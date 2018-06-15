@@ -23,7 +23,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apiserver/pkg/util/logs"
 
-	"sigs.k8s.io/cluster-api/cloud/openstack"
+	"sigs.k8s.io/cluster-provider-api-openstack/cloud/openstack"
 	"sigs.k8s.io/cluster-api/pkg/client/clientset_generated/clientset"
 	"sigs.k8s.io/cluster-api/pkg/controller/config"
 	"sigs.k8s.io/cluster-api/pkg/controller/machine"

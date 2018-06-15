@@ -20,7 +20,7 @@ WORKDIR /go/src/sigs.k8s.io/cluster-api
 # e.g. docker build -t <tag> -f <this_Dockerfile> <path_to_cluster-api>
 COPY . . 
 
-RUN CGO_ENABLED=0 GOOS=linux go install -a -ldflags '-extldflags "-static"' sigs.k8s.io/cluster-api/cloud/openstack/cmd/openstack-machine-controller
+RUN CGO_ENABLED=0 GOOS=linux go install -a -ldflags '-extldflags "-static"' sigs.k8s.io/cluster-provider-api-openstack/cloud/openstack/cmd/openstack-machine-controller
 
 # Final container
 FROM debian:stretch-slim

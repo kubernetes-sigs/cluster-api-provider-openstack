@@ -1,4 +1,5 @@
-# Copyright 2018 The Kubernetes Authors.
+#!/usr/bin/env bash
+# Copyright 2017 The Kubernetes Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,14 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-.PHONY: image push
+set -o errexit
+set -o nounset
+set -o pipefail
 
-PREFIX = gcr.io/openstack-cluster-api
-NAME = openstack-machine-controller
-TAG = 0.0.1
+if ! which gofmt > /dev/null; then
+  echo "Can not find gofmt"
+  exit 1
+fi
 
-image:
-	docker build -t "$(PREFIX)/$(NAME):$(TAG)" -f ./Dockerfile ../../../..
-
-push: image
-	docker push "$(PREFIX)/$(NAME):$(TAG)./
+diff=$(find . -name "*.go" | grep -v "\/vendor\/" | xargs gofmt -s -d 2>&1)
+if [[ -n "${diff}" ]]; then
+  echo "${diff}"
+  echo
+  echo "Please run hack/update-gofmt.sh"
+  exit 1
+fi
