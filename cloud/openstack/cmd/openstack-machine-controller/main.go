@@ -30,10 +30,6 @@ import (
 	"sigs.k8s.io/cluster-api/pkg/controller/sharedinformers"
 )
 
-var (
-	machineSetupConfigPath = pflag.String("machinesetup", "machine_setup_configs.yaml", "machine setup configs yaml file")
-)
-
 func init() {
 	config.ControllerConfig.AddFlags(pflag.CommandLine)
 }

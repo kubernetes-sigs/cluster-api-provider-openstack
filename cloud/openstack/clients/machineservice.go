@@ -18,7 +18,6 @@ package clients
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"github.com/golang/glog"
 	"github.com/gophercloud/gophercloud"
@@ -31,18 +30,23 @@ import (
 )
 
 type InstanceService struct {
-	provider     *gophercloud.ProviderClient
-	serverClient *gophercloud.ServiceClient
-	iamClient    *gophercloud.ServiceClient
+	provider       *gophercloud.ProviderClient
+	computeClient  *gophercloud.ServiceClient
+	identityClient *gophercloud.ServiceClient
 }
 
 type CloudConfig struct {
-	Username   string `json:"username"`
+	AuthURL    string `json:"auth-url"`
+	Username   string `json:"user-name"`
+	UserID     string `json:"user-id"`
 	Password   string `json:"password"`
-	DomainName string `json:"domain_name"`
-	TenantID   string `json:"tenant_id"`
+	TenantID   string `json:"tenant-id"`
+	TenantName string `json:"tenant-name"`
+	TrustID    string `json:"trust-id"`
+	DomainID   string `json:"domain-id"`
+	DomainName string `json:"domain-name"`
 	Region     string `json:"region"`
-	AuthUrl    string `json:"authurl"`
+	CAFile     string `json:"ca-file"`
 }
 
 type Instance struct {
@@ -77,7 +81,7 @@ type InstanceListOpts struct {
 }
 
 func NewInstanceService(cfg *CloudConfig) (*InstanceService, error) {
-	authUrl := gophercloud.NormalizeURL(cfg.AuthUrl)
+	authUrl := gophercloud.NormalizeURL(cfg.AuthURL)
 	opts := &gophercloud.AuthOptions{
 		IdentityEndpoint: authUrl,
 		Username:         cfg.Username,
@@ -91,11 +95,11 @@ func NewInstanceService(cfg *CloudConfig) (*InstanceService, error) {
 		return nil, fmt.Errorf("Create providerClient err: %v", err)
 	}
 
-	iamClient, err := openstack.NewIdentityV3(provider, gophercloud.EndpointOpts{
+	identityClient, err := openstack.NewIdentityV3(provider, gophercloud.EndpointOpts{
 		Region: "",
 	})
 	if err != nil {
-		return nil, fmt.Errorf("Create iamClient err: %v", err)
+		return nil, fmt.Errorf("Create identityClient err: %v", err)
 	}
 	serverClient, err := openstack.NewComputeV2(provider, gophercloud.EndpointOpts{
 		Region: cfg.Region,
@@ -105,16 +109,16 @@ func NewInstanceService(cfg *CloudConfig) (*InstanceService, error) {
 	}
 
 	return &InstanceService{
-		provider:     provider,
-		iamClient:    iamClient,
-		serverClient: serverClient,
+		provider:       provider,
+		identityClient: identityClient,
+		computeClient:  serverClient,
 	}, nil
 }
 
 // UpdateToken to update token if need.
 func (is *InstanceService) UpdateToken() error {
 	token := is.provider.Token()
-	result, err := tokens.Validate(is.iamClient, token)
+	result, err := tokens.Validate(is.identityClient, token)
 	if err != nil {
 		return fmt.Errorf("Validate token err: %v", err)
 	}
@@ -133,11 +137,11 @@ func (is *InstanceService) AssociateFloatingIP(instanceID, floatingIP string) er
 	opts := floatingips.AssociateOpts{
 		FloatingIP: floatingIP,
 	}
-	return floatingips.AssociateInstance(is.serverClient, instanceID, opts).ExtractErr()
+	return floatingips.AssociateInstance(is.computeClient, instanceID, opts).ExtractErr()
 }
 
 func (is *InstanceService) GetAcceptableFloatingIP() (string, error) {
-	page, err := floatingips.List(is.serverClient).AllPages()
+	page, err := floatingips.List(is.computeClient).AllPages()
 	if err != nil {
 		return "", fmt.Errorf("Get floating IP list failed: %v", err)
 	}
@@ -171,9 +175,9 @@ func (is *InstanceService) InstanceCreate(config *openstackconfigv1.OpenstackPro
 		SecurityGroups: []string{
 			"default",
 		},
-		ServiceClient: is.serverClient,
+		ServiceClient: is.computeClient,
 	}
-	server, err := servers.Create(is.serverClient, keypairs.CreateOptsExt{
+	server, err := servers.Create(is.computeClient, keypairs.CreateOptsExt{
 		CreateOptsBuilder: createOpts,
 		KeyName:           keyName,
 	}).Extract()
@@ -184,10 +188,10 @@ func (is *InstanceService) InstanceCreate(config *openstackconfigv1.OpenstackPro
 }
 
 func (is *InstanceService) InstanceDelete(id string) error {
-	return servers.Delete(is.serverClient, id).ExtractErr()
+	return servers.Delete(is.computeClient, id).ExtractErr()
 }
 
-func (is *InstanceService) getInstanceList(opts *InstanceListOpts) (*[]Instance, error) {
+func (is *InstanceService) GetInstanceList(opts *InstanceListOpts) ([]*Instance, error) {
 	var listOpts servers.ListOpts
 	if opts != nil {
 		listOpts = servers.ListOpts{
@@ -197,7 +201,7 @@ func (is *InstanceService) getInstanceList(opts *InstanceListOpts) (*[]Instance,
 		listOpts = servers.ListOpts{}
 	}
 
-	allPages, err := servers.List(is.serverClient, listOpts).AllPages()
+	allPages, err := servers.List(is.computeClient, listOpts).AllPages()
 	if err != nil {
 		return nil, fmt.Errorf("Get service list err: %v", err)
 	}
@@ -205,18 +209,18 @@ func (is *InstanceService) getInstanceList(opts *InstanceListOpts) (*[]Instance,
 	if err != nil {
 		return nil, fmt.Errorf("Extract services list err: %v", err)
 	}
-	var instanceList []Instance
+	var instanceList []*Instance
 	for _, server := range serverList {
-		instanceList = append(instanceList, Instance{server})
+		instanceList = append(instanceList, serverToInstance(&server))
 	}
-	return &instanceList, nil
+	return instanceList, nil
 }
 
 func (is *InstanceService) GetInstance(resourceId string) (instance *Instance, err error) {
 	if resourceId == "" {
 		return nil, fmt.Errorf("ResourceId should be specified to  get detail.")
 	}
-	server, err := servers.Get(is.serverClient, resourceId).Extract()
+	server, err := servers.Get(is.computeClient, resourceId).Extract()
 	if err != nil {
 		return nil, fmt.Errorf("Get server %q detail failed: %v", resourceId, err)
 	}
@@ -228,37 +232,22 @@ func (is *InstanceService) CreateKeyPair(name, publicKey string) error {
 		Name:      name,
 		PublicKey: publicKey,
 	}
-	_, err := keypairs.Create(is.serverClient, opts).Extract()
+	_, err := keypairs.Create(is.computeClient, opts).Extract()
 	return err
+}
+
+func (is *InstanceService) GetKeyPairList() ([]keypairs.KeyPair, error) {
+	page, err := keypairs.List(is.computeClient).AllPages()
+	if err != nil {
+		return nil, err
+	}
+	return keypairs.ExtractKeyPairs(page)
+}
+
+func (is *InstanceService) DeleteKeyPair(name string) error {
+	return keypairs.Delete(is.computeClient, name).ExtractErr()
 }
 
 func serverToInstance(server *servers.Server) *Instance {
 	return &Instance{*server}
-}
-
-func getIPFromInstance(instance Instance) (string, error) {
-	type network struct {
-		Addr    string  `json:"addr"`
-		Version float64 `json:"version"`
-		Type    string  `json:"OS-EXT-IPS:type"`
-	}
-
-	for _, b := range instance.Addresses {
-		list, err := json.Marshal(b)
-		if err != nil {
-			return "", fmt.Errorf("extract IP from instance err: %v", err)
-		}
-		var address []interface{}
-		json.Unmarshal(list, &address)
-		for _, addr := range address {
-			var net network
-			b, _ := json.Marshal(addr)
-			json.Unmarshal(b, &net)
-			fmt.Printf("\nhwNetwork is: %+v\n", net)
-			if net.Type == "floating" && net.Version == 4.0 {
-				return net.Addr, nil
-			}
-		}
-	}
-	return "", fmt.Errorf("extract IP from instance err")
 }

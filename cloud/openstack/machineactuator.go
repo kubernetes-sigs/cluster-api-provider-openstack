@@ -26,18 +26,18 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
-	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
-	"sigs.k8s.io/cluster-api/cloud/openstack/clients"
-	"sigs.k8s.io/cluster-api/cloud/openstack/machinesetup"
-	openstackconfigv1 "sigs.k8s.io/cluster-api/cloud/openstack/openstackproviderconfig/v1alpha1"
-	apierrors "sigs.k8s.io/cluster-api/errors"
-	"sigs.k8s.io/cluster-api/kubeadm"
+	"sigs.k8s.io/cluster-provider-openstack/cloud/openstack/clients"
+	"sigs.k8s.io/cluster-provider-openstack/cloud/openstack/machinesetup"
+	openstackconfigv1 "sigs.k8s.io/cluster-provider-openstack/cloud/openstack/openstackproviderconfig/v1alpha1"
 	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
 	client "sigs.k8s.io/cluster-api/pkg/client/clientset_generated/clientset/typed/cluster/v1alpha1"
-	"sigs.k8s.io/cluster-api/util"
+	apierrors "sigs.k8s.io/cluster-api/pkg/errors"
+	"sigs.k8s.io/cluster-api/pkg/kubeadm"
+	"sigs.k8s.io/cluster-api/pkg/util"
 	"time"
 )
 
@@ -49,6 +49,9 @@ const (
 	CloudConfigPath          = "/etc/cloud/cloud_config.yaml"
 	OpenstackIPAnnotationKey = "openstack-ip-address"
 	OpenstackIdAnnotationKey = "openstack-resourceId"
+
+	TimeoutInstanceCreate       = 5 * time.Minute
+	RetryIntervalInstanceStatus = 10 * time.Second
 )
 
 type SshCreds struct {
@@ -91,31 +94,47 @@ func NewMachineActuator(machineClient client.MachineInterface) (*OpenstackClient
 	if cloudConfig == nil {
 		return nil, fmt.Errorf("Get cloud config from file %q err", CloudConfigPath)
 	}
-	machineService, err := clients.NewInstanceService(&clients.CloudConfig{})
+	machineService, err := clients.NewInstanceService(cloudConfig)
 	if err != nil {
 		return nil, err
 	}
-
 	var sshCred SshCreds
-	if _, err := os.Stat(SshPrivateKeyPath); err != nil {
-		return nil, fmt.Errorf("ssh key pair need to be specified")
-	}
-	sshCred.privateKeyPath = SshPrivateKeyPath
-
 	b, err := ioutil.ReadFile(SshKeyUserPath)
 	if err != nil {
 		return nil, err
 	}
 	sshCred.user = string(b)
-
 	b, err = ioutil.ReadFile(SshPublicKeyPath)
 	if err != nil {
 		return nil, err
 	}
 	sshCred.publicKey = string(b)
 
-	if machineService.CreateKeyPair(sshCred.user, sshCred.publicKey) != nil {
-		return nil, fmt.Errorf("create ssh key pair err: %v", err)
+	keyPairList, err := machineService.GetKeyPairList()
+	if err != nil {
+		return nil, err
+	}
+	needCreate := true
+	// check whether keypair already exist
+	for i := range keyPairList {
+		if sshCred.user == keyPairList[i].Name {
+			if sshCred.publicKey == keyPairList[i].PublicKey {
+				needCreate = false
+			} else {
+				machineService.DeleteKeyPair(keyPairList[i].Name)
+			}
+			break
+		}
+	}
+	if needCreate {
+		if _, err := os.Stat(SshPrivateKeyPath); err != nil {
+			return nil, fmt.Errorf("ssh key pair need to be specified")
+		}
+		sshCred.privateKeyPath = SshPrivateKeyPath
+
+		if machineService.CreateKeyPair(sshCred.user, sshCred.publicKey) != nil {
+			return nil, fmt.Errorf("create ssh key pair err: %v", err)
+		}
 	}
 
 	scheme, codecFactory, err := openstackconfigv1.NewSchemeAndCodecs()
@@ -202,6 +221,18 @@ func (oc *OpenstackClient) Create(cluster *clusterv1.Cluster, machine *clusterv1
 			"error creating Openstack instance: %v", err))
 	}
 	// TODO: wait instance ready
+	err = util.PollImmediate(RetryIntervalInstanceStatus, TimeoutInstanceCreate, func() (bool, error) {
+		instance, err := oc.machineService.GetInstance(instance.ID)
+		if err != nil {
+			return false, nil
+		}
+		return instance.Status == "ACTIVE", nil
+	})
+	if err != nil {
+		return oc.handleMachineError(machine, apierrors.CreateMachine(
+			"error creating Openstack instance: %v", err))
+	}
+
 	if providerConfig.FloatingIP != "" {
 		err := oc.machineService.AssociateFloatingIP(instance.ID, providerConfig.FloatingIP)
 		return oc.handleMachineError(machine, apierrors.CreateMachine(
@@ -244,7 +275,10 @@ func (oc *OpenstackClient) Update(cluster *clusterv1.Cluster, machine *clusterv1
 		if err != nil {
 			return err
 		}
-		if instance == nil {
+		if instance != nil && instance.Status == "ACTIVE" {
+			glog.Infof("Populating current state for boostrap machine %v", machine.ObjectMeta.Name)
+			return oc.updateAnnotation(machine, instance.ID)
+		} else {
 			return fmt.Errorf("Cannot retrieve current state to update machine %v", machine.ObjectMeta.Name)
 		}
 	}
@@ -285,22 +319,31 @@ func getIPFromInstance(instance *clients.Instance) (string, error) {
 		return instance.AccessIPv4, nil
 	}
 	type network struct {
-		Addr    string `json:"addr"`
-		Version string `json:"version"`
-		Type    string `json:"OS-EXT-IPS:type"`
+		Addr    string  `json:"addr"`
+		Version float64 `json:"version"`
+		Type    string  `json:"OS-EXT-IPS:type"`
 	}
 
-	var networkList []network
 	for _, b := range instance.Addresses {
 		list, err := json.Marshal(b)
 		if err != nil {
 			return "", fmt.Errorf("extract IP from instance err: %v", err)
 		}
-		json.Unmarshal(list, networkList)
-		fmt.Printf("\nlist is: %q\nUnmarsheled to: %+v\n", list, networkList)
-		for _, network := range networkList {
-			if network.Type == "floating" && network.Version == "4" {
-				return network.Addr, nil
+		var address []interface{}
+		json.Unmarshal(list, &address)
+		var addrList []string
+		for _, addr := range address {
+			var net network
+			b, _ := json.Marshal(addr)
+			json.Unmarshal(b, &net)
+			if net.Version == 4.0 {
+				if net.Type == "floating" {
+					return net.Addr, nil
+				}
+				addrList = append(addrList, net.Addr)
+			}
+			if len(addrList) != 0 {
+				return addrList[0], nil
 			}
 		}
 	}
@@ -320,7 +363,7 @@ func (oc *OpenstackClient) GetKubeConfig(cluster *clusterv1.Cluster, master *clu
 		"ssh", "-i", oc.sshCred.privateKeyPath,
 		"-o", "StrictHostKeyChecking no",
 		"-o", "UserKnownHostsFile /dev/null",
-		fmt.Sprintf("%s@%s", "root", ip),
+		fmt.Sprintf("cc@%s", ip),
 		"echo STARTFILE; sudo cat /etc/kubernetes/admin.conf"))
 	parts := strings.Split(result, "STARTFILE")
 	if len(parts) != 2 {
@@ -365,6 +408,9 @@ func (oc *OpenstackClient) updateAnnotation(machine *clusterv1.Machine, id strin
 }
 
 func (oc *OpenstackClient) requiresUpdate(a *clusterv1.Machine, b *clusterv1.Machine) bool {
+	if a == nil || b == nil {
+		return true
+	}
 	// Do not want status changes. Do want changes that impact machine provisioning
 	return !reflect.DeepEqual(a.Spec.ObjectMeta, b.Spec.ObjectMeta) ||
 		!reflect.DeepEqual(a.Spec.ProviderConfig, b.Spec.ProviderConfig) ||
@@ -374,15 +420,23 @@ func (oc *OpenstackClient) requiresUpdate(a *clusterv1.Machine, b *clusterv1.Mac
 }
 
 func (oc *OpenstackClient) instanceExists(machine *clusterv1.Machine) (instance *clients.Instance, err error) {
-	id, find := machine.Annotations[OpenstackIdAnnotationKey]
-	if !find {
+	machineConfig, err := oc.providerconfig(machine.Spec.ProviderConfig)
+	if err != nil {
+		return nil, err
+	}
+	opts := &clients.InstanceListOpts{
+		Name:   machineConfig.Name,
+		Image:  machineConfig.Image,
+		Flavor: machineConfig.Flavor,
+	}
+	instanceList, err := oc.machineService.GetInstanceList(opts)
+	if err != nil {
+		return nil, err
+	}
+	if len(instanceList) == 0 {
 		return nil, nil
 	}
-	instance, err = oc.machineService.GetInstance(id)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to get instance: %v", err)
-	}
-	return instance, err
+	return instanceList[0], nil
 }
 
 // providerconfig get openstack provider config

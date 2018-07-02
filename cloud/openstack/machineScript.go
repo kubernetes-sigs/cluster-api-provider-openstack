@@ -88,8 +88,7 @@ func getSubnet(netRange clusterv1.NetworkRanges) string {
 	return netRange.CIDRBlocks[0]
 }
 
-const masterEnvironmentVars = `
-#!/bin/bash
+const masterEnvironmentVars = `#!/bin/bash
 KUBELET_VERSION={{ .Machine.Spec.Versions.Kubelet }}
 VERSION=v${KUBELET_VERSION}
 NAMESPACE={{ .Machine.ObjectMeta.Namespace }}
@@ -102,8 +101,7 @@ POD_CIDR={{ .PodCIDR }}
 SERVICE_CIDR={{ .ServiceCIDR }}
 `
 
-const nodeEnvironmentVars = `
-#!/bin/bash
+const nodeEnvironmentVars = `#!/bin/bash
 KUBELET_VERSION={{ .Machine.Spec.Versions.Kubelet }}
 TOKEN={{ .Token }}
 MASTER={{ .MasterEndpoint }}

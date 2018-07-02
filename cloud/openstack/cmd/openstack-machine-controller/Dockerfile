@@ -24,6 +24,6 @@ RUN CGO_ENABLED=0 GOOS=linux go install -a -ldflags '-extldflags "-static"' sigs
 
 # Final container
 FROM debian:stretch-slim
-RUN apt-get update && apt-get install -y ca-certificates openssh-server && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y ca-certificates openssh-client && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /go/bin/openstack-machine-controller .
