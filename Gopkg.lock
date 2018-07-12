@@ -102,28 +102,28 @@
   version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/go-openapi/jsonpointer"
   packages = ["."]
   revision = "3a0015ad55fa9873f41605d3e8f28cd279c32ab2"
+  version = "0.15.0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/go-openapi/jsonreference"
   packages = ["."]
   revision = "3fb327e6747da3043567ee86abd02bb6376b6be2"
+  version = "0.15.0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/go-openapi/spec"
   packages = ["."]
-  revision = "bcff419492eeeb01f76e77d2ebc714dc97b607f5"
+  revision = "bce47c9386f9ecd6b86f450478a80103c3fe1402"
+  version = "0.15.0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/go-openapi/swag"
   packages = ["."]
-  revision = "811b1089cde9dad18d4d0c2d09fbdbf28dbd27a5"
+  revision = "2b0bd4f193d011c203529df626a65d63cb8a79e8"
+  version = "0.15.0"
 
 [[projects]]
   name = "github.com/gobuffalo/envy"
@@ -205,7 +205,7 @@
     "openstack/utils",
     "pagination"
   ]
-  revision = "9e34f46860442c3331b0f5456500004abcea71db"
+  revision = "45c2d035713fa44f366921035a44610ac5d45beb"
 
 [[projects]]
   branch = "master"
@@ -340,7 +340,7 @@
   branch = "master"
   name = "github.com/prometheus/client_model"
   packages = ["go"]
-  revision = "99fa1f4be8e564e8a6b613da7fa6f46c9edafc6c"
+  revision = "5c3871d89910bfb32f5fcab2aa4b9ec68e65a99f"
 
 [[projects]]
   branch = "master"
@@ -361,7 +361,7 @@
     "nfs",
     "xfs"
   ]
-  revision = "40f013a808ec4fa79def444a1a56de4d1727efcb"
+  revision = "ae68e2d4c00fed4943b5f6698d504a5fe083da8a"
 
 [[projects]]
   name = "github.com/spf13/pflag"
@@ -396,7 +396,7 @@
     "trace",
     "websocket"
   ]
-  revision = "4cb1c02c05b0e749b0365f61ae859a8e0cfceed9"
+  revision = "cffdcf672aee934982473246bc7e9a8ba446aa9b"
 
 [[projects]]
   branch = "master"
@@ -405,7 +405,7 @@
     "unix",
     "windows"
   ]
-  revision = "7138fd3d9dc8335c567ca206f4333fb75eb05d56"
+  revision = "1b2967e3c290b7c545b3db0deeda16e9be4f98a2"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -437,13 +437,13 @@
     "imports",
     "internal/fastwalk"
   ]
-  revision = "1c99e1239a0c8b0e59c34000995c4e319b7702ca"
+  revision = "2087f8c10712366cfc2f4fcb1bf99eeef61ab21e"
 
 [[projects]]
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  revision = "ff3583edef7de132f219f0efc00e097cabcc0ec0"
+  revision = "e92b116572682a5b432ddd840aeaba2a559eeff1"
 
 [[projects]]
   name = "google.golang.org/grpc"
@@ -834,7 +834,7 @@
     "pkg/util",
     "pkg/util/proto"
   ]
-  revision = "d83b052f768a50a309c692a9c271da3f3276ff88"
+  revision = "0cf8f7e6ed1d2e3d47d02e3b6e559369af24d803"
 
 [[projects]]
   branch = "master"
@@ -860,7 +860,7 @@
     "pkg/kubeadm",
     "pkg/util"
   ]
-  revision = "dfa371814c0b39a284662b897ba9b5df4749e973"
+  revision = "b770dd7b06fb75834ead5169db85ea79b6215563"
 
 [solve-meta]
   analyzer-name = "dep"

@@ -890,6 +890,169 @@ func main() {
 }
 `,
 	},
+
+	{
+		name: "issue #23709",
+		in: `package main
+
+import (
+	"math" // fun
+)
+
+func main() {
+	x := math.MaxInt64
+	fmt.Println(strings.Join(",", []string{"hi"}), x)
+}`,
+		out: `package main
+
+import (
+	"fmt"
+	"math" // fun
+	"strings"
+)
+
+func main() {
+	x := math.MaxInt64
+	fmt.Println(strings.Join(",", []string{"hi"}), x)
+}
+`,
+	},
+
+	{
+		name: "issue #26246 1",
+		in: `package main
+
+import (
+	_ "io"
+	_ "net/http"
+	_ "net/http/pprof" // install the pprof http handlers
+	_ "strings"
+)
+
+func main() {
+}
+`,
+		out: `package main
+
+import (
+	_ "io"
+	_ "net/http"
+	_ "net/http/pprof" // install the pprof http handlers
+	_ "strings"
+)
+
+func main() {
+}
+`,
+	},
+
+	{
+		name: "issue #26246 2",
+		in: `package main
+
+import (
+	_ "io"
+	_ "net/http/pprof" // install the pprof http handlers
+	_ "net/http"
+	_ "strings"
+)
+
+func main() {
+}
+`,
+		out: `package main
+
+import (
+	_ "io"
+	_ "net/http"
+	_ "net/http/pprof" // install the pprof http handlers
+	_ "strings"
+)
+
+func main() {
+}
+`,
+	},
+
+	{
+		name: "issue #26246 3",
+		in: `package main
+
+import (
+	"encoding/json"
+	"io"
+	"net/http"
+	_ "net/http/pprof" // install the pprof http handlers
+	"strings"
+
+	"github.com/pkg/errors"
+)
+
+func main() {
+	_ = strings.ToUpper("hello")
+	_ = io.EOF
+	var (
+		_ json.Number
+		_ *http.Request
+		_ errors.Frame
+	)
+}
+`,
+		out: `package main
+
+import (
+	"encoding/json"
+	"io"
+	"net/http"
+	_ "net/http/pprof" // install the pprof http handlers
+	"strings"
+
+	"github.com/pkg/errors"
+)
+
+func main() {
+	_ = strings.ToUpper("hello")
+	_ = io.EOF
+	var (
+		_ json.Number
+		_ *http.Request
+		_ errors.Frame
+	)
+}
+`,
+	},
+
+	{
+		name: "issue #26290 1",
+		in: `package p // comment
+
+import "math"
+
+var _ = fmt.Printf
+`,
+		out: `package p // comment
+
+import "fmt"
+
+var _ = fmt.Printf
+`,
+	},
+
+	{
+		name: "issue #26290 2",
+		in: `package p
+
+import "math"
+
+var _ = fmt.Printf
+`,
+		out: `package p
+
+import "fmt"
+
+var _ = fmt.Printf
+`,
+	},
 }
 
 func TestFixImports(t *testing.T) {
@@ -1111,6 +1274,32 @@ var (
 		}
 	})
 
+}
+
+// Test for x/y/v2 convention for package y.
+func TestFixModuleVersion(t *testing.T) {
+	testConfig{}.test(t, func(t *goimportTest) {
+		input := `package p
+
+import (
+	"fmt"
+
+	"foo/v2"
+)
+
+var (
+	_ = fmt.Print
+	_ = foo.Foo
+)
+`
+		buf, err := Process(filepath.Join(t.gopath, "src/mypkg.com/outpkg/toformat.go"), []byte(input), &Options{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := string(buf); got != input {
+			t.Fatalf("results differ\nGOT:\n%s\nWANT:\n%s\n", got, input)
+		}
+	})
 }
 
 // Test for correctly identifying the name of a vendored package when it
@@ -1643,8 +1832,8 @@ func TestImportPathToNameGoPathParse(t *testing.T) {
 func TestIgnoreConfiguration(t *testing.T) {
 	testConfig{
 		gopathFiles: map[string]string{
-			".goimportsignore":       "# comment line\n\n example.net", // tests comment, blank line, whitespace trimming
-			"example.net/pkg/pkg.go": "package pkg\nconst X = 1",
+			".goimportsignore":                                     "# comment line\n\n example.net", // tests comment, blank line, whitespace trimming
+			"example.net/pkg/pkg.go":                               "package pkg\nconst X = 1",
 			"otherwise-longer-so-worse.example.net/foo/pkg/pkg.go": "package pkg\nconst X = 1",
 		},
 	}.test(t, func(t *goimportTest) {

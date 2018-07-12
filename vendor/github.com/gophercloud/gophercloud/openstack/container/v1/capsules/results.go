@@ -25,9 +25,9 @@ type GetResult struct {
 }
 
 // CreateResult is the response from a Create operation. Call its Extract
-// method to interpret it as a Server.
+// method to interpret it as a Capsule.
 type CreateResult struct {
-	gophercloud.ErrResult
+	commonResult
 }
 
 // DeleteResult represents the result of a delete operation.
@@ -39,13 +39,10 @@ type CapsulePage struct {
 	pagination.LinkedPageBase
 }
 
-// Represents a Container Orchestration Engine Bay, i.e. a cluster
+// Represents a Capsule
 type Capsule struct {
 	// UUID for the capsule
 	UUID string `json:"uuid"`
-
-	// ID for the capsule
-	ID int `json:"id"`
 
 	// User ID for the capsule
 	UserID string `json:"user_id"`
@@ -75,7 +72,7 @@ type Capsule struct {
 	UpdatedAt time.Time `json:"-"`
 
 	// Links includes HTTP references to the itself, useful for passing along to
-	// other APIs that might want a server reference.
+	// other APIs that might want a capsule reference.
 	Links []interface{} `json:"links"`
 
 	// The capsule version
@@ -110,9 +107,6 @@ type Container struct {
 	// UUID for the container
 	UUID string `json:"uuid"`
 
-	// ID for the container
-	ID int `json:"id"`
-
 	// User ID for the container
 	UserID string `json:"user_id"`
 
@@ -144,17 +138,8 @@ type Container struct {
 	Name string `json:"name"`
 
 	// Links includes HTTP references to the itself, useful for passing along to
-	// other APIs that might want a server reference.
+	// other APIs that might want a capsule reference.
 	Links []interface{} `json:"links"`
-
-	// Container ID for the container
-	ContainerID string `json:"container_id"`
-
-	// Websocket url for the container
-	WebsocketUrl string `json:"websocket_url"`
-
-	// Websocket token for the container
-	WebsocketToken string `json:"websocket_token"`
 
 	// auto remove flag token for the container
 	AutoRemove bool `json:"auto_remove"`
@@ -196,10 +181,7 @@ type Container struct {
 	ImageDriver string `json:"image_driver"`
 
 	// Command for the container
-	Command string `json:"command"`
-
-	// Capsule ID for the container
-	CapsuleID int `json:"capsule_id"`
+	Command []string `json:"command"`
 
 	// Image for the container
 	Runtime string `json:"runtime"`
@@ -212,9 +194,6 @@ type Container struct {
 
 	// Ports information for the container
 	Ports []int `json:"ports"`
-
-	// Meta for the container
-	Meta map[string]string `json:"meta"`
 
 	// Security groups for the container
 	SecurityGroups []string `json:"security_groups"`

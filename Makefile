@@ -125,9 +125,9 @@ images: image-machine-controller
 
 image-machine-controller: depend openstack-machine-controller
 ifeq ($(GOOS),linux)
-	cp openstack-machine-controller images/machine-controller
-	docker build -t $(REGISTRY)/openstack-machine-controller:$(VERSION) images/machine-controller
-	rm images/machine-controller/openstack-machine-controller
+	cp openstack-machine-controller images/openstack-machine-controller
+	docker build -t $(REGISTRY)/openstack-machine-controller:$(VERSION) images/openstack-machine-controller
+	rm images/openstack-machine-controller/openstack-machine-controller
 else
 	$(error Please set GOOS=linux for building the image)
 endif
