@@ -1,4 +1,4 @@
-# Kubernetes cluster-provider-api-openstack Project
+# Kubernetes cluster-api-provider-openstack Project
 
 This repository hosts a concrete implementation of a provider for OpenStack for the [cluster-api project](https://github.com/dims/cluster-api).
 

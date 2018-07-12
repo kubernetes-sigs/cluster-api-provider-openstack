@@ -154,8 +154,8 @@ dist: build-cross
 		cd _dist && \
 		$(DIST_DIRS) cp ../LICENSE {} \; && \
 		$(DIST_DIRS) cp ../README.md {} \; && \
-		$(DIST_DIRS) tar -zcf cluster-provider-api-openstack-$(VERSION)-{}.tar.gz {} \; && \
-		$(DIST_DIRS) zip -r cluster-provider-api-openstack-$(VERSION)-{}.zip {} \; \
+		$(DIST_DIRS) tar -zcf cluster-api-provider-openstack-$(VERSION)-{}.tar.gz {} \; && \
+		$(DIST_DIRS) zip -r cluster-api-provider-openstack-$(VERSION)-{}.zip {} \; \
 	)
 
 .PHONY: build clean cover depend docs fmt functional lint realclean \
