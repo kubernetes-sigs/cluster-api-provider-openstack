@@ -22,9 +22,16 @@ import (
 	"strings"
 
 	"github.com/golang/glog"
+	clustercommon "sigs.k8s.io/cluster-api/pkg/apis/cluster/common"
 	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
 	"sigs.k8s.io/cluster-api/pkg/util"
 )
+
+const ProviderName = "openstack"
+
+func init() {
+	clustercommon.RegisterClusterProvisioner(ProviderName, &DeploymentClient{})
+}
 
 type DeploymentClient struct{}
 
