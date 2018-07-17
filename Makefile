@@ -50,13 +50,19 @@ endif
 depend-update: work
 	dep ensure -update
 
-build: openstack-machine-controller
+build: openstack-machine-controller clusterctl
 
 openstack-machine-controller: depend $(SOURCES)
 	CGO_ENABLED=0 GOOS=$(GOOS) go build \
 		-ldflags $(LDFLAGS) \
 		-o openstack-machine-controller \
 		cmd/openstack-machine-controller/main.go
+
+openstack-clusterctl: depend $(SOURCES)
+	CGO_ENABLED=0 GOOS=$(GOOS) go build \
+		-ldflags $(LDFLAGS) \
+		-o openstack-clusterctl \
+		clusterctl/main.go
 
 test: unit functional
 
