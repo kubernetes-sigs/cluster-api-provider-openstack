@@ -46,7 +46,7 @@ const (
 	SshPrivateKeyPath        = "/etc/sshkeys/private"
 	SshPublicKeyPath         = "/etc/sshkeys/public"
 	SshKeyUserPath           = "/etc/sshkeys/user"
-	SshUserName = "ubuntu"
+	SshUserName              = "ubuntu"
 	CloudConfigPath          = "/etc/cloud/cloud_config.yaml"
 	OpenstackIPAnnotationKey = "openstack-ip-address"
 	OpenstackIdAnnotationKey = "openstack-resourceId"

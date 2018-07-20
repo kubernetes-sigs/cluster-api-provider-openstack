@@ -51,12 +51,12 @@ read -p "Enter your tenant id:" tenant_id
 read -p "Enter region name:" region
 read -p "Enter authurl:" authurl
 read -s -p "Enter your password:" password
-OPENSTACK_CLOUD_CONFIG_PLAIN="username: $username\n\
+OPENSTACK_CLOUD_CONFIG_PLAIN="user-name: $username\n\
 password: $password\n\
-domain_name: $domain_name\n\
-tenant_id: $tenant_id\n\
+domain-name: $domain_name\n\
+tenant-id: $tenant_id\n\
 region: $region\n\
-authurl: $authurl\n"
+auth-url: $authurl\n"
 
 # Check if the ssh key already exists. If not, generate and copy to the .ssh dir.
 if [ ! -f $MACHINE_CONTROLLER_SSH_HOME$MACHINE_CONTROLLER_SSH_PRIVATE_FILE ]; then
