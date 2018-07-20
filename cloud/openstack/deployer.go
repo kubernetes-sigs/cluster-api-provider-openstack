@@ -60,7 +60,7 @@ func (d *DeploymentClient) GetKubeConfig(cluster *clusterv1.Cluster, master *clu
 		"ssh", "-i", "/root/.ssh/openstack_tmp",
 		"-o", "StrictHostKeyChecking no",
 		"-o", "UserKnownHostsFile /dev/null",
-		fmt.Sprintf("cc@%s", ip),
+		fmt.Sprintf("%s@%s",SshUserName, ip),
 		"echo STARTFILE; sudo cat /etc/kubernetes/admin.conf"))
 	parts := strings.Split(result, "STARTFILE")
 	if len(parts) != 2 {

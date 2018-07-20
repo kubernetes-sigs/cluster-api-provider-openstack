@@ -46,6 +46,7 @@ const (
 	SshPrivateKeyPath        = "/etc/sshkeys/private"
 	SshPublicKeyPath         = "/etc/sshkeys/public"
 	SshKeyUserPath           = "/etc/sshkeys/user"
+	SshUserName              = "ubuntu"
 	CloudConfigPath          = "/etc/cloud/cloud_config.yaml"
 	OpenstackIPAnnotationKey = "openstack-ip-address"
 	OpenstackIdAnnotationKey = "openstack-resourceId"
@@ -363,7 +364,7 @@ func (oc *OpenstackClient) GetKubeConfig(cluster *clusterv1.Cluster, master *clu
 		"ssh", "-i", oc.sshCred.privateKeyPath,
 		"-o", "StrictHostKeyChecking no",
 		"-o", "UserKnownHostsFile /dev/null",
-		fmt.Sprintf("cc@%s", ip),
+		fmt.Sprintf("%s@%s", SshUserName, ip),
 		"echo STARTFILE; sudo cat /etc/kubernetes/admin.conf"))
 	parts := strings.Split(result, "STARTFILE")
 	if len(parts) != 2 {
