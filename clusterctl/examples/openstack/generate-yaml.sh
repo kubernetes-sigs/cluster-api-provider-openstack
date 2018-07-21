@@ -1,8 +1,14 @@
 #!/bin/sh
 set -e
 
+OUTPUT_DIR=out
+
+MACHINE_TEMPLATE_FILE=machines.yaml.template
+MACHINE_GENERATED_FILE=${OUTPUT_DIR}/machines.yaml
+CLUSTER_TEMPLATE_FILE=cluster.yaml.template
+CLUSTER_GENERATED_FILE=${OUTPUT_DIR}/cluster.yaml
 PROVIDERCOMPONENT_TEMPLATE_FILE=provider-components.yaml.template
-PROVIDERCOMPONENT_GENERATED_FILE=provider-components.yaml
+PROVIDERCOMPONENT_GENERATED_FILE=${OUTPUT_DIR}/provider-components.yaml
 
 MACHINE_CONTROLLER_SSH_PUBLIC_FILE=openstack_tmp.pub
 MACHINE_CONTROLLER_SSH_PUBLIC=
@@ -39,10 +45,22 @@ while test $# -gt 0; do
         esac
 done
 
+if [ $OVERWRITE -ne 1 ] && [ -f $MACHINE_GENERATED_FILE ]; then
+  echo "File $MACHINE_GENERATED_FILE already exists. Delete it manually before running this script."
+  exit 1
+fi
+
+if [ $OVERWRITE -ne 1 ] && [ -f $CLUSTER_GENERATED_FILE ]; then
+  echo "File $CLUSTER_GENERATED_FILE already exists. Delete it manually before running this script."
+  exit 1
+fi
+
 if [ $OVERWRITE -ne 1 ] && [ -f $PROVIDERCOMPONENT_GENERATED_FILE ]; then
   echo "File $PROVIDERCOMPONENT_GENERATED_FILE already exists. Delete it manually before running this script."
   exit 1
 fi
+
+mkdir -p ${OUTPUT_DIR}
 
 # Get user cloud provider information from input
 read -p "Enter your username:" username
@@ -89,6 +107,13 @@ cat $PROVIDERCOMPONENT_TEMPLATE_FILE \
   | sed -e "s/\$MACHINE_CONTROLLER_SSH_PRIVATE/$MACHINE_CONTROLLER_SSH_PRIVATE/" \
   > $PROVIDERCOMPONENT_GENERATED_FILE
 
-echo "Done generating $PROVIDERCOMPONENT_GENERATED_FILE"
-echo "You will still need to generate the cluster.yaml and machines.yaml"
+cat $MACHINE_TEMPLATE_FILE \
+  > $MACHINE_GENERATED_FILE
+
+cat $CLUSTER_TEMPLATE_FILE \
+  > $CLUSTER_GENERATED_FILE
+
+
+echo "Done generating $PROVIDERCOMPONENT_GENERATED_FILE $MACHINE_GENERATED_FILE $CLUSTER_GENERATED_FILE"
+echo "You can manually change your cluster configuration by editing generated files."
 
