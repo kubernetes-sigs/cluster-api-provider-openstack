@@ -50,15 +50,15 @@ endif
 depend-update: work
 	dep ensure -update
 
-build: openstack-machine-controller clusterctl
+build: machine-controller openstack-clusterctl
 
-openstack-machine-controller: depend $(SOURCES)
+machine-controller:
 	CGO_ENABLED=0 GOOS=$(GOOS) go build \
 		-ldflags $(LDFLAGS) \
 		-o openstack-machine-controller \
-		cmd/openstack-machine-controller/main.go
+		cmd/machine-controller/main.go
 
-openstack-clusterctl: depend $(SOURCES)
+openstack-clusterctl:
 	CGO_ENABLED=0 GOOS=$(GOOS) go build \
 		-ldflags $(LDFLAGS) \
 		-o openstack-clusterctl \
@@ -129,11 +129,11 @@ shell:
 
 images: image-machine-controller
 
-image-machine-controller: depend openstack-machine-controller
+image-machine-controller: depend machine-controller
 ifeq ($(GOOS),linux)
-	cp openstack-machine-controller images/openstack-machine-controller
-	docker build -t $(REGISTRY)/openstack-machine-controller:$(VERSION) images/openstack-machine-controller
-	rm images/openstack-machine-controller/openstack-machine-controller
+	cp openstack-machine-controller cmd/machine-controller
+	docker build -t $(REGISTRY)/openstack-machine-controller:$(VERSION) cmd/machine-controller
+	rm cmd/machine-controller/openstack-machine-controller
 else
 	$(error Please set GOOS=linux for building the image)
 endif
