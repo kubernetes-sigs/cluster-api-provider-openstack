@@ -20,11 +20,6 @@ items:
     versions:
       kubelet: 1.9.4
       controlPlane: 1.9.4
-      containerRuntime:
-        name: docker
-        version: 1.12.0
-    roles:
-    - Master
 - apiVersion: "cluster.k8s.io/v1alpha1"
   kind: Machine
   metadata:
@@ -45,9 +40,4 @@ items:
           floatingIP: 129.114.111.153
     versions:
       kubelet: 1.9.4
-      containerRuntime:
-        name: docker
-        version: 1.12.0
-    roles:
-    - Node
 

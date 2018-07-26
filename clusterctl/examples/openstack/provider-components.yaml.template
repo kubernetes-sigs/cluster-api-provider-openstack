@@ -117,16 +117,9 @@ metadata:
 data:
   machine_setup_configs.yaml: |-
     items:
-    - machineParams:
-      - os: ubuntu-1604-lts
-        roles:
-        - Master
-        versions:
+    - versions:
           kubelet: 1.9.4
           controlPlane: 1.9.4
-          containerRuntime:
-            name: docker
-            version: 1.12.0
       startupScript: |
         set -e
         set -x
@@ -212,15 +205,8 @@ data:
         kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f https://docs.projectcalico.org/v3.1/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml
         echo done.
         ) 2>&1 | tee /var/log/startup.log
-    - machineParams:
-      - os: ubuntu-1604-lts
-        roles:
-        - Node
-        versions:
+    - versions:
           kubelet: 1.9.4
-          containerRuntime:
-            name: docker
-            version: 1.12.0
       startupScript: |
         set -e
         set -x

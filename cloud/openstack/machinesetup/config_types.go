@@ -19,16 +19,18 @@ import (
 	"io/ioutil"
 	"os"
 
-	"reflect"
-
 	"github.com/ghodss/yaml"
-	clustercommon "sigs.k8s.io/cluster-api/pkg/apis/cluster/common"
 	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
+)
+
+const (
+	MachineRoleMaster = "master"
+	MachineRoleNode   = "node"
 )
 
 type MachineSetupConfig interface {
 	GetYaml() (string, error)
-	GetSetupScript(params *ConfigParams) (string, error)
+	GetSetupScript(role string) (string, error)
 }
 
 // Config Watch holds the path to the machine setup configs yaml file.
@@ -46,19 +48,14 @@ type configList struct {
 	Items []config `json:"items"`
 }
 
-// A single valid machine setup config that maps a machine's params to the corresponding image and metadata.
-// TODO need more elements for setup hwcloud instance
+// A single valid machine setup config that maps a machine's version to the corresponding startupScript.
+// TODO need more elements for setup openstack instance
 type config struct {
 	// A list of the valid combinations of ConfigParams that will
 	// map to the given Image and Metadata.
-	Params []ConfigParams `json:"machineParams"`
+	Versions clusterv1.MachineVersionInfo
 
 	StartupScript string `json:"startupScript"`
-}
-
-type ConfigParams struct {
-	Roles    []clustercommon.MachineRole
-	Versions clusterv1.MachineVersionInfo
 }
 
 func NewConfigWatch(path string) (*ConfigWatch, error) {
@@ -99,29 +96,21 @@ func (vc *ValidConfigs) GetYaml() (string, error) {
 	return string(bytes), nil
 }
 
-func (vc *ValidConfigs) GetSetupScript(params *ConfigParams) (string, error) {
-	machineSetupConfig, err := vc.matchMachineSetupConfig(params)
+func (vc *ValidConfigs) GetSetupScript(role string) (string, error) {
+	machineSetupConfig, err := vc.matchMachineSetupConfig(role)
 	if err != nil {
 		return "", err
 	}
 	return machineSetupConfig.StartupScript, nil
 }
 
-func (vc *ValidConfigs) matchMachineSetupConfig(params *ConfigParams) (*config, error) {
+func (vc *ValidConfigs) matchMachineSetupConfig(role string) (*config, error) {
 	matchingConfigs := make([]config, 0)
 	for _, conf := range vc.configList.Items {
-		for _, validParams := range conf.Params {
-			//if params.OS != validParams.OS {
-			//	continue
-			//}
-			validRoles := rolesToMap(validParams.Roles)
-			paramRoles := rolesToMap(params.Roles)
-			if !reflect.DeepEqual(paramRoles, validRoles) {
-				continue
-			}
-			if params.Versions != validParams.Versions {
-				continue
-			}
+		if role == MachineRoleMaster && conf.Versions.ControlPlane != "" {
+			matchingConfigs = append(matchingConfigs, conf)
+		}
+		if role == MachineRoleNode && conf.Versions.ControlPlane == "" {
 			matchingConfigs = append(matchingConfigs, conf)
 		}
 	}
@@ -129,16 +118,8 @@ func (vc *ValidConfigs) matchMachineSetupConfig(params *ConfigParams) (*config, 
 	if len(matchingConfigs) == 1 {
 		return &matchingConfigs[0], nil
 	} else if len(matchingConfigs) == 0 {
-		return nil, fmt.Errorf("could not find a matching machine setup config for params %+v", params)
+		return nil, fmt.Errorf("could not find a matching machine setup config for role %q", role)
 	} else {
-		return nil, fmt.Errorf("found multiple matching machine setup configs for params %+v", params)
+		return nil, fmt.Errorf("found multiple matching machine setup configs for role %q", role)
 	}
-}
-
-func rolesToMap(roles []clustercommon.MachineRole) map[clustercommon.MachineRole]int {
-	rolesMap := map[clustercommon.MachineRole]int{}
-	for _, role := range roles {
-		rolesMap[role] = rolesMap[role] + 1
-	}
-	return rolesMap
 }
