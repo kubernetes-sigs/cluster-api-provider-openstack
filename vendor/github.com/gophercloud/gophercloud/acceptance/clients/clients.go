@@ -29,6 +29,9 @@ type AcceptanceTestChoices struct {
 	// FloatingIPPool contains the name of the pool from where to obtain floating IPs.
 	FloatingIPPoolName string
 
+	// MagnumImageID contains the ID of a valid magnum image.
+	MagnumImageID string
+
 	// NetworkName is the name of a network to launch the instance on.
 	NetworkName string
 
@@ -51,6 +54,7 @@ func AcceptanceTestChoicesFromEnv() (*AcceptanceTestChoices, error) {
 	imageID := os.Getenv("OS_IMAGE_ID")
 	flavorID := os.Getenv("OS_FLAVOR_ID")
 	flavorIDResize := os.Getenv("OS_FLAVOR_ID_RESIZE")
+	magnumImageID := os.Getenv("OS_MAGNUM_IMAGE_ID")
 	networkName := os.Getenv("OS_NETWORK_NAME")
 	floatingIPPoolName := os.Getenv("OS_POOL_NAME")
 	externalNetworkID := os.Getenv("OS_EXTGW_ID")
@@ -102,6 +106,7 @@ func AcceptanceTestChoicesFromEnv() (*AcceptanceTestChoices, error) {
 		FlavorID:           flavorID,
 		FlavorIDResize:     flavorIDResize,
 		FloatingIPPoolName: floatingIPPoolName,
+		MagnumImageID:      magnumImageID,
 		NetworkName:        networkName,
 		ExternalNetworkID:  externalNetworkID,
 		ShareNetworkID:     shareNetworkID,
@@ -575,4 +580,25 @@ func configureDebug(client *gophercloud.ProviderClient) *gophercloud.ProviderCli
 	}
 
 	return client
+}
+
+// NewContainerInfraV1Client returns a *ServiceClient for making calls
+// to the OpenStack Container Infra Management v1 API. An error will be returned
+// if authentication or client creation was not possible.
+func NewContainerInfraV1Client() (*gophercloud.ServiceClient, error) {
+	ao, err := openstack.AuthOptionsFromEnv()
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := openstack.AuthenticatedClient(ao)
+	if err != nil {
+		return nil, err
+	}
+
+	client = configureDebug(client)
+
+	return openstack.NewContainerInfraV1(client, gophercloud.EndpointOpts{
+		Region: os.Getenv("OS_REGION_NAME"),
+	})
 }

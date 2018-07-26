@@ -1,3 +1,7 @@
+// Copyright 2018 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package packages_test
 
 import (
@@ -11,6 +15,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -19,18 +24,21 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
+// TODO(matloob): remove this once Go 1.12 is released as we will end support
+// for the loader-backed implementation then.
+var usesLegacyLoader = false
+
 // TODO(adonovan): more test cases to write:
 //
 // - When the tests fail, make them print a 'cd & load' command
 //   that will allow the maintainer to interact with the failing scenario.
 // - vendoring
 // - errors in go-list metadata
-// - all returned file names should be openable
+// - all returned file names are absolute
 // - a foo.test package that cannot be built for some reason (e.g.
 //   import error) will result in a JSON blob with no name and a
 //   nonexistent testmain file in GoFiles. Test that we handle this
 //   gracefully.
-// - import graph for synthetic testmain and "p [t.test]" packages.
 // - IsTest boolean
 //
 // TypeCheck & WholeProgram modes:
@@ -38,13 +46,17 @@ import (
 //   - Packages.Info is correctly set.
 //   - typechecker configuration is honored
 //   - import cycles are gracefully handled in type checker.
+//   - test typechecking of generated test main and cgo.
 
 func TestMetadataImportGraph(t *testing.T) {
-	tmp, cleanup := enterTree(t, map[string]string{
+	if runtime.GOOS != "linux" {
+		t.Skipf("TODO: skipping on non-Linux; fix this test to run everywhere. golang.org/issue/26387")
+	}
+	tmp, cleanup := makeTree(t, map[string]string{
 		"src/a/a.go":             `package a; const A = 1`,
 		"src/b/b.go":             `package b; import ("a"; _ "errors"); var B = a.A`,
 		"src/c/c.go":             `package c; import (_ "b"; _ "unsafe")`,
-		"src/c/c2.go":            "//+build ignore\n\n" + `package c; import _ "fmt"`,
+		"src/c/c2.go":            "// +build ignore\n\n" + `package c; import _ "fmt"`,
 		"src/subdir/d/d.go":      `package d`,
 		"src/subdir/d/d_test.go": `package d; import _ "math/bits"`,
 		"src/subdir/d/x_test.go": `package d_test; import _ "subdir/d"`, // TODO(adonovan): test bad import here
@@ -54,10 +66,12 @@ func TestMetadataImportGraph(t *testing.T) {
 		"src/f/f.go":             `package f`,
 	})
 	defer cleanup()
-	// -- tmp is now the current directory --
 
-	opts := &packages.Options{GOPATH: tmp}
-	initial, err := packages.Metadata(opts, "c", "subdir/d", "e")
+	cfg := &packages.Config{
+		Mode: packages.LoadImports,
+		Env:  append(os.Environ(), "GOPATH="+tmp),
+	}
+	initial, err := packages.Load(cfg, "c", "subdir/d", "e")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -65,6 +79,34 @@ func TestMetadataImportGraph(t *testing.T) {
 	// Check graph topology.
 	graph, all := importGraph(initial)
 	wantGraph := `
+  a
+  b
+* c
+* e
+  errors
+* subdir/d
+  unsafe
+  b -> a
+  b -> errors
+  c -> b
+  c -> unsafe
+  e -> b
+  e -> c
+`[1:]
+
+	if graph != wantGraph {
+		t.Errorf("wrong import graph: got <<%s>>, want <<%s>>", graph, wantGraph)
+	}
+
+	cfg.Tests = true
+	initial, err = packages.Load(cfg, "c", "subdir/d", "e")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Check graph topology.
+	graph, all = importGraph(initial)
+	wantGraph = `
   a
   b
 * c
@@ -91,7 +133,7 @@ func TestMetadataImportGraph(t *testing.T) {
   subdir/d_test [subdir/d.test] -> subdir/d [subdir/d.test]
 `[1:]
 
-	if graph != wantGraph {
+	if graph != wantGraph && !usesLegacyLoader {
 		t.Errorf("wrong import graph: got <<%s>>, want <<%s>>", graph, wantGraph)
 	}
 
@@ -108,9 +150,13 @@ func TestMetadataImportGraph(t *testing.T) {
 		{"e", "main", "command", "e.go e2.go"},
 		{"errors", "errors", "package", "errors.go"},
 		{"subdir/d", "d", "package", "d.go"},
-		// {"subdir/d.test", "main", "test command", "<hideous generated file name>"},
+		{"subdir/d.test", "main", "command", "0.go"},
 		{"unsafe", "unsafe", "package", ""},
 	} {
+		if usesLegacyLoader && test.id == "subdir/d.test" {
+			// Legacy Loader does not support tests.
+			continue
+		}
 		p, ok := all[test.id]
 		if !ok {
 			t.Errorf("no package %s", test.id)
@@ -122,9 +168,6 @@ func TestMetadataImportGraph(t *testing.T) {
 
 		// kind
 		var kind string
-		if p.IsTest {
-			kind = "test "
-		}
 		if p.Name == "main" {
 			kind += "command"
 		} else {
@@ -140,13 +183,18 @@ func TestMetadataImportGraph(t *testing.T) {
 	}
 
 	// Test an ad-hoc package, analogous to "go run hello.go".
-	if initial, err := packages.Metadata(opts, "src/c/c.go"); len(initial) == 0 {
-		t.Errorf("failed to obtain metadata for ad-hoc package (err=%v)", err)
+	if initial, err := packages.Load(cfg, filepath.Join(tmp, "src/c/c.go")); len(initial) == 0 {
+		t.Errorf("failed to obtain metadata for ad-hoc package: %s", err)
 	} else {
 		got := fmt.Sprintf("%s %s", initial[0].ID, srcs(initial[0]))
-		if want := "command-line-arguments [c.go]"; got != want {
+		if want := "command-line-arguments [c.go]"; got != want && !usesLegacyLoader {
 			t.Errorf("oops: got %s, want %s", got, want)
 		}
+	}
+
+	if usesLegacyLoader {
+		// TODO(matloob): Wildcards are not yet supported.
+		return
 	}
 
 	// Wildcards
@@ -154,7 +202,7 @@ func TestMetadataImportGraph(t *testing.T) {
 	// TODO(adonovan): test "all" returns everything in the current module.
 	{
 		// "..." (subdirectory)
-		initial, err = packages.Metadata(opts, "subdir/...")
+		initial, err = packages.Load(cfg, "subdir/...")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -163,6 +211,53 @@ func TestMetadataImportGraph(t *testing.T) {
 			t.Errorf("for subdir/... wildcard, got %s, want %s", initial, want)
 		}
 	}
+}
+
+func TestOptionsDir_Go110(t *testing.T) {
+	tmp, cleanup := makeTree(t, map[string]string{
+		"src/a/a.go":   `package a; const Name = "a" `,
+		"src/a/b/b.go": `package b; const Name = "a/b"`,
+		"src/b/b.go":   `package b; const Name = "b"`,
+	})
+	defer cleanup()
+
+	for _, test := range []struct {
+		dir     string
+		pattern string
+		want    string // value of Name constant, or error
+	}{
+		{"", "a", `"a"`},
+		{"", "b", `"b"`},
+		{"", "./a", "packages not found"},
+		{"", "./b", "packages not found"},
+		{filepath.Join(tmp, "/src"), "a", `"a"`},
+		{filepath.Join(tmp, "/src"), "b", `"b"`},
+		{filepath.Join(tmp, "/src"), "./a", `"a"`},
+		{filepath.Join(tmp, "/src"), "./b", `"b"`},
+		{filepath.Join(tmp, "/src/a"), "a", `"a"`},
+		{filepath.Join(tmp, "/src/a"), "b", `"b"`},
+		{filepath.Join(tmp, "/src/a"), "./a", "packages not found"},
+		{filepath.Join(tmp, "/src/a"), "./b", `"a/b"`},
+	} {
+		cfg := &packages.Config{
+			Mode: packages.LoadSyntax, // Use LoadSyntax to ensure that files can be opened.
+			Dir:  test.dir,
+			Env:  append(os.Environ(), "GOPATH="+tmp),
+		}
+
+		initial, err := packages.Load(cfg, test.pattern)
+		var got string
+		if err != nil {
+			got = err.Error()
+		} else {
+			got = constant(initial[0], "Name").Val().String()
+		}
+		if got != test.want {
+			t.Errorf("dir %q, pattern %q: got %s, want %s",
+				test.dir, test.pattern, got, test.want)
+		}
+	}
+
 }
 
 type errCollector struct {
@@ -176,8 +271,8 @@ func (ec *errCollector) add(err error) {
 	ec.mu.Unlock()
 }
 
-func TestTypeCheckOK(t *testing.T) {
-	tmp, cleanup := enterTree(t, map[string]string{
+func TestTypeCheckOK_Go110(t *testing.T) {
+	tmp, cleanup := makeTree(t, map[string]string{
 		"src/a/a.go": `package a; import "b"; const A = "a" + b.B`,
 		"src/b/b.go": `package b; import "c"; const B = "b" + c.C`,
 		"src/c/c.go": `package c; import "d"; const C = "c" + d.D`,
@@ -185,10 +280,13 @@ func TestTypeCheckOK(t *testing.T) {
 		"src/e/e.go": `package e; const E = "e"`,
 	})
 	defer cleanup()
-	// -- tmp is now the current directory --
 
-	opts := &packages.Options{GOPATH: tmp, Error: func(error) {}}
-	initial, err := packages.TypeCheck(opts, "a", "c")
+	cfg := &packages.Config{
+		Mode:  packages.LoadSyntax,
+		Env:   append(os.Environ(), "GOPATH="+tmp),
+		Error: func(error) {},
+	}
+	initial, err := packages.Load(cfg, "a", "c")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -209,10 +307,14 @@ func TestTypeCheckOK(t *testing.T) {
 		t.Errorf("wrong import graph: got <<%s>>, want <<%s>>", graph, wantGraph)
 	}
 
+	// TODO(matloob): The go/loader based support loads everything from source
+	// because it doesn't do a build and the .a files don't exist.
+	// Can we simulate its existance?
+
 	for _, test := range []struct {
-		id        string
-		wantType  bool
-		wantFiles bool
+		id         string
+		wantType   bool
+		wantSyntax bool
 	}{
 		{"a", true, true},   // source package
 		{"b", true, true},   // source package
@@ -220,20 +322,24 @@ func TestTypeCheckOK(t *testing.T) {
 		{"d", true, false},  // export data package
 		{"e", false, false}, // no package
 	} {
+		if usesLegacyLoader && test.id == "d" || test.id == "e" {
+			// legacyLoader always does a whole-program load.
+			continue
+		}
 		p := all[test.id]
 		if p == nil {
 			t.Errorf("missing package: %s", test.id)
 			continue
 		}
-		if (p.Type != nil) != test.wantType {
+		if (p.Types != nil) != test.wantType {
 			if test.wantType {
 				t.Errorf("missing types.Package for %s", p)
 			} else {
 				t.Errorf("unexpected types.Package for %s", p)
 			}
 		}
-		if (p.Files != nil) != test.wantFiles {
-			if test.wantFiles {
+		if (p.Syntax != nil) != test.wantSyntax {
+			if test.wantSyntax {
 				t.Errorf("missing ast.Files for %s", p)
 			} else {
 				t.Errorf("unexpected ast.Files for for %s", p)
@@ -245,7 +351,7 @@ func TestTypeCheckOK(t *testing.T) {
 	}
 
 	// Check value of constant.
-	aA := all["a"].Type.Scope().Lookup("A").(*types.Const)
+	aA := constant(all["a"], "A")
 	if got, want := fmt.Sprintf("%v %v", aA, aA.Val()), `const a.A untyped string "abcde"`; got != want {
 		t.Errorf("a.A: got %s, want %s", got, want)
 	}
@@ -259,7 +365,7 @@ func TestTypeCheckError(t *testing.T) {
 	// are IllTyped. Package e is not ill-typed, because the user
 	// did not demand its type information (despite it actually
 	// containing a type error).
-	tmp, cleanup := enterTree(t, map[string]string{
+	tmp, cleanup := makeTree(t, map[string]string{
 		"src/a/a.go": `package a; import "b"; const A = "a" + b.B`,
 		"src/b/b.go": `package b; import "c"; const B = "b" + c.C`,
 		"src/c/c.go": `package c; import "d"; const C = "c" + d.D`,
@@ -267,20 +373,35 @@ func TestTypeCheckError(t *testing.T) {
 		"src/e/e.go": `package e; const E = "e" + 1`, // type error
 	})
 	defer cleanup()
-	// -- tmp is now the current directory --
 
-	opts := &packages.Options{GOPATH: tmp, Error: func(error) {}}
-	initial, err := packages.TypeCheck(opts, "a", "c")
+	cfg := &packages.Config{
+		Mode:  packages.LoadSyntax,
+		Env:   append(os.Environ(), "GOPATH="+tmp),
+		Error: func(error) {},
+	}
+	initial, err := packages.Load(cfg, "a", "c")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	all := packages.All(initial)
+	all := make(map[string]*packages.Package)
+	var visit func(p *packages.Package)
+	visit = func(p *packages.Package) {
+		if all[p.ID] == nil {
+			all[p.ID] = p
+			for _, imp := range p.Imports {
+				visit(imp)
+			}
+		}
+	}
+	for _, p := range initial {
+		visit(p)
+	}
 
 	for _, test := range []struct {
 		id           string
-		wantType     bool
-		wantFiles    bool
+		wantTypes    bool
+		wantSyntax   bool
 		wantIllTyped bool
 		wantErrs     []string
 	}{
@@ -290,20 +411,25 @@ func TestTypeCheckError(t *testing.T) {
 		{"d", false, false, true, nil},  // missing export data
 		{"e", false, false, false, nil}, // type info not requested (despite type error)
 	} {
+		if usesLegacyLoader && test.id == "c" || test.id == "d" || test.id == "e" {
+			// Behavior is different for legacy loader because it always loads wholeProgram.
+			// TODO(matloob): can we run more of this test? Can we put export data into the test GOPATH?
+			continue
+		}
 		p := all[test.id]
 		if p == nil {
 			t.Errorf("missing package: %s", test.id)
 			continue
 		}
-		if (p.Type != nil) != test.wantType {
-			if test.wantType {
+		if (p.Types != nil) != test.wantTypes {
+			if test.wantTypes {
 				t.Errorf("missing types.Package for %s", test.id)
 			} else {
 				t.Errorf("unexpected types.Package for %s", test.id)
 			}
 		}
-		if (p.Files != nil) != test.wantFiles {
-			if test.wantFiles {
+		if (p.Syntax != nil) != test.wantSyntax {
+			if test.wantSyntax {
 				t.Errorf("missing ast.Files for %s", test.id)
 			} else {
 				t.Errorf("unexpected ast.Files for for %s", test.id)
@@ -318,7 +444,7 @@ func TestTypeCheckError(t *testing.T) {
 	}
 
 	// Check value of constant.
-	aA := all["a"].Type.Scope().Lookup("A").(*types.Const)
+	aA := constant(all["a"], "A")
 	if got, want := aA.String(), `const a.A invalid type`; got != want {
 		t.Errorf("a.A: got %s, want %s", got, want)
 	}
@@ -327,16 +453,19 @@ func TestTypeCheckError(t *testing.T) {
 // This function tests use of the ParseFile hook to supply
 // alternative file contents to the parser and type-checker.
 func TestWholeProgramOverlay(t *testing.T) {
+	if usesLegacyLoader {
+		t.Skip("not yet supported in go/loader based implementation")
+	}
+
 	type M = map[string]string
 
-	tmp, cleanup := enterTree(t, M{
+	tmp, cleanup := makeTree(t, M{
 		"src/a/a.go": `package a; import "b"; const A = "a" + b.B`,
 		"src/b/b.go": `package b; import "c"; const B = "b" + c.C`,
 		"src/c/c.go": `package c; const C = "c"`,
 		"src/d/d.go": `package d; const D = "d"`,
 	})
 	defer cleanup()
-	// -- tmp is now the current directory --
 
 	for i, test := range []struct {
 		overlay  M
@@ -362,12 +491,13 @@ func TestWholeProgramOverlay(t *testing.T) {
 			}
 		}
 		var errs errCollector
-		opts := &packages.Options{
-			GOPATH:    tmp,
+		cfg := &packages.Config{
+			Mode:      packages.LoadAllSyntax,
+			Env:       append(os.Environ(), "GOPATH="+tmp),
 			Error:     errs.add,
 			ParseFile: parseFile,
 		}
-		initial, err := packages.WholeProgram(opts, "a")
+		initial, err := packages.Load(cfg, "a")
 		if err != nil {
 			t.Error(err)
 			continue
@@ -375,7 +505,7 @@ func TestWholeProgramOverlay(t *testing.T) {
 
 		// Check value of a.A.
 		a := initial[0]
-		got := a.Type.Scope().Lookup("A").(*types.Const).Val().String()
+		got := constant(a, "A").Val().String()
 		if got != test.want {
 			t.Errorf("%d. a.A: got %s, want %s", i, got, test.want)
 		}
@@ -387,7 +517,11 @@ func TestWholeProgramOverlay(t *testing.T) {
 }
 
 func TestWholeProgramImportErrors(t *testing.T) {
-	tmp, cleanup := enterTree(t, map[string]string{
+	if usesLegacyLoader {
+		t.Skip("not yet supported in go/loader based implementation")
+	}
+
+	tmp, cleanup := makeTree(t, map[string]string{
 		"src/unicycle/unicycle.go": `package unicycle; import _ "unicycle"`,
 		"src/bicycle1/bicycle1.go": `package bicycle1; import _ "bicycle2"`,
 		"src/bicycle2/bicycle2.go": `package bicycle2; import _ "bicycle1"`,
@@ -402,13 +536,16 @@ import (
 )`,
 	})
 	defer cleanup()
-	// -- tmp is now the current directory --
 
-	os.Mkdir("src/empty", 0777) // create an existing but empty package
+	os.Mkdir(filepath.Join(tmp, "src/empty"), 0777) // create an existing but empty package
 
 	var errs2 errCollector
-	opts := &packages.Options{GOPATH: tmp, Error: errs2.add}
-	initial, err := packages.WholeProgram(opts, "root")
+	cfg := &packages.Config{
+		Mode:  packages.LoadAllSyntax,
+		Env:   append(os.Environ(), "GOPATH="+tmp),
+		Error: errs2.add,
+	}
+	initial, err := packages.Load(cfg, "root")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -451,10 +588,10 @@ import (
 			t.Errorf("missing package: %s", test.id)
 			continue
 		}
-		if p.Type == nil {
+		if p.Types == nil {
 			t.Errorf("missing types.Package for %s", test.id)
 		}
-		if p.Files == nil {
+		if p.Syntax == nil {
 			t.Errorf("missing ast.Files for %s", test.id)
 		}
 		if !p.IllTyped {
@@ -481,10 +618,13 @@ func errorMessages(errors []error) []string {
 }
 
 func srcs(p *packages.Package) (basenames []string) {
-	// Ideally we would show the root-relative portion (e.g. after
-	// src/) but vgo doesn't necessarily have a src/ dir.
-	for _, src := range p.Srcs {
-		basenames = append(basenames, filepath.Base(src))
+	for i, src := range p.GoFiles {
+		if strings.Contains(src, ".cache/go-build") {
+			src = fmt.Sprintf("%d.go", i) // make cache names predictable
+		} else {
+			src = filepath.Base(src)
+		}
+		basenames = append(basenames, src)
 	}
 	return basenames
 }
@@ -557,35 +697,25 @@ func importGraph(initial []*packages.Package) (string, map[string]*packages.Pack
 
 const skipCleanup = false // for debugging; don't commit 'true'!
 
-// enterTree creates a new temporary directory containing the specified
+// makeTree creates a new temporary directory containing the specified
 // file tree, and chdirs to it. Call the cleanup function to restore the
 // cwd and delete the tree.
-func enterTree(t *testing.T, tree map[string]string) (dir string, cleanup func()) {
-	oldcwd, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
-	dir, err = ioutil.TempDir("", "")
+func makeTree(t *testing.T, tree map[string]string) (dir string, cleanup func()) {
+	dir, err := ioutil.TempDir("", "")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	cleanup = func() {
-		if err := os.Chdir(oldcwd); err != nil {
-			t.Errorf("cannot restore cwd: %v", err)
-		}
 		if skipCleanup {
 			t.Logf("Skipping cleanup of temp dir: %s", dir)
-		} else {
-			os.RemoveAll(dir) // ignore errors
+			return
 		}
-	}
-
-	if err := os.Chdir(dir); err != nil {
-		t.Fatalf("chdir: %v", err)
+		os.RemoveAll(dir) // ignore errors
 	}
 
 	for name, content := range tree {
+		name := filepath.Join(dir, name)
 		if err := os.MkdirAll(filepath.Dir(name), 0777); err != nil {
 			cleanup()
 			t.Fatal(err)
@@ -596,4 +726,8 @@ func enterTree(t *testing.T, tree map[string]string) (dir string, cleanup func()
 		}
 	}
 	return dir, cleanup
+}
+
+func constant(p *packages.Package, name string) *types.Const {
+	return p.Types.Scope().Lookup(name).(*types.Const)
 }
