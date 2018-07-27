@@ -297,7 +297,7 @@ func TestListClusterPolicies(t *testing.T) {
 	HandleListPoliciesSuccessfully(t)
 
 	pageCount := 0
-	err := clusters.ListPolicies(fake.ServiceClient(), ExpectedClusterPolicy.ClusterID, nil).EachPage(func(page pagination.Page) (bool, error) {
+	err := clusters.ListPolicies(fake.ServiceClient(), ExpectedClusterPolicy.ClusterID, clusters.ListPoliciesOpts{Name: "Test"}).EachPage(func(page pagination.Page) (bool, error) {
 		pageCount++
 		actual, err := clusters.ExtractClusterPolicies(page)
 		th.AssertNoErr(t, err)
@@ -406,4 +406,23 @@ func TestClusterCheck(t *testing.T) {
 	actionID, err := clusters.Check(fake.ServiceClient(), "edce3528-864f-41fb-8759-f4707925cc09").Extract()
 	th.AssertNoErr(t, err)
 	th.AssertEquals(t, ExpectedActionID, actionID)
+}
+
+func TestLifecycle(t *testing.T) {
+	th.SetupHTTP()
+	defer th.TeardownHTTP()
+
+	HandleLifecycleSuccessfully(t)
+
+	opts := clusters.CompleteLifecycleOpts{
+		LifecycleActionTokenID: "976528c6-dcf6-4d8d-9f4c-588f4e675f29",
+	}
+
+	res := clusters.CompleteLifecycle(fake.ServiceClient(), "edce3528-864f-41fb-8759-f4707925cc09", opts)
+	location := res.Header.Get("Location")
+	th.AssertEquals(t, "http://senlin.cloud.blizzard.net:8778/v1/actions/2a0ff107-e789-4660-a122-3816c43af703", location)
+
+	actionID, err := res.Extract()
+	th.AssertNoErr(t, err)
+	th.AssertEquals(t, "2a0ff107-e789-4660-a122-3816c43af703", actionID)
 }

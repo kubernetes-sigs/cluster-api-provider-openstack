@@ -405,7 +405,7 @@ func DetachPolicy(client *gophercloud.ServiceClient, id string, opts DetachPolic
 // ListPolicyOptsBuilder allows extensions to add additional parameters to the
 // ListPolicies request.
 type ListPoliciesOptsBuilder interface {
-	ToClusterListPoliciesQuery() (string, error)
+	ToClusterPoliciesListQuery() (string, error)
 }
 
 // ListPoliciesOpts represents options to list a cluster's policies.
@@ -426,7 +426,7 @@ func (opts ListPoliciesOpts) ToClusterPoliciesListQuery() (string, error) {
 func ListPolicies(client *gophercloud.ServiceClient, clusterID string, opts ListPoliciesOptsBuilder) pagination.Pager {
 	url := listPoliciesURL(client, clusterID)
 	if opts != nil {
-		query, err := opts.ToClusterListPoliciesQuery()
+		query, err := opts.ToClusterPoliciesListQuery()
 		if err != nil {
 			return pagination.Pager{Err: err}
 		}
@@ -489,6 +489,33 @@ func Check(client *gophercloud.ServiceClient, id string) (r ActionResult) {
 	var result *http.Response
 	result, r.Err = client.Post(actionURL(client, id), b, &r.Body, &gophercloud.RequestOpts{
 		OkCodes: []int{200, 201, 202},
+	})
+	if r.Err == nil {
+		r.Header = result.Header
+	}
+
+	return
+}
+
+// ToClusterCompleteLifecycleMap constructs a request body from CompleteLifecycleOpts.
+func (opts CompleteLifecycleOpts) ToClusterCompleteLifecycleMap() (map[string]interface{}, error) {
+	return gophercloud.BuildRequestBody(opts, "complete_lifecycle")
+}
+
+type CompleteLifecycleOpts struct {
+	LifecycleActionTokenID string `json:"lifecycle_action_token" required:"true"`
+}
+
+func CompleteLifecycle(client *gophercloud.ServiceClient, id string, opts CompleteLifecycleOpts) (r ActionResult) {
+	b, err := opts.ToClusterCompleteLifecycleMap()
+	if err != nil {
+		r.Err = err
+		return
+	}
+
+	var result *http.Response
+	result, r.Err = client.Post(actionURL(client, id), b, &r.Body, &gophercloud.RequestOpts{
+		OkCodes: []int{202},
 	})
 	if r.Err == nil {
 		r.Header = result.Header

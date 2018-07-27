@@ -189,11 +189,12 @@ func (oc *OpenstackClient) Create(cluster *clusterv1.Cluster, machine *clusterv1
 	if err != nil {
 		return err
 	}
-	configParams := &machinesetup.ConfigParams{
-		Roles:    machine.Spec.Roles,
-		Versions: machine.Spec.Versions,
+	role, ok := machine.ObjectMeta.Labels["set"]
+	if !ok {
+		glog.Errorf("Check machine role err, treat as \"node\" by default")
+		role = machinesetup.MachineRoleNode
 	}
-	startupScript, err := machineSetupConfig.GetSetupScript(configParams)
+	startupScript, err := machineSetupConfig.GetSetupScript(role)
 	if err != nil {
 		return err
 	}
@@ -415,7 +416,6 @@ func (oc *OpenstackClient) requiresUpdate(a *clusterv1.Machine, b *clusterv1.Mac
 	// Do not want status changes. Do want changes that impact machine provisioning
 	return !reflect.DeepEqual(a.Spec.ObjectMeta, b.Spec.ObjectMeta) ||
 		!reflect.DeepEqual(a.Spec.ProviderConfig, b.Spec.ProviderConfig) ||
-		!reflect.DeepEqual(a.Spec.Roles, b.Spec.Roles) ||
 		!reflect.DeepEqual(a.Spec.Versions, b.Spec.Versions) ||
 		a.ObjectMeta.Name != b.ObjectMeta.Name
 }
