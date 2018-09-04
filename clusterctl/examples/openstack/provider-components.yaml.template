@@ -44,7 +44,7 @@ spec:
             cpu: 100m
             memory: 30Mi
       - name: openstack-machine-controller
-        image: gcr.io/openstack-cluster-api/openstack-machine-controller:0.0.1
+        image: k8scloudprovider/openstack-machine-controller:0.0.1
         volumeMounts:
           - name: config
             mountPath: /etc/kubernetes
