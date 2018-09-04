@@ -15,7 +15,7 @@
 package adapter
 
 import (
-	"context"
+	"golang.org/x/net/context"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"

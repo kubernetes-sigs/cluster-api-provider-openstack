@@ -57,6 +57,7 @@ func compactionCommandFunc(cmd *cobra.Command, args []string) {
 	cancel()
 	if cerr != nil {
 		ExitWithError(ExitError, cerr)
+		return
 	}
 	fmt.Println("compacted revision", rev)
 }

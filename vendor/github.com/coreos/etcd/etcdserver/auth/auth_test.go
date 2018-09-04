@@ -15,7 +15,6 @@
 package auth
 
 import (
-	"context"
 	"reflect"
 	"testing"
 	"time"
@@ -24,6 +23,7 @@ import (
 	"github.com/coreos/etcd/etcdserver"
 	"github.com/coreos/etcd/etcdserver/etcdserverpb"
 	etcdstore "github.com/coreos/etcd/store"
+	"golang.org/x/net/context"
 )
 
 type fakeDoer struct{}

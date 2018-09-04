@@ -15,7 +15,6 @@
 package integration
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -23,6 +22,8 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+
+	"golang.org/x/net/context"
 
 	"github.com/coreos/etcd/client"
 	"github.com/coreos/etcd/integration"

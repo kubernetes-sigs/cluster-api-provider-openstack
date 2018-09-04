@@ -15,11 +15,10 @@
 package recipe
 
 import (
-	"context"
-
 	v3 "github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/coreos/etcd/mvcc/mvccpb"
+	"golang.org/x/net/context"
 )
 
 type RWMutex struct {

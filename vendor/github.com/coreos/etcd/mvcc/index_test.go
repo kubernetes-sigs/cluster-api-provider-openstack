@@ -193,7 +193,7 @@ func TestIndexRangeSince(t *testing.T) {
 	}
 }
 
-func TestIndexCompactAndKeep(t *testing.T) {
+func TestIndexCompact(t *testing.T) {
 	maxRev := int64(20)
 	tests := []struct {
 		key     []byte
@@ -215,7 +215,7 @@ func TestIndexCompactAndKeep(t *testing.T) {
 		{[]byte("foo1"), false, revision{10, 1}, revision{10, 1}, 1},
 	}
 
-	// Continuous Compact and Keep
+	// Continuous Compact
 	ti := newTreeIndex()
 	for _, tt := range tests {
 		if tt.remove {
@@ -226,10 +226,7 @@ func TestIndexCompactAndKeep(t *testing.T) {
 	}
 	for i := int64(1); i < maxRev; i++ {
 		am := ti.Compact(i)
-		keep := ti.Keep(i)
-		if !(reflect.DeepEqual(am, keep)) {
-			t.Errorf("#%d: compact keep %v != Keep keep %v", i, am, keep)
-		}
+
 		wti := &treeIndex{tree: btree.New(32)}
 		for _, tt := range tests {
 			if _, ok := am[tt.rev]; ok || tt.rev.GreaterThan(revision{main: i}) {
@@ -245,7 +242,7 @@ func TestIndexCompactAndKeep(t *testing.T) {
 		}
 	}
 
-	// Once Compact and Keep
+	// Once Compact
 	for i := int64(1); i < maxRev; i++ {
 		ti := newTreeIndex()
 		for _, tt := range tests {
@@ -256,10 +253,7 @@ func TestIndexCompactAndKeep(t *testing.T) {
 			}
 		}
 		am := ti.Compact(i)
-		keep := ti.Keep(i)
-		if !(reflect.DeepEqual(am, keep)) {
-			t.Errorf("#%d: compact keep %v != Keep keep %v", i, am, keep)
-		}
+
 		wti := &treeIndex{tree: btree.New(32)}
 		for _, tt := range tests {
 			if _, ok := am[tt.rev]; ok || tt.rev.GreaterThan(revision{main: i}) {

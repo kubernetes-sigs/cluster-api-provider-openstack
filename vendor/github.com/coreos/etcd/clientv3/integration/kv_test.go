@@ -16,7 +16,6 @@ package integration
 
 import (
 	"bytes"
-	"context"
 	"os"
 	"reflect"
 	"strings"
@@ -29,6 +28,7 @@ import (
 	"github.com/coreos/etcd/mvcc/mvccpb"
 	"github.com/coreos/etcd/pkg/testutil"
 
+	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 )
@@ -453,7 +453,7 @@ func TestKVGetErrConnClosed(t *testing.T) {
 	clus.TakeClient(0)
 
 	select {
-	case <-time.After(integration.RequestWaitTimeout):
+	case <-time.After(3 * time.Second):
 		t.Fatal("kv.Get took too long")
 	case <-donec:
 	}
@@ -480,7 +480,7 @@ func TestKVNewAfterClose(t *testing.T) {
 		close(donec)
 	}()
 	select {
-	case <-time.After(integration.RequestWaitTimeout):
+	case <-time.After(3 * time.Second):
 		t.Fatal("kv.Get took too long")
 	case <-donec:
 	}

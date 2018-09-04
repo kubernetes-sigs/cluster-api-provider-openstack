@@ -15,13 +15,14 @@
 package client
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"net/url"
 	"reflect"
 	"testing"
+
+	"golang.org/x/net/context"
 
 	"github.com/coreos/etcd/pkg/types"
 )

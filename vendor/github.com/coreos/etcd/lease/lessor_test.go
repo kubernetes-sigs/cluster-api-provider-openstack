@@ -49,10 +49,6 @@ func TestLessorGrant(t *testing.T) {
 	if err != nil {
 		t.Fatalf("could not grant lease 1 (%v)", err)
 	}
-	if l.ttl != minLeaseTTL {
-		t.Fatalf("ttl = %v, expect minLeaseTTL %v", l.ttl, minLeaseTTL)
-	}
-
 	gl := le.Lookup(l.ID)
 
 	if !reflect.DeepEqual(gl, l) {
@@ -74,17 +70,6 @@ func TestLessorGrant(t *testing.T) {
 	}
 	if nl.ID == l.ID {
 		t.Errorf("new lease.id = %x, want != %x", nl.ID, l.ID)
-	}
-
-	lss := []*Lease{gl, nl}
-	leases := le.Leases()
-	for i := range lss {
-		if lss[i].ID != leases[i].ID {
-			t.Fatalf("lease ID expected %d, got %d", lss[i].ID, leases[i].ID)
-		}
-		if lss[i].ttl != leases[i].ttl {
-			t.Fatalf("ttl expected %d, got %d", lss[i].ttl, leases[i].ttl)
-		}
 	}
 
 	be.BatchTx().Lock()
@@ -183,7 +168,7 @@ func TestLessorRevoke(t *testing.T) {
 	}
 
 	wdeleted := []string{"bar_", "foo_"}
-	sort.Strings(fd.deleted)
+	sort.Sort(sort.StringSlice(fd.deleted))
 	if !reflect.DeepEqual(fd.deleted, wdeleted) {
 		t.Errorf("deleted= %v, want %v", fd.deleted, wdeleted)
 	}
@@ -448,20 +433,6 @@ func TestLessorExpireAndDemote(t *testing.T) {
 	case <-donec:
 	case <-time.After(10 * time.Second):
 		t.Fatalf("renew has not returned after lessor demotion")
-	}
-}
-
-func TestLessorMaxTTL(t *testing.T) {
-	dir, be := NewTestBackend(t)
-	defer os.RemoveAll(dir)
-	defer be.Close()
-
-	le := newLessor(be, minLeaseTTL)
-	defer le.Stop()
-
-	_, err := le.Grant(1, MaxLeaseTTL+1)
-	if err != ErrLeaseTTLTooLarge {
-		t.Fatalf("grant unexpectedly succeeded")
 	}
 }
 

@@ -38,6 +38,7 @@ const (
 )
 
 type Stats struct {
+
 	// Number of get requests
 
 	GetSuccess uint64 `json:"getsSuccess"`

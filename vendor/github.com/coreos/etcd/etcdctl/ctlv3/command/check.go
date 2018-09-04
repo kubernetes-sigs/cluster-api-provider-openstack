@@ -112,10 +112,9 @@ func newCheckPerfCommand(cmd *cobra.Command, args []string) {
 	requests := make(chan v3.Op, cfg.clients)
 	limit := rate.NewLimiter(rate.Limit(cfg.limit), 1)
 
-	cc := clientConfigFromCmd(cmd)
-	clients := make([]*v3.Client, cfg.clients)
+	var clients []*v3.Client
 	for i := 0; i < cfg.clients; i++ {
-		clients[i] = cc.mustClient()
+		clients = append(clients, mustClientFromCmd(cmd))
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(cfg.duration)*time.Second)

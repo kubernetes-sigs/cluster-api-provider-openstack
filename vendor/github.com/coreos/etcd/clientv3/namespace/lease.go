@@ -16,9 +16,10 @@ package namespace
 
 import (
 	"bytes"
-	"context"
 
 	"github.com/coreos/etcd/clientv3"
+
+	"golang.org/x/net/context"
 )
 
 type leasePrefix struct {

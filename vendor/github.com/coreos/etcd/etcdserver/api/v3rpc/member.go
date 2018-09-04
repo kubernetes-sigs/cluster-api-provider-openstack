@@ -15,7 +15,6 @@
 package v3rpc
 
 import (
-	"context"
 	"time"
 
 	"github.com/coreos/etcd/etcdserver"
@@ -24,17 +23,20 @@ import (
 	pb "github.com/coreos/etcd/etcdserver/etcdserverpb"
 	"github.com/coreos/etcd/etcdserver/membership"
 	"github.com/coreos/etcd/pkg/types"
+	"golang.org/x/net/context"
 )
 
 type ClusterServer struct {
-	cluster api.Cluster
-	server  etcdserver.ServerV3
+	cluster   api.Cluster
+	server    etcdserver.Server
+	raftTimer etcdserver.RaftTimer
 }
 
-func NewClusterServer(s etcdserver.ServerV3) *ClusterServer {
+func NewClusterServer(s *etcdserver.EtcdServer) *ClusterServer {
 	return &ClusterServer{
-		cluster: s.Cluster(),
-		server:  s,
+		cluster:   s.Cluster(),
+		server:    s,
+		raftTimer: s,
 	}
 }
 
@@ -84,7 +86,7 @@ func (cs *ClusterServer) MemberList(ctx context.Context, r *pb.MemberListRequest
 }
 
 func (cs *ClusterServer) header() *pb.ResponseHeader {
-	return &pb.ResponseHeader{ClusterId: uint64(cs.cluster.ID()), MemberId: uint64(cs.server.ID()), RaftTerm: cs.server.Term()}
+	return &pb.ResponseHeader{ClusterId: uint64(cs.cluster.ID()), MemberId: uint64(cs.server.ID()), RaftTerm: cs.raftTimer.Term()}
 }
 
 func membersToProtoMembers(membs []*membership.Member) []*pb.Member {

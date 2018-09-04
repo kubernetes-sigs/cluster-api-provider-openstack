@@ -16,7 +16,6 @@ package membership
 
 import (
 	"bytes"
-	"context"
 	"crypto/sha1"
 	"encoding/binary"
 	"encoding/json"
@@ -27,6 +26,8 @@ import (
 	"sync"
 	"time"
 
+	"golang.org/x/net/context"
+
 	"github.com/coreos/etcd/mvcc/backend"
 	"github.com/coreos/etcd/pkg/netutil"
 	"github.com/coreos/etcd/pkg/types"
@@ -34,7 +35,6 @@ import (
 	"github.com/coreos/etcd/raft/raftpb"
 	"github.com/coreos/etcd/store"
 	"github.com/coreos/etcd/version"
-
 	"github.com/coreos/go-semver/semver"
 )
 
@@ -490,8 +490,8 @@ func ValidateClusterAndAssignIDs(local *RaftCluster, existing *RaftCluster) erro
 	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
 	defer cancel()
 	for i := range ems {
-		if ok, err := netutil.URLStringsEqual(ctx, ems[i].PeerURLs, lms[i].PeerURLs); !ok {
-			return fmt.Errorf("unmatched member while checking PeerURLs (%v)", err)
+		if !netutil.URLStringsEqual(ctx, ems[i].PeerURLs, lms[i].PeerURLs) {
+			return fmt.Errorf("unmatched member while checking PeerURLs")
 		}
 		lms[i].ID = ems[i].ID
 	}

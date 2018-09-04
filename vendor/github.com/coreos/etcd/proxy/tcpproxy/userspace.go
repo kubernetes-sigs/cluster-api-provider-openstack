@@ -112,7 +112,7 @@ func (tp *TCPProxy) pick() *remote {
 		case r.srv.Priority < bestPr:
 			bestPr = r.srv.Priority
 			w = 0
-			weighted = nil
+			weighted, unweighted = nil, nil
 			unweighted = []*remote{r}
 			fallthrough
 		case r.srv.Priority == bestPr:

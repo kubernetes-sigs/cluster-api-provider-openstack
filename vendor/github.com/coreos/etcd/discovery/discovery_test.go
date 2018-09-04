@@ -15,7 +15,6 @@
 package discovery
 
 import (
-	"context"
 	"errors"
 	"math"
 	"math/rand"
@@ -26,9 +25,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/coreos/etcd/client"
-
 	"github.com/jonboulle/clockwork"
+	"golang.org/x/net/context"
+
+	"github.com/coreos/etcd/client"
 )
 
 const (

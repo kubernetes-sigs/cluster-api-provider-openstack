@@ -15,7 +15,6 @@
 package integration
 
 import (
-	"context"
 	"fmt"
 	"math/rand"
 	"reflect"
@@ -30,6 +29,7 @@ import (
 	mvccpb "github.com/coreos/etcd/mvcc/mvccpb"
 	"github.com/coreos/etcd/pkg/testutil"
 
+	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
@@ -516,9 +516,6 @@ func TestWatchCompactRevision(t *testing.T) {
 	if wresp.Err() != rpctypes.ErrCompacted {
 		t.Fatalf("wresp.Err() expected %v, but got %v", rpctypes.ErrCompacted, wresp.Err())
 	}
-	if !wresp.Canceled {
-		t.Fatalf("wresp.Canceled expected true, got %+v", wresp)
-	}
 
 	// ensure the channel is closed
 	if wresp, ok = <-wch; ok {
@@ -678,7 +675,7 @@ func TestWatchErrConnClosed(t *testing.T) {
 	clus.TakeClient(0)
 
 	select {
-	case <-time.After(integration.RequestWaitTimeout):
+	case <-time.After(3 * time.Second):
 		t.Fatal("wc.Watch took too long")
 	case <-donec:
 	}
@@ -705,7 +702,7 @@ func TestWatchAfterClose(t *testing.T) {
 		close(donec)
 	}()
 	select {
-	case <-time.After(integration.RequestWaitTimeout):
+	case <-time.After(3 * time.Second):
 		t.Fatal("wc.Watch took too long")
 	case <-donec:
 	}
@@ -751,7 +748,7 @@ func TestWatchWithRequireLeader(t *testing.T) {
 		if resp.Err() != rpctypes.ErrNoLeader {
 			t.Fatalf("expected %v watch response error, got %+v", rpctypes.ErrNoLeader, resp)
 		}
-	case <-time.After(integration.RequestWaitTimeout):
+	case <-time.After(3 * time.Second):
 		t.Fatal("watch without leader took too long to close")
 	}
 
@@ -760,7 +757,7 @@ func TestWatchWithRequireLeader(t *testing.T) {
 		if ok {
 			t.Fatalf("expected closed channel, got response %v", resp)
 		}
-	case <-time.After(integration.RequestWaitTimeout):
+	case <-time.After(3 * time.Second):
 		t.Fatal("waited too long for channel to close")
 	}
 

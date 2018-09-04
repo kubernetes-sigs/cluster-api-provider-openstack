@@ -111,7 +111,6 @@ func (w *watcher) send(wr clientv3.WatchResponse) {
 		Header:          &wr.Header,
 		Created:         wr.Created,
 		CompactRevision: wr.CompactRevision,
-		Canceled:        wr.Canceled,
 		WatchId:         w.id,
 		Events:          events,
 	})

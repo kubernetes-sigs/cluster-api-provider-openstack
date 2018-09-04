@@ -27,9 +27,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var epClusterEndpoints bool
-var epHashKVRev int64
-
 // NewEndpointCommand returns the cobra command for "endpoint".
 func NewEndpointCommand() *cobra.Command {
 	ec := &cobra.Command{
@@ -37,10 +34,8 @@ func NewEndpointCommand() *cobra.Command {
 		Short: "Endpoint related commands",
 	}
 
-	ec.PersistentFlags().BoolVar(&epClusterEndpoints, "cluster", false, "use all endpoints from the cluster member list")
 	ec.AddCommand(newEpHealthCommand())
 	ec.AddCommand(newEpStatusCommand())
-	ec.AddCommand(newEpHashKVCommand())
 
 	return ec
 }
@@ -66,28 +61,20 @@ The items in the lists are endpoint, ID, version, db size, is leader, raft term,
 	}
 }
 
-func newEpHashKVCommand() *cobra.Command {
-	hc := &cobra.Command{
-		Use:   "hashkv",
-		Short: "Prints the KV history hash for each endpoint in --endpoints",
-		Run:   epHashKVCommandFunc,
-	}
-	hc.PersistentFlags().Int64Var(&epHashKVRev, "rev", 0, "maximum revision to hash (default: all revisions)")
-	return hc
-}
-
 // epHealthCommandFunc executes the "endpoint-health" command.
 func epHealthCommandFunc(cmd *cobra.Command, args []string) {
 	flags.SetPflagsFromEnv("ETCDCTL", cmd.InheritedFlags())
+	endpoints, err := cmd.Flags().GetStringSlice("endpoints")
+	if err != nil {
+		ExitWithError(ExitError, err)
+	}
 
 	sec := secureCfgFromCmd(cmd)
 	dt := dialTimeoutFromCmd(cmd)
-	ka := keepAliveTimeFromCmd(cmd)
-	kat := keepAliveTimeoutFromCmd(cmd)
 	auth := authCfgFromCmd(cmd)
 	cfgs := []*v3.Config{}
-	for _, ep := range endpointsFromCluster(cmd) {
-		cfg, err := newClientCfg([]string{ep}, dt, ka, kat, sec, auth)
+	for _, ep := range endpoints {
+		cfg, err := newClientCfg([]string{ep}, dt, sec, auth)
 		if err != nil {
 			ExitWithError(ExitBadArgs, err)
 		}
@@ -146,7 +133,7 @@ func epStatusCommandFunc(cmd *cobra.Command, args []string) {
 
 	statusList := []epStatus{}
 	var err error
-	for _, ep := range endpointsFromCluster(cmd) {
+	for _, ep := range c.Endpoints() {
 		ctx, cancel := commandCtx(cmd)
 		resp, serr := c.Status(ctx, ep)
 		cancel()
@@ -163,79 +150,4 @@ func epStatusCommandFunc(cmd *cobra.Command, args []string) {
 	if err != nil {
 		os.Exit(ExitError)
 	}
-}
-
-type epHashKV struct {
-	Ep   string             `json:"Endpoint"`
-	Resp *v3.HashKVResponse `json:"HashKV"`
-}
-
-func epHashKVCommandFunc(cmd *cobra.Command, args []string) {
-	c := mustClientFromCmd(cmd)
-
-	hashList := []epHashKV{}
-	var err error
-	for _, ep := range endpointsFromCluster(cmd) {
-		ctx, cancel := commandCtx(cmd)
-		resp, serr := c.HashKV(ctx, ep, epHashKVRev)
-		cancel()
-		if serr != nil {
-			err = serr
-			fmt.Fprintf(os.Stderr, "Failed to get the hash of endpoint %s (%v)\n", ep, serr)
-			continue
-		}
-		hashList = append(hashList, epHashKV{Ep: ep, Resp: resp})
-	}
-
-	display.EndpointHashKV(hashList)
-
-	if err != nil {
-		ExitWithError(ExitError, err)
-	}
-}
-
-func endpointsFromCluster(cmd *cobra.Command) []string {
-	if !epClusterEndpoints {
-		endpoints, err := cmd.Flags().GetStringSlice("endpoints")
-		if err != nil {
-			ExitWithError(ExitError, err)
-		}
-		return endpoints
-	}
-
-	sec := secureCfgFromCmd(cmd)
-	dt := dialTimeoutFromCmd(cmd)
-	ka := keepAliveTimeFromCmd(cmd)
-	kat := keepAliveTimeoutFromCmd(cmd)
-	eps, err := endpointsFromCmd(cmd)
-	if err != nil {
-		ExitWithError(ExitError, err)
-	}
-	// exclude auth for not asking needless password (MemberList() doesn't need authentication)
-
-	cfg, err := newClientCfg(eps, dt, ka, kat, sec, nil)
-	if err != nil {
-		ExitWithError(ExitError, err)
-	}
-	c, err := v3.New(*cfg)
-	if err != nil {
-		ExitWithError(ExitError, err)
-	}
-
-	ctx, cancel := commandCtx(cmd)
-	defer func() {
-		c.Close()
-		cancel()
-	}()
-	membs, err := c.MemberList(ctx)
-	if err != nil {
-		err = fmt.Errorf("failed to fetch endpoints from etcd cluster member list: %v", err)
-		ExitWithError(ExitError, err)
-	}
-
-	ret := []string{}
-	for _, m := range membs.Members {
-		ret = append(ret, m.ClientURLs...)
-	}
-	return ret
 }

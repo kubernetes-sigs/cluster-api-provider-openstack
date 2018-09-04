@@ -15,7 +15,6 @@
 package v2http
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -38,8 +37,8 @@ import (
 	"github.com/coreos/etcd/etcdserver/stats"
 	"github.com/coreos/etcd/pkg/types"
 	"github.com/coreos/etcd/store"
-
 	"github.com/jonboulle/clockwork"
+	"golang.org/x/net/context"
 )
 
 const (
@@ -51,21 +50,22 @@ const (
 )
 
 // NewClientHandler generates a muxed http.Handler with the given parameters to serve etcd client requests.
-func NewClientHandler(server etcdserver.ServerPeer, timeout time.Duration) http.Handler {
+func NewClientHandler(server *etcdserver.EtcdServer, timeout time.Duration) http.Handler {
 	mux := http.NewServeMux()
 	etcdhttp.HandleBasic(mux, server)
 	handleV2(mux, server, timeout)
 	return requestLogger(mux)
 }
 
-func handleV2(mux *http.ServeMux, server etcdserver.ServerV2, timeout time.Duration) {
+func handleV2(mux *http.ServeMux, server *etcdserver.EtcdServer, timeout time.Duration) {
 	sec := auth.NewStore(server, timeout)
 	kh := &keysHandler{
 		sec:                   sec,
 		server:                server,
 		cluster:               server.Cluster(),
+		timer:                 server,
 		timeout:               timeout,
-		clientCertAuthEnabled: server.ClientCertAuthEnabled(),
+		clientCertAuthEnabled: server.Cfg.ClientCertAuthEnabled,
 	}
 
 	sh := &statsHandler{
@@ -78,7 +78,7 @@ func handleV2(mux *http.ServeMux, server etcdserver.ServerV2, timeout time.Durat
 		cluster: server.Cluster(),
 		timeout: timeout,
 		clock:   clockwork.NewRealClock(),
-		clientCertAuthEnabled: server.ClientCertAuthEnabled(),
+		clientCertAuthEnabled: server.Cfg.ClientCertAuthEnabled,
 	}
 
 	mah := &machinesHandler{cluster: server.Cluster()}
@@ -86,7 +86,7 @@ func handleV2(mux *http.ServeMux, server etcdserver.ServerV2, timeout time.Durat
 	sech := &authHandler{
 		sec:                   sec,
 		cluster:               server.Cluster(),
-		clientCertAuthEnabled: server.ClientCertAuthEnabled(),
+		clientCertAuthEnabled: server.Cfg.ClientCertAuthEnabled,
 	}
 	mux.HandleFunc("/", http.NotFound)
 	mux.Handle(keysPrefix, kh)
@@ -102,8 +102,9 @@ func handleV2(mux *http.ServeMux, server etcdserver.ServerV2, timeout time.Durat
 
 type keysHandler struct {
 	sec                   auth.Store
-	server                etcdserver.ServerV2
+	server                etcdserver.Server
 	cluster               api.Cluster
+	timer                 etcdserver.RaftTimer
 	timeout               time.Duration
 	clientCertAuthEnabled bool
 }
@@ -141,7 +142,7 @@ func (h *keysHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	switch {
 	case resp.Event != nil:
-		if err := writeKeyEvent(w, resp, noValueOnSuccess); err != nil {
+		if err := writeKeyEvent(w, resp.Event, noValueOnSuccess, h.timer); err != nil {
 			// Should never be reached
 			plog.Errorf("error writing event (%v)", err)
 		}
@@ -149,7 +150,7 @@ func (h *keysHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case resp.Watcher != nil:
 		ctx, cancel := context.WithTimeout(context.Background(), defaultWatchTimeout)
 		defer cancel()
-		handleKeyWatch(ctx, w, resp, rr.Stream)
+		handleKeyWatch(ctx, w, resp.Watcher, rr.Stream, h.timer)
 	default:
 		writeKeyError(w, errors.New("received response with no Event/Watcher!"))
 	}
@@ -169,7 +170,7 @@ func (h *machinesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 type membersHandler struct {
 	sec                   auth.Store
-	server                etcdserver.ServerV2
+	server                etcdserver.Server
 	cluster               api.Cluster
 	timeout               time.Duration
 	clock                 clockwork.Clock
@@ -317,7 +318,7 @@ func (h *statsHandler) serveLeader(w http.ResponseWriter, r *http.Request) {
 // a server Request, performing validation of supplied fields as appropriate.
 // If any validation fails, an empty Request and non-nil error is returned.
 func parseKeyRequest(r *http.Request, clock clockwork.Clock) (etcdserverpb.Request, bool, error) {
-	var noValueOnSuccess bool
+	noValueOnSuccess := false
 	emptyReq := etcdserverpb.Request{}
 
 	err := r.ParseForm()
@@ -502,15 +503,14 @@ func parseKeyRequest(r *http.Request, clock clockwork.Clock) (etcdserverpb.Reque
 // writeKeyEvent trims the prefix of key path in a single Event under
 // StoreKeysPrefix, serializes it and writes the resulting JSON to the given
 // ResponseWriter, along with the appropriate headers.
-func writeKeyEvent(w http.ResponseWriter, resp etcdserver.Response, noValueOnSuccess bool) error {
-	ev := resp.Event
+func writeKeyEvent(w http.ResponseWriter, ev *store.Event, noValueOnSuccess bool, rt etcdserver.RaftTimer) error {
 	if ev == nil {
 		return errors.New("cannot write empty Event!")
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("X-Etcd-Index", fmt.Sprint(ev.EtcdIndex))
-	w.Header().Set("X-Raft-Index", fmt.Sprint(resp.Index))
-	w.Header().Set("X-Raft-Term", fmt.Sprint(resp.Term))
+	w.Header().Set("X-Raft-Index", fmt.Sprint(rt.Index()))
+	w.Header().Set("X-Raft-Term", fmt.Sprint(rt.Term()))
 
 	if ev.IsCreated() {
 		w.WriteHeader(http.StatusCreated)
@@ -552,8 +552,7 @@ func writeKeyError(w http.ResponseWriter, err error) {
 	}
 }
 
-func handleKeyWatch(ctx context.Context, w http.ResponseWriter, resp etcdserver.Response, stream bool) {
-	wa := resp.Watcher
+func handleKeyWatch(ctx context.Context, w http.ResponseWriter, wa store.Watcher, stream bool, rt etcdserver.RaftTimer) {
 	defer wa.Remove()
 	ech := wa.EventChan()
 	var nch <-chan bool
@@ -563,8 +562,8 @@ func handleKeyWatch(ctx context.Context, w http.ResponseWriter, resp etcdserver.
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("X-Etcd-Index", fmt.Sprint(wa.StartIndex()))
-	w.Header().Set("X-Raft-Index", fmt.Sprint(resp.Index))
-	w.Header().Set("X-Raft-Term", fmt.Sprint(resp.Term))
+	w.Header().Set("X-Raft-Index", fmt.Sprint(rt.Index()))
+	w.Header().Set("X-Raft-Term", fmt.Sprint(rt.Term()))
 	w.WriteHeader(http.StatusOK)
 
 	// Ensure headers are flushed early, in case of long polling
