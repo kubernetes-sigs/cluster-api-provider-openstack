@@ -27,7 +27,7 @@ VERSION ?= $(shell git describe --exact-match 2> /dev/null || \
 GOFLAGS   :=
 TAGS      :=
 LDFLAGS   := "-w -s -X 'main.version=${VERSION}'"
-REGISTRY ?= k8sclusterprovider
+REGISTRY ?= k8scloudprovider
 
 ifneq ("$(DEST)", "$(PWD)")
     $(error Please run 'make' from $(DEST). Current directory is $(PWD))
