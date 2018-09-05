@@ -15,7 +15,6 @@
 package rafthttp
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -25,8 +24,6 @@ import (
 	"sync"
 	"testing"
 	"time"
-
-	"golang.org/x/time/rate"
 
 	"github.com/coreos/etcd/etcdserver/stats"
 	"github.com/coreos/etcd/pkg/testutil"
@@ -116,7 +113,6 @@ func TestStreamReaderDialRequest(t *testing.T) {
 			peerID: types.ID(2),
 			tr:     &Transport{streamRt: tr, ClusterID: types.ID(1), ID: types.ID(1)},
 			picker: mustNewURLPicker(t, []string{"http://localhost:2380"}),
-			ctx:    context.Background(),
 		}
 		sr.dial(tt)
 
@@ -171,7 +167,6 @@ func TestStreamReaderDialResult(t *testing.T) {
 			tr:     &Transport{streamRt: tr, ClusterID: types.ID(1)},
 			picker: mustNewURLPicker(t, []string{"http://localhost:2380"}),
 			errorc: make(chan error, 1),
-			ctx:    context.Background(),
 		}
 
 		_, err := sr.dial(streamTypeMessage)
@@ -197,7 +192,6 @@ func TestStreamReaderStopOnDial(t *testing.T) {
 		errorc: make(chan error, 1),
 		typ:    streamTypeMessage,
 		status: newPeerStatus(types.ID(2)),
-		rl:     rate.NewLimiter(rate.Every(100*time.Millisecond), 1),
 	}
 	tr.onResp = func() {
 		// stop() waits for the run() goroutine to exit, but that exit
@@ -252,7 +246,6 @@ func TestStreamReaderDialDetectUnsupport(t *testing.T) {
 			peerID: types.ID(2),
 			tr:     &Transport{streamRt: tr, ClusterID: types.ID(1)},
 			picker: mustNewURLPicker(t, []string{"http://localhost:2380"}),
-			ctx:    context.Background(),
 		}
 
 		_, err := sr.dial(typ)
@@ -318,7 +311,6 @@ func TestStream(t *testing.T) {
 			status: newPeerStatus(types.ID(2)),
 			recvc:  recvc,
 			propc:  propc,
-			rl:     rate.NewLimiter(rate.Every(100*time.Millisecond), 1),
 		}
 		sr.start()
 

@@ -15,7 +15,7 @@
 package grpcproxy
 
 import (
-	"context"
+	"golang.org/x/net/context"
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/etcdserver/api/v3election/v3electionpb"

@@ -16,7 +16,6 @@ package auth
 
 import (
 	"bytes"
-	"context"
 	"encoding/binary"
 	"errors"
 	"sort"
@@ -27,9 +26,9 @@ import (
 	"github.com/coreos/etcd/auth/authpb"
 	pb "github.com/coreos/etcd/etcdserver/etcdserverpb"
 	"github.com/coreos/etcd/mvcc/backend"
-
 	"github.com/coreos/pkg/capnslog"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/net/context"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
@@ -73,9 +72,6 @@ const (
 	rootUser = "root"
 	rootRole = "root"
 
-	tokenTypeSimple = "simple"
-	tokenTypeJWT    = "jwt"
-
 	revBytesLen = 8
 )
 
@@ -83,12 +79,6 @@ type AuthInfo struct {
 	Username string
 	Revision uint64
 }
-
-// AuthenticateParamIndex is used for a key of context in the parameters of Authenticate()
-type AuthenticateParamIndex struct{}
-
-// AuthenticateParamSimpleTokenPrefix is used for a key of context in the parameters of Authenticate()
-type AuthenticateParamSimpleTokenPrefix struct{}
 
 type AuthStore interface {
 	// AuthEnable turns on the authentication feature
@@ -172,12 +162,6 @@ type AuthStore interface {
 
 	// AuthInfoFromTLS gets AuthInfo from TLS info of gRPC's context
 	AuthInfoFromTLS(ctx context.Context) *AuthInfo
-
-	// WithRoot generates and installs a token that can be used as a root credential
-	WithRoot(ctx context.Context) context.Context
-
-	// HasRole checks that user has role
-	HasRole(user, role string) bool
 }
 
 type TokenProvider interface {
@@ -461,7 +445,7 @@ func (as *authStore) UserGrantRole(r *pb.AuthUserGrantRoleRequest) (*pb.AuthUser
 	}
 
 	user.Roles = append(user.Roles, r.Role)
-	sort.Strings(user.Roles)
+	sort.Sort(sort.StringSlice(user.Roles))
 
 	putUser(tx, user)
 
@@ -476,14 +460,14 @@ func (as *authStore) UserGrantRole(r *pb.AuthUserGrantRoleRequest) (*pb.AuthUser
 func (as *authStore) UserGet(r *pb.AuthUserGetRequest) (*pb.AuthUserGetResponse, error) {
 	tx := as.be.BatchTx()
 	tx.Lock()
-	user := getUser(tx, r.Name)
-	tx.Unlock()
+	defer tx.Unlock()
 
+	var resp pb.AuthUserGetResponse
+
+	user := getUser(tx, r.Name)
 	if user == nil {
 		return nil, ErrUserNotFound
 	}
-
-	var resp pb.AuthUserGetResponse
 	resp.Roles = append(resp.Roles, user.Roles...)
 	return &resp, nil
 }
@@ -491,14 +475,17 @@ func (as *authStore) UserGet(r *pb.AuthUserGetRequest) (*pb.AuthUserGetResponse,
 func (as *authStore) UserList(r *pb.AuthUserListRequest) (*pb.AuthUserListResponse, error) {
 	tx := as.be.BatchTx()
 	tx.Lock()
-	users := getAllUsers(tx)
-	tx.Unlock()
+	defer tx.Unlock()
 
-	resp := &pb.AuthUserListResponse{Users: make([]string, len(users))}
-	for i := range users {
-		resp.Users[i] = string(users[i].Name)
+	var resp pb.AuthUserListResponse
+
+	users := getAllUsers(tx)
+
+	for _, u := range users {
+		resp.Users = append(resp.Users, string(u.Name))
 	}
-	return resp, nil
+
+	return &resp, nil
 }
 
 func (as *authStore) UserRevokeRole(r *pb.AuthUserRevokeRoleRequest) (*pb.AuthUserRevokeRoleResponse, error) {
@@ -559,14 +546,17 @@ func (as *authStore) RoleGet(r *pb.AuthRoleGetRequest) (*pb.AuthRoleGetResponse,
 func (as *authStore) RoleList(r *pb.AuthRoleListRequest) (*pb.AuthRoleListResponse, error) {
 	tx := as.be.BatchTx()
 	tx.Lock()
-	roles := getAllRoles(tx)
-	tx.Unlock()
+	defer tx.Unlock()
 
-	resp := &pb.AuthRoleListResponse{Roles: make([]string, len(roles))}
-	for i := range roles {
-		resp.Roles[i] = string(roles[i].Name)
+	var resp pb.AuthRoleListResponse
+
+	roles := getAllRoles(tx)
+
+	for _, r := range roles {
+		resp.Roles = append(resp.Roles, string(r.Name))
 	}
-	return resp, nil
+
+	return &resp, nil
 }
 
 func (as *authStore) RoleRevokePermission(r *pb.AuthRoleRevokePermissionRequest) (*pb.AuthRoleRevokePermissionResponse, error) {
@@ -792,9 +782,9 @@ func (as *authStore) IsAdminPermitted(authInfo *AuthInfo) error {
 
 	tx := as.be.BatchTx()
 	tx.Lock()
-	u := getUser(tx, authInfo.Username)
-	tx.Unlock()
+	defer tx.Unlock()
 
+	u := getUser(tx, authInfo.Username)
 	if u == nil {
 		return ErrUserNotFound
 	}
@@ -826,15 +816,18 @@ func getAllUsers(tx backend.BatchTx) []*authpb.User {
 		return nil
 	}
 
-	users := make([]*authpb.User, len(vs))
-	for i := range vs {
+	var users []*authpb.User
+
+	for _, v := range vs {
 		user := &authpb.User{}
-		err := user.Unmarshal(vs[i])
+		err := user.Unmarshal(v)
 		if err != nil {
 			plog.Panicf("failed to unmarshal user struct: %s", err)
 		}
-		users[i] = user
+
+		users = append(users, user)
 	}
+
 	return users
 }
 
@@ -870,15 +863,18 @@ func getAllRoles(tx backend.BatchTx) []*authpb.Role {
 		return nil
 	}
 
-	roles := make([]*authpb.Role, len(vs))
-	for i := range vs {
+	var roles []*authpb.Role
+
+	for _, v := range vs {
 		role := &authpb.Role{}
-		err := role.Unmarshal(vs[i])
+		err := role.Unmarshal(v)
 		if err != nil {
 			plog.Panicf("failed to unmarshal role struct: %s", err)
 		}
-		roles[i] = role
+
+		roles = append(roles, role)
 	}
+
 	return roles
 }
 
@@ -940,9 +936,12 @@ func NewAuthStore(be backend.Backend, tp TokenProvider) *authStore {
 }
 
 func hasRootRole(u *authpb.User) bool {
-	// u.Roles is sorted in UserGrantRole(), so we can use binary search.
-	idx := sort.SearchStrings(u.Roles, rootRole)
-	return idx != len(u.Roles) && u.Roles[idx] == rootRole
+	for _, r := range u.Roles {
+		if r == rootRole {
+			return true
+		}
+	}
+	return false
 }
 
 func (as *authStore) commitRevision(tx backend.BatchTx) {
@@ -998,12 +997,8 @@ func (as *authStore) AuthInfoFromCtx(ctx context.Context) (*AuthInfo, error) {
 		return nil, nil
 	}
 
-	//TODO(mitake|hexfusion) review unifying key names
-	ts, ok := md["token"]
-	if !ok {
-		ts, ok = md["authorization"]
-	}
-	if !ok {
+	ts, tok := md["token"]
+	if !tok {
 		return nil, nil
 	}
 
@@ -1013,7 +1008,6 @@ func (as *authStore) AuthInfoFromCtx(ctx context.Context) (*AuthInfo, error) {
 		plog.Warningf("invalid auth token: %s", token)
 		return nil, ErrInvalidAuthToken
 	}
-
 	return authInfo, nil
 }
 
@@ -1053,71 +1047,13 @@ func NewTokenProvider(tokenOpts string, indexWaiter func(uint64) <-chan struct{}
 	}
 
 	switch tokenType {
-	case tokenTypeSimple:
+	case "simple":
 		plog.Warningf("simple token is not cryptographically signed")
 		return newTokenProviderSimple(indexWaiter), nil
-
-	case tokenTypeJWT:
+	case "jwt":
 		return newTokenProviderJWT(typeSpecificOpts)
-
-	case "":
-		return newTokenProviderNop()
 	default:
 		plog.Errorf("unknown token type: %s", tokenType)
 		return nil, ErrInvalidAuthOpts
 	}
-}
-
-func (as *authStore) WithRoot(ctx context.Context) context.Context {
-	if !as.isAuthEnabled() {
-		return ctx
-	}
-
-	var ctxForAssign context.Context
-	if ts, ok := as.tokenProvider.(*tokenSimple); ok && ts != nil {
-		ctx1 := context.WithValue(ctx, AuthenticateParamIndex{}, uint64(0))
-		prefix, err := ts.genTokenPrefix()
-		if err != nil {
-			plog.Errorf("failed to generate prefix of internally used token")
-			return ctx
-		}
-		ctxForAssign = context.WithValue(ctx1, AuthenticateParamSimpleTokenPrefix{}, prefix)
-	} else {
-		ctxForAssign = ctx
-	}
-
-	token, err := as.tokenProvider.assign(ctxForAssign, "root", as.Revision())
-	if err != nil {
-		// this must not happen
-		plog.Errorf("failed to assign token for lease revoking: %s", err)
-		return ctx
-	}
-
-	mdMap := map[string]string{
-		"token": token,
-	}
-	tokenMD := metadata.New(mdMap)
-
-	// use "mdIncomingKey{}" since it's called from local etcdserver
-	return metadata.NewIncomingContext(ctx, tokenMD)
-}
-
-func (as *authStore) HasRole(user, role string) bool {
-	tx := as.be.BatchTx()
-	tx.Lock()
-	u := getUser(tx, user)
-	tx.Unlock()
-
-	if u == nil {
-		plog.Warningf("tried to check user %s has role %s, but user %s doesn't exist", user, role, user)
-		return false
-	}
-
-	for _, r := range u.Roles {
-		if role == r {
-			return true
-		}
-	}
-
-	return false
 }

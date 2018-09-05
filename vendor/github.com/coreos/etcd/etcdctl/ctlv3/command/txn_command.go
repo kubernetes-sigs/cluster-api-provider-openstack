@@ -16,16 +16,14 @@ package command
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/coreos/etcd/clientv3"
-	pb "github.com/coreos/etcd/etcdserver/etcdserverpb"
-
 	"github.com/spf13/cobra"
+	"golang.org/x/net/context"
 )
 
 var (
@@ -54,9 +52,9 @@ func txnCommandFunc(cmd *cobra.Command, args []string) {
 	txn := mustClientFromCmd(cmd).Txn(context.Background())
 	promptInteractive("compares:")
 	txn.If(readCompares(reader)...)
-	promptInteractive("success requests (get, put, del):")
+	promptInteractive("success requests (get, put, delete):")
 	txn.Then(readOps(reader)...)
-	promptInteractive("failure requests (get, put, del):")
+	promptInteractive("failure requests (get, put, delete):")
 	txn.Else(readOps(reader)...)
 
 	resp, err := txn.Commit()
@@ -195,8 +193,6 @@ func parseCompare(line string) (*clientv3.Cmp, error) {
 		}
 	case "val", "value":
 		cmp = clientv3.Compare(clientv3.Value(key), op, val)
-	case "lease":
-		cmp = clientv3.Compare(clientv3.Cmp{Target: pb.Compare_LEASE}, op, val)
 	default:
 		return nil, fmt.Errorf("malformed comparison: %s (unknown target %s)", line, target)
 	}

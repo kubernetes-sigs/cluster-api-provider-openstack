@@ -15,10 +15,9 @@
 package adapter
 
 import (
-	"context"
-
 	"github.com/coreos/etcd/etcdserver/api/v3lock/v3lockpb"
 
+	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 

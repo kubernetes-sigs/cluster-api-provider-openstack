@@ -86,11 +86,7 @@ const (
 )
 
 func init() {
-	if prometheus.Register(readCounter) != nil {
-		// Tests will try to double register since the tests use both
-		// store and store_test packages; ignore second attempts.
-		return
-	}
+	prometheus.MustRegister(readCounter)
 	prometheus.MustRegister(writeCounter)
 	prometheus.MustRegister(expireCounter)
 	prometheus.MustRegister(watchRequests)

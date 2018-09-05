@@ -27,8 +27,7 @@ import (
 // (https://github.com/torvalds/linux/releases/tag/v2.6.23), mmap might
 // silently ignore this flag. Please update your kernel to prevent this.
 var boltOpenOptions = &bolt.Options{
-	MmapFlags:      syscall.MAP_POPULATE,
-	NoFreelistSync: true,
+	MmapFlags: syscall.MAP_POPULATE,
 }
 
 func (bcfg *BackendConfig) mmapSize() int { return int(bcfg.MmapSize) }

@@ -15,10 +15,9 @@
 package v3rpc
 
 import (
-	"context"
-
 	"github.com/coreos/etcd/etcdserver"
 	pb "github.com/coreos/etcd/etcdserver/etcdserverpb"
+	"golang.org/x/net/context"
 )
 
 type AuthServer struct {

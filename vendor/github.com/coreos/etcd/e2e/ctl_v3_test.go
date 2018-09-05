@@ -45,7 +45,7 @@ func TestCtlV3DialWithHTTPScheme(t *testing.T) {
 }
 
 func dialWithSchemeTest(cx ctlCtx) {
-	cmdArgs := append(cx.prefixArgs(cx.epc.EndpointsV3()), "put", "foo", "bar")
+	cmdArgs := append(cx.prefixArgs(cx.epc.endpoints()), "put", "foo", "bar")
 	if err := spawnWithExpect(cmdArgs, "OK"); err != nil {
 		cx.t.Fatal(err)
 	}
@@ -55,7 +55,6 @@ type ctlCtx struct {
 	t                 *testing.T
 	cfg               etcdProcessClusterConfig
 	quotaBackendBytes int64
-	corruptFunc       func(string) error
 	noStrictReconfig  bool
 
 	epc *etcdProcessCluster
@@ -70,8 +69,6 @@ type ctlCtx struct {
 	user string
 	pass string
 
-	initialCorruptCheck bool
-
 	// for compaction
 	compactPhysical bool
 }
@@ -82,7 +79,6 @@ func (cx *ctlCtx) applyOpts(opts []ctlOption) {
 	for _, opt := range opts {
 		opt(cx)
 	}
-	cx.initialCorruptCheck = true
 }
 
 func withCfg(cfg etcdProcessClusterConfig) ctlOption {
@@ -109,14 +105,6 @@ func withCompactPhysical() ctlOption {
 	return func(cx *ctlCtx) { cx.compactPhysical = true }
 }
 
-func withInitialCorruptCheck() ctlOption {
-	return func(cx *ctlCtx) { cx.initialCorruptCheck = true }
-}
-
-func withCorruptFunc(f func(string) error) ctlOption {
-	return func(cx *ctlCtx) { cx.corruptFunc = f }
-}
-
 func withNoStrictReconfig() ctlOption {
 	return func(cx *ctlCtx) { cx.noStrictReconfig = true }
 }
@@ -135,6 +123,7 @@ func testCtl(t *testing.T, testFunc func(ctlCtx), opts ...ctlOption) {
 	}
 	ret.applyOpts(opts)
 
+	os.Setenv("ETCDCTL_API", "3")
 	mustEtcdctl(t)
 	if !ret.quorum {
 		ret.cfg = *configStandalone(ret.cfg)
@@ -143,9 +132,6 @@ func testCtl(t *testing.T, testFunc func(ctlCtx), opts ...ctlOption) {
 		ret.cfg.quotaBackendBytes = ret.quotaBackendBytes
 	}
 	ret.cfg.noStrictReconfig = ret.noStrictReconfig
-	if ret.initialCorruptCheck {
-		ret.cfg.initialCorruptCheck = ret.initialCorruptCheck
-	}
 
 	epc, err := newEtcdProcessCluster(&ret.cfg)
 	if err != nil {
@@ -154,6 +140,7 @@ func testCtl(t *testing.T, testFunc func(ctlCtx), opts ...ctlOption) {
 	ret.epc = epc
 
 	defer func() {
+		os.Unsetenv("ETCDCTL_API")
 		if ret.envMap != nil {
 			for k := range ret.envMap {
 				os.Unsetenv(k)
@@ -182,6 +169,10 @@ func testCtl(t *testing.T, testFunc func(ctlCtx), opts ...ctlOption) {
 }
 
 func (cx *ctlCtx) prefixArgs(eps []string) []string {
+	if len(cx.epc.proxies()) > 0 { // TODO: add proxy check as in v2
+		panic("v3 proxy not implemented")
+	}
+
 	fmap := make(map[string]string)
 	fmap["endpoints"] = strings.Join(eps, ",")
 	fmap["dial-timeout"] = cx.dialTimeout.String()
@@ -189,10 +180,6 @@ func (cx *ctlCtx) prefixArgs(eps []string) []string {
 		if cx.epc.cfg.isClientAutoTLS {
 			fmap["insecure-transport"] = "false"
 			fmap["insecure-skip-tls-verify"] = "true"
-		} else if cx.epc.cfg.isClientCRL {
-			fmap["cacert"] = caPath
-			fmap["cert"] = revokedCertPath
-			fmap["key"] = revokedPrivateKeyPath
 		} else {
 			fmap["cacert"] = caPath
 			fmap["cert"] = certPath
@@ -205,7 +192,7 @@ func (cx *ctlCtx) prefixArgs(eps []string) []string {
 
 	useEnv := cx.envMap != nil
 
-	cmdArgs := []string{ctlBinPath + "3"}
+	cmdArgs := []string{ctlBinPath}
 	for k, v := range fmap {
 		if useEnv {
 			ek := flags.FlagToEnv("ETCDCTL", k)
@@ -221,7 +208,7 @@ func (cx *ctlCtx) prefixArgs(eps []string) []string {
 // PrefixArgs prefixes etcdctl command.
 // Make sure to unset environment variables after tests.
 func (cx *ctlCtx) PrefixArgs() []string {
-	return cx.prefixArgs(cx.epc.EndpointsV3())
+	return cx.prefixArgs(cx.epc.grpcEndpoints())
 }
 
 func isGRPCTimedout(err error) bool {

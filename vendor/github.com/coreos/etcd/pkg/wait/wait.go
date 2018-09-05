@@ -34,7 +34,7 @@ type Wait interface {
 }
 
 type list struct {
-	l sync.RWMutex
+	l sync.Mutex
 	m map[uint64]chan interface{}
 }
 
@@ -68,8 +68,8 @@ func (w *list) Trigger(id uint64, x interface{}) {
 }
 
 func (w *list) IsRegistered(id uint64) bool {
-	w.l.RLock()
-	defer w.l.RUnlock()
+	w.l.Lock()
+	defer w.l.Unlock()
 	_, ok := w.m[id]
 	return ok
 }

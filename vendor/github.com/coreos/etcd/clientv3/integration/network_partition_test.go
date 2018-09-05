@@ -17,7 +17,6 @@
 package integration
 
 import (
-	"context"
 	"errors"
 	"testing"
 	"time"
@@ -26,6 +25,8 @@ import (
 	"github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes"
 	"github.com/coreos/etcd/integration"
 	"github.com/coreos/etcd/pkg/testutil"
+
+	"golang.org/x/net/context"
 )
 
 var errExpected = errors.New("expected error")
@@ -36,7 +37,7 @@ var errExpected = errors.New("expected error")
 func TestBalancerUnderNetworkPartitionPut(t *testing.T) {
 	testBalancerUnderNetworkPartition(t, func(cli *clientv3.Client, ctx context.Context) error {
 		_, err := cli.Put(ctx, "a", "b")
-		if err == context.DeadlineExceeded || isServerCtxTimeout(err) || err == rpctypes.ErrTimeout {
+		if err == context.DeadlineExceeded || err == rpctypes.ErrTimeout {
 			return errExpected
 		}
 		return err
@@ -46,7 +47,7 @@ func TestBalancerUnderNetworkPartitionPut(t *testing.T) {
 func TestBalancerUnderNetworkPartitionDelete(t *testing.T) {
 	testBalancerUnderNetworkPartition(t, func(cli *clientv3.Client, ctx context.Context) error {
 		_, err := cli.Delete(ctx, "a")
-		if err == context.DeadlineExceeded || isServerCtxTimeout(err) || err == rpctypes.ErrTimeout {
+		if err == context.DeadlineExceeded || err == rpctypes.ErrTimeout {
 			return errExpected
 		}
 		return err
@@ -59,7 +60,7 @@ func TestBalancerUnderNetworkPartitionTxn(t *testing.T) {
 			If(clientv3.Compare(clientv3.Version("foo"), "=", 0)).
 			Then(clientv3.OpPut("foo", "bar")).
 			Else(clientv3.OpPut("foo", "baz")).Commit()
-		if err == context.DeadlineExceeded || isServerCtxTimeout(err) || err == rpctypes.ErrTimeout {
+		if err == context.DeadlineExceeded || err == rpctypes.ErrTimeout {
 			return errExpected
 		}
 		return err
@@ -82,7 +83,7 @@ func TestBalancerUnderNetworkPartitionLinearizableGetWithLongTimeout(t *testing.
 func TestBalancerUnderNetworkPartitionLinearizableGetWithShortTimeout(t *testing.T) {
 	testBalancerUnderNetworkPartition(t, func(cli *clientv3.Client, ctx context.Context) error {
 		_, err := cli.Get(ctx, "a")
-		if err == context.DeadlineExceeded || isServerCtxTimeout(err) {
+		if err == context.DeadlineExceeded {
 			return errExpected
 		}
 		return err
@@ -100,8 +101,9 @@ func testBalancerUnderNetworkPartition(t *testing.T, op func(*clientv3.Client, c
 	defer testutil.AfterTest(t)
 
 	clus := integration.NewClusterV3(t, &integration.ClusterConfig{
-		Size:               3,
-		SkipCreatingClient: true,
+		Size:                 3,
+		GRPCKeepAliveMinTime: time.Millisecond, // avoid too_many_pings
+		SkipCreatingClient:   true,
 	})
 	defer clus.Terminate(t)
 
@@ -234,7 +236,7 @@ func testBalancerUnderNetworkPartitionWatch(t *testing.T, isolateLeader bool) {
 	wch := watchCli.Watch(clientv3.WithRequireLeader(context.Background()), "foo", clientv3.WithCreatedNotify())
 	select {
 	case <-wch:
-	case <-time.After(integration.RequestWaitTimeout):
+	case <-time.After(3 * time.Second):
 		t.Fatal("took too long to create watch")
 	}
 
@@ -252,7 +254,7 @@ func testBalancerUnderNetworkPartitionWatch(t *testing.T, isolateLeader bool) {
 		if err = ev.Err(); err != rpctypes.ErrNoLeader {
 			t.Fatalf("expected %v, got %v", rpctypes.ErrNoLeader, err)
 		}
-	case <-time.After(integration.RequestWaitTimeout): // enough time to detect leader lost
+	case <-time.After(3 * time.Second): // enough time to detect leader lost
 		t.Fatal("took too long to detect leader lost")
 	}
 }

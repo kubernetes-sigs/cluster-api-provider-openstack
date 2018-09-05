@@ -15,15 +15,14 @@
 package command
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"os"
 	"os/signal"
 
 	"github.com/coreos/etcd/client"
-
 	"github.com/urfave/cli"
+	"golang.org/x/net/context"
 )
 
 // NewWatchCommand returns the CLI command for "watch".

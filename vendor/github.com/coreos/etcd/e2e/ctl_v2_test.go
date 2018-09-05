@@ -128,9 +128,10 @@ func testCtlV2Ls(t *testing.T, cfg *etcdProcessClusterConfig, quorum bool) {
 	}
 }
 
-func TestCtlV2Watch(t *testing.T)    { testCtlV2Watch(t, &configNoTLS, false) }
-func TestCtlV2WatchTLS(t *testing.T) { testCtlV2Watch(t, &configTLS, false) }
-
+func TestCtlV2Watch(t *testing.T)                { testCtlV2Watch(t, &configNoTLS, false) }
+func TestCtlV2WatchTLS(t *testing.T)             { testCtlV2Watch(t, &configTLS, false) }
+func TestCtlV2WatchWithProxy(t *testing.T)       { testCtlV2Watch(t, &configWithProxy, false) }
+func TestCtlV2WatchWithProxyNoSync(t *testing.T) { testCtlV2Watch(t, &configWithProxy, true) }
 func testCtlV2Watch(t *testing.T, cfg *etcdProcessClusterConfig, noSync bool) {
 	defer testutil.AfterTest(t)
 
@@ -157,10 +158,12 @@ func testCtlV2Watch(t *testing.T, cfg *etcdProcessClusterConfig, noSync bool) {
 	}
 }
 
-func TestCtlV2GetRoleUser(t *testing.T) {
+func TestCtlV2GetRoleUser(t *testing.T)          { testCtlV2GetRoleUser(t, &configNoTLS) }
+func TestCtlV2GetRoleUserWithProxy(t *testing.T) { testCtlV2GetRoleUser(t, &configWithProxy) }
+func testCtlV2GetRoleUser(t *testing.T, cfg *etcdProcessClusterConfig) {
 	defer testutil.AfterTest(t)
 
-	epc := setupEtcdctlTest(t, &configNoTLS, false)
+	epc := setupEtcdctlTest(t, cfg, true)
 	defer func() {
 		if err := epc.Close(); err != nil {
 			t.Fatalf("error closing etcd processes (%v)", err)
@@ -193,7 +196,7 @@ func TestCtlV2UserListRoot(t *testing.T)     { testCtlV2UserList(t, "root") }
 func testCtlV2UserList(t *testing.T, username string) {
 	defer testutil.AfterTest(t)
 
-	epc := setupEtcdctlTest(t, &configNoTLS, false)
+	epc := setupEtcdctlTest(t, &configWithProxy, false)
 	defer func() {
 		if err := epc.Close(); err != nil {
 			t.Fatalf("error closing etcd processes (%v)", err)
@@ -211,7 +214,7 @@ func testCtlV2UserList(t *testing.T, username string) {
 func TestCtlV2RoleList(t *testing.T) {
 	defer testutil.AfterTest(t)
 
-	epc := setupEtcdctlTest(t, &configNoTLS, false)
+	epc := setupEtcdctlTest(t, &configWithProxy, false)
 	defer func() {
 		if err := epc.Close(); err != nil {
 			t.Fatalf("error closing etcd processes (%v)", err)
@@ -226,13 +229,7 @@ func TestCtlV2RoleList(t *testing.T) {
 	}
 }
 
-func TestCtlV2Backup(t *testing.T)         { testCtlV2Backup(t, 0, false) }
-func TestCtlV2BackupSnapshot(t *testing.T) { testCtlV2Backup(t, 1, false) }
-
-func TestCtlV2BackupV3(t *testing.T)         { testCtlV2Backup(t, 0, true) }
-func TestCtlV2BackupV3Snapshot(t *testing.T) { testCtlV2Backup(t, 1, true) }
-
-func testCtlV2Backup(t *testing.T, snapCount int, v3 bool) {
+func TestCtlV2Backup(t *testing.T) { // For https://github.com/coreos/etcd/issues/5360
 	defer testutil.AfterTest(t)
 
 	backupDir, err := ioutil.TempDir("", "testbackup0.etcd")
@@ -241,29 +238,15 @@ func testCtlV2Backup(t *testing.T, snapCount int, v3 bool) {
 	}
 	defer os.RemoveAll(backupDir)
 
-	etcdCfg := configNoTLS
-	etcdCfg.snapCount = snapCount
-	epc1 := setupEtcdctlTest(t, &etcdCfg, false)
-
-	// v3 put before v2 set so snapshot happens after v3 operations to confirm
-	// v3 data is preserved after snapshot.
-	if err := ctlV3Put(ctlCtx{t: t, epc: epc1}, "v3key", "123", ""); err != nil {
-		t.Fatal(err)
-	}
-
+	epc1 := setupEtcdctlTest(t, &configNoTLS, false)
 	if err := etcdctlSet(epc1, "foo1", "bar"); err != nil {
 		t.Fatal(err)
 	}
 
-	if v3 {
-		// v3 must lock the db to backup, so stop process
-		if err := epc1.Stop(); err != nil {
-			t.Fatal(err)
-		}
-	}
-	if err := etcdctlBackup(epc1, epc1.procs[0].Config().dataDirPath, backupDir, v3); err != nil {
+	if err := etcdctlBackup(epc1, epc1.procs[0].cfg.dataDirPath, backupDir); err != nil {
 		t.Fatal(err)
 	}
+
 	if err := epc1.Close(); err != nil {
 		t.Fatalf("error closing etcd processes (%v)", err)
 	}
@@ -278,17 +261,6 @@ func testCtlV2Backup(t *testing.T, snapCount int, v3 bool) {
 	// check if backup went through correctly
 	if err := etcdctlGet(epc2, "foo1", "bar", false); err != nil {
 		t.Fatal(err)
-	}
-
-	ctx2 := ctlCtx{t: t, epc: epc2}
-	if v3 {
-		if err := ctlV3Get(ctx2, []string{"v3key"}, kv{"v3key", "123"}); err != nil {
-			t.Fatal(err)
-		}
-	} else {
-		if err := ctlV3Get(ctx2, []string{"v3key"}); err != nil {
-			t.Fatal(err)
-		}
 	}
 
 	// check if it can serve client requests
@@ -349,36 +321,31 @@ func TestCtlV2ClusterHealth(t *testing.T) {
 		}
 	}()
 
-	// all members available
+	// has quorum
 	if err := etcdctlClusterHealth(epc, "cluster is healthy"); err != nil {
 		t.Fatalf("cluster-health expected to be healthy (%v)", err)
 	}
 
-	// missing members, has quorum
+	// cut quorum
 	epc.procs[0].Stop()
-
-	for i := 0; i < 3; i++ {
-		err := etcdctlClusterHealth(epc, "cluster is degraded")
-		if err == nil {
-			break
-		} else if i == 2 {
-			t.Fatalf("cluster-health expected to be degraded (%v)", err)
-		}
-		// possibly no leader yet; retry
-		time.Sleep(time.Second)
-	}
-
-	// no quorum
 	epc.procs[1].Stop()
-	if err := etcdctlClusterHealth(epc, "cluster is unavailable"); err != nil {
-		t.Fatalf("cluster-health expected to be unavailable (%v)", err)
+	if err := etcdctlClusterHealth(epc, "cluster is unhealthy"); err != nil {
+		t.Fatalf("cluster-health expected to be unhealthy (%v)", err)
 	}
-
 	epc.procs[0], epc.procs[1] = nil, nil
 }
 
 func etcdctlPrefixArgs(clus *etcdProcessCluster) []string {
-	endpoints := strings.Join(clus.EndpointsV2(), ",")
+	endpoints := ""
+	if proxies := clus.proxies(); len(proxies) != 0 {
+		endpoints = proxies[0].cfg.acurl
+	} else if processes := clus.processes(); len(processes) != 0 {
+		es := []string{}
+		for _, b := range processes {
+			es = append(es, b.cfg.acurl)
+		}
+		endpoints = strings.Join(es, ",")
+	}
 	cmdArgs := []string{ctlBinPath, "--endpoints", endpoints}
 	if clus.cfg.clientTLS == clientTLS {
 		cmdArgs = append(cmdArgs, "--ca-file", caPath, "--cert-file", certPath, "--key-file", privateKeyPath)
@@ -482,16 +449,9 @@ func etcdctlAuthEnable(clus *etcdProcessCluster) error {
 	return spawnWithExpect(cmdArgs, "Authentication Enabled")
 }
 
-func etcdctlBackup(clus *etcdProcessCluster, dataDir, backupDir string, v3 bool) error {
+func etcdctlBackup(clus *etcdProcessCluster, dataDir, backupDir string) error {
 	cmdArgs := append(etcdctlPrefixArgs(clus), "backup", "--data-dir", dataDir, "--backup-dir", backupDir)
-	if v3 {
-		cmdArgs = append(cmdArgs, "--with-v3")
-	}
-	proc, err := spawnCmd(cmdArgs)
-	if err != nil {
-		return err
-	}
-	return proc.Close()
+	return spawnWithExpects(cmdArgs)
 }
 
 func mustEtcdctl(t *testing.T) {

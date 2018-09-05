@@ -350,7 +350,7 @@ func (n *node) Compare(prevValue string, prevIndex uint64) (ok bool, which int) 
 	default:
 		which = CompareNotMatch
 	}
-	return ok, which
+	return
 }
 
 // Clone function clone the node recursively and return the new node.

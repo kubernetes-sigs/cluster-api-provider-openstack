@@ -16,7 +16,6 @@
 package auth
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -31,8 +30,8 @@ import (
 	"github.com/coreos/etcd/etcdserver/etcdserverpb"
 	"github.com/coreos/etcd/pkg/types"
 	"github.com/coreos/pkg/capnslog"
-
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/net/context"
 )
 
 const (

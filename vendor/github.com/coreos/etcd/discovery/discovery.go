@@ -17,7 +17,6 @@
 package discovery
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -32,9 +31,9 @@ import (
 	"github.com/coreos/etcd/client"
 	"github.com/coreos/etcd/pkg/transport"
 	"github.com/coreos/etcd/pkg/types"
-
 	"github.com/coreos/pkg/capnslog"
 	"github.com/jonboulle/clockwork"
+	"golang.org/x/net/context"
 )
 
 var (

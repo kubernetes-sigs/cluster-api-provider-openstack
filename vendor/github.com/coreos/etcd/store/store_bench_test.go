@@ -194,6 +194,7 @@ func benchStoreSet(b *testing.B, valueSize int, process func(interface{}) ([]byt
 		}
 	}
 
+	kvs = nil
 	b.StopTimer()
 	memStats := new(runtime.MemStats)
 	runtime.GC()

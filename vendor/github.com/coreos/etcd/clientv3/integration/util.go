@@ -15,11 +15,12 @@
 package integration
 
 import (
-	"context"
 	"testing"
 	"time"
 
 	"github.com/coreos/etcd/clientv3"
+
+	"golang.org/x/net/context"
 )
 
 // mustWaitPinReady waits up to 3-second until connection is up (pin endpoint).

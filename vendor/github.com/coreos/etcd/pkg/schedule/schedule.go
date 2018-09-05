@@ -15,8 +15,9 @@
 package schedule
 
 import (
-	"context"
 	"sync"
+
+	"golang.org/x/net/context"
 )
 
 type Job func(context.Context)

@@ -22,29 +22,30 @@ The easiest way to get started using etcd as a distributed key-value store is to
 
 ## Operating etcd clusters
 
-Administrators who need a fault-tolerant etcd cluster for either development or production should begin with a [cluster on multiple machines][clustering].
+Administrators who need to create reliable and scalable key-value stores for the developers they support should begin with a [cluster on multiple machines][clustering].
 
-### Setting up etcd
-
- - [Configuration flags][conf]
- - [Multi-member cluster][clustering]
- - [gRPC proxy][grpc_proxy]
- - [L4 gateway][gateway]
-
-### System configuration
-
- - [Supported systems][supported_platforms]
+ - [Setting up etcd clusters][clustering]
+ - [Setting up etcd gateways][gateway]
+ - [Setting up etcd gRPC proxy][grpc_proxy]
  - [Hardware recommendations][hardware]
- - [Performance benchmarking][performance]
- - [Tuning][tuning]
+ - [Configuration][conf]
+ - [Security][security]
+ - [Authentication][authentication]
+ - [Monitoring][monitoring]
+ - [Maintenance][maintenance]
+ - [Understand failures][failures]
+ - [Disaster recovery][recovery]
+ - [Performance][performance]
+ - [Versioning][versioning]
 
 ### Platform guides
 
- - [Amazon Web Services][aws_platform]
- - [Container Linux, systemd][container_linux_platform]
- - [FreeBSD][freebsd_platform]
+ - [Supported systems][supported_platforms]
  - [Docker container][container_docker]
+ - [Container Linux, systemd][container_linux_platform]
  - [rkt container][container_rkt]
+ - [Amazon Web Services][aws_platform]
+ - [FreeBSD][freebsd_platform]
 
 ### Security
 
@@ -53,7 +54,7 @@ Administrators who need a fault-tolerant etcd cluster for either development or 
 
 ### Maintenance and troubleshooting
 
- - [Frequently asked questions][faq]
+ - [Frequently asked questions][common questions]
  - [Monitoring][monitoring]
  - [Maintenance][maintenance]
  - [Failure modes][failures]
@@ -71,13 +72,17 @@ To learn more about the concepts and internals behind etcd, read the following p
  - Internals
    - [Auth subsystem][auth_design]
 
+## Frequently Asked Questions (FAQ)
+
+Answers to [common questions] about etcd.
+
 [api_ref]: dev-guide/api_reference_v3.md
 [api_concurrency_ref]: dev-guide/api_concurrency_reference_v3.md
 [api_grpc_gateway]: dev-guide/api_grpc_gateway.md
 [clustering]: op-guide/clustering.md
 [conf]: op-guide/configuration.md
 [system-limit]: dev-guide/limit.md
-[faq]: faq.md
+[common questions]: faq.md
 [why]: learning/why.md
 [data_model]: learning/data_model.md
 [demo]: demo.md
@@ -110,5 +115,4 @@ To learn more about the concepts and internals behind etcd, read the following p
 [experimental]: dev-guide/experimental_apis.md
 [authentication]: op-guide/authentication.md
 [auth_design]: learning/auth_design.md
-[tuning]: tuning.md
 [upgrading]: upgrades/upgrading-etcd.md

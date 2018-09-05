@@ -20,30 +20,30 @@ import (
 	"math"
 	"sort"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/coreos/etcd/lease/leasepb"
 	"github.com/coreos/etcd/mvcc/backend"
+	"github.com/coreos/etcd/pkg/monotime"
 )
 
-// NoLease is a special LeaseID representing the absence of a lease.
-const NoLease = LeaseID(0)
+const (
+	// NoLease is a special LeaseID representing the absence of a lease.
+	NoLease = LeaseID(0)
 
-// MaxLeaseTTL is the maximum lease TTL value
-const MaxLeaseTTL = 9000000000
+	forever = monotime.Time(math.MaxInt64)
+)
 
 var (
-	forever = time.Time{}
-
 	leaseBucketName = []byte("lease")
 
 	// maximum number of leases to revoke per second; configurable for tests
 	leaseRevokeRate = 1000
 
-	ErrNotPrimary       = errors.New("not a primary lessor")
-	ErrLeaseNotFound    = errors.New("lease not found")
-	ErrLeaseExists      = errors.New("lease already exists")
-	ErrLeaseTTLTooLarge = errors.New("too large lease TTL")
+	ErrNotPrimary    = errors.New("not a primary lessor")
+	ErrLeaseNotFound = errors.New("lease not found")
+	ErrLeaseExists   = errors.New("lease already exists")
 )
 
 // TxnDelete is a TxnWrite that only permits deletes. Defined here
@@ -98,9 +98,6 @@ type Lessor interface {
 
 	// Lookup gives the lease at a given lease id, if any
 	Lookup(id LeaseID) *Lease
-
-	// Leases lists all leases.
-	Leases() []*Lease
 
 	// ExpiredLeasesC returns a chan that is used to receive expired leases.
 	ExpiredLeasesC() <-chan []*Lease
@@ -200,10 +197,6 @@ func (le *lessor) SetRangeDeleter(rd RangeDeleter) {
 func (le *lessor) Grant(id LeaseID, ttl int64) (*Lease, error) {
 	if id == NoLease {
 		return nil, ErrLeaseNotFound
-	}
-
-	if ttl > MaxLeaseTTL {
-		return nil, ErrLeaseTTLTooLarge
 	}
 
 	// TODO: when lessor is under high load, it should give out lease
@@ -324,22 +317,6 @@ func (le *lessor) Lookup(id LeaseID) *Lease {
 	return le.leaseMap[id]
 }
 
-func (le *lessor) unsafeLeases() []*Lease {
-	leases := make([]*Lease, 0, len(le.leaseMap))
-	for _, l := range le.leaseMap {
-		leases = append(leases, l)
-	}
-	sort.Sort(leasesByExpiry(leases))
-	return leases
-}
-
-func (le *lessor) Leases() []*Lease {
-	le.mu.Lock()
-	ls := le.unsafeLeases()
-	le.mu.Unlock()
-	return ls
-}
-
 func (le *lessor) Promote(extend time.Duration) {
 	le.mu.Lock()
 	defer le.mu.Unlock()
@@ -357,7 +334,11 @@ func (le *lessor) Promote(extend time.Duration) {
 	}
 
 	// adjust expiries in case of overlap
-	leases := le.unsafeLeases()
+	leases := make([]*Lease, 0, len(le.leaseMap))
+	for _, l := range le.leaseMap {
+		leases = append(leases, l)
+	}
+	sort.Sort(leasesByExpiry(leases))
 
 	baseWindow := leases[0].Remaining()
 	nextWindow := baseWindow + time.Second
@@ -482,16 +463,17 @@ func (le *lessor) runLoop() {
 	for {
 		var ls []*Lease
 
-		// rate limit
-		revokeLimit := leaseRevokeRate / 2
-
 		le.mu.Lock()
 		if le.isPrimary() {
-			ls = le.findExpiredLeases(revokeLimit)
+			ls = le.findExpiredLeases()
 		}
 		le.mu.Unlock()
 
 		if len(ls) != 0 {
+			// rate limit
+			if len(ls) > leaseRevokeRate/2 {
+				ls = ls[:leaseRevokeRate/2]
+			}
 			select {
 			case <-le.stopC:
 				return
@@ -511,9 +493,9 @@ func (le *lessor) runLoop() {
 	}
 }
 
-// findExpiredLeases loops leases in the leaseMap until reaching expired limit
-// and returns the expired leases that needed to be revoked.
-func (le *lessor) findExpiredLeases(limit int) []*Lease {
+// findExpiredLeases loops all the leases in the leaseMap and returns the expired
+// leases that needed to be revoked.
+func (le *lessor) findExpiredLeases() []*Lease {
 	leases := make([]*Lease, 0, 16)
 
 	for _, l := range le.leaseMap {
@@ -521,11 +503,6 @@ func (le *lessor) findExpiredLeases(limit int) []*Lease {
 		// make up committing latency.
 		if l.expired() {
 			leases = append(leases, l)
-
-			// reach expired limit
-			if len(leases) == limit {
-				break
-			}
 		}
 	}
 
@@ -568,10 +545,8 @@ func (le *lessor) initAndRecover() {
 type Lease struct {
 	ID  LeaseID
 	ttl int64 // time to live in seconds
-	// expiryMu protects concurrent accesses to expiry
-	expiryMu sync.RWMutex
-	// expiry is time when lease should expire. no expiration when expiry.IsZero() is true
-	expiry time.Time
+	// expiry is time when lease should expire; must be 64-bit aligned.
+	expiry monotime.Time
 
 	// mu protects concurrent accesses to itemSet
 	mu      sync.RWMutex
@@ -604,18 +579,12 @@ func (l *Lease) TTL() int64 {
 
 // refresh refreshes the expiry of the lease.
 func (l *Lease) refresh(extend time.Duration) {
-	newExpiry := time.Now().Add(extend + time.Duration(l.ttl)*time.Second)
-	l.expiryMu.Lock()
-	defer l.expiryMu.Unlock()
-	l.expiry = newExpiry
+	t := monotime.Now().Add(extend + time.Duration(l.ttl)*time.Second)
+	atomic.StoreUint64((*uint64)(&l.expiry), uint64(t))
 }
 
 // forever sets the expiry of lease to be forever.
-func (l *Lease) forever() {
-	l.expiryMu.Lock()
-	defer l.expiryMu.Unlock()
-	l.expiry = forever
-}
+func (l *Lease) forever() { atomic.StoreUint64((*uint64)(&l.expiry), uint64(forever)) }
 
 // Keys returns all the keys attached to the lease.
 func (l *Lease) Keys() []string {
@@ -630,12 +599,8 @@ func (l *Lease) Keys() []string {
 
 // Remaining returns the remaining time of the lease.
 func (l *Lease) Remaining() time.Duration {
-	l.expiryMu.RLock()
-	defer l.expiryMu.RUnlock()
-	if l.expiry.IsZero() {
-		return time.Duration(math.MaxInt64)
-	}
-	return time.Until(l.expiry)
+	t := monotime.Time(atomic.LoadUint64((*uint64)(&l.expiry)))
+	return time.Duration(t - monotime.Now())
 }
 
 type LeaseItem struct {
@@ -669,9 +634,7 @@ func (fl *FakeLessor) Demote() {}
 
 func (fl *FakeLessor) Renew(id LeaseID) (int64, error) { return 10, nil }
 
-func (fl *FakeLessor) Lookup(id LeaseID) *Lease { return nil }
-
-func (fl *FakeLessor) Leases() []*Lease { return nil }
+func (le *FakeLessor) Lookup(id LeaseID) *Lease { return nil }
 
 func (fl *FakeLessor) ExpiredLeasesC() <-chan []*Lease { return nil }
 

@@ -15,14 +15,13 @@
 package command
 
 import (
-	"context"
 	"encoding/hex"
 	"fmt"
 	"regexp"
 
 	pb "github.com/coreos/etcd/mvcc/mvccpb"
-
 	"github.com/spf13/cobra"
+	"golang.org/x/net/context"
 )
 
 func printKV(isHex bool, valueOnly bool, kv *pb.KeyValue) {

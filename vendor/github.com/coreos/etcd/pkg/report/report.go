@@ -127,13 +127,13 @@ func copyMap(m map[string]int) (c map[string]int) {
 	for k, v := range m {
 		c[k] = v
 	}
-	return c
+	return
 }
 
 func copyFloats(s []float64) (c []float64) {
 	c = make([]float64, len(s))
 	copy(c, s)
-	return c
+	return
 }
 
 func (r *report) String() (s string) {
@@ -221,7 +221,7 @@ func percentiles(nums []float64) (data []float64) {
 			j++
 		}
 	}
-	return data
+	return
 }
 
 func (r *report) sprintLatencies() string {

@@ -15,7 +15,6 @@
 package grpcproxy
 
 import (
-	"context"
 	"net"
 	"testing"
 	"time"
@@ -25,6 +24,7 @@ import (
 	"github.com/coreos/etcd/integration"
 	"github.com/coreos/etcd/pkg/testutil"
 
+	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 

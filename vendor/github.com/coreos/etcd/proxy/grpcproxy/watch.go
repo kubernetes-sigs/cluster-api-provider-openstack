@@ -15,16 +15,16 @@
 package grpcproxy
 
 import (
-	"context"
 	"sync"
+
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/etcdserver/api/v3rpc"
 	"github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes"
 	pb "github.com/coreos/etcd/etcdserver/etcdserverpb"
-
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 )
 
 type watchProxy struct {
@@ -40,9 +40,6 @@ type watchProxy struct {
 
 	// wg waits until all outstanding watch servers quit.
 	wg sync.WaitGroup
-
-	// kv is used for permission checking
-	kv clientv3.KV
 }
 
 func NewWatchProxy(c *clientv3.Client) (pb.WatchServer, <-chan struct{}) {
@@ -51,8 +48,6 @@ func NewWatchProxy(c *clientv3.Client) (pb.WatchServer, <-chan struct{}) {
 		cw:     c.Watcher,
 		ctx:    cctx,
 		leader: newLeader(c.Ctx(), c.Watcher),
-
-		kv: c.KV, // for permission checking
 	}
 	wp.ranges = newWatchRanges(wp)
 	ch := make(chan struct{})
@@ -97,7 +92,6 @@ func (wp *watchProxy) Watch(stream pb.Watch_WatchServer) (err error) {
 		watchCh:  make(chan *pb.WatchResponse, 1024),
 		ctx:      ctx,
 		cancel:   cancel,
-		kv:       wp.kv,
 	}
 
 	var lostLeaderC <-chan struct{}
@@ -177,9 +171,6 @@ type watchProxyStream struct {
 
 	ctx    context.Context
 	cancel context.CancelFunc
-
-	// kv is used for permission checking
-	kv clientv3.KV
 }
 
 func (wps *watchProxyStream) close() {
@@ -201,24 +192,6 @@ func (wps *watchProxyStream) close() {
 	close(wps.watchCh)
 }
 
-func (wps *watchProxyStream) checkPermissionForWatch(key, rangeEnd []byte) error {
-	if len(key) == 0 {
-		// If the length of the key is 0, we need to obtain full range.
-		// look at clientv3.WithPrefix()
-		key = []byte{0}
-		rangeEnd = []byte{0}
-	}
-	req := &pb.RangeRequest{
-		Serializable: true,
-		Key:          key,
-		RangeEnd:     rangeEnd,
-		CountOnly:    true,
-		Limit:        1,
-	}
-	_, err := wps.kv.Do(wps.ctx, RangeRequestToOp(req))
-	return err
-}
-
 func (wps *watchProxyStream) recvLoop() error {
 	for {
 		req, err := wps.stream.Recv()
@@ -228,15 +201,6 @@ func (wps *watchProxyStream) recvLoop() error {
 		switch uv := req.RequestUnion.(type) {
 		case *pb.WatchRequest_CreateRequest:
 			cr := uv.CreateRequest
-
-			if err = wps.checkPermissionForWatch(cr.Key, cr.RangeEnd); err != nil && err == rpctypes.ErrPermissionDenied {
-				// Return WatchResponse which is caused by permission checking if and only if
-				// the error is permission denied. For other errors (e.g. timeout or connection closed),
-				// the permission checking mechanism should do nothing for preserving error code.
-				wps.watchCh <- &pb.WatchResponse{Header: &pb.ResponseHeader{}, WatchId: -1, Created: true, Canceled: true}
-				continue
-			}
-
 			w := &watcher{
 				wr:  watchRange{string(cr.Key), string(cr.RangeEnd)},
 				id:  wps.nextWatcherID,

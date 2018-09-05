@@ -31,9 +31,9 @@ func TestGateway(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer ec.Stop()
+	defer ec.StopAll()
 
-	eps := strings.Join(ec.EndpointsV3(), ",")
+	eps := strings.Join(ec.grpcEndpoints(), ",")
 
 	p := startGateway(t, eps)
 	defer p.Stop()

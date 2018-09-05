@@ -16,8 +16,6 @@ package integration
 
 import (
 	"bytes"
-	"context"
-	"strings"
 	"testing"
 	"time"
 
@@ -26,8 +24,7 @@ import (
 	"github.com/coreos/etcd/integration"
 	"github.com/coreos/etcd/pkg/testutil"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"golang.org/x/net/context"
 )
 
 // TestBalancerUnderServerShutdownWatch expects that watch client
@@ -63,7 +60,7 @@ func TestBalancerUnderServerShutdownWatch(t *testing.T) {
 	wch := watchCli.Watch(context.Background(), key, clientv3.WithCreatedNotify())
 	select {
 	case <-wch:
-	case <-time.After(integration.RequestWaitTimeout):
+	case <-time.After(3 * time.Second):
 		t.Fatal("took too long to create watch")
 	}
 
@@ -104,7 +101,7 @@ func TestBalancerUnderServerShutdownWatch(t *testing.T) {
 		if err == nil {
 			break
 		}
-		if err == context.DeadlineExceeded || isServerCtxTimeout(err) || err == rpctypes.ErrTimeout || err == rpctypes.ErrTimeoutDueToLeaderFail {
+		if err == context.DeadlineExceeded || err == rpctypes.ErrTimeout || err == rpctypes.ErrTimeoutDueToLeaderFail {
 			continue
 		}
 		t.Fatal(err)
@@ -348,20 +345,8 @@ func testBalancerUnderServerStopInflightRangeOnRestart(t *testing.T, linearizabl
 	clus.Members[target].Restart(t)
 
 	select {
-	case <-time.After(clientTimeout + integration.RequestWaitTimeout):
+	case <-time.After(clientTimeout + 3*time.Second):
 		t.Fatalf("timed out waiting for Get [linearizable: %v, opt: %+v]", linearizable, opt)
 	case <-donec:
 	}
-}
-
-// e.g. due to clock drifts in server-side,
-// client context times out first in server-side
-// while original client-side context is not timed out yet
-func isServerCtxTimeout(err error) bool {
-	if err == nil {
-		return false
-	}
-	ev, _ := status.FromError(err)
-	code := ev.Code()
-	return code == codes.DeadlineExceeded && strings.Contains(err.Error(), "context deadline exceeded")
 }

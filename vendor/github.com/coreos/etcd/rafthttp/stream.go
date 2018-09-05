@@ -25,8 +25,6 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/time/rate"
-
 	"github.com/coreos/etcd/etcdserver/stats"
 	"github.com/coreos/etcd/pkg/httputil"
 	"github.com/coreos/etcd/pkg/transport"
@@ -55,7 +53,6 @@ var (
 		"3.0.0": {streamTypeMsgAppV2, streamTypeMessage},
 		"3.1.0": {streamTypeMsgAppV2, streamTypeMessage},
 		"3.2.0": {streamTypeMsgAppV2, streamTypeMessage},
-		"3.3.0": {streamTypeMsgAppV2, streamTypeMessage},
 	}
 )
 
@@ -246,9 +243,7 @@ func (cw *streamWriter) closeUnlocked() bool {
 	if !cw.working {
 		return false
 	}
-	if err := cw.closer.Close(); err != nil {
-		plog.Errorf("peer %s (writer) connection close error: %v", cw.peerID, err)
-	}
+	cw.closer.Close()
 	if len(cw.msgc) > 0 {
 		cw.r.ReportUnreachable(uint64(cw.peerID))
 	}
@@ -283,28 +278,25 @@ type streamReader struct {
 	recvc  chan<- raftpb.Message
 	propc  chan<- raftpb.Message
 
-	rl *rate.Limiter // alters the frequency of dial retrial attempts
-
 	errorc chan<- error
 
 	mu     sync.Mutex
 	paused bool
+	cancel func()
 	closer io.Closer
 
-	ctx    context.Context
-	cancel context.CancelFunc
-	done   chan struct{}
+	stopc chan struct{}
+	done  chan struct{}
 }
 
-func (cr *streamReader) start() {
-	cr.done = make(chan struct{})
-	if cr.errorc == nil {
-		cr.errorc = cr.tr.ErrorC
+func (r *streamReader) start() {
+	r.stopc = make(chan struct{})
+	r.done = make(chan struct{})
+	if r.errorc == nil {
+		r.errorc = r.tr.ErrorC
 	}
-	if cr.ctx == nil {
-		cr.ctx, cr.cancel = context.WithCancel(context.Background())
-	}
-	go cr.run()
+
+	go r.run()
 }
 
 func (cr *streamReader) run() {
@@ -319,7 +311,7 @@ func (cr *streamReader) run() {
 		} else {
 			cr.status.activate()
 			plog.Infof("established a TCP streaming connection with peer %s (%s reader)", cr.peerID, cr.typ)
-			err = cr.decodeLoop(rc, t)
+			err := cr.decodeLoop(rc, t)
 			plog.Warningf("lost the TCP streaming connection with peer %s (%s reader)", cr.peerID, cr.typ)
 			switch {
 			// all data is read out
@@ -330,15 +322,14 @@ func (cr *streamReader) run() {
 				cr.status.deactivate(failureType{source: t.String(), action: "read"}, err.Error())
 			}
 		}
-		// Wait for a while before new dial attempt
-		err = cr.rl.Wait(cr.ctx)
-		if cr.ctx.Err() != nil {
+		select {
+		// Wait 100ms to create a new stream, so it doesn't bring too much
+		// overhead when retry.
+		case <-time.After(100 * time.Millisecond):
+		case <-cr.stopc:
 			plog.Infof("stopped streaming with peer %s (%s reader)", cr.peerID, t)
 			close(cr.done)
 			return
-		}
-		if err != nil {
-			plog.Errorf("streaming with peer %s (%s reader) rate limiter error: %v", cr.peerID, t, err)
 		}
 	}
 }
@@ -355,7 +346,7 @@ func (cr *streamReader) decodeLoop(rc io.ReadCloser, t streamType) error {
 		plog.Panicf("unhandled stream type %s", t)
 	}
 	select {
-	case <-cr.ctx.Done():
+	case <-cr.stopc:
 		cr.mu.Unlock()
 		if err := rc.Close(); err != nil {
 			return err
@@ -410,8 +401,11 @@ func (cr *streamReader) decodeLoop(rc io.ReadCloser, t streamType) error {
 }
 
 func (cr *streamReader) stop() {
+	close(cr.stopc)
 	cr.mu.Lock()
-	cr.cancel()
+	if cr.cancel != nil {
+		cr.cancel()
+	}
 	cr.close()
 	cr.mu.Unlock()
 	<-cr.done
@@ -435,11 +429,13 @@ func (cr *streamReader) dial(t streamType) (io.ReadCloser, error) {
 
 	setPeerURLsHeader(req, cr.tr.URLs)
 
-	req = req.WithContext(cr.ctx)
+	ctx, cancel := context.WithCancel(context.Background())
+	req = req.WithContext(ctx)
 
 	cr.mu.Lock()
+	cr.cancel = cancel
 	select {
-	case <-cr.ctx.Done():
+	case <-cr.stopc:
 		cr.mu.Unlock()
 		return nil, fmt.Errorf("stream reader is stopped")
 	default:
@@ -501,9 +497,7 @@ func (cr *streamReader) dial(t streamType) (io.ReadCloser, error) {
 
 func (cr *streamReader) close() {
 	if cr.closer != nil {
-		if err := cr.closer.Close(); err != nil {
-			plog.Errorf("peer %s (reader) connection close error: %v", cr.peerID, err)
-		}
+		cr.closer.Close()
 	}
 	cr.closer = nil
 }

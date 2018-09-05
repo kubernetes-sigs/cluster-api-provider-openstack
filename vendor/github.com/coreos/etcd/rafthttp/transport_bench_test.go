@@ -15,7 +15,6 @@
 package rafthttp
 
 import (
-	"context"
 	"net/http/httptest"
 	"sync"
 	"testing"
@@ -25,6 +24,7 @@ import (
 	"github.com/coreos/etcd/pkg/types"
 	"github.com/coreos/etcd/raft"
 	"github.com/coreos/etcd/raft/raftpb"
+	"golang.org/x/net/context"
 )
 
 func BenchmarkSendingMsgApp(b *testing.B) {

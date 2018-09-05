@@ -79,9 +79,9 @@ Radius Intelligence uses Kubernetes running CoreOS to containerize and scale int
 
 PD(Placement Driver) is the central controller in the TiDB cluster. It saves the cluster meta information, schedule the data, allocate the global unique timestamp for the distributed transaction, etc. It embeds etcd to supply high availability and auto failover.
 
-## Huawei
+## Canal
 
-- *Application*: System configuration for overlay network (Canal)
+- *Application*: system configuration for overlay network
 - *Launched*: June 2016
 - *Cluster Size*: 3 members for each cluster
 - *Order of Data Size*: kilobytes
