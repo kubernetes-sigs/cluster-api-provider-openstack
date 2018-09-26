@@ -14,8 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package clusterdeployer
+package deployer
 
+// ClusterAPIAPIServerConfigTemplate specifies the manifests for the clusterapi-apiserver
 const ClusterAPIAPIServerConfigTemplate = `
 apiVersion: apiregistration.k8s.io/v1beta1
 kind: APIService
@@ -28,10 +29,9 @@ spec:
   version: v1alpha1
   group: cluster.k8s.io
   groupPriorityMinimum: 2000
-  priority: 200
   service:
     name: clusterapi
-    namespace: default
+    namespace: {{ .Namespace }}
   versionPriority: 10
   caBundle: {{ .CABundle }}
 ---
@@ -39,7 +39,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: clusterapi
-  namespace: default
+  namespace: {{ .Namespace }}
   labels:
     api: clusterapi
     apiserver: "true"
@@ -56,7 +56,7 @@ apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
   name: clusterapi-apiserver
-  namespace: default
+  namespace: {{ .Namespace }}
   labels:
     api: clusterapi
     apiserver: "true"
@@ -70,6 +70,7 @@ spec:
     spec:
       nodeSelector:
         node-role.kubernetes.io/master: ""
+      serviceAccountName: apiserver
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
@@ -121,6 +122,25 @@ spec:
         hostPath:
           path: /etc/ssl/certs
 ---
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: apiserver
+  namespace: {{ .Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Namespace }}:system:auth-delegator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+- kind: ServiceAccount
+  name: apiserver
+  namespace: {{ .Namespace }}
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -132,14 +152,14 @@ roleRef:
   name: extension-apiserver-authentication-reader
 subjects:
 - kind: ServiceAccount
-  name: default
-  namespace: default
+  name: apiserver
+  namespace: {{ .Namespace }}
 ---
 apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
   name: etcd-clusterapi
-  namespace: default
+  namespace: {{ .Namespace }}
 spec:
   serviceName: "etcd"
   replicas: 1
@@ -214,7 +234,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: etcd-clusterapi-svc
-  namespace: default
+  namespace: {{ .Namespace }}
   labels:
     app: etcd
 spec:
@@ -230,7 +250,7 @@ kind: Secret
 type: kubernetes.io/tls
 metadata:
   name: cluster-apiserver-certs
-  namespace: default
+  namespace: {{ .Namespace }}
   labels:
     api: clusterapi
     apiserver: "true"
