@@ -53,3 +53,7 @@ required = [
 [[constraint]]
   name = "k8s.io/code-generator"
   version = "kubernetes-1.9.6"
+
+[[constraint]]
+  name = "sigs.k8s.io/cluster-api"
+  revision = "f302034cfa525bd57a891532e761f742687e5392"
