@@ -135,7 +135,6 @@ func NewMachineActuator(machineClient client.MachineInterface) (*OpenstackClient
 		sshCred.privateKeyPath = SshPrivateKeyPath
 
 		err = machineService.CreateKeyPair(sshCred.user, sshCred.publicKey)
-
 		if err != nil {
 			return nil, fmt.Errorf("create ssh key pair err: %v", err)
 		}
