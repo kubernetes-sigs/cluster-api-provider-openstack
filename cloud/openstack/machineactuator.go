@@ -26,6 +26,8 @@ import (
 	"reflect"
 	"strings"
 
+	"time"
+
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -38,7 +40,6 @@ import (
 	apierrors "sigs.k8s.io/cluster-api/pkg/errors"
 	"sigs.k8s.io/cluster-api/pkg/kubeadm"
 	"sigs.k8s.io/cluster-api/pkg/util"
-	"time"
 )
 
 const (
@@ -133,7 +134,9 @@ func NewMachineActuator(machineClient client.MachineInterface) (*OpenstackClient
 		}
 		sshCred.privateKeyPath = SshPrivateKeyPath
 
-		if machineService.CreateKeyPair(sshCred.user, sshCred.publicKey) != nil {
+		err = machineService.CreateKeyPair(sshCred.user, sshCred.publicKey)
+
+		if err != nil {
 			return nil, fmt.Errorf("create ssh key pair err: %v", err)
 		}
 	}
