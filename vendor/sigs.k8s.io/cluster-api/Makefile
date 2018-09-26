@@ -18,20 +18,28 @@ all: generate build images
 
 depend:
 	dep version || go get -u github.com/golang/dep/cmd/dep
+	dep ensure -v
 
-generate: genapi genconversion genclientset gendeepcopy
+	# go libraries often ship BUILD and BUILD.bazel files, but they often don't work.
+	# We delete them and regenerate them
+	find vendor -name "BUILD" -delete
+	find vendor -name "BUILD.bazel" -delete
+
+	bazel run //:gazelle
+
+generate: genapi genconversion genclientset gendeepcopy genopenapi
 
 genapi: depend
 	go build -o $$GOPATH/bin/apiregister-gen sigs.k8s.io/cluster-api/vendor/github.com/kubernetes-incubator/apiserver-builder/cmd/apiregister-gen
-	apiregister-gen -i ./pkg/apis,./pkg/apis/cluster,./pkg/apis/cluster/v1alpha1
+	$$GOPATH/bin/apiregister-gen -i ./pkg/apis,./pkg/apis/cluster,./pkg/apis/cluster/v1alpha1
 
 genconversion: depend
 	go build -o $$GOPATH/bin/conversion-gen sigs.k8s.io/cluster-api/vendor/k8s.io/code-generator/cmd/conversion-gen
-	conversion-gen -i ./pkg/apis/cluster/v1alpha1/ -O zz_generated.conversion --go-header-file boilerplate.go.txt
+	$$GOPATH/bin/conversion-gen -i ./pkg/apis/cluster/v1alpha1/ -O zz_generated.conversion --go-header-file boilerplate.go.txt
 
 genclientset: depend
 	go build -o $$GOPATH/bin/client-gen sigs.k8s.io/cluster-api/vendor/k8s.io/code-generator/cmd/client-gen
-	client-gen \
+	$$GOPATH/bin/client-gen \
 	  --input="cluster/v1alpha1" \
 		--clientset-name="clientset" \
 		--input-base="sigs.k8s.io/cluster-api/pkg/apis" \
@@ -41,10 +49,36 @@ genclientset: depend
 
 gendeepcopy:
 	go build -o $$GOPATH/bin/deepcopy-gen sigs.k8s.io/cluster-api/vendor/k8s.io/code-generator/cmd/deepcopy-gen
-	deepcopy-gen \
+	$$GOPATH/bin/deepcopy-gen \
 	  -i ./pkg/apis/cluster/,./pkg/apis/cluster/v1alpha1/ \
 	  -O zz_generated.deepcopy \
 	  -h boilerplate.go.txt
+
+STATIC_API_DIRS = k8s.io/apimachinery/pkg/apis/meta/v1
+STATIC_API_DIRS += k8s.io/apimachinery/pkg/api/resource
+STATIC_API_DIRS += k8s.io/apimachinery/pkg/version
+STATIC_API_DIRS += k8s.io/apimachinery/pkg/runtime
+STATIC_API_DIRS += k8s.io/apimachinery/pkg/util/intstr
+STATIC_API_DIRS += k8s.io/api/core/v1
+
+# Automatically extract vendored apis under vendor/k8s.io/api.
+VENDOR_API_DIRS := $(shell find vendor/k8s.io/api -type d | grep -E 'v[[:digit:]]+(alpha[[:digit:]]+|beta[[:digit:]]+)*' | sed -e 's/^vendor\///')
+
+empty:=
+comma:=,
+space:=$(empty) $(empty)
+
+genopenapi: static_apis = $(subst $(space),$(comma),$(STATIC_API_DIRS))
+genopenapi: vendor_apis = $(subst $(space),$(comma),$(VENDOR_API_DIRS))
+
+genopenapi:
+	go build -o $$GOPATH/bin/openapi-gen sigs.k8s.io/cluster-api/vendor/k8s.io/code-generator/cmd/openapi-gen
+	$$GOPATH/bin/openapi-gen \
+	  --input-dirs $(static_apis) \
+	  --input-dirs $(vendor_apis) \
+	  --input-dirs ./pkg/apis/cluster/,./pkg/apis/cluster/v1alpha1/ \
+	  --output-package "sigs.k8s.io/cluster-api/pkg/openapi" \
+	  --go-header-file boilerplate.go.txt
 
 build: depend
 	CGO_ENABLED=0 go install -a -ldflags '-extldflags "-static"' sigs.k8s.io/cluster-api/cmd/apiserver

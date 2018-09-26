@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package clusterdeployer
+package clusterclient
 
 // TODO: Test clusterclient. To do this properly, etcd and kubectl need to be on the box running the test.
 // Placeholder till the presubmit images have the needed binaries.

@@ -989,12 +989,13 @@
   revision = "d8ea2fe547a448256204cfc68dfee7b26c720acb"
 
 [[projects]]
-  branch = "master"
-  digest = "1:cfd25db640ab076bf7d65bab52e5578266e714f4cb06aaf2c613b7a77bad8ff2"
+  digest = "1:9c510bf7fbb7c80ee1e41252bc08dcd82d24048be47e2b7c212e2cda4e2a8fa7"
   name = "sigs.k8s.io/cluster-api"
   packages = [
     "clusterctl/clusterdeployer",
-    "clusterctl/clusterdeployer/minikube",
+    "clusterctl/clusterdeployer/bootstrap/existing",
+    "clusterctl/clusterdeployer/bootstrap/minikube",
+    "clusterctl/clusterdeployer/clusterclient",
     "clusterctl/cmd",
     "clusterctl/providercomponents",
     "clusterctl/validation",
@@ -1012,15 +1013,17 @@
     "pkg/clientcmd",
     "pkg/cmd-runner",
     "pkg/controller/config",
+    "pkg/controller/error",
     "pkg/controller/machine",
     "pkg/controller/noderefutil",
     "pkg/controller/sharedinformers",
+    "pkg/deployer",
     "pkg/errors",
     "pkg/kubeadm",
     "pkg/util",
   ]
   pruneopts = ""
-  revision = "4cd646d0a760fbce0e25a370b5fac4f200344f9b"
+  revision = "f302034cfa525bd57a891532e761f742687e5392"
 
 [solve-meta]
   analyzer-name = "dep"
