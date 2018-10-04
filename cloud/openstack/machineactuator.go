@@ -242,8 +242,11 @@ func (oc *OpenstackClient) Create(cluster *clusterv1.Cluster, machine *clusterv1
 
 	if providerConfig.FloatingIP != "" {
 		err := oc.machineService.AssociateFloatingIP(instance.ID, providerConfig.FloatingIP)
-		return oc.handleMachineError(machine, apierrors.CreateMachine(
-			"Associate floatingIP err: %v", err))
+		if err != nil {
+			return oc.handleMachineError(machine, apierrors.CreateMachine(
+				"Associate floatingIP err: %v", err))
+		}
+
 	}
 
 	return oc.updateAnnotation(machine, instance.ID)
