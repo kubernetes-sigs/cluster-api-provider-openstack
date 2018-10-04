@@ -123,7 +123,10 @@ func NewMachineActuator(machineClient client.MachineInterface) (*OpenstackClient
 			if sshCred.publicKey == keyPairList[i].PublicKey {
 				needCreate = false
 			} else {
-				machineService.DeleteKeyPair(keyPairList[i].Name)
+				err = machineService.DeleteKeyPair(keyPairList[i].Name)
+				if err != nil {
+					return nil, fmt.Errorf("unable to delete keypair: %v", err)
+				}
 			}
 			break
 		}
