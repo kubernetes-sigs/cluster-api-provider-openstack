@@ -123,7 +123,10 @@ func NewMachineActuator(machineClient client.MachineInterface) (*OpenstackClient
 			if sshCred.publicKey == keyPairList[i].PublicKey {
 				needCreate = false
 			} else {
-				machineService.DeleteKeyPair(keyPairList[i].Name)
+				err = machineService.DeleteKeyPair(keyPairList[i].Name)
+				if err != nil {
+					return nil, fmt.Errorf("unable to delete keypair: %v", err)
+				}
 			}
 			break
 		}
@@ -386,7 +389,10 @@ func (oc *OpenstackClient) handleMachineError(machine *clusterv1.Machine, err *a
 		message := err.Message
 		machine.Status.ErrorReason = &reason
 		machine.Status.ErrorMessage = &message
-		oc.machineClient.UpdateStatus(machine)
+		_, err := oc.machineClient.UpdateStatus(machine)
+		if err != nil {
+			return fmt.Errorf("unable to update machine status: %v", err)
+		}
 	}
 
 	glog.Errorf("Machine error: %v", err.Message)
