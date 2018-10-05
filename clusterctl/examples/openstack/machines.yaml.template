@@ -17,6 +17,8 @@ items:
         networks:
         - uuid: ab14ce0d-5e1f-4e32-bf65-00416e3cc19c
         floatingIP: 129.114.111.153
+        security_groups:
+        - default
     versions:
       kubelet: 1.9.4
       controlPlane: 1.9.4
@@ -38,5 +40,7 @@ items:
         networks:
         - uuid: ab14ce0d-5e1f-4e32-bf65-00416e3cc19c
         floatingIP: 129.114.111.153
+        security_groups:
+        - default
     versions:
       kubelet: 1.9.4
