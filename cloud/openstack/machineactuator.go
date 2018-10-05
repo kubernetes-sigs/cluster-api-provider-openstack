@@ -325,8 +325,8 @@ func getIPFromInstance(instance *clients.Instance) (string, error) {
 	if instance.AccessIPv4 != "" && net.ParseIP(instance.AccessIPv4) != nil {
 		return instance.AccessIPv4, nil
 	}
-	type network struct {
-		Addr    string  `json:"addr"`
+	type networkInterface struct {
+		Address string  `json:"addr"`
 		Version float64 `json:"version"`
 		Type    string  `json:"OS-EXT-IPS:type"`
 	}
@@ -337,17 +337,17 @@ func getIPFromInstance(instance *clients.Instance) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("extract IP from instance err: %v", err)
 		}
-		var address []interface{}
-		json.Unmarshal(list, &address)
-		for _, addr := range address {
-			var net network
-			b, _ := json.Marshal(addr)
-			json.Unmarshal(b, &net)
-			if net.Version == 4.0 {
-				if net.Type == "floating" {
-					return net.Addr, nil
+		var networks []interface{}
+		json.Unmarshal(list, &networks)
+		for _, network := range networks {
+			var netInterface networkInterface
+			b, _ := json.Marshal(network)
+			json.Unmarshal(b, &netInterface)
+			if netInterface.Version == 4.0 {
+				if netInterface.Type == "floating" {
+					return netInterface.Address, nil
 				}
-				addrList = append(addrList, net.Addr)
+				addrList = append(addrList, netInterface.Address)
 			}
 		}
 	}
