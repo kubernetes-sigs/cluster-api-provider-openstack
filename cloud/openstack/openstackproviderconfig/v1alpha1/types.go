@@ -39,6 +39,9 @@ type OpenstackProviderConfig struct {
 	// The availability zone from which to launch the server.
 	AvailabilityZone string `json:"availability_zone,omitempty"`
 
+	// The names of the security groups to assign to the instance
+	SecurityGroups []string `json:"security_groups,omitempty"`
+
 	RootVolume RootVolume `json:"root_volume,omitempty"`
 }
 
