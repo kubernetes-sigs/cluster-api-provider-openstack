@@ -19,6 +19,7 @@ package clients
 import (
 	"encoding/base64"
 	"fmt"
+
 	"github.com/golang/glog"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
@@ -171,11 +172,9 @@ func (is *InstanceService) InstanceCreate(config *openstackconfigv1.OpenstackPro
 		Networks: []servers.Network{{
 			UUID: config.Networks[0].UUID,
 		}},
-		UserData: []byte(userData),
-		SecurityGroups: []string{
-			"default",
-		},
-		ServiceClient: is.computeClient,
+		UserData:       []byte(userData),
+		SecurityGroups: config.SecurityGroups,
+		ServiceClient:  is.computeClient,
 	}
 	server, err := servers.Create(is.computeClient, keypairs.CreateOptsExt{
 		CreateOptsBuilder: createOpts,
