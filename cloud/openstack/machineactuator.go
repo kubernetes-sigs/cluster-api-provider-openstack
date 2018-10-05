@@ -330,6 +330,7 @@ func getIPFromInstance(instance *clients.Instance) (string, error) {
 		Version float64 `json:"version"`
 		Type    string  `json:"OS-EXT-IPS:type"`
 	}
+	var addrList []string
 
 	for _, b := range instance.Addresses {
 		list, err := json.Marshal(b)
@@ -338,7 +339,6 @@ func getIPFromInstance(instance *clients.Instance) (string, error) {
 		}
 		var address []interface{}
 		json.Unmarshal(list, &address)
-		var addrList []string
 		for _, addr := range address {
 			var net network
 			b, _ := json.Marshal(addr)
@@ -349,10 +349,10 @@ func getIPFromInstance(instance *clients.Instance) (string, error) {
 				}
 				addrList = append(addrList, net.Addr)
 			}
-			if len(addrList) != 0 {
-				return addrList[0], nil
-			}
 		}
+	}
+	if len(addrList) != 0 {
+		return addrList[0], nil
 	}
 	return "", fmt.Errorf("extract IP from instance err")
 }
