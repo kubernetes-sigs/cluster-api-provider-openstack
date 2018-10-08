@@ -29,5 +29,6 @@ aliases:
     - rjmorse
   cluster-api-openstack-maintainers:
     - dims
+    - flaper87
     - Lion-Wei
     - m1093782566
