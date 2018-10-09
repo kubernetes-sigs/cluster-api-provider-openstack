@@ -17,6 +17,8 @@ limitations under the License.
 package main
 
 import (
+	"flag"
+
 	"github.com/golang/glog"
 	"github.com/kubernetes-incubator/apiserver-builder/pkg/controller"
 	"github.com/spf13/pflag"
@@ -35,6 +37,8 @@ func init() {
 }
 
 func main() {
+	// the following line exists to make glog happy, for more information, see: https://github.com/kubernetes/kubernetes/issues/17162
+	flag.CommandLine.Parse([]string{})
 	pflag.Parse()
 
 	logs.InitLogs()
