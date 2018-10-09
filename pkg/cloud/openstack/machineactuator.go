@@ -25,21 +25,20 @@ import (
 	"os"
 	"reflect"
 	"strings"
-
 	"time"
 
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
-	"sigs.k8s.io/cluster-api-provider-openstack/cloud/openstack/clients"
-	"sigs.k8s.io/cluster-api-provider-openstack/cloud/openstack/machinesetup"
-	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/cloud/openstack/openstackproviderconfig/v1alpha1"
+
+	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/clients"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/machinesetup"
 	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
-	client "sigs.k8s.io/cluster-api/pkg/client/clientset_generated/clientset/typed/cluster/v1alpha1"
 	apierrors "sigs.k8s.io/cluster-api/pkg/errors"
 	"sigs.k8s.io/cluster-api/pkg/kubeadm"
 	"sigs.k8s.io/cluster-api/pkg/util"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -65,9 +64,8 @@ type SshCreds struct {
 type OpenstackClient struct {
 	scheme              *runtime.Scheme
 	kubeadm             *kubeadm.Kubeadm
-	machineClient       client.MachineInterface
+	client              client.Client
 	machineSetupWatcher *machinesetup.ConfigWatch
-	codecFactory        *serializer.CodecFactory
 	machineService      *clients.InstanceService
 	sshCred             *SshCreds
 	*DeploymentClient
@@ -91,7 +89,7 @@ func readCloudConfigFromFile(path string) *clients.CloudConfig {
 	return cloudConfig
 }
 
-func NewMachineActuator(machineClient client.MachineInterface) (*OpenstackClient, error) {
+func NewMachineActuator(machineClient client.Client, scheme *runtime.Scheme) (*OpenstackClient, error) {
 	cloudConfig := readCloudConfigFromFile(CloudConfigPath)
 	if cloudConfig == nil {
 		return nil, fmt.Errorf("Get cloud config from file %q err", CloudConfigPath)
@@ -143,7 +141,6 @@ func NewMachineActuator(machineClient client.MachineInterface) (*OpenstackClient
 		}
 	}
 
-	scheme, codecFactory, err := openstackconfigv1.NewSchemeAndCodecs()
 	if err != nil {
 		return nil, err
 	}
@@ -154,9 +151,8 @@ func NewMachineActuator(machineClient client.MachineInterface) (*OpenstackClient
 	}
 
 	return &OpenstackClient{
-		machineClient:       machineClient,
+		client:              machineClient,
 		machineService:      machineService,
-		codecFactory:        codecFactory,
 		machineSetupWatcher: setupConfigWatcher,
 		kubeadm:             kubeadm.New(),
 		scheme:              scheme,
@@ -387,13 +383,12 @@ func (oc *OpenstackClient) GetKubeConfig(cluster *clusterv1.Cluster, master *clu
 // cluster installation, it will operate as a no-op. It also returns the
 // original error for convenience, so callers can do "return handleMachineError(...)".
 func (oc *OpenstackClient) handleMachineError(machine *clusterv1.Machine, err *apierrors.MachineError) error {
-	if oc.machineClient != nil {
+	if oc.client != nil {
 		reason := err.Reason
 		message := err.Message
 		machine.Status.ErrorReason = &reason
 		machine.Status.ErrorMessage = &message
-		_, err := oc.machineClient.UpdateStatus(machine)
-		if err != nil {
+		if err := oc.client.Update(nil, machine); err != nil {
 			return fmt.Errorf("unable to update machine status: %v", err)
 		}
 	}
@@ -413,8 +408,7 @@ func (oc *OpenstackClient) updateAnnotation(machine *clusterv1.Machine, id strin
 		return err
 	}
 	machine.ObjectMeta.Annotations[OpenstackIPAnnotationKey] = ip
-	_, err = oc.machineClient.Update(machine)
-	if err != nil {
+	if err := oc.client.Update(nil, machine); err != nil {
 		return err
 	}
 	return oc.updateInstanceStatus(machine)
@@ -453,16 +447,11 @@ func (oc *OpenstackClient) instanceExists(machine *clusterv1.Machine) (instance 
 
 // providerconfig get openstack provider config
 func (oc *OpenstackClient) providerconfig(providerConfig clusterv1.ProviderConfig) (*openstackconfigv1.OpenstackProviderConfig, error) {
-	obj, gvk, err := oc.codecFactory.UniversalDecoder(openstackconfigv1.SchemeGroupVersion).Decode(providerConfig.Value.Raw, nil, nil)
-	if err != nil {
-		return nil, fmt.Errorf("decoding failure: %v", err)
+	var config openstackconfigv1.OpenstackProviderConfig
+	if err := yaml.Unmarshal(providerConfig.Value.Raw, &config); err != nil {
+		return nil, err
 	}
-	config, ok := obj.(*openstackconfigv1.OpenstackProviderConfig)
-	if !ok {
-		return nil, fmt.Errorf("failure to cast to openstack; type: %v", gvk)
-	}
-
-	return config, nil
+	return &config, nil
 }
 
 func (oc *OpenstackClient) getKubeadmToken() (string, error) {

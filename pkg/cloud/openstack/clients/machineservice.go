@@ -27,7 +27,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/identity/v3/tokens"
-	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/cloud/openstack/openstackproviderconfig/v1alpha1"
+	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
 )
 
 type InstanceService struct {

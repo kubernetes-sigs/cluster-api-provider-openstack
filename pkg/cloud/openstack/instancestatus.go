@@ -36,7 +36,7 @@ type instanceStatus *clusterv1.Machine
 
 // Get the status of the instance identified by the given machine
 func (oc *OpenstackClient) instanceStatus(machine *clusterv1.Machine) (instanceStatus, error) {
-	currentMachine, err := util.GetMachineIfExists(oc.machineClient, machine.ObjectMeta.Name)
+	currentMachine, err := util.GetMachineIfExists(oc.client, machine.Namespace, machine.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (oc *OpenstackClient) instanceStatus(machine *clusterv1.Machine) (instanceS
 // Sets the status of the instance identified by the given machine to the given machine
 func (oc *OpenstackClient) updateInstanceStatus(machine *clusterv1.Machine) error {
 	status := instanceStatus(machine)
-	currentMachine, err := util.GetMachineIfExists(oc.machineClient, machine.ObjectMeta.Name)
+	currentMachine, err := util.GetMachineIfExists(oc.client, machine.Namespace, machine.Name)
 	if err != nil {
 		return err
 	}
@@ -66,8 +66,7 @@ func (oc *OpenstackClient) updateInstanceStatus(machine *clusterv1.Machine) erro
 		return err
 	}
 
-	_, err = oc.machineClient.Update(m)
-	return err
+	return oc.client.Update(nil, m)
 }
 
 // Gets the state of the instance stored on the given machine CRD

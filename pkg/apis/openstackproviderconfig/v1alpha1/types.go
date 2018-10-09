@@ -14,13 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package openstackproviderconfig
+package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// TODO: finish provider config
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type OpenstackProviderConfig struct {
 	metav1.TypeMeta `json:",inline"`
@@ -54,7 +53,10 @@ type NetworkParam struct {
 }
 
 type RootVolume struct {
-	VolumeType  string                 `json:"volumeType"`
-	Size        int                    `json:"diskSize,omitempty"`
-	ExtendParam map[string]interface{} `json:"extendParam,omitempty"`
+	VolumeType string `json:"volumeType"`
+	Size       int    `json:"diskSize,omitempty"`
+}
+
+func init() {
+	SchemeBuilder.Register(&OpenstackProviderConfig{})
 }

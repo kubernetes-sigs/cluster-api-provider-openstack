@@ -14,13 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
-
-import (
-	_ "sigs.k8s.io/cluster-api-provider-openstack/cloud/openstack"
-	"sigs.k8s.io/cluster-api/clusterctl/cmd"
-)
-
-func main() {
-	cmd.Execute()
-}
+// +k8s:deepcopy-gen=package,register
+// +k8s:conversion-gen=sigs.k8s.io/cluster-api/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig
+// +k8s:openapi-gen=true
+// +k8s:defaulter-gen=TypeMeta
+// +groupName=openstackproviderconfig.k8s.io
+package v1alpha1
