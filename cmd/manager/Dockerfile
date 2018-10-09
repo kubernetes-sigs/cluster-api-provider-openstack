@@ -15,6 +15,6 @@ FROM k8s.gcr.io/debian-base-amd64:0.3.2
 RUN echo CACHEBUST>/dev/null && clean-install \
     ca-certificates
 
-ADD openstack-machine-controller /bin/
+ADD manager /bin/
 
-CMD ["/bin/openstack-machine-controller"]
+CMD ["/bin/manager"]
