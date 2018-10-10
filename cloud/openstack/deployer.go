@@ -19,6 +19,7 @@ package openstack
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/golang/glog"
@@ -56,8 +57,13 @@ func (d *DeploymentClient) GetKubeConfig(cluster *clusterv1.Cluster, master *clu
 		return "", err
 	}
 
+	homeDir, ok := os.LookupEnv("HOME")
+	if !ok {
+		return "", fmt.Errorf("unable to use HOME environment variable to find SSH key: %v", err)
+	}
+
 	result := strings.TrimSpace(util.ExecCommand(
-		"ssh", "-i", "/root/.ssh/openstack_tmp",
+		"ssh", "-i", homeDir+"/.ssh/openstack_tmp",
 		"-o", "StrictHostKeyChecking no",
 		"-o", "UserKnownHostsFile /dev/null",
 		fmt.Sprintf("%s@%s", SshUserName, ip),
