@@ -16,24 +16,34 @@ spec:
       properties:
         apiVersion:
           type: string
-        name: string
-        flavor: string
-        image: string
+        name:
+          type: string
+        flavor:
+          type: string
+        image:
+          type: string
         networks:
           items:
-            uuid: string
-            fixed_ip: string
+            uuid:
+              type: string
+            fixed_ip:
+              type: string
           type: array
-        floatingIP: string
-        availability_zone: string
+        floatingIP:
+          type: string
+        availability_zone:
+          type: string
         security_groups:
           items:
             type: string
           type: array
         root_volume:
-          volumeType: string
-          diskSize: int
-
+          properties:
+            volumeType:
+             type: string
+            diskSize:
+              type: string
+          type: object
         metadata:
           type: object
       required:

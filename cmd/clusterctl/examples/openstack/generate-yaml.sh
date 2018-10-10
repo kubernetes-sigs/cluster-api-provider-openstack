@@ -1,7 +1,14 @@
 #!/bin/sh
 set -e
-
-OUTPUT_DIR=out
+PWD=$(cd `dirname $0`; pwd)
+HOME_DIR=${PWD%%/cmd/clusterctl/examples/*}
+OUTPUT_DIR="${PWD}/out"
+PROVIDER_CRD_DIR="${HOME_DIR}/config/crd"
+PROVIDER_RBAC_DIR="${HOME_DIR}/config/rbac"
+PROVIDER_MANAGER_DIR="${HOME_DIR}/config/manager"
+CLUSTER_CRD_DIR="${HOME_DIR}/vendor/sigs.k8s.io/cluster-api/config/crd"
+CLUSTER_RBAC_DIR="${HOME_DIR}/vendor/sigs.k8s.io/cluster-api/config/rbac"
+CLUSTER_MANAGER_DIR="${HOME_DIR}/vendor/sigs.k8s.io/cluster-api/config/manager"
 
 MACHINE_TEMPLATE_FILE=machines.yaml.template
 MACHINE_GENERATED_FILE=${OUTPUT_DIR}/machines.yaml
@@ -99,13 +106,46 @@ else
   echo "Unrecognized OS : $OS"
   exit 1
 fi
+# write config file to PROVIDERCOMPONENT_GENERATED_FILE
+for file in `ls ${PROVIDER_CRD_DIR}`
+do
+    cat "${PROVIDER_CRD_DIR}/${file}" > $PROVIDERCOMPONENT_GENERATED_FILE
+    echo -e "---\n" >> $PROVIDERCOMPONENT_GENERATED_FILE
+done
+for file in `ls ${PROVIDER_RBAC_DIR}`
+do
+    cat "${PROVIDER_RBAC_DIR}/${file}" >> $PROVIDERCOMPONENT_GENERATED_FILE
+    echo -e "---\n" >> $PROVIDERCOMPONENT_GENERATED_FILE
+done
+for file in `ls ${PROVIDER_MANAGER_DIR}`
+do
+    cat "${PROVIDER_MANAGER_DIR}/${file}" >> $PROVIDERCOMPONENT_GENERATED_FILE
+    echo -e "---\n" >> $PROVIDERCOMPONENT_GENERATED_FILE
+done
+for file in `ls ${CLUSTER_MANAGER_DIR}`
+do
+    cat "${CLUSTER_MANAGER_DIR}/${file}" >> $PROVIDERCOMPONENT_GENERATED_FILE
+    echo -e "---\n" >> $PROVIDERCOMPONENT_GENERATED_FILE
+done
+for file in `ls ${CLUSTER_CRD_DIR}`
+do
+    cat "${CLUSTER_CRD_DIR}/${file}" >> $PROVIDERCOMPONENT_GENERATED_FILE
+    echo -e "---\n" >> $PROVIDERCOMPONENT_GENERATED_FILE
+done
+for file in `ls ${CLUSTER_RBAC_DIR}`
+do
+    cat "${CLUSTER_RBAC_DIR}/${file}" >> $PROVIDERCOMPONENT_GENERATED_FILE
+    echo -e "---\n" >> $PROVIDERCOMPONENT_GENERATED_FILE
+done
 
 cat $PROVIDERCOMPONENT_TEMPLATE_FILE \
   | sed -e "s/\$OPENSTACK_CLOUD_CONFIG/$OPENSTACK_CLOUD_CONFIG/" \
   | sed -e "s/\$MACHINE_CONTROLLER_SSH_USER/$MACHINE_CONTROLLER_SSH_USER/" \
   | sed -e "s/\$MACHINE_CONTROLLER_SSH_PUBLIC/$MACHINE_CONTROLLER_SSH_PUBLIC/" \
   | sed -e "s/\$MACHINE_CONTROLLER_SSH_PRIVATE/$MACHINE_CONTROLLER_SSH_PRIVATE/" \
-  > $PROVIDERCOMPONENT_GENERATED_FILE
+  >> $PROVIDERCOMPONENT_GENERATED_FILE
+
+sed -i "s#image: controller:latest#image: gcr.io/k8s-cluster-api/cluster-api-controller:latest#" $PROVIDERCOMPONENT_GENERATED_FILE
 
 cat $MACHINE_TEMPLATE_FILE \
   > $MACHINE_GENERATED_FILE
