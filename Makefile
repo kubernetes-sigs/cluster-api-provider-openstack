@@ -116,7 +116,7 @@ env:
 	go env
 
 clean:
-	rm -rf _dist openstack-machine-controller
+	rm -rf _dist bin/manager bin/clusterctl
 
 realclean: clean
 	rm -rf vendor
