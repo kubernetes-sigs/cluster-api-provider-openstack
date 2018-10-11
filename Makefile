@@ -44,6 +44,7 @@ work: $(GOBIN)
 depend: work
 ifndef HAS_DEP
 	curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+	mv $(GOPATH)/bin/dep /usr/local/bin
 endif
 	dep ensure
 
