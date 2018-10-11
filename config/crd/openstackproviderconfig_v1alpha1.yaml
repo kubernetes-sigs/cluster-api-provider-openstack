@@ -1,0 +1,59 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  labels:
+    controller-tools.k8s.io: "1.0"
+  name: openstackproviderconfigs.openstackproviderconfig.k8s.io
+spec:
+  group: openstackproviderconfig.k8s.io
+  names:
+    kind: OpenstackProviderConfig
+    plural: openstackproviderconfigs
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          type: string
+        name:
+          type: string
+        flavor:
+          type: string
+        image:
+          type: string
+        networks:
+          items:
+            uuid:
+              type: string
+            fixed_ip:
+              type: string
+          type: array
+        floatingIP:
+          type: string
+        availability_zone:
+          type: string
+        security_groups:
+          items:
+            type: string
+          type: array
+        root_volume:
+          properties:
+            volumeType:
+             type: string
+            diskSize:
+              type: string
+          type: object
+        metadata:
+          type: object
+      required:
+      - name
+      - flavor
+      - image
+  version: v1alpha1
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
