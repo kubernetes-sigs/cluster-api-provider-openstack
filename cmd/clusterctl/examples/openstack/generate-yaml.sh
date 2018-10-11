@@ -145,7 +145,7 @@ cat $PROVIDERCOMPONENT_TEMPLATE_FILE \
   | sed -e "s/\$MACHINE_CONTROLLER_SSH_PRIVATE/$MACHINE_CONTROLLER_SSH_PRIVATE/" \
   >> $PROVIDERCOMPONENT_GENERATED_FILE
 
-sed -i "s#image: controller:latest#image: gcr.io/k8s-cluster-api/cluster-api-controller:latest#" $PROVIDERCOMPONENT_GENERATED_FILE
+sed -i '' -e "s#image: controller:latest#image: gcr.io/k8s-cluster-api/cluster-api-controller:latest#" $PROVIDERCOMPONENT_GENERATED_FILE
 
 cat $MACHINE_TEMPLATE_FILE \
   > $MACHINE_GENERATED_FILE
