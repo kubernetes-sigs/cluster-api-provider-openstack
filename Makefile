@@ -50,19 +50,19 @@ endif
 depend-update: work
 	dep ensure -update
 
-build: machine-controller openstack-clusterctl
+build: manager clusterctl
 
-machine-controller:
+manager:
 	CGO_ENABLED=0 GOOS=$(GOOS) go build \
 		-ldflags $(LDFLAGS) \
-		-o openstack-machine-controller \
-		cmd/machine-controller/main.go
+		-o bin/manager \
+		cmd/manager/main.go
 
-openstack-clusterctl:
+clusterctl:
 	CGO_ENABLED=0 GOOS=$(GOOS) go build \
 		-ldflags $(LDFLAGS) \
-		-o openstack-clusterctl \
-		clusterctl/main.go
+		-o bin/clusterctl \
+		cmd/clusterctl/main.go
 
 test: unit functional
 
@@ -127,13 +127,17 @@ realclean: clean
 shell:
 	$(SHELL) -i
 
-images: image-machine-controller
+# Generate code
+generate:
+	go generate ./pkg/... ./cmd/...
 
-image-machine-controller: depend machine-controller
+images: openstack-cluster-api-controller
+
+openstack-cluster-api-controller: depend manager
 ifeq ($(GOOS),linux)
-	cp openstack-machine-controller cmd/machine-controller
-	docker build -t $(REGISTRY)/openstack-machine-controller:$(VERSION) cmd/machine-controller
-	rm cmd/machine-controller/openstack-machine-controller
+	cp bin/manager cmd/manager
+	docker build -t $(REGISTRY)/openstack-cluster-api-controller:$(VERSION) cmd/manager
+	rm cmd/manager/manager
 else
 	$(error Please set GOOS=linux for building the image)
 endif
@@ -141,7 +145,7 @@ endif
 upload-images: images
 	@echo "push images to $(REGISTRY)"
 	docker login -u="$(DOCKER_USERNAME)" -p="$(DOCKER_PASSWORD)";
-	docker push $(REGISTRY)/openstack-machine-controller:$(VERSION)
+	docker push $(REGISTRY)/openstack-cluster-api-controller:$(VERSION)
 
 version:
 	@echo ${VERSION}
