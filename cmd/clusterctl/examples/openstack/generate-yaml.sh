@@ -6,7 +6,7 @@ OUTPUT_DIR="${PWD}/out"
 PROVIDER_CRD_DIR="${HOME_DIR}/config/crd"
 PROVIDER_RBAC_DIR="${HOME_DIR}/config/rbac"
 PROVIDER_MANAGER_DIR="${HOME_DIR}/config/manager"
-CLUSTER_CRD_DIR="${HOME_DIR}/vendor/sigs.k8s.io/cluster-api/config/crd"
+CLUSTER_CRD_DIR="${HOME_DIR}/vendor/sigs.k8s.io/cluster-api/config/crds"
 CLUSTER_RBAC_DIR="${HOME_DIR}/vendor/sigs.k8s.io/cluster-api/config/rbac"
 CLUSTER_MANAGER_DIR="${HOME_DIR}/vendor/sigs.k8s.io/cluster-api/config/manager"
 
