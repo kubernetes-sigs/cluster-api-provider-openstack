@@ -75,6 +75,8 @@ func NewInstanceService(cfg *clientconfig.Cloud) (*InstanceService, error) {
 		Password:         cfg.AuthInfo.Password,
 		DomainName:       cfg.AuthInfo.DomainName,
 		TenantID:         cfg.AuthInfo.ProjectDomainID,
+		TenantName:       cfg.AuthInfo.ProjectDomainName,
+		TokenID:          cfg.AuthInfo.Token,
 		AllowReauth:      true,
 	}
 	provider, err := openstack.AuthenticatedClient(*opts)
