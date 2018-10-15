@@ -72,14 +72,14 @@ mkdir -p ${OUTPUT_DIR}
 # Get user cloud provider information from input
 read -p "Enter your username:" username
 read -p "Enter your domainname:" domain_name
-read -p "Enter your tenant id:" tenant_id
+read -p "Enter your project id:" project_id
 read -p "Enter region name:" region
 read -p "Enter authurl:" authurl
 read -s -p "Enter your password:" password
 OPENSTACK_CLOUD_CONFIG_PLAIN="user-name: $username\n\
 password: $password\n\
 domain-name: $domain_name\n\
-tenant-id: $tenant_id\n\
+tenant-id: $project_id\n\
 region: $region\n\
 auth-url: $authurl\n"
 

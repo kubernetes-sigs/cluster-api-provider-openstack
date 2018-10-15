@@ -44,7 +44,7 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
 
    - user-name
    - domain-name
-   - tenant-id
+   - project-id
    - region-name
    - auth-url
    - password
