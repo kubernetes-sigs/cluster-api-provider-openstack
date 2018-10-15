@@ -1,6 +1,6 @@
 # Kubernetes cluster-api-provider-openstack Project
 
-This repository hosts a concrete implementation of a provider for OpenStack for the [cluster-api project](https://github.com/dims/cluster-api).
+This repository hosts a concrete implementation of an OpenStack provider for the [cluster-api project](https://github.com/kubernetes-sigs/cluster-api).
 
 ## Community, discussion, contribution, and support
 
