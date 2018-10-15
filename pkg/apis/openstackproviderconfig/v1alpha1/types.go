@@ -37,10 +37,10 @@ type OpenstackProviderConfig struct {
 	FloatingIP string `json:"floatingIP,omitempty"`
 
 	// The availability zone from which to launch the server.
-	AvailabilityZone string `json:"availability_zone,omitempty"`
+	AvailabilityZone string `json:"availabilityZone,omitempty"`
 
 	// The names of the security groups to assign to the instance
-	SecurityGroups []string `json:"security_groups,omitempty"`
+	SecurityGroups []string `json:"securityGroups,omitempty"`
 
 	RootVolume RootVolume `json:"root_volume,omitempty"`
 }
