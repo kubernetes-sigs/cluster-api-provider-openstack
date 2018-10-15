@@ -98,5 +98,5 @@ your openstack Cluster API Kubernetes cluster.
 3. Delete the ssh keypair that were created for your cluster machine.
 
    ```bash
-   rm -rf /root/.ssh/openstack_tmp*
+   rm -rf $HOME/.ssh/openstack_tmp*
    ```
