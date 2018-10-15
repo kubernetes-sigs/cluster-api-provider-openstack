@@ -1,6 +1,6 @@
 # Kubernetes cluster-api-provider-openstack Project
 
-This repository hosts a concrete implementation of a provider for OpenStack for the [cluster-api project](https://github.com/dims/cluster-api).
+This repository hosts a concrete implementation of an OpenStack provider for the [cluster-api project](https://github.com/kubernetes-sigs/cluster-api).
 
 ## Community, discussion, contribution, and support
 
@@ -20,13 +20,14 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
 ### Prerequisites
 
 1. Install `kubectl` (see [here](http://kubernetes.io/docs/user-guide/prereqs/)).
-2. Install [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/), version <= 0.28.0 (see: [cluster-api/issues/475](https://github.com/kubernetes-sigs/cluster-api/issues/475)).
+2. Install [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/), version 0.30.0 or greater.
 3. Install a [driver](https://github.com/kubernetes/minikube/blob/master/docs/drivers.md) for minikube. For Linux, we recommend kvm2. For MacOS, we recommend VirtualBox.
-4. Build the `clusterctl` tool
+4. An appropriately configured [Go development environment](https://golang.org/doc/install)
+5. Build the `clusterctl` tool
 
    ```bash
    git clone https://github.com/kubernetes-sigs/cluster-api-provider-openstack $GOPATH/src/sigs.k8s.io/cluster-api-provider-openstack
-   cd $GOPATH/src/sigs.k8s.io/cluster-api-provider-openstack/clusterctl
+   cd $GOPATH/src/sigs.k8s.io/cluster-api-provider-openstack/cmd/clusterctl
    go build
    ```
 
@@ -43,7 +44,7 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
 
    - user-name
    - domain-name
-   - tenant-id
+   - project-id
    - region-name
    - auth-url
    - password
@@ -97,5 +98,5 @@ your openstack Cluster API Kubernetes cluster.
 3. Delete the ssh keypair that were created for your cluster machine.
 
    ```bash
-   rm -rf /root/.ssh/openstack_tmp*
+   rm -rf $HOME/.ssh/openstack_tmp*
    ```
