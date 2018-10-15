@@ -31,7 +31,7 @@ import (
 const ProviderName = "openstack"
 
 func init() {
-	clustercommon.RegisterClusterProvisioner(ProviderName, &DeploymentClient{})
+	clustercommon.RegisterClusterProvisioner(ProviderName, NewDeploymentClient())
 }
 
 type DeploymentClient struct{}
