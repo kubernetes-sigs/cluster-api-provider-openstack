@@ -22,7 +22,8 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
 1. Install `kubectl` (see [here](http://kubernetes.io/docs/user-guide/prereqs/)).
 2. Install [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/), version 0.30.0 or greater.
 3. Install a [driver](https://github.com/kubernetes/minikube/blob/master/docs/drivers.md) for minikube. For Linux, we recommend kvm2. For MacOS, we recommend VirtualBox.
-4. Build the `clusterctl` tool
+4. An appropriately configured [Go development environment](https://golang.org/doc/install)
+5. Build the `clusterctl` tool
 
    ```bash
    git clone https://github.com/kubernetes-sigs/cluster-api-provider-openstack $GOPATH/src/sigs.k8s.io/cluster-api-provider-openstack
