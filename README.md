@@ -27,7 +27,7 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
 
    ```bash
    git clone https://github.com/kubernetes-sigs/cluster-api-provider-openstack $GOPATH/src/sigs.k8s.io/cluster-api-provider-openstack
-   cd $GOPATH/src/sigs.k8s.io/cluster-api-provider-openstack/clusterctl
+   cd $GOPATH/src/sigs.k8s.io/cluster-api-provider-openstack/cmd/clusterctl
    go build
    ```
 
