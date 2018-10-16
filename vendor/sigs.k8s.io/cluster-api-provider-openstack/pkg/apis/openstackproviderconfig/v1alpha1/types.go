@@ -27,13 +27,11 @@ import (
 // OpenstackProviderSpec is the type that will be embedded in a Machine.Spec.ProviderSpec field
 // for an OpenStack Instance. It is used by the Openstack machine actuator to create a single machine instance.
 // TODO(cglaubitz): We might consider to change this to OpenstackMachineProviderSpec
-// +k8s:openapi-gen=true
 type OpenstackProviderSpec struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
+	metav1.TypeMeta `json:",inline"`
 
 	// The name of the secret containing the openstack credentials
-	CloudsSecret *corev1.SecretReference `json:"cloudsSecret"`
+	CloudsSecret string `json:"cloudsSecret"`
 
 	// The name of the cloud to use from the clouds secret
 	CloudName string `json:"cloudName"`
@@ -64,9 +62,6 @@ type OpenstackProviderSpec struct {
 
 	// The name of the secret containing the user data (startup script in most cases)
 	UserDataSecret *corev1.SecretReference `json:"userDataSecret,omitempty"`
-
-	// Whether the server instance is created on a trunk port or not.
-	Trunk bool `json:"trunk,omitempty"`
 
 	RootVolume RootVolume `json:"root_volume,omitempty"`
 }
@@ -116,17 +111,9 @@ type OpenstackClusterProviderSpec struct {
 	// network, a subnet with NodeCIDR, and a router connected to this subnet.
 	// If you leave this empty, no network will be created.
 	NodeCIDR string `json:"nodeCidr,omitempty"`
-	// DNSNameservers is the list of nameservers for OpenStack Subnet being created.
-	DNSNameservers []string `json:"dnsNameservers,omitempty"`
 	// ExternalNetworkID is the ID of an external OpenStack Network. This is necessary
 	// to get public internet to the VMs.
 	ExternalNetworkID string `json:"externalNetworkId,omitempty"`
-
-	// ManagedSecurityGroups defines that kubernetes manages the OpenStack security groups
-	// for now, that means that we'll create two security groups, one allowing SSH
-	// and API access from everywhere, and another one that allows all traffic to/from
-	// machines belonging to that group. In the future, we could make this more flexible.
-	ManagedSecurityGroups bool `json:"managedSecurityGroups"`
 }
 
 // +genclient
@@ -148,15 +135,6 @@ type OpenstackClusterProviderStatus struct {
 	// Network contains all information about the created OpenStack Network.
 	// It includes Subnets and Router.
 	Network *Network `json:"network,omitempty"`
-
-	// ControlPlaneSecurityGroups contains all the information about the OpenStack
-	// Security Group that needs to be applied to control plane nodes.
-	// TODO: Maybe instead of two properties, we add a property to the group?
-	ControlPlaneSecurityGroup *SecurityGroup `json:"controlPlaneSecurityGroup,omitempty"`
-
-	// GlobalSecurityGroup contains all the information about the OpenStack Security
-	// Group that needs to be applied to all nodes, both control plane and worker nodes.
-	GlobalSecurityGroup *SecurityGroup `json:"globalSecurityGroup,omitempty"`
 }
 
 // Network represents basic information about the associated OpenStach Neutron Network

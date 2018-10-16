@@ -107,11 +107,13 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:bf40c04c15471450e644627eb1317197cac533e60883cf44a6a8a2fdb5f3a016"
+  digest = "1:a83fdc9d6e0a39d0f4874b9c6021d77eaf62efdd5a868e6c9c500bdb00086196"
   name = "github.com/gophercloud/gophercloud"
   packages = [
     ".",
     "openstack",
+    "openstack/common/extensions",
+    "openstack/compute/v2/extensions/attachinterfaces",
     "openstack/compute/v2/extensions/floatingips",
     "openstack/compute/v2/extensions/keypairs",
     "openstack/compute/v2/flavors",
@@ -120,10 +122,12 @@
     "openstack/identity/v2/tenants",
     "openstack/identity/v2/tokens",
     "openstack/identity/v3/tokens",
+    "openstack/networking/v2/extensions",
     "openstack/networking/v2/extensions/attributestags",
     "openstack/networking/v2/extensions/layer3/routers",
     "openstack/networking/v2/extensions/security/groups",
     "openstack/networking/v2/extensions/security/rules",
+    "openstack/networking/v2/extensions/trunks",
     "openstack/networking/v2/networks",
     "openstack/networking/v2/ports",
     "openstack/networking/v2/subnets",
@@ -674,6 +678,23 @@
   revision = "e6602cb5709957f9ab9f4c2a1b71226daed26cf8"
 
 [[projects]]
+  branch = "master"
+  digest = "1:fb956a4d445c4d5c26774046ecc21c222e2afef0b7f4ceffb3a1de4becd899aa"
+  name = "sigs.k8s.io/cluster-api-provider-openstack"
+  packages = [
+    "pkg/apis",
+    "pkg/apis/openstackproviderconfig/v1alpha1",
+    "pkg/bootstrap",
+    "pkg/cloud/openstack",
+    "pkg/cloud/openstack/clients",
+    "pkg/cloud/openstack/cluster",
+    "pkg/cloud/openstack/machine",
+    "pkg/controller",
+  ]
+  pruneopts = "NUT"
+  revision = "fb2ac747965a625bf2119d3551da47fcf377aa9a"
+
+[[projects]]
   digest = "1:dca19204224bb3835c1ece945b28aa2b19095f99bad4fff33b72e3a9d47ad968"
   name = "sigs.k8s.io/controller-runtime"
   packages = [
@@ -737,14 +758,18 @@
   input-imports = [
     "github.com/gophercloud/gophercloud",
     "github.com/gophercloud/gophercloud/openstack",
+    "github.com/gophercloud/gophercloud/openstack/common/extensions",
+    "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces",
     "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips",
     "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs",
     "github.com/gophercloud/gophercloud/openstack/compute/v2/servers",
     "github.com/gophercloud/gophercloud/openstack/identity/v3/tokens",
+    "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/rules",
+    "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/trunks",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/networks",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/ports",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/subnets",
@@ -765,6 +790,14 @@
     "k8s.io/cluster-bootstrap/token/util",
     "k8s.io/code-generator/cmd/deepcopy-gen",
     "k8s.io/klog",
+    "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis",
+    "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1",
+    "sigs.k8s.io/cluster-api-provider-openstack/pkg/bootstrap",
+    "sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack",
+    "sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/clients",
+    "sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/cluster",
+    "sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/machine",
+    "sigs.k8s.io/cluster-api-provider-openstack/pkg/controller",
     "sigs.k8s.io/cluster-api/cmd/clusterctl/cmd",
     "sigs.k8s.io/cluster-api/pkg/apis",
     "sigs.k8s.io/cluster-api/pkg/apis/cluster/common",
