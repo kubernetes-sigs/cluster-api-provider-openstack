@@ -145,7 +145,14 @@ cat $PROVIDERCOMPONENT_TEMPLATE_FILE \
   | sed -e "s/\$MACHINE_CONTROLLER_SSH_PRIVATE/$MACHINE_CONTROLLER_SSH_PRIVATE/" \
   >> $PROVIDERCOMPONENT_GENERATED_FILE
 
-sed -i '' -e "s#image: controller:latest#image: gcr.io/k8s-cluster-api/cluster-api-controller:latest#" $PROVIDERCOMPONENT_GENERATED_FILE
+if [[ "$OS" =~ "Linux" ]]; then
+  sed -i "s#image: controller:latest#image: gcr.io/k8s-cluster-api/cluster-api-controller:latest#" $PROVIDERCOMPONENT_GENERATED_FILE
+elif [[ "$OS" =~ "Darwin" ]]; then
+  sed -i '' -e "s#image: controller:latest#image: gcr.io/k8s-cluster-api/cluster-api-controller:latest#" $PROVIDERCOMPONENT_GENERATED_FILE
+else
+  echo "Unrecognized OS : $OS"
+  exit 1
+fi
 
 cat $MACHINE_TEMPLATE_FILE \
   > $MACHINE_GENERATED_FILE
@@ -155,5 +162,5 @@ cat $CLUSTER_TEMPLATE_FILE \
 
 
 echo "Done generating $PROVIDERCOMPONENT_GENERATED_FILE $MACHINE_GENERATED_FILE $CLUSTER_GENERATED_FILE"
-echo "You can manually change your cluster configuration by editing generated files."
+echo "You should now manually change your cluster configuration by editing the generated files."
 
