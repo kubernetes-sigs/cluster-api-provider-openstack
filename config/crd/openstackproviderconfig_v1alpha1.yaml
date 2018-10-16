@@ -31,9 +31,9 @@ spec:
           type: array
         floatingIP:
           type: string
-        availability_zone:
+        availabilityZone:
           type: string
-        security_groups:
+        securityGroups:
           items:
             type: string
           type: array
