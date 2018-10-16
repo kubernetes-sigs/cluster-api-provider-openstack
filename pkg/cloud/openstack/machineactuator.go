@@ -218,7 +218,7 @@ func (oc *OpenstackClient) Create(cluster *clusterv1.Cluster, machine *clusterv1
 		}
 	}
 
-	instance, err = oc.machineService.InstanceCreate(providerConfig, startupScript, oc.sshCred.user)
+	instance, err = oc.machineService.InstanceCreate(machine.Name, providerConfig, startupScript, oc.sshCred.user)
 	if err != nil {
 		return oc.handleMachineError(machine, apierrors.CreateMachine(
 			"error creating Openstack instance: %v", err))
@@ -431,7 +431,7 @@ func (oc *OpenstackClient) instanceExists(machine *clusterv1.Machine) (instance 
 		return nil, err
 	}
 	opts := &clients.InstanceListOpts{
-		Name:   machineConfig.Name,
+		Name:   machine.Name,
 		Image:  machineConfig.Image,
 		Flavor: machineConfig.Flavor,
 	}

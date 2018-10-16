@@ -158,14 +158,14 @@ func (is *InstanceService) GetAcceptableFloatingIP() (string, error) {
 	return "", fmt.Errorf("Don't have acceptable floating IP.")
 }
 
-func (is *InstanceService) InstanceCreate(config *openstackconfigv1.OpenstackProviderConfig, cmd string, keyName string) (instance *Instance, err error) {
+func (is *InstanceService) InstanceCreate(name string, config *openstackconfigv1.OpenstackProviderConfig, cmd string, keyName string) (instance *Instance, err error) {
 	var createOpts servers.CreateOpts
 	if config == nil {
 		return nil, fmt.Errorf("create Options need be specified to create instace.")
 	}
 	userData := base64.StdEncoding.EncodeToString([]byte(cmd))
 	createOpts = servers.CreateOpts{
-		Name:             config.Name,
+		Name:             name,
 		ImageName:        config.Image,
 		FlavorName:       config.Flavor,
 		AvailabilityZone: config.AvailabilityZone,

@@ -10,7 +10,6 @@ items:
       value:
         apiVersion: "openstackproviderconfig/v1alpha1"
         kind: "OpenstackProviderConfig"
-        name: master
         flavor: m1.medium
         image: Ubuntu-Server-16.04-x64
         availabilityZone: nova
@@ -33,7 +32,6 @@ items:
       value:
         apiVersion: "openstackproviderconfig/v1alpha1"
         kind: "OpenstackProviderConfig"
-        name: node01
         flavor: m1.medium
         image: Ubuntu-Server-16.04-x64
         availabilityZone: nova

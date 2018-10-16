@@ -23,8 +23,6 @@ import (
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type OpenstackProviderConfig struct {
 	metav1.TypeMeta `json:",inline"`
-	// The name of your server instance.
-	Name string `json:"name"`
 	// The flavor reference for the flavor for your server instance.
 	Flavor string `json:"flavor"`
 	// The name of the image to use for your server instance.
