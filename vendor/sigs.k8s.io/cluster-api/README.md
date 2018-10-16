@@ -48,11 +48,12 @@ are also sponsored by SIG-cluster-lifecycle:
 Following are the implementations managed by third-parties adopting the standard cluster-api and/or machine-api being developed here.
 
   * Machine-controller-manager, https://github.com/gardener/machine-controller-manager/tree/cluster-api
+  * Kubermatic machine-controller, https://github.com/kubermatic/machine-controller/tree/master
 
 ## Getting Started
 ### Prerequisites
 * `kubectl` is required, see [here](http://kubernetes.io/docs/user-guide/prereqs/).
-* `clusterctl` is a SIG-cluster-lifecycle sponsored tool to manage Cluster API clusters. See [here](clusterctl)
+* `clusterctl` is a SIG-cluster-lifecycle sponsored tool to manage Cluster API clusters. See [here](cmd/clusterctl)
 
 [cluster-api-kep]: https://github.com/kubernetes/community/blob/master/keps/sig-cluster-lifecycle/0003-cluster-api.md
 [notes]: https://docs.google.com/document/d/16ils69KImmE94RlmzjWDrkmFZysgB2J4lGnYMRN89WM/edit
