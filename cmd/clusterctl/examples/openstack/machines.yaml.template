@@ -13,11 +13,11 @@ items:
         name: master
         flavor: m1.medium
         image: Ubuntu-Server-16.04-x64
-        availability_zone: nova
+        availabilityZone: nova
         networks:
         - uuid: ab14ce0d-5e1f-4e32-bf65-00416e3cc19c
         floatingIP: 129.114.111.153
-        security_groups:
+        securityGroups:
         - default
     versions:
       kubelet: 1.9.4
@@ -36,11 +36,11 @@ items:
         name: node01
         flavor: m1.medium
         image: Ubuntu-Server-16.04-x64
-        availability_zone: nova
+        availabilityZone: nova
         networks:
         - uuid: ab14ce0d-5e1f-4e32-bf65-00416e3cc19c
         floatingIP: 129.114.111.153
-        security_groups:
+        securityGroups:
         - default
     versions:
       kubelet: 1.9.4
