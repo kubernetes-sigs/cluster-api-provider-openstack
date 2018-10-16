@@ -28,6 +28,7 @@ aliases:
     - dklyle
     - rjmorse
   cluster-api-openstack-maintainers:
+    - chaosaffe
     - dims
     - flaper87
     - Lion-Wei
