@@ -27,8 +27,8 @@ data:
   machine_setup_configs.yaml: |-
     items:
     - versions:
-          kubelet: 1.9.4
-          controlPlane: 1.9.4
+          kubelet: 1.12.1
+          controlPlane: 1.12.1
       startupScript: |
         set -e
         set -x
@@ -87,12 +87,18 @@ data:
 
         # Set up kubeadm config file to pass parameters to kubeadm init.
         cat > /etc/kubernetes/kubeadm_config.yaml <<EOF
-        apiVersion: kubeadm.k8s.io/v1alpha1
-        kind: MasterConfiguration
+        apiVersion: kubeadm.k8s.io/v1alpha3
+        kind: InitConfiguration
+        bootstrapTokens:
+        - token: ${TOKEN}
+        ---
+        apiVersion: kubeadm.k8s.io/v1alpha3
+        kind: ClusterConfiguration
+        kubernetesVersion: v${CONTROL_PLANE_VERSION}
         networking:
           serviceSubnet: ${SERVICE_CIDR}
-        kubernetesVersion: v${CONTROL_PLANE_VERSION}
-        token: ${TOKEN}
+        clusterName: kubernetes
+        controlPlaneEndpoint: ""
         controllerManagerExtraArgs:
           cluster-cidr: ${POD_CIDR}
           service-cluster-ip-range: ${SERVICE_CIDR}
@@ -115,7 +121,7 @@ data:
         echo done.
         ) 2>&1 | tee /var/log/startup.log
     - versions:
-          kubelet: 1.9.4
+          kubelet: 1.12.1
       startupScript: |
         set -e
         set -x
