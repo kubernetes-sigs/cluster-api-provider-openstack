@@ -16,7 +16,7 @@ metadata:
   name: cloud-config
   namespace: openstack-provider-system
 data:
-  cloud_config.yaml: $OPENSTACK_CLOUD_CONFIG
+  clouds.yaml: $OPENSTACK_CLOUD_CONFIG
 ---
 apiVersion: v1
 kind: ConfigMap
