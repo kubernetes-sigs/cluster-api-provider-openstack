@@ -30,9 +30,20 @@ data:
           kubelet: 1.12.1
           controlPlane: 1.12.1
       startupScript: |
+        #!/bin/bash
         set -e
         set -x
         (
+        KUBELET_VERSION={{ .Machine.Spec.Versions.Kubelet }}
+        VERSION=v${KUBELET_VERSION}
+        NAMESPACE={{ .Machine.ObjectMeta.Namespace }}
+        MACHINE=$NAMESPACE
+        MACHINE+="/"
+        MACHINE+={{ .Machine.ObjectMeta.Name }}
+        CONTROL_PLANE_VERSION={{ .Machine.Spec.Versions.ControlPlane }}
+        CLUSTER_DNS_DOMAIN={{ .Cluster.Spec.ClusterNetwork.ServiceDomain }}
+        POD_CIDR={{ .PodCIDR }}
+        SERVICE_CIDR={{ .ServiceCIDR }}
         ARCH=amd64
         curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
         touch /etc/apt/sources.list.d/kubernetes.list
@@ -123,9 +134,21 @@ data:
     - versions:
           kubelet: 1.12.1
       startupScript: |
+        #!/bin/bash
         set -e
         set -x
         (
+        KUBELET_VERSION={{ .Machine.Spec.Versions.Kubelet }}
+        TOKEN={{ .Token }}
+        MASTER={{ .MasterEndpoint }}
+        NAMESPACE={{ .Machine.ObjectMeta.Namespace }}
+        MACHINE=$NAMESPACE
+        MACHINE+="/"
+        MACHINE+={{ .Machine.ObjectMeta.Name }}
+        CLUSTER_DNS_DOMAIN={{ .Cluster.Spec.ClusterNetwork.ServiceDomain }}
+        POD_CIDR={{ .PodCIDR }}
+        SERVICE_CIDR={{ .ServiceCIDR }}
+
         apt-get update
         apt-get install -y apt-transport-https prips
         apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv-keys F76221572C52609D
