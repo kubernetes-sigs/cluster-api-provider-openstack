@@ -34,14 +34,7 @@ type setupParams struct {
 	MasterEndpoint string
 }
 
-var (
-	masterEnvironmentVarsTemplate *template.Template
-	nodeEnvironmentVarsTemplate   *template.Template
-)
-
 func init() {
-	masterEnvironmentVarsTemplate = template.Must(template.New("masterEnvironmentVars").Parse(masterEnvironmentVars))
-	nodeEnvironmentVarsTemplate = template.Must(template.New("nodeEnvironmentVars").Parse(nodeEnvironmentVars))
 }
 
 func masterStartupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine, script string) (string, error) {
@@ -51,11 +44,13 @@ func masterStartupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine,
 		PodCIDR:     getSubnet(cluster.Spec.ClusterNetwork.Pods),
 		ServiceCIDR: getSubnet(cluster.Spec.ClusterNetwork.Services),
 	}
+
+	masterStartUpScript := template.Must(template.New("masterStartUp").Parse(script))
+
 	var buf bytes.Buffer
-	if err := masterEnvironmentVarsTemplate.Execute(&buf, params); err != nil {
+	if err := masterStartUpScript.Execute(&buf, params); err != nil {
 		return "", err
 	}
-	buf.WriteString(script)
 	return buf.String(), nil
 }
 
@@ -68,11 +63,13 @@ func nodeStartupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine, t
 		ServiceCIDR:    getSubnet(cluster.Spec.ClusterNetwork.Services),
 		MasterEndpoint: getEndpoint(cluster.Status.APIEndpoints[0]),
 	}
+
+	nodeStartUpScript := template.Must(template.New("nodeStartUp").Parse(script))
+
 	var buf bytes.Buffer
-	if err := nodeEnvironmentVarsTemplate.Execute(&buf, params); err != nil {
+	if err := nodeStartUpScript.Execute(&buf, params); err != nil {
 		return "", err
 	}
-	buf.WriteString(script)
 	return buf.String(), nil
 }
 
@@ -87,29 +84,3 @@ func getSubnet(netRange clusterv1.NetworkRanges) string {
 	}
 	return netRange.CIDRBlocks[0]
 }
-
-const masterEnvironmentVars = `#!/bin/bash
-KUBELET_VERSION={{ .Machine.Spec.Versions.Kubelet }}
-VERSION=v${KUBELET_VERSION}
-NAMESPACE={{ .Machine.ObjectMeta.Namespace }}
-MACHINE=$NAMESPACE
-MACHINE+="/"
-MACHINE+={{ .Machine.ObjectMeta.Name }}
-CONTROL_PLANE_VERSION={{ .Machine.Spec.Versions.ControlPlane }}
-CLUSTER_DNS_DOMAIN={{ .Cluster.Spec.ClusterNetwork.ServiceDomain }}
-POD_CIDR={{ .PodCIDR }}
-SERVICE_CIDR={{ .ServiceCIDR }}
-`
-
-const nodeEnvironmentVars = `#!/bin/bash
-KUBELET_VERSION={{ .Machine.Spec.Versions.Kubelet }}
-TOKEN={{ .Token }}
-MASTER={{ .MasterEndpoint }}
-NAMESPACE={{ .Machine.ObjectMeta.Namespace }}
-MACHINE=$NAMESPACE
-MACHINE+="/"
-MACHINE+={{ .Machine.ObjectMeta.Name }}
-CLUSTER_DNS_DOMAIN={{ .Cluster.Spec.ClusterNetwork.ServiceDomain }}
-POD_CIDR={{ .PodCIDR }}
-SERVICE_CIDR={{ .ServiceCIDR }}
-`
