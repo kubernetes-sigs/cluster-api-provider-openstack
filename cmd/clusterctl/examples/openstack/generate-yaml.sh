@@ -24,18 +24,26 @@ MACHINE_CONTROLLER_SSH_PRIVATE=
 MACHINE_CONTROLLER_SSH_HOME=${HOME}/.ssh/
 
 OVERWRITE=0
+CLOUDS_PATH=""
+
+# Function that prints out the help message, describing the script 
+print_help()
+{
+  echo "$SCRIPT - generates input yaml files for Cluster API on openstack"
+  echo " "
+  echo "$SCRIPT [options]"
+  echo " "
+  echo "options:"
+  echo "-h, --help                show brief help"
+  echo "-f, --force-overwrite     if file to be generated already exists, force script to overwrite it"
+  echo "-c, --clouds [File]       specifies an existing clouds.yaml file to use rather than generating one interactively"
+}
 
 SCRIPT=$(basename $0)
 while test $# -gt 0; do
         case "$1" in
           -h|--help)
-            echo "$SCRIPT - generates input yaml files for Cluster API on openstack"
-            echo " "
-            echo "$SCRIPT [options]"
-            echo " "
-            echo "options:"
-            echo "-h, --help                show brief help"
-            echo "-f, --force-overwrite     if file to be generated already exists, force script to overwrite it"
+            print_help
             exit 0
             ;;
           -f)
@@ -44,6 +52,16 @@ while test $# -gt 0; do
             ;;
           --force-overwrite)
             OVERWRITE=1
+            shift
+            ;;
+          -c|--clouds)
+            if [[ $2 == -* ]] || [[ $2 == --* ]];then
+              echo "Error: No cloud path was provided!"
+              print_help
+              exit 1
+            fi
+            CLOUDS_PATH=$2
+            shift
             shift
             ;;
           *)
@@ -69,19 +87,29 @@ fi
 
 mkdir -p ${OUTPUT_DIR}
 
-# Get user cloud provider information from input
-read -p "Enter your username:" username
-read -p "Enter your domainname:" domain_name
-read -p "Enter your project id:" project_id
-read -p "Enter region name:" region
-read -p "Enter authurl:" authurl
-read -s -p "Enter your password:" password
-OPENSTACK_CLOUD_CONFIG_PLAIN="user-name: $username\n\
-password: $password\n\
-domain-name: $domain_name\n\
-tenant-id: $project_id\n\
-region: $region\n\
-auth-url: $authurl\n"
+if [ -n "$CLOUDS_PATH" ]; then
+  # Read clouds.yaml from file if a path is provided 
+  OPENSTACK_CLOUD_CONFIG_PLAIN="$(cat $CLOUDS_PATH)"
+else
+  # Collect user input to generate a clouds.yaml file
+  read -p "Enter your username:" username
+  read -p "Enter your domainname:" domain_name
+  read -p "Enter your project id:" project_id
+  read -p "Enter region name:" region
+  read -p "Enter authurl:" authurl
+  read -s -p "Enter your password:" password
+  OPENSTACK_CLOUD_CONFIG_PLAIN="clouds:
+  openstack:
+    auth:
+      username: $username
+      password: $password
+      user_domain_name: $domain_name
+      project_id: $project_id
+      auth_url: $authurl
+    interface: public
+    identity_api_version: 3
+    region: $region"
+fi
 
 # Check if the ssh key already exists. If not, generate and copy to the .ssh dir.
 if [ ! -f $MACHINE_CONTROLLER_SSH_HOME$MACHINE_CONTROLLER_SSH_PRIVATE_FILE ]; then
@@ -93,12 +121,12 @@ MACHINE_CONTROLLER_SSH_PLAIN=clusterapi
 
 OS=$(uname)
 if [[ "$OS" =~ "Linux" ]]; then
-  OPENSTACK_CLOUD_CONFIG=$(echo -e $OPENSTACK_CLOUD_CONFIG_PLAIN|base64 -w0)
+  OPENSTACK_CLOUD_CONFIG=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN"|base64 -w0)
   MACHINE_CONTROLLER_SSH_USER=$(echo -n $MACHINE_CONTROLLER_SSH_PLAIN|base64 -w0)
   MACHINE_CONTROLLER_SSH_PUBLIC=$(cat $MACHINE_CONTROLLER_SSH_HOME$MACHINE_CONTROLLER_SSH_PUBLIC_FILE|base64 -w0)
   MACHINE_CONTROLLER_SSH_PRIVATE=$(cat $MACHINE_CONTROLLER_SSH_HOME$MACHINE_CONTROLLER_SSH_PRIVATE_FILE|base64 -w0)
 elif [[ "$OS" =~ "Darwin" ]]; then
-  OPENSTACK_CLOUD_CONFIG=$(echo $OPENSTACK_CLOUD_CONFIG_PLAIN|base64)
+  OPENSTACK_CLOUD_CONFIG=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN"|base64)
   MACHINE_CONTROLLER_SSH_USER=$(printf $MACHINE_CONTROLLER_SSH_PLAIN|base64)
   MACHINE_CONTROLLER_SSH_PUBLIC=$(cat $MACHINE_CONTROLLER_SSH_HOME$MACHINE_CONTROLLER_SSH_PUBLIC_FILE|base64)
   MACHINE_CONTROLLER_SSH_PRIVATE=$(cat $MACHINE_CONTROLLER_SSH_HOME$MACHINE_CONTROLLER_SSH_PRIVATE_FILE|base64)

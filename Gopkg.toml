@@ -42,6 +42,10 @@ required = [
   name = "github.com/gophercloud/gophercloud"
 
 [[constraint]]
+  branch = "master"
+  name = "github.com/gophercloud/utils"
+
+[[constraint]]
   name = "github.com/spf13/pflag"
   version = "1.0.3"
 

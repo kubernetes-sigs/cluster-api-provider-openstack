@@ -27,6 +27,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/identity/v3/tokens"
+	"github.com/gophercloud/utils/openstack/clientconfig"
 	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
 )
 
@@ -34,20 +35,6 @@ type InstanceService struct {
 	provider       *gophercloud.ProviderClient
 	computeClient  *gophercloud.ServiceClient
 	identityClient *gophercloud.ServiceClient
-}
-
-type CloudConfig struct {
-	AuthURL    string `json:"auth-url"`
-	Username   string `json:"user-name"`
-	UserID     string `json:"user-id"`
-	Password   string `json:"password"`
-	TenantID   string `json:"tenant-id"`
-	TenantName string `json:"tenant-name"`
-	TrustID    string `json:"trust-id"`
-	DomainID   string `json:"domain-id"`
-	DomainName string `json:"domain-name"`
-	Region     string `json:"region"`
-	CAFile     string `json:"ca-file"`
 }
 
 type Instance struct {
@@ -81,14 +68,15 @@ type InstanceListOpts struct {
 	Name string `q:"name"`
 }
 
-func NewInstanceService(cfg *CloudConfig) (*InstanceService, error) {
-	authUrl := gophercloud.NormalizeURL(cfg.AuthURL)
+func NewInstanceService(cfg *clientconfig.Cloud) (*InstanceService, error) {
 	opts := &gophercloud.AuthOptions{
-		IdentityEndpoint: authUrl,
-		Username:         cfg.Username,
-		Password:         cfg.Password,
-		DomainName:       cfg.DomainName,
-		TenantID:         cfg.TenantID,
+		IdentityEndpoint: cfg.AuthInfo.AuthURL,
+		Username:         cfg.AuthInfo.Username,
+		Password:         cfg.AuthInfo.Password,
+		DomainName:       cfg.AuthInfo.DomainName,
+		TenantID:         cfg.AuthInfo.ProjectDomainID,
+		TenantName:       cfg.AuthInfo.ProjectDomainName,
+		TokenID:          cfg.AuthInfo.Token,
 		AllowReauth:      true,
 	}
 	provider, err := openstack.AuthenticatedClient(*opts)
@@ -103,7 +91,7 @@ func NewInstanceService(cfg *CloudConfig) (*InstanceService, error) {
 		return nil, fmt.Errorf("Create identityClient err: %v", err)
 	}
 	serverClient, err := openstack.NewComputeV2(provider, gophercloud.EndpointOpts{
-		Region: cfg.Region,
+		Region: cfg.RegionName,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("Create serviceClient err: %v", err)

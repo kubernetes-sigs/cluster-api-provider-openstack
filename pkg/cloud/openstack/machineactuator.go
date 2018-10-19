@@ -29,6 +29,7 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
+	"github.com/gophercloud/utils/openstack/clientconfig"
 	"k8s.io/apimachinery/pkg/runtime"
 
 	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
@@ -71,30 +72,13 @@ type OpenstackClient struct {
 	*DeploymentClient
 }
 
-// readCloudConfigFromFile read cloud config from file
-// which should include username/password/region/tenentID...
-func readCloudConfigFromFile(path string) *clients.CloudConfig {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil
-	}
-	bytes, err := ioutil.ReadAll(file)
-	if err != nil {
-		return nil
-	}
-	cloudConfig := &clients.CloudConfig{}
-	if yaml.Unmarshal(bytes, cloudConfig) != nil {
-		return nil
-	}
-	return cloudConfig
-}
-
 func NewMachineActuator(machineClient client.Client, scheme *runtime.Scheme) (*OpenstackClient, error) {
-	cloudConfig := readCloudConfigFromFile(CloudConfigPath)
-	if cloudConfig == nil {
-		return nil, fmt.Errorf("Get cloud config from file %q err", CloudConfigPath)
+	clientOpts := new(clientconfig.ClientOpts)
+	cloud, err := clientconfig.GetCloudFromYAML(clientOpts)
+	if err != nil {
+		return nil, err
 	}
-	machineService, err := clients.NewInstanceService(cloudConfig)
+	machineService, err := clients.NewInstanceService(cloud)
 	if err != nil {
 		return nil, err
 	}
