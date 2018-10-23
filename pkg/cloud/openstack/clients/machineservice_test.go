@@ -19,18 +19,11 @@ package clients
 import (
 	"strings"
 	"testing"
-
-	"github.com/gophercloud/utils/openstack/clientconfig"
 )
 
 func TestMachineServiceInstance(t *testing.T) {
-	clientOpts := new(clientconfig.ClientOpts)
-	cloud, err := clientconfig.GetCloudFromYAML(clientOpts)
-	if err != nil {
-		t.Errorf("Couldn't create clientconfig")
-	}
-	_, err = NewInstanceService(cloud)
-	if !(strings.Contains(err.Error(), "i/o timeout")) {
+	_, err := NewInstanceService()
+	if !(strings.Contains(err.Error(), "[auth_url]")) {
 		t.Errorf("Couldn't create instance service: %v", err)
 	}
 }

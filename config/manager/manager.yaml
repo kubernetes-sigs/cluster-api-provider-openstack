@@ -60,7 +60,7 @@ spec:
         - name: machine-setup
           mountPath: /etc/machinesetup
         - name: cloud-config
-          mountPath: /etc/cloud
+          mountPath: /etc/openstack
         - name: kubeadm
           mountPath: /usr/bin/kubeadm
         resources:
@@ -70,6 +70,11 @@ spec:
           limits:
             cpu: 100m
             memory: 30Mi
+        env:
+          - name: USER
+            value: root
+          - name: OS_CLOUD
+            value: openstack
       volumes:
       - name: config
         hostPath:
