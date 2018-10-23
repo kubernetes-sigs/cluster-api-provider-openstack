@@ -22,7 +22,10 @@ import (
 	"os"
 	"strings"
 
+	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
+
+	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
 	clustercommon "sigs.k8s.io/cluster-api/pkg/apis/cluster/common"
 	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
 	"sigs.k8s.io/cluster-api/pkg/util"
@@ -62,15 +65,28 @@ func (d *DeploymentClient) GetKubeConfig(cluster *clusterv1.Cluster, master *clu
 		return "", fmt.Errorf("unable to use HOME environment variable to find SSH key: %v", err)
 	}
 
+	machineConfig, err := d.providerconfig(master.Spec.ProviderConfig)
+	if err != nil {
+		return "", err
+	}
+
 	result := strings.TrimSpace(util.ExecCommand(
 		"ssh", "-i", homeDir+"/.ssh/openstack_tmp",
 		"-o", "StrictHostKeyChecking no",
 		"-o", "UserKnownHostsFile /dev/null",
-		fmt.Sprintf("%s@%s", SshUserName, ip),
+		fmt.Sprintf("%s@%s", machineConfig.SshUserName, ip),
 		"echo STARTFILE; sudo cat /etc/kubernetes/admin.conf"))
 	parts := strings.Split(result, "STARTFILE")
 	if len(parts) != 2 {
 		return "", nil
 	}
 	return strings.TrimSpace(parts[1]), nil
+}
+
+func (d *DeploymentClient) providerconfig(providerConfig clusterv1.ProviderConfig) (*openstackconfigv1.OpenstackProviderConfig, error) {
+	var config openstackconfigv1.OpenstackProviderConfig
+	if err := yaml.Unmarshal(providerConfig.Value.Raw, &config); err != nil {
+		return nil, err
+	}
+	return &config, nil
 }
