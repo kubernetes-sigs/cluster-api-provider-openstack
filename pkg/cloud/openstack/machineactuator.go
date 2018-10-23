@@ -29,7 +29,6 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
-	"github.com/gophercloud/utils/openstack/clientconfig"
 	"k8s.io/apimachinery/pkg/runtime"
 
 	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
@@ -72,12 +71,7 @@ type OpenstackClient struct {
 }
 
 func NewMachineActuator(machineClient client.Client, scheme *runtime.Scheme) (*OpenstackClient, error) {
-	clientOpts := new(clientconfig.ClientOpts)
-	cloud, err := clientconfig.GetCloudFromYAML(clientOpts)
-	if err != nil {
-		return nil, err
-	}
-	machineService, err := clients.NewInstanceService(cloud)
+	machineService, err := clients.NewInstanceService()
 	if err != nil {
 		return nil, err
 	}

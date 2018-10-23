@@ -68,16 +68,11 @@ type InstanceListOpts struct {
 	Name string `q:"name"`
 }
 
-func NewInstanceService(cfg *clientconfig.Cloud) (*InstanceService, error) {
-	opts := &gophercloud.AuthOptions{
-		IdentityEndpoint: cfg.AuthInfo.AuthURL,
-		Username:         cfg.AuthInfo.Username,
-		Password:         cfg.AuthInfo.Password,
-		DomainName:       cfg.AuthInfo.DomainName,
-		TenantID:         cfg.AuthInfo.ProjectDomainID,
-		TenantName:       cfg.AuthInfo.ProjectDomainName,
-		TokenID:          cfg.AuthInfo.Token,
-		AllowReauth:      true,
+func NewInstanceService() (*InstanceService, error) {
+	clientOpts := new(clientconfig.ClientOpts)
+	opts, err := clientconfig.AuthOptions(clientOpts)
+	if err != nil {
+		return nil, err
 	}
 	provider, err := openstack.AuthenticatedClient(*opts)
 	if err != nil {
@@ -91,7 +86,7 @@ func NewInstanceService(cfg *clientconfig.Cloud) (*InstanceService, error) {
 		return nil, fmt.Errorf("Create identityClient err: %v", err)
 	}
 	serverClient, err := openstack.NewComputeV2(provider, gophercloud.EndpointOpts{
-		Region: cfg.RegionName,
+		Region: clientOpts.RegionName,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("Create serviceClient err: %v", err)
