@@ -27,6 +27,10 @@ type OpenstackProviderConfig struct {
 	Flavor string `json:"flavor"`
 	// The name of the image to use for your server instance.
 	Image string `json:"image"`
+
+	// The machine ssh username
+	SshUserName string `json:"sshUserName,omitempty"`
+
 	// A networks object. Required parameter when there are multiple networks defined for the tenant.
 	// When you do not specify the networks parameter, the server attaches to the only network created for the current tenant.
 	Networks []NetworkParam `json:"networks,omitempty"`
