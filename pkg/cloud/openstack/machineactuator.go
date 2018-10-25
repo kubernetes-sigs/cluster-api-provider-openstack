@@ -445,7 +445,9 @@ func (oc *OpenstackClient) getKubeadmToken() (string, error) {
 		glog.Errorf("unable to create token: %v", err)
 		return "", err
 	}
-	return strings.TrimSpace(output), err
+
+	soutput := strings.Split(output, "\n")
+	return strings.TrimSpace(soutput[len(soutput)-1]), err
 }
 
 func (oc *OpenstackClient) validateMachine(machine *clusterv1.Machine, config *openstackconfigv1.OpenstackProviderConfig) *apierrors.MachineError {
