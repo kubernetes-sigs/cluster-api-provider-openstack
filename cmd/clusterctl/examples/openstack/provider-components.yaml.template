@@ -177,6 +177,9 @@ data:
         EOF
         apt-get update
 
+        # Needed for the node and kubeadm preflights
+        modprobe ip_vs_sh ip_vs ip_vs_rr ip_vs_wrr
+
         mkdir -p /etc/kubernetes/
         # Our Debian packages have versions like "1.8.0-00" or "1.8.0-01". Do a prefix
         # search based on our SemVer to find the right (newest) package version.
