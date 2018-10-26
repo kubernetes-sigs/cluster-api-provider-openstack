@@ -44,8 +44,8 @@ spec:
               properties:
                 rollingUpdate:
                   properties:
-                    maxSurge:
-                    maxUnavailable:
+                    maxSurge: {}
+                    maxUnavailable: {}
                   type: object
                 type:
                   type: string
@@ -65,6 +65,12 @@ spec:
                         value:
                           type: object
                         valueFrom:
+                          properties:
+                            machineClass:
+                              properties:
+                                provider:
+                                  type: string
+                              type: object
                           type: object
                       type: object
                     taints:
