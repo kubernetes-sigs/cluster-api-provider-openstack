@@ -40,7 +40,9 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
    ./generate-yaml.sh
    cd ../..
    ```
-   **Note: **When generating `provider-components.yaml`, you need input your openstack cloud provider information, which include:
+
+   #### Interactively submit provider information
+   By default, the generater script will give you a series of command line prompts, asking the following information about your cloud provider:
 
    - user-name
    - domain-name
@@ -49,7 +51,30 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
    - auth-url
    - password
 
-   You can get those information from your cloud provider.
+   #### Use clouds.yaml to submit provider information
+   If you want to generate scripts without being prompted interactively, you can pass generate-yaml a clouds.yaml file. After downloading your clouds.yaml from your provider, make sure that it has the information listed above filled out. It is very likely that it will at lest be missing the password field. Also, note that domain-name is the same as project-name. You may reference the following sample clouds.yaml to see what yours should look like.
+
+   ```yaml
+   clouds:
+     openstack:
+       auth:
+         auth_url: https://yourauthurl:5000/v3
+         username: foo
+         password: bar
+         project_id: foobar123
+         project_name: foobar
+         user_domain_name: "Default"
+       region_name: "Region_1"
+       interface: "public"
+       identity_api_version: 3
+   ```
+
+   To pass a clouds.yaml file to generate-yaml, set the **-c** or **--clouds** options, followed by the path to a clouds.yaml file. Here are some examples of this syntax:
+
+   ```bash
+   ./generate-yaml.sh -c clouds.yaml
+   ./generate-yaml.sh --clouds clouds.yaml
+   ```
 
 2. Create a cluster:
 
