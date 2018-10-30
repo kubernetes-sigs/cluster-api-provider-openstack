@@ -1,0 +1,46 @@
+items:
+- apiVersion: "cluster.k8s.io/v1alpha1"
+  kind: Machine
+  metadata:
+    generateName: openstack-master-
+    labels:
+      set: master
+  spec:
+    providerConfig:
+      value:
+        apiVersion: "openstackproviderconfig/v1alpha1"
+        kind: "OpenstackProviderConfig"
+        flavor: m1.medium
+        image: CentOS-7-x86_64-GenericCloud
+        sshUserName: centos
+        availabilityZone: nova
+        networks:
+        - uuid: ab14ce0d-5e1f-4e32-bf65-00416e3cc19c
+        floatingIP: 129.114.111.153
+        securityGroups:
+        - default
+    versions:
+      kubelet: 1.12.1
+      controlPlane: 1.12.1
+- apiVersion: "cluster.k8s.io/v1alpha1"
+  kind: Machine
+  metadata:
+    generateName: openstack-node-
+    labels:
+      set: node
+  spec:
+    providerConfig:
+      value:
+        apiVersion: "openstackproviderconfig/v1alpha1"
+        kind: "OpenstackProviderConfig"
+        flavor: m1.medium
+        image: CentOS-7-x86_64-GenericCloud
+        sshUserName: centos
+        availabilityZone: nova
+        networks:
+        - uuid: ab14ce0d-5e1f-4e32-bf65-00416e3cc19c
+        floatingIP: 129.114.111.153
+        securityGroups:
+        - default
+    versions:
+      kubelet: 1.12.1
