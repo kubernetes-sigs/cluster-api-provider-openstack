@@ -1,30 +1,5 @@
 #!/bin/bash
 set -e
-PWD=$(cd `dirname $0`; pwd)
-HOME_DIR=${PWD%%/cmd/clusterctl/examples/*}
-OUTPUT_DIR="${PWD}/out"
-PROVIDER_CRD_DIR="${HOME_DIR}/config/crd"
-PROVIDER_RBAC_DIR="${HOME_DIR}/config/rbac"
-PROVIDER_MANAGER_DIR="${HOME_DIR}/config/manager"
-CLUSTER_CRD_DIR="${HOME_DIR}/vendor/sigs.k8s.io/cluster-api/config/crds"
-CLUSTER_RBAC_DIR="${HOME_DIR}/vendor/sigs.k8s.io/cluster-api/config/rbac"
-CLUSTER_MANAGER_DIR="${HOME_DIR}/vendor/sigs.k8s.io/cluster-api/config/manager"
-
-MACHINE_TEMPLATE_FILE=machines.yaml.template
-MACHINE_GENERATED_FILE=${OUTPUT_DIR}/machines.yaml
-CLUSTER_TEMPLATE_FILE=cluster.yaml.template
-CLUSTER_GENERATED_FILE=${OUTPUT_DIR}/cluster.yaml
-PROVIDERCOMPONENT_TEMPLATE_FILE=provider-components.yaml.template
-PROVIDERCOMPONENT_GENERATED_FILE=${OUTPUT_DIR}/provider-components.yaml
-
-MACHINE_CONTROLLER_SSH_PUBLIC_FILE=openstack_tmp.pub
-MACHINE_CONTROLLER_SSH_PUBLIC=
-MACHINE_CONTROLLER_SSH_PRIVATE_FILE=openstack_tmp
-MACHINE_CONTROLLER_SSH_PRIVATE=
-MACHINE_CONTROLLER_SSH_HOME=${HOME}/.ssh/
-
-OVERWRITE=0
-CLOUDS_PATH=""
 
 # Function that prints out the help message, describing the script 
 print_help()
@@ -46,6 +21,11 @@ while test $# -gt 0; do
             print_help
             exit 0
             ;;
+          -t)
+              TEMPLATES_PATH=`realpath $2`
+              shift
+              shift
+              ;;
           -f)
             OVERWRITE=1
             shift
@@ -69,6 +49,34 @@ while test $# -gt 0; do
             ;;
         esac
 done
+
+# Define global variables
+PWD=$(cd `dirname $0`; pwd)
+TEMPLATES_PATH=${TEMPLATES_PATH:-$PWD/ubuntu/}
+HOME_DIR=${PWD%%/cmd/clusterctl/examples/*}
+OUTPUT_DIR="${TEMPLATES_PATH}/out"
+PROVIDER_CRD_DIR="${HOME_DIR}/config/crd"
+PROVIDER_RBAC_DIR="${HOME_DIR}/config/rbac"
+PROVIDER_MANAGER_DIR="${HOME_DIR}/config/manager"
+CLUSTER_CRD_DIR="${HOME_DIR}/vendor/sigs.k8s.io/cluster-api/config/crds"
+CLUSTER_RBAC_DIR="${HOME_DIR}/vendor/sigs.k8s.io/cluster-api/config/rbac"
+CLUSTER_MANAGER_DIR="${HOME_DIR}/vendor/sigs.k8s.io/cluster-api/config/manager"
+
+MACHINE_TEMPLATE_FILE=${TEMPLATES_PATH}/machines.yaml.template
+MACHINE_GENERATED_FILE=${OUTPUT_DIR}/machines.yaml
+CLUSTER_TEMPLATE_FILE=${TEMPLATES_PATH}/cluster.yaml.template
+CLUSTER_GENERATED_FILE=${OUTPUT_DIR}/cluster.yaml
+PROVIDERCOMPONENT_TEMPLATE_FILE=${TEMPLATES_PATH}/provider-components.yaml.template
+PROVIDERCOMPONENT_GENERATED_FILE=${OUTPUT_DIR}/provider-components.yaml
+
+MACHINE_CONTROLLER_SSH_PUBLIC_FILE=openstack_tmp.pub
+MACHINE_CONTROLLER_SSH_PUBLIC=
+MACHINE_CONTROLLER_SSH_PRIVATE_FILE=openstack_tmp
+MACHINE_CONTROLLER_SSH_PRIVATE=
+MACHINE_CONTROLLER_SSH_HOME=${HOME}/.ssh/
+
+OVERWRITE=${OVERWRITE:-0}
+CLOUDS_PATH=${CLOUDS_PATH:-""}
 
 if [ $OVERWRITE -ne 1 ] && [ -f $MACHINE_GENERATED_FILE ]; then
   echo "File $MACHINE_GENERATED_FILE already exists. Delete it manually before running this script."
