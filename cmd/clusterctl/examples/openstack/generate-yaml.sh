@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 PWD=$(cd `dirname $0`; pwd)
 HOME_DIR=${PWD%%/cmd/clusterctl/examples/*}
