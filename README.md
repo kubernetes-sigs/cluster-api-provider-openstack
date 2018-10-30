@@ -69,6 +69,12 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
        identity_api_version: 3
    ```
 
+   To specify which cloud to use, set the OS_CLOUD environment variable with its name. By default, the generator will use the cloud "openstack". Based on the example above, the following command sets the correct cloud:
+
+   ```bash
+   export OS_CLOUD=openstack
+   ```
+
    To pass a clouds.yaml file to generate-yaml, set the **-c** or **--clouds** options, followed by the path to a clouds.yaml file. Here are some examples of this syntax:
 
    ```bash
