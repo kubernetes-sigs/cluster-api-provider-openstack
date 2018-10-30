@@ -68,6 +68,8 @@ CLUSTER_TEMPLATE_FILE=${TEMPLATES_PATH}/cluster.yaml.template
 CLUSTER_GENERATED_FILE=${OUTPUT_DIR}/cluster.yaml
 PROVIDERCOMPONENT_TEMPLATE_FILE=${TEMPLATES_PATH}/provider-components.yaml.template
 PROVIDERCOMPONENT_GENERATED_FILE=${OUTPUT_DIR}/provider-components.yaml
+PROVIDERMANAGER_TEMPLATE_FILE="${PROVIDER_MANAGER_DIR}/manager_template.yaml"
+PROVIDERMANAGER_GENERATED_FILE="${PROVIDER_MANAGER_DIR}/manager.yaml"
 
 MACHINE_CONTROLLER_SSH_PUBLIC_FILE=openstack_tmp.pub
 MACHINE_CONTROLLER_SSH_PUBLIC=
@@ -77,6 +79,7 @@ MACHINE_CONTROLLER_SSH_HOME=${HOME}/.ssh/
 
 OVERWRITE=${OVERWRITE:-0}
 CLOUDS_PATH=${CLOUDS_PATH:-""}
+CLOUD="${OS_CLOUD}" 
 
 if [ $OVERWRITE -ne 1 ] && [ -f $MACHINE_GENERATED_FILE ]; then
   echo "File $MACHINE_GENERATED_FILE already exists. Delete it manually before running this script."
@@ -91,6 +94,15 @@ fi
 if [ $OVERWRITE -ne 1 ] && [ -f $PROVIDERCOMPONENT_GENERATED_FILE ]; then
   echo "File $PROVIDERCOMPONENT_GENERATED_FILE already exists. Delete it manually before running this script."
   exit 1
+fi
+
+if [ $OVERWRITE -ne 1 ] && [ -f "$PROVIDERMANAGER_GENERATED_FILE" ]; then
+  echo "File $PROVIDERMANAGER_GENERATED_FILE already exists. Delete it manually before running this script."
+  exit 1
+fi
+
+if [ -z "$CLOUD" ]; then
+  CLOUD=openstack
 fi
 
 mkdir -p ${OUTPUT_DIR}
@@ -142,6 +154,10 @@ else
   echo "Unrecognized OS : $OS"
   exit 1
 fi
+
+# Generate manager.yaml (provider manager)
+sed "s/{OS_CLOUD}/$CLOUD/g" "$PROVIDERMANAGER_TEMPLATE_FILE" > "$PROVIDERMANAGER_GENERATED_FILE"
+
 # write config file to PROVIDERCOMPONENT_GENERATED_FILE
 for file in `ls ${PROVIDER_CRD_DIR}`
 do
