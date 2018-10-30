@@ -141,11 +141,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:459a9e1d977c48125fe761f5cb7bba8416fde88d45172bcab1aa2cac2c72e62e"
+  digest = "1:df12b635fdefd90b1d139a70c45716896552051589b004021c745dcbaf0dad96"
   name = "github.com/gophercloud/utils"
   packages = ["openstack/clientconfig"]
   pruneopts = "UT"
-  revision = "a45c12ccd8b0ce73306762607a60568a1bca4bbe"
+  revision = "34f5991525d116b3832e0d9409492274f1c06bda"
 
 [[projects]]
   branch = "master"
