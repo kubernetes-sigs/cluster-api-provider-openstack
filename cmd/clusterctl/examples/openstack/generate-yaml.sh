@@ -81,18 +81,18 @@ OVERWRITE=${OVERWRITE:-0}
 CLOUDS_PATH=${CLOUDS_PATH:-""}
 CLOUD="${OS_CLOUD}" 
 
-if [ $OVERWRITE -ne 1 ] && [ -f $MACHINE_GENERATED_FILE ]; then
+if [ $OVERWRITE -ne 1 ] && [ -f "$MACHINE_GENERATED_FILE" ]; then
   echo "File $MACHINE_GENERATED_FILE already exists. Delete it manually before running this script."
   exit 1
 fi
 
-if [ $OVERWRITE -ne 1 ] && [ -f $CLUSTER_GENERATED_FILE ]; then
+if [ $OVERWRITE -ne 1 ] && [ -f "$CLUSTER_GENERATED_FILE" ]; then
   echo "File $CLUSTER_GENERATED_FILE already exists. Delete it manually before running this script."
   exit 1
 fi
 
-if [ $OVERWRITE -ne 1 ] && [ -f $PROVIDERCOMPONENT_GENERATED_FILE ]; then
-  echo "File $PROVIDERCOMPONENT_GENERATED_FILE already exists. Delete it manually before running this script."
+if [ $OVERWRITE -ne 1 ] && [ -f "$PROVIDERCOMPONENT_GENERATED_FILE" ]; then
+  echo "File "$PROVIDERCOMPONENT_GENERATED_FILE" already exists. Delete it manually before running this script."
   exit 1
 fi
 
@@ -105,11 +105,11 @@ if [ -z "$CLOUD" ]; then
   CLOUD=openstack
 fi
 
-mkdir -p ${OUTPUT_DIR}
+mkdir -p "${OUTPUT_DIR}"
 
 if [ -n "$CLOUDS_PATH" ]; then
   # Read clouds.yaml from file if a path is provided 
-  OPENSTACK_CLOUD_CONFIG_PLAIN="$(cat $CLOUDS_PATH)"
+  OPENSTACK_CLOUD_CONFIG_PLAIN=$(cat "$CLOUDS_PATH")
 else
   # Collect user input to generate a clouds.yaml file
   read -p "Enter your username:" username
@@ -143,13 +143,13 @@ OS=$(uname)
 if [[ "$OS" =~ "Linux" ]]; then
   OPENSTACK_CLOUD_CONFIG=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN"|base64 -w0)
   MACHINE_CONTROLLER_SSH_USER=$(echo -n $MACHINE_CONTROLLER_SSH_PLAIN|base64 -w0)
-  MACHINE_CONTROLLER_SSH_PUBLIC=$(cat $MACHINE_CONTROLLER_SSH_HOME$MACHINE_CONTROLLER_SSH_PUBLIC_FILE|base64 -w0)
-  MACHINE_CONTROLLER_SSH_PRIVATE=$(cat $MACHINE_CONTROLLER_SSH_HOME$MACHINE_CONTROLLER_SSH_PRIVATE_FILE|base64 -w0)
+  MACHINE_CONTROLLER_SSH_PUBLIC=$(cat "$MACHINE_CONTROLLER_SSH_HOME$MACHINE_CONTROLLER_SSH_PUBLIC_FILE"|base64 -w0)
+  MACHINE_CONTROLLER_SSH_PRIVATE=$(cat "$MACHINE_CONTROLLER_SSH_HOME$MACHINE_CONTROLLER_SSH_PRIVATE_FILE"|base64 -w0)
 elif [[ "$OS" =~ "Darwin" ]]; then
   OPENSTACK_CLOUD_CONFIG=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN"|base64)
   MACHINE_CONTROLLER_SSH_USER=$(printf $MACHINE_CONTROLLER_SSH_PLAIN|base64)
-  MACHINE_CONTROLLER_SSH_PUBLIC=$(cat $MACHINE_CONTROLLER_SSH_HOME$MACHINE_CONTROLLER_SSH_PUBLIC_FILE|base64)
-  MACHINE_CONTROLLER_SSH_PRIVATE=$(cat $MACHINE_CONTROLLER_SSH_HOME$MACHINE_CONTROLLER_SSH_PRIVATE_FILE|base64)
+  MACHINE_CONTROLLER_SSH_PUBLIC=$(cat "$MACHINE_CONTROLLER_SSH_HOME$MACHINE_CONTROLLER_SSH_PUBLIC_FILE"|base64)
+  MACHINE_CONTROLLER_SSH_PRIVATE=$(cat "$MACHINE_CONTROLLER_SSH_HOME$MACHINE_CONTROLLER_SSH_PRIVATE_FILE"|base64)
 else
   echo "Unrecognized OS : $OS"
   exit 1
@@ -159,58 +159,58 @@ fi
 sed "s/{OS_CLOUD}/$CLOUD/g" "$PROVIDERMANAGER_TEMPLATE_FILE" > "$PROVIDERMANAGER_GENERATED_FILE"
 
 # write config file to PROVIDERCOMPONENT_GENERATED_FILE
-for file in `ls ${PROVIDER_CRD_DIR}`
+for file in `ls "${PROVIDER_CRD_DIR}"`
 do
-    cat "${PROVIDER_CRD_DIR}/${file}" > $PROVIDERCOMPONENT_GENERATED_FILE
-    echo "---" >> $PROVIDERCOMPONENT_GENERATED_FILE
+    cat "${PROVIDER_CRD_DIR}/${file}" > "$PROVIDERCOMPONENT_GENERATED_FILE"
+    echo "---" >> "$PROVIDERCOMPONENT_GENERATED_FILE"
 done
-for file in `ls ${PROVIDER_RBAC_DIR}`
+for file in `ls "${PROVIDER_RBAC_DIR}"`
 do
-    cat "${PROVIDER_RBAC_DIR}/${file}" >> $PROVIDERCOMPONENT_GENERATED_FILE
-    echo "---" >> $PROVIDERCOMPONENT_GENERATED_FILE
+    cat "${PROVIDER_RBAC_DIR}/${file}" >> "$PROVIDERCOMPONENT_GENERATED_FILE"
+    echo "---" >> "$PROVIDERCOMPONENT_GENERATED_FILE"
 done
-for file in `ls ${PROVIDER_MANAGER_DIR}`
+for file in `ls "${PROVIDER_MANAGER_DIR}"`
 do
-    cat "${PROVIDER_MANAGER_DIR}/${file}" >> $PROVIDERCOMPONENT_GENERATED_FILE
-    echo "---" >> $PROVIDERCOMPONENT_GENERATED_FILE
+    cat "${PROVIDER_MANAGER_DIR}/${file}" >> "$PROVIDERCOMPONENT_GENERATED_FILE"
+    echo "---" >> "$PROVIDERCOMPONENT_GENERATED_FILE"
 done
-for file in `ls ${CLUSTER_MANAGER_DIR}`
+for file in `ls "${CLUSTER_MANAGER_DIR}"`
 do
-    cat "${CLUSTER_MANAGER_DIR}/${file}" >> $PROVIDERCOMPONENT_GENERATED_FILE
-    echo "---" >> $PROVIDERCOMPONENT_GENERATED_FILE
+    cat "${CLUSTER_MANAGER_DIR}/${file}" >> "$PROVIDERCOMPONENT_GENERATED_FILE"
+    echo "---" >> "$PROVIDERCOMPONENT_GENERATED_FILE"
 done
-for file in `ls ${CLUSTER_CRD_DIR}`
+for file in `ls "${CLUSTER_CRD_DIR}"`
 do
-    cat "${CLUSTER_CRD_DIR}/${file}" >> $PROVIDERCOMPONENT_GENERATED_FILE
-    echo "---" >> $PROVIDERCOMPONENT_GENERATED_FILE
+    cat "${CLUSTER_CRD_DIR}/${file}" >> "$PROVIDERCOMPONENT_GENERATED_FILE"
+    echo "---" >> "$PROVIDERCOMPONENT_GENERATED_FILE"
 done
-for file in `ls ${CLUSTER_RBAC_DIR}`
+for file in `ls "${CLUSTER_RBAC_DIR}"`
 do
-    cat "${CLUSTER_RBAC_DIR}/${file}" >> $PROVIDERCOMPONENT_GENERATED_FILE
-    echo "---" >> $PROVIDERCOMPONENT_GENERATED_FILE
+    cat "${CLUSTER_RBAC_DIR}/${file}" >> "$PROVIDERCOMPONENT_GENERATED_FILE"
+    echo "---" >> "$PROVIDERCOMPONENT_GENERATED_FILE"
 done
 
-cat $PROVIDERCOMPONENT_TEMPLATE_FILE \
+cat "$PROVIDERCOMPONENT_TEMPLATE_FILE" \
   | sed -e "s/\$OPENSTACK_CLOUD_CONFIG/$OPENSTACK_CLOUD_CONFIG/" \
   | sed -e "s/\$MACHINE_CONTROLLER_SSH_USER/$MACHINE_CONTROLLER_SSH_USER/" \
   | sed -e "s/\$MACHINE_CONTROLLER_SSH_PUBLIC/$MACHINE_CONTROLLER_SSH_PUBLIC/" \
   | sed -e "s/\$MACHINE_CONTROLLER_SSH_PRIVATE/$MACHINE_CONTROLLER_SSH_PRIVATE/" \
-  >> $PROVIDERCOMPONENT_GENERATED_FILE
+  >> "$PROVIDERCOMPONENT_GENERATED_FILE"
 
 if [[ "$OS" =~ "Linux" ]]; then
-  sed -i "s#image: controller:latest#image: gcr.io/k8s-cluster-api/cluster-api-controller:latest#" $PROVIDERCOMPONENT_GENERATED_FILE
+  sed -i "s#image: controller:latest#image: gcr.io/k8s-cluster-api/cluster-api-controller:latest#" "$PROVIDERCOMPONENT_GENERATED_FILE"
 elif [[ "$OS" =~ "Darwin" ]]; then
-  sed -i '' -e "s#image: controller:latest#image: gcr.io/k8s-cluster-api/cluster-api-controller:latest#" $PROVIDERCOMPONENT_GENERATED_FILE
+  sed -i '' -e "s#image: controller:latest#image: gcr.io/k8s-cluster-api/cluster-api-controller:latest#" "$PROVIDERCOMPONENT_GENERATED_FILE"
 else
   echo "Unrecognized OS : $OS"
   exit 1
 fi
 
-cat $MACHINE_TEMPLATE_FILE \
-  > $MACHINE_GENERATED_FILE
+cat "$MACHINE_TEMPLATE_FILE" \
+  > "$MACHINE_GENERATED_FILE"
 
-cat $CLUSTER_TEMPLATE_FILE \
-  > $CLUSTER_GENERATED_FILE
+cat "$CLUSTER_TEMPLATE_FILE" \
+  > "$CLUSTER_GENERATED_FILE"
 
 
 echo "Done generating $PROVIDERCOMPONENT_GENERATED_FILE $MACHINE_GENERATED_FILE $CLUSTER_GENERATED_FILE"
