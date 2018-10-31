@@ -57,7 +57,7 @@ const (
 	TimeoutInstanceCreate       = 5 * time.Minute
 	RetryIntervalInstanceStatus = 10 * time.Second
 
-	TokenExpiration = 30 * time.Minute
+	TokenTTL = 30 * time.Minute
 )
 
 type SshCreds struct {
@@ -447,7 +447,7 @@ func (oc *OpenstackClient) createBootstrapToken() (string, error) {
 		return "", err
 	}
 
-	expiration := time.Now().UTC().Add(TokenExpiration)
+	expiration := time.Now().UTC().Add(TokenTTL)
 	tokenSecret, err := bootstrap.GenerateTokenSecret(token, expiration)
 	if err != nil {
 		// If this happens, there is a bug somewhere
