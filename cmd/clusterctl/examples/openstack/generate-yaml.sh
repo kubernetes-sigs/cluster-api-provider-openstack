@@ -12,7 +12,14 @@ print_help()
   echo "-h, --help                show brief help"
   echo "-f, --force-overwrite     if file to be generated already exists, force script to overwrite it"
   echo "-c, --clouds [File]       specifies an existing clouds.yaml file to use rather than generating one interactively"
+  echo "--provider-os [os name]   Required: select the operating system of your provider environment"
+  echo "                            Supported Operating Systems: ubuntu, centos"
+  echo ""
 }
+
+# Supported Operating Systems
+declare -a arr=("centos" "ubuntu")
+SUPPORTED_PROVIDER_OS=""
 
 SCRIPT=$(basename $0)
 while test $# -gt 0; do
@@ -35,12 +42,34 @@ while test $# -gt 0; do
             shift
             ;;
           -c|--clouds)
-            if [[ $2 == -* ]] || [[ $2 == --* ]];then
+            if [[ -z "$2" ]] || [[ $2 == -* ]] || [[ $2 == --* ]];then
               echo "Error: No cloud path was provided!"
               print_help
               exit 1
             fi
             CLOUDS_PATH=$2
+            shift
+            shift
+            ;;
+          --provider-os)
+            if [[ -z "$2" ]] || [[ $2 == -* ]] || [[ $2 == --* ]];then
+              echo "provider-os error: No operating system was provided!"
+              print_help
+              exit 1
+            fi
+            PROVIDER_OS=$(echo $2 | tr '[:upper:]' '[:lower:]')
+            for i in "${arr[@]}"
+            do
+              if test "$PROVIDER_OS" = "$i"; then
+                SUPPORTED_PROVIDER_OS=$i
+                break
+              fi
+            done
+            if test -z "$SUPPORTED_PROVIDER_OS"; then
+              echo "provider-os error: $PROVIDER_OS is not one of the supported operating systems!"
+              print_help
+              exit 1
+            fi
             shift
             shift
             ;;
@@ -50,9 +79,15 @@ while test $# -gt 0; do
         esac
 done
 
+if test -z "$SUPPORTED_PROVIDER_OS"; then
+  echo "Missing argument: provider-os is a required argument"
+  print_help
+  exit 1
+fi
+
 # Define global variables
 PWD=$(cd `dirname $0`; pwd)
-TEMPLATES_PATH=${TEMPLATES_PATH:-$PWD/ubuntu/}
+TEMPLATES_PATH=${TEMPLATES_PATH:-$PWD/$SUPPORTED_PROVIDER_OS/}
 HOME_DIR=${PWD%%/cmd/clusterctl/examples/*}
 OUTPUT_DIR="${TEMPLATES_PATH}/out"
 PROVIDER_CRD_DIR="${HOME_DIR}/config/crd"
