@@ -450,17 +450,12 @@ func (oc *OpenstackClient) createBootstrapToken() (string, error) {
 	expiration := time.Now().UTC().Add(TokenTTL)
 	tokenSecret, err := bootstrap.GenerateTokenSecret(token, expiration)
 	if err != nil {
-		// If this happens, there is a bug somewhere
-		return "", err
+		panic(fmt.Sprintf("unable to create token. there might be a bug somwhere: %v", err))
 	}
 
 	err = oc.client.Create(context.TODO(), tokenSecret)
 	if err != nil {
 		return "", err
-	}
-
-	if tokenSecret == nil {
-		return "", errors.New("unable to create token")
 	}
 
 	return tokenutil.TokenFromIDAndSecret(
