@@ -26,6 +26,9 @@ import (
 )
 
 // GeneratesTokenSecret returns a Secret conform to kubeadms bootstrap tokens
+// Inspired by https://github.com/kubernetes/kubernetes/blob/03a145de8ad282764828f43821433001974718e9/cmd/kubeadm/app/apis/kubeadm/bootstraptokenhelpers.go#L34
+// and the underlying type BootstrapToken.
+// We might change the implementation if a type BootstrapToken hits client-go.
 func GenerateTokenSecret(token string, expiration time.Time) (*v1.Secret, error) {
 	substrs := tokenutil.BootstrapTokenRegexp.FindStringSubmatch(token)
 	if len(substrs) != 3 {
