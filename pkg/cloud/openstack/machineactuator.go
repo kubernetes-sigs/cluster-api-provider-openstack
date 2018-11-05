@@ -57,7 +57,7 @@ const (
 	TimeoutInstanceCreate       = 5 * time.Minute
 	RetryIntervalInstanceStatus = 10 * time.Second
 
-	TokenTTL = 30 * time.Minute
+	TokenTTL = 60 * time.Minute
 )
 
 type SshCreds struct {
