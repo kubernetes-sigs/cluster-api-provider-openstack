@@ -74,7 +74,7 @@ spec:
           - name: USER
             value: root
           - name: OS_CLOUD
-            value: openstack
+            value: {OS_CLOUD}
       volumes:
       - name: config
         hostPath:
