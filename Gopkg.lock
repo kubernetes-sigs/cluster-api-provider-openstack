@@ -591,6 +591,17 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:28fd6a61b5220aab30c6f7344676ff5aaea4a5f14407d95f33e238b13da2d2ef"
+  name = "k8s.io/cluster-bootstrap"
+  packages = [
+    "token/api",
+    "token/util",
+  ]
+  pruneopts = "UT"
+  revision = "f574069107f7246cf0a827d06126404028914e97"
+
+[[projects]]
+  branch = "master"
   digest = "1:8a5d7d39d58442d70717601f367e8cd9513615579fdeda93335ee1dca50f6ffd"
   name = "k8s.io/code-generator"
   packages = [
@@ -644,13 +655,11 @@
     "pkg/client/clientset_generated/clientset",
     "pkg/client/clientset_generated/clientset/scheme",
     "pkg/client/clientset_generated/clientset/typed/cluster/v1alpha1",
-    "pkg/cmd-runner",
     "pkg/controller/cluster",
     "pkg/controller/error",
     "pkg/controller/machine",
     "pkg/controller/noderefutil",
     "pkg/errors",
-    "pkg/kubeadm",
     "pkg/util",
   ]
   pruneopts = "T"
@@ -720,10 +729,13 @@
     "github.com/gophercloud/gophercloud/openstack/identity/v3/tokens",
     "github.com/gophercloud/utils/openstack/clientconfig",
     "github.com/spf13/pflag",
+    "k8s.io/api/core/v1",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/runtime",
     "k8s.io/apimachinery/pkg/runtime/schema",
     "k8s.io/apimachinery/pkg/runtime/serializer/json",
+    "k8s.io/cluster-bootstrap/token/api",
+    "k8s.io/cluster-bootstrap/token/util",
     "k8s.io/code-generator/cmd/deepcopy-gen",
     "sigs.k8s.io/cluster-api/cmd/clusterctl/cmd",
     "sigs.k8s.io/cluster-api/pkg/apis",
@@ -732,7 +744,6 @@
     "sigs.k8s.io/cluster-api/pkg/controller/cluster",
     "sigs.k8s.io/cluster-api/pkg/controller/machine",
     "sigs.k8s.io/cluster-api/pkg/errors",
-    "sigs.k8s.io/cluster-api/pkg/kubeadm",
     "sigs.k8s.io/cluster-api/pkg/util",
     "sigs.k8s.io/controller-runtime/pkg/client",
     "sigs.k8s.io/controller-runtime/pkg/client/config",

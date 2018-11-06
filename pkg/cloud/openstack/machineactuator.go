@@ -17,6 +17,7 @@ limitations under the License.
 package openstack
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -31,12 +32,15 @@ import (
 	"github.com/golang/glog"
 	"k8s.io/apimachinery/pkg/runtime"
 
+	tokenapi "k8s.io/cluster-bootstrap/token/api"
+	tokenutil "k8s.io/cluster-bootstrap/token/util"
+	bootstrap "sigs.k8s.io/cluster-api-provider-openstack/pkg/bootstrap"
+
 	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/clients"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/machinesetup"
 	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
 	apierrors "sigs.k8s.io/cluster-api/pkg/errors"
-	"sigs.k8s.io/cluster-api/pkg/kubeadm"
 	"sigs.k8s.io/cluster-api/pkg/util"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -52,6 +56,8 @@ const (
 
 	TimeoutInstanceCreate       = 5 * time.Minute
 	RetryIntervalInstanceStatus = 10 * time.Second
+
+	TokenTTL = 60 * time.Minute
 )
 
 type SshCreds struct {
@@ -62,7 +68,6 @@ type SshCreds struct {
 
 type OpenstackClient struct {
 	scheme              *runtime.Scheme
-	kubeadm             *kubeadm.Kubeadm
 	client              client.Client
 	machineSetupWatcher *machinesetup.ConfigWatch
 	machineService      *clients.InstanceService
@@ -131,7 +136,6 @@ func NewMachineActuator(machineClient client.Client, scheme *runtime.Scheme) (*O
 		client:              machineClient,
 		machineService:      machineService,
 		machineSetupWatcher: setupConfigWatcher,
-		kubeadm:             kubeadm.New(),
 		scheme:              scheme,
 		sshCred:             &sshCred,
 		DeploymentClient:    NewDeploymentClient(),
@@ -183,7 +187,8 @@ func (oc *OpenstackClient) Create(cluster *clusterv1.Cluster, machine *clusterv1
 				"error creating Openstack instance: %v", err))
 		}
 	} else {
-		token, err := oc.getKubeadmToken()
+		glog.Info("Creating bootstrap token")
+		token, err := oc.createBootstrapToken()
 		if err != nil {
 			return oc.handleMachineError(machine, apierrors.CreateMachine(
 				"error creating Openstack instance: %v", err))
@@ -436,18 +441,27 @@ func (oc *OpenstackClient) providerconfig(providerConfig clusterv1.ProviderConfi
 	return &config, nil
 }
 
-func (oc *OpenstackClient) getKubeadmToken() (string, error) {
-	tokenParams := kubeadm.TokenCreateParams{
-		Ttl: time.Duration(10) * time.Minute,
-	}
-	output, err := oc.kubeadm.TokenCreate(tokenParams)
+func (oc *OpenstackClient) createBootstrapToken() (string, error) {
+	token, err := tokenutil.GenerateBootstrapToken()
 	if err != nil {
-		glog.Errorf("unable to create token: %v", err)
 		return "", err
 	}
 
-	soutput := strings.Split(output, "\n")
-	return strings.TrimSpace(soutput[len(soutput)-1]), err
+	expiration := time.Now().UTC().Add(TokenTTL)
+	tokenSecret, err := bootstrap.GenerateTokenSecret(token, expiration)
+	if err != nil {
+		panic(fmt.Sprintf("unable to create token. there might be a bug somwhere: %v", err))
+	}
+
+	err = oc.client.Create(context.TODO(), tokenSecret)
+	if err != nil {
+		return "", err
+	}
+
+	return tokenutil.TokenFromIDAndSecret(
+		string(tokenSecret.Data[tokenapi.BootstrapTokenIDKey]),
+		string(tokenSecret.Data[tokenapi.BootstrapTokenSecretKey]),
+	), nil
 }
 
 func (oc *OpenstackClient) validateMachine(machine *clusterv1.Machine, config *openstackconfigv1.OpenstackProviderConfig) *apierrors.MachineError {
