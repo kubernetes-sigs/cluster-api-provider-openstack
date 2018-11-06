@@ -68,3 +68,7 @@ required = [
 [[prune.project]]
   name = "sigs.k8s.io/cluster-api"
   unused-packages = false
+
+[[constraint]]
+  branch = "master"
+  name = "k8s.io/cluster-bootstrap"
