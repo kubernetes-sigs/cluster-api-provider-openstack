@@ -1,6 +1,8 @@
-package openstack
+package cluster
 
 import (
+	"fmt"
+
 	"github.com/golang/glog"
 	"github.com/pkg/errors"
 
@@ -28,7 +30,25 @@ func NewActuator(params ActuatorParams) (*Actuator, error) {
 }
 
 func (a *Actuator) Reconcile(cluster *clusterv1.Cluster) error {
-	glog.Errorf("Not implemented yet")
+	glog.Infof("Reconciling cluster %v.", cluster.Name)
+
+	// Load provider config.
+	_, err := providerv1.ClusterConfigFromProviderConfig(cluster.Spec.ProviderConfig)
+	if err != nil {
+		return errors.Errorf("failed to load cluster provider config: %v", err)
+	}
+
+	// Load provider status.
+	status, err := providerv1.ClusterStatusFromProviderStatus(cluster.Status.ProviderStatus)
+	if err != nil {
+		return errors.Errorf("failed to load cluster provider status: %v", err)
+	}
+
+	defer func() {
+		if err := a.storeClusterStatus(cluster, status); err != nil {
+			glog.Errorf("failed to store provider status for cluster %q in namespace %q: %v", cluster.Name, cluster.Namespace, err)
+		}
+	}()
 	return nil
 }
 
@@ -49,6 +69,23 @@ func (a *Actuator) Delete(cluster *clusterv1.Cluster) error {
 	}
 
 	// Delete other things
+
+	return nil
+}
+
+func (a *Actuator) storeClusterStatus(cluster *clusterv1.Cluster, status *providerv1.OpenstackClusterProviderStatus) error {
+	clusterClient := a.clustersGetter.Clusters(cluster.Namespace)
+
+	ext, err := providerv1.EncodeClusterStatus(status)
+	if err != nil {
+		return fmt.Errorf("failed to update cluster status for cluster %q in namespace %q: %v", cluster.Name, cluster.Namespace, err)
+	}
+
+	cluster.Status.ProviderStatus = ext
+
+	if _, err := clusterClient.UpdateStatus(cluster); err != nil {
+		return fmt.Errorf("failed to update cluster status for cluster %q in namespace %q: %v", cluster.Name, cluster.Namespace, err)
+	}
 
 	return nil
 }

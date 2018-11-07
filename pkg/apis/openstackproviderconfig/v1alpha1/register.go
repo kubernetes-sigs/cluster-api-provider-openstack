@@ -44,12 +44,12 @@ func ClusterConfigFromProviderConfig(providerConfig clusterv1.ProviderConfig) (*
 	return config, nil
 }
 
-func ClusterStatusFromProviderStatus(extension *runtime.RawExtension) (*interface{}, error) {
+func ClusterStatusFromProviderStatus(extension *runtime.RawExtension) (*OpenstackClusterProviderStatus, error) {
 	if extension == nil {
-		return nil, nil
+		return &OpenstackClusterProviderStatus{}, nil
 	}
 
-	status := new(interface{})
+	status := new(OpenstackClusterProviderStatus)
 	if err := yaml.Unmarshal(extension.Raw, status); err != nil {
 		return nil, err
 	}
@@ -65,4 +65,22 @@ func MachineConfigFromProviderConfig(providerConfig clusterv1.ProviderConfig) (*
 		return nil, err
 	}
 	return &config, nil
+}
+
+func EncodeClusterStatus(status *OpenstackClusterProviderStatus) (*runtime.RawExtension, error) {
+	if status == nil {
+		return &runtime.RawExtension{}, nil
+	}
+
+	var rawBytes []byte
+	var err error
+
+	//  TODO: use apimachinery conversion https://godoc.org/k8s.io/apimachinery/pkg/runtime#Convert_runtime_Object_To_runtime_RawExtension
+	if rawBytes, err = json.Marshal(status); err != nil {
+		return nil, err
+	}
+
+	return &runtime.RawExtension{
+		Raw: rawBytes,
+	}, nil
 }

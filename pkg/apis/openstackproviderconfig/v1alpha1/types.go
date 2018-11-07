@@ -59,6 +59,23 @@ type RootVolume struct {
 	Size       int    `json:"diskSize,omitempty"`
 }
 
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// OpenstackClusterProviderStatus contains the status fields
+// relevant to AWS in the cluster object.
+// +k8s:openapi-gen=true
+type OpenstackClusterProviderStatus struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	// CACertificate is a PEM encoded CA Certificate for the control plane nodes.
+	CACertificate []byte
+
+	// CAPrivateKey is a PEM encoded PKCS1 CA PrivateKey for the control plane nodes.
+	CAPrivateKey []byte
+}
+
 func init() {
 	SchemeBuilder.Register(&OpenstackProviderConfig{})
 }
