@@ -31,6 +31,10 @@ import (
 )
 
 const ProviderName = "openstack"
+const (
+	OpenstackIPAnnotationKey = "openstack-ip-address"
+	OpenstackIdAnnotationKey = "openstack-resourceId"
+)
 
 func init() {
 	clustercommon.RegisterClusterProvisioner(ProviderName, NewDeploymentClient())
