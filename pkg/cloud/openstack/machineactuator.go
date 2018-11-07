@@ -28,7 +28,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
 	"k8s.io/apimachinery/pkg/runtime"
 
@@ -147,7 +146,7 @@ func (oc *OpenstackClient) Create(cluster *clusterv1.Cluster, machine *clusterv1
 		return errors.New("a valid machine setup config watcher is required!")
 	}
 
-	providerConfig, err := oc.providerconfig(machine.Spec.ProviderConfig)
+	providerConfig, err := openstackconfigv1.ClusterConfigFromProviderConfig(machine.Spec.ProviderConfig)
 	if err != nil {
 		return oc.handleMachineError(machine, apierrors.InvalidMachineConfiguration(
 			"Cannot unmarshal providerConfig field: %v", err))
@@ -347,7 +346,7 @@ func (oc *OpenstackClient) GetKubeConfig(cluster *clusterv1.Cluster, master *clu
 		return "", err
 	}
 
-	machineConfig, err := oc.providerconfig(master.Spec.ProviderConfig)
+	machineConfig, err := openstackconfigv1.MachineConfigFromProviderConfig(master.Spec.ProviderConfig)
 	if err != nil {
 		return "", err
 	}
@@ -413,7 +412,7 @@ func (oc *OpenstackClient) requiresUpdate(a *clusterv1.Machine, b *clusterv1.Mac
 }
 
 func (oc *OpenstackClient) instanceExists(machine *clusterv1.Machine) (instance *clients.Instance, err error) {
-	machineConfig, err := oc.providerconfig(machine.Spec.ProviderConfig)
+	machineConfig, err := openstackconfigv1.MachineConfigFromProviderConfig(machine.Spec.ProviderConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -430,15 +429,6 @@ func (oc *OpenstackClient) instanceExists(machine *clusterv1.Machine) (instance 
 		return nil, nil
 	}
 	return instanceList[0], nil
-}
-
-// providerconfig get openstack provider config
-func (oc *OpenstackClient) providerconfig(providerConfig clusterv1.ProviderConfig) (*openstackconfigv1.OpenstackProviderConfig, error) {
-	var config openstackconfigv1.OpenstackProviderConfig
-	if err := yaml.Unmarshal(providerConfig.Value.Raw, &config); err != nil {
-		return nil, err
-	}
-	return &config, nil
 }
 
 func (oc *OpenstackClient) createBootstrapToken() (string, error) {
