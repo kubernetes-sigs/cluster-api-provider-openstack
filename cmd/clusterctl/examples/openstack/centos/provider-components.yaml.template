@@ -76,11 +76,14 @@ data:
         cat <<EOF > /etc/default/kubelet
         KUBELET_KUBEADM_EXTRA_ARGS=--cgroup-driver=systemd
         EOF
+
         systemctl enable kubelet.service
 
         modprobe br_netfilter
         echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables
         echo '1' > /proc/sys/net/ipv4/ip_forward
+
+        echo $OPENSTACK_CLOUD_PROVIDER_CONF | base64 -d > /etc/kubernetes/cloud.conf
 
         # Set up kubeadm config file to pass parameters to kubeadm init.
         cat > /etc/kubernetes/kubeadm_config.yaml <<EOF
@@ -88,6 +91,10 @@ data:
         kind: InitConfiguration
         bootstrapTokens:
         - token: ${TOKEN}
+        nodeRegistration:
+          kubeletExtraArgs:
+            cloud-provider: "openstack"
+            cloud-config: "/etc/kubernetes/cloud.conf"
         ---
         apiVersion: kubeadm.k8s.io/v1alpha3
         kind: ClusterConfiguration
@@ -95,11 +102,24 @@ data:
         networking:
           serviceSubnet: ${SERVICE_CIDR}
         clusterName: kubernetes
+        apiServerExtraArgs:
+          cloud-provider: "openstack"
+          cloud-config: "/etc/kubernetes/cloud.conf"
+        apiServerExtraVolumes:
+        - name: cloud
+          hostPath: "/etc/kubernetes/cloud.conf"
+          mountPath: "/etc/kubernetes/cloud.conf"
         controlPlaneEndpoint: ""
         controllerManagerExtraArgs:
           cluster-cidr: ${POD_CIDR}
           service-cluster-ip-range: ${SERVICE_CIDR}
           allocate-node-cidrs: "true"
+          cloud-provider: "openstack"
+          cloud-config: "/etc/kubernetes/cloud.conf"
+        controllerManagerExtraVolumes:
+        - name: cloud
+          hostPath: "/etc/kubernetes/cloud.conf"
+          mountPath: "/etc/kubernetes/cloud.conf"
         EOF
         
         kubeadm init --config /etc/kubernetes/kubeadm_config.yaml

@@ -93,6 +93,9 @@ data:
         [Service]
         Environment="KUBELET_DNS_ARGS=--cluster-dns=${CLUSTER_DNS_SERVER} --cluster-domain=${CLUSTER_DNS_DOMAIN}"
         EOF
+
+        echo $OPENSTACK_CLOUD_PROVIDER_CONF | base64 -d > /etc/kubernetes/cloud.conf
+
         systemctl daemon-reload
         systemctl restart kubelet.service
 
@@ -106,6 +109,10 @@ data:
         - token: ${TOKEN}
         apiEndpoint:
           bindPort: 443
+        nodeRegistration:
+          kubeletExtraArgs:
+            cloud-provider: "openstack"
+            cloud-config: "/etc/kubernetes/cloud.conf"
         ---
         apiVersion: kubeadm.k8s.io/v1alpha3
         kind: ClusterConfiguration
@@ -114,10 +121,23 @@ data:
           serviceSubnet: ${SERVICE_CIDR}
         clusterName: kubernetes
         controlPlaneEndpoint: ""
+        apiServerExtraArgs:
+          cloud-provider: "openstack"
+          cloud-config: "/etc/kubernetes/cloud.conf"
+        apiServerExtraVolumes:
+        - name: cloud
+          hostPath: "/etc/kubernetes/cloud.conf"
+          mountPath: "/etc/kubernetes/cloud.conf"
         controllerManagerExtraArgs:
           cluster-cidr: ${POD_CIDR}
           service-cluster-ip-range: ${SERVICE_CIDR}
           allocate-node-cidrs: "true"
+          cloud-provider: "openstack"
+          cloud-config: "/etc/kubernetes/cloud.conf"
+        controllerManagerExtraVolumes:
+        - name: cloud
+          hostPath: "/etc/kubernetes/cloud.conf"
+          mountPath: "/etc/kubernetes/cloud.conf"
         EOF
 
         # Create and set bridge-nf-call-iptables to 1 to pass the kubeadm preflight check.
