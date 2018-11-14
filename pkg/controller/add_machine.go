@@ -17,7 +17,7 @@ limitations under the License.
 package controller
 
 import (
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack"
+	ocm "sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/machine"
 	"sigs.k8s.io/cluster-api/pkg/controller/machine"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -25,7 +25,7 @@ import (
 func init() {
 	// AddToManagerFuncs is a list of functions to create controllers and add them to a manager.
 	AddToManagerFuncs = append(AddToManagerFuncs, func(m manager.Manager) error {
-		machineActuator, err := openstack.NewMachineActuator(m.GetClient(), m.GetScheme())
+		machineActuator, err := ocm.NewMachineActuator(m.GetClient(), m.GetScheme())
 		if err != nil {
 			return err
 		}

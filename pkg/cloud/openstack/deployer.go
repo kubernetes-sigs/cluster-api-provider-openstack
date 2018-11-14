@@ -22,7 +22,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
 
 	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
@@ -32,6 +31,10 @@ import (
 )
 
 const ProviderName = "openstack"
+const (
+	OpenstackIPAnnotationKey = "openstack-ip-address"
+	OpenstackIdAnnotationKey = "openstack-resourceId"
+)
 
 func init() {
 	clustercommon.RegisterClusterProvisioner(ProviderName, NewDeploymentClient())
@@ -65,7 +68,7 @@ func (d *DeploymentClient) GetKubeConfig(cluster *clusterv1.Cluster, master *clu
 		return "", fmt.Errorf("unable to use HOME environment variable to find SSH key: %v", err)
 	}
 
-	machineConfig, err := d.providerconfig(master.Spec.ProviderConfig)
+	machineConfig, err := openstackconfigv1.MachineConfigFromProviderConfig(master.Spec.ProviderConfig)
 	if err != nil {
 		return "", err
 	}
@@ -81,12 +84,4 @@ func (d *DeploymentClient) GetKubeConfig(cluster *clusterv1.Cluster, master *clu
 		return "", nil
 	}
 	return strings.TrimSpace(parts[1]), nil
-}
-
-func (d *DeploymentClient) providerconfig(providerConfig clusterv1.ProviderConfig) (*openstackconfigv1.OpenstackProviderConfig, error) {
-	var config openstackconfigv1.OpenstackProviderConfig
-	if err := yaml.Unmarshal(providerConfig.Value.Raw, &config); err != nil {
-		return nil, err
-	}
-	return &config, nil
 }

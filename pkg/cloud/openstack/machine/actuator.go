@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package openstack
+package machine
 
 import (
 	"context"
@@ -28,7 +28,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
 	"k8s.io/apimachinery/pkg/runtime"
 
@@ -37,8 +36,9 @@ import (
 	bootstrap "sigs.k8s.io/cluster-api-provider-openstack/pkg/bootstrap"
 
 	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/clients"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/machinesetup"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/machine/machinesetup"
 	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
 	apierrors "sigs.k8s.io/cluster-api/pkg/errors"
 	"sigs.k8s.io/cluster-api/pkg/util"
@@ -46,13 +46,11 @@ import (
 )
 
 const (
-	MachineSetupConfigPath   = "/etc/machinesetup/machine_setup_configs.yaml"
-	SshPrivateKeyPath        = "/etc/sshkeys/private"
-	SshPublicKeyPath         = "/etc/sshkeys/public"
-	SshKeyUserPath           = "/etc/sshkeys/user"
-	CloudConfigPath          = "/etc/cloud/cloud_config.yaml"
-	OpenstackIPAnnotationKey = "openstack-ip-address"
-	OpenstackIdAnnotationKey = "openstack-resourceId"
+	MachineSetupConfigPath = "/etc/machinesetup/machine_setup_configs.yaml"
+	SshPrivateKeyPath      = "/etc/sshkeys/private"
+	SshPublicKeyPath       = "/etc/sshkeys/public"
+	SshKeyUserPath         = "/etc/sshkeys/user"
+	CloudConfigPath        = "/etc/cloud/cloud_config.yaml"
 
 	TimeoutInstanceCreate       = 5 * time.Minute
 	RetryIntervalInstanceStatus = 10 * time.Second
@@ -72,7 +70,7 @@ type OpenstackClient struct {
 	machineSetupWatcher *machinesetup.ConfigWatch
 	machineService      *clients.InstanceService
 	sshCred             *SshCreds
-	*DeploymentClient
+	*openstack.DeploymentClient
 }
 
 func NewMachineActuator(machineClient client.Client, scheme *runtime.Scheme) (*OpenstackClient, error) {
@@ -138,7 +136,7 @@ func NewMachineActuator(machineClient client.Client, scheme *runtime.Scheme) (*O
 		machineSetupWatcher: setupConfigWatcher,
 		scheme:              scheme,
 		sshCred:             &sshCred,
-		DeploymentClient:    NewDeploymentClient(),
+		DeploymentClient:    openstack.NewDeploymentClient(),
 	}, nil
 }
 
@@ -147,7 +145,7 @@ func (oc *OpenstackClient) Create(cluster *clusterv1.Cluster, machine *clusterv1
 		return errors.New("a valid machine setup config watcher is required!")
 	}
 
-	providerConfig, err := oc.providerconfig(machine.Spec.ProviderConfig)
+	providerConfig, err := openstackconfigv1.ClusterConfigFromProviderConfig(machine.Spec.ProviderConfig)
 	if err != nil {
 		return oc.handleMachineError(machine, apierrors.InvalidMachineConfiguration(
 			"Cannot unmarshal providerConfig field: %v", err))
@@ -241,7 +239,7 @@ func (oc *OpenstackClient) Delete(cluster *clusterv1.Cluster, machine *clusterv1
 		return nil
 	}
 
-	id := machine.ObjectMeta.Annotations[OpenstackIdAnnotationKey]
+	id := machine.ObjectMeta.Annotations[openstack.OpenstackIdAnnotationKey]
 	err = oc.machineService.InstanceDelete(id)
 	if err != nil {
 		return oc.handleMachineError(machine, apierrors.DeleteMachine(
@@ -347,7 +345,7 @@ func (oc *OpenstackClient) GetKubeConfig(cluster *clusterv1.Cluster, master *clu
 		return "", err
 	}
 
-	machineConfig, err := oc.providerconfig(master.Spec.ProviderConfig)
+	machineConfig, err := openstackconfigv1.MachineConfigFromProviderConfig(master.Spec.ProviderConfig)
 	if err != nil {
 		return "", err
 	}
@@ -388,13 +386,13 @@ func (oc *OpenstackClient) updateAnnotation(machine *clusterv1.Machine, id strin
 	if machine.ObjectMeta.Annotations == nil {
 		machine.ObjectMeta.Annotations = make(map[string]string)
 	}
-	machine.ObjectMeta.Annotations[OpenstackIdAnnotationKey] = id
+	machine.ObjectMeta.Annotations[openstack.OpenstackIdAnnotationKey] = id
 	instance, _ := oc.instanceExists(machine)
 	ip, err := getIPFromInstance(instance)
 	if err != nil {
 		return err
 	}
-	machine.ObjectMeta.Annotations[OpenstackIPAnnotationKey] = ip
+	machine.ObjectMeta.Annotations[openstack.OpenstackIPAnnotationKey] = ip
 	if err := oc.client.Update(nil, machine); err != nil {
 		return err
 	}
@@ -413,7 +411,7 @@ func (oc *OpenstackClient) requiresUpdate(a *clusterv1.Machine, b *clusterv1.Mac
 }
 
 func (oc *OpenstackClient) instanceExists(machine *clusterv1.Machine) (instance *clients.Instance, err error) {
-	machineConfig, err := oc.providerconfig(machine.Spec.ProviderConfig)
+	machineConfig, err := openstackconfigv1.MachineConfigFromProviderConfig(machine.Spec.ProviderConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -430,15 +428,6 @@ func (oc *OpenstackClient) instanceExists(machine *clusterv1.Machine) (instance 
 		return nil, nil
 	}
 	return instanceList[0], nil
-}
-
-// providerconfig get openstack provider config
-func (oc *OpenstackClient) providerconfig(providerConfig clusterv1.ProviderConfig) (*openstackconfigv1.OpenstackProviderConfig, error) {
-	var config openstackconfigv1.OpenstackProviderConfig
-	if err := yaml.Unmarshal(providerConfig.Value.Raw, &config); err != nil {
-		return nil, err
-	}
-	return &config, nil
 }
 
 func (oc *OpenstackClient) createBootstrapToken() (string, error) {
