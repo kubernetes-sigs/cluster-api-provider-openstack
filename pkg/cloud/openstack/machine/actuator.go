@@ -73,7 +73,7 @@ type OpenstackClient struct {
 	*openstack.DeploymentClient
 }
 
-func NewMachineActuator(machineClient client.Client, scheme *runtime.Scheme) (*OpenstackClient, error) {
+func NewActuator(machineClient client.Client, scheme *runtime.Scheme) (*OpenstackClient, error) {
 	machineService, err := clients.NewInstanceService()
 	if err != nil {
 		return nil, err
