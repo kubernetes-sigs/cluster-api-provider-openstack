@@ -39,16 +39,17 @@ func (a *Actuator) Reconcile(cluster *clusterv1.Cluster) error {
 	}
 
 	// Load provider status.
-	status, err := providerv1.ClusterStatusFromProviderStatus(cluster.Status.ProviderStatus)
+	_, err = providerv1.ClusterStatusFromProviderStatus(cluster.Status.ProviderStatus)
 	if err != nil {
 		return errors.Errorf("failed to load cluster provider status: %v", err)
 	}
 
+	/* Uncomment when the clusterGetter is back to working
 	defer func() {
 		if err := a.storeClusterStatus(cluster, status); err != nil {
 			glog.Errorf("failed to store provider status for cluster %q in namespace %q: %v", cluster.Name, cluster.Namespace, err)
 		}
-	}()
+	}()*/
 	return nil
 }
 
