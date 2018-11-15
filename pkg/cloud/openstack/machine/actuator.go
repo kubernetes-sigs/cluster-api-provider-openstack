@@ -28,8 +28,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/glog"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/klog"
 
 	tokenapi "k8s.io/cluster-bootstrap/token/api"
 	tokenutil "k8s.io/cluster-bootstrap/token/util"
@@ -160,7 +160,7 @@ func (oc *OpenstackClient) Create(cluster *clusterv1.Cluster, machine *clusterv1
 		return err
 	}
 	if instance != nil {
-		glog.Infof("Skipped creating a VM that already exists.\n")
+		klog.Infof("Skipped creating a VM that already exists.\n")
 		return nil
 	}
 
@@ -171,7 +171,7 @@ func (oc *OpenstackClient) Create(cluster *clusterv1.Cluster, machine *clusterv1
 	}
 	role, ok := machine.ObjectMeta.Labels["set"]
 	if !ok {
-		glog.Errorf("Check machine role err, treat as \"node\" by default")
+		klog.Errorf("Check machine role err, treat as \"node\" by default")
 		role = machinesetup.MachineRoleNode
 	}
 	startupScript, err := machineSetupConfig.GetSetupScript(role)
@@ -185,7 +185,7 @@ func (oc *OpenstackClient) Create(cluster *clusterv1.Cluster, machine *clusterv1
 				"error creating Openstack instance: %v", err))
 		}
 	} else {
-		glog.Info("Creating bootstrap token")
+		klog.Info("Creating bootstrap token")
 		token, err := oc.createBootstrapToken()
 		if err != nil {
 			return oc.handleMachineError(machine, apierrors.CreateMachine(
@@ -235,7 +235,7 @@ func (oc *OpenstackClient) Delete(cluster *clusterv1.Cluster, machine *clusterv1
 	}
 
 	if instance == nil {
-		glog.Infof("Skipped deleting a VM that is already deleted.\n")
+		klog.Infof("Skipped deleting a VM that is already deleted.\n")
 		return nil
 	}
 
@@ -262,7 +262,7 @@ func (oc *OpenstackClient) Update(cluster *clusterv1.Cluster, machine *clusterv1
 			return err
 		}
 		if instance != nil && instance.Status == "ACTIVE" {
-			glog.Infof("Populating current state for boostrap machine %v", machine.ObjectMeta.Name)
+			klog.Infof("Populating current state for boostrap machine %v", machine.ObjectMeta.Name)
 			return oc.updateAnnotation(machine, instance.ID)
 		} else {
 			return fmt.Errorf("Cannot retrieve current state to update machine %v", machine.ObjectMeta.Name)
@@ -275,16 +275,16 @@ func (oc *OpenstackClient) Update(cluster *clusterv1.Cluster, machine *clusterv1
 
 	if util.IsMaster(currentMachine) {
 		// TODO: add master inplace
-		glog.Errorf("master inplace update failed: %v", err)
+		klog.Errorf("master inplace update failed: %v", err)
 	} else {
-		glog.Infof("re-creating machine %s for update.", currentMachine.ObjectMeta.Name)
+		klog.Infof("re-creating machine %s for update.", currentMachine.ObjectMeta.Name)
 		err = oc.Delete(cluster, currentMachine)
 		if err != nil {
-			glog.Errorf("delete machine %s for update failed: %v", currentMachine.ObjectMeta.Name, err)
+			klog.Errorf("delete machine %s for update failed: %v", currentMachine.ObjectMeta.Name, err)
 		} else {
 			err = oc.Create(cluster, machine)
 			if err != nil {
-				glog.Errorf("create machine %s for update failed: %v", machine.ObjectMeta.Name, err)
+				klog.Errorf("create machine %s for update failed: %v", machine.ObjectMeta.Name, err)
 			}
 		}
 	}
@@ -378,7 +378,7 @@ func (oc *OpenstackClient) handleMachineError(machine *clusterv1.Machine, err *a
 		}
 	}
 
-	glog.Errorf("Machine error: %v", err.Message)
+	klog.Errorf("Machine error: %v", err.Message)
 	return err
 }
 

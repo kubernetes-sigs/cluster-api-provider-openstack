@@ -20,8 +20,8 @@ import (
 	"flag"
 	"log"
 
-	"github.com/golang/glog"
 	"github.com/spf13/pflag"
+	"k8s.io/klog"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/apis"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/controller"
@@ -32,36 +32,36 @@ import (
 )
 
 func main() {
-	// the following line exists to make glog happy, for more information, see: https://github.com/kubernetes/kubernetes/issues/17162
+	// the following line exists to make klog happy, for more information, see: https://github.com/kubernetes/kubernetes/issues/17162
 	flag.CommandLine.Parse([]string{})
 	pflag.Parse()
 
 	// Get a config to talk to the apiserver
 	cfg, err := config.GetConfig()
 	if err != nil {
-		glog.Fatal(err)
+		klog.Fatal(err)
 	}
 
 	// Create a new Cmd to provide shared dependencies and start components
 	mgr, err := manager.New(cfg, manager.Options{})
 	if err != nil {
-		glog.Fatal(err)
+		klog.Fatal(err)
 	}
 
-	glog.Infof("Initializing Dependencies.")
+	klog.Infof("Initializing Dependencies.")
 
 	// Setup Scheme for all resources
 	if err := apis.AddToScheme(mgr.GetScheme()); err != nil {
-		glog.Fatal(err)
+		klog.Fatal(err)
 	}
 
 	if err := clusterapis.AddToScheme(mgr.GetScheme()); err != nil {
-		glog.Fatal(err)
+		klog.Fatal(err)
 	}
 
 	// Setup all Controllers
 	if err := controller.AddToManager(mgr); err != nil {
-		glog.Fatal(err)
+		klog.Fatal(err)
 	}
 
 	log.Printf("Starting the Cmd.")
