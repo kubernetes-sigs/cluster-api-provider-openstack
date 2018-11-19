@@ -109,7 +109,7 @@ func (is *InstanceService) UpdateToken() error {
 	if result {
 		return nil
 	}
-	klog.V(2).Infof("Toen is out of date, need get new token.")
+	klog.V(2).Infof("Token is out of date, please provide a valid token.")
 	reAuthFunction := is.provider.ReauthFunc
 	if reAuthFunction() != nil {
 		return fmt.Errorf("reAuth err: %v", err)
