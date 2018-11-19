@@ -19,6 +19,7 @@ package machine
 import (
 	"bytes"
 	"fmt"
+
 	"k8s.io/apimachinery/pkg/runtime/serializer/json"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -84,7 +85,7 @@ func (oc *OpenstackClient) machineInstanceStatus(machine *clusterv1.Machine) (in
 
 	serializer := json.NewSerializer(json.DefaultMetaFactory, oc.scheme, oc.scheme, false)
 	var status clusterv1.Machine
-	_, _, err := serializer.Decode([]byte(a), &schema.GroupVersionKind{Group: "", Version: "cluster.k8s.io/v1alpha1", Kind: "Machine"}, &status)
+	_, _, err := serializer.Decode([]byte(a), &schema.GroupVersionKind{Group: "cluster.k8s.io", Version: "v1alpha1", Kind: "Machine"}, &status)
 	if err != nil {
 		return nil, fmt.Errorf("decoding failure: %v", err)
 	}
