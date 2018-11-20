@@ -12,7 +12,10 @@ configuration is provided.
 ./generate-yaml.sh --provider-os [os name]
 ```
 
-[os name] is the operating system of your provider environment. Supported Operating Systems: ubuntu, centos.
+   [os name] is the operating system of your provider environment. 
+   Supported Operating Systems: 
+   - `ubuntu` 
+   - `centos`
 If yaml file already exists, you will see an error like the one below:
 
 ```

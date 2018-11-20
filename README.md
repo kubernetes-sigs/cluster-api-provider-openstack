@@ -40,7 +40,10 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
    ./generate-yaml.sh --provider-os [os name]
    cd ../..
    ```
-   [os name] is the operating system of your provider environment. Supported Operating Systems: ubuntu, centos.
+   [os name] is the operating system of your provider environment. 
+   Supported Operating Systems: 
+   - `ubuntu` 
+   - `centos`
 
    #### Interactively submit provider information
    By default, the generater script will give you a series of command line prompts, asking the following information about your cloud provider:
