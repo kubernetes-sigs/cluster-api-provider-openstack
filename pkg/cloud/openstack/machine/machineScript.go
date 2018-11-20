@@ -18,9 +18,11 @@ package machine
 
 import (
 	"bytes"
+	"errors"
 	"text/template"
 
 	"fmt"
+
 	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
 )
 
@@ -55,6 +57,9 @@ func masterStartupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine,
 }
 
 func nodeStartupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine, token, script string) (string, error) {
+	if len(cluster.Status.APIEndpoints) == 0 {
+		return "", errors.New("no cluster status found")
+	}
 	params := setupParams{
 		Token:          token,
 		Cluster:        cluster,

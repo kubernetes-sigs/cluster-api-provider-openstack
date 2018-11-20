@@ -378,7 +378,7 @@ func (oc *OpenstackClient) handleMachineError(machine *clusterv1.Machine, err *a
 		}
 	}
 
-	glog.Errorf("Machine error: %v", err.Message)
+	glog.Errorf("Machine error %s: %v", machine.Name, err.Message)
 	return err
 }
 
