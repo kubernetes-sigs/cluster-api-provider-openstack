@@ -37,9 +37,13 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
 
    ```bash
    cd examples/openstack
-   ./generate-yaml.sh
+   ./generate-yaml.sh --provider-os [os name]
    cd ../..
    ```
+   [os name] is the operating system of your provider environment. 
+   Supported Operating Systems: 
+   - `ubuntu` 
+   - `centos`
 
    #### Interactively submit provider information
    By default, the generater script will give you a series of command line prompts, asking the following information about your cloud provider:
@@ -78,14 +82,14 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
    To pass a clouds.yaml file to generate-yaml, set the **-c** or **--clouds** options, followed by the path to a clouds.yaml file. Here are some examples of this syntax:
 
    ```bash
-   ./generate-yaml.sh -c clouds.yaml
-   ./generate-yaml.sh --clouds clouds.yaml
+   ./generate-yaml.sh --provider-os [os name] -c clouds.yaml
+   ./generate-yaml.sh --provider-os [os name] --clouds clouds.yaml
    ```
 
 2. Create a cluster:
 
    ```bash
-   clusterctl create cluster --minikube kubernetes-version=v1.12.1 --provider openstack -c examples/openstack/out/cluster.yaml -m examples/openstack/out/machines.yaml -p examples/openstack/out/provider-components.yaml
+   ./clusterctl create cluster --minikube kubernetes-version=v1.12.1 --provider openstack -c examples/openstack/[os name]/out/cluster.yaml -m examples/openstack/[os name]/out/machines.yaml -p examples/openstack/[os name]/out/provider-components.yaml
    ```
 
 To choose a specific minikube driver, please use the `--vm-driver` command line parameter. For example to use the kvm2 driver with clusterctl you woud add `--vm-driver kvm2`, for linux, if you haven't installed any driver, you can add `--vm-driver none`.
@@ -93,7 +97,7 @@ To choose a specific minikube driver, please use the `--vm-driver` command line 
 Additional advanced flags can be found via help.
 
 ```bash
-clusterctl create cluster --help
+./clusterctl create cluster --help
 ```
 
 ### Interacting with your cluster
