@@ -29,9 +29,6 @@ required = [
   "sigs.k8s.io/controller-tools/cmd/controller-gen", # for crd/rbac generation
 ]
 
-[[constraint]]
-  name = "github.com/ghodss/yaml"
-  version = "1.0.0"
 
 [[constraint]]
   branch = "master"

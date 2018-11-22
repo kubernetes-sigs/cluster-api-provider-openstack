@@ -715,11 +715,18 @@
   revision = "38b2f3f497ed6b8ea5d2844ecf00c28ac4b5c2c4"
   version = "v0.1.6"
 
+[[projects]]
+  digest = "1:7719608fe0b52a4ece56c2dde37bedd95b938677d1ab0f84b8a7852e4c59f849"
+  name = "sigs.k8s.io/yaml"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "fd68e9863619f6ec2fdd8625fe1f02e7c877e480"
+  version = "v1.1.0"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/ghodss/yaml",
     "github.com/golang/glog",
     "github.com/gophercloud/gophercloud",
     "github.com/gophercloud/gophercloud/openstack",
@@ -754,6 +761,7 @@
     "sigs.k8s.io/controller-runtime/pkg/runtime/scheme",
     "sigs.k8s.io/controller-runtime/pkg/runtime/signals",
     "sigs.k8s.io/controller-tools/cmd/controller-gen",
+    "sigs.k8s.io/yaml",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
