@@ -1,10 +1,10 @@
-FROM registry.svc.ci.openshift.org/openshift/release:golang-1.10 AS builder
+FROM registry.svc.ci.openshift.org/ocp/builder:golang-1.10 AS builder
 WORKDIR /go/src/sigs.k8s.io/cluster-api-provider-openstack
 COPY . .
 RUN go build ./cmd/machine-controller
 RUN go build ./vendor/sigs.k8s.io/cluster-api/cmd/controller-manager
 
-FROM registry.svc.ci.openshift.org/openshift/origin-v4.0:base
+FROM registry.svc.ci.openshift.org/ocp/4.0:base
 RUN INSTALL_PKGS=" \
       openssh \
       " && \
