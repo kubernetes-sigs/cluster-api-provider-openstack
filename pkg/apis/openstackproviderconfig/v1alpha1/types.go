@@ -87,7 +87,7 @@ type RootVolume struct {
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// OpenstackClusterProviderSpec is the providerConfig for OpenStack in the cluster object
+// OpenstackClusterProviderSpec is the providerSpec for OpenStack in the cluster object
 // +k8s:openapi-gen=true
 type OpenstackClusterProviderSpec struct {
 	metav1.TypeMeta   `json:",inline"`
