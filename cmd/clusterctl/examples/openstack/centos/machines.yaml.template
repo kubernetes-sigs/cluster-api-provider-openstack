@@ -6,10 +6,10 @@ items:
     labels:
       set: master
   spec:
-    providerConfig:
+    providerSpec:
       value:
         apiVersion: "openstackproviderconfig/v1alpha1"
-        kind: "OpenstackProviderConfig"
+        kind: "OpenstackProviderSpec"
         flavor: m1.medium
         image: CentOS-7-x86_64-GenericCloud
         sshUserName: centos
@@ -29,10 +29,10 @@ items:
     labels:
       set: node
   spec:
-    providerConfig:
+    providerSpec:
       value:
         apiVersion: "openstackproviderconfig/v1alpha1"
-        kind: "OpenstackProviderConfig"
+        kind: "OpenstackProviderSpec"
         flavor: m1.medium
         image: CentOS-7-x86_64-GenericCloud
         sshUserName: centos

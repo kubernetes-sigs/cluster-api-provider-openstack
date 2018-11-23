@@ -6,10 +6,10 @@ items:
     labels:
       set: master
   spec:
-    providerConfig:
+    providerSpec:
       value:
         apiVersion: "openstackproviderconfig/v1alpha1"
-        kind: "OpenstackProviderConfig"
+        kind: "OpenstackProviderSpec"
         flavor: m1.medium
         image: Ubuntu-Server-16.04-x64
         sshUserName: ubuntu
@@ -29,10 +29,10 @@ items:
     labels:
       set: node
   spec:
-    providerConfig:
+    providerSpec:
       value:
         apiVersion: "openstackproviderconfig/v1alpha1"
-        kind: "OpenstackProviderConfig"
+        kind: "OpenstackProviderSpec"
         flavor: m1.medium
         image: Ubuntu-Server-16.04-x64
         sshUserName: ubuntu
