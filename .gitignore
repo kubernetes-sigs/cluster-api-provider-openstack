@@ -136,4 +136,4 @@ zz_generated.openapi.go
 *.pyc
 
 # binaries
-/openstack-machine-controller
+/bin
