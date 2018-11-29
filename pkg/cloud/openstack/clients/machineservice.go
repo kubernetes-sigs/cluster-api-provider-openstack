@@ -18,6 +18,7 @@ package clients
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 
 	"github.com/golang/glog"
@@ -25,8 +26,10 @@ import (
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/secgroups"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/identity/v3/tokens"
+	"github.com/gophercloud/gophercloud/pagination"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
 )
@@ -232,4 +235,78 @@ func (is *InstanceService) DeleteKeyPair(name string) error {
 
 func serverToInstance(server *servers.Server) *Instance {
 	return &Instance{*server}
+}
+
+// AddSecurityGroup - add new sg by name, assume sg already created in project, update annotation
+func (is *InstanceService) AddSecurityGroup(sgName string, serverID string, allSecurityGroups map[string]secgroups.SecurityGroup,
+	updatedAnnotation map[string]interface{}) (bool, error) {
+	sgID, err := getSecurityGroupIDByName(sgName, allSecurityGroups)
+	if err != nil {
+		return false, err
+	}
+
+	if err := secgroups.AddServer(is.computeClient, serverID, sgID).ExtractErr(); err != nil {
+		return false, err
+	}
+
+	updatedAnnotation[sgName] = struct{}{}
+	return true, nil
+}
+
+func getSecurityGroupIDByName(sgName string, allSecurityGroups map[string]secgroups.SecurityGroup) (string, error) {
+	for _, sg := range allSecurityGroups {
+		if sg.Name == sgName {
+			return sg.ID, nil
+		}
+	}
+	return "", errors.New("User must create the requested Security Group within their OpenStack project prior to adding to the machine spec")
+}
+
+// RemoveSecurityGroup - remove sg by id, update annotation, only manage sg that appear in spec or annotation (last known state)
+func (is *InstanceService) RemoveSecurityGroup(sgName string, sgID string, serverID string, updatedAnnotation map[string]interface{}) (bool, error) {
+	if err := secgroups.RemoveServer(is.computeClient, serverID, sgID).ExtractErr(); err != nil {
+		return false, err
+	}
+
+	for name := range updatedAnnotation {
+		if name == sgName {
+			delete(updatedAnnotation, sgName)
+		}
+	}
+
+	return true, nil
+}
+
+// GetOpenstackSecurityGroups - returns all security groups that exist for a specific server
+func (is *InstanceService) GetOpenstackSecurityGroups(serverID string) (map[string]secgroups.SecurityGroup, error) {
+	serverPages, err := secgroups.ListByServer(is.computeClient, serverID).AllPages()
+	if err != nil {
+		return nil, err
+	}
+
+	return extractSecurityGroups(serverPages)
+}
+
+// GetAllOpenstackSecurityGroups - returns all security groups that exist across an OpenStack project
+func (is *InstanceService) GetAllOpenstackSecurityGroups() (map[string]secgroups.SecurityGroup, error) {
+	allPages, err := secgroups.List(is.computeClient).AllPages()
+	if err != nil {
+		return nil, err
+	}
+
+	return extractSecurityGroups(allPages)
+}
+
+func extractSecurityGroups(pages pagination.Page) (map[string]secgroups.SecurityGroup, error) {
+	allSecurityGroups, err := secgroups.ExtractSecurityGroups(pages)
+	if err != nil {
+		return nil, err
+	}
+
+	securityGroups := map[string]secgroups.SecurityGroup{}
+	for _, sg := range allSecurityGroups {
+		securityGroups[sg.Name] = sg
+	}
+
+	return securityGroups, nil
 }

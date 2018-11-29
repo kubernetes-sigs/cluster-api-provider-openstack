@@ -18,17 +18,16 @@ package machine
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"os"
 	"reflect"
 	"strings"
 	"time"
 
 	"github.com/golang/glog"
+	errorwrapper "github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 
 	tokenapi "k8s.io/cluster-bootstrap/token/api"
@@ -225,7 +224,7 @@ func (oc *OpenstackClient) Create(cluster *clusterv1.Cluster, machine *clusterv1
 
 	}
 
-	return oc.updateAnnotation(machine, instance.ID)
+	return oc.updateAnnotation(machine, instance, providerConfig)
 }
 
 func (oc *OpenstackClient) Delete(cluster *clusterv1.Cluster, machine *clusterv1.Machine) error {
@@ -249,7 +248,13 @@ func (oc *OpenstackClient) Delete(cluster *clusterv1.Cluster, machine *clusterv1
 	return nil
 }
 
+// TODO cluster-api is only watching for updates to individual Machines, not MachineSets.. why?
 func (oc *OpenstackClient) Update(cluster *clusterv1.Cluster, machine *clusterv1.Machine) error {
+	machineConfig, err := openstackconfigv1.MachineConfigFromProviderConfig(machine.Spec.ProviderConfig)
+	if err != nil {
+		return err
+	}
+
 	status, err := oc.instanceStatus(machine)
 	if err != nil {
 		return err
@@ -263,16 +268,22 @@ func (oc *OpenstackClient) Update(cluster *clusterv1.Cluster, machine *clusterv1
 		}
 		if instance != nil && instance.Status == "ACTIVE" {
 			glog.Infof("Populating current state for boostrap machine %v", machine.ObjectMeta.Name)
-			return oc.updateAnnotation(machine, instance.ID)
+			return oc.updateAnnotation(machine, instance, machineConfig)
 		} else {
 			return fmt.Errorf("Cannot retrieve current state to update machine %v", machine.ObjectMeta.Name)
 		}
 	}
 
+	if err := oc.updateSecurityGroups(cluster, machine, machineConfig); err != nil {
+		return errorwrapper.Wrap(err, "failed to ensure security groups")
+	}
+
+	// TODO updatedSecurityGroups is a part of Spec.ProviderConfig so it will trigger machine re-build as is
 	if !oc.requiresUpdate(currentMachine, machine) {
 		return nil
 	}
 
+	// TODO not all changes require recreating machine from scratch, need to differentiate.
 	if util.IsMaster(currentMachine) {
 		// TODO: add master inplace
 		glog.Errorf("master inplace update failed: %v", err)
@@ -298,42 +309,6 @@ func (oc *OpenstackClient) Exists(cluster *clusterv1.Cluster, machine *clusterv1
 		return false, err
 	}
 	return instance != nil, err
-}
-
-func getIPFromInstance(instance *clients.Instance) (string, error) {
-	if instance.AccessIPv4 != "" && net.ParseIP(instance.AccessIPv4) != nil {
-		return instance.AccessIPv4, nil
-	}
-	type networkInterface struct {
-		Address string  `json:"addr"`
-		Version float64 `json:"version"`
-		Type    string  `json:"OS-EXT-IPS:type"`
-	}
-	var addrList []string
-
-	for _, b := range instance.Addresses {
-		list, err := json.Marshal(b)
-		if err != nil {
-			return "", fmt.Errorf("extract IP from instance err: %v", err)
-		}
-		var networks []interface{}
-		json.Unmarshal(list, &networks)
-		for _, network := range networks {
-			var netInterface networkInterface
-			b, _ := json.Marshal(network)
-			json.Unmarshal(b, &netInterface)
-			if netInterface.Version == 4.0 {
-				if netInterface.Type == "floating" {
-					return netInterface.Address, nil
-				}
-				addrList = append(addrList, netInterface.Address)
-			}
-		}
-	}
-	if len(addrList) != 0 {
-		return addrList[0], nil
-	}
-	return "", fmt.Errorf("extract IP from instance err")
 }
 
 func (oc *OpenstackClient) GetKubeConfig(cluster *clusterv1.Cluster, master *clusterv1.Machine) (string, error) {
@@ -380,23 +355,6 @@ func (oc *OpenstackClient) handleMachineError(machine *clusterv1.Machine, err *a
 
 	glog.Errorf("Machine error: %v", err.Message)
 	return err
-}
-
-func (oc *OpenstackClient) updateAnnotation(machine *clusterv1.Machine, id string) error {
-	if machine.ObjectMeta.Annotations == nil {
-		machine.ObjectMeta.Annotations = make(map[string]string)
-	}
-	machine.ObjectMeta.Annotations[openstack.OpenstackIdAnnotationKey] = id
-	instance, _ := oc.instanceExists(machine)
-	ip, err := getIPFromInstance(instance)
-	if err != nil {
-		return err
-	}
-	machine.ObjectMeta.Annotations[openstack.OpenstackIPAnnotationKey] = ip
-	if err := oc.client.Update(nil, machine); err != nil {
-		return err
-	}
-	return oc.updateInstanceStatus(machine)
 }
 
 func (oc *OpenstackClient) requiresUpdate(a *clusterv1.Machine, b *clusterv1.Machine) bool {
