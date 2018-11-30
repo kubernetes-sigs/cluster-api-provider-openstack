@@ -69,3 +69,7 @@ required = [
 [[constraint]]
   branch = "master"
   name = "k8s.io/cluster-bootstrap"
+
+[[constraint]]
+  name = "k8s.io/client-go"
+  version = "kubernetes-1.11.2"
