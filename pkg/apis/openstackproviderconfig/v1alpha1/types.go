@@ -52,6 +52,26 @@ type NetworkParam struct {
 	UUID string `json:"uuid,omitempty"`
 	// A fixed IPv4 address for the NIC.
 	FixedIp string `json:"fixed_ip,omitempty"`
+	// Filters for optional network query
+	Filter Filter `json:"filter,omitempty"`
+}
+
+type Filter struct {
+	Status       string `json:"status,omitempty"`
+	Name         string `json:"name,omitempty"`
+	AdminStateUp *bool  `json:"admin_state_up,omitempty"`
+	TenantID     string `json:"tenant_id,omitempty"`
+	ProjectID    string `json:"project_id,omitempty"`
+	Shared       *bool  `json:"shared,omitempty"`
+	ID           string `json:"id,omitempty"`
+	Marker       string `json:"marker,omitempty"`
+	Limit        int    `json:"limit,omitempty"`
+	SortKey      string `json:"sort_key,omitempty"`
+	SortDir      string `json:"sort_dir,omitempty"`
+	Tags         string `json:"tags,omitempty"`
+	TagsAny      string `json:"tags-any,omitempty"`
+	NotTags      string `json:"not-tags,omitempty"`
+	NotTagsAny   string `json:"not-tags-any,omitempty"`
 }
 
 type RootVolume struct {
