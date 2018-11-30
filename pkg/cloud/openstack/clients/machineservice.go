@@ -27,6 +27,8 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/identity/v3/tokens"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
+	"github.com/gophercloud/gophercloud/pagination"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
 )
@@ -35,6 +37,7 @@ type InstanceService struct {
 	provider       *gophercloud.ProviderClient
 	computeClient  *gophercloud.ServiceClient
 	identityClient *gophercloud.ServiceClient
+	networkClient  *gophercloud.ServiceClient
 }
 
 type Instance struct {
@@ -91,11 +94,18 @@ func NewInstanceService() (*InstanceService, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Create serviceClient err: %v", err)
 	}
+	networkingClient, err := openstack.NewNetworkV2(provider, gophercloud.EndpointOpts{
+		Region: clientOpts.RegionName,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("Create networkingClient err: %v", err)
+	}
 
 	return &InstanceService{
 		provider:       provider,
 		identityClient: identityClient,
 		computeClient:  serverClient,
+		networkClient:  networkingClient,
 	}, nil
 }
 
@@ -138,13 +148,60 @@ func (is *InstanceService) GetAcceptableFloatingIP() (string, error) {
 			return floatingIP.IP, nil
 		}
 	}
-	return "", fmt.Errorf("Don't have acceptable floating IP.")
+	return "", fmt.Errorf("Don't have acceptable floating IP")
+}
+
+// A function for getting the id of a network by querying openstack with filters
+func getNetworkIDsByFilter(is *InstanceService, opts *networks.ListOpts) ([]string, error) {
+	if opts == nil {
+		return []string{}, fmt.Errorf("No Filters were passed")
+	}
+	if opts == nil {
+		return []string{}, fmt.Errorf("Network filters must be provided")
+	}
+	pager := networks.List(is.networkClient, opts)
+	var uids []string
+	err := pager.EachPage(func(page pagination.Page) (bool, error) {
+		networkList, err := networks.ExtractNetworks(page)
+		if err != nil {
+			return false, err
+		} else if len(networkList) == 0 {
+			return false, fmt.Errorf("No networks could be found with the filters provided")
+		}
+		for _, network := range networkList {
+			uids = append(uids, network.ID)
+		}
+		return true, nil
+	})
+	if err != nil {
+		return uids, err
+	}
+	return []string{}, nil
 }
 
 func (is *InstanceService) InstanceCreate(name string, config *openstackconfigv1.OpenstackProviderConfig, cmd string, keyName string) (instance *Instance, err error) {
 	var createOpts servers.CreateOpts
 	if config == nil {
-		return nil, fmt.Errorf("create Options need be specified to create instace.")
+		return nil, fmt.Errorf("create Options need be specified to create instace")
+	}
+	var nets []servers.Network
+	for _, net := range config.Networks {
+		if net.UUID == "" {
+			opts := networks.ListOpts(net.Filter)
+			ids, err := getNetworkIDsByFilter(is, &opts)
+			if err != nil {
+				return nil, err
+			}
+			for _, netID := range ids {
+				nets = append(nets, servers.Network{
+					UUID: netID,
+				})
+			}
+		} else {
+			nets = append(nets, servers.Network{
+				UUID: net.UUID,
+			})
+		}
 	}
 	userData := base64.StdEncoding.EncodeToString([]byte(cmd))
 	createOpts = servers.CreateOpts{
@@ -152,12 +209,10 @@ func (is *InstanceService) InstanceCreate(name string, config *openstackconfigv1
 		ImageName:        config.Image,
 		FlavorName:       config.Flavor,
 		AvailabilityZone: config.AvailabilityZone,
-		Networks: []servers.Network{{
-			UUID: config.Networks[0].UUID,
-		}},
-		UserData:       []byte(userData),
-		SecurityGroups: config.SecurityGroups,
-		ServiceClient:  is.computeClient,
+		Networks:         nets,
+		UserData:         []byte(userData),
+		SecurityGroups:   config.SecurityGroups,
+		ServiceClient:    is.computeClient,
 	}
 	server, err := servers.Create(is.computeClient, keypairs.CreateOptsExt{
 		CreateOptsBuilder: createOpts,
