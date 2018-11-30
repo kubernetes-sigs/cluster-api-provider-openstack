@@ -735,11 +735,6 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-<<<<<<< HEAD
-    "github.com/ghodss/yaml",
-=======
-    "github.com/golang/glog",
->>>>>>> Switch yaml to sigs.k8s.io/yaml (#111)
     "github.com/gophercloud/gophercloud",
     "github.com/gophercloud/gophercloud/openstack",
     "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips",
