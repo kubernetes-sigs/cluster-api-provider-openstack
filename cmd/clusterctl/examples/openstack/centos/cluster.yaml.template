@@ -9,8 +9,8 @@ spec:
         pods:
             cidrBlocks: ["192.168.0.0/16"]
         serviceDomain: "cluster.local"
-    providerConfig:
+    providerSpec:
       value:
         apiVersion: "openstackproviderconfig/v1alpha1"
-        kind: "OpenstackProviderConfig"
+        kind: "OpenstackProviderSpec"
 

@@ -4,12 +4,12 @@ metadata:
   creationTimestamp: null
   labels:
     controller-tools.k8s.io: "1.0"
-  name: openstackproviderconfigs.openstackproviderconfig.k8s.io
+  name: openstackproviderspecs.openstackproviderconfig.k8s.io
 spec:
   group: openstackproviderconfig.k8s.io
   names:
-    kind: OpenstackProviderConfig
-    plural: openstackproviderconfigs
+    kind: OpenstackProviderSpec
+    plural: openstackproviderspecs
   scope: Namespaced
   validation:
     openAPIV3Schema:

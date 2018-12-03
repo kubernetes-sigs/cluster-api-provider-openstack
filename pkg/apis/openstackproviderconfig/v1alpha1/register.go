@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"errors"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/json"
@@ -36,12 +38,16 @@ var (
 	SchemeBuilder = &scheme.Builder{GroupVersion: SchemeGroupVersion}
 )
 
-func ClusterConfigFromProviderConfig(providerConfig clusterv1.ProviderConfig) (*OpenstackProviderConfig, error) {
-	var config *OpenstackProviderConfig
-	if err := yaml.Unmarshal(providerConfig.Value.Raw, &config); err != nil {
+func ClusterSpecFromProviderSpec(providerSpec clusterv1.ProviderSpec) (*OpenstackProviderSpec, error) {
+	if providerSpec.Value == nil {
+		return nil, errors.New("no such providerSpec found in manifest")
+	}
+
+	var config OpenstackProviderSpec
+	if err := yaml.Unmarshal(providerSpec.Value.Raw, &config); err != nil {
 		return nil, err
 	}
-	return config, nil
+	return &config, nil
 }
 
 func ClusterStatusFromProviderStatus(extension *runtime.RawExtension) (*OpenstackClusterProviderStatus, error) {
@@ -57,11 +63,15 @@ func ClusterStatusFromProviderStatus(extension *runtime.RawExtension) (*Openstac
 	return status, nil
 }
 
-// This is the same as ClusterConfigFromProviderConfig but we
-// expect there to be a specific Config type for Machines soon
-func MachineConfigFromProviderConfig(providerConfig clusterv1.ProviderConfig) (*OpenstackProviderConfig, error) {
-	var config OpenstackProviderConfig
-	if err := yaml.Unmarshal(providerConfig.Value.Raw, &config); err != nil {
+// This is the same as ClusterSpecFromProviderSpec but we
+// expect there to be a specific Spec type for Machines soon
+func MachineSpecFromProviderSpec(providerSpec clusterv1.ProviderSpec) (*OpenstackProviderSpec, error) {
+	if providerSpec.Value == nil {
+		return nil, errors.New("no such providerSpec found in manifest")
+	}
+
+	var config OpenstackProviderSpec
+	if err := yaml.Unmarshal(providerSpec.Value.Raw, &config); err != nil {
 		return nil, err
 	}
 	return &config, nil

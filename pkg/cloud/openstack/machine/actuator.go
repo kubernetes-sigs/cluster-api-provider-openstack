@@ -140,18 +140,18 @@ func NewActuator(machineClient client.Client, scheme *runtime.Scheme) (*Openstac
 	}, nil
 }
 
-func (oc *OpenstackClient) Create(cluster *clusterv1.Cluster, machine *clusterv1.Machine) error {
+func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluster, machine *clusterv1.Machine) error {
 	if oc.machineSetupWatcher == nil {
 		return errors.New("a valid machine setup config watcher is required!")
 	}
 
-	providerConfig, err := openstackconfigv1.ClusterConfigFromProviderConfig(machine.Spec.ProviderConfig)
+	providerSpec, err := openstackconfigv1.ClusterSpecFromProviderSpec(machine.Spec.ProviderSpec)
 	if err != nil {
 		return oc.handleMachineError(machine, apierrors.InvalidMachineConfiguration(
-			"Cannot unmarshal providerConfig field: %v", err))
+			"Cannot unmarshal providerSpec field: %v", err))
 	}
 
-	if verr := oc.validateMachine(machine, providerConfig); verr != nil {
+	if verr := oc.validateMachine(machine, providerSpec); verr != nil {
 		return oc.handleMachineError(machine, verr)
 	}
 
@@ -198,7 +198,7 @@ func (oc *OpenstackClient) Create(cluster *clusterv1.Cluster, machine *clusterv1
 		}
 	}
 
-	instance, err = oc.machineService.InstanceCreate(machine.Name, providerConfig, startupScript, oc.sshCred.user)
+	instance, err = oc.machineService.InstanceCreate(machine.Name, providerSpec, startupScript, oc.sshCred.user)
 	if err != nil {
 		return oc.handleMachineError(machine, apierrors.CreateMachine(
 			"error creating Openstack instance: %v", err))
@@ -216,8 +216,8 @@ func (oc *OpenstackClient) Create(cluster *clusterv1.Cluster, machine *clusterv1
 			"error creating Openstack instance: %v", err))
 	}
 
-	if providerConfig.FloatingIP != "" {
-		err := oc.machineService.AssociateFloatingIP(instance.ID, providerConfig.FloatingIP)
+	if providerSpec.FloatingIP != "" {
+		err := oc.machineService.AssociateFloatingIP(instance.ID, providerSpec.FloatingIP)
 		if err != nil {
 			return oc.handleMachineError(machine, apierrors.CreateMachine(
 				"Associate floatingIP err: %v", err))
@@ -228,7 +228,7 @@ func (oc *OpenstackClient) Create(cluster *clusterv1.Cluster, machine *clusterv1
 	return oc.updateAnnotation(machine, instance.ID)
 }
 
-func (oc *OpenstackClient) Delete(cluster *clusterv1.Cluster, machine *clusterv1.Machine) error {
+func (oc *OpenstackClient) Delete(ctx context.Context, cluster *clusterv1.Cluster, machine *clusterv1.Machine) error {
 	instance, err := oc.instanceExists(machine)
 	if err != nil {
 		return err
@@ -249,7 +249,7 @@ func (oc *OpenstackClient) Delete(cluster *clusterv1.Cluster, machine *clusterv1
 	return nil
 }
 
-func (oc *OpenstackClient) Update(cluster *clusterv1.Cluster, machine *clusterv1.Machine) error {
+func (oc *OpenstackClient) Update(ctx context.Context, cluster *clusterv1.Cluster, machine *clusterv1.Machine) error {
 	status, err := oc.instanceStatus(machine)
 	if err != nil {
 		return err
@@ -278,11 +278,11 @@ func (oc *OpenstackClient) Update(cluster *clusterv1.Cluster, machine *clusterv1
 		glog.Errorf("master inplace update failed: %v", err)
 	} else {
 		glog.Infof("re-creating machine %s for update.", currentMachine.ObjectMeta.Name)
-		err = oc.Delete(cluster, currentMachine)
+		err = oc.Delete(ctx, cluster, currentMachine)
 		if err != nil {
 			glog.Errorf("delete machine %s for update failed: %v", currentMachine.ObjectMeta.Name, err)
 		} else {
-			err = oc.Create(cluster, machine)
+			err = oc.Create(ctx, cluster, machine)
 			if err != nil {
 				glog.Errorf("create machine %s for update failed: %v", machine.ObjectMeta.Name, err)
 			}
@@ -292,7 +292,7 @@ func (oc *OpenstackClient) Update(cluster *clusterv1.Cluster, machine *clusterv1
 	return nil
 }
 
-func (oc *OpenstackClient) Exists(cluster *clusterv1.Cluster, machine *clusterv1.Machine) (bool, error) {
+func (oc *OpenstackClient) Exists(ctx context.Context, cluster *clusterv1.Cluster, machine *clusterv1.Machine) (bool, error) {
 	instance, err := oc.instanceExists(machine)
 	if err != nil {
 		return false, err
@@ -345,7 +345,7 @@ func (oc *OpenstackClient) GetKubeConfig(cluster *clusterv1.Cluster, master *clu
 		return "", err
 	}
 
-	machineConfig, err := openstackconfigv1.MachineConfigFromProviderConfig(master.Spec.ProviderConfig)
+	machineSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(master.Spec.ProviderSpec)
 	if err != nil {
 		return "", err
 	}
@@ -354,7 +354,7 @@ func (oc *OpenstackClient) GetKubeConfig(cluster *clusterv1.Cluster, master *clu
 		"ssh", "-i", oc.sshCred.privateKeyPath,
 		"-o", "StrictHostKeyChecking no",
 		"-o", "UserKnownHostsFile /dev/null",
-		fmt.Sprintf("%s@%s", machineConfig.SshUserName, ip),
+		fmt.Sprintf("%s@%s", machineSpec.SshUserName, ip),
 		"echo STARTFILE; sudo cat /etc/kubernetes/admin.conf"))
 	parts := strings.Split(result, "STARTFILE")
 	if len(parts) != 2 {
@@ -405,20 +405,20 @@ func (oc *OpenstackClient) requiresUpdate(a *clusterv1.Machine, b *clusterv1.Mac
 	}
 	// Do not want status changes. Do want changes that impact machine provisioning
 	return !reflect.DeepEqual(a.Spec.ObjectMeta, b.Spec.ObjectMeta) ||
-		!reflect.DeepEqual(a.Spec.ProviderConfig, b.Spec.ProviderConfig) ||
+		!reflect.DeepEqual(a.Spec.ProviderSpec, b.Spec.ProviderSpec) ||
 		!reflect.DeepEqual(a.Spec.Versions, b.Spec.Versions) ||
 		a.ObjectMeta.Name != b.ObjectMeta.Name
 }
 
 func (oc *OpenstackClient) instanceExists(machine *clusterv1.Machine) (instance *clients.Instance, err error) {
-	machineConfig, err := openstackconfigv1.MachineConfigFromProviderConfig(machine.Spec.ProviderConfig)
+	machineSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
 	if err != nil {
 		return nil, err
 	}
 	opts := &clients.InstanceListOpts{
 		Name:   machine.Name,
-		Image:  machineConfig.Image,
-		Flavor: machineConfig.Flavor,
+		Image:  machineSpec.Image,
+		Flavor: machineSpec.Flavor,
 	}
 	instanceList, err := oc.machineService.GetInstanceList(opts)
 	if err != nil {
@@ -453,7 +453,7 @@ func (oc *OpenstackClient) createBootstrapToken() (string, error) {
 	), nil
 }
 
-func (oc *OpenstackClient) validateMachine(machine *clusterv1.Machine, config *openstackconfigv1.OpenstackProviderConfig) *apierrors.MachineError {
+func (oc *OpenstackClient) validateMachine(machine *clusterv1.Machine, config *openstackconfigv1.OpenstackProviderSpec) *apierrors.MachineError {
 	if machine.Spec.Versions.Kubelet == "" {
 		return apierrors.InvalidMachineConfiguration("spec.versions.kubelet can't be empty")
 	}
