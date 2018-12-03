@@ -467,9 +467,10 @@
   version = "kubernetes-1.11.2"
 
 [[projects]]
-  digest = "1:51747a5c0ff0e54039ee78dcb3c9f2260725747f9a79f92813fb69b84ef07d4a"
+  digest = "1:6a8fca786f4e263fac02cb6cfe8f0decfee526aede3969d301e18fcef167cd38"
   name = "k8s.io/apimachinery"
   packages = [
+    "pkg/api/equality",
     "pkg/api/errors",
     "pkg/api/meta",
     "pkg/api/resource",
@@ -501,6 +502,7 @@
     "pkg/util/json",
     "pkg/util/mergepatch",
     "pkg/util/net",
+    "pkg/util/rand",
     "pkg/util/runtime",
     "pkg/util/sets",
     "pkg/util/strategicpatch",
@@ -655,9 +657,14 @@
     "pkg/client/clientset_generated/clientset",
     "pkg/client/clientset_generated/clientset/scheme",
     "pkg/client/clientset_generated/clientset/typed/cluster/v1alpha1",
+    "pkg/controller",
     "pkg/controller/cluster",
     "pkg/controller/error",
     "pkg/controller/machine",
+    "pkg/controller/machinedeployment",
+    "pkg/controller/machinedeployment/util",
+    "pkg/controller/machineset",
+    "pkg/controller/node",
     "pkg/controller/noderefutil",
     "pkg/errors",
     "pkg/util",
@@ -751,6 +758,7 @@
     "sigs.k8s.io/cluster-api/pkg/apis/cluster/common",
     "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1",
     "sigs.k8s.io/cluster-api/pkg/client/clientset_generated/clientset/typed/cluster/v1alpha1",
+    "sigs.k8s.io/cluster-api/pkg/controller",
     "sigs.k8s.io/cluster-api/pkg/controller/cluster",
     "sigs.k8s.io/cluster-api/pkg/controller/machine",
     "sigs.k8s.io/cluster-api/pkg/errors",

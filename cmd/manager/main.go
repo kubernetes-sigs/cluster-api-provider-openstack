@@ -26,6 +26,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/apis"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/controller"
 	clusterapis "sigs.k8s.io/cluster-api/pkg/apis"
+	clusterv1controller "sigs.k8s.io/cluster-api/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
@@ -56,6 +57,11 @@ func main() {
 	}
 
 	if err := clusterapis.AddToScheme(mgr.GetScheme()); err != nil {
+		glog.Fatal(err)
+	}
+
+	// Setup MachineSet and MachineDeployment
+	if err := clusterv1controller.AddToManager(mgr); err != nil {
 		glog.Fatal(err)
 	}
 
