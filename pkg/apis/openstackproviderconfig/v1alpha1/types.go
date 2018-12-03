@@ -21,7 +21,7 @@ import (
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type OpenstackProviderConfig struct {
+type OpenstackProviderSpec struct {
 	metav1.TypeMeta `json:",inline"`
 	// The flavor reference for the flavor for your server instance.
 	Flavor string `json:"flavor"`
@@ -97,5 +97,5 @@ type OpenstackClusterProviderStatus struct {
 }
 
 func init() {
-	SchemeBuilder.Register(&OpenstackProviderConfig{})
+	SchemeBuilder.Register(&OpenstackProviderSpec{})
 }

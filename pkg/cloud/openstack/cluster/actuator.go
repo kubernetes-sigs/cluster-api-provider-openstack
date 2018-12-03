@@ -33,9 +33,9 @@ func (a *Actuator) Reconcile(cluster *clusterv1.Cluster) error {
 	glog.Infof("Reconciling cluster %v.", cluster.Name)
 
 	// Load provider config.
-	_, err := providerv1.ClusterConfigFromProviderConfig(cluster.Spec.ProviderConfig)
+	_, err := providerv1.ClusterSpecFromProviderSpec(cluster.Spec.ProviderSpec)
 	if err != nil {
-		return errors.Errorf("failed to load cluster provider config: %v", err)
+		return errors.Errorf("failed to load cluster provider spec: %v", err)
 	}
 
 	// Load provider status.
@@ -58,7 +58,7 @@ func (a *Actuator) Delete(cluster *clusterv1.Cluster) error {
 	glog.Infof("Deleting cluster %v.", cluster.Name)
 
 	// Load provider config.
-	_, err := providerv1.ClusterConfigFromProviderConfig(cluster.Spec.ProviderConfig)
+	_, err := providerv1.ClusterSpecFromProviderSpec(cluster.Spec.ProviderSpec)
 	if err != nil {
 		return errors.Errorf("failed to load cluster provider config: %v", err)
 	}

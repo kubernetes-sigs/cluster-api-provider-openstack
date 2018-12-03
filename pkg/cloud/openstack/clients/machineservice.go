@@ -179,7 +179,7 @@ func getNetworkIDsByFilter(is *InstanceService, opts *networks.ListOpts) ([]stri
 	return []string{}, nil
 }
 
-func (is *InstanceService) InstanceCreate(name string, config *openstackconfigv1.OpenstackProviderConfig, cmd string, keyName string) (instance *Instance, err error) {
+func (is *InstanceService) InstanceCreate(name string, config *openstackconfigv1.OpenstackProviderSpec, cmd string, keyName string) (instance *Instance, err error) {
 	var createOpts servers.CreateOpts
 	if config == nil {
 		return nil, fmt.Errorf("create Options need be specified to create instace")
