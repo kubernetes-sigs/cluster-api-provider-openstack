@@ -20,8 +20,8 @@ items:
         securityGroups:
         - default
     versions:
-      kubelet: 1.12.1
-      controlPlane: 1.12.1
+      kubelet: 1.12.3
+      controlPlane: 1.12.3
 - apiVersion: "cluster.k8s.io/v1alpha1"
   kind: Machine
   metadata:
@@ -43,4 +43,4 @@ items:
         securityGroups:
         - default
     versions:
-      kubelet: 1.12.1
+      kubelet: 1.12.3

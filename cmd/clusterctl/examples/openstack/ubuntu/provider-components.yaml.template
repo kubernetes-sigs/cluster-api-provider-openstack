@@ -27,8 +27,8 @@ data:
   machine_setup_configs.yaml: |-
     items:
     - versions:
-          kubelet: 1.12.1
-          controlPlane: 1.12.1
+          kubelet: 1.12.3
+          controlPlane: 1.12.3
       startupScript: |
         #!/bin/bash
         set -e
@@ -136,7 +136,7 @@ data:
         echo done.
         ) 2>&1 | tee /var/log/startup.log
     - versions:
-          kubelet: 1.12.1
+          kubelet: 1.12.3
       startupScript: |
         #!/bin/bash
         set -e
