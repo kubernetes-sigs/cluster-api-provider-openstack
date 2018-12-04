@@ -85,6 +85,12 @@ if test -z "$SUPPORTED_PROVIDER_OS"; then
   exit 1
 fi
 
+if ! hash yq 2>/dev/null; then
+  echo "'yq' is not available, please install it. (https://github.com/kislyuk/yq)"
+  print_help
+  exit 1
+fi
+
 # Define global variables
 PWD=$(cd `dirname $0`; pwd)
 TEMPLATES_PATH=${TEMPLATES_PATH:-$PWD/$SUPPORTED_PROVIDER_OS/}
@@ -156,8 +162,27 @@ else
       auth_url: $authurl
     interface: public
     identity_api_version: 3
-    region: $region"
+    region_name: $region"
 fi
+
+# Just blindly parse the cloud.conf here, overwriting old vars.
+AUTH_URL=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$CLOUD.auth.auth_url)
+USERNAME=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$CLOUD.auth.username)
+PASSWORD=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$CLOUD.auth.password)
+REGION=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$CLOUD.region_name)
+PROJECT_ID=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$CLOUD.auth.project_id)
+DOMAIN_NAME=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$CLOUD.auth.user_domain_name)
+
+
+# Basic cloud.conf, no LB configuration as that data is not known yet.
+OPENSTACK_CLOUD_PROVIDER_CONF_PLAIN="[Global]
+auth-url=$AUTH_URL
+username=\"$USERNAME\"
+password=\"$PASSWORD\"
+region=\"$REGION\"
+tenant-id=\"$PROJECT_ID\"
+domain-name=\"$DOMAIN_NAME\"
+"
 
 # Check if the ssh key already exists. If not, generate and copy to the .ssh dir.
 if [ ! -f $MACHINE_CONTROLLER_SSH_HOME$MACHINE_CONTROLLER_SSH_PRIVATE_FILE ]; then
@@ -170,11 +195,13 @@ MACHINE_CONTROLLER_SSH_PLAIN=clusterapi
 OS=$(uname)
 if [[ "$OS" =~ "Linux" ]]; then
   OPENSTACK_CLOUD_CONFIG=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN"|base64 -w0)
+  OPENSTACK_CLOUD_PROVIDER_CONF=$(echo "$OPENSTACK_CLOUD_PROVIDER_CONF_PLAIN"|base64 -w0)
   MACHINE_CONTROLLER_SSH_USER=$(echo -n $MACHINE_CONTROLLER_SSH_PLAIN|base64 -w0)
   MACHINE_CONTROLLER_SSH_PUBLIC=$(cat "$MACHINE_CONTROLLER_SSH_HOME$MACHINE_CONTROLLER_SSH_PUBLIC_FILE"|base64 -w0)
   MACHINE_CONTROLLER_SSH_PRIVATE=$(cat "$MACHINE_CONTROLLER_SSH_HOME$MACHINE_CONTROLLER_SSH_PRIVATE_FILE"|base64 -w0)
 elif [[ "$OS" =~ "Darwin" ]]; then
   OPENSTACK_CLOUD_CONFIG=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN"|base64)
+  OPENSTACK_CLOUD_PROVIDER_CONF=$(echo "$OPENSTACK_CLOUD_PROVIDER_CONF_PLAIN"|base64)
   MACHINE_CONTROLLER_SSH_USER=$(printf $MACHINE_CONTROLLER_SSH_PLAIN|base64)
   MACHINE_CONTROLLER_SSH_PUBLIC=$(cat "$MACHINE_CONTROLLER_SSH_HOME$MACHINE_CONTROLLER_SSH_PUBLIC_FILE"|base64)
   MACHINE_CONTROLLER_SSH_PRIVATE=$(cat "$MACHINE_CONTROLLER_SSH_HOME$MACHINE_CONTROLLER_SSH_PRIVATE_FILE"|base64)
@@ -220,6 +247,7 @@ cat "$PROVIDERCOMPONENT_TEMPLATE_FILE" \
   | sed -e "s/\$MACHINE_CONTROLLER_SSH_USER/$MACHINE_CONTROLLER_SSH_USER/" \
   | sed -e "s/\$MACHINE_CONTROLLER_SSH_PUBLIC/$MACHINE_CONTROLLER_SSH_PUBLIC/" \
   | sed -e "s/\$MACHINE_CONTROLLER_SSH_PRIVATE/$MACHINE_CONTROLLER_SSH_PRIVATE/" \
+  | sed -e "s/\$OPENSTACK_CLOUD_PROVIDER_CONF/$OPENSTACK_CLOUD_PROVIDER_CONF/" \
   >> "$PROVIDERCOMPONENT_GENERATED_FILE"
 
 if [[ "$OS" =~ "Linux" ]]; then
