@@ -222,10 +222,8 @@ cat "$PROVIDERCOMPONENT_TEMPLATE_FILE" \
   | sed -e "s/\$MACHINE_CONTROLLER_SSH_PRIVATE/$MACHINE_CONTROLLER_SSH_PRIVATE/" \
   >> "$PROVIDERCOMPONENT_GENERATED_FILE"
 
-if [[ "$OS" =~ "Linux" ]]; then
+if [[ "$OS" =~ "Linux" || "$OS" =~ "Darwin" ]]; then
   sed -i "s#image: controller:latest#image: gcr.io/k8s-cluster-api/cluster-api-controller:latest#" "$PROVIDERCOMPONENT_GENERATED_FILE"
-elif [[ "$OS" =~ "Darwin" ]]; then
-  sed -i '' -e "s#image: controller:latest#image: gcr.io/k8s-cluster-api/cluster-api-controller:latest#" "$PROVIDERCOMPONENT_GENERATED_FILE"
 else
   echo "Unrecognized OS : $OS"
   exit 1
