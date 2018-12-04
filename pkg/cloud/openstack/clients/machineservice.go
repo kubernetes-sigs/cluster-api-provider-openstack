@@ -156,9 +156,6 @@ func getNetworkIDsByFilter(is *InstanceService, opts *networks.ListOpts) ([]stri
 	if opts == nil {
 		return []string{}, fmt.Errorf("No Filters were passed")
 	}
-	if opts == nil {
-		return []string{}, fmt.Errorf("Network filters must be provided")
-	}
 	pager := networks.List(is.networkClient, opts)
 	var uids []string
 	err := pager.EachPage(func(page pagination.Page) (bool, error) {
@@ -174,7 +171,7 @@ func getNetworkIDsByFilter(is *InstanceService, opts *networks.ListOpts) ([]stri
 		return true, nil
 	})
 	if err != nil {
-		return uids, err
+		return []string{}, err
 	}
 	return []string{}, nil
 }
