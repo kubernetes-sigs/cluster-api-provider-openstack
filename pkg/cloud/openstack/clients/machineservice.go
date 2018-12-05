@@ -157,7 +157,7 @@ func getNetworkIDsByFilter(is *InstanceService, opts *networks.ListOpts) ([]stri
 		return []string{}, fmt.Errorf("No Filters were passed")
 	}
 	pager := networks.List(is.networkClient, opts)
-	var uids []string
+	var uuids []string
 	err := pager.EachPage(func(page pagination.Page) (bool, error) {
 		networkList, err := networks.ExtractNetworks(page)
 		if err != nil {
@@ -166,14 +166,14 @@ func getNetworkIDsByFilter(is *InstanceService, opts *networks.ListOpts) ([]stri
 			return false, fmt.Errorf("No networks could be found with the filters provided")
 		}
 		for _, network := range networkList {
-			uids = append(uids, network.ID)
+			uuids = append(uuids, network.ID)
 		}
 		return true, nil
 	})
 	if err != nil {
 		return []string{}, err
 	}
-	return []string{}, nil
+	return uuids, nil
 }
 
 func (is *InstanceService) InstanceCreate(name string, config *openstackconfigv1.OpenstackProviderSpec, cmd string, keyName string) (instance *Instance, err error) {
