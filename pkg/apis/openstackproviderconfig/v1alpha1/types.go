@@ -92,12 +92,6 @@ type RootVolume struct {
 type OpenstackClusterProviderSpec struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	// NodeCIDR is the OpenStack Subnet to be created
-	NodeCIDR string `json:"nodeCidr,omitempty"`
-	// Floating IP which will be assigned to a created loadbalancer. If not provided,
-	// no loadbalancer will be created.
-	FloatingIP string `json:"floatingIP,omitempty"`
 }
 
 // +genclient
