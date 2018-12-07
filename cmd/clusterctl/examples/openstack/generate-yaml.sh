@@ -86,7 +86,14 @@ if test -z "$SUPPORTED_PROVIDER_OS"; then
 fi
 
 if ! hash yq 2>/dev/null; then
-  echo "'yq' is not available, please install it. (https://github.com/kislyuk/yq)"
+  echo "'yq' is not available, please install it. (https://github.com/mikefarah/yq)"
+  print_help
+  exit 1
+fi
+
+yq_type=$(file $(which yq))
+if [[ $yq_type == *"Python script"* ]]; then
+  echo "Wrong version of 'yq' installed, please install the one from https://github.com/mikefarah/yq"
   print_help
   exit 1
 fi
@@ -166,12 +173,12 @@ else
 fi
 
 # Just blindly parse the cloud.conf here, overwriting old vars.
-AUTH_URL=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$CLOUD.auth.auth_url)
-USERNAME=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$CLOUD.auth.username)
-PASSWORD=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$CLOUD.auth.password)
-REGION=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$CLOUD.region_name)
-PROJECT_ID=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$CLOUD.auth.project_id)
-DOMAIN_NAME=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$CLOUD.auth.user_domain_name)
+AUTH_URL=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$CLOUD.auth.auth_url)
+USERNAME=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$CLOUD.auth.username)
+PASSWORD=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$CLOUD.auth.password)
+REGION=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$CLOUD.region_name)
+PROJECT_ID=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$CLOUD.auth.project_id)
+DOMAIN_NAME=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$CLOUD.auth.user_domain_name)
 
 
 # Basic cloud.conf, no LB configuration as that data is not known yet.
