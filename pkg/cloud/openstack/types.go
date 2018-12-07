@@ -17,16 +17,16 @@ limitations under the License.
 package openstack
 
 import (
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // ActuatorParams holds parameter information for Actuator
 type ActuatorParams struct {
-	KubeClient       kubernetes.Interface
-	Client           client.Client
-	EventRecorder    record.EventRecorder
-    Scheme           *runtime.Scheme
+	KubeClient    kubernetes.Interface
+	Client        client.Client
+	EventRecorder record.EventRecorder
+	Scheme        *runtime.Scheme
 }
