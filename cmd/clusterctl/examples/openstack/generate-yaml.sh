@@ -9,10 +9,11 @@ print_help()
   echo "$SCRIPT [options]"
   echo " "
   echo "options:"
-  echo "-h, --help                show brief help"
-  echo "-f, --force-overwrite     if file to be generated already exists, force script to overwrite it"
-  echo "-c, --clouds [File]       specifies an existing clouds.yaml file to use rather than generating one interactively"
-  echo "--provider-os [os name]   Required: select the operating system of your provider environment"
+  echo "-h,  --help                show brief help"
+  echo "-f,  --force-overwrite     if file to be generated already exists, force script to overwrite it"
+  echo "-c,  --clouds [File]       specifies an existing clouds.yaml file to use rather than generating one interactively"
+  echo "-cc, --cloud-config [file] specifies an existing cloud-conf file to use rather than generating one"
+  echo "--provider-os [os name]    Required: select the operating system of your provider environment"
   echo "                            Supported Operating Systems: ubuntu, centos"
   echo ""
 }
@@ -48,6 +49,16 @@ while test $# -gt 0; do
               exit 1
             fi
             CLOUDS_PATH=$2
+            shift
+            shift
+            ;;
+          -cc|--clouds-conf)
+            if [[ -z "$2" ]] || [[ $2 == -* ]] || [[ $2 == --* ]];then
+              echo "Error: No cloud-conf was provided"
+              print_help
+              exit 1
+            fi
+            CLOUD_CONF_PATH=$2
             shift
             shift
             ;;
@@ -143,7 +154,7 @@ mkdir -p "${OUTPUT_DIR}"
 
 if [ -n "$CLOUDS_PATH" ]; then
   # Read clouds.yaml from file if a path is provided 
-  OPENSTACK_CLOUD_CONFIG_PLAIN=$(cat "$CLOUDS_PATH")
+  OPENSTACK_CLOUDS_PLAIN=$(cat "$CLOUDS_PATH")
 else
   # Collect user input to generate a clouds.yaml file
   read -p "Enter your username:" username
@@ -152,7 +163,7 @@ else
   read -p "Enter region name:" region
   read -p "Enter authurl:" authurl
   read -s -p "Enter your password:" password
-  OPENSTACK_CLOUD_CONFIG_PLAIN="clouds:
+  OPENSTACK_CLOUDS_PLAIN="clouds:
   openstack:
     auth:
       username: $username
@@ -165,24 +176,15 @@ else
     region_name: $region"
 fi
 
-# Just blindly parse the cloud.conf here, overwriting old vars.
-AUTH_URL=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$CLOUD.auth.auth_url)
-USERNAME=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$CLOUD.auth.username)
-PASSWORD=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$CLOUD.auth.password)
-REGION=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$CLOUD.region_name)
-PROJECT_ID=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$CLOUD.auth.project_id)
-DOMAIN_NAME=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$CLOUD.auth.user_domain_name)
-
-
-# Basic cloud.conf, no LB configuration as that data is not known yet.
-OPENSTACK_CLOUD_PROVIDER_CONF_PLAIN="[Global]
-auth-url=$AUTH_URL
-username=\"$USERNAME\"
-password=\"$PASSWORD\"
-region=\"$REGION\"
-tenant-id=\"$PROJECT_ID\"
-domain-name=\"$DOMAIN_NAME\"
-"
+if [ -n "$CLOUD_CONF_PATH" ]; then
+  # If a custom cloud-conf is provided, then assume its good to go and ship it as is
+  # Basic cloud.conf, no LB configuration as that data is not known yet.
+  OPENSTACK_CLOUD_PROVIDER_CONF_PLAIN=$(cat "$CLOUD_CONF_PATH")
+else
+  # Build a generic cloud-conf with the clouds.yaml
+  OPENSTACK_CLOUD_PROVIDER_CONF_PLAIN="[Global]
+use-clouds = true"
+fi
 
 # Check if the ssh key already exists. If not, generate and copy to the .ssh dir.
 if [ ! -f $MACHINE_CONTROLLER_SSH_HOME$MACHINE_CONTROLLER_SSH_PRIVATE_FILE ]; then
@@ -194,13 +196,13 @@ MACHINE_CONTROLLER_SSH_PLAIN=clusterapi
 
 OS=$(uname)
 if [[ "$OS" =~ "Linux" ]]; then
-  OPENSTACK_CLOUD_CONFIG=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN"|base64 -w0)
+  OPENSTACK_CLOUDS=$(echo "$OPENSTACK_CLOUDS_PLAIN"|base64 -w0)
   OPENSTACK_CLOUD_PROVIDER_CONF=$(echo "$OPENSTACK_CLOUD_PROVIDER_CONF_PLAIN"|base64 -w0)
   MACHINE_CONTROLLER_SSH_USER=$(echo -n $MACHINE_CONTROLLER_SSH_PLAIN|base64 -w0)
   MACHINE_CONTROLLER_SSH_PUBLIC=$(cat "$MACHINE_CONTROLLER_SSH_HOME$MACHINE_CONTROLLER_SSH_PUBLIC_FILE"|base64 -w0)
   MACHINE_CONTROLLER_SSH_PRIVATE=$(cat "$MACHINE_CONTROLLER_SSH_HOME$MACHINE_CONTROLLER_SSH_PRIVATE_FILE"|base64 -w0)
 elif [[ "$OS" =~ "Darwin" ]]; then
-  OPENSTACK_CLOUD_CONFIG=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN"|base64)
+  OPENSTACK_CLOUDS=$(echo "$OPENSTACK_CLOUDS"|base64)
   OPENSTACK_CLOUD_PROVIDER_CONF=$(echo "$OPENSTACK_CLOUD_PROVIDER_CONF_PLAIN"|base64)
   MACHINE_CONTROLLER_SSH_USER=$(printf $MACHINE_CONTROLLER_SSH_PLAIN|base64)
   MACHINE_CONTROLLER_SSH_PUBLIC=$(cat "$MACHINE_CONTROLLER_SSH_HOME$MACHINE_CONTROLLER_SSH_PUBLIC_FILE"|base64)
@@ -243,7 +245,7 @@ do
 done
 
 cat "$PROVIDERCOMPONENT_TEMPLATE_FILE" \
-  | sed -e "s/\$OPENSTACK_CLOUD_CONFIG/$OPENSTACK_CLOUD_CONFIG/" \
+  | sed -e "s/\$OPENSTACK_CLOUDS/$OPENSTACK_CLOUDS/" \
   | sed -e "s/\$MACHINE_CONTROLLER_SSH_USER/$MACHINE_CONTROLLER_SSH_USER/" \
   | sed -e "s/\$MACHINE_CONTROLLER_SSH_PUBLIC/$MACHINE_CONTROLLER_SSH_PUBLIC/" \
   | sed -e "s/\$MACHINE_CONTROLLER_SSH_PRIVATE/$MACHINE_CONTROLLER_SSH_PRIVATE/" \

@@ -51,7 +51,9 @@ spec:
       - name: openstack-machine-controller
         image: k8scloudprovider/openstack-cluster-api-controller:latest
         volumeMounts:
-        - name: config
+        - name: clouds
+          mountPath: /etc/openstack
+        - name: cloud-config
           mountPath: /etc/kubernetes
         - name: certs
           mountPath: /etc/ssl/certs
@@ -59,8 +61,6 @@ spec:
           mountPath: /etc/sshkeys
         - name: machine-setup
           mountPath: /etc/machinesetup
-        - name: cloud-config
-          mountPath: /etc/openstack
         - name: kubeadm
           mountPath: /usr/bin/kubeadm
         resources:
@@ -76,9 +76,12 @@ spec:
           - name: OS_CLOUD
             value: {OS_CLOUD}
       volumes:
-      - name: config
-        hostPath:
-          path: /etc/kubernetes
+      - name: clouds
+        secret:
+          secretName: clouds
+      - name: cloud-config
+        secret:
+          secretName: cloud-config
       - name: certs
         hostPath:
           path: /etc/ssl/certs
@@ -86,9 +89,6 @@ spec:
         secret:
           secretName: machine-controller-sshkeys
           defaultMode: 256
-      - name: cloud-config
-        secret:
-          secretName: cloud-config
       - name: machine-setup
         configMap:
           name: machine-setup
