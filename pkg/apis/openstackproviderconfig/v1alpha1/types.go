@@ -20,7 +20,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// OpenstackProviderSpec is the type that will be embedded in a Machine.Spec.ProviderSpec field
+// for an OpenStack Instance. It is used by the Openstack machine actuator to create a single machine instance.
+// TODO(cglaubitz): We might consider to change this to OpenstackMachineProviderSpec
 type OpenstackProviderSpec struct {
 	metav1.TypeMeta `json:",inline"`
 	// The flavor reference for the flavor for your server instance.
@@ -82,8 +87,18 @@ type RootVolume struct {
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
+// OpenstackClusterProviderSpec is the providerSpec for OpenStack in the cluster object
+// +k8s:openapi-gen=true
+type OpenstackClusterProviderSpec struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+}
+
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
 // OpenstackClusterProviderStatus contains the status fields
-// relevant to AWS in the cluster object.
+// relevant to OpenStack in the cluster object.
 // +k8s:openapi-gen=true
 type OpenstackClusterProviderStatus struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -98,4 +113,6 @@ type OpenstackClusterProviderStatus struct {
 
 func init() {
 	SchemeBuilder.Register(&OpenstackProviderSpec{})
+	SchemeBuilder.Register(&OpenstackClusterProviderSpec{})
+	SchemeBuilder.Register(&OpenstackClusterProviderStatus{})
 }
