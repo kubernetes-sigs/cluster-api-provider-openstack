@@ -145,7 +145,7 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 		return errors.New("a valid machine setup config watcher is required!")
 	}
 
-	providerSpec, err := openstackconfigv1.ClusterSpecFromProviderSpec(machine.Spec.ProviderSpec)
+	providerSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
 	if err != nil {
 		return oc.handleMachineError(machine, apierrors.InvalidMachineConfiguration(
 			"Cannot unmarshal providerSpec field: %v", err))
@@ -378,7 +378,7 @@ func (oc *OpenstackClient) handleMachineError(machine *clusterv1.Machine, err *a
 		}
 	}
 
-	glog.Errorf("Machine error: %v", err.Message)
+	glog.Errorf("Machine error %s: %v", machine.Name, err.Message)
 	return err
 }
 

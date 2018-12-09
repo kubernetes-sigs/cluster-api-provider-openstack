@@ -38,18 +38,20 @@ var (
 	SchemeBuilder = &scheme.Builder{GroupVersion: SchemeGroupVersion}
 )
 
-func ClusterSpecFromProviderSpec(providerSpec clusterv1.ProviderSpec) (*OpenstackProviderSpec, error) {
+// ClusterConfigFromProviderSpec unmarshals a provider config into an OpenStack Cluster type
+func ClusterSpecFromProviderSpec(providerSpec clusterv1.ProviderSpec) (*OpenstackClusterProviderSpec, error) {
 	if providerSpec.Value == nil {
 		return nil, errors.New("no such providerSpec found in manifest")
 	}
 
-	var config OpenstackProviderSpec
+	var config OpenstackClusterProviderSpec
 	if err := yaml.Unmarshal(providerSpec.Value.Raw, &config); err != nil {
 		return nil, err
 	}
 	return &config, nil
 }
 
+// ClusterStatusFromProviderStatus unmarshals a provider status into an OpenStack Cluster Status type
 func ClusterStatusFromProviderStatus(extension *runtime.RawExtension) (*OpenstackClusterProviderStatus, error) {
 	if extension == nil {
 		return &OpenstackClusterProviderStatus{}, nil
