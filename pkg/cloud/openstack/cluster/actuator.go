@@ -3,9 +3,8 @@ package cluster
 import (
 	"fmt"
 
-	"github.com/golang/glog"
 	"github.com/pkg/errors"
-
+	"k8s.io/klog"
 	providerv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
 	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
 	client "sigs.k8s.io/cluster-api/pkg/client/clientset_generated/clientset/typed/cluster/v1alpha1"
@@ -30,7 +29,7 @@ func NewActuator(params ActuatorParams) (*Actuator, error) {
 }
 
 func (a *Actuator) Reconcile(cluster *clusterv1.Cluster) error {
-	glog.Infof("Reconciling cluster %v.", cluster.Name)
+	klog.Infof("Reconciling cluster %v.", cluster.Name)
 
 	// Load provider config.
 	_, err := providerv1.ClusterSpecFromProviderSpec(cluster.Spec.ProviderSpec)
@@ -47,7 +46,7 @@ func (a *Actuator) Reconcile(cluster *clusterv1.Cluster) error {
 	/* Uncomment when the clusterGetter is back to working
 	defer func() {
 		if err := a.storeClusterStatus(cluster, status); err != nil {
-			glog.Errorf("failed to store provider status for cluster %q in namespace %q: %v", cluster.Name, cluster.Namespace, err)
+			klog.Errorf("failed to store provider status for cluster %q in namespace %q: %v", cluster.Name, cluster.Namespace, err)
 		}
 	}()*/
 	return nil
@@ -55,7 +54,7 @@ func (a *Actuator) Reconcile(cluster *clusterv1.Cluster) error {
 
 // Delete deletes a cluster and is invoked by the Cluster Controller
 func (a *Actuator) Delete(cluster *clusterv1.Cluster) error {
-	glog.Infof("Deleting cluster %v.", cluster.Name)
+	klog.Infof("Deleting cluster %v.", cluster.Name)
 
 	// Load provider config.
 	_, err := providerv1.ClusterSpecFromProviderSpec(cluster.Spec.ProviderSpec)
