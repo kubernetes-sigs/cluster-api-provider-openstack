@@ -186,6 +186,23 @@ data:
 
         install_configure_docker
 
+        # Write the cloud.conf so that the kubelet can use it.
+        echo $OPENSTACK_CLOUD_PROVIDER_CONF | base64 -d > /etc/kubernetes/cloud.conf
+
+        # Set up kubeadm config file to pass to kubeadm join.
+        cat > /etc/kubernetes/kubeadm_config.yaml <<EOF
+        apiVersion: kubeadm.k8s.io/v1alpha3
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            cloud-provider: "openstack"
+            cloud-config: "/etc/kubernetes/cloud.conf"
+        token: ${TOKEN}
+        discoveryTokenAPIServers:
+          - ${MASTER}
+        discoveryTokenUnsafeSkipCAVerification: true
+        EOF
+
         cat <<EOF > /etc/default/kubelet
         KUBELET_KUBEADM_EXTRA_ARGS=--cgroup-driver=systemd
         EOF
@@ -195,7 +212,7 @@ data:
         echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables
         echo '1' > /proc/sys/net/ipv4/ip_forward
 
-        kubeadm join --token "${TOKEN}" "${MASTER}" --ignore-preflight-errors=all --discovery-token-unsafe-skip-ca-verification
+        kubeadm join --ignore-preflight-errors=all --config /etc/kubernetes/kubeadm_config.yaml
         for tries in $(seq 1 60); do
         	kubectl --kubeconfig /etc/kubernetes/kubelet.conf annotate --overwrite node $(hostname) machine=${MACHINE} && break
         	sleep 1
