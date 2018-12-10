@@ -91,7 +91,14 @@ if [ -z "$OS_CLOUD" ]; then
 fi
 
 if ! hash yq 2>/dev/null; then
-  echo "'yq' is not available, please install it. (https://github.com/kislyuk/yq)"
+  echo "'yq' is not available, please install it. (https://github.com/mikefarah/yq)"
+  print_help
+  exit 1
+fi
+
+yq_type=$(file $(which yq))
+if [[ $yq_type == *"Python script"* ]]; then
+  echo "Wrong version of 'yq' installed, please install the one from https://github.com/mikefarah/yq"
   print_help
   exit 1
 fi
