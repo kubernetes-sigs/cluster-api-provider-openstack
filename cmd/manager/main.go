@@ -21,7 +21,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/golang/glog"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"k8s.io/klog"
@@ -92,29 +91,29 @@ func main() {
 	// Get a config to talk to the apiserver
 	cfg, err := config.GetConfig()
 	if err != nil {
-		glog.Fatal(err)
+		klog.Fatal(err)
 	}
 
 	// Create a new Cmd to provide shared dependencies and start components
 	mgr, err := manager.New(cfg, manager.Options{})
 	if err != nil {
-		glog.Fatal(err)
+		klog.Fatal(err)
 	}
 
-	glog.Infof("Initializing Dependencies.")
+	klog.Infof("Initializing Dependencies.")
 
 	// Setup Scheme for all resources
 	if err := apis.AddToScheme(mgr.GetScheme()); err != nil {
-		glog.Fatal(err)
+		klog.Fatal(err)
 	}
 
 	if err := clusterapis.AddToScheme(mgr.GetScheme()); err != nil {
-		glog.Fatal(err)
+		klog.Fatal(err)
 	}
 
 	// Setup all Controllers
 	if err := controller.AddToManager(mgr); err != nil {
-		glog.Fatal(err)
+		klog.Fatal(err)
 	}
 
 	log.Printf("Starting the Cmd.")

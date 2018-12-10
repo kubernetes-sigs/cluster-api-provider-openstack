@@ -20,7 +20,6 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/golang/glog"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
@@ -30,6 +29,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/pagination"
 	"github.com/gophercloud/utils/openstack/clientconfig"
+	"k8s.io/klog"
 	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
 )
 
@@ -119,7 +119,7 @@ func (is *InstanceService) UpdateToken() error {
 	if result {
 		return nil
 	}
-	glog.V(2).Infof("Toen is out of date, need get new token.")
+	klog.V(2).Infof("Token is out of date, getting new token.")
 	reAuthFunction := is.provider.ReauthFunc
 	if reAuthFunction() != nil {
 		return fmt.Errorf("reAuth err: %v", err)
