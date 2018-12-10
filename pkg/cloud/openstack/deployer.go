@@ -22,8 +22,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/golang/glog"
-
+	"k8s.io/klog"
 	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
 	clustercommon "sigs.k8s.io/cluster-api/pkg/apis/cluster/common"
 	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
@@ -49,7 +48,7 @@ func NewDeploymentClient() *DeploymentClient {
 func (*DeploymentClient) GetIP(cluster *clusterv1.Cluster, machine *clusterv1.Machine) (string, error) {
 	if machine.ObjectMeta.Annotations != nil {
 		if ip, ok := machine.ObjectMeta.Annotations[OpenstackIPAnnotationKey]; ok {
-			glog.Infof("Returning IP from machine annotation %s", ip)
+			klog.Infof("Returning IP from machine annotation %s", ip)
 			return ip, nil
 		}
 	}
