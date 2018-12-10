@@ -81,7 +81,18 @@ func (d *DeploymentClient) GetKubeConfig(cluster *clusterv1.Cluster, master *clu
 		"echo STARTFILE; sudo cat /etc/kubernetes/admin.conf"))
 	parts := strings.Split(result, "STARTFILE")
 	if len(parts) != 2 {
-		return "", nil
+		// can't ssh to the instance, try ip netns again with the first network given
+		result := strings.TrimSpace(util.ExecCommand(
+			"ip", "netns", "exec", fmt.Sprintf("qdhcp-%s", machineSpec.Networks[0].UUID),
+			"ssh", "-i", homeDir+"/.ssh/openstack_tmp",
+			"-o", "StrictHostKeyChecking no",
+			"-o", "UserKnownHostsFile /dev/null",
+			fmt.Sprintf("%s@%s", machineSpec.SshUserName, ip),
+			"echo STARTFILE; sudo cat /etc/kubernetes/admin.conf"))
+		parts := strings.Split(result, "STARTFILE")
+		if len(parts) != 2 {
+			return "", nil
+		}
 	}
 	return strings.TrimSpace(parts[1]), nil
 }
