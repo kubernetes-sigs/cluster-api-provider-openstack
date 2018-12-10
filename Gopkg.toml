@@ -42,14 +42,6 @@ required = [
   version = "0.8.0"
 
 [[constraint]]
-  name = "github.com/spf13/cobra"
-  version = "0.0.3"
-
-[[constraint]]
-  name = "github.com/spf13/pflag"
-  version = "1.0.3"
-
-[[constraint]]
   name = "k8s.io/api"
   version = "kubernetes-1.11.2"
 
