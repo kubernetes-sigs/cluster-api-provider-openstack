@@ -29,7 +29,7 @@ TAGS      :=
 LDFLAGS   := "-w -s -X 'main.version=${VERSION}'"
 REGISTRY ?= k8scloudprovider
 
-ifneq ("$(DEST)", "$(PWD)")
+ifneq ("$(realpath $(DEST))", "$(realpath $(PWD))")
     $(error Please run 'make' from $(DEST). Current directory is $(PWD))
 endif
 
