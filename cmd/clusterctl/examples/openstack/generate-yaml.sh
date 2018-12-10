@@ -91,6 +91,12 @@ if ! hash yq 2>/dev/null; then
   exit 1
 fi
 
+if ! hash jq 2>/dev/null; then
+  echo "'jq' is not available, please install it. for example, `pip install jq`"
+  print_help
+  exit 1
+fi
+
 yq_type=$(file $(which yq))
 if [[ $yq_type == *"Python script"* ]]; then
   echo "Wrong version of 'yq' installed, please install the one from https://github.com/mikefarah/yq"
