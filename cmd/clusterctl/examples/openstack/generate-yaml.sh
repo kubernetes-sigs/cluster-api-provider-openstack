@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# Function that prints out the help message, describing the script 
+# Function that prints out the help message, describing the script
 print_help()
 {
   echo "$SCRIPT - generates input yaml files for Cluster API on openstack"
@@ -85,6 +85,11 @@ if test -z "$SUPPORTED_PROVIDER_OS"; then
   exit 1
 fi
 
+if [ -z "$OS_CLOUD" ]; then
+  echo "OS_CLOUD environment variable is not set. Please set OS_CLOUD before running this script."
+  exit 1
+fi
+
 if ! hash yq 2>/dev/null; then
   echo "'yq' is not available, please install it. (https://github.com/mikefarah/yq)"
   print_help
@@ -125,7 +130,7 @@ MACHINE_CONTROLLER_SSH_HOME=${HOME}/.ssh/
 
 OVERWRITE=${OVERWRITE:-0}
 CLOUDS_PATH=${CLOUDS_PATH:-""}
-CLOUD="${OS_CLOUD}" 
+
 
 if [ $OVERWRITE -ne 1 ] && [ -f "$MACHINE_GENERATED_FILE" ]; then
   echo "File $MACHINE_GENERATED_FILE already exists. Delete it manually before running this script."
@@ -142,14 +147,10 @@ if [ $OVERWRITE -ne 1 ] && [ -f "$PROVIDERCOMPONENT_GENERATED_FILE" ]; then
   exit 1
 fi
 
-if [ -z "$CLOUD" ]; then
-  CLOUD=openstack
-fi
-
 mkdir -p "${OUTPUT_DIR}"
 
 if [ -n "$CLOUDS_PATH" ]; then
-  # Read clouds.yaml from file if a path is provided 
+  # Read clouds.yaml from file if a path is provided
   OPENSTACK_CLOUD_CONFIG_PLAIN=$(cat "$CLOUDS_PATH")
 else
   # Collect user input to generate a clouds.yaml file
@@ -173,12 +174,12 @@ else
 fi
 
 # Just blindly parse the cloud.conf here, overwriting old vars.
-AUTH_URL=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$CLOUD.auth.auth_url)
-USERNAME=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$CLOUD.auth.username)
-PASSWORD=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$CLOUD.auth.password)
-REGION=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$CLOUD.region_name)
-PROJECT_ID=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$CLOUD.auth.project_id)
-DOMAIN_NAME=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$CLOUD.auth.user_domain_name)
+AUTH_URL=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$OS_CLOUD.auth.auth_url)
+USERNAME=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$OS_CLOUD.auth.username)
+PASSWORD=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$OS_CLOUD.auth.password)
+REGION=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$OS_CLOUD.region_name)
+PROJECT_ID=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$OS_CLOUD.auth.project_id)
+DOMAIN_NAME=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$OS_CLOUD.auth.user_domain_name)
 
 
 # Basic cloud.conf, no LB configuration as that data is not known yet.
@@ -230,7 +231,7 @@ do
 done
 for file in `ls "${PROVIDER_MANAGER_DIR}"`
 do
-    sed "s/{OS_CLOUD}/$CLOUD/g" "${PROVIDER_MANAGER_DIR}/${file}" >> "$PROVIDERCOMPONENT_GENERATED_FILE"
+    sed "s/{OS_CLOUD}/$OS_CLOUD/g" "${PROVIDER_MANAGER_DIR}/${file}" >> "$PROVIDERCOMPONENT_GENERATED_FILE"
     echo "---" >> "$PROVIDERCOMPONENT_GENERATED_FILE"
 done
 for file in `ls "${CLUSTER_MANAGER_DIR}"`
@@ -275,4 +276,3 @@ cat "$CLUSTER_TEMPLATE_FILE" \
 
 echo "Done generating $PROVIDERCOMPONENT_GENERATED_FILE $MACHINE_GENERATED_FILE $CLUSTER_GENERATED_FILE"
 echo "You should now manually change your cluster configuration by editing the generated files."
-
