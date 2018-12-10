@@ -174,12 +174,12 @@ else
 fi
 
 # Just blindly parse the cloud.conf here, overwriting old vars.
-AUTH_URL=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$OS_CLOUD.auth.auth_url)
-USERNAME=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$OS_CLOUD.auth.username)
-PASSWORD=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$OS_CLOUD.auth.password)
-REGION=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$OS_CLOUD.region_name)
-PROJECT_ID=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$OS_CLOUD.auth.project_id)
-DOMAIN_NAME=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq -r .clouds.$OS_CLOUD.auth.user_domain_name)
+AUTH_URL=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$OS_CLOUD.auth.auth_url)
+USERNAME=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$OS_CLOUD.auth.username)
+PASSWORD=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$OS_CLOUD.auth.password)
+REGION=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$OS_CLOUD.region_name)
+PROJECT_ID=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$OS_CLOUD.auth.project_id)
+DOMAIN_NAME=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$OS_CLOUD.auth.user_domain_name)
 
 
 # Basic cloud.conf, no LB configuration as that data is not known yet.
