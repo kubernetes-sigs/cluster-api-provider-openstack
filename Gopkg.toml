@@ -58,8 +58,8 @@ required = [
   version = "0.1.0"
 
 [[constraint]]
-  branch = "master"
   name = "sigs.k8s.io/cluster-api"
+  version = "0.0.0-alpha.4"
 
 [[constraint]]
   name = "sigs.k8s.io/controller-runtime"
