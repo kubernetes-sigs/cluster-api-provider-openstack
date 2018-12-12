@@ -50,8 +50,8 @@ required = [
   version = "kubernetes-1.11.2"
 
 [[constraint]]
-  branch = "master"
   name = "k8s.io/cluster-bootstrap"
+  branch = "master"
 
 [[constraint]]
   name = "k8s.io/klog"
@@ -74,7 +74,7 @@ required = [
   unused-packages = true
   non-go = true
 
-  [[prune.project]]
-    name = "sigs.k8s.io/cluster-api"
-    unused-packages = false
-    non-go = false
+[[prune.project]]
+  name = "sigs.k8s.io/cluster-api"
+  unused-packages = false
+  non-go = false
