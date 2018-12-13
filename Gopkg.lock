@@ -636,8 +636,7 @@
   revision = "91cfa479c814065e420cee7ed227db0f63a5854e"
 
 [[projects]]
-  branch = "master"
-  digest = "1:0620f7b264e8d88bef0d132098d5cc7da0f522db033b7b1db9e4c8ac57630cd5"
+  digest = "1:ef04c20bf6f1dcd5e1cd1fd27a65675649dfed58e89699fe2891cccc0a233efd"
   name = "sigs.k8s.io/cluster-api"
   packages = [
     "cmd/clusterctl/clientcmd",
@@ -664,7 +663,8 @@
     "pkg/util",
   ]
   pruneopts = "T"
-  revision = "a29f9c42f491f569f5d7a385f4fbdd31b82280d7"
+  revision = "3547f8dd93078c0b0f0b221ee1c2a57f96673081"
+  version = "0.0.0-alpha.4"
 
 [[projects]]
   digest = "1:dca19204224bb3835c1ece945b28aa2b19095f99bad4fff33b72e3a9d47ad968"
@@ -744,6 +744,7 @@
     "k8s.io/apimachinery/pkg/runtime/schema",
     "k8s.io/apimachinery/pkg/runtime/serializer/json",
     "k8s.io/apimachinery/pkg/util/json",
+    "k8s.io/apimachinery/pkg/util/wait",
     "k8s.io/cluster-bootstrap/token/api",
     "k8s.io/cluster-bootstrap/token/util",
     "k8s.io/code-generator/cmd/deepcopy-gen",
