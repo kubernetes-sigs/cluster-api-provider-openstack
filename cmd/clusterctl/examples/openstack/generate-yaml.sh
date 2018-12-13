@@ -128,6 +128,8 @@ MACHINE_CONTROLLER_SSH_PRIVATE_FILE=openstack_tmp
 MACHINE_CONTROLLER_SSH_PRIVATE=
 MACHINE_CONTROLLER_SSH_HOME=${HOME}/.ssh/
 
+CONTROLLER_IMAGE_VERSION="0.0.0-alpha.4"
+
 OVERWRITE=${OVERWRITE:-0}
 CLOUDS_PATH=${CLOUDS_PATH:-""}
 
@@ -259,9 +261,9 @@ cat "$PROVIDERCOMPONENT_TEMPLATE_FILE" \
   >> "$PROVIDERCOMPONENT_GENERATED_FILE"
 
 if [[ "$OS" =~ "Linux" ]]; then
-  sed -i "s#image: controller:latest#image: gcr.io/k8s-cluster-api/cluster-api-controller:latest#" "$PROVIDERCOMPONENT_GENERATED_FILE"
+  sed -i "s#image: controller:latest#image: gcr.io/k8s-cluster-api/cluster-api-controller:$CONTROLLER_IMAGE_VERSION#" "$PROVIDERCOMPONENT_GENERATED_FILE"
 elif [[ "$OS" =~ "Darwin" ]]; then
-  sed -i '' -e "s#image: controller:latest#image: gcr.io/k8s-cluster-api/cluster-api-controller:latest#" "$PROVIDERCOMPONENT_GENERATED_FILE"
+  sed -i '' -e "s#image: controller:latest#image: gcr.io/k8s-cluster-api/cluster-api-controller:$CONTROLLER_IMAGE_VERSION#" "$PROVIDERCOMPONENT_GENERATED_FILE"
 else
   echo "Unrecognized OS : $OS"
   exit 1
