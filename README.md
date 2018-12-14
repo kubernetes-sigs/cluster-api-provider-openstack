@@ -86,6 +86,10 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
    ./generate-yaml.sh --provider-os [os name] --clouds clouds.yaml
    ```
 
+   You will need to make changes to the generated files to create a working cluster.
+   You can find some guidance on what needs to be edited, and how to create some of the
+   required OpenStack resources in the [Configuration documentation](docs/config.md)
+
 2. Create a cluster:
 
    ```bash
