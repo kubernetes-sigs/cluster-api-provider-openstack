@@ -41,6 +41,7 @@ type OpenstackProviderSpec struct {
 	// The flavor reference for the flavor for your server instance.
 	Flavor string `json:"flavor"`
 	// The name of the image to use for your server instance.
+	// If the RootVolume is specified, this will be ignored and use rootVolume directly.
 	Image string `json:"image"`
 
 	// The ssh key to inject in the instance
@@ -68,8 +69,6 @@ type OpenstackProviderSpec struct {
 	// Whether the server instance is created on a trunk port or not.
 	Trunk bool `json:"trunk,omitempty"`
 
-	RootVolume RootVolume `json:"root_volume,omitempty"`
-
 	// Server tags
 	// Requires Nova api 2.52 minimum!
 	Tags []string `json:"tags,omitempty"`
@@ -79,6 +78,9 @@ type OpenstackProviderSpec struct {
 
 	// Config Drive support
 	ConfigDrive *bool `json:"configDrive,omitempty"`
+
+	// The volume metadata to boot from
+	RootVolume *RootVolume `json:"rootVolume,omitempty"`
 }
 
 type SecurityGroupParam struct {
@@ -169,7 +171,9 @@ type SubnetFilter struct {
 }
 
 type RootVolume struct {
-	VolumeType string `json:"volumeType"`
+	SourceType string `json:"sourceType,omitempty"`
+	SourceUUID string `json:"sourceUUID,omitempty"`
+	DeviceType string `json:"deviceType"`
 	Size       int    `json:"diskSize,omitempty"`
 }
 
