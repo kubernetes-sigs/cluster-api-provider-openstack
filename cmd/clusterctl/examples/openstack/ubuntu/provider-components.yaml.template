@@ -153,6 +153,11 @@ data:
         # By default, use calico for container network plugin, should make this configurable.
         kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f https://docs.projectcalico.org/v3.1/getting-started/kubernetes/installation/hosted/rbac-kdd.yaml
         kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f https://docs.projectcalico.org/v3.1/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml
+        # Fixing default ipv4 pool of calico to configured POD_CIDR
+        for tries in $(seq 1 60); do
+            kubectl --kubeconfig /etc/kubernetes/admin.conf patch ippools.crd.projectcalico.org/default-ipv4-ippool --type='json' -p="[{\"op\": \"replace\", \"path\": \"/spec/cidr\", \"value\":\"$POD_CIDR\"}]" && break
+            sleep 5
+        done
         echo done.
         ) 2>&1 | tee /var/log/startup.log
     - versions:
