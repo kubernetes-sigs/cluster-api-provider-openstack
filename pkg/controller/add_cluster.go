@@ -25,7 +25,8 @@ import (
 func init() {
 	// AddToManagerFuncs is a list of functions to create controllers and add them to a manager.
 	AddToManagerFuncs = append(AddToManagerFuncs, func(m manager.Manager) error {
-		clusterActuator, err := occ.NewActuator(occ.ActuatorParams{})
+		params := getActuatorParams(m)
+		clusterActuator, err := occ.NewActuator(params)
 		if err != nil {
 			return err
 		}

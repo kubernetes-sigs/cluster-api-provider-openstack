@@ -6,25 +6,19 @@ import (
 	"github.com/pkg/errors"
 	"k8s.io/klog"
 	providerv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack"
 	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
 	client "sigs.k8s.io/cluster-api/pkg/client/clientset_generated/clientset/typed/cluster/v1alpha1"
 )
 
 type Actuator struct {
+	params         openstack.ActuatorParams
 	clustersGetter client.ClustersGetter
 }
 
-// ActuatorParams holds parameter information for Actuator
-type ActuatorParams struct {
-	ClustersGetter client.ClustersGetter
-}
-
 // NewActuator creates a new Actuator
-func NewActuator(params ActuatorParams) (*Actuator, error) {
-	res := &Actuator{
-		clustersGetter: params.ClustersGetter,
-	}
-
+func NewActuator(params openstack.ActuatorParams) (*Actuator, error) {
+	res := &Actuator{params: params}
 	return res, nil
 }
 

@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 	"reflect"
@@ -47,7 +46,6 @@ const (
 	MachineSetupConfigPath = "/etc/machinesetup/machine_setup_configs.yaml"
 	SshPrivateKeyPath      = "/etc/sshkeys/private"
 	SshPublicKeyPath       = "/etc/sshkeys/public"
-	SshKeyUserPath         = "/etc/sshkeys/user"
 	CloudConfigPath        = "/etc/cloud/cloud_config.yaml"
 
 	TimeoutInstanceCreate       = 5 * time.Minute
@@ -63,64 +61,20 @@ type SshCreds struct {
 }
 
 type OpenstackClient struct {
+	params              openstack.ActuatorParams
 	scheme              *runtime.Scheme
 	client              client.Client
 	machineSetupWatcher *machinesetup.ConfigWatch
-	machineService      *clients.InstanceService
-	sshCred             *SshCreds
 	*openstack.DeploymentClient
 }
 
-func NewActuator(machineClient client.Client, scheme *runtime.Scheme) (*OpenstackClient, error) {
-	machineService, err := clients.NewInstanceService()
-	if err != nil {
-		return nil, err
-	}
-	var sshCred SshCreds
-	b, err := ioutil.ReadFile(SshKeyUserPath)
-	if err != nil {
-		return nil, err
-	}
-	sshCred.user = string(b)
-	b, err = ioutil.ReadFile(SshPublicKeyPath)
-	if err != nil {
-		return nil, err
-	}
-	sshCred.publicKey = string(b)
-
-	keyPairList, err := machineService.GetKeyPairList()
-	if err != nil {
-		return nil, err
-	}
-	needCreate := true
-	// check whether keypair already exist
-	for i := range keyPairList {
-		if sshCred.user == keyPairList[i].Name {
-			if sshCred.publicKey == keyPairList[i].PublicKey {
-				needCreate = false
-			} else {
-				err = machineService.DeleteKeyPair(keyPairList[i].Name)
-				if err != nil {
-					return nil, fmt.Errorf("unable to delete keypair: %v", err)
-				}
-			}
-			break
-		}
-	}
-	if needCreate {
-		if _, err := os.Stat(SshPrivateKeyPath); err != nil {
-			return nil, fmt.Errorf("ssh key pair need to be specified")
-		}
-		sshCred.privateKeyPath = SshPrivateKeyPath
-
-		err = machineService.CreateKeyPair(sshCred.user, sshCred.publicKey)
-		if err != nil {
-			return nil, fmt.Errorf("create ssh key pair err: %v", err)
-		}
+func NewActuator(params openstack.ActuatorParams) (*OpenstackClient, error) {
+	if _, err := os.Stat(SshPublicKeyPath); err != nil {
+		return nil, fmt.Errorf("public key for the ssh key pair not found")
 	}
 
-	if err != nil {
-		return nil, err
+	if _, err := os.Stat(SshPrivateKeyPath); err != nil {
+		return nil, fmt.Errorf("private key for the ssh key pair not found")
 	}
 
 	setupConfigWatcher, err := machinesetup.NewConfigWatch(MachineSetupConfigPath)
@@ -129,16 +83,20 @@ func NewActuator(machineClient client.Client, scheme *runtime.Scheme) (*Openstac
 	}
 
 	return &OpenstackClient{
-		client:              machineClient,
-		machineService:      machineService,
+		params:              params,
+		client:              params.Client,
 		machineSetupWatcher: setupConfigWatcher,
-		scheme:              scheme,
-		sshCred:             &sshCred,
+		scheme:              params.Scheme,
 		DeploymentClient:    openstack.NewDeploymentClient(),
 	}, nil
 }
 
 func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluster, machine *clusterv1.Machine) error {
+	machineService, err := clients.NewInstanceServiceFromMachine(oc.params.KubeClient, machine)
+	if err != nil {
+		return err
+	}
+
 	if oc.machineSetupWatcher == nil {
 		return errors.New("a valid machine setup config watcher is required!")
 	}
@@ -196,14 +154,14 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 		}
 	}
 
-	instance, err = oc.machineService.InstanceCreate(machine.Name, providerSpec, startupScript, oc.sshCred.user)
+	instance, err = machineService.InstanceCreate(machine.Name, providerSpec, startupScript, providerSpec.KeyName)
 	if err != nil {
 		return oc.handleMachineError(machine, apierrors.CreateMachine(
 			"error creating Openstack instance: %v", err))
 	}
 	// TODO: wait instance ready
 	err = util.PollImmediate(RetryIntervalInstanceStatus, TimeoutInstanceCreate, func() (bool, error) {
-		instance, err := oc.machineService.GetInstance(instance.ID)
+		instance, err := machineService.GetInstance(instance.ID)
 		if err != nil {
 			return false, nil
 		}
@@ -215,7 +173,7 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 	}
 
 	if providerSpec.FloatingIP != "" {
-		err := oc.machineService.AssociateFloatingIP(instance.ID, providerSpec.FloatingIP)
+		err := machineService.AssociateFloatingIP(instance.ID, providerSpec.FloatingIP)
 		if err != nil {
 			return oc.handleMachineError(machine, apierrors.CreateMachine(
 				"Associate floatingIP err: %v", err))
@@ -227,6 +185,11 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 }
 
 func (oc *OpenstackClient) Delete(ctx context.Context, cluster *clusterv1.Cluster, machine *clusterv1.Machine) error {
+	machineService, err := clients.NewInstanceServiceFromMachine(oc.params.KubeClient, machine)
+	if err != nil {
+		return err
+	}
+
 	instance, err := oc.instanceExists(machine)
 	if err != nil {
 		return err
@@ -238,7 +201,7 @@ func (oc *OpenstackClient) Delete(ctx context.Context, cluster *clusterv1.Cluste
 	}
 
 	id := machine.ObjectMeta.Annotations[openstack.OpenstackIdAnnotationKey]
-	err = oc.machineService.InstanceDelete(id)
+	err = machineService.InstanceDelete(id)
 	if err != nil {
 		return oc.handleMachineError(machine, apierrors.DeleteMachine(
 			"error deleting Openstack instance: %v", err))
@@ -335,9 +298,6 @@ func getIPFromInstance(instance *clients.Instance) (string, error) {
 }
 
 func (oc *OpenstackClient) GetKubeConfig(cluster *clusterv1.Cluster, master *clusterv1.Machine) (string, error) {
-	if oc.sshCred == nil {
-		return "", fmt.Errorf("Get kubeConfig failed, don't have ssh keypair information")
-	}
 	ip, err := oc.GetIP(cluster, master)
 	if err != nil {
 		return "", err
@@ -349,7 +309,7 @@ func (oc *OpenstackClient) GetKubeConfig(cluster *clusterv1.Cluster, master *clu
 	}
 
 	result := strings.TrimSpace(util.ExecCommand(
-		"ssh", "-i", oc.sshCred.privateKeyPath,
+		"ssh", "-i", SshPrivateKeyPath,
 		"-o", "StrictHostKeyChecking no",
 		"-o", "UserKnownHostsFile /dev/null",
 		fmt.Sprintf("%s@%s", machineSpec.SshUserName, ip),
@@ -418,7 +378,13 @@ func (oc *OpenstackClient) instanceExists(machine *clusterv1.Machine) (instance 
 		Image:  machineSpec.Image,
 		Flavor: machineSpec.Flavor,
 	}
-	instanceList, err := oc.machineService.GetInstanceList(opts)
+
+	machineService, err := clients.NewInstanceServiceFromMachine(oc.params.KubeClient, machine)
+	if err != nil {
+		return nil, err
+	}
+
+	instanceList, err := machineService.GetInstanceList(opts)
 	if err != nil {
 		return nil, err
 	}
