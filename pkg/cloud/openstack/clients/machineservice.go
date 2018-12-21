@@ -143,6 +143,8 @@ func NewInstanceServiceFromCloud(cloud clientconfig.Cloud) (*InstanceService, er
 		return nil, err
 	}
 
+	opts.AllowReauth = true
+
 	provider, err := openstack.AuthenticatedClient(*opts)
 	if err != nil {
 		return nil, fmt.Errorf("Create providerClient err: %v", err)
