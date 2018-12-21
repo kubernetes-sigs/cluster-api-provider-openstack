@@ -20,6 +20,9 @@ import (
 	"encoding/base64"
 	"fmt"
 
+	"k8s.io/client-go/kubernetes"
+	"sigs.k8s.io/yaml"
+
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
@@ -29,9 +32,13 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/pagination"
 	"github.com/gophercloud/utils/openstack/clientconfig"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog"
 	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
+	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
 )
+
+const CloudsSecretKey = "clouds.yaml"
 
 type InstanceService struct {
 	provider       *gophercloud.ProviderClient
@@ -71,13 +78,73 @@ type InstanceListOpts struct {
 	Name string `q:"name"`
 }
 
-func NewInstanceService() (*InstanceService, error) {
-	clientOpts := new(clientconfig.ClientOpts)
-	opts, err := clientconfig.AuthOptions(clientOpts)
+func GetCloudFromSecret(kubeClient kubernetes.Interface, namespace string, secretName string, cloudName string) (clientconfig.Cloud, error) {
+	emptyCloud := clientconfig.Cloud{}
+
+	if secretName == "" {
+		return emptyCloud, nil
+	}
+
+	if secretName != "" && cloudName == "" {
+		return emptyCloud, fmt.Errorf("Secret name set to %v but no cloud was specified. Please set cloud_name in your machine spec.", secretName)
+	}
+
+	secret, err := kubeClient.CoreV1().Secrets(namespace).Get(secretName, metav1.GetOptions{})
+	if err != nil {
+		return emptyCloud, err
+	}
+
+	content, ok := secret.Data[CloudsSecretKey]
+	if !ok {
+		return emptyCloud, fmt.Errorf("OpenStack credentials secret %v did not contain key %v",
+			secretName, CloudsSecretKey)
+	}
+	var clouds clientconfig.Clouds
+	err = yaml.Unmarshal(content, &clouds)
+	if err != nil {
+		return emptyCloud, fmt.Errorf("failed to unmarshal clouds credentials stored in secret %v: %v", secretName, err)
+	}
+
+	return clouds.Clouds[cloudName], nil
+}
+
+// TODO: Eventually we'll have a NewInstanceServiceFromCluster too
+func NewInstanceServiceFromMachine(kubeClient kubernetes.Interface, machine *clusterv1.Machine) (*InstanceService, error) {
+	machineSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
 	if err != nil {
 		return nil, err
 	}
+	cloud, err := GetCloudFromSecret(kubeClient, machine.Namespace, machineSpec.CloudsSecret, machineSpec.CloudName)
+	if err != nil {
+		return nil, err
+	}
+	return NewInstanceServiceFromCloud(cloud)
+}
+
+func NewInstanceService() (*InstanceService, error) {
+	cloud := clientconfig.Cloud{}
+	return NewInstanceServiceFromCloud(cloud)
+}
+
+func NewInstanceServiceFromCloud(cloud clientconfig.Cloud) (*InstanceService, error) {
+	clientOpts := new(clientconfig.ClientOpts)
+	var opts *gophercloud.AuthOptions
+
+	if cloud.AuthInfo != nil {
+		clientOpts.AuthInfo = cloud.AuthInfo
+		clientOpts.AuthType = cloud.AuthType
+		clientOpts.Cloud = cloud.Cloud
+		clientOpts.RegionName = cloud.RegionName
+	}
+
+	opts, err := clientconfig.AuthOptions(clientOpts)
+
+	if err != nil {
+		return nil, err
+	}
+
 	opts.AllowReauth = true
+
 	provider, err := openstack.AuthenticatedClient(*opts)
 	if err != nil {
 		return nil, fmt.Errorf("Create providerClient err: %v", err)

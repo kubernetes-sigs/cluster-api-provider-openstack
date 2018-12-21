@@ -28,10 +28,20 @@ import (
 // TODO(cglaubitz): We might consider to change this to OpenstackMachineProviderSpec
 type OpenstackProviderSpec struct {
 	metav1.TypeMeta `json:",inline"`
+
+	// The name of the secret containing the openstack credentials
+	CloudsSecret string `json:"cloudsSecret"`
+
+	// The name of the cloud to use from the clouds secret
+	CloudName string `json:"cloudName"`
+
 	// The flavor reference for the flavor for your server instance.
 	Flavor string `json:"flavor"`
 	// The name of the image to use for your server instance.
 	Image string `json:"image"`
+
+	// The ssh key to inject in the instance
+	KeyName string `json:"keyName,omitempty"`
 
 	// The machine ssh username
 	SshUserName string `json:"sshUserName,omitempty"`
