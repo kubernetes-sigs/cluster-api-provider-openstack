@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"k8s.io/klog"
 	providerv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack"
+	providerv1openstack "sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/clients"
 	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
 	client "sigs.k8s.io/cluster-api/pkg/client/clientset_generated/clientset/typed/cluster/v1alpha1"
@@ -17,19 +17,15 @@ import (
 
 // Actuator controls cluster related infrastructure.
 type Actuator struct {
-	params         openstack.ActuatorParams
+	params         providerv1openstack.ActuatorParams
 	clustersGetter client.ClustersGetter
 }
 
 // NewActuator creates a new Actuator
-func NewActuator(params openstack.ActuatorParams) (*Actuator, error) {
-	clustersGetter, err := client.NewForConfig(params.Client)
-	if err != nil {
-		return nil, err
-	}
+func NewActuator(params providerv1openstack.ActuatorParams) (*Actuator, error) {
 	res := &Actuator{
 		params:         params,
-		clustersGetter: clustersGetter,
+		clustersGetter: params.ClustersGetter,
 	}
 	return res, nil
 }
@@ -59,7 +55,7 @@ func (a *Actuator) Reconcile(cluster *clusterv1.Cluster) error {
 		return errors.Errorf("failed to load cluster provider status: %v", err)
 	}
 
-	err = networkService.Reconcile(cluster.Name, *desired, status)
+	err = networkService.Reconcile(fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name), *desired, status)
 	if err != nil {
 		return errors.Errorf("failed to reconcile network: %v", err)
 	}

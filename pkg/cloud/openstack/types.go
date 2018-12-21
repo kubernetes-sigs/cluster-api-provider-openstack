@@ -20,13 +20,15 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
+	clusterv1client "sigs.k8s.io/cluster-api/pkg/client/clientset_generated/clientset/typed/cluster/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // ActuatorParams holds parameter information for Actuator
 type ActuatorParams struct {
-	KubeClient    kubernetes.Interface
-	Client        client.Client
-	EventRecorder record.EventRecorder
-	Scheme        *runtime.Scheme
+	Client         client.Client
+	KubeClient     kubernetes.Interface
+	ClustersGetter clusterv1client.ClustersGetter
+	EventRecorder  record.EventRecorder
+	Scheme         *runtime.Scheme
 }

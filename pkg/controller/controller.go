@@ -21,6 +21,7 @@ import (
 
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack"
+	clusterv1client "sigs.k8s.io/cluster-api/pkg/client/clientset_generated/clientset/typed/cluster/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
@@ -45,12 +46,17 @@ func getActuatorParams(mgr manager.Manager) openstack.ActuatorParams {
 	if err != nil {
 		klog.Fatalf("Could not create kubernetes client to talk to the apiserver: %v", err)
 	}
+	clusterClient, err := clusterv1client.NewForConfig(config)
+	if err != nil {
+		klog.Fatalf("Could not create CRD cluster client to talk to the apiserver: %v", err)
+	}
 
 	return openstack.ActuatorParams{
-		Client:        mgr.GetClient(),
-		KubeClient:    kubeClient,
-		Scheme:        mgr.GetScheme(),
-		EventRecorder: mgr.GetRecorder("openstack-controller"),
+		Client:         mgr.GetClient(),
+		KubeClient:     kubeClient,
+		ClustersGetter: clusterClient,
+		Scheme:         mgr.GetScheme(),
+		EventRecorder:  mgr.GetRecorder("openstack-controller"),
 	}
 
 }
