@@ -18,7 +18,6 @@ package controller
 
 import (
 	occ "sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/cluster"
-
 	"sigs.k8s.io/cluster-api/pkg/controller/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
