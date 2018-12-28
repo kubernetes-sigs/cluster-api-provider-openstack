@@ -253,6 +253,7 @@ data:
         # Reset iptables config  
         cat > /etc/systemd/system/docker.service.d/10-iptables.conf <<EOF
         [Service]
+        EnvironmentFile=/etc/default/docker
         ExecStart=
         ExecStart=/usr/bin/dockerd -H fd:// --iptables=false --ip-masq=false
         EOF
