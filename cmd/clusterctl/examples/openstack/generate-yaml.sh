@@ -105,7 +105,7 @@ fi
 
 # Define global variables
 PWD=$(cd `dirname $0`; pwd)
-TEMPLATES_PATH=${TEMPLATES_PATH:-$PWD/$SUPPORTED_PROVIDER_OS/}
+TEMPLATES_PATH=${TEMPLATES_PATH:-$PWD/$SUPPORTED_PROVIDER_OS}
 HOME_DIR=${PWD%%/cmd/clusterctl/examples/*}
 OUTPUT_DIR="${TEMPLATES_PATH}/out"
 PROVIDER_CRD_DIR="${HOME_DIR}/config/crd"
