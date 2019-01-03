@@ -130,17 +130,19 @@ type OpenstackClusterProviderStatus struct {
 
 	// Network contains all information about the created OpenStack Network.
 	// It includes Subnets and Router.
-	Network Network `json:"network,omitempty"`
+	Network *Network `json:"network,omitempty"`
 }
 
+// Network represents basic information about the associated OpenStach Neutron Network
 type Network struct {
 	Name string `json:"name"`
 	ID   string `json:"id"`
 
-	Subnets []Subnet `json:"subnets,omitempty"`
-	Router  *Router  `json:"router,omitempty"`
+	Subnet *Subnet `json:"subnet,omitempty"`
+	Router *Router `json:"router,omitempty"`
 }
 
+// Subnet represents basic information about the associated OpenStack Neutron Subnet
 type Subnet struct {
 	Name string `json:"name"`
 	ID   string `json:"id"`
@@ -148,6 +150,7 @@ type Subnet struct {
 	CIDR string `json:"cidr"`
 }
 
+// Router represents basic information about the associated OpenStack Neutron Router
 type Router struct {
 	Name string `json:"name"`
 	ID   string `json:"id"`

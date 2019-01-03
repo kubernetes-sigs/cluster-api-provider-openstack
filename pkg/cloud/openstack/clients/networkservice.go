@@ -30,7 +30,6 @@ import (
 )
 
 const (
-	defaultDNS    string = "8.8.8.8"
 	networkPrefix string = "k8s"
 )
 
@@ -55,33 +54,56 @@ func (s *NetworkService) Reconcile(clusterName string, desired openstackconfigv1
 		return nil
 	}
 	networkName := fmt.Sprintf("%s-cluster-%s", networkPrefix, clusterName)
-	if err := s.reconcileNetwork(networkName, desired, status); err != nil {
+	network, err := s.reconcileNetwork(networkName, desired)
+	if err != nil {
 		return err
 	}
+	if network.ID == "" {
+		klog.V(4).Infof("No need to reconcile network componence since no network exists.")
+		status.Network = nil
+		return nil
+	}
+	status.Network = &network
 
-	if err := s.reconcileSubnets(networkName, desired, status); err != nil {
+	observedSubnet, err := s.reconcileSubnets(networkName, desired, network)
+	if err != nil {
 		return err
 	}
+	if observedSubnet.ID == "" {
+		klog.V(4).Infof("No need to reconcile further network components since no subnet exists.")
+		status.Network.Subnet = nil
+		return nil
+	}
+	network.Subnet = &observedSubnet
 
-	if err := s.reconcileRouter(networkName, desired, status); err != nil {
+	observerdRouter, err := s.reconcileRouter(networkName, desired, network)
+	if err != nil {
 		return err
+	}
+	if observerdRouter.ID != "" {
+		// Only appending the router if it has an actual id
+		network.Router = &observerdRouter
+	} else {
+		status.Network.Router = nil
 	}
 
 	return nil
 }
 
-func (s *NetworkService) reconcileNetwork(networkName string, desired openstackconfigv1.OpenstackClusterProviderSpec, status *openstackconfigv1.OpenstackClusterProviderStatus) error {
+func (s *NetworkService) reconcileNetwork(networkName string, desired openstackconfigv1.OpenstackClusterProviderSpec) (openstackconfigv1.Network, error) {
 	klog.Infof("Reconciling network %s", networkName)
-	in := &status.Network
+	emptyNetwork := openstackconfigv1.Network{}
 	res, err := s.getNetworkByName(networkName)
 	if err != nil {
-		return err
+		return emptyNetwork, err
 	}
+
 	if res.ID != "" {
 		// Network exists
-		in.ID = res.ID
-		in.Name = res.Name
-		return nil
+		return openstackconfigv1.Network{
+			ID:   res.ID,
+			Name: res.Name,
+		}, nil
 	}
 
 	opts := networks.CreateOpts{
@@ -90,95 +112,91 @@ func (s *NetworkService) reconcileNetwork(networkName string, desired openstackc
 	}
 	network, err := networks.Create(s.client, opts).Extract()
 	if err != nil {
-		return err
+		return emptyNetwork, err
 	}
 
-	in.ID = network.ID
-	in.Name = network.Name
-
-	return nil
+	return openstackconfigv1.Network{
+		ID:   network.ID,
+		Name: network.Name,
+	}, nil
 }
 
-func (s *NetworkService) reconcileSubnets(name string, desired openstackconfigv1.OpenstackClusterProviderSpec, status *openstackconfigv1.OpenstackClusterProviderStatus) error {
+func (s *NetworkService) reconcileSubnets(name string, desired openstackconfigv1.OpenstackClusterProviderSpec, network openstackconfigv1.Network) (openstackconfigv1.Subnet, error) {
 	klog.Infof("Reconciling subnet %s", name)
-	in := &status.Network
-	if in.ID == "" {
-		klog.V(3).Info("No need to reconcile subnets. There is no network.")
-		return nil
-	}
+	emptySubnet := openstackconfigv1.Subnet{}
 	allPages, err := subnets.List(s.client, subnets.ListOpts{
-		NetworkID: in.ID,
+		NetworkID: network.ID,
 		CIDR:      desired.NodeCIDR,
 	}).AllPages()
 	if err != nil {
-		return err
+		return emptySubnet, err
 	}
 
 	subnetList, err := subnets.ExtractSubnets(allPages)
 	if err != nil {
-		return err
+		return emptySubnet, err
 	}
 
-	v1Subnets := []openstackconfigv1.Subnet{}
-	if len(subnetList) == 0 {
+	var observedSubnet openstackconfigv1.Subnet
+	if len(subnetList) > 1 {
+		// Not panicing here, because every other cluster might work.
+		return emptySubnet, fmt.Errorf("found more than 1 network with the expected name (%d) and CIDR (%s), which should not be able to exist in OpenStack", len(subnetList), desired.NodeCIDR)
+	} else if len(subnetList) == 0 {
 		opts := subnets.CreateOpts{
-			NetworkID:      in.ID,
-			Name:           name,
-			IPVersion:      4,
-			DNSNameservers: []string{defaultDNS},
+			NetworkID: network.ID,
+			Name:      name,
+			IPVersion: 4,
 
 			CIDR: desired.NodeCIDR,
 		}
 
 		newSubnet, err := subnets.Create(s.client, opts).Extract()
 		if err != nil {
-			return err
+			return emptySubnet, err
 		}
-		v1Subnets = append(v1Subnets, openstackconfigv1.Subnet{
+		observedSubnet = openstackconfigv1.Subnet{
 			ID:   newSubnet.ID,
 			Name: newSubnet.Name,
 
 			CIDR: newSubnet.CIDR,
-		})
-	}
-	for _, sn := range subnetList {
-		v1Subnets = append(v1Subnets, openstackconfigv1.Subnet{
-			ID:   sn.ID,
-			Name: sn.Name,
+		}
+	} else if len(subnetList) == 1 {
+		observedSubnet = openstackconfigv1.Subnet{
+			ID:   subnetList[0].ID,
+			Name: subnetList[0].Name,
 
-			CIDR: sn.CIDR,
-		})
+			CIDR: subnetList[0].CIDR,
+		}
 	}
-	in.Subnets = v1Subnets
 
-	return nil
+	return observedSubnet, nil
 }
 
-func (s *NetworkService) reconcileRouter(name string, desired openstackconfigv1.OpenstackClusterProviderSpec, status *openstackconfigv1.OpenstackClusterProviderStatus) error {
+func (s *NetworkService) reconcileRouter(name string, desired openstackconfigv1.OpenstackClusterProviderSpec, network openstackconfigv1.Network) (openstackconfigv1.Router, error) {
 	klog.Infof("Reconciling router %s", name)
-	in := &status.Network
-	if in.ID == "" {
+	emptyRouter := openstackconfigv1.Router{}
+	if network.ID == "" {
 		klog.V(3).Info("No need to reconcile router. There is no network.")
-		return nil
+		return emptyRouter, nil
 	}
-	if len(in.Subnets) == 0 {
-		klog.V(3).Info("No need to reconcile router. There are no subnets.")
-		return nil
+	if network.Subnet == nil {
+		klog.V(3).Info("No need to reconcile router. There is no subnet.")
+		return emptyRouter, nil
 	}
 	if desired.ExternalNetworkID == "" {
-		return errors.New("unable to create router, due to missing ExternalNetworkID")
+		return emptyRouter, errors.New("unable to create router, due to missing ExternalNetworkID")
 	}
 
 	allPages, err := routers.List(s.client, routers.ListOpts{
 		Name: name,
 	}).AllPages()
 	if err != nil {
-		return err
+		return emptyRouter, err
 	}
 
 	routerList, err := routers.ExtractRouters(allPages)
 	if err != nil {
-		return err
+		return emptyRouter, err
 	}
 	var router routers.Router
 	if len(routerList) == 0 {
@@ -190,51 +208,48 @@ func (s *NetworkService) reconcileRouter(name string, desired openstackconfigv1.
 		}
 		newRouter, err := routers.Create(s.client, opts).Extract()
 		if err != nil {
-			return err
+			return emptyRouter, err
 		}
 		router = *newRouter
 	} else {
 		router = routerList[0]
 	}
 
-	in.Router = &openstackconfigv1.Router{
+	observedRouter := openstackconfigv1.Router{
 		Name: router.Name,
 		ID:   router.ID,
 	}
 
 	routerInterfaces, err := s.getRouterInterfaces(router.ID)
 	if err != nil {
-		return err
+		return emptyRouter, err
 	}
 
-	// Get all subnets for our network...
-	availableSubnets := make(map[string]openstackconfigv1.Subnet, len(in.Subnets))
-	for _, net := range in.Subnets {
-		availableSubnets[net.ID] = net
-	}
-
-	// ... and filter out all subnets, the router already has an interface in...
+	createInterface := true
+	// check all router interfaces for an existing port in our subnet.
+INTERFACE_LOOP:
 	for _, iface := range routerInterfaces {
 		for _, ip := range iface.FixedIPs {
-			if _, ok := availableSubnets[ip.SubnetID]; ok {
-				delete(availableSubnets, ip.SubnetID)
+			if ip.SubnetID == network.Subnet.ID {
+				createInterface = false
+				break INTERFACE_LOOP
 			}
 		}
 	}
 
-	// ... and create router interfaces for the remaining subnets.
-	for _, net := range availableSubnets {
-		klog.V(4).Infof("Creating RouterInterface on %s in subnet %s", router.ID, net.ID)
+	// ... and create a router interface for our subnet.
+	if createInterface {
+		klog.V(4).Infof("Creating RouterInterface on %s in subnet %s", router.ID, network.Subnet.ID)
 		iface, err := routers.AddInterface(s.client, router.ID, routers.AddInterfaceOpts{
-			SubnetID: net.ID,
+			SubnetID: network.Subnet.ID,
 		}).Extract()
 		if err != nil {
-			return fmt.Errorf("unable to create router interface: %v", err)
+			return observedRouter, fmt.Errorf("unable to create router interface: %v", err)
 		}
 		klog.V(4).Infof("Created RouterInterface: %v", iface)
 	}
 
-	return nil
+	return observedRouter, nil
 }
 
 func (s *NetworkService) getRouterInterfaces(routerID string) ([]ports.Port, error) {
