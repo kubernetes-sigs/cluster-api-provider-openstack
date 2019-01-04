@@ -25,8 +25,8 @@ import (
 
 // ActuatorParams holds parameter information for Actuator
 type ActuatorParams struct {
-	Client        client.Client
 	KubeClient    kubernetes.Interface
+	Client        client.Client
 	EventRecorder record.EventRecorder
 	Scheme        *runtime.Scheme
 }

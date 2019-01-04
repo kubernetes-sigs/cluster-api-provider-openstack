@@ -22,13 +22,11 @@ type Actuator struct {
 
 // NewActuator creates a new Actuator
 func NewActuator(params providerv1openstack.ActuatorParams) (*Actuator, error) {
-	res := &Actuator{
-		params: params,
-	}
+	res := &Actuator{params: params}
 	return res, nil
 }
 
-// Reconcile creates or aplies updates to the cluster.
+// Reconcile creates or applies updates to the cluster.
 func (a *Actuator) Reconcile(cluster *clusterv1.Cluster) error {
 	klog.Infof("Reconciling cluster %v.", cluster.Name)
 

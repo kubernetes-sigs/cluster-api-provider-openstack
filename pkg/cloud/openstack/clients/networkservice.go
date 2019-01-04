@@ -59,7 +59,7 @@ func (s *NetworkService) Reconcile(clusterName string, desired openstackconfigv1
 		return err
 	}
 	if network.ID == "" {
-		klog.V(4).Infof("No need to reconcile network componence since no network exists.")
+		klog.V(4).Infof("No need to reconcile network components since no network exists.")
 		status.Network = nil
 		return nil
 	}
