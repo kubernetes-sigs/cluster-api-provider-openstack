@@ -102,6 +102,14 @@ type RootVolume struct {
 type OpenstackClusterProviderSpec struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	// NodeCIDR is the OpenStack Subnet to be created. Cluster actuator will create a
+	// network, a subnet with NodeCIDR, and a router connected to this subnet.
+	// If you leave this empty, no network will be created.
+	NodeCIDR string `json:"nodeCidr,omitempty"`
+	// ExternalNetworkID is the ID of an external OpenStack Network. This is necessary
+	// to get public internet to the VMs.
+	ExternalNetworkID string `json:"externalNetworkId,omitempty"`
 }
 
 // +genclient
@@ -119,6 +127,33 @@ type OpenstackClusterProviderStatus struct {
 
 	// CAPrivateKey is a PEM encoded PKCS1 CA PrivateKey for the control plane nodes.
 	CAPrivateKey []byte
+
+	// Network contains all information about the created OpenStack Network.
+	// It includes Subnets and Router.
+	Network *Network `json:"network,omitempty"`
+}
+
+// Network represents basic information about the associated OpenStach Neutron Network
+type Network struct {
+	Name string `json:"name"`
+	ID   string `json:"id"`
+
+	Subnet *Subnet `json:"subnet,omitempty"`
+	Router *Router `json:"router,omitempty"`
+}
+
+// Subnet represents basic information about the associated OpenStack Neutron Subnet
+type Subnet struct {
+	Name string `json:"name"`
+	ID   string `json:"id"`
+
+	CIDR string `json:"cidr"`
+}
+
+// Router represents basic information about the associated OpenStack Neutron Router
+type Router struct {
+	Name string `json:"name"`
+	ID   string `json:"id"`
 }
 
 func init() {
