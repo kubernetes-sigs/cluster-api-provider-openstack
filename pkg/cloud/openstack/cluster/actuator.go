@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/gophercloud/gophercloud"
@@ -12,20 +13,17 @@ import (
 	providerv1openstack "sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/clients"
 	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
-	client "sigs.k8s.io/cluster-api/pkg/client/clientset_generated/clientset/typed/cluster/v1alpha1"
 )
 
 // Actuator controls cluster related infrastructure.
 type Actuator struct {
-	params         providerv1openstack.ActuatorParams
-	clustersGetter client.ClustersGetter
+	params providerv1openstack.ActuatorParams
 }
 
 // NewActuator creates a new Actuator
 func NewActuator(params providerv1openstack.ActuatorParams) (*Actuator, error) {
 	res := &Actuator{
-		params:         params,
-		clustersGetter: params.ClustersGetter,
+		params: params,
 	}
 	return res, nil
 }
@@ -99,16 +97,14 @@ func (a *Actuator) Delete(cluster *clusterv1.Cluster) error {
 }
 
 func (a *Actuator) storeClusterStatus(cluster *clusterv1.Cluster, status *providerv1.OpenstackClusterProviderStatus) error {
-	clusterClient := a.clustersGetter.Clusters(cluster.Namespace)
-
 	ext, err := providerv1.EncodeClusterStatus(status)
 	if err != nil {
 		return fmt.Errorf("failed to update cluster status for cluster %q in namespace %q: %v", cluster.Name, cluster.Namespace, err)
 	}
-
 	cluster.Status.ProviderStatus = ext
 
-	if _, err := clusterClient.UpdateStatus(cluster); err != nil {
+	statusClient := a.params.Client.Status()
+	if err := statusClient.Update(context.Background(), cluster); err != nil {
 		return fmt.Errorf("failed to update cluster status for cluster %q in namespace %q: %v", cluster.Name, cluster.Namespace, err)
 	}
 
