@@ -164,7 +164,7 @@ data:
         (
         KUBELET_VERSION={{ .Machine.Spec.Versions.Kubelet }}
         TOKEN={{ .Token }}
-        MASTER={{ .MasterEndpoint }}
+        MASTER={{ call .GetMasterEndpoint }}
         NAMESPACE={{ .Machine.ObjectMeta.Namespace }}
         MACHINE=$NAMESPACE
         MACHINE+="/"
