@@ -33,9 +33,9 @@ type setupParams struct {
 	Machine     *clusterv1.Machine
 	MachineSpec *openstackconfigv1.OpenstackProviderSpec
 
-	PodCIDR        string
-	ServiceCIDR    string
-	MasterEndpoint string
+	PodCIDR           string
+	ServiceCIDR       string
+	GetMasterEndpoint func() (string, error)
 }
 
 func init() {
@@ -65,23 +65,26 @@ func masterStartupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine,
 }
 
 func nodeStartupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine, token, script string) (string, error) {
-	if len(cluster.Status.APIEndpoints) == 0 {
-		return "", errors.New("no cluster status found")
-	}
-
 	machineSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
 	if err != nil {
 		return "", err
 	}
 
+	GetMasterEndpoint := func() (string, error) {
+		if len(cluster.Status.APIEndpoints) == 0 {
+			return "", errors.New("no cluster status found")
+		}
+		return getEndpoint(cluster.Status.APIEndpoints[0]), nil
+	}
+
 	params := setupParams{
-		Token:          token,
-		Cluster:        cluster,
-		Machine:        machine,
-		MachineSpec:    machineSpec,
-		PodCIDR:        getSubnet(cluster.Spec.ClusterNetwork.Pods),
-		ServiceCIDR:    getSubnet(cluster.Spec.ClusterNetwork.Services),
-		MasterEndpoint: getEndpoint(cluster.Status.APIEndpoints[0]),
+		Token:             token,
+		Cluster:           cluster,
+		Machine:           machine,
+		MachineSpec:       machineSpec,
+		PodCIDR:           getSubnet(cluster.Spec.ClusterNetwork.Pods),
+		ServiceCIDR:       getSubnet(cluster.Spec.ClusterNetwork.Services),
+		GetMasterEndpoint: GetMasterEndpoint,
 	}
 
 	nodeStartUpScript := template.Must(template.New("nodeStartUp").Parse(script))
