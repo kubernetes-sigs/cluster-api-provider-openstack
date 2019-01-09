@@ -19,6 +19,9 @@ items:
         floatingIP: 129.114.111.153
         securityGroups:
         - default
+        userDataSecret:
+          name: master-user-data
+          namespace: openstack-provider-system
     versions:
       kubelet: 1.12.3
       controlPlane: 1.12.3
@@ -42,5 +45,8 @@ items:
         floatingIP: 129.114.111.153
         securityGroups:
         - default
+        userDataSecret:
+          name: worker-user-data
+          namespace: openstack-provider-system
     versions:
       kubelet: 1.12.3

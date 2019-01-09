@@ -1,0 +1,78 @@
+#!/bin/bash
+set -e
+set -x
+(
+KUBELET_VERSION={{ .Machine.Spec.Versions.Kubelet }}
+TOKEN={{ .Token }}
+MASTER={{ call .GetMasterEndpoint }}
+NAMESPACE={{ .Machine.ObjectMeta.Namespace }}
+MACHINE=$NAMESPACE
+MACHINE+="/"
+MACHINE+={{ .Machine.ObjectMeta.Name }}
+CLUSTER_DNS_DOMAIN={{ .Cluster.Spec.ClusterNetwork.ServiceDomain }}
+POD_CIDR={{ .PodCIDR }}
+SERVICE_CIDR={{ .ServiceCIDR }}
+CONTROL_PLANE_VERSION={{ .Machine.Spec.Versions.ControlPlane }}
+cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+exclude=kube*
+EOF
+
+setenforce 0
+yum install -y kubelet-$CONTROL_PLANE_VERSION kubeadm-$CONTROL_PLANE_VERSION kubectl-$CONTROL_PLANE_VERSION --disableexcludes=kubernetes
+
+function install_configure_docker () {
+    # prevent docker from auto-starting
+    echo "exit 101" > /usr/sbin/policy-rc.d
+    chmod +x /usr/sbin/policy-rc.d
+    trap "rm /usr/sbin/policy-rc.d" RETURN
+    yum install -y docker
+    echo 'DOCKER_OPTS="--iptables=false --ip-masq=false"' > /etc/default/docker
+    systemctl daemon-reload
+    systemctl enable docker
+    systemctl start docker
+}
+
+install_configure_docker
+
+# Write the cloud.conf so that the kubelet can use it.
+echo $OPENSTACK_CLOUD_PROVIDER_CONF | base64 -d > /etc/kubernetes/cloud.conf
+
+# Set up kubeadm config file to pass to kubeadm join.
+cat > /etc/kubernetes/kubeadm_config.yaml <<EOF
+apiVersion: kubeadm.k8s.io/v1alpha3
+kind: JoinConfiguration
+nodeRegistration:
+  kubeletExtraArgs:
+    cloud-provider: "openstack"
+    cloud-config: "/etc/kubernetes/cloud.conf"
+token: ${TOKEN}
+discoveryTokenAPIServers:
+  - ${MASTER}
+discoveryTokenUnsafeSkipCAVerification: true
+EOF
+
+cat <<EOF > /etc/default/kubelet
+KUBELET_KUBEADM_EXTRA_ARGS=--cgroup-driver=systemd
+EOF
+systemctl enable kubelet.service
+
+modprobe br_netfilter
+echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables
+echo '1' > /proc/sys/net/ipv4/ip_forward
+
+kubeadm join --ignore-preflight-errors=all --config /etc/kubernetes/kubeadm_config.yaml
+for tries in $(seq 1 60); do
+	kubectl --kubeconfig /etc/kubernetes/kubelet.conf annotate --overwrite node $(hostname) machine=${MACHINE} && break
+	sleep 1
+done
+
+echo done.
+) 2>&1 | tee /var/log/startup.log
+

@@ -57,8 +57,6 @@ spec:
           mountPath: /etc/ssl/certs
         - name: sshkeys
           mountPath: /etc/sshkeys
-        - name: machine-setup
-          mountPath: /etc/machinesetup
         - name: cloud-config
           mountPath: /etc/openstack
         - name: kubeadm
@@ -89,9 +87,6 @@ spec:
       - name: cloud-config
         secret:
           secretName: cloud-config
-      - name: machine-setup
-        configMap:
-          name: machine-setup
       - name: kubeadm
         hostPath:
           path: /usr/bin/kubeadm
