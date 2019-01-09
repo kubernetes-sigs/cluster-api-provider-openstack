@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -58,6 +59,9 @@ type OpenstackProviderSpec struct {
 
 	// The names of the security groups to assign to the instance
 	SecurityGroups []string `json:"securityGroups,omitempty"`
+
+	// The name of the secret containing the user data (startup script in most cases)
+	UserDataSecret *corev1.SecretReference `json:"userDataSecret,omitempty"`
 
 	RootVolume RootVolume `json:"root_volume,omitempty"`
 }
