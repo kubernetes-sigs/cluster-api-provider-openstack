@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# Function that prints out the help message, describing the script 
+# Function that prints out the help message, describing the script
 print_help()
 {
   echo "$SCRIPT - generates input yaml files for Cluster API on openstack"
@@ -85,9 +85,27 @@ if test -z "$SUPPORTED_PROVIDER_OS"; then
   exit 1
 fi
 
+if [ -z "$OS_CLOUD" ]; then
+  echo "OS_CLOUD environment variable is not set. Please set OS_CLOUD before running this script."
+  exit 1
+fi
+
+if ! hash yq 2>/dev/null; then
+  echo "'yq' is not available, please install it. (https://github.com/mikefarah/yq)"
+  print_help
+  exit 1
+fi
+
+yq_type=$(file $(which yq))
+if [[ $yq_type == *"Python script"* ]]; then
+  echo "Wrong version of 'yq' installed, please install the one from https://github.com/mikefarah/yq"
+  print_help
+  exit 1
+fi
+
 # Define global variables
 PWD=$(cd `dirname $0`; pwd)
-TEMPLATES_PATH=${TEMPLATES_PATH:-$PWD/$SUPPORTED_PROVIDER_OS/}
+TEMPLATES_PATH=${TEMPLATES_PATH:-$PWD/$SUPPORTED_PROVIDER_OS}
 HOME_DIR=${PWD%%/cmd/clusterctl/examples/*}
 OUTPUT_DIR="${TEMPLATES_PATH}/out"
 PROVIDER_CRD_DIR="${HOME_DIR}/config/crd"
@@ -110,9 +128,11 @@ MACHINE_CONTROLLER_SSH_PRIVATE_FILE=openstack_tmp
 MACHINE_CONTROLLER_SSH_PRIVATE=
 MACHINE_CONTROLLER_SSH_HOME=${HOME}/.ssh/
 
+CONTROLLER_IMAGE_VERSION="0.0.0-alpha.4"
+
 OVERWRITE=${OVERWRITE:-0}
 CLOUDS_PATH=${CLOUDS_PATH:-""}
-CLOUD="${OS_CLOUD}" 
+
 
 if [ $OVERWRITE -ne 1 ] && [ -f "$MACHINE_GENERATED_FILE" ]; then
   echo "File $MACHINE_GENERATED_FILE already exists. Delete it manually before running this script."
@@ -129,14 +149,10 @@ if [ $OVERWRITE -ne 1 ] && [ -f "$PROVIDERCOMPONENT_GENERATED_FILE" ]; then
   exit 1
 fi
 
-if [ -z "$CLOUD" ]; then
-  CLOUD=openstack
-fi
-
 mkdir -p "${OUTPUT_DIR}"
 
 if [ -n "$CLOUDS_PATH" ]; then
-  # Read clouds.yaml from file if a path is provided 
+  # Read clouds.yaml from file if a path is provided
   OPENSTACK_CLOUD_CONFIG_PLAIN=$(cat "$CLOUDS_PATH")
 else
   # Collect user input to generate a clouds.yaml file
@@ -156,8 +172,27 @@ else
       auth_url: $authurl
     interface: public
     identity_api_version: 3
-    region: $region"
+    region_name: $region"
 fi
+
+# Just blindly parse the cloud.conf here, overwriting old vars.
+AUTH_URL=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$OS_CLOUD.auth.auth_url)
+USERNAME=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$OS_CLOUD.auth.username)
+PASSWORD=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$OS_CLOUD.auth.password)
+REGION=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$OS_CLOUD.region_name)
+PROJECT_ID=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$OS_CLOUD.auth.project_id)
+DOMAIN_NAME=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$OS_CLOUD.auth.user_domain_name)
+
+
+# Basic cloud.conf, no LB configuration as that data is not known yet.
+OPENSTACK_CLOUD_PROVIDER_CONF_PLAIN="[Global]
+auth-url=$AUTH_URL
+username=\"$USERNAME\"
+password=\"$PASSWORD\"
+region=\"$REGION\"
+tenant-id=\"$PROJECT_ID\"
+domain-name=\"$DOMAIN_NAME\"
+"
 
 # Check if the ssh key already exists. If not, generate and copy to the .ssh dir.
 if [ ! -f $MACHINE_CONTROLLER_SSH_HOME$MACHINE_CONTROLLER_SSH_PRIVATE_FILE ]; then
@@ -170,11 +205,13 @@ MACHINE_CONTROLLER_SSH_PLAIN=clusterapi
 OS=$(uname)
 if [[ "$OS" =~ "Linux" ]]; then
   OPENSTACK_CLOUD_CONFIG=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN"|base64 -w0)
+  OPENSTACK_CLOUD_PROVIDER_CONF=$(echo "$OPENSTACK_CLOUD_PROVIDER_CONF_PLAIN"|base64 -w0)
   MACHINE_CONTROLLER_SSH_USER=$(echo -n $MACHINE_CONTROLLER_SSH_PLAIN|base64 -w0)
   MACHINE_CONTROLLER_SSH_PUBLIC=$(cat "$MACHINE_CONTROLLER_SSH_HOME$MACHINE_CONTROLLER_SSH_PUBLIC_FILE"|base64 -w0)
   MACHINE_CONTROLLER_SSH_PRIVATE=$(cat "$MACHINE_CONTROLLER_SSH_HOME$MACHINE_CONTROLLER_SSH_PRIVATE_FILE"|base64 -w0)
 elif [[ "$OS" =~ "Darwin" ]]; then
   OPENSTACK_CLOUD_CONFIG=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN"|base64)
+  OPENSTACK_CLOUD_PROVIDER_CONF=$(echo "$OPENSTACK_CLOUD_PROVIDER_CONF_PLAIN"|base64)
   MACHINE_CONTROLLER_SSH_USER=$(printf $MACHINE_CONTROLLER_SSH_PLAIN|base64)
   MACHINE_CONTROLLER_SSH_PUBLIC=$(cat "$MACHINE_CONTROLLER_SSH_HOME$MACHINE_CONTROLLER_SSH_PUBLIC_FILE"|base64)
   MACHINE_CONTROLLER_SSH_PRIVATE=$(cat "$MACHINE_CONTROLLER_SSH_HOME$MACHINE_CONTROLLER_SSH_PRIVATE_FILE"|base64)
@@ -196,7 +233,7 @@ do
 done
 for file in `ls "${PROVIDER_MANAGER_DIR}"`
 do
-    sed "s/{OS_CLOUD}/$CLOUD/g" "${PROVIDER_MANAGER_DIR}/${file}" >> "$PROVIDERCOMPONENT_GENERATED_FILE"
+    sed "s/{OS_CLOUD}/$OS_CLOUD/g" "${PROVIDER_MANAGER_DIR}/${file}" >> "$PROVIDERCOMPONENT_GENERATED_FILE"
     echo "---" >> "$PROVIDERCOMPONENT_GENERATED_FILE"
 done
 for file in `ls "${CLUSTER_MANAGER_DIR}"`
@@ -220,12 +257,13 @@ cat "$PROVIDERCOMPONENT_TEMPLATE_FILE" \
   | sed -e "s/\$MACHINE_CONTROLLER_SSH_USER/$MACHINE_CONTROLLER_SSH_USER/" \
   | sed -e "s/\$MACHINE_CONTROLLER_SSH_PUBLIC/$MACHINE_CONTROLLER_SSH_PUBLIC/" \
   | sed -e "s/\$MACHINE_CONTROLLER_SSH_PRIVATE/$MACHINE_CONTROLLER_SSH_PRIVATE/" \
+  | sed -e "s/\$OPENSTACK_CLOUD_PROVIDER_CONF/$OPENSTACK_CLOUD_PROVIDER_CONF/" \
   >> "$PROVIDERCOMPONENT_GENERATED_FILE"
 
 if [[ "$OS" =~ "Linux" ]]; then
-  sed -i "s#image: controller:latest#image: gcr.io/k8s-cluster-api/cluster-api-controller:latest#" "$PROVIDERCOMPONENT_GENERATED_FILE"
+  sed -i "s#image: controller:latest#image: gcr.io/k8s-cluster-api/cluster-api-controller:$CONTROLLER_IMAGE_VERSION#" "$PROVIDERCOMPONENT_GENERATED_FILE"
 elif [[ "$OS" =~ "Darwin" ]]; then
-  sed -i '' -e "s#image: controller:latest#image: gcr.io/k8s-cluster-api/cluster-api-controller:latest#" "$PROVIDERCOMPONENT_GENERATED_FILE"
+  sed -i '' -e "s#image: controller:latest#image: gcr.io/k8s-cluster-api/cluster-api-controller:$CONTROLLER_IMAGE_VERSION#" "$PROVIDERCOMPONENT_GENERATED_FILE"
 else
   echo "Unrecognized OS : $OS"
   exit 1
@@ -240,4 +278,3 @@ cat "$CLUSTER_TEMPLATE_FILE" \
 
 echo "Done generating $PROVIDERCOMPONENT_GENERATED_FILE $MACHINE_GENERATED_FILE $CLUSTER_GENERATED_FILE"
 echo "You should now manually change your cluster configuration by editing the generated files."
-

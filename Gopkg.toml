@@ -29,11 +29,6 @@ required = [
   "sigs.k8s.io/controller-tools/cmd/controller-gen", # for crd/rbac generation
 ]
 
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/golang/glog"
-
 [[constraint]]
   branch = "master"
   name = "github.com/gophercloud/gophercloud"
@@ -43,37 +38,43 @@ required = [
   name = "github.com/gophercloud/utils"
 
 [[constraint]]
-  name = "github.com/spf13/pflag"
-  version = "1.0.3"
+  name = "github.com/pkg/errors"
+  version = "0.8.0"
+
+[[constraint]]
+  name = "k8s.io/api"
+  version = "kubernetes-1.11.2"
 
 [[constraint]]
   name = "k8s.io/apimachinery"
   version = "kubernetes-1.11.2"
 
 [[constraint]]
-  branch = "master"
-  name = "sigs.k8s.io/cluster-api"
-
-[[constraint]]
-  name = "sigs.k8s.io/controller-runtime"
-  version = "0.1.4"
-
-[prune]
-  go-tests = true
-  unused-packages = true
-
-[[prune.project]]
-  name = "sigs.k8s.io/cluster-api"
-  unused-packages = false
-
-[[constraint]]
-  branch = "master"
   name = "k8s.io/cluster-bootstrap"
-
-[[constraint]]
-  name = "k8s.io/client-go"
-  version = "kubernetes-1.11.2"
+  branch = "master"
 
 [[constraint]]
   name = "k8s.io/klog"
   version = "0.1.0"
+
+[[constraint]]
+  name = "sigs.k8s.io/cluster-api"
+  version = "0.0.0-alpha.4"
+
+[[constraint]]
+  name = "sigs.k8s.io/controller-runtime"
+  version = "0.1.7"
+
+[[constraint]]
+  name = "sigs.k8s.io/yaml"
+  version = "1.1.0"
+
+[prune]
+  go-tests = true
+  unused-packages = true
+  non-go = true
+
+[[prune.project]]
+  name = "sigs.k8s.io/cluster-api"
+  unused-packages = false
+  non-go = false

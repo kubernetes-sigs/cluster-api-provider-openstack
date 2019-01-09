@@ -22,8 +22,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/golang/glog"
-
+	"k8s.io/klog"
 	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
 	clustercommon "sigs.k8s.io/cluster-api/pkg/apis/cluster/common"
 	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
@@ -49,7 +48,7 @@ func NewDeploymentClient() *DeploymentClient {
 func (*DeploymentClient) GetIP(cluster *clusterv1.Cluster, machine *clusterv1.Machine) (string, error) {
 	if machine.ObjectMeta.Annotations != nil {
 		if ip, ok := machine.ObjectMeta.Annotations[OpenstackIPAnnotationKey]; ok {
-			glog.Infof("Returning IP from machine annotation %s", ip)
+			klog.Infof("Returning IP from machine annotation %s", ip)
 			return ip, nil
 		}
 	}
@@ -68,7 +67,7 @@ func (d *DeploymentClient) GetKubeConfig(cluster *clusterv1.Cluster, master *clu
 		return "", fmt.Errorf("unable to use HOME environment variable to find SSH key: %v", err)
 	}
 
-	machineConfig, err := openstackconfigv1.MachineConfigFromProviderConfig(master.Spec.ProviderConfig)
+	machineSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(master.Spec.ProviderSpec)
 	if err != nil {
 		return "", err
 	}
@@ -77,7 +76,7 @@ func (d *DeploymentClient) GetKubeConfig(cluster *clusterv1.Cluster, master *clu
 		"ssh", "-i", homeDir+"/.ssh/openstack_tmp",
 		"-o", "StrictHostKeyChecking no",
 		"-o", "UserKnownHostsFile /dev/null",
-		fmt.Sprintf("%s@%s", machineConfig.SshUserName, ip),
+		fmt.Sprintf("%s@%s", machineSpec.SshUserName, ip),
 		"echo STARTFILE; sudo cat /etc/kubernetes/admin.conf"))
 	parts := strings.Split(result, "STARTFILE")
 	if len(parts) != 2 {

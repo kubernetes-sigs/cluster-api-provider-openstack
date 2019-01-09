@@ -6,10 +6,10 @@ items:
     labels:
       set: master
   spec:
-    providerConfig:
+    providerSpec:
       value:
         apiVersion: "openstackproviderconfig/v1alpha1"
-        kind: "OpenstackProviderConfig"
+        kind: "OpenstackProviderSpec"
         flavor: m1.medium
         image: Ubuntu-Server-16.04-x64
         sshUserName: ubuntu
@@ -20,8 +20,8 @@ items:
         securityGroups:
         - default
     versions:
-      kubelet: 1.12.1
-      controlPlane: 1.12.1
+      kubelet: 1.12.3
+      controlPlane: 1.12.3
 - apiVersion: "cluster.k8s.io/v1alpha1"
   kind: Machine
   metadata:
@@ -29,10 +29,10 @@ items:
     labels:
       set: node
   spec:
-    providerConfig:
+    providerSpec:
       value:
         apiVersion: "openstackproviderconfig/v1alpha1"
-        kind: "OpenstackProviderConfig"
+        kind: "OpenstackProviderSpec"
         flavor: m1.medium
         image: Ubuntu-Server-16.04-x64
         sshUserName: ubuntu
@@ -43,4 +43,4 @@ items:
         securityGroups:
         - default
     versions:
-      kubelet: 1.12.1
+      kubelet: 1.12.3

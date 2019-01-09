@@ -27,8 +27,8 @@ data:
   machine_setup_configs.yaml: |-
     items:
     - versions:
-          kubelet: 1.12.1
-          controlPlane: 1.12.1
+          kubelet: 1.12.3
+          controlPlane: 1.12.3
       startupScript: |
         #!/bin/bash
         set -e
@@ -93,6 +93,9 @@ data:
         [Service]
         Environment="KUBELET_DNS_ARGS=--cluster-dns=${CLUSTER_DNS_SERVER} --cluster-domain=${CLUSTER_DNS_DOMAIN}"
         EOF
+
+        echo $OPENSTACK_CLOUD_PROVIDER_CONF | base64 -d > /etc/kubernetes/cloud.conf
+
         systemctl daemon-reload
         systemctl restart kubelet.service
 
@@ -106,6 +109,10 @@ data:
         - token: ${TOKEN}
         apiEndpoint:
           bindPort: 443
+        nodeRegistration:
+          kubeletExtraArgs:
+            cloud-provider: "openstack"
+            cloud-config: "/etc/kubernetes/cloud.conf"
         ---
         apiVersion: kubeadm.k8s.io/v1alpha3
         kind: ClusterConfiguration
@@ -114,10 +121,23 @@ data:
           serviceSubnet: ${SERVICE_CIDR}
         clusterName: kubernetes
         controlPlaneEndpoint: ""
+        apiServerExtraArgs:
+          cloud-provider: "openstack"
+          cloud-config: "/etc/kubernetes/cloud.conf"
+        apiServerExtraVolumes:
+        - name: cloud
+          hostPath: "/etc/kubernetes/cloud.conf"
+          mountPath: "/etc/kubernetes/cloud.conf"
         controllerManagerExtraArgs:
           cluster-cidr: ${POD_CIDR}
           service-cluster-ip-range: ${SERVICE_CIDR}
           allocate-node-cidrs: "true"
+          cloud-provider: "openstack"
+          cloud-config: "/etc/kubernetes/cloud.conf"
+        controllerManagerExtraVolumes:
+        - name: cloud
+          hostPath: "/etc/kubernetes/cloud.conf"
+          mountPath: "/etc/kubernetes/cloud.conf"
         EOF
 
         # Create and set bridge-nf-call-iptables to 1 to pass the kubeadm preflight check.
@@ -136,7 +156,7 @@ data:
         echo done.
         ) 2>&1 | tee /var/log/startup.log
     - versions:
-          kubelet: 1.12.1
+          kubelet: 1.12.3
       startupScript: |
         #!/bin/bash
         set -e
@@ -144,7 +164,7 @@ data:
         (
         KUBELET_VERSION={{ .Machine.Spec.Versions.Kubelet }}
         TOKEN={{ .Token }}
-        MASTER={{ .MasterEndpoint }}
+        MASTER={{ call .GetMasterEndpoint }}
         NAMESPACE={{ .Machine.ObjectMeta.Namespace }}
         MACHINE=$NAMESPACE
         MACHINE+="/"
@@ -166,7 +186,7 @@ data:
             echo "exit 101" > /usr/sbin/policy-rc.d
             chmod +x /usr/sbin/policy-rc.d
             trap "rm /usr/sbin/policy-rc.d" RETURN
-            apt-get install -y docker-engine=1.12.0-0~xenial
+            apt-get install -y docker.io
             echo 'DOCKER_OPTS="--iptables=false --ip-masq=false"' > /etc/default/docker
             systemctl daemon-reload
             systemctl enable docker
@@ -203,6 +223,24 @@ data:
         apt-get install -y kubelet=${KUBELET} kubeadm=${KUBEADM} kubectl=${KUBECTL}
         # kubeadm uses 10th IP as DNS server
         CLUSTER_DNS_SERVER=$(prips ${SERVICE_CIDR} | head -n 11 | tail -n 1)
+
+        # Write the cloud.conf so that the kubelet can use it.
+        echo $OPENSTACK_CLOUD_PROVIDER_CONF | base64 -d > /etc/kubernetes/cloud.conf
+
+        # Set up kubeadm config file to pass to kubeadm join.
+        cat > /etc/kubernetes/kubeadm_config.yaml <<EOF
+        apiVersion: kubeadm.k8s.io/v1alpha3
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            cloud-provider: "openstack"
+            cloud-config: "/etc/kubernetes/cloud.conf"
+        token: ${TOKEN}
+        discoveryTokenAPIServers:
+          - ${MASTER}
+        discoveryTokenUnsafeSkipCAVerification: true
+        EOF
+
         # Override network args to use kubenet instead of cni, override Kubelet DNS args and
         # add cloud provider args.
         cat > /etc/systemd/system/kubelet.service.d/20-kubenet.conf <<EOF
@@ -211,7 +249,19 @@ data:
         EOF
         systemctl daemon-reload
         systemctl restart kubelet.service
-        kubeadm join --token "${TOKEN}" "${MASTER}" --ignore-preflight-errors=all --discovery-token-unsafe-skip-ca-verification
+        
+        # Reset iptables config  
+        cat > /etc/systemd/system/docker.service.d/10-iptables.conf <<EOF
+        [Service]
+        EnvironmentFile=/etc/default/docker
+        ExecStart=
+        ExecStart=/usr/bin/dockerd -H fd:// $DOCKER_OPTS
+        EOF
+
+        systemctl daemon-reload
+        systemctl disable ufw 
+
+        kubeadm join --ignore-preflight-errors=all --config /etc/kubernetes/kubeadm_config.yaml
         for tries in $(seq 1 60); do
         	kubectl --kubeconfig /etc/kubernetes/kubelet.conf annotate --overwrite node $(hostname) machine=${MACHINE} && break
         	sleep 1

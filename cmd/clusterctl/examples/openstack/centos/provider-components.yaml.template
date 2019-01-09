@@ -27,8 +27,8 @@ data:
   machine_setup_configs.yaml: |-
     items:
     - versions:
-          kubelet: 1.12.1
-          controlPlane: 1.12.1
+          kubelet: 1.12.3
+          controlPlane: 1.12.3
       startupScript: |
         #!/bin/bash
         set -e
@@ -76,11 +76,14 @@ data:
         cat <<EOF > /etc/default/kubelet
         KUBELET_KUBEADM_EXTRA_ARGS=--cgroup-driver=systemd
         EOF
+
         systemctl enable kubelet.service
 
         modprobe br_netfilter
         echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables
         echo '1' > /proc/sys/net/ipv4/ip_forward
+
+        echo $OPENSTACK_CLOUD_PROVIDER_CONF | base64 -d > /etc/kubernetes/cloud.conf
 
         # Set up kubeadm config file to pass parameters to kubeadm init.
         cat > /etc/kubernetes/kubeadm_config.yaml <<EOF
@@ -88,6 +91,10 @@ data:
         kind: InitConfiguration
         bootstrapTokens:
         - token: ${TOKEN}
+        nodeRegistration:
+          kubeletExtraArgs:
+            cloud-provider: "openstack"
+            cloud-config: "/etc/kubernetes/cloud.conf"
         ---
         apiVersion: kubeadm.k8s.io/v1alpha3
         kind: ClusterConfiguration
@@ -95,11 +102,24 @@ data:
         networking:
           serviceSubnet: ${SERVICE_CIDR}
         clusterName: kubernetes
+        apiServerExtraArgs:
+          cloud-provider: "openstack"
+          cloud-config: "/etc/kubernetes/cloud.conf"
+        apiServerExtraVolumes:
+        - name: cloud
+          hostPath: "/etc/kubernetes/cloud.conf"
+          mountPath: "/etc/kubernetes/cloud.conf"
         controlPlaneEndpoint: ""
         controllerManagerExtraArgs:
           cluster-cidr: ${POD_CIDR}
           service-cluster-ip-range: ${SERVICE_CIDR}
           allocate-node-cidrs: "true"
+          cloud-provider: "openstack"
+          cloud-config: "/etc/kubernetes/cloud.conf"
+        controllerManagerExtraVolumes:
+        - name: cloud
+          hostPath: "/etc/kubernetes/cloud.conf"
+          mountPath: "/etc/kubernetes/cloud.conf"
         EOF
         
         kubeadm init --config /etc/kubernetes/kubeadm_config.yaml
@@ -121,7 +141,7 @@ data:
         echo done.
         ) 2>&1 | tee /var/log/startup.log
     - versions:
-          kubelet: 1.12.1
+          kubelet: 1.12.3
       startupScript: |
         #!/bin/bash
         set -e
@@ -129,7 +149,7 @@ data:
         (
         KUBELET_VERSION={{ .Machine.Spec.Versions.Kubelet }}
         TOKEN={{ .Token }}
-        MASTER={{ .MasterEndpoint }}
+        MASTER={{ call .GetMasterEndpoint }}
         NAMESPACE={{ .Machine.ObjectMeta.Namespace }}
         MACHINE=$NAMESPACE
         MACHINE+="/"
@@ -166,6 +186,23 @@ data:
 
         install_configure_docker
 
+        # Write the cloud.conf so that the kubelet can use it.
+        echo $OPENSTACK_CLOUD_PROVIDER_CONF | base64 -d > /etc/kubernetes/cloud.conf
+
+        # Set up kubeadm config file to pass to kubeadm join.
+        cat > /etc/kubernetes/kubeadm_config.yaml <<EOF
+        apiVersion: kubeadm.k8s.io/v1alpha3
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            cloud-provider: "openstack"
+            cloud-config: "/etc/kubernetes/cloud.conf"
+        token: ${TOKEN}
+        discoveryTokenAPIServers:
+          - ${MASTER}
+        discoveryTokenUnsafeSkipCAVerification: true
+        EOF
+
         cat <<EOF > /etc/default/kubelet
         KUBELET_KUBEADM_EXTRA_ARGS=--cgroup-driver=systemd
         EOF
@@ -175,7 +212,7 @@ data:
         echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables
         echo '1' > /proc/sys/net/ipv4/ip_forward
 
-        kubeadm join --token "${TOKEN}" "${MASTER}" --ignore-preflight-errors=all --discovery-token-unsafe-skip-ca-verification
+        kubeadm join --ignore-preflight-errors=all --config /etc/kubernetes/kubeadm_config.yaml
         for tries in $(seq 1 60); do
         	kubectl --kubeconfig /etc/kubernetes/kubelet.conf annotate --overwrite node $(hostname) machine=${MACHINE} && break
         	sleep 1

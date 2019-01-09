@@ -89,7 +89,7 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
 2. Create a cluster:
 
    ```bash
-   ./clusterctl create cluster --minikube kubernetes-version=v1.12.1 --provider openstack -c examples/openstack/[os name]/out/cluster.yaml -m examples/openstack/[os name]/out/machines.yaml -p examples/openstack/[os name]/out/provider-components.yaml
+   ./clusterctl create cluster --minikube kubernetes-version=v1.12.3 --provider openstack -c examples/openstack/[os name]/out/cluster.yaml -m examples/openstack/[os name]/out/machines.yaml -p examples/openstack/[os name]/out/provider-components.yaml
    ```
 
 To choose a specific minikube driver, please use the `--vm-driver` command line parameter. For example to use the kvm2 driver with clusterctl you woud add `--vm-driver kvm2`, for linux, if you haven't installed any driver, you can add `--vm-driver none`.
