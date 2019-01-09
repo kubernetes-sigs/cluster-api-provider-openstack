@@ -1,6 +1,11 @@
 FROM registry.svc.ci.openshift.org/openshift/release:golang-1.10 AS builder
 WORKDIR /go/src/sigs.k8s.io/cluster-api-provider-openstack
 COPY . .
+
+# Needed for the cluster-api/cmd/maager build
+RUN go get -u github.com/golang/dep/cmd/dep
+RUN dep ensure -add k8s.io/apimachinery/pkg/util/rand k8s.io/apimachinery/pkg/api/equality k8s.io/client-go/plugin/pkg/client/auth/gcp
+
 RUN go build -o ./machine-controller-manager ./cmd/manager
 RUN go build -o ./manager ./vendor/sigs.k8s.io/cluster-api/cmd/manager
 
