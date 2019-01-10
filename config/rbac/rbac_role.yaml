@@ -19,6 +19,7 @@ rules:
   - cluster.k8s.io
   resources:
   - clusters
+  - clusters/status
   - machines
   - machinedeployments
   - machinesets
