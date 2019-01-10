@@ -68,14 +68,6 @@ type OpenstackClient struct {
 }
 
 func NewActuator(params openstack.ActuatorParams) (*OpenstackClient, error) {
-	if _, err := os.Stat(SshPublicKeyPath); err != nil {
-		return nil, fmt.Errorf("public key for the ssh key pair not found")
-	}
-
-	if _, err := os.Stat(SshPrivateKeyPath); err != nil {
-		return nil, fmt.Errorf("private key for the ssh key pair not found")
-	}
-
 	return &OpenstackClient{
 		params:           params,
 		client:           params.Client,
@@ -302,6 +294,16 @@ func getIPFromInstance(instance *clients.Instance) (string, error) {
 }
 
 func (oc *OpenstackClient) GetKubeConfig(cluster *clusterv1.Cluster, master *clusterv1.Machine) (string, error) {
+	if _, err := os.Stat(SshPublicKeyPath); err != nil {
+		klog.Infof("Can't get the KubeConfig file as the public ssh key could not be found: %v\n", SshPublicKeyPath)
+		return "", nil
+	}
+
+	if _, err := os.Stat(SshPrivateKeyPath); err != nil {
+		klog.Infof("Can't get the KubeConfig file as the private ssh key could not be found: %v\n", SshPrivateKeyPath)
+		return "", nil
+	}
+
 	ip, err := oc.GetIP(cluster, master)
 	if err != nil {
 		return "", err
