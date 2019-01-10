@@ -51,7 +51,7 @@ func (a *Actuator) Reconcile(cluster *clusterv1.Cluster) error {
 		return errors.Errorf("failed to load cluster provider status: %v", err)
 	}
 
-	err = networkService.Reconcile(fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name), *desired, status)
+	err = networkService.Reconcile(fmt.Sprintf("%s/%s", cluster.ObjectMeta.Namespace, cluster.Name), *desired, status)
 	if err != nil {
 		return errors.Errorf("failed to reconcile network: %v", err)
 	}

@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
@@ -54,7 +55,7 @@ func (s *NetworkService) Reconcile(clusterName string, desired openstackconfigv1
 		return nil
 	}
 	networkName := fmt.Sprintf("%s-cluster-%s", networkPrefix, clusterName)
-	network, err := s.reconcileNetwork(networkName, desired)
+	network, err := s.reconcileNetwork(clusterName, networkName, desired)
 	if err != nil {
 		return err
 	}
@@ -65,7 +66,7 @@ func (s *NetworkService) Reconcile(clusterName string, desired openstackconfigv1
 	}
 	status.Network = &network
 
-	observedSubnet, err := s.reconcileSubnets(networkName, desired, network)
+	observedSubnet, err := s.reconcileSubnets(clusterName, networkName, desired, network)
 	if err != nil {
 		return err
 	}
@@ -76,7 +77,7 @@ func (s *NetworkService) Reconcile(clusterName string, desired openstackconfigv1
 	}
 	network.Subnet = &observedSubnet
 
-	observerdRouter, err := s.reconcileRouter(networkName, desired, network)
+	observerdRouter, err := s.reconcileRouter(clusterName, networkName, desired, network)
 	if err != nil {
 		return err
 	}
@@ -90,7 +91,7 @@ func (s *NetworkService) Reconcile(clusterName string, desired openstackconfigv1
 	return nil
 }
 
-func (s *NetworkService) reconcileNetwork(networkName string, desired openstackconfigv1.OpenstackClusterProviderSpec) (openstackconfigv1.Network, error) {
+func (s *NetworkService) reconcileNetwork(clusterName, networkName string, desired openstackconfigv1.OpenstackClusterProviderSpec) (openstackconfigv1.Network, error) {
 	klog.Infof("Reconciling network %s", networkName)
 	emptyNetwork := openstackconfigv1.Network{}
 	res, err := s.getNetworkByName(networkName)
@@ -115,13 +116,22 @@ func (s *NetworkService) reconcileNetwork(networkName string, desired openstackc
 		return emptyNetwork, err
 	}
 
+	_, err = attributestags.ReplaceAll(s.client, "networks", network.ID, attributestags.ReplaceAllOpts{
+		Tags: []string{
+			"cluster-api-provider-openstack",
+			clusterName,
+		}}).Extract()
+	if err != nil {
+		return emptyNetwork, err
+	}
+
 	return openstackconfigv1.Network{
 		ID:   network.ID,
 		Name: network.Name,
 	}, nil
 }
 
-func (s *NetworkService) reconcileSubnets(name string, desired openstackconfigv1.OpenstackClusterProviderSpec, network openstackconfigv1.Network) (openstackconfigv1.Subnet, error) {
+func (s *NetworkService) reconcileSubnets(clusterName, name string, desired openstackconfigv1.OpenstackClusterProviderSpec, network openstackconfigv1.Network) (openstackconfigv1.Subnet, error) {
 	klog.Infof("Reconciling subnet %s", name)
 	emptySubnet := openstackconfigv1.Subnet{}
 	allPages, err := subnets.List(s.client, subnets.ListOpts{
@@ -169,10 +179,19 @@ func (s *NetworkService) reconcileSubnets(name string, desired openstackconfigv1
 		}
 	}
 
+	_, err = attributestags.ReplaceAll(s.client, "subnets", observedSubnet.ID, attributestags.ReplaceAllOpts{
+		Tags: []string{
+			"cluster-api-provider-openstack",
+			clusterName,
+		}}).Extract()
+	if err != nil {
+		return emptySubnet, err
+	}
+
 	return observedSubnet, nil
 }
 
-func (s *NetworkService) reconcileRouter(name string, desired openstackconfigv1.OpenstackClusterProviderSpec, network openstackconfigv1.Network) (openstackconfigv1.Router, error) {
+func (s *NetworkService) reconcileRouter(clusterName, name string, desired openstackconfigv1.OpenstackClusterProviderSpec, network openstackconfigv1.Network) (openstackconfigv1.Router, error) {
 	klog.Infof("Reconciling router %s", name)
 	emptyRouter := openstackconfigv1.Router{}
 	if network.ID == "" {
@@ -247,6 +266,15 @@ INTERFACE_LOOP:
 			return observedRouter, fmt.Errorf("unable to create router interface: %v", err)
 		}
 		klog.V(4).Infof("Created RouterInterface: %v", iface)
+	}
+
+	_, err = attributestags.ReplaceAll(s.client, "routers", observedRouter.ID, attributestags.ReplaceAllOpts{
+		Tags: []string{
+			"cluster-api-provider-openstack",
+			clusterName,
+		}}).Extract()
+	if err != nil {
+		return emptyRouter, err
 	}
 
 	return observedRouter, nil
