@@ -29,6 +29,8 @@ spec:
               type: string
             fixed_ip:
               type: string
+            filter:
+              type: object
           type: array
         floatingIP:
           type: string
