@@ -53,8 +53,6 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /etc/kubernetes
-        - name: certs
-          mountPath: /etc/ssl/certs
         - name: sshkeys
           mountPath: /etc/sshkeys
         - name: cloud-config
@@ -77,9 +75,6 @@ spec:
       - name: config
         hostPath:
           path: /etc/kubernetes
-      - name: certs
-        hostPath:
-          path: /etc/ssl/certs
       - name: sshkeys
         secret:
           secretName: machine-controller-sshkeys
