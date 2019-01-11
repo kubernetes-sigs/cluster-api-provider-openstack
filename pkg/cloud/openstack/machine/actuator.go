@@ -424,9 +424,6 @@ func (oc *OpenstackClient) createBootstrapToken() (string, error) {
 }
 
 func (oc *OpenstackClient) validateMachine(machine *clusterv1.Machine, config *openstackconfigv1.OpenstackProviderSpec) *apierrors.MachineError {
-	if machine.Spec.Versions.Kubelet == "" {
-		return apierrors.InvalidMachineConfiguration("spec.versions.kubelet can't be empty")
-	}
 	// TODO: other validate of openstackCloud
 	return nil
 }
