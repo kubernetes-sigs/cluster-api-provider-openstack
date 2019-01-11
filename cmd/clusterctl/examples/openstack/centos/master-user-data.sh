@@ -13,6 +13,37 @@ CLUSTER_DNS_DOMAIN={{ .Cluster.Spec.ClusterNetwork.ServiceDomain }}
 POD_CIDR={{ .PodCIDR }}
 SERVICE_CIDR={{ .ServiceCIDR }}
 ARCH=amd64
+
+# Getting master ip from the metadata of the node. By default we try the public-ipv4
+# If we don't get any, we fall back to local-ipv4 and in the worst case to localhost
+MASTER=""
+for i in $(seq 60); do
+    echo "trying to get public-ipv4 $i / 60"
+    MASTER=$(curl --fail -s http://169.254.169.254/2009-04-04/meta-data/public-ipv4)
+    if [[ $? == 0 ]] && [[ -n "$MASTER" ]]; then
+        break
+    fi
+    sleep 1
+done
+
+if [[ -z "$MASTER" ]]; then
+    echo "falling back to local-ipv4"
+    for i in $(seq 60); do
+        echo "trying to get local-ipv4 $i / 60"
+        MASTER=$(curl --fail -s http://169.254.169.254/2009-04-04/meta-data/local-ipv4)
+        if [[ $? == 0 ]] && [[ -n "$MASTER" ]]; then
+            break
+        fi
+        sleep 1
+    done
+fi
+
+if [[ -z "$MASTER" ]]; then
+    echo "falling back to localhost"
+    MASTER="localhost"
+fi
+MASTER="${MASTER}:443"
+
 cat <<EOF > /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
 name=Kubernetes
@@ -77,7 +108,7 @@ apiServerExtraVolumes:
 - name: cloud
   hostPath: "/etc/kubernetes/cloud.conf"
   mountPath: "/etc/kubernetes/cloud.conf"
-controlPlaneEndpoint: ""
+controlPlaneEndpoint: ${MASTER}
 controllerManagerExtraArgs:
   cluster-cidr: ${POD_CIDR}
   service-cluster-ip-range: ${SERVICE_CIDR}

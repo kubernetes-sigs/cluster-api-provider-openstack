@@ -13,6 +13,7 @@ items:
         flavor: m1.medium
         image: CentOS-7-x86_64-GenericCloud
         sshUserName: centos
+        keyName: cluster-api-provider-openstack
         availabilityZone: nova
         networks:
         - uuid: ab14ce0d-5e1f-4e32-bf65-00416e3cc19c
@@ -39,6 +40,7 @@ items:
         flavor: m1.medium
         image: CentOS-7-x86_64-GenericCloud
         sshUserName: centos
+        keyName: cluster-api-provider-openstack
         availabilityZone: nova
         networks:
         - uuid: ab14ce0d-5e1f-4e32-bf65-00416e3cc19c

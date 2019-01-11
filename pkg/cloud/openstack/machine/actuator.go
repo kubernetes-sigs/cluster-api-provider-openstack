@@ -128,7 +128,7 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 	}
 
 	var userDataRendered string
-	if len(userData) == 0 {
+	if len(userData) > 0 {
 		if util.IsMaster(machine) {
 			userDataRendered, err = masterStartupScript(cluster, machine, string(userData))
 			if err != nil {
@@ -318,6 +318,7 @@ func (oc *OpenstackClient) GetKubeConfig(cluster *clusterv1.Cluster, master *clu
 		"ssh", "-i", SshPrivateKeyPath,
 		"-o", "StrictHostKeyChecking no",
 		"-o", "UserKnownHostsFile /dev/null",
+		"-o", "BatchMode=yes",
 		fmt.Sprintf("%s@%s", machineSpec.SshUserName, ip),
 		"echo STARTFILE; sudo cat /etc/kubernetes/admin.conf"))
 	parts := strings.Split(result, "STARTFILE")

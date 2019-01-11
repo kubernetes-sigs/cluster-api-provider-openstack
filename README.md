@@ -37,7 +37,7 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
 
    ```bash
    cd examples/openstack
-   ./generate-yaml.sh --provider-os [os name]
+   ./generate-yaml.sh --provider-os [os name] [options]
    cd ../..
    ```
    [os name] is the operating system of your provider environment. 
@@ -48,12 +48,12 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
    #### Interactively submit provider information
    By default, the generater script will give you a series of command line prompts, asking the following information about your cloud provider:
 
-   - user-name
-   - domain-name
-   - project-id
-   - region-name
-   - auth-url
-   - password
+   - `user-name`
+   - `domain-name`
+   - `project-id`
+   - `region-name`
+   - `auth-url`
+   - `password`
 
    #### Use clouds.yaml to submit provider information
    If you want to generate scripts without being prompted interactively, you can pass generate-yaml a clouds.yaml file. After downloading your clouds.yaml from your provider, make sure that it has the information listed above filled out. It is very likely that it will at lest be missing the password field. Also, note that domain-name is the same as project-name. You may reference the following sample clouds.yaml to see what yours should look like.
@@ -86,9 +86,18 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
    ./generate-yaml.sh --provider-os [os name] --clouds clouds.yaml
    ```
 
-   You will need to make changes to the generated files to create a working cluster.
+   You **will need** to make changes to the generated files to create a working cluster.
    You can find some guidance on what needs to be edited, and how to create some of the
-   required OpenStack resources in the [Configuration documentation](docs/config.md)
+   required OpenStack resources in the [Configuration documentation](docs/config.md).
+
+   #### Special notes on ssh keys and fetching `admin.conf`
+
+   When running `generate-yaml.sh` the first time, a new ssh keypair is generated and stored as `$HOME/.ssh/openstack_tmp` and `$HOME/.ssh/openstack_tmp.pub`. In order to allow `clusterctl` to fetch Kubernetes' `admin.conf` from the master node, you **must** manually create the key pair in OpenStack. By default the generated `machine.yaml` uses `cluster-api-provider-openstack` to be the `keyName`. However, you are free to change that.
+
+   e.g.
+   ```
+   openstack keypair create --public-key ~/.ssh/openstack_tmp.pub cluster-api-provider-openstack
+   ```
 
 2. Create a cluster:
 
