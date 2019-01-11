@@ -32,7 +32,7 @@ function install_configure_docker () {
     chmod +x /usr/sbin/policy-rc.d
     trap "rm /usr/sbin/policy-rc.d" RETURN
     yum install -y docker
-    echo 'DOCKER_OPTS="--iptables=false --ip-masq=false"' > /etc/default/docker
+    echo 'OPTIONS="--selinux-enabled --log-driver=journald --signature-verification=false --iptables=false --ip-masq=false"' >> /etc/sysconfig/docker
     systemctl daemon-reload
     systemctl enable docker
     systemctl start docker
@@ -48,6 +48,7 @@ cat > /etc/kubernetes/kubeadm_config.yaml <<EOF
 apiVersion: kubeadm.k8s.io/v1alpha3
 kind: JoinConfiguration
 nodeRegistration:
+  name: $(hostname -s)
   kubeletExtraArgs:
     cloud-provider: "openstack"
     cloud-config: "/etc/kubernetes/cloud.conf"
@@ -68,7 +69,7 @@ echo '1' > /proc/sys/net/ipv4/ip_forward
 
 kubeadm join --ignore-preflight-errors=all --config /etc/kubernetes/kubeadm_config.yaml
 for tries in $(seq 1 60); do
-	kubectl --kubeconfig /etc/kubernetes/kubelet.conf annotate --overwrite node $(hostname) machine=${MACHINE} && break
+	kubectl --kubeconfig /etc/kubernetes/kubelet.conf annotate --overwrite node $(hostname -s) machine=${MACHINE} && break
 	sleep 1
 done
 
