@@ -92,7 +92,7 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
 
    #### Special notes on ssh keys and fetching `admin.conf`
 
-   When running `generate-yaml.sh` the first time, a new ssh keypair is generated and stored as `$HOME/.ssh/openstack_tmp` and `$HOME/.ssh/openstack_tmp.pub`. In order to allow `clusterctl` to fetch kubernetes `admin.conf` from the master node, you **must** manually create it in OpenStack. By default the generated `machine.yaml` uses `cluster-api-provider-openstack` to be the `keyName`. However, you are free to change that.
+   When running `generate-yaml.sh` the first time, a new ssh keypair is generated and stored as `$HOME/.ssh/openstack_tmp` and `$HOME/.ssh/openstack_tmp.pub`. In order to allow `clusterctl` to fetch Kubernetes' `admin.conf` from the master node, you **must** manually create the key pair in OpenStack. By default the generated `machine.yaml` uses `cluster-api-provider-openstack` to be the `keyName`. However, you are free to change that.
 
    e.g.
    ```
