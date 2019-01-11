@@ -2,6 +2,14 @@
 
 
 [[projects]]
+  digest = "1:5ad08b0e14866764a6d7475eb11c9cf05cad9a52c442593bdfa544703ff77f61"
+  name = "cloud.google.com/go"
+  packages = ["compute/metadata"]
+  pruneopts = "NUT"
+  revision = "0ebda48a7f143b1cce9eb37a8c1106ac762a3430"
+  version = "v0.34.0"
+
+[[projects]]
   digest = "1:6b21090f60571b20b3ddc2c8e48547dffcf409498ed6002c2cada023725ed377"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
@@ -329,10 +337,11 @@
   revision = "49796115aa4b964c318aad4f3084fdb41e9aa067"
 
 [[projects]]
-  digest = "1:866122db0f3007816dccd5b50ba0b3ae593bdadb81f725a17b95c8c6953c5cb7"
+  digest = "1:546efc585d0b3b4ef026faa94ae2d3211c1744d517841a27c83905e18fd0828d"
   name = "golang.org/x/net"
   packages = [
     "context",
+    "context/ctxhttp",
     "http2",
     "http2/hpack",
     "idna",
@@ -340,6 +349,20 @@
   ]
   pruneopts = "NUT"
   revision = "1c05540f6879653db88113bc4a2b70aec4bd491f"
+
+[[projects]]
+  branch = "master"
+  digest = "1:5364323a31838682c280a6bae0efe47991de96b9cbfeef4f27b3ca2353eb7ff8"
+  name = "golang.org/x/oauth2"
+  packages = [
+    ".",
+    "google",
+    "internal",
+    "jws",
+    "jwt",
+  ]
+  pruneopts = "NUT"
+  revision = "d668ce993890a79bda886613ee587a69dd5da7a6"
 
 [[projects]]
   branch = "master"
@@ -394,6 +417,25 @@
   ]
   pruneopts = "NUT"
   revision = "e5f3ab76ea4b26ebea349e4994ee72d38250c9b0"
+
+[[projects]]
+  digest = "1:d395d49d784dd3a11938a3e85091b6570664aa90ff2767a626565c6c130fa7e9"
+  name = "google.golang.org/appengine"
+  packages = [
+    ".",
+    "internal",
+    "internal/app_identity",
+    "internal/base",
+    "internal/datastore",
+    "internal/log",
+    "internal/modules",
+    "internal/remote_api",
+    "internal/urlfetch",
+    "urlfetch",
+  ]
+  pruneopts = "NUT"
+  revision = "e9657d882bb81064595ca3b56cbe2546bbabf7b1"
+  version = "v1.4.0"
 
 [[projects]]
   digest = "1:ef72505cf098abdd34efeea032103377bec06abb61d8a06f002d5d296a4b1185"
@@ -462,7 +504,7 @@
   version = "kubernetes-1.11.2"
 
 [[projects]]
-  digest = "1:d6874ca33f4e906880000209ce80c3476d1c128b9d8a157891a875554baf787d"
+  digest = "1:e2035d60919705a125feeb8b13926383aff8817634b2c4550743c19ca21f3b08"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/errors",
@@ -509,12 +551,12 @@
     "third_party/forked/golang/json",
     "third_party/forked/golang/reflect",
   ]
-  pruneopts = "NUT"
+  pruneopts = "T"
   revision = "103fd098999dc9c0c88536f5c9ad2e5da39373ae"
   version = "kubernetes-1.11.2"
 
 [[projects]]
-  digest = "1:3c7097254406024447d5bdda6cb338d18ccd01900b8778f00d90e5b5d9e223a8"
+  digest = "1:0a19f9bf56ecc683569299c8c2282ee3ac70d4e32eeb170d3265761bff8d5e12"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
@@ -580,7 +622,7 @@
     "util/retry",
     "util/workqueue",
   ]
-  pruneopts = "NUT"
+  pruneopts = "T"
   revision = "1f13a808da65775f22cbf47862c4e5898d8f4ca1"
   version = "kubernetes-1.11.2"
 
@@ -731,6 +773,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "cloud.google.com/go/compute/metadata",
     "github.com/gophercloud/gophercloud",
     "github.com/gophercloud/gophercloud/openstack",
     "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips",
@@ -744,6 +787,8 @@
     "github.com/gophercloud/gophercloud/pagination",
     "github.com/gophercloud/utils/openstack/clientconfig",
     "github.com/pkg/errors",
+    "golang.org/x/oauth2",
+    "golang.org/x/oauth2/google",
     "k8s.io/api/core/v1",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/runtime",
@@ -761,7 +806,6 @@
     "sigs.k8s.io/cluster-api/pkg/apis",
     "sigs.k8s.io/cluster-api/pkg/apis/cluster/common",
     "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1",
-    "sigs.k8s.io/cluster-api/pkg/client/clientset_generated/clientset/typed/cluster/v1alpha1",
     "sigs.k8s.io/cluster-api/pkg/controller/cluster",
     "sigs.k8s.io/cluster-api/pkg/controller/machine",
     "sigs.k8s.io/cluster-api/pkg/errors",
