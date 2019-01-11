@@ -28,6 +28,16 @@ function install_configure_docker () {
     trap "rm /usr/sbin/policy-rc.d" RETURN
     apt-get install -y docker.io
     echo 'DOCKER_OPTS="--iptables=false --ip-masq=false"' > /etc/default/docker
+
+    # Reset iptables config
+    mkdir -p /etc/systemd/system/docker.service.d
+    cat > /etc/systemd/system/docker.service.d/10-iptables.conf <<EOF
+[Service]
+EnvironmentFile=/etc/default/docker
+ExecStart=
+ExecStart=/usr/bin/dockerd -H fd:// \$DOCKER_OPTS
+EOF
+
     systemctl daemon-reload
     systemctl enable docker
     systemctl start docker
@@ -89,17 +99,8 @@ Environment="KUBELET_DNS_ARGS=--cluster-dns=${CLUSTER_DNS_SERVER} --cluster-doma
 EOF
 systemctl daemon-reload
 systemctl restart kubelet.service
-
-# Reset iptables config  
-cat > /etc/systemd/system/docker.service.d/10-iptables.conf <<EOF
-[Service]
-EnvironmentFile=/etc/default/docker
-ExecStart=
-ExecStart=/usr/bin/dockerd -H fd:// $DOCKER_OPTS
-EOF
-
-systemctl daemon-reload
 systemctl disable ufw 
+systemctl mask ufw
 
 kubeadm join --ignore-preflight-errors=all --config /etc/kubernetes/kubeadm_config.yaml
 for tries in $(seq 1 60); do
