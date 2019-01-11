@@ -107,7 +107,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:95c1b54007ab8594dfd79d184c1d6110e76d0eb0597b6fa3bf1e41604b649a45"
+  digest = "1:ed964c403c02c6d9c663e84ee6cdf4aba3c7a92a756a4b9a4d054b0ef8daf2d8"
   name = "github.com/gophercloud/gophercloud"
   packages = [
     ".",
@@ -120,6 +120,7 @@
     "openstack/identity/v2/tenants",
     "openstack/identity/v2/tokens",
     "openstack/identity/v3/tokens",
+    "openstack/networking/v2/extensions/attributestags",
     "openstack/networking/v2/extensions/layer3/routers",
     "openstack/networking/v2/networks",
     "openstack/networking/v2/ports",
@@ -737,6 +738,7 @@
     "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs",
     "github.com/gophercloud/gophercloud/openstack/compute/v2/servers",
     "github.com/gophercloud/gophercloud/openstack/identity/v3/tokens",
+    "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/networks",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/ports",
@@ -761,7 +763,6 @@
     "sigs.k8s.io/cluster-api/pkg/apis",
     "sigs.k8s.io/cluster-api/pkg/apis/cluster/common",
     "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1",
-    "sigs.k8s.io/cluster-api/pkg/client/clientset_generated/clientset/typed/cluster/v1alpha1",
     "sigs.k8s.io/cluster-api/pkg/controller/cluster",
     "sigs.k8s.io/cluster-api/pkg/controller/machine",
     "sigs.k8s.io/cluster-api/pkg/errors",
