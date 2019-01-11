@@ -20,8 +20,8 @@ import (
 	"encoding/base64"
 	"fmt"
 
+	"gopkg.in/yaml.v2"
 	"k8s.io/client-go/kubernetes"
-	"sigs.k8s.io/yaml"
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"

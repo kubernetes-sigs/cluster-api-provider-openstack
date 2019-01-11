@@ -19,7 +19,6 @@ package machine
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -27,6 +26,7 @@ import (
 	"strings"
 	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	tokenapi "k8s.io/cluster-bootstrap/token/api"
 	tokenutil "k8s.io/cluster-bootstrap/token/util"
@@ -35,7 +35,6 @@ import (
 	bootstrap "sigs.k8s.io/cluster-api-provider-openstack/pkg/bootstrap"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/clients"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/machine/machinesetup"
 	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
 	apierrors "sigs.k8s.io/cluster-api/pkg/errors"
 	"sigs.k8s.io/cluster-api/pkg/util"
@@ -43,10 +42,11 @@ import (
 )
 
 const (
-	MachineSetupConfigPath = "/etc/machinesetup/machine_setup_configs.yaml"
-	SshPrivateKeyPath      = "/etc/sshkeys/private"
-	SshPublicKeyPath       = "/etc/sshkeys/public"
-	CloudConfigPath        = "/etc/cloud/cloud_config.yaml"
+	SshPrivateKeyPath = "/etc/sshkeys/private"
+	SshPublicKeyPath  = "/etc/sshkeys/public"
+	CloudConfigPath   = "/etc/cloud/cloud_config.yaml"
+
+	UserDataKey = "userData"
 
 	TimeoutInstanceCreate       = 5 * time.Minute
 	RetryIntervalInstanceStatus = 10 * time.Second
@@ -61,10 +61,9 @@ type SshCreds struct {
 }
 
 type OpenstackClient struct {
-	params              openstack.ActuatorParams
-	scheme              *runtime.Scheme
-	client              client.Client
-	machineSetupWatcher *machinesetup.ConfigWatch
+	params openstack.ActuatorParams
+	scheme *runtime.Scheme
+	client client.Client
 	*openstack.DeploymentClient
 }
 
@@ -77,28 +76,20 @@ func NewActuator(params openstack.ActuatorParams) (*OpenstackClient, error) {
 		return nil, fmt.Errorf("private key for the ssh key pair not found")
 	}
 
-	setupConfigWatcher, err := machinesetup.NewConfigWatch(MachineSetupConfigPath)
-	if err != nil {
-		return nil, fmt.Errorf("error creating machine setup config watcher: %v", err)
-	}
-
 	return &OpenstackClient{
-		params:              params,
-		client:              params.Client,
-		machineSetupWatcher: setupConfigWatcher,
-		scheme:              params.Scheme,
-		DeploymentClient:    openstack.NewDeploymentClient(),
+		params:           params,
+		client:           params.Client,
+		scheme:           params.Scheme,
+		DeploymentClient: openstack.NewDeploymentClient(),
 	}, nil
 }
 
 func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluster, machine *clusterv1.Machine) error {
-	machineService, err := clients.NewInstanceServiceFromMachine(oc.params.KubeClient, machine)
+	kubeClient := oc.params.KubeClient
+
+	machineService, err := clients.NewInstanceServiceFromMachine(kubeClient, machine)
 	if err != nil {
 		return err
-	}
-
-	if oc.machineSetupWatcher == nil {
-		return errors.New("a valid machine setup config watcher is required!")
 	}
 
 	providerSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
@@ -121,40 +112,53 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 	}
 
 	// get machine startup script
-	machineSetupConfig, err := oc.machineSetupWatcher.GetMachineSetupConfig()
-	if err != nil {
-		return err
-	}
-	role, ok := machine.ObjectMeta.Labels["set"]
-	if !ok {
-		klog.Errorf("Check machine role err, treat as \"node\" by default")
-		role = machinesetup.MachineRoleNode
-	}
-	startupScript, err := machineSetupConfig.GetSetupScript(role)
-	if err != nil {
-		return err
-	}
-	if util.IsMaster(machine) {
-		startupScript, err = masterStartupScript(cluster, machine, startupScript)
-		if err != nil {
-			return oc.handleMachineError(machine, apierrors.CreateMachine(
-				"error creating Openstack instance: %v", err))
+	var ok bool
+	userData := []byte{}
+	if providerSpec.UserDataSecret != nil {
+		namespace := providerSpec.UserDataSecret.Namespace
+		if namespace == "" {
+			namespace = machine.Namespace
 		}
-	} else {
-		klog.Info("Creating bootstrap token")
-		token, err := oc.createBootstrapToken()
-		if err != nil {
-			return oc.handleMachineError(machine, apierrors.CreateMachine(
-				"error creating Openstack instance: %v", err))
+
+		if providerSpec.UserDataSecret.Name == "" {
+			return fmt.Errorf("UserDataSecret name must be provided")
 		}
-		startupScript, err = nodeStartupScript(cluster, machine, token, startupScript)
+
+		userDataSecret, err := kubeClient.CoreV1().Secrets(namespace).Get(providerSpec.UserDataSecret.Name, metav1.GetOptions{})
 		if err != nil {
-			return oc.handleMachineError(machine, apierrors.CreateMachine(
-				"error creating Openstack instance: %v", err))
+			return err
+		}
+
+		userData, ok = userDataSecret.Data[UserDataKey]
+		if !ok {
+			return fmt.Errorf("Machine's userdata secret %v in namespace %v did not contain key %v", providerSpec.UserDataSecret.Name, namespace, UserDataKey)
 		}
 	}
 
-	instance, err = machineService.InstanceCreate(machine.Name, providerSpec, startupScript, providerSpec.KeyName)
+	var userDataRendered string
+	if len(userData) == 0 {
+		if util.IsMaster(machine) {
+			userDataRendered, err = masterStartupScript(cluster, machine, string(userData))
+			if err != nil {
+				return oc.handleMachineError(machine, apierrors.CreateMachine(
+					"error creating Openstack instance: %v", err))
+			}
+		} else {
+			klog.Info("Creating bootstrap token")
+			token, err := oc.createBootstrapToken()
+			if err != nil {
+				return oc.handleMachineError(machine, apierrors.CreateMachine(
+					"error creating Openstack instance: %v", err))
+			}
+			userDataRendered, err = nodeStartupScript(cluster, machine, token, string(userData))
+			if err != nil {
+				return oc.handleMachineError(machine, apierrors.CreateMachine(
+					"error creating Openstack instance: %v", err))
+			}
+		}
+	}
+
+	instance, err = machineService.InstanceCreate(machine.Name, providerSpec, userDataRendered, providerSpec.KeyName)
 	if err != nil {
 		return oc.handleMachineError(machine, apierrors.CreateMachine(
 			"error creating Openstack instance: %v", err))
