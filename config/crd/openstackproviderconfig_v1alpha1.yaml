@@ -1,3 +1,4 @@
+---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
@@ -28,6 +29,8 @@ spec:
               type: string
             fixed_ip:
               type: string
+            filter:
+              type: object
           type: array
         floatingIP:
           type: string
@@ -40,16 +43,16 @@ spec:
         root_volume:
           properties:
             volumeType:
-             type: string
+              type: string
             diskSize:
               type: string
           type: object
         metadata:
           type: object
       required:
-      - name
-      - flavor
-      - image
+        - name
+        - flavor
+        - image
   version: v1alpha1
 status:
   acceptedNames:

@@ -68,14 +68,6 @@ type OpenstackClient struct {
 }
 
 func NewActuator(params openstack.ActuatorParams) (*OpenstackClient, error) {
-	if _, err := os.Stat(SshPublicKeyPath); err != nil {
-		return nil, fmt.Errorf("public key for the ssh key pair not found")
-	}
-
-	if _, err := os.Stat(SshPrivateKeyPath); err != nil {
-		return nil, fmt.Errorf("private key for the ssh key pair not found")
-	}
-
 	return &OpenstackClient{
 		params:           params,
 		client:           params.Client,
@@ -136,7 +128,7 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 	}
 
 	var userDataRendered string
-	if len(userData) == 0 {
+	if len(userData) > 0 {
 		if util.IsMaster(machine) {
 			userDataRendered, err = masterStartupScript(cluster, machine, string(userData))
 			if err != nil {
@@ -302,6 +294,16 @@ func getIPFromInstance(instance *clients.Instance) (string, error) {
 }
 
 func (oc *OpenstackClient) GetKubeConfig(cluster *clusterv1.Cluster, master *clusterv1.Machine) (string, error) {
+	if _, err := os.Stat(SshPublicKeyPath); err != nil {
+		klog.Infof("Can't get the KubeConfig file as the public ssh key could not be found: %v\n", SshPublicKeyPath)
+		return "", nil
+	}
+
+	if _, err := os.Stat(SshPrivateKeyPath); err != nil {
+		klog.Infof("Can't get the KubeConfig file as the private ssh key could not be found: %v\n", SshPrivateKeyPath)
+		return "", nil
+	}
+
 	ip, err := oc.GetIP(cluster, master)
 	if err != nil {
 		return "", err
@@ -316,6 +318,7 @@ func (oc *OpenstackClient) GetKubeConfig(cluster *clusterv1.Cluster, master *clu
 		"ssh", "-i", SshPrivateKeyPath,
 		"-o", "StrictHostKeyChecking no",
 		"-o", "UserKnownHostsFile /dev/null",
+		"-o", "BatchMode=yes",
 		fmt.Sprintf("%s@%s", machineSpec.SshUserName, ip),
 		"echo STARTFILE; sudo cat /etc/kubernetes/admin.conf"))
 	parts := strings.Split(result, "STARTFILE")
@@ -422,9 +425,6 @@ func (oc *OpenstackClient) createBootstrapToken() (string, error) {
 }
 
 func (oc *OpenstackClient) validateMachine(machine *clusterv1.Machine, config *openstackconfigv1.OpenstackProviderSpec) *apierrors.MachineError {
-	if machine.Spec.Versions.Kubelet == "" {
-		return apierrors.InvalidMachineConfiguration("spec.versions.kubelet can't be empty")
-	}
 	// TODO: other validate of openstackCloud
 	return nil
 }

@@ -12,7 +12,6 @@ MACHINE+={{ .Machine.ObjectMeta.Name }}
 CLUSTER_DNS_DOMAIN={{ .Cluster.Spec.ClusterNetwork.ServiceDomain }}
 POD_CIDR={{ .PodCIDR }}
 SERVICE_CIDR={{ .ServiceCIDR }}
-CONTROL_PLANE_VERSION={{ .Machine.Spec.Versions.ControlPlane }}
 cat <<EOF > /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
 name=Kubernetes
@@ -25,7 +24,7 @@ exclude=kube*
 EOF
 
 setenforce 0
-yum install -y kubelet-$CONTROL_PLANE_VERSION kubeadm-$CONTROL_PLANE_VERSION kubectl-$CONTROL_PLANE_VERSION --disableexcludes=kubernetes
+yum install -y kubelet-$KUBELET_VERSION kubeadm-$KUBELET_VERSION kubectl-$KUBELET_VERSION --disableexcludes=kubernetes
 
 function install_configure_docker () {
     # prevent docker from auto-starting

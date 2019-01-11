@@ -20,6 +20,36 @@ apt-get update -y
 apt-get install -y \
     prips
 
+# Getting master ip from the metadata of the node. By default we try the public-ipv4
+# If we don't get any, we fall back to local-ipv4 and in the worst case to localhost
+MASTER=""
+for i in $(seq 60); do
+    echo "trying to get public-ipv4 $i / 60"
+    MASTER=$(curl --fail -s http://169.254.169.254/2009-04-04/meta-data/public-ipv4)
+    if [[ $? == 0 ]] && [[ -n "$MASTER" ]]; then
+        break
+    fi
+    sleep 1
+done
+
+if [[ -z "$MASTER" ]]; then
+    echo "falling back to local-ipv4"
+    for i in $(seq 60); do
+        echo "trying to get local-ipv4 $i / 60"
+        MASTER=$(curl --fail -s http://169.254.169.254/2009-04-04/meta-data/local-ipv4)
+        if [[ $? == 0 ]] && [[ -n "$MASTER" ]]; then
+            break
+        fi
+        sleep 1
+    done
+fi
+
+if [[ -z "$MASTER" ]]; then
+    echo "falling back to localhost"
+    MASTER="localhost"
+fi
+MASTER="${MASTER}:443"
+
 function install_configure_docker () {
     # prevent docker from auto-starting
     echo "exit 101" > /usr/sbin/policy-rc.d
@@ -27,6 +57,16 @@ function install_configure_docker () {
     trap "rm /usr/sbin/policy-rc.d" RETURN
     apt-get install -y docker.io
     echo 'DOCKER_OPTS="--iptables=false --ip-masq=false"' > /etc/default/docker
+
+    # Reset iptables config
+    mkdir -p /etc/systemd/system/docker.service.d
+    cat > /etc/systemd/system/docker.service.d/10-iptables.conf <<EOF
+[Service]
+EnvironmentFile=/etc/default/docker
+ExecStart=
+ExecStart=/usr/bin/dockerd -H fd:// \$DOCKER_OPTS
+EOF
+
     systemctl daemon-reload
     systemctl enable docker
     systemctl start docker
@@ -66,6 +106,8 @@ echo $OPENSTACK_CLOUD_PROVIDER_CONF | base64 -d > /etc/kubernetes/cloud.conf
 
 systemctl daemon-reload
 systemctl restart kubelet.service
+systemctl disable ufw
+systemctl mask ufw
 
 # Set up kubeadm config file to pass parameters to kubeadm init.
 # We're using 443 until this bug is fixed
@@ -88,7 +130,7 @@ kubernetesVersion: v${CONTROL_PLANE_VERSION}
 networking:
   serviceSubnet: ${SERVICE_CIDR}
 clusterName: kubernetes
-controlPlaneEndpoint: ""
+controlPlaneEndpoint: ${MASTER}
 apiServerExtraArgs:
   cloud-provider: "openstack"
   cloud-config: "/etc/kubernetes/cloud.conf"
