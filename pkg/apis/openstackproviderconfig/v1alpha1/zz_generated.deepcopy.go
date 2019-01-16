@@ -21,6 +21,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	v1 "k8s.io/api/core/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -175,6 +176,11 @@ func (in *OpenstackProviderSpec) DeepCopyInto(out *OpenstackProviderSpec) {
 		in, out := &in.SecurityGroups, &out.SecurityGroups
 		*out = make([]string, len(*in))
 		copy(*out, *in)
+	}
+	if in.UserDataSecret != nil {
+		in, out := &in.UserDataSecret, &out.UserDataSecret
+		*out = new(v1.SecretReference)
+		**out = **in
 	}
 	out.RootVolume = in.RootVolume
 	return
