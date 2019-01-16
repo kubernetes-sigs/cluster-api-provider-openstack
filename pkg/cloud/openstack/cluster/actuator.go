@@ -29,12 +29,18 @@ func NewActuator(params providerv1openstack.ActuatorParams) (*Actuator, error) {
 // Reconcile creates or applies updates to the cluster.
 func (a *Actuator) Reconcile(cluster *clusterv1.Cluster) error {
 	klog.Infof("Reconciling cluster %v.", cluster.Name)
+	clusterName := fmt.Sprintf("%s/%s", cluster.ObjectMeta.Name, cluster.Name)
 
 	client, err := a.getNetworkClient(cluster)
 	if err != nil {
 		return err
 	}
 	networkService, err := clients.NewNetworkService(client)
+	if err != nil {
+		return err
+	}
+
+	secGroupService, err := clients.NewSecGroupService(client)
 	if err != nil {
 		return err
 	}
@@ -51,11 +57,15 @@ func (a *Actuator) Reconcile(cluster *clusterv1.Cluster) error {
 		return errors.Errorf("failed to load cluster provider status: %v", err)
 	}
 
-	err = networkService.Reconcile(fmt.Sprintf("%s/%s", cluster.ObjectMeta.Namespace, cluster.Name), *desired, status)
+	err = networkService.Reconcile(clusterName, *desired, status)
 	if err != nil {
 		return errors.Errorf("failed to reconcile network: %v", err)
 	}
 
+	err = secGroupService.Reconcile(clusterName, *desired, status)
+	if err != nil {
+		return errors.Errorf("failed to reconcile security groups: %v", err)
+	}
 	defer func() {
 		if err := a.storeClusterStatus(cluster, status); err != nil {
 			klog.Errorf("failed to store provider status for cluster %q in namespace %q: %v", cluster.Name, cluster.Namespace, err)
