@@ -3,6 +3,10 @@
 - `*.yaml files` - concrete example files that can be used as is.
 - `*.yaml.template files` - template example files that need values filled in before use.
 
+## Prerequisites
+
+1. Install `yq` (see [here](https://github.com/mikefarah/yq)).
+
 ## Generation
 For convenience, a generation script which populates templates based on openstack cloud provider
 configuration is provided.
