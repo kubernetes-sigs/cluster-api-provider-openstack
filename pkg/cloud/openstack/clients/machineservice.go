@@ -51,19 +51,6 @@ type Instance struct {
 	servers.Server
 }
 
-type SshKeyPair struct {
-	Name string `json:"name"`
-
-	// PublicKey is the public key from this pair, in OpenSSH format.
-	// "ssh-rsa AAAAB3Nz..."
-	PublicKey string `json:"public_key"`
-
-	// PrivateKey is the private key from this pair, in PEM format.
-	// "-----BEGIN RSA PRIVATE KEY-----\nMIICXA..."
-	// It is only present if this KeyPair was just returned from a Create call.
-	PrivateKey string `json:"private_key"`
-}
-
 type InstanceListOpts struct {
 	// Name of the image in URL format.
 	Image string `q:"image"`
@@ -327,27 +314,6 @@ func (is *InstanceService) GetInstance(resourceId string) (instance *Instance, e
 		return nil, fmt.Errorf("Get server %q detail failed: %v", resourceId, err)
 	}
 	return serverToInstance(server), err
-}
-
-func (is *InstanceService) CreateKeyPair(name, publicKey string) error {
-	opts := keypairs.CreateOpts{
-		Name:      name,
-		PublicKey: publicKey,
-	}
-	_, err := keypairs.Create(is.computeClient, opts).Extract()
-	return err
-}
-
-func (is *InstanceService) GetKeyPairList() ([]keypairs.KeyPair, error) {
-	page, err := keypairs.List(is.computeClient).AllPages()
-	if err != nil {
-		return nil, err
-	}
-	return keypairs.ExtractKeyPairs(page)
-}
-
-func (is *InstanceService) DeleteKeyPair(name string) error {
-	return keypairs.Delete(is.computeClient, name).ExtractErr()
 }
 
 func serverToInstance(server *servers.Server) *Instance {
