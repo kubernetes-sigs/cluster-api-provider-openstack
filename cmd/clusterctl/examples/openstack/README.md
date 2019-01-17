@@ -1,7 +1,7 @@
 # Openstack Example Files
 ## Contents
-- `*.yaml files` - concrete example files that can be used as is.
-- `*.yaml.template files` - template example files that need values filled in before use.
+- `*.yaml` - concrete example files that can be used as is.
+- `*.yaml.template` - template example files that need values filled in before use.
 
 ## Prerequisites
 
