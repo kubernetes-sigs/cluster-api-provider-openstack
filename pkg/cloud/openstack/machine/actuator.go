@@ -40,9 +40,7 @@ import (
 )
 
 const (
-	SshPrivateKeyPath = "/etc/sshkeys/private"
-	SshPublicKeyPath  = "/etc/sshkeys/public"
-	CloudConfigPath   = "/etc/cloud/cloud_config.yaml"
+	CloudConfigPath = "/etc/cloud/cloud_config.yaml"
 
 	UserDataKey = "userData"
 
@@ -51,12 +49,6 @@ const (
 
 	TokenTTL = 60 * time.Minute
 )
-
-type SshCreds struct {
-	user           string
-	privateKeyPath string
-	publicKey      string
-}
 
 type OpenstackClient struct {
 	params openstack.ActuatorParams
