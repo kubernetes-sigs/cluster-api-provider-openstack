@@ -21,9 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"os"
 	"reflect"
-	"strings"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -291,41 +289,6 @@ func getIPFromInstance(instance *clients.Instance) (string, error) {
 		return addrList[0], nil
 	}
 	return "", fmt.Errorf("extract IP from instance err")
-}
-
-func (oc *OpenstackClient) GetKubeConfig(cluster *clusterv1.Cluster, master *clusterv1.Machine) (string, error) {
-	if _, err := os.Stat(SshPublicKeyPath); err != nil {
-		klog.Infof("Can't get the KubeConfig file as the public ssh key could not be found: %v\n", SshPublicKeyPath)
-		return "", nil
-	}
-
-	if _, err := os.Stat(SshPrivateKeyPath); err != nil {
-		klog.Infof("Can't get the KubeConfig file as the private ssh key could not be found: %v\n", SshPrivateKeyPath)
-		return "", nil
-	}
-
-	ip, err := oc.GetIP(cluster, master)
-	if err != nil {
-		return "", err
-	}
-
-	machineSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(master.Spec.ProviderSpec)
-	if err != nil {
-		return "", err
-	}
-
-	result := strings.TrimSpace(util.ExecCommand(
-		"ssh", "-i", SshPrivateKeyPath,
-		"-o", "StrictHostKeyChecking no",
-		"-o", "UserKnownHostsFile /dev/null",
-		"-o", "BatchMode=yes",
-		fmt.Sprintf("%s@%s", machineSpec.SshUserName, ip),
-		"echo STARTFILE; sudo cat /etc/kubernetes/admin.conf"))
-	parts := strings.Split(result, "STARTFILE")
-	if len(parts) != 2 {
-		return "", nil
-	}
-	return strings.TrimSpace(parts[1]), nil
 }
 
 // If the OpenstackClient has a client for updating Machine objects, this will set
