@@ -64,8 +64,6 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /etc/kubernetes
-        - name: sshkeys
-          mountPath: /etc/sshkeys
         - name: cloud-config
           mountPath: /etc/openstack
         - name: kubeadm
@@ -89,10 +87,6 @@ spec:
       - name: config
         hostPath:
           path: /etc/kubernetes
-      - name: sshkeys
-        secret:
-          secretName: machine-controller-sshkeys
-          defaultMode: 256
       - name: cloud-config
         secret:
           secretName: cloud-config
