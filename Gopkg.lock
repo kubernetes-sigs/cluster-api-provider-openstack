@@ -640,7 +640,8 @@
   revision = "91cfa479c814065e420cee7ed227db0f63a5854e"
 
 [[projects]]
-  digest = "1:ef04c20bf6f1dcd5e1cd1fd27a65675649dfed58e89699fe2891cccc0a233efd"
+  branch = "master"
+  digest = "1:252f61bf31b6aaba101c865fec7b4f96601e76728a613c22075d4ec5e5ba3e1d"
   name = "sigs.k8s.io/cluster-api"
   packages = [
     "cmd/clusterctl/clientcmd",
@@ -667,8 +668,7 @@
     "pkg/util",
   ]
   pruneopts = "T"
-  revision = "3547f8dd93078c0b0f0b221ee1c2a57f96673081"
-  version = "0.0.0-alpha.4"
+  revision = "c0744df028f2439f72ba33cea36097e219d87417"
 
 [[projects]]
   digest = "1:dca19204224bb3835c1ece945b28aa2b19095f99bad4fff33b72e3a9d47ad968"
@@ -732,6 +732,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/golang/glog",
     "github.com/gophercloud/gophercloud",
     "github.com/gophercloud/gophercloud/openstack",
     "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips",
@@ -746,6 +747,7 @@
     "github.com/gophercloud/gophercloud/pagination",
     "github.com/gophercloud/utils/openstack/clientconfig",
     "github.com/pkg/errors",
+    "gopkg.in/yaml.v2",
     "k8s.io/api/core/v1",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/runtime",
