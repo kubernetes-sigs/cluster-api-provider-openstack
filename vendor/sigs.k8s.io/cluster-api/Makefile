@@ -31,10 +31,16 @@ help:  ## Display this help
 
 .PHONY: gazelle
 gazelle: ## Run Bazel Gazelle
-	(which bazel && bazel run //:gazelle) || true
+	(which bazel && ./hack/update-bazel.sh) || true
+
+.PHONY: dep-ensure
+dep-ensure: ## Runs dep-ensure and rebuilds Bazel gazelle files.
+	find vendor -name 'BUILD.bazel' -delete
+	(which dep && dep ensure -v) || true
+	$(MAKE) gazelle
 
 .PHONY: test
-test: generate fmt vet manifests verify ## Run tests
+test: verify generate fmt vet manifests ## Run tests
 	go test -v -tags=integration ./pkg/... ./cmd/...
 
 .PHONY: manager
@@ -57,10 +63,6 @@ deploy: manifests ## Deploy controller in the configured Kubernetes cluster in ~
 .PHONY: manifests
 manifests: ## Generate manifests e.g. CRD, RBAC etc.
 	go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go all
-	@# Kubebuilder CRD generation can't handle intstr.IntOrString properly:
-	@# https://github.com/kubernetes-sigs/kubebuilder/issues/442
-	sed -i -e 's/maxSurge:/maxSurge: {}/g' -e '/maxSurge:/{n;d};' config/crds/cluster_v1alpha1_machinedeployment.yaml
-	sed -i -e 's/maxUnavailable:/maxUnavailable: {}/g' -e '/maxUnavailable:/{n;d};' config/crds/cluster_v1alpha1_machinedeployment.yaml
 
 .PHONY: fmt
 fmt: ## Run go fmt against code
@@ -71,7 +73,7 @@ vet: ## Run go vet against code
 	go vet ./pkg/... ./cmd/...
 
 .PHONY: generate
-generate: clientset ## Generate code
+generate: clientset dep-ensure ## Generate code
 	go generate ./pkg/... ./cmd/...
 
 .PHONY: clientset
@@ -89,7 +91,6 @@ clientset: ## Generate a typed clientset
 		--listers-package sigs.k8s.io/cluster-api/pkg/client/listers_generated \
 		--output-package sigs.k8s.io/cluster-api/pkg/client/informers_generated \
 		--go-header-file=./hack/boilerplate.go.txt
-	make gazelle
 
 .PHONY: docker-build
 docker-build: generate fmt vet manifests ## Build the docker image
@@ -105,3 +106,4 @@ docker-push: ## Push the docker image
 verify:
 	./hack/verify_boilerplate.py
 	./hack/verify_clientset.sh
+	./hack/verify-bazel.sh
