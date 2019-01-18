@@ -31,7 +31,7 @@ type OpenstackProviderSpec struct {
 	metav1.TypeMeta `json:",inline"`
 
 	// The name of the secret containing the openstack credentials
-	CloudsSecret string `json:"cloudsSecret"`
+	CloudsSecret *corev1.SecretReference `json:"cloudsSecret"`
 
 	// The name of the cloud to use from the clouds secret
 	CloudName string `json:"cloudName"`
