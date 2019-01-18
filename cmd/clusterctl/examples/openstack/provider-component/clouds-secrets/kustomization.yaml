@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+generatorOptions:
+  disableNameSuffixHash: true
+
+secretGenerator:
+- name: cloud-config
+  commands:
+    clouds.yaml: "cat configs/clouds.yaml"
+  type: Opaque
+- name: cloud-selector
+  commands:
+    OS_CLOUD: "cat configs/os_cloud.txt"
+  type: Opaque
+
+namespace: openstack-provider-system
