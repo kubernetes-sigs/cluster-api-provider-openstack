@@ -101,7 +101,11 @@ func NewInstanceServiceFromMachine(kubeClient kubernetes.Interface, machine *clu
 	if err != nil {
 		return nil, err
 	}
-	cloud, err := GetCloudFromSecret(kubeClient, machine.Namespace, machineSpec.CloudsSecret, machineSpec.CloudName)
+	namespace := machineSpec.CloudsSecret.Namespace
+	if namespace == "" {
+		namespace = machine.Namespace
+	}
+	cloud, err := GetCloudFromSecret(kubeClient, namespace, machineSpec.CloudsSecret.Name, machineSpec.CloudName)
 	if err != nil {
 		return nil, err
 	}
