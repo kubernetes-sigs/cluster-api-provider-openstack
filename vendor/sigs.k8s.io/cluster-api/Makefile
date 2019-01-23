@@ -17,7 +17,7 @@
 
 .DEFAULT_GOAL:=help
 
-# Default timeout for starting/stopping the Kubebuilder test controlplane
+# Default timeout for starting/stopping the Kubebuilder test control plane
 export KUBEBUILDER_CONTROLPLANE_START_TIMEOUT ?=60s
 export KUBEBUILDER_CONTROLPLANE_STOP_TIMEOUT ?=60s
 
@@ -40,7 +40,7 @@ dep-ensure: ## Runs dep-ensure and rebuilds Bazel gazelle files.
 	$(MAKE) gazelle
 
 .PHONY: test
-test: verify generate fmt vet manifests ## Run tests
+test: gazelle verify generate fmt vet manifests ## Run tests
 	go test -v -tags=integration ./pkg/... ./cmd/...
 
 .PHONY: manager

@@ -641,13 +641,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:252f61bf31b6aaba101c865fec7b4f96601e76728a613c22075d4ec5e5ba3e1d"
+  digest = "1:4a0e0f482d4618d612f32edc767ea90f714b47fe60d78f28330d994aecd2a85b"
   name = "sigs.k8s.io/cluster-api"
   packages = [
     "cmd/clusterctl/clientcmd",
     "cmd/clusterctl/clusterdeployer",
     "cmd/clusterctl/clusterdeployer/bootstrap",
     "cmd/clusterctl/clusterdeployer/bootstrap/existing",
+    "cmd/clusterctl/clusterdeployer/bootstrap/kind",
     "cmd/clusterctl/clusterdeployer/bootstrap/minikube",
     "cmd/clusterctl/clusterdeployer/clusterclient",
     "cmd/clusterctl/cmd",
@@ -668,7 +669,7 @@
     "pkg/util",
   ]
   pruneopts = "T"
-  revision = "c0744df028f2439f72ba33cea36097e219d87417"
+  revision = "e6602cb5709957f9ab9f4c2a1b71226daed26cf8"
 
 [[projects]]
   digest = "1:dca19204224bb3835c1ece945b28aa2b19095f99bad4fff33b72e3a9d47ad968"
@@ -732,7 +733,6 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/golang/glog",
     "github.com/gophercloud/gophercloud",
     "github.com/gophercloud/gophercloud/openstack",
     "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips",
