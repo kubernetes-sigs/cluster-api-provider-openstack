@@ -119,7 +119,7 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 
 	var userDataRendered string
 	if len(userData) > 0 {
-		if util.IsMaster(machine) {
+		if util.IsControlPlaneMachine(machine) {
 			userDataRendered, err = masterStartupScript(cluster, machine, string(userData))
 			if err != nil {
 				return oc.handleMachineError(machine, apierrors.CreateMachine(
@@ -220,7 +220,7 @@ func (oc *OpenstackClient) Update(ctx context.Context, cluster *clusterv1.Cluste
 		return nil
 	}
 
-	if util.IsMaster(currentMachine) {
+	if util.IsControlPlaneMachine(currentMachine) {
 		// TODO: add master inplace
 		klog.Errorf("master inplace update failed: %v", err)
 	} else {
