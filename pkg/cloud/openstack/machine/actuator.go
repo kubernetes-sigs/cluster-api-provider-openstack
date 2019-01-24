@@ -45,6 +45,7 @@ const (
 	UserDataKey = "userData"
 
 	TimeoutInstanceCreate       = 5 * time.Minute
+	TimeoutInstanceDelete       = 5 * time.Minute
 	RetryIntervalInstanceStatus = 10 * time.Second
 
 	TokenTTL = 60 * time.Minute
@@ -229,6 +230,18 @@ func (oc *OpenstackClient) Update(ctx context.Context, cluster *clusterv1.Cluste
 		if err != nil {
 			klog.Errorf("delete machine %s for update failed: %v", currentMachine.ObjectMeta.Name, err)
 		} else {
+			err = util.PollImmediate(RetryIntervalInstanceStatus, TimeoutInstanceDelete, func() (bool, error) {
+				instance, err := oc.instanceExists(machine)
+				if err != nil {
+					return false, nil
+				}
+				return instance == nil, nil
+			})
+			if err != nil {
+				return oc.handleMachineError(machine, apierrors.DeleteMachine(
+					"error deleting Openstack instance: %v", err))
+			}
+
 			err = oc.Create(ctx, cluster, machine)
 			if err != nil {
 				klog.Errorf("create machine %s for update failed: %v", machine.ObjectMeta.Name, err)
