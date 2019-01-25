@@ -17,12 +17,16 @@ limitations under the License.
 package machine
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"net"
 	"reflect"
+	"strings"
 	"time"
+
+	"k8s.io/client-go/kubernetes"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -33,6 +37,7 @@ import (
 	bootstrap "sigs.k8s.io/cluster-api-provider-openstack/pkg/bootstrap"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/clients"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/machine/userdata"
 	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
 	apierrors "sigs.k8s.io/cluster-api/pkg/errors"
 	"sigs.k8s.io/cluster-api/pkg/util"
@@ -94,50 +99,44 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 		return nil
 	}
 
-	// get machine startup script
-	var ok bool
-	userData := []byte{}
-	if providerSpec.UserDataSecret != nil {
-		namespace := providerSpec.UserDataSecret.Namespace
-		if namespace == "" {
-			namespace = machine.Namespace
-		}
-
-		if providerSpec.UserDataSecret.Name == "" {
-			return fmt.Errorf("UserDataSecret name must be provided")
-		}
-
-		userDataSecret, err := kubeClient.CoreV1().Secrets(namespace).Get(providerSpec.UserDataSecret.Name, metav1.GetOptions{})
-		if err != nil {
-			return err
-		}
-
-		userData, ok = userDataSecret.Data[UserDataKey]
-		if !ok {
-			return fmt.Errorf("Machine's userdata secret %v in namespace %v did not contain key %v", providerSpec.UserDataSecret.Name, namespace, UserDataKey)
-		}
+	userData, err := getUserDataSecret(kubeClient, providerSpec, machine.Namespace)
+	if err != nil {
+		return oc.handleMachineError(machine, apierrors.CreateMachine(
+			"error creating Openstack instance: %v", err))
 	}
 
+	isMaster := util.IsControlPlaneMachine(machine)
 	var userDataRendered string
 	if len(userData) > 0 {
-		if util.IsControlPlaneMachine(machine) {
-			userDataRendered, err = masterStartupScript(cluster, machine, string(userData))
-			if err != nil {
-				return oc.handleMachineError(machine, apierrors.CreateMachine(
-					"error creating Openstack instance: %v", err))
-			}
+		klog.Info("")
+		var err error
+		userDataRendered, err = oc.getMachineScript(isMaster, cluster, machine, string(userData))
+		if err != nil {
+			return oc.handleMachineError(machine, apierrors.CreateMachine(
+				"error creating Openstack instance: %v", err))
+		}
+	} else {
+		var distri string
+		if strings.Contains(strings.ToLower(providerSpec.Image), "ubuntu") {
+			distri = "ubuntu"
+		} else if strings.Contains(strings.ToLower(providerSpec.Image), "centos") {
+			distri = "centos"
+		}
+
+		var controlPlaneEndpoint string
+		if isMaster {
+			controlPlaneEndpoint = fmt.Sprintf("%s:443", providerSpec.FloatingIP)
 		} else {
-			klog.Info("Creating bootstrap token")
-			token, err := oc.createBootstrapToken()
-			if err != nil {
-				return oc.handleMachineError(machine, apierrors.CreateMachine(
-					"error creating Openstack instance: %v", err))
+			if len(cluster.Status.APIEndpoints) > 0 {
+				controlPlaneEndpoint = fmt.Sprintf("%s:%d", cluster.Status.APIEndpoints[0].Host, cluster.Status.APIEndpoints[0].Port)
 			}
-			userDataRendered, err = nodeStartupScript(cluster, machine, token, string(userData))
-			if err != nil {
-				return oc.handleMachineError(machine, apierrors.CreateMachine(
-					"error creating Openstack instance: %v", err))
-			}
+		}
+
+		var err error
+		userDataRendered, err = oc.getCloudConfig(distri, isMaster, cluster, machine, controlPlaneEndpoint)
+		if err != nil {
+			return oc.handleMachineError(machine, apierrors.CreateMachine(
+				"error creating Openstack instance: %v", err))
 		}
 	}
 
@@ -395,4 +394,76 @@ func (oc *OpenstackClient) createBootstrapToken() (string, error) {
 func (oc *OpenstackClient) validateMachine(machine *clusterv1.Machine, config *openstackconfigv1.OpenstackProviderSpec) *apierrors.MachineError {
 	// TODO: other validate of openstackCloud
 	return nil
+}
+
+func (oc *OpenstackClient) getMachineScript(isMaster bool, cluster *clusterv1.Cluster, machine *clusterv1.Machine, userData string) (string, error) {
+	if isMaster {
+		return masterStartupScript(cluster, machine, userData)
+	}
+	klog.Info("Creating bootstrap token")
+	token, err := oc.createBootstrapToken()
+	if err != nil {
+		return "", err
+	}
+	return nodeStartupScript(cluster, machine, token, string(userData))
+}
+
+func (oc *OpenstackClient) getCloudConfig(distri string, isMaster bool, cluster *clusterv1.Cluster, machine *clusterv1.Machine, controlPlaneEndpoint string) (string, error) {
+	var token string
+	var err error
+	if isMaster {
+		token, err = oc.createBootstrapToken()
+		if err != nil {
+			return "", err
+		}
+	}
+
+	params := userdata.SetupParams{
+		KubernetesParams: userdata.KubernetesParams{
+			ControlPlaneVersion:  machine.Spec.Versions.ControlPlane,
+			ControlPlaneEndpoint: controlPlaneEndpoint,
+			KubeletVersion:       machine.Spec.Versions.Kubelet,
+			PodCIDR:              getSubnet(cluster.Spec.ClusterNetwork.Pods),
+			ServiceCIDR:          getSubnet(cluster.Spec.ClusterNetwork.Services),
+		},
+		ScriptParams: userdata.ScriptParams{
+			Namespace: machine.ObjectMeta.Namespace,
+			Name:      machine.ObjectMeta.Name,
+		},
+		Token: token,
+	}
+
+	var buf bytes.Buffer
+	if err := userdata.WriteCloudConfig(&buf, distri, isMaster, params); err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
+}
+
+// getUserDataSecret returns a machine startup script
+func getUserDataSecret(client kubernetes.Interface, providerSpec *openstackconfigv1.OpenstackProviderSpec, defaultNamespace string) ([]byte, error) {
+	if providerSpec.UserDataSecret == nil {
+		return []byte{}, nil
+	}
+	namespace := providerSpec.UserDataSecret.Namespace
+	if namespace == "" {
+		namespace = defaultNamespace
+	}
+
+	if providerSpec.UserDataSecret.Name == "" {
+		return []byte{}, fmt.Errorf("UserDataSecret name must be provided")
+	}
+
+	userDataSecret, err := client.CoreV1().Secrets(namespace).Get(providerSpec.UserDataSecret.Name, metav1.GetOptions{})
+	if err != nil {
+		return []byte{}, err
+	}
+
+	userData, ok := userDataSecret.Data[UserDataKey]
+	if !ok {
+		return []byte{}, fmt.Errorf("Machine's userdata secret %v in namespace %v did not contain key %v", providerSpec.UserDataSecret.Name, namespace, UserDataKey)
+	}
+
+	return userData, nil
 }
