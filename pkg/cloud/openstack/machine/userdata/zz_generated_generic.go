@@ -1,7 +1,8 @@
+package userdata
+
 /*
 This file is auto-generated DO NOT TOUCH!
 */
-package userdata
 
 const (
 	genericCloudConfig = `#cloud-config

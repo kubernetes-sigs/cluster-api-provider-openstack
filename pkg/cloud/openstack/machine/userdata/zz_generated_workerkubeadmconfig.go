@@ -1,7 +1,8 @@
+package userdata
+
 /*
 This file is auto-generated DO NOT TOUCH!
 */
-package userdata
 
 const (
 	workerKubeadmCloudConfig = `apiVersion: kubeadm.k8s.io/v1alpha3

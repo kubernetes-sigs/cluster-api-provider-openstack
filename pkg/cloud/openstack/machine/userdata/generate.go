@@ -13,10 +13,12 @@ import (
 )
 
 const (
-	header = `/*
+	header = `package %s
+
+/*
 This file is auto-generated DO NOT TOUCH!
 */
-package %s
+
 const (
 `
 )
