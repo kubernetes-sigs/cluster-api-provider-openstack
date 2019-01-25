@@ -411,7 +411,7 @@ func (oc *OpenstackClient) getMachineScript(isMaster bool, cluster *clusterv1.Cl
 func (oc *OpenstackClient) getCloudConfig(distri string, isMaster bool, cluster *clusterv1.Cluster, machine *clusterv1.Machine, controlPlaneEndpoint string) (string, error) {
 	var token string
 	var err error
-	if isMaster {
+	if !isMaster {
 		token, err = oc.createBootstrapToken()
 		if err != nil {
 			return "", err
