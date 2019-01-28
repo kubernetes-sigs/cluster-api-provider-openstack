@@ -108,7 +108,7 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 	isMaster := util.IsControlPlaneMachine(machine)
 	var userDataRendered string
 	if len(userData) > 0 {
-		klog.Info("")
+		klog.Info("Rendering user provided template.")
 		var err error
 		userDataRendered, err = oc.getMachineScript(isMaster, cluster, machine, string(userData))
 		if err != nil {
@@ -125,6 +125,10 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 
 		var controlPlaneEndpoint string
 		if isMaster {
+			// TODO(chrigl): Change controlPlaneEndpoint to something configurable
+			// Currently, just hardcoding it, because it is not configurable via
+			// kubeadm anyways. This also does only work for single master deployments
+			// As soon as we implement multi master, we need to change this.
 			controlPlaneEndpoint = fmt.Sprintf("%s:443", providerSpec.FloatingIP)
 		} else {
 			if len(cluster.Status.APIEndpoints) > 0 {
