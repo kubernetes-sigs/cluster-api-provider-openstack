@@ -20,13 +20,13 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 
 	"k8s.io/klog"
 	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
 	clustercommon "sigs.k8s.io/cluster-api/pkg/apis/cluster/common"
 	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
-	"sigs.k8s.io/cluster-api/pkg/util"
 )
 
 const ProviderName = "openstack"
@@ -72,7 +72,7 @@ func (d *DeploymentClient) GetKubeConfig(cluster *clusterv1.Cluster, master *clu
 		return "", err
 	}
 
-	result := strings.TrimSpace(util.ExecCommand(
+	result := strings.TrimSpace(execCommand(
 		"ssh", "-i", homeDir+"/.ssh/openstack_tmp",
 		"-o", "StrictHostKeyChecking no",
 		"-o", "UserKnownHostsFile /dev/null",
@@ -84,4 +84,15 @@ func (d *DeploymentClient) GetKubeConfig(cluster *clusterv1.Cluster, master *clu
 		return "", nil
 	}
 	return strings.TrimSpace(parts[1]), nil
+}
+
+func execCommand(name string, args ...string) string {
+	cmdOut, err := exec.Command(name, args...).Output()
+	s := strings.Join(append([]string{name}, args...), " ")
+	if err != nil {
+		klog.Warningf("failed to execute command %q: %v", s, err)
+	} else {
+		klog.Infof("successfully executed command %q", s)
+	}
+	return string(cmdOut)
 }
