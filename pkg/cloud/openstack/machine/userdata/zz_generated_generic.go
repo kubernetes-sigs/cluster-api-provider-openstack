@@ -30,10 +30,15 @@ write_files:
     permissions: "0555"
     encoding: b64
     content: {{.BootstrapScript}}
+  - path: /etc/sysctl.d/10-kubeadm.conf
+    paermissions: "0444"
+    content: |
+      net.bridge.bridge-nf-call-iptables = 1
 
 runcmd:
   - [systemctl, daemon-reload]
   - [systemctl, restart, systemd-modules-load.service]
+  - [systemctl, restart, systemd-sysctl.service]
   - [systemctl, enable, docker.service]
   - [systemctl, start, --no-block, docker.service]
   - [systemctl, enable, kubelet.service]
