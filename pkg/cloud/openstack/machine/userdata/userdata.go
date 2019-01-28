@@ -202,7 +202,7 @@ func IsSupported(distri string) bool {
 
 // GetSupported returns a list of supported distributions
 func GetSupported() []string {
-	s := make([]string, len(supportedDistributions))
+	s := []string{}
 	for k := range supportedDistributions {
 		s = append(s, k)
 	}
