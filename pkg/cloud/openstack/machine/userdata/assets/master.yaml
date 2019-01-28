@@ -5,11 +5,5 @@ write_files:
     permissions: "0444"
     encoding: b64
     content: {{.KubeadmConfig}}
-{{- if (ne .CloudConf "") }}
-  - path: /etc/kubernetes/cloud.conf
-    encoding: b64
-    permissions: "0444"
-    content: {{.CloudConf}}
-{{- end }}
 
 merge_how: "list(append)+dict(recurse_array)+str()"

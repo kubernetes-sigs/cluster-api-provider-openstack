@@ -74,7 +74,6 @@ func WriteCloudConfig(f io.Writer, distribution string, master bool, params Setu
 	} else {
 		data, err := NewWorker(WorkerParams{
 			ControlPlaneEndpoint: params.ControlPlaneEndpoint,
-			CloudConf:            params.CloudConf,
 			Token:                params.Token,
 		})
 		if err != nil {
@@ -137,7 +136,6 @@ type KubernetesParams struct {
 	KubeletVersion       string
 	PodCIDR              string
 	ServiceCIDR          string
-	CloudConf            string
 	KubeadmConfig        string
 }
 
@@ -177,7 +175,6 @@ func NewScript(params ScriptParams) (io.Reader, error) {
 // WorkerParams contains all parameters needed on Worker Nodes
 type WorkerParams struct {
 	ControlPlaneEndpoint string
-	CloudConf            string
 	Token                string
 	KubeadmConfig        string
 }
