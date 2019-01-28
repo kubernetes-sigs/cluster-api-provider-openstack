@@ -128,12 +128,16 @@ shell:
 	$(SHELL) -i
 
 # Generate code
-generate:
+generate: manifests
 	go generate ./pkg/... ./cmd/...
 
-images: openstack-cluster-api-controller
+manifests:
+	go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go --name openstack-provider-manager rbac
+	go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go crd
 
-openstack-cluster-api-controller: depend manager
+images: openstack-cluster-api-controller manifests
+
+openstack-cluster-api-controller: depend manager manifests
 ifeq ($(GOOS),linux)
 	cp bin/manager cmd/manager
 	docker build -t $(REGISTRY)/openstack-cluster-api-controller:$(VERSION) cmd/manager
@@ -169,4 +173,4 @@ dist: build-cross
 	)
 
 .PHONY: build clean cover depend docs fmt functional lint realclean \
-	relnotes test translation version build-cross dist
+	relnotes test translation version build-cross dist manifests
