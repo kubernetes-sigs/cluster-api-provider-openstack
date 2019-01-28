@@ -34,7 +34,7 @@ write_files:
     permissions: "0444"
     content: |
       OPTIONS="--selinux-enabled --log-driver=journald --signature-verification=false --iptables=false --ip-masq=false"
-  - path: /etc/sysconfig/kubelet
+  - path: /etc/sysconfig/kubelet-cluster-api-provider-openstack
     permissions: "0444"
     content: |
       KUBELET_KUBEADM_EXTRA_ARGS=--cgroup-driver=systemd
@@ -49,10 +49,16 @@ write_files:
     content: |
       SELINUX=permissive
       SELINUXTYPE=targeted
+  - path: /etc/systemd/system/kubelet.service.d/20-add-environment.conf
+    permissons: "0444"
+    content: |
+      [Service]
+      EnvironmentFile=-/etc/sysconfig/kubelet-cluster-api-provider-openstack
 
 runcmd:
   - [/var/lib/bootstrap/hacks]
   - [yum, versionlock, add, kubelet-{{.Version}}-*]
+  - [systemctl, daemon-reload]
 
 `
 )
