@@ -12,6 +12,7 @@ items:
         kind: "OpenstackProviderSpec"
         flavor: m1.medium
         image: Ubuntu-Server-16.04-x64
+	distributionType: ubuntu
         sshUserName: ubuntu
         keyName: cluster-api-provider-openstack
         availabilityZone: nova
@@ -39,6 +40,7 @@ items:
         kind: "OpenstackProviderSpec"
         flavor: m1.medium
         image: Ubuntu-Server-16.04-x64
+	distributionType: ubuntu
         sshUserName: ubuntu
         keyName: cluster-api-provider-openstack
         availabilityZone: nova
