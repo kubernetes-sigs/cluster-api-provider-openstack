@@ -1,6 +1,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
+  creationTimestamp: null
   name: openstack-provider-manager-role
 rules:
 - apiGroups:
@@ -20,9 +21,9 @@ rules:
   resources:
   - clusters
   - clusters/status
-  - machines
   - machinedeployments
   - machinesets
+  - machines
   verbs:
   - get
   - list
