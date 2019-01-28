@@ -11,8 +11,8 @@ For further documentations have a look at:
 We support some distributions out of the box. So there is no need to pass in custom `user-data`.
 
 Supported Distributions:
-* Ubuntu (16.04 and 18.04)
-* CentOS 7.3
+* Ubuntu (16.04 and 18.04) (`distributionType: ubuntu`)
+* CentOS 7.3 (`distributionType: centos`)
 
 ### Example with the builtin `user-data`
 

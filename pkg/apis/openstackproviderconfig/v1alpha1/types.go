@@ -40,6 +40,8 @@ type OpenstackProviderSpec struct {
 	Flavor string `json:"flavor"`
 	// The name of the image to use for your server instance.
 	Image string `json:"image"`
+	// The type of the distribution you use.
+	DistributionType string `json:"distributionType"`
 
 	// The ssh key to inject in the instance
 	KeyName string `json:"keyName,omitempty"`

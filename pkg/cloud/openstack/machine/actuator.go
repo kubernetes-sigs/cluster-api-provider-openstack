@@ -116,11 +116,12 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 				"error creating Openstack instance: %v", err))
 		}
 	} else {
-		var distri string
-		if strings.Contains(strings.ToLower(providerSpec.Image), "ubuntu") {
-			distri = "ubuntu"
-		} else if strings.Contains(strings.ToLower(providerSpec.Image), "centos") {
-			distri = "centos"
+		if !userdata.IsSupported(providerSpec.DistributionType) {
+			return oc.handleMachineError(machine, apierrors.CreateMachine(
+				fmt.Sprintf("error creating Openstack instance: Distribution %s not supported. Use one of %s.",
+					providerSpec.DistributionType,
+					strings.Join(userdata.GetSupported(), ", ")),
+			))
 		}
 
 		var controlPlaneEndpoint string
@@ -137,7 +138,7 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 		}
 
 		var err error
-		userDataRendered, err = oc.getCloudConfig(distri, isMaster, cluster, machine, controlPlaneEndpoint)
+		userDataRendered, err = oc.getCloudConfig(providerSpec.DistributionType, isMaster, cluster, machine, controlPlaneEndpoint)
 		if err != nil {
 			return oc.handleMachineError(machine, apierrors.CreateMachine(
 				"error creating Openstack instance: %v", err))

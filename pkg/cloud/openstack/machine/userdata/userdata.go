@@ -11,6 +11,13 @@ import (
 	"text/template"
 )
 
+var (
+	supportedDistributions = map[string]bool{
+		"ubuntu": true,
+		"centos": true,
+	}
+)
+
 // SetupParams contains all necessary information to create cloud-config files
 type SetupParams struct {
 	KubernetesParams
@@ -187,4 +194,20 @@ func NewWorker(params WorkerParams) (io.Reader, error) {
 	}
 	params.KubeadmConfig = base64.StdEncoding.EncodeToString(data)
 	return renderTemplate("worker.yaml", workerCloudConfig, params)
+}
+
+// IsSupported returns true if the passed in distribution is supported by the current
+// implementation of userdata
+func IsSupported(distri string) bool {
+	_, ok := supportedDistributions[distri]
+	return ok
+}
+
+// GetSupported returns a list of supported distributions
+func GetSupported() []string {
+	s := make([]string, len(supportedDistributions))
+	for k := range supportedDistributions {
+		s = append(s, k)
+	}
+	return s
 }
