@@ -8,7 +8,7 @@ Learn how to engage with the Kubernetes community on the [community page](http:/
 
 You can reach the maintainers of this project at:
 
-- [#cluster-api on Kubernetes Slack](http://kubernetes.slack.com/messages/cluster-api)
+- [#cluster-api-openstack on Kubernetes Slack](https://kubernetes.slack.com/messages/cluster-api-openstack)
 - [SIG-Cluster-Lifecycle Mailing List](https://groups.google.com/forum/#!forum/kubernetes-sig-cluster-lifecycle)
 
 ### Code of conduct
