@@ -29,9 +29,9 @@ import (
 )
 
 const (
-	secGroupPrefix      string = "k8s"
-	controlPlanePostfix string = "controlplane"
-	globalPostfix       string = "all"
+	secGroupPrefix     string = "k8s"
+	controlPlaneSuffix string = "controlplane"
+	globalSuffix       string = "all"
 )
 
 var defaultRules = []openstackconfigv1.SecurityGroupRule{
@@ -115,7 +115,7 @@ func (s *SecGroupService) Reconcile(clusterName string, desired openstackconfigv
 }
 
 func (s *SecGroupService) generateControlPlaneGroup(clusterName string) openstackconfigv1.SecurityGroup {
-	secGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, controlPlanePostfix)
+	secGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, controlPlaneSuffix)
 
 	// Hardcoded rules for now, we might want to make this definable in the Spec but it's more
 	// likely that the infrastructure plan in cluster-api will have taken form by then.
@@ -146,7 +146,7 @@ func (s *SecGroupService) generateControlPlaneGroup(clusterName string) openstac
 }
 
 func (s *SecGroupService) generateGlobalGroup(clusterName string) openstackconfigv1.SecurityGroup {
-	secGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, globalPostfix)
+	secGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, globalSuffix)
 
 	// As above, hardcoded rules.
 	return openstackconfigv1.SecurityGroup{
