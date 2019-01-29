@@ -27,11 +27,6 @@ func NewActuator(params providerv1openstack.ActuatorParams) (*Actuator, error) {
 }
 
 // Reconcile creates or applies updates to the cluster.
-// TODO: those are copied from original rbac_role.yaml, need remove them if not needed later
-// +kubebuilder:rbac:groups=openstackproviderconfig.k8s.io,resources=openstackmachineproviderconfigs,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=cluster.k8s.io,resources=clusters;clusters/status;machinedeployments;machinesets;machines,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=,resources=nodes,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=,resources=secrets,verbs=get;list;watch
 func (a *Actuator) Reconcile(cluster *clusterv1.Cluster) error {
 	klog.Infof("Reconciling cluster %v.", cluster.Name)
 
