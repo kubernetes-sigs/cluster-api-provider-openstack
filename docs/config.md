@@ -1,5 +1,4 @@
 # Required Configuration
-========================
 
 ## Floating IP
 
