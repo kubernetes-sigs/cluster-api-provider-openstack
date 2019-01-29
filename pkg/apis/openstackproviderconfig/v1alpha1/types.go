@@ -175,28 +175,6 @@ type Router struct {
 	ID   string `json:"id"`
 }
 
-// SecurityGroup represents the basic information of the associated
-// OpenStack Neutron Security Group.
-type SecurityGroup struct {
-	Name  string              `json:"name"`
-	ID    string              `json:"id"`
-	Rules []SecurityGroupRule `json:"rules"`
-}
-
-// SecurityGroupRule represent the basic information of the associated OpenStack
-// Security Group Role.
-type SecurityGroupRule struct {
-	ID              string `json:"name"`
-	Direction       string `json:"direction"`
-	EtherType       string `json:"etherType"`
-	SecurityGroupID string `json:"securityGroupID"`
-	PortRangeMin    int    `json:"portRangeMin"`
-	PortRangeMax    int    `json:"portRangeMax"`
-	Protocol        string `json:"protocol"`
-	RemoteGroupID   string `json:"remoteGroupID"`
-	RemoteIPPrefix  string `json:"remoteIPPrefix"`
-}
-
 func init() {
 	SchemeBuilder.Register(&OpenstackProviderSpec{})
 	SchemeBuilder.Register(&OpenstackClusterProviderSpec{})

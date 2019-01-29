@@ -198,7 +198,7 @@ func (s *SecGroupService) matchGroups(desired, observed *openstackconfigv1.Secur
 		}
 		ruleMatched := false
 		for _, observedRule := range observed.Rules {
-			if s.matchRule(r, observedRule) {
+			if observedRule.Equal(r) {
 				ruleMatched = true
 				break
 			}
@@ -222,7 +222,7 @@ func (s *SecGroupService) reconcileGroup(desired, observed *openstackconfigv1.Se
 			return &openstackconfigv1.SecurityGroup{}, err
 		}
 	}
-	recreatedRules := make([]openstackconfigv1.SecurityGroupRule, len(desired.Rules), len(desired.Rules))
+	recreatedRules := make([]openstackconfigv1.SecurityGroupRule, 0, len(desired.Rules))
 	klog.V(6).Infof("Recreating all rules for group %s", observed.Name)
 	for _, rule := range desired.Rules {
 		r := rule
@@ -252,7 +252,7 @@ func (s *SecGroupService) createSecGroup(group openstackconfigv1.SecurityGroup) 
 	}
 
 	newGroup := s.convertOSSecGroupToConfigSecGroup(*g)
-	rules := make([]openstackconfigv1.SecurityGroupRule, len(group.Rules), len(group.Rules))
+	rules := make([]openstackconfigv1.SecurityGroupRule, 0, len(group.Rules))
 	klog.V(6).Infof("Creating rules for group %s", group.Name)
 	for _, rule := range group.Rules {
 		r := rule
@@ -269,16 +269,6 @@ func (s *SecGroupService) createSecGroup(group openstackconfigv1.SecurityGroup) 
 	newGroup.Rules = rules
 
 	return newGroup, nil
-}
-
-func (s *SecGroupService) matchRule(r1, r2 openstackconfigv1.SecurityGroupRule) bool {
-	return (r1.Direction == r2.Direction &&
-		r1.EtherType == r2.EtherType &&
-		r1.PortRangeMin == r2.PortRangeMin &&
-		r1.PortRangeMax == r2.PortRangeMax &&
-		r1.Protocol == r2.Protocol &&
-		r1.RemoteGroupID == r2.RemoteGroupID &&
-		r1.RemoteIPPrefix == r2.RemoteIPPrefix)
 }
 
 func (s *SecGroupService) getSecurityGroupByName(name string) (*openstackconfigv1.SecurityGroup, error) {
@@ -331,7 +321,7 @@ func (s *SecGroupService) createRule(r openstackconfigv1.SecurityGroupRule) (ope
 }
 
 func (s *SecGroupService) convertOSSecGroupToConfigSecGroup(osSecGroup groups.SecGroup) *openstackconfigv1.SecurityGroup {
-	rules := make([]openstackconfigv1.SecurityGroupRule, len(osSecGroup.Rules), len(osSecGroup.Rules))
+	rules := make([]openstackconfigv1.SecurityGroupRule, 0, len(osSecGroup.Rules))
 	for i, rule := range osSecGroup.Rules {
 		rules[i] = s.convertOSSecGroupRuleToConfigSecGroupRule(rule)
 	}
