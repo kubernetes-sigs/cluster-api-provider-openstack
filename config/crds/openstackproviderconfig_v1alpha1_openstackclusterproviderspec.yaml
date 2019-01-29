@@ -16,6 +16,10 @@ spec:
       properties:
         apiVersion:
           type: string
+        dnsNameservers:
+          items:
+            type: string
+          type: array
         externalNetworkId:
           type: string
         kind:
