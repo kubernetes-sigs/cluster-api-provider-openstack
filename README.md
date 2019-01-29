@@ -143,7 +143,13 @@ your openstack Cluster API Kubernetes cluster.
     kubectl --kubeconfig=kubeconfig delete machines -l set=master
     ```
 
-3. Delete the ssh keypair that were created for your cluster machine.
+3. Delete the kubeconfig file that were created for your cluster.
+
+   ```bash
+   rm kubeconfig
+   ```
+
+4. Delete the ssh keypair that were created for your cluster machine.
 
    ```bash
    rm -rf $HOME/.ssh/openstack_tmp*
