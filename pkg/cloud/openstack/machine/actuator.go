@@ -75,10 +75,20 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 		return err
 	}
 
+	networkService, err := clients.NewNetworkServiceFromMachine(kubeClient, machine)
+	if err != nil {
+		return err
+	}
+
 	providerSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
 	if err != nil {
 		return oc.handleMachineError(machine, apierrors.InvalidMachineConfiguration(
 			"Cannot unmarshal providerSpec field: %v", err))
+	}
+
+	machineSpec, err := openstackconfigv1.ClusterSpecFromProviderSpec(cluster.Spec.ProviderSpec)
+	if err != nil {
+		return err
 	}
 
 	if verr := oc.validateMachine(machine, providerSpec); verr != nil {
@@ -92,6 +102,17 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 	if instance != nil {
 		klog.Infof("Skipped creating a VM that already exists.\n")
 		return nil
+	}
+
+	// create floatingip if needed
+	if providerSpec.FloatingIP == "" && machineSpec.ExternalNetworkID != "" {
+		fip, err := networkService.CreateFloatingIP(machineSpec.ExternalNetworkID)
+		if err != nil {
+			return oc.handleMachineError(machine, apierrors.CreateMachine(
+				"Failed to create floating ip: %v", err))
+		}
+
+		providerSpec.FloatingIP = fip
 	}
 
 	// get machine startup script
@@ -121,7 +142,7 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 	var userDataRendered string
 	if len(userData) > 0 {
 		if util.IsControlPlaneMachine(machine) {
-			userDataRendered, err = masterStartupScript(cluster, machine, string(userData))
+			userDataRendered, err = masterStartupScript(cluster, machine, providerSpec, string(userData))
 			if err != nil {
 				return oc.handleMachineError(machine, apierrors.CreateMachine(
 					"error creating Openstack instance: %v", err))

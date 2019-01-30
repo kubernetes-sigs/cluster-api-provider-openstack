@@ -20,14 +20,20 @@ import (
 	"errors"
 	"fmt"
 
+	"k8s.io/client-go/kubernetes"
+
 	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
+	"github.com/gophercloud/utils/openstack/clientconfig"
 	"k8s.io/klog"
 	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
+	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
 )
 
 const (
@@ -45,6 +51,62 @@ func NewNetworkService(client *gophercloud.ServiceClient) (*NetworkService, erro
 	return &NetworkService{
 		client: client,
 	}, nil
+}
+
+func NewNetworkServiceFromMachine(kubeClient kubernetes.Interface, machine *clusterv1.Machine) (*NetworkService, error) {
+	machineSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
+	if err != nil {
+		return nil, err
+	}
+	cloud := clientconfig.Cloud{}
+	if machineSpec.CloudsSecret != nil && machineSpec.CloudsSecret.Name != "" {
+		namespace := machineSpec.CloudsSecret.Namespace
+		if namespace == "" {
+			namespace = machine.Namespace
+		}
+		cloud, err = GetCloudFromSecret(kubeClient, namespace, machineSpec.CloudsSecret.Name, machineSpec.CloudName)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return NewNetworkServiceFromCloud(cloud)
+}
+
+func NewNetworkServiceFromCloud(cloud clientconfig.Cloud) (*NetworkService, error) {
+	clientOpts := new(clientconfig.ClientOpts)
+	var opts *gophercloud.AuthOptions
+
+	if cloud.AuthInfo != nil {
+		clientOpts.AuthInfo = cloud.AuthInfo
+		clientOpts.AuthType = cloud.AuthType
+		clientOpts.Cloud = cloud.Cloud
+		clientOpts.RegionName = cloud.RegionName
+	}
+
+	opts, err := clientconfig.AuthOptions(clientOpts)
+
+	if err != nil {
+		return nil, err
+	}
+
+	opts.AllowReauth = true
+
+	provider, err := openstack.AuthenticatedClient(*opts)
+	if err != nil {
+		return nil, fmt.Errorf("Create providerClient err: %v", err)
+	}
+
+	networkingClient, err := openstack.NewNetworkV2(provider, gophercloud.EndpointOpts{
+		Region: clientOpts.RegionName,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("Create networkingClient err: %v", err)
+	}
+
+	return &NetworkService{
+		client: networkingClient,
+	}, nil
+
 }
 
 // Reconcile the Network for a given cluster
@@ -319,4 +381,16 @@ func (s *NetworkService) getNetworkByName(networkName string) (networks.Network,
 		return allNetworks[0], nil
 	}
 	return networks.Network{}, errors.New("too many resources")
+}
+
+func (s *NetworkService) CreateFloatingIP(floatingNetworkID string) (string, error) {
+	opts := floatingips.CreateOpts{
+		FloatingNetworkID: floatingNetworkID,
+	}
+
+	fip, err := floatingips.Create(s.client, opts).Extract()
+	if err != nil {
+		return "", err
+	}
+	return fip.FloatingIP, nil
 }

@@ -41,12 +41,7 @@ type setupParams struct {
 func init() {
 }
 
-func masterStartupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine, script string) (string, error) {
-	machineSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
-	if err != nil {
-		return "", err
-	}
-
+func masterStartupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine, machineSpec *openstackconfigv1.OpenstackProviderSpec, script string) (string, error) {
 	params := setupParams{
 		Cluster:     cluster,
 		Machine:     machine,
