@@ -64,7 +64,7 @@ function install_configure_docker () {
     chmod +x /usr/sbin/policy-rc.d
     trap "rm /usr/sbin/policy-rc.d" RETURN
     yum install -y docker
-    echo 'DOCKER_OPTS="--iptables=false --ip-masq=false"' > /etc/default/docker
+    echo 'OPTIONS="--selinux-enabled --log-driver=journald --signature-verification=false --iptables=false --ip-masq=false"' >> /etc/sysconfig/docker
     systemctl daemon-reload
     systemctl enable docker
     systemctl start docker
@@ -90,7 +90,10 @@ apiVersion: kubeadm.k8s.io/v1alpha3
 kind: InitConfiguration
 bootstrapTokens:
 - token: ${TOKEN}
+apiEndpoint:
+  bindPort: 443
 nodeRegistration:
+  name: $(hostname -s)
   kubeletExtraArgs:
     cloud-provider: "openstack"
     cloud-config: "/etc/kubernetes/cloud.conf"
@@ -123,11 +126,9 @@ EOF
 
 kubeadm init --config /etc/kubernetes/kubeadm_config.yaml
 for tries in $(seq 1 60); do
-    kubectl --kubeconfig /etc/kubernetes/kubelet.conf annotate --overwrite node $(hostname) machine=${MACHINE} && break
+    kubectl --kubeconfig /etc/kubernetes/kubelet.conf annotate --overwrite node $(hostname -s) machine=${MACHINE} && break
     sleep 1
 done
-# Enable networking by default.
-kubectl apply -f https://raw.githubusercontent.com/cloudnativelabs/kube-router/master/daemonset/kubeadm-kuberouter.yaml --kubeconfig /etc/kubernetes/admin.conf
 
 # By default, use calico for container network plugin, should make this configurable.
 kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f https://docs.projectcalico.org/v3.1/getting-started/kubernetes/installation/hosted/rbac-kdd.yaml

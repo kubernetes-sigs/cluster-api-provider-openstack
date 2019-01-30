@@ -115,7 +115,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:95c1b54007ab8594dfd79d184c1d6110e76d0eb0597b6fa3bf1e41604b649a45"
+  digest = "1:ed964c403c02c6d9c663e84ee6cdf4aba3c7a92a756a4b9a4d054b0ef8daf2d8"
   name = "github.com/gophercloud/gophercloud"
   packages = [
     ".",
@@ -128,6 +128,7 @@
     "openstack/identity/v2/tenants",
     "openstack/identity/v2/tokens",
     "openstack/identity/v3/tokens",
+    "openstack/networking/v2/extensions/attributestags",
     "openstack/networking/v2/extensions/layer3/routers",
     "openstack/networking/v2/networks",
     "openstack/networking/v2/ports",
@@ -681,13 +682,15 @@
   revision = "91cfa479c814065e420cee7ed227db0f63a5854e"
 
 [[projects]]
-  digest = "1:ef04c20bf6f1dcd5e1cd1fd27a65675649dfed58e89699fe2891cccc0a233efd"
+  branch = "master"
+  digest = "1:4a0e0f482d4618d612f32edc767ea90f714b47fe60d78f28330d994aecd2a85b"
   name = "sigs.k8s.io/cluster-api"
   packages = [
     "cmd/clusterctl/clientcmd",
     "cmd/clusterctl/clusterdeployer",
     "cmd/clusterctl/clusterdeployer/bootstrap",
     "cmd/clusterctl/clusterdeployer/bootstrap/existing",
+    "cmd/clusterctl/clusterdeployer/bootstrap/kind",
     "cmd/clusterctl/clusterdeployer/bootstrap/minikube",
     "cmd/clusterctl/clusterdeployer/clusterclient",
     "cmd/clusterctl/cmd",
@@ -708,8 +711,7 @@
     "pkg/util",
   ]
   pruneopts = "T"
-  revision = "3547f8dd93078c0b0f0b221ee1c2a57f96673081"
-  version = "0.0.0-alpha.4"
+  revision = "e6602cb5709957f9ab9f4c2a1b71226daed26cf8"
 
 [[projects]]
   digest = "1:dca19204224bb3835c1ece945b28aa2b19095f99bad4fff33b72e3a9d47ad968"
@@ -780,6 +782,7 @@
     "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs",
     "github.com/gophercloud/gophercloud/openstack/compute/v2/servers",
     "github.com/gophercloud/gophercloud/openstack/identity/v3/tokens",
+    "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/networks",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/ports",
@@ -789,6 +792,7 @@
     "github.com/pkg/errors",
     "golang.org/x/oauth2",
     "golang.org/x/oauth2/google",
+    "gopkg.in/yaml.v2",
     "k8s.io/api/core/v1",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/runtime",

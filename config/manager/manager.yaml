@@ -20,6 +20,17 @@ spec:
     control-plane: controller-manager
     controller-tools.k8s.io: "1.0"
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    control-plane: controller-manager
+    controller-tools.k8s.io: "1.0"
+  name: cloud-selector
+  namespace: openstack-provider-system
+data:
+  OS_CLOUD: {OS_CLOUD}
+---
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
@@ -53,10 +64,6 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /etc/kubernetes
-        - name: certs
-          mountPath: /etc/ssl/certs
-        - name: sshkeys
-          mountPath: /etc/sshkeys
         - name: cloud-config
           mountPath: /etc/openstack
         - name: kubeadm
@@ -72,18 +79,14 @@ spec:
           - name: USER
             value: root
           - name: OS_CLOUD
-            value: {OS_CLOUD}
+            valueFrom:
+              configMapKeyRef:
+                name: cloud-selector
+                key: OS_CLOUD
       volumes:
       - name: config
         hostPath:
           path: /etc/kubernetes
-      - name: certs
-        hostPath:
-          path: /etc/ssl/certs
-      - name: sshkeys
-        secret:
-          secretName: machine-controller-sshkeys
-          defaultMode: 256
       - name: cloud-config
         secret:
           secretName: cloud-config
