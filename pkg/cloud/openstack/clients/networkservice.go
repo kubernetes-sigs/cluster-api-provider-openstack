@@ -157,7 +157,8 @@ func (s *NetworkService) reconcileSubnets(clusterName, name string, desired open
 			Name:      name,
 			IPVersion: 4,
 
-			CIDR: desired.NodeCIDR,
+			CIDR:           desired.NodeCIDR,
+			DNSNameservers: desired.DNSNameservers,
 		}
 
 		newSubnet, err := subnets.Create(s.client, opts).Extract()
