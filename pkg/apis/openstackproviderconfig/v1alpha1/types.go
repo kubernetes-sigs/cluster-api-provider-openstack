@@ -27,8 +27,10 @@ import (
 // OpenstackProviderSpec is the type that will be embedded in a Machine.Spec.ProviderSpec field
 // for an OpenStack Instance. It is used by the Openstack machine actuator to create a single machine instance.
 // TODO(cglaubitz): We might consider to change this to OpenstackMachineProviderSpec
+// +k8s:openapi-gen=true
 type OpenstackProviderSpec struct {
-	metav1.TypeMeta `json:",inline"`
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// The name of the secret containing the openstack credentials
 	CloudsSecret *corev1.SecretReference `json:"cloudsSecret"`
