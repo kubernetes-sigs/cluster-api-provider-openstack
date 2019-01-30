@@ -111,6 +111,8 @@ type OpenstackClusterProviderSpec struct {
 	// network, a subnet with NodeCIDR, and a router connected to this subnet.
 	// If you leave this empty, no network will be created.
 	NodeCIDR string `json:"nodeCidr,omitempty"`
+	// DNSNameservers is the list of nameservers for OpenStack Subnet being created.
+	DNSNameservers []string `json:"dnsNameservers,omitempty"`
 	// ExternalNetworkID is the ID of an external OpenStack Network. This is necessary
 	// to get public internet to the VMs.
 	ExternalNetworkID string `json:"externalNetworkId,omitempty"`
