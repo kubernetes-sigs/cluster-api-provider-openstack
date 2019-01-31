@@ -3,7 +3,8 @@
 `user-data` is a way to ship config files and scripts into OpenStack VMs. Usually VMs come up and call `cloud-init` to get `user-data` from the OpenStack Metadata Service and execute it.
 
 For further documentations have a look at:
-* [OpenStack Metadata Service](https://docs.openstack.org/nova/rocky/user/metadata-service.html)
+
+* [OpenStack Metadata Service](https://docs.openstack.org/nova/latest/user/metadata-service.html)
 * [cloud-init](https://cloudinit.readthedocs.io/en/latest/)
 
 ## Creating a machine
@@ -11,12 +12,14 @@ For further documentations have a look at:
 We support some distributions out of the box. So there is no need to pass in custom `user-data`.
 
 Supported Distributions:
+
 * Ubuntu (16.04 and 18.04) (`distributionType: ubuntu`)
 * CentOS 7.3 (`distributionType: centos`)
 
 ### Example with the builtin `user-data`
 
 An example machine specification looks like this:
+
 ```yaml
 apiVersion: cluster.k8s.io/v1alpha1
 kind: Machine
