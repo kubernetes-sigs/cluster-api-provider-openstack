@@ -9,8 +9,7 @@ const (
 Description=Bootstrap a Kubernetes Node
 
 [Service]
-Type=oneshot
-RemainAfterExit=yes
+Type=simple
 Restart=on-failure
 RestartSec=10s
 EnvironmentFile=-/etc/default/bootstrap-kubernetes
