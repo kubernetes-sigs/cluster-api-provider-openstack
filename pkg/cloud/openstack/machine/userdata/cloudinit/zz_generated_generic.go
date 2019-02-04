@@ -44,7 +44,7 @@ runcmd:
   - [systemctl, start, --no-block, docker.service]
   - [systemctl, enable, kubelet.service]
   - [systemctl, start, kubelet.service]
-  - [systemctl, start, bootstrap-kubernetes.service]
+  - [systemctl, start, --no-block, bootstrap-kubernetes.service]
 
 merge_how: "list(append)+dict(recurse_array)+str()"
 
