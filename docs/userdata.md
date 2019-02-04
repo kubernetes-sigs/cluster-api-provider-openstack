@@ -1,11 +1,12 @@
 # Passing in user-data
 
-`user-data` is a way to ship config files and scripts into OpenStack VMs. Usually VMs come up and call `cloud-init` to get `user-data` from the OpenStack Metadata Service and execute it.
+`user-data` is a way to ship config files and scripts into OpenStack VMs. Most Linux distributions (especially Ubuntu and CentOS in this case) call a tool called `cloud-init` when the VM comes up. `cloud-init` fetches `user-data` from the OpenStack Metadata Service and execute it. In the wild, there are other solutions that fetch  the `user-data`, but don't use the `cloud-init` format. One example for this is Ignition of Container Linux.
 
 For further documentations have a look at:
 
 * [OpenStack Metadata Service](https://docs.openstack.org/nova/latest/user/metadata-service.html)
 * [cloud-init](https://cloudinit.readthedocs.io/en/latest/)
+* [Ignition](https://coreos.com/ignition/docs/latest/)
 
 ## Creating a machine
 
