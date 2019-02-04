@@ -1,4 +1,4 @@
-package userdata
+package cloudinit
 
 /*
 This file is auto-generated DO NOT TOUCH!

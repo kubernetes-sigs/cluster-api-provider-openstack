@@ -1,4 +1,11 @@
-#cloud-config
+package cloudinit
+
+/*
+This file is auto-generated DO NOT TOUCH!
+*/
+
+const (
+	genericCloudConfig = `#cloud-config
 
 ## FIXME
 package_update: false
@@ -27,6 +34,7 @@ write_files:
     paermissions: "0444"
     content: |
       net.bridge.bridge-nf-call-iptables = 1
+      net.ipv4.ip_forward = 1
 
 runcmd:
   - [systemctl, daemon-reload]
@@ -39,3 +47,6 @@ runcmd:
   - [systemctl, start, bootstrap-kubernetes.service]
 
 merge_how: "list(append)+dict(recurse_array)+str()"
+
+`
+)

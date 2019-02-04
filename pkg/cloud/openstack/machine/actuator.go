@@ -438,8 +438,12 @@ func (oc *OpenstackClient) getCloudConfig(distri string, isMaster bool, cluster 
 		Token: token,
 	}
 
+	userData, err := NewUserData(distri)
+	if err != nil {
+		return "", err
+	}
 	var buf bytes.Buffer
-	if err := userdata.WriteCloudConfig(&buf, distri, isMaster, params); err != nil {
+	if err := userData.Write(&buf, isMaster, params); err != nil {
 		return "", err
 	}
 

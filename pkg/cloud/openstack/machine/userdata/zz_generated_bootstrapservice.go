@@ -11,6 +11,8 @@ Description=Bootstrap a Kubernetes Node
 [Service]
 Type=oneshot
 RemainAfterExit=yes
+Restart=on-failure
+RestartSec=10s
 EnvironmentFile=-/etc/default/bootstrap-kubernetes
 ExecStart=/usr/local/bin/bootstrap-kubernetes
 `
