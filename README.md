@@ -113,6 +113,17 @@ Additional advanced flags can be found via help.
 ./clusterctl create cluster --help
 ```
 
+### Managed OpenStack Security Groups
+
+In `Cluster.spec.ProviderSpec` there is a boolean option called `ManagedSecurityGroups` that, if set to `true`, will create a default set of security groups for the cluster. These are meant for a "standard" setup, and might not be suitable for every environment. Please review the rules below before you use them.
+
+*NOTE*: For now, there is no way to automatically use these rules, which makes them a bit cumbersome to use, this will be possible in the near future.
+
+The rules created are:
+
+* A rule for the controlplane machine, that allows access from everywhere to port 22 and 443.
+* A rule for all the machines, both the controlplane and the nodes that allow all traffic between members of this group.
+
 ### Interacting with your cluster
 
 Once you have created a cluster, you can interact with the cluster and machine
