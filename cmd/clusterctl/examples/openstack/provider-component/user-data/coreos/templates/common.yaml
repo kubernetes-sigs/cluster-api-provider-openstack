@@ -120,6 +120,16 @@ storage:
         id: 0
       group:
         id: 0
+    - path: /etc/certs/cacert
+      filesystem: root
+      contents:
+        inline: !!binary |
+          $OPENSTACK_CLOUD_CACERT_CONFIG
+      mode: 0600
+      user:
+        id: 0
+      group:
+        id: 0
     - path: /etc/modules-load.d/ipvs.conf
       filesystem: root
       contents:

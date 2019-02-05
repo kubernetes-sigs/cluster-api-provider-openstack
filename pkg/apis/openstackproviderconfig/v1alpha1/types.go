@@ -187,6 +187,12 @@ type OpenstackClusterProviderSpec struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
+	// The name of the secret containing the openstack credentials
+	CloudsSecret *corev1.SecretReference `json:"cloudsSecret"`
+
+	// The name of the cloud to use from the clouds secret
+	CloudName string `json:"cloudName"`
+
 	// NodeCIDR is the OpenStack Subnet to be created. Cluster actuator will create a
 	// network, a subnet with NodeCIDR, and a router connected to this subnet.
 	// If you leave this empty, no network will be created.

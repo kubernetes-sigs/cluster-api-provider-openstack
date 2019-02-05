@@ -86,6 +86,8 @@ echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables
 echo '1' > /proc/sys/net/ipv4/ip_forward
 
 echo $OPENSTACK_CLOUD_PROVIDER_CONF | base64 -d > /etc/kubernetes/cloud.conf
+mkdir /etc/certs
+echo $OPENSTACK_CLOUD_CACERT_CONFIG | base64 -d > /etc/certs/cacert
 
 # Set up kubeadm config file to pass parameters to kubeadm init.
 cat > /etc/kubernetes/kubeadm_config.yaml <<EOF
@@ -122,6 +124,10 @@ apiServer:
     mountPath: /etc/kubernetes/cloud.conf
     name: cloud
     readOnly: true
+  - hostPath: "/etc/certs/cacert"
+    mountPath: "/etc/certs/cacert"
+    name: cacert
+    readOnly: true
   timeoutForControlPlane: 4m0s
 certificatesDir: /etc/kubernetes/pki
 clusterName: kubernetes
@@ -137,6 +143,10 @@ controllerManager:
   - hostPath: /etc/kubernetes/cloud.conf
     mountPath: /etc/kubernetes/cloud.conf
     name: cloud
+    readOnly: true
+  - hostPath: "/etc/certs/cacert"
+    mountPath: "/etc/certs/cacert"
+    name: cacert
     readOnly: true
 dns:
   type: CoreDNS

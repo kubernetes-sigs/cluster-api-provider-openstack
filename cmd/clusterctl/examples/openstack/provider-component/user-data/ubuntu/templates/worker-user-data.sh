@@ -79,6 +79,8 @@ CLUSTER_DNS_SERVER=$(prips ${SERVICE_CIDR} | head -n 11 | tail -n 1)
 
 # Write the cloud.conf so that the kubelet can use it.
 echo $OPENSTACK_CLOUD_PROVIDER_CONF | base64 -d > /etc/kubernetes/cloud.conf
+mkdir /etc/certs
+echo $OPENSTACK_CLOUD_CACERT_CONFIG | base64 -d > /etc/certs/cacert
 
 # Set up kubeadm config file to pass to kubeadm join.
 cat > /etc/kubernetes/kubeadm_config.yaml <<EOF

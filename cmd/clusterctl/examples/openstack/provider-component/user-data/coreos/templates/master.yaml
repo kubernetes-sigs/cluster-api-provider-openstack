@@ -31,6 +31,9 @@ storage:
           - name: cloud
             hostPath: "/etc/kubernetes/cloud.conf"
             mountPath: "/etc/kubernetes/cloud.conf"
+          - name: cacert
+            hostPath: "/etc/certs/cacert"
+            mountPath: "/etc/certs/cacert"
         controllerManager:
           extraArgs:
             cluster-cidr: {{ .PodCIDR }}
@@ -42,6 +45,9 @@ storage:
           - name: cloud
             hostPath: "/etc/kubernetes/cloud.conf"
             mountPath: "/etc/kubernetes/cloud.conf"
+          - name: cacert
+            hostPath: "/etc/certs/cacert"
+            mountPath: "/etc/certs/cacert"
     user:
       id: 0
     group:
