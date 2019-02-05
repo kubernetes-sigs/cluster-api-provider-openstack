@@ -118,6 +118,12 @@ type OpenstackClusterProviderSpec struct {
 	// ExternalNetworkID is the ID of an external OpenStack Network. This is necessary
 	// to get public internet to the VMs.
 	ExternalNetworkID string `json:"externalNetworkId,omitempty"`
+
+	// ManagedSecurityGroups defines that kubernetes manages the OpenStack security groups
+	// for now, that means that we'll create two security groups, one allowing SSH
+	// and API access from everywhere, and another one that allows all traffic to/from
+	// machines belonging to that group. In the future, we could make this more flexible.
+	ManagedSecurityGroups bool `json:"managedSecurityGroups"`
 }
 
 // +genclient
@@ -139,6 +145,15 @@ type OpenstackClusterProviderStatus struct {
 	// Network contains all information about the created OpenStack Network.
 	// It includes Subnets and Router.
 	Network *Network `json:"network,omitempty"`
+
+	// ControlPlaneSecurityGroups contains all the information about the OpenStack
+	// Security Group that needs to be applied to control plane nodes.
+	// TODO: Maybe instead of two properties, we add a property to the group?
+	ControlPlaneSecurityGroup *SecurityGroup `json:"controlPlaneSecurityGroup,omitempty"`
+
+	// GlobalSecurityGroup contains all the information about the OpenStack Security
+	// Group that needs to be applied to all nodes, both control plane and worker nodes.
+	GlobalSecurityGroup *SecurityGroup `json:"globalSecurityGroup,omitempty"`
 }
 
 // Network represents basic information about the associated OpenStach Neutron Network

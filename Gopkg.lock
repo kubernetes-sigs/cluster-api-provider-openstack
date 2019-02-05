@@ -107,7 +107,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ed964c403c02c6d9c663e84ee6cdf4aba3c7a92a756a4b9a4d054b0ef8daf2d8"
+  digest = "1:bf40c04c15471450e644627eb1317197cac533e60883cf44a6a8a2fdb5f3a016"
   name = "github.com/gophercloud/gophercloud"
   packages = [
     ".",
@@ -122,6 +122,8 @@
     "openstack/identity/v3/tokens",
     "openstack/networking/v2/extensions/attributestags",
     "openstack/networking/v2/extensions/layer3/routers",
+    "openstack/networking/v2/extensions/security/groups",
+    "openstack/networking/v2/extensions/security/rules",
     "openstack/networking/v2/networks",
     "openstack/networking/v2/ports",
     "openstack/networking/v2/subnets",
@@ -741,6 +743,8 @@
     "github.com/gophercloud/gophercloud/openstack/identity/v3/tokens",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers",
+    "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups",
+    "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/rules",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/networks",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/ports",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/subnets",
