@@ -21,12 +21,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"os"
 	"reflect"
+	"strings"
 	"time"
 
-	machinev1 "github.com/openshift/cluster-api/pkg/apis/machine/v1beta1"
-	apierrors "github.com/openshift/cluster-api/pkg/errors"
-	"github.com/openshift/cluster-api/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	tokenapi "k8s.io/cluster-bootstrap/token/api"
@@ -36,20 +35,30 @@ import (
 	bootstrap "sigs.k8s.io/cluster-api-provider-openstack/pkg/bootstrap"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/clients"
+	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
+	apierrors "sigs.k8s.io/cluster-api/pkg/errors"
+	"sigs.k8s.io/cluster-api/pkg/util"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
-	CloudConfigPath = "/etc/cloud/cloud_config.yaml"
+	SshPrivateKeyPath = "/etc/sshkeys/private"
+	SshPublicKeyPath  = "/etc/sshkeys/public"
+	CloudConfigPath   = "/etc/cloud/cloud_config.yaml"
 
 	UserDataKey = "userData"
 
 	TimeoutInstanceCreate       = 5 * time.Minute
-	TimeoutInstanceDelete       = 5 * time.Minute
 	RetryIntervalInstanceStatus = 10 * time.Second
 
 	TokenTTL = 60 * time.Minute
 )
+
+type SshCreds struct {
+	user           string
+	privateKeyPath string
+	publicKey      string
+}
 
 type OpenstackClient struct {
 	params openstack.ActuatorParams
@@ -67,7 +76,7 @@ func NewActuator(params openstack.ActuatorParams) (*OpenstackClient, error) {
 	}, nil
 }
 
-func (oc *OpenstackClient) Create(ctx context.Context, cluster *machinev1.Cluster, machine *machinev1.Machine) error {
+func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluster, machine *clusterv1.Machine) error {
 	kubeClient := oc.params.KubeClient
 
 	machineService, err := clients.NewInstanceServiceFromMachine(kubeClient, machine)
@@ -120,7 +129,7 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *machinev1.Cluste
 
 	var userDataRendered string
 	if len(userData) > 0 {
-		if machine.Spec.Versions.ControlPlane != "" {
+		if util.IsMaster(machine) {
 			userDataRendered, err = masterStartupScript(cluster, machine, string(userData))
 			if err != nil {
 				return oc.handleMachineError(machine, apierrors.CreateMachine(
@@ -141,7 +150,7 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *machinev1.Cluste
 		}
 	}
 
-	instance, err = machineService.InstanceCreate(fmt.Sprintf("%s/%s", cluster.ObjectMeta.Namespace, cluster.Name), machine.Name, providerSpec, userDataRendered, providerSpec.KeyName)
+	instance, err = machineService.InstanceCreate(machine.Name, providerSpec, userDataRendered, providerSpec.KeyName)
 	if err != nil {
 		return oc.handleMachineError(machine, apierrors.CreateMachine(
 			"error creating Openstack instance: %v", err))
@@ -171,7 +180,7 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *machinev1.Cluste
 	return oc.updateAnnotation(machine, instance.ID)
 }
 
-func (oc *OpenstackClient) Delete(ctx context.Context, cluster *machinev1.Cluster, machine *machinev1.Machine) error {
+func (oc *OpenstackClient) Delete(ctx context.Context, cluster *clusterv1.Cluster, machine *clusterv1.Machine) error {
 	machineService, err := clients.NewInstanceServiceFromMachine(oc.params.KubeClient, machine)
 	if err != nil {
 		return err
@@ -197,13 +206,13 @@ func (oc *OpenstackClient) Delete(ctx context.Context, cluster *machinev1.Cluste
 	return nil
 }
 
-func (oc *OpenstackClient) Update(ctx context.Context, cluster *machinev1.Cluster, machine *machinev1.Machine) error {
+func (oc *OpenstackClient) Update(ctx context.Context, cluster *clusterv1.Cluster, machine *clusterv1.Machine) error {
 	status, err := oc.instanceStatus(machine)
 	if err != nil {
 		return err
 	}
 
-	currentMachine := (*machinev1.Machine)(status)
+	currentMachine := (*clusterv1.Machine)(status)
 	if currentMachine == nil {
 		instance, err := oc.instanceExists(machine)
 		if err != nil {
@@ -221,7 +230,7 @@ func (oc *OpenstackClient) Update(ctx context.Context, cluster *machinev1.Cluste
 		return nil
 	}
 
-	if currentMachine.Spec.Versions.ControlPlane != "" {
+	if util.IsMaster(currentMachine) {
 		// TODO: add master inplace
 		klog.Errorf("master inplace update failed: %v", err)
 	} else {
@@ -230,18 +239,6 @@ func (oc *OpenstackClient) Update(ctx context.Context, cluster *machinev1.Cluste
 		if err != nil {
 			klog.Errorf("delete machine %s for update failed: %v", currentMachine.ObjectMeta.Name, err)
 		} else {
-			err = util.PollImmediate(RetryIntervalInstanceStatus, TimeoutInstanceDelete, func() (bool, error) {
-				instance, err := oc.instanceExists(machine)
-				if err != nil {
-					return false, nil
-				}
-				return instance == nil, nil
-			})
-			if err != nil {
-				return oc.handleMachineError(machine, apierrors.DeleteMachine(
-					"error deleting Openstack instance: %v", err))
-			}
-
 			err = oc.Create(ctx, cluster, machine)
 			if err != nil {
 				klog.Errorf("create machine %s for update failed: %v", machine.ObjectMeta.Name, err)
@@ -252,7 +249,7 @@ func (oc *OpenstackClient) Update(ctx context.Context, cluster *machinev1.Cluste
 	return nil
 }
 
-func (oc *OpenstackClient) Exists(ctx context.Context, cluster *machinev1.Cluster, machine *machinev1.Machine) (bool, error) {
+func (oc *OpenstackClient) Exists(ctx context.Context, cluster *clusterv1.Cluster, machine *clusterv1.Machine) (bool, error) {
 	instance, err := oc.instanceExists(machine)
 	if err != nil {
 		return false, err
@@ -296,11 +293,46 @@ func getIPFromInstance(instance *clients.Instance) (string, error) {
 	return "", fmt.Errorf("extract IP from instance err")
 }
 
+func (oc *OpenstackClient) GetKubeConfig(cluster *clusterv1.Cluster, master *clusterv1.Machine) (string, error) {
+	if _, err := os.Stat(SshPublicKeyPath); err != nil {
+		klog.Infof("Can't get the KubeConfig file as the public ssh key could not be found: %v\n", SshPublicKeyPath)
+		return "", nil
+	}
+
+	if _, err := os.Stat(SshPrivateKeyPath); err != nil {
+		klog.Infof("Can't get the KubeConfig file as the private ssh key could not be found: %v\n", SshPrivateKeyPath)
+		return "", nil
+	}
+
+	ip, err := oc.GetIP(cluster, master)
+	if err != nil {
+		return "", err
+	}
+
+	machineSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(master.Spec.ProviderSpec)
+	if err != nil {
+		return "", err
+	}
+
+	result := strings.TrimSpace(util.ExecCommand(
+		"ssh", "-i", SshPrivateKeyPath,
+		"-o", "StrictHostKeyChecking no",
+		"-o", "UserKnownHostsFile /dev/null",
+		"-o", "BatchMode=yes",
+		fmt.Sprintf("%s@%s", machineSpec.SshUserName, ip),
+		"echo STARTFILE; sudo cat /etc/kubernetes/admin.conf"))
+	parts := strings.Split(result, "STARTFILE")
+	if len(parts) != 2 {
+		return "", nil
+	}
+	return strings.TrimSpace(parts[1]), nil
+}
+
 // If the OpenstackClient has a client for updating Machine objects, this will set
 // the appropriate reason/message on the Machine.Status. If not, such as during
 // cluster installation, it will operate as a no-op. It also returns the
 // original error for convenience, so callers can do "return handleMachineError(...)".
-func (oc *OpenstackClient) handleMachineError(machine *machinev1.Machine, err *apierrors.MachineError) error {
+func (oc *OpenstackClient) handleMachineError(machine *clusterv1.Machine, err *apierrors.MachineError) error {
 	if oc.client != nil {
 		reason := err.Reason
 		message := err.Message
@@ -315,7 +347,7 @@ func (oc *OpenstackClient) handleMachineError(machine *machinev1.Machine, err *a
 	return err
 }
 
-func (oc *OpenstackClient) updateAnnotation(machine *machinev1.Machine, id string) error {
+func (oc *OpenstackClient) updateAnnotation(machine *clusterv1.Machine, id string) error {
 	if machine.ObjectMeta.Annotations == nil {
 		machine.ObjectMeta.Annotations = make(map[string]string)
 	}
@@ -332,7 +364,7 @@ func (oc *OpenstackClient) updateAnnotation(machine *machinev1.Machine, id strin
 	return oc.updateInstanceStatus(machine)
 }
 
-func (oc *OpenstackClient) requiresUpdate(a *machinev1.Machine, b *machinev1.Machine) bool {
+func (oc *OpenstackClient) requiresUpdate(a *clusterv1.Machine, b *clusterv1.Machine) bool {
 	if a == nil || b == nil {
 		return true
 	}
@@ -343,7 +375,7 @@ func (oc *OpenstackClient) requiresUpdate(a *machinev1.Machine, b *machinev1.Mac
 		a.ObjectMeta.Name != b.ObjectMeta.Name
 }
 
-func (oc *OpenstackClient) instanceExists(machine *machinev1.Machine) (instance *clients.Instance, err error) {
+func (oc *OpenstackClient) instanceExists(machine *clusterv1.Machine) (instance *clients.Instance, err error) {
 	machineSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
 	if err != nil {
 		return nil, err
@@ -392,7 +424,7 @@ func (oc *OpenstackClient) createBootstrapToken() (string, error) {
 	), nil
 }
 
-func (oc *OpenstackClient) validateMachine(machine *machinev1.Machine, config *openstackconfigv1.OpenstackProviderSpec) *apierrors.MachineError {
+func (oc *OpenstackClient) validateMachine(machine *clusterv1.Machine, config *openstackconfigv1.OpenstackProviderSpec) *apierrors.MachineError {
 	// TODO: other validate of openstackCloud
 	return nil
 }
