@@ -65,9 +65,6 @@ type OpenstackProviderSpec struct {
 	// The name of the secret containing the user data (startup script in most cases)
 	UserDataSecret *corev1.SecretReference `json:"userDataSecret,omitempty"`
 
-	// Whether the server instance is created on a trunk port or not.
-	Trunk bool `json:"trunk,omitempty"`
-
 	RootVolume RootVolume `json:"root_volume,omitempty"`
 }
 
