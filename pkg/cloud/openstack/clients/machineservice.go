@@ -19,42 +19,26 @@ package clients
 import (
 	"encoding/base64"
 	"fmt"
-	"time"
 
 	"gopkg.in/yaml.v2"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
-	"github.com/gophercloud/gophercloud/openstack/common/extensions"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/identity/v3/tokens"
-	netext "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/trunks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"github.com/gophercloud/gophercloud/pagination"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog"
 	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
 	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
-	"sigs.k8s.io/cluster-api/pkg/util"
 )
 
-const (
-	CloudsSecretKey = "clouds.yaml"
-
-	TimeoutTrunkDelete       = 3 * time.Minute
-	RetryIntervalTrunkDelete = 5 * time.Second
-
-	TimeoutPortDelete       = 3 * time.Minute
-	RetryIntervalPortDelete = 5 * time.Second
-)
+const CloudsSecretKey = "clouds.yaml"
 
 type InstanceService struct {
 	provider       *gophercloud.ProviderClient
@@ -254,13 +238,10 @@ func getNetworkIDsByFilter(is *InstanceService, opts *networks.ListOpts) ([]stri
 	return uuids, nil
 }
 
-func (is *InstanceService) InstanceCreate(clusterName string, name string, config *openstackconfigv1.OpenstackProviderSpec, cmd string, keyName string) (instance *Instance, err error) {
+func (is *InstanceService) InstanceCreate(name string, config *openstackconfigv1.OpenstackProviderSpec, cmd string, keyName string) (instance *Instance, err error) {
+	var createOpts servers.CreateOpts
 	if config == nil {
 		return nil, fmt.Errorf("create Options need be specified to create instace")
-	}
-	clusterTags := []string{
-		"cluster-api-provider-openstack",
-		clusterName,
 	}
 	var nets []servers.Network
 	for _, net := range config.Networks {
@@ -280,98 +261,20 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 				UUID: net.UUID,
 			})
 		}
-		if len(net.Filter.Tags) > 0 {
-			clusterTags = append(clusterTags, net.Filter.Tags)
-		}
 	}
 	userData := base64.StdEncoding.EncodeToString([]byte(cmd))
-	var ports_list []servers.Network
-	for _, net := range nets {
-		allPages, err := ports.List(is.networkClient, ports.ListOpts{
-			Name:      name,
-			NetworkID: net.UUID,
-		}).AllPages()
-		if err != nil {
-			return nil, fmt.Errorf("Searching for existing port for server err: %v", err)
-		}
-		portList, err := ports.ExtractPorts(allPages)
-		if err != nil {
-			return nil, fmt.Errorf("Searching for existing port for server err: %v", err)
-		}
-		var port ports.Port
-		if len(portList) == 0 {
-			// create server port
-			portCreateOpts := ports.CreateOpts{
-				Name:           name,
-				NetworkID:      net.UUID,
-				SecurityGroups: &config.SecurityGroups,
-			}
-			newPort, err := ports.Create(is.networkClient, portCreateOpts).Extract()
-			if err != nil {
-				return nil, fmt.Errorf("Create port for server err: %v", err)
-			}
-			port = *newPort
-		} else {
-			port = portList[0]
-		}
-
-		_, err = attributestags.ReplaceAll(is.networkClient, "ports", port.ID, attributestags.ReplaceAllOpts{
-			Tags: clusterTags}).Extract()
-		if err != nil {
-			return nil, fmt.Errorf("Tagging port for server err: %v", err)
-		}
-		ports_list = append(ports_list, servers.Network{
-			Port: port.ID,
-		})
-
-		if config.Trunk == true {
-			allPages, err := trunks.List(is.networkClient, trunks.ListOpts{
-				Name:   name,
-				PortID: port.ID,
-			}).AllPages()
-			if err != nil {
-				return nil, fmt.Errorf("Searching for existing trunk for server err: %v", err)
-			}
-			trunkList, err := trunks.ExtractTrunks(allPages)
-			if err != nil {
-				return nil, fmt.Errorf("Searching for existing trunk for server err: %v", err)
-			}
-			var trunk trunks.Trunk
-			if len(trunkList) == 0 {
-				// create trunk with the previous port as parent
-				trunkCreateOpts := trunks.CreateOpts{
-					Name:   name,
-					PortID: port.ID,
-				}
-				newTrunk, err := trunks.Create(is.networkClient, trunkCreateOpts).Extract()
-				if err != nil {
-					return nil, fmt.Errorf("Create trunk for server err: %v", err)
-				}
-				trunk = *newTrunk
-			} else {
-				trunk = trunkList[0]
-			}
-
-			_, err = attributestags.ReplaceAll(is.networkClient, "trunks", trunk.ID, attributestags.ReplaceAllOpts{
-				Tags: clusterTags}).Extract()
-			if err != nil {
-				return nil, fmt.Errorf("Tagging trunk for server err: %v", err)
-			}
-		}
-	}
-
-	serverCreateOpts := servers.CreateOpts{
+	createOpts = servers.CreateOpts{
 		Name:             name,
 		ImageName:        config.Image,
 		FlavorName:       config.Flavor,
 		AvailabilityZone: config.AvailabilityZone,
-		Networks:         ports_list,
+		Networks:         nets,
 		UserData:         []byte(userData),
 		SecurityGroups:   config.SecurityGroups,
 		ServiceClient:    is.computeClient,
 	}
 	server, err := servers.Create(is.computeClient, keypairs.CreateOptsExt{
-		CreateOptsBuilder: serverCreateOpts,
+		CreateOptsBuilder: createOpts,
 		KeyName:           keyName,
 	}).Extract()
 	if err != nil {
@@ -381,89 +284,7 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 }
 
 func (is *InstanceService) InstanceDelete(id string) error {
-	// get instance port id
-	allInterfaces, err := attachinterfaces.List(is.computeClient, id).AllPages()
-	if err != nil {
-		return err
-	}
-	instanceInterfaces, err := attachinterfaces.ExtractInterfaces(allInterfaces)
-	if err != nil {
-		return err
-	}
-	if len(instanceInterfaces) < 1 {
-		return servers.Delete(is.computeClient, id).ExtractErr()
-	}
-
-	trunkSupport, err := GetTrunkSupport(is)
-	if err != nil {
-		return fmt.Errorf("Obtaining network extensions err: %v", err)
-	}
-	// get and delete trunks
-	for _, port := range instanceInterfaces {
-		err := attachinterfaces.Delete(is.computeClient, id, port.PortID).ExtractErr()
-		if err != nil {
-			return err
-		}
-		if trunkSupport {
-			listOpts := trunks.ListOpts{
-				PortID: port.PortID,
-			}
-			allTrunks, err := trunks.List(is.networkClient, listOpts).AllPages()
-			if err != nil {
-				return err
-			}
-			trunkInfo, err := trunks.ExtractTrunks(allTrunks)
-			if err != nil {
-				return err
-			}
-			if len(trunkInfo) == 1 {
-				err = util.PollImmediate(RetryIntervalTrunkDelete, TimeoutTrunkDelete, func() (bool, error) {
-					err := trunks.Delete(is.networkClient, trunkInfo[0].ID).ExtractErr()
-					if err != nil {
-						return false, nil
-					}
-					return true, nil
-				})
-				if err != nil {
-					return fmt.Errorf("Error deleting the trunk %v", trunkInfo[0].ID)
-				}
-			}
-		}
-
-		// delete port
-		err = util.PollImmediate(RetryIntervalPortDelete, TimeoutPortDelete, func() (bool, error) {
-			err := ports.Delete(is.networkClient, port.PortID).ExtractErr()
-			if err != nil {
-				return false, nil
-			}
-			return true, nil
-		})
-		if err != nil {
-			return fmt.Errorf("Error deleting the port %v", port.PortID)
-		}
-	}
-
-	// delete instance
 	return servers.Delete(is.computeClient, id).ExtractErr()
-}
-
-func GetTrunkSupport(is *InstanceService) (bool, error) {
-	allPages, err := netext.List(is.networkClient).AllPages()
-	if err != nil {
-		return false, err
-	}
-
-	allExts, err := extensions.ExtractExtensions(allPages)
-	if err != nil {
-		return false, err
-	}
-
-	for _, ext := range allExts {
-		if ext.Alias == "trunk" {
-			return true, nil
-		}
-	}
-	return false, nil
 }
 
 func (is *InstanceService) GetInstanceList(opts *InstanceListOpts) ([]*Instance, error) {
