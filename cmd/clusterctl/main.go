@@ -18,7 +18,7 @@ package main
 
 import (
 	_ "sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack"
-	"sigs.k8s.io/cluster-api/cmd/clusterctl/cmd"
+	"github.com/openshift/cluster-api/cmd/clusterctl/cmd"
 )
 
 func main() {

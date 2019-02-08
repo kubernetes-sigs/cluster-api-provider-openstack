@@ -27,46 +27,79 @@
 required = [
   "k8s.io/code-generator/cmd/deepcopy-gen", # for go generate
   "sigs.k8s.io/controller-tools/cmd/controller-gen", # for crd/rbac generation
-  "cloud.google.com/go/compute/metadata",
-  "golang.org/x/oauth2",
-  "golang.org/x/oauth2/google",
+  "k8s.io/client-go/plugin/pkg/client/auth/gcp", # for development against gcp
+  "sigs.k8s.io/controller-runtime/pkg/client/config",
+  "sigs.k8s.io/controller-runtime/pkg/controller",
+  "sigs.k8s.io/controller-runtime/pkg/handler",
+  "sigs.k8s.io/controller-runtime/pkg/manager",
+  "sigs.k8s.io/controller-runtime/pkg/runtime/signals",
+  "sigs.k8s.io/controller-runtime/pkg/source",
+  "sigs.k8s.io/testing_frameworks/integration", # for integration testing
+  "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1",
 ]
 
 [[constraint]]
   branch = "master"
   name = "github.com/gophercloud/gophercloud"
 
+
+[[override]]
+  name = "k8s.io/kube-aggregator"
+  branch = "release-1.10"
+
+[[override]]
+  name = "github.com/openshift/cluster-api"
+  revision = "91fca585a85b163ddfd119fd09c128c9feadddca"
+
+[[override]]
+  name = "k8s.io/code-generator"
+  # revision for tag "kubernetes-1.11.2"
+  revision = "6702109cc68eb6fe6350b83e14407c8d7309fd1a"
+
+[[override]]
+  name = "k8s.io/api"
+  # revision for tag "kubernetes-1.11.2"
+  revision = "2d6f90ab1293a1fb871cf149423ebb72aa7423aa"
+
+[[override]]
+  name = "k8s.io/apiextensions-apiserver"
+  # revision for tag "kubernetes-1.11.2"
+  revision = "408db4a50408e2149acbd657bceb2480c13cb0a4"
+
+[[override]]
+  name = "k8s.io/apimachinery"
+  # revision for tag "kubernetes-1.11.2"
+  revision = "103fd098999dc9c0c88536f5c9ad2e5da39373ae"
+
+[[override]]
+  name = "k8s.io/client-go"
+  # revision for tag "kubernetes-1.11.2"
+  revision = "1f13a808da65775f22cbf47862c4e5898d8f4ca1"
+
+[[override]]
+  name = "sigs.k8s.io/controller-runtime"
+  revision = "53fc44b56078cd095b11bd44cfa0288ee4cf718f"
+
 [[constraint]]
-  branch = "master"
+  name="sigs.k8s.io/controller-tools"
+  version="v0.1.1"
+
+[[override]]
+  name = "k8s.io/cluster-bootstrap"
+  revision = "c9acc0c1bea2de07a6d31502c2fece9139c7f793"
+
+[[constraint]]
   name = "github.com/gophercloud/utils"
+  revision = "9c3b9f2457ef7011d3a20c9964e5d7107e9ed33c"
 
 [[constraint]]
   name = "github.com/pkg/errors"
   version = "0.8.0"
 
-[[constraint]]
-  name = "k8s.io/api"
-  version = "kubernetes-1.11.2"
-
-[[constraint]]
-  name = "k8s.io/apimachinery"
-  version = "kubernetes-1.11.2"
-
-[[constraint]]
-  name = "k8s.io/cluster-bootstrap"
-  branch = "master"
 
 [[constraint]]
   name = "k8s.io/klog"
   version = "0.1.0"
-
-[[constraint]]
-  name = "sigs.k8s.io/cluster-api"
-  branch = "master"
-
-[[constraint]]
-  name = "sigs.k8s.io/controller-runtime"
-  version = "0.1.7"
 
 [[constraint]]
   name = "sigs.k8s.io/yaml"
@@ -78,16 +111,6 @@ required = [
   non-go = true
 
 [[prune.project]]
-  name = "sigs.k8s.io/cluster-api"
-  unused-packages = false
-  non-go = false
-
-[[prune.project]]
-  name = "k8s.io/apimachinery"
-  unused-packages = false
-  non-go = false
-
-[[prune.project]]
-  name = "k8s.io/client-go"
+  name = "github.com/openshift/cluster-api"
   unused-packages = false
   non-go = false

@@ -33,9 +33,9 @@ import (
 	bootstrap "sigs.k8s.io/cluster-api-provider-openstack/pkg/bootstrap"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/clients"
-	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
-	apierrors "sigs.k8s.io/cluster-api/pkg/errors"
-	"sigs.k8s.io/cluster-api/pkg/util"
+	clusterv1 "github.com/openshift/cluster-api/pkg/apis/cluster/v1alpha1"
+	apierrors "github.com/openshift/cluster-api/pkg/errors"
+	"github.com/openshift/cluster-api/pkg/util"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 

@@ -24,9 +24,9 @@ import (
 
 	"k8s.io/klog"
 	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
-	clustercommon "sigs.k8s.io/cluster-api/pkg/apis/cluster/common"
-	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
-	"sigs.k8s.io/cluster-api/pkg/util"
+	clustercommon "github.com/openshift/cluster-api/pkg/apis/cluster/common"
+	clusterv1 "github.com/openshift/cluster-api/pkg/apis/cluster/v1alpha1"
+	"github.com/openshift/cluster-api/pkg/util"
 )
 
 const ProviderName = "openstack"

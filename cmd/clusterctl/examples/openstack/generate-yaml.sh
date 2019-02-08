@@ -111,9 +111,9 @@ OUTPUT_DIR="${TEMPLATES_PATH}/out"
 PROVIDER_CRD_DIR="${HOME_DIR}/config/crds"
 PROVIDER_RBAC_DIR="${HOME_DIR}/config/rbac"
 PROVIDER_MANAGER_DIR="${HOME_DIR}/config/manager"
-CLUSTER_CRD_DIR="${HOME_DIR}/vendor/sigs.k8s.io/cluster-api/config/crds"
-CLUSTER_RBAC_DIR="${HOME_DIR}/vendor/sigs.k8s.io/cluster-api/config/rbac"
-CLUSTER_MANAGER_DIR="${HOME_DIR}/vendor/sigs.k8s.io/cluster-api/config/manager"
+CLUSTER_CRD_DIR="${HOME_DIR}/vendor/github.com/openshift/cluster-api/config/crds"
+CLUSTER_RBAC_DIR="${HOME_DIR}/vendor/github.com/openshift/cluster-api/config/rbac"
+CLUSTER_MANAGER_DIR="${HOME_DIR}/vendor/github.com/openshift/cluster-api/config/manager"
 
 MACHINE_TEMPLATE_FILE=${TEMPLATES_PATH}/machines.yaml.template
 MACHINE_GENERATED_FILE=${OUTPUT_DIR}/machines.yaml
