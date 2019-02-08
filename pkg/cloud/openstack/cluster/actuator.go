@@ -2,7 +2,10 @@ package cluster
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"net/http"
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
@@ -130,12 +133,32 @@ func (a *Actuator) getNetworkClient(cluster *clusterv1.Cluster) (*gophercloud.Se
 		return nil, err
 	}
 
-	provider, err := openstack.AuthenticatedClient(*opts)
+	providerClient, err := openstack.NewClient(opts.IdentityEndpoint)
 	if err != nil {
 		return nil, fmt.Errorf("create providerClient err: %v", err)
 	}
 
-	client, err := openstack.NewNetworkV2(provider, gophercloud.EndpointOpts{
+	config := &tls.Config{}
+	cloud, err := clientconfig.GetCloudFromYAML(clientOpts)
+	if err != nil {
+		return nil, err
+	}
+	if cloud.CACertFile != "" {
+		caBytes := []byte(cloud.CACertFile)
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caBytes)
+		config.RootCAs = caCertPool
+	}
+	config.InsecureSkipVerify = *cloud.Verify
+	transport := &http.Transport{Proxy: http.ProxyFromEnvironment, TLSClientConfig: config}
+	providerClient.HTTPClient.Transport = transport
+
+	err = openstack.Authenticate(providerClient, *opts)
+	if err != nil {
+		return nil, fmt.Errorf("providerClient authentication err: %v", err)
+	}
+
+	client, err := openstack.NewNetworkV2(providerClient, gophercloud.EndpointOpts{
 		Region: clientOpts.RegionName,
 	})
 	if err != nil {

@@ -17,8 +17,11 @@ limitations under the License.
 package clients
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/base64"
 	"fmt"
+	"net/http"
 
 	"gopkg.in/yaml.v2"
 	"k8s.io/client-go/kubernetes"
@@ -139,9 +142,29 @@ func NewInstanceServiceFromCloud(cloud clientconfig.Cloud) (*InstanceService, er
 
 	opts.AllowReauth = true
 
-	provider, err := openstack.AuthenticatedClient(*opts)
+	provider, err := openstack.NewClient(opts.IdentityEndpoint)
 	if err != nil {
 		return nil, fmt.Errorf("Create providerClient err: %v", err)
+	}
+
+	config := &tls.Config{}
+	cloudFromYaml, err := clientconfig.GetCloudFromYAML(clientOpts)
+	if err != nil {
+		return nil, err
+	}
+	if cloudFromYaml.CACertFile != "" {
+		caBytes := []byte(cloudFromYaml.CACertFile)
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caBytes)
+		config.RootCAs = caCertPool
+	}
+	config.InsecureSkipVerify = *cloudFromYaml.Verify
+	transport := &http.Transport{Proxy: http.ProxyFromEnvironment, TLSClientConfig: config}
+	provider.HTTPClient.Transport = transport
+
+	err = openstack.Authenticate(provider, *opts)
+	if err != nil {
+		return nil, fmt.Errorf("providerClient authentication err: %v", err)
 	}
 
 	identityClient, err := openstack.NewIdentityV3(provider, gophercloud.EndpointOpts{
