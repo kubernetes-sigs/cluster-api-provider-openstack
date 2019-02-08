@@ -141,7 +141,7 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 		}
 	}
 
-	instance, err = machineService.InstanceCreate(machine.Name, providerSpec, userDataRendered, providerSpec.KeyName)
+	instance, err = machineService.InstanceCreate(fmt.Sprintf("%s/%s", cluster.ObjectMeta.Namespace, cluster.Name), machine.Name, providerSpec, userDataRendered, providerSpec.KeyName)
 	if err != nil {
 		return oc.handleMachineError(machine, apierrors.CreateMachine(
 			"error creating Openstack instance: %v", err))

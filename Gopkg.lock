@@ -107,11 +107,13 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:bf40c04c15471450e644627eb1317197cac533e60883cf44a6a8a2fdb5f3a016"
+  digest = "1:a83fdc9d6e0a39d0f4874b9c6021d77eaf62efdd5a868e6c9c500bdb00086196"
   name = "github.com/gophercloud/gophercloud"
   packages = [
     ".",
     "openstack",
+    "openstack/common/extensions",
+    "openstack/compute/v2/extensions/attachinterfaces",
     "openstack/compute/v2/extensions/floatingips",
     "openstack/compute/v2/extensions/keypairs",
     "openstack/compute/v2/flavors",
@@ -120,10 +122,12 @@
     "openstack/identity/v2/tenants",
     "openstack/identity/v2/tokens",
     "openstack/identity/v3/tokens",
+    "openstack/networking/v2/extensions",
     "openstack/networking/v2/extensions/attributestags",
     "openstack/networking/v2/extensions/layer3/routers",
     "openstack/networking/v2/extensions/security/groups",
     "openstack/networking/v2/extensions/security/rules",
+    "openstack/networking/v2/extensions/trunks",
     "openstack/networking/v2/networks",
     "openstack/networking/v2/ports",
     "openstack/networking/v2/subnets",
@@ -737,14 +741,18 @@
   input-imports = [
     "github.com/gophercloud/gophercloud",
     "github.com/gophercloud/gophercloud/openstack",
+    "github.com/gophercloud/gophercloud/openstack/common/extensions",
+    "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces",
     "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips",
     "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs",
     "github.com/gophercloud/gophercloud/openstack/compute/v2/servers",
     "github.com/gophercloud/gophercloud/openstack/identity/v3/tokens",
+    "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/rules",
+    "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/trunks",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/networks",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/ports",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/subnets",
