@@ -321,7 +321,7 @@ func (s *SecGroupService) createRule(r openstackconfigv1.SecurityGroupRule) (ope
 }
 
 func (s *SecGroupService) convertOSSecGroupToConfigSecGroup(osSecGroup groups.SecGroup) *openstackconfigv1.SecurityGroup {
-	rules := make([]openstackconfigv1.SecurityGroupRule, 0, len(osSecGroup.Rules))
+	rules := make([]openstackconfigv1.SecurityGroupRule, len(osSecGroup.Rules))
 	for i, rule := range osSecGroup.Rules {
 		rules[i] = s.convertOSSecGroupRuleToConfigSecGroupRule(rule)
 	}
