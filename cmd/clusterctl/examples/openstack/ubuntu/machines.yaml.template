@@ -23,6 +23,7 @@ items:
         userDataSecret:
           name: master-user-data
           namespace: openstack-provider-system
+        trunk: false
     versions:
       kubelet: 1.12.3
       controlPlane: 1.12.3
@@ -50,5 +51,6 @@ items:
         userDataSecret:
           name: worker-user-data
           namespace: openstack-provider-system
+        trunk: false
     versions:
       kubelet: 1.12.3
