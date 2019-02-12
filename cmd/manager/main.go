@@ -21,11 +21,11 @@ import (
 	"log"
 	"time"
 
+	clusterapis "github.com/openshift/cluster-api/pkg/apis"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/klog"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/apis"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/controller"
-	clusterapis "github.com/openshift/cluster-api/pkg/apis"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"

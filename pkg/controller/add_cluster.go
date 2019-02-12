@@ -17,8 +17,8 @@ limitations under the License.
 package controller
 
 import (
-	occ "sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/cluster"
 	"github.com/openshift/cluster-api/pkg/controller/cluster"
+	occ "sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
