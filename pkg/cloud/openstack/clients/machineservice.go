@@ -68,7 +68,7 @@ type Instance struct {
 	servers.Server
 }
 
-type ProviderNetwork struct {
+type ServerNetwork struct {
 	networkID string
 	subnetID  string
 }
@@ -259,7 +259,7 @@ func getNetworkIDsByFilter(is *InstanceService, opts *networks.ListOpts) ([]stri
 	return uuids, nil
 }
 
-func CreatePort(is *InstanceService, name string, net ProviderNetwork, securityGroups *[]string) (ports.Port, error) {
+func CreatePort(is *InstanceService, name string, net ServerNetwork, securityGroups *[]string) (ports.Port, error) {
 	portCreateOpts := ports.CreateOpts{
 		Name:           name,
 		NetworkID:      net.networkID,
@@ -293,7 +293,7 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 		clusterName,
 	}
 	// Get all network UUIDs
-	var nets []ProviderNetwork
+	var nets []ServerNetwork
 	for _, net := range config.Networks {
 		if net.UUID == "" && net.SubnetID == "" {
 			opts := networks.ListOpts(net.Filter)
@@ -302,7 +302,7 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 				return nil, err
 			}
 			for _, netID := range ids {
-				nets = append(nets, ProviderNetwork{
+				nets = append(nets, ServerNetwork{
 					networkID: netID,
 				})
 			}
@@ -311,12 +311,12 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 			if err != nil {
 				return nil, err
 			}
-			nets = append(nets, ProviderNetwork{
+			nets = append(nets, ServerNetwork{
 				networkID: subnet.NetworkID,
 				subnetID:  net.SubnetID,
 			})
 		} else {
-			nets = append(nets, ProviderNetwork{
+			nets = append(nets, ServerNetwork{
 				networkID: net.UUID,
 				subnetID:  net.SubnetID,
 			})
