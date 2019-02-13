@@ -357,7 +357,36 @@ func isDuplicate(list []string, name string) bool {
 	return false
 }
 
-func GetSecurityGroups(is *InstanceService, sg_param []openstackconfigv1.SecurityGroupParam) ([]string, error) {
+func GetSecurityGroups(is *InstanceService, sg_param []openstackconfigv1.SecurityGroupParam, cluster *clusterv1.Cluster, machine *clusterv1.Machine) ([]string, error) {
+	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
+	secGroupService, err := NewSecGroupService(is.networkClient)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create security group service: %v", err)
+	}
+
+	clusterStatus, err := openstackconfigv1.ClusterStatusFromProviderStatus(cluster.Status.ProviderStatus)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load cluster provider status: %v", err)
+	}
+
+	clusterSpec, err := openstackconfigv1.ClusterSpecFromProviderSpec(cluster.Spec.ProviderSpec)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load cluster provider spec: %v", err)
+	}
+
+	err = secGroupService.Reconcile(clusterName, *clusterSpec, clusterStatus)
+	if err != nil {
+		return nil, fmt.Errorf("failed to reconcile security groups: %v", err)
+	}
+
+	if clusterSpec.ManagedSecurityGroups {
+		klog.Infof("SecurityGroups section from machine spec will be ignored, generated security groups will be attached to machines")
+		if util.IsControlPlaneMachine(machine) {
+			return []string{clusterStatus.ControlPlaneSecurityGroup.ID, clusterStatus.GlobalSecurityGroup.ID}, nil
+		}
+		return []string{clusterStatus.GlobalSecurityGroup.ID}, nil
+	}
+
 	var sgIDs []string
 	for _, sg := range sg_param {
 		listOpts := groups.ListOpts(sg.Filter)
@@ -414,7 +443,7 @@ func getImageID(is *InstanceService, imageName string) (string, error) {
 }
 
 // InstanceCreate creates a compute instance
-func (is *InstanceService) InstanceCreate(clusterName string, name string, clusterSpec *openstackconfigv1.OpenstackClusterProviderSpec, config *openstackconfigv1.OpenstackProviderSpec, cmd string, keyName string) (instance *Instance, err error) {
+func (is *InstanceService) InstanceCreate(cluster *clusterv1.Cluster, machine *clusterv1.Machine, clusterSpec *openstackconfigv1.OpenstackClusterProviderSpec, config *openstackconfigv1.OpenstackProviderSpec, cmd string, keyName string) (instance *Instance, err error) {
 	var createOpts servers.CreateOptsBuilder
 	if config == nil {
 		return nil, fmt.Errorf("create Options need be specified to create instace")
@@ -432,7 +461,7 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, clust
 	// Set default Tags
 	machineTags := []string{
 		"cluster-api-provider-openstack",
-		clusterName,
+		fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name),
 	}
 
 	// Append machine specific tags
@@ -442,7 +471,7 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, clust
 	machineTags = append(machineTags, clusterSpec.Tags...)
 
 	// Get security groups
-	securityGroups, err := GetSecurityGroups(is, config.SecurityGroups)
+	securityGroups, err := GetSecurityGroups(is, config.SecurityGroups, cluster, machine)
 	if err != nil {
 		return nil, err
 	}
@@ -486,7 +515,7 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, clust
 			return nil, fmt.Errorf("No network was found or provided. Please check your machine configuration and try again")
 		}
 		allPages, err := ports.List(is.networkClient, ports.ListOpts{
-			Name:      name,
+			Name:      machine.Name,
 			NetworkID: net.networkID,
 		}).AllPages()
 		if err != nil {
@@ -499,7 +528,7 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, clust
 		var port ports.Port
 		if len(portList) == 0 {
 			// create server port
-			port, err = CreatePort(is, name, net, &securityGroups)
+			port, err = CreatePort(is, machine.Name, net, &securityGroups)
 			if err != nil {
 				return nil, fmt.Errorf("Failed to create port err: %v", err)
 			}
@@ -518,7 +547,7 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, clust
 
 		if config.Trunk == true {
 			allPages, err := trunks.List(is.networkClient, trunks.ListOpts{
-				Name:   name,
+				Name:   machine.Name,
 				PortID: port.ID,
 			}).AllPages()
 			if err != nil {
@@ -532,7 +561,7 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, clust
 			if len(trunkList) == 0 {
 				// create trunk with the previous port as parent
 				trunkCreateOpts := trunks.CreateOpts{
-					Name:   name,
+					Name:   machine.Name,
 					PortID: port.ID,
 				}
 				newTrunk, err := trunks.Create(is.networkClient, trunkCreateOpts).Extract()
@@ -567,8 +596,8 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, clust
 	}
 
 	serverCreateOpts := servers.CreateOpts{
-		Name:             name,
-		ImageRef:         imageID,
+		Name:             machine.Name,
+		ImageName:        imageID,
 		FlavorName:       config.Flavor,
 		AvailabilityZone: config.AvailabilityZone,
 		Networks:         ports_list,
