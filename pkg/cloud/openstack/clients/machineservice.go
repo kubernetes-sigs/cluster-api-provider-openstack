@@ -258,6 +258,15 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 	if config == nil {
 		return nil, fmt.Errorf("create Options need be specified to create instace")
 	}
+	if config.Trunk == true {
+		trunkSupport, err := GetTrunkSupport(is)
+		if err != nil {
+			return nil, fmt.Errorf("There was an issue verifying whether trunk support is available, please disable it: %v", err)
+		}
+		if trunkSupport == false {
+			return nil, fmt.Errorf("There is no trunk support. Please disable it")
+		}
+	}
 	clusterTags := []string{
 		"cluster-api-provider-openstack",
 		clusterName,
