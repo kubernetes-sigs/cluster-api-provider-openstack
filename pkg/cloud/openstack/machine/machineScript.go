@@ -51,8 +51,11 @@ func masterStartupScript(cluster *machinev1.Cluster, machine *machinev1.Machine,
 		Cluster:     cluster,
 		Machine:     machine,
 		MachineSpec: machineSpec,
-		PodCIDR:     getSubnet(cluster.Spec.ClusterNetwork.Pods),
-		ServiceCIDR: getSubnet(cluster.Spec.ClusterNetwork.Services),
+	}
+
+	if cluster != nil {
+		params.PodCIDR = getSubnet(cluster.Spec.ClusterNetwork.Pods)
+		params.ServiceCIDR = getSubnet(cluster.Spec.ClusterNetwork.Services)
 	}
 
 	masterStartUpScript := template.Must(template.New("masterStartUp").Parse(script))
@@ -71,7 +74,9 @@ func nodeStartupScript(cluster *machinev1.Cluster, machine *machinev1.Machine, t
 	}
 
 	GetMasterEndpoint := func() (string, error) {
-		if len(cluster.Status.APIEndpoints) == 0 {
+		if cluster == nil {
+			return "", nil
+		} else if len(cluster.Status.APIEndpoints) == 0 {
 			return "", errors.New("no cluster status found")
 		}
 		return getEndpoint(cluster.Status.APIEndpoints[0]), nil
@@ -82,9 +87,12 @@ func nodeStartupScript(cluster *machinev1.Cluster, machine *machinev1.Machine, t
 		Cluster:           cluster,
 		Machine:           machine,
 		MachineSpec:       machineSpec,
-		PodCIDR:           getSubnet(cluster.Spec.ClusterNetwork.Pods),
-		ServiceCIDR:       getSubnet(cluster.Spec.ClusterNetwork.Services),
 		GetMasterEndpoint: GetMasterEndpoint,
+	}
+
+	if cluster != nil {
+		params.PodCIDR = getSubnet(cluster.Spec.ClusterNetwork.Pods)
+		params.ServiceCIDR = getSubnet(cluster.Spec.ClusterNetwork.Services)
 	}
 
 	nodeStartUpScript := template.Must(template.New("nodeStartUp").Parse(script))
