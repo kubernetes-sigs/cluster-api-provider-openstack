@@ -78,6 +78,7 @@ type NetworkParam struct {
 type Filter struct {
 	Status       string `json:"status,omitempty"`
 	Name         string `json:"name,omitempty"`
+	Description  string `json:"description,omitempty"`
 	AdminStateUp *bool  `json:"admin_state_up,omitempty"`
 	TenantID     string `json:"tenant_id,omitempty"`
 	ProjectID    string `json:"project_id,omitempty"`

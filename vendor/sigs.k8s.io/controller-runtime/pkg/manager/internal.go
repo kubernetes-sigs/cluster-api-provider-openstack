@@ -158,59 +158,18 @@ func (cm *controllerManager) GetRESTMapper() meta.RESTMapper {
 }
 
 func (cm *controllerManager) Start(stop <-chan struct{}) error {
-	if cm.resourceLock != nil {
-		err := cm.startLeaderElection(stop)
-		if err != nil {
+	if cm.resourceLock == nil {
+		go cm.start(stop)
+		select {
+		case <-stop:
+			// we are done
+			return nil
+		case err := <-cm.errChan:
+			// Error starting a controller
 			return err
 		}
-	} else {
-		go cm.start(stop)
 	}
 
-	select {
-	case <-stop:
-		// We are done
-		return nil
-	case err := <-cm.errChan:
-		// Error starting a controller
-		return err
-	}
-}
-
-func (cm *controllerManager) start(stop <-chan struct{}) {
-	cm.mu.Lock()
-	defer cm.mu.Unlock()
-
-	cm.stop = stop
-
-	// Start the Cache. Allow the function to start the cache to be mocked out for testing
-	if cm.startCache == nil {
-		cm.startCache = cm.cache.Start
-	}
-	go func() {
-		if err := cm.startCache(stop); err != nil {
-			cm.errChan <- err
-		}
-	}()
-
-	// Wait for the caches to sync.
-	// TODO(community): Check the return value and write a test
-	cm.cache.WaitForCacheSync(stop)
-
-	// Start the runnables after the cache has synced
-	for _, c := range cm.runnables {
-		// Controllers block, but we want to return an error if any have an error starting.
-		// Write any Start errors to a channel so we can return them
-		ctrl := c
-		go func() {
-			cm.errChan <- ctrl.Start(stop)
-		}()
-	}
-
-	cm.started = true
-}
-
-func (cm *controllerManager) startLeaderElection(stop <-chan struct{}) (err error) {
 	l, err := leaderelection.NewLeaderElector(leaderelection.LeaderElectionConfig{
 		Lock: cm.resourceLock,
 		// Values taken from: https://github.com/kubernetes/apiserver/blob/master/pkg/apis/config/v1alpha1/defaults.go
@@ -219,9 +178,7 @@ func (cm *controllerManager) startLeaderElection(stop <-chan struct{}) (err erro
 		RenewDeadline: 10 * time.Second,
 		RetryPeriod:   2 * time.Second,
 		Callbacks: leaderelection.LeaderCallbacks{
-			OnStartedLeading: func(_ <-chan struct{}) {
-				cm.start(stop)
-			},
+			OnStartedLeading: cm.start,
 			OnStoppedLeading: func() {
 				// Most implementations of leader election log.Fatal() here.
 				// Since Start is wrapped in log.Fatal when called, we can just return
@@ -234,7 +191,55 @@ func (cm *controllerManager) startLeaderElection(stop <-chan struct{}) (err erro
 		return err
 	}
 
-	// Start the leader elector process
 	go l.Run()
-	return nil
+
+	select {
+	case <-stop:
+		// We are done
+		return nil
+	case err := <-cm.errChan:
+		// Error starting a controller
+		return err
+	}
+}
+
+func (cm *controllerManager) start(stop <-chan struct{}) {
+	func() {
+		cm.mu.Lock()
+		defer cm.mu.Unlock()
+
+		cm.stop = stop
+
+		// Start the Cache. Allow the function to start the cache to be mocked out for testing
+		if cm.startCache == nil {
+			cm.startCache = cm.cache.Start
+		}
+		go func() {
+			if err := cm.startCache(stop); err != nil {
+				cm.errChan <- err
+			}
+		}()
+
+		// Wait for the caches to sync.
+		// TODO(community): Check the return value and write a test
+		cm.cache.WaitForCacheSync(stop)
+
+		// Start the runnables after the cache has synced
+		for _, c := range cm.runnables {
+			// Controllers block, but we want to return an error if any have an error starting.
+			// Write any Start errors to a channel so we can return them
+			ctrl := c
+			go func() {
+				cm.errChan <- ctrl.Start(stop)
+			}()
+		}
+
+		cm.started = true
+	}()
+
+	select {
+	case <-stop:
+		// We are done
+		return
+	}
 }
