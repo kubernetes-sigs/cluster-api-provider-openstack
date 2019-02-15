@@ -11,18 +11,19 @@ items:
         apiVersion: "openstackproviderconfig/v1alpha1"
         kind: "OpenstackProviderSpec"
         flavor: m1.medium
-        image: CentOS-7-x86_64-GenericCloud
-        sshUserName: centos
+        image: <Image Name>
+        sshUserName: <SSH Username>
         keyName: cluster-api-provider-openstack
         availabilityZone: nova
         networks:
-        - uuid: ab14ce0d-5e1f-4e32-bf65-00416e3cc19c
-        floatingIP: 129.114.111.153
+        - uuid: <Kubernetes Network ID>
+        floatingIP: <Available Floating IP>
         securityGroups:
         - default
         userDataSecret:
           name: master-user-data
           namespace: openstack-provider-system
+        trunk: false
     versions:
       kubelet: 1.12.3
       controlPlane: 1.12.3
@@ -38,17 +39,18 @@ items:
         apiVersion: "openstackproviderconfig/v1alpha1"
         kind: "OpenstackProviderSpec"
         flavor: m1.medium
-        image: CentOS-7-x86_64-GenericCloud
-        sshUserName: centos
+        image: <Image Name>
+        sshUserName: <SSH Username>
         keyName: cluster-api-provider-openstack
         availabilityZone: nova
         networks:
-        - uuid: ab14ce0d-5e1f-4e32-bf65-00416e3cc19c
-        floatingIP: 129.114.111.153
+        - uuid: <Kubernetes Network ID>
+        floatingIP: <Available Floating IP>
         securityGroups:
         - default
         userDataSecret:
           name: worker-user-data
           namespace: openstack-provider-system
+        trunk: false
     versions:
       kubelet: 1.12.3

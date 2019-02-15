@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+generatorOptions:
+  disableNameSuffixHash: true
+
+resources:
+- ../../../../../../vendor/sigs.k8s.io/cluster-api/config/rbac/rbac_role_binding.yaml
+- ../../../../../../vendor/sigs.k8s.io/cluster-api/config/rbac/rbac_role.yaml
+- ../../../../../../vendor/sigs.k8s.io/cluster-api/config/crds/cluster_v1alpha1_cluster.yaml
+- ../../../../../../vendor/sigs.k8s.io/cluster-api/config/crds/cluster_v1alpha1_machine.yaml
+- ../../../../../../vendor/sigs.k8s.io/cluster-api/config/crds/cluster_v1alpha1_machineclass.yaml
+- ../../../../../../vendor/sigs.k8s.io/cluster-api/config/crds/cluster_v1alpha1_machinedeployment.yaml
+- ../../../../../../vendor/sigs.k8s.io/cluster-api/config/crds/cluster_v1alpha1_machineset.yaml
+- ../../../../../../vendor/sigs.k8s.io/cluster-api/config/manager/manager.yaml
+
+patches:
+  - manager_image_patch.yaml
