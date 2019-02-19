@@ -34,7 +34,7 @@ items:
         - uuid: <Kubernetes Network ID>
         floatingIP: <Available Floating IP>
         securityGroups:
-        - default
+        - <Security Group ID>
         userDataSecret:
           name: master-user-data
           namespace: openstack-provider-system
@@ -61,7 +61,7 @@ items:
         - uuid: <Kubernetes Network ID>
         floatingIP: <Available Floating IP>
         securityGroups:
-        - default
+        - <Security Group ID>
         userDataSecret:
           name: worker-user-data
           namespace: openstack-provider-system
@@ -71,7 +71,7 @@ items:
 
 ## Private Network
 
-Most openstack clusters come with a private network already, but if you would like to create a private network just for kubernetes, then the following openstack commands will create it, and a subnet for the nodes: 
+Most openstack clusters come with a private network already, but if you would like to create a private network just for kubernetes, then the following openstack commands will create it, and a subnet for the nodes:
 
 ```bash
 openstack network create <name of network>
@@ -102,7 +102,7 @@ Once you have an available floating ip, then you can add it to the `machines.yam
 
 ## Proper Routing
 
-Your kubernetes cluster must be reachable from wherever cluster-api-provider-openstack is being run from to set it up, and probably needs to be reachable by external trafic for use. To make your cluster reachable by external traffic, you will need to set up an openstack router that connects your private network to your public network. For this example, lets say you have a subnet named ``kube-nodes-subnet`` in the private network you created, and a public network named ``public`` that you are trying to connect with a router named ``kube-router``. 
+Your kubernetes cluster must be reachable from wherever cluster-api-provider-openstack is being run from to set it up, and probably needs to be reachable by external trafic for use. To make your cluster reachable by external traffic, you will need to set up an openstack router that connects your private network to your public network. For this example, lets say you have a subnet named ``kube-nodes-subnet`` in the private network you created, and a public network named ``public`` that you are trying to connect with a router named ``kube-router``.
 
 ```bash
 openstack router create kube-router
@@ -124,13 +124,13 @@ openstack security group rule create --ingress --protocol tcp --dst-port 443 kub
 openstack security group rule create --egress
 ```
 
-In machines.yaml, we apply the security group `default` to the nodes in your cluster. You may add the following security group rules to the `default` group, or you may add the rulset to a seperate security group. You can add that group to machines.yaml where is says security-groups like so:
+In machines.yaml, we apply the security group `default` to the nodes in your cluster. You may add the following security group rules to the `default` group, or you may add the rulset to a seperate security group. You can add that group to machines.yaml by adding the security group IDs, where is says security-groups like so:
 
 ```yaml
 securityGroups:
-  - default
-  - NewGroupName
-  - AnotherGroupName
+  - default_SG_UUID
+  - NewGroupName_SG_UUID
+  - AnotherGroupName_SG_UUID
 ```
 
 ## Operating System Images

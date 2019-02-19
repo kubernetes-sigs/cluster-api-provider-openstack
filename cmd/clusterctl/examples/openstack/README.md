@@ -32,3 +32,5 @@ File provider-components.yaml already exists. Delete it manually before running 
 ## Manual Modification
 You may always manually curate files based on the examples provided.
 
+Note that to set the desired security groups the UUIDs must be used.
+Using security groups names is not supported.
