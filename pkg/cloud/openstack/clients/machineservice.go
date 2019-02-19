@@ -45,6 +45,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog"
 	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
+	providerv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
 	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
 	"sigs.k8s.io/cluster-api/pkg/util"
 )
@@ -340,7 +341,8 @@ func GetSecurityGroups(is *InstanceService, sg_param []openstackconfigv1.Securit
 	return sgIDs, nil
 }
 
-func (is *InstanceService) InstanceCreate(clusterName string, name string, config *openstackconfigv1.OpenstackProviderSpec, cmd string, keyName string) (instance *Instance, err error) {
+func (is *InstanceService) InstanceCreate(cluster *clusterv1.Cluster, name string, config *openstackconfigv1.OpenstackProviderSpec, cmd string, keyName string) (instance *Instance, err error) {
+	clusterName := fmt.Sprintf("%s/%s", cluster.ObjectMeta.Namespace, cluster.Name)
 	if config == nil {
 		return nil, fmt.Errorf("create Options need be specified to create instace")
 	}
@@ -362,9 +364,29 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 	if err != nil {
 		return nil, err
 	}
+
+	// status is a instance of OpenstackClusterProviderStatus, if given network need to
+	// query from cluster status
+	status, err := providerv1.ClusterStatusFromProviderStatus(cluster.Status.ProviderStatus)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load cluster provider status: %v", err)
+	}
+
+	clusterNetwork := status.Network
+
 	// Get all network UUIDs
 	var nets []ServerNetwork
 	for _, net := range config.Networks {
+		if net.FromCluster {
+			//Get Network from cluster, ignore other settings
+			klog.V(2).Infof("Use cluster network directly")
+			nets = append(nets, ServerNetwork{
+				networkID: clusterNetwork.ID,
+				subnetID:  clusterNetwork.Subnet.ID,
+			})
+			// use cluster, so ignore others
+			continue
+		}
 		opts := networks.ListOpts(net.Filter)
 		opts.ID = net.UUID
 		ids, err := getNetworkIDsByFilter(is, &opts)

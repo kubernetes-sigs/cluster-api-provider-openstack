@@ -55,10 +55,26 @@ spec:
                   tags:
                     type: string
                 type: object
+              fromCluster:
+                type: boolean
               subnets:
                 items:
                   properties:
                     filter:
+                      properties:
+                        cidr:
+                          type: string
+                        id:
+                          type: string
+                        limit:
+                          format: int64
+                          type: integer
+                        marker:
+                          type: string
+                        name:
+                          type: string
+                        tags:
+                          type: string
                       type: object
                     uuid:
                       type: string
@@ -66,6 +82,8 @@ spec:
                 type: array
               uuid:
                 type: string
+            required:
+            - fromCluster
             type: object
           type: array
         securityGroups:

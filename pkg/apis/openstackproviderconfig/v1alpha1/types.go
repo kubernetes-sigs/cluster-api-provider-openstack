@@ -104,6 +104,8 @@ type NetworkParam struct {
 	Filter Filter `json:"filter,omitempty"`
 	// Subnet within a network to use
 	Subnets []SubnetParam `json:"subnets,omitempty"`
+	// Indicate this comes from cluster, should default to False
+	FromCluster bool `json:"fromCluster"`
 }
 
 type Filter struct {
