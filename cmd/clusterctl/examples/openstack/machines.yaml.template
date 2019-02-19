@@ -19,7 +19,7 @@ items:
         - uuid: <Kubernetes Network ID>
         floatingIP: <Available Floating IP>
         securityGroups:
-        - default
+        - <Security Group ID>
         userDataSecret:
           name: master-user-data
           namespace: openstack-provider-system
@@ -47,7 +47,7 @@ items:
         - uuid: <Kubernetes Network ID>
         floatingIP: <Available Floating IP>
         securityGroups:
-        - default
+        - <Security Group ID>
         userDataSecret:
           name: worker-user-data
           namespace: openstack-provider-system
