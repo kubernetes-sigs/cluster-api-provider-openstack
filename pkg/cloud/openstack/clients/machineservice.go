@@ -37,6 +37,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/trunks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/gophercloud/gophercloud/pagination"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -67,6 +68,10 @@ type Instance struct {
 	servers.Server
 }
 
+type ServerNetwork struct {
+	networkID string
+	subnetID  string
+}
 type InstanceListOpts struct {
 	// Name of the image in URL format.
 	Image string `q:"image"`
@@ -254,6 +259,22 @@ func getNetworkIDsByFilter(is *InstanceService, opts *networks.ListOpts) ([]stri
 	return uuids, nil
 }
 
+func CreatePort(is *InstanceService, name string, net ServerNetwork, securityGroups *[]string) (ports.Port, error) {
+	portCreateOpts := ports.CreateOpts{
+		Name:           name,
+		NetworkID:      net.networkID,
+		SecurityGroups: securityGroups,
+	}
+	if net.subnetID != "" {
+		portCreateOpts.FixedIPs = []ports.IP{{SubnetID: net.subnetID}}
+	}
+	newPort, err := ports.Create(is.networkClient, portCreateOpts).Extract()
+	if err != nil {
+		return ports.Port{}, fmt.Errorf("Create port for server err: %v", err)
+	}
+	return *newPort, nil
+}
+
 func (is *InstanceService) InstanceCreate(clusterName string, name string, config *openstackconfigv1.OpenstackProviderSpec, cmd string, keyName string) (instance *Instance, err error) {
 	if config == nil {
 		return nil, fmt.Errorf("create Options need be specified to create instace")
@@ -271,22 +292,33 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 		"cluster-api-provider-openstack",
 		clusterName,
 	}
-	var nets []servers.Network
+	// Get all network UUIDs
+	var nets []ServerNetwork
 	for _, net := range config.Networks {
-		if net.UUID == "" {
+		if net.UUID == "" && net.SubnetID == "" {
 			opts := networks.ListOpts(net.Filter)
 			ids, err := getNetworkIDsByFilter(is, &opts)
 			if err != nil {
 				return nil, err
 			}
 			for _, netID := range ids {
-				nets = append(nets, servers.Network{
-					UUID: netID,
+				nets = append(nets, ServerNetwork{
+					networkID: netID,
 				})
 			}
+		} else if net.UUID == "" && net.SubnetID != "" {
+			subnet, err := subnets.Get(is.networkClient, net.SubnetID).Extract()
+			if err != nil {
+				return nil, err
+			}
+			nets = append(nets, ServerNetwork{
+				networkID: subnet.NetworkID,
+				subnetID:  net.SubnetID,
+			})
 		} else {
-			nets = append(nets, servers.Network{
-				UUID: net.UUID,
+			nets = append(nets, ServerNetwork{
+				networkID: net.UUID,
+				subnetID:  net.SubnetID,
 			})
 		}
 		if len(net.Filter.Tags) > 0 {
@@ -296,9 +328,12 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 	userData := base64.StdEncoding.EncodeToString([]byte(cmd))
 	var ports_list []servers.Network
 	for _, net := range nets {
+		if net.networkID == "" {
+			return nil, fmt.Errorf("No network was found or provided. Please check your machine configuration and try again")
+		}
 		allPages, err := ports.List(is.networkClient, ports.ListOpts{
 			Name:      name,
-			NetworkID: net.UUID,
+			NetworkID: net.networkID,
 		}).AllPages()
 		if err != nil {
 			return nil, fmt.Errorf("Searching for existing port for server err: %v", err)
@@ -310,16 +345,10 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 		var port ports.Port
 		if len(portList) == 0 {
 			// create server port
-			portCreateOpts := ports.CreateOpts{
-				Name:           name,
-				NetworkID:      net.UUID,
-				SecurityGroups: &config.SecurityGroups,
-			}
-			newPort, err := ports.Create(is.networkClient, portCreateOpts).Extract()
+			port, err = CreatePort(is, name, net, &config.SecurityGroups)
 			if err != nil {
-				return nil, fmt.Errorf("Create port for server err: %v", err)
+				return nil, fmt.Errorf("Failed to create port err: %v", err)
 			}
-			port = *newPort
 		} else {
 			port = portList[0]
 		}
