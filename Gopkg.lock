@@ -609,7 +609,7 @@
   revision = "408db4a50408e2149acbd657bceb2480c13cb0a4"
 
 [[projects]]
-  digest = "1:d6874ca33f4e906880000209ce80c3476d1c128b9d8a157891a875554baf787d"
+  digest = "1:e2035d60919705a125feeb8b13926383aff8817634b2c4550743c19ca21f3b08"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/errors",
@@ -656,7 +656,7 @@
     "third_party/forked/golang/json",
     "third_party/forked/golang/reflect",
   ]
-  pruneopts = "NUT"
+  pruneopts = "T"
   revision = "103fd098999dc9c0c88536f5c9ad2e5da39373ae"
 
 [[projects]]

@@ -111,6 +111,11 @@ required = [
   non-go = true
 
 [[prune.project]]
+  name = "k8s.io/apimachinery"
+  unused-packages = false
+  non-go = false
+
+[[prune.project]]
   name = "github.com/openshift/cluster-api"
   unused-packages = false
   non-go = false
