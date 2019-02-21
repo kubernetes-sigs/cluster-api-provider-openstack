@@ -78,6 +78,8 @@ type NetworkParam struct {
 	FixedIp string `json:"fixed_ip,omitempty"`
 	// Filters for optional network query
 	Filter Filter `json:"filter,omitempty"`
+	// Subnet within a network to use
+	SubnetID string `json:"subnet_id,omitempty"`
 }
 
 type Filter struct {
