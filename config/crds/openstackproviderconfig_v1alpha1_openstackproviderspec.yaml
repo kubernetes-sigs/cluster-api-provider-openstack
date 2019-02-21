@@ -1,0 +1,81 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  labels:
+    controller-tools.k8s.io: "1.0"
+  name: openstackproviderspecs.openstackproviderconfig.k8s.io
+spec:
+  group: openstackproviderconfig.k8s.io
+  names:
+    kind: OpenstackProviderSpec
+    plural: openstackproviderspecs
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          type: string
+        availabilityZone:
+          type: string
+        cloudName:
+          type: string
+        cloudsSecret:
+          type: object
+        flavor:
+          type: string
+        floatingIP:
+          type: string
+        image:
+          type: string
+        keyName:
+          type: string
+        kind:
+          type: string
+        metadata:
+          type: object
+        networks:
+          items:
+            properties:
+              filter:
+                properties:
+                  id:
+                    type: string
+                  limit:
+                    format: int64
+                    type: integer
+                  marker:
+                    type: string
+                  name:
+                    type: string
+                  shared:
+                    type: boolean
+                  status:
+                    type: string
+                  tags:
+                    type: string
+                type: object
+              uuid:
+                type: string
+            type: object
+          type: array
+        securityGroups:
+          items:
+            type: string
+          type: array
+        sshUserName:
+          type: string
+        userDataSecret:
+          type: object
+      required:
+      - cloudsSecret
+      - cloudName
+      - flavor
+      - image
+  version: v1alpha1
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

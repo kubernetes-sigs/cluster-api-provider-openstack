@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+generatorOptions:
+  disableNameSuffixHash: true
+
+resources:
+- rbac/secrets_role_binding.yaml
+- rbac/rbac_role_binding.yaml
+- rbac/secrets_role.yaml
+- rbac/rbac_role.yaml
+- manager/manager.yaml
+- crds/openstackproviderconfig_v1alpha1_openstackclusterproviderstatus.yaml
+- crds/openstackproviderconfig_v1alpha1_openstackclusterproviderspec.yaml
+- crds/openstackproviderconfig_v1alpha1_openstackproviderspec.yaml

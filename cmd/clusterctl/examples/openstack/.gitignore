@@ -1,1 +1,6 @@
 out/
+provider-component/user-data/ubuntu/master-user-data.sh
+provider-component/user-data/ubuntu/worker-user-data.sh
+provider-component/user-data/centos/master-user-data.sh
+provider-component/user-data/centos/worker-user-data.sh
+provider-component/clouds-secrets/configs/

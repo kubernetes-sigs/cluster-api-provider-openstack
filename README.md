@@ -8,7 +8,7 @@ Learn how to engage with the Kubernetes community on the [community page](http:/
 
 You can reach the maintainers of this project at:
 
-- [#cluster-api on Kubernetes Slack](http://kubernetes.slack.com/messages/cluster-api)
+- [#cluster-api-openstack on Kubernetes Slack](https://kubernetes.slack.com/messages/cluster-api-openstack)
 - [SIG-Cluster-Lifecycle Mailing List](https://groups.google.com/forum/#!forum/kubernetes-sig-cluster-lifecycle)
 
 ### Code of conduct
@@ -33,58 +33,28 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
 
 ### Cluster Creation
 
-1. Create the `cluster.yaml`, `machines.yaml`, `provider-components.yaml`, and `addons.yaml` files if needed:
+1. Create the `cluster.yaml`, `machines.yaml`, `provider-components.yaml`, and `addons.yaml` files if needed. If you want to use the generate-yaml.sh script, then you will need kustomize version 1.0.11, which can be found at https://github.com/kubernetes-sigs/kustomize/releases/tag/v1.0.11, and the latest go implementation of yq, which can be found at https://github.com/mikefarah/yq. The script has the following usage:
 
    ```bash
    cd examples/openstack
-   ./generate-yaml.sh --provider-os [os name] [options]
+   ./generate-yaml.sh [options] <path/to/clouds.yaml> <openstack cloud> <provider os>
    cd ../..
    ```
-   [os name] is the operating system of your provider environment. 
-   Supported Operating Systems: 
-   - `ubuntu` 
+   `<provider os>` specifies the operating system of the virtual machines Kubernetes will run on.
+   Supported Operating Systems:
+   - `ubuntu`
    - `centos`
 
-   #### Interactively submit provider information
-   By default, the generater script will give you a series of command line prompts, asking the following information about your cloud provider:
+   #### Quick notes on clouds.yaml
+   We no longer support generating clouds.yaml. You should be able to get a valid clouds.yaml from your openstack cluster. However, make sure that the following fields are included, and correct.
 
-   - `user-name`
-   - `domain-name`
-   - `project-id`
-   - `region-name`
-   - `auth-url`
+   - `username`
+   - `user_domain_name`
+   - `project_id`
+   - `region_name`
+   - `auth_url`
    - `password`
-
-   #### Use clouds.yaml to submit provider information
-   If you want to generate scripts without being prompted interactively, you can pass generate-yaml a clouds.yaml file. After downloading your clouds.yaml from your provider, make sure that it has the information listed above filled out. It is very likely that it will at lest be missing the password field. Also, note that domain-name is the same as project-name. You may reference the following sample clouds.yaml to see what yours should look like.
-
-   ```yaml
-   clouds:
-     openstack:
-       auth:
-         auth_url: https://yourauthurl:5000/v3
-         username: foo
-         password: bar
-         project_id: foobar123
-         project_name: foobar
-         user_domain_name: "Default"
-       region_name: "Region_1"
-       interface: "public"
-       identity_api_version: 3
-   ```
-
-   To specify which cloud to use, set the OS_CLOUD environment variable with its name. By default, the generator will use the cloud "openstack". Based on the example above, the following command sets the correct cloud:
-
-   ```bash
-   export OS_CLOUD=openstack
-   ```
-
-   To pass a clouds.yaml file to generate-yaml, set the **-c** or **--clouds** options, followed by the path to a clouds.yaml file. Here are some examples of this syntax:
-
-   ```bash
-   ./generate-yaml.sh --provider-os [os name] -c clouds.yaml
-   ./generate-yaml.sh --provider-os [os name] --clouds clouds.yaml
-   ```
+   - `auth_url`
 
    You **will need** to make changes to the generated files to create a working cluster.
    You can find some guidance on what needs to be edited, and how to create some of the
@@ -102,16 +72,27 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
 2. Create a cluster:
 
    ```bash
-   ./clusterctl create cluster --bootstrap-type minikube --bootstrap-flags kubernetes-version=v1.12.3 --provider openstack -c examples/openstack/[os name]/out/cluster.yaml -m examples/openstack/[os name]/out/machines.yaml -p examples/openstack/[os name]/out/provider-components.yaml
+   ./clusterctl create cluster --bootstrap-type minikube --bootstrap-flags kubernetes-version=v1.12.3 --provider openstack -c examples/openstack/out/cluster.yaml -m examples/openstack/out/machines.yaml -p examples/openstack/out/provider-components.yaml
    ```
 
-To choose a specific minikube driver, please use the `--vm-driver` command line parameter. For example to use the kvm2 driver with clusterctl you woud add `--vm-driver kvm2`, for linux, if you haven't installed any driver, you can add `--vm-driver none`.
+To choose a specific minikube driver, please use the `--bootstrap-flags vm-driver=xxx` command line parameter. For example to use the kvm2 driver with clusterctl you woud add `--bootstrap-flags vm-driver=kvm2`, for linux, if you haven't installed any driver, you can add `--bootstrap-flags vm-driver=none`.
 
 Additional advanced flags can be found via help.
 
 ```bash
 ./clusterctl create cluster --help
 ```
+
+### Managed OpenStack Security Groups
+
+In `Cluster.spec.ProviderSpec` there is a boolean option called `ManagedSecurityGroups` that, if set to `true`, will create a default set of security groups for the cluster. These are meant for a "standard" setup, and might not be suitable for every environment. Please review the rules below before you use them.
+
+*NOTE*: For now, there is no way to automatically use these rules, which makes them a bit cumbersome to use, this will be possible in the near future.
+
+The rules created are:
+
+* A rule for the controlplane machine, that allows access from everywhere to port 22 and 443.
+* A rule for all the machines, both the controlplane and the nodes that allow all traffic between members of this group.
 
 ### Interacting with your cluster
 
@@ -143,7 +124,13 @@ your openstack Cluster API Kubernetes cluster.
     kubectl --kubeconfig=kubeconfig delete machines -l set=master
     ```
 
-3. Delete the ssh keypair that were created for your cluster machine.
+3. Delete the kubeconfig file that were created for your cluster.
+
+   ```bash
+   rm kubeconfig
+   ```
+
+4. Delete the ssh keypair that were created for your cluster machine.
 
    ```bash
    rm -rf $HOME/.ssh/openstack_tmp*
