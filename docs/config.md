@@ -124,13 +124,30 @@ openstack security group rule create --ingress --protocol tcp --dst-port 443 kub
 openstack security group rule create --egress
 ```
 
-In machines.yaml, we apply the security group `default` to the nodes in your cluster. You may add the following security group rules to the `default` group, or you may add the rulset to a seperate security group. You can add that group to machines.yaml by adding the security group IDs, where is says security-groups like so:
+## Security Groups
+In machines.yaml, you can specify openstack security groups to be applied to each server in the `securityGroups` section of the YAML. You can specify the security group in 3 ways: by ID, by Name, or by filters. When you specify a security group by ID or Name, it will always return 1 security group or an error when it finds more than one security group, or no security groups. If you want to specify multiple security groups without explicitly listing them, you can use a filter. The following filters are available to you:
+
+  - Name
+  - TenantID
+  - ProjectID
+  - Limit
+  - Marker
+  - SortKey
+  - SortDir
+  - Tags
+  - TagsAny
+  - NotTags
+  - NotTagsAny
+
+Each security group can `only` be specified by uuid, name, or a filter. Attempting to use more than one of these per entry will result in an error. Listing duplicate security groups will also result in an error. An example of the correct syntax for each of these use cases is below:
 
 ```yaml
 securityGroups:
-  - default_SG_UUID
-  - NewGroupName_SG_UUID
-  - AnotherGroupName_SG_UUID
+  - uuid: < your security group ID >
+  - name: < your security group Name >
+  - filter:
+      project_id: < you project ID >
+      tags: < a tag >
 ```
 
 ## Operating System Images
