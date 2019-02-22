@@ -70,7 +70,24 @@ spec:
           type: array
         securityGroups:
           items:
-            type: string
+            properties:
+              filter:
+                properties:
+                  limit:
+                    format: int64
+                    type: integer
+                  marker:
+                    type: string
+                  name:
+                    type: string
+                  tags:
+                    type: string
+                type: object
+              name:
+                type: string
+              uuid:
+                type: string
+            type: object
           type: array
         sshUserName:
           type: string

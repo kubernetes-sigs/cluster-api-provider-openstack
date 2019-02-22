@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
+
 	"gopkg.in/yaml.v2"
 	"k8s.io/client-go/kubernetes"
 
@@ -300,6 +302,83 @@ func CreatePort(is *InstanceService, name string, net ServerNetwork, securityGro
 	return *newPort, nil
 }
 
+func isDuplicate(list []string, name string) bool {
+	if list == nil || len(list) == 0 {
+		return false
+	}
+	for _, element := range list {
+		if element == name {
+			return true
+		}
+	}
+	return false
+}
+
+func GetSecurityGroups(is *InstanceService, sg_param []openstackconfigv1.SecurityGroupParam) ([]string, error) {
+	var sgIDs []string
+	for _, sg := range sg_param {
+		if sg.UUID != "" {
+			// check syntax
+			if sg.Name != "" || sg.Filter != (openstackconfigv1.SecurityGroupFilter{}) {
+				return []string{}, fmt.Errorf("Syntax Error: too many fields provided for security group %s.\nPlease only provide only a uuid, a name, or a set of filters", sg.UUID)
+			}
+			if isDuplicate(sgIDs, sg.UUID) {
+				return []string{}, fmt.Errorf("Duplication Error: Duplicate security group provided: %s", sg.UUID)
+			}
+			sgIDs = append(sgIDs, sg.UUID)
+		} else if sg.Name != "" {
+			// check syntax
+			if sg.Filter != (openstackconfigv1.SecurityGroupFilter{}) {
+				return []string{}, fmt.Errorf("Syntax Error: too many fields provided for security group %s.\nPlease only provide only a uuid, a name, or a set of filters", sg.Name)
+			}
+			sgID, err := groups.IDFromName(is.networkClient, sg.Name)
+			if err != nil {
+				return []string{}, err
+			}
+			if isDuplicate(sgIDs, sgID) {
+				return []string{}, fmt.Errorf("Duplication Error: Duplicate security group provided: %s", sgID)
+			}
+			sgIDs = append(sgIDs, sgID)
+		} else if sg.Filter != (openstackconfigv1.SecurityGroupFilter{}) {
+			listOpts := groups.ListOpts{
+				Name:       sg.Filter.Name,
+				TenantID:   sg.Filter.TenantID,
+				ProjectID:  sg.Filter.ProjectID,
+				Limit:      sg.Filter.Limit,
+				Marker:     sg.Filter.Marker,
+				SortKey:    sg.Filter.SortKey,
+				SortDir:    sg.Filter.SortDir,
+				Tags:       sg.Filter.Tags,
+				TagsAny:    sg.Filter.TagsAny,
+				NotTags:    sg.Filter.NotTags,
+				NotTagsAny: sg.Filter.NotTagsAny,
+			}
+			pager := groups.List(is.networkClient, listOpts)
+			err := pager.EachPage(func(page pagination.Page) (bool, error) {
+				SGList, err := groups.ExtractGroups(page)
+				if err != nil {
+					return false, err
+				} else if len(SGList) == 0 {
+					return false, fmt.Errorf("No networks could be found with the filters provided")
+				} else {
+					for _, group := range SGList {
+						if isDuplicate(sgIDs, group.ID) {
+							return false, fmt.Errorf("Duplication Error: Duplicate security group provided: %s", group.ID)
+						}
+						sgIDs = append(sgIDs, group.ID)
+					}
+				}
+				return true, nil
+			})
+			if err != nil {
+				return []string{}, err
+			}
+		}
+	}
+	fmt.Printf("Security Groups: %v", sgIDs)
+	return sgIDs, nil
+}
+
 func (is *InstanceService) InstanceCreate(clusterName string, name string, config *openstackconfigv1.OpenstackProviderSpec, cmd string, keyName string) (instance *Instance, err error) {
 	if config == nil {
 		return nil, fmt.Errorf("create Options need be specified to create instace")
@@ -316,6 +395,11 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 	clusterTags := []string{
 		"cluster-api-provider-openstack",
 		clusterName,
+	}
+	// Get security groups
+	securityGroups, err := GetSecurityGroups(is, config.SecurityGroups)
+	if err != nil {
+		return nil, err
 	}
 	// Get all network UUIDs
 	var nets []ServerNetwork
@@ -374,7 +458,7 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 		var port ports.Port
 		if len(portList) == 0 {
 			// create server port
-			port, err = CreatePort(is, name, net, &config.SecurityGroups)
+			port, err = CreatePort(is, name, net, &securityGroups)
 			if err != nil {
 				return nil, fmt.Errorf("Failed to create port err: %v", err)
 			}
@@ -434,7 +518,7 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 		AvailabilityZone: config.AvailabilityZone,
 		Networks:         ports_list,
 		UserData:         []byte(userData),
-		SecurityGroups:   config.SecurityGroups,
+		SecurityGroups:   securityGroups,
 		ServiceClient:    is.computeClient,
 	}
 	server, err := servers.Create(is.computeClient, keypairs.CreateOptsExt{
