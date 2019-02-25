@@ -10,7 +10,7 @@ To succesfully run a kubernetes cluster in openstack, you will need to configure
 
 ## Machines YAML
 
-After running the `generate-yaml.sh`, the file `cmd/clusterct/examples/openstack/out/machines.yaml` will be created at that location. This file stores information on what openstack elements to use to create the cluster on, and which cluster components to create. We provide you with a template to create one master and one worker node, however the template is incomplete and needs to be filled in. It looks like this:
+After running the `generate-yaml.sh`, the file `cmd/clusterctl/examples/openstack/out/machines.yaml` will be created at that location. This file stores information on what openstack elements to use to create the cluster on, and which cluster components to create. We provide you with a template to create one master and one worker node, however the template is incomplete and needs to be filled in. It looks like this:
 
 ```yaml
 items:
