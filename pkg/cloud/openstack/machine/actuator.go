@@ -42,7 +42,8 @@ import (
 const (
 	CloudConfigPath = "/etc/cloud/cloud_config.yaml"
 
-	UserDataKey = "userData"
+	UserDataKey          = "userData"
+	DisableTemplatingKey = "disableTemplating"
 
 	TimeoutInstanceCreate       = 5 * time.Minute
 	TimeoutInstanceDelete       = 5 * time.Minute
@@ -96,6 +97,7 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 
 	// get machine startup script
 	var ok bool
+	var disableTemplating bool
 	userData := []byte{}
 	if providerSpec.UserDataSecret != nil {
 		namespace := providerSpec.UserDataSecret.Namespace
@@ -116,10 +118,12 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 		if !ok {
 			return fmt.Errorf("Machine's userdata secret %v in namespace %v did not contain key %v", providerSpec.UserDataSecret.Name, namespace, UserDataKey)
 		}
+
+		_, disableTemplating = userDataSecret.Data[DisableTemplatingKey]
 	}
 
 	var userDataRendered string
-	if len(userData) > 0 {
+	if len(userData) > 0 && !disableTemplating {
 		if util.IsControlPlaneMachine(machine) {
 			userDataRendered, err = masterStartupScript(cluster, machine, string(userData))
 			if err != nil {
@@ -139,6 +143,8 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 					"error creating Openstack instance: %v", err))
 			}
 		}
+	} else {
+		userDataRendered = string(userData)
 	}
 
 	instance, err = machineService.InstanceCreate(fmt.Sprintf("%s/%s", cluster.ObjectMeta.Namespace, cluster.Name), machine.Name, providerSpec, userDataRendered, providerSpec.KeyName)
