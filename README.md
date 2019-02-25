@@ -54,7 +54,6 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
    - `region_name`
    - `auth_url`
    - `password`
-   - `auth_url`
 
    You **will need** to make changes to the generated files to create a working cluster.
    You can find some guidance on what needs to be edited, and how to create some of the
