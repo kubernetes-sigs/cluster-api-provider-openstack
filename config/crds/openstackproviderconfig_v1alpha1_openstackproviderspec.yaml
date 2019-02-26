@@ -55,6 +55,15 @@ spec:
                   tags:
                     type: string
                 type: object
+              subnets:
+                items:
+                  properties:
+                    filter:
+                      type: object
+                    uuid:
+                      type: string
+                  type: object
+                type: array
               uuid:
                 type: string
             type: object
@@ -65,6 +74,8 @@ spec:
           type: array
         sshUserName:
           type: string
+        trunk:
+          type: boolean
         userDataSecret:
           type: object
       required:

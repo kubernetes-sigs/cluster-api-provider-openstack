@@ -16,6 +16,98 @@ spec:
       properties:
         apiVersion:
           type: string
+        controlPlaneSecurityGroup:
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            rules:
+              items:
+                properties:
+                  direction:
+                    type: string
+                  etherType:
+                    type: string
+                  name:
+                    type: string
+                  portRangeMax:
+                    format: int64
+                    type: integer
+                  portRangeMin:
+                    format: int64
+                    type: integer
+                  protocol:
+                    type: string
+                  remoteGroupID:
+                    type: string
+                  remoteIPPrefix:
+                    type: string
+                  securityGroupID:
+                    type: string
+                required:
+                - name
+                - direction
+                - etherType
+                - securityGroupID
+                - portRangeMin
+                - portRangeMax
+                - protocol
+                - remoteGroupID
+                - remoteIPPrefix
+                type: object
+              type: array
+          required:
+          - name
+          - id
+          - rules
+          type: object
+        globalSecurityGroup:
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            rules:
+              items:
+                properties:
+                  direction:
+                    type: string
+                  etherType:
+                    type: string
+                  name:
+                    type: string
+                  portRangeMax:
+                    format: int64
+                    type: integer
+                  portRangeMin:
+                    format: int64
+                    type: integer
+                  protocol:
+                    type: string
+                  remoteGroupID:
+                    type: string
+                  remoteIPPrefix:
+                    type: string
+                  securityGroupID:
+                    type: string
+                required:
+                - name
+                - direction
+                - etherType
+                - securityGroupID
+                - portRangeMin
+                - portRangeMax
+                - protocol
+                - remoteGroupID
+                - remoteIPPrefix
+                type: object
+              type: array
+          required:
+          - name
+          - id
+          - rules
+          type: object
         kind:
           type: string
         metadata:

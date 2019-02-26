@@ -79,7 +79,7 @@ type NetworkParam struct {
 	// Filters for optional network query
 	Filter Filter `json:"filter,omitempty"`
 	// Subnet within a network to use
-	SubnetID string `json:"subnet_id,omitempty"`
+	Subnets []SubnetParam `json:"subnets,omitempty"`
 }
 
 type Filter struct {
@@ -98,6 +98,37 @@ type Filter struct {
 	TagsAny      string `json:"tags-any,omitempty"`
 	NotTags      string `json:"not-tags,omitempty"`
 	NotTagsAny   string `json:"not-tags-any,omitempty"`
+}
+
+type SubnetParam struct {
+	// The UUID of the network. Required if you omit the port attribute.
+	UUID string `json:"uuid,omitempty"`
+
+	// Filters for optional network query
+	Filter SubnetFilter `json:"filter,omitempty"`
+}
+
+type SubnetFilter struct {
+	Name            string `json:"name"`
+	EnableDHCP      *bool  `json:"enable_dhcp"`
+	NetworkID       string `json:"network_id"`
+	TenantID        string `json:"tenant_id"`
+	ProjectID       string `json:"project_id"`
+	IPVersion       int    `json:"ip_version"`
+	GatewayIP       string `json:"gateway_ip"`
+	CIDR            string `json:"cidr"`
+	IPv6AddressMode string `json:"ipv6_address_mode"`
+	IPv6RAMode      string `json:"ipv6_ra_mode"`
+	ID              string `json:"id"`
+	SubnetPoolID    string `json:"subnetpool_id"`
+	Limit           int    `json:"limit"`
+	Marker          string `json:"marker"`
+	SortKey         string `json:"sort_key"`
+	SortDir         string `json:"sort_dir"`
+	Tags            string `json:"tags"`
+	TagsAny         string `json:"tags-any"`
+	NotTags         string `json:"not-tags"`
+	NotTagsAny      string `json:"not-tags-any"`
 }
 
 type RootVolume struct {
