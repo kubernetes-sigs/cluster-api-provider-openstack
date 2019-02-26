@@ -259,6 +259,31 @@ func getNetworkIDsByFilter(is *InstanceService, opts *networks.ListOpts) ([]stri
 	return uuids, nil
 }
 
+// A function for getting the id of a subnet by querying openstack with filters
+func getSubnetsByFilter(is *InstanceService, opts *subnets.ListOpts) ([]subnets.Subnet, error) {
+	if opts == nil {
+		return []subnets.Subnet{}, fmt.Errorf("No Filters were passed")
+	}
+	pager := subnets.List(is.networkClient, opts)
+	var snets []subnets.Subnet
+	err := pager.EachPage(func(page pagination.Page) (bool, error) {
+		subnetList, err := subnets.ExtractSubnets(page)
+		if err != nil {
+			return false, err
+		} else if len(subnetList) == 0 {
+			return false, fmt.Errorf("No subnets could be found with the filters provided")
+		}
+		for _, subnet := range subnetList {
+			snets = append(snets, subnet)
+		}
+		return true, nil
+	})
+	if err != nil {
+		return []subnets.Subnet{}, err
+	}
+	return snets, nil
+}
+
 func CreatePort(is *InstanceService, name string, net ServerNetwork, securityGroups *[]string) (ports.Port, error) {
 	portCreateOpts := ports.CreateOpts{
 		Name:           name,
@@ -295,32 +320,36 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 	// Get all network UUIDs
 	var nets []ServerNetwork
 	for _, net := range config.Networks {
-		if net.UUID == "" && net.SubnetID == "" {
-			opts := networks.ListOpts(net.Filter)
-			ids, err := getNetworkIDsByFilter(is, &opts)
-			if err != nil {
-				return nil, err
-			}
-			for _, netID := range ids {
+		opts := networks.ListOpts(net.Filter)
+		opts.ID = net.UUID
+		ids, err := getNetworkIDsByFilter(is, &opts)
+		if err != nil {
+			return nil, err
+		}
+		for _, netID := range ids {
+			if net.Subnets == nil {
 				nets = append(nets, ServerNetwork{
 					networkID: netID,
 				})
 			}
-		} else if net.UUID == "" && net.SubnetID != "" {
-			subnet, err := subnets.Get(is.networkClient, net.SubnetID).Extract()
-			if err != nil {
-				return nil, err
+
+			for _, snet := range net.Subnets {
+				sopts := subnets.ListOpts(snet.Filter)
+				sopts.ID = netID
+				sopts.NetworkID = net.UUID
+				snets, err := getSubnetsByFilter(is, &sopts)
+				if err != nil {
+					return nil, err
+				}
+				for _, snet := range snets {
+					nets = append(nets, ServerNetwork{
+						networkID: snet.NetworkID,
+						subnetID:  snet.ID,
+					})
+				}
 			}
-			nets = append(nets, ServerNetwork{
-				networkID: subnet.NetworkID,
-				subnetID:  net.SubnetID,
-			})
-		} else {
-			nets = append(nets, ServerNetwork{
-				networkID: net.UUID,
-				subnetID:  net.SubnetID,
-			})
 		}
+
 		if len(net.Filter.Tags) > 0 {
 			clusterTags = append(clusterTags, net.Filter.Tags)
 		}
