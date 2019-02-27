@@ -109,26 +109,26 @@ type SubnetParam struct {
 }
 
 type SubnetFilter struct {
-	Name            string `json:"name"`
-	EnableDHCP      *bool  `json:"enable_dhcp"`
-	NetworkID       string `json:"network_id"`
-	TenantID        string `json:"tenant_id"`
-	ProjectID       string `json:"project_id"`
-	IPVersion       int    `json:"ip_version"`
-	GatewayIP       string `json:"gateway_ip"`
-	CIDR            string `json:"cidr"`
-	IPv6AddressMode string `json:"ipv6_address_mode"`
-	IPv6RAMode      string `json:"ipv6_ra_mode"`
-	ID              string `json:"id"`
-	SubnetPoolID    string `json:"subnetpool_id"`
-	Limit           int    `json:"limit"`
-	Marker          string `json:"marker"`
-	SortKey         string `json:"sort_key"`
-	SortDir         string `json:"sort_dir"`
-	Tags            string `json:"tags"`
-	TagsAny         string `json:"tags-any"`
-	NotTags         string `json:"not-tags"`
-	NotTagsAny      string `json:"not-tags-any"`
+	Name            string `json:"name,omitempty"`
+	EnableDHCP      *bool  `json:"enable_dhcp,omitempty"`
+	NetworkID       string `json:"network_id,omitempty"`
+	TenantID        string `json:"tenant_id,omitempty"`
+	ProjectID       string `json:"project_id,omitempty"`
+	IPVersion       int    `json:"ip_version,omitempty"`
+	GatewayIP       string `json:"gateway_ip,omitempty"`
+	CIDR            string `json:"cidr,omitempty"`
+	IPv6AddressMode string `json:"ipv6_address_mode,omitempty"`
+	IPv6RAMode      string `json:"ipv6_ra_mode,omitempty"`
+	ID              string `json:"id,omitempty"`
+	SubnetPoolID    string `json:"subnetpool_id,omitempty"`
+	Limit           int    `json:"limit,omitempty"`
+	Marker          string `json:"marker,omitempty"`
+	SortKey         string `json:"sort_key,omitempty"`
+	SortDir         string `json:"sort_dir,omitempty"`
+	Tags            string `json:"tags,omitempty"`
+	TagsAny         string `json:"tags-any,omitempty"`
+	NotTags         string `json:"not-tags,omitempty"`
+	NotTagsAny      string `json:"not-tags-any,omitempty"`
 }
 
 type RootVolume struct {
