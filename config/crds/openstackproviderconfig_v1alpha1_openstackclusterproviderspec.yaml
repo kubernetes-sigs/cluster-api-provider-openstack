@@ -24,10 +24,14 @@ spec:
           type: string
         kind:
           type: string
+        managedSecurityGroups:
+          type: boolean
         metadata:
           type: object
         nodeCidr:
           type: string
+      required:
+      - managedSecurityGroups
   version: v1alpha1
 status:
   acceptedNames:
