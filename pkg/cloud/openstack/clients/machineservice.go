@@ -335,8 +335,8 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 
 			for _, snet := range net.Subnets {
 				sopts := subnets.ListOpts(snet.Filter)
-				sopts.ID = netID
-				sopts.NetworkID = net.UUID
+				sopts.ID = snet.UUID
+				sopts.NetworkID = netID
 				snets, err := getSubnetsByFilter(is, &sopts)
 				if err != nil {
 					return nil, err
