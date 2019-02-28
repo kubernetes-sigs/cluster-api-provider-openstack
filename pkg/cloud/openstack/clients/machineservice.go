@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
+
 	"gopkg.in/yaml.v2"
 	"k8s.io/client-go/kubernetes"
 
@@ -300,6 +302,44 @@ func CreatePort(is *InstanceService, name string, net ServerNetwork, securityGro
 	return *newPort, nil
 }
 
+func isDuplicate(list []string, name string) bool {
+	if list == nil || len(list) == 0 {
+		return false
+	}
+	for _, element := range list {
+		if element == name {
+			return true
+		}
+	}
+	return false
+}
+
+func GetSecurityGroups(is *InstanceService, sg_param []openstackconfigv1.SecurityGroupParam) ([]string, error) {
+	var sgIDs []string
+	for _, sg := range sg_param {
+		listOpts := groups.ListOpts(sg.Filter)
+		listOpts.Name = sg.Name
+		listOpts.ID = sg.UUID
+		pages, err := groups.List(is.networkClient, listOpts).AllPages()
+		if err != nil {
+			return nil, err
+		}
+
+		SGList, err := groups.ExtractGroups(pages)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, group := range SGList {
+			if isDuplicate(sgIDs, group.ID) {
+				continue
+			}
+			sgIDs = append(sgIDs, group.ID)
+		}
+	}
+	return sgIDs, nil
+}
+
 func (is *InstanceService) InstanceCreate(clusterName string, name string, config *openstackconfigv1.OpenstackProviderSpec, cmd string, keyName string) (instance *Instance, err error) {
 	if config == nil {
 		return nil, fmt.Errorf("create Options need be specified to create instace")
@@ -316,6 +356,11 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 	clusterTags := []string{
 		"cluster-api-provider-openstack",
 		clusterName,
+	}
+	// Get security groups
+	securityGroups, err := GetSecurityGroups(is, config.SecurityGroups)
+	if err != nil {
+		return nil, err
 	}
 	// Get all network UUIDs
 	var nets []ServerNetwork
@@ -374,7 +419,7 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 		var port ports.Port
 		if len(portList) == 0 {
 			// create server port
-			port, err = CreatePort(is, name, net, &config.SecurityGroups)
+			port, err = CreatePort(is, name, net, &securityGroups)
 			if err != nil {
 				return nil, fmt.Errorf("Failed to create port err: %v", err)
 			}
@@ -434,7 +479,7 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 		AvailabilityZone: config.AvailabilityZone,
 		Networks:         ports_list,
 		UserData:         []byte(userData),
-		SecurityGroups:   config.SecurityGroups,
+		SecurityGroups:   securityGroups,
 		ServiceClient:    is.computeClient,
 	}
 	server, err := servers.Create(is.computeClient, keypairs.CreateOptsExt{
