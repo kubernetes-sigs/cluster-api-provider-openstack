@@ -125,9 +125,8 @@ openstack security group rule create --egress
 ```
 
 ## Security Groups
-In machines.yaml, you can specify openstack security groups to be applied to each server in the `securityGroups` section of the YAML. You can specify the security group in 3 ways: by ID, by Name, or by filters. When you specify a security group by ID or Name, it will always return 1 security group or an error when it finds more than one security group, or no security groups. If you want to specify multiple security groups without explicitly listing them, you can use a filter. The following filters are available to you:
+In machines.yaml, you can specify openstack security groups to be applied to each server in the `securityGroups` section of the YAML. You can specify the security group in 3 ways: by ID, by Name, or by filters. When you specify a security group by ID it will always return 1 security group or an error if it fails to find the security group specified. Please note that it is possible to add more than one security group to your machine when using Name or a Filter to specify it. The following filters are available to you:
 
-  - Name
   - TenantID
   - ProjectID
   - Limit
@@ -139,7 +138,7 @@ In machines.yaml, you can specify openstack security groups to be applied to eac
   - NotTags
   - NotTagsAny
 
-Each security group can `only` be specified by uuid, name, or a filter. Attempting to use more than one of these per entry will result in an error. Listing duplicate security groups will also result in an error. An example of the correct syntax for each of these use cases is below:
+Each security group can be specified by its uuid, its name, and a filter. It is recommended that you check to make sure that the name or filters you use return the security group or groups you are expecting using an openstack query. An example of the correct syntax for each of these use cases is below:
 
 ```yaml
 securityGroups:
@@ -147,6 +146,9 @@ securityGroups:
   - name: < your security group Name >
   - filter:
       project_id: < you project ID >
+      tags: < a tag >
+  - name: < your security group Name >
+    filter:
       tags: < a tag >
 ```
 
