@@ -317,65 +317,26 @@ func isDuplicate(list []string, name string) bool {
 func GetSecurityGroups(is *InstanceService, sg_param []openstackconfigv1.SecurityGroupParam) ([]string, error) {
 	var sgIDs []string
 	for _, sg := range sg_param {
-		if sg.UUID != "" {
-			// check syntax
-			if sg.Name != "" || sg.Filter != (openstackconfigv1.SecurityGroupFilter{}) {
-				return []string{}, fmt.Errorf("Syntax Error: too many fields provided for security group %s.\nPlease only provide only a uuid, a name, or a set of filters", sg.UUID)
+		listOpts := groups.ListOpts(sg.Filter)
+		listOpts.Name = sg.Name
+		listOpts.ID = sg.UUID
+		pages, err := groups.List(is.networkClient, listOpts).AllPages()
+		if err != nil {
+			return nil, err
+		}
+
+		SGList, err := groups.ExtractGroups(pages)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, group := range SGList {
+			if isDuplicate(sgIDs, group.ID) {
+				continue
 			}
-			if isDuplicate(sgIDs, sg.UUID) {
-				return []string{}, fmt.Errorf("Duplication Error: Duplicate security group provided: %s", sg.UUID)
-			}
-			sgIDs = append(sgIDs, sg.UUID)
-		} else if sg.Name != "" {
-			// check syntax
-			if sg.Filter != (openstackconfigv1.SecurityGroupFilter{}) {
-				return []string{}, fmt.Errorf("Syntax Error: too many fields provided for security group %s.\nPlease only provide only a uuid, a name, or a set of filters", sg.Name)
-			}
-			sgID, err := groups.IDFromName(is.networkClient, sg.Name)
-			if err != nil {
-				return []string{}, err
-			}
-			if isDuplicate(sgIDs, sgID) {
-				return []string{}, fmt.Errorf("Duplication Error: Duplicate security group provided: %s", sgID)
-			}
-			sgIDs = append(sgIDs, sgID)
-		} else if sg.Filter != (openstackconfigv1.SecurityGroupFilter{}) {
-			listOpts := groups.ListOpts{
-				Name:       sg.Filter.Name,
-				TenantID:   sg.Filter.TenantID,
-				ProjectID:  sg.Filter.ProjectID,
-				Limit:      sg.Filter.Limit,
-				Marker:     sg.Filter.Marker,
-				SortKey:    sg.Filter.SortKey,
-				SortDir:    sg.Filter.SortDir,
-				Tags:       sg.Filter.Tags,
-				TagsAny:    sg.Filter.TagsAny,
-				NotTags:    sg.Filter.NotTags,
-				NotTagsAny: sg.Filter.NotTagsAny,
-			}
-			pager := groups.List(is.networkClient, listOpts)
-			err := pager.EachPage(func(page pagination.Page) (bool, error) {
-				SGList, err := groups.ExtractGroups(page)
-				if err != nil {
-					return false, err
-				} else if len(SGList) == 0 {
-					return false, fmt.Errorf("No networks could be found with the filters provided")
-				} else {
-					for _, group := range SGList {
-						if isDuplicate(sgIDs, group.ID) {
-							return false, fmt.Errorf("Duplication Error: Duplicate security group provided: %s", group.ID)
-						}
-						sgIDs = append(sgIDs, group.ID)
-					}
-				}
-				return true, nil
-			})
-			if err != nil {
-				return []string{}, err
-			}
+			sgIDs = append(sgIDs, group.ID)
 		}
 	}
-	fmt.Printf("Security Groups: %v", sgIDs)
 	return sgIDs, nil
 }
 

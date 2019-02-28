@@ -81,6 +81,7 @@ type SecurityGroupParam struct {
 }
 
 type SecurityGroupFilter struct {
+	ID         string `json:"id,omitempty"`
 	Name       string `json:"name,omitempty"`
 	TenantID   string `json:"tenant_id,omitempty"`
 	ProjectID  string `json:"project_id,omitempty"`
