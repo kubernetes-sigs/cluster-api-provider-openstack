@@ -40,8 +40,6 @@ import (
 )
 
 const (
-	CloudConfigPath = "/etc/cloud/cloud_config.yaml"
-
 	UserDataKey          = "userData"
 	DisableTemplatingKey = "disableTemplating"
 
