@@ -120,6 +120,7 @@ kubernetes.tar.gz
 # TODO(thockin): uncomment this when we stop committing the generated files.
 #zz_generated.*
 zz_generated.openapi.go
+overlays-config/debug/manager/patch.yaml
 
 # make-related metadata
 /.make/
@@ -137,3 +138,4 @@ zz_generated.openapi.go
 
 # binaries
 /bin
+

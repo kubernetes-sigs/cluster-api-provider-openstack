@@ -124,7 +124,7 @@ if [[ $DEBUG == 1 ]];then
     print_help
     exit 1
   fi
-  cat > provider-component/debug/manager/patch.yaml <<EOF
+  cat > $PWD/../../../../overlays-config/debug/manager/patch.yaml <<EOF
 - op: replace
   path: /spec/template/spec/containers/0/image
   value: $USER_IMAGE
@@ -145,12 +145,6 @@ if [[ $DEBUG == 1 ]];then
       add:
         ["SYS_PTRACE"]
 
-- op: add
-  path: /spec/template/spec/containers/0/volumes
-  value:
-    - name: kubeadm
-      hostPath:
-        path: /usr/bin/kubeadm
 EOF
 fi
 
