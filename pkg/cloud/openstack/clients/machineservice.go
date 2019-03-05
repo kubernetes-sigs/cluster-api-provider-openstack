@@ -481,6 +481,8 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 		UserData:         []byte(userData),
 		SecurityGroups:   securityGroups,
 		ServiceClient:    is.computeClient,
+		Tags:             config.Tags,
+		Metadata:         config.ServerMetadata,
 	}
 	server, err := servers.Create(is.computeClient, keypairs.CreateOptsExt{
 		CreateOptsBuilder: serverCreateOpts,
