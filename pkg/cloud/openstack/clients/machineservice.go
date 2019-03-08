@@ -176,9 +176,11 @@ func NewInstanceServiceFromCloud(cloud clientconfig.Cloud) (*InstanceService, er
 	serverClient, err := openstack.NewComputeV2(provider, gophercloud.EndpointOpts{
 		Region: clientOpts.RegionName,
 	})
+
 	if err != nil {
 		return nil, fmt.Errorf("Create serviceClient err: %v", err)
 	}
+
 	networkingClient, err := openstack.NewNetworkV2(provider, gophercloud.EndpointOpts{
 		Region: clientOpts.RegionName,
 	})
@@ -357,6 +359,7 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 		"cluster-api-provider-openstack",
 		clusterName,
 	}
+
 	// Get security groups
 	securityGroups, err := GetSecurityGroups(is, config.SecurityGroups)
 	if err != nil {
@@ -483,6 +486,14 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 		ServiceClient:    is.computeClient,
 		Tags:             config.Tags,
 		Metadata:         config.ServerMetadata,
+	}
+
+	if config.Tags != nil {
+		serverCreateOpts.Tags = config.Tags
+		// NOTE(flaper87): This is the minimum required version
+		// to use tags.
+		is.computeClient.Microversion = "2.52"
+
 	}
 	server, err := servers.Create(is.computeClient, keypairs.CreateOptsExt{
 		CreateOptsBuilder: serverCreateOpts,
