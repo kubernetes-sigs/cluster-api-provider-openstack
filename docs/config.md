@@ -208,7 +208,7 @@ Instead of tagging, you also have the option to add metadata to instances. This 
   spec:
     providerSpec:
       value:
-        server_metadata:
+        serverMetadata:
           name: bob
           nickname: bobbert
 ```

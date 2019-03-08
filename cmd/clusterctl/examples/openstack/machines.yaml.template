@@ -26,7 +26,7 @@ items:
         trunk: false
         tags:
           - <Your Tag>
-        server_metadata:
+        serverMetadata:
           key: value
     versions:
       kubelet: 1.12.3
@@ -58,7 +58,7 @@ items:
         trunk: false
         tags:
           - <Your Tag>
-        server_metadata:
+        serverMetadata:
           key: value
     versions:
       kubelet: 1.12.3
