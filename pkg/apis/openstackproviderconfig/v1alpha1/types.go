@@ -76,6 +76,9 @@ type OpenstackProviderSpec struct {
 
 	// Metadata mapping. Allows you to create a map of key value pairs to add to the server instance.
 	ServerMetadata map[string]string `json:"serverMetadata,omitempty"`
+
+	// Config Drive support
+	ConfigDrive *bool `json:"configDrive,omitempty"`
 }
 
 type SecurityGroupParam struct {
