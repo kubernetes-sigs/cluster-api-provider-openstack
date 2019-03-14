@@ -24,6 +24,10 @@ items:
           name: master-user-data
           namespace: openstack-provider-system
         trunk: false
+        tags:
+          - <Your Tag>
+        serverMetadata:
+          key: value
     versions:
       kubelet: 1.12.3
       controlPlane: 1.12.3
@@ -52,5 +56,9 @@ items:
           name: worker-user-data
           namespace: openstack-provider-system
         trunk: false
+        tags:
+          - <Your Tag>
+        serverMetadata:
+          key: value
     versions:
       kubelet: 1.12.3
