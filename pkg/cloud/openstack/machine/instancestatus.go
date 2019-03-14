@@ -22,9 +22,15 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime/serializer/json"
 
+<<<<<<< HEAD
 	machinev1 "github.com/openshift/cluster-api/pkg/apis/machine/v1beta1"
 	"github.com/openshift/cluster-api/pkg/util"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+=======
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
+	"sigs.k8s.io/cluster-api/pkg/util"
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 )
 
 // Long term, we should retrieve the current status by asking k8s, openstack etc. for all the needed info.
@@ -33,12 +39,20 @@ import (
 
 const InstanceStatusAnnotationKey = "instance-status"
 
+<<<<<<< HEAD
 type instanceStatus *machinev1.Machine
 
 // Get the status of the instance identified by the given machine
 func (oc *OpenstackClient) instanceStatus(machine *machinev1.Machine) (instanceStatus, error) {
 	currentMachine, err := util.GetMachineIfExists(oc.client, machine.Namespace, machine.Name)
 
+=======
+type instanceStatus *clusterv1.Machine
+
+// Get the status of the instance identified by the given machine
+func (oc *OpenstackClient) instanceStatus(machine *clusterv1.Machine) (instanceStatus, error) {
+	currentMachine, err := util.GetMachineIfExists(oc.client, machine.Namespace, machine.Name)
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	if err != nil {
 		return nil, err
 	}
@@ -47,6 +61,7 @@ func (oc *OpenstackClient) instanceStatus(machine *machinev1.Machine) (instanceS
 		// The current status no longer exists because the matching CRD has been deleted (or does not exist yet ie. bootstrapping)
 		return nil, nil
 	}
+<<<<<<< HEAD
 	var i interface{} = currentMachine
 	var v1m = i.(machinev1.Machine)
 	return oc.machineInstanceStatus(&v1m)
@@ -54,6 +69,13 @@ func (oc *OpenstackClient) instanceStatus(machine *machinev1.Machine) (instanceS
 
 // Sets the status of the instance identified by the given machine to the given machine
 func (oc *OpenstackClient) updateInstanceStatus(machine *machinev1.Machine) error {
+=======
+	return oc.machineInstanceStatus(currentMachine)
+}
+
+// Sets the status of the instance identified by the given machine to the given machine
+func (oc *OpenstackClient) updateInstanceStatus(machine *clusterv1.Machine) error {
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	status := instanceStatus(machine)
 	currentMachine, err := util.GetMachineIfExists(oc.client, machine.Namespace, machine.Name)
 	if err != nil {
@@ -65,10 +87,14 @@ func (oc *OpenstackClient) updateInstanceStatus(machine *machinev1.Machine) erro
 		return fmt.Errorf("Machine has already been deleted. Cannot update current instance status for machine %v", machine.ObjectMeta.Name)
 	}
 
+<<<<<<< HEAD
 	var i interface{} = currentMachine
 	var v1m = i.(machinev1.Machine)
 
 	m, err := oc.setMachineInstanceStatus(&v1m, status)
+=======
+	m, err := oc.setMachineInstanceStatus(currentMachine, status)
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	if err != nil {
 		return err
 	}
@@ -77,7 +103,11 @@ func (oc *OpenstackClient) updateInstanceStatus(machine *machinev1.Machine) erro
 }
 
 // Gets the state of the instance stored on the given machine CRD
+<<<<<<< HEAD
 func (oc *OpenstackClient) machineInstanceStatus(machine *machinev1.Machine) (instanceStatus, error) {
+=======
+func (oc *OpenstackClient) machineInstanceStatus(machine *clusterv1.Machine) (instanceStatus, error) {
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	if machine.ObjectMeta.Annotations == nil {
 		// No state
 		return nil, nil
@@ -90,7 +120,11 @@ func (oc *OpenstackClient) machineInstanceStatus(machine *machinev1.Machine) (in
 	}
 
 	serializer := json.NewSerializer(json.DefaultMetaFactory, oc.scheme, oc.scheme, false)
+<<<<<<< HEAD
 	var status machinev1.Machine
+=======
+	var status clusterv1.Machine
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	_, _, err := serializer.Decode([]byte(a), &schema.GroupVersionKind{Group: "cluster.k8s.io", Version: "v1alpha1", Kind: "Machine"}, &status)
 	if err != nil {
 		return nil, fmt.Errorf("decoding failure: %v", err)
@@ -100,14 +134,22 @@ func (oc *OpenstackClient) machineInstanceStatus(machine *machinev1.Machine) (in
 }
 
 // Applies the state of an instance onto a given machine CRD
+<<<<<<< HEAD
 func (oc *OpenstackClient) setMachineInstanceStatus(machine *machinev1.Machine, status instanceStatus) (*machinev1.Machine, error) {
+=======
+func (oc *OpenstackClient) setMachineInstanceStatus(machine *clusterv1.Machine, status instanceStatus) (*clusterv1.Machine, error) {
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	// Avoid status within status within status ...
 	status.ObjectMeta.Annotations[InstanceStatusAnnotationKey] = ""
 
 	serializer := json.NewSerializer(json.DefaultMetaFactory, oc.scheme, oc.scheme, false)
 	b := []byte{}
 	buff := bytes.NewBuffer(b)
+<<<<<<< HEAD
 	err := serializer.Encode((*machinev1.Machine)(status), buff)
+=======
+	err := serializer.Encode((*clusterv1.Machine)(status), buff)
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	if err != nil {
 		return nil, fmt.Errorf("encoding failure: %v", err)
 	}

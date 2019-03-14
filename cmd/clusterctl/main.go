@@ -17,8 +17,13 @@ limitations under the License.
 package main
 
 import (
+<<<<<<< HEAD
 	"github.com/openshift/cluster-api/cmd/clusterctl/cmd"
 	_ "sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack"
+=======
+	_ "sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack"
+	"sigs.k8s.io/cluster-api/cmd/clusterctl/cmd"
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 )
 
 func main() {

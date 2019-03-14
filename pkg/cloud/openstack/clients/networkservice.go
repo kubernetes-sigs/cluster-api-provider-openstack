@@ -204,7 +204,12 @@ func (s *NetworkService) reconcileRouter(clusterName, name string, desired opens
 		return emptyRouter, nil
 	}
 	if desired.ExternalNetworkID == "" {
+<<<<<<< HEAD
 		return emptyRouter, errors.New("unable to create router, due to missing ExternalNetworkID")
+=======
+		klog.V(3).Info("No need to create router, due to missing ExternalNetworkID")
+		return emptyRouter, nil
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	}
 
 	allPages, err := routers.List(s.client, routers.ListOpts{

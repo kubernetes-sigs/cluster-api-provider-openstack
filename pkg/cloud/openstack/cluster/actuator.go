@@ -7,12 +7,19 @@ import (
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/utils/openstack/clientconfig"
+<<<<<<< HEAD
 	clusterv1 "github.com/openshift/cluster-api/pkg/apis/cluster/v1alpha1"
+=======
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	"github.com/pkg/errors"
 	"k8s.io/klog"
 	providerv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
 	providerv1openstack "sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/clients"
+<<<<<<< HEAD
+=======
+	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 )
 
 // Actuator controls cluster related infrastructure.
@@ -29,7 +36,11 @@ func NewActuator(params providerv1openstack.ActuatorParams) (*Actuator, error) {
 // Reconcile creates or applies updates to the cluster.
 func (a *Actuator) Reconcile(cluster *clusterv1.Cluster) error {
 	klog.Infof("Reconciling cluster %v.", cluster.Name)
+<<<<<<< HEAD
 	clusterName := fmt.Sprintf("%s/%s", cluster.ObjectMeta.Name, cluster.Name)
+=======
+	clusterName := fmt.Sprintf("%s/%s", cluster.Namespace, cluster.Name)
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 
 	client, err := a.getNetworkClient(cluster)
 	if err != nil {

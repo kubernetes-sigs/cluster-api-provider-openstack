@@ -42,11 +42,19 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/gophercloud/gophercloud/pagination"
 	"github.com/gophercloud/utils/openstack/clientconfig"
+<<<<<<< HEAD
 	machinev1 "github.com/openshift/cluster-api/pkg/apis/machine/v1beta1"
 	"github.com/openshift/cluster-api/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog"
 	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
+=======
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/klog"
+	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
+	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
+	"sigs.k8s.io/cluster-api/pkg/util"
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 )
 
 const (
@@ -119,7 +127,11 @@ func GetCloudFromSecret(kubeClient kubernetes.Interface, namespace string, secre
 }
 
 // TODO: Eventually we'll have a NewInstanceServiceFromCluster too
+<<<<<<< HEAD
 func NewInstanceServiceFromMachine(kubeClient kubernetes.Interface, machine *machinev1.Machine) (*InstanceService, error) {
+=======
+func NewInstanceServiceFromMachine(kubeClient kubernetes.Interface, machine *clusterv1.Machine) (*InstanceService, error) {
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	machineSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
 	if err != nil {
 		return nil, err
@@ -176,9 +188,17 @@ func NewInstanceServiceFromCloud(cloud clientconfig.Cloud) (*InstanceService, er
 	serverClient, err := openstack.NewComputeV2(provider, gophercloud.EndpointOpts{
 		Region: clientOpts.RegionName,
 	})
+<<<<<<< HEAD
 	if err != nil {
 		return nil, fmt.Errorf("Create serviceClient err: %v", err)
 	}
+=======
+
+	if err != nil {
+		return nil, fmt.Errorf("Create serviceClient err: %v", err)
+	}
+
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	networkingClient, err := openstack.NewNetworkV2(provider, gophercloud.EndpointOpts{
 		Region: clientOpts.RegionName,
 	})
@@ -353,10 +373,20 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 			return nil, fmt.Errorf("There is no trunk support. Please disable it")
 		}
 	}
+<<<<<<< HEAD
 	clusterTags := []string{
 		"cluster-api-provider-openstack",
 		clusterName,
 	}
+=======
+	machineTags := []string{
+		"cluster-api-provider-openstack",
+		clusterName,
+	}
+
+	machineTags = append(machineTags, config.Tags...)
+
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	// Get security groups
 	securityGroups, err := GetSecurityGroups(is, config.SecurityGroups)
 	if err != nil {
@@ -396,7 +426,11 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 		}
 
 		if len(net.Filter.Tags) > 0 {
+<<<<<<< HEAD
 			clusterTags = append(clusterTags, net.Filter.Tags)
+=======
+			machineTags = append(machineTags, net.Filter.Tags)
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 		}
 	}
 	userData := base64.StdEncoding.EncodeToString([]byte(cmd))
@@ -428,7 +462,11 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 		}
 
 		_, err = attributestags.ReplaceAll(is.networkClient, "ports", port.ID, attributestags.ReplaceAllOpts{
+<<<<<<< HEAD
 			Tags: clusterTags}).Extract()
+=======
+			Tags: machineTags}).Extract()
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 		if err != nil {
 			return nil, fmt.Errorf("Tagging port for server err: %v", err)
 		}
@@ -465,7 +503,11 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 			}
 
 			_, err = attributestags.ReplaceAll(is.networkClient, "trunks", trunk.ID, attributestags.ReplaceAllOpts{
+<<<<<<< HEAD
 				Tags: clusterTags}).Extract()
+=======
+				Tags: machineTags}).Extract()
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 			if err != nil {
 				return nil, fmt.Errorf("Tagging trunk for server err: %v", err)
 			}
@@ -481,6 +523,19 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 		UserData:         []byte(userData),
 		SecurityGroups:   securityGroups,
 		ServiceClient:    is.computeClient,
+<<<<<<< HEAD
+=======
+		Tags:             config.Tags,
+		Metadata:         config.ServerMetadata,
+	}
+
+	if config.Tags != nil {
+		serverCreateOpts.Tags = config.Tags
+		// NOTE(flaper87): This is the minimum required version
+		// to use tags.
+		is.computeClient.Microversion = "2.52"
+
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	}
 	server, err := servers.Create(is.computeClient, keypairs.CreateOptsExt{
 		CreateOptsBuilder: serverCreateOpts,

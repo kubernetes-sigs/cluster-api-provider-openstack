@@ -24,9 +24,12 @@ import (
 	"reflect"
 	"time"
 
+<<<<<<< HEAD
 	machinev1 "github.com/openshift/cluster-api/pkg/apis/machine/v1beta1"
 	apierrors "github.com/openshift/cluster-api/pkg/errors"
 	"github.com/openshift/cluster-api/pkg/util"
+=======
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	tokenapi "k8s.io/cluster-bootstrap/token/api"
@@ -36,12 +39,21 @@ import (
 	bootstrap "sigs.k8s.io/cluster-api-provider-openstack/pkg/bootstrap"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/clients"
+<<<<<<< HEAD
+=======
+	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
+	apierrors "sigs.k8s.io/cluster-api/pkg/errors"
+	"sigs.k8s.io/cluster-api/pkg/util"
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
+<<<<<<< HEAD
 	CloudConfigPath = "/etc/cloud/cloud_config.yaml"
 
+=======
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	UserDataKey          = "userData"
 	DisableTemplatingKey = "disableTemplating"
 
@@ -68,7 +80,11 @@ func NewActuator(params openstack.ActuatorParams) (*OpenstackClient, error) {
 	}, nil
 }
 
+<<<<<<< HEAD
 func (oc *OpenstackClient) Create(ctx context.Context, cluster *machinev1.Cluster, machine *machinev1.Machine) error {
+=======
+func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluster, machine *clusterv1.Machine) error {
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	kubeClient := oc.params.KubeClient
 
 	machineService, err := clients.NewInstanceServiceFromMachine(kubeClient, machine)
@@ -124,7 +140,11 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *machinev1.Cluste
 
 	var userDataRendered string
 	if len(userData) > 0 && !disableTemplating {
+<<<<<<< HEAD
 		if machine.Spec.Versions.ControlPlane != "" {
+=======
+		if util.IsControlPlaneMachine(machine) {
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 			userDataRendered, err = masterStartupScript(cluster, machine, string(userData))
 			if err != nil {
 				return oc.handleMachineError(machine, apierrors.CreateMachine(
@@ -177,7 +197,11 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *machinev1.Cluste
 	return oc.updateAnnotation(machine, instance.ID)
 }
 
+<<<<<<< HEAD
 func (oc *OpenstackClient) Delete(ctx context.Context, cluster *machinev1.Cluster, machine *machinev1.Machine) error {
+=======
+func (oc *OpenstackClient) Delete(ctx context.Context, cluster *clusterv1.Cluster, machine *clusterv1.Machine) error {
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	machineService, err := clients.NewInstanceServiceFromMachine(oc.params.KubeClient, machine)
 	if err != nil {
 		return err
@@ -203,13 +227,21 @@ func (oc *OpenstackClient) Delete(ctx context.Context, cluster *machinev1.Cluste
 	return nil
 }
 
+<<<<<<< HEAD
 func (oc *OpenstackClient) Update(ctx context.Context, cluster *machinev1.Cluster, machine *machinev1.Machine) error {
+=======
+func (oc *OpenstackClient) Update(ctx context.Context, cluster *clusterv1.Cluster, machine *clusterv1.Machine) error {
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	status, err := oc.instanceStatus(machine)
 	if err != nil {
 		return err
 	}
 
+<<<<<<< HEAD
 	currentMachine := (*machinev1.Machine)(status)
+=======
+	currentMachine := (*clusterv1.Machine)(status)
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	if currentMachine == nil {
 		instance, err := oc.instanceExists(machine)
 		if err != nil {
@@ -227,9 +259,15 @@ func (oc *OpenstackClient) Update(ctx context.Context, cluster *machinev1.Cluste
 		return nil
 	}
 
+<<<<<<< HEAD
 	if currentMachine.Spec.Versions.ControlPlane != "" {
 		// TODO: add master inplace
 		klog.Errorf("master inplace update failed: %v", err)
+=======
+	if util.IsControlPlaneMachine(currentMachine) {
+		// TODO: add master inplace
+		klog.Errorf("master inplace update failed: not support master in place update now")
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	} else {
 		klog.Infof("re-creating machine %s for update.", currentMachine.ObjectMeta.Name)
 		err = oc.Delete(ctx, cluster, currentMachine)
@@ -252,13 +290,21 @@ func (oc *OpenstackClient) Update(ctx context.Context, cluster *machinev1.Cluste
 			if err != nil {
 				klog.Errorf("create machine %s for update failed: %v", machine.ObjectMeta.Name, err)
 			}
+<<<<<<< HEAD
+=======
+			klog.Infof("Successfully updated machine %s", currentMachine.ObjectMeta.Name)
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 		}
 	}
 
 	return nil
 }
 
+<<<<<<< HEAD
 func (oc *OpenstackClient) Exists(ctx context.Context, cluster *machinev1.Cluster, machine *machinev1.Machine) (bool, error) {
+=======
+func (oc *OpenstackClient) Exists(ctx context.Context, cluster *clusterv1.Cluster, machine *clusterv1.Machine) (bool, error) {
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	instance, err := oc.instanceExists(machine)
 	if err != nil {
 		return false, err
@@ -306,7 +352,11 @@ func getIPFromInstance(instance *clients.Instance) (string, error) {
 // the appropriate reason/message on the Machine.Status. If not, such as during
 // cluster installation, it will operate as a no-op. It also returns the
 // original error for convenience, so callers can do "return handleMachineError(...)".
+<<<<<<< HEAD
 func (oc *OpenstackClient) handleMachineError(machine *machinev1.Machine, err *apierrors.MachineError) error {
+=======
+func (oc *OpenstackClient) handleMachineError(machine *clusterv1.Machine, err *apierrors.MachineError) error {
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	if oc.client != nil {
 		reason := err.Reason
 		message := err.Message
@@ -321,7 +371,11 @@ func (oc *OpenstackClient) handleMachineError(machine *machinev1.Machine, err *a
 	return err
 }
 
+<<<<<<< HEAD
 func (oc *OpenstackClient) updateAnnotation(machine *machinev1.Machine, id string) error {
+=======
+func (oc *OpenstackClient) updateAnnotation(machine *clusterv1.Machine, id string) error {
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	if machine.ObjectMeta.Annotations == nil {
 		machine.ObjectMeta.Annotations = make(map[string]string)
 	}
@@ -338,7 +392,11 @@ func (oc *OpenstackClient) updateAnnotation(machine *machinev1.Machine, id strin
 	return oc.updateInstanceStatus(machine)
 }
 
+<<<<<<< HEAD
 func (oc *OpenstackClient) requiresUpdate(a *machinev1.Machine, b *machinev1.Machine) bool {
+=======
+func (oc *OpenstackClient) requiresUpdate(a *clusterv1.Machine, b *clusterv1.Machine) bool {
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	if a == nil || b == nil {
 		return true
 	}
@@ -349,7 +407,11 @@ func (oc *OpenstackClient) requiresUpdate(a *machinev1.Machine, b *machinev1.Mac
 		a.ObjectMeta.Name != b.ObjectMeta.Name
 }
 
+<<<<<<< HEAD
 func (oc *OpenstackClient) instanceExists(machine *machinev1.Machine) (instance *clients.Instance, err error) {
+=======
+func (oc *OpenstackClient) instanceExists(machine *clusterv1.Machine) (instance *clients.Instance, err error) {
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	machineSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
 	if err != nil {
 		return nil, err
@@ -398,7 +460,11 @@ func (oc *OpenstackClient) createBootstrapToken() (string, error) {
 	), nil
 }
 
+<<<<<<< HEAD
 func (oc *OpenstackClient) validateMachine(machine *machinev1.Machine, config *openstackconfigv1.OpenstackProviderSpec) *apierrors.MachineError {
+=======
+func (oc *OpenstackClient) validateMachine(machine *clusterv1.Machine, config *openstackconfigv1.OpenstackProviderSpec) *apierrors.MachineError {
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	// TODO: other validate of openstackCloud
 	return nil
 }

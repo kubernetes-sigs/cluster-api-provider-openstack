@@ -22,11 +22,19 @@ import (
 	"os"
 	"strings"
 
+<<<<<<< HEAD
 	clustercommon "github.com/openshift/cluster-api/pkg/apis/cluster/common"
 	machinev1 "github.com/openshift/cluster-api/pkg/apis/machine/v1beta1"
 	"github.com/openshift/cluster-api/pkg/util"
 	"k8s.io/klog"
 	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
+=======
+	"k8s.io/klog"
+	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
+	clustercommon "sigs.k8s.io/cluster-api/pkg/apis/cluster/common"
+	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
+	"sigs.k8s.io/cluster-api/pkg/util"
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 )
 
 const ProviderName = "openstack"
@@ -45,7 +53,11 @@ func NewDeploymentClient() *DeploymentClient {
 	return &DeploymentClient{}
 }
 
+<<<<<<< HEAD
 func (*DeploymentClient) GetIP(cluster *machinev1.Cluster, machine *machinev1.Machine) (string, error) {
+=======
+func (*DeploymentClient) GetIP(cluster *clusterv1.Cluster, machine *clusterv1.Machine) (string, error) {
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	if machine.ObjectMeta.Annotations != nil {
 		if ip, ok := machine.ObjectMeta.Annotations[OpenstackIPAnnotationKey]; ok {
 			klog.Infof("Returning IP from machine annotation %s", ip)
@@ -56,7 +68,11 @@ func (*DeploymentClient) GetIP(cluster *machinev1.Cluster, machine *machinev1.Ma
 	return "", errors.New("could not get IP")
 }
 
+<<<<<<< HEAD
 func (d *DeploymentClient) GetKubeConfig(cluster *machinev1.Cluster, master *machinev1.Machine) (string, error) {
+=======
+func (d *DeploymentClient) GetKubeConfig(cluster *clusterv1.Cluster, master *clusterv1.Machine) (string, error) {
+>>>>>>> 564ebf706608601f4c653a5e2c1092332feb661e
 	ip, err := d.GetIP(cluster, master)
 	if err != nil {
 		return "", err
