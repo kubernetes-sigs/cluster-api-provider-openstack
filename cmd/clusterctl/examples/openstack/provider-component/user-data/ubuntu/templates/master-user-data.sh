@@ -103,6 +103,7 @@ Environment="KUBELET_DNS_ARGS=--cluster-dns=${CLUSTER_DNS_SERVER} --cluster-doma
 EOF
 
 echo $OPENSTACK_CLOUD_PROVIDER_CONF | base64 -d > /etc/kubernetes/cloud.conf
+chmod 600 /etc/kubernetes/cloud.conf
 
 systemctl daemon-reload
 systemctl restart kubelet.service
