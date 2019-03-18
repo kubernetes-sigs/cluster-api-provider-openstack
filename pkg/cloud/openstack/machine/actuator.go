@@ -21,7 +21,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"os"
 	"reflect"
+	"strconv"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,8 +48,8 @@ const (
 	DisableTemplatingKey = "disableTemplating"
 	PostprocessorKey     = "postprocessor"
 
-	TimeoutInstanceCreate       = 5 * time.Minute
-	TimeoutInstanceDelete       = 5 * time.Minute
+	TimeoutInstanceCreate       = 5
+	TimeoutInstanceDelete       = 5
 	RetryIntervalInstanceStatus = 10 * time.Second
 
 	TokenTTL = 60 * time.Minute
@@ -67,6 +69,16 @@ func NewActuator(params openstack.ActuatorParams) (*OpenstackClient, error) {
 		scheme:           params.Scheme,
 		DeploymentClient: openstack.NewDeploymentClient(),
 	}, nil
+}
+
+func getTimeout(name string, timeout int) time.Duration {
+	if v := os.Getenv(name); v != "" {
+		timeout, err := strconv.Atoi(v)
+		if err == nil {
+			return time.Duration(timeout)
+		}
+	}
+	return time.Duration(timeout)
 }
 
 func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluster, machine *clusterv1.Machine) error {
@@ -193,8 +205,9 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 		return oc.handleMachineError(machine, apierrors.CreateMachine(
 			"error creating Openstack instance: %v", err))
 	}
-	// TODO: wait instance ready
-	err = util.PollImmediate(RetryIntervalInstanceStatus, TimeoutInstanceCreate, func() (bool, error) {
+	instanceCreateTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT", TimeoutInstanceCreate)
+	instanceCreateTimeout = instanceCreateTimeout * time.Minute
+	err = util.PollImmediate(RetryIntervalInstanceStatus, instanceCreateTimeout, func() (bool, error) {
 		instance, err := machineService.GetInstance(instance.ID)
 		if err != nil {
 			return false, nil
@@ -277,7 +290,9 @@ func (oc *OpenstackClient) Update(ctx context.Context, cluster *clusterv1.Cluste
 		if err != nil {
 			klog.Errorf("delete machine %s for update failed: %v", currentMachine.ObjectMeta.Name, err)
 		} else {
-			err = util.PollImmediate(RetryIntervalInstanceStatus, TimeoutInstanceDelete, func() (bool, error) {
+			instanceDeleteTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_DELETE_TIMEOUT", TimeoutInstanceDelete)
+			instanceDeleteTimeout = instanceDeleteTimeout * time.Minute
+			err = util.PollImmediate(RetryIntervalInstanceStatus, instanceDeleteTimeout, func() (bool, error) {
 				instance, err := oc.instanceExists(machine)
 				if err != nil {
 					return false, nil
