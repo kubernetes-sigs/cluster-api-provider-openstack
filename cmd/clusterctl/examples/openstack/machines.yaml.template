@@ -19,7 +19,7 @@ items:
         - uuid: <Kubernetes Network ID>
         floatingIP: <Available Floating IP>
         securityGroups:
-        - <Security Group ID>
+        - uuid: <Security Group ID>
         userDataSecret:
           name: master-user-data
           namespace: openstack-provider-system
