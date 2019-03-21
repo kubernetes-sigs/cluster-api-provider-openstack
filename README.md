@@ -20,8 +20,8 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
 ### Prerequisites
 
 1. Install `kubectl` (see [here](http://kubernetes.io/docs/user-guide/prereqs/)).
-2. Install [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/), version 0.30.0 or greater.
-3. Install a [driver](https://github.com/kubernetes/minikube/blob/master/docs/drivers.md) for minikube. For Linux, we recommend kvm2. For MacOS, we recommend VirtualBox.
+2. If you want to use VM, install [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/), version 0.30.0 or greater. If you want to use container, install [kind](https://github.com/kubernetes-sigs/kind#installation-and-usage).
+3. Install a [driver](https://github.com/kubernetes/minikube/blob/master/docs/drivers.md) **if you are using minikube**. For Linux, we recommend kvm2. For MacOS, we recommend VirtualBox.
 4. An appropriately configured [Go development environment](https://golang.org/doc/install)
 5. Build the `clusterctl` tool
 
@@ -69,12 +69,23 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
    ```
 
 2. Create a cluster:
+   - If you are using minikube:
 
    ```bash
-   ./clusterctl create cluster --bootstrap-type minikube --bootstrap-flags kubernetes-version=v1.12.3 --provider openstack -c examples/openstack/out/cluster.yaml -m examples/openstack/out/machines.yaml -p examples/openstack/out/provider-components.yaml
+   ./clusterctl create cluster --bootstrap-type minikube --bootstrap-flags kubernetes-version=v1.12.3 \
+     --provider openstack -c examples/openstack/out/cluster.yaml \
+     -m examples/openstack/out/machines.yaml -p examples/openstack/out/provider-components.yaml
    ```
 
-To choose a specific minikube driver, please use the `--bootstrap-flags vm-driver=xxx` command line parameter. For example to use the kvm2 driver with clusterctl you woud add `--bootstrap-flags vm-driver=kvm2`, for linux, if you haven't installed any driver, you can add `--bootstrap-flags vm-driver=none`.
+   To choose a specific minikube driver, please use the `--bootstrap-flags vm-driver=xxx` command line parameter. For example to use the kvm2 driver with clusterctl you woud add `--bootstrap-flags vm-driver=kvm2`, for linux, if you haven't installed any driver, you can add `--bootstrap-flags vm-driver=none`.
+
+   - If you are using kind:
+
+   ```bash
+   ./clusterctl create cluster --bootstrap-type kind --provider openstack \
+     -c examples/openstack/out/cluster.yaml -m examples/openstack/out/machines.yaml \
+     -p examples/openstack/out/provider-components.yaml
+   ```
 
 Additional advanced flags can be found via help.
 
@@ -94,6 +105,12 @@ The rules created are:
 * A rule for all the machines, both the controlplane and the nodes that allow all traffic between members of this group.
 
 ### Interacting with your cluster
+
+If you are using kind, config the `KUBECONFIG` first before using kubectl:
+
+```bash
+export KUBECONFIG="$(kind get kubeconfig-path --name="clusterapi")"
+```
 
 Once you have created a cluster, you can interact with the cluster and machine
 resources using kubectl:
