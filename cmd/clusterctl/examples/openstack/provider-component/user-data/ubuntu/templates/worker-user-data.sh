@@ -26,7 +26,8 @@ function install_configure_docker () {
     echo "exit 101" > /usr/sbin/policy-rc.d
     chmod +x /usr/sbin/policy-rc.d
     trap "rm /usr/sbin/policy-rc.d" RETURN
-    apt-get install -y docker.io
+    docker_version=$(apt-cache policy docker.io | grep 18.06 | awk '{print $1}' | head -n1)
+    apt-get install -y docker.io=${docker_version}
     echo 'DOCKER_OPTS="--iptables=false --ip-masq=false"' > /etc/default/docker
 
     # Reset iptables config
