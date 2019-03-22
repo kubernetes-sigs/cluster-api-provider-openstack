@@ -12,62 +12,7 @@ To succesfully run a kubernetes cluster in openstack, you will need to configure
 
 After running the `generate-yaml.sh`, the file `cmd/clusterctl/examples/openstack/out/machines.yaml` will be created at that location. This file stores information on what openstack elements to use to create the cluster on, and which cluster components to create. We provide you with a template to create one master and one worker node, however the template is incomplete and needs to be filled in. It looks like this:
 
-```yaml
-items:
-- apiVersion: "cluster.k8s.io/v1alpha1"
-  kind: Machine
-  metadata:
-    generateName: openstack-master-
-    labels:
-      set: master
-  spec:
-    providerSpec:
-      value:
-        apiVersion: "openstackproviderconfig/v1alpha1"
-        kind: "OpenstackProviderSpec"
-        flavor: m1.medium
-        image: <Image Name>
-        sshUserName: <SSH Username>
-        keyName: cluster-api-provider-openstack
-        availabilityZone: nova
-        networks:
-        - uuid: <Kubernetes Network ID>
-        floatingIP: <Available Floating IP>
-        securityGroups:
-        - <Security Group ID>
-        userDataSecret:
-          name: master-user-data
-          namespace: openstack-provider-system
-    versions:
-      kubelet: 1.12.3
-      controlPlane: 1.12.3
-- apiVersion: "cluster.k8s.io/v1alpha1"
-  kind: Machine
-  metadata:
-    generateName: openstack-node-
-    labels:
-      set: node
-  spec:
-    providerSpec:
-      value:
-        apiVersion: "openstackproviderconfig/v1alpha1"
-        kind: "OpenstackProviderSpec"
-        flavor: m1.medium
-        image: <Image Name>
-        sshUserName: <SSH Username>
-        keyName: cluster-api-provider-openstack
-        availabilityZone: nova
-        networks:
-        - uuid: <Kubernetes Network ID>
-        floatingIP: <Available Floating IP>
-        securityGroups:
-        - <Security Group ID>
-        userDataSecret:
-          name: worker-user-data
-          namespace: openstack-provider-system
-    versions:
-      kubelet: 1.12.3
-```
+[machine deployment template](../cmd/clusterctl/examples/openstack/machines.yaml.template)
 
 ## Private Network
 
@@ -230,4 +175,40 @@ You can specify multiple networks (or subnets) to connect your server to. To do 
               tags: myTag
           - uuid: your_network_id
           - subnet_id: your_subnet_id
+```
+
+## Tagging Instances
+Tags can be added to instances on startup by populating the tags array where it says `<Your Tags>`. You can remove this if you do not want to tag your instances. Please note that your Nova api must be at least mivroversion 2.52 to use this api! Please refer to the following usage example:
+
+```yaml
+- apiVersion: "cluster.k8s.io/v1alpha1"
+  kind: Machine
+  metadata:
+    generateName: openstack-node-
+    labels:
+      set: node
+  spec:
+    providerSpec:
+      value:
+        tags:
+          - tag1
+          - tag2
+```
+
+## Metadata
+Instead of tagging, you also have the option to add metadata to instances. This functionality should be more commonly available than tagging. Here is a usage example:
+
+```yaml
+- apiVersion: "cluster.k8s.io/v1alpha1"
+  kind: Machine
+  metadata:
+    generateName: openstack-node-
+    labels:
+      set: node
+  spec:
+    providerSpec:
+      value:
+        serverMetadata:
+          name: bob
+          nickname: bobbert
 ```

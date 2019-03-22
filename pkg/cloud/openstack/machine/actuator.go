@@ -229,7 +229,7 @@ func (oc *OpenstackClient) Update(ctx context.Context, cluster *machinev1.Cluste
 
 	if currentMachine.Spec.Versions.ControlPlane != "" {
 		// TODO: add master inplace
-		klog.Errorf("master inplace update failed: %v", err)
+		klog.Errorf("master inplace update failed: not support master in place update now")
 	} else {
 		klog.Infof("re-creating machine %s for update.", currentMachine.ObjectMeta.Name)
 		err = oc.Delete(ctx, cluster, currentMachine)
@@ -252,6 +252,7 @@ func (oc *OpenstackClient) Update(ctx context.Context, cluster *machinev1.Cluste
 			if err != nil {
 				klog.Errorf("create machine %s for update failed: %v", machine.ObjectMeta.Name, err)
 			}
+			klog.Infof("Successfully updated machine %s", currentMachine.ObjectMeta.Name)
 		}
 	}
 
