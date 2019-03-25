@@ -1,0 +1,15 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: clusterapi-controllers
+  namespace: openstack-provider-system
+  labels:
+    control-plane: controller-manager
+    controller-tools.k8s.io: "1.0"
+spec:
+  template:
+    spec:
+      volumes:
+        - name: kubeadm
+          hostPath:
+            path: /opt/bin/kubeadm
