@@ -22,6 +22,8 @@ spec:
           type: string
         cloudsSecret:
           type: object
+        configDrive:
+          type: boolean
         flavor:
           type: string
         floatingIP:
