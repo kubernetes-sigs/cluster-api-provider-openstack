@@ -488,6 +488,7 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 		ServiceClient:    is.computeClient,
 		Tags:             config.Tags,
 		Metadata:         config.ServerMetadata,
+		ConfigDrive:      config.ConfigDrive,
 	}
 
 	if config.Tags != nil {
