@@ -232,7 +232,7 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 
 	}
 
-	return oc.updateAnnotation(machine, instance.ID)
+	return oc.updateMachine(machine, instance.ID)
 }
 
 func (oc *OpenstackClient) Delete(ctx context.Context, cluster *clusterv1.Cluster, machine *clusterv1.Machine) error {
@@ -279,7 +279,7 @@ func (oc *OpenstackClient) Update(ctx context.Context, cluster *clusterv1.Cluste
 		}
 		if instance != nil && instance.Status == "ACTIVE" {
 			klog.Infof("Populating current state for boostrap machine %v", machine.ObjectMeta.Name)
-			return oc.updateAnnotation(machine, instance.ID)
+			return oc.updateMachine(machine, instance.ID)
 		} else {
 			return fmt.Errorf("Cannot retrieve current state to update machine %v", machine.ObjectMeta.Name)
 		}
@@ -328,7 +328,17 @@ func (oc *OpenstackClient) Exists(ctx context.Context, cluster *clusterv1.Cluste
 	if err != nil {
 		return false, err
 	}
-	return instance != nil, err
+
+	exists := (instance != nil)
+
+	if exists && (machine.Spec.ProviderID == nil || *machine.Spec.ProviderID == "") {
+		// This actually refers cluster-api-aws cloud/aws/actuators/machine/actuator.go
+		// TODO: we need consider
+		providerID := fmt.Sprintf("openstack:////%s", instance.ID)
+		machine.Spec.ProviderID = &providerID
+	}
+
+	return exists, err
 }
 
 func getIPFromInstance(instance *clients.Instance) (string, error) {
@@ -386,7 +396,7 @@ func (oc *OpenstackClient) handleMachineError(machine *clusterv1.Machine, err *a
 	return err
 }
 
-func (oc *OpenstackClient) updateAnnotation(machine *clusterv1.Machine, id string) error {
+func (oc *OpenstackClient) updateMachine(machine *clusterv1.Machine, id string) error {
 	if machine.ObjectMeta.Annotations == nil {
 		machine.ObjectMeta.Annotations = make(map[string]string)
 	}
@@ -397,6 +407,12 @@ func (oc *OpenstackClient) updateAnnotation(machine *clusterv1.Machine, id strin
 		return err
 	}
 	machine.ObjectMeta.Annotations[openstack.OpenstackIPAnnotationKey] = ip
+
+	if machine.Spec.ProviderID == nil || *machine.Spec.ProviderID == "" {
+		providerID := fmt.Sprintf("openstack:////%s", id)
+		machine.Spec.ProviderID = &providerID
+	}
+
 	if err := oc.client.Update(nil, machine); err != nil {
 		return err
 	}
