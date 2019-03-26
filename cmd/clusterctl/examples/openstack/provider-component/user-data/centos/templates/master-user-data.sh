@@ -86,42 +86,65 @@ echo $OPENSTACK_CLOUD_PROVIDER_CONF | base64 -d > /etc/kubernetes/cloud.conf
 
 # Set up kubeadm config file to pass parameters to kubeadm init.
 cat > /etc/kubernetes/kubeadm_config.yaml <<EOF
-apiVersion: kubeadm.k8s.io/v1alpha3
+apiVersion: kubeadm.k8s.io/v1beta1
 kind: InitConfiguration
 bootstrapTokens:
-- token: ${TOKEN}
-apiEndpoint:
+- groups:
+  - system:bootstrappers:kubeadm:default-node-token
+  token: ${TOKEN}
+  ttl: 24h0m0s
+  usages:
+  - signing
+  - authentication
+localAPIEndpoint:
   bindPort: 443
 nodeRegistration:
-  name: $(hostname -s)
+  criSocket: /var/run/dockershim.sock
   kubeletExtraArgs:
-    cloud-provider: "openstack"
-    cloud-config: "/etc/kubernetes/cloud.conf"
+    cloud-config: /etc/kubernetes/cloud.conf
+    cloud-provider: openstack
+  taints:
+  - effect: NoSchedule
+    key: node-role.kubernetes.io/master
 ---
-apiVersion: kubeadm.k8s.io/v1alpha3
+apiVersion: kubeadm.k8s.io/v1beta1
 kind: ClusterConfiguration
 kubernetesVersion: v${CONTROL_PLANE_VERSION}
-networking:
-  serviceSubnet: ${SERVICE_CIDR}
+apiServer:
+  extraArgs:
+    cloud-config: /etc/kubernetes/cloud.conf
+    cloud-provider: openstack
+  extraVolumes:
+  - hostPath: /etc/kubernetes/cloud.conf
+    mountPath: /etc/kubernetes/cloud.conf
+    name: cloud
+    readOnly: true
+  timeoutForControlPlane: 4m0s
+certificatesDir: /etc/kubernetes/pki
 clusterName: kubernetes
-apiServerExtraArgs:
-  cloud-provider: "openstack"
-  cloud-config: "/etc/kubernetes/cloud.conf"
-apiServerExtraVolumes:
-- name: cloud
-  hostPath: "/etc/kubernetes/cloud.conf"
-  mountPath: "/etc/kubernetes/cloud.conf"
 controlPlaneEndpoint: ${MASTER}
-controllerManagerExtraArgs:
-  cluster-cidr: ${POD_CIDR}
-  service-cluster-ip-range: ${SERVICE_CIDR}
-  allocate-node-cidrs: "true"
-  cloud-provider: "openstack"
-  cloud-config: "/etc/kubernetes/cloud.conf"
-controllerManagerExtraVolumes:
-- name: cloud
-  hostPath: "/etc/kubernetes/cloud.conf"
-  mountPath: "/etc/kubernetes/cloud.conf"
+controllerManager:
+  extraArgs:
+    allocate-node-cidrs: "true"
+    cloud-config: /etc/kubernetes/cloud.conf
+    cloud-provider: openstack
+    cluster-cidr: ${POD_CIDR}
+    service-cluster-ip-range: ${SERVICE_CIDR}
+  extraVolumes:
+  - hostPath: /etc/kubernetes/cloud.conf
+    mountPath: /etc/kubernetes/cloud.conf
+    name: cloud
+    readOnly: true
+dns:
+  type: CoreDNS
+etcd:
+  local:
+    dataDir: /var/lib/etcd
+imageRepository: k8s.gcr.io
+networking:
+  dnsDomain: cluster.local
+  podSubnet: ""
+  serviceSubnet: ${SERVICE_CIDR}
 EOF
 
 kubeadm init --config /etc/kubernetes/kubeadm_config.yaml

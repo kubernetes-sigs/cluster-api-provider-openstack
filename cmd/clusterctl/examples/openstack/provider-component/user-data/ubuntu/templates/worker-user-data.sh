@@ -79,16 +79,21 @@ echo $OPENSTACK_CLOUD_PROVIDER_CONF | base64 -d > /etc/kubernetes/cloud.conf
 
 # Set up kubeadm config file to pass to kubeadm join.
 cat > /etc/kubernetes/kubeadm_config.yaml <<EOF
-apiVersion: kubeadm.k8s.io/v1alpha3
+apiVersion: kubeadm.k8s.io/v1beta1
 kind: JoinConfiguration
+caCertPath: /etc/kubernetes/pki/ca.crt
+discovery:
+  bootstrapToken:
+    apiServerEndpoint: ${MASTER}
+    token: ${TOKEN}
+    unsafeSkipCAVerification: true
+  timeout: 5m0s
+  tlsBootstrapToken: xp87ac.oaev5jvtje9f0g5h
 nodeRegistration:
+  criSocket: /var/run/dockershim.sock
   kubeletExtraArgs:
-    cloud-provider: "openstack"
-    cloud-config: "/etc/kubernetes/cloud.conf"
-token: ${TOKEN}
-discoveryTokenAPIServers:
-  - ${MASTER}
-discoveryTokenUnsafeSkipCAVerification: true
+    cloud-config: /etc/kubernetes/cloud.conf
+    cloud-provider: openstack
 EOF
 
 # Override network args to use kubenet instead of cni, override Kubelet DNS args and
