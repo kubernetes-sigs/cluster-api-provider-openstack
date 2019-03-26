@@ -79,6 +79,12 @@ type OpenstackProviderSpec struct {
 
 	// Config Drive support
 	ConfigDrive *bool `json:"configDrive,omitempty"`
+
+	// Scheduler hints to be passed to nova scheduler. This makes it possible to e.g. use anti affinity.
+	// See:
+	// https://docs.openstack.org/python-openstackclient/latest/cli/command-objects/server-group.html
+	// https://developer.openstack.org/api-ref/compute/?expanded=create-server-detail#create-server
+	SchedulerHints *SchedulerHints `json:"schedulerHints,omitempty"`
 }
 
 type SecurityGroupParam struct {
@@ -166,6 +172,33 @@ type SubnetFilter struct {
 	TagsAny         string `json:"tags-any,omitempty"`
 	NotTags         string `json:"not-tags,omitempty"`
 	NotTagsAny      string `json:"not-tags-any,omitempty"`
+}
+
+// SchedulerHints represents a set of scheduling hints that are passed to the
+// OpenStack scheduler.
+type SchedulerHints struct {
+	// Group specifies a Server Group to place the instance in.
+	Group string `json:"group,omitempty"`
+
+	// DifferentHost will place the instance on a compute node that does not
+	// host the given instances.
+	DifferentHost []string `json:"differentHost,omitempty"`
+
+	// SameHost will place the instance on a compute node that hosts the given
+	// instances.
+	SameHost []string `json:"sameHost,omitempty"`
+
+	// Query is a conditional statement that results in compute nodes able to
+	// host the instance.
+	// Store the json format of your query in this string.
+	// e.g. [">=","$free_ram_mb",1024]
+	Query string `json:"query,omitempty"`
+
+	// TargetCell specifies a cell name where the instance will be placed.
+	TargetCell string `json:"target_cell,omitempty"`
+
+	// BuildNearHostIP specifies a subnet of compute nodes to host the instance.
+	BuildNearHostIP string `json:"buildNearHostIP,omitempty"`
 }
 
 type RootVolume struct {

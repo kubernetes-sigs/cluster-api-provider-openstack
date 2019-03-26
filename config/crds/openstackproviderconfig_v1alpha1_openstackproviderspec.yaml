@@ -88,6 +88,23 @@ spec:
                 type: string
             type: object
           type: array
+        schedulerHints:
+          properties:
+            buildNearHostIP:
+              type: string
+            differentHost:
+              items:
+                type: string
+              type: array
+            group:
+              type: string
+            query:
+              type: string
+            sameHost:
+              items:
+                type: string
+              type: array
+          type: object
         securityGroups:
           items:
             properties:
