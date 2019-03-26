@@ -43,6 +43,8 @@ spec:
                 properties:
                   description:
                     type: string
+                  adminStateUp:
+                    type: boolean
                   id:
                     type: string
                   limit:
@@ -52,13 +54,29 @@ spec:
                     type: string
                   name:
                     type: string
+                  notTags:
+                    type: string
+                  notTagsAny:
+                    type: string
+                  projectId:
+                    type: string
                   shared:
                     type: boolean
+                  sortDir:
+                    type: string
+                  sortKey:
+                    type: string
                   status:
                     type: string
                   tags:
                     type: string
+                  tagsAny:
+                    type: string
+                  tenantId:
+                    type: string
                 type: object
+              fixedIp:
+                type: string
               subnets:
                 items:
                   properties:
@@ -70,6 +88,11 @@ spec:
                           type: string
                         id:
                           type: string
+                        enableDhcp:
+                          type: boolean
+                        ipVersion:
+                          format: int64
+                          type: integer
                         limit:
                           format: int64
                           type: integer
@@ -78,6 +101,26 @@ spec:
                         name:
                           type: string
                         tags:
+                          type: string
+                        networkId:
+                          type: string
+                        notTags:
+                          type: string
+                        notTagsAny:
+                          type: string
+                        projectId:
+                          type: string
+                        sortDir:
+                          type: string
+                        sortKey:
+                          type: string
+                        subnetpoolId:
+                          type: string
+                        tags:
+                          type: string
+                        tagsAny:
+                          type: string
+                        tenantId:
                           type: string
                       type: object
                     uuid:
@@ -104,7 +147,21 @@ spec:
                     type: string
                   name:
                     type: string
+                  notTags:
+                    type: string
+                  notTagsAny:
+                    type: string
+                  projectId:
+                    type: string
+                  sortDir:
+                    type: string
+                  sortKey:
+                    type: string
                   tags:
+                    type: string
+                  tagsAny:
+                    type: string
+                  tenantId:
                     type: string
                 type: object
               name:

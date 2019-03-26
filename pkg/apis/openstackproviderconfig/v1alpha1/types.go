@@ -94,23 +94,23 @@ type SecurityGroupFilter struct {
 	ID          string `json:"id,omitempty"`
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
-	TenantID    string `json:"tenant_id,omitempty"`
-	ProjectID   string `json:"project_id,omitempty"`
+	TenantID    string `json:"tenantId,omitempty"`
+	ProjectID   string `json:"projectId,omitempty"`
 	Limit       int    `json:"limit,omitempty"`
 	Marker      string `json:"marker,omitempty"`
-	SortKey     string `json:"sort_key,omitempty"`
-	SortDir     string `json:"sort_dir,omitempty"`
+	SortKey     string `json:"sortKey,omitempty"`
+	SortDir     string `json:"sortDir,omitempty"`
 	Tags        string `json:"tags,omitempty"`
-	TagsAny     string `json:"tags-any,omitempty"`
-	NotTags     string `json:"not-tags,omitempty"`
-	NotTagsAny  string `json:"not-tags-any,omitempty"`
+	TagsAny     string `json:"tagsAny,omitempty"`
+	NotTags     string `json:"notTags,omitempty"`
+	NotTagsAny  string `json:"notTagsAny,omitempty"`
 }
 
 type NetworkParam struct {
 	// The UUID of the network. Required if you omit the port attribute.
 	UUID string `json:"uuid,omitempty"`
 	// A fixed IPv4 address for the NIC.
-	FixedIp string `json:"fixed_ip,omitempty"`
+	FixedIp string `json:"fixedIp,omitempty"`
 	// Filters for optional network query
 	Filter Filter `json:"filter,omitempty"`
 	// Subnet within a network to use
@@ -121,19 +121,19 @@ type Filter struct {
 	Status       string `json:"status,omitempty"`
 	Name         string `json:"name,omitempty"`
 	Description  string `json:"description,omitempty"`
-	AdminStateUp *bool  `json:"admin_state_up,omitempty"`
-	TenantID     string `json:"tenant_id,omitempty"`
-	ProjectID    string `json:"project_id,omitempty"`
+	AdminStateUp *bool  `json:"adminStateUp,omitempty"`
+	TenantID     string `json:"tenantId,omitempty"`
+	ProjectID    string `json:"projectId,omitempty"`
 	Shared       *bool  `json:"shared,omitempty"`
 	ID           string `json:"id,omitempty"`
 	Marker       string `json:"marker,omitempty"`
 	Limit        int    `json:"limit,omitempty"`
-	SortKey      string `json:"sort_key,omitempty"`
-	SortDir      string `json:"sort_dir,omitempty"`
+	SortKey      string `json:"sortKey,omitempty"`
+	SortDir      string `json:"sortDir,omitempty"`
 	Tags         string `json:"tags,omitempty"`
-	TagsAny      string `json:"tags-any,omitempty"`
-	NotTags      string `json:"not-tags,omitempty"`
-	NotTagsAny   string `json:"not-tags-any,omitempty"`
+	TagsAny      string `json:"tagsAny,omitempty"`
+	NotTags      string `json:"notTags,omitempty"`
+	NotTagsAny   string `json:"notTagsAny,omitempty"`
 }
 
 type SubnetParam struct {
@@ -147,25 +147,25 @@ type SubnetParam struct {
 type SubnetFilter struct {
 	Name            string `json:"name,omitempty"`
 	Description     string `json:"description,omitempty"`
-	EnableDHCP      *bool  `json:"enable_dhcp,omitempty"`
-	NetworkID       string `json:"network_id,omitempty"`
-	TenantID        string `json:"tenant_id,omitempty"`
-	ProjectID       string `json:"project_id,omitempty"`
-	IPVersion       int    `json:"ip_version,omitempty"`
+	EnableDHCP      *bool  `json:"enableDhcp,omitempty"`
+	NetworkID       string `json:"networkId,omitempty"`
+	TenantID        string `json:"tenantId,omitempty"`
+	ProjectID       string `json:"projectId,omitempty"`
+	IPVersion       int    `json:"ipVersion,omitempty"`
 	GatewayIP       string `json:"gateway_ip,omitempty"`
 	CIDR            string `json:"cidr,omitempty"`
-	IPv6AddressMode string `json:"ipv6_address_mode,omitempty"`
-	IPv6RAMode      string `json:"ipv6_ra_mode,omitempty"`
+	IPv6AddressMode string `json:"ipv6AddressMode,omitempty"`
+	IPv6RAMode      string `json:"ipv6RaMode,omitempty"`
 	ID              string `json:"id,omitempty"`
-	SubnetPoolID    string `json:"subnetpool_id,omitempty"`
+	SubnetPoolID    string `json:"subnetpoolId,omitempty"`
 	Limit           int    `json:"limit,omitempty"`
 	Marker          string `json:"marker,omitempty"`
-	SortKey         string `json:"sort_key,omitempty"`
-	SortDir         string `json:"sort_dir,omitempty"`
+	SortKey         string `json:"sortKey,omitempty"`
+	SortDir         string `json:"sortDir,omitempty"`
 	Tags            string `json:"tags,omitempty"`
-	TagsAny         string `json:"tags-any,omitempty"`
-	NotTags         string `json:"not-tags,omitempty"`
-	NotTagsAny      string `json:"not-tags-any,omitempty"`
+	TagsAny         string `json:"tagsAny,omitempty"`
+	NotTags         string `json:"notTags,omitempty"`
+	NotTagsAny      string `json:"notTagsAny,omitempty"`
 }
 
 type RootVolume struct {
