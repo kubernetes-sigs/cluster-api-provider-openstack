@@ -90,7 +90,7 @@ securityGroups:
   - uuid: < your security group ID >
   - name: < your security group Name >
   - filter:
-      project_id: < you project ID >
+      projectId: < you project ID >
       tags: < a tag >
   - name: < your security group Name >
     filter:
@@ -124,19 +124,19 @@ Rather than just using a network, you have the option of specifying a specific s
 If you have a complex query that you want to use to lookup a network, then you can do this by using a network filter. The filter will allow you to look up a network by the following network features:
   - status
   - name
-  - admin_state_up
-  - tenant_id
-  - project_id
+  - adminStateUp
+  - tenantId
+  - projectId
   - shared
   - id
   - marker
   - limit
-  - sort_key
-  - sort_dir
+  - sortKey
+  - sortDir
   - tags
-  - tags-any
-  - not-tags
-  - not-tags-any
+  - tagsAny
+  - notTags
+  - notTagsAny
 
 By using filters to look up a network, please note that it is possible to get multiple networks as a result. This should not be a problem, however please test your filters with `openstack network list` to be certian that it returns the networks you want. Please refer to the following usage example:
 
