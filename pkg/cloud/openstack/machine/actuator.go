@@ -187,7 +187,7 @@ func (oc *OpenstackClient) Delete(ctx context.Context, cluster *clusterv1.Cluste
 	}
 
 	if instance == nil {
-		klog.Infof("Skipped deleting a VM that is already deleted.\n")
+		klog.Infof("Skipped deleting %s that is already deleted.\n", machine.Name)
 		return nil
 	}
 
