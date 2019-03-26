@@ -10,3 +10,4 @@ approvers:
 reviewers:
   - cluster-api-maintainers
   - cluster-api-openstack-maintainers
+  - cluster-api-openstack-reviewers
