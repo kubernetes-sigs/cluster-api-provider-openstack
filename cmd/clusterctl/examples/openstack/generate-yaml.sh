@@ -122,9 +122,9 @@ MACHINE_CONTROLLER_SSH_PRIVATE_FILE=openstack_tmp
 MACHINE_CONTROLLER_SSH_HOME=${HOME}/.ssh/
 
 # Set up the output dir if it does not yet exist
-mkdir -p out
-cp -n cluster.yaml out/cluster.yaml
-cp -n machines.yaml.template out/machines.yaml
+mkdir -p $PWD/out
+cp -n $PWD/cluster.yaml $PWD/out/cluster.yaml
+cp -n $PWD/machines.yaml.template $PWD/out/machines.yaml
 
 # Make the config directory
 mkdir -p $CONFIG_DIR
@@ -176,10 +176,10 @@ printf $CLOUD > $CONFIG_DIR/os_cloud.txt
 echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" > $CONFIG_DIR/clouds.yaml
 
 # Build provider-components.yaml with kustomize
-kustomize build ../../../../config -o out/provider-components.yaml
-echo "---" >> out/provider-components.yaml
-kustomize build provider-component/clouds-secrets >> out/provider-components.yaml
-echo "---" >> out/provider-components.yaml
-kustomize build provider-component/cluster-api >> out/provider-components.yaml
-echo "---" >> out/provider-components.yaml
-kustomize build $USERDATA/$PROVIDER_OS >> out/provider-components.yaml
+kustomize build $PWD/../../../../config -o $PWD/out/provider-components.yaml
+echo "---" >> $PWD/out/provider-components.yaml
+kustomize build $PWD/provider-component/clouds-secrets >> $PWD/out/provider-components.yaml
+echo "---" >> $PWD/out/provider-components.yaml
+kustomize build $PWD/provider-component/cluster-api >> $PWD/out/provider-components.yaml
+echo "---" >> $PWD/out/provider-components.yaml
+kustomize build $USERDATA/$PROVIDER_OS >> $PWD/out/provider-components.yaml
