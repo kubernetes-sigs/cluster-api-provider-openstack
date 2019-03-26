@@ -47,6 +47,12 @@ spec:
       - effect: NoExecute
         key: node.alpha.kubernetes.io/unreachable
         operator: Exists
+      - effect: NoExecute
+        key: node.kubernetes.io/not-ready
+        operator: Exists
+      - effect: NoExecute
+        key: node.kubernetes.io/unreachable
+        operator: Exists
       containers:
       - name: openstack-machine-controller
         image: k8scloudprovider/openstack-cluster-api-controller:latest
