@@ -34,3 +34,8 @@ aliases:
     - flaper87
     - Lion-Wei
     - m1093782566
+  cluster-api-openstack-reviewers:
+    - jichenjc
+    - gyliu513
+    - iamemilio
+    - YorikSar
