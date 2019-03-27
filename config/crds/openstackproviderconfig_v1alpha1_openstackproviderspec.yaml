@@ -104,6 +104,8 @@ spec:
               items:
                 type: string
               type: array
+            targetCell:
+              type: string
           type: object
         securityGroups:
           items:

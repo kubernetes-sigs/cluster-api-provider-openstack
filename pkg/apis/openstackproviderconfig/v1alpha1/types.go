@@ -195,7 +195,7 @@ type SchedulerHints struct {
 	Query string `json:"query,omitempty"`
 
 	// TargetCell specifies a cell name where the instance will be placed.
-	TargetCell string `json:"target_cell,omitempty"`
+	TargetCell string `json:"targetCell,omitempty"`
 
 	// BuildNearHostIP specifies a subnet of compute nodes to host the instance.
 	BuildNearHostIP string `json:"buildNearHostIP,omitempty"`
