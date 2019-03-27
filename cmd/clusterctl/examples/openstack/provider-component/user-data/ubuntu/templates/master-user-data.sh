@@ -114,41 +114,65 @@ systemctl mask ufw
 # We're using 443 until this bug is fixed
 # https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/64
 cat > /etc/kubernetes/kubeadm_config.yaml <<EOF
-apiVersion: kubeadm.k8s.io/v1alpha3
+apiVersion: kubeadm.k8s.io/v1beta1
 kind: InitConfiguration
 bootstrapTokens:
-- token: ${TOKEN}
-apiEndpoint:
+- groups:
+  - system:bootstrappers:kubeadm:default-node-token
+  token: ${TOKEN}
+  ttl: 24h0m0s
+  usages:
+  - signing
+  - authentication
+localAPIEndpoint:
   bindPort: 443
 nodeRegistration:
+  criSocket: /var/run/dockershim.sock
   kubeletExtraArgs:
-    cloud-provider: "openstack"
-    cloud-config: "/etc/kubernetes/cloud.conf"
+    cloud-config: /etc/kubernetes/cloud.conf
+    cloud-provider: openstack
+  taints:
+  - effect: NoSchedule
+    key: node-role.kubernetes.io/master
 ---
-apiVersion: kubeadm.k8s.io/v1alpha3
+apiVersion: kubeadm.k8s.io/v1beta1
 kind: ClusterConfiguration
 kubernetesVersion: v${CONTROL_PLANE_VERSION}
-networking:
-  serviceSubnet: ${SERVICE_CIDR}
+apiServer:
+  extraArgs:
+    cloud-config: /etc/kubernetes/cloud.conf
+    cloud-provider: openstack
+  extraVolumes:
+  - hostPath: /etc/kubernetes/cloud.conf
+    mountPath: /etc/kubernetes/cloud.conf
+    name: cloud
+    readOnly: true
+  timeoutForControlPlane: 4m0s
+certificatesDir: /etc/kubernetes/pki
 clusterName: kubernetes
 controlPlaneEndpoint: ${MASTER}
-apiServerExtraArgs:
-  cloud-provider: "openstack"
-  cloud-config: "/etc/kubernetes/cloud.conf"
-apiServerExtraVolumes:
-- name: cloud
-  hostPath: "/etc/kubernetes/cloud.conf"
-  mountPath: "/etc/kubernetes/cloud.conf"
-controllerManagerExtraArgs:
-  cluster-cidr: ${POD_CIDR}
-  service-cluster-ip-range: ${SERVICE_CIDR}
-  allocate-node-cidrs: "true"
-  cloud-provider: "openstack"
-  cloud-config: "/etc/kubernetes/cloud.conf"
-controllerManagerExtraVolumes:
-- name: cloud
-  hostPath: "/etc/kubernetes/cloud.conf"
-  mountPath: "/etc/kubernetes/cloud.conf"
+controllerManager:
+  extraArgs:
+    allocate-node-cidrs: "true"
+    cloud-config: /etc/kubernetes/cloud.conf
+    cloud-provider: openstack
+    cluster-cidr: ${POD_CIDR}
+    service-cluster-ip-range: ${SERVICE_CIDR}
+  extraVolumes:
+  - hostPath: /etc/kubernetes/cloud.conf
+    mountPath: /etc/kubernetes/cloud.conf
+    name: cloud
+    readOnly: true
+dns:
+  type: CoreDNS
+etcd:
+  local:
+    dataDir: /var/lib/etcd
+imageRepository: k8s.gcr.io
+networking:
+  dnsDomain: cluster.local
+  podSubnet: ""
+  serviceSubnet: ${SERVICE_CIDR}
 EOF
 
 # Create and set bridge-nf-call-iptables to 1 to pass the kubeadm preflight check.
