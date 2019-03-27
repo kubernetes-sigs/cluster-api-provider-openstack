@@ -248,11 +248,11 @@ This example shows you how to build anti affinity for a `MachineDeployment`.
 First you must create a [Server Group](https://docs.openstack.org/python-openstackclient/latest/cli/command-objects/server-group.html)
 ```
 $ openstack server group create sg01 --policy anti-affinity
-+--------------+------+------------+---------+-------------------+---------+----------+
-| Id           | Name | Project Id | User Id | Policies          | Members | Metadata |
-+--------------+------+------------+---------+-------------------+---------+----------+
-| 54a88567-... | sg01 | ...        | ...     | ['anti-affinity'] | []      | {}       |
-+--------------+------+------------+---------+-------------------+---------+----------+
++--------------------------------------+------+------------+---------+-------------------+---------+----------+
+| Id                                   | Name | Project Id | User Id | Policies          | Members | Metadata |
++--------------------------------------+------+------------+---------+-------------------+---------+----------+
+| 54a88567-20ae-467e-8210-3474e54ed168 | sg01 | ...        | ...     | ['anti-affinity'] | []      | {}       |
++--------------------------------------+------+------------+---------+-------------------+---------+----------+
 ```
 
 You must reference this Server Group in the definition of your `MachineDeployment`
