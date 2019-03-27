@@ -40,6 +40,7 @@ type OpenstackProviderSpec struct {
 
 	// The flavor reference for the flavor for your server instance.
 	Flavor string `json:"flavor"`
+
 	// The name of the image to use for your server instance.
 	// If the RootVolume is specified, this will be ignored and use rootVolume directly.
 	Image string `json:"image"`
@@ -69,7 +70,7 @@ type OpenstackProviderSpec struct {
 	// Whether the server instance is created on a trunk port or not.
 	Trunk bool `json:"trunk,omitempty"`
 
-	// Server tags
+	// Machine tags
 	// Requires Nova api 2.52 minimum!
 	Tags []string `json:"tags,omitempty"`
 
@@ -201,6 +202,12 @@ type OpenstackClusterProviderSpec struct {
 	// and API access from everywhere, and another one that allows all traffic to/from
 	// machines belonging to that group. In the future, we could make this more flexible.
 	ManagedSecurityGroups bool `json:"managedSecurityGroups"`
+
+	// Tags for all resources in cluster
+	Tags []string `json:"tags,omitempty"`
+
+	// Default: True. In case of server tag errors, set to False
+	DisableServerTags bool `json:"disableServerTags,omitempty"`
 }
 
 // +genclient

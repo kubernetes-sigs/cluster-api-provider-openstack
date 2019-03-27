@@ -29,7 +29,7 @@ func NewActuator(params providerv1openstack.ActuatorParams) (*Actuator, error) {
 // Reconcile creates or applies updates to the cluster.
 func (a *Actuator) Reconcile(cluster *clusterv1.Cluster) error {
 	klog.Infof("Reconciling cluster %v.", cluster.Name)
-	clusterName := fmt.Sprintf("%s/%s", cluster.Namespace, cluster.Name)
+	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
 
 	client, err := a.getNetworkClient(cluster)
 	if err != nil {
