@@ -54,7 +54,7 @@ discovery:
     token: ${TOKEN}
     unsafeSkipCAVerification: true
   timeout: 5m0s
-  tlsBootstrapToken: xp87ac.oaev5jvtje9f0g5h
+  tlsBootstrapToken: ${TOKEN}
 nodeRegistration:
   criSocket: /var/run/dockershim.sock
   kubeletExtraArgs:
