@@ -129,7 +129,7 @@ Additional advanced flags can be found via help.
 
 In `Cluster.spec.ProviderSpec` there is a boolean option called `ManagedSecurityGroups` that, if set to `true`, will create a default set of security groups for the cluster. These are meant for a "standard" setup, and might not be suitable for every environment. Please review the rules below before you use them.
 
-*NOTE*: For now, there is no way to automatically use these rules, which makes them a bit cumbersome to use, this will be possible in the near future.
+**NOTE**: For now, there is no way to automatically use these rules, which makes them a bit cumbersome to use, this will be possible in the near future.
 
 The rules created are:
 
