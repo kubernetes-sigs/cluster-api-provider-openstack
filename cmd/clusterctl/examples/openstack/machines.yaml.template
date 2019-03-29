@@ -29,8 +29,8 @@ items:
         serverMetadata:
           key: value
     versions:
-      kubelet: 1.12.3
-      controlPlane: 1.12.3
+      kubelet: 1.14.0
+      controlPlane: 1.14.0
 - apiVersion: "cluster.k8s.io/v1alpha1"
   kind: Machine
   metadata:
@@ -61,4 +61,4 @@ items:
         serverMetadata:
           key: value
     versions:
-      kubelet: 1.12.3
+      kubelet: 1.14.0
