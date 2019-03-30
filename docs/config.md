@@ -62,7 +62,6 @@ For another example on networking in openstack, look here https://developer.open
 For the installer to work, a few security groups are required to be open. These may be different from the security groups needed to reach a cluster once its running. The following security group rules should be added to the security group of your chosing. For this example, we will suppose you created a security group names ``kubernetes`` that you will use for the cluster.
 
 ```bash
-openstack security group rule create --ingress --protocol tcp --dst-port 6443 kubernetes
 openstack security group rule create --ingress --protocol tcp --dst-port 22 kubernetes
 openstack security group rule create --ingress --protocol tcp --dst-port 3000:32767 kubernetes
 openstack security group rule create --ingress --protocol tcp --dst-port 443 kubernetes
