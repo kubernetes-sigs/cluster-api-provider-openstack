@@ -96,18 +96,84 @@ storage:
         id: 0
       group:
         id: 0
+    - path: /etc/docker/daemon.json
+      filesystem: root
+      contents:
+        inline: |
+          {
+            "exec-opts": ["native.cgroupdriver=systemd"],
+            "iptables": false,
+            "ip-masq": false
+          }
+      mode: 0644
+      user:
+        id: 0
+      group:
+        id: 0
     - path: /etc/kubernetes/cloud.conf
       filesystem: root
       contents:
         inline: !!binary |
           $OPENSTACK_CLOUD_PROVIDER_CONF
-      mode: 0755
+      mode: 0644
+      user:
+        id: 0
+      group:
+        id: 0
+    - path: /etc/modules-load.d/ipvs.conf
+      filesystem: root
+      contents:
+        inline: |
+          ip_vs
+      mode: 0644
+      user:
+        id: 0
+      group:
+        id: 0
+    - path: /etc/modules-load.d/ipvsrr.conf
+      filesystem: root
+      contents:
+        inline: |
+          ip_vs_rr
+      mode: 0644
+      user:
+        id: 0
+      group:
+        id: 0
+    - path: /etc/modules-load.d/ipvssh.conf
+      filesystem: root
+      contents:
+        inline: |
+          ip_vs_sh
+      mode: 0644
+      user:
+        id: 0
+      group:
+        id: 0
+    - path: /etc/modules-load.d/ipvswrr.conf
+      filesystem: root
+      contents:
+        inline: |
+          ip_vs_wrr
+      mode: 0644
+      user:
+        id: 0
+      group:
+        id: 0
+    - path: /etc/modules-load.d/br_netfilter.conf
+      filesystem: root
+      contents:
+        inline: |
+          br_netfilter
+      mode: 0644
       user:
         id: 0
       group:
         id: 0
 systemd:
   units:
+    - name: docker.service
+      enabled: true
     - name: unpack.service
       enabled: true
       contents: |
