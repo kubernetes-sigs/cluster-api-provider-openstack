@@ -4,39 +4,44 @@ storage:
     filesystem: root
     contents:
       inline: |
-        apiVersion: kubeadm.k8s.io/v1alpha3
+        apiVersion: kubeadm.k8s.io/v1beta1
         kind: InitConfiguration
-        apiEndpoint:
+        localAPIEndpoint:
           bindPort: 443
         nodeRegistration:
           kubeletExtraArgs:
             cloud-provider: "openstack"
             cloud-config: "/etc/kubernetes/cloud.conf"
         ---
-        apiVersion: kubeadm.k8s.io/v1alpha3
+        apiVersion: kubeadm.k8s.io/v1beta1
         kind: ClusterConfiguration
         kubernetesVersion: v{{ .Machine.Spec.Versions.ControlPlane }}
         networking:
           serviceSubnet: {{ .ServiceCIDR }}
+          podSubnet: {{ .PodCIDR }}
+        dns:
+          type: CoreDNS
         clusterName: kubernetes
         controlPlaneEndpoint: ${MASTER}
-        apiServerExtraArgs:
-          cloud-provider: "openstack"
-          cloud-config: "/etc/kubernetes/cloud.conf"
-        apiServerExtraVolumes:
-        - name: cloud
-          hostPath: "/etc/kubernetes/cloud.conf"
-          mountPath: "/etc/kubernetes/cloud.conf"
-        controllerManagerExtraArgs:
-          cluster-cidr: {{ .PodCIDR }}
-          service-cluster-ip-range: {{ .ServiceCIDR }}
-          allocate-node-cidrs: "true"
-          cloud-provider: "openstack"
-          cloud-config: "/etc/kubernetes/cloud.conf"
-        controllerManagerExtraVolumes:
-        - name: cloud
-          hostPath: "/etc/kubernetes/cloud.conf"
-          mountPath: "/etc/kubernetes/cloud.conf"
+        apiServer:
+          extraArgs:
+            cloud-provider: "openstack"
+            cloud-config: "/etc/kubernetes/cloud.conf"
+          extraVolumes:
+          - name: cloud
+            hostPath: "/etc/kubernetes/cloud.conf"
+            mountPath: "/etc/kubernetes/cloud.conf"
+        controllerManager:
+          extraArgs:
+            cluster-cidr: {{ .PodCIDR }}
+            service-cluster-ip-range: {{ .ServiceCIDR }}
+            allocate-node-cidrs: "true"
+            cloud-provider: "openstack"
+            cloud-config: "/etc/kubernetes/cloud.conf"
+          extraVolumes:
+          - name: cloud
+            hostPath: "/etc/kubernetes/cloud.conf"
+            mountPath: "/etc/kubernetes/cloud.conf"
     user:
       id: 0
     group:

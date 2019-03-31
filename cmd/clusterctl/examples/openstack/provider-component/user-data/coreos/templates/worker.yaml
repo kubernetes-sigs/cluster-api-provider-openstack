@@ -4,16 +4,18 @@ storage:
     filesystem: root
     contents:
       inline: |
-        apiVersion: kubeadm.k8s.io/v1alpha3
+        apiVersion: kubeadm.k8s.io/v1beta1
         kind: JoinConfiguration
         nodeRegistration:
           kubeletExtraArgs:
             cloud-provider: "openstack"
             cloud-config: "/etc/kubernetes/cloud.conf"
-        token: {{ .Token }}
-        discoveryTokenAPIServers:
-          - {{ call .GetMasterEndpoint }}
-        discoveryTokenUnsafeSkipCAVerification: true
+        discovery:
+          bootstrapToken:
+            apiServerEndpoint: {{ call .GetMasterEndpoint }}
+            token: {{ .Token }}
+            unsafeSkipCAVerification: true
+          tlsBootstrapToken: {{ .Token }}
     user:
       id: 0
     group:
