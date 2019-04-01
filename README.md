@@ -15,6 +15,38 @@ You can reach the maintainers of this project at:
 
 Participation in the Kubernetes community is governed by the [Kubernetes Code of Conduct](code-of-conduct.md).
 
+------
+
+## Compatibility with Cluster API, Kubernetes and OpenStack Versions
+
+This provider's versions are compatible with the following versions of Cluster API:
+
+||Cluster API v1alpha1 (v0.1)|
+|-|-|
+|OpenStack Provider v1alpha1 (ea309e7f)|✓|
+
+This provider's versions are able to install and manage the following versions of Kubernetes:
+
+||Kubernetes 1.13.5+|Kubernetes 1.14|
+|-|-|-|
+|OpenStack Provider v1alpha1 (ea309e7f)|✓|✓|
+
+**NOTE**: Because the user is able to customize any `user-data`, it is also possible to deploy older versions.
+But we won't provide any examples or working templates. See [user-data in the examples](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/tree/master/cmd/clusterctl/examples/openstack/provider-component/user-data).
+
+This provider's versions are able to install kubernetes to the following versions of OpenStack:
+
+||OpenStack Pike|OpenStack Queens|OpenStack Rocky|
+|-|-|-|-|
+|OpenStack Provider v1alpha1 (ea309e7f)|✓|✓|✓|
+
+Each version of Cluster API for OpenStack will attempt to support two Kubernetes versions.
+
+**NOTE:** As the versioning for this project is tied to the versioning of Cluster API, future modifications to this
+policy may be made to more closely align with other providers in the Cluster API ecosystem.
+
+------
+
 ## Getting Started
 
 ### Prerequisites
@@ -97,7 +129,7 @@ Additional advanced flags can be found via help.
 
 In `Cluster.spec.ProviderSpec` there is a boolean option called `ManagedSecurityGroups` that, if set to `true`, will create a default set of security groups for the cluster. These are meant for a "standard" setup, and might not be suitable for every environment. Please review the rules below before you use them.
 
-*NOTE*: For now, there is no way to automatically use these rules, which makes them a bit cumbersome to use, this will be possible in the near future.
+**NOTE**: For now, there is no way to automatically use these rules, which makes them a bit cumbersome to use, this will be possible in the near future.
 
 The rules created are:
 
