@@ -147,7 +147,20 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *machinev1.Cluste
 		userDataRendered = string(userData)
 	}
 
-	instance, err = machineService.InstanceCreate(fmt.Sprintf("%s/%s", cluster.ObjectMeta.Namespace, cluster.Name), machine.Name, providerSpec, userDataRendered, providerSpec.KeyName)
+	// NOTE(shadower): the OpenShift installer does not create the
+	// `cluster` object so it's `nil` here. Read the cluster name from
+	// the `machine` instead.
+	var clusterName string
+	if cluster == nil {
+		// TODO(shadower): if/when we ever reconcile the
+		// `machine.openshift.io` bit we should be able to merge this
+		// upstream.
+		clusterName = fmt.Sprintf("%s/%s", machine.Namespace, machine.Labels["machine.openshift.io/cluster-api-cluster"])
+	} else {
+		clusterName = fmt.Sprintf("%s/%s", cluster.ObjectMeta.Namespace, cluster.Name)
+	}
+
+	instance, err = machineService.InstanceCreate(clusterName, machine.Name, providerSpec, userDataRendered, providerSpec.KeyName)
 	if err != nil {
 		return oc.handleMachineError(machine, apierrors.CreateMachine(
 			"error creating Openstack instance: %v", err))
