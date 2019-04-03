@@ -31,6 +31,9 @@ This provider's versions are able to install and manage the following versions o
 |-|-|-|
 |OpenStack Provider v1alpha1 (ea309e7f)|✓|✓|
 
+Kubernetes control plane and Kubelet versions are defined in `spec.versions.controlPlane` and `spec.versions.kubelet` of `cmd/clusterctl/examples/openstack/machines.yaml.template` respectively.
+You can generate `cmd/clusterctl/examples/openstack/out/machines.yaml` by running the `generate-yaml.sh` from the template and change the versions if you want.
+
 **NOTE**: Because the user is able to customize any `user-data`, it is also possible to deploy older versions.
 But we won't provide any examples or working templates. See [user-data in the examples](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/tree/master/cmd/clusterctl/examples/openstack/provider-component/user-data).
 
