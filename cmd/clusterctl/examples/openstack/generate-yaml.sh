@@ -199,9 +199,9 @@ echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" > $CONFIG_DIR/clouds.yaml
 # Build provider-components.yaml with kustomize
 # Coreos has a different kubeadm path (/usr is read-only) so gets a different kustomization.
 if [[ "$PROVIDER_OS" == "coreos" ]]; then
-  kustomize build $PWD/../../../../config/overlays/coreos -o $PWD/out/provider-components.yaml
+  kustomize build $PWD/../../../../overlays-config/coreos -o $PWD/out/provider-components.yaml
 else
-  kustomize build $PWD/../../../../config/overlays/generic -o $PWD/out/provider-components.yaml
+  kustomize build $PWD/../../../../overlays-config/generic -o $PWD/out/provider-components.yaml
 fi
 echo "---" >> $PWD/out/provider-components.yaml
 kustomize build $PWD/provider-component/clouds-secrets >> $PWD/out/provider-components.yaml
