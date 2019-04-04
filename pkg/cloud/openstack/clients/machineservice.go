@@ -30,6 +30,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/common/extensions"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/bootfromvolume"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
@@ -343,6 +344,7 @@ func GetSecurityGroups(is *InstanceService, sg_param []openstackconfigv1.Securit
 }
 
 func (is *InstanceService) InstanceCreate(clusterName string, name string, config *openstackconfigv1.OpenstackProviderSpec, cmd string, keyName string) (instance *Instance, err error) {
+	var createOpts servers.CreateOptsBuilder
 	if config == nil {
 		return nil, fmt.Errorf("create Options need be specified to create instace")
 	}
@@ -498,6 +500,28 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 		is.computeClient.Microversion = "2.52"
 
 	}
+
+	// If the root volume Size is not 0, means boot from volume
+	if config.RootVolume != nil && config.RootVolume.Size != 0 {
+		var blocks []bootfromvolume.BlockDevice
+
+		block := bootfromvolume.BlockDevice{
+			SourceType:          bootfromvolume.SourceType(config.RootVolume.SourceType),
+			BootIndex:           0,
+			UUID:                config.RootVolume.SourceUUID,
+			DeleteOnTermination: true,
+			DestinationType:     bootfromvolume.DestinationVolume,
+			VolumeSize:          config.RootVolume.Size,
+			DeviceType:          config.RootVolume.DeviceType,
+		}
+		blocks = append(blocks, block)
+
+		createOpts = bootfromvolume.CreateOptsExt{
+			CreateOptsBuilder: createOpts,
+			BlockDevice:       blocks,
+		}
+	}
+
 	server, err := servers.Create(is.computeClient, keypairs.CreateOptsExt{
 		CreateOptsBuilder: serverCreateOpts,
 		KeyName:           keyName,

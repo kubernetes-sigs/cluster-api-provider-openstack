@@ -18,6 +18,10 @@ items:
         networks:
         - uuid: <Kubernetes Network ID>
         floatingIP: <Available Floating IP>
+        rootVolume:
+          diskSize: 0
+          sourceType: ""
+          SourceUUID: ""
         securityGroups:
         - <Security Group ID>
         userDataSecret:

@@ -211,3 +211,27 @@ Instead of tagging, you also have the option to add metadata to instances. This 
           name: bob
           nickname: bobbert
 ```
+
+# Optional Configuration
+
+## Boot From Volume
+
+1. In `examples/openstack/<os>/out/machines.yaml`, generated with `generate-yaml.sh,
+   set `spec.providerSpec.value.rootVolume.diskSize` to great than 0 means boot from volume.
+
+   ```yaml
+   items:
+   - apiVersion: "cluster.k8s.io/v1alpha1"
+   kind: Machine
+   ...
+   spec:
+     providerSpec:
+       value:
+        ...
+        rootVolume:
+          diskSize: 0
+          sourceType: ""
+          SourceUUID: ""
+        securityGroups:
+   ...
+   ```
