@@ -131,6 +131,20 @@ spec:
                 type: string
             type: object
           type: array
+        rootVolume:
+          properties:
+            deviceType:
+              type: string
+            diskSize:
+              format: int64
+              type: integer
+            sourceType:
+              type: string
+            sourceUUID:
+              type: string
+          required:
+          - deviceType
+          type: object
         securityGroups:
           items:
             properties:
