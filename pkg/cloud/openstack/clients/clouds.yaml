@@ -5,7 +5,6 @@ clouds:
       username: "test@test.com"
       password: "here'syourpassword"
       project_id: 1234abcd1asdf46a69448d5b3fba100a7
-      project_name: "super-secret"
       domain_name: "Default"
       user_domain_name: "Default"
     region_name: "Your_Region"
