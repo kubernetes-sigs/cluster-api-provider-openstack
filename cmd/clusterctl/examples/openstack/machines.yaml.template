@@ -23,7 +23,7 @@ items:
           sourceType: ""
           SourceUUID: ""
         securityGroups:
-        - <Security Group ID>
+        - uuid: <Security Group ID>
         userDataSecret:
           name: master-user-data
           namespace: openstack-provider-system
