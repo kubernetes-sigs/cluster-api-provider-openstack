@@ -52,7 +52,10 @@ policy may be made to more closely align with other providers in the Cluster API
 ### Prerequisites
 
 1. Install `kubectl` (see [here](http://kubernetes.io/docs/user-guide/prereqs/)).
-2. If you want to use VM, install [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/), version 0.30.0 or greater. If you want to use container, install [kind](https://github.com/kubernetes-sigs/kind#installation-and-usage).
+2. You can use either VM, container or existing Kubernetes cluster act as bootstrap cluster.
+   - If you want to use VM, install [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/), version 0.30.0 or greater.
+   - If you want to use container, install [kind](https://github.com/kubernetes-sigs/kind#installation-and-usage).
+   - If you want to use existing Kubernetes cluster, prepare your kubeconfig.
 3. Install a [driver](https://github.com/kubernetes/minikube/blob/master/docs/drivers.md) **if you are using minikube**. For Linux, we recommend kvm2. For MacOS, we recommend VirtualBox.
 4. An appropriately configured [Go development environment](https://golang.org/doc/install)
 5. Build the `clusterctl` tool
@@ -118,6 +121,17 @@ policy may be made to more closely align with other providers in the Cluster API
      -c examples/openstack/out/cluster.yaml -m examples/openstack/out/machines.yaml \
      -p examples/openstack/out/provider-components.yaml
    ```
+
+   - If you are using existing Kubernetes cluster:
+   ```bash
+   ./clusterctl create cluster --bootstrap-cluster-kubeconfig ~/.kube/config \
+     --provider openstack -c examples/openstack/out/cluster.yaml \
+     -m examples/openstack/out/machines.yaml \
+     -p examples/openstack/out/provider-components.yaml
+   ```
+
+   For the above command, the `bootstrap-cluster-kubeconfig` was located at `~/.kube/config`, you must update it
+   to use your kubeconfig.
 
 Additional advanced flags can be found via help.
 
