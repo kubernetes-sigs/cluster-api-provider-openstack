@@ -13,6 +13,9 @@ CLUSTER_DNS_DOMAIN={{ .Cluster.Spec.ClusterNetwork.ServiceDomain }}
 POD_CIDR={{ .PodCIDR }}
 SERVICE_CIDR={{ .ServiceCIDR }}
 
+swapoff -a
+# disable swap in fstab
+sed -i.bak -r 's/(.+ swap .+)/#\1/' /etc/fstab
 apt-get update
 apt-get install -y apt-transport-https prips
 apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv-keys F76221572C52609D

@@ -23,6 +23,9 @@ gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cl
 exclude=kube*
 EOF
 
+swapoff -a
+# disable swap in fstab
+sed -i.bak -r 's/(.+ swap .+)/#\1/' /etc/fstab
 setenforce 0
 yum install -y kubelet-$KUBELET_VERSION kubeadm-$KUBELET_VERSION kubectl-$KUBELET_VERSION --disableexcludes=kubernetes
 
