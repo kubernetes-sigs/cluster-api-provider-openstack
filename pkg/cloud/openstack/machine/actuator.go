@@ -37,11 +37,14 @@ import (
 	apierrors "sigs.k8s.io/cluster-api/pkg/errors"
 	"sigs.k8s.io/cluster-api/pkg/util"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	clconfig "github.com/coreos/container-linux-config-transpiler/config"
 )
 
 const (
 	UserDataKey          = "userData"
 	DisableTemplatingKey = "disableTemplating"
+	PostprocessorKey     = "postprocessor"
 
 	TimeoutInstanceCreate       = 5 * time.Minute
 	TimeoutInstanceDelete       = 5 * time.Minute
@@ -96,6 +99,9 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 	// get machine startup script
 	var ok bool
 	var disableTemplating bool
+	var postprocessor string
+	var postprocess bool
+
 	userData := []byte{}
 	if providerSpec.UserDataSecret != nil {
 		namespace := providerSpec.UserDataSecret.Namespace
@@ -118,6 +124,11 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 		}
 
 		_, disableTemplating = userDataSecret.Data[DisableTemplatingKey]
+
+		var p []byte
+		p, postprocess = userDataSecret.Data[PostprocessorKey]
+
+		postprocessor = string(p)
 	}
 
 	var userDataRendered string
@@ -143,6 +154,32 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 		}
 	} else {
 		userDataRendered = string(userData)
+	}
+
+	if postprocess {
+		switch postprocessor {
+		// Postprocess with the Container Linux ct transpiler.
+		case "ct":
+			clcfg, ast, report := clconfig.Parse([]byte(userDataRendered))
+			if len(report.Entries) > 0 {
+				return fmt.Errorf("Postprocessor error: %s", report.String())
+			}
+
+			ignCfg, report := clconfig.Convert(clcfg, "openstack-metadata", ast)
+			if len(report.Entries) > 0 {
+				return fmt.Errorf("Postprocessor error: %s", report.String())
+			}
+
+			ud, err := json.Marshal(&ignCfg)
+			if err != nil {
+				return fmt.Errorf("Postprocessor error: %s", err)
+			}
+
+			userDataRendered = string(ud)
+
+		default:
+			return fmt.Errorf("Postprocessor error: unknown postprocessor: '%s'", postprocessor)
+		}
 	}
 
 	instance, err = machineService.InstanceCreate(fmt.Sprintf("%s/%s", cluster.ObjectMeta.Namespace, cluster.Name), machine.Name, providerSpec, userDataRendered, providerSpec.KeyName)

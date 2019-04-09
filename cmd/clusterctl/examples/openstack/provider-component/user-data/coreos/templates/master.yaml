@@ -1,0 +1,105 @@
+storage:
+  files:
+  - path: /etc/kubernetes/kubeadm_config.yaml
+    filesystem: root
+    contents:
+      inline: |
+        apiVersion: kubeadm.k8s.io/v1beta1
+        kind: InitConfiguration
+        localAPIEndpoint:
+          bindPort: 443
+        nodeRegistration:
+          kubeletExtraArgs:
+            cloud-provider: "openstack"
+            cloud-config: "/etc/kubernetes/cloud.conf"
+        ---
+        apiVersion: kubeadm.k8s.io/v1beta1
+        kind: ClusterConfiguration
+        kubernetesVersion: v{{ .Machine.Spec.Versions.ControlPlane }}
+        networking:
+          serviceSubnet: {{ .ServiceCIDR }}
+          podSubnet: {{ .PodCIDR }}
+        dns:
+          type: CoreDNS
+        clusterName: kubernetes
+        controlPlaneEndpoint: ${MASTER}
+        apiServer:
+          extraArgs:
+            cloud-provider: "openstack"
+            cloud-config: "/etc/kubernetes/cloud.conf"
+          extraVolumes:
+          - name: cloud
+            hostPath: "/etc/kubernetes/cloud.conf"
+            mountPath: "/etc/kubernetes/cloud.conf"
+        controllerManager:
+          extraArgs:
+            cluster-cidr: {{ .PodCIDR }}
+            service-cluster-ip-range: {{ .ServiceCIDR }}
+            allocate-node-cidrs: "true"
+            cloud-provider: "openstack"
+            cloud-config: "/etc/kubernetes/cloud.conf"
+          extraVolumes:
+          - name: cloud
+            hostPath: "/etc/kubernetes/cloud.conf"
+            mountPath: "/etc/kubernetes/cloud.conf"
+    user:
+      id: 0
+    group:
+      id: 0
+    mode: 0644
+  - path: /opt/bin/prepare.sh
+    filesystem: root
+    contents:
+      inline: |
+        #!/bin/bash
+
+        . /run/metadata/coreos
+
+        MASTER=""
+
+        echo "Trying to get the public IPv4 address."
+        if [[ -n "$COREOS_OPENSTACK_IPV4_PUBLIC" ]]; then
+          MASTER="$COREOS_OPENSTACK_IPV4_PUBLIC"
+        fi
+
+        if [[ -z "$MASTER" ]]; then
+          echo "Trying to get the local IPv4 address. (Try $i/60)"
+          if [[ -n "$COREOS_OPENSTACK_IPV4_LOCAL" ]]; then
+            MASTER="$COREOS_OPENSTACK_IPV4_LOCAL"
+          fi
+        fi
+
+        if [[ -z "$MASTER" ]]; then
+          echo "Falling back to localhost."
+          MASTER="localhost"
+        fi
+
+        MASTER="${MASTER}:443"
+
+        /usr/bin/sed -i "s#\${MASTER}#$MASTER#" /etc/kubernetes/kubeadm_config.yaml
+    user:
+      id: 0
+    group:
+      id: 0
+    mode: 0755
+systemd:
+  units:
+  - name: kubeadm.service
+    contents: |-
+      [Unit]
+      Description=Initialise bootkube master.
+      After=kubelet.service
+      Requires=coreos-metadata.service
+
+      [Service]
+      Type=oneshot
+      Environment="PATH=/usr/bin:/usr/sbin:/opt/bin:/opt/cni/bin:/bin/sbin"
+      ExecStartPre=/opt/bin/prepare.sh
+      ExecStart=/opt/bin/kubeadm init --config /etc/kubernetes/kubeadm_config.yaml
+      ExecStartPost=/opt/bin/kubectl --kubeconfig /etc/kubernetes/kubelet.conf annotate --overwrite node %H machine={{ .Machine.ObjectMeta.Namespace }}/{{ .Machine.ObjectMeta.Name }}
+      ExecStartPost=/opt/bin/kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f https://docs.projectcalico.org/v3.6/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml
+      ExecStartPost=/usr/bin/systemctl disable kubeadm.service
+
+      [Install]
+      WantedBy=multi-user.target
+    enabled: true
