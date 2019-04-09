@@ -14,6 +14,9 @@ POD_CIDR={{ .PodCIDR }}
 SERVICE_CIDR={{ .ServiceCIDR }}
 ARCH=amd64
 
+swapoff -a
+# disable swap in fstab
+sed -i.bak -r 's/(.+ swap .+)/#\1/' /etc/fstab
 # Getting master ip from the metadata of the node. By default we try the public-ipv4
 # If we don't get any, we fall back to local-ipv4 and in the worst case to localhost
 MASTER=""
