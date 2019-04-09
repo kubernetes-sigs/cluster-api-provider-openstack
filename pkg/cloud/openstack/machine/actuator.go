@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"k8s.io/apimachinery/pkg/api/equality"
 	"net"
 	"reflect"
 	"time"
@@ -27,13 +28,14 @@ import (
 	machinev1 "github.com/openshift/cluster-api/pkg/apis/machine/v1beta1"
 	apierrors "github.com/openshift/cluster-api/pkg/errors"
 	"github.com/openshift/cluster-api/pkg/util"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	tokenapi "k8s.io/cluster-bootstrap/token/api"
 	tokenutil "k8s.io/cluster-bootstrap/token/util"
 	"k8s.io/klog"
 	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
-	bootstrap "sigs.k8s.io/cluster-api-provider-openstack/pkg/bootstrap"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/bootstrap"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/clients"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -349,6 +351,27 @@ func (oc *OpenstackClient) updateAnnotation(machine *machinev1.Machine, id strin
 	if err := oc.client.Update(nil, machine); err != nil {
 		return err
 	}
+
+	networkAddresses := []corev1.NodeAddress{}
+	networkAddresses = append(networkAddresses, corev1.NodeAddress{
+		Type:    corev1.NodeInternalIP,
+		Address: ip,
+	})
+
+	networkAddresses = append(networkAddresses, corev1.NodeAddress{
+		Type:    corev1.NodeHostName,
+		Address: machine.Name,
+	})
+
+	machineCopy := machine.DeepCopy()
+	machineCopy.Status.Addresses = networkAddresses
+
+	if !equality.Semantic.DeepEqual(machine.Status.Addresses, machineCopy.Status.Addresses) {
+		if err := oc.client.Status().Update(nil, machineCopy); err != nil {
+			return err
+		}
+	}
+
 	return oc.updateInstanceStatus(machine)
 }
 
