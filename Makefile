@@ -27,6 +27,7 @@ VERSION ?= $(shell git describe --exact-match 2> /dev/null || \
 GOFLAGS   :=
 TAGS      :=
 LDFLAGS   := "-w -s -X 'main.version=${VERSION}'"
+DEBUG_FLAGS := "-X 'main.version=${VERSION}'"
 REGISTRY ?= k8scloudprovider
 
 ifneq ("$(realpath $(DEST))", "$(realpath $(PWD))")
@@ -63,6 +64,13 @@ clusterctl:
 		-ldflags $(LDFLAGS) \
 		-o bin/clusterctl \
 		cmd/clusterctl/main.go
+
+manager-debug:
+	CGO_ENABLED=0 GOOS=$(GOOS) go build \
+		-gcflags "-N -l -dwarf" \
+		-ldflags $(DEBUG_FLAGS) \
+		-o bin/manager \
+		cmd/manager/main.go
 
 test: unit functional
 
@@ -144,6 +152,20 @@ ifeq ($(GOOS),linux)
 else
 	$(error Please set GOOS=linux for building the image)
 endif
+
+# This mode will compile a new manager binary with debugging flags,
+# then build a docker image from it.
+debug-images: debug-openstack-cluster-api-controller manifests
+
+debug-openstack-cluster-api-controller: depend manager-debug manifests
+ifeq ($(GOOS),linux)
+	cp bin/manager cmd/manager
+	docker build -t $(REGISTRY)/openstack-cluster-api-controller:foo cmd/manager/ -f cmd/manager/Dockerfile.debug
+	rm cmd/manager
+else
+	$(error Please set GOOS=linux for building the image)
+endif
+
 
 upload-images: images
 	@echo "push images to $(REGISTRY)"

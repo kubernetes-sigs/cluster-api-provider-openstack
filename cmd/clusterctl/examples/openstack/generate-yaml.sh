@@ -7,16 +7,21 @@ print_help()
   echo "$SCRIPT - generates a provider-configs.yaml file"
   echo ""
   echo "Usage:"
-  echo "$SCRIPT [options] <path/to/clouds.yaml> <cloud> <provider os: [centos,ubuntu]>"
+  echo "$SCRIPT [options] <path/to/clouds.yaml> <cloud> <provider os: [centos,ubuntu,coreos]>"
   echo "options:"
   echo "-h, --help                    show brief help"
   echo "-f, --force-overwrite         if file to be generated already exists, force script to overwrite it"
+  echo "-d, --debug <image repo>      Runs the manager pod with Delve, and exposes it through a loadbalancer in minikube."
+  echo "                              Please refer to the readme for more information. Do not build production yaml"
+  echo "                              with this flag set."
   echo ""
 }
 
 # Supported Operating Systems
-declare -a arr=("centos" "ubuntu")
+declare -a arr=("centos" "ubuntu" "coreos")
 SCRIPT=$(basename $0)
+DEBUG=0
+
 while test $# -gt 0; do
         case "$1" in
           -h|--help)
@@ -25,6 +30,12 @@ while test $# -gt 0; do
             ;;
           -f|--force-overwrite)
             OVERWRITE=1
+            shift
+            ;;
+          -d|--debug)
+            DEBUG=1
+            USER_IMAGE=$2
+            shift
             shift
             ;;
           *)
@@ -49,7 +60,7 @@ if [[ -n "$2" ]] && [[ $2 != -* ]] && [[ $2 != --* ]]; then
   CLOUD=$2
 else
   echo "Error: No cloud specified"
-  echo "You mush specify which cloud you want to use."
+  echo "You must specify which cloud you want to use."
   echo ""
   print_help
   exit 1
@@ -60,7 +71,7 @@ if [[ -n "$3" ]] && [[ $3 != -* ]] && [[ $3 != --* ]]; then
   USER_OS=$(echo $3 | tr '[:upper:]' '[:lower:]')
 else
   echo "Error: No provider OS specified"
-  echo "You mush choose between the following operating systems: centos, ubuntu"
+  echo "You mush choose between the following operating systems: centos, ubuntu, coreos"
   echo ""
   print_help
   exit 1
@@ -104,6 +115,44 @@ if [ -e out/provider-components.yaml ] && [ "$OVERWRITE" != "1" ]; then
   exit 1
 fi
 
+# Check if debug image was provided
+if [[ $DEBUG == 1 ]];then
+  if [[ -z "$USER_IMAGE" ]] || [[ $USER_IMAGE == -* ]] || [[ $USER_IMAGE == --* ]];then
+    echo "Error: No debug image provided"
+    echo "You must provide the image repository your debug image is stored in to run this application in debugging mode"
+    echo ""
+    print_help
+    exit 1
+  fi
+  cat > provider-component/debug/manager/patch.yaml <<EOF
+- op: replace
+  path: /spec/template/spec/containers/0/image
+  value: $USER_IMAGE
+
+- op: replace
+  path: /spec/template/spec/containers/0/resources/limits/memory
+  value: 100Mi
+
+- op: add
+  path: /spec/template/spec/containers/0/ports
+  value:
+    - containerPort: 31000
+
+- op: add
+  path: /spec/template/spec/containers/0/securityContext
+  value:
+    capabilities:
+      add:
+        ["SYS_PTRACE"]
+
+- op: add
+  path: /spec/template/spec/containers/0/volumes
+  value:
+    - name: kubeadm
+      hostPath:
+        path: /usr/bin/kubeadm
+EOF
+fi
 
 # Define global variables
 PWD=$(cd `dirname $0`; pwd)
@@ -113,6 +162,15 @@ CONFIG_DIR=$PWD/provider-component/clouds-secrets/configs
 USERDATA=$PWD/provider-component/user-data
 MASTER_USER_DATA=$USERDATA/$PROVIDER_OS/templates/master-user-data.sh
 WORKER_USER_DATA=$USERDATA/$PROVIDER_OS/templates/worker-user-data.sh
+
+# Container Linux (simply named CoreOS here) does its configuration a bit different
+# so it gets some of its own vars here.
+COREOS_COMMON_SECTION=$USERDATA/$PROVIDER_OS/templates/common.yaml
+COREOS_MASTER_SECTION=$USERDATA/$PROVIDER_OS/templates/master.yaml
+COREOS_WORKER_SECTION=$USERDATA/$PROVIDER_OS/templates/worker.yaml
+
+COREOS_MASTER_USER_DATA=$USERDATA/$PROVIDER_OS/master-user-data.yaml
+COREOS_WORKER_USER_DATA=$USERDATA/$PROVIDER_OS/worker-user-data.yaml
 
 OVERWRITE=${OVERWRITE:-0}
 CLOUDS_PATH=${CLOUDS_PATH:-""}
@@ -165,18 +223,37 @@ else
   exit 1
 fi
 
-cat "$MASTER_USER_DATA" \
+if [[ "$PROVIDER_OS" == "coreos" ]]; then
+  cat $COREOS_COMMON_SECTION \
     | sed -e "s#\$OPENSTACK_CLOUD_PROVIDER_CONF#$OPENSTACK_CLOUD_PROVIDER_CONF#" \
-    > $USERDATA/$PROVIDER_OS/master-user-data.sh
-cat "$WORKER_USER_DATA" \
-  | sed -e "s#\$OPENSTACK_CLOUD_PROVIDER_CONF#$OPENSTACK_CLOUD_PROVIDER_CONF#" \
-  > $USERDATA/$PROVIDER_OS/worker-user-data.sh
+    | yq m -a - $COREOS_MASTER_SECTION  \
+    > $COREOS_MASTER_USER_DATA
+  cat $COREOS_COMMON_SECTION \
+    | sed -e "s#\$OPENSTACK_CLOUD_PROVIDER_CONF#$OPENSTACK_CLOUD_PROVIDER_CONF#" \
+    | yq m -a - $COREOS_WORKER_SECTION  \
+    > $COREOS_WORKER_USER_DATA
+else
+  cat "$MASTER_USER_DATA" \
+      | sed -e "s#\$OPENSTACK_CLOUD_PROVIDER_CONF#$OPENSTACK_CLOUD_PROVIDER_CONF#" \
+      > $USERDATA/$PROVIDER_OS/master-user-data.sh
+  cat "$WORKER_USER_DATA" \
+    | sed -e "s#\$OPENSTACK_CLOUD_PROVIDER_CONF#$OPENSTACK_CLOUD_PROVIDER_CONF#" \
+    > $USERDATA/$PROVIDER_OS/worker-user-data.sh
+fi
 
 printf $CLOUD > $CONFIG_DIR/os_cloud.txt
 echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" > $CONFIG_DIR/clouds.yaml
 
+
 # Build provider-components.yaml with kustomize
-kustomize build $PWD/../../../../config -o $PWD/out/provider-components.yaml
+# Coreos has a different kubeadm path (/usr is read-only) so gets a different kustomization.
+if [[ "$PROVIDER_OS" == "coreos" ]]; then
+  kustomize build $PWD/../../../../overlays-config/coreos -o $PWD/out/provider-components.yaml
+elif [ $DEBUG == 1 ]; then
+  kustomize build $PWD/../../../../overlays-config/debug -o out/provider-components.yaml
+else
+  kustomize build $PWD/../../../../overlays-config/generic -o $PWD/out/provider-components.yaml
+fi
 echo "---" >> $PWD/out/provider-components.yaml
 kustomize build $PWD/provider-component/clouds-secrets >> $PWD/out/provider-components.yaml
 echo "---" >> $PWD/out/provider-components.yaml

@@ -167,6 +167,54 @@ kubectl --kubeconfig=kubeconfig get machines
 kubectl --kubeconfig=kubeconfig get machines -o yaml
 ```
 
+### Debugging the installer
+
+There are various services running that help to communicate with openstack and stand up your cluster. Most of these services have fairly robust logs which should be your first resort for debugging the application. 
+
+Primarily, the log level of clusterctl can be increased to show more verbose logging. To do this, simply append `-v#` where the `#` can be any number [1 - 10]. 
+
+If your error is not here, there is a strong chance that it will be in the openstack-machine-controller pod. To check the logs of this pod, follow these steps:
+
+```bash
+minikube update-context
+kubectl get pods --all-namespaces
+```
+
+At this point, you will have a list of all the pods in the minikube cluster. Now, you need to get the logs of the openstack-machine-controller pod. Look for the pod named `clusterapi-controllers-...` in the list of pods returned from clusterctl. Now, use this command to get its logs:
+
+```bash
+kubectl logs -n openstack-provider-system clusterapi-controllers-....
+```
+
+If you have not solved your issue at this point, there is a heavy duty solution: the Delve debugger. However, please note that this has some requirements. First off, you need to have the latest version of go-delve. [Follow the instructions here for more information](https://github.com/go-delve/delve). Secondly, you must have an account with an online image repository, like [Dockerhub](https://hub.docker.com/) or [Quay](https://quay.io/), and the environment you run clusterctl from must be able to reach it. Once you have this set up, these are the steps to setting cluster-api-provider-openstack up to be remotely debugged.
+
+First, you have to build a new manager image. You can do this with make script by using the command:
+
+```bash
+make debug-images
+```
+
+Assuming you are using docker as your container runtime engine, this will create a docker image with the name `k8scloudprovider/openstack-cluster-api-controller`. Push that image up to your container image repo. 
+
+Now we have to generate special deployment configs, so navigate to `cmd/clusterctl/examples/openstack/`. You will have to run `generate-yaml.sh` with the flag `-d` or `--debug` and pass it the image repo you just pushed your debugging image to. The syntax should look like this:
+
+```bash
+./generate-yaml.sh -d <container repo> <clouds.yaml> <cloud> <operating system> 
+```
+
+Now you are ready to run. Run clusterctl how you normally would. Once it gets past creating the minikube instance, use the following commands to get the url of the remote debugger:
+
+```bash
+minikube update-context
+minikube service clusterapi-controllers --url
+```
+
+This will return a url. To debug your pod, copy the ip and port that the above command returns. Note that it will fail to connect if you include the http prefix in the address! Now run this command:
+
+```bash
+dlv connect <ip:port>
+```
+
 ### Cluster Deletion
 
 This guide explains how to delete all resources that were created as part of
