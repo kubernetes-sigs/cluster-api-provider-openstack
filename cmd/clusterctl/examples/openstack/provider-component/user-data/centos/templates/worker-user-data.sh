@@ -74,7 +74,7 @@ modprobe br_netfilter
 echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables
 echo '1' > /proc/sys/net/ipv4/ip_forward
 
-kubeadm join --ignore-preflight-errors=all --config /etc/kubernetes/kubeadm_config.yaml
+kubeadm join -v 10 --ignore-preflight-errors=all --config /etc/kubernetes/kubeadm_config.yaml
 for tries in $(seq 1 60); do
 	kubectl --kubeconfig /etc/kubernetes/kubelet.conf annotate --overwrite node $(hostname -s) machine=${MACHINE} && break
 	sleep 1

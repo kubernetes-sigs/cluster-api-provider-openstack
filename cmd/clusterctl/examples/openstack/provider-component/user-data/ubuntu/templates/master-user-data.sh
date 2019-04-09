@@ -183,7 +183,7 @@ EOF
 # http://zeeshanali.com/sysadmin/fixed-sysctl-cannot-stat-procsysnetbridgebridge-nf-call-iptables/
 modprobe br_netfilter
 
-kubeadm init --config /etc/kubernetes/kubeadm_config.yaml
+kubeadm init -v 10 --config /etc/kubernetes/kubeadm_config.yaml
 for tries in $(seq 1 60); do
     kubectl --kubeconfig /etc/kubernetes/kubelet.conf annotate --overwrite node $(hostname) machine=${MACHINE} && break
     sleep 1

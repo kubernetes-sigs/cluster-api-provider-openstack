@@ -110,7 +110,7 @@ systemctl restart kubelet.service
 systemctl disable ufw 
 systemctl mask ufw
 
-kubeadm join --ignore-preflight-errors=all --config /etc/kubernetes/kubeadm_config.yaml
+kubeadm -v 10 join --ignore-preflight-errors=all --config /etc/kubernetes/kubeadm_config.yaml
 for tries in $(seq 1 60); do
 	kubectl --kubeconfig /etc/kubernetes/kubelet.conf annotate --overwrite node $(hostname) machine=${MACHINE} && break
 	sleep 1
