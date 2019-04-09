@@ -20,10 +20,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"k8s.io/apimachinery/pkg/api/equality"
 	"net"
 	"reflect"
 	"time"
+
+	"k8s.io/apimachinery/pkg/api/equality"
 
 	machinev1 "github.com/openshift/cluster-api/pkg/apis/machine/v1beta1"
 	apierrors "github.com/openshift/cluster-api/pkg/errors"
@@ -39,6 +40,8 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/clients"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	clconfig "github.com/coreos/container-linux-config-transpiler/config"
 )
 
 const (
@@ -46,6 +49,7 @@ const (
 
 	UserDataKey          = "userData"
 	DisableTemplatingKey = "disableTemplating"
+	PostprocessorKey     = "postprocessor"
 
 	TimeoutInstanceCreate       = 5 * time.Minute
 	TimeoutInstanceDelete       = 5 * time.Minute
@@ -100,6 +104,9 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *machinev1.Cluste
 	// get machine startup script
 	var ok bool
 	var disableTemplating bool
+	var postprocessor string
+	var postprocess bool
+
 	userData := []byte{}
 	if providerSpec.UserDataSecret != nil {
 		namespace := providerSpec.UserDataSecret.Namespace
@@ -122,6 +129,11 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *machinev1.Cluste
 		}
 
 		_, disableTemplating = userDataSecret.Data[DisableTemplatingKey]
+
+		var p []byte
+		p, postprocess = userDataSecret.Data[PostprocessorKey]
+
+		postprocessor = string(p)
 	}
 
 	var userDataRendered string
@@ -160,6 +172,32 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *machinev1.Cluste
 		clusterName = fmt.Sprintf("%s/%s", machine.Namespace, machine.Labels["machine.openshift.io/cluster-api-cluster"])
 	} else {
 		clusterName = fmt.Sprintf("%s/%s", cluster.ObjectMeta.Namespace, cluster.Name)
+	}
+
+	if postprocess {
+		switch postprocessor {
+		// Postprocess with the Container Linux ct transpiler.
+		case "ct":
+			clcfg, ast, report := clconfig.Parse([]byte(userDataRendered))
+			if len(report.Entries) > 0 {
+				return fmt.Errorf("Postprocessor error: %s", report.String())
+			}
+
+			ignCfg, report := clconfig.Convert(clcfg, "openstack-metadata", ast)
+			if len(report.Entries) > 0 {
+				return fmt.Errorf("Postprocessor error: %s", report.String())
+			}
+
+			ud, err := json.Marshal(&ignCfg)
+			if err != nil {
+				return fmt.Errorf("Postprocessor error: %s", err)
+			}
+
+			userDataRendered = string(ud)
+
+		default:
+			return fmt.Errorf("Postprocessor error: unknown postprocessor: '%s'", postprocessor)
+		}
 	}
 
 	instance, err = machineService.InstanceCreate(clusterName, machine.Name, providerSpec, userDataRendered, providerSpec.KeyName)

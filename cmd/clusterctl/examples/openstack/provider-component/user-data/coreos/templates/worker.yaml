@@ -1,0 +1,42 @@
+storage:
+  files:
+  - path: /etc/kubernetes/kubeadm_config.yaml
+    filesystem: root
+    contents:
+      inline: |
+        apiVersion: kubeadm.k8s.io/v1beta1
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            cloud-provider: "openstack"
+            cloud-config: "/etc/kubernetes/cloud.conf"
+        discovery:
+          bootstrapToken:
+            apiServerEndpoint: {{ call .GetMasterEndpoint }}
+            token: {{ .Token }}
+            unsafeSkipCAVerification: true
+          tlsBootstrapToken: {{ .Token }}
+    user:
+      id: 0
+    group:
+      id: 0
+    mode: 0644
+systemd:
+  units:
+  - name: kubeadm.service
+    contents: |-
+      [Unit]
+      Description=Initialise bootkube master.
+      After=kubelet.service
+      Requires=coreos-metadata.service
+
+      [Service]
+      Type=oneshot
+      Environment="PATH=/usr/bin:/usr/sbin:/opt/bin:/opt/cni/bin:/bin/sbin"
+      ExecStart=/opt/bin/kubeadm join --ignore-preflight-errors=all --config /etc/kubernetes/kubeadm_config.yaml
+      ExecStartPost=/opt/bin/kubectl --kubeconfig /etc/kubernetes/kubelet.conf annotate --overwrite node %H machine={{ .Machine.ObjectMeta.Namespace }}/{{ .Machine.ObjectMeta.Name }}
+      ExecStartPost=/usr/bin/systemctl disable kubeadm.service
+
+      [Install]
+      WantedBy=multi-user.target
+    enabled: true

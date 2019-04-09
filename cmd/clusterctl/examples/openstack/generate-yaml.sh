@@ -7,7 +7,7 @@ print_help()
   echo "$SCRIPT - generates a provider-configs.yaml file"
   echo ""
   echo "Usage:"
-  echo "$SCRIPT [options] <path/to/clouds.yaml> <cloud> <provider os: [centos,ubuntu]>"
+  echo "$SCRIPT [options] <path/to/clouds.yaml> <cloud> <provider os: [centos,ubuntu,coreos]>"
   echo "options:"
   echo "-h, --help                    show brief help"
   echo "-f, --force-overwrite         if file to be generated already exists, force script to overwrite it"
@@ -15,7 +15,7 @@ print_help()
 }
 
 # Supported Operating Systems
-declare -a arr=("centos" "ubuntu")
+declare -a arr=("centos" "ubuntu" "coreos")
 SCRIPT=$(basename $0)
 while test $# -gt 0; do
         case "$1" in
@@ -60,7 +60,7 @@ if [[ -n "$3" ]] && [[ $3 != -* ]] && [[ $3 != --* ]]; then
   USER_OS=$(echo $3 | tr '[:upper:]' '[:lower:]')
 else
   echo "Error: No provider OS specified"
-  echo "You mush choose between the following operating systems: centos, ubuntu"
+  echo "You mush choose between the following operating systems: centos, ubuntu, coreos"
   echo ""
   print_help
   exit 1
@@ -114,6 +114,15 @@ USERDATA=$PWD/provider-component/user-data
 MASTER_USER_DATA=$USERDATA/$PROVIDER_OS/templates/master-user-data.sh
 WORKER_USER_DATA=$USERDATA/$PROVIDER_OS/templates/worker-user-data.sh
 
+# Container Linux (simply named CoreOS here) does its configuration a bit different
+# so it gets some of its own vars here.
+COREOS_COMMON_SECTION=$USERDATA/$PROVIDER_OS/templates/common.yaml
+COREOS_MASTER_SECTION=$USERDATA/$PROVIDER_OS/templates/master.yaml
+COREOS_WORKER_SECTION=$USERDATA/$PROVIDER_OS/templates/worker.yaml
+
+COREOS_MASTER_USER_DATA=$USERDATA/$PROVIDER_OS/master-user-data.yaml
+COREOS_WORKER_USER_DATA=$USERDATA/$PROVIDER_OS/worker-user-data.yaml
+
 OVERWRITE=${OVERWRITE:-0}
 CLOUDS_PATH=${CLOUDS_PATH:-""}
 OPENSTACK_CLOUD_CONFIG_PLAIN=$(cat "$CLOUDS_PATH")
@@ -165,18 +174,35 @@ else
   exit 1
 fi
 
-cat "$MASTER_USER_DATA" \
+if [[ "$PROVIDER_OS" == "coreos" ]]; then
+  cat $COREOS_COMMON_SECTION \
     | sed -e "s#\$OPENSTACK_CLOUD_PROVIDER_CONF#$OPENSTACK_CLOUD_PROVIDER_CONF#" \
-    > $USERDATA/$PROVIDER_OS/master-user-data.sh
-cat "$WORKER_USER_DATA" \
-  | sed -e "s#\$OPENSTACK_CLOUD_PROVIDER_CONF#$OPENSTACK_CLOUD_PROVIDER_CONF#" \
-  > $USERDATA/$PROVIDER_OS/worker-user-data.sh
+    | yq m -a - $COREOS_MASTER_SECTION  \
+    > $COREOS_MASTER_USER_DATA
+  cat $COREOS_COMMON_SECTION \
+    | sed -e "s#\$OPENSTACK_CLOUD_PROVIDER_CONF#$OPENSTACK_CLOUD_PROVIDER_CONF#" \
+    | yq m -a - $COREOS_WORKER_SECTION  \
+    > $COREOS_WORKER_USER_DATA
+else
+  cat "$MASTER_USER_DATA" \
+      | sed -e "s#\$OPENSTACK_CLOUD_PROVIDER_CONF#$OPENSTACK_CLOUD_PROVIDER_CONF#" \
+      > $USERDATA/$PROVIDER_OS/master-user-data.sh
+  cat "$WORKER_USER_DATA" \
+    | sed -e "s#\$OPENSTACK_CLOUD_PROVIDER_CONF#$OPENSTACK_CLOUD_PROVIDER_CONF#" \
+    > $USERDATA/$PROVIDER_OS/worker-user-data.sh
+fi
 
 printf $CLOUD > $CONFIG_DIR/os_cloud.txt
 echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" > $CONFIG_DIR/clouds.yaml
 
+
 # Build provider-components.yaml with kustomize
-kustomize build $PWD/../../../../config -o $PWD/out/provider-components.yaml
+# Coreos has a different kubeadm path (/usr is read-only) so gets a different kustomization.
+if [[ "$PROVIDER_OS" == "coreos" ]]; then
+  kustomize build $PWD/../../../../overlays-config/coreos -o $PWD/out/provider-components.yaml
+else
+  kustomize build $PWD/../../../../overlays-config/generic -o $PWD/out/provider-components.yaml
+fi
 echo "---" >> $PWD/out/provider-components.yaml
 kustomize build $PWD/provider-component/clouds-secrets >> $PWD/out/provider-components.yaml
 echo "---" >> $PWD/out/provider-components.yaml
