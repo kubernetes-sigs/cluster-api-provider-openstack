@@ -199,10 +199,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:19333b41a9cd939a2280cd52e39b6f511da6760d7e7b42e528324688032fbe84"
+  digest = "1:57d11d6e542db0131ec25a7271b7605479695a4e7df206481e70ef4874c948bd"
   name = "github.com/gophercloud/gophercloud"
   packages = [
     ".",
+    "internal",
     "openstack",
     "openstack/common/extensions",
     "openstack/compute/v2/extensions/attachinterfaces",
@@ -215,6 +216,7 @@
     "openstack/identity/v2/tenants",
     "openstack/identity/v2/tokens",
     "openstack/identity/v3/tokens",
+    "openstack/imageservice/v2/images",
     "openstack/networking/v2/extensions",
     "openstack/networking/v2/extensions/attributestags",
     "openstack/networking/v2/extensions/layer3/routers",
@@ -957,6 +959,7 @@
     "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs",
     "github.com/gophercloud/gophercloud/openstack/compute/v2/servers",
     "github.com/gophercloud/gophercloud/openstack/identity/v3/tokens",
+    "github.com/gophercloud/gophercloud/openstack/imageservice/v2/images",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers",

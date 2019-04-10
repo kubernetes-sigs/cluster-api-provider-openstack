@@ -165,13 +165,15 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *machinev1.Cluste
 	// `cluster` object so it's `nil` here. Read the cluster name from
 	// the `machine` instead.
 	var clusterName string
+	// TODO(egarcia): if we ever use the cluster object, this will benifit from reading from it
+	var clusterSpec openstackconfigv1.OpenstackClusterProviderSpec
 	if cluster == nil {
 		// TODO(shadower): if/when we ever reconcile the
 		// `machine.openshift.io` bit we should be able to merge this
 		// upstream.
-		clusterName = fmt.Sprintf("%s/%s", machine.Namespace, machine.Labels["machine.openshift.io/cluster-api-cluster"])
+		clusterName = fmt.Sprintf("%s-%s", machine.Namespace, machine.Labels["machine.openshift.io/cluster-api-cluster"])
 	} else {
-		clusterName = fmt.Sprintf("%s/%s", cluster.ObjectMeta.Namespace, cluster.Name)
+		clusterName = fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
 	}
 
 	if postprocess {
@@ -200,7 +202,8 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *machinev1.Cluste
 		}
 	}
 
-	instance, err = machineService.InstanceCreate(clusterName, machine.Name, providerSpec, userDataRendered, providerSpec.KeyName)
+	instance, err = machineService.InstanceCreate(clusterName, machine.Name, &clusterSpec, providerSpec, userDataRendered, providerSpec.KeyName)
+
 	if err != nil {
 		return oc.handleMachineError(machine, apierrors.CreateMachine(
 			"error creating Openstack instance: %v", err))

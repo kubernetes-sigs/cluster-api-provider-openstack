@@ -176,8 +176,31 @@ You can specify multiple networks (or subnets) to connect your server to. To do 
           - subnet_id: your_subnet_id
 ```
 
-## Tagging Instances
-Tags can be added to instances on startup by populating the tags array where it says `<Your Tags>`. You can remove this if you do not want to tag your instances. Please note that your Nova api must be at least mivroversion 2.52 to use this api! Please refer to the following usage example:
+## Tagging
+By default, all resources will be tagged with the values: `clusterName` and `cluster-api-provider-openstack`. The minimum microversion of the nova api that you need to support server tagging is 2.52. If your cluster does not support this, then disable tagging servers by setting `disableServerTags: true` in cluster.yaml. By default, this value is false, so there is no need so set it in machines.yaml. If your cluster supports tagging servers, you have the ability to tag all resources created by the cluster in the cluster.yaml script. Here is the example of the tagging options available in cluster.yaml.
+
+```yaml
+apiVersion: "cluster.k8s.io/v1alpha1"
+kind: Cluster
+metadata:
+  name: test1
+spec:
+    clusterNetwork:
+        services:
+            cidrBlocks: ["10.96.0.0/12"]
+        pods:
+            cidrBlocks: ["192.168.0.0/16"]
+        serviceDomain: "cluster.local"
+    providerSpec:
+      value:
+        apiVersion: "openstackproviderconfig/v1alpha1"
+        kind: "OpenstackProviderSpec"
+        disableServerTags: false
+        tags:
+          - cluster-tag
+```
+
+To tag resources specific to a machine, add a value to the tags field in machines.yaml like this.
 
 ```yaml
 - apiVersion: "cluster.k8s.io/v1alpha1"
@@ -190,8 +213,7 @@ Tags can be added to instances on startup by populating the tags array where it 
     providerSpec:
       value:
         tags:
-          - tag1
-          - tag2
+          - machine-tag
 ```
 
 ## Metadata

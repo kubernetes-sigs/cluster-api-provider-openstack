@@ -41,10 +41,10 @@ spec:
             properties:
               filter:
                 properties:
-                  description:
-                    type: string
                   adminStateUp:
                     type: boolean
+                  description:
+                    type: string
                   id:
                     type: string
                   limit:
@@ -86,10 +86,10 @@ spec:
                           type: string
                         description:
                           type: string
-                        id:
-                          type: string
                         enableDhcp:
                           type: boolean
+                        id:
+                          type: string
                         ipVersion:
                           format: int64
                           type: integer
@@ -99,8 +99,6 @@ spec:
                         marker:
                           type: string
                         name:
-                          type: string
-                        tags:
                           type: string
                         networkId:
                           type: string
