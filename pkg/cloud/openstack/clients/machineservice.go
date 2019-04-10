@@ -35,6 +35,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/identity/v3/tokens"
+	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	netext "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/trunks"
@@ -65,6 +66,7 @@ type InstanceService struct {
 	computeClient  *gophercloud.ServiceClient
 	identityClient *gophercloud.ServiceClient
 	networkClient  *gophercloud.ServiceClient
+	imagesClient   *gophercloud.ServiceClient
 }
 
 type Instance struct {
@@ -189,11 +191,19 @@ func NewInstanceServiceFromCloud(cloud clientconfig.Cloud) (*InstanceService, er
 		return nil, fmt.Errorf("Create networkingClient err: %v", err)
 	}
 
+	imagesClient, err := openstack.NewImageServiceV2(provider, gophercloud.EndpointOpts{
+		Region: clientOpts.RegionName,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("Create ImageClient err: %v", err)
+	}
+
 	return &InstanceService{
 		provider:       provider,
 		identityClient: identityClient,
 		computeClient:  serverClient,
 		networkClient:  networkingClient,
+		imagesClient:   imagesClient,
 	}, nil
 }
 
@@ -343,7 +353,38 @@ func GetSecurityGroups(is *InstanceService, sg_param []openstackconfigv1.Securit
 	return sgIDs, nil
 }
 
-func (is *InstanceService) InstanceCreate(clusterName string, name string, config *openstackconfigv1.OpenstackProviderSpec, cmd string, keyName string) (instance *Instance, err error) {
+// Helper function for getting image ID from name
+func getImageID(is *InstanceService, imageName string) (string, error) {
+	if imageName == "" {
+		return "", nil
+	}
+
+	opts := images.ListOpts{
+		Name: imageName,
+	}
+
+	pages, err := images.List(is.imagesClient, opts).AllPages()
+	if err != nil {
+		return "", err
+	}
+
+	allImages, err := images.ExtractImages(pages)
+	if err != nil {
+		return "", err
+	}
+
+	switch len(allImages) {
+	case 0:
+		return "", fmt.Errorf("no image with the name %s could be found", imageName)
+	case 1:
+		return allImages[0].ID, nil
+	default:
+		return "", fmt.Errorf("too many images with the name, %s, were found", imageName)
+	}
+}
+
+// InstanceCreate creates a compute instance
+func (is *InstanceService) InstanceCreate(clusterName string, name string, clusterSpec *openstackconfigv1.OpenstackClusterProviderSpec, config *openstackconfigv1.OpenstackProviderSpec, cmd string, keyName string) (instance *Instance, err error) {
 	var createOpts servers.CreateOptsBuilder
 	if config == nil {
 		return nil, fmt.Errorf("create Options need be specified to create instace")
@@ -357,12 +398,18 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 			return nil, fmt.Errorf("There is no trunk support. Please disable it")
 		}
 	}
+
+	// Set default Tags
 	machineTags := []string{
 		"cluster-api-provider-openstack",
 		clusterName,
 	}
 
+	// Append machine specific tags
 	machineTags = append(machineTags, config.Tags...)
+
+	// Append cluster scope tags
+	machineTags = append(machineTags, clusterSpec.Tags...)
 
 	// Get security groups
 	securityGroups, err := GetSecurityGroups(is, config.SecurityGroups)
@@ -400,10 +447,6 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 					})
 				}
 			}
-		}
-
-		if len(net.Filter.Tags) > 0 {
-			machineTags = append(machineTags, net.Filter.Tags)
 		}
 	}
 	userData := base64.StdEncoding.EncodeToString([]byte(cmd))
@@ -479,26 +522,32 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 		}
 	}
 
+	var serverTags []string
+	if clusterSpec.DisableServerTags == false {
+		serverTags = machineTags
+		// NOTE(flaper87): This is the minimum required version
+		// to use tags.
+		is.computeClient.Microversion = "2.52"
+	}
+
+	// Get image ID
+	imageID, err := getImageID(is, config.Image)
+	if err != nil {
+		return nil, fmt.Errorf("Create new server err: %v", err)
+	}
+
 	serverCreateOpts := servers.CreateOpts{
 		Name:             name,
-		ImageName:        config.Image,
+		ImageRef:         imageID,
 		FlavorName:       config.Flavor,
 		AvailabilityZone: config.AvailabilityZone,
 		Networks:         ports_list,
 		UserData:         []byte(userData),
 		SecurityGroups:   securityGroups,
 		ServiceClient:    is.computeClient,
-		Tags:             config.Tags,
+		Tags:             serverTags,
 		Metadata:         config.ServerMetadata,
 		ConfigDrive:      config.ConfigDrive,
-	}
-
-	if config.Tags != nil {
-		serverCreateOpts.Tags = config.Tags
-		// NOTE(flaper87): This is the minimum required version
-		// to use tags.
-		is.computeClient.Microversion = "2.52"
-
 	}
 
 	// If the root volume Size is not 0, means boot from volume
@@ -529,6 +578,7 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, confi
 	if err != nil {
 		return nil, fmt.Errorf("Create new server err: %v", err)
 	}
+	is.computeClient.Microversion = ""
 	return serverToInstance(server), nil
 }
 

@@ -29,7 +29,7 @@ items:
           namespace: openstack-provider-system
         trunk: false
         tags:
-          - <Your Tag>
+          - a-machine-specific-tag
         serverMetadata:
           key: value
     versions:
@@ -61,7 +61,7 @@ items:
           namespace: openstack-provider-system
         trunk: false
         tags:
-          - <Your Tag>
+          - a-machine-specific-tag
         serverMetadata:
           key: value
     versions:

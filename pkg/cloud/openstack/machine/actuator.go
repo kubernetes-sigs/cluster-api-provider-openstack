@@ -181,8 +181,14 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 			return fmt.Errorf("Postprocessor error: unknown postprocessor: '%s'", postprocessor)
 		}
 	}
+	clusterSpec, err := openstackconfigv1.ClusterSpecFromProviderSpec(cluster.Spec.ProviderSpec)
+	if err != nil {
+		return oc.handleMachineError(machine, apierrors.CreateMachine(
+			"error creating Openstack instance: %v", err))
+	}
+	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
+	instance, err = machineService.InstanceCreate(clusterName, machine.Name, clusterSpec, providerSpec, userDataRendered, providerSpec.KeyName)
 
-	instance, err = machineService.InstanceCreate(fmt.Sprintf("%s/%s", cluster.ObjectMeta.Namespace, cluster.Name), machine.Name, providerSpec, userDataRendered, providerSpec.KeyName)
 	if err != nil {
 		return oc.handleMachineError(machine, apierrors.CreateMachine(
 			"error creating Openstack instance: %v", err))
