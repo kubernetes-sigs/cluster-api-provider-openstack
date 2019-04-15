@@ -79,6 +79,7 @@ policy may be made to more closely align with other providers in the Cluster API
    Supported Operating Systems:
    - `ubuntu`
    - `centos`
+   - `coreos`
 
    #### Quick notes on clouds.yaml
    We no longer support generating clouds.yaml. You should be able to get a valid clouds.yaml from your openstack cluster. However, make sure that the following fields are included, and correct.
