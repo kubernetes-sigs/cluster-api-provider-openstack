@@ -8,7 +8,9 @@ resources:
 - rbac/rbac_role_binding.yaml
 - rbac/secrets_role.yaml
 - rbac/rbac_role.yaml
-- manager/manager.yaml
+- manager/namespace.yaml
+- manager/service.yaml
+- manager/deployment.yaml
 - crds/openstackproviderconfig_v1alpha1_openstackclusterproviderstatus.yaml
 - crds/openstackproviderconfig_v1alpha1_openstackclusterproviderspec.yaml
 - crds/openstackproviderconfig_v1alpha1_openstackproviderspec.yaml

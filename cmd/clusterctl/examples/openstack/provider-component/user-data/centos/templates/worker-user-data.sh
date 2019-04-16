@@ -23,6 +23,9 @@ gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cl
 exclude=kube*
 EOF
 
+swapoff -a
+# disable swap in fstab
+sed -i.bak -r 's/(.+ swap .+)/#\1/' /etc/fstab
 setenforce 0
 yum install -y kubelet-$KUBELET_VERSION kubeadm-$KUBELET_VERSION kubectl-$KUBELET_VERSION --disableexcludes=kubernetes
 
@@ -45,17 +48,21 @@ echo $OPENSTACK_CLOUD_PROVIDER_CONF | base64 -d > /etc/kubernetes/cloud.conf
 
 # Set up kubeadm config file to pass to kubeadm join.
 cat > /etc/kubernetes/kubeadm_config.yaml <<EOF
-apiVersion: kubeadm.k8s.io/v1alpha3
+apiVersion: kubeadm.k8s.io/v1beta1
 kind: JoinConfiguration
+caCertPath: /etc/kubernetes/pki/ca.crt
+discovery:
+  bootstrapToken:
+    apiServerEndpoint: ${MASTER}
+    token: ${TOKEN}
+    unsafeSkipCAVerification: true
+  timeout: 5m0s
+  tlsBootstrapToken: ${TOKEN}
 nodeRegistration:
-  name: $(hostname -s)
+  criSocket: /var/run/dockershim.sock
   kubeletExtraArgs:
-    cloud-provider: "openstack"
-    cloud-config: "/etc/kubernetes/cloud.conf"
-token: ${TOKEN}
-discoveryTokenAPIServers:
-  - ${MASTER}
-discoveryTokenUnsafeSkipCAVerification: true
+    cloud-config: /etc/kubernetes/cloud.conf
+    cloud-provider: openstack
 EOF
 
 cat <<EOF > /etc/default/kubelet
@@ -67,7 +74,7 @@ modprobe br_netfilter
 echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables
 echo '1' > /proc/sys/net/ipv4/ip_forward
 
-kubeadm join --ignore-preflight-errors=all --config /etc/kubernetes/kubeadm_config.yaml
+kubeadm join -v 10 --ignore-preflight-errors=all --config /etc/kubernetes/kubeadm_config.yaml
 for tries in $(seq 1 60); do
 	kubectl --kubeconfig /etc/kubernetes/kubelet.conf annotate --overwrite node $(hostname -s) machine=${MACHINE} && break
 	sleep 1

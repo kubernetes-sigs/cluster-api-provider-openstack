@@ -13,6 +13,9 @@ CLUSTER_DNS_DOMAIN={{ .Cluster.Spec.ClusterNetwork.ServiceDomain }}
 POD_CIDR={{ .PodCIDR }}
 SERVICE_CIDR={{ .ServiceCIDR }}
 
+swapoff -a
+# disable swap in fstab
+sed -i.bak -r 's/(.+ swap .+)/#\1/' /etc/fstab
 apt-get update
 apt-get install -y apt-transport-https prips
 apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv-keys F76221572C52609D
@@ -79,16 +82,21 @@ echo $OPENSTACK_CLOUD_PROVIDER_CONF | base64 -d > /etc/kubernetes/cloud.conf
 
 # Set up kubeadm config file to pass to kubeadm join.
 cat > /etc/kubernetes/kubeadm_config.yaml <<EOF
-apiVersion: kubeadm.k8s.io/v1alpha3
+apiVersion: kubeadm.k8s.io/v1beta1
 kind: JoinConfiguration
+caCertPath: /etc/kubernetes/pki/ca.crt
+discovery:
+  bootstrapToken:
+    apiServerEndpoint: ${MASTER}
+    token: ${TOKEN}
+    unsafeSkipCAVerification: true
+  timeout: 5m0s
+  tlsBootstrapToken: ${TOKEN}
 nodeRegistration:
+  criSocket: /var/run/dockershim.sock
   kubeletExtraArgs:
-    cloud-provider: "openstack"
-    cloud-config: "/etc/kubernetes/cloud.conf"
-token: ${TOKEN}
-discoveryTokenAPIServers:
-  - ${MASTER}
-discoveryTokenUnsafeSkipCAVerification: true
+    cloud-config: /etc/kubernetes/cloud.conf
+    cloud-provider: openstack
 EOF
 
 # Override network args to use kubenet instead of cni, override Kubelet DNS args and
@@ -102,7 +110,7 @@ systemctl restart kubelet.service
 systemctl disable ufw 
 systemctl mask ufw
 
-kubeadm join --ignore-preflight-errors=all --config /etc/kubernetes/kubeadm_config.yaml
+kubeadm -v 10 join --ignore-preflight-errors=all --config /etc/kubernetes/kubeadm_config.yaml
 for tries in $(seq 1 60); do
 	kubectl --kubeconfig /etc/kubernetes/kubelet.conf annotate --overwrite node $(hostname) machine=${MACHINE} && break
 	sleep 1

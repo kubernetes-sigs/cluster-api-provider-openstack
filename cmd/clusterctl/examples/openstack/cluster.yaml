@@ -13,4 +13,6 @@ spec:
       value:
         apiVersion: "openstackproviderconfig/v1alpha1"
         kind: "OpenstackProviderSpec"
+        tags:
+          - a_cluster_wide_tag
 

@@ -13,6 +13,9 @@ CLUSTER_DNS_DOMAIN={{ .Cluster.Spec.ClusterNetwork.ServiceDomain }}
 POD_CIDR={{ .PodCIDR }}
 SERVICE_CIDR={{ .ServiceCIDR }}
 ARCH=amd64
+swapoff -a
+# disable swap in fstab
+sed -i.bak -r 's/(.+ swap .+)/#\1/' /etc/fstab
 curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
 touch /etc/apt/sources.list.d/kubernetes.list
 sh -c 'echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" > /etc/apt/sources.list.d/kubernetes.list'
@@ -103,6 +106,7 @@ Environment="KUBELET_DNS_ARGS=--cluster-dns=${CLUSTER_DNS_SERVER} --cluster-doma
 EOF
 
 echo $OPENSTACK_CLOUD_PROVIDER_CONF | base64 -d > /etc/kubernetes/cloud.conf
+chmod 600 /etc/kubernetes/cloud.conf
 
 systemctl daemon-reload
 systemctl restart kubelet.service
@@ -113,41 +117,65 @@ systemctl mask ufw
 # We're using 443 until this bug is fixed
 # https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/64
 cat > /etc/kubernetes/kubeadm_config.yaml <<EOF
-apiVersion: kubeadm.k8s.io/v1alpha3
+apiVersion: kubeadm.k8s.io/v1beta1
 kind: InitConfiguration
 bootstrapTokens:
-- token: ${TOKEN}
-apiEndpoint:
+- groups:
+  - system:bootstrappers:kubeadm:default-node-token
+  token: ${TOKEN}
+  ttl: 24h0m0s
+  usages:
+  - signing
+  - authentication
+localAPIEndpoint:
   bindPort: 443
 nodeRegistration:
+  criSocket: /var/run/dockershim.sock
   kubeletExtraArgs:
-    cloud-provider: "openstack"
-    cloud-config: "/etc/kubernetes/cloud.conf"
+    cloud-config: /etc/kubernetes/cloud.conf
+    cloud-provider: openstack
+  taints:
+  - effect: NoSchedule
+    key: node-role.kubernetes.io/master
 ---
-apiVersion: kubeadm.k8s.io/v1alpha3
+apiVersion: kubeadm.k8s.io/v1beta1
 kind: ClusterConfiguration
 kubernetesVersion: v${CONTROL_PLANE_VERSION}
-networking:
-  serviceSubnet: ${SERVICE_CIDR}
+apiServer:
+  extraArgs:
+    cloud-config: /etc/kubernetes/cloud.conf
+    cloud-provider: openstack
+  extraVolumes:
+  - hostPath: /etc/kubernetes/cloud.conf
+    mountPath: /etc/kubernetes/cloud.conf
+    name: cloud
+    readOnly: true
+  timeoutForControlPlane: 4m0s
+certificatesDir: /etc/kubernetes/pki
 clusterName: kubernetes
 controlPlaneEndpoint: ${MASTER}
-apiServerExtraArgs:
-  cloud-provider: "openstack"
-  cloud-config: "/etc/kubernetes/cloud.conf"
-apiServerExtraVolumes:
-- name: cloud
-  hostPath: "/etc/kubernetes/cloud.conf"
-  mountPath: "/etc/kubernetes/cloud.conf"
-controllerManagerExtraArgs:
-  cluster-cidr: ${POD_CIDR}
-  service-cluster-ip-range: ${SERVICE_CIDR}
-  allocate-node-cidrs: "true"
-  cloud-provider: "openstack"
-  cloud-config: "/etc/kubernetes/cloud.conf"
-controllerManagerExtraVolumes:
-- name: cloud
-  hostPath: "/etc/kubernetes/cloud.conf"
-  mountPath: "/etc/kubernetes/cloud.conf"
+controllerManager:
+  extraArgs:
+    allocate-node-cidrs: "true"
+    cloud-config: /etc/kubernetes/cloud.conf
+    cloud-provider: openstack
+    cluster-cidr: ${POD_CIDR}
+    service-cluster-ip-range: ${SERVICE_CIDR}
+  extraVolumes:
+  - hostPath: /etc/kubernetes/cloud.conf
+    mountPath: /etc/kubernetes/cloud.conf
+    name: cloud
+    readOnly: true
+dns:
+  type: CoreDNS
+etcd:
+  local:
+    dataDir: /var/lib/etcd
+imageRepository: k8s.gcr.io
+networking:
+  dnsDomain: cluster.local
+  podSubnet: ""
+  serviceSubnet: ${SERVICE_CIDR}
 EOF
 
 # Create and set bridge-nf-call-iptables to 1 to pass the kubeadm preflight check.
@@ -155,7 +183,7 @@ EOF
 # http://zeeshanali.com/sysadmin/fixed-sysctl-cannot-stat-procsysnetbridgebridge-nf-call-iptables/
 modprobe br_netfilter
 
-kubeadm init --config /etc/kubernetes/kubeadm_config.yaml
+kubeadm init -v 10 --config /etc/kubernetes/kubeadm_config.yaml
 for tries in $(seq 1 60); do
     kubectl --kubeconfig /etc/kubernetes/kubelet.conf annotate --overwrite node $(hostname) machine=${MACHINE} && break
     sleep 1

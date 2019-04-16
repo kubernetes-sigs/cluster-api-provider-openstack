@@ -15,13 +15,48 @@ You can reach the maintainers of this project at:
 
 Participation in the Kubernetes community is governed by the [Kubernetes Code of Conduct](code-of-conduct.md).
 
+------
+
+## Compatibility with Cluster API, Kubernetes and OpenStack Versions
+
+This provider's versions are compatible with the following versions of Cluster API:
+
+||Cluster API v1alpha1 (v0.1)|
+|-|-|
+|OpenStack Provider v1alpha1 (ea309e7f)|✓|
+
+This provider's versions are able to install and manage the following versions of Kubernetes:
+
+||Kubernetes 1.13.5+|Kubernetes 1.14|
+|-|-|-|
+|OpenStack Provider v1alpha1 (ea309e7f)|✓|✓|
+
+**NOTE**: Because the user is able to customize any `user-data`, it is also possible to deploy older versions.
+But we won't provide any examples or working templates. See [user-data in the examples](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/tree/master/cmd/clusterctl/examples/openstack/provider-component/user-data).
+
+This provider's versions are able to install kubernetes to the following versions of OpenStack:
+
+||OpenStack Pike|OpenStack Queens|OpenStack Rocky|
+|-|-|-|-|
+|OpenStack Provider v1alpha1 (ea309e7f)|✓|✓|✓|
+
+Each version of Cluster API for OpenStack will attempt to support two Kubernetes versions.
+
+**NOTE:** As the versioning for this project is tied to the versioning of Cluster API, future modifications to this
+policy may be made to more closely align with other providers in the Cluster API ecosystem.
+
+------
+
 ## Getting Started
 
 ### Prerequisites
 
 1. Install `kubectl` (see [here](http://kubernetes.io/docs/user-guide/prereqs/)).
-2. Install [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/), version 0.30.0 or greater.
-3. Install a [driver](https://github.com/kubernetes/minikube/blob/master/docs/drivers.md) for minikube. For Linux, we recommend kvm2. For MacOS, we recommend VirtualBox.
+2. You can use either VM, container or existing Kubernetes cluster act as bootstrap cluster.
+   - If you want to use VM, install [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/), version 0.30.0 or greater.
+   - If you want to use container, install [kind](https://github.com/kubernetes-sigs/kind#installation-and-usage).
+   - If you want to use existing Kubernetes cluster, prepare your kubeconfig.
+3. Install a [driver](https://github.com/kubernetes/minikube/blob/master/docs/drivers.md) **if you are using minikube**. For Linux, we recommend kvm2. For MacOS, we recommend VirtualBox.
 4. An appropriately configured [Go development environment](https://golang.org/doc/install)
 5. Build the `clusterctl` tool
 
@@ -69,12 +104,34 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
    ```
 
 2. Create a cluster:
+   - If you are using minikube:
 
    ```bash
-   ./clusterctl create cluster --bootstrap-type minikube --bootstrap-flags kubernetes-version=v1.12.3 --provider openstack -c examples/openstack/out/cluster.yaml -m examples/openstack/out/machines.yaml -p examples/openstack/out/provider-components.yaml
+   ./clusterctl create cluster --bootstrap-type minikube --bootstrap-flags kubernetes-version=v1.12.3 \
+     --provider openstack -c examples/openstack/out/cluster.yaml \
+     -m examples/openstack/out/machines.yaml -p examples/openstack/out/provider-components.yaml
    ```
 
-To choose a specific minikube driver, please use the `--bootstrap-flags vm-driver=xxx` command line parameter. For example to use the kvm2 driver with clusterctl you woud add `--bootstrap-flags vm-driver=kvm2`, for linux, if you haven't installed any driver, you can add `--bootstrap-flags vm-driver=none`.
+   To choose a specific minikube driver, please use the `--bootstrap-flags vm-driver=xxx` command line parameter. For example to use the kvm2 driver with clusterctl you woud add `--bootstrap-flags vm-driver=kvm2`, for linux, if you haven't installed any driver, you can add `--bootstrap-flags vm-driver=none`.
+
+   - If you are using kind:
+
+   ```bash
+   ./clusterctl create cluster --bootstrap-type kind --provider openstack \
+     -c examples/openstack/out/cluster.yaml -m examples/openstack/out/machines.yaml \
+     -p examples/openstack/out/provider-components.yaml
+   ```
+
+   - If you are using existing Kubernetes cluster:
+   ```bash
+   ./clusterctl create cluster --bootstrap-cluster-kubeconfig ~/.kube/config \
+     --provider openstack -c examples/openstack/out/cluster.yaml \
+     -m examples/openstack/out/machines.yaml \
+     -p examples/openstack/out/provider-components.yaml
+   ```
+
+   For the above command, the `bootstrap-cluster-kubeconfig` was located at `~/.kube/config`, you must update it
+   to use your kubeconfig.
 
 Additional advanced flags can be found via help.
 
@@ -86,7 +143,7 @@ Additional advanced flags can be found via help.
 
 In `Cluster.spec.ProviderSpec` there is a boolean option called `ManagedSecurityGroups` that, if set to `true`, will create a default set of security groups for the cluster. These are meant for a "standard" setup, and might not be suitable for every environment. Please review the rules below before you use them.
 
-*NOTE*: For now, there is no way to automatically use these rules, which makes them a bit cumbersome to use, this will be possible in the near future.
+**NOTE**: For now, there is no way to automatically use these rules, which makes them a bit cumbersome to use, this will be possible in the near future.
 
 The rules created are:
 
@@ -94,6 +151,12 @@ The rules created are:
 * A rule for all the machines, both the controlplane and the nodes that allow all traffic between members of this group.
 
 ### Interacting with your cluster
+
+If you are using kind, config the `KUBECONFIG` first before using kubectl:
+
+```bash
+export KUBECONFIG="$(kind get kubeconfig-path --name="clusterapi")"
+```
 
 Once you have created a cluster, you can interact with the cluster and machine
 resources using kubectl:

@@ -408,6 +408,11 @@ type TCPInfo struct {
 	Total_retrans  uint32
 }
 
+type CanFilter struct {
+	Id   uint32
+	Mask uint32
+}
+
 const (
 	SizeofSockaddrInet4     = 0x10
 	SizeofSockaddrInet6     = 0x1c
@@ -437,9 +442,38 @@ const (
 	SizeofICMPv6Filter      = 0x20
 	SizeofUcred             = 0xc
 	SizeofTCPInfo           = 0x68
+	SizeofCanFilter         = 0x8
 )
 
 const (
+	NDA_UNSPEC           = 0x0
+	NDA_DST              = 0x1
+	NDA_LLADDR           = 0x2
+	NDA_CACHEINFO        = 0x3
+	NDA_PROBES           = 0x4
+	NDA_VLAN             = 0x5
+	NDA_PORT             = 0x6
+	NDA_VNI              = 0x7
+	NDA_IFINDEX          = 0x8
+	NDA_MASTER           = 0x9
+	NDA_LINK_NETNSID     = 0xa
+	NDA_SRC_VNI          = 0xb
+	NTF_USE              = 0x1
+	NTF_SELF             = 0x2
+	NTF_MASTER           = 0x4
+	NTF_PROXY            = 0x8
+	NTF_EXT_LEARNED      = 0x10
+	NTF_OFFLOADED        = 0x20
+	NTF_ROUTER           = 0x80
+	NUD_INCOMPLETE       = 0x1
+	NUD_REACHABLE        = 0x2
+	NUD_STALE            = 0x4
+	NUD_DELAY            = 0x8
+	NUD_PROBE            = 0x10
+	NUD_FAILED           = 0x20
+	NUD_NOARP            = 0x40
+	NUD_PERMANENT        = 0x80
+	NUD_NONE             = 0x0
 	IFA_UNSPEC           = 0x0
 	IFA_ADDRESS          = 0x1
 	IFA_LOCAL            = 0x2
@@ -448,6 +482,9 @@ const (
 	IFA_ANYCAST          = 0x5
 	IFA_CACHEINFO        = 0x6
 	IFA_MULTICAST        = 0x7
+	IFA_FLAGS            = 0x8
+	IFA_RT_PRIORITY      = 0x9
+	IFA_TARGET_NETNSID   = 0xa
 	IFLA_UNSPEC          = 0x0
 	IFLA_ADDRESS         = 0x1
 	IFLA_BROADCAST       = 0x2
@@ -572,6 +609,8 @@ const (
 	SizeofIfAddrmsg      = 0x8
 	SizeofRtMsg          = 0xc
 	SizeofRtNexthop      = 0x8
+	SizeofNdUseroptmsg   = 0x10
+	SizeofNdMsg          = 0xc
 )
 
 type NlMsghdr struct {
@@ -635,6 +674,27 @@ type RtNexthop struct {
 	Flags   uint8
 	Hops    uint8
 	Ifindex int32
+}
+
+type NdUseroptmsg struct {
+	Family    uint8
+	Pad1      uint8
+	Opts_len  uint16
+	Ifindex   int32
+	Icmp_type uint8
+	Icmp_code uint8
+	Pad2      uint16
+	Pad3      uint32
+}
+
+type NdMsg struct {
+	Family  uint8
+	Pad1    uint8
+	Pad2    uint16
+	Ifindex int32
+	State   uint16
+	Flags   uint8
+	Type    uint8
 }
 
 const (
@@ -955,7 +1015,8 @@ type PerfEventAttr struct {
 	Clockid            int32
 	Sample_regs_intr   uint64
 	Aux_watermark      uint32
-	_                  uint32
+	Sample_max_stack   uint16
+	_                  uint16
 }
 
 type PerfEventMmapPage struct {
@@ -1058,6 +1119,7 @@ const (
 	PERF_COUNT_SW_ALIGNMENT_FAULTS = 0x7
 	PERF_COUNT_SW_EMULATION_FAULTS = 0x8
 	PERF_COUNT_SW_DUMMY            = 0x9
+	PERF_COUNT_SW_BPF_OUTPUT       = 0xa
 
 	PERF_SAMPLE_IP           = 0x1
 	PERF_SAMPLE_TID          = 0x2
@@ -1079,21 +1141,38 @@ const (
 	PERF_SAMPLE_BRANCH_ANY_CALL   = 0x10
 	PERF_SAMPLE_BRANCH_ANY_RETURN = 0x20
 	PERF_SAMPLE_BRANCH_IND_CALL   = 0x40
+	PERF_SAMPLE_BRANCH_ABORT_TX   = 0x80
+	PERF_SAMPLE_BRANCH_IN_TX      = 0x100
+	PERF_SAMPLE_BRANCH_NO_TX      = 0x200
+	PERF_SAMPLE_BRANCH_COND       = 0x400
+	PERF_SAMPLE_BRANCH_CALL_STACK = 0x800
+	PERF_SAMPLE_BRANCH_IND_JUMP   = 0x1000
+	PERF_SAMPLE_BRANCH_CALL       = 0x2000
+	PERF_SAMPLE_BRANCH_NO_FLAGS   = 0x4000
+	PERF_SAMPLE_BRANCH_NO_CYCLES  = 0x8000
+	PERF_SAMPLE_BRANCH_TYPE_SAVE  = 0x10000
 
 	PERF_FORMAT_TOTAL_TIME_ENABLED = 0x1
 	PERF_FORMAT_TOTAL_TIME_RUNNING = 0x2
 	PERF_FORMAT_ID                 = 0x4
 	PERF_FORMAT_GROUP              = 0x8
 
-	PERF_RECORD_MMAP       = 0x1
-	PERF_RECORD_LOST       = 0x2
-	PERF_RECORD_COMM       = 0x3
-	PERF_RECORD_EXIT       = 0x4
-	PERF_RECORD_THROTTLE   = 0x5
-	PERF_RECORD_UNTHROTTLE = 0x6
-	PERF_RECORD_FORK       = 0x7
-	PERF_RECORD_READ       = 0x8
-	PERF_RECORD_SAMPLE     = 0x9
+	PERF_RECORD_MMAP            = 0x1
+	PERF_RECORD_LOST            = 0x2
+	PERF_RECORD_COMM            = 0x3
+	PERF_RECORD_EXIT            = 0x4
+	PERF_RECORD_THROTTLE        = 0x5
+	PERF_RECORD_UNTHROTTLE      = 0x6
+	PERF_RECORD_FORK            = 0x7
+	PERF_RECORD_READ            = 0x8
+	PERF_RECORD_SAMPLE          = 0x9
+	PERF_RECORD_MMAP2           = 0xa
+	PERF_RECORD_AUX             = 0xb
+	PERF_RECORD_ITRACE_START    = 0xc
+	PERF_RECORD_LOST_SAMPLES    = 0xd
+	PERF_RECORD_SWITCH          = 0xe
+	PERF_RECORD_SWITCH_CPU_WIDE = 0xf
+	PERF_RECORD_NAMESPACES      = 0x10
 
 	PERF_CONTEXT_HV     = -0x20
 	PERF_CONTEXT_KERNEL = -0x80
@@ -1106,6 +1185,7 @@ const (
 	PERF_FLAG_FD_NO_GROUP = 0x1
 	PERF_FLAG_FD_OUTPUT   = 0x2
 	PERF_FLAG_PID_CGROUP  = 0x4
+	PERF_FLAG_FD_CLOEXEC  = 0x8
 )
 
 const (
@@ -1411,6 +1491,9 @@ const (
 	SizeofTpacketHdr  = 0x20
 	SizeofTpacket2Hdr = 0x20
 	SizeofTpacket3Hdr = 0x30
+
+	SizeofTpacketStats   = 0x8
+	SizeofTpacketStatsV3 = 0xc
 )
 
 const (
@@ -2026,4 +2109,19 @@ type SockExtendedErr struct {
 	Pad    uint8
 	Info   uint32
 	Data   uint32
+}
+
+type FanotifyEventMetadata struct {
+	Event_len    uint32
+	Vers         uint8
+	Reserved     uint8
+	Metadata_len uint16
+	Mask         uint64
+	Fd           int32
+	Pid          int32
+}
+
+type FanotifyResponse struct {
+	Fd       int32
+	Response uint32
 }

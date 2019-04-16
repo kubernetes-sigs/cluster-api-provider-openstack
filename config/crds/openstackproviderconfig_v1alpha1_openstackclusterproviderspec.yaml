@@ -16,6 +16,8 @@ spec:
       properties:
         apiVersion:
           type: string
+        disableServerTags:
+          type: boolean
         dnsNameservers:
           items:
             type: string
@@ -30,6 +32,10 @@ spec:
           type: object
         nodeCidr:
           type: string
+        tags:
+          items:
+            type: string
+          type: array
       required:
       - managedSecurityGroups
   version: v1alpha1

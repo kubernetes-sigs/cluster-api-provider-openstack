@@ -22,6 +22,8 @@ spec:
           type: string
         cloudsSecret:
           type: object
+        configDrive:
+          type: boolean
         flavor:
           type: string
         floatingIP:
@@ -39,6 +41,8 @@ spec:
             properties:
               filter:
                 properties:
+                  adminStateUp:
+                    type: boolean
                   description:
                     type: string
                   id:
@@ -50,13 +54,29 @@ spec:
                     type: string
                   name:
                     type: string
+                  notTags:
+                    type: string
+                  notTagsAny:
+                    type: string
+                  projectId:
+                    type: string
                   shared:
                     type: boolean
+                  sortDir:
+                    type: string
+                  sortKey:
+                    type: string
                   status:
                     type: string
                   tags:
                     type: string
+                  tagsAny:
+                    type: string
+                  tenantId:
+                    type: string
                 type: object
+              fixedIp:
+                type: string
               subnets:
                 items:
                   properties:
@@ -66,8 +86,13 @@ spec:
                           type: string
                         description:
                           type: string
+                        enableDhcp:
+                          type: boolean
                         id:
                           type: string
+                        ipVersion:
+                          format: int64
+                          type: integer
                         limit:
                           format: int64
                           type: integer
@@ -75,7 +100,25 @@ spec:
                           type: string
                         name:
                           type: string
+                        networkId:
+                          type: string
+                        notTags:
+                          type: string
+                        notTagsAny:
+                          type: string
+                        projectId:
+                          type: string
+                        sortDir:
+                          type: string
+                        sortKey:
+                          type: string
+                        subnetpoolId:
+                          type: string
                         tags:
+                          type: string
+                        tagsAny:
+                          type: string
+                        tenantId:
                           type: string
                       type: object
                     uuid:
@@ -86,6 +129,20 @@ spec:
                 type: string
             type: object
           type: array
+        rootVolume:
+          properties:
+            deviceType:
+              type: string
+            diskSize:
+              format: int64
+              type: integer
+            sourceType:
+              type: string
+            sourceUUID:
+              type: string
+          required:
+          - deviceType
+          type: object
         securityGroups:
           items:
             properties:
@@ -102,7 +159,21 @@ spec:
                     type: string
                   name:
                     type: string
+                  notTags:
+                    type: string
+                  notTagsAny:
+                    type: string
+                  projectId:
+                    type: string
+                  sortDir:
+                    type: string
+                  sortKey:
+                    type: string
                   tags:
+                    type: string
+                  tagsAny:
+                    type: string
+                  tenantId:
                     type: string
                 type: object
               name:
