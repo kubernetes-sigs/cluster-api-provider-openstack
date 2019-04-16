@@ -18,13 +18,16 @@ package machine
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 
 	"k8s.io/apimachinery/pkg/runtime/serializer/json"
 
 	machinev1 "github.com/openshift/cluster-api/pkg/apis/machine/v1beta1"
 	"github.com/openshift/cluster-api/pkg/util"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // Long term, we should retrieve the current status by asking k8s, openstack etc. for all the needed info.
@@ -37,7 +40,7 @@ type instanceStatus *machinev1.Machine
 
 // Get the status of the instance identified by the given machine
 func (oc *OpenstackClient) instanceStatus(machine *machinev1.Machine) (instanceStatus, error) {
-	currentMachine, err := util.GetMachineIfExists(oc.client, machine.Namespace, machine.Name)
+	currentMachine, err := GetMachineIfExists(oc.client, machine.Namespace, machine.Name)
 
 	if err != nil {
 		return nil, err
@@ -50,6 +53,31 @@ func (oc *OpenstackClient) instanceStatus(machine *machinev1.Machine) (instanceS
 	var i interface{} = currentMachine
 	var v1m = i.(machinev1.Machine)
 	return oc.machineInstanceStatus(&v1m)
+}
+
+// Get a `machinev1.Machine` matching the specified name and namespace.
+//
+// Same as cluster-api's `util.GetMachineIfExists`, but works with
+// `machinev1` instead of `clusterv1`. The latter does not work with
+// OpenShift deployments.
+func GetMachineIfExists(c client.Client, namespace, name string) (*machinev1.Machine, error) {
+	if c == nil {
+		// Being called before k8s is setup as part of control plane VM creation
+		return nil, nil
+	}
+
+	machine := &machinev1.Machine{}
+	key := client.ObjectKey{Namespace: namespace, Name: name}
+	err := c.Get(context.Background(), key, machine)
+
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return machine, nil
 }
 
 // Sets the status of the instance identified by the given machine to the given machine
