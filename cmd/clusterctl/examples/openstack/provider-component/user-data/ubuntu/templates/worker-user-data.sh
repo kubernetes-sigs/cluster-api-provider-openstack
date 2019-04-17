@@ -12,6 +12,7 @@ MACHINE+={{ .Machine.ObjectMeta.Name }}
 CLUSTER_DNS_DOMAIN={{ .Cluster.Spec.ClusterNetwork.ServiceDomain }}
 POD_CIDR={{ .PodCIDR }}
 SERVICE_CIDR={{ .ServiceCIDR }}
+DISTRIBUTOR=$(lsb_release -cs)
 
 swapoff -a
 # disable swap in fstab
@@ -20,7 +21,7 @@ apt-get update
 apt-get install -y apt-transport-https prips
 apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv-keys F76221572C52609D
 cat <<EOF > /etc/apt/sources.list.d/k8s.list
-deb [arch=amd64] https://apt.dockerproject.org/repo ubuntu-xenial main
+deb [arch=amd64] https://apt.dockerproject.org/repo ubuntu-${DISTRIBUTOR} main
 EOF
 apt-get update
 
@@ -50,7 +51,7 @@ install_configure_docker
 
 curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 cat <<EOF > /etc/apt/sources.list.d/kubernetes.list
-deb http://apt.kubernetes.io/ kubernetes-xenial main
+deb http://apt.kubernetes.io/ kubernetes-${DISTRIBUTOR} main
 EOF
 apt-get update
 
@@ -107,7 +108,7 @@ Environment="KUBELET_DNS_ARGS=--cluster-dns=${CLUSTER_DNS_SERVER} --cluster-doma
 EOF
 systemctl daemon-reload
 systemctl restart kubelet.service
-systemctl disable ufw 
+systemctl disable ufw
 systemctl mask ufw
 
 kubeadm -v 10 join --ignore-preflight-errors=all --config /etc/kubernetes/kubeadm_config.yaml
@@ -117,4 +118,3 @@ for tries in $(seq 1 60); do
 done
 echo done.
 ) 2>&1 | tee /var/log/startup.log
-

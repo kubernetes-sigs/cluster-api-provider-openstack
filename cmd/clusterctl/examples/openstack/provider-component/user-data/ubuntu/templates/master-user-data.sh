@@ -13,12 +13,14 @@ CLUSTER_DNS_DOMAIN={{ .Cluster.Spec.ClusterNetwork.ServiceDomain }}
 POD_CIDR={{ .PodCIDR }}
 SERVICE_CIDR={{ .ServiceCIDR }}
 ARCH=amd64
+DISTRIBUTOR=$(lsb_release -cs)
+
 swapoff -a
 # disable swap in fstab
 sed -i.bak -r 's/(.+ swap .+)/#\1/' /etc/fstab
 curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
 touch /etc/apt/sources.list.d/kubernetes.list
-sh -c 'echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" > /etc/apt/sources.list.d/kubernetes.list'
+sh -c 'echo "deb http://apt.kubernetes.io/ kubernetes-${DISTRIBUTOR} main" > /etc/apt/sources.list.d/kubernetes.list'
 apt-get update -y
 apt-get install -y \
     prips
@@ -192,4 +194,3 @@ done
 kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f https://docs.projectcalico.org/v3.5/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml
 echo done.
 ) 2>&1 | tee /var/log/startup.log
-
