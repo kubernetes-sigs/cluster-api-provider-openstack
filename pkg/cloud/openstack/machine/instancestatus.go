@@ -24,7 +24,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer/json"
 
 	machinev1 "github.com/openshift/cluster-api/pkg/apis/machine/v1beta1"
-	"github.com/openshift/cluster-api/pkg/util"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -50,9 +49,7 @@ func (oc *OpenstackClient) instanceStatus(machine *machinev1.Machine) (instanceS
 		// The current status no longer exists because the matching CRD has been deleted (or does not exist yet ie. bootstrapping)
 		return nil, nil
 	}
-	var i interface{} = currentMachine
-	var v1m = i.(machinev1.Machine)
-	return oc.machineInstanceStatus(&v1m)
+	return oc.machineInstanceStatus(currentMachine)
 }
 
 // Get a `machinev1.Machine` matching the specified name and namespace.
@@ -83,7 +80,7 @@ func GetMachineIfExists(c client.Client, namespace, name string) (*machinev1.Mac
 // Sets the status of the instance identified by the given machine to the given machine
 func (oc *OpenstackClient) updateInstanceStatus(machine *machinev1.Machine) error {
 	status := instanceStatus(machine)
-	currentMachine, err := util.GetMachineIfExists(oc.client, machine.Namespace, machine.Name)
+	currentMachine, err := GetMachineIfExists(oc.client, machine.Namespace, machine.Name)
 	if err != nil {
 		return err
 	}
@@ -93,10 +90,7 @@ func (oc *OpenstackClient) updateInstanceStatus(machine *machinev1.Machine) erro
 		return fmt.Errorf("Machine has already been deleted. Cannot update current instance status for machine %v", machine.ObjectMeta.Name)
 	}
 
-	var i interface{} = currentMachine
-	var v1m = i.(machinev1.Machine)
-
-	m, err := oc.setMachineInstanceStatus(&v1m, status)
+	m, err := oc.setMachineInstanceStatus(currentMachine, status)
 	if err != nil {
 		return err
 	}
