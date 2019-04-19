@@ -2,8 +2,6 @@
 set -e
 set -x
 (
-KUBELET_VERSION={{ .Machine.Spec.Versions.Kubelet }}
-VERSION=v${KUBELET_VERSION}
 NAMESPACE={{ .Machine.ObjectMeta.Namespace }}
 MACHINE=$NAMESPACE
 MACHINE+="/"
@@ -76,7 +74,7 @@ EOF
 }
 install_configure_docker
 
-curl -sSL https://dl.k8s.io/release/${VERSION}/bin/linux/${ARCH}/kubeadm > /usr/bin/kubeadm.dl
+curl -sSL https://dl.k8s.io/release/${CONTROL_PLANE_VERSION}/bin/linux/${ARCH}/kubeadm > /usr/bin/kubeadm.dl
 chmod a+rx /usr/bin/kubeadm.dl
 # kubeadm uses 10th IP as DNS server
 CLUSTER_DNS_SERVER=$(prips ${SERVICE_CIDR} | head -n 11 | tail -n 1)
@@ -92,8 +90,8 @@ function getversion() {
     fi
     echo $version
 }
-KUBELET=$(getversion kubelet ${KUBELET_VERSION}-)
-KUBEADM=$(getversion kubeadm ${KUBELET_VERSION}-)
+KUBELET=$(getversion kubelet ${CONTROL_PLANE_VERSION}-)
+KUBEADM=$(getversion kubeadm ${CONTROL_PLANE_VERSION}-)
 apt-get install -y \
     kubelet=${KUBELET} \
     kubeadm=${KUBEADM}
