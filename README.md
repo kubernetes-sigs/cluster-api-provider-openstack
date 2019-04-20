@@ -78,6 +78,25 @@ policy may be made to more closely align with other providers in the Cluster API
    ./generate-yaml.sh [options] <path/to/clouds.yaml> <openstack cloud> <provider os>
    cd ../..
    ```
+
+   `<clouds.yaml>` is a yaml file to record how to interact with openstack cloud, there's a sample
+   [clouds.yaml](pkg/cloud/openstack/clients/clouds.yaml), and [openclient configuration files](https://docs.openstack.org/python-openstackclient/latest/configuration/index.html#configuration-files) has additional information.
+
+   `<openstack cloud>` is the cloud you are going to use, e.g. multiple cloud might be defined in `clouds.yaml`
+   and this will be cloud to be used for the new kubernetes to interact with.
+   for example, assume you have 2 clouds defined below as `clouds.yaml` and specify `openstack1` will use all definition in it.
+   ```
+   clouds:
+     openstack1:
+       auth:
+         auth_url: http://192.168.122.10:35357/
+       region_name: RegionOne
+     ds-admin:
+       auth:
+         auth_url: http://192.168.122.10:35357/
+       region_name: RegionOne
+   ```
+
    `<provider os>` specifies the operating system of the virtual machines Kubernetes will run on.
    Supported Operating Systems:
    - `ubuntu`
