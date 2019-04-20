@@ -1,3 +1,15 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Openstack Example Files](#openstack-example-files)
+  - [Contents](#contents)
+  - [Prerequisites](#prerequisites)
+  - [Generation](#generation)
+  - [Manual Modification](#manual-modification)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Openstack Example Files
 ## Contents
 - `*.yaml` - concrete example files that can be used as is.

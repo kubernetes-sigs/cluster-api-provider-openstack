@@ -1,3 +1,26 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Required Configuration](#required-configuration)
+  - [Machines YAML](#machines-yaml)
+  - [Private Network](#private-network)
+  - [Public Network](#public-network)
+  - [Floating IP](#floating-ip)
+  - [Proper Routing](#proper-routing)
+  - [Security Group Rules](#security-group-rules)
+  - [Security Groups](#security-groups)
+  - [Operating System Images](#operating-system-images)
+  - [Subnets](#subnets)
+  - [Network Filters](#network-filters)
+  - [Multiple Networks](#multiple-networks)
+  - [Tagging](#tagging)
+  - [Metadata](#metadata)
+- [Optional Configuration](#optional-configuration)
+  - [Boot From Volume](#boot-from-volume)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Required Configuration
 
 To succesfully run a kubernetes cluster in openstack, you will need to configure a few essential properties, then ensure that they are added to your machines.yaml file. The following components are necessary:

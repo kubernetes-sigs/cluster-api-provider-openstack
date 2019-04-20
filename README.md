@@ -1,3 +1,21 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Kubernetes cluster-api-provider-openstack Project](#kubernetes-cluster-api-provider-openstack-project)
+  - [Community, discussion, contribution, and support](#community-discussion-contribution-and-support)
+    - [Code of conduct](#code-of-conduct)
+  - [Compatibility with Cluster API, Kubernetes and OpenStack Versions](#compatibility-with-cluster-api-kubernetes-and-openstack-versions)
+  - [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Cluster Creation](#cluster-creation)
+    - [Managed OpenStack Security Groups](#managed-openstack-security-groups)
+    - [Interacting with your cluster](#interacting-with-your-cluster)
+    - [Cluster Deletion](#cluster-deletion)
+    - [Trouble shooting](#trouble-shooting)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Kubernetes cluster-api-provider-openstack Project
 
 This repository hosts a concrete implementation of an OpenStack provider for the [cluster-api project](https://github.com/kubernetes-sigs/cluster-api).

@@ -1,3 +1,12 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Trouble shooting](#trouble-shooting)
+  - [Get log of clusterapi-controllers containers](#get-log-of-clusterapi-controllers-containers)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Trouble shooting
 
 This guide (based on minikube and others should be similar) explains general info on how to debug issues if cluster failed to create.
