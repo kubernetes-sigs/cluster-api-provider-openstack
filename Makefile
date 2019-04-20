@@ -68,7 +68,7 @@ test: unit functional
 
 check: depend fmt vet lint
 
-unit: depend
+unit: generate depend
 	go test -tags=unit $(shell go list ./...) $(TESTARGS)
 
 functional:
@@ -87,7 +87,7 @@ endif
 vet:
 	go vet ./...
 
-cover: depend
+cover: generate depend
 	go test -tags=unit $(shell go list ./...) -cover
 
 docs:
