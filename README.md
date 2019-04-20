@@ -220,3 +220,7 @@ your openstack Cluster API Kubernetes cluster.
    ```bash
    rm -rf $HOME/.ssh/openstack_tmp*
    ```
+
+### Trouble shooting
+
+Please refer to [Trouble shooting documentation](docs/trouble_shooting.md) for further info.
