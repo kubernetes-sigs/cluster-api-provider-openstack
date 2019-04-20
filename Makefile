@@ -134,7 +134,7 @@ generate: manifests
 manifests:
 	go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go crd
 
-images: openstack-cluster-api-controller manifests
+images: openstack-cluster-api-controller clusterctl-image manifests
 
 openstack-cluster-api-controller: depend manager manifests
 ifeq ($(GOOS),linux)
@@ -145,10 +145,14 @@ else
 	$(error Please set GOOS=linux for building the image)
 endif
 
+clusterctl-image: generate fmt vet manifests
+	docker build . -f cmd/clusterctl/Dockerfile -t "$(REGISTRY)/openstack-cluster-api-clusterctl:$(VERSION)"
+
 upload-images: images
 	@echo "push images to $(REGISTRY)"
 	docker login -u="$(DOCKER_USERNAME)" -p="$(DOCKER_PASSWORD)";
 	docker push $(REGISTRY)/openstack-cluster-api-controller:$(VERSION)
+	docker push $(REGISTRY)/openstack-cluster-api-clusterctl:$(VERSION)
 
 version:
 	@echo ${VERSION}
