@@ -1,3 +1,13 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Contributing guidelines](#contributing-guidelines)
+  - [Sign the CLA](#sign-the-cla)
+    - [Contributing A Patch](#contributing-a-patch)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Contributing guidelines
 
 ## Sign the CLA
