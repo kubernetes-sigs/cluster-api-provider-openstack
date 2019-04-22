@@ -115,7 +115,7 @@ storage:
       contents:
         inline: !!binary |
           $OPENSTACK_CLOUD_PROVIDER_CONF
-      mode: 0644
+      mode: 0600
       user:
         id: 0
       group:
