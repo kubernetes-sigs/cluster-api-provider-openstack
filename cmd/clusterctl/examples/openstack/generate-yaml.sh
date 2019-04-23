@@ -49,7 +49,7 @@ if [[ -n "$2" ]] && [[ $2 != -* ]] && [[ $2 != --* ]]; then
   CLOUD=$2
 else
   echo "Error: No cloud specified"
-  echo "You mush specify which cloud you want to use."
+  echo "You must specify which cloud you want to use."
   echo ""
   print_help
   exit 1
@@ -60,7 +60,7 @@ if [[ -n "$3" ]] && [[ $3 != -* ]] && [[ $3 != --* ]]; then
   USER_OS=$(echo $3 | tr '[:upper:]' '[:lower:]')
 else
   echo "Error: No provider OS specified"
-  echo "You mush choose between the following operating systems: centos, ubuntu, coreos"
+  echo "You must choose between the following operating systems: centos, ubuntu, coreos"
   echo ""
   print_help
   exit 1
