@@ -19,10 +19,8 @@ package main
 import (
 	"flag"
 	"log"
-	"time"
 
 	clusterapis "github.com/openshift/cluster-api/pkg/apis"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/klog"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/apis"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/controller"
@@ -31,32 +29,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
 )
 
-var logFlushFreq = flag.Duration("log-flush-frequency", 5*time.Second, "Maximum number of seconds between log flushes")
-
-func initLogs() {
-
-	flag.Set("alsologtostderr", "true")
-	flag.Parse()
-
-	// The default klog flush interval is 30 seconds, which is frighteningly long.
-	go wait.Until(klog.Flush, *logFlushFreq, wait.NeverStop)
-
-	klogFlags := flag.NewFlagSet("klog", flag.ExitOnError)
-	klog.InitFlags(klogFlags)
-
-	// Sync the glog and klog flags.
-	flag.CommandLine.VisitAll(func(f1 *flag.Flag) {
-		f2 := klogFlags.Lookup(f1.Name)
-		if f2 != nil {
-			value := f1.Value.String()
-			f2.Value.Set(value)
-		}
-	})
-}
-
 func main() {
 
-	initLogs()
+	flag.Set("logtostderr", "true")
+	klog.InitFlags(nil)
+	flag.Parse()
 
 	// Get a config to talk to the apiserver
 	cfg, err := config.GetConfig()
