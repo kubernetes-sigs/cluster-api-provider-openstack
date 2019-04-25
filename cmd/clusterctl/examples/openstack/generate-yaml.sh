@@ -69,6 +69,8 @@ fi
 OUTPUT=out
 if [[ -n "$4" ]] && [[ $4 != -* ]] && [[ $4 != --* ]]; then
   OUTPUT=$(echo $4 | tr '[:upper:]' '[:lower:]')
+else
+  echo "no output folder provided, use name 'out' by default"
 fi
 
 # Check that OS is supported
