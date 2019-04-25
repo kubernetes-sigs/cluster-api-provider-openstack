@@ -107,11 +107,11 @@ policy may be made to more closely align with other providers in the Cluster API
    clouds:
      openstack1:
        auth:
-         auth_url: http://192.168.122.10:35357/
+         auth_url: http://192.168.122.10:5000/
        region_name: RegionOne
      ds-admin:
        auth:
-         auth_url: http://192.168.122.10:35357/
+         auth_url: http://192.168.122.10:5000/
        region_name: RegionOne
    ```
 
