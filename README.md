@@ -93,7 +93,7 @@ policy may be made to more closely align with other providers in the Cluster API
 
    ```bash
    cd examples/openstack
-   ./generate-yaml.sh [options] <path/to/clouds.yaml> <openstack cloud> <provider os: [centos,ubuntu,coreos]>
+   ./generate-yaml.sh [options] <path/to/clouds.yaml> <openstack cloud> <provider os: [centos,ubuntu,coreos]> [output folder]
    cd ../..
    ```
 

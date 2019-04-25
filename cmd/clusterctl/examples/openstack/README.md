@@ -26,7 +26,7 @@ configuration is provided.
 
 1. Run the generation script.
 ```
-./generate-yaml.sh [options] <path/to/clouds.yaml> <openstack cloud> <provider os: [centos,ubuntu,coreos]>
+./generate-yaml.sh [options] <path/to/clouds.yaml> <openstack cloud> <provider os: [centos,ubuntu,coreos]> [output folder]
 ```
 
    `<clouds.yaml>` is a yaml file to record how to interact with Openstack Cloud, refer [clouds.yaml](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/master/pkg/cloud/openstack/clients/clouds.yaml), and [openclient configuration files](https://docs.openstack.org/python-openstackclient/latest/configuration/index.html#configuration-files) has additional information.
@@ -54,10 +54,12 @@ configuration is provided.
    - `ubuntu`
    - `coreos`
 
+   `[output folder]` is where to put generated yaml files, by default it's `out`.
+
 If yaml file already exists, you will see an error like the one below:
 
 ```
-$ ./generate-yaml.sh [options] <path/to/clouds.yaml> openstack <provider os: [centos,ubuntu,coreos]>
+$ ./generate-yaml.sh [options] <path/to/clouds.yaml> openstack <provider os: [centos,ubuntu,coreos]> [output folder]
 
 File provider-components.yaml already exists. Delete it manually before running this script.
 ```
