@@ -17,9 +17,15 @@ HAS_MERCURIAL := $(shell command -v hg;)
 HAS_DEP := $(shell command -v dep;)
 HAS_LINT := $(shell command -v golint;)
 HAS_GOX := $(shell command -v gox;)
+HAS_YQ := $(shell command -v yq;)
+HAS_KUSTOMIZE := $(shell command -v kustomize;)
 GOX_PARALLEL ?= 3
 TARGETS ?= darwin/amd64 linux/amd64 linux/386 linux/arm linux/arm64 linux/ppc64le
 DIST_DIRS         = find * -type d -exec
+
+GENERATE_YAML_PATH=cmd/clusterctl/examples/openstack
+GENERATE_YAML_EXEC=generate-yaml.sh
+GENERATE_YAML_TEST_FOLDER=dummy-make-auto-test
 
 GOOS ?= $(shell go env GOOS)
 VERSION ?= $(shell git describe --exact-match 2> /dev/null || \
@@ -64,9 +70,29 @@ clusterctl:
 		-o bin/clusterctl \
 		cmd/clusterctl/main.go
 
-test: unit functional
+test: unit functional generate_yaml_test
 
 check: depend fmt vet lint
+
+generate_yaml_test:
+ifndef HAS_YQ
+	go get github.com/mikefarah/yq
+	echo "installing yq"
+endif
+
+ifndef HAS_KUSTOMIZE
+	# for now, higher version has some problem so we stick to 1.0.11
+	wget https://github.com/kubernetes-sigs/kustomize/releases/download/v1.0.11/kustomize_1.0.11_linux_amd64
+	mv kustomize_1.0.11_linux_amd64 /usr/local/bin/kustomize
+	chmod +x /usr/local/bin/kustomize
+endif
+		
+	# Create a dummy file for test only
+	echo 'clouds' > dummy-clouds-test.yaml
+	$(GENERATE_YAML_PATH)/$(GENERATE_YAML_EXEC) -f dummy-clouds-test.yaml openstack ubuntu $(GENERATE_YAML_TEST_FOLDER)
+	# the folder will be generated under same folder of $(GENERATE_YAML_PATH)
+	rm -fr $(GENERATE_YAML_PATH)/$(GENERATE_YAML_TEST_FOLDER)
+	rm dummy-clouds-test.yaml
 
 unit: generate depend
 	go test -tags=unit $(shell go list ./...) $(TESTARGS)

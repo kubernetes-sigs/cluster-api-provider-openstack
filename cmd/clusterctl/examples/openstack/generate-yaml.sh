@@ -7,7 +7,7 @@ print_help()
   echo "$SCRIPT - generates a provider-configs.yaml file"
   echo ""
   echo "Usage:"
-  echo "$SCRIPT [options] <path/to/clouds.yaml> <cloud> <provider os: [centos,ubuntu,coreos]>"
+  echo "$SCRIPT [options] <path/to/clouds.yaml> <cloud> <provider os: [centos,ubuntu,coreos]> [output folder]"
   echo "options:"
   echo "-h, --help                    show brief help"
   echo "-f, --force-overwrite         if file to be generated already exists, force script to overwrite it"
@@ -66,6 +66,13 @@ else
   exit 1
 fi
 
+OUTPUT=out
+if [[ -n "$4" ]] && [[ $4 != -* ]] && [[ $4 != --* ]]; then
+  OUTPUT=$(echo $4 | tr '[:upper:]' '[:lower:]')
+else
+  echo "no output folder provided, use name 'out' by default"
+fi
+
 # Check that OS is supported
 for i in "${arr[@]}"
 do
@@ -96,7 +103,7 @@ if [[ $yq_type == *"Python script"* ]]; then
   exit 1
 fi
 
-if [ -e out/provider-components.yaml ] && [ "$OVERWRITE" != "1" ]; then
+if [ -e $OUTPUT/provider-components.yaml ] && [ "$OVERWRITE" != "1" ]; then
   echo "Can't overwrite provider-components.yaml without user permission. Either run the script again"
   echo "with -f or --force-overwrite, or delete the file in the out/ directory."
   echo ""
@@ -131,9 +138,9 @@ MACHINE_CONTROLLER_SSH_PRIVATE_FILE=openstack_tmp
 MACHINE_CONTROLLER_SSH_HOME=${HOME}/.ssh/
 
 # Set up the output dir if it does not yet exist
-mkdir -p $PWD/out
-cp -n $PWD/cluster.yaml $PWD/out/cluster.yaml
-cp -n $PWD/machines.yaml.template $PWD/out/machines.yaml
+mkdir -p $PWD/$OUTPUT
+cp -n $PWD/cluster.yaml $PWD/$OUTPUT/cluster.yaml
+cp -n $PWD/machines.yaml.template $PWD/$OUTPUT/machines.yaml
 
 # Make the config directory
 mkdir -p $CONFIG_DIR
@@ -199,13 +206,13 @@ echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" > $CONFIG_DIR/clouds.yaml
 # Build provider-components.yaml with kustomize
 # Coreos has a different kubeadm path (/usr is read-only) so gets a different kustomization.
 if [[ "$PROVIDER_OS" == "coreos" ]]; then
-  kustomize build $PWD/../../../../overlays-config/coreos -o $PWD/out/provider-components.yaml
+  kustomize build $PWD/../../../../overlays-config/coreos -o $PWD/$OUTPUT/provider-components.yaml
 else
-  kustomize build $PWD/../../../../overlays-config/generic -o $PWD/out/provider-components.yaml
+  kustomize build $PWD/../../../../overlays-config/generic -o $PWD/$OUTPUT/provider-components.yaml
 fi
-echo "---" >> $PWD/out/provider-components.yaml
-kustomize build $PWD/provider-component/clouds-secrets >> $PWD/out/provider-components.yaml
-echo "---" >> $PWD/out/provider-components.yaml
-kustomize build $PWD/provider-component/cluster-api >> $PWD/out/provider-components.yaml
-echo "---" >> $PWD/out/provider-components.yaml
-kustomize build $USERDATA/$PROVIDER_OS >> $PWD/out/provider-components.yaml
+echo "---" >> $PWD/$OUTPUT/provider-components.yaml
+kustomize build $PWD/provider-component/clouds-secrets >> $PWD/$OUTPUT/provider-components.yaml
+echo "---" >> $PWD/$OUTPUT/provider-components.yaml
+kustomize build $PWD/provider-component/cluster-api >> $PWD/$OUTPUT/provider-components.yaml
+echo "---" >> $PWD/$OUTPUT/provider-components.yaml
+kustomize build $USERDATA/$PROVIDER_OS >> $PWD/$OUTPUT/provider-components.yaml
