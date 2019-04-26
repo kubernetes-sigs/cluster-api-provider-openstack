@@ -43,11 +43,11 @@ required = [
 
 [[constraint]]
   name = "k8s.io/api"
-  version = "kubernetes-1.11.2"
+  version = "kubernetes-1.13.1"
 
 [[constraint]]
   name = "k8s.io/apimachinery"
-  version = "kubernetes-1.11.2"
+  version = "kubernetes-1.13.1"
 
 [[constraint]]
   name = "k8s.io/cluster-bootstrap"
@@ -59,11 +59,11 @@ required = [
 
 [[constraint]]
   name = "sigs.k8s.io/cluster-api"
-  branch = "master"
+  branch = "release-0.1"
 
 [[constraint]]
   name = "sigs.k8s.io/controller-runtime"
-  version = "0.1.7"
+  version = "v0.1.10"
 
 [[constraint]]
   name = "sigs.k8s.io/yaml"

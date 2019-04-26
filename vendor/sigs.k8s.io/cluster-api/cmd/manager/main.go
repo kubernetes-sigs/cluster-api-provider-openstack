@@ -19,6 +19,7 @@ package main
 import (
 	"flag"
 	"log"
+	"time"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/klog"
@@ -30,16 +31,9 @@ import (
 )
 
 func main() {
-	klogFlags := flag.NewFlagSet("klog", flag.ExitOnError)
-	klog.InitFlags(klogFlags)
+	flag.Set("logtostderr", "true")
+	klog.InitFlags(nil)
 	flag.Parse()
-	flag.VisitAll(func(f1 *flag.Flag) {
-		f2 := klogFlags.Lookup(f1.Name)
-		if f2 != nil {
-			value := f1.Value.String()
-			f2.Value.Set(value)
-		}
-	})
 
 	// Get a config to talk to the apiserver
 	cfg, err := config.GetConfig()
@@ -48,7 +42,10 @@ func main() {
 	}
 
 	// Create a new Cmd to provide shared dependencies and start components
-	mgr, err := manager.New(cfg, manager.Options{})
+	syncPeriod := 10 * time.Minute
+	mgr, err := manager.New(cfg, manager.Options{
+		SyncPeriod: &syncPeriod,
+	})
 	if err != nil {
 		log.Fatal(err)
 	}

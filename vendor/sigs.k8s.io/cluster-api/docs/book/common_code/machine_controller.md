@@ -10,16 +10,22 @@ the host with a new one matching the updated spec. If a `Machine` object is
 deleted, the corresponding `Node` should have its external resources released by
 the provider-specific controller, and should be deleted as well.
 
+Machines can be associated with a Cluster using a custom label
+`cluster.k8s.io/cluster-name`. When the label is set and non-empty,
+then it must reference the name of a cluster residing in the same namespace.
+The label must be set only once and updates are not permitted,
+an admission controller is going to enforce the change in a future version.
+
 {% method %}
 ## Machine
 
 `Machine` has 4 fields:
 
-`Spec` contains the desired cluster state specified by the object. While much
+`Spec` contains the desired machine state specified by the object. While much
 of the `Spec` is defined by users, unspecified parts may be filled in with
 defaults or by Controllers such as autoscalers.
 
-`Status` contains only observed cluster state and is only written by
+`Status` contains only observed machine state and is only written by
 controllers. `Status` is not the source of truth for any information, but
 instead aggregates and publishes observed state.
 
@@ -69,7 +75,7 @@ Note that `NodeRef` may not be set. This can happen if the `Machine` and
 corresponding `Node` are not within the same cluster. Two reasons this might be
 the case are:
 
-- During bootstraping the control plane `Machine` will initially not be in the same
+- During bootstrapping, the control plane `Machine` will initially not be in the same
 cluster which is being created.
 - Some providers distinguish between _manager_ and _managed_ clusters. For
 these providers a `Machine` and it's corresponding `Node` may never be within
@@ -93,7 +99,7 @@ methods.
 `Delete()` will only be called when the `Machine` is in the process of being
 deleted.
 
-The definition of `Exist()` is determined by the provider.
+The definition of `Exists()` is determined by the provider.
 
 **TODO**: Provide more guidance on `Exists()`.
 
@@ -103,12 +109,7 @@ The definition of `Exist()` is determined by the provider.
 
 ## Machine Controller Semantics
 
-{% panel style="info", title="Logic sequence" %}
-We need a diagram tracing the logic from resource creation through updates
-and finally deletion.
-{% endpanel %}
-
-0. Determine the `Cluster` associated with the `Machine`.
+0. Determine the `Cluster` associated with the `Machine` from its `cluster.k8s.io/cluster-name` label.
 - If the `Machine` hasn't been deleted and doesn't have a finalizer, add one.
 - If the `Machine` is being deleted, and there is no finalizer, we're done
   - Check if the `Machine` is allowed to be deleted. [^1]
@@ -135,6 +136,20 @@ There are two consequences of this:
  - If the `Cluster` is deleted before the `Machine` it will not be possible to
    delete the `Machine`. Therefore `Machine`s must be deleted before `Cluster`s.
 {% endpanel %}
+
+#### machine reconciliation logic
+![machine reconciliation logic](images/activity_machine_controller_reconciliation.svg)
+
+#### machine deletion block
+![machine deletion block](images/activity_machine_deletion_block.svg)
+
+#### machine object creation sequence
+
+![machine object creation](images/sequence_machine_creation.svg)
+
+#### machine object deletion sequence
+
+![machine object deletion](images/sequence_machine_deletion.svg)
 
 ---
 
