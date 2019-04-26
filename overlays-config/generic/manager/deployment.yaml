@@ -7,6 +7,10 @@ metadata:
     control-plane: controller-manager
     controller-tools.k8s.io: "1.0"
 spec:
+  selector:
+    matchLabels:
+      control-plane: controller-manager
+      controller-tools.k8s.io: "1.0"
   template:
     spec:
       volumes:
