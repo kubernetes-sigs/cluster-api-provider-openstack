@@ -280,3 +280,9 @@ Instead of tagging, you also have the option to add metadata to instances. This 
         securityGroups:
    ...
    ```
+
+## Timeout settings
+During some heavy workload cloud, the time for create and delete openstack instance might takes long time, by default it's 5 minute.
+you can set:
+`CLUSTER_API_OPENSTACK_INSTANCE_DELETE_TIMEOUT` for instance delete timeout value.
+`CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT` for instance create timeout value.
