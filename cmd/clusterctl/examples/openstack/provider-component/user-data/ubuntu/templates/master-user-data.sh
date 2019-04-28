@@ -94,9 +94,12 @@ function getversion() {
 }
 KUBELET=$(getversion kubelet ${KUBELET_VERSION}-)
 KUBEADM=$(getversion kubeadm ${KUBELET_VERSION}-)
+KUBECTL=$(getversion kubectl ${KUBELET_VERSION}-)
 apt-get install -y \
     kubelet=${KUBELET} \
-    kubeadm=${KUBEADM}
+    kubeadm=${KUBEADM} \
+    kubectl=${KUBECTL}
+
 mv /usr/bin/kubeadm.dl /usr/bin/kubeadm
 chmod a+rx /usr/bin/kubeadm
 
