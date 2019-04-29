@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 set -x
 (
@@ -26,7 +26,11 @@ EOF
 swapoff -a
 # disable swap in fstab
 sed -i.bak -r 's/(.+ swap .+)/#\1/' /etc/fstab
-setenforce 0
+
+if [[ $(getenforce) != 'Disabled' ]]; then
+  setenforce 0
+fi
+
 yum install -y kubelet-$KUBELET_VERSION kubeadm-$KUBELET_VERSION kubectl-$KUBELET_VERSION --disableexcludes=kubernetes
 
 function install_configure_docker () {
@@ -35,13 +39,16 @@ function install_configure_docker () {
     chmod +x /usr/sbin/policy-rc.d
     trap "rm /usr/sbin/policy-rc.d" RETURN
     yum install -y docker
-    echo 'OPTIONS="--selinux-enabled --log-driver=journald --signature-verification=false --iptables=false --ip-masq=false"' >> /etc/sysconfig/docker
+    echo 'OPTIONS="--log-driver=journald --signature-verification=false --iptables=false --ip-masq=false"' >> /etc/sysconfig/docker
     systemctl daemon-reload
     systemctl enable docker
     systemctl start docker
 }
 
 install_configure_docker
+
+# Get docker cgroup driver for kubelet configuration
+CG_DRIVER=$(docker info --format '{{.CgroupDriver}}')
 
 # Write the cloud.conf so that the kubelet can use it.
 echo $OPENSTACK_CLOUD_PROVIDER_CONF | base64 -d > /etc/kubernetes/cloud.conf
@@ -68,7 +75,7 @@ nodeRegistration:
 EOF
 
 cat <<EOF > /etc/default/kubelet
-KUBELET_KUBEADM_EXTRA_ARGS=--cgroup-driver=systemd
+KUBELET_KUBEADM_EXTRA_ARGS=--cgroup-driver=$CG_DRIVER
 EOF
 systemctl enable kubelet.service
 
@@ -84,4 +91,3 @@ done
 
 echo done.
 ) 2>&1 | tee /var/log/startup.log
-

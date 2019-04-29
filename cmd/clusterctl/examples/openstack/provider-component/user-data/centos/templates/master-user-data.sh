@@ -1,9 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 set -x
 (
 KUBELET_VERSION={{ .Machine.Spec.Versions.Kubelet }}
-VERSION=v${KUBELET_VERSION}
 NAMESPACE={{ .Machine.ObjectMeta.Namespace }}
 MACHINE=$NAMESPACE
 MACHINE+="/"
@@ -58,8 +57,11 @@ gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cl
 exclude=kube*
 EOF
 
-setenforce 0
-yum install -y kubelet-$CONTROL_PLANE_VERSION kubeadm-$CONTROL_PLANE_VERSION kubectl-$CONTROL_PLANE_VERSION --disableexcludes=kubernetes
+if [[ $(getenforce) != 'Disabled' ]]; then
+  setenforce 0
+fi
+
+yum install -y kubelet-$KUBELET_VERSION kubeadm-$KUBELET_VERSION kubectl-$KUBELET_VERSION --disableexcludes=kubernetes
 
 function install_configure_docker () {
     # prevent docker from auto-starting
@@ -67,7 +69,7 @@ function install_configure_docker () {
     chmod +x /usr/sbin/policy-rc.d
     trap "rm /usr/sbin/policy-rc.d" RETURN
     yum install -y docker
-    echo 'OPTIONS="--selinux-enabled --log-driver=journald --signature-verification=false --iptables=false --ip-masq=false"' >> /etc/sysconfig/docker
+    echo 'OPTIONS="--log-driver=journald --signature-verification=false --iptables=false --ip-masq=false"' >> /etc/sysconfig/docker
     systemctl daemon-reload
     systemctl enable docker
     systemctl start docker
@@ -75,8 +77,11 @@ function install_configure_docker () {
 
 install_configure_docker
 
+# Get docker cgroup driver for kubelet configuration
+CG_DRIVER=$(docker info --format '{{.CgroupDriver}}')
+
 cat <<EOF > /etc/default/kubelet
-KUBELET_KUBEADM_EXTRA_ARGS=--cgroup-driver=systemd
+KUBELET_KUBEADM_EXTRA_ARGS=--cgroup-driver=$CG_DRIVER
 EOF
 
 systemctl enable kubelet.service
@@ -175,4 +180,3 @@ chown $(id -u):$(id -g) /root/.kube/config
 
 echo done.
 ) 2>&1 | tee /var/log/startup.log
-

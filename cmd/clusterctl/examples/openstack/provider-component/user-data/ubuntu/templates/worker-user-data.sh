@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 set -x
 (
@@ -109,7 +109,7 @@ Environment="KUBELET_DNS_ARGS=--cluster-dns=${CLUSTER_DNS_SERVER} --cluster-doma
 EOF
 systemctl daemon-reload
 systemctl restart kubelet.service
-systemctl disable ufw 
+systemctl disable ufw
 systemctl mask ufw
 
 kubeadm -v 10 join --ignore-preflight-errors=all --config /etc/kubernetes/kubeadm_config.yaml
@@ -119,4 +119,3 @@ for tries in $(seq 1 60); do
 done
 echo done.
 ) 2>&1 | tee /var/log/startup.log
-
