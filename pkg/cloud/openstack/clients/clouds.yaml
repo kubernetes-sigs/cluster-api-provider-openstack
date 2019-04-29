@@ -7,6 +7,7 @@ clouds:
       project_id: 1234abcd1asdf46a69448d5b3fba100a7
       domain_name: "Default"
       user_domain_name: "Default"
+    cacert: /path/to/cacertfile
     region_name: "Your_Region"
     interface: "public"
     identity_api_version: 3
