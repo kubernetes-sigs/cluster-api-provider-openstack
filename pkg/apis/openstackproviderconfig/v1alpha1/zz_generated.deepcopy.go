@@ -106,6 +106,11 @@ func (in *OpenstackClusterProviderSpec) DeepCopyInto(out *OpenstackClusterProvid
 	*out = *in
 	out.TypeMeta = in.TypeMeta
 	in.ObjectMeta.DeepCopyInto(&out.ObjectMeta)
+	if in.CloudsSecret != nil {
+		in, out := &in.CloudsSecret, &out.CloudsSecret
+		*out = new(v1.SecretReference)
+		**out = **in
+	}
 	if in.DNSNameservers != nil {
 		in, out := &in.DNSNameservers, &out.DNSNameservers
 		*out = make([]string, len(*in))

@@ -7,6 +7,7 @@ secretGenerator:
 - name: cloud-config
   commands:
     clouds.yaml: "cat configs/clouds.yaml"
+    cacert: "cat configs/cacert"
   type: Opaque
 - name: cloud-selector
   commands:

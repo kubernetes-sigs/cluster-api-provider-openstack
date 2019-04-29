@@ -16,6 +16,10 @@ spec:
       properties:
         apiVersion:
           type: string
+        cloudName:
+          type: string
+        cloudsSecret:
+          type: object
         disableServerTags:
           type: boolean
         dnsNameservers:
@@ -37,6 +41,8 @@ spec:
             type: string
           type: array
       required:
+      - cloudsSecret
+      - cloudName
       - managedSecurityGroups
   version: v1alpha1
 status:

@@ -17,8 +17,11 @@ limitations under the License.
 package clients
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/base64"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
@@ -53,6 +56,7 @@ import (
 
 const (
 	CloudsSecretKey = "clouds.yaml"
+	CaSecretKey     = "cacert"
 
 	TimeoutTrunkDelete       = 3 * time.Minute
 	RetryIntervalTrunkDelete = 5 * time.Second
@@ -91,34 +95,40 @@ type InstanceListOpts struct {
 	Name string `q:"name"`
 }
 
-func GetCloudFromSecret(kubeClient kubernetes.Interface, namespace string, secretName string, cloudName string) (clientconfig.Cloud, error) {
+func GetCloudFromSecret(kubeClient kubernetes.Interface, namespace string, secretName string, cloudName string) (clientconfig.Cloud, []byte, error) {
 	emptyCloud := clientconfig.Cloud{}
 
 	if secretName == "" {
-		return emptyCloud, nil
+		return emptyCloud, nil, nil
 	}
 
 	if secretName != "" && cloudName == "" {
-		return emptyCloud, fmt.Errorf("Secret name set to %v but no cloud was specified. Please set cloud_name in your machine spec.", secretName)
+		return emptyCloud, nil, fmt.Errorf("Secret name set to %v but no cloud was specified. Please set cloud_name in your machine spec.", secretName)
 	}
 
 	secret, err := kubeClient.CoreV1().Secrets(namespace).Get(secretName, metav1.GetOptions{})
 	if err != nil {
-		return emptyCloud, err
+		return emptyCloud, nil, err
 	}
 
 	content, ok := secret.Data[CloudsSecretKey]
 	if !ok {
-		return emptyCloud, fmt.Errorf("OpenStack credentials secret %v did not contain key %v",
+		return emptyCloud, nil, fmt.Errorf("OpenStack credentials secret %v did not contain key %v",
 			secretName, CloudsSecretKey)
 	}
 	var clouds clientconfig.Clouds
 	err = yaml.Unmarshal(content, &clouds)
 	if err != nil {
-		return emptyCloud, fmt.Errorf("failed to unmarshal clouds credentials stored in secret %v: %v", secretName, err)
+		return emptyCloud, nil, fmt.Errorf("failed to unmarshal clouds credentials stored in secret %v: %v", secretName, err)
 	}
 
-	return clouds.Clouds[cloudName], nil
+	// get cacert
+	cacert, ok := secret.Data[CaSecretKey]
+	if !ok {
+		return emptyCloud, nil, err
+	}
+
+	return clouds.Clouds[cloudName], cacert, nil
 }
 
 // TODO: Eventually we'll have a NewInstanceServiceFromCluster too
@@ -128,25 +138,28 @@ func NewInstanceServiceFromMachine(kubeClient kubernetes.Interface, machine *clu
 		return nil, err
 	}
 	cloud := clientconfig.Cloud{}
+	var cacert []byte
+
 	if machineSpec.CloudsSecret != nil && machineSpec.CloudsSecret.Name != "" {
 		namespace := machineSpec.CloudsSecret.Namespace
 		if namespace == "" {
 			namespace = machine.Namespace
 		}
-		cloud, err = GetCloudFromSecret(kubeClient, namespace, machineSpec.CloudsSecret.Name, machineSpec.CloudName)
+		cloud, cacert, err = GetCloudFromSecret(kubeClient, namespace, machineSpec.CloudsSecret.Name, machineSpec.CloudName)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return NewInstanceServiceFromCloud(cloud)
+	return NewInstanceServiceFromCloud(cloud, cacert)
 }
 
 func NewInstanceService() (*InstanceService, error) {
 	cloud := clientconfig.Cloud{}
-	return NewInstanceServiceFromCloud(cloud)
+	var cacert []byte
+	return NewInstanceServiceFromCloud(cloud, cacert)
 }
 
-func NewInstanceServiceFromCloud(cloud clientconfig.Cloud) (*InstanceService, error) {
+func NewInstanceServiceFromCloud(cloud clientconfig.Cloud, cacert []byte) (*InstanceService, error) {
 	clientOpts := new(clientconfig.ClientOpts)
 	var opts *gophercloud.AuthOptions
 
@@ -165,9 +178,26 @@ func NewInstanceServiceFromCloud(cloud clientconfig.Cloud) (*InstanceService, er
 
 	opts.AllowReauth = true
 
-	provider, err := openstack.AuthenticatedClient(*opts)
+	provider, err := openstack.NewClient(opts.IdentityEndpoint)
 	if err != nil {
-		return nil, fmt.Errorf("Create providerClient err: %v", err)
+		return nil, fmt.Errorf("create providerClient err: %v", err)
+	}
+
+	config := &tls.Config{}
+	cloudFromYaml, err := clientconfig.GetCloudFromYAML(clientOpts)
+	if cloudFromYaml.CACertFile != "" {
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(cacert)
+		config.RootCAs = caCertPool
+	}
+
+	config.InsecureSkipVerify = *cloudFromYaml.Verify
+	transport := &http.Transport{Proxy: http.ProxyFromEnvironment, TLSClientConfig: config}
+	provider.HTTPClient.Transport = transport
+
+	err = openstack.Authenticate(provider, *opts)
+	if err != nil {
+		return nil, fmt.Errorf("providerClient authentication err: %v", err)
 	}
 
 	identityClient, err := openstack.NewIdentityV3(provider, gophercloud.EndpointOpts{

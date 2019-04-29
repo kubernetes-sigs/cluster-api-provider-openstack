@@ -136,6 +136,7 @@ OPENSTACK_CLOUD_CONFIG_PLAIN=$(cat "$CLOUDS_PATH")
 
 MACHINE_CONTROLLER_SSH_PRIVATE_FILE=openstack_tmp
 MACHINE_CONTROLLER_SSH_HOME=${HOME}/.ssh/
+CACERT="/etc/certs/cacert"
 
 # Set up the output dir if it does not yet exist
 mkdir -p $PWD/$OUTPUT
@@ -159,7 +160,7 @@ PASSWORD=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$CLOUD.auth.pass
 REGION=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$CLOUD.region_name)
 PROJECT_ID=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$CLOUD.auth.project_id)
 DOMAIN_NAME=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$CLOUD.auth.user_domain_name)
-
+CACERT_ORIGINAL=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.$CLOUD.cacert)
 
 # Basic cloud.conf, no LB configuration as that data is not known yet.
 OPENSTACK_CLOUD_PROVIDER_CONF_PLAIN="[Global]
@@ -171,11 +172,23 @@ tenant-id=\"$PROJECT_ID\"
 domain-name=\"$DOMAIN_NAME\"
 "
 
+if [ "$CACERT_ORIGINAL" != "null" ]; then
+  OPENSTACK_CLOUD_PROVIDER_CONF_PLAIN="$OPENSTACK_CLOUD_PROVIDER_CONF_PLAIN
+  ca-file=\"$CACERT\"
+  "
+fi
+
 OS=$(uname)
 if [[ "$OS" =~ "Linux" ]]; then
   OPENSTACK_CLOUD_PROVIDER_CONF=$(echo "$OPENSTACK_CLOUD_PROVIDER_CONF_PLAIN"|base64 -w0)
+  if [ "$CACERT_ORIGINAL" != "null" ]; then
+    OPENSTACK_CLOUD_CACERT_CONFIG=$(cat "$CACERT_ORIGINAL"|base64 -w0)
+  fi
 elif [[ "$OS" =~ "Darwin" ]]; then
   OPENSTACK_CLOUD_PROVIDER_CONF=$(echo "$OPENSTACK_CLOUD_PROVIDER_CONF_PLAIN"|base64)
+  if [ "$CACERT_ORIGINAL" != "null" ]; then
+    OPENSTACK_CLOUD_CACERT_CONFIG=$(cat "$CACERT_ORIGINAL"|base64)
+  fi
 else
   echo "Unrecognized OS : $OS"
   exit 1
@@ -184,24 +197,32 @@ fi
 if [[ "$PROVIDER_OS" == "coreos" ]]; then
   cat $COREOS_COMMON_SECTION \
     | sed -e "s#\$OPENSTACK_CLOUD_PROVIDER_CONF#$OPENSTACK_CLOUD_PROVIDER_CONF#" \
+    | sed -e "s#\$OPENSTACK_CLOUD_CACERT_CONFIG#$OPENSTACK_CLOUD_CACERT_CONFIG#" \
     | yq m -a - $COREOS_MASTER_SECTION  \
     > $COREOS_MASTER_USER_DATA
   cat $COREOS_COMMON_SECTION \
     | sed -e "s#\$OPENSTACK_CLOUD_PROVIDER_CONF#$OPENSTACK_CLOUD_PROVIDER_CONF#" \
+    | sed -e "s#\$OPENSTACK_CLOUD_CACERT_CONFIG#$OPENSTACK_CLOUD_CACERT_CONFIG#" \
     | yq m -a - $COREOS_WORKER_SECTION  \
     > $COREOS_WORKER_USER_DATA
 else
   cat "$MASTER_USER_DATA" \
       | sed -e "s#\$OPENSTACK_CLOUD_PROVIDER_CONF#$OPENSTACK_CLOUD_PROVIDER_CONF#" \
+      | sed -e "s#\$OPENSTACK_CLOUD_CACERT_CONFIG#$OPENSTACK_CLOUD_CACERT_CONFIG#" \
       > $USERDATA/$PROVIDER_OS/master-user-data.sh
   cat "$WORKER_USER_DATA" \
     | sed -e "s#\$OPENSTACK_CLOUD_PROVIDER_CONF#$OPENSTACK_CLOUD_PROVIDER_CONF#" \
+    | sed -e "s#\$OPENSTACK_CLOUD_CACERT_CONFIG#$OPENSTACK_CLOUD_CACERT_CONFIG#" \
     > $USERDATA/$PROVIDER_OS/worker-user-data.sh
 fi
 
 printf $CLOUD > $CONFIG_DIR/os_cloud.txt
 echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" > $CONFIG_DIR/clouds.yaml
-
+if [ "$CACERT_ORIGINAL" != "null" ]; then
+  cat "$CACERT_ORIGINAL" > $CONFIG_DIR/cacert
+else
+  echo "dummy" > $CONFIG_DIR/cacert
+fi
 
 # Build provider-components.yaml with kustomize
 # Coreos has a different kubeadm path (/usr is read-only) so gets a different kustomization.
