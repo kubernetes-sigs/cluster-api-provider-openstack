@@ -111,7 +111,35 @@ func (s *SecGroupService) Reconcile(clusterName string, desired openstackconfigv
 	status.GlobalSecurityGroup = observedSecGroups["global"]
 
 	return nil
+}
 
+func (s *SecGroupService) Delete(group *openstackconfigv1.SecurityGroup) error {
+	exists, err := s.exists(group.ID)
+	if err != nil {
+		return err
+	}
+	if exists {
+		return groups.Delete(s.client, group.ID).ExtractErr()
+	}
+	return nil
+}
+
+func (s *SecGroupService) exists(groupID string) (bool, error) {
+	opts := groups.ListOpts{
+		ID: groupID,
+	}
+	allPages, err := groups.List(s.client, opts).AllPages()
+	if err != nil {
+		return false, err
+	}
+	allGroups, err := groups.ExtractGroups(allPages)
+	if err != nil {
+		return false, err
+	}
+	if len(allGroups) == 0 {
+		return false, nil
+	}
+	return true, nil
 }
 
 func (s *SecGroupService) generateControlPlaneGroup(clusterName string) openstackconfigv1.SecurityGroup {
