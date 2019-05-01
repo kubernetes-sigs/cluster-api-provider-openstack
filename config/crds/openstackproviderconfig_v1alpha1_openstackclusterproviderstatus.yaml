@@ -15,8 +15,15 @@ spec:
     openAPIV3Schema:
       properties:
         apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
           type: string
         controlPlaneSecurityGroup:
+          description: 'ControlPlaneSecurityGroups contains all the information about
+            the OpenStack Security Group that needs to be applied to control plane
+            nodes. TODO: Maybe instead of two properties, we add a property to the
+            group?'
           properties:
             id:
               type: string
@@ -63,6 +70,9 @@ spec:
           - rules
           type: object
         globalSecurityGroup:
+          description: GlobalSecurityGroup contains all the information about the
+            OpenStack Security Group that needs to be applied to all nodes, both control
+            plane and worker nodes.
           properties:
             id:
               type: string
@@ -109,10 +119,15 @@ spec:
           - rules
           type: object
         kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
           type: string
         metadata:
           type: object
         network:
+          description: Network contains all information about the created OpenStack
+            Network. It includes Subnets and Router.
           properties:
             id:
               type: string

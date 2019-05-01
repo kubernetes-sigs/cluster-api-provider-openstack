@@ -15,28 +15,50 @@ spec:
     openAPIV3Schema:
       properties:
         apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
           type: string
         cloudName:
+          description: The name of the cloud to use from the clouds secret
           type: string
         cloudsSecret:
+          description: The name of the secret containing the openstack credentials
           type: object
         disableServerTags:
+          description: 'Default: True. In case of server tag errors, set to False'
           type: boolean
         dnsNameservers:
+          description: DNSNameservers is the list of nameservers for OpenStack Subnet
+            being created.
           items:
             type: string
           type: array
         externalNetworkId:
+          description: ExternalNetworkID is the ID of an external OpenStack Network.
+            This is necessary to get public internet to the VMs.
           type: string
         kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
           type: string
         managedSecurityGroups:
+          description: ManagedSecurityGroups defines that kubernetes manages the OpenStack
+            security groups for now, that means that we'll create two security groups,
+            one allowing SSH and API access from everywhere, and another one that
+            allows all traffic to/from machines belonging to that group. In the future,
+            we could make this more flexible.
           type: boolean
         metadata:
           type: object
         nodeCidr:
+          description: NodeCIDR is the OpenStack Subnet to be created. Cluster actuator
+            will create a network, a subnet with NodeCIDR, and a router connected
+            to this subnet. If you leave this empty, no network will be created.
           type: string
         tags:
+          description: Tags for all resources in cluster
           items:
             type: string
           type: array
