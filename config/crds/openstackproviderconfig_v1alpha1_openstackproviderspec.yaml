@@ -15,31 +15,53 @@ spec:
     openAPIV3Schema:
       properties:
         apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
           type: string
         availabilityZone:
+          description: The availability zone from which to launch the server.
           type: string
         cloudName:
+          description: The name of the cloud to use from the clouds secret
           type: string
         cloudsSecret:
+          description: The name of the secret containing the openstack credentials
           type: object
         configDrive:
+          description: Config Drive support
           type: boolean
         flavor:
+          description: The flavor reference for the flavor for your server instance.
           type: string
         floatingIP:
+          description: The floatingIP which will be associated to the machine, only
+            used for master. The floatingIP should have been created and haven't been
+            associated.
           type: string
         image:
+          description: The name of the image to use for your server instance. If the
+            RootVolume is specified, this will be ignored and use rootVolume directly.
           type: string
         keyName:
+          description: The ssh key to inject in the instance
           type: string
         kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
           type: string
         metadata:
           type: object
         networks:
+          description: A networks object. Required parameter when there are multiple
+            networks defined for the tenant. When you do not specify the networks
+            parameter, the server attaches to the only network created for the current
+            tenant.
           items:
             properties:
               filter:
+                description: Filters for optional network query
                 properties:
                   adminStateUp:
                     type: boolean
@@ -76,11 +98,14 @@ spec:
                     type: string
                 type: object
               fixedIp:
+                description: A fixed IPv4 address for the NIC.
                 type: string
               subnets:
+                description: Subnet within a network to use
                 items:
                   properties:
                     filter:
+                      description: Filters for optional network query
                       properties:
                         cidr:
                           type: string
@@ -122,14 +147,19 @@ spec:
                           type: string
                       type: object
                     uuid:
+                      description: The UUID of the network. Required if you omit the
+                        port attribute.
                       type: string
                   type: object
                 type: array
               uuid:
+                description: The UUID of the network. Required if you omit the port
+                  attribute.
                 type: string
             type: object
           type: array
         rootVolume:
+          description: The volume metadata to boot from
           properties:
             deviceType:
               type: string
@@ -144,9 +174,11 @@ spec:
           - deviceType
           type: object
         securityGroups:
+          description: The names of the security groups to assign to the instance
           items:
             properties:
               filter:
+                description: Filters used to query security groups in openstack
                 properties:
                   description:
                     type: string
@@ -177,22 +209,31 @@ spec:
                     type: string
                 type: object
               name:
+                description: Security Group name
                 type: string
               uuid:
+                description: Security Group UID
                 type: string
             type: object
           type: array
         serverMetadata:
+          description: Metadata mapping. Allows you to create a map of key value pairs
+            to add to the server instance.
           type: object
         sshUserName:
+          description: The machine ssh username
           type: string
         tags:
+          description: Machine tags Requires Nova api 2.52 minimum!
           items:
             type: string
           type: array
         trunk:
+          description: Whether the server instance is created on a trunk port or not.
           type: boolean
         userDataSecret:
+          description: The name of the secret containing the user data (startup script
+            in most cases)
           type: object
       required:
       - cloudsSecret
