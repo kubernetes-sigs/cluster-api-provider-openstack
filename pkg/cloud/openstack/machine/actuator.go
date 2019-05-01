@@ -82,6 +82,10 @@ func getTimeout(name string, timeout int) time.Duration {
 }
 
 func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluster, machine *clusterv1.Machine) error {
+	if cluster == nil {
+		return fmt.Errorf("The cluster is nil, check your cluster configuration")
+	}
+
 	kubeClient := oc.params.KubeClient
 
 	machineService, err := clients.NewInstanceServiceFromMachine(kubeClient, machine)
@@ -258,6 +262,10 @@ func (oc *OpenstackClient) Delete(ctx context.Context, cluster *clusterv1.Cluste
 }
 
 func (oc *OpenstackClient) Update(ctx context.Context, cluster *clusterv1.Cluster, machine *clusterv1.Machine) error {
+	if cluster == nil {
+		return fmt.Errorf("The cluster is nil, check your cluster configuration")
+	}
+
 	status, err := oc.instanceStatus(machine)
 	if err != nil {
 		return err
