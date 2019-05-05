@@ -55,7 +55,9 @@ endif
 depend-update: work
 	dep ensure -update
 
-build: manager clusterctl
+build: binary images
+
+binary: manager clusterctl
 
 manager:
 	CGO_ENABLED=0 GOOS=$(GOOS) go build \
@@ -85,7 +87,7 @@ ifndef HAS_KUSTOMIZE
 	mv kustomize_1.0.11_linux_amd64 /usr/local/bin/kustomize
 	chmod +x /usr/local/bin/kustomize
 endif
-		
+
 	# Create a dummy file for test only
 	echo 'clouds' > dummy-clouds-test.yaml
 	$(GENERATE_YAML_PATH)/$(GENERATE_YAML_EXEC) -f dummy-clouds-test.yaml openstack ubuntu $(GENERATE_YAML_TEST_FOLDER)
@@ -161,17 +163,11 @@ manifests:
 
 images: openstack-cluster-api-controller clusterctl-image manifests
 
-openstack-cluster-api-controller: depend manager manifests
-ifeq ($(GOOS),linux)
-	cp bin/manager cmd/manager
-	docker build -t $(REGISTRY)/openstack-cluster-api-controller:$(VERSION) cmd/manager
-	rm cmd/manager/manager
-else
-	$(error Please set GOOS=linux for building the image)
-endif
+openstack-cluster-api-controller: generate fmt vet manifests
+	docker build . -f cmd/manager/Dockerfile --network=host -t "$(REGISTRY)/openstack-cluster-api-controller:$(VERSION)"
 
 clusterctl-image: generate fmt vet manifests
-	docker build . -f cmd/clusterctl/Dockerfile -t "$(REGISTRY)/openstack-cluster-api-clusterctl:$(VERSION)"
+	docker build . -f cmd/clusterctl/Dockerfile --network=host -t "$(REGISTRY)/openstack-cluster-api-clusterctl:$(VERSION)"
 
 upload-images: images
 	@echo "push images to $(REGISTRY)"

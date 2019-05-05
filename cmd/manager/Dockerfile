@@ -10,11 +10,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM k8s.gcr.io/debian-base-amd64:0.3.2
+# Build the cluster binary
+FROM golang:1.10.3 as builder
 
-RUN echo CACHEBUST>/dev/null && clean-install \
-    ca-certificates
+# Copy in the go src
+WORKDIR /go/src/sigs.k8s.io/cluster-api-provider-openstack
+COPY pkg/    pkg/
+COPY cmd/    cmd/
+COPY vendor/ vendor/
 
-ADD manager /bin/
+# Build
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o manager sigs.k8s.io/cluster-api-provider-openstack/cmd/manager
 
-CMD ["/bin/manager"]
+# Copy manager into a thin image
+FROM debian:stretch-slim
+WORKDIR /
+
+RUN apt-get update && apt-get install -y ca-certificates
+
+COPY --from=builder /go/src/sigs.k8s.io/cluster-api-provider-openstack/manager .
+
+CMD ["/manager"]
