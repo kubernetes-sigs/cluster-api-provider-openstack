@@ -147,16 +147,6 @@ func (in *OpenstackClusterProviderStatus) DeepCopyInto(out *OpenstackClusterProv
 	*out = *in
 	out.TypeMeta = in.TypeMeta
 	in.ObjectMeta.DeepCopyInto(&out.ObjectMeta)
-	if in.CACertificate != nil {
-		in, out := &in.CACertificate, &out.CACertificate
-		*out = make([]byte, len(*in))
-		copy(*out, *in)
-	}
-	if in.CAPrivateKey != nil {
-		in, out := &in.CAPrivateKey, &out.CAPrivateKey
-		*out = make([]byte, len(*in))
-		copy(*out, *in)
-	}
 	if in.Network != nil {
 		in, out := &in.Network, &out.Network
 		*out = new(Network)
