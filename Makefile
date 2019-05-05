@@ -159,7 +159,7 @@ generate: manifests
 manifests:
 	go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go crd
 
-images: openstack-cluster-api-controller clusterctl-image manifests
+images: openstack-cluster-api-controller clusterctl-image
 
 openstack-cluster-api-controller: depend manager manifests
 ifeq ($(GOOS),linux)
