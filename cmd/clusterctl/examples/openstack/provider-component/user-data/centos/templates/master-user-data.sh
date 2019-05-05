@@ -77,13 +77,6 @@ function install_configure_docker () {
 
 install_configure_docker
 
-# Get docker cgroup driver for kubelet configuration
-CG_DRIVER=$(docker info --format '{{.CgroupDriver}}')
-
-cat <<EOF > /etc/default/kubelet
-KUBELET_KUBEADM_EXTRA_ARGS=--cgroup-driver=$CG_DRIVER
-EOF
-
 systemctl enable kubelet.service
 
 modprobe br_netfilter

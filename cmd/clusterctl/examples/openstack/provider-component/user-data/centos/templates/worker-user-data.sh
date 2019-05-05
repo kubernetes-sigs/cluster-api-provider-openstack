@@ -47,9 +47,6 @@ function install_configure_docker () {
 
 install_configure_docker
 
-# Get docker cgroup driver for kubelet configuration
-CG_DRIVER=$(docker info --format '{{.CgroupDriver}}')
-
 # Write the cloud.conf so that the kubelet can use it.
 echo $OPENSTACK_CLOUD_PROVIDER_CONF | base64 -d > /etc/kubernetes/cloud.conf
 mkdir /etc/certs
@@ -74,9 +71,6 @@ nodeRegistration:
     cloud-provider: openstack
 EOF
 
-cat <<EOF > /etc/default/kubelet
-KUBELET_KUBEADM_EXTRA_ARGS=--cgroup-driver=$CG_DRIVER
-EOF
 systemctl enable kubelet.service
 
 modprobe br_netfilter
