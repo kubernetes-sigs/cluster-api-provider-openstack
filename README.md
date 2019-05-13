@@ -13,6 +13,7 @@
     - [Interacting with your cluster](#interacting-with-your-cluster)
     - [Cluster Deletion](#cluster-deletion)
     - [Trouble shooting](#trouble-shooting)
+  - [Contributing](#contributing)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -242,3 +243,7 @@ your openstack Cluster API Kubernetes cluster.
 ### Trouble shooting
 
 Please refer to [Trouble shooting documentation](docs/trouble_shooting.md) for further info.
+
+## Contributing
+
+Please refer to the [Contribution Guide](CONTRIBUTING.md) and [Development Guide](docs/development.md) for this project.
