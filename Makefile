@@ -161,7 +161,7 @@ generate: manifests
 manifests:
 	go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go crd
 
-images: openstack-cluster-api-controller clusterctl-image manifests
+images: openstack-cluster-api-controller clusterctl-image
 
 openstack-cluster-api-controller: generate fmt vet manifests
 	docker build . -f cmd/manager/Dockerfile --network=host -t "$(REGISTRY)/openstack-cluster-api-controller:$(VERSION)"
