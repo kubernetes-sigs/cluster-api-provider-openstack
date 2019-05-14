@@ -11,7 +11,7 @@
 # limitations under the License.
 
 # Build the cluster binary
-FROM golang:1.10.3 as builder
+FROM golang:1.12.5 as builder
 
 # Copy in the go src
 WORKDIR /go/src/sigs.k8s.io/cluster-api-provider-openstack
