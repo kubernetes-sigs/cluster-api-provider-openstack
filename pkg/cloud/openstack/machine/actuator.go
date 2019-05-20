@@ -53,6 +53,10 @@ const (
 	TimeoutInstanceCreate       = 5
 	TimeoutInstanceDelete       = 5
 	RetryIntervalInstanceStatus = 10 * time.Second
+
+	MachineCreating string = "Creating"
+	MachineRunning  string = "Running"
+	MachineFailed   string = "Failed"
 )
 
 type OpenstackClient struct {
@@ -202,10 +206,12 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 		return oc.handleMachineError(machine, apierrors.CreateMachine(
 			"error creating Openstack instance: %v", err))
 	}
+	oc.updatePhase(ctx, machine, MachineCreating)
 	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
 	instance, err = machineService.InstanceCreate(clusterName, machine.Name, clusterSpec, providerSpec, userDataRendered, providerSpec.KeyName)
 
 	if err != nil {
+		oc.updatePhase(ctx, machine, MachineFailed)
 		return oc.handleMachineError(machine, apierrors.CreateMachine(
 			"error creating Openstack instance: %v", err))
 	}
@@ -219,6 +225,7 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 		return instance.Status == "ACTIVE", nil
 	})
 	if err != nil {
+		oc.updatePhase(ctx, machine, MachineFailed)
 		return oc.handleMachineError(machine, apierrors.CreateMachine(
 			"error creating Openstack instance: %v", err))
 	}
@@ -226,12 +233,14 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 	if providerSpec.FloatingIP != "" {
 		err := machineService.AssociateFloatingIP(instance.ID, providerSpec.FloatingIP)
 		if err != nil {
+			oc.updatePhase(ctx, machine, MachineFailed)
 			return oc.handleMachineError(machine, apierrors.CreateMachine(
 				"Associate floatingIP err: %v", err))
 		}
 
 	}
 
+	oc.updatePhase(ctx, machine, MachineRunning)
 	record.Eventf(machine, "CreatedInstance", "Created new instance with id: %s", instance.ID)
 	return oc.updateAnnotation(machine, instance.ID)
 }
@@ -467,4 +476,12 @@ func (oc *OpenstackClient) createBootstrapToken() (string, error) {
 func (oc *OpenstackClient) validateMachine(machine *clusterv1.Machine, config *openstackconfigv1.OpenstackProviderSpec) *apierrors.MachineError {
 	// TODO: other validate of openstackCloud
 	return nil
+}
+
+func (oc *OpenstackClient) updatePhase(ctx context.Context, machine *clusterv1.Machine, status string) {
+	machine.Status.Phase = &status
+	err := oc.params.Client.Status().Update(ctx, machine)
+	if err != nil {
+		klog.Infof("Failed updating phase: %v", err)
+	}
 }
