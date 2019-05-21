@@ -17,7 +17,6 @@ HAS_DEP := $(shell command -v dep;)
 HAS_LINT := $(shell command -v golint;)
 HAS_GOX := $(shell command -v gox;)
 HAS_YQ := $(shell command -v yq;)
-HAS_KUSTOMIZE := $(shell command -v kustomize;)
 GOX_PARALLEL ?= 3
 TARGETS ?= darwin/amd64 linux/amd64 linux/386 linux/arm linux/arm64 linux/ppc64le
 DIST_DIRS         = find * -type d -exec
@@ -80,14 +79,6 @@ ifndef HAS_YQ
 	go get github.com/mikefarah/yq
 	echo "installing yq"
 endif
-
-ifndef HAS_KUSTOMIZE
-	# for now, higher version has some problem so we stick to 1.0.11
-	wget https://github.com/kubernetes-sigs/kustomize/releases/download/v1.0.11/kustomize_1.0.11_linux_amd64
-	mv kustomize_1.0.11_linux_amd64 /usr/local/bin/kustomize
-	chmod +x /usr/local/bin/kustomize
-endif
-
 	# Create a dummy file for test only
 	echo 'clouds' > dummy-clouds-test.yaml
 	$(GENERATE_YAML_PATH)/$(GENERATE_YAML_EXEC) -f dummy-clouds-test.yaml openstack ubuntu $(GENERATE_YAML_TEST_FOLDER)

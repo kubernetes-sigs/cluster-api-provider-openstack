@@ -227,13 +227,19 @@ fi
 # Build provider-components.yaml with kustomize
 # Coreos has a different kubeadm path (/usr is read-only) so gets a different kustomization.
 if [[ "$PROVIDER_OS" == "coreos" ]]; then
-  kustomize build $PWD/../../../../overlays-config/coreos -o $PWD/$OUTPUT/provider-components.yaml
+  kubectl kustomize $PWD/../../../../overlays-config/coreos > $PWD/$OUTPUT/provider-components.yaml
 else
-  kustomize build $PWD/../../../../overlays-config/generic -o $PWD/$OUTPUT/provider-components.yaml
+  kubectl kustomize $PWD/../../../../overlays-config/generic > $PWD/$OUTPUT/provider-components.yaml
 fi
 echo "---" >> $PWD/$OUTPUT/provider-components.yaml
-kustomize build $PWD/provider-component/clouds-secrets >> $PWD/$OUTPUT/provider-components.yaml
+kubectl kustomize $PWD/provider-component/clouds-secrets >> $PWD/$OUTPUT/provider-components.yaml
 echo "---" >> $PWD/$OUTPUT/provider-components.yaml
-kustomize build $PWD/provider-component/cluster-api >> $PWD/$OUTPUT/provider-components.yaml
+
+# latest kustomize don't allow include files out of build folder
+cp -r $CONFIG_DIR/../../../../../../../vendor/sigs.k8s.io/cluster-api/config $PWD/provider-component/cluster-api
 echo "---" >> $PWD/$OUTPUT/provider-components.yaml
-kustomize build $USERDATA/$PROVIDER_OS >> $PWD/$OUTPUT/provider-components.yaml
+kubectl kustomize $PWD/provider-component/cluster-api >> $PWD/$OUTPUT/provider-components.yaml
+rm -fr $PWD/provider-component/cluster-api/config
+
+echo "---" >> $PWD/$OUTPUT/provider-components.yaml
+kubectl kustomize $USERDATA/$PROVIDER_OS >> $PWD/$OUTPUT/provider-components.yaml
