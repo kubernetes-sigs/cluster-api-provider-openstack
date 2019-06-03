@@ -247,7 +247,7 @@ func (a *Actuator) getNetworkClient(cluster *clusterv1.Cluster) (*gophercloud.Se
 		config.RootCAs = caCertPool
 	}
 
-	config.InsecureSkipVerify = *cloudFromYaml.Verify
+	config.InsecureSkipVerify = !*cloudFromYaml.Verify
 	transport := &http.Transport{Proxy: http.ProxyFromEnvironment, TLSClientConfig: config}
 	provider.HTTPClient.Transport = transport
 
