@@ -23,10 +23,10 @@ COPY vendor/ vendor/
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o manager sigs.k8s.io/cluster-api-provider-openstack/cmd/manager
 
 # Copy manager into a thin image
-FROM debian:stretch-slim
+FROM alpine:latest
 WORKDIR /
 
-RUN apt-get update && apt-get install -y ca-certificates
+RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
 
 COPY --from=builder /go/src/sigs.k8s.io/cluster-api-provider-openstack/manager .
 
