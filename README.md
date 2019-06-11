@@ -57,9 +57,9 @@ But we won't provide any examples or working templates. See [user-data in the ex
 
 This provider's versions are able to install kubernetes to the following versions of OpenStack:
 
-||OpenStack Pike|OpenStack Queens|OpenStack Rocky|
-|-|-|-|-|
-|OpenStack Provider v1alpha1 (ea309e7f)|✓|✓|✓|
+||OpenStack Pike|OpenStack Queens|OpenStack Rocky|OpenStack Stein|
+|-|-|-|-|-|
+|OpenStack Provider v1alpha1 (ea309e7f)|✓|✓|✓|✓|
 
 Each version of Cluster API for OpenStack will attempt to support two Kubernetes versions.
 
