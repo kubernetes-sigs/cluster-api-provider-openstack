@@ -24,6 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/klog"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/apis"
+	_ "sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/options"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/controller"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	clusterapis "sigs.k8s.io/cluster-api/pkg/apis"
