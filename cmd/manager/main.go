@@ -32,6 +32,7 @@ import (
 func main() {
 
 	flag.Set("logtostderr", "true")
+	watchNamespace := flag.String("namespace", "", "Namespace that the controller watches to reconcile machine-api objects. If unspecified, the controller watches for machine-api objects across all namespaces.")
 	klog.InitFlags(nil)
 	flag.Parse()
 
@@ -41,8 +42,14 @@ func main() {
 		klog.Fatal(err)
 	}
 
-	// Create a new Cmd to provide shared dependencies and start components
-	mgr, err := manager.New(cfg, manager.Options{})
+	// Setup a Manager
+	opts := manager.Options{}
+	if *watchNamespace != "" {
+		opts.Namespace = *watchNamespace
+		klog.Infof("Watching machine-api objects only in namespace %q for reconciliation.", opts.Namespace)
+	}
+
+	mgr, err := manager.New(cfg, opts)
 	if err != nil {
 		klog.Fatal(err)
 	}
