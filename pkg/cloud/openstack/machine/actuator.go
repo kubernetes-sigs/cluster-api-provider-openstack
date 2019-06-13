@@ -26,6 +26,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/equality"
 
+	clusterv1 "github.com/openshift/cluster-api/pkg/apis/cluster/v1alpha1"
 	machinev1 "github.com/openshift/cluster-api/pkg/apis/machine/v1beta1"
 	apierrors "github.com/openshift/cluster-api/pkg/errors"
 	"github.com/openshift/cluster-api/pkg/util"
@@ -74,7 +75,7 @@ func NewActuator(params openstack.ActuatorParams) (*OpenstackClient, error) {
 	}, nil
 }
 
-func (oc *OpenstackClient) Create(ctx context.Context, cluster *machinev1.Cluster, machine *machinev1.Machine) error {
+func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluster, machine *machinev1.Machine) error {
 	kubeClient := oc.params.KubeClient
 
 	machineService, err := clients.NewInstanceServiceFromMachine(kubeClient, machine)
@@ -138,7 +139,8 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *machinev1.Cluste
 
 	var userDataRendered string
 	if len(userData) > 0 && !disableTemplating {
-		if machine.Spec.Versions.ControlPlane != "" {
+		// FIXME(mandre) Find the right way to check if machine is part of the control plane
+		if machine.ObjectMeta.Name != "" {
 			userDataRendered, err = masterStartupScript(cluster, machine, string(userData))
 			if err != nil {
 				return oc.handleMachineError(machine, apierrors.CreateMachine(
@@ -233,7 +235,7 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *machinev1.Cluste
 	return oc.updateAnnotation(machine, instance.ID)
 }
 
-func (oc *OpenstackClient) Delete(ctx context.Context, cluster *machinev1.Cluster, machine *machinev1.Machine) error {
+func (oc *OpenstackClient) Delete(ctx context.Context, cluster *clusterv1.Cluster, machine *machinev1.Machine) error {
 	machineService, err := clients.NewInstanceServiceFromMachine(oc.params.KubeClient, machine)
 	if err != nil {
 		return err
@@ -259,7 +261,7 @@ func (oc *OpenstackClient) Delete(ctx context.Context, cluster *machinev1.Cluste
 	return nil
 }
 
-func (oc *OpenstackClient) Update(ctx context.Context, cluster *machinev1.Cluster, machine *machinev1.Machine) error {
+func (oc *OpenstackClient) Update(ctx context.Context, cluster *clusterv1.Cluster, machine *machinev1.Machine) error {
 	status, err := oc.instanceStatus(machine)
 	if err != nil {
 		return err
@@ -283,7 +285,8 @@ func (oc *OpenstackClient) Update(ctx context.Context, cluster *machinev1.Cluste
 		return nil
 	}
 
-	if currentMachine.Spec.Versions.ControlPlane != "" {
+	// FIXME(mandre) Find the right way to check if machine is part of the control plane
+	if currentMachine.ObjectMeta.Name != "" {
 		// TODO: add master inplace
 		klog.Errorf("master inplace update failed: not support master in place update now")
 	} else {
@@ -315,7 +318,7 @@ func (oc *OpenstackClient) Update(ctx context.Context, cluster *machinev1.Cluste
 	return nil
 }
 
-func (oc *OpenstackClient) Exists(ctx context.Context, cluster *machinev1.Cluster, machine *machinev1.Machine) (bool, error) {
+func (oc *OpenstackClient) Exists(ctx context.Context, cluster *clusterv1.Cluster, machine *machinev1.Machine) (bool, error) {
 	instance, err := oc.instanceExists(machine)
 	if err != nil {
 		return false, err
@@ -423,7 +426,6 @@ func (oc *OpenstackClient) requiresUpdate(a *machinev1.Machine, b *machinev1.Mac
 	// Do not want status changes. Do want changes that impact machine provisioning
 	return !reflect.DeepEqual(a.Spec.ObjectMeta, b.Spec.ObjectMeta) ||
 		!reflect.DeepEqual(a.Spec.ProviderSpec, b.Spec.ProviderSpec) ||
-		!reflect.DeepEqual(a.Spec.Versions, b.Spec.Versions) ||
 		a.ObjectMeta.Name != b.ObjectMeta.Name
 }
 

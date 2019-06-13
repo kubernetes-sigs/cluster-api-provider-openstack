@@ -3,6 +3,7 @@ package machine
 import (
 	"testing"
 
+	clusterv1 "github.com/openshift/cluster-api/pkg/apis/cluster/v1alpha1"
 	machinev1 "github.com/openshift/cluster-api/pkg/apis/machine/v1beta1"
 	"sigs.k8s.io/yaml"
 )
@@ -14,7 +15,7 @@ value:
 `
 
 func TestNodeStartupScriptEmpty(t *testing.T) {
-	cluster := &machinev1.Cluster{}
+	cluster := &clusterv1.Cluster{}
 	machine := &machinev1.Machine{}
 	err := yaml.Unmarshal([]byte(providerSpecYAML), &machine.Spec.ProviderSpec)
 	if err != nil {
@@ -40,7 +41,7 @@ func TestNodeStartupScriptEmpty(t *testing.T) {
 }
 
 func TestNodeStartupScriptEndpointError(t *testing.T) {
-	cluster := &machinev1.Cluster{}
+	cluster := &clusterv1.Cluster{}
 	machine := &machinev1.Machine{}
 	err := yaml.Unmarshal([]byte(providerSpecYAML), &machine.Spec.ProviderSpec)
 	if err != nil {
@@ -59,9 +60,9 @@ func TestNodeStartupScriptEndpointError(t *testing.T) {
 }
 
 func TestNodeStartupScriptWithEndpoint(t *testing.T) {
-	cluster := machinev1.Cluster{}
-	cluster.Status.APIEndpoints = make([]machinev1.APIEndpoint, 1)
-	cluster.Status.APIEndpoints[0] = machinev1.APIEndpoint{
+	cluster := clusterv1.Cluster{}
+	cluster.Status.APIEndpoints = make([]clusterv1.APIEndpoint, 1)
+	cluster.Status.APIEndpoints[0] = clusterv1.APIEndpoint{
 		Host: "example.com",
 		Port: 8080,
 	}

@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	clustercommon "github.com/openshift/cluster-api/pkg/apis/cluster/common"
+	clusterv1 "github.com/openshift/cluster-api/pkg/apis/cluster/v1alpha1"
 	machinev1 "github.com/openshift/cluster-api/pkg/apis/machine/v1beta1"
 	"github.com/openshift/cluster-api/pkg/util"
 	"k8s.io/klog"
@@ -45,7 +46,7 @@ func NewDeploymentClient() *DeploymentClient {
 	return &DeploymentClient{}
 }
 
-func (*DeploymentClient) GetIP(cluster *machinev1.Cluster, machine *machinev1.Machine) (string, error) {
+func (*DeploymentClient) GetIP(cluster *clusterv1.Cluster, machine *machinev1.Machine) (string, error) {
 	if machine.ObjectMeta.Annotations != nil {
 		if ip, ok := machine.ObjectMeta.Annotations[OpenstackIPAnnotationKey]; ok {
 			klog.Infof("Returning IP from machine annotation %s", ip)
@@ -56,7 +57,7 @@ func (*DeploymentClient) GetIP(cluster *machinev1.Cluster, machine *machinev1.Ma
 	return "", errors.New("could not get IP")
 }
 
-func (d *DeploymentClient) GetKubeConfig(cluster *machinev1.Cluster, master *machinev1.Machine) (string, error) {
+func (d *DeploymentClient) GetKubeConfig(cluster *clusterv1.Cluster, master *machinev1.Machine) (string, error) {
 	ip, err := d.GetIP(cluster, master)
 	if err != nil {
 		return "", err
