@@ -60,13 +60,13 @@ build: binary images
 binary: manager clusterctl
 
 manager:
-	CGO_ENABLED=0 GOOS=$(GOOS) go build \
+	GO111MODULE=off CGO_ENABLED=0 GOOS=$(GOOS) go build -v \
 		-ldflags $(LDFLAGS) \
 		-o bin/manager \
 		cmd/manager/main.go
 
 clusterctl:
-	CGO_ENABLED=0 GOOS=$(GOOS) go build \
+	GO111MODULE=off CGO_ENABLED=0 GOOS=$(GOOS) go build \
 		-ldflags $(LDFLAGS) \
 		-o bin/clusterctl \
 		cmd/clusterctl/main.go
