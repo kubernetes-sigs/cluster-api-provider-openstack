@@ -433,8 +433,8 @@
   version = "v1.5.0"
 
 [[projects]]
-  branch = "openshift-4.0-cluster-api-0.0.0-alpha.4"
-  digest = "1:6c1953688007e98a582591088bfede8a3bb9e81dce2cdac3b4ace98730f6e2e5"
+  branch = "openshift-4.2-cluster-api-0.0.0-alpha.4"
+  digest = "1:d67ab3b4d46616ef4c7d482dd8a88dbe4634f3a35dd354720cb7a4d6b2f59fa1"
   name = "github.com/openshift/cluster-api"
   packages = [
     "cmd/clusterctl/clientcmd",
@@ -465,7 +465,7 @@
     "pkg/util",
   ]
   pruneopts = "T"
-  revision = "f46665c25908ee8fd5cb6506f374e3ae254a08dc"
+  revision = "9941763fab7237205d6eb162cae1bfb1d0096058"
 
 [[projects]]
   branch = "master"
@@ -1242,7 +1242,6 @@
     "k8s.io/apimachinery/pkg/runtime/schema",
     "k8s.io/apimachinery/pkg/runtime/serializer/json",
     "k8s.io/apimachinery/pkg/util/json",
-    "k8s.io/apimachinery/pkg/util/wait",
     "k8s.io/client-go/kubernetes",
     "k8s.io/client-go/plugin/pkg/client/auth/gcp",
     "k8s.io/client-go/tools/record",
