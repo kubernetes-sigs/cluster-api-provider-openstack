@@ -55,6 +55,10 @@ const (
 	machineClusterLabelName     = "cluster.k8s.io/cluster-name"
 )
 
+const (
+	TimeoutMachineReady = "CLUSTER_API_MACHINE_READY_TIMEOUT"
+)
+
 // Provides interaction with a cluster
 type Client interface {
 	Apply(string) error
@@ -750,43 +754,53 @@ func (c *client) WaitForResourceStatuses() error {
 		klog.V(2).Info("Waiting for Cluster API resources to have statuses...")
 		clusters, err := c.clientSet.ClusterV1alpha1().Clusters("").List(metav1.ListOptions{})
 		if err != nil {
+			klog.V(10).Infof("retrying: failed to list clusters: %v", err)
 			return false, nil
 		}
 		for _, cluster := range clusters.Items {
 			if reflect.DeepEqual(clusterv1.ClusterStatus{}, cluster.Status) {
+				klog.V(10).Info("retrying: cluster status is empty")
 				return false, nil
 			}
 			if cluster.Status.ProviderStatus == nil {
+				klog.V(10).Info("retrying: cluster.Status.ProviderStatus is not set")
 				return false, nil
 			}
 		}
 		machineDeployments, err := c.clientSet.ClusterV1alpha1().MachineDeployments("").List(metav1.ListOptions{})
 		if err != nil {
+			klog.V(10).Infof("retrying: failed to list machine deployment: %v", err)
 			return false, nil
 		}
 		for _, md := range machineDeployments.Items {
 			if reflect.DeepEqual(clusterv1.MachineDeploymentStatus{}, md.Status) {
+				klog.V(10).Info("retrying: machine deployment status is empty")
 				return false, nil
 			}
 		}
 		machineSets, err := c.clientSet.ClusterV1alpha1().MachineSets("").List(metav1.ListOptions{})
 		if err != nil {
+			klog.V(10).Infof("retrying: failed to list machinesets: %v", err)
 			return false, nil
 		}
 		for _, ms := range machineSets.Items {
 			if reflect.DeepEqual(clusterv1.MachineSetStatus{}, ms.Status) {
+				klog.V(10).Info("retrying: machineset status is empty")
 				return false, nil
 			}
 		}
 		machines, err := c.clientSet.ClusterV1alpha1().Machines("").List(metav1.ListOptions{})
 		if err != nil {
+			klog.V(10).Infof("retrying: failed to list machines: %v", err)
 			return false, nil
 		}
 		for _, m := range machines.Items {
 			if reflect.DeepEqual(clusterv1.MachineStatus{}, m.Status) {
+				klog.V(10).Info("retrying: machine status is empty")
 				return false, nil
 			}
 			if m.Status.ProviderStatus == nil {
+				klog.V(10).Info("retrying: machine.Status.ProviderStatus is not set")
 				return false, nil
 			}
 		}
@@ -968,7 +982,17 @@ func waitForClusterResourceReady(cs clientset.Interface) error {
 }
 
 func waitForMachineReady(cs clientset.Interface, machine *clusterv1.Machine) error {
-	err := util.PollImmediate(retryIntervalResourceReady, timeoutMachineReady, func() (bool, error) {
+	timeout := timeoutMachineReady
+	if p := os.Getenv(TimeoutMachineReady); p != "" {
+		t, err := strconv.Atoi(p)
+		if err == nil {
+			// only valid value will be used
+			timeout = time.Duration(t) * time.Minute
+			klog.V(4).Info("Setting wait for machine timeout value to ", timeout)
+		}
+	}
+
+	err := util.PollImmediate(retryIntervalResourceReady, timeout, func() (bool, error) {
 		klog.V(2).Infof("Waiting for Machine %v to become ready...", machine.Name)
 		m, err := cs.ClusterV1alpha1().Machines(machine.Namespace).Get(machine.Name, metav1.GetOptions{})
 		if err != nil {
