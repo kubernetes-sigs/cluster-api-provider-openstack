@@ -10,7 +10,7 @@ resources:
 - rbac/rbac_role.yaml
 - manager/namespace.yaml
 - manager/service.yaml
-- manager/deployment.yaml
+- manager/statefulset.yaml
 - crds/openstackproviderconfig_v1alpha1_openstackclusterproviderstatus.yaml
 - crds/openstackproviderconfig_v1alpha1_openstackclusterproviderspec.yaml
 - crds/openstackproviderconfig_v1alpha1_openstackproviderspec.yaml
