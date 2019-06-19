@@ -42,42 +42,42 @@ required = [
   branch = "master"
   name = "github.com/gophercloud/gophercloud"
 
-
 [[override]]
   name = "k8s.io/kube-aggregator"
-  version = "kubernetes-1.13.1"
+  version = "kubernetes-1.14.1"
 
 [[override]]
   name = "github.com/openshift/cluster-api"
-  branch = "openshift-4.2-cluster-api-0.0.0-alpha.4"
+  branch = "openshift-4.2-cluster-api-0.1.0"
 
 [[override]]
   name = "k8s.io/code-generator"
-  version = "kubernetes-1.13.1"
+  version = "kubernetes-1.14.1"
 
 [[override]]
   name = "k8s.io/api"
-  version = "kubernetes-1.13.1"
+  version = "kubernetes-1.14.1"
 
 [[override]]
   name = "k8s.io/apiextensions-apiserver"
-  version = "kubernetes-1.13.1"
+  version = "kubernetes-1.14.1"
 
 [[override]]
   name = "k8s.io/apimachinery"
-  version = "kubernetes-1.13.1"
+  version = "kubernetes-1.14.1"
 
 [[override]]
   name = "k8s.io/client-go"
-  version = "kubernetes-1.13.1"
+  version = "kubernetes-1.14.1"
 
 [[override]]
   name = "sigs.k8s.io/controller-runtime"
-  version = "v0.1.10"
+  # release-0.2 since it imports kubernetes 1.14
+  branch="release-0.2"
 
 [[constraint]]
   name="sigs.k8s.io/controller-tools"
-  version="v0.1.1"
+  version="v0.1.10"
 
 [[override]]
   name = "k8s.io/cluster-bootstrap"
@@ -104,6 +104,11 @@ required = [
   name = "github.com/ajeddeloh/yaml"
   revision = "6b94386aeefd8c4b8470aee72bfca084c2f91da9"
 
+# For dependency below: Refer to issue https://github.com/golang/dep/issues/1799
+[[override]]
+  name = "gopkg.in/fsnotify.v1"
+  source = "https://github.com/fsnotify/fsnotify.git"
+  version="v1.4.7"
 
 [prune]
   go-tests = true
