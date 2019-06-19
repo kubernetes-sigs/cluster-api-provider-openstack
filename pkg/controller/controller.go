@@ -50,7 +50,7 @@ func getActuatorParams(mgr manager.Manager) openstack.ActuatorParams {
 		Client:        mgr.GetClient(),
 		KubeClient:    kubeClient,
 		Scheme:        mgr.GetScheme(),
-		EventRecorder: mgr.GetRecorder("openstack-controller"),
+		EventRecorder: mgr.GetEventRecorderFor("openstack_controller"),
 	}
 
 }
