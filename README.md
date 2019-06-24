@@ -84,8 +84,8 @@ policy may be made to more closely align with other providers in the Cluster API
 
    ```bash
    git clone https://github.com/kubernetes-sigs/cluster-api-provider-openstack $GOPATH/src/sigs.k8s.io/cluster-api-provider-openstack
-   cd $GOPATH/src/sigs.k8s.io/cluster-api-provider-openstack/cmd/clusterctl
-   go build
+   cd $GOPATH/src/sigs.k8s.io/cluster-api-provider-openstack/
+   make clusterctl
    ```
 
 ### Cluster Creation
