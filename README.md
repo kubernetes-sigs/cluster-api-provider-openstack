@@ -73,7 +73,7 @@ policy may be made to more closely align with other providers in the Cluster API
 
 ### Prerequisites
 
-1. Install `kubectl` (see [here](http://kubernetes.io/docs/user-guide/prereqs/)).
+1. Install `kubectl` (see [here](https://kubernetes.io/docs/tasks/tools/install-kubectl/)). Because `kustomize` was included into `kubectl` and it's used by `cluster-api-provider-openstack` in generating yaml files, so version `1.14.0+` of `kubectl` is required, see [integrate kustomize into kubectl](https://github.com/kubernetes/enhancements/issues/633) for more info.
 2. You can use either VM, container or existing Kubernetes cluster act as bootstrap cluster.
    - If you want to use VM, install [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/), version 0.30.0 or greater.
    - If you want to use container, install [kind](https://github.com/kubernetes-sigs/kind#installation-and-usage).

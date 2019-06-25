@@ -6,11 +6,11 @@ generatorOptions:
 secretGenerator:
 - name: worker-user-data
   type: Opaque
-  commands:
-    userData: "cat worker-user-data.sh"
+  files:
+    - userData=worker-user-data.sh
 - name: master-user-data
   type: Opaque
-  commands:
-    userData: "cat master-user-data.sh"
+  files:
+    - userData=master-user-data.sh
 
 namespace: openstack-provider-system

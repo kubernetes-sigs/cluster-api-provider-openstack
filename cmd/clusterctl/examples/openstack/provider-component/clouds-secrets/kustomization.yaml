@@ -5,13 +5,13 @@ generatorOptions:
 
 secretGenerator:
 - name: cloud-config
-  commands:
-    clouds.yaml: "cat configs/clouds.yaml"
-    cacert: "cat configs/cacert"
+  files:
+    - clouds.yaml=configs/clouds.yaml
+    - cacert=configs/cacert
   type: Opaque
 - name: cloud-selector
-  commands:
-    OS_CLOUD: "cat configs/os_cloud.txt"
+  files:
+    - OS_CLOUD=configs/os_cloud.txt
   type: Opaque
 
 namespace: openstack-provider-system

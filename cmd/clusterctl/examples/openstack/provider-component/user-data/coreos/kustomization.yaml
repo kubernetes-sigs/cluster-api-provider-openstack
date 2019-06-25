@@ -6,13 +6,15 @@ generatorOptions:
 secretGenerator:
 - name: worker-user-data
   type: Opaque
-  commands:
-    userData: "cat worker-user-data.yaml"
-    postprocessor: "printf ct"
+  files:
+    - userData=worker-user-data.yaml
+  literals:
+    - postprocessor=ct
 - name: master-user-data
   type: Opaque
-  commands:
-    userData: "cat master-user-data.yaml"
-    postprocessor: "printf ct"
+  files:
+    - userData=master-user-data.yaml
+  literals:
+    - postprocessor=ct
 
 namespace: openstack-provider-system

@@ -18,7 +18,7 @@
 ## Prerequisites
 
 1. Install `yq` (see [here](https://github.com/mikefarah/yq)).
-2. Install `kustomize` v1.0.11 which can be found [here](https://github.com/kubernetes-sigs/kustomize/releases/tag/v1.0.11).
+2. Install `kubectl` (see [here](http://kubernetes.io/docs/user-guide/prereqs/)). Because `kustomize` was included into `kubectl` and it's used by `cluster-api-provider-openstack` in generating yaml files, so version `1.14.0+` of `kubectl` is required, see [integrate kustomize into kubectl](https://github.com/kubernetes/enhancements/issues/633) for more info.
 
 ## Generation
 For convenience, a generation script which populates templates based on openstack cloud provider
