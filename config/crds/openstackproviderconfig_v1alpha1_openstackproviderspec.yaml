@@ -118,6 +118,10 @@ spec:
                         ipVersion:
                           format: int64
                           type: integer
+                        ipv6AddressMode:
+                          type: string
+                        ipv6RaMode:
+                          type: string
                         limit:
                           format: int64
                           type: integer

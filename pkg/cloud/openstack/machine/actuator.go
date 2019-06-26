@@ -335,7 +335,7 @@ func (oc *OpenstackClient) Update(ctx context.Context, cluster *clusterv1.Cluste
 func (oc *OpenstackClient) Exists(ctx context.Context, cluster *clusterv1.Cluster, machine *machinev1.Machine) (bool, error) {
 	instance, err := oc.instanceExists(machine)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("Error checking if instance exists (machine/actuator.go 346): %v", err)
 	}
 	return instance != nil, err
 }
@@ -446,7 +446,7 @@ func (oc *OpenstackClient) requiresUpdate(a *machinev1.Machine, b *machinev1.Mac
 func (oc *OpenstackClient) instanceExists(machine *machinev1.Machine) (instance *clients.Instance, err error) {
 	machineSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("\nError getting the machine spec from the provider spec (machine/actuator.go 457): %v", err)
 	}
 	opts := &clients.InstanceListOpts{
 		Name:   machine.Name,
@@ -456,12 +456,12 @@ func (oc *OpenstackClient) instanceExists(machine *machinev1.Machine) (instance 
 
 	machineService, err := clients.NewInstanceServiceFromMachine(oc.params.KubeClient, machine)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("\nError getting a new instance service from the machine (machine/actuator.go 467): %v", err)
 	}
 
 	instanceList, err := machineService.GetInstanceList(opts)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("\nError listing the instances (machine/actuator.go 472): %v", err)
 	}
 	if len(instanceList) == 0 {
 		return nil, nil

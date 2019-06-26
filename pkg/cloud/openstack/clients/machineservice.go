@@ -104,7 +104,7 @@ func GetCloudFromSecret(kubeClient kubernetes.Interface, namespace string, secre
 
 	secret, err := kubeClient.CoreV1().Secrets(namespace).Get(secretName, metav1.GetOptions{})
 	if err != nil {
-		return emptyCloud, err
+		return emptyCloud, fmt.Errorf("Failed to get secrets from kubernetes api: %v", err)
 	}
 
 	content, ok := secret.Data[CloudsSecretKey]
@@ -125,7 +125,7 @@ func GetCloudFromSecret(kubeClient kubernetes.Interface, namespace string, secre
 func NewInstanceServiceFromMachine(kubeClient kubernetes.Interface, machine *machinev1.Machine) (*InstanceService, error) {
 	machineSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed to get Machine Spec from Provider Spec (clients/machineservice.go 138): %v", err)
 	}
 	cloud := clientconfig.Cloud{}
 	if machineSpec.CloudsSecret != nil && machineSpec.CloudsSecret.Name != "" {
@@ -135,7 +135,7 @@ func NewInstanceServiceFromMachine(kubeClient kubernetes.Interface, machine *mac
 		}
 		cloud, err = GetCloudFromSecret(kubeClient, namespace, machineSpec.CloudsSecret.Name, machineSpec.CloudName)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Failed to get cloud from secret (clients/machienservice.go 150): %v", err)
 		}
 	}
 	return NewInstanceServiceFromCloud(cloud)
