@@ -21,7 +21,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"os"
 	"reflect"
+	"strconv"
 	"time"
 
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -40,6 +42,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/bootstrap"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/clients"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/options"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	clconfig "github.com/coreos/container-linux-config-transpiler/config"
@@ -52,11 +55,9 @@ const (
 	DisableTemplatingKey = "disableTemplating"
 	PostprocessorKey     = "postprocessor"
 
-	TimeoutInstanceCreate       = 5 * time.Minute
-	TimeoutInstanceDelete       = 5 * time.Minute
+	TimeoutInstanceCreate       = 5
+	TimeoutInstanceDelete       = 5
 	RetryIntervalInstanceStatus = 10 * time.Second
-
-	TokenTTL = 60 * time.Minute
 )
 
 type OpenstackClient struct {
@@ -73,6 +74,16 @@ func NewActuator(params openstack.ActuatorParams) (*OpenstackClient, error) {
 		scheme:           params.Scheme,
 		DeploymentClient: openstack.NewDeploymentClient(),
 	}, nil
+}
+
+func getTimeout(name string, timeout int) time.Duration {
+	if v := os.Getenv(name); v != "" {
+		timeout, err := strconv.Atoi(v)
+		if err == nil {
+			return time.Duration(timeout)
+		}
+	}
+	return time.Duration(timeout)
 }
 
 func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluster, machine *machinev1.Machine) error {
@@ -210,8 +221,9 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 		return oc.handleMachineError(machine, apierrors.CreateMachine(
 			"error creating Openstack instance: %v", err))
 	}
-	// TODO: wait instance ready
-	err = util.PollImmediate(RetryIntervalInstanceStatus, TimeoutInstanceCreate, func() (bool, error) {
+	instanceCreateTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT", TimeoutInstanceCreate)
+	instanceCreateTimeout = instanceCreateTimeout * time.Minute
+	err = util.PollImmediate(RetryIntervalInstanceStatus, instanceCreateTimeout, func() (bool, error) {
 		instance, err := machineService.GetInstance(instance.ID)
 		if err != nil {
 			return false, nil
@@ -295,7 +307,9 @@ func (oc *OpenstackClient) Update(ctx context.Context, cluster *clusterv1.Cluste
 		if err != nil {
 			klog.Errorf("delete machine %s for update failed: %v", currentMachine.ObjectMeta.Name, err)
 		} else {
-			err = util.PollImmediate(RetryIntervalInstanceStatus, TimeoutInstanceDelete, func() (bool, error) {
+			instanceDeleteTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_DELETE_TIMEOUT", TimeoutInstanceDelete)
+			instanceDeleteTimeout = instanceDeleteTimeout * time.Minute
+			err = util.PollImmediate(RetryIntervalInstanceStatus, instanceDeleteTimeout, func() (bool, error) {
 				instance, err := oc.instanceExists(machine)
 				if err != nil {
 					return false, nil
@@ -321,7 +335,7 @@ func (oc *OpenstackClient) Update(ctx context.Context, cluster *clusterv1.Cluste
 func (oc *OpenstackClient) Exists(ctx context.Context, cluster *clusterv1.Cluster, machine *machinev1.Machine) (bool, error) {
 	instance, err := oc.instanceExists(machine)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("Error checking if instance exists (machine/actuator.go 346): %v", err)
 	}
 	return instance != nil, err
 }
@@ -432,7 +446,7 @@ func (oc *OpenstackClient) requiresUpdate(a *machinev1.Machine, b *machinev1.Mac
 func (oc *OpenstackClient) instanceExists(machine *machinev1.Machine) (instance *clients.Instance, err error) {
 	machineSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("\nError getting the machine spec from the provider spec (machine/actuator.go 457): %v", err)
 	}
 	opts := &clients.InstanceListOpts{
 		Name:   machine.Name,
@@ -442,12 +456,12 @@ func (oc *OpenstackClient) instanceExists(machine *machinev1.Machine) (instance 
 
 	machineService, err := clients.NewInstanceServiceFromMachine(oc.params.KubeClient, machine)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("\nError getting a new instance service from the machine (machine/actuator.go 467): %v", err)
 	}
 
 	instanceList, err := machineService.GetInstanceList(opts)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("\nError listing the instances (machine/actuator.go 472): %v", err)
 	}
 	if len(instanceList) == 0 {
 		return nil, nil
@@ -461,7 +475,7 @@ func (oc *OpenstackClient) createBootstrapToken() (string, error) {
 		return "", err
 	}
 
-	expiration := time.Now().UTC().Add(TokenTTL)
+	expiration := time.Now().UTC().Add(options.TokenTTL)
 	tokenSecret, err := bootstrap.GenerateTokenSecret(token, expiration)
 	if err != nil {
 		panic(fmt.Sprintf("unable to create token. there might be a bug somwhere: %v", err))

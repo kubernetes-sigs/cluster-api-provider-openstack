@@ -36,6 +36,7 @@ rules:
   - ""
   resources:
   - nodes
+  - events
   verbs:
   - get
   - list

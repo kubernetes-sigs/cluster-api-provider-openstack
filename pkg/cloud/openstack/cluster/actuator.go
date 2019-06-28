@@ -87,6 +87,11 @@ func (a *Actuator) Delete(cluster *clusterv1.Cluster) error {
 		return err
 	}
 
+	secGroupService, err := clients.NewSecGroupService(client)
+	if err != nil {
+		return err
+	}
+
 	// Load provider config.
 	_, err = providerv1.ClusterSpecFromProviderSpec(cluster.Spec.ProviderSpec)
 	if err != nil {
@@ -94,12 +99,28 @@ func (a *Actuator) Delete(cluster *clusterv1.Cluster) error {
 	}
 
 	// Load provider status.
-	_, err = providerv1.ClusterStatusFromProviderStatus(cluster.Status.ProviderStatus)
+	providerStatus, err := providerv1.ClusterStatusFromProviderStatus(cluster.Status.ProviderStatus)
 	if err != nil {
 		return errors.Errorf("failed to load cluster provider status: %v", err)
 	}
 
 	// Delete other things
+
+	if providerStatus.GlobalSecurityGroup != nil {
+		klog.Infof("Deleting global security group %q", providerStatus.GlobalSecurityGroup.Name)
+		err := secGroupService.Delete(providerStatus.GlobalSecurityGroup)
+		if err != nil {
+			return errors.Errorf("failed to delete security group: %v", err)
+		}
+	}
+
+	if providerStatus.ControlPlaneSecurityGroup != nil {
+		klog.Infof("Deleting control plane security group %q", providerStatus.ControlPlaneSecurityGroup.Name)
+		err := secGroupService.Delete(providerStatus.ControlPlaneSecurityGroup)
+		if err != nil {
+			return errors.Errorf("failed to delete security group: %v", err)
+		}
+	}
 
 	return nil
 }

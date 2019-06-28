@@ -13,7 +13,6 @@ PKG := $(shell awk  -F "\"" '/^ignored = / { print $$2 }' Gopkg.toml)
 DEST := $(GOPATH)/src/$(GIT_HOST)/$(BASE_DIR)
 SOURCES := $(shell find $(DEST) -name '*.go')
 
-HAS_MERCURIAL := $(shell command -v hg;)
 HAS_DEP := $(shell command -v dep;)
 HAS_LINT := $(shell command -v golint;)
 HAS_GOX := $(shell command -v gox;)
@@ -68,7 +67,7 @@ test: unit functional
 
 check: depend fmt vet lint
 
-unit: depend
+unit: generate depend
 	go test -tags=unit $(shell go list ./...) $(TESTARGS)
 
 functional:
@@ -87,7 +86,7 @@ endif
 vet:
 	go vet ./...
 
-cover: depend
+cover: generate depend
 	go test -tags=unit $(shell go list ./...) -cover
 
 docs:
