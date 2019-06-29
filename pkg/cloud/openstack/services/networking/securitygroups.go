@@ -14,14 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package clients
+package networking
 
 import (
 	"fmt"
-
 	"k8s.io/klog"
 
-	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/rules"
 
@@ -53,29 +51,16 @@ var defaultRules = []openstackconfigv1.SecurityGroupRule{
 	},
 }
 
-// SecGroupService interfaces with the OpenStack Networking API.
-// It will create security groups if they're managed.
-type SecGroupService struct {
-	client *gophercloud.ServiceClient
-}
-
-// NewSecGroupService returns an initialised instance of SecGroupService.
-func NewSecGroupService(client *gophercloud.ServiceClient) (*SecGroupService, error) {
-	return &SecGroupService{
-		client: client,
-	}, nil
-}
-
 // Reconcile the security groups.
-func (s *SecGroupService) Reconcile(clusterName string, desired openstackconfigv1.OpenstackClusterProviderSpec, status *openstackconfigv1.OpenstackClusterProviderStatus) error {
+func (s *Service) ReconcileSecurityGroups(clusterName string, desired openstackconfigv1.OpenstackClusterProviderSpec, status *openstackconfigv1.OpenstackClusterProviderStatus) error {
 	klog.Infof("Reconciling security groups for cluster %s", clusterName)
 	if !desired.ManagedSecurityGroups {
 		klog.V(4).Infof("No need to reconcile security groups for cluster %s", clusterName)
 		return nil
 	}
 	desiredSecGroups := map[string]openstackconfigv1.SecurityGroup{
-		"controlplane": s.generateControlPlaneGroup(clusterName),
-		"global":       s.generateGlobalGroup(clusterName),
+		"controlplane": generateControlPlaneGroup(clusterName),
+		"global":       generateGlobalGroup(clusterName),
 	}
 	observedSecGroups := make(map[string]*openstackconfigv1.SecurityGroup)
 
@@ -90,7 +75,7 @@ func (s *SecGroupService) Reconcile(clusterName string, desired openstackconfigv
 		}
 
 		if observedSecGroups[k].ID != "" {
-			if s.matchGroups(&desiredSecGroup, observedSecGroups[k]) {
+			if matchGroups(&desiredSecGroup, observedSecGroups[k]) {
 				klog.V(6).Infof("Group %s matched, have nothing to do.", desiredSecGroup.Name)
 				continue
 			}
@@ -113,7 +98,7 @@ func (s *SecGroupService) Reconcile(clusterName string, desired openstackconfigv
 	return nil
 }
 
-func (s *SecGroupService) Delete(group *openstackconfigv1.SecurityGroup) error {
+func (s *Service) DeleteSecurityGroups(group *openstackconfigv1.SecurityGroup) error {
 	exists, err := s.exists(group.ID)
 	if err != nil {
 		return err
@@ -124,7 +109,7 @@ func (s *SecGroupService) Delete(group *openstackconfigv1.SecurityGroup) error {
 	return nil
 }
 
-func (s *SecGroupService) exists(groupID string) (bool, error) {
+func (s *Service) exists(groupID string) (bool, error) {
 	opts := groups.ListOpts{
 		ID: groupID,
 	}
@@ -142,7 +127,7 @@ func (s *SecGroupService) exists(groupID string) (bool, error) {
 	return true, nil
 }
 
-func (s *SecGroupService) generateControlPlaneGroup(clusterName string) openstackconfigv1.SecurityGroup {
+func generateControlPlaneGroup(clusterName string) openstackconfigv1.SecurityGroup {
 	secGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, controlPlaneSuffix)
 
 	// Hardcoded rules for now, we might want to make this definable in the Spec but it's more
@@ -173,7 +158,7 @@ func (s *SecGroupService) generateControlPlaneGroup(clusterName string) openstac
 	}
 }
 
-func (s *SecGroupService) generateGlobalGroup(clusterName string) openstackconfigv1.SecurityGroup {
+func generateGlobalGroup(clusterName string) openstackconfigv1.SecurityGroup {
 	secGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, globalSuffix)
 
 	// As above, hardcoded rules.
@@ -212,7 +197,7 @@ func (s *SecGroupService) generateGlobalGroup(clusterName string) openstackconfi
 }
 
 // matchGroups will check if security groups match.
-func (s *SecGroupService) matchGroups(desired, observed *openstackconfigv1.SecurityGroup) bool {
+func matchGroups(desired, observed *openstackconfigv1.SecurityGroup) bool {
 	// If they have differing amount of rules they obviously don't match.
 	if len(desired.Rules) != len(observed.Rules) {
 		return false
@@ -241,7 +226,7 @@ func (s *SecGroupService) matchGroups(desired, observed *openstackconfigv1.Secur
 
 // reconcileGroup reconciles an already existing observed group by essentially emptying out all the rules and
 // recreating them.
-func (s *SecGroupService) reconcileGroup(desired, observed *openstackconfigv1.SecurityGroup) (*openstackconfigv1.SecurityGroup, error) {
+func (s *Service) reconcileGroup(desired, observed *openstackconfigv1.SecurityGroup) (*openstackconfigv1.SecurityGroup, error) {
 	klog.V(6).Infof("Deleting all rules for group %s", observed.Name)
 	for _, rule := range observed.Rules {
 		klog.V(6).Infof("Deleting rule %s from group %s", rule.ID, observed.Name)
@@ -268,7 +253,7 @@ func (s *SecGroupService) reconcileGroup(desired, observed *openstackconfigv1.Se
 	return observed, nil
 }
 
-func (s *SecGroupService) createSecGroup(group openstackconfigv1.SecurityGroup) (*openstackconfigv1.SecurityGroup, error) {
+func (s *Service) createSecGroup(group openstackconfigv1.SecurityGroup) (*openstackconfigv1.SecurityGroup, error) {
 	createOpts := groups.CreateOpts{
 		Name:        group.Name,
 		Description: "Cluster API managed group",
@@ -279,8 +264,8 @@ func (s *SecGroupService) createSecGroup(group openstackconfigv1.SecurityGroup) 
 		return &openstackconfigv1.SecurityGroup{}, err
 	}
 
-	newGroup := s.convertOSSecGroupToConfigSecGroup(*g)
-	rules := make([]openstackconfigv1.SecurityGroupRule, 0, len(group.Rules))
+	newGroup := convertOSSecGroupToConfigSecGroup(*g)
+	securityGroupRules := make([]openstackconfigv1.SecurityGroupRule, 0, len(group.Rules))
 	klog.V(6).Infof("Creating rules for group %s", group.Name)
 	for _, rule := range group.Rules {
 		r := rule
@@ -292,14 +277,14 @@ func (s *SecGroupService) createSecGroup(group openstackconfigv1.SecurityGroup) 
 		if err != nil {
 			return &openstackconfigv1.SecurityGroup{}, err
 		}
-		rules = append(rules, newRule)
+		securityGroupRules = append(securityGroupRules, newRule)
 	}
-	newGroup.Rules = rules
+	newGroup.Rules = securityGroupRules
 
 	return newGroup, nil
 }
 
-func (s *SecGroupService) getSecurityGroupByName(name string) (*openstackconfigv1.SecurityGroup, error) {
+func (s *Service) getSecurityGroupByName(name string) (*openstackconfigv1.SecurityGroup, error) {
 	opts := groups.ListOpts{
 		Name: name,
 	}
@@ -319,13 +304,13 @@ func (s *SecGroupService) getSecurityGroupByName(name string) (*openstackconfigv
 	case 0:
 		return &openstackconfigv1.SecurityGroup{}, nil
 	case 1:
-		return s.convertOSSecGroupToConfigSecGroup(allGroups[0]), nil
+		return convertOSSecGroupToConfigSecGroup(allGroups[0]), nil
 	}
 
 	return &openstackconfigv1.SecurityGroup{}, fmt.Errorf("More than one security group found named: %s", name)
 }
 
-func (s *SecGroupService) createRule(r openstackconfigv1.SecurityGroupRule) (openstackconfigv1.SecurityGroupRule, error) {
+func (s *Service) createRule(r openstackconfigv1.SecurityGroupRule) (openstackconfigv1.SecurityGroupRule, error) {
 	dir := rules.RuleDirection(r.Direction)
 	proto := rules.RuleProtocol(r.Protocol)
 	etherType := rules.RuleEtherType(r.EtherType)
@@ -345,23 +330,22 @@ func (s *SecGroupService) createRule(r openstackconfigv1.SecurityGroupRule) (ope
 	if err != nil {
 		return openstackconfigv1.SecurityGroupRule{}, err
 	}
-	return s.convertOSSecGroupRuleToConfigSecGroupRule(*rule), nil
+	return convertOSSecGroupRuleToConfigSecGroupRule(*rule), nil
 }
 
-func (s *SecGroupService) convertOSSecGroupToConfigSecGroup(osSecGroup groups.SecGroup) *openstackconfigv1.SecurityGroup {
-	rules := make([]openstackconfigv1.SecurityGroupRule, len(osSecGroup.Rules))
+func convertOSSecGroupToConfigSecGroup(osSecGroup groups.SecGroup) *openstackconfigv1.SecurityGroup {
+	securityGroupRules := make([]openstackconfigv1.SecurityGroupRule, len(osSecGroup.Rules))
 	for i, rule := range osSecGroup.Rules {
-		rules[i] = s.convertOSSecGroupRuleToConfigSecGroupRule(rule)
+		securityGroupRules[i] = convertOSSecGroupRuleToConfigSecGroupRule(rule)
 	}
 	return &openstackconfigv1.SecurityGroup{
 		ID:    osSecGroup.ID,
 		Name:  osSecGroup.Name,
-		Rules: rules,
+		Rules: securityGroupRules,
 	}
-
 }
 
-func (s *SecGroupService) convertOSSecGroupRuleToConfigSecGroupRule(osSecGroupRule rules.SecGroupRule) openstackconfigv1.SecurityGroupRule {
+func convertOSSecGroupRuleToConfigSecGroupRule(osSecGroupRule rules.SecGroupRule) openstackconfigv1.SecurityGroupRule {
 	return openstackconfigv1.SecurityGroupRule{
 		ID:              osSecGroupRule.ID,
 		Direction:       osSecGroupRule.Direction,

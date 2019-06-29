@@ -1,0 +1,165 @@
+/*
+Copyright 2018 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package networking
+
+import (
+	"fmt"
+	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
+	"github.com/gophercloud/gophercloud/pagination"
+	"k8s.io/klog"
+	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
+)
+
+func (s *Service) ReconcileRouter(clusterName string, clusterProviderSpec *openstackconfigv1.OpenstackClusterProviderSpec, clusterProviderStatus *openstackconfigv1.OpenstackClusterProviderStatus) error {
+
+	if clusterProviderStatus.Network == nil || clusterProviderStatus.Network.ID == "" {
+		klog.V(3).Infof("No need to reconcile router since no network exists.")
+		return nil
+	}
+	if clusterProviderStatus.Network.Subnet == nil || clusterProviderStatus.Network.Subnet.ID == "" {
+		klog.V(4).Infof("No need to reconcile router since no subnet exists.")
+		return nil
+	}
+	if clusterProviderSpec.ExternalNetworkID == "" {
+		klog.V(3).Info("No need to create router, due to missing ExternalNetworkID.")
+		return nil
+	}
+
+	routerName := fmt.Sprintf("%s-cluster-%s", networkPrefix, clusterName)
+	klog.Infof("Reconciling router %s", routerName)
+
+	allPages, err := routers.List(s.client, routers.ListOpts{
+		Name: routerName,
+	}).AllPages()
+	if err != nil {
+		return err
+	}
+
+	routerList, err := routers.ExtractRouters(allPages)
+	if err != nil {
+		return err
+	}
+	var router routers.Router
+	if len(routerList) == 0 {
+		opts := routers.CreateOpts{
+			Name: routerName,
+			GatewayInfo: &routers.GatewayInfo{
+				NetworkID: clusterProviderSpec.ExternalNetworkID,
+			},
+		}
+		newRouter, err := routers.Create(s.client, opts).Extract()
+		if err != nil {
+			return err
+		}
+		router = *newRouter
+	} else {
+		router = routerList[0]
+	}
+
+	observedRouter := openstackconfigv1.Router{
+		Name: router.Name,
+		ID:   router.ID,
+	}
+
+	routerInterfaces, err := s.getRouterInterfaces(router.ID)
+	if err != nil {
+		return err
+	}
+
+	createInterface := true
+	// check all router interfaces for an existing port in our subnet.
+INTERFACE_LOOP:
+	for _, iface := range routerInterfaces {
+		for _, ip := range iface.FixedIPs {
+			if ip.SubnetID == clusterProviderStatus.Network.Subnet.ID {
+				createInterface = false
+				break INTERFACE_LOOP
+			}
+		}
+	}
+
+	// ... and create a router interface for our subnet.
+	if createInterface {
+		klog.V(4).Infof("Creating RouterInterface on %s in subnet %s", router.ID, clusterProviderStatus.Network.Subnet.ID)
+		iface, err := routers.AddInterface(s.client, router.ID, routers.AddInterfaceOpts{
+			SubnetID: clusterProviderStatus.Network.Subnet.ID,
+		}).Extract()
+		if err != nil {
+			return fmt.Errorf("unable to create router interface: %v", err)
+		}
+		klog.V(4).Infof("Created RouterInterface: %v", iface)
+	}
+
+	_, err = attributestags.ReplaceAll(s.client, "routers", observedRouter.ID, attributestags.ReplaceAllOpts{
+		Tags: []string{
+			"cluster-api-provider-openstack",
+			clusterName,
+		}}).Extract()
+	if err != nil {
+		return err
+	}
+
+	if observedRouter.ID != "" {
+		clusterProviderStatus.Network.Router = &observedRouter
+	}
+	return nil
+}
+
+func (s *Service) getRouterInterfaces(routerID string) ([]ports.Port, error) {
+	allPages, err := ports.List(s.client, ports.ListOpts{
+		DeviceID: routerID,
+	}).AllPages()
+	if err != nil {
+		return []ports.Port{}, err
+	}
+
+	portList, err := ports.ExtractPorts(allPages)
+	if err != nil {
+		return []ports.Port{}, err
+	}
+
+	return portList, nil
+}
+
+// A function for getting the id of a subnet by querying openstack with filters
+func GetSubnetsByFilter(networkClient *gophercloud.ServiceClient, opts *subnets.ListOpts) ([]subnets.Subnet, error) {
+	if opts == nil {
+		return []subnets.Subnet{}, fmt.Errorf("no Filters were passed")
+	}
+	pager := subnets.List(networkClient, opts)
+	var snets []subnets.Subnet
+	err := pager.EachPage(func(page pagination.Page) (bool, error) {
+		subnetList, err := subnets.ExtractSubnets(page)
+		if err != nil {
+			return false, err
+		} else if len(subnetList) == 0 {
+			return false, fmt.Errorf("no subnets could be found with the filters provided")
+		}
+		for _, subnet := range subnetList {
+			snets = append(snets, subnet)
+		}
+		return true, nil
+	})
+	if err != nil {
+		return []subnets.Subnet{}, err
+	}
+	return snets, nil
+}
