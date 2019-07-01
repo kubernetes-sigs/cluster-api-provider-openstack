@@ -142,6 +142,7 @@ CACERT="/etc/certs/cacert"
 mkdir -p $PWD/$OUTPUT
 cp -n $PWD/cluster.yaml $PWD/$OUTPUT/cluster.yaml || true
 cp -n $PWD/machines.yaml.template $PWD/$OUTPUT/machines.yaml || true
+cp -n $PWD/machine-deployment.yaml.template $PWD/$OUTPUT/machine-deployment.yaml || true
 
 # Make the config directory
 mkdir -p $CONFIG_DIR
