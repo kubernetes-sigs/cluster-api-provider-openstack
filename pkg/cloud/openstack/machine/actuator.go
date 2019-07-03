@@ -81,7 +81,7 @@ func (a *Actuator) Create(ctx context.Context, cluster *clusterv1.Cluster, machi
 	if cluster == nil {
 		return fmt.Errorf("the cluster is nil, check your cluster configuration")
 	}
-	klog.Info("Creating Machine %s/%s: %s", cluster.Namespace, cluster.Name, machine.Name)
+	klog.Infof("Creating Machine %s/%s: %s", cluster.Namespace, cluster.Name, machine.Name)
 
 	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
 
@@ -165,7 +165,7 @@ func (a *Actuator) Delete(ctx context.Context, cluster *clusterv1.Cluster, machi
 	if cluster == nil {
 		return fmt.Errorf("the cluster is nil, check your cluster configuration")
 	}
-	klog.Info("Deleting Machine %s/%s: %s", cluster.Namespace, cluster.Name, machine.Name)
+	klog.Infof("Deleting Machine %s/%s: %s", cluster.Namespace, cluster.Name, machine.Name)
 
 	osProviderClient, clientOpts, err := provider.NewClientFromMachine(a.params.KubeClient, machine)
 	if err != nil {
@@ -202,7 +202,7 @@ func (a *Actuator) Update(ctx context.Context, cluster *clusterv1.Cluster, machi
 	if cluster == nil {
 		return fmt.Errorf("the cluster is nil, check your cluster configuration")
 	}
-	klog.Info("Updating Machine %s/%s: %s", cluster.Namespace, cluster.Name, machine.Name)
+	klog.Infof("Updating Machine %s/%s: %s", cluster.Namespace, cluster.Name, machine.Name)
 
 	status, err := a.instanceStatus(machine)
 	if err != nil {

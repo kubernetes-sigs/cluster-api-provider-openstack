@@ -47,8 +47,8 @@ func (s *Service) ReconcileNetwork(clusterName string, clusterProviderSpec *open
 	}
 
 	opts := networks.CreateOpts{
-		AdminStateUp:        gophercloud.Enabled,
-		Name:                networkName,
+		AdminStateUp: gophercloud.Enabled,
+		Name:         networkName,
 	}
 	network, err := networks.Create(s.client, opts).Extract()
 	if err != nil {

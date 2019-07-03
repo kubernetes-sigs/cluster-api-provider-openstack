@@ -50,7 +50,7 @@ func (a *Actuator) Reconcile(cluster *clusterv1.Cluster) error {
 	if cluster == nil {
 		return fmt.Errorf("the cluster is nil, check your cluster configuration")
 	}
-	klog.Info("Reconciling Cluster %s/%s", cluster.Namespace, cluster.Name)
+	klog.Infof("Reconciling Cluster %s/%s", cluster.Namespace, cluster.Name)
 
 	// ClusterCopy is used for patch generation during storeCluster
 	clusterCopy := cluster.DeepCopy()
@@ -105,7 +105,7 @@ func (a *Actuator) Reconcile(cluster *clusterv1.Cluster) error {
 
 // Delete deletes a cluster and is invoked by the Cluster Controller
 func (a *Actuator) Delete(cluster *clusterv1.Cluster) error {
-	klog.Info("Deleting Cluster %s/%s", cluster.Namespace, cluster.Name)
+	klog.Infof("Deleting Cluster %s/%s", cluster.Namespace, cluster.Name)
 
 	osProviderClient, clientOpts, err := provider.NewClientFromCluster(a.params.KubeClient, cluster)
 	if err != nil {

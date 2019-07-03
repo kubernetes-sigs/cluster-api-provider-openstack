@@ -78,7 +78,7 @@ func (a *Actuator) machineInstanceStatus(machine *clusterv1.Machine) (instanceSt
 	}
 
 	status := machine.ObjectMeta.Annotations[InstanceStatusAnnotationKey]
-	if status== "" {
+	if status == "" {
 		// No state
 		return nil, nil
 	}
