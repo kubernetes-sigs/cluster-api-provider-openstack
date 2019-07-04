@@ -75,20 +75,20 @@ Your kubernetes cluster must be reachable from wherever cluster-api-provider-ope
 ```bash
 openstack router create kube-router
 openstack router set kube-router --external-gateway public
-openstack router add subnet kube-nodes-subnet
+openstack router add subnet kube-router kube-nodes-subnet
 ```
 
 For another example on networking in openstack, look here https://developer.openstack.org/firstapp-libcloud/networking.html
 
 ## Security Group Rules
 
-For the installer to work, a few security groups are required to be open. These may be different from the security groups needed to reach a cluster once its running. The following security group rules should be added to the security group of your chosing. For this example, we will suppose you created a security group names ``kubernetes`` that you will use for the cluster.
+For the installer to work, a few security groups are required to be open. These may be different from the security groups needed to reach a cluster once its running. The following security group rules should be added to the security group of your chosing. For this example, we will suppose you created a security group named ``kubernetes`` that you will use for the cluster.
 
 ```bash
 openstack security group rule create --ingress --protocol tcp --dst-port 22 kubernetes
 openstack security group rule create --ingress --protocol tcp --dst-port 3000:32767 kubernetes
 openstack security group rule create --ingress --protocol tcp --dst-port 443 kubernetes
-openstack security group rule create --egress
+openstack security group rule create --egress kubernetes
 ```
 
 ## Security Groups
@@ -282,7 +282,7 @@ Instead of tagging, you also have the option to add metadata to instances. This 
    ```
 
 ## Timeout settings
-During some heavy workload cloud, the time for create and delete openstack instance might takes long time, by default it's 5 minute.
+During some heavy workload cloud, the time to create and delete openstack instance might take long time, by default it's 5 minute.
 you can set:
 `CLUSTER_API_OPENSTACK_INSTANCE_DELETE_TIMEOUT` for instance delete timeout value.
 `CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT` for instance create timeout value.
