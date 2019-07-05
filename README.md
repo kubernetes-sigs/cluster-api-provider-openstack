@@ -46,9 +46,9 @@ This provider's versions are compatible with the following versions of Cluster A
 
 This provider's versions are able to install and manage the following versions of Kubernetes:
 
-||Kubernetes 1.13.5+|Kubernetes 1.14|
-|-|-|-|
-|OpenStack Provider v1alpha1 (ea309e7f)|✓|✓|
+||Kubernetes 1.13.5+|Kubernetes 1.14|Kubernetes 1.15|
+|-|-|-|-|
+|OpenStack Provider v1alpha1 (ea309e7f)|✓|✓|✓|
 
 Kubernetes control plane and Kubelet versions are defined in `spec.versions.controlPlane` and `spec.versions.kubelet` of `cmd/clusterctl/examples/openstack/machines.yaml.template` respectively.
 You can generate `cmd/clusterctl/examples/openstack/out/machines.yaml` by running the `generate-yaml.sh` from the template and change the versions if you want.
