@@ -20,9 +20,11 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"io/ioutil"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog"
+	"path"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/options"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/deployer"
 	"sigs.k8s.io/cluster-api/pkg/util"
@@ -108,6 +110,15 @@ func GetUserData(controllerClient client.Client, kubeClient kubernetes.Interface
 		p, postprocess = userDataSecret.Data[PostprocessorKey]
 
 		postprocessor = string(p)
+	} else if options.UserDataFolder != "" {
+		userData, err = ioutil.ReadFile(path.Join(options.UserDataFolder, fmt.Sprintf("%s.yaml", machine.Name)))
+		if err != nil {
+			return "", fmt.Errorf("could not load local userdata files: %v", err)
+		}
+		postprocessor = options.UserDataPostprocessor
+		if postprocessor != "" {
+			postprocess = true
+		}
 	}
 
 	var userDataRendered string

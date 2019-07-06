@@ -22,9 +22,13 @@ import (
 )
 
 var (
-	TokenTTL time.Duration
+	TokenTTL              time.Duration
+	UserDataFolder        string
+	UserDataPostprocessor string
 )
 
 func init() {
 	flag.DurationVar(&TokenTTL, "token_ttl", 60*time.Minute, "TTL for kubeadm bootstrap token of the target Kubernetes cluster")
+	flag.StringVar(&UserDataFolder, "user-data-folder", "", "if set, user data files are retrieved from <user-data-folder>/<machine-name>.yaml")
+	flag.StringVar(&UserDataPostprocessor, "user-data-postprocessor", "", "postprocessor to user for the user data")
 }
