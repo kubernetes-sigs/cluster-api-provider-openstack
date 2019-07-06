@@ -21,10 +21,14 @@ import (
 	"context"
 	"errors"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/options"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/deployer"
 	"sigs.k8s.io/cluster-api/pkg/util"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"strings"
 	"text/template"
 	"time"
 
@@ -168,7 +172,12 @@ func createBootstrapToken(controllerClient client.Client) (string, error) {
 		panic(fmt.Sprintf("unable to create token. there might be a bug somwhere: %v", err))
 	}
 
-	err = controllerClient.Create(context.TODO(), tokenSecret)
+	kubeClient, err := getWorkloadClusterKubeClient(controllerClient)
+	if err != nil {
+		return "", err
+	}
+
+	err = kubeClient.Create(context.TODO(), tokenSecret)
 	if err != nil {
 		return "", err
 	}
@@ -177,6 +186,63 @@ func createBootstrapToken(controllerClient client.Client) (string, error) {
 		string(tokenSecret.Data[tokenapi.BootstrapTokenIDKey]),
 		string(tokenSecret.Data[tokenapi.BootstrapTokenSecretKey]),
 	), nil
+}
+
+func getWorkloadClusterKubeClient(controllerClient client.Client) (client.Client, error) {
+	var master *clusterv1.Machine
+	var cluster *clusterv1.Cluster
+
+	msList := &clusterv1.MachineList{}
+	listOptions := &client.ListOptions{}
+	err := controllerClient.List(context.TODO(), listOptions, msList)
+	if err != nil {
+		return nil, fmt.Errorf("error retrieving machines: %v", err)
+	}
+	for _, m := range msList.Items {
+		if util.IsControlPlaneMachine(&m) {
+			master = &m
+			break
+		}
+	}
+	if master == nil {
+		return nil, fmt.Errorf("could not find master node")
+	}
+
+	clusterList := &clusterv1.ClusterList{}
+	err = controllerClient.List(context.TODO(), listOptions, clusterList)
+	if err != nil {
+		return nil, fmt.Errorf("error retrieving clusters: %v", err)
+	}
+	for _, c := range clusterList.Items {
+		if clusterName, ok := master.Labels[clusterv1.MachineClusterLabelName]; ok && clusterName == c.Name {
+			cluster = &c
+		}
+	}
+	if cluster == nil {
+		return nil, fmt.Errorf("could not find cluster")
+	}
+
+	kubeConfig, err := deployer.New().GetKubeConfig(cluster, master)
+	if err != nil {
+		return nil, err
+	}
+
+	apiConfig, err := clientcmd.Load([]byte(kubeConfig))
+	if err != nil {
+		return nil, err
+	}
+
+	cfg, err := clientcmd.NewDefaultClientConfig(*apiConfig, &clientcmd.ConfigOverrides{}).ClientConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	mgr, err := manager.New(cfg, manager.Options{})
+	if err != nil {
+		return nil, fmt.Errorf("unable to create manager for restConfig: %v", err)
+	}
+
+	return mgr.GetClient(), nil
 }
 
 func masterStartupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine, script string) (string, error) {
