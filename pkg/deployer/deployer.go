@@ -3,13 +3,12 @@ package deployer
 import (
 	"fmt"
 	"github.com/pkg/errors"
+	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog"
-	"os"
 	providerv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
 	constants "sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/contants"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/certificates"
 	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
-	"sigs.k8s.io/cluster-api/pkg/util"
-	"strings"
 )
 
 // Deployer satisfies the ProviderDeployer(https://github.com/kubernetes-sigs/cluster-api/blob/master/cmd/clusterctl/clusterdeployer/clusterdeployer.go) interface.
@@ -35,31 +34,43 @@ func (d *Deployer) GetIP(cluster *clusterv1.Cluster, machine *clusterv1.Machine)
 
 // GetKubeConfig returns the kubeConfig after the bootstrap process is complete.
 func (d *Deployer) GetKubeConfig(cluster *clusterv1.Cluster, master *clusterv1.Machine) (string, error) {
+
+	// Load provider config.
+	config, err := providerv1.ClusterSpecFromProviderSpec(cluster.Spec.ProviderSpec)
+	if err != nil {
+		return "", errors.Errorf("failed to load cluster provider status: %v", err)
+	}
+
+	cert, err := certificates.DecodeCertPEM(config.CAKeyPair.Cert)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to decode CA Cert")
+	} else if cert == nil {
+		return "", errors.New("certificate not found in config")
+	}
+
+	key, err := certificates.DecodePrivateKeyPEM(config.CAKeyPair.Key)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to decode private key")
+	} else if key == nil {
+		return "", errors.New("key not found in status")
+	}
+
 	ip, err := d.GetIP(cluster, master)
 	if err != nil {
 		return "", err
 	}
 
-	homeDir, ok := os.LookupEnv("HOME")
-	if !ok {
-		return "", fmt.Errorf("unable to use HOME environment variable to find SSH key: %v", err)
-	}
+	server := fmt.Sprintf("https://%s:6443", ip)
 
-	machineSpec, err := providerv1.MachineSpecFromProviderSpec(master.Spec.ProviderSpec)
+	cfg, err := certificates.NewKubeconfig(cluster.Name, server, cert, key)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "failed to generate a kubeconfig")
 	}
 
-	result := strings.TrimSpace(util.ExecCommand(
-		"ssh", "-i", homeDir+"/.ssh/openstack_tmp",
-		"-o", "StrictHostKeyChecking no",
-		"-o", "UserKnownHostsFile /dev/null",
-		"-o", "BatchMode=yes",
-		fmt.Sprintf("%s@%s", machineSpec.SshUserName, ip),
-		"echo STARTFILE; sudo cat /etc/kubernetes/admin.conf"))
-	parts := strings.Split(result, "STARTFILE")
-	if len(parts) != 2 {
-		return "", nil
+	yaml, err := clientcmd.Write(*cfg)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to serialize config to yaml")
 	}
-	return strings.TrimSpace(parts[1]), nil
+
+	return string(yaml), nil
 }

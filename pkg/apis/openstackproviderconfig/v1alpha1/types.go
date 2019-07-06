@@ -48,9 +48,6 @@ type OpenstackProviderSpec struct {
 	// The ssh key to inject in the instance
 	KeyName string `json:"keyName,omitempty"`
 
-	// The machine ssh username
-	SshUserName string `json:"sshUserName,omitempty"`
-
 	// A networks object. Required parameter when there are multiple networks defined for the tenant.
 	// When you do not specify the networks parameter, the server attaches to the only network created for the current tenant.
 	Networks []NetworkParam `json:"networks,omitempty"`
@@ -214,6 +211,30 @@ type OpenstackClusterProviderSpec struct {
 
 	// Default: True. In case of server tag errors, set to False
 	DisableServerTags bool `json:"disableServerTags,omitempty"`
+
+	// CAKeyPair is the key pair for ca certs.
+	CAKeyPair KeyPair `json:"caKeyPair,omitempty"`
+
+	//EtcdCAKeyPair is the key pair for etcd.
+	EtcdCAKeyPair KeyPair `json:"etcdCAKeyPair,omitempty"`
+
+	// FrontProxyCAKeyPair is the key pair for FrontProxyKeyPair.
+	FrontProxyCAKeyPair KeyPair `json:"frontProxyCAKeyPair,omitempty"`
+
+	// SAKeyPair is the service account key pair.
+	SAKeyPair KeyPair `json:"saKeyPair,omitempty"`
+}
+
+// KeyPair is how operators can supply custom keypairs for kubeadm to use.
+type KeyPair struct {
+	// base64 encoded cert and key
+	Cert []byte `json:"cert,omitempty"`
+	Key  []byte `json:"key,omitempty"`
+}
+
+// HasCertAndKey returns whether a keypair contains cert and key of non-zero length.
+func (kp *KeyPair) HasCertAndKey() bool {
+	return len(kp.Cert) != 0 && len(kp.Key) != 0
 }
 
 // +genclient

@@ -1,5 +1,95 @@
 storage:
   files:
+
+  - path: /etc/kubernetes/pki/ca.crt
+    filesystem: root
+    user:
+      id: 0
+    group:
+      id: 0
+    mode: 0640
+    contents:
+      inline: |
+{{ .CACert | Indent 10}}
+
+  - path: /etc/kubernetes/pki/ca.key
+    filesystem: root
+    user:
+      id: 0
+    group:
+      id: 0
+    mode: 0600
+    contents:
+      inline: |
+{{ .CAKey | Indent 10}}
+
+  - path: /etc/kubernetes/pki/etcd/ca.crt
+    filesystem: root
+    user:
+      id: 0
+    group:
+      id: 0
+    mode: 0640
+    contents:
+      inline: |
+{{ .EtcdCACert | Indent 10}}
+
+  - path: /etc/kubernetes/pki/etcd/ca.key
+    filesystem: root
+    user:
+      id: 0
+    group:
+      id: 0
+    mode: 0600
+    contents:
+      inline: |
+{{ .EtcdCAKey | Indent 10}}
+
+  - path: /etc/kubernetes/pki/front-proxy-ca.crt
+    filesystem: root
+    user:
+      id: 0
+    group:
+      id: 0
+    mode: 0640
+    contents:
+      inline: |
+{{ .FrontProxyCACert | Indent 10}}
+
+  - path: /etc/kubernetes/pki/front-proxy-ca.key
+    filesystem: root
+    user:
+      id: 0
+    group:
+      id: 0
+    mode: 0600
+    contents:
+      inline: |
+{{ .FrontProxyCAKey | Indent 10}}
+
+  - path: /etc/kubernetes/pki/sa.pub
+    filesystem: root
+    user:
+      id: 0
+    group:
+      id: 0
+    mode: 0640
+    contents:
+      inline: |
+{{ .SaCert | Indent 10}}
+
+  - path: /etc/kubernetes/pki/sa.key
+    filesystem: root
+    user:
+      id: 0
+    group:
+      id: 0
+    mode: 0600
+    contents:
+      inline: |
+{{ .SaKey | Indent 10}}
+
+
   - path: /etc/kubernetes/kubeadm_config.yaml
     filesystem: root
     contents:

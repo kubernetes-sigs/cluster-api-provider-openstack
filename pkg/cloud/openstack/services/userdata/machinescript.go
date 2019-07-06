@@ -54,6 +54,15 @@ type setupParams struct {
 	Machine     *clusterv1.Machine
 	MachineSpec *openstackconfigv1.OpenstackProviderSpec
 
+	CACert           string
+	CAKey            string
+	EtcdCACert       string
+	EtcdCAKey        string
+	FrontProxyCACert string
+	FrontProxyCAKey  string
+	SaCert           string
+	SaKey            string
+
 	PodCIDR           string
 	ServiceCIDR       string
 	GetMasterEndpoint func() (string, error)
@@ -171,20 +180,37 @@ func createBootstrapToken(controllerClient client.Client) (string, error) {
 }
 
 func masterStartupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine, script string) (string, error) {
-	machineSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
+	clusterProviderSpec, err := openstackconfigv1.ClusterSpecFromProviderSpec(cluster.Spec.ProviderSpec)
+	if err != nil {
+		return "", err
+	}
+
+	machineProviderSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
 	if err != nil {
 		return "", err
 	}
 
 	params := setupParams{
-		Cluster:     cluster,
-		Machine:     machine,
-		MachineSpec: machineSpec,
-		PodCIDR:     getSubnet(cluster.Spec.ClusterNetwork.Pods),
-		ServiceCIDR: getSubnet(cluster.Spec.ClusterNetwork.Services),
+		Cluster:          cluster,
+		CACert:           string(clusterProviderSpec.CAKeyPair.Cert),
+		CAKey:            string(clusterProviderSpec.CAKeyPair.Key),
+		EtcdCACert:       string(clusterProviderSpec.EtcdCAKeyPair.Cert),
+		EtcdCAKey:        string(clusterProviderSpec.EtcdCAKeyPair.Key),
+		FrontProxyCACert: string(clusterProviderSpec.FrontProxyCAKeyPair.Cert),
+		FrontProxyCAKey:  string(clusterProviderSpec.FrontProxyCAKeyPair.Key),
+		SaCert:           string(clusterProviderSpec.SAKeyPair.Cert),
+		SaKey:            string(clusterProviderSpec.SAKeyPair.Key),
+		Machine:          machine,
+		MachineSpec:      machineProviderSpec,
+		PodCIDR:          getSubnet(cluster.Spec.ClusterNetwork.Pods),
+		ServiceCIDR:      getSubnet(cluster.Spec.ClusterNetwork.Services),
 	}
 
-	masterStartUpScript := template.Must(template.New("masterStartUp").Parse(script))
+	fMap := map[string]interface{}{
+		"Indent": templateYAMLIndent,
+	}
+
+	masterStartUpScript := template.Must(template.New("masterStartUp").Funcs(fMap).Parse(script))
 
 	var buf bytes.Buffer
 	if err := masterStartUpScript.Execute(&buf, params); err != nil {
@@ -194,7 +220,7 @@ func masterStartupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine,
 }
 
 func nodeStartupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine, token, script string) (string, error) {
-	machineSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
+	machineProviderSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
 	if err != nil {
 		return "", err
 	}
@@ -210,7 +236,7 @@ func nodeStartupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine, t
 		Token:             token,
 		Cluster:           cluster,
 		Machine:           machine,
-		MachineSpec:       machineSpec,
+		MachineSpec:       machineProviderSpec,
 		PodCIDR:           getSubnet(cluster.Spec.ClusterNetwork.Pods),
 		ServiceCIDR:       getSubnet(cluster.Spec.ClusterNetwork.Services),
 		GetMasterEndpoint: GetMasterEndpoint,
@@ -235,4 +261,10 @@ func getSubnet(netRange clusterv1.NetworkRanges) string {
 		return ""
 	}
 	return netRange.CIDRBlocks[0]
+}
+
+func templateYAMLIndent(i int, input string) string {
+	split := strings.Split(input, "\n")
+	ident := "\n" + strings.Repeat(" ", i)
+	return strings.Repeat(" ", i) + strings.Join(split, ident)
 }

@@ -19,6 +19,17 @@ spec:
             of an object. Servers should convert recognized schemas to the latest
             internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
           type: string
+        caKeyPair:
+          description: CAKeyPair is the key pair for ca certs.
+          properties:
+            cert:
+              description: base64 encoded cert and key
+              format: byte
+              type: string
+            key:
+              format: byte
+              type: string
+          type: object
         cloudName:
           description: The name of the cloud to use from the clouds secret
           type: string
@@ -34,10 +45,32 @@ spec:
           items:
             type: string
           type: array
+        etcdCAKeyPair:
+          description: EtcdCAKeyPair is the key pair for etcd.
+          properties:
+            cert:
+              description: base64 encoded cert and key
+              format: byte
+              type: string
+            key:
+              format: byte
+              type: string
+          type: object
         externalNetworkId:
           description: ExternalNetworkID is the ID of an external OpenStack Network.
             This is necessary to get public internet to the VMs.
           type: string
+        frontProxyCAKeyPair:
+          description: FrontProxyCAKeyPair is the key pair for FrontProxyKeyPair.
+          properties:
+            cert:
+              description: base64 encoded cert and key
+              format: byte
+              type: string
+            key:
+              format: byte
+              type: string
+          type: object
         kind:
           description: 'Kind is a string value representing the REST resource this
             object represents. Servers may infer this from the endpoint the client
@@ -57,6 +90,17 @@ spec:
             will create a network, a subnet with NodeCIDR, and a router connected
             to this subnet. If you leave this empty, no network will be created.
           type: string
+        saKeyPair:
+          description: SAKeyPair is the service account key pair.
+          properties:
+            cert:
+              description: base64 encoded cert and key
+              format: byte
+              type: string
+            key:
+              format: byte
+              type: string
+          type: object
         tags:
           description: Tags for all resources in cluster
           items:
