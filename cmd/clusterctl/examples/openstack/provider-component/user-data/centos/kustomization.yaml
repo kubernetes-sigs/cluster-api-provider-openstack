@@ -10,7 +10,7 @@ secretGenerator:
     - userData=worker-user-data.sh
 - name: master-user-data
   type: Opaque
-  commands:
+  files:
     - userData=master-user-data.sh
 
 namespace: openstack-provider-system
