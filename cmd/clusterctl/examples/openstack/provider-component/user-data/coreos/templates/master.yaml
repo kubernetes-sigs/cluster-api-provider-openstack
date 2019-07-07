@@ -85,51 +85,7 @@ storage:
   - path: /etc/kubernetes/kubeadm_config.yaml
     filesystem: root
     contents:
-      inline: |
-        apiVersion: kubeadm.k8s.io/v1beta1
-        kind: InitConfiguration
-        localAPIEndpoint:
-          bindPort: 443
-        nodeRegistration:
-          kubeletExtraArgs:
-            cloud-provider: "openstack"
-            cloud-config: "/etc/kubernetes/cloud.conf"
-        ---
-        apiVersion: kubeadm.k8s.io/v1beta1
-        kind: ClusterConfiguration
-        kubernetesVersion: v{{ .Machine.Spec.Versions.ControlPlane }}
-        networking:
-          serviceSubnet: {{ .ServiceCIDR }}
-          podSubnet: {{ .PodCIDR }}
-        dns:
-          type: CoreDNS
-        clusterName: kubernetes
-        controlPlaneEndpoint: ${MASTER}
-        apiServer:
-          extraArgs:
-            cloud-provider: "openstack"
-            cloud-config: "/etc/kubernetes/cloud.conf"
-          extraVolumes:
-          - name: cloud
-            hostPath: "/etc/kubernetes/cloud.conf"
-            mountPath: "/etc/kubernetes/cloud.conf"
-          - name: cacert
-            hostPath: "/etc/certs/cacert"
-            mountPath: "/etc/certs/cacert"
-        controllerManager:
-          extraArgs:
-            cluster-cidr: {{ .PodCIDR }}
-            service-cluster-ip-range: {{ .ServiceCIDR }}
-            allocate-node-cidrs: "true"
-            cloud-provider: "openstack"
-            cloud-config: "/etc/kubernetes/cloud.conf"
-          extraVolumes:
-          - name: cloud
-            hostPath: "/etc/kubernetes/cloud.conf"
-            mountPath: "/etc/kubernetes/cloud.conf"
-          - name: cacert
-            hostPath: "/etc/certs/cacert"
-            mountPath: "/etc/certs/cacert"
+      inline: '{{ .KubeadmConfig | EscapeNewLines }}'
     user:
       id: 0
     group:

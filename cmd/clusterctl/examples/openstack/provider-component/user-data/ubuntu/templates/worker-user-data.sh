@@ -3,14 +3,11 @@ set -e
 set -x
 (
 KUBELET_VERSION={{ .Machine.Spec.Versions.Kubelet }}
-TOKEN={{ .Token }}
-MASTER={{ call .GetMasterEndpoint }}
 NAMESPACE={{ .Machine.ObjectMeta.Namespace }}
 MACHINE=$NAMESPACE
 MACHINE+="/"
 MACHINE+={{ .Machine.ObjectMeta.Name }}
 CLUSTER_DNS_DOMAIN={{ .Cluster.Spec.ClusterNetwork.ServiceDomain }}
-POD_CIDR={{ .PodCIDR }}
 SERVICE_CIDR={{ .ServiceCIDR }}
 
 swapoff -a
@@ -84,21 +81,7 @@ echo $OPENSTACK_CLOUD_CACERT_CONFIG | base64 -d > /etc/certs/cacert
 
 # Set up kubeadm config file to pass to kubeadm join.
 cat > /etc/kubernetes/kubeadm_config.yaml <<EOF
-apiVersion: kubeadm.k8s.io/v1beta1
-kind: JoinConfiguration
-caCertPath: /etc/kubernetes/pki/ca.crt
-discovery:
-  bootstrapToken:
-    apiServerEndpoint: ${MASTER}
-    token: ${TOKEN}
-    unsafeSkipCAVerification: true
-  timeout: 5m0s
-  tlsBootstrapToken: ${TOKEN}
-nodeRegistration:
-  criSocket: /var/run/dockershim.sock
-  kubeletExtraArgs:
-    cloud-config: /etc/kubernetes/cloud.conf
-    cloud-provider: openstack
+{{ .KubeadmConfig }}
 EOF
 
 # Override network args to use kubenet instead of cni, override Kubelet DNS args and

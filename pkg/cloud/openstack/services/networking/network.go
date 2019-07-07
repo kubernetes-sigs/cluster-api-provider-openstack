@@ -27,6 +27,16 @@ import (
 	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
 )
 
+type createOpts struct {
+	AdminStateUp        *bool  `json:"admin_state_up,omitempty"`
+	Name                string `json:"name,omitempty"`
+	PortSecurityEnabled *bool  `json:"port_security_enabled,omitempty"`
+}
+
+func (c createOpts) ToNetworkCreateMap() (map[string]interface{}, error) {
+	return gophercloud.BuildRequestBody(c, "network")
+}
+
 func (s *Service) ReconcileNetwork(clusterName string, clusterProviderSpec *openstackconfigv1.OpenstackClusterProviderSpec, clusterProviderStatus *openstackconfigv1.OpenstackClusterProviderStatus) error {
 
 	networkName := fmt.Sprintf("%s-cluster-%s", networkPrefix, clusterName)
@@ -46,9 +56,16 @@ func (s *Service) ReconcileNetwork(clusterName string, clusterProviderSpec *open
 		return nil
 	}
 
-	opts := networks.CreateOpts{
-		AdminStateUp: gophercloud.Enabled,
-		Name:         networkName,
+	var portSecurityEnabled gophercloud.EnabledState
+	if clusterProviderSpec.DisablePortSecurity {
+		portSecurityEnabled = gophercloud.Disabled
+	} else {
+		portSecurityEnabled = gophercloud.Enabled
+	}
+	opts := createOpts{
+		AdminStateUp:        gophercloud.Enabled,
+		Name:                networkName,
+		PortSecurityEnabled: portSecurityEnabled,
 	}
 	network, err := networks.Create(s.client, opts).Extract()
 	if err != nil {
