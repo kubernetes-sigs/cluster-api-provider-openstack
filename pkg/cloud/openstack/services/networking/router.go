@@ -61,9 +61,15 @@ func (s *Service) ReconcileRouter(clusterName string, clusterProviderSpec *opens
 	if len(routerList) == 0 {
 		opts := routers.CreateOpts{
 			Name: routerName,
-			GatewayInfo: &routers.GatewayInfo{
+		}
+		// only set the GatewayInfo right now when no externalIPs
+		// should be configured because at least in our environment
+		// we can only set the routerIP via gateway update not during create
+		// That's also the same way terraform provider OpenStack does it
+		if len(clusterProviderSpec.ExternalRouterIPs) == 0 {
+			opts.GatewayInfo = &routers.GatewayInfo{
 				NetworkID: clusterProviderSpec.ExternalNetworkID,
-			},
+			}
 		}
 		newRouter, err := routers.Create(s.client, opts).Extract()
 		if err != nil {
@@ -72,6 +78,36 @@ func (s *Service) ReconcileRouter(clusterName string, clusterProviderSpec *opens
 		router = *newRouter
 	} else {
 		router = routerList[0]
+	}
+
+	if len(clusterProviderSpec.ExternalRouterIPs) > 0 {
+		var updateOpts routers.UpdateOpts
+		updateOpts.GatewayInfo = &routers.GatewayInfo{
+			NetworkID: clusterProviderSpec.ExternalNetworkID,
+		}
+		for _, externalRouterIP := range clusterProviderSpec.ExternalRouterIPs {
+			subnetID := externalRouterIP.Subnet.UUID
+			if subnetID == "" {
+				sopts := subnets.ListOpts(externalRouterIP.Subnet.Filter)
+				snets, err := GetSubnetsByFilter(s.client, &sopts)
+				if err != nil {
+					return err
+				}
+				if len(snets) != 1 {
+					return fmt.Errorf("subnetParam didn't exactly match one subnet")
+				}
+				subnetID = snets[0].ID
+			}
+			updateOpts.GatewayInfo.ExternalFixedIPs = append(updateOpts.GatewayInfo.ExternalFixedIPs, routers.ExternalFixedIP{
+				IPAddress: externalRouterIP.FixedIP,
+				SubnetID:  subnetID,
+			})
+		}
+
+		_, err = routers.Update(s.client, router.ID, updateOpts).Extract()
+		if err != nil {
+			return fmt.Errorf("error updating OpenStack Neutron Router: %s", err)
+		}
 	}
 
 	observedRouter := openstackconfigv1.Router{
