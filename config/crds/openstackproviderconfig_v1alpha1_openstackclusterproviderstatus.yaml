@@ -129,6 +129,24 @@ spec:
           description: Network contains all information about the created OpenStack
             Network. It includes Subnets and Router.
           properties:
+            apiServerLoadBalancer:
+              description: Be careful when using APIServerLoadBalancer, because this
+                field is optional and therefore not set in all cases
+              properties:
+                id:
+                  type: string
+                internalIP:
+                  type: string
+                ip:
+                  type: string
+                name:
+                  type: string
+              required:
+              - name
+              - id
+              - ip
+              - internalIP
+              type: object
             id:
               type: string
             name:

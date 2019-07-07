@@ -24,8 +24,20 @@ func New() *Deployer {
 func (d *Deployer) GetIP(cluster *clusterv1.Cluster, machine *clusterv1.Machine) (string, error) {
 	if machine.ObjectMeta.Annotations != nil {
 		if ip, ok := machine.ObjectMeta.Annotations[constants.OpenstackIPAnnotationKey]; ok {
-			klog.Infof("Returning IP from machine annotation %s", ip)
-			return ip, nil
+			clusterProviderSpec, err := providerv1.ClusterSpecFromProviderSpec(cluster.Spec.ProviderSpec)
+			if err != nil {
+				return "", fmt.Errorf("could not get IP: %v", err)
+			}
+			var endpoint string
+			if clusterProviderSpec.ManagedAPIServerLoadBalancer {
+				endpoint = fmt.Sprintf("%s:%d", ip, clusterProviderSpec.APIServerLoadBalancerPort)
+			} else {
+				// TODO: replace hardcoded port 443 as soon as controlPlaneEndpoint is specified via
+				// ClusterConfiguration (in Cluster CRD)
+				endpoint = fmt.Sprintf("%s:443", ip)
+			}
+			klog.Infof("Returning endpoint from machine annotation %s", endpoint)
+			return endpoint, nil
 		}
 	}
 
@@ -36,42 +48,46 @@ func (d *Deployer) GetIP(cluster *clusterv1.Cluster, machine *clusterv1.Machine)
 func (d *Deployer) GetKubeConfig(cluster *clusterv1.Cluster, master *clusterv1.Machine) (string, error) {
 
 	// Load provider config.
-	config, err := providerv1.ClusterSpecFromProviderSpec(cluster.Spec.ProviderSpec)
+	clusterProviderSpec, err := providerv1.ClusterSpecFromProviderSpec(cluster.Spec.ProviderSpec)
 	if err != nil {
 		return "", errors.Errorf("failed to load cluster provider status: %v", err)
 	}
 
-	cert, err := certificates.DecodeCertPEM(config.CAKeyPair.Cert)
+	cert, err := certificates.DecodeCertPEM(clusterProviderSpec.CAKeyPair.Cert)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to decode CA Cert")
 	} else if cert == nil {
-		return "", errors.New("certificate not found in config")
+		return "", errors.New("certificate not found in clusterProviderSpec")
 	}
 
-	key, err := certificates.DecodePrivateKeyPEM(config.CAKeyPair.Key)
+	key, err := certificates.DecodePrivateKeyPEM(clusterProviderSpec.CAKeyPair.Key)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to decode private key")
 	} else if key == nil {
-		return "", errors.New("key not found in status")
+		return "", errors.New("key not found in clusterProviderSpec")
 	}
 
-	var ip string
-	if master != nil {
-		ip, err = d.GetIP(cluster, master)
-		if err != nil {
-			return "", err
-		}
+	var apiServerEndpoint string
+	if clusterProviderSpec.ManagedAPIServerLoadBalancer {
+		apiServerEndpoint = fmt.Sprintf("https://%s:%d", clusterProviderSpec.APIServerLoadBalancerFloatingIP, clusterProviderSpec.APIServerLoadBalancerPort)
 	} else {
-		// This case means no master created yet, we need get from cluster info anyway
-		if len(config.MasterIP) == 0 {
-			return "", errors.New("MasterIP in cluster spec not set")
+		var endpoint string
+		if master != nil {
+			endpoint, err = d.GetIP(cluster, master)
+			if err != nil {
+				return "", err
+			}
+		} else {
+			// This case means no master has been created yet, we need get from cluster info anyway
+			if len(clusterProviderSpec.MasterIP) == 0 {
+				return "", errors.New("MasterIP in cluster spec not set")
+			}
+			endpoint = clusterProviderSpec.MasterIP
 		}
-		ip = config.MasterIP
+		apiServerEndpoint = fmt.Sprintf("https://%s", endpoint)
 	}
 
-	server := fmt.Sprintf("https://%s:443", ip)
-
-	cfg, err := certificates.NewKubeconfig(cluster.Name, server, cert, key)
+	cfg, err := certificates.NewKubeconfig(cluster.Name, apiServerEndpoint, cert, key)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to generate a kubeconfig")
 	}
