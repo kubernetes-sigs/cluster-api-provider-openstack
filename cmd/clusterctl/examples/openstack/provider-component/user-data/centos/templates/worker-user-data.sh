@@ -68,7 +68,6 @@ nodeRegistration:
   criSocket: /var/run/dockershim.sock
   kubeletExtraArgs:
     cloud-config: /etc/kubernetes/cloud.conf
-    cloud-provider: openstack
 EOF
 
 systemctl enable kubelet.service

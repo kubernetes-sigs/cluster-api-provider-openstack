@@ -10,7 +10,6 @@ storage:
           bindPort: 443
         nodeRegistration:
           kubeletExtraArgs:
-            cloud-provider: "openstack"
             cloud-config: "/etc/kubernetes/cloud.conf"
         ---
         apiVersion: kubeadm.k8s.io/v1beta1
@@ -25,7 +24,6 @@ storage:
         controlPlaneEndpoint: ${MASTER}
         apiServer:
           extraArgs:
-            cloud-provider: "openstack"
             cloud-config: "/etc/kubernetes/cloud.conf"
           extraVolumes:
           - name: cloud
@@ -39,7 +37,6 @@ storage:
             cluster-cidr: {{ .PodCIDR }}
             service-cluster-ip-range: {{ .ServiceCIDR }}
             allocate-node-cidrs: "true"
-            cloud-provider: "openstack"
             cloud-config: "/etc/kubernetes/cloud.conf"
           extraVolumes:
           - name: cloud

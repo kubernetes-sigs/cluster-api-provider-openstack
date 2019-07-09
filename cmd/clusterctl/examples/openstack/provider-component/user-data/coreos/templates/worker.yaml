@@ -8,7 +8,6 @@ storage:
         kind: JoinConfiguration
         nodeRegistration:
           kubeletExtraArgs:
-            cloud-provider: "openstack"
             cloud-config: "/etc/kubernetes/cloud.conf"
         discovery:
           bootstrapToken:

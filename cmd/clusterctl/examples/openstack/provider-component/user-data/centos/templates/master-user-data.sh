@@ -105,7 +105,6 @@ nodeRegistration:
   criSocket: /var/run/dockershim.sock
   kubeletExtraArgs:
     cloud-config: /etc/kubernetes/cloud.conf
-    cloud-provider: openstack
   taints:
   - effect: NoSchedule
     key: node-role.kubernetes.io/master
@@ -116,7 +115,6 @@ kubernetesVersion: v${CONTROL_PLANE_VERSION}
 apiServer:
   extraArgs:
     cloud-config: /etc/kubernetes/cloud.conf
-    cloud-provider: openstack
   extraVolumes:
   - hostPath: /etc/kubernetes/cloud.conf
     mountPath: /etc/kubernetes/cloud.conf
@@ -134,7 +132,6 @@ controllerManager:
   extraArgs:
     allocate-node-cidrs: "true"
     cloud-config: /etc/kubernetes/cloud.conf
-    cloud-provider: openstack
     cluster-cidr: ${POD_CIDR}
     service-cluster-ip-range: ${SERVICE_CIDR}
   extraVolumes:

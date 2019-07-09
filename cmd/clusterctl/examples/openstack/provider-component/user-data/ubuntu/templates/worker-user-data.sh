@@ -98,7 +98,6 @@ nodeRegistration:
   criSocket: /var/run/dockershim.sock
   kubeletExtraArgs:
     cloud-config: /etc/kubernetes/cloud.conf
-    cloud-provider: openstack
 EOF
 
 # Override network args to use kubenet instead of cni, override Kubelet DNS args and
