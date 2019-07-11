@@ -17,8 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"errors"
-
+	"fmt"
+	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/json"
@@ -37,6 +37,18 @@ var (
 	// SchemeBuilder is used to add go types to the GroupVersionKind scheme
 	SchemeBuilder = &scheme.Builder{GroupVersion: SchemeGroupVersion}
 )
+
+func ClusterSpecAndStatusFromProviderSpec(cluster *clusterv1.Cluster) (*OpenstackClusterProviderSpec, *OpenstackClusterProviderStatus, error) {
+	clusterProviderSpec, err := ClusterSpecFromProviderSpec(cluster.Spec.ProviderSpec)
+	if err != nil {
+		return nil, nil, errors.Errorf("failed to load cluster provider spec: %v", err)
+	}
+	clusterProviderStatus, err := ClusterStatusFromProviderStatus(cluster.Status.ProviderStatus)
+	if err != nil {
+		return nil, nil, errors.Errorf("failed to load cluster provider status: %v", err)
+	}
+	return clusterProviderSpec, clusterProviderStatus, nil
+}
 
 // ClusterConfigFromProviderSpec unmarshals a provider config into an OpenStack Cluster type
 func ClusterSpecFromProviderSpec(providerSpec clusterv1.ProviderSpec) (*OpenstackClusterProviderSpec, error) {
@@ -77,6 +89,36 @@ func MachineSpecFromProviderSpec(providerSpec clusterv1.ProviderSpec) (*Openstac
 		return nil, err
 	}
 	return &config, nil
+}
+
+func EncodeClusterSpecAndStatus(cluster *clusterv1.Cluster, clusterProviderSpec *OpenstackClusterProviderSpec, clusterProviderStatus *OpenstackClusterProviderStatus) (*runtime.RawExtension, *runtime.RawExtension, error) {
+	rawSpec, err := EncodeClusterSpec(clusterProviderSpec)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to encod cluster spec for cluster %q in namespace %q: %v", cluster.Name, cluster.Namespace, err)
+	}
+	rawStatus, err := EncodeClusterStatus(clusterProviderStatus)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to update cluster status for cluster %q in namespace %q: %v", cluster.Name, cluster.Namespace, err)
+	}
+	return rawSpec, rawStatus, nil
+}
+
+func EncodeClusterSpec(spec *OpenstackClusterProviderSpec) (*runtime.RawExtension, error) {
+	if spec == nil {
+		return &runtime.RawExtension{}, nil
+	}
+
+	var rawBytes []byte
+	var err error
+
+	//  TODO: use apimachinery conversion https://godoc.org/k8s.io/apimachinery/pkg/runtime#Convert_runtime_Object_To_runtime_RawExtension
+	if rawBytes, err = json.Marshal(spec); err != nil {
+		return nil, err
+	}
+
+	return &runtime.RawExtension{
+		Raw: rawBytes,
+	}, nil
 }
 
 func EncodeClusterStatus(status *OpenstackClusterProviderStatus) (*runtime.RawExtension, error) {

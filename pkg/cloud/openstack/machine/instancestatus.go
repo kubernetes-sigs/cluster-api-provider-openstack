@@ -36,8 +36,8 @@ const InstanceStatusAnnotationKey = "instance-status"
 type instanceStatus *clusterv1.Machine
 
 // Get the status of the instance identified by the given machine
-func (oc *OpenstackClient) instanceStatus(machine *clusterv1.Machine) (instanceStatus, error) {
-	currentMachine, err := util.GetMachineIfExists(oc.client, machine.Namespace, machine.Name)
+func (a *Actuator) instanceStatus(machine *clusterv1.Machine) (instanceStatus, error) {
+	currentMachine, err := util.GetMachineIfExists(a.client, machine.Namespace, machine.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -46,13 +46,13 @@ func (oc *OpenstackClient) instanceStatus(machine *clusterv1.Machine) (instanceS
 		// The current status no longer exists because the matching CRD has been deleted (or does not exist yet ie. bootstrapping)
 		return nil, nil
 	}
-	return oc.machineInstanceStatus(currentMachine)
+	return a.machineInstanceStatus(currentMachine)
 }
 
 // Sets the status of the instance identified by the given machine to the given machine
-func (oc *OpenstackClient) updateInstanceStatus(machine *clusterv1.Machine) error {
+func (a *Actuator) updateInstanceStatus(machine *clusterv1.Machine) error {
 	status := instanceStatus(machine)
-	currentMachine, err := util.GetMachineIfExists(oc.client, machine.Namespace, machine.Name)
+	currentMachine, err := util.GetMachineIfExists(a.client, machine.Namespace, machine.Name)
 	if err != nil {
 		return err
 	}
@@ -62,43 +62,43 @@ func (oc *OpenstackClient) updateInstanceStatus(machine *clusterv1.Machine) erro
 		return fmt.Errorf("Machine has already been deleted. Cannot update current instance status for machine %v", machine.ObjectMeta.Name)
 	}
 
-	m, err := oc.setMachineInstanceStatus(currentMachine, status)
+	m, err := a.setMachineInstanceStatus(currentMachine, status)
 	if err != nil {
 		return err
 	}
 
-	return oc.client.Update(nil, m)
+	return a.client.Update(nil, m)
 }
 
 // Gets the state of the instance stored on the given machine CRD
-func (oc *OpenstackClient) machineInstanceStatus(machine *clusterv1.Machine) (instanceStatus, error) {
+func (a *Actuator) machineInstanceStatus(machine *clusterv1.Machine) (instanceStatus, error) {
 	if machine.ObjectMeta.Annotations == nil {
 		// No state
 		return nil, nil
 	}
 
-	a := machine.ObjectMeta.Annotations[InstanceStatusAnnotationKey]
-	if a == "" {
+	status := machine.ObjectMeta.Annotations[InstanceStatusAnnotationKey]
+	if status == "" {
 		// No state
 		return nil, nil
 	}
 
-	serializer := json.NewSerializer(json.DefaultMetaFactory, oc.scheme, oc.scheme, false)
-	var status clusterv1.Machine
-	_, _, err := serializer.Decode([]byte(a), &schema.GroupVersionKind{Group: "cluster.k8s.io", Version: "v1alpha1", Kind: "Machine"}, &status)
+	serializer := json.NewSerializer(json.DefaultMetaFactory, a.scheme, a.scheme, false)
+	var statusMachine clusterv1.Machine
+	_, _, err := serializer.Decode([]byte(status), &schema.GroupVersionKind{Group: "cluster.k8s.io", Version: "v1alpha1", Kind: "Machine"}, &statusMachine)
 	if err != nil {
 		return nil, fmt.Errorf("decoding failure: %v", err)
 	}
 
-	return instanceStatus(&status), nil
+	return instanceStatus(&statusMachine), nil
 }
 
 // Applies the state of an instance onto a given machine CRD
-func (oc *OpenstackClient) setMachineInstanceStatus(machine *clusterv1.Machine, status instanceStatus) (*clusterv1.Machine, error) {
+func (a *Actuator) setMachineInstanceStatus(machine *clusterv1.Machine, status instanceStatus) (*clusterv1.Machine, error) {
 	// Avoid status within status within status ...
 	status.ObjectMeta.Annotations[InstanceStatusAnnotationKey] = ""
 
-	serializer := json.NewSerializer(json.DefaultMetaFactory, oc.scheme, oc.scheme, false)
+	serializer := json.NewSerializer(json.DefaultMetaFactory, a.scheme, a.scheme, false)
 	b := []byte{}
 	buff := bytes.NewBuffer(b)
 	err := serializer.Encode((*clusterv1.Machine)(status), buff)

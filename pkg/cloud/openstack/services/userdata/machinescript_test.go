@@ -1,4 +1,4 @@
-package machine
+package userdata
 
 import (
 	"testing"

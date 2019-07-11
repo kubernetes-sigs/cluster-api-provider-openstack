@@ -18,47 +18,38 @@ package main
 
 import (
 	"flag"
-	"log"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/kubernetes"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/cluster"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/machine"
+	"sigs.k8s.io/cluster-api/pkg/apis/cluster/common"
+	"sigs.k8s.io/cluster-api/pkg/client/clientset_generated/clientset"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"time"
 
-	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/klog"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/apis"
 	_ "sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/options"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/controller"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	clusterapis "sigs.k8s.io/cluster-api/pkg/apis"
-	"sigs.k8s.io/controller-runtime/pkg/client/config"
+	capicluster "sigs.k8s.io/cluster-api/pkg/controller/cluster"
+	capimachine "sigs.k8s.io/cluster-api/pkg/controller/machine"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
 )
 
+const ProviderName = "openstack"
+
 var logFlushFreq = flag.Duration("log-flush-frequency", 5*time.Second, "Maximum number of seconds between log flushes")
 
-func initLogs() {
-
-	flag.Set("alsologtostderr", "true")
+func main() {
+	klog.InitFlags(nil)
+	flag.Set("logtostderr", "true")
+	watchNamespace := flag.String("namespace", "", "Namespace that the controller watches to reconcile cluster-api objects. If unspecified, the controller watches for cluster-api objects across all namespaces.")
 	flag.Parse()
 
 	// The default klog flush interval is 30 seconds, which is frighteningly long.
 	go wait.Until(klog.Flush, *logFlushFreq, wait.NeverStop)
-
-	klogFlags := flag.NewFlagSet("klog", flag.ExitOnError)
-	klog.InitFlags(klogFlags)
-
-	// Sync the glog and klog flags.
-	flag.CommandLine.VisitAll(func(f1 *flag.Flag) {
-		f2 := klogFlags.Lookup(f1.Name)
-		if f2 != nil {
-			value := f1.Value.String()
-			f2.Value.Set(value)
-		}
-	})
-}
-
-func main() {
-
-	initLogs()
 
 	// Get a config to talk to the apiserver
 	cfg, err := config.GetConfig()
@@ -66,14 +57,55 @@ func main() {
 		klog.Fatal(err)
 	}
 
+	// Setup a Manager
+	syncPeriod := 10 * time.Minute
+	opts := manager.Options{
+		SyncPeriod: &syncPeriod,
+	}
+
+	if *watchNamespace != "" {
+		opts.Namespace = *watchNamespace
+		klog.Infof("Watching cluster-api objects only in namespace %q for reconciliation.", opts.Namespace)
+	}
+
 	// Create a new Cmd to provide shared dependencies and start components
-	mgr, err := manager.New(cfg, manager.Options{})
+	mgr, err := manager.New(cfg, opts)
 	if err != nil {
 		klog.Fatal(err)
 	}
 
+	cs, err := clientset.NewForConfig(cfg)
+	if err != nil {
+		klog.Fatalf("Could not create clientset to talk to the apiserver: %v", err)
+	}
+
+	kubeClient, err := kubernetes.NewForConfig(cfg)
+	if err != nil {
+		klog.Fatalf("Could not create kubernetes client to talk to the apiserver: %v", err)
+	}
+
+	// Initialize event recorder.
 	record.InitFromRecorder(mgr.GetRecorder("openstack-controller"))
-	klog.Infof("Initializing Dependencies.")
+
+	// Initialize cluster actuator.
+	clusterActuator := cluster.NewActuator(cluster.ActuatorParams{
+		Client:        mgr.GetClient(),
+		KubeClient:    kubeClient,
+		ClusterClient: cs.ClusterV1alpha1(),
+		Scheme:        mgr.GetScheme(),
+		EventRecorder: mgr.GetRecorder("openstack-controller"),
+	})
+
+	machineActuator := machine.NewActuator(machine.ActuatorParams{
+		Client:        mgr.GetClient(),
+		KubeClient:    kubeClient,
+		ClusterClient: cs.ClusterV1alpha1(),
+		Scheme:        mgr.GetScheme(),
+		EventRecorder: mgr.GetRecorder("openstack-controller"),
+	})
+
+	// Register our cluster deployer (the interface is in clusterctl and we define the Deployer interface on the actuator)
+	common.RegisterClusterProvisioner(ProviderName, clusterActuator)
 
 	// Setup Scheme for all resources
 	if err := apis.AddToScheme(mgr.GetScheme()); err != nil {
@@ -84,13 +116,14 @@ func main() {
 		klog.Fatal(err)
 	}
 
-	// Setup all Controllers
-	if err := controller.AddToManager(mgr); err != nil {
+	if err := capimachine.AddWithActuator(mgr, machineActuator); err != nil {
+		klog.Fatal(err)
+	}
+	if err := capicluster.AddWithActuator(mgr, clusterActuator); err != nil {
 		klog.Fatal(err)
 	}
 
-	log.Printf("Starting the Cmd.")
-
-	// Start the Cmd
-	log.Fatal(mgr.Start(signals.SetupSignalHandler()))
+	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
+		klog.Fatalf("Failed to run manager: %v", err)
+	}
 }
