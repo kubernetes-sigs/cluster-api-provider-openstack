@@ -38,4 +38,5 @@ aliases:
     - m1093782566
   cluster-api-openstack-reviewers:
     - iamemilio
+    - sbueringer
     - YorikSar
