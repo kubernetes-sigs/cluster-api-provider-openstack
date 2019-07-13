@@ -38,4 +38,4 @@ spec:
           serverMetadata:
             key: value
       versions:
-        kubelet: 1.14.0
+        kubelet: 1.15.0
