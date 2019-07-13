@@ -25,6 +25,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog"
 	"path"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/options"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/deployer"
 	"sigs.k8s.io/cluster-api/pkg/util"
@@ -262,6 +263,10 @@ func masterStartupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine,
 		return "", err
 	}
 
+	if err := validateCertificates(clusterProviderSpec); err != nil {
+		return "", err
+	}
+
 	machineProviderSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
 	if err != nil {
 		return "", err
@@ -326,6 +331,29 @@ func nodeStartupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine, t
 		return "", err
 	}
 	return buf.String(), nil
+}
+
+func validateCertificates(clusterProviderSpec *v1alpha1.OpenstackClusterProviderSpec) error {
+	if !isKeyPairValid(clusterProviderSpec.CAKeyPair.Cert, clusterProviderSpec.CAKeyPair.Key) {
+		return errors.New("CA cert material in the ClusterProviderSpec is missing cert/key")
+	}
+
+	if !isKeyPairValid(clusterProviderSpec.EtcdCAKeyPair.Cert, clusterProviderSpec.EtcdCAKeyPair.Key) {
+		return errors.New("ETCD CA cert material in the ClusterProviderSpec is  missing cert/key")
+	}
+
+	if !isKeyPairValid(clusterProviderSpec.FrontProxyCAKeyPair.Cert, clusterProviderSpec.FrontProxyCAKeyPair.Key) {
+		return errors.New("FrontProxy CA cert material in ClusterProviderSpec is  missing cert/key")
+	}
+
+	if !isKeyPairValid(clusterProviderSpec.SAKeyPair.Cert, clusterProviderSpec.SAKeyPair.Key) {
+		return errors.New("ServiceAccount cert material in ClusterProviderSpec is  missing cert/key")
+	}
+	return nil
+}
+
+func isKeyPairValid(cert, key []byte) bool {
+	return len(cert) > 0 && len(key) > 0
 }
 
 func getEndpoint(apiEndpoint clusterv1.APIEndpoint) string {
