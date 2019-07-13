@@ -17,8 +17,14 @@ limitations under the License.
 package main
 
 import (
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/deployer"
 	"sigs.k8s.io/cluster-api/cmd/clusterctl/cmd"
+	clustercommon "sigs.k8s.io/cluster-api/pkg/apis/cluster/common"
 )
+
+func init() {
+	clustercommon.RegisterClusterProvisioner("openstack", deployer.New())
+}
 
 func main() {
 	cmd.Execute()
