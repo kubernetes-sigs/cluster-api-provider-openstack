@@ -75,6 +75,12 @@ func (a *Actuator) Reconcile(cluster *clusterv1.Cluster) error {
 		return err
 	}
 
+	defer func() {
+		if err := a.storeCluster(cluster, clusterCopy, clusterProviderSpec, clusterProviderStatus); err != nil {
+			klog.Errorf("failed to store cluster %q in namespace %q: %v", cluster.Name, cluster.Namespace, err)
+		}
+	}()
+
 	klog.Infof("Reconciling certificates for cluster %s", clusterName)
 	// Store cert material in spec.
 	if err := certificatesService.ReconcileCertificates(clusterName, clusterProviderSpec); err != nil {
@@ -104,11 +110,6 @@ func (a *Actuator) Reconcile(cluster *clusterv1.Cluster) error {
 		return errors.Errorf("failed to reconcile security groups: %v", err)
 	}
 
-	defer func() {
-		if err := a.storeCluster(cluster, clusterCopy, clusterProviderSpec, clusterProviderStatus); err != nil {
-			klog.Errorf("failed to store cluster %q in namespace %q: %v", cluster.Name, cluster.Namespace, err)
-		}
-	}()
 	return nil
 }
 
