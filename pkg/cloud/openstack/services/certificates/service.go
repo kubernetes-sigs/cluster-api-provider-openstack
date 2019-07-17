@@ -14,21 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package options
+package certificates
 
-import (
-	"flag"
-	"time"
-)
+// Service groups certificate related operations together and allows
+// certificate updates to be applied to the actuator scope.
+type Service struct {
+}
 
-var (
-	TokenTTL              time.Duration
-	UserDataFolder        string
-	UserDataPostprocessor string
-)
-
-func init() {
-	flag.DurationVar(&TokenTTL, "token_ttl", 60*time.Minute, "TTL for kubeadm bootstrap token of the target Kubernetes cluster")
-	flag.StringVar(&UserDataFolder, "user-data-folder", "", "if set, user data files are retrieved from <user-data-folder>/<machine-name>.yaml")
-	flag.StringVar(&UserDataPostprocessor, "user-data-postprocessor", "", "postprocessor to user for the user data")
+// NewService returns a new certificates service for the given actuators scope.
+func NewService() *Service {
+	return &Service{}
 }

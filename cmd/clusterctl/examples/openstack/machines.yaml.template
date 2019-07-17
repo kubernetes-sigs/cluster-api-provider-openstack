@@ -15,7 +15,6 @@ items:
         kind: "OpenstackProviderSpec"
         flavor: m1.medium
         image: <Image Name>
-        sshUserName: <SSH Username>
         keyName: cluster-api-provider-openstack
         availabilityZone: nova
         networks:
@@ -52,7 +51,6 @@ items:
         kind: "OpenstackProviderSpec"
         flavor: m1.medium
         image: <Image Name>
-        sshUserName: <SSH Username>
         keyName: cluster-api-provider-openstack
         availabilityZone: nova
         networks:

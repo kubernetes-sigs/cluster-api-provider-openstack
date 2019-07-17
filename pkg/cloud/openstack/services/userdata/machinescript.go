@@ -20,11 +20,18 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"io/ioutil"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog"
+	"path"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/options"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/deployer"
 	"sigs.k8s.io/cluster-api/pkg/util"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"strings"
 	"text/template"
 	"time"
 
@@ -53,6 +60,15 @@ type setupParams struct {
 	Cluster     *clusterv1.Cluster
 	Machine     *clusterv1.Machine
 	MachineSpec *openstackconfigv1.OpenstackProviderSpec
+
+	CACert           string
+	CAKey            string
+	EtcdCACert       string
+	EtcdCAKey        string
+	FrontProxyCACert string
+	FrontProxyCAKey  string
+	SaCert           string
+	SaKey            string
 
 	PodCIDR           string
 	ServiceCIDR       string
@@ -95,6 +111,15 @@ func GetUserData(controllerClient client.Client, kubeClient kubernetes.Interface
 		p, postprocess = userDataSecret.Data[PostprocessorKey]
 
 		postprocessor = string(p)
+	} else if options.UserDataFolder != "" {
+		userData, err = ioutil.ReadFile(path.Join(options.UserDataFolder, fmt.Sprintf("%s.yaml", machine.Name)))
+		if err != nil {
+			return "", fmt.Errorf("could not load local userdata files: %v", err)
+		}
+		postprocessor = options.UserDataPostprocessor
+		if postprocessor != "" {
+			postprocess = true
+		}
 	}
 
 	var userDataRendered string
@@ -159,7 +184,12 @@ func createBootstrapToken(controllerClient client.Client) (string, error) {
 		panic(fmt.Sprintf("unable to create token. there might be a bug somwhere: %v", err))
 	}
 
-	err = controllerClient.Create(context.TODO(), tokenSecret)
+	kubeClient, err := getWorkloadClusterKubeClient(controllerClient)
+	if err != nil {
+		return "", err
+	}
+
+	err = kubeClient.Create(context.TODO(), tokenSecret)
 	if err != nil {
 		return "", err
 	}
@@ -170,21 +200,99 @@ func createBootstrapToken(controllerClient client.Client) (string, error) {
 	), nil
 }
 
+func getWorkloadClusterKubeClient(controllerClient client.Client) (client.Client, error) {
+	var master *clusterv1.Machine
+	var cluster *clusterv1.Cluster
+
+	msList := &clusterv1.MachineList{}
+	listOptions := &client.ListOptions{}
+	err := controllerClient.List(context.TODO(), listOptions, msList)
+	if err != nil {
+		return nil, fmt.Errorf("error retrieving machines: %v", err)
+	}
+	for _, m := range msList.Items {
+		if util.IsControlPlaneMachine(&m) {
+			master = &m
+			break
+		}
+	}
+	if master == nil {
+		return nil, fmt.Errorf("could not find master node")
+	}
+
+	clusterList := &clusterv1.ClusterList{}
+	err = controllerClient.List(context.TODO(), listOptions, clusterList)
+	if err != nil {
+		return nil, fmt.Errorf("error retrieving clusters: %v", err)
+	}
+	for _, c := range clusterList.Items {
+		if clusterName, ok := master.Labels[clusterv1.MachineClusterLabelName]; ok && clusterName == c.Name {
+			cluster = &c
+		}
+	}
+	if cluster == nil {
+		return nil, fmt.Errorf("could not find cluster")
+	}
+
+	kubeConfig, err := deployer.New().GetKubeConfig(cluster, master)
+	if err != nil {
+		return nil, err
+	}
+
+	apiConfig, err := clientcmd.Load([]byte(kubeConfig))
+	if err != nil {
+		return nil, err
+	}
+
+	cfg, err := clientcmd.NewDefaultClientConfig(*apiConfig, &clientcmd.ConfigOverrides{}).ClientConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	mgr, err := manager.New(cfg, manager.Options{})
+	if err != nil {
+		return nil, fmt.Errorf("unable to create manager for restConfig: %v", err)
+	}
+
+	return mgr.GetClient(), nil
+}
+
 func masterStartupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine, script string) (string, error) {
-	machineSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
+	clusterProviderSpec, err := openstackconfigv1.ClusterSpecFromProviderSpec(cluster.Spec.ProviderSpec)
+	if err != nil {
+		return "", err
+	}
+
+	if err := validateCertificates(clusterProviderSpec); err != nil {
+		return "", err
+	}
+
+	machineProviderSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
 	if err != nil {
 		return "", err
 	}
 
 	params := setupParams{
-		Cluster:     cluster,
-		Machine:     machine,
-		MachineSpec: machineSpec,
-		PodCIDR:     getSubnet(cluster.Spec.ClusterNetwork.Pods),
-		ServiceCIDR: getSubnet(cluster.Spec.ClusterNetwork.Services),
+		Cluster:          cluster,
+		CACert:           string(clusterProviderSpec.CAKeyPair.Cert),
+		CAKey:            string(clusterProviderSpec.CAKeyPair.Key),
+		EtcdCACert:       string(clusterProviderSpec.EtcdCAKeyPair.Cert),
+		EtcdCAKey:        string(clusterProviderSpec.EtcdCAKeyPair.Key),
+		FrontProxyCACert: string(clusterProviderSpec.FrontProxyCAKeyPair.Cert),
+		FrontProxyCAKey:  string(clusterProviderSpec.FrontProxyCAKeyPair.Key),
+		SaCert:           string(clusterProviderSpec.SAKeyPair.Cert),
+		SaKey:            string(clusterProviderSpec.SAKeyPair.Key),
+		Machine:          machine,
+		MachineSpec:      machineProviderSpec,
+		PodCIDR:          getSubnet(cluster.Spec.ClusterNetwork.Pods),
+		ServiceCIDR:      getSubnet(cluster.Spec.ClusterNetwork.Services),
 	}
 
-	masterStartUpScript := template.Must(template.New("masterStartUp").Parse(script))
+	fMap := map[string]interface{}{
+		"Indent": templateYAMLIndent,
+	}
+
+	masterStartUpScript := template.Must(template.New("masterStartUp").Funcs(fMap).Parse(script))
 
 	var buf bytes.Buffer
 	if err := masterStartUpScript.Execute(&buf, params); err != nil {
@@ -194,7 +302,7 @@ func masterStartupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine,
 }
 
 func nodeStartupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine, token, script string) (string, error) {
-	machineSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
+	machineProviderSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
 	if err != nil {
 		return "", err
 	}
@@ -210,7 +318,7 @@ func nodeStartupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine, t
 		Token:             token,
 		Cluster:           cluster,
 		Machine:           machine,
-		MachineSpec:       machineSpec,
+		MachineSpec:       machineProviderSpec,
 		PodCIDR:           getSubnet(cluster.Spec.ClusterNetwork.Pods),
 		ServiceCIDR:       getSubnet(cluster.Spec.ClusterNetwork.Services),
 		GetMasterEndpoint: GetMasterEndpoint,
@@ -225,6 +333,29 @@ func nodeStartupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine, t
 	return buf.String(), nil
 }
 
+func validateCertificates(clusterProviderSpec *v1alpha1.OpenstackClusterProviderSpec) error {
+	if !isKeyPairValid(clusterProviderSpec.CAKeyPair.Cert, clusterProviderSpec.CAKeyPair.Key) {
+		return errors.New("CA cert material in the ClusterProviderSpec is missing cert/key")
+	}
+
+	if !isKeyPairValid(clusterProviderSpec.EtcdCAKeyPair.Cert, clusterProviderSpec.EtcdCAKeyPair.Key) {
+		return errors.New("ETCD CA cert material in the ClusterProviderSpec is  missing cert/key")
+	}
+
+	if !isKeyPairValid(clusterProviderSpec.FrontProxyCAKeyPair.Cert, clusterProviderSpec.FrontProxyCAKeyPair.Key) {
+		return errors.New("FrontProxy CA cert material in ClusterProviderSpec is  missing cert/key")
+	}
+
+	if !isKeyPairValid(clusterProviderSpec.SAKeyPair.Cert, clusterProviderSpec.SAKeyPair.Key) {
+		return errors.New("ServiceAccount cert material in ClusterProviderSpec is  missing cert/key")
+	}
+	return nil
+}
+
+func isKeyPairValid(cert, key []byte) bool {
+	return len(cert) > 0 && len(key) > 0
+}
+
 func getEndpoint(apiEndpoint clusterv1.APIEndpoint) string {
 	return fmt.Sprintf("%s:%d", apiEndpoint.Host, apiEndpoint.Port)
 }
@@ -235,4 +366,10 @@ func getSubnet(netRange clusterv1.NetworkRanges) string {
 		return ""
 	}
 	return netRange.CIDRBlocks[0]
+}
+
+func templateYAMLIndent(i int, input string) string {
+	split := strings.Split(input, "\n")
+	ident := "\n" + strings.Repeat(" ", i)
+	return strings.Repeat(" ", i) + strings.Join(split, ident)
 }

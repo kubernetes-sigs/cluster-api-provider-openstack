@@ -118,6 +118,40 @@ systemctl restart kubelet.service
 systemctl disable ufw
 systemctl mask ufw
 
+# Setup certificates
+mkdir - /etc/kubernetes/pki /etc/kubernetes/pki/etcd
+cat > /etc/kubernetes/pki/ca.crt <<EOF
+{{ .CACert }}
+EOF
+
+cat > /etc/kubernetes/pki/ca.key <<EOF
+{{ .CAKey }}
+EOF
+
+cat > /etc/kubernetes/pki/etcd/ca.crt <<EOF
+{{ .EtcdCACert }}
+EOF
+
+cat > /etc/kubernetes/pki/etcd/ca.key <<EOF
+{{ .EtcdCAKey }}
+EOF
+
+cat > /etc/kubernetes/pki/front-proxy-ca.crt <<EOF
+{{ .FrontProxyCACert }}
+EOF
+
+cat > /etc/kubernetes/pki/front-proxy-ca.key <<EOF
+{{ .FrontProxyCAKey }}
+EOF
+
+cat > /etc/kubernetes/pki/sa.pub <<EOF
+{{ .SaCert }}
+EOF
+
+cat > /etc/kubernetes/pki/sa.key <<EOF
+{{ .SaKey }}
+EOF
+
 # Set up kubeadm config file to pass parameters to kubeadm init.
 # We're using 443 until this bug is fixed
 # https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/64

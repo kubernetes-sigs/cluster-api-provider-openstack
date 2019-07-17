@@ -11,6 +11,7 @@ import (
 	"k8s.io/klog"
 	"reflect"
 	providerv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/certificates"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/provider"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/deployer"
@@ -66,10 +67,24 @@ func (a *Actuator) Reconcile(cluster *clusterv1.Cluster) error {
 		return err
 	}
 
+	certificatesService := certificates.NewService()
+
 	// Load provider spec & status.
 	clusterProviderSpec, clusterProviderStatus, err := providerv1.ClusterSpecAndStatusFromProviderSpec(cluster)
 	if err != nil {
 		return err
+	}
+
+	defer func() {
+		if err := a.storeCluster(cluster, clusterCopy, clusterProviderSpec, clusterProviderStatus); err != nil {
+			klog.Errorf("failed to store cluster %q in namespace %q: %v", cluster.Name, cluster.Namespace, err)
+		}
+	}()
+
+	klog.Infof("Reconciling certificates for cluster %s", clusterName)
+	// Store cert material in spec.
+	if err := certificatesService.ReconcileCertificates(clusterName, clusterProviderSpec); err != nil {
+		return errors.Wrapf(err, "failed to reconcile certificates for cluster %q", cluster.Name)
 	}
 
 	klog.Infof("Reconciling network components for cluster %s", clusterName)
@@ -95,11 +110,6 @@ func (a *Actuator) Reconcile(cluster *clusterv1.Cluster) error {
 		return errors.Errorf("failed to reconcile security groups: %v", err)
 	}
 
-	defer func() {
-		if err := a.storeCluster(cluster, clusterCopy, clusterProviderSpec, clusterProviderStatus); err != nil {
-			klog.Errorf("failed to store cluster %q in namespace %q: %v", cluster.Name, cluster.Namespace, err)
-		}
-	}()
 	return nil
 }
 

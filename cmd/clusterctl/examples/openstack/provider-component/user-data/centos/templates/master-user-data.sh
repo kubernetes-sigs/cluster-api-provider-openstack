@@ -87,6 +87,41 @@ echo $OPENSTACK_CLOUD_PROVIDER_CONF | base64 -d > /etc/kubernetes/cloud.conf
 mkdir /etc/certs
 echo $OPENSTACK_CLOUD_CACERT_CONFIG | base64 -d > /etc/certs/cacert
 
+
+# Setup certificates
+mkdir - /etc/kubernetes/pki /etc/kubernetes/pki/etcd
+cat > /etc/kubernetes/pki/ca.crt <<EOF
+{{ .CACert }}
+EOF
+
+cat > /etc/kubernetes/pki/ca.key <<EOF
+{{ .CAKey }}
+EOF
+
+cat > /etc/kubernetes/pki/etcd/ca.crt <<EOF
+{{ .EtcdCACert }}
+EOF
+
+cat > /etc/kubernetes/pki/etcd/ca.key <<EOF
+{{ .EtcdCAKey }}
+EOF
+
+cat > /etc/kubernetes/pki/front-proxy-ca.crt <<EOF
+{{ .FrontProxyCACert }}
+EOF
+
+cat > /etc/kubernetes/pki/front-proxy-ca.key <<EOF
+{{ .FrontProxyCAKey }}
+EOF
+
+cat > /etc/kubernetes/pki/sa.pub <<EOF
+{{ .SaCert }}
+EOF
+
+cat > /etc/kubernetes/pki/sa.key <<EOF
+{{ .SaKey }}
+EOF
+
 # Set up kubeadm config file to pass parameters to kubeadm init.
 cat > /etc/kubernetes/kubeadm_config.yaml <<EOF
 apiVersion: kubeadm.k8s.io/v1beta1
