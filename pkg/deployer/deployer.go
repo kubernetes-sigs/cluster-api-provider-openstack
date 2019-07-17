@@ -60,7 +60,7 @@ func (d *Deployer) GetKubeConfig(cluster *clusterv1.Cluster, master *clusterv1.M
 		return "", err
 	}
 
-	server := fmt.Sprintf("https://%s:6443", ip)
+	server := fmt.Sprintf("https://%s:443", ip)
 
 	cfg, err := certificates.NewKubeconfig(cluster.Name, server, cert, key)
 	if err != nil {
