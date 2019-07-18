@@ -9,8 +9,7 @@ storage:
       id: 0
     mode: 0640
     contents:
-      inline: |
-{{ .CACert | Indent 10}}
+      inline: "{{ .CACert | EscapeNewLines }}"
 
   - path: /etc/kubernetes/pki/ca.key
     filesystem: root
@@ -20,8 +19,7 @@ storage:
       id: 0
     mode: 0600
     contents:
-      inline: |
-{{ .CAKey | Indent 10}}
+      inline: "{{ .CAKey | EscapeNewLines }}"
 
   - path: /etc/kubernetes/pki/etcd/ca.crt
     filesystem: root
@@ -31,8 +29,7 @@ storage:
       id: 0
     mode: 0640
     contents:
-      inline: |
-{{ .EtcdCACert | Indent 10}}
+      inline: "{{ .EtcdCACert | EscapeNewLines }}"
 
   - path: /etc/kubernetes/pki/etcd/ca.key
     filesystem: root
@@ -42,8 +39,7 @@ storage:
       id: 0
     mode: 0600
     contents:
-      inline: |
-{{ .EtcdCAKey | Indent 10}}
+      inline: "{{ .EtcdCAKey | EscapeNewLines }}"
 
   - path: /etc/kubernetes/pki/front-proxy-ca.crt
     filesystem: root
@@ -53,8 +49,7 @@ storage:
       id: 0
     mode: 0640
     contents:
-      inline: |
-{{ .FrontProxyCACert | Indent 10}}
+      inline: "{{ .FrontProxyCACert | EscapeNewLines }}"
 
   - path: /etc/kubernetes/pki/front-proxy-ca.key
     filesystem: root
@@ -64,8 +59,7 @@ storage:
       id: 0
     mode: 0600
     contents:
-      inline: |
-{{ .FrontProxyCAKey | Indent 10}}
+      inline: "{{ .FrontProxyCAKey | EscapeNewLines }}"
 
   - path: /etc/kubernetes/pki/sa.pub
     filesystem: root
@@ -75,8 +69,7 @@ storage:
       id: 0
     mode: 0640
     contents:
-      inline: |
-{{ .SaCert | Indent 10}}
+      inline: "{{ .SaCert | EscapeNewLines }}"
 
   - path: /etc/kubernetes/pki/sa.key
     filesystem: root
@@ -86,8 +79,7 @@ storage:
       id: 0
     mode: 0600
     contents:
-      inline: |
-{{ .SaKey | Indent 10}}
+      inline: "{{ .SaKey | EscapeNewLines }}"
 
 
   - path: /etc/kubernetes/kubeadm_config.yaml
