@@ -136,9 +136,9 @@ policy may be made to more closely align with other providers in the Cluster API
    You can find some guidance on what needs to be edited, and how to create some of the
    required OpenStack resources in the [Configuration documentation](docs/config.md).
 
-   #### Special notes on ssh keys and fetching `admin.conf`
+   #### Special notes on ssh keys for debug purpose.
 
-   When running `generate-yaml.sh` the first time, a new ssh keypair is generated and stored as `$HOME/.ssh/openstack_tmp` and `$HOME/.ssh/openstack_tmp.pub`. In order to allow `clusterctl` to fetch Kubernetes' `admin.conf` from the master node, you **must** manually create the key pair in OpenStack. By default the generated `machine.yaml` uses `cluster-api-provider-openstack` to be the `keyName`. However, you are free to change that.
+   When running `generate-yaml.sh` the first time, a new ssh keypair is generated and stored as `$HOME/.ssh/openstack_tmp` and `$HOME/.ssh/openstack_tmp.pub`. Previously ssh key is needed to fetch `kubeconfig` from master node, after PR `https://github.com/kubernetes-sigs/cluster-api-provider-openstack/pull/394`, there is no need to create or specify the ssh key in master machine config definition anymore. The key is for debug purpose only now.
 
    e.g.
    ```
