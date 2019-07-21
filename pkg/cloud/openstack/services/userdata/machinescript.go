@@ -289,7 +289,8 @@ func masterStartupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine,
 	}
 
 	fMap := map[string]interface{}{
-		"Indent": templateYAMLIndent,
+		"EscapeNewLines": templateEscapeNewLines,
+		"Indent":         templateYAMLIndent,
 	}
 
 	masterStartUpScript := template.Must(template.New("masterStartUp").Funcs(fMap).Parse(script))
@@ -366,6 +367,10 @@ func getSubnet(netRange clusterv1.NetworkRanges) string {
 		return ""
 	}
 	return netRange.CIDRBlocks[0]
+}
+
+func templateEscapeNewLines(s string) string {
+	return strings.ReplaceAll(s, "\n", "\\n")
 }
 
 func templateYAMLIndent(i int, input string) string {
