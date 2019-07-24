@@ -13,5 +13,5 @@ resources:
 - config/crds/cluster_v1alpha1_machineset.yaml
 - config/manager/manager.yaml
 
-patches:
+patchesStrategicMerge:
   - manager_image_patch.yaml
