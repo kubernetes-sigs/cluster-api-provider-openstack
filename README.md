@@ -136,6 +136,23 @@ policy may be made to more closely align with other providers in the Cluster API
    You can find some guidance on what needs to be edited, and how to create some of the
    required OpenStack resources in the [Configuration documentation](docs/config.md).
 
+   #### Notes on using custom CAs
+   
+   The Cluster CD has properties to specify the CAs of the Kubernetes cluster. Usually, they are not 
+   set and the Cluster controller generates them when creating the Kubernetes cluster. However if it's 
+   desired to use a custom ca, it can be generated with the following commands and set via the Cluster CRD.
+   
+   ```
+   openssl genrsa -out ca.key 2048
+   openssl req -x509 -new -nodes -key ca.key -sha256 -days 3650 -out ca.crt
+   
+   # Use the output of the following command as key, e.g. .caKeyPair.key
+   cat ca.key | base64 --wrap=0
+   
+   # Use the output of the following command as certificate, e.g. .caKeyPair.cert
+   cat ca.crt | base64 --wrap=0 
+   ```
+  
    #### Special notes on ssh keys for debug purpose.
 
    When running `generate-yaml.sh` the first time, a new ssh keypair is generated and stored as `$HOME/.ssh/openstack_tmp` and `$HOME/.ssh/openstack_tmp.pub`. Previously ssh key is needed to fetch `kubeconfig` from master node, after PR `https://github.com/kubernetes-sigs/cluster-api-provider-openstack/pull/394`, there is no need to create or specify the ssh key in master machine config definition anymore. The key is for debug purpose only now.
