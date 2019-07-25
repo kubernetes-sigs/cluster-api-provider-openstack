@@ -156,6 +156,10 @@ func (a *Actuator) Create(ctx context.Context, cluster *clusterv1.Cluster, machi
 
 	}
 
+	// update Annotation below will store machine spec
+	providerID := fmt.Sprintf("openstack:////%s", instance.ID)
+	machine.Spec.ProviderID = &providerID
+
 	record.Eventf(machine, "CreatedInstance", "Created new instance with id: %s", instance.ID)
 	return a.updateAnnotation(machine, instance.ID)
 }
@@ -265,6 +269,13 @@ func (a *Actuator) Exists(ctx context.Context, cluster *clusterv1.Cluster, machi
 	instance, err := a.instanceExists(machine)
 	if err != nil {
 		return false, err
+	}
+
+	if (instance != nil) && (machine.Spec.ProviderID == nil || *machine.Spec.ProviderID == "") {
+		providerID := fmt.Sprintf("openstack:////%s", instance.ID)
+		machine.Spec.ProviderID = &providerID
+
+		a.client.Update(nil, machine)
 	}
 	return instance != nil, err
 }

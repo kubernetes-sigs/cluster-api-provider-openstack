@@ -4,8 +4,8 @@ generatorOptions:
   disableNameSuffixHash: true
 
 resources:
-- config/rbac/rbac_role_binding.yaml
-- config/rbac/rbac_role.yaml
+- config/rbac/manager_role_binding.yaml
+- config/rbac/manager_role.yaml
 - config/crds/cluster_v1alpha1_cluster.yaml
 - config/crds/cluster_v1alpha1_machine.yaml
 - config/crds/cluster_v1alpha1_machineclass.yaml
