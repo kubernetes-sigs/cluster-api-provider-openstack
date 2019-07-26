@@ -44,6 +44,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/gophercloud/gophercloud/pagination"
 	"github.com/gophercloud/utils/openstack/clientconfig"
+	configclient "github.com/openshift/client-go/config/clientset/versioned/typed/config/v1"
 	machinev1 "github.com/openshift/cluster-api/pkg/apis/machine/v1beta1"
 	"github.com/openshift/cluster-api/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -299,11 +300,12 @@ func getSubnetsByFilter(is *InstanceService, opts *subnets.ListOpts) ([]subnets.
 	return snets, nil
 }
 
-func CreatePort(is *InstanceService, name string, net ServerNetwork, securityGroups *[]string) (ports.Port, error) {
+func CreatePort(is *InstanceService, name string, net ServerNetwork, securityGroups *[]string, allowedAddressPairs *[]ports.AddressPair) (ports.Port, error) {
 	portCreateOpts := ports.CreateOpts{
-		Name:           name,
-		NetworkID:      net.networkID,
-		SecurityGroups: securityGroups,
+		Name:                name,
+		NetworkID:           net.networkID,
+		SecurityGroups:      securityGroups,
+		AllowedAddressPairs: *allowedAddressPairs,
 	}
 	if net.subnetID != "" {
 		portCreateOpts.FixedIPs = []ports.IP{{SubnetID: net.subnetID}}
@@ -384,7 +386,7 @@ func getImageID(is *InstanceService, imageName string) (string, error) {
 }
 
 // InstanceCreate creates a compute instance
-func (is *InstanceService) InstanceCreate(clusterName string, name string, clusterSpec *openstackconfigv1.OpenstackClusterProviderSpec, config *openstackconfigv1.OpenstackProviderSpec, cmd string, keyName string) (instance *Instance, err error) {
+func (is *InstanceService) InstanceCreate(clusterName string, name string, clusterSpec *openstackconfigv1.OpenstackClusterProviderSpec, config *openstackconfigv1.OpenstackProviderSpec, cmd string, keyName string, configClient configclient.ConfigV1Interface) (instance *Instance, err error) {
 	var createOpts servers.CreateOptsBuilder
 	if config == nil {
 		return nil, fmt.Errorf("create Options need be specified to create instace")
@@ -451,6 +453,27 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, clust
 			}
 		}
 	}
+
+	clusterInfra, err := configClient.Infrastructures().Get("cluster", metav1.GetOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("Failed to retrieve cluster Infrastructure object: %v", err)
+	}
+
+	allowedAddressPairs := []ports.AddressPair{}
+	if clusterInfra != nil && clusterInfra.Status.PlatformStatus != nil && clusterInfra.Status.PlatformStatus.OpenStack != nil {
+		clusterVips := []string{
+			clusterInfra.Status.PlatformStatus.OpenStack.APIServerInternalIP,
+			clusterInfra.Status.PlatformStatus.OpenStack.NodeDNSIP,
+			clusterInfra.Status.PlatformStatus.OpenStack.IngressIP,
+		}
+
+		for _, vip := range clusterVips {
+			if vip != "" {
+				allowedAddressPairs = append(allowedAddressPairs, ports.AddressPair{IPAddress: vip})
+			}
+		}
+	}
+
 	userData := base64.StdEncoding.EncodeToString([]byte(cmd))
 	var ports_list []servers.Network
 	for _, net := range nets {
@@ -471,7 +494,7 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, clust
 		var port ports.Port
 		if len(portList) == 0 {
 			// create server port
-			port, err = CreatePort(is, name, net, &securityGroups)
+			port, err = CreatePort(is, name, net, &securityGroups, &allowedAddressPairs)
 			if err != nil {
 				return nil, fmt.Errorf("Failed to create port err: %v", err)
 			}
