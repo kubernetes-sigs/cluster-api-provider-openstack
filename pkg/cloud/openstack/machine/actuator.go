@@ -421,6 +421,11 @@ func (oc *OpenstackClient) updateAnnotation(machine *machinev1.Machine, id strin
 		Address: machine.Name,
 	})
 
+	networkAddresses = append(networkAddresses, corev1.NodeAddress{
+		Type:    corev1.NodeInternalDNS,
+		Address: machine.Name,
+	})
+
 	machineCopy := machine.DeepCopy()
 	machineCopy.Status.Addresses = networkAddresses
 
