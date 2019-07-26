@@ -22,7 +22,7 @@ export KUBEBUILDER_CONTROLPLANE_START_TIMEOUT ?=60s
 export KUBEBUILDER_CONTROLPLANE_STOP_TIMEOUT ?=60s
 
 # Image URL to use all building/pushing image targets
-export CONTROLLER_IMG ?= gcr.io/k8s-staging-cluster-api/cluster-api-controller:v0.1.6
+export CONTROLLER_IMG ?= gcr.io/k8s-cluster-api/cluster-api-controller:v0.1.4
 export EXAMPLE_PROVIDER_IMG ?= gcr.io/k8s-cluster-api/example-provider-controller:latest
 
 all: test manager clusterctl
@@ -34,13 +34,11 @@ help:  ## Display this help
 gazelle: ## Run Bazel Gazelle
 	(which bazel && ./hack/update-bazel.sh) || true
 
-.PHONY: vendor
-vendor: ## Runs go mod to ensure proper vendoring.
-	./hack/update-vendor.sh
+.PHONY: dep-ensure
+dep-ensure: ## Runs dep-ensure and rebuilds Bazel gazelle files.
+	find vendor -name 'BUILD.bazel' -delete
+	(which dep && dep ensure -v) || true
 	$(MAKE) gazelle
-
-bin/%-gen: ./vendor/k8s.io/code-generator/cmd/%-gen ## Build code-generator binaries
-	go build -o $@ ./$<
 
 .PHONY: test
 test: gazelle verify generate fmt vet manifests ## Run tests
@@ -77,27 +75,28 @@ vet: ## Run go vet against code
 	go vet ./pkg/... ./cmd/...
 
 .PHONY: lint
-lint: ## Lint codebase
+lint: dep-ensure ## Lint codebase
 	bazel run //:lint $(BAZEL_ARGS)
 
-lint-full: ## Run slower linters to detect possible issues
+lint-full: dep-ensure ## Run slower linters to detect possible issues
 	bazel run //:lint-full $(BAZEL_ARGS)
 
 .PHONY: generate
-generate: clientset ## Generate code
+generate: clientset dep-ensure ## Generate code
 	go generate ./pkg/... ./cmd/...
 	$(MAKE) gazelle
 
 .PHONY: clientset
-clientset: bin/client-gen bin/lister-gen bin/informer-gen ## Generate a typed clientset
+clientset: ## Generate a typed clientset
 	rm -rf pkg/client
-	bin/client-gen --clientset-name clientset --input-base sigs.k8s.io/cluster-api/pkg/apis \
+	cd ./vendor/k8s.io/code-generator/cmd && go install ./client-gen ./lister-gen ./informer-gen
+	$$GOPATH/bin/client-gen --clientset-name clientset --input-base sigs.k8s.io/cluster-api/pkg/apis \
 		--input cluster/v1alpha1 --output-package sigs.k8s.io/cluster-api/pkg/client/clientset_generated \
 		--go-header-file=./hack/boilerplate/boilerplate.generatego.txt
-	bin/lister-gen --input-dirs sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1 \
+	$$GOPATH/bin/lister-gen --input-dirs sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1 \
 		--output-package sigs.k8s.io/cluster-api/pkg/client/listers_generated \
 		--go-header-file=./hack/boilerplate/boilerplate.generatego.txt
-	bin/informer-gen --input-dirs sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1 \
+	$$GOPATH/bin/informer-gen --input-dirs sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1 \
 		--versioned-clientset-package sigs.k8s.io/cluster-api/pkg/client/clientset_generated/clientset \
 		--listers-package sigs.k8s.io/cluster-api/pkg/client/listers_generated \
 		--output-package sigs.k8s.io/cluster-api/pkg/client/informers_generated \
