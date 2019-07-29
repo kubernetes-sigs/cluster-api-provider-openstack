@@ -226,6 +226,10 @@ type OpenstackClusterProviderSpec struct {
 
 	// SAKeyPair is the service account key pair.
 	SAKeyPair KeyPair `json:"saKeyPair,omitempty"`
+
+	// MasterIP is the ip of the master, if there is Loadbalancer, should be LB
+	// ip and no LB should be floating ip address
+	MasterIP string `json:"masterIP,omitempty"`
 }
 
 // KeyPair is how operators can supply custom keypairs for kubeadm to use.
