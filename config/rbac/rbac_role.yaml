@@ -24,6 +24,7 @@ rules:
   - machinedeployments
   - machinesets
   - machines
+  - machines/status
   verbs:
   - get
   - list
