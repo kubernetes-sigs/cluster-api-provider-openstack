@@ -55,9 +55,18 @@ func (d *Deployer) GetKubeConfig(cluster *clusterv1.Cluster, master *clusterv1.M
 		return "", errors.New("key not found in status")
 	}
 
-	ip, err := d.GetIP(cluster, master)
-	if err != nil {
-		return "", err
+	var ip string
+	if master != nil {
+		ip, err = d.GetIP(cluster, master)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		// This case means no master created yet, we need get from cluster info anyway
+		if len(config.MasterIP) == 0 {
+			return "", errors.New("MasterIP in cluster spec not set")
+		}
+		ip = config.MasterIP
 	}
 
 	server := fmt.Sprintf("https://%s:443", ip)

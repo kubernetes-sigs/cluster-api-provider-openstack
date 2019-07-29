@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
+	apiv1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
@@ -17,6 +20,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/deployer"
 	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
 	clientclusterv1 "sigs.k8s.io/cluster-api/pkg/client/clientset_generated/clientset/typed/cluster/v1alpha1"
+	"sigs.k8s.io/cluster-api/pkg/controller/remote"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/patch"
 )
@@ -108,6 +112,30 @@ func (a *Actuator) Reconcile(cluster *clusterv1.Cluster) error {
 	err = networkingService.ReconcileSecurityGroups(clusterName, *clusterProviderSpec, clusterProviderStatus)
 	if err != nil {
 		return errors.Errorf("failed to reconcile security groups: %v", err)
+	}
+
+	// Store KubeConfig for Cluster API NodeRef controller to use.
+	kubeConfigSecretName := remote.KubeConfigSecretName(cluster.Name)
+	if _, err := a.params.KubeClient.CoreV1().Secrets(cluster.Namespace).Get(kubeConfigSecretName, metav1.GetOptions{}); err != nil && apierrors.IsNotFound(err) {
+		kubeConfig, err := a.Deployer.GetKubeConfig(cluster, nil)
+		if err != nil {
+			return errors.Wrapf(err, "failed to get kubeconfig for cluster %q", cluster.Name)
+		}
+
+		kubeConfigSecret := &apiv1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: kubeConfigSecretName,
+			},
+			StringData: map[string]string{
+				"value": kubeConfig,
+			},
+		}
+
+		if _, err := a.params.KubeClient.CoreV1().Secrets(cluster.Namespace).Create(kubeConfigSecret); err != nil {
+			return errors.Wrapf(err, "failed to create kubeconfig secret for cluster %q", cluster.Name)
+		}
+	} else if err != nil {
+		return errors.Wrapf(err, "failed to get kubeconfig secret for cluster %q", cluster.Name)
 	}
 
 	return nil
