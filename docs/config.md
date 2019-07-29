@@ -18,6 +18,8 @@
   - [Metadata](#metadata)
 - [Optional Configuration](#optional-configuration)
   - [Boot From Volume](#boot-from-volume)
+  - [Timeout settings](#timeout-settings)
+  - [Use machinedeployment as additional worker nodes](#use-machinedeployment-as-additional-worker-nodes)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -286,3 +288,62 @@ During some heavy workload cloud, the time to create and delete openstack instan
 you can set:
 `CLUSTER_API_OPENSTACK_INSTANCE_DELETE_TIMEOUT` for instance delete timeout value.
 `CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT` for instance create timeout value.
+
+## Use machinedeployment as additional worker nodes
+Assume we already have a cluster created:
+```
+# kubectl --kubeconfig kubeconfig get machines
+NAME                     PROVIDERID                                           PHASE
+openstack-master-g8vrl   openstack:////a87b5caf-8fc5-4943-b0b3-e8743c138c64
+openstack-node-6b2v7     openstack:////6c8efe5f-e993-430e-a60b-f20f29560240
+
+# kubectl --kubeconfig kubeconfig get nodes
+NAME                     STATUS   ROLES    AGE    VERSION
+openstack-master-g8vrl   Ready    master   112m   v1.15.0
+openstack-node-6b2v7     Ready    <none>   109m   v1.15.0
+```
+
+Then find file at `examples/openstack/machine-deployment.yaml.template` and do modification according to your settings,
+In below example, the machine replics are set to 2:
+```
+# kubectl --kubeconfig kubeconfig apply -f examples/openstack/out/machinedeploy.yaml
+machinedeployment.cluster.k8s.io/test1-machinedeployment created
+
+# kubectl --kubeconfig kubeconfig get machinedeployment
+NAME                      AGE
+test1-machinedeployment   45s
+
+# kubectl --kubeconfig kubeconfig get machinesets
+NAME                                 AGE
+test1-machinedeployment-8676464b5d   50s
+```
+
+Wait a while and you will see machines and nodes are created:
+```
+kubectl --kubeconfig kubeconfig get machines
+NAME                                       PROVIDERID                                           PHASE
+openstack-master-g8vrl                     openstack:////a87b5caf-8fc5-4943-b0b3-e8743c138c64
+openstack-node-6b2v7                       openstack:////6c8efe5f-e993-430e-a60b-f20f29560240
+test1-machinedeployment-8676464b5d-24fv4   openstack:////c886b36a-9657-40cc-a81f-bffcc73501a8
+test1-machinedeployment-8676464b5d-67jsw   openstack:////a6b14f22-9b87-48c1-a7de-7ccaea6f3b81
+
+# kubectl --kubeconfig kubeconfig get nodes
+NAME                                       STATUS   ROLES    AGE     VERSION
+openstack-master-g8vrl                     Ready    master   145m    v1.15.0
+openstack-node-6b2v7                       Ready    <none>   142m    v1.15.0
+test1-machinedeployment-8676464b5d-24fv4   Ready    <none>   3m25s   v1.15.0
+test1-machinedeployment-8676464b5d-67jsw   Ready    <none>   4m11s   v1.15.0
+```
+
+The new 2 machines with test1-machinedeployment- are newly created.
+
+Use following command to delete the machinedeployment:
+```
+# kubectl --kubeconfig kubeconfig delete machinedeployments test1-machinedeployment
+machinedeployment.cluster.k8s.io "test1-machinedeployment" deleted
+
+# kubectl --kubeconfig kubeconfig get machines
+NAME                     PROVIDERID                                           PHASE
+openstack-master-g8vrl   openstack:////a87b5caf-8fc5-4943-b0b3-e8743c138c64
+openstack-node-6b2v7     openstack:////6c8efe5f-e993-430e-a60b-f20f29560240
+```
