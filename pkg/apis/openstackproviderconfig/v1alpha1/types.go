@@ -284,8 +284,22 @@ type Router struct {
 	ID   string `json:"id"`
 }
 
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// OpenstackClusterProviderStatus contains the status fields
+// relevant to OpenStack in the cluster object.
+// +k8s:openapi-gen=true
+type OpenstackMachineProviderStatus struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	//TODO: add provider status
+}
+
 func init() {
 	SchemeBuilder.Register(&OpenstackProviderSpec{})
 	SchemeBuilder.Register(&OpenstackClusterProviderSpec{})
 	SchemeBuilder.Register(&OpenstackClusterProviderStatus{})
+	SchemeBuilder.Register(&OpenstackMachineProviderStatus{})
 }

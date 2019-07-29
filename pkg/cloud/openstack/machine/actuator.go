@@ -160,8 +160,22 @@ func (a *Actuator) Create(ctx context.Context, cluster *clusterv1.Cluster, machi
 	providerID := fmt.Sprintf("openstack:////%s", instance.ID)
 	machine.Spec.ProviderID = &providerID
 
+	klog.Infof("updating status of machine of %s", machine.Name)
+	ext, _ := providerv1.EncodeMachineStatus(&providerv1.OpenstackMachineProviderStatus{})
+	machine.Status.ProviderStatus = ext
+	err = a.updateMachine(cluster, machine)
+	if err != nil {
+		klog.Infof("updated status of machine failed: %v", err)
+	}
+
 	record.Eventf(machine, "CreatedInstance", "Created new instance with id: %s", instance.ID)
 	return a.updateAnnotation(machine, instance.ID)
+}
+
+func (a *Actuator) updateMachine(cluster *clusterv1.Cluster, machine *clusterv1.Machine) error {
+	machineClient := a.params.ClusterClient.Machines(cluster.Namespace)
+	_, err := machineClient.UpdateStatus(machine)
+	return err
 }
 
 func (a *Actuator) Delete(ctx context.Context, cluster *clusterv1.Cluster, machine *clusterv1.Machine) error {
@@ -211,6 +225,15 @@ func (a *Actuator) Update(ctx context.Context, cluster *clusterv1.Cluster, machi
 	status, err := a.instanceStatus(machine)
 	if err != nil {
 		return err
+	}
+
+	// FIXME: Sometimes the master node ProviderStatus update of bootstrap cluster didn't reflected on the new cluster
+	klog.Infof("updating status of machine of %s", machine.Name)
+	ext, _ := providerv1.EncodeMachineStatus(&providerv1.OpenstackMachineProviderStatus{})
+	machine.Status.ProviderStatus = ext
+	err = a.updateMachine(cluster, machine)
+	if err != nil {
+		klog.Infof("updated status of machine failed: %v", err)
 	}
 
 	currentMachine := (*clusterv1.Machine)(status)

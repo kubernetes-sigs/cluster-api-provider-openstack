@@ -14,3 +14,4 @@ resources:
 - crds/openstackproviderconfig_v1alpha1_openstackclusterproviderstatus.yaml
 - crds/openstackproviderconfig_v1alpha1_openstackclusterproviderspec.yaml
 - crds/openstackproviderconfig_v1alpha1_openstackproviderspec.yaml
+- crds/openstackproviderconfig_v1alpha1_openstackmachineproviderstatus.yaml
