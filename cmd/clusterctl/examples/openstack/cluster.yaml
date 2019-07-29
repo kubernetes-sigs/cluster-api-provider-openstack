@@ -15,4 +15,4 @@ spec:
         kind: "OpenstackProviderSpec"
         tags:
           - a_cluster_wide_tag
-
+        masterIP: <master ip>
