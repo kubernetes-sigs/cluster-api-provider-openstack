@@ -60,6 +60,70 @@ spec:
           description: ExternalNetworkID is the ID of an external OpenStack Network.
             This is necessary to get public internet to the VMs.
           type: string
+        externalRouterIPs:
+          description: ExternalRouterIPs is an array of externalIPs on the respective
+            subnets. This is necessary if the router needs a fixed ip in a specific
+            subnet.
+          items:
+            properties:
+              fixedIP:
+                description: The FixedIP in the corresponding subnet
+                type: string
+              subnet:
+                description: The subnet in which the FixedIP is used for the Gateway
+                  of this router
+                properties:
+                  filter:
+                    description: Filters for optional network query
+                    properties:
+                      cidr:
+                        type: string
+                      description:
+                        type: string
+                      enableDhcp:
+                        type: boolean
+                      id:
+                        type: string
+                      ipVersion:
+                        format: int64
+                        type: integer
+                      limit:
+                        format: int64
+                        type: integer
+                      marker:
+                        type: string
+                      name:
+                        type: string
+                      networkId:
+                        type: string
+                      notTags:
+                        type: string
+                      notTagsAny:
+                        type: string
+                      projectId:
+                        type: string
+                      sortDir:
+                        type: string
+                      sortKey:
+                        type: string
+                      subnetpoolId:
+                        type: string
+                      tags:
+                        type: string
+                      tagsAny:
+                        type: string
+                      tenantId:
+                        type: string
+                    type: object
+                  uuid:
+                    description: The UUID of the network. Required if you omit the
+                      port attribute.
+                    type: string
+                type: object
+            required:
+            - subnet
+            type: object
+          type: array
         frontProxyCAKeyPair:
           description: FrontProxyCAKeyPair is the key pair for FrontProxyKeyPair.
           properties:

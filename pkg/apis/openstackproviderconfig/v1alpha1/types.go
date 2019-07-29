@@ -196,6 +196,9 @@ type OpenstackClusterProviderSpec struct {
 	NodeCIDR string `json:"nodeCidr,omitempty"`
 	// DNSNameservers is the list of nameservers for OpenStack Subnet being created.
 	DNSNameservers []string `json:"dnsNameservers,omitempty"`
+	// ExternalRouterIPs is an array of externalIPs on the respective subnets.
+	// This is necessary if the router needs a fixed ip in a specific subnet.
+	ExternalRouterIPs []ExternalRouterIPParam `json:"externalRouterIPs,omitempty"`
 	// ExternalNetworkID is the ID of an external OpenStack Network. This is necessary
 	// to get public internet to the VMs.
 	ExternalNetworkID string `json:"externalNetworkId,omitempty"`
@@ -235,6 +238,13 @@ type KeyPair struct {
 // HasCertAndKey returns whether a keypair contains cert and key of non-zero length.
 func (kp *KeyPair) HasCertAndKey() bool {
 	return len(kp.Cert) != 0 && len(kp.Key) != 0
+}
+
+type ExternalRouterIPParam struct {
+	// The FixedIP in the corresponding subnet
+	FixedIP string `json:"fixedIP,omitempty"`
+	// The subnet in which the FixedIP is used for the Gateway of this router
+	Subnet SubnetParam `json:"subnet"`
 }
 
 // +genclient
