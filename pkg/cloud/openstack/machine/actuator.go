@@ -221,15 +221,17 @@ func (a *Actuator) Delete(ctx context.Context, cluster *clusterv1.Cluster, machi
 		return err
 	}
 
-	clusterProviderStatus, err := providerv1.ClusterStatusFromProviderStatus(cluster.Status.ProviderStatus)
+	clusterProviderSpec, clusterProviderStatus, err := providerv1.ClusterSpecAndStatusFromProviderSpec(cluster)
 	if err != nil {
 		return a.handleMachineError(machine, apierrors.CreateMachine(
 			"error updating Openstack instance: %v", err))
 	}
 
-	err = networkingService.DeleteLoadBalancerMember(clusterName, machine, clusterProviderStatus)
-	if err != nil {
-		return err
+	if clusterProviderSpec.ManagedAPIServerLoadBalancer {
+		err = networkingService.DeleteLoadBalancerMember(clusterName, machine, clusterProviderStatus)
+		if err != nil {
+			return err
+		}
 	}
 
 	instance, err := a.instanceExists(machine)
