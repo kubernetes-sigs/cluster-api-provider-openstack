@@ -414,6 +414,25 @@
   version = "v1.5.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:e56a2932c64a3556d2303725e7735f1661b863ec92278ba17a377fb2ce9fa3fc"
+  name = "github.com/openshift/api"
+  packages = ["config/v1"]
+  pruneopts = "NUT"
+  revision = "406574a7aa1eb0e916f4029433e5c28c6a53099b"
+
+[[projects]]
+  branch = "master"
+  digest = "1:94506f6a1e10b4b325f01fee471a4d938f7871c26b1da2a49727cea7784bfb30"
+  name = "github.com/openshift/client-go"
+  packages = [
+    "config/clientset/versioned/scheme",
+    "config/clientset/versioned/typed/config/v1",
+  ]
+  pruneopts = "NUT"
+  revision = "a85ea6a6b3a5d2dbe41582ee35695dd4683e1f02"
+
+[[projects]]
   branch = "openshift-4.2-cluster-api-0.1.0"
   digest = "1:39b28a2133488606e41fd0f6f13ec4239169424432fb0eb0dadb9d6f8ee4bf91"
   name = "github.com/openshift/cluster-api"
@@ -1087,7 +1106,7 @@
 
 [[projects]]
   branch = "release-0.2"
-  digest = "1:d68cbd98b02df3040befe70a2da26ceb1d090acf6e1e42e2701bde629331758b"
+  digest = "1:bd060d3dab4e2fb834f2976db7757f3f9056a27d4d686de1eb0a1e333d52e1fb"
   name = "sigs.k8s.io/controller-runtime"
   packages = [
     "pkg/cache",
@@ -1113,7 +1132,6 @@
     "pkg/reconcile",
     "pkg/recorder",
     "pkg/runtime/inject",
-    "pkg/runtime/scheme",
     "pkg/runtime/signals",
     "pkg/scheme",
     "pkg/source",
@@ -1191,6 +1209,7 @@
     "github.com/gophercloud/gophercloud/openstack/networking/v2/subnets",
     "github.com/gophercloud/gophercloud/pagination",
     "github.com/gophercloud/utils/openstack/clientconfig",
+    "github.com/openshift/client-go/config/clientset/versioned/typed/config/v1",
     "github.com/openshift/cluster-api/cmd/clusterctl/cmd",
     "github.com/openshift/cluster-api/pkg/apis",
     "github.com/openshift/cluster-api/pkg/apis/cluster/common",
@@ -1222,8 +1241,8 @@
     "sigs.k8s.io/controller-runtime/pkg/controller",
     "sigs.k8s.io/controller-runtime/pkg/handler",
     "sigs.k8s.io/controller-runtime/pkg/manager",
-    "sigs.k8s.io/controller-runtime/pkg/runtime/scheme",
     "sigs.k8s.io/controller-runtime/pkg/runtime/signals",
+    "sigs.k8s.io/controller-runtime/pkg/scheme",
     "sigs.k8s.io/controller-runtime/pkg/source",
     "sigs.k8s.io/controller-tools/cmd/controller-gen",
     "sigs.k8s.io/testing_frameworks/integration",

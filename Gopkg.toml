@@ -124,3 +124,7 @@ required = [
   name = "github.com/openshift/cluster-api"
   unused-packages = false
   non-go = false
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/openshift/client-go"
