@@ -226,7 +226,8 @@ func (a *Actuator) storeCluster(cluster *clusterv1.Cluster, clusterCopy *cluster
 	apiServerHost := clusterProviderSpec.APIServerLoadBalancerFloatingIP
 	apiServerPort := clusterProviderSpec.APIServerLoadBalancerPort
 	if clusterProviderSpec.ManagedAPIServerLoadBalancer {
-		if apiServerHost != clusterProviderStatus.Network.APIServerLoadBalancer.IP {
+		if clusterProviderStatus.Network != nil && clusterProviderStatus.Network.APIServerLoadBalancer != nil &&
+			apiServerHost != clusterProviderStatus.Network.APIServerLoadBalancer.IP {
 			return fmt.Errorf("APIServerLoadBalancer has IP %s instead of IP %s", clusterProviderStatus.Network.APIServerLoadBalancer.IP, apiServerHost)
 		}
 	}
