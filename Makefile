@@ -2,18 +2,9 @@
 GIT_HOST = sigs.k8s.io
 PWD := $(shell pwd)
 BASE_DIR := $(shell basename $(PWD))
-# Keep an existing GOPATH, make a private one if it is undefined
-GOPATH_DEFAULT := $(PWD)/.go
-export GOPATH ?= $(GOPATH_DEFAULT)
-GOBIN_DEFAULT := $(GOPATH)/bin
-export GOBIN ?= $(GOBIN_DEFAULT)
 TESTARGS_DEFAULT := "-v"
 export TESTARGS ?= $(TESTARGS_DEFAULT)
-PKG := $(shell awk  -F "\"" '/^ignored = / { print $$2 }' Gopkg.toml)
-DEST := $(GOPATH)/src/$(GIT_HOST)/$(BASE_DIR)
-SOURCES := $(shell find $(DEST) -name '*.go')
 
-HAS_DEP := $(shell command -v dep;)
 HAS_LINT := $(shell command -v golint;)
 HAS_GOX := $(shell command -v gox;)
 HAS_YQ := $(shell command -v yq;)
@@ -33,46 +24,29 @@ TAGS      :=
 LDFLAGS   := "-w -s -X 'main.version=${VERSION}'"
 REGISTRY ?= k8scloudprovider
 
-ifneq ("$(realpath $(DEST))", "$(realpath $(PWD))")
-    $(error Please run 'make' from $(DEST). Current directory is $(PWD))
-endif
-
-# CTI targets
-
-$(GOBIN):
-	echo "create gobin"
-	mkdir -p $(GOBIN)
-
-work: $(GOBIN)
-
-depend: work
-ifndef HAS_DEP
-	curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-endif
-	dep ensure
-
-depend-update: work
-	dep ensure -update
+.PHONY: vendor
+vendor: ## Runs go mod to ensure proper vendoring.
+	./hack/update-vendor.sh
 
 build: binary images
 
 binary: manager clusterctl
 
 manager:
-	GO111MODULE=off CGO_ENABLED=0 GOOS=$(GOOS) go build -v \
+	CGO_ENABLED=0 GOOS=$(GOOS) go build -v \
 		-ldflags $(LDFLAGS) \
 		-o bin/manager \
 		cmd/manager/main.go
 
 clusterctl:
-	GO111MODULE=off CGO_ENABLED=0 GOOS=$(GOOS) go build \
+	CGO_ENABLED=0 GOOS=$(GOOS) go build \
 		-ldflags $(LDFLAGS) \
 		-o bin/clusterctl \
 		cmd/clusterctl/main.go
 
 test: unit functional generate_yaml_test
 
-check: depend fmt vet lint
+check: vendor fmt vet lint
 
 generate_yaml_test:
 ifndef HAS_YQ
@@ -86,8 +60,8 @@ endif
 	rm -fr $(GENERATE_YAML_PATH)/$(GENERATE_YAML_TEST_FOLDER)
 	rm dummy-clouds-test.yaml
 
-unit: generate depend
-	go test -tags=unit $(shell go list ./...) $(TESTARGS)
+unit: generate vendor
+	go test -tags=unit ./pkg/... ./cmd/... $(TESTARGS)
 
 functional:
 	@echo "$@ not yet implemented"
@@ -103,10 +77,10 @@ endif
 	hack/verify-golint.sh
 
 vet:
-	go vet ./...
+	go vet ./pkg/... ./cmd/...
 
-cover: generate depend
-	go test -tags=unit $(shell go list ./...) -cover
+cover: generate vendor
+	go test -tags=unit ./pkg/... ./cmd/... -cover
 
 docs:
 	@echo "$@ not yet implemented"
@@ -126,10 +100,6 @@ translation:
 env:
 	@echo "PWD: $(PWD)"
 	@echo "BASE_DIR: $(BASE_DIR)"
-	@echo "GOPATH: $(GOPATH)"
-	@echo "GOROOT: $(GOROOT)"
-	@echo "DEST: $(DEST)"
-	@echo "PKG: $(PKG)"
 	go version
 	go env
 
@@ -154,10 +124,10 @@ manifests:
 
 images: openstack-cluster-api-controller clusterctl-image
 
-openstack-cluster-api-controller: generate fmt vet manifests
+openstack-cluster-api-controller: generate manifests
 	docker build . -f cmd/manager/Dockerfile --network=host -t "$(REGISTRY)/openstack-cluster-api-controller:$(VERSION)"
 
-clusterctl-image: generate fmt vet manifests
+clusterctl-image: generate manifests
 	docker build . -f cmd/clusterctl/Dockerfile --network=host -t "$(REGISTRY)/openstack-cluster-api-clusterctl:$(VERSION)"
 
 upload-images: images
@@ -171,7 +141,7 @@ version:
 
 .PHONY: build-cross
 build-cross: LDFLAGS += -extldflags "-static"
-build-cross: depend
+build-cross: vendor
 ifndef HAS_GOX
 	go get -u github.com/mitchellh/gox
 endif
@@ -187,5 +157,5 @@ dist: build-cross
 		$(DIST_DIRS) zip -r cluster-api-provider-openstack-$(VERSION)-{}.zip {} \; \
 	)
 
-.PHONY: build clean cover depend docs fmt functional lint realclean \
+.PHONY: build clean cover vendor docs fmt functional lint realclean \
 	relnotes test translation version build-cross dist manifests

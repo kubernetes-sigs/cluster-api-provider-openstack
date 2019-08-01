@@ -18,30 +18,20 @@ package noderefutil
 
 import (
 	"errors"
-	"regexp"
-	"strings"
+	"net/url"
+	"path"
 )
 
 var (
 	ErrEmptyProviderID   = errors.New("providerID is empty")
-	ErrInvalidProviderID = errors.New("providerID must be of the form <cloudProvider>://<optional>/<segments>/<provider id>")
+	ErrInvalidProviderID = errors.New("providerID is not valid")
 )
 
 // ProviderID is a struct representation of a Kubernetes ProviderID.
 // Format: cloudProvider://optional/segments/etc/id
 type ProviderID struct {
-	original      string
-	cloudProvider string
-	id            string
+	value *url.URL
 }
-
-/*
-	- must start with at least one non-colon
-	- followed by ://
-	- followed by any number of characters
-	- must end with a non-slash
-*/
-var providerIDRegex = regexp.MustCompile("^[^:]+://.*[^/]$")
 
 // NewProviderID parses the input string and returns a new ProviderID.
 func NewProviderID(id string) (*ProviderID, error) {
@@ -49,20 +39,13 @@ func NewProviderID(id string) (*ProviderID, error) {
 		return nil, ErrEmptyProviderID
 	}
 
-	if !providerIDRegex.MatchString(id) {
-		return nil, ErrInvalidProviderID
+	parsed, err := url.Parse(id)
+	if err != nil {
+		return nil, err
 	}
 
-	colonIndex := strings.Index(id, ":")
-	cloudProvider := id[0:colonIndex]
-
-	lastSlashIndex := strings.LastIndex(id, "/")
-	instance := id[lastSlashIndex+1:]
-
 	res := &ProviderID{
-		original:      id,
-		cloudProvider: cloudProvider,
-		id:            instance,
+		value: parsed,
 	}
 
 	if !res.Validate() {
@@ -74,12 +57,12 @@ func NewProviderID(id string) (*ProviderID, error) {
 
 // CloudProvider returns the cloud provider portion of the ProviderID.
 func (p *ProviderID) CloudProvider() string {
-	return p.cloudProvider
+	return p.value.Scheme
 }
 
 // ID returns the identifier portion of the ProviderID.
 func (p *ProviderID) ID() string {
-	return p.id
+	return path.Base(p.value.Path)
 }
 
 // Equals returns true if both the CloudProvider and ID match.
@@ -89,10 +72,12 @@ func (p *ProviderID) Equals(o *ProviderID) bool {
 
 // String returns the string representation of this object.
 func (p *ProviderID) String() string {
-	return p.original
+	return p.value.String()
 }
 
 // Validate returns true if the provider id is valid.
 func (p *ProviderID) Validate() bool {
-	return p.CloudProvider() != "" && p.ID() != ""
+	return p.CloudProvider() != "" &&
+		p.ID() != "" &&
+		p.ID() != "/" // path.Base returns "/" if consists only of slashes.
 }
