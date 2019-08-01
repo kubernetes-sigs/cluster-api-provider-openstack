@@ -14,6 +14,23 @@ spec:
   validation:
     openAPIV3Schema:
       properties:
+        apiServerLoadBalancerAdditionalPorts:
+          description: APIServerLoadBalancerAdditionalPorts adds additional ports
+            to the APIServerLoadBalancer
+          items:
+            format: int64
+            type: integer
+          type: array
+        apiServerLoadBalancerFloatingIP:
+          description: APIServerLoadBalancerFloatingIP is the floatingIP which will
+            be associated to the APIServer loadbalancer. The floatingIP will be created
+            if it not already exists.
+          type: string
+        apiServerLoadBalancerPort:
+          description: APIServerLoadBalancerPort is the port on which the listener
+            on the APIServer loadbalancer will be created
+          format: int64
+          type: integer
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
             of an object. Servers should convert recognized schemas to the latest
@@ -87,6 +104,10 @@ spec:
                       ipVersion:
                         format: int64
                         type: integer
+                      ipv6AddressMode:
+                        type: string
+                      ipv6RaMode:
+                        type: string
                       limit:
                         format: int64
                         type: integer
@@ -140,6 +161,11 @@ spec:
             object represents. Servers may infer this from the endpoint the client
             submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
           type: string
+        managedAPIServerLoadBalancer:
+          description: 'ManagedAPIServerLoadBalancer defines whether a LoadBalancer
+            for the APIServer should be created. If set to true the following properties
+            are mandatory: APIServerLoadBalancerFloatingIP, APIServerLoadBalancerPort'
+          type: boolean
         managedSecurityGroups:
           description: ManagedSecurityGroups defines that kubernetes manages the OpenStack
             security groups for now, that means that we'll create two security groups,
@@ -177,6 +203,7 @@ spec:
       required:
       - cloudsSecret
       - cloudName
+      - managedAPIServerLoadBalancer
       - managedSecurityGroups
   version: v1alpha1
 status:

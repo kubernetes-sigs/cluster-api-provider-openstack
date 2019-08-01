@@ -26,6 +26,7 @@ import (
 	"reflect"
 	constants "sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/contants"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/compute"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/provider"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/userdata"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/deployer"
@@ -95,7 +96,12 @@ func (a *Actuator) Create(ctx context.Context, cluster *clusterv1.Cluster, machi
 		return err
 	}
 
-	clusterProviderSpec, err := providerv1.ClusterSpecFromProviderSpec(cluster.Spec.ProviderSpec)
+	networkingService, err := networking.NewService(osProviderClient, clientOpts)
+	if err != nil {
+		return err
+	}
+
+	clusterProviderSpec, clusterProviderStatus, err := providerv1.ClusterSpecAndStatusFromProviderSpec(cluster)
 	if err != nil {
 		return a.handleMachineError(machine, apierrors.CreateMachine(
 			"error creating Openstack instance: %v", err))
@@ -114,37 +120,37 @@ func (a *Actuator) Create(ctx context.Context, cluster *clusterv1.Cluster, machi
 	if err != nil {
 		return err
 	}
+	// We're skipping server creation if it already exists. FloatingIP and LoadBalancer member should be reconciled anyway.
 	if instance != nil {
 		klog.Infof("Skipped creating a VM that already exists.\n")
-		return nil
-	}
-
-	userData, err := userdata.GetUserData(a.params.Client, a.params.KubeClient, machineProviderSpec, cluster, machine)
-	if err != nil {
-		if machineError, ok := err.(*apierrors.MachineError); ok {
-			return a.handleMachineError(machine, machineError)
-		}
-		return err
-	}
-
-	instance, err = computeService.InstanceCreate(clusterName, machine.Name, clusterProviderSpec, machineProviderSpec, userData, machineProviderSpec.KeyName)
-
-	if err != nil {
-		return a.handleMachineError(machine, apierrors.CreateMachine(
-			"error creating Openstack instance: %v", err))
-	}
-	instanceCreateTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT", TimeoutInstanceCreate)
-	instanceCreateTimeout = instanceCreateTimeout * time.Minute
-	err = util.PollImmediate(RetryIntervalInstanceStatus, instanceCreateTimeout, func() (bool, error) {
-		instance, err := computeService.GetInstance(instance.ID)
+	} else {
+		userData, err := userdata.GetUserData(a.params.Client, a.params.KubeClient, machineProviderSpec, cluster, machine)
 		if err != nil {
-			return false, nil
+			if machineError, ok := err.(*apierrors.MachineError); ok {
+				return a.handleMachineError(machine, machineError)
+			}
+			return err
 		}
-		return instance.Status == "ACTIVE", nil
-	})
-	if err != nil {
-		return a.handleMachineError(machine, apierrors.CreateMachine(
-			"error creating Openstack instance: %v", err))
+
+		instance, err = computeService.InstanceCreate(clusterName, machine.Name, clusterProviderSpec, machineProviderSpec, userData, machineProviderSpec.KeyName)
+
+		if err != nil {
+			return a.handleMachineError(machine, apierrors.CreateMachine(
+				"error creating Openstack instance: %v", err))
+		}
+		instanceCreateTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT", TimeoutInstanceCreate)
+		instanceCreateTimeout = instanceCreateTimeout * time.Minute
+		err = util.PollImmediate(RetryIntervalInstanceStatus, instanceCreateTimeout, func() (bool, error) {
+			instance, err := computeService.GetInstance(instance.ID)
+			if err != nil {
+				return false, nil
+			}
+			return instance.Status == "ACTIVE", nil
+		})
+		if err != nil {
+			return a.handleMachineError(machine, apierrors.CreateMachine(
+				"error creating Openstack instance: %v", err))
+		}
 	}
 
 	if machineProviderSpec.FloatingIP != "" {
@@ -153,7 +159,14 @@ func (a *Actuator) Create(ctx context.Context, cluster *clusterv1.Cluster, machi
 			return a.handleMachineError(machine, apierrors.CreateMachine(
 				"Associate floatingIP err: %v", err))
 		}
+	}
 
+	if clusterProviderSpec.ManagedAPIServerLoadBalancer {
+		err := networkingService.ReconcileLoadBalancerMember(clusterName, machine, clusterProviderSpec, clusterProviderStatus)
+		if err != nil {
+			return a.handleMachineError(machine, apierrors.CreateMachine(
+				"Reconcile LoadBalancer Member err: %v", err))
+		}
 	}
 
 	// update Annotation below will store machine spec
@@ -169,7 +182,13 @@ func (a *Actuator) Create(ctx context.Context, cluster *clusterv1.Cluster, machi
 	}
 
 	record.Eventf(machine, "CreatedInstance", "Created new instance with id: %s", instance.ID)
-	return a.updateAnnotation(machine, instance.ID)
+	err = a.updateAnnotation(machine, instance.ID)
+	if err != nil {
+		return err
+	}
+
+	klog.Infof("Created Machine %s/%s: %s successfully", cluster.Namespace, cluster.Name, machine.Name)
+	return nil
 }
 
 func (a *Actuator) updateMachine(cluster *clusterv1.Cluster, machine *clusterv1.Machine) error {
@@ -185,6 +204,8 @@ func (a *Actuator) Delete(ctx context.Context, cluster *clusterv1.Cluster, machi
 	}
 	klog.Infof("Deleting Machine %s/%s: %s", cluster.Namespace, cluster.Name, machine.Name)
 
+	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
+
 	osProviderClient, clientOpts, err := provider.NewClientFromMachine(a.params.KubeClient, machine)
 	if err != nil {
 		return err
@@ -193,6 +214,24 @@ func (a *Actuator) Delete(ctx context.Context, cluster *clusterv1.Cluster, machi
 	computeService, err := compute.NewService(osProviderClient, clientOpts)
 	if err != nil {
 		return err
+	}
+
+	networkingService, err := networking.NewService(osProviderClient, clientOpts)
+	if err != nil {
+		return err
+	}
+
+	clusterProviderSpec, clusterProviderStatus, err := providerv1.ClusterSpecAndStatusFromProviderSpec(cluster)
+	if err != nil {
+		return a.handleMachineError(machine, apierrors.CreateMachine(
+			"error updating Openstack instance: %v", err))
+	}
+
+	if clusterProviderSpec.ManagedAPIServerLoadBalancer {
+		err = networkingService.DeleteLoadBalancerMember(clusterName, machine, clusterProviderStatus)
+		if err != nil {
+			return err
+		}
 	}
 
 	instance, err := a.instanceExists(machine)
@@ -222,6 +261,24 @@ func (a *Actuator) Update(ctx context.Context, cluster *clusterv1.Cluster, machi
 	}
 	klog.Infof("Updating Machine %s/%s: %s", cluster.Namespace, cluster.Name, machine.Name)
 
+	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
+
+	osProviderClient, clientOpts, err := provider.NewClientFromMachine(a.params.KubeClient, machine)
+	if err != nil {
+		return err
+	}
+
+	networkingService, err := networking.NewService(osProviderClient, clientOpts)
+	if err != nil {
+		return err
+	}
+
+	clusterProviderSpec, clusterProviderStatus, err := providerv1.ClusterSpecAndStatusFromProviderSpec(cluster)
+	if err != nil {
+		return a.handleMachineError(machine, apierrors.CreateMachine(
+			"error updating Openstack instance: %v", err))
+	}
+
 	status, err := a.instanceStatus(machine)
 	if err != nil {
 		return err
@@ -235,7 +292,7 @@ func (a *Actuator) Update(ctx context.Context, cluster *clusterv1.Cluster, machi
 	if err != nil {
 		klog.Infof("updated status of machine failed: %v", err)
 	}
-
+	var machineAlreadyExists bool
 	currentMachine := (*clusterv1.Machine)(status)
 	if currentMachine == nil {
 		instance, err := a.instanceExists(machine)
@@ -244,44 +301,57 @@ func (a *Actuator) Update(ctx context.Context, cluster *clusterv1.Cluster, machi
 		}
 		if instance != nil && instance.Status == "ACTIVE" {
 			klog.Infof("Populating current state for boostrap machine %v", machine.ObjectMeta.Name)
-			return a.updateAnnotation(machine, instance.ID)
+			err = a.updateAnnotation(machine, instance.ID)
+			if err != nil {
+				return err
+			}
+			machineAlreadyExists = true
 		} else {
 			return fmt.Errorf("cannot retrieve current state to update machine %v", machine.ObjectMeta.Name)
 		}
 	}
 
 	if !requiresUpdate(currentMachine, machine) {
-		return nil
+		machineAlreadyExists = true
 	}
 
-	if util.IsControlPlaneMachine(currentMachine) {
-		// TODO: add master inplace
-		klog.Errorf("master inplace update failed: not support master in place update now")
-	} else {
-		klog.Infof("re-creating machine %s for update.", currentMachine.ObjectMeta.Name)
-		err = a.Delete(ctx, cluster, currentMachine)
-		if err != nil {
-			klog.Errorf("delete machine %s for update failed: %v", currentMachine.ObjectMeta.Name, err)
+	if !machineAlreadyExists {
+		if util.IsControlPlaneMachine(currentMachine) {
+			// TODO: add master inplace
+			klog.Errorf("master inplace update failed: not support master in place update now")
 		} else {
-			instanceDeleteTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_DELETE_TIMEOUT", TimeoutInstanceDelete)
-			instanceDeleteTimeout = instanceDeleteTimeout * time.Minute
-			err = util.PollImmediate(RetryIntervalInstanceStatus, instanceDeleteTimeout, func() (bool, error) {
-				instance, err := a.instanceExists(machine)
+			klog.Infof("re-creating machine %s for update.", currentMachine.ObjectMeta.Name)
+			err = a.Delete(ctx, cluster, currentMachine)
+			if err != nil {
+				klog.Errorf("delete machine %s for update failed: %v", currentMachine.ObjectMeta.Name, err)
+			} else {
+				instanceDeleteTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_DELETE_TIMEOUT", TimeoutInstanceDelete)
+				instanceDeleteTimeout = instanceDeleteTimeout * time.Minute
+				err = util.PollImmediate(RetryIntervalInstanceStatus, instanceDeleteTimeout, func() (bool, error) {
+					instance, err := a.instanceExists(machine)
+					if err != nil {
+						return false, nil
+					}
+					return instance == nil, nil
+				})
 				if err != nil {
-					return false, nil
+					return a.handleMachineError(machine, apierrors.DeleteMachine(
+						"error deleting Openstack instance: %v", err))
 				}
-				return instance == nil, nil
-			})
-			if err != nil {
-				return a.handleMachineError(machine, apierrors.DeleteMachine(
-					"error deleting Openstack instance: %v", err))
-			}
 
-			err = a.Create(ctx, cluster, machine)
-			if err != nil {
-				klog.Errorf("create machine %s for update failed: %v", machine.ObjectMeta.Name, err)
+				err = a.Create(ctx, cluster, machine)
+				if err != nil {
+					klog.Errorf("create machine %s for update failed: %v", machine.ObjectMeta.Name, err)
+				}
+				klog.Infof("Successfully updated machine %s", currentMachine.ObjectMeta.Name)
 			}
-			klog.Infof("Successfully updated machine %s", currentMachine.ObjectMeta.Name)
+		}
+	}
+
+	if clusterProviderSpec.ManagedAPIServerLoadBalancer {
+		err = networkingService.ReconcileLoadBalancerMember(clusterName, machine, clusterProviderSpec, clusterProviderStatus)
+		if err != nil {
+			return err
 		}
 	}
 

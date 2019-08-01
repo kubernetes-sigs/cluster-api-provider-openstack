@@ -260,7 +260,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1569d27c7f3b5dc47a4a834f8dc1a27100928c24d16f3742aac4b89c427e8839"
+  digest = "1:329a5e71e73ab0ec18a7b90f72db800af2bf2198d2b848d03e2f94279291a106"
   name = "github.com/gophercloud/gophercloud"
   packages = [
     ".",
@@ -280,7 +280,13 @@
     "openstack/imageservice/v2/images",
     "openstack/networking/v2/extensions",
     "openstack/networking/v2/extensions/attributestags",
+    "openstack/networking/v2/extensions/layer3/floatingips",
     "openstack/networking/v2/extensions/layer3/routers",
+    "openstack/networking/v2/extensions/lbaas_v2/l7policies",
+    "openstack/networking/v2/extensions/lbaas_v2/listeners",
+    "openstack/networking/v2/extensions/lbaas_v2/loadbalancers",
+    "openstack/networking/v2/extensions/lbaas_v2/monitors",
+    "openstack/networking/v2/extensions/lbaas_v2/pools",
     "openstack/networking/v2/extensions/security/groups",
     "openstack/networking/v2/extensions/security/rules",
     "openstack/networking/v2/extensions/trunks",
@@ -1160,7 +1166,12 @@
     "github.com/gophercloud/gophercloud/openstack/imageservice/v2/images",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags",
+    "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers",
+    "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/lbaas_v2/listeners",
+    "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/lbaas_v2/loadbalancers",
+    "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/lbaas_v2/monitors",
+    "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/lbaas_v2/pools",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/rules",
     "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/trunks",
@@ -1170,6 +1181,7 @@
     "github.com/gophercloud/gophercloud/pagination",
     "github.com/gophercloud/utils/openstack/clientconfig",
     "github.com/pkg/errors",
+    "github.com/sbueringer/cluster-api-provider-openstack/pkg/cloud/openstack",
     "gopkg.in/yaml.v2",
     "k8s.io/api/core/v1",
     "k8s.io/apimachinery/pkg/api/errors",
@@ -1200,7 +1212,6 @@
     "sigs.k8s.io/cluster-api/pkg/errors",
     "sigs.k8s.io/cluster-api/pkg/util",
     "sigs.k8s.io/controller-runtime/pkg/client",
-    "sigs.k8s.io/controller-runtime/pkg/client/config",
     "sigs.k8s.io/controller-runtime/pkg/manager",
     "sigs.k8s.io/controller-runtime/pkg/patch",
     "sigs.k8s.io/controller-runtime/pkg/runtime/scheme",

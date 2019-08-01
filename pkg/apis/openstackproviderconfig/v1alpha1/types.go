@@ -203,6 +203,23 @@ type OpenstackClusterProviderSpec struct {
 	// to get public internet to the VMs.
 	ExternalNetworkID string `json:"externalNetworkId,omitempty"`
 
+	// ManagedAPIServerLoadBalancer defines whether a LoadBalancer for the
+	// APIServer should be created. If set to true the following properties are
+	// mandatory: APIServerLoadBalancerFloatingIP, APIServerLoadBalancerPort
+	ManagedAPIServerLoadBalancer bool `json:"managedAPIServerLoadBalancer"`
+
+	// APIServerLoadBalancerFloatingIP is the floatingIP which will be associated
+	// to the APIServer loadbalancer. The floatingIP will be created if it not
+	// already exists.
+	APIServerLoadBalancerFloatingIP string `json:"apiServerLoadBalancerFloatingIP,omitempty"`
+
+	// APIServerLoadBalancerPort is the port on which the listener on the APIServer
+	// loadbalancer will be created
+	APIServerLoadBalancerPort int `json:"apiServerLoadBalancerPort,omitempty"`
+
+	// APIServerLoadBalancerAdditionalPorts adds additional ports to the APIServerLoadBalancer
+	APIServerLoadBalancerAdditionalPorts []int `json:"apiServerLoadBalancerAdditionalPorts,omitempty"`
+
 	// ManagedSecurityGroups defines that kubernetes manages the OpenStack security groups
 	// for now, that means that we'll create two security groups, one allowing SSH
 	// and API access from everywhere, and another one that allows all traffic to/from
@@ -282,6 +299,10 @@ type Network struct {
 
 	Subnet *Subnet `json:"subnet,omitempty"`
 	Router *Router `json:"router,omitempty"`
+
+	// Be careful when using APIServerLoadBalancer, because this field is optional and therefore not
+	// set in all cases
+	APIServerLoadBalancer *LoadBalancer `json:"apiServerLoadBalancer,omitempty"`
 }
 
 // Subnet represents basic information about the associated OpenStack Neutron Subnet
@@ -296,6 +317,14 @@ type Subnet struct {
 type Router struct {
 	Name string `json:"name"`
 	ID   string `json:"id"`
+}
+
+// LoadBalancer represents basic information about the associated OpenStack LoadBalancer
+type LoadBalancer struct {
+	Name       string `json:"name"`
+	ID         string `json:"id"`
+	IP         string `json:"ip"`
+	InternalIP string `json:"internalIP"`
 }
 
 // +genclient

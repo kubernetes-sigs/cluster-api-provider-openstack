@@ -81,7 +81,7 @@ func (a *Actuator) Reconcile(cluster *clusterv1.Cluster) error {
 
 	defer func() {
 		if err := a.storeCluster(cluster, clusterCopy, clusterProviderSpec, clusterProviderStatus); err != nil {
-			klog.Errorf("failed to store cluster %q in namespace %q: %v", cluster.Name, cluster.Namespace, err)
+			klog.Errorf("Failed to store cluster %q in namespace %q: %v", cluster.Name, cluster.Namespace, err)
 		}
 	}()
 
@@ -106,6 +106,12 @@ func (a *Actuator) Reconcile(cluster *clusterv1.Cluster) error {
 		err = networkingService.ReconcileRouter(clusterName, clusterProviderSpec, clusterProviderStatus)
 		if err != nil {
 			return errors.Errorf("failed to reconcile router: %v", err)
+		}
+		if clusterProviderSpec.ManagedAPIServerLoadBalancer {
+			err = networkingService.ReconcileLoadBalancer(clusterName, clusterProviderSpec, clusterProviderStatus)
+			if err != nil {
+				return errors.Errorf("failed to reconcile load balancer: %v", err)
+			}
 		}
 	}
 
@@ -138,6 +144,7 @@ func (a *Actuator) Reconcile(cluster *clusterv1.Cluster) error {
 		return errors.Wrapf(err, "failed to get kubeconfig secret for cluster %q", cluster.Name)
 	}
 
+	klog.Infof("Reconciled Cluster %s/%s successfully", cluster.Namespace, cluster.Name)
 	return nil
 }
 
@@ -180,9 +187,9 @@ func (a *Actuator) Delete(cluster *clusterv1.Cluster) error {
 	return nil
 }
 
-func (a *Actuator) storeCluster(cluster *clusterv1.Cluster, clusterCopy *clusterv1.Cluster, spec *providerv1.OpenstackClusterProviderSpec, status *providerv1.OpenstackClusterProviderStatus) error {
+func (a *Actuator) storeCluster(cluster *clusterv1.Cluster, clusterCopy *clusterv1.Cluster, clusterProviderSpec *providerv1.OpenstackClusterProviderSpec, clusterProviderStatus *providerv1.OpenstackClusterProviderStatus) error {
 
-	rawSpec, rawStatus, err := providerv1.EncodeClusterSpecAndStatus(cluster, spec, status)
+	rawSpec, rawStatus, err := providerv1.EncodeClusterSpecAndStatus(cluster, clusterProviderSpec, clusterProviderStatus)
 	if err != nil {
 		return err
 	}
@@ -210,6 +217,28 @@ func (a *Actuator) storeCluster(cluster *clusterv1.Cluster, clusterCopy *cluster
 		}
 		// Keep the resource version updated so the status update can succeed
 		cluster.ResourceVersion = result.ResourceVersion
+	}
+
+	// set to APIServerLoadBalancer IP & Port for now. With generated kubeadm
+	// this can be changed to clusterConfiguration.controlPlaneEndpoint for the
+	// non-LoadBalancer case. For now it doesn't matter because the Status is not
+	// used yet.
+	apiServerHost := clusterProviderSpec.APIServerLoadBalancerFloatingIP
+	apiServerPort := clusterProviderSpec.APIServerLoadBalancerPort
+	if clusterProviderSpec.ManagedAPIServerLoadBalancer {
+		if clusterProviderStatus.Network != nil && clusterProviderStatus.Network.APIServerLoadBalancer != nil &&
+			apiServerHost != clusterProviderStatus.Network.APIServerLoadBalancer.IP {
+			return fmt.Errorf("APIServerLoadBalancer has IP %s instead of IP %s", clusterProviderStatus.Network.APIServerLoadBalancer.IP, apiServerHost)
+		}
+	}
+	// Check if API endpoints is not set or has changed.
+	if len(cluster.Status.APIEndpoints) == 0 || cluster.Status.APIEndpoints[0].Host != apiServerHost {
+		cluster.Status.APIEndpoints = []clusterv1.APIEndpoint{
+			{
+				Host: apiServerHost,
+				Port: apiServerPort,
+			},
+		}
 	}
 
 	cluster.Status.ProviderStatus = rawStatus

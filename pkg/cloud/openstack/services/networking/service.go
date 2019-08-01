@@ -25,7 +25,8 @@ import (
 )
 
 const (
-	networkPrefix string = "k8s"
+	networkPrefix   string = "k8s"
+	kubeapiLBSuffix string = "kubeapi"
 )
 
 // Service interfaces with the OpenStack Networking API.
