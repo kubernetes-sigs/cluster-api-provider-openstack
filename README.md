@@ -162,6 +162,12 @@ policy may be made to more closely align with other providers in the Cluster API
    openstack keypair create --public-key ~/.ssh/openstack_tmp.pub cluster-api-provider-openstack
    ```
 
+   #### Notes for using custom pod network CIDR
+
+   If 192.168.0.0/16 is already in use within your network, you must select a different pod network CIDR. Replace [calico.yaml](https://docs.projectcalico.org/v3.5/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml) used in [master-user-data.sh](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/master/cmd/clusterctl/examples/openstack/provider-component/user-data/ubuntu/templates/master-user-data.sh#L239) with custom calico file. In this file you must replace every instance of CIDR 192.168.0.0/16 with the new pod network CIDR.
+
+   The new pod network CIDR must be replaced in the generated cluster.yaml as well.
+
 2. Create a cluster:
    - If you are using minikube:
 
