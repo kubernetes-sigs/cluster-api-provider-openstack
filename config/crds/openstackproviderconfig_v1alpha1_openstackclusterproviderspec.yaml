@@ -4,9 +4,9 @@ metadata:
   creationTimestamp: null
   labels:
     controller-tools.k8s.io: "1.0"
-  name: openstackclusterproviderspecs.openstackproviderconfig.k8s.io
+  name: openstackclusterproviderspecs.openstackproviderconfig.openshift.io
 spec:
-  group: openstackproviderconfig.k8s.io
+  group: openstackproviderconfig.openshift.io
   names:
     kind: OpenstackClusterProviderSpec
     plural: openstackclusterproviderspecs
@@ -19,12 +19,6 @@ spec:
             of an object. Servers should convert recognized schemas to the latest
             internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
           type: string
-        cloudName:
-          description: The name of the cloud to use from the clouds secret
-          type: string
-        cloudsSecret:
-          description: The name of the secret containing the openstack credentials
-          type: object
         disableServerTags:
           description: 'Default: True. In case of server tag errors, set to False'
           type: boolean
