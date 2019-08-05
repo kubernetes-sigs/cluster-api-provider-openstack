@@ -4,9 +4,9 @@ metadata:
   creationTimestamp: null
   labels:
     controller-tools.k8s.io: "1.0"
-  name: openstackclusterproviderstatuses.openstackproviderconfig.k8s.io
+  name: openstackclusterproviderstatuses.openstackproviderconfig.openshift.io
 spec:
-  group: openstackproviderconfig.k8s.io
+  group: openstackproviderconfig.openshift.io
   names:
     kind: OpenstackClusterProviderStatus
     plural: openstackclusterproviderstatuses

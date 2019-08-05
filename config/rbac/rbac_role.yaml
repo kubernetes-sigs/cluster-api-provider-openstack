@@ -5,7 +5,7 @@ metadata:
   name: openstack-provider-manager-role
 rules:
 - apiGroups:
-  - openstackproviderconfig.k8s.io
+  - openstackproviderconfig.openshift.io
   resources:
   - openstackmachineproviderconfigs
   verbs:
