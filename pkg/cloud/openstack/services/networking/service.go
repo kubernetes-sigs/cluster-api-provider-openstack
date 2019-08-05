@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	networkPrefix   string = "k8s"
+	networkPrefix   string = "k8s-clusterapi"
 	kubeapiLBSuffix string = "kubeapi"
 )
 
