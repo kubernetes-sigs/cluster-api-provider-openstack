@@ -187,6 +187,7 @@ func (s *Service) ReconcileLoadBalancerMember(clusterName string, machine *clust
 	}
 
 	loadBalancerName := fmt.Sprintf("%s-cluster-%s-%s", networkPrefix, clusterName, kubeapiLBSuffix)
+	klog.Infof("Reconciling loadbalancer %s for member %s", loadBalancerName, machine.Name)
 
 	lbID := clusterProviderStatus.Network.APIServerLoadBalancer.ID
 	subnetID := clusterProviderStatus.Network.Subnet.ID
