@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	localIPV4Lookup = "${COREOS_OPENSTACK_IPV4_LOCAL}"
+	localIPV4Lookup = "${OPENSTACK_IPV4_LOCAL}"
 
 	cloudProvider       = "openstack"
 	cloudProviderConfig = "/etc/kubernetes/cloud.conf"

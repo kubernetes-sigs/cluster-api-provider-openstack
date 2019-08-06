@@ -226,8 +226,9 @@ func (a *Actuator) storeCluster(cluster *clusterv1.Cluster, clusterCopy *cluster
 		cluster.ResourceVersion = result.ResourceVersion
 	}
 
-	apiServerHost := strings.Split(clusterProviderSpec.ClusterConfiguration.ControlPlaneEndpoint, ":")[0]
-	apiServerPortStr := strings.Split(clusterProviderSpec.ClusterConfiguration.ControlPlaneEndpoint, ":")[1]
+	controlPlaneURI := strings.Split(clusterProviderSpec.ClusterConfiguration.ControlPlaneEndpoint, ":")
+	apiServerHost := controlPlaneURI[0]
+	apiServerPortStr := controlPlaneURI[1]
 	apiServerPort, err := strconv.Atoi(apiServerPortStr)
 	if err != nil {
 		return fmt.Errorf("could not parse port of controlPlaneEndpoint %s: %v", clusterProviderSpec.ClusterConfiguration.ControlPlaneEndpoint, err)

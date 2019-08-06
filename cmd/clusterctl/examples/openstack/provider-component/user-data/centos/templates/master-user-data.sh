@@ -13,6 +13,19 @@ swapoff -a
 # disable swap in fstab
 sed -i.bak -r 's/(.+ swap .+)/#\1/' /etc/fstab
 
+# Getting local ip from the metadata of the node.
+echo "Getting local ip from metadata"
+for i in $(seq 60); do
+    echo "trying to get local-ipv4 $i / 60"
+    OPENSTACK_IPV4_LOCAL=$(curl --fail -s http://169.254.169.254/latest/meta-data/local-ipv4)
+    if [[ $? == 0 ]] && [[ -n "$OPENSTACK_IPV4_LOCAL" ]]; then
+        break
+    fi
+    sleep 1
+done
+echo "Replacing OPENSTACK_IPV4_LOCAL in kubeadm_config through ${OPENSTACK_IPV4_LOCAL}"
+/usr/bin/sed -i "s#\${OPENSTACK_IPV4_LOCAL}#${OPENSTACK_IPV4_LOCAL}#" /etc/kubernetes/kubeadm_config.yaml
+
 cat <<EOF > /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
 name=Kubernetes

@@ -99,28 +99,8 @@ storage:
 
         . /run/metadata/coreos
 
-        MASTER=""
-
-        echo "Trying to get the public IPv4 address."
-        if [[ -n "$COREOS_OPENSTACK_IPV4_PUBLIC" ]]; then
-          MASTER="$COREOS_OPENSTACK_IPV4_PUBLIC"
-        fi
-
-        if [[ -z "$MASTER" ]]; then
-          echo "Trying to get the local IPv4 address. (Try $i/60)"
-          if [[ -n "$COREOS_OPENSTACK_IPV4_LOCAL" ]]; then
-            MASTER="$COREOS_OPENSTACK_IPV4_LOCAL"
-          fi
-        fi
-
-        if [[ -z "$MASTER" ]]; then
-          echo "Falling back to localhost."
-          MASTER="localhost"
-        fi
-
-        MASTER="${MASTER}:443"
-
-        /usr/bin/sed -i "s#\${MASTER}#$MASTER#" /etc/kubernetes/kubeadm_config.yaml
+        echo "Replacing OPENSTACK_IPV4_LOCAL in kubeadm_config through ${COREOS_OPENSTACK_IPV4_LOCAL}"
+        /usr/bin/sed -i "s#\${OPENSTACK_IPV4_LOCAL}#${COREOS_OPENSTACK_IPV4_LOCAL}#" /etc/kubernetes/kubeadm_config.yaml
     user:
       id: 0
     group:
