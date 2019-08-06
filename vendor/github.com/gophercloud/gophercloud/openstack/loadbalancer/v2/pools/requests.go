@@ -19,13 +19,11 @@ type ListOptsBuilder interface {
 type ListOpts struct {
 	LBMethod       string `q:"lb_algorithm"`
 	Protocol       string `q:"protocol"`
-	TenantID       string `q:"tenant_id"`
 	ProjectID      string `q:"project_id"`
 	AdminStateUp   *bool  `q:"admin_state_up"`
 	Name           string `q:"name"`
 	ID             string `q:"id"`
 	LoadbalancerID string `q:"loadbalancer_id"`
-	ListenerID     string `q:"listener_id"`
 	Limit          int    `q:"limit"`
 	Marker         string `q:"marker"`
 	SortKey        string `q:"sort_key"`
@@ -43,7 +41,7 @@ func (opts ListOpts) ToPoolListQuery() (string, error) {
 // the returned collection for greater efficiency.
 //
 // Default policy settings return only those pools that are owned by the
-// tenant who submits the request, unless an admin user submits the request.
+// project who submits the request, unless an admin user submits the request.
 func List(c *gophercloud.ServiceClient, opts ListOptsBuilder) pagination.Pager {
 	url := rootURL(c)
 	if opts != nil {
@@ -68,6 +66,8 @@ const (
 	LBMethodSourceIp         LBMethod = "SOURCE_IP"
 
 	ProtocolTCP   Protocol = "TCP"
+	ProtocolUDP   Protocol = "UDP"
+	ProtocolPROXY Protocol = "PROXY"
 	ProtocolHTTP  Protocol = "HTTP"
 	ProtocolHTTPS Protocol = "HTTPS"
 )
@@ -87,7 +87,7 @@ type CreateOpts struct {
 	LBMethod LBMethod `json:"lb_algorithm" required:"true"`
 
 	// The protocol used by the pool members, you can use either
-	// ProtocolTCP, ProtocolHTTP, or ProtocolHTTPS.
+	// ProtocolTCP, ProtocolUDP, ProtocolPROXY, ProtocolHTTP, or ProtocolHTTPS.
 	Protocol Protocol `json:"protocol" required:"true"`
 
 	// The Loadbalancer on which the members of the pool will be associated with.
@@ -97,10 +97,6 @@ type CreateOpts struct {
 	// The Listener on which the members of the pool will be associated with.
 	// Note: one of LoadbalancerID or ListenerID must be provided.
 	ListenerID string `json:"listener_id,omitempty" xor:"LoadbalancerID"`
-
-	// TenantID is the UUID of the project who owns the Pool.
-	// Only administrative users can specify a project UUID other than their own.
-	TenantID string `json:"tenant_id,omitempty"`
 
 	// ProjectID is the UUID of the project who owns the Pool.
 	// Only administrative users can specify a project UUID other than their own.
@@ -208,7 +204,7 @@ type ListMembersOpts struct {
 	Name         string `q:"name"`
 	Weight       int    `q:"weight"`
 	AdminStateUp *bool  `q:"admin_state_up"`
-	TenantID     string `q:"tenant_id"`
+	ProjectID    string `q:"project_id"`
 	Address      string `q:"address"`
 	ProtocolPort int    `q:"protocol_port"`
 	ID           string `q:"id"`
@@ -229,7 +225,7 @@ func (opts ListMembersOpts) ToMembersListQuery() (string, error) {
 // sort the returned collection for greater efficiency.
 //
 // Default policy settings return only those members that are owned by the
-// tenant who submits the request, unless an admin user submits the request.
+// project who submits the request, unless an admin user submits the request.
 func ListMembers(c *gophercloud.ServiceClient, poolID string, opts ListMembersOptsBuilder) pagination.Pager {
 	url := memberRootURL(c, poolID)
 	if opts != nil {
@@ -262,17 +258,13 @@ type CreateMemberOpts struct {
 	// Name of the Member.
 	Name string `json:"name,omitempty"`
 
-	// TenantID is the UUID of the project who owns the Member.
-	// Only administrative users can specify a project UUID other than their own.
-	TenantID string `json:"tenant_id,omitempty"`
-
 	// ProjectID is the UUID of the project who owns the Member.
 	// Only administrative users can specify a project UUID other than their own.
 	ProjectID string `json:"project_id,omitempty"`
 
 	// A positive integer value that indicates the relative portion of traffic
-	// that  this member should receive from the pool. For example, a member with
-	// a weight  of 10 receives five times as much traffic as a member with a
+	// that this member should receive from the pool. For example, a member with
+	// a weight of 10 receives five times as much traffic as a member with a
 	// weight of 2.
 	Weight *int `json:"weight,omitempty"`
 
@@ -345,6 +337,36 @@ func UpdateMember(c *gophercloud.ServiceClient, poolID string, memberID string, 
 	_, r.Err = c.Put(memberResourceURL(c, poolID, memberID), b, &r.Body, &gophercloud.RequestOpts{
 		OkCodes: []int{200, 201, 202},
 	})
+	return
+}
+
+// BatchUpdateMemberOptsBuilder allows extensions to add additional parameters to the BatchUpdateMembers request.
+type BatchUpdateMemberOptsBuilder interface {
+	ToBatchMemberUpdateMap() (map[string]interface{}, error)
+}
+
+type BatchUpdateMemberOpts CreateMemberOpts
+
+// ToBatchMemberUpdateMap builds a request body from BatchUpdateMemberOpts.
+func (opts BatchUpdateMemberOpts) ToBatchMemberUpdateMap() (map[string]interface{}, error) {
+	return gophercloud.BuildRequestBody(opts, "")
+}
+
+// BatchUpdateMembers updates the pool members in batch
+func BatchUpdateMembers(c *gophercloud.ServiceClient, poolID string, opts []BatchUpdateMemberOpts) (r UpdateMembersResult) {
+	var members []map[string]interface{}
+	for _, opt := range opts {
+		b, err := opt.ToBatchMemberUpdateMap()
+		if err != nil {
+			r.Err = err
+			return
+		}
+		members = append(members, b)
+	}
+
+	b := map[string]interface{}{"members": members}
+
+	_, r.Err = c.Put(memberRootURL(c, poolID), b, nil, &gophercloud.RequestOpts{OkCodes: []int{202}})
 	return
 }
 

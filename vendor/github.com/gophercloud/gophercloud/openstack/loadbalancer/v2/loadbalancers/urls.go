@@ -5,8 +5,9 @@ import "github.com/gophercloud/gophercloud"
 const (
 	rootPath       = "lbaas"
 	resourcePath   = "loadbalancers"
-	statusPath     = "statuses"
+	statusPath     = "status"
 	statisticsPath = "stats"
+	failoverPath   = "failover"
 )
 
 func rootURL(c *gophercloud.ServiceClient) string {
@@ -23,4 +24,8 @@ func statusRootURL(c *gophercloud.ServiceClient, id string) string {
 
 func statisticsRootURL(c *gophercloud.ServiceClient, id string) string {
 	return c.ServiceURL(rootPath, resourcePath, id, statisticsPath)
+}
+
+func failoverRootURL(c *gophercloud.ServiceClient, id string) string {
+	return c.ServiceURL(rootPath, resourcePath, id, failoverPath)
 }

@@ -200,9 +200,13 @@ spec:
           items:
             type: string
           type: array
+        useOctavia:
+          description: UseOctavia is weather LoadBalancer Service is Octavia or not
+          type: boolean
       required:
       - cloudsSecret
       - cloudName
+      - useOctavia
       - managedAPIServerLoadBalancer
       - managedSecurityGroups
   version: v1alpha1

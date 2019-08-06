@@ -26,7 +26,7 @@ import (
 	"reflect"
 	constants "sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/contants"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/compute"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/networking"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/loadbalancer"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/provider"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/userdata"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/deployer"
@@ -96,11 +96,6 @@ func (a *Actuator) Create(ctx context.Context, cluster *clusterv1.Cluster, machi
 		return err
 	}
 
-	networkingService, err := networking.NewService(osProviderClient, clientOpts)
-	if err != nil {
-		return err
-	}
-
 	clusterProviderSpec, clusterProviderStatus, err := providerv1.ClusterSpecAndStatusFromProviderSpec(cluster)
 	if err != nil {
 		return a.handleMachineError(machine, apierrors.CreateMachine(
@@ -161,8 +156,12 @@ func (a *Actuator) Create(ctx context.Context, cluster *clusterv1.Cluster, machi
 		}
 	}
 
+	loadbalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, clusterProviderSpec.UseOctavia)
+	if err != nil {
+		return err
+	}
 	if clusterProviderSpec.ManagedAPIServerLoadBalancer {
-		err := networkingService.ReconcileLoadBalancerMember(clusterName, machine, clusterProviderSpec, clusterProviderStatus)
+		err := loadbalancerService.ReconcileLoadBalancerMember(clusterName, machine, clusterProviderSpec, clusterProviderStatus)
 		if err != nil {
 			return a.handleMachineError(machine, apierrors.CreateMachine(
 				"Reconcile LoadBalancer Member err: %v", err))
@@ -216,19 +215,18 @@ func (a *Actuator) Delete(ctx context.Context, cluster *clusterv1.Cluster, machi
 		return err
 	}
 
-	networkingService, err := networking.NewService(osProviderClient, clientOpts)
-	if err != nil {
-		return err
-	}
-
 	clusterProviderSpec, clusterProviderStatus, err := providerv1.ClusterSpecAndStatusFromProviderSpec(cluster)
 	if err != nil {
 		return a.handleMachineError(machine, apierrors.CreateMachine(
 			"error updating Openstack instance: %v", err))
 	}
 
+	loadbalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, clusterProviderSpec.UseOctavia)
+	if err != nil {
+		return err
+	}
 	if clusterProviderSpec.ManagedAPIServerLoadBalancer {
-		err = networkingService.DeleteLoadBalancerMember(clusterName, machine, clusterProviderStatus)
+		err = loadbalancerService.DeleteLoadBalancerMember(clusterName, machine, clusterProviderStatus)
 		if err != nil {
 			return err
 		}
@@ -264,11 +262,6 @@ func (a *Actuator) Update(ctx context.Context, cluster *clusterv1.Cluster, machi
 	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
 
 	osProviderClient, clientOpts, err := provider.NewClientFromMachine(a.params.KubeClient, machine)
-	if err != nil {
-		return err
-	}
-
-	networkingService, err := networking.NewService(osProviderClient, clientOpts)
 	if err != nil {
 		return err
 	}
@@ -347,9 +340,13 @@ func (a *Actuator) Update(ctx context.Context, cluster *clusterv1.Cluster, machi
 			}
 		}
 	}
+	loadbalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, clusterProviderSpec.UseOctavia)
+	if err != nil {
+		return err
+	}
 
 	if clusterProviderSpec.ManagedAPIServerLoadBalancer {
-		err = networkingService.ReconcileLoadBalancerMember(clusterName, machine, clusterProviderSpec, clusterProviderStatus)
+		err = loadbalancerService.ReconcileLoadBalancerMember(clusterName, machine, clusterProviderSpec, clusterProviderStatus)
 		if err != nil {
 			return err
 		}

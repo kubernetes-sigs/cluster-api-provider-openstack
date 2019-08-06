@@ -26,9 +26,9 @@ type L7Policy struct {
 	// A human-readable description for the resource.
 	Description string `json:"description"`
 
-	// TenantID is the UUID of the tenant who owns the L7 policy in octavia.
+	// ProjectID is the UUID of the project who owns the L7 policy in octavia.
 	// Only administrative users can specify a project UUID other than their own.
-	TenantID string `json:"tenant_id"`
+	ProjectID string `json:"project_id"`
 
 	// Requests matching this policy will be redirected to the pool with this ID.
 	// Only valid if action is REDIRECT_TO_POOL.
@@ -43,13 +43,9 @@ type L7Policy struct {
 
 	// The provisioning status of the L7 policy.
 	// This value is ACTIVE, PENDING_* or ERROR.
-	// This field seems to only be returned during a call to a load balancer's /status
-	// see: https://github.com/gophercloud/gophercloud/issues/1362
 	ProvisioningStatus string `json:"provisioning_status"`
 
 	// The operating status of the L7 policy.
-	// This field seems to only be returned during a call to a load balancer's /status
-	// see: https://github.com/gophercloud/gophercloud/issues/1362
 	OperatingStatus string `json:"operating_status"`
 
 	// Rules are List of associated L7 rule IDs.
@@ -70,9 +66,9 @@ type Rule struct {
 	// The value to use for the comparison. For example, the file type to compare.
 	Value string `json:"value"`
 
-	// TenantID is the UUID of the tenant who owns the rule in octavia.
+	// ProjectID is the UUID of the project who owns the rule in octavia.
 	// Only administrative users can specify a project UUID other than their own.
-	TenantID string `json:"tenant_id"`
+	ProjectID string `json:"project_id"`
 
 	// The key to use for the comparison. For example, the name of the cookie to evaluate.
 	Key string `json:"key"`
@@ -86,13 +82,9 @@ type Rule struct {
 
 	// The provisioning status of the L7 rule.
 	// This value is ACTIVE, PENDING_* or ERROR.
-	// This field seems to only be returned during a call to a load balancer's /status
-	// see: https://github.com/gophercloud/gophercloud/issues/1362
 	ProvisioningStatus string `json:"provisioning_status"`
 
 	// The operating status of the L7 policy.
-	// This field seems to only be returned during a call to a load balancer's /status
-	// see: https://github.com/gophercloud/gophercloud/issues/1362
 	OperatingStatus string `json:"operating_status"`
 }
 
