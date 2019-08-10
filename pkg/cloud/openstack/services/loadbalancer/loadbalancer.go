@@ -264,7 +264,7 @@ func (s *Service) ReconcileLoadBalancerMember(clusterName string, machine *clust
 	return nil
 }
 
-func (s *Service) DeleteLoadBalancerMember(clusterName string, machine *clusterv1.Machine, clusterProviderStatus *providerv1.OpenstackClusterProviderStatus) error {
+func (s *Service) DeleteLoadBalancerMember(clusterName string, machine *clusterv1.Machine, clusterProviderSpec *providerv1.OpenstackClusterProviderSpec, clusterProviderStatus *providerv1.OpenstackClusterProviderStatus) error {
 
 	if machine == nil || !util.IsControlPlaneMachine(machine) {
 		return nil
@@ -275,13 +275,19 @@ func (s *Service) DeleteLoadBalancerMember(clusterName string, machine *clusterv
 
 	lbID := clusterProviderStatus.Network.APIServerLoadBalancer.ID
 
-	for _, port := range []int{22, 6443} {
+	portList := []int{clusterProviderSpec.APIServerLoadBalancerPort}
+	portList = append(portList, clusterProviderSpec.APIServerLoadBalancerAdditionalPorts...)
+	for _, port := range portList {
 		lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)
 		name := lbPortObjectsName + "-" + machine.Name
 
 		pool, err := checkIfPoolExists(s.loadbalancerClient, lbPortObjectsName)
 		if err != nil {
 			return err
+		}
+		if pool == nil {
+			klog.Infof("Pool %s does not exist", lbPortObjectsName)
+			continue
 		}
 
 		lbMember, err := checkIfLbMemberExists(s.loadbalancerClient, pool.ID, name)
