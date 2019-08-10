@@ -234,7 +234,12 @@ kubectl --kubeconfig=kubeconfig get machines -o yaml
 
 ### Cluster Deletion
 
-This guide explains how to delete all resources that were created as part of
+Use following command to delete a cluster and all resources it created.
+```bash
+./clusterctl delete cluster --cluster test1 --bootstrap-type kind --kubeconfig kubeconfig --provider-components examples/openstack/out/provider-components.yaml
+```
+
+Or you can manually delete all resources that were created as part of
 your openstack Cluster API Kubernetes cluster.
 
 1. Delete all of the node Machines in the cluster. Make sure to wait for the
@@ -251,13 +256,15 @@ your openstack Cluster API Kubernetes cluster.
     kubectl --kubeconfig=kubeconfig delete machines -l set=master
     ```
 
-3. Delete the kubeconfig file that were created for your cluster.
+3. (optional) Delete the load balancer in your OpenStack cloud if you created them.
+
+4. Delete the kubeconfig file that were created for your cluster.
 
    ```bash
    rm kubeconfig
    ```
 
-4. Delete the ssh keypair that were created for your cluster machine.
+5. Delete the ssh keypair that were created for your cluster machine.
 
    ```bash
    rm -rf $HOME/.ssh/openstack_tmp*
