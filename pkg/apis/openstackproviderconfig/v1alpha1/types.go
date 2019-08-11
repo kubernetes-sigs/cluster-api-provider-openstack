@@ -202,6 +202,8 @@ type OpenstackClusterProviderSpec struct {
 	// ExternalNetworkID is the ID of an external OpenStack Network. This is necessary
 	// to get public internet to the VMs.
 	ExternalNetworkID string `json:"externalNetworkId,omitempty"`
+	// UseOctavia is weather LoadBalancer Service is Octavia or not
+	UseOctavia bool `json:"useOctavia"`
 
 	// ManagedAPIServerLoadBalancer defines whether a LoadBalancer for the
 	// APIServer should be created. If set to true the following properties are

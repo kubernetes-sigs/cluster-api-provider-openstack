@@ -31,8 +31,8 @@ type Monitor struct {
 	// The Name of the Monitor.
 	Name string `json:"name"`
 
-	// TenantID is the owner of the Monitor.
-	TenantID string `json:"tenant_id"`
+	// The owner of the Monitor.
+	ProjectID string `json:"project_id"`
 
 	// The type of probe sent by the load balancer to verify the member state,
 	// which is PING, TCP, HTTP, or HTTPS.
@@ -71,9 +71,12 @@ type Monitor struct {
 	// List of pools that are associated with the health monitor.
 	Pools []PoolID `json:"pools"`
 
-	// The provisioning status of the monitor.
+	// The provisioning status of the Monitor.
 	// This value is ACTIVE, PENDING_* or ERROR.
 	ProvisioningStatus string `json:"provisioning_status"`
+
+	// The operating status of the monitor.
+	OperatingStatus string `json:"operating_status"`
 }
 
 // MonitorPage is the page returned by a pager when traversing over a

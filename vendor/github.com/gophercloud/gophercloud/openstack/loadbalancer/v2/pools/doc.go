@@ -13,7 +13,7 @@ Example to List Pools
 		panic(err)
 	}
 
-	allPools, err := pools.ExtractPools(allPages)
+	allPools, err := pools.ExtractMonitors(allPages)
 	if err != nil {
 		panic(err)
 	}
@@ -119,6 +119,34 @@ Example to Delete a Member
 	memberID := "64dba99f-8af8-4200-8882-e32a0660f23e"
 
 	err := pools.DeleteMember(networkClient, poolID, memberID).ExtractErr()
+	if err != nil {
+		panic(err)
+	}
+
+Example to Update Members:
+
+	poolID := "d67d56a6-4a86-4688-a282-f46444705c64"
+
+	weight_1 := 20
+	member1 := pools.BatchUpdateMemberOpts{
+		Address:      "192.0.2.16",
+		ProtocolPort: 80,
+		Name:         "web-server-1",
+		SubnetID:     "bbb35f84-35cc-4b2f-84c2-a6a29bba68aa",
+		Weight:       &weight_1,
+	}
+
+	weight_2 := 10
+	member2 := pools.BatchUpdateMemberOpts{
+		Address:      "192.0.2.17",
+		ProtocolPort: 80,
+		Name:         "web-server-2",
+		Weight:       &weight_2,
+		SubnetID:     "bbb35f84-35cc-4b2f-84c2-a6a29bba68aa",
+	}
+	members := []pools.BatchUpdateMemberOpts{member1, member2}
+
+	err := pools.BatchUpdateMembers(networkClient, poolID, members).ExtractErr()
 	if err != nil {
 		panic(err)
 	}

@@ -2,8 +2,8 @@ package listeners
 
 import (
 	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/lbaas_v2/l7policies"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/lbaas_v2/pools"
+	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/l7policies"
+	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/pools"
 	"github.com/gophercloud/gophercloud/pagination"
 )
 
@@ -19,7 +19,7 @@ type Listener struct {
 	ID string `json:"id"`
 
 	// Owner of the Listener.
-	TenantID string `json:"tenant_id"`
+	ProjectID string `json:"project_id"`
 
 	// Human-readable name for the Listener. Does not have to be unique.
 	Name string `json:"name"`
@@ -57,13 +57,43 @@ type Listener struct {
 	Pools []pools.Pool `json:"pools"`
 
 	// L7policies are the L7 policies which are part of this listener.
-	// This field seems to only be returned during a call to a load balancer's /status
-	// see: https://github.com/gophercloud/gophercloud/issues/1352
 	L7Policies []l7policies.L7Policy `json:"l7policies"`
 
-	// The provisioning status of the listener.
+	// The provisioning status of the Listener.
 	// This value is ACTIVE, PENDING_* or ERROR.
 	ProvisioningStatus string `json:"provisioning_status"`
+
+	// Frontend client inactivity timeout in milliseconds
+	TimeoutClientData int `json:"timeout_client_data"`
+
+	// Backend member inactivity timeout in milliseconds
+	TimeoutMemberData int `json:"timeout_member_data"`
+
+	// Backend member connection timeout in milliseconds
+	TimeoutMemberConnect int `json:"timeout_member_connect"`
+
+	// Time, in milliseconds, to wait for additional TCP packets for content inspection
+	TimeoutTCPInspect int `json:"timeout_tcp_inspect"`
+
+	// A dictionary of optional headers to insert into the request before it is sent to the backend member.
+	InsertHeaders map[string]string `json:"insert_headers"`
+}
+
+type Stats struct {
+	// The currently active connections.
+	ActiveConnections int `json:"active_connections"`
+
+	// The total bytes received.
+	BytesIn int `json:"bytes_in"`
+
+	// The total bytes sent.
+	BytesOut int `json:"bytes_out"`
+
+	// The total requests that were unable to be fulfilled.
+	RequestErrors int `json:"request_errors"`
+
+	// The total connections handled.
+	TotalConnections int `json:"total_connections"`
 }
 
 // ListenerPage is the page returned by a pager when traversing over a
@@ -138,4 +168,20 @@ type UpdateResult struct {
 // ExtractErr method to determine if the request succeeded or failed.
 type DeleteResult struct {
 	gophercloud.ErrResult
+}
+
+// StatsResult represents the result of a GetStats operation.
+// Call its Extract method to interpret it as a Stats.
+type StatsResult struct {
+	gophercloud.Result
+}
+
+// Extract is a function that accepts a result and extracts the status of
+// a Listener.
+func (r StatsResult) Extract() (*Stats, error) {
+	var s struct {
+		Stats *Stats `json:"stats"`
+	}
+	err := r.ExtractInto(&s)
+	return s.Stats, err
 }

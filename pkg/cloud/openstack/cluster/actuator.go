@@ -15,6 +15,7 @@ import (
 	"reflect"
 	providerv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/certificates"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/loadbalancer"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/provider"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/deployer"
@@ -78,6 +79,10 @@ func (a *Actuator) Reconcile(cluster *clusterv1.Cluster) error {
 	if err != nil {
 		return err
 	}
+	loadbalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, clusterProviderSpec.UseOctavia)
+	if err != nil {
+		return err
+	}
 
 	defer func() {
 		if err := a.storeCluster(cluster, clusterCopy, clusterProviderSpec, clusterProviderStatus); err != nil {
@@ -108,7 +113,7 @@ func (a *Actuator) Reconcile(cluster *clusterv1.Cluster) error {
 			return errors.Errorf("failed to reconcile router: %v", err)
 		}
 		if clusterProviderSpec.ManagedAPIServerLoadBalancer {
-			err = networkingService.ReconcileLoadBalancer(clusterName, clusterProviderSpec, clusterProviderStatus)
+			err = loadbalancerService.ReconcileLoadBalancer(clusterName, clusterProviderSpec, clusterProviderStatus)
 			if err != nil {
 				return errors.Errorf("failed to reconcile load balancer: %v", err)
 			}
