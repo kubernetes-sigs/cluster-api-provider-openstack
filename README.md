@@ -136,6 +136,27 @@ policy may be made to more closely align with other providers in the Cluster API
    You can find some guidance on what needs to be edited, and how to create some of the
    required OpenStack resources in the [Configuration documentation](docs/config.md).
 
+
+   #### Notes on configuring an APIServer LoadBalancer
+   
+   It's possible to configure a loadbalancer, which is then used to loadbalance in front of the control 
+   plane nodes. This feature is optional for single-node clusters but highly recommmended for multi-node 
+   control plane clusters. The loadbalancer can be configured via the following properties in the Cluster CRD:
+   
+   ````
+     managedAPIServerLoadBalancer: true
+     apiServerLoadBalancerFloatingIP: <floating-ip>
+     apiServerLoadBalancerPort: 6443
+     apiServerLoadBalancerAdditionalPorts:
+       - 22
+   ````
+   
+   `6443` is usually used for the APIServer port. It's also possible to configure additional ports, e.g. for ssh.
+   
+   Note: This currently only works with `nodeCidr` set, as only then the created networks/ subnets are available in 
+   the cluster status. This will be fixed in [#428](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/428)
+   Note: Make sure the floating ip is not already used on a Machine.
+
    #### Notes on using custom CAs
    
    The Cluster CD has properties to specify the CAs of the Kubernetes cluster. Usually, they are not 
