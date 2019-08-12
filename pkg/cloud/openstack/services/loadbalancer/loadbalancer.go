@@ -264,6 +264,27 @@ func (s *Service) ReconcileLoadBalancerMember(clusterName string, machine *clust
 	return nil
 }
 
+func (s *Service) DeleteLoadBalancer(clusterName string, clusterProviderSpec *providerv1.OpenstackClusterProviderSpec, clusterProviderStatus *providerv1.OpenstackClusterProviderStatus) error {
+	loadBalancerName := fmt.Sprintf("%s-cluster-%s-%s", networkPrefix, clusterName, kubeapiLBSuffix)
+	lb, err := checkIfLbExists(s.loadbalancerClient, loadBalancerName)
+	if err != nil {
+		return err
+	}
+	deleteOpts := loadbalancers.DeleteOpts{
+		Cascade: true,
+	}
+	klog.Infof("Deleting loadbalancer %s", loadBalancerName)
+	err = loadbalancers.Delete(s.loadbalancerClient, lb.ID, deleteOpts).ExtractErr()
+	if err != nil {
+		return fmt.Errorf("error deleting loadbalancer: %s", err)
+	}
+
+	// floating ip
+	// TODO: need delete floating IP if it's created when doing the cluster provisioning
+	// but keep the floating ips if it's original exist
+	return nil
+}
+
 func (s *Service) DeleteLoadBalancerMember(clusterName string, machine *clusterv1.Machine, clusterProviderSpec *providerv1.OpenstackClusterProviderSpec, clusterProviderStatus *providerv1.OpenstackClusterProviderStatus) error {
 
 	if machine == nil || !util.IsControlPlaneMachine(machine) {
