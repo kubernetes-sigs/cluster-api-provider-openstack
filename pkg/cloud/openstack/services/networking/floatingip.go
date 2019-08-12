@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func (s *Service) CreateFloatingIP(clusterProviderSpec *providerv1.OpenstackClusterProviderSpec, ip string) error {
+func (s *Service) GetOrCreateFloatingIP(clusterProviderSpec *providerv1.OpenstackClusterProviderSpec, ip string) error {
 	fp, err := checkIfFloatingIPExists(s.client, ip)
 	if err != nil {
 		return err
@@ -25,11 +25,8 @@ func (s *Service) CreateFloatingIP(clusterProviderSpec *providerv1.OpenstackClus
 		if err != nil {
 			return fmt.Errorf("error allocating floating IP: %s", err)
 		}
-		err = waitForFloatingIP(s.client, fp.ID, "ACTIVE")
-		if err != nil {
-			return err
-		}
 	}
+	return nil
 }
 
 func checkIfFloatingIPExists(client *gophercloud.ServiceClient, ip string) (*floatingips.FloatingIP, error) {

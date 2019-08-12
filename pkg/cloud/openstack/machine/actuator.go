@@ -155,7 +155,7 @@ func (a *Actuator) Create(ctx context.Context, cluster *clusterv1.Cluster, machi
 	}
 
 	if machineProviderSpec.FloatingIP != "" {
-		err := networkingService.CreateFloatingIP(clusterProviderSpec, machineProviderSpec.FloatingIP)
+		err := networkingService.GetOrCreateFloatingIP(clusterProviderSpec, machineProviderSpec.FloatingIP)
 		if err != nil {
 			return a.handleMachineError(machine, apierrors.CreateMachine(
 				"Create floatingIP err: %v", err))
