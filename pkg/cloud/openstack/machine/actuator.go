@@ -226,7 +226,7 @@ func (a *Actuator) Delete(ctx context.Context, cluster *clusterv1.Cluster, machi
 		return err
 	}
 	if clusterProviderSpec.ManagedAPIServerLoadBalancer {
-		err = loadbalancerService.DeleteLoadBalancerMember(clusterName, machine, clusterProviderStatus)
+		err = loadbalancerService.DeleteLoadBalancerMember(clusterName, machine, clusterProviderSpec, clusterProviderStatus)
 		if err != nil {
 			return err
 		}
