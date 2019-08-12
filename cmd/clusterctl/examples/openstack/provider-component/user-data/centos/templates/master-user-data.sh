@@ -7,7 +7,6 @@ NAMESPACE={{ .Machine.ObjectMeta.Namespace }}
 MACHINE=$NAMESPACE
 MACHINE+="/"
 MACHINE+={{ .Machine.ObjectMeta.Name }}
-CLUSTER_DNS_DOMAIN={{ .Cluster.Spec.ClusterNetwork.ServiceDomain }}
 ARCH=amd64
 swapoff -a
 # disable swap in fstab
@@ -23,8 +22,6 @@ for i in $(seq 60); do
     fi
     sleep 1
 done
-echo "Replacing OPENSTACK_IPV4_LOCAL in kubeadm_config through ${OPENSTACK_IPV4_LOCAL}"
-/usr/bin/sed -i "s#\${OPENSTACK_IPV4_LOCAL}#${OPENSTACK_IPV4_LOCAL}#" /etc/kubernetes/kubeadm_config.yaml
 
 cat <<EOF > /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
@@ -106,6 +103,9 @@ EOF
 cat > /etc/kubernetes/kubeadm_config.yaml <<EOF
 {{ .KubeadmConfig }}
 EOF
+
+echo "Replacing OPENSTACK_IPV4_LOCAL in kubeadm_config through ${OPENSTACK_IPV4_LOCAL}"
+/usr/bin/sed -i "s#\${OPENSTACK_IPV4_LOCAL}#${OPENSTACK_IPV4_LOCAL}#" /etc/kubernetes/kubeadm_config.yaml
 
 kubeadm init -v 10 --config /etc/kubernetes/kubeadm_config.yaml
 for tries in $(seq 1 60); do

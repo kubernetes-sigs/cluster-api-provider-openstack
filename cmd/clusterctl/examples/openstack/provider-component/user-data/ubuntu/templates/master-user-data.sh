@@ -8,7 +8,6 @@ NAMESPACE={{ .Machine.ObjectMeta.Namespace }}
 MACHINE=$NAMESPACE
 MACHINE+="/"
 MACHINE+={{ .Machine.ObjectMeta.Name }}
-CLUSTER_DNS_DOMAIN={{ .Cluster.Spec.ClusterNetwork.ServiceDomain }}
 ARCH=amd64
 swapoff -a
 # disable swap in fstab
@@ -30,8 +29,6 @@ for i in $(seq 60); do
     fi
     sleep 1
 done
-echo "Replacing OPENSTACK_IPV4_LOCAL in kubeadm_config through ${OPENSTACK_IPV4_LOCAL}"
-/usr/bin/sed -i "s#\${OPENSTACK_IPV4_LOCAL}#${OPENSTACK_IPV4_LOCAL}#" /etc/kubernetes/kubeadm_config.yaml
 
 function install_configure_docker () {
     # prevent docker from auto-starting
@@ -58,8 +55,7 @@ install_configure_docker
 
 curl -sSL https://dl.k8s.io/release/${VERSION}/bin/linux/${ARCH}/kubeadm > /usr/bin/kubeadm.dl
 chmod a+rx /usr/bin/kubeadm.dl
-# kubeadm uses 10th IP as DNS server
-CLUSTER_DNS_SERVER=$(prips ${SERVICE_CIDR} | head -n 11 | tail -n 1)
+
 # Our Debian packages have versions like "1.8.0-00" or "1.8.0-01". Do a prefix
 # search based on our SemVer to find the right (newest) package version.
 function getversion() {
@@ -82,11 +78,6 @@ apt-get install -y \
 
 mv /usr/bin/kubeadm.dl /usr/bin/kubeadm
 chmod a+rx /usr/bin/kubeadm
-
-cat > /etc/systemd/system/kubelet.service.d/20-kubenet.conf <<EOF
-[Service]
-Environment="KUBELET_DNS_ARGS=--cluster-dns=${CLUSTER_DNS_SERVER} --cluster-domain=${CLUSTER_DNS_DOMAIN}"
-EOF
 
 echo $OPENSTACK_CLOUD_PROVIDER_CONF | base64 -d > /etc/kubernetes/cloud.conf
 chmod 600 /etc/kubernetes/cloud.conf
@@ -136,6 +127,9 @@ EOF
 cat > /etc/kubernetes/kubeadm_config.yaml <<EOF
 {{ .KubeadmConfig }}
 EOF
+
+echo "Replacing OPENSTACK_IPV4_LOCAL in kubeadm_config through ${OPENSTACK_IPV4_LOCAL}"
+/bin/sed -i "s#\${OPENSTACK_IPV4_LOCAL}#${OPENSTACK_IPV4_LOCAL}#" /etc/kubernetes/kubeadm_config.yaml
 
 # Create and set bridge-nf-call-iptables to 1 to pass the kubeadm preflight check.
 # Workaround was found here:
