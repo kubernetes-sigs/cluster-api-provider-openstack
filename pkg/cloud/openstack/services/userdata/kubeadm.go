@@ -67,7 +67,7 @@ func generateKubeadmConfig(isControlPlane bool, bootstrapToken string, cluster *
 						Name:      "cloud",
 						HostPath:  "/etc/kubernetes/cloud.conf",
 						MountPath: "/etc/kubernetes/cloud.conf",
-					},{
+					}, {
 						Name:      "cacert",
 						HostPath:  "/etc/certs/cacert",
 						MountPath: "/etc/certs/cacert",
