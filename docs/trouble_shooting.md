@@ -5,6 +5,7 @@
 - [Trouble shooting](#trouble-shooting)
   - [Get log of clusterapi-controllers containers](#get-log-of-clusterapi-controllers-containers)
   - [Master failed to start with error: node xxxx not found](#master-failed-to-start-with-error-node-xxxx-not-found)
+  - [providerClient authentication err](#providerclient-authentication-err)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -40,3 +41,27 @@ Jul 10 00:07:58 openstack-master-5wgrw kubelet: E0710 00:07:58.527398 4340 kubel
 ```
 
 This might be caused by [This issue](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/391), try the method proposed there.
+
+## providerClient authentication err
+
+If you are using https, you must specify the cacert in your `clouds.yaml` file, and when you encounter issue like:
+
+```
+# kubectl logs clusterapi-controllers-0 -n openstack-provider-system
+...
+E0814 04:32:52.688514       1 machine_controller.go:204] Failed to check if machine "openstack-master-hxk9r" exists: providerClient authentication err: Post https://xxxxxxxxxxxxxxx:5000/v3/auth/tokens: x509: certificate signed by unknown authority
+...
+```
+
+you can add `verify: false` into clouds.yaml file to solve the problem.
+```
+clouds:
+  openstack:
+    auth:
+        ....
+    region_name: "RegionOne"
+    interface: "public"
+    identity_api_version: 3
+    cacert: /etc/certs/cacert
+    verify: false
+```
