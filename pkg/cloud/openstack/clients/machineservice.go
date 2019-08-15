@@ -33,6 +33,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/bootfromvolume"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/identity/v3/tokens"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
@@ -60,6 +61,15 @@ const (
 
 	TimeoutPortDelete       = 3 * time.Minute
 	RetryIntervalPortDelete = 5 * time.Second
+
+	// MachineRegionLabelName as annotation name for a machine region
+	MachineRegionLabelName = "machine.openshift.io/region"
+
+	// MachineAZLabelName as annotation name for a machine AZ
+	MachineAZLabelName = "machine.openshift.io/zone"
+
+	// MachineInstanceTypeLabelName as annotation name for a machine instance type
+	MachineInstanceTypeLabelName = "machine.openshift.io/instance-type"
 )
 
 type InstanceService struct {
@@ -68,6 +78,8 @@ type InstanceService struct {
 	identityClient *gophercloud.ServiceClient
 	networkClient  *gophercloud.ServiceClient
 	imagesClient   *gophercloud.ServiceClient
+
+	regionName string
 }
 
 type Instance struct {
@@ -90,6 +102,19 @@ type InstanceListOpts struct {
 	// only, you can use a regular expression matching the syntax of the
 	// underlying database server implemented for Compute.
 	Name string `q:"name"`
+}
+
+type serverMetadata struct {
+	// AZ contains name of the server's availability zone
+	AZ string `json:"OS-EXT-AZ:availability_zone"`
+
+	// Flavor refers to a JSON object, which itself indicates the hardware
+	// configuration of the deployed server.
+	Flavor map[string]interface{} `json:"flavor"`
+
+	// Status contains the current operational status of the server,
+	// such as IN_PROGRESS or ACTIVE.
+	Status string `json:"status"`
 }
 
 func GetCloudFromSecret(kubeClient kubernetes.Interface, namespace string, secretName string, cloudName string) (clientconfig.Cloud, error) {
@@ -205,6 +230,7 @@ func NewInstanceServiceFromCloud(cloud clientconfig.Cloud) (*InstanceService, er
 		computeClient:  serverClient,
 		networkClient:  networkingClient,
 		imagesClient:   imagesClient,
+		regionName:     clientOpts.RegionName,
 	}, nil
 }
 
@@ -727,6 +753,38 @@ func (is *InstanceService) GetInstance(resourceId string) (instance *Instance, e
 		return nil, fmt.Errorf("Get server %q detail failed: %v", resourceId, err)
 	}
 	return serverToInstance(server), err
+}
+
+// SetMachineLabels set labels describing the machine
+func (is *InstanceService) SetMachineLabels(machine *machinev1.Machine, instanceID string) error {
+	if machine.Labels[MachineRegionLabelName] != "" && machine.Labels[MachineAZLabelName] != "" && machine.Labels[MachineInstanceTypeLabelName] != "" {
+		return nil
+	}
+
+	var sm serverMetadata
+	err := servers.Get(is.computeClient, instanceID).ExtractInto(&sm)
+	if err != nil {
+		return err
+	}
+
+	if machine.Labels == nil {
+		machine.Labels = make(map[string]string)
+	}
+
+	// Set the region
+	machine.Labels[MachineRegionLabelName] = is.regionName
+
+	// Set the availability zone
+	machine.Labels[MachineAZLabelName] = sm.AZ
+
+	// Set the flavor name
+	flavor, err := flavors.Get(is.computeClient, sm.Flavor["id"].(string)).Extract()
+	if err != nil {
+		return err
+	}
+	machine.Labels[MachineInstanceTypeLabelName] = flavor.Name
+
+	return nil
 }
 
 func serverToInstance(server *servers.Server) *Instance {

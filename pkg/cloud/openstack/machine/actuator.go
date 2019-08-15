@@ -58,6 +58,9 @@ const (
 	TimeoutInstanceCreate       = 5
 	TimeoutInstanceDelete       = 5
 	RetryIntervalInstanceStatus = 10 * time.Second
+
+	// MachineInstanceStateAnnotationName as annotation name for a machine instance state
+	MachineInstanceStateAnnotationName = "machine.openshift.io/instance-state"
 )
 
 type OpenstackClient struct {
@@ -244,6 +247,11 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 
 	}
 
+	err = machineService.SetMachineLabels(machine, instance.ID)
+	if err != nil {
+		return nil
+	}
+
 	return oc.updateAnnotation(machine, instance.ID)
 }
 
@@ -287,6 +295,18 @@ func (oc *OpenstackClient) Update(ctx context.Context, cluster *clusterv1.Cluste
 		}
 		if instance != nil && instance.Status == "ACTIVE" {
 			klog.Infof("Populating current state for boostrap machine %v", machine.ObjectMeta.Name)
+
+			kubeClient := oc.params.KubeClient
+			machineService, err := clients.NewInstanceServiceFromMachine(kubeClient, machine)
+			if err != nil {
+				return err
+			}
+
+			err = machineService.SetMachineLabels(machine, instance.ID)
+			if err != nil {
+				return nil
+			}
+
 			return oc.updateAnnotation(machine, instance.ID)
 		} else {
 			return fmt.Errorf("Cannot retrieve current state to update machine %v", machine.ObjectMeta.Name)
@@ -406,6 +426,8 @@ func (oc *OpenstackClient) updateAnnotation(machine *machinev1.Machine, id strin
 		return err
 	}
 	machine.ObjectMeta.Annotations[openstack.OpenstackIPAnnotationKey] = ip
+	machine.ObjectMeta.Annotations[MachineInstanceStateAnnotationName] = instance.Status
+
 	if err := oc.client.Update(nil, machine); err != nil {
 		return err
 	}
