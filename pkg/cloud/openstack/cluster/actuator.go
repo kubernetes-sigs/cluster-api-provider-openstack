@@ -24,6 +24,8 @@ import (
 	"sigs.k8s.io/cluster-api/pkg/controller/remote"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/patch"
+	"strconv"
+	"strings"
 )
 
 // Actuator controls cluster related infrastructure.
@@ -224,18 +226,14 @@ func (a *Actuator) storeCluster(cluster *clusterv1.Cluster, clusterCopy *cluster
 		cluster.ResourceVersion = result.ResourceVersion
 	}
 
-	// set to APIServerLoadBalancer IP & Port for now. With generated kubeadm
-	// this can be changed to clusterConfiguration.controlPlaneEndpoint for the
-	// non-LoadBalancer case. For now it doesn't matter because the Status is not
-	// used yet.
-	apiServerHost := clusterProviderSpec.APIServerLoadBalancerFloatingIP
-	apiServerPort := clusterProviderSpec.APIServerLoadBalancerPort
-	if clusterProviderSpec.ManagedAPIServerLoadBalancer {
-		if clusterProviderStatus.Network != nil && clusterProviderStatus.Network.APIServerLoadBalancer != nil &&
-			apiServerHost != clusterProviderStatus.Network.APIServerLoadBalancer.IP {
-			return fmt.Errorf("APIServerLoadBalancer has IP %s instead of IP %s", clusterProviderStatus.Network.APIServerLoadBalancer.IP, apiServerHost)
-		}
+	controlPlaneURI := strings.Split(clusterProviderSpec.ClusterConfiguration.ControlPlaneEndpoint, ":")
+	apiServerHost := controlPlaneURI[0]
+	apiServerPortStr := controlPlaneURI[1]
+	apiServerPort, err := strconv.Atoi(apiServerPortStr)
+	if err != nil {
+		return fmt.Errorf("could not parse port of controlPlaneEndpoint %s: %v", clusterProviderSpec.ClusterConfiguration.ControlPlaneEndpoint, err)
 	}
+
 	// Check if API endpoints is not set or has changed.
 	if len(cluster.Status.APIEndpoints) == 0 || cluster.Status.APIEndpoints[0].Host != apiServerHost {
 		cluster.Status.APIEndpoints = []clusterv1.APIEndpoint{

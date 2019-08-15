@@ -3,19 +3,7 @@ storage:
   - path: /etc/kubernetes/kubeadm_config.yaml
     filesystem: root
     contents:
-      inline: |
-        apiVersion: kubeadm.k8s.io/v1beta1
-        kind: JoinConfiguration
-        nodeRegistration:
-          kubeletExtraArgs:
-            cloud-provider: "openstack"
-            cloud-config: "/etc/kubernetes/cloud.conf"
-        discovery:
-          bootstrapToken:
-            apiServerEndpoint: {{ call .GetMasterEndpoint }}
-            token: {{ .Token }}
-            unsafeSkipCAVerification: true
-          tlsBootstrapToken: {{ .Token }}
+      inline: '{{ .KubeadmConfig | EscapeNewLines }}'
     user:
       id: 0
     group:

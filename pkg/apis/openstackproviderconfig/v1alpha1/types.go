@@ -19,6 +19,8 @@ package v1alpha1
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	kubeadmv1beta1 "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1beta1"
 )
 
 // +genclient
@@ -79,6 +81,21 @@ type OpenstackProviderSpec struct {
 
 	// The volume metadata to boot from
 	RootVolume *RootVolume `json:"rootVolume,omitempty"`
+
+	// KubeadmConfiguration holds the kubeadm configuration options
+	// +optional
+	KubeadmConfiguration KubeadmConfiguration `json:"kubeadmConfiguration,omitempty"`
+}
+
+// KubeadmConfiguration holds the various configurations that kubeadm uses
+type KubeadmConfiguration struct {
+	// JoinConfiguration is used to customize any kubeadm join configuration
+	// parameters.
+	Join kubeadmv1beta1.JoinConfiguration `json:"join,omitempty"`
+
+	// InitConfiguration is used to customize any kubeadm init configuration
+	// parameters.
+	Init kubeadmv1beta1.InitConfiguration `json:"init,omitempty"`
 }
 
 type SecurityGroupParam struct {
@@ -228,6 +245,10 @@ type OpenstackClusterProviderSpec struct {
 	// machines belonging to that group. In the future, we could make this more flexible.
 	ManagedSecurityGroups bool `json:"managedSecurityGroups"`
 
+	// DisablePortSecurity disables the port security of the network created for the
+	// Kubernetes cluster, which also disables SecurityGroups
+	DisablePortSecurity bool `json:"disablePortSecurity,omitempty"`
+
 	// Tags for all resources in cluster
 	Tags []string `json:"tags,omitempty"`
 
@@ -246,9 +267,9 @@ type OpenstackClusterProviderSpec struct {
 	// SAKeyPair is the service account key pair.
 	SAKeyPair KeyPair `json:"saKeyPair,omitempty"`
 
-	// MasterIP is the ip of the master, if there is Loadbalancer, should be LB
-	// ip and no LB should be floating ip address
-	MasterIP string `json:"masterIP,omitempty"`
+	// ClusterConfiguration holds the cluster-wide information used during a
+	// kubeadm init call.
+	ClusterConfiguration kubeadmv1beta1.ClusterConfiguration `json:"clusterConfiguration,omitempty"`
 }
 
 // KeyPair is how operators can supply custom keypairs for kubeadm to use.

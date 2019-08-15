@@ -7,44 +7,21 @@ NAMESPACE={{ .Machine.ObjectMeta.Namespace }}
 MACHINE=$NAMESPACE
 MACHINE+="/"
 MACHINE+={{ .Machine.ObjectMeta.Name }}
-CONTROL_PLANE_VERSION={{ .Machine.Spec.Versions.ControlPlane }}
-CLUSTER_DNS_DOMAIN={{ .Cluster.Spec.ClusterNetwork.ServiceDomain }}
-POD_CIDR={{ .PodCIDR }}
-SERVICE_CIDR={{ .ServiceCIDR }}
 ARCH=amd64
-
 swapoff -a
 # disable swap in fstab
 sed -i.bak -r 's/(.+ swap .+)/#\1/' /etc/fstab
-# Getting master ip from the metadata of the node. By default we try the public-ipv4
-# If we don't get any, we fall back to local-ipv4 and in the worst case to localhost
-MASTER=""
+
+# Getting local ip from the metadata of the node.
+echo "Getting local ip from metadata"
 for i in $(seq 60); do
-    echo "trying to get public-ipv4 $i / 60"
-    MASTER=$(curl --fail -s http://169.254.169.254/2009-04-04/meta-data/public-ipv4)
-    if [[ $? == 0 ]] && [[ -n "$MASTER" ]]; then
+    echo "trying to get local-ipv4 $i / 60"
+    OPENSTACK_IPV4_LOCAL=$(curl --fail -s http://169.254.169.254/latest/meta-data/local-ipv4)
+    if [[ $? == 0 ]] && [[ -n "$OPENSTACK_IPV4_LOCAL" ]]; then
         break
     fi
     sleep 1
 done
-
-if [[ -z "$MASTER" ]]; then
-    echo "falling back to local-ipv4"
-    for i in $(seq 60); do
-        echo "trying to get local-ipv4 $i / 60"
-        MASTER=$(curl --fail -s http://169.254.169.254/2009-04-04/meta-data/local-ipv4)
-        if [[ $? == 0 ]] && [[ -n "$MASTER" ]]; then
-            break
-        fi
-        sleep 1
-    done
-fi
-
-if [[ -z "$MASTER" ]]; then
-    echo "falling back to localhost"
-    MASTER="localhost"
-fi
-MASTER="${MASTER}:443"
 
 cat <<EOF > /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
@@ -124,81 +101,17 @@ EOF
 
 # Set up kubeadm config file to pass parameters to kubeadm init.
 cat > /etc/kubernetes/kubeadm_config.yaml <<EOF
-apiVersion: kubeadm.k8s.io/v1beta1
-kind: InitConfiguration
-bootstrapTokens:
-- groups:
-  - system:bootstrappers:kubeadm:default-node-token
-  token: ${TOKEN}
-  ttl: 24h0m0s
-  usages:
-  - signing
-  - authentication
-localAPIEndpoint:
-  bindPort: 443
-nodeRegistration:
-  criSocket: /var/run/dockershim.sock
-  kubeletExtraArgs:
-    cloud-config: /etc/kubernetes/cloud.conf
-    cloud-provider: openstack
-  taints:
-  - effect: NoSchedule
-    key: node-role.kubernetes.io/master
----
-apiVersion: kubeadm.k8s.io/v1beta1
-kind: ClusterConfiguration
-kubernetesVersion: v${CONTROL_PLANE_VERSION}
-apiServer:
-  extraArgs:
-    cloud-config: /etc/kubernetes/cloud.conf
-    cloud-provider: openstack
-  extraVolumes:
-  - hostPath: /etc/kubernetes/cloud.conf
-    mountPath: /etc/kubernetes/cloud.conf
-    name: cloud
-    readOnly: true
-  - hostPath: "/etc/certs/cacert"
-    mountPath: "/etc/certs/cacert"
-    name: cacert
-    readOnly: true
-  timeoutForControlPlane: 4m0s
-certificatesDir: /etc/kubernetes/pki
-clusterName: kubernetes
-controlPlaneEndpoint: ${MASTER}
-controllerManager:
-  extraArgs:
-    allocate-node-cidrs: "true"
-    cloud-config: /etc/kubernetes/cloud.conf
-    cloud-provider: openstack
-    cluster-cidr: ${POD_CIDR}
-    service-cluster-ip-range: ${SERVICE_CIDR}
-  extraVolumes:
-  - hostPath: /etc/kubernetes/cloud.conf
-    mountPath: /etc/kubernetes/cloud.conf
-    name: cloud
-    readOnly: true
-  - hostPath: "/etc/certs/cacert"
-    mountPath: "/etc/certs/cacert"
-    name: cacert
-    readOnly: true
-dns:
-  type: CoreDNS
-etcd:
-  local:
-    dataDir: /var/lib/etcd
-imageRepository: k8s.gcr.io
-networking:
-  dnsDomain: cluster.local
-  podSubnet: ""
-  serviceSubnet: ${SERVICE_CIDR}
+{{ .KubeadmConfig }}
 EOF
+
+echo "Replacing OPENSTACK_IPV4_LOCAL in kubeadm_config through ${OPENSTACK_IPV4_LOCAL}"
+/usr/bin/sed -i "s#\${OPENSTACK_IPV4_LOCAL}#${OPENSTACK_IPV4_LOCAL}#" /etc/kubernetes/kubeadm_config.yaml
 
 kubeadm init -v 10 --config /etc/kubernetes/kubeadm_config.yaml
 for tries in $(seq 1 60); do
     kubectl --kubeconfig /etc/kubernetes/kubelet.conf annotate --overwrite node $(hostname -s) machine=${MACHINE} && break
     sleep 1
 done
-
 # By default, use calico for container network plugin, should make this configurable.
 kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f https://docs.projectcalico.org/v3.5/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml
 

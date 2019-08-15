@@ -20,11 +20,12 @@ import (
 	"flag"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+	"os"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/cluster"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/machine"
 	"sigs.k8s.io/cluster-api/pkg/apis/cluster/common"
 	"sigs.k8s.io/cluster-api/pkg/client/clientset_generated/clientset"
-	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"time"
 
 	"k8s.io/klog"
@@ -51,8 +52,10 @@ func main() {
 	// The default klog flush interval is 30 seconds, which is frighteningly long.
 	go wait.Until(klog.Flush, *logFlushFreq, wait.NeverStop)
 
-	// Get a config to talk to the apiserver
-	cfg, err := config.GetConfig()
+	// TODO implement with v1alpha2 via: https://github.com/kubernetes-sigs/controller-runtime/pull/489
+	cfg, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		&clientcmd.ClientConfigLoadingRules{ExplicitPath: os.Getenv("KUBECONFIG")},
+		&clientcmd.ConfigOverrides{CurrentContext: os.Getenv("KUBECONTEXT")}).ClientConfig()
 	if err != nil {
 		klog.Fatal(err)
 	}

@@ -8,10 +8,6 @@ NAMESPACE={{ .Machine.ObjectMeta.Namespace }}
 MACHINE=$NAMESPACE
 MACHINE+="/"
 MACHINE+={{ .Machine.ObjectMeta.Name }}
-CONTROL_PLANE_VERSION={{ .Machine.Spec.Versions.ControlPlane }}
-CLUSTER_DNS_DOMAIN={{ .Cluster.Spec.ClusterNetwork.ServiceDomain }}
-POD_CIDR={{ .PodCIDR }}
-SERVICE_CIDR={{ .ServiceCIDR }}
 ARCH=amd64
 swapoff -a
 # disable swap in fstab
@@ -23,35 +19,16 @@ apt-get update -y
 apt-get install -y \
     prips
 
-# Getting master ip from the metadata of the node. By default we try the public-ipv4
-# If we don't get any, we fall back to local-ipv4 and in the worst case to localhost
-MASTER=""
+# Getting local ip from the metadata of the node.
+echo "Getting local ip from metadata"
 for i in $(seq 60); do
-    echo "trying to get public-ipv4 $i / 60"
-    MASTER=$(curl --fail -s http://169.254.169.254/2009-04-04/meta-data/public-ipv4)
-    if [[ $? == 0 ]] && [[ -n "$MASTER" ]]; then
+    echo "trying to get local-ipv4 $i / 60"
+    OPENSTACK_IPV4_LOCAL=$(curl --fail -s http://169.254.169.254/latest/meta-data/local-ipv4)
+    if [[ $? == 0 ]] && [[ -n "$OPENSTACK_IPV4_LOCAL" ]]; then
         break
     fi
     sleep 1
 done
-
-if [[ -z "$MASTER" ]]; then
-    echo "falling back to local-ipv4"
-    for i in $(seq 60); do
-        echo "trying to get local-ipv4 $i / 60"
-        MASTER=$(curl --fail -s http://169.254.169.254/2009-04-04/meta-data/local-ipv4)
-        if [[ $? == 0 ]] && [[ -n "$MASTER" ]]; then
-            break
-        fi
-        sleep 1
-    done
-fi
-
-if [[ -z "$MASTER" ]]; then
-    echo "falling back to localhost"
-    MASTER="localhost"
-fi
-MASTER="${MASTER}:443"
 
 function install_configure_docker () {
     # prevent docker from auto-starting
@@ -78,8 +55,7 @@ install_configure_docker
 
 curl -sSL https://dl.k8s.io/release/${VERSION}/bin/linux/${ARCH}/kubeadm > /usr/bin/kubeadm.dl
 chmod a+rx /usr/bin/kubeadm.dl
-# kubeadm uses 10th IP as DNS server
-CLUSTER_DNS_SERVER=$(prips ${SERVICE_CIDR} | head -n 11 | tail -n 1)
+
 # Our Debian packages have versions like "1.8.0-00" or "1.8.0-01". Do a prefix
 # search based on our SemVer to find the right (newest) package version.
 function getversion() {
@@ -102,11 +78,6 @@ apt-get install -y \
 
 mv /usr/bin/kubeadm.dl /usr/bin/kubeadm
 chmod a+rx /usr/bin/kubeadm
-
-cat > /etc/systemd/system/kubelet.service.d/20-kubenet.conf <<EOF
-[Service]
-Environment="KUBELET_DNS_ARGS=--cluster-dns=${CLUSTER_DNS_SERVER} --cluster-domain=${CLUSTER_DNS_DOMAIN}"
-EOF
 
 echo $OPENSTACK_CLOUD_PROVIDER_CONF | base64 -d > /etc/kubernetes/cloud.conf
 chmod 600 /etc/kubernetes/cloud.conf
@@ -153,77 +124,12 @@ cat > /etc/kubernetes/pki/sa.key <<EOF
 EOF
 
 # Set up kubeadm config file to pass parameters to kubeadm init.
-# We're using 443 until this bug is fixed
-# https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/64
 cat > /etc/kubernetes/kubeadm_config.yaml <<EOF
-apiVersion: kubeadm.k8s.io/v1beta1
-kind: InitConfiguration
-bootstrapTokens:
-- groups:
-  - system:bootstrappers:kubeadm:default-node-token
-  token: ${TOKEN}
-  ttl: 24h0m0s
-  usages:
-  - signing
-  - authentication
-localAPIEndpoint:
-  bindPort: 443
-nodeRegistration:
-  criSocket: /var/run/dockershim.sock
-  kubeletExtraArgs:
-    cloud-config: /etc/kubernetes/cloud.conf
-    cloud-provider: openstack
-  taints:
-  - effect: NoSchedule
-    key: node-role.kubernetes.io/master
----
-apiVersion: kubeadm.k8s.io/v1beta1
-kind: ClusterConfiguration
-kubernetesVersion: v${CONTROL_PLANE_VERSION}
-apiServer:
-  extraArgs:
-    cloud-config: /etc/kubernetes/cloud.conf
-    cloud-provider: openstack
-  extraVolumes:
-  - hostPath: /etc/kubernetes/cloud.conf
-    mountPath: /etc/kubernetes/cloud.conf
-    name: cloud
-    readOnly: true
-  - hostPath: "/etc/certs/cacert"
-    mountPath: "/etc/certs/cacert"
-    name: cacert
-    readOnly: true
-  timeoutForControlPlane: 4m0s
-certificatesDir: /etc/kubernetes/pki
-clusterName: kubernetes
-controlPlaneEndpoint: ${MASTER}
-controllerManager:
-  extraArgs:
-    allocate-node-cidrs: "true"
-    cloud-config: /etc/kubernetes/cloud.conf
-    cloud-provider: openstack
-    cluster-cidr: ${POD_CIDR}
-    service-cluster-ip-range: ${SERVICE_CIDR}
-  extraVolumes:
-  - hostPath: /etc/kubernetes/cloud.conf
-    mountPath: /etc/kubernetes/cloud.conf
-    name: cloud
-    readOnly: true
-  - hostPath: "/etc/certs/cacert"
-    mountPath: "/etc/certs/cacert"
-    name: cacert
-    readOnly: true
-dns:
-  type: CoreDNS
-etcd:
-  local:
-    dataDir: /var/lib/etcd
-imageRepository: k8s.gcr.io
-networking:
-  dnsDomain: cluster.local
-  podSubnet: ""
-  serviceSubnet: ${SERVICE_CIDR}
+{{ .KubeadmConfig }}
 EOF
+
+echo "Replacing OPENSTACK_IPV4_LOCAL in kubeadm_config through ${OPENSTACK_IPV4_LOCAL}"
+/bin/sed -i "s#\${OPENSTACK_IPV4_LOCAL}#${OPENSTACK_IPV4_LOCAL}#" /etc/kubernetes/kubeadm_config.yaml
 
 # Create and set bridge-nf-call-iptables to 1 to pass the kubeadm preflight check.
 # Workaround was found here:

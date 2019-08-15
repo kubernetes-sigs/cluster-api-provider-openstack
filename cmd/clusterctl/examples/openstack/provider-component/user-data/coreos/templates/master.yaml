@@ -85,51 +85,7 @@ storage:
   - path: /etc/kubernetes/kubeadm_config.yaml
     filesystem: root
     contents:
-      inline: |
-        apiVersion: kubeadm.k8s.io/v1beta1
-        kind: InitConfiguration
-        localAPIEndpoint:
-          bindPort: 443
-        nodeRegistration:
-          kubeletExtraArgs:
-            cloud-provider: "openstack"
-            cloud-config: "/etc/kubernetes/cloud.conf"
-        ---
-        apiVersion: kubeadm.k8s.io/v1beta1
-        kind: ClusterConfiguration
-        kubernetesVersion: v{{ .Machine.Spec.Versions.ControlPlane }}
-        networking:
-          serviceSubnet: {{ .ServiceCIDR }}
-          podSubnet: {{ .PodCIDR }}
-        dns:
-          type: CoreDNS
-        clusterName: kubernetes
-        controlPlaneEndpoint: ${MASTER}
-        apiServer:
-          extraArgs:
-            cloud-provider: "openstack"
-            cloud-config: "/etc/kubernetes/cloud.conf"
-          extraVolumes:
-          - name: cloud
-            hostPath: "/etc/kubernetes/cloud.conf"
-            mountPath: "/etc/kubernetes/cloud.conf"
-          - name: cacert
-            hostPath: "/etc/certs/cacert"
-            mountPath: "/etc/certs/cacert"
-        controllerManager:
-          extraArgs:
-            cluster-cidr: {{ .PodCIDR }}
-            service-cluster-ip-range: {{ .ServiceCIDR }}
-            allocate-node-cidrs: "true"
-            cloud-provider: "openstack"
-            cloud-config: "/etc/kubernetes/cloud.conf"
-          extraVolumes:
-          - name: cloud
-            hostPath: "/etc/kubernetes/cloud.conf"
-            mountPath: "/etc/kubernetes/cloud.conf"
-          - name: cacert
-            hostPath: "/etc/certs/cacert"
-            mountPath: "/etc/certs/cacert"
+      inline: '{{ .KubeadmConfig | EscapeNewLines }}'
     user:
       id: 0
     group:
@@ -143,28 +99,8 @@ storage:
 
         . /run/metadata/coreos
 
-        MASTER=""
-
-        echo "Trying to get the public IPv4 address."
-        if [[ -n "$COREOS_OPENSTACK_IPV4_PUBLIC" ]]; then
-          MASTER="$COREOS_OPENSTACK_IPV4_PUBLIC"
-        fi
-
-        if [[ -z "$MASTER" ]]; then
-          echo "Trying to get the local IPv4 address. (Try $i/60)"
-          if [[ -n "$COREOS_OPENSTACK_IPV4_LOCAL" ]]; then
-            MASTER="$COREOS_OPENSTACK_IPV4_LOCAL"
-          fi
-        fi
-
-        if [[ -z "$MASTER" ]]; then
-          echo "Falling back to localhost."
-          MASTER="localhost"
-        fi
-
-        MASTER="${MASTER}:443"
-
-        /usr/bin/sed -i "s#\${MASTER}#$MASTER#" /etc/kubernetes/kubeadm_config.yaml
+        echo "Replacing OPENSTACK_IPV4_LOCAL in kubeadm_config through ${COREOS_OPENSTACK_IPV4_LOCAL}"
+        /usr/bin/sed -i "s#\${OPENSTACK_IPV4_LOCAL}#${COREOS_OPENSTACK_IPV4_LOCAL}#" /etc/kubernetes/kubeadm_config.yaml
     user:
       id: 0
     group:

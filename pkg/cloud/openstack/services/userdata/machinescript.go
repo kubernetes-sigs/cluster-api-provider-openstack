@@ -27,6 +27,8 @@ import (
 	"path"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/options"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/compute"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/provider"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/deployer"
 	"sigs.k8s.io/cluster-api/pkg/util"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -42,7 +44,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	tokenapi "k8s.io/cluster-bootstrap/token/api"
 	tokenutil "k8s.io/cluster-bootstrap/token/util"
-	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
 	providerv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/bootstrap"
 	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
@@ -56,10 +57,7 @@ const (
 )
 
 type setupParams struct {
-	Token       string
-	Cluster     *clusterv1.Cluster
-	Machine     *clusterv1.Machine
-	MachineSpec *openstackconfigv1.OpenstackProviderSpec
+	Machine *clusterv1.Machine
 
 	CACert           string
 	CAKey            string
@@ -70,9 +68,7 @@ type setupParams struct {
 	SaCert           string
 	SaKey            string
 
-	PodCIDR           string
-	ServiceCIDR       string
-	GetMasterEndpoint func() (string, error)
+	KubeadmConfig string
 }
 
 func GetUserData(controllerClient client.Client, kubeClient kubernetes.Interface, machineProviderSpec *providerv1.OpenstackProviderSpec, cluster *clusterv1.Cluster, machine *clusterv1.Machine) (string, error) {
@@ -124,21 +120,29 @@ func GetUserData(controllerClient client.Client, kubeClient kubernetes.Interface
 
 	var userDataRendered string
 	if len(userData) > 0 && !disableTemplating {
-		if util.IsControlPlaneMachine(machine) {
-			userDataRendered, err = masterStartupScript(cluster, machine, string(userData))
-			if err != nil {
-				return "", apierrors.CreateMachine("error creating Openstack instance: %v", err)
-			}
-		} else {
+		isNodeJoin, err := isNodeJoin(controllerClient, kubeClient, cluster, machine)
+		if err != nil {
+			return "", apierrors.CreateMachine("error creating Openstack instance: %v", err)
+		}
+
+		var bootstrapToken string
+		if isNodeJoin {
 			klog.Info("Creating bootstrap token")
-			token, err := createBootstrapToken(controllerClient)
+			bootstrapToken, err = createBootstrapToken(controllerClient)
 			if err != nil {
 				return "", apierrors.CreateMachine("error creating Openstack instance: %v", err)
 			}
-			userDataRendered, err = nodeStartupScript(cluster, machine, token, string(userData))
-			if err != nil {
-				return "", apierrors.CreateMachine("error creating Openstack instance: %v", err)
-			}
+		}
+
+		userDataRendered, err = startupScript(cluster, machine, machineProviderSpec, string(userData), bootstrapToken)
+		if err != nil {
+			return "", apierrors.CreateMachine("error creating Openstack instance: %v", err)
+		}
+		if util.IsControlPlaneMachine(machine) && isNodeJoin {
+			// A little bit hacky but maybe good enough until v1alpha2. The alternative would be to template
+			// either the kubeadm command or the whole kubeadm service file. But I think the 2nd option would
+			// reduce the flexibility too much.
+			userDataRendered = strings.ReplaceAll(userDataRendered, "kubeadm init", "kubeadm join")
 		}
 	} else {
 		userDataRendered = string(userData)
@@ -172,6 +176,72 @@ func GetUserData(controllerClient client.Client, kubeClient kubernetes.Interface
 	return userDataRendered, nil
 }
 
+func isNodeJoin(controllerClient client.Client, kubeClient kubernetes.Interface, cluster *clusterv1.Cluster, machine *clusterv1.Machine) (bool, error) {
+
+	// Worker machines always join
+	if !util.IsControlPlaneMachine(machine) {
+		klog.Infof("Worker machine %s is joining the cluster\n", machine.Name)
+		return true, nil
+	}
+
+	// Get control plane machines and return false if none found
+	controlPlaneMachines, err := getControlPlaneMachines(controllerClient)
+	if err != nil {
+		return false, apierrors.CreateMachine("error retrieving control plane machines: %v", err)
+	}
+	if len(controlPlaneMachines) == 0 {
+		klog.Infof("Could not find control plane machine: creating first control plane machine %s\n", machine.Name)
+		return false, nil
+	}
+
+	// Get control plane machine instances and return false if none found
+	osProviderClient, clientOpts, err := provider.NewClientFromCluster(kubeClient, cluster)
+	if err != nil {
+		return false, err
+	}
+	computeService, err := compute.NewService(osProviderClient, clientOpts)
+	if err != nil {
+		return false, err
+	}
+	instanceList, err := computeService.GetInstanceList(&compute.InstanceListOpts{})
+	if err != nil {
+		return false, err
+	}
+	if len(instanceList) == 0 {
+		klog.Infof("Could not find control plane machine: creating first control plane machine %s\n", machine.Name)
+		return false, nil
+	}
+
+	for _, controlPlaneMachine := range controlPlaneMachines {
+		for _, instance := range instanceList {
+			if controlPlaneMachine.Name == instance.Name {
+				klog.Infof("Found control plane machine %s: control plane machine %s is joining the cluster\n", controlPlaneMachine.Name, machine.Name)
+				return true, nil
+			}
+		}
+	}
+	klog.Infof("Could not find control plane machine: creating first control plane machine %s\n", machine.Name)
+	return false, nil
+}
+
+func getControlPlaneMachines(controllerClient client.Client) ([]*clusterv1.Machine, error) {
+	var controlPlaneMachines []*clusterv1.Machine
+	msList := &clusterv1.MachineList{}
+	listOptions := &client.ListOptions{}
+	err := controllerClient.List(context.TODO(), listOptions, msList)
+	if err != nil {
+		return nil, fmt.Errorf("error retrieving machines: %v", err)
+	}
+	for _, m := range msList.Items {
+		if util.IsControlPlaneMachine(&m) {
+			// we need DeepCopy because if we append the Pointer it will all be
+			// the same machine
+			controlPlaneMachines = append(controlPlaneMachines, m.DeepCopy())
+		}
+	}
+	return controlPlaneMachines, nil
+}
+
 func createBootstrapToken(controllerClient client.Client) (string, error) {
 	token, err := tokenutil.GenerateBootstrapToken()
 	if err != nil {
@@ -201,32 +271,25 @@ func createBootstrapToken(controllerClient client.Client) (string, error) {
 }
 
 func getWorkloadClusterKubeClient(controllerClient client.Client) (client.Client, error) {
-	var master *clusterv1.Machine
 	var cluster *clusterv1.Cluster
 
-	msList := &clusterv1.MachineList{}
-	listOptions := &client.ListOptions{}
-	err := controllerClient.List(context.TODO(), listOptions, msList)
+	controlPlaneMachines, err := getControlPlaneMachines(controllerClient)
 	if err != nil {
-		return nil, fmt.Errorf("error retrieving machines: %v", err)
+		return nil, err
 	}
-	for _, m := range msList.Items {
-		if util.IsControlPlaneMachine(&m) {
-			master = &m
-			break
-		}
-	}
-	if master == nil {
-		return nil, fmt.Errorf("could not find master node")
+
+	if len(controlPlaneMachines) == 0 {
+		return nil, fmt.Errorf("could not find control plane nodes")
 	}
 
 	clusterList := &clusterv1.ClusterList{}
+	listOptions := &client.ListOptions{}
 	err = controllerClient.List(context.TODO(), listOptions, clusterList)
 	if err != nil {
 		return nil, fmt.Errorf("error retrieving clusters: %v", err)
 	}
 	for _, c := range clusterList.Items {
-		if clusterName, ok := master.Labels[clusterv1.MachineClusterLabelName]; ok && clusterName == c.Name {
+		if clusterName, ok := controlPlaneMachines[0].Labels[clusterv1.MachineClusterLabelName]; ok && clusterName == c.Name {
 			cluster = &c
 		}
 	}
@@ -234,7 +297,7 @@ func getWorkloadClusterKubeClient(controllerClient client.Client) (client.Client
 		return nil, fmt.Errorf("could not find cluster")
 	}
 
-	kubeConfig, err := deployer.New().GetKubeConfig(cluster, master)
+	kubeConfig, err := deployer.New().GetKubeConfig(cluster, controlPlaneMachines[0])
 	if err != nil {
 		return nil, err
 	}
@@ -257,8 +320,8 @@ func getWorkloadClusterKubeClient(controllerClient client.Client) (client.Client
 	return mgr.GetClient(), nil
 }
 
-func masterStartupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine, script string) (string, error) {
-	clusterProviderSpec, err := openstackconfigv1.ClusterSpecFromProviderSpec(cluster.Spec.ProviderSpec)
+func startupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine, machineProviderSpec *providerv1.OpenstackProviderSpec, userdata, bootstrapToken string) (string, error) {
+	clusterProviderSpec, err := providerv1.ClusterSpecFromProviderSpec(cluster.Spec.ProviderSpec)
 	if err != nil {
 		return "", err
 	}
@@ -267,13 +330,12 @@ func masterStartupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine,
 		return "", err
 	}
 
-	machineProviderSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
+	kubeadmConfig, err := generateKubeadmConfig(util.IsControlPlaneMachine(machine), bootstrapToken, cluster, machine, machineProviderSpec, clusterProviderSpec)
 	if err != nil {
 		return "", err
 	}
 
 	params := setupParams{
-		Cluster:          cluster,
 		CACert:           string(clusterProviderSpec.CAKeyPair.Cert),
 		CAKey:            string(clusterProviderSpec.CAKeyPair.Key),
 		EtcdCACert:       string(clusterProviderSpec.EtcdCAKeyPair.Cert),
@@ -283,52 +345,17 @@ func masterStartupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine,
 		SaCert:           string(clusterProviderSpec.SAKeyPair.Cert),
 		SaKey:            string(clusterProviderSpec.SAKeyPair.Key),
 		Machine:          machine,
-		MachineSpec:      machineProviderSpec,
-		PodCIDR:          getSubnet(cluster.Spec.ClusterNetwork.Pods),
-		ServiceCIDR:      getSubnet(cluster.Spec.ClusterNetwork.Services),
+		KubeadmConfig:    kubeadmConfig,
 	}
 
 	fMap := map[string]interface{}{
 		"EscapeNewLines": templateEscapeNewLines,
 		"Indent":         templateYAMLIndent,
 	}
-
-	masterStartUpScript := template.Must(template.New("masterStartUp").Funcs(fMap).Parse(script))
-
-	var buf bytes.Buffer
-	if err := masterStartUpScript.Execute(&buf, params); err != nil {
-		return "", err
-	}
-	return buf.String(), nil
-}
-
-func nodeStartupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine, token, script string) (string, error) {
-	machineProviderSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
-	if err != nil {
-		return "", err
-	}
-
-	GetMasterEndpoint := func() (string, error) {
-		if len(cluster.Status.APIEndpoints) == 0 {
-			return "", errors.New("no cluster status found")
-		}
-		return getEndpoint(cluster.Status.APIEndpoints[0]), nil
-	}
-
-	params := setupParams{
-		Token:             token,
-		Cluster:           cluster,
-		Machine:           machine,
-		MachineSpec:       machineProviderSpec,
-		PodCIDR:           getSubnet(cluster.Spec.ClusterNetwork.Pods),
-		ServiceCIDR:       getSubnet(cluster.Spec.ClusterNetwork.Services),
-		GetMasterEndpoint: GetMasterEndpoint,
-	}
-
-	nodeStartUpScript := template.Must(template.New("nodeStartUp").Parse(script))
+	startUpScript := template.Must(template.New("startUp").Funcs(fMap).Parse(userdata))
 
 	var buf bytes.Buffer
-	if err := nodeStartUpScript.Execute(&buf, params); err != nil {
+	if err := startUpScript.Execute(&buf, params); err != nil {
 		return "", err
 	}
 	return buf.String(), nil
@@ -355,18 +382,6 @@ func validateCertificates(clusterProviderSpec *v1alpha1.OpenstackClusterProvider
 
 func isKeyPairValid(cert, key []byte) bool {
 	return len(cert) > 0 && len(key) > 0
-}
-
-func getEndpoint(apiEndpoint clusterv1.APIEndpoint) string {
-	return fmt.Sprintf("%s:%d", apiEndpoint.Host, apiEndpoint.Port)
-}
-
-// Just a temporary hack to grab a single range from the config.
-func getSubnet(netRange clusterv1.NetworkRanges) string {
-	if len(netRange.CIDRBlocks) == 0 {
-		return ""
-	}
-	return netRange.CIDRBlocks[0]
 }
 
 func templateEscapeNewLines(s string) string {

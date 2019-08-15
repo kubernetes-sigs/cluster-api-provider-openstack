@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/klog"
 	providerv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
-	constants "sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/contants"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/certificates"
 	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
 )
@@ -20,28 +18,14 @@ func New() *Deployer {
 	return &Deployer{}
 }
 
-// GetIP returns the IP of a machine, but this is going away.
+// GetIP returns the controlPlaneEndpoint of the Kubernetes cluster, which makes sense in the current
+// contexts where this method is called. Seems to be going away anyway with v1alpha2.
 func (d *Deployer) GetIP(cluster *clusterv1.Cluster, machine *clusterv1.Machine) (string, error) {
-	if machine.ObjectMeta.Annotations != nil {
-		if ip, ok := machine.ObjectMeta.Annotations[constants.OpenstackIPAnnotationKey]; ok {
-			clusterProviderSpec, err := providerv1.ClusterSpecFromProviderSpec(cluster.Spec.ProviderSpec)
-			if err != nil {
-				return "", fmt.Errorf("could not get IP: %v", err)
-			}
-			var endpoint string
-			if clusterProviderSpec.ManagedAPIServerLoadBalancer {
-				endpoint = fmt.Sprintf("%s:%d", ip, clusterProviderSpec.APIServerLoadBalancerPort)
-			} else {
-				// TODO: replace hardcoded port 443 as soon as controlPlaneEndpoint is specified via
-				// ClusterConfiguration (in Cluster CRD)
-				endpoint = fmt.Sprintf("%s:443", ip)
-			}
-			klog.Infof("Returning endpoint from machine annotation %s", endpoint)
-			return endpoint, nil
-		}
+	clusterProviderSpec, err := providerv1.ClusterSpecFromProviderSpec(cluster.Spec.ProviderSpec)
+	if err != nil {
+		return "", fmt.Errorf("could not get IP: %v", err)
 	}
-
-	return "", errors.New("could not get IP")
+	return clusterProviderSpec.ClusterConfiguration.ControlPlaneEndpoint, nil
 }
 
 // GetKubeConfig returns the kubeConfig after the bootstrap process is complete.
@@ -67,27 +51,12 @@ func (d *Deployer) GetKubeConfig(cluster *clusterv1.Cluster, master *clusterv1.M
 		return "", errors.New("key not found in clusterProviderSpec")
 	}
 
-	var apiServerEndpoint string
-	if clusterProviderSpec.ManagedAPIServerLoadBalancer {
-		apiServerEndpoint = fmt.Sprintf("https://%s:%d", clusterProviderSpec.APIServerLoadBalancerFloatingIP, clusterProviderSpec.APIServerLoadBalancerPort)
-	} else {
-		var endpoint string
-		if master != nil {
-			endpoint, err = d.GetIP(cluster, master)
-			if err != nil {
-				return "", err
-			}
-		} else {
-			// This case means no master has been created yet, we need get from cluster info anyway
-			if len(clusterProviderSpec.MasterIP) == 0 {
-				return "", errors.New("MasterIP in cluster spec not set")
-			}
-			endpoint = clusterProviderSpec.MasterIP
-		}
-		apiServerEndpoint = fmt.Sprintf("https://%s", endpoint)
+	apiServerEndpoint, err := d.GetIP(cluster, master)
+	if err != nil {
+		return "", err
 	}
 
-	cfg, err := certificates.NewKubeconfig(cluster.Name, apiServerEndpoint, cert, key)
+	cfg, err := certificates.NewKubeconfig(cluster.Name, fmt.Sprintf("https://%s", apiServerEndpoint), cert, key)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to generate a kubeconfig")
 	}

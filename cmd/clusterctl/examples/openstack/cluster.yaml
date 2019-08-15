@@ -15,4 +15,7 @@ spec:
         kind: "OpenstackProviderSpec"
         tags:
           - a_cluster_wide_tag
-        masterIP: <master ip>
+        clusterConfiguration:
+          controlPlaneEndpoint: <apiServerLoadBalancer or master IP>:6443
+          kubernetesVersion: 1.15.0
+
