@@ -7,8 +7,6 @@ NAMESPACE={{ .Machine.ObjectMeta.Namespace }}
 MACHINE=$NAMESPACE
 MACHINE+="/"
 MACHINE+={{ .Machine.ObjectMeta.Name }}
-CLUSTER_DNS_DOMAIN={{ .Cluster.Spec.ClusterNetwork.ServiceDomain }}
-SERVICE_CIDR={{ .ServiceCIDR }}
 cat <<EOF > /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
 name=Kubernetes

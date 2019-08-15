@@ -7,8 +7,6 @@ NAMESPACE={{ .Machine.ObjectMeta.Namespace }}
 MACHINE=$NAMESPACE
 MACHINE+="/"
 MACHINE+={{ .Machine.ObjectMeta.Name }}
-CLUSTER_DNS_DOMAIN={{ .Cluster.Spec.ClusterNetwork.ServiceDomain }}
-SERVICE_CIDR={{ .ServiceCIDR }}
 
 swapoff -a
 # disable swap in fstab
@@ -72,7 +70,6 @@ KUBEADM=$(getversion kubeadm ${KUBELET_VERSION}-)
 KUBECTL=$(getversion kubectl ${KUBELET_VERSION}-)
 apt-get install -y kubelet=${KUBELET} kubeadm=${KUBEADM} kubectl=${KUBECTL}
 # kubeadm uses 10th IP as DNS server
-CLUSTER_DNS_SERVER=$(prips ${SERVICE_CIDR} | head -n 11 | tail -n 1)
 
 # Write the cloud.conf so that the kubelet can use it.
 echo $OPENSTACK_CLOUD_PROVIDER_CONF | base64 -d > /etc/kubernetes/cloud.conf
@@ -84,12 +81,6 @@ cat > /etc/kubernetes/kubeadm_config.yaml <<EOF
 {{ .KubeadmConfig }}
 EOF
 
-# Override network args to use kubenet instead of cni, override Kubelet DNS args and
-# add cloud provider args.
-cat > /etc/systemd/system/kubelet.service.d/20-kubenet.conf <<EOF
-[Service]
-Environment="KUBELET_DNS_ARGS=--cluster-dns=${CLUSTER_DNS_SERVER} --cluster-domain=${CLUSTER_DNS_DOMAIN}"
-EOF
 systemctl daemon-reload
 systemctl restart kubelet.service
 systemctl disable ufw
