@@ -3,7 +3,7 @@ storage:
   - path: /etc/kubernetes/kubeadm_config.yaml
     filesystem: root
     contents:
-      inline: '{{ .KubeadmConfig | EscapeNewLines }}'
+      inline: "{{ .KubeadmConfig | EscapeNewLines }}"
     user:
       id: 0
     group:
@@ -14,7 +14,7 @@ systemd:
   - name: kubeadm.service
     contents: |-
       [Unit]
-      Description=Initialise bootkube master.
+      Description=Initialise Kubernetes worker node.
       After=kubelet.service
       Requires=coreos-metadata.service
 
