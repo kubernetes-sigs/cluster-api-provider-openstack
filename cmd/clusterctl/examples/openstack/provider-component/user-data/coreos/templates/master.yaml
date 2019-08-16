@@ -95,7 +95,7 @@ storage:
     filesystem: root
     contents:
       inline: |
-        #!/bin/bash
+        #!/usr/bin/env bash
 
         . /run/metadata/coreos
 
