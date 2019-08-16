@@ -158,7 +158,7 @@ func (a *Actuator) Reconcile(cluster *clusterv1.Cluster) error {
 // Delete deletes a cluster and is invoked by the Cluster Controller
 func (a *Actuator) Delete(cluster *clusterv1.Cluster) error {
 	klog.Infof("Deleting Cluster %s/%s", cluster.Namespace, cluster.Name)
-
+	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
 	osProviderClient, clientOpts, err := provider.NewClientFromCluster(a.params.KubeClient, cluster)
 	if err != nil {
 		return err
@@ -170,9 +170,21 @@ func (a *Actuator) Delete(cluster *clusterv1.Cluster) error {
 	}
 
 	// Load provider spec & status.
-	_, clusterProviderStatus, err := providerv1.ClusterSpecAndStatusFromProviderSpec(cluster)
+	clusterProviderSpec, clusterProviderStatus, err := providerv1.ClusterSpecAndStatusFromProviderSpec(cluster)
 	if err != nil {
 		return err
+	}
+
+	loadbalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, clusterProviderSpec.UseOctavia)
+	if err != nil {
+		return err
+	}
+
+	if clusterProviderSpec.ManagedAPIServerLoadBalancer {
+		err = loadbalancerService.DeleteLoadBalancer(clusterName, clusterProviderSpec, clusterProviderStatus)
+		if err != nil {
+			return errors.Errorf("failed to delete load balancer: %v", err)
+		}
 	}
 
 	// Delete other things
