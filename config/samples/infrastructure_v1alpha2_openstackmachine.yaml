@@ -1,0 +1,9 @@
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+kind: OpenStackMachine
+metadata:
+  labels:
+    controller-tools.k8s.io: "1.0"
+  name: openstackmachine-sample
+spec:
+  # Add fields here
+  foo: bar

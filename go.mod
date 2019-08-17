@@ -9,8 +9,10 @@ require (
 	github.com/coreos/ignition v0.33.0 // indirect
 	github.com/gophercloud/gophercloud v0.3.0
 	github.com/gophercloud/utils v0.0.0-20190527093828-25f1b77b8c03
+	github.com/onsi/gomega v1.5.0
 	github.com/pkg/errors v0.8.1
 	github.com/vincent-petithory/dataurl v0.0.0-20160330182126-9a301d65acbb // indirect
+	golang.org/x/net v0.0.0-20190613194153-d28f0bde5980
 	gopkg.in/yaml.v2 v2.2.2
 	k8s.io/api v0.0.0-20190814101207-0772a1bdf941
 	k8s.io/apimachinery v0.0.0-20190814100815-533d101be9a6
