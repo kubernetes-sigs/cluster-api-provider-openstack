@@ -1,6 +1,8 @@
 module github.com/gobuffalo/flect
 
+go 1.12
+
 require (
-	github.com/gobuffalo/envy v1.6.11
-	github.com/stretchr/testify v1.2.2
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/stretchr/testify v1.3.0
 )

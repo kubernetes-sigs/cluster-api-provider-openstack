@@ -22,8 +22,7 @@ import (
 
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/rules"
-
-	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha2"
 )
 
 const (
@@ -32,7 +31,7 @@ const (
 	globalSuffix       string = "all"
 )
 
-var defaultRules = []openstackconfigv1.SecurityGroupRule{
+var defaultRules = []infrav1.SecurityGroupRule{
 	{
 		Direction:      "egress",
 		EtherType:      "IPv4",
@@ -52,17 +51,17 @@ var defaultRules = []openstackconfigv1.SecurityGroupRule{
 }
 
 // Reconcile the security groups.
-func (s *Service) ReconcileSecurityGroups(clusterName string, desired openstackconfigv1.OpenstackClusterProviderSpec, status *openstackconfigv1.OpenstackClusterProviderStatus) error {
+func (s *Service) ReconcileSecurityGroups(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {
 	klog.Infof("Reconciling security groups for cluster %s", clusterName)
-	if !desired.ManagedSecurityGroups {
+	if !openStackCluster.Spec.ManagedSecurityGroups {
 		klog.V(4).Infof("No need to reconcile security groups for cluster %s", clusterName)
 		return nil
 	}
-	desiredSecGroups := map[string]openstackconfigv1.SecurityGroup{
+	desiredSecGroups := map[string]infrav1.SecurityGroup{
 		"controlplane": generateControlPlaneGroup(clusterName),
 		"global":       generateGlobalGroup(clusterName),
 	}
-	observedSecGroups := make(map[string]*openstackconfigv1.SecurityGroup)
+	observedSecGroups := make(map[string]*infrav1.SecurityGroup)
 
 	for k, desiredSecGroup := range desiredSecGroups {
 		klog.Infof("Reconciling security group %s", desiredSecGroup.Name)
@@ -92,13 +91,13 @@ func (s *Service) ReconcileSecurityGroups(clusterName string, desired openstackc
 		observedSecGroups[k], err = s.createSecGroup(desiredSecGroup)
 	}
 
-	status.ControlPlaneSecurityGroup = observedSecGroups["controlplane"]
-	status.GlobalSecurityGroup = observedSecGroups["global"]
+	openStackCluster.Status.ControlPlaneSecurityGroup = observedSecGroups["controlplane"]
+	openStackCluster.Status.GlobalSecurityGroup = observedSecGroups["global"]
 
 	return nil
 }
 
-func (s *Service) DeleteSecurityGroups(group *openstackconfigv1.SecurityGroup) error {
+func (s *Service) DeleteSecurityGroups(group *infrav1.SecurityGroup) error {
 	exists, err := s.exists(group.ID)
 	if err != nil {
 		return err
@@ -127,15 +126,15 @@ func (s *Service) exists(groupID string) (bool, error) {
 	return true, nil
 }
 
-func generateControlPlaneGroup(clusterName string) openstackconfigv1.SecurityGroup {
+func generateControlPlaneGroup(clusterName string) infrav1.SecurityGroup {
 	secGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, controlPlaneSuffix)
 
 	// Hardcoded rules for now, we might want to make this definable in the Spec but it's more
 	// likely that the infrastructure plan in cluster-api will have taken form by then.
-	return openstackconfigv1.SecurityGroup{
+	return infrav1.SecurityGroup{
 		Name: secGroupName,
 		Rules: append(
-			[]openstackconfigv1.SecurityGroupRule{
+			[]infrav1.SecurityGroupRule{
 				{
 					Direction:      "ingress",
 					EtherType:      "IPv4",
@@ -158,14 +157,14 @@ func generateControlPlaneGroup(clusterName string) openstackconfigv1.SecurityGro
 	}
 }
 
-func generateGlobalGroup(clusterName string) openstackconfigv1.SecurityGroup {
+func generateGlobalGroup(clusterName string) infrav1.SecurityGroup {
 	secGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, globalSuffix)
 
 	// As above, hardcoded rules.
-	return openstackconfigv1.SecurityGroup{
+	return infrav1.SecurityGroup{
 		Name: secGroupName,
 		Rules: append(
-			[]openstackconfigv1.SecurityGroupRule{
+			[]infrav1.SecurityGroupRule{
 				{
 					Direction:     "ingress",
 					EtherType:     "IPv4",
@@ -197,7 +196,7 @@ func generateGlobalGroup(clusterName string) openstackconfigv1.SecurityGroup {
 }
 
 // matchGroups will check if security groups match.
-func matchGroups(desired, observed *openstackconfigv1.SecurityGroup) bool {
+func matchGroups(desired, observed *infrav1.SecurityGroup) bool {
 	// If they have differing amount of rules they obviously don't match.
 	if len(desired.Rules) != len(observed.Rules) {
 		return false
@@ -226,16 +225,16 @@ func matchGroups(desired, observed *openstackconfigv1.SecurityGroup) bool {
 
 // reconcileGroup reconciles an already existing observed group by essentially emptying out all the rules and
 // recreating them.
-func (s *Service) reconcileGroup(desired, observed *openstackconfigv1.SecurityGroup) (*openstackconfigv1.SecurityGroup, error) {
+func (s *Service) reconcileGroup(desired, observed *infrav1.SecurityGroup) (*infrav1.SecurityGroup, error) {
 	klog.V(6).Infof("Deleting all rules for group %s", observed.Name)
 	for _, rule := range observed.Rules {
 		klog.V(6).Infof("Deleting rule %s from group %s", rule.ID, observed.Name)
 		err := rules.Delete(s.client, rule.ID).ExtractErr()
 		if err != nil {
-			return &openstackconfigv1.SecurityGroup{}, err
+			return &infrav1.SecurityGroup{}, err
 		}
 	}
-	recreatedRules := make([]openstackconfigv1.SecurityGroupRule, 0, len(desired.Rules))
+	recreatedRules := make([]infrav1.SecurityGroupRule, 0, len(desired.Rules))
 	klog.V(6).Infof("Recreating all rules for group %s", observed.Name)
 	for _, rule := range desired.Rules {
 		r := rule
@@ -245,7 +244,7 @@ func (s *Service) reconcileGroup(desired, observed *openstackconfigv1.SecurityGr
 		}
 		newRule, err := s.createRule(r)
 		if err != nil {
-			return &openstackconfigv1.SecurityGroup{}, err
+			return &infrav1.SecurityGroup{}, err
 		}
 		recreatedRules = append(recreatedRules, newRule)
 	}
@@ -253,7 +252,7 @@ func (s *Service) reconcileGroup(desired, observed *openstackconfigv1.SecurityGr
 	return observed, nil
 }
 
-func (s *Service) createSecGroup(group openstackconfigv1.SecurityGroup) (*openstackconfigv1.SecurityGroup, error) {
+func (s *Service) createSecGroup(group infrav1.SecurityGroup) (*infrav1.SecurityGroup, error) {
 	createOpts := groups.CreateOpts{
 		Name:        group.Name,
 		Description: "Cluster API managed group",
@@ -261,11 +260,11 @@ func (s *Service) createSecGroup(group openstackconfigv1.SecurityGroup) (*openst
 	klog.V(6).Infof("Creating group %+v", createOpts)
 	g, err := groups.Create(s.client, createOpts).Extract()
 	if err != nil {
-		return &openstackconfigv1.SecurityGroup{}, err
+		return &infrav1.SecurityGroup{}, err
 	}
 
 	newGroup := convertOSSecGroupToConfigSecGroup(*g)
-	securityGroupRules := make([]openstackconfigv1.SecurityGroupRule, 0, len(group.Rules))
+	securityGroupRules := make([]infrav1.SecurityGroupRule, 0, len(group.Rules))
 	klog.V(6).Infof("Creating rules for group %s", group.Name)
 	for _, rule := range group.Rules {
 		r := rule
@@ -275,7 +274,7 @@ func (s *Service) createSecGroup(group openstackconfigv1.SecurityGroup) (*openst
 		}
 		newRule, err := s.createRule(r)
 		if err != nil {
-			return &openstackconfigv1.SecurityGroup{}, err
+			return &infrav1.SecurityGroup{}, err
 		}
 		securityGroupRules = append(securityGroupRules, newRule)
 	}
@@ -284,7 +283,7 @@ func (s *Service) createSecGroup(group openstackconfigv1.SecurityGroup) (*openst
 	return newGroup, nil
 }
 
-func (s *Service) getSecurityGroupByName(name string) (*openstackconfigv1.SecurityGroup, error) {
+func (s *Service) getSecurityGroupByName(name string) (*infrav1.SecurityGroup, error) {
 	opts := groups.ListOpts{
 		Name: name,
 	}
@@ -292,25 +291,25 @@ func (s *Service) getSecurityGroupByName(name string) (*openstackconfigv1.Securi
 	klog.V(6).Infof("Attempting to fetch security group with name %s", name)
 	allPages, err := groups.List(s.client, opts).AllPages()
 	if err != nil {
-		return &openstackconfigv1.SecurityGroup{}, err
+		return &infrav1.SecurityGroup{}, err
 	}
 
 	allGroups, err := groups.ExtractGroups(allPages)
 	if err != nil {
-		return &openstackconfigv1.SecurityGroup{}, err
+		return &infrav1.SecurityGroup{}, err
 	}
 
 	switch len(allGroups) {
 	case 0:
-		return &openstackconfigv1.SecurityGroup{}, nil
+		return &infrav1.SecurityGroup{}, nil
 	case 1:
 		return convertOSSecGroupToConfigSecGroup(allGroups[0]), nil
 	}
 
-	return &openstackconfigv1.SecurityGroup{}, fmt.Errorf("More than one security group found named: %s", name)
+	return &infrav1.SecurityGroup{}, fmt.Errorf("more than one security group found named: %s", name)
 }
 
-func (s *Service) createRule(r openstackconfigv1.SecurityGroupRule) (openstackconfigv1.SecurityGroupRule, error) {
+func (s *Service) createRule(r infrav1.SecurityGroupRule) (infrav1.SecurityGroupRule, error) {
 	dir := rules.RuleDirection(r.Direction)
 	proto := rules.RuleProtocol(r.Protocol)
 	etherType := rules.RuleEtherType(r.EtherType)
@@ -328,25 +327,25 @@ func (s *Service) createRule(r openstackconfigv1.SecurityGroupRule) (openstackco
 	klog.V(6).Infof("Creating rule %+v", createOpts)
 	rule, err := rules.Create(s.client, createOpts).Extract()
 	if err != nil {
-		return openstackconfigv1.SecurityGroupRule{}, err
+		return infrav1.SecurityGroupRule{}, err
 	}
 	return convertOSSecGroupRuleToConfigSecGroupRule(*rule), nil
 }
 
-func convertOSSecGroupToConfigSecGroup(osSecGroup groups.SecGroup) *openstackconfigv1.SecurityGroup {
-	securityGroupRules := make([]openstackconfigv1.SecurityGroupRule, len(osSecGroup.Rules))
+func convertOSSecGroupToConfigSecGroup(osSecGroup groups.SecGroup) *infrav1.SecurityGroup {
+	securityGroupRules := make([]infrav1.SecurityGroupRule, len(osSecGroup.Rules))
 	for i, rule := range osSecGroup.Rules {
 		securityGroupRules[i] = convertOSSecGroupRuleToConfigSecGroupRule(rule)
 	}
-	return &openstackconfigv1.SecurityGroup{
+	return &infrav1.SecurityGroup{
 		ID:    osSecGroup.ID,
 		Name:  osSecGroup.Name,
 		Rules: securityGroupRules,
 	}
 }
 
-func convertOSSecGroupRuleToConfigSecGroupRule(osSecGroupRule rules.SecGroupRule) openstackconfigv1.SecurityGroupRule {
-	return openstackconfigv1.SecurityGroupRule{
+func convertOSSecGroupRuleToConfigSecGroupRule(osSecGroupRule rules.SecGroupRule) infrav1.SecurityGroupRule {
+	return infrav1.SecurityGroupRule{
 		ID:              osSecGroupRule.ID,
 		Direction:       osSecGroupRule.Direction,
 		EtherType:       osSecGroupRule.EtherType,

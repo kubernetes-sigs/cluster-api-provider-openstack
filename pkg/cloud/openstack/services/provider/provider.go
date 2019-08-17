@@ -1,19 +1,19 @@
 package provider
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/utils/openstack/clientconfig"
-	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"net/http"
-	providerv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
-	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha2"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -21,20 +21,17 @@ const (
 	CaSecretKey     = "cacert"
 )
 
-func NewClientFromMachine(kubeClient kubernetes.Interface, machine *clusterv1.Machine) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, error) {
-	machineProviderSpec, err := providerv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
-	if err != nil {
-		return nil, nil, errors.Errorf("failed to load machine provider spec: %v", err)
-	}
+func NewClientFromMachine(ctrlClient client.Client, openStackMachine *infrav1.OpenStackMachine) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, error) {
 	var cloud clientconfig.Cloud
 	var caCert []byte
 
-	if machineProviderSpec.CloudsSecret != nil && machineProviderSpec.CloudsSecret.Name != "" {
-		namespace := machineProviderSpec.CloudsSecret.Namespace
+	if openStackMachine.Spec.CloudsSecret != nil && openStackMachine.Spec.CloudsSecret.Name != "" {
+		namespace := openStackMachine.Spec.CloudsSecret.Namespace
 		if namespace == "" {
-			namespace = machine.Namespace
+			namespace = openStackMachine.Namespace
 		}
-		cloud, caCert, err = getCloudFromSecret(kubeClient, namespace, machineProviderSpec.CloudsSecret.Name, machineProviderSpec.CloudName)
+		var err error
+		cloud, caCert, err = getCloudFromSecret(ctrlClient, namespace, openStackMachine.Spec.CloudsSecret.Name, openStackMachine.Spec.CloudName)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -42,20 +39,17 @@ func NewClientFromMachine(kubeClient kubernetes.Interface, machine *clusterv1.Ma
 	return newClient(cloud, caCert)
 }
 
-func NewClientFromCluster(kubeClient kubernetes.Interface, cluster *clusterv1.Cluster) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, error) {
-	clusterProviderSpec, err := providerv1.ClusterSpecFromProviderSpec(cluster.Spec.ProviderSpec)
-	if err != nil {
-		return nil, nil, errors.Errorf("failed to load cluster provider spec: %v", err)
-	}
+func NewClientFromCluster(ctrlClient client.Client, openStackCluster *infrav1.OpenStackCluster) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, error) {
 	var cloud clientconfig.Cloud
 	var caCert []byte
 
-	if clusterProviderSpec.CloudsSecret != nil && clusterProviderSpec.CloudsSecret.Name != "" {
-		namespace := clusterProviderSpec.CloudsSecret.Namespace
+	if openStackCluster.Spec.CloudsSecret != nil && openStackCluster.Spec.CloudsSecret.Name != "" {
+		namespace := openStackCluster.Spec.CloudsSecret.Namespace
 		if namespace == "" {
-			namespace = cluster.Namespace
+			namespace = openStackCluster.Namespace
 		}
-		cloud, caCert, err = getCloudFromSecret(kubeClient, namespace, clusterProviderSpec.CloudsSecret.Name, clusterProviderSpec.CloudName)
+		var err error
+		cloud, caCert, err = getCloudFromSecret(ctrlClient, namespace, openStackCluster.Spec.CloudsSecret.Name, openStackCluster.Spec.CloudName)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -105,7 +99,8 @@ func newClient(cloud clientconfig.Cloud, caCert []byte) (*gophercloud.ProviderCl
 }
 
 // getCloudFromSecret extract a Cloud from the given namespace:secretName
-func getCloudFromSecret(kubeClient kubernetes.Interface, namespace string, secretName string, cloudName string) (clientconfig.Cloud, []byte, error) {
+func getCloudFromSecret(ctrlClient client.Client, secretNamespace string, secretName string, cloudName string) (clientconfig.Cloud, []byte, error) {
+	ctx := context.TODO()
 	emptyCloud := clientconfig.Cloud{}
 
 	if secretName == "" {
@@ -116,7 +111,11 @@ func getCloudFromSecret(kubeClient kubernetes.Interface, namespace string, secre
 		return emptyCloud, nil, fmt.Errorf("secret name set to %v but no cloud was specified. Please set cloud_name in your machine spec", secretName)
 	}
 
-	secret, err := kubeClient.CoreV1().Secrets(namespace).Get(secretName, metav1.GetOptions{})
+	secret := &v1.Secret{}
+	err := ctrlClient.Get(ctx, types.NamespacedName{
+		Namespace: secretNamespace,
+		Name:      secretName,
+	}, secret)
 	if err != nil {
 		return emptyCloud, nil, err
 	}

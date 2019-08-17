@@ -4,6 +4,8 @@
 
 ## Getting Started
 
+* [Glossary](GLOSSARY.md)
+* [Abbreviations](ABBREVIATIONS.md)
 * [Existing Providers](getting_started/existing_providers.md)
 
 ## Common Code
@@ -14,6 +16,7 @@
 * [Machine Controller](common_code/machine_controller.md)
 * [MachineSet Controller](common_code/machineset_controller.md)
 * [MachineDeployment Controller](common_code/machinedeployment_controller.md)
+* [NodeRef Controller](common_code/noderef_controller.md)
 * [Node Controller](common_code/node_controller.md)
 
 ## Creating a New Provider

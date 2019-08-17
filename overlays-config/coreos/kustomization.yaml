@@ -1,4 +1,0 @@
-bases:
-  - ../../config/
-patchesStrategicMerge:
-  - manager/deployment.yaml

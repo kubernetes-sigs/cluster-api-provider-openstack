@@ -17,15 +17,17 @@ limitations under the License.
 package machine
 
 import (
-	"reflect"
-	"sort"
 	"testing"
 
+	"github.com/onsi/gomega"
+
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
-	"sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
-	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
+	"k8s.io/utils/pointer"
+	"sigs.k8s.io/cluster-api/api/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -35,52 +37,91 @@ var (
 )
 
 func TestReconcileRequest(t *testing.T) {
-	machine1 := v1alpha1.Machine{
+	g := gomega.NewGomegaWithT(t)
+
+	infraConfig := unstructured.Unstructured{
+		Object: map[string]interface{}{
+			"kind":       "InfrastructureConfig",
+			"apiVersion": "infrastructure.cluster.x-k8s.io/v1alpha2",
+			"metadata": map[string]interface{}{
+				"name":      "infra-config1",
+				"namespace": "default",
+			},
+			"spec": map[string]interface{}{
+				"providerID": "test://id-1",
+			},
+			"status": map[string]interface{}{
+				"ready": true,
+				"addresses": []interface{}{
+					map[string]interface{}{
+						"type":    "InternalIP",
+						"address": "10.0.0.1",
+					},
+				},
+			},
+		},
+	}
+	machine1 := v1alpha2.Machine{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "Machine",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:       "create",
 			Namespace:  "default",
-			Finalizers: []string{v1alpha1.MachineFinalizer, metav1.FinalizerDeleteDependents},
-			Labels: map[string]string{
-				v1alpha1.MachineClusterLabelName: "testcluster",
+			Finalizers: []string{v1alpha2.MachineFinalizer, metav1.FinalizerDeleteDependents},
+		},
+		Spec: v1alpha2.MachineSpec{
+			InfrastructureRef: corev1.ObjectReference{
+				APIVersion: "infrastructure.cluster.x-k8s.io/v1alpha2",
+				Kind:       "InfrastructureConfig",
+				Name:       "infra-config1",
 			},
+			Bootstrap: v1alpha2.Bootstrap{Data: pointer.StringPtr("data")},
 		},
 	}
-	machine2 := v1alpha1.Machine{
+	machine2 := v1alpha2.Machine{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "Machine",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:       "update",
 			Namespace:  "default",
-			Finalizers: []string{v1alpha1.MachineFinalizer, metav1.FinalizerDeleteDependents},
-			Labels: map[string]string{
-				v1alpha1.MachineClusterLabelName: "testcluster",
+			Finalizers: []string{v1alpha2.MachineFinalizer, metav1.FinalizerDeleteDependents},
+		},
+		Spec: v1alpha2.MachineSpec{
+			InfrastructureRef: corev1.ObjectReference{
+				APIVersion: "infrastructure.cluster.x-k8s.io/v1alpha2",
+				Kind:       "InfrastructureConfig",
+				Name:       "infra-config1",
 			},
+			Bootstrap: v1alpha2.Bootstrap{Data: pointer.StringPtr("data")},
 		},
 	}
 	time := metav1.Now()
-	machine3 := v1alpha1.Machine{
+	machine3 := v1alpha2.Machine{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "Machine",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:              "delete",
 			Namespace:         "default",
-			Finalizers:        []string{v1alpha1.MachineFinalizer, metav1.FinalizerDeleteDependents},
+			Finalizers:        []string{v1alpha2.MachineFinalizer, metav1.FinalizerDeleteDependents},
 			DeletionTimestamp: &time,
-			Labels: map[string]string{
-				v1alpha1.MachineClusterLabelName: "testcluster",
+		},
+		Spec: v1alpha2.MachineSpec{
+			InfrastructureRef: corev1.ObjectReference{
+				APIVersion: "infrastructure.cluster.x-k8s.io/v1alpha2",
+				Kind:       "InfrastructureConfig",
+				Name:       "infra-config1",
 			},
+			Bootstrap: v1alpha2.Bootstrap{Data: pointer.StringPtr("data")},
 		},
 	}
-	clusterList := v1alpha1.ClusterList{
+	clusterList := v1alpha2.ClusterList{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "ClusterList",
 		},
-		Items: []v1alpha1.Cluster{
+		Items: []v1alpha2.Cluster{
 			{
 				TypeMeta: metav1.TypeMeta{
 					Kind: "Cluster",
@@ -103,12 +144,8 @@ func TestReconcileRequest(t *testing.T) {
 	}
 
 	type expected struct {
-		createCallCount int64
-		existCallCount  int64
-		updateCallCount int64
-		deleteCallCount int64
-		result          reconcile.Result
-		error           bool
+		result reconcile.Result
+		err    bool
 	}
 	testCases := []struct {
 		request     reconcile.Request
@@ -116,169 +153,45 @@ func TestReconcileRequest(t *testing.T) {
 		expected    expected
 	}{
 		{
-			request: reconcile.Request{NamespacedName: types.NamespacedName{Name: machine1.Name, Namespace: machine1.Namespace}},
+			request:     reconcile.Request{NamespacedName: types.NamespacedName{Name: machine1.Name, Namespace: machine1.Namespace}},
+			existsValue: false,
 			expected: expected{
-				createCallCount: 1,
-				existCallCount:  1,
-				updateCallCount: 0,
-				deleteCallCount: 0,
-				result:          reconcile.Result{},
-				error:           false,
+				result: reconcile.Result{},
+				err:    false,
 			},
 		},
 		{
 			request:     reconcile.Request{NamespacedName: types.NamespacedName{Name: machine2.Name, Namespace: machine2.Namespace}},
 			existsValue: true,
 			expected: expected{
-				createCallCount: 0,
-				existCallCount:  1,
-				updateCallCount: 1,
-				deleteCallCount: 0,
-				result:          reconcile.Result{},
-				error:           false,
+				result: reconcile.Result{},
+				err:    false,
 			},
 		},
 		{
 			request:     reconcile.Request{NamespacedName: types.NamespacedName{Name: machine3.Name, Namespace: machine3.Namespace}},
 			existsValue: true,
 			expected: expected{
-				createCallCount: 0,
-				existCallCount:  0,
-				updateCallCount: 0,
-				deleteCallCount: 1,
-				result:          reconcile.Result{},
-				error:           false,
+				result: reconcile.Result{},
+				err:    false,
 			},
 		},
 	}
 
 	for _, tc := range testCases {
-		act := newTestActuator()
-		act.ExistsValue = tc.existsValue
-		v1alpha1.AddToScheme(scheme.Scheme)
+		v1alpha2.AddToScheme(scheme.Scheme)
 		r := &ReconcileMachine{
-			Client:   fake.NewFakeClient(&clusterList, &machine1, &machine2, &machine3),
-			scheme:   scheme.Scheme,
-			actuator: act,
+			Client: fake.NewFakeClient(&clusterList, &machine1, &machine2, &machine3, &infraConfig),
+			scheme: scheme.Scheme,
 		}
 
 		result, err := r.Reconcile(tc.request)
-		gotError := (err != nil)
-		if tc.expected.error != gotError {
-			var errorExpectation string
-			if !tc.expected.error {
-				errorExpectation = "no"
-			}
-			t.Errorf("Case: %s. Expected %s error, got: %v", tc.request.Name, errorExpectation, err)
+		if tc.expected.err {
+			g.Expect(err).ToNot(gomega.BeNil())
+		} else {
+			g.Expect(err).To(gomega.BeNil())
 		}
 
-		if !reflect.DeepEqual(result, tc.expected.result) {
-			t.Errorf("Case %s. Got: %v, expected %v", tc.request.Name, result, tc.expected.result)
-		}
-
-		if act.CreateCallCount != tc.expected.createCallCount {
-			t.Errorf("Case %s. Got: %d createCallCount, expected %d", tc.request.Name, act.CreateCallCount, tc.expected.createCallCount)
-		}
-
-		if act.UpdateCallCount != tc.expected.updateCallCount {
-			t.Errorf("Case %s. Got: %d updateCallCount, expected %d", tc.request.Name, act.UpdateCallCount, tc.expected.updateCallCount)
-		}
-
-		if act.ExistsCallCount != tc.expected.existCallCount {
-			t.Errorf("Case %s. Got: %d existCallCount, expected %d", tc.request.Name, act.ExistsCallCount, tc.expected.existCallCount)
-		}
-
-		if act.DeleteCallCount != tc.expected.deleteCallCount {
-			t.Errorf("Case %s. Got: %d deleteCallCount, expected %d", tc.request.Name, act.DeleteCallCount, tc.expected.deleteCallCount)
-		}
-	}
-}
-
-func TestReconcileFinalizers(t *testing.T) {
-	// If we need to add new finalizer logic later, add them here as well.
-	allFinalizers := []string{metav1.FinalizerDeleteDependents, clusterv1.MachineFinalizer}
-	nilClusterFinalizers := []string{clusterv1.MachineFinalizer}
-
-	cluster1 := v1alpha1.Cluster{}
-
-	testCases := []struct {
-		cluster            *v1alpha1.Cluster
-		startingFinalizers []string
-		deleted            bool
-		expected           bool
-		expectedFinalizers []string
-	}{
-		{
-			cluster:            &cluster1,
-			startingFinalizers: []string{},
-			deleted:            false,
-			expected:           true,
-			expectedFinalizers: allFinalizers,
-		},
-		{
-			cluster:            &cluster1,
-			startingFinalizers: []string{metav1.FinalizerDeleteDependents},
-			deleted:            false,
-			expected:           true,
-			expectedFinalizers: allFinalizers,
-		},
-		{
-			cluster:            &cluster1,
-			startingFinalizers: []string{clusterv1.MachineFinalizer},
-			deleted:            false,
-			expected:           true,
-			expectedFinalizers: allFinalizers,
-		},
-		{
-			cluster:            nil,
-			startingFinalizers: []string{},
-			deleted:            false,
-			expected:           true,
-			expectedFinalizers: nilClusterFinalizers,
-		},
-		{
-			cluster:            nil,
-			startingFinalizers: []string{clusterv1.MachineFinalizer},
-			deleted:            false,
-			expected:           false,
-			expectedFinalizers: nilClusterFinalizers,
-		},
-		{
-			cluster:            &cluster1,
-			startingFinalizers: []string{},
-			deleted:            true,
-			expected:           false,
-			expectedFinalizers: []string{},
-		},
-		{
-			cluster:            &cluster1,
-			startingFinalizers: allFinalizers,
-			deleted:            true,
-			expected:           false,
-			expectedFinalizers: allFinalizers,
-		},
-	}
-
-	for i, tc := range testCases {
-		m := v1alpha1.Machine{
-			ObjectMeta: metav1.ObjectMeta{
-				Finalizers: tc.startingFinalizers,
-			},
-		}
-		if tc.deleted {
-			time := metav1.Now()
-			m.ObjectMeta.DeletionTimestamp = &time
-		}
-		needUpdate := reconcileFinalizers(&m, tc.cluster)
-		if needUpdate != tc.expected {
-			t.Errorf("Case: %d. Expected %v, got: %v", i, tc.expected, needUpdate)
-		}
-		// sort for easier comparison: [a, b] != [b, a] for DeepEqual.
-		sort.Strings(tc.expectedFinalizers)
-		sort.Strings(m.Finalizers)
-
-		if !reflect.DeepEqual(tc.expectedFinalizers, m.Finalizers) {
-			t.Errorf("Case: %d. Expected %v finializers, got: %v", i, tc.expectedFinalizers, m.Finalizers)
-		}
+		g.Expect(result).To(gomega.Equal(tc.expected.result))
 	}
 }

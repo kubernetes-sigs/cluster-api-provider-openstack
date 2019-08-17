@@ -1,0 +1,732 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  name: openstackclusters.infrastructure.cluster.x-k8s.io
+spec:
+  group: infrastructure.cluster.x-k8s.io
+  names:
+    kind: OpenStackCluster
+    plural: openstackclusters
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: OpenStackCluster is the Schema for the openstackclusters API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: OpenStackClusterSpec defines the desired state of OpenStackCluster
+          properties:
+            apiServerLoadBalancerAdditionalPorts:
+              description: APIServerLoadBalancerAdditionalPorts adds additional ports
+                to the APIServerLoadBalancer
+              items:
+                type: integer
+              type: array
+            apiServerLoadBalancerFloatingIP:
+              description: APIServerLoadBalancerFloatingIP is the floatingIP which
+                will be associated to the APIServer loadbalancer. The floatingIP will
+                be created if it not already exists.
+              type: string
+            apiServerLoadBalancerPort:
+              description: APIServerLoadBalancerPort is the port on which the listener
+                on the APIServer loadbalancer will be created
+              type: integer
+            caKeyPair:
+              description: CAKeyPair is the key pair for ca certs.
+              properties:
+                cert:
+                  description: base64 encoded cert and key
+                  format: byte
+                  type: string
+                key:
+                  format: byte
+                  type: string
+              type: object
+            cloudName:
+              description: The name of the cloud to use from the clouds secret
+              type: string
+            cloudsSecret:
+              description: The name of the secret containing the openstack credentials
+              properties:
+                name:
+                  description: Name is unique within a namespace to reference a secret
+                    resource.
+                  type: string
+                namespace:
+                  description: Namespace defines the space within which the secret
+                    name must be unique.
+                  type: string
+              type: object
+            clusterConfiguration:
+              description: ClusterConfiguration holds the cluster-wide information
+                used during a kubeadm init call.
+              properties:
+                apiServer:
+                  description: APIServer contains extra settings for the API server
+                    control plane component
+                  properties:
+                    certSANs:
+                      description: CertSANs sets extra Subject Alternative Names for
+                        the API Server signing cert.
+                      items:
+                        type: string
+                      type: array
+                    extraArgs:
+                      additionalProperties:
+                        type: string
+                      description: 'ExtraArgs is an extra set of flags to pass to
+                        the control plane component. TODO: This is temporary and ideally
+                        we would like to switch all components to use ComponentConfig
+                        + ConfigMaps.'
+                      type: object
+                    extraVolumes:
+                      description: ExtraVolumes is an extra set of host volumes, mounted
+                        to the control plane component.
+                      items:
+                        description: HostPathMount contains elements describing volumes
+                          that are mounted from the host.
+                        properties:
+                          hostPath:
+                            description: HostPath is the path in the host that will
+                              be mounted inside the pod.
+                            type: string
+                          mountPath:
+                            description: MountPath is the path inside the pod where
+                              hostPath will be mounted.
+                            type: string
+                          name:
+                            description: Name of the volume inside the pod template.
+                            type: string
+                          pathType:
+                            description: PathType is the type of the HostPath.
+                            type: string
+                          readOnly:
+                            description: ReadOnly controls write access to the volume
+                            type: boolean
+                        required:
+                        - hostPath
+                        - mountPath
+                        - name
+                        type: object
+                      type: array
+                    timeoutForControlPlane:
+                      description: TimeoutForControlPlane controls the timeout that
+                        we use for API server to appear
+                      type: string
+                  type: object
+                apiVersion:
+                  description: 'APIVersion defines the versioned schema of this representation
+                    of an object. Servers should convert recognized schemas to the
+                    latest internal value, and may reject unrecognized values. More
+                    info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+                  type: string
+                certificatesDir:
+                  description: CertificatesDir specifies where to store or look for
+                    all required certificates.
+                  type: string
+                clusterName:
+                  description: The cluster name
+                  type: string
+                controlPlaneEndpoint:
+                  description: 'ControlPlaneEndpoint sets a stable IP address or DNS
+                    name for the control plane; it can be a valid IP address or a
+                    RFC-1123 DNS subdomain, both with optional TCP port. In case the
+                    ControlPlaneEndpoint is not specified, the AdvertiseAddress +
+                    BindPort are used; in case the ControlPlaneEndpoint is specified
+                    but without a TCP port, the BindPort is used. Possible usages
+                    are: e.g. In a cluster with more than one control plane instances,
+                    this field should be assigned the address of the external load
+                    balancer in front of the control plane instances. e.g.  in environments
+                    with enforced node recycling, the ControlPlaneEndpoint could be
+                    used for assigning a stable DNS to the control plane.'
+                  type: string
+                controllerManager:
+                  description: ControllerManager contains extra settings for the controller
+                    manager control plane component
+                  properties:
+                    extraArgs:
+                      additionalProperties:
+                        type: string
+                      description: 'ExtraArgs is an extra set of flags to pass to
+                        the control plane component. TODO: This is temporary and ideally
+                        we would like to switch all components to use ComponentConfig
+                        + ConfigMaps.'
+                      type: object
+                    extraVolumes:
+                      description: ExtraVolumes is an extra set of host volumes, mounted
+                        to the control plane component.
+                      items:
+                        description: HostPathMount contains elements describing volumes
+                          that are mounted from the host.
+                        properties:
+                          hostPath:
+                            description: HostPath is the path in the host that will
+                              be mounted inside the pod.
+                            type: string
+                          mountPath:
+                            description: MountPath is the path inside the pod where
+                              hostPath will be mounted.
+                            type: string
+                          name:
+                            description: Name of the volume inside the pod template.
+                            type: string
+                          pathType:
+                            description: PathType is the type of the HostPath.
+                            type: string
+                          readOnly:
+                            description: ReadOnly controls write access to the volume
+                            type: boolean
+                        required:
+                        - hostPath
+                        - mountPath
+                        - name
+                        type: object
+                      type: array
+                  type: object
+                dns:
+                  description: DNS defines the options for the DNS add-on installed
+                    in the cluster.
+                  properties:
+                    imageRepository:
+                      description: ImageRepository sets the container registry to
+                        pull images from. if not set, the ImageRepository defined
+                        in ClusterConfiguration will be used instead.
+                      type: string
+                    imageTag:
+                      description: ImageTag allows to specify a tag for the image.
+                        In case this value is set, kubeadm does not change automatically
+                        the version of the above components during upgrades.
+                      type: string
+                    type:
+                      description: Type defines the DNS add-on to be used
+                      type: string
+                  required:
+                  - type
+                  type: object
+                etcd:
+                  description: Etcd holds configuration for etcd.
+                  properties:
+                    external:
+                      description: External describes how to connect to an external
+                        etcd cluster Local and External are mutually exclusive
+                      properties:
+                        caFile:
+                          description: CAFile is an SSL Certificate Authority file
+                            used to secure etcd communication. Required if using a
+                            TLS connection.
+                          type: string
+                        certFile:
+                          description: CertFile is an SSL certification file used
+                            to secure etcd communication. Required if using a TLS
+                            connection.
+                          type: string
+                        endpoints:
+                          description: Endpoints of etcd members. Required for ExternalEtcd.
+                          items:
+                            type: string
+                          type: array
+                        keyFile:
+                          description: KeyFile is an SSL key file used to secure etcd
+                            communication. Required if using a TLS connection.
+                          type: string
+                      required:
+                      - caFile
+                      - certFile
+                      - endpoints
+                      - keyFile
+                      type: object
+                    local:
+                      description: Local provides configuration knobs for configuring
+                        the local etcd instance Local and External are mutually exclusive
+                      properties:
+                        dataDir:
+                          description: DataDir is the directory etcd will place its
+                            data. Defaults to "/var/lib/etcd".
+                          type: string
+                        extraArgs:
+                          additionalProperties:
+                            type: string
+                          description: ExtraArgs are extra arguments provided to the
+                            etcd binary when run inside a static pod.
+                          type: object
+                        imageRepository:
+                          description: ImageRepository sets the container registry
+                            to pull images from. if not set, the ImageRepository defined
+                            in ClusterConfiguration will be used instead.
+                          type: string
+                        imageTag:
+                          description: ImageTag allows to specify a tag for the image.
+                            In case this value is set, kubeadm does not change automatically
+                            the version of the above components during upgrades.
+                          type: string
+                        peerCertSANs:
+                          description: PeerCertSANs sets extra Subject Alternative
+                            Names for the etcd peer signing cert.
+                          items:
+                            type: string
+                          type: array
+                        serverCertSANs:
+                          description: ServerCertSANs sets extra Subject Alternative
+                            Names for the etcd server signing cert.
+                          items:
+                            type: string
+                          type: array
+                      required:
+                      - dataDir
+                      type: object
+                  type: object
+                featureGates:
+                  additionalProperties:
+                    type: boolean
+                  description: FeatureGates enabled by the user.
+                  type: object
+                imageRepository:
+                  description: ImageRepository sets the container registry to pull
+                    images from. If empty, `k8s.gcr.io` will be used by default; in
+                    case of kubernetes version is a CI build (kubernetes version starts
+                    with `ci/` or `ci-cross/`) `gcr.io/kubernetes-ci-images` will
+                    be used as a default for control plane components and for kube-proxy,
+                    while `k8s.gcr.io` will be used for all the other images.
+                  type: string
+                kind:
+                  description: 'Kind is a string value representing the REST resource
+                    this object represents. Servers may infer this from the endpoint
+                    the client submits requests to. Cannot be updated. In CamelCase.
+                    More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+                  type: string
+                kubernetesVersion:
+                  description: KubernetesVersion is the target version of the control
+                    plane.
+                  type: string
+                networking:
+                  description: Networking holds configuration for the networking topology
+                    of the cluster.
+                  properties:
+                    dnsDomain:
+                      description: DNSDomain is the dns domain used by k8s services.
+                        Defaults to "cluster.local".
+                      type: string
+                    podSubnet:
+                      description: PodSubnet is the subnet used by pods.
+                      type: string
+                    serviceSubnet:
+                      description: ServiceSubnet is the subnet used by k8s services.
+                        Defaults to "10.96.0.0/12".
+                      type: string
+                  required:
+                  - dnsDomain
+                  - podSubnet
+                  - serviceSubnet
+                  type: object
+                scheduler:
+                  description: Scheduler contains extra settings for the scheduler
+                    control plane component
+                  properties:
+                    extraArgs:
+                      additionalProperties:
+                        type: string
+                      description: 'ExtraArgs is an extra set of flags to pass to
+                        the control plane component. TODO: This is temporary and ideally
+                        we would like to switch all components to use ComponentConfig
+                        + ConfigMaps.'
+                      type: object
+                    extraVolumes:
+                      description: ExtraVolumes is an extra set of host volumes, mounted
+                        to the control plane component.
+                      items:
+                        description: HostPathMount contains elements describing volumes
+                          that are mounted from the host.
+                        properties:
+                          hostPath:
+                            description: HostPath is the path in the host that will
+                              be mounted inside the pod.
+                            type: string
+                          mountPath:
+                            description: MountPath is the path inside the pod where
+                              hostPath will be mounted.
+                            type: string
+                          name:
+                            description: Name of the volume inside the pod template.
+                            type: string
+                          pathType:
+                            description: PathType is the type of the HostPath.
+                            type: string
+                          readOnly:
+                            description: ReadOnly controls write access to the volume
+                            type: boolean
+                        required:
+                        - hostPath
+                        - mountPath
+                        - name
+                        type: object
+                      type: array
+                  type: object
+                useHyperKubeImage:
+                  description: UseHyperKubeImage controls if hyperkube should be used
+                    for Kubernetes components instead of their respective separate
+                    images
+                  type: boolean
+              required:
+              - certificatesDir
+              - controlPlaneEndpoint
+              - dns
+              - etcd
+              - imageRepository
+              - kubernetesVersion
+              - networking
+              type: object
+            disablePortSecurity:
+              description: DisablePortSecurity disables the port security of the network
+                created for the Kubernetes cluster, which also disables SecurityGroups
+              type: boolean
+            disableServerTags:
+              description: 'Default: True. In case of server tag errors, set to False'
+              type: boolean
+            dnsNameservers:
+              description: DNSNameservers is the list of nameservers for OpenStack
+                Subnet being created.
+              items:
+                type: string
+              type: array
+            etcdCAKeyPair:
+              description: EtcdCAKeyPair is the key pair for etcd.
+              properties:
+                cert:
+                  description: base64 encoded cert and key
+                  format: byte
+                  type: string
+                key:
+                  format: byte
+                  type: string
+              type: object
+            externalNetworkId:
+              description: ExternalNetworkID is the ID of an external OpenStack Network.
+                This is necessary to get public internet to the VMs.
+              type: string
+            externalRouterIPs:
+              description: ExternalRouterIPs is an array of externalIPs on the respective
+                subnets. This is necessary if the router needs a fixed ip in a specific
+                subnet.
+              items:
+                properties:
+                  fixedIP:
+                    description: The FixedIP in the corresponding subnet
+                    type: string
+                  subnet:
+                    description: The subnet in which the FixedIP is used for the Gateway
+                      of this router
+                    properties:
+                      filter:
+                        description: Filters for optional network query
+                        properties:
+                          cidr:
+                            type: string
+                          description:
+                            type: string
+                          enableDhcp:
+                            type: boolean
+                          gateway_ip:
+                            type: string
+                          id:
+                            type: string
+                          ipVersion:
+                            type: integer
+                          ipv6AddressMode:
+                            type: string
+                          ipv6RaMode:
+                            type: string
+                          limit:
+                            type: integer
+                          marker:
+                            type: string
+                          name:
+                            type: string
+                          networkId:
+                            type: string
+                          notTags:
+                            type: string
+                          notTagsAny:
+                            type: string
+                          projectId:
+                            type: string
+                          sortDir:
+                            type: string
+                          sortKey:
+                            type: string
+                          subnetpoolId:
+                            type: string
+                          tags:
+                            type: string
+                          tagsAny:
+                            type: string
+                          tenantId:
+                            type: string
+                        type: object
+                      uuid:
+                        description: The UUID of the network. Required if you omit
+                          the port attribute.
+                        type: string
+                    type: object
+                required:
+                - subnet
+                type: object
+              type: array
+            frontProxyCAKeyPair:
+              description: FrontProxyCAKeyPair is the key pair for FrontProxyKeyPair.
+              properties:
+                cert:
+                  description: base64 encoded cert and key
+                  format: byte
+                  type: string
+                key:
+                  format: byte
+                  type: string
+              type: object
+            managedAPIServerLoadBalancer:
+              description: 'ManagedAPIServerLoadBalancer defines whether a LoadBalancer
+                for the APIServer should be created. If set to true the following
+                properties are mandatory: APIServerLoadBalancerFloatingIP, APIServerLoadBalancerPort'
+              type: boolean
+            managedSecurityGroups:
+              description: ManagedSecurityGroups defines that kubernetes manages the
+                OpenStack security groups for now, that means that we'll create two
+                security groups, one allowing SSH and API access from everywhere,
+                and another one that allows all traffic to/from machines belonging
+                to that group. In the future, we could make this more flexible.
+              type: boolean
+            nodeCidr:
+              description: NodeCIDR is the OpenStack Subnet to be created. Cluster
+                actuator will create a network, a subnet with NodeCIDR, and a router
+                connected to this subnet. If you leave this empty, no network will
+                be created.
+              type: string
+            saKeyPair:
+              description: SAKeyPair is the service account key pair.
+              properties:
+                cert:
+                  description: base64 encoded cert and key
+                  format: byte
+                  type: string
+                key:
+                  format: byte
+                  type: string
+              type: object
+            tags:
+              description: Tags for all resources in cluster
+              items:
+                type: string
+              type: array
+            useOctavia:
+              description: UseOctavia is weather LoadBalancer Service is Octavia or
+                not
+              type: boolean
+          type: object
+        status:
+          description: OpenStackClusterStatus defines the observed state of OpenStackCluster
+          properties:
+            apiEndpoints:
+              description: APIEndpoints represents the endpoints to communicate with
+                the control plane.
+              items:
+                description: APIEndpoint represents a reachable Kubernetes API endpoint.
+                properties:
+                  host:
+                    description: The hostname on which the API server is serving.
+                    type: string
+                  port:
+                    description: The port on which the API server is serving.
+                    type: integer
+                required:
+                - host
+                - port
+                type: object
+              type: array
+            controlPlaneSecurityGroup:
+              description: 'ControlPlaneSecurityGroups contains all the information
+                about the OpenStack Security Group that needs to be applied to control
+                plane nodes. TODO: Maybe instead of two properties, we add a property
+                to the group?'
+              properties:
+                id:
+                  type: string
+                name:
+                  type: string
+                rules:
+                  items:
+                    description: SecurityGroupRule represent the basic information
+                      of the associated OpenStack Security Group Role.
+                    properties:
+                      direction:
+                        type: string
+                      etherType:
+                        type: string
+                      name:
+                        type: string
+                      portRangeMax:
+                        type: integer
+                      portRangeMin:
+                        type: integer
+                      protocol:
+                        type: string
+                      remoteGroupID:
+                        type: string
+                      remoteIPPrefix:
+                        type: string
+                      securityGroupID:
+                        type: string
+                    required:
+                    - direction
+                    - etherType
+                    - name
+                    - portRangeMax
+                    - portRangeMin
+                    - protocol
+                    - remoteGroupID
+                    - remoteIPPrefix
+                    - securityGroupID
+                    type: object
+                  type: array
+              required:
+              - id
+              - name
+              - rules
+              type: object
+            globalSecurityGroup:
+              description: GlobalSecurityGroup contains all the information about
+                the OpenStack Security Group that needs to be applied to all nodes,
+                both control plane and worker nodes.
+              properties:
+                id:
+                  type: string
+                name:
+                  type: string
+                rules:
+                  items:
+                    description: SecurityGroupRule represent the basic information
+                      of the associated OpenStack Security Group Role.
+                    properties:
+                      direction:
+                        type: string
+                      etherType:
+                        type: string
+                      name:
+                        type: string
+                      portRangeMax:
+                        type: integer
+                      portRangeMin:
+                        type: integer
+                      protocol:
+                        type: string
+                      remoteGroupID:
+                        type: string
+                      remoteIPPrefix:
+                        type: string
+                      securityGroupID:
+                        type: string
+                    required:
+                    - direction
+                    - etherType
+                    - name
+                    - portRangeMax
+                    - portRangeMin
+                    - protocol
+                    - remoteGroupID
+                    - remoteIPPrefix
+                    - securityGroupID
+                    type: object
+                  type: array
+              required:
+              - id
+              - name
+              - rules
+              type: object
+            network:
+              description: Network contains all information about the created OpenStack
+                Network. It includes Subnets and Router.
+              properties:
+                apiServerLoadBalancer:
+                  description: Be careful when using APIServerLoadBalancer, because
+                    this field is optional and therefore not set in all cases
+                  properties:
+                    id:
+                      type: string
+                    internalIP:
+                      type: string
+                    ip:
+                      type: string
+                    name:
+                      type: string
+                  required:
+                  - id
+                  - internalIP
+                  - ip
+                  - name
+                  type: object
+                id:
+                  type: string
+                name:
+                  type: string
+                router:
+                  description: Router represents basic information about the associated
+                    OpenStack Neutron Router
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+                  required:
+                  - id
+                  - name
+                  type: object
+                subnet:
+                  description: Subnet represents basic information about the associated
+                    OpenStack Neutron Subnet
+                  properties:
+                    cidr:
+                      type: string
+                    id:
+                      type: string
+                    name:
+                      type: string
+                  required:
+                  - cidr
+                  - id
+                  - name
+                  type: object
+              required:
+              - id
+              - name
+              type: object
+            ready:
+              type: boolean
+          required:
+          - ready
+          type: object
+      type: object
+  version: v1alpha2
+  versions:
+  - name: v1alpha2
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

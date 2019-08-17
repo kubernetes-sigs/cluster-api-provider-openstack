@@ -31,7 +31,7 @@ import (
 	"math"
 	"math/big"
 	"net"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha2"
 	"strings"
 	"time"
 )
@@ -67,51 +67,51 @@ type Config struct {
 }
 
 // ReconcileCertificates generate certificates if none exists.
-func (s *Service) ReconcileCertificates(clusterName string, clusterProviderSpec *v1alpha1.OpenstackClusterProviderSpec) error {
-	if !clusterProviderSpec.CAKeyPair.HasCertAndKey() {
+func (s *Service) ReconcileCertificates(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {
+	if !openStackCluster.Spec.CAKeyPair.HasCertAndKey() {
 		klog.Infof("Generating keypair for user %s", clusterCA)
-		clusterCAKeyPair, err := generateCACert(&clusterProviderSpec.CAKeyPair, clusterCA)
+		clusterCAKeyPair, err := generateCACert(&openStackCluster.Spec.CAKeyPair, clusterCA)
 		if err != nil {
 			return errors.Wrapf(err, "Failed to generate certs for %q", clusterCA)
 		}
-		clusterProviderSpec.CAKeyPair = clusterCAKeyPair
+		openStackCluster.Spec.CAKeyPair = clusterCAKeyPair
 	}
 
-	if !clusterProviderSpec.EtcdCAKeyPair.HasCertAndKey() {
+	if !openStackCluster.Spec.EtcdCAKeyPair.HasCertAndKey() {
 		klog.Infof("Generating keypair for user %s", etcdCA)
-		etcdCAKeyPair, err := generateCACert(&clusterProviderSpec.EtcdCAKeyPair, etcdCA)
+		etcdCAKeyPair, err := generateCACert(&openStackCluster.Spec.EtcdCAKeyPair, etcdCA)
 		if err != nil {
 			return errors.Wrapf(err, "Failed to generate certs for %q", etcdCA)
 		}
-		clusterProviderSpec.EtcdCAKeyPair = etcdCAKeyPair
+		openStackCluster.Spec.EtcdCAKeyPair = etcdCAKeyPair
 	}
-	if !clusterProviderSpec.FrontProxyCAKeyPair.HasCertAndKey() {
+	if !openStackCluster.Spec.FrontProxyCAKeyPair.HasCertAndKey() {
 		klog.Infof("Generating keypair for user %s", frontProxyCA)
-		fpCAKeyPair, err := generateCACert(&clusterProviderSpec.FrontProxyCAKeyPair, frontProxyCA)
+		fpCAKeyPair, err := generateCACert(&openStackCluster.Spec.FrontProxyCAKeyPair, frontProxyCA)
 		if err != nil {
 			return errors.Wrapf(err, "Failed to generate certs for %q", frontProxyCA)
 		}
-		clusterProviderSpec.FrontProxyCAKeyPair = fpCAKeyPair
+		openStackCluster.Spec.FrontProxyCAKeyPair = fpCAKeyPair
 	}
 
-	if !clusterProviderSpec.SAKeyPair.HasCertAndKey() {
+	if !openStackCluster.Spec.SAKeyPair.HasCertAndKey() {
 		klog.Infof("Generating service account keys for user %s", serviceAccount)
-		saKeyPair, err := generateServiceAccountKeys(&clusterProviderSpec.SAKeyPair, serviceAccount)
+		saKeyPair, err := generateServiceAccountKeys(&openStackCluster.Spec.SAKeyPair, serviceAccount)
 		if err != nil {
 			return errors.Wrapf(err, "Failed to generate keyPair for %q", serviceAccount)
 		}
-		clusterProviderSpec.SAKeyPair = saKeyPair
+		openStackCluster.Spec.SAKeyPair = saKeyPair
 	}
 	return nil
 }
 
-func generateCACert(kp *v1alpha1.KeyPair, user string) (v1alpha1.KeyPair, error) {
+func generateCACert(kp *infrav1.KeyPair, user string) (infrav1.KeyPair, error) {
 	x509Cert, privKey, err := NewCertificateAuthority()
 	if err != nil {
-		return v1alpha1.KeyPair{}, errors.Wrapf(err, "failed to generate CA cert for %q", user)
+		return infrav1.KeyPair{}, errors.Wrapf(err, "failed to generate CA cert for %q", user)
 	}
 	if kp == nil {
-		return v1alpha1.KeyPair{
+		return infrav1.KeyPair{
 			Cert: EncodeCertPEM(x509Cert),
 			Key:  EncodePrivateKeyPEM(privKey),
 		}, nil
@@ -121,17 +121,17 @@ func generateCACert(kp *v1alpha1.KeyPair, user string) (v1alpha1.KeyPair, error)
 	return *kp, nil
 }
 
-func generateServiceAccountKeys(kp *v1alpha1.KeyPair, user string) (v1alpha1.KeyPair, error) {
+func generateServiceAccountKeys(kp *infrav1.KeyPair, user string) (infrav1.KeyPair, error) {
 	saCreds, err := NewPrivateKey()
 	if err != nil {
-		return v1alpha1.KeyPair{}, errors.Wrapf(err, "failed to create service account public and private keys")
+		return infrav1.KeyPair{}, errors.Wrapf(err, "failed to create service account public and private keys")
 	}
 	saPub, err := EncodePublicKeyPEM(&saCreds.PublicKey)
 	if err != nil {
-		return v1alpha1.KeyPair{}, errors.Wrapf(err, "failed to encode service account public key to PEM")
+		return infrav1.KeyPair{}, errors.Wrapf(err, "failed to encode service account public key to PEM")
 	}
 	if kp == nil {
-		return v1alpha1.KeyPair{
+		return infrav1.KeyPair{
 			Cert: saPub,
 			Key:  EncodePrivateKeyPEM(saCreds),
 		}, nil

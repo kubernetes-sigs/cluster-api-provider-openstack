@@ -1,0 +1,40 @@
+apiVersion: cluster.x-k8s.io/v1alpha2
+kind: Cluster
+metadata:
+  name: cluster001
+  namespace: default
+spec:
+  clusterNetwork:
+    services:
+      cidrBlocks: ["10.96.0.0/12"]
+    pods:
+      cidrBlocks: ["192.168.0.0/16"]
+    serviceDomain: "cluster.local"
+  infrastructureRef:
+    kind: OpenStackCluster
+    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+    name: cluster001
+    namespace: default
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+kind: OpenStackCluster
+metadata:
+  name: cluster001
+  namespace: default
+spec:
+  tags:
+    - a_cluster_wide_tag
+  clusterConfiguration:
+    controlPlaneEndpoint: <apiServerLoadBalancer or master IP>:6443
+    kubernetesVersion: 1.15.0
+    imageRepository: k8s.gcr.io
+    certificatesDir: /etc/kubernetes/pki
+    dns:
+      type: "CoreDNS"
+    networking:
+      dnsDomain: "cluster.local"
+      podSubnet: "192.168.0.0/16"
+      serviceSubnet: "10.96.0.0/12"
+    etcd:
+      local:
+        dataDir: "/var/lib/etcd"

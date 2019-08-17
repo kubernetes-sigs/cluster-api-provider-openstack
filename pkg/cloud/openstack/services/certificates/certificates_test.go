@@ -18,16 +18,16 @@ package certificates
 
 import (
 	"crypto/x509"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha2"
 	"testing"
 
 	"github.com/pkg/errors"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
 )
 
 func TestGenerateCACert(t *testing.T) {
 	testCases := []struct {
 		name             string
-		inputKeyPair     *v1alpha1.KeyPair
+		inputKeyPair     *infrav1.KeyPair
 		inputUser        string
 		expectKeyPairGen bool
 		expectedError    error
@@ -41,28 +41,28 @@ func TestGenerateCACert(t *testing.T) {
 		},
 		{
 			name:             "should generate keypair when inputKeyPair has no cert",
-			inputKeyPair:     &v1alpha1.KeyPair{Key: []byte("foo-key")},
+			inputKeyPair:     &infrav1.KeyPair{Key: []byte("foo-key")},
 			inputUser:        "foo-ca",
 			expectKeyPairGen: true,
 			expectedError:    nil,
 		},
 		{
 			name:             "should generate keypair when inputKeyPair has no key",
-			inputKeyPair:     &v1alpha1.KeyPair{Cert: []byte("foo-cert")},
+			inputKeyPair:     &infrav1.KeyPair{Cert: []byte("foo-cert")},
 			inputUser:        "foo-ca",
 			expectKeyPairGen: true,
 			expectedError:    nil,
 		},
 		{
 			name:             "should generate keypair when inputKeyPair has no cert and nokey",
-			inputKeyPair:     &v1alpha1.KeyPair{},
+			inputKeyPair:     &infrav1.KeyPair{},
 			inputUser:        "foo-ca",
 			expectKeyPairGen: true,
 			expectedError:    nil,
 		},
 		{
 			name:             "should not generate keypair when inputKeyPair has cert and key",
-			inputKeyPair:     &v1alpha1.KeyPair{Cert: []byte("foo-cert"), Key: []byte("foo-key")},
+			inputKeyPair:     &infrav1.KeyPair{Cert: []byte("foo-cert"), Key: []byte("foo-key")},
 			inputUser:        "foo-ca",
 			expectKeyPairGen: false,
 			expectedError:    nil,
@@ -99,7 +99,7 @@ func TestGenerateCACert(t *testing.T) {
 func TestGenerateServiceAccountKeys(t *testing.T) {
 	testCases := []struct {
 		name             string
-		inputKeyPair     *v1alpha1.KeyPair
+		inputKeyPair     *infrav1.KeyPair
 		inputUser        string
 		expectKeyPairGen bool
 		expectedError    error
@@ -113,28 +113,28 @@ func TestGenerateServiceAccountKeys(t *testing.T) {
 		},
 		{
 			name:             "should generate keypair when inputKeyPair has no cert",
-			inputKeyPair:     &v1alpha1.KeyPair{Key: []byte("foo-key")},
+			inputKeyPair:     &infrav1.KeyPair{Key: []byte("foo-key")},
 			inputUser:        "foo-sa",
 			expectKeyPairGen: true,
 			expectedError:    nil,
 		},
 		{
 			name:             "should generate keypair when inputKeyPair has no key",
-			inputKeyPair:     &v1alpha1.KeyPair{Cert: []byte("foo-cert")},
+			inputKeyPair:     &infrav1.KeyPair{Cert: []byte("foo-cert")},
 			inputUser:        "foo-sa",
 			expectKeyPairGen: true,
 			expectedError:    nil,
 		},
 		{
 			name:             "should generate keypair when inputKeyPair has no cert and nokey",
-			inputKeyPair:     &v1alpha1.KeyPair{},
+			inputKeyPair:     &infrav1.KeyPair{},
 			inputUser:        "foo-ca",
 			expectKeyPairGen: true,
 			expectedError:    nil,
 		},
 		{
 			name:             "should not generate keypair when inputKeyPair has cert and key",
-			inputKeyPair:     &v1alpha1.KeyPair{Cert: []byte("foo-cert"), Key: []byte("foo-key")},
+			inputKeyPair:     &infrav1.KeyPair{Cert: []byte("foo-cert"), Key: []byte("foo-key")},
 			inputUser:        "foo-sa",
 			expectKeyPairGen: false,
 			expectedError:    nil,

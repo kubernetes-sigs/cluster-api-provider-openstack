@@ -20,19 +20,19 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	werrors "github.com/pkg/errors"
 	"io/ioutil"
-	"k8s.io/client-go/kubernetes"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog"
 	"path"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/options"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/certificates"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/compute"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/provider"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/deployer"
 	"sigs.k8s.io/cluster-api/pkg/util"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"strings"
 	"text/template"
 	"time"
@@ -41,12 +41,11 @@ import (
 
 	"encoding/json"
 	clconfig "github.com/coreos/container-linux-config-transpiler/config"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	tokenapi "k8s.io/cluster-bootstrap/token/api"
 	tokenutil "k8s.io/cluster-bootstrap/token/util"
-	providerv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha2"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/bootstrap"
-	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha2"
 	apierrors "sigs.k8s.io/cluster-api/pkg/errors"
 )
 
@@ -71,8 +70,8 @@ type setupParams struct {
 	KubeadmConfig string
 }
 
-func GetUserData(controllerClient client.Client, kubeClient kubernetes.Interface, machineProviderSpec *providerv1.OpenstackProviderSpec, cluster *clusterv1.Cluster, machine *clusterv1.Machine) (string, error) {
-
+func GetUserData(ctrlClient client.Client, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (string, error) {
+	ctx := context.TODO()
 	// get machine startup script
 	var ok bool
 	var disableTemplating bool
@@ -81,24 +80,28 @@ func GetUserData(controllerClient client.Client, kubeClient kubernetes.Interface
 	var err error
 
 	var userData []byte
-	if machineProviderSpec.UserDataSecret != nil {
-		namespace := machineProviderSpec.UserDataSecret.Namespace
+	if openStackMachine.Spec.UserDataSecret != nil {
+		namespace := openStackMachine.Spec.UserDataSecret.Namespace
 		if namespace == "" {
 			namespace = machine.Namespace
 		}
 
-		if machineProviderSpec.UserDataSecret.Name == "" {
+		if openStackMachine.Spec.UserDataSecret.Name == "" {
 			return "", fmt.Errorf("UserDataSecret name must be provided")
 		}
 
-		userDataSecret, err := kubeClient.CoreV1().Secrets(namespace).Get(machineProviderSpec.UserDataSecret.Name, metav1.GetOptions{})
+		userDataSecret := &v1.Secret{}
+		err := ctrlClient.Get(ctx, types.NamespacedName{
+			Namespace: namespace,
+			Name:      openStackMachine.Spec.UserDataSecret.Name,
+		}, userDataSecret)
 		if err != nil {
 			return "", err
 		}
 
 		userData, ok = userDataSecret.Data[UserDataKey]
 		if !ok {
-			return "", fmt.Errorf("machine's userdata secret %v in namespace %v did not contain key %v", machineProviderSpec.UserDataSecret.Name, namespace, UserDataKey)
+			return "", fmt.Errorf("machine's userdata secret %v in namespace %v did not contain key %v", openStackMachine.Spec.UserDataSecret.Name, namespace, UserDataKey)
 		}
 
 		_, disableTemplating = userDataSecret.Data[DisableTemplatingKey]
@@ -120,7 +123,7 @@ func GetUserData(controllerClient client.Client, kubeClient kubernetes.Interface
 
 	var userDataRendered string
 	if len(userData) > 0 && !disableTemplating {
-		isNodeJoin, err := isNodeJoin(controllerClient, kubeClient, cluster, machine)
+		isNodeJoin, err := isNodeJoin(ctrlClient, openStackCluster, machine)
 		if err != nil {
 			return "", apierrors.CreateMachine("error creating Openstack instance: %v", err)
 		}
@@ -128,13 +131,13 @@ func GetUserData(controllerClient client.Client, kubeClient kubernetes.Interface
 		var bootstrapToken string
 		if isNodeJoin {
 			klog.Info("Creating bootstrap token")
-			bootstrapToken, err = createBootstrapToken(controllerClient)
+			bootstrapToken, err = createBootstrapToken(openStackCluster)
 			if err != nil {
 				return "", apierrors.CreateMachine("error creating Openstack instance: %v", err)
 			}
 		}
 
-		userDataRendered, err = startupScript(cluster, machine, machineProviderSpec, string(userData), bootstrapToken)
+		userDataRendered, err = startupScript(machine, openStackMachine, cluster, openStackCluster, string(userData), bootstrapToken)
 		if err != nil {
 			return "", apierrors.CreateMachine("error creating Openstack instance: %v", err)
 		}
@@ -154,29 +157,29 @@ func GetUserData(controllerClient client.Client, kubeClient kubernetes.Interface
 		case "ct":
 			clCfg, ast, report := clconfig.Parse([]byte(userDataRendered))
 			if len(report.Entries) > 0 {
-				return "", fmt.Errorf("Postprocessor error: %s", report.String())
+				return "", fmt.Errorf("postprocessor error: %s", report.String())
 			}
 
 			ignCfg, report := clconfig.Convert(clCfg, "openstack-metadata", ast)
 			if len(report.Entries) > 0 {
-				return "", fmt.Errorf("Postprocessor error: %s", report.String())
+				return "", fmt.Errorf("postprocessor error: %s", report.String())
 			}
 
 			ud, err := json.Marshal(&ignCfg)
 			if err != nil {
-				return "", fmt.Errorf("Postprocessor error: %s", err)
+				return "", fmt.Errorf("postprocessor error: %s", err)
 			}
 
 			userDataRendered = string(ud)
 
 		default:
-			return "", fmt.Errorf("Postprocessor error: unknown postprocessor: '%s'", postprocessor)
+			return "", fmt.Errorf("postprocessor error: unknown postprocessor: '%s'", postprocessor)
 		}
 	}
 	return userDataRendered, nil
 }
 
-func isNodeJoin(controllerClient client.Client, kubeClient kubernetes.Interface, cluster *clusterv1.Cluster, machine *clusterv1.Machine) (bool, error) {
+func isNodeJoin(ctrlClient client.Client, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine) (bool, error) {
 
 	// Worker machines always join
 	if !util.IsControlPlaneMachine(machine) {
@@ -185,7 +188,7 @@ func isNodeJoin(controllerClient client.Client, kubeClient kubernetes.Interface,
 	}
 
 	// Get control plane machines and return false if none found
-	controlPlaneMachines, err := getControlPlaneMachines(controllerClient)
+	controlPlaneMachines, err := getControlPlaneMachines(ctrlClient)
 	if err != nil {
 		return false, apierrors.CreateMachine("error retrieving control plane machines: %v", err)
 	}
@@ -195,7 +198,7 @@ func isNodeJoin(controllerClient client.Client, kubeClient kubernetes.Interface,
 	}
 
 	// Get control plane machine instances and return false if none found
-	osProviderClient, clientOpts, err := provider.NewClientFromCluster(kubeClient, cluster)
+	osProviderClient, clientOpts, err := provider.NewClientFromCluster(ctrlClient, openStackCluster)
 	if err != nil {
 		return false, err
 	}
@@ -224,11 +227,10 @@ func isNodeJoin(controllerClient client.Client, kubeClient kubernetes.Interface,
 	return false, nil
 }
 
-func getControlPlaneMachines(controllerClient client.Client) ([]*clusterv1.Machine, error) {
+func getControlPlaneMachines(ctrlClient client.Client) ([]*clusterv1.Machine, error) {
 	var controlPlaneMachines []*clusterv1.Machine
 	msList := &clusterv1.MachineList{}
-	listOptions := &client.ListOptions{}
-	err := controllerClient.List(context.TODO(), listOptions, msList)
+	err := ctrlClient.List(context.TODO(), msList)
 	if err != nil {
 		return nil, fmt.Errorf("error retrieving machines: %v", err)
 	}
@@ -242,7 +244,7 @@ func getControlPlaneMachines(controllerClient client.Client) ([]*clusterv1.Machi
 	return controlPlaneMachines, nil
 }
 
-func createBootstrapToken(controllerClient client.Client) (string, error) {
+func createBootstrapToken(openStackCluster *infrav1.OpenStackCluster) (string, error) {
 	token, err := tokenutil.GenerateBootstrapToken()
 	if err != nil {
 		return "", err
@@ -254,7 +256,7 @@ func createBootstrapToken(controllerClient client.Client) (string, error) {
 		panic(fmt.Sprintf("unable to create token. there might be a bug somwhere: %v", err))
 	}
 
-	kubeClient, err := getWorkloadClusterKubeClient(controllerClient)
+	kubeClient, err := getKubeClient(openStackCluster)
 	if err != nil {
 		return "", err
 	}
@@ -270,34 +272,8 @@ func createBootstrapToken(controllerClient client.Client) (string, error) {
 	), nil
 }
 
-func getWorkloadClusterKubeClient(controllerClient client.Client) (client.Client, error) {
-	var cluster *clusterv1.Cluster
-
-	controlPlaneMachines, err := getControlPlaneMachines(controllerClient)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(controlPlaneMachines) == 0 {
-		return nil, fmt.Errorf("could not find control plane nodes")
-	}
-
-	clusterList := &clusterv1.ClusterList{}
-	listOptions := &client.ListOptions{}
-	err = controllerClient.List(context.TODO(), listOptions, clusterList)
-	if err != nil {
-		return nil, fmt.Errorf("error retrieving clusters: %v", err)
-	}
-	for _, c := range clusterList.Items {
-		if clusterName, ok := controlPlaneMachines[0].Labels[clusterv1.MachineClusterLabelName]; ok && clusterName == c.Name {
-			cluster = &c
-		}
-	}
-	if cluster == nil {
-		return nil, fmt.Errorf("could not find cluster")
-	}
-
-	kubeConfig, err := deployer.New().GetKubeConfig(cluster, controlPlaneMachines[0])
+func getKubeClient(openStackCluster *infrav1.OpenStackCluster) (client.Client, error) {
+	kubeConfig, err := GetKubeConfig(openStackCluster)
 	if err != nil {
 		return nil, err
 	}
@@ -312,38 +288,33 @@ func getWorkloadClusterKubeClient(controllerClient client.Client) (client.Client
 		return nil, err
 	}
 
-	mgr, err := manager.New(cfg, manager.Options{})
+	cl, err := client.New(cfg, client.Options{})
 	if err != nil {
-		return nil, fmt.Errorf("unable to create manager for restConfig: %v", err)
+		return nil, fmt.Errorf("unable to create client for restConfig: %v", err)
 	}
 
-	return mgr.GetClient(), nil
+	return cl, nil
 }
 
-func startupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine, machineProviderSpec *providerv1.OpenstackProviderSpec, userdata, bootstrapToken string) (string, error) {
-	clusterProviderSpec, err := providerv1.ClusterSpecFromProviderSpec(cluster.Spec.ProviderSpec)
-	if err != nil {
+func startupScript(machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, userdata, bootstrapToken string) (string, error) {
+	if err := validateCertificates(openStackCluster); err != nil {
 		return "", err
 	}
 
-	if err := validateCertificates(clusterProviderSpec); err != nil {
-		return "", err
-	}
-
-	kubeadmConfig, err := generateKubeadmConfig(util.IsControlPlaneMachine(machine), bootstrapToken, cluster, machine, machineProviderSpec, clusterProviderSpec)
+	kubeadmConfig, err := generateKubeadmConfig(util.IsControlPlaneMachine(machine), bootstrapToken, machine, openStackMachine, cluster, openStackCluster)
 	if err != nil {
 		return "", err
 	}
 
 	params := setupParams{
-		CACert:           string(clusterProviderSpec.CAKeyPair.Cert),
-		CAKey:            string(clusterProviderSpec.CAKeyPair.Key),
-		EtcdCACert:       string(clusterProviderSpec.EtcdCAKeyPair.Cert),
-		EtcdCAKey:        string(clusterProviderSpec.EtcdCAKeyPair.Key),
-		FrontProxyCACert: string(clusterProviderSpec.FrontProxyCAKeyPair.Cert),
-		FrontProxyCAKey:  string(clusterProviderSpec.FrontProxyCAKeyPair.Key),
-		SaCert:           string(clusterProviderSpec.SAKeyPair.Cert),
-		SaKey:            string(clusterProviderSpec.SAKeyPair.Key),
+		CACert:           string(openStackCluster.Spec.CAKeyPair.Cert),
+		CAKey:            string(openStackCluster.Spec.CAKeyPair.Key),
+		EtcdCACert:       string(openStackCluster.Spec.EtcdCAKeyPair.Cert),
+		EtcdCAKey:        string(openStackCluster.Spec.EtcdCAKeyPair.Key),
+		FrontProxyCACert: string(openStackCluster.Spec.FrontProxyCAKeyPair.Cert),
+		FrontProxyCAKey:  string(openStackCluster.Spec.FrontProxyCAKeyPair.Key),
+		SaCert:           string(openStackCluster.Spec.SAKeyPair.Cert),
+		SaKey:            string(openStackCluster.Spec.SAKeyPair.Key),
 		Machine:          machine,
 		KubeadmConfig:    kubeadmConfig,
 	}
@@ -361,21 +332,21 @@ func startupScript(cluster *clusterv1.Cluster, machine *clusterv1.Machine, machi
 	return buf.String(), nil
 }
 
-func validateCertificates(clusterProviderSpec *v1alpha1.OpenstackClusterProviderSpec) error {
-	if !isKeyPairValid(clusterProviderSpec.CAKeyPair.Cert, clusterProviderSpec.CAKeyPair.Key) {
-		return errors.New("CA cert material in the ClusterProviderSpec is missing cert/key")
+func validateCertificates(openStackCluster *infrav1.OpenStackCluster) error {
+	if !isKeyPairValid(openStackCluster.Spec.CAKeyPair.Cert, openStackCluster.Spec.CAKeyPair.Key) {
+		return errors.New("CA cert material in the openStackCluster.Spec is missing cert/key")
 	}
 
-	if !isKeyPairValid(clusterProviderSpec.EtcdCAKeyPair.Cert, clusterProviderSpec.EtcdCAKeyPair.Key) {
-		return errors.New("ETCD CA cert material in the ClusterProviderSpec is  missing cert/key")
+	if !isKeyPairValid(openStackCluster.Spec.EtcdCAKeyPair.Cert, openStackCluster.Spec.EtcdCAKeyPair.Key) {
+		return errors.New("ETCD CA cert material in the openStackCluster.Spec is  missing cert/key")
 	}
 
-	if !isKeyPairValid(clusterProviderSpec.FrontProxyCAKeyPair.Cert, clusterProviderSpec.FrontProxyCAKeyPair.Key) {
-		return errors.New("FrontProxy CA cert material in ClusterProviderSpec is  missing cert/key")
+	if !isKeyPairValid(openStackCluster.Spec.FrontProxyCAKeyPair.Cert, openStackCluster.Spec.FrontProxyCAKeyPair.Key) {
+		return errors.New("FrontProxy CA cert material in openStackCluster.Spec is  missing cert/key")
 	}
 
-	if !isKeyPairValid(clusterProviderSpec.SAKeyPair.Cert, clusterProviderSpec.SAKeyPair.Key) {
-		return errors.New("ServiceAccount cert material in ClusterProviderSpec is  missing cert/key")
+	if !isKeyPairValid(openStackCluster.Spec.SAKeyPair.Cert, openStackCluster.Spec.SAKeyPair.Key) {
+		return errors.New("ServiceAccount cert material in openStackCluster.Spec is  missing cert/key")
 	}
 	return nil
 }
@@ -392,4 +363,34 @@ func templateYAMLIndent(i int, input string) string {
 	split := strings.Split(input, "\n")
 	ident := "\n" + strings.Repeat(" ", i)
 	return strings.Repeat(" ", i) + strings.Join(split, ident)
+}
+
+// GetKubeConfig returns the kubeConfig after the bootstrap process is complete.
+func GetKubeConfig(openStackCluster *infrav1.OpenStackCluster) (string, error) {
+
+	cert, err := certificates.DecodeCertPEM(openStackCluster.Spec.CAKeyPair.Cert)
+	if err != nil {
+		return "", werrors.Wrap(err, "failed to decode CA Cert")
+	} else if cert == nil {
+		return "", errors.New("certificate not found in clusterProviderSpec")
+	}
+
+	key, err := certificates.DecodePrivateKeyPEM(openStackCluster.Spec.CAKeyPair.Key)
+	if err != nil {
+		return "", werrors.Wrap(err, "failed to decode private key")
+	} else if key == nil {
+		return "", errors.New("key not found in clusterProviderSpec")
+	}
+
+	cfg, err := certificates.NewKubeconfig(openStackCluster.Name, fmt.Sprintf("https://%s", openStackCluster.Spec.ClusterConfiguration.ControlPlaneEndpoint), cert, key)
+	if err != nil {
+		return "", werrors.Wrap(err, "failed to generate a kubeconfig")
+	}
+
+	yaml, err := clientcmd.Write(*cfg)
+	if err != nil {
+		return "", werrors.Wrap(err, "failed to serialize config to yaml")
+	}
+
+	return string(yaml), nil
 }

@@ -13,16 +13,23 @@
 # limitations under the License.
 
 # Build the manager binary
-FROM golang:1.12.5 as builder
+FROM golang:1.12.6 as builder
+
+ARG ARCH
 
 # Copy in the go src
 WORKDIR $GOPATH/src/sigs.k8s.io/cluster-api
 COPY pkg/    pkg/
 COPY vendor/ vendor/
 COPY cmd/    cmd/
+COPY api/ api/
+COPY controllers/ controllers/
+COPY vendor/ vendor/
 
 # Build
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags '-extldflags "-static"' -o ./cmd/example-provider/manager sigs.k8s.io/cluster-api/cmd/example-provider
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=${ARCH} \
+    go build -a -ldflags '-extldflags "-static"' \
+    -o ./cmd/example-provider/manager sigs.k8s.io/cluster-api/cmd/example-provider
 
 # Copy the controller-manager into a thin image
 FROM gcr.io/distroless/static:latest

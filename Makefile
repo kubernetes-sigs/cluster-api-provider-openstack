@@ -1,4 +1,13 @@
 
+
+# Allow overriding manifest generation destination directory
+MANIFEST_ROOT ?= "config"
+CRD_ROOT ?= "$(MANIFEST_ROOT)/crd/bases"
+WEBHOOK_ROOT ?= "$(MANIFEST_ROOT)/webhook"
+RBAC_ROOT ?= "$(MANIFEST_ROOT)/rbac"
+
+
+
 GIT_HOST = sigs.k8s.io
 PWD := $(shell pwd)
 BASE_DIR := $(shell basename $(PWD))
@@ -12,7 +21,7 @@ GOX_PARALLEL ?= 3
 TARGETS ?= darwin/amd64 linux/amd64 linux/386 linux/arm linux/arm64 linux/ppc64le
 DIST_DIRS         = find * -type d -exec
 
-GENERATE_YAML_PATH=cmd/clusterctl/examples/openstack
+GENERATE_YAML_PATH=samples
 GENERATE_YAML_EXEC=generate-yaml.sh
 GENERATE_YAML_TEST_FOLDER=dummy-make-auto-test
 
@@ -23,6 +32,13 @@ GOFLAGS   :=
 TAGS      :=
 LDFLAGS   := "-w -s -X 'main.version=${VERSION}'"
 REGISTRY ?= k8scloudprovider
+
+MANAGER_IMAGE_NAME ?= cluster-api-provider-openstack
+MANAGER_IMAGE_TAG ?= dev
+PULL_POLICY ?= Always
+
+# Used in docker-* targets.
+MANAGER_IMAGE ?= $(REGISTRY)/$(MANAGER_IMAGE_NAME):$(MANAGER_IMAGE_TAG)
 
 .PHONY: vendor
 vendor: ## Runs go mod to ensure proper vendoring.
@@ -115,20 +131,12 @@ realclean: clean
 shell:
 	$(SHELL) -i
 
-# Generate code
-generate: manifests
-	go generate ./pkg/... ./cmd/...
+images: docker-build
 
-manifests:
-	go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go crd
-
-images: openstack-cluster-api-controller clusterctl-image
-
-openstack-cluster-api-controller: generate manifests
-	docker build . -f cmd/manager/Dockerfile --network=host -t "$(REGISTRY)/openstack-cluster-api-controller:$(VERSION)"
-
-clusterctl-image: generate manifests
-	docker build . -f cmd/clusterctl/Dockerfile --network=host -t "$(REGISTRY)/openstack-cluster-api-clusterctl:$(VERSION)"
+# Build the docker image
+.PHONY: docker-build
+docker-build:
+	docker build . -t ${MANAGER_IMAGE}
 
 upload-images: images
 	@echo "push images to $(REGISTRY)"
@@ -156,6 +164,33 @@ dist: build-cross
 		$(DIST_DIRS) tar -zcf cluster-api-provider-openstack-$(VERSION)-{}.tar.gz {} \; && \
 		$(DIST_DIRS) zip -r cluster-api-provider-openstack-$(VERSION)-{}.zip {} \; \
 	)
+
+# Generate code
+.PHONY: generate
+generate:
+	$(MAKE) generate-manifests
+#TODO(sbueringer) will work after we migrated to kubeadm (because there are problems generating structs with kubeadm structs embedded)
+#	$(MAKE) generate-kubebuilder-code
+
+# Generate manifests e.g. CRD, RBAC etc.
+.PHONY: generate-manifests
+#generate-manifests: $(CONTROLLER_GEN)
+#	go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go \
+#	    paths=./api/... \
+#	    crd:trivialVersions=true \
+#	    output:crd:dir=$(CRD_ROOT) \
+#	    output:webhook:dir=$(WEBHOOK_ROOT) \
+#	    webhook
+#	go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go \
+#	    paths=./controllers/... \
+#        output:rbac:dir=$(RBAC_ROOT) \
+#        rbac:roleName=manager-role
+
+.PHONY: generate-kubebuilder-code
+generate-kubebuilder-code: ## Runs controller-gen
+	go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go \
+		paths=./api/... \
+		object:headerFile=./hack/boilerplate/boilerplate.generatego.txt
 
 .PHONY: build clean cover vendor docs fmt functional lint realclean \
 	relnotes test translation version build-cross dist manifests

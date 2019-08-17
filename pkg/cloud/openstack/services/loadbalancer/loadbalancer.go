@@ -11,24 +11,23 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/klog"
-	providerv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
-	constants "sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/contants"
-	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha2"
+	"sigs.k8s.io/cluster-api/api/v1alpha2"
 	"sigs.k8s.io/cluster-api/pkg/util"
 	"time"
 )
 
-func (s *Service) ReconcileLoadBalancer(clusterName string, clusterProviderSpec *providerv1.OpenstackClusterProviderSpec, clusterProviderStatus *providerv1.OpenstackClusterProviderStatus) error {
+func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {
 
-	if clusterProviderSpec.ExternalNetworkID == "" {
+	if openStackCluster.Spec.ExternalNetworkID == "" {
 		klog.V(3).Infof("No need to create loadbalancer, due to missing ExternalNetworkID")
 		return nil
 	}
-	if clusterProviderSpec.APIServerLoadBalancerFloatingIP == "" {
+	if openStackCluster.Spec.APIServerLoadBalancerFloatingIP == "" {
 		klog.V(3).Infof("No need to create loadbalancer, due to missing APIServerLoadBalancerFloatingIP")
 		return nil
 	}
-	if clusterProviderSpec.APIServerLoadBalancerPort == 0 {
+	if openStackCluster.Spec.APIServerLoadBalancerPort == 0 {
 		klog.V(3).Infof("No need to create loadbalancer, due to missing APIServerLoadBalancerPort")
 		return nil
 	}
@@ -45,7 +44,7 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, clusterProviderSpec 
 		klog.Infof("Creating loadbalancer %s", loadBalancerName)
 		lbCreateOpts := loadbalancers.CreateOpts{
 			Name:        loadBalancerName,
-			VipSubnetID: clusterProviderStatus.Network.Subnet.ID,
+			VipSubnetID: openStackCluster.Status.Network.Subnet.ID,
 		}
 
 		lb, err = loadbalancers.Create(s.loadbalancerClient, lbCreateOpts).Extract()
@@ -59,15 +58,15 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, clusterProviderSpec 
 	}
 
 	// floating ip
-	fp, err := checkIfFloatingIPExists(s.networkingClient, clusterProviderSpec.APIServerLoadBalancerFloatingIP)
+	fp, err := checkIfFloatingIPExists(s.networkingClient, openStackCluster.Spec.APIServerLoadBalancerFloatingIP)
 	if err != nil {
 		return err
 	}
 	if fp == nil {
-		klog.Infof("Creating floating ip %s", clusterProviderSpec.APIServerLoadBalancerFloatingIP)
+		klog.Infof("Creating floating ip %s", openStackCluster.Spec.APIServerLoadBalancerFloatingIP)
 		fpCreateOpts := &floatingips.CreateOpts{
-			FloatingIP:        clusterProviderSpec.APIServerLoadBalancerFloatingIP,
-			FloatingNetworkID: clusterProviderSpec.ExternalNetworkID,
+			FloatingIP:        openStackCluster.Spec.APIServerLoadBalancerFloatingIP,
+			FloatingNetworkID: openStackCluster.Spec.ExternalNetworkID,
 		}
 		fp, err = floatingips.Create(s.networkingClient, fpCreateOpts).Extract()
 		if err != nil {
@@ -76,7 +75,7 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, clusterProviderSpec 
 	}
 
 	// associate floating ip
-	klog.Infof("Associating floating ip %s", clusterProviderSpec.APIServerLoadBalancerFloatingIP)
+	klog.Infof("Associating floating ip %s", openStackCluster.Spec.APIServerLoadBalancerFloatingIP)
 	fpUpdateOpts := &floatingips.UpdateOpts{
 		PortID: &lb.VipPortID,
 	}
@@ -90,8 +89,8 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, clusterProviderSpec 
 	}
 
 	// lb listener
-	portList := []int{clusterProviderSpec.APIServerLoadBalancerPort}
-	portList = append(portList, clusterProviderSpec.APIServerLoadBalancerAdditionalPorts...)
+	portList := []int{openStackCluster.Spec.APIServerLoadBalancerPort}
+	portList = append(portList, openStackCluster.Spec.APIServerLoadBalancerAdditionalPorts...)
 	for _, port := range portList {
 		lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)
 
@@ -170,7 +169,7 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, clusterProviderSpec 
 		}
 	}
 
-	clusterProviderStatus.Network.APIServerLoadBalancer = &providerv1.LoadBalancer{
+	openStackCluster.Status.Network.APIServerLoadBalancer = &infrav1.LoadBalancer{
 		Name:       lb.Name,
 		ID:         lb.ID,
 		InternalIP: lb.VipAddress,
@@ -179,43 +178,39 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, clusterProviderSpec 
 	return nil
 }
 
-func (s *Service) ReconcileLoadBalancerMember(clusterName string, machine *clusterv1.Machine, clusterProviderSpec *providerv1.OpenstackClusterProviderSpec, clusterProviderStatus *providerv1.OpenstackClusterProviderStatus) error {
-
+func (s *Service) ReconcileLoadBalancerMember(clusterName string, machine *v1alpha2.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster, ip string) error {
 	if !util.IsControlPlaneMachine(machine) {
 		return nil
 	}
 
-	if clusterProviderStatus.Network == nil {
-		return errors.New("network is not yet available in clusterProviderStatus")
+	if openStackCluster.Status.Network == nil {
+		return errors.New("network is not yet available in openStackCluster.Status")
 	}
-	if clusterProviderStatus.Network.Subnet == nil {
-		return errors.New("network.Subnet is not yet available in clusterProviderStatus")
+	if openStackCluster.Status.Network.Subnet == nil {
+		return errors.New("network.Subnet is not yet available in openStackCluster.Status")
 	}
-	if clusterProviderStatus.Network.APIServerLoadBalancer == nil {
-		return errors.New("network.APIServerLoadBalancer is not yet available in clusterProviderStatus")
+	if openStackCluster.Status.Network.APIServerLoadBalancer == nil {
+		return errors.New("network.APIServerLoadBalancer is not yet available in openStackCluster.Status")
 	}
 
 	loadBalancerName := fmt.Sprintf("%s-cluster-%s-%s", networkPrefix, clusterName, kubeapiLBSuffix)
-	klog.Infof("Reconciling loadbalancer %s for member %s", loadBalancerName, machine.Name)
+	klog.Infof("Reconciling loadbalancer %s for member %s", loadBalancerName, openStackMachine.Name)
 
-	lbID := clusterProviderStatus.Network.APIServerLoadBalancer.ID
-	subnetID := clusterProviderStatus.Network.Subnet.ID
+	lbID := openStackCluster.Status.Network.APIServerLoadBalancer.ID
+	subnetID := openStackCluster.Status.Network.Subnet.ID
 
-	portList := []int{clusterProviderSpec.APIServerLoadBalancerPort}
-	portList = append(portList, clusterProviderSpec.APIServerLoadBalancerAdditionalPorts...)
+	portList := []int{openStackCluster.Spec.APIServerLoadBalancerPort}
+	portList = append(portList, openStackCluster.Spec.APIServerLoadBalancerAdditionalPorts...)
 	for _, port := range portList {
 		lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)
-		name := lbPortObjectsName + "-" + machine.Name
+		name := lbPortObjectsName + "-" + openStackMachine.Name
 
 		pool, err := checkIfPoolExists(s.loadbalancerClient, lbPortObjectsName)
 		if err != nil {
 			return err
 		}
-
-		ip, ok := machine.ObjectMeta.Annotations[constants.OpenstackIPAnnotationKey]
-		if !ok {
-			klog.Infof("no ip found yet on annotation %s on machine %s", constants.OpenstackIPAnnotationKey, machine.Name)
-			return nil
+		if pool == nil {
+			return errors.New("loadbalancer pool does not exist yet")
 		}
 
 		lbMember, err := checkIfLbMemberExists(s.loadbalancerClient, pool.ID, name)
@@ -273,7 +268,7 @@ func (s *Service) ReconcileLoadBalancerMember(clusterName string, machine *clust
 	return nil
 }
 
-func (s *Service) DeleteLoadBalancer(clusterName string, clusterProviderSpec *providerv1.OpenstackClusterProviderSpec, clusterProviderStatus *providerv1.OpenstackClusterProviderStatus) error {
+func (s *Service) DeleteLoadBalancer(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {
 	loadBalancerName := fmt.Sprintf("%s-cluster-%s-%s", networkPrefix, clusterName, kubeapiLBSuffix)
 	lb, err := checkIfLbExists(s.loadbalancerClient, loadBalancerName)
 	if err != nil {
@@ -294,22 +289,22 @@ func (s *Service) DeleteLoadBalancer(clusterName string, clusterProviderSpec *pr
 	return nil
 }
 
-func (s *Service) DeleteLoadBalancerMember(clusterName string, machine *clusterv1.Machine, clusterProviderSpec *providerv1.OpenstackClusterProviderSpec, clusterProviderStatus *providerv1.OpenstackClusterProviderStatus) error {
+func (s *Service) DeleteLoadBalancerMember(clusterName string, machine *v1alpha2.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster) error {
 
-	if machine == nil || !util.IsControlPlaneMachine(machine) {
+	if openStackMachine == nil || !util.IsControlPlaneMachine(machine) {
 		return nil
 	}
 
 	loadBalancerName := fmt.Sprintf("%s-cluster-%s-%s", networkPrefix, clusterName, kubeapiLBSuffix)
 	klog.Infof("Reconciling loadbalancer %s", loadBalancerName)
 
-	lbID := clusterProviderStatus.Network.APIServerLoadBalancer.ID
+	lbID := openStackCluster.Status.Network.APIServerLoadBalancer.ID
 
-	portList := []int{clusterProviderSpec.APIServerLoadBalancerPort}
-	portList = append(portList, clusterProviderSpec.APIServerLoadBalancerAdditionalPorts...)
+	portList := []int{openStackCluster.Spec.APIServerLoadBalancerPort}
+	portList = append(portList, openStackCluster.Spec.APIServerLoadBalancerAdditionalPorts...)
 	for _, port := range portList {
 		lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)
-		name := lbPortObjectsName + "-" + machine.Name
+		name := lbPortObjectsName + "-" + openStackMachine.Name
 
 		pool, err := checkIfPoolExists(s.loadbalancerClient, lbPortObjectsName)
 		if err != nil {
