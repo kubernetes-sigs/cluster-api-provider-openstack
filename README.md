@@ -99,7 +99,7 @@ policy may be made to more closely align with other providers in the Cluster API
    ```
 
    `<clouds.yaml>` is a yaml file to record how to interact with openstack cloud, there's a sample
-   [clouds.yaml](pkg/cloud/openstack/clients/clouds.yaml), and [openclient configuration files](https://docs.openstack.org/python-openstackclient/latest/configuration/index.html#configuration-files) has additional information.
+   [clouds.yaml](pkg/cloud/openstack/services/clouds.yaml), and [OpenStackClient configuration files](https://docs.openstack.org/python-openstackclient/latest/configuration/index.html#configuration-files) has additional information.
 
    `<openstack cloud>` is the cloud you are going to use, e.g. multiple cloud might be defined in `clouds.yaml`
    and this will be cloud to be used for the new kubernetes to interact with.
@@ -115,6 +115,8 @@ policy may be made to more closely align with other providers in the Cluster API
          auth_url: http://192.168.122.10:5000/
        region_name: RegionOne
    ```
+
+   In case your OpenStack cluster endpoint is using SSL and the cert is signed by an unknown CA, a specific cacert can be provided via cacert.
 
    `<provider os>` specifies the operating system of the virtual machines Kubernetes will run on.
    Supported Operating Systems:
