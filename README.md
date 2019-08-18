@@ -71,6 +71,11 @@ policy may be made to more closely align with other providers in the Cluster API
 
 ## Getting Started
 
+### Notice
+Currenlty `cluster-api-provider-openstack` project is evolving into `cluster-api v1alpha2`, please use `release-0.1` branch for `cluster-api v1alpha1` development as it provides function workable code and configurations.
+
+For more information, please refer to [v1alpha2](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/380)
+
 ### Prerequisites
 
 1. Install `kubectl` (see [here](https://kubernetes.io/docs/tasks/tools/install-kubectl/)). Because `kustomize` was included into `kubectl` and it's used by `cluster-api-provider-openstack` in generating yaml files, so version `1.14.0+` of `kubectl` is required, see [integrate kustomize into kubectl](https://github.com/kubernetes/enhancements/issues/633) for more info.
