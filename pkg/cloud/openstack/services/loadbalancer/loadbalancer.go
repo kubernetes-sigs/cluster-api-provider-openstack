@@ -68,16 +68,25 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, clusterProviderSpec 
 		fpCreateOpts := &floatingips.CreateOpts{
 			FloatingIP:        clusterProviderSpec.APIServerLoadBalancerFloatingIP,
 			FloatingNetworkID: clusterProviderSpec.ExternalNetworkID,
-			PortID:            lb.VipPortID,
 		}
 		fp, err = floatingips.Create(s.networkingClient, fpCreateOpts).Extract()
 		if err != nil {
 			return fmt.Errorf("error allocating floating IP: %s", err)
 		}
-		err = waitForFloatingIP(s.networkingClient, fp.ID, "ACTIVE")
-		if err != nil {
-			return err
-		}
+	}
+
+	// associate floating ip
+	klog.Infof("Associating floating ip %s", clusterProviderSpec.APIServerLoadBalancerFloatingIP)
+	fpUpdateOpts := &floatingips.UpdateOpts{
+		PortID: &lb.VipPortID,
+	}
+	fp, err = floatingips.Update(s.networkingClient, fp.ID, fpUpdateOpts).Extract()
+	if err != nil {
+		return fmt.Errorf("error allocating floating IP: %s", err)
+	}
+	err = waitForFloatingIP(s.networkingClient, fp.ID, "ACTIVE")
+	if err != nil {
+		return err
 	}
 
 	// lb listener

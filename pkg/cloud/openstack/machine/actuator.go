@@ -27,6 +27,7 @@ import (
 	constants "sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/contants"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/compute"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/loadbalancer"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/provider"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/userdata"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/deployer"
@@ -96,6 +97,11 @@ func (a *Actuator) Create(ctx context.Context, cluster *clusterv1.Cluster, machi
 		return err
 	}
 
+	networkingService, err := networking.NewService(osProviderClient, clientOpts)
+	if err != nil {
+		return err
+	}
+
 	clusterProviderSpec, clusterProviderStatus, err := providerv1.ClusterSpecAndStatusFromProviderSpec(cluster)
 	if err != nil {
 		return a.handleMachineError(machine, apierrors.CreateMachine(
@@ -149,7 +155,13 @@ func (a *Actuator) Create(ctx context.Context, cluster *clusterv1.Cluster, machi
 	}
 
 	if machineProviderSpec.FloatingIP != "" {
-		err := computeService.AssociateFloatingIP(instance.ID, machineProviderSpec.FloatingIP)
+		err := networkingService.GetOrCreateFloatingIP(clusterProviderSpec, machineProviderSpec.FloatingIP)
+		if err != nil {
+			return a.handleMachineError(machine, apierrors.CreateMachine(
+				"Create floatingIP err: %v", err))
+		}
+
+		err = computeService.AssociateFloatingIP(instance.ID, machineProviderSpec.FloatingIP)
 		if err != nil {
 			return a.handleMachineError(machine, apierrors.CreateMachine(
 				"Associate floatingIP err: %v", err))
