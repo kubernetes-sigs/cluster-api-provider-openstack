@@ -42,10 +42,13 @@ func generateKubeadmConfig(isControlPlane bool, bootstrapToken string, cluster *
 			// Set default values. If they are not set, these two properties are added with an
 			// empty string and the CoreOS ignition postprocesser fails with "could not find expected key"
 			if clusterConfigurationCopy.CertificatesDir == "" {
-				clusterConfigurationCopy.CertificatesDir = "/etc/kubernetes/pki"
+				clusterConfigurationCopy.CertificatesDir = kubeadmv1beta1.DefaultCertificatesDir
 			}
 			if string(clusterConfigurationCopy.DNS.Type) == "" {
 				clusterConfigurationCopy.DNS.Type = kubeadmv1beta1.CoreDNS
+			}
+			if clusterConfigurationCopy.ImageRepository == "" {
+				clusterConfigurationCopy.ImageRepository = kubeadmv1beta1.DefaultImageRepository
 			}
 			kubeadm.SetClusterConfigurationOptions(
 				clusterConfigurationCopy,
@@ -104,7 +107,7 @@ func generateKubeadmConfig(isControlPlane bool, bootstrapToken string, cluster *
 			joinConfigurationCopy := machineProviderSpec.KubeadmConfiguration.Join
 			// Set default values. If they are not set, these two properties are added with an
 			// empty string and the CoreOS ignition postprocesser fails with "could not find expected key"
-			joinConfigurationCopy.CACertPath = "/etc/kubernetes/pki/ca.crt"
+			joinConfigurationCopy.CACertPath = kubeadmv1beta1.DefaultCACertPath
 			kubeadm.SetJoinConfigurationOptions(
 				&joinConfigurationCopy,
 				kubeadm.WithBootstrapTokenDiscovery(
@@ -138,7 +141,7 @@ func generateKubeadmConfig(isControlPlane bool, bootstrapToken string, cluster *
 		joinConfigurationCopy := machineProviderSpec.KubeadmConfiguration.Join
 		// Set default values. If they are not set, these two properties are added with an
 		// empty string and the CoreOS ignition postprocesser fails with "could not find expected key"
-		joinConfigurationCopy.CACertPath = "/etc/kubernetes/pki/ca.crt"
+		joinConfigurationCopy.CACertPath = kubeadmv1beta1.DefaultCACertPath
 		kubeadm.SetJoinConfigurationOptions(
 			&joinConfigurationCopy,
 			kubeadm.WithBootstrapTokenDiscovery(
