@@ -1,38 +1,7 @@
-# See the OWNERS docs: https://git.k8s.io/community/docs/devel/owners.md
+# See the CONTRIBUTERS docs here https://github.com/openshift/cluster-api/blob/master/CONTRIBUTING.md
 
 aliases:
-  sig-cluster-lifecycle-leads:
-    - lukemarsden
-    - luxas
-    - roberthbailey
-    - timothysc
-  cluster-api-admins:
-    - justinsb
-    - krousey
-    - luxas
-    - roberthbailey
-    - kris-nova
-  cluster-api-maintainers:
-    - jessicaochen
-    - k4leung4
-    - karan
-    - kris-nova
-    - krousey
-    - medinatiger
-    - mkjelland
-    - roberthbailey
-    - rsdcastro
-    - spew
-  sig-openstack-leads:
-    - hogepodge
-    - dklyle
-    - rjmorse
-  cluster-api-openstack-maintainers:
-    - chaosaffe
-    - chrigl
-    - dims
-    - Lion-Wei
-    - m1093782566
+  shiftstack-team:
     - Fedosin
     - iamemilio
     - mandre
