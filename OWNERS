@@ -1,12 +1,4 @@
-# See the OWNERS docs: https://git.k8s.io/community/contributors/guide/owners.md
+# See the CONTRIBUTING docs: https://github.com/openshift/origin/blob/master/CONTRIBUTING.adoc
 
 approvers:
-  - sig-cluster-lifecycle-leads
-  - sig-openstack-leads
-  - cluster-api-admins
-  - cluster-api-maintainers
-  - cluster-api-openstack-maintainers
-
-reviewers:
-  - cluster-api-maintainers
-  - cluster-api-openstack-maintainers
+  - shiftstack-team
