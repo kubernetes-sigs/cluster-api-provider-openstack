@@ -70,7 +70,7 @@ storage:
       filesystem: root
       contents:
         remote:
-          url: https://storage.googleapis.com/kubernetes-release/release/v{{.Machine.Spec.Versions.Kubelet}}/bin/linux/amd64/kubeadm
+          url: https://storage.googleapis.com/kubernetes-release/release/v{{.Machine.Spec.Version}}/bin/linux/amd64/kubeadm
       mode: 0755
       user:
         id: 0
@@ -80,7 +80,7 @@ storage:
       filesystem: root
       contents:
         remote:
-          url: https://storage.googleapis.com/kubernetes-release/release/v{{.Machine.Spec.Versions.Kubelet}}/bin/linux/amd64/kubectl
+          url: https://storage.googleapis.com/kubernetes-release/release/v{{.Machine.Spec.Version}}/bin/linux/amd64/kubectl
       mode: 0755
       user:
         id: 0
@@ -90,7 +90,7 @@ storage:
       filesystem: root
       contents:
         remote:
-          url: https://storage.googleapis.com/kubernetes-release/release/v{{.Machine.Spec.Versions.Kubelet}}/bin/linux/amd64/kubelet
+          url: https://storage.googleapis.com/kubernetes-release/release/v{{.Machine.Spec.Version}}/bin/linux/amd64/kubelet
       mode: 0755
       user:
         id: 0

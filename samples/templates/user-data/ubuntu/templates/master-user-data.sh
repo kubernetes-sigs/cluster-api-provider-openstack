@@ -2,7 +2,7 @@
 set -e
 set -x
 (
-KUBELET_VERSION={{ .Machine.Spec.Versions.Kubelet }}
+KUBELET_VERSION={{ .Machine.Spec.Version }}
 VERSION=v${KUBELET_VERSION}
 NAMESPACE={{ .Machine.ObjectMeta.Namespace }}
 MACHINE=$NAMESPACE
