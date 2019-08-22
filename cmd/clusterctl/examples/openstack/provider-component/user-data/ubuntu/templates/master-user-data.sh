@@ -10,6 +10,7 @@ MACHINE+="/"
 MACHINE+={{ .Machine.ObjectMeta.Name }}
 ARCH=amd64
 swapoff -a
+echo "127.0.0.1 $(hostname)"  >> /etc/hosts
 # disable swap in fstab
 sed -i.bak -r 's/(.+ swap .+)/#\1/' /etc/fstab
 curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
