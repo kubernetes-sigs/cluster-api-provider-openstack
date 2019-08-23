@@ -285,7 +285,8 @@ func (s *Service) DeleteLoadBalancer(clusterName string, openStackCluster *infra
 
 	// floating ip
 	// TODO: need delete floating IP if it's created when doing the cluster provisioning
-	// but keep the floating ips if it's original exist
+	// but keep the floating ips if it's original exist (probably should store it in the
+	// Cluster status if the floating ip has been created by us)
 	return nil
 }
 

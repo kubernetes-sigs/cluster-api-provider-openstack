@@ -85,10 +85,6 @@ type OpenStackMachineSpec struct {
 
 	// The volume metadata to boot from
 	RootVolume *RootVolume `json:"rootVolume,omitempty"`
-
-	// KubeadmConfiguration holds the kubeadm configuration options
-	// +optional
-	KubeadmConfiguration KubeadmConfiguration `json:"kubeadmConfiguration,omitempty"`
 }
 
 // OpenStackMachineStatus defines the observed state of OpenStackMachine

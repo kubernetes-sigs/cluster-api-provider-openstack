@@ -160,12 +160,11 @@ func (r *OpenStackMachineReconciler) reconcileMachine(logger logr.Logger, machin
 		return reconcile.Result{RequeueAfter: waitForClusterInfrastructureReadyDuration}, nil
 	}
 
-	// TODO enable when using kubeadm bootstrapper
 	// Make sure bootstrap data is available and populated.
-	//if machine.Spec.Bootstrap.Data == nil {
-	//	logger.Info("Waiting for bootstrap data to be available")
-	//	return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
-	//}
+	if machine.Spec.Bootstrap.Data == nil {
+		logger.Info("Waiting for bootstrap data to be available")
+		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+	}
 
 	klog.Infof("Creating Machine %s/%s: %s", cluster.Namespace, cluster.Name, machine.Name)
 
@@ -213,6 +212,7 @@ func (r *OpenStackMachineReconciler) reconcileMachine(logger logr.Logger, machin
 	switch instance.State {
 	case infrav1.InstanceStateActive:
 		logger.Info("Machine instance is ACTIVE", "instance-id", instance.ID)
+		openStackMachine.Status.Ready = true
 	case infrav1.InstanceStateBuilding:
 		logger.Info("Machine instance is BUILDING", "instance-id", instance.ID)
 	default:
@@ -235,9 +235,6 @@ func (r *OpenStackMachineReconciler) reconcileMachine(logger logr.Logger, machin
 			return reconcile.Result{}, nil
 		}
 	}
-
-	// TODO(sbueringer) check if that's the right place to set the machine to ready
-	openStackMachine.Status.Ready = true
 
 	klog.Infof("Created Machine %s/%s: %s successfully", cluster.Namespace, cluster.Name, machine.Name)
 	return reconcile.Result{}, nil
@@ -296,12 +293,7 @@ func (r *OpenStackMachineReconciler) getOrCreate(computeService *compute.Service
 	}
 
 	if instance == nil {
-		userData, err := userdata.GetUserData(r.Client, machine, openStackMachine, cluster, openStackCluster)
-		if err != nil {
-			return nil, err
-		}
-
-		instance, err = computeService.InstanceCreate(cluster.Name, machine.Name, openStackCluster, openStackMachine, userData)
+		instance, err = computeService.InstanceCreate(cluster.Name, machine, openStackMachine, openStackCluster)
 		if err != nil {
 			return nil, errors.Errorf("error creating Openstack instance: %v", err)
 		}

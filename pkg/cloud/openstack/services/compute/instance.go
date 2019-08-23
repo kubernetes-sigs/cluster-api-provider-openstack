@@ -17,7 +17,6 @@ limitations under the License.
 package compute
 
 import (
-	"encoding/base64"
 	"fmt"
 	"github.com/gophercloud/gophercloud/openstack/identity/v3/tokens"
 	"k8s.io/klog"
@@ -55,7 +54,7 @@ const (
 	RetryIntervalPortDelete = 5 * time.Second
 )
 
-// TODO(sbueringer) We should probably wrape the OpenStack object completely (see CAPA)
+// TODO(sbueringer) We should probably wrap the OpenStack object completely (see CAPA)
 type Instance struct {
 	servers.Server
 	State infrav1.InstanceState
@@ -67,7 +66,7 @@ type ServerNetwork struct {
 }
 
 // InstanceCreate creates a compute instance
-func (is *Service) InstanceCreate(clusterName string, name string, openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, userdata string) (instance *Instance, err error) {
+func (is *Service) InstanceCreate(clusterName string, machine *v1alpha2.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster) (instance *Instance, err error) {
 	var createOpts servers.CreateOptsBuilder
 	if openStackMachine == nil {
 		return nil, fmt.Errorf("create Options need be specified to create instace")
@@ -132,14 +131,13 @@ func (is *Service) InstanceCreate(clusterName string, name string, openStackClus
 			}
 		}
 	}
-	userData := base64.StdEncoding.EncodeToString([]byte(userdata))
 	var portsList []servers.Network
 	for _, net := range nets {
 		if net.networkID == "" {
 			return nil, fmt.Errorf("no network was found or provided. Please check your machine configuration and try again")
 		}
 		allPages, err := ports.List(is.networkClient, ports.ListOpts{
-			Name:      name,
+			Name:      openStackMachine.Name,
 			NetworkID: net.networkID,
 		}).AllPages()
 		if err != nil {
@@ -152,7 +150,7 @@ func (is *Service) InstanceCreate(clusterName string, name string, openStackClus
 		var port ports.Port
 		if len(portList) == 0 {
 			// create server port
-			port, err = createPort(is, name, net, &securityGroups)
+			port, err = createPort(is, openStackMachine.Name, net, &securityGroups)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create port err: %v", err)
 			}
@@ -171,7 +169,7 @@ func (is *Service) InstanceCreate(clusterName string, name string, openStackClus
 
 		if openStackMachine.Spec.Trunk == true {
 			allPages, err := trunks.List(is.networkClient, trunks.ListOpts{
-				Name:   name,
+				Name:   openStackMachine.Name,
 				PortID: port.ID,
 			}).AllPages()
 			if err != nil {
@@ -185,7 +183,7 @@ func (is *Service) InstanceCreate(clusterName string, name string, openStackClus
 			if len(trunkList) == 0 {
 				// create trunk with the previous port as parent
 				trunkCreateOpts := trunks.CreateOpts{
-					Name:   name,
+					Name:   openStackMachine.Name,
 					PortID: port.ID,
 				}
 				newTrunk, err := trunks.Create(is.networkClient, trunkCreateOpts).Extract()
@@ -220,12 +218,12 @@ func (is *Service) InstanceCreate(clusterName string, name string, openStackClus
 	}
 
 	serverCreateOpts := servers.CreateOpts{
-		Name:             name,
+		Name:             openStackMachine.Name,
 		ImageRef:         imageID,
 		FlavorName:       openStackMachine.Spec.Flavor,
 		AvailabilityZone: openStackMachine.Spec.AvailabilityZone,
 		Networks:         portsList,
-		UserData:         []byte(userData),
+		UserData:         []byte(*machine.Spec.Bootstrap.Data),
 		SecurityGroups:   securityGroups,
 		ServiceClient:    is.computeClient,
 		Tags:             serverTags,

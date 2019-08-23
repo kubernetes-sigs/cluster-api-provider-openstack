@@ -1,25 +1,10 @@
 package v1alpha2
 
-import (
-	kubeadmv1beta1 "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1beta1"
-)
-
 type ExternalRouterIPParam struct {
 	// The FixedIP in the corresponding subnet
 	FixedIP string `json:"fixedIP,omitempty"`
 	// The subnet in which the FixedIP is used for the Gateway of this router
 	Subnet SubnetParam `json:"subnet"`
-}
-
-// KubeadmConfiguration holds the various configurations that kubeadm uses
-type KubeadmConfiguration struct {
-	// JoinConfiguration is used to customize any kubeadm join configuration
-	// parameters.
-	Join kubeadmv1beta1.JoinConfiguration `json:"join,omitempty"`
-
-	// InitConfiguration is used to customize any kubeadm init configuration
-	// parameters.
-	Init kubeadmv1beta1.InitConfiguration `json:"init,omitempty"`
 }
 
 type SecurityGroupParam struct {

@@ -20,16 +20,12 @@ import (
 	"fmt"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
-	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha2"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/certificates"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/loadbalancer"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/provider"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/userdata"
 	"sigs.k8s.io/cluster-api/api/v1alpha2"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/patch"
@@ -37,8 +33,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"strconv"
-	"strings"
 	"time"
 )
 
@@ -122,17 +116,9 @@ func (r *OpenStackClusterReconciler) reconcileCluster(logger logr.Logger, cluste
 		return reconcile.Result{}, err
 	}
 
-	certificatesService := certificates.NewService()
-
 	loadbalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, openStackCluster.Spec.UseOctavia)
 	if err != nil {
 		return reconcile.Result{}, err
-	}
-
-	klog.Infof("Reconciling certificates for cluster %s", clusterName)
-	// Store cert material in spec.
-	if err := certificatesService.ReconcileCertificates(clusterName, openStackCluster); err != nil {
-		return reconcile.Result{}, errors.Wrapf(err, "failed to reconcile certificates for cluster %q", cluster.Name)
 	}
 
 	klog.Infof("Reconciling network components for cluster %s", clusterName)
@@ -165,49 +151,16 @@ func (r *OpenStackClusterReconciler) reconcileCluster(logger logr.Logger, cluste
 	}
 
 	// Set APIEndpoints so the Cluster API Cluster Controller can pull them
-	controlPlaneURI := strings.Split(openStackCluster.Spec.ClusterConfiguration.ControlPlaneEndpoint, ":")
-	apiServerHost := controlPlaneURI[0]
-	apiServerPortStr := controlPlaneURI[1]
-	apiServerPort, err := strconv.Atoi(apiServerPortStr)
-	if err != nil {
-		return reconcile.Result{}, errors.Wrapf(err, "could not parse port of controlPlaneEndpoint %s", openStackCluster.Spec.ClusterConfiguration.ControlPlaneEndpoint)
-	}
+	// TODO(sbueringer): how does the non-lb case work??
 	openStackCluster.Status.APIEndpoints = []infrav1.APIEndpoint{
 		{
-			Host: apiServerHost,
-			Port: apiServerPort,
+			Host: openStackCluster.Spec.APIServerLoadBalancerFloatingIP,
+			Port: openStackCluster.Spec.APIServerLoadBalancerPort,
 		},
 	}
 
 	// No errors, so mark us ready so the Cluster API Cluster Controller can pull it
 	openStackCluster.Status.Ready = true
-
-	// TODO remove after migration to kubeadm bootstrapper
-	// Upload kubeconfig (just for us) can be deleted after we migrated to kubeadm bootstrapper
-	// because kubeadm bootstrapper already creates the secret "{cluster.Name}-kubeconfig"
-	kubeConfig, err := userdata.GetKubeConfig(openStackCluster)
-	if err != nil {
-		return reconcile.Result{}, errors.Wrapf(err, "failed to get kubeconfig for cluster %q", cluster.Name)
-	}
-	secret := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("%s-tmp-kubeconfig", cluster.Name),
-			Namespace: cluster.Namespace,
-		},
-		StringData: map[string]string{
-			"value": kubeConfig,
-		},
-	}
-	err = r.Client.Create(context.TODO(), secret)
-	if err != nil {
-		if apierrors.IsAlreadyExists(err) {
-			if err = r.Client.Update(context.TODO(), secret); err != nil {
-				return reconcile.Result{}, errors.Wrapf(err, "failed to update kubeconfig secret for cluster %q", cluster.Name)
-			}
-		} else {
-			return reconcile.Result{}, errors.Wrapf(err, "failed to create kubeconfig secret for cluster %q", cluster.Name)
-		}
-	}
 
 	klog.Infof("Reconciled Cluster %s/%s successfully", cluster.Namespace, cluster.Name)
 	return reconcile.Result{}, nil
