@@ -31,7 +31,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/certificates"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/compute"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/provider"
-	"sigs.k8s.io/cluster-api/pkg/util"
+	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 	"text/template"
@@ -46,7 +46,7 @@ import (
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha2"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/bootstrap"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha2"
-	apierrors "sigs.k8s.io/cluster-api/pkg/errors"
+	apierrors "sigs.k8s.io/cluster-api/errors"
 )
 
 const (
