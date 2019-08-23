@@ -24,7 +24,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/pkg/errors"
 	"k8s.io/klog"
-	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha2"
 )
 
 type createOpts struct {
@@ -37,7 +37,7 @@ func (c createOpts) ToNetworkCreateMap() (map[string]interface{}, error) {
 	return gophercloud.BuildRequestBody(c, "network")
 }
 
-func (s *Service) ReconcileNetwork(clusterName string, clusterProviderSpec *openstackconfigv1.OpenstackClusterProviderSpec, clusterProviderStatus *openstackconfigv1.OpenstackClusterProviderStatus) error {
+func (s *Service) ReconcileNetwork(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {
 
 	networkName := fmt.Sprintf("%s-cluster-%s", networkPrefix, clusterName)
 	klog.Infof("Reconciling network %s", networkName)
@@ -49,7 +49,7 @@ func (s *Service) ReconcileNetwork(clusterName string, clusterProviderSpec *open
 
 	if res.ID != "" {
 		// Network exists
-		clusterProviderStatus.Network = &openstackconfigv1.Network{
+		openStackCluster.Status.Network = &infrav1.Network{
 			ID:   res.ID,
 			Name: res.Name,
 		}
@@ -57,7 +57,7 @@ func (s *Service) ReconcileNetwork(clusterName string, clusterProviderSpec *open
 	}
 
 	var portSecurityEnabled gophercloud.EnabledState
-	if clusterProviderSpec.DisablePortSecurity {
+	if openStackCluster.Spec.DisablePortSecurity {
 		portSecurityEnabled = gophercloud.Disabled
 	} else {
 		portSecurityEnabled = gophercloud.Enabled
@@ -81,16 +81,16 @@ func (s *Service) ReconcileNetwork(clusterName string, clusterProviderSpec *open
 		return err
 	}
 
-	clusterProviderStatus.Network = &openstackconfigv1.Network{
+	openStackCluster.Status.Network = &infrav1.Network{
 		ID:   network.ID,
 		Name: network.Name,
 	}
 	return nil
 }
 
-func (s *Service) ReconcileSubnet(clusterName string, clusterProviderSpec *openstackconfigv1.OpenstackClusterProviderSpec, clusterProviderStatus *openstackconfigv1.OpenstackClusterProviderStatus) error {
+func (s *Service) ReconcileSubnet(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {
 
-	if clusterProviderStatus.Network == nil || clusterProviderStatus.Network.ID == "" {
+	if openStackCluster.Status.Network == nil || openStackCluster.Status.Network.ID == "" {
 		klog.V(4).Infof("No need to reconcile network components since no network exists.")
 		return nil
 	}
@@ -99,8 +99,8 @@ func (s *Service) ReconcileSubnet(clusterName string, clusterProviderSpec *opens
 	klog.Infof("Reconciling subnet %s", subnetName)
 
 	allPages, err := subnets.List(s.client, subnets.ListOpts{
-		NetworkID: clusterProviderStatus.Network.ID,
-		CIDR:      clusterProviderSpec.NodeCIDR,
+		NetworkID: openStackCluster.Status.Network.ID,
+		CIDR:      openStackCluster.Spec.NodeCIDR,
 	}).AllPages()
 	if err != nil {
 		return err
@@ -111,32 +111,32 @@ func (s *Service) ReconcileSubnet(clusterName string, clusterProviderSpec *opens
 		return err
 	}
 
-	var observedSubnet openstackconfigv1.Subnet
+	var observedSubnet infrav1.Subnet
 	if len(subnetList) > 1 {
 		// Not panicing here, because every other cluster might work.
-		return fmt.Errorf("found more than 1 network with the expected name (%d) and CIDR (%s), which should not be able to exist in OpenStack", len(subnetList), clusterProviderSpec.NodeCIDR)
+		return fmt.Errorf("found more than 1 network with the expected name (%d) and CIDR (%s), which should not be able to exist in OpenStack", len(subnetList), openStackCluster.Spec.NodeCIDR)
 	} else if len(subnetList) == 0 {
 		opts := subnets.CreateOpts{
-			NetworkID: clusterProviderStatus.Network.ID,
+			NetworkID: openStackCluster.Status.Network.ID,
 			Name:      subnetName,
 			IPVersion: 4,
 
-			CIDR:           clusterProviderSpec.NodeCIDR,
-			DNSNameservers: clusterProviderSpec.DNSNameservers,
+			CIDR:           openStackCluster.Spec.NodeCIDR,
+			DNSNameservers: openStackCluster.Spec.DNSNameservers,
 		}
 
 		newSubnet, err := subnets.Create(s.client, opts).Extract()
 		if err != nil {
 			return err
 		}
-		observedSubnet = openstackconfigv1.Subnet{
+		observedSubnet = infrav1.Subnet{
 			ID:   newSubnet.ID,
 			Name: newSubnet.Name,
 
 			CIDR: newSubnet.CIDR,
 		}
 	} else if len(subnetList) == 1 {
-		observedSubnet = openstackconfigv1.Subnet{
+		observedSubnet = infrav1.Subnet{
 			ID:   subnetList[0].ID,
 			Name: subnetList[0].Name,
 
@@ -153,7 +153,7 @@ func (s *Service) ReconcileSubnet(clusterName string, clusterProviderSpec *opens
 		return err
 	}
 
-	clusterProviderStatus.Network.Subnet = &observedSubnet
+	openStackCluster.Status.Network.Subnet = &observedSubnet
 	return nil
 }
 

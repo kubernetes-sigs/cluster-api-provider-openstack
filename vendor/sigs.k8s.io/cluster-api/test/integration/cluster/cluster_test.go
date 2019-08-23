@@ -17,6 +17,7 @@ limitations under the License.
 package integration
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -24,22 +25,24 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	informers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/clientcmd"
-	clusterv1alpha1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
-	clientset "sigs.k8s.io/cluster-api/pkg/client/clientset_generated/clientset"
-	client "sigs.k8s.io/cluster-api/pkg/client/clientset_generated/clientset/typed/cluster/v1alpha1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha2"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var clusterSpec = &clusterv1alpha1.ClusterSpec{
-	ClusterNetwork: clusterv1alpha1.ClusterNetworkingConfig{
+func init() {
+	clusterv1.AddToScheme(scheme.Scheme)
+}
+
+var clusterSpec = &clusterv1.ClusterSpec{
+	ClusterNetwork: &clusterv1.ClusterNetworkingConfig{
 		ServiceDomain: "mydomain.com",
-		Services: clusterv1alpha1.NetworkRanges{
+		Services: clusterv1.NetworkRanges{
 			CIDRBlocks: []string{"10.96.0.0/12"},
 		},
-		Pods: clusterv1alpha1.NetworkRanges{
+		Pods: clusterv1.NetworkRanges{
 			CIDRBlocks: []string{"192.168.0.0/16"},
 		},
 	},
@@ -54,10 +57,8 @@ func TestCluster(t *testing.T) {
 }
 
 var _ = Describe("Cluster-Controller", func() {
-	var clusterapi client.ClusterInterface
-	var client *kubernetes.Clientset
-	var stopper chan struct{}
-	var informer cache.SharedIndexInformer
+	var k8sClient *kubernetes.Clientset
+	var apiclient client.Client
 	var testNamespace string
 
 	BeforeEach(func() {
@@ -67,61 +68,43 @@ var _ = Describe("Cluster-Controller", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		// Create kubernetes client
-		client, err = kubernetes.NewForConfig(config)
+		k8sClient, err = kubernetes.NewForConfig(config)
 		Expect(err).ShouldNot(HaveOccurred())
 
 		// Create namespace for test
 		ns := &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{GenerateName: "clusterapi-test-"}}
-		ns, err = client.Core().Namespaces().Create(ns)
+		ns, err = k8sClient.CoreV1().Namespaces().Create(ns)
 		Expect(err).ShouldNot(HaveOccurred())
 		testNamespace = ns.ObjectMeta.Name
 
-		// Create  informer for events in the namespace
-		factory := informers.NewSharedInformerFactoryWithOptions(client, 0, informers.WithNamespace(testNamespace))
-		informer = factory.Core().V1().Events().Informer()
-		stopper = make(chan struct{})
-
-		// Create clusterapi client
-		cs, err := clientset.NewForConfig(config)
+		// Create a new client
+		apiclient, err = client.New(config, client.Options{Scheme: scheme.Scheme})
 		Expect(err).ShouldNot(HaveOccurred())
-		clusterapi = cs.ClusterV1alpha1().Clusters(testNamespace)
 	})
 
 	AfterEach(func() {
-		close(stopper)
-		client.Core().Namespaces().Delete(testNamespace, &metav1.DeleteOptions{})
+		k8sClient.CoreV1().Namespaces().Delete(testNamespace, &metav1.DeleteOptions{})
 	})
 
 	Describe("Create Cluster", func() {
-		It("Should trigger an event", func(done Done) {
-			// Register handler for cluster events
-			events := make(chan *corev1.Event, 0)
-			informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
-				AddFunc: func(obj interface{}) {
-					// Guard against miscofigured informer not listening to Events
-					Expect(obj).Should(BeAssignableToTypeOf(&corev1.Event{}))
-
-					e := obj.(*corev1.Event)
-					if e.InvolvedObject.Kind == "Cluster" {
-						events <- e
-					}
-				},
-			})
-			go informer.Run(stopper)
-			Expect(cache.WaitForCacheSync(stopper, informer.HasSynced)).To(BeTrue())
-
+		It("Should reach to pending phase after creation", func(done Done) {
+			ctx := context.Background()
 			// Create Cluster
-			cluster := &clusterv1alpha1.Cluster{
+			cluster := &clusterv1.Cluster{
 				ObjectMeta: metav1.ObjectMeta{
 					GenerateName: "cluster-",
 					Namespace:    testNamespace,
 				},
 				Spec: *clusterSpec.DeepCopy(),
 			}
-			_, err := clusterapi.Create(cluster)
-			Expect(err).ShouldNot(HaveOccurred())
 
-			Expect(<-events).ShouldNot(BeNil())
+			Expect(apiclient.Create(ctx, cluster)).ShouldNot(HaveOccurred())
+			Eventually(func() bool {
+				if err := apiclient.Get(ctx, client.ObjectKey{Name: cluster.Name, Namespace: cluster.Namespace}, cluster); err != nil {
+					return false
+				}
+				return cluster.Status.Phase == "pending"
+			}).Should(BeTrue())
 
 			close(done)
 		}, TIMEOUT)

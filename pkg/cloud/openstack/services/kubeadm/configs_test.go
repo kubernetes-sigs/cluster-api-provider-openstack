@@ -23,7 +23,7 @@ import (
 
 	kubeadmv1beta1 "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/kubeadm"
-	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha2"
 )
 
 func TestInitConfiguration(t *testing.T) {
@@ -95,7 +95,7 @@ func TestClusterConfiguration(t *testing.T) {
 				kubeadm.WithKubernetesVersion("test version"),
 				kubeadm.WithAPIServerExtraArgs(map[string]string{"test key": "test value"}),
 				kubeadm.WithControllerManagerExtraArgs(map[string]string{"test cm key": "test cm value"}),
-				kubeadm.WithClusterNetworkFromClusterNetworkingConfig(clusterv1.ClusterNetworkingConfig{
+				kubeadm.WithClusterNetworkFromClusterNetworkingConfig(&clusterv1.ClusterNetworkingConfig{
 					ServiceDomain: "test dns domain",
 					Pods: clusterv1.NetworkRanges{
 						CIDRBlocks: []string{

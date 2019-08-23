@@ -18,7 +18,7 @@ package kubeadm
 
 import (
 	kubeadmv1beta1 "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1beta1"
-	"sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha2"
 )
 
 // InitConfigurationOption will set various options on kubeadm's InitConfiguration type.
@@ -111,7 +111,7 @@ func WithControllerManagerExtraVolumes(args []kubeadmv1beta1.HostPathMount) Clus
 }
 
 // WithClusterNetworkFromClusterNetworkingConfig maps a cluster api ClusterNetworkingConfig to a kubeadm Networking object.
-func WithClusterNetworkFromClusterNetworkingConfig(networkingConfig v1alpha1.ClusterNetworkingConfig) ClusterConfigurationOption {
+func WithClusterNetworkFromClusterNetworkingConfig(networkingConfig *clusterv1.ClusterNetworkingConfig) ClusterConfigurationOption {
 	return func(c *kubeadmv1beta1.ClusterConfiguration) {
 		c.Networking.DNSDomain = networkingConfig.ServiceDomain
 		c.Networking.PodSubnet = networkingConfig.Pods.CIDRBlocks[0]

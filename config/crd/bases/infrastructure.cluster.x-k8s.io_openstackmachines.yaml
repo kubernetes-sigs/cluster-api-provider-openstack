@@ -1,0 +1,676 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  name: openstackmachines.infrastructure.cluster.x-k8s.io
+spec:
+  group: infrastructure.cluster.x-k8s.io
+  names:
+    kind: OpenStackMachine
+    plural: openstackmachines
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: OpenStackMachine is the Schema for the openstackmachines API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: OpenStackMachineSpec defines the desired state of OpenStackMachine
+          properties:
+            availabilityZone:
+              description: The availability zone from which to launch the server.
+              type: string
+            cloudName:
+              description: The name of the cloud to use from the clouds secret
+              type: string
+            cloudsSecret:
+              description: The name of the secret containing the openstack credentials
+              properties:
+                name:
+                  description: Name is unique within a namespace to reference a secret
+                    resource.
+                  type: string
+                namespace:
+                  description: Namespace defines the space within which the secret
+                    name must be unique.
+                  type: string
+              type: object
+            configDrive:
+              description: Config Drive support
+              type: boolean
+            flavor:
+              description: The flavor reference for the flavor for your server instance.
+              type: string
+            floatingIP:
+              description: The floatingIP which will be associated to the machine,
+                only used for master. The floatingIP should have been created and
+                haven't been associated.
+              type: string
+            image:
+              description: The name of the image to use for your server instance.
+                If the RootVolume is specified, this will be ignored and use rootVolume
+                directly.
+              type: string
+            keyName:
+              description: The ssh key to inject in the instance
+              type: string
+            kubeadmConfiguration:
+              description: KubeadmConfiguration holds the kubeadm configuration options
+              properties:
+                init:
+                  description: InitConfiguration is used to customize any kubeadm
+                    init configuration parameters.
+                  properties:
+                    apiVersion:
+                      description: 'APIVersion defines the versioned schema of this
+                        representation of an object. Servers should convert recognized
+                        schemas to the latest internal value, and may reject unrecognized
+                        values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+                      type: string
+                    bootstrapTokens:
+                      description: '`kubeadm init`-only information. These fields
+                        are solely used the first time `kubeadm init` runs. After
+                        that, the information in the fields IS NOT uploaded to the
+                        `kubeadm-config` ConfigMap that is used by `kubeadm upgrade`
+                        for instance. These fields must be omitempty. BootstrapTokens
+                        is respected at `kubeadm init` time and describes a set of
+                        Bootstrap Tokens to create. This information IS NOT uploaded
+                        to the kubeadm cluster configmap, partly because of its sensitive
+                        nature'
+                      items:
+                        description: BootstrapToken describes one bootstrap token,
+                          stored as a Secret in the cluster
+                        properties:
+                          description:
+                            description: Description sets a human-friendly message
+                              why this token exists and what it's used for, so other
+                              administrators can know its purpose.
+                            type: string
+                          expires:
+                            description: Expires specifies the timestamp when this
+                              token expires. Defaults to being set dynamically at
+                              runtime based on the TTL. Expires and TTL are mutually
+                              exclusive.
+                            format: date-time
+                            type: string
+                          groups:
+                            description: Groups specifies the extra groups that this
+                              token will authenticate as when/if used for authentication
+                            items:
+                              type: string
+                            type: array
+                          token:
+                            description: Token is used for establishing bidirectional
+                              trust between nodes and control-planes. Used for joining
+                              nodes in the cluster.
+                            type: object
+                          ttl:
+                            description: TTL defines the time to live for this token.
+                              Defaults to 24h. Expires and TTL are mutually exclusive.
+                            type: string
+                          usages:
+                            description: Usages describes the ways in which this token
+                              can be used. Can by default be used for establishing
+                              bidirectional trust, but that can be changed here.
+                            items:
+                              type: string
+                            type: array
+                        required:
+                        - token
+                        type: object
+                      type: array
+                    kind:
+                      description: 'Kind is a string value representing the REST resource
+                        this object represents. Servers may infer this from the endpoint
+                        the client submits requests to. Cannot be updated. In CamelCase.
+                        More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+                      type: string
+                    localAPIEndpoint:
+                      description: LocalAPIEndpoint represents the endpoint of the
+                        API server instance that's deployed on this control plane
+                        node In HA setups, this differs from ClusterConfiguration.ControlPlaneEndpoint
+                        in the sense that ControlPlaneEndpoint is the global endpoint
+                        for the cluster, which then loadbalances the requests to each
+                        individual API server. This configuration object lets you
+                        customize what IP/DNS name and port the local API server advertises
+                        it's accessible on. By default, kubeadm tries to auto-detect
+                        the IP of the default interface and use that, but in case
+                        that process fails you may set the desired value here.
+                      properties:
+                        advertiseAddress:
+                          description: AdvertiseAddress sets the IP address for the
+                            API server to advertise.
+                          type: string
+                        bindPort:
+                          description: BindPort sets the secure port for the API Server
+                            to bind to. Defaults to 6443.
+                          format: int32
+                          type: integer
+                      required:
+                      - advertiseAddress
+                      - bindPort
+                      type: object
+                    nodeRegistration:
+                      description: NodeRegistration holds fields that relate to registering
+                        the new control-plane node to the cluster
+                      properties:
+                        criSocket:
+                          description: CRISocket is used to retrieve container runtime
+                            info. This information will be annotated to the Node API
+                            object, for later re-use
+                          type: string
+                        kubeletExtraArgs:
+                          additionalProperties:
+                            type: string
+                          description: KubeletExtraArgs passes through extra arguments
+                            to the kubelet. The arguments here are passed to the kubelet
+                            command line via the environment file kubeadm writes at
+                            runtime for the kubelet to source. This overrides the
+                            generic base-level configuration in the kubelet-config-1.X
+                            ConfigMap Flags have higher priority when parsing. These
+                            values are local and specific to the node kubeadm is executing
+                            on.
+                          type: object
+                        name:
+                          description: Name is the `.Metadata.Name` field of the Node
+                            API object that will be created in this `kubeadm init`
+                            or `kubeadm join` operation. This field is also used in
+                            the CommonName field of the kubelet's client certificate
+                            to the API server. Defaults to the hostname of the node
+                            if not provided.
+                          type: string
+                        taints:
+                          description: 'Taints specifies the taints the Node API object
+                            should be registered with. If this field is unset, i.e.
+                            nil, in the `kubeadm init` process it will be defaulted
+                            to []v1.Taint{''node-role.kubernetes.io/master=""''}.
+                            If you don''t want to taint your control-plane node, set
+                            this field to an empty slice, i.e. `taints: {}` in the
+                            YAML file. This field is solely used for Node registration.'
+                          items:
+                            description: The node this Taint is attached to has the
+                              "effect" on any pod that does not tolerate the Taint.
+                            properties:
+                              effect:
+                                description: Required. The effect of the taint on
+                                  pods that do not tolerate the taint. Valid effects
+                                  are NoSchedule, PreferNoSchedule and NoExecute.
+                                type: string
+                              key:
+                                description: Required. The taint key to be applied
+                                  to a node.
+                                type: string
+                              timeAdded:
+                                description: TimeAdded represents the time at which
+                                  the taint was added. It is only written for NoExecute
+                                  taints.
+                                format: date-time
+                                type: string
+                              value:
+                                description: Required. The taint value corresponding
+                                  to the taint key.
+                                type: string
+                            required:
+                            - effect
+                            - key
+                            type: object
+                          type: array
+                      type: object
+                  type: object
+                join:
+                  description: JoinConfiguration is used to customize any kubeadm
+                    join configuration parameters.
+                  properties:
+                    apiVersion:
+                      description: 'APIVersion defines the versioned schema of this
+                        representation of an object. Servers should convert recognized
+                        schemas to the latest internal value, and may reject unrecognized
+                        values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+                      type: string
+                    caCertPath:
+                      description: CACertPath is the path to the SSL certificate authority
+                        used to secure comunications between node and control-plane.
+                        Defaults to "/etc/kubernetes/pki/ca.crt".
+                      type: string
+                    controlPlane:
+                      description: ControlPlane defines the additional control plane
+                        instance to be deployed on the joining node. If nil, no additional
+                        control plane instance will be deployed.
+                      properties:
+                        localAPIEndpoint:
+                          description: LocalAPIEndpoint represents the endpoint of
+                            the API server instance to be deployed on this node.
+                          properties:
+                            advertiseAddress:
+                              description: AdvertiseAddress sets the IP address for
+                                the API server to advertise.
+                              type: string
+                            bindPort:
+                              description: BindPort sets the secure port for the API
+                                Server to bind to. Defaults to 6443.
+                              format: int32
+                              type: integer
+                          required:
+                          - advertiseAddress
+                          - bindPort
+                          type: object
+                      type: object
+                    discovery:
+                      description: Discovery specifies the options for the kubelet
+                        to use during the TLS Bootstrap process
+                      properties:
+                        bootstrapToken:
+                          description: BootstrapToken is used to set the options for
+                            bootstrap token based discovery BootstrapToken and File
+                            are mutually exclusive
+                          properties:
+                            apiServerEndpoint:
+                              description: APIServerEndpoint is an IP or domain name
+                                to the API server from which info will be fetched.
+                              type: string
+                            caCertHashes:
+                              description: 'CACertHashes specifies a set of public
+                                key pins to verify when token-based discovery is used.
+                                The root CA found during discovery must match one
+                                of these values. Specifying an empty set disables
+                                root CA pinning, which can be unsafe. Each hash is
+                                specified as "<type>:<value>", where the only currently
+                                supported type is "sha256". This is a hex-encoded
+                                SHA-256 hash of the Subject Public Key Info (SPKI)
+                                object in DER-encoded ASN.1. These hashes can be calculated
+                                using, for example, OpenSSL: openssl x509 -pubkey
+                                -in ca.crt openssl rsa -pubin -outform der 2>&/dev/null
+                                | openssl dgst -sha256 -hex'
+                              items:
+                                type: string
+                              type: array
+                            token:
+                              description: Token is a token used to validate cluster
+                                information fetched from the control-plane.
+                              type: string
+                            unsafeSkipCAVerification:
+                              description: UnsafeSkipCAVerification allows token-based
+                                discovery without CA verification via CACertHashes.
+                                This can weaken the security of kubeadm since other
+                                nodes can impersonate the control-plane.
+                              type: boolean
+                          required:
+                          - token
+                          - unsafeSkipCAVerification
+                          type: object
+                        file:
+                          description: File is used to specify a file or URL to a
+                            kubeconfig file from which to load cluster information
+                            BootstrapToken and File are mutually exclusive
+                          properties:
+                            kubeConfigPath:
+                              description: KubeConfigPath is used to specify the actual
+                                file path or URL to the kubeconfig file from which
+                                to load cluster information
+                              type: string
+                          required:
+                          - kubeConfigPath
+                          type: object
+                        timeout:
+                          description: Timeout modifies the discovery timeout
+                          type: string
+                        tlsBootstrapToken:
+                          description: TLSBootstrapToken is a token used for TLS bootstrapping.
+                            If .BootstrapToken is set, this field is defaulted to
+                            .BootstrapToken.Token, but can be overridden. If .File
+                            is set, this field **must be set** in case the KubeConfigFile
+                            does not contain any other authentication information
+                          type: string
+                      required:
+                      - tlsBootstrapToken
+                      type: object
+                    kind:
+                      description: 'Kind is a string value representing the REST resource
+                        this object represents. Servers may infer this from the endpoint
+                        the client submits requests to. Cannot be updated. In CamelCase.
+                        More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+                      type: string
+                    nodeRegistration:
+                      description: NodeRegistration holds fields that relate to registering
+                        the new control-plane node to the cluster
+                      properties:
+                        criSocket:
+                          description: CRISocket is used to retrieve container runtime
+                            info. This information will be annotated to the Node API
+                            object, for later re-use
+                          type: string
+                        kubeletExtraArgs:
+                          additionalProperties:
+                            type: string
+                          description: KubeletExtraArgs passes through extra arguments
+                            to the kubelet. The arguments here are passed to the kubelet
+                            command line via the environment file kubeadm writes at
+                            runtime for the kubelet to source. This overrides the
+                            generic base-level configuration in the kubelet-config-1.X
+                            ConfigMap Flags have higher priority when parsing. These
+                            values are local and specific to the node kubeadm is executing
+                            on.
+                          type: object
+                        name:
+                          description: Name is the `.Metadata.Name` field of the Node
+                            API object that will be created in this `kubeadm init`
+                            or `kubeadm join` operation. This field is also used in
+                            the CommonName field of the kubelet's client certificate
+                            to the API server. Defaults to the hostname of the node
+                            if not provided.
+                          type: string
+                        taints:
+                          description: 'Taints specifies the taints the Node API object
+                            should be registered with. If this field is unset, i.e.
+                            nil, in the `kubeadm init` process it will be defaulted
+                            to []v1.Taint{''node-role.kubernetes.io/master=""''}.
+                            If you don''t want to taint your control-plane node, set
+                            this field to an empty slice, i.e. `taints: {}` in the
+                            YAML file. This field is solely used for Node registration.'
+                          items:
+                            description: The node this Taint is attached to has the
+                              "effect" on any pod that does not tolerate the Taint.
+                            properties:
+                              effect:
+                                description: Required. The effect of the taint on
+                                  pods that do not tolerate the taint. Valid effects
+                                  are NoSchedule, PreferNoSchedule and NoExecute.
+                                type: string
+                              key:
+                                description: Required. The taint key to be applied
+                                  to a node.
+                                type: string
+                              timeAdded:
+                                description: TimeAdded represents the time at which
+                                  the taint was added. It is only written for NoExecute
+                                  taints.
+                                format: date-time
+                                type: string
+                              value:
+                                description: Required. The taint value corresponding
+                                  to the taint key.
+                                type: string
+                            required:
+                            - effect
+                            - key
+                            type: object
+                          type: array
+                      type: object
+                  required:
+                  - caCertPath
+                  - discovery
+                  - nodeRegistration
+                  type: object
+              type: object
+            networks:
+              description: A networks object. Required parameter when there are multiple
+                networks defined for the tenant. When you do not specify the networks
+                parameter, the server attaches to the only network created for the
+                current tenant.
+              items:
+                properties:
+                  filter:
+                    description: Filters for optional network query
+                    properties:
+                      adminStateUp:
+                        type: boolean
+                      description:
+                        type: string
+                      id:
+                        type: string
+                      limit:
+                        type: integer
+                      marker:
+                        type: string
+                      name:
+                        type: string
+                      notTags:
+                        type: string
+                      notTagsAny:
+                        type: string
+                      projectId:
+                        type: string
+                      shared:
+                        type: boolean
+                      sortDir:
+                        type: string
+                      sortKey:
+                        type: string
+                      status:
+                        type: string
+                      tags:
+                        type: string
+                      tagsAny:
+                        type: string
+                      tenantId:
+                        type: string
+                    type: object
+                  fixedIp:
+                    description: A fixed IPv4 address for the NIC.
+                    type: string
+                  subnets:
+                    description: Subnet within a network to use
+                    items:
+                      properties:
+                        filter:
+                          description: Filters for optional network query
+                          properties:
+                            cidr:
+                              type: string
+                            description:
+                              type: string
+                            enableDhcp:
+                              type: boolean
+                            gateway_ip:
+                              type: string
+                            id:
+                              type: string
+                            ipVersion:
+                              type: integer
+                            ipv6AddressMode:
+                              type: string
+                            ipv6RaMode:
+                              type: string
+                            limit:
+                              type: integer
+                            marker:
+                              type: string
+                            name:
+                              type: string
+                            networkId:
+                              type: string
+                            notTags:
+                              type: string
+                            notTagsAny:
+                              type: string
+                            projectId:
+                              type: string
+                            sortDir:
+                              type: string
+                            sortKey:
+                              type: string
+                            subnetpoolId:
+                              type: string
+                            tags:
+                              type: string
+                            tagsAny:
+                              type: string
+                            tenantId:
+                              type: string
+                          type: object
+                        uuid:
+                          description: The UUID of the network. Required if you omit
+                            the port attribute.
+                          type: string
+                      type: object
+                    type: array
+                  uuid:
+                    description: The UUID of the network. Required if you omit the
+                      port attribute.
+                    type: string
+                type: object
+              type: array
+            providerID:
+              description: ProviderID is the unique identifier as specified by the
+                cloud provider.
+              type: string
+            rootVolume:
+              description: The volume metadata to boot from
+              properties:
+                deviceType:
+                  type: string
+                diskSize:
+                  type: integer
+                sourceType:
+                  type: string
+                sourceUUID:
+                  type: string
+              type: object
+            securityGroups:
+              description: The names of the security groups to assign to the instance
+              items:
+                properties:
+                  filter:
+                    description: Filters used to query security groups in openstack
+                    properties:
+                      description:
+                        type: string
+                      id:
+                        type: string
+                      limit:
+                        type: integer
+                      marker:
+                        type: string
+                      name:
+                        type: string
+                      notTags:
+                        type: string
+                      notTagsAny:
+                        type: string
+                      projectId:
+                        type: string
+                      sortDir:
+                        type: string
+                      sortKey:
+                        type: string
+                      tags:
+                        type: string
+                      tagsAny:
+                        type: string
+                      tenantId:
+                        type: string
+                    type: object
+                  name:
+                    description: Security Group name
+                    type: string
+                  uuid:
+                    description: Security Group UID
+                    type: string
+                type: object
+              type: array
+            serverMetadata:
+              additionalProperties:
+                type: string
+              description: Metadata mapping. Allows you to create a map of key value
+                pairs to add to the server instance.
+              type: object
+            tags:
+              description: Machine tags Requires Nova api 2.52 minimum!
+              items:
+                type: string
+              type: array
+            trunk:
+              description: Whether the server instance is created on a trunk port
+                or not.
+              type: boolean
+            userDataSecret:
+              description: The name of the secret containing the user data (startup
+                script in most cases)
+              properties:
+                name:
+                  description: Name is unique within a namespace to reference a secret
+                    resource.
+                  type: string
+                namespace:
+                  description: Namespace defines the space within which the secret
+                    name must be unique.
+                  type: string
+              type: object
+          required:
+          - flavor
+          - image
+          type: object
+        status:
+          description: OpenStackMachineStatus defines the observed state of OpenStackMachine
+          properties:
+            addresses:
+              description: Addresses contains the OpenStack instance associated addresses.
+              items:
+                description: NodeAddress contains information for the node's address.
+                properties:
+                  address:
+                    description: The node address.
+                    type: string
+                  type:
+                    description: Node address type, one of Hostname, ExternalIP or
+                      InternalIP.
+                    type: string
+                required:
+                - address
+                - type
+                type: object
+              type: array
+            errorMessage:
+              description: "ErrorMessage will be set in the event that there is a
+                terminal problem reconciling the Machine and will contain a more verbose
+                string suitable for logging and human consumption. \n This field should
+                not be set for transitive errors that a controller faces that are
+                expected to be fixed automatically over time (like service outages),
+                but instead indicate that something is fundamentally wrong with the
+                Machine's spec or the configuration of the controller, and that manual
+                intervention is required. Examples of terminal errors would be invalid
+                combinations of settings in the spec, values that are unsupported
+                by the controller, or the responsible controller itself being critically
+                misconfigured. \n Any transient errors that occur during the reconciliation
+                of Machines can be added as events to the Machine object and/or logged
+                in the controller's output."
+              type: string
+            errorReason:
+              description: Constants aren't automatically generated for unversioned
+                packages. Instead share the same constant for all versioned packages
+              type: string
+            instanceState:
+              description: InstanceState is the state of the OpenStack instance for
+                this machine.
+              type: string
+            ready:
+              description: Ready is true when the provider resource is ready.
+              type: boolean
+          type: object
+      type: object
+  version: v1alpha2
+  versions:
+  - name: v1alpha2
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

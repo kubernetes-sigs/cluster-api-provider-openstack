@@ -25,20 +25,20 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/gophercloud/gophercloud/pagination"
 	"k8s.io/klog"
-	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha2"
 )
 
-func (s *Service) ReconcileRouter(clusterName string, clusterProviderSpec *openstackconfigv1.OpenstackClusterProviderSpec, clusterProviderStatus *openstackconfigv1.OpenstackClusterProviderStatus) error {
+func (s *Service) ReconcileRouter(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {
 
-	if clusterProviderStatus.Network == nil || clusterProviderStatus.Network.ID == "" {
+	if openStackCluster.Status.Network == nil || openStackCluster.Status.Network.ID == "" {
 		klog.V(3).Infof("No need to reconcile router since no network exists.")
 		return nil
 	}
-	if clusterProviderStatus.Network.Subnet == nil || clusterProviderStatus.Network.Subnet.ID == "" {
+	if openStackCluster.Status.Network.Subnet == nil || openStackCluster.Status.Network.Subnet.ID == "" {
 		klog.V(4).Infof("No need to reconcile router since no subnet exists.")
 		return nil
 	}
-	if clusterProviderSpec.ExternalNetworkID == "" {
+	if openStackCluster.Spec.ExternalNetworkID == "" {
 		klog.V(3).Info("No need to create router, due to missing ExternalNetworkID.")
 		return nil
 	}
@@ -66,9 +66,9 @@ func (s *Service) ReconcileRouter(clusterName string, clusterProviderSpec *opens
 		// should be configured because at least in our environment
 		// we can only set the routerIP via gateway update not during create
 		// That's also the same way terraform provider OpenStack does it
-		if len(clusterProviderSpec.ExternalRouterIPs) == 0 {
+		if len(openStackCluster.Spec.ExternalRouterIPs) == 0 {
 			opts.GatewayInfo = &routers.GatewayInfo{
-				NetworkID: clusterProviderSpec.ExternalNetworkID,
+				NetworkID: openStackCluster.Spec.ExternalNetworkID,
 			}
 		}
 		newRouter, err := routers.Create(s.client, opts).Extract()
@@ -80,12 +80,12 @@ func (s *Service) ReconcileRouter(clusterName string, clusterProviderSpec *opens
 		router = routerList[0]
 	}
 
-	if len(clusterProviderSpec.ExternalRouterIPs) > 0 {
+	if len(openStackCluster.Spec.ExternalRouterIPs) > 0 {
 		var updateOpts routers.UpdateOpts
 		updateOpts.GatewayInfo = &routers.GatewayInfo{
-			NetworkID: clusterProviderSpec.ExternalNetworkID,
+			NetworkID: openStackCluster.Spec.ExternalNetworkID,
 		}
-		for _, externalRouterIP := range clusterProviderSpec.ExternalRouterIPs {
+		for _, externalRouterIP := range openStackCluster.Spec.ExternalRouterIPs {
 			subnetID := externalRouterIP.Subnet.UUID
 			if subnetID == "" {
 				sopts := subnets.ListOpts(externalRouterIP.Subnet.Filter)
@@ -110,7 +110,7 @@ func (s *Service) ReconcileRouter(clusterName string, clusterProviderSpec *opens
 		}
 	}
 
-	observedRouter := openstackconfigv1.Router{
+	observedRouter := infrav1.Router{
 		Name: router.Name,
 		ID:   router.ID,
 	}
@@ -125,7 +125,7 @@ func (s *Service) ReconcileRouter(clusterName string, clusterProviderSpec *opens
 INTERFACE_LOOP:
 	for _, iface := range routerInterfaces {
 		for _, ip := range iface.FixedIPs {
-			if ip.SubnetID == clusterProviderStatus.Network.Subnet.ID {
+			if ip.SubnetID == openStackCluster.Status.Network.Subnet.ID {
 				createInterface = false
 				break INTERFACE_LOOP
 			}
@@ -134,9 +134,9 @@ INTERFACE_LOOP:
 
 	// ... and create a router interface for our subnet.
 	if createInterface {
-		klog.V(4).Infof("Creating RouterInterface on %s in subnet %s", router.ID, clusterProviderStatus.Network.Subnet.ID)
+		klog.V(4).Infof("Creating RouterInterface on %s in subnet %s", router.ID, openStackCluster.Status.Network.Subnet.ID)
 		iface, err := routers.AddInterface(s.client, router.ID, routers.AddInterfaceOpts{
-			SubnetID: clusterProviderStatus.Network.Subnet.ID,
+			SubnetID: openStackCluster.Status.Network.Subnet.ID,
 		}).Extract()
 		if err != nil {
 			return fmt.Errorf("unable to create router interface: %v", err)
@@ -154,7 +154,7 @@ INTERFACE_LOOP:
 	}
 
 	if observedRouter.ID != "" {
-		clusterProviderStatus.Network.Router = &observedRouter
+		openStackCluster.Status.Network.Router = &observedRouter
 	}
 	return nil
 }

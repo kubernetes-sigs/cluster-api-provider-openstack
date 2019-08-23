@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"k8s.io/klog"
 	kubeadmv1beta1 "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1beta1"
-	providerv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha2"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/certificates"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/kubeadm"
-	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha2"
 )
 
 const (
@@ -19,9 +19,9 @@ const (
 	nodeRole = "node-role.kubernetes.io/node="
 )
 
-func generateKubeadmConfig(isControlPlane bool, bootstrapToken string, cluster *clusterv1.Cluster, machine *clusterv1.Machine, machineProviderSpec *providerv1.OpenstackProviderSpec, clusterProviderSpec *providerv1.OpenstackClusterProviderSpec) (string, error) {
+func generateKubeadmConfig(isControlPlane bool, bootstrapToken string, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (string, error) {
 
-	caCertHash, err := certificates.GenerateCertificateHash(clusterProviderSpec.CAKeyPair.Cert)
+	caCertHash, err := certificates.GenerateCertificateHash(openStackCluster.Spec.CAKeyPair.Cert)
 	if err != nil {
 		return "", err
 	}
@@ -34,15 +34,18 @@ func generateKubeadmConfig(isControlPlane bool, bootstrapToken string, cluster *
 		if bootstrapToken == "" {
 			klog.Info("Machine is the first control plane machine for the cluster")
 
-			if !clusterProviderSpec.CAKeyPair.HasCertAndKey() {
+			if !openStackCluster.Spec.CAKeyPair.HasCertAndKey() {
 				return "", fmt.Errorf("failed to create controlplane kubeadm config, missing CAKeyPair")
 			}
 
-			clusterConfigurationCopy := clusterProviderSpec.ClusterConfiguration.DeepCopy()
+			clusterConfigurationCopy := openStackCluster.Spec.ClusterConfiguration.DeepCopy()
 			// Set default values. If they are not set, these two properties are added with an
 			// empty string and the CoreOS ignition postprocesser fails with "could not find expected key"
 			if clusterConfigurationCopy.CertificatesDir == "" {
 				clusterConfigurationCopy.CertificatesDir = kubeadmv1beta1.DefaultCertificatesDir
+			}
+			if clusterConfigurationCopy.ImageRepository == "" {
+				clusterConfigurationCopy.ImageRepository = kubeadmv1beta1.DefaultImageRepository
 			}
 			if string(clusterConfigurationCopy.DNS.Type) == "" {
 				clusterConfigurationCopy.DNS.Type = kubeadmv1beta1.CoreDNS
@@ -52,7 +55,7 @@ func generateKubeadmConfig(isControlPlane bool, bootstrapToken string, cluster *
 			}
 			kubeadm.SetClusterConfigurationOptions(
 				clusterConfigurationCopy,
-				kubeadm.WithKubernetesVersion(machine.Spec.Versions.ControlPlane),
+				kubeadm.WithKubernetesVersion(*machine.Spec.Version),
 				kubeadm.WithAPIServerCertificateSANs(localIPV4Lookup),
 				kubeadm.WithAPIServerExtraArgs(map[string]string{"cloud-provider": cloudProvider}),
 				kubeadm.WithAPIServerExtraArgs(map[string]string{"cloud-config": cloudProviderConfig}),
@@ -77,7 +80,7 @@ func generateKubeadmConfig(isControlPlane bool, bootstrapToken string, cluster *
 					},
 				}),
 				kubeadm.WithClusterNetworkFromClusterNetworkingConfig(cluster.Spec.ClusterNetwork),
-				kubeadm.WithKubernetesVersion(machine.Spec.Versions.ControlPlane),
+				kubeadm.WithKubernetesVersion(*machine.Spec.Version),
 			)
 			clusterConfigYAML, err := kubeadm.ConfigurationToYAML(clusterConfigurationCopy)
 			if err != nil {
@@ -85,17 +88,16 @@ func generateKubeadmConfig(isControlPlane bool, bootstrapToken string, cluster *
 			}
 
 			kubeadm.SetInitConfigurationOptions(
-				&machineProviderSpec.KubeadmConfiguration.Init,
+				&openStackMachine.Spec.KubeadmConfiguration.Init,
 				kubeadm.WithNodeRegistrationOptions(
 					kubeadm.NewNodeRegistration(
-						kubeadm.WithTaints(machine.Spec.Taints),
 						kubeadm.WithKubeletExtraArgs(map[string]string{"cloud-provider": cloudProvider}),
 						kubeadm.WithKubeletExtraArgs(map[string]string{"cloud-config": cloudProviderConfig}),
 					),
 				),
 				kubeadm.WithInitLocalAPIEndpointAndPort(localIPV4Lookup, cluster.Status.APIEndpoints[0].Port),
 			)
-			initConfigYAML, err := kubeadm.ConfigurationToYAML(&machineProviderSpec.KubeadmConfiguration.Init)
+			initConfigYAML, err := kubeadm.ConfigurationToYAML(&openStackMachine.Spec.KubeadmConfiguration.Init)
 			if err != nil {
 				return "", err
 			}
@@ -104,7 +106,7 @@ func generateKubeadmConfig(isControlPlane bool, bootstrapToken string, cluster *
 		} else {
 			klog.Info("Allowing a machine to join the control plane")
 
-			joinConfigurationCopy := machineProviderSpec.KubeadmConfiguration.Join
+			joinConfigurationCopy := openStackMachine.Spec.KubeadmConfiguration.Join
 			// Set default values. If they are not set, these two properties are added with an
 			// empty string and the CoreOS ignition postprocesser fails with "could not find expected key"
 			joinConfigurationCopy.CACertPath = kubeadmv1beta1.DefaultCACertPath
@@ -112,7 +114,7 @@ func generateKubeadmConfig(isControlPlane bool, bootstrapToken string, cluster *
 				&joinConfigurationCopy,
 				kubeadm.WithBootstrapTokenDiscovery(
 					kubeadm.NewBootstrapTokenDiscovery(
-						kubeadm.WithAPIServerEndpoint(clusterProviderSpec.ClusterConfiguration.ControlPlaneEndpoint),
+						kubeadm.WithAPIServerEndpoint(openStackCluster.Spec.ClusterConfiguration.ControlPlaneEndpoint),
 						kubeadm.WithToken(bootstrapToken),
 						kubeadm.WithCACertificateHash(caCertHash),
 					),
@@ -120,7 +122,6 @@ func generateKubeadmConfig(isControlPlane bool, bootstrapToken string, cluster *
 				kubeadm.WithTLSBootstrapToken(bootstrapToken),
 				kubeadm.WithJoinNodeRegistrationOptions(
 					kubeadm.NewNodeRegistration(
-						kubeadm.WithTaints(machine.Spec.Taints),
 						kubeadm.WithKubeletExtraArgs(map[string]string{"cloud-provider": cloudProvider}),
 						kubeadm.WithKubeletExtraArgs(map[string]string{"cloud-config": cloudProviderConfig}),
 					),
@@ -138,7 +139,7 @@ func generateKubeadmConfig(isControlPlane bool, bootstrapToken string, cluster *
 	} else {
 		klog.Info("Joining a worker node to the cluster")
 
-		joinConfigurationCopy := machineProviderSpec.KubeadmConfiguration.Join
+		joinConfigurationCopy := openStackMachine.Spec.KubeadmConfiguration.Join
 		// Set default values. If they are not set, these two properties are added with an
 		// empty string and the CoreOS ignition postprocesser fails with "could not find expected key"
 		joinConfigurationCopy.CACertPath = kubeadmv1beta1.DefaultCACertPath
@@ -146,7 +147,7 @@ func generateKubeadmConfig(isControlPlane bool, bootstrapToken string, cluster *
 			&joinConfigurationCopy,
 			kubeadm.WithBootstrapTokenDiscovery(
 				kubeadm.NewBootstrapTokenDiscovery(
-					kubeadm.WithAPIServerEndpoint(clusterProviderSpec.ClusterConfiguration.ControlPlaneEndpoint),
+					kubeadm.WithAPIServerEndpoint(openStackCluster.Spec.ClusterConfiguration.ControlPlaneEndpoint),
 					kubeadm.WithToken(bootstrapToken),
 					kubeadm.WithCACertificateHash(caCertHash),
 				),
@@ -154,7 +155,6 @@ func generateKubeadmConfig(isControlPlane bool, bootstrapToken string, cluster *
 			kubeadm.WithTLSBootstrapToken(bootstrapToken),
 			kubeadm.WithJoinNodeRegistrationOptions(
 				kubeadm.NewNodeRegistration(
-					kubeadm.WithTaints(machine.Spec.Taints),
 					kubeadm.WithKubeletExtraArgs(map[string]string{"cloud-provider": cloudProvider}),
 					kubeadm.WithKubeletExtraArgs(map[string]string{"cloud-config": cloudProviderConfig}),
 					kubeadm.WithKubeletExtraArgs(map[string]string{"node-labels": nodeRole}),

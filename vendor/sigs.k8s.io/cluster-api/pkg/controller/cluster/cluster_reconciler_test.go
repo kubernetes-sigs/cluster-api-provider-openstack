@@ -20,62 +20,49 @@ import (
 	"testing"
 	"time"
 
+	. "github.com/onsi/gomega"
 	"golang.org/x/net/context"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	clusterv1alpha1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
+	clusterv1alpha2 "sigs.k8s.io/cluster-api/api/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
-
-var c client.Client
-
-var expectedRequest = reconcile.Request{NamespacedName: types.NamespacedName{Name: "foo", Namespace: "default"}}
 
 const timeout = time.Second * 5
 
 func TestReconcile(t *testing.T) {
-	instance := &clusterv1alpha1.Cluster{
+	RegisterTestingT(t)
+	ctx := context.TODO()
+
+	instance := &clusterv1alpha2.Cluster{
 		ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "default"},
-		Spec: clusterv1alpha1.ClusterSpec{
-			ClusterNetwork: clusterv1alpha1.ClusterNetworkingConfig{
-				Services: clusterv1alpha1.NetworkRanges{CIDRBlocks: []string{"10.96.0.0/12"}},
-				Pods:     clusterv1alpha1.NetworkRanges{CIDRBlocks: []string{"192.168.0.0/16"}},
-			},
-		},
+		Spec:       clusterv1alpha2.ClusterSpec{},
 	}
 
 	// Setup the Manager and Controller.  Wrap the Controller Reconcile function so it writes each request to a
 	// channel when it is finished.
-	mgr, err := manager.New(cfg, manager.Options{})
+	mgr, err := manager.New(cfg, manager.Options{MetricsBindAddress: "0"})
 	if err != nil {
 		t.Fatalf("error creating new manager: %v", err)
 	}
-	c = mgr.GetClient()
+	c := mgr.GetClient()
 
-	a := newTestActuator()
-	r, err := newReconciler(mgr, a)
-	if err != nil {
-		t.Fatalf("Couldn't create controller: %v", err)
-	}
-	recFn, requests := SetupTestReconcile(r)
-	if err := add(mgr, recFn); err != nil {
-		t.Fatalf("error adding controller to manager: %v", err)
-	}
+	reconciler := newReconciler(mgr)
+	controller, err := addController(mgr, reconciler)
+	Expect(err).To(BeNil())
+	reconciler.controller = controller
 	defer close(StartTestManager(mgr, t))
 
 	// Create the Cluster object and expect the Reconcile and Deployment to be created
-	if err := c.Create(context.TODO(), instance); err != nil {
-		t.Fatalf("error creating instance: %v", err)
-	}
-	defer c.Delete(context.TODO(), instance)
-	select {
-	case recv := <-requests:
-		if recv != expectedRequest {
-			t.Error("received request does not match expected request")
+	Expect(c.Create(ctx, instance)).To(BeNil())
+	defer c.Delete(ctx, instance)
+
+	// Make sure the Cluster exists.
+	Eventually(func() bool {
+		key := client.ObjectKey{Namespace: instance.Namespace, Name: instance.Name}
+		if err := c.Get(ctx, key, instance); err != nil {
+			return false
 		}
-	case <-time.After(timeout):
-		t.Error("timed out waiting for request")
-	}
+		return true
+	}, timeout).Should(BeTrue())
 }

@@ -18,14 +18,14 @@ limitations under the License.
 package tools
 
 import (
-	_ "k8s.io/code-generator/cmd/client-gen"            //nolint
-	_ "k8s.io/code-generator/cmd/conversion-gen"        //nolint
-	_ "k8s.io/code-generator/cmd/deepcopy-gen"          //nolint
-	_ "k8s.io/code-generator/cmd/defaulter-gen"         //nolint
-	_ "k8s.io/code-generator/cmd/informer-gen"          //nolint
-	_ "k8s.io/code-generator/cmd/lister-gen"            //nolint
-	_ "k8s.io/code-generator/cmd/register-gen"          //nolint
-	_ "k8s.io/code-generator/cmd/set-gen"               //nolint
-	_ "sigs.k8s.io/controller-tools/cmd/controller-gen" //nolint
-	_ "sigs.k8s.io/testing_frameworks/integration"      //nolint
+	_ "k8s.io/code-generator/cmd/client-gen"
+	_ "k8s.io/code-generator/cmd/conversion-gen"
+	_ "k8s.io/code-generator/cmd/deepcopy-gen"
+	_ "k8s.io/code-generator/cmd/defaulter-gen"
+	_ "k8s.io/code-generator/cmd/informer-gen"
+	_ "k8s.io/code-generator/cmd/lister-gen"
+	_ "k8s.io/code-generator/cmd/register-gen"
+	_ "k8s.io/code-generator/cmd/set-gen"
+	_ "sigs.k8s.io/controller-tools/cmd/controller-gen"
+	_ "sigs.k8s.io/testing_frameworks/integration"
 )

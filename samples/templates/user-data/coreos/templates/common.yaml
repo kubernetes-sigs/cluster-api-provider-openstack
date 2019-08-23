@@ -1,0 +1,233 @@
+storage:
+  directories:
+    - path: /opt
+      filesystem: root
+      mode: 0755
+      user:
+        id: 0
+      group:
+        id: 0
+    - path: /opt/kubetmp
+      filesystem: root
+      mode: 0755
+      user:
+        id: 0
+      group:
+        id: 0
+    - path: /opt/bin
+      filesystem: root
+      mode: 0755
+      user:
+        id: 0
+      group:
+        id: 0
+    - path: /opt/cni
+      filesystem: root
+      mode: 0755
+      user:
+        id: 0
+      group:
+        id: 0
+    - path: /opt/cni/bin
+      filesystem: root
+      mode: 0755
+      user:
+        id: 0
+      group:
+        id: 0
+  files:
+    - path: /etc/hostname
+      filesystem: root
+      contents:
+        inline: |
+          {{ .Machine.ObjectMeta.Name }}
+      mode: 0644
+      user:
+        id: 0
+      group:
+        id: 0
+    - path: /opt/kubetmp/cni-plugins.tar.gz
+      filesystem: root
+      contents:
+        remote:
+          url: https://github.com/containernetworking/plugins/releases/download/v0.7.5/cni-plugins-amd64-v0.7.5.tgz
+      mode: 0644
+      user:
+        id: 0
+      group:
+        id: 0
+    - path: /opt/kubetmp/crictl.tar.gz
+      filesystem: root
+      contents:
+        remote:
+          url: https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.12.0/crictl-v1.12.0-linux-amd64.tar.gz
+      mode: 0644
+      user:
+        id: 0
+      group:
+        id: 0
+    - path: /opt/bin/kubeadm
+      filesystem: root
+      contents:
+        remote:
+          url: https://storage.googleapis.com/kubernetes-release/release/v{{.Machine.Spec.Version}}/bin/linux/amd64/kubeadm
+      mode: 0755
+      user:
+        id: 0
+      group:
+        id: 0
+    - path: /opt/bin/kubectl
+      filesystem: root
+      contents:
+        remote:
+          url: https://storage.googleapis.com/kubernetes-release/release/v{{.Machine.Spec.Version}}/bin/linux/amd64/kubectl
+      mode: 0755
+      user:
+        id: 0
+      group:
+        id: 0
+    - path: /opt/bin/kubelet
+      filesystem: root
+      contents:
+        remote:
+          url: https://storage.googleapis.com/kubernetes-release/release/v{{.Machine.Spec.Version}}/bin/linux/amd64/kubelet
+      mode: 0755
+      user:
+        id: 0
+      group:
+        id: 0
+    - path: /etc/docker/daemon.json
+      filesystem: root
+      contents:
+        inline: |
+          {
+            "exec-opts": ["native.cgroupdriver=systemd"],
+            "iptables": false,
+            "ip-masq": false
+          }
+      mode: 0644
+      user:
+        id: 0
+      group:
+        id: 0
+    - path: /etc/kubernetes/cloud.conf
+      filesystem: root
+      contents:
+        inline: !!binary |
+          $OPENSTACK_CLOUD_PROVIDER_CONF
+      mode: 0600
+      user:
+        id: 0
+      group:
+        id: 0
+    - path: /etc/certs/cacert
+      filesystem: root
+      contents:
+        inline: !!binary |
+          $OPENSTACK_CLOUD_CACERT_CONFIG
+      mode: 0600
+      user:
+        id: 0
+      group:
+        id: 0
+    - path: /etc/modules-load.d/ipvs.conf
+      filesystem: root
+      contents:
+        inline: |
+          ip_vs
+      mode: 0644
+      user:
+        id: 0
+      group:
+        id: 0
+    - path: /etc/modules-load.d/ipvsrr.conf
+      filesystem: root
+      contents:
+        inline: |
+          ip_vs_rr
+      mode: 0644
+      user:
+        id: 0
+      group:
+        id: 0
+    - path: /etc/modules-load.d/ipvssh.conf
+      filesystem: root
+      contents:
+        inline: |
+          ip_vs_sh
+      mode: 0644
+      user:
+        id: 0
+      group:
+        id: 0
+    - path: /etc/modules-load.d/ipvswrr.conf
+      filesystem: root
+      contents:
+        inline: |
+          ip_vs_wrr
+      mode: 0644
+      user:
+        id: 0
+      group:
+        id: 0
+    - path: /etc/modules-load.d/br_netfilter.conf
+      filesystem: root
+      contents:
+        inline: |
+          br_netfilter
+      mode: 0644
+      user:
+        id: 0
+      group:
+        id: 0
+systemd:
+  units:
+    - name: docker.service
+      enabled: true
+    - name: unpack.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Unpack CNI and CRICTL into the right places.
+        Before=kubelet.service
+
+        [Service]
+        Type=oneshot
+        ExecStartPre=/usr/bin/tar -C /opt/bin -xzf /opt/kubetmp/crictl.tar.gz
+        ExecStart=/usr/bin/tar -C /opt/cni/bin -xzf /opt/kubetmp/cni-plugins.tar.gz
+        ExecStartPost=/usr/bin/systemctl disable unpack.service
+
+        [Install]
+        WantedBy=multi-user.target
+    - name: kubelet.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=kubelet: The Kubernetes Node Agent
+        Documentation=http://kubernetes.io/docs/
+
+        [Service]
+        ExecStart=/opt/bin/kubelet
+        Restart=always
+        StartLimitInterval=0
+        RestartSec=10
+
+        [Install]
+        WantedBy=multi-user.target
+      dropins:
+        - name: 10-kubeadm.conf
+          contents: |
+            # Note: This dropin only works with kubeadm and kubelet v1.11+
+            [Service]
+            Environment="KUBELET_KUBECONFIG_ARGS=--bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubelet.conf --kubeconfig=/etc/kubernetes/kubelet.conf"
+            Environment="KUBELET_CONFIG_ARGS=--config=/var/lib/kubelet/config.yaml"
+            # This is a file that "kubeadm init" and "kubeadm join" generates at runtime, populating the KUBELET_KUBEADM_ARGS variable dynamically
+            EnvironmentFile=-/var/lib/kubelet/kubeadm-flags.env
+            # This is a file that the user can use for overrides of the kubelet args as a last resort. Preferably, the user should use
+            # the .NodeRegistration.KubeletExtraArgs object in the configuration files instead. KUBELET_EXTRA_ARGS should be sourced from this file.
+            EnvironmentFile=-/etc/default/kubelet
+            ExecStart=
+            ExecStart=/opt/bin/kubelet $KUBELET_KUBECONFIG_ARGS $KUBELET_CONFIG_ARGS $KUBELET_KUBEADM_ARGS $KUBELET_EXTRA_ARGS
+locksmith:
+  # Set to off, install https://github.com/coreos/container-linux-update-operator once the cluster is up.
+  reboot_strategy: "off"

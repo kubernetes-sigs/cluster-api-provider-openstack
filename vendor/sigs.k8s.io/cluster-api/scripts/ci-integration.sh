@@ -19,9 +19,8 @@ set -o nounset
 set -o pipefail
 
 MAKE="make"
-KIND_VERSION="0.2.1"
-KUSTOMIZE_VERSION="2.0.3"
-KUBECTL_VERSION="v1.13.2"
+KIND_VERSION="v0.4.0"
+KUBECTL_VERSION="v1.15.0"
 CRD_YAML="crd.yaml"
 BOOTSTRAP_CLUSTER_NAME="clusterapi-bootstrap"
 CONTROLLER_REPO="controller-ci" # use arbitrary repo name since we don't need to publish it
@@ -30,12 +29,6 @@ INTEGRATION_TEST_DIR="./test/integration"
 
 GOOS=$(go env GOOS)
 GOARCH=$(go env GOARCH)
-
-install_kustomize() {
-   wget "https://github.com/kubernetes-sigs/kustomize/releases/download/v${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_${GOOS}_${GOARCH}" \
-     --no-verbose -O /usr/local/bin/kustomize
-   chmod +x /usr/local/bin/kustomize
-}
 
 install_kind() {
    wget "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-${GOOS}-${GOARCH}" \
@@ -51,18 +44,18 @@ install_kubectl() {
 
 build_containers() {
    VERSION="$(git describe --exact-match 2> /dev/null || git describe --match="$(git rev-parse --short=8 HEAD)" --always --dirty --abbrev=8)"
-   export CONTROLLER_IMG="${CONTROLLER_REPO}:${VERSION}"
-   export EXAMPLE_PROVIDER_IMG="${EXAMPLE_PROVIDER_REPO}:${VERSION}"
+   export CONTROLLER_IMG="${CONTROLLER_REPO}"
+   export EXAMPLE_PROVIDER_IMG="${EXAMPLE_PROVIDER_REPO}"
 
-   "${MAKE}" docker-build
-   "${MAKE}" docker-build-ci
+   "${MAKE}" docker-build TAG="${VERSION}" ARCH="${GOARCH}"
+   "${MAKE}" docker-build-ci TAG="${VERSION}" ARCH="${GOARCH}"
 }
 
 prepare_crd_yaml() {
    CLUSTER_API_CONFIG_PATH="./config"
-   kustomize build "${CLUSTER_API_CONFIG_PATH}/default/" > "${CRD_YAML}"
+   kubectl kustomize "${CLUSTER_API_CONFIG_PATH}/default/" > "${CRD_YAML}"
    echo "---" >> "${CRD_YAML}"
-   kustomize build "${CLUSTER_API_CONFIG_PATH}/ci/" >> "${CRD_YAML}"
+   kubectl kustomize "${CLUSTER_API_CONFIG_PATH}/ci/" >> "${CRD_YAML}"
 }
 
 create_bootstrap() {
@@ -70,8 +63,8 @@ create_bootstrap() {
    KUBECONFIG="$(kind get kubeconfig-path --name="${BOOTSTRAP_CLUSTER_NAME}")"
    export KUBECONFIG
 
-   kind load docker-image "${CONTROLLER_IMG}" --name "${BOOTSTRAP_CLUSTER_NAME}"
-   kind load docker-image "${EXAMPLE_PROVIDER_IMG}" --name "${BOOTSTRAP_CLUSTER_NAME}"
+   kind load docker-image "${CONTROLLER_IMG}-${GOARCH}:${VERSION}" --name "${BOOTSTRAP_CLUSTER_NAME}"
+   kind load docker-image "${EXAMPLE_PROVIDER_IMG}-${GOARCH}:${VERSION}" --name "${BOOTSTRAP_CLUSTER_NAME}"
 }
 
 delete_bootstrap() {
@@ -96,7 +89,7 @@ wait_pod_running() {
 }
 
 ensure_docker_in_docker() {
-   if [[ -z "${PROW_JOB_ID:-}" ]] ; then
+   if [[ -z "${PROW_JOB_ID}" ]] ; then
       # start docker service in setup other than Prow
       service docker start
    fi
@@ -107,11 +100,9 @@ main() {
    ensure_docker_in_docker
    build_containers
 
-   install_kustomize
-   prepare_crd_yaml
-
    install_kubectl
    install_kind
+   prepare_crd_yaml
    create_bootstrap
 
    kubectl create -f "${CRD_YAML}"

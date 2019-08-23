@@ -2,7 +2,7 @@
 
 <p align="center">
 <a href="https://godoc.org/github.com/gobuffalo/flect"><img src="https://godoc.org/github.com/gobuffalo/flect?status.svg" alt="GoDoc" /></a>
-<a href="https://travis-ci.org/gobuffalo/flect"><img src="https://travis-ci.org/gobuffalo/flect.svg?branch=master" alt="Build Status" /></a>
+<a href="https://dev.azure.com/markbates/buffalo/_build/latest?definitionId=51&branchName=master"><img src="https://dev.azure.com/markbates/buffalo/_apis/build/status/gobuffalo.flect?branchName=master" alt="CI" /></a>
 <a href="https://goreportcard.com/report/github.com/gobuffalo/flect"><img src="https://goreportcard.com/badge/github.com/gobuffalo/flect" alt="Go Report Card" /></a>
 </p>
 

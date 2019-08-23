@@ -1,3 +1,10 @@
-version: "1"
-domain: k8s.io
+version: "2"
+domain: cluster.x-k8s.io
 repo: sigs.k8s.io/cluster-api-provider-openstack
+resources:
+- group: infrastructure
+  version: v1alpha2
+  kind: OpenStackCluster
+- group: infrastructure
+  version: v1alpha2
+  kind: OpenStackMachine

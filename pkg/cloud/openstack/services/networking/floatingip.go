@@ -4,13 +4,11 @@ import (
 	"fmt"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/klog"
-	providerv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
-	"time"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha2"
 )
 
-func (s *Service) GetOrCreateFloatingIP(clusterProviderSpec *providerv1.OpenstackClusterProviderSpec, ip string) error {
+func (s *Service) GetOrCreateFloatingIP(openStackCluster *infrav1.OpenStackCluster, ip string) error {
 	fp, err := checkIfFloatingIPExists(s.client, ip)
 	if err != nil {
 		return err
@@ -19,7 +17,7 @@ func (s *Service) GetOrCreateFloatingIP(clusterProviderSpec *providerv1.Openstac
 		klog.Infof("Creating floating ip %s", ip)
 		fpCreateOpts := &floatingips.CreateOpts{
 			FloatingIP:        ip,
-			FloatingNetworkID: clusterProviderSpec.ExternalNetworkID,
+			FloatingNetworkID: openStackCluster.Spec.ExternalNetworkID,
 		}
 		fp, err = floatingips.Create(s.client, fpCreateOpts).Extract()
 		if err != nil {
@@ -42,22 +40,4 @@ func checkIfFloatingIPExists(client *gophercloud.ServiceClient, ip string) (*flo
 		return nil, nil
 	}
 	return &fpList[0], nil
-}
-
-var backoff = wait.Backoff{
-	Steps:    10,
-	Duration: 30 * time.Second,
-	Factor:   1.0,
-	Jitter:   0.1,
-}
-
-func waitForFloatingIP(client *gophercloud.ServiceClient, id, target string) error {
-	klog.Infof("Waiting for floatingip %s to become %s.", id, target)
-	return wait.ExponentialBackoff(backoff, func() (bool, error) {
-		fp, err := floatingips.Get(client, id).Extract()
-		if err != nil {
-			return false, err
-		}
-		return fp.Status == target, nil
-	})
 }

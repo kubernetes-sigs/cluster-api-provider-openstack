@@ -22,6 +22,8 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/identity/v3/tokens"
 	"k8s.io/klog"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/networking"
+	"sigs.k8s.io/cluster-api/api/v1alpha2"
+	"sigs.k8s.io/cluster-api/pkg/controller/noderefutil"
 	"time"
 
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
@@ -41,7 +43,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/gophercloud/gophercloud/pagination"
-	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha2"
 	"sigs.k8s.io/cluster-api/pkg/util"
 )
 
@@ -53,8 +55,10 @@ const (
 	RetryIntervalPortDelete = 5 * time.Second
 )
 
+// TODO(sbueringer) We should probably wrape the OpenStack object completely (see CAPA)
 type Instance struct {
 	servers.Server
+	State infrav1.InstanceState
 }
 
 type ServerNetwork struct {
@@ -63,12 +67,12 @@ type ServerNetwork struct {
 }
 
 // InstanceCreate creates a compute instance
-func (is *Service) InstanceCreate(clusterName string, name string, clusterSpec *openstackconfigv1.OpenstackClusterProviderSpec, config *openstackconfigv1.OpenstackProviderSpec, userdata string, keyName string) (instance *Instance, err error) {
+func (is *Service) InstanceCreate(clusterName string, name string, openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, userdata string) (instance *Instance, err error) {
 	var createOpts servers.CreateOptsBuilder
-	if config == nil {
+	if openStackMachine == nil {
 		return nil, fmt.Errorf("create Options need be specified to create instace")
 	}
-	if config.Trunk == true {
+	if openStackMachine.Spec.Trunk == true {
 		trunkSupport, err := getTrunkSupport(is)
 		if err != nil {
 			return nil, fmt.Errorf("there was an issue verifying whether trunk support is available, please disable it: %v", err)
@@ -85,19 +89,19 @@ func (is *Service) InstanceCreate(clusterName string, name string, clusterSpec *
 	}
 
 	// Append machine specific tags
-	machineTags = append(machineTags, config.Tags...)
+	machineTags = append(machineTags, openStackMachine.Spec.Tags...)
 
 	// Append cluster scope tags
-	machineTags = append(machineTags, clusterSpec.Tags...)
+	machineTags = append(machineTags, openStackCluster.Spec.Tags...)
 
 	// Get security groups
-	securityGroups, err := getSecurityGroups(is, config.SecurityGroups)
+	securityGroups, err := getSecurityGroups(is, openStackMachine.Spec.SecurityGroups)
 	if err != nil {
 		return nil, err
 	}
 	// Get all network UUIDs
 	var nets []ServerNetwork
-	for _, net := range config.Networks {
+	for _, net := range openStackMachine.Spec.Networks {
 		opts := networks.ListOpts(net.Filter)
 		opts.ID = net.UUID
 		ids, err := getNetworkIDsByFilter(is.networkClient, &opts)
@@ -165,7 +169,7 @@ func (is *Service) InstanceCreate(clusterName string, name string, clusterSpec *
 			Port: port.ID,
 		})
 
-		if config.Trunk == true {
+		if openStackMachine.Spec.Trunk == true {
 			allPages, err := trunks.List(is.networkClient, trunks.ListOpts{
 				Name:   name,
 				PortID: port.ID,
@@ -202,7 +206,7 @@ func (is *Service) InstanceCreate(clusterName string, name string, clusterSpec *
 	}
 
 	var serverTags []string
-	if clusterSpec.DisableServerTags == false {
+	if openStackCluster.Spec.DisableServerTags == false {
 		serverTags = machineTags
 		// NOTE(flaper87): This is the minimum required version
 		// to use tags.
@@ -210,7 +214,7 @@ func (is *Service) InstanceCreate(clusterName string, name string, clusterSpec *
 	}
 
 	// Get image ID
-	imageID, err := getImageID(is, config.Image)
+	imageID, err := getImageID(is, openStackMachine.Spec.Image)
 	if err != nil {
 		return nil, fmt.Errorf("create new server err: %v", err)
 	}
@@ -218,29 +222,29 @@ func (is *Service) InstanceCreate(clusterName string, name string, clusterSpec *
 	serverCreateOpts := servers.CreateOpts{
 		Name:             name,
 		ImageRef:         imageID,
-		FlavorName:       config.Flavor,
-		AvailabilityZone: config.AvailabilityZone,
+		FlavorName:       openStackMachine.Spec.Flavor,
+		AvailabilityZone: openStackMachine.Spec.AvailabilityZone,
 		Networks:         portsList,
 		UserData:         []byte(userData),
 		SecurityGroups:   securityGroups,
 		ServiceClient:    is.computeClient,
 		Tags:             serverTags,
-		Metadata:         config.ServerMetadata,
-		ConfigDrive:      config.ConfigDrive,
+		Metadata:         openStackMachine.Spec.ServerMetadata,
+		ConfigDrive:      openStackMachine.Spec.ConfigDrive,
 	}
 
 	// If the root volume Size is not 0, means boot from volume
-	if config.RootVolume != nil && config.RootVolume.Size != 0 {
+	if openStackMachine.Spec.RootVolume != nil && openStackMachine.Spec.RootVolume.Size != 0 {
 		var blocks []bootfromvolume.BlockDevice
 
 		block := bootfromvolume.BlockDevice{
-			SourceType:          bootfromvolume.SourceType(config.RootVolume.SourceType),
+			SourceType:          bootfromvolume.SourceType(openStackMachine.Spec.RootVolume.SourceType),
 			BootIndex:           0,
-			UUID:                config.RootVolume.SourceUUID,
+			UUID:                openStackMachine.Spec.RootVolume.SourceUUID,
 			DeleteOnTermination: true,
 			DestinationType:     bootfromvolume.DestinationVolume,
-			VolumeSize:          config.RootVolume.Size,
-			DeviceType:          config.RootVolume.DeviceType,
+			VolumeSize:          openStackMachine.Spec.RootVolume.Size,
+			DeviceType:          openStackMachine.Spec.RootVolume.DeviceType,
 		}
 		blocks = append(blocks, block)
 
@@ -252,13 +256,13 @@ func (is *Service) InstanceCreate(clusterName string, name string, clusterSpec *
 
 	server, err := servers.Create(is.computeClient, keypairs.CreateOptsExt{
 		CreateOptsBuilder: serverCreateOpts,
-		KeyName:           keyName,
+		KeyName:           openStackMachine.Spec.KeyName,
 	}).Extract()
 	if err != nil {
 		return nil, fmt.Errorf("create new server err: %v", err)
 	}
 	is.computeClient.Microversion = ""
-	return &Instance{*server}, nil
+	return &Instance{Server: *server, State: infrav1.InstanceState(server.Status)}, nil
 }
 
 func getTrunkSupport(is *Service) (bool, error) {
@@ -280,7 +284,7 @@ func getTrunkSupport(is *Service) (bool, error) {
 	return false, nil
 }
 
-func getSecurityGroups(is *Service, securityGroupParams []openstackconfigv1.SecurityGroupParam) ([]string, error) {
+func getSecurityGroups(is *Service, securityGroupParams []infrav1.SecurityGroupParam) ([]string, error) {
 	var sgIDs []string
 	for _, sg := range securityGroupParams {
 		listOpts := groups.ListOpts(sg.Filter)
@@ -396,9 +400,15 @@ func (is *Service) AssociateFloatingIP(instanceID, floatingIP string) error {
 	return floatingips.AssociateInstance(is.computeClient, instanceID, opts).ExtractErr()
 }
 
-func (is *Service) InstanceDelete(id string) error {
+func (is *Service) InstanceDelete(machine *v1alpha2.Machine) error {
+
+	parsed, err := noderefutil.NewProviderID(*machine.Spec.ProviderID)
+	if err != nil {
+		return err
+	}
+
 	// get instance port id
-	allInterfaces, err := attachinterfaces.List(is.computeClient, id).AllPages()
+	allInterfaces, err := attachinterfaces.List(is.computeClient, parsed.ID()).AllPages()
 	if err != nil {
 		return err
 	}
@@ -407,7 +417,7 @@ func (is *Service) InstanceDelete(id string) error {
 		return err
 	}
 	if len(instanceInterfaces) < 1 {
-		return servers.Delete(is.computeClient, id).ExtractErr()
+		return servers.Delete(is.computeClient, parsed.ID()).ExtractErr()
 	}
 
 	trunkSupport, err := getTrunkSupport(is)
@@ -416,7 +426,7 @@ func (is *Service) InstanceDelete(id string) error {
 	}
 	// get and delete trunks
 	for _, port := range instanceInterfaces {
-		err := attachinterfaces.Delete(is.computeClient, id, port.PortID).ExtractErr()
+		err := attachinterfaces.Delete(is.computeClient, parsed.ID(), port.PortID).ExtractErr()
 		if err != nil {
 			return err
 		}
@@ -460,7 +470,7 @@ func (is *Service) InstanceDelete(id string) error {
 	}
 
 	// delete instance
-	return servers.Delete(is.computeClient, id).ExtractErr()
+	return servers.Delete(is.computeClient, parsed.ID()).ExtractErr()
 }
 
 type InstanceListOpts struct {
@@ -497,7 +507,10 @@ func (is *Service) GetInstanceList(opts *InstanceListOpts) ([]*Instance, error) 
 	}
 	var instanceList []*Instance
 	for _, server := range serverList {
-		instanceList = append(instanceList, &Instance{server})
+		instanceList = append(instanceList, &Instance{
+			Server: server,
+			State:  infrav1.InstanceState(server.Status),
+		})
 	}
 	return instanceList, nil
 }
@@ -510,7 +523,24 @@ func (is *Service) GetInstance(resourceId string) (instance *Instance, err error
 	if err != nil {
 		return nil, fmt.Errorf("get server %q detail failed: %v", resourceId, err)
 	}
-	return &Instance{*server}, err
+	return &Instance{Server: *server, State: infrav1.InstanceState(server.Status)}, err
+}
+
+func (is *Service) InstanceExists(openStackMachine *infrav1.OpenStackMachine) (instance *Instance, err error) {
+	opts := &InstanceListOpts{
+		Name:   openStackMachine.Name,
+		Image:  openStackMachine.Spec.Image,
+		Flavor: openStackMachine.Spec.Flavor,
+	}
+
+	instanceList, err := is.GetInstanceList(opts)
+	if err != nil {
+		return nil, err
+	}
+	if len(instanceList) == 0 {
+		return nil, nil
+	}
+	return instanceList[0], nil
 }
 
 // UpdateToken to update token if need.

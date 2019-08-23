@@ -1,0 +1,7 @@
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+kind: OpenStackCluster
+metadata:
+  name: openstackcluster-sample
+spec:
+  # Add fields here
+  foo: bar

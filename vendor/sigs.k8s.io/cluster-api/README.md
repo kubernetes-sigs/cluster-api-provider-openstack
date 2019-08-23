@@ -1,4 +1,19 @@
 # Cluster API
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [What is the Cluster API?](#what-is-the-cluster-api)
+- [Getting Started](#getting-started)
+  - [Resources](#resources)
+  - [Prerequisites](#prerequisites)
+  - [Using `clusterctl` to create a cluster](#using-clusterctl-to-create-a-cluster)
+  - [How does Cluster API compare to Kubernetes Cloud Providers?](#how-does-cluster-api-compare-to-kubernetes-cloud-providers)
+- [Get involved!](#get-involved)
+- [Provider Implementations](#provider-implementations)
+- [API Adoption](#api-adoption)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 ## What is the Cluster API?
 
 The Cluster API is a Kubernetes project to bring declarative, Kubernetes-style
@@ -9,6 +24,19 @@ Note that Cluster API effort is still in the prototype stage while we get
 feedback on the API types themselves. All of the code here is to experiment with
 the API and demo its abilities, in order to drive more technical feedback to the
 API design. Because of this, all of the prototype code is rapidly changing.
+
+## Getting Started
+
+### Resources
+
+* GitBook: [cluster-api.sigs.k8s.io](https://cluster-api.sigs.k8s.io)
+
+### Prerequisites
+* `kubectl` is required, see [here](http://kubernetes.io/docs/user-guide/prereqs/).
+* `clusterctl` is a SIG-cluster-lifecycle sponsored tool to manage Cluster API clusters. See [here](cmd/clusterctl)
+
+### Using `clusterctl` to create a cluster
+* Doc [here](./docs/how-to-use-clusterctl.md)
 
 ![Cluster API Architecture](./docs/book/common_code/architecture.svg "Cluster API Architecture")
 
@@ -54,6 +82,7 @@ are also sponsored by SIG-cluster-lifecycle:
   * GCP, https://github.com/kubernetes-sigs/cluster-api-provider-gcp
   * IBM Cloud, https://github.com/kubernetes-sigs/cluster-api-provider-ibmcloud
   * OpenStack, https://github.com/kubernetes-sigs/cluster-api-provider-openstack
+  * Packet, https://github.com/packethost/cluster-api-provider-packet
   * Talos, https://github.com/talos-systems/cluster-api-provider-talos
   * Tencent Cloud, https://github.com/TencentCloud/cluster-api-provider-tencent
   * vSphere, https://github.com/kubernetes-sigs/cluster-api-provider-vsphere
@@ -74,15 +103,7 @@ Following are the implementations managed by third-parties adopting the standard
 - The _master_ branch is where development happens, this might include breaking changes.
 - The _release-X_ branches contain stable, backward compatible code. A new _release-X_ branch is created at every major (X) release.
 
-## Getting Started
 
-### Resources
-
-* GitBook: [kubernetes-sigs.github.io/cluster-api](https://kubernetes-sigs.github.io/cluster-api)
-
-### Prerequisites
-* `kubectl` is required, see [here](http://kubernetes.io/docs/user-guide/prereqs/).
-* `clusterctl` is a SIG-cluster-lifecycle sponsored tool to manage Cluster API clusters. See [here](cmd/clusterctl)
 
 [notes]: https://docs.google.com/document/d/1Ys-DOR5UsgbMEeciuG0HOgDQc8kZsaWIWJeKJ1-UfbY/edit
 [recordings]: https://www.youtube.com/playlist?list=PL69nYSiGNLP29D0nYgAGWt1ZFqS9Z7lw4
