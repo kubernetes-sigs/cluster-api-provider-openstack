@@ -66,7 +66,7 @@ echo $OPENSTACK_CLOUD_CACERT_CONFIG | base64 -d > /etc/certs/cacert
 
 
 # Setup certificates
-mkdir - /etc/kubernetes/pki /etc/kubernetes/pki/etcd
+mkdir /etc/kubernetes/pki /etc/kubernetes/pki/etcd
 cat > /etc/kubernetes/pki/ca.crt <<EOF
 {{ .CACert }}
 EOF

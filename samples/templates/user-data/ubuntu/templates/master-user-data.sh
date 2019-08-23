@@ -90,7 +90,7 @@ systemctl disable ufw
 systemctl mask ufw
 
 # Setup certificates
-mkdir - /etc/kubernetes/pki /etc/kubernetes/pki/etcd
+mkdir /etc/kubernetes/pki /etc/kubernetes/pki/etcd
 cat > /etc/kubernetes/pki/ca.crt <<EOF
 {{ .CACert }}
 EOF
