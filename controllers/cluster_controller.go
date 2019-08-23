@@ -31,7 +31,8 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/provider"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/userdata"
 	"sigs.k8s.io/cluster-api/api/v1alpha2"
-	"sigs.k8s.io/cluster-api/pkg/util"
+	"sigs.k8s.io/cluster-api/util"
+	"sigs.k8s.io/cluster-api/util/patch"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -55,7 +56,7 @@ type OpenStackClusterReconciler struct {
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackclusters/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=cluster.x-k8s.io,resources=clusters,verbs=get;list;watch
 
-func (r *OpenStackClusterReconciler) Reconcile(request ctrl.Request) (ctrl.Result, error) {
+func (r *OpenStackClusterReconciler) Reconcile(request ctrl.Request) (_ ctrl.Result, reterr error) {
 	ctx := context.TODO()
 	logger := log.Log.WithName(clusterControllerName).
 		WithName(fmt.Sprintf("namespace=%s", request.Namespace)).
@@ -85,6 +86,18 @@ func (r *OpenStackClusterReconciler) Reconcile(request ctrl.Request) (ctrl.Resul
 
 	logger = logger.WithName(fmt.Sprintf("cluster=%s", cluster.Name))
 
+	patchHelper, err := patch.NewHelper(openStackCluster, r)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+	defer func() {
+		if err := patchHelper.Patch(ctx, openStackCluster); err != nil {
+			if reterr == nil {
+				reterr = errors.Wrapf(err, "error patching OpenStackCluster %s/%s", openStackCluster.Namespace, openStackCluster.Name)
+			}
+		}
+	}()
+
 	// Handle deleted clusters
 	if !openStackCluster.DeletionTimestamp.IsZero() {
 		return r.reconcileClusterDelete(logger, cluster, openStackCluster)
@@ -97,8 +110,6 @@ func (r *OpenStackClusterReconciler) Reconcile(request ctrl.Request) (ctrl.Resul
 func (r *OpenStackClusterReconciler) reconcileCluster(logger logr.Logger, cluster *v1alpha2.Cluster, openStackCluster *infrav1.OpenStackCluster) (_ ctrl.Result, reterr error) {
 	klog.Infof("Reconciling Cluster %s/%s", cluster.Namespace, cluster.Name)
 
-	// openstackClusterPath is used for patch generation during storeCluster
-	openstackClusterPatch := client.MergeFrom(openStackCluster.DeepCopy())
 	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
 
 	osProviderClient, clientOpts, err := provider.NewClientFromCluster(r.Client, openStackCluster)
@@ -117,12 +128,6 @@ func (r *OpenStackClusterReconciler) reconcileCluster(logger logr.Logger, cluste
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-
-	defer func() {
-		if err := storeCluster(r.Client, openStackCluster, openstackClusterPatch); err != nil && reterr == nil {
-			reterr = err
-		}
-	}()
 
 	klog.Infof("Reconciling certificates for cluster %s", clusterName)
 	// Store cert material in spec.
@@ -251,22 +256,6 @@ func (r *OpenStackClusterReconciler) reconcileClusterDelete(logger logr.Logger, 
 		}
 	}
 	return reconcile.Result{}, nil
-}
-
-func storeCluster(ctrlClient client.Client, openStackCluster *infrav1.OpenStackCluster, openStackClusterPatch client.Patch) error {
-	ctx := context.TODO()
-
-	// Patch Cluster object.
-	if err := ctrlClient.Patch(ctx, openStackCluster, openStackClusterPatch); err != nil {
-		return errors.Wrapf(err, "error patching OpenStackCluster %s/%s", openStackCluster.Namespace, openStackCluster.Name)
-	}
-
-	// Patch Cluster status.
-	if err := ctrlClient.Status().Patch(ctx, openStackCluster, openStackClusterPatch); err != nil {
-		return errors.Wrapf(err, "error patching OpenStackCluster %s/%s status", openStackCluster.Namespace, openStackCluster.Name)
-	}
-
-	return nil
 }
 
 func (r *OpenStackClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {

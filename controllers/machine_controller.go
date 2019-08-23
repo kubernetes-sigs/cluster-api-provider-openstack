@@ -33,6 +33,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/provider"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/userdata"
 	"sigs.k8s.io/cluster-api/api/v1alpha2"
+	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"strconv"
@@ -44,8 +45,8 @@ import (
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha2"
-	capierrors "sigs.k8s.io/cluster-api/pkg/errors"
-	"sigs.k8s.io/cluster-api/pkg/util"
+	capierrors "sigs.k8s.io/cluster-api/errors"
+	"sigs.k8s.io/cluster-api/util"
 )
 
 const (
@@ -67,7 +68,7 @@ type OpenStackMachineReconciler struct {
 // +kubebuilder:rbac:groups=cluster.x-k8s.io,resources=clusters;machines,verbs=get;list;watch
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch;create;update;patch
 
-func (r *OpenStackMachineReconciler) Reconcile(request ctrl.Request) (ctrl.Result, error) {
+func (r *OpenStackMachineReconciler) Reconcile(request ctrl.Request) (_ ctrl.Result, reterr error) {
 	ctx := context.TODO()
 	logger := log.Log.
 		WithName(machineControllerName).
@@ -119,6 +120,20 @@ func (r *OpenStackMachineReconciler) Reconcile(request ctrl.Request) (ctrl.Resul
 
 	logger = logger.WithName(fmt.Sprintf("openStackCluster=%s", openStackCluster.Name))
 
+	// Initialize the patch helper
+	patchHelper, err := patch.NewHelper(openStackMachine, r)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+	// Always attempt to Patch the Machine object and status after each reconciliation.
+	defer func() {
+		if err := patchHelper.Patch(ctx, openStackMachine); err != nil {
+			if reterr == nil {
+				reterr = err
+			}
+		}
+	}()
+
 	// Handle deleted clusters
 	if !openStackMachine.DeletionTimestamp.IsZero() {
 		return r.reconcileMachineDelete(logger, machine, openStackMachine, cluster, openStackCluster)
@@ -156,8 +171,6 @@ func (r *OpenStackMachineReconciler) reconcileMachine(logger logr.Logger, machin
 
 	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
 
-	openstackMachinePatch := client.MergeFrom(openStackMachine.DeepCopy())
-
 	osProviderClient, clientOpts, err := provider.NewClientFromMachine(r.Client, openStackMachine)
 	if err != nil {
 		return reconcile.Result{}, err
@@ -172,12 +185,6 @@ func (r *OpenStackMachineReconciler) reconcileMachine(logger logr.Logger, machin
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-
-	defer func() {
-		if err := storeMachine(r.Client, openStackMachine, openstackMachinePatch); err != nil && reterr == nil {
-			reterr = err
-		}
-	}()
 
 	instance, err := r.getOrCreate(computeService, machine, openStackMachine, cluster, openStackCluster)
 	if err != nil {
@@ -332,22 +339,6 @@ func getTimeout(name string, timeout int) time.Duration {
 		}
 	}
 	return time.Duration(timeout)
-}
-
-func storeMachine(ctrlClient client.Client, openStackMachine *infrav1.OpenStackMachine, openStackMachinePatch client.Patch) error {
-	ctx := context.TODO()
-
-	// Patch Cluster object.
-	if err := ctrlClient.Patch(ctx, openStackMachine, openStackMachinePatch); err != nil {
-		return errors.Wrapf(err, "error patching OpenStackMachine %s/%s", openStackMachine.Namespace, openStackMachine.Name)
-	}
-
-	// Patch Cluster status.
-	if err := ctrlClient.Status().Patch(ctx, openStackMachine, openStackMachinePatch); err != nil {
-		return errors.Wrapf(err, "error patching OpenStackMachine %s/%s status", openStackMachine.Namespace, openStackMachine.Name)
-	}
-
-	return nil
 }
 
 func (r *OpenStackMachineReconciler) SetupWithManager(mgr ctrl.Manager) error {
