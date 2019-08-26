@@ -143,7 +143,7 @@ test: generate lint ## Run tests
 
 .PHONY: test-go
 test-go: ## Run tests
-	go test -v -tags=unit ./pkg/... ./cmd/... ./api/... ./controllers/...
+	go test -v -tags=unit ./api/... ./pkg/... ./controllers/...
 
 test-generate-examples:
 ifndef HAS_YQ
@@ -151,7 +151,7 @@ ifndef HAS_YQ
 	echo "installing yq"
 endif
 ifndef HAS_KUSTOMIZE
-    go install sigs.k8s.io/kustomize/v3/cmd/kustomize
+	go install sigs.k8s.io/kustomize/v3/cmd/kustomize
 	echo "installing kustomize"
 endif
 ifndef HAS_ENVSUBST

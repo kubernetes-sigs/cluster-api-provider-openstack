@@ -175,42 +175,39 @@ else
   echo "dummy" > ${CLOUDS_SECRETS_CONFIG_DIR}/cacert
 fi
 
-echo $(which kustomize)
-kustomize version
-
 # Generate cluster resources.
-kustomize build "${SOURCE_DIR}/cluster" | envsubst > "${CLUSTER_GENERATED_FILE}"
+kustomize build "${SOURCE_DIR}/cluster" --reorder=none | envsubst > "${CLUSTER_GENERATED_FILE}"
 echo "Generated ${CLUSTER_GENERATED_FILE}"
 
 # Generate controlplane resources.
-kustomize build "${SOURCE_DIR}/controlplane" | envsubst > "${CONTROLPLANE_GENERATED_FILE}"
+kustomize build "${SOURCE_DIR}/controlplane" --reorder=none | envsubst > "${CONTROLPLANE_GENERATED_FILE}"
 echo "Generated ${CONTROLPLANE_GENERATED_FILE}"
 
 # Generate machinedeployment resources. (TODO(sbueringer) Have to implement OpenStackMachineTemplate first)
-#kustomize build "${SOURCE_DIR}/machinedeployment" | envsubst >> "${MACHINEDEPLOYMENT_GENERATED_FILE}"
+#kustomize build "${SOURCE_DIR}/machinedeployment" --reorder=none | envsubst >> "${MACHINEDEPLOYMENT_GENERATED_FILE}"
 #echo "Generated ${MACHINEDEPLOYMENT_GENERATED_FILE}"
 
 # Generate machines resources.
-kustomize build "${SOURCE_DIR}/machines" | envsubst > "${MACHINES_GENERATED_FILE}"
+kustomize build "${SOURCE_DIR}/machines" --reorder=none | envsubst > "${MACHINES_GENERATED_FILE}"
 echo "Generated ${MACHINES_GENERATED_FILE}"
 
 # Generate Cluster API provider components file.
-kustomize build "github.com/kubernetes-sigs/cluster-api//config/default/?ref=master" > "${COMPONENTS_CLUSTER_API_GENERATED_FILE}"
+kustomize build "github.com/kubernetes-sigs/cluster-api//config/default/?ref=master" --reorder=none > "${COMPONENTS_CLUSTER_API_GENERATED_FILE}"
 echo "Generated ${COMPONENTS_CLUSTER_API_GENERATED_FILE}"
 
 # Generate Kubeadm Bootstrap Provider components file.
-kustomize build "github.com/kubernetes-sigs/cluster-api-bootstrap-provider-kubeadm//config/default/?ref=master" > "${COMPONENTS_KUBEADM_GENERATED_FILE}"
+kustomize build "github.com/kubernetes-sigs/cluster-api-bootstrap-provider-kubeadm//config/default/?ref=master" --reorder=none > "${COMPONENTS_KUBEADM_GENERATED_FILE}"
 echo "Generated ${COMPONENTS_KUBEADM_GENERATED_FILE}"
 
 # Generate OpenStack Infrastructure Provider components file.
-kustomize build "${SOURCE_DIR}/../config/default" | envsubst > "${COMPONENTS_OPENSTACK_GENERATED_FILE}"
+kustomize build "${SOURCE_DIR}/../config/default" --reorder=none | envsubst > "${COMPONENTS_OPENSTACK_GENERATED_FILE}"
 echo "Generated ${COMPONENTS_OPENSTACK_GENERATED_FILE}"
 
 # Generate OpenStack Infrastructure Provider cloud-secrets file.
-kustomize build "${SOURCE_DIR}/clouds-secrets" | envsubst > "${COMPONENTS_OPENSTACK_CLOUDS_SECRETS_GENERATED_FILE}"
+kustomize build "${SOURCE_DIR}/clouds-secrets" --reorder=none | envsubst > "${COMPONENTS_OPENSTACK_CLOUDS_SECRETS_GENERATED_FILE}"
 echo "Generated ${COMPONENTS_OPENSTACK_CLOUDS_SECRETS_GENERATED_FILE}"
 
 # Generate a single provider components file.
-kustomize build "${SOURCE_DIR}/provider-components" | envsubst > "${PROVIDER_COMPONENTS_GENERATED_FILE}"
+kustomize build "${SOURCE_DIR}/provider-components" --reorder=none | envsubst > "${PROVIDER_COMPONENTS_GENERATED_FILE}"
 echo "Generated ${PROVIDER_COMPONENTS_GENERATED_FILE}"
 echo "WARNING: ${PROVIDER_COMPONENTS_GENERATED_FILE} includes OpenStack credentials"

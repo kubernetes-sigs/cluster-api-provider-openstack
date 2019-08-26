@@ -2,6 +2,7 @@ apiVersion: cluster.x-k8s.io/v1alpha2
 kind: Machine
 metadata:
   name: ${CLUSTER_NAME}-node-01
+  namespace: ${CLUSTER_NAME}
   labels:
     cluster.x-k8s.io/cluster-name: ${CLUSTER_NAME}
 spec:
@@ -11,15 +12,18 @@ spec:
       apiVersion: bootstrap.cluster.x-k8s.io/v1alpha2
       kind: KubeadmConfig
       name: ${CLUSTER_NAME}-node-01
+      namespace: ${CLUSTER_NAME}
   infrastructureRef:
     apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
     kind: OpenStackMachine
     name: ${CLUSTER_NAME}-node-01
+    namespace: ${CLUSTER_NAME}
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
 kind: OpenStackMachine
 metadata:
   name: ${CLUSTER_NAME}-node-01
+  namespace: ${CLUSTER_NAME}
 spec:
   flavor: m1.medium
   image: <Image Name>
@@ -35,7 +39,7 @@ spec:
   cloudName: $CLOUD
   cloudsSecret:
     name: cloud-config
-    namespace: capo-system
+    namespace: ${CLUSTER_NAME}
   serverMetadata:
     key: value
 ---

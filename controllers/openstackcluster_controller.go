@@ -171,9 +171,7 @@ func (r *OpenStackClusterReconciler) reconcileCluster(logger logr.Logger, cluste
 			openStackCluster.Status.APIEndpoints = []infrav1.APIEndpoint{
 				{
 					Host: controlPlaneMachine.Spec.FloatingIP,
-					Port: 6443,
-					// TODO set port form clusternetwork after next cluster-api dependency update
-					//Port: cluster.Spec.ClusterNetwork.,
+					Port: int(*cluster.Spec.ClusterNetwork.APIServerPort),
 				},
 			}
 		} else {

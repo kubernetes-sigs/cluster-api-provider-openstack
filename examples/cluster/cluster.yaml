@@ -3,6 +3,7 @@ apiVersion: cluster.x-k8s.io/v1alpha2
 kind: Cluster
 metadata:
   name: ${CLUSTER_NAME}
+  namespace: ${CLUSTER_NAME}
 spec:
   clusterNetwork:
     services:
@@ -20,10 +21,11 @@ apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
 kind: OpenStackCluster
 metadata:
   name: ${CLUSTER_NAME}
+  namespace: ${CLUSTER_NAME}
 spec:
   tags:
   - a_cluster_wide_tag
   cloudName: $CLOUD
   cloudsSecret:
     name: cloud-config
-    namespace: capo-system
+    namespace: ${CLUSTER_NAME}

@@ -2,6 +2,7 @@ apiVersion: cluster.x-k8s.io/v1alpha2
 kind: Machine
 metadata:
   name: ${CLUSTER_NAME}-controlplane-0
+  namespace: ${CLUSTER_NAME}
   labels:
     cluster.x-k8s.io/control-plane: "true"
     cluster.x-k8s.io/cluster-name: "${CLUSTER_NAME}"
@@ -12,15 +13,18 @@ spec:
       apiVersion: bootstrap.cluster.x-k8s.io/v1alpha2
       kind: KubeadmConfig
       name: ${CLUSTER_NAME}-controlplane-0
+      namespace: ${CLUSTER_NAME}
   infrastructureRef:
     apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
     kind: OpenStackMachine
     name: ${CLUSTER_NAME}-controlplane-0
+    namespace: ${CLUSTER_NAME}
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
 kind: OpenStackMachine
 metadata:
   name: ${CLUSTER_NAME}-controlplane-0
+  namespace: ${CLUSTER_NAME}
 spec:
   flavor: m1.medium
   image: <Image Name>
@@ -28,7 +32,9 @@ spec:
   availabilityZone: nova
   networks:
   - uuid: <Kubernetes Network ID>
-  floatingIP: <Floating IP (only set if not using an APIServer LB>
+  # if a single control plane cluster is setup and floatingIP is set
+  # Cluster.spec.clusterNetwork.apiServerPort must also be set
+  #floatingIP: <Floating IP (only set if not using an APIServer LB>
   securityGroups:
   - uuid: <Security Group ID>
   trunk: false
@@ -37,7 +43,7 @@ spec:
   cloudName: $CLOUD
   cloudsSecret:
     name: cloud-config
-    namespace: capo-system
+    namespace: ${CLUSTER_NAME}
   serverMetadata:
     key: value
 ---
@@ -45,6 +51,7 @@ apiVersion: bootstrap.cluster.x-k8s.io/v1alpha2
 kind: KubeadmConfig
 metadata:
   name: ${CLUSTER_NAME}-controlplane-0
+  namespace: ${CLUSTER_NAME}
 spec:
   files:
   - path: /etc/kubernetes/cloud.conf
@@ -114,15 +121,18 @@ spec:
       apiVersion: bootstrap.cluster.x-k8s.io/v1alpha2
       kind: KubeadmConfig
       name: ${CLUSTER_NAME}-controlplane-1
+      namespace: ${CLUSTER_NAME}
   infrastructureRef:
     apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
     kind: OpenStackMachine
     name: ${CLUSTER_NAME}-controlplane-1
+    namespace: ${CLUSTER_NAME}
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
 kind: OpenStackMachine
 metadata:
   name: ${CLUSTER_NAME}-controlplane-1
+  namespace: ${CLUSTER_NAME}
 spec:
   flavor: m1.medium
   image: <Image Name>
@@ -138,7 +148,7 @@ spec:
   cloudName: $CLOUD
   cloudsSecret:
     name: cloud-config
-    namespace: capo-system
+    namespace: ${CLUSTER_NAME}
   serverMetadata:
     key: value
 ---
@@ -146,6 +156,7 @@ apiVersion: bootstrap.cluster.x-k8s.io/v1alpha2
 kind: KubeadmConfig
 metadata:
   name: ${CLUSTER_NAME}-controlplane-1
+  namespace: ${CLUSTER_NAME}
 spec:
   files:
   - path: /etc/kubernetes/cloud.conf
@@ -179,6 +190,7 @@ apiVersion: cluster.x-k8s.io/v1alpha2
 kind: Machine
 metadata:
   name: ${CLUSTER_NAME}-controlplane-2
+  namespace: ${CLUSTER_NAME}
   labels:
     cluster.x-k8s.io/control-plane: "true"
     cluster.x-k8s.io/cluster-name: "${CLUSTER_NAME}"
@@ -189,15 +201,18 @@ spec:
       apiVersion: bootstrap.cluster.x-k8s.io/v1alpha2
       kind: KubeadmConfig
       name: ${CLUSTER_NAME}-controlplane-2
+      namespace: ${CLUSTER_NAME}
   infrastructureRef:
     apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
     kind: OpenStackMachine
     name: ${CLUSTER_NAME}-controlplane-2
+    namespace: ${CLUSTER_NAME}
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
 kind: OpenStackMachine
 metadata:
   name: ${CLUSTER_NAME}-controlplane-2
+  namespace: ${CLUSTER_NAME}
 spec:
   flavor: m1.medium
   image: <Image Name>
@@ -213,7 +228,7 @@ spec:
   cloudName: $CLOUD
   cloudsSecret:
     name: cloud-config
-    namespace: capo-system
+    namespace: ${CLUSTER_NAME}
   serverMetadata:
     key: value
 ---
@@ -221,6 +236,7 @@ apiVersion: bootstrap.cluster.x-k8s.io/v1alpha2
 kind: KubeadmConfig
 metadata:
   name: ${CLUSTER_NAME}-controlplane-2
+  namespace: ${CLUSTER_NAME}
 spec:
   files:
   - path: /etc/kubernetes/cloud.conf

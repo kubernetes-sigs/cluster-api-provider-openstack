@@ -14,4 +14,4 @@ secretGenerator:
     - OS_CLOUD=configs/os_cloud.txt
   type: Opaque
 
-namespace: capo-system
+namespace: ${CLUSTER_NAME}
