@@ -17,13 +17,14 @@ spec:
     apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
     namespace: default
     name: test-cluster-kube-master-01
-  version: "v1.15.0"
+  version: "1.15.0"
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
 kind: OpenStackMachine
 metadata:
   name: test-cluster-kube-master-01
 spec:
+  cloudName: <Cloud Name>
   flavor: m1.medium
   image: <Image Name>
   keyName: cluster-api-provider-openstack
@@ -78,13 +79,14 @@ spec:
     apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
     namespace: default
     name: test-cluster-openstack-node-01
-  version: "v1.15.0"
+  version: "1.15.0"
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
 kind: OpenStackMachine
 metadata:
   name: test-cluster-openstack-node-01
 spec:
+  cloudName: <Cloud Name>
   flavor: m1.medium
   image: <Image Name>
   keyName: cluster-api-provider-openstack
