@@ -79,10 +79,10 @@ apt-get install -y \
 mv /usr/bin/kubeadm.dl /usr/bin/kubeadm
 chmod a+rx /usr/bin/kubeadm
 
-echo W0dsb2JhbF0KYXV0aC11cmw9bnVsbAp1c2VybmFtZT0ibnVsbCIKcGFzc3dvcmQ9Im51bGwiCnJlZ2lvbj0ibnVsbCIKdGVuYW50LWlkPSJudWxsIgpkb21haW4tbmFtZT0ibnVsbCIKCg== | base64 -d > /etc/kubernetes/cloud.conf
+echo $OPENSTACK_CLOUD_PROVIDER_CONF | base64 -d > /etc/kubernetes/cloud.conf
 chmod 600 /etc/kubernetes/cloud.conf
 mkdir /etc/certs
-echo  | base64 -d > /etc/certs/cacert
+echo $OPENSTACK_CLOUD_CACERT_CONFIG | base64 -d > /etc/certs/cacert
 
 systemctl daemon-reload
 systemctl restart kubelet.service
@@ -90,7 +90,7 @@ systemctl disable ufw
 systemctl mask ufw
 
 # Setup certificates
-mkdir - /etc/kubernetes/pki /etc/kubernetes/pki/etcd
+mkdir /etc/kubernetes/pki /etc/kubernetes/pki/etcd
 cat > /etc/kubernetes/pki/ca.crt <<EOF
 {{ .CACert }}
 EOF
