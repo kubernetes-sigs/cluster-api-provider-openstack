@@ -119,6 +119,7 @@ MACHINEDEPLOYMENT_GENERATED_FILE=${OUTPUT_DIR}/machinedeployment.yaml
 MACHINES_GENERATED_FILE=${OUTPUT_DIR}/machines.yaml
 
 mkdir -p "${OUTPUT_DIR}"
+mkdir -p "${CLOUDS_SECRETS_CONFIG_DIR}"
 
 # Check if the ssh key already exists. If not, generate and copy to the .ssh dir.
 if [[ ! -f ${MACHINE_CONTROLLER_SSH_PRIVATE_FILE} ]]; then
