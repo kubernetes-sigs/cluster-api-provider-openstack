@@ -350,7 +350,7 @@ func (s *Service) deleteLoadBalancerNeutronV2(id string) error {
 		}
 		// delete all members of pool
 		for _, member := range members {
-			klog.Info("Deleting lb member %s (%s)", member.Name, member.ID)
+			klog.Infof("Deleting lb member %s (%s)", member.Name, member.ID)
 			err := pools.DeleteMember(s.loadbalancerClient, pool.ID, member.ID).ExtractErr()
 			if err != nil {
 				return fmt.Errorf("error deleting lbaas member %s on pool %s: %v", member.ID, pool.ID, err)
