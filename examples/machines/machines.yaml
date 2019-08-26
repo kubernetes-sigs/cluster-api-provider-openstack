@@ -5,7 +5,7 @@ metadata:
   labels:
     cluster.x-k8s.io/cluster-name: ${CLUSTER_NAME}
 spec:
-  version: v1.15.0
+  version: ${KUBERNETES_VERSION}
   bootstrap:
     configRef:
       apiVersion: bootstrap.cluster.x-k8s.io/v1alpha2
@@ -32,6 +32,10 @@ spec:
   trunk: false
   tags:
   - a-machine-specific-tag
+  cloudName: $CLOUD
+  cloudsSecret:
+    name: cloud-config
+    namespace: capo-system
   serverMetadata:
     key: value
 ---

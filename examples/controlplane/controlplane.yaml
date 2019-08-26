@@ -34,6 +34,10 @@ spec:
   trunk: false
   tags:
   - a-machine-specific-tag
+  cloudName: $CLOUD
+  cloudsSecret:
+    name: cloud-config
+    namespace: capo-system
   serverMetadata:
     key: value
 ---
@@ -131,6 +135,10 @@ spec:
   trunk: false
   tags:
   - a-machine-specific-tag
+  cloudName: $CLOUD
+  cloudsSecret:
+    name: cloud-config
+    namespace: capo-system
   serverMetadata:
     key: value
 ---
@@ -202,6 +210,10 @@ spec:
   trunk: false
   tags:
   - a-machine-specific-tag
+  cloudName: $CLOUD
+  cloudsSecret:
+    name: cloud-config
+    namespace: capo-system
   serverMetadata:
     key: value
 ---

@@ -24,7 +24,7 @@ ENVSUBST=${ENVSUBST:-envsubst}
 command -v "${ENVSUBST}" >/dev/null 2>&1 || echo -v "Cannot find ${ENVSUBST} in path."
 
 # Cluster.
-export CLUSTER_NAME="${CLUSTER_NAME:-test1}"
+export CLUSTER_NAME="${CLUSTER_NAME:-test-cluster}"
 export KUBERNETES_VERSION="${KUBERNETES_VERSION:-v1.15.0}"
 
 # Machine settings.
@@ -75,7 +75,7 @@ fi
 
 # Check if os cloud is provided
 if [[ -n "$2" ]] && [[ $2 != -* ]] && [[ $2 != --* ]]; then
-  CLOUD=$2
+  export CLOUD=$2
 else
   echo "Error: No cloud specified"
   echo "You must specify which cloud you want to use."

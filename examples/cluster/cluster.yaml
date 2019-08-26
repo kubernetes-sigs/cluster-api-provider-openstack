@@ -23,3 +23,7 @@ metadata:
 spec:
   tags:
   - a_cluster_wide_tag
+  cloudName: $CLOUD
+  cloudsSecret:
+    name: cloud-config
+    namespace: capo-system
