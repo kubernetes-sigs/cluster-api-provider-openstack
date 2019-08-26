@@ -24,6 +24,10 @@ metadata:
 spec:
   tags:
     - a_cluster_wide_tag
+  cloudName: <Cloud Name>
+  cloudsSecret:
+    name: cloud-config
+    namespace: capo-system
   clusterConfiguration:
     controlPlaneEndpoint: <apiServerLoadBalancer or master IP>:6443
     kubernetesVersion: 1.15.0
