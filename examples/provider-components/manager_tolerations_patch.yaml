@@ -23,7 +23,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: capo-controller-manager
-  namespace: capa-system
+  namespace: capo-system
 spec:
   template:
     spec:

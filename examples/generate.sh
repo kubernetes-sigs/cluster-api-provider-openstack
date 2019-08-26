@@ -67,7 +67,7 @@ if [[ -n "$1" ]] && [[ $1 != -* ]] && [[ $1 != --* ]];then
   CLOUDS_PATH="$1"
 else
   echo "Error: No clouds.yaml provided"
-  echo "You must provide a valid clouds.yaml script to genereate a cloud.conf"
+  echo "You must provide a valid clouds.yaml script to generate a cloud.conf"
   echo ""
   print_help
   exit 1
@@ -87,7 +87,7 @@ fi
 if [[ -n "$3" ]] && [[ $3 != -* ]] && [[ $3 != --* ]]; then
   OUTPUT_DIR=$(echo $3 | tr '[:upper:]' '[:lower:]')
 else
-  echo "no output folder provided, use name 'out' by default"
+  echo "no output folder provided, use name '_out' by default"
 fi
 
 if [[ ${OVERWRITE} -ne 1 ]] && [[ -d "$OUTPUT_DIR" ]]; then
@@ -195,9 +195,7 @@ kustomize build "${SOURCE_DIR}/machines" | envsubst > "${MACHINES_GENERATED_FILE
 echo "Generated ${MACHINES_GENERATED_FILE}"
 
 # Generate Cluster API provider components file.
-#TODO(sbueringer) replace as soon as https://github.com/kubernetes-sigs/cluster-api/pull/1320 is merged
-#kustomize build "github.com/kubernetes-sigs/cluster-api//config/default/?ref=master" > "${COMPONENTS_CLUSTER_API_GENERATED_FILE}"
-kustomize build "github.com/sbueringer/cluster-api//config/default/?ref=pr-fix-kustomize" > "${COMPONENTS_CLUSTER_API_GENERATED_FILE}"
+kustomize build "github.com/kubernetes-sigs/cluster-api//config/default/?ref=master" > "${COMPONENTS_CLUSTER_API_GENERATED_FILE}"
 echo "Generated ${COMPONENTS_CLUSTER_API_GENERATED_FILE}"
 
 # Generate Kubeadm Bootstrap Provider components file.
