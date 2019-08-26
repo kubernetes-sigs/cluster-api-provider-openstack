@@ -1,0 +1,65 @@
+apiVersion: cluster.x-k8s.io/v1alpha2
+kind: Machine
+metadata:
+  name: ${CLUSTER_NAME}-node-01
+  labels:
+    cluster.x-k8s.io/cluster-name: ${CLUSTER_NAME}
+spec:
+  version: v1.15.0
+  bootstrap:
+    configRef:
+      apiVersion: bootstrap.cluster.x-k8s.io/v1alpha2
+      kind: KubeadmConfig
+      name: ${CLUSTER_NAME}-node-01
+  infrastructureRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+    kind: OpenStackMachine
+    name: ${CLUSTER_NAME}-node-01
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+kind: OpenStackMachine
+metadata:
+  name: ${CLUSTER_NAME}-node-01
+spec:
+  flavor: m1.medium
+  image: <Image Name>
+  keyName: cluster-api-provider-openstack
+  availabilityZone: nova
+  networks:
+  - uuid: <Kubernetes Network ID>
+  securityGroups:
+  - uuid: <Security Group ID>
+  trunk: false
+  tags:
+  - a-machine-specific-tag
+  serverMetadata:
+    key: value
+---
+apiVersion: bootstrap.cluster.x-k8s.io/v1alpha2
+kind: KubeadmConfig
+metadata:
+  name: ${CLUSTER_NAME}-node-01
+spec:
+  files:
+  - path: /etc/kubernetes/cloud.conf
+    owner: root
+    permissions: "0600"
+    content: |-
+      # cloud.conf to communicate with OpenStack
+      $OPENSTACK_CLOUD_PROVIDER_CONF
+  - path: /etc/certs/cacert
+    owner: root
+    permissions: "0600"
+    content: |-
+      # cacert to communicate with OpenStack
+      $OPENSTACK_CLOUD_CACERT_CONFIG
+  users:
+  - name: ubuntu
+    sshAuthorizedKeys:
+    - "$MACHINE_CONTROLLER_SSH_PUBLIC_FILE_CONTENT"
+  joinConfiguration:
+    nodeRegistration:
+      name: '{{ local_hostname }}'
+      kubeletExtraArgs:
+        cloud-provider: openstack
+        cloud-config: /etc/kubernetes/cloud.conf

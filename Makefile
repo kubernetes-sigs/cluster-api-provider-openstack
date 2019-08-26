@@ -169,22 +169,22 @@ dist: build-cross
 .PHONY: generate
 generate:
 	$(MAKE) generate-manifests
-#TODO(sbueringer) will work after we migrated to kubeadm (because there are problems generating structs with kubeadm structs embedded)
-#	$(MAKE) generate-kubebuilder-code
+	$(MAKE) generate-kubebuilder-code
 
 # Generate manifests e.g. CRD, RBAC etc.
 .PHONY: generate-manifests
-#generate-manifests: $(CONTROLLER_GEN)
-#	go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go \
-#	    paths=./api/... \
-#	    crd:trivialVersions=true \
-#	    output:crd:dir=$(CRD_ROOT) \
-#	    output:webhook:dir=$(WEBHOOK_ROOT) \
-#	    webhook
-#	go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go \
-#	    paths=./controllers/... \
-#        output:rbac:dir=$(RBAC_ROOT) \
-#        rbac:roleName=manager-role
+# TODO check
+generate-manifests: $(CONTROLLER_GEN)
+	go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go \
+	    paths=./api/... \
+	    crd:trivialVersions=true \
+	    output:crd:dir=$(CRD_ROOT) \
+	    output:webhook:dir=$(WEBHOOK_ROOT) \
+	    webhook
+	go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go \
+	    paths=./controllers/... \
+        output:rbac:dir=$(RBAC_ROOT) \
+        rbac:roleName=manager-role
 
 .PHONY: generate-kubebuilder-code
 generate-kubebuilder-code: ## Runs controller-gen

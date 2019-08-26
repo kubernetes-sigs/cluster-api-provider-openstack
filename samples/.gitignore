@@ -1,8 +1,0 @@
-out/
-provider-component/user-data/ubuntu/master-user-data.sh
-provider-component/user-data/ubuntu/worker-user-data.sh
-provider-component/user-data/centos/master-user-data.sh
-provider-component/user-data/centos/worker-user-data.sh
-provider-component/user-data/coreos/master-user-data.yaml
-provider-component/user-data/coreos/worker-user-data.yaml
-provider-component/clouds-secrets/configs/

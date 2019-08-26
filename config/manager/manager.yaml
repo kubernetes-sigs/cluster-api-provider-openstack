@@ -16,7 +16,6 @@ spec:
   selector:
     matchLabels:
       control-plane: capo-controller-manager
-  replicas: 1
   template:
     metadata:
       labels:

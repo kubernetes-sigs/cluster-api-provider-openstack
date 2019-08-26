@@ -387,9 +387,6 @@ k8s.io/client-go/util/homedir
 k8s.io/client-go/util/keyutil
 k8s.io/client-go/util/retry
 k8s.io/client-go/util/workqueue
-# k8s.io/cluster-bootstrap v0.0.0-20190711112844-b7409fb13d1b
-k8s.io/cluster-bootstrap/token/api
-k8s.io/cluster-bootstrap/token/util
 # k8s.io/code-generator v0.0.0-20190311093542-50b561225d70
 k8s.io/code-generator/cmd/client-gen
 k8s.io/code-generator/cmd/client-gen/args
