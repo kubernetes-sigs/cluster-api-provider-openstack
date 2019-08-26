@@ -21,8 +21,8 @@ GOX_PARALLEL ?= 3
 TARGETS ?= darwin/amd64 linux/amd64 linux/386 linux/arm linux/arm64 linux/ppc64le
 DIST_DIRS         = find * -type d -exec
 
-GENERATE_YAML_PATH=samples
-GENERATE_YAML_EXEC=generate-yaml.sh
+GENERATE_YAML_PATH=examples
+GENERATE_YAML_EXEC=generate.sh
 GENERATE_YAML_TEST_FOLDER=dummy-make-auto-test
 
 GOOS ?= $(shell go env GOOS)
