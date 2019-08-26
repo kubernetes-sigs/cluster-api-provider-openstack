@@ -118,8 +118,8 @@ TEMPLATES_PATH=${TEMPLATES_PATH:-$PWD/$SUPPORTED_PROVIDER_OS}
 HOME_DIR=${PWD%%/samples/*}
 CONFIG_DIR=$PWD/templates/clouds-secrets/configs
 USERDATA=$PWD/templates/user-data
-MASTER_USER_DATA=$USERDATA/$PROVIDER_OS/templates/master-user-data.sh
-WORKER_USER_DATA=$USERDATA/$PROVIDER_OS/templates/worker-user-data.sh
+MASTER_USER_DATA=$USERDATA/$PROVIDER_OS/templates/master-user-data.sh.template
+WORKER_USER_DATA=$USERDATA/$PROVIDER_OS/templates/worker-user-data.sh.template
 
 # Container Linux (simply named CoreOS here) does its configuration a bit different
 # so it gets some of its own vars here.

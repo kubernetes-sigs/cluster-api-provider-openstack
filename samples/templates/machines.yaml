@@ -50,11 +50,11 @@ metadata:
 spec:
   clusterConfiguration:
     certificatesDir: /etc/kubernetes/pki
-    controlPlaneEndpoint: "53.48.112.86:6443"
+    controlPlaneEndpoint: <End point Ip: End point Address>
     dns:
       type: "CoreDNS"
     imageRepository: "k8s.gcr.io"
-    kubernetesVersion: v1.14.2
+    kubernetesVersion: 1.15.0
     networking:
       dnsDomain: ""
       podSubnet: ""
