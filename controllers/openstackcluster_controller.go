@@ -33,7 +33,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"time"
 )
 
 const (
@@ -74,8 +73,8 @@ func (r *OpenStackClusterReconciler) Reconcile(request ctrl.Request) (_ ctrl.Res
 		return reconcile.Result{}, err
 	}
 	if cluster == nil {
-		logger.Info("Waiting for Cluster Controller to set OwnerRef on OpenStackCluster")
-		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+		logger.Info("Cluster Controller has not yet set OwnerRef")
+		return reconcile.Result{}, nil
 	}
 
 	logger = logger.WithName(fmt.Sprintf("cluster=%s", cluster.Name))

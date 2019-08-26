@@ -69,7 +69,6 @@ else
   echo "Error: No clouds.yaml provided"
   echo "You must provide a valid clouds.yaml script to generate a cloud.conf"
   echo ""
-  print_help
   exit 1
 fi
 
@@ -80,7 +79,6 @@ else
   echo "Error: No cloud specified"
   echo "You must specify which cloud you want to use."
   echo ""
-  print_help
   exit 1
 fi
 
@@ -99,7 +97,6 @@ yq_type=$(file $(which yq))
 if [[ $yq_type == *"Python script"* ]]; then
   echo "Wrong version of 'yq' installed, please install the one from https://github.com/mikefarah/yq"
   echo ""
-  print_help
   exit 1
 fi
 
@@ -177,6 +174,9 @@ if [[ "$CACERT_ORIGINAL" != "null" ]]; then
 else
   echo "dummy" > ${CLOUDS_SECRETS_CONFIG_DIR}/cacert
 fi
+
+echo $(which kustomize)
+kustomize version
 
 # Generate cluster resources.
 kustomize build "${SOURCE_DIR}/cluster" | envsubst > "${CLUSTER_GENERATED_FILE}"

@@ -22,6 +22,7 @@ import (
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog"
 	"k8s.io/utils/pointer"
@@ -31,10 +32,12 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/loadbalancer"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/provider"
-	"sigs.k8s.io/cluster-api/api/v1alpha2"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha2"
 	"sigs.k8s.io/cluster-api/util/patch"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 	"strconv"
 	"time"
 
@@ -92,8 +95,8 @@ func (r *OpenStackMachineReconciler) Reconcile(request ctrl.Request) (_ ctrl.Res
 		return reconcile.Result{}, err
 	}
 	if machine == nil {
-		logger.Info("Waiting for Machine Controller to set OwnerRef on OpenStackMachine")
-		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+		logger.Info("Machine Controller has not yet set OwnerRef")
+		return reconcile.Result{}, nil
 	}
 
 	logger = logger.WithName(fmt.Sprintf("machine=%s", machine.Name))
@@ -113,8 +116,8 @@ func (r *OpenStackMachineReconciler) Reconcile(request ctrl.Request) (_ ctrl.Res
 		Name:      cluster.Spec.InfrastructureRef.Name,
 	}
 	if err := r.Client.Get(ctx, openStackClusterName, openStackCluster); err != nil {
-		logger.Info("Waiting for OpenStackCluster")
-		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+		logger.Info("OpenStackCluster is not available yet")
+		return reconcile.Result{}, nil
 	}
 
 	logger = logger.WithName(fmt.Sprintf("openStackCluster=%s", openStackCluster.Name))
@@ -142,7 +145,7 @@ func (r *OpenStackMachineReconciler) Reconcile(request ctrl.Request) (_ ctrl.Res
 	return r.reconcileMachine(logger, machine, openStackMachine, cluster, openStackCluster)
 }
 
-func (r *OpenStackMachineReconciler) reconcileMachine(logger logr.Logger, machine *v1alpha2.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *v1alpha2.Cluster, openStackCluster *infrav1.OpenStackCluster) (_ ctrl.Result, reterr error) {
+func (r *OpenStackMachineReconciler) reconcileMachine(logger logr.Logger, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (_ ctrl.Result, reterr error) {
 	// If the OpenStackMachine is in an error state, return early.
 	if openStackMachine.Status.ErrorReason != nil || openStackMachine.Status.ErrorMessage != nil {
 		logger.Info("Error state detected, skipping reconciliation")
@@ -239,7 +242,7 @@ func (r *OpenStackMachineReconciler) reconcileMachine(logger logr.Logger, machin
 	return reconcile.Result{}, nil
 }
 
-func (r *OpenStackMachineReconciler) reconcileMachineDelete(logger logr.Logger, machine *v1alpha2.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *v1alpha2.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
+func (r *OpenStackMachineReconciler) reconcileMachineDelete(logger logr.Logger, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
 
 	klog.Infof("Deleting Machine %s/%s: %s", cluster.Namespace, cluster.Name, machine.Name)
 
@@ -290,7 +293,7 @@ func (r *OpenStackMachineReconciler) reconcileMachineDelete(logger logr.Logger, 
 	return reconcile.Result{}, nil
 }
 
-func (r *OpenStackMachineReconciler) getOrCreate(computeService *compute.Service, machine *v1alpha2.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *v1alpha2.Cluster, openStackCluster *infrav1.OpenStackCluster) (*compute.Instance, error) {
+func (r *OpenStackMachineReconciler) getOrCreate(computeService *compute.Service, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (*compute.Instance, error) {
 
 	instance, err := computeService.InstanceExists(openStackMachine)
 	if err != nil {
@@ -340,8 +343,19 @@ func getTimeout(name string, timeout int) time.Duration {
 
 func (r *OpenStackMachineReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&infrav1.OpenStackMachine{}).
-		Complete(r)
+		For(&infrav1.OpenStackMachine{}).Watches(
+		&source.Kind{Type: &clusterv1.Machine{}},
+		&handler.EnqueueRequestsFromMapFunc{
+			ToRequests: util.MachineToInfrastructureMapFunc(schema.GroupVersionKind{
+				Group:   infrav1.SchemeBuilder.GroupVersion.Group,
+				Version: infrav1.SchemeBuilder.GroupVersion.Version,
+				Kind:    "OpenStackMachine",
+			}),
+		},
+	).Watches(
+		&source.Kind{Type: &infrav1.OpenStackCluster{}},
+		&handler.EnqueueRequestsFromMapFunc{ToRequests: handler.ToRequestsFunc(r.OpenStackClusterToOpenStackMachines)},
+	).Complete(r)
 }
 
 func (r *OpenStackMachineReconciler) reconcileFloatingIP(computeService *compute.Service, networkingService *networking.Service, instance *compute.Instance, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster) error {
@@ -357,7 +371,7 @@ func (r *OpenStackMachineReconciler) reconcileFloatingIP(computeService *compute
 	return nil
 }
 
-func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, instance *compute.Instance, clusterName string, machine *v1alpha2.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster) error {
+func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, instance *compute.Instance, clusterName string, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster) error {
 	ip, err := getIPFromInstance(instance)
 	if err != nil {
 		return err
@@ -413,4 +427,29 @@ func getIPFromInstance(instance *compute.Instance) (string, error) {
 		return addrList[0], nil
 	}
 	return "", fmt.Errorf("extract IP from instance err")
+}
+
+// OpenStackClusterToOpenStackMachine is a handler.ToRequestsFunc to be used to enqeue requests for reconciliation
+// of OpenStackMachines.
+func (r *OpenStackMachineReconciler) OpenStackClusterToOpenStackMachines(o handler.MapObject) []ctrl.Request {
+	var result []ctrl.Request
+
+	c, ok := o.Object.(*infrav1.OpenStackCluster)
+	if !ok {
+		r.Log.Error(errors.Errorf("expected a OpenStackCluster but got a %T", o.Object), "failed to get OpenStackMachine for OpenStackCluster")
+		return nil
+	}
+
+	labels := map[string]string{clusterv1.MachineClusterLabelName: c.Name}
+	machineList := &infrav1.OpenStackMachineList{}
+	if err := r.List(context.Background(), machineList, client.InNamespace(c.Namespace), client.MatchingLabels(labels)); err != nil {
+		r.Log.Error(err, "failed to list OpenStackMachines", "OpenStackCluster", c.Name, "Namespace", c.Namespace)
+		return nil
+	}
+	for _, m := range machineList.Items {
+		name := client.ObjectKey{Namespace: m.Namespace, Name: m.Name}
+		result = append(result, ctrl.Request{NamespacedName: name})
+	}
+
+	return result
 }
