@@ -71,7 +71,7 @@ ifndef HAS_YQ
 endif
 	# Create a dummy file for test only
 	echo 'clouds' > dummy-clouds-test.yaml
-	$(GENERATE_YAML_PATH)/$(GENERATE_YAML_EXEC) -f dummy-clouds-test.yaml openstack ubuntu $(GENERATE_YAML_TEST_FOLDER)
+	$(GENERATE_YAML_PATH)/$(GENERATE_YAML_EXEC) -f dummy-clouds-test.yaml openstack $(GENERATE_YAML_TEST_FOLDER)
 	# the folder will be generated under same folder of $(GENERATE_YAML_PATH)
 	rm -fr $(GENERATE_YAML_PATH)/$(GENERATE_YAML_TEST_FOLDER)
 	rm dummy-clouds-test.yaml
