@@ -57,10 +57,6 @@ func NewClientFromCluster(ctrlClient client.Client, openStackCluster *infrav1.Op
 	return newClient(cloud, caCert)
 }
 
-// TODO(sbueringer) find out if this function does what we want
-// e.g. it had a bug where it didn't use the verify option of the
-// cloud parameter. Does it read the ca property from the paramenter?
-// how can a CA be set via secret? (an additional key?)
 func newClient(cloud clientconfig.Cloud, caCert []byte) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, error) {
 	clientOpts := new(clientconfig.ClientOpts)
 	if cloud.AuthInfo != nil {
