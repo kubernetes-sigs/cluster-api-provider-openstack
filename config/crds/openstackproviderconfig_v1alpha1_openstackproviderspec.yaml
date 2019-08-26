@@ -456,6 +456,40 @@ spec:
           required:
           - deviceType
           type: object
+        schedulerHints:
+          description: 'Scheduler hints to be passed to nova scheduler. This makes
+            it possible to e.g. use anti affinity. See: https://docs.openstack.org/python-openstackclient/latest/cli/command-objects/server-group.html
+            https://developer.openstack.org/api-ref/compute/?expanded=create-server-detail#create-server'
+          properties:
+            buildNearHostIP:
+              description: BuildNearHostIP specifies a subnet of compute nodes to
+                host the instance.
+              type: string
+            differentHost:
+              description: DifferentHost will place the instance on a compute node
+                that does not host the given instances.
+              items:
+                type: string
+              type: array
+            group:
+              description: Group specifies a Server Group to place the instance in.
+              type: string
+            query:
+              description: Query is a conditional statement that results in compute
+                nodes able to host the instance. Store the json format of your query
+                in this string. e.g. [">=","$free_ram_mb",1024]
+              type: string
+            sameHost:
+              description: SameHost will place the instance on a compute node that
+                hosts the given instances.
+              items:
+                type: string
+              type: array
+            targetCell:
+              description: TargetCell specifies a cell name where the instance will
+                be placed.
+              type: string
+          type: object
         securityGroups:
           description: The names of the security groups to assign to the instance
           items:

@@ -19,10 +19,11 @@ package compute
 import (
 	"encoding/base64"
 	"fmt"
+	"time"
+
 	"github.com/gophercloud/gophercloud/openstack/identity/v3/tokens"
 	"k8s.io/klog"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/services/networking"
-	"time"
 
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 
@@ -32,6 +33,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/bootfromvolume"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/schedulerhints"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	netext "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions"
@@ -215,7 +217,9 @@ func (is *Service) InstanceCreate(clusterName string, name string, clusterSpec *
 		return nil, fmt.Errorf("create new server err: %v", err)
 	}
 
-	serverCreateOpts := servers.CreateOpts{
+	var serverCreateOpts servers.CreateOptsBuilder
+
+	serverOpts := servers.CreateOpts{
 		Name:             name,
 		ImageRef:         imageID,
 		FlavorName:       config.Flavor,
@@ -250,6 +254,10 @@ func (is *Service) InstanceCreate(clusterName string, name string, clusterSpec *
 		}
 	}
 
+	serverCreateOpts, err = is.buildSchedulerHints(config, serverOpts)
+	if err != nil {
+		return nil, fmt.Errorf("Create new server err: %v", err)
+	}
 	server, err := servers.Create(is.computeClient, keypairs.CreateOptsExt{
 		CreateOptsBuilder: serverCreateOpts,
 		KeyName:           keyName,
@@ -529,4 +537,46 @@ func (is *Service) UpdateToken() error {
 		return fmt.Errorf("reAuth: %v", err)
 	}
 	return nil
+}
+
+func (Service) buildSchedulerHints(config *openstackconfigv1.OpenstackProviderSpec, opts servers.CreateOptsBuilder) (servers.CreateOptsBuilder, error) {
+	if config.SchedulerHints == nil {
+		return opts, nil
+	}
+	hints := queryFixer{
+		SchedulerHints: schedulerhints.SchedulerHints{
+			Group:           config.SchedulerHints.Group,
+			DifferentHost:   config.SchedulerHints.DifferentHost,
+			SameHost:        config.SchedulerHints.SameHost,
+			TargetCell:      config.SchedulerHints.TargetCell,
+			BuildNearHostIP: config.SchedulerHints.BuildNearHostIP,
+		},
+		Query: config.SchedulerHints.Query,
+	}
+	klog.Infof("adding schedulerHints to: %+v", hints)
+	return schedulerhints.CreateOptsExt{
+		CreateOptsBuilder: opts,
+		SchedulerHints:    hints,
+	}, nil
+}
+
+type queryFixer struct {
+	schedulerhints.SchedulerHints
+
+	Query string
+}
+
+func (opts queryFixer) ToServerSchedulerHintsCreateMap() (map[string]interface{}, error) {
+	// remove potential Query parameter from SchedulerHints
+	// Might not work with all versions of OpenStack
+	opts.SchedulerHints.Query = []interface{}{}
+
+	sh, err := opts.SchedulerHints.ToServerSchedulerHintsCreateMap()
+	if err != nil {
+		return nil, err
+	}
+	if len(opts.Query) > 0 {
+		sh["query"] = opts.Query
+	}
+	return sh, nil
 }

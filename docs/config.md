@@ -125,7 +125,7 @@ securityGroups:
 
 We don't currently have specific version requriements, and so the choice is yours. However, we do require that you have either a ubuntu image or a centos image available in your cluster. For this step, we would like to refer you to the following doccumentation, https://docs.openstack.org/image-guide/obtain-images.html.
 
-You can reference which operating system image you want to use in the machines.yaml script where it says `<Image Name>`. If you are using ubuntu, then replace `<SSH Username>` in machines.yaml with `ubuntu`. If you are using centos, then replace  `<SSH Username>` in machines.yaml with `centos`. 
+You can reference which operating system image you want to use in the machines.yaml script where it says `<Image Name>`. If you are using ubuntu, then replace `<SSH Username>` in machines.yaml with `ubuntu`. If you are using centos, then replace  `<SSH Username>` in machines.yaml with `centos`.
 
 ## Subnets
 Rather than just using a network, you have the option of specifying a specific subnet to connect your server to. The following is an example of how to specify a specific subnet of a network to use for a server.
@@ -257,6 +257,113 @@ Instead of tagging, you also have the option to add metadata to instances. This 
         serverMetadata:
           name: bob
           nickname: bobbert
+```
+
+
+## Scheduler hints
+OpenStack provides a way to define scheduler hints, which is useful to implement affinity/anti affinity. See [Nova Filter Scheduler](https://docs.openstack.org/nova/rocky/user/filter-scheduler.html) for more information.
+
+```yaml
+- apiVersion: "cluster.k8s.io/v1alpha1"
+  kind: Machine
+  metadata:
+    generateName: openstack-node-
+    labels:
+      set: node
+  spec:
+    providerSpec:
+      value:
+        schedulerHints:
+          group: uuid of server group
+          differentHost:
+          - UUID1
+          - UUID2
+          - ...
+          sameHost:
+          - ...
+          query: |-
+            ["and",
+             [">=","$free_ram_mb","1024"],
+             [">=","$free_disk_mb","2048"]]
+```
+
+Be aware, all of the hints depend on the setup of your cloud provider. So some filters might not work in your environment.
+
+
+This example shows you how to build anti affinity for a `MachineDeployment`.
+
+First you must create a [Server Group](https://docs.openstack.org/python-openstackclient/latest/cli/command-objects/server-group.html)
+```
+$ openstack server group create sg01 --policy anti-affinity
++--------------------------------------+------+------------+---------+-------------------+---------+----------+
+| Id                                   | Name | Project Id | User Id | Policies          | Members | Metadata |
++--------------------------------------+------+------------+---------+-------------------+---------+----------+
+| 54a88567-20ae-467e-8210-3474e54ed168 | sg01 | ...        | ...     | ['anti-affinity'] | []      | {}       |
++--------------------------------------+------+------------+---------+-------------------+---------+----------+
+```
+
+You must reference this Server Group in the definition of your `MachineDeployment`
+
+```yaml
+apiVersion: cluster.k8s.io/v1alpha1
+kind: MachineDeployment
+metadata:
+  labels:
+    set: node
+  name: test
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      set: node
+      deployment: test
+  template:
+    metadata:
+      labels:
+        set: node
+        deployment: test
+    spec:
+      providerSpec:
+        value:
+          apiVersion: openstackproviderconfig/v1alpha1
+          availabilityZone: nova
+          flavor: m1.micro
+          image: Ubuntu 18.04 Bionic Beaver - Latest
+          keyName: cluster-api-provider-openstack
+          kind: OpenstackProviderSpec
+          networks:
+          - uuid: 964dc69d-3aef-473e-a500-18abc5b9b76f
+          securityGroups:
+          - uuid: f2c2ff1a-6049-42c7-99ff-06b9a04e56bd
+          - uuid: 3108f6de-0785-4c23-b316-7d8c1b823b20
+          sshUserName: ubuntu
+          schedulerHints:
+            group: 54a88567-20ae-467e-8210-3474e54ed168
+          userDataSecret:
+            name: worker-user-data
+            namespace: openstack-provider-system
+      versions:
+        kubelet: 1.13.4
+```
+
+Be aware. The policy `anti-affinity` really means hard anti affinity. Thus, you can't create more VMs in a single Server Group than your cloud provider runs hypervisors in `availabilityZone`. All VMs that don't fit into the Server Group will land in `ERROR` state.
+
+```
+$ openstack server list
++--------------------------------------+-------------------------------+--------+---------------------------+-------------------------------------+-----------+
+| ID                                   | Name                          | Status | Networks                  | Image                               | Flavor    |
++--------------------------------------+-------------------------------+--------+---------------------------+-------------------------------------+-----------+
+| 34930b07-6c10-4b5b-98c9-eb42b044d02c | test-84bccdfb7b-4966r         | ERROR  |                           | Ubuntu 18.04 Bionic Beaver - Latest | m1.micro  |
++--------------------------------------+-------------------------------+--------+---------------------------+-------------------------------------+-----------+
+$ openstack server show 34930b07-6c10-4b5b-98c9-eb42b044d02c
++-----------------------------+-------------------------------------------------------------------------------------------------------------------------------+
+| Field                       | Value                                                                                                                         |
++-----------------------------+-------------------------------------------------------------------------------------------------------------------------------+
+| fault                       | {'message': 'No valid host was found. There are not enough hosts available.', 'code': 500, 'created': '2019-03-25T15:43:20Z'} |
+| status                      | ERROR                                                                                                                         |
+| ...                         |                                                                                                                               |
++-----------------------------+-------------------------------------------------------------------------------------------------------------------------------+
 ```
 
 # Optional Configuration
