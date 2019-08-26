@@ -9,9 +9,5 @@ secretGenerator:
     - clouds.yaml=configs/clouds.yaml
     - cacert=configs/cacert
   type: Opaque
-- name: cloud-selector
-  files:
-    - OS_CLOUD=configs/os_cloud.txt
-  type: Opaque
 
 namespace: ${CLUSTER_NAME}

@@ -136,6 +136,9 @@ PASSWORD=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.${CLOUD}.auth.pa
 REGION=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.${CLOUD}.region_name)
 PROJECT_ID=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.${CLOUD}.auth.project_id)
 DOMAIN_NAME=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.${CLOUD}.auth.user_domain_name)
+if [[ "$DOMAIN_NAME" = "null" ]]; then
+  DOMAIN_NAME=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.${CLOUD}.auth.domain_name)
+fi
 CACERT_ORIGINAL=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.${CLOUD}.cacert)
 
 # Basic cloud.conf, no LB configuration as that data is not known yet.
@@ -143,13 +146,17 @@ export OPENSTACK_CLOUD_PROVIDER_CONF="[Global]
       auth-url=$AUTH_URL
       username=\"$USERNAME\"
       password=\"$PASSWORD\"
-      region=\"$REGION\"
       tenant-id=\"$PROJECT_ID\"
       domain-name=\"$DOMAIN_NAME\"
 "
 if [[ "$CACERT_ORIGINAL" != "null" ]]; then
   OPENSTACK_CLOUD_PROVIDER_CONF="$OPENSTACK_CLOUD_PROVIDER_CONF
         ca-file=\"${CACERT_ORIGINAL}\"
+  "
+fi
+if [[ "$REGION" != "null" ]]; then
+  OPENSTACK_CLOUD_PROVIDER_CONF="$OPENSTACK_CLOUD_PROVIDER_CONF
+        region=\"${REGION}\"
   "
 fi
 OS=$(uname)
@@ -167,7 +174,7 @@ else
   echo "Unrecognized OS : $OS"
   exit 1
 fi
-printf ${CLOUD} > ${CLOUDS_SECRETS_CONFIG_DIR}/os_cloud.txt
+
 echo "${OPENSTACK_CLOUD_CONFIG_PLAIN}" > ${CLOUDS_SECRETS_CONFIG_DIR}/clouds.yaml
 if [[ "$CACERT_ORIGINAL" != "null" ]]; then
   cat "$CACERT_ORIGINAL" > ${CLOUDS_SECRETS_CONFIG_DIR}/cacert

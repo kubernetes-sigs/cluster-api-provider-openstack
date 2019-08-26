@@ -1,3 +1,6 @@
+#####################################################
+# ${CLUSTER_NAME}-node-01
+#####################################################
 apiVersion: cluster.x-k8s.io/v1alpha2
 kind: Machine
 metadata:
@@ -30,18 +33,15 @@ spec:
   keyName: cluster-api-provider-openstack
   availabilityZone: nova
   networks:
-  - uuid: <Kubernetes Network ID>
-  securityGroups:
-  - uuid: <Security Group ID>
-  trunk: false
-  tags:
-  - a-machine-specific-tag
+  - filter:
+      name: k8s-clusterapi-cluster-${CLUSTER_NAME}-${CLUSTER_NAME}
+    subnets:
+    - filter:
+        name: k8s-clusterapi-cluster-${CLUSTER_NAME}-${CLUSTER_NAME}
   cloudName: $CLOUD
   cloudsSecret:
     name: cloud-config
     namespace: ${CLUSTER_NAME}
-  serverMetadata:
-    key: value
 ---
 apiVersion: bootstrap.cluster.x-k8s.io/v1alpha2
 kind: KubeadmConfig
@@ -61,6 +61,8 @@ spec:
     content: |-
       # cacert to communicate with OpenStack
       $OPENSTACK_CLOUD_CACERT_CONFIG
+  ntp:
+    servers: []
   users:
   - name: ubuntu
     sshAuthorizedKeys:

@@ -1,3 +1,6 @@
+#####################################################
+# ${CLUSTER_NAME}-controlplane-0
+#####################################################
 apiVersion: cluster.x-k8s.io/v1alpha2
 kind: Machine
 metadata:
@@ -31,21 +34,20 @@ spec:
   keyName: cluster-api-provider-openstack
   availabilityZone: nova
   networks:
-  - uuid: <Kubernetes Network ID>
-  # if a single control plane cluster is setup and floatingIP is set
-  # Cluster.spec.clusterNetwork.apiServerPort must also be set
-  #floatingIP: <Floating IP (only set if not using an APIServer LB>
-  securityGroups:
-  - uuid: <Security Group ID>
-  trunk: false
-  tags:
-  - a-machine-specific-tag
+  - filter:
+      name: k8s-clusterapi-cluster-${CLUSTER_NAME}-${CLUSTER_NAME}
+    subnets:
+    - filter:
+        name: k8s-clusterapi-cluster-${CLUSTER_NAME}-${CLUSTER_NAME}
+  # multi-node control-plane:
+  # * Disable the floatingIP property
+  # single-node control-plane:
+  # * Enable the floatingIP property
+  #floatingIP: <floating IP>
   cloudName: $CLOUD
   cloudsSecret:
     name: cloud-config
     namespace: ${CLUSTER_NAME}
-  serverMetadata:
-    key: value
 ---
 apiVersion: bootstrap.cluster.x-k8s.io/v1alpha2
 kind: KubeadmConfig
@@ -66,6 +68,8 @@ spec:
     content: |-
       # cacert to communicate with OpenStack
       $OPENSTACK_CLOUD_CACERT_CONFIG
+  ntp:
+    servers: []
   users:
   - name: ubuntu
     sshAuthorizedKeys:
@@ -80,7 +84,12 @@ spec:
         cloud-provider: openstack
         cloud-config: /etc/kubernetes/cloud.conf
   clusterConfiguration:
-    controlPlaneEndpoint: "<loadbalancer or control plane floating ip>:6443"
+    # multi-node control-plane:
+    # * Configure the floating ip of the loadbalancer
+    # single-node control-plane:
+    # * Configure the floating ip of the (only) control
+    #   plane node
+    controlPlaneEndpoint: "<floating ip>:6443"
     kubernetesVersion: 1.15.0
     imageRepository: k8s.gcr.io
     apiServer:
@@ -105,8 +114,10 @@ spec:
         hostPath: /etc/certs/cacert
         mountPath: /etc/certs/cacert
         readOnly: true
-
 ---
+#####################################################
+# ${CLUSTER_NAME}-controlplane-1
+#####################################################
 apiVersion: cluster.x-k8s.io/v1alpha2
 kind: Machine
 metadata:
@@ -139,18 +150,15 @@ spec:
   keyName: cluster-api-provider-openstack
   availabilityZone: nova
   networks:
-  - uuid: <Kubernetes Network ID>
-  securityGroups:
-  - uuid: <Security Group ID>
-  trunk: false
-  tags:
-  - a-machine-specific-tag
+  - filter:
+      name: k8s-clusterapi-cluster-${CLUSTER_NAME}-${CLUSTER_NAME}
+    subnets:
+    - filter:
+        name: k8s-clusterapi-cluster-${CLUSTER_NAME}-${CLUSTER_NAME}
   cloudName: $CLOUD
   cloudsSecret:
     name: cloud-config
     namespace: ${CLUSTER_NAME}
-  serverMetadata:
-    key: value
 ---
 apiVersion: bootstrap.cluster.x-k8s.io/v1alpha2
 kind: KubeadmConfig
@@ -171,6 +179,8 @@ spec:
     content: |-
       # cacert to communicate with OpenStack
       $OPENSTACK_CLOUD_CACERT_CONFIG
+  ntp:
+    servers: []
   users:
   - name: ubuntu
     sshAuthorizedKeys:
@@ -186,6 +196,9 @@ spec:
         cloud-provider: openstack
         cloud-config: /etc/kubernetes/cloud.conf
 ---
+#####################################################
+# ${CLUSTER_NAME}-controlplane-2
+#####################################################
 apiVersion: cluster.x-k8s.io/v1alpha2
 kind: Machine
 metadata:
@@ -219,18 +232,15 @@ spec:
   keyName: cluster-api-provider-openstack
   availabilityZone: nova
   networks:
-  - uuid: <Kubernetes Network ID>
-  securityGroups:
-  - uuid: <Security Group ID>
-  trunk: false
-  tags:
-  - a-machine-specific-tag
+  - filter:
+      name: k8s-clusterapi-cluster-${CLUSTER_NAME}-${CLUSTER_NAME}
+    subnets:
+    - filter:
+        name: k8s-clusterapi-cluster-${CLUSTER_NAME}-${CLUSTER_NAME}
   cloudName: $CLOUD
   cloudsSecret:
     name: cloud-config
     namespace: ${CLUSTER_NAME}
-  serverMetadata:
-    key: value
 ---
 apiVersion: bootstrap.cluster.x-k8s.io/v1alpha2
 kind: KubeadmConfig
@@ -251,6 +261,8 @@ spec:
     content: |-
       # cacert to communicate with OpenStack
       $OPENSTACK_CLOUD_CACERT_CONFIG
+  ntp:
+    servers: []
   users:
   - name: ubuntu
     sshAuthorizedKeys:
