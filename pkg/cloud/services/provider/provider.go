@@ -57,6 +57,10 @@ func NewClientFromCluster(ctrlClient client.Client, openStackCluster *infrav1.Op
 	return newClient(cloud, caCert)
 }
 
+// TODO(sbueringer) find out if this function does what we want
+// e.g. it had a bug where it didn't use the verify option of the
+// cloud parameter. Does it read the ca property from the paramenter?
+// how can a CA be set via secret? (an additional key?)
 func newClient(cloud clientconfig.Cloud, caCert []byte) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, error) {
 	clientOpts := new(clientconfig.ClientOpts)
 	if cloud.AuthInfo != nil {
@@ -77,20 +81,13 @@ func newClient(cloud clientconfig.Cloud, caCert []byte) (*gophercloud.ProviderCl
 		return nil, nil, fmt.Errorf("create providerClient err: %v", err)
 	}
 
-	config := &tls.Config{}
-	cloudFromYaml, err := clientconfig.GetCloudFromYAML(clientOpts)
-	if cloudFromYaml != nil {
-		if cloudFromYaml.CACertFile != "" {
-			caCertPool := x509.NewCertPool()
-			caCertPool.AppendCertsFromPEM(caCert)
-			config.RootCAs = caCertPool
-		}
-		config.InsecureSkipVerify = !*cloudFromYaml.Verify
+	config := &tls.Config{
+		RootCAs:            x509.NewCertPool(),
+		InsecureSkipVerify: !*cloud.Verify,
 	}
+	config.RootCAs.AppendCertsFromPEM(caCert)
 
-	transport := &http.Transport{Proxy: http.ProxyFromEnvironment, TLSClientConfig: config}
-	provider.HTTPClient.Transport = transport
-
+	provider.HTTPClient.Transport = &http.Transport{Proxy: http.ProxyFromEnvironment, TLSClientConfig: config}
 	err = openstack.Authenticate(provider, *opts)
 	if err != nil {
 		return nil, nil, fmt.Errorf("providerClient authentication err: %v", err)
