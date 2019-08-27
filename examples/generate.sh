@@ -113,6 +113,7 @@ PROVIDER_COMPONENTS_GENERATED_FILE=${OUTPUT_DIR}/provider-components.yaml
 CLUSTER_GENERATED_FILE=${OUTPUT_DIR}/cluster.yaml
 CONTROLPLANE_GENERATED_FILE=${OUTPUT_DIR}/controlplane.yaml
 MACHINEDEPLOYMENT_GENERATED_FILE=${OUTPUT_DIR}/machinedeployment.yaml
+WORKER_GENERATED_FILE=${OUTPUT_DIR}/worker.yaml
 MACHINES_GENERATED_FILE=${OUTPUT_DIR}/machines.yaml
 
 mkdir -p "${OUTPUT_DIR}"
@@ -195,7 +196,15 @@ echo "Generated ${CONTROLPLANE_GENERATED_FILE}"
 #echo "Generated ${MACHINEDEPLOYMENT_GENERATED_FILE}"
 
 # Generate machines resources.
-kustomize build "${SOURCE_DIR}/machines" --reorder=none | envsubst > "${MACHINES_GENERATED_FILE}"
+kustomize build "${SOURCE_DIR}/machines" --reorder=none | envsubst > "${WORKER_GENERATED_FILE}"
+echo "Generated ${WORKER_GENERATED_FILE}"
+
+cat ${CONTROLPLANE_GENERATED_FILE} > ${MACHINES_GENERATED_FILE}
+echo "---" >> ${MACHINES_GENERATED_FILE}
+#cat ${MACHINEDEPLOYMENT_GENERATED_FILE} >> ${MACHINES_GENERATED_FILE}
+echo "---" >> ${MACHINES_GENERATED_FILE}
+cat ${WORKER_GENERATED_FILE} >> ${MACHINES_GENERATED_FILE}
+echo "---" >> ${MACHINES_GENERATED_FILE}
 echo "Generated ${MACHINES_GENERATED_FILE}"
 
 # Generate Cluster API provider components file.
@@ -215,6 +224,6 @@ kustomize build "${SOURCE_DIR}/clouds-secrets" --reorder=none | envsubst > "${CO
 echo "Generated ${COMPONENTS_OPENSTACK_CLOUDS_SECRETS_GENERATED_FILE}"
 
 # Generate a single provider components file.
-kustomize build "${SOURCE_DIR}/provider-components" --reorder=none | envsubst > "${PROVIDER_COMPONENTS_GENERATED_FILE}"
+kustomize build "${SOURCE_DIR}/provider-components"| envsubst > "${PROVIDER_COMPONENTS_GENERATED_FILE}"
 echo "Generated ${PROVIDER_COMPONENTS_GENERATED_FILE}"
 echo "WARNING: ${PROVIDER_COMPONENTS_GENERATED_FILE} includes OpenStack credentials"

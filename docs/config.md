@@ -20,12 +20,13 @@
   - [Boot From Volume](#boot-from-volume)
   - [Timeout settings](#timeout-settings)
   - [Use machinedeployment as additional worker nodes](#use-machinedeployment-as-additional-worker-nodes)
+  - [Custom CAs](#custom-cas)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Required Configuration
 
-To succesfully run a kubernetes cluster in openstack, you will need to configure a few essential properties, then ensure that they are added to your machines.yaml file. The following components are necessary:
+To successfully run a kubernetes cluster in openstack, you will need to configure a few essential properties, then ensure that they are added to your machines.yaml file. The following components are necessary:
   - private network
   - public network
   - floating ip address
@@ -94,6 +95,16 @@ openstack security group rule create --egress kubernetes
 ```
 
 ## Security Groups
+
+In `OpenStackCluster` (cluster.yaml) there is a boolean option called `managedSecurityGroups` that, if set to `true`, will create a default set of security groups for the cluster. These are meant for a "standard" setup, and might not be suitable for every environment. Please review the rules below before you use them.
+
+**NOTE**: For now, there is no way to automatically use these rules, which makes them a bit cumbersome to use, this will be possible in the near future.
+
+The rules created are:
+
+* A rule for the controlplane machine, that allows access from everywhere to port 22 and 443.
+* A rule for all the machines, both the controlplane and the nodes that allow all traffic between members of this group.
+
 In machines.yaml, you can specify openstack security groups to be applied to each server in the `securityGroups` section of the YAML. You can specify the security group in 3 ways: by ID, by Name, or by filters. When you specify a security group by ID it will always return 1 security group or an error if it fails to find the security group specified. Please note that it is possible to add more than one security group to your machine when using Name or a Filter to specify it. The following filters are available to you:
 
   - TenantID
@@ -123,7 +134,7 @@ securityGroups:
 
 ## Operating System Images
 
-We don't currently have specific version requriements, and so the choice is yours. However, we do require that you have either a ubuntu image or a centos image available in your cluster. For this step, we would like to refer you to the following doccumentation, https://docs.openstack.org/image-guide/obtain-images.html.
+We don't currently have specific version requirements, and so the choice is yours. However, we do require that you have either a ubuntu image or a centos image available in your cluster. For this step, we would like to refer you to the following documentation, https://docs.openstack.org/image-guide/obtain-images.html.
 
 You can reference which operating system image you want to use in the machines.yaml script where it says `<Image Name>`. If you are using ubuntu, then replace `<SSH Username>` in machines.yaml with `ubuntu`. If you are using centos, then replace  `<SSH Username>` in machines.yaml with `centos`. 
 
@@ -347,3 +358,9 @@ NAME                     PROVIDERID                                           PH
 openstack-master-g8vrl   openstack:////a87b5caf-8fc5-4943-b0b3-e8743c138c64
 openstack-node-6b2v7     openstack:////6c8efe5f-e993-430e-a60b-f20f29560240
 ```
+
+#### Custom pod network CIDR
+
+If `192.168.0.0/16` is already in use within your network, you must select a different pod network CIDR. You have to adjust the CIDR `192.168.0.0/16` with your own in:
+* [examples/addons.yaml](../examples/addons.yaml) 
+* [examples/_out/cluster.yaml](../examples/_out/cluster.yaml)
