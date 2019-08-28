@@ -1,0 +1,56 @@
+---
+apiVersion: cluster.x-k8s.io/v1alpha2
+kind: Cluster
+metadata:
+  name: ${CLUSTER_NAME}
+  namespace: ${CLUSTER_NAME}
+spec:
+  clusterNetwork:
+    services:
+      cidrBlocks: ["10.96.0.0/12"]
+    pods:
+      cidrBlocks: ["192.168.0.0/16"]
+    serviceDomain: "cluster.local"
+    # multi-node control-plane:
+    # * Disable the apiServerPort property
+    # single-node control-plane:
+    # * Enable the apiServerPort property
+    #apiServerPort: 6443
+  infrastructureRef:
+    kind: OpenStackCluster
+    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+    name: ${CLUSTER_NAME}
+    namespace: ${CLUSTER_NAME}
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+kind: OpenStackCluster
+metadata:
+  name: ${CLUSTER_NAME}
+  namespace: ${CLUSTER_NAME}
+spec:
+  cloudName: $CLOUD
+  cloudsSecret:
+    name: cloud-config
+    namespace: ${CLUSTER_NAME}
+  nodeCidr: <node-cidr>
+  # multi-node control-plane:
+  # * Enable the following section to use a Loadbalancer
+  #   which is required for multi-node control plane
+  # single-node control-plane:
+  # * Disable the following section to deploy a single node
+  #   control plane
+  managedAPIServerLoadBalancer: true
+  apiServerLoadBalancerFloatingIP: <loadbalancer floating ip>
+  apiServerLoadBalancerPort: 6443
+  apiServerLoadBalancerAdditionalPorts:
+  - 22
+  dnsNameservers: []
+  # multi-node control-plane:
+  # * externalNetworkId is required for:
+  #   * creating routers
+  #   * creating floating ips
+  #   * creating load balancer
+  externalNetworkId: <external-network-id>
+  managedSecurityGroups: false
+  disablePortSecurity: true
+  disableServerTags: true

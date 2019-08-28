@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Build the manager binary
-#FROM golang:1.12.7 as builder
+#FROM golang:1.12.9 as builder
 #
 ## Copy in the go src
 #WORKDIR ${GOPATH}/src/sigs.k8s.io/cluster-api-provider-openstack
@@ -39,7 +39,7 @@
 #ENTRYPOINT ["/manager"]
 
 # Build the manager binary
-FROM golang:1.12.7
+FROM golang:1.12.9
 
 # default the go proxy
 ARG goproxy=https://proxy.golang.org

@@ -12,7 +12,7 @@ namePrefix: capo-
 #commonLabels:
 #  someName: someValue
 
-bases:
+resources:
 - ../crd
 - ../rbac
 - ../manager

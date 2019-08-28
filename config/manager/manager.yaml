@@ -16,7 +16,6 @@ spec:
   selector:
     matchLabels:
       control-plane: capo-controller-manager
-  replicas: 1
   template:
     metadata:
       labels:
@@ -26,17 +25,4 @@ spec:
       - name: manager
         image: controller:latest
         imagePullPolicy: Always
-        volumeMounts:
-          - name: cloud-config
-            mountPath: /etc/openstack
-        env:
-          - name: OS_CLOUD
-            valueFrom:
-              secretKeyRef:
-                name: cloud-selector
-                key: OS_CLOUD
-      volumes:
-        - name: cloud-config
-          secret:
-            secretName: cloud-config
       terminationGracePeriodSeconds: 10

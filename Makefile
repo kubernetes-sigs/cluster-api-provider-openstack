@@ -11,19 +11,15 @@ RBAC_ROOT ?= "$(MANIFEST_ROOT)/rbac"
 GIT_HOST = sigs.k8s.io
 PWD := $(shell pwd)
 BASE_DIR := $(shell basename $(PWD))
-TESTARGS_DEFAULT := "-v"
-export TESTARGS ?= $(TESTARGS_DEFAULT)
 
 HAS_LINT := $(shell command -v golint;)
 HAS_GOX := $(shell command -v gox;)
 HAS_YQ := $(shell command -v yq;)
+HAS_KUSTOMIZE := $(shell command -v kustomize;)
+HAS_ENVSUBST := $(shell command -v envsubst;)
 GOX_PARALLEL ?= 3
 TARGETS ?= darwin/amd64 linux/amd64 linux/386 linux/arm linux/arm64 linux/ppc64le
 DIST_DIRS         = find * -type d -exec
-
-GENERATE_YAML_PATH=samples
-GENERATE_YAML_EXEC=generate-yaml.sh
-GENERATE_YAML_TEST_FOLDER=dummy-make-auto-test
 
 GOOS ?= $(shell go env GOOS)
 VERSION ?= $(shell git describe --exact-match 2> /dev/null || \
@@ -40,9 +36,6 @@ PULL_POLICY ?= Always
 # Used in docker-* targets.
 MANAGER_IMAGE ?= $(REGISTRY)/$(MANAGER_IMAGE_NAME):$(MANAGER_IMAGE_TAG)
 
-.PHONY: vendor
-vendor: ## Runs go mod to ensure proper vendoring.
-	./hack/update-vendor.sh
 
 build: binary images
 
@@ -60,27 +53,7 @@ clusterctl:
 		-o bin/clusterctl \
 		cmd/clusterctl/main.go
 
-test: unit functional generate_yaml_test
-
 check: vendor fmt vet lint
-
-generate_yaml_test:
-ifndef HAS_YQ
-	go get github.com/mikefarah/yq
-	echo "installing yq"
-endif
-	# Create a dummy file for test only
-	echo 'clouds' > dummy-clouds-test.yaml
-	$(GENERATE_YAML_PATH)/$(GENERATE_YAML_EXEC) -f dummy-clouds-test.yaml openstack ubuntu $(GENERATE_YAML_TEST_FOLDER)
-	# the folder will be generated under same folder of $(GENERATE_YAML_PATH)
-	rm -fr $(GENERATE_YAML_PATH)/$(GENERATE_YAML_TEST_FOLDER)
-	rm dummy-clouds-test.yaml
-
-unit: generate vendor
-	go test -tags=unit ./pkg/... ./cmd/... $(TESTARGS)
-
-functional:
-	@echo "$@ not yet implemented"
 
 fmt:
 	hack/verify-gofmt.sh
@@ -119,15 +92,6 @@ env:
 	go version
 	go env
 
-clean:
-	rm -rf _dist bin/manager bin/clusterctl
-
-realclean: clean
-	rm -rf vendor
-	if [ "$(GOPATH)" = "$(GOPATH_DEFAULT)" ]; then \
-		rm -rf $(GOPATH); \
-	fi
-
 shell:
 	$(SHELL) -i
 
@@ -165,32 +129,108 @@ dist: build-cross
 		$(DIST_DIRS) zip -r cluster-api-provider-openstack-$(VERSION)-{}.zip {} \; \
 	)
 
-# Generate code
+# TODO(sbueringer) target below are already cleaned up after v1alpha2 refactoring
+# targets above have to be cleaned up
+
+## --------------------------------------
+## Testing
+## --------------------------------------
+
+.PHONY: test
+test: generate lint ## Run tests
+	$(MAKE) test-go
+	$(MAKE) test-generate-examples
+
+.PHONY: test-go
+test-go: ## Run tests
+	go test -v -tags=unit ./api/... ./pkg/... ./controllers/...
+
+test-generate-examples:
+ifndef HAS_YQ
+	go get github.com/mikefarah/yq
+	echo "installing yq"
+endif
+ifndef HAS_KUSTOMIZE
+	GO111MODULE=on go get sigs.k8s.io/kustomize/v3/cmd/kustomize
+	echo "installing kustomize"
+endif
+ifndef HAS_ENVSUBST
+	go get github.com/a8m/envsubst/cmd/envsubst
+	echo "installing envsubst"
+endif
+	# Create a dummy file for test only
+	mkdir tmp
+	echo 'clouds' > tmp/dummy-clouds-test.yaml
+	examples/generate.sh -f tmp/dummy-clouds-test.yaml openstack tmp/dummy-make-auto-test
+	# the folder will be generated under same folder of examples
+	rm -rf tmp/dummy-make-auto-test
+	rm tmp/dummy-clouds-test.yaml
+
+## --------------------------------------
+## Generate
+## --------------------------------------
+
+.PHONY: vendor
+vendor: ## Runs go mod to ensure proper vendoring.
+	./hack/update-vendor.sh
+
 .PHONY: generate
-generate:
+generate: ## Generate code
+	$(MAKE) generate-go
 	$(MAKE) generate-manifests
-#TODO(sbueringer) will work after we migrated to kubeadm (because there are problems generating structs with kubeadm structs embedded)
-#	$(MAKE) generate-kubebuilder-code
+	$(MAKE) generate-deepcopy
 
-# Generate manifests e.g. CRD, RBAC etc.
+.PHONY: generate-go
+generate-go: ## Runs go generate
+	go generate ./pkg/... ./cmd/...
+
 .PHONY: generate-manifests
-#generate-manifests: $(CONTROLLER_GEN)
-#	go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go \
-#	    paths=./api/... \
-#	    crd:trivialVersions=true \
-#	    output:crd:dir=$(CRD_ROOT) \
-#	    output:webhook:dir=$(WEBHOOK_ROOT) \
-#	    webhook
-#	go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go \
-#	    paths=./controllers/... \
-#        output:rbac:dir=$(RBAC_ROOT) \
-#        rbac:roleName=manager-role
+generate-manifests: ## Generate manifests e.g. CRD, RBAC etc.
+	go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go \
+		paths=./api/... \
+		crd:trivialVersions=true \
+		output:crd:dir=$(CRD_ROOT) \
+		output:webhook:dir=$(WEBHOOK_ROOT) \
+		webhook
+	go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go \
+		paths=./controllers/... \
+		output:rbac:dir=$(RBAC_ROOT) \
+		rbac:roleName=manager-role
 
-.PHONY: generate-kubebuilder-code
-generate-kubebuilder-code: ## Runs controller-gen
+.PHONY: generate-deepcopy
+generate-deepcopy: ## Runs controller-gen to generate deepcopy files.
 	go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go \
 		paths=./api/... \
 		object:headerFile=./hack/boilerplate/boilerplate.generatego.txt
 
-.PHONY: build clean cover vendor docs fmt functional lint realclean \
-	relnotes test translation version build-cross dist manifests
+.PHONY: generate-examples
+generate-examples: clean-examples ## Generate examples configurations to run a cluster.
+	./examples/generate.sh
+
+## --------------------------------------
+## Cleanup / Verification
+## --------------------------------------
+
+.PHONY: clean
+clean: ## Remove all generated files
+	$(MAKE) clean-bin
+	$(MAKE) clean-temporary
+
+.PHONY: clean-bin
+clean-bin: ## Remove all generated binaries
+	rm -rf bin
+
+.PHONY: clean-temporary
+clean-temporary: ## Remove all temporary files and folders
+	rm -f minikube.kubeconfig
+	rm -f kubeconfig
+	rm -rf out/
+
+.PHONY: clean-examples
+clean-examples: ## Remove all the temporary files generated in the examples folder
+	rm -rf examples/_out/
+	rm -f examples/provider-components/provider-components-*.yaml
+
+
+.PHONY: build clean cover vendor docs fmt functional lint \
+	translation version build-cross dist manifests

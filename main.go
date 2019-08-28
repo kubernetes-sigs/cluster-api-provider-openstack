@@ -30,7 +30,7 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/klog"
 	"k8s.io/klog/klogr"
-	infrastructurev1alpha2 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha2"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha2"
 	"sigs.k8s.io/cluster-api-provider-openstack/controllers"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha2"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -44,8 +44,8 @@ var (
 
 func init() {
 	_ = clientgoscheme.AddToScheme(scheme)
+	_ = infrav1.AddToScheme(scheme)
 	_ = clusterv1.AddToScheme(scheme)
-	_ = infrastructurev1alpha2.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 }
 
@@ -101,6 +101,7 @@ func main() {
 	if err = (&controllers.OpenStackMachineReconciler{
 		Client: mgr.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("OpenStackMachine"),
+		//Recorder: mgr.GetEventRecorderFor("openstackmachine-controller"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "OpenStackMachine")
 		os.Exit(1)
@@ -108,6 +109,7 @@ func main() {
 	if err = (&controllers.OpenStackClusterReconciler{
 		Client: mgr.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("OpenStackCluster"),
+		//Recorder: mgr.GetEventRecorderFor("openstackcluster-controller"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "OpenStackCluster")
 		os.Exit(1)

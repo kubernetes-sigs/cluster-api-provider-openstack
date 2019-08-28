@@ -1,0 +1,75 @@
+#####################################################
+# ${CLUSTER_NAME}-node-01
+#####################################################
+apiVersion: cluster.x-k8s.io/v1alpha2
+kind: Machine
+metadata:
+  name: ${CLUSTER_NAME}-node-01
+  namespace: ${CLUSTER_NAME}
+  labels:
+    cluster.x-k8s.io/cluster-name: ${CLUSTER_NAME}
+spec:
+  version: ${KUBERNETES_VERSION}
+  bootstrap:
+    configRef:
+      apiVersion: bootstrap.cluster.x-k8s.io/v1alpha2
+      kind: KubeadmConfig
+      name: ${CLUSTER_NAME}-node-01
+      namespace: ${CLUSTER_NAME}
+  infrastructureRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+    kind: OpenStackMachine
+    name: ${CLUSTER_NAME}-node-01
+    namespace: ${CLUSTER_NAME}
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+kind: OpenStackMachine
+metadata:
+  name: ${CLUSTER_NAME}-node-01
+  namespace: ${CLUSTER_NAME}
+spec:
+  flavor: m1.medium
+  image: <Image Name>
+  keyName: cluster-api-provider-openstack
+  availabilityZone: nova
+  networks:
+  - filter:
+      name: k8s-clusterapi-cluster-${CLUSTER_NAME}-${CLUSTER_NAME}
+    subnets:
+    - filter:
+        name: k8s-clusterapi-cluster-${CLUSTER_NAME}-${CLUSTER_NAME}
+  cloudName: $CLOUD
+  cloudsSecret:
+    name: cloud-config
+    namespace: ${CLUSTER_NAME}
+---
+apiVersion: bootstrap.cluster.x-k8s.io/v1alpha2
+kind: KubeadmConfig
+metadata:
+  name: ${CLUSTER_NAME}-node-01
+spec:
+  files:
+  - path: /etc/kubernetes/cloud.conf
+    owner: root
+    permissions: "0600"
+    content: |-
+      # cloud.conf to communicate with OpenStack
+      $OPENSTACK_CLOUD_PROVIDER_CONF
+  - path: /etc/certs/cacert
+    owner: root
+    permissions: "0600"
+    content: |-
+      # cacert to communicate with OpenStack
+      $OPENSTACK_CLOUD_CACERT_CONFIG
+  ntp:
+    servers: []
+  users:
+  - name: ubuntu
+    sshAuthorizedKeys:
+    - "$MACHINE_CONTROLLER_SSH_PUBLIC_FILE_CONTENT"
+  joinConfiguration:
+    nodeRegistration:
+      name: '{{ local_hostname }}'
+      kubeletExtraArgs:
+        cloud-provider: openstack
+        cloud-config: /etc/kubernetes/cloud.conf
