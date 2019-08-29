@@ -344,6 +344,7 @@ func (oc *OpenstackClient) Update(ctx context.Context, cluster *clusterv1.Cluste
 			err = oc.Create(ctx, cluster, machine)
 			if err != nil {
 				klog.Errorf("create machine %s for update failed: %v", machine.ObjectMeta.Name, err)
+				return fmt.Errorf("Cannot create machine %s: %v", machine.ObjectMeta.Name, err)
 			}
 			klog.Infof("Successfully updated machine %s", currentMachine.ObjectMeta.Name)
 		}
