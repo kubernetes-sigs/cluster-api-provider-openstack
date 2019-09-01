@@ -107,7 +107,7 @@ endif
 	# Create a dummy file for test only
 	mkdir -p tmp/dummy-make-auto-test
 	echo 'clouds' > tmp/dummy-make-auto-test/dummy-clouds-test.yaml
-	examples/generate.sh -f tmp/dummy-make-auto-test/dummy-clouds-test.yaml openstack tmp/dummy-make-auto-test
+	examples/generate.sh -f tmp/dummy-make-auto-test/dummy-clouds-test.yaml openstack tmp/dummy-make-auto-test/_out
 	# the folder will be generated under same folder of examples
 	rm -rf tmp/dummy-make-auto-test
 
