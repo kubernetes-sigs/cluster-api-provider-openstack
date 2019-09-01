@@ -190,7 +190,7 @@ func (r *OpenStackClusterReconciler) reconcileCluster(logger logr.Logger, cluste
 
 func (r *OpenStackClusterReconciler) reconcileClusterDelete(logger logr.Logger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
 
-	logger.Infof("Reconcile Cluster delete")
+	logger.Info("Reconcile Cluster delete")
 	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
 	osProviderClient, clientOpts, err := provider.NewClientFromCluster(r.Client, openStackCluster)
 	if err != nil {
