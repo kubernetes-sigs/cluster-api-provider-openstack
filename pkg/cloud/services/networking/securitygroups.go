@@ -18,8 +18,6 @@ package networking
 
 import (
 	"fmt"
-	"k8s.io/klog"
-
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/rules"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha2"
@@ -29,6 +27,7 @@ const (
 	secGroupPrefix     string = "k8s"
 	controlPlaneSuffix string = "controlplane"
 	globalSuffix       string = "all"
+	remoteGroupIDSelf  string = "self"
 )
 
 var defaultRules = []infrav1.SecurityGroupRule{
@@ -52,9 +51,9 @@ var defaultRules = []infrav1.SecurityGroupRule{
 
 // Reconcile the security groups.
 func (s *Service) ReconcileSecurityGroups(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {
-	klog.Infof("Reconciling security groups for cluster %s", clusterName)
+	s.logger.Info("Reconciling security groups", "cluster", clusterName)
 	if !openStackCluster.Spec.ManagedSecurityGroups {
-		klog.V(4).Infof("No need to reconcile security groups for cluster %s", clusterName)
+		s.logger.V(4).Info("No need to reconcile security groups", "cluster", clusterName)
 		return nil
 	}
 	desiredSecGroups := map[string]infrav1.SecurityGroup{
@@ -64,7 +63,7 @@ func (s *Service) ReconcileSecurityGroups(clusterName string, openStackCluster *
 	observedSecGroups := make(map[string]*infrav1.SecurityGroup)
 
 	for k, desiredSecGroup := range desiredSecGroups {
-		klog.Infof("Reconciling security group %s", desiredSecGroup.Name)
+		s.logger.Info("Reconciling security group", "name", desiredSecGroup.Name)
 
 		var err error
 		observedSecGroups[k], err = s.getSecurityGroupByName(desiredSecGroup.Name)
@@ -75,11 +74,11 @@ func (s *Service) ReconcileSecurityGroups(clusterName string, openStackCluster *
 
 		if observedSecGroups[k].ID != "" {
 			if matchGroups(&desiredSecGroup, observedSecGroups[k]) {
-				klog.V(6).Infof("Group %s matched, have nothing to do.", desiredSecGroup.Name)
+				s.logger.V(6).Info("Group matched, have nothing to do.", "name", desiredSecGroup.Name)
 				continue
 			}
 
-			klog.V(6).Infof("Group %s didn't match, reconciling...", desiredSecGroup.Name)
+			s.logger.V(6).Info("Group didn't match, reconciling...", "name", desiredSecGroup.Name)
 			observedSecGroups[k], err = s.reconcileGroup(&desiredSecGroup, observedSecGroups[k])
 			if err != nil {
 				return err
@@ -87,8 +86,11 @@ func (s *Service) ReconcileSecurityGroups(clusterName string, openStackCluster *
 			continue
 		}
 
-		klog.V(6).Infof("Group %s doesn't exist, creating it.", desiredSecGroup.Name)
+		s.logger.V(6).Info("Group doesn't exist, creating it.", "name", desiredSecGroup.Name)
 		observedSecGroups[k], err = s.createSecGroup(desiredSecGroup)
+		if err != nil {
+			return err
+		}
 	}
 
 	openStackCluster.Status.ControlPlaneSecurityGroup = observedSecGroups["controlplane"]
@@ -161,6 +163,7 @@ func generateGlobalGroup(clusterName string) infrav1.SecurityGroup {
 	secGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, globalSuffix)
 
 	// As above, hardcoded rules.
+
 	return infrav1.SecurityGroup{
 		Name: secGroupName,
 		Rules: append(
@@ -171,7 +174,7 @@ func generateGlobalGroup(clusterName string) infrav1.SecurityGroup {
 					PortRangeMin:  1,
 					PortRangeMax:  65535,
 					Protocol:      "tcp",
-					RemoteGroupID: "self",
+					RemoteGroupID: remoteGroupIDSelf,
 				},
 				{
 					Direction:     "ingress",
@@ -179,7 +182,7 @@ func generateGlobalGroup(clusterName string) infrav1.SecurityGroup {
 					PortRangeMin:  1,
 					PortRangeMax:  65535,
 					Protocol:      "udp",
-					RemoteGroupID: "self",
+					RemoteGroupID: remoteGroupIDSelf,
 				},
 				{
 					Direction:     "ingress",
@@ -187,7 +190,7 @@ func generateGlobalGroup(clusterName string) infrav1.SecurityGroup {
 					PortRangeMin:  0,
 					PortRangeMax:  0,
 					Protocol:      "icmp",
-					RemoteGroupID: "self",
+					RemoteGroupID: remoteGroupIDSelf,
 				},
 			},
 			defaultRules...,
@@ -205,7 +208,7 @@ func matchGroups(desired, observed *infrav1.SecurityGroup) bool {
 	// Rules aren't in any order, so we're doing this the hard way.
 	for _, desiredRule := range desired.Rules {
 		r := desiredRule
-		if r.RemoteGroupID == "self" {
+		if r.RemoteGroupID == remoteGroupIDSelf {
 			r.RemoteGroupID = observed.ID
 		}
 		ruleMatched := false
@@ -226,20 +229,20 @@ func matchGroups(desired, observed *infrav1.SecurityGroup) bool {
 // reconcileGroup reconciles an already existing observed group by essentially emptying out all the rules and
 // recreating them.
 func (s *Service) reconcileGroup(desired, observed *infrav1.SecurityGroup) (*infrav1.SecurityGroup, error) {
-	klog.V(6).Infof("Deleting all rules for group %s", observed.Name)
+	s.logger.V(6).Info("Deleting all rules for group", "name", observed.Name)
 	for _, rule := range observed.Rules {
-		klog.V(6).Infof("Deleting rule %s from group %s", rule.ID, observed.Name)
+		s.logger.V(6).Info("Deleting rule", "ruleID", rule.ID, "groupName", observed.Name)
 		err := rules.Delete(s.client, rule.ID).ExtractErr()
 		if err != nil {
 			return &infrav1.SecurityGroup{}, err
 		}
 	}
 	recreatedRules := make([]infrav1.SecurityGroupRule, 0, len(desired.Rules))
-	klog.V(6).Infof("Recreating all rules for group %s", observed.Name)
+	s.logger.V(6).Info("Recreating all rules for group", "name", observed.Name)
 	for _, rule := range desired.Rules {
 		r := rule
 		r.SecurityGroupID = observed.ID
-		if r.RemoteGroupID == "self" {
+		if r.RemoteGroupID == remoteGroupIDSelf {
 			r.RemoteGroupID = observed.ID
 		}
 		newRule, err := s.createRule(r)
@@ -257,7 +260,7 @@ func (s *Service) createSecGroup(group infrav1.SecurityGroup) (*infrav1.Security
 		Name:        group.Name,
 		Description: "Cluster API managed group",
 	}
-	klog.V(6).Infof("Creating group %+v", createOpts)
+	s.logger.V(6).Info("Creating group", "name", group.Name)
 	g, err := groups.Create(s.client, createOpts).Extract()
 	if err != nil {
 		return &infrav1.SecurityGroup{}, err
@@ -265,11 +268,11 @@ func (s *Service) createSecGroup(group infrav1.SecurityGroup) (*infrav1.Security
 
 	newGroup := convertOSSecGroupToConfigSecGroup(*g)
 	securityGroupRules := make([]infrav1.SecurityGroupRule, 0, len(group.Rules))
-	klog.V(6).Infof("Creating rules for group %s", group.Name)
+	s.logger.V(6).Info("Creating rules for group", "name", group.Name)
 	for _, rule := range group.Rules {
 		r := rule
 		r.SecurityGroupID = newGroup.ID
-		if r.RemoteGroupID == "self" {
+		if r.RemoteGroupID == remoteGroupIDSelf {
 			r.RemoteGroupID = newGroup.ID
 		}
 		newRule, err := s.createRule(r)
@@ -288,7 +291,7 @@ func (s *Service) getSecurityGroupByName(name string) (*infrav1.SecurityGroup, e
 		Name: name,
 	}
 
-	klog.V(6).Infof("Attempting to fetch security group with name %s", name)
+	s.logger.V(6).Info("Attempting to fetch security group with", "name", name)
 	allPages, err := groups.List(s.client, opts).AllPages()
 	if err != nil {
 		return &infrav1.SecurityGroup{}, err
@@ -324,7 +327,7 @@ func (s *Service) createRule(r infrav1.SecurityGroupRule) (infrav1.SecurityGroup
 		RemoteIPPrefix: r.RemoteIPPrefix,
 		SecGroupID:     r.SecurityGroupID,
 	}
-	klog.V(6).Infof("Creating rule %+v", createOpts)
+	s.logger.V(6).Info("Creating rule")
 	rule, err := rules.Create(s.client, createOpts).Extract()
 	if err != nil {
 		return infrav1.SecurityGroupRule{}, err

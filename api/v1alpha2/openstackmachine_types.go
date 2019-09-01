@@ -52,7 +52,7 @@ type OpenStackMachineSpec struct {
 	Image string `json:"image"`
 
 	// The ssh key to inject in the instance
-	KeyName string `json:"keyName,omitempty"`
+	SSHKeyName string `json:"sshKeyName,omitempty"`
 
 	// A networks object. Required parameter when there are multiple networks defined for the tenant.
 	// When you do not specify the networks parameter, the server attaches to the only network created for the current tenant.

@@ -36,7 +36,7 @@ type NetworkParam struct {
 	// The UUID of the network. Required if you omit the port attribute.
 	UUID string `json:"uuid,omitempty"`
 	// A fixed IPv4 address for the NIC.
-	FixedIp string `json:"fixedIp,omitempty"`
+	FixedIP string `json:"fixedIp,omitempty"`
 	// Filters for optional network query
 	Filter Filter `json:"filter,omitempty"`
 	// Subnet within a network to use

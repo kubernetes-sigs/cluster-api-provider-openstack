@@ -55,7 +55,7 @@ type OpenStackClusterSpec struct {
 
 	// UseOctavia is weather LoadBalancer Service is Octavia or not
 	// +optional
-	UseOctavia bool `json:"useOctavia, omitempty"`
+	UseOctavia bool `json:"useOctavia,omitempty"`
 
 	// ManagedAPIServerLoadBalancer defines whether a LoadBalancer for the
 	// APIServer should be created. If set to true the following properties are

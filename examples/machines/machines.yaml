@@ -30,7 +30,7 @@ metadata:
 spec:
   flavor: m1.medium
   image: <Image Name>
-  keyName: cluster-api-provider-openstack
+  sshKeyName: cluster-api-provider-openstack
   availabilityZone: nova
   networks:
   - filter:
