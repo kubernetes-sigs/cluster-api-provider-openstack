@@ -169,7 +169,7 @@ generate-go: $(CONTROLLER_GEN) $(MOCKGEN) ## Runs Go related generate targets
 	# TODO change to ./.. as soon as vendor is removed
 	$(CONTROLLER_GEN) \
 		paths=./api/... \
-		object:headerFile=./hack/boilerplate/boilerplate.generatego.txt
+		object:headerFile=./hack/boilerplate.go.txt
 
 .PHONY: generate-manifests
 generate-manifests: ## Generate manifests e.g. CRD, RBAC etc.

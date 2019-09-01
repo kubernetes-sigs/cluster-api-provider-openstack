@@ -400,6 +400,11 @@ func (s *Service) AssociateFloatingIP(instanceID, floatingIP string) error {
 
 func (s *Service) InstanceDelete(machine *clusterv1.Machine) error {
 
+	if machine.Spec.ProviderID == nil {
+		// nothing to do
+		return nil
+	}
+
 	parsed, err := noderefutil.NewProviderID(*machine.Spec.ProviderID)
 	if err != nil {
 		return err

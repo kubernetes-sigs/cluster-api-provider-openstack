@@ -113,9 +113,10 @@ PROVIDER_COMPONENTS_GENERATED_FILE=${OUTPUT_DIR}/provider-components.yaml
 CLUSTER_GENERATED_FILE=${OUTPUT_DIR}/cluster.yaml
 CONTROLPLANE_GENERATED_FILE=${OUTPUT_DIR}/controlplane.yaml
 MACHINEDEPLOYMENT_GENERATED_FILE=${OUTPUT_DIR}/machinedeployment.yaml
-WORKER_GENERATED_FILE=${OUTPUT_DIR}/worker.yaml
 MACHINES_GENERATED_FILE=${OUTPUT_DIR}/machines.yaml
 
+rm -rf "${OUTPUT_DIR}"
+rm -rf "${CLOUDS_SECRETS_CONFIG_DIR}"
 mkdir -p "${OUTPUT_DIR}"
 mkdir -p "${CLOUDS_SECRETS_CONFIG_DIR}"
 
@@ -145,20 +146,20 @@ CACERT_ORIGINAL=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.${CLOUD}.
 
 # Basic cloud.conf, no LB configuration as that data is not known yet.
 export OPENSTACK_CLOUD_PROVIDER_CONF="[Global]
-      auth-url=$AUTH_URL
-      username=\"$USERNAME\"
-      password=\"$PASSWORD\"
-      tenant-id=\"$PROJECT_ID\"
-      domain-name=\"$DOMAIN_NAME\"
+          auth-url=$AUTH_URL
+          username=\"$USERNAME\"
+          password=\"$PASSWORD\"
+          tenant-id=\"$PROJECT_ID\"
+          domain-name=\"$DOMAIN_NAME\"
 "
 if [[ "$CACERT_ORIGINAL" != "null" ]]; then
   OPENSTACK_CLOUD_PROVIDER_CONF="$OPENSTACK_CLOUD_PROVIDER_CONF
-        ca-file=\"${CACERT_ORIGINAL}\"
+          ca-file=\"${CACERT_ORIGINAL}\"
   "
 fi
 if [[ "$REGION" != "null" ]]; then
   OPENSTACK_CLOUD_PROVIDER_CONF="$OPENSTACK_CLOUD_PROVIDER_CONF
-        region=\"${REGION}\"
+          region=\"${REGION}\"
   "
 fi
 OS=$(uname)
@@ -194,20 +195,16 @@ echo "Generated ${CLUSTER_GENERATED_FILE}"
 kustomize build "${SOURCE_DIR}/controlplane" --reorder=none | envsubst > "${CONTROLPLANE_GENERATED_FILE}"
 echo "Generated ${CONTROLPLANE_GENERATED_FILE}"
 
-# Generate machinedeployment resources. (TODO(sbueringer) Have to implement OpenStackMachineTemplate first)
-#kustomize build "${SOURCE_DIR}/machinedeployment" --reorder=none | envsubst >> "${MACHINEDEPLOYMENT_GENERATED_FILE}"
-#echo "Generated ${MACHINEDEPLOYMENT_GENERATED_FILE}"
-
-# Generate machines resources.
-kustomize build "${SOURCE_DIR}/machines" --reorder=none | envsubst > "${WORKER_GENERATED_FILE}"
-echo "Generated ${WORKER_GENERATED_FILE}"
+# Generate machinedeployment resources.
+kustomize build "${SOURCE_DIR}/machinedeployment" --reorder=none | envsubst >> "${MACHINEDEPLOYMENT_GENERATED_FILE}"
+echo "Generated ${MACHINEDEPLOYMENT_GENERATED_FILE}"
 
 # combine control plane and regular machines in ${MACHINES_GENERATED_FILE}
 cat ${CONTROLPLANE_GENERATED_FILE} > ${MACHINES_GENERATED_FILE}
 echo "---" >> ${MACHINES_GENERATED_FILE}
 #cat ${MACHINEDEPLOYMENT_GENERATED_FILE} >> ${MACHINES_GENERATED_FILE}
 echo "---" >> ${MACHINES_GENERATED_FILE}
-cat ${WORKER_GENERATED_FILE} >> ${MACHINES_GENERATED_FILE}
+cat ${MACHINEDEPLOYMENT_GENERATED_FILE} >> ${MACHINES_GENERATED_FILE}
 echo "---" >> ${MACHINES_GENERATED_FILE}
 echo "Generated ${MACHINES_GENERATED_FILE}"
 

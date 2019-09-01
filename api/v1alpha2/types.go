@@ -1,5 +1,11 @@
 package v1alpha2
 
+// OpenStackMachineTemplateResource describes the data needed to create a OpenStackMachine from a template
+type OpenStackMachineTemplateResource struct {
+	// Spec is the specification of the desired behavior of the machine.
+	Spec OpenStackMachineSpec `json:"spec"`
+}
+
 type ExternalRouterIPParam struct {
 	// The FixedIP in the corresponding subnet
 	FixedIP string `json:"fixedIP,omitempty"`
