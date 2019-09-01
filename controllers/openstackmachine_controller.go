@@ -369,7 +369,7 @@ func (r *OpenStackMachineReconciler) reconcileFloatingIP(computeService *compute
 
 	err = computeService.AssociateFloatingIP(instance.ID, openStackMachine.Spec.FloatingIP)
 	if err != nil {
-		return fmt.Errorf("error associationg floatingIP: %v", err)
+		return fmt.Errorf("error associating floatingIP: %v", err)
 	}
 	return nil
 }

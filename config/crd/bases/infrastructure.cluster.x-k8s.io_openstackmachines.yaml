@@ -66,9 +66,6 @@ spec:
                 If the RootVolume is specified, this will be ignored and use rootVolume
                 directly.
               type: string
-            keyName:
-              description: The ssh key to inject in the instance
-              type: string
             networks:
               description: A networks object. Required parameter when there are multiple
                 networks defined for the tenant. When you do not specify the networks
@@ -241,6 +238,9 @@ spec:
               description: Metadata mapping. Allows you to create a map of key value
                 pairs to add to the server instance.
               type: object
+            sshKeyName:
+              description: The ssh key to inject in the instance
+              type: string
             tags:
               description: Machine tags Requires Nova api 2.52 minimum!
               items:
