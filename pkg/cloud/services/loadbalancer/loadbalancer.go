@@ -272,6 +272,10 @@ func (s *Service) DeleteLoadBalancer(clusterName string, openStackCluster *infra
 	if err != nil {
 		return err
 	}
+	if lb == nil {
+		// nothing to do
+		return nil
+	}
 
 	// only Octavia supports Cascade
 	if openStackCluster.Spec.UseOctavia {
