@@ -93,24 +93,23 @@ test-go: ## Run golang tests
 
 test-generate-examples:
 ifndef HAS_YQ
-	go get github.com/mikefarah/yq
 	echo "installing yq"
+	GO111MODULE=off go get github.com/mikefarah/yq
 endif
 ifndef HAS_KUSTOMIZE
-	GO111MODULE=on go get sigs.k8s.io/kustomize/v3/cmd/kustomize
 	echo "installing kustomize"
+	go get sigs.k8s.io/kustomize/v3/cmd/kustomize
 endif
 ifndef HAS_ENVSUBST
-	go get github.com/a8m/envsubst/cmd/envsubst
 	echo "installing envsubst"
+	go get github.com/a8m/envsubst/cmd/envsubst
 endif
 	# Create a dummy file for test only
-	mkdir tmp
-	echo 'clouds' > tmp/dummy-clouds-test.yaml
-	examples/generate.sh -f tmp/dummy-clouds-test.yaml openstack tmp/dummy-make-auto-test
+	mkdir -p tmp/dummy-make-auto-test
+	echo 'clouds' > tmp/dummy-make-auto-test/dummy-clouds-test.yaml
+	examples/generate.sh -f tmp/dummy-make-auto-test/dummy-clouds-test.yaml openstack tmp/dummy-make-auto-test
 	# the folder will be generated under same folder of examples
 	rm -rf tmp/dummy-make-auto-test
-	rm tmp/dummy-clouds-test.yaml
 
 ## --------------------------------------
 ## Binaries
