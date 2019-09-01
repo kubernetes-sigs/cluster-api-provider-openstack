@@ -74,7 +74,7 @@ type OpenStackMachineReconciler struct {
 
 func (r *OpenStackMachineReconciler) Reconcile(request ctrl.Request) (_ ctrl.Result, reterr error) {
 	ctx := context.TODO()
-	log := r.Log.
+	logger := r.Log.
 		WithName(machineControllerName).
 		WithName(fmt.Sprintf("namespace=%s", request.Namespace)).
 		WithName(fmt.Sprintf("openStackMachine=%s", request.Name))
@@ -89,7 +89,7 @@ func (r *OpenStackMachineReconciler) Reconcile(request ctrl.Request) (_ ctrl.Res
 		return reconcile.Result{}, err
 	}
 
-	log = log.WithName(openStackMachine.APIVersion)
+	logger = logger.WithName(openStackMachine.APIVersion)
 
 	// Fetch the Machine.
 	machine, err := util.GetOwnerMachine(ctx, r.Client, openStackMachine.ObjectMeta)
@@ -97,20 +97,20 @@ func (r *OpenStackMachineReconciler) Reconcile(request ctrl.Request) (_ ctrl.Res
 		return reconcile.Result{}, err
 	}
 	if machine == nil {
-		log.Info("Machine Controller has not yet set OwnerRef")
+		logger.Info("Machine Controller has not yet set OwnerRef")
 		return reconcile.Result{}, nil
 	}
 
-	log = log.WithName(fmt.Sprintf("machine=%s", machine.Name))
+	logger = logger.WithName(fmt.Sprintf("machine=%s", machine.Name))
 
 	// Fetch the Cluster.
 	cluster, err := util.GetClusterFromMetadata(ctx, r.Client, machine.ObjectMeta)
 	if err != nil {
-		log.Info("Machine is missing cluster label or cluster does not exist")
+		logger.Info("Machine is missing cluster label or cluster does not exist")
 		return reconcile.Result{}, nil
 	}
 
-	log = log.WithName(fmt.Sprintf("cluster=%s", cluster.Name))
+	logger = logger.WithName(fmt.Sprintf("cluster=%s", cluster.Name))
 
 	openStackCluster := &infrav1.OpenStackCluster{}
 	openStackClusterName := types.NamespacedName{
@@ -118,11 +118,11 @@ func (r *OpenStackMachineReconciler) Reconcile(request ctrl.Request) (_ ctrl.Res
 		Name:      cluster.Spec.InfrastructureRef.Name,
 	}
 	if err := r.Client.Get(ctx, openStackClusterName, openStackCluster); err != nil {
-		log.Info("OpenStackCluster is not available yet")
+		logger.Info("OpenStackCluster is not available yet")
 		return reconcile.Result{}, nil
 	}
 
-	log = log.WithName(fmt.Sprintf("openStackCluster=%s", openStackCluster.Name))
+	logger = logger.WithName(fmt.Sprintf("openStackCluster=%s", openStackCluster.Name))
 
 	// Initialize the patch helper
 	patchHelper, err := patch.NewHelper(openStackMachine, r)
@@ -140,11 +140,11 @@ func (r *OpenStackMachineReconciler) Reconcile(request ctrl.Request) (_ ctrl.Res
 
 	// Handle deleted clusters
 	if !openStackMachine.DeletionTimestamp.IsZero() {
-		return r.reconcileMachineDelete(log, machine, openStackMachine, cluster, openStackCluster)
+		return r.reconcileMachineDelete(logger, machine, openStackMachine, cluster, openStackCluster)
 	}
 
 	// Handle non-deleted clusters
-	return r.reconcileMachine(log, machine, openStackMachine, cluster, openStackCluster)
+	return r.reconcileMachine(logger, machine, openStackMachine, cluster, openStackCluster)
 }
 
 func (r *OpenStackMachineReconciler) reconcileMachine(logger logr.Logger, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (_ ctrl.Result, reterr error) {

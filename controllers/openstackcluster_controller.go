@@ -53,7 +53,7 @@ type OpenStackClusterReconciler struct {
 
 func (r *OpenStackClusterReconciler) Reconcile(request ctrl.Request) (_ ctrl.Result, reterr error) {
 	ctx := context.TODO()
-	log := r.Log.WithName(clusterControllerName).
+	logger := r.Log.WithName(clusterControllerName).
 		WithName(fmt.Sprintf("namespace=%s", request.Namespace)).
 		WithName(fmt.Sprintf("openStackCluster=%s", request.Name))
 
@@ -67,7 +67,7 @@ func (r *OpenStackClusterReconciler) Reconcile(request ctrl.Request) (_ ctrl.Res
 		return reconcile.Result{}, err
 	}
 
-	log = log.WithName(openStackCluster.APIVersion)
+	logger = logger.WithName(openStackCluster.APIVersion)
 
 	// Fetch the Cluster.
 	cluster, err := util.GetOwnerCluster(ctx, r.Client, openStackCluster.ObjectMeta)
@@ -75,11 +75,11 @@ func (r *OpenStackClusterReconciler) Reconcile(request ctrl.Request) (_ ctrl.Res
 		return reconcile.Result{}, err
 	}
 	if cluster == nil {
-		log.Info("Cluster Controller has not yet set OwnerRef")
+		logger.Info("Cluster Controller has not yet set OwnerRef")
 		return reconcile.Result{}, nil
 	}
 
-	log = log.WithName(fmt.Sprintf("cluster=%s", cluster.Name))
+	logger = logger.WithName(fmt.Sprintf("cluster=%s", cluster.Name))
 
 	patchHelper, err := patch.NewHelper(openStackCluster, r)
 	if err != nil {
@@ -95,11 +95,11 @@ func (r *OpenStackClusterReconciler) Reconcile(request ctrl.Request) (_ ctrl.Res
 
 	// Handle deleted clusters
 	if !openStackCluster.DeletionTimestamp.IsZero() {
-		return r.reconcileClusterDelete(log, cluster, openStackCluster)
+		return r.reconcileClusterDelete(logger, cluster, openStackCluster)
 	}
 
 	// Handle non-deleted clusters
-	return r.reconcileCluster(log, cluster, openStackCluster)
+	return r.reconcileCluster(logger, cluster, openStackCluster)
 }
 
 func (r *OpenStackClusterReconciler) reconcileCluster(logger logr.Logger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (_ ctrl.Result, reterr error) {

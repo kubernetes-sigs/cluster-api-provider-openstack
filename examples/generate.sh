@@ -93,8 +93,8 @@ if [[ ${OVERWRITE} -ne 1 ]] && [[ -d "$OUTPUT_DIR" ]]; then
   exit 1
 fi
 
-yq_type=$(file $(which yq))
-if [[ $yq_type == *"Python script"* ]]; then
+yq_type=$(file "$(which yq)")
+if [[ ${yq_type} == *"Python script"* ]]; then
   echo "Wrong version of 'yq' installed, please install the one from https://github.com/mikefarah/yq"
   echo ""
   exit 1
@@ -125,7 +125,8 @@ if [[ ! -f ${MACHINE_CONTROLLER_SSH_PRIVATE_FILE} ]]; then
   # This is needed because GetKubeConfig assumes the key in the home .ssh dir.
   ssh-keygen -t rsa -f ${MACHINE_CONTROLLER_SSH_PRIVATE_FILE}  -N ""
 fi
-export MACHINE_CONTROLLER_SSH_PUBLIC_FILE_CONTENT=$(cat ${MACHINE_CONTROLLER_SSH_PRIVATE_FILE}.pub)
+export MACHINE_CONTROLLER_SSH_PUBLIC_FILE_CONTENT
+MACHINE_CONTROLLER_SSH_PUBLIC_FILE_CONTENT=$(cat ${MACHINE_CONTROLLER_SSH_PRIVATE_FILE}.pub)
 
 CLOUDS_PATH=${CLOUDS_PATH:-""}
 OPENSTACK_CLOUD_CONFIG_PLAIN=$(cat "$CLOUDS_PATH")
@@ -164,12 +165,14 @@ OS=$(uname)
 if [[ "$OS" =~ "Linux" ]]; then
 #  export OPENSTACK_CLOUD_PROVIDER_CONF=$(echo "$OPENSTACK_CLOUD_PROVIDER_CONF_PLAIN"|base64 -w0)
   if [[ "$CACERT_ORIGINAL" != "null" ]]; then
-    export OPENSTACK_CLOUD_CACERT_CONFIG=$(cat "$CACERT_ORIGINAL"|base64 -w0)
+    export OPENSTACK_CLOUD_CACERT_CONFIG
+    OPENSTACK_CLOUD_CACERT_CONFIG=$(cat "$CACERT_ORIGINAL"|base64 -w0)
   fi
 elif [[ "$OS" =~ "Darwin" ]]; then
 #  export OPENSTACK_CLOUD_PROVIDER_CONF=$(echo "$OPENSTACK_CLOUD_PROVIDER_CONF_PLAIN"|base64)
   if [[ "$CACERT_ORIGINAL" != "null" ]]; then
-    export OPENSTACK_CLOUD_CACERT_CONFIG=$(cat "$CACERT_ORIGINAL"|base64)
+    export OPENSTACK_CLOUD_CACERT_CONFIG
+    OPENSTACK_CLOUD_CACERT_CONFIG=$(cat "$CACERT_ORIGINAL"|base64)
   fi
 else
   echo "Unrecognized OS : $OS"
@@ -199,6 +202,7 @@ echo "Generated ${CONTROLPLANE_GENERATED_FILE}"
 kustomize build "${SOURCE_DIR}/machines" --reorder=none | envsubst > "${WORKER_GENERATED_FILE}"
 echo "Generated ${WORKER_GENERATED_FILE}"
 
+# combine control plane and regular machines in ${MACHINES_GENERATED_FILE}
 cat ${CONTROLPLANE_GENERATED_FILE} > ${MACHINES_GENERATED_FILE}
 echo "---" >> ${MACHINES_GENERATED_FILE}
 #cat ${MACHINEDEPLOYMENT_GENERATED_FILE} >> ${MACHINES_GENERATED_FILE}
@@ -222,6 +226,7 @@ echo "Generated ${COMPONENTS_OPENSTACK_GENERATED_FILE}"
 # Generate OpenStack Infrastructure Provider cloud-secrets file.
 kustomize build "${SOURCE_DIR}/clouds-secrets" --reorder=none | envsubst > "${COMPONENTS_OPENSTACK_CLOUDS_SECRETS_GENERATED_FILE}"
 echo "Generated ${COMPONENTS_OPENSTACK_CLOUDS_SECRETS_GENERATED_FILE}"
+echo "WARNING: ${COMPONENTS_OPENSTACK_CLOUDS_SECRETS_GENERATED_FILE} includes OpenStack credentials"
 
 # Generate a single provider components file.
 kustomize build "${SOURCE_DIR}/provider-components"| envsubst > "${PROVIDER_COMPONENTS_GENERATED_FILE}"
