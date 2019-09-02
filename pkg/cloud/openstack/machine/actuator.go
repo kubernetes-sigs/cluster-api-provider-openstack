@@ -61,6 +61,9 @@ const (
 
 	// MachineInstanceStateAnnotationName as annotation name for a machine instance state
 	MachineInstanceStateAnnotationName = "machine.openshift.io/instance-state"
+
+	// ErrorState is assigned to the machine if its instance has been destroyed
+	ErrorState = "ERROR"
 )
 
 type OpenstackClient struct {
@@ -114,6 +117,25 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 	if instance != nil {
 		klog.Infof("Skipped creating a VM that already exists.\n")
 		return nil
+	}
+
+	// Here we check whether we want to create a new instance or recreate the destroyed
+	// one. If this is the second case, we have to return an error, because if we just
+	// create an instance with the old name, because the CSR for it will not be approved
+	// automatically.
+	// See https://bugzilla.redhat.com/show_bug.cgi?id=1746369
+	if machine.ObjectMeta.Annotations[InstanceStatusAnnotationKey] != "" {
+		klog.Errorf("The instance has been destroyed for the machine %v, cannot recreate it.\n", machine.ObjectMeta.Name)
+
+		// Currently machines with ERROR state should be deleted manually, later it will
+		// be done automatically by machine-api-operator.
+		machine.ObjectMeta.Annotations[MachineInstanceStateAnnotationName] = ErrorState
+
+		if err := oc.client.Update(nil, machine); err != nil {
+			return err
+		}
+
+		return fmt.Errorf("the instance has been destroyed for the machine %v, cannot recreate it", machine.ObjectMeta.Name)
 	}
 
 	// get machine startup script
