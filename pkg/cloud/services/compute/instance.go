@@ -18,12 +18,12 @@ package compute
 
 import (
 	"fmt"
-	"github.com/gophercloud/gophercloud/openstack/identity/v3/tokens"
-	"k8s.io/klog"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
-	"sigs.k8s.io/cluster-api/api/v1alpha2"
-	"sigs.k8s.io/cluster-api/controllers/noderefutil"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	"time"
+
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha2"
+	"sigs.k8s.io/cluster-api/controllers/noderefutil"
 
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 
@@ -66,17 +66,16 @@ type ServerNetwork struct {
 }
 
 // InstanceCreate creates a compute instance
-func (is *Service) InstanceCreate(clusterName string, machine *v1alpha2.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster) (instance *Instance, err error) {
-	var createOpts servers.CreateOptsBuilder
+func (s *Service) InstanceCreate(clusterName string, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster) (instance *Instance, err error) {
 	if openStackMachine == nil {
 		return nil, fmt.Errorf("create Options need be specified to create instace")
 	}
-	if openStackMachine.Spec.Trunk == true {
-		trunkSupport, err := getTrunkSupport(is)
+	if openStackMachine.Spec.Trunk {
+		trunkSupport, err := getTrunkSupport(s)
 		if err != nil {
 			return nil, fmt.Errorf("there was an issue verifying whether trunk support is available, please disable it: %v", err)
 		}
-		if trunkSupport == false {
+		if !trunkSupport {
 			return nil, fmt.Errorf("there is no trunk support. Please disable it")
 		}
 	}
@@ -94,7 +93,7 @@ func (is *Service) InstanceCreate(clusterName string, machine *v1alpha2.Machine,
 	machineTags = append(machineTags, openStackCluster.Spec.Tags...)
 
 	// Get security groups
-	securityGroups, err := getSecurityGroups(is, openStackMachine.Spec.SecurityGroups)
+	securityGroups, err := getSecurityGroups(s, openStackMachine.Spec.SecurityGroups)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +102,7 @@ func (is *Service) InstanceCreate(clusterName string, machine *v1alpha2.Machine,
 	for _, net := range openStackMachine.Spec.Networks {
 		opts := networks.ListOpts(net.Filter)
 		opts.ID = net.UUID
-		ids, err := getNetworkIDsByFilter(is.networkClient, &opts)
+		ids, err := getNetworkIDsByFilter(s.networkClient, &opts)
 		if err != nil {
 			return nil, err
 		}
@@ -118,7 +117,7 @@ func (is *Service) InstanceCreate(clusterName string, machine *v1alpha2.Machine,
 				subnetOpts := subnets.ListOpts(subnet.Filter)
 				subnetOpts.ID = subnet.UUID
 				subnetOpts.NetworkID = netID
-				subnetsByFilter, err := networking.GetSubnetsByFilter(is.networkClient, &subnetOpts)
+				subnetsByFilter, err := networking.GetSubnetsByFilter(s.networkClient, &subnetOpts)
 				if err != nil {
 					return nil, err
 				}
@@ -131,12 +130,12 @@ func (is *Service) InstanceCreate(clusterName string, machine *v1alpha2.Machine,
 			}
 		}
 	}
-	var portsList []servers.Network
+	portsList := []servers.Network{}
 	for _, net := range nets {
 		if net.networkID == "" {
 			return nil, fmt.Errorf("no network was found or provided. Please check your machine configuration and try again")
 		}
-		allPages, err := ports.List(is.networkClient, ports.ListOpts{
+		allPages, err := ports.List(s.networkClient, ports.ListOpts{
 			Name:      openStackMachine.Name,
 			NetworkID: net.networkID,
 		}).AllPages()
@@ -150,7 +149,7 @@ func (is *Service) InstanceCreate(clusterName string, machine *v1alpha2.Machine,
 		var port ports.Port
 		if len(portList) == 0 {
 			// create server port
-			port, err = createPort(is, openStackMachine.Name, net, &securityGroups)
+			port, err = createPort(s, openStackMachine.Name, net, &securityGroups)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create port err: %v", err)
 			}
@@ -158,7 +157,7 @@ func (is *Service) InstanceCreate(clusterName string, machine *v1alpha2.Machine,
 			port = portList[0]
 		}
 
-		_, err = attributestags.ReplaceAll(is.networkClient, "ports", port.ID, attributestags.ReplaceAllOpts{
+		_, err = attributestags.ReplaceAll(s.networkClient, "ports", port.ID, attributestags.ReplaceAllOpts{
 			Tags: machineTags}).Extract()
 		if err != nil {
 			return nil, fmt.Errorf("tagging port for server err: %v", err)
@@ -167,8 +166,8 @@ func (is *Service) InstanceCreate(clusterName string, machine *v1alpha2.Machine,
 			Port: port.ID,
 		})
 
-		if openStackMachine.Spec.Trunk == true {
-			allPages, err := trunks.List(is.networkClient, trunks.ListOpts{
+		if openStackMachine.Spec.Trunk {
+			allPages, err := trunks.List(s.networkClient, trunks.ListOpts{
 				Name:   openStackMachine.Name,
 				PortID: port.ID,
 			}).AllPages()
@@ -186,7 +185,7 @@ func (is *Service) InstanceCreate(clusterName string, machine *v1alpha2.Machine,
 					Name:   openStackMachine.Name,
 					PortID: port.ID,
 				}
-				newTrunk, err := trunks.Create(is.networkClient, trunkCreateOpts).Extract()
+				newTrunk, err := trunks.Create(s.networkClient, trunkCreateOpts).Extract()
 				if err != nil {
 					return nil, fmt.Errorf("create trunk for server err: %v", err)
 				}
@@ -195,7 +194,7 @@ func (is *Service) InstanceCreate(clusterName string, machine *v1alpha2.Machine,
 				trunk = trunkList[0]
 			}
 
-			_, err = attributestags.ReplaceAll(is.networkClient, "trunks", trunk.ID, attributestags.ReplaceAllOpts{
+			_, err = attributestags.ReplaceAll(s.networkClient, "trunks", trunk.ID, attributestags.ReplaceAllOpts{
 				Tags: machineTags}).Extract()
 			if err != nil {
 				return nil, fmt.Errorf("tagging trunk for server err: %v", err)
@@ -204,20 +203,23 @@ func (is *Service) InstanceCreate(clusterName string, machine *v1alpha2.Machine,
 	}
 
 	var serverTags []string
-	if openStackCluster.Spec.DisableServerTags == false {
+	if !openStackCluster.Spec.DisableServerTags {
 		serverTags = machineTags
 		// NOTE(flaper87): This is the minimum required version
 		// to use tags.
-		is.computeClient.Microversion = "2.52"
+		s.computeClient.Microversion = "2.52"
+		defer func(s *Service) {
+			s.computeClient.Microversion = ""
+		}(s)
 	}
 
 	// Get image ID
-	imageID, err := getImageID(is, openStackMachine.Spec.Image)
+	imageID, err := getImageID(s, openStackMachine.Spec.Image)
 	if err != nil {
 		return nil, fmt.Errorf("create new server err: %v", err)
 	}
 
-	serverCreateOpts := servers.CreateOpts{
+	var serverCreateOpts servers.CreateOptsBuilder = servers.CreateOpts{
 		Name:             openStackMachine.Name,
 		ImageRef:         imageID,
 		FlavorName:       openStackMachine.Spec.Flavor,
@@ -225,7 +227,7 @@ func (is *Service) InstanceCreate(clusterName string, machine *v1alpha2.Machine,
 		Networks:         portsList,
 		UserData:         []byte(*machine.Spec.Bootstrap.Data),
 		SecurityGroups:   securityGroups,
-		ServiceClient:    is.computeClient,
+		ServiceClient:    s.computeClient,
 		Tags:             serverTags,
 		Metadata:         openStackMachine.Spec.ServerMetadata,
 		ConfigDrive:      openStackMachine.Spec.ConfigDrive,
@@ -233,8 +235,6 @@ func (is *Service) InstanceCreate(clusterName string, machine *v1alpha2.Machine,
 
 	// If the root volume Size is not 0, means boot from volume
 	if openStackMachine.Spec.RootVolume != nil && openStackMachine.Spec.RootVolume.Size != 0 {
-		var blocks []bootfromvolume.BlockDevice
-
 		block := bootfromvolume.BlockDevice{
 			SourceType:          bootfromvolume.SourceType(openStackMachine.Spec.RootVolume.SourceType),
 			BootIndex:           0,
@@ -244,22 +244,22 @@ func (is *Service) InstanceCreate(clusterName string, machine *v1alpha2.Machine,
 			VolumeSize:          openStackMachine.Spec.RootVolume.Size,
 			DeviceType:          openStackMachine.Spec.RootVolume.DeviceType,
 		}
-		blocks = append(blocks, block)
-
-		createOpts = bootfromvolume.CreateOptsExt{
-			CreateOptsBuilder: createOpts,
-			BlockDevice:       blocks,
+		serverCreateOpts = bootfromvolume.CreateOptsExt{
+			CreateOptsBuilder: serverCreateOpts,
+			BlockDevice:       []bootfromvolume.BlockDevice{block},
 		}
 	}
 
-	server, err := servers.Create(is.computeClient, keypairs.CreateOptsExt{
+	server, err := servers.Create(s.computeClient, keypairs.CreateOptsExt{
 		CreateOptsBuilder: serverCreateOpts,
-		KeyName:           openStackMachine.Spec.KeyName,
+		KeyName:           openStackMachine.Spec.SSHKeyName,
 	}).Extract()
 	if err != nil {
+		record.Warnf(openStackMachine, "FailedCreateServer", "Failed to create server: %v", err)
 		return nil, fmt.Errorf("create new server err: %v", err)
 	}
-	is.computeClient.Microversion = ""
+	record.Eventf(openStackMachine, "SuccessfulCreateServer", "Created server %s with id %s", openStackMachine.Name, server.ID)
+
 	return &Instance{Server: *server, State: infrav1.InstanceState(server.Status)}, nil
 }
 
@@ -309,7 +309,7 @@ func getSecurityGroups(is *Service, securityGroupParams []infrav1.SecurityGroupP
 }
 
 func isDuplicate(list []string, name string) bool {
-	if list == nil || len(list) == 0 {
+	if len(list) == 0 {
 		return false
 	}
 	for _, element := range list {
@@ -321,7 +321,7 @@ func isDuplicate(list []string, name string) bool {
 }
 
 // A function for getting the id of a network by querying openstack with filters
-func getNetworkIDsByFilter(networkClient *gophercloud.ServiceClient, opts *networks.ListOpts) ([]string, error) {
+func getNetworkIDsByFilter(networkClient *gophercloud.ServiceClient, opts networks.ListOptsBuilder) ([]string, error) {
 	if opts == nil {
 		return []string{}, fmt.Errorf("no Filters were passed")
 	}
@@ -391,14 +391,19 @@ func getImageID(is *Service, imageName string) (string, error) {
 	}
 }
 
-func (is *Service) AssociateFloatingIP(instanceID, floatingIP string) error {
+func (s *Service) AssociateFloatingIP(instanceID, floatingIP string) error {
 	opts := floatingips.AssociateOpts{
 		FloatingIP: floatingIP,
 	}
-	return floatingips.AssociateInstance(is.computeClient, instanceID, opts).ExtractErr()
+	return floatingips.AssociateInstance(s.computeClient, instanceID, opts).ExtractErr()
 }
 
-func (is *Service) InstanceDelete(machine *v1alpha2.Machine) error {
+func (s *Service) InstanceDelete(machine *clusterv1.Machine) error {
+
+	if machine.Spec.ProviderID == nil {
+		// nothing to do
+		return nil
+	}
 
 	parsed, err := noderefutil.NewProviderID(*machine.Spec.ProviderID)
 	if err != nil {
@@ -406,7 +411,7 @@ func (is *Service) InstanceDelete(machine *v1alpha2.Machine) error {
 	}
 
 	// get instance port id
-	allInterfaces, err := attachinterfaces.List(is.computeClient, parsed.ID()).AllPages()
+	allInterfaces, err := attachinterfaces.List(s.computeClient, parsed.ID()).AllPages()
 	if err != nil {
 		return err
 	}
@@ -415,16 +420,16 @@ func (is *Service) InstanceDelete(machine *v1alpha2.Machine) error {
 		return err
 	}
 	if len(instanceInterfaces) < 1 {
-		return servers.Delete(is.computeClient, parsed.ID()).ExtractErr()
+		return servers.Delete(s.computeClient, parsed.ID()).ExtractErr()
 	}
 
-	trunkSupport, err := getTrunkSupport(is)
+	trunkSupport, err := getTrunkSupport(s)
 	if err != nil {
 		return fmt.Errorf("obtaining network extensions: %v", err)
 	}
 	// get and delete trunks
 	for _, port := range instanceInterfaces {
-		err := attachinterfaces.Delete(is.computeClient, parsed.ID(), port.PortID).ExtractErr()
+		err := attachinterfaces.Delete(s.computeClient, parsed.ID(), port.PortID).ExtractErr()
 		if err != nil {
 			return err
 		}
@@ -432,7 +437,7 @@ func (is *Service) InstanceDelete(machine *v1alpha2.Machine) error {
 			listOpts := trunks.ListOpts{
 				PortID: port.PortID,
 			}
-			allTrunks, err := trunks.List(is.networkClient, listOpts).AllPages()
+			allTrunks, err := trunks.List(s.networkClient, listOpts).AllPages()
 			if err != nil {
 				return err
 			}
@@ -442,7 +447,7 @@ func (is *Service) InstanceDelete(machine *v1alpha2.Machine) error {
 			}
 			if len(trunkInfo) == 1 {
 				err = util.PollImmediate(RetryIntervalTrunkDelete, TimeoutTrunkDelete, func() (bool, error) {
-					err := trunks.Delete(is.networkClient, trunkInfo[0].ID).ExtractErr()
+					err := trunks.Delete(s.networkClient, trunkInfo[0].ID).ExtractErr()
 					if err != nil {
 						return false, nil
 					}
@@ -456,7 +461,7 @@ func (is *Service) InstanceDelete(machine *v1alpha2.Machine) error {
 
 		// delete port
 		err = util.PollImmediate(RetryIntervalPortDelete, TimeoutPortDelete, func() (bool, error) {
-			err := ports.Delete(is.networkClient, port.PortID).ExtractErr()
+			err := ports.Delete(s.networkClient, port.PortID).ExtractErr()
 			if err != nil {
 				return false, nil
 			}
@@ -468,7 +473,7 @@ func (is *Service) InstanceDelete(machine *v1alpha2.Machine) error {
 	}
 
 	// delete instance
-	return servers.Delete(is.computeClient, parsed.ID()).ExtractErr()
+	return servers.Delete(s.computeClient, parsed.ID()).ExtractErr()
 }
 
 type InstanceListOpts struct {
@@ -485,7 +490,7 @@ type InstanceListOpts struct {
 	Name string `q:"name"`
 }
 
-func (is *Service) GetInstanceList(opts *InstanceListOpts) ([]*Instance, error) {
+func (s *Service) GetInstanceList(opts *InstanceListOpts) ([]*Instance, error) {
 	var listOpts servers.ListOpts
 	if opts != nil {
 		listOpts = servers.ListOpts{
@@ -495,7 +500,7 @@ func (is *Service) GetInstanceList(opts *InstanceListOpts) ([]*Instance, error) 
 		listOpts = servers.ListOpts{}
 	}
 
-	allPages, err := servers.List(is.computeClient, listOpts).AllPages()
+	allPages, err := servers.List(s.computeClient, listOpts).AllPages()
 	if err != nil {
 		return nil, fmt.Errorf("get service list: %v", err)
 	}
@@ -503,7 +508,7 @@ func (is *Service) GetInstanceList(opts *InstanceListOpts) ([]*Instance, error) 
 	if err != nil {
 		return nil, fmt.Errorf("extract services list: %v", err)
 	}
-	var instanceList []*Instance
+	instanceList := []*Instance{}
 	for _, server := range serverList {
 		instanceList = append(instanceList, &Instance{
 			Server: server,
@@ -513,25 +518,25 @@ func (is *Service) GetInstanceList(opts *InstanceListOpts) ([]*Instance, error) 
 	return instanceList, nil
 }
 
-func (is *Service) GetInstance(resourceId string) (instance *Instance, err error) {
-	if resourceId == "" {
-		return nil, fmt.Errorf("ResourceId should be specified to  get detail.")
+func (s *Service) GetInstance(resourceID string) (instance *Instance, err error) {
+	if resourceID == "" {
+		return nil, fmt.Errorf("resourceId should be specified to  get detail")
 	}
-	server, err := servers.Get(is.computeClient, resourceId).Extract()
+	server, err := servers.Get(s.computeClient, resourceID).Extract()
 	if err != nil {
-		return nil, fmt.Errorf("get server %q detail failed: %v", resourceId, err)
+		return nil, fmt.Errorf("get server %q detail failed: %v", resourceID, err)
 	}
 	return &Instance{Server: *server, State: infrav1.InstanceState(server.Status)}, err
 }
 
-func (is *Service) InstanceExists(openStackMachine *infrav1.OpenStackMachine) (instance *Instance, err error) {
+func (s *Service) InstanceExists(openStackMachine *infrav1.OpenStackMachine) (instance *Instance, err error) {
 	opts := &InstanceListOpts{
 		Name:   openStackMachine.Name,
 		Image:  openStackMachine.Spec.Image,
 		Flavor: openStackMachine.Spec.Flavor,
 	}
 
-	instanceList, err := is.GetInstanceList(opts)
+	instanceList, err := s.GetInstanceList(opts)
 	if err != nil {
 		return nil, err
 	}
@@ -539,22 +544,4 @@ func (is *Service) InstanceExists(openStackMachine *infrav1.OpenStackMachine) (i
 		return nil, nil
 	}
 	return instanceList[0], nil
-}
-
-// UpdateToken to update token if need.
-func (is *Service) UpdateToken() error {
-	token := is.provider.Token()
-	result, err := tokens.Validate(is.identityClient, token)
-	if err != nil {
-		return fmt.Errorf("validate token: %v", err)
-	}
-	if result {
-		return nil
-	}
-	klog.V(2).Infof("Token is out of date, getting new token.")
-	reAuthFunction := is.provider.ReauthFunc
-	if reAuthFunction() != nil {
-		return fmt.Errorf("reAuth: %v", err)
-	}
-	return nil
 }

@@ -8,3 +8,6 @@ resources:
 - group: infrastructure
   version: v1alpha2
   kind: OpenStackMachine
+- group: infrastructure
+  version: v1alpha2
+  kind: OpenStackMachineTemplate

@@ -1,136 +1,81 @@
+# Copyright 2019 The Kubernetes Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
+# If you update this file, please follow:
+# https://suva.sh/posts/well-documented-makefiles/
+
+# Ensure Make is run with bash shell as some syntax below is bash-specific
+SHELL:=/usr/bin/env bash
+
+.DEFAULT_GOAL:=help
+
+# Use GOPROXY environment variable if set
+GOPROXY := $(shell go env GOPROXY)
+ifeq ($(GOPROXY),)
+GOPROXY := https://proxy.golang.org
+endif
+export GOPROXY
+
+# Activate module mode, as we use go modules to manage dependencies
+export GO111MODULE=on
+
+# Directories.
+TOOLS_DIR := hack/tools
+TOOLS_BIN_DIR := $(TOOLS_DIR)/bin
+BIN_DIR := bin
+
+# Binaries.
+CLUSTERCTL := $(BIN_DIR)/clusterctl
+CONTROLLER_GEN := $(TOOLS_BIN_DIR)/controller-gen
+GOLANGCI_LINT := $(TOOLS_BIN_DIR)/golangci-lint
+MOCKGEN := $(TOOLS_BIN_DIR)/mockgen
+
+# Define Docker related variables. Releases should modify and double check these vars.
+REGISTRY ?= k8scloudprovider
+CONTROLLER_IMG ?= $(REGISTRY)/cluster-api-openstack-controller
+TAG ?= dev
+ARCH ?= amd64
+ALL_ARCH = amd64 arm arm64 ppc64le s390x
 
 # Allow overriding manifest generation destination directory
-MANIFEST_ROOT ?= "config"
-CRD_ROOT ?= "$(MANIFEST_ROOT)/crd/bases"
-WEBHOOK_ROOT ?= "$(MANIFEST_ROOT)/webhook"
-RBAC_ROOT ?= "$(MANIFEST_ROOT)/rbac"
+MANIFEST_ROOT ?= config
+CRD_ROOT ?= $(MANIFEST_ROOT)/crd/bases
+WEBHOOK_ROOT ?= $(MANIFEST_ROOT)/webhook
+RBAC_ROOT ?= $(MANIFEST_ROOT)/rbac
 
-
-
-GIT_HOST = sigs.k8s.io
-PWD := $(shell pwd)
-BASE_DIR := $(shell basename $(PWD))
-
-HAS_LINT := $(shell command -v golint;)
-HAS_GOX := $(shell command -v gox;)
+# Check if binaries exist
 HAS_YQ := $(shell command -v yq;)
 HAS_KUSTOMIZE := $(shell command -v kustomize;)
 HAS_ENVSUBST := $(shell command -v envsubst;)
-GOX_PARALLEL ?= 3
-TARGETS ?= darwin/amd64 linux/amd64 linux/386 linux/arm linux/arm64 linux/ppc64le
-DIST_DIRS         = find * -type d -exec
 
-GOOS ?= $(shell go env GOOS)
-VERSION ?= $(shell git describe --exact-match 2> /dev/null || \
-                 git describe --match=$(git rev-parse --short=8 HEAD) --always --dirty --abbrev=8)
-GOFLAGS   :=
-TAGS      :=
-LDFLAGS   := "-w -s -X 'main.version=${VERSION}'"
-REGISTRY ?= k8scloudprovider
+## --------------------------------------
+## Help
+## --------------------------------------
 
-MANAGER_IMAGE_NAME ?= cluster-api-provider-openstack
-MANAGER_IMAGE_TAG ?= dev
-PULL_POLICY ?= Always
+help:  ## Display this help
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
-# Used in docker-* targets.
-MANAGER_IMAGE ?= $(REGISTRY)/$(MANAGER_IMAGE_NAME):$(MANAGER_IMAGE_TAG)
+## --------------------------------------
+## Define targets for prow
+## --------------------------------------
 
 
-build: binary images
+.PHONY: images
+images: docker-build ## Build all images
 
-binary: manager clusterctl
-
-manager:
-	CGO_ENABLED=0 GOOS=$(GOOS) go build -v \
-		-ldflags $(LDFLAGS) \
-		-o bin/manager \
-		cmd/manager/main.go
-
-clusterctl:
-	CGO_ENABLED=0 GOOS=$(GOOS) go build \
-		-ldflags $(LDFLAGS) \
-		-o bin/clusterctl \
-		cmd/clusterctl/main.go
-
-check: vendor fmt vet lint
-
-fmt:
-	hack/verify-gofmt.sh
-
-lint:
-ifndef HAS_LINT
-		go get -u golang.org/x/lint/golint
-		echo "installing golint"
-endif
-	hack/verify-golint.sh
-
-vet:
-	go vet ./pkg/... ./cmd/...
-
-cover: generate vendor
-	go test -tags=unit ./pkg/... ./cmd/... -cover
-
-docs:
-	@echo "$@ not yet implemented"
-
-godoc:
-	@echo "$@ not yet implemented"
-
-releasenotes:
-	@echo "Reno not yet implemented for this repo"
-
-translation:
-	@echo "$@ not yet implemented"
-
-# Do the work here
-
-# Set up the development environment
-env:
-	@echo "PWD: $(PWD)"
-	@echo "BASE_DIR: $(BASE_DIR)"
-	go version
-	go env
-
-shell:
-	$(SHELL) -i
-
-images: docker-build
-
-# Build the docker image
-.PHONY: docker-build
-docker-build:
-	docker build . -t ${MANAGER_IMAGE}
-
-upload-images: images
-	@echo "push images to $(REGISTRY)"
-	docker login -u="$(DOCKER_USERNAME)" -p="$(DOCKER_PASSWORD)";
-	docker push $(REGISTRY)/openstack-cluster-api-controller:$(VERSION)
-	docker push $(REGISTRY)/openstack-cluster-api-clusterctl:$(VERSION)
-
-version:
-	@echo ${VERSION}
-
-.PHONY: build-cross
-build-cross: LDFLAGS += -extldflags "-static"
-build-cross: vendor
-ifndef HAS_GOX
-	go get -u github.com/mitchellh/gox
-endif
-	CGO_ENABLED=0 gox -parallel=$(GOX_PARALLEL) -output="_dist/{{.OS}}-{{.Arch}}/{{.Dir}}" -osarch='$(TARGETS)' $(GOFLAGS) $(if $(TAGS),-tags '$(TAGS)',) -ldflags '$(LDFLAGS)' $(GIT_HOST)/$(BASE_DIR)/cmd/openstack-machine-controller/
-
-.PHONY: dist
-dist: build-cross
-	( \
-		cd _dist && \
-		$(DIST_DIRS) cp ../LICENSE {} \; && \
-		$(DIST_DIRS) cp ../README.md {} \; && \
-		$(DIST_DIRS) tar -zcf cluster-api-provider-openstack-$(VERSION)-{}.tar.gz {} \; && \
-		$(DIST_DIRS) zip -r cluster-api-provider-openstack-$(VERSION)-{}.zip {} \; \
-	)
-
-# TODO(sbueringer) target below are already cleaned up after v1alpha2 refactoring
-# targets above have to be cleaned up
+.PHONY: check
+check: modules generate lint-full test
 
 ## --------------------------------------
 ## Testing
@@ -142,70 +87,231 @@ test: generate lint ## Run tests
 	$(MAKE) test-generate-examples
 
 .PHONY: test-go
-test-go: ## Run tests
-	go test -v -tags=unit ./api/... ./pkg/... ./controllers/...
+test-go: ## Run golang tests
+	go test -v ./api/... ./pkg/... ./controllers/...
+	# TODO change to ./... as soon as vendor is removed
 
 test-generate-examples:
 ifndef HAS_YQ
-	go get github.com/mikefarah/yq
 	echo "installing yq"
+	GO111MODULE=off go get github.com/mikefarah/yq
 endif
 ifndef HAS_KUSTOMIZE
-	GO111MODULE=on go get sigs.k8s.io/kustomize/v3/cmd/kustomize
 	echo "installing kustomize"
+	go get sigs.k8s.io/kustomize/v3/cmd/kustomize
 endif
 ifndef HAS_ENVSUBST
-	go get github.com/a8m/envsubst/cmd/envsubst
 	echo "installing envsubst"
+	go get github.com/a8m/envsubst/cmd/envsubst
 endif
 	# Create a dummy file for test only
-	mkdir tmp
-	echo 'clouds' > tmp/dummy-clouds-test.yaml
-	examples/generate.sh -f tmp/dummy-clouds-test.yaml openstack tmp/dummy-make-auto-test
+	mkdir -p tmp/dummy-make-auto-test
+	echo 'clouds' > tmp/dummy-make-auto-test/dummy-clouds-test.yaml
+	examples/generate.sh -f tmp/dummy-make-auto-test/dummy-clouds-test.yaml openstack tmp/dummy-make-auto-test/_out
 	# the folder will be generated under same folder of examples
 	rm -rf tmp/dummy-make-auto-test
-	rm tmp/dummy-clouds-test.yaml
+
+## --------------------------------------
+## Binaries
+## --------------------------------------
+
+.PHONY: binaries
+binaries: manager ## Builds and installs all binaries
+
+.PHONY: manager
+manager: ## Build manager binary.
+	go build -o $(BIN_DIR)/manager .
+
+## --------------------------------------
+## Tooling Binaries
+## --------------------------------------
+
+$(CLUSTERCTL): go.mod ## Build clusterctl binary.
+	go build -o $(BIN_DIR)/clusterctl sigs.k8s.io/cluster-api/cmd/clusterctl
+
+$(CONTROLLER_GEN): $(TOOLS_DIR)/go.mod # Build controller-gen from tools folder.
+	cd $(TOOLS_DIR); go build -tags=tools -o $(BIN_DIR)/controller-gen sigs.k8s.io/controller-tools/cmd/controller-gen
+
+$(GOLANGCI_LINT): $(TOOLS_DIR)/go.mod # Build golangci-lint from tools folder.
+	cd $(TOOLS_DIR); go build -tags=tools -o $(BIN_DIR)/golangci-lint github.com/golangci/golangci-lint/cmd/golangci-lint
+
+$(MOCKGEN): $(TOOLS_DIR)/go.mod # Build mockgen from tools folder.
+	cd $(TOOLS_DIR); go build -tags=tools -o $(BIN_DIR)/mockgen github.com/golang/mock/mockgen
+
+## --------------------------------------
+## Linting
+## --------------------------------------
+
+.PHONY: lint
+lint: $(GOLANGCI_LINT) ## Lint codebase
+	$(GOLANGCI_LINT) run -v
+
+lint-full: $(GOLANGCI_LINT) ## Run slower linters to detect possible issues
+	$(GOLANGCI_LINT) run -v --fast=false
 
 ## --------------------------------------
 ## Generate
 ## --------------------------------------
 
-.PHONY: vendor
-vendor: ## Runs go mod to ensure proper vendoring.
-	./hack/update-vendor.sh
+.PHONY: modules
+modules: ## Runs go mod to ensure proper vendoring.
+	go mod tidy
+	cd $(TOOLS_DIR); go mod tidy
 
 .PHONY: generate
 generate: ## Generate code
 	$(MAKE) generate-go
 	$(MAKE) generate-manifests
-	$(MAKE) generate-deepcopy
 
 .PHONY: generate-go
-generate-go: ## Runs go generate
+generate-go: $(CONTROLLER_GEN) $(MOCKGEN) ## Runs Go related generate targets
 	go generate ./pkg/... ./cmd/...
+	# TODO change to ./.. as soon as vendor is removed
+	$(CONTROLLER_GEN) \
+		paths=./api/... \
+		object:headerFile=./hack/boilerplate.go.txt
 
 .PHONY: generate-manifests
 generate-manifests: ## Generate manifests e.g. CRD, RBAC etc.
-	go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go \
+	$(CONTROLLER_GEN) \
 		paths=./api/... \
 		crd:trivialVersions=true \
 		output:crd:dir=$(CRD_ROOT) \
 		output:webhook:dir=$(WEBHOOK_ROOT) \
 		webhook
-	go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go \
+	$(CONTROLLER_GEN) \
 		paths=./controllers/... \
 		output:rbac:dir=$(RBAC_ROOT) \
 		rbac:roleName=manager-role
 
-.PHONY: generate-deepcopy
-generate-deepcopy: ## Runs controller-gen to generate deepcopy files.
-	go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go \
-		paths=./api/... \
-		object:headerFile=./hack/boilerplate/boilerplate.generatego.txt
-
 .PHONY: generate-examples
 generate-examples: clean-examples ## Generate examples configurations to run a cluster.
 	./examples/generate.sh
+
+## --------------------------------------
+## Docker
+## --------------------------------------
+
+.PHONY: docker-build
+docker-build: ## Build the docker image for controller-manager
+	docker build --pull --build-arg ARCH=$(ARCH) . -t $(CONTROLLER_IMG)-$(ARCH):$(TAG)
+	MANIFEST_IMG=$(CONTROLLER_IMG)-$(ARCH) MANIFEST_TAG=$(TAG) $(MAKE) set-manifest-image
+
+.PHONY: docker-push
+docker-push: ## Push the docker image
+	docker push $(CONTROLLER_IMG)-$(ARCH):$(TAG)
+
+## --------------------------------------
+## Docker — All ARCH
+## --------------------------------------
+
+.PHONY: docker-build-all ## Build all the architecture docker images
+docker-build-all: $(addprefix docker-build-,$(ALL_ARCH))
+
+docker-build-%:
+	$(MAKE) ARCH=$* docker-build
+
+.PHONY: docker-push-all ## Push all the architecture docker images
+docker-push-all: $(addprefix docker-push-,$(ALL_ARCH))
+	$(MAKE) docker-push-manifest
+
+docker-push-%:
+	$(MAKE) ARCH=$* docker-push
+
+.PHONY: docker-push-manifest
+docker-push-manifest: ## Push the fat manifest docker image.
+	## Minimum docker version 18.06.0 is required for creating and pushing manifest images.
+	docker manifest create --amend $(CONTROLLER_IMG):$(TAG) $(shell echo $(ALL_ARCH) | sed -e "s~[^ ]*~$(CONTROLLER_IMG)\-&:$(TAG)~g")
+	@for arch in $(ALL_ARCH); do docker manifest annotate --arch $${arch} ${CONTROLLER_IMG}:${TAG} ${CONTROLLER_IMG}-$${arch}:${TAG}; done
+	MANIFEST_IMG=$(CONTROLLER_IMG) MANIFEST_TAG=$(TAG) $(MAKE) set-manifest-image
+
+.PHONY: set-manifest-image
+set-manifest-image:
+	$(info Updating kustomize image patch file for manager resource)
+	sed -i'' -e 's@image: .*@image: '"${MANIFEST_IMG}:$(MANIFEST_TAG)"'@' ./config/default/manager_image_patch.yaml
+
+## --------------------------------------
+## Release TODO(sbueringer): just copied over from CAPA right now, have to implement that for OpenStack
+## --------------------------------------
+
+RELEASE_TAG := $(shell git describe --abbrev=0 2>/dev/null)
+
+.PHONY: release
+release:  ## Builds and push container images using the latest git tag for the commit.
+	@if [ -z "${RELEASE_TAG}" ]; then echo "RELEASE_TAG is not set"; exit 1; fi
+	# Push the release image to the staging bucket first.
+	REGISTRY=gcr.io/k8s-staging-cluster-api-openstack TAG=$(RELEASE_TAG) \
+		$(MAKE) docker-build-all docker-push-all
+	# Set the manifest image to the production bucket.
+	REGISTRY=us.gcr.io/k8s-artifacts-prod/cluster-api-openstack TAG=$(RELEASE_TAG) \
+		set-manifest-image
+	# Generate release artifacts.
+	mkdir -p out/
+	kustomize build config/default > out/infrastructure-components.yaml
+
+.PHONY: release-staging-latest
+release-staging-latest: ## Builds and push container images to the staging bucket using "latest" tag.
+	REGISTRY=gcr.io/k8s-staging-cluster-api-openstack TAG=latest \
+		$(MAKE) docker-build-all docker-push-all
+
+## --------------------------------------
+## Development
+## --------------------------------------
+
+.PHONY: create-cluster
+create-cluster: $(CLUSTERCTL) ## Create a development Kubernetes cluster on OpenStack using examples
+	$(CLUSTERCTL) \
+	create cluster -v 4 \
+	--bootstrap-flags="name=clusterapi" \
+	--bootstrap-type kind \
+	-m ./examples/_out/controlplane.yaml \
+	-c ./examples/_out/cluster.yaml \
+	-p ./examples/_out/provider-components.yaml \
+	-a ./examples/addons.yaml
+
+.PHONY: create-cluster-management
+create-cluster-management: $(CLUSTERCTL) ## Create a development Kubernetes cluster on OpenStack in a KIND management cluster.
+	kind create cluster --name=clusterapi
+	# Apply provider-components.
+	kubectl \
+		--kubeconfig=$$(kind get kubeconfig-path --name="clusterapi") \
+		create -f examples/_out/provider-components.yaml
+	# Create Cluster.
+	kubectl \
+		--kubeconfig=$$(kind get kubeconfig-path --name="clusterapi") \
+		create -f examples/_out/cluster.yaml
+	# Create control plane machine.
+	kubectl \
+		--kubeconfig=$$(kind get kubeconfig-path --name="clusterapi") \
+		create -f examples/_out/controlplane.yaml
+	# Get KubeConfig using clusterctl.
+	$(CLUSTERCTL) \
+		alpha phases get-kubeconfig -v=3 \
+		--kubeconfig=$$(kind get kubeconfig-path --name="clusterapi") \
+		--namespace=default \
+		--cluster-name=test1
+	# Apply addons on the target cluster, waiting for the control-plane to become available.
+	$(CLUSTERCTL) \
+		alpha phases apply-addons -v=3 \
+		--kubeconfig=./kubeconfig \
+		-a examples/addons.yaml
+	# Create a worker node with MachineDeployment.
+	kubectl \
+		--kubeconfig=$$(kind get kubeconfig-path --name="clusterapi") \
+		create -f examples/_out/worker.yaml
+
+.PHONY: delete-cluster
+delete-cluster: $(CLUSTERCTL) ## Deletes the development Kubernetes Cluster "test1"
+	$(CLUSTERCTL) \
+	delete cluster -v 4 \
+	--bootstrap-type kind \
+	--bootstrap-flags="name=clusterapi" \
+	--cluster test1 \
+	--kubeconfig ./kubeconfig \
+	-p ./examples/out/provider-components.yaml \
+
+kind-reset: ## Destroys the "clusterapi" kind cluster.
+	kind delete cluster --name=clusterapi || true
 
 ## --------------------------------------
 ## Cleanup / Verification
@@ -219,6 +325,7 @@ clean: ## Remove all generated files
 .PHONY: clean-bin
 clean-bin: ## Remove all generated binaries
 	rm -rf bin
+	rm -rf hack/tools/bin
 
 .PHONY: clean-temporary
 clean-temporary: ## Remove all temporary files and folders
@@ -231,6 +338,6 @@ clean-examples: ## Remove all the temporary files generated in the examples fold
 	rm -rf examples/_out/
 	rm -f examples/provider-components/provider-components-*.yaml
 
-
-.PHONY: build clean cover vendor docs fmt functional lint \
-	translation version build-cross dist manifests
+.PHONY: verify-install
+verify-install: ## Checks that you've installed this repository correctly
+	./hack/verify-install.sh

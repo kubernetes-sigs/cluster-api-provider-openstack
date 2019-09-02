@@ -1,4 +1,5 @@
 /*
+Copyright 2019 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27,9 +28,6 @@ const (
 	MachineFinalizer = "openstackmachine.infrastructure.cluster.x-k8s.io"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // OpenStackMachineSpec defines the desired state of OpenStackMachine
 type OpenStackMachineSpec struct {
 
@@ -52,7 +50,7 @@ type OpenStackMachineSpec struct {
 	Image string `json:"image"`
 
 	// The ssh key to inject in the instance
-	KeyName string `json:"keyName,omitempty"`
+	SSHKeyName string `json:"sshKeyName,omitempty"`
 
 	// A networks object. Required parameter when there are multiple networks defined for the tenant.
 	// When you do not specify the networks parameter, the server attaches to the only network created for the current tenant.

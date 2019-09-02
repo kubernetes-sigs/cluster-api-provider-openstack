@@ -8,5 +8,5 @@ spec:
     spec:
       containers:
       # Change the value of image field below to your controller image URL
-      - image: docker.io/sbueringer/cluster-api-provider-openstack:dev
+      - image: k8scloudprovider/openstack-cluster-api-controller:latest
         name: manager

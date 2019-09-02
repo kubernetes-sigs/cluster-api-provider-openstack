@@ -18,6 +18,8 @@ package loadbalancer
 
 import (
 	"fmt"
+	"github.com/go-logr/logr"
+
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 
@@ -33,10 +35,11 @@ const (
 type Service struct {
 	loadbalancerClient *gophercloud.ServiceClient
 	networkingClient   *gophercloud.ServiceClient
+	logger             logr.Logger
 }
 
 // NewService returns an instance of the loadbalancer service
-func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, useOctavia bool) (*Service, error) {
+func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, logger logr.Logger, useOctavia bool) (*Service, error) {
 	var err error
 	var loadbalancerClient *gophercloud.ServiceClient
 	if useOctavia {
@@ -61,5 +64,6 @@ func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.Cli
 	return &Service{
 		loadbalancerClient: loadbalancerClient,
 		networkingClient:   networkingClient,
+		logger:             logger,
 	}, nil
 }

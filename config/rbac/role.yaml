@@ -9,6 +9,7 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - events
   - secrets
   verbs:
   - create
@@ -21,6 +22,7 @@ rules:
   - cluster.x-k8s.io
   resources:
   - clusters
+  - clusters/status
   verbs:
   - get
   - list
@@ -30,6 +32,7 @@ rules:
   resources:
   - clusters
   - machines
+  - machines/status
   verbs:
   - get
   - list

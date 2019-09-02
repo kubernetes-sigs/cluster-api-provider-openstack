@@ -1,4 +1,5 @@
 /*
+Copyright 2019 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,9 +27,6 @@ const (
 	ClusterFinalizer = "openstackcluster.infrastructure.cluster.x-k8s.io"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // OpenStackClusterSpec defines the desired state of OpenStackCluster
 type OpenStackClusterSpec struct {
 
@@ -55,7 +53,7 @@ type OpenStackClusterSpec struct {
 
 	// UseOctavia is weather LoadBalancer Service is Octavia or not
 	// +optional
-	UseOctavia bool `json:"useOctavia, omitempty"`
+	UseOctavia bool `json:"useOctavia,omitempty"`
 
 	// ManagedAPIServerLoadBalancer defines whether a LoadBalancer for the
 	// APIServer should be created. If set to true the following properties are

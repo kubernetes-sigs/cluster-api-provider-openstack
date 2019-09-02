@@ -17,8 +17,8 @@ spec:
     # * Enable the apiServerPort property
     #apiServerPort: 6443
   infrastructureRef:
-    kind: OpenStackCluster
     apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+    kind: OpenStackCluster
     name: ${CLUSTER_NAME}
     namespace: ${CLUSTER_NAME}
 ---

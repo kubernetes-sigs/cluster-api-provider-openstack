@@ -20,9 +20,12 @@ import (
 	"flag"
 	"net/http"
 	"os"
+	"time"
+
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
-	"time"
 
 	_ "net/http/pprof"
 
@@ -52,29 +55,74 @@ func init() {
 func main() {
 	klog.InitFlags(nil)
 
-	var metricsAddr string
-	var enableLeaderElection bool
+	var (
+		metricsAddr                 string
+		enableLeaderElection        bool
+		watchNamespace              string
+		profilerAddress             string
+		openStackClusterConcurrency int
+		openStackMachineConcurrency int
+		syncPeriod                  time.Duration
+	)
 
-	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
-	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
-		"Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
-	watchNamespace := flag.String("namespace", "",
-		"Namespace that the controller watches to reconcile cluster-api objects. If unspecified, the controller watches for cluster-api objects across all namespaces.")
-	profilerAddress := flag.String("profiler-address", "", "Bind address to expose the pprof profiler (e.g. localhost:6060)")
+	flag.StringVar(
+		&metricsAddr,
+		"metrics-addr",
+		":8080",
+		"The address the metric endpoint binds to.",
+	)
+
+	flag.BoolVar(
+		&enableLeaderElection,
+		"enable-leader-election",
+		false,
+		"Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.",
+	)
+
+	flag.StringVar(
+		&watchNamespace,
+		"namespace",
+		"",
+		"Namespace that the controller watches to reconcile cluster-api objects. If unspecified, the controller watches for cluster-api objects across all namespaces.",
+	)
+
+	flag.StringVar(
+		&profilerAddress,
+		"profiler-address",
+		"",
+		"Bind address to expose the pprof profiler (e.g. localhost:6060)",
+	)
+
+	flag.IntVar(&openStackClusterConcurrency,
+		"openstackcluster-concurrency",
+		1,
+		"Number of OpenStackClusters to process simultaneously",
+	)
+
+	flag.IntVar(&openStackMachineConcurrency,
+		"openstackmachine-concurrency",
+		1,
+		"Number of OpenStackMachines to process simultaneously",
+	)
+
+	flag.DurationVar(&syncPeriod,
+		"sync-period",
+		10*time.Minute,
+		"The minimum interval at which watched resources are reconciled (e.g. 15m)",
+	)
+
 	flag.Parse()
 
-	if *watchNamespace != "" {
-		setupLog.Info("Watching cluster-api objects only in namespace for reconciliation", "namespace", *watchNamespace)
+	if watchNamespace != "" {
+		setupLog.Info("Watching cluster-api objects only in namespace for reconciliation", "namespace", watchNamespace)
 	}
 
-	if *profilerAddress != "" {
-		setupLog.Info("Profiler listening for requests", "profiler-address", *profilerAddress)
+	if profilerAddress != "" {
+		setupLog.Info("Profiler listening for requests", "profiler-address", profilerAddress)
 		go func() {
-			setupLog.Error(http.ListenAndServe(*profilerAddress, nil), "listen and serve error")
+			setupLog.Error(http.ListenAndServe(profilerAddress, nil), "listen and serve error")
 		}()
 	}
-
-	syncPeriod := 10 * time.Minute
 
 	ctrl.SetLogger(klogr.New())
 
@@ -88,7 +136,7 @@ func main() {
 		MetricsBindAddress: metricsAddr,
 		LeaderElection:     enableLeaderElection,
 		SyncPeriod:         &syncPeriod,
-		Namespace:          *watchNamespace,
+		Namespace:          watchNamespace,
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
@@ -99,18 +147,18 @@ func main() {
 	record.InitFromRecorder(mgr.GetEventRecorderFor("openstack-controller"))
 
 	if err = (&controllers.OpenStackMachineReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("OpenStackMachine"),
-		//Recorder: mgr.GetEventRecorderFor("openstackmachine-controller"),
-	}).SetupWithManager(mgr); err != nil {
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("controllers").WithName("OpenStackMachine"),
+		Recorder: mgr.GetEventRecorderFor("openstackmachine-controller"),
+	}).SetupWithManager(mgr, controller.Options{MaxConcurrentReconciles: openStackMachineConcurrency}); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "OpenStackMachine")
 		os.Exit(1)
 	}
 	if err = (&controllers.OpenStackClusterReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("OpenStackCluster"),
-		//Recorder: mgr.GetEventRecorderFor("openstackcluster-controller"),
-	}).SetupWithManager(mgr); err != nil {
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("controllers").WithName("OpenStackCluster"),
+		Recorder: mgr.GetEventRecorderFor("openstackcluster-controller"),
+	}).SetupWithManager(mgr, controller.Options{MaxConcurrentReconciles: openStackClusterConcurrency}); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "OpenStackCluster")
 		os.Exit(1)
 	}

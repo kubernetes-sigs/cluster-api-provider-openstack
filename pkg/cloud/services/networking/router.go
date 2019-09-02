@@ -18,33 +18,34 @@ package networking
 
 import (
 	"fmt"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
+
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/gophercloud/gophercloud/pagination"
-	"k8s.io/klog"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha2"
 )
 
 func (s *Service) ReconcileRouter(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {
 
 	if openStackCluster.Status.Network == nil || openStackCluster.Status.Network.ID == "" {
-		klog.V(3).Infof("No need to reconcile router since no network exists.")
+		s.logger.V(3).Info("No need to reconcile router since no network exists.")
 		return nil
 	}
 	if openStackCluster.Status.Network.Subnet == nil || openStackCluster.Status.Network.Subnet.ID == "" {
-		klog.V(4).Infof("No need to reconcile router since no subnet exists.")
+		s.logger.V(4).Info("No need to reconcile router since no subnet exists.")
 		return nil
 	}
 	if openStackCluster.Spec.ExternalNetworkID == "" {
-		klog.V(3).Info("No need to create router, due to missing ExternalNetworkID.")
+		s.logger.V(3).Info("No need to create router, due to missing ExternalNetworkID.")
 		return nil
 	}
 
 	routerName := fmt.Sprintf("%s-cluster-%s", networkPrefix, clusterName)
-	klog.Infof("Reconciling router %s", routerName)
+	s.logger.Info("Reconciling router", "name", routerName)
 
 	allPages, err := routers.List(s.client, routers.ListOpts{
 		Name: routerName,
@@ -73,8 +74,10 @@ func (s *Service) ReconcileRouter(clusterName string, openStackCluster *infrav1.
 		}
 		newRouter, err := routers.Create(s.client, opts).Extract()
 		if err != nil {
+			record.Warnf(openStackCluster, "FailedCreateRouter", "Failed to create router %s: %v", routerName, err)
 			return err
 		}
+		record.Eventf(openStackCluster, "SuccessfulCreateRouter", "Created router %s with id %s", routerName, newRouter.ID)
 		router = *newRouter
 	} else {
 		router = routerList[0]
@@ -106,8 +109,10 @@ func (s *Service) ReconcileRouter(clusterName string, openStackCluster *infrav1.
 
 		_, err = routers.Update(s.client, router.ID, updateOpts).Extract()
 		if err != nil {
+			record.Warnf(openStackCluster, "FailedUpdateRouter", "Failed to update router %s: %v", routerName, err)
 			return fmt.Errorf("error updating OpenStack Neutron Router: %s", err)
 		}
+		record.Eventf(openStackCluster, "SuccessfulUpdateRouter", "Updated router %s with id %s", routerName, router.ID)
 	}
 
 	observedRouter := infrav1.Router{
@@ -134,14 +139,14 @@ INTERFACE_LOOP:
 
 	// ... and create a router interface for our subnet.
 	if createInterface {
-		klog.V(4).Infof("Creating RouterInterface on %s in subnet %s", router.ID, openStackCluster.Status.Network.Subnet.ID)
-		iface, err := routers.AddInterface(s.client, router.ID, routers.AddInterfaceOpts{
+		s.logger.V(4).Info("Creating RouterInterface", "routerID", router.ID, "subnetID", openStackCluster.Status.Network.Subnet.ID)
+		routerInterface, err := routers.AddInterface(s.client, router.ID, routers.AddInterfaceOpts{
 			SubnetID: openStackCluster.Status.Network.Subnet.ID,
 		}).Extract()
 		if err != nil {
 			return fmt.Errorf("unable to create router interface: %v", err)
 		}
-		klog.V(4).Infof("Created RouterInterface: %v", iface)
+		s.logger.V(4).Info("Created RouterInterface", "id", routerInterface.ID)
 	}
 
 	_, err = attributestags.ReplaceAll(s.client, "routers", observedRouter.ID, attributestags.ReplaceAllOpts{
@@ -176,7 +181,7 @@ func (s *Service) getRouterInterfaces(routerID string) ([]ports.Port, error) {
 }
 
 // A function for getting the id of a subnet by querying openstack with filters
-func GetSubnetsByFilter(networkClient *gophercloud.ServiceClient, opts *subnets.ListOpts) ([]subnets.Subnet, error) {
+func GetSubnetsByFilter(networkClient *gophercloud.ServiceClient, opts subnets.ListOptsBuilder) ([]subnets.Subnet, error) {
 	if opts == nil {
 		return []subnets.Subnet{}, fmt.Errorf("no Filters were passed")
 	}
@@ -189,9 +194,7 @@ func GetSubnetsByFilter(networkClient *gophercloud.ServiceClient, opts *subnets.
 		} else if len(subnetList) == 0 {
 			return false, fmt.Errorf("no subnets could be found with the filters provided")
 		}
-		for _, subnet := range subnetList {
-			snets = append(snets, subnet)
-		}
+		snets = append(snets, subnetList...)
 		return true, nil
 	})
 	if err != nil {

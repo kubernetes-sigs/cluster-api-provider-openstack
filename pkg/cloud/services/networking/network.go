@@ -18,12 +18,13 @@ package networking
 
 import (
 	"fmt"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
+
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/pkg/errors"
-	"k8s.io/klog"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha2"
 )
 
@@ -40,7 +41,7 @@ func (c createOpts) ToNetworkCreateMap() (map[string]interface{}, error) {
 func (s *Service) ReconcileNetwork(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {
 
 	networkName := fmt.Sprintf("%s-cluster-%s", networkPrefix, clusterName)
-	klog.Infof("Reconciling network %s", networkName)
+	s.logger.Info("Reconciling network", "name", networkName)
 
 	res, err := s.getNetworkByName(networkName)
 	if err != nil {
@@ -69,8 +70,10 @@ func (s *Service) ReconcileNetwork(clusterName string, openStackCluster *infrav1
 	}
 	network, err := networks.Create(s.client, opts).Extract()
 	if err != nil {
+		record.Warnf(openStackCluster, "FailedCreateNetwork", "Failed to create network %s: %v", networkName, err)
 		return err
 	}
+	record.Eventf(openStackCluster, "SuccessfulCreateNetwork", "Created network %s with id %s", networkName, network.ID)
 
 	_, err = attributestags.ReplaceAll(s.client, "networks", network.ID, attributestags.ReplaceAllOpts{
 		Tags: []string{
@@ -91,12 +94,12 @@ func (s *Service) ReconcileNetwork(clusterName string, openStackCluster *infrav1
 func (s *Service) ReconcileSubnet(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {
 
 	if openStackCluster.Status.Network == nil || openStackCluster.Status.Network.ID == "" {
-		klog.V(4).Infof("No need to reconcile network components since no network exists.")
+		s.logger.V(4).Info("No need to reconcile network components since no network exists.")
 		return nil
 	}
 
 	subnetName := fmt.Sprintf("%s-cluster-%s", networkPrefix, clusterName)
-	klog.Infof("Reconciling subnet %s", subnetName)
+	s.logger.Info("Reconciling subnet", "name", subnetName)
 
 	allPages, err := subnets.List(s.client, subnets.ListOpts{
 		NetworkID: openStackCluster.Status.Network.ID,
@@ -127,8 +130,10 @@ func (s *Service) ReconcileSubnet(clusterName string, openStackCluster *infrav1.
 
 		newSubnet, err := subnets.Create(s.client, opts).Extract()
 		if err != nil {
+			record.Warnf(openStackCluster, "FailedCreateSubnet", "Failed to create subnet %s: %v", subnetName, err)
 			return err
 		}
+		record.Eventf(openStackCluster, "SuccessfulCreateSubnet", "Created subnet %s with id %s", subnetName, newSubnet.ID)
 		observedSubnet = infrav1.Subnet{
 			ID:   newSubnet.ID,
 			Name: newSubnet.Name,

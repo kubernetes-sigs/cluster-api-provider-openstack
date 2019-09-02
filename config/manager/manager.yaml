@@ -16,13 +16,16 @@ spec:
   selector:
     matchLabels:
       control-plane: capo-controller-manager
+  replicas: 1
   template:
     metadata:
       labels:
         control-plane: capo-controller-manager
     spec:
       containers:
-      - name: manager
+      - args:
+        - --enable-leader-election
         image: controller:latest
         imagePullPolicy: Always
+        name: manager
       terminationGracePeriodSeconds: 10

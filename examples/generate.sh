@@ -93,8 +93,8 @@ if [[ ${OVERWRITE} -ne 1 ]] && [[ -d "$OUTPUT_DIR" ]]; then
   exit 1
 fi
 
-yq_type=$(file $(which yq))
-if [[ $yq_type == *"Python script"* ]]; then
+yq_type=$(file "$(which yq)")
+if [[ ${yq_type} == *"Python script"* ]]; then
   echo "Wrong version of 'yq' installed, please install the one from https://github.com/mikefarah/yq"
   echo ""
   exit 1
@@ -113,9 +113,10 @@ PROVIDER_COMPONENTS_GENERATED_FILE=${OUTPUT_DIR}/provider-components.yaml
 CLUSTER_GENERATED_FILE=${OUTPUT_DIR}/cluster.yaml
 CONTROLPLANE_GENERATED_FILE=${OUTPUT_DIR}/controlplane.yaml
 MACHINEDEPLOYMENT_GENERATED_FILE=${OUTPUT_DIR}/machinedeployment.yaml
-WORKER_GENERATED_FILE=${OUTPUT_DIR}/worker.yaml
 MACHINES_GENERATED_FILE=${OUTPUT_DIR}/machines.yaml
 
+rm -rf "${OUTPUT_DIR}"
+rm -rf "${CLOUDS_SECRETS_CONFIG_DIR}"
 mkdir -p "${OUTPUT_DIR}"
 mkdir -p "${CLOUDS_SECRETS_CONFIG_DIR}"
 
@@ -125,7 +126,8 @@ if [[ ! -f ${MACHINE_CONTROLLER_SSH_PRIVATE_FILE} ]]; then
   # This is needed because GetKubeConfig assumes the key in the home .ssh dir.
   ssh-keygen -t rsa -f ${MACHINE_CONTROLLER_SSH_PRIVATE_FILE}  -N ""
 fi
-export MACHINE_CONTROLLER_SSH_PUBLIC_FILE_CONTENT=$(cat ${MACHINE_CONTROLLER_SSH_PRIVATE_FILE}.pub)
+export MACHINE_CONTROLLER_SSH_PUBLIC_FILE_CONTENT
+MACHINE_CONTROLLER_SSH_PUBLIC_FILE_CONTENT=$(cat ${MACHINE_CONTROLLER_SSH_PRIVATE_FILE}.pub)
 
 CLOUDS_PATH=${CLOUDS_PATH:-""}
 OPENSTACK_CLOUD_CONFIG_PLAIN=$(cat "$CLOUDS_PATH")
@@ -144,32 +146,34 @@ CACERT_ORIGINAL=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.${CLOUD}.
 
 # Basic cloud.conf, no LB configuration as that data is not known yet.
 export OPENSTACK_CLOUD_PROVIDER_CONF="[Global]
-      auth-url=$AUTH_URL
-      username=\"$USERNAME\"
-      password=\"$PASSWORD\"
-      tenant-id=\"$PROJECT_ID\"
-      domain-name=\"$DOMAIN_NAME\"
+          auth-url=$AUTH_URL
+          username=\"$USERNAME\"
+          password=\"$PASSWORD\"
+          tenant-id=\"$PROJECT_ID\"
+          domain-name=\"$DOMAIN_NAME\"
 "
 if [[ "$CACERT_ORIGINAL" != "null" ]]; then
   OPENSTACK_CLOUD_PROVIDER_CONF="$OPENSTACK_CLOUD_PROVIDER_CONF
-        ca-file=\"${CACERT_ORIGINAL}\"
+          ca-file=\"${CACERT_ORIGINAL}\"
   "
 fi
 if [[ "$REGION" != "null" ]]; then
   OPENSTACK_CLOUD_PROVIDER_CONF="$OPENSTACK_CLOUD_PROVIDER_CONF
-        region=\"${REGION}\"
+          region=\"${REGION}\"
   "
 fi
 OS=$(uname)
 if [[ "$OS" =~ "Linux" ]]; then
 #  export OPENSTACK_CLOUD_PROVIDER_CONF=$(echo "$OPENSTACK_CLOUD_PROVIDER_CONF_PLAIN"|base64 -w0)
   if [[ "$CACERT_ORIGINAL" != "null" ]]; then
-    export OPENSTACK_CLOUD_CACERT_CONFIG=$(cat "$CACERT_ORIGINAL"|base64 -w0)
+    export OPENSTACK_CLOUD_CACERT_CONFIG
+    OPENSTACK_CLOUD_CACERT_CONFIG=$(cat "$CACERT_ORIGINAL"|base64 -w0)
   fi
 elif [[ "$OS" =~ "Darwin" ]]; then
 #  export OPENSTACK_CLOUD_PROVIDER_CONF=$(echo "$OPENSTACK_CLOUD_PROVIDER_CONF_PLAIN"|base64)
   if [[ "$CACERT_ORIGINAL" != "null" ]]; then
-    export OPENSTACK_CLOUD_CACERT_CONFIG=$(cat "$CACERT_ORIGINAL"|base64)
+    export OPENSTACK_CLOUD_CACERT_CONFIG
+    OPENSTACK_CLOUD_CACERT_CONFIG=$(cat "$CACERT_ORIGINAL"|base64)
   fi
 else
   echo "Unrecognized OS : $OS"
@@ -191,19 +195,16 @@ echo "Generated ${CLUSTER_GENERATED_FILE}"
 kustomize build "${SOURCE_DIR}/controlplane" --reorder=none | envsubst > "${CONTROLPLANE_GENERATED_FILE}"
 echo "Generated ${CONTROLPLANE_GENERATED_FILE}"
 
-# Generate machinedeployment resources. (TODO(sbueringer) Have to implement OpenStackMachineTemplate first)
-#kustomize build "${SOURCE_DIR}/machinedeployment" --reorder=none | envsubst >> "${MACHINEDEPLOYMENT_GENERATED_FILE}"
-#echo "Generated ${MACHINEDEPLOYMENT_GENERATED_FILE}"
+# Generate machinedeployment resources.
+kustomize build "${SOURCE_DIR}/machinedeployment" --reorder=none | envsubst >> "${MACHINEDEPLOYMENT_GENERATED_FILE}"
+echo "Generated ${MACHINEDEPLOYMENT_GENERATED_FILE}"
 
-# Generate machines resources.
-kustomize build "${SOURCE_DIR}/machines" --reorder=none | envsubst > "${WORKER_GENERATED_FILE}"
-echo "Generated ${WORKER_GENERATED_FILE}"
-
+# combine control plane and regular machines in ${MACHINES_GENERATED_FILE}
 cat ${CONTROLPLANE_GENERATED_FILE} > ${MACHINES_GENERATED_FILE}
 echo "---" >> ${MACHINES_GENERATED_FILE}
 #cat ${MACHINEDEPLOYMENT_GENERATED_FILE} >> ${MACHINES_GENERATED_FILE}
 echo "---" >> ${MACHINES_GENERATED_FILE}
-cat ${WORKER_GENERATED_FILE} >> ${MACHINES_GENERATED_FILE}
+cat ${MACHINEDEPLOYMENT_GENERATED_FILE} >> ${MACHINES_GENERATED_FILE}
 echo "---" >> ${MACHINES_GENERATED_FILE}
 echo "Generated ${MACHINES_GENERATED_FILE}"
 
@@ -222,6 +223,7 @@ echo "Generated ${COMPONENTS_OPENSTACK_GENERATED_FILE}"
 # Generate OpenStack Infrastructure Provider cloud-secrets file.
 kustomize build "${SOURCE_DIR}/clouds-secrets" --reorder=none | envsubst > "${COMPONENTS_OPENSTACK_CLOUDS_SECRETS_GENERATED_FILE}"
 echo "Generated ${COMPONENTS_OPENSTACK_CLOUDS_SECRETS_GENERATED_FILE}"
+echo "WARNING: ${COMPONENTS_OPENSTACK_CLOUDS_SECRETS_GENERATED_FILE} includes OpenStack credentials"
 
 # Generate a single provider components file.
 kustomize build "${SOURCE_DIR}/provider-components"| envsubst > "${PROVIDER_COMPONENTS_GENERATED_FILE}"

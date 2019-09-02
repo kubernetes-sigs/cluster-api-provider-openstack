@@ -18,6 +18,8 @@ package compute
 
 import (
 	"fmt"
+	"github.com/go-logr/logr"
+
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/utils/openstack/clientconfig"
@@ -29,9 +31,10 @@ type Service struct {
 	identityClient *gophercloud.ServiceClient
 	networkClient  *gophercloud.ServiceClient
 	imagesClient   *gophercloud.ServiceClient
+	logger         logr.Logger
 }
 
-func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts) (*Service, error) {
+func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, logger logr.Logger) (*Service, error) {
 	identityClient, err := openstack.NewIdentityV3(client, gophercloud.EndpointOpts{
 		Region: "",
 	})
@@ -66,5 +69,6 @@ func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.Cli
 		computeClient:  computeClient,
 		networkClient:  networkingClient,
 		imagesClient:   imagesClient,
+		logger:         logger,
 	}, nil
 }

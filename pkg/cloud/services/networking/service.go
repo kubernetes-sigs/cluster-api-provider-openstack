@@ -18,6 +18,8 @@ package networking
 
 import (
 	"fmt"
+	"github.com/go-logr/logr"
+
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 
@@ -32,10 +34,11 @@ const (
 // It will create a network related infrastructure for the cluster, like network, subnet, router, security groups.
 type Service struct {
 	client *gophercloud.ServiceClient
+	logger logr.Logger
 }
 
 // NewService returns an instance of the networking service
-func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts) (*Service, error) {
+func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, logger logr.Logger) (*Service, error) {
 	serviceClient, err := openstack.NewNetworkV2(client, gophercloud.EndpointOpts{
 		Region: clientOpts.RegionName,
 	})
@@ -44,5 +47,6 @@ func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.Cli
 	}
 	return &Service{
 		client: serviceClient,
+		logger: logger,
 	}, nil
 }

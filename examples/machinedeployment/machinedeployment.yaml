@@ -1,0 +1,92 @@
+#####################################################
+# ${CLUSTER_NAME}-md-0
+#####################################################
+apiVersion: cluster.x-k8s.io/v1alpha2
+kind: MachineDeployment
+metadata:
+  name: ${CLUSTER_NAME}-md-0
+  namespace: ${CLUSTER_NAME}
+  labels:
+    cluster.x-k8s.io/cluster-name: ${CLUSTER_NAME}
+    nodepool: nodepool-0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      cluster.x-k8s.io/cluster-name: ${CLUSTER_NAME}
+      nodepool: nodepool-0
+  template:
+    metadata:
+      labels:
+        cluster.x-k8s.io/cluster-name: ${CLUSTER_NAME}
+        nodepool: nodepool-0
+    spec:
+      bootstrap:
+        configRef:
+          apiVersion: bootstrap.cluster.x-k8s.io/v1alpha2
+          kind: KubeadmConfigTemplate
+          name: ${CLUSTER_NAME}-md-0
+          namespace: ${CLUSTER_NAME}
+      infrastructureRef:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+        kind: OpenStackMachineTemplate
+        name: ${CLUSTER_NAME}-md-0
+        namespace: ${CLUSTER_NAME}
+      version: ${KUBERNETES_VERSION}
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+kind: OpenStackMachineTemplate
+metadata:
+  name: ${CLUSTER_NAME}-md-0
+  namespace: ${CLUSTER_NAME}
+spec:
+  template:
+    spec:
+      availabilityZone: nova
+      cloudName: $CLOUD
+      cloudsSecret:
+        name: cloud-config
+        namespace: ${CLUSTER_NAME}
+      flavor: m1.medium
+      image: <Image Name>
+      networks:
+      - filter:
+          name: k8s-clusterapi-cluster-${CLUSTER_NAME}-${CLUSTER_NAME}
+        subnets:
+        - filter:
+            name: k8s-clusterapi-cluster-${CLUSTER_NAME}-${CLUSTER_NAME}
+      sshKeyName: cluster-api-provider-openstack
+---
+apiVersion: bootstrap.cluster.x-k8s.io/v1alpha2
+kind: KubeadmConfigTemplate
+metadata:
+  name: ${CLUSTER_NAME}-md-0
+  namespace: ${CLUSTER_NAME}
+spec:
+  template:
+    spec:
+      files:
+      - content: |-
+          # cloud.conf to communicate with OpenStack
+          $OPENSTACK_CLOUD_PROVIDER_CONF
+        owner: root
+        path: /etc/kubernetes/cloud.conf
+        permissions: "0600"
+      - content: |-
+          # cacert to communicate with OpenStack
+          $OPENSTACK_CLOUD_CACERT_CONFIG
+        owner: root
+        path: /etc/certs/cacert
+        permissions: "0600"
+      joinConfiguration:
+        nodeRegistration:
+          kubeletExtraArgs:
+            cloud-config: /etc/kubernetes/cloud.conf
+            cloud-provider: openstack
+          name: '{{ local_hostname }}'
+      ntp:
+        servers: []
+        users:
+        - name: ubuntu
+          sshAuthorizedKeys:
+          - "$MACHINE_CONTROLLER_SSH_PUBLIC_FILE_CONTENT"

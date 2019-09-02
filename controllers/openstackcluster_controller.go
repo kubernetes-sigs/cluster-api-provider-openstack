@@ -18,20 +18,21 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"k8s.io/client-go/tools/record"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/klog"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha2"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/loadbalancer"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/provider"
-	"sigs.k8s.io/cluster-api/api/v1alpha2"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha2"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/patch"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -42,16 +43,17 @@ const (
 // OpenStackClusterReconciler reconciles a OpenStackCluster object
 type OpenStackClusterReconciler struct {
 	client.Client
-	Log logr.Logger
+	Log      logr.Logger
+	Recorder record.EventRecorder
 }
 
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackclusters,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackclusters/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=cluster.x-k8s.io,resources=clusters,verbs=get;list;watch
+// +kubebuilder:rbac:groups=cluster.x-k8s.io,resources=clusters;clusters/status,verbs=get;list;watch
 
 func (r *OpenStackClusterReconciler) Reconcile(request ctrl.Request) (_ ctrl.Result, reterr error) {
 	ctx := context.TODO()
-	logger := log.Log.WithName(clusterControllerName).
+	logger := r.Log.WithName(clusterControllerName).
 		WithName(fmt.Sprintf("namespace=%s", request.Namespace)).
 		WithName(fmt.Sprintf("openStackCluster=%s", request.Name))
 
@@ -100,8 +102,8 @@ func (r *OpenStackClusterReconciler) Reconcile(request ctrl.Request) (_ ctrl.Res
 	return r.reconcileCluster(logger, cluster, openStackCluster)
 }
 
-func (r *OpenStackClusterReconciler) reconcileCluster(logger logr.Logger, cluster *v1alpha2.Cluster, openStackCluster *infrav1.OpenStackCluster) (_ ctrl.Result, reterr error) {
-	klog.Infof("Reconciling Cluster %s/%s", cluster.Namespace, cluster.Name)
+func (r *OpenStackClusterReconciler) reconcileCluster(logger logr.Logger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (_ ctrl.Result, reterr error) {
+	logger.Info("Reconciling Cluster")
 
 	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
 
@@ -115,19 +117,19 @@ func (r *OpenStackClusterReconciler) reconcileCluster(logger logr.Logger, cluste
 		return reconcile.Result{}, err
 	}
 
-	networkingService, err := networking.NewService(osProviderClient, clientOpts)
+	networkingService, err := networking.NewService(osProviderClient, clientOpts, logger)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	loadbalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, openStackCluster.Spec.UseOctavia)
+	loadbalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, logger, openStackCluster.Spec.UseOctavia)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	klog.Infof("Reconciling network components for cluster %s", clusterName)
+	logger.Info("Reconciling network components")
 	if openStackCluster.Spec.NodeCIDR == "" {
-		klog.V(4).Infof("No need to reconcile network for cluster %s", clusterName)
+		logger.V(4).Info("No need to reconcile network")
 	} else {
 		err := networkingService.ReconcileNetwork(clusterName, openStackCluster)
 		if err != nil {
@@ -175,32 +177,32 @@ func (r *OpenStackClusterReconciler) reconcileCluster(logger logr.Logger, cluste
 				},
 			}
 		} else {
-			klog.Info("No control plane node found yet, could not write OpenStackCluster.Status.APIEndpoints")
+			logger.Info("No control plane node found yet, could not write OpenStackCluster.Status.APIEndpoints")
 		}
 	}
 
 	// No errors, so mark us ready so the Cluster API Cluster Controller can pull it
 	openStackCluster.Status.Ready = true
 
-	klog.Infof("Reconciled Cluster create %s/%s successfully", cluster.Namespace, cluster.Name)
+	logger.Info("Reconciled Cluster create successfully")
 	return reconcile.Result{}, nil
 }
 
-func (r *OpenStackClusterReconciler) reconcileClusterDelete(logger logr.Logger, cluster *v1alpha2.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
+func (r *OpenStackClusterReconciler) reconcileClusterDelete(logger logr.Logger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
 
-	klog.Infof("Reconcile Cluster delete %s/%s", cluster.Namespace, cluster.Name)
+	logger.Info("Reconcile Cluster delete")
 	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
 	osProviderClient, clientOpts, err := provider.NewClientFromCluster(r.Client, openStackCluster)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	networkingService, err := networking.NewService(osProviderClient, clientOpts)
+	networkingService, err := networking.NewService(osProviderClient, clientOpts, logger)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	loadbalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, openStackCluster.Spec.UseOctavia)
+	loadbalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, logger, openStackCluster.Spec.UseOctavia)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -214,7 +216,7 @@ func (r *OpenStackClusterReconciler) reconcileClusterDelete(logger logr.Logger, 
 
 	// Delete other things
 	if openStackCluster.Status.GlobalSecurityGroup != nil {
-		klog.Infof("Deleting global security group %q", openStackCluster.Status.GlobalSecurityGroup.Name)
+		logger.Info("Deleting global security group", "name", openStackCluster.Status.GlobalSecurityGroup.Name)
 		err := networkingService.DeleteSecurityGroups(openStackCluster.Status.GlobalSecurityGroup)
 		if err != nil {
 			return reconcile.Result{}, errors.Errorf("failed to delete security group: %v", err)
@@ -222,7 +224,7 @@ func (r *OpenStackClusterReconciler) reconcileClusterDelete(logger logr.Logger, 
 	}
 
 	if openStackCluster.Status.ControlPlaneSecurityGroup != nil {
-		klog.Infof("Deleting control plane security group %q", openStackCluster.Status.ControlPlaneSecurityGroup.Name)
+		logger.Info("Deleting control plane security group", "name", openStackCluster.Status.ControlPlaneSecurityGroup.Name)
 		err := networkingService.DeleteSecurityGroups(openStackCluster.Status.ControlPlaneSecurityGroup)
 		if err != nil {
 			return reconcile.Result{}, errors.Errorf("failed to delete security group: %v", err)
@@ -231,20 +233,21 @@ func (r *OpenStackClusterReconciler) reconcileClusterDelete(logger logr.Logger, 
 
 	// TODO(sbueringer) Delete network/subnet/router/... if created by CAPO
 
-	klog.Infof("Reconciled Cluster delete %s/%s successfully", cluster.Namespace, cluster.Name)
+	logger.Info("Reconciled Cluster delete successfully")
 	// Cluster is deleted so remove the finalizer.
 	openStackCluster.Finalizers = util.Filter(openStackCluster.Finalizers, infrav1.ClusterFinalizer)
 	return reconcile.Result{}, nil
 }
 
-func (r *OpenStackClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *OpenStackClusterReconciler) SetupWithManager(mgr ctrl.Manager, options controller.Options) error {
 	return ctrl.NewControllerManagedBy(mgr).
+		WithOptions(options).
 		For(&infrav1.OpenStackCluster{}).
 		Complete(r)
 }
 
 func (r *OpenStackClusterReconciler) getControlPlaneMachine() (*infrav1.OpenStackMachine, error) {
-	machines := &v1alpha2.MachineList{}
+	machines := &clusterv1.MachineList{}
 	if err := r.Client.List(context.Background(), machines); err != nil {
 		return nil, err
 	}
@@ -253,7 +256,7 @@ func (r *OpenStackClusterReconciler) getControlPlaneMachine() (*infrav1.OpenStac
 		return nil, err
 	}
 
-	var controlPlaneMachine *v1alpha2.Machine
+	var controlPlaneMachine *clusterv1.Machine
 	for _, machine := range machines.Items {
 		if util.IsControlPlaneMachine(&machine) {
 			controlPlaneMachine = &machine

@@ -19,15 +19,19 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"k8s.io/client-go/tools/record"
+	"net"
+	"os"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"strconv"
+	"time"
+
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/klog"
 	"k8s.io/utils/pointer"
-	"net"
-	"os"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/loadbalancer"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
@@ -35,11 +39,8 @@ import (
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha2"
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	"strconv"
-	"time"
 
 	"github.com/go-logr/logr"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -62,17 +63,18 @@ const (
 // OpenStackMachineReconciler reconciles a OpenStackMachine object
 type OpenStackMachineReconciler struct {
 	client.Client
-	Log logr.Logger
+	Log      logr.Logger
+	Recorder record.EventRecorder
 }
 
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackmachines,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackmachines/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=cluster.x-k8s.io,resources=clusters;machines,verbs=get;list;watch
-// +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch;create;update;patch
+// +kubebuilder:rbac:groups=cluster.x-k8s.io,resources=clusters;machines;machines/status,verbs=get;list;watch
+// +kubebuilder:rbac:groups="",resources=events;secrets,verbs=get;list;watch;create;update;patch
 
 func (r *OpenStackMachineReconciler) Reconcile(request ctrl.Request) (_ ctrl.Result, reterr error) {
 	ctx := context.TODO()
-	logger := log.Log.
+	logger := r.Log.
 		WithName(machineControllerName).
 		WithName(fmt.Sprintf("namespace=%s", request.Namespace)).
 		WithName(fmt.Sprintf("openStackMachine=%s", request.Name))
@@ -168,7 +170,7 @@ func (r *OpenStackMachineReconciler) reconcileMachine(logger logr.Logger, machin
 		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 	}
 
-	klog.Infof("Creating Machine %s/%s: %s", cluster.Namespace, cluster.Name, machine.Name)
+	logger.Info("Creating Machine")
 
 	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
 
@@ -177,25 +179,25 @@ func (r *OpenStackMachineReconciler) reconcileMachine(logger logr.Logger, machin
 		return reconcile.Result{}, err
 	}
 
-	computeService, err := compute.NewService(osProviderClient, clientOpts)
+	computeService, err := compute.NewService(osProviderClient, clientOpts, logger)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	networkingService, err := networking.NewService(osProviderClient, clientOpts)
+	networkingService, err := networking.NewService(osProviderClient, clientOpts, logger)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	instance, err := r.getOrCreate(computeService, machine, openStackMachine, cluster, openStackCluster)
 	if err != nil {
-		handleMachineError(openStackMachine, capierrors.UpdateMachineError, errors.Errorf("OpenStack instance cannot be created: %v", err))
+		handleMachineError(logger, openStackMachine, capierrors.UpdateMachineError, errors.Errorf("OpenStack instance cannot be created: %v", err))
 		return reconcile.Result{}, err
 	}
 
 	// Set an error message if we couldn't find the instance.
 	if instance == nil {
-		handleMachineError(openStackMachine, capierrors.UpdateMachineError, errors.New("OpenStack instance cannot be found"))
+		handleMachineError(logger, openStackMachine, capierrors.UpdateMachineError, errors.New("OpenStack instance cannot be found"))
 		return reconcile.Result{}, nil
 	}
 
@@ -218,33 +220,33 @@ func (r *OpenStackMachineReconciler) reconcileMachine(logger logr.Logger, machin
 	case infrav1.InstanceStateBuilding:
 		logger.Info("Machine instance is BUILDING", "instance-id", instance.ID)
 	default:
-		handleMachineError(openStackMachine, capierrors.UpdateMachineError, errors.Errorf("OpenStack instance state %q is unexpected", instance.State))
+		handleMachineError(logger, openStackMachine, capierrors.UpdateMachineError, errors.Errorf("OpenStack instance state %q is unexpected", instance.State))
 		return reconcile.Result{}, nil
 	}
 
 	if openStackMachine.Spec.FloatingIP != "" {
 		err = r.reconcileFloatingIP(computeService, networkingService, instance, openStackMachine, openStackCluster)
 		if err != nil {
-			handleMachineError(openStackMachine, capierrors.UpdateMachineError, errors.Errorf("FloatingIP cannot be reconciled: %v", err))
+			handleMachineError(logger, openStackMachine, capierrors.UpdateMachineError, errors.Errorf("FloatingIP cannot be reconciled: %v", err))
 			return reconcile.Result{}, nil
 		}
 	}
 
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
-		err = r.reconcileLoadBalancerMember(osProviderClient, clientOpts, instance, clusterName, machine, openStackMachine, openStackCluster)
+		err = r.reconcileLoadBalancerMember(logger, osProviderClient, clientOpts, instance, clusterName, machine, openStackMachine, openStackCluster)
 		if err != nil {
-			handleMachineError(openStackMachine, capierrors.UpdateMachineError, errors.Errorf("LoadBalancerMember cannot be reconciled: %v", err))
+			handleMachineError(logger, openStackMachine, capierrors.UpdateMachineError, errors.Errorf("LoadBalancerMember cannot be reconciled: %v", err))
 			return reconcile.Result{}, nil
 		}
 	}
 
-	klog.Infof("Reconciled Machine create %s/%s: %s successfully", cluster.Namespace, cluster.Name, machine.Name)
+	logger.Info("Reconciled Machine create successfully")
 	return reconcile.Result{}, nil
 }
 
 func (r *OpenStackMachineReconciler) reconcileMachineDelete(logger logr.Logger, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
 
-	klog.Infof("Deleting Machine %s/%s: %s", cluster.Namespace, cluster.Name, machine.Name)
+	logger.Info("Deleting Machine")
 
 	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
 
@@ -253,12 +255,12 @@ func (r *OpenStackMachineReconciler) reconcileMachineDelete(logger logr.Logger, 
 		return reconcile.Result{}, err
 	}
 
-	computeService, err := compute.NewService(osProviderClient, clientOpts)
+	computeService, err := compute.NewService(osProviderClient, clientOpts, logger)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	loadbalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, openStackCluster.Spec.UseOctavia)
+	loadbalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, logger, openStackCluster.Spec.UseOctavia)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -275,7 +277,7 @@ func (r *OpenStackMachineReconciler) reconcileMachineDelete(logger logr.Logger, 
 	}
 
 	if instance == nil {
-		klog.Infof("Skipped deleting %s that is already deleted.\n", machine.Name)
+		logger.Info("Skipped deleting machine that is already deleted")
 		openStackMachine.Finalizers = util.Filter(openStackMachine.Finalizers, infrav1.MachineFinalizer)
 		return reconcile.Result{}, nil
 	}
@@ -283,11 +285,11 @@ func (r *OpenStackMachineReconciler) reconcileMachineDelete(logger logr.Logger, 
 	// TODO(sbueringer) wait for instance deleted
 	err = computeService.InstanceDelete(machine)
 	if err != nil {
-		handleMachineError(openStackMachine, capierrors.UpdateMachineError, errors.Errorf("error deleting Openstack instance: %v", err))
+		handleMachineError(logger, openStackMachine, capierrors.UpdateMachineError, errors.Errorf("error deleting Openstack instance: %v", err))
 		return reconcile.Result{}, nil
 	}
 
-	klog.Infof("Reconciled Machine delete %s/%s: %s successfully", cluster.Namespace, cluster.Name, machine.Name)
+	logger.Info("Reconciled Machine delete successfully")
 	// Instance is deleted so remove the finalizer.
 	openStackMachine.Finalizers = util.Filter(openStackMachine.Finalizers, infrav1.MachineFinalizer)
 	return reconcile.Result{}, nil
@@ -324,11 +326,11 @@ func (r *OpenStackMachineReconciler) getOrCreate(computeService *compute.Service
 	return instance, nil
 }
 
-func handleMachineError(openstackMachine *infrav1.OpenStackMachine, reason capierrors.MachineStatusError, message error) {
+func handleMachineError(logger logr.Logger, openstackMachine *infrav1.OpenStackMachine, reason capierrors.MachineStatusError, message error) {
 	openstackMachine.Status.ErrorReason = &reason
 	openstackMachine.Status.ErrorMessage = pointer.StringPtr(message.Error())
 	// TODO remove if this error is logged redundantly
-	klog.Errorf("Machine error %s: %v", openstackMachine.Name, message.Error())
+	logger.Error(fmt.Errorf(string(reason)), message.Error())
 }
 
 func getTimeout(name string, timeout int) time.Duration {
@@ -341,8 +343,9 @@ func getTimeout(name string, timeout int) time.Duration {
 	return time.Duration(timeout)
 }
 
-func (r *OpenStackMachineReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *OpenStackMachineReconciler) SetupWithManager(mgr ctrl.Manager, options controller.Options) error {
 	return ctrl.NewControllerManagedBy(mgr).
+		WithOptions(options).
 		For(&infrav1.OpenStackMachine{}).Watches(
 		&source.Kind{Type: &clusterv1.Machine{}},
 		&handler.EnqueueRequestsFromMapFunc{
@@ -359,24 +362,24 @@ func (r *OpenStackMachineReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *OpenStackMachineReconciler) reconcileFloatingIP(computeService *compute.Service, networkingService *networking.Service, instance *compute.Instance, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster) error {
-	err := networkingService.GetOrCreateFloatingIP(openStackCluster, openStackMachine.Spec.FloatingIP)
+	err := networkingService.CreateFloatingIPIfNecessary(openStackCluster, openStackMachine.Spec.FloatingIP)
 	if err != nil {
 		return fmt.Errorf("error creating floatingIP: %v", err)
 	}
 
 	err = computeService.AssociateFloatingIP(instance.ID, openStackMachine.Spec.FloatingIP)
 	if err != nil {
-		return fmt.Errorf("error associationg floatingIP: %v", err)
+		return fmt.Errorf("error associating floatingIP: %v", err)
 	}
 	return nil
 }
 
-func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, instance *compute.Instance, clusterName string, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster) error {
+func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(logger logr.Logger, osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, instance *compute.Instance, clusterName string, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster) error {
 	ip, err := getIPFromInstance(instance)
 	if err != nil {
 		return err
 	}
-	loadbalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, openStackCluster.Spec.UseOctavia)
+	loadbalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, logger, openStackCluster.Spec.UseOctavia)
 	if err != nil {
 		return err
 	}
@@ -432,7 +435,7 @@ func getIPFromInstance(instance *compute.Instance) (string, error) {
 // OpenStackClusterToOpenStackMachine is a handler.ToRequestsFunc to be used to enqeue requests for reconciliation
 // of OpenStackMachines.
 func (r *OpenStackMachineReconciler) OpenStackClusterToOpenStackMachines(o handler.MapObject) []ctrl.Request {
-	var result []ctrl.Request
+	result := []ctrl.Request{}
 
 	c, ok := o.Object.(*infrav1.OpenStackCluster)
 	if !ok {

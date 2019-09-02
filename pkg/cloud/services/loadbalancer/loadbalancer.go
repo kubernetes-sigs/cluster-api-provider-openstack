@@ -3,6 +3,9 @@ package loadbalancer
 import (
 	"errors"
 	"fmt"
+	"github.com/go-logr/logr"
+	"time"
+
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/listeners"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/loadbalancers"
@@ -10,30 +13,28 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/pools"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/klog"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha2"
-	"sigs.k8s.io/cluster-api/api/v1alpha2"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha2"
 	"sigs.k8s.io/cluster-api/util"
-	"time"
 )
 
 func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {
 
 	if openStackCluster.Spec.ExternalNetworkID == "" {
-		klog.V(3).Infof("No need to create loadbalancer, due to missing ExternalNetworkID")
+		s.logger.V(3).Info("No need to create loadbalancer, due to missing ExternalNetworkID")
 		return nil
 	}
 	if openStackCluster.Spec.APIServerLoadBalancerFloatingIP == "" {
-		klog.V(3).Infof("No need to create loadbalancer, due to missing APIServerLoadBalancerFloatingIP")
+		s.logger.V(3).Info("No need to create loadbalancer, due to missing APIServerLoadBalancerFloatingIP")
 		return nil
 	}
 	if openStackCluster.Spec.APIServerLoadBalancerPort == 0 {
-		klog.V(3).Infof("No need to create loadbalancer, due to missing APIServerLoadBalancerPort")
+		s.logger.V(3).Info("No need to create loadbalancer, due to missing APIServerLoadBalancerPort")
 		return nil
 	}
 
 	loadBalancerName := fmt.Sprintf("%s-cluster-%s-%s", networkPrefix, clusterName, kubeapiLBSuffix)
-	klog.Infof("Reconciling loadbalancer %s", loadBalancerName)
+	s.logger.Info("Reconciling loadbalancer", "name", loadBalancerName)
 
 	// lb
 	lb, err := checkIfLbExists(s.loadbalancerClient, loadBalancerName)
@@ -41,7 +42,7 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 		return err
 	}
 	if lb == nil {
-		klog.Infof("Creating loadbalancer %s", loadBalancerName)
+		s.logger.Info("Creating loadbalancer", "name", loadBalancerName)
 		lbCreateOpts := loadbalancers.CreateOpts{
 			Name:        loadBalancerName,
 			VipSubnetID: openStackCluster.Status.Network.Subnet.ID,
@@ -51,7 +52,7 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 		if err != nil {
 			return fmt.Errorf("error creating loadbalancer: %s", err)
 		}
-		err = waitForLoadBalancer(s.loadbalancerClient, lb.ID, "ACTIVE")
+		err = waitForLoadBalancer(s.logger, s.loadbalancerClient, lb.ID, "ACTIVE")
 		if err != nil {
 			return err
 		}
@@ -63,7 +64,7 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 		return err
 	}
 	if fp == nil {
-		klog.Infof("Creating floating ip %s", openStackCluster.Spec.APIServerLoadBalancerFloatingIP)
+		s.logger.Info("Creating floating ip", "ip", openStackCluster.Spec.APIServerLoadBalancerFloatingIP)
 		fpCreateOpts := &floatingips.CreateOpts{
 			FloatingIP:        openStackCluster.Spec.APIServerLoadBalancerFloatingIP,
 			FloatingNetworkID: openStackCluster.Spec.ExternalNetworkID,
@@ -75,7 +76,7 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 	}
 
 	// associate floating ip
-	klog.Infof("Associating floating ip %s", openStackCluster.Spec.APIServerLoadBalancerFloatingIP)
+	s.logger.Info("Associating floating ip", "ip", openStackCluster.Spec.APIServerLoadBalancerFloatingIP)
 	fpUpdateOpts := &floatingips.UpdateOpts{
 		PortID: &lb.VipPortID,
 	}
@@ -83,7 +84,7 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 	if err != nil {
 		return fmt.Errorf("error allocating floating IP: %s", err)
 	}
-	err = waitForFloatingIP(s.networkingClient, fp.ID, "ACTIVE")
+	err = waitForFloatingIP(s.logger, s.networkingClient, fp.ID, "ACTIVE")
 	if err != nil {
 		return err
 	}
@@ -99,7 +100,7 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 			return err
 		}
 		if listener == nil {
-			klog.Infof("Creating lb listener %s", lbPortObjectsName)
+			s.logger.Info("Creating lb listener", "name", lbPortObjectsName)
 			listenerCreateOpts := listeners.CreateOpts{
 				Name:           lbPortObjectsName,
 				Protocol:       "TCP",
@@ -110,11 +111,11 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 			if err != nil {
 				return fmt.Errorf("error creating listener: %s", err)
 			}
-			err = waitForLoadBalancer(s.loadbalancerClient, lb.ID, "ACTIVE")
+			err = waitForLoadBalancer(s.logger, s.loadbalancerClient, lb.ID, "ACTIVE")
 			if err != nil {
 				return err
 			}
-			err = waitForListener(s.loadbalancerClient, listener.ID, "ACTIVE")
+			err = waitForListener(s.logger, s.loadbalancerClient, listener.ID, "ACTIVE")
 			if err != nil {
 				return err
 			}
@@ -126,7 +127,7 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 			return err
 		}
 		if pool == nil {
-			klog.Infof("Creating lb pool %s", lbPortObjectsName)
+			s.logger.Info("Creating lb pool", "name", lbPortObjectsName)
 			poolCreateOpts := pools.CreateOpts{
 				Name:       lbPortObjectsName,
 				Protocol:   "TCP",
@@ -137,7 +138,7 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 			if err != nil {
 				return fmt.Errorf("error creating pool: %s", err)
 			}
-			err = waitForLoadBalancer(s.loadbalancerClient, lb.ID, "ACTIVE")
+			err = waitForLoadBalancer(s.logger, s.loadbalancerClient, lb.ID, "ACTIVE")
 			if err != nil {
 				return err
 			}
@@ -149,7 +150,7 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 			return err
 		}
 		if monitor == nil {
-			klog.Infof("Creating lb monitor %s", lbPortObjectsName)
+			s.logger.Info("Creating lb monitor", "name", lbPortObjectsName)
 			monitorCreateOpts := monitors.CreateOpts{
 				Name:       lbPortObjectsName,
 				PoolID:     pool.ID,
@@ -162,7 +163,7 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 			if err != nil {
 				return fmt.Errorf("error creating monitor: %s", err)
 			}
-			err = waitForLoadBalancer(s.loadbalancerClient, lb.ID, "ACTIVE")
+			err = waitForLoadBalancer(s.logger, s.loadbalancerClient, lb.ID, "ACTIVE")
 			if err != nil {
 				return err
 			}
@@ -178,7 +179,7 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 	return nil
 }
 
-func (s *Service) ReconcileLoadBalancerMember(clusterName string, machine *v1alpha2.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster, ip string) error {
+func (s *Service) ReconcileLoadBalancerMember(clusterName string, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster, ip string) error {
 	if !util.IsControlPlaneMachine(machine) {
 		return nil
 	}
@@ -194,7 +195,7 @@ func (s *Service) ReconcileLoadBalancerMember(clusterName string, machine *v1alp
 	}
 
 	loadBalancerName := fmt.Sprintf("%s-cluster-%s-%s", networkPrefix, clusterName, kubeapiLBSuffix)
-	klog.Infof("Reconciling loadbalancer %s for member %s", loadBalancerName, openStackMachine.Name)
+	s.logger.Info("Reconciling loadbalancer", "name", loadBalancerName)
 
 	lbID := openStackCluster.Status.Network.APIServerLoadBalancer.ID
 	subnetID := openStackCluster.Status.Network.Subnet.ID
@@ -225,10 +226,10 @@ func (s *Service) ReconcileLoadBalancerMember(clusterName string, machine *v1alp
 				return nil
 			}
 
-			klog.Infof("Deleting lb member %s (because the IP of the machine changed)", name)
+			s.logger.Info("Deleting lb member (because the IP of the machine changed)", "name", name)
 
 			// lb member changed so let's delete it so we can create it again with the correct IP
-			err = waitForLoadBalancer(s.loadbalancerClient, lbID, "ACTIVE")
+			err = waitForLoadBalancer(s.logger, s.loadbalancerClient, lbID, "ACTIVE")
 			if err != nil {
 				return err
 			}
@@ -236,13 +237,13 @@ func (s *Service) ReconcileLoadBalancerMember(clusterName string, machine *v1alp
 			if err != nil {
 				return fmt.Errorf("error deleting lbmember: %s", err)
 			}
-			err = waitForLoadBalancer(s.loadbalancerClient, lbID, "ACTIVE")
+			err = waitForLoadBalancer(s.logger, s.loadbalancerClient, lbID, "ACTIVE")
 			if err != nil {
 				return err
 			}
 		}
 
-		klog.Infof("Creating lb member %s", name)
+		s.logger.Info("Creating lb member", "name", name)
 
 		// if we got to this point we should either create or re-create the lb member
 		lbMemberOpts := pools.CreateMemberOpts{
@@ -252,16 +253,13 @@ func (s *Service) ReconcileLoadBalancerMember(clusterName string, machine *v1alp
 			SubnetID:     subnetID,
 		}
 
-		err = waitForLoadBalancer(s.loadbalancerClient, lbID, "ACTIVE")
-		if err != nil {
+		if err := waitForLoadBalancer(s.logger, s.loadbalancerClient, lbID, "ACTIVE"); err != nil {
 			return err
 		}
-		lbMember, err = pools.CreateMember(s.loadbalancerClient, pool.ID, lbMemberOpts).Extract()
-		if err != nil {
+		if _, err := pools.CreateMember(s.loadbalancerClient, pool.ID, lbMemberOpts).Extract(); err != nil {
 			return fmt.Errorf("error create lbmember: %s", err)
 		}
-		err = waitForLoadBalancer(s.loadbalancerClient, lbID, "ACTIVE")
-		if err != nil {
+		if err := waitForLoadBalancer(s.logger, s.loadbalancerClient, lbID, "ACTIVE"); err != nil {
 			return err
 		}
 	}
@@ -274,13 +272,17 @@ func (s *Service) DeleteLoadBalancer(clusterName string, openStackCluster *infra
 	if err != nil {
 		return err
 	}
+	if lb == nil {
+		// nothing to do
+		return nil
+	}
 
 	// only Octavia supports Cascade
 	if openStackCluster.Spec.UseOctavia {
 		deleteOpts := loadbalancers.DeleteOpts{
 			Cascade: true,
 		}
-		klog.Infof("Deleting loadbalancer %s", loadBalancerName)
+		s.logger.Info("Deleting loadbalancer", "name", loadBalancerName)
 		err = loadbalancers.Delete(s.loadbalancerClient, lb.ID, deleteOpts).ExtractErr()
 		if err != nil {
 			return fmt.Errorf("error deleting loadbalancer: %s", err)
@@ -329,12 +331,12 @@ func (s *Service) deleteLoadBalancerNeutronV2(id string) error {
 	for _, pool := range lbPools {
 		// delete the monitors
 		if pool.MonitorID != "" {
-			klog.Infof("Deleting lb monitor %s", pool.MonitorID)
+			s.logger.Info("Deleting lb monitor", "id", pool.MonitorID)
 			err := monitors.Delete(s.loadbalancerClient, pool.MonitorID).ExtractErr()
 			if err != nil {
 				return fmt.Errorf("error deleting lbaas monitor %s: %v", pool.MonitorID, err)
 			}
-			if err = waitForLoadBalancer(s.loadbalancerClient, lb.ID, "ACTIVE"); err != nil {
+			if err = waitForLoadBalancer(s.logger, s.loadbalancerClient, lb.ID, "ACTIVE"); err != nil {
 				return fmt.Errorf("loadbalancer %s did not get back to %s state in time", lb.ID, "Active")
 			}
 		}
@@ -350,41 +352,41 @@ func (s *Service) deleteLoadBalancerNeutronV2(id string) error {
 		}
 		// delete all members of pool
 		for _, member := range members {
-			klog.Infof("Deleting lb member %s (%s)", member.Name, member.ID)
+			s.logger.Info("Deleting lb member", "name", member.Name, "id", member.ID)
 			err := pools.DeleteMember(s.loadbalancerClient, pool.ID, member.ID).ExtractErr()
 			if err != nil {
 				return fmt.Errorf("error deleting lbaas member %s on pool %s: %v", member.ID, pool.ID, err)
 			}
-			if err = waitForLoadBalancer(s.loadbalancerClient, lb.ID, "ACTIVE"); err != nil {
+			if err = waitForLoadBalancer(s.logger, s.loadbalancerClient, lb.ID, "ACTIVE"); err != nil {
 				return fmt.Errorf("loadbalancer %s did not get back to %s state in time", lb.ID, "ACTIVE")
 			}
 		}
 
 		// delete pool
-		klog.Infof("Deleting lb pool %s (%s)", pool.Name, pool.ID)
+		s.logger.Info("Deleting lb pool", "name", pool.Name, "id", pool.ID)
 		err = pools.Delete(s.loadbalancerClient, pool.ID).ExtractErr()
 		if err != nil {
 			return fmt.Errorf("error deleting lbaas pool %s: %v", pool.ID, err)
 		}
-		if err = waitForLoadBalancer(s.loadbalancerClient, lb.ID, "ACTIVE"); err != nil {
+		if err = waitForLoadBalancer(s.logger, s.loadbalancerClient, lb.ID, "ACTIVE"); err != nil {
 			return fmt.Errorf("loadbalancer %s did not get back to %s state in time", lb.ID, "ACTIVE")
 		}
 	}
 
 	// delete all listeners
 	for _, listener := range lbListeners {
-		klog.Infof("Deleting lb listener %s (%s)", listener.Name, listener.ID)
+		s.logger.Info("Deleting lb listener", "name", listener.Name, "id", listener.ID)
 		err = listeners.Delete(s.loadbalancerClient, listener.ID).ExtractErr()
 		if err != nil {
 			return fmt.Errorf("error deleting lbaas listener %s: %v", listener.ID, err)
 		}
-		if err = waitForLoadBalancer(s.loadbalancerClient, lb.ID, "ACTIVE"); err != nil {
+		if err = waitForLoadBalancer(s.logger, s.loadbalancerClient, lb.ID, "ACTIVE"); err != nil {
 			return fmt.Errorf("loadbalancer %s did not get back to %s state in time", lb.ID, "ACTIVE")
 		}
 	}
 
 	// delete loadbalancer
-	klog.Infof("Deleting loadbalancer %s (%s)", lb.Name, lb.ID)
+	s.logger.Info("Deleting loadbalancer", "name", lb.Name, "id", lb.ID)
 	if err = loadbalancers.Delete(s.loadbalancerClient, lb.ID, loadbalancers.DeleteOpts{}).ExtractErr(); err != nil {
 		return fmt.Errorf("error deleting lbaas %s: %v", lb.ID, err)
 	}
@@ -392,14 +394,14 @@ func (s *Service) deleteLoadBalancerNeutronV2(id string) error {
 	return nil
 }
 
-func (s *Service) DeleteLoadBalancerMember(clusterName string, machine *v1alpha2.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster) error {
+func (s *Service) DeleteLoadBalancerMember(clusterName string, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster) error {
 
 	if openStackMachine == nil || !util.IsControlPlaneMachine(machine) {
 		return nil
 	}
 
 	loadBalancerName := fmt.Sprintf("%s-cluster-%s-%s", networkPrefix, clusterName, kubeapiLBSuffix)
-	klog.Infof("Reconciling loadbalancer %s", loadBalancerName)
+	s.logger.Info("Reconciling loadbalancer", "name", loadBalancerName)
 
 	lbID := openStackCluster.Status.Network.APIServerLoadBalancer.ID
 
@@ -414,7 +416,7 @@ func (s *Service) DeleteLoadBalancerMember(clusterName string, machine *v1alpha2
 			return err
 		}
 		if pool == nil {
-			klog.Infof("Pool %s does not exist", lbPortObjectsName)
+			s.logger.Info("Pool does not exist", "name", lbPortObjectsName)
 			continue
 		}
 
@@ -426,7 +428,7 @@ func (s *Service) DeleteLoadBalancerMember(clusterName string, machine *v1alpha2
 		if lbMember != nil {
 
 			// lb member changed so let's delete it so we can create it again with the correct IP
-			err = waitForLoadBalancer(s.loadbalancerClient, lbID, "ACTIVE")
+			err = waitForLoadBalancer(s.logger, s.loadbalancerClient, lbID, "ACTIVE")
 			if err != nil {
 				return err
 			}
@@ -434,7 +436,7 @@ func (s *Service) DeleteLoadBalancerMember(clusterName string, machine *v1alpha2
 			if err != nil {
 				return fmt.Errorf("error deleting lbmember: %s", err)
 			}
-			err = waitForLoadBalancer(s.loadbalancerClient, lbID, "ACTIVE")
+			err = waitForLoadBalancer(s.logger, s.loadbalancerClient, lbID, "ACTIVE")
 			if err != nil {
 				return err
 			}
@@ -541,8 +543,8 @@ var backoff = wait.Backoff{
 }
 
 // Possible LoadBalancer states are documented here: https://developer.openstack.org/api-ref/network/v2/?expanded=show-load-balancer-status-tree-detail#load-balancer-statuses
-func waitForLoadBalancer(client *gophercloud.ServiceClient, id, target string) error {
-	klog.Infof("Waiting for loadbalancer %s to become %s.", id, target)
+func waitForLoadBalancer(logger logr.Logger, client *gophercloud.ServiceClient, id, target string) error {
+	logger.Info("Waiting for loadbalancer", "id", id, "targetStatus", target)
 	return wait.ExponentialBackoff(backoff, func() (bool, error) {
 		lb, err := loadbalancers.Get(client, id).Extract()
 		if err != nil {
@@ -552,8 +554,8 @@ func waitForLoadBalancer(client *gophercloud.ServiceClient, id, target string) e
 	})
 }
 
-func waitForFloatingIP(client *gophercloud.ServiceClient, id, target string) error {
-	klog.Infof("Waiting for floatingip %s to become %s.", id, target)
+func waitForFloatingIP(logger logr.Logger, client *gophercloud.ServiceClient, id, target string) error {
+	logger.Info("Waiting for floatingIP", "id", id, "targetStatus", target)
 	return wait.ExponentialBackoff(backoff, func() (bool, error) {
 		fp, err := floatingips.Get(client, id).Extract()
 		if err != nil {
@@ -563,8 +565,8 @@ func waitForFloatingIP(client *gophercloud.ServiceClient, id, target string) err
 	})
 }
 
-func waitForListener(client *gophercloud.ServiceClient, id, target string) error {
-	klog.Infof("Waiting for listener %s to become %s.", id, target)
+func waitForListener(logger logr.Logger, client *gophercloud.ServiceClient, id, target string) error {
+	logger.Info("Waiting for listener", "id", id, "targetStatus", target)
 	return wait.ExponentialBackoff(backoff, func() (bool, error) {
 		_, err := listeners.Get(client, id).Extract()
 		if err != nil {
