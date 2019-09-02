@@ -270,7 +270,7 @@ create-cluster: $(CLUSTERCTL) ## Create a development Kubernetes cluster on Open
 	-a ./examples/addons.yaml
 
 .PHONY: create-cluster-management
-create-cluster-management: $(CLUSTERCTL) ## Create a development Kubernetes cluster on AWS in a KIND management cluster.
+create-cluster-management: $(CLUSTERCTL) ## Create a development Kubernetes cluster on OpenStack in a KIND management cluster.
 	kind create cluster --name=clusterapi
 	# Apply provider-components.
 	kubectl \
