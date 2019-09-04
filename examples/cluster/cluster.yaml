@@ -15,7 +15,7 @@ spec:
     # * Disable the apiServerPort property
     # single-node control-plane:
     # * Enable the apiServerPort property
-    #apiServerPort: 6443
+    apiServerPort: <disable when multi-node control-plane>
   infrastructureRef:
     apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
     kind: OpenStackCluster
