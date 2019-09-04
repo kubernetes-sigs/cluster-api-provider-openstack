@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# If you update this file, please follow:
-# https://suva.sh/posts/well-documented-makefiles/
+# If you update this file, please follow
+# https://suva.sh/posts/well-documented-makefiles
 
 # Ensure Make is run with bash shell as some syntax below is bash-specific
 SHELL:=/usr/bin/env bash
@@ -42,8 +42,11 @@ GOLANGCI_LINT := $(TOOLS_BIN_DIR)/golangci-lint
 MOCKGEN := $(TOOLS_BIN_DIR)/mockgen
 
 # Define Docker related variables. Releases should modify and double check these vars.
-REGISTRY ?= k8scloudprovider
-CONTROLLER_IMG ?= $(REGISTRY)/cluster-api-openstack-controller
+REGISTRY ?= gcr.io/$(shell gcloud config get-value project)
+STAGING_REGISTRY := gcr.io/k8s-staging-cluster-api-openstack
+PROD_REGISTRY := us.gcr.io/k8s-artifacts-prod/cluster-api-openstack
+IMAGE_NAME ?= cluster-api-openstack-controller
+CONTROLLER_IMG ?= $(REGISTRY)/$(IMAGE_NAME)
 TAG ?= dev
 ARCH ?= amd64
 ALL_ARCH = amd64 arm arm64 ppc64le s390x
@@ -64,7 +67,7 @@ HAS_ENVSUBST := $(shell command -v envsubst;)
 ## --------------------------------------
 
 help:  ## Display this help
-	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 ## --------------------------------------
 ## Define targets for prow
@@ -88,9 +91,9 @@ test: generate lint ## Run tests
 
 .PHONY: test-go
 test-go: ## Run golang tests
-	go test -v ./api/... ./pkg/... ./controllers/...
-	# TODO change to ./... as soon as vendor is removed
+	go test -v ./...
 
+.PHONY: test-generate-examples
 test-generate-examples:
 ifndef HAS_YQ
 	echo "installing yq"
@@ -165,14 +168,13 @@ generate: ## Generate code
 
 .PHONY: generate-go
 generate-go: $(CONTROLLER_GEN) $(MOCKGEN) ## Runs Go related generate targets
-	go generate ./pkg/... ./cmd/...
-	# TODO change to ./.. as soon as vendor is removed
+	go generate ./...
 	$(CONTROLLER_GEN) \
 		paths=./api/... \
 		object:headerFile=./hack/boilerplate.go.txt
 
 .PHONY: generate-manifests
-generate-manifests: ## Generate manifests e.g. CRD, RBAC etc.
+generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
 	$(CONTROLLER_GEN) \
 		paths=./api/... \
 		crd:trivialVersions=true \
@@ -223,6 +225,7 @@ docker-push-manifest: ## Push the fat manifest docker image.
 	## Minimum docker version 18.06.0 is required for creating and pushing manifest images.
 	docker manifest create --amend $(CONTROLLER_IMG):$(TAG) $(shell echo $(ALL_ARCH) | sed -e "s~[^ ]*~$(CONTROLLER_IMG)\-&:$(TAG)~g")
 	@for arch in $(ALL_ARCH); do docker manifest annotate --arch $${arch} ${CONTROLLER_IMG}:${TAG} ${CONTROLLER_IMG}-$${arch}:${TAG}; done
+	docker manifest push --purge ${CONTROLLER_IMG}:${TAG}
 	MANIFEST_IMG=$(CONTROLLER_IMG) MANIFEST_TAG=$(TAG) $(MAKE) set-manifest-image
 
 .PHONY: set-manifest-image
@@ -231,7 +234,7 @@ set-manifest-image:
 	sed -i'' -e 's@image: .*@image: '"${MANIFEST_IMG}:$(MANIFEST_TAG)"'@' ./config/default/manager_image_patch.yaml
 
 ## --------------------------------------
-## Release TODO(sbueringer): just copied over from CAPA right now, have to implement that for OpenStack
+## Release
 ## --------------------------------------
 
 RELEASE_TAG := $(shell git describe --abbrev=0 2>/dev/null)
@@ -240,18 +243,18 @@ RELEASE_TAG := $(shell git describe --abbrev=0 2>/dev/null)
 release:  ## Builds and push container images using the latest git tag for the commit.
 	@if [ -z "${RELEASE_TAG}" ]; then echo "RELEASE_TAG is not set"; exit 1; fi
 	# Push the release image to the staging bucket first.
-	REGISTRY=gcr.io/k8s-staging-cluster-api-openstack TAG=$(RELEASE_TAG) \
+	REGISTRY=$(STAGING_REGISTRY) TAG=$(RELEASE_TAG) \
 		$(MAKE) docker-build-all docker-push-all
 	# Set the manifest image to the production bucket.
-	REGISTRY=us.gcr.io/k8s-artifacts-prod/cluster-api-openstack TAG=$(RELEASE_TAG) \
-		set-manifest-image
+	MANIFEST_IMG=$(PROD_REGISTRY)/$(IMAGE_NAME) MANIFEST_TAG=$(RELEASE_TAG) \
+		$(MAKE) set-manifest-image
 	# Generate release artifacts.
 	mkdir -p out/
 	kustomize build config/default > out/infrastructure-components.yaml
 
 .PHONY: release-staging-latest
 release-staging-latest: ## Builds and push container images to the staging bucket using "latest" tag.
-	REGISTRY=gcr.io/k8s-staging-cluster-api-openstack TAG=latest \
+	REGISTRY=$(STAGING_REGISTRY) TAG=latest \
 		$(MAKE) docker-build-all docker-push-all
 
 ## --------------------------------------
@@ -268,6 +271,7 @@ create-cluster: $(CLUSTERCTL) ## Create a development Kubernetes cluster on Open
 	-c ./examples/_out/cluster.yaml \
 	-p ./examples/_out/provider-components.yaml \
 	-a ./examples/addons.yaml
+
 
 .PHONY: create-cluster-management
 create-cluster-management: $(CLUSTERCTL) ## Create a development Kubernetes cluster on OpenStack in a KIND management cluster.
@@ -298,7 +302,7 @@ create-cluster-management: $(CLUSTERCTL) ## Create a development Kubernetes clus
 	# Create a worker node with MachineDeployment.
 	kubectl \
 		--kubeconfig=$$(kind get kubeconfig-path --name="clusterapi") \
-		create -f examples/_out/worker.yaml
+		create -f examples/_out/machinedeployment.yaml
 
 .PHONY: delete-cluster
 delete-cluster: $(CLUSTERCTL) ## Deletes the development Kubernetes Cluster "test1"
