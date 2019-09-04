@@ -42,7 +42,7 @@ GOLANGCI_LINT := $(TOOLS_BIN_DIR)/golangci-lint
 MOCKGEN := $(TOOLS_BIN_DIR)/mockgen
 
 # Define Docker related variables. Releases should modify and double check these vars.
-REGISTRY ?= gcr.io/$(shell gcloud config get-value project)
+REGISTRY ?= k8scloudprovider
 STAGING_REGISTRY := gcr.io/k8s-staging-cluster-api-openstack
 PROD_REGISTRY := us.gcr.io/k8s-artifacts-prod/cluster-api-openstack
 IMAGE_NAME ?= cluster-api-openstack-controller
