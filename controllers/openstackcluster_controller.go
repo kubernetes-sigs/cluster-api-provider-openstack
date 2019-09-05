@@ -170,10 +170,17 @@ func (r *OpenStackClusterReconciler) reconcileCluster(logger logr.Logger, cluste
 			return reconcile.Result{}, errors.Errorf("failed to get control plane machine: %v", err)
 		}
 		if controlPlaneMachine != nil {
+			var apiPort int
+			if cluster.Spec.ClusterNetwork.APIServerPort == nil {
+				logger.Info("No API endpoint given, default to 6443")
+				apiPort = 6443
+			} else {
+				apiPort = int(*cluster.Spec.ClusterNetwork.APIServerPort)
+			}
 			openStackCluster.Status.APIEndpoints = []infrav1.APIEndpoint{
 				{
 					Host: controlPlaneMachine.Spec.FloatingIP,
-					Port: int(*cluster.Spec.ClusterNetwork.APIServerPort),
+					Port: apiPort,
 				},
 			}
 		} else {
