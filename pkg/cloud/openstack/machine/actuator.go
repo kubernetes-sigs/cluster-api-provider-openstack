@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"k8s.io/apimachinery/pkg/api/equality"
+	"k8s.io/client-go/tools/record"
 
 	clusterv1 "github.com/openshift/cluster-api/pkg/apis/cluster/v1alpha1"
 	machinev1 "github.com/openshift/cluster-api/pkg/apis/machine/v1beta1"
@@ -66,11 +67,20 @@ const (
 	ErrorState = "ERROR"
 )
 
+// Event Action Constants
+const (
+	createEventAction = "Create"
+	updateEventAction = "Update"
+	deleteEventAction = "Delete"
+	noEventAction     = ""
+)
+
 type OpenstackClient struct {
 	params openstack.ActuatorParams
 	scheme *runtime.Scheme
 	client client.Client
 	*openstack.DeploymentClient
+	eventRecorder record.EventRecorder
 }
 
 func NewActuator(params openstack.ActuatorParams) (*OpenstackClient, error) {
@@ -79,6 +89,7 @@ func NewActuator(params openstack.ActuatorParams) (*OpenstackClient, error) {
 		client:           params.Client,
 		scheme:           params.Scheme,
 		DeploymentClient: openstack.NewDeploymentClient(),
+		eventRecorder:    params.EventRecorder,
 	}, nil
 }
 
@@ -103,11 +114,11 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 	providerSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
 	if err != nil {
 		return oc.handleMachineError(machine, apierrors.InvalidMachineConfiguration(
-			"Cannot unmarshal providerSpec field: %v", err))
+			"Cannot unmarshal providerSpec field: %v", err), createEventAction)
 	}
 
 	if verr := oc.validateMachine(machine, providerSpec); verr != nil {
-		return oc.handleMachineError(machine, verr)
+		return oc.handleMachineError(machine, verr, createEventAction)
 	}
 
 	instance, err := oc.instanceExists(machine)
@@ -180,19 +191,19 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 			userDataRendered, err = masterStartupScript(cluster, machine, string(userData))
 			if err != nil {
 				return oc.handleMachineError(machine, apierrors.CreateMachine(
-					"error creating Openstack instance: %v", err))
+					"error creating Openstack instance: %v", err), createEventAction)
 			}
 		} else {
 			klog.Info("Creating bootstrap token")
 			token, err := oc.createBootstrapToken()
 			if err != nil {
 				return oc.handleMachineError(machine, apierrors.CreateMachine(
-					"error creating Openstack instance: %v", err))
+					"error creating Openstack instance: %v", err), createEventAction)
 			}
 			userDataRendered, err = nodeStartupScript(cluster, machine, token, string(userData))
 			if err != nil {
 				return oc.handleMachineError(machine, apierrors.CreateMachine(
-					"error creating Openstack instance: %v", err))
+					"error creating Openstack instance: %v", err), createEventAction)
 			}
 		}
 	} else {
@@ -244,7 +255,7 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 
 	if err != nil {
 		return oc.handleMachineError(machine, apierrors.CreateMachine(
-			"error creating Openstack instance: %v", err))
+			"error creating Openstack instance: %v", err), createEventAction)
 	}
 	instanceCreateTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT", TimeoutInstanceCreate)
 	instanceCreateTimeout = instanceCreateTimeout * time.Minute
@@ -257,14 +268,14 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 	})
 	if err != nil {
 		return oc.handleMachineError(machine, apierrors.CreateMachine(
-			"error creating Openstack instance: %v", err))
+			"error creating Openstack instance: %v", err), createEventAction)
 	}
 
 	if providerSpec.FloatingIP != "" {
 		err := machineService.AssociateFloatingIP(instance.ID, providerSpec.FloatingIP)
 		if err != nil {
 			return oc.handleMachineError(machine, apierrors.CreateMachine(
-				"Associate floatingIP err: %v", err))
+				"Associate floatingIP err: %v", err), createEventAction)
 		}
 
 	}
@@ -274,6 +285,7 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 		return nil
 	}
 
+	oc.eventRecorder.Eventf(machine, corev1.EventTypeNormal, "Created", "Created Machine %v", machine.Name)
 	return oc.updateAnnotation(machine, instance.ID)
 }
 
@@ -297,9 +309,10 @@ func (oc *OpenstackClient) Delete(ctx context.Context, cluster *clusterv1.Cluste
 	err = machineService.InstanceDelete(id)
 	if err != nil {
 		return oc.handleMachineError(machine, apierrors.DeleteMachine(
-			"error deleting Openstack instance: %v", err))
+			"error deleting Openstack instance: %v", err), deleteEventAction)
 	}
 
+	oc.eventRecorder.Eventf(machine, corev1.EventTypeNormal, "Deleted", "Deleted machine %v", machine.Name)
 	return nil
 }
 
@@ -349,30 +362,29 @@ func (oc *OpenstackClient) Update(ctx context.Context, cluster *clusterv1.Cluste
 		if err != nil {
 			klog.Errorf("delete machine %s for update failed: %v", currentMachine.ObjectMeta.Name, err)
 			return fmt.Errorf("Cannot delete machine %s: %v", currentMachine.ObjectMeta.Name, err)
-		} else {
-			instanceDeleteTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_DELETE_TIMEOUT", TimeoutInstanceDelete)
-			instanceDeleteTimeout = instanceDeleteTimeout * time.Minute
-			err = util.PollImmediate(RetryIntervalInstanceStatus, instanceDeleteTimeout, func() (bool, error) {
-				instance, err := oc.instanceExists(machine)
-				if err != nil {
-					return false, nil
-				}
-				return instance == nil, nil
-			})
-			if err != nil {
-				return oc.handleMachineError(machine, apierrors.DeleteMachine(
-					"error deleting Openstack instance: %v", err))
-			}
-
-			err = oc.Create(ctx, cluster, machine)
-			if err != nil {
-				klog.Errorf("create machine %s for update failed: %v", machine.ObjectMeta.Name, err)
-				return fmt.Errorf("Cannot create machine %s: %v", machine.ObjectMeta.Name, err)
-			}
-			klog.Infof("Successfully updated machine %s", currentMachine.ObjectMeta.Name)
 		}
+		instanceDeleteTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_DELETE_TIMEOUT", TimeoutInstanceDelete)
+		instanceDeleteTimeout = instanceDeleteTimeout * time.Minute
+		err = util.PollImmediate(RetryIntervalInstanceStatus, instanceDeleteTimeout, func() (bool, error) {
+			instance, err := oc.instanceExists(machine)
+			if err != nil {
+				return false, nil
+			}
+			return instance == nil, nil
+		})
+		if err != nil {
+			return oc.handleMachineError(machine, apierrors.DeleteMachine(
+				"error deleting Openstack instance: %v", err), deleteEventAction)
+		}
+		err = oc.Create(ctx, cluster, machine)
+		if err != nil {
+			klog.Errorf("create machine %s for update failed: %v", machine.ObjectMeta.Name, err)
+			return fmt.Errorf("Cannot create machine %s: %v", machine.ObjectMeta.Name, err)
+		}
+		klog.Infof("Successfully updated machine %s", currentMachine.ObjectMeta.Name)
 	}
 
+	oc.eventRecorder.Eventf(currentMachine, corev1.EventTypeNormal, "Updated", "Updated machine %v", currentMachine.ObjectMeta.Name, updateEventAction)
 	return nil
 }
 
@@ -424,7 +436,10 @@ func getIPFromInstance(instance *clients.Instance) (string, error) {
 // the appropriate reason/message on the Machine.Status. If not, such as during
 // cluster installation, it will operate as a no-op. It also returns the
 // original error for convenience, so callers can do "return handleMachineError(...)".
-func (oc *OpenstackClient) handleMachineError(machine *machinev1.Machine, err *apierrors.MachineError) error {
+func (oc *OpenstackClient) handleMachineError(machine *machinev1.Machine, err *apierrors.MachineError, eventAction string) error {
+	if eventAction != noEventAction {
+		oc.eventRecorder.Eventf(machine, corev1.EventTypeWarning, "Failed"+eventAction, "%v", err.Reason)
+	}
 	if oc.client != nil {
 		reason := err.Reason
 		message := err.Message
