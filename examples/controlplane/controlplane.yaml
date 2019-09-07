@@ -61,7 +61,7 @@ spec:
     permissions: "0600"
     content: |-
       # cloud.conf to communicate with OpenStack
-      $OPENSTACK_CLOUD_PROVIDER_CONF
+      $OPENSTACK_CLOUD_PROVIDER_CONF6
   - path: /etc/certs/cacert
     owner: root
     permissions: "0600"
@@ -172,7 +172,7 @@ spec:
     permissions: "0600"
     content: |-
       # cloud.conf to communicate with OpenStack
-      $OPENSTACK_CLOUD_PROVIDER_CONF
+      $OPENSTACK_CLOUD_PROVIDER_CONF6
   - path: /etc/certs/cacert
     owner: root
     permissions: "0600"
@@ -254,7 +254,7 @@ spec:
     permissions: "0600"
     content: |-
       # cloud.conf to communicate with OpenStack
-      $OPENSTACK_CLOUD_PROVIDER_CONF
+      $OPENSTACK_CLOUD_PROVIDER_CONF6
   - path: /etc/certs/cacert
     owner: root
     permissions: "0600"

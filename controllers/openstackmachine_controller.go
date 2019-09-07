@@ -442,15 +442,28 @@ func (r *OpenStackMachineReconciler) OpenStackClusterToOpenStackMachines(o handl
 		r.Log.Error(errors.Errorf("expected a OpenStackCluster but got a %T", o.Object), "failed to get OpenStackMachine for OpenStackCluster")
 		return nil
 	}
+	log := r.Log.WithValues("OpenStackCluster", c.Name, "Namespace", c.Namespace)
 
-	labels := map[string]string{clusterv1.MachineClusterLabelName: c.Name}
-	machineList := &infrav1.OpenStackMachineList{}
-	if err := r.List(context.Background(), machineList, client.InNamespace(c.Namespace), client.MatchingLabels(labels)); err != nil {
-		r.Log.Error(err, "failed to list OpenStackMachines", "OpenStackCluster", c.Name, "Namespace", c.Namespace)
+	cluster, err := util.GetOwnerCluster(context.TODO(), r.Client, c.ObjectMeta)
+	switch {
+	case apierrors.IsNotFound(err) || cluster == nil:
+		return result
+	case err != nil:
+		log.Error(err, "failed to get owning cluster")
+		return result
+	}
+
+	labels := map[string]string{clusterv1.MachineClusterLabelName: cluster.Name}
+	machineList := &clusterv1.MachineList{}
+	if err := r.List(context.TODO(), machineList, client.InNamespace(c.Namespace), client.MatchingLabels(labels)); err != nil {
+		log.Error(err, "failed to list Machines")
 		return nil
 	}
 	for _, m := range machineList.Items {
-		name := client.ObjectKey{Namespace: m.Namespace, Name: m.Name}
+		if m.Spec.InfrastructureRef.Name == "" {
+			continue
+		}
+		name := client.ObjectKey{Namespace: m.Namespace, Name: m.Spec.InfrastructureRef.Name}
 		result = append(result, ctrl.Request{NamespacedName: name})
 	}
 

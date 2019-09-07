@@ -114,6 +114,7 @@ CLUSTER_GENERATED_FILE=${OUTPUT_DIR}/cluster.yaml
 CONTROLPLANE_GENERATED_FILE=${OUTPUT_DIR}/controlplane.yaml
 MACHINEDEPLOYMENT_GENERATED_FILE=${OUTPUT_DIR}/machinedeployment.yaml
 MACHINES_GENERATED_FILE=${OUTPUT_DIR}/machines.yaml
+ADDONS_GENERATED_FILE=${OUTPUT_DIR}/addons.yaml
 
 rm -rf "${OUTPUT_DIR}"
 rm -rf "${CLOUDS_SECRETS_CONFIG_DIR}"
@@ -127,7 +128,7 @@ if [[ ! -f ${MACHINE_CONTROLLER_SSH_PRIVATE_FILE} ]]; then
   ssh-keygen -t rsa -f ${MACHINE_CONTROLLER_SSH_PRIVATE_FILE}  -N ""
 fi
 export MACHINE_CONTROLLER_SSH_PUBLIC_FILE_CONTENT
-MACHINE_CONTROLLER_SSH_PUBLIC_FILE_CONTENT=$(cat ${MACHINE_CONTROLLER_SSH_PRIVATE_FILE}.pub)
+MACHINE_CONTROLLER_SSH_PUBLIC_FILE_CONTENT="\"$(cat ${MACHINE_CONTROLLER_SSH_PRIVATE_FILE}.pub)\""
 
 CLOUDS_PATH=${CLOUDS_PATH:-""}
 OPENSTACK_CLOUD_CONFIG_PLAIN=$(cat "$CLOUDS_PATH")
@@ -145,23 +146,30 @@ fi
 CACERT_ORIGINAL=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.${CLOUD}.cacert)
 
 # Basic cloud.conf, no LB configuration as that data is not known yet.
-export OPENSTACK_CLOUD_PROVIDER_CONF="[Global]
-          auth-url=$AUTH_URL
-          username=\"$USERNAME\"
-          password=\"$PASSWORD\"
-          tenant-id=\"$PROJECT_ID\"
-          domain-name=\"$DOMAIN_NAME\"
+OPENSTACK_CLOUD_PROVIDER_CONF="
+[Global]
+auth-url=$AUTH_URL
+username=\"$USERNAME\"
+password=\"$PASSWORD\"
+tenant-id=\"$PROJECT_ID\"
+domain-name=\"$DOMAIN_NAME\"
 "
 if [[ "$CACERT_ORIGINAL" != "null" ]]; then
   OPENSTACK_CLOUD_PROVIDER_CONF="$OPENSTACK_CLOUD_PROVIDER_CONF
-          ca-file=\"${CACERT_ORIGINAL}\"
+ca-file=\"${CACERT_ORIGINAL}\"
   "
 fi
 if [[ "$REGION" != "null" ]]; then
   OPENSTACK_CLOUD_PROVIDER_CONF="$OPENSTACK_CLOUD_PROVIDER_CONF
-          region=\"${REGION}\"
+region=\"${REGION}\"
   "
 fi
+
+export OPENSTACK_CLOUD_PROVIDER_CONF6
+OPENSTACK_CLOUD_PROVIDER_CONF6=$(echo "${OPENSTACK_CLOUD_PROVIDER_CONF}" | sed -e 's/^/      /')
+export OPENSTACK_CLOUD_PROVIDER_CONF10
+OPENSTACK_CLOUD_PROVIDER_CONF10=$(echo "${OPENSTACK_CLOUD_PROVIDER_CONF}" | sed -e 's/^/          /')
+
 OS=$(uname)
 if [[ "$OS" =~ "Linux" ]]; then
 #  export OPENSTACK_CLOUD_PROVIDER_CONF=$(echo "$OPENSTACK_CLOUD_PROVIDER_CONF_PLAIN"|base64 -w0)
@@ -207,6 +215,9 @@ echo "---" >> ${MACHINES_GENERATED_FILE}
 cat ${MACHINEDEPLOYMENT_GENERATED_FILE} >> ${MACHINES_GENERATED_FILE}
 echo "---" >> ${MACHINES_GENERATED_FILE}
 echo "Generated ${MACHINES_GENERATED_FILE}"
+
+cp ${SOURCE_DIR}/addons.yaml "${ADDONS_GENERATED_FILE}"
+echo "Generated ${ADDONS_GENERATED_FILE}"
 
 # Generate Cluster API provider components file.
 kustomize build "github.com/kubernetes-sigs/cluster-api//config/default/?ref=master" --reorder=none > "${COMPONENTS_CLUSTER_API_GENERATED_FILE}"

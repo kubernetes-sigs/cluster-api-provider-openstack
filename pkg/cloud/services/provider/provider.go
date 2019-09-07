@@ -79,8 +79,10 @@ func newClient(cloud clientconfig.Cloud, caCert []byte) (*gophercloud.ProviderCl
 	}
 
 	config := &tls.Config{
-		RootCAs:            x509.NewCertPool(),
-		InsecureSkipVerify: !*cloud.Verify,
+		RootCAs: x509.NewCertPool(),
+	}
+	if cloud.Verify != nil {
+		config.InsecureSkipVerify = !*cloud.Verify
 	}
 	config.RootCAs.AppendCertsFromPEM(caCert)
 

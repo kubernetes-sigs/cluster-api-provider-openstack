@@ -238,9 +238,13 @@ set-manifest-image:
 ## --------------------------------------
 
 RELEASE_TAG := $(shell git describe --abbrev=0 2>/dev/null)
+RELEASE_DIR := out
+
+$(RELEASE_DIR):
+	mkdir -p $(RELEASE_DIR)/
 
 .PHONY: release
-release:  ## Builds and push container images using the latest git tag for the commit.
+release: clean-release  ## Builds and push container images using the latest git tag for the commit.
 	@if [ -z "${RELEASE_TAG}" ]; then echo "RELEASE_TAG is not set"; exit 1; fi
 	# Push the release image to the staging bucket first.
 	REGISTRY=$(STAGING_REGISTRY) TAG=$(RELEASE_TAG) \
@@ -248,9 +252,11 @@ release:  ## Builds and push container images using the latest git tag for the c
 	# Set the manifest image to the production bucket.
 	MANIFEST_IMG=$(PROD_REGISTRY)/$(IMAGE_NAME) MANIFEST_TAG=$(RELEASE_TAG) \
 		$(MAKE) set-manifest-image
-	# Generate release artifacts.
-	mkdir -p out/
-	kustomize build config/default > out/infrastructure-components.yaml
+	$(MAKE) release-manifests
+
+.PHONY: release-manifests
+release-manifests: $(RELEASE_DIR) ## Builds the manifests to publish with a release
+	kustomize build config/default > $(RELEASE_DIR)/infrastructure-components.yaml
 
 .PHONY: release-staging-latest
 release-staging-latest: ## Builds and push container images to the staging bucket using "latest" tag.
@@ -267,8 +273,9 @@ create-cluster: $(CLUSTERCTL) ## Create a development Kubernetes cluster on Open
 	create cluster -v 4 \
 	--bootstrap-flags="name=clusterapi" \
 	--bootstrap-type kind \
-	-m ./examples/_out/controlplane.yaml \
+	--bootstrap-cluster-cleanup=false \
 	-c ./examples/_out/cluster.yaml \
+	-m ./examples/_out/machines.yaml \
 	-p ./examples/_out/provider-components.yaml \
 	-a ./examples/addons.yaml
 
@@ -312,8 +319,9 @@ delete-cluster: $(CLUSTERCTL) ## Deletes the development Kubernetes Cluster "tes
 	--bootstrap-flags="name=clusterapi" \
 	--cluster test1 \
 	--kubeconfig ./kubeconfig \
-	-p ./examples/out/provider-components.yaml \
+	-p ./examples/_out/provider-components.yaml \
 
+.PHONY: kind-reset
 kind-reset: ## Destroys the "clusterapi" kind cluster.
 	kind delete cluster --name=clusterapi || true
 
@@ -335,7 +343,10 @@ clean-bin: ## Remove all generated binaries
 clean-temporary: ## Remove all temporary files and folders
 	rm -f minikube.kubeconfig
 	rm -f kubeconfig
-	rm -rf out/
+
+.PHONY: clean-release
+clean-release: ## Remove the release folder
+	rm -rf $(RELEASE_DIR)
 
 .PHONY: clean-examples
 clean-examples: ## Remove all the temporary files generated in the examples folder

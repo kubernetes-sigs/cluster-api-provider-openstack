@@ -68,7 +68,7 @@ spec:
       files:
       - content: |-
           # cloud.conf to communicate with OpenStack
-          $OPENSTACK_CLOUD_PROVIDER_CONF
+          $OPENSTACK_CLOUD_PROVIDER_CONF10
         owner: root
         path: /etc/kubernetes/cloud.conf
         permissions: "0600"
@@ -86,7 +86,7 @@ spec:
           name: '{{ local_hostname }}'
       ntp:
         servers: []
-        users:
-        - name: ubuntu
-          sshAuthorizedKeys:
-          - "$MACHINE_CONTROLLER_SSH_PUBLIC_FILE_CONTENT"
+      users:
+      - name: ubuntu
+        sshAuthorizedKeys:
+        - "$MACHINE_CONTROLLER_SSH_PUBLIC_FILE_CONTENT"
