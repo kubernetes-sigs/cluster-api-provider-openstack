@@ -273,9 +273,8 @@ create-cluster: $(CLUSTERCTL) ## Create a development Kubernetes cluster on Open
 	create cluster -v 4 \
 	--bootstrap-flags="name=clusterapi" \
 	--bootstrap-type kind \
-	--bootstrap-cluster-cleanup=false \
+	-m ./examples/_out/controlplane.yaml \
 	-c ./examples/_out/cluster.yaml \
-	-m ./examples/_out/machines.yaml \
 	-p ./examples/_out/provider-components.yaml \
 	-a ./examples/addons.yaml
 

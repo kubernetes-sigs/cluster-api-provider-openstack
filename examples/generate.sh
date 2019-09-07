@@ -14,6 +14,7 @@
 # limitations under the License.
 
 set -o errexit
+set -o nounset
 
 # Directories.
 SOURCE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
@@ -113,7 +114,6 @@ PROVIDER_COMPONENTS_GENERATED_FILE=${OUTPUT_DIR}/provider-components.yaml
 CLUSTER_GENERATED_FILE=${OUTPUT_DIR}/cluster.yaml
 CONTROLPLANE_GENERATED_FILE=${OUTPUT_DIR}/controlplane.yaml
 MACHINEDEPLOYMENT_GENERATED_FILE=${OUTPUT_DIR}/machinedeployment.yaml
-MACHINES_GENERATED_FILE=${OUTPUT_DIR}/machines.yaml
 ADDONS_GENERATED_FILE=${OUTPUT_DIR}/addons.yaml
 
 rm -rf "${OUTPUT_DIR}"
@@ -144,6 +144,9 @@ if [[ "$DOMAIN_NAME" = "null" ]]; then
   DOMAIN_NAME=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.${CLOUD}.auth.domain_name)
 fi
 CACERT_ORIGINAL=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.${CLOUD}.cacert)
+
+# use only the selected cloud not the whole clouds.yaml
+OPENSTACK_CLOUD_CONFIG_SELECTED_CLOUD=$(echo "${OPENSTACK_CLOUD_CONFIG_PLAIN}" | yq r - clouds.${CLOUD} | yq p - clouds.${CLOUD})
 
 # Basic cloud.conf, no LB configuration as that data is not known yet.
 OPENSTACK_CLOUD_PROVIDER_CONF="
@@ -188,7 +191,7 @@ else
   exit 1
 fi
 
-echo "${OPENSTACK_CLOUD_CONFIG_PLAIN}" > ${CLOUDS_SECRETS_CONFIG_DIR}/clouds.yaml
+echo "${OPENSTACK_CLOUD_CONFIG_SELECTED_CLOUD}" > ${CLOUDS_SECRETS_CONFIG_DIR}/clouds.yaml
 if [[ "$CACERT_ORIGINAL" != "null" ]]; then
   cat "$CACERT_ORIGINAL" > ${CLOUDS_SECRETS_CONFIG_DIR}/cacert
 else
@@ -207,28 +210,19 @@ echo "Generated ${CONTROLPLANE_GENERATED_FILE}"
 kustomize build "${SOURCE_DIR}/machinedeployment" --reorder=none | envsubst >> "${MACHINEDEPLOYMENT_GENERATED_FILE}"
 echo "Generated ${MACHINEDEPLOYMENT_GENERATED_FILE}"
 
-# combine control plane and regular machines in ${MACHINES_GENERATED_FILE}
-cat ${CONTROLPLANE_GENERATED_FILE} > ${MACHINES_GENERATED_FILE}
-echo "---" >> ${MACHINES_GENERATED_FILE}
-#cat ${MACHINEDEPLOYMENT_GENERATED_FILE} >> ${MACHINES_GENERATED_FILE}
-echo "---" >> ${MACHINES_GENERATED_FILE}
-cat ${MACHINEDEPLOYMENT_GENERATED_FILE} >> ${MACHINES_GENERATED_FILE}
-echo "---" >> ${MACHINES_GENERATED_FILE}
-echo "Generated ${MACHINES_GENERATED_FILE}"
-
 cp ${SOURCE_DIR}/addons.yaml "${ADDONS_GENERATED_FILE}"
 echo "Generated ${ADDONS_GENERATED_FILE}"
 
 # Generate Cluster API provider components file.
-kustomize build "github.com/kubernetes-sigs/cluster-api//config/default/?ref=master" --reorder=none > "${COMPONENTS_CLUSTER_API_GENERATED_FILE}"
+kustomize build "github.com/kubernetes-sigs/cluster-api//config/default/?ref=master" > "${COMPONENTS_CLUSTER_API_GENERATED_FILE}"
 echo "Generated ${COMPONENTS_CLUSTER_API_GENERATED_FILE}"
 
 # Generate Kubeadm Bootstrap Provider components file.
-kustomize build "github.com/kubernetes-sigs/cluster-api-bootstrap-provider-kubeadm//config/default/?ref=master" --reorder=none > "${COMPONENTS_KUBEADM_GENERATED_FILE}"
+kustomize build "github.com/kubernetes-sigs/cluster-api-bootstrap-provider-kubeadm//config/default/?ref=master" > "${COMPONENTS_KUBEADM_GENERATED_FILE}"
 echo "Generated ${COMPONENTS_KUBEADM_GENERATED_FILE}"
 
 # Generate OpenStack Infrastructure Provider components file.
-kustomize build "${SOURCE_DIR}/../config/default" --reorder=none | envsubst > "${COMPONENTS_OPENSTACK_GENERATED_FILE}"
+kustomize build "${SOURCE_DIR}/../config/default" | envsubst > "${COMPONENTS_OPENSTACK_GENERATED_FILE}"
 echo "Generated ${COMPONENTS_OPENSTACK_GENERATED_FILE}"
 
 # Generate OpenStack Infrastructure Provider cloud-secrets file.
@@ -237,6 +231,6 @@ echo "Generated ${COMPONENTS_OPENSTACK_CLOUDS_SECRETS_GENERATED_FILE}"
 echo "WARNING: ${COMPONENTS_OPENSTACK_CLOUDS_SECRETS_GENERATED_FILE} includes OpenStack credentials"
 
 # Generate a single provider components file.
-kustomize build "${SOURCE_DIR}/provider-components"| envsubst > "${PROVIDER_COMPONENTS_GENERATED_FILE}"
+kustomize build "${SOURCE_DIR}/provider-components" | envsubst > "${PROVIDER_COMPONENTS_GENERATED_FILE}"
 echo "Generated ${PROVIDER_COMPONENTS_GENERATED_FILE}"
 echo "WARNING: ${PROVIDER_COMPONENTS_GENERATED_FILE} includes OpenStack credentials"
