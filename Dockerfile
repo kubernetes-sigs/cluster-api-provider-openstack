@@ -13,39 +13,13 @@
 # limitations under the License.
 
 # Build the manager binary
-#FROM golang:1.12.9 as builder
-#
-## Copy in the go src
-#WORKDIR ${GOPATH}/src/sigs.k8s.io/cluster-api-provider-openstack
-#COPY pkg/    pkg/
-#COPY cmd/    cmd/
-#COPY vendor/ vendor/
-#COPY api/ api/
-#COPY controllers/ controllers/
-#COPY main.go main.go
-#COPY go.mod go.mod
-#COPY go.sum go.sum
-#
-## Build
-#RUN CGO_ENABLED=0 GOOS=linux GO111MODULE=on GOFLAGS="-mod=vendor" \
-#    go build -a -ldflags '-extldflags "-static"' \
-#    -o manager sigs.k8s.io/cluster-api-provider-openstack
-#
-## Copy the controller-manager into a thin image
-#FROM gcr.io/distroless/static:latest
-#WORKDIR /
-#COPY --from=builder /go/src/sigs.k8s.io/cluster-api-provider-openstack/manager .
-#USER nobody
-#ENTRYPOINT ["/manager"]
-
-# Build the manager binary
-FROM golang:1.12.9
+FROM golang:1.12.9 as builder
+WORKDIR /workspace
 
 # Run this with docker build --build_arg $(go env GOPROXY) to override the goproxy
 ARG goproxy=https://proxy.golang.org
 ENV GOPROXY=$goproxy
 
-WORKDIR /workspace
 # Copy the Go Modules manifests
 COPY go.mod go.mod
 COPY go.sum go.sum
@@ -54,17 +28,17 @@ COPY go.sum go.sum
 RUN go mod download
 
 # Copy the sources
-COPY main.go main.go
-COPY api/ api/
-COPY controllers/ controllers/
-COPY pkg/    pkg/
+COPY ./ ./
 
-# Allow containerd to restart pods by calling /restart.sh (mostly for tilt + fast dev cycles)
-# TODO: Remove this on prod and use a multi-stage build
-COPY third_party/forked/rerun-process-wrapper/start.sh .
-COPY third_party/forked/rerun-process-wrapper/restart.sh .
+# Build
+ARG ARCH
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=${ARCH} \
+    go build -a -ldflags '-extldflags "-static"' \
+    -o manager .
 
-# Build and run
-RUN go install -v .
-RUN mv /go/bin/cluster-api-provider-openstack /manager
-ENTRYPOINT ["./start.sh", "/manager"]
+# Copy the controller-manager into a thin image
+FROM gcr.io/distroless/static:latest
+WORKDIR /
+COPY --from=builder /workspace/manager .
+USER nobody
+ENTRYPOINT ["/manager"]
