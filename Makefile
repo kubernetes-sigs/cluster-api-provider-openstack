@@ -43,9 +43,9 @@ MOCKGEN := $(TOOLS_BIN_DIR)/mockgen
 
 # Define Docker related variables. Releases should modify and double check these vars.
 REGISTRY ?= gcr.io/$(shell gcloud config get-value project)
-STAGING_REGISTRY := gcr.io/k8s-staging-cluster-api-openstack
-PROD_REGISTRY := us.gcr.io/k8s-artifacts-prod/cluster-api-openstack
-IMAGE_NAME ?= cluster-api-openstack-controller
+STAGING_REGISTRY := gcr.io/k8s-staging-capi-openstack
+PROD_REGISTRY := us.gcr.io/k8s-artifacts-prod/capi-openstack
+IMAGE_NAME ?= capi-openstack-controller
 CONTROLLER_IMG ?= $(REGISTRY)/$(IMAGE_NAME)
 TAG ?= dev
 ARCH ?= amd64
@@ -225,7 +225,7 @@ docker-push-manifest: ## Push the fat manifest docker image.
 	## Minimum docker version 18.06.0 is required for creating and pushing manifest images.
 	docker manifest create --amend $(CONTROLLER_IMG):$(TAG) $(shell echo $(ALL_ARCH) | sed -e "s~[^ ]*~$(CONTROLLER_IMG)\-&:$(TAG)~g")
 	@for arch in $(ALL_ARCH); do docker manifest annotate --arch $${arch} ${CONTROLLER_IMG}:${TAG} ${CONTROLLER_IMG}-$${arch}:${TAG}; done
-	docker manifest push --purge ${CONTROLLER_IMG}:${TAG}
+	docker manifest push --purge $(CONTROLLER_IMG):$(TAG)
 	MANIFEST_IMG=$(CONTROLLER_IMG) MANIFEST_TAG=$(TAG) $(MAKE) set-manifest-image
 
 .PHONY: set-manifest-image
@@ -238,24 +238,35 @@ set-manifest-image:
 ## --------------------------------------
 
 RELEASE_TAG := $(shell git describe --abbrev=0 2>/dev/null)
+RELEASE_DIR := out
+
+$(RELEASE_DIR):
+	mkdir -p $(RELEASE_DIR)/
 
 .PHONY: release
-release:  ## Builds and push container images using the latest git tag for the commit.
+release: clean-release ## Builds and push container images using the latest git tag for the commit.
 	@if [ -z "${RELEASE_TAG}" ]; then echo "RELEASE_TAG is not set"; exit 1; fi
+	@if ! [ -z "$$(git status --porcelain)" ]; then echo "Your local git repository contains uncommitted changes, use git clean before proceeding."; exit 1; fi
+	git checkout "${RELEASE_TAG}"
 	# Push the release image to the staging bucket first.
 	REGISTRY=$(STAGING_REGISTRY) TAG=$(RELEASE_TAG) \
 		$(MAKE) docker-build-all docker-push-all
 	# Set the manifest image to the production bucket.
 	MANIFEST_IMG=$(PROD_REGISTRY)/$(IMAGE_NAME) MANIFEST_TAG=$(RELEASE_TAG) \
 		$(MAKE) set-manifest-image
-	# Generate release artifacts.
-	mkdir -p out/
-	kustomize build config/default > out/infrastructure-components.yaml
+	$(MAKE) release-manifests
 
-.PHONY: release-staging-latest
-release-staging-latest: ## Builds and push container images to the staging bucket using "latest" tag.
-	REGISTRY=$(STAGING_REGISTRY) TAG=latest \
-		$(MAKE) docker-build-all docker-push-all
+.PHONY: release-manifests
+release-manifests: $(RELEASE_DIR) ## Builds the manifests to publish with a release
+	kustomize build config/default > $(RELEASE_DIR)/infrastructure-components.yaml
+
+.PHONY: release-staging
+release-staging: ## Builds and push container images to the staging bucket.
+	REGISTRY=$(STAGING_REGISTRY) $(MAKE) docker-build-all docker-push-all release-tag-latest
+
+.PHONY: release-tag-latest
+release-tag-latest: ## Adds the latest tag to the last build tag.
+	gcloud container images add-tag $(CONTROLLER_IMG):$(TAG) $(CONTROLLER_IMG):latest
 
 ## --------------------------------------
 ## Development
@@ -312,8 +323,9 @@ delete-cluster: $(CLUSTERCTL) ## Deletes the development Kubernetes Cluster "tes
 	--bootstrap-flags="name=clusterapi" \
 	--cluster test1 \
 	--kubeconfig ./kubeconfig \
-	-p ./examples/out/provider-components.yaml \
+	-p ./examples/_out/provider-components.yaml \
 
+.PHONY: kind-reset
 kind-reset: ## Destroys the "clusterapi" kind cluster.
 	kind delete cluster --name=clusterapi || true
 
@@ -335,7 +347,10 @@ clean-bin: ## Remove all generated binaries
 clean-temporary: ## Remove all temporary files and folders
 	rm -f minikube.kubeconfig
 	rm -f kubeconfig
-	rm -rf out/
+
+.PHONY: clean-release
+clean-release: ## Remove the release folder
+	rm -rf $(RELEASE_DIR)
 
 .PHONY: clean-examples
 clean-examples: ## Remove all the temporary files generated in the examples folder

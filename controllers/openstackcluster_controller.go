@@ -255,11 +255,11 @@ func (r *OpenStackClusterReconciler) SetupWithManager(mgr ctrl.Manager, options 
 
 func (r *OpenStackClusterReconciler) getControlPlaneMachine() (*infrav1.OpenStackMachine, error) {
 	machines := &clusterv1.MachineList{}
-	if err := r.Client.List(context.Background(), machines); err != nil {
+	if err := r.Client.List(context.TODO(), machines); err != nil {
 		return nil, err
 	}
 	openStackMachines := &infrav1.OpenStackMachineList{}
-	if err := r.Client.List(context.Background(), openStackMachines); err != nil {
+	if err := r.Client.List(context.TODO(), openStackMachines); err != nil {
 		return nil, err
 	}
 

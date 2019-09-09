@@ -120,6 +120,8 @@ For more information, please refer to [v1alpha2](https://github.com/kubernetes-s
            -m examples/_out/machines.yaml \
            -p examples/_out/provider-components.yaml \
            -a examples/addons.yaml
+   # Alternatively
+   make create-cluster
    ```
 
    - If you are using an existing Kubernetes cluster:
