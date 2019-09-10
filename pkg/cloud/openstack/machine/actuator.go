@@ -137,16 +137,9 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 	// See https://bugzilla.redhat.com/show_bug.cgi?id=1746369
 	if machine.ObjectMeta.Annotations[InstanceStatusAnnotationKey] != "" {
 		klog.Errorf("The instance has been destroyed for the machine %v, cannot recreate it.\n", machine.ObjectMeta.Name)
+		verr := apierrors.InvalidMachineConfiguration("the instance has been destroyed for the machine %v, cannot recreate it.\n", machine.ObjectMeta.Name)
 
-		// Currently machines with ERROR state should be deleted manually, later it will
-		// be done automatically by machine-api-operator.
-		machine.ObjectMeta.Annotations[MachineInstanceStateAnnotationName] = ErrorState
-
-		if err := oc.client.Update(nil, machine); err != nil {
-			return err
-		}
-
-		return fmt.Errorf("the instance has been destroyed for the machine %v, cannot recreate it", machine.ObjectMeta.Name)
+		return oc.handleMachineError(machine, verr, createEventAction)
 	}
 
 	// get machine startup script
@@ -445,6 +438,13 @@ func (oc *OpenstackClient) handleMachineError(machine *machinev1.Machine, err *a
 		message := err.Message
 		machine.Status.ErrorReason = &reason
 		machine.Status.ErrorMessage = &message
+
+		// Set state label to indicate that this machine is broken
+		if machine.ObjectMeta.Annotations == nil {
+			machine.ObjectMeta.Annotations = make(map[string]string)
+		}
+		machine.ObjectMeta.Annotations[MachineInstanceStateAnnotationName] = ErrorState
+
 		if err := oc.client.Update(nil, machine); err != nil {
 			return fmt.Errorf("unable to update machine status: %v", err)
 		}
