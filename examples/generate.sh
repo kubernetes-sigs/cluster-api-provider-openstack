@@ -213,6 +213,9 @@ echo "Generated ${MACHINEDEPLOYMENT_GENERATED_FILE}"
 cp ${SOURCE_DIR}/addons.yaml "${ADDONS_GENERATED_FILE}"
 echo "Generated ${ADDONS_GENERATED_FILE}"
 
+cp ${SOURCE_DIR}/addons.yaml "${ADDONS_GENERATED_FILE}"
+echo "Generated ${ADDONS_GENERATED_FILE}"
+
 # Generate Cluster API provider components file.
 kustomize build "github.com/kubernetes-sigs/cluster-api/config/default/?ref=master" > "${COMPONENTS_CLUSTER_API_GENERATED_FILE}"
 echo "Generated ${COMPONENTS_CLUSTER_API_GENERATED_FILE}"
