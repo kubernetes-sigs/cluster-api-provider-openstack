@@ -36,7 +36,6 @@ rules:
   - ""
   resources:
   - nodes
-  - events
   verbs:
   - get
   - list
@@ -53,3 +52,12 @@ rules:
   - get
   - list
   - watch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - watch
+  - list
+  - patch
