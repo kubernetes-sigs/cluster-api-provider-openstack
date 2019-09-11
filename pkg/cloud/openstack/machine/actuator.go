@@ -104,6 +104,23 @@ func getTimeout(name string, timeout int) time.Duration {
 }
 
 func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluster, machine *machinev1.Machine) error {
+	// First check that provided labels are correct
+	// TODO(mfedosin): stop sending the infrastructure request when we start to receive the cluster value
+	clusterInfra, err := oc.params.ConfigClient.Infrastructures().Get("cluster", metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("Failed to retrieve cluster Infrastructure object: %v", err)
+	}
+
+	clusterInfraName := clusterInfra.Status.InfrastructureName
+	clusterNameLabel := machine.Labels["machine.openshift.io/cluster-api-cluster"]
+
+	if clusterNameLabel != clusterInfraName {
+		klog.Errorf("machine.openshift.io/cluster-api-cluster label value is incorrect: %v, machine %v cannot join cluster %v", clusterNameLabel, machine.ObjectMeta.Name, clusterInfraName)
+		verr := apierrors.InvalidMachineConfiguration("machine.openshift.io/cluster-api-cluster label value is incorrect: %v, machine %v cannot join cluster %v", clusterNameLabel, machine.ObjectMeta.Name, clusterInfraName)
+
+		return oc.handleMachineError(machine, verr, createEventAction)
+	}
+
 	kubeClient := oc.params.KubeClient
 
 	machineService, err := clients.NewInstanceServiceFromMachine(kubeClient, machine)
@@ -137,16 +154,9 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 	// See https://bugzilla.redhat.com/show_bug.cgi?id=1746369
 	if machine.ObjectMeta.Annotations[InstanceStatusAnnotationKey] != "" {
 		klog.Errorf("The instance has been destroyed for the machine %v, cannot recreate it.\n", machine.ObjectMeta.Name)
+		verr := apierrors.InvalidMachineConfiguration("the instance has been destroyed for the machine %v, cannot recreate it.\n", machine.ObjectMeta.Name)
 
-		// Currently machines with ERROR state should be deleted manually, later it will
-		// be done automatically by machine-api-operator.
-		machine.ObjectMeta.Annotations[MachineInstanceStateAnnotationName] = ErrorState
-
-		if err := oc.client.Update(nil, machine); err != nil {
-			return err
-		}
-
-		return fmt.Errorf("the instance has been destroyed for the machine %v, cannot recreate it", machine.ObjectMeta.Name)
+		return oc.handleMachineError(machine, verr, createEventAction)
 	}
 
 	// get machine startup script
@@ -445,6 +455,13 @@ func (oc *OpenstackClient) handleMachineError(machine *machinev1.Machine, err *a
 		message := err.Message
 		machine.Status.ErrorReason = &reason
 		machine.Status.ErrorMessage = &message
+
+		// Set state label to indicate that this machine is broken
+		if machine.ObjectMeta.Annotations == nil {
+			machine.ObjectMeta.Annotations = make(map[string]string)
+		}
+		machine.ObjectMeta.Annotations[MachineInstanceStateAnnotationName] = ErrorState
+
 		if err := oc.client.Update(nil, machine); err != nil {
 			return fmt.Errorf("unable to update machine status: %v", err)
 		}
