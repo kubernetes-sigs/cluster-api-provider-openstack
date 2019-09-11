@@ -104,6 +104,23 @@ func getTimeout(name string, timeout int) time.Duration {
 }
 
 func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluster, machine *machinev1.Machine) error {
+	// First check that provided labels are correct
+	// TODO(mfedosin): stop sending the infrastructure request when we start to receive the cluster value
+	clusterInfra, err := oc.params.ConfigClient.Infrastructures().Get("cluster", metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("Failed to retrieve cluster Infrastructure object: %v", err)
+	}
+
+	clusterInfraName := clusterInfra.Status.InfrastructureName
+	clusterNameLabel := machine.Labels["machine.openshift.io/cluster-api-cluster"]
+
+	if clusterNameLabel != clusterInfraName {
+		klog.Errorf("machine.openshift.io/cluster-api-cluster label value is incorrect: %v, machine %v cannot join cluster %v", clusterNameLabel, machine.ObjectMeta.Name, clusterInfraName)
+		verr := apierrors.InvalidMachineConfiguration("machine.openshift.io/cluster-api-cluster label value is incorrect: %v, machine %v cannot join cluster %v", clusterNameLabel, machine.ObjectMeta.Name, clusterInfraName)
+
+		return oc.handleMachineError(machine, verr, createEventAction)
+	}
+
 	kubeClient := oc.params.KubeClient
 
 	machineService, err := clients.NewInstanceServiceFromMachine(kubeClient, machine)
