@@ -64,7 +64,7 @@ while test $# -gt 0; do
 done
 
 # Check if clouds.yaml file provided
-if [[ -n "$1" ]] && [[ $1 != -* ]] && [[ $1 != --* ]];then
+if [[ -n "${1-}" ]] && [[ $1 != -* ]] && [[ $1 != --* ]];then
   CLOUDS_PATH="$1"
 else
   echo "Error: No clouds.yaml provided"
@@ -74,7 +74,7 @@ else
 fi
 
 # Check if os cloud is provided
-if [[ -n "$2" ]] && [[ $2 != -* ]] && [[ $2 != --* ]]; then
+if [[ -n "${2-}" ]] && [[ $2 != -* ]] && [[ $2 != --* ]]; then
   export CLOUD=$2
 else
   echo "Error: No cloud specified"
@@ -83,7 +83,7 @@ else
   exit 1
 fi
 
-if [[ -n "$3" ]] && [[ $3 != -* ]] && [[ $3 != --* ]]; then
+if [[ -n "${3-}" ]] && [[ $3 != -* ]] && [[ $3 != --* ]]; then
   OUTPUT_DIR=$(echo $3 | tr '[:upper:]' '[:lower:]')
 else
   echo "no output folder provided, use name '_out' by default"
