@@ -479,6 +479,9 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, clust
 			}
 		}
 	}
+	if len(nets) == 0 {
+		return nil, fmt.Errorf("No network was found or provided. Please check your machine configuration and try again")
+	}
 
 	clusterInfra, err := configClient.Infrastructures().Get("cluster", metav1.GetOptions{})
 	if err != nil {
