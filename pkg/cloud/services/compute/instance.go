@@ -130,6 +130,10 @@ func (s *Service) InstanceCreate(clusterName string, machine *clusterv1.Machine,
 			}
 		}
 	}
+	if len(nets) == 0 {
+		return nil, fmt.Errorf("no network was found or provided. Please check your machine configuration and try again")
+	}
+
 	portsList := []servers.Network{}
 	for _, net := range nets {
 		if net.networkID == "" {
