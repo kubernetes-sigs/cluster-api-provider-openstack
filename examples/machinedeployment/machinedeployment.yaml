@@ -73,7 +73,7 @@ spec:
         path: /etc/kubernetes/cloud.conf
         permissions: "0600"
       - content: |
-          $OPENSTACK_CLOUD_CACERT_CONFIG6
+          $OPENSTACK_CLOUD_CACERT_CONFIG10
         owner: root
         path: /etc/certs/cacert
         permissions: "0600"
