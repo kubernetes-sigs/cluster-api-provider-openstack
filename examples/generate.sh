@@ -175,9 +175,11 @@ OPENSTACK_CLOUD_PROVIDER_CONF10=$(echo "${OPENSTACK_CLOUD_PROVIDER_CONF}" | sed 
 
 if [[ "$CACERT_ORIGINAL" != "null" ]]; then
   export OPENSTACK_CLOUD_CACERT_CONFIG6
-  OPENSTACK_CLOUD_CACERT_CONFIG6=$(cat "$CACERT_ORIGINAL" | sed -e 's/^/      /')
+  OPENSTACK_CLOUD_CACERT_CONFIG6="$(cat "$CACERT_ORIGINAL" | head -1)
+$(cat "$CACERT_ORIGINAL" | tail -n +2 | sed -e 's/^/      /')"
   export OPENSTACK_CLOUD_CACERT_CONFIG10
-  OPENSTACK_CLOUD_CACERT_CONFIG10=$(cat "$CACERT_ORIGINAL" | sed -e 's/^/          /')
+  OPENSTACK_CLOUD_CACERT_CONFIG10="$(cat "$CACERT_ORIGINAL" | head -1)
+$(cat "$CACERT_ORIGINAL" | tail -n +2 | sed -e 's/^/          /')"
 fi
 
 echo "${OPENSTACK_CLOUD_CONFIG_SELECTED_CLOUD}" > ${CLOUDS_SECRETS_CONFIG_DIR}/clouds.yaml
