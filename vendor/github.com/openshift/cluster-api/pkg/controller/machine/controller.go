@@ -19,15 +19,16 @@ package machine
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/go-log/log/info"
 	clusterv1 "github.com/openshift/cluster-api/pkg/apis/cluster/v1alpha1"
+	commonerrors "github.com/openshift/cluster-api/pkg/apis/machine/common"
 	machinev1 "github.com/openshift/cluster-api/pkg/apis/machine/v1beta1"
 	controllerError "github.com/openshift/cluster-api/pkg/controller/error"
+	kubedrain "github.com/openshift/cluster-api/pkg/drain"
+	clusterapiError "github.com/openshift/cluster-api/pkg/errors"
 	"github.com/openshift/cluster-api/pkg/util"
-	kubedrain "github.com/openshift/kubernetes-drain"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -49,6 +50,18 @@ const (
 
 	// ExcludeNodeDrainingAnnotation annotation explicitly skips node draining if set
 	ExcludeNodeDrainingAnnotation = "machine.openshift.io/exclude-node-draining"
+
+	// MachineRegionLabelName as annotation name for a machine region
+	MachineRegionLabelName = "machine.openshift.io/region"
+
+	// MachineAZLabelName as annotation name for a machine AZ
+	MachineAZLabelName = "machine.openshift.io/zone"
+
+	// MachineInstanceStateAnnotationName as annotation name for a machine instance state
+	MachineInstanceStateAnnotationName = "machine.openshift.io/instance-state"
+
+	// MachineInstanceTypeLabelName as annotation name for a machine instance type
+	MachineInstanceTypeLabelName = "machine.openshift.io/instance-type"
 )
 
 var DefaultActuator Actuator
@@ -64,14 +77,8 @@ func newReconciler(mgr manager.Manager, actuator Actuator) reconcile.Reconciler 
 		eventRecorder: mgr.GetEventRecorderFor("machine-controller"),
 		config:        mgr.GetConfig(),
 		scheme:        mgr.GetScheme(),
-		nodeName:      os.Getenv(NodeNameEnvVar),
 		actuator:      actuator,
 	}
-
-	if r.nodeName == "" {
-		klog.Warningf("Environment variable %q is not set, this controller will not protect against deleting its own machine", NodeNameEnvVar)
-	}
-
 	return r
 }
 
@@ -99,9 +106,6 @@ type ReconcileMachine struct {
 	eventRecorder record.EventRecorder
 
 	actuator Actuator
-
-	// nodeName is the name of the node on which the machine controller is running, if not present, it is loaded from NODE_NAME.
-	nodeName string
 }
 
 // Reconcile reads that state of the cluster for a Machine object and makes changes based on the state read
@@ -185,13 +189,7 @@ func (r *ReconcileMachine) Reconcile(request reconcile.Request) (reconcile.Resul
 			return reconcile.Result{}, nil
 		}
 
-		if !r.isDeleteAllowed(m) {
-			klog.Infof("Deleting machine hosting this controller is not allowed. Skipping reconciliation of machine %q", name)
-			return reconcile.Result{}, nil
-		}
-
 		klog.Infof("Reconciling machine %q triggers delete", name)
-
 		// Drain node before deletion
 		// If a machine is not linked to a node, just delete the machine. Since a node
 		// can be unlinked from a machine when the node goes NotReady and is removed
@@ -205,8 +203,16 @@ func (r *ReconcileMachine) Reconcile(request reconcile.Request) (reconcile.Resul
 		}
 
 		if err := r.actuator.Delete(ctx, cluster, m); err != nil {
-			klog.Errorf("Failed to delete machine %q: %v", name, err)
-			return delayIfRequeueAfterError(err)
+			// isInvalidMachineConfiguration will take care of the case where the
+			// configuration is invalid from the beginning. len(m.Status.Addresses) > 0
+			// will handle the case when a machine configuration was invalidated
+			// after an instance was created. So only a small window is left when
+			// we can loose instances, e.g. right after request to create one
+			// was sent and before a list of node addresses was set.
+			if len(m.Status.Addresses) > 0 || !isInvalidMachineConfigurationError(err) {
+				klog.Errorf("Failed to delete machine %q: %v", name, err)
+				return delayIfRequeueAfterError(err)
+			}
 		}
 
 		if m.Status.NodeRef != nil {
@@ -312,27 +318,6 @@ func (r *ReconcileMachine) getCluster(ctx context.Context, machine *machinev1.Ma
 	return cluster, nil
 }
 
-func (r *ReconcileMachine) isDeleteAllowed(machine *machinev1.Machine) bool {
-	if r.nodeName == "" || machine.Status.NodeRef == nil {
-		return true
-	}
-
-	if machine.Status.NodeRef.Name != r.nodeName {
-		return true
-	}
-
-	node := &corev1.Node{}
-	if err := r.Client.Get(context.Background(), client.ObjectKey{Name: r.nodeName}, node); err != nil {
-		klog.Infof("Failed to determine if controller's node %q is associated with machine %q: %v", r.nodeName, machine.Name, err)
-		return true
-	}
-
-	// When the UID of the machine's node reference and this controller's actual node match then then the request is to
-	// delete the machine this machine-controller is running on. Return false to not allow machine controller to delete its
-	// own machine.
-	return node.UID != machine.Status.NodeRef.UID
-}
-
 func (r *ReconcileMachine) deleteNode(ctx context.Context, name string) error {
 	var node corev1.Node
 	if err := r.Client.Get(ctx, client.ObjectKey{Name: name}, &node); err != nil {
@@ -353,4 +338,15 @@ func delayIfRequeueAfterError(err error) (reconcile.Result, error) {
 		return reconcile.Result{Requeue: true, RequeueAfter: t.RequeueAfter}, nil
 	}
 	return reconcile.Result{}, err
+}
+
+func isInvalidMachineConfigurationError(err error) bool {
+	switch t := err.(type) {
+	case *clusterapiError.MachineError:
+		if t.Reason == commonerrors.InvalidConfigurationMachineError {
+			klog.Infof("Actuator returned invalid configuration error: %v", err)
+			return true
+		}
+	}
+	return false
 }
