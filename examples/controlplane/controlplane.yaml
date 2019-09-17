@@ -65,9 +65,8 @@ spec:
   - path: /etc/certs/cacert
     owner: root
     permissions: "0600"
-    content: |-
-      # cacert to communicate with OpenStack
-      $OPENSTACK_CLOUD_CACERT_CONFIG
+    content: |
+      $OPENSTACK_CLOUD_CACERT_CONFIG6
   ntp:
     servers: []
   users:
@@ -176,9 +175,8 @@ spec:
   - path: /etc/certs/cacert
     owner: root
     permissions: "0600"
-    content: |-
-      # cacert to communicate with OpenStack
-      $OPENSTACK_CLOUD_CACERT_CONFIG
+    content: |
+      $OPENSTACK_CLOUD_CACERT_CONFIG6
   ntp:
     servers: []
   users:
@@ -258,9 +256,8 @@ spec:
   - path: /etc/certs/cacert
     owner: root
     permissions: "0600"
-    content: |-
-      # cacert to communicate with OpenStack
-      $OPENSTACK_CLOUD_CACERT_CONFIG
+    content: |
+      $OPENSTACK_CLOUD_CACERT_CONFIG6
   ntp:
     servers: []
   users:

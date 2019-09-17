@@ -72,9 +72,8 @@ spec:
         owner: root
         path: /etc/kubernetes/cloud.conf
         permissions: "0600"
-      - content: |-
-          # cacert to communicate with OpenStack
-          $OPENSTACK_CLOUD_CACERT_CONFIG
+      - content: |
+          $OPENSTACK_CLOUD_CACERT_CONFIG10
         owner: root
         path: /etc/certs/cacert
         permissions: "0600"
