@@ -72,6 +72,10 @@ manifests: ## Generate manifests e.g. CRD, RBAC etc.
 fmt: ## Run go fmt against code
 	go fmt ./pkg/... ./cmd/...
 
+.PHONY: goimports
+goimports: ## Go fmt your code
+	hack/goimports.sh .
+
 .PHONY: vet
 vet: ## Run go vet against code
 	go vet ./pkg/... ./cmd/...
