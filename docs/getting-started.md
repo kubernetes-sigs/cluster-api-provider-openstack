@@ -60,7 +60,7 @@ kubectl get clusters
 kubectl get machines
 ```
 
-### Depoying additional machines
+### Deploying additional machines
 
 You can deploy additional machines via the `examples/_out/machinedeployment.yaml`. You probably have to customize the 
 configuration of these machines.
