@@ -197,7 +197,6 @@ generate-examples: clean-examples ## Generate examples configurations to run a c
 .PHONY: docker-build
 docker-build: ## Build the docker image for controller-manager
 	docker build --pull --build-arg ARCH=$(ARCH) . -t $(CONTROLLER_IMG)-$(ARCH):$(TAG)
-	MANIFEST_IMG=$(CONTROLLER_IMG)-$(ARCH) MANIFEST_TAG=$(TAG) $(MAKE) set-manifest-image
 
 .PHONY: docker-push
 docker-push: ## Push the docker image
@@ -226,12 +225,6 @@ docker-push-manifest: ## Push the fat manifest docker image.
 	docker manifest create --amend $(CONTROLLER_IMG):$(TAG) $(shell echo $(ALL_ARCH) | sed -e "s~[^ ]*~$(CONTROLLER_IMG)\-&:$(TAG)~g")
 	@for arch in $(ALL_ARCH); do docker manifest annotate --arch $${arch} ${CONTROLLER_IMG}:${TAG} ${CONTROLLER_IMG}-$${arch}:${TAG}; done
 	docker manifest push --purge $(CONTROLLER_IMG):$(TAG)
-	MANIFEST_IMG=$(CONTROLLER_IMG) MANIFEST_TAG=$(TAG) $(MAKE) set-manifest-image
-
-.PHONY: set-manifest-image
-set-manifest-image:
-	$(info Updating kustomize image patch file for manager resource)
-	sed -i'' -e 's@image: .*@image: '"${MANIFEST_IMG}:$(MANIFEST_TAG)"'@' ./config/default/manager_image_patch.yaml
 
 ## --------------------------------------
 ## Release
@@ -252,8 +245,7 @@ release: clean-release ## Builds and push container images using the latest git 
 	REGISTRY=$(STAGING_REGISTRY) TAG=$(RELEASE_TAG) \
 		$(MAKE) docker-build-all docker-push-all
 	# Set the manifest image to the production bucket.
-	MANIFEST_IMG=$(PROD_REGISTRY)/$(IMAGE_NAME) MANIFEST_TAG=$(RELEASE_TAG) \
-		$(MAKE) set-manifest-image
+	MANIFEST_IMG=$(PROD_REGISTRY)/$(IMAGE_NAME) MANIFEST_TAG=$(RELEASE_TAG)
 	$(MAKE) release-manifests
 
 .PHONY: release-manifests
