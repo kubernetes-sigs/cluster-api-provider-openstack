@@ -3,7 +3,7 @@
 ## Prerequisites
 
 1. Install [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
-1. Install `kustomize` `v3.1.0+` (see [kustomize/releases](https://github.com/kubernetes-sigs/kustomize/releases).
+1. Install `kustomize` `v3.1.0+` (see [kustomize/releases](https://github.com/kubernetes-sigs/kustomize/releases))
 1. Download the latest `v0.2.x` release of `clusterctl` from [cluster-api/releases](https://github.com/kubernetes-sigs/cluster-api/releases)
 1. You can use either a VM, container or existing Kubernetes cluster as bootstrap cluster.
    - If you want to use VM, install [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/), version 0.30.0 or greater. Also install a [driver](https://github.com/kubernetes/minikube/blob/master/docs/drivers.md). For Linux, we recommend `kvm2`. For MacOS, we recommend `VirtualBox`.
@@ -21,7 +21,7 @@
    clusterctl create cluster \
         --bootstrap-type minikube --bootstrap-flags kubernetes-version=v1.15.0 \
         -c examples/_out/cluster.yaml \
-        -m examples/_out/machines.yaml \
+        -m examples/_out/controlplane.yaml \
         -p examples/_out/provider-components.yaml \
         -a examples/addons.yaml
    ```
@@ -34,7 +34,7 @@
    clusterctl create cluster \
            --bootstrap-type kind --bootstrap-cluster-cleanup=false \
            -c examples/_out/cluster.yaml \
-           -m examples/_out/machines.yaml \
+           -m examples/_out/controlplane.yaml \
            -p examples/_out/provider-components.yaml \
            -a examples/addons.yaml
    ```
@@ -45,7 +45,7 @@
    clusterctl create cluster \
            --bootstrap-cluster-kubeconfig ~/.kube/config \
            -c examples/_out/cluster.yaml \
-           -m examples/_out/machines.yaml \
+           -m examples/_out/controlplane.yaml \
            -p examples/_out/provider-components.yaml \
            -a examples/addons.yaml
    ```

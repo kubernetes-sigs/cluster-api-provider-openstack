@@ -30,7 +30,7 @@ export CLUSTER_NAME=<cluster-name>
 ./generate.sh [options] <path/to/clouds.yaml> <openstack-cloud> [output folder]
 ```
 
-   `<clouds.yaml>` is a YAML configuration file for Openstack, refer to [clouds.yaml](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/master/pkg/cloud/openstack/clients/clouds.yaml), and [OpenStack client configuration files](https://docs.openstack.org/python-openstackclient/latest/configuration/index.html#configuration-files).
+   `<clouds.yaml>` is a YAML configuration file for Openstack, for more details refer to [OpenStack client configuration files](https://docs.openstack.org/python-openstackclient/latest/configuration/index.html#configuration-files).
 
    `<openstack-cloud>` is the cloud you are going to use, e.g. multiple clouds might be defined in `clouds.yaml`.
    This will be the cloud on which the new workload Kubernetes cluster will be created. For example, assume you have 
