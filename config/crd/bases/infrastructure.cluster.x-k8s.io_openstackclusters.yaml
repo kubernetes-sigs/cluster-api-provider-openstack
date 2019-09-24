@@ -192,6 +192,43 @@ spec:
                 and another one that allows all traffic to/from machines belonging
                 to that group. In the future, we could make this more flexible.
               type: boolean
+            network:
+              description: If NodeCIDR cannot be set this can be used to detect an
+                existing network.
+              properties:
+                adminStateUp:
+                  type: boolean
+                description:
+                  type: string
+                id:
+                  type: string
+                limit:
+                  type: integer
+                marker:
+                  type: string
+                name:
+                  type: string
+                notTags:
+                  type: string
+                notTagsAny:
+                  type: string
+                projectId:
+                  type: string
+                shared:
+                  type: boolean
+                sortDir:
+                  type: string
+                sortKey:
+                  type: string
+                status:
+                  type: string
+                tags:
+                  type: string
+                tagsAny:
+                  type: string
+                tenantId:
+                  type: string
+              type: object
             nodeCidr:
               description: NodeCIDR is the OpenStack Subnet to be created. Cluster
                 actuator will create a network, a subnet with NodeCIDR, and a router
@@ -207,6 +244,53 @@ spec:
                   type: string
                 key:
                   format: byte
+                  type: string
+              type: object
+            subnet:
+              description: If NodeCIDR cannot be set this can be used to detect an
+                existing subnet.
+              properties:
+                cidr:
+                  type: string
+                description:
+                  type: string
+                enableDhcp:
+                  type: boolean
+                gateway_ip:
+                  type: string
+                id:
+                  type: string
+                ipVersion:
+                  type: integer
+                ipv6AddressMode:
+                  type: string
+                ipv6RaMode:
+                  type: string
+                limit:
+                  type: integer
+                marker:
+                  type: string
+                name:
+                  type: string
+                networkId:
+                  type: string
+                notTags:
+                  type: string
+                notTagsAny:
+                  type: string
+                projectId:
+                  type: string
+                sortDir:
+                  type: string
+                sortKey:
+                  type: string
+                subnetpoolId:
+                  type: string
+                tags:
+                  type: string
+                tagsAny:
+                  type: string
+                tenantId:
                   type: string
               type: object
             tags:

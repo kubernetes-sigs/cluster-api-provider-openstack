@@ -242,6 +242,8 @@ func (in *OpenStackClusterSpec) DeepCopyInto(out *OpenStackClusterSpec) {
 		*out = new(v1.SecretReference)
 		**out = **in
 	}
+	in.Network.DeepCopyInto(&out.Network)
+	in.Subnet.DeepCopyInto(&out.Subnet)
 	if in.DNSNameservers != nil {
 		in, out := &in.DNSNameservers, &out.DNSNameservers
 		*out = make([]string, len(*in))
