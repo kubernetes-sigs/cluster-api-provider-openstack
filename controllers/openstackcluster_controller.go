@@ -18,6 +18,8 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
@@ -129,7 +131,35 @@ func (r *OpenStackClusterReconciler) reconcileCluster(logger logr.Logger, cluste
 
 	logger.Info("Reconciling network components")
 	if openStackCluster.Spec.NodeCIDR == "" {
-		logger.V(4).Info("No need to reconcile network")
+		logger.V(4).Info("No need to reconcile network, searching network and subnet instead")
+
+		netOpts := networks.ListOpts(openStackCluster.Spec.Network)
+		networkList, err := networkingService.GetNetworksByFilter(&netOpts)
+		if err != nil && len(networkList) == 0 {
+			return reconcile.Result{}, errors.Errorf("failed to find network: %v", err)
+		}
+		if len(networkList) > 1 {
+			return reconcile.Result{}, errors.Errorf("failed to find only one network (result: %v): %v", networkList, err)
+		}
+		openStackCluster.Status.Network = &infrav1.Network{
+			ID:   networkList[0].ID,
+			Name: networkList[0].Name,
+		}
+
+		subnetOpts := subnets.ListOpts(openStackCluster.Spec.Subnet)
+		subnetOpts.NetworkID = networkList[0].ID
+		subnetList, err := networkingService.GetSubnetsByFilter(&subnetOpts)
+		if err != nil || len(subnetList) == 0 {
+			return reconcile.Result{}, errors.Errorf("failed to find subnet: %v", err)
+		}
+		if len(subnetList) > 1 {
+			return reconcile.Result{}, errors.Errorf("failed to find only one subnet (result: %v): %v", subnetList, err)
+		}
+		openStackCluster.Status.Network.Subnet = &infrav1.Subnet{
+			ID:   subnetList[0].ID,
+			Name: subnetList[0].Name,
+			CIDR: subnetList[0].CIDR,
+		}
 	} else {
 		err := networkingService.ReconcileNetwork(clusterName, openStackCluster)
 		if err != nil {
