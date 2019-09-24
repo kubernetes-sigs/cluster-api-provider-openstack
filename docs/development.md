@@ -3,9 +3,10 @@
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
 - [Development Guide](#development-guide)
-  - [Using your own openstack-cluster-api-controller image for testing cluster creation or deletion](#using-your-own-openstack-cluster-api-controller-image-for-testing-cluster-creation-or-deletion)
-    - [Building and upload your own openstack-cluster-api-controller image](#building-and-upload-your-own-openstack-cluster-api-controller-image)
-    - [Using your own openstack-cluster-api-controller image](#using-your-own-openstack-cluster-api-controller-image)
+  - [Using your own capi-openstack controller image for testing cluster creation or deletion](#using-your-own-capi-openstack-controller-image-for-testing-cluster-creation-or-deletion)
+    - [Building and upload your own capi-openstack controller image](#building-and-upload-your-own-capi-openstack-controller-image)
+    - [Using your own capi-openstack controller image](#using-your-own-capi-openstack-controller-image)
+  - [Developing with Tilt](#developing-with-tilt)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 

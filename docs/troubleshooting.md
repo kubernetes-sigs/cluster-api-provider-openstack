@@ -2,8 +2,8 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
-- [Trouble shooting](#trouble-shooting)
-  - [Get log of clusterapi-controllers containers](#get-log-of-clusterapi-controllers-containers)
+- [Troubleshooting](#troubleshooting)
+  - [Get logs of Cluster API controller containers](#get-logs-of-cluster-api-controller-containers)
   - [Master failed to start with error: node xxxx not found](#master-failed-to-start-with-error-node-xxxx-not-found)
   - [providerClient authentication err](#providerclient-authentication-err)
 

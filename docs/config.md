@@ -3,23 +3,22 @@
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
 - [Required Configuration](#required-configuration)
-  - [Machines YAML](#machines-yaml)
+  - [Cluster and machines YAML files](#cluster-and-machines-yaml-files)
   - [Private Network](#private-network)
   - [Public Network](#public-network)
-  - [Floating IP](#floating-ip)
-  - [Proper Routing](#proper-routing)
+  - [Floating IPs](#floating-ips)
   - [Security Group Rules](#security-group-rules)
   - [Security Groups](#security-groups)
   - [Operating System Images](#operating-system-images)
-  - [Subnets](#subnets)
   - [Network Filters](#network-filters)
   - [Multiple Networks](#multiple-networks)
+  - [Subnet Filters](#subnet-filters)
   - [Tagging](#tagging)
   - [Metadata](#metadata)
 - [Optional Configuration](#optional-configuration)
   - [Boot From Volume](#boot-from-volume)
   - [Timeout settings](#timeout-settings)
-  - [Use machinedeployment as additional worker nodes](#use-machinedeployment-as-additional-worker-nodes)
+  - [Custom pod network CIDR](#custom-pod-network-cidr)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -219,6 +218,6 @@ If creating servers in your OpenStack takes a long time, you can increase the ti
 
 ## Custom pod network CIDR
 
-If `192.168.0.0/16` is already in use within your network, you must select a different pod network CIDR. You have to adjust the CIDR `192.168.0.0/16` with your own in:
+If `192.168.0.0/16` is already in use within your network, you must select a different pod network CIDR. You have to adjust the CIDR `192.168.0.0/16` with your own in the generated example files:
 * [examples/_out/addons.yaml](../examples/_out/addons.yaml) 
 * [examples/_out/cluster.yaml](../examples/_out/cluster.yaml)

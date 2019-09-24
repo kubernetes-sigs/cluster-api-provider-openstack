@@ -16,7 +16,7 @@
 
 1. Install `yq` (see [here](https://github.com/mikefarah/yq)).
 1. Install `envsubst` (see [here](http://linuxcommandlibrary.com/man/envsubst.html)).
-2. Install `kustomize` v3.1.0+ (see [here](https://github.com/kubernetes-sigs/kustomize/releases)
+2. Install `kustomize` v3.1.0+ (see [here](https://github.com/kubernetes-sigs/kustomize/releases)).
 
 ## Generation
 
@@ -51,7 +51,7 @@ export CLUSTER_NAME=<cluster-name>
    In case your OpenStack cluster endpoint is using SSL and the cert is signed by an unknown CA, a specific CA certificate
    can be provided via the cacert field.
 
-   `[output folder]` is where the YAML files will be stored, by default it's `out`.
+   `[output folder]` is where the YAML files will be stored, by default it's `_out`.
 
 ## Manual Modification
 
