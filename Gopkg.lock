@@ -263,12 +263,13 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6a85e9c1a9b6c0f4844ca0a3e24499afdfbf1d7d395d014fd45399bd71630c31"
+  digest = "1:f483805cee5b4708a599d5e761ae3b2c0af2b657fd93405d5d7fd428f096bf9f"
   name = "github.com/gophercloud/gophercloud"
   packages = [
     ".",
     "internal",
     "openstack",
+    "openstack/blockstorage/v3/volumes",
     "openstack/common/extensions",
     "openstack/compute/v2/extensions/attachinterfaces",
     "openstack/compute/v2/extensions/bootfromvolume",
@@ -1183,6 +1184,7 @@
     "github.com/coreos/container-linux-config-transpiler/config",
     "github.com/gophercloud/gophercloud",
     "github.com/gophercloud/gophercloud/openstack",
+    "github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes",
     "github.com/gophercloud/gophercloud/openstack/common/extensions",
     "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces",
     "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/bootfromvolume",
