@@ -33,12 +33,6 @@ spec:
   image: <Image Name>
   sshKeyName: cluster-api-provider-openstack
   availabilityZone: nova
-  networks:
-  - filter:
-      name: k8s-clusterapi-cluster-${CLUSTER_NAME}-${CLUSTER_NAME}
-    subnets:
-    - filter:
-        name: k8s-clusterapi-cluster-${CLUSTER_NAME}-${CLUSTER_NAME}
   # multi-node control-plane:
   # * Disable the floatingIP property
   # single-node control-plane:
@@ -148,12 +142,6 @@ spec:
   image: <Image Name>
   sshKeyName: cluster-api-provider-openstack
   availabilityZone: nova
-  networks:
-  - filter:
-      name: k8s-clusterapi-cluster-${CLUSTER_NAME}-${CLUSTER_NAME}
-    subnets:
-    - filter:
-        name: k8s-clusterapi-cluster-${CLUSTER_NAME}-${CLUSTER_NAME}
   cloudName: $CLOUD
   cloudsSecret:
     name: cloud-config
@@ -229,12 +217,6 @@ spec:
   image: <Image Name>
   sshKeyName: cluster-api-provider-openstack
   availabilityZone: nova
-  networks:
-  - filter:
-      name: k8s-clusterapi-cluster-${CLUSTER_NAME}-${CLUSTER_NAME}
-    subnets:
-    - filter:
-        name: k8s-clusterapi-cluster-${CLUSTER_NAME}-${CLUSTER_NAME}
   cloudName: $CLOUD
   cloudsSecret:
     name: cloud-config
