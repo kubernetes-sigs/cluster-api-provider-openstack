@@ -220,6 +220,5 @@ If creating servers in your OpenStack takes a long time, you can increase the ti
 
 ## Custom pod network CIDR
 
-If `192.168.0.0/16` is already in use within your network, you must select a different pod network CIDR. You have to adjust the CIDR `192.168.0.0/16` with your own in the generated example files:
-* [examples/_out/addons.yaml](../examples/_out/addons.yaml) 
-* [examples/_out/cluster.yaml](../examples/_out/cluster.yaml)
+If `192.168.0.0/16` is already in use within your network, you must select a different pod network CIDR. You have to replace the CIDR `192.168.0.0/16` with your own in the generated example files: `addons.yaml` and `cluster.yaml`.
+
