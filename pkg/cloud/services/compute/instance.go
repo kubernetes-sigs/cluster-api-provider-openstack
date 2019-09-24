@@ -140,7 +140,7 @@ func (s *Service) InstanceCreate(clusterName string, machine *clusterv1.Machine,
 
 		nets = []ServerNetwork{{
 			networkID: openStackCluster.Status.Network.ID,
-			subnetID: openStackCluster.Status.Network.Subnet.ID,
+			subnetID:  openStackCluster.Status.Network.Subnet.ID,
 		}}
 	}
 	if len(nets) == 0 {

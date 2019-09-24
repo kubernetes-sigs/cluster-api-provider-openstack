@@ -191,7 +191,7 @@ func GetNetworkIDsByFilter(networkClient *gophercloud.ServiceClient, opts networ
 	if err != nil {
 		return nil, err
 	}
-	var ids []string
+	ids := []string{}
 	for _, network := range nets {
 		ids = append(ids, network.ID)
 	}
