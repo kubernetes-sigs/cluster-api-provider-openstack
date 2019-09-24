@@ -61,6 +61,8 @@ There are different places where the floating IP has to be configured:
   * Add a `.spec.floatingIP` field to the `<cluster-name>-controlplane-0` Machine in`controlplane.yaml`.
 * multi-node control plane:
   * Set the floating IP in `.spec.apiServerLoadBalancerFloatingIP` in your `<cluster-name>` Cluster resource in `cluster.yaml`.
+* both:
+  * Configure floating IP in `.spec.clusterConfiguration.controlPlaneEndpoint` in your `<cluster-name>-controlplane-0` KubeadmConfig resource in `controlplane.yaml`.
 
 ## Security Group Rules
 
