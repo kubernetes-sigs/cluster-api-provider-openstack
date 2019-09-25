@@ -28,6 +28,7 @@ import (
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
+	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
 	"github.com/gophercloud/gophercloud/openstack/common/extensions"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/bootfromvolume"
@@ -78,6 +79,7 @@ type InstanceService struct {
 	identityClient *gophercloud.ServiceClient
 	networkClient  *gophercloud.ServiceClient
 	imagesClient   *gophercloud.ServiceClient
+	volumeClient   *gophercloud.ServiceClient
 
 	regionName string
 }
@@ -224,12 +226,20 @@ func NewInstanceServiceFromCloud(cloud clientconfig.Cloud) (*InstanceService, er
 		return nil, fmt.Errorf("Create ImageClient err: %v", err)
 	}
 
+	volumeClient, err := openstack.NewBlockStorageV3(provider, gophercloud.EndpointOpts{
+		Region: clientOpts.RegionName,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("Create VolumeClient err: %v", err)
+	}
+
 	return &InstanceService{
 		provider:       provider,
 		identityClient: identityClient,
 		computeClient:  serverClient,
 		networkClient:  networkingClient,
 		imagesClient:   imagesClient,
+		volumeClient:   volumeClient,
 		regionName:     clientOpts.RegionName,
 	}, nil
 }
@@ -413,7 +423,6 @@ func getImageID(is *InstanceService, imageName string) (string, error) {
 
 // InstanceCreate creates a compute instance
 func (is *InstanceService) InstanceCreate(clusterName string, name string, clusterSpec *openstackconfigv1.OpenstackClusterProviderSpec, config *openstackconfigv1.OpenstackProviderSpec, cmd string, keyName string, configClient configclient.ConfigV1Interface) (instance *Instance, err error) {
-	var createOpts servers.CreateOptsBuilder
 	if config == nil {
 		return nil, fmt.Errorf("create Options need be specified to create instace")
 	}
@@ -590,7 +599,7 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, clust
 		return nil, fmt.Errorf("Create new server err: %v", err)
 	}
 
-	serverCreateOpts := servers.CreateOpts{
+	var serverCreateOpts servers.CreateOptsBuilder = servers.CreateOpts{
 		Name:             name,
 		ImageRef:         imageID,
 		FlavorName:       config.Flavor,
@@ -608,21 +617,75 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, clust
 	if config.RootVolume != nil && config.RootVolume.Size != 0 {
 		var blocks []bootfromvolume.BlockDevice
 
+		volumeID := config.RootVolume.SourceUUID
+
+		// change serverCreateOpts to exclude imageRef from them
+		serverCreateOpts = servers.CreateOpts{
+			Name:             name,
+			FlavorName:       config.Flavor,
+			AvailabilityZone: config.AvailabilityZone,
+			Networks:         ports_list,
+			UserData:         []byte(userData),
+			SecurityGroups:   securityGroups,
+			ServiceClient:    is.computeClient,
+			Tags:             serverTags,
+			Metadata:         config.ServerMetadata,
+			ConfigDrive:      config.ConfigDrive,
+		}
+
+		if bootfromvolume.SourceType(config.RootVolume.SourceType) == bootfromvolume.SourceImage {
+			// if source type is "image" then we have to create a volume from the image first
+			klog.Infof("Creating a bootable volume from image %v.", config.RootVolume.SourceUUID)
+
+			imageID, err := getImageID(is, config.RootVolume.SourceUUID)
+			if err != nil {
+				return nil, fmt.Errorf("Create new server err: %v", err)
+			}
+
+			// Create a volume first
+			volumeCreateOpts := volumes.CreateOpts{
+				Size:       config.RootVolume.Size,
+				VolumeType: config.RootVolume.VolumeType,
+				ImageID:    imageID,
+				// The same name as the instance
+				Name: name,
+			}
+
+			volume, err := volumes.Create(is.volumeClient, volumeCreateOpts).Extract()
+			if err != nil {
+				return nil, fmt.Errorf("Create bootable volume err: %v", err)
+			}
+
+			volumeID = volume.ID
+
+			err = volumes.WaitForStatus(is.volumeClient, volumeID, "available", 300)
+			if err != nil {
+				klog.Infof("Bootable volume %v creation failed. Removing...", volumeID)
+				err = volumes.Delete(is.volumeClient, volumeID, volumes.DeleteOpts{}).ExtractErr()
+				if err != nil {
+					return nil, fmt.Errorf("Bootable volume deletion err: %v", err)
+				}
+
+				return nil, fmt.Errorf("Bootable volume %v is not available err: %v", volumeID, err)
+			}
+
+			klog.Infof("Bootable volume %v was created successfully.", volumeID)
+		}
+
 		block := bootfromvolume.BlockDevice{
-			SourceType:          bootfromvolume.SourceType(config.RootVolume.SourceType),
+			SourceType:          bootfromvolume.SourceVolume,
 			BootIndex:           0,
-			UUID:                config.RootVolume.SourceUUID,
+			UUID:                volumeID,
 			DeleteOnTermination: true,
 			DestinationType:     bootfromvolume.DestinationVolume,
-			VolumeSize:          config.RootVolume.Size,
-			DeviceType:          config.RootVolume.DeviceType,
 		}
 		blocks = append(blocks, block)
 
-		createOpts = bootfromvolume.CreateOptsExt{
-			CreateOptsBuilder: createOpts,
+		serverCreateOpts = bootfromvolume.CreateOptsExt{
+			CreateOptsBuilder: serverCreateOpts,
 			BlockDevice:       blocks,
 		}
+
 	}
 
 	server, err := servers.Create(is.computeClient, keypairs.CreateOptsExt{
@@ -632,6 +695,7 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, clust
 	if err != nil {
 		return nil, fmt.Errorf("Create new server err: %v", err)
 	}
+
 	is.computeClient.Microversion = ""
 	return serverToInstance(server), nil
 }

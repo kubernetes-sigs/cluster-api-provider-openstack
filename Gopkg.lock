@@ -263,12 +263,13 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:57d11d6e542db0131ec25a7271b7605479695a4e7df206481e70ef4874c948bd"
+  digest = "1:f483805cee5b4708a599d5e761ae3b2c0af2b657fd93405d5d7fd428f096bf9f"
   name = "github.com/gophercloud/gophercloud"
   packages = [
     ".",
     "internal",
     "openstack",
+    "openstack/blockstorage/v3/volumes",
     "openstack/common/extensions",
     "openstack/compute/v2/extensions/attachinterfaces",
     "openstack/compute/v2/extensions/bootfromvolume",
@@ -294,7 +295,7 @@
     "pagination",
   ]
   pruneopts = "NUT"
-  revision = "2c55d17f707cc8333ca4f49690cb2970d12a25f6"
+  revision = "36aaa4d3437eaaebf8722753597c2fc8e12618b7"
 
 [[projects]]
   digest = "1:e27049cb48bc2850a6c00f590a83ee81fc05703543088851c9d6628841844a6d"
@@ -461,19 +462,12 @@
     "pkg/controller/error",
     "pkg/controller/machine",
     "pkg/controller/noderefutil",
+    "pkg/drain",
     "pkg/errors",
     "pkg/util",
   ]
   pruneopts = "T"
   revision = "655e2d6ccdd5774442da004081f933cd8f1f3273"
-
-[[projects]]
-  branch = "master"
-  digest = "1:f7646c654e93258958dba300641f8f674d5a9ed015c11119793ba1156e2acbe9"
-  name = "github.com/openshift/kubernetes-drain"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "c2e51be1758efa30d71a4d30dc4e2db86b70a4df"
 
 [[projects]]
   digest = "1:93b1d84c5fa6d1ea52f4114c37714cddd84d5b78f151b62bb101128dd51399bf"
@@ -1190,6 +1184,7 @@
     "github.com/coreos/container-linux-config-transpiler/config",
     "github.com/gophercloud/gophercloud",
     "github.com/gophercloud/gophercloud/openstack",
+    "github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes",
     "github.com/gophercloud/gophercloud/openstack/common/extensions",
     "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces",
     "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/bootfromvolume",
