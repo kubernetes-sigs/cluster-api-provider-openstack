@@ -27,7 +27,7 @@ For convenience, a script is provided which generates example YAMLs. The generat
 ```
 cd examples
 export CLUSTER_NAME=<cluster-name>
-./generate.sh [options] <path/to/clouds.yaml> <openstack-cloud> [output folder]
+./generate.sh [options] <path/to/clouds.yaml> <openstack-cloud> <output folder> [single/multi-node]
 ```
 
    `<clouds.yaml>` is a YAML configuration file for Openstack, for more details refer to [OpenStack client configuration files](https://docs.openstack.org/python-openstackclient/latest/configuration/index.html#configuration-files).
@@ -51,7 +51,9 @@ export CLUSTER_NAME=<cluster-name>
    In case your OpenStack cluster endpoint is using SSL and the cert is signed by an unknown CA, a specific CA certificate
    can be provided via the cacert field.
 
-   `[output folder]` is where the YAML files will be stored, by default it's `_out`.
+   `<output folder>` is where the YAML files will be stored.
+
+   `[single/multi-node]` is for the control plane preference, by default it's `single-node` .
 
 ## Manual Modification
 

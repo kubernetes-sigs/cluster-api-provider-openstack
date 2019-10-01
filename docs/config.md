@@ -34,7 +34,7 @@ To successfully run a Kubernetes cluster in OpenStack, you will need to configur
 
 ## Cluster and machines YAML files
 
-After running `examples/generate.sh` the YAML files will be created in `examples/_out` (or your custom output folder). This files contain configuration on what OpenStack elements to use to create the cluster on, and which cluster components to create. However the template is incomplete and needs to be filled in. The following sections explain some more details about what can be configured.
+After running `examples/generate.sh` the YAML files will be created in your custom output folder. This files contain configuration on what OpenStack elements to use to create the cluster on, and which cluster components to create. However the template is incomplete and needs to be filled in. The following sections explain some more details about what can be configured.
 
 ## Private Network 
 

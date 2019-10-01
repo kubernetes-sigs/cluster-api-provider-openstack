@@ -33,11 +33,12 @@ spec:
   image: <Image Name>
   sshKeyName: cluster-api-provider-openstack
   availabilityZone: nova
-  # multi-node control-plane:
-  # * Disable the floatingIP property
-  # single-node control-plane:
-  # * Enable the floatingIP property
-  #floatingIP: <floating IP>
+  networks:
+  - filter:
+      name: k8s-clusterapi-cluster-${CLUSTER_NAME}-${CLUSTER_NAME}
+    subnets:
+    - filter:
+        name: k8s-clusterapi-cluster-${CLUSTER_NAME}-${CLUSTER_NAME}
   cloudName: $CLOUD
   cloudsSecret:
     name: cloud-config
@@ -77,12 +78,7 @@ spec:
         cloud-provider: openstack
         cloud-config: /etc/kubernetes/cloud.conf
   clusterConfiguration:
-    # multi-node control-plane:
-    # * Configure the floating ip of the loadbalancer
-    # single-node control-plane:
-    # * Configure the floating ip of the (only) control
-    #   plane node
-    controlPlaneEndpoint: "<floating ip>:6443"
+    controlPlaneEndpoint: "<loadbalancer ip>:6443"
     kubernetesVersion: 1.15.0
     imageRepository: k8s.gcr.io
     apiServer:
@@ -142,6 +138,12 @@ spec:
   image: <Image Name>
   sshKeyName: cluster-api-provider-openstack
   availabilityZone: nova
+  networks:
+  - filter:
+      name: k8s-clusterapi-cluster-${CLUSTER_NAME}-${CLUSTER_NAME}
+    subnets:
+    - filter:
+        name: k8s-clusterapi-cluster-${CLUSTER_NAME}-${CLUSTER_NAME}
   cloudName: $CLOUD
   cloudsSecret:
     name: cloud-config
@@ -217,6 +219,12 @@ spec:
   image: <Image Name>
   sshKeyName: cluster-api-provider-openstack
   availabilityZone: nova
+  networks:
+  - filter:
+      name: k8s-clusterapi-cluster-${CLUSTER_NAME}-${CLUSTER_NAME}
+    subnets:
+    - filter:
+        name: k8s-clusterapi-cluster-${CLUSTER_NAME}-${CLUSTER_NAME}
   cloudName: $CLOUD
   cloudsSecret:
     name: cloud-config

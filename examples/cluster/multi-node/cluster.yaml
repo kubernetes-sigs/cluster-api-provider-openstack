@@ -11,11 +11,6 @@ spec:
     pods:
       cidrBlocks: ["192.168.0.0/16"]
     serviceDomain: "cluster.local"
-    # multi-node control-plane:
-    # * Disable the apiServerPort property
-    # single-node control-plane:
-    # * Enable the apiServerPort property
-    apiServerPort: <disable when multi-node control-plane>
   infrastructureRef:
     apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
     kind: OpenStackCluster
@@ -33,12 +28,6 @@ spec:
     name: cloud-config
     namespace: ${CLUSTER_NAME}
   nodeCidr: <node-cidr>
-  # multi-node control-plane:
-  # * Enable the following section to use a Loadbalancer
-  #   which is required for multi-node control plane
-  # single-node control-plane:
-  # * Disable the following section to deploy a single node
-  #   control plane
   managedAPIServerLoadBalancer: true
   apiServerLoadBalancerFloatingIP: <loadbalancer floating ip>
   apiServerLoadBalancerPort: 6443
@@ -54,3 +43,4 @@ spec:
   managedSecurityGroups: false
   disablePortSecurity: true
   disableServerTags: true
+  useOctavia: true
