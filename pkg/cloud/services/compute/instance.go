@@ -132,10 +132,10 @@ func (s *Service) InstanceCreate(clusterName string, machine *clusterv1.Machine,
 		}
 	} else {
 		if openStackCluster.Status.Network == nil {
-			return nil, fmt.Errorf("no network was found in OpenStackCluster.Status.Network")
+			return nil, fmt.Errorf(".spec.networks not set in Machine and also no network was found in .status.network in OpenStackCluster")
 		}
 		if openStackCluster.Status.Network.Subnet == nil {
-			return nil, fmt.Errorf("no subnet was found in OpenStackCluster.Status.Network")
+			return nil, fmt.Errorf(".spec.networks not set in Machine and also no subnet was found in .status.network.subnet in OpenStackCluster")
 		}
 
 		nets = []ServerNetwork{{
