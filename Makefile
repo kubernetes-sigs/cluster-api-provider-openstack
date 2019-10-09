@@ -101,7 +101,7 @@ ifndef HAS_YQ
 endif
 ifndef HAS_KUSTOMIZE
 	echo "installing kustomize"
-	go get sigs.k8s.io/kustomize/v3/cmd/kustomize
+	GO111MODULE=off go get sigs.k8s.io/kustomize/kustomize
 endif
 ifndef HAS_ENVSUBST
 	echo "installing envsubst"
