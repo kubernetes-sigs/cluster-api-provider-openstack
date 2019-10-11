@@ -42,6 +42,13 @@ type OpenStackClusterSpec struct {
 	// network, a subnet with NodeCIDR, and a router connected to this subnet.
 	// If you leave this empty, no network will be created.
 	NodeCIDR string `json:"nodeCidr,omitempty"`
+
+	// If NodeCIDR cannot be set this can be used to detect an existing network.
+	Network Filter `json:"network,omitempty"`
+
+	// If NodeCIDR cannot be set this can be used to detect an existing subnet.
+	Subnet SubnetFilter `json:"subnet,omitempty"`
+
 	// DNSNameservers is the list of nameservers for OpenStack Subnet being created.
 	DNSNameservers []string `json:"dnsNameservers,omitempty"`
 	// ExternalRouterIPs is an array of externalIPs on the respective subnets.

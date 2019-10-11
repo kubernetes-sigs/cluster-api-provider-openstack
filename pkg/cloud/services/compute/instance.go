@@ -27,7 +27,6 @@ import (
 
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 
-	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/common/extensions"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/bootfromvolume"
@@ -41,7 +40,6 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
-	"github.com/gophercloud/gophercloud/pagination"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha2"
 	"sigs.k8s.io/cluster-api/util"
 )
@@ -99,36 +97,51 @@ func (s *Service) InstanceCreate(clusterName string, machine *clusterv1.Machine,
 	}
 	// Get all network UUIDs
 	var nets []ServerNetwork
-	for _, net := range openStackMachine.Spec.Networks {
-		opts := networks.ListOpts(net.Filter)
-		opts.ID = net.UUID
-		ids, err := getNetworkIDsByFilter(s.networkClient, &opts)
-		if err != nil {
-			return nil, err
-		}
-		for _, netID := range ids {
-			if net.Subnets == nil {
-				nets = append(nets, ServerNetwork{
-					networkID: netID,
-				})
+	if len(openStackMachine.Spec.Networks) > 0 {
+		for _, net := range openStackMachine.Spec.Networks {
+			opts := networks.ListOpts(net.Filter)
+			opts.ID = net.UUID
+			ids, err := networking.GetNetworkIDsByFilter(s.networkClient, &opts)
+			if err != nil {
+				return nil, err
 			}
-
-			for _, subnet := range net.Subnets {
-				subnetOpts := subnets.ListOpts(subnet.Filter)
-				subnetOpts.ID = subnet.UUID
-				subnetOpts.NetworkID = netID
-				subnetsByFilter, err := networking.GetSubnetsByFilter(s.networkClient, &subnetOpts)
-				if err != nil {
-					return nil, err
-				}
-				for _, subnetByFilter := range subnetsByFilter {
+			for _, netID := range ids {
+				if net.Subnets == nil {
 					nets = append(nets, ServerNetwork{
-						networkID: subnetByFilter.NetworkID,
-						subnetID:  subnetByFilter.ID,
+						networkID: netID,
 					})
+					continue
+				}
+
+				for _, subnet := range net.Subnets {
+					subnetOpts := subnets.ListOpts(subnet.Filter)
+					subnetOpts.ID = subnet.UUID
+					subnetOpts.NetworkID = netID
+					subnetsByFilter, err := networking.GetSubnetsByFilter(s.networkClient, &subnetOpts)
+					if err != nil {
+						return nil, err
+					}
+					for _, subnetByFilter := range subnetsByFilter {
+						nets = append(nets, ServerNetwork{
+							networkID: subnetByFilter.NetworkID,
+							subnetID:  subnetByFilter.ID,
+						})
+					}
 				}
 			}
 		}
+	} else {
+		if openStackCluster.Status.Network == nil {
+			return nil, fmt.Errorf(".spec.networks not set in Machine and also no network was found in .status.network in OpenStackCluster")
+		}
+		if openStackCluster.Status.Network.Subnet == nil {
+			return nil, fmt.Errorf(".spec.networks not set in Machine and also no subnet was found in .status.network.subnet in OpenStackCluster")
+		}
+
+		nets = []ServerNetwork{{
+			networkID: openStackCluster.Status.Network.ID,
+			subnetID:  openStackCluster.Status.Network.Subnet.ID,
+		}}
 	}
 	if len(nets) == 0 {
 		return nil, fmt.Errorf("no network was found or provided. Please check your machine configuration and try again")
@@ -322,31 +335,6 @@ func isDuplicate(list []string, name string) bool {
 		}
 	}
 	return false
-}
-
-// A function for getting the id of a network by querying openstack with filters
-func getNetworkIDsByFilter(networkClient *gophercloud.ServiceClient, opts networks.ListOptsBuilder) ([]string, error) {
-	if opts == nil {
-		return []string{}, fmt.Errorf("no Filters were passed")
-	}
-	pager := networks.List(networkClient, opts)
-	var uuids []string
-	err := pager.EachPage(func(page pagination.Page) (bool, error) {
-		networkList, err := networks.ExtractNetworks(page)
-		if err != nil {
-			return false, err
-		} else if len(networkList) == 0 {
-			return false, fmt.Errorf("no networks could be found with the filters provided")
-		}
-		for _, network := range networkList {
-			uuids = append(uuids, network.ID)
-		}
-		return true, nil
-	})
-	if err != nil {
-		return []string{}, err
-	}
-	return uuids, nil
 }
 
 func createPort(is *Service, name string, net ServerNetwork, securityGroups *[]string) (ports.Port, error) {
