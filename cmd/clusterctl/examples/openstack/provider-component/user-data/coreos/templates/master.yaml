@@ -121,7 +121,7 @@ systemd:
       ExecStartPre=/opt/bin/prepare.sh
       ExecStart=/opt/bin/kubeadm init --config /etc/kubernetes/kubeadm_config.yaml
       ExecStartPost=/opt/bin/kubectl --kubeconfig /etc/kubernetes/kubelet.conf annotate --overwrite node %H machine={{ .Machine.ObjectMeta.Namespace }}/{{ .Machine.ObjectMeta.Name }}
-      ExecStartPost=/opt/bin/kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f https://docs.projectcalico.org/v3.6/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml
+      ExecStartPost=/opt/bin/kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f https://docs.projectcalico.org/v3.8/manifests/calico.yaml
       ExecStartPost=/usr/bin/systemctl disable kubeadm.service
 
       [Install]
