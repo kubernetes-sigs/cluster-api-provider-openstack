@@ -18,7 +18,6 @@ set -o nounset
 
 # Directories.
 SOURCE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-OUTPUT_DIR=${OUTPUT_DIR:-${SOURCE_DIR}/_out}
 
 # Binaries
 ENVSUBST=${ENVSUBST:-envsubst}
@@ -32,6 +31,7 @@ export KUBERNETES_VERSION="${KUBERNETES_VERSION:-v1.15.0}"
 export CONTROL_PLANE_MACHINE_TYPE="${CONTROL_PLANE_MACHINE_TYPE:-m1.medium}"
 export NODE_MACHINE_TYPE="${CONTROL_PLANE_MACHINE_TYPE:-m1.medium}"
 export SSH_KEY_NAME="${SSH_KEY_NAME:-cluster-api-provider-openstack}"
+export CONTROLPLANE="single-node"
 
 # Overwrite flag.
 OVERWRITE=0
@@ -42,7 +42,7 @@ while test $# -gt 0; do
           -h|--help)
             echo "$SCRIPT - generates input yaml files for Cluster API on OpenStack"
             echo " "
-            echo "$SCRIPT [options] <path/to/clouds.yaml> <cloud> [output folder]"
+            echo "$SCRIPT [options] <path/to/clouds.yaml> <cloud> <output folder> [single-node/multi-node]"
             echo " "
             echo "options:"
             echo "-h, --help                show brief help"
@@ -83,10 +83,27 @@ else
   exit 1
 fi
 
+# Check if output folder directory is provided
 if [[ -n "${3-}" ]] && [[ $3 != -* ]] && [[ $3 != --* ]]; then
   OUTPUT_DIR=$(echo $3 | tr '[:upper:]' '[:lower:]')
 else
-  echo "no output folder provided, use name '_out' by default"
+  echo "Error: No output folder provided"
+  echo "You must specify the output folder."
+  echo ""
+  exit 1
+fi
+
+# Check if correct controlplane preference is given
+if [[ -n "${4-}" ]] && [[ $4 != -* ]] && [[ $4 != --* ]]; then
+  if [[ "$4" == "single-node" || "$4" == "multi-node" ]]; then
+    export CONTROLPLANE=$4
+  else
+    echo "\"${4}\" is not a valid keyword. Use \"single-node\" or \"multi-node\" instead."
+    echo ""
+    exit 1
+  fi
+else
+  echo "Controlplane preference not given, generating samples for \"single-node\" by default"
 fi
 
 if [[ ${OVERWRITE} -ne 1 ]] && [[ -d "$OUTPUT_DIR" ]]; then
@@ -100,7 +117,6 @@ if [[ ${yq_type} == *"Python script"* ]]; then
   echo ""
   exit 1
 fi
-
 
 # Outputs.
 COMPONENTS_CLUSTER_API_GENERATED_FILE=${SOURCE_DIR}/provider-components/provider-components-cluster-api.yaml
@@ -190,11 +206,11 @@ else
 fi
 
 # Generate cluster resources.
-kustomize build "${SOURCE_DIR}/cluster" | envsubst > "${CLUSTER_GENERATED_FILE}"
+kustomize build "${SOURCE_DIR}/cluster/${CONTROLPLANE}" | envsubst > "${CLUSTER_GENERATED_FILE}"
 echo "Generated ${CLUSTER_GENERATED_FILE}"
 
 # Generate controlplane resources.
-kustomize build "${SOURCE_DIR}/controlplane" | envsubst > "${CONTROLPLANE_GENERATED_FILE}"
+kustomize build "${SOURCE_DIR}/controlplane/${CONTROLPLANE}" | envsubst > "${CONTROLPLANE_GENERATED_FILE}"
 echo "Generated ${CONTROLPLANE_GENERATED_FILE}"
 
 # Generate machinedeployment resources.
@@ -205,12 +221,24 @@ cp ${SOURCE_DIR}/addons.yaml "${ADDONS_GENERATED_FILE}"
 echo "Generated ${ADDONS_GENERATED_FILE}"
 
 # Generate Cluster API provider components file.
-kustomize build "github.com/kubernetes-sigs/cluster-api/config/default/?ref=master" > "${COMPONENTS_CLUSTER_API_GENERATED_FILE}"
-echo "Generated ${COMPONENTS_CLUSTER_API_GENERATED_FILE}"
+CAPI_BRANCH=${CAPI_BRANCH:-"stable"}
+if [[ ${CAPI_BRANCH} == "stable" ]]; then
+  curl -L https://github.com/kubernetes-sigs/cluster-api/releases/download/v0.2.4/cluster-api-components.yaml > "${COMPONENTS_CLUSTER_API_GENERATED_FILE}"
+  echo "Downloaded ${COMPONENTS_CLUSTER_API_GENERATED_FILE} from cluster-api stable branch - v0.2.4"
+else
+  kustomize build "github.com/kubernetes-sigs/cluster-api/config/default/?ref=${CAPI_BRANCH}" > "${COMPONENTS_CLUSTER_API_GENERATED_FILE}"
+  echo "Generated ${COMPONENTS_CLUSTER_API_GENERATED_FILE} from cluster-api - ${CAPI_BRANCH}"
+fi
 
 # Generate Kubeadm Bootstrap Provider components file.
-kustomize build "github.com/kubernetes-sigs/cluster-api-bootstrap-provider-kubeadm//config/default/?ref=master" > "${COMPONENTS_KUBEADM_GENERATED_FILE}"
-echo "Generated ${COMPONENTS_KUBEADM_GENERATED_FILE}"
+CABPK_BRANCH=${CABPK_BRANCH:-"stable"}
+if [[ ${CABPK_BRANCH} == "stable" ]]; then
+  curl -L https://github.com/kubernetes-sigs/cluster-api-bootstrap-provider-kubeadm/releases/download/v0.1.2/bootstrap-components.yaml > "${COMPONENTS_KUBEADM_GENERATED_FILE}"
+  echo "Downloaded ${COMPONENTS_KUBEADM_GENERATED_FILE} from cluster-api-bootstrap-provider-kubeadm stable branch - v0.1.2"
+else
+  kustomize build "github.com/kubernetes-sigs/cluster-api-bootstrap-provider-kubeadm/config/default/?ref=${CABPK_BRANCH}" > "${COMPONENTS_KUBEADM_GENERATED_FILE}"
+  echo "Generated ${COMPONENTS_KUBEADM_GENERATED_FILE} from cluster-api-bootstrap-provider-kubeadm - ${CABPK_BRANCH}"
+fi
 
 # Generate OpenStack Infrastructure Provider components file.
 kustomize build "${SOURCE_DIR}/../config/default" | envsubst > "${COMPONENTS_OPENSTACK_GENERATED_FILE}"

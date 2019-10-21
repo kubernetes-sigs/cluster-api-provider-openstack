@@ -1,0 +1,42 @@
+---
+apiVersion: cluster.x-k8s.io/v1alpha2
+kind: Cluster
+metadata:
+  name: ${CLUSTER_NAME}
+  namespace: ${CLUSTER_NAME}
+spec:
+  clusterNetwork:
+    services:
+      cidrBlocks: ["10.96.0.0/12"]
+    pods:
+      cidrBlocks: ["192.168.0.0/16"]
+    serviceDomain: "cluster.local"
+    apiServerPort: 6443
+  infrastructureRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+    kind: OpenStackCluster
+    name: ${CLUSTER_NAME}
+    namespace: ${CLUSTER_NAME}
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+kind: OpenStackCluster
+metadata:
+  name: ${CLUSTER_NAME}
+  namespace: ${CLUSTER_NAME}
+spec:
+  cloudName: $CLOUD
+  cloudsSecret:
+    name: cloud-config
+    namespace: ${CLUSTER_NAME}
+  nodeCidr: <node-cidr>
+  managedAPIServerLoadBalancer: false
+  dnsNameservers: []
+  # multi-node control-plane:
+  # * externalNetworkId is required for:
+  #   * creating routers
+  #   * creating floating ips
+  #   * creating load balancer
+  externalNetworkId: <external-network-id>
+  managedSecurityGroups: false
+  disablePortSecurity: true
+  disableServerTags: true

@@ -1,0 +1,100 @@
+#####################################################
+# ${CLUSTER_NAME}-controlplane-0
+#####################################################
+apiVersion: cluster.x-k8s.io/v1alpha2
+kind: Machine
+metadata:
+  name: ${CLUSTER_NAME}-controlplane-0
+  namespace: ${CLUSTER_NAME}
+  labels:
+    cluster.x-k8s.io/control-plane: "true"
+    cluster.x-k8s.io/cluster-name: "${CLUSTER_NAME}"
+spec:
+  version: ${KUBERNETES_VERSION}
+  bootstrap:
+    configRef:
+      apiVersion: bootstrap.cluster.x-k8s.io/v1alpha2
+      kind: KubeadmConfig
+      name: ${CLUSTER_NAME}-controlplane-0
+      namespace: ${CLUSTER_NAME}
+  infrastructureRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+    kind: OpenStackMachine
+    name: ${CLUSTER_NAME}-controlplane-0
+    namespace: ${CLUSTER_NAME}
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+kind: OpenStackMachine
+metadata:
+  name: ${CLUSTER_NAME}-controlplane-0
+  namespace: ${CLUSTER_NAME}
+spec:
+  flavor: m1.medium
+  image: <Image Name>
+  sshKeyName: cluster-api-provider-openstack
+  availabilityZone: nova
+  floatingIP: <floating IP>
+  cloudName: $CLOUD
+  cloudsSecret:
+    name: cloud-config
+    namespace: ${CLUSTER_NAME}
+---
+apiVersion: bootstrap.cluster.x-k8s.io/v1alpha2
+kind: KubeadmConfig
+metadata:
+  name: ${CLUSTER_NAME}-controlplane-0
+  namespace: ${CLUSTER_NAME}
+spec:
+  files:
+  - path: /etc/kubernetes/cloud.conf
+    owner: root
+    permissions: "0600"
+    content: |-
+      # cloud.conf to communicate with OpenStack
+      $OPENSTACK_CLOUD_PROVIDER_CONF6
+  - path: /etc/certs/cacert
+    owner: root
+    permissions: "0600"
+    content: |
+      $OPENSTACK_CLOUD_CACERT_CONFIG6
+  ntp:
+    servers: []
+  users:
+  - name: ubuntu
+    sshAuthorizedKeys:
+    - "$MACHINE_CONTROLLER_SSH_PUBLIC_FILE_CONTENT"
+  initConfiguration:
+    localAPIEndpoint:
+      advertiseAddress: '{{ ds.ec2_metadata.local_ipv4 }}'
+      bindPort: 6443
+    nodeRegistration:
+      name: '{{ local_hostname }}'
+      kubeletExtraArgs:
+        cloud-provider: openstack
+        cloud-config: /etc/kubernetes/cloud.conf
+  clusterConfiguration:
+    controlPlaneEndpoint: "<floating ip of control plane node>:6443"
+    kubernetesVersion: 1.15.0
+    imageRepository: k8s.gcr.io
+    apiServer:
+      extraArgs:
+        cloud-provider: openstack
+        cloud-config: /etc/kubernetes/cloud.conf
+      extraVolumes:
+      - name: cloud
+        hostPath: /etc/kubernetes/cloud.conf
+        mountPath: /etc/kubernetes/cloud.conf
+        readOnly: true
+    controllerManager:
+      extraArgs:
+        cloud-provider: openstack
+        cloud-config: /etc/kubernetes/cloud.conf
+      extraVolumes:
+      - name: cloud
+        hostPath: /etc/kubernetes/cloud.conf
+        mountPath: /etc/kubernetes/cloud.conf
+        readOnly: true
+      - name: cacerts
+        hostPath: /etc/certs/cacert
+        mountPath: /etc/certs/cacert
+        readOnly: true
