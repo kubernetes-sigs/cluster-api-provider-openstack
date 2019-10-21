@@ -221,12 +221,24 @@ cp ${SOURCE_DIR}/addons.yaml "${ADDONS_GENERATED_FILE}"
 echo "Generated ${ADDONS_GENERATED_FILE}"
 
 # Generate Cluster API provider components file.
-kustomize build "github.com/kubernetes-sigs/cluster-api/config/default/?ref=master" > "${COMPONENTS_CLUSTER_API_GENERATED_FILE}"
-echo "Generated ${COMPONENTS_CLUSTER_API_GENERATED_FILE}"
+CAPI_BRANCH=${CAPI_BRANCH:-"stable"}
+if [[ ${CAPI_BRANCH} == "stable" ]]; then
+  curl -L https://github.com/kubernetes-sigs/cluster-api/releases/download/v0.2.4/cluster-api-components.yaml > "${COMPONENTS_CLUSTER_API_GENERATED_FILE}"
+  echo "Downloaded ${COMPONENTS_CLUSTER_API_GENERATED_FILE} from cluster-api stable branch - v0.2.4"
+else
+  kustomize build "github.com/kubernetes-sigs/cluster-api/config/default/?ref=${CAPI_BRANCH}" > "${COMPONENTS_CLUSTER_API_GENERATED_FILE}"
+  echo "Generated ${COMPONENTS_CLUSTER_API_GENERATED_FILE} from cluster-api - ${CAPI_BRANCH}"
+fi
 
 # Generate Kubeadm Bootstrap Provider components file.
-kustomize build "github.com/kubernetes-sigs/cluster-api-bootstrap-provider-kubeadm//config/default/?ref=master" > "${COMPONENTS_KUBEADM_GENERATED_FILE}"
-echo "Generated ${COMPONENTS_KUBEADM_GENERATED_FILE}"
+CABPK_BRANCH=${CABPK_BRANCH:-"stable"}
+if [[ ${CABPK_BRANCH} == "stable" ]]; then
+  curl -L https://github.com/kubernetes-sigs/cluster-api-bootstrap-provider-kubeadm/releases/download/v0.1.2/bootstrap-components.yaml > "${COMPONENTS_KUBEADM_GENERATED_FILE}"
+  echo "Downloaded ${COMPONENTS_KUBEADM_GENERATED_FILE} from cluster-api-bootstrap-provider-kubeadm stable branch - v0.1.2"
+else
+  kustomize build "github.com/kubernetes-sigs/cluster-api-bootstrap-provider-kubeadm/config/default/?ref=${CABPK_BRANCH}" > "${COMPONENTS_KUBEADM_GENERATED_FILE}"
+  echo "Generated ${COMPONENTS_KUBEADM_GENERATED_FILE} from cluster-api-bootstrap-provider-kubeadm - ${CABPK_BRANCH}"
+fi
 
 # Generate OpenStack Infrastructure Provider components file.
 kustomize build "${SOURCE_DIR}/../config/default" | envsubst > "${COMPONENTS_OPENSTACK_GENERATED_FILE}"
