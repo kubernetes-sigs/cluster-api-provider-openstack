@@ -49,12 +49,6 @@ spec:
         namespace: ${CLUSTER_NAME}
       flavor: m1.medium
       image: <Image Name>
-      networks:
-      - filter:
-          name: k8s-clusterapi-cluster-${CLUSTER_NAME}-${CLUSTER_NAME}
-        subnets:
-        - filter:
-            name: k8s-clusterapi-cluster-${CLUSTER_NAME}-${CLUSTER_NAME}
       sshKeyName: cluster-api-provider-openstack
 ---
 apiVersion: bootstrap.cluster.x-k8s.io/v1alpha2

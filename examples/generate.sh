@@ -42,7 +42,7 @@ while test $# -gt 0; do
           -h|--help)
             echo "$SCRIPT - generates input yaml files for Cluster API on OpenStack"
             echo " "
-            echo "$SCRIPT [options] <path/to/clouds.yaml> <cloud> [output folder] <single-node/multi-node>"
+            echo "$SCRIPT [options] <path/to/clouds.yaml> <cloud> <output folder> [single-node/multi-node]"
             echo " "
             echo "options:"
             echo "-h, --help                show brief help"
