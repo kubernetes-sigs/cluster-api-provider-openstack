@@ -26,7 +26,9 @@ For version v0.x.y:
     1. Note: `origin` should be the name of the remote pointing to `github.com/kubernetes-sigs/cluster-api-provider-openstack`
 1. Run `make release` to build artifacts and push the images to the staging bucket
 1. Follow the [Image Promotion process](https://github.com/kubernetes/k8s.io/tree/master/k8s.gcr.io#image-promoter) to promote the image from the staging repo to `us.gcr.io/k8s-artifacts-prod/capi-openstack`
-1. Create a release (with the above mentioned release notes) in GitHub based on the tag created above
+1. Create a release in GitHub based on the tag created above
+    1. add the above mentioned release notes
+    1. upload `out/infrastructure-components.yaml`
 1. The release issue is closed
 1. An announcement email is sent to `kubernetes-dev@googlegroups.com` with the subject `[ANNOUNCE] cluster-api-provider-openstack $VERSION is released`
 
