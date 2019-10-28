@@ -73,7 +73,6 @@ spec:
       joinConfiguration:
         nodeRegistration:
           name: '{{ local_hostname }}'
-          criSocket: "/var/run/containerd/containerd.sock"
           kubeletExtraArgs:
             cloud-config: /etc/kubernetes/cloud.conf
             cloud-provider: openstack

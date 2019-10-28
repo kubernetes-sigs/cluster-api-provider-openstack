@@ -70,7 +70,6 @@ spec:
       bindPort: 6443
     nodeRegistration:
       name: '{{ local_hostname }}'
-      criSocket: "/var/run/containerd/containerd.sock"
       kubeletExtraArgs:
         cloud-provider: openstack
         cloud-config: /etc/kubernetes/cloud.conf
