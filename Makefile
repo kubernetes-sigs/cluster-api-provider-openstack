@@ -131,7 +131,9 @@ generate: manifests
 	go generate ./pkg/... ./cmd/...
 
 manifests:
-	go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go crd --domain openshift.io
+	go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go crd \
+	    paths=./pkg/apis/openstackproviderconfig/... \
+	    output:crd:dir=./config/crds
 
 images: openstack-cluster-api-controller manifests
 
