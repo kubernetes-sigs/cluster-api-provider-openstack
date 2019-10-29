@@ -31,7 +31,6 @@ metadata:
 spec:
   flavor: m1.medium
   image: <Image Name>
-  sshKeyName: cluster-api-provider-openstack
   availabilityZone: nova
   floatingIP: <floating IP>
   cloudName: $CLOUD
@@ -60,9 +59,12 @@ spec:
   ntp:
     servers: []
   users:
-  - name: ubuntu
+  - name: capo
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
     sshAuthorizedKeys:
     - "$MACHINE_CONTROLLER_SSH_PUBLIC_FILE_CONTENT"
+  # For more information about these values,
+  # refer to the Kubeadm Bootstrap Provider documentation.
   initConfiguration:
     localAPIEndpoint:
       advertiseAddress: '{{ ds.ec2_metadata.local_ipv4 }}'
@@ -74,7 +76,6 @@ spec:
         cloud-config: /etc/kubernetes/cloud.conf
   clusterConfiguration:
     controlPlaneEndpoint: "<floating ip of control plane node>:6443"
-    kubernetesVersion: 1.15.0
     imageRepository: k8s.gcr.io
     apiServer:
       extraArgs:

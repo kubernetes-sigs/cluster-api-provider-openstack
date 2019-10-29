@@ -9,7 +9,7 @@ spec:
     services:
       cidrBlocks: ["10.96.0.0/12"]
     pods:
-      cidrBlocks: ["192.168.0.0/16"]
+      cidrBlocks: ["192.168.0.0/16"] # CIDR block used by Calico.
     serviceDomain: "cluster.local"
   infrastructureRef:
     apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
@@ -40,7 +40,6 @@ spec:
   #   * creating floating ips
   #   * creating load balancer
   externalNetworkId: <external-network-id>
-  managedSecurityGroups: false
   disablePortSecurity: true
   disableServerTags: true
   useOctavia: true

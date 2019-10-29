@@ -49,7 +49,6 @@ spec:
         namespace: ${CLUSTER_NAME}
       flavor: m1.medium
       image: <Image Name>
-      sshKeyName: cluster-api-provider-openstack
 ---
 apiVersion: bootstrap.cluster.x-k8s.io/v1alpha2
 kind: KubeadmConfigTemplate
@@ -73,13 +72,14 @@ spec:
         permissions: "0600"
       joinConfiguration:
         nodeRegistration:
+          name: '{{ local_hostname }}'
           kubeletExtraArgs:
             cloud-config: /etc/kubernetes/cloud.conf
             cloud-provider: openstack
-          name: '{{ local_hostname }}'
       ntp:
         servers: []
       users:
-      - name: ubuntu
+      - name: capo
+        sudo: "ALL=(ALL) NOPASSWD:ALL"
         sshAuthorizedKeys:
         - "$MACHINE_CONTROLLER_SSH_PUBLIC_FILE_CONTENT"
