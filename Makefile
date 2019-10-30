@@ -49,19 +49,13 @@ endif
 depend-update: work
 	dep ensure -update
 
-build: manager clusterctl
+build: manager
 
 manager:
 	CGO_ENABLED=0 GOOS=$(GOOS) go build \
 		-ldflags $(LDFLAGS) \
 		-o bin/manager \
 		cmd/manager/main.go
-
-clusterctl:
-	CGO_ENABLED=0 GOOS=$(GOOS) go build \
-		-ldflags $(LDFLAGS) \
-		-o bin/clusterctl \
-		cmd/clusterctl/main.go
 
 test: unit functional
 
@@ -115,7 +109,7 @@ env:
 	go env
 
 clean:
-	rm -rf _dist bin/manager bin/clusterctl
+	rm -rf _dist bin/manager
 
 realclean: clean
 	rm -rf vendor

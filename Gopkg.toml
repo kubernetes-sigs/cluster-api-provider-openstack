@@ -44,40 +44,40 @@ required = [
 
 [[override]]
   name = "k8s.io/kube-aggregator"
-  version = "kubernetes-1.14.1"
+  version = "kubernetes-1.16.0"
 
 [[override]]
   name = "github.com/openshift/cluster-api"
-  branch = "openshift-4.2-cluster-api-0.1.0"
+  branch = "master"
 
 [[override]]
   name = "k8s.io/code-generator"
-  version = "kubernetes-1.14.1"
+  version = "kubernetes-1.16.0"
 
 [[override]]
   name = "k8s.io/api"
-  version = "kubernetes-1.14.1"
+  version = "kubernetes-1.16.0"
+
+[[override]]
+  name = "k8s.io/apiserver"
+  version = "kubernetes-1.16.0"
 
 [[override]]
   name = "k8s.io/apiextensions-apiserver"
-  version = "kubernetes-1.14.1"
+  version = "kubernetes-1.16.0"
 
 [[override]]
   name = "k8s.io/apimachinery"
-  version = "kubernetes-1.14.1"
+  version = "kubernetes-1.16.0"
 
 [[override]]
   name = "k8s.io/client-go"
-  version = "kubernetes-1.14.1"
+  version = "kubernetes-1.16.0"
 
 [[override]]
   name = "sigs.k8s.io/controller-runtime"
-  # release-0.2 since it imports kubernetes 1.14
-  branch="release-0.2"
-
-[[constraint]]
-  name="sigs.k8s.io/controller-tools"
-  version="v0.1.10"
+  branch="kube-1.16.0"
+  source="github.com/enxebre/controller-runtime"
 
 [[override]]
   name = "k8s.io/cluster-bootstrap"
@@ -90,7 +90,6 @@ required = [
 [[constraint]]
   name = "github.com/pkg/errors"
   version = "0.8.0"
-
 
 [[constraint]]
   name = "k8s.io/klog"

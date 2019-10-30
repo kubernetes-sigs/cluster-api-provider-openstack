@@ -31,14 +31,15 @@ import (
 	"k8s.io/client-go/tools/leaderelection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	"k8s.io/client-go/tools/record"
+
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	logf "sigs.k8s.io/controller-runtime/pkg/internal/log"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 	"sigs.k8s.io/controller-runtime/pkg/recorder"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
-	"sigs.k8s.io/controller-runtime/pkg/webhook/conversion"
 )
 
 const (
@@ -46,6 +47,9 @@ const (
 	defaultLeaseDuration = 15 * time.Second
 	defaultRenewDeadline = 10 * time.Second
 	defaultRetryPeriod   = 2 * time.Second
+
+	defaultReadinessEndpoint = "/readyz"
+	defaultLivenessEndpoint  = "/healthz"
 )
 
 var log = logf.RuntimeLog.WithName("manager")
@@ -91,9 +95,26 @@ type controllerManager struct {
 	// metricsListener is used to serve prometheus metrics
 	metricsListener net.Listener
 
-	mu      sync.Mutex
-	started bool
-	errChan chan error
+	// healthProbeListener is used to serve liveness probe
+	healthProbeListener net.Listener
+
+	// Readiness probe endpoint name
+	readinessEndpointName string
+
+	// Liveness probe endpoint name
+	livenessEndpointName string
+
+	// Readyz probe handler
+	readyzHandler *healthz.Handler
+
+	// Healthz probe handler
+	healthzHandler *healthz.Handler
+
+	mu             sync.Mutex
+	started        bool
+	startedLeader  bool
+	healthzStarted bool
+	errChan        chan error
 
 	// internalStop is the stop channel *actually* used by everything involved
 	// with the manager as a stop channel, so that we can pass a stop channel
@@ -111,6 +132,10 @@ type controllerManager struct {
 	port int
 	// host is the hostname that the webhook server binds to.
 	host string
+	// CertDir is the directory that contains the server key and certificate.
+	// if not set, webhook server would look up the server key and certificate in
+	// {TempDir}/k8s-webhook-server/serving-certs
+	certDir string
 
 	webhookServer *webhook.Server
 
@@ -135,14 +160,18 @@ func (cm *controllerManager) Add(r Runnable) error {
 		return err
 	}
 
+	var shouldStart bool
+
 	// Add the runnable to the leader election or the non-leaderelection list
 	if leRunnable, ok := r.(LeaderElectionRunnable); ok && !leRunnable.NeedLeaderElection() {
+		shouldStart = cm.started
 		cm.nonLeaderElectionRunnables = append(cm.nonLeaderElectionRunnables, r)
 	} else {
+		shouldStart = cm.startedLeader
 		cm.leaderElectionRunnables = append(cm.leaderElectionRunnables, r)
 	}
 
-	if cm.started {
+	if shouldStart {
 		// If already started, start the controller
 		go func() {
 			cm.errChan <- r.Start(cm.internalStop)
@@ -177,6 +206,40 @@ func (cm *controllerManager) SetFields(i interface{}) error {
 	if _, err := inject.MapperInto(cm.mapper, i); err != nil {
 		return err
 	}
+	return nil
+}
+
+// AddHealthzCheck allows you to add Healthz checker
+func (cm *controllerManager) AddHealthzCheck(name string, check healthz.Checker) error {
+	cm.mu.Lock()
+	defer cm.mu.Unlock()
+
+	if cm.healthzStarted {
+		return fmt.Errorf("unable to add new checker because healthz endpoint has already been created")
+	}
+
+	if cm.healthzHandler == nil {
+		cm.healthzHandler = &healthz.Handler{Checks: map[string]healthz.Checker{}}
+	}
+
+	cm.healthzHandler.Checks[name] = check
+	return nil
+}
+
+// AddReadyzCheck allows you to add Readyz checker
+func (cm *controllerManager) AddReadyzCheck(name string, check healthz.Checker) error {
+	cm.mu.Lock()
+	defer cm.mu.Unlock()
+
+	if cm.healthzStarted {
+		return fmt.Errorf("unable to add new checker because readyz endpoint has already been created")
+	}
+
+	if cm.readyzHandler == nil {
+		cm.readyzHandler = &healthz.Handler{Checks: map[string]healthz.Checker{}}
+	}
+
+	cm.readyzHandler.Checks[name] = check
 	return nil
 }
 
@@ -215,10 +278,10 @@ func (cm *controllerManager) GetAPIReader() client.Reader {
 func (cm *controllerManager) GetWebhookServer() *webhook.Server {
 	if cm.webhookServer == nil {
 		cm.webhookServer = &webhook.Server{
-			Port: cm.port,
-			Host: cm.host,
+			Port:    cm.port,
+			Host:    cm.host,
+			CertDir: cm.certDir,
 		}
-		cm.webhookServer.Register("/convert", &conversion.Webhook{})
 		if err := cm.Add(cm.webhookServer); err != nil {
 			panic("unable to add webhookServer to the controller manager")
 		}
@@ -227,21 +290,55 @@ func (cm *controllerManager) GetWebhookServer() *webhook.Server {
 }
 
 func (cm *controllerManager) serveMetrics(stop <-chan struct{}) {
+	var metricsPath = "/metrics"
 	handler := promhttp.HandlerFor(metrics.Registry, promhttp.HandlerOpts{
 		ErrorHandling: promhttp.HTTPErrorOnError,
 	})
 	// TODO(JoelSpeed): Use existing Kubernetes machinery for serving metrics
 	mux := http.NewServeMux()
-	mux.Handle("/metrics", handler)
+	mux.Handle(metricsPath, handler)
 	server := http.Server{
 		Handler: mux,
 	}
 	// Run the server
 	go func() {
+		log.Info("starting metrics server", "path", metricsPath)
 		if err := server.Serve(cm.metricsListener); err != nil && err != http.ErrServerClosed {
 			cm.errChan <- err
 		}
 	}()
+
+	// Shutdown the server when stop is closed
+	select {
+	case <-stop:
+		if err := server.Shutdown(context.Background()); err != nil {
+			cm.errChan <- err
+		}
+	}
+}
+
+func (cm *controllerManager) serveHealthProbes(stop <-chan struct{}) {
+	cm.mu.Lock()
+	mux := http.NewServeMux()
+
+	if cm.readyzHandler != nil {
+		mux.Handle(cm.readinessEndpointName, http.StripPrefix(cm.readinessEndpointName, cm.readyzHandler))
+	}
+	if cm.healthzHandler != nil {
+		mux.Handle(cm.livenessEndpointName, http.StripPrefix(cm.livenessEndpointName, cm.healthzHandler))
+	}
+
+	server := http.Server{
+		Handler: mux,
+	}
+	// Run server
+	go func() {
+		if err := server.Serve(cm.healthProbeListener); err != nil && err != http.ErrServerClosed {
+			cm.errChan <- err
+		}
+	}()
+	cm.healthzStarted = true
+	cm.mu.Unlock()
 
 	// Shutdown the server when stop is closed
 	select {
@@ -261,6 +358,11 @@ func (cm *controllerManager) Start(stop <-chan struct{}) error {
 	// the pod but will get a connection refused)
 	if cm.metricsListener != nil {
 		go cm.serveMetrics(cm.internalStop)
+	}
+
+	// Serve health probes
+	if cm.healthProbeListener != nil {
+		go cm.serveHealthProbes(cm.internalStop)
 	}
 
 	go cm.startNonLeaderElectionRunnables()
@@ -316,6 +418,8 @@ func (cm *controllerManager) startLeaderElectionRunnables() {
 			cm.errChan <- ctrl.Start(cm.internalStop)
 		}()
 	}
+
+	cm.startedLeader = true
 }
 
 func (cm *controllerManager) waitForCache() {
@@ -361,7 +465,16 @@ func (cm *controllerManager) startLeaderElection() (err error) {
 		return err
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		select {
+		case <-cm.internalStop:
+			cancel()
+		case <-ctx.Done():
+		}
+	}()
+
 	// Start the leader elector process
-	go l.Run(context.Background())
+	go l.Run(ctx)
 	return nil
 }

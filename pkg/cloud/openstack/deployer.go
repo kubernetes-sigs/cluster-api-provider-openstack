@@ -20,12 +20,12 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 
 	clustercommon "github.com/openshift/cluster-api/pkg/apis/cluster/common"
 	clusterv1 "github.com/openshift/cluster-api/pkg/apis/cluster/v1alpha1"
 	machinev1 "github.com/openshift/cluster-api/pkg/apis/machine/v1beta1"
-	"github.com/openshift/cluster-api/pkg/util"
 	"k8s.io/klog"
 	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
 )
@@ -57,6 +57,16 @@ func (*DeploymentClient) GetIP(cluster *clusterv1.Cluster, machine *machinev1.Ma
 	return "", errors.New("could not get IP")
 }
 
+// execCommand executes a local command in the current shell.
+func execCommand(name string, args ...string) string {
+	cmdOut, err := exec.Command(name, args...).Output()
+	if err != nil {
+		s := strings.Join(append([]string{name}, args...), " ")
+		klog.Errorf("error executing command %q: %v", s, err)
+	}
+	return string(cmdOut)
+}
+
 func (d *DeploymentClient) GetKubeConfig(cluster *clusterv1.Cluster, master *machinev1.Machine) (string, error) {
 	ip, err := d.GetIP(cluster, master)
 	if err != nil {
@@ -73,7 +83,7 @@ func (d *DeploymentClient) GetKubeConfig(cluster *clusterv1.Cluster, master *mac
 		return "", err
 	}
 
-	result := strings.TrimSpace(util.ExecCommand(
+	result := strings.TrimSpace(execCommand(
 		"ssh", "-i", homeDir+"/.ssh/openstack_tmp",
 		"-o", "StrictHostKeyChecking no",
 		"-o", "UserKnownHostsFile /dev/null",
