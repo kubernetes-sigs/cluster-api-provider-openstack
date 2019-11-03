@@ -94,10 +94,13 @@ test-go: ## Run golang tests
 	go test -v ./...
 
 .PHONY: test-generate-examples
+# See:
+# * https://github.com/mikefarah/yq/issues/291
+# * https://github.com/mikefarah/yq/issues/289
 test-generate-examples:
 ifndef HAS_YQ
 	echo "installing yq"
-	GO111MODULE=off go get github.com/mikefarah/yq
+	GO111MODULE=on go get -u github.com/mikefarah/yq@d05391e
 endif
 ifndef HAS_KUSTOMIZE
 	echo "installing kustomize"
