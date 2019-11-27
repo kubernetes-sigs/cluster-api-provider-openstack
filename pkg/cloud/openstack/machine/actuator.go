@@ -365,7 +365,9 @@ func (oc *OpenstackClient) Update(ctx context.Context, cluster *clusterv1.Cluste
 	// FIXME(mandre) Find the right way to check if machine is part of the control plane
 	if currentMachine.ObjectMeta.Name != "" {
 		// TODO: add master inplace
-		klog.Errorf("master inplace update failed: not support master in place update now")
+		klog.Errorf("master inplace update failed: not supported")
+		return oc.handleMachineError(machine, apierrors.UpdateMachine(
+			"master inplace update failed: not supported"), updateEventAction)
 	} else {
 		klog.Infof("re-creating machine %s for update.", currentMachine.ObjectMeta.Name)
 		err = oc.Delete(ctx, cluster, currentMachine)
@@ -384,7 +386,7 @@ func (oc *OpenstackClient) Update(ctx context.Context, cluster *clusterv1.Cluste
 		})
 		if err != nil {
 			return oc.handleMachineError(machine, apierrors.DeleteMachine(
-				"error deleting Openstack instance: %v", err), deleteEventAction)
+				"error deleting Openstack instance: %v", err), updateEventAction)
 		}
 		err = oc.Create(ctx, cluster, machine)
 		if err != nil {
@@ -394,7 +396,7 @@ func (oc *OpenstackClient) Update(ctx context.Context, cluster *clusterv1.Cluste
 		klog.Infof("Successfully updated machine %s", currentMachine.ObjectMeta.Name)
 	}
 
-	oc.eventRecorder.Eventf(currentMachine, corev1.EventTypeNormal, "Updated", "Updated machine %v", currentMachine.ObjectMeta.Name, updateEventAction)
+	oc.eventRecorder.Eventf(currentMachine, corev1.EventTypeNormal, "Updated", "Updated machine %v", currentMachine.ObjectMeta.Name)
 	return nil
 }
 
