@@ -362,8 +362,7 @@ func (oc *OpenstackClient) Update(ctx context.Context, cluster *clusterv1.Cluste
 		return nil
 	}
 
-	// FIXME(mandre) Find the right way to check if machine is part of the control plane
-	if currentMachine.ObjectMeta.Name != "" {
+	if _, ok := currentMachine.Labels["node-role.kubernetes.io/master"]; ok {
 		// TODO: add master inplace
 		klog.Errorf("master inplace update failed: not supported")
 		return oc.handleMachineError(machine, apierrors.UpdateMachine(
