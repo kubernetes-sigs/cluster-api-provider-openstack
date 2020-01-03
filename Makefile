@@ -104,7 +104,8 @@ ifndef HAS_YQ
 endif
 ifndef HAS_KUSTOMIZE
 	echo "installing kustomize"
-	GO111MODULE=off go get sigs.k8s.io/kustomize/kustomize
+	curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
+	mv ./kustomize $GOPATH/bin/kustomize
 endif
 ifndef HAS_ENVSUBST
 	echo "installing envsubst"
