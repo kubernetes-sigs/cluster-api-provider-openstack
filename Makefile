@@ -36,6 +36,7 @@ TOOLS_BIN_DIR := $(TOOLS_DIR)/bin
 BIN_DIR := bin
 
 # Binaries.
+KUSTOMIZE := $(TOOLS_BIN_DIR)/kustomize
 CLUSTERCTL := $(BIN_DIR)/clusterctl
 CONTROLLER_GEN := $(TOOLS_BIN_DIR)/controller-gen
 GOLANGCI_LINT := $(TOOLS_BIN_DIR)/golangci-lint
@@ -59,7 +60,6 @@ RBAC_ROOT ?= $(MANIFEST_ROOT)/rbac
 
 # Check if binaries exist
 HAS_YQ := $(shell command -v yq;)
-HAS_KUSTOMIZE := $(shell command -v kustomize;)
 HAS_ENVSUBST := $(shell command -v envsubst;)
 
 ## --------------------------------------
@@ -97,14 +97,10 @@ test-go: ## Run golang tests
 # See:
 # * https://github.com/mikefarah/yq/issues/291
 # * https://github.com/mikefarah/yq/issues/289
-test-generate-examples:
+test-generate-examples: $(KUSTOMIZE)
 ifndef HAS_YQ
 	echo "installing yq"
 	GO111MODULE=on go get -u github.com/mikefarah/yq@d05391e
-endif
-ifndef HAS_KUSTOMIZE
-	echo "installing kustomize"
-	GO111MODULE=off go get sigs.k8s.io/kustomize/kustomize
 endif
 ifndef HAS_ENVSUBST
 	echo "installing envsubst"
@@ -113,7 +109,7 @@ endif
 	# Create a dummy file for test only
 	mkdir -p tmp/dummy-make-auto-test
 	echo 'clouds' > tmp/dummy-make-auto-test/dummy-clouds-test.yaml
-	examples/generate.sh -f tmp/dummy-make-auto-test/dummy-clouds-test.yaml openstack tmp/dummy-make-auto-test/_out
+	PATH=$(TOOLS_DIR)/$(BIN_DIR):${PATH} examples/generate.sh -f tmp/dummy-make-auto-test/dummy-clouds-test.yaml openstack tmp/dummy-make-auto-test/_out
 	# the folder will be generated under same folder of examples
 	rm -rf tmp/dummy-make-auto-test
 
@@ -131,6 +127,9 @@ manager: ## Build manager binary.
 ## --------------------------------------
 ## Tooling Binaries
 ## --------------------------------------
+
+$(KUSTOMIZE): $(TOOLS_DIR)/go.mod # Build kustomize from tools folder.
+	cd $(TOOLS_DIR); go build -tags=tools -o $(BIN_DIR)/kustomize sigs.k8s.io/kustomize/kustomize/v3
 
 $(CLUSTERCTL): go.mod ## Build clusterctl binary.
 	go build -o $(BIN_DIR)/clusterctl sigs.k8s.io/cluster-api/cmd/clusterctl
@@ -264,7 +263,7 @@ release-manifests: $(RELEASE_DIR) ## Builds the manifests to publish with a rele
 	MANIFEST_IMG=$(PROD_REGISTRY)/$(IMAGE_NAME) MANIFEST_TAG=$(RELEASE_TAG) \
 		$(MAKE) set-manifest-image
 	PULL_POLICY=IfNotPresent $(MAKE) set-manifest-pull-policy
-	kustomize build config/default > $(RELEASE_DIR)/infrastructure-components.yaml
+	$(KUSTOMIZE) build config/default > $(RELEASE_DIR)/infrastructure-components.yaml
 
 .PHONY: release-staging
 release-staging: ## Builds and push container images to the staging bucket.
