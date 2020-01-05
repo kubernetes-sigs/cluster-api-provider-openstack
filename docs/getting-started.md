@@ -82,13 +82,13 @@ your openstack Cluster API Kubernetes cluster.
   step, only the control plane node(s) will remain.
 
    ```bash
-   kubectl --kubeconfig=kubeconfig delete machines -l set=node
+   kubectl --kubeconfig=kubeconfig delete machinedeployment -l cluster.x-k8s.io/cluster-name=<cluster-name>
    kubectl --kubeconfig=kubeconfig get nodes
    ```
 
 2. Delete the control plane machines.
     ```bash
-    kubectl --kubeconfig=kubeconfig delete machines -l set=master
+    kubectl --kubeconfig=kubeconfig delete machines -l cluster.x-k8s.io/cluster-name=<cluster-name>
     ```
 
 3. (optional) Delete the load balancer in your OpenStack cloud if one has been created.
