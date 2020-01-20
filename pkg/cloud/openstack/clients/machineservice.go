@@ -17,11 +17,8 @@ limitations under the License.
 package clients
 
 import (
-	"crypto/tls"
-	"crypto/x509"
 	"encoding/base64"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
@@ -169,16 +166,17 @@ func NewInstanceServiceFromMachine(kubeClient kubernetes.Interface, machine *mac
 			return nil, fmt.Errorf("Failed to get cloud from secret (clients/machienservice.go 150): %v", err)
 		}
 	}
-	return NewInstanceServiceFromCloud(cloud, []byte(machineSpec.CertBundle))
+	return NewInstanceServiceFromCloud(cloud)
 }
 
 func NewInstanceService() (*InstanceService, error) {
 	cloud := clientconfig.Cloud{}
-	return NewInstanceServiceFromCloud(cloud, nil)
+	return NewInstanceServiceFromCloud(cloud)
 }
 
-func NewInstanceServiceFromCloud(cloud clientconfig.Cloud, cert []byte) (*InstanceService, error) {
+func NewInstanceServiceFromCloud(cloud clientconfig.Cloud) (*InstanceService, error) {
 	clientOpts := new(clientconfig.ClientOpts)
+	var opts *gophercloud.AuthOptions
 
 	if cloud.AuthInfo != nil {
 		clientOpts.AuthInfo = cloud.AuthInfo
@@ -188,36 +186,16 @@ func NewInstanceServiceFromCloud(cloud clientconfig.Cloud, cert []byte) (*Instan
 	}
 
 	opts, err := clientconfig.AuthOptions(clientOpts)
+
 	if err != nil {
 		return nil, err
 	}
 
 	opts.AllowReauth = true
 
-	provider, err := openstack.NewClient(opts.IdentityEndpoint)
+	provider, err := openstack.AuthenticatedClient(*opts)
 	if err != nil {
-		return nil, fmt.Errorf("Create new provider client failed: %v", err)
-	}
-
-	if cert != nil {
-		certPool, err := x509.SystemCertPool()
-		if err != nil {
-			return nil, fmt.Errorf("Create system cert pool failed: %v", err)
-		}
-		certPool.AppendCertsFromPEM(cert)
-		client := http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					RootCAs: certPool,
-				},
-			},
-		}
-		provider.HTTPClient = client
-	}
-
-	err = openstack.Authenticate(provider, *opts)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to authenticate provider client: %v", err)
+		return nil, fmt.Errorf("Create providerClient err: %v", err)
 	}
 
 	identityClient, err := openstack.NewIdentityV3(provider, gophercloud.EndpointOpts{
