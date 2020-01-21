@@ -50,6 +50,8 @@ type OpenStackClusterSpec struct {
 	Subnet SubnetFilter `json:"subnet,omitempty"`
 
 	// DNSNameservers is the list of nameservers for OpenStack Subnet being created.
+	// Set this value when you need create a new network/subnet while the access
+	// through DNS is required.
 	DNSNameservers []string `json:"dnsNameservers,omitempty"`
 	// ExternalRouterIPs is an array of externalIPs on the respective subnets.
 	// This is necessary if the router needs a fixed ip in a specific subnet.
