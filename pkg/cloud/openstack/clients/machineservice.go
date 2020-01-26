@@ -152,20 +152,6 @@ func GetCloudFromSecret(kubeClient kubernetes.Interface, namespace string, secre
 	return clouds.Clouds[cloudName], nil
 }
 
-func getCACertFromConfigmap(kubeClient kubernetes.Interface, namespace string, configmapName string, key string) (string, error) {
-	cloudConfig, err := kubeClient.CoreV1().ConfigMaps(namespace).Get(configmapName, metav1.GetOptions{})
-	if err != nil {
-		return "", fmt.Errorf("failed to get configmap %s/%s/%s from kubernetes api: %v", namespace, configmapName, key, err)
-	}
-
-	val, ok := cloudConfig.Data[key]
-	if !ok {
-		return "", fmt.Errorf("configmap does not contain key, %s", key)
-	}
-
-	return val, nil
-}
-
 // TODO: Eventually we'll have a NewInstanceServiceFromCluster too
 func NewInstanceServiceFromMachine(kubeClient kubernetes.Interface, machine *machinev1.Machine) (*InstanceService, error) {
 	machineSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
@@ -184,12 +170,17 @@ func NewInstanceServiceFromMachine(kubeClient kubernetes.Interface, machine *mac
 		}
 	}
 
-	cacert, err := getCACertFromConfigmap(kubeClient, "openshift-config", "cloud-provider-config", "ca-bundle.pem")
-	if err != nil || cacert == "" {
+	cloudConfig, err := kubeClient.CoreV1().ConfigMaps("openshift-config").Get("cloud-provider-config", metav1.GetOptions{})
+	if err != nil {
+		klog.Warningf("failed to get configmap openshift-config/cloud-provider-config from kubernetes api: %v", err)
 		return NewInstanceServiceFromCloud(cloud, nil)
 	}
 
-	return NewInstanceServiceFromCloud(cloud, []byte(cacert))
+	if cacert, ok := cloudConfig.Data["ca-bundle.pem"]; ok {
+		return NewInstanceServiceFromCloud(cloud, []byte(cacert))
+	}
+
+	return NewInstanceServiceFromCloud(cloud, nil)
 }
 
 func NewInstanceService() (*InstanceService, error) {
@@ -234,6 +225,8 @@ func NewInstanceServiceFromCloud(cloud clientconfig.Cloud, cert []byte) (*Instan
 			},
 		}
 		provider.HTTPClient = client
+	} else {
+		klog.Infof("Cloud provider CA cert not provided, using system trust bundle")
 	}
 
 	err = openstack.Authenticate(provider, *opts)
