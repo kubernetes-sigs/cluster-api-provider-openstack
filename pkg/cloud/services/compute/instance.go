@@ -18,8 +18,9 @@ package compute
 
 import (
 	"fmt"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	"time"
+
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha2"
@@ -89,6 +90,9 @@ func (s *Service) InstanceCreate(clusterName string, machine *clusterv1.Machine,
 
 	// Append cluster scope tags
 	machineTags = append(machineTags, openStackCluster.Spec.Tags...)
+
+	// tags need to be unique or the "apply tags" call will fail.
+	machineTags = deduplicate(machineTags)
 
 	// Get security groups
 	securityGroups, err := getSecurityGroups(s, openStackMachine.Spec.SecurityGroups)
@@ -536,4 +540,21 @@ func (s *Service) InstanceExists(openStackMachine *infrav1.OpenStackMachine) (in
 		return nil, nil
 	}
 	return instanceList[0], nil
+}
+
+// deduplicate takes a slice of input strings and filters out any duplicate
+// string occurrences, for example making ["a", "b", "a", "c"] become ["a", "b",
+// "c"].
+func deduplicate(sequence []string) []string {
+	var unique []string
+	set := make(map[string]bool)
+
+	for _, s := range sequence {
+		if _, ok := set[s]; !ok {
+			unique = append(unique, s)
+			set[s] = true
+		}
+	}
+
+	return unique
 }
