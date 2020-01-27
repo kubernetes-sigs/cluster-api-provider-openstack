@@ -546,15 +546,15 @@ func (s *Service) InstanceExists(openStackMachine *infrav1.OpenStackMachine) (in
 // string occurences, for example making ["a", "b", "a", "c"] become ["a", "b",
 // "c"].
 func deduplicate(sequence []string) []string {
-	var filtered []string
+	var unique []string
 	set := make(map[string]bool)
 
 	for _, s := range sequence {
 		if _, ok := set[s]; !ok {
-			filtered = append(filtered, s)
+			unique = append(unique, s)
 			set[s] = true
 		}
 	}
 
-	return filtered
+	return unique
 }
