@@ -543,7 +543,7 @@ func (s *Service) InstanceExists(openStackMachine *infrav1.OpenStackMachine) (in
 }
 
 // deduplicate takes a slice of input strings and filters out any duplicate
-// string occurences, for example making ["a", "b", "a", "c"] become ["a", "b",
+// string occurrences, for example making ["a", "b", "a", "c"] become ["a", "b",
 // "c"].
 func deduplicate(sequence []string) []string {
 	var unique []string
