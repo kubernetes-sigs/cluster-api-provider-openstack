@@ -11,3 +11,12 @@ resources:
 - group: infrastructure
   version: v1alpha2
   kind: OpenStackMachineTemplate
+- group: infrastructure
+  version: v1alpha3
+  kind: OpenStackCluster
+- group: infrastructure
+  version: v1alpha3
+  kind: OpenStackMachine
+- group: infrastructure
+  version: v1alpha3
+  kind: OpenStackMachineTemplate

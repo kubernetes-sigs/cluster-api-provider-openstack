@@ -26,11 +26,11 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha2"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/loadbalancer"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/provider"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha2"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha3"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/patch"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -213,6 +213,11 @@ func (r *OpenStackClusterReconciler) reconcileCluster(logger logr.Logger, cluste
 					Port: apiPort,
 				},
 			}
+
+			openStackCluster.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{
+				Host: controlPlaneMachine.Spec.FloatingIP,
+				Port: int32(apiPort),
+		        }
 		} else {
 			logger.Info("No control plane node found yet, could not write OpenStackCluster.Status.APIEndpoints")
 		}

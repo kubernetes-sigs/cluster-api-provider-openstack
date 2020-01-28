@@ -27,7 +27,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/gophercloud/gophercloud/pagination"
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha2"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
 )
 
 func (s *Service) ReconcileRouter(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {

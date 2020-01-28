@@ -23,7 +23,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha2"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha3"
 	"sigs.k8s.io/cluster-api/controllers/noderefutil"
 
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
@@ -41,7 +41,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha2"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
 	"sigs.k8s.io/cluster-api/util"
 )
 
@@ -65,7 +65,7 @@ type ServerNetwork struct {
 }
 
 // InstanceCreate creates a compute instance
-func (s *Service) InstanceCreate(clusterName string, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster) (instance *Instance, err error) {
+func (s *Service) InstanceCreate(clusterName string, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster, userData string) (instance *Instance, err error) {
 	if openStackMachine == nil {
 		return nil, fmt.Errorf("create Options need be specified to create instace")
 	}
@@ -246,7 +246,7 @@ func (s *Service) InstanceCreate(clusterName string, machine *clusterv1.Machine,
 		FlavorName:       openStackMachine.Spec.Flavor,
 		AvailabilityZone: openStackMachine.Spec.AvailabilityZone,
 		Networks:         portsList,
-		UserData:         []byte(*machine.Spec.Bootstrap.Data),
+		UserData:         []byte(userData),
 		SecurityGroups:   securityGroups,
 		ServiceClient:    s.computeClient,
 		Tags:             serverTags,
