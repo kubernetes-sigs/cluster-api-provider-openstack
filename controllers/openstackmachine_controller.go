@@ -25,7 +25,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"strconv"
 	"time"
+	"encoding/base64"
 
+	corev1 "k8s.io/api/core/v1"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	"github.com/pkg/errors"
@@ -36,7 +38,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/loadbalancer"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/provider"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha2"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha3"
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -47,7 +49,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha2"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
 	capierrors "sigs.k8s.io/cluster-api/errors"
 	"sigs.k8s.io/cluster-api/util"
 )
@@ -165,9 +167,13 @@ func (r *OpenStackMachineReconciler) reconcileMachine(logger logr.Logger, machin
 	}
 
 	// Make sure bootstrap data is available and populated.
-	if machine.Spec.Bootstrap.Data == nil {
+	if machine.Spec.Bootstrap.DataSecretName == nil {
 		logger.Info("Waiting for bootstrap data to be available")
 		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+	}
+	userData, err := r.getBootstrapData(machine, openStackMachine)
+	if err != nil {
+		return reconcile.Result{}, err
 	}
 
 	logger.Info("Creating Machine")
@@ -189,7 +195,7 @@ func (r *OpenStackMachineReconciler) reconcileMachine(logger logr.Logger, machin
 		return reconcile.Result{}, err
 	}
 
-	instance, err := r.getOrCreate(computeService, machine, openStackMachine, cluster, openStackCluster)
+	instance, err := r.getOrCreate(computeService, machine, openStackMachine, cluster, openStackCluster, userData)
 	if err != nil {
 		handleMachineError(logger, openStackMachine, capierrors.UpdateMachineError, errors.Errorf("OpenStack instance cannot be created: %v", err))
 		return reconcile.Result{}, err
@@ -295,7 +301,7 @@ func (r *OpenStackMachineReconciler) reconcileMachineDelete(logger logr.Logger, 
 	return reconcile.Result{}, nil
 }
 
-func (r *OpenStackMachineReconciler) getOrCreate(computeService *compute.Service, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (*compute.Instance, error) {
+func (r *OpenStackMachineReconciler) getOrCreate(computeService *compute.Service, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, userData string) (*compute.Instance, error) {
 
 	instance, err := computeService.InstanceExists(openStackMachine)
 	if err != nil {
@@ -303,7 +309,7 @@ func (r *OpenStackMachineReconciler) getOrCreate(computeService *compute.Service
 	}
 
 	if instance == nil {
-		instance, err = computeService.InstanceCreate(cluster.Name, machine, openStackMachine, openStackCluster)
+		instance, err = computeService.InstanceCreate(cluster.Name, machine, openStackMachine, openStackCluster, userData)
 		if err != nil {
 			return nil, errors.Errorf("error creating Openstack instance: %v", err)
 		}
@@ -453,7 +459,7 @@ func (r *OpenStackMachineReconciler) OpenStackClusterToOpenStackMachines(o handl
 		return result
 	}
 
-	labels := map[string]string{clusterv1.MachineClusterLabelName: cluster.Name}
+	labels := map[string]string{clusterv1.ClusterLabelName: cluster.Name}
 	machineList := &clusterv1.MachineList{}
 	if err := r.List(context.TODO(), machineList, client.InNamespace(c.Namespace), client.MatchingLabels(labels)); err != nil {
 		log.Error(err, "failed to list Machines")
@@ -469,3 +475,24 @@ func (r *OpenStackMachineReconciler) OpenStackClusterToOpenStackMachines(o handl
 
 	return result
 }
+
+func (r *OpenStackMachineReconciler) getBootstrapData(machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (string, error) {
+        if machine.Spec.Bootstrap.DataSecretName == nil {
+                return "", errors.New("error retrieving bootstrap data: linked Machine's bootstrap.dataSecretName is nil")
+        }
+
+        secret := &corev1.Secret{}
+        key := types.NamespacedName{Namespace: machine.ObjectMeta.Namespace, Name: *machine.Spec.Bootstrap.DataSecretName}
+        if err := r.Client.Get(context.TODO(), key, secret); err != nil {
+                return "", errors.Wrapf(err, "failed to retrieve bootstrap data secret for Openstack Machine %s/%s", machine.ObjectMeta.Namespace, openStackMachine.Name)
+        }
+
+        value, ok := secret.Data["value"]
+        if !ok {
+                return "", errors.New("error retrieving bootstrap data: secret value key is missing")
+        }
+
+        return base64.StdEncoding.EncodeToString(value), nil
+}
+
+
