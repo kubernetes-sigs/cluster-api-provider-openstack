@@ -84,7 +84,9 @@ func newClient(cloud clientconfig.Cloud, caCert []byte) (*gophercloud.ProviderCl
 	if cloud.Verify != nil {
 		config.InsecureSkipVerify = !*cloud.Verify
 	}
-	config.RootCAs.AppendCertsFromPEM(caCert)
+	if caCert != nil {
+		config.RootCAs.AppendCertsFromPEM(caCert)
+	}
 
 	provider.HTTPClient.Transport = &http.Transport{Proxy: http.ProxyFromEnvironment, TLSClientConfig: config}
 	err = openstack.Authenticate(provider, *opts)
@@ -130,7 +132,7 @@ func getCloudFromSecret(ctrlClient client.Client, secretNamespace string, secret
 	// get caCert
 	caCert, ok := secret.Data[CaSecretKey]
 	if !ok {
-		return emptyCloud, nil, err
+		return clouds.Clouds[cloudName], nil, nil
 	}
 
 	return clouds.Clouds[cloudName], caCert, nil
