@@ -295,7 +295,7 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 		return nil
 	}
 
-	oc.eventRecorder.Eventf(machine, corev1.EventTypeNormal, "Created", "Created Machine %v", machine.Name)
+	oc.eventRecorder.Eventf(machine, corev1.EventTypeNormal, "Created", "Created machine %v", machine.Name)
 	return oc.updateAnnotation(machine, instance.ID)
 }
 
@@ -363,12 +363,20 @@ func (oc *OpenstackClient) Update(ctx context.Context, cluster *clusterv1.Cluste
 	}
 
 	if _, ok := currentMachine.Labels["node-role.kubernetes.io/master"]; ok {
+		// In this conditional block, Machine is Control Plane
 		// TODO: add master inplace
 		klog.Errorf("master inplace update failed: not supported")
 		return oc.handleMachineError(machine, apierrors.UpdateMachine(
 			"master inplace update failed: not supported"), updateEventAction)
 	} else {
+		// In this conditional block, Machine is Compute Node
 		klog.Infof("re-creating machine %s for update.", currentMachine.ObjectMeta.Name)
+		err = oc.Create(ctx, cluster, machine)
+		if err != nil {
+			klog.Errorf("create machine %s for update failed: %v", machine.ObjectMeta.Name, err)
+			return fmt.Errorf("Cannot create machine %s: %v", machine.ObjectMeta.Name, err)
+		}
+
 		err = oc.Delete(ctx, cluster, currentMachine)
 		if err != nil {
 			klog.Errorf("delete machine %s for update failed: %v", currentMachine.ObjectMeta.Name, err)
@@ -386,11 +394,6 @@ func (oc *OpenstackClient) Update(ctx context.Context, cluster *clusterv1.Cluste
 		if err != nil {
 			return oc.handleMachineError(machine, apierrors.DeleteMachine(
 				"error deleting Openstack instance: %v", err), updateEventAction)
-		}
-		err = oc.Create(ctx, cluster, machine)
-		if err != nil {
-			klog.Errorf("create machine %s for update failed: %v", machine.ObjectMeta.Name, err)
-			return fmt.Errorf("Cannot create machine %s: %v", machine.ObjectMeta.Name, err)
 		}
 		klog.Infof("Successfully updated machine %s", currentMachine.ObjectMeta.Name)
 	}
