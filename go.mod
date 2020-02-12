@@ -1,6 +1,6 @@
 module sigs.k8s.io/cluster-api-provider-openstack
 
-go 1.12
+go 1.13
 
 require (
 	github.com/go-logr/logr v0.1.0
