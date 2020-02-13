@@ -1,14 +1,10 @@
 module sigs.k8s.io/cluster-api/hack/tools
 
-go 1.12
+go 1.13
 
 require (
 	github.com/golang/mock v1.3.1
-	github.com/golangci/go-tools v0.0.0-20180109140146-af6baa5dc196 // indirect
 	github.com/golangci/golangci-lint v1.19.1
-	github.com/golangci/gosec v0.0.0-20180901114220-66fb7fc33547 // indirect
-	gopkg.in/airbrake/gobrake.v2 v2.0.9 // indirect
-	gopkg.in/gemnasium/logrus-airbrake-hook.v2 v2.1.2 // indirect
 	sigs.k8s.io/controller-tools v0.2.0
 	sigs.k8s.io/kustomize/kustomize/v3 v3.4.0
 	sigs.k8s.io/testing_frameworks v0.1.1
