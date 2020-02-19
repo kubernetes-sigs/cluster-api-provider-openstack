@@ -216,7 +216,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:11a1c19c48edfb00986c3d11842b5aae6c47453ce3b5e10e2f19541e97764dfe"
+  digest = "1:4f251dbf4e7aeee58fc200e91330cb5bfc32530504c714dd18ae80297a91dc7a"
   name = "github.com/gophercloud/gophercloud"
   packages = [
     ".",
@@ -228,6 +228,7 @@
     "openstack/compute/v2/extensions/bootfromvolume",
     "openstack/compute/v2/extensions/floatingips",
     "openstack/compute/v2/extensions/keypairs",
+    "openstack/compute/v2/extensions/schedulerhints",
     "openstack/compute/v2/flavors",
     "openstack/compute/v2/images",
     "openstack/compute/v2/servers",
@@ -1025,6 +1026,7 @@
     "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/bootfromvolume",
     "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips",
     "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs",
+    "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/schedulerhints",
     "github.com/gophercloud/gophercloud/openstack/compute/v2/flavors",
     "github.com/gophercloud/gophercloud/openstack/compute/v2/servers",
     "github.com/gophercloud/gophercloud/openstack/identity/v3/tokens",

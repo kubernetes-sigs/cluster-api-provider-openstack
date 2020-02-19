@@ -37,6 +37,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/bootfromvolume"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/schedulerhints"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/identity/v3/tokens"
@@ -722,6 +723,16 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, clust
 			BlockDevice:       blocks,
 		}
 
+	}
+
+	// If the spec sets a server group, then add scheduler hint
+	if config.ServerGroupID != "" {
+		serverCreateOpts = schedulerhints.CreateOptsExt{
+			CreateOptsBuilder: serverCreateOpts,
+			SchedulerHints: schedulerhints.SchedulerHints{
+				Group: config.ServerGroupID,
+			},
+		}
 	}
 
 	server, err := servers.Create(is.computeClient, keypairs.CreateOptsExt{
