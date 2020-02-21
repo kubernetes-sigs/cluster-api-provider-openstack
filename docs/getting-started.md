@@ -9,7 +9,9 @@
    - If you want to use VM, install [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/), version 0.30.0 or greater. Also install a [driver](https://github.com/kubernetes/minikube/blob/master/docs/drivers.md). For Linux, we recommend `kvm2`. For MacOS, we recommend `VirtualBox`.
    - If you want to use a container, install [Kind](https://github.com/kubernetes-sigs/kind#installation-and-usage).
    - If you want to use an existing Kubernetes cluster, prepare a kubeconfig which for this cluster.
-1. The CAPO provider requires an OS image (available in OpenStack), which is build like the ones in [image-builder](https://github.com/kubernetes-sigs/image-builder/tree/master/images/capi) 
+1. The CAPO provider requires an OS image (available in OpenStack), you have several ways to provide one:
+   - Build image via [image-builder](https://github.com/kubernetes-sigs/image-builder/tree/master/images/capi)
+   - Or as a test env, you can deploy a VM through OpenStack, log on to the VM and follow the steps in [install kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/) to install container runtime and download kubectl, kubelet and kubeadm but *don't* execute kubeadm, then capture the image in OpenStack cloud and use it as OS image.
 
 ## Cluster Creation
 
