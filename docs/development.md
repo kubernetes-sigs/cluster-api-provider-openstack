@@ -25,9 +25,9 @@ Log in to your registry account. Export the following environment variables whic
 
 Variable | Meaning | Mandatory | Example
 ------------ | ------------- | ------------- | -------------
-REGISTRY | The registry name | Yes | docker.io/<username>
-IMAGE_NAME | The image name (default: capi-openstack-controller | No | capi-openstack-controller
-VERSION | The image version (default: dev) | No | latest
+REGISTRY | The registry name | Yes | docker.io/\<username\>
+IMAGE_NAME | The image name (default: capi-openstack-controller) | No | capi-openstack-controller
+TAG | The image version (default: dev) | No | latest
 
 Execute the command to build and upload the image to the Docker registry.
 
@@ -37,7 +37,7 @@ make docker-build docker-push
 
 ### Using your own capi-openstack controller image
 
-After generating `provider-components.yaml`, replace the `gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:latest` with your image.
+After generating `provider-components.yaml`, replace the `us.gcr.io/k8s-artifacts-prod/capi-openstack/capi-openstack-controller:v0.2.0` with your image.
 
 ## Developing with Tilt
 
