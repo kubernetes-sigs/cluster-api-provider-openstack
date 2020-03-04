@@ -203,7 +203,7 @@ func (r *OpenStackMachineReconciler) reconcileMachine(logger logr.Logger, machin
 
 	// TODO(sbueringer) From CAPA: TODO(ncdc): move this validation logic into a validating webhook (for us: create validation logic in webhook)
 
-	openStackMachine.Spec.ProviderID = pointer.StringPtr(fmt.Sprintf("openstack:////%s", instance.ID))
+	openStackMachine.Spec.ProviderID = pointer.StringPtr(fmt.Sprintf("openstack://%s", instance.ID))
 
 	openStackMachine.Status.InstanceState = &instance.State
 
