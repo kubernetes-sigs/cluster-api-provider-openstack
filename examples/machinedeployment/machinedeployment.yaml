@@ -1,7 +1,7 @@
 #####################################################
 # ${CLUSTER_NAME}-md-0
 #####################################################
-apiVersion: cluster.x-k8s.io/v1alpha2
+apiVersion: cluster.x-k8s.io/v1alpha3
 kind: MachineDeployment
 metadata:
   name: ${CLUSTER_NAME}-md-0
@@ -10,6 +10,7 @@ metadata:
     cluster.x-k8s.io/cluster-name: ${CLUSTER_NAME}
     nodepool: nodepool-0
 spec:
+  clusterName: "${CLUSTER_NAME}"
   replicas: 1
   selector:
     matchLabels:
@@ -21,20 +22,21 @@ spec:
         cluster.x-k8s.io/cluster-name: ${CLUSTER_NAME}
         nodepool: nodepool-0
     spec:
+      clusterName: "${CLUSTER_NAME}"
       bootstrap:
         configRef:
-          apiVersion: bootstrap.cluster.x-k8s.io/v1alpha2
+          apiVersion: bootstrap.cluster.x-k8s.io/v1alpha3
           kind: KubeadmConfigTemplate
           name: ${CLUSTER_NAME}-md-0
           namespace: ${CLUSTER_NAME}
       infrastructureRef:
-        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
         kind: OpenStackMachineTemplate
         name: ${CLUSTER_NAME}-md-0
         namespace: ${CLUSTER_NAME}
       version: ${KUBERNETES_VERSION}
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
 kind: OpenStackMachineTemplate
 metadata:
   name: ${CLUSTER_NAME}-md-0
@@ -42,15 +44,15 @@ metadata:
 spec:
   template:
     spec:
-      availabilityZone: nova
+      availabilityZone: ${AVAILABILITY_ZONE}
       cloudName: $CLOUD
       cloudsSecret:
         name: cloud-config
         namespace: ${CLUSTER_NAME}
       flavor: m1.medium
-      image: <Image Name>
+      image: ${OS_IMAGE_NAME}
 ---
-apiVersion: bootstrap.cluster.x-k8s.io/v1alpha2
+apiVersion: bootstrap.cluster.x-k8s.io/v1alpha3
 kind: KubeadmConfigTemplate
 metadata:
   name: ${CLUSTER_NAME}-md-0

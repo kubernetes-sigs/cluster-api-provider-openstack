@@ -119,8 +119,6 @@ if [[ ${yq_type} == *"Python script"* ]]; then
 fi
 
 # Outputs.
-COMPONENTS_CLUSTER_API_GENERATED_FILE=${SOURCE_DIR}/provider-components/provider-components-cluster-api.yaml
-COMPONENTS_KUBEADM_GENERATED_FILE=${SOURCE_DIR}/provider-components/provider-components-kubeadm.yaml
 COMPONENTS_OPENSTACK_GENERATED_FILE=${SOURCE_DIR}/provider-components/provider-components-openstack.yaml
 COMPONENTS_OPENSTACK_CLOUDS_SECRETS_GENERATED_FILE=${SOURCE_DIR}/provider-components/provider-components-openstack-clouds-secrets.yaml
 CLOUDS_SECRETS_CONFIG_DIR=${SOURCE_DIR}/clouds-secrets/configs
@@ -130,7 +128,6 @@ PROVIDER_COMPONENTS_GENERATED_FILE=${OUTPUT_DIR}/provider-components.yaml
 CLUSTER_GENERATED_FILE=${OUTPUT_DIR}/cluster.yaml
 CONTROLPLANE_GENERATED_FILE=${OUTPUT_DIR}/controlplane.yaml
 MACHINEDEPLOYMENT_GENERATED_FILE=${OUTPUT_DIR}/machinedeployment.yaml
-ADDONS_GENERATED_FILE=${OUTPUT_DIR}/addons.yaml
 
 rm -rf "${OUTPUT_DIR}"
 rm -rf "${CLOUDS_SECRETS_CONFIG_DIR}"
@@ -159,6 +156,10 @@ DOMAIN_NAME=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.${CLOUD}.auth
 if [[ "$DOMAIN_NAME" = "null" ]]; then
   DOMAIN_NAME=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.${CLOUD}.auth.domain_name)
 fi
+DOMAIN_ID=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.${CLOUD}.auth.user_domain_id)
+if [[ "$DOMAIN_ID" = "null" ]]; then
+  DOMAIN_ID=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.${CLOUD}.auth.domain_id)
+fi
 CACERT_ORIGINAL=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.${CLOUD}.cacert)
 
 # use only the selected cloud not the whole clouds.yaml
@@ -171,8 +172,19 @@ auth-url=$AUTH_URL
 username=\"$USERNAME\"
 password=\"$PASSWORD\"
 tenant-id=\"$PROJECT_ID\"
-domain-name=\"$DOMAIN_NAME\"
 "
+
+if [[ "$DOMAIN_NAME" != "null" ]]; then
+  OPENSTACK_CLOUD_PROVIDER_CONF="$OPENSTACK_CLOUD_PROVIDER_CONF
+domain-name=\"${DOMAIN_NAME}\"
+  "
+fi
+if [[ "$DOMAIN_ID" != "null" ]]; then
+  OPENSTACK_CLOUD_PROVIDER_CONF="$OPENSTACK_CLOUD_PROVIDER_CONF
+domain-id=\"${DOMAIN_ID}\"
+  "
+fi
+
 if [[ "$CACERT_ORIGINAL" != "null" ]]; then
   OPENSTACK_CLOUD_PROVIDER_CONF="$OPENSTACK_CLOUD_PROVIDER_CONF
 ca-file=\"${CACERT_ORIGINAL}\"
@@ -184,8 +196,8 @@ region=\"${REGION}\"
   "
 fi
 
-export OPENSTACK_CLOUD_PROVIDER_CONF6
-OPENSTACK_CLOUD_PROVIDER_CONF6=$(echo "${OPENSTACK_CLOUD_PROVIDER_CONF}" | sed -e 's/^/      /')
+export OPENSTACK_CLOUD_PROVIDER_CONF8
+OPENSTACK_CLOUD_PROVIDER_CONF8=$(echo "${OPENSTACK_CLOUD_PROVIDER_CONF}" | sed -e 's/^/        /')
 export OPENSTACK_CLOUD_PROVIDER_CONF10
 OPENSTACK_CLOUD_PROVIDER_CONF10=$(echo "${OPENSTACK_CLOUD_PROVIDER_CONF}" | sed -e 's/^/          /')
 
@@ -217,31 +229,8 @@ echo "Generated ${CONTROLPLANE_GENERATED_FILE}"
 kustomize build "${SOURCE_DIR}/machinedeployment" | envsubst >> "${MACHINEDEPLOYMENT_GENERATED_FILE}"
 echo "Generated ${MACHINEDEPLOYMENT_GENERATED_FILE}"
 
-cp ${SOURCE_DIR}/addons.yaml "${ADDONS_GENERATED_FILE}"
-echo "Generated ${ADDONS_GENERATED_FILE}"
-
-# Generate Cluster API provider components file.
-CAPI_BRANCH=${CAPI_BRANCH:-"stable"}
-if [[ ${CAPI_BRANCH} == "stable" ]]; then
-  curl -L https://github.com/kubernetes-sigs/cluster-api/releases/download/v0.2.4/cluster-api-components.yaml > "${COMPONENTS_CLUSTER_API_GENERATED_FILE}"
-  echo "Downloaded ${COMPONENTS_CLUSTER_API_GENERATED_FILE} from cluster-api stable branch - v0.2.4"
-else
-  kustomize build "github.com/kubernetes-sigs/cluster-api/config/default/?ref=${CAPI_BRANCH}" > "${COMPONENTS_CLUSTER_API_GENERATED_FILE}"
-  echo "Generated ${COMPONENTS_CLUSTER_API_GENERATED_FILE} from cluster-api - ${CAPI_BRANCH}"
-fi
-
-# Generate Kubeadm Bootstrap Provider components file.
-CABPK_BRANCH=${CABPK_BRANCH:-"stable"}
-if [[ ${CABPK_BRANCH} == "stable" ]]; then
-  curl -L https://github.com/kubernetes-sigs/cluster-api-bootstrap-provider-kubeadm/releases/download/v0.1.2/bootstrap-components.yaml > "${COMPONENTS_KUBEADM_GENERATED_FILE}"
-  echo "Downloaded ${COMPONENTS_KUBEADM_GENERATED_FILE} from cluster-api-bootstrap-provider-kubeadm stable branch - v0.1.2"
-else
-  kustomize build "github.com/kubernetes-sigs/cluster-api-bootstrap-provider-kubeadm/config/default/?ref=${CABPK_BRANCH}" > "${COMPONENTS_KUBEADM_GENERATED_FILE}"
-  echo "Generated ${COMPONENTS_KUBEADM_GENERATED_FILE} from cluster-api-bootstrap-provider-kubeadm - ${CABPK_BRANCH}"
-fi
-
 # Generate OpenStack Infrastructure Provider components file.
-kustomize build "${SOURCE_DIR}/../config/default" | envsubst > "${COMPONENTS_OPENSTACK_GENERATED_FILE}"
+kustomize build "${SOURCE_DIR}/../config" | envsubst > "${COMPONENTS_OPENSTACK_GENERATED_FILE}"
 echo "Generated ${COMPONENTS_OPENSTACK_GENERATED_FILE}"
 
 # Generate OpenStack Infrastructure Provider cloud-secrets file.

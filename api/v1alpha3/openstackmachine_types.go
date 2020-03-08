@@ -30,7 +30,6 @@ const (
 
 // OpenStackMachineSpec defines the desired state of OpenStackMachine
 type OpenStackMachineSpec struct {
-
 	// ProviderID is the unique identifier as specified by the cloud provider.
 	ProviderID *string `json:"providerID,omitempty"`
 
@@ -99,9 +98,9 @@ type OpenStackMachineStatus struct {
 	// +optional
 	InstanceState *InstanceState `json:"instanceState,omitempty"`
 
-	ErrorReason *errors.MachineStatusError `json:"errorReason,omitempty"`
+	FailureReason *errors.MachineStatusError `json:"errorReason,omitempty"`
 
-	// ErrorMessage will be set in the event that there is a terminal problem
+	// FailureMessage will be set in the event that there is a terminal problem
 	// reconciling the Machine and will contain a more verbose string suitable
 	// for logging and human consumption.
 	//
@@ -118,7 +117,7 @@ type OpenStackMachineStatus struct {
 	// can be added as events to the Machine object and/or logged in the
 	// controller's output.
 	// +optional
-	ErrorMessage *string `json:"errorMessage,omitempty"`
+	FailureMessage *string `json:"errorMessage,omitempty"`
 }
 
 // +kubebuilder:object:root=true

@@ -39,8 +39,12 @@ BIN_DIR := bin
 KUSTOMIZE := $(TOOLS_BIN_DIR)/kustomize
 CLUSTERCTL := $(BIN_DIR)/clusterctl
 CONTROLLER_GEN := $(TOOLS_BIN_DIR)/controller-gen
+ENVSUBST := $(TOOLS_BIN_DIR)/envsubst
 GOLANGCI_LINT := $(TOOLS_BIN_DIR)/golangci-lint
 MOCKGEN := $(TOOLS_BIN_DIR)/mockgen
+CONVERSION_GEN := $(TOOLS_BIN_DIR)/conversion-gen
+RELEASE_NOTES_BIN := bin/release-notes
+RELEASE_NOTES := $(TOOLS_DIR)/$(RELEASE_NOTES_BIN)
 
 # Define Docker related variables. Releases should modify and double check these vars.
 REGISTRY ?= gcr.io/$(shell gcloud config get-value project)
@@ -58,9 +62,21 @@ CRD_ROOT ?= $(MANIFEST_ROOT)/crd/bases
 WEBHOOK_ROOT ?= $(MANIFEST_ROOT)/webhook
 RBAC_ROOT ?= $(MANIFEST_ROOT)/rbac
 
+# Allow overriding the imagePullPolicy
+PULL_POLICY ?= Always
+
+# Hosts running SELinux need :z added to volume mounts
+SELINUX_ENABLED := $(shell cat /sys/fs/selinux/enforce 2> /dev/null || echo 0)
+
+ifeq ($(SELINUX_ENABLED),1)
+  DOCKER_VOL_OPTS?=:z
+endif
+
+# Set build time variables including version details
+LDFLAGS := $(shell source ./hack/version.sh; version::ldflags)
+
 # Check if binaries exist
 HAS_YQ := $(shell command -v yq;)
-HAS_ENVSUBST := $(shell command -v envsubst;)
 
 ## --------------------------------------
 ## Help
@@ -97,14 +113,10 @@ test-go: ## Run golang tests
 # See:
 # * https://github.com/mikefarah/yq/issues/291
 # * https://github.com/mikefarah/yq/issues/289
-test-generate-examples: $(KUSTOMIZE)
+test-generate-examples: $(KUSTOMIZE) $(ENVSUBST)
 ifndef HAS_YQ
 	echo "installing yq"
-	GO111MODULE=on go get -u github.com/mikefarah/yq@d05391e
-endif
-ifndef HAS_ENVSUBST
-	echo "installing envsubst"
-	go get github.com/a8m/envsubst/cmd/envsubst
+	GO111MODULE=on go get github.com/mikefarah/yq/v2
 endif
 	# Create a dummy file for test only
 	mkdir -p tmp/dummy-make-auto-test
@@ -137,11 +149,20 @@ $(CLUSTERCTL): go.mod ## Build clusterctl binary.
 $(CONTROLLER_GEN): $(TOOLS_DIR)/go.mod # Build controller-gen from tools folder.
 	cd $(TOOLS_DIR); go build -tags=tools -o $(BIN_DIR)/controller-gen sigs.k8s.io/controller-tools/cmd/controller-gen
 
+$(ENVSUBST): $(TOOLS_DIR)/go.mod # Build envsubst from tools folder.
+	cd $(TOOLS_DIR); go build -tags=tools -o $(BIN_DIR)/envsubst github.com/a8m/envsubst/cmd/envsubst
+
 $(GOLANGCI_LINT): $(TOOLS_DIR)/go.mod # Build golangci-lint from tools folder.
 	cd $(TOOLS_DIR); go build -tags=tools -o $(BIN_DIR)/golangci-lint github.com/golangci/golangci-lint/cmd/golangci-lint
 
 $(MOCKGEN): $(TOOLS_DIR)/go.mod # Build mockgen from tools folder.
 	cd $(TOOLS_DIR); go build -tags=tools -o $(BIN_DIR)/mockgen github.com/golang/mock/mockgen
+
+$(CONVERSION_GEN): $(TOOLS_DIR)/go.mod
+	cd $(TOOLS_DIR); go build -tags=tools -o $(BIN_DIR)/conversion-gen k8s.io/code-generator/cmd/conversion-gen
+
+$(RELEASE_NOTES) : $(TOOLS_DIR)/go.mod
+	cd $(TOOLS_DIR) && go build -tags tools -o $(BIN_DIR)/release-notes sigs.k8s.io/cluster-api/hack/tools/release
 
 ## --------------------------------------
 ## Linting
@@ -169,17 +190,22 @@ generate: ## Generate code
 	$(MAKE) generate-manifests
 
 .PHONY: generate-go
-generate-go: $(CONTROLLER_GEN) $(MOCKGEN) ## Runs Go related generate targets
-	go generate ./...
+generate-go: $(CONTROLLER_GEN) $(CONVERSION_GEN) $(MOCKGEN) ## Runs Go related generate targets
 	$(CONTROLLER_GEN) \
 		paths=./api/... \
-		object:headerFile=./hack/boilerplate.go.txt
+		object:headerFile=./hack/boilerplate/boilerplate.generatego.txt
+
+	$(CONVERSION_GEN) \
+		--input-dirs=./api/v1alpha2 \
+		--output-file-base=zz_generated.conversion \
+		--go-header-file=./hack/boilerplate/boilerplate.generatego.txt
+	go generate ./...
 
 .PHONY: generate-manifests
 generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
 	$(CONTROLLER_GEN) \
 		paths=./api/... \
-		crd \
+		crd:crdVersions=v1 \
 		output:crd:dir=$(CRD_ROOT) \
 		output:webhook:dir=$(WEBHOOK_ROOT) \
 		webhook
@@ -190,7 +216,11 @@ generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
 
 .PHONY: generate-examples
 generate-examples: clean-examples ## Generate examples configurations to run a cluster.
-	./examples/generate.sh
+ifndef HAS_YQ
+	echo "installing yq"
+	GO111MODULE=on go get github.com/mikefarah/yq/v2
+endif
+	./examples/generate.sh -f  ${OPENSTACK_CONFIG_FILE} ${CLUSTER_NAME} ./examples/_out single-node
 
 ## --------------------------------------
 ## Docker
@@ -198,7 +228,9 @@ generate-examples: clean-examples ## Generate examples configurations to run a c
 
 .PHONY: docker-build
 docker-build: ## Build the docker image for controller-manager
-	docker build --pull --build-arg ARCH=$(ARCH) . -t $(CONTROLLER_IMG)-$(ARCH):$(TAG)
+	docker build --pull --build-arg ARCH=$(ARCH) --build-arg LDFLAGS="$(LDFLAGS)" . -t $(CONTROLLER_IMG)-$(ARCH):$(TAG)
+	MANIFEST_IMG=$(CONTROLLER_IMG)-$(ARCH) MANIFEST_TAG=$(TAG) $(MAKE) set-manifest-image
+	$(MAKE) set-manifest-pull-policy
 
 .PHONY: docker-push
 docker-push: ## Push the docker image
@@ -226,18 +258,20 @@ docker-push-manifest: ## Push the fat manifest docker image.
 	## Minimum docker version 18.06.0 is required for creating and pushing manifest images.
 	docker manifest create --amend $(CONTROLLER_IMG):$(TAG) $(shell echo $(ALL_ARCH) | sed -e "s~[^ ]*~$(CONTROLLER_IMG)\-&:$(TAG)~g")
 	@for arch in $(ALL_ARCH); do docker manifest annotate --arch $${arch} ${CONTROLLER_IMG}:${TAG} ${CONTROLLER_IMG}-$${arch}:${TAG}; done
-	docker manifest push --purge $(CONTROLLER_IMG):$(TAG)
+	docker manifest push --purge ${CONTROLLER_IMG}:${TAG}
+	MANIFEST_IMG=$(CONTROLLER_IMG) MANIFEST_TAG=$(TAG) $(MAKE) set-manifest-image
+	$(MAKE) set-manifest-pull-policy
 
 .PHONY: set-manifest-image
 set-manifest-image:
 	$(info Updating kustomize image patch file for manager resource)
-	sed -i'' -e 's@image: .*@image: '"${MANIFEST_IMG}:$(MANIFEST_TAG)"'@' ./config/default/manager_image_patch.yaml
+	sed -i'' -e 's@image: .*@image: '"${MANIFEST_IMG}:$(MANIFEST_TAG)"'@' ./config/manager/manager_image_patch.yaml
 
 
 .PHONY: set-manifest-pull-policy
 set-manifest-pull-policy:
 	$(info Updating kustomize pull policy file for manager resource)
-	sed -i'' -e 's@imagePullPolicy: .*@imagePullPolicy: '"$(PULL_POLICY)"'@' ./config/default/manager_pull_policy.yaml
+	sed -i'' -e 's@imagePullPolicy: .*@imagePullPolicy: '"$(PULL_POLICY)"'@' ./config/manager/manager_pull_policy.yaml
 
 ## --------------------------------------
 ## Release
@@ -250,87 +284,105 @@ $(RELEASE_DIR):
 	mkdir -p $(RELEASE_DIR)/
 
 .PHONY: release
-release: clean-release ## Builds and push container images using the latest git tag for the commit.
+release: clean-release  ## Builds and push container images using the latest git tag for the commit.
 	@if [ -z "${RELEASE_TAG}" ]; then echo "RELEASE_TAG is not set"; exit 1; fi
-	# Push the release image to the staging bucket first.
-	REGISTRY=$(STAGING_REGISTRY) TAG=$(RELEASE_TAG) \
-		$(MAKE) docker-build-all docker-push-all
+	@if ! [ -z "$$(git status --porcelain)" ]; then echo "Your local git repository contains uncommitted changes, use git clean before proceeding."; exit 1; fi
+	git checkout "${RELEASE_TAG}"
 	# Set the manifest image to the production bucket.
+	$(MAKE) set-manifest-image MANIFEST_IMG=$(PROD_REGISTRY)/$(IMAGE_NAME) MANIFEST_TAG=$(RELEASE_TAG)
+	$(MAKE) set-manifest-pull-policy PULL_POLICY=IfNotPresent
 	$(MAKE) release-manifests
 
 .PHONY: release-manifests
 release-manifests: $(RELEASE_DIR) ## Builds the manifests to publish with a release
-	MANIFEST_IMG=$(PROD_REGISTRY)/$(IMAGE_NAME) MANIFEST_TAG=$(RELEASE_TAG) \
-		$(MAKE) set-manifest-image
-	PULL_POLICY=IfNotPresent $(MAKE) set-manifest-pull-policy
-	$(KUSTOMIZE) build config/default > $(RELEASE_DIR)/infrastructure-components.yaml
+	kustomize build config > $(RELEASE_DIR)/infrastructure-components.yaml
+
+.PHONY: release-binary
+release-binary: $(RELEASE_DIR)
+	docker run \
+		--rm \
+		-e CGO_ENABLED=0 \
+		-e GOOS=$(GOOS) \
+		-e GOARCH=$(GOARCH) \
+		-v "$$(pwd):/workspace$(DOCKER_VOL_OPTS)" \
+		-w /workspace \
+		golang:1.13.8 \
+		go build -a -ldflags '$(LDFLAGS) -extldflags "-static"' \
+		-o $(RELEASE_DIR)/$(notdir $(RELEASE_BINARY))-$(GOOS)-$(GOARCH) $(RELEASE_BINARY)
 
 .PHONY: release-staging
 release-staging: ## Builds and push container images to the staging bucket.
 	REGISTRY=$(STAGING_REGISTRY) $(MAKE) docker-build-all docker-push-all release-alias-tag
 
-RELEASE_ALIAS_TAG=$(shell if [ "$(PULL_BASE_REF)" = "master" ]; then echo "latest"; else echo "$(PULL_BASE_REF)"; fi)
+RELEASE_ALIAS_TAG=$(PULL_BASE_REF)
 
 .PHONY: release-alias-tag
 release-alias-tag: # Adds the tag to the last build tag.
 	gcloud container images add-tag $(CONTROLLER_IMG):$(TAG) $(CONTROLLER_IMG):$(RELEASE_ALIAS_TAG)
 
+.PHONY: release-notes
+release-notes: $(RELEASE_NOTES)
+	$(RELEASE_NOTES) $(ARGS)
+
 ## --------------------------------------
 ## Development
 ## --------------------------------------
 
+# This is used in the get-kubeconfig call below in the create-cluster target. It may be overridden by the
+# e2e-conformance.sh script, which is why we need it as a variable here.
+CLUSTER_NAME ?= test1
+
+# NOTE: do not add 'generate-exmaples' as a prerequisite of this target. It will break e2e conformance testing.
 .PHONY: create-cluster
-create-cluster: $(CLUSTERCTL) ## Create a development Kubernetes cluster on OpenStack using examples
-	$(CLUSTERCTL) \
-	create cluster -v 4 \
-	--bootstrap-flags="name=clusterapi" \
-	--bootstrap-type kind \
-	-m ./examples/_out/controlplane.yaml \
-	-c ./examples/_out/cluster.yaml \
-	-p ./examples/_out/provider-components.yaml \
-	-a ./examples/addons.yaml
+create-cluster: $(CLUSTERCTL) $(ENVSUBST) ## Create a development Kubernetes cluster on OpenStack in a KIND management cluster.
+	@if [ -z `kind get clusters | grep clusterapi` ]; then \
+		kind create cluster --name=clusterapi; \
+	fi
+	@if [ ! -z "${LOAD_IMAGE}" ]; then \
+		echo "loading ${LOAD_IMAGE} into kind cluster ..." && \
+		kind --name="clusterapi" load docker-image "${LOAD_IMAGE}"; \
+	fi
+	# Install cert manager and wait for availability
+	kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v0.11.1/cert-manager.yaml
+	kubectl wait --for=condition=Available --timeout=5m apiservice v1beta1.webhook.cert-manager.io
 
+	# Deploy CAPI
+	kubectl apply -f https://github.com/kubernetes-sigs/cluster-api/releases/download/v0.3.0-rc.3/cluster-api-components.yaml
 
-.PHONY: create-cluster-management
-create-cluster-management: $(CLUSTERCTL) ## Create a development Kubernetes cluster on OpenStack in a KIND management cluster.
-	kind create cluster --name=clusterapi
-	# Apply provider-components.
-	kubectl \
-		--kubeconfig=$$(kind get kubeconfig-path --name="clusterapi") \
-		create -f examples/_out/provider-components.yaml
+	# Deploy CAPO
+	kustomize build config | $(ENVSUBST) | kubectl apply -f -
+
+	# Wait for CAPI pods
+	kubectl wait --for=condition=Ready --timeout=5m -n capi-system pod -l cluster.x-k8s.io/provider=cluster-api
+	kubectl wait --for=condition=Ready --timeout=5m -n capi-kubeadm-bootstrap-system pod -l cluster.x-k8s.io/provider=bootstrap-kubeadm
+	kubectl wait --for=condition=Ready --timeout=5m -n capi-kubeadm-control-plane-system pod -l cluster.x-k8s.io/provider=control-plane-kubeadm
+
+	# Wait for CAPO pods
+	kubectl wait --for=condition=Ready --timeout=5m -n capo-system pod -l cluster.x-k8s.io/provider=infrastructure-openstack
+
+	# FIXME:
 	# Create Cluster.
-	kubectl \
-		--kubeconfig=$$(kind get kubeconfig-path --name="clusterapi") \
-		create -f examples/_out/cluster.yaml
-	# Create control plane machine.
-	kubectl \
-		--kubeconfig=$$(kind get kubeconfig-path --name="clusterapi") \
-		create -f examples/_out/controlplane.yaml
-	# Get KubeConfig using clusterctl.
-	$(CLUSTERCTL) \
-		alpha phases get-kubeconfig -v=3 \
-		--kubeconfig=$$(kind get kubeconfig-path --name="clusterapi") \
-		--namespace=default \
-		--cluster-name=test1
-	# Apply addons on the target cluster, waiting for the control-plane to become available.
-	$(CLUSTERCTL) \
-		alpha phases apply-addons -v=3 \
-		--kubeconfig=./kubeconfig \
-		-a examples/addons.yaml
-	# Create a worker node with MachineDeployment.
-	kubectl \
-		--kubeconfig=$$(kind get kubeconfig-path --name="clusterapi") \
-		create -f examples/_out/machinedeployment.yaml
+	#sleep 10
+	#kustomize build templates | $(ENVSUBST) | kubectl apply -f -
 
-.PHONY: delete-cluster
-delete-cluster: $(CLUSTERCTL) ## Deletes the development Kubernetes Cluster "test1"
-	$(CLUSTERCTL) \
-	delete cluster -v 4 \
-	--bootstrap-type kind \
-	--bootstrap-flags="name=clusterapi" \
-	--cluster test1 \
-	--kubeconfig ./kubeconfig \
-	-p ./examples/_out/provider-components.yaml \
+	# Apply provider-components.
+	kubectl apply -f examples/_out/provider-components.yaml
+	# Create Cluster.
+	kubectl apply -f examples/_out/cluster.yaml
+	# Create control plane machine.
+	kubectl apply -f examples/_out/controlplane.yaml
+
+	# Wait for the kubeconfig to become available.
+	timeout 300 bash -c "while ! kubectl -n $(CLUSTER_NAME) get secrets | grep $(CLUSTER_NAME)-kubeconfig; do sleep 1; done"
+	# Get kubeconfig and store it locally.
+	kubectl -n $(CLUSTER_NAME) get secrets $(CLUSTER_NAME)-kubeconfig -o json | jq -r .data.value | base64 --decode > ./kubeconfig
+	timeout 300 bash -c "while ! kubectl --kubeconfig=./kubeconfig get nodes | grep master; do sleep 1; done"
+
+	# Deploy calico
+	kubectl --kubeconfig=./kubeconfig apply -f https://docs.projectcalico.org/manifests/calico.yaml
+	# FIXME:
+	# Create a worker node with MachineDeployment.
+	kubectl apply -f examples/_out/machinedeployment.yaml
 
 .PHONY: kind-reset
 kind-reset: ## Destroys the "clusterapi" kind cluster.
@@ -359,11 +411,28 @@ clean-temporary: ## Remove all temporary files and folders
 clean-release: ## Remove the release folder
 	rm -rf $(RELEASE_DIR)
 
+# FIXME:
 .PHONY: clean-examples
 clean-examples: ## Remove all the temporary files generated in the examples folder
 	rm -rf examples/_out/
 	rm -f examples/provider-components/provider-components-*.yaml
 
-.PHONY: verify-install
-verify-install: ## Checks that you've installed this repository correctly
-	./hack/verify-install.sh
+.PHONY: verify
+verify: verify-boilerplate verify-modules verify-gen
+
+.PHONY: verify-boilerplate
+verify-boilerplate:
+	./hack/verify-boilerplate.sh
+
+.PHONY: verify-modules
+verify-modules: modules
+	@if !(git diff --quiet HEAD -- go.sum go.mod hack/tools/go.mod hack/tools/go.sum); then \
+		git diff; \
+		echo "go module files are out of date"; exit 1; \
+	fi
+
+verify-gen: generate
+	@if !(git diff --quiet HEAD); then \
+		git diff; \
+		echo "generated files are out of date, run make generate"; exit 1; \
+	fi

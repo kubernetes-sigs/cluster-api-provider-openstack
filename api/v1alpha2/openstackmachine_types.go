@@ -123,7 +123,6 @@ type OpenStackMachineStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:resource:path=openstackmachines,scope=Namespaced
-// +kubebuilder:storageversion
 // +kubebuilder:subresource:status
 
 // OpenStackMachine is the Schema for the openstackmachines API

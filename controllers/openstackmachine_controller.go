@@ -17,20 +17,21 @@ package controllers
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"k8s.io/client-go/tools/record"
 	"net"
 	"os"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"strconv"
 	"time"
-	"encoding/base64"
 
-	corev1 "k8s.io/api/core/v1"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	"github.com/pkg/errors"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
@@ -112,6 +113,11 @@ func (r *OpenStackMachineReconciler) Reconcile(request ctrl.Request) (_ ctrl.Res
 		return reconcile.Result{}, nil
 	}
 
+	if isPaused(cluster, openStackMachine) {
+		logger.Info("OpenStackMachine or linked Cluster is marked as paused. Won't reconcile")
+		return ctrl.Result{}, nil
+	}
+
 	logger = logger.WithName(fmt.Sprintf("cluster=%s", cluster.Name))
 
 	openStackCluster := &infrav1.OpenStackCluster{}
@@ -146,19 +152,21 @@ func (r *OpenStackMachineReconciler) Reconcile(request ctrl.Request) (_ ctrl.Res
 	}
 
 	// Handle non-deleted clusters
-	return r.reconcileMachine(logger, machine, openStackMachine, cluster, openStackCluster)
+	return r.reconcileMachine(ctx, logger, patchHelper, machine, openStackMachine, cluster, openStackCluster)
 }
 
-func (r *OpenStackMachineReconciler) reconcileMachine(logger logr.Logger, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (_ ctrl.Result, reterr error) {
+func (r *OpenStackMachineReconciler) reconcileMachine(ctx context.Context, logger logr.Logger, patchHelper *patch.Helper, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (_ ctrl.Result, reterr error) {
 	// If the OpenStackMachine is in an error state, return early.
-	if openStackMachine.Status.ErrorReason != nil || openStackMachine.Status.ErrorMessage != nil {
+	if openStackMachine.Status.FailureReason != nil || openStackMachine.Status.FailureMessage != nil {
 		logger.Info("Error state detected, skipping reconciliation")
 		return reconcile.Result{}, nil
 	}
 
 	// If the OpenStackMachine doesn't have our finalizer, add it.
-	if !util.Contains(openStackMachine.Finalizers, infrav1.MachineFinalizer) {
-		openStackMachine.Finalizers = append(openStackMachine.Finalizers, infrav1.MachineFinalizer)
+	controllerutil.AddFinalizer(openStackMachine, infrav1.ClusterFinalizer)
+	// Register the finalizer immediately to avoid orphaning OpenStack resources on delete
+	if err := patchHelper.Patch(ctx, openStackMachine); err != nil {
+		return reconcile.Result{}, err
 	}
 
 	if !cluster.Status.InfrastructureReady {
@@ -284,7 +292,7 @@ func (r *OpenStackMachineReconciler) reconcileMachineDelete(logger logr.Logger, 
 
 	if instance == nil {
 		logger.Info("Skipped deleting machine that is already deleted")
-		openStackMachine.Finalizers = util.Filter(openStackMachine.Finalizers, infrav1.MachineFinalizer)
+		controllerutil.RemoveFinalizer(openStackMachine, infrav1.MachineFinalizer)
 		return reconcile.Result{}, nil
 	}
 
@@ -297,7 +305,7 @@ func (r *OpenStackMachineReconciler) reconcileMachineDelete(logger logr.Logger, 
 
 	logger.Info("Reconciled Machine delete successfully")
 	// Instance is deleted so remove the finalizer.
-	openStackMachine.Finalizers = util.Filter(openStackMachine.Finalizers, infrav1.MachineFinalizer)
+	controllerutil.RemoveFinalizer(openStackMachine, infrav1.MachineFinalizer)
 	return reconcile.Result{}, nil
 }
 
@@ -333,8 +341,8 @@ func (r *OpenStackMachineReconciler) getOrCreate(computeService *compute.Service
 }
 
 func handleMachineError(logger logr.Logger, openstackMachine *infrav1.OpenStackMachine, reason capierrors.MachineStatusError, message error) {
-	openstackMachine.Status.ErrorReason = &reason
-	openstackMachine.Status.ErrorMessage = pointer.StringPtr(message.Error())
+	openstackMachine.Status.FailureReason = &reason
+	openstackMachine.Status.FailureMessage = pointer.StringPtr(message.Error())
 	// TODO remove if this error is logged redundantly
 	logger.Error(fmt.Errorf(string(reason)), message.Error())
 }
@@ -477,22 +485,20 @@ func (r *OpenStackMachineReconciler) OpenStackClusterToOpenStackMachines(o handl
 }
 
 func (r *OpenStackMachineReconciler) getBootstrapData(machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (string, error) {
-        if machine.Spec.Bootstrap.DataSecretName == nil {
-                return "", errors.New("error retrieving bootstrap data: linked Machine's bootstrap.dataSecretName is nil")
-        }
+	if machine.Spec.Bootstrap.DataSecretName == nil {
+		return "", errors.New("error retrieving bootstrap data: linked Machine's bootstrap.dataSecretName is nil")
+	}
 
-        secret := &corev1.Secret{}
-        key := types.NamespacedName{Namespace: machine.ObjectMeta.Namespace, Name: *machine.Spec.Bootstrap.DataSecretName}
-        if err := r.Client.Get(context.TODO(), key, secret); err != nil {
-                return "", errors.Wrapf(err, "failed to retrieve bootstrap data secret for Openstack Machine %s/%s", machine.ObjectMeta.Namespace, openStackMachine.Name)
-        }
+	secret := &corev1.Secret{}
+	key := types.NamespacedName{Namespace: machine.ObjectMeta.Namespace, Name: *machine.Spec.Bootstrap.DataSecretName}
+	if err := r.Client.Get(context.TODO(), key, secret); err != nil {
+		return "", errors.Wrapf(err, "failed to retrieve bootstrap data secret for Openstack Machine %s/%s", machine.ObjectMeta.Namespace, openStackMachine.Name)
+	}
 
-        value, ok := secret.Data["value"]
-        if !ok {
-                return "", errors.New("error retrieving bootstrap data: secret value key is missing")
-        }
+	value, ok := secret.Data["value"]
+	if !ok {
+		return "", errors.New("error retrieving bootstrap data: secret value key is missing")
+	}
 
-        return base64.StdEncoding.EncodeToString(value), nil
+	return base64.StdEncoding.EncodeToString(value), nil
 }
-
-
