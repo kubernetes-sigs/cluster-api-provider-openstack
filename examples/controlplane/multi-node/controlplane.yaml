@@ -30,8 +30,8 @@ metadata:
   namespace: ${CLUSTER_NAME}
 spec:
   flavor: m1.medium
-  image: <Image Name>
-  availabilityZone: nova
+  image: ${OS_IMAGE_NAME}
+  availabilityZone: ${AVAILABILITY_ZONE}
   cloudName: $CLOUD
   cloudsSecret:
     name: cloud-config
@@ -130,8 +130,8 @@ metadata:
   namespace: ${CLUSTER_NAME}
 spec:
   flavor: m1.medium
-  image: <Image Name>
-  availabilityZone: nova
+  image: ${OS_IMAGE_NAME}
+  availabilityZone: ${AVAILABILITY_ZONE}
   cloudName: $CLOUD
   cloudsSecret:
     name: cloud-config
@@ -205,8 +205,8 @@ metadata:
   namespace: ${CLUSTER_NAME}
 spec:
   flavor: m1.medium
-  image: <Image Name>
-  availabilityZone: nova
+  image: ${OS_IMAGE_NAME}
+  availabilityZone: ${AVAILABILITY_ZONE}
   cloudName: $CLOUD
   cloudsSecret:
     name: cloud-config

@@ -27,13 +27,13 @@ spec:
   cloudsSecret:
     name: cloud-config
     namespace: ${CLUSTER_NAME}
-  nodeCidr: <node-cidr>
+  nodeCidr: ${NODE_CIDR}
   dnsNameservers: []
   # multi-node control-plane:
   # * externalNetworkId is required for:
   #   * creating routers
   #   * creating floating ips
   #   * creating load balancer
-  externalNetworkId: <external-network-id>
+  externalNetworkId: ${EXTERNAL_NETWORK_ID}
   disablePortSecurity: true
   disableServerTags: true

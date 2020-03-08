@@ -42,13 +42,13 @@ metadata:
 spec:
   template:
     spec:
-      availabilityZone: nova
+      availabilityZone: ${AVAILABILITY_ZONE}
       cloudName: $CLOUD
       cloudsSecret:
         name: cloud-config
         namespace: ${CLUSTER_NAME}
       flavor: m1.medium
-      image: <Image Name>
+      image: ${OS_IMAGE_NAME}
 ---
 apiVersion: bootstrap.cluster.x-k8s.io/v1alpha2
 kind: KubeadmConfigTemplate

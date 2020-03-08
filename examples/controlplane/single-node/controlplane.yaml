@@ -30,9 +30,9 @@ metadata:
   namespace: ${CLUSTER_NAME}
 spec:
   flavor: m1.medium
-  image: <Image Name>
-  availabilityZone: nova
-  floatingIP: <floating IP>
+  image: ${OS_IMAGE_NAME}
+  availabilityZone: ${AVAILABILITY_ZONE}
+  floatingIP: ${CONTROLPLANE_FLOATING_IP}
   cloudName: $CLOUD
   cloudsSecret:
     name: cloud-config
@@ -75,7 +75,7 @@ spec:
         cloud-provider: openstack
         cloud-config: /etc/kubernetes/cloud.conf
   clusterConfiguration:
-    controlPlaneEndpoint: "<floating ip of control plane node>:6443"
+    controlPlaneEndpoint: "${CONTROLPLANE_FLOATING_IP}:6443"
     imageRepository: k8s.gcr.io
     apiServer:
       extraArgs:

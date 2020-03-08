@@ -27,9 +27,9 @@ spec:
   cloudsSecret:
     name: cloud-config
     namespace: ${CLUSTER_NAME}
-  nodeCidr: <node-cidr>
+  nodeCidr: ${NODE_CIDR}
   managedAPIServerLoadBalancer: true
-  apiServerLoadBalancerFloatingIP: <loadbalancer floating ip>
+  apiServerLoadBalancerFloatingIP: ${CONTROLPLANE_FLOATING_IP}
   apiServerLoadBalancerPort: 6443
   apiServerLoadBalancerAdditionalPorts:
   - 22
@@ -39,7 +39,7 @@ spec:
   #   * creating routers
   #   * creating floating ips
   #   * creating load balancer
-  externalNetworkId: <external-network-id>
+  externalNetworkId: ${EXTERNAL_NETWORK_ID}
   disablePortSecurity: true
   disableServerTags: true
   useOctavia: true
