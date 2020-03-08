@@ -1,0 +1,46 @@
+- project:
+    # master branches
+#    cluster-api-provider-openstack-conformance-master:
+#      jobs:
+#      - cluster-api-provider-openstack-conformance-master:
+#          irrelevant-files:
+#          - ^docs/.*$
+#          - ^.*\.md$
+#          - ^OWNERS$
+#          - ^SECURITY_CONTACTS$
+#          - ^.gitignore$
+
+    # CAPI/CABPK: stable branches other repos: master branches
+    cluster-api-provider-openstack-conformance-stable:
+      jobs:
+      - cluster-api-provider-openstack-conformance-stable:
+          irrelevant-files:
+          - ^docs/.*$
+          - ^.*\.md$
+          - ^OWNERS$
+          - ^SECURITY_CONTACTS$
+          - ^.gitignore$
+
+# TODO compare with cloud provider openstack job definition
+- job:
+    name: cluster-api-provider-openstack-conformance-stable
+    parent: init-test
+    timeout: 36000
+    description: |
+      Test CAPO & Kubernetes master against CAPI & CABPKG stable
+    run: .zuul/playbooks/run.yaml
+    nodeset: ubuntu-xenial-arm64
+    vars:
+      go_version: '1.13.4'
+      k8s_os_capi_provider_src_dir: '{{ ansible_user_dir }}/src/k8s.io/cluster-api-provider-openstack'
+
+    # CAPI/CABPK: stable branches other repos: master branches (but using k8s artifacts published by CI)
+#    cluster-api-provider-openstack-conformance-stable-k8s-ci-artifacts:
+#      jobs:
+#      - cluster-api-provider-openstack-conformance-stable-k8s-ci-artifacts:
+#          irrelevant-files:
+#          - ^docs/.*$
+#          - ^.*\.md$
+#          - ^OWNERS$
+#          - ^SECURITY_CONTACTS$
+#          - ^.gitignore$

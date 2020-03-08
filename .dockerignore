@@ -6,4 +6,5 @@ config/
 hack/
 docs/
 examples/
+tmp/
 **/.md

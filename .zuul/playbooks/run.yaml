@@ -1,0 +1,88 @@
+- hosts: all
+  become: yes
+  roles:
+  - move-k8s-repo-to-k8s-specific-dir
+  - config-golang
+  - clone-devstack-gate-to-workspace
+  - create-devstack-local-conf
+  - role: install-devstack
+    environment:
+      # Keystone - nothing works without keystone
+      #ENABLED_SERVICES=key
+      # Nova - services to support libvirt based openstack clouds
+      #ENABLED_SERVICES+=,n-api,n-cpu,n-cond,n-sch,n-novnc,n-api-meta
+      # Placement service needed for Nova
+      #ENABLED_SERVICES+=,placement-api,placement-client
+      # Glance services needed for Nova
+      #ENABLED_SERVICES+=,g-api
+      # Cinder
+      #ENABLED_SERVICES+=,c-sch,c-api,c-vol
+      # Neutron
+      #ENABLED_SERVICES+=,q-svc,q-dhcp,q-meta,q-agt,q-l3
+      # Dashboard
+      #ENABLED_SERVICES+=,horizon
+      # Additional services
+      #ENABLED_SERVICES+=,rabbit,tempest,mysql,etcd3,dstat
+      OVERRIDE_ENABLED_SERVICES: 'key,mysql,rabbit,n-api,n-obj,n-cpu,n-cond,n-sch,n-novnc,n-api-meta,placement-api,placement-client,g-api,g-reg,neutron-api,neutron-agent,neutron-dhcp,neutron-l3,neutron-metadata-agent,neutron-qos,octavia,o-api,o-cw,o-hm,o-hk,o-da'
+      USE_PYTHON3: 'True'
+      #OS_BRANCH: 'stable/train'
+  tasks:
+  - name: Run kubernetes E2E conformance tests with ClusterAPI OpenStack
+    shell:
+      cmd: |
+        set -x
+        set -e
+        set -o pipefail
+
+        top -b -n 1 > /tmp/top.txt
+        cat /tmp/top.txt
+
+        pushd /opt/stack/new/devstack
+        source openrc admin admin
+        popd
+
+        openstack project list
+        openstack network list
+        openstack subnet list
+        openstack image list
+        openstack flavor list
+        openstack server list
+        openstack availability zone list
+
+
+        OS_PROJECT_ID=$(openstack project show admin -f value -c id)
+
+        # Create clouds.yaml
+        cat << EOF >> /tmp/clouds.yaml
+        clouds:
+          clusterapitesting:
+            auth:
+              username: $OS_USERNAME
+              password: $OS_PASSWORD
+              user_domain_id: $OS_USER_DOMAIN_ID
+              auth_url: $OS_AUTH_URL
+              project_id: $OS_PROJECT_ID
+            verify: false
+            region_name: $OS_REGION_NAME
+        EOF
+
+        cat /tmp/clouds.yaml
+
+        export KUBERNETES_VERSION=v1.16.2
+        export OPENSTACK_CONFIG_FILE=/tmp/clouds.yaml
+        export CLUSTER_NAME=clusterapitesting
+
+        export OS_EXTERNAL_NETWORK_NAME=public
+        #172.24.5.0/24
+        export OS_FLOATING_IP="172.24.5.24"
+        export OS_AVAILABILITY_ZONE="nova"
+
+        export ARTIFACTS=/home/zuul/workspace/logs/_artifacts
+        ./hack/ci/e2e-conformance.sh --install-prereqs --skip-upload-image
+        # Known issues:
+        # * dependencies like vmware workstation
+        # * build either via kvm or openstack
+        # * git clone for e.g. kubernetes repo missing
+      executable: /bin/bash
+      chdir: '{{ k8s_os_capi_provider_src_dir }}'
+    environment: '{{ global_env }}'
