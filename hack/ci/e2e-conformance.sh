@@ -167,7 +167,7 @@ upload_image() {
 
   tmp_source_image=/tmp/ubuntu-1804.ova.qcow2
 
-  wget https://github.com/sbueringer/image-builder/releases/download/v1.6.2-03/qemu-kube-v1.16.2.qcow2 -O ${tmp_source_image}
+  wget https://github.com/sbueringer/image-builder/releases/download/v1.6.2-04/qemu-kube-v1.16.2.qcow2 -O ${tmp_source_image}
 
   echo "Uploading image ${tmp_source_image} as ${OS_IMAGE_NAME}"
   openstack image create --disk-format qcow2 \
