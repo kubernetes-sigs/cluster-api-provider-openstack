@@ -2,11 +2,15 @@
   become: yes
   roles:
   - move-k8s-repo-to-k8s-specific-dir
+  - export-cloud-openrc
   tasks:
   - name: Test
     shell:
       cmd: |
 
+        openstack server list
+        openstack flavor list
+        
         cat /sys/module/kvm_intel/parameters/nested
 
         sudo rmmod kvm-intel
