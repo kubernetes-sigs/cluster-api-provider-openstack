@@ -159,6 +159,10 @@ DOMAIN_NAME=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.${CLOUD}.auth
 if [[ "$DOMAIN_NAME" = "null" ]]; then
   DOMAIN_NAME=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.${CLOUD}.auth.domain_name)
 fi
+DOMAIN_ID=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.${CLOUD}.auth.user_domain_id)
+if [[ "$DOMAIN_ID" = "null" ]]; then
+  DOMAIN_ID=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.${CLOUD}.auth.domain_id)
+fi
 CACERT_ORIGINAL=$(echo "$OPENSTACK_CLOUD_CONFIG_PLAIN" | yq r - clouds.${CLOUD}.cacert)
 
 # use only the selected cloud not the whole clouds.yaml
@@ -171,8 +175,19 @@ auth-url=$AUTH_URL
 username=\"$USERNAME\"
 password=\"$PASSWORD\"
 tenant-id=\"$PROJECT_ID\"
-domain-name=\"$DOMAIN_NAME\"
 "
+
+if [[ "$DOMAIN_NAME" != "null" ]]; then
+  OPENSTACK_CLOUD_PROVIDER_CONF="$OPENSTACK_CLOUD_PROVIDER_CONF
+domain-name=\"${DOMAIN_NAME}\"
+  "
+fi
+if [[ "$DOMAIN_ID" != "null" ]]; then
+  OPENSTACK_CLOUD_PROVIDER_CONF="$OPENSTACK_CLOUD_PROVIDER_CONF
+domain-id=\"${DOMAIN_ID}\"
+  "
+fi
+
 if [[ "$CACERT_ORIGINAL" != "null" ]]; then
   OPENSTACK_CLOUD_PROVIDER_CONF="$OPENSTACK_CLOUD_PROVIDER_CONF
 ca-file=\"${CACERT_ORIGINAL}\"
