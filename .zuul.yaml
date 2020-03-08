@@ -2,10 +2,10 @@
     name: kubernetes-sigs/cluster-api-provider-openstack
     check:
       jobs:
-        - cluster-api-provider-openstack-conformance-stable
+        - cluster-api-provider-openstack-conformance-stable-test
 
 - job:
-    name: cluster-api-provider-openstack-conformance-stable
+    name: cluster-api-provider-openstack-conformance-stable-test
     parent: init-test
     timeout: 36000
     description: |
