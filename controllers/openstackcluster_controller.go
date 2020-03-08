@@ -18,14 +18,12 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"github.com/go-logr/logr"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
-	"k8s.io/client-go/tools/record"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
-
-	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/client-go/tools/record"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/loadbalancer"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
@@ -35,6 +33,8 @@ import (
 	"sigs.k8s.io/cluster-api/util/patch"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -76,6 +76,12 @@ func (r *OpenStackClusterReconciler) Reconcile(request ctrl.Request) (_ ctrl.Res
 	if err != nil {
 		return reconcile.Result{}, err
 	}
+
+	if isPaused(cluster, openStackCluster) {
+		logger.Info("OpenStackCluster or linked Cluster is marked as paused. Won't reconcile")
+		return reconcile.Result{}, nil
+	}
+
 	if cluster == nil {
 		logger.Info("Cluster Controller has not yet set OwnerRef")
 		return reconcile.Result{}, nil
@@ -101,17 +107,19 @@ func (r *OpenStackClusterReconciler) Reconcile(request ctrl.Request) (_ ctrl.Res
 	}
 
 	// Handle non-deleted clusters
-	return r.reconcileCluster(logger, cluster, openStackCluster)
+	return r.reconcileCluster(ctx, logger, patchHelper, cluster, openStackCluster)
 }
 
-func (r *OpenStackClusterReconciler) reconcileCluster(logger logr.Logger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (_ ctrl.Result, reterr error) {
+func (r *OpenStackClusterReconciler) reconcileCluster(ctx context.Context, logger logr.Logger, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (_ ctrl.Result, reterr error) {
 	logger.Info("Reconciling Cluster")
 
 	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
 
 	// If the OpenStackCluster doesn't have our finalizer, add it.
-	if !util.Contains(openStackCluster.Finalizers, infrav1.ClusterFinalizer) {
-		openStackCluster.Finalizers = append(openStackCluster.Finalizers, infrav1.ClusterFinalizer)
+	controllerutil.AddFinalizer(openStackCluster, infrav1.ClusterFinalizer)
+	// Register the finalizer immediately to avoid orphaning OpenStack resources on delete
+	if err := patchHelper.Patch(ctx, openStackCluster); err != nil {
+		return reconcile.Result{}, err
 	}
 
 	osProviderClient, clientOpts, err := provider.NewClientFromCluster(r.Client, openStackCluster)
@@ -188,11 +196,9 @@ func (r *OpenStackClusterReconciler) reconcileCluster(logger logr.Logger, cluste
 
 	// Set APIEndpoints so the Cluster API Cluster Controller can pull them
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
-		openStackCluster.Status.APIEndpoints = []infrav1.APIEndpoint{
-			{
-				Host: openStackCluster.Spec.APIServerLoadBalancerFloatingIP,
-				Port: openStackCluster.Spec.APIServerLoadBalancerPort,
-			},
+		openStackCluster.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{
+			Host: openStackCluster.Spec.APIServerLoadBalancerFloatingIP,
+			Port: int32(openStackCluster.Spec.APIServerLoadBalancerPort),
 		}
 	} else {
 		controlPlaneMachine, err := r.getControlPlaneMachine()
@@ -207,19 +213,13 @@ func (r *OpenStackClusterReconciler) reconcileCluster(logger logr.Logger, cluste
 			} else {
 				apiPort = int(*cluster.Spec.ClusterNetwork.APIServerPort)
 			}
-			openStackCluster.Status.APIEndpoints = []infrav1.APIEndpoint{
-				{
-					Host: controlPlaneMachine.Spec.FloatingIP,
-					Port: apiPort,
-				},
-			}
 
 			openStackCluster.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{
 				Host: controlPlaneMachine.Spec.FloatingIP,
 				Port: int32(apiPort),
-		        }
+			}
 		} else {
-			logger.Info("No control plane node found yet, could not write OpenStackCluster.Status.APIEndpoints")
+			logger.Info("No control plane node found yet, could not write OpenStackCluster.Spec.ControlPlaneEndpoint")
 		}
 	}
 
@@ -277,7 +277,7 @@ func (r *OpenStackClusterReconciler) reconcileClusterDelete(logger logr.Logger, 
 
 	logger.Info("Reconciled Cluster delete successfully")
 	// Cluster is deleted so remove the finalizer.
-	openStackCluster.Finalizers = util.Filter(openStackCluster.Finalizers, infrav1.ClusterFinalizer)
+	controllerutil.RemoveFinalizer(openStackCluster, infrav1.ClusterFinalizer)
 	return reconcile.Result{}, nil
 }
 

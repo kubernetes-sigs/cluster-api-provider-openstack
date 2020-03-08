@@ -1,5 +1,5 @@
 ---
-apiVersion: cluster.x-k8s.io/v1alpha2
+apiVersion: cluster.x-k8s.io/v1alpha3
 kind: Cluster
 metadata:
   name: ${CLUSTER_NAME}
@@ -12,28 +12,36 @@ spec:
       cidrBlocks: ["192.168.0.0/16"] # CIDR block used by Calico.
     serviceDomain: "cluster.local"
   infrastructureRef:
-    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
     kind: OpenStackCluster
     name: ${CLUSTER_NAME}
     namespace: ${CLUSTER_NAME}
+  controlPlaneRef:
+    kind: KubeadmControlPlane
+    apiVersion: controlplane.cluster.x-k8s.io/v1alpha3
+    name: "${CLUSTER_NAME}-control-plane"
+    namespace: ${CLUSTER_NAME}
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
 kind: OpenStackCluster
 metadata:
   name: ${CLUSTER_NAME}
   namespace: ${CLUSTER_NAME}
 spec:
+  controlPlaneEndpoint:
+    host: ${CONTROLPLANE_FLOATING_IP}
+    port: 6443
   cloudName: $CLOUD
   cloudsSecret:
     name: cloud-config
     namespace: ${CLUSTER_NAME}
-  nodeCidr: <node-cidr>
+  nodeCidr: ${NODE_CIDR}
   dnsNameservers: []
   # multi-node control-plane:
   # * externalNetworkId is required for:
   #   * creating routers
   #   * creating floating ips
   #   * creating load balancer
-  externalNetworkId: <external-network-id>
+  externalNetworkId: ${EXTERNAL_NETWORK_ID}
   disablePortSecurity: true
   disableServerTags: true

@@ -21,6 +21,8 @@ spec:
     metadata:
       labels:
         control-plane: capo-controller-manager
+      annotations:
+        prometheus.io/scrape: 'true'
     spec:
       containers:
       - args:
@@ -31,6 +33,9 @@ spec:
         ports:
         - containerPort: 9440
           name: healthz
+          protocol: TCP
+        - containerPort: 8080
+          name: metrics
           protocol: TCP
         readinessProbe:
           httpGet:

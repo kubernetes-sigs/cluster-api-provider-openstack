@@ -135,7 +135,6 @@ type OpenStackClusterStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:resource:path=openstackclusters,scope=Namespaced
-// +kubebuilder:storageversion
 // +kubebuilder:subresource:status
 
 // OpenStackCluster is the Schema for the openstackclusters API

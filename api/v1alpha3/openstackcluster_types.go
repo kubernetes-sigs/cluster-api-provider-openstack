@@ -113,16 +113,13 @@ type OpenStackClusterSpec struct {
 	SAKeyPair KeyPair `json:"saKeyPair,omitempty"`
 
 	// ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
-        // +optional
-        ControlPlaneEndpoint clusterv1.APIEndpoint `json:"controlPlaneEndpoint"`
+	// +optional
+	ControlPlaneEndpoint clusterv1.APIEndpoint `json:"controlPlaneEndpoint"`
 }
 
 // OpenStackClusterStatus defines the observed state of OpenStackCluster
 type OpenStackClusterStatus struct {
 	Ready bool `json:"ready"`
-	// APIEndpoints represents the endpoints to communicate with the control plane.
-	// +optional
-	APIEndpoints []APIEndpoint `json:"apiEndpoints,omitempty"`
 
 	// Network contains all information about the created OpenStack Network.
 	// It includes Subnets and Router.
