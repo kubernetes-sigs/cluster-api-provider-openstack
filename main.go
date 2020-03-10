@@ -132,12 +132,6 @@ func main() {
 		"The address the health endpoint binds to.",
 	)
 
-	flag.StringVar(&healthAddr,
-		"health-addr",
-		":9440",
-		"The address the health endpoint binds to.",
-	)
-
 	flag.Parse()
 
 	if watchNamespace != "" {
