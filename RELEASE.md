@@ -31,11 +31,11 @@
     3. `./out/infrastructure-components.yaml`
     4. `./templates/cluster-template.yaml`
 9.  Perform the [image promotion process](https://github.com/kubernetes/k8s.io/tree/master/k8s.gcr.io#image-promoter).
-    The staging repository is at https://console.cloud.google.com/gcr/images/k8s-staging-cluster-api-aws/GLOBAL. Be
-    sure to choose the top level `cluster-api-aws-controller`, which will provide the multi-arch manifest, rather than one for a specific architecture.
+    The staging repository is at https://console.cloud.google.com/gcr/images/k8s-staging-capi-openstack/GLOBAL. Be
+    sure to choose the top level `capi-openstack-controller`, which will provide the multi-arch manifest, rather than one for a specific architecture.
 10.  Finalise the release notes
 11.  Publish release. Use the pre-release option for release
-    candidate versions of Cluster API Provider AWS.
+    candidate versions of Cluster API Provider OpenStack.
 12.  Email `kubernetes-sig-cluster-lifecycle@googlegroups.com` to announce the release
 
 <!-- TODO add link to image promote PR after the first release -->
