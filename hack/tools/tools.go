@@ -20,9 +20,12 @@ limitations under the License.
 package tools
 
 import (
-	_ "github.com/golang/mock/mockgen"
-	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
-	_ "sigs.k8s.io/controller-tools/cmd/controller-gen"
-	_ "sigs.k8s.io/kustomize/kustomize/v3"
-	_ "sigs.k8s.io/testing_frameworks/integration"
+	_ "github.com/a8m/envsubst"                             //nolint
+	_ "github.com/golang/mock/mockgen"                      //nolint
+	_ "github.com/golangci/golangci-lint/cmd/golangci-lint" //nolint
+	_ "k8s.io/code-generator"                               //nolint
+	_ "sigs.k8s.io/cluster-api/hack/tools/release"          //nolint
+	_ "sigs.k8s.io/controller-tools/cmd/controller-gen"     //nolint
+	_ "sigs.k8s.io/kustomize/kustomize/v3"                  //nolint
+	_ "sigs.k8s.io/testing_frameworks/integration"          //nolint
 )
