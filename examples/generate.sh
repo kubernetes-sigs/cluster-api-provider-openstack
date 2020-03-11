@@ -25,7 +25,7 @@ command -v "${ENVSUBST}" >/dev/null 2>&1 || echo -v "Cannot find ${ENVSUBST} in 
 
 # Cluster.
 export CLUSTER_NAME="${CLUSTER_NAME:-test-cluster}"
-export KUBERNETES_VERSION="${KUBERNETES_VERSION:-v1.15.0}"
+export KUBERNETES_VERSION="${KUBERNETES_VERSION:-v1.16.0}"
 
 # Machine settings.
 export CONTROL_PLANE_MACHINE_TYPE="${CONTROL_PLANE_MACHINE_TYPE:-m1.medium}"
