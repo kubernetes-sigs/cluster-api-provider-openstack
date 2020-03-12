@@ -58,11 +58,11 @@ to create floating IPs you have to make sure they already exist before creating 
 
 There are different places where the floating IP has to be configured:
 * single-node control plane:
-  * Add a `.spec.floatingIP` field to the `<cluster-name>-controlplane-0` Machine in`controlplane.yaml`.
+  * Add a `.spec.floatingIP` field to the `<cluster-name>-controlplane` Machine in`controlplane.yaml`.
 * multi-node control plane:
   * Set the floating IP in `.spec.apiServerLoadBalancerFloatingIP` in your `<cluster-name>` Cluster resource in `cluster.yaml`.
 * both:
-  * Configure floating IP in `.spec.clusterConfiguration.controlPlaneEndpoint` in your `<cluster-name>-controlplane-0` KubeadmConfig resource in `controlplane.yaml`.
+  * Configure floating IP in `.spec.clusterConfiguration.controlPlaneEndpoint` in your `<cluster-name>-controlplane` KubeadmConfig resource in `controlplane.yaml`.
 
 ## Security Group Rules
 
@@ -104,7 +104,7 @@ By using filters to look up a network, please note that it is possible to get mu
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
 kind: OpenStackMachine
 metadata:
-  name: <cluster-name>-controlplane-0
+  name: <cluster-name>-controlplane
   namespace: <cluster-name>
 spec:
   networks:
@@ -120,7 +120,7 @@ You can specify multiple networks (or subnets) to connect your server to. To do 
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
 kind: OpenStackMachine
 metadata:
-  name: <cluster-name>-controlplane-0
+  name: <cluster-name>-controlplane
   namespace: <cluster-name>
 spec:
   networks:
@@ -139,7 +139,7 @@ Rather than just using a network, you have the option of specifying a specific s
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
 kind: OpenStackMachine
 metadata:
-  name: <cluster-name>-controlplane-0
+  name: <cluster-name>-controlplane
   namespace: <cluster-name>
 spec:
   networks:
@@ -171,7 +171,7 @@ To tag resources specific to a machine, add a value to the tags field in `contro
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
 kind: OpenStackMachine
 metadata:
-  name: <cluster-name>-controlplane-0
+  name: <cluster-name>-controlplane
   namespace: <cluster-name>
 spec:
   tags:
@@ -186,7 +186,7 @@ Instead of tagging, you also have the option to add metadata to instances. This 
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
 kind: OpenStackMachine
 metadata:
-  name: <cluster-name>-controlplane-0
+  name: <cluster-name>-controlplane
   namespace: <cluster-name>
 spec:
   serverMetadata:
@@ -204,7 +204,7 @@ spec:
    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
    kind: OpenStackMachine
    metadata:
-     name: <cluster-name>-controlplane-0
+     name: <cluster-name>-controlplane
      namespace: <cluster-name>
    spec:
      rootVolume:
