@@ -58,11 +58,11 @@ to create floating IPs you have to make sure they already exist before creating 
 
 There are different places where the floating IP has to be configured:
 * single-node control plane:
-  * Add a `.spec.floatingIP` field to the `<cluster-name>-controlplane-0` Machine in`controlplane.yaml`.
+  * Add a `.spec.floatingIP` field to the `<cluster-name>-controlplane` Machine in`controlplane.yaml`.
 * multi-node control plane:
   * Set the floating IP in `.spec.apiServerLoadBalancerFloatingIP` in your `<cluster-name>` Cluster resource in `cluster.yaml`.
 * both:
-  * Configure floating IP in `.spec.clusterConfiguration.controlPlaneEndpoint` in your `<cluster-name>-controlplane-0` KubeadmConfig resource in `controlplane.yaml`.
+  * Configure floating IP in `.spec.clusterConfiguration.controlPlaneEndpoint` in your `<cluster-name>-controlplane` KubeadmConfig resource in `controlplane.yaml`.
 
 ## Security Group Rules
 
@@ -86,7 +86,7 @@ The rules created are:
 * A rule for the controlplane machine, that allows access from everywhere to port 22 and 443.
 * A rule for all the machines, both the controlplane and the nodes that allow all traffic between members of this group.
 
-In `controlplane.yaml` and `machinedeployment.yaml`, you can specify OpenStack security groups to be applied to each server in the `securityGroups` section of the YAML. You can specify the security group in 3 ways: by ID, by Name, or by filters. When you specify a security group by ID it will always return 1 security group or an error if it fails to find the security group specified. Please note that it is possible to add more than one security group to your machine when using Name or a Filter to specify it. More details about the filter can be found in [SecurityGroupParam](../api/v1alpha2/types.go).
+In `controlplane.yaml` and `machinedeployment.yaml`, you can specify OpenStack security groups to be applied to each server in the `securityGroups` section of the YAML. You can specify the security group in 3 ways: by ID, by Name, or by filters. When you specify a security group by ID it will always return 1 security group or an error if it fails to find the security group specified. Please note that it is possible to add more than one security group to your machine when using Name or a Filter to specify it. More details about the filter can be found in [SecurityGroupParam](../api/v1alpha3/types.go).
 
 ## Operating System Images
 
@@ -96,15 +96,15 @@ You can reference which operating system image you want to use in the `controlpl
 
 ## Network Filters
 
-If you have a complex query that you want to use to lookup a network, then you can do this by using a network filter. More details about the filter can be found in [NetworkParam](../api/v1alpha2/types.go)
+If you have a complex query that you want to use to lookup a network, then you can do this by using a network filter. More details about the filter can be found in [NetworkParam](../api/v1alpha3/types.go)
 
 By using filters to look up a network, please note that it is possible to get multiple networks as a result. This should not be a problem, however please test your filters with `openstack network list` to be certain that it returns the networks you want. Please refer to the following usage example:
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
 kind: OpenStackMachine
 metadata:
-  name: <cluster-name>-controlplane-0
+  name: <cluster-name>-controlplane
   namespace: <cluster-name>
 spec:
   networks:
@@ -117,10 +117,10 @@ spec:
 You can specify multiple networks (or subnets) to connect your server to. To do this, simply add another entry in the networks array. The following example connects the server to 3 different networks:
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
 kind: OpenStackMachine
 metadata:
-  name: <cluster-name>-controlplane-0
+  name: <cluster-name>-controlplane
   namespace: <cluster-name>
 spec:
   networks:
@@ -136,10 +136,10 @@ spec:
 Rather than just using a network, you have the option of specifying a specific subnet to connect your server to. The following is an example of how to specify a specific subnet of a network to use for your server.
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
 kind: OpenStackMachine
 metadata:
-  name: <cluster-name>-controlplane-0
+  name: <cluster-name>-controlplane
   namespace: <cluster-name>
 spec:
   networks:
@@ -155,7 +155,7 @@ spec:
 By default, all resources will be tagged with the values: `clusterName` and `cluster-api-provider-openstack`. The minimum microversion of the nova api that you need to support server tagging is 2.52. If your cluster does not support this, then disable tagging servers by setting `disableServerTags: true` in `cluster.yaml`. By default, this value is false. If your cluster supports tagging servers, you have the ability to tag all resources created by the cluster in the `cluster.yaml` file. Here is an example how to configure tagging:
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
 kind: OpenStackCluster
 metadata:
   name: <cluster-name>
@@ -168,10 +168,10 @@ spec:
 To tag resources specific to a machine, add a value to the tags field in `controlplane.yaml` and `machinedeployment.yaml` like this:
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
 kind: OpenStackMachine
 metadata:
-  name: <cluster-name>-controlplane-0
+  name: <cluster-name>-controlplane
   namespace: <cluster-name>
 spec:
   tags:
@@ -183,10 +183,10 @@ spec:
 Instead of tagging, you also have the option to add metadata to instances. This functionality should be more commonly available than tagging. Here is a usage example:
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
 kind: OpenStackMachine
 metadata:
-  name: <cluster-name>-controlplane-0
+  name: <cluster-name>-controlplane
   namespace: <cluster-name>
 spec:
   serverMetadata:
@@ -201,10 +201,10 @@ spec:
 1. For example in `examples/_out/controlplane.yaml` set `spec.rootVolume.diskSize` to something greater than `0` means boot from volume.
 
    ```yaml
-   apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+   apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
    kind: OpenStackMachine
    metadata:
-     name: <cluster-name>-controlplane-0
+     name: <cluster-name>-controlplane
      namespace: <cluster-name>
    spec:
      rootVolume:

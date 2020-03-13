@@ -45,6 +45,7 @@ MOCKGEN := $(TOOLS_BIN_DIR)/mockgen
 CONVERSION_GEN := $(TOOLS_BIN_DIR)/conversion-gen
 RELEASE_NOTES_BIN := bin/release-notes
 RELEASE_NOTES := $(TOOLS_DIR)/$(RELEASE_NOTES_BIN)
+GINKGO := $(abspath $(TOOLS_BIN_DIR)/ginkgo)
 
 # Define Docker related variables. Releases should modify and double check these vars.
 REGISTRY ?= gcr.io/$(shell gcloud config get-value project)
@@ -128,13 +129,15 @@ endif
 ## --------------------------------------
 ## Binaries
 ## --------------------------------------
+$(GINKGO): $(TOOLS_DIR)/go.mod
+	cd $(TOOLS_DIR) && go build -tags=tools -o $(BIN_DIR)/ginkgo github.com/onsi/ginkgo/ginkgo
 
 .PHONY: binaries
 binaries: manager ## Builds and installs all binaries
 
 .PHONY: manager
 manager: ## Build manager binary.
-	go build -o $(BIN_DIR)/manager .
+	go build -ldflags "$(LDFLAGS)" -o $(BIN_DIR)/manager .
 
 ## --------------------------------------
 ## Tooling Binaries
@@ -196,7 +199,7 @@ generate-go: $(CONTROLLER_GEN) $(CONVERSION_GEN) $(MOCKGEN) ## Runs Go related g
 		object:headerFile=./hack/boilerplate/boilerplate.generatego.txt
 
 	$(CONVERSION_GEN) \
-		--input-dirs=./api/v1alpha2 \
+		--input-dirs=./api/v1alpha3 \
 		--output-file-base=zz_generated.conversion \
 		--go-header-file=./hack/boilerplate/boilerplate.generatego.txt
 	go generate ./...
@@ -295,20 +298,7 @@ release: clean-release  ## Builds and push container images using the latest git
 
 .PHONY: release-manifests
 release-manifests: $(RELEASE_DIR) ## Builds the manifests to publish with a release
-	kustomize build config > $(RELEASE_DIR)/infrastructure-components.yaml
-
-.PHONY: release-binary
-release-binary: $(RELEASE_DIR)
-	docker run \
-		--rm \
-		-e CGO_ENABLED=0 \
-		-e GOOS=$(GOOS) \
-		-e GOARCH=$(GOARCH) \
-		-v "$$(pwd):/workspace$(DOCKER_VOL_OPTS)" \
-		-w /workspace \
-		golang:1.13.8 \
-		go build -a -ldflags '$(LDFLAGS) -extldflags "-static"' \
-		-o $(RELEASE_DIR)/$(notdir $(RELEASE_BINARY))-$(GOOS)-$(GOARCH) $(RELEASE_BINARY)
+	$(KUSTOMIZE) build config > $(RELEASE_DIR)/infrastructure-components.yaml
 
 .PHONY: release-staging
 release-staging: ## Builds and push container images to the staging bucket.
@@ -347,7 +337,7 @@ create-cluster: $(CLUSTERCTL) $(ENVSUBST) ## Create a development Kubernetes clu
 	kubectl wait --for=condition=Available --timeout=5m apiservice v1beta1.webhook.cert-manager.io
 
 	# Deploy CAPI
-	kubectl apply -f https://github.com/kubernetes-sigs/cluster-api/releases/download/v0.3.0-rc.3/cluster-api-components.yaml
+	kubectl apply -f https://github.com/kubernetes-sigs/cluster-api/releases/download/v0.3.0/cluster-api-components.yaml
 
 	# Deploy CAPO
 	kustomize build config | $(ENVSUBST) | kubectl apply -f -
@@ -380,7 +370,7 @@ create-cluster: $(CLUSTERCTL) $(ENVSUBST) ## Create a development Kubernetes clu
 
 	# Deploy calico
 	kubectl --kubeconfig=./kubeconfig apply -f https://docs.projectcalico.org/manifests/calico.yaml
-	# FIXME:
+
 	# Create a worker node with MachineDeployment.
 	kubectl apply -f examples/_out/machinedeployment.yaml
 
