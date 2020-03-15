@@ -20,14 +20,7 @@ import (
 	"fmt"
 	"time"
 
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
-
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha3"
-	"sigs.k8s.io/cluster-api/controllers/noderefutil"
-
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
-
+	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/common/extensions"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/bootfromvolume"
@@ -37,11 +30,16 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	netext "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/trunks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha3"
+	"sigs.k8s.io/cluster-api/controllers/noderefutil"
 	"sigs.k8s.io/cluster-api/util"
 )
 
@@ -102,37 +100,10 @@ func (s *Service) InstanceCreate(clusterName string, machine *clusterv1.Machine,
 	// Get all network UUIDs
 	var nets []ServerNetwork
 	if len(openStackMachine.Spec.Networks) > 0 {
-		for _, net := range openStackMachine.Spec.Networks {
-			opts := networks.ListOpts(net.Filter)
-			opts.ID = net.UUID
-			ids, err := networking.GetNetworkIDsByFilter(s.networkClient, &opts)
-			if err != nil {
-				return nil, err
-			}
-			for _, netID := range ids {
-				if net.Subnets == nil {
-					nets = append(nets, ServerNetwork{
-						networkID: netID,
-					})
-					continue
-				}
-
-				for _, subnet := range net.Subnets {
-					subnetOpts := subnets.ListOpts(subnet.Filter)
-					subnetOpts.ID = subnet.UUID
-					subnetOpts.NetworkID = netID
-					subnetsByFilter, err := networking.GetSubnetsByFilter(s.networkClient, &subnetOpts)
-					if err != nil {
-						return nil, err
-					}
-					for _, subnetByFilter := range subnetsByFilter {
-						nets = append(nets, ServerNetwork{
-							networkID: subnetByFilter.NetworkID,
-							subnetID:  subnetByFilter.ID,
-						})
-					}
-				}
-			}
+		var err error
+		nets, err = getServerNetworks(s.networkClient, openStackMachine.Spec.Networks)
+		if err != nil {
+			return nil, err
 		}
 	} else {
 		if openStackCluster.Status.Network == nil {
@@ -240,11 +211,14 @@ func (s *Service) InstanceCreate(clusterName string, machine *clusterv1.Machine,
 		return nil, fmt.Errorf("create new server err: %v", err)
 	}
 
+	if machine.Spec.FailureDomain == nil {
+		return nil, fmt.Errorf("create new server err: failure domain not set")
+	}
 	var serverCreateOpts servers.CreateOptsBuilder = servers.CreateOpts{
 		Name:             openStackMachine.Name,
 		ImageRef:         imageID,
 		FlavorName:       openStackMachine.Spec.Flavor,
-		AvailabilityZone: openStackMachine.Spec.AvailabilityZone,
+		AvailabilityZone: *machine.Spec.FailureDomain,
 		Networks:         portsList,
 		UserData:         []byte(userData),
 		SecurityGroups:   securityGroups,
@@ -327,6 +301,43 @@ func getSecurityGroups(is *Service, securityGroupParams []infrav1.SecurityGroupP
 		}
 	}
 	return sgIDs, nil
+}
+
+func getServerNetworks(networkClient *gophercloud.ServiceClient, networkParams []infrav1.NetworkParam) ([]ServerNetwork, error) {
+	var nets []ServerNetwork
+	for _, net := range networkParams {
+		opts := networks.ListOpts(net.Filter)
+		opts.ID = net.UUID
+		ids, err := networking.GetNetworkIDsByFilter(networkClient, &opts)
+		if err != nil {
+			return nil, err
+		}
+		for _, netID := range ids {
+			if net.Subnets == nil {
+				nets = append(nets, ServerNetwork{
+					networkID: netID,
+				})
+				continue
+			}
+
+			for _, subnet := range net.Subnets {
+				subnetOpts := subnets.ListOpts(subnet.Filter)
+				subnetOpts.ID = subnet.UUID
+				subnetOpts.NetworkID = netID
+				subnetsByFilter, err := networking.GetSubnetsByFilter(networkClient, &subnetOpts)
+				if err != nil {
+					return nil, err
+				}
+				for _, subnetByFilter := range subnetsByFilter {
+					nets = append(nets, ServerNetwork{
+						networkID: subnetByFilter.NetworkID,
+						subnetID:  subnetByFilter.ID,
+					})
+				}
+			}
+		}
+	}
+	return nets, nil
 }
 
 func isDuplicate(list []string, name string) bool {

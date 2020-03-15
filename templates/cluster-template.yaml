@@ -1,0 +1,200 @@
+---
+apiVersion: cluster.x-k8s.io/v1alpha3
+kind: Cluster
+metadata:
+  name: ${CLUSTER_NAME}
+spec:
+  clusterNetwork:
+    pods:
+      cidrBlocks: ["192.168.0.0/16"] # CIDR block used by Calico.
+    serviceDomain: "cluster.local"
+  infrastructureRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+    kind: OpenStackCluster
+    name: ${CLUSTER_NAME}
+  controlPlaneRef:
+    kind: KubeadmControlPlane
+    apiVersion: controlplane.cluster.x-k8s.io/v1alpha3
+    name: ${CLUSTER_NAME}-control-plane
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+kind: OpenStackCluster
+metadata:
+  name: ${CLUSTER_NAME}
+spec:
+  cloudName: ${OPENSTACK_CLOUD}
+  cloudsSecret:
+    name: ${CLUSTER_NAME}-cloud-config
+    namespace: ${CLUSTER_NAME}
+  managedAPIServerLoadBalancer: true
+  apiServerLoadBalancerFloatingIP: ${OPENSTACK_CONTROLPLANE_IP}
+  apiServerLoadBalancerPort: 6443
+  apiServerLoadBalancerAdditionalPorts:
+  - 22
+  nodeCidr: 10.6.0.0/24
+  dnsNameservers:
+  - ${OPENSTACK_DNS_NAMESERVERS}
+  externalNetworkId: ${OPENSTACK_EXTERNAL_NETWORK_ID}
+  disablePortSecurity: true
+  disableServerTags: true
+  useOctavia: true
+---
+kind: KubeadmControlPlane
+apiVersion: controlplane.cluster.x-k8s.io/v1alpha3
+metadata:
+  name: "${CLUSTER_NAME}-control-plane"
+spec:
+  replicas: ${CONTROL_PLANE_MACHINE_COUNT}
+  infrastructureTemplate:
+    kind: OpenStackMachineTemplate
+    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+    name: "${CLUSTER_NAME}-control-plane"
+  kubeadmConfigSpec:
+    initConfiguration:
+      nodeRegistration:
+        name: '{{ local_hostname }}'
+        kubeletExtraArgs:
+          cloud-provider: openstack
+          cloud-config: /etc/kubernetes/cloud.conf
+    clusterConfiguration:
+      controlPlaneEndpoint: "${OPENSTACK_CONTROLPLANE_IP}:6443"
+      imageRepository: k8s.gcr.io
+      apiServer:
+        extraArgs:
+          cloud-provider: openstack
+          cloud-config: /etc/kubernetes/cloud.conf
+        extraVolumes:
+        - name: cloud
+          hostPath: /etc/kubernetes/cloud.conf
+          mountPath: /etc/kubernetes/cloud.conf
+          readOnly: true
+      controllerManager:
+        extraArgs:
+          cloud-provider: openstack
+          cloud-config: /etc/kubernetes/cloud.conf
+        extraVolumes:
+        - name: cloud
+          hostPath: /etc/kubernetes/cloud.conf
+          mountPath: /etc/kubernetes/cloud.conf
+          readOnly: true
+        - name: cacerts
+          hostPath: /etc/certs/cacert
+          mountPath: /etc/certs/cacert
+          readOnly: true
+    joinConfiguration:
+      nodeRegistration:
+        name: '{{ local_hostname }}'
+        kubeletExtraArgs:
+          cloud-config: /etc/kubernetes/cloud.conf
+          cloud-provider: openstack
+    files:
+    - path: /etc/kubernetes/cloud.conf
+      owner: root
+      permissions: "0600"
+      content: ${OPENSTACK_CLOUD_PROVIDER_CONF_B64}
+      encoding: base64
+    - path: /etc/certs/cacert
+      owner: root
+      permissions: "0600"
+      content: ${OPENSTACK_CLOUD_CACERT_B64}
+      encoding: base64
+    ntp:
+      servers: []
+    users:
+    - name: capo
+      sudo: "ALL=(ALL) NOPASSWD:ALL"
+      sshAuthorizedKeys:
+      - "${OPENSTACK_SSH_AUTHORIZED_KEY}"
+  version: "${KUBERNETES_VERSION}"
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+kind: OpenStackMachineTemplate
+metadata:
+  name: ${CLUSTER_NAME}-control-plane
+spec:
+  template:
+    spec:
+      flavor: ${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR}
+      image: ${OPENSTACK_IMAGE_NAME}
+      cloudName: ${OPENSTACK_CLOUD}
+      cloudsSecret:
+        name: ${CLUSTER_NAME}-cloud-config
+        namespace: ${CLUSTER_NAME}
+---
+apiVersion: cluster.x-k8s.io/v1alpha3
+kind: MachineDeployment
+metadata:
+  name: "${CLUSTER_NAME}-md-0"
+spec:
+  clusterName: "${CLUSTER_NAME}"
+  replicas: ${WORKER_MACHINE_COUNT}
+  selector:
+    matchLabels:
+  template:
+    spec:
+      clusterName: "${CLUSTER_NAME}"
+      version: "${KUBERNETES_VERSION}"
+      failureDomain: ${OPENSTACK_FAILURE_DOMAIN}
+      bootstrap:
+        configRef:
+          name: "${CLUSTER_NAME}-md-0"
+          apiVersion: bootstrap.cluster.x-k8s.io/v1alpha3
+          kind: KubeadmConfigTemplate
+      infrastructureRef:
+        name: "${CLUSTER_NAME}-md-0"
+        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+        kind: OpenStackMachineTemplate
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+kind: OpenStackMachineTemplate
+metadata:
+  name: ${CLUSTER_NAME}-md-0
+spec:
+  template:
+    spec:
+      cloudName: ${OPENSTACK_CLOUD}
+      cloudsSecret:
+        name: ${CLUSTER_NAME}-cloud-config
+        namespace: ${CLUSTER_NAME}
+      flavor: ${OPENSTACK_NODE_MACHINE_FLAVOR}
+      image: ${OPENSTACK_IMAGE_NAME}
+---
+apiVersion: bootstrap.cluster.x-k8s.io/v1alpha3
+kind: KubeadmConfigTemplate
+metadata:
+  name: ${CLUSTER_NAME}-md-0
+spec:
+  template:
+    spec:
+      files:
+      - content: ${OPENSTACK_CLOUD_PROVIDER_CONF_B64}
+        encoding: base64
+        owner: root
+        path: /etc/kubernetes/cloud.conf
+        permissions: "0600"
+      - content: ${OPENSTACK_CLOUD_CACERT_B64}
+        encoding: base64
+        owner: root
+        path: /etc/certs/cacert
+        permissions: "0600"
+      joinConfiguration:
+        nodeRegistration:
+          name: '{{ local_hostname }}'
+          kubeletExtraArgs:
+            cloud-config: /etc/kubernetes/cloud.conf
+            cloud-provider: openstack
+      ntp:
+        servers: []
+      users:
+      - name: capo
+        sudo: "ALL=(ALL) NOPASSWD:ALL"
+        sshAuthorizedKeys:
+        - "${OPENSTACK_SSH_AUTHORIZED_KEY}"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ${CLUSTER_NAME}-cloud-config
+data:
+  clouds.yaml: ${OPENSTACK_CLOUD_YAML_B64}
+  cacert: ${OPENSTACK_CLOUD_CACERT_B64}

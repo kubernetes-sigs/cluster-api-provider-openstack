@@ -73,16 +73,17 @@ func (s *Service) ReconcileSecurityGroups(clusterName string, openStackCluster *
 		}
 
 		if observedSecGroups[k].ID != "" {
-			if matchGroups(&desiredSecGroup, observedSecGroups[k]) {
+			if matchGroups(desiredSecGroup, *observedSecGroups[k]) {
 				s.logger.V(6).Info("Group matched, have nothing to do.", "name", desiredSecGroup.Name)
 				continue
 			}
 
 			s.logger.V(6).Info("Group didn't match, reconciling...", "name", desiredSecGroup.Name)
-			observedSecGroups[k], err = s.reconcileGroup(&desiredSecGroup, observedSecGroups[k])
+			observedSecGroup, err := s.reconcileGroup(desiredSecGroup, *observedSecGroups[k])
 			if err != nil {
 				return err
 			}
+			observedSecGroups[k] = &observedSecGroup
 			continue
 		}
 
@@ -199,7 +200,7 @@ func generateGlobalGroup(clusterName string) infrav1.SecurityGroup {
 }
 
 // matchGroups will check if security groups match.
-func matchGroups(desired, observed *infrav1.SecurityGroup) bool {
+func matchGroups(desired, observed infrav1.SecurityGroup) bool {
 	// If they have differing amount of rules they obviously don't match.
 	if len(desired.Rules) != len(observed.Rules) {
 		return false
@@ -228,13 +229,13 @@ func matchGroups(desired, observed *infrav1.SecurityGroup) bool {
 
 // reconcileGroup reconciles an already existing observed group by essentially emptying out all the rules and
 // recreating them.
-func (s *Service) reconcileGroup(desired, observed *infrav1.SecurityGroup) (*infrav1.SecurityGroup, error) {
+func (s *Service) reconcileGroup(desired, observed infrav1.SecurityGroup) (infrav1.SecurityGroup, error) {
 	s.logger.V(6).Info("Deleting all rules for group", "name", observed.Name)
 	for _, rule := range observed.Rules {
 		s.logger.V(6).Info("Deleting rule", "ruleID", rule.ID, "groupName", observed.Name)
 		err := rules.Delete(s.client, rule.ID).ExtractErr()
 		if err != nil {
-			return &infrav1.SecurityGroup{}, err
+			return infrav1.SecurityGroup{}, err
 		}
 	}
 	recreatedRules := make([]infrav1.SecurityGroupRule, 0, len(desired.Rules))
@@ -247,7 +248,7 @@ func (s *Service) reconcileGroup(desired, observed *infrav1.SecurityGroup) (*inf
 		}
 		newRule, err := s.createRule(r)
 		if err != nil {
-			return &infrav1.SecurityGroup{}, err
+			return infrav1.SecurityGroup{}, err
 		}
 		recreatedRules = append(recreatedRules, newRule)
 	}

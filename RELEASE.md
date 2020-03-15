@@ -28,8 +28,9 @@
 6. Checkout the tag you've just created and make sure git is in a clean state
 7. Run `make release`
 8. Attach the files to the drafted release:
-    3. `./out/infrastructure-components.yaml`
-    4. `./templates/cluster-template.yaml`
+    1. `./out/infrastructure-components.yaml`
+    2. `./templates/cluster-template.yaml`
+    3. `./templates/cluster-template-without-lb.yaml`
 9.  Perform the [image promotion process](https://github.com/kubernetes/k8s.io/tree/master/k8s.gcr.io#image-promoter).
     The staging repository is at https://console.cloud.google.com/gcr/images/k8s-staging-capi-openstack/GLOBAL. Be
     sure to choose the top level `capi-openstack-controller`, which will provide the multi-arch manifest, rather than one for a specific architecture.

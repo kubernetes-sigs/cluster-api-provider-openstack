@@ -125,6 +125,9 @@ type OpenStackClusterStatus struct {
 	// It includes Subnets and Router.
 	Network *Network `json:"network,omitempty"`
 
+	// FailureDomains represent OpenStack availability zones
+	FailureDomains clusterv1.FailureDomains `json:"failureDomains,omitempty"`
+
 	// ControlPlaneSecurityGroups contains all the information about the OpenStack
 	// Security Group that needs to be applied to control plane nodes.
 	// TODO: Maybe instead of two properties, we add a property to the group?
@@ -136,9 +139,14 @@ type OpenStackClusterStatus struct {
 }
 
 // +kubebuilder:object:root=true
-// +kubebuilder:resource:path=openstackclusters,scope=Namespaced
+// +kubebuilder:resource:path=openstackclusters,scope=Namespaced,categories=cluster-api
 // +kubebuilder:storageversion
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Cluster",type="string",JSONPath=".metadata.labels.cluster\\.x-k8s\\.io/cluster-name",description="Cluster to which this OpenStackCluster belongs"
+// +kubebuilder:printcolumn:name="Ready",type="string",JSONPath=".status.ready",description="Cluster infrastructure is ready for OpenStack instances"
+// +kubebuilder:printcolumn:name="Network",type="string",JSONPath=".status.network.id",description="Network the cluster is using"
+// +kubebuilder:printcolumn:name="Subnet",type="string",JSONPath=".status.network.subnet.id",description="Subnet the cluster is using"
+// +kubebuilder:printcolumn:name="Endpoint",type="string",JSONPath=".status.network.apiServerLoadBalancer.IP",description="API Endpoint",priority=1
 
 // OpenStackCluster is the Schema for the openstackclusters API
 type OpenStackCluster struct {

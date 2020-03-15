@@ -1,13 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
-
-- [Contributing guidelines](#contributing-guidelines)
-  - [Sign the CLA](#sign-the-cla)
-    - [Contributing A Patch](#contributing-a-patch)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 # Contributing guidelines
 
 ## Sign the CLA
@@ -21,4 +11,4 @@ Kubernetes projects require that you sign a Contributor License Agreement (CLA) 
 1. If your proposed change is accepted, and you haven't already done so, sign a Contributor License Agreement (see details above).
 1. Fork the desired repo, develop and test your code changes.
 1. Submit a pull request.
-1. All code PR must be labeled with ⚠️ (⚠️, major or breaking changes), ✨ (✨, minor or feature additions), 🐛 (🐛, patch and bugfixes), 📖 (📖, documentation or proposals), or 🏃 (🏃, other).
+1. All code PR must be labeled with ⚠️ (:warning:, major or breaking changes), ✨ (:sparkles:, minor or feature additions), 🐛 (:bug:, patch and bugfixes), 📖 (:book:, documentation or proposals), or 🏃 (:running:, other)

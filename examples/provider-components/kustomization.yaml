@@ -1,4 +1,0 @@
-resources:
-- namespace.yaml
-- provider-components-openstack-clouds-secrets.yaml
-- provider-components-openstack.yaml

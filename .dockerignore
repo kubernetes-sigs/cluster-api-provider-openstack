@@ -1,9 +1,13 @@
 .git
 .github
 .vscode
+_artifacts
 bin/
 config/
 hack/
 docs/
-examples/
+templates/
+tmp
+scripts/
 **/.md
+tilt-provider.json

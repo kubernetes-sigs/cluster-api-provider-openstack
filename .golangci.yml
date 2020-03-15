@@ -1,23 +1,28 @@
 linters:
-  enable:
-    - golint
-    - govet
-    - gofmt
-    - structcheck
-    - varcheck
-    - interfacer
-    - unconvert
-    - ineffassign
-    - goconst
-    - misspell
-    - nakedret
-    - prealloc
-    - deadcode
-  disable-all: true
+  enable-all: true
+  disable:
+    - dupl
+    - funlen
+    - gochecknoglobals
+    - gochecknoinits
+    - lll
+    - maligned
+    - godox
+    - wsl
+    - whitespace
+    - gocognit
+    - gomnd
   # Run with --fast=false for more extensive checks
   fast: true
-issue:
+issues:
   max-same-issues: 0
   max-per-linter: 0
+  # List of regexps of issue texts to exclude, empty list by default.
+  exclude:
+    - Using the variable on range scope `(tc)|(rt)|(tt)|(test)|(testcase)|(testCase)` in function literal
+    - "G108: Profiling endpoint is automatically exposed on /debug/pprof"
 run:
-  deadline: 4m
+  timeout: 6m
+  skip-files:
+    - "zz_generated.*\\.go$"
+    - ".*_mock\\.go"

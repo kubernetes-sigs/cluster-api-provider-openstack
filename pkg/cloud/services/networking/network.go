@@ -115,10 +115,13 @@ func (s *Service) ReconcileSubnet(clusterName string, openStackCluster *infrav1.
 	}
 
 	var observedSubnet infrav1.Subnet
+
 	if len(subnetList) > 1 {
 		// Not panicing here, because every other cluster might work.
 		return fmt.Errorf("found more than 1 network with the expected name (%d) and CIDR (%s), which should not be able to exist in OpenStack", len(subnetList), openStackCluster.Spec.NodeCIDR)
-	} else if len(subnetList) == 0 {
+	}
+
+	if len(subnetList) == 0 {
 		opts := subnets.CreateOpts{
 			NetworkID: openStackCluster.Status.Network.ID,
 			Name:      subnetName,
