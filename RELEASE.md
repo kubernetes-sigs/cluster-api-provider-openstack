@@ -22,7 +22,7 @@
 2. If this is a new minor release, create a new release branch and push to github, otherwise switch to it, for example `release-0.2`
 3. Run `make release-notes` to gather changes since the last revision. If you need to specify a specific tag to look for changes
    since, use `make release-notes ARGS="--from <tag>"` Pay close attention to the `## :question: Sort these by hand` section, as it contains items that need to be manually sorted.
-4. Tag the repository and push the tag `git tag -s -m $VERSION $VERSION`
+4. Tag the repository and push the tag `git tag -s -m $VERSION $VERSION; git push upstream $VERSION`
 5. Create a draft release in github and associate it with the tag that was just created, copying the generated release notes into
    the draft.
 6. Checkout the tag you've just created and make sure git is in a clean state
@@ -34,6 +34,7 @@
 9.  Perform the [image promotion process](https://github.com/kubernetes/k8s.io/tree/master/k8s.gcr.io#image-promoter).
     The staging repository is at https://console.cloud.google.com/gcr/images/k8s-staging-capi-openstack/GLOBAL. Be
     sure to choose the top level `capi-openstack-controller`, which will provide the multi-arch manifest, rather than one for a specific architecture.
+    Add the new sha=>tag mapping to the [images.yaml](https://github.com/kubernetes/k8s.io/edit/master/k8s.gcr.io/images/k8s-staging-capi-openstack/images.yaml)
 10.  Finalise the release notes
 11.  Publish release. Use the pre-release option for release
     candidate versions of Cluster API Provider OpenStack.
