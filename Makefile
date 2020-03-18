@@ -308,7 +308,7 @@ OPENSTACK_CLUSTER_TEMPLATE ?= "./templates/cluster-template-without-lb.yaml"
 KUBERNETES_VERSION ?= "v1.17.3"
 CONTROL_PLANE_MACHINE_COUNT ?= "1"
 WORKER_MACHINE_COUNT ?= "3"
-LOAD_IMAGE=$(CONTROLLER_IMG)-$(ARCH):dev
+LOAD_IMAGE=$(CONTROLLER_IMG)-$(ARCH):$(TAG)
 
 .PHONY: create-cluster
 create-cluster: $(CLUSTERCTL) $(ENVSUBST) ## Create a development Kubernetes cluster on OpenStack in a KIND management cluster.
