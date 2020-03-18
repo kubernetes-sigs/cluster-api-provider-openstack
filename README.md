@@ -37,13 +37,7 @@ previous cluster managers such as [kops][kops] and
 
 This provider's versions are compatible with the following versions of Cluster API:
 
-| abc  | def  | adfa  |adf   |asdf   |
-|---|---|---|---|---|
-| sdf  | sdfsdf  |sfddsf   |sdfsd   |sdf   |
-|   |   |   |   |   |
-|   |   |   |   |   |
-
-| | Cluster API v1alpha1 (v0.1) | Cluster API v1alpha2 (v0.2) | Cluster API v1alpha2 (v0.3) |
+| | Cluster API v1alpha1 (v0.1) | Cluster API v1alpha2 (v0.2) | Cluster API v1alpha3 (v0.3) |
 |-------------------------------------------------|---|---|---|
 | OpenStack Provider v1alpha1 (release-0.1 branch)| ✓ |   |   |
 | OpenStack Provider v1alpha2 (v0.2)              |   | ✓ |   |
