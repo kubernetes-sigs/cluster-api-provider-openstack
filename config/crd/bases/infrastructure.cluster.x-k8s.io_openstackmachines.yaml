@@ -10,13 +10,36 @@ metadata:
 spec:
   group: infrastructure.cluster.x-k8s.io
   names:
+    categories:
+    - cluster-api
     kind: OpenStackMachine
     listKind: OpenStackMachineList
     plural: openstackmachines
     singular: openstackmachine
   scope: Namespaced
   versions:
-  - name: v1alpha3
+  - additionalPrinterColumns:
+    - description: Cluster to which this OpenStackMachine belongs
+      jsonPath: .metadata.labels.cluster\.x-k8s\.io/cluster-name
+      name: Cluster
+      type: string
+    - description: OpenStack instance state
+      jsonPath: .status.instanceState
+      name: State
+      type: string
+    - description: Machine ready status
+      jsonPath: .status.ready
+      name: Ready
+      type: string
+    - description: OpenStack instance ID
+      jsonPath: .spec.providerID
+      name: InstanceID
+      type: string
+    - description: Machine object which owns with this OpenStackMachine
+      jsonPath: .metadata.ownerReferences[?(@.kind=="Machine")].name
+      name: Machine
+      type: string
+    name: v1alpha3
     schema:
       openAPIV3Schema:
         description: OpenStackMachine is the Schema for the openstackmachines API
@@ -36,9 +59,6 @@ spec:
           spec:
             description: OpenStackMachineSpec defines the desired state of OpenStackMachine
             properties:
-              availabilityZone:
-                description: The availability zone from which to launch the server.
-                type: string
               cloudName:
                 description: The name of the cloud to use from the clouds secret
                 type: string

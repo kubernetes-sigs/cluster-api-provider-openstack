@@ -21,7 +21,6 @@ previous cluster managers such as [kops][kops] and
 ## Launching a Kubernetes cluster on OpenStack
 
 - Check out the [Cluster API Quick Start](https://cluster-api.sigs.k8s.io/user/quick-start.html) to create your first Kubernetes cluster on OpenStack using Cluster API.
-- Check out the [getting started guide](./docs/getting-started.md) for launching a cluster on OpenStack using `clusterctl`.
 
 ## Features
 
@@ -30,7 +29,7 @@ previous cluster managers such as [kops][kops] and
 - Support for single and multi-node control plane clusters
 - Deploy clusters with and without LBaaS available
 - Support for security groups
-- Doesn't use SSH for bootstrapping nodes
+- cloud-init based nodes bootstrapping
 
 ------
 
@@ -38,26 +37,29 @@ previous cluster managers such as [kops][kops] and
 
 This provider's versions are compatible with the following versions of Cluster API:
 
-||Cluster API v1alpha1 (v0.1)|Cluster API v1alpha2 (v0.2)|
-|-|-|-|
-|OpenStack Provider v1alpha1 (release-0.1 branch)|✓||
-|OpenStack Provider v1alpha2 (v0.2)||✓|
+| | Cluster API v1alpha1 (v0.1) | Cluster API v1alpha2 (v0.2) | Cluster API v1alpha3 (v0.3) |
+|-------------------------------------------------|---|---|---|
+| OpenStack Provider v1alpha1 (release-0.1 branch)| ✓ |   |   |
+| OpenStack Provider v1alpha2 (v0.2)              |   | ✓ |   |
+| OpenStack Provider v1alpha3 (v0.3)              |   |   | ✓ |
 
 This provider's versions are able to install and manage the following versions of Kubernetes:
 
-||Kubernetes 1.13|Kubernetes 1.14|Kubernetes 1.15|
-|-|-|-|-|
-|OpenStack Provider v1alpha1 (release-0.1 branch)|✓|✓|✓|
-|OpenStack Provider v1alpha2 (v0.2)|||✓|
+| | Kubernetes 1.13 | Kubernetes 1.14 | Kubernetes 1.15 | Kubernetes 1.16 | Kubernetes 1.17 |
+|-------------------------------------------------|---|---|---|---|---|
+|OpenStack Provider v1alpha1 (release-0.1 branch) | ✓ | ✓ | ✓ |   |   |
+|OpenStack Provider v1alpha2 (v0.2)               |   |   | ✓ |   |   |
+|OpenStack Provider v1alpha3 (v0.3)               |   |   |   | ✓ | ✓ |
 
 This provider's versions are able to install Kubernetes to the following versions of OpenStack:
 
-||OpenStack Pike|OpenStack Queens|OpenStack Rocky|OpenStack Stein|
-|-|-|-|-|-|
-|OpenStack Provider v1alpha1 (release-0.1 branch)|✓|✓|✓|✓|
-|OpenStack Provider v1alpha2 (v0.2)|+|✓|+|✓|
+| | OpenStack Pike | OpenStack Queens | OpenStack Rocky | OpenStack Stein | OpenStack Train |
+|-------------------------------------------------|---|---|---|---|---|
+| OpenStack Provider v1alpha1 (release-0.1 branch)| ✓ | ✓ | ✓ | ✓ | + |
+| OpenStack Provider v1alpha2 (v0.2)              | + | ✓ | + | ✓ | + |
+| OpenStack Provider v1alpha3 (v0.3)              | + | + | + | + | ✓ | 
 
-Key:
+Test status:
 * `✓` tested
 * `+` should work, but we weren't able to test it
 
@@ -80,7 +82,7 @@ Reference images can be found in [kubernetes-sigs/image-builder](https://github.
 
 ## Documentation
 
-Documentation is in the `/docs` directory
+Documentation can be found in the `/docs` directory
 
 ## Getting involved and contributing
 

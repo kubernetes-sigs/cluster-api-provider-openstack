@@ -1,4 +1,5 @@
 /*
+Copyright 2019 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+
 	"github.com/go-logr/logr"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
@@ -25,6 +27,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/tools/record"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/loadbalancer"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/provider"
@@ -38,38 +41,30 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-const (
-	clusterControllerName = "openstackcluster-controller"
-)
-
 // OpenStackClusterReconciler reconciles a OpenStackCluster object
 type OpenStackClusterReconciler struct {
 	client.Client
-	Log      logr.Logger
 	Recorder record.EventRecorder
+	Log      logr.Logger
 }
 
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackclusters,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackclusters/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=cluster.x-k8s.io,resources=clusters;clusters/status,verbs=get;list;watch
 
-func (r *OpenStackClusterReconciler) Reconcile(request ctrl.Request) (_ ctrl.Result, reterr error) {
+func (r *OpenStackClusterReconciler) Reconcile(req ctrl.Request) (_ ctrl.Result, reterr error) {
 	ctx := context.TODO()
-	logger := r.Log.WithName(clusterControllerName).
-		WithName(fmt.Sprintf("namespace=%s", request.Namespace)).
-		WithName(fmt.Sprintf("openStackCluster=%s", request.Name))
+	log := r.Log.WithValues("namespace", req.Namespace, "openStackCluster", req.Name)
 
 	// Fetch the OpenStackCluster instance
 	openStackCluster := &infrav1.OpenStackCluster{}
-	err := r.Get(ctx, request.NamespacedName, openStackCluster)
+	err := r.Get(ctx, req.NamespacedName, openStackCluster)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
 		return reconcile.Result{}, err
 	}
-
-	logger = logger.WithName(openStackCluster.APIVersion)
 
 	// Fetch the Cluster.
 	cluster, err := util.GetOwnerCluster(ctx, r.Client, openStackCluster.ObjectMeta)
@@ -78,21 +73,23 @@ func (r *OpenStackClusterReconciler) Reconcile(request ctrl.Request) (_ ctrl.Res
 	}
 
 	if isPaused(cluster, openStackCluster) {
-		logger.Info("OpenStackCluster or linked Cluster is marked as paused. Won't reconcile")
+		log.Info("OpenStackCluster or linked Cluster is marked as paused. Won't reconcile")
 		return reconcile.Result{}, nil
 	}
 
 	if cluster == nil {
-		logger.Info("Cluster Controller has not yet set OwnerRef")
+		log.Info("Cluster Controller has not yet set OwnerRef")
 		return reconcile.Result{}, nil
 	}
 
-	logger = logger.WithName(fmt.Sprintf("cluster=%s", cluster.Name))
+	log = log.WithValues("cluster", cluster.Name)
 
 	patchHelper, err := patch.NewHelper(openStackCluster, r)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
+
+	// Always patch the openStackCluster when exiting this function so we can persist any OpenStackCluster changes.
 	defer func() {
 		if err := patchHelper.Patch(ctx, openStackCluster); err != nil {
 			if reterr == nil {
@@ -103,15 +100,66 @@ func (r *OpenStackClusterReconciler) Reconcile(request ctrl.Request) (_ ctrl.Res
 
 	// Handle deleted clusters
 	if !openStackCluster.DeletionTimestamp.IsZero() {
-		return r.reconcileClusterDelete(logger, cluster, openStackCluster)
+		return r.reconcileDelete(log, cluster, openStackCluster)
 	}
 
 	// Handle non-deleted clusters
-	return r.reconcileCluster(ctx, logger, patchHelper, cluster, openStackCluster)
+	return r.reconcileNormal(ctx, log, patchHelper, cluster, openStackCluster)
 }
 
-func (r *OpenStackClusterReconciler) reconcileCluster(ctx context.Context, logger logr.Logger, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (_ ctrl.Result, reterr error) {
-	logger.Info("Reconciling Cluster")
+func (r *OpenStackClusterReconciler) reconcileDelete(log logr.Logger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
+	log.Info("Reconciling Cluster delete")
+
+	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
+	osProviderClient, clientOpts, err := provider.NewClientFromCluster(r.Client, openStackCluster)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	networkingService, err := networking.NewService(osProviderClient, clientOpts, log)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	loadBalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, log, openStackCluster.Spec.UseOctavia)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
+		err = loadBalancerService.DeleteLoadBalancer(clusterName, openStackCluster)
+		if err != nil {
+			return reconcile.Result{}, errors.Errorf("failed to delete load balancer: %v", err)
+		}
+	}
+
+	// Delete other things
+	if openStackCluster.Status.GlobalSecurityGroup != nil {
+		log.Info("Deleting global security group", "name", openStackCluster.Status.GlobalSecurityGroup.Name)
+		err := networkingService.DeleteSecurityGroups(openStackCluster.Status.GlobalSecurityGroup)
+		if err != nil {
+			return reconcile.Result{}, errors.Errorf("failed to delete security group: %v", err)
+		}
+	}
+
+	if openStackCluster.Status.ControlPlaneSecurityGroup != nil {
+		log.Info("Deleting control plane security group", "name", openStackCluster.Status.ControlPlaneSecurityGroup.Name)
+		err := networkingService.DeleteSecurityGroups(openStackCluster.Status.ControlPlaneSecurityGroup)
+		if err != nil {
+			return reconcile.Result{}, errors.Errorf("failed to delete security group: %v", err)
+		}
+	}
+
+	// TODO(sbueringer) Delete network/subnet/router/... if created by CAPO
+
+	// Cluster is deleted so remove the finalizer.
+	controllerutil.RemoveFinalizer(openStackCluster, infrav1.ClusterFinalizer)
+
+	return reconcile.Result{}, nil
+}
+
+func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, log logr.Logger, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
+	log.Info("Reconciling Cluster")
 
 	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
 
@@ -127,19 +175,24 @@ func (r *OpenStackClusterReconciler) reconcileCluster(ctx context.Context, logge
 		return reconcile.Result{}, err
 	}
 
-	networkingService, err := networking.NewService(osProviderClient, clientOpts, logger)
+	computeService, err := compute.NewService(osProviderClient, clientOpts, log)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	loadbalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, logger, openStackCluster.Spec.UseOctavia)
+	networkingService, err := networking.NewService(osProviderClient, clientOpts, log)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	logger.Info("Reconciling network components")
+	loadBalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, log, openStackCluster.Spec.UseOctavia)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	log.Info("Reconciling network components")
 	if openStackCluster.Spec.NodeCIDR == "" {
-		logger.V(4).Info("No need to reconcile network, searching network and subnet instead")
+		log.V(4).Info("No need to reconcile network, searching network and subnet instead")
 
 		netOpts := networks.ListOpts(openStackCluster.Spec.Network)
 		networkList, err := networkingService.GetNetworksByFilter(&netOpts)
@@ -182,7 +235,7 @@ func (r *OpenStackClusterReconciler) reconcileCluster(ctx context.Context, logge
 			return reconcile.Result{}, errors.Errorf("failed to reconcile router: %v", err)
 		}
 		if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
-			err = loadbalancerService.ReconcileLoadBalancer(clusterName, openStackCluster)
+			err = loadBalancerService.ReconcileLoadBalancer(clusterName, openStackCluster)
 			if err != nil {
 				return reconcile.Result{}, errors.Errorf("failed to reconcile load balancer: %v", err)
 			}
@@ -201,14 +254,14 @@ func (r *OpenStackClusterReconciler) reconcileCluster(ctx context.Context, logge
 			Port: int32(openStackCluster.Spec.APIServerLoadBalancerPort),
 		}
 	} else {
-		controlPlaneMachine, err := r.getControlPlaneMachine()
+		controlPlaneMachine, err := getControlPlaneMachine(r.Client)
 		if err != nil {
-			return reconcile.Result{}, errors.Errorf("failed to get control plane machine: %v", err)
+			return ctrl.Result{}, errors.Errorf("failed to get control plane machine: %v", err)
 		}
 		if controlPlaneMachine != nil {
 			var apiPort int
 			if cluster.Spec.ClusterNetwork.APIServerPort == nil {
-				logger.Info("No API endpoint given, default to 6443")
+				log.Info("No API endpoint given, default to 6443")
 				apiPort = 6443
 			} else {
 				apiPort = int(*cluster.Spec.ClusterNetwork.APIServerPort)
@@ -219,89 +272,55 @@ func (r *OpenStackClusterReconciler) reconcileCluster(ctx context.Context, logge
 				Port: int32(apiPort),
 			}
 		} else {
-			logger.Info("No control plane node found yet, could not write OpenStackCluster.Spec.ControlPlaneEndpoint")
+			log.Info("No control plane node found yet, could not write OpenStackCluster.Spec.ControlPlaneEndpoint")
 		}
 	}
 
-	// No errors, so mark us ready so the Cluster API Cluster Controller can pull it
+	availabilityZones, err := computeService.GetAvailabilityZones()
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+	if openStackCluster.Status.FailureDomains == nil {
+		openStackCluster.Status.FailureDomains = make(clusterv1.FailureDomains)
+	}
+	for _, az := range availabilityZones {
+		// I'm actually not sure if that's just my local devstack,
+		// but we probably shouldn't use the "internal" AZ
+		if az.ZoneName == "internal" {
+			continue
+		}
+		openStackCluster.Status.FailureDomains[az.ZoneName] = clusterv1.FailureDomainSpec{
+			ControlPlane: true,
+		}
+	}
+
 	openStackCluster.Status.Ready = true
-
-	logger.Info("Reconciled Cluster create successfully")
-	return reconcile.Result{}, nil
-}
-
-func (r *OpenStackClusterReconciler) reconcileClusterDelete(logger logr.Logger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
-
-	logger.Info("Reconcile Cluster delete")
-	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
-	osProviderClient, clientOpts, err := provider.NewClientFromCluster(r.Client, openStackCluster)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	networkingService, err := networking.NewService(osProviderClient, clientOpts, logger)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	loadbalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, logger, openStackCluster.Spec.UseOctavia)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
-		err = loadbalancerService.DeleteLoadBalancer(clusterName, openStackCluster)
-		if err != nil {
-			return reconcile.Result{}, errors.Errorf("failed to delete load balancer: %v", err)
-		}
-	}
-
-	// Delete other things
-	if openStackCluster.Status.GlobalSecurityGroup != nil {
-		logger.Info("Deleting global security group", "name", openStackCluster.Status.GlobalSecurityGroup.Name)
-		err := networkingService.DeleteSecurityGroups(openStackCluster.Status.GlobalSecurityGroup)
-		if err != nil {
-			return reconcile.Result{}, errors.Errorf("failed to delete security group: %v", err)
-		}
-	}
-
-	if openStackCluster.Status.ControlPlaneSecurityGroup != nil {
-		logger.Info("Deleting control plane security group", "name", openStackCluster.Status.ControlPlaneSecurityGroup.Name)
-		err := networkingService.DeleteSecurityGroups(openStackCluster.Status.ControlPlaneSecurityGroup)
-		if err != nil {
-			return reconcile.Result{}, errors.Errorf("failed to delete security group: %v", err)
-		}
-	}
-
-	// TODO(sbueringer) Delete network/subnet/router/... if created by CAPO
-
-	logger.Info("Reconciled Cluster delete successfully")
-	// Cluster is deleted so remove the finalizer.
-	controllerutil.RemoveFinalizer(openStackCluster, infrav1.ClusterFinalizer)
-	return reconcile.Result{}, nil
+	return ctrl.Result{}, nil
 }
 
 func (r *OpenStackClusterReconciler) SetupWithManager(mgr ctrl.Manager, options controller.Options) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		WithOptions(options).
 		For(&infrav1.OpenStackCluster{}).
+		WithEventFilter(pausePredicates).
 		Complete(r)
 }
 
-func (r *OpenStackClusterReconciler) getControlPlaneMachine() (*infrav1.OpenStackMachine, error) {
+func getControlPlaneMachine(client client.Client) (*infrav1.OpenStackMachine, error) {
 	machines := &clusterv1.MachineList{}
-	if err := r.Client.List(context.TODO(), machines); err != nil {
+	if err := client.List(context.TODO(), machines); err != nil {
 		return nil, err
 	}
 	openStackMachines := &infrav1.OpenStackMachineList{}
-	if err := r.Client.List(context.TODO(), openStackMachines); err != nil {
+	if err := client.List(context.TODO(), openStackMachines); err != nil {
 		return nil, err
 	}
 
 	var controlPlaneMachine *clusterv1.Machine
 	for _, machine := range machines.Items {
-		if util.IsControlPlaneMachine(&machine) {
-			controlPlaneMachine = &machine
+		m := machine
+		if util.IsControlPlaneMachine(&m) {
+			controlPlaneMachine = &m
 			break
 		}
 	}

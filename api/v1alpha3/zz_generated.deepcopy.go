@@ -23,6 +23,7 @@ package v1alpha3
 import (
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	apiv1alpha3 "sigs.k8s.io/cluster-api/api/v1alpha3"
 	"sigs.k8s.io/cluster-api/errors"
 )
 
@@ -290,6 +291,13 @@ func (in *OpenStackClusterStatus) DeepCopyInto(out *OpenStackClusterStatus) {
 		in, out := &in.Network, &out.Network
 		*out = new(Network)
 		(*in).DeepCopyInto(*out)
+	}
+	if in.FailureDomains != nil {
+		in, out := &in.FailureDomains, &out.FailureDomains
+		*out = make(apiv1alpha3.FailureDomains, len(*in))
+		for key, val := range *in {
+			(*out)[key] = *val.DeepCopy()
+		}
 	}
 	if in.ControlPlaneSecurityGroup != nil {
 		in, out := &in.ControlPlaneSecurityGroup, &out.ControlPlaneSecurityGroup

@@ -10,13 +10,37 @@ metadata:
 spec:
   group: infrastructure.cluster.x-k8s.io
   names:
+    categories:
+    - cluster-api
     kind: OpenStackCluster
     listKind: OpenStackClusterList
     plural: openstackclusters
     singular: openstackcluster
   scope: Namespaced
   versions:
-  - name: v1alpha3
+  - additionalPrinterColumns:
+    - description: Cluster to which this OpenStackCluster belongs
+      jsonPath: .metadata.labels.cluster\.x-k8s\.io/cluster-name
+      name: Cluster
+      type: string
+    - description: Cluster infrastructure is ready for OpenStack instances
+      jsonPath: .status.ready
+      name: Ready
+      type: string
+    - description: Network the cluster is using
+      jsonPath: .status.network.id
+      name: Network
+      type: string
+    - description: Subnet the cluster is using
+      jsonPath: .status.network.subnet.id
+      name: Subnet
+      type: string
+    - description: API Endpoint
+      jsonPath: .status.network.apiServerLoadBalancer.IP
+      name: Endpoint
+      priority: 1
+      type: string
+    name: v1alpha3
     schema:
       openAPIV3Schema:
         description: OpenStackCluster is the Schema for the openstackclusters API
@@ -377,6 +401,25 @@ spec:
                 - id
                 - name
                 - rules
+                type: object
+              failureDomains:
+                additionalProperties:
+                  description: FailureDomainSpec is the Schema for Cluster API failure
+                    domains. It allows controllers to understand how many failure
+                    domains a cluster can optionally span across.
+                  properties:
+                    attributes:
+                      additionalProperties:
+                        type: string
+                      description: Attributes is a free form map of attributes an
+                        infrastructure provider might use or require.
+                      type: object
+                    controlPlane:
+                      description: ControlPlane determines if this failure domain
+                        is suitable for use by control plane machines.
+                      type: boolean
+                  type: object
+                description: FailureDomains represent OpenStack availability zones
                 type: object
               globalSecurityGroup:
                 description: GlobalSecurityGroup contains all the information about

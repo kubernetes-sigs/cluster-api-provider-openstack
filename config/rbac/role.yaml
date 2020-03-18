@@ -10,13 +10,20 @@ rules:
   - ""
   resources:
   - events
-  - secrets
   verbs:
   - create
   - get
   - list
   - patch
   - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
   - watch
 - apiGroups:
   - cluster.x-k8s.io
@@ -30,7 +37,6 @@ rules:
 - apiGroups:
   - cluster.x-k8s.io
   resources:
-  - clusters
   - machines
   - machines/status
   verbs:

@@ -48,10 +48,6 @@ spec:
                     description: Spec is the specification of the desired behavior
                       of the machine.
                     properties:
-                      availabilityZone:
-                        description: The availability zone from which to launch the
-                          server.
-                        type: string
                       cloudName:
                         description: The name of the cloud to use from the clouds
                           secret

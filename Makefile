@@ -48,7 +48,7 @@ RELEASE_NOTES := $(TOOLS_DIR)/$(RELEASE_NOTES_BIN)
 GINKGO := $(abspath $(TOOLS_BIN_DIR)/ginkgo)
 
 # Define Docker related variables. Releases should modify and double check these vars.
-REGISTRY ?= gcr.io/$(shell gcloud config get-value project)
+REGISTRY ?= gcr.io/k8s-staging-capi-openstack
 STAGING_REGISTRY := gcr.io/k8s-staging-capi-openstack
 PROD_REGISTRY := us.gcr.io/k8s-artifacts-prod/capi-openstack
 IMAGE_NAME ?= capi-openstack-controller
@@ -64,7 +64,7 @@ WEBHOOK_ROOT ?= $(MANIFEST_ROOT)/webhook
 RBAC_ROOT ?= $(MANIFEST_ROOT)/rbac
 
 # Allow overriding the imagePullPolicy
-PULL_POLICY ?= Always
+PULL_POLICY ?= IfNotPresent
 
 # Hosts running SELinux need :z added to volume mounts
 SELINUX_ENABLED := $(shell cat /sys/fs/selinux/enforce 2> /dev/null || echo 0)
@@ -75,9 +75,6 @@ endif
 
 # Set build time variables including version details
 LDFLAGS := $(shell source ./hack/version.sh; version::ldflags)
-
-# Check if binaries exist
-HAS_YQ := $(shell command -v yq;)
 
 ## --------------------------------------
 ## Help
@@ -95,7 +92,7 @@ help:  ## Display this help
 images: docker-build ## Build all images
 
 .PHONY: check
-check: modules generate lint-full test
+check: modules generate lint-full test verify
 
 ## --------------------------------------
 ## Testing
@@ -104,27 +101,10 @@ check: modules generate lint-full test
 .PHONY: test
 test: generate lint ## Run tests
 	$(MAKE) test-go
-	$(MAKE) test-generate-examples
 
 .PHONY: test-go
 test-go: ## Run golang tests
 	go test -v ./...
-
-.PHONY: test-generate-examples
-# See:
-# * https://github.com/mikefarah/yq/issues/291
-# * https://github.com/mikefarah/yq/issues/289
-test-generate-examples: $(KUSTOMIZE) $(ENVSUBST)
-ifndef HAS_YQ
-	echo "installing yq"
-	GO111MODULE=on go get github.com/mikefarah/yq/v2
-endif
-	# Create a dummy file for test only
-	mkdir -p tmp/dummy-make-auto-test
-	echo 'clouds' > tmp/dummy-make-auto-test/dummy-clouds-test.yaml
-	PATH=$(TOOLS_DIR)/$(BIN_DIR):${PATH} examples/generate.sh -f tmp/dummy-make-auto-test/dummy-clouds-test.yaml openstack tmp/dummy-make-auto-test/_out
-	# the folder will be generated under same folder of examples
-	rm -rf tmp/dummy-make-auto-test
 
 ## --------------------------------------
 ## Binaries
@@ -216,14 +196,6 @@ generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
 		paths=./controllers/... \
 		output:rbac:dir=$(RBAC_ROOT) \
 		rbac:roleName=manager-role
-
-.PHONY: generate-examples
-generate-examples: clean-examples ## Generate examples configurations to run a cluster.
-ifndef HAS_YQ
-	echo "installing yq"
-	GO111MODULE=on go get github.com/mikefarah/yq/v2
-endif
-	./examples/generate.sh -f  ${OPENSTACK_CONFIG_FILE} ${CLUSTER_NAME} ./examples/_out single-node
 
 ## --------------------------------------
 ## Docker
@@ -318,13 +290,41 @@ release-notes: $(RELEASE_NOTES)
 ## Development
 ## --------------------------------------
 
-# This is used in the get-kubeconfig call below in the create-cluster target. It may be overridden by the
-# e2e-conformance.sh script, which is why we need it as a variable here.
-CLUSTER_NAME ?= test1
+# Properties for create-cluster
+OPENSTACK_CONTROLPLANE_IP ?= "192.168.200.195"
+OPENSTACK_FAILURE_DOMAIN ?= "nova"
+OPENSTACK_CLOUD ?= "capi-quickstart"
+OPENSTACK_CLOUD_CACERT_B64 ?= "Cg=="
+OPENSTACK_CLOUD_PROVIDER_CONF_B64 ?= ""
+OPENSTACK_CLOUD_YAML_B64 ?= ""
+OPENSTACK_EXTERNAL_NETWORK_ID ?= ""
+OPENSTACK_DNS_NAMESERVERS ?= "192.168.200.1"
+OPENSTACK_IMAGE_NAME ?= "ubuntu-1910-kube-v1.17.3"
+OPENSTACK_SSH_AUTHORIZED_KEY ?= ""
+OPENSTACK_NODE_MACHINE_FLAVOR ?= "m1.medium"
+OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR ?= "m1.medium"
+CLUSTER_NAME ?= "capi-quickstart"
+OPENSTACK_CLUSTER_TEMPLATE ?= "./templates/cluster-template-without-lb.yaml"
+KUBERNETES_VERSION ?= "v1.17.3"
+CONTROL_PLANE_MACHINE_COUNT ?= "1"
+WORKER_MACHINE_COUNT ?= "3"
+LOAD_IMAGE=$(CONTROLLER_IMG)-$(ARCH):$(TAG)
 
-# NOTE: do not add 'generate-exmaples' as a prerequisite of this target. It will break e2e conformance testing.
 .PHONY: create-cluster
 create-cluster: $(CLUSTERCTL) $(ENVSUBST) ## Create a development Kubernetes cluster on OpenStack in a KIND management cluster.
+
+	# Create clusterctl.yaml to use local OpenStack provider
+	mkdir -p ./out/infrastructure-openstack/v0.3.0
+	echo "providers:" > ./out/clusterctl.yaml
+	echo "- name: openstack" >> ./out/clusterctl.yaml
+	echo "  url: $(PWD)/out/infrastructure-openstack/v0.3.0/infrastructure-components.yaml" >> ./out/clusterctl.yaml
+	echo "  type: InfrastructureProvider" >> ./out/clusterctl.yaml
+
+	echo "releaseSeries:" > ./out/infrastructure-openstack/v0.3.0/metadata.yaml
+	echo "- major: 0" >> ./out/infrastructure-openstack/v0.3.0/metadata.yaml
+	echo "  minor: 3" >> ./out/infrastructure-openstack/v0.3.0/metadata.yaml
+	echo "  contract: v1alpha3" >> ./out/infrastructure-openstack/v0.3.0/metadata.yaml
+
 	@if [ -z `kind get clusters | grep clusterapi` ]; then \
 		kind create cluster --name=clusterapi; \
 	fi
@@ -332,35 +332,51 @@ create-cluster: $(CLUSTERCTL) $(ENVSUBST) ## Create a development Kubernetes clu
 		echo "loading ${LOAD_IMAGE} into kind cluster ..." && \
 		kind --name="clusterapi" load docker-image "${LOAD_IMAGE}"; \
 	fi
-	# Install cert manager and wait for availability
-	kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v0.11.1/cert-manager.yaml
-	kubectl wait --for=condition=Available --timeout=5m apiservice v1beta1.webhook.cert-manager.io
 
-	# Deploy CAPI
-	kubectl apply -f https://github.com/kubernetes-sigs/cluster-api/releases/download/v0.3.0/cluster-api-components.yaml
+	# (Re-)install Core providers
+	$(CLUSTERCTL) delete --all
+	$(CLUSTERCTL) init --core cluster-api:v0.3.0 --bootstrap kubeadm:v0.3.0 --control-plane kubeadm:v0.3.0
 
-	# Deploy CAPO
-	kustomize build config | $(ENVSUBST) | kubectl apply -f -
+	# (Re-)deploy CAPO provider
+	MANIFEST_IMG=$(CONTROLLER_IMG)-$(ARCH) MANIFEST_TAG=$(TAG) $(MAKE) set-manifest-image
+	kustomize build config > ./out/infrastructure-openstack/v0.3.0/infrastructure-components.yaml
+	$(CLUSTERCTL) delete --infrastructure openstack --include-namespace --namespace capo-system || true
+	kubectl wait --for=delete ns/capo-system || true
+	$(CLUSTERCTL) init --config ./out/clusterctl.yaml --infrastructure openstack
 
 	# Wait for CAPI pods
-	kubectl wait --for=condition=Ready --timeout=5m -n capi-system pod -l cluster.x-k8s.io/provider=cluster-api
-	kubectl wait --for=condition=Ready --timeout=5m -n capi-kubeadm-bootstrap-system pod -l cluster.x-k8s.io/provider=bootstrap-kubeadm
-	kubectl wait --for=condition=Ready --timeout=5m -n capi-kubeadm-control-plane-system pod -l cluster.x-k8s.io/provider=control-plane-kubeadm
+	kubectl wait --for=condition=Ready --timeout=5m -n capi-system pod --all
+	kubectl wait --for=condition=Ready --timeout=5m -n capi-webhook-system pod --all
+	kubectl wait --for=condition=Ready --timeout=5m -n capi-kubeadm-bootstrap-system pod --all
+	kubectl wait --for=condition=Ready --timeout=5m -n capi-kubeadm-control-plane-system pod --all
+	kubectl wait --for=condition=Ready --timeout=5m -n capo-system pod --all
 
-	# Wait for CAPO pods
-	kubectl wait --for=condition=Ready --timeout=5m -n capo-system pod -l cluster.x-k8s.io/provider=infrastructure-openstack
+	# Wait for CAPO CRDs
+	kubectl wait --for condition=established --timeout=60s crds/openstackmachines.infrastructure.cluster.x-k8s.io
+	kubectl wait --for condition=established --timeout=60s crds/openstackmachinetemplates.infrastructure.cluster.x-k8s.io
+	kubectl wait --for condition=established --timeout=60s crds/openstackclusters.infrastructure.cluster.x-k8s.io
 
-	# FIXME:
 	# Create Cluster.
-	#sleep 10
-	#kustomize build templates | $(ENVSUBST) | kubectl apply -f -
-
-	# Apply provider-components.
-	kubectl apply -f examples/_out/provider-components.yaml
-	# Create Cluster.
-	kubectl apply -f examples/_out/cluster.yaml
-	# Create control plane machine.
-	kubectl apply -f examples/_out/controlplane.yaml
+	kubectl create ns $(CLUSTER_NAME) || true
+	PULL_POLICY=$(PULL_POLICY) \
+	OPENSTACK_CONTROLPLANE_IP=$(OPENSTACK_CONTROLPLANE_IP) \
+	OPENSTACK_FAILURE_DOMAIN=$(OPENSTACK_FAILURE_DOMAIN) \
+	OPENSTACK_CLOUD=$(OPENSTACK_CLOUD) \
+	OPENSTACK_CLOUD_CACERT_B64=$(OPENSTACK_CLOUD_CACERT_B64) \
+	OPENSTACK_CLOUD_PROVIDER_CONF_B64=$(OPENSTACK_CLOUD_PROVIDER_CONF_B64) \
+	OPENSTACK_CLOUD_YAML_B64=$(OPENSTACK_CLOUD_YAML_B64) \
+	OPENSTACK_EXTERNAL_NETWORK_ID=$(OPENSTACK_EXTERNAL_NETWORK_ID) \
+	OPENSTACK_DNS_NAMESERVERS=$(OPENSTACK_DNS_NAMESERVERS) \
+	OPENSTACK_IMAGE_NAME=$(OPENSTACK_IMAGE_NAME) \
+	OPENSTACK_SSH_AUTHORIZED_KEY="$(OPENSTACK_SSH_AUTHORIZED_KEY)" \
+	OPENSTACK_NODE_MACHINE_FLAVOR=$(OPENSTACK_NODE_MACHINE_FLAVOR) \
+	OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR=$(OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR) \
+	  $(CLUSTERCTL) config cluster $(CLUSTER_NAME) \
+	    --from=$(OPENSTACK_CLUSTER_TEMPLATE) \
+	    --kubernetes-version $(KUBERNETES_VERSION) \
+	    --control-plane-machine-count=$(CONTROL_PLANE_MACHINE_COUNT) \
+	    --worker-machine-count=$(WORKER_MACHINE_COUNT) \
+	    --target-namespace=$(CLUSTER_NAME) | kubectl apply -f -
 
 	# Wait for the kubeconfig to become available.
 	timeout 300 bash -c "while ! kubectl -n $(CLUSTER_NAME) get secrets | grep $(CLUSTER_NAME)-kubeconfig; do sleep 1; done"
@@ -369,10 +385,8 @@ create-cluster: $(CLUSTERCTL) $(ENVSUBST) ## Create a development Kubernetes clu
 	timeout 900 bash -c "while ! kubectl --kubeconfig=./kubeconfig get nodes | grep master; do sleep 1; done"
 
 	# Deploy calico
-	kubectl --kubeconfig=./kubeconfig apply -f https://docs.projectcalico.org/manifests/calico.yaml
-
-	# Create a worker node with MachineDeployment.
-	kubectl apply -f examples/_out/machinedeployment.yaml
+	curl https://docs.projectcalico.org/manifests/calico.yaml | sed "s/veth_mtu:.*/veth_mtu: \"1400\"/g" | \
+		kubectl --kubeconfig=./kubeconfig apply -f -
 
 .PHONY: kind-reset
 kind-reset: ## Destroys the "clusterapi" kind cluster.
@@ -400,12 +414,6 @@ clean-temporary: ## Remove all temporary files and folders
 .PHONY: clean-release
 clean-release: ## Remove the release folder
 	rm -rf $(RELEASE_DIR)
-
-# FIXME:
-.PHONY: clean-examples
-clean-examples: ## Remove all the temporary files generated in the examples folder
-	rm -rf examples/_out/
-	rm -f examples/provider-components/provider-components-*.yaml
 
 .PHONY: verify
 verify: verify-boilerplate verify-modules verify-gen

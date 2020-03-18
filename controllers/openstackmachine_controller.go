@@ -1,4 +1,5 @@
 /*
+Copyright 2020 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,46 +21,42 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"k8s.io/client-go/tools/record"
 	"net"
 	"os"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"strconv"
 	"time"
 
+	"github.com/go-logr/logr"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/pointer"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/loadbalancer"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/provider"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha3"
-	"sigs.k8s.io/cluster-api/util/patch"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
-
-	"github.com/go-logr/logr"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
 	capierrors "sigs.k8s.io/cluster-api/errors"
 	"sigs.k8s.io/cluster-api/util"
+	"sigs.k8s.io/cluster-api/util/patch"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 const (
 	waitForClusterInfrastructureReadyDuration = 15 * time.Second
-	machineControllerName                     = "openstackmachine-controller"
 	TimeoutInstanceCreate                     = 5
-	TimeoutInstanceDelete                     = 5
 	RetryIntervalInstanceStatus               = 10 * time.Second
 )
 
@@ -72,45 +69,41 @@ type OpenStackMachineReconciler struct {
 
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackmachines,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackmachines/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=cluster.x-k8s.io,resources=clusters;machines;machines/status,verbs=get;list;watch
-// +kubebuilder:rbac:groups="",resources=events;secrets,verbs=get;list;watch;create;update;patch
+// +kubebuilder:rbac:groups=cluster.x-k8s.io,resources=machines;machines/status,verbs=get;list;watch
+// +kubebuilder:rbac:groups="",resources=secrets;,verbs=get;list;watch
+// +kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;update;patch
 
-func (r *OpenStackMachineReconciler) Reconcile(request ctrl.Request) (_ ctrl.Result, reterr error) {
+func (r *OpenStackMachineReconciler) Reconcile(req ctrl.Request) (_ ctrl.Result, reterr error) {
 	ctx := context.TODO()
-	logger := r.Log.
-		WithName(machineControllerName).
-		WithName(fmt.Sprintf("namespace=%s", request.Namespace)).
-		WithName(fmt.Sprintf("openStackMachine=%s", request.Name))
+	logger := r.Log.WithValues("namespace", req.Namespace, "openStackMachine", req.Name)
 
 	// Fetch the OpenStackMachine instance.
 	openStackMachine := &infrav1.OpenStackMachine{}
-	err := r.Get(ctx, request.NamespacedName, openStackMachine)
+	err := r.Get(ctx, req.NamespacedName, openStackMachine)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			return reconcile.Result{}, nil
+			return ctrl.Result{}, nil
 		}
-		return reconcile.Result{}, err
+		return ctrl.Result{}, err
 	}
-
-	logger = logger.WithName(openStackMachine.APIVersion)
 
 	// Fetch the Machine.
 	machine, err := util.GetOwnerMachine(ctx, r.Client, openStackMachine.ObjectMeta)
 	if err != nil {
-		return reconcile.Result{}, err
+		return ctrl.Result{}, err
 	}
 	if machine == nil {
 		logger.Info("Machine Controller has not yet set OwnerRef")
-		return reconcile.Result{}, nil
+		return ctrl.Result{}, nil
 	}
 
-	logger = logger.WithName(fmt.Sprintf("machine=%s", machine.Name))
+	logger = logger.WithValues("machine", machine.Name)
 
 	// Fetch the Cluster.
 	cluster, err := util.GetClusterFromMetadata(ctx, r.Client, machine.ObjectMeta)
 	if err != nil {
 		logger.Info("Machine is missing cluster label or cluster does not exist")
-		return reconcile.Result{}, nil
+		return ctrl.Result{}, nil
 	}
 
 	if isPaused(cluster, openStackMachine) {
@@ -118,26 +111,28 @@ func (r *OpenStackMachineReconciler) Reconcile(request ctrl.Request) (_ ctrl.Res
 		return ctrl.Result{}, nil
 	}
 
-	logger = logger.WithName(fmt.Sprintf("cluster=%s", cluster.Name))
+	logger = logger.WithValues("cluster", cluster.Name)
 
 	openStackCluster := &infrav1.OpenStackCluster{}
-	openStackClusterName := types.NamespacedName{
+
+	openStackClusterName := client.ObjectKey{
 		Namespace: openStackMachine.Namespace,
 		Name:      cluster.Spec.InfrastructureRef.Name,
 	}
 	if err := r.Client.Get(ctx, openStackClusterName, openStackCluster); err != nil {
 		logger.Info("OpenStackCluster is not available yet")
-		return reconcile.Result{}, nil
+		return ctrl.Result{}, nil
 	}
 
-	logger = logger.WithName(fmt.Sprintf("openStackCluster=%s", openStackCluster.Name))
+	logger = logger.WithValues("openStackCluster", openStackCluster.Name)
 
 	// Initialize the patch helper
 	patchHelper, err := patch.NewHelper(openStackMachine, r)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	// Always attempt to Patch the Machine object and status after each reconciliation.
+
+	// Always patch the openStackMachine when exiting this function so we can persist any AWSMachine changes.
 	defer func() {
 		if err := patchHelper.Patch(ctx, openStackMachine); err != nil {
 			if reterr == nil {
@@ -146,42 +141,138 @@ func (r *OpenStackMachineReconciler) Reconcile(request ctrl.Request) (_ ctrl.Res
 		}
 	}()
 
-	// Handle deleted clusters
+	// Handle deleted machines
 	if !openStackMachine.DeletionTimestamp.IsZero() {
-		return r.reconcileMachineDelete(logger, machine, openStackMachine, cluster, openStackCluster)
+		return r.reconcileDelete(logger, machine, openStackMachine, cluster, openStackCluster)
 	}
 
 	// Handle non-deleted clusters
-	return r.reconcileMachine(ctx, logger, patchHelper, machine, openStackMachine, cluster, openStackCluster)
+	return r.reconcileNormal(ctx, logger, patchHelper, machine, openStackMachine, cluster, openStackCluster)
 }
 
-func (r *OpenStackMachineReconciler) reconcileMachine(ctx context.Context, logger logr.Logger, patchHelper *patch.Helper, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (_ ctrl.Result, reterr error) {
+func (r *OpenStackMachineReconciler) SetupWithManager(mgr ctrl.Manager, options controller.Options) error {
+	controller, err := ctrl.NewControllerManagedBy(mgr).
+		WithOptions(options).
+		For(&infrav1.OpenStackMachine{}).
+		Watches(
+			&source.Kind{Type: &clusterv1.Machine{}},
+			&handler.EnqueueRequestsFromMapFunc{
+				ToRequests: util.MachineToInfrastructureMapFunc(infrav1.GroupVersion.WithKind("OpenStackMachine")),
+			},
+		).
+		Watches(
+			&source.Kind{Type: &infrav1.OpenStackCluster{}},
+			&handler.EnqueueRequestsFromMapFunc{ToRequests: handler.ToRequestsFunc(r.OpenStackClusterToOpenStackMachines)},
+		).
+		WithEventFilter(pausePredicates).
+		Build(r)
+
+	if err != nil {
+		return err
+	}
+
+	return controller.Watch(
+		&source.Kind{Type: &clusterv1.Cluster{}},
+		&handler.EnqueueRequestsFromMapFunc{
+			ToRequests: handler.ToRequestsFunc(r.requeueOpenStackMachinesForUnpausedCluster),
+		},
+		predicate.Funcs{
+			UpdateFunc: func(e event.UpdateEvent) bool {
+				oldCluster := e.ObjectOld.(*clusterv1.Cluster)
+				newCluster := e.ObjectNew.(*clusterv1.Cluster)
+				return oldCluster.Spec.Paused && !newCluster.Spec.Paused
+			},
+			CreateFunc: func(e event.CreateEvent) bool {
+				cluster := e.Object.(*clusterv1.Cluster)
+				return !cluster.Spec.Paused
+			},
+			DeleteFunc: func(e event.DeleteEvent) bool {
+				return false
+			},
+		},
+	)
+}
+
+func (r *OpenStackMachineReconciler) reconcileDelete(logger logr.Logger, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
+	logger.Info("Handling deleted OpenStackMachine")
+
+	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
+
+	osProviderClient, clientOpts, err := provider.NewClientFromMachine(r.Client, openStackMachine)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	computeService, err := compute.NewService(osProviderClient, clientOpts, logger)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	loadBalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, logger, openStackCluster.Spec.UseOctavia)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
+		err = loadBalancerService.DeleteLoadBalancerMember(clusterName, machine, openStackMachine, openStackCluster)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+
+	instance, err := computeService.InstanceExists(openStackMachine)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	if instance == nil {
+		logger.Info("Skipped deleting machine that is already deleted")
+		controllerutil.RemoveFinalizer(openStackMachine, infrav1.MachineFinalizer)
+		return ctrl.Result{}, nil
+	}
+
+	// TODO(sbueringer) wait for instance deleted
+	err = computeService.InstanceDelete(machine)
+	if err != nil {
+		handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error deleting Openstack instance: %v", err))
+		return ctrl.Result{}, nil
+	}
+
+	logger.Info("OpenStack machine deleted successfully")
+	r.Recorder.Eventf(openStackMachine, corev1.EventTypeNormal, "SuccessfulTerminate", "Terminated instance %q", instance.ID)
+
+	// Instance is deleted so remove the finalizer.
+	controllerutil.RemoveFinalizer(openStackMachine, infrav1.MachineFinalizer)
+
+	return ctrl.Result{}, nil
+}
+
+func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger logr.Logger, patchHelper *patch.Helper, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (_ ctrl.Result, reterr error) {
 	// If the OpenStackMachine is in an error state, return early.
 	if openStackMachine.Status.FailureReason != nil || openStackMachine.Status.FailureMessage != nil {
 		logger.Info("Error state detected, skipping reconciliation")
-		return reconcile.Result{}, nil
+		return ctrl.Result{}, nil
 	}
 
 	// If the OpenStackMachine doesn't have our finalizer, add it.
 	controllerutil.AddFinalizer(openStackMachine, infrav1.ClusterFinalizer)
 	// Register the finalizer immediately to avoid orphaning OpenStack resources on delete
 	if err := patchHelper.Patch(ctx, openStackMachine); err != nil {
-		return reconcile.Result{}, err
+		return ctrl.Result{}, err
 	}
 
 	if !cluster.Status.InfrastructureReady {
 		logger.Info("Cluster infrastructure is not ready yet, requeuing machine")
-		return reconcile.Result{RequeueAfter: waitForClusterInfrastructureReadyDuration}, nil
+		return ctrl.Result{RequeueAfter: waitForClusterInfrastructureReadyDuration}, nil
 	}
 
 	// Make sure bootstrap data is available and populated.
 	if machine.Spec.Bootstrap.DataSecretName == nil {
 		logger.Info("Waiting for bootstrap data to be available")
-		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+		return ctrl.Result{RequeueAfter: 10 * time.Second}, nil
 	}
 	userData, err := r.getBootstrapData(machine, openStackMachine)
 	if err != nil {
-		return reconcile.Result{}, err
+		return ctrl.Result{}, err
 	}
 
 	logger.Info("Creating Machine")
@@ -190,29 +281,29 @@ func (r *OpenStackMachineReconciler) reconcileMachine(ctx context.Context, logge
 
 	osProviderClient, clientOpts, err := provider.NewClientFromMachine(r.Client, openStackMachine)
 	if err != nil {
-		return reconcile.Result{}, err
+		return ctrl.Result{}, err
 	}
 
 	computeService, err := compute.NewService(osProviderClient, clientOpts, logger)
 	if err != nil {
-		return reconcile.Result{}, err
+		return ctrl.Result{}, err
 	}
 
 	networkingService, err := networking.NewService(osProviderClient, clientOpts, logger)
 	if err != nil {
-		return reconcile.Result{}, err
+		return ctrl.Result{}, err
 	}
 
 	instance, err := r.getOrCreate(computeService, machine, openStackMachine, cluster, openStackCluster, userData)
 	if err != nil {
-		handleMachineError(logger, openStackMachine, capierrors.UpdateMachineError, errors.Errorf("OpenStack instance cannot be created: %v", err))
-		return reconcile.Result{}, err
+		handleUpdateMachineError(logger, openStackMachine, errors.Errorf("OpenStack instance cannot be created: %v", err))
+		return ctrl.Result{}, err
 	}
 
 	// Set an error message if we couldn't find the instance.
 	if instance == nil {
-		handleMachineError(logger, openStackMachine, capierrors.UpdateMachineError, errors.New("OpenStack instance cannot be found"))
-		return reconcile.Result{}, nil
+		handleUpdateMachineError(logger, openStackMachine, errors.New("OpenStack instance cannot be found"))
+		return ctrl.Result{}, nil
 	}
 
 	// TODO(sbueringer) From CAPA: TODO(ncdc): move this validation logic into a validating webhook (for us: create validation logic in webhook)
@@ -234,79 +325,28 @@ func (r *OpenStackMachineReconciler) reconcileMachine(ctx context.Context, logge
 	case infrav1.InstanceStateBuilding:
 		logger.Info("Machine instance is BUILDING", "instance-id", instance.ID)
 	default:
-		handleMachineError(logger, openStackMachine, capierrors.UpdateMachineError, errors.Errorf("OpenStack instance state %q is unexpected", instance.State))
-		return reconcile.Result{}, nil
+		handleUpdateMachineError(logger, openStackMachine, errors.Errorf("OpenStack instance state %q is unexpected", instance.State))
+		return ctrl.Result{}, nil
 	}
 
 	if openStackMachine.Spec.FloatingIP != "" {
 		err = r.reconcileFloatingIP(computeService, networkingService, instance, openStackMachine, openStackCluster)
 		if err != nil {
-			handleMachineError(logger, openStackMachine, capierrors.UpdateMachineError, errors.Errorf("FloatingIP cannot be reconciled: %v", err))
-			return reconcile.Result{}, nil
+			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("FloatingIP cannot be reconciled: %v", err))
+			return ctrl.Result{}, nil
 		}
 	}
 
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
 		err = r.reconcileLoadBalancerMember(logger, osProviderClient, clientOpts, instance, clusterName, machine, openStackMachine, openStackCluster)
 		if err != nil {
-			handleMachineError(logger, openStackMachine, capierrors.UpdateMachineError, errors.Errorf("LoadBalancerMember cannot be reconciled: %v", err))
-			return reconcile.Result{}, nil
+			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("LoadBalancerMember cannot be reconciled: %v", err))
+			return ctrl.Result{}, nil
 		}
 	}
 
 	logger.Info("Reconciled Machine create successfully")
-	return reconcile.Result{}, nil
-}
-
-func (r *OpenStackMachineReconciler) reconcileMachineDelete(logger logr.Logger, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
-
-	logger.Info("Deleting Machine")
-
-	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
-
-	osProviderClient, clientOpts, err := provider.NewClientFromMachine(r.Client, openStackMachine)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	computeService, err := compute.NewService(osProviderClient, clientOpts, logger)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	loadbalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, logger, openStackCluster.Spec.UseOctavia)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
-		err = loadbalancerService.DeleteLoadBalancerMember(clusterName, machine, openStackMachine, openStackCluster)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-	}
-
-	instance, err := computeService.InstanceExists(openStackMachine)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	if instance == nil {
-		logger.Info("Skipped deleting machine that is already deleted")
-		controllerutil.RemoveFinalizer(openStackMachine, infrav1.MachineFinalizer)
-		return reconcile.Result{}, nil
-	}
-
-	// TODO(sbueringer) wait for instance deleted
-	err = computeService.InstanceDelete(machine)
-	if err != nil {
-		handleMachineError(logger, openStackMachine, capierrors.UpdateMachineError, errors.Errorf("error deleting Openstack instance: %v", err))
-		return reconcile.Result{}, nil
-	}
-
-	logger.Info("Reconciled Machine delete successfully")
-	// Instance is deleted so remove the finalizer.
-	controllerutil.RemoveFinalizer(openStackMachine, infrav1.MachineFinalizer)
-	return reconcile.Result{}, nil
+	return ctrl.Result{}, nil
 }
 
 func (r *OpenStackMachineReconciler) getOrCreate(computeService *compute.Service, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, userData string) (*compute.Instance, error) {
@@ -322,7 +362,7 @@ func (r *OpenStackMachineReconciler) getOrCreate(computeService *compute.Service
 			return nil, errors.Errorf("error creating Openstack instance: %v", err)
 		}
 		instanceCreateTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT", TimeoutInstanceCreate)
-		instanceCreateTimeout = instanceCreateTimeout * time.Minute
+		instanceCreateTimeout *= time.Minute
 		// instance in PollImmediate has to overwrites instance of the outer scope to get an updated instance state,
 		// which is then returned at the end of getOrCreate
 		err = util.PollImmediate(RetryIntervalInstanceStatus, instanceCreateTimeout, func() (bool, error) {
@@ -340,11 +380,12 @@ func (r *OpenStackMachineReconciler) getOrCreate(computeService *compute.Service
 	return instance, nil
 }
 
-func handleMachineError(logger logr.Logger, openstackMachine *infrav1.OpenStackMachine, reason capierrors.MachineStatusError, message error) {
-	openstackMachine.Status.FailureReason = &reason
+func handleUpdateMachineError(logger logr.Logger, openstackMachine *infrav1.OpenStackMachine, message error) {
+	err := capierrors.UpdateMachineError
+	openstackMachine.Status.FailureReason = &err
 	openstackMachine.Status.FailureMessage = pointer.StringPtr(message.Error())
 	// TODO remove if this error is logged redundantly
-	logger.Error(fmt.Errorf(string(reason)), message.Error())
+	logger.Error(fmt.Errorf(string(err)), message.Error())
 }
 
 func getTimeout(name string, timeout int) time.Duration {
@@ -355,24 +396,6 @@ func getTimeout(name string, timeout int) time.Duration {
 		}
 	}
 	return time.Duration(timeout)
-}
-
-func (r *OpenStackMachineReconciler) SetupWithManager(mgr ctrl.Manager, options controller.Options) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		WithOptions(options).
-		For(&infrav1.OpenStackMachine{}).Watches(
-		&source.Kind{Type: &clusterv1.Machine{}},
-		&handler.EnqueueRequestsFromMapFunc{
-			ToRequests: util.MachineToInfrastructureMapFunc(schema.GroupVersionKind{
-				Group:   infrav1.SchemeBuilder.GroupVersion.Group,
-				Version: infrav1.SchemeBuilder.GroupVersion.Version,
-				Kind:    "OpenStackMachine",
-			}),
-		},
-	).Watches(
-		&source.Kind{Type: &infrav1.OpenStackCluster{}},
-		&handler.EnqueueRequestsFromMapFunc{ToRequests: handler.ToRequestsFunc(r.OpenStackClusterToOpenStackMachines)},
-	).Complete(r)
 }
 
 func (r *OpenStackMachineReconciler) reconcileFloatingIP(computeService *compute.Service, networkingService *networking.Service, instance *compute.Instance, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster) error {
@@ -490,9 +513,9 @@ func (r *OpenStackMachineReconciler) getBootstrapData(machine *clusterv1.Machine
 	}
 
 	secret := &corev1.Secret{}
-	key := types.NamespacedName{Namespace: machine.ObjectMeta.Namespace, Name: *machine.Spec.Bootstrap.DataSecretName}
+	key := types.NamespacedName{Namespace: machine.Namespace, Name: *machine.Spec.Bootstrap.DataSecretName}
 	if err := r.Client.Get(context.TODO(), key, secret); err != nil {
-		return "", errors.Wrapf(err, "failed to retrieve bootstrap data secret for Openstack Machine %s/%s", machine.ObjectMeta.Namespace, openStackMachine.Name)
+		return "", errors.Wrapf(err, "failed to retrieve bootstrap data secret for Openstack Machine %s/%s", machine.Namespace, openStackMachine.Name)
 	}
 
 	value, ok := secret.Data["value"]
@@ -501,4 +524,37 @@ func (r *OpenStackMachineReconciler) getBootstrapData(machine *clusterv1.Machine
 	}
 
 	return base64.StdEncoding.EncodeToString(value), nil
+}
+
+func (r *OpenStackMachineReconciler) requeueOpenStackMachinesForUnpausedCluster(o handler.MapObject) []ctrl.Request {
+	c, ok := o.Object.(*clusterv1.Cluster)
+	if !ok {
+		r.Log.Error(errors.Errorf("expected a Cluster but got a %T", o.Object), "failed to get OpenStackMachines for unpaused Cluster")
+		return nil
+	}
+
+	// Don't handle deleted clusters
+	if !c.ObjectMeta.DeletionTimestamp.IsZero() {
+		return nil
+	}
+
+	return r.requestsForCluster(c.Namespace, c.Name)
+}
+
+func (r *OpenStackMachineReconciler) requestsForCluster(namespace, name string) []ctrl.Request {
+	log := r.Log.WithValues("Cluster", name, "Namespace", namespace)
+	labels := map[string]string{clusterv1.ClusterLabelName: name}
+	machineList := &clusterv1.MachineList{}
+	if err := r.Client.List(context.TODO(), machineList, client.InNamespace(namespace), client.MatchingLabels(labels)); err != nil {
+		log.Error(err, "failed to get owned Machines")
+		return nil
+	}
+
+	result := make([]ctrl.Request, 0, len(machineList.Items))
+	for _, m := range machineList.Items {
+		if m.Spec.InfrastructureRef.Name != "" {
+			result = append(result, ctrl.Request{NamespacedName: client.ObjectKey{Namespace: m.Namespace, Name: m.Spec.InfrastructureRef.Name}})
+		}
+	}
+	return result
 }

@@ -17,7 +17,7 @@
 set -o errexit
 set -o nounset
 set -o pipefail
-#set -o verbose
+set -o verbose
 
 KUBE_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
 
