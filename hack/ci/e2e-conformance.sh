@@ -195,9 +195,10 @@ install_prereqs() {
     #curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -
     #echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
     #sudo apt update && sudo apt install bazel
-    wget -q https://github.com/bazelbuild/bazel/releases/download/0.28.1/bazel-0.28.1-installer-linux-x86_64.sh
-    chmod +x bazel-0.28.1-installer-linux-x86_64.sh
-    ./bazel-0.28.1-installer-linux-x86_64.sh --user
+    bazel_version=0.28.1
+    wget -q https://github.com/bazelbuild/bazel/releases/download/${bazel_version}/bazel-${bazel_version}-installer-linux-x86_64.sh
+    chmod +x bazel-${bazel_version}-installer-linux-x86_64.sh
+    ./bazel-${bazel_version}-installer-linux-x86_64.sh --user
 
     # Bazel is installed in /root/bin
     export PATH="/root/bin:${PATH}"
@@ -227,6 +228,8 @@ build() {
   # ensure the e2e script will find our binaries ...
   mkdir -p "${PWD}/_output/bin/"
   rm -f "${PWD}/_output/bin/e2e.test"
+
+  # use go build for local execution if no bazel version is installed which is that old
   if bazel --version | grep "0.28.1"
   then
     bazel build //test/e2e:e2e.test
