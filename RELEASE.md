@@ -47,9 +47,8 @@
 
 Releasing requires a particular set of permissions.
 
-* Approver role for the image promoter process ([kubernetes/k8s.io/blob/master/k8s.gcr.io/images/k8s-staging-capi-openstack/OWNERS](https://github.com/kubernetes/k8s.io/blob/master/k8s.gcr.io/images/k8s-staging-capi-openstack/OWNERS)
-* Tag push access to the GitHub repository ([kubernetes/org/config/kubernetes-sigs/sig-cluster-lifecycle/teams.yaml](https://github.com/kubernetes/org/blob/master/config/kubernetes-sigs/sig-cluster-lifecycle/teams.yaml#L136-L137))
-* GitHub release creation access ([kubernetes/org/config/kubernetes-sigs/sig-cluster-lifecycle/teams.yaml](https://github.com/kubernetes/org/blob/master/config/kubernetes-sigs/sig-cluster-lifecycle/teams.yaml#L136-L137))
+* Approver role for the image promoter process ([kubernetes/k8s.io/blob/master/k8s.gcr.io/images/k8s-staging-capi-openstack/OWNERS](https://github.com/kubernetes/k8s.io/blob/master/k8s.gcr.io/images/k8s-staging-capi-openstack/OWNERS))
+* Tag push and release creation rights to the GitHub repository (team `cluster-api-provider-openstack-maintainers` in [kubernetes/org/config/kubernetes-sigs/sig-cluster-lifecycle/teams.yaml](https://github.com/kubernetes/org/blob/master/config/kubernetes-sigs/sig-cluster-lifecycle/teams.yaml))
 
 ## Staging
 
