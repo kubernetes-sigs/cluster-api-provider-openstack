@@ -31,6 +31,7 @@
     1. `./out/infrastructure-components.yaml`
     2. `./templates/cluster-template.yaml`
     3. `./templates/cluster-template-without-lb.yaml`
+    4. `./metadata.yaml` (as long as CAPO is not hardcoded in the clusterctl binary, see [metadata_client.go](https://github.com/kubernetes-sigs/cluster-api/blob/master/cmd/clusterctl/client/repository/metadata_client.go#L158))
 9.  Perform the [image promotion process](https://github.com/kubernetes/k8s.io/tree/master/k8s.gcr.io#image-promoter).
     The staging repository is at https://console.cloud.google.com/gcr/images/k8s-staging-capi-openstack/GLOBAL. Be
     sure to choose the top level `capi-openstack-controller`, which will provide the multi-arch manifest, rather than one for a specific architecture.
@@ -46,13 +47,13 @@
 
 Releasing requires a particular set of permissions.
 
-* Push access to the staging gcr bucket ([kubernetes/k8s.io/k8s.gcr.io/k8s-staging-capi-openstack/OWNERS](https://github.com/kubernetes/k8s.io/blob/master/k8s.gcr.io/k8s-staging-capi-openstack/OWNERS)
+* Approver role for the image promoter process ([kubernetes/k8s.io/blob/master/k8s.gcr.io/images/k8s-staging-capi-openstack/OWNERS](https://github.com/kubernetes/k8s.io/blob/master/k8s.gcr.io/images/k8s-staging-capi-openstack/OWNERS)
 * Tag push access to the GitHub repository ([kubernetes/org/config/kubernetes-sigs/sig-cluster-lifecycle/teams.yaml](https://github.com/kubernetes/org/blob/master/config/kubernetes-sigs/sig-cluster-lifecycle/teams.yaml#L136-L137))
 * GitHub release creation access ([kubernetes/org/config/kubernetes-sigs/sig-cluster-lifecycle/teams.yaml](https://github.com/kubernetes/org/blob/master/config/kubernetes-sigs/sig-cluster-lifecycle/teams.yaml#L136-L137))
 
 ## Staging
 
 There is a post-submit Prow job running after each commit on master which pushes a new image to the staging repo (`gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:latest`). Following configuration is involved:
-* staging gcr bucket: [kubernetes/k8s.io/k8s.gcr.io/k8s-staging-capi-openstack/manifest.yaml](https://github.com/kubernetes/k8s.io/blob/master/k8s.gcr.io/k8s-staging-capi-openstack/manifest.yaml)
-* post-submit `post-capi-openstack-push-images` Prow job: [kubernetes/test-infra/config/jobs/image-pushing/k8s-staging-capi-openstack.yaml](https://github.com/kubernetes/test-infra/blob/master/config/jobs/image-pushing/k8s-staging-capi-openstack.yaml)) (corresponding dashboard is located at [https://testgrid.k8s.io/sig-cluster-lifecycle-image-pushes#post-capi-openstack-push-images](https://testgrid.k8s.io/sig-cluster-lifecycle-image-pushes#post-capi-openstack-push-images))
+* staging gcr bucket: [kubernetes/k8s.io/blob/master/k8s.gcr.io/manifests/k8s-staging-capi-openstack/promoter-manifest.yaml](https://github.com/kubernetes/k8s.io/blob/master/k8s.gcr.io/manifests/k8s-staging-capi-openstack/promoter-manifest.yaml)
+* post-submit `post-capi-openstack-push-images` Prow job: [kubernetes/test-infra/blob/master/config/jobs/image-pushing/k8s-staging-cluster-api.yaml](https://github.com/kubernetes/test-infra/blob/master/config/jobs/image-pushing/k8s-staging-cluster-api.yaml)) (corresponding dashboard is located at [https://testgrid.k8s.io/sig-cluster-lifecycle-image-pushes#post-capi-openstack-push-images](https://testgrid.k8s.io/sig-cluster-lifecycle-image-pushes#post-capi-openstack-push-images))
 * Google Cloud Build configuration which is used by the Prow job: [kubernetes-sigs/cluster-api-provider-openstack/cloudbuild.yaml](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/master/cloudbuild.yaml)
