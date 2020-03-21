@@ -161,7 +161,7 @@ upload_image() {
   fi
 
   tmp_source_image=/tmp/ubuntu-1910.ova.qcow2
-  wget -q https://github.com/sbueringer/image-builder/releases/download/v1.17.3-04/ubuntu-1910-kube-v1.17.3.qcow2 -O ${tmp_source_image}
+  wget -q -c https://github.com/sbueringer/image-builder/releases/download/v1.17.3-04/ubuntu-1910-kube-v1.17.3.qcow2 -O ${tmp_source_image}
 
   echo "Uploading image ${tmp_source_image} as ${OPENSTACK_IMAGE_NAME}"
   openstack image create --disk-format qcow2 \
