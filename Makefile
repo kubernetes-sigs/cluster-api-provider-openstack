@@ -291,14 +291,14 @@ release-notes: $(RELEASE_NOTES)
 ## --------------------------------------
 
 # Properties for create-cluster
-OPENSTACK_CONTROLPLANE_IP ?= "192.168.200.195"
+OPENSTACK_CONTROLPLANE_IP ?= ""
 OPENSTACK_FAILURE_DOMAIN ?= "nova"
 OPENSTACK_CLOUD ?= "capi-quickstart"
 OPENSTACK_CLOUD_CACERT_B64 ?= "Cg=="
 OPENSTACK_CLOUD_PROVIDER_CONF_B64 ?= ""
 OPENSTACK_CLOUD_YAML_B64 ?= ""
 OPENSTACK_EXTERNAL_NETWORK_ID ?= ""
-OPENSTACK_DNS_NAMESERVERS ?= "192.168.200.1"
+OPENSTACK_DNS_NAMESERVERS ?= ""
 OPENSTACK_IMAGE_NAME ?= "ubuntu-1910-kube-v1.17.3"
 OPENSTACK_SSH_AUTHORIZED_KEY ?= ""
 OPENSTACK_NODE_MACHINE_FLAVOR ?= "m1.medium"
@@ -335,7 +335,7 @@ create-cluster: $(CLUSTERCTL) $(ENVSUBST) ## Create a development Kubernetes clu
 
 	# (Re-)install Core providers
 	$(CLUSTERCTL) delete --all
-	$(CLUSTERCTL) init --core cluster-api:v0.3.0 --bootstrap kubeadm:v0.3.0 --control-plane kubeadm:v0.3.0
+	$(CLUSTERCTL) init --core cluster-api:v0.3.2 --bootstrap kubeadm:v0.3.2 --control-plane kubeadm:v0.3.2
 
 	# (Re-)deploy CAPO provider
 	MANIFEST_IMG=$(CONTROLLER_IMG)-$(ARCH) MANIFEST_TAG=$(TAG) $(MAKE) set-manifest-image

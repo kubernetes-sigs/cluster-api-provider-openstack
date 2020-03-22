@@ -100,14 +100,14 @@ func (r *OpenStackClusterReconciler) Reconcile(req ctrl.Request) (_ ctrl.Result,
 
 	// Handle deleted clusters
 	if !openStackCluster.DeletionTimestamp.IsZero() {
-		return r.reconcileDelete(log, cluster, openStackCluster)
+		return r.reconcileDelete(ctx, log, patchHelper, cluster, openStackCluster)
 	}
 
 	// Handle non-deleted clusters
 	return r.reconcileNormal(ctx, log, patchHelper, cluster, openStackCluster)
 }
 
-func (r *OpenStackClusterReconciler) reconcileDelete(log logr.Logger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
+func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, log logr.Logger, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
 	log.Info("Reconciling Cluster delete")
 
 	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
@@ -154,7 +154,9 @@ func (r *OpenStackClusterReconciler) reconcileDelete(log logr.Logger, cluster *c
 
 	// Cluster is deleted so remove the finalizer.
 	controllerutil.RemoveFinalizer(openStackCluster, infrav1.ClusterFinalizer)
-
+	if err := patchHelper.Patch(ctx, openStackCluster); err != nil {
+		return ctrl.Result{}, err
+	}
 	return reconcile.Result{}, nil
 }
 

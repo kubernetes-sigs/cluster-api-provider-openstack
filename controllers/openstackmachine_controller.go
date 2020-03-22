@@ -143,7 +143,7 @@ func (r *OpenStackMachineReconciler) Reconcile(req ctrl.Request) (_ ctrl.Result,
 
 	// Handle deleted machines
 	if !openStackMachine.DeletionTimestamp.IsZero() {
-		return r.reconcileDelete(logger, machine, openStackMachine, cluster, openStackCluster)
+		return r.reconcileDelete(ctx, logger, patchHelper, machine, openStackMachine, cluster, openStackCluster)
 	}
 
 	// Handle non-deleted clusters
@@ -193,7 +193,7 @@ func (r *OpenStackMachineReconciler) SetupWithManager(mgr ctrl.Manager, options 
 	)
 }
 
-func (r *OpenStackMachineReconciler) reconcileDelete(logger logr.Logger, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
+func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger logr.Logger, patchHelper *patch.Helper, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
 	logger.Info("Handling deleted OpenStackMachine")
 
 	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
@@ -227,6 +227,9 @@ func (r *OpenStackMachineReconciler) reconcileDelete(logger logr.Logger, machine
 	if instance == nil {
 		logger.Info("Skipped deleting machine that is already deleted")
 		controllerutil.RemoveFinalizer(openStackMachine, infrav1.MachineFinalizer)
+		if err := patchHelper.Patch(ctx, openStackMachine); err != nil {
+			return ctrl.Result{}, err
+		}
 		return ctrl.Result{}, nil
 	}
 
@@ -242,7 +245,9 @@ func (r *OpenStackMachineReconciler) reconcileDelete(logger logr.Logger, machine
 
 	// Instance is deleted so remove the finalizer.
 	controllerutil.RemoveFinalizer(openStackMachine, infrav1.MachineFinalizer)
-
+	if err := patchHelper.Patch(ctx, openStackMachine); err != nil {
+		return ctrl.Result{}, err
+	}
 	return ctrl.Result{}, nil
 }
 
@@ -254,7 +259,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 	}
 
 	// If the OpenStackMachine doesn't have our finalizer, add it.
-	controllerutil.AddFinalizer(openStackMachine, infrav1.ClusterFinalizer)
+	controllerutil.AddFinalizer(openStackMachine, infrav1.MachineFinalizer)
 	// Register the finalizer immediately to avoid orphaning OpenStack resources on delete
 	if err := patchHelper.Patch(ctx, openStackMachine); err != nil {
 		return ctrl.Result{}, err

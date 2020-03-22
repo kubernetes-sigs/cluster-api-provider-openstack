@@ -22,6 +22,8 @@ OPENSTACK_CLOUD_YAML_FILE=${OPENSTACK_CLOUD_YAML_FILE:-"/tmp/clouds.yaml"}
 OPENSTACK_SSH_AUTHORIZED_KEY_PATH=${OPENSTACK_SSH_AUTHORIZED_KEY_PATH:-"/tmp/id_rsa.pub"}
 OPENSTACK_SSH_PRIVATE_KEY_PATH=${OPENSTACK_SSH_PRIVATE_KEY_PATH:-"/tmp/id_rsa"}
 OPENSTACK_IMAGE_NAME="ubuntu-1910-kube-v1.17.3"
+OPENSTACK_CONTROLPLANE_IP=${OPENSTACK_CONTROLPLANE_IP:-"192.168.200.195"}
+OPENSTACK_DNS_NAMESERVERS=${OPENSTACK_DNS_NAMESERVERS:-"192.168.200.1"}
 CLUSTER_NAME=${CLUSTER_NAME:-"capi-quickstart"}
 KUBERNETES_VERSION=${KUBERNETES_VERSION:-"v1.17.3"}
 TIMESTAMP=$(date +"%Y-%m-%dT%H:%M:%SZ")
@@ -161,7 +163,7 @@ upload_image() {
   fi
 
   tmp_source_image=/tmp/ubuntu-1910.ova.qcow2
-  wget -q https://github.com/sbueringer/image-builder/releases/download/v1.17.3-04/ubuntu-1910-kube-v1.17.3.qcow2 -O ${tmp_source_image}
+  wget -q -c https://github.com/sbueringer/image-builder/releases/download/v1.17.3-04/ubuntu-1910-kube-v1.17.3.qcow2 -O ${tmp_source_image}
 
   echo "Uploading image ${tmp_source_image} as ${OPENSTACK_IMAGE_NAME}"
   openstack image create --disk-format qcow2 \
@@ -195,9 +197,10 @@ install_prereqs() {
     #curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -
     #echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
     #sudo apt update && sudo apt install bazel
-    wget -q https://github.com/bazelbuild/bazel/releases/download/0.28.1/bazel-0.28.1-installer-linux-x86_64.sh
-    chmod +x bazel-0.28.1-installer-linux-x86_64.sh
-    ./bazel-0.28.1-installer-linux-x86_64.sh --user
+    bazel_version=0.28.1
+    wget -q https://github.com/bazelbuild/bazel/releases/download/${bazel_version}/bazel-${bazel_version}-installer-linux-x86_64.sh
+    chmod +x bazel-${bazel_version}-installer-linux-x86_64.sh
+    ./bazel-${bazel_version}-installer-linux-x86_64.sh --user
 
     # Bazel is installed in /root/bin
     export PATH="/root/bin:${PATH}"
@@ -227,6 +230,8 @@ build() {
   # ensure the e2e script will find our binaries ...
   mkdir -p "${PWD}/_output/bin/"
   rm -f "${PWD}/_output/bin/e2e.test"
+
+  # use go build for local execution if no bazel version is installed which is that old
   if bazel --version | grep "0.28.1"
   then
     bazel build //test/e2e:e2e.test
@@ -285,6 +290,8 @@ create_cluster() {
   OPENSTACK_EXTERNAL_NETWORK_ID=$(openstack network show "public" -f value -c id) \
   OPENSTACK_IMAGE_NAME=${OPENSTACK_IMAGE_NAME} \
   OPENSTACK_SSH_AUTHORIZED_KEY="$(cat ${OPENSTACK_SSH_AUTHORIZED_KEY_PATH})" \
+  OPENSTACK_CONTROLPLANE_IP=${OPENSTACK_CONTROLPLANE_IP} \
+  OPENSTACK_DNS_NAMESERVERS=${OPENSTACK_DNS_NAMESERVERS} \
   KUBERNETES_VERSION=${KUBERNETES_VERSION} \
     make create-cluster
 
