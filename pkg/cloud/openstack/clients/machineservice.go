@@ -494,6 +494,7 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, clust
 	}
 	// Get all network UUIDs
 	var nets []ServerNetwork
+	netsWithoutAllowedAddressPairs := map[string]struct{}{}
 	for _, net := range config.Networks {
 		opts := networks.ListOpts(net.Filter)
 		opts.ID = net.UUID
@@ -502,6 +503,9 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, clust
 			return nil, err
 		}
 		for _, netID := range ids {
+			if net.NoAllowedAddressPairs {
+				netsWithoutAllowedAddressPairs[netID] = struct{}{}
+			}
 			if net.Subnets == nil {
 				nets = append(nets, ServerNetwork{
 					networkID: netID,
@@ -569,7 +573,12 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, clust
 		var port ports.Port
 		if len(portList) == 0 {
 			// create server port
-			port, err = CreatePort(is, name, net, &securityGroups, &allowedAddressPairs)
+			if _, ok := netsWithoutAllowedAddressPairs[net.networkID]; ok {
+				// create ports without address pairs
+				port, err = CreatePort(is, name, net, &securityGroups, &[]ports.AddressPair{})
+			} else {
+				port, err = CreatePort(is, name, net, &securityGroups, &allowedAddressPairs)
+			}
 			if err != nil {
 				return nil, fmt.Errorf("Failed to create port err: %v", err)
 			}
