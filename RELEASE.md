@@ -35,7 +35,7 @@
 9.  Perform the [image promotion process](https://github.com/kubernetes/k8s.io/tree/master/k8s.gcr.io#image-promoter).
     The staging repository is at https://console.cloud.google.com/gcr/images/k8s-staging-capi-openstack/GLOBAL. Be
     sure to choose the top level `capi-openstack-controller`, which will provide the multi-arch manifest, rather than one for a specific architecture.
-    Add the new sha=>tag mapping to the [images.yaml](https://github.com/kubernetes/k8s.io/edit/master/k8s.gcr.io/images/k8s-staging-capi-openstack/images.yaml)
+    Add the new sha=>tag mapping to the [images.yaml](https://github.com/kubernetes/k8s.io/edit/master/k8s.gcr.io/images/k8s-staging-capi-openstack/images.yaml) (use the sha of the image with the corresponding tag)
 10.  Finalise the release notes
 11.  Publish release. Use the pre-release option for release
     candidate versions of Cluster API Provider OpenStack.

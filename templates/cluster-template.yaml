@@ -25,7 +25,7 @@ spec:
   cloudName: ${OPENSTACK_CLOUD}
   cloudsSecret:
     name: ${CLUSTER_NAME}-cloud-config
-    namespace: ${CLUSTER_NAME}
+    namespace: ${NAMESPACE}
   managedAPIServerLoadBalancer: true
   apiServerLoadBalancerFloatingIP: ${OPENSTACK_CONTROLPLANE_IP}
   apiServerLoadBalancerPort: 6443
@@ -119,7 +119,7 @@ spec:
       cloudName: ${OPENSTACK_CLOUD}
       cloudsSecret:
         name: ${CLUSTER_NAME}-cloud-config
-        namespace: ${CLUSTER_NAME}
+        namespace: ${NAMESPACE}
 ---
 apiVersion: cluster.x-k8s.io/v1alpha3
 kind: MachineDeployment
@@ -155,7 +155,7 @@ spec:
       cloudName: ${OPENSTACK_CLOUD}
       cloudsSecret:
         name: ${CLUSTER_NAME}-cloud-config
-        namespace: ${CLUSTER_NAME}
+        namespace: ${NAMESPACE}
       flavor: ${OPENSTACK_NODE_MACHINE_FLAVOR}
       image: ${OPENSTACK_IMAGE_NAME}
 ---
