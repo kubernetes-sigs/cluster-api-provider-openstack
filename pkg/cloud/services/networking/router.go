@@ -165,6 +165,33 @@ INTERFACE_LOOP:
 	return nil
 }
 
+func (s *Service) DeleteRouter(network *infrav1.Network) error {
+	if network.Router == nil || network.Router.ID == "" {
+		s.logger.V(4).Info("No need to delete router since no router exists.")
+		return nil
+	}
+	exists, err := s.existsRouter(network.Router.ID)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		s.logger.Info("Skipping router deletion because router doesn't exist", "router", network.Router.ID)
+		return nil
+	}
+	if network.Subnet == nil || network.Subnet.ID == "" {
+		s.logger.V(4).Info("Skipping removing router interface since no subnet exists.")
+	} else {
+		_, err = routers.RemoveInterface(s.client, network.Router.ID, routers.RemoveInterfaceOpts{
+			SubnetID: network.Subnet.ID,
+		}).Extract()
+		if err != nil {
+			return fmt.Errorf("unable to remove router interface: %v", err)
+		}
+		s.logger.V(4).Info("Removed RouterInterface of Router", "id", network.Router.ID)
+	}
+	return routers.Delete(s.client, network.Router.ID).ExtractErr()
+}
+
 func (s *Service) getRouterInterfaces(routerID string) ([]ports.Port, error) {
 	allPages, err := ports.List(s.client, ports.ListOpts{
 		DeviceID: routerID,
@@ -246,4 +273,18 @@ func GetSubnetsByFilter(networkClient *gophercloud.ServiceClient, opts subnets.L
 		return []subnets.Subnet{}, err
 	}
 	return snets, nil
+}
+
+func (s *Service) existsRouter(routerID string) (bool, error) {
+	if routerID == "" {
+		return false, nil
+	}
+	router, err := routers.Get(s.client, routerID).Extract()
+	if err != nil {
+		return false, err
+	}
+	if router == nil {
+		return false, nil
+	}
+	return true, nil
 }

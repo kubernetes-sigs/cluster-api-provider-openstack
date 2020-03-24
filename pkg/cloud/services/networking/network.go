@@ -91,6 +91,22 @@ func (s *Service) ReconcileNetwork(clusterName string, openStackCluster *infrav1
 	return nil
 }
 
+func (s *Service) DeleteNetwork(network *infrav1.Network) error {
+	if network == nil || network.ID == "" {
+		s.logger.V(4).Info("No need to delete network since no network exists.")
+		return nil
+	}
+	exists, err := s.existsNetwork(network.ID)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		s.logger.Info("Skipping network deletion because network doesn't exist", "network", network.ID)
+		return nil
+	}
+	return networks.Delete(s.client, network.ID).ExtractErr()
+}
+
 func (s *Service) ReconcileSubnet(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {
 
 	if openStackCluster.Status.Network == nil || openStackCluster.Status.Network.ID == "" {
@@ -187,4 +203,18 @@ func (s *Service) getNetworkByName(networkName string) (networks.Network, error)
 		return allNetworks[0], nil
 	}
 	return networks.Network{}, errors.New("too many resources")
+}
+
+func (s *Service) existsNetwork(networkID string) (bool, error) {
+	if networkID == "" {
+		return false, nil
+	}
+	network, err := networks.Get(s.client, networkID).Extract()
+	if err != nil {
+		return false, err
+	}
+	if network == nil {
+		return false, nil
+	}
+	return true, nil
 }
