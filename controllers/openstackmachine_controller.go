@@ -245,6 +245,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 
 	// Instance is deleted so remove the finalizer.
 	controllerutil.RemoveFinalizer(openStackMachine, infrav1.MachineFinalizer)
+	logger.Info("Reconciled Machine delete successfully")
 	if err := patchHelper.Patch(ctx, openStackMachine); err != nil {
 		return ctrl.Result{}, err
 	}

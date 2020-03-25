@@ -23,10 +23,13 @@ import (
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/utils/openstack/clientconfig"
+
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/provider"
 )
 
 type Service struct {
 	provider       *gophercloud.ProviderClient
+	projectID      string
 	computeClient  *gophercloud.ServiceClient
 	identityClient *gophercloud.ServiceClient
 	networkClient  *gophercloud.ServiceClient
@@ -62,9 +65,20 @@ func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.Cli
 	if err != nil {
 		return nil, fmt.Errorf("failed to create image service client: %v", err)
 	}
+	var projectID string
+	if clientOpts.AuthInfo != nil {
+		projectID = clientOpts.AuthInfo.ProjectID
+		if projectID == "" && clientOpts.AuthInfo.ProjectName != "" {
+			projectID, err = provider.GetProjectID(client, clientOpts.AuthInfo.ProjectName)
+			if err != nil {
+				return nil, fmt.Errorf("error retrieveing project id: %v", err)
+			}
+		}
+	}
 
 	return &Service{
 		provider:       client,
+		projectID:      projectID,
 		identityClient: identityClient,
 		computeClient:  computeClient,
 		networkClient:  networkingClient,
