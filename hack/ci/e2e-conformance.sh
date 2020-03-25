@@ -144,7 +144,7 @@ dump_capo_logs() {
 
 function dump_logs() {
   dump_kind_logs
-  dump_kind_logs
+  dump_capo_logs
 }
 
 # SSH to a node by name ($1) via jump server ($2) and run a command ($3).
@@ -418,10 +418,6 @@ main() {
 
   if [[ -z "${SKIP_RUN_TESTS:-}" ]]; then
     echo "Running tests..."
-    # save some resources for tests
-    dump_kind_logs
-    make kind-reset
-
     run_tests
   fi
 
