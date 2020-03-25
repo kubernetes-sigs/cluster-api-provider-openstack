@@ -1,0 +1,90 @@
+- hosts: all
+  become: yes
+  pre_tasks:
+  - name: Enable nested virt
+    shell:
+      cmd: |
+        # enable nested virt
+        cat /sys/module/kvm_intel/parameters/nested
+        sudo rmmod kvm-intel
+        sudo sh -c "echo 'options kvm-intel nested=y' >> /etc/modprobe.d/dist.conf"
+        sudo modprobe kvm-intel
+        cat /sys/module/kvm_intel/parameters/nested
+        modinfo kvm_intel | grep nested
+  roles:
+  - move-k8s-repo-to-k8s-specific-dir
+  - config-golang
+  - clone-devstack-gate-to-workspace
+  - role: create-devstack-local-conf
+    enable_services:
+    - 'nova'
+    - 'neutron'
+    - 'cinder'
+    - 'keystone'
+    - 'glance'
+  - role: install-devstack
+    environment:
+      USE_PYTHON3: 'True'
+      DEVSTACK_GATE_LIBVIRT_TYPE: 'kvm'
+      OS_BRANCH: 'stable/train'
+  tasks:
+  - name: Run kubernetes E2E conformance tests with ClusterAPI OpenStack
+    shell:
+      cmd: |
+        set -xeo pipefail
+
+        source /opt/stack/new/devstack/openrc admin admin
+
+        # Print some infos
+        nova hypervisor-stats
+        openstack host list
+        openstack usage list
+        openstack project list
+        openstack network list
+        openstack subnet list
+        openstack image list
+        openstack flavor list
+        openstack server list
+        openstack availability zone list
+        openstack domain list
+
+        openstack flavor delete m1.small
+        openstack flavor create --ram 4096 --disk 10 --vcpus 2 --public --id 2 m1.small --property hw_rng:allowed='True'
+        openstack flavor delete m1.medium
+        openstack flavor create --ram 6144 --disk 10 --vcpus 4 --public --id 3 m1.medium --property hw_rng:allowed='True'
+
+        #  Switch to demo project
+        source /opt/stack/new/devstack/openrc admin demo
+
+        # Create clouds.yaml
+        cat << EOF >> /tmp/clouds.yaml
+        clouds:
+          capi-quickstart:
+            auth:
+              username: ${OS_USERNAME}
+              password: ${OS_PASSWORD}
+              user_domain_id: ${OS_USER_DOMAIN_NAME}
+              auth_url: ${OS_AUTH_URL}
+              domain_id: default
+              project_name: demo
+            verify: false
+            region_name: RegionOne
+        EOF
+        cat /tmp/clouds.yaml
+
+        export ARTIFACTS=/home/zuul/workspace/logs/_artifacts
+        export KUBERNETES_VERSION_SERIES={{ k8s_version_series }}
+        export OPENSTACK_CONTROLPLANE_IP="172.24.5.24"
+        export OPENSTACK_DNS_NAMESERVERS=8.8.8.8
+        export CONTROL_PLANE_MACHINE_COUNT=1
+        export WORKER_MACHINE_COUNT=1
+
+        ./hack/ci/e2e-conformance.sh --install-prereqs --run-tests-parallel --delete-cluster {{ extra_args }}
+
+        # Print some infos
+        ps aux
+        df -h
+
+      executable: /bin/bash
+      chdir: '{{ k8s_os_capi_provider_src_dir }}'
+    environment: '{{ global_env }}'

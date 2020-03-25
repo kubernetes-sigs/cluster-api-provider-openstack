@@ -33,6 +33,7 @@ verify_kind_version() {
       fi
       curl -sLo "${GOPATH_BIN}/kind" https://github.com/kubernetes-sigs/kind/releases/download/${MINIMUM_KIND_VERSION}/kind-linux-amd64
       chmod +x "${GOPATH_BIN}/kind"
+      echo 'kind installed'
     else
       echo "Missing required binary in path: kind"
       return 2

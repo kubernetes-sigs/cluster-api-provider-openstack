@@ -24,61 +24,92 @@ OPENSTACK_SSH_PRIVATE_KEY_PATH=${OPENSTACK_SSH_PRIVATE_KEY_PATH:-"/tmp/id_rsa"}
 OPENSTACK_IMAGE_NAME="ubuntu-1910-kube-v1.17.3"
 OPENSTACK_CONTROLPLANE_IP=${OPENSTACK_CONTROLPLANE_IP:-"192.168.200.195"}
 OPENSTACK_DNS_NAMESERVERS=${OPENSTACK_DNS_NAMESERVERS:-"192.168.200.1"}
+OPENSTACK_NODE_MACHINE_FLAVOR=${OPENSTACK_NODE_MACHINE_FLAVOR:-"m1.small"}
+OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR=${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR:-"m1.medium"}
+OPENSTACK_CLUSTER_TEMPLATE=${OPENSTACK_CLUSTER_TEMPLATE:-"./templates/cluster-template-without-lb.yaml"}
 CLUSTER_NAME=${CLUSTER_NAME:-"capi-quickstart"}
-KUBERNETES_VERSION=${KUBERNETES_VERSION:-"v1.17.3"}
+KUBERNETES_VERSION_SERIES=${KUBERNETES_VERSION_SERIES:-"1.17"}
 TIMESTAMP=$(date +"%Y-%m-%dT%H:%M:%SZ")
 
 ARTIFACTS="${ARTIFACTS:-${PWD}/_artifacts}"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
 
-# dump logs from kind and all the nodes
-dump-logs() {
+LOGS_KIND_DUMPED=false
+LOGS_CAPO_DUMPED=false
+
+dump_kind_logs() {
+  set -x
+
+  if [[ "${LOGS_KIND_DUMPED}" == "true" ]];
+  then
+    echo "kind logs already dumped"
+    return 0
+  fi
+  LOGS_KIND_DUMPED=true
 
   echo "Dump logs"
   mkdir -p "${ARTIFACTS}/logs"
 
-  # log version information
   echo "=== versions ==="
   echo "kind : $(kind version)" || true
   echo "bootstrap cluster:"
   kubectl version || true
-  echo "deployed cluster:"
-  kubectl --kubeconfig=${PWD}/kubeconfig version || true
   echo ""
 
   # dump all the info from the CAPI related CRDs
-  kubectl get \
-    clusters,openstackclusters,machines,openstackmachines,kubeadmconfigs,machinedeployments,openstackmachinetemplates,kubeadmconfigtemplates,machinesets \
-    --all-namespaces -o yaml >> "${ARTIFACTS}/logs/capo.info" || true
-
-  # dump images info
-  echo "images in docker" >> "${ARTIFACTS}/logs/images.info"
-  docker images >> "${ARTIFACTS}/logs/images.info"
-  echo "images from bootstrap using containerd CLI" >> "${ARTIFACTS}/logs/images.info"
-  docker exec clusterapi-control-plane ctr -n k8s.io images list >> "${ARTIFACTS}/logs/images.info" || true
-  echo "images in bootstrap cluster using kubectl CLI" >> "${ARTIFACTS}/logs/images.info"
-  (kubectl get pods --all-namespaces -o json \
-   | jq --raw-output '.items[].spec.containers[].image' | sort)  >> "${ARTIFACTS}/logs/images.info" || true
-  echo "images in deployed cluster using kubectl CLI" >> "${ARTIFACTS}/logs/images.info"
-  (kubectl --kubeconfig="${PWD}"/kubeconfig get pods --all-namespaces -o json \
-   | jq --raw-output '.items[].spec.containers[].image' | sort)  >> "${ARTIFACTS}/logs/images.info" || true
+  kubectl get clusters,openstackclusters,machines,openstackmachines,kubeadmconfigs,machinedeployments,openstackmachinetemplates,kubeadmconfigtemplates,machinesets --all-namespaces -o yaml > "${ARTIFACTS}/logs/kind-capo.txt" || true
 
   # dump cluster info for kind
-  kubectl cluster-info dump > "${ARTIFACTS}/logs/kind-cluster.info" || true
+  kubectl cluster-info dump > "${ARTIFACTS}/logs/kind-cluster.txt" || true
+  kubectl get secrets -o yaml -A > "${ARTIFACTS}/logs/kind-cluster-secrets.txt" || true
+
+  # dump images info
+  echo "images in docker" >> "${ARTIFACTS}/logs/images.txt"
+  docker images >> "${ARTIFACTS}/logs/images.txt"
+  echo "images from bootstrap using containerd CLI" >> "${ARTIFACTS}/logs/images.txt"
+  docker exec clusterapi-control-plane ctr -n k8s.io images list >> "${ARTIFACTS}/logs/images.txt" || true
+  echo "images in bootstrap cluster using kubectl CLI" >> "${ARTIFACTS}/logs/images.txt"
+  (kubectl get pods --all-namespaces -o json \
+   | jq --raw-output '.items[].spec.containers[].image' | sort)  >> "${ARTIFACTS}/logs/images.txt" || true
 
   # export all logs from kind
   kind "export" logs --name="clusterapi" "${ARTIFACTS}/logs" || true
+  set +x
+}
+
+dump_capo_logs() {
+  set -x
+
+  if [[ "${LOGS_CAPO_DUMPED}" == "true" ]];
+  then
+    echo "capo logs already dumped"
+    return 0
+  fi
+  LOGS_CAPO_DUMPED=true
+
+  echo "Dump logs"
+  mkdir -p "${ARTIFACTS}/logs"
+
+  echo "=== versions ==="
+  echo "capo cluster:"
+  kubectl --kubeconfig=${PWD}/kubeconfig version || true
+  echo ""
+
+  # dump images info
+  echo "images in deployed cluster using kubectl CLI" >> "${ARTIFACTS}/logs/images.txt"
+  (kubectl --kubeconfig="${PWD}"/kubeconfig get pods --all-namespaces -o json \
+   | jq --raw-output '.items[].spec.containers[].image' | sort)  >> "${ARTIFACTS}/logs/images.txt" || true
 
   # dump OpenStack info
-  echo "" > "${ARTIFACTS}/logs/openstack-cluster.info"
-  echo "=== OpenStack compute instances list ===" >> "${ARTIFACTS}/logs/openstack-cluster.info" || true
-  openstack server list >> "${ARTIFACTS}/logs/openstack-cluster.info" || true
-  echo "=== OpenStack compute instances show ===" >> "${ARTIFACTS}/logs/openstack-cluster.info" || true
-  openstack server list -f value -c Name | xargs -I% openstack server show % >> "${ARTIFACTS}/logs/openstack-cluster.info" || true
-  echo "=== cluster-info dump ===" >> "${ARTIFACTS}/logs/openstack-cluster.info" || true
-  kubectl --kubeconfig=${PWD}/kubeconfig cluster-info dump >> "${ARTIFACTS}/logs/openstack-cluster.info" || true
+  echo "" > "${ARTIFACTS}/logs/openstack-cluster.txt"
+  echo "=== OpenStack compute instances list ===" >> "${ARTIFACTS}/logs/openstack-cluster.txt" || true
+  openstack server list >> "${ARTIFACTS}/logs/openstack-cluster.txt" || true
+  echo "=== OpenStack compute instances show ===" >> "${ARTIFACTS}/logs/openstack-cluster.txt" || true
+  openstack server list -f value -c Name | xargs -I% openstack server show % >> "${ARTIFACTS}/logs/openstack-cluster.txt" || true
+  echo "=== cluster-info dump ===" >> "${ARTIFACTS}/logs/openstack-cluster.txt" || true
+  kubectl --kubeconfig=${PWD}/kubeconfig cluster-info dump >> "${ARTIFACTS}/logs/openstack-cluster.txt" || true
+  kubectl --kubeconfig=${PWD}/kubeconfig get secrets -o yaml -A > "${ARTIFACTS}/logs/openstack-cluster-secrets.txt" || true
 
-  set -x
   jump_node_name=$(openstack server list -f value -c Name | grep ${CLUSTER_NAME}-control-plane | head -n 1)
   jump_node=$(openstack server show ${jump_node_name} -f value -c addresses | awk '{print $2}')
   for node in $(openstack server list -f value -c Name)
@@ -89,10 +120,10 @@ dump-logs() {
 
     openstack console log show "${node}" > "${dir}/console.log" || true
 
-    ssh-to-node "${node}" "${jump_node}" "sudo chmod -R a+r /var/log" || true
-
     PROXY_COMMAND="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=30 -x -W %h:22 -i ${OPENSTACK_SSH_PRIVATE_KEY_PATH} capo@${jump_node}"
     node=$(openstack port show ${node}  -f json -c fixed_ips | jq '.fixed_ips[0].ip_address' -r)
+
+    ssh-to-node "${node}" "${jump_node}" "sudo chmod -R a+r /var/log" || true
     scp -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=30 -o ProxyCommand="${PROXY_COMMAND}" -i ${OPENSTACK_SSH_PRIVATE_KEY_PATH} \
       "capo@${node}:/var/log/cloud-init.log" "capo@${node}:/var/log/cloud-init-output.log" \
       "capo@${node}:/var/log/pods" "capo@${node}:/var/log/containers" \
@@ -100,7 +131,7 @@ dump-logs() {
 
     ssh-to-node "${node}" "${jump_node}" "sudo journalctl --output=short-precise -k" > "${dir}/kern.log" || true
     ssh-to-node "${node}" "${jump_node}" "sudo journalctl --output=short-precise" > "${dir}/systemd.log" || true
-    ssh-to-node "${node}" "${jump_node}" "sudo crictl version && sudo crictl info" > "${dir}/containerd.info" || true
+    ssh-to-node "${node}" "${jump_node}" "sudo crictl version && sudo crictl info" > "${dir}/containerd.txt" || true
     ssh-to-node "${node}" "${jump_node}" "sudo journalctl --no-pager -u cloud-final" > "${dir}/cloud-final.log" || true
     ssh-to-node "${node}" "${jump_node}" "sudo journalctl --no-pager -u kubelet.service" > "${dir}/kubelet.log" || true
     ssh-to-node "${node}" "${jump_node}" "sudo journalctl --no-pager -u containerd.service" > "${dir}/containerd.log" || true
@@ -109,6 +140,11 @@ dump-logs() {
     ssh-to-node "${node}" "${jump_node}" "sudo crictl pods" > "${dir}/crictl-pods.log" || true
   done
   set +x
+}
+
+function dump_logs() {
+  dump_kind_logs
+  dump_kind_logs
 }
 
 # SSH to a node by name ($1) via jump server ($2) and run a command ($3).
@@ -122,26 +158,6 @@ function ssh-to-node() {
   ssh $ssh_params -i "${OPENSTACK_SSH_PRIVATE_KEY_PATH}" \
     -o "ProxyCommand ssh $ssh_params -W %h:%p -i ${OPENSTACK_SSH_PRIVATE_KEY_PATH} capo@${jump}" \
     capo@"${node}" "${cmd}"
-}
-
-# cleanup all resources we use
-cleanup() {
-  # KIND_IS_UP is true once we: kind create
-  if [[ "${KIND_IS_UP:-}" = true ]]; then
-    timeout 600 kubectl \
-      delete cluster "${CLUSTER_NAME}" || true
-     timeout 600 kubectl \
-      wait --for=delete -n ${CLUSTER_NAME} cluster/"${CLUSTER_NAME}" || true
-    make kind-reset || true
-  fi
-  # clean up e2e.test symlink
-  (cd "$(go env GOPATH)/src/k8s.io/kubernetes" && rm -f _output/bin/e2e.test) || true
-}
-
-# our exit handler (trap)
-exit-handler() {
-  dump-logs
-  cleanup
 }
 
 upload_image() {
@@ -162,8 +178,10 @@ upload_image() {
     return
   fi
 
+  source_image_url="https://github.com/kubernetes-sigs/cluster-api-provider-openstack/releases/download/v0.3.0/ubuntu-1910-kube-v1.17.3.qcow2"
+  echo "Download image ${OPENSTACK_IMAGE_NAME} from ${source_image_url}"
   tmp_source_image=/tmp/ubuntu-1910.ova.qcow2
-  wget -q -c https://github.com/sbueringer/image-builder/releases/download/v1.17.3-04/ubuntu-1910-kube-v1.17.3.qcow2 -O ${tmp_source_image}
+  wget -q -c ${source_image_url} -O ${tmp_source_image}
 
   echo "Uploading image ${tmp_source_image} as ${OPENSTACK_IMAGE_NAME}"
   openstack image create --disk-format qcow2 \
@@ -180,93 +198,54 @@ install_prereqs() {
     sudo apt-get update
     sudo apt-get install -y docker-ce docker-ce-cli containerd.io jq
     # docker socket already works because OpenLab runs via root
-
-    # Install go
-    sudo snap install go --classic
     
     # Install yq
-	GO111MODULE=on go get github.com/mikefarah/yq/v2
+	go get github.com/mikefarah/yq/v2
+	go get -u github.com/go-bindata/go-bindata/...
 
-    source "${REPO_ROOT}/hack/ensure-go.sh"
     source "${REPO_ROOT}/hack/ensure-kubectl.sh"
     source "${REPO_ROOT}/hack/ensure-kind.sh"
-    source "${REPO_ROOT}/hack/ensure-kustomize.sh"
-
-    # Kubernetes does not build with modern bazel
-    #sudo apt install curl
-    #curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -
-    #echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
-    #sudo apt update && sudo apt install bazel
-    bazel_version=0.28.1
-    wget -q https://github.com/bazelbuild/bazel/releases/download/${bazel_version}/bazel-${bazel_version}-installer-linux-x86_64.sh
-    chmod +x bazel-${bazel_version}-installer-linux-x86_64.sh
-    ./bazel-${bazel_version}-installer-linux-x86_64.sh --user
-
-    # Bazel is installed in /root/bin
-    export PATH="/root/bin:${PATH}"
 }
 
 # build kubernetes / node image, e2e binaries
 build() {
-  # possibly enable bazel build caching before building kubernetes
-  if [[ "${BAZEL_REMOTE_CACHE_ENABLED:-false}" == "true" ]]; then
-    create_bazel_cache_rcs.sh || true
-  fi
-
   if [[ ! -d "$(go env GOPATH)/src/k8s.io/kubernetes" ]]; then
     mkdir -p $(go env GOPATH)/src/k8s.io
     cd $(go env GOPATH)/src/k8s.io
 
     git clone https://github.com/kubernetes/kubernetes.git
     cd kubernetes
-    git checkout release-1.17
+    if [[ "${KUBERNETES_VERSION_SERIES}" == "master" ]]
+    then
+      git checkout master
+    else
+      git checkout "release-${KUBERNETES_VERSION_SERIES}"
+    fi
   fi
 
   pushd "$(go env GOPATH)/src/k8s.io/kubernetes"
 
-  # make sure we have e2e requirements
-  bazel build //cmd/kubectl //vendor/github.com/onsi/ginkgo/ginkgo
-
-  # ensure the e2e script will find our binaries ...
+  # re-create _output/bin folder
+  rm -rf "${PWD}/_output/bin"
   mkdir -p "${PWD}/_output/bin/"
-  rm -f "${PWD}/_output/bin/e2e.test"
 
-  # use go build for local execution if no bazel version is installed which is that old
-  if bazel --version | grep "0.28.1"
-  then
-    bazel build //test/e2e:e2e.test
-    cp "${PWD}/bazel-bin/test/e2e/e2e.test" "${PWD}/_output/bin/e2e.test"
-  else
-    go test -c ./test/e2e/
-    cp "./e2e.test" "${PWD}/_output/bin/e2e.test"
-  fi
-  PATH="$(dirname "$(find "${PWD}/bazel-bin/" -name kubectl -type f)"):${PATH}"
+  go build -o ./_output/bin/kubectl ./cmd/kubectl
+
+  ./hack/generate-bindata.sh
+  go test -o ./_output/bin/e2e.test -c ./test/e2e/
+
+  go build -o ./_output/bin/ginkgo ./vendor/github.com/onsi/ginkgo/ginkgo
+
+  PATH="$(go env GOPATH)/src/k8s.io/kubernetes/_output/bin:${PATH}"
   export PATH
+  popd
 
   # attempt to release some memory after building
   sync || true
   sudo sh -c "echo 1 > /proc/sys/vm/drop_caches" || true
 
-  popd
-}
-
-# generate manifests needed for creating the GCP cluster to run the tests
-generate_manifests() {
   cd ${REPO_ROOT}
-  if ! command -v kustomize >/dev/null 2>&1; then
-    (cd ./hack/tools/ && GO111MODULE=on go install sigs.k8s.io/kustomize/kustomize/v3)
-  fi
-
-  echo "Build Docker Images & Generating Manifests"
-
-  # Enable the bits to inject a script that can pull newer versions of kubernetes
-  if [[ -n ${CI_VERSION:-} || -n ${USE_CI_ARTIFACTS:-} ]]; then
-    if ! grep -i -wq "patchesStrategicMerge" "templates/kustomization.yaml"; then
-      echo "patchesStrategicMerge:" >> "templates/kustomization.yaml"
-      echo "- kustomizeversions.yaml" >> "templates/kustomization.yaml"
-    fi
-  fi
-
+  echo "Build Docker Images"
   make modules docker-build
 }
 
@@ -284,6 +263,15 @@ create_cluster() {
   # exports the b64 env vars used below
   source ${REPO_ROOT}/templates/env.rc ${OPENSTACK_CLOUD_YAML_FILE} ${CLUSTER_NAME}
 
+  # KUBERNETES_VERSION will be used via e2e-conformance_patch.yaml
+  # TODO: revert to https://dl.k8s.io/ci/latest-green.txt once https://github.com/kubernetes/release/issues/897 is fixed.
+  if [[ "${KUBERNETES_VERSION_SERIES}" == "master" ]]
+  then
+    KUBERNETES_VERSION=$(curl -sSL https://dl.k8s.io/ci/k8s-master.txt)
+  else
+    KUBERNETES_VERSION=$(curl -sSL https://dl.k8s.io/ci/latest-${KUBERNETES_VERSION_SERIES}.txt)
+  fi
+
   OPENSTACK_CLOUD_CACERT_B64=${OPENSTACK_CLOUD_CACERT_B64} \
   OPENSTACK_CLOUD_PROVIDER_CONF_B64=${OPENSTACK_CLOUD_PROVIDER_CONF_B64} \
   OPENSTACK_CLOUD_YAML_B64=${OPENSTACK_CLOUD_YAML_B64} \
@@ -292,19 +280,20 @@ create_cluster() {
   OPENSTACK_SSH_AUTHORIZED_KEY="$(cat ${OPENSTACK_SSH_AUTHORIZED_KEY_PATH})" \
   OPENSTACK_CONTROLPLANE_IP=${OPENSTACK_CONTROLPLANE_IP} \
   OPENSTACK_DNS_NAMESERVERS=${OPENSTACK_DNS_NAMESERVERS} \
+  OPENSTACK_CLUSTER_TEMPLATE=${OPENSTACK_CLUSTER_TEMPLATE} \
   KUBERNETES_VERSION=${KUBERNETES_VERSION} \
     make create-cluster
 
   # Wait till all machines are running (bail out at 30 mins)
   attempt=0
   while true; do
-    kubectl get machines -n "${CLUSTER_NAME}"
-    read running total <<< $(kubectl get machines -n "${CLUSTER_NAME}" \
+    kubectl get machines
+    read running total <<< $(kubectl get machines \
       -o json | jq -r '.items[].status.phase' | awk 'BEGIN{count=0} /(r|R)unning/{count++} END{print count " " NR}') ;
     if [[ ${total} ==  ${running} ]]; then
       return 0
     fi
-    read failed total <<< $(kubectl get machines -n "${CLUSTER_NAME}" \
+    read failed total <<< $(kubectl get machines \
       -o json | jq -r '.items[].status.phase' | awk 'BEGIN{count=0} /(f|F)ailed/{count++} END{print count " " NR}') ;
     if [[ ! ${failed} -eq 0 ]]; then
       echo "$failed machines (out of $total) in cluster failed ... bailing out"
@@ -319,6 +308,15 @@ create_cluster() {
     sleep 10
     attempt=$((attempt+1))
   done
+
+  # Wait till all pods and nodes are ready
+  kubectl wait --for=condition=Ready --timeout=15m pods -n kube-system --kubeconfig="$KUBECONFIG" --all
+  kubectl wait --for=condition=Ready --timeout=5m node --kubeconfig="$KUBECONFIG" --all
+}
+
+delete_cluster() {
+    CLUSTER_NAME=${CLUSTER_NAME} \
+      make delete-cluster
 }
 
 # run e2es with kubetest
@@ -333,6 +331,7 @@ run_tests() {
   # if we set PARALLEL=true, skip serial tests set --ginkgo-parallel
   if [[ "${PARALLEL:-false}" == "true" ]]; then
     export GINKGO_PARALLEL=y
+    export GINKGO_PARALLEL_NODES=10
     echo "Running tests in parallel"
     if [[ -z "${SKIP}" ]]; then
       SKIP="\\[Serial\\]"
@@ -347,16 +346,13 @@ run_tests() {
     -o=jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.taints}{"\n"}{end}' \
     | grep -cv "node-role.kubernetes.io/master" )"
 
-  # wait for all the nodes to be ready
-  kubectl wait --for=condition=Ready node --kubeconfig="$KUBECONFIG" --all || true
-
   # setting this env prevents ginkgo e2e from trying to run provider setup
   export KUBERNETES_CONFORMANCE_TEST="y"
   # run the tests
   (cd "$(go env GOPATH)/src/k8s.io/kubernetes" && ./hack/ginkgo-e2e.sh \
     '--provider=skeleton' "--num-nodes=${NUM_NODES}" \
     "--ginkgo.focus=${FOCUS}" "--ginkgo.skip=${SKIP}" \
-    "--report-dir=${ARTIFACTS}" '--disable-log-dump=true')
+    "--report-dir=${ARTIFACTS}" '--disable-log-dump=true' | tee ${ARTIFACTS}/e2e.log)
 
   unset KUBECONFIG
   unset KUBERNETES_CONFORMANCE_TEST
@@ -368,10 +364,6 @@ main() {
   do
     if [[ "$arg" == "--verbose" ]]; then
       set -o xtrace
-    fi
-    if [[ "$arg" == "--clean" ]]; then
-      cleanup
-      return 0
     fi
     if [[ "$arg" == "--install-prereqs" ]]; then
       INSTALL_PREREQS="1"
@@ -391,12 +383,15 @@ main() {
     if [[ "$arg" == "--run-tests-parallel" ]]; then
       export PARALLEL="true"
     fi
+    if [[ "$arg" == "--delete-cluster" ]]; then
+      DELETE_CLUSTER="1"
+    fi
   done
 
   # create temp dir and setup cleanup
   SKIP_CLEANUP=${SKIP_CLEANUP:-""}
   if [[ -z "${SKIP_CLEANUP}" ]]; then
-    trap exit-handler EXIT
+    trap dump_logs EXIT
   fi
   # ensure artifacts exists when not in CI
   export ARTIFACTS
@@ -419,12 +414,24 @@ main() {
   fi
 
   build
-  generate_manifests
   create_cluster
 
   if [[ -z "${SKIP_RUN_TESTS:-}" ]]; then
     echo "Running tests..."
+    # save some resources for tests
+    dump_kind_logs
+    make kind-reset
+
     run_tests
+  fi
+
+  DELETE_CLUSTER=${DELETE_CLUSTER:-""}
+  if [[ "${DELETE_CLUSTER}" == "yes" || "${DELETE_CLUSTER}" == "1" ]]; then
+    echo "Dumping logs"
+    dump_logs
+
+    echo "Deleting cluster..."
+    delete_cluster
   fi
 }
 

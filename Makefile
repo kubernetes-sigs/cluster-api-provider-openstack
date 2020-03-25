@@ -301,7 +301,7 @@ OPENSTACK_EXTERNAL_NETWORK_ID ?= ""
 OPENSTACK_DNS_NAMESERVERS ?= ""
 OPENSTACK_IMAGE_NAME ?= "ubuntu-1910-kube-v1.17.3"
 OPENSTACK_SSH_AUTHORIZED_KEY ?= ""
-OPENSTACK_NODE_MACHINE_FLAVOR ?= "m1.medium"
+OPENSTACK_NODE_MACHINE_FLAVOR ?= "m1.small"
 OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR ?= "m1.medium"
 CLUSTER_NAME ?= "capi-quickstart"
 OPENSTACK_CLUSTER_TEMPLATE ?= "./templates/cluster-template-without-lb.yaml"
@@ -311,7 +311,7 @@ WORKER_MACHINE_COUNT ?= "3"
 LOAD_IMAGE=$(CONTROLLER_IMG)-$(ARCH):$(TAG)
 
 .PHONY: create-cluster
-create-cluster: $(CLUSTERCTL) $(ENVSUBST) ## Create a development Kubernetes cluster on OpenStack in a KIND management cluster.
+create-cluster: $(CLUSTERCTL) $(KUSTOMIZE) $(ENVSUBST) ## Create a development Kubernetes cluster on OpenStack in a KIND management cluster.
 
 	# Create clusterctl.yaml to use local OpenStack provider
 	mkdir -p ./out/infrastructure-openstack/v0.3.0
@@ -339,7 +339,7 @@ create-cluster: $(CLUSTERCTL) $(ENVSUBST) ## Create a development Kubernetes clu
 
 	# (Re-)deploy CAPO provider
 	MANIFEST_IMG=$(CONTROLLER_IMG)-$(ARCH) MANIFEST_TAG=$(TAG) $(MAKE) set-manifest-image
-	kustomize build config > ./out/infrastructure-openstack/v0.3.0/infrastructure-components.yaml
+	$(KUSTOMIZE) build config > ./out/infrastructure-openstack/v0.3.0/infrastructure-components.yaml
 	$(CLUSTERCTL) delete --infrastructure openstack --include-namespace --namespace capo-system || true
 	kubectl wait --for=delete ns/capo-system || true
 	$(CLUSTERCTL) init --config ./out/clusterctl.yaml --infrastructure openstack
@@ -355,6 +355,10 @@ create-cluster: $(CLUSTERCTL) $(ENVSUBST) ## Create a development Kubernetes clu
 	kubectl wait --for condition=established --timeout=60s crds/openstackmachines.infrastructure.cluster.x-k8s.io
 	kubectl wait --for condition=established --timeout=60s crds/openstackmachinetemplates.infrastructure.cluster.x-k8s.io
 	kubectl wait --for condition=established --timeout=60s crds/openstackclusters.infrastructure.cluster.x-k8s.io
+
+    # Wait until everything is really ready, as we had some problems with pods being ready but not yet
+    # available when deploying the cluster.
+	sleep 5
 
 	# Create Cluster.
 	kubectl create ns $(CLUSTER_NAME) || true
@@ -375,18 +379,42 @@ create-cluster: $(CLUSTERCTL) $(ENVSUBST) ## Create a development Kubernetes clu
 	    --from=$(OPENSTACK_CLUSTER_TEMPLATE) \
 	    --kubernetes-version $(KUBERNETES_VERSION) \
 	    --control-plane-machine-count=$(CONTROL_PLANE_MACHINE_COUNT) \
-	    --worker-machine-count=$(WORKER_MACHINE_COUNT) \
-	    --target-namespace=$(CLUSTER_NAME) | kubectl apply -f -
+	    --worker-machine-count=$(WORKER_MACHINE_COUNT) > ./hack/ci/e2e-conformance/cluster.yaml
+
+    # Patch Kubernetes version
+	cat ./hack/ci/e2e-conformance/e2e-conformance_patch.yaml.tpl | \
+	  sed "s|\$${OPENSTACK_CLOUD_PROVIDER_CONF_B64}|$(OPENSTACK_CLOUD_PROVIDER_CONF_B64)|" | \
+	  sed "s|\$${OPENSTACK_CLOUD_CACERT_B64}|$(OPENSTACK_CLOUD_CACERT_B64)|" | \
+	  sed "s|\$${KUBERNETES_VERSION}|$(KUBERNETES_VERSION)|" | \
+	  sed "s|\$${CLUSTER_NAME}|$(CLUSTER_NAME)|"  \
+	   > ./hack/ci/e2e-conformance/e2e-conformance_patch.yaml
+	$(KUSTOMIZE) build --reorder=none hack/ci/e2e-conformance  > ./out/cluster.yaml
+
+	# Deploy cluster
+	kubectl apply -f ./out/cluster.yaml
 
 	# Wait for the kubeconfig to become available.
-	timeout 300 bash -c "while ! kubectl -n $(CLUSTER_NAME) get secrets | grep $(CLUSTER_NAME)-kubeconfig; do sleep 1; done"
+	timeout 300 bash -c "while ! kubectl get secrets | grep $(CLUSTER_NAME)-kubeconfig; do sleep 10; done"
 	# Get kubeconfig and store it locally.
-	kubectl -n $(CLUSTER_NAME) get secrets $(CLUSTER_NAME)-kubeconfig -o json | jq -r .data.value | base64 --decode > ./kubeconfig
-	timeout 900 bash -c "while ! kubectl --kubeconfig=./kubeconfig get nodes | grep master; do sleep 1; done"
+	kubectl get secrets $(CLUSTER_NAME)-kubeconfig -o json | jq -r .data.value | base64 --decode > ./kubeconfig
+	timeout 900 bash -c "while ! kubectl --kubeconfig=./kubeconfig get nodes | grep master; do sleep 10; done"
 
 	# Deploy calico
 	curl https://docs.projectcalico.org/manifests/calico.yaml | sed "s/veth_mtu:.*/veth_mtu: \"1400\"/g" | \
 		kubectl --kubeconfig=./kubeconfig apply -f -
+
+.PHONY: delete-cluster
+delete-cluster:
+	kubectl delete machinedeployment --all --ignore-not-found
+	kubectl delete kubeadmcontrolplane --all --ignore-not-found
+	kubectl delete cluster --all --ignore-not-found
+
+	kubectl get machinedeployment,kubeadmcontrolplane,cluster
+
+	@if [[ `kubectl get machinedeployment,kubeadmcontrolplane,cluster | wc -l` -gt 0 ]]; then \
+	  echo "Error: not all resources have been deleted correctly"; \
+	  exit 1; \
+	fi
 
 .PHONY: kind-reset
 kind-reset: ## Destroys the "clusterapi" kind cluster.

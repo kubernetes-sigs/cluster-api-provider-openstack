@@ -1,0 +1,40 @@
+- project:
+    name: kubernetes-sigs/cluster-api-provider-openstack
+    check:
+      jobs:
+        - cluster-api-provider-openstack-current-acceptance-test-v1.17
+        # FIXME: remove before merge
+        - cluster-api-provider-openstack-stable-acceptance-test-master-pr
+
+- job:
+    name: cluster-api-provider-openstack-conformance-pr
+    parent: init-test
+    timeout: 36000
+    description: |
+      Test CAPO & Kubernetes
+    run: .zuul/playbooks/run.yaml
+    nodeset: ubuntu-bionic-large
+    vars:
+      go_version: '1.13.8'
+      k8s_log_dir: '{{ ansible_user_dir }}/workspace/logs/_artifacts'
+      k8s_os_capi_provider_src_dir: '{{ ansible_user_dir }}/src/sigs.k8s.io/cluster-api-provider-openstack'
+      extra_args: ''
+
+- job:
+    name: cluster-api-provider-openstack-current-acceptance-test-v1.17
+    parent: cluster-api-provider-openstack-conformance-pr
+    description: |
+      Test CAPO current against Kubernetes release-1.17
+    vars:
+      k8s_version_series: '1.17'
+      extra_args: '--use-ci-artifacts'
+
+# FIXME: remove before merge
+- job:
+    name: cluster-api-provider-openstack-stable-acceptance-test-master-pr
+    parent: cluster-api-provider-openstack-conformance-pr
+    description: |
+      Test CAPO master against Kubernetes master
+    vars:
+      k8s_version_series: 'master'
+      extra_args: '--use-ci-artifacts'
