@@ -331,7 +331,7 @@ run_tests() {
   # if we set PARALLEL=true, skip serial tests set --ginkgo-parallel
   if [[ "${PARALLEL:-false}" == "true" ]]; then
     export GINKGO_PARALLEL=y
-    export GINKGO_PARALLEL_NODES=10
+    export GINKGO_PARALLEL_NODES=5
     echo "Running tests in parallel"
     if [[ -z "${SKIP}" ]]; then
       SKIP="\\[Serial\\]"

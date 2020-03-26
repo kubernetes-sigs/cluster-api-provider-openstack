@@ -2,9 +2,9 @@
     name: kubernetes-sigs/cluster-api-provider-openstack
     check:
       jobs:
-        - cluster-api-provider-openstack-current-acceptance-test-v1.17
+        - cluster-api-provider-openstack-current-acceptance-test-v1.18
         # FIXME: remove before merge
-        - cluster-api-provider-openstack-stable-acceptance-test-master-pr
+        - cluster-api-provider-openstack-current-acceptance-test-master
 
 - job:
     name: cluster-api-provider-openstack-conformance-pr
@@ -21,17 +21,17 @@
       extra_args: ''
 
 - job:
-    name: cluster-api-provider-openstack-current-acceptance-test-v1.17
+    name: cluster-api-provider-openstack-current-acceptance-test-v1.18
     parent: cluster-api-provider-openstack-conformance-pr
     description: |
-      Test CAPO current against Kubernetes release-1.17
+      Test CAPO current against Kubernetes release-1.18
     vars:
-      k8s_version_series: '1.17'
+      k8s_version_series: '1.18'
       extra_args: '--use-ci-artifacts'
 
 # FIXME: remove before merge
 - job:
-    name: cluster-api-provider-openstack-stable-acceptance-test-master-pr
+    name: cluster-api-provider-openstack-current-acceptance-test-master
     parent: cluster-api-provider-openstack-conformance-pr
     description: |
       Test CAPO master against Kubernetes master
