@@ -3,8 +3,6 @@
     check:
       jobs:
         - cluster-api-provider-openstack-current-acceptance-test-v1.18
-        # FIXME: remove before merge
-        - cluster-api-provider-openstack-current-acceptance-test-master
 
 - job:
     name: cluster-api-provider-openstack-conformance-pr
@@ -27,14 +25,4 @@
       Test CAPO current against Kubernetes release-1.18
     vars:
       k8s_version_series: '1.18'
-      extra_args: '--use-ci-artifacts'
-
-# FIXME: remove before merge
-- job:
-    name: cluster-api-provider-openstack-current-acceptance-test-master
-    parent: cluster-api-provider-openstack-conformance-pr
-    description: |
-      Test CAPO master against Kubernetes master
-    vars:
-      k8s_version_series: 'master'
       extra_args: '--use-ci-artifacts'
