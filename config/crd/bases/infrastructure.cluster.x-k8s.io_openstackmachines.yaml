@@ -256,6 +256,9 @@ spec:
                       type: string
                   type: object
                 type: array
+              serverGroupID:
+                description: The server group to assign the machine to
+                type: string
               serverMetadata:
                 additionalProperties:
                   type: string

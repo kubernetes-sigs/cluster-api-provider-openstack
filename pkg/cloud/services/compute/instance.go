@@ -26,6 +26,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/bootfromvolume"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/schedulerhints"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	netext "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions"
@@ -228,22 +229,9 @@ func (s *Service) InstanceCreate(clusterName string, machine *clusterv1.Machine,
 		ConfigDrive:      openStackMachine.Spec.ConfigDrive,
 	}
 
-	// If the root volume Size is not 0, means boot from volume
-	if openStackMachine.Spec.RootVolume != nil && openStackMachine.Spec.RootVolume.Size != 0 {
-		block := bootfromvolume.BlockDevice{
-			SourceType:          bootfromvolume.SourceType(openStackMachine.Spec.RootVolume.SourceType),
-			BootIndex:           0,
-			UUID:                openStackMachine.Spec.RootVolume.SourceUUID,
-			DeleteOnTermination: true,
-			DestinationType:     bootfromvolume.DestinationVolume,
-			VolumeSize:          openStackMachine.Spec.RootVolume.Size,
-			DeviceType:          openStackMachine.Spec.RootVolume.DeviceType,
-		}
-		serverCreateOpts = bootfromvolume.CreateOptsExt{
-			CreateOptsBuilder: serverCreateOpts,
-			BlockDevice:       []bootfromvolume.BlockDevice{block},
-		}
-	}
+	serverCreateOpts = applyRootVolume(serverCreateOpts, openStackMachine.Spec.RootVolume)
+
+	serverCreateOpts = applyServerGroupID(serverCreateOpts, openStackMachine.Spec.ServerGroupID)
 
 	server, err := servers.Create(s.computeClient, keypairs.CreateOptsExt{
 		CreateOptsBuilder: serverCreateOpts,
@@ -256,6 +244,40 @@ func (s *Service) InstanceCreate(clusterName string, machine *clusterv1.Machine,
 	record.Eventf(openStackMachine, "SuccessfulCreateServer", "Created server %s with id %s", openStackMachine.Name, server.ID)
 
 	return &Instance{Server: *server, State: infrav1.InstanceState(server.Status)}, nil
+}
+
+// applyRootVolume sets a root volume if the root volume Size is not 0
+func applyRootVolume(opts servers.CreateOptsBuilder, rootVolume *infrav1.RootVolume) servers.CreateOptsBuilder {
+	if rootVolume != nil && rootVolume.Size != 0 {
+		block := bootfromvolume.BlockDevice{
+			SourceType:          bootfromvolume.SourceType(rootVolume.SourceType),
+			BootIndex:           0,
+			UUID:                rootVolume.SourceUUID,
+			DeleteOnTermination: true,
+			DestinationType:     bootfromvolume.DestinationVolume,
+			VolumeSize:          rootVolume.Size,
+			DeviceType:          rootVolume.DeviceType,
+		}
+		return bootfromvolume.CreateOptsExt{
+			CreateOptsBuilder: opts,
+			BlockDevice:       []bootfromvolume.BlockDevice{block},
+		}
+	}
+	return opts
+}
+
+// applyServerGroupID adds a scheduler hint to the CreateOptsBuilder, if the
+// spec contains a server group ID
+func applyServerGroupID(opts servers.CreateOptsBuilder, serverGroupID string) servers.CreateOptsBuilder {
+	if serverGroupID != "" {
+		return schedulerhints.CreateOptsExt{
+			CreateOptsBuilder: opts,
+			SchedulerHints: schedulerhints.SchedulerHints{
+				Group: serverGroupID,
+			},
+		}
+	}
+	return opts
 }
 
 func getTrunkSupport(is *Service) (bool, error) {
