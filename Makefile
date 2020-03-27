@@ -405,8 +405,6 @@ create-cluster: $(CLUSTERCTL) $(KUSTOMIZE) $(ENVSUBST) ## Create a development K
 
 .PHONY: delete-cluster
 delete-cluster:
-	kubectl delete machinedeployment --all --ignore-not-found
-	kubectl delete kubeadmcontrolplane --all --ignore-not-found
 	kubectl delete cluster --all --ignore-not-found
 
 	kubectl get machinedeployment,kubeadmcontrolplane,cluster

@@ -418,16 +418,11 @@ main() {
 
   if [[ -z "${SKIP_RUN_TESTS:-}" ]]; then
     echo "Running tests..."
+    # save some resources for tests
+    dump_kind_logs
+    make kind-reset
+
     run_tests
-  fi
-
-  DELETE_CLUSTER=${DELETE_CLUSTER:-""}
-  if [[ "${DELETE_CLUSTER}" == "yes" || "${DELETE_CLUSTER}" == "1" ]]; then
-    echo "Dumping logs"
-    dump_logs
-
-    echo "Deleting cluster..."
-    delete_cluster
   fi
 }
 
