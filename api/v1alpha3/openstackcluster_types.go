@@ -115,6 +115,9 @@ type OpenStackClusterSpec struct {
 	// ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
 	// +optional
 	ControlPlaneEndpoint clusterv1.APIEndpoint `json:"controlPlaneEndpoint"`
+
+	// AvailabilityZone is the az to deploy controller to
+	AvailabilityZones []string `json:"availabilityZones,omitempty"`
 }
 
 // OpenStackClusterStatus defines the observed state of OpenStackCluster

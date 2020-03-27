@@ -291,6 +291,21 @@ func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, log lo
 		if az.ZoneName == "internal" {
 			continue
 		}
+		// If Az given, then check whether it's in the allow list
+		// If no Az given, then by default put into allow list
+		if len(openStackCluster.Spec.AvailabilityZones) > 0 {
+			found := false
+			for _, a := range openStackCluster.Spec.AvailabilityZones {
+				if a == az.ZoneName {
+					found = true
+					break
+				}
+			}
+			if !found {
+				continue
+			}
+		}
+
 		openStackCluster.Status.FailureDomains[az.ZoneName] = clusterv1.FailureDomainSpec{
 			ControlPlane: true,
 		}

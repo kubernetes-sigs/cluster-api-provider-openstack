@@ -75,6 +75,11 @@ spec:
                 description: APIServerLoadBalancerPort is the port on which the listener
                   on the APIServer loadbalancer will be created
                 type: integer
+              availabilityZones:
+                description: AvailabilityZone is the az to deploy controller to
+                items:
+                  type: string
+                type: array
               caKeyPair:
                 description: CAKeyPair is the key pair for ca certs.
                 properties:
