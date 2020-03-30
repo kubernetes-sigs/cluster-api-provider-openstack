@@ -150,7 +150,23 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, log lo
 		}
 	}
 
-	// TODO(sbueringer) Delete network/subnet/router/... if created by CAPO
+	if openStackCluster.Status.Network.Router != nil {
+		log.Info("Deleting router", "name", openStackCluster.Status.Network.Router.Name)
+		if err := networkingService.DeleteRouter(openStackCluster.Status.Network); err != nil {
+			return ctrl.Result{}, errors.Errorf("failed to delete router: %v", err)
+		}
+		log.Info("OpenStack router deleted successfully")
+	}
+
+	if openStackCluster.Status.Network != nil {
+		log.Info("Deleting network", "name", openStackCluster.Status.Network.Name)
+		if err := networkingService.DeleteNetwork(openStackCluster.Status.Network); err != nil {
+			return ctrl.Result{}, errors.Errorf("failed to delete network: %v", err)
+		}
+		log.Info("OpenStack network deleted successfully")
+	}
+
+	log.Info("OpenStack cluster deleted successfully")
 
 	// Cluster is deleted so remove the finalizer.
 	controllerutil.RemoveFinalizer(openStackCluster, infrav1.ClusterFinalizer)
@@ -297,6 +313,7 @@ func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, log lo
 	}
 
 	openStackCluster.Status.Ready = true
+	log.Info("Reconciled Cluster create successfully")
 	return ctrl.Result{}, nil
 }
 
