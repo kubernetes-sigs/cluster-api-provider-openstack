@@ -79,7 +79,7 @@
         export CONTROL_PLANE_MACHINE_COUNT=1
         export WORKER_MACHINE_COUNT=1
 
-        ./hack/ci/e2e-conformance.sh --install-prereqs --run-tests-parallel {{ extra_args }}
+        ./hack/ci/e2e-conformance.sh --install-prereqs --run-tests-parallel --delete-cluster {{ extra_args }}
 
         # Print some infos
         ps aux
