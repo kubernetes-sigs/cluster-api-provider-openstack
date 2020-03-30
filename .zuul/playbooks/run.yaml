@@ -19,7 +19,6 @@
     enable_services:
     - 'nova'
     - 'neutron'
-    - 'cinder'
     - 'keystone'
     - 'glance'
   - role: install-devstack
@@ -27,6 +26,7 @@
       USE_PYTHON3: 'True'
       DEVSTACK_GATE_LIBVIRT_TYPE: 'kvm'
       OS_BRANCH: 'stable/train'
+      OVERRIDE_ENABLED_SERVICES: 'dstat,etcd3,g-api,g-reg,key,mysql,n-api,n-api-meta,n-cond,n-cpu,n-novnc,n-sch,placement-api,q-agt,q-dhcp,q-l3,q-meta,q-metering,q-svc,rabbit'
   tasks:
   - name: Run kubernetes E2E conformance tests with ClusterAPI OpenStack
     shell:
