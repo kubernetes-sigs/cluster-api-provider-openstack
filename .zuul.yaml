@@ -3,6 +3,8 @@
     check:
       jobs:
         - cluster-api-provider-openstack-current-acceptance-test-v1.18
+            files:
+            - .*
 
 - job:
     name: cluster-api-provider-openstack-conformance-pr
