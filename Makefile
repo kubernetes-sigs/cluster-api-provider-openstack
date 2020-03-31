@@ -400,7 +400,7 @@ create-cluster: $(CLUSTERCTL) $(KUSTOMIZE) $(ENVSUBST) ## Create a development K
 	timeout 900 bash -c "while ! kubectl --kubeconfig=./kubeconfig get nodes | grep master; do sleep 10; done"
 
 	# Deploy calico
-	curl https://docs.projectcalico.org/manifests/calico.yaml | sed "s/veth_mtu:.*/veth_mtu: \"1400\"/g" | \
+	cat hack/ci/e2e-conformance/calico.yaml | sed "s/veth_mtu:.*/veth_mtu: \"1400\"/g" | \
 		kubectl --kubeconfig=./kubeconfig apply -f -
 
 .PHONY: delete-cluster
