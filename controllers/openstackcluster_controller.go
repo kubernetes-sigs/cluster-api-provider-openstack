@@ -170,10 +170,11 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, log lo
 
 	// Cluster is deleted so remove the finalizer.
 	controllerutil.RemoveFinalizer(openStackCluster, infrav1.ClusterFinalizer)
+	log.Info("Reconciled Cluster delete successfully")
 	if err := patchHelper.Patch(ctx, openStackCluster); err != nil {
 		return ctrl.Result{}, err
 	}
-	return reconcile.Result{}, nil
+	return ctrl.Result{}, nil
 }
 
 func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, log logr.Logger, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {

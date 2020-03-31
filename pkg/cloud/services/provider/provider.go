@@ -153,3 +153,33 @@ func getCloudFromSecret(ctrlClient client.Client, secretNamespace string, secret
 
 	return clouds.Clouds[cloudName], caCert, nil
 }
+
+type project struct {
+	ID   string `json:"id"`
+	Name string
+}
+
+type projects struct {
+	Projects []project `json:"projects"`
+}
+
+func GetProjectID(client *gophercloud.ProviderClient, name string) (string, error) {
+	c, err := openstack.NewIdentityV3(client, gophercloud.EndpointOpts{})
+	if err != nil {
+		return "", fmt.Errorf("failed to create identity service client: %v", err)
+	}
+
+	jsonResp := projects{}
+	resp, err := c.Get(c.ServiceURL("auth", "projects"), &jsonResp, &gophercloud.RequestOpts{OkCodes: []int{200}})
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	for _, project := range jsonResp.Projects {
+		if project.Name == name {
+			return project.ID, nil
+		}
+	}
+	return "", fmt.Errorf("project %s not found", name)
+}

@@ -68,10 +68,9 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 		if err != nil {
 			return fmt.Errorf("error creating loadbalancer: %s", err)
 		}
-		err = waitForLoadBalancerActive(s.logger, s.loadbalancerClient, lb.ID)
-		if err != nil {
-			return err
-		}
+	}
+	if err := waitForLoadBalancerActive(s.logger, s.loadbalancerClient, lb.ID); err != nil {
+		return err
 	}
 
 	// floating ip
@@ -127,14 +126,13 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 			if err != nil {
 				return fmt.Errorf("error creating listener: %s", err)
 			}
-			err = waitForLoadBalancerActive(s.logger, s.loadbalancerClient, lb.ID)
-			if err != nil {
-				return err
-			}
-			err = waitForListener(s.logger, s.loadbalancerClient, listener.ID, "ACTIVE")
-			if err != nil {
-				return err
-			}
+		}
+		if err := waitForLoadBalancerActive(s.logger, s.loadbalancerClient, lb.ID); err != nil {
+			return err
+		}
+
+		if err := waitForListener(s.logger, s.loadbalancerClient, listener.ID, "ACTIVE"); err != nil {
+			return err
 		}
 
 		// lb pool
@@ -154,10 +152,9 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 			if err != nil {
 				return fmt.Errorf("error creating pool: %s", err)
 			}
-			err = waitForLoadBalancerActive(s.logger, s.loadbalancerClient, lb.ID)
-			if err != nil {
-				return err
-			}
+		}
+		if err := waitForLoadBalancerActive(s.logger, s.loadbalancerClient, lb.ID); err != nil {
+			return err
 		}
 
 		// lb monitor
@@ -179,10 +176,9 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 			if err != nil {
 				return fmt.Errorf("error creating monitor: %s", err)
 			}
-			err = waitForLoadBalancerActive(s.logger, s.loadbalancerClient, lb.ID)
-			if err != nil {
-				return err
-			}
+		}
+		if err = waitForLoadBalancerActive(s.logger, s.loadbalancerClient, lb.ID); err != nil {
+			return err
 		}
 	}
 

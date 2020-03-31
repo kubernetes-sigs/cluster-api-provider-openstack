@@ -303,6 +303,9 @@ func getSecurityGroups(is *Service, securityGroupParams []infrav1.SecurityGroupP
 	var sgIDs []string
 	for _, sg := range securityGroupParams {
 		listOpts := groups.ListOpts(sg.Filter)
+		if listOpts.ProjectID == "" {
+			listOpts.ProjectID = is.projectID
+		}
 		listOpts.Name = sg.Name
 		listOpts.ID = sg.UUID
 		pages, err := groups.List(is.networkClient, listOpts).AllPages()
