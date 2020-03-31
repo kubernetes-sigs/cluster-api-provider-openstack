@@ -1,5 +1,5 @@
 - project:
-    name: kubernetes-sigs/cluster-api-provider-openstack
+    name: kubernetes-sigs/cluster-api-provider-openstack-pr
     check:
       jobs:
         - cluster-api-provider-openstack-current-acceptance-test-v1.18
