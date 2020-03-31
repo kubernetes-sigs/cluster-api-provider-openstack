@@ -33,6 +33,7 @@ verify_kustomize_version() {
       fi
       curl -sLo "${GOPATH_BIN}/kustomize" https://github.com/kubernetes-sigs/kustomize/releases/download/v${MINIMUM_KUSTOMIZE_VERSION}/kustomize_${MINIMUM_KUSTOMIZE_VERSION}_linux_amd64
       chmod +x "${GOPATH_BIN}/kustomize"
+      echo "kustomize installed"
     else
       echo "Missing required binary in path: kustomize"
       return 2
