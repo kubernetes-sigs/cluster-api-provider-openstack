@@ -84,10 +84,6 @@
 
         ./hack/ci/e2e-conformance.sh --install-prereqs --run-tests-parallel --delete-cluster {{ extra_args }}
 
-        # Print some infos
-        ps aux
-        df -h
-
       executable: /bin/bash
       chdir: '{{ k8s_os_capi_provider_src_dir }}'
     environment: '{{ global_env }}'

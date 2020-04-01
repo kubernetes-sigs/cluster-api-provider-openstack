@@ -143,6 +143,9 @@ dump_capo_logs() {
 }
 
 function dump_logs() {
+  # Print some infos
+  ps aux
+  df -h
   dump_kind_logs
   dump_capo_logs
 }
