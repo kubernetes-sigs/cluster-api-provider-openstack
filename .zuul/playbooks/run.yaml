@@ -11,6 +11,9 @@
         sudo modprobe kvm-intel
         cat /sys/module/kvm_intel/parameters/nested
         modinfo kvm_intel | grep nested
+
+        cat /proc/cpuinfo
+        cat /proc/meminfo
   roles:
   - move-k8s-repo-to-k8s-specific-dir
   - config-golang
