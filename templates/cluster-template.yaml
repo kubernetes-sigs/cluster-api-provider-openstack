@@ -31,11 +31,12 @@ spec:
   apiServerLoadBalancerPort: 6443
   apiServerLoadBalancerAdditionalPorts:
   - 22
+  managedSecurityGroups: true
   nodeCidr: 10.6.0.0/24
   dnsNameservers:
   - ${OPENSTACK_DNS_NAMESERVERS}
   externalNetworkId: ${OPENSTACK_EXTERNAL_NETWORK_ID}
-  disablePortSecurity: true
+  disablePortSecurity: false
   disableServerTags: true
   useOctavia: true
 ---
@@ -120,6 +121,9 @@ spec:
       cloudsSecret:
         name: ${CLUSTER_NAME}-cloud-config
         namespace: ${NAMESPACE}
+      securityGroups:
+      - name: k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-controlplane
+      - name: k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-all
 ---
 apiVersion: cluster.x-k8s.io/v1alpha3
 kind: MachineDeployment
@@ -158,6 +162,8 @@ spec:
         namespace: ${NAMESPACE}
       flavor: ${OPENSTACK_NODE_MACHINE_FLAVOR}
       image: ${OPENSTACK_IMAGE_NAME}
+      securityGroups:
+        - name: k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-all
 ---
 apiVersion: bootstrap.cluster.x-k8s.io/v1alpha3
 kind: KubeadmConfigTemplate
