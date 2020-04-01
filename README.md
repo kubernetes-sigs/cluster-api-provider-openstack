@@ -57,7 +57,7 @@ This provider's versions are able to install Kubernetes to the following version
 |-------------------------------------------------|---|---|---|---|---|
 | OpenStack Provider v1alpha1 (release-0.1 branch)| ✓ | ✓ | ✓ | ✓ | + |
 | OpenStack Provider v1alpha2 (v0.2)              | + | ✓ | + | ✓ | + |
-| OpenStack Provider v1alpha3 (v0.3)              | + | + | + | + | ✓ | 
+| OpenStack Provider v1alpha3 (v0.3)              | + | + | + | ? | ✓ | 
 
 Test status:
 * `✓` tested
