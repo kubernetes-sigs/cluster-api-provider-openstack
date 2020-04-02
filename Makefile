@@ -394,7 +394,7 @@ create-cluster: $(CLUSTERCTL) $(KUSTOMIZE) $(ENVSUBST) ## Create a development K
 	kubectl apply -f ./out/cluster.yaml
 
 	# Wait for the kubeconfig to become available.
-	timeout 300 bash -c "while ! kubectl get secrets | grep $(CLUSTER_NAME)-kubeconfig; do sleep 10; done"
+	timeout 600 bash -c "while ! kubectl get secrets | grep $(CLUSTER_NAME)-kubeconfig; do sleep 10; done"
 	# Get kubeconfig and store it locally.
 	kubectl get secrets $(CLUSTER_NAME)-kubeconfig -o json | jq -r .data.value | base64 --decode > ./kubeconfig
 	timeout 900 bash -c "while ! kubectl --kubeconfig=./kubeconfig get nodes | grep master; do sleep 10; done"

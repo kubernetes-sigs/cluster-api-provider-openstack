@@ -136,6 +136,8 @@ dump_capo_logs() {
     ssh-to-node "${node}" "${jump_node}" "sudo journalctl --no-pager -u kubelet.service" > "${dir}/kubelet.log" || true
     ssh-to-node "${node}" "${jump_node}" "sudo journalctl --no-pager -u containerd.service" > "${dir}/containerd.log" || true
     ssh-to-node "${node}" "${jump_node}" "sudo top -b -n 1" > "${dir}/top.txt" || true
+    ssh-to-node "${node}" "${jump_node}" "sudo cat /proc/cpuinfo" > "${dir}/cpuinfo.txt" || true
+    ssh-to-node "${node}" "${jump_node}" "sudo cat /proc/meminfo" > "${dir}/meminfo.txt" || true
     ssh-to-node "${node}" "${jump_node}" "sudo crictl ps" > "${dir}/crictl-ps.log" || true
     ssh-to-node "${node}" "${jump_node}" "sudo crictl pods" > "${dir}/crictl-pods.log" || true
   done

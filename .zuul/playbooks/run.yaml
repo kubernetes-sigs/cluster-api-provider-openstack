@@ -12,6 +12,14 @@
         cat /sys/module/kvm_intel/parameters/nested
         modinfo kvm_intel | grep nested
 
+        cat << EOF >> /tmp/dg-local.conf
+        [[post-config|$NOVA_CONF]]
+        [libvirt]
+        cpu_mode "custom"
+        cpu_model "IvyBridge"
+        cpu_model_extra_flags "pcid"
+        EOF
+
         cat /proc/cpuinfo
         cat /proc/meminfo
   roles:
@@ -35,6 +43,9 @@
     shell:
       cmd: |
         set -xeo pipefail
+
+        sudo cat /opt/stack/new/devstack/localrc
+        sudo cat /etc/nova/nova.conf
 
         source /opt/stack/new/devstack/openrc admin admin
 
