@@ -15,15 +15,17 @@
         cat << EOF >> /tmp/dg-local.conf
         [[post-config|/etc/nova/nova.conf]]
         [libvirt]
-        cpu_mode = custom
-        cpu_model = IvyBridge
-        cpu_model_extra_flags = pcid
+        cpu_mode = host-model
+        cpu_model_extra_flags = pcid, vmx, pdpe1gb
         EOF
 
-
+        #cpu_mode = custom
+        #cpu_mode = host-model
         #cpu_mode = host-passthrough
 
-        #LIBVIRT_CPU_MODE=host-passthrough
+        # https://kashyapc.fedorapeople.org/Reducing-OpenStack-Guest-Perf-Impact-from-Meltdown.txt
+        # https://events19.linuxfoundation.org/wp-content/uploads/2017/12/Kashyap-Chamarthy_Effective-Virtual-CPU-Configuration-OSS-EU2018.pdf
+        # https://unix.stackexchange.com/questions/43539/what-do-the-flags-in-proc-cpuinfo-mean
 
         cat /proc/cpuinfo
         cat /proc/meminfo
