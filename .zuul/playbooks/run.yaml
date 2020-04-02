@@ -15,12 +15,13 @@
         cat << EOF >> /tmp/dg-local.conf
         [[post-config|/etc/nova/nova.conf]]
         [libvirt]
-        cpu_mode = host-passthrough
+        cpu_mode = custom
+        cpu_model = IvyBridge
+        cpu_model_extra_flags = pcid
         EOF
 
-        #cpu_mode = custom
-        #cpu_model = IvyBridge
-        #cpu_model_extra_flags = pcid
+
+        #cpu_mode = host-passthrough
 
         #LIBVIRT_CPU_MODE=host-passthrough
 
