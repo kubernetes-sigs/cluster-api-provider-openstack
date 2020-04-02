@@ -4,8 +4,6 @@
       jobs:
         - cluster-api-provider-openstack-current-acceptance-test-v1.18
         - cluster-api-provider-openstack-current-acceptance-test-v1.18-1
-        - cluster-api-provider-openstack-current-acceptance-test-v1.18-2
-        - cluster-api-provider-openstack-current-acceptance-test-v1.18-3
 
 - job:
     name: cluster-api-provider-openstack-conformance-pr
@@ -32,24 +30,6 @@
 
 - job:
     name: cluster-api-provider-openstack-current-acceptance-test-v1.18-1
-    parent: cluster-api-provider-openstack-conformance-pr
-    description: |
-      Test CAPO current against Kubernetes release-1.18
-    vars:
-      k8s_version_series: '1.18'
-      extra_args: '--use-ci-artifacts'
-
-- job:
-    name: cluster-api-provider-openstack-current-acceptance-test-v1.18-2
-    parent: cluster-api-provider-openstack-conformance-pr
-    description: |
-      Test CAPO current against Kubernetes release-1.18
-    vars:
-      k8s_version_series: '1.18'
-      extra_args: '--use-ci-artifacts'
-
-- job:
-    name: cluster-api-provider-openstack-current-acceptance-test-v1.18-3
     parent: cluster-api-provider-openstack-conformance-pr
     description: |
       Test CAPO current against Kubernetes release-1.18

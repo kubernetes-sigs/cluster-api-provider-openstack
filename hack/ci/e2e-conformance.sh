@@ -284,7 +284,7 @@ create_cluster() {
   KUBERNETES_VERSION=${KUBERNETES_VERSION} \
     make create-cluster
 
-  # Wait till all machines are running (bail out at 30 mins)
+  # Wait till all machines are running (bail out at 10 mins)
   attempt=0
   while true; do
     kubectl get machines
@@ -300,8 +300,8 @@ create_cluster() {
       exit 1
     fi
     timestamp=$(date +"[%H:%M:%S]")
-    if [[ ${attempt} -gt 180 ]]; then
-      echo "cluster did not start in 30 mins ... bailing out!"
+    if [[ ${attempt} -gt 60 ]]; then
+      echo "cluster did not start in 10 mins ... bailing out!"
       exit 1
     fi
     echo "$timestamp Total machines : $total / Running : $running .. waiting for 10 seconds"
