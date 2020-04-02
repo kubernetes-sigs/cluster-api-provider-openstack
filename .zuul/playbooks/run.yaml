@@ -52,9 +52,9 @@
         openstack domain list
 
         openstack flavor delete m1.small
-        openstack flavor create --ram 4096 --disk 10 --vcpus 2 --public --id 2 m1.small --property hw_rng:allowed='True'
+        openstack flavor create --ram 6144 --disk 10 --vcpus 2 --public --id 2 m1.small --property hw_rng:allowed='True'
         openstack flavor delete m1.medium
-        openstack flavor create --ram 4096 --disk 10 --vcpus 2 --public --id 3 m1.medium --property hw_rng:allowed='True'
+        openstack flavor create --ram 8192 --disk 10 --vcpus 4 --public --id 3 m1.medium --property hw_rng:allowed='True'
 
         #  Switch to demo project
         source /opt/stack/new/devstack/openrc admin demo
@@ -80,7 +80,7 @@
         export OPENSTACK_CONTROLPLANE_IP="172.24.5.24"
         export OPENSTACK_DNS_NAMESERVERS=8.8.8.8
         export CONTROL_PLANE_MACHINE_COUNT=1
-        export WORKER_MACHINE_COUNT=1
+        export WORKER_MACHINE_COUNT=2
 
         ./hack/ci/e2e-conformance.sh --install-prereqs --run-tests-parallel --delete-cluster {{ extra_args }}
 
