@@ -92,7 +92,7 @@ help:  ## Display this help
 images: docker-build ## Build all images
 
 .PHONY: check
-check: modules generate lint-full test verify
+check: modules generate lint test verify
 
 ## --------------------------------------
 ## Testing
@@ -153,10 +153,10 @@ $(RELEASE_NOTES) : $(TOOLS_DIR)/go.mod
 
 .PHONY: lint
 lint: $(GOLANGCI_LINT) ## Lint codebase
-	$(GOLANGCI_LINT) run -v
-
-lint-full: $(GOLANGCI_LINT) ## Run slower linters to detect possible issues
 	$(GOLANGCI_LINT) run -v --fast=false
+
+lint-fast: $(GOLANGCI_LINT) ## Run only faster linters to detect possible issues
+	$(GOLANGCI_LINT) run -v --fast=true
 
 ## --------------------------------------
 ## Generate
