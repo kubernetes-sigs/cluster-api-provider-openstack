@@ -59,7 +59,7 @@ spec:
           CI_DIR=/tmp/k8s-ci
           mkdir -p $CI_DIR
           # replace + with %2B for the URL
-          CI_URL="https://storage.googleapis.com/kubernetes-release-dev/ci/${CI_VERSION//+/%2B}/bin/linux/amd64"
+          CI_URL="https://storage.googleapis.com/kubernetes-release-dev/ci/${CI_VERSION//+/%2B}-bazel/bin/linux/amd64"
           declare -a BINARIES_TO_TEST=("kubectl" "kubelet" "kubeadm")
           declare -a CONTAINERS_TO_TEST=("kube-apiserver" "kube-controller-manager" "kube-scheduler" "kube-proxy")
           CONTAINER_EXT="tar"
@@ -148,7 +148,7 @@ spec:
               CI_DIR=/tmp/k8s-ci
               mkdir -p $CI_DIR
               # replace + with %2B for the URL
-              CI_URL="https://storage.googleapis.com/kubernetes-release-dev/ci/${CI_VERSION//+/%2B}/bin/linux/amd64"
+              CI_URL="https://storage.googleapis.com/kubernetes-release-dev/ci/${CI_VERSION//+/%2B}-bazel/bin/linux/amd64"
               declare -a BINARIES_TO_TEST=("kubectl" "kubelet" "kubeadm")
               declare -a CONTAINERS_TO_TEST=("kube-proxy")
               CONTAINER_EXT="tar"
