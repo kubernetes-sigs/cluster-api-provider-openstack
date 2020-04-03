@@ -141,8 +141,8 @@ func generateControlPlaneGroup(clusterName string) infrav1.SecurityGroup {
 				{
 					Direction:      "ingress",
 					EtherType:      "IPv4",
-					PortRangeMin:   443,
-					PortRangeMax:   443,
+					PortRangeMin:   6443,
+					PortRangeMax:   6443,
 					Protocol:       "tcp",
 					RemoteIPPrefix: "0.0.0.0/0",
 				},
