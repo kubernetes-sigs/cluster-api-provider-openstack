@@ -335,7 +335,9 @@ create-cluster: $(CLUSTERCTL) $(KUSTOMIZE) $(ENVSUBST) ## Create a development K
 
 	# (Re-)install Core providers
 	$(CLUSTERCTL) delete --all
-	$(CLUSTERCTL) init --core cluster-api:v0.3.2 --bootstrap kubeadm:v0.3.2 --control-plane kubeadm:v0.3.2
+	kubectl create -f https://github.com/jetstack/cert-manager/releases/download/v0.11.1/cert-manager.yaml
+	kubectl wait --for=condition=Available --timeout=5m apiservice v1beta1.webhook.cert-manager.io
+	kubectl apply -f https://github.com/kubernetes-sigs/cluster-api/releases/download/v0.3.3/cluster-api-components.yaml
 
 	# (Re-)deploy CAPO provider
 	MANIFEST_IMG=$(CONTROLLER_IMG)-$(ARCH) MANIFEST_TAG=$(TAG) $(MAKE) set-manifest-image
