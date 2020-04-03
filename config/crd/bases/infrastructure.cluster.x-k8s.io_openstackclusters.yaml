@@ -101,6 +101,12 @@ spec:
                       name must be unique.
                     type: string
                 type: object
+              controlPlaneAvailabilityZones:
+                description: ControlPlaneAvailabilityZones is the az to deploy control
+                  plane to
+                items:
+                  type: string
+                type: array
               controlPlaneEndpoint:
                 description: ControlPlaneEndpoint represents the endpoint used to
                   communicate with the control plane.

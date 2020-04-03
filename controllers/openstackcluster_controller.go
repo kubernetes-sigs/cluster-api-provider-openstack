@@ -177,6 +177,15 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, log lo
 	return ctrl.Result{}, nil
 }
 
+func contains(arr []string, target string) bool {
+	for _, a := range arr {
+		if a == target {
+			return true
+		}
+	}
+	return false
+}
+
 func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, log logr.Logger, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
 	log.Info("Reconciling Cluster")
 
@@ -308,8 +317,20 @@ func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, log lo
 		if az.ZoneName == "internal" {
 			continue
 		}
+
+		found := true
+		// If Az given, then check whether it's in the allow list
+		// If no Az given, then by default put into allow list
+		if len(openStackCluster.Spec.ControlPlaneAvailabilityZones) > 0 {
+			if contains(openStackCluster.Spec.ControlPlaneAvailabilityZones, az.ZoneName) {
+				found = true
+			} else {
+				found = false
+			}
+		}
+
 		openStackCluster.Status.FailureDomains[az.ZoneName] = clusterv1.FailureDomainSpec{
-			ControlPlane: true,
+			ControlPlane: found,
 		}
 	}
 
