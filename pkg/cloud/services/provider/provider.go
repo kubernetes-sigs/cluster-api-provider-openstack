@@ -85,7 +85,7 @@ func newClient(cloud clientconfig.Cloud, caCert []byte) (*gophercloud.ProviderCl
 
 	opts, err := clientconfig.AuthOptions(clientOpts)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("auth option failed for cloud %v: %v", cloud.Cloud, err)
 	}
 	opts.AllowReauth = true
 
