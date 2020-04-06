@@ -22,4 +22,4 @@ REPO_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
 # shellcheck source=../hack/ensure-go.sh
 source "${REPO_ROOT}/hack/ensure-go.sh"
 
-cd "${REPO_ROOT}" && make binaries docker-build
+cd "${REPO_ROOT}" && make binaries
