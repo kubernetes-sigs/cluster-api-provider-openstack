@@ -306,6 +306,7 @@ OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR ?= "m1.medium"
 CLUSTER_NAME ?= "capi-quickstart"
 OPENSTACK_CLUSTER_TEMPLATE ?= "./templates/cluster-template-without-lb.yaml"
 KUBERNETES_VERSION ?= "v1.17.3"
+CI_VERSION ?= $(KUBERNETES_VERSION)
 CONTROL_PLANE_MACHINE_COUNT ?= "1"
 WORKER_MACHINE_COUNT ?= "3"
 LOAD_IMAGE=$(CONTROLLER_IMG)-$(ARCH):$(TAG)
@@ -386,7 +387,8 @@ create-cluster: $(CLUSTERCTL) $(KUSTOMIZE) $(ENVSUBST) ## Create a development K
 	  sed "s|\$${OPENSTACK_CLOUD_PROVIDER_CONF_B64}|$(OPENSTACK_CLOUD_PROVIDER_CONF_B64)|" | \
 	  sed "s|\$${OPENSTACK_CLOUD_CACERT_B64}|$(OPENSTACK_CLOUD_CACERT_B64)|" | \
 	  sed "s|\$${KUBERNETES_VERSION}|$(KUBERNETES_VERSION)|" | \
-	  sed "s|\$${CLUSTER_NAME}|$(CLUSTER_NAME)|"  \
+	  sed "s|\$${CLUSTER_NAME}|$(CLUSTER_NAME)|"  | \
+	  sed "s|\$${CI_VERSION}|$(CI_VERSION)|" \
 	   > ./hack/ci/e2e-conformance/e2e-conformance_patch.yaml
 	$(KUSTOMIZE) build --reorder=none hack/ci/e2e-conformance  > ./out/cluster.yaml
 

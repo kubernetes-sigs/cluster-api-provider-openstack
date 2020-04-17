@@ -54,7 +54,6 @@ spec:
         ps aux
         top -b -n 1
 
-        CI_VERSION=${CI_VERSION:-"${KUBERNETES_VERSION}"}
         if [[ "${CI_VERSION}" != "" ]]; then
           CI_DIR=/tmp/k8s-ci
           mkdir -p $CI_DIR
