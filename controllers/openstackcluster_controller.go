@@ -160,7 +160,8 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, log lo
 		log.Info("OpenStack router deleted successfully")
 	}
 
-	if openStackCluster.Status.Network != nil {
+	// if NodeCIDR was not set, no network was created.
+	if openStackCluster.Status.Network != nil && openStackCluster.Spec.NodeCIDR != "" {
 		log.Info("Deleting network", "name", openStackCluster.Status.Network.Name)
 		if err := networkingService.DeleteNetwork(openStackCluster.Status.Network); err != nil {
 			return ctrl.Result{}, errors.Errorf("failed to delete network: %v", err)
@@ -334,11 +335,12 @@ func (r *OpenStackClusterReconciler) reconcileNetworkComponents(log logr.Logger,
 		if err != nil {
 			return errors.Errorf("failed to reconcile router: %v", err)
 		}
-		if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
-			err = loadBalancerService.ReconcileLoadBalancer(clusterName, openStackCluster)
-			if err != nil {
-				return errors.Errorf("failed to reconcile load balancer: %v", err)
-			}
+	}
+
+	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
+		err = loadBalancerService.ReconcileLoadBalancer(clusterName, openStackCluster)
+		if err != nil {
+			return errors.Errorf("failed to reconcile load balancer: %v", err)
 		}
 	}
 
