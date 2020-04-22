@@ -21,8 +21,10 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
+	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
+	"github.com/gophercloud/utils/openstack/clientconfig"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/tools/record"
@@ -189,8 +191,6 @@ func contains(arr []string, target string) bool {
 func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, log logr.Logger, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
 	log.Info("Reconciling Cluster")
 
-	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
-
 	// If the OpenStackCluster doesn't have our finalizer, add it.
 	controllerutil.AddFinalizer(openStackCluster, infrav1.ClusterFinalizer)
 	// Register the finalizer immediately to avoid orphaning OpenStack resources on delete
@@ -208,71 +208,9 @@ func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, log lo
 		return reconcile.Result{}, err
 	}
 
-	networkingService, err := networking.NewService(osProviderClient, clientOpts, log)
+	err = r.reconcileNetworkComponents(log, osProviderClient, clientOpts, cluster, openStackCluster)
 	if err != nil {
 		return reconcile.Result{}, err
-	}
-
-	loadBalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, log, openStackCluster.Spec.UseOctavia)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	log.Info("Reconciling network components")
-	if openStackCluster.Spec.NodeCIDR == "" {
-		log.V(4).Info("No need to reconcile network, searching network and subnet instead")
-
-		netOpts := networks.ListOpts(openStackCluster.Spec.Network)
-		networkList, err := networkingService.GetNetworksByFilter(&netOpts)
-		if err != nil && len(networkList) == 0 {
-			return reconcile.Result{}, errors.Errorf("failed to find network: %v", err)
-		}
-		if len(networkList) > 1 {
-			return reconcile.Result{}, errors.Errorf("failed to find only one network (result: %v): %v", networkList, err)
-		}
-		openStackCluster.Status.Network = &infrav1.Network{
-			ID:   networkList[0].ID,
-			Name: networkList[0].Name,
-		}
-
-		subnetOpts := subnets.ListOpts(openStackCluster.Spec.Subnet)
-		subnetOpts.NetworkID = networkList[0].ID
-		subnetList, err := networkingService.GetSubnetsByFilter(&subnetOpts)
-		if err != nil || len(subnetList) == 0 {
-			return reconcile.Result{}, errors.Errorf("failed to find subnet: %v", err)
-		}
-		if len(subnetList) > 1 {
-			return reconcile.Result{}, errors.Errorf("failed to find only one subnet (result: %v): %v", subnetList, err)
-		}
-		openStackCluster.Status.Network.Subnet = &infrav1.Subnet{
-			ID:   subnetList[0].ID,
-			Name: subnetList[0].Name,
-			CIDR: subnetList[0].CIDR,
-		}
-	} else {
-		err := networkingService.ReconcileNetwork(clusterName, openStackCluster)
-		if err != nil {
-			return reconcile.Result{}, errors.Errorf("failed to reconcile network: %v", err)
-		}
-		err = networkingService.ReconcileSubnet(clusterName, openStackCluster)
-		if err != nil {
-			return reconcile.Result{}, errors.Errorf("failed to reconcile subnets: %v", err)
-		}
-		err = networkingService.ReconcileRouter(clusterName, openStackCluster)
-		if err != nil {
-			return reconcile.Result{}, errors.Errorf("failed to reconcile router: %v", err)
-		}
-		if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
-			err = loadBalancerService.ReconcileLoadBalancer(clusterName, openStackCluster)
-			if err != nil {
-				return reconcile.Result{}, errors.Errorf("failed to reconcile load balancer: %v", err)
-			}
-		}
-	}
-
-	err = networkingService.ReconcileSecurityGroups(clusterName, openStackCluster)
-	if err != nil {
-		return reconcile.Result{}, errors.Errorf("failed to reconcile security groups: %v", err)
 	}
 
 	// Set APIEndpoints so the Cluster API Cluster Controller can pull them
@@ -337,6 +275,79 @@ func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, log lo
 	openStackCluster.Status.Ready = true
 	log.Info("Reconciled Cluster create successfully")
 	return ctrl.Result{}, nil
+}
+
+func (r *OpenStackClusterReconciler) reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
+	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
+
+	networkingService, err := networking.NewService(osProviderClient, clientOpts, log)
+	if err != nil {
+		return err
+	}
+
+	loadBalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, log, openStackCluster.Spec.UseOctavia)
+	if err != nil {
+		return err
+	}
+
+	log.Info("Reconciling network components")
+	if openStackCluster.Spec.NodeCIDR == "" {
+		log.V(4).Info("No need to reconcile network, searching network and subnet instead")
+
+		netOpts := networks.ListOpts(openStackCluster.Spec.Network)
+		networkList, err := networkingService.GetNetworksByFilter(&netOpts)
+		if err != nil && len(networkList) == 0 {
+			return errors.Errorf("failed to find network: %v", err)
+		}
+		if len(networkList) > 1 {
+			return errors.Errorf("failed to find only one network (result: %v): %v", networkList, err)
+		}
+		openStackCluster.Status.Network = &infrav1.Network{
+			ID:   networkList[0].ID,
+			Name: networkList[0].Name,
+		}
+
+		subnetOpts := subnets.ListOpts(openStackCluster.Spec.Subnet)
+		subnetOpts.NetworkID = networkList[0].ID
+		subnetList, err := networkingService.GetSubnetsByFilter(&subnetOpts)
+		if err != nil || len(subnetList) == 0 {
+			return errors.Errorf("failed to find subnet: %v", err)
+		}
+		if len(subnetList) > 1 {
+			return errors.Errorf("failed to find only one subnet (result: %v): %v", subnetList, err)
+		}
+		openStackCluster.Status.Network.Subnet = &infrav1.Subnet{
+			ID:   subnetList[0].ID,
+			Name: subnetList[0].Name,
+			CIDR: subnetList[0].CIDR,
+		}
+	} else {
+		err := networkingService.ReconcileNetwork(clusterName, openStackCluster)
+		if err != nil {
+			return errors.Errorf("failed to reconcile network: %v", err)
+		}
+		err = networkingService.ReconcileSubnet(clusterName, openStackCluster)
+		if err != nil {
+			return errors.Errorf("failed to reconcile subnets: %v", err)
+		}
+		err = networkingService.ReconcileRouter(clusterName, openStackCluster)
+		if err != nil {
+			return errors.Errorf("failed to reconcile router: %v", err)
+		}
+		if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
+			err = loadBalancerService.ReconcileLoadBalancer(clusterName, openStackCluster)
+			if err != nil {
+				return errors.Errorf("failed to reconcile load balancer: %v", err)
+			}
+		}
+	}
+
+	err = networkingService.ReconcileSecurityGroups(clusterName, openStackCluster)
+	if err != nil {
+		return errors.Errorf("failed to reconcile security groups: %v", err)
+	}
+
+	return nil
 }
 
 func (r *OpenStackClusterReconciler) SetupWithManager(mgr ctrl.Manager, options controller.Options) error {
