@@ -33,10 +33,9 @@ import (
 	gophercloudopenstack "github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 
-	clusterv1 "github.com/openshift/cluster-api/pkg/apis/cluster/v1alpha1"
-	machinev1 "github.com/openshift/cluster-api/pkg/apis/machine/v1beta1"
-	apierrors "github.com/openshift/cluster-api/pkg/errors"
-	"github.com/openshift/cluster-api/pkg/util"
+	machinev1 "github.com/openshift/machine-api-operator/pkg/apis/machine/v1beta1"
+	apierrors "github.com/openshift/machine-api-operator/pkg/controller/machine"
+	"github.com/openshift/machine-api-operator/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -107,10 +106,10 @@ func getTimeout(name string, timeout int) time.Duration {
 	return time.Duration(timeout)
 }
 
-func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluster, machine *machinev1.Machine) error {
+func (oc *OpenstackClient) Create(ctx context.Context, machine *machinev1.Machine) error {
 	// First check that provided labels are correct
 	// TODO(mfedosin): stop sending the infrastructure request when we start to receive the cluster value
-	clusterInfra, err := oc.params.ConfigClient.Infrastructures().Get("cluster", metav1.GetOptions{})
+	clusterInfra, err := oc.params.ConfigClient.Infrastructures().Get(context.TODO(), "cluster", metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("Failed to retrieve cluster Infrastructure object: %v", err)
 	}
@@ -180,7 +179,7 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 			return fmt.Errorf("UserDataSecret name must be provided")
 		}
 
-		userDataSecret, err := kubeClient.CoreV1().Secrets(namespace).Get(providerSpec.UserDataSecret.Name, metav1.GetOptions{})
+		userDataSecret, err := kubeClient.CoreV1().Secrets(namespace).Get(context.TODO(), providerSpec.UserDataSecret.Name, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -202,7 +201,7 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 	if len(userData) > 0 && !disableTemplating {
 		// FIXME(mandre) Find the right way to check if machine is part of the control plane
 		if machine.ObjectMeta.Name != "" {
-			userDataRendered, err = masterStartupScript(cluster, machine, string(userData))
+			userDataRendered, err = masterStartupScript(machine, string(userData))
 			if err != nil {
 				return oc.handleMachineError(machine, apierrors.CreateMachine(
 					"error creating Openstack instance: %v", err), createEventAction)
@@ -214,7 +213,7 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 				return oc.handleMachineError(machine, apierrors.CreateMachine(
 					"error creating Openstack instance: %v", err), createEventAction)
 			}
-			userDataRendered, err = nodeStartupScript(cluster, machine, token, string(userData))
+			userDataRendered, err = nodeStartupScript(machine, token, string(userData))
 			if err != nil {
 				return oc.handleMachineError(machine, apierrors.CreateMachine(
 					"error creating Openstack instance: %v", err), createEventAction)
@@ -224,20 +223,11 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 		userDataRendered = string(userData)
 	}
 
-	// NOTE(shadower): the OpenShift installer does not create the
-	// `cluster` object so it's `nil` here. Read the cluster name from
-	// the `machine` instead.
-	var clusterName string
+	//Read the cluster name from the `machine`.
+	clusterName := fmt.Sprintf("%s-%s", machine.Namespace, machine.Labels["machine.openshift.io/cluster-api-cluster"])
+
 	// TODO(egarcia): if we ever use the cluster object, this will benifit from reading from it
 	var clusterSpec openstackconfigv1.OpenstackClusterProviderSpec
-	if cluster == nil {
-		// TODO(shadower): if/when we ever reconcile the
-		// `machine.openshift.io` bit we should be able to merge this
-		// upstream.
-		clusterName = fmt.Sprintf("%s-%s", machine.Namespace, machine.Labels["machine.openshift.io/cluster-api-cluster"])
-	} else {
-		clusterName = fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
-	}
 
 	if postprocess {
 		switch postprocessor {
@@ -303,7 +293,7 @@ func (oc *OpenstackClient) Create(ctx context.Context, cluster *clusterv1.Cluste
 	return oc.updateAnnotation(machine, instance.ID, clusterInfraName)
 }
 
-func (oc *OpenstackClient) Delete(ctx context.Context, cluster *clusterv1.Cluster, machine *machinev1.Machine) error {
+func (oc *OpenstackClient) Delete(ctx context.Context, machine *machinev1.Machine) error {
 	machineService, err := clients.NewInstanceServiceFromMachine(oc.params.KubeClient, machine)
 	if err != nil {
 		return err
@@ -330,8 +320,8 @@ func (oc *OpenstackClient) Delete(ctx context.Context, cluster *clusterv1.Cluste
 	return nil
 }
 
-func (oc *OpenstackClient) Update(ctx context.Context, cluster *clusterv1.Cluster, machine *machinev1.Machine) error {
-	clusterInfra, err := oc.params.ConfigClient.Infrastructures().Get("cluster", metav1.GetOptions{})
+func (oc *OpenstackClient) Update(ctx context.Context, machine *machinev1.Machine) error {
+	clusterInfra, err := oc.params.ConfigClient.Infrastructures().Get(context.TODO(), "cluster", metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("Failed to retrieve cluster Infrastructure object: %v", err)
 	}
@@ -380,13 +370,13 @@ func (oc *OpenstackClient) Update(ctx context.Context, cluster *clusterv1.Cluste
 	} else {
 		// In this conditional block, Machine is Compute Node
 		klog.Infof("re-creating machine %s for update.", currentMachine.ObjectMeta.Name)
-		err = oc.Create(ctx, cluster, machine)
+		err = oc.Create(ctx, machine)
 		if err != nil {
 			klog.Errorf("create machine %s for update failed: %v", machine.ObjectMeta.Name, err)
 			return fmt.Errorf("Cannot create machine %s: %v", machine.ObjectMeta.Name, err)
 		}
 
-		err = oc.Delete(ctx, cluster, currentMachine)
+		err = oc.Delete(ctx, currentMachine)
 		if err != nil {
 			klog.Errorf("delete machine %s for update failed: %v", currentMachine.ObjectMeta.Name, err)
 			return fmt.Errorf("Cannot delete machine %s: %v", currentMachine.ObjectMeta.Name, err)
@@ -411,7 +401,7 @@ func (oc *OpenstackClient) Update(ctx context.Context, cluster *clusterv1.Cluste
 	return nil
 }
 
-func (oc *OpenstackClient) Exists(ctx context.Context, cluster *clusterv1.Cluster, machine *machinev1.Machine) (bool, error) {
+func (oc *OpenstackClient) Exists(ctx context.Context, machine *machinev1.Machine) (bool, error) {
 	instance, err := oc.instanceExists(machine)
 	if err != nil {
 		return false, fmt.Errorf("Error checking if instance exists (machine/actuator.go 346): %v", err)
@@ -540,7 +530,7 @@ func (oc *OpenstackClient) handleMachineError(machine *machinev1.Machine, err *a
 		}
 		machine.ObjectMeta.Annotations[MachineInstanceStateAnnotationName] = ErrorState
 
-		if err := oc.client.Update(nil, machine); err != nil {
+		if err := oc.client.Update(context.TODO(), machine); err != nil {
 			return fmt.Errorf("unable to update machine status: %v", err)
 		}
 	}
@@ -569,7 +559,7 @@ func (oc *OpenstackClient) updateAnnotation(machine *machinev1.Machine, instance
 	machine.ObjectMeta.Annotations[openstack.OpenstackIPAnnotationKey] = primaryIP
 	machine.ObjectMeta.Annotations[MachineInstanceStateAnnotationName] = instance.Status
 
-	if err := oc.client.Update(nil, machine); err != nil {
+	if err := oc.client.Update(context.TODO(), machine); err != nil {
 		return err
 	}
 
@@ -593,7 +583,7 @@ func (oc *OpenstackClient) updateAnnotation(machine *machinev1.Machine, instance
 	machineCopy.Status.Addresses = networkAddresses
 
 	if !equality.Semantic.DeepEqual(machine.Status.Addresses, machineCopy.Status.Addresses) {
-		if err := oc.client.Status().Update(nil, machineCopy); err != nil {
+		if err := oc.client.Status().Update(context.TODO(), machineCopy); err != nil {
 			return err
 		}
 	}
