@@ -17,11 +17,8 @@ limitations under the License.
 package clients
 
 import (
-	"crypto/tls"
-	"crypto/x509"
 	"encoding/base64"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
@@ -155,33 +152,12 @@ func GetCloudFromSecret(kubeClient kubernetes.Interface, namespace string, secre
 
 // TODO: Eventually we'll have a NewInstanceServiceFromCluster too
 func NewInstanceServiceFromMachine(kubeClient kubernetes.Interface, machine *machinev1.Machine) (*InstanceService, error) {
-	machineSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
+	cloud, err := GetCloud(kubeClient, machine)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get Machine Spec from Provider Spec: %v", err)
-	}
-	cloud := clientconfig.Cloud{}
-	if machineSpec.CloudsSecret != nil && machineSpec.CloudsSecret.Name != "" {
-		namespace := machineSpec.CloudsSecret.Namespace
-		if namespace == "" {
-			namespace = machine.Namespace
-		}
-		cloud, err = GetCloudFromSecret(kubeClient, namespace, machineSpec.CloudsSecret.Name, machineSpec.CloudName)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to get cloud from secret: %v", err)
-		}
+		return nil, err
 	}
 
-	cloudConfig, err := kubeClient.CoreV1().ConfigMaps("openshift-config").Get("cloud-provider-config", metav1.GetOptions{})
-	if err != nil {
-		klog.Warningf("failed to get configmap openshift-config/cloud-provider-config from kubernetes api: %v", err)
-		return NewInstanceServiceFromCloud(cloud, nil)
-	}
-
-	if cacert, ok := cloudConfig.Data["ca-bundle.pem"]; ok {
-		return NewInstanceServiceFromCloud(cloud, []byte(cacert))
-	}
-
-	return NewInstanceServiceFromCloud(cloud, nil)
+	return NewInstanceServiceFromCloud(cloud, GetCACertificate(kubeClient))
 }
 
 func NewInstanceService() (*InstanceService, error) {
@@ -190,49 +166,9 @@ func NewInstanceService() (*InstanceService, error) {
 }
 
 func NewInstanceServiceFromCloud(cloud clientconfig.Cloud, cert []byte) (*InstanceService, error) {
-	clientOpts := new(clientconfig.ClientOpts)
-
-	if cloud.AuthInfo != nil {
-		clientOpts.AuthInfo = cloud.AuthInfo
-		clientOpts.AuthType = cloud.AuthType
-		clientOpts.Cloud = cloud.Cloud
-		clientOpts.RegionName = cloud.RegionName
-	}
-
-	opts, err := clientconfig.AuthOptions(clientOpts)
-
+	provider, err := GetProviderClient(cloud, cert)
 	if err != nil {
 		return nil, err
-	}
-
-	opts.AllowReauth = true
-
-	provider, err := openstack.NewClient(opts.IdentityEndpoint)
-	if err != nil {
-		return nil, fmt.Errorf("Create new provider client failed: %v", err)
-	}
-
-	if cert != nil {
-		certPool, err := x509.SystemCertPool()
-		if err != nil {
-			return nil, fmt.Errorf("Create system cert pool failed: %v", err)
-		}
-		certPool.AppendCertsFromPEM(cert)
-		client := http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					RootCAs: certPool,
-				},
-			},
-		}
-		provider.HTTPClient = client
-	} else {
-		klog.Infof("Cloud provider CA cert not provided, using system trust bundle")
-	}
-
-	err = openstack.Authenticate(provider, *opts)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to authenticate provider client: %v", err)
 	}
 
 	identityClient, err := openstack.NewIdentityV3(provider, gophercloud.EndpointOpts{
@@ -242,7 +178,7 @@ func NewInstanceServiceFromCloud(cloud clientconfig.Cloud, cert []byte) (*Instan
 		return nil, fmt.Errorf("Create identityClient err: %v", err)
 	}
 	serverClient, err := openstack.NewComputeV2(provider, gophercloud.EndpointOpts{
-		Region: clientOpts.RegionName,
+		Region: cloud.RegionName,
 	})
 
 	if err != nil {
@@ -250,21 +186,21 @@ func NewInstanceServiceFromCloud(cloud clientconfig.Cloud, cert []byte) (*Instan
 	}
 
 	networkingClient, err := openstack.NewNetworkV2(provider, gophercloud.EndpointOpts{
-		Region: clientOpts.RegionName,
+		Region: cloud.RegionName,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("Create networkingClient err: %v", err)
 	}
 
 	imagesClient, err := openstack.NewImageServiceV2(provider, gophercloud.EndpointOpts{
-		Region: clientOpts.RegionName,
+		Region: cloud.RegionName,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("Create ImageClient err: %v", err)
 	}
 
 	volumeClient, err := openstack.NewBlockStorageV3(provider, gophercloud.EndpointOpts{
-		Region: clientOpts.RegionName,
+		Region: cloud.RegionName,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("Create VolumeClient err: %v", err)
@@ -277,7 +213,7 @@ func NewInstanceServiceFromCloud(cloud clientconfig.Cloud, cert []byte) (*Instan
 		networkClient:  networkingClient,
 		imagesClient:   imagesClient,
 		volumeClient:   volumeClient,
-		regionName:     clientOpts.RegionName,
+		regionName:     cloud.RegionName,
 	}, nil
 }
 
