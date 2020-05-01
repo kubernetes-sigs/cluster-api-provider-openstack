@@ -17,6 +17,7 @@ limitations under the License.
 package clients
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"time"
@@ -48,8 +49,8 @@ import (
 	"github.com/gophercloud/gophercloud/pagination"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	configclient "github.com/openshift/client-go/config/clientset/versioned/typed/config/v1"
-	machinev1 "github.com/openshift/cluster-api/pkg/apis/machine/v1beta1"
-	"github.com/openshift/cluster-api/pkg/util"
+	machinev1 "github.com/openshift/machine-api-operator/pkg/apis/machine/v1beta1"
+	"github.com/openshift/machine-api-operator/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog"
 	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
@@ -131,7 +132,7 @@ func GetCloudFromSecret(kubeClient kubernetes.Interface, namespace string, secre
 		return emptyCloud, fmt.Errorf("Secret name set to %v but no cloud was specified. Please set cloud_name in your machine spec.", secretName)
 	}
 
-	secret, err := kubeClient.CoreV1().Secrets(namespace).Get(secretName, metav1.GetOptions{})
+	secret, err := kubeClient.CoreV1().Secrets(namespace).Get(context.TODO(), secretName, metav1.GetOptions{})
 	if err != nil {
 		return emptyCloud, fmt.Errorf("Failed to get secrets from kubernetes api: %v", err)
 	}
@@ -469,7 +470,7 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, clust
 		return nil, fmt.Errorf("No network was found or provided. Please check your machine configuration and try again")
 	}
 
-	clusterInfra, err := configClient.Infrastructures().Get("cluster", metav1.GetOptions{})
+	clusterInfra, err := configClient.Infrastructures().Get(context.TODO(), "cluster", metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("Failed to retrieve cluster Infrastructure object: %v", err)
 	}

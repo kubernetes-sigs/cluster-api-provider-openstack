@@ -20,7 +20,7 @@ import (
 	"flag"
 	"log"
 
-	clusterapis "github.com/openshift/cluster-api/pkg/apis"
+	machinev1 "github.com/openshift/machine-api-operator/pkg/apis/machine/v1beta1"
 	"k8s.io/klog"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/apis"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/controller"
@@ -61,7 +61,7 @@ func main() {
 		klog.Fatal(err)
 	}
 
-	if err := clusterapis.AddToScheme(mgr.GetScheme()); err != nil {
+	if err := machinev1.AddToScheme(mgr.GetScheme()); err != nil {
 		klog.Fatal(err)
 	}
 

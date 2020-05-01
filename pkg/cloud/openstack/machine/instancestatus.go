@@ -23,7 +23,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime/serializer/json"
 
-	machinev1 "github.com/openshift/cluster-api/pkg/apis/machine/v1beta1"
+	machinev1 "github.com/openshift/machine-api-operator/pkg/apis/machine/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -95,7 +95,7 @@ func (oc *OpenstackClient) updateInstanceStatus(machine *machinev1.Machine) erro
 		return err
 	}
 
-	return oc.client.Update(nil, m)
+	return oc.client.Update(context.TODO(), m)
 }
 
 // Gets the state of the instance stored on the given machine CRD

@@ -1,6 +1,7 @@
 package clients
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
@@ -9,7 +10,7 @@ import (
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/utils/openstack/clientconfig"
-	machinev1 "github.com/openshift/cluster-api/pkg/apis/machine/v1beta1"
+	machinev1 "github.com/openshift/machine-api-operator/pkg/apis/machine/v1beta1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -43,7 +44,7 @@ func GetCloud(kubeClient kubernetes.Interface, machine *machinev1.Machine) (clie
 
 // GetCACertificate gets the CA certificate from the configmap
 func GetCACertificate(kubeClient kubernetes.Interface) []byte {
-	cloudConfig, err := kubeClient.CoreV1().ConfigMaps("openshift-config").Get("cloud-provider-config", metav1.GetOptions{})
+	cloudConfig, err := kubeClient.CoreV1().ConfigMaps("openshift-config").Get(context.TODO(), "cloud-provider-config", metav1.GetOptions{})
 	if err != nil {
 		klog.Warningf("failed to get configmap openshift-config/cloud-provider-config from kubernetes api: %v", err)
 		return nil

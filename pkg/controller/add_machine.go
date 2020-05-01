@@ -17,7 +17,7 @@ limitations under the License.
 package controller
 
 import (
-	"github.com/openshift/cluster-api/pkg/controller/machine"
+	"github.com/openshift/machine-api-operator/pkg/controller/machine"
 	ocm "sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/machine"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )

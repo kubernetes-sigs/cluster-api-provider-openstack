@@ -14,6 +14,9 @@ type TLSSecurityProfile struct {
 	// are found to be insecure.  Depending on precisely which ciphers are available to a process, the list may be
 	// reduced.
 	//
+	// Note that the Modern profile is currently not supported because it is not
+	// yet well adopted by common software libraries.
+	//
 	// +unionDiscriminator
 	// +optional
 	Type TLSProfileType `json:"type"`
@@ -93,6 +96,8 @@ type TLSSecurityProfile struct {
 	//     - TLS_CHACHA20_POLY1305_SHA256
 	//   minTLSVersion: TLSv1.3
 	//
+	// NOTE: Currently unsupported.
+	//
 	// +optional
 	// +nullable
 	Modern *ModernTLSProfile `json:"modern,omitempty"`
@@ -131,6 +136,7 @@ type CustomTLSProfile struct {
 }
 
 // TLSProfileType defines a TLS security profile type.
+// +kubebuilder:validation:Enum=Old;Intermediate;Modern;Custom
 type TLSProfileType string
 
 const (
@@ -163,6 +169,8 @@ type TLSProfileSpec struct {
 	//
 	//   minTLSVersion: TLSv1.1
 	//
+	// NOTE: currently the highest minTLSVersion allowed is VersionTLS12
+	//
 	MinTLSVersion TLSProtocolVersion `json:"minTLSVersion"`
 }
 
@@ -173,6 +181,7 @@ type TLSProfileSpec struct {
 //
 // Note that SSLv3.0 is not a supported protocol version due to well known
 // vulnerabilities such as POODLE: https://en.wikipedia.org/wiki/POODLE
+// +kubebuilder:validation:Enum=VersionTLS10;VersionTLS11;VersionTLS12;VersionTLS13
 type TLSProtocolVersion string
 
 const (
