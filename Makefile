@@ -335,7 +335,7 @@ create-cluster: $(CLUSTERCTL) $(KUSTOMIZE) $(ENVSUBST) ## Create a development K
 
 	# (Re-)install Core providers
 	$(CLUSTERCTL) delete --all
-	$(CLUSTERCTL) init --core cluster-api:v0.3.3 --bootstrap kubeadm:v0.3.3 --control-plane kubeadm:v0.3.3
+	$(CLUSTERCTL) init --core cluster-api:v0.3.5 --bootstrap kubeadm:v0.3.5 --control-plane kubeadm:v0.3.5
 
 	# (Re-)deploy CAPO provider
 	MANIFEST_IMG=$(CONTROLLER_IMG)-$(ARCH) MANIFEST_TAG=$(TAG) $(MAKE) set-manifest-image
