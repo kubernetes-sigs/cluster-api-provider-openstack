@@ -693,7 +693,7 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, clust
 	return serverToInstance(server), nil
 }
 
-func (is *InstanceService) InstanceDelete(id string) error {
+func (is *InstanceService) deleteInstancePorts(id string) error {
 	// get instance port id
 	allInterfaces, err := attachinterfaces.List(is.computeClient, id).AllPages()
 	if err != nil {
@@ -754,6 +754,15 @@ func (is *InstanceService) InstanceDelete(id string) error {
 		if err != nil {
 			return fmt.Errorf("Error deleting the port %v", port.PortID)
 		}
+	}
+
+	return nil
+}
+
+func (is *InstanceService) InstanceDelete(id string) error {
+	err := is.deleteInstancePorts(id)
+	if err != nil {
+		klog.Warningf("Couldn't delete all instance %v ports: %v", id, err)
 	}
 
 	// delete instance
