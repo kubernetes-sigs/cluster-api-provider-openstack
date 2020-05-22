@@ -36,6 +36,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/schedulerhints"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/servergroups"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/identity/v3/tokens"
@@ -395,7 +396,9 @@ func getImageID(is *InstanceService, imageName string) (string, error) {
 	}
 }
 
-// InstanceCreate creates a compute instance
+// InstanceCreate creates a compute instance.
+// If ServerGroupName is nonempty and no server group exists with that name,
+// then InstanceCreate creates a server group with that name.
 func (is *InstanceService) InstanceCreate(clusterName string, name string, clusterSpec *openstackconfigv1.OpenstackClusterProviderSpec, config *openstackconfigv1.OpenstackProviderSpec, cmd string, keyName string, configClient configclient.ConfigV1Interface) (instance *Instance, err error) {
 	if config == nil {
 		return nil, fmt.Errorf("create Options need be specified to create instace")
@@ -671,6 +674,49 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, clust
 
 	}
 
+	// The Machine spec accepts both a server group ID and a server group
+	// name. If both are present, assert that they are consistent, else
+	// fail. If only the name is present, create the server group.
+	//
+	// This block validates or populates config.ServerGroupID.
+	if config.ServerGroupName != "" {
+		existingServerGroups, err := getServerGroupsByName(is.computeClient, config.ServerGroupName)
+		if err != nil {
+			return nil, fmt.Errorf("retrieving existing server groups: %v", err)
+		}
+
+		if config.ServerGroupID == "" {
+			switch len(existingServerGroups) {
+			case 0:
+				sg, err := createServerGroup(is.computeClient, config.ServerGroupName)
+				if err != nil {
+					return nil, fmt.Errorf("creating the server group: %v", err)
+				}
+				config.ServerGroupID = sg.ID
+			case 1:
+				config.ServerGroupID = existingServerGroups[0].ID
+			default:
+				return nil, fmt.Errorf("multiple server groups found with the same ServerGroupName")
+			}
+		} else {
+			switch len(existingServerGroups) {
+			case 0:
+				return nil, fmt.Errorf("incompatible ServerGroupID and ServerGroupName")
+			default:
+				var found bool
+				for _, existingServerGroup := range existingServerGroups {
+					if existingServerGroup.ID == config.ServerGroupID {
+						found = true
+						break
+					}
+				}
+				if !found {
+					return nil, fmt.Errorf("incompatible ServerGroupID and ServerGroupName")
+				}
+			}
+		}
+	}
+
 	// If the spec sets a server group, then add scheduler hint
 	if config.ServerGroupID != "" {
 		serverCreateOpts = schedulerhints.CreateOptsExt{
@@ -691,6 +737,42 @@ func (is *InstanceService) InstanceCreate(clusterName string, name string, clust
 
 	is.computeClient.Microversion = ""
 	return serverToInstance(server), nil
+}
+
+func createServerGroup(computeClient *gophercloud.ServiceClient, name string) (*servergroups.ServerGroup, error) {
+	// Microversion "2.15" is the first that supports "soft"-anti-affinity.
+	// Microversions starting from "2.64" accept policies as a string
+	// instead of an array.
+	defer func(microversion string) {
+		computeClient.Microversion = microversion
+	}(computeClient.Microversion)
+	computeClient.Microversion = "2.15"
+
+	return servergroups.Create(computeClient, &servergroups.CreateOpts{
+		Name:     name,
+		Policies: []string{"soft-anti-affinity"},
+	}).Extract()
+}
+
+func getServerGroupsByName(computeClient *gophercloud.ServiceClient, name string) ([]servergroups.ServerGroup, error) {
+	pages, err := servergroups.List(computeClient).AllPages()
+	if err != nil {
+		return nil, err
+	}
+
+	allServerGroups, err := servergroups.ExtractServerGroups(pages)
+	if err != nil {
+		return nil, err
+	}
+
+	serverGroups := make([]servergroups.ServerGroup, 0, len(allServerGroups))
+	for _, serverGroup := range allServerGroups {
+		if serverGroup.Name == name {
+			serverGroups = append(serverGroups, serverGroup)
+		}
+	}
+
+	return serverGroups, nil
 }
 
 func (is *InstanceService) deleteInstancePorts(id string) error {

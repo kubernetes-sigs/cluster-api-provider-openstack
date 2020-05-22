@@ -100,6 +100,7 @@ github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/bootfromvolum
 github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips
 github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs
 github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/schedulerhints
+github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/servergroups
 github.com/gophercloud/gophercloud/openstack/compute/v2/flavors
 github.com/gophercloud/gophercloud/openstack/compute/v2/images
 github.com/gophercloud/gophercloud/openstack/compute/v2/servers
