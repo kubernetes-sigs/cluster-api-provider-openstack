@@ -136,9 +136,9 @@ type OpenStackClusterStatus struct {
 	// TODO: Maybe instead of two properties, we add a property to the group?
 	ControlPlaneSecurityGroup *SecurityGroup `json:"controlPlaneSecurityGroup,omitempty"`
 
-	// GlobalSecurityGroup contains all the information about the OpenStack Security
-	// Group that needs to be applied to all nodes, both control plane and worker nodes.
-	GlobalSecurityGroup *SecurityGroup `json:"globalSecurityGroup,omitempty"`
+	// WorkerSecurityGroup contains all the information about the OpenStack Security
+	// Group that needs to be applied to worker nodes.
+	WorkerSecurityGroup *SecurityGroup `json:"workerSecurityGroup,omitempty"`
 }
 
 // +kubebuilder:object:root=true

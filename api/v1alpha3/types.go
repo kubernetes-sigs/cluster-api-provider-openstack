@@ -190,6 +190,7 @@ type SecurityGroup struct {
 // SecurityGroupRule represent the basic information of the associated OpenStack
 // Security Group Role.
 type SecurityGroupRule struct {
+	Description     string `json:"description"`
 	ID              string `json:"name"`
 	Direction       string `json:"direction"`
 	EtherType       string `json:"etherType"`
@@ -204,6 +205,7 @@ type SecurityGroupRule struct {
 // Equal checks if two SecurityGroupRules are the same.
 func (r SecurityGroupRule) Equal(x SecurityGroupRule) bool {
 	return (r.Direction == x.Direction &&
+		r.Description == x.Description &&
 		r.EtherType == x.EtherType &&
 		r.PortRangeMin == x.PortRangeMin &&
 		r.PortRangeMax == x.PortRangeMax &&

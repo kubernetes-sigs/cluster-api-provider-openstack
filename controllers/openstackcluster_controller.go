@@ -136,9 +136,9 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, log lo
 	}
 
 	// Delete other things
-	if openStackCluster.Status.GlobalSecurityGroup != nil {
-		log.Info("Deleting global security group", "name", openStackCluster.Status.GlobalSecurityGroup.Name)
-		err := networkingService.DeleteSecurityGroups(openStackCluster.Status.GlobalSecurityGroup)
+	if openStackCluster.Status.WorkerSecurityGroup != nil {
+		log.Info("Deleting worker security group", "name", openStackCluster.Status.WorkerSecurityGroup.Name)
+		err := networkingService.DeleteSecurityGroups(openStackCluster.Status.WorkerSecurityGroup)
 		if err != nil {
 			return reconcile.Result{}, errors.Errorf("failed to delete security group: %v", err)
 		}

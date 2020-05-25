@@ -67,6 +67,21 @@ openstack keypair create <name>
 ```
 The keypair must be exposed as an environment variable `OPENSTACK_SSH_AUTHORIZED_KEY`.
 
+If you want to login to each machine by ssh, you have to configure security groups. If `spec.managedSecurityGroups` of `OpenStackCluster` set to true, two security groups will be created. One is `k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-controlplane`, another is `k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-worker`. These security group rules are following kubeadm's [Check required ports](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#check-required-ports) so that each node can not be logged in through ssh by default. Please add existing security group allowing ssh port to `OpenStackMachineTemplate` spec. Here is an example:
+
+```yaml
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+kind: OpenStackMachineTemplate
+metadata:
+  name: ${CLUSTER_NAME}-control-plane
+spec:
+  template:
+    spec:
+      securityGroups:
+      - name: k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-controlplane
+      - name: allow-ssh
+```
+
 ## Network Filters
 
 If you have a complex query that you want to use to lookup a network, then you can do this by using a network filter. More details about the filter can be found in [NetworkParam](../api/v1alpha3/types.go)

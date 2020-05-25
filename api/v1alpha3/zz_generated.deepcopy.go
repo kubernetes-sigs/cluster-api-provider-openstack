@@ -309,8 +309,8 @@ func (in *OpenStackClusterStatus) DeepCopyInto(out *OpenStackClusterStatus) {
 		*out = new(SecurityGroup)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.GlobalSecurityGroup != nil {
-		in, out := &in.GlobalSecurityGroup, &out.GlobalSecurityGroup
+	if in.WorkerSecurityGroup != nil {
+		in, out := &in.WorkerSecurityGroup, &out.WorkerSecurityGroup
 		*out = new(SecurityGroup)
 		(*in).DeepCopyInto(*out)
 	}
