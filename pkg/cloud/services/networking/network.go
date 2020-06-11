@@ -58,15 +58,19 @@ func (s *Service) ReconcileNetwork(clusterName string, openStackCluster *infrav1
 	}
 
 	var portSecurityEnabled gophercloud.EnabledState
+	var opts createOpts
 	if openStackCluster.Spec.DisablePortSecurity {
 		portSecurityEnabled = gophercloud.Disabled
+		opts = createOpts{
+			AdminStateUp:        gophercloud.Enabled,
+			Name:                networkName,
+			PortSecurityEnabled: portSecurityEnabled,
+		}
 	} else {
-		portSecurityEnabled = gophercloud.Enabled
-	}
-	opts := createOpts{
-		AdminStateUp:        gophercloud.Enabled,
-		Name:                networkName,
-		PortSecurityEnabled: portSecurityEnabled,
+		opts = createOpts{
+			AdminStateUp: gophercloud.Enabled,
+			Name:         networkName,
+		}
 	}
 	network, err := networks.Create(s.client, opts).Extract()
 	if err != nil {
