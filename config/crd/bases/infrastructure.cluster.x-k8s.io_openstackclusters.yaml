@@ -373,6 +373,8 @@ spec:
                       description: SecurityGroupRule represent the basic information
                         of the associated OpenStack Security Group Role.
                       properties:
+                        description:
+                          type: string
                         direction:
                           type: string
                         etherType:
@@ -392,6 +394,7 @@ spec:
                         securityGroupID:
                           type: string
                       required:
+                      - description
                       - direction
                       - etherType
                       - name
@@ -426,55 +429,6 @@ spec:
                       type: boolean
                   type: object
                 description: FailureDomains represent OpenStack availability zones
-                type: object
-              globalSecurityGroup:
-                description: GlobalSecurityGroup contains all the information about
-                  the OpenStack Security Group that needs to be applied to all nodes,
-                  both control plane and worker nodes.
-                properties:
-                  id:
-                    type: string
-                  name:
-                    type: string
-                  rules:
-                    items:
-                      description: SecurityGroupRule represent the basic information
-                        of the associated OpenStack Security Group Role.
-                      properties:
-                        direction:
-                          type: string
-                        etherType:
-                          type: string
-                        name:
-                          type: string
-                        portRangeMax:
-                          type: integer
-                        portRangeMin:
-                          type: integer
-                        protocol:
-                          type: string
-                        remoteGroupID:
-                          type: string
-                        remoteIPPrefix:
-                          type: string
-                        securityGroupID:
-                          type: string
-                      required:
-                      - direction
-                      - etherType
-                      - name
-                      - portRangeMax
-                      - portRangeMin
-                      - protocol
-                      - remoteGroupID
-                      - remoteIPPrefix
-                      - securityGroupID
-                      type: object
-                    type: array
-                required:
-                - id
-                - name
-                - rules
                 type: object
               network:
                 description: Network contains all information about the created OpenStack
@@ -535,6 +489,58 @@ spec:
                 type: object
               ready:
                 type: boolean
+              workerSecurityGroup:
+                description: WorkerSecurityGroup contains all the information about
+                  the OpenStack Security Group that needs to be applied to worker
+                  nodes.
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  rules:
+                    items:
+                      description: SecurityGroupRule represent the basic information
+                        of the associated OpenStack Security Group Role.
+                      properties:
+                        description:
+                          type: string
+                        direction:
+                          type: string
+                        etherType:
+                          type: string
+                        name:
+                          type: string
+                        portRangeMax:
+                          type: integer
+                        portRangeMin:
+                          type: integer
+                        protocol:
+                          type: string
+                        remoteGroupID:
+                          type: string
+                        remoteIPPrefix:
+                          type: string
+                        securityGroupID:
+                          type: string
+                      required:
+                      - description
+                      - direction
+                      - etherType
+                      - name
+                      - portRangeMax
+                      - portRangeMin
+                      - protocol
+                      - remoteGroupID
+                      - remoteIPPrefix
+                      - securityGroupID
+                      type: object
+                    type: array
+                required:
+                - id
+                - name
+                - rules
+                type: object
             required:
             - ready
             type: object

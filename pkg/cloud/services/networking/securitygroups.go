@@ -26,7 +26,7 @@ import (
 const (
 	secGroupPrefix     string = "k8s"
 	controlPlaneSuffix string = "controlplane"
-	globalSuffix       string = "all"
+	workerSuffix       string = "worker"
 	remoteGroupIDSelf  string = "self"
 )
 
@@ -56,14 +56,27 @@ func (s *Service) ReconcileSecurityGroups(clusterName string, openStackCluster *
 		s.logger.V(4).Info("No need to reconcile security groups", "cluster", clusterName)
 		return nil
 	}
-	desiredSecGroups := map[string]infrav1.SecurityGroup{
-		"controlplane": generateControlPlaneGroup(clusterName),
-		"global":       generateGlobalGroup(clusterName),
-	}
-	observedSecGroups := make(map[string]*infrav1.SecurityGroup)
 
+	secControlPlaneGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, controlPlaneSuffix)
+	secWorkerGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, workerSuffix)
+	secGroupNames := map[string]string{
+		controlPlaneSuffix: secControlPlaneGroupName,
+		workerSuffix:       secWorkerGroupName,
+	}
+	//create security groups first, because desired rules use group ids.
+	for _, v := range secGroupNames {
+		if err := s.createSecurityGroupIfNotExists(v); err != nil {
+			return err
+		}
+	}
+	// create desired security groups
+	desiredSecGroups, err := s.generateDesiredSecGroups(secGroupNames)
+	if err != nil {
+		return err
+	}
+
+	observedSecGroups := make(map[string]*infrav1.SecurityGroup)
 	for k, desiredSecGroup := range desiredSecGroups {
-		s.logger.Info("Reconciling security group", "name", desiredSecGroup.Name)
 
 		var err error
 		observedSecGroups[k], err = s.getSecurityGroupByName(desiredSecGroup.Name)
@@ -74,30 +87,191 @@ func (s *Service) ReconcileSecurityGroups(clusterName string, openStackCluster *
 
 		if observedSecGroups[k].ID != "" {
 			if matchGroups(desiredSecGroup, *observedSecGroups[k]) {
-				s.logger.V(6).Info("Group matched, have nothing to do.", "name", desiredSecGroup.Name)
+				s.logger.V(6).Info("Group rules matched, have nothing to do.", "name", desiredSecGroup.Name)
 				continue
 			}
 
-			s.logger.V(6).Info("Group didn't match, reconciling...", "name", desiredSecGroup.Name)
-			observedSecGroup, err := s.reconcileGroup(desiredSecGroup, *observedSecGroups[k])
+			s.logger.V(6).Info("Group rules didn't match, reconciling...", "name", desiredSecGroup.Name)
+			observedSecGroup, err := s.reconcileGroupRules(desiredSecGroup, *observedSecGroups[k])
 			if err != nil {
 				return err
 			}
 			observedSecGroups[k] = &observedSecGroup
 			continue
 		}
+	}
 
-		s.logger.V(6).Info("Group doesn't exist, creating it.", "name", desiredSecGroup.Name)
-		observedSecGroups[k], err = s.createSecGroup(desiredSecGroup)
+	openStackCluster.Status.ControlPlaneSecurityGroup = observedSecGroups[controlPlaneSuffix]
+	openStackCluster.Status.WorkerSecurityGroup = observedSecGroups[workerSuffix]
+
+	return nil
+}
+
+func (s *Service) generateDesiredSecGroups(secGroupNames map[string]string) (map[string]infrav1.SecurityGroup, error) {
+	desiredSecGroups := make(map[string]infrav1.SecurityGroup)
+
+	var secControlPlaneGroupID string
+	var secWorkerGroupID string
+	for i, v := range secGroupNames {
+		secGroup, err := s.getSecurityGroupByName(v)
 		if err != nil {
-			return err
+			return desiredSecGroups, err
+		}
+		if i == controlPlaneSuffix {
+			secControlPlaneGroupID = secGroup.ID
+		} else if i == workerSuffix {
+			secWorkerGroupID = secGroup.ID
 		}
 	}
 
-	openStackCluster.Status.ControlPlaneSecurityGroup = observedSecGroups["controlplane"]
-	openStackCluster.Status.GlobalSecurityGroup = observedSecGroups["global"]
+	desiredSecGroups[controlPlaneSuffix] = infrav1.SecurityGroup{
+		Name: secGroupNames[controlPlaneSuffix],
+		Rules: append(
+			[]infrav1.SecurityGroupRule{
+				{
+					Description:    "Kubernetes API",
+					Direction:      "ingress",
+					EtherType:      "IPv4",
+					PortRangeMin:   6443,
+					PortRangeMax:   6443,
+					Protocol:       "tcp",
+					RemoteIPPrefix: "0.0.0.0/0",
+				},
+				{
+					Description:   "Etcd",
+					Direction:     "ingress",
+					EtherType:     "IPv4",
+					PortRangeMin:  2379,
+					PortRangeMax:  2380,
+					Protocol:      "tcp",
+					RemoteGroupID: remoteGroupIDSelf,
+				},
+				{
+					// kubeadm says this is needed
+					Description:   "Kubelet API",
+					Direction:     "ingress",
+					EtherType:     "IPv4",
+					PortRangeMin:  10250,
+					PortRangeMax:  10250,
+					Protocol:      "tcp",
+					RemoteGroupID: remoteGroupIDSelf,
+				},
+				{
+					// This is needed to support metrics-server deployments
+					Description:   "Kubelet API",
+					Direction:     "ingress",
+					EtherType:     "IPv4",
+					PortRangeMin:  10250,
+					PortRangeMax:  10250,
+					Protocol:      "tcp",
+					RemoteGroupID: secWorkerGroupID,
+				},
+				{
+					Description:   "BGP (calico)",
+					Direction:     "ingress",
+					EtherType:     "IPv4",
+					PortRangeMin:  179,
+					PortRangeMax:  179,
+					Protocol:      "tcp",
+					RemoteGroupID: remoteGroupIDSelf,
+				},
+				{
+					Description:   "BGP (calico)",
+					Direction:     "ingress",
+					EtherType:     "IPv4",
+					PortRangeMin:  179,
+					PortRangeMax:  179,
+					Protocol:      "tcp",
+					RemoteGroupID: secWorkerGroupID,
+				},
+				{
+					Description:   "IP-in-IP (calico)",
+					Direction:     "ingress",
+					EtherType:     "IPv4",
+					Protocol:      "4",
+					RemoteGroupID: remoteGroupIDSelf,
+				},
+				{
+					Description:   "IP-in-IP (calico)",
+					Direction:     "ingress",
+					EtherType:     "IPv4",
+					Protocol:      "4",
+					RemoteGroupID: secWorkerGroupID,
+				},
+			},
+			defaultRules...,
+		),
+	}
 
-	return nil
+	desiredSecGroups[workerSuffix] = infrav1.SecurityGroup{
+		Name: secGroupNames[workerSuffix],
+		Rules: append(
+			[]infrav1.SecurityGroupRule{
+				{
+					Description:    "Node Port Services",
+					Direction:      "ingress",
+					EtherType:      "IPv4",
+					PortRangeMin:   30000,
+					PortRangeMax:   32767,
+					Protocol:       "tcp",
+					RemoteIPPrefix: "0.0.0.0/0",
+				},
+				{
+					// This is needed to support metrics-server deployments
+					Description:   "Kubelet API",
+					Direction:     "ingress",
+					EtherType:     "IPv4",
+					PortRangeMin:  10250,
+					PortRangeMax:  10250,
+					Protocol:      "tcp",
+					RemoteGroupID: remoteGroupIDSelf,
+				},
+				{
+					Description:   "Kubelet API",
+					Direction:     "ingress",
+					EtherType:     "IPv4",
+					PortRangeMin:  10250,
+					PortRangeMax:  10250,
+					Protocol:      "tcp",
+					RemoteGroupID: secControlPlaneGroupID,
+				},
+				{
+					Description:   "BGP (calico)",
+					Direction:     "ingress",
+					EtherType:     "IPv4",
+					PortRangeMin:  179,
+					PortRangeMax:  179,
+					Protocol:      "tcp",
+					RemoteGroupID: remoteGroupIDSelf,
+				},
+				{
+					Description:   "BGP (calico)",
+					Direction:     "ingress",
+					EtherType:     "IPv4",
+					PortRangeMin:  179,
+					PortRangeMax:  179,
+					Protocol:      "tcp",
+					RemoteGroupID: secControlPlaneGroupID,
+				},
+				{
+					Description:   "IP-in-IP (calico)",
+					Direction:     "ingress",
+					EtherType:     "IPv4",
+					Protocol:      "4",
+					RemoteGroupID: remoteGroupIDSelf,
+				},
+				{
+					Description:   "IP-in-IP (calico)",
+					Direction:     "ingress",
+					EtherType:     "IPv4",
+					Protocol:      "4",
+					RemoteGroupID: secControlPlaneGroupID,
+				},
+			},
+			defaultRules...,
+		),
+	}
+	return desiredSecGroups, nil
 }
 
 func (s *Service) DeleteSecurityGroups(group *infrav1.SecurityGroup) error {
@@ -129,76 +303,6 @@ func (s *Service) exists(groupID string) (bool, error) {
 	return true, nil
 }
 
-func generateControlPlaneGroup(clusterName string) infrav1.SecurityGroup {
-	secGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, controlPlaneSuffix)
-
-	// Hardcoded rules for now, we might want to make this definable in the Spec but it's more
-	// likely that the infrastructure plan in cluster-api will have taken form by then.
-	return infrav1.SecurityGroup{
-		Name: secGroupName,
-		Rules: append(
-			[]infrav1.SecurityGroupRule{
-				{
-					Direction:      "ingress",
-					EtherType:      "IPv4",
-					PortRangeMin:   6443,
-					PortRangeMax:   6443,
-					Protocol:       "tcp",
-					RemoteIPPrefix: "0.0.0.0/0",
-				},
-				{
-					Direction:      "ingress",
-					EtherType:      "IPv4",
-					PortRangeMin:   22,
-					PortRangeMax:   22,
-					Protocol:       "tcp",
-					RemoteIPPrefix: "0.0.0.0/0",
-				},
-			},
-			defaultRules...,
-		),
-	}
-}
-
-func generateGlobalGroup(clusterName string) infrav1.SecurityGroup {
-	secGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, globalSuffix)
-
-	// As above, hardcoded rules.
-
-	return infrav1.SecurityGroup{
-		Name: secGroupName,
-		Rules: append(
-			[]infrav1.SecurityGroupRule{
-				{
-					Direction:     "ingress",
-					EtherType:     "IPv4",
-					PortRangeMin:  1,
-					PortRangeMax:  65535,
-					Protocol:      "tcp",
-					RemoteGroupID: remoteGroupIDSelf,
-				},
-				{
-					Direction:     "ingress",
-					EtherType:     "IPv4",
-					PortRangeMin:  1,
-					PortRangeMax:  65535,
-					Protocol:      "udp",
-					RemoteGroupID: remoteGroupIDSelf,
-				},
-				{
-					Direction:     "ingress",
-					EtherType:     "IPv4",
-					PortRangeMin:  0,
-					PortRangeMax:  0,
-					Protocol:      "icmp",
-					RemoteGroupID: remoteGroupIDSelf,
-				},
-			},
-			defaultRules...,
-		),
-	}
-}
-
 // matchGroups will check if security groups match.
 func matchGroups(desired, observed infrav1.SecurityGroup) bool {
 	// If they have differing amount of rules they obviously don't match.
@@ -227,9 +331,9 @@ func matchGroups(desired, observed infrav1.SecurityGroup) bool {
 	return true
 }
 
-// reconcileGroup reconciles an already existing observed group by essentially emptying out all the rules and
+// reconcileGroupRules reconciles an already existing observed group by essentially emptying out all the rules and
 // recreating them.
-func (s *Service) reconcileGroup(desired, observed infrav1.SecurityGroup) (infrav1.SecurityGroup, error) {
+func (s *Service) reconcileGroupRules(desired, observed infrav1.SecurityGroup) (infrav1.SecurityGroup, error) {
 	s.logger.V(6).Info("Deleting all rules for group", "name", observed.Name)
 	for _, rule := range observed.Rules {
 		s.logger.V(6).Info("Deleting rule", "ruleID", rule.ID, "groupName", observed.Name)
@@ -256,35 +360,27 @@ func (s *Service) reconcileGroup(desired, observed infrav1.SecurityGroup) (infra
 	return observed, nil
 }
 
-func (s *Service) createSecGroup(group infrav1.SecurityGroup) (*infrav1.SecurityGroup, error) {
-	createOpts := groups.CreateOpts{
-		Name:        group.Name,
-		Description: "Cluster API managed group",
-	}
-	s.logger.V(6).Info("Creating group", "name", group.Name)
-	g, err := groups.Create(s.client, createOpts).Extract()
+func (s *Service) createSecurityGroupIfNotExists(groupName string) error {
+	secGroup, err := s.getSecurityGroupByName(groupName)
 	if err != nil {
-		return &infrav1.SecurityGroup{}, err
+		return err
 	}
+	if secGroup == nil || secGroup.ID == "" {
+		s.logger.V(6).Info("Group doesn't exist, creating it.", "name", groupName)
 
-	newGroup := convertOSSecGroupToConfigSecGroup(*g)
-	securityGroupRules := make([]infrav1.SecurityGroupRule, 0, len(group.Rules))
-	s.logger.V(6).Info("Creating rules for group", "name", group.Name)
-	for _, rule := range group.Rules {
-		r := rule
-		r.SecurityGroupID = newGroup.ID
-		if r.RemoteGroupID == remoteGroupIDSelf {
-			r.RemoteGroupID = newGroup.ID
+		createOpts := groups.CreateOpts{
+			Name:        groupName,
+			Description: "Cluster API managed group",
 		}
-		newRule, err := s.createRule(r)
+		s.logger.V(6).Info("Creating group", "name", groupName)
+		_, err := groups.Create(s.client, createOpts).Extract()
 		if err != nil {
-			return &infrav1.SecurityGroup{}, err
+			return err
 		}
-		securityGroupRules = append(securityGroupRules, newRule)
-	}
-	newGroup.Rules = securityGroupRules
+		return nil
 
-	return newGroup, nil
+	}
+	return nil
 }
 
 func (s *Service) getSecurityGroupByName(name string) (*infrav1.SecurityGroup, error) {
@@ -319,6 +415,7 @@ func (s *Service) createRule(r infrav1.SecurityGroupRule) (infrav1.SecurityGroup
 	etherType := rules.RuleEtherType(r.EtherType)
 
 	createOpts := rules.CreateOpts{
+		Description:    r.Description,
 		Direction:      dir,
 		PortRangeMin:   r.PortRangeMin,
 		PortRangeMax:   r.PortRangeMax,
@@ -352,6 +449,7 @@ func convertOSSecGroupRuleToConfigSecGroupRule(osSecGroupRule rules.SecGroupRule
 	return infrav1.SecurityGroupRule{
 		ID:              osSecGroupRule.ID,
 		Direction:       osSecGroupRule.Direction,
+		Description:     osSecGroupRule.Description,
 		EtherType:       osSecGroupRule.EtherType,
 		SecurityGroupID: osSecGroupRule.SecGroupID,
 		PortRangeMin:    osSecGroupRule.PortRangeMin,
