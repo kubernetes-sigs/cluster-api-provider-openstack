@@ -29,8 +29,6 @@ spec:
   managedAPIServerLoadBalancer: true
   apiServerLoadBalancerFloatingIP: ${OPENSTACK_CONTROLPLANE_IP}
   apiServerLoadBalancerPort: 6443
-  apiServerLoadBalancerAdditionalPorts:
-  - 22
   managedSecurityGroups: true
   nodeCidr: 10.6.0.0/24
   dnsNameservers:
