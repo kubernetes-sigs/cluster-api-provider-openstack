@@ -238,11 +238,12 @@ spec:
                   properties are mandatory: APIServerLoadBalancerFloatingIP, APIServerLoadBalancerPort'
                 type: boolean
               managedSecurityGroups:
-                description: ManagedSecurityGroups defines that kubernetes manages
-                  the OpenStack security groups for now, that means that we'll create
-                  two security groups, one allowing SSH and API access from everywhere,
-                  and another one that allows all traffic to/from machines belonging
-                  to that group. In the future, we could make this more flexible.
+                description: 'ManagedSecurityGroups defines that kubernetes manages
+                  the OpenStack security groups for now, that means that we''ll create
+                  security group allows traffic to/from machines belonging to that
+                  group based on Calico CNI plugin default network requirements: BGP
+                  and IP-in-IP for master node(s) and worker node(s) respectively.
+                  In the future, we could make this more flexible.'
                 type: boolean
               network:
                 description: If NodeCIDR cannot be set this can be used to detect

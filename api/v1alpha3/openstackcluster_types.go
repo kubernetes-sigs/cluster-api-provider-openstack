@@ -84,9 +84,10 @@ type OpenStackClusterSpec struct {
 	APIServerLoadBalancerAdditionalPorts []int `json:"apiServerLoadBalancerAdditionalPorts,omitempty"`
 
 	// ManagedSecurityGroups defines that kubernetes manages the OpenStack security groups
-	// for now, that means that we'll create two security groups, one allowing SSH
-	// and API access from everywhere, and another one that allows all traffic to/from
-	// machines belonging to that group. In the future, we could make this more flexible.
+	// for now, that means that we'll create security group allows traffic to/from
+	// machines belonging to that group based on Calico CNI plugin default network
+	// requirements: BGP and IP-in-IP for master node(s) and worker node(s) respectively.
+	// In the future, we could make this more flexible.
 	// +optional
 	ManagedSecurityGroups bool `json:"managedSecurityGroups"`
 
