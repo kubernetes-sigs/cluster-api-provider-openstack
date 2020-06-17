@@ -98,6 +98,14 @@ func (s *Service) InstanceCreate(clusterName string, machine *clusterv1.Machine,
 	if err != nil {
 		return nil, err
 	}
+	if openStackCluster.Spec.ManagedSecurityGroups {
+		if util.IsControlPlaneMachine(machine) {
+			securityGroups = append(securityGroups, openStackCluster.Status.ControlPlaneSecurityGroup.ID)
+		} else {
+			securityGroups = append(securityGroups, openStackCluster.Status.WorkerSecurityGroup.ID)
+		}
+	}
+
 	// Get all network UUIDs
 	var nets []ServerNetwork
 	if len(openStackMachine.Spec.Networks) > 0 {
