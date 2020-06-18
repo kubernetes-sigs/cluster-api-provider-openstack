@@ -18,6 +18,7 @@ package machine
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -85,6 +86,9 @@ const (
 
 	// Machine has a deletion timestamp
 	phaseDeleting = "Deleting"
+
+	// Hardcoded instance state set on machine failure
+	unknownInstanceState = "Unknown"
 
 	skipWaitForDeleteTimeoutSeconds = 60 * 5
 )
@@ -396,19 +400,19 @@ func (r *ReconcileMachine) deleteNode(ctx context.Context, name string) error {
 }
 
 func delayIfRequeueAfterError(err error) (reconcile.Result, error) {
-	switch t := err.(type) {
-	case *RequeueAfterError:
-		klog.Infof("Actuator returned requeue-after error: %v", err)
-		return reconcile.Result{Requeue: true, RequeueAfter: t.RequeueAfter}, nil
+	var requeueAfterError *RequeueAfterError
+	if errors.As(err, &requeueAfterError) {
+		klog.Infof("Actuator returned requeue-after error: %v", requeueAfterError)
+		return reconcile.Result{Requeue: true, RequeueAfter: requeueAfterError.RequeueAfter}, nil
 	}
 	return reconcile.Result{}, err
 }
 
 func isInvalidMachineConfigurationError(err error) bool {
-	switch t := err.(type) {
-	case *MachineError:
-		if t.Reason == machinev1.InvalidConfigurationMachineError {
-			klog.Infof("Actuator returned invalid configuration error: %v", err)
+	var machineError *MachineError
+	if errors.As(err, &machineError) {
+		if machineError.Reason == machinev1.InvalidConfigurationMachineError {
+			klog.Infof("Actuator returned invalid configuration error: %v", machineError)
 			return true
 		}
 	}
@@ -418,6 +422,18 @@ func isInvalidMachineConfigurationError(err error) bool {
 func (r *ReconcileMachine) setPhase(machine *machinev1.Machine, phase string, errorMessage string) error {
 	if stringPointerDeref(machine.Status.Phase) != phase {
 		klog.V(3).Infof("%v: going into phase %q", machine.GetName(), phase)
+		// A call to Patch will mutate our local copy of the machine to match what is stored in the API.
+		// Before we make any changes to the status subresource on our local copy, we need to patch the object first,
+		// otherwise our local changes to the status subresource will be lost.
+		if phase == phaseFailed {
+			err := r.patchFailedMachineInstanceAnnotation(machine)
+			if err != nil {
+				klog.Errorf("Failed to update machine %q: %v", machine.GetName(), err)
+				return err
+			}
+		}
+
+		// Since we may have mutated the local copy of the machine above, we need to calculate baseToPatch here.
 		baseToPatch := client.MergeFrom(machine.DeepCopy())
 		machine.Status.Phase = &phase
 		machine.Status.ErrorMessage = nil
@@ -427,9 +443,21 @@ func (r *ReconcileMachine) setPhase(machine *machinev1.Machine, phase string, er
 			machine.Status.ErrorMessage = &errorMessage
 		}
 		if err := r.Client.Status().Patch(context.Background(), machine, baseToPatch); err != nil {
-			klog.Errorf("Failed to update machine %q: %v", machine.GetName(), err)
+			klog.Errorf("Failed to update machine status %q: %v", machine.GetName(), err)
 			return err
 		}
+	}
+	return nil
+}
+
+func (r *ReconcileMachine) patchFailedMachineInstanceAnnotation(machine *machinev1.Machine) error {
+	baseToPatch := client.MergeFrom(machine.DeepCopy())
+	if machine.Annotations == nil {
+		machine.Annotations = map[string]string{}
+	}
+	machine.Annotations[MachineInstanceStateAnnotationName] = unknownInstanceState
+	if err := r.Client.Patch(context.Background(), machine, baseToPatch); err != nil {
+		return err
 	}
 	return nil
 }

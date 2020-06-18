@@ -12,11 +12,10 @@ require (
 	github.com/golang/groupcache v0.0.0-20191027212112-611e8accdfc9 // indirect
 	github.com/gophercloud/gophercloud v0.6.1-0.20191025185032-6ad562af8c1f
 	github.com/gophercloud/utils v0.0.0-20190124231947-9c3b9f2457ef
-	github.com/openshift/client-go v0.0.0-20200320150128-a906f3d8e723
-	github.com/openshift/machine-api-operator v0.2.1-0.20200402110321-4f3602b96da3
+	github.com/openshift/client-go v0.0.0-20200326155132-2a6cd50aedd0
+	github.com/openshift/machine-api-operator v0.2.1-0.20200527204437-14e5e0c7d862
 	github.com/vincent-petithory/dataurl v0.0.0-20160330182126-9a301d65acbb // indirect
 	go4.org v0.0.0-20191010144846-132d2879e1e9 // indirect
-	golang.org/x/sys v0.0.0-20191029155521-f43be2a4598c // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
 	gopkg.in/yaml.v2 v2.2.8
