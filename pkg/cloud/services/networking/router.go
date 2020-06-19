@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
@@ -281,6 +282,9 @@ func (s *Service) existsRouter(routerID string) (bool, error) {
 	}
 	router, err := routers.Get(s.client, routerID).Extract()
 	if err != nil {
+		if errors.IsNotFound(err) {
+			return false, nil
+		}
 		return false, err
 	}
 	if router == nil {
