@@ -21,7 +21,9 @@ import (
 	"log"
 	"time"
 
+	configv1 "github.com/openshift/api/config/v1"
 	machinev1 "github.com/openshift/machine-api-operator/pkg/apis/machine/v1beta1"
+	"github.com/openshift/machine-api-operator/pkg/metrics"
 	"k8s.io/klog"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/apis"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/controller"
@@ -63,6 +65,12 @@ func main() {
 		15*time.Second,
 		"The duration that non-leader candidates will wait after observing a leadership renewal until attempting to acquire leadership of a led but unrenewed leader slot. This is effectively the maximum duration that a leader can be stopped before it is replaced by another candidate. This is only applicable if leader election is enabled.",
 	)
+	metricsAddress := flag.String(
+		"metrics-bind-address",
+		metrics.DefaultMachineMetricsAddress,
+		"Address for hosting metrics",
+	)
+
 	klog.InitFlags(nil)
 	flag.Parse()
 
@@ -79,6 +87,7 @@ func main() {
 		LeaderElectionNamespace: *leaderElectResourceNamespace,
 		LeaderElectionID:        "cluster-api-provider-openstack-leader",
 		LeaseDuration:           leaderElectLeaseDuration,
+		MetricsBindAddress:      *metricsAddress,
 	}
 	if *watchNamespace != "" {
 		opts.Namespace = *watchNamespace
@@ -94,6 +103,10 @@ func main() {
 
 	// Setup Scheme for all resources
 	if err := apis.AddToScheme(mgr.GetScheme()); err != nil {
+		klog.Fatal(err)
+	}
+
+	if err := configv1.AddToScheme(mgr.GetScheme()); err != nil {
 		klog.Fatal(err)
 	}
 
