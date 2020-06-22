@@ -269,7 +269,7 @@ release: clean-release  ## Builds and push container images using the latest git
 	$(MAKE) release-manifests
 
 .PHONY: release-manifests
-release-manifests: $(RELEASE_DIR) ## Builds the manifests to publish with a release
+release-manifests: $(RELEASE_DIR) $(KUSTOMIZE) ## Builds the manifests to publish with a release
 	$(KUSTOMIZE) build config > $(RELEASE_DIR)/infrastructure-components.yaml
 
 .PHONY: release-staging
