@@ -27,13 +27,10 @@ spec:
     name: ${CLUSTER_NAME}-cloud-config
     namespace: ${NAMESPACE}
   managedAPIServerLoadBalancer: true
-  apiServerLoadBalancerFloatingIP: ${OPENSTACK_CONTROLPLANE_IP}
-  apiServerLoadBalancerPort: 6443
   managedSecurityGroups: true
   nodeCidr: 10.6.0.0/24
   dnsNameservers:
   - ${OPENSTACK_DNS_NAMESERVERS}
-  externalNetworkId: ${OPENSTACK_EXTERNAL_NETWORK_ID}
   disablePortSecurity: false
   disableServerTags: true
   useOctavia: true
@@ -56,7 +53,6 @@ spec:
           cloud-provider: openstack
           cloud-config: /etc/kubernetes/cloud.conf
     clusterConfiguration:
-      controlPlaneEndpoint: "${OPENSTACK_CONTROLPLANE_IP}:6443"
       imageRepository: k8s.gcr.io
       apiServer:
         extraArgs:

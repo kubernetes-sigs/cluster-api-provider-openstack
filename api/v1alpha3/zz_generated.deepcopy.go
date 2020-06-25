@@ -297,6 +297,11 @@ func (in *OpenStackClusterStatus) DeepCopyInto(out *OpenStackClusterStatus) {
 		*out = new(Network)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.ExternalNetwork != nil {
+		in, out := &in.ExternalNetwork, &out.ExternalNetwork
+		*out = new(Network)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.FailureDomains != nil {
 		in, out := &in.FailureDomains, &out.FailureDomains
 		*out = make(apiv1alpha3.FailureDomains, len(*in))

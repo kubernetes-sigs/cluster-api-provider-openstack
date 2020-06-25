@@ -59,6 +59,7 @@ type OpenStackClusterSpec struct {
 	ExternalRouterIPs []ExternalRouterIPParam `json:"externalRouterIPs,omitempty"`
 	// ExternalNetworkID is the ID of an external OpenStack Network. This is necessary
 	// to get public internet to the VMs.
+	// +optional
 	ExternalNetworkID string `json:"externalNetworkId,omitempty"`
 
 	// UseOctavia is weather LoadBalancer Service is Octavia or not
@@ -128,6 +129,9 @@ type OpenStackClusterStatus struct {
 	// Network contains all information about the created OpenStack Network.
 	// It includes Subnets and Router.
 	Network *Network `json:"network,omitempty"`
+
+	// External Network contains information about the created OpenStack external network.
+	ExternalNetwork *Network `json:"externalNetwork,omitempty"`
 
 	// FailureDomains represent OpenStack availability zones
 	FailureDomains clusterv1.FailureDomains `json:"failureDomains,omitempty"`

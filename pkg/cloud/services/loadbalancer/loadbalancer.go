@@ -30,24 +30,12 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
 	"k8s.io/apimachinery/pkg/util/wait"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha3"
 	"sigs.k8s.io/cluster-api/util"
 )
 
 func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {
-
-	if openStackCluster.Spec.ExternalNetworkID == "" {
-		s.logger.V(3).Info("No need to create loadbalancer, due to missing ExternalNetworkID")
-		return nil
-	}
-	if openStackCluster.Spec.APIServerLoadBalancerFloatingIP == "" {
-		s.logger.V(3).Info("No need to create loadbalancer, due to missing APIServerLoadBalancerFloatingIP")
-		return nil
-	}
-	if openStackCluster.Spec.APIServerLoadBalancerPort == 0 {
-		s.logger.V(3).Info("No need to create loadbalancer, due to missing APIServerLoadBalancerPort")
-		return nil
-	}
 
 	loadBalancerName := fmt.Sprintf("%s-cluster-%s-%s", networkPrefix, clusterName, kubeapiLBSuffix)
 	s.logger.Info("Reconciling loadbalancer", "name", loadBalancerName)
@@ -73,39 +61,26 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 		return err
 	}
 
-	// floating ip
-	fp, err := checkIfFloatingIPExists(s.networkingClient, openStackCluster.Spec.APIServerLoadBalancerFloatingIP)
+	fp, err := getOrCreateFloatingIP(s.networkingClient, openStackCluster, openStackCluster.Spec.ControlPlaneEndpoint.Host)
 	if err != nil {
 		return err
 	}
-	if fp == nil {
-		s.logger.Info("Creating floating ip", "ip", openStackCluster.Spec.APIServerLoadBalancerFloatingIP)
-		fpCreateOpts := &floatingips.CreateOpts{
-			FloatingIP:        openStackCluster.Spec.APIServerLoadBalancerFloatingIP,
-			FloatingNetworkID: openStackCluster.Spec.ExternalNetworkID,
-		}
-		fp, err = floatingips.Create(s.networkingClient, fpCreateOpts).Extract()
-		if err != nil {
-			return fmt.Errorf("error allocating floating IP: %s", err)
-		}
-	}
-
-	// associate floating ip
-	s.logger.Info("Associating floating ip", "ip", openStackCluster.Spec.APIServerLoadBalancerFloatingIP)
+	s.logger.Info("Associating floating ip", "ip", fp.FloatingIP)
 	fpUpdateOpts := &floatingips.UpdateOpts{
 		PortID: &lb.VipPortID,
 	}
 	fp, err = floatingips.Update(s.networkingClient, fp.ID, fpUpdateOpts).Extract()
 	if err != nil {
-		return fmt.Errorf("error allocating floating IP: %s", err)
+		return fmt.Errorf("error associating floating IP: %s", err)
 	}
 	err = waitForFloatingIP(s.logger, s.networkingClient, fp.ID, "ACTIVE")
 	if err != nil {
 		return err
 	}
+	record.Eventf(openStackCluster, "SuccessfulAssociateFloatingIP", "Associate floating IP %s with port %s", fp.FloatingIP, &lb.VipPortID)
 
 	// lb listener
-	portList := []int{openStackCluster.Spec.APIServerLoadBalancerPort}
+	portList := []int{int(openStackCluster.Spec.ControlPlaneEndpoint.Port)}
 	portList = append(portList, openStackCluster.Spec.APIServerLoadBalancerAdditionalPorts...)
 	for _, port := range portList {
 		lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)
@@ -212,7 +187,7 @@ func (s *Service) ReconcileLoadBalancerMember(clusterName string, machine *clust
 	lbID := openStackCluster.Status.Network.APIServerLoadBalancer.ID
 	subnetID := openStackCluster.Status.Network.Subnet.ID
 
-	portList := []int{openStackCluster.Spec.APIServerLoadBalancerPort}
+	portList := []int{int(openStackCluster.Spec.ControlPlaneEndpoint.Port)}
 	portList = append(portList, openStackCluster.Spec.APIServerLoadBalancerAdditionalPorts...)
 	for _, port := range portList {
 		lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)
@@ -415,7 +390,7 @@ func (s *Service) DeleteLoadBalancerMember(clusterName string, machine *clusterv
 
 	lbID := openStackCluster.Status.Network.APIServerLoadBalancer.ID
 
-	portList := []int{openStackCluster.Spec.APIServerLoadBalancerPort}
+	portList := []int{int(openStackCluster.Spec.ControlPlaneEndpoint.Port)}
 	portList = append(portList, openStackCluster.Spec.APIServerLoadBalancerAdditionalPorts...)
 	for _, port := range portList {
 		lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)
@@ -468,6 +443,32 @@ func checkIfLbExists(client *gophercloud.ServiceClient, name string) (*loadbalan
 		return nil, nil
 	}
 	return &lbList[0], nil
+}
+
+func getOrCreateFloatingIP(client *gophercloud.ServiceClient, openStackCluster *infrav1.OpenStackCluster, ip string) (*floatingips.FloatingIP, error) {
+	var fp *floatingips.FloatingIP
+	var err error
+	if ip != "" {
+		fp, err = checkIfFloatingIPExists(client, ip)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if fp == nil {
+		fpCreateOpts := &floatingips.CreateOpts{
+			FloatingNetworkID: openStackCluster.Status.ExternalNetwork.ID,
+		}
+		if ip != "" {
+			fpCreateOpts.FloatingIP = ip
+		}
+		fp, err = floatingips.Create(client, fpCreateOpts).Extract()
+		if err != nil {
+			return nil, fmt.Errorf("error creating floating IP: %s", err)
+		}
+		record.Eventf(openStackCluster, "SuccessfulCreateFloatingIP", "Created floating IP %s with id %s", fp.FloatingIP, fp.ID)
+
+	}
+	return fp, nil
 }
 
 func checkIfFloatingIPExists(client *gophercloud.ServiceClient, ip string) (*floatingips.FloatingIP, error) {

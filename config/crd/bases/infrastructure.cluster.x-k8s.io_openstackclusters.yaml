@@ -412,6 +412,63 @@ spec:
                 - name
                 - rules
                 type: object
+              externalNetwork:
+                description: External Network contains information about the created
+                  OpenStack external network.
+                properties:
+                  apiServerLoadBalancer:
+                    description: Be careful when using APIServerLoadBalancer, because
+                      this field is optional and therefore not set in all cases
+                    properties:
+                      id:
+                        type: string
+                      internalIP:
+                        type: string
+                      ip:
+                        type: string
+                      name:
+                        type: string
+                    required:
+                    - id
+                    - internalIP
+                    - ip
+                    - name
+                    type: object
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  router:
+                    description: Router represents basic information about the associated
+                      OpenStack Neutron Router
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                    required:
+                    - id
+                    - name
+                    type: object
+                  subnet:
+                    description: Subnet represents basic information about the associated
+                      OpenStack Neutron Subnet
+                    properties:
+                      cidr:
+                        type: string
+                      id:
+                        type: string
+                      name:
+                        type: string
+                    required:
+                    - cidr
+                    - id
+                    - name
+                    type: object
+                required:
+                - id
+                - name
+                type: object
               failureDomains:
                 additionalProperties:
                   description: FailureDomainSpec is the Schema for Cluster API failure
