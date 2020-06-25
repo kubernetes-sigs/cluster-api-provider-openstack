@@ -25,6 +25,5 @@ require (
 	k8s.io/cluster-bootstrap v0.0.0-20190202014938-c9acc0c1bea2
 	k8s.io/klog v1.0.0
 	sigs.k8s.io/controller-runtime v0.5.1-0.20200330174416-a11a908d91e0
-	sigs.k8s.io/controller-tools v0.3.0 // indirect
 	sigs.k8s.io/yaml v1.2.0
 )
