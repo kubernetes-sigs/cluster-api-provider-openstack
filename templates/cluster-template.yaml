@@ -119,8 +119,6 @@ spec:
       cloudsSecret:
         name: ${CLUSTER_NAME}-cloud-config
         namespace: ${NAMESPACE}
-      securityGroups:
-      - name: k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-controlplane
 ---
 apiVersion: cluster.x-k8s.io/v1alpha3
 kind: MachineDeployment
@@ -159,8 +157,6 @@ spec:
         namespace: ${NAMESPACE}
       flavor: ${OPENSTACK_NODE_MACHINE_FLAVOR}
       image: ${OPENSTACK_IMAGE_NAME}
-      securityGroups:
-        - name: k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-worker
 ---
 apiVersion: bootstrap.cluster.x-k8s.io/v1alpha3
 kind: KubeadmConfigTemplate
