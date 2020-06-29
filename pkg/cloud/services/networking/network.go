@@ -19,6 +19,7 @@ package networking
 import (
 	"fmt"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
+	capierrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
@@ -213,6 +214,9 @@ func (s *Service) existsNetwork(networkID string) (bool, error) {
 	}
 	network, err := networks.Get(s.client, networkID).Extract()
 	if err != nil {
+		if capierrors.IsNotFound(err) {
+			return false, nil
+		}
 		return false, err
 	}
 	if network == nil {
