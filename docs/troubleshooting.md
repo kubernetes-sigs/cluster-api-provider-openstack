@@ -6,6 +6,7 @@
   - [Get logs of Cluster API controller containers](#get-logs-of-cluster-api-controller-containers)
   - [Master failed to start with error: node xxxx not found](#master-failed-to-start-with-error-node-xxxx-not-found)
   - [providerClient authentication err](#providerclient-authentication-err)
+  - [Fails in creating floating IP during cluster creation.](#fails-in-creating-floating-ip-during-cluster-creation)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -56,3 +57,11 @@ clouds:
     cacert: /etc/certs/cacert
     verify: false
 ```
+
+## Fails in creating floating IP during cluster creation.
+
+If you encounter `rule:create_floatingip and rule:create_floatingip:floating_ip_address is disallowed by policy` when create floating ip, check with your openstack administrator, you need to be authorized to perform those actions, see [issue 572](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/572) for more detailed information.
+
+Refer to [rule:create_floatingip](https://github.com/openstack/neutron/blob/master/neutron/conf/policies/floatingip.py#L26) and [rule:create_floatingip:floating_ip_address](https://github.com/openstack/neutron/blob/master/neutron/conf/policies/floatingip.py#L36) for further policy information.
+
+An alternative is to create the floating IP before create the cluster and use it.
