@@ -8,7 +8,7 @@
   - [Floating IP](#floating-ip)
   - [SSH authorized key](#ssh-authorized-key)
   - [OpenStack credential](#openstack-credential)
-  - [Avaialability zone](#avaialability-zone)
+  - [Availability zone](#availability-zone)
   - [DNS server](#dns-server)
 - [Optional Configuration](#optional-configuration)
   - [Network Filters](#network-filters)
@@ -31,7 +31,7 @@ Note: You can use [the template file](../templates/cluster-template.yaml) by man
 
 ## Operating system image
 
-We currently depend on an update version of cloud-init otherwise the operating system choice is yours. The kubeadm bootstrap provider we're using also depends on some pre-installed software like a controller-runtime, kubelet, kubeadm, etc.. . For an examples how to build such an image take a look at [image-builder (openstack)](https://image-builder.sigs.k8s.io/capi/providers/openstack.html).
+We currently depend on an up-to-date version of cloud-init otherwise the operating system choice is yours. The kubeadm bootstrap provider we're using also depends on some pre-installed software like a container runtime, kubelet, kubeadm, etc.. . For an examples how to build such an image take a look at [image-builder (openstack)](https://image-builder.sigs.k8s.io/capi/providers/openstack.html).
 
 The image can be referenced by exposing it as an environment variable `OPENSTACK_IMAGE_NAME`.
 
@@ -63,7 +63,7 @@ The ssh public key is required. This key does not need to be created by OpenStac
 
 The public key must be exposed as an environment variable `OPENSTACK_SSH_AUTHORIZED_KEY`.
 
-If you want to login to each machine by ssh, you have to configure security groups. If `spec.managedSecurityGroups` of `OpenStackCluster` set to true, two security groups will be created and added to the instances. One is `k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-controlplane`, another is `k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-worker`. These security group rules include the kubeadm's [Check required ports](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#check-required-ports) so that each node can not be logged in through ssh by default. Please add existing security group allowing ssh port to OpenStackMachineTemplate spec. Here is an example:
+If you want to login to each machine by ssh, you have to configure security groups. If `spec.managedSecurityGroups` of `OpenStackCluster` set to true, two security groups will be created and added to the instances. One is `k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-controlplane`, another is `k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-worker`. These security group rules include the kubeadm's [Check required ports](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#check-required-ports) so that each node can not be logged in through ssh by default. Please add pre-existing security group allowing ssh port to OpenStackMachineTemplate spec. Here is an example:
 
 ```yaml
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
@@ -94,7 +94,7 @@ The following variables are set.
 | OPENSTACK_CLOUD_PROVIDER_CONF_B64 | The content of [cloud.conf](https://kubernetes.io/docs/concepts/cluster-administration/cloud-providers/#cloud-conf) which is used by OpenStack cloud provider |
 | OPENSTACK_CLOUD_CACERT_B64 | (Optional) The content of your custom CA file which can be specified in your clouds.yaml by `ca-file` |
 
-## Avaialability zone
+## Availability zone
 
 The availability zone names must be exposed as an environment variable `OPENSTACK_FAILURE_DOMAIN`.
 
@@ -229,4 +229,3 @@ If creating servers in your OpenStack takes a long time, you can increase the ti
 ## Custom pod network CIDR
 
 If `192.168.0.0/16` is already in use within your network, you must select a different pod network CIDR. You have to replace the CIDR `192.168.0.0/16` with your own in the generated file.
-
