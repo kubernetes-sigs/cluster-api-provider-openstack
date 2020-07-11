@@ -326,6 +326,10 @@ func getSecurityGroups(is *Service, securityGroupParams []infrav1.SecurityGroupP
 			return nil, err
 		}
 
+		if len(SGList) == 0 {
+			return nil, fmt.Errorf("security group %s not found", sg.Name)
+		}
+
 		for _, group := range SGList {
 			if isDuplicate(sgIDs, group.ID) {
 				continue
