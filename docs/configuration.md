@@ -19,6 +19,7 @@
   - [Boot From Volume](#boot-from-volume)
   - [Timeout settings](#timeout-settings)
   - [Custom pod network CIDR](#custom-pod-network-cidr)
+  - [Configuration of KubeadmControlPlane](#configuration-of-kubeadmcontrolplane)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -229,3 +230,10 @@ If creating servers in your OpenStack takes a long time, you can increase the ti
 ## Custom pod network CIDR
 
 If `192.168.0.0/16` is already in use within your network, you must select a different pod network CIDR. You have to replace the CIDR `192.168.0.0/16` with your own in the generated file.
+
+## Configuration of KubeadmControlPlane
+`KubeadmControlPlane` is defined [here](https://github.com/kubernetes-sigs/cluster-api/blob/master/controlplane/kubeadm/api/v1alpha3/kubeadm_control_plane_types.go#L146) and you need to define it to create a kubeadm control plane.
+
+`cluster-api-openstack-provider` defined templates for you at [with-lb](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/master/templates/cluster-template.yaml) and [without-lb](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/master/templates/cluster-template-without-lb.yaml), you can reuse the template with your cloud's settings.
+
+Please note the port `6443` must be kept at `controlPlaneEndpoint: "${OPENSTACK_CONTROLPLANE_IP}:6443"` because the security group is hard coded at [here](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/master/pkg/cloud/services/networking/securitygroups.go#L136).
