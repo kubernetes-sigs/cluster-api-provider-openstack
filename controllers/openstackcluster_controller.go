@@ -221,7 +221,7 @@ func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, log lo
 			Port: int32(openStackCluster.Spec.APIServerLoadBalancerPort),
 		}
 	} else {
-		controlPlaneMachine, err := getControlPlaneMachine(r.Client)
+		controlPlaneMachine, err := getControlPlaneMachine(r.Client, log)
 		if err != nil {
 			return ctrl.Result{}, errors.Errorf("failed to get control plane machine: %v", err)
 		}
@@ -360,7 +360,7 @@ func (r *OpenStackClusterReconciler) SetupWithManager(mgr ctrl.Manager, options 
 		Complete(r)
 }
 
-func getControlPlaneMachine(client client.Client) (*infrav1.OpenStackMachine, error) {
+func getControlPlaneMachine(client client.Client, log logr.Logger) (*infrav1.OpenStackMachine, error) {
 	machines := &clusterv1.MachineList{}
 	if err := client.List(context.TODO(), machines); err != nil {
 		return nil, err
@@ -379,13 +379,15 @@ func getControlPlaneMachine(client client.Client) (*infrav1.OpenStackMachine, er
 		}
 	}
 	if controlPlaneMachine == nil {
+		log.Info("no controlPlaneMachine found yet")
 		return nil, nil
 	}
 
 	for _, openStackMachine := range openStackMachines.Items {
-		if openStackMachine.Name == controlPlaneMachine.Name {
+		if openStackMachine.Spec.ProviderID == controlPlaneMachine.Spec.ProviderID {
 			return &openStackMachine, nil
 		}
 	}
+	log.Info("no match openstack machine for controller")
 	return nil, nil
 }
