@@ -22,6 +22,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/rules"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 )
 
 const (
@@ -66,7 +67,7 @@ func (s *Service) ReconcileSecurityGroups(clusterName string, openStackCluster *
 	}
 	//create security groups first, because desired rules use group ids.
 	for _, v := range secGroupNames {
-		if err := s.createSecurityGroupIfNotExists(v); err != nil {
+		if err := s.createSecurityGroupIfNotExists(openStackCluster, v); err != nil {
 			return err
 		}
 	}
@@ -361,7 +362,7 @@ func (s *Service) reconcileGroupRules(desired, observed infrav1.SecurityGroup) (
 	return observed, nil
 }
 
-func (s *Service) createSecurityGroupIfNotExists(groupName string) error {
+func (s *Service) createSecurityGroupIfNotExists(openStackCluster *infrav1.OpenStackCluster, groupName string) error {
 	secGroup, err := s.getSecurityGroupByName(groupName)
 	if err != nil {
 		return err
@@ -378,6 +379,7 @@ func (s *Service) createSecurityGroupIfNotExists(groupName string) error {
 		if err != nil {
 			return err
 		}
+		record.Eventf(openStackCluster, "SuccessfulCreateSecurityGroup", "Created security group %s with id %s", groupName, secGroup.ID)
 		return nil
 
 	}
