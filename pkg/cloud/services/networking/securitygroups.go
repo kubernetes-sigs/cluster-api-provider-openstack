@@ -35,6 +35,7 @@ const (
 var defaultRules = []infrav1.SecurityGroupRule{
 	{
 		Direction:      "egress",
+		Description:    "Full open",
 		EtherType:      "IPv4",
 		PortRangeMin:   0,
 		PortRangeMax:   0,
@@ -43,6 +44,7 @@ var defaultRules = []infrav1.SecurityGroupRule{
 	},
 	{
 		Direction:      "egress",
+		Description:    "Full open",
 		EtherType:      "IPv6",
 		PortRangeMin:   0,
 		PortRangeMax:   0,
