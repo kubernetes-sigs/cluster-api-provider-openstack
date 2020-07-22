@@ -297,11 +297,17 @@ func (r *OpenStackClusterReconciler) reconcileNetworkComponents(log logr.Logger,
 
 		netOpts := networks.ListOpts(openStackCluster.Spec.Network)
 		networkList, err := networkingService.GetNetworksByFilter(&netOpts)
+<<<<<<< Updated upstream
 		if len(networkList) == 0 {
 			return errors.Errorf("failed to find any network: %v", err)
 		}
+=======
+>>>>>>> Stashed changes
 		if err != nil {
 			return errors.Errorf("failed to find network: %v", err)
+		}
+		if len(networkList) <= 0 {
+			return errors.Errorf("failed to find any network: %v", err)
 		}
 		if len(networkList) > 1 {
 			return errors.Errorf("failed to find only one network (result: %v): %v", networkList, err)
