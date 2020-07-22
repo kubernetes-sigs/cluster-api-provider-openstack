@@ -306,7 +306,7 @@ func (r *OpenStackClusterReconciler) reconcileNetworkComponents(log logr.Logger,
 		if err != nil {
 			return errors.Errorf("failed to find network: %v", err)
 		}
-		if len(networkList) <= 0 {
+		if len(networkList) == 0 {
 			return errors.Errorf("failed to find any network: %v", err)
 		}
 		if len(networkList) > 1 {
