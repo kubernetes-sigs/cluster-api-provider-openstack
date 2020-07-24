@@ -153,13 +153,12 @@ INTERFACE_LOOP:
 		s.logger.V(4).Info("Created RouterInterface", "id", routerInterface.ID)
 	}
 
-	_, err = attributestags.ReplaceAll(s.client, "routers", observedRouter.ID, attributestags.ReplaceAllOpts{
-		Tags: []string{
-			"cluster-api-provider-openstack",
-			clusterName,
-		}}).Extract()
-	if err != nil {
-		return err
+	if len(openStackCluster.Spec.Tags) > 0 {
+		_, err = attributestags.ReplaceAll(s.client, "routers", observedRouter.ID, attributestags.ReplaceAllOpts{
+			Tags: openStackCluster.Spec.Tags}).Extract()
+		if err != nil {
+			return err
+		}
 	}
 
 	if observedRouter.ID != "" {

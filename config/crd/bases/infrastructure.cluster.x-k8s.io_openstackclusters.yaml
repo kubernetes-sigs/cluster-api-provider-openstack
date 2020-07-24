@@ -127,10 +127,6 @@ spec:
                   network created for the Kubernetes cluster, which also disables
                   SecurityGroups
                 type: boolean
-              disableServerTags:
-                description: 'Default: True. In case of server tag errors, set to
-                  False'
-                type: boolean
               dnsNameservers:
                 description: DNSNameservers is the list of nameservers for OpenStack
                   Subnet being created. Set this value when you need create a new

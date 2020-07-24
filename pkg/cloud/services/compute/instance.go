@@ -78,11 +78,7 @@ func (s *Service) InstanceCreate(clusterName string, machine *clusterv1.Machine,
 		}
 	}
 
-	// Set default Tags
-	machineTags := []string{
-		"cluster-api-provider-openstack",
-		clusterName,
-	}
+	machineTags := []string{}
 
 	// Append machine specific tags
 	machineTags = append(machineTags, openStackMachine.Spec.Tags...)
@@ -150,7 +146,7 @@ func (s *Service) InstanceCreate(clusterName string, machine *clusterv1.Machine,
 		var port ports.Port
 		if len(portList) == 0 {
 			// create server port
-			port, err = createPort(s, openStackMachine.Name, net, &securityGroups)
+			port, err = createPort(s, clusterName, openStackMachine.Name, net, &securityGroups)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create port err: %v", err)
 			}
@@ -158,11 +154,6 @@ func (s *Service) InstanceCreate(clusterName string, machine *clusterv1.Machine,
 			port = portList[0]
 		}
 
-		_, err = attributestags.ReplaceAll(s.networkClient, "ports", port.ID, attributestags.ReplaceAllOpts{
-			Tags: machineTags}).Extract()
-		if err != nil {
-			return nil, fmt.Errorf("tagging port for server err: %v", err)
-		}
 		portsList = append(portsList, servers.Network{
 			Port: port.ID,
 		})
@@ -204,7 +195,7 @@ func (s *Service) InstanceCreate(clusterName string, machine *clusterv1.Machine,
 	}
 
 	var serverTags []string
-	if !openStackCluster.Spec.DisableServerTags {
+	if len(machineTags) > 0 {
 		serverTags = machineTags
 		// NOTE(flaper87): This is the minimum required version
 		// to use tags.
@@ -389,11 +380,12 @@ func isDuplicate(list []string, name string) bool {
 	return false
 }
 
-func createPort(is *Service, name string, net ServerNetwork, securityGroups *[]string) (ports.Port, error) {
+func createPort(is *Service, clusterName string, name string, net ServerNetwork, securityGroups *[]string) (ports.Port, error) {
 	portCreateOpts := ports.CreateOpts{
 		Name:           name,
 		NetworkID:      net.networkID,
 		SecurityGroups: securityGroups,
+		Description:    fmt.Sprintf("Created by cluster-api-provider-openstack cluster %s", clusterName),
 	}
 	if net.subnetID != "" {
 		portCreateOpts.FixedIPs = []ports.IP{{SubnetID: net.subnetID}}

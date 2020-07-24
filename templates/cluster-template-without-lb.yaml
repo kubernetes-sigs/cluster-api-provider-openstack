@@ -34,7 +34,6 @@ spec:
   - ${OPENSTACK_DNS_NAMESERVERS}
   externalNetworkId: ${OPENSTACK_EXTERNAL_NETWORK_ID}
   disablePortSecurity: true
-  disableServerTags: true
   useOctavia: false
 ---
 kind: KubeadmControlPlane
