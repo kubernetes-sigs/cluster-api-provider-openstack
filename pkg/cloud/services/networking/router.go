@@ -83,6 +83,8 @@ func (s *Service) ReconcileRouter(clusterName string, openStackCluster *infrav1.
 		router = *newRouter
 	} else {
 		router = routerList[0]
+		sInfo := fmt.Sprintf("Reuse Existing Router %s with id %s", routerName, router.ID)
+		s.logger.V(6).Info(sInfo)
 	}
 
 	if len(openStackCluster.Spec.ExternalRouterIPs) > 0 {

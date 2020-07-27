@@ -385,6 +385,10 @@ func (s *Service) createSecurityGroupIfNotExists(openStackCluster *infrav1.OpenS
 		return nil
 
 	}
+
+	sInfo := fmt.Sprintf("Reuse Existing SecurityGroup %s with %s", groupName, secGroup.ID)
+	s.logger.V(6).Info(sInfo)
+
 	return nil
 }
 

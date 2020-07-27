@@ -55,6 +55,8 @@ func (s *Service) ReconcileNetwork(clusterName string, openStackCluster *infrav1
 			ID:   res.ID,
 			Name: res.Name,
 		}
+		sInfo := fmt.Sprintf("Reuse Existing Network %s with id %s", res.Name, res.ID)
+		s.logger.V(6).Info(sInfo)
 		return nil
 	}
 
