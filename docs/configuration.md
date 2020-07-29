@@ -8,6 +8,7 @@
   - [Floating IP](#floating-ip)
   - [SSH authorized key](#ssh-authorized-key)
   - [OpenStack credential](#openstack-credential)
+    - [Generate credentials](#generate-credentials)
   - [Availability zone](#availability-zone)
   - [DNS server](#dns-server)
 - [Optional Configuration](#optional-configuration)
@@ -79,6 +80,7 @@ spec:
 
 ## OpenStack credential
 
+### Generate credentials
 The [env.rc](./env.rc) script sets the environment variables related to credentials.
 
 ```bash
@@ -93,6 +95,8 @@ The following variables are set.
 | OPENSTACK_CLOUD_YAML_B64 | The secret used by Cluster API Provider OpenStack accessing OpenStack |
 | OPENSTACK_CLOUD_PROVIDER_CONF_B64 | The content of [cloud.conf](https://kubernetes.io/docs/concepts/cluster-administration/cloud-providers/#cloud-conf) which is used by OpenStack cloud provider |
 | OPENSTACK_CLOUD_CACERT_B64 | (Optional) The content of your custom CA file which can be specified in your clouds.yaml by `ca-file` |
+
+Note: Only the [external cloud provider](./external-cloud-provider.md) supports [Application Credentials](https://docs.openstack.org/keystone/latest/user/application_credentials.html).
 
 ## Availability zone
 
