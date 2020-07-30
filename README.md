@@ -20,7 +20,7 @@ previous cluster managers such as [kops][kops] and
 
 ## Launching a Kubernetes cluster on OpenStack
 
-- Check out the [Cluster API Quick Start](https://cluster-api.sigs.k8s.io/user/quick-start.html) to create your first Kubernetes cluster on OpenStack using Cluster API.
+- Check out the [Cluster API Quick Start](https://cluster-api.sigs.k8s.io/user/quick-start.html) to create your first Kubernetes cluster on OpenStack using Cluster API. If you wish to use the external cloud provider, check out the [External Cloud Provider](docs/external-cloud-provider.md) as well. 
 
 ## Features
 
