@@ -38,7 +38,7 @@ else
   echo "Error: No clouds.yaml provided"
   echo "You must provide a valid clouds.yaml script to generate a cloud.conf"
   echo ""
-  return 1
+  exit 1
 fi
 
 # Check if os cloud is provided
@@ -48,14 +48,14 @@ else
   echo "Error: No cloud specified"
   echo "You must specify which cloud you want to use."
   echo ""
-  return 1
+  exit 1
 fi
 
 CAPO_YQ_TYPE=$(file "$(which yq)")
 if [[ ${CAPO_YQ_TYPE} == *"Python script"* ]]; then
   echo "Wrong version of 'yq' installed, please install the one from https://github.com/mikefarah/yq"
   echo ""
-  return 1
+  exit 1
 fi
 
 CAPO_CLOUDS_PATH=${CAPO_CLOUDS_PATH:-""}
