@@ -4,7 +4,7 @@
 
 - [Required configuration](#required-configuration)
   - [Operating system image](#operating-system-image)
-  - [SSH authorized key](#ssh-authorized-key)
+  - [SSH key pair](#ssh-key-pair)
   - [OpenStack credential](#openstack-credential)
   - [Availability zone](#availability-zone)
   - [DNS server](#dns-server)
@@ -35,11 +35,15 @@ We currently depend on an up-to-date version of cloud-init otherwise the operati
 
 The image can be referenced by exposing it as an environment variable `OPENSTACK_IMAGE_NAME`.
 
-## SSH authorized key
+## SSH key pair
 
-The ssh public key is required. This key does not need to be created by OpenStack key pair.
+The SSH key pair is required. You can create one using,
 
-The public key must be exposed as an environment variable `OPENSTACK_SSH_AUTHORIZED_KEY`.
+```bash
+openstack keypair create [--public-key <file> | --private-key <file>] <name>
+```
+
+The key pair name must be exposed as an environment variable `OPENSTACK_SSH_KEY_NAME`.
 
 If you want to login to each machine by ssh, you have to configure security groups. If `spec.managedSecurityGroups` of `OpenStackCluster` set to true, two security groups will be created and added to the instances. One is `k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-controlplane`, another is `k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-worker`. These security group rules include the kubeadm's [Check required ports](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#check-required-ports) so that each node can not be logged in through ssh by default. Please add pre-existing security group allowing ssh port to OpenStackMachineTemplate spec. Here is an example:
 

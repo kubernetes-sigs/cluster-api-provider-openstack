@@ -19,14 +19,13 @@
 set -o errexit -o nounset -o pipefail
 
 OPENSTACK_CLOUD_YAML_FILE=${OPENSTACK_CLOUD_YAML_FILE:-"/tmp/clouds.yaml"}
-OPENSTACK_SSH_AUTHORIZED_KEY_PATH=${OPENSTACK_SSH_AUTHORIZED_KEY_PATH:-"/tmp/id_rsa.pub"}
-OPENSTACK_SSH_PRIVATE_KEY_PATH=${OPENSTACK_SSH_PRIVATE_KEY_PATH:-"/tmp/id_rsa"}
 OPENSTACK_IMAGE_NAME="ubuntu-1910-kube-v1.17.3"
 OPENSTACK_DNS_NAMESERVERS=${OPENSTACK_DNS_NAMESERVERS:-"192.168.200.1"}
 OPENSTACK_NODE_MACHINE_FLAVOR=${OPENSTACK_NODE_MACHINE_FLAVOR:-"m1.small"}
 OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR=${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR:-"m1.medium"}
 OPENSTACK_CLUSTER_TEMPLATE=${OPENSTACK_CLUSTER_TEMPLATE:-"./templates/cluster-template-without-lb.yaml"}
 CLUSTER_NAME=${CLUSTER_NAME:-"capi-quickstart"}
+OPENSTACK_SSH_KEY_NAME=${OPENSTACK_SSH_KEY_NAME:-"${CLUSTER_NAME}-key"}
 KUBERNETES_VERSION_SERIES=${KUBERNETES_VERSION_SERIES:-"1.17"}
 TIMESTAMP=$(date +"%Y-%m-%dT%H:%M:%SZ")
 
@@ -119,13 +118,14 @@ dump_capo_logs() {
 
     openstack console log show "${node}" > "${dir}/console.log" || true
 
-    PROXY_COMMAND="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=30 -x -W %h:22 -i ${OPENSTACK_SSH_PRIVATE_KEY_PATH} capo@${jump_node}"
+    ssh_key_pem="/tmp/${OPENSTACK_SSH_KEY_NAME}.pem"
+    PROXY_COMMAND="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=30 -x -W %h:22 -i ${ssh_key_pem} ubuntu@${jump_node}"
     node=$(openstack port show ${node}  -f json -c fixed_ips | jq '.fixed_ips[0].ip_address' -r)
 
     ssh-to-node "${node}" "${jump_node}" "sudo chmod -R a+r /var/log" || true
-    scp -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=30 -o ProxyCommand="${PROXY_COMMAND}" -i ${OPENSTACK_SSH_PRIVATE_KEY_PATH} \
-      "capo@${node}:/var/log/cloud-init.log" "capo@${node}:/var/log/cloud-init-output.log" \
-      "capo@${node}:/var/log/pods" "capo@${node}:/var/log/containers" \
+    scp -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=30 -o ProxyCommand="${PROXY_COMMAND}" -i ${ssh_key_pem} \
+      "ubuntu@${node}:/var/log/cloud-init.log" "ubuntu@${node}:/var/log/cloud-init-output.log" \
+      "ubuntu@${node}:/var/log/pods" "ubuntu@${node}:/var/log/containers" \
       "${dir}" || true
 
     ssh-to-node "${node}" "${jump_node}" "sudo journalctl --output=short-precise -k" > "${dir}/kern.log" || true
@@ -152,11 +152,21 @@ function ssh-to-node() {
   local jump="$2"
   local cmd="$3"
 
+  ssh_key_pem="/tmp/${OPENSTACK_SSH_KEY_NAME}.pem"
   ssh_params="-o LogLevel=quiet -o ConnectTimeout=30 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
-  scp $ssh_params -i "${OPENSTACK_SSH_PRIVATE_KEY_PATH}" "${OPENSTACK_SSH_PRIVATE_KEY_PATH}" "capo@${jump}:${OPENSTACK_SSH_PRIVATE_KEY_PATH}"
-  ssh $ssh_params -i "${OPENSTACK_SSH_PRIVATE_KEY_PATH}" \
-    -o "ProxyCommand ssh $ssh_params -W %h:%p -i ${OPENSTACK_SSH_PRIVATE_KEY_PATH} capo@${jump}" \
-    capo@"${node}" "${cmd}"
+  scp $ssh_params -i $ssh_key_pem $ssh_key_pem "ubuntu@${jump}:$ssh_key_pem"
+  ssh $ssh_params -i $ssh_key_pem \
+    -o "ProxyCommand ssh $ssh_params -W %h:%p -i $ssh_key_pem ubuntu@${jump}" \
+    ubuntu@"${node}" "${cmd}"
+}
+
+create_key_pair() {
+  echo "Create key pair"
+
+  ssh-keygen -t rsa -f "/tmp/${OPENSTACK_SSH_KEY_NAME}.pem"  -N ""
+  chmod 0400 "/tmp/${OPENSTACK_SSH_KEY_NAME}.pem"
+
+  openstack keypair create --public-key "/tmp/${OPENSTACK_SSH_KEY_NAME}.pem.pub" ${OPENSTACK_SSH_KEY_NAME}
 }
 
 upload_image() {
@@ -253,12 +263,6 @@ create_cluster() {
   # actually create the cluster
   KIND_IS_UP=true
 
-  if [[ ! -f ${OPENSTACK_SSH_AUTHORIZED_KEY_PATH} ]]
-  then
-    ssh-keygen -t rsa -f ${OPENSTACK_SSH_PRIVATE_KEY_PATH}  -N ""
-    chmod 0400 ${OPENSTACK_SSH_AUTHORIZED_KEY_PATH}
-  fi
-
   # exports the b64 env vars used below
   source ${REPO_ROOT}/templates/env.rc ${OPENSTACK_CLOUD_YAML_FILE} ${CLUSTER_NAME}
 
@@ -275,7 +279,7 @@ create_cluster() {
   OPENSTACK_CLOUD_PROVIDER_CONF_B64=${OPENSTACK_CLOUD_PROVIDER_CONF_B64} \
   OPENSTACK_CLOUD_YAML_B64=${OPENSTACK_CLOUD_YAML_B64} \
   OPENSTACK_IMAGE_NAME=${OPENSTACK_IMAGE_NAME} \
-  OPENSTACK_SSH_AUTHORIZED_KEY="$(cat ${OPENSTACK_SSH_AUTHORIZED_KEY_PATH})" \
+  OPENSTACK_SSH_KEY_NAME=${OPENSTACK_SSH_KEY_NAME} \
   OPENSTACK_DNS_NAMESERVERS=${OPENSTACK_DNS_NAMESERVERS} \
   OPENSTACK_CLUSTER_TEMPLATE=${OPENSTACK_CLUSTER_TEMPLATE} \
   KUBERNETES_VERSION=${KUBERNETES_VERSION} \
@@ -411,6 +415,7 @@ main() {
   fi
 
   build
+  create_key_pair
   create_cluster
 
   if [[ -z "${SKIP_RUN_TESTS:-}" ]]; then
