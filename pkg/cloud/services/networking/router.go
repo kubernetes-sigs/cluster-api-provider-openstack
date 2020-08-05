@@ -41,7 +41,7 @@ func (s *Service) ReconcileRouter(clusterName string, openStackCluster *infrav1.
 		s.logger.V(4).Info("No need to reconcile router since no subnet exists.")
 		return nil
 	}
-	if openStackCluster.Spec.ExternalNetworkID == "" {
+	if openStackCluster.Status.ExternalNetwork == nil || openStackCluster.Status.ExternalNetwork.ID == "" {
 		s.logger.V(3).Info("No need to create router, due to missing ExternalNetworkID.")
 		return nil
 	}
@@ -71,7 +71,7 @@ func (s *Service) ReconcileRouter(clusterName string, openStackCluster *infrav1.
 		// That's also the same way terraform provider OpenStack does it
 		if len(openStackCluster.Spec.ExternalRouterIPs) == 0 {
 			opts.GatewayInfo = &routers.GatewayInfo{
-				NetworkID: openStackCluster.Spec.ExternalNetworkID,
+				NetworkID: openStackCluster.Status.ExternalNetwork.ID,
 			}
 		}
 		newRouter, err := routers.Create(s.client, opts).Extract()
@@ -90,7 +90,7 @@ func (s *Service) ReconcileRouter(clusterName string, openStackCluster *infrav1.
 	if len(openStackCluster.Spec.ExternalRouterIPs) > 0 {
 		var updateOpts routers.UpdateOpts
 		updateOpts.GatewayInfo = &routers.GatewayInfo{
-			NetworkID: openStackCluster.Spec.ExternalNetworkID,
+			NetworkID: openStackCluster.Status.ExternalNetwork.ID,
 		}
 		for _, externalRouterIP := range openStackCluster.Spec.ExternalRouterIPs {
 			subnetID := externalRouterIP.Subnet.UUID

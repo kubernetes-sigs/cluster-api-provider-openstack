@@ -22,24 +22,34 @@ import (
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 )
 
-func (s *Service) CreateFloatingIPIfNecessary(openStackCluster *infrav1.OpenStackCluster, ip string) error {
-	fp, err := checkIfFloatingIPExists(s.client, ip)
-	if err != nil {
-		return err
+func (s *Service) GetOrCreateFloatingIP(openStackCluster *infrav1.OpenStackCluster, ip string) (*floatingips.FloatingIP, error) {
+	var fp *floatingips.FloatingIP
+	var err error
+	if ip != "" {
+		fp, err = checkIfFloatingIPExists(s.client, ip)
+		if err != nil {
+			return nil, err
+		}
 	}
 	if fp == nil {
-		s.logger.Info("Creating floating ip", "ip", ip)
 		fpCreateOpts := &floatingips.CreateOpts{
-			FloatingIP:        ip,
-			FloatingNetworkID: openStackCluster.Spec.ExternalNetworkID,
+			FloatingNetworkID: openStackCluster.Status.ExternalNetwork.ID,
 		}
-		if _, err = floatingips.Create(s.client, fpCreateOpts).Extract(); err != nil {
-			return fmt.Errorf("error allocating floating IP: %s", err)
+		if ip != "" {
+			// only admin can add ip address
+			fpCreateOpts.FloatingIP = ip
 		}
+		fp, err = floatingips.Create(s.client, fpCreateOpts).Extract()
+		if err != nil {
+			return nil, fmt.Errorf("error creating floating IP: %s", err)
+		}
+		record.Eventf(openStackCluster, "SuccessfulCreateFloatingIP", "Created floating IP %s with id %s", fp.FloatingIP, fp.ID)
+
 	}
-	return nil
+	return fp, nil
 }
 
 func checkIfFloatingIPExists(client *gophercloud.ServiceClient, ip string) (*floatingips.FloatingIP, error) {

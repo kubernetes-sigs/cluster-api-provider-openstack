@@ -23,6 +23,7 @@ import (
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/external"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/pkg/errors"
@@ -37,6 +38,53 @@ type createOpts struct {
 
 func (c createOpts) ToNetworkCreateMap() (map[string]interface{}, error) {
 	return gophercloud.BuildRequestBody(c, "network")
+}
+
+func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCluster) error {
+
+	if openStackCluster.Spec.ExternalNetworkID != "" {
+		externalNetwork, err := s.getNetworkByID(openStackCluster.Spec.ExternalNetworkID)
+		if err != nil {
+			return err
+		}
+		if externalNetwork.ID != "" {
+			openStackCluster.Status.ExternalNetwork = &infrav1.Network{
+				ID:   externalNetwork.ID,
+				Name: externalNetwork.Name,
+			}
+			return nil
+		}
+	}
+
+	// ExternalNetworkID is not given
+	iTrue := true
+	networkListOpts := networks.ListOpts{}
+	listOpts := external.ListOptsExt{
+		ListOptsBuilder: networkListOpts,
+		External:        &iTrue,
+	}
+
+	allPages, err := networks.List(s.client, listOpts).AllPages()
+	if err != nil {
+		return err
+	}
+	allNetworks, err := networks.ExtractNetworks(allPages)
+	if err != nil {
+		return err
+	}
+
+	switch len(allNetworks) {
+	case 0:
+		return fmt.Errorf("external network not found")
+	case 1:
+		openStackCluster.Status.ExternalNetwork = &infrav1.Network{
+			ID:   allNetworks[0].ID,
+			Name: allNetworks[0].Name,
+		}
+		s.logger.Info("External network found:", "network id", allNetworks[0].ID)
+		return nil
+	}
+	return errors.New("too many resources")
 }
 
 func (s *Service) ReconcileNetwork(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {
@@ -184,6 +232,30 @@ func (s *Service) ReconcileSubnet(clusterName string, openStackCluster *infrav1.
 
 	openStackCluster.Status.Network.Subnet = &observedSubnet
 	return nil
+}
+
+func (s *Service) getNetworkByID(networkID string) (networks.Network, error) {
+	opts := networks.ListOpts{
+		ID: networkID,
+	}
+
+	allPages, err := networks.List(s.client, opts).AllPages()
+	if err != nil {
+		return networks.Network{}, err
+	}
+
+	allNetworks, err := networks.ExtractNetworks(allPages)
+	if err != nil {
+		return networks.Network{}, err
+	}
+
+	switch len(allNetworks) {
+	case 0:
+		return networks.Network{}, nil
+	case 1:
+		return allNetworks[0], nil
+	}
+	return networks.Network{}, errors.New("multiple external network found")
 }
 
 func (s *Service) getNetworkByName(networkName string) (networks.Network, error) {

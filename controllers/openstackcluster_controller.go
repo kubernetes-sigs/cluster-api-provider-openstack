@@ -214,35 +214,6 @@ func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, log lo
 		return reconcile.Result{}, err
 	}
 
-	// Set APIEndpoints so the Cluster API Cluster Controller can pull them
-	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
-		openStackCluster.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{
-			Host: openStackCluster.Spec.APIServerLoadBalancerFloatingIP,
-			Port: int32(openStackCluster.Spec.APIServerLoadBalancerPort),
-		}
-	} else {
-		controlPlaneMachine, err := getControlPlaneMachine(r.Client)
-		if err != nil {
-			return ctrl.Result{}, errors.Errorf("failed to get control plane machine: %v", err)
-		}
-		if controlPlaneMachine != nil {
-			var apiPort int
-			if cluster.Spec.ClusterNetwork.APIServerPort == nil {
-				log.Info("No API endpoint given, default to 6443")
-				apiPort = 6443
-			} else {
-				apiPort = int(*cluster.Spec.ClusterNetwork.APIServerPort)
-			}
-
-			openStackCluster.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{
-				Host: controlPlaneMachine.Spec.FloatingIP,
-				Port: int32(apiPort),
-			}
-		} else {
-			log.Info("No control plane node found yet, could not write OpenStackCluster.Spec.ControlPlaneEndpoint")
-		}
-	}
-
 	availabilityZones, err := computeService.GetAvailabilityZones()
 	if err != nil {
 		return ctrl.Result{}, err
@@ -292,6 +263,12 @@ func (r *OpenStackClusterReconciler) reconcileNetworkComponents(log logr.Logger,
 	}
 
 	log.Info("Reconciling network components")
+
+	err = networkingService.ReconcileExternalNetwork(openStackCluster)
+	if err != nil {
+		return errors.Errorf("failed to reconcile external network: %v", err)
+	}
+
 	if openStackCluster.Spec.NodeCIDR == "" {
 		log.V(4).Info("No need to reconcile network, searching network and subnet instead")
 
@@ -337,6 +314,35 @@ func (r *OpenStackClusterReconciler) reconcileNetworkComponents(log logr.Logger,
 		}
 	}
 
+	if openStackCluster.Spec.ControlPlaneEndpoint.IsZero() {
+		var controlPlaneEndpointHost string
+		var port int32
+		if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
+			controlPlaneEndpointHost = openStackCluster.Spec.APIServerLoadBalancerFloatingIP
+			if openStackCluster.Spec.APIServerLoadBalancerPort == 0 {
+				port = 6443
+			} else {
+				port = int32(openStackCluster.Spec.APIServerLoadBalancerPort)
+			}
+		} else {
+			controlPlaneEndpointHost = openStackCluster.Spec.ControlPlaneEndpoint.Host
+			if openStackCluster.Spec.ControlPlaneEndpoint.Port == 0 {
+				port = 6443
+			} else {
+				port = openStackCluster.Spec.ControlPlaneEndpoint.Port
+			}
+		}
+		fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, controlPlaneEndpointHost)
+		if err != nil {
+			return errors.Errorf("Floating IP cannot be got or created: %v", err)
+		}
+		// Set APIEndpoints so the Cluster API Cluster Controller can pull them
+		openStackCluster.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{
+			Host: fp.FloatingIP,
+			Port: port,
+		}
+	}
+
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
 		err = loadBalancerService.ReconcileLoadBalancer(clusterName, openStackCluster)
 		if err != nil {
@@ -358,34 +364,4 @@ func (r *OpenStackClusterReconciler) SetupWithManager(mgr ctrl.Manager, options 
 		For(&infrav1.OpenStackCluster{}).
 		WithEventFilter(pausePredicates).
 		Complete(r)
-}
-
-func getControlPlaneMachine(client client.Client) (*infrav1.OpenStackMachine, error) {
-	machines := &clusterv1.MachineList{}
-	if err := client.List(context.TODO(), machines); err != nil {
-		return nil, err
-	}
-	openStackMachines := &infrav1.OpenStackMachineList{}
-	if err := client.List(context.TODO(), openStackMachines); err != nil {
-		return nil, err
-	}
-
-	var controlPlaneMachine *clusterv1.Machine
-	for _, machine := range machines.Items {
-		m := machine
-		if util.IsControlPlaneMachine(&m) {
-			controlPlaneMachine = &m
-			break
-		}
-	}
-	if controlPlaneMachine == nil {
-		return nil, nil
-	}
-
-	for _, openStackMachine := range openStackMachines.Items {
-		if openStackMachine.Name == controlPlaneMachine.Name {
-			return &openStackMachine, nil
-		}
-	}
-	return nil, nil
 }

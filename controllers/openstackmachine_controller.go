@@ -335,18 +335,21 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 		return ctrl.Result{}, nil
 	}
 
-	if openStackMachine.Spec.FloatingIP != "" {
-		err = r.reconcileFloatingIP(computeService, networkingService, instance, openStackMachine, openStackCluster)
-		if err != nil {
-			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("FloatingIP cannot be reconciled: %v", err))
-			return ctrl.Result{}, nil
-		}
-	}
-
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
 		err = r.reconcileLoadBalancerMember(logger, osProviderClient, clientOpts, instance, clusterName, machine, openStackMachine, openStackCluster)
 		if err != nil {
 			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("LoadBalancerMember cannot be reconciled: %v", err))
+			return ctrl.Result{}, nil
+		}
+	} else if util.IsControlPlaneMachine(machine) {
+		fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster.Spec.ControlPlaneEndpoint.Host)
+		if err != nil {
+			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("Floating IP cannot be got or created: %v", err))
+			return ctrl.Result{}, nil
+		}
+		err = computeService.AssociateFloatingIP(instance.ID, fp.FloatingIP)
+		if err != nil {
+			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("Floating IP cannot be associated: %v", err))
 			return ctrl.Result{}, nil
 		}
 	}
@@ -402,19 +405,6 @@ func getTimeout(name string, timeout int) time.Duration {
 		}
 	}
 	return time.Duration(timeout)
-}
-
-func (r *OpenStackMachineReconciler) reconcileFloatingIP(computeService *compute.Service, networkingService *networking.Service, instance *compute.Instance, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster) error {
-	err := networkingService.CreateFloatingIPIfNecessary(openStackCluster, openStackMachine.Spec.FloatingIP)
-	if err != nil {
-		return fmt.Errorf("error creating floatingIP: %v", err)
-	}
-
-	err = computeService.AssociateFloatingIP(instance.ID, openStackMachine.Spec.FloatingIP)
-	if err != nil {
-		return fmt.Errorf("error associating floatingIP: %v", err)
-	}
-	return nil
 }
 
 func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(logger logr.Logger, osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, instance *compute.Instance, clusterName string, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster) error {
