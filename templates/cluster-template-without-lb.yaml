@@ -26,13 +26,9 @@ spec:
   cloudsSecret:
     name: ${CLUSTER_NAME}-cloud-config
     namespace: ${NAMESPACE}
-  controlPlaneEndpoint:
-    host: ${OPENSTACK_CONTROLPLANE_IP}
-    port: 6443
   nodeCidr: 10.6.0.0/24
   dnsNameservers:
   - ${OPENSTACK_DNS_NAMESERVERS}
-  externalNetworkId: ${OPENSTACK_EXTERNAL_NETWORK_ID}
   disablePortSecurity: true
   disableServerTags: true
   useOctavia: false
@@ -55,7 +51,6 @@ spec:
           cloud-provider: openstack
           cloud-config: /etc/kubernetes/cloud.conf
     clusterConfiguration:
-      controlPlaneEndpoint: "${OPENSTACK_CONTROLPLANE_IP}:6443"
       imageRepository: k8s.gcr.io
       apiServer:
         extraArgs:
@@ -112,7 +107,6 @@ metadata:
 spec:
   template:
     spec:
-      floatingIP: ${OPENSTACK_CONTROLPLANE_IP}
       flavor: ${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR}
       image: ${OPENSTACK_IMAGE_NAME}
       cloudName: ${OPENSTACK_CLOUD}
