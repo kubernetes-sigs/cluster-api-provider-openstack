@@ -74,7 +74,6 @@
 
         export ARTIFACTS=/home/zuul/workspace/logs/_artifacts
         export KUBERNETES_VERSION_SERIES={{ k8s_version_series }}
-        export OPENSTACK_CONTROLPLANE_IP="172.24.5.24"
         export OPENSTACK_DNS_NAMESERVERS=8.8.8.8
         export CONTROL_PLANE_MACHINE_COUNT=1
         export WORKER_MACHINE_COUNT=1

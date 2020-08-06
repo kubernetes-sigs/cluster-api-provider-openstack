@@ -4,13 +4,13 @@
 
 - [Required configuration](#required-configuration)
   - [Operating system image](#operating-system-image)
-  - [Public network](#public-network)
-  - [Floating IP](#floating-ip)
   - [SSH authorized key](#ssh-authorized-key)
   - [OpenStack credential](#openstack-credential)
   - [Availability zone](#availability-zone)
   - [DNS server](#dns-server)
 - [Optional Configuration](#optional-configuration)
+  - [External network](#external-network)
+  - [Floating IP](#floating-ip)
   - [Network Filters](#network-filters)
   - [Multiple Networks](#multiple-networks)
   - [Subnet Filters](#subnet-filters)
@@ -34,28 +34,6 @@ Note: You can use [the template file](../templates/cluster-template.yaml) by man
 We currently depend on an up-to-date version of cloud-init otherwise the operating system choice is yours. The kubeadm bootstrap provider we're using also depends on some pre-installed software like a container runtime, kubelet, kubeadm, etc.. . For an examples how to build such an image take a look at [image-builder (openstack)](https://image-builder.sigs.k8s.io/capi/providers/openstack.html).
 
 The image can be referenced by exposing it as an environment variable `OPENSTACK_IMAGE_NAME`.
-
-## Public network
-
-The public network id can be obtained by using command,
-
-```bash
-openstack network list --external
-```
-The ID must be expose as an environment variable `OPENSTACK_EXTERNAL_NETWORK_ID`
-
-Note: If your openstack cluster does not already have a public network, you should contact your cloud service provider. We will not review how to troubleshoot this here.
-
-## Floating IP
-
-You have to be able to create a floating IP in your OpenStack. You can create one using,
-
-```bash
-openstack floating ip create <public network>
-```
-The IP must be exposed as an environment variable `OPENSTACK_CONTROLPLANE_IP`.
-
-Note: Only user with admin role can create a floating IP with specific IP.
 
 ## SSH authorized key
 
@@ -103,6 +81,31 @@ The availability zone names must be exposed as an environment variable `OPENSTAC
 The DNS servers must be exposed as an environment variable `OPENSTACK_DNS_NAMESERVERS`.
 
 # Optional Configuration
+
+## External network
+
+External network is automatically found, but you can specify the external network explicitly by `spec.externalNetworkId` of `OpenStackCluster`.
+
+The public network id can be obtained by using command,
+
+```bash
+openstack network list --external
+```
+
+Note: If your openstack cluster does not already have a public network, you should contact your cloud service provider. We will not review how to troubleshoot this here.
+
+## Floating IP
+
+A floating IP is automatically created and associated with the load balancer or controller node, but you can specify the floating IP explicitly. When `managedAPIServerLoadBalancer: true`, `spec.apiServerLoadBalancerFlotingIP` of `OpenStackCluster` is used. When `managedAPIServerLoadBalancer: false`, `spec.controlPlaneEndpoint.host` of `OpenStackCluster` is used.
+
+You have to be able to create a floating IP in your OpenStack in advance. You can create one using,
+
+```bash
+openstack floating ip create <public network>
+```
+
+Note: Only user with admin role can create a floating IP with specific IP.
+
 
 ## Network Filters
 
