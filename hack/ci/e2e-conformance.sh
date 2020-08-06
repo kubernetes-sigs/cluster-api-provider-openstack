@@ -312,6 +312,9 @@ create_cluster() {
   # Wait till all pods and nodes are ready
   kubectl wait --for=condition=Ready --timeout=15m pods -n kube-system --kubeconfig="$KUBECONFIG" --all
   kubectl wait --for=condition=Ready --timeout=5m node --kubeconfig="$KUBECONFIG" --all
+
+  kubectl describe pods --kubeconfig="$KUBECONFIG" --all-namespaces
+  kubectl describe nodes --kubeconfig="$KUBECONFIG"
 }
 
 delete_cluster() {
