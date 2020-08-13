@@ -26,7 +26,7 @@ OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR=${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR:
 OPENSTACK_CLUSTER_TEMPLATE=${OPENSTACK_CLUSTER_TEMPLATE:-"./templates/cluster-template-without-lb.yaml"}
 CLUSTER_NAME=${CLUSTER_NAME:-"capi-quickstart"}
 OPENSTACK_SSH_KEY_NAME=${OPENSTACK_SSH_KEY_NAME:-"${CLUSTER_NAME}-key"}
-KUBERNETES_VERSION_SERIES=${KUBERNETES_VERSION_SERIES:-"1.17"}
+KUBERNETES_VERSION=${KUBERNETES_VERSION:-"v1.18.6"}
 TIMESTAMP=$(date +"%Y-%m-%dT%H:%M:%SZ")
 
 ARTIFACTS="${ARTIFACTS:-${PWD}/_artifacts}"
@@ -224,12 +224,7 @@ build() {
 
     git clone https://github.com/kubernetes/kubernetes.git
     cd kubernetes
-    if [[ "${KUBERNETES_VERSION_SERIES}" == "master" ]]
-    then
-      git checkout master
-    else
-      git checkout "release-${KUBERNETES_VERSION_SERIES}"
-    fi
+    git checkout -b ${KUBERNETES_VERSION} "refs/tags/${KUBERNETES_VERSION}"
   fi
 
   pushd "$(go env GOPATH)/src/k8s.io/kubernetes"
@@ -265,15 +260,6 @@ create_cluster() {
 
   # exports the b64 env vars used below
   source ${REPO_ROOT}/templates/env.rc ${OPENSTACK_CLOUD_YAML_FILE} ${CLUSTER_NAME}
-
-  # KUBERNETES_VERSION will be used via e2e-conformance_patch.yaml
-  # TODO: revert to https://dl.k8s.io/ci/latest-green.txt once https://github.com/kubernetes/release/issues/897 is fixed.
-  if [[ "${KUBERNETES_VERSION_SERIES}" == "master" ]]
-  then
-    KUBERNETES_VERSION=$(curl -sSL https://dl.k8s.io/ci/k8s-master.txt)
-  else
-    KUBERNETES_VERSION=$(curl -sSL https://dl.k8s.io/ci/latest-${KUBERNETES_VERSION_SERIES}.txt)
-  fi
 
   OPENSTACK_CLOUD_CACERT_B64=${OPENSTACK_CLOUD_CACERT_B64} \
   OPENSTACK_CLOUD_PROVIDER_CONF_B64=${OPENSTACK_CLOUD_PROVIDER_CONF_B64} \

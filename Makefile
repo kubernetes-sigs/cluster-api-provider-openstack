@@ -333,7 +333,7 @@ create-cluster: $(CLUSTERCTL) $(KUSTOMIZE) $(ENVSUBST) ## Create a development K
 
 	# (Re-)install Core providers
 	$(CLUSTERCTL) delete --all
-	$(CLUSTERCTL) init --core cluster-api:v0.3.5 --bootstrap kubeadm:v0.3.5 --control-plane kubeadm:v0.3.5
+	$(CLUSTERCTL) init --core cluster-api:v0.3.8 --bootstrap kubeadm:v0.3.8 --control-plane kubeadm:v0.3.8
 
 	# (Re-)deploy CAPO provider
 	MANIFEST_IMG=$(CONTROLLER_IMG)-$(ARCH) MANIFEST_TAG=$(TAG) $(MAKE) set-manifest-image
@@ -379,8 +379,6 @@ create-cluster: $(CLUSTERCTL) $(KUSTOMIZE) $(ENVSUBST) ## Create a development K
 
     # Patch Kubernetes version
 	cat ./hack/ci/e2e-conformance/e2e-conformance_patch.yaml.tpl | \
-	  sed "s|\$${OPENSTACK_CLOUD_PROVIDER_CONF_B64}|$(OPENSTACK_CLOUD_PROVIDER_CONF_B64)|" | \
-	  sed "s|\$${OPENSTACK_CLOUD_CACERT_B64}|$(OPENSTACK_CLOUD_CACERT_B64)|" | \
 	  sed "s|\$${KUBERNETES_VERSION}|$(KUBERNETES_VERSION)|" | \
 	  sed "s|\$${CLUSTER_NAME}|$(CLUSTER_NAME)|"  \
 	   > ./hack/ci/e2e-conformance/e2e-conformance_patch.yaml
