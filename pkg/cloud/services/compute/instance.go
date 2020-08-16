@@ -431,7 +431,11 @@ func (s *Service) AssociateFloatingIP(instanceID, floatingIP string) error {
 	opts := floatingips.AssociateOpts{
 		FloatingIP: floatingIP,
 	}
-	return floatingips.AssociateInstance(s.computeClient, instanceID, opts).ExtractErr()
+	err := floatingips.AssociateInstance(s.computeClient, instanceID, opts).ExtractErr()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *Service) InstanceDelete(machine *clusterv1.Machine) error {
@@ -567,9 +571,7 @@ func (s *Service) GetInstance(resourceID string) (instance *Instance, err error)
 
 func (s *Service) InstanceExists(openStackMachine *infrav1.OpenStackMachine) (instance *Instance, err error) {
 	opts := &InstanceListOpts{
-		Name:   openStackMachine.Name,
-		Image:  openStackMachine.Spec.Image,
-		Flavor: openStackMachine.Spec.Flavor,
+		Name: openStackMachine.Name,
 	}
 
 	instanceList, err := s.GetInstanceList(opts)

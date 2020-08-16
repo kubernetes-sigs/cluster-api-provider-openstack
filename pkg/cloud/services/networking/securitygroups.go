@@ -29,6 +29,7 @@ const (
 	secGroupPrefix     string = "k8s"
 	controlPlaneSuffix string = "controlplane"
 	workerSuffix       string = "worker"
+	bastionSuffix      string = "bastion"
 	remoteGroupIDSelf  string = "self"
 )
 
@@ -67,6 +68,12 @@ func (s *Service) ReconcileSecurityGroups(clusterName string, openStackCluster *
 		controlPlaneSuffix: secControlPlaneGroupName,
 		workerSuffix:       secWorkerGroupName,
 	}
+
+	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
+		secBastionGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, bastionSuffix)
+		secGroupNames[bastionSuffix] = secBastionGroupName
+	}
+
 	//create security groups first, because desired rules use group ids.
 	for _, v := range secGroupNames {
 		if err := s.createSecurityGroupIfNotExists(openStackCluster, v); err != nil {
@@ -74,7 +81,7 @@ func (s *Service) ReconcileSecurityGroups(clusterName string, openStackCluster *
 		}
 	}
 	// create desired security groups
-	desiredSecGroups, err := s.generateDesiredSecGroups(secGroupNames)
+	desiredSecGroups, err := s.generateDesiredSecGroups(secGroupNames, openStackCluster)
 	if err != nil {
 		return err
 	}
@@ -107,174 +114,230 @@ func (s *Service) ReconcileSecurityGroups(clusterName string, openStackCluster *
 
 	openStackCluster.Status.ControlPlaneSecurityGroup = observedSecGroups[controlPlaneSuffix]
 	openStackCluster.Status.WorkerSecurityGroup = observedSecGroups[workerSuffix]
+	openStackCluster.Status.BastionSecurityGroup = observedSecGroups[bastionSuffix]
 
 	return nil
 }
 
-func (s *Service) generateDesiredSecGroups(secGroupNames map[string]string) (map[string]infrav1.SecurityGroup, error) {
+func (s *Service) generateDesiredSecGroups(secGroupNames map[string]string, openStackCluster *infrav1.OpenStackCluster) (map[string]infrav1.SecurityGroup, error) {
 	desiredSecGroups := make(map[string]infrav1.SecurityGroup)
 
 	var secControlPlaneGroupID string
 	var secWorkerGroupID string
+	var secBastionGroupID string
 	for i, v := range secGroupNames {
 		secGroup, err := s.getSecurityGroupByName(v)
 		if err != nil {
 			return desiredSecGroups, err
 		}
-		if i == controlPlaneSuffix {
+		switch i {
+		case controlPlaneSuffix:
 			secControlPlaneGroupID = secGroup.ID
-		} else if i == workerSuffix {
+		case workerSuffix:
 			secWorkerGroupID = secGroup.ID
+		case bastionSuffix:
+			secBastionGroupID = secGroup.ID
+		}
+	}
+
+	controlPlaneRules := append(
+		[]infrav1.SecurityGroupRule{
+			{
+				Description:    "Kubernetes API",
+				Direction:      "ingress",
+				EtherType:      "IPv4",
+				PortRangeMin:   6443,
+				PortRangeMax:   6443,
+				Protocol:       "tcp",
+				RemoteIPPrefix: "0.0.0.0/0",
+			},
+			{
+				Description:   "Etcd",
+				Direction:     "ingress",
+				EtherType:     "IPv4",
+				PortRangeMin:  2379,
+				PortRangeMax:  2380,
+				Protocol:      "tcp",
+				RemoteGroupID: remoteGroupIDSelf,
+			},
+			{
+				// kubeadm says this is needed
+				Description:   "Kubelet API",
+				Direction:     "ingress",
+				EtherType:     "IPv4",
+				PortRangeMin:  10250,
+				PortRangeMax:  10250,
+				Protocol:      "tcp",
+				RemoteGroupID: remoteGroupIDSelf,
+			},
+			{
+				// This is needed to support metrics-server deployments
+				Description:   "Kubelet API",
+				Direction:     "ingress",
+				EtherType:     "IPv4",
+				PortRangeMin:  10250,
+				PortRangeMax:  10250,
+				Protocol:      "tcp",
+				RemoteGroupID: secWorkerGroupID,
+			},
+			{
+				Description:   "BGP (calico)",
+				Direction:     "ingress",
+				EtherType:     "IPv4",
+				PortRangeMin:  179,
+				PortRangeMax:  179,
+				Protocol:      "tcp",
+				RemoteGroupID: remoteGroupIDSelf,
+			},
+			{
+				Description:   "BGP (calico)",
+				Direction:     "ingress",
+				EtherType:     "IPv4",
+				PortRangeMin:  179,
+				PortRangeMax:  179,
+				Protocol:      "tcp",
+				RemoteGroupID: secWorkerGroupID,
+			},
+			{
+				Description:   "IP-in-IP (calico)",
+				Direction:     "ingress",
+				EtherType:     "IPv4",
+				Protocol:      "4",
+				RemoteGroupID: remoteGroupIDSelf,
+			},
+			{
+				Description:   "IP-in-IP (calico)",
+				Direction:     "ingress",
+				EtherType:     "IPv4",
+				Protocol:      "4",
+				RemoteGroupID: secWorkerGroupID,
+			},
+		},
+		defaultRules...,
+	)
+
+	workerRules := append(
+		[]infrav1.SecurityGroupRule{
+			{
+				Description:    "Node Port Services",
+				Direction:      "ingress",
+				EtherType:      "IPv4",
+				PortRangeMin:   30000,
+				PortRangeMax:   32767,
+				Protocol:       "tcp",
+				RemoteIPPrefix: "0.0.0.0/0",
+			},
+			{
+				// This is needed to support metrics-server deployments
+				Description:   "Kubelet API",
+				Direction:     "ingress",
+				EtherType:     "IPv4",
+				PortRangeMin:  10250,
+				PortRangeMax:  10250,
+				Protocol:      "tcp",
+				RemoteGroupID: remoteGroupIDSelf,
+			},
+			{
+				Description:   "Kubelet API",
+				Direction:     "ingress",
+				EtherType:     "IPv4",
+				PortRangeMin:  10250,
+				PortRangeMax:  10250,
+				Protocol:      "tcp",
+				RemoteGroupID: secControlPlaneGroupID,
+			},
+			{
+				Description:   "BGP (calico)",
+				Direction:     "ingress",
+				EtherType:     "IPv4",
+				PortRangeMin:  179,
+				PortRangeMax:  179,
+				Protocol:      "tcp",
+				RemoteGroupID: remoteGroupIDSelf,
+			},
+			{
+				Description:   "BGP (calico)",
+				Direction:     "ingress",
+				EtherType:     "IPv4",
+				PortRangeMin:  179,
+				PortRangeMax:  179,
+				Protocol:      "tcp",
+				RemoteGroupID: secControlPlaneGroupID,
+			},
+			{
+				Description:   "IP-in-IP (calico)",
+				Direction:     "ingress",
+				EtherType:     "IPv4",
+				Protocol:      "4",
+				RemoteGroupID: remoteGroupIDSelf,
+			},
+			{
+				Description:   "IP-in-IP (calico)",
+				Direction:     "ingress",
+				EtherType:     "IPv4",
+				Protocol:      "4",
+				RemoteGroupID: secControlPlaneGroupID,
+			},
+		},
+		defaultRules...,
+	)
+
+	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
+		controlPlaneRules = append(controlPlaneRules,
+			[]infrav1.SecurityGroupRule{
+				{
+					Description:   "SSH",
+					Direction:     "ingress",
+					EtherType:     "IPv4",
+					PortRangeMin:  22,
+					PortRangeMax:  22,
+					Protocol:      "tcp",
+					RemoteGroupID: secBastionGroupID,
+				},
+			}...,
+		)
+		workerRules = append(workerRules,
+			[]infrav1.SecurityGroupRule{
+				{
+					Description:   "SSH",
+					Direction:     "ingress",
+					EtherType:     "IPv4",
+					PortRangeMin:  22,
+					PortRangeMax:  22,
+					Protocol:      "tcp",
+					RemoteGroupID: secBastionGroupID,
+				},
+			}...,
+		)
+		desiredSecGroups[bastionSuffix] = infrav1.SecurityGroup{
+			Name: secGroupNames[bastionSuffix],
+			Rules: append(
+				[]infrav1.SecurityGroupRule{
+					{
+						Description:    "SSH",
+						Direction:      "ingress",
+						EtherType:      "IPv4",
+						PortRangeMin:   22,
+						PortRangeMax:   22,
+						Protocol:       "tcp",
+						RemoteIPPrefix: "0.0.0.0/0",
+					},
+				},
+				defaultRules...,
+			),
 		}
 	}
 
 	desiredSecGroups[controlPlaneSuffix] = infrav1.SecurityGroup{
-		Name: secGroupNames[controlPlaneSuffix],
-		Rules: append(
-			[]infrav1.SecurityGroupRule{
-				{
-					Description:    "Kubernetes API",
-					Direction:      "ingress",
-					EtherType:      "IPv4",
-					PortRangeMin:   6443,
-					PortRangeMax:   6443,
-					Protocol:       "tcp",
-					RemoteIPPrefix: "0.0.0.0/0",
-				},
-				{
-					Description:   "Etcd",
-					Direction:     "ingress",
-					EtherType:     "IPv4",
-					PortRangeMin:  2379,
-					PortRangeMax:  2380,
-					Protocol:      "tcp",
-					RemoteGroupID: remoteGroupIDSelf,
-				},
-				{
-					// kubeadm says this is needed
-					Description:   "Kubelet API",
-					Direction:     "ingress",
-					EtherType:     "IPv4",
-					PortRangeMin:  10250,
-					PortRangeMax:  10250,
-					Protocol:      "tcp",
-					RemoteGroupID: remoteGroupIDSelf,
-				},
-				{
-					// This is needed to support metrics-server deployments
-					Description:   "Kubelet API",
-					Direction:     "ingress",
-					EtherType:     "IPv4",
-					PortRangeMin:  10250,
-					PortRangeMax:  10250,
-					Protocol:      "tcp",
-					RemoteGroupID: secWorkerGroupID,
-				},
-				{
-					Description:   "BGP (calico)",
-					Direction:     "ingress",
-					EtherType:     "IPv4",
-					PortRangeMin:  179,
-					PortRangeMax:  179,
-					Protocol:      "tcp",
-					RemoteGroupID: remoteGroupIDSelf,
-				},
-				{
-					Description:   "BGP (calico)",
-					Direction:     "ingress",
-					EtherType:     "IPv4",
-					PortRangeMin:  179,
-					PortRangeMax:  179,
-					Protocol:      "tcp",
-					RemoteGroupID: secWorkerGroupID,
-				},
-				{
-					Description:   "IP-in-IP (calico)",
-					Direction:     "ingress",
-					EtherType:     "IPv4",
-					Protocol:      "4",
-					RemoteGroupID: remoteGroupIDSelf,
-				},
-				{
-					Description:   "IP-in-IP (calico)",
-					Direction:     "ingress",
-					EtherType:     "IPv4",
-					Protocol:      "4",
-					RemoteGroupID: secWorkerGroupID,
-				},
-			},
-			defaultRules...,
-		),
+		Name:  secGroupNames[controlPlaneSuffix],
+		Rules: controlPlaneRules,
 	}
 
 	desiredSecGroups[workerSuffix] = infrav1.SecurityGroup{
-		Name: secGroupNames[workerSuffix],
-		Rules: append(
-			[]infrav1.SecurityGroupRule{
-				{
-					Description:    "Node Port Services",
-					Direction:      "ingress",
-					EtherType:      "IPv4",
-					PortRangeMin:   30000,
-					PortRangeMax:   32767,
-					Protocol:       "tcp",
-					RemoteIPPrefix: "0.0.0.0/0",
-				},
-				{
-					// This is needed to support metrics-server deployments
-					Description:   "Kubelet API",
-					Direction:     "ingress",
-					EtherType:     "IPv4",
-					PortRangeMin:  10250,
-					PortRangeMax:  10250,
-					Protocol:      "tcp",
-					RemoteGroupID: remoteGroupIDSelf,
-				},
-				{
-					Description:   "Kubelet API",
-					Direction:     "ingress",
-					EtherType:     "IPv4",
-					PortRangeMin:  10250,
-					PortRangeMax:  10250,
-					Protocol:      "tcp",
-					RemoteGroupID: secControlPlaneGroupID,
-				},
-				{
-					Description:   "BGP (calico)",
-					Direction:     "ingress",
-					EtherType:     "IPv4",
-					PortRangeMin:  179,
-					PortRangeMax:  179,
-					Protocol:      "tcp",
-					RemoteGroupID: remoteGroupIDSelf,
-				},
-				{
-					Description:   "BGP (calico)",
-					Direction:     "ingress",
-					EtherType:     "IPv4",
-					PortRangeMin:  179,
-					PortRangeMax:  179,
-					Protocol:      "tcp",
-					RemoteGroupID: secControlPlaneGroupID,
-				},
-				{
-					Description:   "IP-in-IP (calico)",
-					Direction:     "ingress",
-					EtherType:     "IPv4",
-					Protocol:      "4",
-					RemoteGroupID: remoteGroupIDSelf,
-				},
-				{
-					Description:   "IP-in-IP (calico)",
-					Direction:     "ingress",
-					EtherType:     "IPv4",
-					Protocol:      "4",
-					RemoteGroupID: secControlPlaneGroupID,
-				},
-			},
-			defaultRules...,
-		),
+		Name:  secGroupNames[workerSuffix],
+		Rules: workerRules,
 	}
+
 	return desiredSecGroups, nil
 }
 

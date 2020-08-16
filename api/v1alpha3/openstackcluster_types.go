@@ -105,6 +105,10 @@ type OpenStackClusterSpec struct {
 
 	// ControlPlaneAvailabilityZones is the az to deploy control plane to
 	ControlPlaneAvailabilityZones []string `json:"controlPlaneAvailabilityZones,omitempty"`
+
+	// Bastion is the OpenStack instance to login the nodes
+	//+optional
+	Bastion *Bastion `json:"bastion,omitempty"`
 }
 
 // OpenStackClusterStatus defines the observed state of OpenStackCluster
@@ -129,6 +133,10 @@ type OpenStackClusterStatus struct {
 	// WorkerSecurityGroup contains all the information about the OpenStack Security
 	// Group that needs to be applied to worker nodes.
 	WorkerSecurityGroup *SecurityGroup `json:"workerSecurityGroup,omitempty"`
+
+	BastionSecurityGroup *SecurityGroup `json:"bastionSecurityGroup,omitempty"`
+
+	Bastion *Bastion `json:"bastion,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -140,6 +148,7 @@ type OpenStackClusterStatus struct {
 // +kubebuilder:printcolumn:name="Network",type="string",JSONPath=".status.network.id",description="Network the cluster is using"
 // +kubebuilder:printcolumn:name="Subnet",type="string",JSONPath=".status.network.subnet.id",description="Subnet the cluster is using"
 // +kubebuilder:printcolumn:name="Endpoint",type="string",JSONPath=".spec.controlPlaneEndpoint.host",description="API Endpoint",priority=1
+// +kubebuilder:printcolumn:name="Bastion",type="string",JSONPath=".status.bastion.floatingIP",description="Bastion floating IP"
 
 // OpenStackCluster is the Schema for the openstackclusters API
 type OpenStackCluster struct {

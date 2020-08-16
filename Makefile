@@ -382,7 +382,10 @@ create-cluster: $(CLUSTERCTL) $(KUSTOMIZE) $(ENVSUBST) ## Create a development K
 	  sed "s|\$${OPENSTACK_CLOUD_PROVIDER_CONF_B64}|$(OPENSTACK_CLOUD_PROVIDER_CONF_B64)|" | \
 	  sed "s|\$${OPENSTACK_CLOUD_CACERT_B64}|$(OPENSTACK_CLOUD_CACERT_B64)|" | \
 	  sed "s|\$${KUBERNETES_VERSION}|$(KUBERNETES_VERSION)|" | \
-	  sed "s|\$${CLUSTER_NAME}|$(CLUSTER_NAME)|"  \
+	  sed "s|\$${CLUSTER_NAME}|$(CLUSTER_NAME)|" | \
+	  sed "s|\$${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR}|$(OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR)|" | \
+	  sed "s|\$${OPENSTACK_IMAGE_NAME}|$(OPENSTACK_IMAGE_NAME)|" | \
+	  sed "s|\$${OPENSTACK_SSH_KEY_NAME}|$(OPENSTACK_SSH_KEY_NAME)|" \
 	   > ./hack/ci/e2e-conformance/e2e-conformance_patch.yaml
 	$(KUSTOMIZE) build --reorder=none hack/ci/e2e-conformance  > ./out/cluster.yaml
 

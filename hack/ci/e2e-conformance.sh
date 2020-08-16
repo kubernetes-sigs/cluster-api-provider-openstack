@@ -108,9 +108,9 @@ dump_capo_logs() {
   kubectl --kubeconfig=${PWD}/kubeconfig cluster-info dump >> "${ARTIFACTS}/logs/openstack-cluster.txt" || true
   kubectl --kubeconfig=${PWD}/kubeconfig get secrets -o yaml -A > "${ARTIFACTS}/logs/openstack-cluster-secrets.txt" || true
 
-  jump_node_name=$(openstack server list -f value -c Name | grep ${CLUSTER_NAME}-control-plane | head -n 1)
+  jump_node_name=$(openstack server list -f value -c Name | grep ${CLUSTER_NAME}-bastion | head -n 1)
   jump_node=$(openstack server show ${jump_node_name} -f value -c addresses | awk '{print $2}')
-  for node in $(openstack server list -f value -c Name)
+  for node in $(openstack server list -f value -c Name | grep -v bastion)
   do
     echo "collecting logs from ${node} using jump host "
     dir="${ARTIFACTS}/logs/${node}"

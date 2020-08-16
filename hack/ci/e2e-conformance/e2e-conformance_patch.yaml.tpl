@@ -1,3 +1,14 @@
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+kind: OpenStackCluster
+metadata:
+  name: ${CLUSTER_NAME}
+spec:
+  bastion:
+    enabled: true
+    flavor: ${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR}
+    image: ${OPENSTACK_IMAGE_NAME}
+    sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
+---
 apiVersion: controlplane.cluster.x-k8s.io/v1alpha3
 kind: KubeadmControlPlane
 metadata:
