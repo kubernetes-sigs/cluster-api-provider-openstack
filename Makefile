@@ -379,6 +379,8 @@ create-cluster: $(CLUSTERCTL) $(KUSTOMIZE) $(ENVSUBST) ## Create a development K
 
     # Patch Kubernetes version
 	cat ./hack/ci/e2e-conformance/e2e-conformance_patch.yaml.tpl | \
+	  sed "s|\$${OPENSTACK_CLOUD_PROVIDER_CONF_B64}|$(OPENSTACK_CLOUD_PROVIDER_CONF_B64)|" | \
+	  sed "s|\$${OPENSTACK_CLOUD_CACERT_B64}|$(OPENSTACK_CLOUD_CACERT_B64)|" | \
 	  sed "s|\$${KUBERNETES_VERSION}|$(KUBERNETES_VERSION)|" | \
 	  sed "s|\$${CLUSTER_NAME}|$(CLUSTER_NAME)|"  \
 	   > ./hack/ci/e2e-conformance/e2e-conformance_patch.yaml
