@@ -895,6 +895,16 @@ func (is *InstanceService) GetInstanceList(opts *InstanceListOpts) ([]*Instance,
 	return instanceList, nil
 }
 
+// DoesFlavorExist return an error if flavor with given name doesn't exist, and nil otherwise
+func (is *InstanceService) DoesFlavorExist(flavorName string) error {
+	_, err := flavors.IDFromName(is.computeClient, flavorName)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (is *InstanceService) GetInstance(resourceId string) (instance *Instance, err error) {
 	if resourceId == "" {
 		return nil, fmt.Errorf("ResourceId should be specified to  get detail.")
