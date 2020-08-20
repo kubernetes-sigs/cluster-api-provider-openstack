@@ -173,7 +173,7 @@ spec:
 
 ## Tagging
 
-By default, all resources will be tagged with the values: `clusterName` and `cluster-api-provider-openstack`. The minimum microversion of the nova api that you need to support server tagging is 2.52. If your cluster does not support this, then disable tagging servers by setting `disableServerTags: true` in `cluster.yaml`. By default, this value is false. If your cluster supports tagging servers, you have the ability to tag all resources created by the cluster in the `cluster.yaml` file. Here is an example how to configure tagging:
+If your cluster supports tagging servers, you have the ability to tag all resources created by the cluster in the `cluster.yaml` file. Here is an example how to configure tagging:
 
 ```yaml
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3

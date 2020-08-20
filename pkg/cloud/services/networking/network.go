@@ -128,13 +128,12 @@ func (s *Service) ReconcileNetwork(clusterName string, openStackCluster *infrav1
 	}
 	record.Eventf(openStackCluster, "SuccessfulCreateNetwork", "Created network %s with id %s", networkName, network.ID)
 
-	_, err = attributestags.ReplaceAll(s.client, "networks", network.ID, attributestags.ReplaceAllOpts{
-		Tags: []string{
-			"cluster-api-provider-openstack",
-			clusterName,
-		}}).Extract()
-	if err != nil {
-		return err
+	if len(openStackCluster.Spec.Tags) > 0 {
+		_, err = attributestags.ReplaceAll(s.client, "networks", network.ID, attributestags.ReplaceAllOpts{
+			Tags: openStackCluster.Spec.Tags}).Extract()
+		if err != nil {
+			return err
+		}
 	}
 
 	openStackCluster.Status.Network = &infrav1.Network{
@@ -221,13 +220,12 @@ func (s *Service) ReconcileSubnet(clusterName string, openStackCluster *infrav1.
 		}
 	}
 
-	_, err = attributestags.ReplaceAll(s.client, "subnets", observedSubnet.ID, attributestags.ReplaceAllOpts{
-		Tags: []string{
-			"cluster-api-provider-openstack",
-			clusterName,
-		}}).Extract()
-	if err != nil {
-		return err
+	if len(openStackCluster.Spec.Tags) > 0 {
+		_, err = attributestags.ReplaceAll(s.client, "subnets", observedSubnet.ID, attributestags.ReplaceAllOpts{
+			Tags: openStackCluster.Spec.Tags}).Extract()
+		if err != nil {
+			return err
+		}
 	}
 
 	openStackCluster.Status.Network.Subnet = &observedSubnet

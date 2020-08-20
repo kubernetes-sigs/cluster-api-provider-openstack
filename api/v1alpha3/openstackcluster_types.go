@@ -99,9 +99,6 @@ type OpenStackClusterSpec struct {
 	// Tags for all resources in cluster
 	Tags []string `json:"tags,omitempty"`
 
-	// Default: True. In case of server tag errors, set to False
-	DisableServerTags bool `json:"disableServerTags,omitempty"`
-
 	// CAKeyPair is the key pair for ca certs.
 	CAKeyPair KeyPair `json:"caKeyPair,omitempty"`
 

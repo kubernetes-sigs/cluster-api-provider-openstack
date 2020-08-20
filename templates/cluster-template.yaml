@@ -32,7 +32,6 @@ spec:
   dnsNameservers:
   - ${OPENSTACK_DNS_NAMESERVERS}
   disablePortSecurity: false
-  disableServerTags: true
   useOctavia: true
 ---
 kind: KubeadmControlPlane
