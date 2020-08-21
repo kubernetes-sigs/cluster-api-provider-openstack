@@ -61,6 +61,7 @@ func (s *Service) ReconcileRouter(clusterName string, openStackCluster *infrav1.
 		return err
 	}
 	var router routers.Router
+	var observedRouter infrav1.Router
 	if len(routerList) == 0 {
 		opts := routers.CreateOpts{
 			Name: routerName,
@@ -80,11 +81,30 @@ func (s *Service) ReconcileRouter(clusterName string, openStackCluster *infrav1.
 			return err
 		}
 		record.Eventf(openStackCluster, "SuccessfulCreateRouter", "Created router %s with id %s", routerName, newRouter.ID)
+		if len(openStackCluster.Spec.Tags) > 0 {
+			_, err = attributestags.ReplaceAll(s.client, "routers", newRouter.ID, attributestags.ReplaceAllOpts{
+				Tags: openStackCluster.Spec.Tags}).Extract()
+			if err != nil {
+				return err
+			}
+		}
 		router = *newRouter
+		observedRouter = infrav1.Router{
+			Name: router.Name,
+			ID:   router.ID,
+			Tags: openStackCluster.Spec.Tags,
+		}
+
 	} else {
 		router = routerList[0]
 		sInfo := fmt.Sprintf("Reuse Existing Router %s with id %s", routerName, router.ID)
 		s.logger.V(6).Info(sInfo)
+		observedRouter = infrav1.Router{
+			Name: router.Name,
+			ID:   router.ID,
+			Tags: router.Tags,
+		}
+
 	}
 
 	if len(openStackCluster.Spec.ExternalRouterIPs) > 0 {
@@ -119,11 +139,6 @@ func (s *Service) ReconcileRouter(clusterName string, openStackCluster *infrav1.
 		record.Eventf(openStackCluster, "SuccessfulUpdateRouter", "Updated router %s with id %s", routerName, router.ID)
 	}
 
-	observedRouter := infrav1.Router{
-		Name: router.Name,
-		ID:   router.ID,
-	}
-
 	routerInterfaces, err := s.getRouterInterfaces(router.ID)
 	if err != nil {
 		return err
@@ -151,14 +166,6 @@ INTERFACE_LOOP:
 			return fmt.Errorf("unable to create router interface: %v", err)
 		}
 		s.logger.V(4).Info("Created RouterInterface", "id", routerInterface.ID)
-	}
-
-	if len(openStackCluster.Spec.Tags) > 0 {
-		_, err = attributestags.ReplaceAll(s.client, "routers", observedRouter.ID, attributestags.ReplaceAllOpts{
-			Tags: openStackCluster.Spec.Tags}).Extract()
-		if err != nil {
-			return err
-		}
 	}
 
 	if observedRouter.ID != "" {

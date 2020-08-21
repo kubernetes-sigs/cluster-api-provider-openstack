@@ -149,6 +149,9 @@ type Network struct {
 	Name string `json:"name"`
 	ID   string `json:"id"`
 
+	//+optional
+	Tags []string `json:"tags,omitempty"`
+
 	Subnet *Subnet `json:"subnet,omitempty"`
 	Router *Router `json:"router,omitempty"`
 
@@ -163,12 +166,17 @@ type Subnet struct {
 	ID   string `json:"id"`
 
 	CIDR string `json:"cidr"`
+
+	//+optional
+	Tags []string `json:"tags,omitempty"`
 }
 
 // Router represents basic information about the associated OpenStack Neutron Router
 type Router struct {
 	Name string `json:"name"`
 	ID   string `json:"id"`
+	//+optional
+	Tags []string `json:"tags,omitempty"`
 }
 
 // LoadBalancer represents basic information about the associated OpenStack LoadBalancer

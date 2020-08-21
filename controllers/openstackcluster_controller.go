@@ -283,6 +283,7 @@ func (r *OpenStackClusterReconciler) reconcileNetworkComponents(log logr.Logger,
 		openStackCluster.Status.Network = &infrav1.Network{
 			ID:   networkList[0].ID,
 			Name: networkList[0].Name,
+			Tags: networkList[0].Tags,
 		}
 
 		subnetOpts := subnets.ListOpts(openStackCluster.Spec.Subnet)
@@ -298,6 +299,7 @@ func (r *OpenStackClusterReconciler) reconcileNetworkComponents(log logr.Logger,
 			ID:   subnetList[0].ID,
 			Name: subnetList[0].Name,
 			CIDR: subnetList[0].CIDR,
+			Tags: subnetList[0].Tags,
 		}
 	} else {
 		err := networkingService.ReconcileNetwork(clusterName, openStackCluster)

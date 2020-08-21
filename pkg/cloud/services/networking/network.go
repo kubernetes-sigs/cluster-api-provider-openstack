@@ -51,6 +51,7 @@ func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCl
 			openStackCluster.Status.ExternalNetwork = &infrav1.Network{
 				ID:   externalNetwork.ID,
 				Name: externalNetwork.Name,
+				Tags: externalNetwork.Tags,
 			}
 			return nil
 		}
@@ -80,6 +81,7 @@ func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCl
 		openStackCluster.Status.ExternalNetwork = &infrav1.Network{
 			ID:   allNetworks[0].ID,
 			Name: allNetworks[0].Name,
+			Tags: allNetworks[0].Tags,
 		}
 		s.logger.Info("External network found:", "network id", allNetworks[0].ID)
 		return nil
@@ -102,6 +104,7 @@ func (s *Service) ReconcileNetwork(clusterName string, openStackCluster *infrav1
 		openStackCluster.Status.Network = &infrav1.Network{
 			ID:   res.ID,
 			Name: res.Name,
+			Tags: res.Tags,
 		}
 		sInfo := fmt.Sprintf("Reuse Existing Network %s with id %s", res.Name, res.ID)
 		s.logger.V(6).Info(sInfo)
@@ -139,6 +142,7 @@ func (s *Service) ReconcileNetwork(clusterName string, openStackCluster *infrav1
 	openStackCluster.Status.Network = &infrav1.Network{
 		ID:   network.ID,
 		Name: network.Name,
+		Tags: openStackCluster.Spec.Tags,
 	}
 	return nil
 }
@@ -198,33 +202,33 @@ func (s *Service) ReconcileSubnet(clusterName string, openStackCluster *infrav1.
 			CIDR:           openStackCluster.Spec.NodeCIDR,
 			DNSNameservers: openStackCluster.Spec.DNSNameservers,
 		}
-
 		newSubnet, err := subnets.Create(s.client, opts).Extract()
 		if err != nil {
 			record.Warnf(openStackCluster, "FailedCreateSubnet", "Failed to create subnet %s: %v", subnetName, err)
 			return err
 		}
 		record.Eventf(openStackCluster, "SuccessfulCreateSubnet", "Created subnet %s with id %s", subnetName, newSubnet.ID)
+
+		if len(openStackCluster.Spec.Tags) > 0 {
+			_, err = attributestags.ReplaceAll(s.client, "subnets", newSubnet.ID, attributestags.ReplaceAllOpts{
+				Tags: openStackCluster.Spec.Tags}).Extract()
+			if err != nil {
+				return err
+			}
+		}
+
 		observedSubnet = infrav1.Subnet{
 			ID:   newSubnet.ID,
 			Name: newSubnet.Name,
-
 			CIDR: newSubnet.CIDR,
+			Tags: openStackCluster.Spec.Tags,
 		}
 	} else if len(subnetList) == 1 {
 		observedSubnet = infrav1.Subnet{
 			ID:   subnetList[0].ID,
 			Name: subnetList[0].Name,
-
 			CIDR: subnetList[0].CIDR,
-		}
-	}
-
-	if len(openStackCluster.Spec.Tags) > 0 {
-		_, err = attributestags.ReplaceAll(s.client, "subnets", observedSubnet.ID, attributestags.ReplaceAllOpts{
-			Tags: openStackCluster.Spec.Tags}).Extract()
-		if err != nil {
-			return err
+			Tags: subnetList[0].Tags,
 		}
 	}
 
