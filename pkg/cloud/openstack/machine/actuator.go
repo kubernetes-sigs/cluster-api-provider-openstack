@@ -137,7 +137,11 @@ func (oc *OpenstackClient) Create(ctx context.Context, machine *machinev1.Machin
 			"Cannot unmarshal providerSpec field: %v", err), createEventAction)
 	}
 
-	if verr := oc.validateMachine(machine, providerSpec); verr != nil {
+	if err = oc.validateMachine(machine); err != nil {
+		verr := &apierrors.MachineError{
+			Reason:  machinev1.CreateMachineError,
+			Message: err.Error(),
+		}
 		return oc.handleMachineError(machine, verr, createEventAction)
 	}
 
@@ -321,6 +325,14 @@ func (oc *OpenstackClient) Delete(ctx context.Context, machine *machinev1.Machin
 }
 
 func (oc *OpenstackClient) Update(ctx context.Context, machine *machinev1.Machine) error {
+	if err := oc.validateMachine(machine); err != nil {
+		verr := &apierrors.MachineError{
+			Reason:  machinev1.UpdateMachineError,
+			Message: err.Error(),
+		}
+		return oc.handleMachineError(machine, verr, createEventAction)
+	}
+
 	clusterInfra, err := oc.params.ConfigClient.Infrastructures().Get(context.TODO(), "cluster", metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("Failed to retrieve cluster Infrastructure object: %v", err)
@@ -619,7 +631,7 @@ func (oc *OpenstackClient) instanceExists(machine *machinev1.Machine) (instance 
 
 	instanceList, err := machineService.GetInstanceList(opts)
 	if err != nil {
-		return nil, fmt.Errorf("\nError listing the instances (machine/actuator.go 472): %v", err)
+		return nil, fmt.Errorf("\nError listing the instances: %v", err)
 	}
 	if len(instanceList) == 0 {
 		return nil, nil
@@ -650,7 +662,24 @@ func (oc *OpenstackClient) createBootstrapToken() (string, error) {
 	), nil
 }
 
-func (oc *OpenstackClient) validateMachine(machine *machinev1.Machine, config *openstackconfigv1.OpenstackProviderSpec) *apierrors.MachineError {
-	// TODO: other validate of openstackCloud
+func (oc *OpenstackClient) validateMachine(machine *machinev1.Machine) error {
+	machineSpec, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
+	if err != nil {
+		return fmt.Errorf("\nError getting the machine spec from the provider spec: %v", err)
+	}
+
+	machineService, err := clients.NewInstanceServiceFromMachine(oc.params.KubeClient, machine)
+	if err != nil {
+		return fmt.Errorf("\nError getting a new instance service from the machine: %v", err)
+	}
+
+	// TODO(mfedosin): add more validations here
+
+	// Validate that flavor exists
+	err = machineService.DoesFlavorExist(machineSpec.Flavor)
+	if err != nil {
+		return fmt.Errorf("Can't find a flavor with name %v: %v", machineSpec.Flavor, err)
+	}
+
 	return nil
 }
