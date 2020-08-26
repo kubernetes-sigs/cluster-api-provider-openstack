@@ -151,7 +151,7 @@ type OpenStackClusterStatus struct {
 // +kubebuilder:printcolumn:name="Ready",type="string",JSONPath=".status.ready",description="Cluster infrastructure is ready for OpenStack instances"
 // +kubebuilder:printcolumn:name="Network",type="string",JSONPath=".status.network.id",description="Network the cluster is using"
 // +kubebuilder:printcolumn:name="Subnet",type="string",JSONPath=".status.network.subnet.id",description="Subnet the cluster is using"
-// +kubebuilder:printcolumn:name="Endpoint",type="string",JSONPath=".status.network.apiServerLoadBalancer.ip",description="API Endpoint",priority=1
+// +kubebuilder:printcolumn:name="Endpoint",type="string",JSONPath=".spec.controlPlaneEndpoint.host",description="API Endpoint",priority=1
 
 // OpenStackCluster is the Schema for the openstackclusters API
 type OpenStackCluster struct {
