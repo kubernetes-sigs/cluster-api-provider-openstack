@@ -36,7 +36,7 @@ spec:
       name: Subnet
       type: string
     - description: API Endpoint
-      jsonPath: .status.network.apiServerLoadBalancer.ip
+      jsonPath: .spec.controlPlaneEndpoint.host
       name: Endpoint
       priority: 1
       type: string
