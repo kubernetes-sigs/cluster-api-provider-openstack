@@ -25,7 +25,7 @@ spec:
       type: string
     - description: OpenStack instance state
       jsonPath: .status.instanceState
-      name: State
+      name: InstanceState
       type: string
     - description: Machine ready status
       jsonPath: .status.ready
@@ -33,7 +33,7 @@ spec:
       type: string
     - description: OpenStack instance ID
       jsonPath: .spec.providerID
-      name: InstanceID
+      name: ProviderID
       type: string
     - description: Machine object which owns with this OpenStackMachine
       jsonPath: .metadata.ownerReferences[?(@.kind=="Machine")].name
