@@ -75,17 +75,6 @@ spec:
                 description: APIServerLoadBalancerPort is the port on which the listener
                   on the APIServer loadbalancer will be created
                 type: integer
-              caKeyPair:
-                description: CAKeyPair is the key pair for ca certs.
-                properties:
-                  cert:
-                    description: base64 encoded cert and key
-                    format: byte
-                    type: string
-                  key:
-                    format: byte
-                    type: string
-                type: object
               cloudName:
                 description: The name of the cloud to use from the clouds secret
                 type: string
@@ -134,17 +123,6 @@ spec:
                 items:
                   type: string
                 type: array
-              etcdCAKeyPair:
-                description: EtcdCAKeyPair is the key pair for etcd.
-                properties:
-                  cert:
-                    description: base64 encoded cert and key
-                    format: byte
-                    type: string
-                  key:
-                    format: byte
-                    type: string
-                type: object
               externalNetworkId:
                 description: ExternalNetworkID is the ID of an external OpenStack
                   Network. This is necessary to get public internet to the VMs.
@@ -217,17 +195,6 @@ spec:
                   - subnet
                   type: object
                 type: array
-              frontProxyCAKeyPair:
-                description: FrontProxyCAKeyPair is the key pair for FrontProxyKeyPair.
-                properties:
-                  cert:
-                    description: base64 encoded cert and key
-                    format: byte
-                    type: string
-                  key:
-                    format: byte
-                    type: string
-                type: object
               managedAPIServerLoadBalancer:
                 description: 'ManagedAPIServerLoadBalancer defines whether a LoadBalancer
                   for the APIServer should be created. If set to true the following
@@ -284,17 +251,6 @@ spec:
                   connected to this subnet. If you leave this empty, no network will
                   be created.
                 type: string
-              saKeyPair:
-                description: SAKeyPair is the service account key pair.
-                properties:
-                  cert:
-                    description: base64 encoded cert and key
-                    format: byte
-                    type: string
-                  key:
-                    format: byte
-                    type: string
-                type: object
               subnet:
                 description: If NodeCIDR cannot be set this can be used to detect
                   an existing subnet.

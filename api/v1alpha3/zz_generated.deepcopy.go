@@ -267,10 +267,6 @@ func (in *OpenStackClusterSpec) DeepCopyInto(out *OpenStackClusterSpec) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
-	in.CAKeyPair.DeepCopyInto(&out.CAKeyPair)
-	in.EtcdCAKeyPair.DeepCopyInto(&out.EtcdCAKeyPair)
-	in.FrontProxyCAKeyPair.DeepCopyInto(&out.FrontProxyCAKeyPair)
-	in.SAKeyPair.DeepCopyInto(&out.SAKeyPair)
 	out.ControlPlaneEndpoint = in.ControlPlaneEndpoint
 	if in.ControlPlaneAvailabilityZones != nil {
 		in, out := &in.ControlPlaneAvailabilityZones, &out.ControlPlaneAvailabilityZones

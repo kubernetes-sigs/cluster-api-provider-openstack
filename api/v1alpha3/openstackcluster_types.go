@@ -99,18 +99,6 @@ type OpenStackClusterSpec struct {
 	// Tags for all resources in cluster
 	Tags []string `json:"tags,omitempty"`
 
-	// CAKeyPair is the key pair for ca certs.
-	CAKeyPair KeyPair `json:"caKeyPair,omitempty"`
-
-	//EtcdCAKeyPair is the key pair for etcd.
-	EtcdCAKeyPair KeyPair `json:"etcdCAKeyPair,omitempty"`
-
-	// FrontProxyCAKeyPair is the key pair for FrontProxyKeyPair.
-	FrontProxyCAKeyPair KeyPair `json:"frontProxyCAKeyPair,omitempty"`
-
-	// SAKeyPair is the service account key pair.
-	SAKeyPair KeyPair `json:"saKeyPair,omitempty"`
-
 	// ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
 	// +optional
 	ControlPlaneEndpoint clusterv1.APIEndpoint `json:"controlPlaneEndpoint"`
