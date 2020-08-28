@@ -244,6 +244,12 @@ func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, log lo
 		}
 	}
 
+	err = provider.CloudSecretSetOwnerReference(r.Client, cluster, openStackCluster)
+	if err != nil {
+		// we don't force the stop of cluster creation if set owner failed
+		log.Info("Set owner of cloud secret failed", err)
+	}
+
 	openStackCluster.Status.Ready = true
 	log.Info("Reconciled Cluster create successfully")
 	return ctrl.Result{}, nil

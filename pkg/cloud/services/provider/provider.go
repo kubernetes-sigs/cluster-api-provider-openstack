@@ -28,8 +28,10 @@ import (
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	"gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha3"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -72,6 +74,30 @@ func NewClientFromCluster(ctrlClient client.Client, openStackCluster *infrav1.Op
 		}
 	}
 	return newClient(cloud, caCert)
+}
+
+func CloudSecretSetOwnerReference(ctrlClient client.Client, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
+	ctx := context.TODO()
+
+	namespace := openStackCluster.Spec.CloudsSecret.Namespace
+	if namespace == "" {
+		namespace = openStackCluster.Namespace
+	}
+	secret := &v1.Secret{}
+	err := ctrlClient.Get(ctx, types.NamespacedName{
+		Namespace: namespace,
+		Name:      openStackCluster.Spec.CloudsSecret.Name,
+	}, secret)
+	if err != nil {
+		return err
+	}
+	secret.SetOwnerReferences([]metav1.OwnerReference{{
+		APIVersion: cluster.APIVersion,
+		Kind:       cluster.Kind,
+		Name:       cluster.Name,
+		UID:        cluster.UID,
+	}})
+	return nil
 }
 
 func newClient(cloud clientconfig.Cloud, caCert []byte) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, error) {
