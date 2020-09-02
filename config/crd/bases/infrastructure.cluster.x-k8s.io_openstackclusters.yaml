@@ -398,6 +398,10 @@ spec:
                         type: string
                       name:
                         type: string
+                      tags:
+                        items:
+                          type: string
+                        type: array
                     required:
                     - id
                     - name
@@ -412,11 +416,19 @@ spec:
                         type: string
                       name:
                         type: string
+                      tags:
+                        items:
+                          type: string
+                        type: array
                     required:
                     - cidr
                     - id
                     - name
                     type: object
+                  tags:
+                    items:
+                      type: string
+                    type: array
                 required:
                 - id
                 - name
@@ -474,6 +486,10 @@ spec:
                         type: string
                       name:
                         type: string
+                      tags:
+                        items:
+                          type: string
+                        type: array
                     required:
                     - id
                     - name
@@ -488,11 +504,19 @@ spec:
                         type: string
                       name:
                         type: string
+                      tags:
+                        items:
+                          type: string
+                        type: array
                     required:
                     - cidr
                     - id
                     - name
                     type: object
+                  tags:
+                    items:
+                      type: string
+                    type: array
                 required:
                 - id
                 - name
