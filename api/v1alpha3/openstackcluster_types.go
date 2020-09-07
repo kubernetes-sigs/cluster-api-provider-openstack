@@ -28,8 +28,23 @@ const (
 	ClusterFinalizer = "openstackcluster.infrastructure.cluster.x-k8s.io"
 )
 
+// Credentials defines the OpenStackCluster
+type Credentials struct {
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Format:=string
+
+	Name string `json:"name,omitempty"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Format:=[]byte
+
+	CloudsYaml []byte `json:"cloudsYaml,omitempty"`
+	CaCert     []byte `json:"caCert,omitempty"`
+}
+
 // OpenStackClusterSpec defines the desired state of OpenStackCluster
 type OpenStackClusterSpec struct {
+	Credentials *Credentials `json:"credentials,omitempty"`
 
 	// The name of the secret containing the openstack credentials
 	// +optional

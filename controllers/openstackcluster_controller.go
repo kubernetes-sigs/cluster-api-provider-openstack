@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/go-logr/logr"
 	"github.com/gophercloud/gophercloud"
@@ -26,7 +27,10 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	"github.com/pkg/errors"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute"
@@ -40,12 +44,22 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/source"
+)
+
+const (
+	CloudsYamlKey string = "clouds.yaml"
+	CaCertKey     string = "cacert"
 )
 
 // OpenStackClusterReconciler reconciles a OpenStackCluster object
 type OpenStackClusterReconciler struct {
 	client.Client
+	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
 	Log      logr.Logger
 }
@@ -74,7 +88,7 @@ func (r *OpenStackClusterReconciler) Reconcile(req ctrl.Request) (_ ctrl.Result,
 		return reconcile.Result{}, err
 	}
 
-	if isPaused(cluster, openStackCluster) {
+	if util.IsPaused(cluster, openStackCluster) {
 		log.Info("OpenStackCluster or linked Cluster is marked as paused. Won't reconcile")
 		return reconcile.Result{}, nil
 	}
@@ -106,6 +120,51 @@ func (r *OpenStackClusterReconciler) Reconcile(req ctrl.Request) (_ ctrl.Result,
 	}
 
 	// Handle non-deleted clusters
+
+	if openStackCluster.Spec.Credentials == nil {
+		return ctrl.Result{}, nil
+	}
+
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      openStackCluster.Spec.Credentials.Name,
+			Namespace: req.Namespace,
+		},
+	}
+
+	if _, err := ctrl.CreateOrUpdate(ctx, r.Client, secret, func() error {
+
+		var cloudsYaml *[]byte
+		if openStackCluster.Spec.Credentials.CloudsYaml != nil {
+			cloudsYaml = &openStackCluster.Spec.Credentials.CloudsYaml
+		}
+		var caCert *[]byte
+		if openStackCluster.Spec.Credentials.CaCert != nil {
+			caCert = &openStackCluster.Spec.Credentials.CaCert
+		}
+
+		secret.Data = map[string][]byte{
+			CloudsYamlKey: *cloudsYaml,
+		}
+
+		if caCert != nil {
+			secret.Data[CaCertKey] = *caCert
+		}
+
+		// set the owner so that garbage collection can kicks in
+		if err := ctrl.SetControllerReference(openStackCluster, secret, r.Scheme); err != nil {
+			log.Error(err, "unable to set ownerReference from openStackCluster to Secret")
+			return err
+		}
+		// end of ctrl.CreateOrUpdate
+		return nil
+
+	}); err != nil {
+		// error handling of ctrl.CreateOrUpdate
+		log.Error(err, "unable to ensure secret is correct")
+		return ctrl.Result{}, err
+	}
+
 	return r.reconcileNormal(ctx, log, patchHelper, cluster, openStackCluster)
 }
 
@@ -361,9 +420,109 @@ func (r *OpenStackClusterReconciler) reconcileNetworkComponents(log logr.Logger,
 }
 
 func (r *OpenStackClusterReconciler) SetupWithManager(mgr ctrl.Manager, options controller.Options) error {
-	return ctrl.NewControllerManagedBy(mgr).
+
+	controller, err := ctrl.NewControllerManagedBy(mgr).
 		WithOptions(options).
 		For(&infrav1.OpenStackCluster{}).
-		WithEventFilter(pausePredicates).
-		Complete(r)
+		Owns(&corev1.Secret{}).
+		WithEventFilter(pausedPredicates(r.Log)).
+		WithEventFilter(
+			predicate.Funcs{
+				// Avoid reconciling if the event triggering the reconciliation is related to incremental status updates
+				// for OpenStackCluster resources only
+				UpdateFunc: func(e event.UpdateEvent) bool {
+					if e.ObjectOld.GetObjectKind().GroupVersionKind().Kind != "OpenStackCluster" {
+						return true
+					}
+
+					oldCluster := e.ObjectOld.(*infrav1.OpenStackCluster).DeepCopy()
+					newCluster := e.ObjectNew.(*infrav1.OpenStackCluster).DeepCopy()
+
+					oldCluster.Status = infrav1.OpenStackClusterStatus{}
+					newCluster.Status = infrav1.OpenStackClusterStatus{}
+
+					return !reflect.DeepEqual(oldCluster, newCluster)
+				},
+			},
+		).
+		Build(r)
+	if err != nil {
+		return errors.Wrap(err, "error creating controller")
+	}
+
+	return controller.Watch(
+		&source.Kind{Type: &clusterv1.Cluster{}},
+		&handler.EnqueueRequestsFromMapFunc{
+			ToRequests: handler.ToRequestsFunc(r.requeueOpenStackClusterForUnpausedCluster),
+		},
+		predicate.Funcs{
+			UpdateFunc: func(e event.UpdateEvent) bool {
+				oldCluster := e.ObjectOld.(*clusterv1.Cluster)
+				newCluster := e.ObjectNew.(*clusterv1.Cluster)
+				log := r.Log.WithValues("predicate", "updateEvent", "namespace", newCluster.Namespace, "cluster", newCluster.Name)
+				switch {
+				// return true if Cluster.Spec.Paused has changed from true to false
+				case oldCluster.Spec.Paused && !newCluster.Spec.Paused:
+					log.V(4).Info("Cluster was unpaused, will attempt to map associated OpenStackCluster.")
+					return true
+					// otherwise, return false
+				default:
+					log.V(4).Info("Cluster did not match expected conditions, will not attempt to map associated OpenStackCluster.")
+					return false
+				}
+			},
+			CreateFunc: func(e event.CreateEvent) bool {
+				cluster := e.Object.(*clusterv1.Cluster)
+				log := r.Log.WithValues("predicate", "createEvent", "namespace", cluster.Namespace, "cluster", cluster.Name)
+
+				// Only need to trigger a reconcile if the Cluster.Spec.Paused is false
+				if !cluster.Spec.Paused {
+					log.V(4).Info("Cluster is not paused, will attempt to map associated OpenStackCluster.")
+					return true
+				}
+				log.V(4).Info("Cluster did not match expected conditions, will not attempt to map associated OpenStackCluster.")
+				return false
+			},
+			DeleteFunc: func(e event.DeleteEvent) bool {
+				log := r.Log.WithValues("predicate", "deleteEvent", "namespace", e.Meta.GetNamespace(), "cluster", e.Meta.GetName())
+				log.V(4).Info("Cluster did not match expected conditions, will not attempt to map associated OpenStackCluster.")
+				return false
+			},
+			GenericFunc: func(e event.GenericEvent) bool {
+				log := r.Log.WithValues("predicate", "genericEvent", "namespace", e.Meta.GetNamespace(), "cluster", e.Meta.GetName())
+				log.V(4).Info("Cluster did not match expected conditions, will not attempt to map associated OpenStackCluster.")
+				return false
+			},
+		},
+	)
+
+}
+
+func (r *OpenStackClusterReconciler) requeueOpenStackClusterForUnpausedCluster(o handler.MapObject) []ctrl.Request {
+	c := o.Object.(*clusterv1.Cluster)
+	log := r.Log.WithValues("objectMapper", "clusterToOpenStackCluster", "namespace", c.Namespace, "cluster", c.Name)
+
+	// Don't handle deleted clusters
+	if !c.ObjectMeta.DeletionTimestamp.IsZero() {
+		log.V(4).Info("Cluster has a deletion timestamp, skipping mapping.")
+		return nil
+	}
+
+	// Make sure the ref is set
+	if c.Spec.InfrastructureRef == nil {
+		log.V(4).Info("Cluster does not have an InfrastructureRef, skipping mapping.")
+		return nil
+	}
+
+	if c.Spec.InfrastructureRef.GroupVersionKind().Kind != "OpenStackCluster" {
+		log.V(4).Info("Cluster has an InfrastructureRef for a different type, skipping mapping.")
+		return nil
+	}
+
+	log.V(4).Info("Adding request.", "openStackCluster", c.Spec.InfrastructureRef.Name)
+	return []ctrl.Request{
+		{
+			NamespacedName: client.ObjectKey{Namespace: c.Namespace, Name: c.Spec.InfrastructureRef.Name},
+		},
+	}
 }

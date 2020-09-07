@@ -111,6 +111,19 @@ spec:
                 - host
                 - port
                 type: object
+              credentials:
+                description: Credentials defines the OpenStackCluster
+                properties:
+                  caCert:
+                    format: byte
+                    type: string
+                  cloudsYaml:
+                    format: '[]byte'
+                    type: string
+                  name:
+                    format: string
+                    type: string
+                type: object
               disablePortSecurity:
                 description: DisablePortSecurity disables the port security of the
                   network created for the Kubernetes cluster, which also disables

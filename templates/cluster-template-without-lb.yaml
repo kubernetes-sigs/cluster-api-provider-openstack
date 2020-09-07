@@ -22,6 +22,10 @@ kind: OpenStackCluster
 metadata:
   name: ${CLUSTER_NAME}
 spec:
+  credentials:
+    name: ${CLUSTER_NAME}-cloud-config
+    cloudsYaml: ${OPENSTACK_CLOUD_YAML_B64}
+    caCert: ${OPENSTACK_CLOUD_CACERT_B64}
   cloudName: ${OPENSTACK_CLOUD}
   cloudsSecret:
     name: ${CLUSTER_NAME}-cloud-config
@@ -172,11 +176,3 @@ spec:
           kubeletExtraArgs:
             cloud-config: /etc/kubernetes/cloud.conf
             cloud-provider: openstack
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: ${CLUSTER_NAME}-cloud-config
-data:
-  clouds.yaml: ${OPENSTACK_CLOUD_YAML_B64}
-  cacert: ${OPENSTACK_CLOUD_CACERT_B64}

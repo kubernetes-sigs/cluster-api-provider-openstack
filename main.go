@@ -188,6 +188,7 @@ func main() {
 		}
 		if err = (&controllers.OpenStackClusterReconciler{
 			Client:   mgr.GetClient(),
+			Scheme:   mgr.GetScheme(),
 			Log:      ctrl.Log.WithName("controllers").WithName("OpenStackCluster"),
 			Recorder: mgr.GetEventRecorderFor("openstackcluster-controller"),
 		}).SetupWithManager(mgr, controller.Options{MaxConcurrentReconciles: openStackClusterConcurrency}); err != nil {
