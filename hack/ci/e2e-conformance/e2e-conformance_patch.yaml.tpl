@@ -109,7 +109,7 @@ spec:
           mkdir -p $K8S_DIR
           K8S_URL="https://dl.k8s.io/${KUBERNETES_VERSION}/kubernetes-server-linux-amd64.tar.gz"
           cd ${K8S_DIR}
-          wget ${K8S_URL}
+          wget -q ${K8S_URL}
           tar zxvf kubernetes-server-linux-amd64.tar.gz
           K8S_SERVER_BIN_DIR="${K8S_DIR}/kubernetes/server/bin"
 
