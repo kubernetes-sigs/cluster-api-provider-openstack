@@ -117,19 +117,13 @@ func (h *machineSetValidatorHandler) validateMachineSet(ms *MachineSet) (bool, u
 }
 
 func (h *machineSetDefaulterHandler) defaultMachineSet(ms *MachineSet) (bool, utilerrors.Aggregate) {
-	var errs []error
-
 	// Create a Machine from the MachineSet and default the Machine template
 	m := &Machine{Spec: ms.Spec.Template.Spec}
 	if ok, err := h.webhookOperations(m, h.clusterID); !ok {
-		errs = append(errs, err.Errors()...)
-	} else {
-		// Restore the defaulted template
-		ms.Spec.Template.Spec = m.Spec
+		return false, utilerrors.NewAggregate(err.Errors())
 	}
 
-	if len(errs) > 0 {
-		return false, utilerrors.NewAggregate(errs)
-	}
+	// Restore the defaulted template
+	ms.Spec.Template.Spec = m.Spec
 	return true, nil
 }
