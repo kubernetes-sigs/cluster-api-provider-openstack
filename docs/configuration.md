@@ -20,6 +20,9 @@
   - [Boot From Volume](#boot-from-volume)
   - [Timeout settings](#timeout-settings)
   - [Custom pod network CIDR](#custom-pod-network-cidr)
+  - [Accessing nodes through the bastion host via SSH](#accessing-nodes-through-the-bastion-host-via-ssh)
+    - [Enabling the bastion host](#enabling-the-bastion-host)
+    - [Obtain floating IP address of the bastion node](#obtain-floating-ip-address-of-the-bastion-node)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -46,7 +49,7 @@ openstack keypair create [--public-key <file> | --private-key <file>] <name>
 
 The key pair name must be exposed as an environment variable `OPENSTACK_SSH_KEY_NAME`.
 
-If you want to login to each machine by ssh, you have to configure security groups. If `spec.managedSecurityGroups` of `OpenStackCluster` set to true, two security groups will be created and added to the instances. One is `k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-controlplane`, another is `k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-worker`. These security group rules include the kubeadm's [Check required ports](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#check-required-ports) so that each node can not be logged in through ssh by default. Please add pre-existing security group allowing ssh port to OpenStackMachineTemplate spec. Here is an example:
+If you want to login to each machine by ssh,  you can [access nodes through the bastion host via SSH](#accessing-nodes-through-the-bastion-host-via-ssh). Otherwise you have to configure security groups. If `spec.managedSecurityGroups` of `OpenStackCluster` set to true, two security groups will be created and added to the instances. One is `k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-controlplane`, another is `k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-worker`. These security group rules include the kubeadm's [Check required ports](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#check-required-ports) so that each node can not be logged in through ssh by default. Please add pre-existing security group allowing ssh port to OpenStackMachineTemplate spec. Here is an example:
 
 ```yaml
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
@@ -240,3 +243,38 @@ If creating servers in your OpenStack takes a long time, you can increase the ti
 ## Custom pod network CIDR
 
 If `192.168.0.0/16` is already in use within your network, you must select a different pod network CIDR. You have to replace the CIDR `192.168.0.0/16` with your own in the generated file.
+
+## Accessing nodes through the bastion host via SSH
+
+### Enabling the bastion host
+
+To configure the Cluster API Provider for OpenStack to create a SSH bastion host, add this line to the OpenStackCluster spec after `clusterctl config cluster` was successfully executed:
+
+```yaml
+  bastion:
+    enabled: true
+    flavor: <Flavor name>
+    image:  <Image name>
+    sshKeyName: <Key pair name>
+```
+
+A floating IP is created and associated to the bastion host automatically, but you can add the IP address explicitly:
+
+```yaml
+  bastion:
+    ...
+    floatingIP: <Floating IP address>
+```
+
+If `managedSecurityGroups: true`, security group rule opening 22/tcp is added to security groups for bastion, controller, and worker nodes respectively. Otherwise, you have to add `securityGroups` to the `bastion` in `OpenStackCluster` spec and `OpenStackMachineTemplate` spec template respectively.
+
+### Obtain floating IP address of the bastion node
+
+Once the workload cluster is up and running after being configured for an SSH bastion host, you can use the kubectl get openstackcluster command to look up the floating IP address of the bastion host (make sure the kubectl context is set to the management cluster). The output will look something like this:
+
+
+```yaml
+$ kubectl get openstackcluster
+NAME    CLUSTER   READY   NETWORK                                SUBNET                                 BASTION
+nonha   nonha     true    2e2a2fad-28c0-4159-8898-c0a2241a86a7   53cb77ab-86a6-4f2c-8d87-24f8411f15de   10.0.0.213
+```

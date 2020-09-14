@@ -237,3 +237,19 @@ var (
 
 	InstanceStateShutoff = InstanceState("SHUTOFF")
 )
+
+// Bastion represents basic information about the bastion node
+type Bastion struct {
+	//+optional
+	Enabled bool `json:"enabled"`
+	//+optional
+	Flavor string `json:"flavor,omitempty"`
+	//+optional
+	Image string `json:"image,omitempty"`
+	//+optional
+	SSHKeyName string `json:"sshKeyName,omitempty"`
+	//+optional
+	SecurityGroups []SecurityGroupParam `json:"securityGroups,omitempty"`
+	//+optional
+	FloatingIP string `json:"floatingIP,omitempty"`
+}

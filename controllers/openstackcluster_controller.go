@@ -112,7 +112,6 @@ func (r *OpenStackClusterReconciler) Reconcile(req ctrl.Request) (_ ctrl.Result,
 func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, log logr.Logger, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
 	log.Info("Reconciling Cluster delete")
 
-	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
 	osProviderClient, clientOpts, err := provider.NewClientFromCluster(r.Client, openStackCluster)
 	if err != nil {
 		return reconcile.Result{}, err
@@ -123,11 +122,32 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, log lo
 		return reconcile.Result{}, err
 	}
 
+	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
+		computeService, err := compute.NewService(osProviderClient, clientOpts, log)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+
+		err = computeService.DeleteBastion(cluster.Name, openStackCluster)
+		if err != nil {
+			return reconcile.Result{}, errors.Errorf("failed to delete bastion: %v", err)
+		}
+		if openStackCluster.Status.BastionSecurityGroup != nil {
+			log.Info("Deleting bastion security group", "name", openStackCluster.Status.BastionSecurityGroup.Name)
+
+			err = networkingService.DeleteSecurityGroups(openStackCluster.Status.BastionSecurityGroup)
+			if err != nil {
+				return reconcile.Result{}, errors.Errorf("failed to delete security group: %v", err)
+			}
+		}
+	}
+
 	loadBalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, log, openStackCluster.Spec.UseOctavia)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
+	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
 		err = loadBalancerService.DeleteLoadBalancer(clusterName, openStackCluster)
 		if err != nil {
@@ -214,6 +234,13 @@ func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, log lo
 		return reconcile.Result{}, err
 	}
 
+	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
+		err = r.reconcileBastion(log, osProviderClient, clientOpts, cluster, openStackCluster)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+
 	availabilityZones, err := computeService.GetAvailabilityZones()
 	if err != nil {
 		return ctrl.Result{}, err
@@ -247,6 +274,48 @@ func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, log lo
 	openStackCluster.Status.Ready = true
 	log.Info("Reconciled Cluster create successfully")
 	return ctrl.Result{}, nil
+}
+
+func (r *OpenStackClusterReconciler) reconcileBastion(log logr.Logger, osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
+
+	computeService, err := compute.NewService(osProviderClient, clientOpts, log)
+	if err != nil {
+		return err
+	}
+
+	openStackMachine := &infrav1.OpenStackMachine{}
+	openStackMachine.Name = fmt.Sprintf("%s-bastion", cluster.Name)
+	instance, err := computeService.InstanceExists(openStackMachine)
+	if err != nil {
+		return err
+	}
+	if instance != nil {
+		return nil
+	}
+
+	log.Info("Reconciling Bastion")
+	instance, err = computeService.ReconcileBastion(cluster.Name, cluster, openStackCluster)
+	if err != nil {
+		return errors.Errorf("failed to reconcile bastion: %v", err)
+	}
+
+	networkingService, err := networking.NewService(osProviderClient, clientOpts, log)
+	if err != nil {
+		return err
+	}
+	fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster.Spec.Bastion.FloatingIP)
+	if err != nil {
+		return errors.Errorf("failed to get or create floating IP for bastion: %v", err)
+	}
+	err = computeService.AssociateFloatingIP(instance.ID, fp.FloatingIP)
+	if err != nil {
+		return errors.Errorf("failed to associate floating IP with bastion: %v", err)
+	}
+	openStackCluster.Status.Bastion = &infrav1.Bastion{
+		Enabled:    true,
+		FloatingIP: fp.FloatingIP,
+	}
+	return nil
 }
 
 func (r *OpenStackClusterReconciler) reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {

@@ -19,10 +19,14 @@
 set -o errexit -o nounset -o pipefail
 
 OPENSTACK_CLOUD_YAML_FILE=${OPENSTACK_CLOUD_YAML_FILE:-"/tmp/clouds.yaml"}
+IMAGE_URL="https://github.com/kubernetes-sigs/cluster-api-provider-openstack/releases/download/v0.3.0/ubuntu-1910-kube-v1.17.3.qcow2"
+CIRROS_URL="http://download.cirros-cloud.net/0.5.1/cirros-0.5.1-x86_64-disk.img"
 OPENSTACK_IMAGE_NAME="ubuntu-1910-kube-v1.17.3"
+OPENSTACK_BASTION_IMAGE_NAME="cirros"
 OPENSTACK_DNS_NAMESERVERS=${OPENSTACK_DNS_NAMESERVERS:-"192.168.200.1"}
 OPENSTACK_NODE_MACHINE_FLAVOR=${OPENSTACK_NODE_MACHINE_FLAVOR:-"m1.small"}
 OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR=${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR:-"m1.medium"}
+OPENSTACK_BASTION_MACHINE_FLAVOR=${OPENSTACK_BASTION_MACHINE_FLAVOR:-"m1.tiny"}
 OPENSTACK_CLUSTER_TEMPLATE=${OPENSTACK_CLUSTER_TEMPLATE:-"./templates/cluster-template-without-lb.yaml"}
 CLUSTER_NAME=${CLUSTER_NAME:-"capi-quickstart"}
 OPENSTACK_SSH_KEY_NAME=${OPENSTACK_SSH_KEY_NAME:-"${CLUSTER_NAME}-key"}
@@ -108,9 +112,9 @@ dump_capo_logs() {
   kubectl --kubeconfig=${PWD}/kubeconfig cluster-info dump >> "${ARTIFACTS}/logs/openstack-cluster.txt" || true
   kubectl --kubeconfig=${PWD}/kubeconfig get secrets -o yaml -A > "${ARTIFACTS}/logs/openstack-cluster-secrets.txt" || true
 
-  jump_node_name=$(openstack server list -f value -c Name | grep ${CLUSTER_NAME}-control-plane | head -n 1)
+  jump_node_name=$(openstack server list -f value -c Name | grep ${CLUSTER_NAME}-bastion | head -n 1)
   jump_node=$(openstack server show ${jump_node_name} -f value -c addresses | awk '{print $2}')
-  for node in $(openstack server list -f value -c Name)
+  for node in $(openstack server list -f value -c Name | grep -v bastion)
   do
     echo "collecting logs from ${node} using jump host "
     dir="${ARTIFACTS}/logs/${node}"
@@ -119,7 +123,7 @@ dump_capo_logs() {
     openstack console log show "${node}" > "${dir}/console.log" || true
 
     ssh_key_pem="/tmp/${OPENSTACK_SSH_KEY_NAME}.pem"
-    PROXY_COMMAND="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=30 -x -W %h:22 -i ${ssh_key_pem} ubuntu@${jump_node}"
+    PROXY_COMMAND="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=30 -x -W %h:22 -i ${ssh_key_pem} cirros@${jump_node}"
     node=$(openstack port show ${node}  -f json -c fixed_ips | jq '.fixed_ips[0].ip_address' -r)
 
     ssh-to-node "${node}" "${jump_node}" "sudo chmod -R a+r /var/log" || true
@@ -154,9 +158,9 @@ function ssh-to-node() {
 
   ssh_key_pem="/tmp/${OPENSTACK_SSH_KEY_NAME}.pem"
   ssh_params="-o LogLevel=quiet -o ConnectTimeout=30 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
-  scp $ssh_params -i $ssh_key_pem $ssh_key_pem "ubuntu@${jump}:$ssh_key_pem"
+  scp $ssh_params -i $ssh_key_pem $ssh_key_pem "cirros@${jump}:$ssh_key_pem"
   ssh $ssh_params -i $ssh_key_pem \
-    -o "ProxyCommand ssh $ssh_params -W %h:%p -i $ssh_key_pem ubuntu@${jump}" \
+    -o "ProxyCommand ssh $ssh_params -W %h:%p -i $ssh_key_pem cirros@${jump}" \
     ubuntu@"${node}" "${cmd}"
 }
 
@@ -170,33 +174,32 @@ create_key_pair() {
 }
 
 upload_image() {
+  # $1: image name
+  # $2: image url
+
   echo "Upload image"
 
   # Remove old image if we don't want to reuse it
   if [[ "${REUSE_OLD_IMAGES:-true}" == "false" ]]; then
-    image_id=$(openstack image list --name=${OPENSTACK_IMAGE_NAME} -f value -c ID)
+    image_id=$(openstack image list --name=$1 -f value -c ID)
     if [[ ! -z "$image_id" ]]; then
-        echo "Deleting old image ${OPENSTACK_IMAGE_NAME} with id: ${image_id}"
+        echo "Deleting old image $1  with id: ${image_id}"
         openstack image delete ${image_id}
     fi
   fi
 
-  image=$(openstack image list --name=${OPENSTACK_IMAGE_NAME} -f value -c Name)
+  image=$(openstack image list --name=$1 -f value -c Name)
   if [[ ! -z "$image" ]]; then
-    echo "Image ${OPENSTACK_IMAGE_NAME} already exists"
+    echo "Image $1 already exists"
     return
   fi
 
-  source_image_url="https://github.com/kubernetes-sigs/cluster-api-provider-openstack/releases/download/v0.3.0/ubuntu-1910-kube-v1.17.3.qcow2"
-  echo "Download image ${OPENSTACK_IMAGE_NAME} from ${source_image_url}"
-  tmp_source_image=/tmp/ubuntu-1910.ova.qcow2
-  wget -q -c ${source_image_url} -O ${tmp_source_image}
+  tmpfile=$(mktemp)
+  echo "Download image $1 from $2"
+  wget -q -c $2 -O ${tmpfile}
 
-  echo "Uploading image ${tmp_source_image} as ${OPENSTACK_IMAGE_NAME}"
-  openstack image create --disk-format qcow2 \
-    --private \
-    --container-format bare \
-    --file "${tmp_source_image}" ${OPENSTACK_IMAGE_NAME}
+  echo "Uploading image $1"
+  openstack image create --disk-format qcow2 --private --container-format bare --file "${tmpfile}" $1
 }
 
 install_prereqs() {
@@ -397,7 +400,8 @@ main() {
   fi
   if [[ -z "${SKIP_UPLOAD_IMAGE:-}" ]]; then
     echo "Uploading image..."
-    upload_image
+    upload_image ${OPENSTACK_IMAGE_NAME} ${IMAGE_URL}
+    upload_image ${OPENSTACK_BASTION_IMAGE_NAME} ${CIRROS_URL}
   fi
 
   build

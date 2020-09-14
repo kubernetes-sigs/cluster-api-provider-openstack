@@ -26,10 +26,11 @@ spec:
   cloudsSecret:
     name: ${CLUSTER_NAME}-cloud-config
     namespace: ${NAMESPACE}
+  managedSecurityGroups: true
   nodeCidr: 10.6.0.0/24
   dnsNameservers:
   - ${OPENSTACK_DNS_NAMESERVERS}
-  disablePortSecurity: true
+  disablePortSecurity: false
   useOctavia: false
 ---
 kind: KubeadmControlPlane
