@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/common/extensions"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/bootfromvolume"
@@ -33,11 +32,8 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/trunks"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha3"
 	"sigs.k8s.io/cluster-api/controllers/noderefutil"
@@ -66,8 +62,9 @@ type ServerNetwork struct {
 // InstanceCreate creates a compute instance
 func (s *Service) InstanceCreate(clusterName string, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster, userData string) (instance *Instance, err error) {
 	if openStackMachine == nil {
-		return nil, fmt.Errorf("create Options need be specified to create instace")
+		return nil, fmt.Errorf("openStackMachine is null")
 	}
+
 	if openStackMachine.Spec.Trunk {
 		trunkSupport, err := getTrunkSupport(s)
 		if err != nil {
@@ -78,18 +75,19 @@ func (s *Service) InstanceCreate(clusterName string, machine *clusterv1.Machine,
 		}
 	}
 
+	if machine.Spec.FailureDomain == nil {
+		return nil, fmt.Errorf("failure domain not set")
+	}
+
 	machineTags := []string{}
 
 	// Append machine specific tags
 	machineTags = append(machineTags, openStackMachine.Spec.Tags...)
-
 	// Append cluster scope tags
 	machineTags = append(machineTags, openStackCluster.Spec.Tags...)
-
 	// tags need to be unique or the "apply tags" call will fail.
 	machineTags = deduplicate(machineTags)
 
-	// Get security groups
 	securityGroups, err := getSecurityGroups(s, openStackMachine.Spec.SecurityGroups)
 	if err != nil {
 		return nil, err
@@ -102,30 +100,10 @@ func (s *Service) InstanceCreate(clusterName string, machine *clusterv1.Machine,
 		}
 	}
 
-	// Get all network UUIDs
-	var nets []ServerNetwork
-	if len(openStackMachine.Spec.Networks) > 0 {
-		var err error
-		nets, err = getServerNetworks(s.networkClient, openStackMachine.Spec.Networks)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		if openStackCluster.Status.Network == nil {
-			return nil, fmt.Errorf(".spec.networks not set in Machine and also no network was found in .status.network in OpenStackCluster")
-		}
-		if openStackCluster.Status.Network.Subnet == nil {
-			return nil, fmt.Errorf(".spec.networks not set in Machine and also no subnet was found in .status.network.subnet in OpenStackCluster")
-		}
-
-		nets = []ServerNetwork{{
-			networkID: openStackCluster.Status.Network.ID,
-			subnetID:  openStackCluster.Status.Network.Subnet.ID,
-		}}
-	}
-	if len(nets) == 0 {
-		return nil, fmt.Errorf("no network was found or provided. Please check your machine configuration and try again")
-	}
+	nets := []ServerNetwork{{
+		networkID: openStackCluster.Status.Network.ID,
+		subnetID:  openStackCluster.Status.Network.Subnet.ID,
+	}}
 
 	portsList := []servers.Network{}
 	for _, net := range nets {
@@ -211,9 +189,6 @@ func (s *Service) InstanceCreate(clusterName string, machine *clusterv1.Machine,
 		return nil, fmt.Errorf("create new server err: %v", err)
 	}
 
-	if machine.Spec.FailureDomain == nil {
-		return nil, fmt.Errorf("create new server err: failure domain not set")
-	}
 	var serverCreateOpts servers.CreateOptsBuilder = servers.CreateOpts{
 		Name:             openStackMachine.Name,
 		ImageRef:         imageID,
@@ -329,43 +304,6 @@ func getSecurityGroups(is *Service, securityGroupParams []infrav1.SecurityGroupP
 		}
 	}
 	return sgIDs, nil
-}
-
-func getServerNetworks(networkClient *gophercloud.ServiceClient, networkParams []infrav1.NetworkParam) ([]ServerNetwork, error) {
-	var nets []ServerNetwork
-	for _, net := range networkParams {
-		opts := networks.ListOpts(net.Filter)
-		opts.ID = net.UUID
-		ids, err := networking.GetNetworkIDsByFilter(networkClient, &opts)
-		if err != nil {
-			return nil, err
-		}
-		for _, netID := range ids {
-			if net.Subnets == nil {
-				nets = append(nets, ServerNetwork{
-					networkID: netID,
-				})
-				continue
-			}
-
-			for _, subnet := range net.Subnets {
-				subnetOpts := subnets.ListOpts(subnet.Filter)
-				subnetOpts.ID = subnet.UUID
-				subnetOpts.NetworkID = netID
-				subnetsByFilter, err := networking.GetSubnetsByFilter(networkClient, &subnetOpts)
-				if err != nil {
-					return nil, err
-				}
-				for _, subnetByFilter := range subnetsByFilter {
-					nets = append(nets, ServerNetwork{
-						networkID: subnetByFilter.NetworkID,
-						subnetID:  subnetByFilter.ID,
-					})
-				}
-			}
-		}
-	}
-	return nets, nil
 }
 
 func isDuplicate(list []string, name string) bool {
