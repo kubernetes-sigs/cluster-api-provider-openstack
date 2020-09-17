@@ -675,10 +675,16 @@ func (oc *OpenstackClient) validateMachine(machine *machinev1.Machine) error {
 
 	// TODO(mfedosin): add more validations here
 
+	// Validate that image exists
+	err = machineService.DoesImageExist(machineSpec.Image)
+	if err != nil {
+		return err
+	}
+
 	// Validate that flavor exists
 	err = machineService.DoesFlavorExist(machineSpec.Flavor)
 	if err != nil {
-		return fmt.Errorf("Can't find a flavor with name %v: %v", machineSpec.Flavor, err)
+		return err
 	}
 
 	return nil

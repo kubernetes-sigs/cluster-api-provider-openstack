@@ -905,6 +905,16 @@ func (is *InstanceService) DoesFlavorExist(flavorName string) error {
 	return nil
 }
 
+// DoesImageExist return an error if image with the given name doesn't exist, and nil otherwise
+func (is *InstanceService) DoesImageExist(imageName string) error {
+	_, err := getImageID(is, imageName)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (is *InstanceService) GetInstance(resourceId string) (instance *Instance, err error) {
 	if resourceId == "" {
 		return nil, fmt.Errorf("ResourceId should be specified to  get detail.")
