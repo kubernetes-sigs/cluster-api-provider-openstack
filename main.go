@@ -31,6 +31,7 @@ import (
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
 	"sigs.k8s.io/cluster-api-provider-openstack/controllers"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
+	"sigs.k8s.io/cluster-api-provider-openstack/version"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha3"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
@@ -232,7 +233,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	setupLog.Info("starting manager")
+	setupLog.Info("starting manager", "version", version.Get().String())
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
