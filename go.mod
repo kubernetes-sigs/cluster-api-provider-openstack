@@ -13,7 +13,7 @@ require (
 	github.com/gophercloud/utils v0.0.0-20190124231947-9c3b9f2457ef
 	github.com/openshift/api v0.0.0-20200901182017-7ac89ba6b971
 	github.com/openshift/client-go v0.0.0-20200827190008-3062137373b5
-	github.com/openshift/machine-api-operator v0.2.1-0.20200910172650-cac610d67c12
+	github.com/openshift/machine-api-operator v0.2.1-0.20200922150054-e0db6b65ba71
 	github.com/vincent-petithory/dataurl v0.0.0-20160330182126-9a301d65acbb // indirect
 	go4.org v0.0.0-20191010144846-132d2879e1e9 // indirect
 	gopkg.in/yaml.v2 v2.3.0
