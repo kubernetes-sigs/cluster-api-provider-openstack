@@ -26,6 +26,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	"github.com/pkg/errors"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/tools/record"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
@@ -128,10 +129,11 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, log lo
 			return reconcile.Result{}, err
 		}
 
-		err = computeService.DeleteBastion(cluster.Name, openStackCluster)
+		err = computeService.DeleteBastion(openStackCluster.Status.Bastion.ID)
 		if err != nil {
 			return reconcile.Result{}, errors.Errorf("failed to delete bastion: %v", err)
 		}
+		r.Recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulTerminate", "Terminated instance %q", openStackCluster.Status.Bastion.ID)
 		if openStackCluster.Status.BastionSecurityGroup != nil {
 			log.Info("Deleting bastion security group", "name", openStackCluster.Status.BastionSecurityGroup.Name)
 
@@ -278,14 +280,14 @@ func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, log lo
 
 func (r *OpenStackClusterReconciler) reconcileBastion(log logr.Logger, osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
 
+	log.Info("Reconciling Bastion")
+
 	computeService, err := compute.NewService(osProviderClient, clientOpts, log)
 	if err != nil {
 		return err
 	}
 
-	openStackMachine := &infrav1.OpenStackMachine{}
-	openStackMachine.Name = fmt.Sprintf("%s-bastion", cluster.Name)
-	instance, err := computeService.InstanceExists(openStackMachine)
+	instance, err := computeService.InstanceExists(fmt.Sprintf("%s-bastion", cluster.Name))
 	if err != nil {
 		return err
 	}
@@ -293,8 +295,7 @@ func (r *OpenStackClusterReconciler) reconcileBastion(log logr.Logger, osProvide
 		return nil
 	}
 
-	log.Info("Reconciling Bastion")
-	instance, err = computeService.ReconcileBastion(cluster.Name, cluster, openStackCluster)
+	instance, err = computeService.CreateBastion(cluster.Name, openStackCluster)
 	if err != nil {
 		return errors.Errorf("failed to reconcile bastion: %v", err)
 	}
@@ -311,10 +312,8 @@ func (r *OpenStackClusterReconciler) reconcileBastion(log logr.Logger, osProvide
 	if err != nil {
 		return errors.Errorf("failed to associate floating IP with bastion: %v", err)
 	}
-	openStackCluster.Status.Bastion = &infrav1.Bastion{
-		Enabled:    true,
-		FloatingIP: fp.FloatingIP,
-	}
+	instance.FloatingIP = fp.FloatingIP
+	openStackCluster.Status.Bastion = instance
 	return nil
 }
 

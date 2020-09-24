@@ -136,7 +136,7 @@ type OpenStackClusterStatus struct {
 
 	BastionSecurityGroup *SecurityGroup `json:"bastionSecurityGroup,omitempty"`
 
-	Bastion *Bastion `json:"bastion,omitempty"`
+	Bastion *Instance `json:"bastion,omitempty"`
 }
 
 // +kubebuilder:object:root=true
