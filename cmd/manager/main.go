@@ -24,7 +24,7 @@ import (
 	configv1 "github.com/openshift/api/config/v1"
 	machinev1 "github.com/openshift/machine-api-operator/pkg/apis/machine/v1beta1"
 	"github.com/openshift/machine-api-operator/pkg/metrics"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/apis"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"

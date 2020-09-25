@@ -41,7 +41,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	tokenapi "k8s.io/cluster-bootstrap/token/api"
 	tokenutil "k8s.io/cluster-bootstrap/token/util"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 	openstackconfigv1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/apis/openstackproviderconfig/v1alpha1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/bootstrap"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack"

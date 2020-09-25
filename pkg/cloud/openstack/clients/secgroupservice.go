@@ -19,7 +19,7 @@ package clients
 import (
 	"fmt"
 
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"

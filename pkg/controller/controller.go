@@ -17,7 +17,7 @@ limitations under the License.
 package controller
 
 import (
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 
 	configclient "github.com/openshift/client-go/config/clientset/versioned/typed/config/v1"
 	"k8s.io/client-go/kubernetes"
