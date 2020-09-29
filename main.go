@@ -110,7 +110,7 @@ func main() {
 
 	flag.IntVar(&openStackMachineConcurrency,
 		"openstackmachine-concurrency",
-		1,
+		10,
 		"Number of OpenStackMachines to process simultaneously",
 	)
 
