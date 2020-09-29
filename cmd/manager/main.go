@@ -19,15 +19,20 @@ package main
 import (
 	"flag"
 	"log"
+	"os"
 	"time"
 
 	configv1 "github.com/openshift/api/config/v1"
 	machinev1 "github.com/openshift/machine-api-operator/pkg/apis/machine/v1beta1"
 	"github.com/openshift/machine-api-operator/pkg/metrics"
+	"k8s.io/klog/klogr"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/apis"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/openstack/machineset"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/controller"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
+	rTcontroller "sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
@@ -127,6 +132,16 @@ func main() {
 	// Setup all Controllers
 	if err := controller.AddToManager(mgr); err != nil {
 		klog.Fatal(err)
+	}
+
+	ctrl.SetLogger(klogr.New())
+	setupLog := ctrl.Log.WithName("setup")
+	if err = (&machineset.Reconciler{
+		Client: mgr.GetClient(),
+		Log:    ctrl.Log.WithName("controllers").WithName("MachineSet"),
+	}).SetupWithManager(mgr, rTcontroller.Options{}); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "MachineSet")
+		os.Exit(1)
 	}
 
 	if err := mgr.AddReadyzCheck("ping", healthz.Ping); err != nil {

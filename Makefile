@@ -46,15 +46,17 @@ manager:
 		-o bin/manager \
 		cmd/manager/main.go
 
-test: unit functional
+
+test: ## Run tests
+	@echo -e "\033[32mTesting...\033[0m"
+	hack/ci-test.sh
+
 
 check: fmt vet lint
 
 unit:
 	go test -tags=unit $(shell go list ./...) $(TESTARGS)
 
-functional:
-	@echo "$@ not yet implemented"
 
 fmt:
 	hack/verify-gofmt.sh
@@ -145,5 +147,5 @@ dist: build-cross
 		$(DIST_DIRS) zip -r cluster-api-provider-openstack-$(VERSION)-{}.zip {} \; \
 	)
 
-.PHONY: build clean cover docs fmt functional lint realclean \
-	relnotes test translation version build-cross dist
+.PHONY: build clean cover docs fmt lint realclean \
+	relnotes test translation version build-cross dist unit

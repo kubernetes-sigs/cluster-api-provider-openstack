@@ -958,6 +958,20 @@ func (is *InstanceService) SetMachineLabels(machine *machinev1.Machine, instance
 	return nil
 }
 
+func (is *InstanceService) GetFlavorInfo(flavorID string) (flavor *flavors.Flavor, err error) {
+
+	info, err := flavors.Get(is.computeClient, flavorID).Extract()
+	if err != nil {
+		return nil, fmt.Errorf("Could not find information for flavor id %s", flavorID)
+	}
+	return info, nil
+}
+
+func (is *InstanceService) GetFlavorID(flavorName string) (string, error) {
+	flavorID, err := flavors.IDFromName(is.computeClient, flavorName)
+	return flavorID, err
+}
+
 func serverToInstance(server *servers.Server) *Instance {
 	return &Instance{*server}
 }
