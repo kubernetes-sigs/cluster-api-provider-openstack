@@ -29,6 +29,10 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/client-go/tools/record"
 
+	"github.com/gophercloud/gophercloud"
+	gophercloudopenstack "github.com/gophercloud/gophercloud/openstack"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	machinev1 "github.com/openshift/machine-api-operator/pkg/apis/machine/v1beta1"
 	apierrors "github.com/openshift/machine-api-operator/pkg/controller/machine"
 	"github.com/openshift/machine-api-operator/pkg/util"
@@ -453,6 +457,43 @@ func getIPsFromInstance(instance *clients.Instance) (map[string]string, error) {
 	return addrMap, nil
 }
 
+func getNetworkBySubnet(client *gophercloud.ServiceClient, subnetID string) (*networks.Network, error) {
+	subnet, err := subnets.Get(client, subnetID).Extract()
+	if err != nil {
+		return nil, fmt.Errorf("Could not get subnet %s, %v", subnetID, err)
+	}
+
+	network, err := networks.Get(client, subnet.NetworkID).Extract()
+	if err != nil {
+		return nil, fmt.Errorf("Could not get network %s, %v", subnet.NetworkID, err)
+	}
+	return network, nil
+}
+
+func getNetworkByPrimaryNetworkTag(client *gophercloud.ServiceClient, primaryNetworkTag string) (*networks.Network, error) {
+	opts := networks.ListOpts{
+		Tags: primaryNetworkTag,
+	}
+
+	allPages, err := networks.List(client, opts).AllPages()
+	if err != nil {
+		return nil, err
+	}
+
+	allNetworks, err := networks.ExtractNetworks(allPages)
+	if err != nil {
+		return nil, err
+	}
+
+	switch len(allNetworks) {
+	case 0:
+		return nil, fmt.Errorf("There are no networks with primary network tag: %v", primaryNetworkTag)
+	case 1:
+		return &allNetworks[0], nil
+	}
+	return nil, fmt.Errorf("Too many networks with the same primary network tag: %v", primaryNetworkTag)
+}
+
 func (oc *OpenstackClient) getPrimaryMachineIP(mapAddr map[string]string, machine *machinev1.Machine, clusterInfraName string) (string, error) {
 	// If there is only one network in the list, we consider it as the primary one
 	if len(mapAddr) == 1 {
@@ -469,8 +510,38 @@ func (oc *OpenstackClient) getPrimaryMachineIP(mapAddr map[string]string, machin
 	// PrimarySubnet should always be set in the machine api in 4.6
 	primarySubnet := config.PrimarySubnet
 
+	cloud, err := clients.GetCloud(oc.params.KubeClient, machine)
+	if err != nil {
+		return "", err
+	}
+	provider, err := clients.GetProviderClient(cloud, clients.GetCACertificate(oc.params.KubeClient))
+	if err != nil {
+		return "", err
+	}
+	netClient, err := gophercloudopenstack.NewNetworkV2(provider, gophercloud.EndpointOpts{
+		Region: cloud.RegionName,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	var primaryNetwork *networks.Network
+	if primarySubnet != "" {
+		primaryNetwork, err = getNetworkBySubnet(netClient, primarySubnet)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		// Support legacy versions
+		primaryNetworkTag := clusterInfraName + "-primaryClusterNetwork"
+		primaryNetwork, err = getNetworkByPrimaryNetworkTag(netClient, primaryNetworkTag)
+		if err != nil {
+			return "", err
+		}
+	}
+
 	for networkName, addr := range mapAddr {
-		if networkName == primarySubnet {
+		if networkName == primaryNetwork.Name {
 			return addr, nil
 		}
 	}
