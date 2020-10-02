@@ -13,7 +13,7 @@ require (
 	github.com/gophercloud/utils v0.0.0-20190124231947-9c3b9f2457ef
 	github.com/openshift/api v0.0.0-20200901182017-7ac89ba6b971
 	github.com/openshift/client-go v0.0.0-20200827190008-3062137373b5
-	github.com/openshift/machine-api-operator v0.2.1-0.20200926044412-b7d860f8074c
+	github.com/openshift/machine-api-operator v0.2.1-0.20201002104344-6abfb5440597
 	github.com/vincent-petithory/dataurl v0.0.0-20160330182126-9a301d65acbb // indirect
 	go4.org v0.0.0-20191010144846-132d2879e1e9 // indirect
 	gopkg.in/yaml.v2 v2.3.0
@@ -27,6 +27,6 @@ require (
 )
 
 replace (
-	sigs.k8s.io/cluster-api-provider-aws => github.com/openshift/cluster-api-provider-aws v0.2.1-0.20200708153314-34dd2b6e8b8d
-	sigs.k8s.io/cluster-api-provider-azure => github.com/openshift/cluster-api-provider-azure v0.1.0-alpha.3.0.20200709020159-fa840d10429c
+	sigs.k8s.io/cluster-api-provider-aws => github.com/openshift/cluster-api-provider-aws v0.2.1-0.20200929152424-eab2e087f366
+	sigs.k8s.io/cluster-api-provider-azure => github.com/openshift/cluster-api-provider-azure v0.1.0-alpha.3.0.20200929220456-04e680e51d03
 )
