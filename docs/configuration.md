@@ -47,7 +47,7 @@ The SSH key pair is required. You can create one using,
 openstack keypair create [--public-key <file> | --private-key <file>] <name>
 ```
 
-The key pair name must be exposed as an environment variable `OPENSTACK_SSH_KEY_NAME`.
+The key pair name must be exposed as an environment variable `OPENSTACK_SSH_AUTHORIZED_KEY`.
 
 If you want to login to each machine by ssh,  you can [access nodes through the bastion host via SSH](#accessing-nodes-through-the-bastion-host-via-ssh). Otherwise you have to configure security groups. If `spec.managedSecurityGroups` of `OpenStackCluster` set to true, two security groups will be created and added to the instances. One is `k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-controlplane`, another is `k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-worker`. These security group rules include the kubeadm's [Check required ports](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#check-required-ports) so that each node can not be logged in through ssh by default. Please add pre-existing security group allowing ssh port to OpenStackMachineTemplate spec. Here is an example:
 
