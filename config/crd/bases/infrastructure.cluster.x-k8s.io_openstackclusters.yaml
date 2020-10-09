@@ -90,6 +90,110 @@ spec:
                     type: string
                   image:
                     type: string
+                  networks:
+                    items:
+                      properties:
+                        filter:
+                          description: Filters for optional network query
+                          properties:
+                            adminStateUp:
+                              type: boolean
+                            description:
+                              type: string
+                            id:
+                              type: string
+                            limit:
+                              type: integer
+                            marker:
+                              type: string
+                            name:
+                              type: string
+                            notTags:
+                              type: string
+                            notTagsAny:
+                              type: string
+                            projectId:
+                              type: string
+                            shared:
+                              type: boolean
+                            sortDir:
+                              type: string
+                            sortKey:
+                              type: string
+                            status:
+                              type: string
+                            tags:
+                              type: string
+                            tagsAny:
+                              type: string
+                            tenantId:
+                              type: string
+                          type: object
+                        fixedIp:
+                          description: A fixed IPv4 address for the NIC.
+                          type: string
+                        subnets:
+                          description: Subnet within a network to use
+                          items:
+                            properties:
+                              filter:
+                                description: Filters for optional network query
+                                properties:
+                                  cidr:
+                                    type: string
+                                  description:
+                                    type: string
+                                  enableDhcp:
+                                    type: boolean
+                                  gateway_ip:
+                                    type: string
+                                  id:
+                                    type: string
+                                  ipVersion:
+                                    type: integer
+                                  ipv6AddressMode:
+                                    type: string
+                                  ipv6RaMode:
+                                    type: string
+                                  limit:
+                                    type: integer
+                                  marker:
+                                    type: string
+                                  name:
+                                    type: string
+                                  networkId:
+                                    type: string
+                                  notTags:
+                                    type: string
+                                  notTagsAny:
+                                    type: string
+                                  projectId:
+                                    type: string
+                                  sortDir:
+                                    type: string
+                                  sortKey:
+                                    type: string
+                                  subnetpoolId:
+                                    type: string
+                                  tags:
+                                    type: string
+                                  tagsAny:
+                                    type: string
+                                  tenantId:
+                                    type: string
+                                type: object
+                              uuid:
+                                description: The UUID of the network. Required if
+                                  you omit the port attribute.
+                                type: string
+                            type: object
+                          type: array
+                        uuid:
+                          description: The UUID of the network. Required if you omit
+                            the port attribute.
+                          type: string
+                      type: object
+                    type: array
                   securityGroups:
                     items:
                       properties:
@@ -371,59 +475,129 @@ spec:
             description: OpenStackClusterStatus defines the observed state of OpenStackCluster
             properties:
               bastion:
-                description: Bastion represents basic information about the bastion
-                  node
                 properties:
-                  enabled:
+                  configDrive:
                     type: boolean
+                  failureDomain:
+                    type: string
                   flavor:
                     type: string
                   floatingIP:
                     type: string
+                  id:
+                    type: string
                   image:
                     type: string
-                  securityGroups:
+                  ip:
+                    type: string
+                  metadata:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  name:
+                    type: string
+                  networks:
                     items:
+                      description: Network represents basic information about the
+                        associated OpenStach Neutron Network
                       properties:
-                        filter:
-                          description: Filters used to query security groups in openstack
+                        apiServerLoadBalancer:
+                          description: Be careful when using APIServerLoadBalancer,
+                            because this field is optional and therefore not set in
+                            all cases
                           properties:
-                            description:
-                              type: string
                             id:
                               type: string
-                            limit:
-                              type: integer
-                            marker:
+                            internalIP:
+                              type: string
+                            ip:
                               type: string
                             name:
                               type: string
-                            notTags:
+                          required:
+                          - id
+                          - internalIP
+                          - ip
+                          - name
+                          type: object
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        router:
+                          description: Router represents basic information about the
+                            associated OpenStack Neutron Router
+                          properties:
+                            id:
                               type: string
-                            notTagsAny:
-                              type: string
-                            projectId:
-                              type: string
-                            sortDir:
-                              type: string
-                            sortKey:
+                            name:
                               type: string
                             tags:
-                              type: string
-                            tagsAny:
-                              type: string
-                            tenantId:
-                              type: string
+                              items:
+                                type: string
+                              type: array
+                          required:
+                          - id
+                          - name
                           type: object
-                        name:
-                          description: Security Group name
-                          type: string
-                        uuid:
-                          description: Security Group UID
-                          type: string
+                        subnet:
+                          description: Subnet represents basic information about the
+                            associated OpenStack Neutron Subnet
+                          properties:
+                            cidr:
+                              type: string
+                            id:
+                              type: string
+                            name:
+                              type: string
+                            tags:
+                              items:
+                                type: string
+                              type: array
+                          required:
+                          - cidr
+                          - id
+                          - name
+                          type: object
+                        tags:
+                          items:
+                            type: string
+                          type: array
+                      required:
+                      - id
+                      - name
                       type: object
                     type: array
+                  rootVolume:
+                    properties:
+                      deviceType:
+                        type: string
+                      diskSize:
+                        type: integer
+                      sourceType:
+                        type: string
+                      sourceUUID:
+                        type: string
+                    type: object
+                  securigyGroups:
+                    items:
+                      type: string
+                    type: array
+                  serverGroupID:
+                    type: string
                   sshKeyName:
+                    type: string
+                  state:
+                    description: InstanceState describes the state of an OpenStack
+                      instance.
+                    type: string
+                  tags:
+                    items:
+                      type: string
+                    type: array
+                  trunk:
+                    type: boolean
+                  userData:
                     type: string
                 type: object
               bastionSecurityGroup:

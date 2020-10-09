@@ -19,11 +19,7 @@ package controllers
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
-	"net"
-	"os"
-	"strconv"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -56,8 +52,6 @@ import (
 
 const (
 	waitForClusterInfrastructureReadyDuration = 15 * time.Second
-	TimeoutInstanceCreate                     = 5
-	RetryIntervalInstanceStatus               = 10 * time.Second
 )
 
 // OpenStackMachineReconciler reconciles a OpenStackMachine object
@@ -219,7 +213,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 		}
 	}
 
-	instance, err := computeService.InstanceExists(openStackMachine)
+	instance, err := computeService.InstanceExists(openStackMachine.Name)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -239,7 +233,6 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 		handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error deleting Openstack instance: %v", err))
 		return ctrl.Result{}, nil
 	}
-
 	logger.Info("OpenStack machine deleted successfully")
 	r.Recorder.Eventf(openStackMachine, corev1.EventTypeNormal, "SuccessfulTerminate", "Terminated instance %q", instance.ID)
 
@@ -358,29 +351,15 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 	return ctrl.Result{}, nil
 }
 
-func (r *OpenStackMachineReconciler) getOrCreate(computeService *compute.Service, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, userData string) (*compute.Instance, error) {
+func (r *OpenStackMachineReconciler) getOrCreate(computeService *compute.Service, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, userData string) (*infrav1.Instance, error) {
 
-	instance, err := computeService.InstanceExists(openStackMachine)
+	instance, err := computeService.InstanceExists(openStackMachine.Name)
 	if err != nil {
 		return nil, err
 	}
 
 	if instance == nil {
 		instance, err = computeService.InstanceCreate(cluster.Name, machine, openStackMachine, openStackCluster, userData)
-		if err != nil {
-			return nil, errors.Errorf("error creating Openstack instance: %v", err)
-		}
-		instanceCreateTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT", TimeoutInstanceCreate)
-		instanceCreateTimeout *= time.Minute
-		// instance in PollImmediate has to overwrites instance of the outer scope to get an updated instance state,
-		// which is then returned at the end of getOrCreate
-		err = util.PollImmediate(RetryIntervalInstanceStatus, instanceCreateTimeout, func() (bool, error) {
-			instance, err = computeService.GetInstance(instance.ID)
-			if err != nil {
-				return false, nil
-			}
-			return instance.Status == "ACTIVE", nil
-		})
 		if err != nil {
 			return nil, errors.Errorf("error creating Openstack instance: %v", err)
 		}
@@ -397,21 +376,8 @@ func handleUpdateMachineError(logger logr.Logger, openstackMachine *infrav1.Open
 	logger.Error(fmt.Errorf(string(err)), message.Error())
 }
 
-func getTimeout(name string, timeout int) time.Duration {
-	if v := os.Getenv(name); v != "" {
-		timeout, err := strconv.Atoi(v)
-		if err == nil {
-			return time.Duration(timeout)
-		}
-	}
-	return time.Duration(timeout)
-}
-
-func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(logger logr.Logger, osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, instance *compute.Instance, clusterName string, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster) error {
-	ip, err := getIPFromInstance(instance)
-	if err != nil {
-		return err
-	}
+func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(logger logr.Logger, osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, instance *infrav1.Instance, clusterName string, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster) error {
+	ip := instance.IP
 	loadbalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, logger, openStackCluster.Spec.UseOctavia)
 	if err != nil {
 		return err
@@ -421,48 +387,6 @@ func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(logger logr.Log
 		return err
 	}
 	return nil
-}
-
-func getIPFromInstance(instance *compute.Instance) (string, error) {
-	if instance.AccessIPv4 != "" && net.ParseIP(instance.AccessIPv4) != nil {
-		return instance.AccessIPv4, nil
-	}
-	type networkInterface struct {
-		Address string  `json:"addr"`
-		Version float64 `json:"version"`
-		Type    string  `json:"OS-EXT-IPS:type"`
-	}
-	var addrList []string
-
-	for _, b := range instance.Addresses {
-		list, err := json.Marshal(b)
-		if err != nil {
-			return "", fmt.Errorf("extract IP from instance err: %v", err)
-		}
-		var networks []interface{}
-		err = json.Unmarshal(list, &networks)
-		if err != nil {
-			return "", fmt.Errorf("extract IP from instance err: %v", err)
-		}
-		for _, network := range networks {
-			var netInterface networkInterface
-			b, _ := json.Marshal(network)
-			err = json.Unmarshal(b, &netInterface)
-			if err != nil {
-				return "", fmt.Errorf("extract IP from instance err: %v", err)
-			}
-			if netInterface.Version == 4.0 {
-				if netInterface.Type == "floating" {
-					return netInterface.Address, nil
-				}
-				addrList = append(addrList, netInterface.Address)
-			}
-		}
-	}
-	if len(addrList) != 0 {
-		return addrList[0], nil
-	}
-	return "", fmt.Errorf("extract IP from instance err")
 }
 
 // OpenStackClusterToOpenStackMachine is a handler.ToRequestsFunc to be used to enqeue requests for reconciliation

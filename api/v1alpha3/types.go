@@ -125,6 +125,27 @@ type APIEndpoint struct {
 	Port int `json:"port"`
 }
 
+type Instance struct {
+	ID             string            `json:"id,omitempty"`
+	Name           string            `json:"name,omitempty"`
+	Trunk          bool              `json:"trunk,omitempty"`
+	FailureDomain  string            `json:"failureDomain,omitempty"`
+	SecurityGroups *[]string         `json:"securigyGroups,omitempty"`
+	Networks       *[]Network        `json:"networks,omitempty"`
+	Tags           []string          `json:"tags,omitempty"`
+	Image          string            `json:"image,omitempty"`
+	Flavor         string            `json:"flavor,omitempty"`
+	SSHKeyName     string            `json:"sshKeyName,omitempty"`
+	UserData       string            `json:"userData,omitempty"`
+	Metadata       map[string]string `json:"metadata,omitempty"`
+	ConfigDrive    *bool             `json:"configDrive,omitempty"`
+	RootVolume     *RootVolume       `json:"rootVolume,omitempty"`
+	ServerGroupID  string            `json:"serverGroupID,omitempty"`
+	State          InstanceState     `json:"state,omitempty"`
+	IP             string            `json:"ip,omitempty"`
+	FloatingIP     string            `json:"floatingIP,omitempty"`
+}
+
 type RootVolume struct {
 	SourceType string `json:"sourceType,omitempty"`
 	SourceUUID string `json:"sourceUUID,omitempty"`
@@ -249,7 +270,9 @@ type Bastion struct {
 	//+optional
 	SSHKeyName string `json:"sshKeyName,omitempty"`
 	//+optional
-	SecurityGroups []SecurityGroupParam `json:"securityGroups,omitempty"`
+	Networks []NetworkParam `json:"networks,omitempty"`
 	//+optional
 	FloatingIP string `json:"floatingIP,omitempty"`
+	//+optional
+	SecurityGroups []SecurityGroupParam `json:"securityGroups,omitempty"`
 }
