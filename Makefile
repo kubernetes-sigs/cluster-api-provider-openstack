@@ -56,6 +56,7 @@ CONTROLLER_IMG ?= $(REGISTRY)/$(IMAGE_NAME)
 TAG ?= dev
 ARCH ?= amd64
 ALL_ARCH = amd64 arm arm64 ppc64le s390x
+CAPI_VERSION = 0.3.9
 
 # Allow overriding manifest generation destination directory
 MANIFEST_ROOT ?= config
@@ -125,9 +126,6 @@ manager: ## Build manager binary.
 
 $(KUSTOMIZE): $(TOOLS_DIR)/go.mod # Build kustomize from tools folder.
 	cd $(TOOLS_DIR); go build -tags=tools -o $(BIN_DIR)/kustomize sigs.k8s.io/kustomize/kustomize/v3
-
-$(CLUSTERCTL): go.mod ## Build clusterctl binary.
-	go build -o $(BIN_DIR)/clusterctl sigs.k8s.io/cluster-api/cmd/clusterctl
 
 $(CONTROLLER_GEN): $(TOOLS_DIR)/go.mod # Build controller-gen from tools folder.
 	cd $(TOOLS_DIR); go build -tags=tools -o $(BIN_DIR)/controller-gen sigs.k8s.io/controller-tools/cmd/controller-gen
@@ -311,8 +309,12 @@ WORKER_MACHINE_COUNT ?= "3"
 LOAD_IMAGE=$(CONTROLLER_IMG)-$(ARCH):$(TAG)
 
 .PHONY: create-cluster
-create-cluster: $(CLUSTERCTL) $(KUSTOMIZE) $(ENVSUBST) ## Create a development Kubernetes cluster on OpenStack in a KIND management cluster.
-
+create-cluster: $(KUSTOMIZE) $(ENVSUBST) ## Create a development Kubernetes cluster on OpenStack in a KIND management cluster.
+	mkdir $(BIN_DIR)
+	wget https://github.com/kubernetes-sigs/cluster-api/releases/download/v${CAPI_VERSION}/clusterctl-linux-amd64
+	mv ./clusterctl-linux-amd64 $(CLUSTERCTL)
+	mkdir ~/.cluster-api
+	chmod +x $(CLUSTERCTL)
 	# Create clusterctl.yaml to use local OpenStack provider
 	mkdir -p ./out/infrastructure-openstack/v0.3.0
 	echo "providers:" > ./out/clusterctl.yaml
@@ -335,14 +337,13 @@ create-cluster: $(CLUSTERCTL) $(KUSTOMIZE) $(ENVSUBST) ## Create a development K
 
 	# (Re-)install Core providers
 	$(CLUSTERCTL) delete --all
-	$(CLUSTERCTL) init --core cluster-api:v0.3.8 --bootstrap kubeadm:v0.3.8 --control-plane kubeadm:v0.3.8
 
 	# (Re-)deploy CAPO provider
 	MANIFEST_IMG=$(CONTROLLER_IMG)-$(ARCH) MANIFEST_TAG=$(TAG) $(MAKE) set-manifest-image
 	$(KUSTOMIZE) build config > ./out/infrastructure-openstack/v0.3.0/infrastructure-components.yaml
 	$(CLUSTERCTL) delete --infrastructure openstack --include-namespace --namespace capo-system || true
 	kubectl wait --for=delete ns/capo-system || true
-	$(CLUSTERCTL) init --config ./out/clusterctl.yaml --infrastructure openstack
+	$(CLUSTERCTL) init --config ./out/clusterctl.yaml --infrastructure openstack --core cluster-api:v${CAPI_VERSION} --bootstrap kubeadm:v${CAPI_VERSION} --control-plane kubeadm:v${CAPI_VERSION}
 
 	# Wait for CAPI pods
 	kubectl wait --for=condition=Ready --timeout=5m -n capi-system pod --all
