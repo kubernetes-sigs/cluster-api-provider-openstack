@@ -253,8 +253,7 @@ func (s *Service) ReconcileLoadBalancerMember(clusterName string, machine *clust
 	return nil
 }
 
-func (s *Service) DeleteLoadBalancer(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {
-	loadBalancerName := fmt.Sprintf("%s-cluster-%s-%s", networkPrefix, clusterName, kubeapiLBSuffix)
+func (s *Service) DeleteLoadBalancer(loadBalancerName string, openStackCluster *infrav1.OpenStackCluster) error {
 	lb, err := checkIfLbExists(s.loadbalancerClient, loadBalancerName)
 	if err != nil {
 		return err
