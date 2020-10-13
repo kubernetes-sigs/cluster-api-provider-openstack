@@ -9,6 +9,7 @@
     - [Generate credentials](#generate-credentials)
   - [Availability zone](#availability-zone)
   - [DNS server](#dns-server)
+  - [Machine flavor](#machine-flavor)
 - [Optional Configuration](#optional-configuration)
   - [External network](#external-network)
   - [Floating IP](#floating-ip)
@@ -90,6 +91,10 @@ The availability zone names must be exposed as an environment variable `OPENSTAC
 ## DNS server
 
 The DNS servers must be exposed as an environment variable `OPENSTACK_DNS_NAMESERVERS`.
+
+## Machine flavor
+
+The flavors for control plane and worker node machines must be exposed as environment variables `OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR` and `OPENSTACK_NODE_MACHINE_FLAVOR` respectively. 
 
 # Optional Configuration
 
