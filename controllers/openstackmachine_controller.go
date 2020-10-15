@@ -234,7 +234,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 		return ctrl.Result{}, nil
 	}
 	logger.Info("OpenStack machine deleted successfully")
-	r.Recorder.Eventf(openStackMachine, corev1.EventTypeNormal, "SuccessfulTerminate", "Terminated instance %q", instance.ID)
+	r.Recorder.Eventf(openStackMachine, corev1.EventTypeNormal, "SuccessfulDeleteServer", "Deleted server %s with id %s", instance.Name, instance.ID)
 
 	// Instance is deleted so remove the finalizer.
 	controllerutil.RemoveFinalizer(openStackMachine, infrav1.MachineFinalizer)
