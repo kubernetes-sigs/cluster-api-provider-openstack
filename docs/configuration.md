@@ -84,6 +84,8 @@ The following variables are set.
 
 Note: Only the [external cloud provider](./external-cloud-provider.md) supports [Application Credentials](https://docs.openstack.org/keystone/latest/user/application_credentials.html).
 
+Note: you need to set `clusterctl.cluster.x-k8s.io/move` label for the secret created from `OPENSTACK_CLOUD_YAML_B64` in order to successfully move objects from bootstrap cluster to target cluster. See [bug 626](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/626) for further information.
+
 ## Availability zone
 
 The availability zone names must be exposed as an environment variable `OPENSTACK_FAILURE_DOMAIN`.
