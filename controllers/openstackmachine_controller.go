@@ -311,6 +311,12 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 
 	openStackMachine.Status.InstanceState = &instance.State
 
+	address := []corev1.NodeAddress{{Type: corev1.NodeInternalIP, Address: instance.IP}}
+	if instance.FloatingIP != "" {
+		address = append(address, []corev1.NodeAddress{{Type: corev1.NodeExternalIP, Address: instance.FloatingIP}}...)
+	}
+	openStackMachine.Status.Addresses = address
+
 	// TODO(sbueringer) From CAPA: TODO(vincepri): Remove this annotation when clusterctl is no longer relevant.
 	if openStackMachine.Annotations == nil {
 		openStackMachine.Annotations = map[string]string{}

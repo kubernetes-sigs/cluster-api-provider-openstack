@@ -273,55 +273,57 @@ func serverToInstance(v *servers.Server) (*infrav1.Instance, error) {
 		SSHKeyName: v.KeyName,
 		State:      infrav1.InstanceState(v.Status),
 	}
-	ip, err := getIPFromInstance(v)
+	addrMap, err := getIPFromInstance(v)
 	if err != nil {
 		return i, err
 	}
-	i.IP = ip
+	i.IP = addrMap["internal"]
+	if addrMap["floating"] != "" {
+		i.FloatingIP = addrMap["floating"]
+	}
 	return i, nil
 }
 
-func getIPFromInstance(v *servers.Server) (string, error) {
+func getIPFromInstance(v *servers.Server) (map[string]string, error) {
+	addrMap := make(map[string]string)
 	if v.AccessIPv4 != "" && net.ParseIP(v.AccessIPv4) != nil {
-		return v.AccessIPv4, nil
+		addrMap["internal"] = v.AccessIPv4
+		return addrMap, nil
 	}
 	type networkInterface struct {
 		Address string  `json:"addr"`
 		Version float64 `json:"version"`
 		Type    string  `json:"OS-EXT-IPS:type"`
 	}
-	var addrList []string
 
 	for _, b := range v.Addresses {
 		list, err := json.Marshal(b)
 		if err != nil {
-			return "", fmt.Errorf("extract IP from instance err: %v", err)
+			return nil, fmt.Errorf("extract IP from instance err: %v", err)
 		}
 		var networks []interface{}
 		err = json.Unmarshal(list, &networks)
 		if err != nil {
-			return "", fmt.Errorf("extract IP from instance err: %v", err)
+			return nil, fmt.Errorf("extract IP from instance err: %v", err)
 		}
 		for _, network := range networks {
 			var netInterface networkInterface
 			b, _ := json.Marshal(network)
 			err = json.Unmarshal(b, &netInterface)
 			if err != nil {
-				return "", fmt.Errorf("extract IP from instance err: %v", err)
+				return nil, fmt.Errorf("extract IP from instance err: %v", err)
 			}
 			if netInterface.Version == 4.0 {
 				if netInterface.Type == "floating" {
-					return netInterface.Address, nil
+					addrMap["floating"] = netInterface.Address
+				} else {
+					addrMap["internal"] = netInterface.Address
 				}
-				addrList = append(addrList, netInterface.Address)
 			}
 		}
 	}
-	if len(addrList) != 0 {
-		return addrList[0], nil
-	}
 
-	return "", fmt.Errorf("extract IP from instance err")
+	return addrMap, nil
 }
 
 // applyRootVolume sets a root volume if the root volume Size is not 0
