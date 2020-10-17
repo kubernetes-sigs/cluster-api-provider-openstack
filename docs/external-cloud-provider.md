@@ -15,7 +15,7 @@ To deploy a cluster using [external cloud provider](https://github.com/kubernete
 - Deploy a CNI solution
 
     ```shell
-    curl https://docs.projectcalico.org/v3.12/manifests/calico.yaml | sed "s/veth_mtu:.*/veth_mtu: \"1430\"/g" | kubectl --kubeconfig=./${CLUSTER_NAME}.kubeconfig apply -f -
+    curl https://docs.projectcalico.org/v3.16/manifests/calico.yaml | sed "s/veth_mtu:.*/veth_mtu: \"1430\"/g" | kubectl --kubeconfig=./${CLUSTER_NAME}.kubeconfig apply -f -
     ```
 
 - Create a secret containing the cloud configuration
