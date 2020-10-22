@@ -64,20 +64,20 @@ spec:
           spec:
             description: OpenStackClusterSpec defines the desired state of OpenStackCluster
             properties:
+              apiServerFloatingIP:
+                description: APIServerFloatingIP is the floatingIP which will be associated
+                  to the APIServer. The floatingIP will be created if it not already
+                  exists.
+                type: string
               apiServerLoadBalancerAdditionalPorts:
                 description: APIServerLoadBalancerAdditionalPorts adds additional
                   ports to the APIServerLoadBalancer
                 items:
                   type: integer
                 type: array
-              apiServerLoadBalancerFloatingIP:
-                description: APIServerLoadBalancerFloatingIP is the floatingIP which
-                  will be associated to the APIServer loadbalancer. The floatingIP
-                  will be created if it not already exists.
-                type: string
-              apiServerLoadBalancerPort:
-                description: APIServerLoadBalancerPort is the port on which the listener
-                  on the APIServer loadbalancer will be created
+              apiServerPort:
+                description: APIServerPort is the port on which the listener on the
+                  APIServer will be created
                 type: integer
               bastion:
                 description: Bastion is the OpenStack instance to login the nodes
@@ -361,7 +361,7 @@ spec:
               managedAPIServerLoadBalancer:
                 description: 'ManagedAPIServerLoadBalancer defines whether a LoadBalancer
                   for the APIServer should be created. If set to true the following
-                  properties are mandatory: APIServerLoadBalancerFloatingIP, APIServerLoadBalancerPort'
+                  properties are mandatory: APIServerFloatingIP, APIServerPort'
                 type: boolean
               managedSecurityGroups:
                 description: 'ManagedSecurityGroups defines that kubernetes manages

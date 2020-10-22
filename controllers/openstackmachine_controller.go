@@ -202,6 +202,11 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 		return ctrl.Result{}, err
 	}
 
+	networkingService, err := networking.NewService(osProviderClient, clientOpts, logger)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
 	loadBalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, logger, openStackCluster.Spec.UseOctavia)
 	if err != nil {
 		return ctrl.Result{}, err
@@ -235,6 +240,15 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 	}
 	logger.Info("OpenStack machine deleted successfully")
 	r.Recorder.Eventf(openStackMachine, corev1.EventTypeNormal, "SuccessfulDeleteServer", "Deleted server %s with id %s", instance.Name, instance.ID)
+
+	if util.IsControlPlaneMachine(machine) && openStackCluster.Spec.APIServerFloatingIP == "" {
+		if err = networkingService.DeleteFloatingIP(instance.FloatingIP); err != nil {
+			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error deleting Openstack floating IP: %v", err))
+			return ctrl.Result{}, nil
+		}
+		logger.Info("OpenStack floating IP deleted successfully", "Floating IP", instance.FloatingIP)
+		r.Recorder.Eventf(openStackMachine, corev1.EventTypeNormal, "SuccessfulDeleteFloatingIP", "Deleted floating IP %s", instance.FloatingIP)
+	}
 
 	// Instance is deleted so remove the finalizer.
 	controllerutil.RemoveFinalizer(openStackMachine, infrav1.MachineFinalizer)
