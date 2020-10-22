@@ -83,7 +83,7 @@ func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCl
 			Name: allNetworks[0].Name,
 			Tags: allNetworks[0].Tags,
 		}
-		s.logger.Info("External network found:", "network id", allNetworks[0].ID)
+		s.logger.Info("External network found", "network id", allNetworks[0].ID)
 		return nil
 	}
 	return errors.New("too many resources")
