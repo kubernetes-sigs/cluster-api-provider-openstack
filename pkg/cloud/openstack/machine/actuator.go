@@ -32,7 +32,7 @@ import (
 	"github.com/gophercloud/gophercloud"
 	gophercloudopenstack "github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
-
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	machinev1 "github.com/openshift/machine-api-operator/pkg/apis/machine/v1beta1"
 	apierrors "github.com/openshift/machine-api-operator/pkg/controller/machine"
 	"github.com/openshift/machine-api-operator/pkg/util"
@@ -457,28 +457,41 @@ func getIPsFromInstance(instance *clients.Instance) (map[string]string, error) {
 	return addrMap, nil
 }
 
-func getNetworkByPrimaryNetworkTag(client *gophercloud.ServiceClient, primaryNetworkTag string) (networks.Network, error) {
+func getNetworkBySubnet(client *gophercloud.ServiceClient, subnetID string) (*networks.Network, error) {
+	subnet, err := subnets.Get(client, subnetID).Extract()
+	if err != nil {
+		return nil, fmt.Errorf("Could not get subnet %s, %v", subnetID, err)
+	}
+
+	network, err := networks.Get(client, subnet.NetworkID).Extract()
+	if err != nil {
+		return nil, fmt.Errorf("Could not get network %s, %v", subnet.NetworkID, err)
+	}
+	return network, nil
+}
+
+func getNetworkByPrimaryNetworkTag(client *gophercloud.ServiceClient, primaryNetworkTag string) (*networks.Network, error) {
 	opts := networks.ListOpts{
 		Tags: primaryNetworkTag,
 	}
 
 	allPages, err := networks.List(client, opts).AllPages()
 	if err != nil {
-		return networks.Network{}, err
+		return nil, err
 	}
 
 	allNetworks, err := networks.ExtractNetworks(allPages)
 	if err != nil {
-		return networks.Network{}, err
+		return nil, err
 	}
 
 	switch len(allNetworks) {
 	case 0:
-		return networks.Network{}, fmt.Errorf("There are no networks with primary network tag: %v", primaryNetworkTag)
+		return nil, fmt.Errorf("There are no networks with primary network tag: %v", primaryNetworkTag)
 	case 1:
-		return allNetworks[0], nil
+		return &allNetworks[0], nil
 	}
-	return networks.Network{}, fmt.Errorf("Too many networks with the same primary network tag: %v", primaryNetworkTag)
+	return nil, fmt.Errorf("Too many networks with the same primary network tag: %v", primaryNetworkTag)
 }
 
 func (oc *OpenstackClient) getPrimaryMachineIP(mapAddr map[string]string, machine *machinev1.Machine, clusterInfraName string) (string, error) {
@@ -489,32 +502,46 @@ func (oc *OpenstackClient) getPrimaryMachineIP(mapAddr map[string]string, machin
 		}
 	}
 
+	config, err := openstackconfigv1.MachineSpecFromProviderSpec(machine.Spec.ProviderSpec)
+	if err != nil {
+		return "", fmt.Errorf("Invalid provider spec for machine %s", machine.Name)
+	}
+
+	// PrimarySubnet should always be set in the machine api in 4.6
+	primarySubnet := config.PrimarySubnet
+
 	cloud, err := clients.GetCloud(oc.params.KubeClient, machine)
 	if err != nil {
 		return "", err
 	}
-
 	provider, err := clients.GetProviderClient(cloud, clients.GetCACertificate(oc.params.KubeClient))
 	if err != nil {
 		return "", err
 	}
-
-	networkingClient, err := gophercloudopenstack.NewNetworkV2(provider, gophercloud.EndpointOpts{
+	netClient, err := gophercloudopenstack.NewNetworkV2(provider, gophercloud.EndpointOpts{
 		Region: cloud.RegionName,
 	})
 	if err != nil {
 		return "", err
 	}
 
-	primaryNetworkTag := clusterInfraName + "-primaryClusterNetwork"
-	network, err := getNetworkByPrimaryNetworkTag(networkingClient, primaryNetworkTag)
-	if err != nil {
-		return "", err
+	var primaryNetwork *networks.Network
+	if primarySubnet != "" {
+		primaryNetwork, err = getNetworkBySubnet(netClient, primarySubnet)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		// Support legacy versions
+		primaryNetworkTag := clusterInfraName + "-primaryClusterNetwork"
+		primaryNetwork, err = getNetworkByPrimaryNetworkTag(netClient, primaryNetworkTag)
+		if err != nil {
+			return "", err
+		}
 	}
 
-	// We're looking for the tag to identify the primary network
 	for networkName, addr := range mapAddr {
-		if networkName == network.Name {
+		if networkName == primaryNetwork.Name {
 			return addr, nil
 		}
 	}
