@@ -2,6 +2,6 @@
   "name": "infrastructure-openstack",
   "config": {
     "componentsFile": "infrastructure-components.yaml",
-    "nextVersion": "v0.3.0"
+    "nextVersion": "v0.3.1"
   }
 }

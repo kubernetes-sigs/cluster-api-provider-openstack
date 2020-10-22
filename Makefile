@@ -316,16 +316,16 @@ create-cluster: $(KUSTOMIZE) $(ENVSUBST) ## Create a development Kubernetes clus
 	mkdir ~/.cluster-api
 	chmod +x $(CLUSTERCTL)
 	# Create clusterctl.yaml to use local OpenStack provider
-	mkdir -p ./out/infrastructure-openstack/v0.3.0
+	mkdir -p ./out/infrastructure-openstack/v0.3.1
 	echo "providers:" > ./out/clusterctl.yaml
 	echo "- name: openstack" >> ./out/clusterctl.yaml
-	echo "  url: $(PWD)/out/infrastructure-openstack/v0.3.0/infrastructure-components.yaml" >> ./out/clusterctl.yaml
+	echo "  url: $(PWD)/out/infrastructure-openstack/v0.3.1/infrastructure-components.yaml" >> ./out/clusterctl.yaml
 	echo "  type: InfrastructureProvider" >> ./out/clusterctl.yaml
 
-	echo "releaseSeries:" > ./out/infrastructure-openstack/v0.3.0/metadata.yaml
-	echo "- major: 0" >> ./out/infrastructure-openstack/v0.3.0/metadata.yaml
-	echo "  minor: 3" >> ./out/infrastructure-openstack/v0.3.0/metadata.yaml
-	echo "  contract: v1alpha3" >> ./out/infrastructure-openstack/v0.3.0/metadata.yaml
+	echo "releaseSeries:" > ./out/infrastructure-openstack/v0.3.1/metadata.yaml
+	echo "- major: 0" >> ./out/infrastructure-openstack/v0.3.1/metadata.yaml
+	echo "  minor: 3" >> ./out/infrastructure-openstack/v0.3.1/metadata.yaml
+	echo "  contract: v1alpha3" >> ./out/infrastructure-openstack/v0.3.1/metadata.yaml
 
 	@if [ -z `kind get clusters | grep clusterapi` ]; then \
 		kind create cluster --name=clusterapi; \
@@ -340,7 +340,7 @@ create-cluster: $(KUSTOMIZE) $(ENVSUBST) ## Create a development Kubernetes clus
 
 	# (Re-)deploy CAPO provider
 	MANIFEST_IMG=$(CONTROLLER_IMG)-$(ARCH) MANIFEST_TAG=$(TAG) $(MAKE) set-manifest-image
-	$(KUSTOMIZE) build config > ./out/infrastructure-openstack/v0.3.0/infrastructure-components.yaml
+	$(KUSTOMIZE) build config > ./out/infrastructure-openstack/v0.3.1/infrastructure-components.yaml
 	$(CLUSTERCTL) delete --infrastructure openstack --include-namespace --namespace capo-system || true
 	kubectl wait --for=delete ns/capo-system || true
 	$(CLUSTERCTL) init --config ./out/clusterctl.yaml --infrastructure openstack --core cluster-api:v${CAPI_VERSION} --bootstrap kubeadm:v${CAPI_VERSION} --control-plane kubeadm:v${CAPI_VERSION}
