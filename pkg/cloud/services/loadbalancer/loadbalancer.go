@@ -65,7 +65,7 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 	if err != nil {
 		return err
 	}
-	s.logger.Info("Associating floating ip", "ip", fp.FloatingIP)
+	s.logger.Info("Associating floating IP", "IP", fp.FloatingIP)
 	fpUpdateOpts := &floatingips.UpdateOpts{
 		PortID: &lb.VipPortID,
 	}
@@ -77,7 +77,7 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 	if err != nil {
 		return err
 	}
-	record.Eventf(openStackCluster, "SuccessfulAssociateFloatingIP", "Associate floating IP %s with port %s", fp.FloatingIP, &lb.VipPortID)
+	record.Eventf(openStackCluster, "SuccessfulAssociateFloatingIP", "Associate floating IP %s with port %s", fp.FloatingIP, lb.VipPortID)
 
 	// lb listener
 	portList := []int{int(openStackCluster.Spec.ControlPlaneEndpoint.Port)}
