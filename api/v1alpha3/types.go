@@ -153,18 +153,6 @@ type RootVolume struct {
 	Size       int    `json:"diskSize,omitempty"`
 }
 
-// KeyPair is how operators can supply custom keypairs for kubeadm to use.
-type KeyPair struct {
-	// base64 encoded cert and key
-	Cert []byte `json:"cert,omitempty"`
-	Key  []byte `json:"key,omitempty"`
-}
-
-// HasCertAndKey returns whether a keypair contains cert and key of non-zero length.
-func (kp *KeyPair) HasCertAndKey() bool {
-	return len(kp.Cert) != 0 && len(kp.Key) != 0
-}
-
 // Network represents basic information about the associated OpenStach Neutron Network
 type Network struct {
 	Name string `json:"name"`
