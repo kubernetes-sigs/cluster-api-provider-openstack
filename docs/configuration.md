@@ -114,7 +114,7 @@ Note: If your openstack cluster does not already have a public network, you shou
 
 ## Floating IP
 
-A floating IP is automatically created and associated with the load balancer or controller node, but you can specify the floating IP explicitly. When `managedAPIServerLoadBalancer: true`, `spec.apiServerLoadBalancerFlotingIP` of `OpenStackCluster` is used. When `managedAPIServerLoadBalancer: false`, `spec.controlPlaneEndpoint.host` of `OpenStackCluster` is used.
+A floating IP is automatically created and associated with the load balancer or controller node, but you can specify the floating IP explicitly by `spec.apiServerFloatingIP` of `OpenStackCluster`.
 
 You have to be able to create a floating IP in your OpenStack in advance. You can create one using,
 

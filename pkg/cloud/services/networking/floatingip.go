@@ -66,3 +66,14 @@ func checkIfFloatingIPExists(client *gophercloud.ServiceClient, ip string) (*flo
 	}
 	return &fpList[0], nil
 }
+
+func (s *Service) DeleteFloatingIP(ip string) error {
+	fip, err := checkIfFloatingIPExists(s.client, ip)
+	if err != nil {
+		return err
+	}
+	if fip != nil {
+		return floatingips.Delete(s.client, fip.ID).ExtractErr()
+	}
+	return nil
+}

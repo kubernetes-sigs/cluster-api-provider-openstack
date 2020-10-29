@@ -134,6 +134,12 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, log lo
 				return reconcile.Result{}, errors.Errorf("failed to delete bastion: %v", err)
 			}
 			r.Recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteServer", "Deleted server %s with id %s", bastion.Name, bastion.ID)
+			if openStackCluster.Spec.Bastion.FloatingIP == "" {
+				if err = networkingService.DeleteFloatingIP(bastion.FloatingIP); err != nil {
+					return reconcile.Result{}, errors.Errorf("failed to delete floating IP: %v", err)
+				}
+				r.Recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteFloatingIP", "Deleted floating IP %s", bastion.FloatingIP)
+			}
 		}
 
 		if bastionSecGroup := openStackCluster.Status.BastionSecurityGroup; bastionSecGroup != nil {
@@ -142,7 +148,6 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, log lo
 				return reconcile.Result{}, errors.Errorf("failed to delete security group: %v", err)
 			}
 			r.Recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteSecurityGroup", "Deleted security group %s with id %s", bastionSecGroup.Name, bastionSecGroup.ID)
-
 		}
 	}
 
@@ -158,6 +163,12 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, log lo
 			}
 			r.Recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteLoadBalancer", "Deleted load balancer %s with id %s", apiLb.Name, apiLb.ID)
 
+			if openStackCluster.Spec.APIServerFloatingIP == "" {
+				if err = networkingService.DeleteFloatingIP(apiLb.IP); err != nil {
+					return reconcile.Result{}, errors.Errorf("failed to delete floating IP: %v", err)
+				}
+				r.Recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteFloatingIP", "Deleted floating IP %s", apiLb.IP)
+			}
 		}
 	}
 
@@ -392,26 +403,14 @@ func (r *OpenStackClusterReconciler) reconcileNetworkComponents(log logr.Logger,
 			return errors.Errorf("failed to reconcile router: %v", err)
 		}
 	}
-
-	if openStackCluster.Spec.ControlPlaneEndpoint.IsZero() {
-		var controlPlaneEndpointHost string
+	if !openStackCluster.Spec.ControlPlaneEndpoint.IsValid() {
 		var port int32
-		if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
-			controlPlaneEndpointHost = openStackCluster.Spec.APIServerLoadBalancerFloatingIP
-			if openStackCluster.Spec.APIServerLoadBalancerPort == 0 {
-				port = 6443
-			} else {
-				port = int32(openStackCluster.Spec.APIServerLoadBalancerPort)
-			}
+		if openStackCluster.Spec.APIServerPort == 0 {
+			port = 6443
 		} else {
-			controlPlaneEndpointHost = openStackCluster.Spec.ControlPlaneEndpoint.Host
-			if openStackCluster.Spec.ControlPlaneEndpoint.Port == 0 {
-				port = 6443
-			} else {
-				port = openStackCluster.Spec.ControlPlaneEndpoint.Port
-			}
+			port = int32(openStackCluster.Spec.APIServerPort)
 		}
-		fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, controlPlaneEndpointHost)
+		fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster.Spec.APIServerFloatingIP)
 		if err != nil {
 			return errors.Errorf("Floating IP cannot be got or created: %v", err)
 		}
