@@ -129,7 +129,6 @@ func (s *Service) ReconcileNetwork(clusterName string, openStackCluster *infrav1
 		record.Warnf(openStackCluster, "FailedCreateNetwork", "Failed to create network %s: %v", networkName, err)
 		return err
 	}
-	record.Eventf(openStackCluster, "SuccessfulCreateNetwork", "Created network %s with id %s", networkName, network.ID)
 
 	if len(openStackCluster.Spec.Tags) > 0 {
 		_, err = attributestags.ReplaceAll(s.client, "networks", network.ID, attributestags.ReplaceAllOpts{
@@ -139,6 +138,7 @@ func (s *Service) ReconcileNetwork(clusterName string, openStackCluster *infrav1
 		}
 	}
 
+	record.Eventf(openStackCluster, "SuccessfulCreateNetwork", "Created network %s with id %s", networkName, network.ID)
 	openStackCluster.Status.Network = &infrav1.Network{
 		ID:   network.ID,
 		Name: network.Name,
@@ -207,7 +207,6 @@ func (s *Service) ReconcileSubnet(clusterName string, openStackCluster *infrav1.
 			record.Warnf(openStackCluster, "FailedCreateSubnet", "Failed to create subnet %s: %v", subnetName, err)
 			return err
 		}
-		record.Eventf(openStackCluster, "SuccessfulCreateSubnet", "Created subnet %s with id %s", subnetName, newSubnet.ID)
 
 		if len(openStackCluster.Spec.Tags) > 0 {
 			_, err = attributestags.ReplaceAll(s.client, "subnets", newSubnet.ID, attributestags.ReplaceAllOpts{
@@ -216,6 +215,7 @@ func (s *Service) ReconcileSubnet(clusterName string, openStackCluster *infrav1.
 				return err
 			}
 		}
+		record.Eventf(openStackCluster, "SuccessfulCreateSubnet", "Created subnet %s with id %s", subnetName, newSubnet.ID)
 
 		observedSubnet = infrav1.Subnet{
 			ID:   newSubnet.ID,

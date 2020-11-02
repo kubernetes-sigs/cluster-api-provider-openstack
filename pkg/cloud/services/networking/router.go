@@ -80,7 +80,6 @@ func (s *Service) ReconcileRouter(clusterName string, openStackCluster *infrav1.
 			record.Warnf(openStackCluster, "FailedCreateRouter", "Failed to create router %s: %v", routerName, err)
 			return err
 		}
-		record.Eventf(openStackCluster, "SuccessfulCreateRouter", "Created router %s with id %s", routerName, newRouter.ID)
 		if len(openStackCluster.Spec.Tags) > 0 {
 			_, err = attributestags.ReplaceAll(s.client, "routers", newRouter.ID, attributestags.ReplaceAllOpts{
 				Tags: openStackCluster.Spec.Tags}).Extract()
@@ -88,6 +87,7 @@ func (s *Service) ReconcileRouter(clusterName string, openStackCluster *infrav1.
 				return err
 			}
 		}
+		record.Eventf(openStackCluster, "SuccessfulCreateRouter", "Created router %s with id %s", routerName, newRouter.ID)
 		router = *newRouter
 		observedRouter = infrav1.Router{
 			Name: router.Name,
