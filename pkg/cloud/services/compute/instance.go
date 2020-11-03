@@ -79,6 +79,7 @@ func (s *Service) InstanceCreate(clusterName string, machine *clusterv1.Machine,
 		Metadata:      openStackMachine.Spec.ServerMetadata,
 		ConfigDrive:   openStackMachine.Spec.ConfigDrive,
 		FailureDomain: *machine.Spec.FailureDomain,
+		RootVolume:    openStackMachine.Spec.RootVolume,
 	}
 
 	if openStackMachine.Spec.Trunk {
