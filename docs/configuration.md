@@ -227,19 +227,20 @@ spec:
 
 ## Boot From Volume
 
-1. For example in `examples/_out/controlplane.yaml` set `spec.rootVolume.diskSize` to something greater than `0` means boot from volume.
+1. For example in `OpenStackMachineTemplate` set `spec.rootVolume.diskSize` to something greater than `0` means boot from volume.
 
    ```yaml
    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
-   kind: OpenStackMachine
+   kind: OpenStackMachineTemplate
    metadata:
      name: <cluster-name>-controlplane
      namespace: <cluster-name>
    spec:
+   ...
      rootVolume:
-       diskSize: 0
-       sourceType: ""
-       SourceUUID: ""
+       diskSize: <image size>
+       sourceType: "image"
+       SourceUUID: <image id>
    ...
    ```
 
