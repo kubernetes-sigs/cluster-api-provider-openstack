@@ -67,7 +67,7 @@ spec:
 ## OpenStack credential
 
 ### Generate credentials
-The [env.rc](./env.rc) script sets the environment variables related to credentials.
+The [env.rc](../templates/env.rc) script sets the environment variables related to credentials.
 
 ```bash
 source env.rc <path/to/clouds.yaml> <cloud>
