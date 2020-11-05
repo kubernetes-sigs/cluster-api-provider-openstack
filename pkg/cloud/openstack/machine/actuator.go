@@ -138,10 +138,7 @@ func (oc *OpenstackClient) Create(ctx context.Context, machine *machinev1.Machin
 	}
 
 	if err = oc.validateMachine(machine); err != nil {
-		verr := &apierrors.MachineError{
-			Reason:  machinev1.CreateMachineError,
-			Message: err.Error(),
-		}
+		verr := apierrors.InvalidMachineConfiguration("Machine validation failed: %v", err)
 		return oc.handleMachineError(machine, verr, createEventAction)
 	}
 
@@ -330,7 +327,7 @@ func (oc *OpenstackClient) Update(ctx context.Context, machine *machinev1.Machin
 			Reason:  machinev1.UpdateMachineError,
 			Message: err.Error(),
 		}
-		return oc.handleMachineError(machine, verr, createEventAction)
+		return oc.handleMachineError(machine, verr, updateEventAction)
 	}
 
 	clusterInfra, err := oc.params.ConfigClient.Infrastructures().Get(context.TODO(), "cluster", metav1.GetOptions{})
