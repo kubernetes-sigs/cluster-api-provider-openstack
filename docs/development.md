@@ -41,5 +41,4 @@ After generating `provider-components.yaml`, replace the `us.gcr.io/k8s-artifact
 
 ## Developing with Tilt
 
-For rapid development it's recommended to use [Tilt](https://tilt.dev/). An example for a development environment
- setup with Tilt can be found in [sbueringer/capi-dev](https://github.com/sbueringer/capi-dev).
+We have support for using [Tilt](https://tilt.dev/) for rapid iterative development. Please visit the [Cluster API documentation on Tilt](https://master.cluster-api.sigs.k8s.io/developer/tilt.html) for information on how to set up your development environment. 

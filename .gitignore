@@ -163,3 +163,6 @@ zz_generated.openapi.go
 
 # binaries
 /bin
+
+#Tilt files.
+.tiltbuild
