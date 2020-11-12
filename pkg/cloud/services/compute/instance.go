@@ -606,7 +606,7 @@ func (s *Service) deleteInstance(serverID string) error {
 
 func (s *Service) GetInstance(resourceID string) (instance *infrav1.Instance, err error) {
 	if resourceID == "" {
-		return nil, fmt.Errorf("resourceId should be specified to  get detail")
+		return nil, fmt.Errorf("resourceId should be specified to get detail")
 	}
 	server, err := servers.Get(s.computeClient, resourceID).Extract()
 	if err != nil {
