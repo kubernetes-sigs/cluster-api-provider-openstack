@@ -287,8 +287,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-
-	logger.Info("Creating Machine")
+	logger.Info("Reconciling Machine create started")
 
 	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
 
@@ -307,7 +306,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 		return ctrl.Result{}, err
 	}
 
-	instance, err := r.getOrCreate(computeService, machine, openStackMachine, cluster, openStackCluster, userData)
+	instance, err := r.getOrCreate(computeService, machine, openStackMachine, cluster, openStackCluster, userData, logger)
 	if err != nil {
 		handleUpdateMachineError(logger, openStackMachine, errors.Errorf("OpenStack instance cannot be created: %v", err))
 		return ctrl.Result{}, err
@@ -371,7 +370,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 	return ctrl.Result{}, nil
 }
 
-func (r *OpenStackMachineReconciler) getOrCreate(computeService *compute.Service, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, userData string) (*infrav1.Instance, error) {
+func (r *OpenStackMachineReconciler) getOrCreate(computeService *compute.Service, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, userData string, logger logr.Logger) (*infrav1.Instance, error) {
 
 	instance, err := computeService.InstanceExists(openStackMachine.Name)
 	if err != nil {
@@ -379,6 +378,7 @@ func (r *OpenStackMachineReconciler) getOrCreate(computeService *compute.Service
 	}
 
 	if instance == nil {
+		logger.Info("Machine not exist, Creating Machine", "Machine", openStackMachine.Name)
 		instance, err = computeService.InstanceCreate(cluster.Name, machine, openStackMachine, openStackCluster, userData)
 		if err != nil {
 			return nil, errors.Errorf("error creating Openstack instance: %v", err)
