@@ -7,9 +7,7 @@ To deploy a cluster using [external cloud provider](https://github.com/kubernete
 - After control plane is up and running, retrieve the workload cluster Kubeconfig:
 
     ```shell
-    kubectl --namespace=default get secret/${CLUSTER_NAME}-kubeconfig -o jsonpath={.data.value} \
-    | base64 --decode \
-    > ./${CLUSTER_NAME}.kubeconfig
+    clusterctl get kubeconfig ${CLUSTER_NAME} --namespace default > ./${CLUSTER_NAME}.kubeconfig
     ```
 
 - Deploy a CNI solution
