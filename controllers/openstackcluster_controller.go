@@ -309,6 +309,7 @@ func (r *OpenStackClusterReconciler) reconcileBastion(log logr.Logger, osProvide
 		return err
 	}
 	if instance != nil {
+		openStackCluster.Status.Bastion = instance
 		return nil
 	}
 
