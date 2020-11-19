@@ -53,11 +53,13 @@ This provider's versions are able to install and manage the following versions o
 
 This provider's versions are able to install Kubernetes to the following versions of OpenStack:
 
-| | OpenStack Pike | OpenStack Queens | OpenStack Rocky | OpenStack Stein | OpenStack Train |
-|-------------------------------------------------|---|---|---|---|---|
-| OpenStack Provider v1alpha1 (release-0.1 branch)| ✓ | ✓ | ✓ | ✓ | + |
-| OpenStack Provider v1alpha2 (v0.2)              | + | ✓ | + | ✓ | + |
-| OpenStack Provider v1alpha3 (v0.3)              | + | + | + | ✓ | ✓ |
+| | OpenStack Pike | OpenStack Queens | OpenStack Rocky | OpenStack Stein | OpenStack Train | OpenStack Ussuri | OpenStack Victoria |
+|-------------------------------------------------|---|---|---|---|---|---|---|
+| OpenStack Provider v1alpha1 (release-0.1 branch)| ✓ | ✓ | ✓ | ✓ | + | + | + |
+| OpenStack Provider v1alpha2 (v0.2)              | + | ✓ | + | ✓ | + | + | + |
+| OpenStack Provider v1alpha3 (v0.3)              | + | + | + | ✓ | ✓ | ✓ | ✓ |
+
+**NOTE:** : The development team has a CI using [non HA template](./templates/cluster-template-without-lb.yaml) running on latest OpenStack devstack and that covers most of ✓ at above table. Some versions are tested against [HA template](./templates/cluster-template.yaml).
 
 Test status:
 * `✓` tested
