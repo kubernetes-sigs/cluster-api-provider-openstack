@@ -31,7 +31,8 @@
     1. `./out/infrastructure-components.yaml`
     2. `./templates/cluster-template.yaml`
     3. `./templates/cluster-template-without-lb.yaml`
-    4. `./metadata.yaml` (clusterctl >0.3.1 will include hardcoded metadata for CAPO. But let's keep the `metadata.yaml` file for our v0.3.* releases to be compatible with clusterctl <=0.3.1)
+    4. `./templates/cluster-template-external-cloud-provider.yaml`
+    5. `./metadata.yaml` (clusterctl >0.3.1 will include hardcoded metadata for CAPO. But let's keep the `metadata.yaml` file for our v0.3.* releases to be compatible with clusterctl <=0.3.1)
 9.  Perform the [image promotion process](https://github.com/kubernetes/k8s.io/tree/master/k8s.gcr.io#image-promoter).
     The staging repository is at https://console.cloud.google.com/gcr/images/k8s-staging-capi-openstack/GLOBAL. Be
     sure to choose the top level `capi-openstack-controller`, which will provide the multi-arch manifest, rather than one for a specific architecture.
