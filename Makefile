@@ -250,7 +250,7 @@ set-manifest-pull-policy:
 ## Release
 ## --------------------------------------
 
-RELEASE_TAG := $(shell git describe --abbrev=0 2>/dev/null)
+RELEASE_TAG := $(shell git describe --tags --abbrev=0 2>/dev/null)
 RELEASE_DIR := out
 
 $(RELEASE_DIR):
