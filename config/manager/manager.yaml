@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - args:
-        - --enable-leader-election
+        - --leader-elect
         image: controller:latest
         imagePullPolicy: IfNotPresent
         name: manager

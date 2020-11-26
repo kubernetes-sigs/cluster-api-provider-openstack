@@ -56,7 +56,7 @@ func main() {
 	klog.InitFlags(nil)
 
 	var (
-		metricsAddr                 string
+		metricsBindAddr             string
 		enableLeaderElection        bool
 		leaderElectionNamespace     string
 		watchNamespace              string
@@ -69,15 +69,15 @@ func main() {
 	)
 
 	flag.StringVar(
-		&metricsAddr,
-		"metrics-addr",
+		&metricsBindAddr,
+		"metrics-bind-addr",
 		":8080",
 		"The address the metric endpoint binds to.",
 	)
 
 	flag.BoolVar(
 		&enableLeaderElection,
-		"enable-leader-election",
+		"leader-elect",
 		false,
 		"Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.",
 	)
@@ -160,7 +160,7 @@ func main() {
 
 	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
 		Scheme:                  scheme,
-		MetricsBindAddress:      metricsAddr,
+		MetricsBindAddress:      metricsBindAddr,
 		LeaderElection:          enableLeaderElection,
 		LeaderElectionID:        "controller-leader-election-capo",
 		LeaderElectionNamespace: leaderElectionNamespace,
