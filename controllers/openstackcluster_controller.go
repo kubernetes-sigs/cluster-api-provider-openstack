@@ -156,7 +156,7 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, log lo
 		return reconcile.Result{}, err
 	}
 
-	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
+	if openStackCluster.Spec.ManagedAPIServerLoadBalancer && openStackCluster.Status.Network != nil {
 		if apiLb := openStackCluster.Status.Network.APIServerLoadBalancer; apiLb != nil {
 			if err = loadBalancerService.DeleteLoadBalancer(apiLb.Name, openStackCluster); err != nil {
 				return reconcile.Result{}, errors.Errorf("failed to delete load balancer: %v", err)
@@ -189,17 +189,17 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, log lo
 		r.Recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteSecurityGroup", "Deleted security group %s with id %s", controlPlaneSecGroup.Name, controlPlaneSecGroup.ID)
 	}
 
-	if router := openStackCluster.Status.Network.Router; router != nil {
-		log.Info("Deleting router", "name", router.Name)
-		if err = networkingService.DeleteRouter(openStackCluster.Status.Network); err != nil {
-			return ctrl.Result{}, errors.Errorf("failed to delete router: %v", err)
-		}
-		r.Recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteRouter", "Deleted router %s with id %s", router.Name, router.ID)
-		log.Info("OpenStack router deleted successfully")
-	}
-
 	// if NodeCIDR was not set, no network was created.
 	if network := openStackCluster.Status.Network; network != nil && openStackCluster.Spec.NodeCIDR != "" {
+		if router := network.Router; router != nil {
+			log.Info("Deleting router", "name", router.Name)
+			if err = networkingService.DeleteRouter(network); err != nil {
+				return ctrl.Result{}, errors.Errorf("failed to delete router: %v", err)
+			}
+			r.Recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteRouter", "Deleted router %s with id %s", router.Name, router.ID)
+			log.Info("OpenStack router deleted successfully")
+		}
+
 		log.Info("Deleting network", "name", network.Name)
 		if err = networkingService.DeleteNetwork(network); err != nil {
 			return ctrl.Result{}, errors.Errorf("failed to delete network: %v", err)
