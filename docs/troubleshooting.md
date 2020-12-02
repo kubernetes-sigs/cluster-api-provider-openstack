@@ -17,7 +17,7 @@ This guide (based on Minikube but others should be similar) explains general inf
 ## Get logs of Cluster API controller containers
 
 ```bash
-kubectl --kubeconfig minikube.kubeconfig -n capo-system logs -l control-plane=capo-controller-manager
+kubectl --kubeconfig minikube.kubeconfig -n capo-system logs -l control-plane=capo-controller-manager -c manager
 ```
 
 Similarly, the logs of the other controllers in the namespaces `capi-system` and `cabpk-system` can be retrieved.
