@@ -21,6 +21,7 @@ about: Tell us about a problem you are experiencing
 
 - Cluster API Provider OpenStack version (Or `git rev-parse HEAD` if manually built):
 - Cluster-API version:
+- OpenStack version:
 - Minikube/KIND version:
 - Kubernetes version (use `kubectl version`):
 - OS (e.g. from `/etc/os-release`):
