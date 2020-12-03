@@ -422,16 +422,16 @@ func (r *OpenStackClusterReconciler) reconcileNetworkComponents(log logr.Logger,
 		}
 	}
 
+	err = networkingService.ReconcileSecurityGroups(clusterName, openStackCluster)
+	if err != nil {
+		return errors.Errorf("failed to reconcile security groups: %v", err)
+	}
+
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
 		err = loadBalancerService.ReconcileLoadBalancer(clusterName, openStackCluster)
 		if err != nil {
 			return errors.Errorf("failed to reconcile load balancer: %v", err)
 		}
-	}
-
-	err = networkingService.ReconcileSecurityGroups(clusterName, openStackCluster)
-	if err != nil {
-		return errors.Errorf("failed to reconcile security groups: %v", err)
 	}
 
 	return nil
