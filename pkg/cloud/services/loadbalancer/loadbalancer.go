@@ -38,6 +38,7 @@ import (
 	"sigs.k8s.io/cluster-api/util"
 )
 
+// Todo: get these constants from networking, but they are not exported
 const (
 	secGroupPrefix     string = "k8s"
 	controlPlaneSuffix string = "controlplane"
@@ -82,6 +83,10 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 		controlPlaneGroups, err := groups.ExtractGroups(allPages)
 		if err != nil {
 			return err
+		}
+
+		if len(controlPlaneGroups) != 1 {
+			return fmt.Errorf("Found %v securitygroups with name %v", len(controlPlaneGroups), secControlPlaneGroupName)
 		}
 
 		updateOpts := v2_ports.UpdateOpts{
