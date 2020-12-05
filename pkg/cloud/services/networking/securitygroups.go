@@ -26,10 +26,10 @@ import (
 )
 
 const (
-	secGroupPrefix     string = "k8s"
-	controlPlaneSuffix string = "controlplane"
-	workerSuffix       string = "worker"
-	bastionSuffix      string = "bastion"
+	SecGroupPrefix     string = "k8s"
+	ControlPlaneSuffix string = "controlplane"
+	WorkerSuffix       string = "worker"
+	BastionSuffix      string = "bastion"
 	remoteGroupIDSelf  string = "self"
 )
 
@@ -62,16 +62,16 @@ func (s *Service) ReconcileSecurityGroups(clusterName string, openStackCluster *
 		return nil
 	}
 
-	secControlPlaneGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, controlPlaneSuffix)
-	secWorkerGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, workerSuffix)
+	secControlPlaneGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", SecGroupPrefix, clusterName, ControlPlaneSuffix)
+	secWorkerGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", SecGroupPrefix, clusterName, WorkerSuffix)
 	secGroupNames := map[string]string{
-		controlPlaneSuffix: secControlPlaneGroupName,
-		workerSuffix:       secWorkerGroupName,
+		ControlPlaneSuffix: secControlPlaneGroupName,
+		WorkerSuffix:       secWorkerGroupName,
 	}
 
 	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
-		secBastionGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, bastionSuffix)
-		secGroupNames[bastionSuffix] = secBastionGroupName
+		secBastionGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", SecGroupPrefix, clusterName, BastionSuffix)
+		secGroupNames[BastionSuffix] = secBastionGroupName
 	}
 
 	//create security groups first, because desired rules use group ids.
@@ -112,9 +112,9 @@ func (s *Service) ReconcileSecurityGroups(clusterName string, openStackCluster *
 		}
 	}
 
-	openStackCluster.Status.ControlPlaneSecurityGroup = observedSecGroups[controlPlaneSuffix]
-	openStackCluster.Status.WorkerSecurityGroup = observedSecGroups[workerSuffix]
-	openStackCluster.Status.BastionSecurityGroup = observedSecGroups[bastionSuffix]
+	openStackCluster.Status.ControlPlaneSecurityGroup = observedSecGroups[ControlPlaneSuffix]
+	openStackCluster.Status.WorkerSecurityGroup = observedSecGroups[WorkerSuffix]
+	openStackCluster.Status.BastionSecurityGroup = observedSecGroups[BastionSuffix]
 
 	return nil
 }
@@ -131,11 +131,11 @@ func (s *Service) generateDesiredSecGroups(secGroupNames map[string]string, open
 			return desiredSecGroups, err
 		}
 		switch i {
-		case controlPlaneSuffix:
+		case ControlPlaneSuffix:
 			secControlPlaneGroupID = secGroup.ID
-		case workerSuffix:
+		case WorkerSuffix:
 			secWorkerGroupID = secGroup.ID
-		case bastionSuffix:
+		case BastionSuffix:
 			secBastionGroupID = secGroup.ID
 		}
 	}
@@ -309,8 +309,8 @@ func (s *Service) generateDesiredSecGroups(secGroupNames map[string]string, open
 				},
 			}...,
 		)
-		desiredSecGroups[bastionSuffix] = infrav1.SecurityGroup{
-			Name: secGroupNames[bastionSuffix],
+		desiredSecGroups[BastionSuffix] = infrav1.SecurityGroup{
+			Name: secGroupNames[BastionSuffix],
 			Rules: append(
 				[]infrav1.SecurityGroupRule{
 					{
@@ -328,13 +328,13 @@ func (s *Service) generateDesiredSecGroups(secGroupNames map[string]string, open
 		}
 	}
 
-	desiredSecGroups[controlPlaneSuffix] = infrav1.SecurityGroup{
-		Name:  secGroupNames[controlPlaneSuffix],
+	desiredSecGroups[ControlPlaneSuffix] = infrav1.SecurityGroup{
+		Name:  secGroupNames[ControlPlaneSuffix],
 		Rules: controlPlaneRules,
 	}
 
-	desiredSecGroups[workerSuffix] = infrav1.SecurityGroup{
-		Name:  secGroupNames[workerSuffix],
+	desiredSecGroups[WorkerSuffix] = infrav1.SecurityGroup{
+		Name:  secGroupNames[WorkerSuffix],
 		Rules: workerRules,
 	}
 

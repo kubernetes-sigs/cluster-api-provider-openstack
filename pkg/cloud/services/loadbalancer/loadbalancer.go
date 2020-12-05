@@ -33,15 +33,10 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	v2_ports "github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha3"
 	"sigs.k8s.io/cluster-api/util"
-)
-
-// Todo: get these constants from networking, but they are not exported
-const (
-	secGroupPrefix     string = "k8s"
-	controlPlaneSuffix string = "controlplane"
 )
 
 func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {
@@ -71,7 +66,7 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 	}
 
 	if s.usesOctavia == false {
-		secControlPlaneGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, controlPlaneSuffix)
+		secControlPlaneGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", networking.SecGroupPrefix, clusterName, networking.ControlPlaneSuffix)
 		listOpts := groups.ListOpts{
 			Name: secControlPlaneGroupName,
 		}
