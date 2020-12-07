@@ -3,11 +3,9 @@ module sigs.k8s.io/cluster-api-provider-openstack
 go 1.13
 
 require (
-	github.com/docker/distribution v2.7.1+incompatible
 	github.com/go-logr/logr v0.1.0
 	github.com/gophercloud/gophercloud v0.8.0
 	github.com/gophercloud/utils v0.0.0-20200302155035-0565566533e4
-	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/onsi/ginkgo v1.12.1
 	github.com/onsi/gomega v1.10.1
 	github.com/pkg/errors v0.9.1
