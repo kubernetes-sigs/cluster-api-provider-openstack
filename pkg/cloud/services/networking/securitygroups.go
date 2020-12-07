@@ -349,6 +349,23 @@ func (s *Service) generateDesiredSecGroups(secGroupNames map[string]string, open
 			},
 			defaultRules...,
 		)
+		if openStackCluster.Spec.APIServerLoadBalancerAdditionalPorts != nil {
+			for _, value := range openStackCluster.Spec.APIServerLoadBalancerAdditionalPorts {
+				neutronLbaasRules = append(neutronLbaasRules,
+					[]infrav1.SecurityGroupRule{
+						{
+							Description:    "APIServerLoadBalancerAdditionalPorts",
+							Direction:      "ingress",
+							EtherType:      "IPv4",
+							PortRangeMin:   value,
+							PortRangeMax:   value,
+							Protocol:       "tcp",
+							RemoteIPPrefix: "0.0.0.0/0",
+						},
+					}...,
+				)
+			}
+		}
 		desiredSecGroups[NeutronLbaasSuffix] = infrav1.SecurityGroup{
 			Name:  secGroupNames[NeutronLbaasSuffix],
 			Rules: neutronLbaasRules,
