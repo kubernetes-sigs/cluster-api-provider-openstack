@@ -75,7 +75,7 @@ func (s *Service) ReconcileSecurityGroups(clusterName string, openStackCluster *
 		secGroupNames[BastionSuffix] = secBastionGroupName
 	}
 
-	if openStackCluster.Spec.ManagedAPIServerLoadBalancer != false && openStackCluster.Spec.UseOctavia == false {
+	if openStackCluster.Spec.ManagedAPIServerLoadBalancer && !openStackCluster.Spec.UseOctavia {
 		secLbaasGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", SecGroupPrefix, clusterName, NeutronLbaasSuffix)
 		secGroupNames[NeutronLbaasSuffix] = secLbaasGroupName
 	}
@@ -334,7 +334,7 @@ func (s *Service) generateDesiredSecGroups(secGroupNames map[string]string, open
 		}
 	}
 
-	if openStackCluster.Spec.ManagedAPIServerLoadBalancer != false && openStackCluster.Spec.UseOctavia == false {
+	if openStackCluster.Spec.ManagedAPIServerLoadBalancer && !openStackCluster.Spec.UseOctavia {
 		neutronLbaasRules := append(
 			[]infrav1.SecurityGroupRule{
 				{

@@ -81,7 +81,7 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 		}
 
 		if len(neutronLbaasGroups) != 1 {
-			return fmt.Errorf("Found %v securitygroups with name %v", len(neutronLbaasGroups), neutronLbaasSecGroupName)
+			return fmt.Errorf("error found %v securitygroups with name %v", len(neutronLbaasGroups), neutronLbaasSecGroupName)
 		}
 
 		updateOpts := v2_ports.UpdateOpts{
