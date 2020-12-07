@@ -66,26 +66,26 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 	}
 
 	if s.usesOctavia == false {
-		secControlPlaneGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", networking.SecGroupPrefix, clusterName, networking.ControlPlaneSuffix)
+		neutronLbaasSecGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", networking.SecGroupPrefix, clusterName, networking.NeutronLbaasSuffix)
 		listOpts := groups.ListOpts{
-			Name: secControlPlaneGroupName,
+			Name: neutronLbaasSecGroupName,
 		}
 		allPages, err := groups.List(s.networkingClient, listOpts).AllPages()
 		if err != nil {
 			return err
 		}
 
-		controlPlaneGroups, err := groups.ExtractGroups(allPages)
+		neutronLbaasGroups, err := groups.ExtractGroups(allPages)
 		if err != nil {
 			return err
 		}
 
-		if len(controlPlaneGroups) != 1 {
-			return fmt.Errorf("Found %v securitygroups with name %v", len(controlPlaneGroups), secControlPlaneGroupName)
+		if len(neutronLbaasGroups) != 1 {
+			return fmt.Errorf("Found %v securitygroups with name %v", len(neutronLbaasGroups), neutronLbaasSecGroupName)
 		}
 
 		updateOpts := v2_ports.UpdateOpts{
-			SecurityGroups: &[]string{controlPlaneGroups[0].ID},
+			SecurityGroups: &[]string{neutronLbaasGroups[0].ID},
 		}
 
 		_, err = v2_ports.Update(s.networkingClient, lb.VipPortID, updateOpts).Extract()

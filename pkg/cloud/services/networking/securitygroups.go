@@ -30,6 +30,7 @@ const (
 	ControlPlaneSuffix string = "controlplane"
 	WorkerSuffix       string = "worker"
 	BastionSuffix      string = "bastion"
+	NeutronLbaasSuffix string = "lbaas"
 	remoteGroupIDSelf  string = "self"
 )
 
@@ -72,6 +73,11 @@ func (s *Service) ReconcileSecurityGroups(clusterName string, openStackCluster *
 	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
 		secBastionGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", SecGroupPrefix, clusterName, BastionSuffix)
 		secGroupNames[BastionSuffix] = secBastionGroupName
+	}
+
+	if openStackCluster.Spec.ManagedAPIServerLoadBalancer != false && openStackCluster.Spec.UseOctavia == false {
+		secLbaasGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", SecGroupPrefix, clusterName, NeutronLbaasSuffix)
+		secGroupNames[NeutronLbaasSuffix] = secLbaasGroupName
 	}
 
 	//create security groups first, because desired rules use group ids.
@@ -325,6 +331,27 @@ func (s *Service) generateDesiredSecGroups(secGroupNames map[string]string, open
 				},
 				defaultRules...,
 			),
+		}
+	}
+
+	if openStackCluster.Spec.ManagedAPIServerLoadBalancer != false && openStackCluster.Spec.UseOctavia == false {
+		neutronLbaasRules := append(
+			[]infrav1.SecurityGroupRule{
+				{
+					Description:    "Kubernetes API",
+					Direction:      "ingress",
+					EtherType:      "IPv4",
+					PortRangeMin:   6443,
+					PortRangeMax:   6443,
+					Protocol:       "tcp",
+					RemoteIPPrefix: "0.0.0.0/0",
+				},
+			},
+			defaultRules...,
+		)
+		desiredSecGroups[NeutronLbaasSuffix] = infrav1.SecurityGroup{
+			Name:  secGroupNames[NeutronLbaasSuffix],
+			Rules: neutronLbaasRules,
 		}
 	}
 
