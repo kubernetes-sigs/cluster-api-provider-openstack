@@ -65,3 +65,28 @@ If you encounter `rule:create_floatingip and rule:create_floatingip:floating_ip_
 Refer to [rule:create_floatingip](https://github.com/openstack/neutron/blob/master/neutron/conf/policies/floatingip.py#L26) and [rule:create_floatingip:floating_ip_address](https://github.com/openstack/neutron/blob/master/neutron/conf/policies/floatingip.py#L36) for further policy information.
 
 An alternative is to create the floating IP before create the cluster and use it.
+
+## calico failed to start
+
+After cluster is running, you might see following error:
+
+```
+root@jjtest7:~/abc# kubectl --kubeconfig capi-openstack-3.kubeconfig get pods --all-namespaces
+NAMESPACE     NAME                                                         READY   STATUS                  RESTARTS   AGE
+kube-system   calico-kube-controllers-59b699859f-hqpbt                     0/1     Pending                 0          118m
+kube-system   calico-node-gntzr                                            0/1     Init:ImagePullBackOff   0          118m
+kube-system   calico-node-rfhqb                                            0/1     Init:ImagePullBackOff   0          118m
+kube-system   coredns-6955765f44-k6l6j                                     0/1     Pending                 0          120m
+kube-system   coredns-6955765f44-zvdml                                     0/1     Pending                 0          120m
+```
+
+This might be caused by docker pull limit, check whether you are using anonymous user and use registered user instead.
+
+```
+  ----     ------   ----                  ----                                         -------
+  Normal   BackOff  20m (x432 over 120m)  kubelet, capi-openstack-control-plane-5ztrj  Back-off pulling image "calico/cni:v3.12.3"
+  Warning  Failed   20s (x508 over 120m)  kubelet, capi-openstack-control-plane-5ztrj  Error: ImagePullBackOff
+
+
+429 Too Many Requests - Server message: toomanyrequests: You have reached your pull rate limit. You may increase the limit by authenticating and upgrading: https://www.docker.com/increase-rate-limit
+```
