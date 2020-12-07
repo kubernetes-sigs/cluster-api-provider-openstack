@@ -34,6 +34,26 @@ This command actually uses [the template file](../templates/cluster-template.yam
 
 Note: You can use [the template file](../templates/cluster-template.yaml) by manually replacing values.
 
+**Note:** By default the command creates highly available control plane with internal OpenStack cloud provider. If you wish to create highly available control plane with external OpenStack cloud provider or single control plane without load balancer, use external-cloud-provider or without-lb [flavor](https://cluster-api.sigs.k8s.io/clusterctl/commands/config-cluster.html#flavors) respectively. For example,
+
+```bash
+# Using 'external-cloud-provider' flavor
+clusterctl config cluster capi-quickstart \
+  --flavor external-cloud-provider
+  --kubernetes-version v1.18.2 \
+  --control-plane-machine-count=3 \
+  --worker-machine-count=1 \
+  > capi-quickstart.yaml
+
+# Using 'without-lb' flavor
+clusterctl config cluster capi-quickstart \
+  --flavor without-lb
+  --kubernetes-version v1.18.2 \
+  --control-plane-machine-count=1 \
+  --worker-machine-count=1 \
+  > capi-quickstart.yaml
+```
+
 ## Operating system image
 
 We currently depend on an up-to-date version of cloud-init otherwise the operating system choice is yours. The kubeadm bootstrap provider we're using also depends on some pre-installed software like a container runtime, kubelet, kubeadm, etc.. . For an examples how to build such an image take a look at [image-builder (openstack)](https://image-builder.sigs.k8s.io/capi/providers/openstack.html).
