@@ -65,7 +65,7 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 		return err
 	}
 
-	if s.usesOctavia == false {
+	if !s.usesOctavia {
 		neutronLbaasSecGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", networking.SecGroupPrefix, clusterName, networking.NeutronLbaasSuffix)
 		listOpts := groups.ListOpts{
 			Name: neutronLbaasSecGroupName,
