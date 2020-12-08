@@ -31,7 +31,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/pools"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
-	v2_ports "github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
@@ -196,11 +196,11 @@ func (s *Service) assignNeutronLbaasApiSecGroup(clusterName string, lb *loadbala
 		return fmt.Errorf("error found %v securitygroups with name %v", len(neutronLbaasGroups), neutronLbaasSecGroupName)
 	}
 
-	updateOpts := v2_ports.UpdateOpts{
+	updateOpts := ports.UpdateOpts{
 		SecurityGroups: &[]string{neutronLbaasGroups[0].ID},
 	}
 
-	_, err = v2_ports.Update(s.networkingClient, lb.VipPortID, updateOpts).Extract()
+	_, err = ports.Update(s.networkingClient, lb.VipPortID, updateOpts).Extract()
 	if err != nil {
 		return err
 	}
