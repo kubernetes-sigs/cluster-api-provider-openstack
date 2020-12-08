@@ -65,30 +65,8 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 		return err
 	}
 
-	if !s.usesOctavia {
-		neutronLbaasSecGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", networking.SecGroupPrefix, clusterName, networking.NeutronLbaasSuffix)
-		listOpts := groups.ListOpts{
-			Name: neutronLbaasSecGroupName,
-		}
-		allPages, err := groups.List(s.networkingClient, listOpts).AllPages()
-		if err != nil {
-			return err
-		}
-
-		neutronLbaasGroups, err := groups.ExtractGroups(allPages)
-		if err != nil {
-			return err
-		}
-
-		if len(neutronLbaasGroups) != 1 {
-			return fmt.Errorf("error found %v securitygroups with name %v", len(neutronLbaasGroups), neutronLbaasSecGroupName)
-		}
-
-		updateOpts := v2_ports.UpdateOpts{
-			SecurityGroups: &[]string{neutronLbaasGroups[0].ID},
-		}
-
-		_, err = v2_ports.Update(s.networkingClient, lb.VipPortID, updateOpts).Extract()
+	if !openStackCluster.Spec.UseOctavia {
+		err := s.assignNeutronLbaasApiSecGroup(clusterName, lb)
 		if err != nil {
 			return err
 		}
@@ -199,6 +177,36 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 	return nil
 }
 
+func (s *Service) assignNeutronLbaasApiSecGroup(clusterName string, lb *loadbalancers.LoadBalancer) error {
+	neutronLbaasSecGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", networking.SecGroupPrefix, clusterName, networking.NeutronLbaasSuffix)
+	listOpts := groups.ListOpts{
+		Name: neutronLbaasSecGroupName,
+	}
+	allPages, err := groups.List(s.networkingClient, listOpts).AllPages()
+	if err != nil {
+		return err
+	}
+
+	neutronLbaasGroups, err := groups.ExtractGroups(allPages)
+	if err != nil {
+		return err
+	}
+
+	if len(neutronLbaasGroups) != 1 {
+		return fmt.Errorf("error found %v securitygroups with name %v", len(neutronLbaasGroups), neutronLbaasSecGroupName)
+	}
+
+	updateOpts := v2_ports.UpdateOpts{
+		SecurityGroups: &[]string{neutronLbaasGroups[0].ID},
+	}
+
+	_, err = v2_ports.Update(s.networkingClient, lb.VipPortID, updateOpts).Extract()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (s *Service) ReconcileLoadBalancerMember(clusterName string, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster, ip string) error {
 	if !util.IsControlPlaneMachine(machine) {
 		return nil
@@ -219,7 +227,6 @@ func (s *Service) ReconcileLoadBalancerMember(clusterName string, machine *clust
 
 	lbID := openStackCluster.Status.Network.APIServerLoadBalancer.ID
 	subnetID := openStackCluster.Status.Network.Subnet.ID
-
 	portList := []int{int(openStackCluster.Spec.ControlPlaneEndpoint.Port)}
 	portList = append(portList, openStackCluster.Spec.APIServerLoadBalancerAdditionalPorts...)
 	for _, port := range portList {
