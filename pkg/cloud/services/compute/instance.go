@@ -244,6 +244,9 @@ func (s *Service) createInstance(clusterName string, i *infrav1.Instance) (*infr
 		KeyName:           i.SSHKeyName,
 	}).Extract()
 	if err != nil {
+		if errd := deletePorts(s, portsList); errd != nil {
+			return nil, fmt.Errorf("error recover creating Openstack instance: %v", errd)
+		}
 		return nil, fmt.Errorf("error creating Openstack instance: %v", err)
 	}
 	instanceCreateTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT", TimeoutInstanceCreate)
@@ -479,6 +482,22 @@ func createPort(is *Service, clusterName string, name string, net *infrav1.Netwo
 		return ports.Port{}, fmt.Errorf("create port for server: %v", err)
 	}
 	return *newPort, nil
+}
+
+func deletePorts(s *Service, nets []servers.Network) error {
+
+	for _, n := range nets {
+		_, err := ports.Get(s.networkClient, n.Port).Extract()
+		if err != nil {
+			if capoerrors.IsNotFound(err) {
+				return nil
+			}
+		}
+		if err := ports.Delete(s.networkClient, n.Port).ExtractErr(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Helper function for getting image ID from name
