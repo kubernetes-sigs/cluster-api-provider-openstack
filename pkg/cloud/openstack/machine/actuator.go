@@ -711,5 +711,11 @@ func (oc *OpenstackClient) validateMachine(machine *machinev1.Machine) error {
 		return err
 	}
 
+	// Validate that Availability Zone exists
+	err = machineService.DoesAvailabilityZoneExist(machineSpec.AvailabilityZone)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

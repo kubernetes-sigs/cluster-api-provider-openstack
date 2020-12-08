@@ -49,6 +49,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/gophercloud/gophercloud/pagination"
 	"github.com/gophercloud/utils/openstack/clientconfig"
+	azutils "github.com/gophercloud/utils/openstack/compute/v2/availabilityzones"
 	configclient "github.com/openshift/client-go/config/clientset/versioned/typed/config/v1"
 	machinev1 "github.com/openshift/machine-api-operator/pkg/apis/machine/v1beta1"
 	"github.com/openshift/machine-api-operator/pkg/util"
@@ -913,6 +914,23 @@ func (is *InstanceService) DoesImageExist(imageName string) error {
 	}
 
 	return nil
+}
+
+// DoesAvailabilityZoneExist return an error if AZ with the given name doesn't exist, and nil otherwise
+func (is *InstanceService) DoesAvailabilityZoneExist(azName string) error {
+	zones, err := azutils.ListAvailableAvailabilityZones(is.computeClient)
+	if err != nil {
+		return err
+	}
+	if len(zones) == 0 {
+		return fmt.Errorf("could not find an available compute availability zone")
+	}
+	for _, zoneName := range zones {
+		if zoneName == azName {
+			return nil
+		}
+	}
+	return fmt.Errorf("could not find compute availability zone: %s", azName)
 }
 
 func (is *InstanceService) GetInstance(resourceId string) (instance *Instance, err error) {
