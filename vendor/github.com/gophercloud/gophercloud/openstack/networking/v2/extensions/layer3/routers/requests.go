@@ -84,13 +84,15 @@ func Create(c *gophercloud.ServiceClient, opts CreateOptsBuilder) (r CreateResul
 		r.Err = err
 		return
 	}
-	_, r.Err = c.Post(rootURL(c), b, &r.Body, nil)
+	resp, err := c.Post(rootURL(c), b, &r.Body, nil)
+	_, r.Header, r.Err = gophercloud.ParseResponse(resp, err)
 	return
 }
 
 // Get retrieves a particular router based on its unique ID.
 func Get(c *gophercloud.ServiceClient, id string) (r GetResult) {
-	_, r.Err = c.Get(resourceURL(c, id), &r.Body, nil)
+	resp, err := c.Get(resourceURL(c, id), &r.Body, nil)
+	_, r.Header, r.Err = gophercloud.ParseResponse(resp, err)
 	return
 }
 
@@ -107,7 +109,7 @@ type UpdateOpts struct {
 	AdminStateUp *bool        `json:"admin_state_up,omitempty"`
 	Distributed  *bool        `json:"distributed,omitempty"`
 	GatewayInfo  *GatewayInfo `json:"external_gateway_info,omitempty"`
-	Routes       []Route      `json:"routes"`
+	Routes       *[]Route     `json:"routes,omitempty"`
 }
 
 // ToRouterUpdateMap builds an update body based on UpdateOpts.
@@ -126,15 +128,17 @@ func Update(c *gophercloud.ServiceClient, id string, opts UpdateOptsBuilder) (r 
 		r.Err = err
 		return
 	}
-	_, r.Err = c.Put(resourceURL(c, id), b, &r.Body, &gophercloud.RequestOpts{
+	resp, err := c.Put(resourceURL(c, id), b, &r.Body, &gophercloud.RequestOpts{
 		OkCodes: []int{200},
 	})
+	_, r.Header, r.Err = gophercloud.ParseResponse(resp, err)
 	return
 }
 
 // Delete will permanently delete a particular router based on its unique ID.
 func Delete(c *gophercloud.ServiceClient, id string) (r DeleteResult) {
-	_, r.Err = c.Delete(resourceURL(c, id), nil)
+	resp, err := c.Delete(resourceURL(c, id), nil)
+	_, r.Header, r.Err = gophercloud.ParseResponse(resp, err)
 	return
 }
 
@@ -182,9 +186,10 @@ func AddInterface(c *gophercloud.ServiceClient, id string, opts AddInterfaceOpts
 		r.Err = err
 		return
 	}
-	_, r.Err = c.Put(addInterfaceURL(c, id), b, &r.Body, &gophercloud.RequestOpts{
+	resp, err := c.Put(addInterfaceURL(c, id), b, &r.Body, &gophercloud.RequestOpts{
 		OkCodes: []int{200},
 	})
+	_, r.Header, r.Err = gophercloud.ParseResponse(resp, err)
 	return
 }
 
@@ -226,8 +231,16 @@ func RemoveInterface(c *gophercloud.ServiceClient, id string, opts RemoveInterfa
 		r.Err = err
 		return
 	}
-	_, r.Err = c.Put(removeInterfaceURL(c, id), b, &r.Body, &gophercloud.RequestOpts{
+	resp, err := c.Put(removeInterfaceURL(c, id), b, &r.Body, &gophercloud.RequestOpts{
 		OkCodes: []int{200},
 	})
+	_, r.Header, r.Err = gophercloud.ParseResponse(resp, err)
 	return
+}
+
+// ListL3Agents returns a list of l3-agents scheduled for a specific router.
+func ListL3Agents(c *gophercloud.ServiceClient, id string) (result pagination.Pager) {
+	return pagination.NewPager(c, listl3AgentsURL(c, id), func(r pagination.PageResult) pagination.Page {
+		return ListL3AgentsPage{pagination.SinglePageBase(r)}
+	})
 }
