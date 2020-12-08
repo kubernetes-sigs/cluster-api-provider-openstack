@@ -66,7 +66,7 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 	}
 
 	if !openStackCluster.Spec.UseOctavia {
-		err := s.assignNeutronLbaasApiSecGroup(clusterName, lb)
+		err := s.assignNeutronLbaasAPISecGroup(clusterName, lb)
 		if err != nil {
 			return err
 		}
@@ -177,7 +177,7 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 	return nil
 }
 
-func (s *Service) assignNeutronLbaasApiSecGroup(clusterName string, lb *loadbalancers.LoadBalancer) error {
+func (s *Service) assignNeutronLbaasAPISecGroup(clusterName string, lb *loadbalancers.LoadBalancer) error {
 	neutronLbaasSecGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", networking.SecGroupPrefix, clusterName, networking.NeutronLbaasSuffix)
 	listOpts := groups.ListOpts{
 		Name: neutronLbaasSecGroupName,
