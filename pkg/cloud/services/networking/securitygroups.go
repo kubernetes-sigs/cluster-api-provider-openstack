@@ -25,13 +25,15 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 )
 
+// Exported Constants can be used to calculate securitygroupnames in other packages
 const (
-	SecGroupPrefix     string = "k8s"
-	ControlPlaneSuffix string = "controlplane"
-	WorkerSuffix       string = "worker"
-	BastionSuffix      string = "bastion"
-	NeutronLbaasSuffix string = "lbaas"
-	remoteGroupIDSelf  string = "self"
+	secGroupPrefix                string = "k8s"
+	ControlPlaneSuffix            string = "controlplane"
+	WorkerSuffix                  string = "worker"
+	BastionSuffix                 string = "bastion"
+	NeutronLbaasSuffix            string = "lbaas"
+	remoteGroupIDSelf             string = "self"
+	securityGroupNameFormatString string = "%s-cluster-%s-secgroup-%s"
 )
 
 var defaultRules = []infrav1.SecurityGroupRule{
@@ -63,20 +65,20 @@ func (s *Service) ReconcileSecurityGroups(clusterName string, openStackCluster *
 		return nil
 	}
 
-	secControlPlaneGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", SecGroupPrefix, clusterName, ControlPlaneSuffix)
-	secWorkerGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", SecGroupPrefix, clusterName, WorkerSuffix)
+	secControlPlaneGroupName := GetSecurityGroupName(clusterName, ControlPlaneSuffix)
+	secWorkerGroupName := GetSecurityGroupName(clusterName, WorkerSuffix)
 	secGroupNames := map[string]string{
 		ControlPlaneSuffix: secControlPlaneGroupName,
 		WorkerSuffix:       secWorkerGroupName,
 	}
 
 	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
-		secBastionGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", SecGroupPrefix, clusterName, BastionSuffix)
+		secBastionGroupName := GetSecurityGroupName(clusterName, BastionSuffix)
 		secGroupNames[BastionSuffix] = secBastionGroupName
 	}
 
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer && !openStackCluster.Spec.UseOctavia {
-		secLbaasGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", SecGroupPrefix, clusterName, NeutronLbaasSuffix)
+		secLbaasGroupName := GetSecurityGroupName(clusterName, NeutronLbaasSuffix)
 		secGroupNames[NeutronLbaasSuffix] = secLbaasGroupName
 	}
 
@@ -574,4 +576,9 @@ func convertOSSecGroupRuleToConfigSecGroupRule(osSecGroupRule rules.SecGroupRule
 		RemoteGroupID:   osSecGroupRule.RemoteGroupID,
 		RemoteIPPrefix:  osSecGroupRule.RemoteIPPrefix,
 	}
+}
+
+// GetSecurityGroupName Calculate name of securitygroup
+func GetSecurityGroupName(clusterName string, suffix string) string {
+	return fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, suffix)
 }
