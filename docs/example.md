@@ -2,17 +2,25 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
-- [Pre-condition](#pre-condition)
-- [Install openstack providers into target cluster](#install-openstack-providers-into-target-cluster)
-- [Move objects in `bootstrap` cluster into `target` cluster.](#move-objects-in-bootstrap-cluster-into-target-cluster)
-- [Create secret in `target` cluster](#create-secret-in-target-cluster)
-- [Check cluster status](#check-cluster-status)
+- [Move `Cluster API` related objects from `bootstrap` cluster to `target` cluster](#move-cluster-api-related-objects-from-bootstrap-cluster-to-target-cluster)
+  - [Pre-condition](#pre-condition)
+  - [Install OpenStack Cluster API provider into target cluster](#install-openstack-cluster-api-provider-into-target-cluster)
+  - [Move objects from `bootstrap` cluster into `target` cluster.](#move-objects-from-bootstrap-cluster-into-target-cluster)
+  - [Check cluster status](#check-cluster-status)
+- [Scale up/down cluster](#scale-updown-cluster)
+  - [Pre-condition](#pre-condition-1)
+  - [Scale the cluster to 2 `worker`](#scale-the-cluster-to-2-worker)
+  - [Scale the cluster to 1 `worker` again](#scale-the-cluster-to-1-worker-again)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-This documenation describes how to move `Cluster API` related objects from `bootstrap` cluster to `target` cluster. Check [clusterctl move](https://cluster-api.sigs.k8s.io/clusterctl/commands/move.html) for further information.
+This document provides a set of examples regarding how to use `cluster-api-provider-openstack`, it's based on `v1alpha3` version of `cluster-api`.
 
-# Pre-condition
+# Move `Cluster API` related objects from `bootstrap` cluster to `target` cluster
+
+This section describes how to move `Cluster API` related objects from `bootstrap` cluster to `target` cluster. Check [clusterctl move](https://cluster-api.sigs.k8s.io/clusterctl/commands/move.html) for further information.
+
+## Pre-condition
 
 Bootstrap cluster
 ```
@@ -58,7 +66,7 @@ kube-system   kube-scheduler-capi-openstack-control-plane-82xck            1/1  
 kube-system   openstack-cloud-controller-manager-z9jtc                     1/1     Running   1          4m9s
 ```
 
-# Install OpenStack Cluster API provider into target cluster
+## Install OpenStack Cluster API provider into target cluster
 
 You need install OpenStack cluster api providers into `target` cluster first.
 ```
@@ -78,7 +86,7 @@ You can now create your first workload cluster by running the following:
   clusterctl config cluster [name] --kubernetes-version [version] | kubectl apply -f -
 ```
 
-# Move objects from `bootstrap` cluster into `target` cluster.
+## Move objects from `bootstrap` cluster into `target` cluster.
 
 CRD, objects such as `OpenStackCluster`, `OpenStackMachine` etc need to be moved.
 ```
@@ -149,7 +157,7 @@ Deleting Cluster="capi-openstack-3" Namespace="default"
 Resuming the target cluster
 Set Cluster.Spec.Paused Paused=false Cluster="capi-openstack-3" Namespace="default"
 ```
-# Check cluster status
+## Check cluster status
 
 ```
 # kubectl get openstackcluster --kubeconfig capi-openstack-3.kubeconfig --all-namespaces
@@ -161,3 +169,59 @@ NAMESPACE   NAME                                 CLUSTER            STATE    REA
 default     capi-openstack-control-plane-82xck   capi-openstack-3   ACTIVE   true    openstack://f29007c5-f672-4214-a508-b7cf4a17b3ed   capi-openstack-control-plane-n2kdq
 default     capi-openstack-md-0-bkwhh            capi-openstack-3   ACTIVE   true    openstack://6e23324d-315a-4d75-85a9-350fd1705ab6   capi-openstack-md-0-dfdf94979-656zq
 ```
+
+
+# Scale up/down cluster
+
+## Pre-condition
+
+A cluster is ready, one `master` and one `worker` is running.
+```
+# kubectl --kubeconfig capi-openstack-3.kubeconfig  get machine
+NAME                                  PROVIDERID                                         PHASE     VERSION
+capi-openstack-control-plane-trjxk    openstack://1a88b72d-2a62-4ddf-bc89-30e4821abf4c   Running   v1.17.3
+capi-openstack-md-0-775f546bc-cdzq6   openstack://238c3d92-5b24-4adc-b1d9-5b3b93ebf84f   Running   v1.17.3
+
+# nova list
++--------------------------------------+------------------------------------+-----------+------------+-------------+------------------------------------------------------------------------+
+| ID                                   | Name                               | Status    | Task State | Power State | Networks                                                               |
++--------------------------------------+------------------------------------+-----------+------------+-------------+------------------------------------------------------------------------+
+| 1a88b72d-2a62-4ddf-bc89-30e4821abf4c | capi-openstack-control-plane-5ztrj | ACTIVE    | -          | Running     | k8s-clusterapi-cluster-default-capi-openstack-3=10.6.0.114, 172.24.4.2 |
+| 238c3d92-5b24-4adc-b1d9-5b3b93ebf84f | capi-openstack-md-0-4nwlg          | ACTIVE    | -          | Running     | k8s-clusterapi-cluster-default-capi-openstack-3=10.6.0.33              |
++--------------------------------------+------------------------------------+-----------+------------+-------------+------------------------------------------------------------------------+
+```
+
+## Scale the cluster to 2 `worker`
+
+Edit `machinedeployment`, in current environment, it's `capi-openstack-md-0`
+`# kubectl --kubeconfig capi-openstack-3.kubeconfig edit machinedeployment`
+
+update the `replicas` to 2 then exit the edit and wait for a while, or you can `PATCH` the `machinedeployment` as well.
+
+```
+# nova list
++--------------------------------------+------------------------------------+-----------+------------+-------------+------------------------------------------------------------------------+
+| 1a88b72d-2a62-4ddf-bc89-30e4821abf4c | capi-openstack-control-plane-5ztrj | ACTIVE    | -          | Running     | k8s-clusterapi-cluster-default-capi-openstack-3=10.6.0.114, 172.24.4.2 |
+| 238c3d92-5b24-4adc-b1d9-5b3b93ebf84f | capi-openstack-md-0-4nwlg          | ACTIVE    | -          | Running     | k8s-clusterapi-cluster-default-capi-openstack-3=10.6.0.33              |
+| d55537c5-b972-4a95-ad6e-c81235466f7e | capi-openstack-md-0-92wtw          | ACTIVE    | -          | Running     | k8s-clusterapi-cluster-default-capi-openstack-3=10.6.0.37              |
++--------------------------------------+------------------------------------+-----------+------------+-------------+------------------------------------------------------------------------+
+
+# kubectl --kubeconfig capi-openstack-3.kubeconfig  get nodes
+NAME                                 STATUS   ROLES    AGE     VERSION
+capi-openstack-control-plane-5ztrj   Ready    master   33h     v1.17.3
+capi-openstack-md-0-4nwlg            Ready    <none>   2m36s   v1.17.3
+capi-openstack-md-0-92wtw            Ready    <none>   33h     v1.17.3
+
+# kubectl --kubeconfig capi-openstack-3.kubeconfig  get machine
+NAME                                  PROVIDERID                                         PHASE     VERSION
+capi-openstack-control-plane-trjxk    openstack://1a88b72d-2a62-4ddf-bc89-30e4821abf4c   Running   v1.17.3
+capi-openstack-md-0-775f546bc-cdzq6   openstack://238c3d92-5b24-4adc-b1d9-5b3b93ebf84f   Running   v1.17.3
+capi-openstack-md-0-775f546bc-nhdjk   openstack://d55537c5-b972-4a95-ad6e-c81235466f7e   Running   v1.17.3
+```
+
+## Scale the cluster to 1 `worker` again
+
+Edit `machinedeployment`, in current environment, it's `capi-openstack-md-0`
+`# kubectl --kubeconfig capi-openstack-3.kubeconfig edit machinedeployment`
+
+update the `replicas` to 1 and wait for a while ,then the cluster will back to its original state with 1 `master` and 1 `worker`.
