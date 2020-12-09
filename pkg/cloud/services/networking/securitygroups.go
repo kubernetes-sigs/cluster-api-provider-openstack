@@ -580,5 +580,5 @@ func convertOSSecGroupRuleToConfigSecGroupRule(osSecGroupRule rules.SecGroupRule
 
 // GetSecurityGroupName Calculate name of securitygroup
 func GetSecurityGroupName(clusterName string, suffix string) string {
-	return fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, suffix)
+	return fmt.Sprintf(securityGroupNameFormatString, secGroupPrefix, clusterName, suffix)
 }
