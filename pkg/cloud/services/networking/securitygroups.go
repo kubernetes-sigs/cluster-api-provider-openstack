@@ -25,17 +25,13 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 )
 
-// export constants for use in loadbalancer-package
 const (
-	SecGroupPrefix     string = "k8s"
-	NeutronLbaasSuffix string = "lbaas"
-)
-
-const (
+	secGroupPrefix     string = "k8s"
 	controlPlaneSuffix string = "controlplane"
 	workerSuffix       string = "worker"
 	bastionSuffix      string = "bastion"
 	remoteGroupIDSelf  string = "self"
+	neutronLbaasSuffix string = "lbaas"
 )
 
 var defaultRules = []infrav1.SecurityGroupRule{
@@ -67,21 +63,21 @@ func (s *Service) ReconcileSecurityGroups(clusterName string, openStackCluster *
 		return nil
 	}
 
-	secControlPlaneGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", SecGroupPrefix, clusterName, controlPlaneSuffix)
-	secWorkerGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", SecGroupPrefix, clusterName, workerSuffix)
+	secControlPlaneGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, controlPlaneSuffix)
+	secWorkerGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, workerSuffix)
 	secGroupNames := map[string]string{
 		controlPlaneSuffix: secControlPlaneGroupName,
 		workerSuffix:       secWorkerGroupName,
 	}
 
 	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
-		secBastionGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", SecGroupPrefix, clusterName, bastionSuffix)
+		secBastionGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, bastionSuffix)
 		secGroupNames[bastionSuffix] = secBastionGroupName
 	}
 
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer && !openStackCluster.Spec.UseOctavia {
-		secLbaasGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", SecGroupPrefix, clusterName, NeutronLbaasSuffix)
-		secGroupNames[NeutronLbaasSuffix] = secLbaasGroupName
+		secLbaasGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, neutronLbaasSuffix)
+		secGroupNames[neutronLbaasSuffix] = secLbaasGroupName
 	}
 
 	//create security groups first, because desired rules use group ids.
@@ -370,8 +366,8 @@ func (s *Service) generateDesiredSecGroups(secGroupNames map[string]string, open
 				)
 			}
 		}
-		desiredSecGroups[NeutronLbaasSuffix] = infrav1.SecurityGroup{
-			Name:  secGroupNames[NeutronLbaasSuffix],
+		desiredSecGroups[neutronLbaasSuffix] = infrav1.SecurityGroup{
+			Name:  secGroupNames[neutronLbaasSuffix],
 			Rules: neutronLbaasRules,
 		}
 	}
@@ -578,4 +574,9 @@ func convertOSSecGroupRuleToConfigSecGroupRule(osSecGroupRule rules.SecGroupRule
 		RemoteGroupID:   osSecGroupRule.RemoteGroupID,
 		RemoteIPPrefix:  osSecGroupRule.RemoteIPPrefix,
 	}
+}
+
+// GetNeutronLBaasSecGroupName export NeutronLBaasSecGroupName
+func GetNeutronLBaasSecGroupName(clusterName string) string {
+	return fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, neutronLbaasSuffix)
 }

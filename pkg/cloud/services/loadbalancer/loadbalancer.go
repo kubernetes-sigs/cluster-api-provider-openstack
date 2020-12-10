@@ -178,7 +178,7 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 }
 
 func (s *Service) assignNeutronLbaasAPISecGroup(clusterName string, lb *loadbalancers.LoadBalancer) error {
-	neutronLbaasSecGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", networking.SecGroupPrefix, clusterName, networking.NeutronLbaasSuffix)
+	neutronLbaasSecGroupName := networking.GetNeutronLBaasSecGroupName(clusterName)
 	listOpts := groups.ListOpts{
 		Name: neutronLbaasSecGroupName,
 	}
