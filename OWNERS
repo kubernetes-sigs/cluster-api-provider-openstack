@@ -11,3 +11,6 @@ reviewers:
   - cluster-api-maintainers
   - cluster-api-openstack-maintainers
   - cluster-api-openstack-reviewers
+
+emeritus_maintainers:
+  - ncdc
