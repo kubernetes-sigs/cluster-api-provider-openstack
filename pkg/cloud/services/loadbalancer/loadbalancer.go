@@ -19,8 +19,10 @@ package loadbalancer
 import (
 	"errors"
 	"fmt"
-	"github.com/go-logr/logr"
 	"time"
+
+	"github.com/go-logr/logr"
+	"k8s.io/apimachinery/pkg/util/wait"
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/listeners"
@@ -28,8 +30,10 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/monitors"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/pools"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
-	"k8s.io/apimachinery/pkg/util/wait"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha3"
 	"sigs.k8s.io/cluster-api/util"
@@ -59,6 +63,13 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 	}
 	if err := waitForLoadBalancerActive(s.logger, s.loadbalancerClient, lb.ID); err != nil {
 		return err
+	}
+
+	if !openStackCluster.Spec.UseOctavia {
+		err := s.assignNeutronLbaasAPISecGroup(clusterName, lb)
+		if err != nil {
+			return err
+		}
 	}
 
 	fp, err := getOrCreateFloatingIP(s.networkingClient, openStackCluster, openStackCluster.Spec.ControlPlaneEndpoint.Host)
@@ -166,6 +177,36 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 	return nil
 }
 
+func (s *Service) assignNeutronLbaasAPISecGroup(clusterName string, lb *loadbalancers.LoadBalancer) error {
+	neutronLbaasSecGroupName := networking.GetNeutronLBaasSecGroupName(clusterName)
+	listOpts := groups.ListOpts{
+		Name: neutronLbaasSecGroupName,
+	}
+	allPages, err := groups.List(s.networkingClient, listOpts).AllPages()
+	if err != nil {
+		return err
+	}
+
+	neutronLbaasGroups, err := groups.ExtractGroups(allPages)
+	if err != nil {
+		return err
+	}
+
+	if len(neutronLbaasGroups) != 1 {
+		return fmt.Errorf("error found %v securitygroups with name %v", len(neutronLbaasGroups), neutronLbaasSecGroupName)
+	}
+
+	updateOpts := ports.UpdateOpts{
+		SecurityGroups: &[]string{neutronLbaasGroups[0].ID},
+	}
+
+	_, err = ports.Update(s.networkingClient, lb.VipPortID, updateOpts).Extract()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (s *Service) ReconcileLoadBalancerMember(clusterName string, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster, ip string) error {
 	if !util.IsControlPlaneMachine(machine) {
 		return nil
@@ -186,7 +227,6 @@ func (s *Service) ReconcileLoadBalancerMember(clusterName string, machine *clust
 
 	lbID := openStackCluster.Status.Network.APIServerLoadBalancer.ID
 	subnetID := openStackCluster.Status.Network.Subnet.ID
-
 	portList := []int{int(openStackCluster.Spec.ControlPlaneEndpoint.Port)}
 	portList = append(portList, openStackCluster.Spec.APIServerLoadBalancerAdditionalPorts...)
 	for _, port := range portList {
