@@ -25,15 +25,17 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 )
 
-// Exported Constants can be used to calculate securitygroupnames in other packages
+// export constants for use in loadbalancer-package
 const (
-	secGroupPrefix                string = "k8s"
-	ControlPlaneSuffix            string = "controlplane"
-	WorkerSuffix                  string = "worker"
-	BastionSuffix                 string = "bastion"
-	NeutronLbaasSuffix            string = "lbaas"
-	remoteGroupIDSelf             string = "self"
-	securityGroupNameFormatString string = "%s-cluster-%s-secgroup-%s"
+	SecGroupPrefix     string = "k8s"
+	NeutronLbaasSuffix string = "lbaas"
+)
+
+const (
+	controlPlaneSuffix string = "controlplane"
+	workerSuffix       string = "worker"
+	bastionSuffix      string = "bastion"
+	remoteGroupIDSelf  string = "self"
 )
 
 var defaultRules = []infrav1.SecurityGroupRule{
@@ -65,20 +67,20 @@ func (s *Service) ReconcileSecurityGroups(clusterName string, openStackCluster *
 		return nil
 	}
 
-	secControlPlaneGroupName := GetSecurityGroupName(clusterName, ControlPlaneSuffix)
-	secWorkerGroupName := GetSecurityGroupName(clusterName, WorkerSuffix)
+	secControlPlaneGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", SecGroupPrefix, clusterName, controlPlaneSuffix)
+	secWorkerGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", SecGroupPrefix, clusterName, workerSuffix)
 	secGroupNames := map[string]string{
-		ControlPlaneSuffix: secControlPlaneGroupName,
-		WorkerSuffix:       secWorkerGroupName,
+		controlPlaneSuffix: secControlPlaneGroupName,
+		workerSuffix:       secWorkerGroupName,
 	}
 
 	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
-		secBastionGroupName := GetSecurityGroupName(clusterName, BastionSuffix)
-		secGroupNames[BastionSuffix] = secBastionGroupName
+		secBastionGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", SecGroupPrefix, clusterName, bastionSuffix)
+		secGroupNames[bastionSuffix] = secBastionGroupName
 	}
 
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer && !openStackCluster.Spec.UseOctavia {
-		secLbaasGroupName := GetSecurityGroupName(clusterName, NeutronLbaasSuffix)
+		secLbaasGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", SecGroupPrefix, clusterName, NeutronLbaasSuffix)
 		secGroupNames[NeutronLbaasSuffix] = secLbaasGroupName
 	}
 
@@ -120,9 +122,9 @@ func (s *Service) ReconcileSecurityGroups(clusterName string, openStackCluster *
 		}
 	}
 
-	openStackCluster.Status.ControlPlaneSecurityGroup = observedSecGroups[ControlPlaneSuffix]
-	openStackCluster.Status.WorkerSecurityGroup = observedSecGroups[WorkerSuffix]
-	openStackCluster.Status.BastionSecurityGroup = observedSecGroups[BastionSuffix]
+	openStackCluster.Status.ControlPlaneSecurityGroup = observedSecGroups[controlPlaneSuffix]
+	openStackCluster.Status.WorkerSecurityGroup = observedSecGroups[workerSuffix]
+	openStackCluster.Status.BastionSecurityGroup = observedSecGroups[bastionSuffix]
 
 	return nil
 }
@@ -139,11 +141,11 @@ func (s *Service) generateDesiredSecGroups(secGroupNames map[string]string, open
 			return desiredSecGroups, err
 		}
 		switch i {
-		case ControlPlaneSuffix:
+		case controlPlaneSuffix:
 			secControlPlaneGroupID = secGroup.ID
-		case WorkerSuffix:
+		case workerSuffix:
 			secWorkerGroupID = secGroup.ID
-		case BastionSuffix:
+		case bastionSuffix:
 			secBastionGroupID = secGroup.ID
 		}
 	}
@@ -317,8 +319,8 @@ func (s *Service) generateDesiredSecGroups(secGroupNames map[string]string, open
 				},
 			}...,
 		)
-		desiredSecGroups[BastionSuffix] = infrav1.SecurityGroup{
-			Name: secGroupNames[BastionSuffix],
+		desiredSecGroups[bastionSuffix] = infrav1.SecurityGroup{
+			Name: secGroupNames[bastionSuffix],
 			Rules: append(
 				[]infrav1.SecurityGroupRule{
 					{
@@ -374,13 +376,13 @@ func (s *Service) generateDesiredSecGroups(secGroupNames map[string]string, open
 		}
 	}
 
-	desiredSecGroups[ControlPlaneSuffix] = infrav1.SecurityGroup{
-		Name:  secGroupNames[ControlPlaneSuffix],
+	desiredSecGroups[controlPlaneSuffix] = infrav1.SecurityGroup{
+		Name:  secGroupNames[controlPlaneSuffix],
 		Rules: controlPlaneRules,
 	}
 
-	desiredSecGroups[WorkerSuffix] = infrav1.SecurityGroup{
-		Name:  secGroupNames[WorkerSuffix],
+	desiredSecGroups[workerSuffix] = infrav1.SecurityGroup{
+		Name:  secGroupNames[workerSuffix],
 		Rules: workerRules,
 	}
 
@@ -576,9 +578,4 @@ func convertOSSecGroupRuleToConfigSecGroupRule(osSecGroupRule rules.SecGroupRule
 		RemoteGroupID:   osSecGroupRule.RemoteGroupID,
 		RemoteIPPrefix:  osSecGroupRule.RemoteIPPrefix,
 	}
-}
-
-// GetSecurityGroupName Calculate name of securitygroup
-func GetSecurityGroupName(clusterName string, suffix string) string {
-	return fmt.Sprintf(securityGroupNameFormatString, secGroupPrefix, clusterName, suffix)
 }
