@@ -23,6 +23,7 @@ import (
 
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/utils/openstack/clientconfig"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 
 	"github.com/gophercloud/gophercloud"
 )
@@ -35,7 +36,7 @@ const (
 // Service interfaces with the OpenStack Neutron LBaaS v2 API.
 type Service struct {
 	loadbalancerClient *gophercloud.ServiceClient
-	networkingClient   *gophercloud.ServiceClient
+	networkingService  *networking.Service
 	logger             logr.Logger
 }
 
@@ -55,16 +56,15 @@ func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.Cli
 	if err != nil {
 		return nil, fmt.Errorf("failed to create loadbalancer service client: %v", err)
 	}
-	networkingClient, err := openstack.NewNetworkV2(client, gophercloud.EndpointOpts{
-		Region: clientOpts.RegionName,
-	})
+
+	networkingService, err := networking.NewService(client, clientOpts, logger)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create networking service client: %v", err)
+		return nil, fmt.Errorf("failed to create networking service: %v", err)
 	}
 
 	return &Service{
 		loadbalancerClient: loadbalancerClient,
-		networkingClient:   networkingClient,
+		networkingService:  networkingService,
 		logger:             logger,
 	}, nil
 }

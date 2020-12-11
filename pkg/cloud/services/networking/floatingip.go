@@ -18,6 +18,9 @@ package networking
 
 import (
 	"fmt"
+	"time"
+
+	"k8s.io/apimachinery/pkg/util/wait"
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
@@ -76,4 +79,33 @@ func (s *Service) DeleteFloatingIP(ip string) error {
 		return floatingips.Delete(s.client, fip.ID).ExtractErr()
 	}
 	return nil
+}
+
+var backoff = wait.Backoff{
+	Steps:    10,
+	Duration: 30 * time.Second,
+	Factor:   1.0,
+	Jitter:   0.1,
+}
+
+func (s *Service) AssociateFloatingIP(fp *floatingips.FloatingIP, portID string) error {
+
+	s.logger.Info("Associating floating IP", "IP", fp.FloatingIP)
+	fpUpdateOpts := &floatingips.UpdateOpts{
+		PortID: &portID,
+	}
+	fp, err := floatingips.Update(s.client, fp.ID, fpUpdateOpts).Extract()
+	if err != nil {
+		return fmt.Errorf("error associating floating IP: %s", err)
+	}
+
+	s.logger.Info("Waiting for floatingIP", "id", fp.ID, "targetStatus", "ACTIVE")
+
+	return wait.ExponentialBackoff(backoff, func() (bool, error) {
+		fp, err := floatingips.Get(s.client, fp.ID).Extract()
+		if err != nil {
+			return false, err
+		}
+		return fp.Status == "ACTIVE", nil
+	})
 }

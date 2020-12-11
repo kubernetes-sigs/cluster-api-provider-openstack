@@ -29,7 +29,6 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/loadbalancers"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/monitors"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/pools"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
@@ -72,19 +71,11 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 		}
 	}
 
-	fp, err := getOrCreateFloatingIP(s.networkingClient, openStackCluster, openStackCluster.Spec.ControlPlaneEndpoint.Host)
+	fp, err := s.networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster.Spec.ControlPlaneEndpoint.Host)
 	if err != nil {
 		return err
 	}
-	s.logger.Info("Associating floating IP", "IP", fp.FloatingIP)
-	fpUpdateOpts := &floatingips.UpdateOpts{
-		PortID: &lb.VipPortID,
-	}
-	fp, err = floatingips.Update(s.networkingClient, fp.ID, fpUpdateOpts).Extract()
-	if err != nil {
-		return fmt.Errorf("error associating floating IP: %s", err)
-	}
-	err = waitForFloatingIP(s.logger, s.networkingClient, fp.ID, "ACTIVE")
+	err = s.networkingService.AssociateFloatingIP(fp, lb.VipPortID)
 	if err != nil {
 		return err
 	}
@@ -182,7 +173,7 @@ func (s *Service) assignNeutronLbaasAPISecGroup(clusterName string, lb *loadbala
 	listOpts := groups.ListOpts{
 		Name: neutronLbaasSecGroupName,
 	}
-	allPages, err := groups.List(s.networkingClient, listOpts).AllPages()
+	allPages, err := groups.List(s.loadbalancerClient, listOpts).AllPages()
 	if err != nil {
 		return err
 	}
@@ -200,7 +191,7 @@ func (s *Service) assignNeutronLbaasAPISecGroup(clusterName string, lb *loadbala
 		SecurityGroups: &[]string{neutronLbaasGroups[0].ID},
 	}
 
-	_, err = ports.Update(s.networkingClient, lb.VipPortID, updateOpts).Extract()
+	_, err = ports.Update(s.loadbalancerClient, lb.VipPortID, updateOpts).Extract()
 	if err != nil {
 		return err
 	}
@@ -317,10 +308,6 @@ func (s *Service) DeleteLoadBalancer(loadBalancerName string, openStackCluster *
 		return fmt.Errorf("error deleting loadbalancer: %s", err)
 	}
 
-	// floating ip
-	// TODO: need delete floating IP if it's created when doing the cluster provisioning
-	// but keep the floating ips if it's original exist (probably should store it in the
-	// Cluster status if the floating ip has been created by us)
 	return nil
 }
 
@@ -484,47 +471,6 @@ func checkIfLbExists(client *gophercloud.ServiceClient, name string) (*loadbalan
 	return &lbList[0], nil
 }
 
-func getOrCreateFloatingIP(client *gophercloud.ServiceClient, openStackCluster *infrav1.OpenStackCluster, ip string) (*floatingips.FloatingIP, error) {
-	var fp *floatingips.FloatingIP
-	var err error
-	if ip != "" {
-		fp, err = checkIfFloatingIPExists(client, ip)
-		if err != nil {
-			return nil, err
-		}
-	}
-	if fp == nil {
-		fpCreateOpts := &floatingips.CreateOpts{
-			FloatingNetworkID: openStackCluster.Status.ExternalNetwork.ID,
-		}
-		if ip != "" {
-			fpCreateOpts.FloatingIP = ip
-		}
-		fp, err = floatingips.Create(client, fpCreateOpts).Extract()
-		if err != nil {
-			return nil, fmt.Errorf("error creating floating IP: %s", err)
-		}
-		record.Eventf(openStackCluster, "SuccessfulCreateFloatingIP", "Created floating IP %s with id %s", fp.FloatingIP, fp.ID)
-
-	}
-	return fp, nil
-}
-
-func checkIfFloatingIPExists(client *gophercloud.ServiceClient, ip string) (*floatingips.FloatingIP, error) {
-	allPages, err := floatingips.List(client, floatingips.ListOpts{FloatingIP: ip}).AllPages()
-	if err != nil {
-		return nil, err
-	}
-	fpList, err := floatingips.ExtractFloatingIPs(allPages)
-	if err != nil {
-		return nil, err
-	}
-	if len(fpList) == 0 {
-		return nil, nil
-	}
-	return &fpList[0], nil
-}
-
 func checkIfListenerExists(client *gophercloud.ServiceClient, name string) (*listeners.Listener, error) {
 	allPages, err := listeners.List(client, listeners.ListOpts{Name: name}).AllPages()
 	if err != nil {
@@ -601,17 +547,6 @@ func waitForLoadBalancerActive(logger logr.Logger, client *gophercloud.ServiceCl
 			return false, err
 		}
 		return lb.ProvisioningStatus == "ACTIVE", nil
-	})
-}
-
-func waitForFloatingIP(logger logr.Logger, client *gophercloud.ServiceClient, id, target string) error {
-	logger.Info("Waiting for floatingIP", "id", id, "targetStatus", target)
-	return wait.ExponentialBackoff(backoff, func() (bool, error) {
-		fp, err := floatingips.Get(client, id).Extract()
-		if err != nil {
-			return false, err
-		}
-		return fp.Status == target, nil
 	})
 }
 
