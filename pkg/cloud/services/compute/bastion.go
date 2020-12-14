@@ -32,7 +32,7 @@ func (s *Service) DeleteBastion(serverID string) error {
 	if instance == nil {
 		return nil
 	}
-	return s.deleteInstance(instance.ID)
+	return deleteInstance(s, instance.ID)
 }
 
 func (s *Service) CreateBastion(clusterName string, openStackCluster *infrav1.OpenStackCluster) (*infrav1.Instance, error) {
@@ -72,7 +72,7 @@ func (s *Service) CreateBastion(clusterName string, openStackCluster *infrav1.Op
 	}
 	input.Networks = &nets
 
-	out, err := s.createInstance(clusterName, input)
+	out, err := createInstance(s, clusterName, input)
 	if err != nil {
 		record.Warnf(openStackCluster, "FailedCreateServer", "Failed to create bastion: %v", err)
 		return nil, fmt.Errorf("create new server err: %v", err)
