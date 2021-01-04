@@ -62,22 +62,22 @@ CAPO_CLOUDS_PATH=${CAPO_CLOUDS_PATH:-""}
 CAPO_OPENSTACK_CLOUD_YAML_CONTENT=$(cat "${CAPO_CLOUDS_PATH}")
 
 # Just blindly parse the cloud.yaml here, overwriting old vars.
-CAPO_AUTH_URL=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yq r - clouds.${CAPO_CLOUD}.auth.auth_url)
-CAPO_USERNAME=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yq r - clouds.${CAPO_CLOUD}.auth.username)
-CAPO_PASSWORD=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yq r - clouds.${CAPO_CLOUD}.auth.password)
-CAPO_REGION=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yq r - clouds.${CAPO_CLOUD}.region_name)
-CAPO_PROJECT_ID=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yq r - clouds.${CAPO_CLOUD}.auth.project_id)
-CAPO_PROJECT_NAME=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yq r - clouds.${CAPO_CLOUD}.auth.project_name)
-CAPO_DOMAIN_NAME=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yq r - clouds.${CAPO_CLOUD}.auth.user_domain_name)
-CAPO_APPLICATION_CREDENTIAL_NAME=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yq r - clouds.${CAPO_CLOUD}.auth.application_credential_name)
-CAPO_APPLICATION_CREDENTIAL_ID=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yq r - clouds.${CAPO_CLOUD}.auth.application_credential_id)
-CAPO_APPLICATION_CREDENTIAL_SECRET=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yq r - clouds.${CAPO_CLOUD}.auth.application_credential_secret)
+CAPO_AUTH_URL=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yq e .clouds.${CAPO_CLOUD}.auth.auth_url -)
+CAPO_USERNAME=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yq e .clouds.${CAPO_CLOUD}.auth.username -)
+CAPO_PASSWORD=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yq e .clouds.${CAPO_CLOUD}.auth.password -)
+CAPO_REGION=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yq e .clouds.${CAPO_CLOUD}.region_name -)
+CAPO_PROJECT_ID=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yq e .clouds.${CAPO_CLOUD}.auth.project_id -)
+CAPO_PROJECT_NAME=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yq e .clouds.${CAPO_CLOUD}.auth.project_name -)
+CAPO_DOMAIN_NAME=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yq e .clouds.${CAPO_CLOUD}.auth.user_domain_name -)
+CAPO_APPLICATION_CREDENTIAL_NAME=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yq e .clouds.${CAPO_CLOUD}.auth.application_credential_name -)
+CAPO_APPLICATION_CREDENTIAL_ID=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yq e .clouds.${CAPO_CLOUD}.auth.application_credential_id -)
+CAPO_APPLICATION_CREDENTIAL_SECRET=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yq e .clouds.${CAPO_CLOUD}.auth.application_credential_secret -)
 if [[ "$CAPO_DOMAIN_NAME" = "null" ]]; then
-  CAPO_DOMAIN_NAME=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yq r - clouds.${CAPO_CLOUD}.auth.domain_name)
+  CAPO_DOMAIN_NAME=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yq e .clouds.${CAPO_CLOUD}.auth.domain_name -)
 fi
-CAPO_DOMAIN_ID=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yq r - clouds.${CAPO_CLOUD}.auth.user_domain_id)
+CAPO_DOMAIN_ID=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yq e .clouds.${CAPO_CLOUD}.auth.user_domain_id -)
 if [[ "$CAPO_DOMAIN_ID" = "null" ]]; then
-  CAPO_DOMAIN_ID=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yq r - clouds.${CAPO_CLOUD}.auth.domain_id)
+  CAPO_DOMAIN_ID=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yq e .clouds.${CAPO_CLOUD}.auth.domain_id -)
 fi
 
 # Build cloud.conf
