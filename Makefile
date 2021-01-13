@@ -56,7 +56,7 @@ CONTROLLER_IMG ?= $(REGISTRY)/$(IMAGE_NAME)
 TAG ?= dev
 ARCH ?= amd64
 ALL_ARCH = amd64 arm arm64 ppc64le s390x
-CAPI_VERSION = 0.3.11
+CAPI_VERSION = 0.3.12
 CAPO_VERSION = 0.4.0
 
 # Allow overriding manifest generation destination directory
