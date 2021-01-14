@@ -194,6 +194,10 @@ func (s *Service) DeleteRouter(network *infrav1.Network) error {
 			SubnetID: network.Subnet.ID,
 		}).Extract()
 		if err != nil {
+			if errors.IsNotFound(err) {
+				s.logger.V(4).Info("Router Interface already removed, no actions", "id", network.Router.ID)
+				return nil
+			}
 			return fmt.Errorf("unable to remove router interface: %v", err)
 		}
 		s.logger.V(4).Info("Removed RouterInterface of Router", "id", network.Router.ID)
