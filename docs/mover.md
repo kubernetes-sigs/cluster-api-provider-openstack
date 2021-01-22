@@ -158,6 +158,6 @@ default     capi-openstack-3   capi-openstack-3   true    4a6f2d57-bb3d-44f4-a28
 
 # kubectl get openstackmachines --kubeconfig capi-openstack-3.kubeconfig --all-namespaces
 NAMESPACE   NAME                                 CLUSTER            STATE    READY   INSTANCEID                                         MACHINE
-default     capi-openstack-control-plane-82xck   capi-openstack-3   ACTIVE   true    openstack://f29007c5-f672-4214-a508-b7cf4a17b3ed   capi-openstack-control-plane-n2kdq
-default     capi-openstack-md-0-bkwhh            capi-openstack-3   ACTIVE   true    openstack://6e23324d-315a-4d75-85a9-350fd1705ab6   capi-openstack-md-0-dfdf94979-656zq
+default     capi-openstack-control-plane-82xck   capi-openstack-3   ACTIVE   true    openstack:///f29007c5-f672-4214-a508-b7cf4a17b3ed   capi-openstack-control-plane-n2kdq
+default     capi-openstack-md-0-bkwhh            capi-openstack-3   ACTIVE   true    openstack:///6e23324d-315a-4d75-85a9-350fd1705ab6   capi-openstack-md-0-dfdf94979-656zq
 ```
