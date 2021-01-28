@@ -75,11 +75,6 @@ func (r *OpenStackClusterReconciler) Reconcile(req ctrl.Request) (_ ctrl.Result,
 		return reconcile.Result{}, err
 	}
 
-	if isPaused(cluster, openStackCluster) {
-		log.Info("OpenStackCluster or linked Cluster is marked as paused. Won't reconcile")
-		return reconcile.Result{}, nil
-	}
-
 	if cluster == nil {
 		log.Info("Cluster Controller has not yet set OwnerRef")
 		return reconcile.Result{}, nil
@@ -441,6 +436,6 @@ func (r *OpenStackClusterReconciler) SetupWithManager(mgr ctrl.Manager, options 
 	return ctrl.NewControllerManagedBy(mgr).
 		WithOptions(options).
 		For(&infrav1.OpenStackCluster{}).
-		WithEventFilter(pausePredicates).
+		WithEventFilter(pausedPredicates(r.Log)).
 		Complete(r)
 }

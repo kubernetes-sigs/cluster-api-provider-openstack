@@ -100,11 +100,6 @@ func (r *OpenStackMachineReconciler) Reconcile(req ctrl.Request) (_ ctrl.Result,
 		return ctrl.Result{}, nil
 	}
 
-	if isPaused(cluster, openStackMachine) {
-		logger.Info("OpenStackMachine or linked Cluster is marked as paused. Won't reconcile")
-		return ctrl.Result{}, nil
-	}
-
 	logger = logger.WithValues("cluster", cluster.Name)
 
 	openStackCluster := &infrav1.OpenStackCluster{}
@@ -158,7 +153,7 @@ func (r *OpenStackMachineReconciler) SetupWithManager(mgr ctrl.Manager, options 
 			&source.Kind{Type: &infrav1.OpenStackCluster{}},
 			&handler.EnqueueRequestsFromMapFunc{ToRequests: handler.ToRequestsFunc(r.OpenStackClusterToOpenStackMachines)},
 		).
-		WithEventFilter(pausePredicates).
+		WithEventFilter(pausedPredicates(r.Log)).
 		Build(r)
 
 	if err != nil {
