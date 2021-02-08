@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -28,6 +29,7 @@ import (
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/pointer"
@@ -51,6 +53,8 @@ import (
 )
 
 const (
+	InstanceIDIndex = ".spec.instanceID"
+
 	waitForClusterInfrastructureReadyDuration = 15 * time.Second
 )
 
@@ -121,7 +125,7 @@ func (r *OpenStackMachineReconciler) Reconcile(req ctrl.Request) (_ ctrl.Result,
 		return ctrl.Result{}, err
 	}
 
-	// Always patch the openStackMachine when exiting this function so we can persist any AWSMachine changes.
+	// Always patch the openStackMachine when exiting this function so we can persist any OpenStackMachine changes.
 	defer func() {
 		if err := patchHelper.Patch(ctx, openStackMachine); err != nil {
 			if reterr == nil {
@@ -154,10 +158,39 @@ func (r *OpenStackMachineReconciler) SetupWithManager(mgr ctrl.Manager, options 
 			&handler.EnqueueRequestsFromMapFunc{ToRequests: handler.ToRequestsFunc(r.OpenStackClusterToOpenStackMachines)},
 		).
 		WithEventFilter(pausedPredicates(r.Log)).
-		Build(r)
+		WithEventFilter(
+			predicate.Funcs{
+				// Avoid reconciling if the event triggering the reconciliation is related to incremental status updates
+				// for OpenStackMachine resources only
+				UpdateFunc: func(e event.UpdateEvent) bool {
+					if e.ObjectOld.GetObjectKind().GroupVersionKind().Kind != "OpenStackMachine" {
+						return true
+					}
 
+					oldMachine := e.ObjectOld.(*infrav1.OpenStackMachine).DeepCopy()
+					newMachine := e.ObjectNew.(*infrav1.OpenStackMachine).DeepCopy()
+
+					oldMachine.Status = infrav1.OpenStackMachineStatus{}
+					newMachine.Status = infrav1.OpenStackMachineStatus{}
+
+					oldMachine.ObjectMeta.ResourceVersion = ""
+					newMachine.ObjectMeta.ResourceVersion = ""
+
+					return !reflect.DeepEqual(oldMachine, newMachine)
+				},
+			},
+		).
+		Build(r)
 	if err != nil {
 		return err
+	}
+
+	// Add index to OpenStackMachine to find by providerID
+	if err := mgr.GetFieldIndexer().IndexField(&infrav1.OpenStackMachine{},
+		InstanceIDIndex,
+		r.indexOpenStackMachineByInstanceID,
+	); err != nil {
+		return errors.Wrap(err, "error setting index fields")
 	}
 
 	return controller.Watch(
@@ -169,13 +202,48 @@ func (r *OpenStackMachineReconciler) SetupWithManager(mgr ctrl.Manager, options 
 			UpdateFunc: func(e event.UpdateEvent) bool {
 				oldCluster := e.ObjectOld.(*clusterv1.Cluster)
 				newCluster := e.ObjectNew.(*clusterv1.Cluster)
-				return oldCluster.Spec.Paused && !newCluster.Spec.Paused
+				log := r.Log.WithValues("predicate", "updateEvent", "namespace", newCluster.Namespace, "cluster", newCluster.Name)
+
+				switch {
+				// never return true for a paused Cluster
+				case newCluster.Spec.Paused:
+					log.V(4).Info("Cluster is paused, will not attempt to map associated OpenStackMachine.")
+					return false
+				// return true if Cluster.Status.InfrastructureReady has changed from false to true
+				case !oldCluster.Status.InfrastructureReady && newCluster.Status.InfrastructureReady:
+					log.V(4).Info("Cluster InfrastructureReady became ready, will attempt to map associated OpenStackMachine.")
+					return true
+				// return true if Cluster.Spec.Paused has changed from true to false
+				case oldCluster.Spec.Paused && !newCluster.Spec.Paused:
+					log.V(4).Info("Cluster was unpaused, will attempt to map associated OpenStackMachine.")
+					return true
+				// otherwise, return false
+				default:
+					log.V(4).Info("Cluster did not match expected conditions, will not attempt to map associated OpenStackMachine.")
+					return false
+				}
 			},
 			CreateFunc: func(e event.CreateEvent) bool {
 				cluster := e.Object.(*clusterv1.Cluster)
-				return !cluster.Spec.Paused
+				log := r.Log.WithValues("predicateEvent", "create", "namespace", cluster.Namespace, "cluster", cluster.Name)
+
+				// Only need to trigger a reconcile if the Cluster.Spec.Paused is false and
+				// Cluster.Status.InfrastructureReady is true
+				if !cluster.Spec.Paused && cluster.Status.InfrastructureReady {
+					log.V(4).Info("Cluster is not paused and has infrastructure ready, will attempt to map associated OpenStackMachine.")
+					return true
+				}
+				log.V(4).Info("Cluster did not match expected conditions, will not attempt to map associated OpenStackMachine.")
+				return false
 			},
 			DeleteFunc: func(e event.DeleteEvent) bool {
+				log := r.Log.WithValues("predicateEvent", "delete", "namespace", e.Meta.GetNamespace(), "cluster", e.Meta.GetName())
+				log.V(4).Info("Cluster did not match expected conditions, will not attempt to map associated OpenStackMachine.")
+				return false
+			},
+			GenericFunc: func(e event.GenericEvent) bool {
+				log := r.Log.WithValues("predicateEvent", "generic", "namespace", e.Meta.GetNamespace(), "cluster", e.Meta.GetName())
+				log.V(4).Info("Cluster did not match expected conditions, will not attempt to map associated OpenStackMachine.")
 				return false
 			},
 		},
@@ -316,6 +384,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 	// TODO(sbueringer) From CAPA: TODO(ncdc): move this validation logic into a validating webhook (for us: create validation logic in webhook)
 
 	openStackMachine.Spec.ProviderID = pointer.StringPtr(fmt.Sprintf("openstack:///%s", instance.ID))
+	openStackMachine.Spec.InstanceID = pointer.StringPtr(instance.ID)
 
 	openStackMachine.Status.InstanceState = &instance.State
 
@@ -492,4 +561,18 @@ func (r *OpenStackMachineReconciler) requestsForCluster(namespace, name string) 
 		}
 	}
 	return result
+}
+
+func (r *OpenStackMachineReconciler) indexOpenStackMachineByInstanceID(o runtime.Object) []string {
+	openstackMachine, ok := o.(*infrav1.OpenStackMachine)
+	if !ok {
+		r.Log.Error(errors.New("incorrect type"), "expected an OpenStackMachine", "type", fmt.Sprintf("%T", o))
+		return nil
+	}
+
+	if openstackMachine.Spec.InstanceID != nil {
+		return []string{*openstackMachine.Spec.InstanceID}
+	}
+
+	return nil
 }

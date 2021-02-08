@@ -473,6 +473,11 @@ func (in *OpenStackMachineSpec) DeepCopyInto(out *OpenStackMachineSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.InstanceID != nil {
+		in, out := &in.InstanceID, &out.InstanceID
+		*out = new(string)
+		**out = **in
+	}
 	if in.CloudsSecret != nil {
 		in, out := &in.CloudsSecret, &out.CloudsSecret
 		*out = new(v1.SecretReference)

@@ -33,6 +33,9 @@ type OpenStackMachineSpec struct {
 	// ProviderID is the unique identifier as specified by the cloud provider.
 	ProviderID *string `json:"providerID,omitempty"`
 
+	// InstanceID is the OpenStack instance ID for this machine.
+	InstanceID *string `json:"instanceID,omitempty"`
+
 	// The name of the secret containing the openstack credentials
 	// +optional
 	CloudsSecret *corev1.SecretReference `json:"cloudsSecret"`

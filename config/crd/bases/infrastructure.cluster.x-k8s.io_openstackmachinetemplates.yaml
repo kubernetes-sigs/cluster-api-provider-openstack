@@ -82,6 +82,10 @@ spec:
                           instance. If the RootVolume is specified, this will be ignored
                           and use rootVolume directly.
                         type: string
+                      instanceID:
+                        description: InstanceID is the OpenStack instance ID for this
+                          machine.
+                        type: string
                       networks:
                         description: A networks object. Required parameter when there
                           are multiple networks defined for the tenant. When you do
