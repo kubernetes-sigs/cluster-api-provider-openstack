@@ -3,6 +3,7 @@ apiVersion: cluster.x-k8s.io/v1alpha3
 kind: Cluster
 metadata:
   name: ${CLUSTER_NAME}
+  namespace: '${NAMESPACE}'
 spec:
   clusterNetwork:
     pods:
@@ -21,6 +22,7 @@ apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
 kind: OpenStackCluster
 metadata:
   name: ${CLUSTER_NAME}
+  namespace: '${NAMESPACE}'
 spec:
   cloudName: ${OPENSTACK_CLOUD}
   cloudsSecret:
@@ -38,6 +40,7 @@ kind: KubeadmControlPlane
 apiVersion: controlplane.cluster.x-k8s.io/v1alpha3
 metadata:
   name: "${CLUSTER_NAME}-control-plane"
+  namespace: '${NAMESPACE}'
 spec:
   replicas: ${CONTROL_PLANE_MACHINE_COUNT}
   infrastructureTemplate:
@@ -69,6 +72,7 @@ apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
 kind: OpenStackMachineTemplate
 metadata:
   name: ${CLUSTER_NAME}-control-plane
+  namespace: '${NAMESPACE}'
 spec:
   template:
     spec:
@@ -84,6 +88,7 @@ apiVersion: cluster.x-k8s.io/v1alpha3
 kind: MachineDeployment
 metadata:
   name: "${CLUSTER_NAME}-md-0"
+  namespace: '${NAMESPACE}'
 spec:
   clusterName: "${CLUSTER_NAME}"
   replicas: ${WORKER_MACHINE_COUNT}
@@ -108,6 +113,7 @@ apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
 kind: OpenStackMachineTemplate
 metadata:
   name: ${CLUSTER_NAME}-md-0
+  namespace: '${NAMESPACE}'
 spec:
   template:
     spec:
@@ -123,6 +129,7 @@ apiVersion: bootstrap.cluster.x-k8s.io/v1alpha3
 kind: KubeadmConfigTemplate
 metadata:
   name: ${CLUSTER_NAME}-md-0
+  namespace: '${NAMESPACE}'
 spec:
   template:
     spec:
@@ -138,6 +145,7 @@ metadata:
   name: ${CLUSTER_NAME}-cloud-config
   labels:
     clusterctl.cluster.x-k8s.io/move: "true"
+  namespace: '${NAMESPACE}'
 data:
   clouds.yaml: ${OPENSTACK_CLOUD_YAML_B64}
   cacert: ${OPENSTACK_CLOUD_CACERT_B64}
