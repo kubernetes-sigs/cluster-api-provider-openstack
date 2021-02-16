@@ -6,6 +6,3 @@ resources:
 bases:
 - ../rbac
 - ../manager
-
-patchesStrategicMerge:
-- manager_role_aggregation_patch.yaml
