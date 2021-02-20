@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Kubernetes Authors.
+Copyright 2021 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,18 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha3
+package v1alpha4
 
 import (
-	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
 // log is for logging in this package.
-var _ = logf.Log.WithName("awsclusterlist-resource")
+var _ = logf.Log.WithName("openstackmachinetemplatelist-resource")
 
-func (r *OpenStackClusterList) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
+func (r *OpenStackMachineTemplateList) SetupWebhookWithManager(mgr manager.Manager) error {
+	return builder.WebhookManagedBy(mgr).
 		For(r).
 		Complete()
 }

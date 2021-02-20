@@ -3,6 +3,9 @@
   pre_tasks:
   - name: Enable nested virt
     shell:
+      # Enable nested virtualization
+      # Fail instantly when we got a cluster with: Intel Xeon E3-12xx v2 (Ivy Bridge, IBRS) (won't work anyway..)
+      # The good ones look like this: Intel Xeon E3-12xx v2 (Ivy Bridge)
       cmd: |
         # enable nested virt
         cat /sys/module/kvm_intel/parameters/nested
@@ -11,6 +14,17 @@
         sudo modprobe kvm-intel
         cat /sys/module/kvm_intel/parameters/nested
         modinfo kvm_intel | grep nested
+
+        if cat /proc/cpuinfo | grep Intel | grep IBRS
+        then
+          echo "Detected bad CPU, failing now..."
+          echo "It's okay if just one of those jobs is successful"
+          echo "If all fail, it's either an error in the PR or we"
+          echo "had really bad luck"
+          exit 1
+        else
+          echo "Detected good CPU"
+        fi
   roles:
   - move-k8s-repo-to-k8s-specific-dir
   - config-golang

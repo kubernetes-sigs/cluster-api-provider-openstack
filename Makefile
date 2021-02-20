@@ -45,7 +45,7 @@ MOCKGEN := $(TOOLS_BIN_DIR)/mockgen
 CONVERSION_GEN := $(TOOLS_BIN_DIR)/conversion-gen
 RELEASE_NOTES_BIN := bin/release-notes
 RELEASE_NOTES := $(TOOLS_DIR)/$(RELEASE_NOTES_BIN)
-GINKGO := $(abspath $(TOOLS_BIN_DIR)/ginkgo)
+GINKGO := $(TOOLS_BIN_DIR)/ginkgo
 
 # Define Docker related variables. Releases should modify and double check these vars.
 REGISTRY ?= gcr.io/k8s-staging-capi-openstack
@@ -56,8 +56,6 @@ CONTROLLER_IMG ?= $(REGISTRY)/$(IMAGE_NAME)
 TAG ?= dev
 ARCH ?= amd64
 ALL_ARCH = amd64 arm arm64 ppc64le s390x
-CAPI_VERSION = 0.3.12
-CAPO_VERSION = 0.4.0
 
 # Allow overriding manifest generation destination directory
 MANIFEST_ROOT ?= config
@@ -125,8 +123,11 @@ manager: ## Build manager binary.
 ## Tooling Binaries
 ## --------------------------------------
 
-$(KUSTOMIZE): $(TOOLS_DIR)/go.mod # Build kustomize from tools folder.
-	cd $(TOOLS_DIR); go build -tags=tools -o $(BIN_DIR)/kustomize sigs.k8s.io/kustomize/kustomize/v3
+$(CLUSTERCTL): ## Build clusterctl binary (we have to set some gitVersion, otherwise commands will fail)
+	go build -ldflags "-X 'sigs.k8s.io/cluster-api/version.gitVersion=v0.4.0-dirty'" -o $(BIN_DIR)/clusterctl sigs.k8s.io/cluster-api/cmd/clusterctl
+
+$(KUSTOMIZE): # Build kustomize from tools folder.
+	hack/ensure-kustomize.sh
 
 $(CONTROLLER_GEN): $(TOOLS_DIR)/go.mod # Build controller-gen from tools folder.
 	cd $(TOOLS_DIR); go build -tags=tools -o $(BIN_DIR)/controller-gen sigs.k8s.io/controller-tools/cmd/controller-gen
@@ -239,13 +240,13 @@ docker-push-manifest: ## Push the fat manifest docker image.
 .PHONY: set-manifest-image
 set-manifest-image:
 	$(info Updating kustomize image patch file for manager resource)
-	sed -i'' -e 's@image: .*@image: '"${MANIFEST_IMG}:$(MANIFEST_TAG)"'@' ./config/manager/manager_image_patch.yaml
+	sed -i'' -e 's@image: .*@image: '"${MANIFEST_IMG}:$(MANIFEST_TAG)"'@' ./config/default/manager_image_patch.yaml
 
 
 .PHONY: set-manifest-pull-policy
 set-manifest-pull-policy:
 	$(info Updating kustomize pull policy file for manager resource)
-	sed -i'' -e 's@imagePullPolicy: .*@imagePullPolicy: '"$(PULL_POLICY)"'@' ./config/manager/manager_pull_policy.yaml
+	sed -i'' -e 's@imagePullPolicy: .*@imagePullPolicy: '"$(PULL_POLICY)"'@' ./config/default/manager_pull_policy.yaml
 
 ## --------------------------------------
 ## Release
@@ -269,7 +270,7 @@ release: clean-release  ## Builds and push container images using the latest git
 
 .PHONY: release-manifests
 release-manifests: $(RELEASE_DIR) $(KUSTOMIZE) ## Builds the manifests to publish with a release
-	$(KUSTOMIZE) build config > $(RELEASE_DIR)/infrastructure-components.yaml
+	$(KUSTOMIZE) build config/default > $(RELEASE_DIR)/infrastructure-components.yaml
 
 .PHONY: release-staging
 release-staging: ## Builds and push container images to the staging bucket.
@@ -284,142 +285,6 @@ release-alias-tag: # Adds the tag to the last build tag.
 .PHONY: release-notes
 release-notes: $(RELEASE_NOTES)
 	$(RELEASE_NOTES) $(ARGS)
-
-## --------------------------------------
-## Development
-## --------------------------------------
-
-# Properties for create-cluster
-OPENSTACK_FAILURE_DOMAIN ?= "nova"
-OPENSTACK_CLOUD ?= "capi-quickstart"
-OPENSTACK_CLOUD_CACERT_B64 ?= "Cg=="
-OPENSTACK_CLOUD_PROVIDER_CONF_B64 ?= ""
-OPENSTACK_CLOUD_YAML_B64 ?= ""
-OPENSTACK_DNS_NAMESERVERS ?= ""
-OPENSTACK_IMAGE_NAME ?= "ubuntu-1910-kube-v1.17.3"
-OPENSTACK_BASTION_IMAGE_NAME ?= "cirros"
-OPENSTACK_NODE_MACHINE_FLAVOR ?= "m1.small"
-OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR ?= "m1.medium"
-OPENSTACK_BASTION_MACHINE_FLAVOR ?= "m1.tiny"
-CLUSTER_NAME ?= "capi-quickstart"
-OPENSTACK_SSH_KEY_NAME ?= "${CLUSTER_NAME}-key"
-OPENSTACK_CLUSTER_TEMPLATE ?= "./templates/cluster-template-without-lb.yaml"
-KUBERNETES_VERSION ?= "v1.17.3"
-CONTROL_PLANE_MACHINE_COUNT ?= "1"
-WORKER_MACHINE_COUNT ?= "3"
-LOAD_IMAGE=$(CONTROLLER_IMG)-$(ARCH):$(TAG)
-
-.PHONY: create-cluster
-create-cluster: $(KUSTOMIZE) $(ENVSUBST) ## Create a development Kubernetes cluster on OpenStack in a KIND management cluster.
-	mkdir $(BIN_DIR)
-	wget https://github.com/kubernetes-sigs/cluster-api/releases/download/v${CAPI_VERSION}/clusterctl-linux-amd64
-	mv ./clusterctl-linux-amd64 $(CLUSTERCTL)
-	mkdir ~/.cluster-api
-	chmod +x $(CLUSTERCTL)
-	# Create clusterctl.yaml to use local OpenStack provider
-	mkdir -p ./out/infrastructure-openstack/$(CAPO_VERSION)
-	echo "providers:" > ./out/clusterctl.yaml
-	echo "- name: openstack" >> ./out/clusterctl.yaml
-	echo "  url: $(PWD)/out/infrastructure-openstack/$(CAPO_VERSION)/infrastructure-components.yaml" >> ./out/clusterctl.yaml
-	echo "  type: InfrastructureProvider" >> ./out/clusterctl.yaml
-
-	echo "releaseSeries:" > ./out/infrastructure-openstack/$(CAPO_VERSION)/metadata.yaml
-	echo "- major: 0" >> ./out/infrastructure-openstack/$(CAPO_VERSION)/metadata.yaml
-	echo "  minor: 4" >> ./out/infrastructure-openstack/$(CAPO_VERSION)/metadata.yaml
-	echo "  contract: v1alpha3" >> ./out/infrastructure-openstack/$(CAPO_VERSION)/metadata.yaml
-
-	@if [ -z `kind get clusters | grep clusterapi` ]; then \
-		kind create cluster --name=clusterapi; \
-	fi
-	@if [ ! -z "${LOAD_IMAGE}" ]; then \
-		echo "loading ${LOAD_IMAGE} into kind cluster ..." && \
-		kind --name="clusterapi" load docker-image "${LOAD_IMAGE}"; \
-	fi
-
-	# (Re-)install Core providers
-	$(CLUSTERCTL) delete --all
-
-	# (Re-)deploy CAPO provider
-	MANIFEST_IMG=$(CONTROLLER_IMG)-$(ARCH) MANIFEST_TAG=$(TAG) $(MAKE) set-manifest-image
-	$(KUSTOMIZE) build config > ./out/infrastructure-openstack/$(CAPO_VERSION)/infrastructure-components.yaml
-	$(CLUSTERCTL) delete --infrastructure openstack --include-namespace --namespace capo-system || true
-	kubectl wait --for=delete ns/capo-system || true
-	$(CLUSTERCTL) init --config ./out/clusterctl.yaml --infrastructure openstack --core cluster-api:v${CAPI_VERSION} --bootstrap kubeadm:v${CAPI_VERSION} --control-plane kubeadm:v${CAPI_VERSION}
-
-	# Wait for CAPI pods
-	kubectl wait --for=condition=Ready --timeout=5m -n capi-system pod --all
-	kubectl wait --for=condition=Ready --timeout=5m -n capi-webhook-system pod --all
-	kubectl wait --for=condition=Ready --timeout=5m -n capi-kubeadm-bootstrap-system pod --all
-	kubectl wait --for=condition=Ready --timeout=5m -n capi-kubeadm-control-plane-system pod --all
-	kubectl wait --for=condition=Ready --timeout=5m -n capo-system pod --all
-
-	# Wait for CAPO CRDs
-	kubectl wait --for condition=established --timeout=60s crds/openstackmachines.infrastructure.cluster.x-k8s.io
-	kubectl wait --for condition=established --timeout=60s crds/openstackmachinetemplates.infrastructure.cluster.x-k8s.io
-	kubectl wait --for condition=established --timeout=60s crds/openstackclusters.infrastructure.cluster.x-k8s.io
-
-    # Wait until everything is really ready, as we had some problems with pods being ready but not yet
-    # available when deploying the cluster.
-	sleep 5
-
-	# Create Cluster.
-	kubectl create ns $(CLUSTER_NAME) || true
-	PULL_POLICY=$(PULL_POLICY) \
-	OPENSTACK_FAILURE_DOMAIN=$(OPENSTACK_FAILURE_DOMAIN) \
-	OPENSTACK_CLOUD=$(OPENSTACK_CLOUD) \
-	OPENSTACK_CLOUD_CACERT_B64=$(OPENSTACK_CLOUD_CACERT_B64) \
-	OPENSTACK_CLOUD_PROVIDER_CONF_B64=$(OPENSTACK_CLOUD_PROVIDER_CONF_B64) \
-	OPENSTACK_CLOUD_YAML_B64=$(OPENSTACK_CLOUD_YAML_B64) \
-	OPENSTACK_DNS_NAMESERVERS=$(OPENSTACK_DNS_NAMESERVERS) \
-	OPENSTACK_IMAGE_NAME=$(OPENSTACK_IMAGE_NAME) \
-	OPENSTACK_SSH_KEY_NAME=$(OPENSTACK_SSH_KEY_NAME) \
-	OPENSTACK_NODE_MACHINE_FLAVOR=$(OPENSTACK_NODE_MACHINE_FLAVOR) \
-	OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR=$(OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR) \
-	  $(CLUSTERCTL) config cluster $(CLUSTER_NAME) \
-	    --from=$(OPENSTACK_CLUSTER_TEMPLATE) \
-	    --kubernetes-version $(KUBERNETES_VERSION) \
-	    --control-plane-machine-count=$(CONTROL_PLANE_MACHINE_COUNT) \
-	    --worker-machine-count=$(WORKER_MACHINE_COUNT) > ./hack/ci/e2e-conformance/cluster.yaml
-
-    # Patch Kubernetes version
-	cat ./hack/ci/e2e-conformance/e2e-conformance_patch.yaml.tpl | \
-	  sed "s|\$${OPENSTACK_CLOUD_PROVIDER_CONF_B64}|$(OPENSTACK_CLOUD_PROVIDER_CONF_B64)|" | \
-	  sed "s|\$${OPENSTACK_CLOUD_CACERT_B64}|$(OPENSTACK_CLOUD_CACERT_B64)|" | \
-	  sed "s|\$${KUBERNETES_VERSION}|$(KUBERNETES_VERSION)|" | \
-	  sed "s|\$${CLUSTER_NAME}|$(CLUSTER_NAME)|" | \
-	  sed "s|\$${OPENSTACK_BASTION_MACHINE_FLAVOR}|$(OPENSTACK_BASTION_MACHINE_FLAVOR)|" | \
-	  sed "s|\$${OPENSTACK_BASTION_IMAGE_NAME}|$(OPENSTACK_BASTION_IMAGE_NAME)|" | \
-	  sed "s|\$${OPENSTACK_SSH_KEY_NAME}|$(OPENSTACK_SSH_KEY_NAME)|" \
-	   > ./hack/ci/e2e-conformance/e2e-conformance_patch.yaml
-	$(KUSTOMIZE) build --reorder=none hack/ci/e2e-conformance  > ./out/cluster.yaml
-
-	# Deploy cluster
-	kubectl apply -f ./out/cluster.yaml
-
-	# Wait for the kubeconfig to become available.
-	timeout 300 bash -c "while ! kubectl get secrets | grep $(CLUSTER_NAME)-kubeconfig; do sleep 10; done"
-	# Get kubeconfig and store it locally.
-	kubectl get secrets $(CLUSTER_NAME)-kubeconfig -o json | jq -r .data.value | base64 --decode > ./kubeconfig
-	timeout 900 bash -c "while ! kubectl --kubeconfig=./kubeconfig get nodes | grep master; do sleep 10; done"
-
-	# Deploy calico
-	curl https://docs.projectcalico.org/manifests/calico.yaml | sed "s/veth_mtu:.*/veth_mtu: \"1430\"/g" | \
-		kubectl --kubeconfig=./kubeconfig apply -f -
-
-.PHONY: delete-cluster
-delete-cluster:
-	kubectl delete cluster --all --ignore-not-found
-
-	kubectl get machinedeployment,kubeadmcontrolplane,cluster
-
-	@if [[ `kubectl get machinedeployment,kubeadmcontrolplane,cluster | wc -l` -gt 0 ]]; then \
-	  echo "Error: not all resources have been deleted correctly"; \
-	  exit 1; \
-	fi
-
-.PHONY: kind-reset
-kind-reset: ## Destroys the "clusterapi" kind cluster.
-	kind delete cluster --name=clusterapi || true
 
 ## --------------------------------------
 ## Cleanup / Verification

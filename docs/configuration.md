@@ -40,7 +40,7 @@ Note: You can use [the template file](../templates/cluster-template.yaml) by man
 # Using 'external-cloud-provider' flavor
 clusterctl config cluster capi-quickstart \
   --flavor external-cloud-provider \
-  --kubernetes-version v1.18.2 \
+  --kubernetes-version v1.19.7 \
   --control-plane-machine-count=3 \
   --worker-machine-count=1 \
   > capi-quickstart.yaml
@@ -48,7 +48,7 @@ clusterctl config cluster capi-quickstart \
 # Using 'without-lb' flavor
 clusterctl config cluster capi-quickstart \
   --flavor without-lb \
-  --kubernetes-version v1.18.2 \
+  --kubernetes-version v1.19.7 \
   --control-plane-machine-count=1 \
   --worker-machine-count=1 \
   > capi-quickstart.yaml
@@ -73,7 +73,7 @@ The key pair name must be exposed as an environment variable `OPENSTACK_SSH_KEY_
 If you want to login to each machine by ssh,  you can [access nodes through the bastion host via SSH](#accessing-nodes-through-the-bastion-host-via-ssh). Otherwise you have to configure security groups. If `spec.managedSecurityGroups` of `OpenStackCluster` set to true, two security groups will be created and added to the instances. One is `k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-controlplane`, another is `k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-worker`. These security group rules include the kubeadm's [Check required ports](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#check-required-ports) so that each node can not be logged in through ssh by default. Please add pre-existing security group allowing ssh port to OpenStackMachineTemplate spec. Here is an example:
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha4
 kind: OpenStackMachineTemplate
 metadata:
   name: ${CLUSTER_NAME}-control-plane
@@ -147,12 +147,12 @@ Note: Only user with admin role can create a floating IP with specific IP.
 
 ## Network Filters
 
-If you have a complex query that you want to use to lookup a network, then you can do this by using a network filter. More details about the filter can be found in [NetworkParam](../api/v1alpha3/types.go)
+If you have a complex query that you want to use to lookup a network, then you can do this by using a network filter. More details about the filter can be found in [NetworkParam](../api/v1alpha4/types.go)
 
 By using filters to look up a network, please note that it is possible to get multiple networks as a result. This should not be a problem, however please test your filters with `openstack network list` to be certain that it returns the networks you want. Please refer to the following usage example:
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha4
 kind: OpenStackMachine
 metadata:
   name: <cluster-name>-controlplane
@@ -168,7 +168,7 @@ spec:
 You can specify multiple networks (or subnets) to connect your server to. To do this, simply add another entry in the networks array. The following example connects the server to 3 different networks:
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha4
 kind: OpenStackMachine
 metadata:
   name: <cluster-name>-controlplane
@@ -187,7 +187,7 @@ spec:
 Rather than just using a network, you have the option of specifying a specific subnet to connect your server to. The following is an example of how to specify a specific subnet of a network to use for your server.
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha4
 kind: OpenStackMachine
 metadata:
   name: <cluster-name>-controlplane
@@ -206,7 +206,7 @@ spec:
 If your cluster supports tagging servers, you have the ability to tag all resources created by the cluster in the `cluster.yaml` file. Here is an example how to configure tagging:
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha4
 kind: OpenStackCluster
 metadata:
   name: <cluster-name>
@@ -219,7 +219,7 @@ spec:
 To tag resources specific to a machine, add a value to the tags field in `controlplane.yaml` and `machinedeployment.yaml` like this:
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha4
 kind: OpenStackMachine
 metadata:
   name: <cluster-name>-controlplane
@@ -234,7 +234,7 @@ spec:
 Instead of tagging, you also have the option to add metadata to instances. This functionality should be more commonly available than tagging. Here is a usage example:
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha4
 kind: OpenStackMachine
 metadata:
   name: <cluster-name>-controlplane
@@ -250,7 +250,7 @@ spec:
 1. For example in `OpenStackMachineTemplate` set `spec.rootVolume.diskSize` to something greater than `0` means boot from volume.
 
    ```yaml
-   apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+   apiVersion: infrastructure.cluster.x-k8s.io/v1alpha4
    kind: OpenStackMachineTemplate
    metadata:
      name: <cluster-name>-controlplane

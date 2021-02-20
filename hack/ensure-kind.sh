@@ -19,7 +19,7 @@ set -o nounset
 set -o pipefail
 
 GOPATH_BIN="$(go env GOPATH)/bin/"
-MINIMUM_KIND_VERSION=v0.7.0
+MINIMUM_KIND_VERSION=v0.9.0
 
 # Ensure the kind tool exists and is a viable version, or installs it
 verify_kind_version() {
@@ -33,7 +33,6 @@ verify_kind_version() {
       fi
       curl -sLo "${GOPATH_BIN}/kind" https://github.com/kubernetes-sigs/kind/releases/download/${MINIMUM_KIND_VERSION}/kind-linux-amd64
       chmod +x "${GOPATH_BIN}/kind"
-      echo 'kind installed'
     else
       echo "Missing required binary in path: kind"
       return 2

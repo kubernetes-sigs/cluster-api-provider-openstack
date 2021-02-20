@@ -1,17 +1,19 @@
 
 ---
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   creationTimestamp: null
   name: validating-webhook-configuration
 webhooks:
-- clientConfig:
+- admissionReviewVersions:
+  - v1beta1
+  clientConfig:
     caBundle: Cg==
     service:
       name: webhook-service
       namespace: system
-      path: /validate-infrastructure-cluster-x-k8s-io-v1alpha3-openstackmachine
+      path: /validate-infrastructure-cluster-x-k8s-io-v1alpha4-openstackmachine
   failurePolicy: Fail
   matchPolicy: Equivalent
   name: validation.openstackmachine.infrastructure.cluster.x-k8s.io
@@ -19,18 +21,21 @@ webhooks:
   - apiGroups:
     - infrastructure.cluster.x-k8s.io
     apiVersions:
-    - v1alpha3
+    - v1alpha4
     operations:
     - CREATE
     - UPDATE
     resources:
     - openstackmachines
-- clientConfig:
+  sideEffects: None
+- admissionReviewVersions:
+  - v1beta1
+  clientConfig:
     caBundle: Cg==
     service:
       name: webhook-service
       namespace: system
-      path: /validate-infrastructure-cluster-x-k8s-io-v1alpha3-openstackmachinetemplate
+      path: /validate-infrastructure-cluster-x-k8s-io-v1alpha4-openstackmachinetemplate
   failurePolicy: Fail
   matchPolicy: Equivalent
   name: validation.openstackmachinetemplate.infrastructure.x-k8s.io
@@ -38,9 +43,10 @@ webhooks:
   - apiGroups:
     - infrastructure.cluster.x-k8s.io
     apiVersions:
-    - v1alpha3
+    - v1alpha4
     operations:
     - CREATE
     - UPDATE
     resources:
     - openstackmachinetemplates
+  sideEffects: None

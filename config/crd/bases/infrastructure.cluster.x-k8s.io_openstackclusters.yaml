@@ -4,7 +4,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.2.9
+    controller-gen.kubebuilder.io/version: v0.4.1-0.20201002000720-57250aac17f6
   creationTimestamp: null
   name: openstackclusters.infrastructure.cluster.x-k8s.io
 spec:
@@ -50,14 +50,10 @@ spec:
         description: OpenStackCluster is the Schema for the openstackclusters API
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
             type: string
           metadata:
             type: object
@@ -65,19 +61,15 @@ spec:
             description: OpenStackClusterSpec defines the desired state of OpenStackCluster
             properties:
               apiServerFloatingIP:
-                description: APIServerFloatingIP is the floatingIP which will be associated
-                  to the APIServer. The floatingIP will be created if it not already
-                  exists.
+                description: APIServerFloatingIP is the floatingIP which will be associated to the APIServer. The floatingIP will be created if it not already exists.
                 type: string
               apiServerLoadBalancerAdditionalPorts:
-                description: APIServerLoadBalancerAdditionalPorts adds additional
-                  ports to the APIServerLoadBalancer
+                description: APIServerLoadBalancerAdditionalPorts adds additional ports to the APIServerLoadBalancer
                 items:
                   type: integer
                 type: array
               apiServerPort:
-                description: APIServerPort is the port on which the listener on the
-                  APIServer will be created
+                description: APIServerPort is the port on which the listener on the APIServer will be created
                 type: integer
               bastion:
                 description: Bastion is the OpenStack instance to login the nodes
@@ -224,14 +216,12 @@ spec:
                                         type: string
                                     type: object
                                   uuid:
-                                    description: The UUID of the network. Required
-                                      if you omit the port attribute.
+                                description: The UUID of the network. Required if you omit the port attribute.
                                     type: string
                                 type: object
                               type: array
                             uuid:
-                              description: The UUID of the network. Required if you
-                                omit the port attribute.
+                          description: The UUID of the network. Required if you omit the port attribute.
                               type: string
                           type: object
                         type: array
@@ -345,23 +335,19 @@ spec:
                 description: The name of the secret containing the openstack credentials
                 properties:
                   name:
-                    description: Name is unique within a namespace to reference a
-                      secret resource.
+                    description: Name is unique within a namespace to reference a secret resource.
                     type: string
                   namespace:
-                    description: Namespace defines the space within which the secret
-                      name must be unique.
+                    description: Namespace defines the space within which the secret name must be unique.
                     type: string
                 type: object
               controlPlaneAvailabilityZones:
-                description: ControlPlaneAvailabilityZones is the az to deploy control
-                  plane to
+                description: ControlPlaneAvailabilityZones is the az to deploy control plane to
                 items:
                   type: string
                 type: array
               controlPlaneEndpoint:
-                description: ControlPlaneEndpoint represents the endpoint used to
-                  communicate with the control plane.
+                description: ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
                 properties:
                   host:
                     description: The hostname on which the API server is serving.
@@ -375,33 +361,25 @@ spec:
                 - port
                 type: object
               disablePortSecurity:
-                description: DisablePortSecurity disables the port security of the
-                  network created for the Kubernetes cluster, which also disables
-                  SecurityGroups
+                description: DisablePortSecurity disables the port security of the network created for the Kubernetes cluster, which also disables SecurityGroups
                 type: boolean
               dnsNameservers:
-                description: DNSNameservers is the list of nameservers for OpenStack
-                  Subnet being created. Set this value when you need create a new
-                  network/subnet while the access through DNS is required.
+                description: DNSNameservers is the list of nameservers for OpenStack Subnet being created. Set this value when you need create a new network/subnet while the access through DNS is required.
                 items:
                   type: string
                 type: array
               externalNetworkId:
-                description: ExternalNetworkID is the ID of an external OpenStack
-                  Network. This is necessary to get public internet to the VMs.
+                description: ExternalNetworkID is the ID of an external OpenStack Network. This is necessary to get public internet to the VMs.
                 type: string
               externalRouterIPs:
-                description: ExternalRouterIPs is an array of externalIPs on the respective
-                  subnets. This is necessary if the router needs a fixed ip in a specific
-                  subnet.
+                description: ExternalRouterIPs is an array of externalIPs on the respective subnets. This is necessary if the router needs a fixed ip in a specific subnet.
                 items:
                   properties:
                     fixedIP:
                       description: The FixedIP in the corresponding subnet
                       type: string
                     subnet:
-                      description: The subnet in which the FixedIP is used for the
-                        Gateway of this router
+                      description: The subnet in which the FixedIP is used for the Gateway of this router
                       properties:
                         filter:
                           description: Filters for optional network query
@@ -450,8 +428,7 @@ spec:
                               type: string
                           type: object
                         uuid:
-                          description: The UUID of the network. Required if you omit
-                            the port attribute.
+                          description: The UUID of the network. Required if you omit the port attribute.
                           type: string
                       type: object
                   required:
@@ -459,21 +436,13 @@ spec:
                   type: object
                 type: array
               managedAPIServerLoadBalancer:
-                description: 'ManagedAPIServerLoadBalancer defines whether a LoadBalancer
-                  for the APIServer should be created. If set to true the following
-                  properties are mandatory: APIServerFloatingIP, APIServerPort'
+                description: 'ManagedAPIServerLoadBalancer defines whether a LoadBalancer for the APIServer should be created. If set to true the following properties are mandatory: APIServerFloatingIP, APIServerPort'
                 type: boolean
               managedSecurityGroups:
-                description: 'ManagedSecurityGroups defines that kubernetes manages
-                  the OpenStack security groups for now, that means that we''ll create
-                  security group allows traffic to/from machines belonging to that
-                  group based on Calico CNI plugin default network requirements: BGP
-                  and IP-in-IP for master node(s) and worker node(s) respectively.
-                  In the future, we could make this more flexible.'
+                description: 'ManagedSecurityGroups defines that kubernetes manages the OpenStack security groups for now, that means that we''ll create security group allows traffic to/from machines belonging to that group based on Calico CNI plugin default network requirements: BGP and IP-in-IP for master node(s) and worker node(s) respectively. In the future, we could make this more flexible.'
                 type: boolean
               network:
-                description: If NodeCIDR cannot be set this can be used to detect
-                  an existing network.
+                description: If NodeCIDR cannot be set this can be used to detect an existing network.
                 properties:
                   adminStateUp:
                     type: boolean
@@ -509,14 +478,10 @@ spec:
                     type: string
                 type: object
               nodeCidr:
-                description: NodeCIDR is the OpenStack Subnet to be created. Cluster
-                  actuator will create a network, a subnet with NodeCIDR, and a router
-                  connected to this subnet. If you leave this empty, no network will
-                  be created.
+                description: NodeCIDR is the OpenStack Subnet to be created. Cluster actuator will create a network, a subnet with NodeCIDR, and a router connected to this subnet. If you leave this empty, no network will be created.
                 type: string
               subnet:
-                description: If NodeCIDR cannot be set this can be used to detect
-                  an existing subnet.
+                description: If NodeCIDR cannot be set this can be used to detect an existing subnet.
                 properties:
                   cidr:
                     type: string
@@ -567,8 +532,7 @@ spec:
                   type: string
                 type: array
               useOctavia:
-                description: UseOctavia is weather LoadBalancer Service is Octavia
-                  or not
+                description: UseOctavia is weather LoadBalancer Service is Octavia or not
                 type: boolean
             type: object
           status:
@@ -598,13 +562,10 @@ spec:
                     type: string
                   networks:
                     items:
-                      description: Network represents basic information about the
-                        associated OpenStach Neutron Network
+                      description: Network represents basic information about the associated OpenStach Neutron Network
                       properties:
                         apiServerLoadBalancer:
-                          description: Be careful when using APIServerLoadBalancer,
-                            because this field is optional and therefore not set in
-                            all cases
+                          description: Be careful when using APIServerLoadBalancer, because this field is optional and therefore not set in all cases
                           properties:
                             id:
                               type: string
@@ -625,8 +586,7 @@ spec:
                         name:
                           type: string
                         router:
-                          description: Router represents basic information about the
-                            associated OpenStack Neutron Router
+                          description: Router represents basic information about the associated OpenStack Neutron Router
                           properties:
                             id:
                               type: string
@@ -641,8 +601,7 @@ spec:
                           - name
                           type: object
                         subnet:
-                          description: Subnet represents basic information about the
-                            associated OpenStack Neutron Subnet
+                          description: Subnet represents basic information about the associated OpenStack Neutron Subnet
                           properties:
                             cidr:
                               type: string
@@ -688,8 +647,7 @@ spec:
                   sshKeyName:
                     type: string
                   state:
-                    description: InstanceState describes the state of an OpenStack
-                      instance.
+                    description: InstanceState describes the state of an OpenStack instance.
                     type: string
                   subnet:
                     type: string
@@ -703,8 +661,7 @@ spec:
                     type: string
                 type: object
               bastionSecurityGroup:
-                description: SecurityGroup represents the basic information of the
-                  associated OpenStack Neutron Security Group.
+                description: SecurityGroup represents the basic information of the associated OpenStack Neutron Security Group.
                 properties:
                   id:
                     type: string
@@ -712,8 +669,7 @@ spec:
                     type: string
                   rules:
                     items:
-                      description: SecurityGroupRule represent the basic information
-                        of the associated OpenStack Security Group Role.
+                      description: SecurityGroupRule represent the basic information of the associated OpenStack Security Group Role.
                       properties:
                         description:
                           type: string
@@ -754,10 +710,7 @@ spec:
                 - rules
                 type: object
               controlPlaneSecurityGroup:
-                description: 'ControlPlaneSecurityGroups contains all the information
-                  about the OpenStack Security Group that needs to be applied to control
-                  plane nodes. TODO: Maybe instead of two properties, we add a property
-                  to the group?'
+                description: 'ControlPlaneSecurityGroups contains all the information about the OpenStack Security Group that needs to be applied to control plane nodes. TODO: Maybe instead of two properties, we add a property to the group?'
                 properties:
                   id:
                     type: string
@@ -765,8 +718,7 @@ spec:
                     type: string
                   rules:
                     items:
-                      description: SecurityGroupRule represent the basic information
-                        of the associated OpenStack Security Group Role.
+                      description: SecurityGroupRule represent the basic information of the associated OpenStack Security Group Role.
                       properties:
                         description:
                           type: string
@@ -807,12 +759,10 @@ spec:
                 - rules
                 type: object
               externalNetwork:
-                description: External Network contains information about the created
-                  OpenStack external network.
+                description: External Network contains information about the created OpenStack external network.
                 properties:
                   apiServerLoadBalancer:
-                    description: Be careful when using APIServerLoadBalancer, because
-                      this field is optional and therefore not set in all cases
+                    description: Be careful when using APIServerLoadBalancer, because this field is optional and therefore not set in all cases
                     properties:
                       id:
                         type: string
@@ -833,8 +783,7 @@ spec:
                   name:
                     type: string
                   router:
-                    description: Router represents basic information about the associated
-                      OpenStack Neutron Router
+                    description: Router represents basic information about the associated OpenStack Neutron Router
                     properties:
                       id:
                         type: string
@@ -849,8 +798,7 @@ spec:
                     - name
                     type: object
                   subnet:
-                    description: Subnet represents basic information about the associated
-                      OpenStack Neutron Subnet
+                    description: Subnet represents basic information about the associated OpenStack Neutron Subnet
                     properties:
                       cidr:
                         type: string
@@ -877,30 +825,24 @@ spec:
                 type: object
               failureDomains:
                 additionalProperties:
-                  description: FailureDomainSpec is the Schema for Cluster API failure
-                    domains. It allows controllers to understand how many failure
-                    domains a cluster can optionally span across.
+                  description: FailureDomainSpec is the Schema for Cluster API failure domains. It allows controllers to understand how many failure domains a cluster can optionally span across.
                   properties:
                     attributes:
                       additionalProperties:
                         type: string
-                      description: Attributes is a free form map of attributes an
-                        infrastructure provider might use or require.
+                      description: Attributes is a free form map of attributes an infrastructure provider might use or require.
                       type: object
                     controlPlane:
-                      description: ControlPlane determines if this failure domain
-                        is suitable for use by control plane machines.
+                      description: ControlPlane determines if this failure domain is suitable for use by control plane machines.
                       type: boolean
                   type: object
                 description: FailureDomains represent OpenStack availability zones
                 type: object
               network:
-                description: Network contains all information about the created OpenStack
-                  Network. It includes Subnets and Router.
+                description: Network contains all information about the created OpenStack Network. It includes Subnets and Router.
                 properties:
                   apiServerLoadBalancer:
-                    description: Be careful when using APIServerLoadBalancer, because
-                      this field is optional and therefore not set in all cases
+                    description: Be careful when using APIServerLoadBalancer, because this field is optional and therefore not set in all cases
                     properties:
                       id:
                         type: string
@@ -921,8 +863,7 @@ spec:
                   name:
                     type: string
                   router:
-                    description: Router represents basic information about the associated
-                      OpenStack Neutron Router
+                    description: Router represents basic information about the associated OpenStack Neutron Router
                     properties:
                       id:
                         type: string
@@ -937,8 +878,7 @@ spec:
                     - name
                     type: object
                   subnet:
-                    description: Subnet represents basic information about the associated
-                      OpenStack Neutron Subnet
+                    description: Subnet represents basic information about the associated OpenStack Neutron Subnet
                     properties:
                       cidr:
                         type: string
@@ -966,9 +906,7 @@ spec:
               ready:
                 type: boolean
               workerSecurityGroup:
-                description: WorkerSecurityGroup contains all the information about
-                  the OpenStack Security Group that needs to be applied to worker
-                  nodes.
+                description: WorkerSecurityGroup contains all the information about the OpenStack Security Group that needs to be applied to worker nodes.
                 properties:
                   id:
                     type: string
@@ -976,8 +914,851 @@ spec:
                     type: string
                   rules:
                     items:
-                      description: SecurityGroupRule represent the basic information
-                        of the associated OpenStack Security Group Role.
+                      description: SecurityGroupRule represent the basic information of the associated OpenStack Security Group Role.
+                      properties:
+                        description:
+                          type: string
+                        direction:
+                          type: string
+                        etherType:
+                          type: string
+                        name:
+                          type: string
+                        portRangeMax:
+                          type: integer
+                        portRangeMin:
+                          type: integer
+                        protocol:
+                          type: string
+                        remoteGroupID:
+                          type: string
+                        remoteIPPrefix:
+                          type: string
+                        securityGroupID:
+                          type: string
+                      required:
+                      - description
+                      - direction
+                      - etherType
+                      - name
+                      - portRangeMax
+                      - portRangeMin
+                      - protocol
+                      - remoteGroupID
+                      - remoteIPPrefix
+                      - securityGroupID
+                      type: object
+                    type: array
+                required:
+                - id
+                - name
+                - rules
+                type: object
+            required:
+            - ready
+            type: object
+        type: object
+    served: true
+    storage: false
+    subresources:
+      status: {}
+  - additionalPrinterColumns:
+    - description: Cluster to which this OpenStackCluster belongs
+      jsonPath: .metadata.labels.cluster\.x-k8s\.io/cluster-name
+      name: Cluster
+      type: string
+    - description: Cluster infrastructure is ready for OpenStack instances
+      jsonPath: .status.ready
+      name: Ready
+      type: string
+    - description: Network the cluster is using
+      jsonPath: .status.network.id
+      name: Network
+      type: string
+    - description: Subnet the cluster is using
+      jsonPath: .status.network.subnet.id
+      name: Subnet
+      type: string
+    - description: API Endpoint
+      jsonPath: .spec.controlPlaneEndpoint.host
+      name: Endpoint
+      priority: 1
+      type: string
+    - description: Bastion address for breakglass access
+      jsonPath: .status.bastion.floatingIP
+      name: Bastion IP
+      type: string
+    name: v1alpha4
+    schema:
+      openAPIV3Schema:
+        description: OpenStackCluster is the Schema for the openstackclusters API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: OpenStackClusterSpec defines the desired state of OpenStackCluster
+            properties:
+              apiServerFloatingIP:
+                description: APIServerFloatingIP is the floatingIP which will be associated to the APIServer. The floatingIP will be created if it not already exists.
+                type: string
+              apiServerLoadBalancerAdditionalPorts:
+                description: APIServerLoadBalancerAdditionalPorts adds additional ports to the APIServerLoadBalancer
+                items:
+                  type: integer
+                type: array
+              apiServerPort:
+                description: APIServerPort is the port on which the listener on the APIServer will be created
+                type: integer
+              bastion:
+                description: Bastion is the OpenStack instance to login the nodes
+                properties:
+                  enabled:
+                    type: boolean
+                  flavor:
+                    type: string
+                  floatingIP:
+                    type: string
+                  image:
+                    type: string
+                  networks:
+                    items:
+                      properties:
+                        filter:
+                          description: Filters for optional network query
+                          properties:
+                            adminStateUp:
+                              type: boolean
+                            description:
+                              type: string
+                            id:
+                              type: string
+                            limit:
+                              type: integer
+                            marker:
+                              type: string
+                            name:
+                              type: string
+                            notTags:
+                              type: string
+                            notTagsAny:
+                              type: string
+                            projectId:
+                              type: string
+                            shared:
+                              type: boolean
+                            sortDir:
+                              type: string
+                            sortKey:
+                              type: string
+                            status:
+                              type: string
+                            tags:
+                              type: string
+                            tagsAny:
+                              type: string
+                            tenantId:
+                              type: string
+                          type: object
+                        fixedIp:
+                          description: A fixed IPv4 address for the NIC.
+                          type: string
+                        subnets:
+                          description: Subnet within a network to use
+                          items:
+                            properties:
+                              filter:
+                                description: Filters for optional network query
+                                properties:
+                                  cidr:
+                                    type: string
+                                  description:
+                                    type: string
+                                  enableDhcp:
+                                    type: boolean
+                                  gateway_ip:
+                                    type: string
+                                  id:
+                                    type: string
+                                  ipVersion:
+                                    type: integer
+                                  ipv6AddressMode:
+                                    type: string
+                                  ipv6RaMode:
+                                    type: string
+                                  limit:
+                                    type: integer
+                                  marker:
+                                    type: string
+                                  name:
+                                    type: string
+                                  networkId:
+                                    type: string
+                                  notTags:
+                                    type: string
+                                  notTagsAny:
+                                    type: string
+                                  projectId:
+                                    type: string
+                                  sortDir:
+                                    type: string
+                                  sortKey:
+                                    type: string
+                                  subnetpoolId:
+                                    type: string
+                                  tags:
+                                    type: string
+                                  tagsAny:
+                                    type: string
+                                  tenantId:
+                                    type: string
+                                type: object
+                              uuid:
+                                description: The UUID of the network. Required if you omit the port attribute.
+                                type: string
+                            type: object
+                          type: array
+                        uuid:
+                          description: The UUID of the network. Required if you omit the port attribute.
+                          type: string
+                      type: object
+                    type: array
+                  securityGroups:
+                    items:
+                      properties:
+                        filter:
+                          description: Filters used to query security groups in openstack
+                          properties:
+                            description:
+                              type: string
+                            id:
+                              type: string
+                            limit:
+                              type: integer
+                            marker:
+                              type: string
+                            name:
+                              type: string
+                            notTags:
+                              type: string
+                            notTagsAny:
+                              type: string
+                            projectId:
+                              type: string
+                            sortDir:
+                              type: string
+                            sortKey:
+                              type: string
+                            tags:
+                              type: string
+                            tagsAny:
+                              type: string
+                            tenantId:
+                              type: string
+                          type: object
+                        name:
+                          description: Security Group name
+                          type: string
+                        uuid:
+                          description: Security Group UID
+                          type: string
+                      type: object
+                    type: array
+                  sshKeyName:
+                    type: string
+                type: object
+              cloudName:
+                description: The name of the cloud to use from the clouds secret
+                type: string
+              cloudsSecret:
+                description: The name of the secret containing the openstack credentials
+                properties:
+                  name:
+                    description: Name is unique within a namespace to reference a secret resource.
+                    type: string
+                  namespace:
+                    description: Namespace defines the space within which the secret name must be unique.
+                    type: string
+                type: object
+              controlPlaneAvailabilityZones:
+                description: ControlPlaneAvailabilityZones is the az to deploy control plane to
+                items:
+                  type: string
+                type: array
+              controlPlaneEndpoint:
+                description: ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
+                properties:
+                  host:
+                    description: The hostname on which the API server is serving.
+                    type: string
+                  port:
+                    description: The port on which the API server is serving.
+                    format: int32
+                    type: integer
+                required:
+                - host
+                - port
+                type: object
+              disablePortSecurity:
+                description: DisablePortSecurity disables the port security of the network created for the Kubernetes cluster, which also disables SecurityGroups
+                type: boolean
+              dnsNameservers:
+                description: DNSNameservers is the list of nameservers for OpenStack Subnet being created. Set this value when you need create a new network/subnet while the access through DNS is required.
+                items:
+                  type: string
+                type: array
+              externalNetworkId:
+                description: ExternalNetworkID is the ID of an external OpenStack Network. This is necessary to get public internet to the VMs.
+                type: string
+              externalRouterIPs:
+                description: ExternalRouterIPs is an array of externalIPs on the respective subnets. This is necessary if the router needs a fixed ip in a specific subnet.
+                items:
+                  properties:
+                    fixedIP:
+                      description: The FixedIP in the corresponding subnet
+                      type: string
+                    subnet:
+                      description: The subnet in which the FixedIP is used for the Gateway of this router
+                      properties:
+                        filter:
+                          description: Filters for optional network query
+                          properties:
+                            cidr:
+                              type: string
+                            description:
+                              type: string
+                            enableDhcp:
+                              type: boolean
+                            gateway_ip:
+                              type: string
+                            id:
+                              type: string
+                            ipVersion:
+                              type: integer
+                            ipv6AddressMode:
+                              type: string
+                            ipv6RaMode:
+                              type: string
+                            limit:
+                              type: integer
+                            marker:
+                              type: string
+                            name:
+                              type: string
+                            networkId:
+                              type: string
+                            notTags:
+                              type: string
+                            notTagsAny:
+                              type: string
+                            projectId:
+                              type: string
+                            sortDir:
+                              type: string
+                            sortKey:
+                              type: string
+                            subnetpoolId:
+                              type: string
+                            tags:
+                              type: string
+                            tagsAny:
+                              type: string
+                            tenantId:
+                              type: string
+                          type: object
+                        uuid:
+                          description: The UUID of the network. Required if you omit the port attribute.
+                          type: string
+                      type: object
+                  required:
+                  - subnet
+                  type: object
+                type: array
+              managedAPIServerLoadBalancer:
+                description: 'ManagedAPIServerLoadBalancer defines whether a LoadBalancer for the APIServer should be created. If set to true the following properties are mandatory: APIServerFloatingIP, APIServerPort'
+                type: boolean
+              managedSecurityGroups:
+                description: 'ManagedSecurityGroups defines that kubernetes manages the OpenStack security groups for now, that means that we''ll create security group allows traffic to/from machines belonging to that group based on Calico CNI plugin default network requirements: BGP and IP-in-IP for master node(s) and worker node(s) respectively. In the future, we could make this more flexible.'
+                type: boolean
+              network:
+                description: If NodeCIDR cannot be set this can be used to detect an existing network.
+                properties:
+                  adminStateUp:
+                    type: boolean
+                  description:
+                    type: string
+                  id:
+                    type: string
+                  limit:
+                    type: integer
+                  marker:
+                    type: string
+                  name:
+                    type: string
+                  notTags:
+                    type: string
+                  notTagsAny:
+                    type: string
+                  projectId:
+                    type: string
+                  shared:
+                    type: boolean
+                  sortDir:
+                    type: string
+                  sortKey:
+                    type: string
+                  status:
+                    type: string
+                  tags:
+                    type: string
+                  tagsAny:
+                    type: string
+                  tenantId:
+                    type: string
+                type: object
+              nodeCidr:
+                description: NodeCIDR is the OpenStack Subnet to be created. Cluster actuator will create a network, a subnet with NodeCIDR, and a router connected to this subnet. If you leave this empty, no network will be created.
+                type: string
+              subnet:
+                description: If NodeCIDR cannot be set this can be used to detect an existing subnet.
+                properties:
+                  cidr:
+                    type: string
+                  description:
+                    type: string
+                  enableDhcp:
+                    type: boolean
+                  gateway_ip:
+                    type: string
+                  id:
+                    type: string
+                  ipVersion:
+                    type: integer
+                  ipv6AddressMode:
+                    type: string
+                  ipv6RaMode:
+                    type: string
+                  limit:
+                    type: integer
+                  marker:
+                    type: string
+                  name:
+                    type: string
+                  networkId:
+                    type: string
+                  notTags:
+                    type: string
+                  notTagsAny:
+                    type: string
+                  projectId:
+                    type: string
+                  sortDir:
+                    type: string
+                  sortKey:
+                    type: string
+                  subnetpoolId:
+                    type: string
+                  tags:
+                    type: string
+                  tagsAny:
+                    type: string
+                  tenantId:
+                    type: string
+                type: object
+              tags:
+                description: Tags for all resources in cluster
+                items:
+                  type: string
+                type: array
+              useOctavia:
+                description: UseOctavia is weather LoadBalancer Service is Octavia or not
+                type: boolean
+            type: object
+          status:
+            description: OpenStackClusterStatus defines the observed state of OpenStackCluster
+            properties:
+              bastion:
+                properties:
+                  configDrive:
+                    type: boolean
+                  failureDomain:
+                    type: string
+                  flavor:
+                    type: string
+                  floatingIP:
+                    type: string
+                  id:
+                    type: string
+                  image:
+                    type: string
+                  ip:
+                    type: string
+                  metadata:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  name:
+                    type: string
+                  networks:
+                    items:
+                      description: Network represents basic information about the associated OpenStach Neutron Network
+                      properties:
+                        apiServerLoadBalancer:
+                          description: Be careful when using APIServerLoadBalancer, because this field is optional and therefore not set in all cases
+                          properties:
+                            id:
+                              type: string
+                            internalIP:
+                              type: string
+                            ip:
+                              type: string
+                            name:
+                              type: string
+                          required:
+                          - id
+                          - internalIP
+                          - ip
+                          - name
+                          type: object
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        router:
+                          description: Router represents basic information about the associated OpenStack Neutron Router
+                          properties:
+                            id:
+                              type: string
+                            name:
+                              type: string
+                            tags:
+                              items:
+                                type: string
+                              type: array
+                          required:
+                          - id
+                          - name
+                          type: object
+                        subnet:
+                          description: Subnet represents basic information about the associated OpenStack Neutron Subnet
+                          properties:
+                            cidr:
+                              type: string
+                            id:
+                              type: string
+                            name:
+                              type: string
+                            tags:
+                              items:
+                                type: string
+                              type: array
+                          required:
+                          - cidr
+                          - id
+                          - name
+                          type: object
+                        tags:
+                          items:
+                            type: string
+                          type: array
+                      required:
+                      - id
+                      - name
+                      type: object
+                    type: array
+                  rootVolume:
+                    properties:
+                      deviceType:
+                        type: string
+                      diskSize:
+                        type: integer
+                      sourceType:
+                        type: string
+                      sourceUUID:
+                        type: string
+                    type: object
+                  securigyGroups:
+                    items:
+                      type: string
+                    type: array
+                  serverGroupID:
+                    type: string
+                  sshKeyName:
+                    type: string
+                  state:
+                    description: InstanceState describes the state of an OpenStack instance.
+                    type: string
+                  subnet:
+                    type: string
+                  tags:
+                    items:
+                      type: string
+                    type: array
+                  trunk:
+                    type: boolean
+                  userData:
+                    type: string
+                type: object
+              bastionSecurityGroup:
+                description: SecurityGroup represents the basic information of the associated OpenStack Neutron Security Group.
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  rules:
+                    items:
+                      description: SecurityGroupRule represent the basic information of the associated OpenStack Security Group Role.
+                      properties:
+                        description:
+                          type: string
+                        direction:
+                          type: string
+                        etherType:
+                          type: string
+                        name:
+                          type: string
+                        portRangeMax:
+                          type: integer
+                        portRangeMin:
+                          type: integer
+                        protocol:
+                          type: string
+                        remoteGroupID:
+                          type: string
+                        remoteIPPrefix:
+                          type: string
+                        securityGroupID:
+                          type: string
+                      required:
+                      - description
+                      - direction
+                      - etherType
+                      - name
+                      - portRangeMax
+                      - portRangeMin
+                      - protocol
+                      - remoteGroupID
+                      - remoteIPPrefix
+                      - securityGroupID
+                      type: object
+                    type: array
+                required:
+                - id
+                - name
+                - rules
+                type: object
+              controlPlaneSecurityGroup:
+                description: 'ControlPlaneSecurityGroups contains all the information about the OpenStack Security Group that needs to be applied to control plane nodes. TODO: Maybe instead of two properties, we add a property to the group?'
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  rules:
+                    items:
+                      description: SecurityGroupRule represent the basic information of the associated OpenStack Security Group Role.
+                      properties:
+                        description:
+                          type: string
+                        direction:
+                          type: string
+                        etherType:
+                          type: string
+                        name:
+                          type: string
+                        portRangeMax:
+                          type: integer
+                        portRangeMin:
+                          type: integer
+                        protocol:
+                          type: string
+                        remoteGroupID:
+                          type: string
+                        remoteIPPrefix:
+                          type: string
+                        securityGroupID:
+                          type: string
+                      required:
+                      - description
+                      - direction
+                      - etherType
+                      - name
+                      - portRangeMax
+                      - portRangeMin
+                      - protocol
+                      - remoteGroupID
+                      - remoteIPPrefix
+                      - securityGroupID
+                      type: object
+                    type: array
+                required:
+                - id
+                - name
+                - rules
+                type: object
+              externalNetwork:
+                description: External Network contains information about the created OpenStack external network.
+                properties:
+                  apiServerLoadBalancer:
+                    description: Be careful when using APIServerLoadBalancer, because this field is optional and therefore not set in all cases
+                    properties:
+                      id:
+                        type: string
+                      internalIP:
+                        type: string
+                      ip:
+                        type: string
+                      name:
+                        type: string
+                    required:
+                    - id
+                    - internalIP
+                    - ip
+                    - name
+                    type: object
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  router:
+                    description: Router represents basic information about the associated OpenStack Neutron Router
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      tags:
+                        items:
+                          type: string
+                        type: array
+                    required:
+                    - id
+                    - name
+                    type: object
+                  subnet:
+                    description: Subnet represents basic information about the associated OpenStack Neutron Subnet
+                    properties:
+                      cidr:
+                        type: string
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      tags:
+                        items:
+                          type: string
+                        type: array
+                    required:
+                    - cidr
+                    - id
+                    - name
+                    type: object
+                  tags:
+                    items:
+                      type: string
+                    type: array
+                required:
+                - id
+                - name
+                type: object
+              failureDomains:
+                additionalProperties:
+                  description: FailureDomainSpec is the Schema for Cluster API failure domains. It allows controllers to understand how many failure domains a cluster can optionally span across.
+                  properties:
+                    attributes:
+                      additionalProperties:
+                        type: string
+                      description: Attributes is a free form map of attributes an infrastructure provider might use or require.
+                      type: object
+                    controlPlane:
+                      description: ControlPlane determines if this failure domain is suitable for use by control plane machines.
+                      type: boolean
+                  type: object
+                description: FailureDomains represent OpenStack availability zones
+                type: object
+              network:
+                description: Network contains all information about the created OpenStack Network. It includes Subnets and Router.
+                properties:
+                  apiServerLoadBalancer:
+                    description: Be careful when using APIServerLoadBalancer, because this field is optional and therefore not set in all cases
+                    properties:
+                      id:
+                        type: string
+                      internalIP:
+                        type: string
+                      ip:
+                        type: string
+                      name:
+                        type: string
+                    required:
+                    - id
+                    - internalIP
+                    - ip
+                    - name
+                    type: object
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  router:
+                    description: Router represents basic information about the associated OpenStack Neutron Router
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      tags:
+                        items:
+                          type: string
+                        type: array
+                    required:
+                    - id
+                    - name
+                    type: object
+                  subnet:
+                    description: Subnet represents basic information about the associated OpenStack Neutron Subnet
+                    properties:
+                      cidr:
+                        type: string
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      tags:
+                        items:
+                          type: string
+                        type: array
+                    required:
+                    - cidr
+                    - id
+                    - name
+                    type: object
+                  tags:
+                    items:
+                      type: string
+                    type: array
+                required:
+                - id
+                - name
+                type: object
+              ready:
+                type: boolean
+              workerSecurityGroup:
+                description: WorkerSecurityGroup contains all the information about the OpenStack Security Group that needs to be applied to worker nodes.
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  rules:
+                    items:
+                      description: SecurityGroupRule represent the basic information of the associated OpenStack Security Group Role.
                       properties:
                         description:
                           type: string

@@ -2,7 +2,9 @@
     name: kubernetes-sigs/cluster-api-provider-openstack
     check:
       jobs:
-        - cluster-api-provider-openstack-current-acceptance-test-v1.18
+        - cluster-api-provider-openstack-current-acceptance-test-v1.19-1
+        - cluster-api-provider-openstack-current-acceptance-test-v1.19-2
+        - cluster-api-provider-openstack-current-acceptance-test-v1.19-3
 
 - job:
     name: cluster-api-provider-openstack-conformance-pr
@@ -13,16 +15,39 @@
     run: .zuul/playbooks/run.yaml
     nodeset: ubuntu-bionic-large
     vars:
-      go_version: '1.13.15'
+      go_version: '1.15.8'
       k8s_log_dir: '{{ ansible_user_dir }}/workspace/logs/_artifacts'
       k8s_os_capi_provider_src_dir: '{{ ansible_user_dir }}/src/sigs.k8s.io/cluster-api-provider-openstack'
       extra_args: ''
 
 - job:
-    name: cluster-api-provider-openstack-current-acceptance-test-v1.18
+    name: cluster-api-provider-openstack-current-acceptance-test-v1.19-1
     parent: cluster-api-provider-openstack-conformance-pr
     description: |
-      Test CAPO current against Kubernetes release-1.18
+      Test CAPO current against Kubernetes release-1.19-1
+      We run 3 jobs, so that at least one of them hits a cluster
+      with a good CPU. It's fine if just one of them is successful.
     vars:
-      k8s_version_series: '1.18'
+      k8s_version_series: '1.19'
+      extra_args: '--use-ci-artifacts'
+
+- job:
+    name: cluster-api-provider-openstack-current-acceptance-test-v1.19-2
+    parent: cluster-api-provider-openstack-conformance-pr
+    description: |
+      Test CAPO current against Kubernetes release-1.19-2
+      We run 3 jobs, so that at least one of them hits a cluster
+      with a good CPU. It's fine if just one of them is successful.
+    vars:
+      k8s_version_series: '1.19'
+      extra_args: '--use-ci-artifacts'
+- job:
+    name: cluster-api-provider-openstack-current-acceptance-test-v1.19-3
+    parent: cluster-api-provider-openstack-conformance-pr
+    description: |
+      Test CAPO current against Kubernetes release-1.19-3
+      We run 3 jobs, so that at least one of them hits a cluster
+      with a good CPU. It's fine if just one of them is successful.
+    vars:
+      k8s_version_series: '1.19'
       extra_args: '--use-ci-artifacts'

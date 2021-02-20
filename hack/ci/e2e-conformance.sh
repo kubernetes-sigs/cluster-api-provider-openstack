@@ -18,20 +18,25 @@
 
 set -o errexit -o nounset -o pipefail
 
+OPENSTACK_CLOUD=${OPENSTACK_CLOUD:-"capi-quickstart"}
 OPENSTACK_CLOUD_YAML_FILE=${OPENSTACK_CLOUD_YAML_FILE:-"/tmp/clouds.yaml"}
 IMAGE_URL="https://github.com/kubernetes-sigs/cluster-api-provider-openstack/releases/download/v0.3.0/ubuntu-1910-kube-v1.17.3.qcow2"
 CIRROS_URL="http://download.cirros-cloud.net/0.5.1/cirros-0.5.1-x86_64-disk.img"
-OPENSTACK_IMAGE_NAME="ubuntu-1910-kube-v1.17.3"
-OPENSTACK_BASTION_IMAGE_NAME="cirros"
+OPENSTACK_IMAGE_NAME=${OPENSTACK_IMAGE_NAME:-"ubuntu-1910-kube-v1.17.3"}
+OPENSTACK_BASTION_IMAGE_NAME=${OPENSTACK_BASTION_IMAGE_NAME:-"cirros"}
+OPENSTACK_FAILURE_DOMAIN=${OPENSTACK_FAILURE_DOMAIN:-"nova"}
 OPENSTACK_DNS_NAMESERVERS=${OPENSTACK_DNS_NAMESERVERS:-"192.168.200.1"}
 OPENSTACK_NODE_MACHINE_FLAVOR=${OPENSTACK_NODE_MACHINE_FLAVOR:-"m1.small"}
+WORKER_MACHINE_COUNT=${WORKER_MACHINE_COUNT:-"3"}
 OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR=${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR:-"m1.medium"}
+CONTROL_PLANE_MACHINE_COUNT=${CONTROL_PLANE_MACHINE_COUNT:-"1"}
 OPENSTACK_BASTION_MACHINE_FLAVOR=${OPENSTACK_BASTION_MACHINE_FLAVOR:-"m1.tiny"}
 OPENSTACK_CLUSTER_TEMPLATE=${OPENSTACK_CLUSTER_TEMPLATE:-"./templates/cluster-template-without-lb.yaml"}
 CLUSTER_NAME=${CLUSTER_NAME:-"capi-quickstart"}
 OPENSTACK_SSH_KEY_NAME=${OPENSTACK_SSH_KEY_NAME:-"${CLUSTER_NAME}-key"}
-KUBERNETES_VERSION=${KUBERNETES_VERSION:-"v1.18.6"}
-TIMESTAMP=$(date +"%Y-%m-%dT%H:%M:%SZ")
+KUBERNETES_VERSION=${KUBERNETES_VERSION:-"v1.19.7"}
+USE_CI_ARTIFACTS=${USE_CI_ARTIFACTS:-"true"}
+IMAGE_REPOSITORY=${IMAGE_REPOSITORY:-"k8s.gcr.io"}
 
 ARTIFACTS="${ARTIFACTS:-${PWD}/_artifacts}"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
@@ -73,6 +78,9 @@ dump_kind_logs() {
   echo "images in bootstrap cluster using kubectl CLI" >> "${ARTIFACTS}/logs/images.txt"
   (kubectl get pods --all-namespaces -o json \
    | jq --raw-output '.items[].spec.containers[].image' | sort)  >> "${ARTIFACTS}/logs/images.txt" || true
+  sudo journalctl --output=short-precise -k -b all > "${ARTIFACTS}/logs/kern.txt" || true
+  sudo journalctl --output=short-precise > "${ARTIFACTS}/logs/systemd.txt" || true
+  sudo last -x > "${ARTIFACTS}/logs/last-x.txt" || true
 
   # export all logs from kind
   kind "export" logs --name="clusterapi" "${ARTIFACTS}/logs" || true
@@ -104,6 +112,8 @@ dump_capo_logs() {
 
   # dump OpenStack info
   echo "" > "${ARTIFACTS}/logs/openstack-cluster.txt"
+  echo "=== OpenStack compute images list ===" >> "${ARTIFACTS}/logs/openstack-cluster.txt" || true
+  openstack image list >> "${ARTIFACTS}/logs/openstack-cluster.txt" || true
   echo "=== OpenStack compute instances list ===" >> "${ARTIFACTS}/logs/openstack-cluster.txt" || true
   openstack server list >> "${ARTIFACTS}/logs/openstack-cluster.txt" || true
   echo "=== OpenStack compute instances show ===" >> "${ARTIFACTS}/logs/openstack-cluster.txt" || true
@@ -167,6 +177,12 @@ function ssh-to-node() {
 create_key_pair() {
   echo "Create key pair"
 
+  if [[ -f /tmp/${OPENSTACK_SSH_KEY_NAME}.pem ]] && [[ -f /tmp/${OPENSTACK_SSH_KEY_NAME}.pem.pub ]]
+  then
+    echo "Skipping, key pair already exists"
+    return 0
+  fi
+
   ssh-keygen -t rsa -f "/tmp/${OPENSTACK_SSH_KEY_NAME}.pem"  -N ""
   chmod 0400 "/tmp/${OPENSTACK_SSH_KEY_NAME}.pem"
 
@@ -203,20 +219,20 @@ upload_image() {
 }
 
 install_prereqs() {
-    # Install Docker
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-    sudo apt-key fingerprint 0EBFCD88
-    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-    sudo apt-get update
-    sudo apt-get install -y docker-ce docker-ce-cli containerd.io jq
-    # docker socket already works because OpenLab runs via root
+  # Install Docker
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+  sudo apt-key fingerprint 0EBFCD88
+  sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+  sudo apt-get update
+  sudo apt-get install -y docker-ce docker-ce-cli containerd.io jq
+  # docker socket already works because OpenLab runs via root
     
     # Install yq
-	go get github.com/mikefarah/yq/v2
+	GO111MODULE=on go get github.com/mikefarah/yq/v2
 	go get -u github.com/go-bindata/go-bindata/...
 
-    source "${REPO_ROOT}/hack/ensure-kubectl.sh"
-    source "${REPO_ROOT}/hack/ensure-kind.sh"
+  source "${REPO_ROOT}/hack/ensure-kubectl.sh"
+  source "${REPO_ROOT}/hack/ensure-kind.sh"
 }
 
 # build kubernetes / node image, e2e binaries
@@ -253,8 +269,14 @@ build() {
 
   cd ${REPO_ROOT}
   echo "Build Docker Images"
-  make modules docker-build
+  make modules bin/clusterctl hack/tools/bin/kustomize hack/tools/bin/envsubst docker-build
 }
+
+# CAPI/CAPO versions
+# See: https://console.cloud.google.com/storage/browser/artifacts.k8s-staging-cluster-api.appspot.com/components?project=k8s-staging-cluster-api
+E2E_CAPI_DOWNLOAD_VERSION=nightly_master_20210220
+E2E_CAPI_VERSION=0.4.0
+E2E_CAPO_VERSION=0.4.0
 
 # up a cluster with kind
 create_cluster() {
@@ -264,26 +286,123 @@ create_cluster() {
   # exports the b64 env vars used below
   source ${REPO_ROOT}/templates/env.rc ${OPENSTACK_CLOUD_YAML_FILE} ${CLUSTER_NAME}
 
-  OPENSTACK_CLOUD_CACERT_B64=${OPENSTACK_CLOUD_CACERT_B64} \
-  OPENSTACK_CLOUD_PROVIDER_CONF_B64=${OPENSTACK_CLOUD_PROVIDER_CONF_B64} \
-  OPENSTACK_CLOUD_YAML_B64=${OPENSTACK_CLOUD_YAML_B64} \
-  OPENSTACK_IMAGE_NAME=${OPENSTACK_IMAGE_NAME} \
-  OPENSTACK_SSH_KEY_NAME=${OPENSTACK_SSH_KEY_NAME} \
-  OPENSTACK_DNS_NAMESERVERS=${OPENSTACK_DNS_NAMESERVERS} \
-  OPENSTACK_CLUSTER_TEMPLATE=${OPENSTACK_CLUSTER_TEMPLATE} \
-  KUBERNETES_VERSION=${KUBERNETES_VERSION} \
-    make create-cluster
+  cd ${REPO_ROOT}
+
+	# Create local repository to use local OpenStack provider and nightly CAPI
+	mkdir -p ./out
+  cat ./hack/ci/e2e-conformance/clusterctl.yaml.tpl | \
+	  sed "s|\${PWD}|${PWD}|" | \
+	  sed "s|\${E2E_CAPO_VERSION}|${E2E_CAPO_VERSION}|" | \
+	  sed "s|\${E2E_CAPI_VERSION}|${E2E_CAPI_VERSION}|" \
+	   > ./out/clusterctl.yaml
+
+	mkdir -p ./out/infrastructure-openstack/${E2E_CAPO_VERSION}
+	MANIFEST_IMG=gcr.io/k8s-staging-capi-openstack/capi-openstack-controller-amd64 MANIFEST_TAG=dev make set-manifest-image
+	./hack/tools/bin/kustomize build config/default > ./out/infrastructure-openstack/${E2E_CAPO_VERSION}/infrastructure-components.yaml
+  cp ./hack/ci/e2e-conformance/metadata.yaml ./out/infrastructure-openstack/${E2E_CAPO_VERSION}/metadata.yaml
+
+	mkdir -p ./out/cluster-api/v${E2E_CAPI_VERSION}
+	wget https://storage.googleapis.com/artifacts.k8s-staging-cluster-api.appspot.com/components/${E2E_CAPI_DOWNLOAD_VERSION}/core-components.yaml -O ./out/cluster-api/v${E2E_CAPI_VERSION}/core-components.yaml
+	cp ./hack/ci/e2e-conformance/metadata.yaml ./out/cluster-api/v${E2E_CAPI_VERSION}/metadata.yaml
+
+	mkdir -p ./out/bootstrap-kubeadm/v${E2E_CAPI_VERSION}
+	wget https://storage.googleapis.com/artifacts.k8s-staging-cluster-api.appspot.com/components/${E2E_CAPI_DOWNLOAD_VERSION}/bootstrap-components.yaml -O ./out/bootstrap-kubeadm/v${E2E_CAPI_VERSION}/bootstrap-components.yaml
+	cp ./hack/ci/e2e-conformance/metadata.yaml ./out/bootstrap-kubeadm/v${E2E_CAPI_VERSION}/metadata.yaml
+
+	mkdir -p ./out/control-plane-kubeadm/v${E2E_CAPI_VERSION}
+	wget https://storage.googleapis.com/artifacts.k8s-staging-cluster-api.appspot.com/components/${E2E_CAPI_DOWNLOAD_VERSION}/control-plane-components.yaml -O ./out/control-plane-kubeadm/v${E2E_CAPI_VERSION}/control-plane-components.yaml
+	cp ./hack/ci/e2e-conformance/metadata.yaml ./out/control-plane-kubeadm/v${E2E_CAPI_VERSION}/metadata.yaml
+
+  # Generate cluster.yaml
+	OPENSTACK_FAILURE_DOMAIN=${OPENSTACK_FAILURE_DOMAIN} \
+	OPENSTACK_CLOUD=${OPENSTACK_CLOUD} \
+	OPENSTACK_CLOUD_CACERT_B64=${OPENSTACK_CLOUD_CACERT_B64} \
+	OPENSTACK_CLOUD_PROVIDER_CONF_B64=${OPENSTACK_CLOUD_PROVIDER_CONF_B64} \
+	OPENSTACK_CLOUD_YAML_B64=${OPENSTACK_CLOUD_YAML_B64} \
+	OPENSTACK_DNS_NAMESERVERS=${OPENSTACK_DNS_NAMESERVERS} \
+	OPENSTACK_IMAGE_NAME=${OPENSTACK_IMAGE_NAME} \
+	OPENSTACK_SSH_KEY_NAME=${OPENSTACK_SSH_KEY_NAME} \
+	OPENSTACK_NODE_MACHINE_FLAVOR=${OPENSTACK_NODE_MACHINE_FLAVOR} \
+	OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR=${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR} \
+	  ./bin/clusterctl config cluster "${CLUSTER_NAME}" \
+	    --from="${OPENSTACK_CLUSTER_TEMPLATE}" \
+	    --kubernetes-version "${KUBERNETES_VERSION}" \
+	    --target-namespace "${CLUSTER_NAME}" \
+	    --control-plane-machine-count="${CONTROL_PLANE_MACHINE_COUNT}" \
+	    --worker-machine-count="${WORKER_MACHINE_COUNT}" > ./hack/ci/e2e-conformance/cluster.yaml
+
+  # Patch cluster.yaml
+	cat ./hack/ci/e2e-conformance/e2e-conformance_patch.yaml.tpl | \
+	  sed "s|\${OPENSTACK_CLOUD_PROVIDER_CONF_B64}|${OPENSTACK_CLOUD_PROVIDER_CONF_B64}|" | \
+	  sed "s|\${OPENSTACK_CLOUD_CACERT_B64}|${OPENSTACK_CLOUD_CACERT_B64}|" | \
+	  sed "s|\${USE_CI_ARTIFACTS}|${USE_CI_ARTIFACTS}|" | \
+	  sed "s|\${IMAGE_REPOSITORY}|${IMAGE_REPOSITORY}|" | \
+	  sed "s|\${KUBERNETES_VERSION}|${KUBERNETES_VERSION}|" | \
+	  sed "s|\${CLUSTER_NAME}|${CLUSTER_NAME}|" | \
+	  sed "s|\${OPENSTACK_BASTION_MACHINE_FLAVOR}|${OPENSTACK_BASTION_MACHINE_FLAVOR}|" | \
+	  sed "s|\${OPENSTACK_BASTION_IMAGE_NAME}|${OPENSTACK_BASTION_IMAGE_NAME}|" | \
+	  sed "s|\${OPENSTACK_SSH_KEY_NAME}|${OPENSTACK_SSH_KEY_NAME}|" \
+	   > ./hack/ci/e2e-conformance/e2e-conformance_patch.yaml
+
+	./hack/tools/bin/kustomize build --reorder=none hack/ci/e2e-conformance  > ./out/cluster.yaml
+
+	if ! kind get clusters | grep -q clusterapi
+	then
+		kind create cluster --name=clusterapi
+	fi
+
+  echo "loading capi image into kind cluster ..."
+  kind --name=clusterapi load docker-image "gcr.io/k8s-staging-capi-openstack/capi-openstack-controller-amd64:dev"
+
+	# Delete already deployed provider
+	set -x
+	./bin/clusterctl delete --all
+	./bin/clusterctl delete --infrastructure openstack --include-namespace --namespace capo-system || true
+	kubectl wait --for=delete --timeout=5m ns/capo-system || true
+
+	# Deploy provider
+	./bin/clusterctl init --config ./out/clusterctl.yaml --infrastructure openstack --core cluster-api:v${E2E_CAPI_VERSION} --bootstrap kubeadm:v${E2E_CAPI_VERSION} --control-plane kubeadm:v${E2E_CAPI_VERSION}
+
+	# Wait for CAPI pods
+	kubectl wait --for=condition=Ready --timeout=5m -n capi-system pod --all
+	kubectl wait --for=condition=Ready --timeout=5m -n capi-kubeadm-bootstrap-system pod --all
+	kubectl wait --for=condition=Ready --timeout=5m -n capi-kubeadm-control-plane-system pod --all
+	kubectl wait --for=condition=Ready --timeout=5m -n capo-system pod --all
+
+	# Wait for CAPO CRDs
+	kubectl wait --for condition=established --timeout=60s crds/openstackmachines.infrastructure.cluster.x-k8s.io
+	kubectl wait --for condition=established --timeout=60s crds/openstackmachinetemplates.infrastructure.cluster.x-k8s.io
+	kubectl wait --for condition=established --timeout=60s crds/openstackclusters.infrastructure.cluster.x-k8s.io
+
+  # Wait until everything is really ready, as we had some problems with pods being ready but not yet
+  # available when deploying the cluster.
+	sleep 5
+
+	# Deploy cluster
+  kubectl create ns "${CLUSTER_NAME}" || true
+	kubectl apply -f ./out/cluster.yaml
+
+	# Wait for the kubeconfig to become available.
+
+	timeout 300 bash -c "while ! kubectl -n ${CLUSTER_NAME} get secrets | grep ${CLUSTER_NAME}-kubeconfig; do kubectl -n ${CLUSTER_NAME} get secrets; sleep 10; done"
+	# Get kubeconfig and store it locally.
+	kubectl -n "${CLUSTER_NAME}" get secrets "${CLUSTER_NAME}-kubeconfig" -o json | jq -r .data.value | base64 --decode > ./kubeconfig
+	timeout 900 bash -c "while ! kubectl --kubeconfig=./kubeconfig get nodes | grep control-plane; do kubectl --kubeconfig=./kubeconfig get nodes; sleep 10; done"
+
+	# Deploy calico
+	curl https://docs.projectcalico.org/manifests/calico.yaml | sed "s/veth_mtu:.*/veth_mtu: \"1430\"/g" | \
+		kubectl --kubeconfig=./kubeconfig apply -f -
 
   # Wait till all machines are running (bail out at 30 mins)
   attempt=0
   while true; do
-    kubectl get machines
-    read running total <<< $(kubectl get machines \
+    kubectl -n "${CLUSTER_NAME}" get machines
+    read running total <<< $(kubectl -n "${CLUSTER_NAME}" get machines \
       -o json | jq -r '.items[].status.phase' | awk 'BEGIN{count=0} /(r|R)unning/{count++} END{print count " " NR}') ;
     if [[ ${total} ==  ${running} ]]; then
       return 0
     fi
-    read failed total <<< $(kubectl get machines \
+    read failed total <<< $(kubectl -n "${CLUSTER_NAME}" get machines \
       -o json | jq -r '.items[].status.phase' | awk 'BEGIN{count=0} /(f|F)ailed/{count++} END{print count " " NR}') ;
     if [[ ! ${failed} -eq 0 ]]; then
       echo "$failed machines (out of $total) in cluster failed ... bailing out"
@@ -300,13 +419,19 @@ create_cluster() {
   done
 
   # Wait till all pods and nodes are ready
-  kubectl wait --for=condition=Ready --timeout=15m pods -n kube-system --kubeconfig="$KUBECONFIG" --all
-  kubectl wait --for=condition=Ready --timeout=5m node --kubeconfig="$KUBECONFIG" --all
+  kubectl --kubeconfig=./kubeconfig wait --for=condition=Ready --timeout=15m pods -n kube-system --all
+  kubectl --kubeconfig=./kubeconfig wait --for=condition=Ready --timeout=5m node --all
 }
 
 delete_cluster() {
-    CLUSTER_NAME=${CLUSTER_NAME} \
-      make delete-cluster
+  kubectl -n "${CLUSTER_NAME}" delete cluster --all --ignore-not-found
+	kubectl -n "${CLUSTER_NAME}" get machinedeployment,kubeadmcontrolplane,cluster
+
+	if [[ $(kubectl -n "${CLUSTER_NAME}" get machinedeployment,kubeadmcontrolplane,cluster | wc -l) -gt 0 ]]
+	then
+	  echo "Error: not all resources have been deleted correctly"
+	  exit 1
+	fi
 }
 
 # run e2es with kubetest
@@ -362,7 +487,7 @@ main() {
       SKIP_CLEANUP="1"
     fi
     if [[ "$arg" == "--use-ci-artifacts" ]]; then
-      USE_CI_ARTIFACTS="1"
+      USE_CI_ARTIFACTS="true"
     fi
     if [[ "$arg" == "--skip-upload-image" ]]; then
       SKIP_UPLOAD_IMAGE="1"

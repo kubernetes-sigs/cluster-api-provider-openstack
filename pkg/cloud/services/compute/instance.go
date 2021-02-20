@@ -40,11 +40,12 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
+	"github.com/gophercloud/utils/openstack/compute/v2/flavors"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha3"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha4"
 	"sigs.k8s.io/cluster-api/controllers/noderefutil"
 	"sigs.k8s.io/cluster-api/util"
 )
@@ -229,19 +230,24 @@ func createInstance(is *Service, clusterName string, i *infrav1.Instance) (*infr
 			}
 		}
 	}
+
 	if i.Subnet != "" && accessIPv4 == "" {
 		return nil, fmt.Errorf("no ports with fixed IPs found on Subnet \"%s\"", i.Subnet)
+	}
+
+	flavorID, err := flavors.IDFromName(is.computeClient, i.Flavor)
+	if err != nil {
+		return nil, fmt.Errorf("error getting flavor id from flavor name %s: %v", i.Flavor, err)
 	}
 
 	var serverCreateOpts servers.CreateOptsBuilder = servers.CreateOpts{
 		Name:             i.Name,
 		ImageRef:         imageID,
-		FlavorName:       i.Flavor,
+		FlavorRef:        flavorID,
 		AvailabilityZone: i.FailureDomain,
 		Networks:         portsList,
 		UserData:         []byte(i.UserData),
 		SecurityGroups:   *i.SecurityGroups,
-		ServiceClient:    is.computeClient,
 		Tags:             i.Tags,
 		Metadata:         i.Metadata,
 		ConfigDrive:      i.ConfigDrive,

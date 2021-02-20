@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha3
+package v1alpha4
 
 // OpenStackMachineTemplateResource describes the data needed to create a OpenStackMachine from a template
 type OpenStackMachineTemplateResource struct {
@@ -243,10 +243,16 @@ var (
 type Bastion struct {
 	//+optional
 	Enabled bool `json:"enabled"`
-
-	// Instance for the bastion itself
-	Instance OpenStackMachineSpec `json:"instance,omitempty"`
-
 	//+optional
-	AvailabilityZone string `json:"availabilityZone,omitempty"`
+	Flavor string `json:"flavor,omitempty"`
+	//+optional
+	Image string `json:"image,omitempty"`
+	//+optional
+	SSHKeyName string `json:"sshKeyName,omitempty"`
+	//+optional
+	Networks []NetworkParam `json:"networks,omitempty"`
+	//+optional
+	FloatingIP string `json:"floatingIP,omitempty"`
+	//+optional
+	SecurityGroups []SecurityGroupParam `json:"securityGroups,omitempty"`
 }

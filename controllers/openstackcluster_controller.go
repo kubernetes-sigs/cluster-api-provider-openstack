@@ -30,14 +30,15 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/tools/record"
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/loadbalancer"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/provider"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha3"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha4"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/patch"
+	"sigs.k8s.io/cluster-api/util/predicates"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -49,24 +50,23 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-// OpenStackClusterReconciler reconciles a OpenStackCluster object
+// OpenStackClusterReconciler reconciles a OpenStackCluster object.
 type OpenStackClusterReconciler struct {
-	client.Client
-	Recorder record.EventRecorder
-	Log      logr.Logger
+	Client           client.Client
+	Recorder         record.EventRecorder
+	WatchFilterValue string
 }
 
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackclusters,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackclusters/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=cluster.x-k8s.io,resources=clusters;clusters/status,verbs=get;list;watch
 
-func (r *OpenStackClusterReconciler) Reconcile(req ctrl.Request) (_ ctrl.Result, reterr error) {
-	ctx := context.TODO()
-	log := r.Log.WithValues("namespace", req.Namespace, "openStackCluster", req.Name)
+func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.Result, reterr error) {
+	log := ctrl.LoggerFrom(ctx)
 
 	// Fetch the OpenStackCluster instance
 	openStackCluster := &infrav1.OpenStackCluster{}
-	err := r.Get(ctx, req.NamespacedName, openStackCluster)
+	err := r.Client.Get(ctx, req.NamespacedName, openStackCluster)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
@@ -85,9 +85,14 @@ func (r *OpenStackClusterReconciler) Reconcile(req ctrl.Request) (_ ctrl.Result,
 		return reconcile.Result{}, nil
 	}
 
+	if util.IsPaused(cluster, openStackCluster) {
+		log.Info("OpenStackCluster or linked Cluster is marked as paused. Won't reconcile")
+		return reconcile.Result{}, nil
+	}
+
 	log = log.WithValues("cluster", cluster.Name)
 
-	patchHelper, err := patch.NewHelper(openStackCluster, r)
+	patchHelper, err := patch.NewHelper(openStackCluster, r.Client)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -103,17 +108,18 @@ func (r *OpenStackClusterReconciler) Reconcile(req ctrl.Request) (_ ctrl.Result,
 
 	// Handle deleted clusters
 	if !openStackCluster.DeletionTimestamp.IsZero() {
-		return r.reconcileDelete(ctx, log, patchHelper, openStackCluster)
+		return reconcileDelete(ctx, log, r.Client, r.Recorder, patchHelper, openStackCluster)
 	}
 
 	// Handle non-deleted clusters
-	return r.reconcileNormal(ctx, log, patchHelper, cluster, openStackCluster)
+	return reconcileNormal(ctx, log, r.Client, patchHelper, cluster, openStackCluster)
 }
 
-func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, log logr.Logger, patchHelper *patch.Helper, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
+//nolint:interfacer
+func reconcileDelete(ctx context.Context, log logr.Logger, client client.Client, recorder record.EventRecorder, patchHelper *patch.Helper, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
 	log.Info("Reconciling Cluster delete")
 
-	osProviderClient, clientOpts, err := provider.NewClientFromCluster(r.Client, openStackCluster)
+	osProviderClient, clientOpts, err := provider.NewClientFromCluster(client, openStackCluster)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -133,12 +139,12 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, log lo
 			if err = computeService.DeleteBastion(bastion.ID); err != nil {
 				return reconcile.Result{}, errors.Errorf("failed to delete bastion: %v", err)
 			}
-			r.Recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteServer", "Deleted server %s with id %s", bastion.Name, bastion.ID)
+			recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteServer", "Deleted server %s with id %s", bastion.Name, bastion.ID)
 			if openStackCluster.Spec.Bastion.Instance.FloatingIP == "" {
 				if err = networkingService.DeleteFloatingIP(bastion.FloatingIP); err != nil {
 					return reconcile.Result{}, errors.Errorf("failed to delete floating IP: %v", err)
 				}
-				r.Recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteFloatingIP", "Deleted floating IP %s", bastion.FloatingIP)
+				recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteFloatingIP", "Deleted floating IP %s", bastion.FloatingIP)
 			}
 		}
 
@@ -147,7 +153,7 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, log lo
 			if err = networkingService.DeleteSecurityGroups(bastionSecGroup); err != nil {
 				return reconcile.Result{}, errors.Errorf("failed to delete security group: %v", err)
 			}
-			r.Recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteSecurityGroup", "Deleted security group %s with id %s", bastionSecGroup.Name, bastionSecGroup.ID)
+			recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteSecurityGroup", "Deleted security group %s with id %s", bastionSecGroup.Name, bastionSecGroup.ID)
 		}
 	}
 
@@ -161,13 +167,13 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, log lo
 			if err = loadBalancerService.DeleteLoadBalancer(apiLb.Name, openStackCluster); err != nil {
 				return reconcile.Result{}, errors.Errorf("failed to delete load balancer: %v", err)
 			}
-			r.Recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteLoadBalancer", "Deleted load balancer %s with id %s", apiLb.Name, apiLb.ID)
+			recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteLoadBalancer", "Deleted load balancer %s with id %s", apiLb.Name, apiLb.ID)
 
 			if openStackCluster.Spec.APIServerFloatingIP == "" {
 				if err = networkingService.DeleteFloatingIP(apiLb.IP); err != nil {
 					return reconcile.Result{}, errors.Errorf("failed to delete floating IP: %v", err)
 				}
-				r.Recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteFloatingIP", "Deleted floating IP %s", apiLb.IP)
+				recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteFloatingIP", "Deleted floating IP %s", apiLb.IP)
 			}
 		}
 	}
@@ -178,7 +184,7 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, log lo
 		if err = networkingService.DeleteSecurityGroups(workerSecGroup); err != nil {
 			return reconcile.Result{}, errors.Errorf("failed to delete security group: %v", err)
 		}
-		r.Recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteSecurityGroup", "Deleted security group %s with id %s", workerSecGroup.Name, workerSecGroup.ID)
+		recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteSecurityGroup", "Deleted security group %s with id %s", workerSecGroup.Name, workerSecGroup.ID)
 	}
 
 	if controlPlaneSecGroup := openStackCluster.Status.ControlPlaneSecurityGroup; controlPlaneSecGroup != nil {
@@ -186,7 +192,7 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, log lo
 		if err = networkingService.DeleteSecurityGroups(controlPlaneSecGroup); err != nil {
 			return reconcile.Result{}, errors.Errorf("failed to delete security group: %v", err)
 		}
-		r.Recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteSecurityGroup", "Deleted security group %s with id %s", controlPlaneSecGroup.Name, controlPlaneSecGroup.ID)
+		recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteSecurityGroup", "Deleted security group %s with id %s", controlPlaneSecGroup.Name, controlPlaneSecGroup.ID)
 	}
 
 	// if NodeCIDR was not set, no network was created.
@@ -196,7 +202,7 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, log lo
 			if err = networkingService.DeleteRouter(network); err != nil {
 				return ctrl.Result{}, errors.Errorf("failed to delete router: %v", err)
 			}
-			r.Recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteRouter", "Deleted router %s with id %s", router.Name, router.ID)
+			recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteRouter", "Deleted router %s with id %s", router.Name, router.ID)
 			log.Info("OpenStack router deleted successfully")
 		}
 
@@ -204,7 +210,7 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, log lo
 		if err = networkingService.DeleteNetwork(network); err != nil {
 			return ctrl.Result{}, errors.Errorf("failed to delete network: %v", err)
 		}
-		r.Recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteNetwork", "Deleted network %s with id %s", network.Name, network.ID)
+		recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteNetwork", "Deleted network %s with id %s", network.Name, network.ID)
 		log.Info("OpenStack network deleted successfully")
 	}
 
@@ -228,7 +234,7 @@ func contains(arr []string, target string) bool {
 	return false
 }
 
-func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, log logr.Logger, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
+func reconcileNormal(ctx context.Context, log logr.Logger, client client.Client, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
 	log.Info("Reconciling Cluster")
 
 	// If the OpenStackCluster doesn't have our finalizer, add it.
@@ -238,7 +244,7 @@ func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, log lo
 		return reconcile.Result{}, err
 	}
 
-	osProviderClient, clientOpts, err := provider.NewClientFromCluster(r.Client, openStackCluster)
+	osProviderClient, clientOpts, err := provider.NewClientFromCluster(client, openStackCluster)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -248,13 +254,13 @@ func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, log lo
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileNetworkComponents(log, osProviderClient, clientOpts, cluster, openStackCluster)
+	err = reconcileNetworkComponents(log, osProviderClient, clientOpts, cluster, openStackCluster)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
-		err = r.reconcileBastion(log, osProviderClient, clientOpts, cluster, openStackCluster)
+		err = reconcileBastion(log, osProviderClient, clientOpts, cluster, openStackCluster)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -292,10 +298,10 @@ func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, log lo
 
 	openStackCluster.Status.Ready = true
 	log.Info("Reconciled Cluster create successfully")
-	return ctrl.Result{}, nil
+	return reconcile.Result{}, nil
 }
 
-func (r *OpenStackClusterReconciler) reconcileBastion(log logr.Logger, osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
+func reconcileBastion(log logr.Logger, osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
 
 	log.Info("Reconciling Bastion")
 
@@ -335,7 +341,7 @@ func (r *OpenStackClusterReconciler) reconcileBastion(log logr.Logger, osProvide
 	return nil
 }
 
-func (r *OpenStackClusterReconciler) reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
+func reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
 	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
 
 	networkingService, err := networking.NewService(osProviderClient, clientOpts, log)
@@ -437,11 +443,13 @@ func (r *OpenStackClusterReconciler) reconcileNetworkComponents(log logr.Logger,
 	return nil
 }
 
-func (r *OpenStackClusterReconciler) SetupWithManager(mgr ctrl.Manager, options controller.Options) error {
+func (r *OpenStackClusterReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager, options controller.Options) error {
+	log := ctrl.LoggerFrom(ctx)
+
 	controller, err := ctrl.NewControllerManagedBy(mgr).
 		WithOptions(options).
 		For(&infrav1.OpenStackCluster{}).
-		WithEventFilter(pausedPredicates(r.Log)).
+		WithEventFilter(predicates.ResourceNotPausedAndHasFilterLabel(ctrl.LoggerFrom(ctx), r.WatchFilterValue)).
 		WithEventFilter(
 			predicate.Funcs{
 				// Avoid reconciling if the event triggering the reconciliation is related to incremental status updates
@@ -471,14 +479,12 @@ func (r *OpenStackClusterReconciler) SetupWithManager(mgr ctrl.Manager, options 
 
 	return controller.Watch(
 		&source.Kind{Type: &clusterv1.Cluster{}},
-		&handler.EnqueueRequestsFromMapFunc{
-			ToRequests: handler.ToRequestsFunc(r.requeueOpenStackClusterForUnpausedCluster),
-		},
+		handler.EnqueueRequestsFromMapFunc(r.requeueOpenStackClusterForUnpausedCluster(log)),
 		predicate.Funcs{
 			UpdateFunc: func(e event.UpdateEvent) bool {
 				oldCluster := e.ObjectOld.(*clusterv1.Cluster)
 				newCluster := e.ObjectNew.(*clusterv1.Cluster)
-				log := r.Log.WithValues("predicate", "updateEvent", "namespace", newCluster.Namespace, "cluster", newCluster.Name)
+				log := log.WithValues("predicate", "updateEvent", "namespace", newCluster.Namespace, "cluster", newCluster.Name)
 				switch {
 				// return true if Cluster.Spec.Paused has changed from true to false
 				case oldCluster.Spec.Paused && !newCluster.Spec.Paused:
@@ -492,7 +498,7 @@ func (r *OpenStackClusterReconciler) SetupWithManager(mgr ctrl.Manager, options 
 			},
 			CreateFunc: func(e event.CreateEvent) bool {
 				cluster := e.Object.(*clusterv1.Cluster)
-				log := r.Log.WithValues("predicate", "createEvent", "namespace", cluster.Namespace, "cluster", cluster.Name)
+				log := log.WithValues("predicate", "createEvent", "namespace", cluster.Namespace, "cluster", cluster.Name)
 
 				// Only need to trigger a reconcile if the Cluster.Spec.Paused is false
 				if !cluster.Spec.Paused {
@@ -503,12 +509,12 @@ func (r *OpenStackClusterReconciler) SetupWithManager(mgr ctrl.Manager, options 
 				return false
 			},
 			DeleteFunc: func(e event.DeleteEvent) bool {
-				log := r.Log.WithValues("predicate", "deleteEvent", "namespace", e.Meta.GetNamespace(), "cluster", e.Meta.GetName())
+				log := log.WithValues("predicate", "deleteEvent", "namespace", e.Object.GetNamespace(), "cluster", e.Object.GetName())
 				log.V(4).Info("Cluster did not match expected conditions, will not attempt to map associated OpenStackCluster.")
 				return false
 			},
 			GenericFunc: func(e event.GenericEvent) bool {
-				log := r.Log.WithValues("predicate", "genericEvent", "namespace", e.Meta.GetNamespace(), "cluster", e.Meta.GetName())
+				log := log.WithValues("predicate", "genericEvent", "namespace", e.Object.GetNamespace(), "cluster", e.Object.GetName())
 				log.V(4).Info("Cluster did not match expected conditions, will not attempt to map associated OpenStackCluster.")
 				return false
 			},
@@ -516,31 +522,37 @@ func (r *OpenStackClusterReconciler) SetupWithManager(mgr ctrl.Manager, options 
 	)
 }
 
-func (r *OpenStackClusterReconciler) requeueOpenStackClusterForUnpausedCluster(o handler.MapObject) []ctrl.Request {
-	c := o.Object.(*clusterv1.Cluster)
-	log := r.Log.WithValues("objectMapper", "clusterToOpenStackCluster", "namespace", c.Namespace, "cluster", c.Name)
+func (r *OpenStackClusterReconciler) requeueOpenStackClusterForUnpausedCluster(log logr.Logger) handler.MapFunc {
+	return func(o client.Object) []ctrl.Request {
+		c, ok := o.(*clusterv1.Cluster)
+		if !ok {
+			panic(fmt.Sprintf("Expected a Cluster but got a %T", o))
+		}
 
-	// Don't handle deleted clusters
-	if !c.ObjectMeta.DeletionTimestamp.IsZero() {
-		log.V(4).Info("Cluster has a deletion timestamp, skipping mapping.")
-		return nil
-	}
+		log := log.WithValues("objectMapper", "clusterToOpenStackCluster", "namespace", c.Namespace, "cluster", c.Name)
 
-	// Make sure the ref is set
-	if c.Spec.InfrastructureRef == nil {
-		log.V(4).Info("Cluster does not have an InfrastructureRef, skipping mapping.")
-		return nil
-	}
+		// Don't handle deleted clusters
+		if !c.ObjectMeta.DeletionTimestamp.IsZero() {
+			log.V(4).Info("Cluster has a deletion timestamp, skipping mapping.")
+			return nil
+		}
 
-	if c.Spec.InfrastructureRef.GroupVersionKind().Kind != "OpenStackCluster" {
-		log.V(4).Info("Cluster has an InfrastructureRef for a different type, skipping mapping.")
-		return nil
-	}
+		// Make sure the ref is set
+		if c.Spec.InfrastructureRef == nil {
+			log.V(4).Info("Cluster does not have an InfrastructureRef, skipping mapping.")
+			return nil
+		}
 
-	log.V(4).Info("Adding request.", "openstackCluster", c.Spec.InfrastructureRef.Name)
-	return []ctrl.Request{
-		{
-			NamespacedName: client.ObjectKey{Namespace: c.Namespace, Name: c.Spec.InfrastructureRef.Name},
-		},
+		if c.Spec.InfrastructureRef.GroupVersionKind().Kind != "OpenStackCluster" {
+			log.V(4).Info("Cluster has an InfrastructureRef for a different type, skipping mapping.")
+			return nil
+		}
+
+		log.V(4).Info("Adding request.", "openstackCluster", c.Spec.InfrastructureRef.Name)
+		return []ctrl.Request{
+			{
+				NamespacedName: client.ObjectKey{Namespace: c.Namespace, Name: c.Spec.InfrastructureRef.Name},
+			},
+		}
 	}
 }

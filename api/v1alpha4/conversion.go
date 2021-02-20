@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Kubernetes Authors.
+Copyright 2020 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,10 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha3
+package v1alpha4
+
+// Hub marks OpenStackCluster as a conversion hub.
+func (*OpenStackCluster) Hub() {}
+
+// Hub marks OpenStackClusterList as a conversion hub.
+func (*OpenStackClusterList) Hub() {}
 
 // Hub marks OpenStackMachine as a conversion hub.
 func (*OpenStackMachine) Hub() {}
 
 // Hub marks OpenStackMachineList as a conversion hub.
 func (*OpenStackMachineList) Hub() {}
+
+// Hub marks OpenStackMachineTemplate as a conversion hub.
+func (*OpenStackMachineTemplate) Hub() {}
+
+// Hub marks OpenStackMachineTemplateList as a conversion hub.
+func (*OpenStackMachineTemplateList) Hub() {}

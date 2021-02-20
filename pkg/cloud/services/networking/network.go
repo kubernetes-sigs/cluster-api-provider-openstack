@@ -28,7 +28,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/gophercloud/gophercloud/pagination"
 	"github.com/pkg/errors"
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 )
 
 type createOpts struct {
