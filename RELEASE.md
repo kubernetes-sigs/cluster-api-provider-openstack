@@ -33,16 +33,14 @@
     3. `./templates/cluster-template-without-lb.yaml`
     4. `./templates/cluster-template-external-cloud-provider.yaml`
     5. `./metadata.yaml` (clusterctl >0.3.1 will include hardcoded metadata for CAPO. But let's keep the `metadata.yaml` file for our v0.3.* releases to be compatible with clusterctl <=0.3.1)
-9.  Perform the [image promotion process](https://github.com/kubernetes/k8s.io/tree/master/k8s.gcr.io#image-promoter).
+9.  Perform the [image promotion process](https://github.com/kubernetes/k8s.io/tree/main/k8s.gcr.io#image-promoter).
     The staging repository is at https://console.cloud.google.com/gcr/images/k8s-staging-capi-openstack/GLOBAL. Be
     sure to choose the top level `capi-openstack-controller`, which will provide the multi-arch manifest, rather than one for a specific architecture.
-    Add the new sha=>tag mapping to the [images.yaml](https://github.com/kubernetes/k8s.io/edit/master/k8s.gcr.io/images/k8s-staging-capi-openstack/images.yaml) (use the sha of the image with the corresponding tag)
+    The image build logs are available in [Cloud Build](https://console.cloud.google.com/cloud-build/builds?project=k8s-staging-capi-openstack).
+    Add the new sha=>tag mapping to the [images.yaml](https://github.com/kubernetes/k8s.io/edit/main/k8s.gcr.io/images/k8s-staging-capi-openstack/images.yaml) (use the sha of the image with the corresponding tag)
 10.  Finalise the release notes
 11.  Publish release. Use the pre-release option for release
     candidate versions of Cluster API Provider OpenStack.
-12.  Email `kubernetes-sig-cluster-lifecycle@googlegroups.com` to announce the release
-
-<!-- TODO add link to image promote PR after the first release -->
 
 ### Permissions
 
