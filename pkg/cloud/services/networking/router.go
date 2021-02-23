@@ -253,7 +253,7 @@ func GetNetworksByFilter(networkClient *gophercloud.ServiceClient, opts networks
 			return false, fmt.Errorf("no networks could be found with the filters provided")
 		}
 		nets = networkList
-		return true, nil
+		return nets, nil
 	})
 	if err != nil {
 		return nil, err
