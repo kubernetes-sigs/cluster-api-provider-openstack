@@ -18,16 +18,13 @@ package networking
 
 import (
 	"fmt"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 
-	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
-	"github.com/gophercloud/gophercloud/pagination"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
 )
 
@@ -219,73 +216,6 @@ func (s *Service) getRouterInterfaces(routerID string) ([]ports.Port, error) {
 	}
 
 	return portList, nil
-}
-
-func (s *Service) GetNetworksByFilter(opts networks.ListOptsBuilder) ([]networks.Network, error) {
-	return GetNetworksByFilter(s.client, opts)
-}
-
-// getNetworkIDsByFilter retrieves network ids by querying openstack with filters
-func GetNetworkIDsByFilter(networkClient *gophercloud.ServiceClient, opts networks.ListOptsBuilder) ([]string, error) {
-	nets, err := GetNetworksByFilter(networkClient, opts)
-	if err != nil {
-		return nil, err
-	}
-	ids := []string{}
-	for _, network := range nets {
-		ids = append(ids, network.ID)
-	}
-	return ids, nil
-}
-
-// GetNetworksByFilter retrieves networks by querying openstack with filters
-func GetNetworksByFilter(networkClient *gophercloud.ServiceClient, opts networks.ListOptsBuilder) ([]networks.Network, error) {
-	if opts == nil {
-		return nil, fmt.Errorf("no Filters were passed")
-	}
-	pager := networks.List(networkClient, opts)
-	var nets []networks.Network
-	err := pager.EachPage(func(page pagination.Page) (bool, error) {
-		networkList, err := networks.ExtractNetworks(page)
-		if err != nil {
-			return false, err
-		} else if len(networkList) == 0 {
-			return false, fmt.Errorf("no networks could be found with the filters provided")
-		}
-		nets = networkList
-		return true, nil
-	})
-	if err != nil {
-		return nil, err
-	}
-	return nets, nil
-}
-
-func (s *Service) GetSubnetsByFilter(opts subnets.ListOptsBuilder) ([]subnets.Subnet, error) {
-	return GetSubnetsByFilter(s.client, opts)
-}
-
-// A function for getting the id of a subnet by querying openstack with filters
-func GetSubnetsByFilter(networkClient *gophercloud.ServiceClient, opts subnets.ListOptsBuilder) ([]subnets.Subnet, error) {
-	if opts == nil {
-		return []subnets.Subnet{}, fmt.Errorf("no Filters were passed")
-	}
-	pager := subnets.List(networkClient, opts)
-	var snets []subnets.Subnet
-	err := pager.EachPage(func(page pagination.Page) (bool, error) {
-		subnetList, err := subnets.ExtractSubnets(page)
-		if err != nil {
-			return false, err
-		} else if len(subnetList) == 0 {
-			return false, fmt.Errorf("no subnets could be found with the filters provided")
-		}
-		snets = append(snets, subnetList...)
-		return true, nil
-	})
-	if err != nil {
-		return []subnets.Subnet{}, err
-	}
-	return snets, nil
 }
 
 func (s *Service) existsRouter(routerID string) (bool, error) {
