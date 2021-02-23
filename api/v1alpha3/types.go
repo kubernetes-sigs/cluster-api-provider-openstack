@@ -132,6 +132,7 @@ type Instance struct {
 	FailureDomain  string            `json:"failureDomain,omitempty"`
 	SecurityGroups *[]string         `json:"securigyGroups,omitempty"`
 	Networks       *[]Network        `json:"networks,omitempty"`
+	AccessSubnet   string            `json:"accessSubnet,omitempty"`
 	Tags           []string          `json:"tags,omitempty"`
 	Image          string            `json:"image,omitempty"`
 	Flavor         string            `json:"flavor,omitempty"`

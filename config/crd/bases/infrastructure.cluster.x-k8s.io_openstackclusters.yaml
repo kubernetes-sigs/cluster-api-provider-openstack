@@ -476,6 +476,8 @@ spec:
             properties:
               bastion:
                 properties:
+                  accessSubnet:
+                    type: string
                   configDrive:
                     type: boolean
                   failureDomain:

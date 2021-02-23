@@ -59,6 +59,10 @@ spec:
           spec:
             description: OpenStackMachineSpec defines the desired state of OpenStackMachine
             properties:
+              accessSubnetUuid:
+                description: IP address of a port from this subnet will be marked
+                  as AccessIPv4 on the created compute instance
+                type: string
               cloudName:
                 description: The name of the cloud to use from the clouds secret
                 type: string
