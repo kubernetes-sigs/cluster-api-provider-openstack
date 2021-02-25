@@ -134,7 +134,7 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, log lo
 				return reconcile.Result{}, errors.Errorf("failed to delete bastion: %v", err)
 			}
 			r.Recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteServer", "Deleted server %s with id %s", bastion.Name, bastion.ID)
-			if openStackCluster.Spec.Bastion.FloatingIP == "" {
+			if openStackCluster.Spec.Bastion.Instance.FloatingIP == "" {
 				if err = networkingService.DeleteFloatingIP(bastion.FloatingIP); err != nil {
 					return reconcile.Result{}, errors.Errorf("failed to delete floating IP: %v", err)
 				}
@@ -322,7 +322,7 @@ func (r *OpenStackClusterReconciler) reconcileBastion(log logr.Logger, osProvide
 	if err != nil {
 		return err
 	}
-	fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster.Spec.Bastion.FloatingIP)
+	fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster.Spec.Bastion.Instance.FloatingIP)
 	if err != nil {
 		return errors.Errorf("failed to get or create floating IP for bastion: %v", err)
 	}

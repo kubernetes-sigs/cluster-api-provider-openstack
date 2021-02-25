@@ -5,9 +5,10 @@ metadata:
 spec:
   bastion:
     enabled: true
-    flavor: ${OPENSTACK_BASTION_MACHINE_FLAVOR}
-    image: ${OPENSTACK_BASTION_IMAGE_NAME}
-    sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
+    instance:
+      flavor: ${OPENSTACK_BASTION_MACHINE_FLAVOR}
+      image: ${OPENSTACK_BASTION_IMAGE_NAME}
+      sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
 ---
 apiVersion: controlplane.cluster.x-k8s.io/v1alpha3
 kind: KubeadmControlPlane
