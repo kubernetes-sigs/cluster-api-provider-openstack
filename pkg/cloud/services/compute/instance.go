@@ -80,7 +80,7 @@ func (s *Service) InstanceCreate(clusterName string, machine *clusterv1.Machine,
 		ConfigDrive:   openStackMachine.Spec.ConfigDrive,
 		FailureDomain: *machine.Spec.FailureDomain,
 		RootVolume:    openStackMachine.Spec.RootVolume,
-		AccessSubnet:  openStackMachine.Spec.AccessSubnetUUID,
+		AccessSubnet:  openStackMachine.Spec.Subnet,
 	}
 
 	if openStackMachine.Spec.Trunk {
