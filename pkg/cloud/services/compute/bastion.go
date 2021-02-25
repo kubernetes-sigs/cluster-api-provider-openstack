@@ -38,15 +38,16 @@ func (s *Service) DeleteBastion(serverID string) error {
 func (s *Service) CreateBastion(clusterName string, openStackCluster *infrav1.OpenStackCluster) (*infrav1.Instance, error) {
 
 	name := fmt.Sprintf("%s-bastion", clusterName)
-
 	input := &infrav1.Instance{
-		Name:       name,
-		Flavor:     openStackCluster.Spec.Bastion.Flavor,
-		SSHKeyName: openStackCluster.Spec.Bastion.SSHKeyName,
-		Image:      openStackCluster.Spec.Bastion.Image,
+		Name:          name,
+		Flavor:        openStackCluster.Spec.Bastion.Instance.Flavor,
+		SSHKeyName:    openStackCluster.Spec.Bastion.Instance.SSHKeyName,
+		Image:         openStackCluster.Spec.Bastion.Instance.Image,
+		FailureDomain: openStackCluster.Spec.Bastion.AvailabilityZone,
+		RootVolume:    openStackCluster.Spec.Bastion.Instance.RootVolume,
 	}
 
-	securityGroups, err := getSecurityGroups(s, openStackCluster.Spec.Bastion.SecurityGroups)
+	securityGroups, err := getSecurityGroups(s, openStackCluster.Spec.Bastion.Instance.SecurityGroups)
 	if err != nil {
 		return nil, err
 	}
@@ -56,9 +57,9 @@ func (s *Service) CreateBastion(clusterName string, openStackCluster *infrav1.Op
 	input.SecurityGroups = &securityGroups
 
 	var nets []infrav1.Network
-	if len(openStackCluster.Spec.Bastion.Networks) > 0 {
+	if len(openStackCluster.Spec.Bastion.Instance.Networks) > 0 {
 		var err error
-		nets, err = getServerNetworks(s.networkClient, openStackCluster.Spec.Bastion.Networks)
+		nets, err = getServerNetworks(s.networkClient, openStackCluster.Spec.Bastion.Instance.Networks)
 		if err != nil {
 			return nil, err
 		}

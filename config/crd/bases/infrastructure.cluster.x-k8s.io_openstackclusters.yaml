@@ -82,161 +82,261 @@ spec:
               bastion:
                 description: Bastion is the OpenStack instance to login the nodes
                 properties:
+                  availabilityZone:
+                    type: string
                   enabled:
                     type: boolean
-                  flavor:
-                    type: string
-                  floatingIP:
-                    type: string
-                  image:
-                    type: string
-                  networks:
-                    items:
-                      properties:
-                        filter:
-                          description: Filters for optional network query
+                  instance:
+                    description: Instance for the bastion itself
+                    properties:
+                      cloudName:
+                        description: The name of the cloud to use from the clouds
+                          secret
+                        type: string
+                      cloudsSecret:
+                        description: The name of the secret containing the openstack
+                          credentials
+                        properties:
+                          name:
+                            description: Name is unique within a namespace to reference
+                              a secret resource.
+                            type: string
+                          namespace:
+                            description: Namespace defines the space within which
+                              the secret name must be unique.
+                            type: string
+                        type: object
+                      configDrive:
+                        description: Config Drive support
+                        type: boolean
+                      flavor:
+                        description: The flavor reference for the flavor for your
+                          server instance.
+                        type: string
+                      floatingIP:
+                        description: The floatingIP which will be associated to the
+                          machine, only used for master. The floatingIP should have
+                          been created and haven't been associated.
+                        type: string
+                      image:
+                        description: The name of the image to use for your server
+                          instance. If the RootVolume is specified, this will be ignored
+                          and use rootVolume directly.
+                        type: string
+                      instanceID:
+                        description: InstanceID is the OpenStack instance ID for this
+                          machine.
+                        type: string
+                      networks:
+                        description: A networks object. Required parameter when there
+                          are multiple networks defined for the tenant. When you do
+                          not specify the networks parameter, the server attaches
+                          to the only network created for the current tenant.
+                        items:
                           properties:
-                            adminStateUp:
-                              type: boolean
-                            description:
+                            filter:
+                              description: Filters for optional network query
+                              properties:
+                                adminStateUp:
+                                  type: boolean
+                                description:
+                                  type: string
+                                id:
+                                  type: string
+                                limit:
+                                  type: integer
+                                marker:
+                                  type: string
+                                name:
+                                  type: string
+                                notTags:
+                                  type: string
+                                notTagsAny:
+                                  type: string
+                                projectId:
+                                  type: string
+                                shared:
+                                  type: boolean
+                                sortDir:
+                                  type: string
+                                sortKey:
+                                  type: string
+                                status:
+                                  type: string
+                                tags:
+                                  type: string
+                                tagsAny:
+                                  type: string
+                                tenantId:
+                                  type: string
+                              type: object
+                            fixedIp:
+                              description: A fixed IPv4 address for the NIC.
                               type: string
-                            id:
-                              type: string
-                            limit:
-                              type: integer
-                            marker:
-                              type: string
-                            name:
-                              type: string
-                            notTags:
-                              type: string
-                            notTagsAny:
-                              type: string
-                            projectId:
-                              type: string
-                            shared:
-                              type: boolean
-                            sortDir:
-                              type: string
-                            sortKey:
-                              type: string
-                            status:
-                              type: string
-                            tags:
-                              type: string
-                            tagsAny:
-                              type: string
-                            tenantId:
-                              type: string
-                          type: object
-                        fixedIp:
-                          description: A fixed IPv4 address for the NIC.
-                          type: string
-                        subnets:
-                          description: Subnet within a network to use
-                          items:
-                            properties:
-                              filter:
-                                description: Filters for optional network query
+                            subnets:
+                              description: Subnet within a network to use
+                              items:
                                 properties:
-                                  cidr:
-                                    type: string
-                                  description:
-                                    type: string
-                                  enableDhcp:
-                                    type: boolean
-                                  gateway_ip:
-                                    type: string
-                                  id:
-                                    type: string
-                                  ipVersion:
-                                    type: integer
-                                  ipv6AddressMode:
-                                    type: string
-                                  ipv6RaMode:
-                                    type: string
-                                  limit:
-                                    type: integer
-                                  marker:
-                                    type: string
-                                  name:
-                                    type: string
-                                  networkId:
-                                    type: string
-                                  notTags:
-                                    type: string
-                                  notTagsAny:
-                                    type: string
-                                  projectId:
-                                    type: string
-                                  sortDir:
-                                    type: string
-                                  sortKey:
-                                    type: string
-                                  subnetpoolId:
-                                    type: string
-                                  tags:
-                                    type: string
-                                  tagsAny:
-                                    type: string
-                                  tenantId:
+                                  filter:
+                                    description: Filters for optional network query
+                                    properties:
+                                      cidr:
+                                        type: string
+                                      description:
+                                        type: string
+                                      enableDhcp:
+                                        type: boolean
+                                      gateway_ip:
+                                        type: string
+                                      id:
+                                        type: string
+                                      ipVersion:
+                                        type: integer
+                                      ipv6AddressMode:
+                                        type: string
+                                      ipv6RaMode:
+                                        type: string
+                                      limit:
+                                        type: integer
+                                      marker:
+                                        type: string
+                                      name:
+                                        type: string
+                                      networkId:
+                                        type: string
+                                      notTags:
+                                        type: string
+                                      notTagsAny:
+                                        type: string
+                                      projectId:
+                                        type: string
+                                      sortDir:
+                                        type: string
+                                      sortKey:
+                                        type: string
+                                      subnetpoolId:
+                                        type: string
+                                      tags:
+                                        type: string
+                                      tagsAny:
+                                        type: string
+                                      tenantId:
+                                        type: string
+                                    type: object
+                                  uuid:
+                                    description: The UUID of the network. Required
+                                      if you omit the port attribute.
                                     type: string
                                 type: object
-                              uuid:
-                                description: The UUID of the network. Required if
-                                  you omit the port attribute.
-                                type: string
-                            type: object
-                          type: array
-                        uuid:
-                          description: The UUID of the network. Required if you omit
-                            the port attribute.
-                          type: string
-                      type: object
-                    type: array
-                  securityGroups:
-                    items:
-                      properties:
-                        filter:
-                          description: Filters used to query security groups in openstack
-                          properties:
-                            description:
-                              type: string
-                            id:
-                              type: string
-                            limit:
-                              type: integer
-                            marker:
-                              type: string
-                            name:
-                              type: string
-                            notTags:
-                              type: string
-                            notTagsAny:
-                              type: string
-                            projectId:
-                              type: string
-                            sortDir:
-                              type: string
-                            sortKey:
-                              type: string
-                            tags:
-                              type: string
-                            tagsAny:
-                              type: string
-                            tenantId:
+                              type: array
+                            uuid:
+                              description: The UUID of the network. Required if you
+                                omit the port attribute.
                               type: string
                           type: object
-                        name:
-                          description: Security Group name
+                        type: array
+                      providerID:
+                        description: ProviderID is the unique identifier as specified
+                          by the cloud provider.
+                        type: string
+                      rootVolume:
+                        description: The volume metadata to boot from
+                        properties:
+                          deviceType:
+                            type: string
+                          diskSize:
+                            type: integer
+                          sourceType:
+                            type: string
+                          sourceUUID:
+                            type: string
+                        type: object
+                      securityGroups:
+                        description: The names of the security groups to assign to
+                          the instance
+                        items:
+                          properties:
+                            filter:
+                              description: Filters used to query security groups in
+                                openstack
+                              properties:
+                                description:
+                                  type: string
+                                id:
+                                  type: string
+                                limit:
+                                  type: integer
+                                marker:
+                                  type: string
+                                name:
+                                  type: string
+                                notTags:
+                                  type: string
+                                notTagsAny:
+                                  type: string
+                                projectId:
+                                  type: string
+                                sortDir:
+                                  type: string
+                                sortKey:
+                                  type: string
+                                tags:
+                                  type: string
+                                tagsAny:
+                                  type: string
+                                tenantId:
+                                  type: string
+                              type: object
+                            name:
+                              description: Security Group name
+                              type: string
+                            uuid:
+                              description: Security Group UID
+                              type: string
+                          type: object
+                        type: array
+                      serverGroupID:
+                        description: The server group to assign the machine to
+                        type: string
+                      serverMetadata:
+                        additionalProperties:
                           type: string
-                        uuid:
-                          description: Security Group UID
+                        description: Metadata mapping. Allows you to create a map
+                          of key value pairs to add to the server instance.
+                        type: object
+                      sshKeyName:
+                        description: The ssh key to inject in the instance
+                        type: string
+                      subnet:
+                        description: UUID, IP address of a port from this subnet will
+                          be marked as AccessIPv4 on the created compute instance
+                        type: string
+                      tags:
+                        description: Machine tags Requires Nova api 2.52 minimum!
+                        items:
                           type: string
-                      type: object
-                    type: array
-                  sshKeyName:
-                    type: string
+                        type: array
+                      trunk:
+                        description: Whether the server instance is created on a trunk
+                          port or not.
+                        type: boolean
+                      userDataSecret:
+                        description: The name of the secret containing the user data
+                          (startup script in most cases)
+                        properties:
+                          name:
+                            description: Name is unique within a namespace to reference
+                              a secret resource.
+                            type: string
+                          namespace:
+                            description: Namespace defines the space within which
+                              the secret name must be unique.
+                            type: string
+                        type: object
+                    required:
+                    - flavor
+                    - image
+                    type: object
                 type: object
               cloudName:
                 description: The name of the cloud to use from the clouds secret

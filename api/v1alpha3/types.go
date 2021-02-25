@@ -252,16 +252,10 @@ var (
 type Bastion struct {
 	//+optional
 	Enabled bool `json:"enabled"`
+
+	// Instance for the bastion itself
+	Instance OpenStackMachineSpec `json:"instance,omitempty"`
+
 	//+optional
-	Flavor string `json:"flavor,omitempty"`
-	//+optional
-	Image string `json:"image,omitempty"`
-	//+optional
-	SSHKeyName string `json:"sshKeyName,omitempty"`
-	//+optional
-	Networks []NetworkParam `json:"networks,omitempty"`
-	//+optional
-	FloatingIP string `json:"floatingIP,omitempty"`
-	//+optional
-	SecurityGroups []SecurityGroupParam `json:"securityGroups,omitempty"`
+	AvailabilityZone string `json:"availabilityZone,omitempty"`
 }
