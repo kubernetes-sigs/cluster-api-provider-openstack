@@ -229,6 +229,10 @@ func createInstance(is *Service, clusterName string, i *infrav1.Instance) (*infr
 			}
 		}
 	}
+	if i.AccessSubnet != "" && accessIPv4 == "" {
+		return nil, fmt.Errorf("no ports with fixed IPs found on AccessSubnet \"%s\"", i.AccessSubnet)
+	}
+
 	var serverCreateOpts servers.CreateOptsBuilder = servers.CreateOpts{
 		Name:             i.Name,
 		ImageRef:         imageID,
