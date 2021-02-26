@@ -476,8 +476,6 @@ spec:
             properties:
               bastion:
                 properties:
-                  accessSubnet:
-                    type: string
                   configDrive:
                     type: boolean
                   failureDomain:
@@ -592,6 +590,8 @@ spec:
                   state:
                     description: InstanceState describes the state of an OpenStack
                       instance.
+                    type: string
+                  subnet:
                     type: string
                   tags:
                     items:

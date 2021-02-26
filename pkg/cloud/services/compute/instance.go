@@ -80,7 +80,7 @@ func (s *Service) InstanceCreate(clusterName string, machine *clusterv1.Machine,
 		ConfigDrive:   openStackMachine.Spec.ConfigDrive,
 		FailureDomain: *machine.Spec.FailureDomain,
 		RootVolume:    openStackMachine.Spec.RootVolume,
-		AccessSubnet:  openStackMachine.Spec.Subnet,
+		Subnet:        openStackMachine.Spec.Subnet,
 	}
 
 	if openStackMachine.Spec.Trunk {
@@ -185,7 +185,7 @@ func createInstance(is *Service, clusterName string, i *infrav1.Instance) (*infr
 		}
 
 		for _, fip := range port.FixedIPs {
-			if fip.SubnetID == i.AccessSubnet {
+			if fip.SubnetID == i.Subnet {
 				accessIPv4 = fip.IPAddress
 			}
 		}
@@ -229,8 +229,8 @@ func createInstance(is *Service, clusterName string, i *infrav1.Instance) (*infr
 			}
 		}
 	}
-	if i.AccessSubnet != "" && accessIPv4 == "" {
-		return nil, fmt.Errorf("no ports with fixed IPs found on AccessSubnet \"%s\"", i.AccessSubnet)
+	if i.Subnet != "" && accessIPv4 == "" {
+		return nil, fmt.Errorf("no ports with fixed IPs found on Subnet \"%s\"", i.Subnet)
 	}
 
 	var serverCreateOpts servers.CreateOptsBuilder = servers.CreateOpts{
