@@ -4,10 +4,11 @@
 _artifacts
 bin/
 config/
-hack/
 docs/
-templates/
-tmp
+hack/
+out/
 scripts/
+templates/
+tmp/
 **/.md
 tilt-provider.json

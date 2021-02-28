@@ -23,251 +23,271 @@ OPENSTACK_CLOUD_YAML_FILE=${OPENSTACK_CLOUD_YAML_FILE:-"/tmp/clouds.yaml"}
 IMAGE_URL="https://github.com/kubernetes-sigs/cluster-api-provider-openstack/releases/download/v0.3.0/ubuntu-1910-kube-v1.17.3.qcow2"
 CIRROS_URL="http://download.cirros-cloud.net/0.5.1/cirros-0.5.1-x86_64-disk.img"
 OPENSTACK_IMAGE_NAME=${OPENSTACK_IMAGE_NAME:-"ubuntu-1910-kube-v1.17.3"}
-OPENSTACK_BASTION_IMAGE_NAME=${OPENSTACK_BASTION_IMAGE_NAME:-"cirros"}
+OPENSTACK_BASTION_IMAGE_NAME=${OPENSTACK_BASTION_IMAGE_NAME:-"cirros-0.5.1-x86_64-disk"}
 OPENSTACK_FAILURE_DOMAIN=${OPENSTACK_FAILURE_DOMAIN:-"nova"}
 OPENSTACK_DNS_NAMESERVERS=${OPENSTACK_DNS_NAMESERVERS:-"192.168.200.1"}
 OPENSTACK_NODE_MACHINE_FLAVOR=${OPENSTACK_NODE_MACHINE_FLAVOR:-"m1.small"}
-WORKER_MACHINE_COUNT=${WORKER_MACHINE_COUNT:-"3"}
+WORKER_MACHINE_COUNT=${WORKER_MACHINE_COUNT:-"4"}
 OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR=${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR:-"m1.medium"}
 CONTROL_PLANE_MACHINE_COUNT=${CONTROL_PLANE_MACHINE_COUNT:-"1"}
 OPENSTACK_BASTION_MACHINE_FLAVOR=${OPENSTACK_BASTION_MACHINE_FLAVOR:-"m1.tiny"}
-OPENSTACK_CLUSTER_TEMPLATE=${OPENSTACK_CLUSTER_TEMPLATE:-"./templates/cluster-template-without-lb.yaml"}
+OPENSTACK_CLUSTER_TEMPLATE=${OPENSTACK_CLUSTER_TEMPLATE:-"./templates/cluster-template.yaml"}
 CLUSTER_NAME=${CLUSTER_NAME:-"capi-quickstart"}
 OPENSTACK_SSH_KEY_NAME=${OPENSTACK_SSH_KEY_NAME:-"${CLUSTER_NAME}-key"}
-KUBERNETES_VERSION=${KUBERNETES_VERSION:-"v1.19.7"}
+KUBERNETES_VERSION=${KUBERNETES_VERSION:-"v1.20.4"}
 USE_CI_ARTIFACTS=${USE_CI_ARTIFACTS:-"true"}
 IMAGE_REPOSITORY=${IMAGE_REPOSITORY:-"k8s.gcr.io"}
 
 ARTIFACTS="${ARTIFACTS:-${PWD}/_artifacts}"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
 
-LOGS_KIND_DUMPED=false
+LOGS_DEVSTACK_DUMPED=false
+LOGS_MGMT_DUMPED=false
 LOGS_CAPO_DUMPED=false
+
+dump_devstack_logs() {
+  set -x
+
+  if [[ "${LOGS_DEVSTACK_DUMPED}" == "true" ]];
+  then
+    echo "mgmt logs already dumped"
+    return 0
+  fi
+  LOGS_DEVSTACK_DUMPED=true
+
+  echo "Dump logs"
+  dir="${ARTIFACTS}/logs/devstack"
+  mkdir -p "${dir}"
+
+  # e.g.: http://10.150.0.2/identity => 10.150.0.2
+  DEVSTACK_IP=$(echo "$CAPO_AUTH_URL" | awk -F[/:] '{print $4}')
+  scp -i ~/.ssh/google_compute_engine \
+    -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -o "IdentitiesOnly=yes" \
+    -r "root@${DEVSTACK_IP}:/var/log/cloud-init.log" "root@${DEVSTACK_IP}:/var/log/cloud-init-output.log" \
+    "${dir}" || true
+}
 
 dump_kind_logs() {
   set -x
 
-  if [[ "${LOGS_KIND_DUMPED}" == "true" ]];
+  if [[ "${LOGS_MGMT_DUMPED}" == "true" ]];
   then
-    echo "kind logs already dumped"
+    echo "mgmt logs already dumped"
     return 0
   fi
-  LOGS_KIND_DUMPED=true
+  LOGS_MGMT_DUMPED=true
+
+  iptables -t nat -L --line-numbers || true
 
   echo "Dump logs"
-  mkdir -p "${ARTIFACTS}/logs"
+  mkdir -p "${ARTIFACTS}/logs/mgmt"
 
   echo "=== versions ==="
   echo "kind : $(kind version)" || true
-  echo "bootstrap cluster:"
+  echo "mgmt cluster:"
   kubectl version || true
   echo ""
 
   # dump all the info from the CAPI related CRDs
-  kubectl get clusters,openstackclusters,machines,openstackmachines,kubeadmconfigs,machinedeployments,openstackmachinetemplates,kubeadmconfigtemplates,machinesets --all-namespaces -o yaml > "${ARTIFACTS}/logs/kind-capo.txt" || true
-
-  # dump cluster info for kind
-  kubectl cluster-info dump > "${ARTIFACTS}/logs/kind-cluster.txt" || true
-  kubectl get secrets -o yaml -A > "${ARTIFACTS}/logs/kind-cluster-secrets.txt" || true
+  kubectl get clusters,openstackclusters,machines,openstackmachines,kubeadmconfigs,machinedeployments,openstackmachinetemplates,kubeadmconfigtemplates,machinesets --all-namespaces -o yaml > "${ARTIFACTS}/logs/mgmt/capo.txt" || true
 
   # dump images info
-  echo "images in docker" >> "${ARTIFACTS}/logs/images.txt"
-  docker images >> "${ARTIFACTS}/logs/images.txt"
-  echo "images from bootstrap using containerd CLI" >> "${ARTIFACTS}/logs/images.txt"
-  docker exec clusterapi-control-plane ctr -n k8s.io images list >> "${ARTIFACTS}/logs/images.txt" || true
-  echo "images in bootstrap cluster using kubectl CLI" >> "${ARTIFACTS}/logs/images.txt"
+  { echo "=== images in docker using docker images ==="; docker images;} >> "${ARTIFACTS}/logs/mgmt/images.txt"
+  echo "=== images in mgmt cluster using containerd CLI ===" >> "${ARTIFACTS}/logs/mgmt/images.txt"
+  docker exec clusterapi-control-plane ctr -n k8s.io images list >> "${ARTIFACTS}/logs/mgmt/images.txt" || true
+  echo "=== images in mgmt cluster using kubectl CLI" >> "${ARTIFACTS}/logs/mgmt/images.txt"
   (kubectl get pods --all-namespaces -o json \
-   | jq --raw-output '.items[].spec.containers[].image' | sort)  >> "${ARTIFACTS}/logs/images.txt" || true
-  sudo journalctl --output=short-precise -k -b all > "${ARTIFACTS}/logs/kern.txt" || true
-  sudo journalctl --output=short-precise > "${ARTIFACTS}/logs/systemd.txt" || true
-  sudo last -x > "${ARTIFACTS}/logs/last-x.txt" || true
+   | jq --raw-output '.items[].spec.containers[].image' | sort)  >> "${ARTIFACTS}/logs/mgmt/images.txt" || true
+
+  # dump cluster info for mgmt
+  kubectl cluster-info dump > "${ARTIFACTS}/logs/mgmt/cluster.txt" || true
+  kubectl get secrets -o yaml -A > "${ARTIFACTS}/logs/mgmt/cluster-secrets.txt" || true
 
   # export all logs from kind
-  kind "export" logs --name="clusterapi" "${ARTIFACTS}/logs" || true
+  kind export logs --name="clusterapi" "${ARTIFACTS}/logs/mgmt" || true
   set +x
 }
 
-dump_capo_logs() {
+dump_workload_logs() {
   set -x
 
   if [[ "${LOGS_CAPO_DUMPED}" == "true" ]];
   then
-    echo "capo logs already dumped"
+    echo "workload logs already dumped"
     return 0
   fi
   LOGS_CAPO_DUMPED=true
 
   echo "Dump logs"
-  mkdir -p "${ARTIFACTS}/logs"
+  mkdir -p "${ARTIFACTS}/logs/workload"
 
   echo "=== versions ==="
-  echo "capo cluster:"
-  kubectl --kubeconfig=${PWD}/kubeconfig version || true
+  echo "workload cluster:"
+  kubectl --kubeconfig="${PWD}/kubeconfig" version || true
   echo ""
 
   # dump images info
-  echo "images in deployed cluster using kubectl CLI" >> "${ARTIFACTS}/logs/images.txt"
+  echo "=== images in workload cluster using kubectl CLI ===" >> "${ARTIFACTS}/logs/workload/images.txt"
   (kubectl --kubeconfig="${PWD}"/kubeconfig get pods --all-namespaces -o json \
-   | jq --raw-output '.items[].spec.containers[].image' | sort)  >> "${ARTIFACTS}/logs/images.txt" || true
+   | jq --raw-output '.items[].spec.containers[].image' | sort)  >> "${ARTIFACTS}/logs/workload/images.txt" || true
+
+  # dump cluster info for workload
+  kubectl --kubeconfig="${PWD}/kubeconfig" cluster-info dump >> "${ARTIFACTS}/logs/workload/cluster.txt" || true
+  kubectl --kubeconfig="${PWD}/kubeconfig" get secrets -o yaml -A > "${ARTIFACTS}/logs/workload/cluster-secrets.txt" || true
 
   # dump OpenStack info
-  echo "" > "${ARTIFACTS}/logs/openstack-cluster.txt"
-  echo "=== OpenStack compute images list ===" >> "${ARTIFACTS}/logs/openstack-cluster.txt" || true
-  openstack image list >> "${ARTIFACTS}/logs/openstack-cluster.txt" || true
-  echo "=== OpenStack compute instances list ===" >> "${ARTIFACTS}/logs/openstack-cluster.txt" || true
-  openstack server list >> "${ARTIFACTS}/logs/openstack-cluster.txt" || true
-  echo "=== OpenStack compute instances show ===" >> "${ARTIFACTS}/logs/openstack-cluster.txt" || true
-  openstack server list -f value -c Name | xargs -I% openstack server show % >> "${ARTIFACTS}/logs/openstack-cluster.txt" || true
-  echo "=== cluster-info dump ===" >> "${ARTIFACTS}/logs/openstack-cluster.txt" || true
-  kubectl --kubeconfig=${PWD}/kubeconfig cluster-info dump >> "${ARTIFACTS}/logs/openstack-cluster.txt" || true
-  kubectl --kubeconfig=${PWD}/kubeconfig get secrets -o yaml -A > "${ARTIFACTS}/logs/openstack-cluster-secrets.txt" || true
+  echo "=== OpenStack compute images list ===" >> "${ARTIFACTS}/logs/workload/openstack.txt" || true
+  openstack image list >> "${ARTIFACTS}/logs/workload/openstack.txt" || true
+  echo "=== OpenStack compute instances list ===" >> "${ARTIFACTS}/logs/workload/openstack.txt" || true
+  openstack server list >> "${ARTIFACTS}/logs/workload/openstack.txt" || true
+  echo "=== OpenStack compute instances show ===" >> "${ARTIFACTS}/logs/workload/openstack.txt" || true
+  openstack server list -f value -c Name | xargs -I% openstack server show % >> "${ARTIFACTS}/logs/workload/openstack.txt" || true
 
-  jump_node_name=$(openstack server list -f value -c Name | grep ${CLUSTER_NAME}-bastion | head -n 1)
-  jump_node=$(openstack server show ${jump_node_name} -f value -c addresses | awk '{print $2}')
+  jump_node_name=$(openstack server list -f value -c Name | grep "${CLUSTER_NAME}-bastion" | head -n 1)
+  jump_node=$(openstack server show "${jump_node_name}" -f value -c addresses | awk '{print $2}')
+  ssh_config="${ARTIFACTS}/ssh_config"
+  cat > "${ssh_config}" <<EOF
+Host *
+  IdentityFile /tmp/${OPENSTACK_SSH_KEY_NAME}.pem
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+  ConnectTimeout 30
+Host ${jump_node}
+  User cirros
+Host * !${jump_node}
+  ProxyJump ${jump_node}
+EOF
+
   for node in $(openstack server list -f value -c Name | grep -v bastion)
   do
-    echo "collecting logs from ${node} using jump host "
-    dir="${ARTIFACTS}/logs/${node}"
-    mkdir -p ${dir}
+    echo "collecting logs from ${node} using jump host"
+    dir="${ARTIFACTS}/logs/workload/${node}"
+    mkdir -p "${dir}"
 
-    openstack console log show "${node}" > "${dir}/console.log" || true
+    openstack console log show "${node}" > "${dir}/openstack-console.log" || true
+    node=$(openstack port show "${node}"  -f json -c fixed_ips | jq '.fixed_ips[0].ip_address' -r)
 
-    ssh_key_pem="/tmp/${OPENSTACK_SSH_KEY_NAME}.pem"
-    PROXY_COMMAND="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=30 -x -W %h:22 -i ${ssh_key_pem} cirros@${jump_node}"
-    node=$(openstack port show ${node}  -f json -c fixed_ips | jq '.fixed_ips[0].ip_address' -r)
-
-    ssh-to-node "${node}" "${jump_node}" "sudo chmod -R a+r /var/log" || true
-    scp -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=30 -o ProxyCommand="${PROXY_COMMAND}" -i ${ssh_key_pem} \
-      "ubuntu@${node}:/var/log/cloud-init.log" "ubuntu@${node}:/var/log/cloud-init-output.log" \
-      "ubuntu@${node}:/var/log/pods" "ubuntu@${node}:/var/log/containers" \
+    ssh -F "${ssh_config}" "capi@${node}" "sudo chmod -R a+r /var/log" || true
+    scp -F "${ssh_config}" -r \
+      "capi@${node}:/var/log/cloud-init.log" "capi@${node}:/var/log/cloud-init-output.log" \
+      "capi@${node}:/var/log/pods" "capi@${node}:/var/log/containers" \
       "${dir}" || true
 
-    ssh-to-node "${node}" "${jump_node}" "sudo journalctl --output=short-precise -k" > "${dir}/kern.log" || true
-    ssh-to-node "${node}" "${jump_node}" "sudo journalctl --output=short-precise" > "${dir}/systemd.log" || true
-    ssh-to-node "${node}" "${jump_node}" "sudo crictl version && sudo crictl info" > "${dir}/containerd.txt" || true
-    ssh-to-node "${node}" "${jump_node}" "sudo journalctl --no-pager -u cloud-final" > "${dir}/cloud-final.log" || true
-    ssh-to-node "${node}" "${jump_node}" "sudo journalctl --no-pager -u kubelet.service" > "${dir}/kubelet.log" || true
-    ssh-to-node "${node}" "${jump_node}" "sudo journalctl --no-pager -u containerd.service" > "${dir}/containerd.log" || true
-    ssh-to-node "${node}" "${jump_node}" "sudo top -b -n 1" > "${dir}/top.txt" || true
-    ssh-to-node "${node}" "${jump_node}" "sudo crictl ps" > "${dir}/crictl-ps.log" || true
-    ssh-to-node "${node}" "${jump_node}" "sudo crictl pods" > "${dir}/crictl-pods.log" || true
+    ssh -F "${ssh_config}" "capi@${node}" "sudo journalctl --output=short-precise -k -b all" > "${dir}/kernel.log" || true
+    ssh -F "${ssh_config}" "capi@${node}" "sudo journalctl --output=short-precise" > "${dir}/systemd.log" || true
+    ssh -F "${ssh_config}" "capi@${node}" "sudo crictl version && sudo crictl info" > "${dir}/containerd.txt" || true
+    ssh -F "${ssh_config}" "capi@${node}" "sudo journalctl --no-pager -u cloud-final" > "${dir}/cloud-final.log" || true
+    ssh -F "${ssh_config}" "capi@${node}" "sudo journalctl --no-pager -u kubelet.service" > "${dir}/kubelet.log" || true
+    ssh -F "${ssh_config}" "capi@${node}" "sudo journalctl --no-pager -u containerd.service" > "${dir}/containerd.log" || true
+    ssh -F "${ssh_config}" "capi@${node}" "sudo top -b -n 1" > "${dir}/top.txt" || true
+    ssh -F "${ssh_config}" "capi@${node}" "sudo crictl ps" > "${dir}/crictl-ps.log" || true
+    ssh -F "${ssh_config}" "capi@${node}" "sudo crictl pods" > "${dir}/crictl-pods.log" || true
   done
   set +x
 }
 
 function dump_logs() {
+  dump_devstack_logs
   dump_kind_logs
-  dump_capo_logs
-}
-
-# SSH to a node by name ($1) via jump server ($2) and run a command ($3).
-function ssh-to-node() {
-  local node="$1"
-  local jump="$2"
-  local cmd="$3"
-
-  ssh_key_pem="/tmp/${OPENSTACK_SSH_KEY_NAME}.pem"
-  ssh_params="-o LogLevel=quiet -o ConnectTimeout=30 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
-  scp $ssh_params -i $ssh_key_pem $ssh_key_pem "cirros@${jump}:$ssh_key_pem"
-  ssh $ssh_params -i $ssh_key_pem \
-    -o "ProxyCommand ssh $ssh_params -W %h:%p -i $ssh_key_pem cirros@${jump}" \
-    ubuntu@"${node}" "${cmd}"
+  dump_workload_logs
 }
 
 create_key_pair() {
-  echo "Create key pair"
+  echo "Create and upload key pair"
 
   if [[ -f /tmp/${OPENSTACK_SSH_KEY_NAME}.pem ]] && [[ -f /tmp/${OPENSTACK_SSH_KEY_NAME}.pem.pub ]]
   then
-    echo "Skipping, key pair already exists"
-    return 0
+    echo "Skip generating key pair, it already exists"
+  else
+    ssh-keygen -t rsa -f "/tmp/${OPENSTACK_SSH_KEY_NAME}.pem"  -N ""
+    chmod 0400 "/tmp/${OPENSTACK_SSH_KEY_NAME}.pem"
   fi
+  OPENSTACK_SSH_KEY_PUBLIC=$(cat "/tmp/${OPENSTACK_SSH_KEY_NAME}.pem.pub")
 
-  ssh-keygen -t rsa -f "/tmp/${OPENSTACK_SSH_KEY_NAME}.pem"  -N ""
-  chmod 0400 "/tmp/${OPENSTACK_SSH_KEY_NAME}.pem"
-
-  openstack keypair create --public-key "/tmp/${OPENSTACK_SSH_KEY_NAME}.pem.pub" ${OPENSTACK_SSH_KEY_NAME}
+  if ! openstack keypair show "${OPENSTACK_SSH_KEY_NAME}";
+  then
+    openstack keypair create --public-key "/tmp/${OPENSTACK_SSH_KEY_NAME}.pem.pub" "${OPENSTACK_SSH_KEY_NAME}"
+  fi
 }
 
-upload_image() {
-  # $1: image name
-  # $2: image url
+upload_image(){
+  IMAGE_NAME=$1
+  IMAGE_URL=$2
 
   echo "Upload image"
 
   # Remove old image if we don't want to reuse it
   if [[ "${REUSE_OLD_IMAGES:-true}" == "false" ]]; then
-    image_id=$(openstack image list --name=$1 -f value -c ID)
-    if [[ ! -z "$image_id" ]]; then
-        echo "Deleting old image $1  with id: ${image_id}"
-        openstack image delete ${image_id}
+    image_id=$(openstack image list --name="${IMAGE_NAME}" -f value -c ID)
+    if [[ -n "$image_id" ]]; then
+        echo "Deleting old image ${IMAGE_NAME} with id: ${image_id}"
+        openstack image delete "${image_id}"
     fi
   fi
 
-  image=$(openstack image list --name=$1 -f value -c Name)
-  if [[ ! -z "$image" ]]; then
-    echo "Image $1 already exists"
+  image=$(openstack image list --name="${IMAGE_NAME}" -f value -c Name)
+  if [[ -n "$image" ]]; then
+    echo "Image ""${IMAGE_NAME}"" already exists"
     return
   fi
 
-  tmpfile=$(mktemp)
-  echo "Download image $1 from $2"
-  wget -q -c $2 -O ${tmpfile}
+  tmpfile=/tmp/"${IMAGE_NAME}"
+  if [ ! -f "${tmpfile}" ];
+  then
+    echo "Download image ${IMAGE_NAME} from IMAGE_URL"
+    wget -q -c "IMAGE_URL" -O "${tmpfile}"
+  fi
 
-  echo "Uploading image $1"
-  openstack image create --disk-format qcow2 --private --container-format bare --file "${tmpfile}" $1
+  echo "Uploading image ${IMAGE_NAME}"
+  openstack image create --disk-format qcow2 --private --container-format bare --file "${tmpfile}" "${IMAGE_NAME}"
 }
 
 install_prereqs() {
-  # Install Docker
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-  sudo apt-key fingerprint 0EBFCD88
-  sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-  sudo apt-get update
-  sudo apt-get install -y docker-ce docker-ce-cli containerd.io jq
-  # docker socket already works because OpenLab runs via root
-    
-    # Install yq
+  if ! command -v jq;
+  then
+    apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y jq
+  fi
+
 	GO111MODULE=on go get github.com/mikefarah/yq/v2
 	go get -u github.com/go-bindata/go-bindata/...
-
-  source "${REPO_ROOT}/hack/ensure-kubectl.sh"
-  source "${REPO_ROOT}/hack/ensure-kind.sh"
 }
 
 # build kubernetes / node image, e2e binaries
 build() {
+  # possibly enable bazel build caching before building kubernetes
+  if [[ "${BAZEL_REMOTE_CACHE_ENABLED:-false}" == "true" ]]; then
+    create_bazel_cache_rcs.sh || true
+  fi
+
   if [[ ! -d "$(go env GOPATH)/src/k8s.io/kubernetes" ]]; then
-    mkdir -p $(go env GOPATH)/src/k8s.io
-    cd $(go env GOPATH)/src/k8s.io
+    mkdir -p "$(go env GOPATH)/src/k8s.io"
+    cd "$(go env GOPATH)/src/k8s.io"
 
     git clone https://github.com/kubernetes/kubernetes.git
     cd kubernetes
-    git checkout -b ${KUBERNETES_VERSION} "refs/tags/${KUBERNETES_VERSION}"
   fi
 
   pushd "$(go env GOPATH)/src/k8s.io/kubernetes"
+  echo "Checking out Kubernetes version: ${KUBERNETES_VERSION}"
+  git checkout -b "${KUBERNETES_VERSION}" "refs/tags/${KUBERNETES_VERSION}"
 
-  # re-create _output/bin folder
+  # cleanup old _output/bin folder
   rm -rf "${PWD}/_output/bin"
-  mkdir -p "${PWD}/_output/bin/"
 
-  go build -o ./_output/bin/kubectl ./cmd/kubectl
+  # make sure we have e2e requirements
+  make WHAT="test/e2e/e2e.test vendor/github.com/onsi/ginkgo/ginkgo cmd/kubectl"
 
-  ./hack/generate-bindata.sh
-  go test -o ./_output/bin/e2e.test -c ./test/e2e/
-
-  go build -o ./_output/bin/ginkgo ./vendor/github.com/onsi/ginkgo/ginkgo
-
-  PATH="$(go env GOPATH)/src/k8s.io/kubernetes/_output/bin:${PATH}"
+  # ensure the e2e script will find our binaries ...
+  PATH="$(dirname "$(find "${PWD}/_output/bin/" -name kubectl -type f)"):${PATH}"
   export PATH
-  popd
 
   # attempt to release some memory after building
   sync || true
-  sudo sh -c "echo 1 > /proc/sys/vm/drop_caches" || true
+  sh -c "echo 1 > /proc/sys/vm/drop_caches" || true
 
-  cd ${REPO_ROOT}
+  popd
+
+  cd "${REPO_ROOT}"
   echo "Build Docker Images"
   make modules hack/tools/bin/clusterctl hack/tools/bin/kustomize hack/tools/bin/envsubst docker-build
 }
@@ -280,17 +300,12 @@ E2E_CAPO_VERSION=0.4.0
 
 # up a cluster with kind
 create_cluster() {
-  # actually create the cluster
-  KIND_IS_UP=true
 
-  # exports the b64 env vars used below
-  source ${REPO_ROOT}/templates/env.rc ${OPENSTACK_CLOUD_YAML_FILE} ${CLUSTER_NAME}
-
-  cd ${REPO_ROOT}
+  cd "${REPO_ROOT}"
 
 	# Create local repository to use local OpenStack provider and nightly CAPI
 	mkdir -p ./out
-  cat ./hack/ci/e2e-conformance/clusterctl.yaml.tpl | \
+  < ./hack/ci/e2e-conformance/clusterctl.yaml.tpl \
 	  sed "s|\${PWD}|${PWD}|" | \
 	  sed "s|\${E2E_CAPO_VERSION}|${E2E_CAPO_VERSION}|" | \
 	  sed "s|\${E2E_CAPI_VERSION}|${E2E_CAPI_VERSION}|" \
@@ -332,7 +347,7 @@ create_cluster() {
 	    --worker-machine-count="${WORKER_MACHINE_COUNT}" > ./hack/ci/e2e-conformance/cluster.yaml
 
   # Patch cluster.yaml
-	cat ./hack/ci/e2e-conformance/e2e-conformance_patch.yaml.tpl | \
+	< ./hack/ci/e2e-conformance/e2e-conformance_patch.yaml.tpl \
 	  sed "s|\${OPENSTACK_CLOUD_PROVIDER_CONF_B64}|${OPENSTACK_CLOUD_PROVIDER_CONF_B64}|" | \
 	  sed "s|\${OPENSTACK_CLOUD_CACERT_B64}|${OPENSTACK_CLOUD_CACERT_B64}|" | \
 	  sed "s|\${USE_CI_ARTIFACTS}|${USE_CI_ARTIFACTS}|" | \
@@ -341,7 +356,8 @@ create_cluster() {
 	  sed "s|\${CLUSTER_NAME}|${CLUSTER_NAME}|" | \
 	  sed "s|\${OPENSTACK_BASTION_MACHINE_FLAVOR}|${OPENSTACK_BASTION_MACHINE_FLAVOR}|" | \
 	  sed "s|\${OPENSTACK_BASTION_IMAGE_NAME}|${OPENSTACK_BASTION_IMAGE_NAME}|" | \
-	  sed "s|\${OPENSTACK_SSH_KEY_NAME}|${OPENSTACK_SSH_KEY_NAME}|" \
+	  sed "s|\${OPENSTACK_SSH_KEY_NAME}|${OPENSTACK_SSH_KEY_NAME}|" | \
+	  sed "s|\${OPENSTACK_SSH_KEY_PUBLIC}|${OPENSTACK_SSH_KEY_PUBLIC}|" \
 	   > ./hack/ci/e2e-conformance/e2e-conformance_patch.yaml
 
 	./hack/tools/bin/kustomize build --reorder=none hack/ci/e2e-conformance  > ./out/cluster.yaml
@@ -356,9 +372,10 @@ create_cluster() {
 
 	# Delete already deployed provider
 	set -x
-	./hack/tools/bin/clusterctl delete --all
+	./hack/tools/bin/clusterctl delete --all || true
 	./hack/tools/bin/clusterctl delete --infrastructure openstack --include-namespace --namespace capo-system || true
-	kubectl wait --for=delete --timeout=5m ns/capo-system || true
+	kubectl delete ns capi-kubeadm-bootstrap-system capi-kubeadm-control-plane-system capi-system || true
+	kubectl wait --for=delete --timeout=5m ns/capo-system ns/capi-kubeadm-bootstrap-system ns/capi-kubeadm-control-plane-system ns/capi-system || true
 
 	# Deploy provider
 	./hack/tools/bin/clusterctl init --config ./out/clusterctl.yaml --infrastructure openstack --core cluster-api:v${E2E_CAPI_VERSION} --bootstrap kubeadm:v${E2E_CAPI_VERSION} --control-plane kubeadm:v${E2E_CAPI_VERSION}
@@ -397,12 +414,14 @@ create_cluster() {
   attempt=0
   while true; do
     kubectl -n "${CLUSTER_NAME}" get machines
-    read running total <<< $(kubectl -n "${CLUSTER_NAME}" get machines \
+    # shellcheck disable=SC2046
+    read -r running total <<< $(kubectl -n "${CLUSTER_NAME}" get machines \
       -o json | jq -r '.items[].status.phase' | awk 'BEGIN{count=0} /(r|R)unning/{count++} END{print count " " NR}') ;
-    if [[ ${total} ==  ${running} ]]; then
+    if [[ ${total} ==  "${running}" ]]; then
       return 0
     fi
-    read failed total <<< $(kubectl -n "${CLUSTER_NAME}" get machines \
+    # shellcheck disable=SC2046
+    read -r failed total <<< $(kubectl -n "${CLUSTER_NAME}" get machines \
       -o json | jq -r '.items[].status.phase' | awk 'BEGIN{count=0} /(f|F)ailed/{count++} END{print count " " NR}') ;
     if [[ ! ${failed} -eq 0 ]]; then
       echo "$failed machines (out of $total) in cluster failed ... bailing out"
@@ -467,7 +486,7 @@ run_tests() {
   (cd "$(go env GOPATH)/src/k8s.io/kubernetes" && ./hack/ginkgo-e2e.sh \
     '--provider=skeleton' "--num-nodes=${NUM_NODES}" \
     "--ginkgo.focus=${FOCUS}" "--ginkgo.skip=${SKIP}" \
-    "--report-dir=${ARTIFACTS}" '--disable-log-dump=true' | tee ${ARTIFACTS}/e2e.log)
+    "--report-dir=${ARTIFACTS}" '--disable-log-dump=true' | tee "${ARTIFACTS}/e2e.log")
 
   unset KUBECONFIG
   unset KUBERNETES_CONFORMANCE_TEST
@@ -480,8 +499,11 @@ main() {
     if [[ "$arg" == "--verbose" ]]; then
       set -o xtrace
     fi
-    if [[ "$arg" == "--install-prereqs" ]]; then
-      INSTALL_PREREQS="1"
+    if [[ "$arg" == "--skip-install-prereqs" ]]; then
+      SKIP_INSTALL_PREREQS="1"
+    fi
+    if [[ "$arg" == "--skip-build" ]]; then
+      SKIP_BUILD="1"
     fi
     if [[ "$arg" == "--skip-cleanup" ]]; then
       SKIP_CLEANUP="1"
@@ -498,38 +520,50 @@ main() {
     if [[ "$arg" == "--run-tests-parallel" ]]; then
       export PARALLEL="true"
     fi
-    if [[ "$arg" == "--delete-cluster" ]]; then
-      DELETE_CLUSTER="1"
+    if [[ "$arg" == "--skip-delete-cluster" ]]; then
+      SKIP_DELETE_CLUSTER="1"
     fi
   done
 
-  # create temp dir and setup cleanup
-  SKIP_CLEANUP=${SKIP_CLEANUP:-""}
-  if [[ -z "${SKIP_CLEANUP}" ]]; then
-    trap dump_logs EXIT
-  fi
   # ensure artifacts exists when not in CI
   export ARTIFACTS
   mkdir -p "${ARTIFACTS}/logs"
 
   source "${REPO_ROOT}/hack/ensure-go.sh"
   source "${REPO_ROOT}/hack/ensure-kind.sh"
+  source "${REPO_ROOT}/hack/ensure-kubectl.sh"
 
   export GOPATH=${GOPATH:-/home/ubuntu/go}
   export PATH=$PATH:${GOPATH}/bin:/snap/bin:${HOME}/bin
 
-  INSTALL_PREREQS=${INSTALL_PREREQS:-""}
-  if [[ "${INSTALL_PREREQS}" == "yes" || "${INSTALL_PREREQS}" == "1" ]]; then
+  if [[ -z "${SKIP_INSTALL_PREREQS:-}" ]]; then
     echo "Install prereqs..."
     install_prereqs
   fi
+
+  # setup cleanup
+  SKIP_CLEANUP=${SKIP_CLEANUP:-""}
+  if [[ -z "${SKIP_CLEANUP}" ]]; then
+    trap dump_logs EXIT
+  fi
+  
+  # exports the b64 env vars used below
+  # We also need CAPO_AUTH_URL to get files from the devstack later
+  source "${REPO_ROOT}"/templates/env.rc "${OPENSTACK_CLOUD_YAML_FILE}" "${CLUSTER_NAME}"
+  cp "${OPENSTACK_CLOUD_YAML_FILE}" ./
+  export OS_CLOUD=${CLUSTER_NAME}  
+  
   if [[ -z "${SKIP_UPLOAD_IMAGE:-}" ]]; then
     echo "Uploading image..."
-    upload_image ${OPENSTACK_IMAGE_NAME} ${IMAGE_URL}
-    upload_image ${OPENSTACK_BASTION_IMAGE_NAME} ${CIRROS_URL}
+    upload_image "${OPENSTACK_IMAGE_NAME}" "${IMAGE_URL}"
+    upload_image "${OPENSTACK_BASTION_IMAGE_NAME}" "${CIRROS_URL}"
   fi
 
-  build
+  if [[ -z "${SKIP_BUILD:-}" ]]; then
+    echo "Building..."
+    build
+  fi
+
   create_key_pair
   create_cluster
 
@@ -538,8 +572,7 @@ main() {
     run_tests
   fi
 
-  DELETE_CLUSTER=${DELETE_CLUSTER:-""}
-  if [[ "${DELETE_CLUSTER}" == "yes" || "${DELETE_CLUSTER}" == "1" ]]; then
+  if [[ -z "${SKIP_DELETE_CLUSTER:-}" ]]; then
     echo "Dumping logs"
     dump_logs
 
