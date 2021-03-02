@@ -260,7 +260,7 @@ spec:
      rootVolume:
        diskSize: <image size>
        sourceType: "image"
-       SourceUUID: <image id>
+       sourceUUID: <image id>
    ...
    ```
 
