@@ -2,15 +2,23 @@
 
 approvers:
   - sig-cluster-lifecycle-leads
-  - sig-openstack-leads
   - cluster-api-admins
   - cluster-api-maintainers
   - cluster-api-openstack-maintainers
 
 reviewers:
-  - cluster-api-maintainers
   - cluster-api-openstack-maintainers
   - cluster-api-openstack-reviewers
 
 emeritus_maintainers:
   - ncdc
+  - chaosaffe
+  - chrigl
+  - dims
+  - gyliu513
+  - Lion-Wei
+  - m1093782566
+
+emeritus_reviewers:
+  - iamemilio
+  - YorikSar
