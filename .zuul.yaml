@@ -2,7 +2,15 @@
     name: kubernetes-sigs/cluster-api-provider-openstack
     check:
       jobs:
-        - cluster-api-provider-openstack-current-acceptance-test-v1.18
+        - cluster-api-provider-openstack-current-acceptance-test-v1.18:
+            irrelevant-files:
+              - ^README.md$
+              - ^docs/.*$
+              - ^.*\.md$
+              - ^OWNERS$
+              - ^SECURITY_CONTACTS$
+              - ^.gitignore$
+              - ^.*\.sh$
 
 - job:
     name: cluster-api-provider-openstack-conformance-pr
