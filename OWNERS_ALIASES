@@ -1,32 +1,26 @@
-# See the OWNERS docs: https://git.k8s.io/community/docs/devel/owners.md
+# See the OWNERS docs: https://git.k8s.io/community/contributors/guide/owners.md
 
 aliases:
+  # correct as of 2021/03/03
   sig-cluster-lifecycle-leads:
     - justinsb
-    - luxas
+    - neolit123
     - timothysc
+    - fabriziopandini
+  # correct as of 2021/03/03
   cluster-api-admins:
-    - davidewatson
-    - detiber
     - justinsb
-  cluster-api-maintainers:
     - detiber
-    - justinsb
     - vincepri
-  sig-openstack-leads:
-    - hogepodge
-    - dklyle
-    - rjmorse
+  # correct as of 2021/03/03
+  cluster-api-maintainers:
+    - justinsb
+    - detiber
+    - vincepri
+    - CecileRobertMichon
   cluster-api-openstack-maintainers:
-    - chaosaffe
-    - chrigl
-    - dims
-    - gyliu513
     - jichenjc
-    - Lion-Wei
-    - m1093782566
     - sbueringer
-  cluster-api-openstack-reviewers:
-    - iamemilio
-    - YorikSar
     - hidekazuna
+  cluster-api-openstack-reviewers:
+    - prankul88
