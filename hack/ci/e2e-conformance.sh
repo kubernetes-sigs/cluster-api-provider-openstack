@@ -274,7 +274,7 @@ build() {
 
 # CAPI/CAPO versions
 # See: https://console.cloud.google.com/storage/browser/artifacts.k8s-staging-cluster-api.appspot.com/components?project=k8s-staging-cluster-api
-E2E_CAPI_DOWNLOAD_VERSION=nightly_master_20210220
+E2E_CAPI_DOWNLOAD_VERSION=nightly_master_20210305
 E2E_CAPI_VERSION=0.4.0
 E2E_CAPO_VERSION=0.4.0
 
