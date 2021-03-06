@@ -37,7 +37,7 @@ BIN_DIR := bin
 
 # Binaries.
 KUSTOMIZE := $(TOOLS_BIN_DIR)/kustomize
-CLUSTERCTL := $(BIN_DIR)/clusterctl
+CLUSTERCTL := $(TOOLS_BIN_DIR)/clusterctl
 CONTROLLER_GEN := $(TOOLS_BIN_DIR)/controller-gen
 ENVSUBST := $(TOOLS_BIN_DIR)/envsubst
 GOLANGCI_LINT := $(TOOLS_BIN_DIR)/golangci-lint
@@ -124,7 +124,7 @@ manager: ## Build manager binary.
 ## --------------------------------------
 
 $(CLUSTERCTL): ## Build clusterctl binary (we have to set some gitVersion, otherwise commands will fail)
-	go build -ldflags "-X 'sigs.k8s.io/cluster-api/version.gitVersion=v0.4.0-dirty'" -o $(BIN_DIR)/clusterctl sigs.k8s.io/cluster-api/cmd/clusterctl
+	cd $(TOOLS_DIR); go build -tags=tools -ldflags "-X 'sigs.k8s.io/cluster-api/version.gitVersion=v0.4.0-dirty'" -o $(BIN_DIR)/clusterctl sigs.k8s.io/cluster-api/cmd/clusterctl
 
 $(KUSTOMIZE): # Build kustomize from tools folder.
 	hack/ensure-kustomize.sh

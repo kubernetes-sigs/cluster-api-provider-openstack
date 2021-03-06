@@ -269,7 +269,7 @@ build() {
 
   cd ${REPO_ROOT}
   echo "Build Docker Images"
-  make modules bin/clusterctl hack/tools/bin/kustomize hack/tools/bin/envsubst docker-build
+  make modules hack/tools/bin/clusterctl hack/tools/bin/kustomize hack/tools/bin/envsubst docker-build
 }
 
 # CAPI/CAPO versions
@@ -324,7 +324,7 @@ create_cluster() {
 	OPENSTACK_SSH_KEY_NAME=${OPENSTACK_SSH_KEY_NAME} \
 	OPENSTACK_NODE_MACHINE_FLAVOR=${OPENSTACK_NODE_MACHINE_FLAVOR} \
 	OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR=${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR} \
-	  ./bin/clusterctl config cluster "${CLUSTER_NAME}" \
+	  ./hack/tools/bin/clusterctl config cluster "${CLUSTER_NAME}" \
 	    --from="${OPENSTACK_CLUSTER_TEMPLATE}" \
 	    --kubernetes-version "${KUBERNETES_VERSION}" \
 	    --target-namespace "${CLUSTER_NAME}" \
@@ -356,12 +356,12 @@ create_cluster() {
 
 	# Delete already deployed provider
 	set -x
-	./bin/clusterctl delete --all
-	./bin/clusterctl delete --infrastructure openstack --include-namespace --namespace capo-system || true
+	./hack/tools/bin/clusterctl delete --all
+	./hack/tools/bin/clusterctl delete --infrastructure openstack --include-namespace --namespace capo-system || true
 	kubectl wait --for=delete --timeout=5m ns/capo-system || true
 
 	# Deploy provider
-	./bin/clusterctl init --config ./out/clusterctl.yaml --infrastructure openstack --core cluster-api:v${E2E_CAPI_VERSION} --bootstrap kubeadm:v${E2E_CAPI_VERSION} --control-plane kubeadm:v${E2E_CAPI_VERSION}
+	./hack/tools/bin/clusterctl init --config ./out/clusterctl.yaml --infrastructure openstack --core cluster-api:v${E2E_CAPI_VERSION} --bootstrap kubeadm:v${E2E_CAPI_VERSION} --control-plane kubeadm:v${E2E_CAPI_VERSION}
 
 	# Wait for CAPI pods
 	kubectl wait --for=condition=Ready --timeout=5m -n capi-system pod --all
