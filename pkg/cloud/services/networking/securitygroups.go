@@ -143,13 +143,12 @@ func (s *Service) generateDesiredSecGroups(secGroupNames map[string]string, open
 	controlPlaneRules := append(
 		[]infrav1.SecurityGroupRule{
 			{
-				Description:    "Kubernetes API",
-				Direction:      "ingress",
-				EtherType:      "IPv4",
-				PortRangeMin:   6443,
-				PortRangeMax:   6443,
-				Protocol:       "tcp",
-				RemoteIPPrefix: "0.0.0.0/0",
+				Description:  "Kubernetes API",
+				Direction:    "ingress",
+				EtherType:    "IPv4",
+				PortRangeMin: 6443,
+				PortRangeMax: 6443,
+				Protocol:     "tcp",
 			},
 			{
 				Description:   "Etcd",
@@ -219,13 +218,12 @@ func (s *Service) generateDesiredSecGroups(secGroupNames map[string]string, open
 	workerRules := append(
 		[]infrav1.SecurityGroupRule{
 			{
-				Description:    "Node Port Services",
-				Direction:      "ingress",
-				EtherType:      "IPv4",
-				PortRangeMin:   30000,
-				PortRangeMax:   32767,
-				Protocol:       "tcp",
-				RemoteIPPrefix: "0.0.0.0/0",
+				Description:  "Node Port Services",
+				Direction:    "ingress",
+				EtherType:    "IPv4",
+				PortRangeMin: 30000,
+				PortRangeMax: 32767,
+				Protocol:     "tcp",
 			},
 			{
 				// This is needed to support metrics-server deployments
@@ -314,13 +312,12 @@ func (s *Service) generateDesiredSecGroups(secGroupNames map[string]string, open
 			Rules: append(
 				[]infrav1.SecurityGroupRule{
 					{
-						Description:    "SSH",
-						Direction:      "ingress",
-						EtherType:      "IPv4",
-						PortRangeMin:   22,
-						PortRangeMax:   22,
-						Protocol:       "tcp",
-						RemoteIPPrefix: "0.0.0.0/0",
+						Description:  "SSH",
+						Direction:    "ingress",
+						EtherType:    "IPv4",
+						PortRangeMin: 22,
+						PortRangeMax: 22,
+						Protocol:     "tcp",
 					},
 				},
 				defaultRules...,
@@ -332,13 +329,12 @@ func (s *Service) generateDesiredSecGroups(secGroupNames map[string]string, open
 		neutronLbaasRules := append(
 			[]infrav1.SecurityGroupRule{
 				{
-					Description:    "Kubernetes API",
-					Direction:      "ingress",
-					EtherType:      "IPv4",
-					PortRangeMin:   6443,
-					PortRangeMax:   6443,
-					Protocol:       "tcp",
-					RemoteIPPrefix: "0.0.0.0/0",
+					Description:  "Kubernetes API",
+					Direction:    "ingress",
+					EtherType:    "IPv4",
+					PortRangeMin: 6443,
+					PortRangeMax: 6443,
+					Protocol:     "tcp",
 				},
 			},
 			defaultRules...,
@@ -348,13 +344,12 @@ func (s *Service) generateDesiredSecGroups(secGroupNames map[string]string, open
 				neutronLbaasRules = append(neutronLbaasRules,
 					[]infrav1.SecurityGroupRule{
 						{
-							Description:    "APIServerLoadBalancerAdditionalPorts",
-							Direction:      "ingress",
-							EtherType:      "IPv4",
-							PortRangeMin:   value,
-							PortRangeMax:   value,
-							Protocol:       "tcp",
-							RemoteIPPrefix: "0.0.0.0/0",
+							Description:  "APIServerLoadBalancerAdditionalPorts",
+							Direction:    "ingress",
+							EtherType:    "IPv4",
+							PortRangeMin: value,
+							PortRangeMax: value,
+							Protocol:     "tcp",
 						},
 					}...,
 				)
