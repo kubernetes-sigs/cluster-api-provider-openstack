@@ -43,6 +43,7 @@ import (
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/cluster-api/util/predicates"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -55,7 +56,6 @@ import (
 // OpenStackMachineReconciler reconciles a OpenStackMachine object.
 type OpenStackMachineReconciler struct {
 	Client           client.Client
-	Log              logr.Logger
 	Recorder         record.EventRecorder
 	WatchFilterValue string
 }
@@ -145,102 +145,40 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 }
 
 func (r *OpenStackMachineReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager, options controller.Options) error {
-	log := ctrl.LoggerFrom(ctx)
-	OpenStackClusterToOpenStackMachines := r.OpenStackClusterToOpenStackMachines(log)
-
-	controller, err := ctrl.NewControllerManagedBy(mgr).
+	return ctrl.NewControllerManagedBy(mgr).
 		WithOptions(options).
-		For(&infrav1.OpenStackMachine{}).
+		For(
+			&infrav1.OpenStackMachine{},
+			builder.WithPredicates(
+				predicate.Funcs{
+					// Avoid reconciling if the event triggering the reconciliation is related to incremental status updates
+					UpdateFunc: func(e event.UpdateEvent) bool {
+						oldMachine := e.ObjectOld.(*infrav1.OpenStackMachine).DeepCopy()
+						newMachine := e.ObjectNew.(*infrav1.OpenStackMachine).DeepCopy()
+						oldMachine.Status = infrav1.OpenStackMachineStatus{}
+						newMachine.Status = infrav1.OpenStackMachineStatus{}
+						oldMachine.ObjectMeta.ResourceVersion = ""
+						newMachine.ObjectMeta.ResourceVersion = ""
+						return !reflect.DeepEqual(oldMachine, newMachine)
+					},
+				},
+			),
+		).
 		Watches(
 			&source.Kind{Type: &clusterv1.Machine{}},
 			handler.EnqueueRequestsFromMapFunc(util.MachineToInfrastructureMapFunc(infrav1.GroupVersion.WithKind("OpenStackMachine"))),
 		).
 		Watches(
 			&source.Kind{Type: &infrav1.OpenStackCluster{}},
-			handler.EnqueueRequestsFromMapFunc(OpenStackClusterToOpenStackMachines),
+			handler.EnqueueRequestsFromMapFunc(r.OpenStackClusterToOpenStackMachines(ctrl.LoggerFrom(ctx))),
 		).
 		WithEventFilter(predicates.ResourceNotPausedAndHasFilterLabel(ctrl.LoggerFrom(ctx), r.WatchFilterValue)).
-		WithEventFilter(
-			predicate.Funcs{
-				// Avoid reconciling if the event triggering the reconciliation is related to incremental status updates
-				// for OpenStackMachine resources only
-				UpdateFunc: func(e event.UpdateEvent) bool {
-					if e.ObjectOld.GetObjectKind().GroupVersionKind().Kind != "OpenStackMachine" {
-						return true
-					}
-
-					oldMachine := e.ObjectOld.(*infrav1.OpenStackMachine).DeepCopy()
-					newMachine := e.ObjectNew.(*infrav1.OpenStackMachine).DeepCopy()
-
-					oldMachine.Status = infrav1.OpenStackMachineStatus{}
-					newMachine.Status = infrav1.OpenStackMachineStatus{}
-
-					oldMachine.ObjectMeta.ResourceVersion = ""
-					newMachine.ObjectMeta.ResourceVersion = ""
-
-					return !reflect.DeepEqual(oldMachine, newMachine)
-				},
-			},
+		Watches(
+			&source.Kind{Type: &clusterv1.Cluster{}},
+			handler.EnqueueRequestsFromMapFunc(r.requeueOpenStackMachinesForUnpausedCluster(ctrl.LoggerFrom(ctx))),
+			builder.WithPredicates(predicates.ClusterUnpausedAndInfrastructureReady(ctrl.LoggerFrom(ctx))),
 		).
-		Build(r)
-	if err != nil {
-		return err
-	}
-
-	requeueOpenStackMachinesForUnpausedCluster := r.requeueOpenStackMachinesForUnpausedCluster(log)
-	return controller.Watch(
-		&source.Kind{Type: &clusterv1.Cluster{}},
-		handler.EnqueueRequestsFromMapFunc(requeueOpenStackMachinesForUnpausedCluster),
-		predicate.Funcs{
-			UpdateFunc: func(e event.UpdateEvent) bool {
-				oldCluster := e.ObjectOld.(*clusterv1.Cluster)
-				newCluster := e.ObjectNew.(*clusterv1.Cluster)
-				log := log.WithValues("predicate", "updateEvent", "namespace", newCluster.Namespace, "cluster", newCluster.Name)
-
-				switch {
-				// never return true for a paused Cluster
-				case newCluster.Spec.Paused:
-					log.V(4).Info("Cluster is paused, will not attempt to map associated OpenStackMachine.")
-					return false
-				// return true if Cluster.Status.InfrastructureReady has changed from false to true
-				case !oldCluster.Status.InfrastructureReady && newCluster.Status.InfrastructureReady:
-					log.V(4).Info("Cluster InfrastructureReady became ready, will attempt to map associated OpenStackMachine.")
-					return true
-				// return true if Cluster.Spec.Paused has changed from true to false
-				case oldCluster.Spec.Paused && !newCluster.Spec.Paused:
-					log.V(4).Info("Cluster was unpaused, will attempt to map associated OpenStackMachine.")
-					return true
-				// otherwise, return false
-				default:
-					log.V(4).Info("Cluster did not match expected conditions, will not attempt to map associated OpenStackMachine.")
-					return false
-				}
-			},
-			CreateFunc: func(e event.CreateEvent) bool {
-				cluster := e.Object.(*clusterv1.Cluster)
-				log := r.Log.WithValues("predicateEvent", "create", "namespace", cluster.Namespace, "cluster", cluster.Name)
-
-				// Only need to trigger a reconcile if the Cluster.Spec.Paused is false and
-				// Cluster.Status.InfrastructureReady is true
-				if !cluster.Spec.Paused && cluster.Status.InfrastructureReady {
-					log.V(4).Info("Cluster is not paused and has infrastructure ready, will attempt to map associated OpenStackMachine.")
-					return true
-				}
-				log.V(4).Info("Cluster did not match expected conditions, will not attempt to map associated OpenStackMachine.")
-				return false
-			},
-			DeleteFunc: func(e event.DeleteEvent) bool {
-				log := r.Log.WithValues("predicateEvent", "delete", "namespace", e.Object.GetNamespace(), "cluster", e.Object.GetName())
-				log.V(4).Info("Cluster did not match expected conditions, will not attempt to map associated OpenStackMachine.")
-				return false
-			},
-			GenericFunc: func(e event.GenericEvent) bool {
-				log := r.Log.WithValues("predicateEvent", "generic", "namespace", e.Object.GetNamespace(), "cluster", e.Object.GetName())
-				log.V(4).Info("Cluster did not match expected conditions, will not attempt to map associated OpenStackMachine.")
-				return false
-			},
-		},
-	)
+		Complete(r)
 }
 
 func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger logr.Logger, patchHelper *patch.Helper, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {

@@ -201,7 +201,6 @@ func setupReconcilers(ctx context.Context, mgr ctrl.Manager) {
 	}
 	if err := (&controllers.OpenStackMachineReconciler{
 		Client:           mgr.GetClient(),
-		Log:              ctrl.Log.WithName("controllers").WithName("OpenStackMachine"),
 		Recorder:         mgr.GetEventRecorderFor("openstackmachine-controller"),
 		WatchFilterValue: watchFilterValue,
 	}).SetupWithManager(ctx, mgr, concurrency(openStackMachineConcurrency)); err != nil {

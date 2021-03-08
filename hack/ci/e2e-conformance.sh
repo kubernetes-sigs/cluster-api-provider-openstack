@@ -379,7 +379,7 @@ create_cluster() {
 	sleep 5
 
 	# Deploy cluster
-  kubectl create ns "${CLUSTER_NAME}" || true
+	kubectl create ns "${CLUSTER_NAME}" || true
 	kubectl apply -f ./out/cluster.yaml
 
 	# Wait for the kubeconfig to become available.
