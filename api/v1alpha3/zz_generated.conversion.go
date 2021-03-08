@@ -334,12 +334,10 @@ func RegisterConversions(s *runtime.Scheme) error {
 
 func autoConvert_v1alpha3_Bastion_To_v1alpha4_Bastion(in *Bastion, out *v1alpha4.Bastion, s conversion.Scope) error {
 	out.Enabled = in.Enabled
-	out.Flavor = in.Flavor
-	out.Image = in.Image
-	out.SSHKeyName = in.SSHKeyName
-	out.Networks = *(*[]v1alpha4.NetworkParam)(unsafe.Pointer(&in.Networks))
-	out.FloatingIP = in.FloatingIP
-	out.SecurityGroups = *(*[]v1alpha4.SecurityGroupParam)(unsafe.Pointer(&in.SecurityGroups))
+	if err := Convert_v1alpha3_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(&in.Instance, &out.Instance, s); err != nil {
+		return err
+	}
+	out.AvailabilityZone = in.AvailabilityZone
 	return nil
 }
 
@@ -350,12 +348,10 @@ func Convert_v1alpha3_Bastion_To_v1alpha4_Bastion(in *Bastion, out *v1alpha4.Bas
 
 func autoConvert_v1alpha4_Bastion_To_v1alpha3_Bastion(in *v1alpha4.Bastion, out *Bastion, s conversion.Scope) error {
 	out.Enabled = in.Enabled
-	out.Flavor = in.Flavor
-	out.Image = in.Image
-	out.SSHKeyName = in.SSHKeyName
-	out.Networks = *(*[]NetworkParam)(unsafe.Pointer(&in.Networks))
-	out.FloatingIP = in.FloatingIP
-	out.SecurityGroups = *(*[]SecurityGroupParam)(unsafe.Pointer(&in.SecurityGroups))
+	if err := Convert_v1alpha4_OpenStackMachineSpec_To_v1alpha3_OpenStackMachineSpec(&in.Instance, &out.Instance, s); err != nil {
+		return err
+	}
+	out.AvailabilityZone = in.AvailabilityZone
 	return nil
 }
 
