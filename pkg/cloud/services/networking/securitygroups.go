@@ -103,12 +103,6 @@ func (s *Service) ReconcileSecurityGroups(clusterName string, openStackCluster *
 		}
 
 		if observedSecGroups[k].ID != "" {
-			if matchGroups(desiredSecGroup, *observedSecGroups[k]) {
-				s.logger.V(6).Info("Group rules matched, have nothing to do.", "name", desiredSecGroup.Name)
-				continue
-			}
-
-			s.logger.V(6).Info("Group rules didn't match, reconciling...", "name", desiredSecGroup.Name)
 			observedSecGroup, err := s.reconcileGroupRules(desiredSecGroup, *observedSecGroups[k])
 			if err != nil {
 				return err
@@ -414,48 +408,53 @@ func (s *Service) exists(groupID string) (bool, error) {
 	return true, nil
 }
 
-// matchGroups will check if security groups match.
-func matchGroups(desired, observed infrav1.SecurityGroup) bool {
-	// If they have differing amount of rules they obviously don't match.
-	if len(desired.Rules) != len(observed.Rules) {
-		return false
+// reconcileGroupRules reconciles an already existing observed group by deleting rules not needed anymore and
+// creating rules that are missing.
+func (s *Service) reconcileGroupRules(desired, observed infrav1.SecurityGroup) (infrav1.SecurityGroup, error) {
+	rulesToDelete := []infrav1.SecurityGroupRule{}
+	// fills rulesToDelete by calculating observed - desired
+	for _, observedRule := range observed.Rules {
+		delete := true
+		for _, desiredRule := range desired.Rules {
+			r := desiredRule
+			if r.RemoteGroupID == remoteGroupIDSelf {
+				r.RemoteGroupID = observed.ID
+			}
+			if r.Equal(observedRule) {
+				delete = false
+				break
+			}
+		}
+		if delete {
+			rulesToDelete = append(rulesToDelete, observedRule)
+		}
 	}
 
-	// Rules aren't in any order, so we're doing this the hard way.
+	rulesToCreate := []infrav1.SecurityGroupRule{}
+	reconciledRules := make([]infrav1.SecurityGroupRule, 0, len(desired.Rules))
+	// fills rulesToCreate by calculating desired - observed
+	// also adds rules which are in observed and desired to reconciledRules.
 	for _, desiredRule := range desired.Rules {
 		r := desiredRule
 		if r.RemoteGroupID == remoteGroupIDSelf {
 			r.RemoteGroupID = observed.ID
 		}
-		ruleMatched := false
+		create := true
 		for _, observedRule := range observed.Rules {
-			if observedRule.Equal(r) {
-				ruleMatched = true
+			if r.Equal(observedRule) {
+				// add already existing rules to reconciledRules because we won't touch them anymore
+				reconciledRules = append(reconciledRules, observedRule)
+				create = false
 				break
 			}
 		}
-
-		if !ruleMatched {
-			return false
+		if create {
+			rulesToCreate = append(rulesToCreate, desiredRule)
 		}
 	}
-	return true
-}
 
-// reconcileGroupRules reconciles an already existing observed group by essentially emptying out all the rules and
-// recreating them.
-func (s *Service) reconcileGroupRules(desired, observed infrav1.SecurityGroup) (infrav1.SecurityGroup, error) {
-	s.logger.V(6).Info("Deleting all rules for group", "name", observed.Name)
-	for _, rule := range observed.Rules {
-		s.logger.V(6).Info("Deleting rule", "ruleID", rule.ID, "groupName", observed.Name)
-		err := rules.Delete(s.client, rule.ID).ExtractErr()
-		if err != nil {
-			return infrav1.SecurityGroup{}, err
-		}
-	}
-	recreatedRules := make([]infrav1.SecurityGroupRule, 0, len(desired.Rules))
-	s.logger.V(6).Info("Recreating all rules for group", "name", observed.Name)
-	for _, rule := range desired.Rules {
+	s.logger.V(6).Info("Creating new rules needed for group", "name", observed.Name, "amount", len(rulesToCreate))
+	for _, rule := range rulesToCreate {
 		r := rule
 		r.SecurityGroupID = observed.ID
 		if r.RemoteGroupID == remoteGroupIDSelf {
@@ -465,9 +464,19 @@ func (s *Service) reconcileGroupRules(desired, observed infrav1.SecurityGroup) (
 		if err != nil {
 			return infrav1.SecurityGroup{}, err
 		}
-		recreatedRules = append(recreatedRules, newRule)
+		reconciledRules = append(reconciledRules, newRule)
 	}
-	observed.Rules = recreatedRules
+	observed.Rules = reconciledRules
+
+	s.logger.V(6).Info("Deleting rules not needed anymore for group", "name", observed.Name, "amount", len(rulesToDelete))
+	for _, rule := range rulesToDelete {
+		s.logger.V(6).Info("Deleting rule", "ruleID", rule.ID, "groupName", observed.Name)
+		err := rules.Delete(s.client, rule.ID).ExtractErr()
+		if err != nil {
+			return infrav1.SecurityGroup{}, err
+		}
+	}
+
 	return observed, nil
 }
 
@@ -541,7 +550,7 @@ func (s *Service) createRule(r infrav1.SecurityGroupRule) (infrav1.SecurityGroup
 		RemoteIPPrefix: r.RemoteIPPrefix,
 		SecGroupID:     r.SecurityGroupID,
 	}
-	s.logger.V(6).Info("Creating rule")
+	s.logger.V(6).Info("Creating rule", "Description", r.Description, "Direction", dir, "PortRangeMin", r.PortRangeMin, "PortRangeMax", r.PortRangeMax, "Proto", proto, "etherType", etherType, "RemoteGroupID", r.RemoteGroupID, "RemoteIPPrefix", r.RemoteIPPrefix, "SecurityGroupID", r.SecurityGroupID)
 	rule, err := rules.Create(s.client, createOpts).Extract()
 	if err != nil {
 		return infrav1.SecurityGroupRule{}, err
