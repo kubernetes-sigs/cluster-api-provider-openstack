@@ -448,6 +448,15 @@ func (s *Service) reconcileGroupRules(desired, observed infrav1.SecurityGroup) (
 		}
 	}
 
+	s.logger.V(4).Info("Deleting rules not needed anymore for group", "name", observed.Name, "amount", len(rulesToDelete))
+	for _, rule := range rulesToDelete {
+		s.logger.V(6).Info("Deleting rule", "ruleID", rule.ID, "groupName", observed.Name)
+		err := rules.Delete(s.client, rule.ID).ExtractErr()
+		if err != nil {
+			return infrav1.SecurityGroup{}, err
+		}
+	}
+
 	s.logger.V(4).Info("Creating new rules needed for group", "name", observed.Name, "amount", len(rulesToCreate))
 	for _, rule := range rulesToCreate {
 		r := rule
@@ -462,15 +471,6 @@ func (s *Service) reconcileGroupRules(desired, observed infrav1.SecurityGroup) (
 		reconciledRules = append(reconciledRules, newRule)
 	}
 	observed.Rules = reconciledRules
-
-	s.logger.V(4).Info("Deleting rules not needed anymore for group", "name", observed.Name, "amount", len(rulesToDelete))
-	for _, rule := range rulesToDelete {
-		s.logger.V(6).Info("Deleting rule", "ruleID", rule.ID, "groupName", observed.Name)
-		err := rules.Delete(s.client, rule.ID).ExtractErr()
-		if err != nil {
-			return infrav1.SecurityGroup{}, err
-		}
-	}
 
 	return observed, nil
 }
