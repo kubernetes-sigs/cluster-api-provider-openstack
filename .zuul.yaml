@@ -2,9 +2,9 @@
     name: kubernetes-sigs/cluster-api-provider-openstack
     check:
       jobs:
-        - cluster-api-provider-openstack-current-acceptance-test-v1.19-1
-        - cluster-api-provider-openstack-current-acceptance-test-v1.19-2
-        - cluster-api-provider-openstack-current-acceptance-test-v1.19-3
+        - cluster-api-provider-openstack-current-acceptance-test-v1.20-1
+        - cluster-api-provider-openstack-current-acceptance-test-v1.20-2
+        - cluster-api-provider-openstack-current-acceptance-test-v1.20-3
 
 - job:
     name: cluster-api-provider-openstack-conformance-pr
@@ -21,33 +21,33 @@
       extra_args: ''
 
 - job:
-    name: cluster-api-provider-openstack-current-acceptance-test-v1.19-1
+    name: cluster-api-provider-openstack-current-acceptance-test-v1.20-1
     parent: cluster-api-provider-openstack-conformance-pr
     description: |
-      Test CAPO current against Kubernetes release-1.19-1
+      Test CAPO current against Kubernetes release-1.20-1
       We run 3 jobs, so that at least one of them hits a cluster
       with a good CPU. It's fine if just one of them is successful.
     vars:
-      k8s_version_series: '1.19'
+      k8s_version_series: '1.20'
       extra_args: '--use-ci-artifacts'
 
 - job:
-    name: cluster-api-provider-openstack-current-acceptance-test-v1.19-2
+    name: cluster-api-provider-openstack-current-acceptance-test-v1.20-2
     parent: cluster-api-provider-openstack-conformance-pr
     description: |
-      Test CAPO current against Kubernetes release-1.19-2
+      Test CAPO current against Kubernetes release-1.20-2
       We run 3 jobs, so that at least one of them hits a cluster
       with a good CPU. It's fine if just one of them is successful.
     vars:
-      k8s_version_series: '1.19'
+      k8s_version_series: '1.20'
       extra_args: '--use-ci-artifacts'
 - job:
-    name: cluster-api-provider-openstack-current-acceptance-test-v1.19-3
+    name: cluster-api-provider-openstack-current-acceptance-test-v1.20-3
     parent: cluster-api-provider-openstack-conformance-pr
     description: |
-      Test CAPO current against Kubernetes release-1.19-3
+      Test CAPO current against Kubernetes release-1.20-3
       We run 3 jobs, so that at least one of them hits a cluster
       with a good CPU. It's fine if just one of them is successful.
     vars:
-      k8s_version_series: '1.19'
+      k8s_version_series: '1.20'
       extra_args: '--use-ci-artifacts'
