@@ -1,7 +1,8 @@
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha4
 kind: OpenStackCluster
 metadata:
   name: ${CLUSTER_NAME}
+  namespace: ${CLUSTER_NAME}
 spec:
   bastion:
     enabled: true
@@ -10,12 +11,15 @@ spec:
       image: ${OPENSTACK_BASTION_IMAGE_NAME}
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
 ---
-apiVersion: controlplane.cluster.x-k8s.io/v1alpha3
+apiVersion: controlplane.cluster.x-k8s.io/v1alpha4
 kind: KubeadmControlPlane
 metadata:
   name: "${CLUSTER_NAME}-control-plane"
+  namespace: ${CLUSTER_NAME}
 spec:
   kubeadmConfigSpec:
+    clusterConfiguration:
+      imageRepository: ${IMAGE_REPOSITORY}
     initConfiguration:
       nodeRegistration:
         kubeletExtraArgs:
@@ -49,6 +53,8 @@ spec:
         set -o errexit
         set -e
 
+        [[ ${USE_CI_ARTIFACTS} == "false" ]] && exit 0
+
         [[ $(id -u) != 0 ]] && SUDO="sudo" || SUDO=""
 
         # This script installs kubectl, kubelet, and kubeadm binaries.
@@ -79,10 +85,11 @@ spec:
 
         echo "$LINE_SEPARATOR"
 ---
-apiVersion: bootstrap.cluster.x-k8s.io/v1alpha3
+apiVersion: bootstrap.cluster.x-k8s.io/v1alpha4
 kind: KubeadmConfigTemplate
 metadata:
   name: ${CLUSTER_NAME}-md-0
+  namespace: ${CLUSTER_NAME}
 spec:
   template:
     spec:
@@ -110,6 +117,8 @@ spec:
           set -o pipefail
           set -o errexit
           set -e
+
+          [[ ${USE_CI_ARTIFACTS} == "false" ]] && exit 0
 
           [[ $(id -u) != 0 ]] && SUDO="sudo" || SUDO=""
 

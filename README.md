@@ -37,11 +37,12 @@ previous cluster managers such as [kops][kops] and
 
 This provider's versions are compatible with the following versions of Cluster API:
 
-| | Cluster API v1alpha1 (v0.1) | Cluster API v1alpha2 (v0.2) | Cluster API v1alpha3 (v0.3) |
-|-------------------------------------------------|---|---|---|
-| OpenStack Provider v1alpha1 (release-0.1 branch)| ✓ |   |   |
-| OpenStack Provider v1alpha2 (v0.2)              |   | ✓ |   |
-| OpenStack Provider v1alpha3 (v0.3)              |   |   | ✓ |
+| | Cluster API v1alpha1 (v0.1) | Cluster API v1alpha2 (v0.2) | Cluster API v1alpha3 (v0.3) |  Cluster API v1alpha4 (v0.4) |
+|-------------------------------------------------|---|---|---|---|
+| OpenStack Provider v1alpha1 (release-0.1 branch)| ✓ |   |   |   |
+| OpenStack Provider v1alpha2 (v0.2)              |   | ✓ |   |   |
+| OpenStack Provider v1alpha3 (v0.3)              |   |   | ✓ |   |
+| OpenStack Provider v1alpha4 (v0.4)              |   |   |   | ✓ |
 
 This provider's versions are able to install and manage the following versions of Kubernetes:
 

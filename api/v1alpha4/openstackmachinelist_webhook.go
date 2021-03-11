@@ -14,3 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+package v1alpha4
+
+import (
+	"sigs.k8s.io/controller-runtime/pkg/builder"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
+)
+
+// log is for logging in this package.
+var _ = logf.Log.WithName("openstackmachinelist-resource")
+
+func (r *OpenStackMachineList) SetupWebhookWithManager(mgr manager.Manager) error {
+	return builder.WebhookManagedBy(mgr).
+		For(r).
+		Complete()
+}

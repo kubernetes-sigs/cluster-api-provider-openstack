@@ -18,6 +18,7 @@ package networking
 
 import (
 	"fmt"
+
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 
@@ -25,7 +26,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 )
 
 func (s *Service) ReconcileRouter(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {

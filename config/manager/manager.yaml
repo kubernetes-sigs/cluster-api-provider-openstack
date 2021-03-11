@@ -17,10 +17,12 @@ spec:
         control-plane: capo-controller-manager
     spec:
       containers:
-      - args:
-        - --leader-elect
+      - command:
+        - /manager
+        args:
+        - "--leader-elect"
+        - "--metrics-bind-addr=127.0.0.1:8080"
         image: controller:latest
-        imagePullPolicy: IfNotPresent
         name: manager
         ports:
         - containerPort: 9440
@@ -35,6 +37,7 @@ spec:
             path: /healthz
             port: healthz
       terminationGracePeriodSeconds: 10
+      serviceAccountName: manager
       tolerations:
         - effect: NoSchedule
           key: node-role.kubernetes.io/master

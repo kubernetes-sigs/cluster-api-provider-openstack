@@ -19,7 +19,7 @@ package compute
 import (
 	"fmt"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 )
 
