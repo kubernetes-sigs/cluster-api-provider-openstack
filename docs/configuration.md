@@ -281,9 +281,10 @@ To configure the Cluster API Provider for OpenStack to create a SSH bastion host
 ```yaml
   bastion:
     enabled: true
-    flavor: <Flavor name>
-    image:  <Image name>
-    sshKeyName: <Key pair name>
+      instance:
+        flavor: <Flavor name>
+        image:  <Image name>
+        sshKeyName: <Key pair name>
 ```
 
 A floating IP is created and associated to the bastion host automatically, but you can add the IP address explicitly:
@@ -291,7 +292,7 @@ A floating IP is created and associated to the bastion host automatically, but y
 ```yaml
   bastion:
     ...
-    floatingIP: <Floating IP address>
+        floatingIP: <Floating IP address>
 ```
 
 If `managedSecurityGroups: true`, security group rule opening 22/tcp is added to security groups for bastion, controller, and worker nodes respectively. Otherwise, you have to add `securityGroups` to the `bastion` in `OpenStackCluster` spec and `OpenStackMachineTemplate` spec template respectively.
