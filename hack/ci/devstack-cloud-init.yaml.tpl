@@ -66,16 +66,19 @@ write_files:
       ENABLED_SERVICES+=,octavia,o-api,o-cw,o-hm,o-hk,o-da
 
       # Horizon (enable for manual tests)
-      #ENABLED_SERVICES+=,horizon
+      # ENABLED_SERVICES+=,horizon
 
       # Cinder
       ENABLED_SERVICES+=,c-sch,c-api,c-vol
+
+      # Additional services
+      ENABLED_SERVICES+=${OPENSTACK_ADDITIONAL_SERVICES}
 
       LIBVIRT_TYPE=kvm
 
       # Don't download default images, just our test images
       DOWNLOAD_DEFAULT_IMAGES=False
-      IMAGE_URLS="https://github.com/kubernetes-sigs/cluster-api-provider-openstack/releases/download/v0.3.0/ubuntu-1910-kube-v1.17.3.qcow2,"
+      IMAGE_URLS="https://github.com/sbueringer/image-builder/releases/download/v1.18.15-01/ubuntu-2004-kube-v1.18.15.qcow2,"
       IMAGE_URLS+="http://download.cirros-cloud.net/0.5.1/cirros-0.5.1-x86_64-disk.img"
       EOF
 

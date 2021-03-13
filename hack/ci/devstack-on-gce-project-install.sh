@@ -18,7 +18,11 @@
 
 set -o errexit -o nounset -o pipefail
 
-CLUSTER_NAME=${CLUSTER_NAME:-"capi-quickstart"}
+REPO_ROOT=$(dirname "${BASH_SOURCE[0]}")/../../
+cd "${REPO_ROOT}" || exit 1
+REPO_ROOT_ABSOLUTE=$(pwd)
+
+CLUSTER_NAME=${CLUSTER_NAME:-"capo-e2e"}
 GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS:-""}
 GCP_PROJECT=${GCP_PROJECT:-""}
 GCP_REGION=${GCP_REGION:-"us-east4"}
@@ -27,6 +31,7 @@ GCP_MACHINE_MIN_CPU_PLATFORM=${GCP_MACHINE_MIN_CPU_PLATFORM:-"Intel Cascade Lake
 GCP_MACHINE_TYPE=${GCP_MACHINE_TYPE:-"n2-standard-16"}
 GCP_NETWORK_NAME=${GCP_NETWORK_NAME:-"${CLUSTER_NAME}-mynetwork"}
 OPENSTACK_RELEASE=${OPENSTACK_RELEASE:-"victoria"}
+OPENSTACK_ADDITIONAL_SERVICES=${OPENSTACK_ADDITIONAL_SERVICES:-""}
 
 echo "Using: GCP_PROJECT: ${GCP_PROJECT} GCP_REGION: ${GCP_REGION} GCP_NETWORK_NAME: ${GCP_NETWORK_NAME}"
 
@@ -110,9 +115,10 @@ main() {
 
   if ! gcloud compute instances describe openstack --project "${GCP_PROJECT}" --zone "${GCP_ZONE}" > /dev/null;
   then
-    	< ./hack/ci/e2e-conformance-gcp-cloud-init.yaml.tpl \
-	  sed "s|\${OPENSTACK_RELEASE}|${OPENSTACK_RELEASE}|" \
-	   > ./hack/ci/e2e-conformance-gcp-cloud-init.yaml
+    	< ./hack/ci/devstack-cloud-init.yaml.tpl \
+	  sed "s|\${OPENSTACK_RELEASE}|${OPENSTACK_RELEASE}|" | \
+	  sed "s|\${OPENSTACK_ADDITIONAL_SERVICES}|${OPENSTACK_ADDITIONAL_SERVICES}|" \
+	   > ./hack/ci/devstack-cloud-init.yaml
 
     gcloud compute instances create openstack \
       --project "${GCP_PROJECT}" \
@@ -125,7 +131,7 @@ main() {
       --min-cpu-platform "${GCP_MACHINE_MIN_CPU_PLATFORM}" \
       --machine-type "${GCP_MACHINE_TYPE}" \
       --network-interface=network="${CLUSTER_NAME}-mynetwork,subnet=${CLUSTER_NAME}-mynetwork,aliases=/24" \
-      --metadata-from-file user-data=./hack/ci/e2e-conformance-gcp-cloud-init.yaml
+      --metadata-from-file user-data=./hack/ci/devstack-cloud-init.yaml
   fi
 
   # Install some local deps we later need in the meantime (we have to wait for cloud init anyway)
@@ -138,6 +144,7 @@ main() {
     git clone https://github.com/sshuttle/sshuttle.git
     cd sshuttle
     pip3 install .
+    cd "${REPO_ROOT_ABSOLUTE}" || exit 1
   fi
   if ! command -v openstack;
   then
@@ -188,7 +195,7 @@ main() {
   openstack flavor delete m1.tiny
   openstack flavor create --ram 512 --disk 1 --vcpus 1 --public --id 1 m1.tiny --property hw_rng:allowed='True'
   openstack flavor delete m1.small
-  openstack flavor create --ram 6144 --disk 10 --vcpus 2 --public --id 2 m1.small --property hw_rng:allowed='True'
+  openstack flavor create --ram 4192 --disk 10 --vcpus 2 --public --id 2 m1.small --property hw_rng:allowed='True'
   openstack flavor delete m1.medium
   openstack flavor create --ram 6144 --disk 10 --vcpus 4 --public --id 3 m1.medium --property hw_rng:allowed='True'
 
@@ -196,7 +203,7 @@ main() {
   export OS_USERNAME=demo
   export OS_PROJECT_NAME=demo
 
-  cat << EOF > /tmp/clouds.yaml
+  cat << EOF > "${REPO_ROOT_ABSOLUTE}/clouds.yaml"
 clouds:
   ${CLUSTER_NAME}:
     auth:
@@ -209,7 +216,8 @@ clouds:
     verify: false
     region_name: RegionOne
 EOF
-  cat /tmp/clouds.yaml
+  echo "${REPO_ROOT_ABSOLUTE}/clouds.yaml:"
+  cat "${REPO_ROOT_ABSOLUTE}/clouds.yaml"
 }
 
 main "$@"

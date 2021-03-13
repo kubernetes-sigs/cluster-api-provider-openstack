@@ -297,7 +297,7 @@ func serverToInstance(v *servers.Server) (*infrav1.Instance, error) {
 		SSHKeyName: v.KeyName,
 		State:      infrav1.InstanceState(v.Status),
 	}
-	addrMap, err := getIPFromInstance(v)
+	addrMap, err := GetIPFromInstance(*v)
 	if err != nil {
 		return i, err
 	}
@@ -308,7 +308,7 @@ func serverToInstance(v *servers.Server) (*infrav1.Instance, error) {
 	return i, nil
 }
 
-func getIPFromInstance(v *servers.Server) (map[string]string, error) {
+func GetIPFromInstance(v servers.Server) (map[string]string, error) {
 	addrMap := make(map[string]string)
 	if v.AccessIPv4 != "" && net.ParseIP(v.AccessIPv4) != nil {
 		addrMap["internal"] = v.AccessIPv4
@@ -678,11 +678,11 @@ func (s *Service) InstanceExists(name string) (instance *infrav1.Instance, err e
 
 	allPages, err := servers.List(s.computeClient, listOpts).AllPages()
 	if err != nil {
-		return nil, fmt.Errorf("get service list: %v", err)
+		return nil, fmt.Errorf("get server list: %v", err)
 	}
 	serverList, err := servers.ExtractServers(allPages)
 	if err != nil {
-		return nil, fmt.Errorf("extract services list: %v", err)
+		return nil, fmt.Errorf("extract server list: %v", err)
 	}
 	instanceList := []*infrav1.Instance{}
 	for _, server := range serverList {

@@ -12,59 +12,73 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+ROOT_DIR_RELATIVE := .
+
+include $(ROOT_DIR_RELATIVE)/common.mk
+
 # If you update this file, please follow
 # https://suva.sh/posts/well-documented-makefiles
 
-# Ensure Make is run with bash shell as some syntax below is bash-specific
-SHELL:=/usr/bin/env bash
-
-.DEFAULT_GOAL:=help
-
-# Use GOPROXY environment variable if set
-GOPROXY := $(shell go env GOPROXY)
-ifeq ($(GOPROXY),)
-GOPROXY := https://proxy.golang.org
-endif
-export GOPROXY
-
-# Activate module mode, as we use go modules to manage dependencies
-export GO111MODULE=on
-
-# This option is for running docker manifest command
-export DOCKER_CLI_EXPERIMENTAL := enabled
-
 # Directories.
-REPO_ROOT := $(shell git rev-parse --show-toplevel)
+ARTIFACTS ?= $(REPO_ROOT)/_artifacts
 TOOLS_DIR := hack/tools
+TOOLS_DIR_DEPS := $(TOOLS_DIR)/go.sum $(TOOLS_DIR)/go.mod $(TOOLS_DIR)/Makefile
 TOOLS_BIN_DIR := $(TOOLS_DIR)/bin
+
 BIN_DIR := bin
+REPO_ROOT := $(shell git rev-parse --show-toplevel)
+GH_REPO ?= kubernetes-sigs/cluster-api-provider-openstack
+TEST_E2E_DIR := test/e2e
+
+# Files
+E2E_DATA_DIR ?= $(REPO_ROOT)/test/e2e/data
+E2E_CONF_PATH  ?= $(E2E_DATA_DIR)/e2e_conf.yaml
+KUBETEST_CONF_PATH ?= $(abspath $(E2E_DATA_DIR)/kubetest/conformance.yaml)
+KUBETEST_FAST_CONF_PATH ?= $(abspath $(E2E_DATA_DIR)/kubetest/conformance-fast.yaml)
 
 # Binaries.
-KUSTOMIZE := $(TOOLS_BIN_DIR)/kustomize
-CLUSTERCTL := $(TOOLS_BIN_DIR)/clusterctl
 CONTROLLER_GEN := $(TOOLS_BIN_DIR)/controller-gen
-ENVSUBST := $(TOOLS_BIN_DIR)/envsubst
-GOLANGCI_LINT := $(TOOLS_BIN_DIR)/golangci-lint
-MOCKGEN := $(TOOLS_BIN_DIR)/mockgen
 CONVERSION_GEN := $(TOOLS_BIN_DIR)/conversion-gen
-RELEASE_NOTES_BIN := bin/release-notes
-RELEASE_NOTES := $(TOOLS_DIR)/$(RELEASE_NOTES_BIN)
+DEFAULTER_GEN := $(TOOLS_BIN_DIR)/defaulter-gen
+ENVSUBST := $(TOOLS_BIN_DIR)/envsubst
 GINKGO := $(TOOLS_BIN_DIR)/ginkgo
+GOLANGCI_LINT := $(TOOLS_BIN_DIR)/golangci-lint
+KIND := $(TOOLS_BIN_DIR)/kind
+KUSTOMIZE := $(TOOLS_BIN_DIR)/kustomize
+MOCKGEN := $(TOOLS_BIN_DIR)/mockgen
+RELEASE_NOTES := $(TOOLS_BIN_DIR)/release-notes
+
+PATH := $(abspath $(TOOLS_BIN_DIR)):$(PATH)
+DOCKER_CLI_EXPERIMENTAL=enabled
+DOCKER_BUILDKIT=1
 
 # Set --output-base for conversion-gen if we are not within GOPATH
 ifneq ($(abspath $(REPO_ROOT)),$(shell go env GOPATH)/src/sigs.k8s.io/cluster-api-provider-openstack)
 	GEN_OUTPUT_BASE := --output-base=$(REPO_ROOT)
 endif
 
-# Define Docker related variables. Releases should modify and double check these vars.
-REGISTRY ?= gcr.io/k8s-staging-capi-openstack
+# Release variables
+
 STAGING_REGISTRY := gcr.io/k8s-staging-capi-openstack
 PROD_REGISTRY := us.gcr.io/k8s-artifacts-prod/capi-openstack
-IMAGE_NAME ?= capi-openstack-controller
-CONTROLLER_IMG ?= $(REGISTRY)/$(IMAGE_NAME)
+REGISTRY ?= $(STAGING_REGISTRY)
+RELEASE_TAG ?= $(shell git describe --abbrev=0 2>/dev/null)
+PULL_BASE_REF ?= $(RELEASE_TAG) # PULL_BASE_REF will be provided by Prow
+RELEASE_ALIAS_TAG ?= $(PULL_BASE_REF)
+RELEASE_DIR := out
+
 TAG ?= dev
 ARCH ?= amd64
-ALL_ARCH = amd64 arm arm64 ppc64le s390x
+ALL_ARCH ?= amd64 arm arm64 ppc64le s390x
+
+# main controller
+IMAGE_NAME ?= capi-openstack-controller
+CONTROLLER_IMG ?= $(REGISTRY)/$(IMAGE_NAME)
+CONTROLLER_ORIGINAL_IMG := gcr.io/k8s-staging-capi-openstack/capi-openstack-controller
+CONTROLLER_NAME := capa-controller-manager
+MANIFEST_FILE := infrastructure-components
+CONFIG_DIR := config
+NAMESPACE := capa-system
 
 # Allow overriding manifest generation destination directory
 MANIFEST_ROOT ?= config
@@ -73,88 +87,55 @@ WEBHOOK_ROOT ?= $(MANIFEST_ROOT)/webhook
 RBAC_ROOT ?= $(MANIFEST_ROOT)/rbac
 
 # Allow overriding the imagePullPolicy
-PULL_POLICY ?= IfNotPresent
-
-# Hosts running SELinux need :z added to volume mounts
-SELINUX_ENABLED := $(shell cat /sys/fs/selinux/enforce 2> /dev/null || echo 0)
-
-ifeq ($(SELINUX_ENABLED),1)
-  DOCKER_VOL_OPTS?=:z
-endif
+PULL_POLICY ?= Always
 
 # Set build time variables including version details
 LDFLAGS := $(shell source ./hack/version.sh; version::ldflags)
 
-## --------------------------------------
-## Help
-## --------------------------------------
 
-help:  ## Display this help
-	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
-
-## --------------------------------------
-## Define targets for prow
-## --------------------------------------
-
-
-.PHONY: images
-images: docker-build ## Build all images
-
-.PHONY: check
-check: modules generate lint test verify
 
 ## --------------------------------------
 ## Testing
 ## --------------------------------------
 
-.PHONY: test
-test: generate lint ## Run tests
-	$(MAKE) test-go
+$(ARTIFACTS):
+	mkdir -p $@
 
-.PHONY: test-go
-test-go: ## Run golang tests
+.PHONY: test
+test: ## Run tests
 	go test -v ./...
+
+.PHONY: e2e-image
+e2e-image: docker-pull-prerequisites
+	docker build -f Dockerfile --tag="gcr.io/k8s-staging-capi-openstack/capi-openstack-controller-amd64:e2e" .
+
+E2E_ARGS ?=
+CONFORMANCE_E2E_ARGS ?= -kubetest.config-file=$(KUBETEST_CONF_PATH)
+CONFORMANCE_E2E_ARGS += $(E2E_ARGS)
+CONFORMANCE_GINKGO_ARGS ?= -stream
+CONFORMANCE_GINKGO_ARGS += $(GINKGO_ARGS)
+.PHONY: test-conformance
+test-conformance: $(GINKGO) $(KIND) $(KUSTOMIZE) e2e-image ## Run clusterctl based conformance test on workload cluster (requires Docker).
+	time $(GINKGO) -trace -progress -v -tags=e2e -focus="conformance" $(CONFORMANCE_GINKGO_ARGS) ./test/e2e/suites/conformance/... -- -config-path="$(E2E_CONF_PATH)" -artifacts-folder="$(ARTIFACTS)" --data-folder="$(E2E_DATA_DIR)" $(CONFORMANCE_E2E_ARGS)
+
+
+test-conformance-fast: ## Run clusterctl based conformance test on workload cluster (requires Docker) using a subset of the conformance suite in parallel.
+	$(MAKE) test-conformance CONFORMANCE_E2E_ARGS="-kubetest.config-file=$(KUBETEST_FAST_CONF_PATH) -kubetest.ginkgo-nodes=5 $(E2E_ARGS)"
 
 ## --------------------------------------
 ## Binaries
 ## --------------------------------------
-$(GINKGO): $(TOOLS_DIR)/go.mod
-	cd $(TOOLS_DIR) && go build -tags=tools -o $(BIN_DIR)/ginkgo github.com/onsi/ginkgo/ginkgo
 
 .PHONY: binaries
-binaries: manager ## Builds and installs all binaries
+binaries: managers ## Builds and installs all binaries
 
-.PHONY: manager
-manager: ## Build manager binary.
-	go build -ldflags "$(LDFLAGS)" -o $(BIN_DIR)/manager .
+.PHONY: managers
+managers:
+	$(MAKE) manager-openstack-infrastructure
 
-## --------------------------------------
-## Tooling Binaries
-## --------------------------------------
-
-$(CLUSTERCTL): ## Build clusterctl binary (we have to set some gitVersion, otherwise commands will fail)
-	cd $(TOOLS_DIR); go build -tags=tools -ldflags "-X 'sigs.k8s.io/cluster-api/version.gitVersion=v0.4.0-dirty'" -o $(BIN_DIR)/clusterctl sigs.k8s.io/cluster-api/cmd/clusterctl
-
-$(KUSTOMIZE): # Build kustomize from tools folder.
-	hack/ensure-kustomize.sh
-
-$(CONTROLLER_GEN): $(TOOLS_DIR)/go.mod # Build controller-gen from tools folder.
-	cd $(TOOLS_DIR); go build -tags=tools -o $(BIN_DIR)/controller-gen sigs.k8s.io/controller-tools/cmd/controller-gen
-
-$(ENVSUBST): $(TOOLS_DIR)/go.mod # Build envsubst from tools folder.
-	cd $(TOOLS_DIR); go build -tags=tools -o $(BIN_DIR)/envsubst github.com/a8m/envsubst/cmd/envsubst
-
-$(GOLANGCI_LINT): $(TOOLS_DIR)/go.mod # Build golangci-lint from tools folder.
-	cd $(TOOLS_DIR); go build -tags=tools -o $(BIN_DIR)/golangci-lint github.com/golangci/golangci-lint/cmd/golangci-lint
-
-$(MOCKGEN): $(TOOLS_DIR)/go.mod # Build mockgen from tools folder.
-	cd $(TOOLS_DIR); go build -tags=tools -o $(BIN_DIR)/mockgen github.com/golang/mock/mockgen
-
-$(CONVERSION_GEN): $(TOOLS_DIR)/go.mod
-	cd $(TOOLS_DIR); go build -tags=tools -o $(BIN_DIR)/conversion-gen k8s.io/code-generator/cmd/conversion-gen
-
-$(RELEASE_NOTES) : $(TOOLS_DIR)/go.mod
-	cd $(TOOLS_DIR) && go build -tags tools -o $(BIN_DIR)/release-notes sigs.k8s.io/cluster-api/hack/tools/release
+.PHONY: manager-openstack-infrastructure
+manager-openstack-infrastructure: ## Build manager binary.
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS} -extldflags '-static'" -o $(BIN_DIR)/manager .
 
 ## --------------------------------------
 ## Linting
@@ -182,7 +163,9 @@ generate: ## Generate code
 	$(MAKE) generate-manifests
 
 .PHONY: generate-go
-generate-go: $(CONTROLLER_GEN) $(CONVERSION_GEN) $(MOCKGEN) ## Runs Go related generate targets
+generate-go: $(MOCKGEN)
+	go generate ./...
+	$(MAKE) -B $(CONTROLLER_GEN) $(CONVERSION_GEN) $(DEFAULTER_GEN)
 	$(CONTROLLER_GEN) \
 		paths=./api/... \
 		object:headerFile=./hack/boilerplate/boilerplate.generatego.txt
@@ -191,7 +174,6 @@ generate-go: $(CONTROLLER_GEN) $(CONVERSION_GEN) $(MOCKGEN) ## Runs Go related g
 		--input-dirs=./api/v1alpha3 \
 		--output-file-base=zz_generated.conversion $(GEN_OUTPUT_BASE) \
 		--go-header-file=./hack/boilerplate/boilerplate.generatego.txt
-	go generate ./...
 
 .PHONY: generate-manifests
 generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
@@ -210,21 +192,19 @@ generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
 ## Docker
 ## --------------------------------------
 
-.PHONY: docker-pull-prerequisites
-docker-pull-prerequisites:
-	docker pull docker.io/docker/dockerfile:1.1-experimental
-	docker pull docker.io/library/golang:1.16.0
-	docker pull gcr.io/distroless/static:latest
-
 .PHONY: docker-build
 docker-build: docker-pull-prerequisites ## Build the docker image for controller-manager
-	DOCKER_BUILDKIT=1 docker build --build-arg goproxy=$(GOPROXY) --build-arg ARCH=$(ARCH) --build-arg LDFLAGS="$(LDFLAGS)" . -t $(CONTROLLER_IMG)-$(ARCH):$(TAG)
-	MANIFEST_IMG=$(CONTROLLER_IMG)-$(ARCH) MANIFEST_TAG=$(TAG) $(MAKE) set-manifest-image
-	$(MAKE) set-manifest-pull-policy
+	docker build --build-arg goproxy=$(GOPROXY) --build-arg ARCH=$(ARCH) --build-arg LDFLAGS="$(LDFLAGS)" . -t $(CONTROLLER_IMG)-$(ARCH):$(TAG)
 
 .PHONY: docker-push
 docker-push: ## Push the docker image
 	docker push $(CONTROLLER_IMG)-$(ARCH):$(TAG)
+
+.PHONY: docker-pull-prerequisites
+docker-pull-prerequisites:
+	docker pull docker.io/docker/dockerfile:1.1-experimental
+	docker pull docker.io/library/golang:$(GOLANG_VERSION)
+	docker pull gcr.io/distroless/static:latest
 
 ## --------------------------------------
 ## Docker — All ARCH
@@ -249,57 +229,110 @@ docker-push-manifest: ## Push the fat manifest docker image.
 	docker manifest create --amend $(CONTROLLER_IMG):$(TAG) $(shell echo $(ALL_ARCH) | sed -e "s~[^ ]*~$(CONTROLLER_IMG)\-&:$(TAG)~g")
 	@for arch in $(ALL_ARCH); do docker manifest annotate --arch $${arch} ${CONTROLLER_IMG}:${TAG} ${CONTROLLER_IMG}-$${arch}:${TAG}; done
 	docker manifest push --purge ${CONTROLLER_IMG}:${TAG}
-	MANIFEST_IMG=$(CONTROLLER_IMG) MANIFEST_TAG=$(TAG) $(MAKE) set-manifest-image
-	$(MAKE) set-manifest-pull-policy
 
-.PHONY: set-manifest-image
-set-manifest-image:
-	$(info Updating kustomize image patch file for manager resource)
-	sed -i'' -e 's@image: .*@image: '"${MANIFEST_IMG}:$(MANIFEST_TAG)"'@' ./config/default/manager_image_patch.yaml
-
-
-.PHONY: set-manifest-pull-policy
-set-manifest-pull-policy:
-	$(info Updating kustomize pull policy file for manager resource)
-	sed -i'' -e 's@imagePullPolicy: .*@imagePullPolicy: '"$(PULL_POLICY)"'@' ./config/default/manager_pull_policy.yaml
+.PHONY: staging-manifests
+staging-manifests:
+	$(MAKE) $(RELEASE_DIR)/$(MANIFEST_FILE).yaml PULL_POLICY=IfNotPresent TAG=$(RELEASE_ALIAS_TAG)
 
 ## --------------------------------------
 ## Release
 ## --------------------------------------
 
-RELEASE_TAG := $(shell git describe --tags --abbrev=0 2>/dev/null)
-RELEASE_DIR := out
-
 $(RELEASE_DIR):
-	mkdir -p $(RELEASE_DIR)/
+	mkdir -p $@
 
-.PHONY: release
-release: clean-release  ## Builds and push container images using the latest git tag for the commit.
+.PHONY: list-staging-releases
+list-staging-releases: ## List staging images for image promotion
+	@echo $(IMAGE_NAME):
+	$(MAKE) list-image RELEASE_TAG=$(RELEASE_TAG) IMAGE=$(IMAGE_NAME)
+
+list-image:
+	gcloud container images list-tags $(STAGING_REGISTRY)/$(IMAGE) --filter="tags=('$(RELEASE_TAG)')" --format=json
+
+.PHONY: check-release-tag
+check-release-tag:
 	@if [ -z "${RELEASE_TAG}" ]; then echo "RELEASE_TAG is not set"; exit 1; fi
 	@if ! [ -z "$$(git status --porcelain)" ]; then echo "Your local git repository contains uncommitted changes, use git clean before proceeding."; exit 1; fi
+
+.PHONY: release
+release: $(RELEASE_NOTES) clean-release check-release-tag $(RELEASE_DIR)  ## Builds and push container images using the latest git tag for the commit.
 	git checkout "${RELEASE_TAG}"
-	# Set the manifest image to the production bucket.
-	$(MAKE) set-manifest-image MANIFEST_IMG=$(PROD_REGISTRY)/$(IMAGE_NAME) MANIFEST_TAG=$(RELEASE_TAG)
-	$(MAKE) set-manifest-pull-policy PULL_POLICY=IfNotPresent
+	@if [ -z "${PREVIOUS_VERSION}" ]; then echo "PREVIOUS_VERSION is not set"; exit 1; fi
+	$(RELEASE_NOTES) --from $(PREVIOUS_VERSION) > $(RELEASE_DIR)/CHANGELOG.md
+	$(MAKE) release-notes
 	$(MAKE) release-manifests
+	$(MAKE) release-templates
 
 .PHONY: release-manifests
-release-manifests: $(RELEASE_DIR) $(KUSTOMIZE) ## Builds the manifests to publish with a release
-	$(KUSTOMIZE) build config/default > $(RELEASE_DIR)/infrastructure-components.yaml
+release-manifests:
+	$(MAKE) $(RELEASE_DIR)/$(MANIFEST_FILE).yaml TAG=$(RELEASE_TAG) PULL_POLICY=IfNotPresent
+	# Add metadata to the release artifacts
+	cp metadata.yaml $(RELEASE_DIR)/metadata.yaml
 
 .PHONY: release-staging
-release-staging: ## Builds and push container images to the staging bucket.
-	REGISTRY=$(STAGING_REGISTRY) $(MAKE) docker-build-all docker-push-all release-alias-tag
+release-staging: ## Builds and push container images and manifests to the staging bucket.
+	$(MAKE) docker-build-all
+	$(MAKE) docker-push-all
+	$(MAKE) release-alias-tag
+	$(MAKE) staging-manifests
+	$(MAKE) upload-staging-artifacts
 
-RELEASE_ALIAS_TAG=$(PULL_BASE_REF)
+.PHONY: upload-staging-artifacts
+upload-staging-artifacts: ## Upload release artifacts to the staging bucket
+	gsutil cp $(RELEASE_DIR)/* gs://$(BUCKET)/components/$(RELEASE_ALIAS_TAG)
+
+.PHONY: create-gh-release
+create-gh-release:$(GH) ## Create release on Github
+	$(GH) release create $(VERSION) -d -F $(RELEASE_DIR)/CHANGELOG.md -t $(VERSION) -R $(GH_REPO)
+
+.PHONY: upload-gh-artifacts
+upload-gh-artifacts: $(GH) ## Upload artifacts to Github release
+	$(GH) release upload $(VERSION) -R $(GH_REPO) --clobber  $(RELEASE_DIR)/*
 
 .PHONY: release-alias-tag
 release-alias-tag: # Adds the tag to the last build tag.
-	gcloud container images add-tag $(CONTROLLER_IMG):$(TAG) $(CONTROLLER_IMG):$(RELEASE_ALIAS_TAG)
+	gcloud container images add-tag -q $(CONTROLLER_IMG):$(TAG) $(CONTROLLER_IMG):$(RELEASE_ALIAS_TAG)
 
 .PHONY: release-notes
-release-notes: $(RELEASE_NOTES)
+release-notes: $(RELEASE_NOTES) ## Generate release notes
 	$(RELEASE_NOTES) $(ARGS)
+
+.PHONY: release-templates
+release-templates: $(RELEASE_DIR) ## Generate release templates
+	cp templates/cluster-template*.yaml $(RELEASE_DIR)/
+
+IMAGE_PATCH_DIR := $(ARTIFACTS)/image-patch
+
+$(IMAGE_PATCH_DIR): $(ARTIFACTS)
+	mkdir -p $@
+
+.PHONY: $(RELEASE_DIR)/$(MANIFEST_FILE).yaml
+$(RELEASE_DIR)/$(MANIFEST_FILE).yaml:
+	$(MAKE) compiled-manifest \
+		PROVIDER=$(MANIFEST_FILE) \
+		OLD_IMG=$(CONTROLLER_ORIGINAL_IMG) \
+		MANIFEST_IMG=$(CONTROLLER_IMG) \
+		CONTROLLER_NAME=$(CONTROLLER_NAME) \
+		PROVIDER_CONFIG_DIR=$(CONFIG_DIR) \
+		NAMESPACE=$(NAMESPACE)
+
+.PHONY: compiled-manifest
+compiled-manifest: $(RELEASE_DIR) $(KUSTOMIZE)
+	$(MAKE) image-patch-source-manifest
+	$(MAKE) image-patch-pull-policy
+	$(KUSTOMIZE) build $(IMAGE_PATCH_DIR)/$(PROVIDER) > $(RELEASE_DIR)/$(PROVIDER).yaml
+
+.PHONY: image-patch-source-manifest
+image-patch-source-manifest: $(IMAGE_PATCH_DIR) $(KUSTOMIZE)
+	mkdir -p $(IMAGE_PATCH_DIR)/$(PROVIDER)
+	$(KUSTOMIZE) build $(PROVIDER_CONFIG_DIR) > $(IMAGE_PATCH_DIR)/$(PROVIDER)/source-manifest.yaml
+
+.PHONY: image-patch-pull-policy
+image-patch-pull-policy: $(IMAGE_PATCH_DIR) $(GOJQ)
+	mkdir -p $(IMAGE_PATCH_DIR)/$(PROVIDER)
+	echo Setting imagePullPolicy to $(PULL_POLICY)
+	$(GOJQ) --yaml-input --yaml-output '.[0].value="$(PULL_POLICY)"' "hack/image-patch/pull-policy-patch.yaml" > $(IMAGE_PATCH_DIR)/$(PROVIDER)/pull-policy-patch.yaml
+
 
 ## --------------------------------------
 ## Cleanup / Verification
@@ -307,18 +340,19 @@ release-notes: $(RELEASE_NOTES)
 
 .PHONY: clean
 clean: ## Remove all generated files
+	$(MAKE) -C hack/tools clean
 	$(MAKE) clean-bin
 	$(MAKE) clean-temporary
 
 .PHONY: clean-bin
 clean-bin: ## Remove all generated binaries
 	rm -rf bin
-	rm -rf hack/tools/bin
 
 .PHONY: clean-temporary
 clean-temporary: ## Remove all temporary files and folders
 	rm -f minikube.kubeconfig
 	rm -f kubeconfig
+	rm -rf _artifacts
 
 .PHONY: clean-release
 clean-release: ## Remove the release folder
@@ -343,3 +377,7 @@ verify-gen: generate
 		git diff; \
 		echo "generated files are out of date, run make generate"; exit 1; \
 	fi
+
+.PHONY: compile-e2e
+compile-e2e: ## Test e2e compilation
+	go test -c -o /dev/null -tags=e2e ./test/e2e/suites/conformance

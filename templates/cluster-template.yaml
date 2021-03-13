@@ -3,7 +3,6 @@ apiVersion: cluster.x-k8s.io/v1alpha4
 kind: Cluster
 metadata:
   name: ${CLUSTER_NAME}
-  namespace: '${NAMESPACE}'
 spec:
   clusterNetwork:
     pods:
@@ -22,12 +21,10 @@ apiVersion: infrastructure.cluster.x-k8s.io/v1alpha4
 kind: OpenStackCluster
 metadata:
   name: ${CLUSTER_NAME}
-  namespace: '${NAMESPACE}'
 spec:
   cloudName: ${OPENSTACK_CLOUD}
   cloudsSecret:
     name: ${CLUSTER_NAME}-cloud-config
-    namespace: ${NAMESPACE}
   managedAPIServerLoadBalancer: true
   managedSecurityGroups: true
   nodeCidr: 10.6.0.0/24
@@ -39,7 +36,6 @@ kind: KubeadmControlPlane
 apiVersion: controlplane.cluster.x-k8s.io/v1alpha4
 metadata:
   name: "${CLUSTER_NAME}-control-plane"
-  namespace: '${NAMESPACE}'
 spec:
   replicas: ${CONTROL_PLANE_MACHINE_COUNT}
   infrastructureTemplate:
@@ -100,7 +96,6 @@ apiVersion: infrastructure.cluster.x-k8s.io/v1alpha4
 kind: OpenStackMachineTemplate
 metadata:
   name: ${CLUSTER_NAME}-control-plane
-  namespace: '${NAMESPACE}'
 spec:
   template:
     spec:
@@ -110,13 +105,11 @@ spec:
       cloudName: ${OPENSTACK_CLOUD}
       cloudsSecret:
         name: ${CLUSTER_NAME}-cloud-config
-        namespace: ${NAMESPACE}
 ---
 apiVersion: cluster.x-k8s.io/v1alpha4
 kind: MachineDeployment
 metadata:
   name: "${CLUSTER_NAME}-md-0"
-  namespace: '${NAMESPACE}'
 spec:
   clusterName: "${CLUSTER_NAME}"
   replicas: ${WORKER_MACHINE_COUNT}
@@ -141,14 +134,12 @@ apiVersion: infrastructure.cluster.x-k8s.io/v1alpha4
 kind: OpenStackMachineTemplate
 metadata:
   name: ${CLUSTER_NAME}-md-0
-  namespace: '${NAMESPACE}'
 spec:
   template:
     spec:
       cloudName: ${OPENSTACK_CLOUD}
       cloudsSecret:
         name: ${CLUSTER_NAME}-cloud-config
-        namespace: ${NAMESPACE}
       flavor: ${OPENSTACK_NODE_MACHINE_FLAVOR}
       image: ${OPENSTACK_IMAGE_NAME}
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
@@ -157,7 +148,6 @@ apiVersion: bootstrap.cluster.x-k8s.io/v1alpha4
 kind: KubeadmConfigTemplate
 metadata:
   name: ${CLUSTER_NAME}-md-0
-  namespace: '${NAMESPACE}'
 spec:
   template:
     spec:
@@ -185,7 +175,6 @@ metadata:
   name: ${CLUSTER_NAME}-cloud-config
   labels:
     clusterctl.cluster.x-k8s.io/move: "true"
-  namespace: '${NAMESPACE}'
 data:
   clouds.yaml: ${OPENSTACK_CLOUD_YAML_B64}
   cacert: ${OPENSTACK_CLOUD_CACERT_B64}

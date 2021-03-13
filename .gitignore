@@ -167,3 +167,6 @@ zz_generated.openapi.go
 
 #Tilt files.
 .tiltbuild
+
+# sshuttle
+sshuttle.pid
