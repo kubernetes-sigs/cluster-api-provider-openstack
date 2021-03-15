@@ -84,6 +84,14 @@ spec:
         echo "kubelet version: " $(kubelet --version)
 
         echo "$LINE_SEPARATOR"
+    users:
+    - name: "capi"
+      sudo: "ALL=(ALL) NOPASSWD:ALL"
+      # user: capi, passwd: capi
+      passwd: "$6$rounds=4096$yKTFKL6RmN128$a7cGMiNjeTSd091s6QzZcUNrMTgm3HhML5rVmpDFlCfgD7scTW7ZHr0OChcXCaeiO/kbhdn0XzIzWk63nSqRH1"
+      lockPassword: false
+      sshAuthorizedKeys:
+      - "${OPENSTACK_SSH_KEY_PUBLIC}"
 ---
 apiVersion: bootstrap.cluster.x-k8s.io/v1alpha4
 kind: KubeadmConfigTemplate
@@ -149,3 +157,11 @@ spec:
           echo "kubelet version: " $(kubelet --version)
 
           echo "$LINE_SEPARATOR"
+      users:
+      - name: "capi"
+        sudo: "ALL=(ALL) NOPASSWD:ALL"
+        # user: capi, passwd: capi
+        passwd: "$6$rounds=4096$yKTFKL6RmN128$a7cGMiNjeTSd091s6QzZcUNrMTgm3HhML5rVmpDFlCfgD7scTW7ZHr0OChcXCaeiO/kbhdn0XzIzWk63nSqRH1"
+        lockPassword: false
+        sshAuthorizedKeys:
+        - "${OPENSTACK_SSH_KEY_PUBLIC}"
