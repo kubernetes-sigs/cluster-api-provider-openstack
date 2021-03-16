@@ -289,7 +289,7 @@ build() {
 
   cd "${REPO_ROOT}"
   echo "Build Docker Images"
-  make modules hack/tools/bin/clusterctl hack/tools/bin/kustomize hack/tools/bin/envsubst docker-build
+  make modules docker-build
 }
 
 # CAPI/CAPO versions
