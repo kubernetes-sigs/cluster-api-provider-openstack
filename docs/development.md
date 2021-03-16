@@ -37,7 +37,7 @@ make docker-build docker-push
 
 ### Using your own capi-openstack controller image
 
-After generating `provider-components.yaml`, replace the `us.gcr.io/k8s-artifacts-prod/capi-openstack/capi-openstack-controller:v0.2.0` with your image.
+After generating `infrastructure-components.yaml`, replace the `us.gcr.io/k8s-artifacts-prod/capi-openstack/capi-openstack-controller:v0.3.4` with your image.
 
 ## Developing with Tilt
 
