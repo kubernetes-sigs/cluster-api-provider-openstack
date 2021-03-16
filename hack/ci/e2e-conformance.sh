@@ -189,7 +189,7 @@ EOF
 function dump_logs() {
   dump_devstack_logs
   dump_kind_logs
-  dump_workload_logsImage
+  dump_workload_logs
 }
 
 create_key_pair() {
