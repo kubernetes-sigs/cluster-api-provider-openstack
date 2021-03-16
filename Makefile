@@ -206,7 +206,7 @@ generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
 .PHONY: docker-pull-prerequisites
 docker-pull-prerequisites:
 	docker pull docker.io/docker/dockerfile:1.1-experimental
-	docker pull docker.io/library/golang:1.16.0
+	docker pull docker.io/library/golang:1.13.15
 	docker pull gcr.io/distroless/static:latest
 
 .PHONY: docker-build
