@@ -10,6 +10,14 @@ Fixes #
 
 1. Please confirm that if this PR changes any image versions, then that's the sole change this PR makes.
 
+**TODOs**:
+<!-- Put an "X" character inside the brackets of each completed task. Some may be optional depending on the PR. -->
+
+- [ ] squashed commits
+- if necessary:
+  - [ ] includes documentation
+  - [ ] adds unit tests
+
 **Release note**:
 <!--  Write your release note:
 1. Enter your extended release note in the below block. If the PR requires additional action from users switching to the new release, include the string "action required".
