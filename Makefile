@@ -30,6 +30,9 @@ export GOPROXY
 # Activate module mode, as we use go modules to manage dependencies
 export GO111MODULE=on
 
+# This option is for running docker manifest command
+export DOCKER_CLI_EXPERIMENTAL := enabled
+
 # Directories.
 TOOLS_DIR := hack/tools
 TOOLS_BIN_DIR := $(TOOLS_DIR)/bin
@@ -200,9 +203,15 @@ generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
 ## Docker
 ## --------------------------------------
 
+.PHONY: docker-pull-prerequisites
+docker-pull-prerequisites:
+	docker pull docker.io/docker/dockerfile:1.1-experimental
+	docker pull docker.io/library/golang:1.13.15
+	docker pull gcr.io/distroless/static:latest
+
 .PHONY: docker-build
-docker-build: ## Build the docker image for controller-manager
-	docker build --pull --build-arg goproxy=$(GOPROXY) --build-arg ARCH=$(ARCH) --build-arg LDFLAGS="$(LDFLAGS)" . -t $(CONTROLLER_IMG)-$(ARCH):$(TAG)
+docker-build: docker-pull-prerequisites ## Build the docker image for controller-manager
+	DOCKER_BUILDKIT=1 docker build --build-arg goproxy=$(GOPROXY) --build-arg ARCH=$(ARCH) --build-arg LDFLAGS="$(LDFLAGS)" . -t $(CONTROLLER_IMG)-$(ARCH):$(TAG)
 	MANIFEST_IMG=$(CONTROLLER_IMG)-$(ARCH) MANIFEST_TAG=$(TAG) $(MAKE) set-manifest-image
 	$(MAKE) set-manifest-pull-policy
 
@@ -297,13 +306,13 @@ OPENSTACK_CLOUD_PROVIDER_CONF_B64 ?= ""
 OPENSTACK_CLOUD_YAML_B64 ?= ""
 OPENSTACK_DNS_NAMESERVERS ?= ""
 OPENSTACK_IMAGE_NAME ?= "ubuntu-1910-kube-v1.17.3"
-OPENSTACK_BASTION_IMAGE_NAME ?= "cirros"
+OPENSTACK_BASTION_IMAGE_NAME ?= "cirros-0.5.1-x86_64-disk"
 OPENSTACK_NODE_MACHINE_FLAVOR ?= "m1.small"
 OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR ?= "m1.medium"
 OPENSTACK_BASTION_MACHINE_FLAVOR ?= "m1.tiny"
 CLUSTER_NAME ?= "capi-quickstart"
 OPENSTACK_SSH_KEY_NAME ?= "${CLUSTER_NAME}-key"
-OPENSTACK_CLUSTER_TEMPLATE ?= "./templates/cluster-template-without-lb.yaml"
+OPENSTACK_CLUSTER_TEMPLATE ?= "./templates/cluster-template.yaml"
 KUBERNETES_VERSION ?= "v1.17.3"
 CONTROL_PLANE_MACHINE_COUNT ?= "1"
 WORKER_MACHINE_COUNT ?= "3"
@@ -311,10 +320,9 @@ LOAD_IMAGE=$(CONTROLLER_IMG)-$(ARCH):$(TAG)
 
 .PHONY: create-cluster
 create-cluster: $(KUSTOMIZE) $(ENVSUBST) ## Create a development Kubernetes cluster on OpenStack in a KIND management cluster.
-	mkdir $(BIN_DIR)
+	mkdir -p $(BIN_DIR)
 	wget https://github.com/kubernetes-sigs/cluster-api/releases/download/v${CAPI_VERSION}/clusterctl-linux-amd64
 	mv ./clusterctl-linux-amd64 $(CLUSTERCTL)
-	mkdir ~/.cluster-api
 	chmod +x $(CLUSTERCTL)
 	# Create clusterctl.yaml to use local OpenStack provider
 	mkdir -p ./out/infrastructure-openstack/$(CAPO_VERSION)
