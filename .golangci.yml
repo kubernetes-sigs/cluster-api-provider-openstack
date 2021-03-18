@@ -5,15 +5,18 @@ linters:
     - funlen
     - gochecknoglobals
     - gochecknoinits
+    - gocognit
+    - godox
+    - gomnd
     - lll
     - maligned
-    - godox
-    - wsl
     - whitespace
-    - gocognit
-    - gomnd
+    - wsl
   # Run with --fast=false for more extensive checks
   fast: true
+linters-settings:
+  goimports:
+    local-prefixes: sigs.k8s.io/cluster-api-provider-openstack
 issues:
   max-same-issues: 0
   max-per-linter: 0

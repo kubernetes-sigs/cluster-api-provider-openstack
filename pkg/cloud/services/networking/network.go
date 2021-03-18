@@ -18,8 +18,6 @@ package networking
 
 import (
 	"fmt"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
-	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
@@ -28,7 +26,10 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/gophercloud/gophercloud/pagination"
 	"github.com/pkg/errors"
+
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
+	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 )
 
 type createOpts struct {

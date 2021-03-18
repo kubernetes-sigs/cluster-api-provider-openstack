@@ -18,8 +18,8 @@ package compute
 
 import (
 	"fmt"
-	"github.com/go-logr/logr"
 
+	"github.com/go-logr/logr"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/utils/openstack/clientconfig"

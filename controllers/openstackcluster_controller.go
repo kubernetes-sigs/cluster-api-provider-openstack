@@ -30,11 +30,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/tools/record"
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/loadbalancer"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/provider"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha4"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/patch"
@@ -49,6 +44,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/loadbalancer"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/provider"
 )
 
 // OpenStackClusterReconciler reconciles a OpenStackCluster object.

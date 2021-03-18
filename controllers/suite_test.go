@@ -18,17 +18,17 @@ package controllers
 
 import (
 	"path/filepath"
-	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
+
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 	// +kubebuilder:scaffold:imports
 )
 

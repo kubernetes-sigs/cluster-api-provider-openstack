@@ -20,12 +20,11 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
-
+	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/utils/openstack/clientconfig"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 
-	"github.com/gophercloud/gophercloud"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 )
 
 const (
