@@ -16,6 +16,10 @@ limitations under the License.
 
 package v1alpha4
 
+import (
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
+)
+
 // OpenStackMachineTemplateResource describes the data needed to create a OpenStackMachine from a template.
 type OpenStackMachineTemplateResource struct {
 	// Spec is the specification of the desired behavior of the machine.
@@ -116,6 +120,28 @@ type SubnetFilter struct {
 	NotTagsAny      string `json:"notTagsAny,omitempty"`
 }
 
+type PortOpts struct {
+	NetworkID           string              `json:"networkId" required:"true"`
+	NameSuffix          string              `json:"nameSuffix" required:"true"`
+	Description         string              `json:"description,omitempty"`
+	AdminStateUp        *bool               `json:"adminStateUp,omitempty"`
+	MACAddress          string              `json:"macAddress,omitempty"`
+	FixedIPs            []ports.IP          `json:"fixedIPs,omitempty"`
+	DeviceID            string              `json:"deviceID,omitempty"`
+	DeviceOwner         string              `json:"deviceOwner,omitempty"`
+	TenantID            string              `json:"tenantID,omitempty"`
+	ProjectID           string              `json:"projectID,omitempty"`
+	SecurityGroups      *[]string           `json:"securityGroups,omitempty"`
+	AllowedAddressPairs []ports.AddressPair `json:"allowedAddressPairs,omitempty"`
+
+	// The ID of the host where the port is allocated
+	HostID string `json:"binding:host_id,omitempty"`
+
+	// The virtual network interface card (vNIC) type that is bound to the
+	// neutron port.
+	VNICType string `json:"binding:vnic_type,omitempty"`
+}
+
 type Instance struct {
 	ID             string            `json:"id,omitempty"`
 	Name           string            `json:"name,omitempty"`
@@ -124,6 +150,7 @@ type Instance struct {
 	SecurityGroups *[]string         `json:"securigyGroups,omitempty"`
 	Networks       *[]Network        `json:"networks,omitempty"`
 	Subnet         string            `json:"subnet,omitempty"`
+	Ports          []PortOpts        `json:"ports,omitempty"`
 	Tags           []string          `json:"tags,omitempty"`
 	Image          string            `json:"image,omitempty"`
 	Flavor         string            `json:"flavor,omitempty"`

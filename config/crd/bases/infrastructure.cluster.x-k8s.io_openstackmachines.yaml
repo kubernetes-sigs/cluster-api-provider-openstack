@@ -537,6 +537,68 @@ spec:
                       type: string
                   type: object
                 type: array
+              ports:
+                description: create and assign additional ports to instances
+                items:
+                  properties:
+                    adminStateUp:
+                      type: boolean
+                    allowedAddressPairs:
+                      items:
+                        description: AddressPair contains the IP Address and the MAC
+                          address.
+                        properties:
+                          ip_address:
+                            type: string
+                          mac_address:
+                            type: string
+                        type: object
+                      type: array
+                    binding:host_id:
+                      description: The ID of the host where the port is allocated
+                      type: string
+                    binding:vnic_type:
+                      description: The virtual network interface card (vNIC) type
+                        that is bound to the neutron port.
+                      type: string
+                    description:
+                      type: string
+                    deviceID:
+                      type: string
+                    deviceOwner:
+                      type: string
+                    fixedIPs:
+                      items:
+                        description: IP is a sub-struct that represents an individual
+                          IP.
+                        properties:
+                          ip_address:
+                            type: string
+                          subnet_id:
+                            type: string
+                        required:
+                        - subnet_id
+                        type: object
+                      type: array
+                    macAddress:
+                      type: string
+                    nameSuffix:
+                      type: string
+                    networkId:
+                      type: string
+                    projectID:
+                      type: string
+                    securityGroups:
+                      items:
+                        type: string
+                      type: array
+                    tenantID:
+                      type: string
+                  required:
+                  - nameSuffix
+                  - networkId
+                  type: object
+                type: array
               providerID:
                 description: ProviderID is the unique identifier as specified by the
                   cloud provider.

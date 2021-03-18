@@ -35,6 +35,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	netext "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/portsbinding"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/trunks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
@@ -83,6 +84,7 @@ func (s *Service) InstanceCreate(openStackCluster *infrav1.OpenStackCluster, mac
 		FailureDomain: *machine.Spec.FailureDomain,
 		RootVolume:    openStackMachine.Spec.RootVolume,
 		Subnet:        openStackMachine.Spec.Subnet,
+		Ports:         openStackMachine.Spec.Ports,
 	}
 
 	if openStackMachine.Spec.Trunk {
@@ -240,6 +242,15 @@ func createInstance(is *Service, clusterName string, i *infrav1.Instance) (*infr
 		return nil, fmt.Errorf("no ports with fixed IPs found on Subnet %q", i.Subnet)
 	}
 
+	for _, portCreateOpts := range i.Ports {
+		port, err := getOrCreatePort(is, i.Name+"-"+portCreateOpts.NameSuffix, portCreateOpts)
+		if err != nil {
+			return nil, err
+		}
+		portsList = append(portsList, servers.Network{
+			Port: port.ID,
+		})
+	}
 	flavorID, err := flavors.IDFromName(is.computeClient, i.Flavor)
 	if err != nil {
 		return nil, fmt.Errorf("error getting flavor id from flavor name %s: %v", i.Flavor, err)
@@ -490,6 +501,62 @@ func isDuplicate(list []string, name string) bool {
 		}
 	}
 	return false
+}
+
+func getOrCreatePort(is *Service, name string, portOpts infrav1.PortOpts) (*ports.Port, error) {
+	existingPorts, err := listPorts(is, ports.ListOpts{
+		Name: name,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(existingPorts) == 0 {
+		createOpts := ports.CreateOpts{
+			Name:                name,
+			NetworkID:           portOpts.NetworkID,
+			Description:         portOpts.Description,
+			AdminStateUp:        portOpts.AdminStateUp,
+			MACAddress:          portOpts.MACAddress,
+			DeviceID:            portOpts.DeviceID,
+			DeviceOwner:         portOpts.DeviceOwner,
+			TenantID:            portOpts.TenantID,
+			ProjectID:           portOpts.ProjectID,
+			SecurityGroups:      portOpts.SecurityGroups,
+			AllowedAddressPairs: portOpts.AllowedAddressPairs,
+		}
+		if len(portOpts.FixedIPs) != 0 {
+			createOpts.FixedIPs = portOpts.FixedIPs
+		}
+		newPort, err := ports.Create(is.networkClient, portsbinding.CreateOptsExt{
+			CreateOptsBuilder: createOpts,
+			HostID:            portOpts.HostID,
+			VNICType:          portOpts.VNICType,
+			Profile:           nil,
+		}).Extract()
+		if err != nil {
+			return nil, err
+		}
+
+		return newPort, nil
+	} else if len(existingPorts) == 1 {
+		return &existingPorts[0], nil
+	}
+
+	return nil, fmt.Errorf("multiple ports found with name \"%s\"", name)
+}
+
+func listPorts(is *Service, opts ports.ListOpts) ([]ports.Port, error) {
+	allPages, err := ports.List(is.networkClient, opts).AllPages()
+	if err != nil {
+		return []ports.Port{}, err
+	}
+
+	portList, err := ports.ExtractPorts(allPages)
+	if err != nil {
+		return []ports.Port{}, err
+	}
+
+	return portList, nil
 }
 
 func createPort(is *Service, clusterName string, name string, net *infrav1.Network, securityGroups *[]string) (ports.Port, error) {
