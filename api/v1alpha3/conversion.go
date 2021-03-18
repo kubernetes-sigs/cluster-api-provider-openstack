@@ -17,8 +17,9 @@ limitations under the License.
 package v1alpha3
 
 import (
-	"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 	"sigs.k8s.io/controller-runtime/pkg/conversion"
+
+	"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 )
 
 var _ conversion.Convertible = &OpenStackCluster{}
