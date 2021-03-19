@@ -81,7 +81,7 @@ func (s *Service) ReconcileSecurityGroups(clusterName string, openStackCluster *
 		secGroupNames[neutronLbaasSuffix] = secLbaasGroupName
 	}
 
-	//create security groups first, because desired rules use group ids.
+	// create security groups first, because desired rules use group ids.
 	for _, v := range secGroupNames {
 		if err := s.createSecurityGroupIfNotExists(openStackCluster, v); err != nil {
 			return err
@@ -410,18 +410,18 @@ func (s *Service) reconcileGroupRules(desired, observed infrav1.SecurityGroup) (
 	rulesToDelete := []infrav1.SecurityGroupRule{}
 	// fills rulesToDelete by calculating observed - desired
 	for _, observedRule := range observed.Rules {
-		delete := true
+		deleteRule := true
 		for _, desiredRule := range desired.Rules {
 			r := desiredRule
 			if r.RemoteGroupID == remoteGroupIDSelf {
 				r.RemoteGroupID = observed.ID
 			}
 			if r.Equal(observedRule) {
-				delete = false
+				deleteRule = false
 				break
 			}
 		}
-		if delete {
+		if deleteRule {
 			rulesToDelete = append(rulesToDelete, observedRule)
 		}
 	}
@@ -435,16 +435,16 @@ func (s *Service) reconcileGroupRules(desired, observed infrav1.SecurityGroup) (
 		if r.RemoteGroupID == remoteGroupIDSelf {
 			r.RemoteGroupID = observed.ID
 		}
-		create := true
+		createRule := true
 		for _, observedRule := range observed.Rules {
 			if r.Equal(observedRule) {
 				// add already existing rules to reconciledRules because we won't touch them anymore
 				reconciledRules = append(reconciledRules, observedRule)
-				create = false
+				createRule = false
 				break
 			}
 		}
-		if create {
+		if createRule {
 			rulesToCreate = append(rulesToCreate, desiredRule)
 		}
 	}
@@ -581,7 +581,7 @@ func convertOSSecGroupRuleToConfigSecGroupRule(osSecGroupRule rules.SecGroupRule
 	}
 }
 
-// GetNeutronLBaasSecGroupName export NeutronLBaasSecGroupName
+// GetNeutronLBaasSecGroupName export NeutronLBaasSecGroupName.
 func GetNeutronLBaasSecGroupName(clusterName string) string {
 	return fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, neutronLbaasSuffix)
 }

@@ -37,7 +37,7 @@ func (r *OpenStackMachineTemplate) SetupWebhookWithManager(mgr manager.Manager) 
 
 var _ webhook.Validator = &OpenStackMachineTemplate{}
 
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
+// ValidateCreate implements webhook.Validator so a webhook will be registered for the type.
 func (r *OpenStackMachineTemplate) ValidateCreate() error {
 	var allErrs field.ErrorList
 	spec := r.Spec.Template.Spec
@@ -49,7 +49,7 @@ func (r *OpenStackMachineTemplate) ValidateCreate() error {
 	return aggregateObjErrors(r.GroupVersionKind().GroupKind(), r.Name, allErrs)
 }
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
+// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type.
 func (r *OpenStackMachineTemplate) ValidateUpdate(old runtime.Object) error {
 	oldOpenStackMachineTemplate := old.(*OpenStackMachineTemplate)
 	if !reflect.DeepEqual(r.Spec, oldOpenStackMachineTemplate.Spec) {
@@ -59,7 +59,7 @@ func (r *OpenStackMachineTemplate) ValidateUpdate(old runtime.Object) error {
 	return nil
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
+// ValidateDelete implements webhook.Validator so a webhook will be registered for the type.
 func (r *OpenStackMachineTemplate) ValidateDelete() error {
 	return nil
 }

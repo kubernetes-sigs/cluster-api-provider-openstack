@@ -96,7 +96,8 @@ func NewClient(cloud clientconfig.Cloud, caCert []byte) (*gophercloud.ProviderCl
 	}
 
 	config := &tls.Config{
-		RootCAs: x509.NewCertPool(),
+		RootCAs:    x509.NewCertPool(),
+		MinVersion: tls.VersionTLS12,
 	}
 	if cloud.Verify != nil {
 		config.InsecureSkipVerify = !*cloud.Verify
@@ -113,7 +114,7 @@ func NewClient(cloud clientconfig.Cloud, caCert []byte) (*gophercloud.ProviderCl
 	return provider, clientOpts, nil
 }
 
-// getCloudFromSecret extract a Cloud from the given namespace:secretName
+// getCloudFromSecret extract a Cloud from the given namespace:secretName.
 func getCloudFromSecret(ctrlClient client.Client, secretNamespace string, secretName string, cloudName string) (clientconfig.Cloud, []byte, error) {
 	ctx := context.TODO()
 	emptyCloud := clientconfig.Cloud{}

@@ -23,7 +23,6 @@ import (
 	"path/filepath"
 
 	. "github.com/onsi/gomega"
-
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/clientcmd"
 	capie2e "sigs.k8s.io/cluster-api/test/e2e"
@@ -33,7 +32,7 @@ import (
 )
 
 // createClusterctlLocalRepository generates a clusterctl repository.
-// Must always be run after kubetest.NewConfiguration
+// Must always be run after kubetest.NewConfiguration.
 func createClusterctlLocalRepository(config *clusterctl.E2EConfig, repositoryFolder string) string {
 	createRepositoryInput := clusterctl.CreateRepositoryInput{
 		E2EConfig:        config,
@@ -51,7 +50,7 @@ func createClusterctlLocalRepository(config *clusterctl.E2EConfig, repositoryFol
 	return clusterctlConfig
 }
 
-// setupBootstrapCluster installs Cluster API components via clusterctl
+// setupBootstrapCluster installs Cluster API components via clusterctl.
 func setupBootstrapCluster(config *clusterctl.E2EConfig, scheme *runtime.Scheme, useExistingCluster bool) (bootstrap.ClusterProvider, framework.ClusterProxy) {
 	var clusterProvider bootstrap.ClusterProvider
 	kubeconfigPath := ""
@@ -86,7 +85,7 @@ func setupBootstrapCluster(config *clusterctl.E2EConfig, scheme *runtime.Scheme,
 	return clusterProvider, clusterProxy
 }
 
-// initBootstrapCluster uses kind to create a cluster
+// initBootstrapCluster uses kind to create a cluster.
 func initBootstrapCluster(e2eCtx *E2EContext) {
 	clusterctl.InitManagementClusterAndWatchControllerLogs(context.TODO(), clusterctl.InitManagementClusterAndWatchControllerLogsInput{
 		ClusterProxy:            e2eCtx.Environment.BootstrapClusterProxy,
@@ -96,7 +95,7 @@ func initBootstrapCluster(e2eCtx *E2EContext) {
 	}, e2eCtx.E2EConfig.GetIntervals(e2eCtx.Environment.BootstrapClusterProxy.GetName(), "wait-controllers")...)
 }
 
-// tearDown the bootstrap kind cluster
+// tearDown the bootstrap kind cluster.
 func tearDown(bootstrapClusterProvider bootstrap.ClusterProvider, bootstrapClusterProxy framework.ClusterProxy) {
 	if bootstrapClusterProxy != nil {
 		bootstrapClusterProxy.Dispose(context.TODO())

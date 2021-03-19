@@ -45,7 +45,7 @@ type instance struct {
 }
 
 // allMachines gets all OpenStack servers at once, to save on DescribeInstances
-// calls
+// calls.
 func allMachines(_ context.Context, e2eCtx *E2EContext) ([]instance, error) {
 	openStackCloudYAMLFile := e2eCtx.E2EConfig.GetVariable(OpenStackCloudYAMLFile)
 	openstackCloud := e2eCtx.E2EConfig.GetVariable(OpenStackCloud)
@@ -75,7 +75,7 @@ func allMachines(_ context.Context, e2eCtx *E2EContext) ([]instance, error) {
 	}
 
 	instances := make([]instance, len(serverList))
-	for _, server := range serverList {
+	for i, server := range serverList {
 		addrMap, err := compute.GetIPFromInstance(server)
 		if err != nil {
 			return nil, fmt.Errorf("error getting ip for server %s: %v", server.Name, err)
@@ -85,11 +85,11 @@ func allMachines(_ context.Context, e2eCtx *E2EContext) ([]instance, error) {
 			return nil, fmt.Errorf("error geting internal ip for server %s: %v", server.Name, err)
 		}
 
-		instances = append(instances, instance{
+		instances[i] = instance{
 			name: server.Name,
 			id:   server.ID,
 			ip:   ip,
-		})
+		}
 	}
 	return instances, nil
 }

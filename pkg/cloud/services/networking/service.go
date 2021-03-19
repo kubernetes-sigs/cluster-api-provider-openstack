@@ -36,7 +36,7 @@ type Service struct {
 	logger logr.Logger
 }
 
-// NewService returns an instance of the networking service
+// NewService returns an instance of the networking service.
 func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, logger logr.Logger) (*Service, error) {
 	serviceClient, err := openstack.NewNetworkV2(client, gophercloud.EndpointOpts{
 		Region: clientOpts.RegionName,

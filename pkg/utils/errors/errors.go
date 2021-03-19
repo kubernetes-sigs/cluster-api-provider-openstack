@@ -17,22 +17,35 @@ limitations under the License.
 package errors
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gophercloud/gophercloud"
 )
 
+func IsRetryable(err error) bool {
+	var errUnexpectedResponseCode gophercloud.ErrUnexpectedResponseCode
+	if errors.As(err, &errUnexpectedResponseCode) {
+		statusCode := errUnexpectedResponseCode.GetStatusCode()
+		return statusCode >= 500 && statusCode != http.StatusNotImplemented
+	}
+	return false
+}
+
 func IsNotFound(err error) bool {
-	if _, ok := err.(gophercloud.ErrDefault404); ok {
+	var errDefault404 gophercloud.ErrDefault404
+	if errors.As(err, &errDefault404) {
 		return true
 	}
 
-	if _, ok := err.(gophercloud.ErrResourceNotFound); ok {
+	var errResourceNotFound gophercloud.ErrResourceNotFound
+	if errors.As(err, &errResourceNotFound) {
 		return true
 	}
 
-	if errCode, ok := err.(gophercloud.ErrUnexpectedResponseCode); ok {
-		if errCode.Actual == http.StatusNotFound {
+	var errUnexpectedResponseCode gophercloud.ErrUnexpectedResponseCode
+	if errors.As(err, &errUnexpectedResponseCode) {
+		if errUnexpectedResponseCode.Actual == http.StatusNotFound {
 			return true
 		}
 	}
@@ -41,12 +54,14 @@ func IsNotFound(err error) bool {
 }
 
 func IsInvalidError(err error) bool {
-	if _, ok := err.(gophercloud.ErrDefault400); ok {
+	var errDefault400 gophercloud.ErrDefault400
+	if errors.As(err, &errDefault400) {
 		return true
 	}
 
-	if errCode, ok := err.(gophercloud.ErrUnexpectedResponseCode); ok {
-		if errCode.Actual == http.StatusBadRequest {
+	var errUnexpectedResponseCode gophercloud.ErrUnexpectedResponseCode
+	if errors.As(err, &errUnexpectedResponseCode) {
+		if errUnexpectedResponseCode.Actual == http.StatusBadRequest {
 			return true
 		}
 	}

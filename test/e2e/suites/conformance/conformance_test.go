@@ -26,7 +26,6 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/cluster-api/test/framework/clusterctl"
@@ -53,17 +52,15 @@ var _ = Describe("conformance tests", func() {
 		namespace = shared.SetupSpecNamespace(ctx, specName, e2eCtx)
 	})
 	Measure(specName, func(b Benchmarker) {
-
 		name := fmt.Sprintf("cluster-%s", util.RandomString(6))
 		shared.SetEnvVar("USE_CI_ARTIFACTS", "true", false)
 		kubernetesVersion := e2eCtx.E2EConfig.GetVariable(shared.KubernetesVersion)
-		flavor := clusterctl.DefaultFlavor
 
 		// TODO(sbuerin): we always need ci artifacts, because we don't have images for every Kubernetes version
 		// * we're using ci-artifacts of the release we want and
 		// * with UseCIArtifacts we use the latest Kubernetes ci release
-		//if e2eCtx.Settings.UseCIArtifacts {
-		flavor = "conformance-ci-artifacts"
+		// if e2eCtx.Settings.UseCIArtifacts {
+		flavor := "conformance-ci-artifacts"
 		if e2eCtx.Settings.UseCIArtifacts {
 			var err error
 			kubernetesVersion, err = kubernetesversions.LatestCIRelease()
@@ -116,5 +113,4 @@ var _ = Describe("conformance tests", func() {
 		// Dumps all the resources in the spec namespace, then cleanups the cluster object and the spec namespace itself.
 		shared.DumpSpecResourcesAndCleanup(ctx, "", namespace, e2eCtx)
 	})
-
 })

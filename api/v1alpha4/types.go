@@ -16,7 +16,7 @@ limitations under the License.
 
 package v1alpha4
 
-// OpenStackMachineTemplateResource describes the data needed to create a OpenStackMachine from a template
+// OpenStackMachineTemplateResource describes the data needed to create a OpenStackMachine from a template.
 type OpenStackMachineTemplateResource struct {
 	// Spec is the specification of the desired behavior of the machine.
 	Spec OpenStackMachineSpec `json:"spec"`
@@ -145,7 +145,7 @@ type RootVolume struct {
 	Size       int    `json:"diskSize,omitempty"`
 }
 
-// Network represents basic information about the associated OpenStach Neutron Network
+// Network represents basic information about the associated OpenStach Neutron Network.
 type Network struct {
 	Name string `json:"name"`
 	ID   string `json:"id"`
@@ -161,7 +161,7 @@ type Network struct {
 	APIServerLoadBalancer *LoadBalancer `json:"apiServerLoadBalancer,omitempty"`
 }
 
-// Subnet represents basic information about the associated OpenStack Neutron Subnet
+// Subnet represents basic information about the associated OpenStack Neutron Subnet.
 type Subnet struct {
 	Name string `json:"name"`
 	ID   string `json:"id"`
@@ -172,7 +172,7 @@ type Subnet struct {
 	Tags []string `json:"tags,omitempty"`
 }
 
-// Router represents basic information about the associated OpenStack Neutron Router
+// Router represents basic information about the associated OpenStack Neutron Router.
 type Router struct {
 	Name string `json:"name"`
 	ID   string `json:"id"`
@@ -180,7 +180,7 @@ type Router struct {
 	Tags []string `json:"tags,omitempty"`
 }
 
-// LoadBalancer represents basic information about the associated OpenStack LoadBalancer
+// LoadBalancer represents basic information about the associated OpenStack LoadBalancer.
 type LoadBalancer struct {
 	Name       string `json:"name"`
 	ID         string `json:"id"`
@@ -221,7 +221,6 @@ func (r SecurityGroupRule) Equal(x SecurityGroupRule) bool {
 		r.Protocol == x.Protocol &&
 		r.RemoteGroupID == x.RemoteGroupID &&
 		r.RemoteIPPrefix == x.RemoteIPPrefix)
-
 }
 
 // InstanceState describes the state of an OpenStack instance.
@@ -239,7 +238,7 @@ var (
 	InstanceStateShutoff = InstanceState("SHUTOFF")
 )
 
-// Bastion represents basic information about the bastion node
+// Bastion represents basic information about the bastion node.
 type Bastion struct {
 	//+optional
 	Enabled bool `json:"enabled"`

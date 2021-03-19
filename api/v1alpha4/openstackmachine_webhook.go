@@ -42,14 +42,14 @@ func (r *OpenStackMachine) SetupWebhookWithManager(mgr manager.Manager) error {
 
 var _ webhook.Validator = &OpenStackMachine{}
 
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
+// ValidateCreate implements webhook.Validator so a webhook will be registered for the type.
 func (r *OpenStackMachine) ValidateCreate() error {
 	var allErrs field.ErrorList
 
 	return aggregateObjErrors(r.GroupVersionKind().GroupKind(), r.Name, allErrs)
 }
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
+// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type.
 func (r *OpenStackMachine) ValidateUpdate(old runtime.Object) error {
 	newOpenStackMachine, err := runtime.DefaultUnstructuredConverter.ToUnstructured(r)
 	if err != nil {
@@ -84,7 +84,7 @@ func (r *OpenStackMachine) ValidateUpdate(old runtime.Object) error {
 	return aggregateObjErrors(r.GroupVersionKind().GroupKind(), r.Name, allErrs)
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
+// ValidateDelete implements webhook.Validator so a webhook will be registered for the type.
 func (r *OpenStackMachine) ValidateDelete() error {
 	return nil
 }

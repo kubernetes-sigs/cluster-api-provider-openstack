@@ -39,7 +39,7 @@ type Service struct {
 	logger             logr.Logger
 }
 
-// NewService returns an instance of the loadbalancer service
+// NewService returns an instance of the loadbalancer service.
 func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, logger logr.Logger, useOctavia bool) (*Service, error) {
 	var err error
 	var loadbalancerClient *gophercloud.ServiceClient

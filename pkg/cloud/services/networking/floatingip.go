@@ -89,7 +89,6 @@ var backoff = wait.Backoff{
 }
 
 func (s *Service) AssociateFloatingIP(fp *floatingips.FloatingIP, portID string) error {
-
 	s.logger.Info("Associating floating IP", "IP", fp.FloatingIP)
 	fpUpdateOpts := &floatingips.UpdateOpts{
 		PortID: &portID,

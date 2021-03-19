@@ -62,7 +62,7 @@ const (
 	RetryIntervalPortDelete = 5 * time.Second
 )
 
-// InstanceCreate creates a compute instance
+// InstanceCreate creates a compute instance.
 func (s *Service) InstanceCreate(clusterName string, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster, userData string) (instance *infrav1.Instance, err error) {
 	if openStackMachine == nil {
 		return nil, fmt.Errorf("create Options need be specified to create instace")
@@ -225,7 +225,8 @@ func createInstance(is *Service, clusterName string, i *infrav1.Instance) (*infr
 			}
 
 			_, err = attributestags.ReplaceAll(is.networkClient, "trunks", trunk.ID, attributestags.ReplaceAllOpts{
-				Tags: i.Tags}).Extract()
+				Tags: i.Tags,
+			}).Extract()
 			if err != nil {
 				return nil, fmt.Errorf("tagging trunk for server err: %v", err)
 			}
@@ -275,8 +276,10 @@ func createInstance(is *Service, clusterName string, i *infrav1.Instance) (*infr
 	err = util.PollImmediate(RetryIntervalInstanceStatus, instanceCreateTimeout, func() (bool, error) {
 		instance, err = is.GetInstance(server.ID)
 		if err != nil {
-			return false, nil
-
+			if capoerrors.IsRetryable(err) {
+				return false, nil
+			}
+			return false, err
 		}
 		return instance.State == infrav1.InstanceStateActive, nil
 	})
@@ -284,7 +287,6 @@ func createInstance(is *Service, clusterName string, i *infrav1.Instance) (*infr
 		return nil, fmt.Errorf("error creating Openstack instance %s, %v", server.ID, err)
 	}
 	return instance, nil
-
 }
 
 func serverToInstance(v *servers.Server) (*infrav1.Instance, error) {
@@ -350,7 +352,7 @@ func GetIPFromInstance(v servers.Server) (map[string]string, error) {
 	return addrMap, nil
 }
 
-// applyRootVolume sets a root volume if the root volume Size is not 0
+// applyRootVolume sets a root volume if the root volume Size is not 0.
 func applyRootVolume(opts servers.CreateOptsBuilder, rootVolume *infrav1.RootVolume) servers.CreateOptsBuilder {
 	if rootVolume != nil && rootVolume.Size != 0 {
 		block := bootfromvolume.BlockDevice{
@@ -371,7 +373,7 @@ func applyRootVolume(opts servers.CreateOptsBuilder, rootVolume *infrav1.RootVol
 }
 
 // applyServerGroupID adds a scheduler hint to the CreateOptsBuilder, if the
-// spec contains a server group ID
+// spec contains a server group ID.
 func applyServerGroupID(opts servers.CreateOptsBuilder, serverGroupID string) servers.CreateOptsBuilder {
 	if serverGroupID != "" {
 		return schedulerhints.CreateOptsExt{
@@ -505,7 +507,6 @@ func createPort(is *Service, clusterName string, name string, net *infrav1.Netwo
 }
 
 func deletePorts(s *Service, nets []servers.Network) error {
-
 	for _, n := range nets {
 		_, err := ports.Get(s.networkClient, n.Port).Extract()
 		if err != nil {
@@ -520,7 +521,7 @@ func deletePorts(s *Service, nets []servers.Network) error {
 	return nil
 }
 
-// Helper function for getting image ID from name
+// Helper function for getting image ID from name.
 func getImageID(is *Service, imageName string) (string, error) {
 	if imageName == "" {
 		return "", nil
@@ -562,7 +563,6 @@ func (s *Service) AssociateFloatingIP(instanceID, floatingIP string) error {
 }
 
 func (s *Service) InstanceDelete(machine *clusterv1.Machine) error {
-
 	if machine.Spec.ProviderID == nil {
 		// nothing to do
 		return nil
@@ -614,9 +614,11 @@ func deleteInstance(is *Service, serverID string) error {
 			}
 			if len(trunkInfo) == 1 {
 				err = util.PollImmediate(RetryIntervalTrunkDelete, TimeoutTrunkDelete, func() (bool, error) {
-					err := trunks.Delete(is.networkClient, trunkInfo[0].ID).ExtractErr()
-					if err != nil {
-						return false, nil
+					if err := trunks.Delete(is.networkClient, trunkInfo[0].ID).ExtractErr(); err != nil {
+						if capoerrors.IsRetryable(err) {
+							return false, nil
+						}
+						return false, err
 					}
 					return true, nil
 				})
@@ -630,7 +632,10 @@ func deleteInstance(is *Service, serverID string) error {
 		err = util.PollImmediate(RetryIntervalPortDelete, TimeoutPortDelete, func() (bool, error) {
 			err := ports.Delete(is.networkClient, port.PortID).ExtractErr()
 			if err != nil {
-				return false, nil
+				if capoerrors.IsRetryable(err) {
+					return false, nil
+				}
+				return false, err
 			}
 			return true, nil
 		})
@@ -653,7 +658,6 @@ func (s *Service) GetInstance(resourceID string) (instance *infrav1.Instance, er
 			return nil, nil
 		}
 		return nil, fmt.Errorf("get server %q detail failed: %v", resourceID, err)
-
 	}
 	i, err := serverToInstance(server)
 	if err != nil {
@@ -663,7 +667,6 @@ func (s *Service) GetInstance(resourceID string) (instance *infrav1.Instance, er
 }
 
 func (s *Service) InstanceExists(name string) (instance *infrav1.Instance, err error) {
-
 	var listOpts servers.ListOpts
 	if name != "" {
 		listOpts = servers.ListOpts{
@@ -686,7 +689,7 @@ func (s *Service) InstanceExists(name string) (instance *infrav1.Instance, err e
 	}
 	instanceList := []*infrav1.Instance{}
 	for _, server := range serverList {
-		var server = server
+		server := server
 		i, err := serverToInstance(&server)
 		if err != nil {
 			return nil, err
