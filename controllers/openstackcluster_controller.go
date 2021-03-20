@@ -180,7 +180,6 @@ func reconcileDelete(ctx context.Context, log logr.Logger, client client.Client,
 		}
 	}
 
-	// Delete other things
 	if workerSecGroup := openStackCluster.Status.WorkerSecurityGroup; workerSecGroup != nil {
 		log.Info("Deleting worker security group", "name", workerSecGroup.Name)
 		if err = networkingService.DeleteSecurityGroups(workerSecGroup); err != nil {

@@ -41,7 +41,7 @@ providers:
     - old: "imagePullPolicy: Always"
       new: "imagePullPolicy: IfNotPresent"
     - old: "--leader-elect"
-      new: "--leader-elect=false"
+      new: "--leader-elect=false\n        - --sync-period=1m"
 - name: kubeadm
   type: BootstrapProvider
   versions:
@@ -54,7 +54,7 @@ providers:
     - old: "imagePullPolicy: Always"
       new: "imagePullPolicy: IfNotPresent"
     - old: "--leader-elect"
-      new: "--leader-elect=false"
+      new: "--leader-elect=false\n        - --sync-period=1m"
 - name: kubeadm
   type: ControlPlaneProvider
   versions:
@@ -67,7 +67,7 @@ providers:
     - old: "imagePullPolicy: Always"
       new: "imagePullPolicy: IfNotPresent"
     - old: "--leader-elect"
-      new: "--leader-elect=false"
+      new: "--leader-elect=false\n        - --sync-period=1m"
 - name: openstack
   type: InfrastructureProvider
   versions:
@@ -85,6 +85,8 @@ providers:
       new: "imagePullPolicy: IfNotPresent"
     - old: "--v=2"
       new: "--v=4"
+    - old: "--leader-elect"
+      new: "--leader-elect=false\n        - --sync-period=1m"
 
 # default variables for the e2e test; those values could be overridden via env variables, thus
 # allowing the same e2e config file to be re-used in different prow jobs e.g. each one with a K8s version permutation
@@ -93,6 +95,7 @@ variables:
   KUBE_CONTEXT: "kind-capo-e2e"
   KUBERNETES_VERSION: "v1.20.4"
   CNI: "../../data/cni/calico.yaml"
+  CCM: "../../data/ccm/cloud-controller-manager.yaml"
   EXP_CLUSTER_RESOURCE_SET: "true"
   OPENSTACK_BASTION_IMAGE_NAME: "cirros-0.5.1-x86_64-disk"
   OPENSTACK_BASTION_MACHINE_FLAVOR: "m1.tiny"
@@ -113,7 +116,6 @@ intervals:
   conformance/wait-worker-nodes: ["30m", "10s"]
   default/wait-controllers: ["3m", "10s"]
   default/wait-cluster: ["20m", "10s"]
-  default/wait-control-plane: ["20m", "10s"]
-  default/wait-worker-nodes: ["20m", "10s"]
+  default/wait-control-plane: ["30m", "10s"]
+  default/wait-worker-nodes: ["30m", "10s"]
   default/wait-delete-cluster: ["30m", "10s"]
-  default/wait-machine-status: ["20m", "10s"]

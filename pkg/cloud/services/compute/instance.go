@@ -234,7 +234,10 @@ func createInstance(is *Service, clusterName string, i *infrav1.Instance) (*infr
 	}
 
 	if i.Subnet != "" && accessIPv4 == "" {
-		return nil, fmt.Errorf("no ports with fixed IPs found on Subnet \"%s\"", i.Subnet)
+		if errd := deletePorts(is, portsList); errd != nil {
+			return nil, fmt.Errorf("no ports with fixed IPs found on Subnet %q: error cleaning up ports: %v", i.Subnet, errd)
+		}
+		return nil, fmt.Errorf("no ports with fixed IPs found on Subnet %q", i.Subnet)
 	}
 
 	flavorID, err := flavors.IDFromName(is.computeClient, i.Flavor)
@@ -266,7 +269,7 @@ func createInstance(is *Service, clusterName string, i *infrav1.Instance) (*infr
 	}).Extract()
 	if err != nil {
 		if errd := deletePorts(is, portsList); errd != nil {
-			return nil, fmt.Errorf("error recover creating Openstack instance: %v", errd)
+			return nil, fmt.Errorf("error recover creating Openstack instance: error cleaning up ports: %v", errd)
 		}
 		return nil, fmt.Errorf("error creating Openstack instance: %v", err)
 	}
