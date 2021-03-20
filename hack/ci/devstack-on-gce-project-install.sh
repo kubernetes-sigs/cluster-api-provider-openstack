@@ -56,7 +56,9 @@ function init_networks() {
   if [[ ${GCP_NETWORK_NAME} != "default" ]]; then
     if ! gcloud compute networks describe "${GCP_NETWORK_NAME}" --project "${GCP_PROJECT}" > /dev/null;
     then
-      gcloud compute networks create --project "$GCP_PROJECT" "${GCP_NETWORK_NAME}" --subnet-mode auto --quiet
+      gcloud compute networks create --project "$GCP_PROJECT" "${GCP_NETWORK_NAME}" --subnet-mode custom
+      gcloud compute networks subnets create "${GCP_NETWORK_NAME}" --project "$GCP_PROJECT" --network="${GCP_NETWORK_NAME}" --range="10.0.0.0/20" --region "${GCP_REGION}"
+
       gcloud compute firewall-rules create "${GCP_NETWORK_NAME}"-allow-http --project "$GCP_PROJECT" \
         --allow tcp:80 --network "${GCP_NETWORK_NAME}" --quiet
       gcloud compute firewall-rules create "${GCP_NETWORK_NAME}"-allow-https --project "$GCP_PROJECT" \
@@ -124,13 +126,13 @@ main() {
       --project "${GCP_PROJECT}" \
       --zone "${GCP_ZONE}" \
       --image ubuntu-2004-nested \
-      --boot-disk-size 100G \
+      --boot-disk-size 300G \
       --boot-disk-type pd-ssd \
       --can-ip-forward \
       --tags http-server,https-server,novnc,openstack-apis \
       --min-cpu-platform "${GCP_MACHINE_MIN_CPU_PLATFORM}" \
       --machine-type "${GCP_MACHINE_TYPE}" \
-      --network-interface=network="${CLUSTER_NAME}-mynetwork,subnet=${CLUSTER_NAME}-mynetwork,aliases=/24" \
+      --network-interface="private-network-ip=10.0.2.15,network=${CLUSTER_NAME}-mynetwork,subnet=${CLUSTER_NAME}-mynetwork" \
       --metadata-from-file user-data=./hack/ci/devstack-cloud-init.yaml
   fi
 
@@ -192,12 +194,17 @@ main() {
   openstack availability zone list
   openstack domain list
 
+  # the flavors are created in a way that we can execute at least 2 e2e tests in parallel (overall we have 32 vCPUs)
   openstack flavor delete m1.tiny
   openstack flavor create --ram 512 --disk 1 --vcpus 1 --public --id 1 m1.tiny --property hw_rng:allowed='True'
   openstack flavor delete m1.small
   openstack flavor create --ram 4192 --disk 10 --vcpus 2 --public --id 2 m1.small --property hw_rng:allowed='True'
   openstack flavor delete m1.medium
   openstack flavor create --ram 6144 --disk 10 --vcpus 4 --public --id 3 m1.medium --property hw_rng:allowed='True'
+
+  # Adjust the CPU quota
+  openstack quota set --cores 32 demo
+  openstack quota set --secgroups 50 demo
 
   export OS_TENANT_NAME=demo
   export OS_USERNAME=demo

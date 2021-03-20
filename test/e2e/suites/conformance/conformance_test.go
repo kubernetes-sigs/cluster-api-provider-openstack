@@ -31,7 +31,6 @@ import (
 	"sigs.k8s.io/cluster-api/test/framework/clusterctl"
 	"sigs.k8s.io/cluster-api/test/framework/kubernetesversions"
 	"sigs.k8s.io/cluster-api/test/framework/kubetest"
-	"sigs.k8s.io/cluster-api/util"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
 )
@@ -52,15 +51,12 @@ var _ = Describe("conformance tests", func() {
 		namespace = shared.SetupSpecNamespace(ctx, specName, e2eCtx)
 	})
 	Measure(specName, func(b Benchmarker) {
-		name := fmt.Sprintf("cluster-%s", util.RandomString(6))
+		name := fmt.Sprintf("cluster-%s", namespace.Name)
 		shared.SetEnvVar("USE_CI_ARTIFACTS", "true", false)
 		kubernetesVersion := e2eCtx.E2EConfig.GetVariable(shared.KubernetesVersion)
 
-		// TODO(sbuerin): we always need ci artifacts, because we don't have images for every Kubernetes version
-		// * we're using ci-artifacts of the release we want and
+		flavor := shared.FlavorDefault
 		// * with UseCIArtifacts we use the latest Kubernetes ci release
-		// if e2eCtx.Settings.UseCIArtifacts {
-		flavor := "conformance-ci-artifacts"
 		if e2eCtx.Settings.UseCIArtifacts {
 			var err error
 			kubernetesVersion, err = kubernetesversions.LatestCIRelease()
@@ -111,6 +107,6 @@ var _ = Describe("conformance tests", func() {
 	AfterEach(func() {
 		shared.SetEnvVar("USE_CI_ARTIFACTS", "false", false)
 		// Dumps all the resources in the spec namespace, then cleanups the cluster object and the spec namespace itself.
-		shared.DumpSpecResourcesAndCleanup(ctx, "", namespace, e2eCtx)
+		shared.DumpSpecResourcesAndCleanup(ctx, specName, namespace, e2eCtx)
 	})
 })

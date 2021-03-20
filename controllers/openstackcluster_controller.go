@@ -181,6 +181,11 @@ func reconcileDelete(ctx context.Context, log logr.Logger, client client.Client,
 	}
 
 	// Delete other things
+	log.Info("Deleting orphaned ports")
+	if err = networkingService.DeleteOrphanedPorts(); err != nil {
+		return reconcile.Result{}, errors.Errorf("failed to delete orophaned ports: %v", err)
+	}
+
 	if workerSecGroup := openStackCluster.Status.WorkerSecurityGroup; workerSecGroup != nil {
 		log.Info("Deleting worker security group", "name", workerSecGroup.Name)
 		if err = networkingService.DeleteSecurityGroups(workerSecGroup); err != nil {

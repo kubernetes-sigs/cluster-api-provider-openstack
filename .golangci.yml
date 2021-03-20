@@ -23,7 +23,7 @@ linters:
 linters-settings:
   cyclop:
     # TODO(sbuerin) fix remaining findings and set to 20 afterwards
-    max-complexity: 29
+    max-complexity: 30
   goimports:
     local-prefixes: sigs.k8s.io/cluster-api-provider-openstack
   nestif:

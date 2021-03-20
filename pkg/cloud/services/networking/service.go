@@ -23,6 +23,8 @@ import (
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/utils/openstack/clientconfig"
+
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/provider"
 )
 
 const (
@@ -32,8 +34,9 @@ const (
 // Service interfaces with the OpenStack Networking API.
 // It will create a network related infrastructure for the cluster, like network, subnet, router, security groups.
 type Service struct {
-	client *gophercloud.ServiceClient
-	logger logr.Logger
+	projectID string
+	client    *gophercloud.ServiceClient
+	logger    logr.Logger
 }
 
 // NewService returns an instance of the networking service.
@@ -44,8 +47,25 @@ func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.Cli
 	if err != nil {
 		return nil, fmt.Errorf("failed to create networking service client: %v", err)
 	}
+
+	if clientOpts.AuthInfo == nil {
+		return nil, fmt.Errorf("failed to get project id: authInfo must be set: %v", err)
+	}
+
+	projectID := clientOpts.AuthInfo.ProjectID
+	if projectID == "" && clientOpts.AuthInfo.ProjectName != "" {
+		projectID, err = provider.GetProjectID(client, clientOpts.AuthInfo.ProjectName)
+		if err != nil {
+			return nil, fmt.Errorf("error retrieveing project id: %v", err)
+		}
+	}
+	if projectID == "" {
+		return nil, fmt.Errorf("failed to get project id")
+	}
+
 	return &Service{
-		client: serviceClient,
-		logger: logger,
+		projectID: projectID,
+		client:    serviceClient,
+		logger:    logger,
 	}, nil
 }

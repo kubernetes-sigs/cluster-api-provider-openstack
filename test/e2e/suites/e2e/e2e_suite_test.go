@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package conformance
+package e2e
 
 import (
 	"testing"
@@ -35,9 +35,9 @@ func init() {
 	shared.CreateDefaultFlags(e2eCtx)
 }
 
-func TestConformance(t *testing.T) {
+func TestE2E(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecsWithDefaultAndCustomReporters(t, "capo-conformance", []Reporter{framework.CreateJUnitReporterForProw(e2eCtx.Settings.ArtifactFolder)})
+	RunSpecsWithDefaultAndCustomReporters(t, "capo-e2e", []Reporter{framework.CreateJUnitReporterForProw(e2eCtx.Settings.ArtifactFolder)})
 }
 
 var _ = SynchronizedBeforeSuite(func() []byte {
