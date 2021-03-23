@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# hack script for preparing gcp to run cluster-api-provider-openstack e2e
+# hack script for preparing GCP to run cluster-api-provider-openstack e2e
 
 set -o errexit -o nounset -o pipefail
 
@@ -23,6 +23,7 @@ cd "${REPO_ROOT}" || exit 1
 REPO_ROOT_ABSOLUTE=$(pwd)
 
 CLUSTER_NAME=${CLUSTER_NAME:-"capo-e2e"}
+
 GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS:-""}
 GCP_PROJECT=${GCP_PROJECT:-""}
 GCP_REGION=${GCP_REGION:-"us-east4"}
@@ -30,8 +31,14 @@ GCP_ZONE=${GCP_ZONE:-"us-east4-a"}
 GCP_MACHINE_MIN_CPU_PLATFORM=${GCP_MACHINE_MIN_CPU_PLATFORM:-"Intel Cascade Lake"}
 GCP_MACHINE_TYPE=${GCP_MACHINE_TYPE:-"n2-standard-16"}
 GCP_NETWORK_NAME=${GCP_NETWORK_NAME:-"${CLUSTER_NAME}-mynetwork"}
+
 OPENSTACK_RELEASE=${OPENSTACK_RELEASE:-"victoria"}
-OPENSTACK_ADDITIONAL_SERVICES=${OPENSTACK_ADDITIONAL_SERVICES:-""}
+OPENSTACK_ENABLE_HORIZON=${OPENSTACK_ENABLE_HORIZON:-"false"}
+# Flavors are default or preinstalled:
+# * default: installs devstack via cloud-init
+#   * OPENSTACK_RELEASE only works on default
+# * preinstalled: uses a already installed devstack
+FLAVOR=${FLAVOR:="preinstalled"}
 
 echo "Using: GCP_PROJECT: ${GCP_PROJECT} GCP_REGION: ${GCP_REGION} GCP_NETWORK_NAME: ${GCP_NETWORK_NAME}"
 
@@ -99,44 +106,58 @@ main() {
     init_networks
   fi
 
-  if ! gcloud compute disks describe ubuntu2004disk --project "${GCP_PROJECT}" --zone "${GCP_ZONE}" > /dev/null;
+  if [[ ${FLAVOR} = "default" ]]
   then
-    gcloud compute disks create ubuntu2004disk \
-      --project "${GCP_PROJECT}" \
-      --image-project ubuntu-os-cloud --image-family ubuntu-2004-lts \
-      --zone "${GCP_ZONE}"
+    if ! gcloud compute disks describe devstack-${FLAVOR} --project "${GCP_PROJECT}" --zone "${GCP_ZONE}" > /dev/null;
+    then
+      gcloud compute disks create devstack-${FLAVOR} \
+        --project "${GCP_PROJECT}" \
+        --image-project ubuntu-os-cloud --image-family ubuntu-2004-lts \
+        --zone "${GCP_ZONE}"
+    fi
+
+    if ! gcloud compute images describe devstack-${FLAVOR} --project "${GCP_PROJECT}" > /dev/null;
+    then
+      gcloud compute images create devstack-${FLAVOR} \
+        --project "${GCP_PROJECT}" \
+        --source-disk devstack-${FLAVOR} --source-disk-zone "${GCP_ZONE}" \
+        --licenses "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
+    fi
   fi
 
-  if ! gcloud compute images describe ubuntu-2004-nested --project "${GCP_PROJECT}" > /dev/null;
+  if [[ ${FLAVOR} = "preinstalled" ]]
   then
-    gcloud compute images create ubuntu-2004-nested \
-      --project "${GCP_PROJECT}" \
-      --source-disk ubuntu2004disk --source-disk-zone "${GCP_ZONE}" \
-      --licenses "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
+    if ! gcloud compute images describe devstack-${FLAVOR} --project "${GCP_PROJECT}" > /dev/null;
+    then
+      gcloud compute images create devstack-${FLAVOR} \
+        --project "${GCP_PROJECT}" \
+        --source-uri gs://artifacts.k8s-staging-capi-openstack.appspot.com/test/devstack/2021-03-28/devstack.raw.tar.gz \
+        --licenses "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
+    fi
   fi
 
   if ! gcloud compute instances describe openstack --project "${GCP_PROJECT}" --zone "${GCP_ZONE}" > /dev/null;
   then
-    	< ./hack/ci/devstack-cloud-init.yaml.tpl \
-	  sed "s|\${OPENSTACK_RELEASE}|${OPENSTACK_RELEASE}|" | \
-	  sed "s|\${OPENSTACK_ADDITIONAL_SERVICES}|${OPENSTACK_ADDITIONAL_SERVICES}|" \
-	   > ./hack/ci/devstack-cloud-init.yaml
+    < ./hack/ci/devstack-${FLAVOR}-cloud-init.yaml.tpl \
+	    sed "s|\${OPENSTACK_ENABLE_HORIZON}|${OPENSTACK_ENABLE_HORIZON}|" | \
+      sed "s|\${OPENSTACK_RELEASE}|${OPENSTACK_RELEASE}|" \
+	    > ./hack/ci/devstack-${FLAVOR}-cloud-init.yaml
 
     gcloud compute instances create openstack \
       --project "${GCP_PROJECT}" \
       --zone "${GCP_ZONE}" \
-      --image ubuntu-2004-nested \
-      --boot-disk-size 300G \
+      --image devstack-${FLAVOR} \
+      --boot-disk-size 200G \
       --boot-disk-type pd-ssd \
       --can-ip-forward \
       --tags http-server,https-server,novnc,openstack-apis \
       --min-cpu-platform "${GCP_MACHINE_MIN_CPU_PLATFORM}" \
       --machine-type "${GCP_MACHINE_TYPE}" \
       --network-interface="private-network-ip=10.0.2.15,network=${CLUSTER_NAME}-mynetwork,subnet=${CLUSTER_NAME}-mynetwork" \
-      --metadata-from-file user-data=./hack/ci/devstack-cloud-init.yaml
+      --metadata-from-file user-data=./hack/ci/devstack-${FLAVOR}-cloud-init.yaml
   fi
 
-  # Install some local deps we later need in the meantime (we have to wait for cloud init anyway)
+  # Install some local dependencies we later need in the meantime (we have to wait for cloud init anyway)
   if ! command -v sshuttle;
   then
     # Install sshuttle from source because we need: https://github.com/sshuttle/sshuttle/pull/606
@@ -158,12 +179,13 @@ main() {
     pip3 install python-cinderclient python-glanceclient python-keystoneclient python-neutronclient python-novaclient python-openstackclient python-octaviaclient
   fi
 
+  PUBLIC_IP=$(gcloud compute instances describe openstack --project "${GCP_PROJECT}" --zone "${GCP_ZONE}" --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
+  PRIVATE_IP=$(gcloud compute instances describe openstack --project "${GCP_PROJECT}" --zone "${GCP_ZONE}" --format='get(networkInterfaces[0].networkIP)')
+
   # Wait until cloud-init is done
   retry 120 30 "gcloud compute ssh --project ${GCP_PROJECT} --zone ${GCP_ZONE} openstack -- cat /var/lib/cloud/instance/boot-finished"
 
   # Open tunnel
-  PUBLIC_IP=$(gcloud compute instances describe openstack --project "${GCP_PROJECT}" --zone "${GCP_ZONE}" --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
-  PRIVATE_IP=$(gcloud compute instances describe openstack --project "${GCP_PROJECT}" --zone "${GCP_ZONE}" --format='get(networkInterfaces[0].networkIP)')
   echo "Opening tunnel to ${PRIVATE_IP} via ${PUBLIC_IP}"
   # Packets from the Prow Pod or the Pods in Kind have TTL 63 or 64.
   # We need a ttl of 65 (default 63), so all of our packets are captured by sshuttle.

@@ -70,10 +70,10 @@ func ensureSSHKeyPair(e2eCtx *E2EContext) {
 	err = os.MkdirAll(sshDir, 0750)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = os.WriteFile(filepath.Join(sshDir, DefaultSSHKeyPairName), []byte(keypair.PrivateKey), 0o400)
+	err = os.WriteFile(filepath.Join(sshDir, DefaultSSHKeyPairName), []byte(keypair.PrivateKey), 0o600)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = os.WriteFile(filepath.Join(sshDir, fmt.Sprintf("%s.pub", DefaultSSHKeyPairName)), []byte(keypair.PublicKey), 0o400)
+	err = os.WriteFile(filepath.Join(sshDir, fmt.Sprintf("%s.pub", DefaultSSHKeyPairName)), []byte(keypair.PublicKey), 0o600)
 	Expect(err).NotTo(HaveOccurred())
 }
 

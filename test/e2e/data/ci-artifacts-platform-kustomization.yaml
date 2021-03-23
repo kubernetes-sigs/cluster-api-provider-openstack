@@ -9,3 +9,25 @@ metadata:
   name: ${CLUSTER_NAME}-control-plane
 spec:
   version: ${KUBERNETES_VERSION}
+# Comment this out for debbuging in case there are problems with the ssky key
+#  kubeadmConfigSpec:
+#    users:
+#    - name: "capi"
+#      sudo: "ALL=(ALL) NOPASSWD:ALL"
+#      # user: capi, passwd: capi
+#      passwd: "$6$rounds=4096$yKTFKL6RmN128$a7cGMiNjeTSd091s6QzZcUNrMTgm3HhML5rVmpDFlCfgD7scTW7ZHr0OChcXCaeiO/kbhdn0XzIzWk63nSqRH1"
+#      lockPassword: false
+#---
+#apiVersion: bootstrap.cluster.x-k8s.io/v1alpha4
+#kind: KubeadmConfigTemplate
+#metadata:
+#  name: ${CLUSTER_NAME}-md-0
+#spec:
+#  template:
+#    spec:
+#      users:
+#      - name: "capi"
+#        sudo: "ALL=(ALL) NOPASSWD:ALL"
+#        # user: capi, passwd: capi
+#        passwd: "$6$rounds=4096$yKTFKL6RmN128$a7cGMiNjeTSd091s6QzZcUNrMTgm3HhML5rVmpDFlCfgD7scTW7ZHr0OChcXCaeiO/kbhdn0XzIzWk63nSqRH1"
+#        lockPassword: false
