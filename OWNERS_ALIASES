@@ -12,7 +12,6 @@ aliases:
   cluster-api-maintainers:
     - detiber
     - justinsb
-    - ncdc
     - vincepri
   sig-openstack-leads:
     - hogepodge
