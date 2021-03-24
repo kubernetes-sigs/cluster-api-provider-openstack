@@ -34,6 +34,7 @@ export GO111MODULE=on
 export DOCKER_CLI_EXPERIMENTAL := enabled
 
 # Directories.
+REPO_ROOT := $(shell git rev-parse --show-toplevel)
 TOOLS_DIR := hack/tools
 TOOLS_BIN_DIR := $(TOOLS_DIR)/bin
 BIN_DIR := bin
@@ -49,6 +50,11 @@ CONVERSION_GEN := $(TOOLS_BIN_DIR)/conversion-gen
 RELEASE_NOTES_BIN := bin/release-notes
 RELEASE_NOTES := $(TOOLS_DIR)/$(RELEASE_NOTES_BIN)
 GINKGO := $(TOOLS_BIN_DIR)/ginkgo
+
+# Set --output-base for conversion-gen if we are not within GOPATH
+ifneq ($(abspath $(REPO_ROOT)),$(shell go env GOPATH)/src/sigs.k8s.io/cluster-api-provider-openstack)
+	GEN_OUTPUT_BASE := --output-base=$(REPO_ROOT)
+endif
 
 # Define Docker related variables. Releases should modify and double check these vars.
 REGISTRY ?= gcr.io/k8s-staging-capi-openstack
@@ -183,7 +189,7 @@ generate-go: $(CONTROLLER_GEN) $(CONVERSION_GEN) $(MOCKGEN) ## Runs Go related g
 
 	$(CONVERSION_GEN) \
 		--input-dirs=./api/v1alpha3 \
-		--output-file-base=zz_generated.conversion \
+		--output-file-base=zz_generated.conversion $(GEN_OUTPUT_BASE) \
 		--go-header-file=./hack/boilerplate/boilerplate.generatego.txt
 	go generate ./...
 
