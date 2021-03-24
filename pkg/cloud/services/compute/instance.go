@@ -667,7 +667,10 @@ func (s *Service) InstanceExists(name string) (instance *infrav1.Instance, err e
 	var listOpts servers.ListOpts
 	if name != "" {
 		listOpts = servers.ListOpts{
-			Name: name,
+			// The name parameter to /servers is a regular expression. Unless we
+			// explicitly specify a whole string match this will be a substring
+			// match.
+			Name: fmt.Sprintf("^%s$", name),
 		}
 	} else {
 		listOpts = servers.ListOpts{}
