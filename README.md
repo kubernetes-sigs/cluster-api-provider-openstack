@@ -124,7 +124,7 @@ If you think you have found a bug please follow the instructions below.
 
 - Please spend a small amount of time giving due diligence to the issue tracker. Your issue might be a duplicate.
 - Get the logs from the cluster controllers. Please paste this into your issue.
-- Open a [new issue][new_issue].
+- Open a [new issue][new_bug_issue].
 - Remember that users might be searching for your issue in the future, so please give it a meaningful title to help others.
 - Feel free to reach out to the Cluster API community on the [Kubernetes Slack][slack].
 
@@ -132,7 +132,7 @@ If you think you have found a bug please follow the instructions below.
 
 We also use the issue tracker to track features. If you have an idea for a feature, or think you can help Cluster API Provider OpenStack become even more awesome follow the steps below.
 
-- Open a [new issue][new_issue].
+- Open a [new issue][new_feature_issue].
 - Remember that users might be searching for your issue in the future, so please
   give it a meaningful title to help others.
 - Clearly define the use case, using concrete examples.
@@ -151,4 +151,5 @@ We also use the issue tracker to track features. If you have an idea for a featu
 [slack]: https://kubernetes.slack.com/messages/cluster-api-openstack
 [good_first_issue]: https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc+label%3A%22good+first+issue%22
 [prow]: https://go.k8s.io/bot-commands
-[new_issue]: https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/new
+[new_bug_issue]: https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/new?assignees=&labels=&template=bug_report.md
+[new_feature_issue]: https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/new?assignees=&labels=&template=feature_request.md
