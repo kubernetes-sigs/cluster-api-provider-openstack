@@ -19,6 +19,9 @@ include $(ROOT_DIR_RELATIVE)/common.mk
 # If you update this file, please follow
 # https://suva.sh/posts/well-documented-makefiles
 
+# Active module mode, as we use go modules to manage dependencies
+export GO111MODULE=on
+
 # Directories.
 ARTIFACTS ?= $(REPO_ROOT)/_artifacts
 TOOLS_DIR := hack/tools
