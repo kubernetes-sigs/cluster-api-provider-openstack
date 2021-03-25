@@ -6,7 +6,7 @@ require (
 	github.com/go-logr/logr v0.4.0
 	github.com/gophercloud/gophercloud v0.15.0
 	github.com/gophercloud/utils v0.0.0-20201203161420-f41c1768a042
-	github.com/onsi/ginkgo v1.15.0
+	github.com/onsi/ginkgo v1.15.2
 	github.com/onsi/gomega v1.10.5
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/pflag v1.0.5
