@@ -3,6 +3,8 @@ apiVersion: cluster.x-k8s.io/v1alpha4
 kind: Cluster
 metadata:
   name: ${CLUSTER_NAME}
+  labels:
+    cni: "${CLUSTER_NAME}-crs-0"
 spec:
   clusterNetwork:
     pods:
@@ -25,19 +27,23 @@ spec:
   cloudName: ${OPENSTACK_CLOUD}
   cloudsSecret:
     name: ${CLUSTER_NAME}-cloud-config
-  managedAPIServerLoadBalancer: true
   managedSecurityGroups: true
   nodeCidr: 10.6.0.0/24
   dnsNameservers:
   - ${OPENSTACK_DNS_NAMESERVERS}
-  useOctavia: true
+  bastion:
+    enabled: true
+    instance:
+      flavor: ${OPENSTACK_BASTION_MACHINE_FLAVOR}
+      image: ${OPENSTACK_BASTION_IMAGE_NAME}
+      sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
 ---
 kind: KubeadmControlPlane
 apiVersion: controlplane.cluster.x-k8s.io/v1alpha4
 metadata:
   name: "${CLUSTER_NAME}-control-plane"
 spec:
-  replicas: ${CONTROL_PLANE_MACHINE_COUNT}
+  replicas: 1
   infrastructureTemplate:
     kind: OpenStackMachineTemplate
     apiVersion: infrastructure.cluster.x-k8s.io/v1alpha4
@@ -47,20 +53,49 @@ spec:
       nodeRegistration:
         name: '{{ local_hostname }}'
         kubeletExtraArgs:
-          cloud-provider: external
+          cloud-provider: openstack
+          cloud-config: /etc/kubernetes/cloud.conf
     clusterConfiguration:
       imageRepository: k8s.gcr.io
       apiServer:
         extraArgs:
-          cloud-provider: external
+          cloud-provider: openstack
+          cloud-config: /etc/kubernetes/cloud.conf
+        extraVolumes:
+        - name: cloud
+          hostPath: /etc/kubernetes/cloud.conf
+          mountPath: /etc/kubernetes/cloud.conf
+          readOnly: true
       controllerManager:
         extraArgs:
-          cloud-provider: external
+          cloud-provider: openstack
+          cloud-config: /etc/kubernetes/cloud.conf
+        extraVolumes:
+        - name: cloud
+          hostPath: /etc/kubernetes/cloud.conf
+          mountPath: /etc/kubernetes/cloud.conf
+          readOnly: true
+        - name: cacerts
+          hostPath: /etc/certs/cacert
+          mountPath: /etc/certs/cacert
+          readOnly: true
     joinConfiguration:
       nodeRegistration:
         name: '{{ local_hostname }}'
         kubeletExtraArgs:
-          cloud-provider: external
+          cloud-config: /etc/kubernetes/cloud.conf
+          cloud-provider: openstack
+    files:
+    - path: /etc/kubernetes/cloud.conf
+      owner: root
+      permissions: "0600"
+      content: ${OPENSTACK_CLOUD_PROVIDER_CONF_B64}
+      encoding: base64
+    - path: /etc/certs/cacert
+      owner: root
+      permissions: "0600"
+      content: ${OPENSTACK_CLOUD_CACERT_B64}
+      encoding: base64
   version: "${KUBERNETES_VERSION}"
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha4
@@ -122,11 +157,23 @@ metadata:
 spec:
   template:
     spec:
+      files:
+      - content: ${OPENSTACK_CLOUD_PROVIDER_CONF_B64}
+        encoding: base64
+        owner: root
+        path: /etc/kubernetes/cloud.conf
+        permissions: "0600"
+      - content: ${OPENSTACK_CLOUD_CACERT_B64}
+        encoding: base64
+        owner: root
+        path: /etc/certs/cacert
+        permissions: "0600"
       joinConfiguration:
         nodeRegistration:
           name: '{{ local_hostname }}'
           kubeletExtraArgs:
-            cloud-provider: external
+            cloud-config: /etc/kubernetes/cloud.conf
+            cloud-provider: openstack
 ---
 apiVersion: v1
 kind: Secret
@@ -137,3 +184,22 @@ metadata:
 data:
   clouds.yaml: ${OPENSTACK_CLOUD_YAML_B64}
   cacert: ${OPENSTACK_CLOUD_CACERT_B64}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "cni-${CLUSTER_NAME}-crs-0"
+data: ${CNI_RESOURCES}
+---
+apiVersion: addons.cluster.x-k8s.io/v1alpha4
+kind: ClusterResourceSet
+metadata:
+  name:  "${CLUSTER_NAME}-crs-0"
+spec:
+  strategy: ApplyOnce
+  clusterSelector:
+    matchLabels:
+      cni: "${CLUSTER_NAME}-crs-0"
+  resources:
+  - name: "cni-${CLUSTER_NAME}-crs-0"
+    kind: ConfigMap

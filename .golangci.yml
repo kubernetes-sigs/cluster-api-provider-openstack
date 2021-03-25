@@ -26,6 +26,9 @@ issues:
     - "G108: Profiling endpoint is automatically exposed on /debug/pprof"
 run:
   timeout: 6m
+  build-tags:
+  - e2e
+
   skip-files:
     - "zz_generated.*\\.go$"
     - ".*_mock\\.go"

@@ -1,0 +1,119 @@
+---
+# E2E test scenario using local dev images and manifests built from the source tree for following providers:
+# - cluster-api
+# - bootstrap kubeadm
+# - control-plane kubeadm
+# - openstack
+
+# To run tests, run the following from the root of this repository.
+# `OPENSTACK_CLOUD=capo-e2e OPENSTACK_CLOUD_YAML_FILE=/tmp/clouds.yaml make test-conformance`
+# The -stream flag will make Ginkgo print results to the screen in real-time.
+
+managementClusterName: capo-e2e
+
+images:
+- name: gcr.io/k8s-staging-cluster-api/cluster-api-controller:nightly_master_20210310
+  loadBehavior: tryLoad
+- name: gcr.io/k8s-staging-cluster-api/kubeadm-bootstrap-controller:nightly_master_20210310
+  loadBehavior: tryLoad
+- name: gcr.io/k8s-staging-cluster-api/kubeadm-control-plane-controller:nightly_master_20210310
+  loadBehavior: tryLoad
+# Use local dev images built source tree;
+- name: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller-amd64:e2e
+  loadBehavior: mustLoad
+- name: quay.io/jetstack/cert-manager-cainjector:v1.1.0
+  loadBehavior: tryLoad
+- name: quay.io/jetstack/cert-manager-webhook:v1.1.0
+  loadBehavior: tryLoad
+- name: quay.io/jetstack/cert-manager-controller:v1.1.0
+  loadBehavior: tryLoad
+
+providers:
+- name: cluster-api
+  type: CoreProvider
+  versions:
+  - name: v0.4.0
+    value: https://storage.googleapis.com/artifacts.k8s-staging-cluster-api.appspot.com/components/nightly_master_20210310/core-components.yaml
+    type: url
+    files:
+    - sourcePath: "../data/shared/v1alpha4/metadata.yaml"
+    replacements:
+    - old: "imagePullPolicy: Always"
+      new: "imagePullPolicy: IfNotPresent"
+    - old: "--leader-elect"
+      new: "--leader-elect=false"
+- name: kubeadm
+  type: BootstrapProvider
+  versions:
+  - name: v0.4.0
+    value: https://storage.googleapis.com/artifacts.k8s-staging-cluster-api.appspot.com/components/nightly_master_20210310/bootstrap-components.yaml
+    type: url
+    files:
+    - sourcePath: "../data/shared/v1alpha4/metadata.yaml"
+    replacements:
+    - old: "imagePullPolicy: Always"
+      new: "imagePullPolicy: IfNotPresent"
+    - old: "--leader-elect"
+      new: "--leader-elect=false"
+- name: kubeadm
+  type: ControlPlaneProvider
+  versions:
+  - name: v0.4.0
+    value: https://storage.googleapis.com/artifacts.k8s-staging-cluster-api.appspot.com/components/nightly_master_20210310/control-plane-components.yaml
+    type: url
+    files:
+    - sourcePath: "../data/shared/v1alpha4/metadata.yaml"
+    replacements:
+    - old: "imagePullPolicy: Always"
+      new: "imagePullPolicy: IfNotPresent"
+    - old: "--leader-elect"
+      new: "--leader-elect=false"
+- name: openstack
+  type: InfrastructureProvider
+  versions:
+  - name: v0.4.0
+    value: ../../../config/default
+    files:
+    - sourcePath: "../data/shared/v1alpha4_provider/metadata.yaml"
+    - sourcePath: "./infrastructure-openstack/cluster-template.yaml"
+    - sourcePath: "./infrastructure-openstack/cluster-template-external-cloud-provider.yaml"
+    - sourcePath: "./infrastructure-openstack/cluster-template-without-lb.yaml"
+    replacements:
+    - old: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller-amd64:dev
+      new: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller-amd64:e2e
+    - old: "imagePullPolicy: Always"
+      new: "imagePullPolicy: IfNotPresent"
+    - old: "--v=2"
+      new: "--v=4"
+
+# default variables for the e2e test; those values could be overridden via env variables, thus
+# allowing the same e2e config file to be re-used in different prow jobs e.g. each one with a K8s version permutation
+variables:
+  # used to ensure we deploy to the correct management cluster
+  KUBE_CONTEXT: "kind-capo-e2e"
+  KUBERNETES_VERSION: "v1.20.4"
+  CNI: "../../data/cni/calico.yaml"
+  EXP_CLUSTER_RESOURCE_SET: "true"
+  OPENSTACK_BASTION_IMAGE_NAME: "cirros-0.5.1-x86_64-disk"
+  OPENSTACK_BASTION_MACHINE_FLAVOR: "m1.tiny"
+  OPENSTACK_CLOUD: "capo-e2e"
+  OPENSTACK_CLOUD_CACERT_B64: "Cg=="
+  OPENSTACK_CLOUD_YAML_FILE: '../../../../clouds.yaml'
+  OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR: "m1.medium"
+  OPENSTACK_DNS_NAMESERVERS: "8.8.8.8"
+  OPENSTACK_FAILURE_DOMAIN: "nova"
+  OPENSTACK_IMAGE_NAME: "ubuntu-2004-kube-v1.18.15"
+  OPENSTACK_NODE_MACHINE_FLAVOR: "m1.small"
+  OPENSTACK_SSH_KEY_NAME: "cluster-api-provider-openstack-sigs-k8s-io"
+  CONFORMANCE_WORKER_MACHINE_COUNT: "5"
+  CONFORMANCE_CONTROL_PLANE_MACHINE_COUNT: "1"
+
+intervals:
+  conformance/wait-control-plane: ["30m", "10s"]
+  conformance/wait-worker-nodes: ["30m", "10s"]
+  default/wait-controllers: ["3m", "10s"]
+  default/wait-cluster: ["20m", "10s"]
+  default/wait-control-plane: ["20m", "10s"]
+  default/wait-worker-nodes: ["20m", "10s"]
+  default/wait-delete-cluster: ["30m", "10s"]
+  default/wait-machine-status: ["20m", "10s"]

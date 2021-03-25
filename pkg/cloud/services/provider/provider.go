@@ -26,10 +26,10 @@ import (
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/utils/openstack/clientconfig"
-	"gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/yaml"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 )
@@ -54,7 +54,7 @@ func NewClientFromMachine(ctrlClient client.Client, openStackMachine *infrav1.Op
 			return nil, nil, err
 		}
 	}
-	return newClient(cloud, caCert)
+	return NewClient(cloud, caCert)
 }
 
 func NewClientFromCluster(ctrlClient client.Client, openStackCluster *infrav1.OpenStackCluster) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, error) {
@@ -72,10 +72,10 @@ func NewClientFromCluster(ctrlClient client.Client, openStackCluster *infrav1.Op
 			return nil, nil, err
 		}
 	}
-	return newClient(cloud, caCert)
+	return NewClient(cloud, caCert)
 }
 
-func newClient(cloud clientconfig.Cloud, caCert []byte) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, error) {
+func NewClient(cloud clientconfig.Cloud, caCert []byte) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, error) {
 	clientOpts := new(clientconfig.ClientOpts)
 	if cloud.AuthInfo != nil {
 		clientOpts.AuthInfo = cloud.AuthInfo
@@ -141,8 +141,7 @@ func getCloudFromSecret(ctrlClient client.Client, secretNamespace string, secret
 			secretName, CloudsSecretKey)
 	}
 	var clouds clientconfig.Clouds
-	err = yaml.Unmarshal(content, &clouds)
-	if err != nil {
+	if err = yaml.Unmarshal(content, &clouds); err != nil {
 		return emptyCloud, nil, fmt.Errorf("failed to unmarshal clouds credentials stored in secret %v: %v", secretName, err)
 	}
 

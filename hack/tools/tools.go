@@ -29,5 +29,6 @@ import (
 	_ "sigs.k8s.io/cluster-api/hack/tools/release"
 	_ "sigs.k8s.io/controller-tools/cmd/controller-gen"
 	_ "sigs.k8s.io/kind"
+	_ "sigs.k8s.io/kustomize/kustomize/v3"
 	_ "sigs.k8s.io/testing_frameworks/integration"
 )

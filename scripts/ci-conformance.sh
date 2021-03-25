@@ -42,7 +42,7 @@ cleanup() {
   # stop boskos heartbeat
   [[ -z ${HEART_BEAT_PID:-} ]] || kill -9 "${HEART_BEAT_PID}"
 
-  # will be started by e2e-conformance-gcp-prepare.sh
+  # will be started by the devstack installation script
   pkill sshuttle
 }
 trap cleanup EXIT
@@ -50,7 +50,7 @@ trap cleanup EXIT
 #Install requests module explicitly for HTTP calls
 python3 -m pip install requests
 
-# If BOSKOS_HOST is set then acquire an GCP account from Boskos.
+# If BOSKOS_HOST is set then acquire a resource of type ${RESOURCE_TYPE} from Boskos.
 if [ -n "${BOSKOS_HOST:-}" ]; then
   # Check out the account from Boskos and store the produced environment
   # variables in a temporary file.
@@ -78,16 +78,14 @@ if [ -n "${BOSKOS_HOST:-}" ]; then
   HEART_BEAT_PID=$!
 fi
 
-hack/ci/e2e-conformance-gcp-prepare.sh
+"hack/ci/devstack-on-${RESOURCE_TYPE}-install.sh"
 
-export ARTIFACTS
-export OPENSTACK_DNS_NAMESERVERS=8.8.8.8
-export CONTROL_PLANE_MACHINE_COUNT=1
-export WORKER_MACHINE_COUNT=4
-hack/ci/e2e-conformance.sh --run-tests-parallel --verbose $*
+export OPENSTACK_CLOUD_YAML_FILE
+OPENSTACK_CLOUD_YAML_FILE="$(pwd)/clouds.yaml"
+make test-conformance-fast
 test_status="${?}"
 
-# If Boskos is being used then release the GCP project back to Boskos.
+# If Boskos is being used then release the resource back to Boskos.
 [ -z "${BOSKOS_HOST:-}" ] || python3 hack/boskos.py --release >> "$ARTIFACTS/logs/boskos.log" 2>&1
 
 exit "${test_status}"

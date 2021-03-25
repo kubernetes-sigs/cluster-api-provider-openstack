@@ -32,6 +32,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha4"
 	"sigs.k8s.io/cluster-api/util"
+	"sigs.k8s.io/cluster-api/util/annotations"
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/cluster-api/util/predicates"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -87,7 +88,7 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return reconcile.Result{}, nil
 	}
 
-	if util.IsPaused(cluster, openStackCluster) {
+	if annotations.IsPaused(cluster, openStackCluster) {
 		log.Info("OpenStackCluster or linked Cluster is marked as paused. Won't reconcile")
 		return reconcile.Result{}, nil
 	}
