@@ -29,22 +29,21 @@ import (
 	"path/filepath"
 	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/gophercloud/utils/openstack/clientconfig"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	"gopkg.in/ini.v1"
 	"sigs.k8s.io/yaml"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/provider"
 )
 
-// ensureSSHKeyPair ensures A SSH key is present under the name
+// ensureSSHKeyPair ensures A SSH key is present under the name.
 func ensureSSHKeyPair(openStackCloudYAMLFile, cloudName, keyPairName string) {
 	Byf("Ensuring presence of SSH key in OpenStack: key-name=%s", keyPairName)
 
@@ -158,7 +157,7 @@ func getProviderClient(e2eCtx *E2EContext) (*gophercloud.ProviderClient, *client
 }
 
 // Config is used to read and store information from the cloud configuration file
-// Depends on: /home/sbuerin/code/src/k8s.io/cloud-provider-openstack/pkg/cloudprovider/providers/openstack/openstack.go
+// Depends on: /home/sbuerin/code/src/k8s.io/cloud-provider-openstack/pkg/cloudprovider/providers/openstack/openstack.go.
 type Config struct {
 	Global AuthOpts
 }
@@ -172,19 +171,19 @@ type AuthOpts struct {
 	TenantName string `ini:"tenant-name"`
 	DomainID   string `ini:"domain-id"`
 	DomainName string `ini:"domain-name"`
-	//TenantDomainID   string `ini:"tenant-domain-id"`
-	//TenantDomainName string `ini:"tenant-domain-name"`
-	//UserDomainID     string `ini:"user-domain-id"`
-	//UserDomainName   string `ini:"user-domain-name"`
+	// TenantDomainID   string `ini:"tenant-domain-id"`
+	// TenantDomainName string `ini:"tenant-domain-name"`
+	// UserDomainID     string `ini:"user-domain-id"`
+	// UserDomainName   string `ini:"user-domain-name"`
 	Region string `ini:"region"`
 	CAFile string `ini:"ca-file"`
-	//TLSInsecure      string `ini:"tls-insecure"`
+	// TLSInsecure      string `ini:"tls-insecure"`
 
-	//CloudsFile string `ini:"clouds-file"`
-	//Cloud      string `ini:"cloud"`
+	// CloudsFile string `ini:"clouds-file"`
+	// Cloud      string `ini:"cloud"`
 
-	//ApplicationCredentialID   string `ini:"application-credential-id"`
-	//ApplicationCredentialName string `ini:"application-credential-name"`
+	// ApplicationCredentialID   string `ini:"application-credential-id"`
+	// ApplicationCredentialName string `ini:"application-credential-name"`
 }
 
 func getEncodedOpenStackCloudYAML(cloudYAML string) string {

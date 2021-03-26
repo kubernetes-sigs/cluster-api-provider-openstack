@@ -24,7 +24,6 @@ import (
 )
 
 func (s *Service) DeleteBastion(serverID string) error {
-
 	instance, err := s.GetInstance(serverID)
 	if err != nil {
 		return err
@@ -36,7 +35,6 @@ func (s *Service) DeleteBastion(serverID string) error {
 }
 
 func (s *Service) CreateBastion(clusterName string, openStackCluster *infrav1.OpenStackCluster) (*infrav1.Instance, error) {
-
 	name := fmt.Sprintf("%s-bastion", clusterName)
 	input := &infrav1.Instance{
 		Name:          name,
@@ -81,5 +79,4 @@ func (s *Service) CreateBastion(clusterName string, openStackCluster *infrav1.Op
 	record.Eventf(openStackCluster, "SuccessfulCreateServer", "Created server %s with id %s", name, out.ID)
 
 	return out, nil
-
 }

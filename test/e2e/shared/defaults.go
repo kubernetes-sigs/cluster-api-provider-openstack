@@ -23,8 +23,9 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 	"sigs.k8s.io/cluster-api/test/framework"
+
+	"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 )
 
 const (
@@ -35,7 +36,7 @@ const (
 	OpenStackCloud         = "OPENSTACK_CLOUD"
 )
 
-// DefaultScheme returns the default scheme to use for testing
+// DefaultScheme returns the default scheme to use for testing.
 func DefaultScheme() *runtime.Scheme {
 	sc := runtime.NewScheme()
 	framework.TryAddDefaultSchemes(sc)
@@ -44,7 +45,7 @@ func DefaultScheme() *runtime.Scheme {
 	return sc
 }
 
-// CreateDefaultFlags will create the default flags used for the tests and binds them to the e2e context
+// CreateDefaultFlags will create the default flags used for the tests and binds them to the e2e context.
 func CreateDefaultFlags(ctx *E2EContext) {
 	flag.StringVar(&ctx.Settings.ConfigPath, "config-path", "", "path to the e2e config file")
 	flag.StringVar(&ctx.Settings.ArtifactFolder, "artifacts-folder", "", "folder where e2e test artifact should be stored")

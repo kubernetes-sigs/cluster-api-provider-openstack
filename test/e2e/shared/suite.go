@@ -28,7 +28,6 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
 	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/cluster-api/test/framework/clusterctl"
 	"sigs.k8s.io/yaml"
@@ -46,7 +45,7 @@ type synchronizedBeforeTestSuiteConfig struct {
 	GinkgoSlowSpecThreshold int                  `json:"ginkgoSlowSpecThreshold,omitempty"`
 }
 
-// Node1BeforeSuite is the common setup down on the first ginkgo node before the test suite runs
+// Node1BeforeSuite is the common setup down on the first ginkgo node before the test suite runs.
 func Node1BeforeSuite(e2eCtx *E2EContext) []byte {
 	By("Running Node1BeforeSuite")
 
@@ -126,7 +125,7 @@ func Node1BeforeSuite(e2eCtx *E2EContext) []byte {
 	return data
 }
 
-// AllNodesBeforeSuite is the common setup down on each ginkgo parallel node before the test suite runs
+// AllNodesBeforeSuite is the common setup down on each ginkgo parallel node before the test suite runs.
 func AllNodesBeforeSuite(e2eCtx *E2EContext, data []byte) {
 	By("Running AllNodesBeforeSuite")
 
@@ -186,7 +185,7 @@ func AllNodesBeforeSuite(e2eCtx *E2EContext, data []byte) {
 	}()
 }
 
-// Node1AfterSuite is cleanup that runs on the first ginkgo node after the test suite finishes
+// Node1AfterSuite is cleanup that runs on the first ginkgo node after the test suite finishes.
 func Node1AfterSuite(e2eCtx *E2EContext) {
 	By("Running Node1AfterSuite")
 
@@ -205,7 +204,7 @@ func Node1AfterSuite(e2eCtx *E2EContext) {
 	}
 }
 
-// AllNodesAfterSuite is cleanup that runs on all ginkgo parallel nodes after the test suite finishes
+// AllNodesAfterSuite is cleanup that runs on all ginkgo parallel nodes after the test suite finishes.
 func AllNodesAfterSuite(e2eCtx *E2EContext) {
 	By("Running AllNodesAfterSuite")
 

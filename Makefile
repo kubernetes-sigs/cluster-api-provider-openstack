@@ -148,6 +148,10 @@ manager-openstack-infrastructure: ## Build manager binary.
 lint: $(GOLANGCI_LINT) ## Lint codebase
 	$(GOLANGCI_LINT) run -v --fast=false
 
+.PHONY: lint-update
+lint-update: $(GOLANGCI_LINT) ## Lint codebase
+	$(GOLANGCI_LINT) run -v --fast=false --fix
+
 lint-fast: $(GOLANGCI_LINT) ## Run only faster linters to detect possible issues
 	$(GOLANGCI_LINT) run -v --fast=true
 

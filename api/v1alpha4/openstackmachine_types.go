@@ -28,7 +28,7 @@ const (
 	MachineFinalizer = "openstackmachine.infrastructure.cluster.x-k8s.io"
 )
 
-// OpenStackMachineSpec defines the desired state of OpenStackMachine
+// OpenStackMachineSpec defines the desired state of OpenStackMachine.
 type OpenStackMachineSpec struct {
 	// ProviderID is the unique identifier as specified by the cloud provider.
 	ProviderID *string `json:"providerID,omitempty"`
@@ -91,7 +91,7 @@ type OpenStackMachineSpec struct {
 	ServerGroupID string `json:"serverGroupID,omitempty"`
 }
 
-// OpenStackMachineStatus defines the observed state of OpenStackMachine
+// OpenStackMachineStatus defines the observed state of OpenStackMachine.
 type OpenStackMachineStatus struct {
 
 	// Ready is true when the provider resource is ready.
@@ -137,7 +137,7 @@ type OpenStackMachineStatus struct {
 // +kubebuilder:printcolumn:name="ProviderID",type="string",JSONPath=".spec.providerID",description="OpenStack instance ID"
 // +kubebuilder:printcolumn:name="Machine",type="string",JSONPath=".metadata.ownerReferences[?(@.kind==\"Machine\")].name",description="Machine object which owns with this OpenStackMachine"
 
-// OpenStackMachine is the Schema for the openstackmachines API
+// OpenStackMachine is the Schema for the openstackmachines API.
 type OpenStackMachine struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -148,7 +148,7 @@ type OpenStackMachine struct {
 
 // +kubebuilder:object:root=true
 
-// OpenStackMachineList contains a list of OpenStackMachine
+// OpenStackMachineList contains a list of OpenStackMachine.
 type OpenStackMachineList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

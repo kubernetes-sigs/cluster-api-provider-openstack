@@ -28,7 +28,7 @@ const (
 	ClusterFinalizer = "openstackcluster.infrastructure.cluster.x-k8s.io"
 )
 
-// OpenStackClusterSpec defines the desired state of OpenStackCluster
+// OpenStackClusterSpec defines the desired state of OpenStackCluster.
 type OpenStackClusterSpec struct {
 
 	// The name of the secret containing the openstack credentials
@@ -111,7 +111,7 @@ type OpenStackClusterSpec struct {
 	Bastion *Bastion `json:"bastion,omitempty"`
 }
 
-// OpenStackClusterStatus defines the observed state of OpenStackCluster
+// OpenStackClusterStatus defines the observed state of OpenStackCluster.
 type OpenStackClusterStatus struct {
 	Ready bool `json:"ready"`
 
@@ -150,7 +150,7 @@ type OpenStackClusterStatus struct {
 // +kubebuilder:printcolumn:name="Endpoint",type="string",JSONPath=".spec.controlPlaneEndpoint.host",description="API Endpoint",priority=1
 // +kubebuilder:printcolumn:name="Bastion IP",type="string",JSONPath=".status.bastion.floatingIP",description="Bastion address for breakglass access"
 
-// OpenStackCluster is the Schema for the openstackclusters API
+// OpenStackCluster is the Schema for the openstackclusters API.
 type OpenStackCluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -161,7 +161,7 @@ type OpenStackCluster struct {
 
 // +kubebuilder:object:root=true
 
-// OpenStackClusterList contains a list of OpenStackCluster
+// OpenStackClusterList contains a list of OpenStackCluster.
 type OpenStackClusterList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

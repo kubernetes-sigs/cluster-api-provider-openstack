@@ -43,7 +43,6 @@ func (c createOpts) ToNetworkCreateMap() (map[string]interface{}, error) {
 }
 
 func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCluster) error {
-
 	if openStackCluster.Spec.ExternalNetworkID != "" {
 		externalNetwork, err := s.getNetworkByID(openStackCluster.Spec.ExternalNetworkID)
 		if err != nil {
@@ -92,7 +91,6 @@ func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCl
 }
 
 func (s *Service) ReconcileNetwork(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {
-
 	networkName := fmt.Sprintf("%s-cluster-%s", networkPrefix, clusterName)
 	s.logger.Info("Reconciling network", "name", networkName)
 
@@ -135,7 +133,8 @@ func (s *Service) ReconcileNetwork(clusterName string, openStackCluster *infrav1
 
 	if len(openStackCluster.Spec.Tags) > 0 {
 		_, err = attributestags.ReplaceAll(s.client, "networks", network.ID, attributestags.ReplaceAllOpts{
-			Tags: openStackCluster.Spec.Tags}).Extract()
+			Tags: openStackCluster.Spec.Tags,
+		}).Extract()
 		if err != nil {
 			return err
 		}
@@ -166,7 +165,6 @@ func (s *Service) DeleteNetwork(network *infrav1.Network) error {
 }
 
 func (s *Service) ReconcileSubnet(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {
-
 	if openStackCluster.Status.Network == nil || openStackCluster.Status.Network.ID == "" {
 		s.logger.V(4).Info("No need to reconcile network components since no network exists.")
 		return nil
@@ -188,54 +186,56 @@ func (s *Service) ReconcileSubnet(clusterName string, openStackCluster *infrav1.
 		return err
 	}
 
-	var observedSubnet infrav1.Subnet
-
 	if len(subnetList) > 1 {
-		// Not panicing here, because every other cluster might work.
-		return fmt.Errorf("found more than 1 network with the expected name (%d) and CIDR (%s), which should not be able to exist in OpenStack", len(subnetList), openStackCluster.Spec.NodeCIDR)
+		return fmt.Errorf("found %d subnets with the name %s, which should not happen", len(subnetList), subnetName)
 	}
 
+	var subnet *subnets.Subnet
 	if len(subnetList) == 0 {
-		opts := subnets.CreateOpts{
-			NetworkID: openStackCluster.Status.Network.ID,
-			Name:      subnetName,
-			IPVersion: 4,
-
-			CIDR:           openStackCluster.Spec.NodeCIDR,
-			DNSNameservers: openStackCluster.Spec.DNSNameservers,
-		}
-		newSubnet, err := subnets.Create(s.client, opts).Extract()
+		var err error
+		subnet, err = createSubnet(s.client, openStackCluster, subnetName)
 		if err != nil {
-			record.Warnf(openStackCluster, "FailedCreateSubnet", "Failed to create subnet %s: %v", subnetName, err)
 			return err
 		}
-		record.Eventf(openStackCluster, "SuccessfulCreateSubnet", "Created subnet %s with id %s", subnetName, newSubnet.ID)
-
-		if len(openStackCluster.Spec.Tags) > 0 {
-			_, err = attributestags.ReplaceAll(s.client, "subnets", newSubnet.ID, attributestags.ReplaceAllOpts{
-				Tags: openStackCluster.Spec.Tags}).Extract()
-			if err != nil {
-				return err
-			}
-		}
-
-		observedSubnet = infrav1.Subnet{
-			ID:   newSubnet.ID,
-			Name: newSubnet.Name,
-			CIDR: newSubnet.CIDR,
-			Tags: openStackCluster.Spec.Tags,
-		}
 	} else if len(subnetList) == 1 {
-		observedSubnet = infrav1.Subnet{
-			ID:   subnetList[0].ID,
-			Name: subnetList[0].Name,
-			CIDR: subnetList[0].CIDR,
-			Tags: subnetList[0].Tags,
+		subnet = &subnetList[0]
+		s.logger.V(6).Info(fmt.Sprintf("Reuse existing subnet %s with id %s", subnetName, subnet.ID))
+	}
+
+	openStackCluster.Status.Network.Subnet = &infrav1.Subnet{
+		ID:   subnet.ID,
+		Name: subnet.Name,
+		CIDR: subnet.CIDR,
+		Tags: subnet.Tags,
+	}
+	return nil
+}
+
+func createSubnet(client *gophercloud.ServiceClient, openStackCluster *infrav1.OpenStackCluster, name string) (*subnets.Subnet, error) {
+	opts := subnets.CreateOpts{
+		NetworkID:      openStackCluster.Status.Network.ID,
+		Name:           name,
+		IPVersion:      4,
+		CIDR:           openStackCluster.Spec.NodeCIDR,
+		DNSNameservers: openStackCluster.Spec.DNSNameservers,
+	}
+	subnet, err := subnets.Create(client, opts).Extract()
+	if err != nil {
+		record.Warnf(openStackCluster, "FailedCreateSubnet", "Failed to create subnet %s: %v", name, err)
+		return nil, err
+	}
+	record.Eventf(openStackCluster, "SuccessfulCreateSubnet", "Created subnet %s with id %s", name, subnet.ID)
+
+	if len(openStackCluster.Spec.Tags) > 0 {
+		_, err = attributestags.ReplaceAll(client, "subnets", subnet.ID, attributestags.ReplaceAllOpts{
+			Tags: openStackCluster.Spec.Tags,
+		}).Extract()
+		if err != nil {
+			return nil, err
 		}
 	}
 
-	openStackCluster.Status.Network.Subnet = &observedSubnet
-	return nil
+	return subnet, nil
 }
 
 func (s *Service) getNetworkByID(networkID string) (networks.Network, error) {
@@ -307,7 +307,7 @@ func (s *Service) GetNetworksByFilter(opts networks.ListOptsBuilder) ([]networks
 	return GetNetworksByFilter(s.client, opts)
 }
 
-// getNetworkIDsByFilter retrieves network ids by querying openstack with filters
+// getNetworkIDsByFilter retrieves network ids by querying openstack with filters.
 func GetNetworkIDsByFilter(networkClient *gophercloud.ServiceClient, opts networks.ListOptsBuilder) ([]string, error) {
 	nets, err := GetNetworksByFilter(networkClient, opts)
 	if err != nil {
@@ -320,7 +320,7 @@ func GetNetworkIDsByFilter(networkClient *gophercloud.ServiceClient, opts networ
 	return ids, nil
 }
 
-// GetNetworksByFilter retrieves networks by querying openstack with filters
+// GetNetworksByFilter retrieves networks by querying openstack with filters.
 func GetNetworksByFilter(networkClient *gophercloud.ServiceClient, opts networks.ListOptsBuilder) ([]networks.Network, error) {
 	if opts == nil {
 		return nil, fmt.Errorf("no Filters were passed")
@@ -347,7 +347,7 @@ func (s *Service) GetSubnetsByFilter(opts subnets.ListOptsBuilder) ([]subnets.Su
 	return GetSubnetsByFilter(s.client, opts)
 }
 
-// A function for getting the id of a subnet by querying openstack with filters
+// A function for getting the id of a subnet by querying openstack with filters.
 func GetSubnetsByFilter(networkClient *gophercloud.ServiceClient, opts subnets.ListOptsBuilder) ([]subnets.Subnet, error) {
 	if opts == nil {
 		return []subnets.Subnet{}, fmt.Errorf("no Filters were passed")

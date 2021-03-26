@@ -29,14 +29,14 @@ import (
 	"sigs.k8s.io/cluster-api/test/framework/clusterctl"
 )
 
-// Option represents an option to use when creating a e2e context
+// Option represents an option to use when creating a e2e context.
 type Option func(*E2EContext)
 
 func NewE2EContext(options ...Option) *E2EContext {
 	ctx := &E2EContext{}
 	ctx.Environment.Scheme = DefaultScheme()
 	ctx.Environment.Namespaces = map[*corev1.Namespace]context.CancelFunc{}
-	//ctx.Lifecycle = DefaultGinkgoLifecycle()
+	// ctx.Lifecycle = DefaultGinkgoLifecycle()
 
 	for _, opt := range options {
 		opt(ctx)
@@ -45,7 +45,7 @@ func NewE2EContext(options ...Option) *E2EContext {
 	return ctx
 }
 
-// E2EContext represents the context of the e2e test
+// E2EContext represents the context of the e2e test.
 type E2EContext struct {
 	// Settings is the settings used for the test
 	Settings Settings
@@ -55,7 +55,7 @@ type E2EContext struct {
 	Environment RuntimeEnvironment
 }
 
-// Settings represents the test settings
+// Settings represents the test settings.
 type Settings struct {
 	// ConfigPath is the path to the e2e config file.
 	ConfigPath string
@@ -79,7 +79,7 @@ type Settings struct {
 	SourceTemplate string
 }
 
-// RuntimeEnvironment represents the runtime environment of the test
+// RuntimeEnvironment represents the runtime environment of the test.
 type RuntimeEnvironment struct {
 	// BootstrapClusterProvider manages provisioning of the the bootstrap cluster to be used for the e2e tests.
 	// Please note that provisioning will be skipped if use-existing-cluster is provided.

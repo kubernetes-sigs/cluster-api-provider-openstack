@@ -19,6 +19,7 @@ package networking
 import (
 	"fmt"
 
+	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
@@ -30,7 +31,6 @@ import (
 )
 
 func (s *Service) ReconcileRouter(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {
-
 	if openStackCluster.Status.Network == nil || openStackCluster.Status.Network.ID == "" {
 		s.logger.V(3).Info("No need to reconcile router since no network exists.")
 		return nil
@@ -58,83 +58,33 @@ func (s *Service) ReconcileRouter(clusterName string, openStackCluster *infrav1.
 	if err != nil {
 		return err
 	}
-	var router routers.Router
-	var observedRouter infrav1.Router
+
+	if len(routerList) > 1 {
+		return fmt.Errorf("found %d router with the name %s, which should not happen", len(routerList), routerName)
+	}
+
+	var router *routers.Router
 	if len(routerList) == 0 {
-		opts := routers.CreateOpts{
-			Name: routerName,
-		}
-		// only set the GatewayInfo right now when no externalIPs
-		// should be configured because at least in our environment
-		// we can only set the routerIP via gateway update not during create
-		// That's also the same way terraform provider OpenStack does it
-		if len(openStackCluster.Spec.ExternalRouterIPs) == 0 {
-			opts.GatewayInfo = &routers.GatewayInfo{
-				NetworkID: openStackCluster.Status.ExternalNetwork.ID,
-			}
-		}
-		newRouter, err := routers.Create(s.client, opts).Extract()
+		var err error
+		router, err = createRouter(s.client, openStackCluster, routerName)
 		if err != nil {
-			record.Warnf(openStackCluster, "FailedCreateRouter", "Failed to create router %s: %v", routerName, err)
 			return err
 		}
-		record.Eventf(openStackCluster, "SuccessfulCreateRouter", "Created router %s with id %s", routerName, newRouter.ID)
-		if len(openStackCluster.Spec.Tags) > 0 {
-			_, err = attributestags.ReplaceAll(s.client, "routers", newRouter.ID, attributestags.ReplaceAllOpts{
-				Tags: openStackCluster.Spec.Tags}).Extract()
-			if err != nil {
-				return err
-			}
-		}
-		router = *newRouter
-		observedRouter = infrav1.Router{
-			Name: router.Name,
-			ID:   router.ID,
-			Tags: openStackCluster.Spec.Tags,
-		}
-
 	} else {
-		router = routerList[0]
-		sInfo := fmt.Sprintf("Reuse Existing Router %s with id %s", routerName, router.ID)
-		s.logger.V(6).Info(sInfo)
-		observedRouter = infrav1.Router{
-			Name: router.Name,
-			ID:   router.ID,
-			Tags: router.Tags,
-		}
+		router = &routerList[0]
+		s.logger.V(6).Info(fmt.Sprintf("Reuse existing Router %s with id %s", routerName, router.ID))
+	}
 
+	openStackCluster.Status.Network.Router = &infrav1.Router{
+		Name: router.Name,
+		ID:   router.ID,
+		Tags: router.Tags,
 	}
 
 	if len(openStackCluster.Spec.ExternalRouterIPs) > 0 {
-		var updateOpts routers.UpdateOpts
-		updateOpts.GatewayInfo = &routers.GatewayInfo{
-			NetworkID: openStackCluster.Status.ExternalNetwork.ID,
+		if err := setRouterExternalIPs(s.client, openStackCluster, router); err != nil {
+			return err
 		}
-		for _, externalRouterIP := range openStackCluster.Spec.ExternalRouterIPs {
-			subnetID := externalRouterIP.Subnet.UUID
-			if subnetID == "" {
-				sopts := subnets.ListOpts(externalRouterIP.Subnet.Filter)
-				snets, err := GetSubnetsByFilter(s.client, &sopts)
-				if err != nil {
-					return err
-				}
-				if len(snets) != 1 {
-					return fmt.Errorf("subnetParam didn't exactly match one subnet")
-				}
-				subnetID = snets[0].ID
-			}
-			updateOpts.GatewayInfo.ExternalFixedIPs = append(updateOpts.GatewayInfo.ExternalFixedIPs, routers.ExternalFixedIP{
-				IPAddress: externalRouterIP.FixedIP,
-				SubnetID:  subnetID,
-			})
-		}
-
-		_, err = routers.Update(s.client, router.ID, updateOpts).Extract()
-		if err != nil {
-			record.Warnf(openStackCluster, "FailedUpdateRouter", "Failed to update router %s: %v", routerName, err)
-			return fmt.Errorf("error updating OpenStack Neutron Router: %s", err)
-		}
-		record.Eventf(openStackCluster, "SuccessfulUpdateRouter", "Updated router %s with id %s", routerName, router.ID)
 	}
 
 	routerInterfaces, err := s.getRouterInterfaces(router.ID)
@@ -165,10 +115,72 @@ INTERFACE_LOOP:
 		}
 		s.logger.V(4).Info("Created RouterInterface", "id", routerInterface.ID)
 	}
+	return nil
+}
 
-	if observedRouter.ID != "" {
-		openStackCluster.Status.Network.Router = &observedRouter
+func createRouter(client *gophercloud.ServiceClient, openStackCluster *infrav1.OpenStackCluster, name string) (*routers.Router, error) {
+	opts := routers.CreateOpts{
+		Name: name,
 	}
+	// only set the GatewayInfo right now when no externalIPs
+	// should be configured because at least in our environment
+	// we can only set the routerIP via gateway update not during create
+	// That's also the same way terraform provider OpenStack does it
+	if len(openStackCluster.Spec.ExternalRouterIPs) == 0 {
+		opts.GatewayInfo = &routers.GatewayInfo{
+			NetworkID: openStackCluster.Status.ExternalNetwork.ID,
+		}
+	}
+	router, err := routers.Create(client, opts).Extract()
+	if err != nil {
+		record.Warnf(openStackCluster, "FailedCreateRouter", "Failed to create router %s: %v", name, err)
+		return nil, err
+	}
+	record.Eventf(openStackCluster, "SuccessfulCreateRouter", "Created router %s with id %s", name, router.ID)
+
+	if len(openStackCluster.Spec.Tags) > 0 {
+		_, err = attributestags.ReplaceAll(client, "routers", router.ID, attributestags.ReplaceAllOpts{
+			Tags: openStackCluster.Spec.Tags,
+		}).Extract()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return router, nil
+}
+
+func setRouterExternalIPs(client *gophercloud.ServiceClient, openStackCluster *infrav1.OpenStackCluster, router *routers.Router) error {
+	updateOpts := routers.UpdateOpts{
+		GatewayInfo: &routers.GatewayInfo{
+			NetworkID: openStackCluster.Status.ExternalNetwork.ID,
+		},
+	}
+
+	for _, externalRouterIP := range openStackCluster.Spec.ExternalRouterIPs {
+		subnetID := externalRouterIP.Subnet.UUID
+		if subnetID == "" {
+			listOpts := subnets.ListOpts(externalRouterIP.Subnet.Filter)
+			subnetsByFilter, err := GetSubnetsByFilter(client, &listOpts)
+			if err != nil {
+				return err
+			}
+			if len(subnetsByFilter) != 1 {
+				return fmt.Errorf("subnetParam didn't exactly match one subnet")
+			}
+			subnetID = subnetsByFilter[0].ID
+		}
+		updateOpts.GatewayInfo.ExternalFixedIPs = append(updateOpts.GatewayInfo.ExternalFixedIPs, routers.ExternalFixedIP{
+			IPAddress: externalRouterIP.FixedIP,
+			SubnetID:  subnetID,
+		})
+	}
+
+	if _, err := routers.Update(client, router.ID, updateOpts).Extract(); err != nil {
+		record.Warnf(openStackCluster, "FailedUpdateRouter", "Failed to update router %s: %v", router.Name, err)
+		return fmt.Errorf("error updating OpenStack Neutron Router: %s", err)
+	}
+	record.Eventf(openStackCluster, "SuccessfulUpdateRouter", "Updated router %s with id %s", router.Name, router.ID)
 	return nil
 }
 

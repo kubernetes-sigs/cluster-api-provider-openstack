@@ -23,14 +23,12 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"sigs.k8s.io/cluster-api/test/framework"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
-	"sigs.k8s.io/cluster-api/test/framework"
 )
 
-var (
-	e2eCtx *shared.E2EContext
-)
+var e2eCtx *shared.E2EContext
 
 func init() {
 	e2eCtx = shared.NewE2EContext()

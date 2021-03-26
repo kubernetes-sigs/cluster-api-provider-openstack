@@ -20,7 +20,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// OpenStackMachineTemplateSpec defines the desired state of OpenStackMachineTemplate
+// OpenStackMachineTemplateSpec defines the desired state of OpenStackMachineTemplate.
 type OpenStackMachineTemplateSpec struct {
 	Template OpenStackMachineTemplateResource `json:"template"`
 }
@@ -29,7 +29,7 @@ type OpenStackMachineTemplateSpec struct {
 // +kubebuilder:resource:path=openstackmachinetemplates,scope=Namespaced,categories=cluster-api
 // +kubebuilder:storageversion
 
-// OpenStackMachineTemplate is the Schema for the openstackmachinetemplates API
+// OpenStackMachineTemplate is the Schema for the openstackmachinetemplates API.
 type OpenStackMachineTemplate struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -39,7 +39,7 @@ type OpenStackMachineTemplate struct {
 
 // +kubebuilder:object:root=true
 
-// OpenStackMachineTemplateList contains a list of OpenStackMachineTemplate
+// OpenStackMachineTemplateList contains a list of OpenStackMachineTemplate.
 type OpenStackMachineTemplateList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

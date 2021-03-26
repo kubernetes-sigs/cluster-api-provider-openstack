@@ -2,21 +2,36 @@ linters:
   enable-all: true
   disable:
     - dupl
+    - errorlint
+    - exhaustivestruct
     - funlen
     - gochecknoglobals
     - gochecknoinits
     - gocognit
     - godox
+    - goerr113
     - gomnd
+    - interfacer
     - lll
     - maligned
+    - nlreturn
     - whitespace
+    - wrapcheck
     - wsl
   # Run with --fast=false for more extensive checks
   fast: true
 linters-settings:
+  cyclop:
+    # TODO(sbuerin) fix remaining findings and set to 20 afterwards
+    max-complexity: 29
   goimports:
     local-prefixes: sigs.k8s.io/cluster-api-provider-openstack
+  nestif:
+    # minimal complexity of if statements to report, 5 by default
+    # TODO(sbuerin) fix remaining findings and set to 5 after:
+    # https://github.com/kubernetes-sigs/cluster-api-provider-openstack/pull/778
+    min-complexity: 13
+
 issues:
   max-same-issues: 0
   max-per-linter: 0

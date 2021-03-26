@@ -118,7 +118,6 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	return reconcileNormal(ctx, log, r.Client, patchHelper, cluster, openStackCluster)
 }
 
-//nolint:interfacer
 func reconcileDelete(ctx context.Context, log logr.Logger, client client.Client, recorder record.EventRecorder, patchHelper *patch.Helper, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
 	log.Info("Reconciling Cluster delete")
 
@@ -305,7 +304,6 @@ func reconcileNormal(ctx context.Context, log logr.Logger, client client.Client,
 }
 
 func reconcileBastion(log logr.Logger, osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
-
 	log.Info("Reconciling Bastion")
 
 	computeService, err := compute.NewService(osProviderClient, clientOpts, log)

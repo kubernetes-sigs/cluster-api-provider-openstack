@@ -367,7 +367,6 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 }
 
 func (r *OpenStackMachineReconciler) getOrCreate(computeService *compute.Service, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, userData string, logger logr.Logger) (*infrav1.Instance, error) {
-
 	instance, err := computeService.InstanceExists(openStackMachine.Name)
 	if err != nil {
 		return nil, err
@@ -399,10 +398,7 @@ func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(logger logr.Log
 		return err
 	}
 
-	if err := loadbalancerService.ReconcileLoadBalancerMember(clusterName, machine, openStackMachine, openStackCluster, ip); err != nil {
-		return err
-	}
-	return nil
+	return loadbalancerService.ReconcileLoadBalancerMember(clusterName, machine, openStackMachine, openStackCluster, ip)
 }
 
 // OpenStackClusterToOpenStackMachine is a handler.ToRequestsFunc to be used to enqeue requests for reconciliation

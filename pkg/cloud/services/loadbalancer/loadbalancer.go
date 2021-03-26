@@ -39,7 +39,6 @@ import (
 )
 
 func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {
-
 	loadBalancerName := fmt.Sprintf("%s-cluster-%s-%s", networkPrefix, clusterName, kubeapiLBSuffix)
 	s.logger.Info("Reconciling loadbalancer", "name", loadBalancerName)
 
@@ -315,7 +314,6 @@ func (s *Service) DeleteLoadBalancer(loadBalancerName string, openStackCluster *
 
 // ref: https://github.com/kubernetes/kubernetes/blob/7f23a743e8c23ac6489340bbb34fa6f1d392db9d/pkg/cloudprovider/providers/openstack/openstack_loadbalancer.go#L1452
 func (s *Service) deleteLoadBalancerNeutronV2(id string) error {
-
 	lb, err := loadbalancers.Get(s.loadbalancerClient, id).Extract()
 	if err != nil {
 		return fmt.Errorf("unable to get loadbalancer: %v", err)
@@ -408,7 +406,6 @@ func (s *Service) deleteLoadBalancerNeutronV2(id string) error {
 }
 
 func (s *Service) DeleteLoadBalancerMember(clusterName string, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster) error {
-
 	if openStackMachine == nil || !util.IsControlPlaneMachine(machine) {
 		return nil
 	}
