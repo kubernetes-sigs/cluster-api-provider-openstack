@@ -35,6 +35,8 @@ import (
 	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/cluster-api/test/framework/clusterctl"
 	"sigs.k8s.io/yaml"
+
+	"sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared/kubernetesversions"
 )
 
 type synchronizedBeforeTestSuiteConfig struct {
@@ -77,16 +79,8 @@ func Node1BeforeSuite(e2eCtx *E2EContext) []byte {
 		platformKustomization, err := ioutil.ReadFile(filepath.Join(e2eCtx.Settings.DataFolder, "ci-artifacts-platform-kustomization.yaml"))
 		Expect(err).NotTo(HaveOccurred())
 
-		// TODO(sbuerin): should be removed after: https://github.com/kubernetes-sigs/kustomize/issues/2825 is fixed
-		//ciTemplate, err := kubernetesversions.GenerateCIArtifactsInjectedTemplateForDebian(
-		//	kubernetesversions.GenerateCIArtifactsInjectedTemplateForDebianInput{
-		//		ArtifactsDirectory:    e2eCtx.Settings.ArtifactFolder,
-		//		SourceTemplate:        sourceTemplate,
-		//		PlatformKustomization: platformKustomization,
-		//	},
-		//)
-		ciTemplate, err := GenerateCIArtifactsInjectedTemplateForDebian(
-			GenerateCIArtifactsInjectedTemplateForDebianInput{
+		ciTemplate, err := kubernetesversions.GenerateCIArtifactsInjectedTemplateForDebian(
+			kubernetesversions.GenerateCIArtifactsInjectedTemplateForDebianInput{
 				ArtifactsDirectory:    e2eCtx.Settings.ArtifactFolder,
 				SourceTemplate:        sourceTemplate,
 				PlatformKustomization: platformKustomization,
