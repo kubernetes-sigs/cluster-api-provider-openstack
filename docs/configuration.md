@@ -281,10 +281,10 @@ To configure the Cluster API Provider for OpenStack to create a SSH bastion host
 ```yaml
   bastion:
     enabled: true
-      instance:
-        flavor: <Flavor name>
-        image:  <Image name>
-        sshKeyName: <Key pair name>
+    instance:
+      flavor: <Flavor name>
+      image:  <Image name>
+      sshKeyName: <Key pair name>
 ```
 
 A floating IP is created and associated to the bastion host automatically, but you can add the IP address explicitly:
