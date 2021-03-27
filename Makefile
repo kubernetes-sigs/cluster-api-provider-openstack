@@ -45,6 +45,7 @@ CONVERSION_GEN := $(TOOLS_BIN_DIR)/conversion-gen
 DEFAULTER_GEN := $(TOOLS_BIN_DIR)/defaulter-gen
 ENVSUBST := $(TOOLS_BIN_DIR)/envsubst
 GINKGO := $(TOOLS_BIN_DIR)/ginkgo
+GOJQ := $(TOOLS_BIN_DIR)/gojq
 GOLANGCI_LINT := $(TOOLS_BIN_DIR)/golangci-lint
 KIND := $(TOOLS_BIN_DIR)/kind
 KUSTOMIZE := $(TOOLS_BIN_DIR)/kustomize
@@ -63,6 +64,8 @@ endif
 # Release variables
 
 STAGING_REGISTRY := gcr.io/k8s-staging-capi-openstack
+STAGING_BUCKET ?= artifacts.k8s-staging-capi-openstack.appspot.com
+BUCKET ?= $(STAGING_BUCKET)
 PROD_REGISTRY := us.gcr.io/k8s-artifacts-prod/capi-openstack
 REGISTRY ?= $(STAGING_REGISTRY)
 RELEASE_TAG ?= $(shell git describe --abbrev=0 2>/dev/null)
@@ -78,10 +81,10 @@ ALL_ARCH ?= amd64 arm arm64 ppc64le s390x
 IMAGE_NAME ?= capi-openstack-controller
 CONTROLLER_IMG ?= $(REGISTRY)/$(IMAGE_NAME)
 CONTROLLER_ORIGINAL_IMG := gcr.io/k8s-staging-capi-openstack/capi-openstack-controller
-CONTROLLER_NAME := capa-controller-manager
+CONTROLLER_NAME := capo-controller-manager
 MANIFEST_FILE := infrastructure-components
 CONFIG_DIR := config
-NAMESPACE := capa-system
+NAMESPACE := capo-system
 
 # Allow overriding manifest generation destination directory
 MANIFEST_ROOT ?= config
@@ -327,12 +330,19 @@ $(RELEASE_DIR)/$(MANIFEST_FILE).yaml:
 compiled-manifest: $(RELEASE_DIR) $(KUSTOMIZE)
 	$(MAKE) image-patch-source-manifest
 	$(MAKE) image-patch-pull-policy
+	$(MAKE) image-patch-kustomization
 	$(KUSTOMIZE) build $(IMAGE_PATCH_DIR)/$(PROVIDER) > $(RELEASE_DIR)/$(PROVIDER).yaml
 
 .PHONY: image-patch-source-manifest
 image-patch-source-manifest: $(IMAGE_PATCH_DIR) $(KUSTOMIZE)
 	mkdir -p $(IMAGE_PATCH_DIR)/$(PROVIDER)
-	$(KUSTOMIZE) build $(PROVIDER_CONFIG_DIR) > $(IMAGE_PATCH_DIR)/$(PROVIDER)/source-manifest.yaml
+	$(KUSTOMIZE) build $(PROVIDER_CONFIG_DIR)/default > $(IMAGE_PATCH_DIR)/$(PROVIDER)/source-manifest.yaml
+
+.PHONY: image-patch-kustomization
+image-patch-kustomization: $(IMAGE_PATCH_DIR)
+	mkdir -p $(IMAGE_PATCH_DIR)/$(PROVIDER)
+	$(GOJQ) --yaml-input --yaml-output '.images[0]={"name":"$(OLD_IMG)","newName":"$(MANIFEST_IMG)","newTag":"$(TAG)"}|del(.patchesJson6902[1])|.patchesJson6902[0].target.name="$(CONTROLLER_NAME)"|.patchesJson6902[0].target.namespace="$(NAMESPACE)"' \
+		"hack/image-patch/kustomization.yaml" > $(IMAGE_PATCH_DIR)/$(PROVIDER)/kustomization.yaml
 
 .PHONY: image-patch-pull-policy
 image-patch-pull-policy: $(IMAGE_PATCH_DIR) $(GOJQ)
