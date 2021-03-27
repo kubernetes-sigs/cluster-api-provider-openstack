@@ -33,7 +33,6 @@ spec:
   nodeCidr: 10.6.0.0/24
   dnsNameservers:
   - ${OPENSTACK_DNS_NAMESERVERS}
-  useOctavia: true
   bastion:
     enabled: true
     instance:
