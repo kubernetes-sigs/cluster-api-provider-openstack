@@ -70,13 +70,16 @@ func checkIfFloatingIPExists(client *gophercloud.ServiceClient, ip string) (*flo
 	return &fpList[0], nil
 }
 
-func (s *Service) DeleteFloatingIP(ip string) error {
+func (s *Service) DeleteFloatingIP(openStackCluster *infrav1.OpenStackCluster, ip string) error {
 	fip, err := checkIfFloatingIPExists(s.client, ip)
 	if err != nil {
 		return err
 	}
 	if fip != nil {
-		return floatingips.Delete(s.client, fip.ID).ExtractErr()
+		if err = floatingips.Delete(s.client, fip.ID).ExtractErr(); err != nil {
+			return err
+		}
+		record.Eventf(openStackCluster, "SuccessfulDeleteFloatingIP", "Deleted floating IP %s", ip)
 	}
 	return nil
 }
