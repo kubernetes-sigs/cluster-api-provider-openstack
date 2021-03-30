@@ -23,7 +23,6 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/external"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/gophercloud/gophercloud/pagination"
 	"github.com/pkg/errors"
@@ -369,29 +368,4 @@ func GetSubnetsByFilter(networkClient *gophercloud.ServiceClient, opts subnets.L
 		return []subnets.Subnet{}, err
 	}
 	return snets, nil
-}
-
-func (s *Service) DeleteOrphanedPorts() error {
-	portList, err := ports.List(s.client, ports.ListOpts{ProjectID: s.projectID}).AllPages()
-	if err != nil {
-		return fmt.Errorf("error listing ports: %v", err)
-	}
-
-	orphanedPorts, err := ports.ExtractPorts(portList)
-	if err != nil {
-		return fmt.Errorf("error extracting ports: %v", err)
-	}
-
-	for _, orphanedPort := range orphanedPorts {
-		if orphanedPort.DeviceOwner != "" {
-			continue
-		}
-
-		s.logger.Info("Deleting orphaned port with id %s", orphanedPort.ID)
-		if err := ports.Delete(s.client, orphanedPort.ID).ExtractErr(); err != nil {
-			return fmt.Errorf("error deleting port: %v", err)
-		}
-	}
-
-	return nil
 }
