@@ -40,24 +40,22 @@ import (
 	"gopkg.in/ini.v1"
 	"sigs.k8s.io/yaml"
 
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/provider"
 )
 
 // ensureSSHKeyPair ensures A SSH key is present under the name.
-func ensureSSHKeyPair(openStackCloudYAMLFile, cloudName, keyPairName string) {
-	Byf("Ensuring presence of SSH key in OpenStack: key-name=%s", keyPairName)
+func ensureSSHKeyPair(e2eCtx *E2EContext) {
+	Byf("Ensuring presence of SSH key %q in OpenStack", DefaultSSHKeyPairName)
 
-	clouds := getParsedOpenStackCloudYAML(openStackCloudYAMLFile)
-	cloud := clouds.Clouds[cloudName]
-
-	providerClient, clientOpts, err := provider.NewClient(cloud, nil)
+	providerClient, clientOpts, err := getProviderClient(e2eCtx)
 	Expect(err).NotTo(HaveOccurred())
 
 	computeClient, err := openstack.NewComputeV2(providerClient, gophercloud.EndpointOpts{Region: clientOpts.RegionName})
 	Expect(err).NotTo(HaveOccurred())
 
 	keyPairCreateOpts := &keypairs.CreateOpts{
-		Name: keyPairName,
+		Name: DefaultSSHKeyPairName,
 	}
 	_, err = keypairs.Create(computeClient, keyPairCreateOpts).Extract()
 	if err != nil && !strings.Contains(err.Error(), "already exists") {
@@ -65,8 +63,8 @@ func ensureSSHKeyPair(openStackCloudYAMLFile, cloudName, keyPairName string) {
 	}
 }
 
-func DumpOpenStackClusters(_ context.Context, e2eCtx *E2EContext, bootstrapClusterProxyName string) {
-	By("Running DumpOpenStackClusters")
+func dumpOpenStack(_ context.Context, e2eCtx *E2EContext, bootstrapClusterProxyName string) {
+	Byf("Running dumpOpenStack")
 	logPath := filepath.Join(e2eCtx.Settings.ArtifactFolder, "clusters", bootstrapClusterProxyName, "openstack-resources")
 	if err := os.MkdirAll(logPath, os.ModePerm); err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "error creating directory %s: %s\n", logPath, err)
@@ -80,39 +78,9 @@ func DumpOpenStackClusters(_ context.Context, e2eCtx *E2EContext, bootstrapClust
 		return
 	}
 
-	if err := dumpOpenStackServers(providerClient, clientOpts, logPath); err != nil {
-		_, _ = fmt.Fprintf(GinkgoWriter, "error dumping OpenStack server: %s\n", err)
-	}
-
 	if err := dumpOpenStackImages(providerClient, clientOpts, logPath); err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "error dumping OpenStack images: %s\n", err)
 	}
-}
-
-func dumpOpenStackServers(providerClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, logPath string) error {
-	computeClient, err := openstack.NewComputeV2(providerClient, gophercloud.EndpointOpts{
-		Region: clientOpts.RegionName,
-	})
-	if err != nil {
-		return fmt.Errorf("error creating compute client: %s", err)
-	}
-
-	allPages, err := servers.List(computeClient, servers.ListOpts{}).AllPages()
-	if err != nil {
-		return fmt.Errorf("error getting server: %s", err)
-	}
-	serverList, err := servers.ExtractServers(allPages)
-	if err != nil {
-		return fmt.Errorf("error extracting server: %s", err)
-	}
-	serverJSON, err := json.MarshalIndent(serverList, "", "    ")
-	if err != nil {
-		return fmt.Errorf("error marshalling server %v: %s", serverList, err)
-	}
-	if err := os.WriteFile(path.Join(logPath, "server.txt"), serverJSON, 0o600); err != nil {
-		return fmt.Errorf("error writing severJSON %s: %s", serverJSON, err)
-	}
-	return nil
 }
 
 func dumpOpenStackImages(providerClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, logPath string) error {
@@ -139,6 +107,52 @@ func dumpOpenStackImages(providerClient *gophercloud.ProviderClient, clientOpts 
 		return fmt.Errorf("error writing seversJSON %s: %s", imagesJSON, err)
 	}
 	return nil
+}
+
+// getOpenStackServers gets all OpenStack servers at once, to save on DescribeInstances
+// calls.
+func getOpenStackServers(e2eCtx *E2EContext) (map[string]server, error) {
+	providerClient, clientOpts, err := getProviderClient(e2eCtx)
+	if err != nil {
+		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
+		return nil, nil
+	}
+
+	computeClient, err := openstack.NewComputeV2(providerClient, gophercloud.EndpointOpts{Region: clientOpts.RegionName})
+	if err != nil {
+		return nil, fmt.Errorf("error creating compute client: %v", err)
+	}
+
+	serverListOpts := &servers.ListOpts{}
+	allPages, err := servers.List(computeClient, serverListOpts).AllPages()
+	if err != nil {
+		return nil, fmt.Errorf("error listing server: %v", err)
+	}
+
+	serverList, err := servers.ExtractServers(allPages)
+	if err != nil {
+		return nil, fmt.Errorf("error extracting server: %v", err)
+	}
+
+	srvs := map[string]server{}
+	for _, srv := range serverList {
+		addrMap, err := compute.GetIPFromInstance(srv)
+		if err != nil {
+			return nil, fmt.Errorf("error getting ip for server %s: %v", srv.Name, err)
+		}
+		ip, ok := addrMap["internal"]
+		if !ok {
+			_, _ = fmt.Fprintf(GinkgoWriter, "error getting internal ip for server %s: internal ip doesn't exist (yet)\n", srv.Name)
+			continue
+		}
+
+		srvs[srv.Name] = server{
+			name: srv.Name,
+			id:   srv.ID,
+			ip:   ip,
+		}
+	}
+	return srvs, nil
 }
 
 func getProviderClient(e2eCtx *E2EContext) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, error) {

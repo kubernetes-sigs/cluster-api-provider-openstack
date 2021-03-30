@@ -20,10 +20,12 @@ package shared
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path"
 	"path/filepath"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -51,12 +53,16 @@ func SetupSpecNamespace(ctx context.Context, specName string, e2eCtx *E2EContext
 }
 
 func DumpSpecResourcesAndCleanup(ctx context.Context, specName string, namespace *corev1.Namespace, e2eCtx *E2EContext) {
-	Byf("Dumping all the Cluster API resources in the %q namespace", namespace.Name)
+	Byf("Running DumpSpecResourcesAndCleanup for namespace %q", namespace.Name)
 	// Dump all Cluster API related resources to artifacts before deleting them.
 	cancelWatches := e2eCtx.Environment.Namespaces[namespace]
-	DumpSpecResources(ctx, e2eCtx, namespace)
+	dumpSpecResources(ctx, e2eCtx, namespace)
+
+	dumpOpenStack(ctx, e2eCtx, e2eCtx.Environment.BootstrapClusterProxy.GetName())
+
 	Byf("Dumping all OpenStack server instances in the %q namespace", namespace.Name)
-	DumpMachines(ctx, e2eCtx, namespace)
+	dumpMachines(ctx, e2eCtx, namespace)
+
 	if !e2eCtx.Settings.SkipCleanup {
 		framework.DeleteAllClustersAndWait(ctx, framework.DeleteAllClustersAndWaitInput{
 			Client:    e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
@@ -73,73 +79,83 @@ func DumpSpecResourcesAndCleanup(ctx context.Context, specName string, namespace
 	delete(e2eCtx.Environment.Namespaces, namespace)
 }
 
-func DumpMachines(ctx context.Context, e2eCtx *E2EContext, namespace *corev1.Namespace) {
-	By("Running DumpMachines")
-	cluster := ClusterForSpec(ctx, e2eCtx.Environment.BootstrapClusterProxy, namespace)
-	if cluster.Status.Bastion == nil || cluster.Status.Bastion.FloatingIP == "" {
-		_, _ = fmt.Fprintln(GinkgoWriter, "cannot dump machines, cluster doesn't have a bastion host with a floating ip")
-		return
-	}
-	machines := MachinesForSpec(ctx, e2eCtx.Environment.BootstrapClusterProxy, namespace)
-	instances, err := allMachines(ctx, e2eCtx)
+func dumpMachines(ctx context.Context, e2eCtx *E2EContext, namespace *corev1.Namespace) {
+	cluster, err := clusterForSpec(ctx, e2eCtx.Environment.BootstrapClusterProxy, namespace)
 	if err != nil {
-		_, _ = fmt.Fprintf(GinkgoWriter, "cannot dump machines, could not get instances from OpenStack: %v\n", err)
+		_, _ = fmt.Fprintf(GinkgoWriter, "cannot dump machines, couldn't get cluster in namespace %s: %v\n", namespace.Name, err)
 		return
 	}
-	var machineInstance instance
+	if cluster.Status.Bastion == nil || cluster.Status.Bastion.FloatingIP == "" {
+		_, _ = fmt.Fprintln(GinkgoWriter, "cannot dump machines, cluster doesn't has a bastion host (yet) with a floating ip")
+		return
+	}
+	machines, err := machinesForSpec(ctx, e2eCtx.Environment.BootstrapClusterProxy, namespace)
+	if err != nil {
+		_, _ = fmt.Fprintf(GinkgoWriter, "cannot dump machines, could not get machines: %v\n", err)
+		return
+	}
+	srvs, err := getOpenStackServers(e2eCtx)
+	if err != nil {
+		_, _ = fmt.Fprintf(GinkgoWriter, "cannot dump machines, could not get servers from OpenStack: %v\n", err)
+		return
+	}
 	for _, m := range machines.Items {
-		for _, i := range instances {
-			if i.name == m.Name {
-				machineInstance = i
-				break
-			}
+		srv, ok := srvs[m.Name]
+		if !ok {
+			continue
 		}
-		if machineInstance.id == "" {
-			return
-		}
-		DumpMachine(ctx, e2eCtx, m, machineInstance, cluster.Status.Bastion.FloatingIP)
+		dumpMachine(ctx, e2eCtx, m, srv, cluster.Status.Bastion.FloatingIP)
 	}
 }
 
-func ClusterForSpec(ctx context.Context, clusterProxy framework.ClusterProxy, namespace *corev1.Namespace) *infrav1.OpenStackCluster {
+func clusterForSpec(ctx context.Context, clusterProxy framework.ClusterProxy, namespace *corev1.Namespace) (*infrav1.OpenStackCluster, error) {
 	lister := clusterProxy.GetClient()
 	list := new(infrav1.OpenStackClusterList)
 	if err := lister.List(ctx, list, client.InNamespace(namespace.GetName())); err != nil {
-		_, _ = fmt.Fprintln(GinkgoWriter, "couldn't find cluster")
-		return nil
+		return nil, fmt.Errorf("error listing cluster: %v", err)
 	}
-	Expect(list.Items).To(HaveLen(1), "Expected to find one cluster, found %d", len(list.Items))
-	return &list.Items[0]
+	if len(list.Items) != 1 {
+		return nil, fmt.Errorf("error expected 1 cluster but got %d: %v", len(list.Items), list.Items)
+	}
+	return &list.Items[0], nil
 }
 
-func MachinesForSpec(ctx context.Context, clusterProxy framework.ClusterProxy, namespace *corev1.Namespace) *infrav1.OpenStackMachineList {
-	lister := clusterProxy.GetClient()
+func machinesForSpec(ctx context.Context, clusterProxy framework.ClusterProxy, namespace *corev1.Namespace) (*infrav1.OpenStackMachineList, error) {
 	list := new(infrav1.OpenStackMachineList)
-	if err := lister.List(ctx, list, client.InNamespace(namespace.GetName())); err != nil {
-		_, _ = fmt.Fprintln(GinkgoWriter, "couldn't find machines")
-		return nil
+	if err := clusterProxy.GetClient().List(ctx, list, client.InNamespace(namespace.GetName())); err != nil {
+		return nil, fmt.Errorf("error listing machines: %v", err)
 	}
-	return list
+	return list, nil
 }
 
-func DumpMachine(_ context.Context, e2eCtx *E2EContext, machine infrav1.OpenStackMachine, machineInstance instance, bastionIP string) {
+func dumpMachine(ctx context.Context, e2eCtx *E2EContext, machine infrav1.OpenStackMachine, srv server, bastionIP string) {
 	logPath := filepath.Join(e2eCtx.Settings.ArtifactFolder, "clusters", e2eCtx.Environment.BootstrapClusterProxy.GetName())
 	machineLogBase := path.Join(logPath, "instances", machine.Namespace, machine.Name)
 	metaLog := path.Join(machineLogBase, "instance.log")
 	if err := os.MkdirAll(filepath.Dir(metaLog), 0750); err != nil {
-		_, _ = fmt.Fprintf(GinkgoWriter, "couldn't create directory %q for file: %s", metaLog, err)
+		_, _ = fmt.Fprintf(GinkgoWriter, "couldn't create directory %q for file: %s\n", metaLog, err)
 	}
 	f, err := os.OpenFile(metaLog, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		_, _ = fmt.Fprintf(GinkgoWriter, "couldn't open file %q: %s", metaLog, err)
+		_, _ = fmt.Fprintf(GinkgoWriter, "couldn't open file %q: %s\n", metaLog, err)
 		return
 	}
 	defer f.Close()
 
-	_, _ = fmt.Fprintf(f, "instance found: %q\n", machineInstance.id)
+	serverJSON, err := json.MarshalIndent(srv, "", "    ")
+	if err != nil {
+		_, _ = fmt.Fprintf(GinkgoWriter, "error marshalling server %v: %s", srv, err)
+	}
+	if err := os.WriteFile(path.Join(machineLogBase, "server.txt"), serverJSON, 0o600); err != nil {
+		_, _ = fmt.Fprintf(GinkgoWriter, "error writing server JSON %s: %s", serverJSON, err)
+	}
+
+	_, _ = fmt.Fprintf(f, "instance found: %q\n", srv.id)
 	commandsForMachine(
+		ctx,
+		e2eCtx.Settings.Debug,
 		f,
-		machineInstance.ip,
+		srv.ip,
 		bastionIP,
 		[]command{
 			// don't do this for now, it just takes to long
@@ -179,7 +195,7 @@ func DumpMachine(_ context.Context, e2eCtx *E2EContext, machine infrav1.OpenStac
 	)
 }
 
-func DumpSpecResources(ctx context.Context, e2eCtx *E2EContext, namespace *corev1.Namespace) {
+func dumpSpecResources(ctx context.Context, e2eCtx *E2EContext, namespace *corev1.Namespace) {
 	framework.DumpAllResources(ctx, framework.DumpAllResourcesInput{
 		Lister:    e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
 		Namespace: namespace.Name,
@@ -188,7 +204,13 @@ func DumpSpecResources(ctx context.Context, e2eCtx *E2EContext, namespace *corev
 }
 
 func Byf(format string, a ...interface{}) {
-	By(fmt.Sprintf(format, a...))
+	By("[" + time.Now().Format(time.RFC3339) + "] " + fmt.Sprintf(format, a...))
+}
+
+func Debugf(debug bool, format string, a ...interface{}) {
+	if debug {
+		By("[DEBUG] [" + time.Now().Format(time.RFC3339) + "] " + fmt.Sprintf(format, a...))
+	}
 }
 
 // LoadE2EConfig loads the e2econfig from the specified path.

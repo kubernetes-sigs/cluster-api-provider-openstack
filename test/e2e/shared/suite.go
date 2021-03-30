@@ -21,9 +21,13 @@ package shared
 import (
 	"context"
 	"flag"
+	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
+	"strings"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -47,65 +51,83 @@ type synchronizedBeforeTestSuiteConfig struct {
 
 // Node1BeforeSuite is the common setup down on the first ginkgo node before the test suite runs.
 func Node1BeforeSuite(e2eCtx *E2EContext) []byte {
-	By("Running Node1BeforeSuite")
+	Byf("Running Node1BeforeSuite")
+	defer Byf("Finished Node1BeforeSuite")
 
 	flag.Parse()
 	Expect(e2eCtx.Settings.ConfigPath).To(BeAnExistingFile(), "Invalid test suite argument. configPath should be an existing file.")
 	Expect(os.MkdirAll(e2eCtx.Settings.ArtifactFolder, 0o750)).To(Succeed(), "Invalid test suite argument. Can't create artifacts-folder %q", e2eCtx.Settings.ArtifactFolder)
 	Byf("Loading the e2e test configuration from %q", e2eCtx.Settings.ConfigPath)
 	e2eCtx.E2EConfig = LoadE2EConfig(e2eCtx.Settings.ConfigPath)
-	sourceTemplate, err := ioutil.ReadFile(filepath.Join(e2eCtx.Settings.DataFolder, e2eCtx.Settings.SourceTemplate))
-	Expect(err).NotTo(HaveOccurred())
 
-	var clusterctlCITemplate clusterctl.Files
+	Expect(e2eCtx.E2EConfig.GetVariable(OpenStackCloudYAMLFile)).To(BeAnExistingFile(), "Invalid test suite argument. Value of environment variable OPENSTACK_CLOUD_YAML_FILE should be an existing file: %s", e2eCtx.E2EConfig.GetVariable(OpenStackCloudYAMLFile))
+	Byf("Loading the clouds.yaml from %q", e2eCtx.E2EConfig.GetVariable(OpenStackCloudYAMLFile))
 
-	platformKustomization, err := ioutil.ReadFile(filepath.Join(e2eCtx.Settings.DataFolder, "ci-artifacts-platform-kustomization.yaml"))
-	Expect(err).NotTo(HaveOccurred())
-
-	// TODO(sbuerin): should be removed after: https://github.com/kubernetes-sigs/kustomize/issues/2825 is fixed
-	//ciTemplate, err := kubernetesversions.GenerateCIArtifactsInjectedTemplateForDebian(
-	//	kubernetesversions.GenerateCIArtifactsInjectedTemplateForDebianInput{
-	//		ArtifactsDirectory:    e2eCtx.Settings.ArtifactFolder,
-	//		SourceTemplate:        sourceTemplate,
-	//		PlatformKustomization: platformKustomization,
-	//	},
-	//)
-	ciTemplate, err := GenerateCIArtifactsInjectedTemplateForDebian(
-		GenerateCIArtifactsInjectedTemplateForDebianInput{
-			ArtifactsDirectory:    e2eCtx.Settings.ArtifactFolder,
-			SourceTemplate:        sourceTemplate,
-			PlatformKustomization: platformKustomization,
-		},
-	)
-	Expect(err).NotTo(HaveOccurred())
-
-	clusterctlCITemplate = clusterctl.Files{
-		SourcePath: ciTemplate,
-		TargetName: "cluster-template-conformance-ci-artifacts.yaml",
-	}
-
-	providers := e2eCtx.E2EConfig.Providers
-	for i, prov := range providers {
-		if prov.Name != "openstack" {
-			continue
+	// TODO(sbuerin): we always need ci artifacts, because we don't have images for every Kubernetes version
+	err := filepath.WalkDir(path.Join(e2eCtx.Settings.DataFolder, "infrastructure-openstack"), func(f string, d fs.DirEntry, _ error) error {
+		filename := filepath.Base(f)
+		fileExtension := filepath.Ext(filename)
+		if d.IsDir() || !strings.HasPrefix(filename, "cluster-template") {
+			return nil
 		}
-		e2eCtx.E2EConfig.Providers[i].Files = append(e2eCtx.E2EConfig.Providers[i].Files, clusterctlCITemplate)
-	}
 
-	openStackCloudYAMLFile := e2eCtx.E2EConfig.GetVariable(OpenStackCloudYAMLFile)
-	openStackCloud := e2eCtx.E2EConfig.GetVariable(OpenStackCloud)
-	ensureSSHKeyPair(openStackCloudYAMLFile, openStackCloud, DefaultSSHKeyPairName)
+		sourceTemplate, err := ioutil.ReadFile(f)
+		Expect(err).NotTo(HaveOccurred())
+
+		platformKustomization, err := ioutil.ReadFile(filepath.Join(e2eCtx.Settings.DataFolder, "ci-artifacts-platform-kustomization.yaml"))
+		Expect(err).NotTo(HaveOccurred())
+
+		// TODO(sbuerin): should be removed after: https://github.com/kubernetes-sigs/kustomize/issues/2825 is fixed
+		//ciTemplate, err := kubernetesversions.GenerateCIArtifactsInjectedTemplateForDebian(
+		//	kubernetesversions.GenerateCIArtifactsInjectedTemplateForDebianInput{
+		//		ArtifactsDirectory:    e2eCtx.Settings.ArtifactFolder,
+		//		SourceTemplate:        sourceTemplate,
+		//		PlatformKustomization: platformKustomization,
+		//	},
+		//)
+		ciTemplate, err := GenerateCIArtifactsInjectedTemplateForDebian(
+			GenerateCIArtifactsInjectedTemplateForDebianInput{
+				ArtifactsDirectory:    e2eCtx.Settings.ArtifactFolder,
+				SourceTemplate:        sourceTemplate,
+				PlatformKustomization: platformKustomization,
+			},
+		)
+		Expect(err).NotTo(HaveOccurred())
+
+		targetName := fmt.Sprintf("%s-ci-artifacts.yaml", strings.TrimSuffix(filename, fileExtension))
+		targetTemplate := path.Join(e2eCtx.Settings.ArtifactFolder, "templates", targetName)
+
+		// We have to copy the file from ciTemplate to targetTemplate. Otherwise it would be overwritten because
+		// ciTemplate is the same for all templates
+		ciTemplateBytes, err := os.ReadFile(ciTemplate)
+		Expect(err).NotTo(HaveOccurred())
+		err = os.WriteFile(targetTemplate, ciTemplateBytes, 0o600)
+		Expect(err).NotTo(HaveOccurred())
+
+		clusterctlCITemplate := clusterctl.Files{
+			SourcePath: targetTemplate,
+			TargetName: targetName,
+		}
+
+		for i, prov := range e2eCtx.E2EConfig.Providers {
+			if prov.Name != "openstack" {
+				continue
+			}
+			e2eCtx.E2EConfig.Providers[i].Files = append(e2eCtx.E2EConfig.Providers[i].Files, clusterctlCITemplate)
+		}
+		return nil
+	})
+	Expect(err).NotTo(HaveOccurred())
+
+	ensureSSHKeyPair(e2eCtx)
 
 	Byf("Creating a clusterctl local repository into %q", e2eCtx.Settings.ArtifactFolder)
 	e2eCtx.Environment.ClusterctlConfigPath = createClusterctlLocalRepository(e2eCtx.E2EConfig, filepath.Join(e2eCtx.Settings.ArtifactFolder, "repository"))
 
-	By("Setting up the bootstrap cluster")
+	Byf("Setting up the bootstrap cluster")
 	e2eCtx.Environment.BootstrapClusterProvider, e2eCtx.Environment.BootstrapClusterProxy = setupBootstrapCluster(e2eCtx.E2EConfig, e2eCtx.Environment.Scheme, e2eCtx.Settings.UseExistingCluster)
 
-	SetEnvVar("OPENSTACK_CLOUD_YAML_B64", getEncodedOpenStackCloudYAML(openStackCloudYAMLFile), true)
-	SetEnvVar("OPENSTACK_CLOUD_PROVIDER_CONF_B64", getEncodedOpenStackCloudProviderConf(openStackCloudYAMLFile, openStackCloud), true)
-
-	By("Initializing the bootstrap cluster")
+	Byf("Initializing the bootstrap cluster")
 	initBootstrapCluster(e2eCtx)
 
 	conf := synchronizedBeforeTestSuiteConfig{
@@ -127,7 +149,8 @@ func Node1BeforeSuite(e2eCtx *E2EContext) []byte {
 
 // AllNodesBeforeSuite is the common setup down on each ginkgo parallel node before the test suite runs.
 func AllNodesBeforeSuite(e2eCtx *E2EContext, data []byte) {
-	By("Running AllNodesBeforeSuite")
+	Byf("Running AllNodesBeforeSuite")
+	defer Byf("Finished AllNodesBeforeSuite")
 
 	conf := &synchronizedBeforeTestSuiteConfig{}
 	err := yaml.UnmarshalStrict(data, conf)
@@ -142,28 +165,40 @@ func AllNodesBeforeSuite(e2eCtx *E2EContext, data []byte) {
 	e2eCtx.Settings.GinkgoNodes = conf.GinkgoNodes
 	e2eCtx.Settings.GinkgoSlowSpecThreshold = conf.GinkgoSlowSpecThreshold
 
+	openStackCloudYAMLFile := e2eCtx.E2EConfig.GetVariable(OpenStackCloudYAMLFile)
+	openStackCloud := e2eCtx.E2EConfig.GetVariable(OpenStackCloud)
+	SetEnvVar("OPENSTACK_CLOUD_YAML_B64", getEncodedOpenStackCloudYAML(openStackCloudYAMLFile), true)
+	SetEnvVar("OPENSTACK_CLOUD_PROVIDER_CONF_B64", getEncodedOpenStackCloudProviderConf(openStackCloudYAMLFile, openStackCloud), true)
 	SetEnvVar("OPENSTACK_SSH_KEY_NAME", DefaultSSHKeyPairName, false)
 
-	e2eCtx.Environment.ResourceTicker = time.NewTicker(time.Second * 5)
+	e2eCtx.Environment.ResourceTicker = time.NewTicker(time.Second * 10)
 	e2eCtx.Environment.ResourceTickerDone = make(chan bool)
 	// Get OpenStack server logs every 5 minutes
-	e2eCtx.Environment.MachineTicker = time.NewTicker(time.Second * 300)
+	e2eCtx.Environment.MachineTicker = time.NewTicker(time.Second * 60)
 	e2eCtx.Environment.MachineTickerDone = make(chan bool)
 	resourceCtx, resourceCancel := context.WithCancel(context.Background())
 	machineCtx, machineCancel := context.WithCancel(context.Background())
 
+	debug := e2eCtx.Settings.Debug
 	// Dump resources every 5 seconds
 	go func() {
 		defer GinkgoRecover()
 		for {
 			select {
 			case <-e2eCtx.Environment.ResourceTickerDone:
+				Debugf(debug, "Running ResourceTickerDone")
 				resourceCancel()
+				Debugf(debug, "Finished ResourceTickerDone")
 				return
 			case <-e2eCtx.Environment.ResourceTicker.C:
+				Debugf(debug, "Running ResourceTicker")
 				for k := range e2eCtx.Environment.Namespaces {
-					DumpSpecResources(resourceCtx, e2eCtx, k)
+					// ensure dumpSpecResources cannot get stuck indefinitely
+					timeoutCtx, timeoutCancel := context.WithTimeout(resourceCtx, time.Second*5)
+					dumpSpecResources(timeoutCtx, e2eCtx, k)
+					timeoutCancel()
 				}
+				Debugf(debug, "Finished ResourceTicker")
 			}
 		}
 	}()
@@ -174,41 +209,60 @@ func AllNodesBeforeSuite(e2eCtx *E2EContext, data []byte) {
 		for {
 			select {
 			case <-e2eCtx.Environment.MachineTickerDone:
+				Debugf(debug, "Running MachineTickerDone")
 				machineCancel()
+				Debugf(debug, "Finished MachineTickerDone")
 				return
 			case <-e2eCtx.Environment.MachineTicker.C:
+				Debugf(debug, "Running MachineTicker")
 				for k := range e2eCtx.Environment.Namespaces {
-					DumpMachines(machineCtx, e2eCtx, k)
+					// ensure dumpMachines cannot get stuck indefinitely
+					timeoutCtx, timeoutCancel := context.WithTimeout(machineCtx, time.Second*30)
+					dumpMachines(timeoutCtx, e2eCtx, k)
+					timeoutCancel()
 				}
+				Debugf(debug, "Finished MachineTicker")
 			}
 		}
 	}()
 }
 
-// Node1AfterSuite is cleanup that runs on the first ginkgo node after the test suite finishes.
-func Node1AfterSuite(e2eCtx *E2EContext) {
-	By("Running Node1AfterSuite")
+// AllNodesAfterSuite is cleanup that runs on all ginkgo parallel nodes after the test suite finishes.
+func AllNodesAfterSuite(e2eCtx *E2EContext) {
+	Byf("Running AllNodesAfterSuite")
+	defer Byf("Finished AllNodesAfterSuite")
 
+	Byf("Stopping ResourceTicker")
 	if e2eCtx.Environment.ResourceTickerDone != nil {
 		e2eCtx.Environment.ResourceTickerDone <- true
 	}
+	Byf("Stopped ResourceTicker")
+
+	Byf("Stopping MachineTicker")
 	if e2eCtx.Environment.MachineTickerDone != nil {
 		e2eCtx.Environment.MachineTickerDone <- true
 	}
+	Byf("Stopped MachineTicker")
+
 	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Minute)
 	defer cancel()
-	DumpOpenStackClusters(ctx, e2eCtx, e2eCtx.Environment.BootstrapClusterProxy.GetName())
-	for k := range e2eCtx.Environment.Namespaces {
-		DumpSpecResourcesAndCleanup(ctx, "", k, e2eCtx)
-		DumpMachines(ctx, e2eCtx, k)
+
+	if e2eCtx.Environment.BootstrapClusterProxy == nil {
+		_, _ = fmt.Fprintf(GinkgoWriter, "bootstrap cluster proxy does not exist yet, cannot dump clusters and machines\n")
+		return
+	}
+
+	for namespace := range e2eCtx.Environment.Namespaces {
+		DumpSpecResourcesAndCleanup(ctx, "after-suite", namespace, e2eCtx)
 	}
 }
 
-// AllNodesAfterSuite is cleanup that runs on all ginkgo parallel nodes after the test suite finishes.
-func AllNodesAfterSuite(e2eCtx *E2EContext) {
-	By("Running AllNodesAfterSuite")
+// Node1AfterSuite is cleanup that runs on the first ginkgo node after the test suite finishes.
+func Node1AfterSuite(e2eCtx *E2EContext) {
+	Byf("Running Node1AfterSuite")
+	defer Byf("Finished Node1AfterSuite")
 
-	By("Tearing down the management cluster")
+	Byf("Tearing down the management cluster")
 	if !e2eCtx.Settings.SkipCleanup {
 		tearDown(e2eCtx.Environment.BootstrapClusterProvider, e2eCtx.Environment.BootstrapClusterProxy)
 	}

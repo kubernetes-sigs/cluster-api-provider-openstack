@@ -19,6 +19,7 @@ limitations under the License.
 package shared
 
 import (
+	"context"
 	"os"
 	"testing"
 )
@@ -87,7 +88,7 @@ func Test_commandsForMachine(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			commandsForMachine(f, tt.args.machineIP, tt.args.bastionIP, tt.args.commands)
+			commandsForMachine(context.Background(), true, f, tt.args.machineIP, tt.args.bastionIP, tt.args.commands)
 		})
 	}
 }

@@ -37,6 +37,7 @@ type Service struct {
 	logger         logr.Logger
 }
 
+// NewService returns an instance of the compute service.
 func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, logger logr.Logger) (*Service, error) {
 	identityClient, err := openstack.NewIdentityV3(client, gophercloud.EndpointOpts{
 		Region: "",
@@ -65,15 +66,20 @@ func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.Cli
 	if err != nil {
 		return nil, fmt.Errorf("failed to create image service client: %v", err)
 	}
-	var projectID string
-	if clientOpts.AuthInfo != nil {
-		projectID = clientOpts.AuthInfo.ProjectID
-		if projectID == "" && clientOpts.AuthInfo.ProjectName != "" {
-			projectID, err = provider.GetProjectID(client, clientOpts.AuthInfo.ProjectName)
-			if err != nil {
-				return nil, fmt.Errorf("error retrieveing project id: %v", err)
-			}
+
+	if clientOpts.AuthInfo == nil {
+		return nil, fmt.Errorf("failed to get project id: authInfo must be set: %v", err)
+	}
+
+	projectID := clientOpts.AuthInfo.ProjectID
+	if projectID == "" && clientOpts.AuthInfo.ProjectName != "" {
+		projectID, err = provider.GetProjectID(client, clientOpts.AuthInfo.ProjectName)
+		if err != nil {
+			return nil, fmt.Errorf("error retrieveing project id: %v", err)
 		}
+	}
+	if projectID == "" {
+		return nil, fmt.Errorf("failed to get project id")
 	}
 
 	return &Service{

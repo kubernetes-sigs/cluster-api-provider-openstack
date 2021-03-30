@@ -75,8 +75,8 @@ type Settings struct {
 	KubetestConfigFilePath string
 	// useCIArtifacts specifies whether or not to use the latest build from the main branch of the Kubernetes repository
 	UseCIArtifacts bool
-	// SourceTemplate specifies which source template to use
-	SourceTemplate string
+	// Debug specifies if the debug log should be logged
+	Debug bool
 }
 
 // RuntimeEnvironment represents the runtime environment of the test.

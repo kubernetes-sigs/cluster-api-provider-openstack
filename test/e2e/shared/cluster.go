@@ -45,6 +45,12 @@ func createClusterctlLocalRepository(config *clusterctl.E2EConfig, repositoryFol
 	Expect(cniPath).To(BeAnExistingFile(), "The %s variable should resolve to an existing file", capie2e.CNIPath)
 	createRepositoryInput.RegisterClusterResourceSetConfigMapTransformation(cniPath, capie2e.CNIResources)
 
+	// Ensuring a CCM file is defined in the config and register a FileTransformation to inject the referenced file as in place of the CCM_RESOURCES envSubst variable.
+	Expect(config.Variables).To(HaveKey(CCMPath), "Missing %s variable in the config", CCMPath)
+	ccmPath := config.GetVariable(CCMPath)
+	Expect(ccmPath).To(BeAnExistingFile(), "The %s variable should resolve to an existing file", CCMPath)
+	createRepositoryInput.RegisterClusterResourceSetConfigMapTransformation(ccmPath, CCMResources)
+
 	clusterctlConfig := clusterctl.CreateRepository(context.TODO(), createRepositoryInput)
 	Expect(clusterctlConfig).To(BeAnExistingFile(), "The clusterctl config file does not exists in the local repository %s", repositoryFolder)
 	return clusterctlConfig
@@ -52,9 +58,34 @@ func createClusterctlLocalRepository(config *clusterctl.E2EConfig, repositoryFol
 
 // setupBootstrapCluster installs Cluster API components via clusterctl.
 func setupBootstrapCluster(config *clusterctl.E2EConfig, scheme *runtime.Scheme, useExistingCluster bool) (bootstrap.ClusterProvider, framework.ClusterProxy) {
+	Byf("Running setupBootstrapCluster (useExistingCluster: %t)", useExistingCluster)
+
+	// We only want to set clusterProvider if we create a new bootstrap cluster in this test.
+	// If we re-use an existing one, we don't want to delete it afterwards, so we don't set it.
 	var clusterProvider bootstrap.ClusterProvider
-	kubeconfigPath := ""
-	if !useExistingCluster {
+	var kubeconfigPath string
+
+	// try to use an existing cluster
+	if useExistingCluster {
+		// If the kubeContext is locked: try to use the default kubeconfig with the current context
+		kubeContext := config.GetVariable(KubeContext)
+		if kubeContext != "" {
+			testKubeconfigPath := clientcmd.NewDefaultClientConfigLoadingRules().GetDefaultFilename()
+			kubecfg, err := clientcmd.LoadFromFile(testKubeconfigPath)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Only use the kubeconfigPath if the current context is the configured kubeContext
+			// Otherwise we might deploy to the wrong cluster.
+			// TODO(sbuerin): this logic could be a lot nicer if we could hand over a kubeContext to NewClusterProxy
+			Byf("Found currentContext %q in %q (configured kubeContext is %q)", kubecfg.CurrentContext, testKubeconfigPath, kubeContext)
+			if kubecfg.CurrentContext == kubeContext {
+				kubeconfigPath = testKubeconfigPath
+			}
+		}
+	}
+
+	// If useExistingCluster was false or we couldn't find an existing cluster in the default kubeconfig with the configured kubeContext, let's create a new one
+	if kubeconfigPath == "" {
 		clusterProvider = bootstrap.CreateKindBootstrapClusterAndLoadImages(context.TODO(), bootstrap.CreateKindBootstrapClusterAndLoadImagesInput{
 			Name:               config.ManagementClusterName,
 			RequiresDockerSock: config.HasDockerProvider(),
@@ -64,19 +95,6 @@ func setupBootstrapCluster(config *clusterctl.E2EConfig, scheme *runtime.Scheme,
 
 		kubeconfigPath = clusterProvider.GetKubeconfigPath()
 		Expect(kubeconfigPath).To(BeAnExistingFile(), "Failed to get the kubeconfig file for the bootstrap cluster")
-	}
-
-	// Ensure kubeconfigPath already has been defaulted for the verification below
-	// If we're not doing it here, it's done inside of framework.NewClusterProxy()
-	if kubeconfigPath == "" {
-		kubeconfigPath = clientcmd.NewDefaultClientConfigLoadingRules().GetDefaultFilename()
-	}
-
-	kubeContext := config.GetVariable(KubeContext)
-	if kubeContext != "" {
-		kubecfg, err := clientcmd.LoadFromFile(kubeconfigPath)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(kubecfg.CurrentContext).Should(Equal(kubeContext), "current-context of the kubeconfig should be the same as %s (%s)", KubeContext, kubeContext)
 	}
 
 	clusterProxy := framework.NewClusterProxy("bootstrap", kubeconfigPath, scheme)

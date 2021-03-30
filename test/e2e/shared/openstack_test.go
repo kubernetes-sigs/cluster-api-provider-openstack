@@ -40,7 +40,7 @@ func Test_dumpOpenStackClusters(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	DumpOpenStackClusters(context.TODO(), &E2EContext{
+	dumpOpenStack(context.TODO(), &E2EContext{
 		E2EConfig: &clusterctl.E2EConfig{
 			Variables: map[string]string{
 				OpenStackCloudYAMLFile: fmt.Sprintf("%s/../../../clouds.yaml", currentDir),

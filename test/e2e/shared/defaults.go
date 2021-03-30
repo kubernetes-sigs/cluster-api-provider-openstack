@@ -29,11 +29,19 @@ import (
 )
 
 const (
-	DefaultSSHKeyPairName  = "cluster-api-provider-openstack-sigs-k8s-io"
-	KubeContext            = "KUBE_CONTEXT"
-	KubernetesVersion      = "KUBERNETES_VERSION"
-	OpenStackCloudYAMLFile = "OPENSTACK_CLOUD_YAML_FILE"
-	OpenStackCloud         = "OPENSTACK_CLOUD"
+	DefaultSSHKeyPairName       = "cluster-api-provider-openstack-sigs-k8s-io"
+	KubeContext                 = "KUBE_CONTEXT"
+	KubernetesVersion           = "KUBERNETES_VERSION"
+	CCMPath                     = "CCM"
+	CCMResources                = "CCM_RESOURCES"
+	OpenStackCloudYAMLFile      = "OPENSTACK_CLOUD_YAML_FILE"
+	OpenStackCloud              = "OPENSTACK_CLOUD"
+	OpenStackFailureDomain      = "OPENSTACK_FAILURE_DOMAIN"
+	OpenStackImageName          = "OPENSTACK_IMAGE_NAME"
+	OpenStackNodeMachineFlavor  = "OPENSTACK_NODE_MACHINE_FLAVOR"
+	FlavorDefault               = "ci-artifacts"
+	FlavorWithoutLB             = "without-lb-ci-artifacts"
+	FlavorExternalCloudProvider = "external-cloud-provider-ci-artifacts"
 )
 
 // DefaultScheme returns the default scheme to use for testing.
@@ -53,8 +61,8 @@ func CreateDefaultFlags(ctx *E2EContext) {
 	flag.StringVar(&ctx.Settings.KubetestConfigFilePath, "kubetest.config-file", "", "path to the kubetest configuration file")
 	flag.IntVar(&ctx.Settings.GinkgoNodes, "kubetest.ginkgo-nodes", 1, "number of ginkgo nodes to use")
 	flag.IntVar(&ctx.Settings.GinkgoSlowSpecThreshold, "kubetest.ginkgo-slowSpecThreshold", 120, "time in s before spec is marked as slow")
-	flag.BoolVar(&ctx.Settings.UseExistingCluster, "use-existing-cluster", false, "if true, the test uses the current cluster instead of creating a new one (default discovery rules apply)")
+	flag.BoolVar(&ctx.Settings.UseExistingCluster, "use-existing-cluster", false, "if true, the test will try to use an existing cluster and fallback to create a new one if it couldn't be found")
 	flag.BoolVar(&ctx.Settings.SkipCleanup, "skip-cleanup", false, "if true, the resource cleanup after tests will be skipped")
 	flag.StringVar(&ctx.Settings.DataFolder, "data-folder", "", "path to the data folder")
-	flag.StringVar(&ctx.Settings.SourceTemplate, "source-template", "./infrastructure-openstack/cluster-template.yaml", "path to the data folder")
+	flag.BoolVar(&ctx.Settings.Debug, "debug", false, "enables the debug log")
 }

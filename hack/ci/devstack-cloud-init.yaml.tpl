@@ -1,8 +1,8 @@
 #cloud-config
-hostname: openstack
-password: ubuntu
-chpasswd: { expire: False }
-ssh_pwauth: True
+hostname: localhost
+users:
+- name: ubuntu
+  lock_passwd: true
 write_files:
   - content: |
       net.ipv4.ip_forward=1
@@ -22,8 +22,11 @@ write_files:
       # from https://raw.githubusercontent.com/openstack/octavia/master/devstack/contrib/new-octavia-devstack.sh
       git clone -b stable/${OPENSTACK_RELEASE} https://github.com/openstack/devstack.git /tmp/devstack
 
-      cat <<EOF > /tmp/devstack/localrc
+      cat <<EOF > /tmp/devstack/local.conf
+
+      [[local|localrc]]
       GIT_BASE=https://github.com
+      HOST_IP=10.0.2.15
 
       # Neutron
       enable_plugin neutron https://github.com/openstack/neutron stable/${OPENSTACK_RELEASE}
@@ -78,12 +81,26 @@ write_files:
 
       # Don't download default images, just our test images
       DOWNLOAD_DEFAULT_IMAGES=False
-      IMAGE_URLS="https://github.com/sbueringer/image-builder/releases/download/v1.18.15-01/ubuntu-2004-kube-v1.18.15.qcow2,"
-      IMAGE_URLS+="http://download.cirros-cloud.net/0.5.1/cirros-0.5.1-x86_64-disk.img"
+      # We upload the Amphora image so it doesn't have to be build
+      IMAGE_URLS="https://github.com/sbueringer/cluster-api-provider-openstack-images/releases/download/amphora-victoria-1/amphora-x64-haproxy.qcow2"
+
+      # See: https://docs.openstack.org/nova/victoria/configuration/sample-config.html
+      # Helpful commands (on the devstack VM):
+      # * openstack resource provider list
+      # * openstack resource provider inventory list 4aa55af2-d50a-4a53-b225-f6b22dd01044
+      # * openstack resource provider usage show 4aa55af2-d50a-4a53-b225-f6b22dd01044
+      # * openstack hypervisor stats show
+      # * openstack hypervisor list
+      # * openstack hypervisor show openstack
+      # A CPU allocation ratio von 32 gives us 32 vCPUs in devstack
+      # This should be enough to run multiple e2e tests at the same time
+      [[post-config|\$NOVA_CONF]]
+      [DEFAULT]
+      cpu_allocation_ratio = 32.0
       EOF
 
       # Create the stack user
-      /tmp/devstack/tools/create-stack-user.sh
+      HOST_IP=10.0.2.15 /tmp/devstack/tools/create-stack-user.sh
 
       # Move everything into place (/opt/stack is the $HOME folder of the stack user)
       mv /tmp/devstack /opt/stack/
@@ -94,6 +111,10 @@ write_files:
 
       # Add environment variables for auth/endpoints
       echo 'source /opt/stack/devstack/openrc admin admin' >> /opt/stack/.bashrc
+
+      # Upload the images so we don't have to upload them from prow
+      su - stack -c "source /opt/stack/devstack/openrc admin admin && /opt/stack/devstack/tools/upload_image.sh https://github.com/sbueringer/cluster-api-provider-openstack-images/releases/download/ubuntu-2004-v1.18.15-0/ubuntu-2004-kube-v1.18.15.qcow2"
+      su - stack -c "source /opt/stack/devstack/openrc admin admin && /opt/stack/devstack/tools/upload_image.sh http://download.cirros-cloud.net/0.5.1/cirros-0.5.1-x86_64-disk.img"
 
       sudo iptables -t nat -I POSTROUTING -o ens4 -s 172.24.4.0/24 -j MASQUERADE
       sudo iptables -I FORWARD -s 172.24.4.0/24 -j ACCEPT
