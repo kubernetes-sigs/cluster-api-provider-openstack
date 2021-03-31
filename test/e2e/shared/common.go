@@ -151,10 +151,11 @@ func dumpMachine(ctx context.Context, e2eCtx *E2EContext, machine infrav1.OpenSt
 	}
 
 	_, _ = fmt.Fprintf(f, "instance found: %q\n", srv.id)
-	commandsForMachine(
+	executeCommands(
 		ctx,
+		e2eCtx.Settings.ArtifactFolder,
 		e2eCtx.Settings.Debug,
-		f,
+		filepath.Dir(f.Name()),
 		srv.ip,
 		bastionIP,
 		[]command{

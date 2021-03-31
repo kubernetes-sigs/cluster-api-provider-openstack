@@ -21,19 +21,14 @@ package shared
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
 // Test_commandsForMachine can be used to develop and test
-// commandsForMachine locally.
+// executeCommands locally.
 func Test_commandsForMachine(t *testing.T) {
 	t.Skip()
-
-	f, err := os.OpenFile("/tmp/test/instance.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer f.Close()
 
 	type args struct {
 		machineIP string
@@ -88,7 +83,11 @@ func Test_commandsForMachine(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			commandsForMachine(context.Background(), true, f, tt.args.machineIP, tt.args.bastionIP, tt.args.commands)
+			workingDir, err := os.Getwd()
+			if err != nil {
+				panic(err)
+			}
+			executeCommands(context.Background(), filepath.Join(workingDir, "..", "..", "..", "_artifacts"), true, "/tmp/", tt.args.machineIP, tt.args.bastionIP, tt.args.commands)
 		})
 	}
 }

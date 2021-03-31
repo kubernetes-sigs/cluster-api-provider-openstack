@@ -1,34 +1,11 @@
 # Can be used to modify the resources when use-ci-artifacts is enabled.
+# Be careful arrays are completely overwritten with 'patchesStrategicMerge'.
+# We currently don't need to patch anything, but the shared util func (GenerateCIArtifactsInjectedTemplateForDebian)
+# which is using this does not allow an empty patch
 ---
 apiVersion: controlplane.cluster.x-k8s.io/v1alpha4
 kind: KubeadmControlPlane
 metadata:
   name: ${CLUSTER_NAME}-control-plane
 spec:
-  infrastructureTemplate: {}
-  kubeadmConfigSpec:
-    users:
-      - name: "capi"
-        sudo: "ALL=(ALL) NOPASSWD:ALL"
-        # user: capi, passwd: capi
-        passwd: "$6$rounds=4096$yKTFKL6RmN128$a7cGMiNjeTSd091s6QzZcUNrMTgm3HhML5rVmpDFlCfgD7scTW7ZHr0OChcXCaeiO/kbhdn0XzIzWk63nSqRH1"
-        lockPassword: false
   version: ${KUBERNETES_VERSION}
-status:
-  initialized: false
-  ready: false
-
----
-apiVersion: bootstrap.cluster.x-k8s.io/v1alpha4
-kind: KubeadmConfigTemplate
-metadata:
-  name: ${CLUSTER_NAME}-md-0
-spec:
-  template:
-    spec:
-      users:
-        - name: "capi"
-          sudo: "ALL=(ALL) NOPASSWD:ALL"
-          # user: capi, passwd: capi
-          passwd: "$6$rounds=4096$yKTFKL6RmN128$a7cGMiNjeTSd091s6QzZcUNrMTgm3HhML5rVmpDFlCfgD7scTW7ZHr0OChcXCaeiO/kbhdn0XzIzWk63nSqRH1"
-          lockPassword: false
