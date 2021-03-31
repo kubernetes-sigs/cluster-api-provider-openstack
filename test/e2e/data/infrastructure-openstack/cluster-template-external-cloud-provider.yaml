@@ -70,6 +70,17 @@ spec:
         name: '{{ local_hostname }}'
         kubeletExtraArgs:
           cloud-provider: external
+    files:
+    - path: /etc/kubernetes/cloud.conf
+      owner: root
+      permissions: "0600"
+      content: ${OPENSTACK_CLOUD_PROVIDER_CONF_B64}
+      encoding: base64
+    - path: /etc/certs/cacert
+      owner: root
+      permissions: "0600"
+      content: ${OPENSTACK_CLOUD_CACERT_B64}
+      encoding: base64
   version: "${KUBERNETES_VERSION}"
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha4
