@@ -23,7 +23,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 )
 
-func (s *Service) DeleteBastion(serverID string) error {
+func (s *Service) DeleteBastion(openStackCluster *infrav1.OpenStackCluster, serverID string) error {
 	instance, err := s.GetInstance(serverID)
 	if err != nil {
 		return err
@@ -31,7 +31,12 @@ func (s *Service) DeleteBastion(serverID string) error {
 	if instance == nil {
 		return nil
 	}
-	return deleteInstance(s, instance.ID)
+	if err = deleteInstance(s, instance.ID); err != nil {
+		return err
+	}
+	record.Eventf(openStackCluster, "SuccessfulDeleteServer", "Deleted server %s with id %s", instance.Name, instance.ID)
+
+	return nil
 }
 
 func (s *Service) CreateBastion(clusterName string, openStackCluster *infrav1.OpenStackCluster) (*infrav1.Instance, error) {

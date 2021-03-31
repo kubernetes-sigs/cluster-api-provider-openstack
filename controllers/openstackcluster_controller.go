@@ -126,37 +126,13 @@ func reconcileDelete(ctx context.Context, log logr.Logger, client client.Client,
 		return reconcile.Result{}, err
 	}
 
-	networkingService, err := networking.NewService(osProviderClient, clientOpts, log)
-	if err != nil {
+	if err = deleteBastion(log, osProviderClient, clientOpts, openStackCluster); err != nil {
 		return reconcile.Result{}, err
 	}
 
-	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
-		computeService, err := compute.NewService(osProviderClient, clientOpts, log)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		if bastion := openStackCluster.Status.Bastion; bastion != nil {
-
-			if err = computeService.DeleteBastion(bastion.ID); err != nil {
-				return reconcile.Result{}, errors.Errorf("failed to delete bastion: %v", err)
-			}
-			recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteServer", "Deleted server %s with id %s", bastion.Name, bastion.ID)
-			if openStackCluster.Spec.Bastion.Instance.FloatingIP == "" {
-				if err = networkingService.DeleteFloatingIP(bastion.FloatingIP); err != nil {
-					return reconcile.Result{}, errors.Errorf("failed to delete floating IP: %v", err)
-				}
-				recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteFloatingIP", "Deleted floating IP %s", bastion.FloatingIP)
-			}
-		}
-
-		if bastionSecGroup := openStackCluster.Status.BastionSecurityGroup; bastionSecGroup != nil {
-			log.Info("Deleting bastion security group", "name", bastionSecGroup.Name)
-			if err = networkingService.DeleteSecurityGroups(bastionSecGroup); err != nil {
-				return reconcile.Result{}, errors.Errorf("failed to delete security group: %v", err)
-			}
-			recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteSecurityGroup", "Deleted security group %s with id %s", bastionSecGroup.Name, bastionSecGroup.ID)
-		}
+	networkingService, err := networking.NewService(osProviderClient, clientOpts, log)
+	if err != nil {
+		return reconcile.Result{}, err
 	}
 
 	loadBalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, log, openStackCluster.Spec.UseOctavia)
@@ -172,28 +148,25 @@ func reconcileDelete(ctx context.Context, log logr.Logger, client client.Client,
 			recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteLoadBalancer", "Deleted load balancer %s with id %s", apiLb.Name, apiLb.ID)
 
 			if openStackCluster.Spec.APIServerFloatingIP == "" {
-				if err = networkingService.DeleteFloatingIP(apiLb.IP); err != nil {
+				if err = networkingService.DeleteFloatingIP(openStackCluster, apiLb.IP); err != nil {
 					return reconcile.Result{}, errors.Errorf("failed to delete floating IP: %v", err)
 				}
-				recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteFloatingIP", "Deleted floating IP %s", apiLb.IP)
 			}
 		}
 	}
 
 	if workerSecGroup := openStackCluster.Status.WorkerSecurityGroup; workerSecGroup != nil {
 		log.Info("Deleting worker security group", "name", workerSecGroup.Name)
-		if err = networkingService.DeleteSecurityGroups(workerSecGroup); err != nil {
+		if err = networkingService.DeleteSecurityGroups(openStackCluster, workerSecGroup); err != nil {
 			return reconcile.Result{}, errors.Errorf("failed to delete security group: %v", err)
 		}
-		recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteSecurityGroup", "Deleted security group %s with id %s", workerSecGroup.Name, workerSecGroup.ID)
 	}
 
 	if controlPlaneSecGroup := openStackCluster.Status.ControlPlaneSecurityGroup; controlPlaneSecGroup != nil {
 		log.Info("Deleting control plane security group", "name", controlPlaneSecGroup.Name)
-		if err = networkingService.DeleteSecurityGroups(controlPlaneSecGroup); err != nil {
+		if err = networkingService.DeleteSecurityGroups(openStackCluster, controlPlaneSecGroup); err != nil {
 			return reconcile.Result{}, errors.Errorf("failed to delete security group: %v", err)
 		}
-		recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteSecurityGroup", "Deleted security group %s with id %s", controlPlaneSecGroup.Name, controlPlaneSecGroup.ID)
 	}
 
 	// if NodeCIDR was not set, no network was created.
@@ -235,6 +208,36 @@ func contains(arr []string, target string) bool {
 	return false
 }
 
+func deleteBastion(log logr.Logger, osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, openStackCluster *infrav1.OpenStackCluster) error {
+	computeService, err := compute.NewService(osProviderClient, clientOpts, log)
+	if err != nil {
+		return err
+	}
+	networkingService, err := networking.NewService(osProviderClient, clientOpts, log)
+	if err != nil {
+		return err
+	}
+
+	if openStackCluster.Status.Bastion != nil {
+		if err = computeService.DeleteBastion(openStackCluster, openStackCluster.Status.Bastion.ID); err != nil {
+			return errors.Errorf("failed to delete bastion: %v", err)
+		}
+		if err = networkingService.DeleteFloatingIP(openStackCluster, openStackCluster.Status.Bastion.FloatingIP); err != nil {
+			return errors.Errorf("failed to delete floating IP: %v", err)
+		}
+		openStackCluster.Status.Bastion = nil
+	}
+
+	if openStackCluster.Status.BastionSecurityGroup != nil {
+		if err = networkingService.DeleteSecurityGroups(openStackCluster, openStackCluster.Status.BastionSecurityGroup); err != nil {
+			return errors.Errorf("failed to delete security group: %v", err)
+		}
+		openStackCluster.Status.BastionSecurityGroup = nil
+	}
+
+	return nil
+}
+
 func reconcileNormal(ctx context.Context, log logr.Logger, client client.Client, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
 	log.Info("Reconciling Cluster")
 
@@ -260,11 +263,8 @@ func reconcileNormal(ctx context.Context, log logr.Logger, client client.Client,
 		return reconcile.Result{}, err
 	}
 
-	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
-		err = reconcileBastion(log, osProviderClient, clientOpts, cluster, openStackCluster)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
+	if err = reconcileBastion(log, osProviderClient, clientOpts, cluster, openStackCluster); err != nil {
+		return reconcile.Result{}, err
 	}
 
 	availabilityZones, err := computeService.GetAvailabilityZones()
@@ -304,6 +304,10 @@ func reconcileNormal(ctx context.Context, log logr.Logger, client client.Client,
 
 func reconcileBastion(log logr.Logger, osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
 	log.Info("Reconciling Bastion")
+
+	if openStackCluster.Spec.Bastion == nil || !openStackCluster.Spec.Bastion.Enabled {
+		return deleteBastion(log, osProviderClient, clientOpts, openStackCluster)
+	}
 
 	computeService, err := compute.NewService(osProviderClient, clientOpts, log)
 	if err != nil {

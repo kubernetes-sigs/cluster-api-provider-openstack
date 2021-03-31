@@ -238,12 +238,11 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 	r.Recorder.Eventf(openStackMachine, corev1.EventTypeNormal, "SuccessfulDeleteServer", "Deleted server %s with id %s", instance.Name, instance.ID)
 
 	if !openStackCluster.Spec.ManagedAPIServerLoadBalancer && util.IsControlPlaneMachine(machine) && openStackCluster.Spec.APIServerFloatingIP == "" && instance.FloatingIP != "" {
-		if err = networkingService.DeleteFloatingIP(instance.FloatingIP); err != nil {
+		if err = networkingService.DeleteFloatingIP(openStackCluster, instance.FloatingIP); err != nil {
 			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error deleting Openstack floating IP: %v", err))
 			return ctrl.Result{}, nil
 		}
 		logger.Info("OpenStack floating IP deleted successfully", "Floating IP", instance.FloatingIP)
-		r.Recorder.Eventf(openStackMachine, corev1.EventTypeNormal, "SuccessfulDeleteFloatingIP", "Deleted floating IP %s", instance.FloatingIP)
 	}
 
 	controllerutil.RemoveFinalizer(openStackMachine, infrav1.MachineFinalizer)

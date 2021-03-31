@@ -375,14 +375,18 @@ func (s *Service) generateDesiredSecGroups(secGroupNames map[string]string, open
 	return desiredSecGroups, nil
 }
 
-func (s *Service) DeleteSecurityGroups(group *infrav1.SecurityGroup) error {
+func (s *Service) DeleteSecurityGroups(openStackCluster *infrav1.OpenStackCluster, group *infrav1.SecurityGroup) error {
 	exists, err := s.exists(group.ID)
 	if err != nil {
 		return err
 	}
 	if exists {
-		return groups.Delete(s.client, group.ID).ExtractErr()
+		if err = groups.Delete(s.client, group.ID).ExtractErr(); err != nil {
+			return err
+		}
+		record.Eventf(openStackCluster, "SuccessfulDeleteSecurityGroup", "Deleted security group %s with id %s", group.Name, group.ID)
 	}
+
 	return nil
 }
 
