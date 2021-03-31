@@ -135,14 +135,14 @@ func reconcileDelete(ctx context.Context, log logr.Logger, client client.Client,
 		return reconcile.Result{}, err
 	}
 
-	loadBalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, log, openStackCluster.Spec.UseOctavia)
+	loadBalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, log)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer && openStackCluster.Status.Network != nil {
 		if apiLb := openStackCluster.Status.Network.APIServerLoadBalancer; apiLb != nil {
-			if err = loadBalancerService.DeleteLoadBalancer(apiLb.Name, openStackCluster); err != nil {
+			if err = loadBalancerService.DeleteLoadBalancer(apiLb.Name); err != nil {
 				return reconcile.Result{}, errors.Errorf("failed to delete load balancer: %v", err)
 			}
 			recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteLoadBalancer", "Deleted load balancer %s with id %s", apiLb.Name, apiLb.ID)
@@ -353,7 +353,7 @@ func reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.P
 		return err
 	}
 
-	loadBalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, log, openStackCluster.Spec.UseOctavia)
+	loadBalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, log)
 	if err != nil {
 		return err
 	}

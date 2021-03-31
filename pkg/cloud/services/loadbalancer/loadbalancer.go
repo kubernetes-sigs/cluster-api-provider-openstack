@@ -27,14 +27,11 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/loadbalancers"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/monitors"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/pools"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"k8s.io/apimachinery/pkg/util/wait"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha4"
 	"sigs.k8s.io/cluster-api/util"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 )
 
@@ -61,13 +58,6 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 	}
 	if err := waitForLoadBalancerActive(s.logger, s.loadbalancerClient, lb.ID); err != nil {
 		return err
-	}
-
-	if !openStackCluster.Spec.UseOctavia {
-		err := s.assignNeutronLbaasAPISecGroup(clusterName, lb)
-		if err != nil {
-			return err
-		}
 	}
 
 	fip := openStackCluster.Spec.ControlPlaneEndpoint.Host
@@ -171,36 +161,6 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 	return nil
 }
 
-func (s *Service) assignNeutronLbaasAPISecGroup(clusterName string, lb *loadbalancers.LoadBalancer) error {
-	neutronLbaasSecGroupName := networking.GetNeutronLBaasSecGroupName(clusterName)
-	listOpts := groups.ListOpts{
-		Name: neutronLbaasSecGroupName,
-	}
-	allPages, err := groups.List(s.loadbalancerClient, listOpts).AllPages()
-	if err != nil {
-		return err
-	}
-
-	neutronLbaasGroups, err := groups.ExtractGroups(allPages)
-	if err != nil {
-		return err
-	}
-
-	if len(neutronLbaasGroups) != 1 {
-		return fmt.Errorf("error found %v securitygroups with name %v", len(neutronLbaasGroups), neutronLbaasSecGroupName)
-	}
-
-	updateOpts := ports.UpdateOpts{
-		SecurityGroups: &[]string{neutronLbaasGroups[0].ID},
-	}
-
-	_, err = ports.Update(s.loadbalancerClient, lb.VipPortID, updateOpts).Extract()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (s *Service) ReconcileLoadBalancerMember(clusterName string, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster, ip string) error {
 	if !util.IsControlPlaneMachine(machine) {
 		return nil
@@ -285,7 +245,7 @@ func (s *Service) ReconcileLoadBalancerMember(clusterName string, machine *clust
 	return nil
 }
 
-func (s *Service) DeleteLoadBalancer(loadBalancerName string, openStackCluster *infrav1.OpenStackCluster) error {
+func (s *Service) DeleteLoadBalancer(loadBalancerName string) error {
 	lb, err := checkIfLbExists(s.loadbalancerClient, loadBalancerName)
 	if err != nil {
 		return err
@@ -295,111 +255,13 @@ func (s *Service) DeleteLoadBalancer(loadBalancerName string, openStackCluster *
 		return nil
 	}
 
-	// only Octavia supports Cascade
-	if openStackCluster.Spec.UseOctavia {
-		deleteOpts := loadbalancers.DeleteOpts{
-			Cascade: true,
-		}
-		s.logger.Info("Deleting loadbalancer", "name", loadBalancerName)
-		err = loadbalancers.Delete(s.loadbalancerClient, lb.ID, deleteOpts).ExtractErr()
-		if err != nil {
-			return fmt.Errorf("error deleting loadbalancer: %s", err)
-		}
-	} else if err := s.deleteLoadBalancerNeutronV2(lb.ID); err != nil {
+	deleteOpts := loadbalancers.DeleteOpts{
+		Cascade: true,
+	}
+	s.logger.Info("Deleting loadbalancer", "name", loadBalancerName)
+	err = loadbalancers.Delete(s.loadbalancerClient, lb.ID, deleteOpts).ExtractErr()
+	if err != nil {
 		return fmt.Errorf("error deleting loadbalancer: %s", err)
-	}
-
-	return nil
-}
-
-// ref: https://github.com/kubernetes/kubernetes/blob/7f23a743e8c23ac6489340bbb34fa6f1d392db9d/pkg/cloudprovider/providers/openstack/openstack_loadbalancer.go#L1452
-func (s *Service) deleteLoadBalancerNeutronV2(id string) error {
-	lb, err := loadbalancers.Get(s.loadbalancerClient, id).Extract()
-	if err != nil {
-		return fmt.Errorf("unable to get loadbalancer: %v", err)
-	}
-
-	// get all listeners
-	r, err := listeners.List(s.loadbalancerClient, listeners.ListOpts{LoadbalancerID: lb.ID}).AllPages()
-	if err != nil {
-		return fmt.Errorf("unable to list listeners of loadbalancer %s: %v", lb.ID, err)
-	}
-	lbListeners, err := listeners.ExtractListeners(r)
-	if err != nil {
-		return fmt.Errorf("unable to extract listeners: %v", err)
-	}
-
-	// get all pools and healthmonitors for this lb
-	r, err = pools.List(s.loadbalancerClient, pools.ListOpts{LoadbalancerID: lb.ID}).AllPages()
-	if err != nil {
-		return fmt.Errorf("unable to list pools for laodbalancer %s: %v", lb.ID, err)
-	}
-	lbPools, err := pools.ExtractPools(r)
-	if err != nil {
-		return fmt.Errorf("unable to extract pools for laodbalancer %s: %v", lb.ID, err)
-	}
-
-	for _, pool := range lbPools {
-		// delete the monitors
-		if pool.MonitorID != "" {
-			s.logger.Info("Deleting lb monitor", "id", pool.MonitorID)
-			err := monitors.Delete(s.loadbalancerClient, pool.MonitorID).ExtractErr()
-			if err != nil {
-				return fmt.Errorf("error deleting lbaas monitor %s: %v", pool.MonitorID, err)
-			}
-			if err = waitForLoadBalancerActive(s.logger, s.loadbalancerClient, lb.ID); err != nil {
-				return fmt.Errorf("loadbalancer %s did not get back to %s state in time", lb.ID, "Active")
-			}
-		}
-
-		// get all members of pool
-		r, err := pools.ListMembers(s.loadbalancerClient, pool.ID, pools.ListMembersOpts{}).AllPages()
-		if err != nil {
-			return fmt.Errorf("error listing loadbalancer members of pool %s: %v", pool.ID, err)
-		}
-		members, err := pools.ExtractMembers(r)
-		if err != nil {
-			return fmt.Errorf("unable to extract members: %v", err)
-		}
-		// delete all members of pool
-		for _, member := range members {
-			s.logger.Info("Deleting lb member", "name", member.Name, "id", member.ID)
-			err := pools.DeleteMember(s.loadbalancerClient, pool.ID, member.ID).ExtractErr()
-			if err != nil {
-				return fmt.Errorf("error deleting lbaas member %s on pool %s: %v", member.ID, pool.ID, err)
-			}
-			if err = waitForLoadBalancerActive(s.logger, s.loadbalancerClient, lb.ID); err != nil {
-				return fmt.Errorf("loadbalancer %s did not get back to %s state in time", lb.ID, "ACTIVE")
-			}
-		}
-
-		// delete pool
-		s.logger.Info("Deleting lb pool", "name", pool.Name, "id", pool.ID)
-		err = pools.Delete(s.loadbalancerClient, pool.ID).ExtractErr()
-		if err != nil {
-			return fmt.Errorf("error deleting lbaas pool %s: %v", pool.ID, err)
-		}
-		if err = waitForLoadBalancerActive(s.logger, s.loadbalancerClient, lb.ID); err != nil {
-			return fmt.Errorf("loadbalancer %s did not get back to %s state in time", lb.ID, "ACTIVE")
-		}
-	}
-
-	// delete all listeners
-	for _, listener := range lbListeners {
-		s.logger.Info("Deleting lb listener", "name", listener.Name, "id", listener.ID)
-		err = listeners.Delete(s.loadbalancerClient, listener.ID).ExtractErr()
-		if err != nil {
-			return fmt.Errorf("error deleting lbaas listener %s: %v", listener.ID, err)
-		}
-		if err = waitForLoadBalancerActive(s.logger, s.loadbalancerClient, lb.ID); err != nil {
-			return fmt.Errorf("loadbalancer %s did not get back to %s state in time", lb.ID, "ACTIVE")
-		}
-	}
-
-	// delete loadbalancer
-	s.logger.Info("Deleting loadbalancer", "name", lb.Name, "id", lb.ID)
-	if err = loadbalancers.Delete(s.loadbalancerClient, lb.ID, loadbalancers.DeleteOpts{}).ExtractErr(); err != nil {
-		return fmt.Errorf("error deleting lbaas %s: %v", lb.ID, err)
 	}
 
 	return nil

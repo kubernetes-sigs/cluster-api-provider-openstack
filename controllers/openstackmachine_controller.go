@@ -203,7 +203,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 		return ctrl.Result{}, err
 	}
 
-	loadBalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, logger, openStackCluster.Spec.UseOctavia)
+	loadBalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, logger)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -392,7 +392,7 @@ func handleUpdateMachineError(logger logr.Logger, openstackMachine *infrav1.Open
 
 func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(logger logr.Logger, osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, instance *infrav1.Instance, clusterName string, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster) error {
 	ip := instance.IP
-	loadbalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, logger, openStackCluster.Spec.UseOctavia)
+	loadbalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, logger)
 	if err != nil {
 		return err
 	}

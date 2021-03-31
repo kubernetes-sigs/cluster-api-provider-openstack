@@ -1573,10 +1573,6 @@ spec:
                 items:
                   type: string
                 type: array
-              useOctavia:
-                description: UseOctavia is weather LoadBalancer Service is Octavia
-                  or not
-                type: boolean
             type: object
           status:
             description: OpenStackClusterStatus defines the observed state of OpenStackCluster.

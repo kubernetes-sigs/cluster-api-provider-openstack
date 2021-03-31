@@ -40,18 +40,10 @@ type Service struct {
 }
 
 // NewService returns an instance of the loadbalancer service.
-func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, logger logr.Logger, useOctavia bool) (*Service, error) {
-	var err error
-	var loadbalancerClient *gophercloud.ServiceClient
-	if useOctavia {
-		loadbalancerClient, err = openstack.NewLoadBalancerV2(client, gophercloud.EndpointOpts{
-			Region: clientOpts.RegionName,
-		})
-	} else {
-		loadbalancerClient, err = openstack.NewNetworkV2(client, gophercloud.EndpointOpts{
-			Region: clientOpts.RegionName,
-		})
-	}
+func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, logger logr.Logger) (*Service, error) {
+	loadbalancerClient, err := openstack.NewLoadBalancerV2(client, gophercloud.EndpointOpts{
+		Region: clientOpts.RegionName,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create loadbalancer service client: %v", err)
 	}

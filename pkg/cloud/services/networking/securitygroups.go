@@ -32,7 +32,6 @@ const (
 	workerSuffix       string = "worker"
 	bastionSuffix      string = "bastion"
 	remoteGroupIDSelf  string = "self"
-	neutronLbaasSuffix string = "lbaas"
 )
 
 var defaultRules = []infrav1.SecurityGroupRule{
@@ -74,11 +73,6 @@ func (s *Service) ReconcileSecurityGroups(clusterName string, openStackCluster *
 	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
 		secBastionGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, bastionSuffix)
 		secGroupNames[bastionSuffix] = secBastionGroupName
-	}
-
-	if openStackCluster.Spec.ManagedAPIServerLoadBalancer && !openStackCluster.Spec.UseOctavia {
-		secLbaasGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, neutronLbaasSuffix)
-		secGroupNames[neutronLbaasSuffix] = secLbaasGroupName
 	}
 
 	// create security groups first, because desired rules use group ids.
@@ -326,42 +320,6 @@ func (s *Service) generateDesiredSecGroups(secGroupNames map[string]string, open
 		}
 	}
 
-	if openStackCluster.Spec.ManagedAPIServerLoadBalancer && !openStackCluster.Spec.UseOctavia {
-		neutronLbaasRules := append(
-			[]infrav1.SecurityGroupRule{
-				{
-					Description:  "Kubernetes API",
-					Direction:    "ingress",
-					EtherType:    "IPv4",
-					PortRangeMin: 6443,
-					PortRangeMax: 6443,
-					Protocol:     "tcp",
-				},
-			},
-			defaultRules...,
-		)
-		if openStackCluster.Spec.APIServerLoadBalancerAdditionalPorts != nil {
-			for _, value := range openStackCluster.Spec.APIServerLoadBalancerAdditionalPorts {
-				neutronLbaasRules = append(neutronLbaasRules,
-					[]infrav1.SecurityGroupRule{
-						{
-							Description:  "APIServerLoadBalancerAdditionalPorts",
-							Direction:    "ingress",
-							EtherType:    "IPv4",
-							PortRangeMin: value,
-							PortRangeMax: value,
-							Protocol:     "tcp",
-						},
-					}...,
-				)
-			}
-		}
-		desiredSecGroups[neutronLbaasSuffix] = infrav1.SecurityGroup{
-			Name:  secGroupNames[neutronLbaasSuffix],
-			Rules: neutronLbaasRules,
-		}
-	}
-
 	desiredSecGroups[controlPlaneSuffix] = infrav1.SecurityGroup{
 		Name:  secGroupNames[controlPlaneSuffix],
 		Rules: controlPlaneRules,
@@ -583,9 +541,4 @@ func convertOSSecGroupRuleToConfigSecGroupRule(osSecGroupRule rules.SecGroupRule
 		RemoteGroupID:   osSecGroupRule.RemoteGroupID,
 		RemoteIPPrefix:  osSecGroupRule.RemoteIPPrefix,
 	}
-}
-
-// GetNeutronLBaasSecGroupName export NeutronLBaasSecGroupName.
-func GetNeutronLBaasSecGroupName(clusterName string) string {
-	return fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, neutronLbaasSuffix)
 }
