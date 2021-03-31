@@ -57,10 +57,24 @@ func ensureSSHKeyPair(e2eCtx *E2EContext) {
 	keyPairCreateOpts := &keypairs.CreateOpts{
 		Name: DefaultSSHKeyPairName,
 	}
-	_, err = keypairs.Create(computeClient, keyPairCreateOpts).Extract()
-	if err != nil && !strings.Contains(err.Error(), "already exists") {
+	keypair, err := keypairs.Create(computeClient, keyPairCreateOpts).Extract()
+	if err != nil {
+		if strings.Contains(err.Error(), "already exists") {
+			return
+		}
 		Expect(err).NotTo(HaveOccurred())
 	}
+
+	sshDir := filepath.Join(e2eCtx.Settings.ArtifactFolder, "ssh")
+	Byf("Storing keypair in %q", sshDir)
+	err = os.MkdirAll(sshDir, 0750)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = os.WriteFile(filepath.Join(sshDir, DefaultSSHKeyPairName), []byte(keypair.PrivateKey), 0o400)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = os.WriteFile(filepath.Join(sshDir, fmt.Sprintf("%s.pub", DefaultSSHKeyPairName)), []byte(keypair.PublicKey), 0o400)
+	Expect(err).NotTo(HaveOccurred())
 }
 
 func dumpOpenStack(_ context.Context, e2eCtx *E2EContext, bootstrapClusterProxyName string) {

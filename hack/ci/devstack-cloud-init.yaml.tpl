@@ -113,7 +113,7 @@ write_files:
       echo 'source /opt/stack/devstack/openrc admin admin' >> /opt/stack/.bashrc
 
       # Upload the images so we don't have to upload them from prow
-      su - stack -c "source /opt/stack/devstack/openrc admin admin && /opt/stack/devstack/tools/upload_image.sh https://github.com/sbueringer/cluster-api-provider-openstack-images/releases/download/ubuntu-2004-v1.18.15-0/ubuntu-2004-kube-v1.18.15.qcow2"
+      su - stack -c "source /opt/stack/devstack/openrc admin admin && /opt/stack/devstack/tools/upload_image.sh https://github.com/sbueringer/cluster-api-provider-openstack-images/releases/download/ubuntu-2004-v1.18.15-1/ubuntu-2004-kube-v1.18.15.qcow2"
       su - stack -c "source /opt/stack/devstack/openrc admin admin && /opt/stack/devstack/tools/upload_image.sh http://download.cirros-cloud.net/0.5.1/cirros-0.5.1-x86_64-disk.img"
 
       sudo iptables -t nat -I POSTROUTING -o ens4 -s 172.24.4.0/24 -j MASQUERADE
