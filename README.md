@@ -46,11 +46,11 @@ This provider's versions are compatible with the following versions of Cluster A
 
 This provider's versions are able to install and manage the following versions of Kubernetes:
 
-| | Kubernetes 1.13 | Kubernetes 1.14 | Kubernetes 1.15 | Kubernetes 1.16 | Kubernetes 1.17 | Kubernetes 1.18 |
-|-------------------------------------------------|---|---|---|---|---|---|
-|OpenStack Provider v1alpha1 (release-0.1 branch) | ✓ | ✓ | ✓ |   |   |   |
-|OpenStack Provider v1alpha2 (v0.2)               |   |   | ✓ |   |   |   |
-|OpenStack Provider v1alpha3 (v0.3)               |   |   |   | ✓ | ✓ | ✓ |
+| | Kubernetes 1.13 | Kubernetes 1.14 | Kubernetes 1.15 | Kubernetes 1.16 | Kubernetes 1.17 | Kubernetes 1.18 | Kubernetes 1.19 | Kubernetes 1.20 |
+|-------------------------------------------------|---|---|---|---|---|---|---|---|
+|OpenStack Provider v1alpha1 (release-0.1 branch) | ✓ | ✓ | ✓ |   |   |   |   |   |
+|OpenStack Provider v1alpha2 (v0.2)               |   |   | ✓ |   |   |   |   |   |
+|OpenStack Provider v1alpha3 (v0.3)               |   |   |   | ✓ | ✓ | ✓ | ✓ | ✓ |
 
 This provider's versions are able to install Kubernetes to the following versions of OpenStack:
 
