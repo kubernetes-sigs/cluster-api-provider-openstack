@@ -139,11 +139,11 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	// Handle deleted machines
 	if !openStackMachine.DeletionTimestamp.IsZero() {
-		return r.reconcileDelete(ctx, log, patchHelper, machine, openStackMachine, cluster, infraCluster)
+		return r.reconcileDelete(ctx, log, patchHelper, cluster, infraCluster, machine, openStackMachine)
 	}
 
 	// Handle non-deleted clusters
-	return r.reconcileNormal(ctx, log, patchHelper, machine, openStackMachine, cluster, infraCluster)
+	return r.reconcileNormal(ctx, log, patchHelper, cluster, infraCluster, machine, openStackMachine)
 }
 
 func (r *OpenStackMachineReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager, options controller.Options) error {
@@ -183,7 +183,7 @@ func (r *OpenStackMachineReconciler) SetupWithManager(ctx context.Context, mgr c
 		Complete(r)
 }
 
-func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger logr.Logger, patchHelper *patch.Helper, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
+func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger logr.Logger, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (ctrl.Result, error) {
 	logger.Info("Handling deleted OpenStackMachine")
 
 	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
@@ -208,7 +208,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 		return ctrl.Result{}, err
 	}
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
-		err = loadBalancerService.DeleteLoadBalancerMember(clusterName, machine, openStackMachine, openStackCluster)
+		err = loadBalancerService.DeleteLoadBalancerMember(openStackCluster, machine, openStackMachine, clusterName)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
@@ -253,7 +253,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 	return ctrl.Result{}, nil
 }
 
-func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger logr.Logger, patchHelper *patch.Helper, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (_ ctrl.Result, reterr error) {
+func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger logr.Logger, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (_ ctrl.Result, reterr error) {
 	// If the OpenStackMachine is in an error state, return early.
 	if openStackMachine.Status.FailureReason != nil || openStackMachine.Status.FailureMessage != nil {
 		logger.Info("Error state detected, skipping reconciliation")
@@ -300,7 +300,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 		return ctrl.Result{}, err
 	}
 
-	instance, err := r.getOrCreate(computeService, machine, openStackMachine, cluster, openStackCluster, userData, logger)
+	instance, err := r.getOrCreate(logger, cluster, openStackCluster, machine, openStackMachine, computeService, userData)
 	if err != nil {
 		handleUpdateMachineError(logger, openStackMachine, errors.Errorf("OpenStack instance cannot be created: %v", err))
 		return ctrl.Result{}, err
@@ -343,7 +343,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 	}
 
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
-		err = r.reconcileLoadBalancerMember(logger, osProviderClient, clientOpts, instance, clusterName, machine, openStackMachine, openStackCluster)
+		err = r.reconcileLoadBalancerMember(logger, osProviderClient, clientOpts, openStackCluster, machine, openStackMachine, instance, clusterName)
 		if err != nil {
 			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("LoadBalancerMember cannot be reconciled: %v", err))
 			return ctrl.Result{}, nil
@@ -365,7 +365,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 	return ctrl.Result{}, nil
 }
 
-func (r *OpenStackMachineReconciler) getOrCreate(computeService *compute.Service, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, userData string, logger logr.Logger) (*infrav1.Instance, error) {
+func (r *OpenStackMachineReconciler) getOrCreate(logger logr.Logger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, computeService *compute.Service, userData string) (*infrav1.Instance, error) {
 	instance, err := computeService.InstanceExists(openStackMachine.Name)
 	if err != nil {
 		return nil, err
@@ -373,7 +373,7 @@ func (r *OpenStackMachineReconciler) getOrCreate(computeService *compute.Service
 
 	if instance == nil {
 		logger.Info("Machine not exist, Creating Machine", "Machine", openStackMachine.Name)
-		instance, err = computeService.InstanceCreate(cluster.Name, machine, openStackMachine, openStackCluster, userData)
+		instance, err = computeService.InstanceCreate(openStackCluster, machine, openStackMachine, cluster.Name, userData)
 		if err != nil {
 			return nil, errors.Errorf("error creating Openstack instance: %v", err)
 		}
@@ -390,14 +390,14 @@ func handleUpdateMachineError(logger logr.Logger, openstackMachine *infrav1.Open
 	logger.Error(fmt.Errorf(string(err)), message.Error())
 }
 
-func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(logger logr.Logger, osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, instance *infrav1.Instance, clusterName string, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster) error {
+func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(logger logr.Logger, osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, instance *infrav1.Instance, clusterName string) error {
 	ip := instance.IP
 	loadbalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, logger)
 	if err != nil {
 		return err
 	}
 
-	return loadbalancerService.ReconcileLoadBalancerMember(clusterName, machine, openStackMachine, openStackCluster, ip)
+	return loadbalancerService.ReconcileLoadBalancerMember(openStackCluster, machine, openStackMachine, clusterName, ip)
 }
 
 // OpenStackClusterToOpenStackMachine is a handler.ToRequestsFunc to be used to enqeue requests for reconciliation

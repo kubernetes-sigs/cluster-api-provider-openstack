@@ -30,7 +30,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 )
 
-func (s *Service) ReconcileRouter(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {
+func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
 	if openStackCluster.Status.Network == nil || openStackCluster.Status.Network.ID == "" {
 		s.logger.V(3).Info("No need to reconcile router since no network exists.")
 		return nil

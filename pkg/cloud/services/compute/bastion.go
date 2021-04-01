@@ -39,7 +39,7 @@ func (s *Service) DeleteBastion(openStackCluster *infrav1.OpenStackCluster, serv
 	return nil
 }
 
-func (s *Service) CreateBastion(clusterName string, openStackCluster *infrav1.OpenStackCluster) (*infrav1.Instance, error) {
+func (s *Service) CreateBastion(openStackCluster *infrav1.OpenStackCluster, clusterName string) (*infrav1.Instance, error) {
 	name := fmt.Sprintf("%s-bastion", clusterName)
 	input := &infrav1.Instance{
 		Name:          name,

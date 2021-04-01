@@ -323,7 +323,7 @@ func reconcileBastion(log logr.Logger, osProviderClient *gophercloud.ProviderCli
 		return nil
 	}
 
-	instance, err = computeService.CreateBastion(cluster.Name, openStackCluster)
+	instance, err = computeService.CreateBastion(openStackCluster, cluster.Name)
 	if err != nil {
 		return errors.Errorf("failed to reconcile bastion: %v", err)
 	}
@@ -401,15 +401,15 @@ func reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.P
 			Tags: subnetList[0].Tags,
 		}
 	} else {
-		err := networkingService.ReconcileNetwork(clusterName, openStackCluster)
+		err := networkingService.ReconcileNetwork(openStackCluster, clusterName)
 		if err != nil {
 			return errors.Errorf("failed to reconcile network: %v", err)
 		}
-		err = networkingService.ReconcileSubnet(clusterName, openStackCluster)
+		err = networkingService.ReconcileSubnet(openStackCluster, clusterName)
 		if err != nil {
 			return errors.Errorf("failed to reconcile subnets: %v", err)
 		}
-		err = networkingService.ReconcileRouter(clusterName, openStackCluster)
+		err = networkingService.ReconcileRouter(openStackCluster, clusterName)
 		if err != nil {
 			return errors.Errorf("failed to reconcile router: %v", err)
 		}
@@ -432,13 +432,13 @@ func reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.P
 		}
 	}
 
-	err = networkingService.ReconcileSecurityGroups(clusterName, openStackCluster)
+	err = networkingService.ReconcileSecurityGroups(openStackCluster, clusterName)
 	if err != nil {
 		return errors.Errorf("failed to reconcile security groups: %v", err)
 	}
 
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
-		err = loadBalancerService.ReconcileLoadBalancer(clusterName, openStackCluster)
+		err = loadBalancerService.ReconcileLoadBalancer(openStackCluster, clusterName)
 		if err != nil {
 			return errors.Errorf("failed to reconcile load balancer: %v", err)
 		}

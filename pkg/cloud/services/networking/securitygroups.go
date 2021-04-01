@@ -56,7 +56,7 @@ var defaultRules = []infrav1.SecurityGroupRule{
 }
 
 // Reconcile the security groups.
-func (s *Service) ReconcileSecurityGroups(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {
+func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
 	s.logger.Info("Reconciling security groups", "cluster", clusterName)
 	if !openStackCluster.Spec.ManagedSecurityGroups {
 		s.logger.V(4).Info("No need to reconcile security groups", "cluster", clusterName)
@@ -82,7 +82,7 @@ func (s *Service) ReconcileSecurityGroups(clusterName string, openStackCluster *
 		}
 	}
 	// create desired security groups
-	desiredSecGroups, err := s.generateDesiredSecGroups(secGroupNames, openStackCluster)
+	desiredSecGroups, err := s.generateDesiredSecGroups(openStackCluster, secGroupNames)
 	if err != nil {
 		return err
 	}
@@ -114,7 +114,7 @@ func (s *Service) ReconcileSecurityGroups(clusterName string, openStackCluster *
 	return nil
 }
 
-func (s *Service) generateDesiredSecGroups(secGroupNames map[string]string, openStackCluster *infrav1.OpenStackCluster) (map[string]infrav1.SecurityGroup, error) {
+func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCluster, secGroupNames map[string]string) (map[string]infrav1.SecurityGroup, error) {
 	desiredSecGroups := make(map[string]infrav1.SecurityGroup)
 
 	var secControlPlaneGroupID string
