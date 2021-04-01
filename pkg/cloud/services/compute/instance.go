@@ -725,6 +725,27 @@ func deleteInstance(is *Service, serverID string) error {
 	return servers.Delete(is.computeClient, serverID).ExtractErr()
 }
 
+func (s *Service) DeleteInstancePorts(instance *infrav1.Instance) error {
+	allPorts, err := listPorts(s, ports.ListOpts{})
+	if err != nil {
+		return fmt.Errorf("error retrieving port list: %v", err)
+	}
+
+	for _, portOpts := range instance.Ports {
+		portName := getPortName(instance.Name, &portOpts)
+
+		for _, port := range allPorts {
+			if port.Name == portName {
+				err := ports.Delete(s.networkClient, port.ID).ExtractErr()
+				if err != nil {
+					return fmt.Errorf("error deleting port id \"%s\" owned by instance \"%s\": %v", port.ID, instance.Name, err)
+				}
+			}
+		}
+	}
+	return nil
+}
+
 func (s *Service) GetInstance(resourceID string) (instance *infrav1.Instance, err error) {
 	if resourceID == "" {
 		return nil, fmt.Errorf("resourceId should be specified to get detail")

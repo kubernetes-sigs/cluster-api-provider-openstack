@@ -242,6 +242,10 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 		}
 	}
 
+	if err := computeService.DeleteInstancePorts(instance); err != nil {
+		return ctrl.Result{}, err;
+	}
+
 	controllerutil.RemoveFinalizer(openStackMachine, infrav1.MachineFinalizer)
 	logger.Info("Reconciled Machine delete successfully")
 	if err := patchHelper.Patch(ctx, openStackMachine); err != nil {
