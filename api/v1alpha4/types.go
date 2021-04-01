@@ -121,7 +121,7 @@ type SubnetFilter struct {
 }
 
 type PortOpts struct {
-	NetworkID           string              `json:"networkId" required:"true"`
+	NetworkID           string              `json:"networkID" required:"true"`
 	NameSuffix          string              `json:"nameSuffix" required:"true"`
 	Description         string              `json:"description,omitempty"`
 	AdminStateUp        *bool               `json:"adminStateUp,omitempty"`
@@ -133,11 +133,11 @@ type PortOpts struct {
 	AllowedAddressPairs []ports.AddressPair `json:"allowedAddressPairs,omitempty"`
 
 	// The ID of the host where the port is allocated
-	HostID string `json:"binding:host_id,omitempty"`
+	HostID string `json:"binding:hostID,omitempty"`
 
 	// The virtual network interface card (vNIC) type that is bound to the
 	// neutron port.
-	VNICType string `json:"binding:vnic_type,omitempty"`
+	VNICType string `json:"binding:vnicType,omitempty"`
 }
 
 type Instance struct {

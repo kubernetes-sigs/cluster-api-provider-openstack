@@ -498,18 +498,14 @@ spec:
                                     type: string
                                 type: object
                               type: array
-                            binding:host_id:
+                            binding:hostID:
                               description: The ID of the host where the port is allocated
                               type: string
-                            binding:vnic_type:
+                            binding:vnicType:
                               description: The virtual network interface card (vNIC)
                                 type that is bound to the neutron port.
                               type: string
                             description:
-                              type: string
-                            deviceID:
-                              type: string
-                            deviceOwner:
                               type: string
                             fixedIPs:
                               items:
@@ -528,7 +524,7 @@ spec:
                               type: string
                             nameSuffix:
                               type: string
-                            networkId:
+                            networkID:
                               type: string
                             projectID:
                               type: string
@@ -540,7 +536,7 @@ spec:
                               type: string
                           required:
                           - nameSuffix
-                          - networkId
+                          - networkID
                           type: object
                         type: array
                       providerID:
