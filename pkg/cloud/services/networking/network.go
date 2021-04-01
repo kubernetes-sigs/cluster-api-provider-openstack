@@ -90,7 +90,7 @@ func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCl
 	return errors.New("too many resources")
 }
 
-func (s *Service) ReconcileNetwork(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {
+func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
 	networkName := fmt.Sprintf("%s-cluster-%s", networkPrefix, clusterName)
 	s.logger.Info("Reconciling network", "name", networkName)
 
@@ -164,7 +164,7 @@ func (s *Service) DeleteNetwork(network *infrav1.Network) error {
 	return networks.Delete(s.client, network.ID).ExtractErr()
 }
 
-func (s *Service) ReconcileSubnet(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {
+func (s *Service) ReconcileSubnet(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
 	if openStackCluster.Status.Network == nil || openStackCluster.Status.Network.ID == "" {
 		s.logger.V(4).Info("No need to reconcile network components since no network exists.")
 		return nil

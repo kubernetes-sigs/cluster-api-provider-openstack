@@ -40,7 +40,7 @@ const (
 	kubeapiLBSuffix string = "kubeapi"
 )
 
-func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {
+func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
 	loadBalancerName := getLoadBalancerName(clusterName)
 	s.logger.Info("Reconciling loadbalancer", "name", loadBalancerName)
 
@@ -166,7 +166,7 @@ func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *in
 	return nil
 }
 
-func (s *Service) ReconcileLoadBalancerMember(clusterName string, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster, ip string) error {
+func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, clusterName, ip string) error {
 	if !util.IsControlPlaneMachine(machine) {
 		return nil
 	}
@@ -272,7 +272,7 @@ func (s *Service) DeleteLoadBalancer(loadBalancerName string) error {
 	return nil
 }
 
-func (s *Service) DeleteLoadBalancerMember(clusterName string, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster) error {
+func (s *Service) DeleteLoadBalancerMember(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, clusterName string) error {
 	if openStackMachine == nil || !util.IsControlPlaneMachine(machine) {
 		return nil
 	}
