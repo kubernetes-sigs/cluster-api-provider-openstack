@@ -60,8 +60,6 @@ This provider's versions are able to install Kubernetes to the following version
 | OpenStack Provider v1alpha2 (v0.2)              | + | ✓ | + | ✓ | + | + | + |
 | OpenStack Provider v1alpha3 (v0.3)              | + | + | + | ✓ | ✓ | ✓ | ✓ |
 
-**NOTE:** : The development team has a CI using [non HA template](./templates/cluster-template-without-lb.yaml) running on latest OpenStack devstack and that covers most of ✓ at above table. Some versions are tested against [HA template](./templates/cluster-template.yaml).
-
 Test status:
 * `✓` tested
 * `+` should work, but we weren't able to test it
