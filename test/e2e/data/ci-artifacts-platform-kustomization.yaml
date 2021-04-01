@@ -9,7 +9,7 @@ metadata:
   name: ${CLUSTER_NAME}-control-plane
 spec:
   version: ${KUBERNETES_VERSION}
-# Comment this out for debbuging in case there are problems with the ssky key
+# Comment this out for debbuging in case there are problems with the OpenStack key pair mechanism
 #  kubeadmConfigSpec:
 #    users:
 #    - name: "capi"
