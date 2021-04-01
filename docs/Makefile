@@ -1,4 +1,4 @@
-# Copyright 2021 The Kubernetes Authors.
+# Copyright 2018 The Kubernetes Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-MDBOOK_VERSION := v0.4.5
-GOLANG_VERSION := 1.16.0
-PLANTUML_VERSION := 1.2020.16
-GH_VERSION := 1.2.0
+# If you update this file, please follow
+# https://suva.sh/posts/well-documented-makefiles
+
+ROOT_DIR_RELATIVE := ..
+include $(ROOT_DIR_RELATIVE)/common.mk
+
+DIAGRAM_SRCS := $(call rwildcard,.,*.md,*.plantuml)
+
+diagrams: $(TOOLS_BIN_DIR)/plantuml-sentinal ## Generate plantuml diagrams
+	-docker run -u $(UID):$(GID) -v $(abspath .):/docs$(DOCKER_VOL_OPTS) plantuml-builder -tsvg /docs/**/*.md
+	-docker run -u $(UID):$(GID) -v $(abspath .):/docs$(DOCKER_VOL_OPTS) plantuml-builder -tsvg /docs/**/*.plantuml
