@@ -243,7 +243,7 @@ func createInstance(is *Service, clusterName string, i *infrav1.Instance) (*infr
 	}
 
 	for _, portCreateOpts := range i.Ports {
-		port, err := getOrCreatePort(is, i.Name+"-"+portCreateOpts.NameSuffix, portCreateOpts)
+		port, err := getOrCreatePort(is, getPortName(i.Name, &portCreateOpts), portCreateOpts)
 		if err != nil {
 			return nil, err
 		}
@@ -501,6 +501,10 @@ func isDuplicate(list []string, name string) bool {
 		}
 	}
 	return false
+}
+
+func getPortName(instanceName string, portOpts *infrav1.PortOpts) string {
+	return instanceName + "-" + portOpts.NameSuffix
 }
 
 func getOrCreatePort(is *Service, name string, portOpts infrav1.PortOpts) (*ports.Port, error) {
