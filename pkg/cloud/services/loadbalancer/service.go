@@ -27,11 +27,6 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 )
 
-const (
-	networkPrefix   string = "k8s-clusterapi"
-	kubeapiLBSuffix string = "kubeapi"
-)
-
 // Service interfaces with the OpenStack Neutron LBaaS v2 API.
 type Service struct {
 	loadbalancerClient *gophercloud.ServiceClient

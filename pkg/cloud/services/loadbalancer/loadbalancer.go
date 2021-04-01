@@ -35,8 +35,13 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 )
 
+const (
+	networkPrefix   string = "k8s-clusterapi"
+	kubeapiLBSuffix string = "kubeapi"
+)
+
 func (s *Service) ReconcileLoadBalancer(clusterName string, openStackCluster *infrav1.OpenStackCluster) error {
-	loadBalancerName := fmt.Sprintf("%s-cluster-%s-%s", networkPrefix, clusterName, kubeapiLBSuffix)
+	loadBalancerName := getLoadBalancerName(clusterName)
 	s.logger.Info("Reconciling loadbalancer", "name", loadBalancerName)
 
 	// lb
@@ -176,7 +181,7 @@ func (s *Service) ReconcileLoadBalancerMember(clusterName string, machine *clust
 		return errors.New("network.APIServerLoadBalancer is not yet available in openStackCluster.Status")
 	}
 
-	loadBalancerName := fmt.Sprintf("%s-cluster-%s-%s", networkPrefix, clusterName, kubeapiLBSuffix)
+	loadBalancerName := getLoadBalancerName(clusterName)
 	s.logger.Info("Reconciling loadbalancer", "name", loadBalancerName)
 
 	lbID := openStackCluster.Status.Network.APIServerLoadBalancer.ID
@@ -272,7 +277,7 @@ func (s *Service) DeleteLoadBalancerMember(clusterName string, machine *clusterv
 		return nil
 	}
 
-	loadBalancerName := fmt.Sprintf("%s-cluster-%s-%s", networkPrefix, clusterName, kubeapiLBSuffix)
+	loadBalancerName := getLoadBalancerName(clusterName)
 	s.logger.Info("Reconciling loadbalancer", "name", loadBalancerName)
 
 	lbID := openStackCluster.Status.Network.APIServerLoadBalancer.ID
@@ -315,6 +320,10 @@ func (s *Service) DeleteLoadBalancerMember(clusterName string, machine *clusterv
 		}
 	}
 	return nil
+}
+
+func getLoadBalancerName(clusterName string) string {
+	return fmt.Sprintf("%s-cluster-%s-%s", networkPrefix, clusterName, kubeapiLBSuffix)
 }
 
 func checkIfLbExists(client *gophercloud.ServiceClient, name string) (*loadbalancers.LoadBalancer, error) {
