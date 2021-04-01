@@ -517,8 +517,6 @@ func getOrCreatePort(is *Service, name string, portOpts infrav1.PortOpts) (*port
 			Description:         portOpts.Description,
 			AdminStateUp:        portOpts.AdminStateUp,
 			MACAddress:          portOpts.MACAddress,
-			DeviceID:            portOpts.DeviceID,
-			DeviceOwner:         portOpts.DeviceOwner,
 			TenantID:            portOpts.TenantID,
 			ProjectID:           portOpts.ProjectID,
 			SecurityGroups:      portOpts.SecurityGroups,

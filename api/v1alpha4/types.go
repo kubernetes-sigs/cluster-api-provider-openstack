@@ -127,8 +127,6 @@ type PortOpts struct {
 	AdminStateUp        *bool               `json:"adminStateUp,omitempty"`
 	MACAddress          string              `json:"macAddress,omitempty"`
 	FixedIPs            []ports.IP          `json:"fixedIPs,omitempty"`
-	DeviceID            string              `json:"deviceID,omitempty"`
-	DeviceOwner         string              `json:"deviceOwner,omitempty"`
 	TenantID            string              `json:"tenantID,omitempty"`
 	ProjectID           string              `json:"projectID,omitempty"`
 	SecurityGroups      *[]string           `json:"securityGroups,omitempty"`
