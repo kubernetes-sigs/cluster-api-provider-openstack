@@ -184,7 +184,7 @@ func (r *OpenStackMachineReconciler) SetupWithManager(ctx context.Context, mgr c
 }
 
 func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger logr.Logger, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (ctrl.Result, error) {
-	logger.Info("Handling deleted OpenStackMachine")
+	logger.Info("Reconciling Machine delete")
 
 	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
 
@@ -229,20 +229,17 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 	}
 
 	// TODO(sbueringer) wait for instance deleted
-	err = computeService.InstanceDelete(machine)
+	err = computeService.InstanceDelete(machine, openStackMachine)
 	if err != nil {
 		handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error deleting Openstack instance: %v", err))
 		return ctrl.Result{}, nil
 	}
-	logger.Info("OpenStack machine deleted successfully")
-	r.Recorder.Eventf(openStackMachine, corev1.EventTypeNormal, "SuccessfulDeleteServer", "Deleted server %s with id %s", instance.Name, instance.ID)
 
 	if !openStackCluster.Spec.ManagedAPIServerLoadBalancer && util.IsControlPlaneMachine(machine) && openStackCluster.Spec.APIServerFloatingIP == "" && instance.FloatingIP != "" {
 		if err = networkingService.DeleteFloatingIP(openStackCluster, instance.FloatingIP); err != nil {
 			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error deleting Openstack floating IP: %v", err))
 			return ctrl.Result{}, nil
 		}
-		logger.Info("OpenStack floating IP deleted successfully", "Floating IP", instance.FloatingIP)
 	}
 
 	controllerutil.RemoveFinalizer(openStackMachine, infrav1.MachineFinalizer)
@@ -281,7 +278,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	logger.Info("Reconciling Machine create started")
+	logger.Info("Reconciling Machine")
 
 	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
 

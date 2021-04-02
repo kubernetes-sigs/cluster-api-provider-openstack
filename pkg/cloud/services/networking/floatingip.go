@@ -17,7 +17,6 @@ limitations under the License.
 package networking
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/gophercloud/gophercloud"
@@ -47,7 +46,8 @@ func (s *Service) GetOrCreateFloatingIP(openStackCluster *infrav1.OpenStackClust
 		}
 		fp, err = floatingips.Create(s.client, fpCreateOpts).Extract()
 		if err != nil {
-			return nil, fmt.Errorf("error creating floating IP: %s", err)
+			record.Warnf(openStackCluster, "FailedCreateFloatingIP", "Failed to create floating IP %s: %v", fp.FloatingIP, err)
+			return nil, err
 		}
 		record.Eventf(openStackCluster, "SuccessfulCreateFloatingIP", "Created floating IP %s with id %s", fp.FloatingIP, fp.ID)
 
@@ -77,6 +77,7 @@ func (s *Service) DeleteFloatingIP(openStackCluster *infrav1.OpenStackCluster, i
 	}
 	if fip != nil {
 		if err = floatingips.Delete(s.client, fip.ID).ExtractErr(); err != nil {
+			record.Warnf(openStackCluster, "FailedDeleteFloatingIP", "Failed to delete floating IP %s: %v", ip, err)
 			return err
 		}
 		record.Eventf(openStackCluster, "SuccessfulDeleteFloatingIP", "Deleted floating IP %s", ip)
@@ -91,15 +92,17 @@ var backoff = wait.Backoff{
 	Jitter:   0.1,
 }
 
-func (s *Service) AssociateFloatingIP(fp *floatingips.FloatingIP, portID string) error {
+func (s *Service) AssociateFloatingIP(openStackCluster *infrav1.OpenStackCluster, fp *floatingips.FloatingIP, portID string) error {
 	s.logger.Info("Associating floating IP", "IP", fp.FloatingIP)
 	fpUpdateOpts := &floatingips.UpdateOpts{
 		PortID: &portID,
 	}
 	fp, err := floatingips.Update(s.client, fp.ID, fpUpdateOpts).Extract()
 	if err != nil {
-		return fmt.Errorf("error associating floating IP: %s", err)
+		record.Warnf(openStackCluster, "FailedAssociateFloatingIP", "Failed to associate floating IP %s with port %s: %v", fp.FloatingIP, portID, err)
+		return err
 	}
+	record.Eventf(openStackCluster, "SuccessfulAssociateFloatingIP", "Associated floating IP %s with port %s", fp.FloatingIP, portID)
 
 	s.logger.Info("Waiting for floatingIP", "id", fp.ID, "targetStatus", "ACTIVE")
 

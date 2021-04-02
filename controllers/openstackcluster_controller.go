@@ -27,7 +27,6 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	"github.com/pkg/errors"
-	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/tools/record"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha4"
@@ -111,14 +110,14 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	// Handle deleted clusters
 	if !openStackCluster.DeletionTimestamp.IsZero() {
-		return reconcileDelete(ctx, log, r.Client, r.Recorder, patchHelper, openStackCluster)
+		return reconcileDelete(ctx, log, r.Client, patchHelper, openStackCluster)
 	}
 
 	// Handle non-deleted clusters
 	return reconcileNormal(ctx, log, r.Client, patchHelper, cluster, openStackCluster)
 }
 
-func reconcileDelete(ctx context.Context, log logr.Logger, client client.Client, recorder record.EventRecorder, patchHelper *patch.Helper, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
+func reconcileDelete(ctx context.Context, log logr.Logger, client client.Client, patchHelper *patch.Helper, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
 	log.Info("Reconciling Cluster delete")
 
 	osProviderClient, clientOpts, err := provider.NewClientFromCluster(client, openStackCluster)
@@ -142,10 +141,9 @@ func reconcileDelete(ctx context.Context, log logr.Logger, client client.Client,
 
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer && openStackCluster.Status.Network != nil {
 		if apiLb := openStackCluster.Status.Network.APIServerLoadBalancer; apiLb != nil {
-			if err = loadBalancerService.DeleteLoadBalancer(apiLb.Name); err != nil {
+			if err = loadBalancerService.DeleteLoadBalancer(openStackCluster, apiLb.Name); err != nil {
 				return reconcile.Result{}, errors.Errorf("failed to delete load balancer: %v", err)
 			}
-			recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteLoadBalancer", "Deleted load balancer %s with id %s", apiLb.Name, apiLb.ID)
 
 			if openStackCluster.Spec.APIServerFloatingIP == "" {
 				if err = networkingService.DeleteFloatingIP(openStackCluster, apiLb.IP); err != nil {
@@ -156,39 +154,29 @@ func reconcileDelete(ctx context.Context, log logr.Logger, client client.Client,
 	}
 
 	if workerSecGroup := openStackCluster.Status.WorkerSecurityGroup; workerSecGroup != nil {
-		log.Info("Deleting worker security group", "name", workerSecGroup.Name)
 		if err = networkingService.DeleteSecurityGroups(openStackCluster, workerSecGroup); err != nil {
 			return reconcile.Result{}, errors.Errorf("failed to delete security group: %v", err)
 		}
 	}
 
 	if controlPlaneSecGroup := openStackCluster.Status.ControlPlaneSecurityGroup; controlPlaneSecGroup != nil {
-		log.Info("Deleting control plane security group", "name", controlPlaneSecGroup.Name)
 		if err = networkingService.DeleteSecurityGroups(openStackCluster, controlPlaneSecGroup); err != nil {
 			return reconcile.Result{}, errors.Errorf("failed to delete security group: %v", err)
 		}
 	}
 
 	// if NodeCIDR was not set, no network was created.
-	if network := openStackCluster.Status.Network; network != nil && openStackCluster.Spec.NodeCIDR != "" {
-		if router := network.Router; router != nil {
-			log.Info("Deleting router", "name", router.Name)
-			if err = networkingService.DeleteRouter(network); err != nil {
+	if openStackCluster.Status.Network != nil && openStackCluster.Spec.NodeCIDR != "" {
+		if openStackCluster.Status.Network.Router != nil {
+			if err = networkingService.DeleteRouter(openStackCluster, openStackCluster.Status.Network); err != nil {
 				return ctrl.Result{}, errors.Errorf("failed to delete router: %v", err)
 			}
-			recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteRouter", "Deleted router %s with id %s", router.Name, router.ID)
-			log.Info("OpenStack router deleted successfully")
 		}
 
-		log.Info("Deleting network", "name", network.Name)
-		if err = networkingService.DeleteNetwork(network); err != nil {
+		if err = networkingService.DeleteNetwork(openStackCluster, openStackCluster.Status.Network); err != nil {
 			return ctrl.Result{}, errors.Errorf("failed to delete network: %v", err)
 		}
-		recorder.Eventf(openStackCluster, corev1.EventTypeNormal, "SuccessfulDeleteNetwork", "Deleted network %s with id %s", network.Name, network.ID)
-		log.Info("OpenStack network deleted successfully")
 	}
-
-	log.Info("OpenStack cluster deleted successfully")
 
 	// Cluster is deleted so remove the finalizer.
 	controllerutil.RemoveFinalizer(openStackCluster, infrav1.ClusterFinalizer)

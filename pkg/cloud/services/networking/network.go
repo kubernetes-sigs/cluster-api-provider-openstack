@@ -148,7 +148,7 @@ func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, c
 	return nil
 }
 
-func (s *Service) DeleteNetwork(network *infrav1.Network) error {
+func (s *Service) DeleteNetwork(openStackCluster *infrav1.OpenStackCluster, network *infrav1.Network) error {
 	if network == nil || network.ID == "" {
 		s.logger.V(4).Info("No need to delete network since no network exists.")
 		return nil
@@ -161,7 +161,13 @@ func (s *Service) DeleteNetwork(network *infrav1.Network) error {
 		s.logger.Info("Skipping network deletion because network doesn't exist", "network", network.ID)
 		return nil
 	}
-	return networks.Delete(s.client, network.ID).ExtractErr()
+	if err = networks.Delete(s.client, network.ID).ExtractErr(); err != nil {
+		record.Warnf(openStackCluster, "FailedDeleteNetwork", "Failed to delete network %s with id %s: %v", network.Name, network.ID, err)
+		return err
+	}
+
+	record.Eventf(openStackCluster, "SuccessfulDeleteNetwork", "Deleted network %s with id %s", network.Name, network.ID)
+	return nil
 }
 
 func (s *Service) ReconcileSubnet(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {

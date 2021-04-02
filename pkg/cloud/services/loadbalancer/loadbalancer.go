@@ -58,8 +58,10 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 
 		lb, err = loadbalancers.Create(s.loadbalancerClient, lbCreateOpts).Extract()
 		if err != nil {
-			return fmt.Errorf("error creating loadbalancer: %s", err)
+			record.Warnf(openStackCluster, "FailedCreateLoadBalancer", "Failed to create load balancer %s: %v", loadBalancerName, err)
+			return err
 		}
+		record.Eventf(openStackCluster, "SuccessfulCreateLoadBalancer", "Created load balancer %s with id %s", loadBalancerName, lb.ID)
 	}
 	if err := waitForLoadBalancerActive(s.logger, s.loadbalancerClient, lb.ID); err != nil {
 		return err
@@ -73,11 +75,9 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 	if err != nil {
 		return err
 	}
-	err = s.networkingService.AssociateFloatingIP(fp, lb.VipPortID)
-	if err != nil {
+	if err = s.networkingService.AssociateFloatingIP(openStackCluster, fp, lb.VipPortID); err != nil {
 		return err
 	}
-	record.Eventf(openStackCluster, "SuccessfulAssociateFloatingIP", "Associate floating IP %s with port %s", fp.FloatingIP, lb.VipPortID)
 
 	// lb listener
 	portList := []int{int(openStackCluster.Spec.ControlPlaneEndpoint.Port)}
@@ -250,7 +250,7 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 	return nil
 }
 
-func (s *Service) DeleteLoadBalancer(loadBalancerName string) error {
+func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster, loadBalancerName string) error {
 	lb, err := checkIfLbExists(s.loadbalancerClient, loadBalancerName)
 	if err != nil {
 		return err
@@ -266,9 +266,11 @@ func (s *Service) DeleteLoadBalancer(loadBalancerName string) error {
 	s.logger.Info("Deleting loadbalancer", "name", loadBalancerName)
 	err = loadbalancers.Delete(s.loadbalancerClient, lb.ID, deleteOpts).ExtractErr()
 	if err != nil {
-		return fmt.Errorf("error deleting loadbalancer: %s", err)
+		record.Warnf(openStackCluster, "FailedDeleteLoadBalancer", "Failed to delete load balancer %s with id %s: %v", lb.Name, lb.ID, err)
+		return err
 	}
 
+	record.Eventf(openStackCluster, "SuccessfulDeleteLoadBalancer", "Deleted load balancer %s with id %s", lb.Name, lb.ID)
 	return nil
 }
 
