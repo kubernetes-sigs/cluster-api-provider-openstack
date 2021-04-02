@@ -122,7 +122,7 @@ test-e2e: $(GINKGO) $(KIND) $(KUSTOMIZE) e2e-image ## Run e2e tests
 
 .PHONY: e2e-image
 e2e-image: docker-pull-prerequisites
-	docker build -f Dockerfile --tag="gcr.io/k8s-staging-capi-openstack/capi-openstack-controller-amd64:e2e" .
+	docker build -f Dockerfile --tag="gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e" .
 
 CONFORMANCE_E2E_ARGS ?= -kubetest.config-file=$(KUBETEST_CONF_PATH)
 CONFORMANCE_E2E_ARGS += $(E2E_ARGS)
@@ -294,9 +294,17 @@ release-staging: ## Builds and push container images and manifests to the stagin
 	$(MAKE) staging-manifests
 	$(MAKE) upload-staging-artifacts
 
+.PHONY: release-staging-nightly
+release-staging-nightly: ## Tags and push container images to the staging bucket. Example image tag: capi-openstack-controller:nightly_master_20210121
+	$(eval NEW_RELEASE_ALIAS_TAG := nightly_$(RELEASE_ALIAS_TAG)_$(shell date +'%Y%m%d'))
+	echo $(NEW_RELEASE_ALIAS_TAG)
+	$(MAKE) release-alias-tag TAG=$(RELEASE_ALIAS_TAG) RELEASE_ALIAS_TAG=$(NEW_RELEASE_ALIAS_TAG)
+	$(MAKE) staging-manifests RELEASE_ALIAS_TAG=$(NEW_RELEASE_ALIAS_TAG)
+	$(MAKE) upload-staging-artifacts RELEASE_ALIAS_TAG=$(NEW_RELEASE_ALIAS_TAG)
+
 .PHONY: upload-staging-artifacts
 upload-staging-artifacts: ## Upload release artifacts to the staging bucket
-	gsutil cp $(RELEASE_DIR)/* gs://$(BUCKET)/components/$(RELEASE_ALIAS_TAG)
+	gsutil cp $(RELEASE_DIR)/* gs://$(STAGING_BUCKET)/components/$(RELEASE_ALIAS_TAG)
 
 .PHONY: create-gh-release
 create-gh-release:$(GH) ## Create release on Github

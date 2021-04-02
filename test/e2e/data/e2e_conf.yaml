@@ -19,7 +19,7 @@ images:
 - name: gcr.io/k8s-staging-cluster-api/kubeadm-control-plane-controller:nightly_master_20210310
   loadBehavior: tryLoad
 # Use local dev images built source tree;
-- name: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller-amd64:e2e
+- name: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e
   loadBehavior: mustLoad
 - name: quay.io/jetstack/cert-manager-cainjector:v1.1.0
   loadBehavior: tryLoad
@@ -79,8 +79,8 @@ providers:
     - sourcePath: "./infrastructure-openstack/cluster-template-external-cloud-provider.yaml"
     - sourcePath: "./infrastructure-openstack/cluster-template-without-lb.yaml"
     replacements:
-    - old: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller-amd64:dev
-      new: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller-amd64:e2e
+    - old: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:dev
+      new: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e
     - old: "imagePullPolicy: Always"
       new: "imagePullPolicy: IfNotPresent"
     - old: "--v=2"

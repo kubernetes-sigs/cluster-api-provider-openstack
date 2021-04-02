@@ -1,7 +1,7 @@
 {
     "name": "openstack",
     "config": {
-      "image": "gcr.io/k8s-staging-capi-openstack/capi-openstack-controller-amd64",
+      "image": "gcr.io/k8s-staging-capi-openstack/capi-openstack-controller",
       "live_reload_deps": [
         "main.go",
         "go.mod",
