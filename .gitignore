@@ -170,3 +170,6 @@ zz_generated.openapi.go
 
 # sshuttle
 sshuttle.pid
+
+# manifests
+/sigs.k8s.io 
