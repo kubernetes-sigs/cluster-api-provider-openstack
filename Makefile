@@ -304,7 +304,7 @@ release-staging-nightly: ## Tags and push container images to the staging bucket
 
 .PHONY: upload-staging-artifacts
 upload-staging-artifacts: ## Upload release artifacts to the staging bucket
-	gsutil cp $(RELEASE_DIR)/* gs://$(STAGING_BUCKET)/components/$(RELEASE_ALIAS_TAG)
+	gsutil cp $(RELEASE_DIR)/* gs://$(STAGING_BUCKET)/components/$(RELEASE_ALIAS_TAG)/
 
 .PHONY: create-gh-release
 create-gh-release:$(GH) ## Create release on Github
