@@ -339,7 +339,7 @@ spec:
                 type: string
               errorReason:
                 description: Constants aren't automatically generated for unversioned
-                  packages. Instead share the same constant for all versioned packages
+                  packages. Instead share the same constant for all versioned packages.
                 type: string
               instanceState:
                 description: InstanceState is the state of the OpenStack instance
@@ -675,7 +675,7 @@ spec:
                 type: string
               errorReason:
                 description: Constants aren't automatically generated for unversioned
-                  packages. Instead share the same constant for all versioned packages
+                  packages. Instead share the same constant for all versioned packages.
                 type: string
               instanceState:
                 description: InstanceState is the state of the OpenStack instance
