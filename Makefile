@@ -42,14 +42,12 @@ KUBETEST_FAST_CONF_PATH ?= $(abspath $(E2E_DATA_DIR)/kubetest/conformance-fast.y
 # Binaries.
 CONTROLLER_GEN := $(TOOLS_BIN_DIR)/controller-gen
 CONVERSION_GEN := $(TOOLS_BIN_DIR)/conversion-gen
-DEFAULTER_GEN := $(TOOLS_BIN_DIR)/defaulter-gen
 ENVSUBST := $(TOOLS_BIN_DIR)/envsubst
 GINKGO := $(TOOLS_BIN_DIR)/ginkgo
 GOJQ := $(TOOLS_BIN_DIR)/gojq
 GOLANGCI_LINT := $(TOOLS_BIN_DIR)/golangci-lint
 KIND := $(TOOLS_BIN_DIR)/kind
 KUSTOMIZE := $(TOOLS_BIN_DIR)/kustomize
-MOCKGEN := $(TOOLS_BIN_DIR)/mockgen
 RELEASE_NOTES := $(TOOLS_BIN_DIR)/release-notes
 
 PATH := $(abspath $(TOOLS_BIN_DIR)):$(PATH)
@@ -180,9 +178,9 @@ generate: ## Generate code
 	$(MAKE) generate-manifests
 
 .PHONY: generate-go
-generate-go: $(MOCKGEN)
+generate-go:
 	go generate ./...
-	$(MAKE) -B $(CONTROLLER_GEN) $(CONVERSION_GEN) $(DEFAULTER_GEN)
+	$(MAKE) -B $(CONTROLLER_GEN) $(CONVERSION_GEN)
 	$(CONTROLLER_GEN) \
 		paths=./api/... \
 		object:headerFile=./hack/boilerplate/boilerplate.generatego.txt
