@@ -177,14 +177,15 @@ func setRouterExternalIPs(client *gophercloud.ServiceClient, openStackCluster *i
 	}
 
 	if _, err := routers.Update(client, router.ID, updateOpts).Extract(); err != nil {
-		record.Warnf(openStackCluster, "FailedUpdateRouter", "Failed to update router %s: %v", router.Name, err)
-		return fmt.Errorf("error updating OpenStack Neutron Router: %s", err)
+		record.Warnf(openStackCluster, "FailedUpdateRouter", "Failed to update router %s with id %s: %v", router.Name, router.ID, err)
+		return err
 	}
+
 	record.Eventf(openStackCluster, "SuccessfulUpdateRouter", "Updated router %s with id %s", router.Name, router.ID)
 	return nil
 }
 
-func (s *Service) DeleteRouter(network *infrav1.Network) error {
+func (s *Service) DeleteRouter(openStackCluster *infrav1.OpenStackCluster, network *infrav1.Network) error {
 	if network.Router == nil || network.Router.ID == "" {
 		s.logger.V(4).Info("No need to delete router since no router exists.")
 		return nil
@@ -212,7 +213,14 @@ func (s *Service) DeleteRouter(network *infrav1.Network) error {
 		}
 		s.logger.V(4).Info("Removed RouterInterface of Router", "id", network.Router.ID)
 	}
-	return routers.Delete(s.client, network.Router.ID).ExtractErr()
+
+	if err = routers.Delete(s.client, network.Router.ID).ExtractErr(); err != nil {
+		record.Warnf(openStackCluster, "FailedDeleteRouter", "Failed to delete router %s with id %s: %v", network.Router.Name, network.Router.ID, err)
+		return err
+	}
+
+	record.Eventf(openStackCluster, "SuccessfulDeleteRouter", "Deleted router %s with id %s", network.Router.Name, network.Router.ID)
+	return nil
 }
 
 func (s *Service) getRouterInterfaces(routerID string) ([]ports.Port, error) {

@@ -142,9 +142,10 @@ func (s *Service) InstanceCreate(openStackCluster *infrav1.OpenStackCluster, mac
 
 	out, err := createInstance(s, clusterName, input)
 	if err != nil {
-		record.Warnf(openStackMachine, "FailedCreateServer", "Failed to create server: %v", err)
-		return nil, fmt.Errorf("create new server err: %v", err)
+		record.Warnf(openStackMachine, "FailedCreateServer", "Failed to create server %s: %v", out.Name, err)
+		return nil, err
 	}
+
 	record.Eventf(openStackMachine, "SuccessfulCreateServer", "Created server %s with id %s", out.Name, out.ID)
 	return out, nil
 }
@@ -565,7 +566,7 @@ func (s *Service) AssociateFloatingIP(instanceID, floatingIP string) error {
 	return nil
 }
 
-func (s *Service) InstanceDelete(machine *clusterv1.Machine) error {
+func (s *Service) InstanceDelete(machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) error {
 	if machine.Spec.ProviderID == nil {
 		// nothing to do
 		return nil
@@ -575,8 +576,13 @@ func (s *Service) InstanceDelete(machine *clusterv1.Machine) error {
 	if err != nil {
 		return err
 	}
+	if err = deleteInstance(s, parsed.ID()); err != nil {
+		record.Warnf(openStackMachine, "FailedDeleteServer", "Failed to deleted server %s: %v", parsed.ID(), err)
+		return err
+	}
 
-	return deleteInstance(s, parsed.ID())
+	record.Eventf(openStackMachine, "SuccessfulDeleteServer", "Deleted server %s", parsed.ID())
+	return nil
 }
 
 func deleteInstance(is *Service, serverID string) error {

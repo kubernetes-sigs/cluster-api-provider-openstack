@@ -32,10 +32,11 @@ func (s *Service) DeleteBastion(openStackCluster *infrav1.OpenStackCluster, serv
 		return nil
 	}
 	if err = deleteInstance(s, instance.ID); err != nil {
+		record.Warnf(openStackCluster, "FailedDeleteServer", "Failed to delete server %s with id %s: %v", instance.Name, instance.ID, err)
 		return err
 	}
-	record.Eventf(openStackCluster, "SuccessfulDeleteServer", "Deleted server %s with id %s", instance.Name, instance.ID)
 
+	record.Eventf(openStackCluster, "SuccessfulDeleteServer", "Deleted server %s with id %s", instance.Name, instance.ID)
 	return nil
 }
 
@@ -78,10 +79,10 @@ func (s *Service) CreateBastion(openStackCluster *infrav1.OpenStackCluster, clus
 
 	out, err := createInstance(s, clusterName, input)
 	if err != nil {
-		record.Warnf(openStackCluster, "FailedCreateServer", "Failed to create bastion: %v", err)
-		return nil, fmt.Errorf("create new server err: %v", err)
+		record.Warnf(openStackCluster, "FailedCreateServer", "Failed to create server %s: %v", name, err)
+		return nil, err
 	}
-	record.Eventf(openStackCluster, "SuccessfulCreateServer", "Created server %s with id %s", name, out.ID)
 
+	record.Eventf(openStackCluster, "SuccessfulCreateServer", "Created server %s with id %s", name, out.ID)
 	return out, nil
 }
