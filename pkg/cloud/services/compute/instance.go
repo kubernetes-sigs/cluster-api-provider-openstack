@@ -142,10 +142,9 @@ func (s *Service) InstanceCreate(openStackCluster *infrav1.OpenStackCluster, mac
 
 	out, err := createInstance(s, clusterName, input)
 	if err != nil {
-		record.Warnf(openStackMachine, "FailedCreateServer", "Failed to create server %s: %v", out.Name, err)
+		record.Warnf(openStackMachine, "FailedCreateServer", "Failed to create server %s: %v", input.Name, err)
 		return nil, err
 	}
-
 	record.Eventf(openStackMachine, "SuccessfulCreateServer", "Created server %s with id %s", out.Name, out.ID)
 	return out, nil
 }
@@ -158,16 +157,16 @@ func createInstance(is *Service, clusterName string, i *infrav1.Instance) (*infr
 	}
 
 	accessIPv4 := ""
-	nets := i.Networks
+	networkList := i.Networks
 	portsList := []servers.Network{}
-	for _, net := range *nets {
-		net := net
-		if net.ID == "" {
+	for _, network := range *networkList {
+		network := network
+		if network.ID == "" {
 			return nil, fmt.Errorf("no network was found or provided. Please check your machine configuration and try again")
 		}
 		allPages, err := ports.List(is.networkClient, ports.ListOpts{
 			Name:      i.Name,
-			NetworkID: net.ID,
+			NetworkID: network.ID,
 		}).AllPages()
 		if err != nil {
 			return nil, fmt.Errorf("searching for existing port for server: %v", err)
@@ -179,7 +178,7 @@ func createInstance(is *Service, clusterName string, i *infrav1.Instance) (*infr
 		var port ports.Port
 		if len(portList) == 0 {
 			// create server port
-			port, err = createPort(is, clusterName, i.Name, &net, i.SecurityGroups)
+			port, err = createPort(is, clusterName, i.Name, &network, i.SecurityGroups)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create port err: %v", err)
 			}
@@ -331,12 +330,12 @@ func GetIPFromInstance(v servers.Server) (map[string]string, error) {
 		if err != nil {
 			return nil, fmt.Errorf("extract IP from instance err: %v", err)
 		}
-		var networks []interface{}
-		err = json.Unmarshal(list, &networks)
+		var networkList []interface{}
+		err = json.Unmarshal(list, &networkList)
 		if err != nil {
 			return nil, fmt.Errorf("extract IP from instance err: %v", err)
 		}
-		for _, network := range networks {
+		for _, network := range networkList {
 			var netInterface networkInterface
 			b, _ := json.Marshal(network)
 			err = json.Unmarshal(b, &netInterface)
@@ -444,22 +443,22 @@ func getSecurityGroups(is *Service, securityGroupParams []infrav1.SecurityGroupP
 
 func getServerNetworks(networkClient *gophercloud.ServiceClient, networkParams []infrav1.NetworkParam) ([]infrav1.Network, error) {
 	var nets []infrav1.Network
-	for _, net := range networkParams {
-		opts := networks.ListOpts(net.Filter)
-		opts.ID = net.UUID
+	for _, networkParam := range networkParams {
+		opts := networks.ListOpts(networkParam.Filter)
+		opts.ID = networkParam.UUID
 		ids, err := networking.GetNetworkIDsByFilter(networkClient, &opts)
 		if err != nil {
 			return nil, err
 		}
 		for _, netID := range ids {
-			if net.Subnets == nil {
+			if networkParam.Subnets == nil {
 				nets = append(nets, infrav1.Network{
 					ID: netID,
 				})
 				continue
 			}
 
-			for _, subnet := range net.Subnets {
+			for _, subnet := range networkParam.Subnets {
 				subnetOpts := subnets.ListOpts(subnet.Filter)
 				subnetOpts.ID = subnet.UUID
 				subnetOpts.NetworkID = netID
