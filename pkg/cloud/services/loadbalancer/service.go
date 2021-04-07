@@ -40,7 +40,7 @@ func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.Cli
 		Region: clientOpts.RegionName,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create loadbalancer service client: %v", err)
+		return nil, fmt.Errorf("failed to create load balancer service client: %v", err)
 	}
 
 	networkingService, err := networking.NewService(client, clientOpts, logger)

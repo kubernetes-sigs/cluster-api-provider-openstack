@@ -30,28 +30,29 @@ import (
 func (s *Service) GetOrCreateFloatingIP(openStackCluster *infrav1.OpenStackCluster, ip string) (*floatingips.FloatingIP, error) {
 	var fp *floatingips.FloatingIP
 	var err error
+	var fpCreateOpts floatingips.CreateOpts
+
 	if ip != "" {
 		fp, err = checkIfFloatingIPExists(s.client, ip)
 		if err != nil {
 			return nil, err
 		}
+		if fp != nil {
+			return fp, nil
+		}
+		// only admin can add ip address
+		fpCreateOpts.FloatingIP = ip
 	}
-	if fp == nil {
-		fpCreateOpts := &floatingips.CreateOpts{
-			FloatingNetworkID: openStackCluster.Status.ExternalNetwork.ID,
-		}
-		if ip != "" {
-			// only admin can add ip address
-			fpCreateOpts.FloatingIP = ip
-		}
-		fp, err = floatingips.Create(s.client, fpCreateOpts).Extract()
-		if err != nil {
-			record.Warnf(openStackCluster, "FailedCreateFloatingIP", "Failed to create floating IP %s: %v", fp.FloatingIP, err)
-			return nil, err
-		}
-		record.Eventf(openStackCluster, "SuccessfulCreateFloatingIP", "Created floating IP %s with id %s", fp.FloatingIP, fp.ID)
 
+	fpCreateOpts.FloatingNetworkID = openStackCluster.Status.ExternalNetwork.ID
+
+	fp, err = floatingips.Create(s.client, fpCreateOpts).Extract()
+	if err != nil {
+		record.Warnf(openStackCluster, "FailedCreateFloatingIP", "Failed to create floating IP %s: %v", ip, err)
+		return nil, err
 	}
+
+	record.Eventf(openStackCluster, "SuccessfulCreateFloatingIP", "Created floating IP %s with id %s", fp.FloatingIP, fp.ID)
 	return fp, nil
 }
 
@@ -93,18 +94,18 @@ var backoff = wait.Backoff{
 }
 
 func (s *Service) AssociateFloatingIP(openStackCluster *infrav1.OpenStackCluster, fp *floatingips.FloatingIP, portID string) error {
-	s.logger.Info("Associating floating IP", "IP", fp.FloatingIP)
+	s.logger.Info("Associating floating IP", "id", fp.ID, "ip", fp.FloatingIP)
 	fpUpdateOpts := &floatingips.UpdateOpts{
 		PortID: &portID,
 	}
-	fp, err := floatingips.Update(s.client, fp.ID, fpUpdateOpts).Extract()
+	_, err := floatingips.Update(s.client, fp.ID, fpUpdateOpts).Extract()
 	if err != nil {
 		record.Warnf(openStackCluster, "FailedAssociateFloatingIP", "Failed to associate floating IP %s with port %s: %v", fp.FloatingIP, portID, err)
 		return err
 	}
 	record.Eventf(openStackCluster, "SuccessfulAssociateFloatingIP", "Associated floating IP %s with port %s", fp.FloatingIP, portID)
 
-	s.logger.Info("Waiting for floatingIP", "id", fp.ID, "targetStatus", "ACTIVE")
+	s.logger.Info("Waiting for floating IP", "id", fp.ID, "targetStatus", "ACTIVE")
 
 	return wait.ExponentialBackoff(backoff, func() (bool, error) {
 		fp, err := floatingips.Get(s.client, fp.ID).Extract()

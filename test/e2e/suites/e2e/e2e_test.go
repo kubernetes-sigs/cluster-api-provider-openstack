@@ -165,7 +165,7 @@ var _ = Describe("e2e tests", func() {
 			configCluster.Flavor = shared.FlavorDefault
 			_ = createCluster(ctx, configCluster, specName)
 
-			shared.Byf("Creating Machine Deployment with invalid subnet ID")
+			shared.Byf("Creating Machine Deployment with invalid subnet id")
 			md1Name := clusterName + "-md-1"
 			framework.CreateMachineDeployment(ctx, framework.CreateMachineDeploymentInput{
 				Creator:                 e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
