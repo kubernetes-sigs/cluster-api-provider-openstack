@@ -109,6 +109,7 @@ github.com/bgentry/speakeasy v0.1.0/go.mod h1:+zsyZBPWlz7T6j88CTgSN5bM796AkVf0kB
 github.com/bketelsen/crypt v0.0.3-0.20200106085610-5cbc8cc4026c/go.mod h1:MKsuJmJgSg28kpZDP6UIiPt0e0Oz0kqKNGyRaWEPv84=
 github.com/bkielbasa/cyclop v1.2.0 h1:7Jmnh0yL2DjKfw28p86YTd/B4lRGcNuu12sKE35sM7A=
 github.com/bkielbasa/cyclop v1.2.0/go.mod h1:qOI0yy6A7dYC4Zgsa72Ppm9kONl0RoIlPbzot9mhmeI=
+github.com/blang/semver v3.5.1+incompatible h1:cQNTCjp13qL8KC3Nbxr/y2Bqb63oX6wdnnjpJbkM4JQ=
 github.com/blang/semver v3.5.1+incompatible/go.mod h1:kRBLl5iJ+tD4TcOOxsy/0fnwebNt5EWlYSAyrTnjyyk=
 github.com/bombsimon/wsl v1.2.5 h1:9gTOkIwVtoDZywvX802SDHokeX4kW1cKnV8ZTVAPkRs=
 github.com/bombsimon/wsl v1.2.5/go.mod h1:43lEF/i0kpXbLCeDXL9LMT8c92HyBywXb0AsgMHYngM=
@@ -1314,6 +1315,7 @@ sigs.k8s.io/controller-tools v0.5.0 h1:3u2RCwOlp0cjCALAigpOcbAf50pE+kHSdueUosrC/
 sigs.k8s.io/controller-tools v0.5.0/go.mod h1:JTsstrMpxs+9BUj6eGuAaEb6SDSPTeVtUyp0jmnAM/I=
 sigs.k8s.io/kind v0.10.0 h1:Tm+QITIqdRd+efLOsxZHMAfLnr5K4e3/RH8MePspEXs=
 sigs.k8s.io/kind v0.10.0/go.mod h1:fb32zUw7ewC47bPwLnwhf47wd/vADtv3c38KP7sjIlo=
+sigs.k8s.io/kubebuilder/docs/book/utils v0.0.0-20200226075303-ed8438ec10a4 h1:P/Vxe8zHHI0mjkl9+5UuWJgynJgLxoVpisfWKWr3zl4=
 sigs.k8s.io/kubebuilder/docs/book/utils v0.0.0-20200226075303-ed8438ec10a4/go.mod h1:nyAxPBUS04gN3IRuEQ0elG4mVeto/d/qQRsW2PsyAy4=
 sigs.k8s.io/kustomize/api v0.6.4 h1:YIVJnBH+yngw1/1CcLH6GvJ2aEoX9jDlqVuWhfjWmYc=
 sigs.k8s.io/kustomize/api v0.6.4/go.mod h1:BX11EGGdQTCYHLMaz7oT4TKdQ8owypNlYIrUj1i5HwA=
