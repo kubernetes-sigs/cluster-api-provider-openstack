@@ -80,7 +80,6 @@ func NewClient(cloud clientconfig.Cloud, caCert []byte) (*gophercloud.ProviderCl
 	if cloud.AuthInfo != nil {
 		clientOpts.AuthInfo = cloud.AuthInfo
 		clientOpts.AuthType = cloud.AuthType
-		clientOpts.Cloud = cloud.Cloud
 		clientOpts.RegionName = cloud.RegionName
 	}
 
