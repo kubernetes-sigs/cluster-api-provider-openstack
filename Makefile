@@ -21,6 +21,7 @@ include $(ROOT_DIR_RELATIVE)/common.mk
 
 # Active module mode, as we use go modules to manage dependencies
 export GO111MODULE=on
+unexport GOPATH
 
 # Directories.
 ARTIFACTS ?= $(REPO_ROOT)/_artifacts
@@ -55,11 +56,6 @@ RELEASE_NOTES := $(TOOLS_BIN_DIR)/release-notes
 PATH := $(abspath $(TOOLS_BIN_DIR)):$(PATH)
 DOCKER_CLI_EXPERIMENTAL=enabled
 DOCKER_BUILDKIT=1
-
-# Set --output-base for conversion-gen if we are not within GOPATH
-ifneq ($(abspath $(REPO_ROOT)),$(shell go env GOPATH)/src/sigs.k8s.io/cluster-api-provider-openstack)
-	GEN_OUTPUT_BASE := --output-base=$(REPO_ROOT)
-endif
 
 # Release variables
 
@@ -189,7 +185,7 @@ generate-go: $(MOCKGEN)
 
 	$(CONVERSION_GEN) \
 		--input-dirs=./api/v1alpha3 \
-		--output-file-base=zz_generated.conversion $(GEN_OUTPUT_BASE) \
+		--output-file-base=zz_generated.conversion \
 		--go-header-file=./hack/boilerplate/boilerplate.generatego.txt
 
 .PHONY: generate-manifests
