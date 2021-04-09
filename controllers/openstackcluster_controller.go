@@ -150,6 +150,11 @@ func reconcileDelete(ctx context.Context, log logr.Logger, client client.Client,
 		}
 	}
 
+	if err = loadBalancerService.DeleteOrphanedLoadBalancers(openStackCluster); err != nil {
+		return reconcile.Result{}, errors.Errorf("failed to delete orphaned load balancers: %v", err)
+	}
+	log.Info("Ensured deletion of orphaned load balancers")
+
 	if err = networkingService.DeleteSecurityGroups(openStackCluster, clusterName); err != nil {
 		handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete security groups: %v", err))
 		return reconcile.Result{}, errors.Errorf("failed to delete security groups: %v", err)
