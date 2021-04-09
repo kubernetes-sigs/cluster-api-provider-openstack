@@ -70,6 +70,20 @@ policy may be made to more closely aligned with other providers in the Cluster A
 
 ------
 
+## Development versions
+
+ClusterAPI provider OpenStack images and manifests are published after every PR merge and once every day:
+* With a Google Cloud account you can get a quick overview [here](https://console.cloud.google.com/storage/browser/artifacts.k8s-staging-capi-openstack.appspot.com/components)
+* The manifests are available under:
+  * [master/infrastructure-components.yaml](https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/components/master/infrastructure-components.yaml): 
+    latest build from the main branch, overwritten after every merge
+  * e.g. [nightly_master_20210407/infrastructure-components.yaml](https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/components/nightly_master_20210407/infrastructure-components.yaml): build of the main branch from 7th April
+    
+These artifacts are published via Prow and Google Cloud Build. The corresponding job definitions can 
+be found [here](https://github.com/kubernetes/test-infra/blob/4d146721aaec27a3c93299956f8d64af2357d64a/config/jobs/image-pushing/k8s-staging-cluster-api.yaml).
+
+------
+
 ## Operating system images
 
 Note: Cluster API Provider OpenStack relies on a few prerequisites which have to be already
