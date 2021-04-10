@@ -29,7 +29,6 @@ import (
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
-	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 )
 
 type createOpts struct {
@@ -91,7 +90,7 @@ func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCl
 }
 
 func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
-	networkName := fmt.Sprintf("%s-cluster-%s", networkPrefix, clusterName)
+	networkName := getNetworkName(clusterName)
 	s.logger.Info("Reconciling network", "name", networkName)
 
 	res, err := s.getNetworkByName(networkName)
@@ -148,19 +147,17 @@ func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, c
 	return nil
 }
 
-func (s *Service) DeleteNetwork(openStackCluster *infrav1.OpenStackCluster, network *infrav1.Network) error {
-	if network == nil || network.ID == "" {
-		s.logger.V(4).Info("No need to delete network since no network exists.")
-		return nil
-	}
-	exists, err := s.existsNetwork(network.ID)
+func (s *Service) DeleteNetwork(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
+	networkName := getNetworkName(clusterName)
+	network, err := s.getNetworkByName(networkName)
 	if err != nil {
 		return err
 	}
-	if !exists {
-		s.logger.Info("Skipping network deletion because network doesn't exist", "network", network.ID)
+	if network.ID == "" {
+		// nothing to do
 		return nil
 	}
+
 	if err = networks.Delete(s.client, network.ID).ExtractErr(); err != nil {
 		record.Warnf(openStackCluster, "FailedDeleteNetwork", "Failed to delete network %s with id %s: %v", network.Name, network.ID, err)
 		return err
@@ -176,7 +173,7 @@ func (s *Service) ReconcileSubnet(openStackCluster *infrav1.OpenStackCluster, cl
 		return nil
 	}
 
-	subnetName := fmt.Sprintf("%s-cluster-%s", networkPrefix, clusterName)
+	subnetName := getSubnetName(clusterName)
 	s.logger.Info("Reconciling subnet", "name", subnetName)
 
 	allPages, err := subnets.List(s.client, subnets.ListOpts{
@@ -254,16 +251,16 @@ func (s *Service) getNetworkByID(networkID string) (networks.Network, error) {
 		return networks.Network{}, err
 	}
 
-	allNetworks, err := networks.ExtractNetworks(allPages)
+	networkList, err := networks.ExtractNetworks(allPages)
 	if err != nil {
 		return networks.Network{}, err
 	}
 
-	switch len(allNetworks) {
+	switch len(networkList) {
 	case 0:
 		return networks.Network{}, nil
 	case 1:
-		return allNetworks[0], nil
+		return networkList[0], nil
 	}
 	return networks.Network{}, errors.New("multiple external network found")
 }
@@ -278,35 +275,18 @@ func (s *Service) getNetworkByName(networkName string) (networks.Network, error)
 		return networks.Network{}, err
 	}
 
-	allNetworks, err := networks.ExtractNetworks(allPages)
+	networkList, err := networks.ExtractNetworks(allPages)
 	if err != nil {
 		return networks.Network{}, err
 	}
 
-	switch len(allNetworks) {
+	switch len(networkList) {
 	case 0:
 		return networks.Network{}, nil
 	case 1:
-		return allNetworks[0], nil
+		return networkList[0], nil
 	}
 	return networks.Network{}, errors.New("too many resources")
-}
-
-func (s *Service) existsNetwork(networkID string) (bool, error) {
-	if networkID == "" {
-		return false, nil
-	}
-	network, err := networks.Get(s.client, networkID).Extract()
-	if err != nil {
-		if capoerrors.IsNotFound(err) {
-			return false, nil
-		}
-		return false, err
-	}
-	if network == nil {
-		return false, nil
-	}
-	return true, nil
 }
 
 func (s *Service) GetNetworksByFilter(opts networks.ListOptsBuilder) ([]networks.Network, error) {
@@ -374,4 +354,12 @@ func GetSubnetsByFilter(networkClient *gophercloud.ServiceClient, opts subnets.L
 		return []subnets.Subnet{}, err
 	}
 	return snets, nil
+}
+
+func getSubnetName(clusterName string) string {
+	return fmt.Sprintf("%s-cluster-%s", networkPrefix, clusterName)
+}
+
+func getNetworkName(clusterName string) string {
+	return fmt.Sprintf("%s-cluster-%s", networkPrefix, clusterName)
 }

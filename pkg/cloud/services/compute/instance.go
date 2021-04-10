@@ -42,7 +42,6 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/gophercloud/utils/openstack/compute/v2/flavors"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha4"
-	"sigs.k8s.io/cluster-api/controllers/noderefutil"
 	"sigs.k8s.io/cluster-api/util"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
@@ -568,36 +567,38 @@ func (s *Service) AssociateFloatingIP(instanceID, floatingIP string) error {
 }
 
 func (s *Service) InstanceDelete(machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) error {
-	if machine.Spec.ProviderID == nil {
+	if openStackMachine == nil {
 		// nothing to do
 		return nil
 	}
 
-	parsed, err := noderefutil.NewProviderID(*machine.Spec.ProviderID)
+	instance, err := s.InstanceExists(openStackMachine.Name)
 	if err != nil {
 		return err
 	}
-	if err = deleteInstance(s, parsed.ID()); err != nil {
-		record.Warnf(openStackMachine, "FailedDeleteServer", "Failed to deleted server %s with id %s: %v", openStackMachine.Name, parsed.ID(), err)
-		return err
-	}
-
-	err = util.PollImmediate(RetryIntervalInstanceStatus, TimeoutInstanceDelete, func() (bool, error) {
-		_, err = s.GetInstance(parsed.ID())
-		if err != nil {
-			if capoerrors.IsNotFound(err) {
-				return true, nil
-			}
-			return false, err
+	if instance != nil && instance.ID != "" {
+		if err = deleteInstance(s, instance.ID); err != nil {
+			record.Warnf(openStackMachine, "FailedDeleteServer", "Failed to deleted server %s with id %s: %v", openStackMachine.Name, instance.ID, err)
+			return err
 		}
-		return false, nil
-	})
-	if err != nil {
-		record.Warnf(openStackMachine, "FailedDeleteServer", "Failed to deleted server %s with id %s: %v", openStackMachine.Name, parsed.ID(), err)
-		return fmt.Errorf("error deleting Openstack instance %s, %v", parsed.ID(), err)
-	}
 
-	record.Eventf(openStackMachine, "SuccessfulDeleteServer", "Deleted server %s", parsed.ID())
+		err = util.PollImmediate(RetryIntervalInstanceStatus, TimeoutInstanceDelete, func() (bool, error) {
+			_, err = s.GetInstance(instance.ID)
+			if err != nil {
+				if capoerrors.IsNotFound(err) {
+					return true, nil
+				}
+				return false, err
+			}
+			return false, nil
+		})
+		if err != nil {
+			record.Warnf(openStackMachine, "FailedDeleteServer", "Failed to deleted server %s with id %s: %v", openStackMachine.Name, instance.ID, err)
+			return fmt.Errorf("error deleting Openstack instance %s, %v", instance.ID, err)
+		}
+
+		record.Eventf(openStackMachine, "SuccessfulDeleteServer", "Deleted server %s", instance.ID)
+	}
 	return nil
 }
 

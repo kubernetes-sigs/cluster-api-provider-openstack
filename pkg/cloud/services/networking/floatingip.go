@@ -71,18 +71,37 @@ func checkIfFloatingIPExists(client *gophercloud.ServiceClient, ip string) (*flo
 	return &fpList[0], nil
 }
 
+func (s *Service) GetFloatingIPByPortID(portID string) (*floatingips.FloatingIP, error) {
+	allPages, err := floatingips.List(s.client, floatingips.ListOpts{PortID: portID}).AllPages()
+	if err != nil {
+		return nil, err
+	}
+	fpList, err := floatingips.ExtractFloatingIPs(allPages)
+	if err != nil {
+		return nil, err
+	}
+	if len(fpList) == 0 {
+		return nil, nil
+	}
+	return &fpList[0], nil
+}
+
 func (s *Service) DeleteFloatingIP(openStackCluster *infrav1.OpenStackCluster, ip string) error {
 	fip, err := checkIfFloatingIPExists(s.client, ip)
 	if err != nil {
 		return err
 	}
-	if fip != nil {
-		if err = floatingips.Delete(s.client, fip.ID).ExtractErr(); err != nil {
-			record.Warnf(openStackCluster, "FailedDeleteFloatingIP", "Failed to delete floating IP %s: %v", ip, err)
-			return err
-		}
-		record.Eventf(openStackCluster, "SuccessfulDeleteFloatingIP", "Deleted floating IP %s", ip)
+	if fip == nil {
+		// nothing to do
+		return nil
 	}
+
+	if err = floatingips.Delete(s.client, fip.ID).ExtractErr(); err != nil {
+		record.Warnf(openStackCluster, "FailedDeleteFloatingIP", "Failed to delete floating IP %s: %v", ip, err)
+		return err
+	}
+
+	record.Eventf(openStackCluster, "SuccessfulDeleteFloatingIP", "Deleted floating IP %s", ip)
 	return nil
 }
 
@@ -113,5 +132,38 @@ func (s *Service) AssociateFloatingIP(openStackCluster *infrav1.OpenStackCluster
 			return false, err
 		}
 		return fp.Status == "ACTIVE", nil
+	})
+}
+
+func (s *Service) DisassociateFloatingIP(openStackCluster *infrav1.OpenStackCluster, ip string) error {
+	fip, err := checkIfFloatingIPExists(s.client, ip)
+	if err != nil {
+		return err
+	}
+	if fip == nil || fip.FloatingIP == "" {
+		s.logger.Info("Floating IP not associated", "ip", ip)
+		return nil
+	}
+
+	s.logger.Info("Disassociating floating IP", "id", fip.ID, "ip", fip.FloatingIP)
+
+	fpUpdateOpts := &floatingips.UpdateOpts{
+		PortID: nil,
+	}
+	_, err = floatingips.Update(s.client, fip.ID, fpUpdateOpts).Extract()
+	if err != nil {
+		record.Warnf(openStackCluster, "FailedDisassociateFloatingIP", "Failed to disassociate floating IP %s: %v", fip.FloatingIP, err)
+		return err
+	}
+	record.Eventf(openStackCluster, "SuccessfulDisassociateFloatingIP", "Disassociated floating IP %s", fip.FloatingIP)
+
+	s.logger.Info("Waiting for floating IP", "id", fip.ID, "targetStatus", "DOWN")
+
+	return wait.ExponentialBackoff(backoff, func() (bool, error) {
+		fip, err := floatingips.Get(s.client, fip.ID).Extract()
+		if err != nil {
+			return false, err
+		}
+		return fip.Status == "DOWN", nil
 	})
 }

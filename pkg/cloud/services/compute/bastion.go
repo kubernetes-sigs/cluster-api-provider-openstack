@@ -26,35 +26,35 @@ import (
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 )
 
-func (s *Service) DeleteBastion(openStackCluster *infrav1.OpenStackCluster, serverID string) error {
-	instance, err := s.GetInstance(serverID)
+func (s *Service) DeleteBastion(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
+	instance, err := s.InstanceExists(fmt.Sprintf("%s-bastion", clusterName))
 	if err != nil {
 		return err
 	}
-	if instance == nil {
-		return nil
-	}
-	if err = deleteInstance(s, instance.ID); err != nil {
-		record.Warnf(openStackCluster, "FailedDeleteServer", "Failed to delete server %s with id %s: %v", instance.Name, instance.ID, err)
-		return err
-	}
 
-	err = util.PollImmediate(RetryIntervalInstanceStatus, TimeoutInstanceDelete, func() (bool, error) {
-		_, err = s.GetInstance(instance.ID)
-		if err != nil {
-			if capoerrors.IsNotFound(err) {
-				return true, nil
-			}
-			return false, err
+	if instance != nil && instance.ID != "" {
+		if err = deleteInstance(s, instance.ID); err != nil {
+			record.Warnf(openStackCluster, "FailedDeleteServer", "Failed to delete server %s with id %s: %v", instance.Name, instance.ID, err)
+			return err
 		}
-		return false, nil
-	})
-	if err != nil {
-		record.Warnf(openStackCluster, "FailedDeleteServer", "Failed to delete server %s with id %s: %v", instance.Name, instance.ID, err)
-		return fmt.Errorf("error deleting Openstack instance %s, %v", instance.ID, err)
-	}
 
-	record.Eventf(openStackCluster, "SuccessfulDeleteServer", "Deleted server %s with id %s", instance.Name, instance.ID)
+		err = util.PollImmediate(RetryIntervalInstanceStatus, TimeoutInstanceDelete, func() (bool, error) {
+			_, err = s.GetInstance(instance.ID)
+			if err != nil {
+				if capoerrors.IsNotFound(err) {
+					return true, nil
+				}
+				return false, err
+			}
+			return false, nil
+		})
+		if err != nil {
+			record.Warnf(openStackCluster, "FailedDeleteServer", "Failed to delete server %s with id %s: %v", instance.Name, instance.ID, err)
+			return fmt.Errorf("error deleting Openstack instance %s, %v", instance.ID, err)
+		}
+
+		record.Eventf(openStackCluster, "SuccessfulDeleteServer", "Deleted server %s with id %s", instance.Name, instance.ID)
+	}
 	return nil
 }
 

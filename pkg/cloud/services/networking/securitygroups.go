@@ -63,15 +63,15 @@ func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackClu
 		return nil
 	}
 
-	secControlPlaneGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, controlPlaneSuffix)
-	secWorkerGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, workerSuffix)
+	secControlPlaneGroupName := getSecControlPlaneGroupName(clusterName)
+	secWorkerGroupName := getSecWorkerGroupName(clusterName)
 	secGroupNames := map[string]string{
 		controlPlaneSuffix: secControlPlaneGroupName,
 		workerSuffix:       secWorkerGroupName,
 	}
 
 	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
-		secBastionGroupName := fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, bastionSuffix)
+		secBastionGroupName := getSecBastionGroupName(clusterName)
 		secGroupNames[bastionSuffix] = secBastionGroupName
 	}
 
@@ -333,38 +333,41 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 	return desiredSecGroups, nil
 }
 
-func (s *Service) DeleteSecurityGroups(openStackCluster *infrav1.OpenStackCluster, group *infrav1.SecurityGroup) error {
-	exists, err := s.exists(group.ID)
-	if err != nil {
-		return err
+func (s *Service) DeleteSecurityGroups(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
+	secGroupNames := []string{
+		getSecControlPlaneGroupName(clusterName),
+		getSecWorkerGroupName(clusterName),
 	}
-	if exists {
-		if err = groups.Delete(s.client, group.ID).ExtractErr(); err != nil {
-			record.Warnf(openStackCluster, "FailedDeleteSecurityGroup", "Failed to delete security group %s with id %s: %v", group.Name, group.ID, err)
+	for _, secGroupName := range secGroupNames {
+		if err := s.deleteSecurityGroup(openStackCluster, secGroupName); err != nil {
 			return err
 		}
-		record.Eventf(openStackCluster, "SuccessfulDeleteSecurityGroup", "Deleted security group %s with id %s", group.Name, group.ID)
 	}
 
 	return nil
 }
 
-func (s *Service) exists(groupID string) (bool, error) {
-	opts := groups.ListOpts{
-		ID: groupID,
-	}
-	allPages, err := groups.List(s.client, opts).AllPages()
+func (s *Service) DeleteBastionSecurityGroup(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
+	secBastionGroupName := getSecBastionGroupName(clusterName)
+	return s.deleteSecurityGroup(openStackCluster, secBastionGroupName)
+}
+
+func (s *Service) deleteSecurityGroup(openStackCluster *infrav1.OpenStackCluster, name string) error {
+	group, err := s.getSecurityGroupByName(name)
 	if err != nil {
-		return false, err
+		return err
 	}
-	allGroups, err := groups.ExtractGroups(allPages)
-	if err != nil {
-		return false, err
+	if group.ID == "" {
+		// nothing to do
+		return nil
 	}
-	if len(allGroups) == 0 {
-		return false, nil
+	if err = groups.Delete(s.client, group.ID).ExtractErr(); err != nil {
+		record.Warnf(openStackCluster, "FailedDeleteSecurityGroup", "Failed to delete security group %s with id %s: %v", group.Name, group.ID, err)
+		return err
 	}
-	return true, nil
+
+	record.Eventf(openStackCluster, "SuccessfulDeleteSecurityGroup", "Deleted security group %s with id %s", group.Name, group.ID)
+	return nil
 }
 
 // reconcileGroupRules reconciles an already existing observed group by deleting rules not needed anymore and
@@ -516,6 +519,18 @@ func (s *Service) createRule(r infrav1.SecurityGroupRule) (infrav1.SecurityGroup
 		return infrav1.SecurityGroupRule{}, err
 	}
 	return convertOSSecGroupRuleToConfigSecGroupRule(*rule), nil
+}
+
+func getSecControlPlaneGroupName(clusterName string) string {
+	return fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, controlPlaneSuffix)
+}
+
+func getSecWorkerGroupName(clusterName string) string {
+	return fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, workerSuffix)
+}
+
+func getSecBastionGroupName(clusterName string) string {
+	return fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, bastionSuffix)
 }
 
 func convertOSSecGroupToConfigSecGroup(osSecGroup groups.SecGroup) *infrav1.SecurityGroup {
