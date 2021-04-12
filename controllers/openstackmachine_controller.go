@@ -228,7 +228,6 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 		return ctrl.Result{}, nil
 	}
 
-	// TODO(sbueringer) wait for instance deleted
 	err = computeService.InstanceDelete(machine, openStackMachine)
 	if err != nil {
 		handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error deleting Openstack instance: %v", err))

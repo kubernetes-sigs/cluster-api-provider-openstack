@@ -60,6 +60,8 @@ const (
 
 	TimeoutPortDelete       = 3 * time.Minute
 	RetryIntervalPortDelete = 5 * time.Second
+
+	TimeoutInstanceDelete = 5 * time.Minute
 )
 
 // InstanceCreate creates a compute instance.
@@ -576,8 +578,23 @@ func (s *Service) InstanceDelete(machine *clusterv1.Machine, openStackMachine *i
 		return err
 	}
 	if err = deleteInstance(s, parsed.ID()); err != nil {
-		record.Warnf(openStackMachine, "FailedDeleteServer", "Failed to deleted server %s: %v", parsed.ID(), err)
+		record.Warnf(openStackMachine, "FailedDeleteServer", "Failed to deleted server %s with id %s: %v", openStackMachine.Name, parsed.ID(), err)
 		return err
+	}
+
+	err = util.PollImmediate(RetryIntervalInstanceStatus, TimeoutInstanceDelete, func() (bool, error) {
+		_, err = s.GetInstance(parsed.ID())
+		if err != nil {
+			if capoerrors.IsNotFound(err) {
+				return true, nil
+			}
+			return false, err
+		}
+		return false, nil
+	})
+	if err != nil {
+		record.Warnf(openStackMachine, "FailedDeleteServer", "Failed to deleted server %s with id %s: %v", openStackMachine.Name, parsed.ID(), err)
+		return fmt.Errorf("error deleting Openstack instance %s, %v", parsed.ID(), err)
 	}
 
 	record.Eventf(openStackMachine, "SuccessfulDeleteServer", "Deleted server %s", parsed.ID())
