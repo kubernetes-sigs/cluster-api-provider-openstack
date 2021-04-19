@@ -40,7 +40,7 @@ Note: You can use [the template file](../templates/cluster-template.yaml) by man
 # Using 'external-cloud-provider' flavor
 clusterctl config cluster capi-quickstart \
   --flavor external-cloud-provider \
-  --kubernetes-version v1.20.4 \
+  --kubernetes-version v1.20.6 \
   --control-plane-machine-count=3 \
   --worker-machine-count=1 \
   > capi-quickstart.yaml
@@ -48,7 +48,7 @@ clusterctl config cluster capi-quickstart \
 # Using 'without-lb' flavor
 clusterctl config cluster capi-quickstart \
   --flavor without-lb \
-  --kubernetes-version v1.20.4 \
+  --kubernetes-version v1.20.6 \
   --control-plane-machine-count=1 \
   --worker-machine-count=1 \
   > capi-quickstart.yaml
