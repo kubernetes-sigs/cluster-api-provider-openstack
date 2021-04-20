@@ -187,40 +187,35 @@ func setRouterExternalIPs(client *gophercloud.ServiceClient, openStackCluster *i
 }
 
 func (s *Service) DeleteRouter(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
-	routerName := getRouterName(clusterName)
-	router, err := s.getRouterByName(routerName)
+	router, err := s.getRouter(clusterName)
 	if err != nil {
 		return err
 	}
 
-	subnetName := getSubnetName(clusterName)
-	subnet, err := s.getSubnetByName(subnetName)
-	if err != nil {
-		return err
+	if router == nil || router.router.ID == "" {
+		return nil
 	}
 
-	if router.ID != "" {
-		if subnet.ID != "" {
-			_, err = routers.RemoveInterface(s.client, router.ID, routers.RemoveInterfaceOpts{
-				SubnetID: subnet.ID,
-			}).Extract()
-			if err != nil {
-				if capoerrors.IsNotFound(err) {
-					s.logger.V(4).Info("Router Interface already removed, no actions", "id", router.ID)
-					// nothing to do
-				}
-				return fmt.Errorf("unable to remove router interface: %v", err)
+	if router.subnet.ID != "" {
+		_, err = routers.RemoveInterface(s.client, router.router.ID, routers.RemoveInterfaceOpts{
+			SubnetID: router.subnet.ID,
+		}).Extract()
+		if err != nil {
+			if capoerrors.IsNotFound(err) {
+				s.logger.V(4).Info("Router Interface already removed, no actions", "id", router.router.ID)
+				// nothing to do
 			}
-			s.logger.V(4).Info("Removed RouterInterface of Router", "id", router.ID)
+			return fmt.Errorf("unable to remove router interface: %v", err)
 		}
-
-		if err = routers.Delete(s.client, router.ID).ExtractErr(); err != nil {
-			record.Warnf(openStackCluster, "FailedDeleteRouter", "Failed to delete router %s with id %s: %v", router.Name, router.ID, err)
-			return err
-		}
-		record.Eventf(openStackCluster, "SuccessfulDeleteRouter", "Deleted router %s with id %s", router.Name, router.ID)
-
+		s.logger.V(4).Info("Removed RouterInterface of Router", "id", router.router.ID)
 	}
+
+	if err = routers.Delete(s.client, router.router.ID).ExtractErr(); err != nil {
+		record.Warnf(openStackCluster, "FailedDeleteRouter", "Failed to delete router %s with id %s: %v", router.router.Name, router.router.ID, err)
+		return err
+	}
+
+	record.Eventf(openStackCluster, "SuccessfulDeleteRouter", "Deleted router %s with id %s", router.router.Name, router.router.ID)
 	return nil
 }
 
@@ -238,6 +233,26 @@ func (s *Service) getRouterInterfaces(routerID string) ([]ports.Port, error) {
 	}
 
 	return portList, nil
+}
+
+type Router struct {
+	router routers.Router
+	subnet subnets.Subnet
+}
+
+func (s *Service) getRouter(clusterName string) (*Router, error) {
+	routerName := getRouterName(clusterName)
+	router, err := s.getRouterByName(routerName)
+	if err != nil {
+		return nil, err
+	}
+
+	subnetName := getSubnetName(clusterName)
+	subnet, err := s.getSubnetByName(subnetName)
+	if err != nil {
+		return nil, err
+	}
+	return &Router{router: router, subnet: subnet}, nil
 }
 
 func (s *Service) getRouterByName(routerName string) (routers.Router, error) {
