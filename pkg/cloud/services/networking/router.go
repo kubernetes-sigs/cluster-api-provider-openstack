@@ -207,7 +207,7 @@ func (s *Service) DeleteRouter(openStackCluster *infrav1.OpenStackCluster, clust
 			if err != nil {
 				if capoerrors.IsNotFound(err) {
 					s.logger.V(4).Info("Router Interface already removed, no actions", "id", router.ID)
-					return nil
+					// nothing to do
 				}
 				return fmt.Errorf("unable to remove router interface: %v", err)
 			}

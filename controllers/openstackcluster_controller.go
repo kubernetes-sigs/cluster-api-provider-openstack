@@ -197,7 +197,7 @@ func deleteBastion(log logr.Logger, osProviderClient *gophercloud.ProviderClient
 
 	if instance != nil && instance.FloatingIP != "" {
 		if err = networkingService.DisassociateFloatingIP(openStackCluster, instance.FloatingIP); err != nil {
-			return errors.Errorf("failed to delete floating IP: %v", err)
+			return errors.Errorf("failed to disassociate floating IP: %v", err)
 		}
 		if err = networkingService.DeleteFloatingIP(openStackCluster, instance.FloatingIP); err != nil {
 			return errors.Errorf("failed to delete floating IP: %v", err)

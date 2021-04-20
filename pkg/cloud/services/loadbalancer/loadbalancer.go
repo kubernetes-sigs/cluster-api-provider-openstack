@@ -257,7 +257,11 @@ func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster,
 		return err
 	}
 
-	if lb != nil && lb.VipPortID != "" {
+	if lb == nil {
+		return nil
+	}
+
+	if lb.VipPortID != "" {
 		fip, err := s.networkingService.GetFloatingIPByPortID(lb.VipPortID)
 		if err != nil {
 			return err
@@ -271,19 +275,19 @@ func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster,
 				return err
 			}
 		}
-
-		deleteOpts := loadbalancers.DeleteOpts{
-			Cascade: true,
-		}
-		s.logger.Info("Deleting load balancer", "name", loadBalancerName, "cascade", deleteOpts.Cascade)
-		err = loadbalancers.Delete(s.loadbalancerClient, lb.ID, deleteOpts).ExtractErr()
-		if err != nil {
-			record.Warnf(openStackCluster, "FailedDeleteLoadBalancer", "Failed to delete load balancer %s with id %s: %v", lb.Name, lb.ID, err)
-			return err
-		}
-
-		record.Eventf(openStackCluster, "SuccessfulDeleteLoadBalancer", "Deleted load balancer %s with id %s", lb.Name, lb.ID)
 	}
+
+	deleteOpts := loadbalancers.DeleteOpts{
+		Cascade: true,
+	}
+	s.logger.Info("Deleting load balancer", "name", loadBalancerName, "cascade", deleteOpts.Cascade)
+	err = loadbalancers.Delete(s.loadbalancerClient, lb.ID, deleteOpts).ExtractErr()
+	if err != nil {
+		record.Warnf(openStackCluster, "FailedDeleteLoadBalancer", "Failed to delete load balancer %s with id %s: %v", lb.Name, lb.ID, err)
+		return err
+	}
+
+	record.Eventf(openStackCluster, "SuccessfulDeleteLoadBalancer", "Deleted load balancer %s with id %s", lb.Name, lb.ID)
 	return nil
 }
 

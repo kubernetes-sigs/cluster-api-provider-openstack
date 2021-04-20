@@ -576,29 +576,32 @@ func (s *Service) InstanceDelete(machine *clusterv1.Machine, openStackMachine *i
 	if err != nil {
 		return err
 	}
-	if instance != nil && instance.ID != "" {
-		if err = deleteInstance(s, instance.ID); err != nil {
-			record.Warnf(openStackMachine, "FailedDeleteServer", "Failed to deleted server %s with id %s: %v", openStackMachine.Name, instance.ID, err)
-			return err
-		}
 
-		err = util.PollImmediate(RetryIntervalInstanceStatus, TimeoutInstanceDelete, func() (bool, error) {
-			_, err = s.GetInstance(instance.ID)
-			if err != nil {
-				if capoerrors.IsNotFound(err) {
-					return true, nil
-				}
-				return false, err
-			}
-			return false, nil
-		})
-		if err != nil {
-			record.Warnf(openStackMachine, "FailedDeleteServer", "Failed to deleted server %s with id %s: %v", openStackMachine.Name, instance.ID, err)
-			return fmt.Errorf("error deleting Openstack instance %s, %v", instance.ID, err)
-		}
-
-		record.Eventf(openStackMachine, "SuccessfulDeleteServer", "Deleted server %s", instance.ID)
+	if instance == nil || instance.ID == "" {
+		return nil
 	}
+
+	if err = deleteInstance(s, instance.ID); err != nil {
+		record.Warnf(openStackMachine, "FailedDeleteServer", "Failed to deleted server %s with id %s: %v", openStackMachine.Name, instance.ID, err)
+		return err
+	}
+
+	err = util.PollImmediate(RetryIntervalInstanceStatus, TimeoutInstanceDelete, func() (bool, error) {
+		_, err = s.GetInstance(instance.ID)
+		if err != nil {
+			if capoerrors.IsNotFound(err) {
+				return true, nil
+			}
+			return false, err
+		}
+		return false, nil
+	})
+	if err != nil {
+		record.Warnf(openStackMachine, "FailedDeleteServer", "Failed to deleted server %s with id %s: %v", openStackMachine.Name, instance.ID, err)
+		return fmt.Errorf("error deleting Openstack instance %s, %v", instance.ID, err)
+	}
+
+	record.Eventf(openStackMachine, "SuccessfulDeleteServer", "Deleted server %s", instance.ID)
 	return nil
 }
 
