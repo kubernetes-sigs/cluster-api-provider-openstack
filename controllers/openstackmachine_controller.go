@@ -228,10 +228,11 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 		return ctrl.Result{}, nil
 	}
 
-	err = computeService.InstanceDelete(machine, openStackMachine)
-	if err != nil {
-		handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error deleting Openstack instance: %v", err))
-		return ctrl.Result{}, nil
+	if instance.Name != "" {
+		if err = computeService.DeleteInstance(openStackMachine, instance.Name); err != nil {
+			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error deleting Openstack instance: %v", err))
+			return ctrl.Result{}, nil
+		}
 	}
 
 	if !openStackCluster.Spec.ManagedAPIServerLoadBalancer && util.IsControlPlaneMachine(machine) && openStackCluster.Spec.APIServerFloatingIP == "" && instance.FloatingIP != "" {

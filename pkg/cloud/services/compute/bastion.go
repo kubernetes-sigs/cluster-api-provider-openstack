@@ -19,46 +19,9 @@ package compute
 import (
 	"fmt"
 
-	"sigs.k8s.io/cluster-api/util"
-
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
-	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 )
-
-func (s *Service) DeleteBastion(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
-	instance, err := s.InstanceExists(fmt.Sprintf("%s-bastion", clusterName))
-	if err != nil {
-		return err
-	}
-
-	if instance == nil || instance.ID == "" {
-		return nil
-	}
-
-	if err = deleteInstance(s, instance.ID); err != nil {
-		record.Warnf(openStackCluster, "FailedDeleteServer", "Failed to delete server %s with id %s: %v", instance.Name, instance.ID, err)
-		return err
-	}
-
-	err = util.PollImmediate(RetryIntervalInstanceStatus, TimeoutInstanceDelete, func() (bool, error) {
-		_, err = s.GetInstance(instance.ID)
-		if err != nil {
-			if capoerrors.IsNotFound(err) {
-				return true, nil
-			}
-			return false, err
-		}
-		return false, nil
-	})
-	if err != nil {
-		record.Warnf(openStackCluster, "FailedDeleteServer", "Failed to delete server %s with id %s: %v", instance.Name, instance.ID, err)
-		return fmt.Errorf("error deleting Openstack instance %s, %v", instance.ID, err)
-	}
-
-	record.Eventf(openStackCluster, "SuccessfulDeleteServer", "Deleted server %s with id %s", instance.Name, instance.ID)
-	return nil
-}
 
 func (s *Service) CreateBastion(openStackCluster *infrav1.OpenStackCluster, clusterName string) (*infrav1.Instance, error) {
 	name := fmt.Sprintf("%s-bastion", clusterName)

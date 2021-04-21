@@ -25,7 +25,6 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/gophercloud/gophercloud/pagination"
-	"github.com/pkg/errors"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
@@ -69,24 +68,24 @@ func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCl
 	if err != nil {
 		return err
 	}
-	allNetworks, err := networks.ExtractNetworks(allPages)
+	networkList, err := networks.ExtractNetworks(allPages)
 	if err != nil {
 		return err
 	}
 
-	switch len(allNetworks) {
+	switch len(networkList) {
 	case 0:
 		return fmt.Errorf("external network not found")
 	case 1:
 		openStackCluster.Status.ExternalNetwork = &infrav1.Network{
-			ID:   allNetworks[0].ID,
-			Name: allNetworks[0].Name,
-			Tags: allNetworks[0].Tags,
+			ID:   networkList[0].ID,
+			Name: networkList[0].Name,
+			Tags: networkList[0].Tags,
 		}
-		s.logger.Info("External network found", "network id", allNetworks[0].ID)
+		s.logger.Info("External network found", "network id", networkList[0].ID)
 		return nil
 	}
-	return errors.New("too many resources")
+	return fmt.Errorf("found %d external networks, which should not happen", len(networkList))
 }
 
 func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
@@ -154,7 +153,6 @@ func (s *Service) DeleteNetwork(openStackCluster *infrav1.OpenStackCluster, clus
 		return err
 	}
 	if network.ID == "" {
-		// nothing to do
 		return nil
 	}
 
@@ -262,7 +260,7 @@ func (s *Service) getNetworkByID(networkID string) (networks.Network, error) {
 	case 1:
 		return networkList[0], nil
 	}
-	return networks.Network{}, errors.New("multiple external network found")
+	return networks.Network{}, fmt.Errorf("found %d networks with id %s, which should not happen", len(networkList), networkID)
 }
 
 func (s *Service) getNetworkByName(networkName string) (networks.Network, error) {
@@ -286,7 +284,7 @@ func (s *Service) getNetworkByName(networkName string) (networks.Network, error)
 	case 1:
 		return networkList[0], nil
 	}
-	return networks.Network{}, errors.New("too many resources")
+	return networks.Network{}, fmt.Errorf("found %d networks with the name %s, which should not happen", len(networkList), networkName)
 }
 
 func (s *Service) GetNetworksByFilter(opts networks.ListOptsBuilder) ([]networks.Network, error) {

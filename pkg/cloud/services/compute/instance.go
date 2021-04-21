@@ -41,6 +41,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/gophercloud/utils/openstack/compute/v2/flavors"
+	"k8s.io/apimachinery/pkg/runtime"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha4"
 	"sigs.k8s.io/cluster-api/util"
 
@@ -566,13 +567,8 @@ func (s *Service) AssociateFloatingIP(instanceID, floatingIP string) error {
 	return nil
 }
 
-func (s *Service) InstanceDelete(machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) error {
-	if openStackMachine == nil {
-		// nothing to do
-		return nil
-	}
-
-	instance, err := s.InstanceExists(openStackMachine.Name)
+func (s *Service) DeleteInstance(object runtime.Object, instanceName string) error {
+	instance, err := s.InstanceExists(instanceName)
 	if err != nil {
 		return err
 	}
@@ -581,33 +577,8 @@ func (s *Service) InstanceDelete(machine *clusterv1.Machine, openStackMachine *i
 		return nil
 	}
 
-	if err = deleteInstance(s, instance.ID); err != nil {
-		record.Warnf(openStackMachine, "FailedDeleteServer", "Failed to deleted server %s with id %s: %v", openStackMachine.Name, instance.ID, err)
-		return err
-	}
-
-	err = util.PollImmediate(RetryIntervalInstanceStatus, TimeoutInstanceDelete, func() (bool, error) {
-		_, err = s.GetInstance(instance.ID)
-		if err != nil {
-			if capoerrors.IsNotFound(err) {
-				return true, nil
-			}
-			return false, err
-		}
-		return false, nil
-	})
-	if err != nil {
-		record.Warnf(openStackMachine, "FailedDeleteServer", "Failed to deleted server %s with id %s: %v", openStackMachine.Name, instance.ID, err)
-		return fmt.Errorf("error deleting Openstack instance %s, %v", instance.ID, err)
-	}
-
-	record.Eventf(openStackMachine, "SuccessfulDeleteServer", "Deleted server %s", instance.ID)
-	return nil
-}
-
-func deleteInstance(is *Service, serverID string) error {
 	// get instance port id
-	allInterfaces, err := attachinterfaces.List(is.computeClient, serverID).AllPages()
+	allInterfaces, err := attachinterfaces.List(s.computeClient, instance.ID).AllPages()
 	if err != nil {
 		return err
 	}
@@ -616,16 +587,16 @@ func deleteInstance(is *Service, serverID string) error {
 		return err
 	}
 	if len(instanceInterfaces) < 1 {
-		return servers.Delete(is.computeClient, serverID).ExtractErr()
+		return servers.Delete(s.computeClient, instance.ID).ExtractErr()
 	}
 
-	trunkSupport, err := getTrunkSupport(is)
+	trunkSupport, err := getTrunkSupport(s)
 	if err != nil {
 		return fmt.Errorf("obtaining network extensions: %v", err)
 	}
 	// get and delete trunks
 	for _, port := range instanceInterfaces {
-		err := attachinterfaces.Delete(is.computeClient, serverID, port.PortID).ExtractErr()
+		err := attachinterfaces.Delete(s.computeClient, instance.ID, port.PortID).ExtractErr()
 		if err != nil {
 			return err
 		}
@@ -633,7 +604,7 @@ func deleteInstance(is *Service, serverID string) error {
 			listOpts := trunks.ListOpts{
 				PortID: port.PortID,
 			}
-			allTrunks, err := trunks.List(is.networkClient, listOpts).AllPages()
+			allTrunks, err := trunks.List(s.networkClient, listOpts).AllPages()
 			if err != nil {
 				return err
 			}
@@ -643,7 +614,7 @@ func deleteInstance(is *Service, serverID string) error {
 			}
 			if len(trunkInfo) == 1 {
 				err = util.PollImmediate(RetryIntervalTrunkDelete, TimeoutTrunkDelete, func() (bool, error) {
-					if err := trunks.Delete(is.networkClient, trunkInfo[0].ID).ExtractErr(); err != nil {
+					if err := trunks.Delete(s.networkClient, trunkInfo[0].ID).ExtractErr(); err != nil {
 						if capoerrors.IsRetryable(err) {
 							return false, nil
 						}
@@ -659,7 +630,7 @@ func deleteInstance(is *Service, serverID string) error {
 
 		// delete port
 		err = util.PollImmediate(RetryIntervalPortDelete, TimeoutPortDelete, func() (bool, error) {
-			err := ports.Delete(is.networkClient, port.PortID).ExtractErr()
+			err := ports.Delete(s.networkClient, port.PortID).ExtractErr()
 			if err != nil {
 				if capoerrors.IsRetryable(err) {
 					return false, nil
@@ -673,8 +644,28 @@ func deleteInstance(is *Service, serverID string) error {
 		}
 	}
 
-	// delete instance
-	return servers.Delete(is.computeClient, serverID).ExtractErr()
+	if err = servers.Delete(s.computeClient, instance.ID).ExtractErr(); err != nil {
+		record.Warnf(object, "FailedDeleteServer", "Failed to deleted server %s with id %s: %v", instance.Name, instance.ID, err)
+		return err
+	}
+
+	err = util.PollImmediate(RetryIntervalInstanceStatus, TimeoutInstanceDelete, func() (bool, error) {
+		_, err = s.GetInstance(instance.ID)
+		if err != nil {
+			if capoerrors.IsNotFound(err) {
+				return true, nil
+			}
+			return false, err
+		}
+		return false, nil
+	})
+	if err != nil {
+		record.Warnf(object, "FailedDeleteServer", "Failed to deleted server %s with id %s: %v", instance.Name, instance.ID, err)
+		return fmt.Errorf("error deleting Openstack instance %s, %v", instance.ID, err)
+	}
+
+	record.Eventf(object, "SuccessfulDeleteServer", "Deleted server %s", instance.ID)
+	return nil
 }
 
 func (s *Service) GetInstance(resourceID string) (instance *infrav1.Instance, err error) {

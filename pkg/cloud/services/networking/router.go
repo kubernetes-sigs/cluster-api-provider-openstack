@@ -24,7 +24,6 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
-	"github.com/pkg/errors"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
@@ -187,35 +186,35 @@ func setRouterExternalIPs(client *gophercloud.ServiceClient, openStackCluster *i
 }
 
 func (s *Service) DeleteRouter(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
-	router, err := s.getRouter(clusterName)
+	router, subnet, err := s.getRouter(clusterName)
 	if err != nil {
 		return err
 	}
 
-	if router == nil || router.router.ID == "" {
+	if router.ID == "" {
 		return nil
 	}
 
-	if router.subnet.ID != "" {
-		_, err = routers.RemoveInterface(s.client, router.router.ID, routers.RemoveInterfaceOpts{
-			SubnetID: router.subnet.ID,
+	if subnet.ID != "" {
+		_, err = routers.RemoveInterface(s.client, router.ID, routers.RemoveInterfaceOpts{
+			SubnetID: subnet.ID,
 		}).Extract()
 		if err != nil {
-			if capoerrors.IsNotFound(err) {
-				s.logger.V(4).Info("Router Interface already removed, no actions", "id", router.router.ID)
-				// nothing to do
+			if !capoerrors.IsNotFound(err) {
+				return fmt.Errorf("unable to remove router interface: %v", err)
 			}
-			return fmt.Errorf("unable to remove router interface: %v", err)
+			s.logger.V(4).Info("Router Interface already removed, nothing to do", "id", router.ID)
+		} else {
+			s.logger.V(4).Info("Removed RouterInterface of Router", "id", router.ID)
 		}
-		s.logger.V(4).Info("Removed RouterInterface of Router", "id", router.router.ID)
 	}
 
-	if err = routers.Delete(s.client, router.router.ID).ExtractErr(); err != nil {
-		record.Warnf(openStackCluster, "FailedDeleteRouter", "Failed to delete router %s with id %s: %v", router.router.Name, router.router.ID, err)
+	if err = routers.Delete(s.client, router.ID).ExtractErr(); err != nil {
+		record.Warnf(openStackCluster, "FailedDeleteRouter", "Failed to delete router %s with id %s: %v", router.Name, router.ID, err)
 		return err
 	}
 
-	record.Eventf(openStackCluster, "SuccessfulDeleteRouter", "Deleted router %s with id %s", router.router.Name, router.router.ID)
+	record.Eventf(openStackCluster, "SuccessfulDeleteRouter", "Deleted router %s with id %s", router.Name, router.ID)
 	return nil
 }
 
@@ -235,24 +234,20 @@ func (s *Service) getRouterInterfaces(routerID string) ([]ports.Port, error) {
 	return portList, nil
 }
 
-type Router struct {
-	router routers.Router
-	subnet subnets.Subnet
-}
-
-func (s *Service) getRouter(clusterName string) (*Router, error) {
+func (s *Service) getRouter(clusterName string) (routers.Router, subnets.Subnet, error) {
 	routerName := getRouterName(clusterName)
 	router, err := s.getRouterByName(routerName)
 	if err != nil {
-		return nil, err
+		return routers.Router{}, subnets.Subnet{}, err
 	}
 
 	subnetName := getSubnetName(clusterName)
 	subnet, err := s.getSubnetByName(subnetName)
 	if err != nil {
-		return nil, err
+		return router, subnets.Subnet{}, err
 	}
-	return &Router{router: router, subnet: subnet}, nil
+
+	return router, subnet, nil
 }
 
 func (s *Service) getRouterByName(routerName string) (routers.Router, error) {
@@ -268,17 +263,13 @@ func (s *Service) getRouterByName(routerName string) (routers.Router, error) {
 		return routers.Router{}, err
 	}
 
-	if len(routerList) > 1 {
-		return routers.Router{}, fmt.Errorf("found %d router with the name %s, which should not happen", len(routerList), routerName)
-	}
-
 	switch len(routerList) {
 	case 0:
 		return routers.Router{}, nil
 	case 1:
 		return routerList[0], nil
 	}
-	return routers.Router{}, errors.New("too many resources")
+	return routers.Router{}, fmt.Errorf("found %d router with the name %s, which should not happen", len(routerList), routerName)
 }
 
 func (s *Service) getSubnetByName(subnetName string) (subnets.Subnet, error) {
@@ -302,7 +293,7 @@ func (s *Service) getSubnetByName(subnetName string) (subnets.Subnet, error) {
 	case 1:
 		return subnetList[0], nil
 	}
-	return subnets.Subnet{}, errors.New("too many resources")
+	return subnets.Subnet{}, fmt.Errorf("found %d subnets with the name %s, which should not happen", len(subnetList), subnetName)
 }
 
 func getRouterName(clusterName string) string {
