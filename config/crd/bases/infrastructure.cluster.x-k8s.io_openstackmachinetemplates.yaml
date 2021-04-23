@@ -294,7 +294,6 @@ spec:
                         type: object
                     required:
                     - flavor
-                    - image
                     type: object
                 required:
                 - spec
@@ -581,7 +580,6 @@ spec:
                         type: object
                     required:
                     - flavor
-                    - image
                     type: object
                 required:
                 - spec

@@ -335,7 +335,6 @@ spec:
                         type: object
                     required:
                     - flavor
-                    - image
                     type: object
                 type: object
               cloudName:
@@ -1342,7 +1341,6 @@ spec:
                         type: object
                     required:
                     - flavor
-                    - image
                     type: object
                 type: object
               cloudName:

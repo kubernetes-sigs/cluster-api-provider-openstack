@@ -299,7 +299,6 @@ spec:
                 type: object
             required:
             - flavor
-            - image
             type: object
           status:
             description: OpenStackMachineStatus defines the observed state of OpenStackMachine.
@@ -635,7 +634,6 @@ spec:
                 type: object
             required:
             - flavor
-            - image
             type: object
           status:
             description: OpenStackMachineStatus defines the observed state of OpenStackMachine.
