@@ -250,14 +250,31 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 	return nil
 }
 
-func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster, loadBalancerName string) error {
+func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
+	loadBalancerName := getLoadBalancerName(clusterName)
 	lb, err := checkIfLbExists(s.loadbalancerClient, loadBalancerName)
 	if err != nil {
 		return err
 	}
+
 	if lb == nil {
-		// nothing to do
 		return nil
+	}
+
+	if lb.VipPortID != "" {
+		fip, err := s.networkingService.GetFloatingIPByPortID(lb.VipPortID)
+		if err != nil {
+			return err
+		}
+
+		if fip != nil && fip.FloatingIP != "" {
+			if err = s.networkingService.DisassociateFloatingIP(openStackCluster, fip.FloatingIP); err != nil {
+				return err
+			}
+			if err = s.networkingService.DeleteFloatingIP(openStackCluster, fip.FloatingIP); err != nil {
+				return err
+			}
+		}
 	}
 
 	deleteOpts := loadbalancers.DeleteOpts{
@@ -280,9 +297,16 @@ func (s *Service) DeleteLoadBalancerMember(openStackCluster *infrav1.OpenStackCl
 	}
 
 	loadBalancerName := getLoadBalancerName(clusterName)
-	s.logger.Info("Reconciling load balancer", "name", loadBalancerName)
+	lb, err := checkIfLbExists(s.loadbalancerClient, loadBalancerName)
+	if err != nil {
+		return err
+	}
+	if lb == nil {
+		// nothing to do
+		return nil
+	}
 
-	lbID := openStackCluster.Status.Network.APIServerLoadBalancer.ID
+	lbID := lb.ID
 
 	portList := []int{int(openStackCluster.Spec.ControlPlaneEndpoint.Port)}
 	portList = append(portList, openStackCluster.Spec.APIServerLoadBalancerAdditionalPorts...)

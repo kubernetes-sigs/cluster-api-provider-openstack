@@ -27,7 +27,7 @@ import (
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
+	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 )
 
 func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
@@ -44,7 +44,7 @@ func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, cl
 		return nil
 	}
 
-	routerName := fmt.Sprintf("%s-cluster-%s", networkPrefix, clusterName)
+	routerName := getRouterName(clusterName)
 	s.logger.Info("Reconciling router", "name", routerName)
 
 	allPages, err := routers.List(s.client, routers.ListOpts{
@@ -185,41 +185,36 @@ func setRouterExternalIPs(client *gophercloud.ServiceClient, openStackCluster *i
 	return nil
 }
 
-func (s *Service) DeleteRouter(openStackCluster *infrav1.OpenStackCluster, network *infrav1.Network) error {
-	if network.Router == nil || network.Router.ID == "" {
-		s.logger.V(4).Info("No need to delete router since no router exists.")
-		return nil
-	}
-	exists, err := s.existsRouter(network.Router.ID)
+func (s *Service) DeleteRouter(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
+	router, subnet, err := s.getRouter(clusterName)
 	if err != nil {
 		return err
 	}
-	if !exists {
-		s.logger.Info("Skipping router deletion because router doesn't exist", "router", network.Router.ID)
+
+	if router.ID == "" {
 		return nil
 	}
-	if network.Subnet == nil || network.Subnet.ID == "" {
-		s.logger.V(4).Info("Skipping removing router interface since no subnet exists.")
-	} else {
-		_, err = routers.RemoveInterface(s.client, network.Router.ID, routers.RemoveInterfaceOpts{
-			SubnetID: network.Subnet.ID,
+
+	if subnet.ID != "" {
+		_, err = routers.RemoveInterface(s.client, router.ID, routers.RemoveInterfaceOpts{
+			SubnetID: subnet.ID,
 		}).Extract()
 		if err != nil {
-			if errors.IsNotFound(err) {
-				s.logger.V(4).Info("Router Interface already removed, no actions", "id", network.Router.ID)
-				return nil
+			if !capoerrors.IsNotFound(err) {
+				return fmt.Errorf("unable to remove router interface: %v", err)
 			}
-			return fmt.Errorf("unable to remove router interface: %v", err)
+			s.logger.V(4).Info("Router Interface already removed, nothing to do", "id", router.ID)
+		} else {
+			s.logger.V(4).Info("Removed RouterInterface of Router", "id", router.ID)
 		}
-		s.logger.V(4).Info("Removed RouterInterface of Router", "id", network.Router.ID)
 	}
 
-	if err = routers.Delete(s.client, network.Router.ID).ExtractErr(); err != nil {
-		record.Warnf(openStackCluster, "FailedDeleteRouter", "Failed to delete router %s with id %s: %v", network.Router.Name, network.Router.ID, err)
+	if err = routers.Delete(s.client, router.ID).ExtractErr(); err != nil {
+		record.Warnf(openStackCluster, "FailedDeleteRouter", "Failed to delete router %s with id %s: %v", router.Name, router.ID, err)
 		return err
 	}
 
-	record.Eventf(openStackCluster, "SuccessfulDeleteRouter", "Deleted router %s with id %s", network.Router.Name, network.Router.ID)
+	record.Eventf(openStackCluster, "SuccessfulDeleteRouter", "Deleted router %s with id %s", router.Name, router.ID)
 	return nil
 }
 
@@ -239,19 +234,68 @@ func (s *Service) getRouterInterfaces(routerID string) ([]ports.Port, error) {
 	return portList, nil
 }
 
-func (s *Service) existsRouter(routerID string) (bool, error) {
-	if routerID == "" {
-		return false, nil
-	}
-	router, err := routers.Get(s.client, routerID).Extract()
+func (s *Service) getRouter(clusterName string) (routers.Router, subnets.Subnet, error) {
+	routerName := getRouterName(clusterName)
+	router, err := s.getRouterByName(routerName)
 	if err != nil {
-		if errors.IsNotFound(err) {
-			return false, nil
-		}
-		return false, err
+		return routers.Router{}, subnets.Subnet{}, err
 	}
-	if router == nil {
-		return false, nil
+
+	subnetName := getSubnetName(clusterName)
+	subnet, err := s.getSubnetByName(subnetName)
+	if err != nil {
+		return router, subnets.Subnet{}, err
 	}
-	return true, nil
+
+	return router, subnet, nil
+}
+
+func (s *Service) getRouterByName(routerName string) (routers.Router, error) {
+	allPages, err := routers.List(s.client, routers.ListOpts{
+		Name: routerName,
+	}).AllPages()
+	if err != nil {
+		return routers.Router{}, err
+	}
+
+	routerList, err := routers.ExtractRouters(allPages)
+	if err != nil {
+		return routers.Router{}, err
+	}
+
+	switch len(routerList) {
+	case 0:
+		return routers.Router{}, nil
+	case 1:
+		return routerList[0], nil
+	}
+	return routers.Router{}, fmt.Errorf("found %d router with the name %s, which should not happen", len(routerList), routerName)
+}
+
+func (s *Service) getSubnetByName(subnetName string) (subnets.Subnet, error) {
+	opts := subnets.ListOpts{
+		Name: subnetName,
+	}
+
+	allPages, err := subnets.List(s.client, opts).AllPages()
+	if err != nil {
+		return subnets.Subnet{}, err
+	}
+
+	subnetList, err := subnets.ExtractSubnets(allPages)
+	if err != nil {
+		return subnets.Subnet{}, err
+	}
+
+	switch len(subnetList) {
+	case 0:
+		return subnets.Subnet{}, nil
+	case 1:
+		return subnetList[0], nil
+	}
+	return subnets.Subnet{}, fmt.Errorf("found %d subnets with the name %s, which should not happen", len(subnetList), subnetName)
+}
+
+func getRouterName(clusterName string) string {
+	return fmt.Sprintf("%s-cluster-%s", networkPrefix, clusterName)
 }
