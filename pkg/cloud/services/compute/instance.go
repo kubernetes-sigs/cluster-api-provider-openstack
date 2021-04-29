@@ -64,8 +64,7 @@ const (
 	TimeoutInstanceDelete = 5 * time.Minute
 )
 
-// InstanceCreate creates a compute instance.
-func (s *Service) InstanceCreate(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, clusterName string, userData string) (instance *infrav1.Instance, err error) {
+func (s *Service) CreateInstance(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, clusterName string, userData string) (instance *infrav1.Instance, err error) {
 	if openStackMachine == nil {
 		return nil, fmt.Errorf("create Options need be specified to create instace")
 	}
@@ -142,50 +141,36 @@ func (s *Service) InstanceCreate(openStackCluster *infrav1.OpenStackCluster, mac
 	}
 	input.Networks = &nets
 
-	out, err := createInstance(s, clusterName, input)
+	out, err := createInstance(s, openStackMachine, clusterName, input)
 	if err != nil {
-		record.Warnf(openStackMachine, "FailedCreateServer", "Failed to create server %s: %v", input.Name, err)
 		return nil, err
 	}
-	record.Eventf(openStackMachine, "SuccessfulCreateServer", "Created server %s with id %s", out.Name, out.ID)
 	return out, nil
 }
 
-func createInstance(is *Service, clusterName string, i *infrav1.Instance) (*infrav1.Instance, error) {
-	// Get image ID
-	imageID, err := getImageID(is, i.Image)
-	if err != nil {
-		return nil, fmt.Errorf("create new server err: %v", err)
-	}
-
+func createInstance(is *Service, eventObject runtime.Object, clusterName string, i *infrav1.Instance) (*infrav1.Instance, error) {
 	accessIPv4 := ""
-	networkList := i.Networks
-	portsList := []servers.Network{}
-	for _, network := range *networkList {
-		network := network
+	portList := []servers.Network{}
+
+	for _, network := range *i.Networks {
 		if network.ID == "" {
 			return nil, fmt.Errorf("no network was found or provided. Please check your machine configuration and try again")
 		}
-		allPages, err := ports.List(is.networkClient, ports.ListOpts{
-			Name:      i.Name,
-			NetworkID: network.ID,
-		}).AllPages()
+
+		port, err := getOrCreatePort(is, eventObject, clusterName, i.Name, network, i.SecurityGroups)
 		if err != nil {
-			return nil, fmt.Errorf("searching for existing port for server: %v", err)
+			return nil, err
 		}
-		portList, err := ports.ExtractPorts(allPages)
-		if err != nil {
-			return nil, fmt.Errorf("searching for existing port for server err: %v", err)
-		}
-		var port ports.Port
-		if len(portList) == 0 {
-			// create server port
-			port, err = createPort(is, clusterName, i.Name, &network, i.SecurityGroups)
+
+		if i.Trunk {
+			trunk, err := getOrCreateTrunk(is, eventObject, i.Name, port.ID)
 			if err != nil {
-				return nil, fmt.Errorf("failed to create port err: %v", err)
+				return nil, err
 			}
-		} else {
-			port = portList[0]
+
+			if err = replaceAllAttributesTags(is, eventObject, trunk.ID, i.Tags); err != nil {
+				return nil, err
+			}
 		}
 
 		for _, fip := range port.FixedIPs {
@@ -194,52 +179,21 @@ func createInstance(is *Service, clusterName string, i *infrav1.Instance) (*infr
 			}
 		}
 
-		portsList = append(portsList, servers.Network{
+		portList = append(portList, servers.Network{
 			Port: port.ID,
 		})
-
-		if i.Trunk {
-			allPages, err := trunks.List(is.networkClient, trunks.ListOpts{
-				Name:   i.Name,
-				PortID: port.ID,
-			}).AllPages()
-			if err != nil {
-				return nil, fmt.Errorf("searching for existing trunk for server err: %v", err)
-			}
-			trunkList, err := trunks.ExtractTrunks(allPages)
-			if err != nil {
-				return nil, fmt.Errorf("searching for existing trunk for server err: %v", err)
-			}
-			var trunk trunks.Trunk
-			if len(trunkList) == 0 {
-				// create trunk with the previous port as parent
-				trunkCreateOpts := trunks.CreateOpts{
-					Name:   i.Name,
-					PortID: port.ID,
-				}
-				newTrunk, err := trunks.Create(is.networkClient, trunkCreateOpts).Extract()
-				if err != nil {
-					return nil, fmt.Errorf("create trunk for server err: %v", err)
-				}
-				trunk = *newTrunk
-			} else {
-				trunk = trunkList[0]
-			}
-
-			_, err = attributestags.ReplaceAll(is.networkClient, "trunks", trunk.ID, attributestags.ReplaceAllOpts{
-				Tags: i.Tags,
-			}).Extract()
-			if err != nil {
-				return nil, fmt.Errorf("tagging trunk for server err: %v", err)
-			}
-		}
 	}
 
 	if i.Subnet != "" && accessIPv4 == "" {
-		if errd := deletePorts(is, portsList); errd != nil {
-			return nil, fmt.Errorf("no ports with fixed IPs found on Subnet %q: error cleaning up ports: %v", i.Subnet, errd)
+		if err := deletePorts(is, eventObject, portList); err != nil {
+			return nil, err
 		}
 		return nil, fmt.Errorf("no ports with fixed IPs found on Subnet %q", i.Subnet)
+	}
+
+	imageID, err := getImageID(is, i.Image)
+	if err != nil {
+		return nil, fmt.Errorf("create new server: %v", err)
 	}
 
 	flavorID, err := flavors.IDFromName(is.computeClient, i.Flavor)
@@ -252,7 +206,7 @@ func createInstance(is *Service, clusterName string, i *infrav1.Instance) (*infr
 		ImageRef:         imageID,
 		FlavorRef:        flavorID,
 		AvailabilityZone: i.FailureDomain,
-		Networks:         portsList,
+		Networks:         portList,
 		UserData:         []byte(i.UserData),
 		SecurityGroups:   *i.SecurityGroups,
 		Tags:             i.Tags,
@@ -270,8 +224,8 @@ func createInstance(is *Service, clusterName string, i *infrav1.Instance) (*infr
 		KeyName:           i.SSHKeyName,
 	}).Extract()
 	if err != nil {
-		if errd := deletePorts(is, portsList); errd != nil {
-			return nil, fmt.Errorf("error recover creating Openstack instance: error cleaning up ports: %v", errd)
+		if err = deletePorts(is, eventObject, portList); err != nil {
+			return nil, err
 		}
 		return nil, fmt.Errorf("error creating Openstack instance: %v", err)
 	}
@@ -289,72 +243,12 @@ func createInstance(is *Service, clusterName string, i *infrav1.Instance) (*infr
 		return instance.State == infrav1.InstanceStateActive, nil
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error creating Openstack instance %s, %v", server.ID, err)
+		record.Warnf(eventObject, "FailedCreateServer", "Failed to create server %s: %v", instance.Name, err)
+		return nil, err
 	}
+
+	record.Eventf(eventObject, "SuccessfulCreateServer", "Created server %s with id %s", instance.Name, instance.ID)
 	return instance, nil
-}
-
-func serverToInstance(v *servers.Server) (*infrav1.Instance, error) {
-	if v == nil {
-		return nil, nil
-	}
-	i := &infrav1.Instance{
-		ID:         v.ID,
-		Name:       v.Name,
-		SSHKeyName: v.KeyName,
-		State:      infrav1.InstanceState(v.Status),
-	}
-	addrMap, err := GetIPFromInstance(*v)
-	if err != nil {
-		return i, err
-	}
-	i.IP = addrMap["internal"]
-	if addrMap["floating"] != "" {
-		i.FloatingIP = addrMap["floating"]
-	}
-	return i, nil
-}
-
-func GetIPFromInstance(v servers.Server) (map[string]string, error) {
-	addrMap := make(map[string]string)
-	if v.AccessIPv4 != "" && net.ParseIP(v.AccessIPv4) != nil {
-		addrMap["internal"] = v.AccessIPv4
-		return addrMap, nil
-	}
-	type networkInterface struct {
-		Address string  `json:"addr"`
-		Version float64 `json:"version"`
-		Type    string  `json:"OS-EXT-IPS:type"`
-	}
-
-	for _, b := range v.Addresses {
-		list, err := json.Marshal(b)
-		if err != nil {
-			return nil, fmt.Errorf("extract IP from instance err: %v", err)
-		}
-		var networkList []interface{}
-		err = json.Unmarshal(list, &networkList)
-		if err != nil {
-			return nil, fmt.Errorf("extract IP from instance err: %v", err)
-		}
-		for _, network := range networkList {
-			var netInterface networkInterface
-			b, _ := json.Marshal(network)
-			err = json.Unmarshal(b, &netInterface)
-			if err != nil {
-				return nil, fmt.Errorf("extract IP from instance err: %v", err)
-			}
-			if netInterface.Version == 4.0 {
-				if netInterface.Type == "floating" {
-					addrMap["floating"] = netInterface.Address
-				} else {
-					addrMap["internal"] = netInterface.Address
-				}
-			}
-		}
-	}
-
-	return addrMap, nil
 }
 
 // applyRootVolume sets a root volume if the root volume Size is not 0.
@@ -482,21 +376,25 @@ func getServerNetworks(networkClient *gophercloud.ServiceClient, networkParams [
 	return nets, nil
 }
 
-func isDuplicate(list []string, name string) bool {
-	if len(list) == 0 {
-		return false
+func getOrCreatePort(is *Service, eventObject runtime.Object, clusterName string, portName string, net infrav1.Network, securityGroups *[]string) (*ports.Port, error) {
+	allPages, err := ports.List(is.networkClient, ports.ListOpts{
+		Name:      portName,
+		NetworkID: net.ID,
+	}).AllPages()
+	if err != nil {
+		return nil, fmt.Errorf("searching for existing port for server: %v", err)
 	}
-	for _, element := range list {
-		if element == name {
-			return true
-		}
+	portList, err := ports.ExtractPorts(allPages)
+	if err != nil {
+		return nil, fmt.Errorf("searching for existing port for server: %v", err)
 	}
-	return false
-}
 
-func createPort(is *Service, clusterName string, name string, net *infrav1.Network, securityGroups *[]string) (ports.Port, error) {
+	if len(portList) != 0 {
+		return &portList[0], nil
+	}
+
 	portCreateOpts := ports.CreateOpts{
-		Name:           name,
+		Name:           portName,
 		NetworkID:      net.ID,
 		SecurityGroups: securityGroups,
 		Description:    fmt.Sprintf("Created by cluster-api-provider-openstack cluster %s", clusterName),
@@ -504,25 +402,57 @@ func createPort(is *Service, clusterName string, name string, net *infrav1.Netwo
 	if net.Subnet.ID != "" {
 		portCreateOpts.FixedIPs = []ports.IP{{SubnetID: net.Subnet.ID}}
 	}
-	newPort, err := ports.Create(is.networkClient, portCreateOpts).Extract()
+	port, err := ports.Create(is.networkClient, portCreateOpts).Extract()
 	if err != nil {
-		return ports.Port{}, fmt.Errorf("create port for server: %v", err)
+		record.Warnf(eventObject, "FailedCreatePort", "Failed to create port %s: %v", portName, err)
+		return nil, err
 	}
-	return *newPort, nil
+
+	record.Eventf(eventObject, "SuccessfulCreatePort", "Created port %s with id %s", port.Name, port.ID)
+	return port, nil
 }
 
-func deletePorts(s *Service, nets []servers.Network) error {
-	for _, n := range nets {
-		_, err := ports.Get(s.networkClient, n.Port).Extract()
-		if err != nil {
-			if capoerrors.IsNotFound(err) {
-				return nil
-			}
-		}
-		if err := ports.Delete(s.networkClient, n.Port).ExtractErr(); err != nil {
-			return err
-		}
+func getOrCreateTrunk(is *Service, eventObject runtime.Object, trunkName, portID string) (*trunks.Trunk, error) {
+	allPages, err := trunks.List(is.networkClient, trunks.ListOpts{
+		Name:   trunkName,
+		PortID: portID,
+	}).AllPages()
+	if err != nil {
+		return nil, fmt.Errorf("searching for existing trunk for server: %v", err)
 	}
+	trunkList, err := trunks.ExtractTrunks(allPages)
+	if err != nil {
+		return nil, fmt.Errorf("searching for existing trunk for server: %v", err)
+	}
+
+	if len(trunkList) != 0 {
+		return &trunkList[0], nil
+	}
+
+	trunkCreateOpts := trunks.CreateOpts{
+		Name:   trunkName,
+		PortID: portID,
+	}
+	trunk, err := trunks.Create(is.networkClient, trunkCreateOpts).Extract()
+	if err != nil {
+		record.Warnf(eventObject, "FailedCreateTrunk", "Failed to create trunk %s: %v", trunkName, err)
+		return nil, err
+	}
+
+	record.Eventf(eventObject, "SuccessfulCreateTrunk", "Created trunk %s with id %s", trunk.Name, trunk.ID)
+	return trunk, nil
+}
+
+func replaceAllAttributesTags(is *Service, eventObject runtime.Object, trunkID string, tags []string) error {
+	_, err := attributestags.ReplaceAll(is.networkClient, "trunks", trunkID, attributestags.ReplaceAllOpts{
+		Tags: tags,
+	}).Extract()
+	if err != nil {
+		record.Warnf(eventObject, "FailedReplaceAllAttributesTags", "Failed to replace all attributestags, trunk %s: %v", trunkID, err)
+		return err
+	}
+
+	record.Eventf(eventObject, "SuccessfulReplaceAllAttributeTags", "Replaced all attributestags %s with tags %s", trunkID, tags)
 	return nil
 }
 
@@ -567,7 +497,7 @@ func (s *Service) AssociateFloatingIP(instanceID, floatingIP string) error {
 	return nil
 }
 
-func (s *Service) DeleteInstance(object runtime.Object, instanceName string) error {
+func (s *Service) DeleteInstance(eventObject runtime.Object, instanceName string) error {
 	instance, err := s.InstanceExists(instanceName)
 	if err != nil {
 		return err
@@ -577,7 +507,6 @@ func (s *Service) DeleteInstance(object runtime.Object, instanceName string) err
 		return nil
 	}
 
-	// get instance port id
 	allInterfaces, err := attachinterfaces.List(s.computeClient, instance.ID).AllPages()
 	if err != nil {
 		return err
@@ -587,7 +516,7 @@ func (s *Service) DeleteInstance(object runtime.Object, instanceName string) err
 		return err
 	}
 	if len(instanceInterfaces) < 1 {
-		return servers.Delete(s.computeClient, instance.ID).ExtractErr()
+		return deleteInstance(s, eventObject, instance.ID)
 	}
 
 	trunkSupport, err := getTrunkSupport(s)
@@ -596,61 +525,164 @@ func (s *Service) DeleteInstance(object runtime.Object, instanceName string) err
 	}
 	// get and delete trunks
 	for _, port := range instanceInterfaces {
-		err := attachinterfaces.Delete(s.computeClient, instance.ID, port.PortID).ExtractErr()
-		if err != nil {
+		if err = deleteAttachInterface(s, eventObject, instance.ID, port.PortID); err != nil {
 			return err
 		}
+
 		if trunkSupport {
-			listOpts := trunks.ListOpts{
-				PortID: port.PortID,
-			}
-			allTrunks, err := trunks.List(s.networkClient, listOpts).AllPages()
-			if err != nil {
+			if err = deleteTrunk(s, eventObject, port.PortID); err != nil {
 				return err
-			}
-			trunkInfo, err := trunks.ExtractTrunks(allTrunks)
-			if err != nil {
-				return err
-			}
-			if len(trunkInfo) == 1 {
-				err = util.PollImmediate(RetryIntervalTrunkDelete, TimeoutTrunkDelete, func() (bool, error) {
-					if err := trunks.Delete(s.networkClient, trunkInfo[0].ID).ExtractErr(); err != nil {
-						if capoerrors.IsRetryable(err) {
-							return false, nil
-						}
-						return false, err
-					}
-					return true, nil
-				})
-				if err != nil {
-					return fmt.Errorf("error deleting the trunk %v", trunkInfo[0].ID)
-				}
 			}
 		}
 
-		// delete port
-		err = util.PollImmediate(RetryIntervalPortDelete, TimeoutPortDelete, func() (bool, error) {
-			err := ports.Delete(s.networkClient, port.PortID).ExtractErr()
-			if err != nil {
-				if capoerrors.IsRetryable(err) {
-					return false, nil
-				}
-				return false, err
-			}
-			return true, nil
-		})
-		if err != nil {
-			return fmt.Errorf("error deleting the port %v", port.PortID)
+		if err = deletePort(s, eventObject, port.PortID); err != nil {
+			return err
 		}
 	}
 
-	if err = servers.Delete(s.computeClient, instance.ID).ExtractErr(); err != nil {
-		record.Warnf(object, "FailedDeleteServer", "Failed to deleted server %s with id %s: %v", instance.Name, instance.ID, err)
+	return deleteInstance(s, eventObject, instance.ID)
+}
+
+func deletePort(is *Service, eventObject runtime.Object, portID string) error {
+	port, err := getPort(is, portID)
+	if err != nil {
+		return err
+	}
+	if port == nil {
+		return nil
+	}
+
+	err = util.PollImmediate(RetryIntervalPortDelete, TimeoutPortDelete, func() (bool, error) {
+		err := ports.Delete(is.networkClient, port.ID).ExtractErr()
+		if err != nil {
+			if capoerrors.IsRetryable(err) {
+				return false, nil
+			}
+			return false, err
+		}
+		return true, nil
+	})
+	if err != nil {
+		record.Warnf(eventObject, "FailedDeletePort", "Failed to delete port %s with id %s: %v", port.Name, port.ID, err)
+		return err
+	}
+
+	record.Eventf(eventObject, "SuccessfulDeletePort", "Deleted port %s with id %s", port.Name, port.ID)
+	return nil
+}
+
+func deletePorts(is *Service, eventObject runtime.Object, nets []servers.Network) error {
+	for _, n := range nets {
+		if err := deletePort(is, eventObject, n.Port); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func deleteAttachInterface(is *Service, eventObject runtime.Object, instanceID, portID string) error {
+	instance, err := is.GetInstance(instanceID)
+	if err != nil {
+		return err
+	}
+	if instance == nil || instance.ID == "" {
+		return nil
+	}
+
+	port, err := getPort(is, portID)
+	if err != nil {
+		return err
+	}
+	if port == nil {
+		return nil
+	}
+
+	err = attachinterfaces.Delete(is.computeClient, instanceID, portID).ExtractErr()
+	if err != nil {
+		if capoerrors.IsNotFound(err) {
+			return nil
+		}
+		record.Warnf(eventObject, "FailedDeleteAttachInterface", "Failed to delete attach interface: instance %s, port %s: %v", instance.ID, port.ID, err)
+		return err
+	}
+
+	record.Eventf(eventObject, "SuccessfulDeleteAttachInterface", "Deleted attach interface: instance %s, port %s", instance.ID, port.ID)
+	return nil
+}
+
+func deleteTrunk(is *Service, eventObject runtime.Object, portID string) error {
+	port, err := getPort(is, portID)
+	if err != nil {
+		return err
+	}
+	if port == nil {
+		return nil
+	}
+
+	listOpts := trunks.ListOpts{
+		PortID: port.ID,
+	}
+	trunkList, err := trunks.List(is.networkClient, listOpts).AllPages()
+	if err != nil {
+		return err
+	}
+	trunkInfo, err := trunks.ExtractTrunks(trunkList)
+	if err != nil {
+		return err
+	}
+	if len(trunkInfo) != 1 {
+		return nil
+	}
+
+	err = util.PollImmediate(RetryIntervalTrunkDelete, TimeoutTrunkDelete, func() (bool, error) {
+		if err := trunks.Delete(is.networkClient, trunkInfo[0].ID).ExtractErr(); err != nil {
+			if capoerrors.IsRetryable(err) {
+				return false, nil
+			}
+			return false, err
+		}
+		return true, nil
+	})
+	if err != nil {
+		record.Warnf(eventObject, "FailedDeleteTrunk", "Failed to delete trunk %s with id %s: %v", trunkInfo[0].Name, trunkInfo[0].ID, err)
+		return err
+	}
+
+	record.Eventf(eventObject, "SuccessfulDeleteTrunk", "Deleted trunk %s with id %s", trunkInfo[0].Name, trunkInfo[0].ID)
+	return nil
+}
+
+func getPort(is *Service, portID string) (port *ports.Port, err error) {
+	if portID == "" {
+		return nil, fmt.Errorf("portID should be specified to get detail")
+	}
+	port, err = ports.Get(is.networkClient, portID).Extract()
+	if err != nil {
+		if capoerrors.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("get port %q detail failed: %v", portID, err)
+	}
+	return port, nil
+}
+
+func deleteInstance(is *Service, eventObject runtime.Object, instanceID string) error {
+	instance, err := is.GetInstance(instanceID)
+	if err != nil {
+		return err
+	}
+
+	if instance == nil || instance.ID == "" {
+		return nil
+	}
+
+	if err = servers.Delete(is.computeClient, instance.ID).ExtractErr(); err != nil {
+		record.Warnf(eventObject, "FailedDeleteServer", "Failed to deleted server %s with id %s: %v", instance.Name, instance.ID, err)
 		return err
 	}
 
 	err = util.PollImmediate(RetryIntervalInstanceStatus, TimeoutInstanceDelete, func() (bool, error) {
-		i, err := s.GetInstance(instance.ID)
+		i, err := is.GetInstance(instance.ID)
 		if err != nil {
 			return false, err
 		}
@@ -660,11 +692,11 @@ func (s *Service) DeleteInstance(object runtime.Object, instanceName string) err
 		return true, nil
 	})
 	if err != nil {
-		record.Warnf(object, "FailedDeleteServer", "Failed to deleted server %s with id %s: %v", instance.Name, instance.ID, err)
-		return fmt.Errorf("error deleting Openstack instance %s, %v", instance.ID, err)
+		record.Warnf(eventObject, "FailedDeleteServer", "Failed to delete server %s with id %s: %v", instance.Name, instance.ID, err)
+		return err
 	}
 
-	record.Eventf(object, "SuccessfulDeleteServer", "Deleted server %s", instance.ID)
+	record.Eventf(eventObject, "SuccessfulDeleteServer", "Deleted server %s with id %s", instance.Name, instance.ID)
 	return nil
 }
 
@@ -720,6 +752,81 @@ func (s *Service) InstanceExists(name string) (instance *infrav1.Instance, err e
 		return nil, nil
 	}
 	return instanceList[0], nil
+}
+
+func isDuplicate(list []string, name string) bool {
+	if len(list) == 0 {
+		return false
+	}
+	for _, element := range list {
+		if element == name {
+			return true
+		}
+	}
+	return false
+}
+
+func serverToInstance(v *servers.Server) (*infrav1.Instance, error) {
+	if v == nil {
+		return nil, nil
+	}
+	i := &infrav1.Instance{
+		ID:         v.ID,
+		Name:       v.Name,
+		SSHKeyName: v.KeyName,
+		State:      infrav1.InstanceState(v.Status),
+	}
+	addrMap, err := GetIPFromInstance(*v)
+	if err != nil {
+		return i, err
+	}
+	i.IP = addrMap["internal"]
+	if addrMap["floating"] != "" {
+		i.FloatingIP = addrMap["floating"]
+	}
+	return i, nil
+}
+
+func GetIPFromInstance(v servers.Server) (map[string]string, error) {
+	addrMap := make(map[string]string)
+	if v.AccessIPv4 != "" && net.ParseIP(v.AccessIPv4) != nil {
+		addrMap["internal"] = v.AccessIPv4
+		return addrMap, nil
+	}
+	type networkInterface struct {
+		Address string  `json:"addr"`
+		Version float64 `json:"version"`
+		Type    string  `json:"OS-EXT-IPS:type"`
+	}
+
+	for _, b := range v.Addresses {
+		list, err := json.Marshal(b)
+		if err != nil {
+			return nil, fmt.Errorf("extract IP from instance err: %v", err)
+		}
+		var networkList []interface{}
+		err = json.Unmarshal(list, &networkList)
+		if err != nil {
+			return nil, fmt.Errorf("extract IP from instance err: %v", err)
+		}
+		for _, network := range networkList {
+			var netInterface networkInterface
+			b, _ := json.Marshal(network)
+			err = json.Unmarshal(b, &netInterface)
+			if err != nil {
+				return nil, fmt.Errorf("extract IP from instance err: %v", err)
+			}
+			if netInterface.Version == 4.0 {
+				if netInterface.Type == "floating" {
+					addrMap["floating"] = netInterface.Address
+				} else {
+					addrMap["internal"] = netInterface.Address
+				}
+			}
+		}
+	}
+
+	return addrMap, nil
 }
 
 // deduplicate takes a slice of input strings and filters out any duplicate
