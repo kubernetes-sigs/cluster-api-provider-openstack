@@ -650,14 +650,14 @@ func (s *Service) DeleteInstance(object runtime.Object, instanceName string) err
 	}
 
 	err = util.PollImmediate(RetryIntervalInstanceStatus, TimeoutInstanceDelete, func() (bool, error) {
-		_, err = s.GetInstance(instance.ID)
+		i, err := s.GetInstance(instance.ID)
 		if err != nil {
-			if capoerrors.IsNotFound(err) {
-				return true, nil
-			}
 			return false, err
 		}
-		return false, nil
+		if i != nil {
+			return false, nil
+		}
+		return true, nil
 	})
 	if err != nil {
 		record.Warnf(object, "FailedDeleteServer", "Failed to deleted server %s with id %s: %v", instance.Name, instance.ID, err)
