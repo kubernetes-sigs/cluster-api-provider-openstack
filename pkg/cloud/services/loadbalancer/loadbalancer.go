@@ -428,9 +428,9 @@ func checkIfLbMemberExists(client *gophercloud.ServiceClient, poolID, name strin
 }
 
 var backoff = wait.Backoff{
-	Steps:    10,
-	Duration: 30 * time.Second,
-	Factor:   1.0,
+	Steps:    20,
+	Duration: time.Second,
+	Factor:   1.25,
 	Jitter:   0.1,
 }
 
