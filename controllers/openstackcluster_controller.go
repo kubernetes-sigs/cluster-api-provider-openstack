@@ -120,7 +120,7 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 func reconcileDelete(ctx context.Context, log logr.Logger, client client.Client, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
 	log.Info("Reconciling Cluster delete")
 
-	osProviderClient, clientOpts, err := provider.NewClientFromCluster(client, openStackCluster)
+	osProviderClient, clientOpts, err := provider.NewClientFromCluster(ctx, client, openStackCluster)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -230,7 +230,7 @@ func reconcileNormal(ctx context.Context, log logr.Logger, client client.Client,
 		return reconcile.Result{}, err
 	}
 
-	osProviderClient, clientOpts, err := provider.NewClientFromCluster(client, openStackCluster)
+	osProviderClient, clientOpts, err := provider.NewClientFromCluster(ctx, client, openStackCluster)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
