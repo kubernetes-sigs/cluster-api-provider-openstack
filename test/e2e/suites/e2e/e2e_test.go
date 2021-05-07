@@ -35,7 +35,6 @@ import (
 	"k8s.io/utils/pointer"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha4"
 	bootstrapv1 "sigs.k8s.io/cluster-api/bootstrap/kubeadm/api/v1alpha4"
-	kubeadmv1beta1 "sigs.k8s.io/cluster-api/bootstrap/kubeadm/types/v1beta1"
 	"sigs.k8s.io/cluster-api/controllers/noderefutil"
 	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/cluster-api/test/framework/clusterctl"
@@ -307,8 +306,8 @@ func makeJoinBootstrapConfigTemplate(namespace, name string) *bootstrapv1.Kubead
 		Spec: bootstrapv1.KubeadmConfigTemplateSpec{
 			Template: bootstrapv1.KubeadmConfigTemplateResource{
 				Spec: bootstrapv1.KubeadmConfigSpec{
-					JoinConfiguration: &kubeadmv1beta1.JoinConfiguration{
-						NodeRegistration: kubeadmv1beta1.NodeRegistrationOptions{
+					JoinConfiguration: &bootstrapv1.JoinConfiguration{
+						NodeRegistration: bootstrapv1.NodeRegistrationOptions{
 							Name: "{{ local_hostname }}",
 							KubeletExtraArgs: map[string]string{
 								"cloud-config":   "/etc/kubernetes/cloud.conf",
