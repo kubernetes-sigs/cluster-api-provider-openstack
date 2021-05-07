@@ -25,9 +25,11 @@ import (
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
+	osclient "github.com/gophercloud/utils/client"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 
@@ -39,7 +41,7 @@ const (
 	CaSecretKey     = "cacert"
 )
 
-func NewClientFromMachine(ctrlClient client.Client, openStackMachine *infrav1.OpenStackMachine) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, error) {
+func NewClientFromMachine(ctx context.Context, ctrlClient client.Client, openStackMachine *infrav1.OpenStackMachine) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, error) {
 	var cloud clientconfig.Cloud
 	var caCert []byte
 
@@ -49,7 +51,7 @@ func NewClientFromMachine(ctrlClient client.Client, openStackMachine *infrav1.Op
 			namespace = openStackMachine.Namespace
 		}
 		var err error
-		cloud, caCert, err = getCloudFromSecret(ctrlClient, namespace, openStackMachine.Spec.CloudsSecret.Name, openStackMachine.Spec.CloudName)
+		cloud, caCert, err = getCloudFromSecret(ctx, ctrlClient, namespace, openStackMachine.Spec.CloudsSecret.Name, openStackMachine.Spec.CloudName)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -57,7 +59,7 @@ func NewClientFromMachine(ctrlClient client.Client, openStackMachine *infrav1.Op
 	return NewClient(cloud, caCert)
 }
 
-func NewClientFromCluster(ctrlClient client.Client, openStackCluster *infrav1.OpenStackCluster) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, error) {
+func NewClientFromCluster(ctx context.Context, ctrlClient client.Client, openStackCluster *infrav1.OpenStackCluster) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, error) {
 	var cloud clientconfig.Cloud
 	var caCert []byte
 
@@ -67,7 +69,7 @@ func NewClientFromCluster(ctrlClient client.Client, openStackCluster *infrav1.Op
 			namespace = openStackCluster.Namespace
 		}
 		var err error
-		cloud, caCert, err = getCloudFromSecret(ctrlClient, namespace, openStackCluster.Spec.CloudsSecret.Name, openStackCluster.Spec.CloudName)
+		cloud, caCert, err = getCloudFromSecret(ctx, ctrlClient, namespace, openStackCluster.Spec.CloudsSecret.Name, openStackCluster.Spec.CloudName)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -106,6 +108,12 @@ func NewClient(cloud clientconfig.Cloud, caCert []byte) (*gophercloud.ProviderCl
 	}
 
 	provider.HTTPClient.Transport = &http.Transport{Proxy: http.ProxyFromEnvironment, TLSClientConfig: config}
+	if klog.V(6).Enabled() {
+		provider.HTTPClient.Transport = &osclient.RoundTripper{
+			Rt:     provider.HTTPClient.Transport,
+			Logger: &defaultLogger{},
+		}
+	}
 	err = openstack.Authenticate(provider, *opts)
 	if err != nil {
 		return nil, nil, fmt.Errorf("providerClient authentication err: %v", err)
@@ -113,9 +121,15 @@ func NewClient(cloud clientconfig.Cloud, caCert []byte) (*gophercloud.ProviderCl
 	return provider, clientOpts, nil
 }
 
+type defaultLogger struct{}
+
+// Printf is a default Printf method.
+func (defaultLogger) Printf(format string, args ...interface{}) {
+	klog.V(6).Infof(format, args...)
+}
+
 // getCloudFromSecret extract a Cloud from the given namespace:secretName.
-func getCloudFromSecret(ctrlClient client.Client, secretNamespace string, secretName string, cloudName string) (clientconfig.Cloud, []byte, error) {
-	ctx := context.TODO()
+func getCloudFromSecret(ctx context.Context, ctrlClient client.Client, secretNamespace string, secretName string, cloudName string) (clientconfig.Cloud, []byte, error) {
 	emptyCloud := clientconfig.Cloud{}
 
 	if secretName == "" {

@@ -172,12 +172,12 @@ func (r *OpenStackMachineReconciler) SetupWithManager(ctx context.Context, mgr c
 		).
 		Watches(
 			&source.Kind{Type: &infrav1.OpenStackCluster{}},
-			handler.EnqueueRequestsFromMapFunc(r.OpenStackClusterToOpenStackMachines(ctrl.LoggerFrom(ctx))),
+			handler.EnqueueRequestsFromMapFunc(r.OpenStackClusterToOpenStackMachines(ctx)),
 		).
 		WithEventFilter(predicates.ResourceNotPausedAndHasFilterLabel(ctrl.LoggerFrom(ctx), r.WatchFilterValue)).
 		Watches(
 			&source.Kind{Type: &clusterv1.Cluster{}},
-			handler.EnqueueRequestsFromMapFunc(r.requeueOpenStackMachinesForUnpausedCluster(ctrl.LoggerFrom(ctx))),
+			handler.EnqueueRequestsFromMapFunc(r.requeueOpenStackMachinesForUnpausedCluster(ctx)),
 			builder.WithPredicates(predicates.ClusterUnpausedAndInfrastructureReady(ctrl.LoggerFrom(ctx))),
 		).
 		Complete(r)
@@ -188,7 +188,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 
 	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
 
-	osProviderClient, clientOpts, err := provider.NewClientFromMachine(r.Client, openStackMachine)
+	osProviderClient, clientOpts, err := provider.NewClientFromMachine(ctx, r.Client, openStackMachine)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -282,7 +282,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 
 	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
 
-	osProviderClient, clientOpts, err := provider.NewClientFromMachine(r.Client, openStackMachine)
+	osProviderClient, clientOpts, err := provider.NewClientFromMachine(ctx, r.Client, openStackMachine)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -399,7 +399,8 @@ func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(logger logr.Log
 
 // OpenStackClusterToOpenStackMachine is a handler.ToRequestsFunc to be used to enqeue requests for reconciliation
 // of OpenStackMachines.
-func (r *OpenStackMachineReconciler) OpenStackClusterToOpenStackMachines(log logr.Logger) handler.MapFunc {
+func (r *OpenStackMachineReconciler) OpenStackClusterToOpenStackMachines(ctx context.Context) handler.MapFunc {
+	log := ctrl.LoggerFrom(ctx)
 	return func(o client.Object) []ctrl.Request {
 		c, ok := o.(*infrav1.OpenStackCluster)
 		if !ok {
@@ -447,7 +448,8 @@ func (r *OpenStackMachineReconciler) getBootstrapData(machine *clusterv1.Machine
 	return base64.StdEncoding.EncodeToString(value), nil
 }
 
-func (r *OpenStackMachineReconciler) requeueOpenStackMachinesForUnpausedCluster(log logr.Logger) handler.MapFunc {
+func (r *OpenStackMachineReconciler) requeueOpenStackMachinesForUnpausedCluster(ctx context.Context) handler.MapFunc {
+	log := ctrl.LoggerFrom(ctx)
 	return func(o client.Object) []ctrl.Request {
 		c, ok := o.(*clusterv1.Cluster)
 		if !ok {
