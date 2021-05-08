@@ -30,6 +30,7 @@ import (
 	"sigs.k8s.io/cluster-api/util"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 )
 
@@ -54,8 +55,10 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 			VipSubnetID: openStackCluster.Status.Network.Subnet.ID,
 		}
 
+		mc := metrics.NewMetricPrometheusContext("loadbalancer", "create")
 		lb, err = loadbalancers.Create(s.loadbalancerClient, lbCreateOpts).Extract()
-		if err != nil {
+
+		if mc.ObserveRequest(err) != nil {
 			record.Warnf(openStackCluster, "FailedCreateLoadBalancer", "Failed to create load balancer %s: %v", loadBalancerName, err)
 			return err
 		}
@@ -95,8 +98,9 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 				ProtocolPort:   port,
 				LoadbalancerID: lb.ID,
 			}
+			mc := metrics.NewMetricPrometheusContext("loadbalancer_listener", "create")
 			listener, err = listeners.Create(s.loadbalancerClient, listenerCreateOpts).Extract()
-			if err != nil {
+			if mc.ObserveRequest(err) != nil {
 				return fmt.Errorf("error creating listener: %s", err)
 			}
 		}
@@ -121,8 +125,9 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 				LBMethod:   pools.LBMethodRoundRobin,
 				ListenerID: listener.ID,
 			}
+			mc := metrics.NewMetricPrometheusContext("loadbalancer_pool", "create")
 			pool, err = pools.Create(s.loadbalancerClient, poolCreateOpts).Extract()
-			if err != nil {
+			if mc.ObserveRequest(err) != nil {
 				return fmt.Errorf("error creating pool: %s", err)
 			}
 		}
@@ -145,8 +150,9 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 				Timeout:    5,
 				MaxRetries: 3,
 			}
+			mc := metrics.NewMetricPrometheusContext("loadbalancer_healthmonitor", "create")
 			_, err = monitors.Create(s.loadbalancerClient, monitorCreateOpts).Extract()
-			if err != nil {
+			if mc.ObserveRequest(err) != nil {
 				return fmt.Errorf("error creating monitor: %s", err)
 			}
 		}
@@ -216,8 +222,9 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 			if err != nil {
 				return err
 			}
+			mc := metrics.NewMetricPrometheusContext("loadbalancer_member", "delete")
 			err = pools.DeleteMember(s.loadbalancerClient, pool.ID, lbMember.ID).ExtractErr()
-			if err != nil {
+			if mc.ObserveRequest(err) != nil {
 				return fmt.Errorf("error deleting lbmember: %s", err)
 			}
 			err = s.waitForLoadBalancerActive(lbID)
@@ -238,7 +245,9 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 		if err := s.waitForLoadBalancerActive(lbID); err != nil {
 			return err
 		}
-		if _, err := pools.CreateMember(s.loadbalancerClient, pool.ID, lbMemberOpts).Extract(); err != nil {
+		mc := metrics.NewMetricPrometheusContext("loadbalancer_member", "create")
+		_, err = pools.CreateMember(s.loadbalancerClient, pool.ID, lbMemberOpts).Extract()
+		if mc.ObserveRequest(err) != nil {
 			return fmt.Errorf("error create lbmember: %s", err)
 		}
 		if err := s.waitForLoadBalancerActive(lbID); err != nil {
@@ -279,8 +288,9 @@ func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster,
 		Cascade: true,
 	}
 	s.logger.Info("Deleting load balancer", "name", loadBalancerName, "cascade", deleteOpts.Cascade)
+	mc := metrics.NewMetricPrometheusContext("loadbalancer", "delete")
 	err = loadbalancers.Delete(s.loadbalancerClient, lb.ID, deleteOpts).ExtractErr()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		record.Warnf(openStackCluster, "FailedDeleteLoadBalancer", "Failed to delete load balancer %s with id %s: %v", lb.Name, lb.ID, err)
 		return err
 	}
@@ -333,8 +343,9 @@ func (s *Service) DeleteLoadBalancerMember(openStackCluster *infrav1.OpenStackCl
 			if err != nil {
 				return err
 			}
+			mc := metrics.NewMetricPrometheusContext("loadbalancer_member", "delete")
 			err = pools.DeleteMember(s.loadbalancerClient, pool.ID, lbMember.ID).ExtractErr()
-			if err != nil {
+			if mc.ObserveRequest(err) != nil {
 				return fmt.Errorf("error deleting load balancer member: %s", err)
 			}
 			err = s.waitForLoadBalancerActive(lbID)
