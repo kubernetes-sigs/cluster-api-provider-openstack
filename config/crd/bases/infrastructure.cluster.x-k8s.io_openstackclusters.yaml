@@ -1326,19 +1326,6 @@ spec:
                         description: Whether the server instance is created on a trunk
                           port or not.
                         type: boolean
-                      userDataSecret:
-                        description: The name of the secret containing the user data
-                          (startup script in most cases)
-                        properties:
-                          name:
-                            description: Name is unique within a namespace to reference
-                              a secret resource.
-                            type: string
-                          namespace:
-                            description: Namespace defines the space within which
-                              the secret name must be unique.
-                            type: string
-                        type: object
                     required:
                     - flavor
                     type: object

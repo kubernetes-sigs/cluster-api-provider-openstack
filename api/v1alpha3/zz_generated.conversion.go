@@ -814,7 +814,6 @@ func autoConvert_v1alpha3_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(
 	out.Subnet = in.Subnet
 	out.FloatingIP = in.FloatingIP
 	out.SecurityGroups = *(*[]v1alpha4.SecurityGroupParam)(unsafe.Pointer(&in.SecurityGroups))
-	out.UserDataSecret = (*v1.SecretReference)(unsafe.Pointer(in.UserDataSecret))
 	out.Trunk = in.Trunk
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.ServerMetadata = *(*map[string]string)(unsafe.Pointer(&in.ServerMetadata))
@@ -841,7 +840,6 @@ func autoConvert_v1alpha4_OpenStackMachineSpec_To_v1alpha3_OpenStackMachineSpec(
 	out.Subnet = in.Subnet
 	out.FloatingIP = in.FloatingIP
 	out.SecurityGroups = *(*[]SecurityGroupParam)(unsafe.Pointer(&in.SecurityGroups))
-	out.UserDataSecret = (*v1.SecretReference)(unsafe.Pointer(in.UserDataSecret))
 	out.Trunk = in.Trunk
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.ServerMetadata = *(*map[string]string)(unsafe.Pointer(&in.ServerMetadata))
