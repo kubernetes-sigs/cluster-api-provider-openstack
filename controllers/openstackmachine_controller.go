@@ -85,6 +85,8 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, err
 	}
 
+	log = log.WithValues("openStackMachine", openStackMachine.Name)
+
 	// Fetch the Machine.
 	machine, err := util.GetOwnerMachine(ctx, r.Client, openStackMachine.ObjectMeta)
 	if err != nil {
@@ -104,12 +106,12 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, nil
 	}
 
+	log = log.WithValues("cluster", cluster.Name)
+
 	if annotations.IsPaused(cluster, openStackMachine) {
 		log.Info("OpenStackMachine or linked Cluster is marked as paused. Won't reconcile")
 		return ctrl.Result{}, nil
 	}
-
-	log = log.WithValues("cluster", cluster.Name)
 
 	infraCluster, err := r.getInfraCluster(ctx, cluster, openStackMachine)
 	if err != nil {

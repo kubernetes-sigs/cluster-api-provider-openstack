@@ -73,6 +73,7 @@ if [[ "$${KUBERNETES_VERSION}" != "" ]]; then
     CI_URL="https://storage.googleapis.com/kubernetes-release/release/$${KUBERNETES_VERSION}/bin/linux/amd64"
     VERSION_WITHOUT_PREFIX="$${KUBERNETES_VERSION#v}"
     export DEBIAN_FRONTEND=noninteractive
+    # sometimes the network is not immediately available, so we have to retry the apt-get update
     retry 10 5 "apt-get update"
     apt-get install -y apt-transport-https ca-certificates curl
     curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -

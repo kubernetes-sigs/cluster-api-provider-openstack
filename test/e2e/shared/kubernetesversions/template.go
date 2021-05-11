@@ -17,7 +17,6 @@ limitations under the License.
 package kubernetesversions
 
 import (
-	"bytes"
 	_ "embed"
 	"errors"
 	"fmt"
@@ -26,7 +25,6 @@ import (
 	"os/exec"
 	"path"
 	"strings"
-	"text/template"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/cluster-api/test/framework"
@@ -40,10 +38,8 @@ var (
 	//go:embed data/debian_injection_script_worker.envsubst.sh
 	debianInjectionScriptWorkerBytes string
 
-	//go:embed data/kustomization.yaml.tpl
+	//go:embed data/kustomization.yaml
 	kustomizationYAMLBytes string
-
-	kustomizationTemplate = template.Must(template.New("kustomization").Parse(kustomizationYAMLBytes))
 )
 
 type GenerateCIArtifactsInjectedTemplateForDebianInput struct {
@@ -93,35 +89,30 @@ func GenerateCIArtifactsInjectedTemplateForDebian(input GenerateCIArtifactsInjec
 
 	kustomizedTemplate := path.Join(templateDir, "cluster-template-conformance-ci-artifacts.yaml")
 
-	kustomizationYamlBytes, err := generateKustomizationYAML(input)
+	if err := ioutil.WriteFile(path.Join(overlayDir, "kustomization.yaml"), []byte(kustomizationYAMLBytes), 0o600); err != nil {
+		return "", err
+	}
+
+	patch, err := generateInjectScriptJSONPatch(input.SourceTemplate, "KubeadmControlPlane", input.KubeadmControlPlaneName, "/spec/kubeadmConfigSpec", "/usr/local/bin/ci-artifacts.sh", debianInjectionScriptControlPlaneBytes)
 	if err != nil {
 		return "", err
 	}
-
-	if err := ioutil.WriteFile(path.Join(overlayDir, "kustomization.yaml"), kustomizationYamlBytes, 0o600); err != nil {
+	if err := os.WriteFile(path.Join(overlayDir, "kubeadmcontrolplane-patch.yaml"), patch, 0o600); err != nil {
 		return "", err
 	}
 
-	patch, err := generateDebianInjectionScriptJSONPatch(input.SourceTemplate, "KubeadmControlPlane", input.KubeadmControlPlaneName, "/spec/kubeadmConfigSpec", debianInjectionScriptControlPlaneBytes)
+	patch, err = generateInjectScriptJSONPatch(input.SourceTemplate, "KubeadmConfigTemplate", input.KubeadmConfigTemplateName, "/spec/template/spec", "/usr/local/bin/ci-artifacts.sh", debianInjectionScriptWorkerBytes)
 	if err != nil {
 		return "", err
 	}
-	if err := ioutil.WriteFile(path.Join(overlayDir, "kubeadmcontrolplane-patch.yaml"), patch, 0o600); err != nil {
+	if err := os.WriteFile(path.Join(overlayDir, "kubeadmconfigtemplate-patch.yaml"), patch, 0o600); err != nil {
 		return "", err
 	}
 
-	patch, err = generateDebianInjectionScriptJSONPatch(input.SourceTemplate, "KubeadmConfigTemplate", input.KubeadmConfigTemplateName, "/spec/template/spec", debianInjectionScriptWorkerBytes)
-	if err != nil {
+	if err := os.WriteFile(path.Join(overlayDir, "ci-artifacts-source-template.yaml"), input.SourceTemplate, 0o600); err != nil {
 		return "", err
 	}
-
-	if err := ioutil.WriteFile(path.Join(overlayDir, "kubeadmconfigtemplate-patch.yaml"), patch, 0o600); err != nil {
-		return "", err
-	}
-	if err := ioutil.WriteFile(path.Join(overlayDir, "ci-artifacts-source-template.yaml"), input.SourceTemplate, 0o600); err != nil {
-		return "", err
-	}
-	if err := ioutil.WriteFile(path.Join(overlayDir, "platform-kustomization.yaml"), input.PlatformKustomization, 0o600); err != nil {
+	if err := os.WriteFile(path.Join(overlayDir, "platform-kustomization.yaml"), input.PlatformKustomization, 0o600); err != nil {
 		return "", err
 	}
 	cmd := exec.Command("kustomize", "build", overlayDir)
@@ -129,18 +120,10 @@ func GenerateCIArtifactsInjectedTemplateForDebian(input GenerateCIArtifactsInjec
 	if err != nil {
 		return "", err
 	}
-	if err := ioutil.WriteFile(kustomizedTemplate, data, 0o600); err != nil {
+	if err := os.WriteFile(kustomizedTemplate, data, 0o600); err != nil {
 		return "", err
 	}
 	return kustomizedTemplate, nil
-}
-
-func generateKustomizationYAML(input GenerateCIArtifactsInjectedTemplateForDebianInput) ([]byte, error) {
-	var kustomizationYamlBytes bytes.Buffer
-	if err := kustomizationTemplate.Execute(&kustomizationYamlBytes, input); err != nil {
-		return nil, err
-	}
-	return kustomizationYamlBytes.Bytes(), nil
 }
 
 type jsonPatch struct {
@@ -149,8 +132,14 @@ type jsonPatch struct {
 	Value interface{} `json:"value"`
 }
 
-func generateDebianInjectionScriptJSONPatch(sourceTemplate []byte, kind, name, path, content string) ([]byte, error) {
-	filesPathExists, preKubeadmCommandsPathExists, err := checkExistingPaths(sourceTemplate, kind, name, path)
+// generateInjectScriptJSONPatch generates a JSON patch which injects a script
+// * objectKind: is the kind of the object we want to inject the script into
+// * objectName: is the name of the object we want to inject the script into
+// * jsonPatchPathPrefix: is the prefix of the 'files' and `preKubeadmCommands` arrays where we append the script
+// * scriptPath: is the path where the script will be stored at
+// * scriptContent: content of the script.
+func generateInjectScriptJSONPatch(sourceTemplate []byte, objectKind, objectName, jsonPatchPathPrefix, scriptPath, scriptContent string) ([]byte, error) {
+	filesPathExists, preKubeadmCommandsPathExists, err := checkIfArraysAlreadyExist(sourceTemplate, objectKind, objectName, jsonPatchPathPrefix)
 	if err != nil {
 		return nil, err
 	}
@@ -159,37 +148,38 @@ func generateDebianInjectionScriptJSONPatch(sourceTemplate []byte, kind, name, p
 	if !filesPathExists {
 		patches = append(patches, jsonPatch{
 			Op:    "add",
-			Path:  fmt.Sprintf("%s/files", path),
+			Path:  fmt.Sprintf("%s/files", jsonPatchPathPrefix),
 			Value: []interface{}{},
 		})
 	}
 	patches = append(patches, jsonPatch{
 		Op:   "add",
-		Path: fmt.Sprintf("%s/files/0", path),
+		Path: fmt.Sprintf("%s/files/-", jsonPatchPathPrefix),
 		Value: map[string]string{
-			"content":     content,
+			"content":     scriptContent,
 			"owner":       "root:root",
-			"path":        "/usr/local/bin/ci-artifacts.sh",
+			"path":        scriptPath,
 			"permissions": "0750",
 		},
 	})
 	if !preKubeadmCommandsPathExists {
 		patches = append(patches, jsonPatch{
 			Op:    "add",
-			Path:  fmt.Sprintf("%s/preKubeadmCommands", path),
+			Path:  fmt.Sprintf("%s/preKubeadmCommands", jsonPatchPathPrefix),
 			Value: []string{},
 		})
 	}
 	patches = append(patches, jsonPatch{
 		Op:    "add",
-		Path:  fmt.Sprintf("%s/preKubeadmCommands/0", path),
-		Value: "/usr/local/bin/ci-artifacts.sh",
+		Path:  fmt.Sprintf("%s/preKubeadmCommands/-", jsonPatchPathPrefix),
+		Value: scriptPath,
 	})
 
 	return yaml.Marshal(patches)
 }
 
-func checkExistingPaths(sourceTemplate []byte, kind, name, path string) (bool, bool, error) {
+// checkIfArraysAlreadyExist check is the 'files' and 'preKubeadmCommands' arrays already exist below jsonPatchPathPrefix.
+func checkIfArraysAlreadyExist(sourceTemplate []byte, objectKind, objectName, jsonPatchPathPrefix string) (bool, bool, error) {
 	yamlDocs := strings.Split(string(sourceTemplate), "---")
 	for _, yamlDoc := range yamlDocs {
 		if yamlDoc == "" {
@@ -200,14 +190,14 @@ func checkExistingPaths(sourceTemplate []byte, kind, name, path string) (bool, b
 			return false, false, err
 		}
 
-		if obj.GetKind() != kind {
+		if obj.GetKind() != objectKind {
 			continue
 		}
-		if obj.GetName() != name {
+		if obj.GetName() != objectName {
 			continue
 		}
 
-		pathSplit := strings.Split(strings.TrimPrefix(path, "/"), "/")
+		pathSplit := strings.Split(strings.TrimPrefix(jsonPatchPathPrefix, "/"), "/")
 		filesPath := append(pathSplit, "files")
 		preKubeadmCommandsPath := append(pathSplit, "preKubeadmCommands")
 		_, filesPathExists, err := unstructured.NestedFieldCopy(obj.Object, filesPath...)
@@ -220,5 +210,5 @@ func checkExistingPaths(sourceTemplate []byte, kind, name, path string) (bool, b
 		}
 		return filesPathExists, preKubeadmCommandsPathExists, nil
 	}
-	return false, false, fmt.Errorf("could not find document with kind %q and name %q", kind, name)
+	return false, false, fmt.Errorf("could not find document with kind %q and name %q", objectKind, objectName)
 }
