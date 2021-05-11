@@ -469,11 +469,6 @@ func (in *OpenStackMachineSpec) DeepCopyInto(out *OpenStackMachineSpec) {
 		*out = make([]SecurityGroupParam, len(*in))
 		copy(*out, *in)
 	}
-	if in.UserDataSecret != nil {
-		in, out := &in.UserDataSecret, &out.UserDataSecret
-		*out = new(v1.SecretReference)
-		**out = **in
-	}
 	if in.Tags != nil {
 		in, out := &in.Tags, &out.Tags
 		*out = make([]string, len(*in))
