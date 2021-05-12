@@ -11,6 +11,7 @@
   - [DNS server](#dns-server)
   - [Machine flavor](#machine-flavor)
 - [Optional Configuration](#optional-configuration)
+  - [Log level](#log-level)
   - [External network](#external-network)
   - [Floating IP](#floating-ip)
   - [Network Filters](#network-filters)
@@ -119,6 +120,10 @@ The DNS servers must be exposed as an environment variable `OPENSTACK_DNS_NAMESE
 The flavors for control plane and worker node machines must be exposed as environment variables `OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR` and `OPENSTACK_NODE_MACHINE_FLAVOR` respectively. 
 
 # Optional Configuration
+
+## Log level
+
+If with `--v=6` the gophercloud client would log it's requests. This would really help during debugging.
 
 ## External network
 
