@@ -17,7 +17,6 @@ limitations under the License.
 package v1alpha4
 
 import (
-	"errors"
 	"reflect"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -26,6 +25,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
+
+// OpenStackMachineTemplateImmutableMsg ...
+const OpenStackMachineTemplateImmutableMsg = "OpenStackMachineTemplate spec.template.spec field is immutable. Please create a new resource instead. Ref doc: https://cluster-api.sigs.k8s.io/tasks/change-machine-template.html"
 
 func (r *OpenStackMachineTemplate) SetupWebhookWithManager(mgr manager.Manager) error {
 	return builder.WebhookManagedBy(mgr).
@@ -51,9 +53,17 @@ func (r *OpenStackMachineTemplate) ValidateCreate() error {
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type.
 func (r *OpenStackMachineTemplate) ValidateUpdate(old runtime.Object) error {
+	var allErrs field.ErrorList
 	oldOpenStackMachineTemplate := old.(*OpenStackMachineTemplate)
-	if !reflect.DeepEqual(r.Spec, oldOpenStackMachineTemplate.Spec) {
-		return errors.New("openstackMachineTemplateSpec is immutable")
+
+	if !reflect.DeepEqual(r.Spec.Template.Spec, oldOpenStackMachineTemplate.Spec.Template.Spec) {
+		allErrs = append(allErrs,
+			field.Invalid(field.NewPath("spec", "template", "spec"), r, OpenStackMachineTemplateImmutableMsg),
+		)
+	}
+
+	if len(allErrs) != 0 {
+		return aggregateObjErrors(r.GroupVersionKind().GroupKind(), r.Name, allErrs)
 	}
 
 	return nil
