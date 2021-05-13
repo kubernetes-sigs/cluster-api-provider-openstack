@@ -123,7 +123,7 @@ The flavors for control plane and worker node machines must be exposed as enviro
 
 ## Log level
 
-If with `--v=6` the gophercloud client would log it's requests. This would really help during debugging.
+When running CAPO with `--v=6` the gophercloud client logs its requests to the OpenStack API. This can be helpful during debugging.
 
 ## External network
 
