@@ -20,7 +20,6 @@ import (
 	"fmt"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 )
 
 func (s *Service) CreateBastion(openStackCluster *infrav1.OpenStackCluster, clusterName string) (*infrav1.Instance, error) {
@@ -60,12 +59,10 @@ func (s *Service) CreateBastion(openStackCluster *infrav1.OpenStackCluster, clus
 	}
 	input.Networks = &nets
 
-	out, err := createInstance(s, clusterName, input)
+	out, err := createInstance(s, openStackCluster, clusterName, input)
 	if err != nil {
-		record.Warnf(openStackCluster, "FailedCreateServer", "Failed to create server %s: %v", name, err)
 		return nil, err
 	}
 
-	record.Eventf(openStackCluster, "SuccessfulCreateServer", "Created server %s with id %s", name, out.ID)
 	return out, nil
 }

@@ -372,7 +372,7 @@ func (r *OpenStackMachineReconciler) getOrCreate(logger logr.Logger, cluster *cl
 
 	if instance == nil {
 		logger.Info("Machine not exist, Creating Machine", "Machine", openStackMachine.Name)
-		instance, err = computeService.InstanceCreate(openStackCluster, machine, openStackMachine, cluster.Name, userData)
+		instance, err = computeService.CreateInstance(openStackCluster, machine, openStackMachine, cluster.Name, userData)
 		if err != nil {
 			return nil, errors.Errorf("error creating Openstack instance: %v", err)
 		}
