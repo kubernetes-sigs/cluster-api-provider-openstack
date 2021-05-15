@@ -50,7 +50,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 		return err
 	}
 	if lb == nil {
-		s.logger.Info("Creating load balancer", "name", loadBalancerName)
+		s.logger.Info(fmt.Sprintf("Creating load balancer in subnet: %q", openStackCluster.Status.Network.Subnet.ID), "name", loadBalancerName)
 		lbCreateOpts := loadbalancers.CreateOpts{
 			Name:        loadBalancerName,
 			VipSubnetID: openStackCluster.Status.Network.Subnet.ID,
@@ -90,7 +90,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 			return err
 		}
 		if listener == nil {
-			s.logger.Info("Creating load balancer listener", "name", lbPortObjectsName)
+			s.logger.Info("Creating load balancer listener", "name", lbPortObjectsName, "lb-id", lb.ID)
 			listenerCreateOpts := listeners.CreateOpts{
 				Name:           lbPortObjectsName,
 				Protocol:       "TCP",
@@ -116,7 +116,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 			return err
 		}
 		if pool == nil {
-			s.logger.Info("Creating load balancer pool", "name", lbPortObjectsName)
+			s.logger.Info(fmt.Sprintf("Creating load balancer pool for listener %q", listener.ID), "name", lbPortObjectsName, "lb-id", lb.ID)
 			poolCreateOpts := pools.CreateOpts{
 				Name:       lbPortObjectsName,
 				Protocol:   "TCP",
@@ -138,7 +138,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 			return err
 		}
 		if monitor == nil {
-			s.logger.Info("Creating load balancer monitor", "name", lbPortObjectsName)
+			s.logger.Info(fmt.Sprintf("Creating load balancer monitor for pool %q", pool.ID), "name", lbPortObjectsName, "lb-id", lb.ID)
 			monitorCreateOpts := monitors.CreateOpts{
 				Name:       lbPortObjectsName,
 				PoolID:     pool.ID,
