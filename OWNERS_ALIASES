@@ -24,3 +24,4 @@ aliases:
     - hidekazuna
   cluster-api-openstack-reviewers:
     - prankul88
+    - seanschneeweiss
