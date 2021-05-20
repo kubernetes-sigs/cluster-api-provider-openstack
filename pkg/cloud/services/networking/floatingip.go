@@ -19,7 +19,6 @@ package networking
 import (
 	"time"
 
-	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
 	"k8s.io/apimachinery/pkg/util/wait"
 
@@ -33,7 +32,7 @@ func (s *Service) GetOrCreateFloatingIP(openStackCluster *infrav1.OpenStackClust
 	var fpCreateOpts floatingips.CreateOpts
 
 	if ip != "" {
-		fp, err = checkIfFloatingIPExists(s.client, ip)
+		fp, err = s.checkIfFloatingIPExists(ip)
 		if err != nil {
 			return nil, err
 		}
@@ -56,8 +55,8 @@ func (s *Service) GetOrCreateFloatingIP(openStackCluster *infrav1.OpenStackClust
 	return fp, nil
 }
 
-func checkIfFloatingIPExists(client *gophercloud.ServiceClient, ip string) (*floatingips.FloatingIP, error) {
-	allPages, err := floatingips.List(client, floatingips.ListOpts{FloatingIP: ip}).AllPages()
+func (s *Service) checkIfFloatingIPExists(ip string) (*floatingips.FloatingIP, error) {
+	allPages, err := floatingips.List(s.client, floatingips.ListOpts{FloatingIP: ip}).AllPages()
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +86,7 @@ func (s *Service) GetFloatingIPByPortID(portID string) (*floatingips.FloatingIP,
 }
 
 func (s *Service) DeleteFloatingIP(openStackCluster *infrav1.OpenStackCluster, ip string) error {
-	fip, err := checkIfFloatingIPExists(s.client, ip)
+	fip, err := s.checkIfFloatingIPExists(ip)
 	if err != nil {
 		return err
 	}
@@ -136,7 +135,7 @@ func (s *Service) AssociateFloatingIP(openStackCluster *infrav1.OpenStackCluster
 }
 
 func (s *Service) DisassociateFloatingIP(openStackCluster *infrav1.OpenStackCluster, ip string) error {
-	fip, err := checkIfFloatingIPExists(s.client, ip)
+	fip, err := s.checkIfFloatingIPExists(ip)
 	if err != nil {
 		return err
 	}

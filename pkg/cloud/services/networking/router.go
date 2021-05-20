@@ -19,7 +19,6 @@ package networking
 import (
 	"fmt"
 
-	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
@@ -66,7 +65,7 @@ func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, cl
 	var router *routers.Router
 	if len(routerList) == 0 {
 		var err error
-		router, err = createRouter(s.client, openStackCluster, routerName)
+		router, err = s.createRouter(openStackCluster, routerName)
 		if err != nil {
 			return err
 		}
@@ -82,7 +81,7 @@ func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, cl
 	}
 
 	if len(openStackCluster.Spec.ExternalRouterIPs) > 0 {
-		if err := setRouterExternalIPs(s.client, openStackCluster, router); err != nil {
+		if err := s.setRouterExternalIPs(openStackCluster, router); err != nil {
 			return err
 		}
 	}
@@ -118,7 +117,7 @@ INTERFACE_LOOP:
 	return nil
 }
 
-func createRouter(client *gophercloud.ServiceClient, openStackCluster *infrav1.OpenStackCluster, name string) (*routers.Router, error) {
+func (s *Service) createRouter(openStackCluster *infrav1.OpenStackCluster, name string) (*routers.Router, error) {
 	opts := routers.CreateOpts{
 		Name: name,
 	}
@@ -131,7 +130,7 @@ func createRouter(client *gophercloud.ServiceClient, openStackCluster *infrav1.O
 			NetworkID: openStackCluster.Status.ExternalNetwork.ID,
 		}
 	}
-	router, err := routers.Create(client, opts).Extract()
+	router, err := routers.Create(s.client, opts).Extract()
 	if err != nil {
 		record.Warnf(openStackCluster, "FailedCreateRouter", "Failed to create router %s: %v", name, err)
 		return nil, err
@@ -139,7 +138,7 @@ func createRouter(client *gophercloud.ServiceClient, openStackCluster *infrav1.O
 	record.Eventf(openStackCluster, "SuccessfulCreateRouter", "Created router %s with id %s", name, router.ID)
 
 	if len(openStackCluster.Spec.Tags) > 0 {
-		_, err = attributestags.ReplaceAll(client, "routers", router.ID, attributestags.ReplaceAllOpts{
+		_, err = attributestags.ReplaceAll(s.client, "routers", router.ID, attributestags.ReplaceAllOpts{
 			Tags: openStackCluster.Spec.Tags,
 		}).Extract()
 		if err != nil {
@@ -150,7 +149,7 @@ func createRouter(client *gophercloud.ServiceClient, openStackCluster *infrav1.O
 	return router, nil
 }
 
-func setRouterExternalIPs(client *gophercloud.ServiceClient, openStackCluster *infrav1.OpenStackCluster, router *routers.Router) error {
+func (s *Service) setRouterExternalIPs(openStackCluster *infrav1.OpenStackCluster, router *routers.Router) error {
 	updateOpts := routers.UpdateOpts{
 		GatewayInfo: &routers.GatewayInfo{
 			NetworkID: openStackCluster.Status.ExternalNetwork.ID,
@@ -161,7 +160,7 @@ func setRouterExternalIPs(client *gophercloud.ServiceClient, openStackCluster *i
 		subnetID := externalRouterIP.Subnet.UUID
 		if subnetID == "" {
 			listOpts := subnets.ListOpts(externalRouterIP.Subnet.Filter)
-			subnetsByFilter, err := GetSubnetsByFilter(client, &listOpts)
+			subnetsByFilter, err := s.GetSubnetsByFilter(&listOpts)
 			if err != nil {
 				return err
 			}
@@ -176,7 +175,7 @@ func setRouterExternalIPs(client *gophercloud.ServiceClient, openStackCluster *i
 		})
 	}
 
-	if _, err := routers.Update(client, router.ID, updateOpts).Extract(); err != nil {
+	if _, err := routers.Update(s.client, router.ID, updateOpts).Extract(); err != nil {
 		record.Warnf(openStackCluster, "FailedUpdateRouter", "Failed to update router %s with id %s: %v", router.Name, router.ID, err)
 		return err
 	}

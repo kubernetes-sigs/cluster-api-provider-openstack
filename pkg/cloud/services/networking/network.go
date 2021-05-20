@@ -194,7 +194,7 @@ func (s *Service) ReconcileSubnet(openStackCluster *infrav1.OpenStackCluster, cl
 	var subnet *subnets.Subnet
 	if len(subnetList) == 0 {
 		var err error
-		subnet, err = createSubnet(s.client, openStackCluster, subnetName)
+		subnet, err = s.createSubnet(openStackCluster, subnetName)
 		if err != nil {
 			return err
 		}
@@ -212,7 +212,7 @@ func (s *Service) ReconcileSubnet(openStackCluster *infrav1.OpenStackCluster, cl
 	return nil
 }
 
-func createSubnet(client *gophercloud.ServiceClient, openStackCluster *infrav1.OpenStackCluster, name string) (*subnets.Subnet, error) {
+func (s *Service) createSubnet(openStackCluster *infrav1.OpenStackCluster, name string) (*subnets.Subnet, error) {
 	opts := subnets.CreateOpts{
 		NetworkID:      openStackCluster.Status.Network.ID,
 		Name:           name,
@@ -220,7 +220,7 @@ func createSubnet(client *gophercloud.ServiceClient, openStackCluster *infrav1.O
 		CIDR:           openStackCluster.Spec.NodeCIDR,
 		DNSNameservers: openStackCluster.Spec.DNSNameservers,
 	}
-	subnet, err := subnets.Create(client, opts).Extract()
+	subnet, err := subnets.Create(s.client, opts).Extract()
 	if err != nil {
 		record.Warnf(openStackCluster, "FailedCreateSubnet", "Failed to create subnet %s: %v", name, err)
 		return nil, err
@@ -228,7 +228,7 @@ func createSubnet(client *gophercloud.ServiceClient, openStackCluster *infrav1.O
 	record.Eventf(openStackCluster, "SuccessfulCreateSubnet", "Created subnet %s with id %s", name, subnet.ID)
 
 	if len(openStackCluster.Spec.Tags) > 0 {
-		_, err = attributestags.ReplaceAll(client, "subnets", subnet.ID, attributestags.ReplaceAllOpts{
+		_, err = attributestags.ReplaceAll(s.client, "subnets", subnet.ID, attributestags.ReplaceAllOpts{
 			Tags: openStackCluster.Spec.Tags,
 		}).Extract()
 		if err != nil {
@@ -287,29 +287,12 @@ func (s *Service) getNetworkByName(networkName string) (networks.Network, error)
 	return networks.Network{}, fmt.Errorf("found %d networks with the name %s, which should not happen", len(networkList), networkName)
 }
 
-func (s *Service) GetNetworksByFilter(opts networks.ListOptsBuilder) ([]networks.Network, error) {
-	return GetNetworksByFilter(s.client, opts)
-}
-
-// getNetworkIDsByFilter retrieves network ids by querying openstack with filters.
-func GetNetworkIDsByFilter(networkClient *gophercloud.ServiceClient, opts networks.ListOptsBuilder) ([]string, error) {
-	nets, err := GetNetworksByFilter(networkClient, opts)
-	if err != nil {
-		return nil, err
-	}
-	ids := []string{}
-	for _, network := range nets {
-		ids = append(ids, network.ID)
-	}
-	return ids, nil
-}
-
 // GetNetworksByFilter retrieves networks by querying openstack with filters.
-func GetNetworksByFilter(networkClient *gophercloud.ServiceClient, opts networks.ListOptsBuilder) ([]networks.Network, error) {
+func (s *Service) GetNetworksByFilter(opts networks.ListOptsBuilder) ([]networks.Network, error) {
 	if opts == nil {
 		return nil, fmt.Errorf("no Filters were passed")
 	}
-	pager := networks.List(networkClient, opts)
+	pager := networks.List(s.client, opts)
 	var nets []networks.Network
 	err := pager.EachPage(func(page pagination.Page) (bool, error) {
 		networkList, err := networks.ExtractNetworks(page)
@@ -327,16 +310,25 @@ func GetNetworksByFilter(networkClient *gophercloud.ServiceClient, opts networks
 	return nets, nil
 }
 
-func (s *Service) GetSubnetsByFilter(opts subnets.ListOptsBuilder) ([]subnets.Subnet, error) {
-	return GetSubnetsByFilter(s.client, opts)
+// getNetworkIDsByFilter retrieves network ids by querying openstack with filters.
+func (s *Service) GetNetworkIDsByFilter(opts networks.ListOptsBuilder) ([]string, error) {
+	nets, err := s.GetNetworksByFilter(opts)
+	if err != nil {
+		return nil, err
+	}
+	ids := []string{}
+	for _, network := range nets {
+		ids = append(ids, network.ID)
+	}
+	return ids, nil
 }
 
 // A function for getting the id of a subnet by querying openstack with filters.
-func GetSubnetsByFilter(networkClient *gophercloud.ServiceClient, opts subnets.ListOptsBuilder) ([]subnets.Subnet, error) {
+func (s *Service) GetSubnetsByFilter(opts subnets.ListOptsBuilder) ([]subnets.Subnet, error) {
 	if opts == nil {
 		return []subnets.Subnet{}, fmt.Errorf("no Filters were passed")
 	}
-	pager := subnets.List(networkClient, opts)
+	pager := subnets.List(s.client, opts)
 	var snets []subnets.Subnet
 	err := pager.EachPage(func(page pagination.Page) (bool, error) {
 		subnetList, err := subnets.ExtractSubnets(page)
