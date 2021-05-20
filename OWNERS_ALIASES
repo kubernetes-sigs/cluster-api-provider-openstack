@@ -23,4 +23,5 @@ aliases:
     - sbueringer
     - hidekazuna
   cluster-api-openstack-reviewers:
+    - chrischdi
     - prankul88
