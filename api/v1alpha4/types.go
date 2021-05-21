@@ -58,7 +58,7 @@ type NetworkParam struct {
 	// The UUID of the network. Required if you omit the port attribute.
 	UUID string `json:"uuid,omitempty"`
 	// A fixed IPv4 address for the NIC.
-	FixedIP string `json:"fixedIp,omitempty"`
+	FixedIP string `json:"fixedIP,omitempty"`
 	// Filters for optional network query
 	Filter Filter `json:"filter,omitempty"`
 	// Subnet within a network to use
@@ -116,6 +116,38 @@ type SubnetFilter struct {
 	NotTagsAny      string `json:"notTagsAny,omitempty"`
 }
 
+type PortOpts struct {
+	// ID of the OpenStack network on which to create the port. If unspecified, create the port on the default cluster network.
+	NetworkID string `json:"networkId,omitempty"`
+	// Used to make the name of the port unique. If unspecified, instead the 0-based index of the port in the list is used.
+	NameSuffix   string `json:"nameSuffix,omitempty"`
+	Description  string `json:"description,omitempty"`
+	AdminStateUp *bool  `json:"adminStateUp,omitempty"`
+	MACAddress   string `json:"macAddress,omitempty"`
+	// Specify pairs of subnet and/or IP address. These should be subnets of the network with the given NetworkID.
+	FixedIPs            []FixedIP     `json:"fixedIPs,omitempty"`
+	TenantID            string        `json:"tenantId,omitempty"`
+	ProjectID           string        `json:"projectId,omitempty"`
+	SecurityGroups      *[]string     `json:"securityGroups,omitempty"`
+	AllowedAddressPairs []AddressPair `json:"allowedAddressPairs,omitempty"`
+
+	// The ID of the host where the port is allocated
+	HostID string `json:"hostId,omitempty"`
+
+	// The virtual network interface card (vNIC) type that is bound to the neutron port.
+	VNICType string `json:"vnicType,omitempty"`
+}
+
+type FixedIP struct {
+	SubnetID  string `json:"subnetId"`
+	IPAddress string `json:"ipAddress,omitempty"`
+}
+
+type AddressPair struct {
+	IPAddress  string `json:"ipAddress,omitempty"`
+	MACAddress string `json:"macAddress,omitempty"`
+}
+
 type Instance struct {
 	ID             string            `json:"id,omitempty"`
 	Name           string            `json:"name,omitempty"`
@@ -145,7 +177,7 @@ type RootVolume struct {
 	Size       int    `json:"diskSize,omitempty"`
 }
 
-// Network represents basic information about the associated OpenStach Neutron Network.
+// Network represents basic information about an OpenStack Neutron Network associated with an instance's port.
 type Network struct {
 	Name string `json:"name"`
 	ID   string `json:"id"`
@@ -153,8 +185,9 @@ type Network struct {
 	//+optional
 	Tags []string `json:"tags,omitempty"`
 
-	Subnet *Subnet `json:"subnet,omitempty"`
-	Router *Router `json:"router,omitempty"`
+	Subnet   *Subnet   `json:"subnet,omitempty"`
+	PortOpts *PortOpts `json:"port,omitempty"`
+	Router   *Router   `json:"router,omitempty"`
 
 	// Be careful when using APIServerLoadBalancer, because this field is optional and therefore not
 	// set in all cases

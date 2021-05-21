@@ -55,8 +55,12 @@ type OpenStackMachineSpec struct {
 	SSHKeyName string `json:"sshKeyName,omitempty"`
 
 	// A networks object. Required parameter when there are multiple networks defined for the tenant.
-	// When you do not specify the networks parameter, the server attaches to the only network created for the current tenant.
+	// When you do not specify both networks and ports parameters, the server attaches to the only network created for the current tenant.
 	Networks []NetworkParam `json:"networks,omitempty"`
+
+	// Ports to be attached to the server instance. They are created if a port with the given name does not already exist.
+	// When you do not specify both networks and ports parameters, the server attaches to the only network created for the current tenant.
+	Ports []PortOpts `json:"ports,omitempty"`
 
 	// UUID, IP address of a port from this subnet will be marked as AccessIPv4 on the created compute instance
 	Subnet string `json:"subnet,omitempty"`
