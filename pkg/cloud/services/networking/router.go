@@ -25,6 +25,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
@@ -107,10 +108,11 @@ INTERFACE_LOOP:
 	// ... and create a router interface for our subnet.
 	if createInterface {
 		s.logger.V(4).Info("Creating RouterInterface", "routerID", router.ID, "subnetID", openStackCluster.Status.Network.Subnet.ID)
+		mc := metrics.NewMetricPrometheusContext("router_interface", "create")
 		routerInterface, err := routers.AddInterface(s.client, router.ID, routers.AddInterfaceOpts{
 			SubnetID: openStackCluster.Status.Network.Subnet.ID,
 		}).Extract()
-		if err != nil {
+		if mc.ObserveRequest(err) != nil {
 			return fmt.Errorf("unable to create router interface: %v", err)
 		}
 		s.logger.V(4).Info("Created RouterInterface", "id", routerInterface.ID)
@@ -132,8 +134,12 @@ func (s *Service) createRouter(openStackCluster *infrav1.OpenStackCluster, clust
 			NetworkID: openStackCluster.Status.ExternalNetwork.ID,
 		}
 	}
+
+	mc := metrics.NewMetricPrometheusContext("router", "create")
+
 	router, err := routers.Create(s.client, opts).Extract()
-	if err != nil {
+
+	if mc.ObserveRequest(err) != nil {
 		record.Warnf(openStackCluster, "FailedCreateRouter", "Failed to create router %s: %v", name, err)
 		return nil, err
 	}
@@ -177,7 +183,9 @@ func (s *Service) setRouterExternalIPs(openStackCluster *infrav1.OpenStackCluste
 		})
 	}
 
-	if _, err := routers.Update(s.client, router.ID, updateOpts).Extract(); err != nil {
+	mc := metrics.NewMetricPrometheusContext("router", "update")
+	_, err := routers.Update(s.client, router.ID, updateOpts).Extract()
+	if mc.ObserveRequest(err) != nil {
 		record.Warnf(openStackCluster, "FailedUpdateRouter", "Failed to update router %s with id %s: %v", router.Name, router.ID, err)
 		return err
 	}
@@ -197,10 +205,11 @@ func (s *Service) DeleteRouter(openStackCluster *infrav1.OpenStackCluster, clust
 	}
 
 	if subnet.ID != "" {
+		mc := metrics.NewMetricPrometheusContext("router_interface", "delete")
 		_, err = routers.RemoveInterface(s.client, router.ID, routers.RemoveInterfaceOpts{
 			SubnetID: subnet.ID,
 		}).Extract()
-		if err != nil {
+		if mc.ObserveRequest(err) != nil {
 			if !capoerrors.IsNotFound(err) {
 				return fmt.Errorf("unable to remove router interface: %v", err)
 			}
@@ -210,7 +219,9 @@ func (s *Service) DeleteRouter(openStackCluster *infrav1.OpenStackCluster, clust
 		}
 	}
 
-	if err = routers.Delete(s.client, router.ID).ExtractErr(); err != nil {
+	mc := metrics.NewMetricPrometheusContext("router", "delete")
+	err = routers.Delete(s.client, router.ID).ExtractErr()
+	if mc.ObserveRequest(err) != nil {
 		record.Warnf(openStackCluster, "FailedDeleteRouter", "Failed to delete router %s with id %s: %v", router.Name, router.ID, err)
 		return err
 	}

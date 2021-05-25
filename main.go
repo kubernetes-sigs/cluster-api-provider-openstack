@@ -40,6 +40,7 @@ import (
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 	"sigs.k8s.io/cluster-api-provider-openstack/controllers"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	"sigs.k8s.io/cluster-api-provider-openstack/version"
 )
@@ -72,6 +73,8 @@ func init() {
 	_ = clusterv1.AddToScheme(scheme)
 	_ = infrav1.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
+
+	metrics.RegisterAPIPrometheusMetrics()
 }
 
 // InitFlags initializes the flags.

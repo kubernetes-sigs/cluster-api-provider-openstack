@@ -27,6 +27,7 @@ import (
 	"github.com/gophercloud/gophercloud/pagination"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
@@ -123,8 +124,10 @@ func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, c
 			Name:         networkName,
 		}
 	}
+
+	mc := metrics.NewMetricPrometheusContext("network", "create")
 	network, err := networks.Create(s.client, opts).Extract()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		record.Warnf(openStackCluster, "FailedCreateNetwork", "Failed to create network %s: %v", networkName, err)
 		return err
 	}
@@ -157,7 +160,9 @@ func (s *Service) DeleteNetwork(openStackCluster *infrav1.OpenStackCluster, clus
 		return nil
 	}
 
-	if err = networks.Delete(s.client, network.ID).ExtractErr(); err != nil {
+	mc := metrics.NewMetricPrometheusContext("network", "delete")
+	err = networks.Delete(s.client, network.ID).ExtractErr()
+	if mc.ObserveRequest(err) != nil {
 		record.Warnf(openStackCluster, "FailedDeleteNetwork", "Failed to delete network %s with id %s: %v", network.Name, network.ID, err)
 		return err
 	}
@@ -222,18 +227,22 @@ func (s *Service) createSubnet(openStackCluster *infrav1.OpenStackCluster, clust
 		DNSNameservers: openStackCluster.Spec.DNSNameservers,
 		Description:    names.GetDescription(clusterName),
 	}
+	mc := metrics.NewMetricPrometheusContext("subnet", "create")
+
 	subnet, err := subnets.Create(s.client, opts).Extract()
-	if err != nil {
+
+	if mc.ObserveRequest(err) != nil {
 		record.Warnf(openStackCluster, "FailedCreateSubnet", "Failed to create subnet %s: %v", name, err)
 		return nil, err
 	}
 	record.Eventf(openStackCluster, "SuccessfulCreateSubnet", "Created subnet %s with id %s", name, subnet.ID)
 
 	if len(openStackCluster.Spec.Tags) > 0 {
+		mc := metrics.NewMetricPrometheusContext("subnet", "update")
 		_, err = attributestags.ReplaceAll(s.client, "subnets", subnet.ID, attributestags.ReplaceAllOpts{
 			Tags: openStackCluster.Spec.Tags,
 		}).Extract()
-		if err != nil {
+		if mc.ObserveRequest(err) != nil {
 			return nil, err
 		}
 	}

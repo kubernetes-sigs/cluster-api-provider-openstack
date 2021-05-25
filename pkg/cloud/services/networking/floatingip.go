@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 )
 
@@ -45,8 +46,9 @@ func (s *Service) GetOrCreateFloatingIP(openStackCluster *infrav1.OpenStackClust
 
 	fpCreateOpts.FloatingNetworkID = openStackCluster.Status.ExternalNetwork.ID
 
+	mc := metrics.NewMetricPrometheusContext("floating_ip", "create")
 	fp, err = floatingips.Create(s.client, fpCreateOpts).Extract()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		record.Warnf(openStackCluster, "FailedCreateFloatingIP", "Failed to create floating IP %s: %v", ip, err)
 		return nil, err
 	}
@@ -95,7 +97,9 @@ func (s *Service) DeleteFloatingIP(openStackCluster *infrav1.OpenStackCluster, i
 		return nil
 	}
 
-	if err = floatingips.Delete(s.client, fip.ID).ExtractErr(); err != nil {
+	mc := metrics.NewMetricPrometheusContext("floating_ip", "delete")
+	err = floatingips.Delete(s.client, fip.ID).ExtractErr()
+	if mc.ObserveRequest(err) != nil {
 		record.Warnf(openStackCluster, "FailedDeleteFloatingIP", "Failed to delete floating IP %s: %v", ip, err)
 		return err
 	}
@@ -116,8 +120,9 @@ func (s *Service) AssociateFloatingIP(openStackCluster *infrav1.OpenStackCluster
 	fpUpdateOpts := &floatingips.UpdateOpts{
 		PortID: &portID,
 	}
+	mc := metrics.NewMetricPrometheusContext("floating_ip", "update")
 	_, err := floatingips.Update(s.client, fp.ID, fpUpdateOpts).Extract()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		record.Warnf(openStackCluster, "FailedAssociateFloatingIP", "Failed to associate floating IP %s with port %s: %v", fp.FloatingIP, portID, err)
 		return err
 	}
@@ -149,8 +154,9 @@ func (s *Service) DisassociateFloatingIP(openStackCluster *infrav1.OpenStackClus
 	fpUpdateOpts := &floatingips.UpdateOpts{
 		PortID: nil,
 	}
+	mc := metrics.NewMetricPrometheusContext("floating_ip", "update")
 	_, err = floatingips.Update(s.client, fip.ID, fpUpdateOpts).Extract()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		record.Warnf(openStackCluster, "FailedDisassociateFloatingIP", "Failed to disassociate floating IP %s: %v", fip.FloatingIP, err)
 		return err
 	}

@@ -45,6 +45,7 @@ import (
 	"sigs.k8s.io/cluster-api/util"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
@@ -218,11 +219,14 @@ func (s *Service) createInstance(eventObject runtime.Object, clusterName string,
 
 	serverCreateOpts = applyServerGroupID(serverCreateOpts, i.ServerGroupID)
 
+	mc := metrics.NewMetricPrometheusContext("server", "create")
+
 	server, err := servers.Create(s.computeClient, keypairs.CreateOptsExt{
 		CreateOptsBuilder: serverCreateOpts,
 		KeyName:           i.SSHKeyName,
 	}).Extract()
-	if err != nil {
+
+	if mc.ObserveRequest(err) != nil {
 		if err = s.deletePorts(eventObject, portList); err != nil {
 			return nil, err
 		}
@@ -401,8 +405,10 @@ func (s *Service) getOrCreatePort(eventObject runtime.Object, clusterName string
 	if net.Subnet.ID != "" {
 		portCreateOpts.FixedIPs = []ports.IP{{SubnetID: net.Subnet.ID}}
 	}
+	mc := metrics.NewMetricPrometheusContext("port", "create")
+
 	port, err := ports.Create(s.networkClient, portCreateOpts).Extract()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		record.Warnf(eventObject, "FailedCreatePort", "Failed to create port %s: %v", portName, err)
 		return nil, err
 	}
@@ -433,8 +439,10 @@ func (s *Service) getOrCreateTrunk(eventObject runtime.Object, clusterName, trun
 		PortID:      portID,
 		Description: names.GetDescription(clusterName),
 	}
+	mc := metrics.NewMetricPrometheusContext("trunk", "create")
+
 	trunk, err := trunks.Create(s.networkClient, trunkCreateOpts).Extract()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		record.Warnf(eventObject, "FailedCreateTrunk", "Failed to create trunk %s: %v", trunkName, err)
 		return nil, err
 	}
@@ -444,10 +452,11 @@ func (s *Service) getOrCreateTrunk(eventObject runtime.Object, clusterName, trun
 }
 
 func (s *Service) replaceAllAttributesTags(eventObject runtime.Object, trunkID string, tags []string) error {
+	mc := metrics.NewMetricPrometheusContext("trunk", "update")
 	_, err := attributestags.ReplaceAll(s.networkClient, "trunks", trunkID, attributestags.ReplaceAllOpts{
 		Tags: tags,
 	}).Extract()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		record.Warnf(eventObject, "FailedReplaceAllAttributesTags", "Failed to replace all attributestags, trunk %s: %v", trunkID, err)
 		return err
 	}
@@ -490,8 +499,9 @@ func (s *Service) AssociateFloatingIP(instanceID, floatingIP string) error {
 	opts := floatingips.AssociateOpts{
 		FloatingIP: floatingIP,
 	}
+	mc := metrics.NewMetricPrometheusContext("floating_ip", "update")
 	err := floatingips.AssociateInstance(s.computeClient, instanceID, opts).ExtractErr()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		return err
 	}
 	return nil
@@ -553,8 +563,9 @@ func (s *Service) deletePort(eventObject runtime.Object, portID string) error {
 	}
 
 	err = util.PollImmediate(RetryIntervalPortDelete, TimeoutPortDelete, func() (bool, error) {
+		mc := metrics.NewMetricPrometheusContext("port", "delete")
 		err := ports.Delete(s.networkClient, port.ID).ExtractErr()
-		if err != nil {
+		if mc.ObserveRequest(err) != nil {
 			if capoerrors.IsRetryable(err) {
 				return false, nil
 			}
@@ -597,8 +608,9 @@ func (s *Service) deleteAttachInterface(eventObject runtime.Object, instanceID, 
 		return nil
 	}
 
+	mc := metrics.NewMetricPrometheusContext("router_interface", "delete")
 	err = attachinterfaces.Delete(s.computeClient, instanceID, portID).ExtractErr()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		if capoerrors.IsNotFound(err) {
 			return nil
 		}
@@ -675,8 +687,9 @@ func (s *Service) deleteInstance(eventObject runtime.Object, instanceID string) 
 	if instance == nil || instance.ID == "" {
 		return nil
 	}
-
-	if err = servers.Delete(s.computeClient, instance.ID).ExtractErr(); err != nil {
+	mc := metrics.NewMetricPrometheusContext("server", "delete")
+	err = servers.Delete(s.computeClient, instance.ID).ExtractErr()
+	if mc.ObserveRequest(err) != nil {
 		record.Warnf(eventObject, "FailedDeleteServer", "Failed to deleted server %s with id %s: %v", instance.Name, instance.ID, err)
 		return err
 	}
