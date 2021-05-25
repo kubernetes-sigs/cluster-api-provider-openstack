@@ -24,7 +24,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/common/extensions"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/bootfromvolume"
@@ -46,7 +45,6 @@ import (
 	"sigs.k8s.io/cluster-api/util"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 )
@@ -87,7 +85,7 @@ func (s *Service) CreateInstance(openStackCluster *infrav1.OpenStackCluster, mac
 	}
 
 	if openStackMachine.Spec.Trunk {
-		trunkSupport, err := getTrunkSupport(s)
+		trunkSupport, err := s.getTrunkSupport()
 		if err != nil {
 			return nil, fmt.Errorf("there was an issue verifying whether trunk support is available, please disable it: %v", err)
 		}
@@ -111,7 +109,7 @@ func (s *Service) CreateInstance(openStackCluster *infrav1.OpenStackCluster, mac
 	input.Tags = machineTags
 
 	// Get security groups
-	securityGroups, err := getSecurityGroups(s, openStackMachine.Spec.SecurityGroups)
+	securityGroups, err := s.getSecurityGroups(openStackMachine.Spec.SecurityGroups)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +125,7 @@ func (s *Service) CreateInstance(openStackCluster *infrav1.OpenStackCluster, mac
 	var nets []infrav1.Network
 	if len(openStackMachine.Spec.Networks) > 0 {
 		var err error
-		nets, err = getServerNetworks(s.networkClient, openStackMachine.Spec.Networks)
+		nets, err = s.getServerNetworks(openStackMachine.Spec.Networks)
 		if err != nil {
 			return nil, err
 		}
@@ -141,14 +139,14 @@ func (s *Service) CreateInstance(openStackCluster *infrav1.OpenStackCluster, mac
 	}
 	input.Networks = &nets
 
-	out, err := createInstance(s, openStackMachine, clusterName, input)
+	out, err := s.createInstance(openStackMachine, clusterName, input)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func createInstance(is *Service, eventObject runtime.Object, clusterName string, i *infrav1.Instance) (*infrav1.Instance, error) {
+func (s *Service) createInstance(eventObject runtime.Object, clusterName string, i *infrav1.Instance) (*infrav1.Instance, error) {
 	accessIPv4 := ""
 	portList := []servers.Network{}
 
@@ -157,18 +155,18 @@ func createInstance(is *Service, eventObject runtime.Object, clusterName string,
 			return nil, fmt.Errorf("no network was found or provided. Please check your machine configuration and try again")
 		}
 
-		port, err := getOrCreatePort(is, eventObject, clusterName, i.Name, network, i.SecurityGroups)
+		port, err := s.getOrCreatePort(eventObject, clusterName, i.Name, network, i.SecurityGroups)
 		if err != nil {
 			return nil, err
 		}
 
 		if i.Trunk {
-			trunk, err := getOrCreateTrunk(is, eventObject, i.Name, port.ID)
+			trunk, err := s.getOrCreateTrunk(eventObject, i.Name, port.ID)
 			if err != nil {
 				return nil, err
 			}
 
-			if err = replaceAllAttributesTags(is, eventObject, trunk.ID, i.Tags); err != nil {
+			if err = s.replaceAllAttributesTags(eventObject, trunk.ID, i.Tags); err != nil {
 				return nil, err
 			}
 		}
@@ -185,18 +183,18 @@ func createInstance(is *Service, eventObject runtime.Object, clusterName string,
 	}
 
 	if i.Subnet != "" && accessIPv4 == "" {
-		if err := deletePorts(is, eventObject, portList); err != nil {
+		if err := s.deletePorts(eventObject, portList); err != nil {
 			return nil, err
 		}
 		return nil, fmt.Errorf("no ports with fixed IPs found on Subnet %q", i.Subnet)
 	}
 
-	imageID, err := getImageID(is, i.Image)
+	imageID, err := s.getImageID(i.Image)
 	if err != nil {
 		return nil, fmt.Errorf("create new server: %v", err)
 	}
 
-	flavorID, err := flavors.IDFromName(is.computeClient, i.Flavor)
+	flavorID, err := flavors.IDFromName(s.computeClient, i.Flavor)
 	if err != nil {
 		return nil, fmt.Errorf("error getting flavor id from flavor name %s: %v", i.Flavor, err)
 	}
@@ -219,12 +217,12 @@ func createInstance(is *Service, eventObject runtime.Object, clusterName string,
 
 	serverCreateOpts = applyServerGroupID(serverCreateOpts, i.ServerGroupID)
 
-	server, err := servers.Create(is.computeClient, keypairs.CreateOptsExt{
+	server, err := servers.Create(s.computeClient, keypairs.CreateOptsExt{
 		CreateOptsBuilder: serverCreateOpts,
 		KeyName:           i.SSHKeyName,
 	}).Extract()
 	if err != nil {
-		if err = deletePorts(is, eventObject, portList); err != nil {
+		if err = s.deletePorts(eventObject, portList); err != nil {
 			return nil, err
 		}
 		return nil, fmt.Errorf("error creating Openstack instance: %v", err)
@@ -233,7 +231,7 @@ func createInstance(is *Service, eventObject runtime.Object, clusterName string,
 	instanceCreateTimeout *= time.Minute
 	var instance *infrav1.Instance
 	err = util.PollImmediate(RetryIntervalInstanceStatus, instanceCreateTimeout, func() (bool, error) {
-		instance, err = is.GetInstance(server.ID)
+		instance, err = s.GetInstance(server.ID)
 		if err != nil {
 			if capoerrors.IsRetryable(err) {
 				return false, nil
@@ -285,8 +283,8 @@ func applyServerGroupID(opts servers.CreateOptsBuilder, serverGroupID string) se
 	return opts
 }
 
-func getTrunkSupport(is *Service) (bool, error) {
-	allPages, err := netext.List(is.networkClient).AllPages()
+func (s *Service) getTrunkSupport() (bool, error) {
+	allPages, err := netext.List(s.networkClient).AllPages()
 	if err != nil {
 		return false, err
 	}
@@ -304,16 +302,16 @@ func getTrunkSupport(is *Service) (bool, error) {
 	return false, nil
 }
 
-func getSecurityGroups(is *Service, securityGroupParams []infrav1.SecurityGroupParam) ([]string, error) {
+func (s *Service) getSecurityGroups(securityGroupParams []infrav1.SecurityGroupParam) ([]string, error) {
 	var sgIDs []string
 	for _, sg := range securityGroupParams {
 		listOpts := groups.ListOpts(sg.Filter)
 		if listOpts.ProjectID == "" {
-			listOpts.ProjectID = is.projectID
+			listOpts.ProjectID = s.projectID
 		}
 		listOpts.Name = sg.Name
 		listOpts.ID = sg.UUID
-		pages, err := groups.List(is.networkClient, listOpts).AllPages()
+		pages, err := groups.List(s.networkClient, listOpts).AllPages()
 		if err != nil {
 			return nil, err
 		}
@@ -337,12 +335,12 @@ func getSecurityGroups(is *Service, securityGroupParams []infrav1.SecurityGroupP
 	return sgIDs, nil
 }
 
-func getServerNetworks(networkClient *gophercloud.ServiceClient, networkParams []infrav1.NetworkParam) ([]infrav1.Network, error) {
+func (s *Service) getServerNetworks(networkParams []infrav1.NetworkParam) ([]infrav1.Network, error) {
 	var nets []infrav1.Network
 	for _, networkParam := range networkParams {
 		opts := networks.ListOpts(networkParam.Filter)
 		opts.ID = networkParam.UUID
-		ids, err := networking.GetNetworkIDsByFilter(networkClient, &opts)
+		ids, err := s.networkingService.GetNetworkIDsByFilter(&opts)
 		if err != nil {
 			return nil, err
 		}
@@ -358,7 +356,7 @@ func getServerNetworks(networkClient *gophercloud.ServiceClient, networkParams [
 				subnetOpts := subnets.ListOpts(subnet.Filter)
 				subnetOpts.ID = subnet.UUID
 				subnetOpts.NetworkID = netID
-				subnetsByFilter, err := networking.GetSubnetsByFilter(networkClient, &subnetOpts)
+				subnetsByFilter, err := s.networkingService.GetSubnetsByFilter(&subnetOpts)
 				if err != nil {
 					return nil, err
 				}
@@ -376,8 +374,8 @@ func getServerNetworks(networkClient *gophercloud.ServiceClient, networkParams [
 	return nets, nil
 }
 
-func getOrCreatePort(is *Service, eventObject runtime.Object, clusterName string, portName string, net infrav1.Network, securityGroups *[]string) (*ports.Port, error) {
-	allPages, err := ports.List(is.networkClient, ports.ListOpts{
+func (s *Service) getOrCreatePort(eventObject runtime.Object, clusterName string, portName string, net infrav1.Network, securityGroups *[]string) (*ports.Port, error) {
+	allPages, err := ports.List(s.networkClient, ports.ListOpts{
 		Name:      portName,
 		NetworkID: net.ID,
 	}).AllPages()
@@ -402,7 +400,7 @@ func getOrCreatePort(is *Service, eventObject runtime.Object, clusterName string
 	if net.Subnet.ID != "" {
 		portCreateOpts.FixedIPs = []ports.IP{{SubnetID: net.Subnet.ID}}
 	}
-	port, err := ports.Create(is.networkClient, portCreateOpts).Extract()
+	port, err := ports.Create(s.networkClient, portCreateOpts).Extract()
 	if err != nil {
 		record.Warnf(eventObject, "FailedCreatePort", "Failed to create port %s: %v", portName, err)
 		return nil, err
@@ -412,8 +410,8 @@ func getOrCreatePort(is *Service, eventObject runtime.Object, clusterName string
 	return port, nil
 }
 
-func getOrCreateTrunk(is *Service, eventObject runtime.Object, trunkName, portID string) (*trunks.Trunk, error) {
-	allPages, err := trunks.List(is.networkClient, trunks.ListOpts{
+func (s *Service) getOrCreateTrunk(eventObject runtime.Object, trunkName, portID string) (*trunks.Trunk, error) {
+	allPages, err := trunks.List(s.networkClient, trunks.ListOpts{
 		Name:   trunkName,
 		PortID: portID,
 	}).AllPages()
@@ -433,7 +431,7 @@ func getOrCreateTrunk(is *Service, eventObject runtime.Object, trunkName, portID
 		Name:   trunkName,
 		PortID: portID,
 	}
-	trunk, err := trunks.Create(is.networkClient, trunkCreateOpts).Extract()
+	trunk, err := trunks.Create(s.networkClient, trunkCreateOpts).Extract()
 	if err != nil {
 		record.Warnf(eventObject, "FailedCreateTrunk", "Failed to create trunk %s: %v", trunkName, err)
 		return nil, err
@@ -443,8 +441,8 @@ func getOrCreateTrunk(is *Service, eventObject runtime.Object, trunkName, portID
 	return trunk, nil
 }
 
-func replaceAllAttributesTags(is *Service, eventObject runtime.Object, trunkID string, tags []string) error {
-	_, err := attributestags.ReplaceAll(is.networkClient, "trunks", trunkID, attributestags.ReplaceAllOpts{
+func (s *Service) replaceAllAttributesTags(eventObject runtime.Object, trunkID string, tags []string) error {
+	_, err := attributestags.ReplaceAll(s.networkClient, "trunks", trunkID, attributestags.ReplaceAllOpts{
 		Tags: tags,
 	}).Extract()
 	if err != nil {
@@ -457,7 +455,7 @@ func replaceAllAttributesTags(is *Service, eventObject runtime.Object, trunkID s
 }
 
 // Helper function for getting image ID from name.
-func getImageID(is *Service, imageName string) (string, error) {
+func (s *Service) getImageID(imageName string) (string, error) {
 	if imageName == "" {
 		return "", nil
 	}
@@ -466,7 +464,7 @@ func getImageID(is *Service, imageName string) (string, error) {
 		Name: imageName,
 	}
 
-	pages, err := images.List(is.imagesClient, opts).AllPages()
+	pages, err := images.List(s.imagesClient, opts).AllPages()
 	if err != nil {
 		return "", err
 	}
@@ -516,35 +514,35 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instanceName string
 		return err
 	}
 	if len(instanceInterfaces) < 1 {
-		return deleteInstance(s, eventObject, instance.ID)
+		return s.deleteInstance(eventObject, instance.ID)
 	}
 
-	trunkSupport, err := getTrunkSupport(s)
+	trunkSupport, err := s.getTrunkSupport()
 	if err != nil {
 		return fmt.Errorf("obtaining network extensions: %v", err)
 	}
 	// get and delete trunks
 	for _, port := range instanceInterfaces {
-		if err = deleteAttachInterface(s, eventObject, instance.ID, port.PortID); err != nil {
+		if err = s.deleteAttachInterface(eventObject, instance.ID, port.PortID); err != nil {
 			return err
 		}
 
 		if trunkSupport {
-			if err = deleteTrunk(s, eventObject, port.PortID); err != nil {
+			if err = s.deleteTrunk(eventObject, port.PortID); err != nil {
 				return err
 			}
 		}
 
-		if err = deletePort(s, eventObject, port.PortID); err != nil {
+		if err = s.deletePort(eventObject, port.PortID); err != nil {
 			return err
 		}
 	}
 
-	return deleteInstance(s, eventObject, instance.ID)
+	return s.deleteInstance(eventObject, instance.ID)
 }
 
-func deletePort(is *Service, eventObject runtime.Object, portID string) error {
-	port, err := getPort(is, portID)
+func (s *Service) deletePort(eventObject runtime.Object, portID string) error {
+	port, err := s.getPort(portID)
 	if err != nil {
 		return err
 	}
@@ -553,7 +551,7 @@ func deletePort(is *Service, eventObject runtime.Object, portID string) error {
 	}
 
 	err = util.PollImmediate(RetryIntervalPortDelete, TimeoutPortDelete, func() (bool, error) {
-		err := ports.Delete(is.networkClient, port.ID).ExtractErr()
+		err := ports.Delete(s.networkClient, port.ID).ExtractErr()
 		if err != nil {
 			if capoerrors.IsRetryable(err) {
 				return false, nil
@@ -571,17 +569,17 @@ func deletePort(is *Service, eventObject runtime.Object, portID string) error {
 	return nil
 }
 
-func deletePorts(is *Service, eventObject runtime.Object, nets []servers.Network) error {
+func (s *Service) deletePorts(eventObject runtime.Object, nets []servers.Network) error {
 	for _, n := range nets {
-		if err := deletePort(is, eventObject, n.Port); err != nil {
+		if err := s.deletePort(eventObject, n.Port); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func deleteAttachInterface(is *Service, eventObject runtime.Object, instanceID, portID string) error {
-	instance, err := is.GetInstance(instanceID)
+func (s *Service) deleteAttachInterface(eventObject runtime.Object, instanceID, portID string) error {
+	instance, err := s.GetInstance(instanceID)
 	if err != nil {
 		return err
 	}
@@ -589,7 +587,7 @@ func deleteAttachInterface(is *Service, eventObject runtime.Object, instanceID, 
 		return nil
 	}
 
-	port, err := getPort(is, portID)
+	port, err := s.getPort(portID)
 	if err != nil {
 		return err
 	}
@@ -597,7 +595,7 @@ func deleteAttachInterface(is *Service, eventObject runtime.Object, instanceID, 
 		return nil
 	}
 
-	err = attachinterfaces.Delete(is.computeClient, instanceID, portID).ExtractErr()
+	err = attachinterfaces.Delete(s.computeClient, instanceID, portID).ExtractErr()
 	if err != nil {
 		if capoerrors.IsNotFound(err) {
 			return nil
@@ -610,8 +608,8 @@ func deleteAttachInterface(is *Service, eventObject runtime.Object, instanceID, 
 	return nil
 }
 
-func deleteTrunk(is *Service, eventObject runtime.Object, portID string) error {
-	port, err := getPort(is, portID)
+func (s *Service) deleteTrunk(eventObject runtime.Object, portID string) error {
+	port, err := s.getPort(portID)
 	if err != nil {
 		return err
 	}
@@ -622,7 +620,7 @@ func deleteTrunk(is *Service, eventObject runtime.Object, portID string) error {
 	listOpts := trunks.ListOpts{
 		PortID: port.ID,
 	}
-	trunkList, err := trunks.List(is.networkClient, listOpts).AllPages()
+	trunkList, err := trunks.List(s.networkClient, listOpts).AllPages()
 	if err != nil {
 		return err
 	}
@@ -635,7 +633,7 @@ func deleteTrunk(is *Service, eventObject runtime.Object, portID string) error {
 	}
 
 	err = util.PollImmediate(RetryIntervalTrunkDelete, TimeoutTrunkDelete, func() (bool, error) {
-		if err := trunks.Delete(is.networkClient, trunkInfo[0].ID).ExtractErr(); err != nil {
+		if err := trunks.Delete(s.networkClient, trunkInfo[0].ID).ExtractErr(); err != nil {
 			if capoerrors.IsRetryable(err) {
 				return false, nil
 			}
@@ -652,11 +650,11 @@ func deleteTrunk(is *Service, eventObject runtime.Object, portID string) error {
 	return nil
 }
 
-func getPort(is *Service, portID string) (port *ports.Port, err error) {
+func (s *Service) getPort(portID string) (port *ports.Port, err error) {
 	if portID == "" {
 		return nil, fmt.Errorf("portID should be specified to get detail")
 	}
-	port, err = ports.Get(is.networkClient, portID).Extract()
+	port, err = ports.Get(s.networkClient, portID).Extract()
 	if err != nil {
 		if capoerrors.IsNotFound(err) {
 			return nil, nil
@@ -666,8 +664,8 @@ func getPort(is *Service, portID string) (port *ports.Port, err error) {
 	return port, nil
 }
 
-func deleteInstance(is *Service, eventObject runtime.Object, instanceID string) error {
-	instance, err := is.GetInstance(instanceID)
+func (s *Service) deleteInstance(eventObject runtime.Object, instanceID string) error {
+	instance, err := s.GetInstance(instanceID)
 	if err != nil {
 		return err
 	}
@@ -676,13 +674,13 @@ func deleteInstance(is *Service, eventObject runtime.Object, instanceID string) 
 		return nil
 	}
 
-	if err = servers.Delete(is.computeClient, instance.ID).ExtractErr(); err != nil {
+	if err = servers.Delete(s.computeClient, instance.ID).ExtractErr(); err != nil {
 		record.Warnf(eventObject, "FailedDeleteServer", "Failed to deleted server %s with id %s: %v", instance.Name, instance.ID, err)
 		return err
 	}
 
 	err = util.PollImmediate(RetryIntervalInstanceStatus, TimeoutInstanceDelete, func() (bool, error) {
-		i, err := is.GetInstance(instance.ID)
+		i, err := s.GetInstance(instance.ID)
 		if err != nil {
 			return false, err
 		}

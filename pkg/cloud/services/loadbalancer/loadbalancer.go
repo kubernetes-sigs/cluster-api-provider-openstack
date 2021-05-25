@@ -21,8 +21,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-logr/logr"
-	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/listeners"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/loadbalancers"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/monitors"
@@ -45,7 +43,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 	s.logger.Info("Reconciling load balancer", "name", loadBalancerName)
 
 	// lb
-	lb, err := checkIfLbExists(s.loadbalancerClient, loadBalancerName)
+	lb, err := s.checkIfLbExists(loadBalancerName)
 	if err != nil {
 		return err
 	}
@@ -63,7 +61,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 		}
 		record.Eventf(openStackCluster, "SuccessfulCreateLoadBalancer", "Created load balancer %s with id %s", loadBalancerName, lb.ID)
 	}
-	if err := waitForLoadBalancerActive(s.logger, s.loadbalancerClient, lb.ID); err != nil {
+	if err := s.waitForLoadBalancerActive(lb.ID); err != nil {
 		return err
 	}
 
@@ -85,7 +83,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 	for _, port := range portList {
 		lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)
 
-		listener, err := checkIfListenerExists(s.loadbalancerClient, lbPortObjectsName)
+		listener, err := s.checkIfListenerExists(lbPortObjectsName)
 		if err != nil {
 			return err
 		}
@@ -102,16 +100,16 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 				return fmt.Errorf("error creating listener: %s", err)
 			}
 		}
-		if err := waitForLoadBalancerActive(s.logger, s.loadbalancerClient, lb.ID); err != nil {
+		if err := s.waitForLoadBalancerActive(lb.ID); err != nil {
 			return err
 		}
 
-		if err := waitForListener(s.logger, s.loadbalancerClient, listener.ID, "ACTIVE"); err != nil {
+		if err := s.waitForListener(listener.ID, "ACTIVE"); err != nil {
 			return err
 		}
 
 		// lb pool
-		pool, err := checkIfPoolExists(s.loadbalancerClient, lbPortObjectsName)
+		pool, err := s.checkIfPoolExists(lbPortObjectsName)
 		if err != nil {
 			return err
 		}
@@ -128,12 +126,12 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 				return fmt.Errorf("error creating pool: %s", err)
 			}
 		}
-		if err := waitForLoadBalancerActive(s.logger, s.loadbalancerClient, lb.ID); err != nil {
+		if err := s.waitForLoadBalancerActive(lb.ID); err != nil {
 			return err
 		}
 
 		// lb monitor
-		monitor, err := checkIfMonitorExists(s.loadbalancerClient, lbPortObjectsName)
+		monitor, err := s.checkIfMonitorExists(lbPortObjectsName)
 		if err != nil {
 			return err
 		}
@@ -152,7 +150,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 				return fmt.Errorf("error creating monitor: %s", err)
 			}
 		}
-		if err = waitForLoadBalancerActive(s.logger, s.loadbalancerClient, lb.ID); err != nil {
+		if err = s.waitForLoadBalancerActive(lb.ID); err != nil {
 			return err
 		}
 	}
@@ -191,7 +189,7 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 		lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)
 		name := lbPortObjectsName + "-" + openStackMachine.Name
 
-		pool, err := checkIfPoolExists(s.loadbalancerClient, lbPortObjectsName)
+		pool, err := s.checkIfPoolExists(lbPortObjectsName)
 		if err != nil {
 			return err
 		}
@@ -199,7 +197,7 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 			return errors.New("load balancer pool does not exist yet")
 		}
 
-		lbMember, err := checkIfLbMemberExists(s.loadbalancerClient, pool.ID, name)
+		lbMember, err := s.checkIfLbMemberExists(pool.ID, name)
 		if err != nil {
 			return err
 		}
@@ -214,7 +212,7 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 			s.logger.Info("Deleting load balancer member (because the IP of the machine changed)", "name", name)
 
 			// lb member changed so let's delete it so we can create it again with the correct IP
-			err = waitForLoadBalancerActive(s.logger, s.loadbalancerClient, lbID)
+			err = s.waitForLoadBalancerActive(lbID)
 			if err != nil {
 				return err
 			}
@@ -222,7 +220,7 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 			if err != nil {
 				return fmt.Errorf("error deleting lbmember: %s", err)
 			}
-			err = waitForLoadBalancerActive(s.logger, s.loadbalancerClient, lbID)
+			err = s.waitForLoadBalancerActive(lbID)
 			if err != nil {
 				return err
 			}
@@ -237,13 +235,13 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 			Address:      ip,
 		}
 
-		if err := waitForLoadBalancerActive(s.logger, s.loadbalancerClient, lbID); err != nil {
+		if err := s.waitForLoadBalancerActive(lbID); err != nil {
 			return err
 		}
 		if _, err := pools.CreateMember(s.loadbalancerClient, pool.ID, lbMemberOpts).Extract(); err != nil {
 			return fmt.Errorf("error create lbmember: %s", err)
 		}
-		if err := waitForLoadBalancerActive(s.logger, s.loadbalancerClient, lbID); err != nil {
+		if err := s.waitForLoadBalancerActive(lbID); err != nil {
 			return err
 		}
 	}
@@ -252,7 +250,7 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 
 func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
 	loadBalancerName := getLoadBalancerName(clusterName)
-	lb, err := checkIfLbExists(s.loadbalancerClient, loadBalancerName)
+	lb, err := s.checkIfLbExists(loadBalancerName)
 	if err != nil {
 		return err
 	}
@@ -297,7 +295,7 @@ func (s *Service) DeleteLoadBalancerMember(openStackCluster *infrav1.OpenStackCl
 	}
 
 	loadBalancerName := getLoadBalancerName(clusterName)
-	lb, err := checkIfLbExists(s.loadbalancerClient, loadBalancerName)
+	lb, err := s.checkIfLbExists(loadBalancerName)
 	if err != nil {
 		return err
 	}
@@ -314,7 +312,7 @@ func (s *Service) DeleteLoadBalancerMember(openStackCluster *infrav1.OpenStackCl
 		lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)
 		name := lbPortObjectsName + "-" + openStackMachine.Name
 
-		pool, err := checkIfPoolExists(s.loadbalancerClient, lbPortObjectsName)
+		pool, err := s.checkIfPoolExists(lbPortObjectsName)
 		if err != nil {
 			return err
 		}
@@ -323,7 +321,7 @@ func (s *Service) DeleteLoadBalancerMember(openStackCluster *infrav1.OpenStackCl
 			continue
 		}
 
-		lbMember, err := checkIfLbMemberExists(s.loadbalancerClient, pool.ID, name)
+		lbMember, err := s.checkIfLbMemberExists(pool.ID, name)
 		if err != nil {
 			return err
 		}
@@ -331,7 +329,7 @@ func (s *Service) DeleteLoadBalancerMember(openStackCluster *infrav1.OpenStackCl
 		if lbMember != nil {
 
 			// lb member changed so let's delete it so we can create it again with the correct IP
-			err = waitForLoadBalancerActive(s.logger, s.loadbalancerClient, lbID)
+			err = s.waitForLoadBalancerActive(lbID)
 			if err != nil {
 				return err
 			}
@@ -339,7 +337,7 @@ func (s *Service) DeleteLoadBalancerMember(openStackCluster *infrav1.OpenStackCl
 			if err != nil {
 				return fmt.Errorf("error deleting load balancer member: %s", err)
 			}
-			err = waitForLoadBalancerActive(s.logger, s.loadbalancerClient, lbID)
+			err = s.waitForLoadBalancerActive(lbID)
 			if err != nil {
 				return err
 			}
@@ -352,8 +350,8 @@ func getLoadBalancerName(clusterName string) string {
 	return fmt.Sprintf("%s-cluster-%s-%s", networkPrefix, clusterName, kubeapiLBSuffix)
 }
 
-func checkIfLbExists(client *gophercloud.ServiceClient, name string) (*loadbalancers.LoadBalancer, error) {
-	allPages, err := loadbalancers.List(client, loadbalancers.ListOpts{Name: name}).AllPages()
+func (s *Service) checkIfLbExists(name string) (*loadbalancers.LoadBalancer, error) {
+	allPages, err := loadbalancers.List(s.loadbalancerClient, loadbalancers.ListOpts{Name: name}).AllPages()
 	if err != nil {
 		return nil, err
 	}
@@ -367,8 +365,8 @@ func checkIfLbExists(client *gophercloud.ServiceClient, name string) (*loadbalan
 	return &lbList[0], nil
 }
 
-func checkIfListenerExists(client *gophercloud.ServiceClient, name string) (*listeners.Listener, error) {
-	allPages, err := listeners.List(client, listeners.ListOpts{Name: name}).AllPages()
+func (s *Service) checkIfListenerExists(name string) (*listeners.Listener, error) {
+	allPages, err := listeners.List(s.loadbalancerClient, listeners.ListOpts{Name: name}).AllPages()
 	if err != nil {
 		return nil, err
 	}
@@ -382,8 +380,8 @@ func checkIfListenerExists(client *gophercloud.ServiceClient, name string) (*lis
 	return &listenerList[0], nil
 }
 
-func checkIfPoolExists(client *gophercloud.ServiceClient, name string) (*pools.Pool, error) {
-	allPages, err := pools.List(client, pools.ListOpts{Name: name}).AllPages()
+func (s *Service) checkIfPoolExists(name string) (*pools.Pool, error) {
+	allPages, err := pools.List(s.loadbalancerClient, pools.ListOpts{Name: name}).AllPages()
 	if err != nil {
 		return nil, err
 	}
@@ -397,8 +395,8 @@ func checkIfPoolExists(client *gophercloud.ServiceClient, name string) (*pools.P
 	return &poolList[0], nil
 }
 
-func checkIfMonitorExists(client *gophercloud.ServiceClient, name string) (*monitors.Monitor, error) {
-	allPages, err := monitors.List(client, monitors.ListOpts{Name: name}).AllPages()
+func (s *Service) checkIfMonitorExists(name string) (*monitors.Monitor, error) {
+	allPages, err := monitors.List(s.loadbalancerClient, monitors.ListOpts{Name: name}).AllPages()
 	if err != nil {
 		return nil, err
 	}
@@ -412,8 +410,8 @@ func checkIfMonitorExists(client *gophercloud.ServiceClient, name string) (*moni
 	return &monitorList[0], nil
 }
 
-func checkIfLbMemberExists(client *gophercloud.ServiceClient, poolID, name string) (*pools.Member, error) {
-	allPages, err := pools.ListMembers(client, poolID, pools.ListMembersOpts{Name: name}).AllPages()
+func (s *Service) checkIfLbMemberExists(poolID, name string) (*pools.Member, error) {
+	allPages, err := pools.ListMembers(s.loadbalancerClient, poolID, pools.ListMembersOpts{Name: name}).AllPages()
 	if err != nil {
 		return nil, err
 	}
@@ -435,10 +433,10 @@ var backoff = wait.Backoff{
 }
 
 // Possible LoadBalancer states are documented here: https://developer.openstack.org/api-ref/network/v2/?expanded=show-load-balancer-status-tree-detail#load-balancer-statuses
-func waitForLoadBalancerActive(logger logr.Logger, client *gophercloud.ServiceClient, id string) error {
-	logger.Info("Waiting for load balancer", "id", id, "targetStatus", "ACTIVE")
+func (s *Service) waitForLoadBalancerActive(id string) error {
+	s.logger.Info("Waiting for load balancer", "id", id, "targetStatus", "ACTIVE")
 	return wait.ExponentialBackoff(backoff, func() (bool, error) {
-		lb, err := loadbalancers.Get(client, id).Extract()
+		lb, err := loadbalancers.Get(s.loadbalancerClient, id).Extract()
 		if err != nil {
 			return false, err
 		}
@@ -446,10 +444,10 @@ func waitForLoadBalancerActive(logger logr.Logger, client *gophercloud.ServiceCl
 	})
 }
 
-func waitForListener(logger logr.Logger, client *gophercloud.ServiceClient, id, target string) error {
-	logger.Info("Waiting for load balancer listener", "id", id, "targetStatus", target)
+func (s *Service) waitForListener(id, target string) error {
+	s.logger.Info("Waiting for load balancer listener", "id", id, "targetStatus", target)
 	return wait.ExponentialBackoff(backoff, func() (bool, error) {
-		_, err := listeners.Get(client, id).Extract()
+		_, err := listeners.Get(s.loadbalancerClient, id).Extract()
 		if err != nil {
 			return false, err
 		}

@@ -33,7 +33,7 @@ func (s *Service) CreateBastion(openStackCluster *infrav1.OpenStackCluster, clus
 		RootVolume:    openStackCluster.Spec.Bastion.Instance.RootVolume,
 	}
 
-	securityGroups, err := getSecurityGroups(s, openStackCluster.Spec.Bastion.Instance.SecurityGroups)
+	securityGroups, err := s.getSecurityGroups(openStackCluster.Spec.Bastion.Instance.SecurityGroups)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func (s *Service) CreateBastion(openStackCluster *infrav1.OpenStackCluster, clus
 	var nets []infrav1.Network
 	if len(openStackCluster.Spec.Bastion.Instance.Networks) > 0 {
 		var err error
-		nets, err = getServerNetworks(s.networkClient, openStackCluster.Spec.Bastion.Instance.Networks)
+		nets, err = s.getServerNetworks(openStackCluster.Spec.Bastion.Instance.Networks)
 		if err != nil {
 			return nil, err
 		}
@@ -59,7 +59,7 @@ func (s *Service) CreateBastion(openStackCluster *infrav1.OpenStackCluster, clus
 	}
 	input.Networks = &nets
 
-	out, err := createInstance(s, openStackCluster, clusterName, input)
+	out, err := s.createInstance(openStackCluster, clusterName, input)
 	if err != nil {
 		return nil, err
 	}
