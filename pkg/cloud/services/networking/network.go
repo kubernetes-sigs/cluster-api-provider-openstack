@@ -28,6 +28,7 @@ import (
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
 type createOpts struct {
@@ -194,7 +195,7 @@ func (s *Service) ReconcileSubnet(openStackCluster *infrav1.OpenStackCluster, cl
 	var subnet *subnets.Subnet
 	if len(subnetList) == 0 {
 		var err error
-		subnet, err = s.createSubnet(openStackCluster, subnetName)
+		subnet, err = s.createSubnet(openStackCluster, clusterName, subnetName)
 		if err != nil {
 			return err
 		}
@@ -212,13 +213,14 @@ func (s *Service) ReconcileSubnet(openStackCluster *infrav1.OpenStackCluster, cl
 	return nil
 }
 
-func (s *Service) createSubnet(openStackCluster *infrav1.OpenStackCluster, name string) (*subnets.Subnet, error) {
+func (s *Service) createSubnet(openStackCluster *infrav1.OpenStackCluster, clusterName string, name string) (*subnets.Subnet, error) {
 	opts := subnets.CreateOpts{
 		NetworkID:      openStackCluster.Status.Network.ID,
 		Name:           name,
 		IPVersion:      4,
 		CIDR:           openStackCluster.Spec.NodeCIDR,
 		DNSNameservers: openStackCluster.Spec.DNSNameservers,
+		Description:    names.GetDescription(clusterName),
 	}
 	subnet, err := subnets.Create(s.client, opts).Extract()
 	if err != nil {

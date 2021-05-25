@@ -27,6 +27,7 @@ import (
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
 func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
@@ -65,7 +66,7 @@ func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, cl
 	var router *routers.Router
 	if len(routerList) == 0 {
 		var err error
-		router, err = s.createRouter(openStackCluster, routerName)
+		router, err = s.createRouter(openStackCluster, clusterName, routerName)
 		if err != nil {
 			return err
 		}
@@ -117,9 +118,10 @@ INTERFACE_LOOP:
 	return nil
 }
 
-func (s *Service) createRouter(openStackCluster *infrav1.OpenStackCluster, name string) (*routers.Router, error) {
+func (s *Service) createRouter(openStackCluster *infrav1.OpenStackCluster, clusterName, name string) (*routers.Router, error) {
 	opts := routers.CreateOpts{
-		Name: name,
+		Description: names.GetDescription(clusterName),
+		Name:        name,
 	}
 	// only set the GatewayInfo right now when no externalIPs
 	// should be configured because at least in our environment

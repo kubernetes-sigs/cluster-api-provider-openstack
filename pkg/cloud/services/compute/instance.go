@@ -47,6 +47,7 @@ import (
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
 const (
@@ -161,7 +162,7 @@ func (s *Service) createInstance(eventObject runtime.Object, clusterName string,
 		}
 
 		if i.Trunk {
-			trunk, err := s.getOrCreateTrunk(eventObject, i.Name, port.ID)
+			trunk, err := s.getOrCreateTrunk(eventObject, clusterName, i.Name, port.ID)
 			if err != nil {
 				return nil, err
 			}
@@ -395,7 +396,7 @@ func (s *Service) getOrCreatePort(eventObject runtime.Object, clusterName string
 		Name:           portName,
 		NetworkID:      net.ID,
 		SecurityGroups: securityGroups,
-		Description:    fmt.Sprintf("Created by cluster-api-provider-openstack cluster %s", clusterName),
+		Description:    names.GetDescription(clusterName),
 	}
 	if net.Subnet.ID != "" {
 		portCreateOpts.FixedIPs = []ports.IP{{SubnetID: net.Subnet.ID}}
@@ -410,7 +411,7 @@ func (s *Service) getOrCreatePort(eventObject runtime.Object, clusterName string
 	return port, nil
 }
 
-func (s *Service) getOrCreateTrunk(eventObject runtime.Object, trunkName, portID string) (*trunks.Trunk, error) {
+func (s *Service) getOrCreateTrunk(eventObject runtime.Object, clusterName, trunkName, portID string) (*trunks.Trunk, error) {
 	allPages, err := trunks.List(s.networkClient, trunks.ListOpts{
 		Name:   trunkName,
 		PortID: portID,
@@ -428,8 +429,9 @@ func (s *Service) getOrCreateTrunk(eventObject runtime.Object, trunkName, portID
 	}
 
 	trunkCreateOpts := trunks.CreateOpts{
-		Name:   trunkName,
-		PortID: portID,
+		Name:        trunkName,
+		PortID:      portID,
+		Description: names.GetDescription(clusterName),
 	}
 	trunk, err := trunks.Create(s.networkClient, trunkCreateOpts).Extract()
 	if err != nil {

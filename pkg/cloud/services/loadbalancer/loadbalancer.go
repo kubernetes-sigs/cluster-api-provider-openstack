@@ -31,6 +31,7 @@ import (
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
 const (
@@ -52,6 +53,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 		lbCreateOpts := loadbalancers.CreateOpts{
 			Name:        loadBalancerName,
 			VipSubnetID: openStackCluster.Status.Network.Subnet.ID,
+			Description: names.GetDescription(clusterName),
 		}
 
 		lb, err = loadbalancers.Create(s.loadbalancerClient, lbCreateOpts).Extract()
