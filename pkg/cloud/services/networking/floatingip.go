@@ -117,26 +117,25 @@ var backoff = wait.Backoff{
 
 func (s *Service) AssociateFloatingIP(openStackCluster *infrav1.OpenStackCluster, fp *floatingips.FloatingIP, portID string) error {
 	s.logger.Info("Associating floating IP", "id", fp.ID, "ip", fp.FloatingIP)
+
 	fpUpdateOpts := &floatingips.UpdateOpts{
 		PortID: &portID,
 	}
+
 	mc := metrics.NewMetricPrometheusContext("floating_ip", "update")
 	_, err := floatingips.Update(s.client, fp.ID, fpUpdateOpts).Extract()
 	if mc.ObserveRequest(err) != nil {
 		record.Warnf(openStackCluster, "FailedAssociateFloatingIP", "Failed to associate floating IP %s with port %s: %v", fp.FloatingIP, portID, err)
 		return err
 	}
+
+	if err = s.waitForFloatingIP(fp.ID, "ACTIVE"); err != nil {
+		record.Warnf(openStackCluster, "FailedAssociateFloatingIP", "Failed to associate floating IP %s with port %s: wait for floating IP ACTIVE: %v", fp.FloatingIP, portID, err)
+		return err
+	}
+
 	record.Eventf(openStackCluster, "SuccessfulAssociateFloatingIP", "Associated floating IP %s with port %s", fp.FloatingIP, portID)
-
-	s.logger.Info("Waiting for floating IP", "id", fp.ID, "targetStatus", "ACTIVE")
-
-	return wait.ExponentialBackoff(backoff, func() (bool, error) {
-		fp, err := floatingips.Get(s.client, fp.ID).Extract()
-		if err != nil {
-			return false, err
-		}
-		return fp.Status == "ACTIVE", nil
-	})
+	return nil
 }
 
 func (s *Service) DisassociateFloatingIP(openStackCluster *infrav1.OpenStackCluster, ip string) error {
@@ -154,21 +153,30 @@ func (s *Service) DisassociateFloatingIP(openStackCluster *infrav1.OpenStackClus
 	fpUpdateOpts := &floatingips.UpdateOpts{
 		PortID: nil,
 	}
+
 	mc := metrics.NewMetricPrometheusContext("floating_ip", "update")
 	_, err = floatingips.Update(s.client, fip.ID, fpUpdateOpts).Extract()
 	if mc.ObserveRequest(err) != nil {
 		record.Warnf(openStackCluster, "FailedDisassociateFloatingIP", "Failed to disassociate floating IP %s: %v", fip.FloatingIP, err)
 		return err
 	}
+
+	if err = s.waitForFloatingIP(fip.ID, "DOWN"); err != nil {
+		record.Warnf(openStackCluster, "FailedDisassociateFloatingIP", "Failed to disassociate floating IP: wait for floating IP DOWN: %v", fip.FloatingIP, err)
+		return err
+	}
+
 	record.Eventf(openStackCluster, "SuccessfulDisassociateFloatingIP", "Disassociated floating IP %s", fip.FloatingIP)
+	return nil
+}
 
-	s.logger.Info("Waiting for floating IP", "id", fip.ID, "targetStatus", "DOWN")
-
+func (s *Service) waitForFloatingIP(id, target string) error {
+	s.logger.Info("Waiting for floating IP", "id", id, "targetStatus", target)
 	return wait.ExponentialBackoff(backoff, func() (bool, error) {
-		fip, err := floatingips.Get(s.client, fip.ID).Extract()
+		fip, err := floatingips.Get(s.client, id).Extract()
 		if err != nil {
 			return false, err
 		}
-		return fip.Status == "DOWN", nil
+		return fip.Status == target, nil
 	})
 }
