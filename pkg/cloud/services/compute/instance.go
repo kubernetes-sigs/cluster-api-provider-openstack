@@ -84,6 +84,7 @@ func (s *Service) CreateInstance(openStackCluster *infrav1.OpenStackCluster, mac
 		FailureDomain: *machine.Spec.FailureDomain,
 		RootVolume:    openStackMachine.Spec.RootVolume,
 		Subnet:        openStackMachine.Spec.Subnet,
+		ServerGroupID: openStackMachine.Spec.ServerGroupID,
 	}
 
 	if openStackMachine.Spec.Trunk {
