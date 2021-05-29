@@ -250,6 +250,86 @@ func (s *Service) createSubnet(openStackCluster *infrav1.OpenStackCluster, clust
 	return subnet, nil
 }
 
+func (s *Service) GetNetworks(networkParams []infrav1.NetworkParam) ([]infrav1.Network, error) {
+	var nets []infrav1.Network
+	for _, networkParam := range networkParams {
+		opts := networks.ListOpts(networkParam.Filter)
+		opts.ID = networkParam.UUID
+		ids, err := s.getNetworkIDsByFilter(&opts)
+		if err != nil {
+			return nil, err
+		}
+		for _, netID := range ids {
+			if networkParam.Subnets == nil {
+				nets = append(nets, infrav1.Network{
+					ID:     netID,
+					Subnet: &infrav1.Subnet{},
+				})
+				continue
+			}
+
+			for _, subnet := range networkParam.Subnets {
+				subnetOpts := subnets.ListOpts(subnet.Filter)
+				subnetOpts.ID = subnet.UUID
+				subnetOpts.NetworkID = netID
+				subnetsByFilter, err := s.GetSubnetsByFilter(&subnetOpts)
+				if err != nil {
+					return nil, err
+				}
+				for _, subnetByFilter := range subnetsByFilter {
+					nets = append(nets, infrav1.Network{
+						ID: subnetByFilter.NetworkID,
+						Subnet: &infrav1.Subnet{
+							ID: subnetByFilter.ID,
+						},
+					})
+				}
+			}
+		}
+	}
+	return nets, nil
+}
+
+// constructNetworks builds an array of networks from the network, subnet and ports items in the machine spec.
+// If no networks or ports are in the spec, returns a single network item for a network connection to the default cluster network.
+func (s *Service) ConstructNetworks(openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine) (*[]infrav1.Network, error) {
+	var nets []infrav1.Network
+	if len(openStackMachine.Spec.Networks) > 0 {
+		var err error
+		nets, err = s.GetNetworks(openStackMachine.Spec.Networks)
+		if err != nil {
+			return nil, err
+		}
+	}
+	for i, port := range openStackMachine.Spec.Ports {
+		if port.NetworkID != "" {
+			nets = append(nets, infrav1.Network{
+				ID:       port.NetworkID,
+				Subnet:   &infrav1.Subnet{},
+				PortOpts: &openStackMachine.Spec.Ports[i],
+			})
+		} else {
+			nets = append(nets, infrav1.Network{
+				ID: openStackCluster.Status.Network.ID,
+				Subnet: &infrav1.Subnet{
+					ID: openStackCluster.Status.Network.Subnet.ID,
+				},
+				PortOpts: &openStackMachine.Spec.Ports[i],
+			})
+		}
+	}
+	// no networks or ports found in the spec, so create a port on the cluster network
+	if len(nets) == 0 {
+		nets = []infrav1.Network{{
+			ID: openStackCluster.Status.Network.ID,
+			Subnet: &infrav1.Subnet{
+				ID: openStackCluster.Status.Network.Subnet.ID,
+			},
+		}}
+	}
+	return &nets, nil
+}
+
 func (s *Service) getNetworkByID(networkID string) (networks.Network, error) {
 	opts := networks.ListOpts{
 		ID: networkID,
@@ -322,7 +402,7 @@ func (s *Service) GetNetworksByFilter(opts networks.ListOptsBuilder) ([]networks
 }
 
 // getNetworkIDsByFilter retrieves network ids by querying openstack with filters.
-func (s *Service) GetNetworkIDsByFilter(opts networks.ListOptsBuilder) ([]string, error) {
+func (s *Service) getNetworkIDsByFilter(opts networks.ListOptsBuilder) ([]string, error) {
 	nets, err := s.GetNetworksByFilter(opts)
 	if err != nil {
 		return nil, err
@@ -332,6 +412,30 @@ func (s *Service) GetNetworkIDsByFilter(opts networks.ListOptsBuilder) ([]string
 		ids = append(ids, network.ID)
 	}
 	return ids, nil
+}
+
+func (s *Service) getSubnetByName(subnetName string) (subnets.Subnet, error) {
+	opts := subnets.ListOpts{
+		Name: subnetName,
+	}
+
+	allPages, err := subnets.List(s.client, opts).AllPages()
+	if err != nil {
+		return subnets.Subnet{}, err
+	}
+
+	subnetList, err := subnets.ExtractSubnets(allPages)
+	if err != nil {
+		return subnets.Subnet{}, err
+	}
+
+	switch len(subnetList) {
+	case 0:
+		return subnets.Subnet{}, nil
+	case 1:
+		return subnetList[0], nil
+	}
+	return subnets.Subnet{}, fmt.Errorf("found %d subnets with the name %s, which should not happen", len(subnetList), subnetName)
 }
 
 // A function for getting the id of a subnet by querying openstack with filters.
