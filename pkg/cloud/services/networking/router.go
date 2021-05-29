@@ -284,30 +284,6 @@ func (s *Service) getRouterByName(routerName string) (routers.Router, error) {
 	return routers.Router{}, fmt.Errorf("found %d router with the name %s, which should not happen", len(routerList), routerName)
 }
 
-func (s *Service) getSubnetByName(subnetName string) (subnets.Subnet, error) {
-	opts := subnets.ListOpts{
-		Name: subnetName,
-	}
-
-	allPages, err := subnets.List(s.client, opts).AllPages()
-	if err != nil {
-		return subnets.Subnet{}, err
-	}
-
-	subnetList, err := subnets.ExtractSubnets(allPages)
-	if err != nil {
-		return subnets.Subnet{}, err
-	}
-
-	switch len(subnetList) {
-	case 0:
-		return subnets.Subnet{}, nil
-	case 1:
-		return subnetList[0], nil
-	}
-	return subnets.Subnet{}, fmt.Errorf("found %d subnets with the name %s, which should not happen", len(subnetList), subnetName)
-}
-
 func getRouterName(clusterName string) string {
 	return fmt.Sprintf("%s-cluster-%s", networkPrefix, clusterName)
 }

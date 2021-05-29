@@ -334,6 +334,30 @@ func (s *Service) GetNetworkIDsByFilter(opts networks.ListOptsBuilder) ([]string
 	return ids, nil
 }
 
+func (s *Service) getSubnetByName(subnetName string) (subnets.Subnet, error) {
+	opts := subnets.ListOpts{
+		Name: subnetName,
+	}
+
+	allPages, err := subnets.List(s.client, opts).AllPages()
+	if err != nil {
+		return subnets.Subnet{}, err
+	}
+
+	subnetList, err := subnets.ExtractSubnets(allPages)
+	if err != nil {
+		return subnets.Subnet{}, err
+	}
+
+	switch len(subnetList) {
+	case 0:
+		return subnets.Subnet{}, nil
+	case 1:
+		return subnetList[0], nil
+	}
+	return subnets.Subnet{}, fmt.Errorf("found %d subnets with the name %s, which should not happen", len(subnetList), subnetName)
+}
+
 // A function for getting the id of a subnet by querying openstack with filters.
 func (s *Service) GetSubnetsByFilter(opts subnets.ListOptsBuilder) ([]subnets.Subnet, error) {
 	if opts == nil {
