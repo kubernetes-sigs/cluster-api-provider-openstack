@@ -29,7 +29,9 @@ import (
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/utils/pointer"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha4"
+	capierrors "sigs.k8s.io/cluster-api/errors"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/annotations"
 	"sigs.k8s.io/cluster-api/util/patch"
@@ -143,21 +145,25 @@ func reconcileDelete(ctx context.Context, log logr.Logger, client client.Client,
 
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
 		if err = loadBalancerService.DeleteLoadBalancer(openStackCluster, clusterName); err != nil {
+			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete load balancer: %v", err))
 			return reconcile.Result{}, errors.Errorf("failed to delete load balancer: %v", err)
 		}
 	}
 
 	if err = networkingService.DeleteSecurityGroups(openStackCluster, clusterName); err != nil {
+		handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete security groups: %v", err))
 		return reconcile.Result{}, errors.Errorf("failed to delete security groups: %v", err)
 	}
 
 	// if NodeCIDR was not set, no network was created.
 	if openStackCluster.Spec.NodeCIDR != "" {
 		if err = networkingService.DeleteRouter(openStackCluster, clusterName); err != nil {
+			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete router: %v", err))
 			return ctrl.Result{}, errors.Errorf("failed to delete router: %v", err)
 		}
 
 		if err = networkingService.DeleteNetwork(openStackCluster, clusterName); err != nil {
+			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete network: %v", err))
 			return ctrl.Result{}, errors.Errorf("failed to delete network: %v", err)
 		}
 	}
@@ -197,15 +203,18 @@ func deleteBastion(log logr.Logger, osProviderClient *gophercloud.ProviderClient
 
 	if instance != nil && instance.FloatingIP != "" {
 		if err = networkingService.DisassociateFloatingIP(openStackCluster, instance.FloatingIP); err != nil {
+			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to disassociate floating IP: %v", err))
 			return errors.Errorf("failed to disassociate floating IP: %v", err)
 		}
 		if err = networkingService.DeleteFloatingIP(openStackCluster, instance.FloatingIP); err != nil {
+			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete floating IP: %v", err))
 			return errors.Errorf("failed to delete floating IP: %v", err)
 		}
 	}
 
 	if instance != nil && instance.Name != "" {
 		if err = computeService.DeleteInstance(openStackCluster, instance.Name); err != nil {
+			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete bastion: %v", err))
 			return errors.Errorf("failed to delete bastion: %v", err)
 		}
 	}
@@ -213,6 +222,7 @@ func deleteBastion(log logr.Logger, osProviderClient *gophercloud.ProviderClient
 	openStackCluster.Status.Bastion = nil
 
 	if err = networkingService.DeleteBastionSecurityGroup(openStackCluster, fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)); err != nil {
+		handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete bastion security group: %v", err))
 		return errors.Errorf("failed to delete bastion security group: %v", err)
 	}
 	openStackCluster.Status.BastionSecurityGroup = nil
@@ -307,6 +317,7 @@ func reconcileBastion(log logr.Logger, osProviderClient *gophercloud.ProviderCli
 
 	instance, err = computeService.CreateBastion(openStackCluster, cluster.Name)
 	if err != nil {
+		handleUpdateOSCError(openStackCluster, errors.Errorf("failed to reconcile bastion: %v", err))
 		return errors.Errorf("failed to reconcile bastion: %v", err)
 	}
 
@@ -317,10 +328,12 @@ func reconcileBastion(log logr.Logger, osProviderClient *gophercloud.ProviderCli
 	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
 	fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, clusterName, openStackCluster.Spec.Bastion.Instance.FloatingIP)
 	if err != nil {
+		handleUpdateOSCError(openStackCluster, errors.Errorf("failed to get or create floating IP for bastion: %v", err))
 		return errors.Errorf("failed to get or create floating IP for bastion: %v", err)
 	}
 	err = computeService.AssociateFloatingIP(instance.ID, fp.FloatingIP)
 	if err != nil {
+		handleUpdateOSCError(openStackCluster, errors.Errorf("failed to associate floating IP with bastion: %v", err))
 		return errors.Errorf("failed to associate floating IP with bastion: %v", err)
 	}
 	instance.FloatingIP = fp.FloatingIP
@@ -345,6 +358,7 @@ func reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.P
 
 	err = networkingService.ReconcileExternalNetwork(openStackCluster)
 	if err != nil {
+		handleUpdateOSCError(openStackCluster, errors.Errorf("failed to reconcile external network: %v", err))
 		return errors.Errorf("failed to reconcile external network: %v", err)
 	}
 
@@ -354,12 +368,15 @@ func reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.P
 		netOpts := networks.ListOpts(openStackCluster.Spec.Network)
 		networkList, err := networkingService.GetNetworksByFilter(&netOpts)
 		if err != nil {
+			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to find network: %v", err))
 			return errors.Errorf("failed to find network: %v", err)
 		}
 		if len(networkList) == 0 {
+			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to find any network: %v", err))
 			return errors.Errorf("failed to find any network: %v", err)
 		}
 		if len(networkList) > 1 {
+			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to find only one network (result: %v): %v", networkList, err))
 			return errors.Errorf("failed to find only one network (result: %v): %v", networkList, err)
 		}
 		openStackCluster.Status.Network = &infrav1.Network{
@@ -372,9 +389,11 @@ func reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.P
 		subnetOpts.NetworkID = networkList[0].ID
 		subnetList, err := networkingService.GetSubnetsByFilter(&subnetOpts)
 		if err != nil || len(subnetList) == 0 {
+			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to find subnet: %v", err))
 			return errors.Errorf("failed to find subnet: %v", err)
 		}
 		if len(subnetList) > 1 {
+			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to find only one subnet (result: %v): %v", subnetList, err))
 			return errors.Errorf("failed to find only one subnet (result: %v): %v", subnetList, err)
 		}
 		openStackCluster.Status.Network.Subnet = &infrav1.Subnet{
@@ -386,14 +405,17 @@ func reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.P
 	} else {
 		err := networkingService.ReconcileNetwork(openStackCluster, clusterName)
 		if err != nil {
+			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to reconcile network: %v", err))
 			return errors.Errorf("failed to reconcile network: %v", err)
 		}
 		err = networkingService.ReconcileSubnet(openStackCluster, clusterName)
 		if err != nil {
+			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to reconcile subnets: %v", err))
 			return errors.Errorf("failed to reconcile subnets: %v", err)
 		}
 		err = networkingService.ReconcileRouter(openStackCluster, clusterName)
 		if err != nil {
+			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to reconcile router: %v", err))
 			return errors.Errorf("failed to reconcile router: %v", err)
 		}
 	}
@@ -406,6 +428,7 @@ func reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.P
 		}
 		fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, clusterName, openStackCluster.Spec.APIServerFloatingIP)
 		if err != nil {
+			handleUpdateOSCError(openStackCluster, errors.Errorf("Floating IP cannot be got or created: %v", err))
 			return errors.Errorf("Floating IP cannot be got or created: %v", err)
 		}
 		// Set APIEndpoints so the Cluster API Cluster Controller can pull them
@@ -417,12 +440,14 @@ func reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.P
 
 	err = networkingService.ReconcileSecurityGroups(openStackCluster, clusterName)
 	if err != nil {
+		handleUpdateOSCError(openStackCluster, errors.Errorf("failed to reconcile security groups: %v", err))
 		return errors.Errorf("failed to reconcile security groups: %v", err)
 	}
 
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
 		err = loadBalancerService.ReconcileLoadBalancer(openStackCluster, clusterName)
 		if err != nil {
+			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to reconcile load balancer: %v", err))
 			return errors.Errorf("failed to reconcile load balancer: %v", err)
 		}
 	}
@@ -477,4 +502,10 @@ func (r *OpenStackClusterReconciler) SetupWithManager(ctx context.Context, mgr c
 		WithEventFilter(predicates.ResourceNotPausedAndHasFilterLabel(ctrl.LoggerFrom(ctx), r.WatchFilterValue)).
 		WithEventFilter(predicates.ResourceIsNotExternallyManaged(ctrl.LoggerFrom(ctx))).
 		Complete(r)
+}
+
+func handleUpdateOSCError(openstackCluster *infrav1.OpenStackCluster, message error) {
+	err := capierrors.UpdateClusterError
+	openstackCluster.Status.FailureReason = &err
+	openstackCluster.Status.FailureMessage = pointer.StringPtr(message.Error())
 }

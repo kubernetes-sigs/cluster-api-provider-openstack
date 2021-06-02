@@ -131,6 +131,12 @@ func Convert_v1alpha4_OpenStackMachineSpec_To_v1alpha3_OpenStackMachineSpec(in *
 	return autoConvert_v1alpha4_OpenStackMachineSpec_To_v1alpha3_OpenStackMachineSpec(in, out, s)
 }
 
+// Convert_v1alpha4_OpenStackClusterStatus_To_v1alpha3_OpenStackClusterStatus has to be added
+// in order to drop the FailureReason and FailureMessage fields that are not present in v1alpha3.
+func Convert_v1alpha4_OpenStackClusterStatus_To_v1alpha3_OpenStackClusterStatus(in *v1alpha4.OpenStackClusterStatus, out *OpenStackClusterStatus, s conversion.Scope) error {
+	return autoConvert_v1alpha4_OpenStackClusterStatus_To_v1alpha3_OpenStackClusterStatus(in, out, s)
+}
+
 func Convert_Slice_v1alpha4_Network_To_Slice_v1alpha3_Network(in *[]v1alpha4.Network, out *[]Network, s conversion.Scope) error {
 	for i := range *in {
 		inNet := &(*in)[i]
