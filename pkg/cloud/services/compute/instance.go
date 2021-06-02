@@ -228,10 +228,11 @@ func (s *Service) createInstance(eventObject runtime.Object, clusterName string,
 	}).Extract()
 
 	if mc.ObserveRequest(err) != nil {
+		serverErr := err
 		if err = s.deletePorts(eventObject, portList); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error creating OpenStack instance: %v, error deleting ports: %v", serverErr, err)
 		}
-		return nil, fmt.Errorf("error creating Openstack instance: %v", err)
+		return nil, fmt.Errorf("error creating Openstack instance: %v", serverErr)
 	}
 	instanceCreateTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT", TimeoutInstanceCreate)
 	instanceCreateTimeout *= time.Minute
