@@ -430,6 +430,9 @@ func reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.P
 }
 
 func (r *OpenStackClusterReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager, options controller.Options) error {
+	clusterToInfraFn := util.ClusterToInfrastructureMapFunc(infrav1.GroupVersion.WithKind("OpenStackCluster"))
+	log := ctrl.LoggerFrom(ctx)
+
 	return ctrl.NewControllerManagedBy(mgr).
 		WithOptions(options).
 		For(&infrav1.OpenStackCluster{},
@@ -450,9 +453,27 @@ func (r *OpenStackClusterReconciler) SetupWithManager(ctx context.Context, mgr c
 		).
 		Watches(
 			&source.Kind{Type: &clusterv1.Cluster{}},
-			handler.EnqueueRequestsFromMapFunc(util.ClusterToInfrastructureMapFunc(infrav1.GroupVersion.WithKind("OpenStackCluster"))),
+			handler.EnqueueRequestsFromMapFunc(func(o client.Object) []reconcile.Request {
+				requests := clusterToInfraFn(o)
+				if len(requests) < 1 {
+					return nil
+				}
+
+				c := &infrav1.OpenStackCluster{}
+				if err := r.Client.Get(ctx, requests[0].NamespacedName, c); err != nil {
+					log.V(4).Error(err, "Failed to get OpenStack cluster")
+					return nil
+				}
+
+				if annotations.IsExternallyManaged(c) {
+					log.V(4).Info("OpenStackCluster is externally managed, skipping mapping.")
+					return nil
+				}
+				return requests
+			}),
 			builder.WithPredicates(predicates.ClusterUnpaused(ctrl.LoggerFrom(ctx))),
 		).
 		WithEventFilter(predicates.ResourceNotPausedAndHasFilterLabel(ctrl.LoggerFrom(ctx), r.WatchFilterValue)).
+		WithEventFilter(predicates.ResourceIsNotExternallyManaged(ctrl.LoggerFrom(ctx))).
 		Complete(r)
 }
