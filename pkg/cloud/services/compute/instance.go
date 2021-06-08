@@ -34,6 +34,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	netext "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/portsbinding"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/trunks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
@@ -125,22 +126,11 @@ func (s *Service) CreateInstance(openStackCluster *infrav1.OpenStackCluster, mac
 	}
 	input.SecurityGroups = &securityGroups
 
-	var nets []infrav1.Network
-	if len(openStackMachine.Spec.Networks) > 0 {
-		var err error
-		nets, err = s.getServerNetworks(openStackMachine.Spec.Networks)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		nets = []infrav1.Network{{
-			ID: openStackCluster.Status.Network.ID,
-			Subnet: &infrav1.Subnet{
-				ID: openStackCluster.Status.Network.Subnet.ID,
-			},
-		}}
+	nets, err := s.constructNetworks(openStackCluster, openStackMachine)
+	if err != nil {
+		return nil, err
 	}
-	input.Networks = &nets
+	input.Networks = nets
 
 	out, err := s.createInstance(openStackMachine, clusterName, input)
 	if err != nil {
@@ -149,33 +139,74 @@ func (s *Service) CreateInstance(openStackCluster *infrav1.OpenStackCluster, mac
 	return out, nil
 }
 
-func (s *Service) createInstance(eventObject runtime.Object, clusterName string, i *infrav1.Instance) (*infrav1.Instance, error) {
+// constructNetworks builds an array of networks from the network, subnet and ports items in the machine spec.
+// If no networks or ports are in the spec, returns a single network item for a network connection to the default cluster network.
+func (s *Service) constructNetworks(openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine) (*[]infrav1.Network, error) {
+	var nets []infrav1.Network
+	if len(openStackMachine.Spec.Networks) > 0 {
+		var err error
+		nets, err = s.getServerNetworks(openStackMachine.Spec.Networks)
+		if err != nil {
+			return nil, err
+		}
+	}
+	for i, port := range openStackMachine.Spec.Ports {
+		if port.NetworkID != "" {
+			nets = append(nets, infrav1.Network{
+				ID:       port.NetworkID,
+				Subnet:   &infrav1.Subnet{},
+				PortOpts: &openStackMachine.Spec.Ports[i],
+			})
+		} else {
+			nets = append(nets, infrav1.Network{
+				ID: openStackCluster.Status.Network.ID,
+				Subnet: &infrav1.Subnet{
+					ID: openStackCluster.Status.Network.Subnet.ID,
+				},
+				PortOpts: &openStackMachine.Spec.Ports[i],
+			})
+		}
+	}
+	// no networks or ports found in the spec, so create a port on the cluster network
+	if len(nets) == 0 {
+		nets = []infrav1.Network{{
+			ID: openStackCluster.Status.Network.ID,
+			Subnet: &infrav1.Subnet{
+				ID: openStackCluster.Status.Network.Subnet.ID,
+			},
+		}}
+	}
+	return &nets, nil
+}
+
+func (s *Service) createInstance(eventObject runtime.Object, clusterName string, instance *infrav1.Instance) (*infrav1.Instance, error) {
 	accessIPv4 := ""
 	portList := []servers.Network{}
 
-	for _, network := range *i.Networks {
+	for i, network := range *instance.Networks {
 		if network.ID == "" {
 			return nil, fmt.Errorf("no network was found or provided. Please check your machine configuration and try again")
 		}
 
-		port, err := s.getOrCreatePort(eventObject, clusterName, i.Name, network, i.SecurityGroups)
+		portName := getPortName(instance.Name, network.PortOpts, i)
+		port, err := s.getOrCreatePort(eventObject, clusterName, portName, network, instance.SecurityGroups)
 		if err != nil {
 			return nil, err
 		}
 
-		if i.Trunk {
-			trunk, err := s.getOrCreateTrunk(eventObject, clusterName, i.Name, port.ID)
+		if instance.Trunk {
+			trunk, err := s.getOrCreateTrunk(eventObject, clusterName, instance.Name, port.ID)
 			if err != nil {
 				return nil, err
 			}
 
-			if err = s.replaceAllAttributesTags(eventObject, trunk.ID, i.Tags); err != nil {
+			if err = s.replaceAllAttributesTags(eventObject, trunk.ID, instance.Tags); err != nil {
 				return nil, err
 			}
 		}
 
 		for _, fip := range port.FixedIPs {
-			if fip.SubnetID == i.Subnet {
+			if fip.SubnetID == instance.Subnet {
 				accessIPv4 = fip.IPAddress
 			}
 		}
@@ -185,46 +216,46 @@ func (s *Service) createInstance(eventObject runtime.Object, clusterName string,
 		})
 	}
 
-	if i.Subnet != "" && accessIPv4 == "" {
+	if instance.Subnet != "" && accessIPv4 == "" {
 		if err := s.deletePorts(eventObject, portList); err != nil {
 			return nil, err
 		}
-		return nil, fmt.Errorf("no ports with fixed IPs found on Subnet %q", i.Subnet)
+		return nil, fmt.Errorf("no ports with fixed IPs found on Subnet %q", instance.Subnet)
 	}
 
-	imageID, err := s.getImageID(i.Image)
+	imageID, err := s.getImageID(instance.Image)
 	if err != nil {
 		return nil, fmt.Errorf("create new server: %v", err)
 	}
 
-	flavorID, err := flavors.IDFromName(s.computeClient, i.Flavor)
+	flavorID, err := flavors.IDFromName(s.computeClient, instance.Flavor)
 	if err != nil {
-		return nil, fmt.Errorf("error getting flavor id from flavor name %s: %v", i.Flavor, err)
+		return nil, fmt.Errorf("error getting flavor id from flavor name %s: %v", instance.Flavor, err)
 	}
 
 	var serverCreateOpts servers.CreateOptsBuilder = servers.CreateOpts{
-		Name:             i.Name,
+		Name:             instance.Name,
 		ImageRef:         imageID,
 		FlavorRef:        flavorID,
-		AvailabilityZone: i.FailureDomain,
+		AvailabilityZone: instance.FailureDomain,
 		Networks:         portList,
-		UserData:         []byte(i.UserData),
-		SecurityGroups:   *i.SecurityGroups,
-		Tags:             i.Tags,
-		Metadata:         i.Metadata,
-		ConfigDrive:      i.ConfigDrive,
+		UserData:         []byte(instance.UserData),
+		SecurityGroups:   *instance.SecurityGroups,
+		Tags:             instance.Tags,
+		Metadata:         instance.Metadata,
+		ConfigDrive:      instance.ConfigDrive,
 		AccessIPv4:       accessIPv4,
 	}
 
-	serverCreateOpts = applyRootVolume(serverCreateOpts, i.RootVolume)
+	serverCreateOpts = applyRootVolume(serverCreateOpts, instance.RootVolume)
 
-	serverCreateOpts = applyServerGroupID(serverCreateOpts, i.ServerGroupID)
+	serverCreateOpts = applyServerGroupID(serverCreateOpts, instance.ServerGroupID)
 
 	mc := metrics.NewMetricPrometheusContext("server", "create")
 
 	server, err := servers.Create(s.computeClient, keypairs.CreateOptsExt{
 		CreateOptsBuilder: serverCreateOpts,
-		KeyName:           i.SSHKeyName,
+		KeyName:           instance.SSHKeyName,
 	}).Extract()
 
 	if mc.ObserveRequest(err) != nil {
@@ -236,24 +267,32 @@ func (s *Service) createInstance(eventObject runtime.Object, clusterName string,
 	}
 	instanceCreateTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT", TimeoutInstanceCreate)
 	instanceCreateTimeout *= time.Minute
-	var instance *infrav1.Instance
+	var createdInstance *infrav1.Instance
 	err = util.PollImmediate(RetryIntervalInstanceStatus, instanceCreateTimeout, func() (bool, error) {
-		instance, err = s.GetInstance(server.ID)
+		createdInstance, err = s.GetInstance(server.ID)
 		if err != nil {
 			if capoerrors.IsRetryable(err) {
 				return false, nil
 			}
 			return false, err
 		}
-		return instance.State == infrav1.InstanceStateActive, nil
+		return createdInstance.State == infrav1.InstanceStateActive, nil
 	})
 	if err != nil {
-		record.Warnf(eventObject, "FailedCreateServer", "Failed to create server %s: %v", instance.Name, err)
+		record.Warnf(eventObject, "FailedCreateServer", "Failed to create server %s: %v", createdInstance.Name, err)
 		return nil, err
 	}
 
-	record.Eventf(eventObject, "SuccessfulCreateServer", "Created server %s with id %s", instance.Name, instance.ID)
-	return instance, nil
+	record.Eventf(eventObject, "SuccessfulCreateServer", "Created server %s with id %s", createdInstance.Name, createdInstance.ID)
+	return createdInstance, nil
+}
+
+// getPortName appends a suffix to an instance name in order to try and get a unique name per port.
+func getPortName(instanceName string, opts *infrav1.PortOpts, netIndex int) string {
+	if opts != nil && opts.NameSuffix != "" {
+		return fmt.Sprintf("%s-%s", instanceName, opts.NameSuffix)
+	}
+	return fmt.Sprintf("%s-%d", instanceName, netIndex)
 }
 
 // applyRootVolume sets a root volume if the root volume Size is not 0.
@@ -354,7 +393,8 @@ func (s *Service) getServerNetworks(networkParams []infrav1.NetworkParam) ([]inf
 		for _, netID := range ids {
 			if networkParam.Subnets == nil {
 				nets = append(nets, infrav1.Network{
-					ID: netID,
+					ID:     netID,
+					Subnet: &infrav1.Subnet{},
 				})
 				continue
 			}
@@ -381,7 +421,7 @@ func (s *Service) getServerNetworks(networkParams []infrav1.NetworkParam) ([]inf
 	return nets, nil
 }
 
-func (s *Service) getOrCreatePort(eventObject runtime.Object, clusterName string, portName string, net infrav1.Network, securityGroups *[]string) (*ports.Port, error) {
+func (s *Service) getOrCreatePort(eventObject runtime.Object, clusterName string, portName string, net infrav1.Network, instanceSecurityGroups *[]string) (*ports.Port, error) {
 	allPages, err := ports.List(s.networkClient, ports.ListOpts{
 		Name:      portName,
 		NetworkID: net.ID,
@@ -389,27 +429,76 @@ func (s *Service) getOrCreatePort(eventObject runtime.Object, clusterName string
 	if err != nil {
 		return nil, fmt.Errorf("searching for existing port for server: %v", err)
 	}
-	portList, err := ports.ExtractPorts(allPages)
+	existingPorts, err := ports.ExtractPorts(allPages)
 	if err != nil {
 		return nil, fmt.Errorf("searching for existing port for server: %v", err)
 	}
 
-	if len(portList) != 0 {
-		return &portList[0], nil
+	if len(existingPorts) == 1 {
+		return &existingPorts[0], nil
 	}
 
-	portCreateOpts := ports.CreateOpts{
-		Name:           portName,
-		NetworkID:      net.ID,
-		SecurityGroups: securityGroups,
-		Description:    names.GetDescription(clusterName),
+	if len(existingPorts) > 1 {
+		return nil, fmt.Errorf("multiple ports found with name \"%s\"", portName)
+	}
+
+	// no port found, so create the port
+	portOpts := net.PortOpts
+	if portOpts == nil {
+		portOpts = &infrav1.PortOpts{}
+	}
+
+	description := portOpts.Description
+	if description == "" {
+		description = names.GetDescription(clusterName)
+	}
+
+	// inherit port security groups from the instance if not explicitly specified
+	securityGroups := portOpts.SecurityGroups
+	if securityGroups == nil {
+		securityGroups = instanceSecurityGroups
+	}
+
+	createOpts := ports.CreateOpts{
+		Name:                portName,
+		NetworkID:           net.ID,
+		Description:         description,
+		AdminStateUp:        portOpts.AdminStateUp,
+		MACAddress:          portOpts.MACAddress,
+		TenantID:            portOpts.TenantID,
+		ProjectID:           portOpts.ProjectID,
+		SecurityGroups:      securityGroups,
+		AllowedAddressPairs: []ports.AddressPair{},
+	}
+
+	for _, ap := range portOpts.AllowedAddressPairs {
+		createOpts.AllowedAddressPairs = append(createOpts.AllowedAddressPairs, ports.AddressPair{
+			IPAddress:  ap.IPAddress,
+			MACAddress: ap.MACAddress,
+		})
+	}
+
+	fixedIPs := make([]ports.IP, 0, len(portOpts.FixedIPs)+1)
+	for _, fixedIP := range portOpts.FixedIPs {
+		fixedIPs = append(fixedIPs, ports.IP{
+			SubnetID:  fixedIP.SubnetID,
+			IPAddress: fixedIP.IPAddress,
+		})
 	}
 	if net.Subnet.ID != "" {
-		portCreateOpts.FixedIPs = []ports.IP{{SubnetID: net.Subnet.ID}}
+		fixedIPs = append(fixedIPs, ports.IP{SubnetID: net.Subnet.ID})
+	}
+	if len(fixedIPs) > 0 {
+		createOpts.FixedIPs = fixedIPs
 	}
 	mc := metrics.NewMetricPrometheusContext("port", "create")
 
-	port, err := ports.Create(s.networkClient, portCreateOpts).Extract()
+	port, err := ports.Create(s.networkClient, portsbinding.CreateOptsExt{
+		CreateOptsBuilder: createOpts,
+		HostID:            portOpts.HostID,
+		VNICType:          portOpts.VNICType,
+		Profile:           nil,
+	}).Extract()
 	if mc.ObserveRequest(err) != nil {
 		record.Warnf(eventObject, "FailedCreatePort", "Failed to create port %s: %v", portName, err)
 		return nil, err

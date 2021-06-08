@@ -118,3 +118,39 @@ func Convert_v1alpha3_OpenStackClusterSpec_To_v1alpha4_OpenStackClusterSpec(in *
 func Convert_v1alpha3_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(in *OpenStackMachineSpec, out *v1alpha4.OpenStackMachineSpec, s conversion.Scope) error {
 	return autoConvert_v1alpha3_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(in, out, s)
 }
+
+// Convert_v1alpha3_OpenStackClusterSpec_To_v1alpha4_OpenStackClusterSpec has to be added by us for the new portOpts
+// parameter in v1alpha4. There is no intention to support this parameter in v1alpha3, so the field is just dropped.
+func Convert_v1alpha4_Network_To_v1alpha3_Network(in *v1alpha4.Network, out *Network, s conversion.Scope) error {
+	return autoConvert_v1alpha4_Network_To_v1alpha3_Network(in, out, s)
+}
+
+// Convert_v1alpha3_OpenStackClusterSpec_To_v1alpha4_OpenStackClusterSpec has to be added by us for the new ports
+// parameter in v1alpha4. There is no intention to support this parameter in v1alpha3, so the field is just dropped.
+func Convert_v1alpha4_OpenStackMachineSpec_To_v1alpha3_OpenStackMachineSpec(in *v1alpha4.OpenStackMachineSpec, out *OpenStackMachineSpec, s conversion.Scope) error {
+	return autoConvert_v1alpha4_OpenStackMachineSpec_To_v1alpha3_OpenStackMachineSpec(in, out, s)
+}
+
+func Convert_Slice_v1alpha4_Network_To_Slice_v1alpha3_Network(in *[]v1alpha4.Network, out *[]Network, s conversion.Scope) error {
+	for i := range *in {
+		inNet := &(*in)[i]
+		outNet := new(Network)
+		if err := autoConvert_v1alpha4_Network_To_v1alpha3_Network(inNet, outNet, s); err != nil {
+			return err
+		}
+		*out = append(*out, *outNet)
+	}
+	return nil
+}
+
+func Convert_Slice_v1alpha3_Network_To_Slice_v1alpha4_Network(in *[]Network, out *[]v1alpha4.Network, s conversion.Scope) error {
+	for i := range *in {
+		inNet := &(*in)[i]
+		outNet := new(v1alpha4.Network)
+		if err := autoConvert_v1alpha3_Network_To_v1alpha4_Network(inNet, outNet, s); err != nil {
+			return err
+		}
+		*out = append(*out, *outNet)
+	}
+	return nil
+}

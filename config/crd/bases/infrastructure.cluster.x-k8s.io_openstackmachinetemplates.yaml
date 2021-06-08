@@ -375,8 +375,8 @@ spec:
                       networks:
                         description: A networks object. Required parameter when there
                           are multiple networks defined for the tenant. When you do
-                          not specify the networks parameter, the server attaches
-                          to the only network created for the current tenant.
+                          not specify both networks and ports parameters, the server
+                          attaches to the only network created for the current tenant.
                         items:
                           properties:
                             filter:
@@ -415,7 +415,7 @@ spec:
                                 tenantId:
                                   type: string
                               type: object
-                            fixedIp:
+                            fixedIP:
                               description: A fixed IPv4 address for the NIC.
                               type: string
                             subnets:
@@ -477,6 +477,70 @@ spec:
                             uuid:
                               description: The UUID of the network. Required if you
                                 omit the port attribute.
+                              type: string
+                          type: object
+                        type: array
+                      ports:
+                        description: Ports to be attached to the server instance.
+                          They are created if a port with the given name does not
+                          already exist. When you do not specify both networks and
+                          ports parameters, the server attaches to the only network
+                          created for the current tenant.
+                        items:
+                          properties:
+                            adminStateUp:
+                              type: boolean
+                            allowedAddressPairs:
+                              items:
+                                properties:
+                                  ipAddress:
+                                    type: string
+                                  macAddress:
+                                    type: string
+                                type: object
+                              type: array
+                            description:
+                              type: string
+                            fixedIPs:
+                              description: Specify pairs of subnet and/or IP address.
+                                These should be subnets of the network with the given
+                                NetworkID.
+                              items:
+                                properties:
+                                  ipAddress:
+                                    type: string
+                                  subnetId:
+                                    type: string
+                                required:
+                                - subnetId
+                                type: object
+                              type: array
+                            hostId:
+                              description: The ID of the host where the port is allocated
+                              type: string
+                            macAddress:
+                              type: string
+                            nameSuffix:
+                              description: Used to make the name of the port unique.
+                                If unspecified, instead the 0-based index of the port
+                                in the list is used.
+                              type: string
+                            networkId:
+                              description: ID of the OpenStack network on which to
+                                create the port. If unspecified, create the port on
+                                the default cluster network.
+                              type: string
+                            projectId:
+                              type: string
+                            securityGroups:
+                              items:
+                                type: string
+                              type: array
+                            tenantId:
+                              type: string
+                            vnicType:
+                              description: The virtual network interface card (vNIC)
+                                type that is bound to the neutron port.
                               type: string
                           type: object
                         type: array
