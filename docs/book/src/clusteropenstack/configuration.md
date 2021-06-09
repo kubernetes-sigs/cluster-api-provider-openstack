@@ -17,6 +17,7 @@
   - [Network Filters](#network-filters)
   - [Multiple Networks](#multiple-networks)
   - [Subnet Filters](#subnet-filters)
+  - [Ports](#ports)
   - [Tagging](#tagging)
   - [Metadata](#metadata)
   - [Boot From Volume](#boot-from-volume)
@@ -205,6 +206,30 @@ spec:
     - filter:
        name: <subnet-name>
 ```
+
+## Ports
+
+A server can also be connected to networks by describing what ports to create. Describing a server's connection with `ports` allows for finer and more advanced configuration. For example, you can specify per-port security groups, fixed IPs or VNIC type.
+
+```yaml
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha4
+kind: OpenStackMachine
+metadata:
+  name: <cluster-name>-controlplane
+  namespace: <cluster-name>
+spec:
+  ports:
+  - networkId: <your-network-id>
+    description: <your-custom-port-description>
+    vnicType: normal
+    fixedIPs:
+    - subnetId: <your-subnet-id>
+      ipAddress: <your-fixed-ip>
+    securityGroups:
+    - <your-security-group-id>
+```
+
+Any such ports are created in addition to ports used for connections to networks or subnets.
 
 ## Tagging
 
