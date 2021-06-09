@@ -62,7 +62,7 @@ DOCKER_BUILDKIT=1
 STAGING_REGISTRY := gcr.io/k8s-staging-capi-openstack
 STAGING_BUCKET ?= artifacts.k8s-staging-capi-openstack.appspot.com
 BUCKET ?= $(STAGING_BUCKET)
-PROD_REGISTRY := us.gcr.io/k8s-artifacts-prod/capi-openstack
+PROD_REGISTRY ?= k8s.gcr.io/capi-openstack
 REGISTRY ?= $(STAGING_REGISTRY)
 RELEASE_TAG ?= $(shell git describe --abbrev=0 2>/dev/null)
 PULL_BASE_REF ?= $(RELEASE_TAG) # PULL_BASE_REF will be provided by Prow
@@ -262,19 +262,32 @@ list-staging-releases: ## List staging images for image promotion
 list-image:
 	gcloud container images list-tags $(STAGING_REGISTRY)/$(IMAGE) --filter="tags=('$(RELEASE_TAG)')" --format=json
 
-.PHONY: check-release-tag
-check-release-tag:
-	@if [ -z "${RELEASE_TAG}" ]; then echo "RELEASE_TAG is not set"; exit 1; fi
-	@if ! [ -z "$$(git status --porcelain)" ]; then echo "Your local git repository contains uncommitted changes, use git clean before proceeding."; exit 1; fi
-
 .PHONY: release
-release: $(RELEASE_NOTES) clean-release check-release-tag $(RELEASE_DIR)  ## Builds and push container images using the latest git tag for the commit.
+release: $(RELEASE_NOTES) clean-release $(RELEASE_DIR)  ## Builds and push container images using the latest git tag for the commit.
+	@if [ -z "${RELEASE_TAG}" ]; then echo "RELEASE_TAG is not set"; exit 1; fi
+	@if ! [ -z "$$(git status --porcelain)" ]; then echo "Your local git repository contains uncommitted changes, use git clean before proceeding."; fi
 	git checkout "${RELEASE_TAG}"
-	@if [ -z "${PREVIOUS_VERSION}" ]; then echo "PREVIOUS_VERSION is not set"; exit 1; fi
-	$(RELEASE_NOTES) --from $(PREVIOUS_VERSION) > $(RELEASE_DIR)/CHANGELOG.md
-	$(MAKE) release-notes
+	# Set the manifest image to the production bucket.
+	$(MAKE) manifest-modification REGISTRY=$(PROD_REGISTRY)
 	$(MAKE) release-manifests
 	$(MAKE) release-templates
+
+.PHONY: manifest-modification
+manifest-modification: # Set the manifest images to the staging/production bucket.
+	$(MAKE) set-manifest-image \
+		MANIFEST_IMG=$(REGISTRY)/$(IMAGE_NAME) MANIFEST_TAG=$(RELEASE_TAG) \
+		TARGET_RESOURCE="./config/default/manager_image_patch.yaml"
+	$(MAKE) set-manifest-pull-policy PULL_POLICY=IfNotPresent TARGET_RESOURCE="./config/default/manager_pull_policy.yaml"
+
+.PHONY: set-manifest-image
+set-manifest-image:
+	$(info Updating kustomize image patch file for manager resource)
+	sed -i'' -e 's@image: .*@image: '"${MANIFEST_IMG}:$(MANIFEST_TAG)"'@' $(TARGET_RESOURCE)
+
+.PHONY: set-manifest-pull-policy
+set-manifest-pull-policy:
+	$(info Updating kustomize pull policy file for manager resources)
+	sed -i'' -e 's@imagePullPolicy: .*@imagePullPolicy: '"$(PULL_POLICY)"'@' $(TARGET_RESOURCE)
 
 .PHONY: release-manifests
 release-manifests:
@@ -316,7 +329,7 @@ release-alias-tag: # Adds the tag to the last build tag.
 
 .PHONY: release-notes
 release-notes: $(RELEASE_NOTES) ## Generate release notes
-	$(RELEASE_NOTES) $(ARGS)
+	$(RELEASE_NOTES) $(RELEASE_NOTES_ARGS)
 
 .PHONY: release-templates
 release-templates: $(RELEASE_DIR) ## Generate release templates
