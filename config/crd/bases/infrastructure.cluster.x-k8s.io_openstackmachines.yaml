@@ -337,8 +337,8 @@ spec:
                   to the Machine object and/or logged in the controller's output."
                 type: string
               errorReason:
-                description: Constants aren't automatically generated for unversioned
-                  packages. Instead share the same constant for all versioned packages.
+                description: MachineStatusError defines errors states for Machine
+                  objects.
                 type: string
               instanceState:
                 description: InstanceState is the state of the OpenStack instance
@@ -720,8 +720,8 @@ spec:
                   to the Machine object and/or logged in the controller's output."
                 type: string
               errorReason:
-                description: Constants aren't automatically generated for unversioned
-                  packages. Instead share the same constant for all versioned packages.
+                description: MachineStatusError defines errors states for Machine
+                  objects.
                 type: string
               instanceState:
                 description: InstanceState is the state of the OpenStack instance
