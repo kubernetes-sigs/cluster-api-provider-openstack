@@ -13,7 +13,7 @@ To deploy a cluster using [external cloud provider](https://github.com/kubernete
 - Deploy a CNI solution
 
     ```shell
-    curl https://docs.projectcalico.org/v3.16/manifests/calico.yaml | sed "s/veth_mtu:.*/veth_mtu: \"1430\"/g" | kubectl --kubeconfig=./${CLUSTER_NAME}.kubeconfig apply -f -
+    curl https://docs.projectcalico.org/v3.19/manifests/calico.yaml | sed "s/veth_mtu:.*/veth_mtu: \"1430\"/g" | kubectl --kubeconfig=./${CLUSTER_NAME}.kubeconfig apply -f -
     ```
 
 - Create a secret containing the cloud configuration
@@ -33,8 +33,8 @@ To deploy a cluster using [external cloud provider](https://github.com/kubernete
 - Create RBAC resources and openstack-cloud-controller-manager deamonset
 
     ```shell
-    kubectl --kubeconfig=./${CLUSTER_NAME}.kubeconfig apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/cluster/addons/rbac/cloud-controller-manager-roles.yaml
-    kubectl --kubeconfig=./${CLUSTER_NAME}.kubeconfig apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/cluster/addons/rbac/cloud-controller-manager-role-bindings.yaml
+    kubectl --kubeconfig=./${CLUSTER_NAME}.kubeconfig apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/manifests/controller-manager/cloud-controller-manager-roles.yaml
+    kubectl --kubeconfig=./${CLUSTER_NAME}.kubeconfig apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/manifests/controller-manager/cloud-controller-manager-role-bindings.yaml
     kubectl --kubeconfig=./${CLUSTER_NAME}.kubeconfig apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/manifests/controller-manager/openstack-cloud-controller-manager-ds.yaml
     ```
 
