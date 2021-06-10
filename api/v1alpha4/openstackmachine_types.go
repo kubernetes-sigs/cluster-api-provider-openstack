@@ -129,7 +129,7 @@ type OpenStackMachineStatus struct {
 }
 
 // +kubebuilder:object:root=true
-// +kubebuilder:resource:path=openstackmachines,scope=Namespaced,categories=cluster-api
+// +kubebuilder:resource:path=openstackmachines,scope=Namespaced,categories=cluster-api,shortName=osm
 // +kubebuilder:storageversion
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Cluster",type="string",JSONPath=".metadata.labels.cluster\\.x-k8s\\.io/cluster-name",description="Cluster to which this OpenStackMachine belongs"
