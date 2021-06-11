@@ -18,29 +18,31 @@
 ## Process
 
 
-1. Make sure your repo is clean by git's standards
-2. If this is a new minor release, create a new release branch and push to github, otherwise switch to it, for example `release-0.2`
-3. Run `make release-notes` to gather changes since the last revision. If you need to specify a specific tag to look for changes
-   since, use `make release-notes ARGS="--from <tag>"` Pay close attention to the `## :question: Sort these by hand` section, as it contains items that need to be manually sorted.
-4. Tag the repository and push the tag `git tag -s -m $VERSION $VERSION; git push upstream $VERSION`
-5. Create a draft release in github and associate it with the tag that was just created, copying the generated release notes into
-   the draft.
-6. Checkout the tag you've just created and make sure git is in a clean state
-7. Run `make release`
-8. Attach the files to the drafted release:
-    1. `./out/infrastructure-components.yaml`
-    2. `./templates/cluster-template.yaml`
-    3. `./templates/cluster-template-without-lb.yaml`
-    4. `./templates/cluster-template-external-cloud-provider.yaml`
-    5. `./metadata.yaml` (clusterctl >0.3.1 will include hardcoded metadata for CAPO. But let's keep the `metadata.yaml` file for our v0.3.* releases to be compatible with clusterctl <=0.3.1)
-9.  Perform the [image promotion process](https://github.com/kubernetes/k8s.io/tree/main/k8s.gcr.io#image-promoter).
-    The staging repository is at https://console.cloud.google.com/gcr/images/k8s-staging-capi-openstack/GLOBAL. Be
-    sure to choose the top level `capi-openstack-controller`, which will provide the multi-arch manifest, rather than one for a specific architecture.
-    The image build logs are available in [Cloud Build](https://console.cloud.google.com/cloud-build/builds?project=k8s-staging-capi-openstack).
-    Add the new sha=>tag mapping to the [images.yaml](https://github.com/kubernetes/k8s.io/edit/main/k8s.gcr.io/images/k8s-staging-capi-openstack/images.yaml) (use the sha of the image with the corresponding tag)
-10.  Finalise the release notes
-11.  Publish release. Use the pre-release option for release
-    candidate versions of Cluster API Provider OpenStack.
+1. Make sure your repo is clean by git's standards.
+1. Make sure you are on the correct branch (`master` for the current release and `release-0.x` for older releases).
+1. Create an annotated tag
+    - `git tag -s -a $VERSION -m $VERSION`.
+1. Push the tag to the GitHub repository:
+   > NOTE: `upstream` should be the name of the remote pointing to `github.com/kubernetes-sigs/cluster-api-provider-openstack`
+    - `git push upstream $VERSION`
+1. Run `make release` to build artifacts (the image is automatically built by CI)
+1. Follow the [image promotion process](https://github.com/kubernetes/k8s.io/tree/main/k8s.gcr.io#image-promoter) to promote the image from the staging repo to `k8s.gcr.io/capi-openstack`.
+   The staging repository can be inspected at https://console.cloud.google.com/gcr/images/k8s-staging-capi-openstack/GLOBAL. Be
+   sure to choose the top level `capi-openstack-controller`, which will provide the multi-arch manifest, rather than one for a specific architecture.
+   The image build logs are available at [Cloud Build](https://console.cloud.google.com/cloud-build/builds?project=k8s-staging-capi-openstack).
+   Add the new sha=>tag mapping to the [images.yaml](https://github.com/kubernetes/k8s.io/edit/main/k8s.gcr.io/images/k8s-staging-capi-openstack/images.yaml) (use the sha of the image with the corresponding tag)
+1. Create a draft release in GitHub based on the tag created above
+1. Generate and finalize the release notes and add them to the draft release:
+    - Run `make release-notes` to gather changes since the last revision. If you need to specify a specific tag to look for changes
+      since, use `make release-notes RELEASE_NOTES_ARGS="--from <tag>"`.
+    - Pay close attention to the `## :question: Sort these by hand` section, as it contains items that need to be manually sorted.
+1. Attach the following files to the draft release:
+    - `./out/infrastructure-components.yaml`
+    - `./out/cluster-template.yaml`
+    - `./out/cluster-template-external-cloud-provider.yaml`
+    - `./out/cluster-template-without-lb.yaml`
+    - `./out/metadata.yaml`
+1.  Publish release. Use the pre-release option for release candidate or beta versions.
 
 ### Permissions
 
