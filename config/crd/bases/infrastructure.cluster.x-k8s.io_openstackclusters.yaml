@@ -1264,6 +1264,11 @@ spec:
                               type: array
                             description:
                               type: string
+                            disablePortSecurity:
+                              description: Disables PortSecurity at the port level.
+                                If not provided, it inherits the corresponding network
+                                level value
+                              type: boolean
                             fixedIPs:
                               description: Specify pairs of subnet and/or IP address.
                                 These should be subnets of the network with the given
@@ -1693,6 +1698,11 @@ spec:
                               type: array
                             description:
                               type: string
+                            disablePortSecurity:
+                              description: Disables PortSecurity at the port level.
+                                If not provided, it inherits the corresponding network
+                                level value
+                              type: boolean
                             fixedIPs:
                               description: Specify pairs of subnet and/or IP address.
                                 These should be subnets of the network with the given
@@ -1958,6 +1968,10 @@ spec:
                         type: array
                       description:
                         type: string
+                      disablePortSecurity:
+                        description: Disables PortSecurity at the port level. If not
+                          provided, it inherits the corresponding network level value
+                        type: boolean
                       fixedIPs:
                         description: Specify pairs of subnet and/or IP address. These
                           should be subnets of the network with the given NetworkID.
@@ -2102,6 +2116,10 @@ spec:
                         type: array
                       description:
                         type: string
+                      disablePortSecurity:
+                        description: Disables PortSecurity at the port level. If not
+                          provided, it inherits the corresponding network level value
+                        type: boolean
                       fixedIPs:
                         description: Specify pairs of subnet and/or IP address. These
                           should be subnets of the network with the given NetworkID.
