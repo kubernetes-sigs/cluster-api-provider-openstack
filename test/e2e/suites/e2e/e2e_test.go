@@ -23,9 +23,11 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"time"
 
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	appsv1 "k8s.io/api/apps/v1"
@@ -129,6 +131,47 @@ var _ = Describe("e2e tests", func() {
 	})
 
 	Describe("Workload cluster (without lb)", func() {
+		It("Should create port(s) with custom options", func() {
+			shared.Byf("Creating a cluster")
+			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
+			configCluster := defaultConfigCluster(clusterName, namespace.Name)
+			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(1)
+			configCluster.WorkerMachineCount = pointer.Int64Ptr(1)
+			configCluster.Flavor = shared.FlavorDefault
+			_ = createCluster(ctx, configCluster, specName)
+
+			shared.Byf("Creating MachineDeployment with custom port options")
+			md3Name := clusterName + "-md-3"
+			customPortOptions := &[]infrav1.PortOpts{
+				{Description: "primary"},
+			}
+			framework.CreateMachineDeployment(ctx, framework.CreateMachineDeploymentInput{
+				Creator:                 e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
+				MachineDeployment:       makeMachineDeployment(namespace.Name, md3Name, clusterName, "", 1),
+				BootstrapConfigTemplate: makeJoinBootstrapConfigTemplate(namespace.Name, md3Name),
+				InfraMachineTemplate:    makeOpenStackMachineTemplateWithPortOptions(namespace.Name, clusterName, md3Name, customPortOptions),
+			})
+
+			shared.Byf("Expecting MachineDeployment to be created successfully")
+			Eventually(func() bool {
+				eventList := getEvents(namespace.Name)
+				portError := "Failed to create server with custom port options"
+				return isErrorEventExists(namespace.Name, md3Name, "FailedCreateServer", portError, eventList)
+			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(BeFalse())
+
+			filterNone := ports.ListOpts{}
+			plist1, err := shared.DumpOpenStackPorts(e2eCtx, filterNone)
+			Expect(err).To(BeNil())
+			Expect(plist1).NotTo(BeNil())
+
+			filterOne := ports.ListOpts{Description: "primary"}
+			plist2, err := shared.DumpOpenStackPorts(e2eCtx, filterOne)
+			Expect(err).To(BeNil())
+			count := len(*plist2)
+			Expect(count).To(Equal(1))
+			found := portContainsProperty(*plist2, "Description", "primary")
+			Expect(found).Should(BeTrue())
+		})
 		It("It should be creatable and deletable", func() {
 			shared.Byf("Creating a cluster")
 			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
@@ -294,6 +337,29 @@ func makeOpenStackMachineTemplate(namespace, clusterName, name string, subnetID 
 	}
 }
 
+func makeOpenStackMachineTemplateWithPortOptions(namespace, clusterName, name string, portOpts *[]infrav1.PortOpts) *infrav1.OpenStackMachineTemplate {
+	return &infrav1.OpenStackMachineTemplate{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: infrav1.OpenStackMachineTemplateSpec{
+			Template: infrav1.OpenStackMachineTemplateResource{
+				Spec: infrav1.OpenStackMachineSpec{
+					Flavor:     e2eCtx.E2EConfig.GetVariable(shared.OpenStackNodeMachineFlavor),
+					Image:      e2eCtx.E2EConfig.GetVariable(shared.OpenStackImageName),
+					SSHKeyName: shared.DefaultSSHKeyPairName,
+					CloudName:  e2eCtx.E2EConfig.GetVariable(shared.OpenStackCloud),
+					CloudsSecret: &corev1.SecretReference{
+						Name: fmt.Sprintf("%s-cloud-config", clusterName),
+					},
+					Ports: *portOpts,
+				},
+			},
+		},
+	}
+}
+
 // makeJoinBootstrapConfigTemplate returns a KubeadmConfigTemplate which can be used
 // to test different error cases. As we're missing e.g. the cloud provider conf it cannot
 // be used to successfully add nodes to a cluster.
@@ -416,4 +482,20 @@ func isCloudProviderInitialized(taints []corev1.Taint) bool {
 		}
 	}
 	return true
+}
+
+// Verifies that a Port contains a valid property with a correct value.
+func portContainsProperty(plist interface{}, property string, value interface{}) bool {
+	ports := reflect.ValueOf(plist)
+	portsCount := ports.Len()
+	for i := 0; i < portsCount; i++ {
+		currentPort := ports.Index(i)
+		searchProperty := currentPort.FieldByName(property)
+		correctValue := searchProperty.Interface() == value
+		if correctValue {
+			return true
+		}
+	}
+	// Non-existing property or incorrect value
+	return false
 }
