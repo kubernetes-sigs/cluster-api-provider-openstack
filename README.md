@@ -27,7 +27,7 @@ previous cluster managers such as [kops][kops] and
 - Native Kubernetes manifests and API
 - Choice of Linux distribution (as long as a current cloud-init is available)
 - Support for single and multi-node control plane clusters
-- Deploy clusters with and without LBaaS available
+- Deploy clusters with and without LBaaS available (only cluster with LBaaS can be upgraded)
 - Support for security groups
 - cloud-init based nodes bootstrapping
 
