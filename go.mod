@@ -11,18 +11,18 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.11.0
 	github.com/spf13/pflag v1.0.5
-	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
+	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 	gopkg.in/ini.v1 v1.62.0
-	k8s.io/api v0.21.1
-	k8s.io/apimachinery v0.21.1
-	k8s.io/client-go v0.21.1
-	k8s.io/component-base v0.21.1
+	k8s.io/api v0.21.2
+	k8s.io/apimachinery v0.21.2
+	k8s.io/client-go v0.21.2
+	k8s.io/component-base v0.21.2
 	k8s.io/klog/v2 v2.9.0
 	k8s.io/utils v0.0.0-20210527160623-6fdb442a123b
-	sigs.k8s.io/cluster-api v0.4.0-beta.0
-	sigs.k8s.io/cluster-api/test v0.4.0-beta.0
-	sigs.k8s.io/controller-runtime v0.9.0
+	sigs.k8s.io/cluster-api v0.4.0
+	sigs.k8s.io/cluster-api/test v0.4.0
+	sigs.k8s.io/controller-runtime v0.9.1
 	sigs.k8s.io/yaml v1.2.0
 )
 
-replace sigs.k8s.io/cluster-api => sigs.k8s.io/cluster-api v0.4.0-beta.0
+replace sigs.k8s.io/cluster-api => sigs.k8s.io/cluster-api v0.4.0
