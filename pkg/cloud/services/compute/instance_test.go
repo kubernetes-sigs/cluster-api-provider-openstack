@@ -19,6 +19,8 @@ package compute
 import (
 	"testing"
 
+	"k8s.io/utils/pointer"
+
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 )
 
@@ -47,6 +49,11 @@ func Test_getPortName(t *testing.T) {
 			name: "without PortOpts name suffix",
 			args: args{"test-1-instance", &infrav1.PortOpts{}, 4},
 			want: "test-1-instance-4",
+		},
+		{
+			name: "with PortOpts name suffix",
+			args: args{"test-1-instance", &infrav1.PortOpts{NameSuffix: "foo2", NetworkID: "bar", DisablePortSecurity: pointer.Bool(true)}, 4},
+			want: "test-1-instance-foo2",
 		},
 	}
 	for _, tt := range tests {

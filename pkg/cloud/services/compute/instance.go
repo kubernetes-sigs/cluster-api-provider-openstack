@@ -35,6 +35,7 @@ import (
 	netext "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/portsbinding"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/portsecurity"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/trunks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
@@ -456,13 +457,41 @@ func (s *Service) getOrCreatePort(eventObject runtime.Object, clusterName string
 		description = names.GetDescription(clusterName)
 	}
 
-	// inherit port security groups from the instance if not explicitly specified
-	securityGroups := portOpts.SecurityGroups
-	if securityGroups == nil {
-		securityGroups = instanceSecurityGroups
+	var securityGroups *[]string
+	addressPairs := []ports.AddressPair{}
+	if portOpts.DisablePortSecurity == nil || !*portOpts.DisablePortSecurity {
+		for _, ap := range portOpts.AllowedAddressPairs {
+			addressPairs = append(addressPairs, ports.AddressPair{
+				IPAddress:  ap.IPAddress,
+				MACAddress: ap.MACAddress,
+			})
+		}
+
+		securityGroups = portOpts.SecurityGroups
+
+		// inherit port security groups from the instance if not explicitly specified
+		if securityGroups == nil {
+			securityGroups = instanceSecurityGroups
+		}
 	}
 
-	createOpts := ports.CreateOpts{
+	var fixedIPs interface{}
+	if len(portOpts.FixedIPs) > 0 {
+		fips := make([]ports.IP, 0, len(portOpts.FixedIPs)+1)
+		for _, fixedIP := range portOpts.FixedIPs {
+			fips = append(fips, ports.IP{
+				SubnetID:  fixedIP.SubnetID,
+				IPAddress: fixedIP.IPAddress,
+			})
+		}
+		if net.Subnet.ID != "" {
+			fips = append(fips, ports.IP{SubnetID: net.Subnet.ID})
+		}
+		fixedIPs = fips
+	}
+
+	var createOpts ports.CreateOptsBuilder
+	createOpts = ports.CreateOpts{
 		Name:                portName,
 		NetworkID:           net.ID,
 		Description:         description,
@@ -471,37 +500,27 @@ func (s *Service) getOrCreatePort(eventObject runtime.Object, clusterName string
 		TenantID:            portOpts.TenantID,
 		ProjectID:           portOpts.ProjectID,
 		SecurityGroups:      securityGroups,
-		AllowedAddressPairs: []ports.AddressPair{},
+		AllowedAddressPairs: addressPairs,
+		FixedIPs:            fixedIPs,
 	}
 
-	for _, ap := range portOpts.AllowedAddressPairs {
-		createOpts.AllowedAddressPairs = append(createOpts.AllowedAddressPairs, ports.AddressPair{
-			IPAddress:  ap.IPAddress,
-			MACAddress: ap.MACAddress,
-		})
+	if portOpts.DisablePortSecurity != nil {
+		portSecurity := !*portOpts.DisablePortSecurity
+		createOpts = portsecurity.PortCreateOptsExt{
+			CreateOptsBuilder:   createOpts,
+			PortSecurityEnabled: &portSecurity,
+		}
 	}
 
-	fixedIPs := make([]ports.IP, 0, len(portOpts.FixedIPs)+1)
-	for _, fixedIP := range portOpts.FixedIPs {
-		fixedIPs = append(fixedIPs, ports.IP{
-			SubnetID:  fixedIP.SubnetID,
-			IPAddress: fixedIP.IPAddress,
-		})
-	}
-	if net.Subnet.ID != "" {
-		fixedIPs = append(fixedIPs, ports.IP{SubnetID: net.Subnet.ID})
-	}
-	if len(fixedIPs) > 0 {
-		createOpts.FixedIPs = fixedIPs
-	}
-
-	mc = metrics.NewMetricPrometheusContext("port", "create")
-	port, err := ports.Create(s.networkClient, portsbinding.CreateOptsExt{
+	createOpts = portsbinding.CreateOptsExt{
 		CreateOptsBuilder: createOpts,
 		HostID:            portOpts.HostID,
 		VNICType:          portOpts.VNICType,
 		Profile:           nil,
-	}).Extract()
+	}
+
+	mc = metrics.NewMetricPrometheusContext("port", "create")
+	port, err := ports.Create(s.networkClient, createOpts).Extract()
 	if mc.ObserveRequest(err) != nil {
 		record.Warnf(eventObject, "FailedCreatePort", "Failed to create port %s: %v", portName, err)
 		return nil, err
