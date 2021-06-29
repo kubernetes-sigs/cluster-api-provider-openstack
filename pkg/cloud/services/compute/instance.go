@@ -35,6 +35,7 @@ import (
 	netext "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/portsbinding"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/portsecurity"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/trunks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
@@ -471,11 +472,13 @@ func (s *Service) getOrCreatePort(eventObject runtime.Object, clusterName string
 		AllowedAddressPairs: []ports.AddressPair{},
 	}
 
-	for _, ap := range portOpts.AllowedAddressPairs {
-		createOpts.AllowedAddressPairs = append(createOpts.AllowedAddressPairs, ports.AddressPair{
-			IPAddress:  ap.IPAddress,
-			MACAddress: ap.MACAddress,
-		})
+	if portOpts.DisablePortSecurity == nil || !*portOpts.DisablePortSecurity {
+		for _, ap := range portOpts.AllowedAddressPairs {
+			createOpts.AllowedAddressPairs = append(createOpts.AllowedAddressPairs, ports.AddressPair{
+				IPAddress:  ap.IPAddress,
+				MACAddress: ap.MACAddress,
+			})
+		}
 	}
 
 	fixedIPs := make([]ports.IP, 0, len(portOpts.FixedIPs)+1)
@@ -505,6 +508,28 @@ func (s *Service) getOrCreatePort(eventObject runtime.Object, clusterName string
 	}
 
 	record.Eventf(eventObject, "SuccessfulCreatePort", "Created port %s with id %s", port.Name, port.ID)
+
+	if portOpts.DisablePortSecurity != nil {
+		mc2 := metrics.NewMetricPrometheusContext("port", "update")
+		portUpdateOpts := ports.UpdateOpts{}
+
+		if *portOpts.DisablePortSecurity {
+			// Remove security groups from port if possible to avoid openstack errors
+			// caused by instance level security groups being applied to port interfaces.
+			portUpdateOpts.SecurityGroups = &[]string{}
+		}
+		updateOpts := portsecurity.PortUpdateOptsExt{
+			UpdateOptsBuilder:   portUpdateOpts,
+			PortSecurityEnabled: portOpts.DisablePortSecurity,
+		}
+		port, err = ports.Update(s.networkClient, port.ID, updateOpts).Extract()
+		if mc2.ObserveRequest(err) != nil {
+			record.Warnf(eventObject, "FailedUpdatePort", "Failed to apply port security update on port %s: %v", port.ID, err)
+			return nil, err
+		}
+		record.Eventf(eventObject, "SuccessfulUpdatePort", "Update port %s with id %s", port.Name, port.ID)
+	}
+
 	return port, nil
 }
 
