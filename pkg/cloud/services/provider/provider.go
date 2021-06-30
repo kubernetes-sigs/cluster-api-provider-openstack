@@ -27,7 +27,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack"
 	osclient "github.com/gophercloud/utils/client"
 	"github.com/gophercloud/utils/openstack/clientconfig"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -37,8 +37,8 @@ import (
 )
 
 const (
-	CloudsSecretKey = "clouds.yaml"
-	CaSecretKey     = "cacert"
+	cloudsSecretKey = "clouds.yaml"
+	caSecretKey     = "cacert"
 )
 
 func NewClientFromMachine(ctx context.Context, ctrlClient client.Client, openStackMachine *infrav1.OpenStackMachine) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, error) {
@@ -140,7 +140,7 @@ func getCloudFromSecret(ctx context.Context, ctrlClient client.Client, secretNam
 		return emptyCloud, nil, fmt.Errorf("secret name set to %v but no cloud was specified. Please set cloud_name in your machine spec", secretName)
 	}
 
-	secret := &v1.Secret{}
+	secret := &corev1.Secret{}
 	err := ctrlClient.Get(ctx, types.NamespacedName{
 		Namespace: secretNamespace,
 		Name:      secretName,
@@ -149,10 +149,10 @@ func getCloudFromSecret(ctx context.Context, ctrlClient client.Client, secretNam
 		return emptyCloud, nil, err
 	}
 
-	content, ok := secret.Data[CloudsSecretKey]
+	content, ok := secret.Data[cloudsSecretKey]
 	if !ok {
 		return emptyCloud, nil, fmt.Errorf("OpenStack credentials secret %v did not contain key %v",
-			secretName, CloudsSecretKey)
+			secretName, cloudsSecretKey)
 	}
 	var clouds clientconfig.Clouds
 	if err = yaml.Unmarshal(content, &clouds); err != nil {
@@ -160,7 +160,7 @@ func getCloudFromSecret(ctx context.Context, ctrlClient client.Client, secretNam
 	}
 
 	// get caCert
-	caCert, ok := secret.Data[CaSecretKey]
+	caCert, ok := secret.Data[caSecretKey]
 	if !ok {
 		return clouds.Clouds[cloudName], nil, nil
 	}

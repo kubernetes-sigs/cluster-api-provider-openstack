@@ -53,16 +53,16 @@ import (
 )
 
 const (
-	TimeoutInstanceCreate       = 5
-	RetryIntervalInstanceStatus = 10 * time.Second
+	timeoutInstanceCreate       = 5
+	retryIntervalInstanceStatus = 10 * time.Second
 
-	TimeoutTrunkDelete       = 3 * time.Minute
-	RetryIntervalTrunkDelete = 5 * time.Second
+	timeoutTrunkDelete       = 3 * time.Minute
+	retryIntervalTrunkDelete = 5 * time.Second
 
-	TimeoutPortDelete       = 3 * time.Minute
-	RetryIntervalPortDelete = 5 * time.Second
+	timeoutPortDelete       = 3 * time.Minute
+	retryIntervalPortDelete = 5 * time.Second
 
-	TimeoutInstanceDelete = 5 * time.Minute
+	timeoutInstanceDelete = 5 * time.Minute
 )
 
 func (s *Service) CreateInstance(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, clusterName string, userData string) (instance *infrav1.Instance, err error) {
@@ -265,10 +265,10 @@ func (s *Service) createInstance(eventObject runtime.Object, clusterName string,
 		}
 		return nil, fmt.Errorf("error creating Openstack instance: %v", serverErr)
 	}
-	instanceCreateTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT", TimeoutInstanceCreate)
+	instanceCreateTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT", timeoutInstanceCreate)
 	instanceCreateTimeout *= time.Minute
 	var createdInstance *infrav1.Instance
-	err = util.PollImmediate(RetryIntervalInstanceStatus, instanceCreateTimeout, func() (bool, error) {
+	err = util.PollImmediate(retryIntervalInstanceStatus, instanceCreateTimeout, func() (bool, error) {
 		createdInstance, err = s.GetInstance(server.ID)
 		if err != nil {
 			if capoerrors.IsRetryable(err) {
@@ -653,7 +653,7 @@ func (s *Service) deletePort(eventObject runtime.Object, portID string) error {
 		return nil
 	}
 
-	err = util.PollImmediate(RetryIntervalPortDelete, TimeoutPortDelete, func() (bool, error) {
+	err = util.PollImmediate(retryIntervalPortDelete, timeoutPortDelete, func() (bool, error) {
 		mc := metrics.NewMetricPrometheusContext("port", "delete")
 		err := ports.Delete(s.networkClient, port.ID).ExtractErr()
 		if mc.ObserveRequest(err) != nil {
@@ -737,7 +737,7 @@ func (s *Service) deleteTrunk(eventObject runtime.Object, portID string) error {
 		return nil
 	}
 
-	err = util.PollImmediate(RetryIntervalTrunkDelete, TimeoutTrunkDelete, func() (bool, error) {
+	err = util.PollImmediate(retryIntervalTrunkDelete, timeoutTrunkDelete, func() (bool, error) {
 		if err := trunks.Delete(s.networkClient, trunkInfo[0].ID).ExtractErr(); err != nil {
 			if capoerrors.IsRetryable(err) {
 				return false, nil
@@ -785,7 +785,7 @@ func (s *Service) deleteInstance(eventObject runtime.Object, instanceID string) 
 		return err
 	}
 
-	err = util.PollImmediate(RetryIntervalInstanceStatus, TimeoutInstanceDelete, func() (bool, error) {
+	err = util.PollImmediate(retryIntervalInstanceStatus, timeoutInstanceDelete, func() (bool, error) {
 		i, err := s.GetInstance(instance.ID)
 		if err != nil {
 			return false, err

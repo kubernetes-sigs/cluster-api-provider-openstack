@@ -398,7 +398,6 @@ func (s *Service) DeleteLoadBalancerMember(openStackCluster *infrav1.OpenStackCl
 		}
 
 		if lbMember != nil {
-
 			// lb member changed so let's delete it so we can create it again with the correct IP
 			err = s.waitForLoadBalancerActive(lbID)
 			if err != nil {

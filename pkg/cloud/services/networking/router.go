@@ -93,6 +93,7 @@ func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, cl
 		return err
 	}
 
+	//nolint:ifshort
 	createInterface := true
 	// check all router interfaces for an existing port in our subnet.
 INTERFACE_LOOP:

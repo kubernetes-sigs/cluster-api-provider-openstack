@@ -321,7 +321,7 @@ func (s *Service) GetNetworksByFilter(opts networks.ListOptsBuilder) ([]networks
 	return nets, nil
 }
 
-// getNetworkIDsByFilter retrieves network ids by querying openstack with filters.
+// GetNetworkIDsByFilter retrieves network ids by querying openstack with filters.
 func (s *Service) GetNetworkIDsByFilter(opts networks.ListOptsBuilder) ([]string, error) {
 	nets, err := s.GetNetworksByFilter(opts)
 	if err != nil {
@@ -334,7 +334,7 @@ func (s *Service) GetNetworkIDsByFilter(opts networks.ListOptsBuilder) ([]string
 	return ids, nil
 }
 
-// A function for getting the id of a subnet by querying openstack with filters.
+// GetSubnetsByFilter gets the id of a subnet by querying openstack with filters.
 func (s *Service) GetSubnetsByFilter(opts subnets.ListOptsBuilder) ([]subnets.Subnet, error) {
 	if opts == nil {
 		return []subnets.Subnet{}, fmt.Errorf("no Filters were passed")

@@ -1,31 +1,87 @@
 linters:
-  enable-all: true
-  disable:
-    - dupl
-    - errorlint
-    - exhaustivestruct
-    - funlen
-    - gochecknoglobals
-    - gochecknoinits
-    - gocognit
-    - godox
-    - goerr113
-    - gomnd
-    - interfacer
-    - lll
-    - maligned
-    - nlreturn
-    - whitespace
-    - wrapcheck
-    - wsl
-  # Run with --fast=false for more extensive checks
-  fast: true
+  disable-all: true
+  enable:
+  - asciicheck
+  - bodyclose
+  - cyclop
+  - deadcode
+  - depguard
+  - dogsled
+  - durationcheck
+  - errcheck
+  - exportloopref
+  - forbidigo
+  - gci
+  - goconst
+  - gocritic
+  - gocyclo
+  - godot
+  - gofmt
+  - gofumpt
+  - goheader
+  - goimports
+  - gomodguard
+  - goprintffuncname
+  - gosec
+  - gosimple
+  - govet
+  - ifshort
+  - importas
+  - ineffassign
+  - makezero
+  - misspell
+  - nakedret
+  - nestif
+  - nilerr
+  - noctx
+  - nolintlint
+  - prealloc
+  - predeclared
+  - revive
+  - rowserrcheck
+  - sqlclosecheck
+  - staticcheck
+  - structcheck
+  - stylecheck
+  - thelper
+  - typecheck
+  - unconvert
+  - unparam
+  - unused
+  - varcheck
+  - wastedassign
+  - whitespace
+
 linters-settings:
   cyclop:
     # TODO(sbuerin) fix remaining findings and set to 20 afterwards
     max-complexity: 30
+  ifshort:
+    # Maximum length of variable declaration measured in number of characters, after which linter won't suggest using short syntax.
+    max-decl-chars: 50
   goimports:
     local-prefixes: sigs.k8s.io/cluster-api-provider-openstack
+  importas:
+    no-unaliased: true
+    alias:
+      # Kubernetes
+      - pkg: k8s.io/api/core/v1
+        alias: corev1
+      - pkg: k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1
+        alias: apiextensionsv1
+      - pkg: k8s.io/apimachinery/pkg/apis/meta/v1
+        alias: metav1
+      - pkg: k8s.io/apimachinery/pkg/api/errors
+        alias: apierrors
+      - pkg: k8s.io/apimachinery/pkg/util/errors
+        alias: kerrors
+      # Controller Runtime
+      - pkg: sigs.k8s.io/controller-runtime
+        alias: ctrl
+  staticcheck:
+    go: "1.16"
+  stylecheck:
+    go: "1.16"
   nestif:
     # minimal complexity of if statements to report, 5 by default
     # TODO(sbuerin) fix remaining findings and set to 5 after:
@@ -34,16 +90,34 @@ linters-settings:
 
 issues:
   max-same-issues: 0
-  max-per-linter: 0
+  max-issues-per-linter: 0
   # List of regexps of issue texts to exclude, empty list by default.
-  exclude:
-    - Using the variable on range scope `(tc)|(rt)|(tt)|(test)|(testcase)|(testCase)` in function literal
-    - "G108: Profiling endpoint is automatically exposed on /debug/pprof"
+  exclude-rules:
+  - linters:
+    - gosec
+    text: "G108: Profiling endpoint is automatically exposed on /debug/pprof"
+  - linters:
+    - gosec
+    text: "G108: Profiling endpoint is automatically exposed on /debug/pprof"
+  # This directive allows the embed package to be imported with an underscore everywhere.
+  - linters:
+    - revive
+    source: _ "embed"
+  - linters:
+    - revive
+    - stylecheck
+    path: (test)/.*.go
+    text: should not use dot imports
+  - linters:
+    - revive
+    path: test/e2e/shared/defaults.go
+    text: "exported: exported const .* should have comment \\(or a comment on this block\\) or be unexported"
 run:
-  timeout: 6m
+  timeout: 10m
   build-tags:
   - e2e
 
   skip-files:
     - "zz_generated.*\\.go$"
-    - ".*_mock\\.go"
+    - ".*conversion.*\\.go$"
+  allow-parallel-runners: true
