@@ -314,7 +314,8 @@ func reconcileBastion(log logr.Logger, osProviderClient *gophercloud.ProviderCli
 	if err != nil {
 		return err
 	}
-	fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster.Spec.Bastion.Instance.FloatingIP)
+	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
+	fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, clusterName, openStackCluster.Spec.Bastion.Instance.FloatingIP)
 	if err != nil {
 		return errors.Errorf("failed to get or create floating IP for bastion: %v", err)
 	}
@@ -403,7 +404,7 @@ func reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.P
 		} else {
 			port = int32(openStackCluster.Spec.APIServerPort)
 		}
-		fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster.Spec.APIServerFloatingIP)
+		fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, clusterName, openStackCluster.Spec.APIServerFloatingIP)
 		if err != nil {
 			return errors.Errorf("Floating IP cannot be got or created: %v", err)
 		}

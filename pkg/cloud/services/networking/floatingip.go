@@ -19,15 +19,17 @@ package networking
 import (
 	"time"
 
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
-func (s *Service) GetOrCreateFloatingIP(openStackCluster *infrav1.OpenStackCluster, ip string) (*floatingips.FloatingIP, error) {
+func (s *Service) GetOrCreateFloatingIP(openStackCluster *infrav1.OpenStackCluster, clusterName, ip string) (*floatingips.FloatingIP, error) {
 	var fp *floatingips.FloatingIP
 	var err error
 	var fpCreateOpts floatingips.CreateOpts
@@ -45,12 +47,22 @@ func (s *Service) GetOrCreateFloatingIP(openStackCluster *infrav1.OpenStackClust
 	}
 
 	fpCreateOpts.FloatingNetworkID = openStackCluster.Status.ExternalNetwork.ID
+	fpCreateOpts.Description = names.GetDescription(clusterName)
 
 	mc := metrics.NewMetricPrometheusContext("floating_ip", "create")
 	fp, err = floatingips.Create(s.client, fpCreateOpts).Extract()
 	if mc.ObserveRequest(err) != nil {
 		record.Warnf(openStackCluster, "FailedCreateFloatingIP", "Failed to create floating IP %s: %v", ip, err)
 		return nil, err
+	}
+
+	if len(openStackCluster.Spec.Tags) > 0 {
+		_, err = attributestags.ReplaceAll(s.client, "floatingips", fp.ID, attributestags.ReplaceAllOpts{
+			Tags: openStackCluster.Spec.Tags,
+		}).Extract()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	record.Eventf(openStackCluster, "SuccessfulCreateFloatingIP", "Created floating IP %s with id %s", fp.FloatingIP, fp.ID)

@@ -53,7 +53,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 	if openStackCluster.Spec.APIServerFloatingIP != "" {
 		floatingIPAddress = openStackCluster.Spec.APIServerFloatingIP
 	}
-	fp, err := s.networkingService.GetOrCreateFloatingIP(openStackCluster, floatingIPAddress)
+	fp, err := s.networkingService.GetOrCreateFloatingIP(openStackCluster, clusterName, floatingIPAddress)
 	if err != nil {
 		return err
 	}
