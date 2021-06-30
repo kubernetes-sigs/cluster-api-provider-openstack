@@ -103,7 +103,7 @@ write_files:
     # Don't download default images, just our test images
     DOWNLOAD_DEFAULT_IMAGES=False
     # We upload the Amphora image so it doesn't have to be build
-    IMAGE_URLS="https://github.com/sbueringer/cluster-api-provider-openstack-images/releases/download/amphora-victoria-1/amphora-x64-haproxy.qcow2"
+    IMAGE_URLS="https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/amphora/2021-03-27/amphora-x64-haproxy.qcow2"
 
     # See: https://docs.openstack.org/nova/victoria/configuration/sample-config.html
     # Helpful commands (on the devstack VM):
