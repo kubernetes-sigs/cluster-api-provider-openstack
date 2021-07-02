@@ -528,6 +528,39 @@ func (s *Service) createRule(r infrav1.SecurityGroupRule) (infrav1.SecurityGroup
 	return convertOSSecGroupRuleToConfigSecGroupRule(*rule), nil
 }
 
+func (s *Service) GetSecurityGroups(securityGroupParams []infrav1.SecurityGroupParam) ([]string, error) {
+	var sgIDs []string
+	for _, sg := range securityGroupParams {
+		listOpts := groups.ListOpts(sg.Filter)
+		if listOpts.ProjectID == "" {
+			listOpts.ProjectID = s.projectID
+		}
+		listOpts.Name = sg.Name
+		listOpts.ID = sg.UUID
+		pages, err := groups.List(s.client, listOpts).AllPages()
+		if err != nil {
+			return nil, err
+		}
+
+		SGList, err := groups.ExtractGroups(pages)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(SGList) == 0 {
+			return nil, fmt.Errorf("security group %s not found", sg.Name)
+		}
+
+		for _, group := range SGList {
+			if isDuplicate(sgIDs, group.ID) {
+				continue
+			}
+			sgIDs = append(sgIDs, group.ID)
+		}
+	}
+	return sgIDs, nil
+}
+
 func getSecControlPlaneGroupName(clusterName string) string {
 	return fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, controlPlaneSuffix)
 }
@@ -565,4 +598,16 @@ func convertOSSecGroupRuleToConfigSecGroupRule(osSecGroupRule rules.SecGroupRule
 		RemoteGroupID:   osSecGroupRule.RemoteGroupID,
 		RemoteIPPrefix:  osSecGroupRule.RemoteIPPrefix,
 	}
+}
+
+func isDuplicate(list []string, name string) bool {
+	if len(list) == 0 {
+		return false
+	}
+	for _, element := range list {
+		if element == name {
+			return true
+		}
+	}
+	return false
 }
