@@ -57,10 +57,11 @@ func (s *Service) GetOrCreateFloatingIP(openStackCluster *infrav1.OpenStackClust
 	}
 
 	if len(openStackCluster.Spec.Tags) > 0 {
+		mc := metrics.NewMetricPrometheusContext("floating_ip", "update")
 		_, err = attributestags.ReplaceAll(s.client, "floatingips", fp.ID, attributestags.ReplaceAllOpts{
 			Tags: openStackCluster.Spec.Tags,
 		}).Extract()
-		if err != nil {
+		if mc.ObserveRequest(err) != nil {
 			return nil, err
 		}
 	}
