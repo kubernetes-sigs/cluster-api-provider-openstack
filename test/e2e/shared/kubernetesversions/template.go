@@ -198,7 +198,11 @@ func checkIfArraysAlreadyExist(sourceTemplate []byte, objectKind, objectName, js
 		}
 
 		pathSplit := strings.Split(strings.TrimPrefix(jsonPatchPathPrefix, "/"), "/")
+		// false positive, we intentionally append to another array
+		//nolint:gocritic
 		filesPath := append(pathSplit, "files")
+		// false positive, we intentionally append to another array
+		//nolint:gocritic
 		preKubeadmCommandsPath := append(pathSplit, "preKubeadmCommands")
 		_, filesPathExists, err := unstructured.NestedFieldCopy(obj.Object, filesPath...)
 		if err != nil {

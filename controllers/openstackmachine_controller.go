@@ -399,7 +399,7 @@ func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(logger logr.Log
 	return loadbalancerService.ReconcileLoadBalancerMember(openStackCluster, machine, openStackMachine, clusterName, ip)
 }
 
-// OpenStackClusterToOpenStackMachine is a handler.ToRequestsFunc to be used to enqeue requests for reconciliation
+// OpenStackClusterToOpenStackMachines is a handler.ToRequestsFunc to be used to enqeue requests for reconciliation
 // of OpenStackMachines.
 func (r *OpenStackMachineReconciler) OpenStackClusterToOpenStackMachines(ctx context.Context) handler.MapFunc {
 	log := ctrl.LoggerFrom(ctx)

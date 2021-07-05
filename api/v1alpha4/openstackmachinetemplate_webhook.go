@@ -42,9 +42,8 @@ var _ webhook.Validator = &OpenStackMachineTemplate{}
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type.
 func (r *OpenStackMachineTemplate) ValidateCreate() error {
 	var allErrs field.ErrorList
-	spec := r.Spec.Template.Spec
 
-	if spec.ProviderID != nil {
+	if r.Spec.Template.Spec.ProviderID != nil {
 		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "template", "spec", "providerID"), "cannot be set in templates"))
 	}
 

@@ -56,7 +56,7 @@ var defaultRules = []infrav1.SecurityGroupRule{
 	},
 }
 
-// Reconcile the security groups.
+// ReconcileSecurityGroups reconcile the security groups.
 func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
 	s.logger.Info("Reconciling security groups", "cluster", clusterName)
 	if !openStackCluster.Spec.ManagedSecurityGroups {
@@ -90,7 +90,6 @@ func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackClu
 
 	observedSecGroups := make(map[string]*infrav1.SecurityGroup)
 	for k, desiredSecGroup := range desiredSecGroups {
-
 		var err error
 		observedSecGroups[k], err = s.getSecurityGroupByName(desiredSecGroup.Name)
 
@@ -468,7 +467,6 @@ func (s *Service) createSecurityGroupIfNotExists(openStackCluster *infrav1.OpenS
 		}
 		record.Eventf(openStackCluster, "SuccessfulCreateSecurityGroup", "Created security group %s with id %s", groupName, group.ID)
 		return nil
-
 	}
 
 	sInfo := fmt.Sprintf("Reuse Existing SecurityGroup %s with %s", groupName, secGroup.ID)

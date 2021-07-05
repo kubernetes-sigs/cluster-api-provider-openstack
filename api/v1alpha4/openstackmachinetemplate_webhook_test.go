@@ -20,7 +20,7 @@ import (
 	"testing"
 
 	. "github.com/onsi/gomega"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
@@ -67,7 +67,7 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 						},
 					},
 				},
-				ObjectMeta: v1.ObjectMeta{
+				ObjectMeta: metav1.ObjectMeta{
 					Name: "foo",
 				},
 			},
@@ -80,7 +80,7 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 						},
 					},
 				},
-				ObjectMeta: v1.ObjectMeta{
+				ObjectMeta: metav1.ObjectMeta{
 					Name: "bar",
 				},
 			},

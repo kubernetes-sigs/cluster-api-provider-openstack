@@ -227,14 +227,19 @@ func (r SecurityGroupRule) Equal(x SecurityGroupRule) bool {
 type InstanceState string
 
 var (
+	// InstanceStateBuilding is the string representing an instance in a building state.
 	InstanceStateBuilding = InstanceState("BUILDING")
 
+	// InstanceStateActive is the string representing an instance in an active state.
 	InstanceStateActive = InstanceState("ACTIVE")
 
+	// InstanceStateError is the string representing an instance in an error state.
 	InstanceStateError = InstanceState("ERROR")
 
+	// InstanceStateStopped is the string representing an instance in a stopped state.
 	InstanceStateStopped = InstanceState("STOPPED")
 
+	// InstanceStateShutoff is the string representing an instance in a shutoff state.
 	InstanceStateShutoff = InstanceState("SHUTOFF")
 )
 

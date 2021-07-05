@@ -160,10 +160,10 @@ func dumpMachine(ctx context.Context, e2eCtx *E2EContext, machine infrav1.OpenSt
 		bastionIP,
 		[]command{
 			// don't do this for now, it just takes to long
-			//{
+			// {
 			//	title: "systemd",
 			//	cmd:   "journalctl --no-pager --output=short-precise | grep -v  'audit:\\|audit\\['",
-			//},
+			// },
 			{
 				title: "kern",
 				cmd:   "journalctl --no-pager --output=short-precise -k",
