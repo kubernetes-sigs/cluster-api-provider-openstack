@@ -30,6 +30,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/pointer"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha4"
@@ -53,6 +54,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/loadbalancer"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/provider"
+	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 )
 
 // OpenStackMachineReconciler reconciles a OpenStackMachine object.
@@ -353,7 +355,31 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("Floating IP cannot be got or created: %v", err))
 			return ctrl.Result{}, nil
 		}
-		err = computeService.AssociateFloatingIP(instance.ID, fp.FloatingIP)
+
+		// There is some possibility that floating IP is created but not able to be find right after that
+		// so give a retry here, see #927 for further information.
+		backoff := wait.Backoff{
+			Steps:    10,
+			Duration: time.Second,
+			Factor:   1.25,
+			Jitter:   0.1,
+		}
+		err = wait.ExponentialBackoff(backoff, func() (bool, error) {
+			if err := computeService.AssociateFloatingIP(instance.ID, fp.FloatingIP); err != nil {
+				if capoerrors.IsNotFound(err) {
+					// not found, timing issue
+					logger.Info("Floating IP association failed, will retry.", "instance-id", instance.ID, "floating-ip", fp.FloatingIP)
+					return false, nil
+				}
+				// real error occurs
+				return false, err
+			}
+			return true, nil
+		})
+		if err == wait.ErrWaitTimeout {
+			err = fmt.Errorf("floating IP association timeout %s", fp.FloatingIP)
+		}
+
 		if err != nil {
 			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("Floating IP cannot be associated: %v", err))
 			return ctrl.Result{}, nil
