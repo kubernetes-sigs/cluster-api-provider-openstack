@@ -227,6 +227,10 @@ func setupWebhooks(mgr ctrl.Manager) {
 		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackCluster")
 		os.Exit(1)
 	}
+	if err := (&infrav1.OpenStackClusterTemplate{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackClusterTemplate")
+		os.Exit(1)
+	}
 	if err := (&infrav1.OpenStackMachine{}).SetupWebhookWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackMachine")
 		os.Exit(1)
