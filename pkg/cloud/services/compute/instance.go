@@ -330,8 +330,9 @@ func applyServerGroupID(opts servers.CreateOptsBuilder, serverGroupID string) se
 }
 
 func (s *Service) getTrunkSupport() (bool, error) {
+	mc := metrics.NewMetricPrometheusContext("network_extension", "list")
 	allPages, err := netext.List(s.networkClient).AllPages()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		return false, err
 	}
 
@@ -357,8 +358,9 @@ func (s *Service) getSecurityGroups(securityGroupParams []infrav1.SecurityGroupP
 		}
 		listOpts.Name = sg.Name
 		listOpts.ID = sg.UUID
+		mc := metrics.NewMetricPrometheusContext("security_group", "list")
 		pages, err := groups.List(s.networkClient, listOpts).AllPages()
-		if err != nil {
+		if mc.ObserveRequest(err) != nil {
 			return nil, err
 		}
 
@@ -422,11 +424,12 @@ func (s *Service) getServerNetworks(networkParams []infrav1.NetworkParam) ([]inf
 }
 
 func (s *Service) getOrCreatePort(eventObject runtime.Object, clusterName string, portName string, net infrav1.Network, instanceSecurityGroups *[]string) (*ports.Port, error) {
+	mc := metrics.NewMetricPrometheusContext("port", "list")
 	allPages, err := ports.List(s.networkClient, ports.ListOpts{
 		Name:      portName,
 		NetworkID: net.ID,
 	}).AllPages()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		return nil, fmt.Errorf("searching for existing port for server: %v", err)
 	}
 	existingPorts, err := ports.ExtractPorts(allPages)
@@ -491,8 +494,8 @@ func (s *Service) getOrCreatePort(eventObject runtime.Object, clusterName string
 	if len(fixedIPs) > 0 {
 		createOpts.FixedIPs = fixedIPs
 	}
-	mc := metrics.NewMetricPrometheusContext("port", "create")
 
+	mc = metrics.NewMetricPrometheusContext("port", "create")
 	port, err := ports.Create(s.networkClient, portsbinding.CreateOptsExt{
 		CreateOptsBuilder: createOpts,
 		HostID:            portOpts.HostID,
@@ -509,11 +512,12 @@ func (s *Service) getOrCreatePort(eventObject runtime.Object, clusterName string
 }
 
 func (s *Service) getOrCreateTrunk(eventObject runtime.Object, clusterName, trunkName, portID string) (*trunks.Trunk, error) {
+	mc := metrics.NewMetricPrometheusContext("trunk", "list")
 	allPages, err := trunks.List(s.networkClient, trunks.ListOpts{
 		Name:   trunkName,
 		PortID: portID,
 	}).AllPages()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		return nil, fmt.Errorf("searching for existing trunk for server: %v", err)
 	}
 	trunkList, err := trunks.ExtractTrunks(allPages)
@@ -530,8 +534,8 @@ func (s *Service) getOrCreateTrunk(eventObject runtime.Object, clusterName, trun
 		PortID:      portID,
 		Description: names.GetDescription(clusterName),
 	}
-	mc := metrics.NewMetricPrometheusContext("trunk", "create")
 
+	mc = metrics.NewMetricPrometheusContext("trunk", "create")
 	trunk, err := trunks.Create(s.networkClient, trunkCreateOpts).Extract()
 	if mc.ObserveRequest(err) != nil {
 		record.Warnf(eventObject, "FailedCreateTrunk", "Failed to create trunk %s: %v", trunkName, err)
@@ -566,8 +570,9 @@ func (s *Service) getImageID(imageName string) (string, error) {
 		Name: imageName,
 	}
 
+	mc := metrics.NewMetricPrometheusContext("image", "list")
 	pages, err := images.List(s.imagesClient, opts).AllPages()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		return "", err
 	}
 
@@ -608,8 +613,9 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instanceName string
 		return nil
 	}
 
+	mc := metrics.NewMetricPrometheusContext("server_os_interface", "list")
 	allInterfaces, err := attachinterfaces.List(s.computeClient, instance.ID).AllPages()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		return err
 	}
 	instanceInterfaces, err := attachinterfaces.ExtractInterfaces(allInterfaces)
@@ -699,9 +705,9 @@ func (s *Service) deleteAttachInterface(eventObject runtime.Object, instanceID, 
 		return nil
 	}
 
-	mc := metrics.NewMetricPrometheusContext("router_interface", "delete")
+	mc := metrics.NewMetricPrometheusContext("server_os_interface", "delete")
 	err = attachinterfaces.Delete(s.computeClient, instanceID, portID).ExtractErr()
-	if mc.ObserveRequest(err) != nil {
+	if mc.ObserveRequestIgnoreNotFound(err) != nil {
 		if capoerrors.IsNotFound(err) {
 			return nil
 		}
@@ -725,8 +731,9 @@ func (s *Service) deleteTrunk(eventObject runtime.Object, portID string) error {
 	listOpts := trunks.ListOpts{
 		PortID: port.ID,
 	}
+	mc := metrics.NewMetricPrometheusContext("trunk", "list")
 	trunkList, err := trunks.List(s.networkClient, listOpts).AllPages()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		return err
 	}
 	trunkInfo, err := trunks.ExtractTrunks(trunkList)
@@ -738,7 +745,8 @@ func (s *Service) deleteTrunk(eventObject runtime.Object, portID string) error {
 	}
 
 	err = util.PollImmediate(retryIntervalTrunkDelete, timeoutTrunkDelete, func() (bool, error) {
-		if err := trunks.Delete(s.networkClient, trunkInfo[0].ID).ExtractErr(); err != nil {
+		mc := metrics.NewMetricPrometheusContext("trunk", "delete")
+		if err := trunks.Delete(s.networkClient, trunkInfo[0].ID).ExtractErr(); mc.ObserveRequest(err) != nil {
 			if capoerrors.IsRetryable(err) {
 				return false, nil
 			}
@@ -759,8 +767,9 @@ func (s *Service) getPort(portID string) (port *ports.Port, err error) {
 	if portID == "" {
 		return nil, fmt.Errorf("portID should be specified to get detail")
 	}
+	mc := metrics.NewMetricPrometheusContext("port", "get")
 	port, err = ports.Get(s.networkClient, portID).Extract()
-	if err != nil {
+	if mc.ObserveRequestIgnoreNotFound(err) != nil {
 		if capoerrors.IsNotFound(err) {
 			return nil, nil
 		}
@@ -808,8 +817,9 @@ func (s *Service) GetInstance(resourceID string) (instance *infrav1.Instance, er
 	if resourceID == "" {
 		return nil, fmt.Errorf("resourceId should be specified to get detail")
 	}
+	mc := metrics.NewMetricPrometheusContext("server", "get")
 	server, err := servers.Get(s.computeClient, resourceID).Extract()
-	if err != nil {
+	if mc.ObserveRequestIgnoreNotFound(err) != nil {
 		if capoerrors.IsNotFound(err) {
 			return nil, nil
 		}
@@ -835,8 +845,9 @@ func (s *Service) InstanceExists(name string) (instance *infrav1.Instance, err e
 		listOpts = servers.ListOpts{}
 	}
 
+	mc := metrics.NewMetricPrometheusContext("server", "list")
 	allPages, err := servers.List(s.computeClient, listOpts).AllPages()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		return nil, fmt.Errorf("get server list: %v", err)
 	}
 	serverList, err := servers.ExtractServers(allPages)

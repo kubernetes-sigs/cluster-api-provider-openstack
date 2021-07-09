@@ -71,8 +71,9 @@ func (s *Service) GetOrCreateFloatingIP(openStackCluster *infrav1.OpenStackClust
 }
 
 func (s *Service) checkIfFloatingIPExists(ip string) (*floatingips.FloatingIP, error) {
+	mc := metrics.NewMetricPrometheusContext("floating_ip", "list")
 	allPages, err := floatingips.List(s.client, floatingips.ListOpts{FloatingIP: ip}).AllPages()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	fpList, err := floatingips.ExtractFloatingIPs(allPages)
@@ -86,8 +87,9 @@ func (s *Service) checkIfFloatingIPExists(ip string) (*floatingips.FloatingIP, e
 }
 
 func (s *Service) GetFloatingIPByPortID(portID string) (*floatingips.FloatingIP, error) {
+	mc := metrics.NewMetricPrometheusContext("floating_ip", "list")
 	allPages, err := floatingips.List(s.client, floatingips.ListOpts{PortID: portID}).AllPages()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	fpList, err := floatingips.ExtractFloatingIPs(allPages)
@@ -186,8 +188,9 @@ func (s *Service) DisassociateFloatingIP(openStackCluster *infrav1.OpenStackClus
 func (s *Service) waitForFloatingIP(id, target string) error {
 	s.logger.Info("Waiting for floating IP", "id", id, "targetStatus", target)
 	return wait.ExponentialBackoff(backoff, func() (bool, error) {
+		mc := metrics.NewMetricPrometheusContext("floating_ip", "get")
 		fip, err := floatingips.Get(s.client, id).Extract()
-		if err != nil {
+		if mc.ObserveRequest(err) != nil {
 			return false, err
 		}
 		return fip.Status == target, nil

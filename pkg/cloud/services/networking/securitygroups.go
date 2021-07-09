@@ -481,8 +481,9 @@ func (s *Service) getSecurityGroupByName(name string) (*infrav1.SecurityGroup, e
 	}
 
 	s.logger.V(6).Info("Attempting to fetch security group with", "name", name)
+	mc := metrics.NewMetricPrometheusContext("group", "list")
 	allPages, err := groups.List(s.client, opts).AllPages()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		return &infrav1.SecurityGroup{}, err
 	}
 

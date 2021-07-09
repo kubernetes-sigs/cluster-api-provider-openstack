@@ -422,8 +422,9 @@ func getLoadBalancerName(clusterName string) string {
 }
 
 func (s *Service) checkIfLbExists(name string) (*loadbalancers.LoadBalancer, error) {
+	mc := metrics.NewMetricPrometheusContext("loadbalancer", "list")
 	allPages, err := loadbalancers.List(s.loadbalancerClient, loadbalancers.ListOpts{Name: name}).AllPages()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	lbList, err := loadbalancers.ExtractLoadBalancers(allPages)
@@ -437,8 +438,9 @@ func (s *Service) checkIfLbExists(name string) (*loadbalancers.LoadBalancer, err
 }
 
 func (s *Service) checkIfListenerExists(name string) (*listeners.Listener, error) {
+	mc := metrics.NewMetricPrometheusContext("loadbalancer_listener", "list")
 	allPages, err := listeners.List(s.loadbalancerClient, listeners.ListOpts{Name: name}).AllPages()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	listenerList, err := listeners.ExtractListeners(allPages)
@@ -452,8 +454,9 @@ func (s *Service) checkIfListenerExists(name string) (*listeners.Listener, error
 }
 
 func (s *Service) checkIfPoolExists(name string) (*pools.Pool, error) {
+	mc := metrics.NewMetricPrometheusContext("loadbalancer_pool", "list")
 	allPages, err := pools.List(s.loadbalancerClient, pools.ListOpts{Name: name}).AllPages()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	poolList, err := pools.ExtractPools(allPages)
@@ -467,8 +470,9 @@ func (s *Service) checkIfPoolExists(name string) (*pools.Pool, error) {
 }
 
 func (s *Service) checkIfMonitorExists(name string) (*monitors.Monitor, error) {
+	mc := metrics.NewMetricPrometheusContext("loadbalancer_healthmonitor", "list")
 	allPages, err := monitors.List(s.loadbalancerClient, monitors.ListOpts{Name: name}).AllPages()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	monitorList, err := monitors.ExtractMonitors(allPages)
@@ -482,8 +486,9 @@ func (s *Service) checkIfMonitorExists(name string) (*monitors.Monitor, error) {
 }
 
 func (s *Service) checkIfLbMemberExists(poolID, name string) (*pools.Member, error) {
+	mc := metrics.NewMetricPrometheusContext("loadbalancer_pool", "list")
 	allPages, err := pools.ListMembers(s.loadbalancerClient, poolID, pools.ListMembersOpts{Name: name}).AllPages()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	lbMemberList, err := pools.ExtractMembers(allPages)
@@ -507,8 +512,9 @@ var backoff = wait.Backoff{
 func (s *Service) waitForLoadBalancerActive(id string) error {
 	s.logger.Info("Waiting for load balancer", "id", id, "targetStatus", "ACTIVE")
 	return wait.ExponentialBackoff(backoff, func() (bool, error) {
+		mc := metrics.NewMetricPrometheusContext("loadbalancer", "get")
 		lb, err := loadbalancers.Get(s.loadbalancerClient, id).Extract()
-		if err != nil {
+		if mc.ObserveRequest(err) != nil {
 			return false, err
 		}
 		return lb.ProvisioningStatus == "ACTIVE", nil
@@ -518,8 +524,9 @@ func (s *Service) waitForLoadBalancerActive(id string) error {
 func (s *Service) waitForListener(id, target string) error {
 	s.logger.Info("Waiting for load balancer listener", "id", id, "targetStatus", target)
 	return wait.ExponentialBackoff(backoff, func() (bool, error) {
+		mc := metrics.NewMetricPrometheusContext("loadbalancer_listener", "get")
 		_, err := listeners.Get(s.loadbalancerClient, id).Extract()
-		if err != nil {
+		if mc.ObserveRequest(err) != nil {
 			return false, err
 		}
 		// The listener resource has no Status attribute, so a successful Get is the best we can do

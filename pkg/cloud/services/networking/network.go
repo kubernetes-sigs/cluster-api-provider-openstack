@@ -66,8 +66,9 @@ func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCl
 		External:        &iTrue,
 	}
 
+	mc := metrics.NewMetricPrometheusContext("network", "list")
 	allPages, err := networks.List(s.client, listOpts).AllPages()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		return err
 	}
 	networkList, err := networks.ExtractNetworks(allPages)
@@ -180,11 +181,12 @@ func (s *Service) ReconcileSubnet(openStackCluster *infrav1.OpenStackCluster, cl
 	subnetName := getSubnetName(clusterName)
 	s.logger.Info("Reconciling subnet", "name", subnetName)
 
+	mc := metrics.NewMetricPrometheusContext("subnet", "list")
 	allPages, err := subnets.List(s.client, subnets.ListOpts{
 		NetworkID: openStackCluster.Status.Network.ID,
 		CIDR:      openStackCluster.Spec.NodeCIDR,
 	}).AllPages()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		return err
 	}
 
@@ -255,8 +257,9 @@ func (s *Service) getNetworkByID(networkID string) (networks.Network, error) {
 		ID: networkID,
 	}
 
+	mc := metrics.NewMetricPrometheusContext("network", "list")
 	allPages, err := networks.List(s.client, opts).AllPages()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		return networks.Network{}, err
 	}
 
@@ -279,8 +282,9 @@ func (s *Service) getNetworkByName(networkName string) (networks.Network, error)
 		Name: networkName,
 	}
 
+	mc := metrics.NewMetricPrometheusContext("network", "list")
 	allPages, err := networks.List(s.client, opts).AllPages()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		return networks.Network{}, err
 	}
 
@@ -303,11 +307,12 @@ func (s *Service) GetNetworksByFilter(opts networks.ListOptsBuilder) ([]networks
 	if opts == nil {
 		return nil, fmt.Errorf("no Filters were passed")
 	}
+	mc := metrics.NewMetricPrometheusContext("network", "list")
 	pager := networks.List(s.client, opts)
 	var nets []networks.Network
 	err := pager.EachPage(func(page pagination.Page) (bool, error) {
 		networkList, err := networks.ExtractNetworks(page)
-		if err != nil {
+		if mc.ObserveRequest(err) != nil {
 			return false, err
 		} else if len(networkList) == 0 {
 			return false, fmt.Errorf("no networks could be found with the filters provided")
@@ -339,11 +344,12 @@ func (s *Service) GetSubnetsByFilter(opts subnets.ListOptsBuilder) ([]subnets.Su
 	if opts == nil {
 		return []subnets.Subnet{}, fmt.Errorf("no Filters were passed")
 	}
+	mc := metrics.NewMetricPrometheusContext("subnet", "list")
 	pager := subnets.List(s.client, opts)
 	var snets []subnets.Subnet
 	err := pager.EachPage(func(page pagination.Page) (bool, error) {
 		subnetList, err := subnets.ExtractSubnets(page)
-		if err != nil {
+		if mc.ObserveRequest(err) != nil {
 			return false, err
 		} else if len(subnetList) == 0 {
 			return false, fmt.Errorf("no subnets could be found with the filters provided")
