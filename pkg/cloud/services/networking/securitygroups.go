@@ -362,7 +362,7 @@ func (s *Service) deleteSecurityGroup(openStackCluster *infrav1.OpenStackCluster
 		return nil
 	}
 	mc := metrics.NewMetricPrometheusContext("security_group", "delete")
-	err = groups.Delete(s.client, group.ID).ExtractErr()
+	err = s.client.DeleteSecGroup(group.ID)
 	if mc.ObserveRequest(err) != nil {
 		record.Warnf(openStackCluster, "FailedDeleteSecurityGroup", "Failed to delete security group %s with id %s: %v", group.Name, group.ID, err)
 		return err
@@ -421,7 +421,7 @@ func (s *Service) reconcileGroupRules(desired, observed infrav1.SecurityGroup) (
 	for _, rule := range rulesToDelete {
 		s.logger.V(6).Info("Deleting rule", "ruleID", rule.ID, "groupName", observed.Name)
 		mc := metrics.NewMetricPrometheusContext("security_group_rule", "delete")
-		err := rules.Delete(s.client, rule.ID).ExtractErr()
+		err := s.client.DeleteSecGroupRule(rule.ID)
 		if mc.ObserveRequest(err) != nil {
 			return infrav1.SecurityGroup{}, err
 		}
@@ -460,7 +460,7 @@ func (s *Service) createSecurityGroupIfNotExists(openStackCluster *infrav1.OpenS
 		s.logger.V(6).Info("Creating group", "name", groupName)
 
 		mc := metrics.NewMetricPrometheusContext("security_group", "create")
-		group, err := groups.Create(s.client, createOpts).Extract()
+		group, err := s.client.CreateSecGroup(createOpts)
 		if mc.ObserveRequest(err) != nil {
 			record.Warnf(openStackCluster, "FailedCreateSecurityGroup", "Failed to create security group %s: %v", groupName, err)
 			return err
@@ -481,13 +481,7 @@ func (s *Service) getSecurityGroupByName(name string) (*infrav1.SecurityGroup, e
 	}
 
 	s.logger.V(6).Info("Attempting to fetch security group with", "name", name)
-	mc := metrics.NewMetricPrometheusContext("group", "list")
-	allPages, err := groups.List(s.client, opts).AllPages()
-	if mc.ObserveRequest(err) != nil {
-		return &infrav1.SecurityGroup{}, err
-	}
-
-	allGroups, err := groups.ExtractGroups(allPages)
+	allGroups, err := s.client.ListSecGroup(opts)
 	if err != nil {
 		return &infrav1.SecurityGroup{}, err
 	}
@@ -520,7 +514,7 @@ func (s *Service) createRule(r infrav1.SecurityGroupRule) (infrav1.SecurityGroup
 	}
 	s.logger.V(6).Info("Creating rule", "Description", r.Description, "Direction", dir, "PortRangeMin", r.PortRangeMin, "PortRangeMax", r.PortRangeMax, "Proto", proto, "etherType", etherType, "RemoteGroupID", r.RemoteGroupID, "RemoteIPPrefix", r.RemoteIPPrefix, "SecurityGroupID", r.SecurityGroupID)
 	mc := metrics.NewMetricPrometheusContext("security_group_rule", "create")
-	rule, err := rules.Create(s.client, createOpts).Extract()
+	rule, err := s.client.CreateSecGroupRule(createOpts)
 	if mc.ObserveRequest(err) != nil {
 		return infrav1.SecurityGroupRule{}, err
 	}

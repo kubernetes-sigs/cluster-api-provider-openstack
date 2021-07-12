@@ -24,7 +24,6 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/external"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
-	"github.com/gophercloud/gophercloud/pagination"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
@@ -66,12 +65,7 @@ func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCl
 		External:        &iTrue,
 	}
 
-	mc := metrics.NewMetricPrometheusContext("network", "list")
-	allPages, err := networks.List(s.client, listOpts).AllPages()
-	if mc.ObserveRequest(err) != nil {
-		return err
-	}
-	networkList, err := networks.ExtractNetworks(allPages)
+	networkList, err := s.client.ListNetwork(listOpts)
 	if err != nil {
 		return err
 	}
@@ -127,7 +121,7 @@ func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, c
 	}
 
 	mc := metrics.NewMetricPrometheusContext("network", "create")
-	network, err := networks.Create(s.client, opts).Extract()
+	network, err := s.client.CreateNetwork(opts)
 	if mc.ObserveRequest(err) != nil {
 		record.Warnf(openStackCluster, "FailedCreateNetwork", "Failed to create network %s: %v", networkName, err)
 		return err
@@ -135,9 +129,9 @@ func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, c
 	record.Eventf(openStackCluster, "SuccessfulCreateNetwork", "Created network %s with id %s", networkName, network.ID)
 
 	if len(openStackCluster.Spec.Tags) > 0 {
-		_, err = attributestags.ReplaceAll(s.client, "networks", network.ID, attributestags.ReplaceAllOpts{
+		_, err = s.client.ReplaceAllAttributesTags("networks", network.ID, attributestags.ReplaceAllOpts{
 			Tags: openStackCluster.Spec.Tags,
-		}).Extract()
+		})
 		if err != nil {
 			return err
 		}
@@ -162,7 +156,7 @@ func (s *Service) DeleteNetwork(openStackCluster *infrav1.OpenStackCluster, clus
 	}
 
 	mc := metrics.NewMetricPrometheusContext("network", "delete")
-	err = networks.Delete(s.client, network.ID).ExtractErr()
+	err = s.client.DeleteNetwork(network.ID)
 	if mc.ObserveRequest(err) != nil {
 		record.Warnf(openStackCluster, "FailedDeleteNetwork", "Failed to delete network %s with id %s: %v", network.Name, network.ID, err)
 		return err
@@ -181,16 +175,10 @@ func (s *Service) ReconcileSubnet(openStackCluster *infrav1.OpenStackCluster, cl
 	subnetName := getSubnetName(clusterName)
 	s.logger.Info("Reconciling subnet", "name", subnetName)
 
-	mc := metrics.NewMetricPrometheusContext("subnet", "list")
-	allPages, err := subnets.List(s.client, subnets.ListOpts{
+	subnetList, err := s.client.ListSubnet(subnets.ListOpts{
 		NetworkID: openStackCluster.Status.Network.ID,
 		CIDR:      openStackCluster.Spec.NodeCIDR,
-	}).AllPages()
-	if mc.ObserveRequest(err) != nil {
-		return err
-	}
-
-	subnetList, err := subnets.ExtractSubnets(allPages)
+	})
 	if err != nil {
 		return err
 	}
@@ -231,7 +219,7 @@ func (s *Service) createSubnet(openStackCluster *infrav1.OpenStackCluster, clust
 	}
 	mc := metrics.NewMetricPrometheusContext("subnet", "create")
 
-	subnet, err := subnets.Create(s.client, opts).Extract()
+	subnet, err := s.client.CreateSubnet(opts)
 
 	if mc.ObserveRequest(err) != nil {
 		record.Warnf(openStackCluster, "FailedCreateSubnet", "Failed to create subnet %s: %v", name, err)
@@ -241,9 +229,9 @@ func (s *Service) createSubnet(openStackCluster *infrav1.OpenStackCluster, clust
 
 	if len(openStackCluster.Spec.Tags) > 0 {
 		mc := metrics.NewMetricPrometheusContext("subnet", "update")
-		_, err = attributestags.ReplaceAll(s.client, "subnets", subnet.ID, attributestags.ReplaceAllOpts{
+		_, err = s.client.ReplaceAllAttributesTags("subnets", subnet.ID, attributestags.ReplaceAllOpts{
 			Tags: openStackCluster.Spec.Tags,
-		}).Extract()
+		})
 		if mc.ObserveRequest(err) != nil {
 			return nil, err
 		}
@@ -257,13 +245,7 @@ func (s *Service) getNetworkByID(networkID string) (networks.Network, error) {
 		ID: networkID,
 	}
 
-	mc := metrics.NewMetricPrometheusContext("network", "list")
-	allPages, err := networks.List(s.client, opts).AllPages()
-	if mc.ObserveRequest(err) != nil {
-		return networks.Network{}, err
-	}
-
-	networkList, err := networks.ExtractNetworks(allPages)
+	networkList, err := s.client.ListNetwork(opts)
 	if err != nil {
 		return networks.Network{}, err
 	}
@@ -282,13 +264,7 @@ func (s *Service) getNetworkByName(networkName string) (networks.Network, error)
 		Name: networkName,
 	}
 
-	mc := metrics.NewMetricPrometheusContext("network", "list")
-	allPages, err := networks.List(s.client, opts).AllPages()
-	if mc.ObserveRequest(err) != nil {
-		return networks.Network{}, err
-	}
-
-	networkList, err := networks.ExtractNetworks(allPages)
+	networkList, err := s.client.ListNetwork(opts)
 	if err != nil {
 		return networks.Network{}, err
 	}
@@ -307,23 +283,14 @@ func (s *Service) GetNetworksByFilter(opts networks.ListOptsBuilder) ([]networks
 	if opts == nil {
 		return nil, fmt.Errorf("no Filters were passed")
 	}
-	mc := metrics.NewMetricPrometheusContext("network", "list")
-	pager := networks.List(s.client, opts)
-	var nets []networks.Network
-	err := pager.EachPage(func(page pagination.Page) (bool, error) {
-		networkList, err := networks.ExtractNetworks(page)
-		if mc.ObserveRequest(err) != nil {
-			return false, err
-		} else if len(networkList) == 0 {
-			return false, fmt.Errorf("no networks could be found with the filters provided")
-		}
-		nets = networkList
-		return true, nil
-	})
+	networkList, err := s.client.ListNetwork(opts)
 	if err != nil {
 		return nil, err
 	}
-	return nets, nil
+	if len(networkList) == 0 {
+		return nil, fmt.Errorf("no networks could be found with the filters provided")
+	}
+	return networkList, nil
 }
 
 // GetNetworkIDsByFilter retrieves network ids by querying openstack with filters.
@@ -344,23 +311,14 @@ func (s *Service) GetSubnetsByFilter(opts subnets.ListOptsBuilder) ([]subnets.Su
 	if opts == nil {
 		return []subnets.Subnet{}, fmt.Errorf("no Filters were passed")
 	}
-	mc := metrics.NewMetricPrometheusContext("subnet", "list")
-	pager := subnets.List(s.client, opts)
-	var snets []subnets.Subnet
-	err := pager.EachPage(func(page pagination.Page) (bool, error) {
-		subnetList, err := subnets.ExtractSubnets(page)
-		if mc.ObserveRequest(err) != nil {
-			return false, err
-		} else if len(subnetList) == 0 {
-			return false, fmt.Errorf("no subnets could be found with the filters provided")
-		}
-		snets = append(snets, subnetList...)
-		return true, nil
-	})
+	subnetList, err := s.client.ListSubnet(opts)
 	if err != nil {
 		return []subnets.Subnet{}, err
 	}
-	return snets, nil
+	if len(subnetList) == 0 {
+		return nil, fmt.Errorf("no subnets could be found with the filters provided")
+	}
+	return subnetList, nil
 }
 
 func getSubnetName(clusterName string) string {

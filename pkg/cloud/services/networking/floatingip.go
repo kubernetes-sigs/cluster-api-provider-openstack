@@ -50,7 +50,7 @@ func (s *Service) GetOrCreateFloatingIP(openStackCluster *infrav1.OpenStackClust
 	fpCreateOpts.Description = names.GetDescription(clusterName)
 
 	mc := metrics.NewMetricPrometheusContext("floating_ip", "create")
-	fp, err = floatingips.Create(s.client, fpCreateOpts).Extract()
+	fp, err = s.client.CreateFloatingIP(fpCreateOpts)
 	if mc.ObserveRequest(err) != nil {
 		record.Warnf(openStackCluster, "FailedCreateFloatingIP", "Failed to create floating IP %s: %v", ip, err)
 		return nil, err
@@ -58,9 +58,9 @@ func (s *Service) GetOrCreateFloatingIP(openStackCluster *infrav1.OpenStackClust
 
 	if len(openStackCluster.Spec.Tags) > 0 {
 		mc := metrics.NewMetricPrometheusContext("floating_ip", "update")
-		_, err = attributestags.ReplaceAll(s.client, "floatingips", fp.ID, attributestags.ReplaceAllOpts{
+		_, err = s.client.ReplaceAllAttributesTags("floatingips", fp.ID, attributestags.ReplaceAllOpts{
 			Tags: openStackCluster.Spec.Tags,
-		}).Extract()
+		})
 		if mc.ObserveRequest(err) != nil {
 			return nil, err
 		}
@@ -71,12 +71,7 @@ func (s *Service) GetOrCreateFloatingIP(openStackCluster *infrav1.OpenStackClust
 }
 
 func (s *Service) checkIfFloatingIPExists(ip string) (*floatingips.FloatingIP, error) {
-	mc := metrics.NewMetricPrometheusContext("floating_ip", "list")
-	allPages, err := floatingips.List(s.client, floatingips.ListOpts{FloatingIP: ip}).AllPages()
-	if mc.ObserveRequest(err) != nil {
-		return nil, err
-	}
-	fpList, err := floatingips.ExtractFloatingIPs(allPages)
+	fpList, err := s.client.ListFloatingIP(floatingips.ListOpts{FloatingIP: ip})
 	if err != nil {
 		return nil, err
 	}
@@ -87,12 +82,7 @@ func (s *Service) checkIfFloatingIPExists(ip string) (*floatingips.FloatingIP, e
 }
 
 func (s *Service) GetFloatingIPByPortID(portID string) (*floatingips.FloatingIP, error) {
-	mc := metrics.NewMetricPrometheusContext("floating_ip", "list")
-	allPages, err := floatingips.List(s.client, floatingips.ListOpts{PortID: portID}).AllPages()
-	if mc.ObserveRequest(err) != nil {
-		return nil, err
-	}
-	fpList, err := floatingips.ExtractFloatingIPs(allPages)
+	fpList, err := s.client.ListFloatingIP(floatingips.ListOpts{PortID: portID})
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +103,7 @@ func (s *Service) DeleteFloatingIP(openStackCluster *infrav1.OpenStackCluster, i
 	}
 
 	mc := metrics.NewMetricPrometheusContext("floating_ip", "delete")
-	err = floatingips.Delete(s.client, fip.ID).ExtractErr()
+	err = s.client.DeleteFloatingIP(fip.ID)
 	if mc.ObserveRequest(err) != nil {
 		record.Warnf(openStackCluster, "FailedDeleteFloatingIP", "Failed to delete floating IP %s: %v", ip, err)
 		return err
@@ -138,7 +128,7 @@ func (s *Service) AssociateFloatingIP(openStackCluster *infrav1.OpenStackCluster
 	}
 
 	mc := metrics.NewMetricPrometheusContext("floating_ip", "update")
-	_, err := floatingips.Update(s.client, fp.ID, fpUpdateOpts).Extract()
+	_, err := s.client.UpdateFloatingIP(fp.ID, fpUpdateOpts)
 	if mc.ObserveRequest(err) != nil {
 		record.Warnf(openStackCluster, "FailedAssociateFloatingIP", "Failed to associate floating IP %s with port %s: %v", fp.FloatingIP, portID, err)
 		return err
@@ -170,7 +160,7 @@ func (s *Service) DisassociateFloatingIP(openStackCluster *infrav1.OpenStackClus
 	}
 
 	mc := metrics.NewMetricPrometheusContext("floating_ip", "update")
-	_, err = floatingips.Update(s.client, fip.ID, fpUpdateOpts).Extract()
+	_, err = s.client.UpdateFloatingIP(fip.ID, fpUpdateOpts)
 	if mc.ObserveRequest(err) != nil {
 		record.Warnf(openStackCluster, "FailedDisassociateFloatingIP", "Failed to disassociate floating IP %s: %v", fip.FloatingIP, err)
 		return err
@@ -188,9 +178,8 @@ func (s *Service) DisassociateFloatingIP(openStackCluster *infrav1.OpenStackClus
 func (s *Service) waitForFloatingIP(id, target string) error {
 	s.logger.Info("Waiting for floating IP", "id", id, "targetStatus", target)
 	return wait.ExponentialBackoff(backoff, func() (bool, error) {
-		mc := metrics.NewMetricPrometheusContext("floating_ip", "get")
-		fip, err := floatingips.Get(s.client, id).Extract()
-		if mc.ObserveRequest(err) != nil {
+		fip, err := s.client.GetFloatingIP(id)
+		if err != nil {
 			return false, err
 		}
 		return fip.Status == target, nil

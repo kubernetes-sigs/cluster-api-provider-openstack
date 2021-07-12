@@ -35,17 +35,17 @@ const (
 // It will create a network related infrastructure for the cluster, like network, subnet, router, security groups.
 type Service struct {
 	projectID string
-	client    *gophercloud.ServiceClient
+	client    NetworkClient
 	logger    logr.Logger
 }
 
 // NewService returns an instance of the networking service.
-func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, logger logr.Logger) (*Service, error) {
-	serviceClient, err := openstack.NewNetworkV2(client, gophercloud.EndpointOpts{
+func NewService(providerClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, logger logr.Logger) (*Service, error) {
+	serviceClient, err := openstack.NewNetworkV2(providerClient, gophercloud.EndpointOpts{
 		Region: clientOpts.RegionName,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create networking service client: %v", err)
+		return nil, fmt.Errorf("failed to create networking service providerClient: %v", err)
 	}
 
 	if clientOpts.AuthInfo == nil {
@@ -54,7 +54,7 @@ func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.Cli
 
 	projectID := clientOpts.AuthInfo.ProjectID
 	if projectID == "" && clientOpts.AuthInfo.ProjectName != "" {
-		projectID, err = provider.GetProjectID(client, clientOpts.AuthInfo.ProjectName)
+		projectID, err = provider.GetProjectID(providerClient, clientOpts.AuthInfo.ProjectName)
 		if err != nil {
 			return nil, fmt.Errorf("error retrieveing project id: %v", err)
 		}
@@ -65,7 +65,7 @@ func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.Cli
 
 	return &Service{
 		projectID: projectID,
-		client:    serviceClient,
+		client:    networkClient{serviceClient},
 		logger:    logger,
 	}, nil
 }
