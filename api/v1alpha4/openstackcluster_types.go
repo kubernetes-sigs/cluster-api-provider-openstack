@@ -17,7 +17,6 @@ limitations under the License.
 package v1alpha4
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha4"
 	capierrors "sigs.k8s.io/cluster-api/errors"
@@ -31,11 +30,6 @@ const (
 
 // OpenStackClusterSpec defines the desired state of OpenStackCluster.
 type OpenStackClusterSpec struct {
-
-	// The name of the secret containing the openstack credentials
-	// +optional
-	CloudsSecret *corev1.SecretReference `json:"cloudsSecret"`
-
 	// The name of the cloud to use from the clouds secret
 	// +optional
 	CloudName string `json:"cloudName"`
@@ -106,6 +100,11 @@ type OpenStackClusterSpec struct {
 	// Bastion is the OpenStack instance to login the nodes
 	//+optional
 	Bastion *Bastion `json:"bastion,omitempty"`
+
+	// IdentityRef is a reference to a identity to be used when reconciling this cluster
+	// +optional
+	// +k8s:conversion-gen=false
+	IdentityRef *OpenStackIdentityReference `json:"identityRef,omitempty"`
 }
 
 // OpenStackClusterStatus defines the observed state of OpenStackCluster.

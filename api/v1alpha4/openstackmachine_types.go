@@ -36,10 +36,6 @@ type OpenStackMachineSpec struct {
 	// InstanceID is the OpenStack instance ID for this machine.
 	InstanceID *string `json:"instanceID,omitempty"`
 
-	// The name of the secret containing the openstack credentials
-	// +optional
-	CloudsSecret *corev1.SecretReference `json:"cloudsSecret"`
-
 	// The name of the cloud to use from the clouds secret
 	// +optional
 	CloudName string `json:"cloudName"`
@@ -90,6 +86,11 @@ type OpenStackMachineSpec struct {
 
 	// The server group to assign the machine to
 	ServerGroupID string `json:"serverGroupID,omitempty"`
+
+	// IdentityRef is a reference to a identity to be used when reconciling this cluster
+	// +optional
+	// +k8s:conversion-gen=false
+	IdentityRef *OpenStackIdentityReference `json:"identityRef,omitempty"`
 }
 
 // OpenStackMachineStatus defines the observed state of OpenStackMachine.

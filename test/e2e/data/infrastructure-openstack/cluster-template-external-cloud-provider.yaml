@@ -26,8 +26,9 @@ metadata:
   name: ${CLUSTER_NAME}
 spec:
   cloudName: ${OPENSTACK_CLOUD}
-  cloudsSecret:
+  identityRef:
     name: ${CLUSTER_NAME}-cloud-config
+    kind: Secret
   managedAPIServerLoadBalancer: true
   managedSecurityGroups: true
   nodeCidr: 10.6.0.0/24
@@ -94,8 +95,9 @@ spec:
       image: ${OPENSTACK_IMAGE_NAME}
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
       cloudName: ${OPENSTACK_CLOUD}
-      cloudsSecret:
+      identityRef:
         name: ${CLUSTER_NAME}-cloud-config
+        kind: Secret
 ---
 apiVersion: cluster.x-k8s.io/v1alpha4
 kind: MachineDeployment
@@ -129,8 +131,9 @@ spec:
   template:
     spec:
       cloudName: ${OPENSTACK_CLOUD}
-      cloudsSecret:
+      identityRef:
         name: ${CLUSTER_NAME}-cloud-config
+        kind: Secret
       flavor: ${OPENSTACK_NODE_MACHINE_FLAVOR}
       image: ${OPENSTACK_IMAGE_NAME}
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
