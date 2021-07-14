@@ -23,7 +23,6 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"time"
 
@@ -145,6 +144,9 @@ var _ = Describe("e2e tests", func() {
 			customPortOptions := &[]infrav1.PortOpts{
 				{Description: "primary"},
 			}
+
+			// Note that as the bootstrap config does not have cloud.conf, the node will not be added to the cluster.
+			// We still expect the port for the machine to be created.
 			framework.CreateMachineDeployment(ctx, framework.CreateMachineDeploymentInput{
 				Creator:                 e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
 				MachineDeployment:       makeMachineDeployment(namespace.Name, md3Name, clusterName, "", 1),
@@ -152,25 +154,17 @@ var _ = Describe("e2e tests", func() {
 				InfraMachineTemplate:    makeOpenStackMachineTemplateWithPortOptions(namespace.Name, clusterName, md3Name, customPortOptions),
 			})
 
-			shared.Byf("Expecting MachineDeployment to be created successfully")
-			Eventually(func() bool {
-				eventList := getEvents(namespace.Name)
-				portError := "Failed to create server with custom port options"
-				return isErrorEventExists(namespace.Name, md3Name, "FailedCreateServer", portError, eventList)
-			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(BeFalse())
+			shared.Byf("Waiting for custom port to be created")
+			var plist *[]ports.Port
+			var err error
+			Eventually(func() int {
+				plist, err = shared.DumpOpenStackPorts(e2eCtx, ports.ListOpts{Description: "primary"})
+				Expect(err).To(BeNil())
+				return len(*plist)
+			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(Equal(1))
 
-			filterNone := ports.ListOpts{}
-			plist1, err := shared.DumpOpenStackPorts(e2eCtx, filterNone)
-			Expect(err).To(BeNil())
-			Expect(plist1).NotTo(BeNil())
-
-			filterOne := ports.ListOpts{Description: "primary"}
-			plist2, err := shared.DumpOpenStackPorts(e2eCtx, filterOne)
-			Expect(err).To(BeNil())
-			count := len(*plist2)
-			Expect(count).To(Equal(1))
-			found := portContainsProperty(*plist2, "Description", "primary")
-			Expect(found).Should(BeTrue())
+			port := (*plist)[0]
+			Expect(port.Description).To(Equal("primary"))
 		})
 		It("It should be creatable and deletable", func() {
 			shared.Byf("Creating a cluster")
@@ -482,20 +476,4 @@ func isCloudProviderInitialized(taints []corev1.Taint) bool {
 		}
 	}
 	return true
-}
-
-// Verifies that a Port contains a valid property with a correct value.
-func portContainsProperty(plist interface{}, property string, value interface{}) bool {
-	ports := reflect.ValueOf(plist)
-	portsCount := ports.Len()
-	for i := 0; i < portsCount; i++ {
-		currentPort := ports.Index(i)
-		searchProperty := currentPort.FieldByName(property)
-		correctValue := searchProperty.Interface() == value
-		if correctValue {
-			return true
-		}
-	}
-	// Non-existing property or incorrect value
-	return false
 }
