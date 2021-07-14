@@ -34,6 +34,7 @@ import (
 	"sigs.k8s.io/yaml"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
 )
 
 const (
@@ -184,8 +185,9 @@ func GetProjectID(client *gophercloud.ProviderClient, name string) (string, erro
 	}
 
 	jsonResp := projects{}
+	mc := metrics.NewMetricPrometheusContext("project", "get")
 	resp, err := c.Get(c.ServiceURL("auth", "projects"), &jsonResp, &gophercloud.RequestOpts{OkCodes: []int{200}})
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		return "", err
 	}
 	defer resp.Body.Close()

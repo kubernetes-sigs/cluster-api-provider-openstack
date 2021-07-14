@@ -48,10 +48,11 @@ func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, cl
 	routerName := getRouterName(clusterName)
 	s.logger.Info("Reconciling router", "name", routerName)
 
+	mc := metrics.NewMetricPrometheusContext("router", "list")
 	allPages, err := routers.List(s.client, routers.ListOpts{
 		Name: routerName,
 	}).AllPages()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		return err
 	}
 
@@ -109,7 +110,7 @@ INTERFACE_LOOP:
 	// ... and create a router interface for our subnet.
 	if createInterface {
 		s.logger.V(4).Info("Creating RouterInterface", "routerID", router.ID, "subnetID", openStackCluster.Status.Network.Subnet.ID)
-		mc := metrics.NewMetricPrometheusContext("router_interface", "create")
+		mc := metrics.NewMetricPrometheusContext("server_os_interface", "create")
 		routerInterface, err := routers.AddInterface(s.client, router.ID, routers.AddInterfaceOpts{
 			SubnetID: openStackCluster.Status.Network.Subnet.ID,
 		}).Extract()
@@ -206,11 +207,11 @@ func (s *Service) DeleteRouter(openStackCluster *infrav1.OpenStackCluster, clust
 	}
 
 	if subnet.ID != "" {
-		mc := metrics.NewMetricPrometheusContext("router_interface", "delete")
+		mc := metrics.NewMetricPrometheusContext("server_os_interface", "delete")
 		_, err = routers.RemoveInterface(s.client, router.ID, routers.RemoveInterfaceOpts{
 			SubnetID: subnet.ID,
 		}).Extract()
-		if mc.ObserveRequest(err) != nil {
+		if mc.ObserveRequestIgnoreNotFound(err) != nil {
 			if !capoerrors.IsNotFound(err) {
 				return fmt.Errorf("unable to remove router interface: %v", err)
 			}
@@ -232,10 +233,11 @@ func (s *Service) DeleteRouter(openStackCluster *infrav1.OpenStackCluster, clust
 }
 
 func (s *Service) getRouterInterfaces(routerID string) ([]ports.Port, error) {
+	mc := metrics.NewMetricPrometheusContext("port", "list")
 	allPages, err := ports.List(s.client, ports.ListOpts{
 		DeviceID: routerID,
 	}).AllPages()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		return []ports.Port{}, err
 	}
 
@@ -264,10 +266,11 @@ func (s *Service) getRouter(clusterName string) (routers.Router, subnets.Subnet,
 }
 
 func (s *Service) getRouterByName(routerName string) (routers.Router, error) {
+	mc := metrics.NewMetricPrometheusContext("router", "list")
 	allPages, err := routers.List(s.client, routers.ListOpts{
 		Name: routerName,
 	}).AllPages()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		return routers.Router{}, err
 	}
 
@@ -290,8 +293,9 @@ func (s *Service) getSubnetByName(subnetName string) (subnets.Subnet, error) {
 		Name: subnetName,
 	}
 
+	mc := metrics.NewMetricPrometheusContext("subnet", "list")
 	allPages, err := subnets.List(s.client, opts).AllPages()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		return subnets.Subnet{}, err
 	}
 
