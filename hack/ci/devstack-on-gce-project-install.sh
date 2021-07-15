@@ -160,7 +160,7 @@ main() {
   # Install some local dependencies we later need in the meantime (we have to wait for cloud init anyway)
   if ! command -v sshuttle;
   then
-    # Install sshuttle from source because we need: https://github.com/sshuttle/sshuttle/pull/606
+    # Install sshuttle from source because we need: https://github.com/sshuttle/sshuttle/pull/661
     # TODO(sbueringer) install via pip after the next release after 1.0.5 via:
     # pip3 install sshuttle
     cd /tmp
@@ -187,9 +187,7 @@ main() {
 
   # Open tunnel
   echo "Opening tunnel to ${PRIVATE_IP} via ${PUBLIC_IP}"
-  # Packets from the Prow Pod or the Pods in Kind have TTL 63 or 64.
-  # We need a ttl of 65 (default 63), so all of our packets are captured by sshuttle.
-  sshuttle -r "${PUBLIC_IP}" "${PRIVATE_IP}/32" 172.24.4.0/24 --ttl=65 --ssh-cmd='ssh -i ~/.ssh/google_compute_engine -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -o "IdentitiesOnly=yes"' -l 0.0.0.0 -D
+  sshuttle -r "${PUBLIC_IP}" "${PRIVATE_IP}/32" 172.24.4.0/24 --ssh-cmd='ssh -i ~/.ssh/google_compute_engine -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -o "IdentitiesOnly=yes"' -l 0.0.0.0 -D
 
   export OS_REGION_NAME=RegionOne
   export OS_PROJECT_DOMAIN_ID=default
