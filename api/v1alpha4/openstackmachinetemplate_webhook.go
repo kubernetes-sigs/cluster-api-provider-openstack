@@ -61,11 +61,7 @@ func (r *OpenStackMachineTemplate) ValidateUpdate(old runtime.Object) error {
 		)
 	}
 
-	if len(allErrs) != 0 {
-		return aggregateObjErrors(r.GroupVersionKind().GroupKind(), r.Name, allErrs)
-	}
-
-	return nil
+	return aggregateObjErrors(r.GroupVersionKind().GroupKind(), r.Name, allErrs)
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type.

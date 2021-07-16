@@ -46,13 +46,9 @@ func NewClientFromMachine(ctx context.Context, ctrlClient client.Client, openSta
 	var cloud clientconfig.Cloud
 	var caCert []byte
 
-	if openStackMachine.Spec.CloudsSecret != nil && openStackMachine.Spec.CloudsSecret.Name != "" {
-		namespace := openStackMachine.Spec.CloudsSecret.Namespace
-		if namespace == "" {
-			namespace = openStackMachine.Namespace
-		}
+	if openStackMachine.Spec.IdentityRef != nil {
 		var err error
-		cloud, caCert, err = getCloudFromSecret(ctx, ctrlClient, namespace, openStackMachine.Spec.CloudsSecret.Name, openStackMachine.Spec.CloudName)
+		cloud, caCert, err = getCloudFromSecret(ctx, ctrlClient, openStackMachine.Namespace, openStackMachine.Spec.IdentityRef.Name, openStackMachine.Spec.CloudName)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -64,13 +60,9 @@ func NewClientFromCluster(ctx context.Context, ctrlClient client.Client, openSta
 	var cloud clientconfig.Cloud
 	var caCert []byte
 
-	if openStackCluster.Spec.CloudsSecret != nil && openStackCluster.Spec.CloudsSecret.Name != "" {
-		namespace := openStackCluster.Spec.CloudsSecret.Namespace
-		if namespace == "" {
-			namespace = openStackCluster.Namespace
-		}
+	if openStackCluster.Spec.IdentityRef != nil {
 		var err error
-		cloud, caCert, err = getCloudFromSecret(ctx, ctrlClient, namespace, openStackCluster.Spec.CloudsSecret.Name, openStackCluster.Spec.CloudName)
+		cloud, caCert, err = getCloudFromSecret(ctx, ctrlClient, openStackCluster.Namespace, openStackCluster.Spec.IdentityRef.Name, openStackCluster.Spec.CloudName)
 		if err != nil {
 			return nil, nil, err
 		}

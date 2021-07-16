@@ -39,12 +39,27 @@ func (r *OpenStackMachine) SetupWebhookWithManager(mgr manager.Manager) error {
 }
 
 // +kubebuilder:webhook:verbs=create;update,path=/validate-infrastructure-cluster-x-k8s-io-v1alpha4-openstackmachine,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=infrastructure.cluster.x-k8s.io,resources=openstackmachines,versions=v1alpha4,name=validation.openstackmachine.infrastructure.cluster.x-k8s.io,sideEffects=None,admissionReviewVersions=v1beta1
+// +kubebuilder:webhook:verbs=create;update,path=/mutate-infrastructure-cluster-x-k8s-io-v1alpha4-openstackmachine,mutating=true,failurePolicy=fail,matchPolicy=Equivalent,groups=infrastructure.cluster.x-k8s.io,resources=openstackmachines,versions=v1alpha4,name=default.openstackmachine.infrastructure.cluster.x-k8s.io,sideEffects=None,admissionReviewVersions=v1beta1
 
-var _ webhook.Validator = &OpenStackMachine{}
+var (
+	_ webhook.Defaulter = &OpenStackMachine{}
+	_ webhook.Validator = &OpenStackMachine{}
+)
+
+// Default satisfies the defaulting webhook interface.
+func (r *OpenStackMachine) Default() {
+	if r.Spec.IdentityRef != nil && r.Spec.IdentityRef.Kind == "" {
+		r.Spec.IdentityRef.Kind = defaultIdentityRefKind
+	}
+}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type.
 func (r *OpenStackMachine) ValidateCreate() error {
 	var allErrs field.ErrorList
+
+	if r.Spec.IdentityRef != nil && r.Spec.IdentityRef.Kind != defaultIdentityRefKind {
+		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "identityRef", "kind"), "must be a Secret"))
+	}
 
 	return aggregateObjErrors(r.GroupVersionKind().GroupKind(), r.Name, allErrs)
 }
@@ -65,6 +80,10 @@ func (r *OpenStackMachine) ValidateUpdate(old runtime.Object) error {
 	}
 
 	var allErrs field.ErrorList
+
+	if r.Spec.IdentityRef != nil && r.Spec.IdentityRef.Kind != defaultIdentityRefKind {
+		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "identityRef", "kind"), "must be a Secret"))
+	}
 
 	newOpenStackMachineSpec := newOpenStackMachine["spec"].(map[string]interface{})
 	oldOpenStackMachineSpec := oldOpenStackMachine["spec"].(map[string]interface{})

@@ -38,6 +38,7 @@ type OpenStackMachineSpec struct {
 
 	// The name of the secret containing the openstack credentials
 	// +optional
+	// +k8s:conversion-gen=false
 	CloudsSecret *corev1.SecretReference `json:"cloudsSecret"`
 
 	// The name of the cloud to use from the clouds secret

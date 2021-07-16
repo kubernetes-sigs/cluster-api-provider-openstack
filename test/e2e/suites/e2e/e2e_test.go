@@ -321,7 +321,8 @@ func makeOpenStackMachineTemplate(namespace, clusterName, name string, subnetID 
 					Image:      e2eCtx.E2EConfig.GetVariable(shared.OpenStackImageName),
 					SSHKeyName: shared.DefaultSSHKeyPairName,
 					CloudName:  e2eCtx.E2EConfig.GetVariable(shared.OpenStackCloud),
-					CloudsSecret: &corev1.SecretReference{
+					IdentityRef: &infrav1.OpenStackIdentityReference{
+						Kind: "Secret",
 						Name: fmt.Sprintf("%s-cloud-config", clusterName),
 					},
 					Subnet: subnetID,
@@ -344,7 +345,8 @@ func makeOpenStackMachineTemplateWithPortOptions(namespace, clusterName, name st
 					Image:      e2eCtx.E2EConfig.GetVariable(shared.OpenStackImageName),
 					SSHKeyName: shared.DefaultSSHKeyPairName,
 					CloudName:  e2eCtx.E2EConfig.GetVariable(shared.OpenStackCloud),
-					CloudsSecret: &corev1.SecretReference{
+					IdentityRef: &infrav1.OpenStackIdentityReference{
+						Kind: "Secret",
 						Name: fmt.Sprintf("%s-cloud-config", clusterName),
 					},
 					Ports: *portOpts,

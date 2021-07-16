@@ -1101,19 +1101,6 @@ spec:
                         description: The name of the cloud to use from the clouds
                           secret
                         type: string
-                      cloudsSecret:
-                        description: The name of the secret containing the openstack
-                          credentials
-                        properties:
-                          name:
-                            description: Name is unique within a namespace to reference
-                              a secret resource.
-                            type: string
-                          namespace:
-                            description: Namespace defines the space within which
-                              the secret name must be unique.
-                            type: string
-                        type: object
                       configDrive:
                         description: Config Drive support
                         type: boolean
@@ -1126,6 +1113,26 @@ spec:
                           machine, only used for master. The floatingIP should have
                           been created and haven't been associated.
                         type: string
+                      identityRef:
+                        description: IdentityRef is a reference to a identity to be
+                          used when reconciling this cluster
+                        properties:
+                          kind:
+                            description: Kind of the identity. Must be supported by
+                              the infrastructure provider and may be either cluster
+                              or namespace-scoped.
+                            minLength: 1
+                            type: string
+                          name:
+                            description: Name of the infrastructure identity to be
+                              used. Must be either a cluster-scoped resource, or namespaced-scoped
+                              resource the same namespace as the resource(s) being
+                              provisioned.
+                            type: string
+                        required:
+                        - kind
+                        - name
+                        type: object
                       image:
                         description: The name of the image to use for your server
                           instance. If the RootVolume is specified, this will be ignored
@@ -1399,18 +1406,6 @@ spec:
               cloudName:
                 description: The name of the cloud to use from the clouds secret
                 type: string
-              cloudsSecret:
-                description: The name of the secret containing the openstack credentials
-                properties:
-                  name:
-                    description: Name is unique within a namespace to reference a
-                      secret resource.
-                    type: string
-                  namespace:
-                    description: Namespace defines the space within which the secret
-                      name must be unique.
-                    type: string
-                type: object
               controlPlaneAvailabilityZones:
                 description: ControlPlaneAvailabilityZones is the az to deploy control
                   plane to
@@ -1516,6 +1511,24 @@ spec:
                   - subnet
                   type: object
                 type: array
+              identityRef:
+                description: IdentityRef is a reference to a identity to be used when
+                  reconciling this cluster
+                properties:
+                  kind:
+                    description: Kind of the identity. Must be supported by the infrastructure
+                      provider and may be either cluster or namespace-scoped.
+                    minLength: 1
+                    type: string
+                  name:
+                    description: Name of the infrastructure identity to be used. Must
+                      be either a cluster-scoped resource, or namespaced-scoped resource
+                      the same namespace as the resource(s) being provisioned.
+                    type: string
+                required:
+                - kind
+                - name
+                type: object
               managedAPIServerLoadBalancer:
                 description: 'ManagedAPIServerLoadBalancer defines whether a LoadBalancer
                   for the APIServer should be created. If set to true the following
