@@ -49,9 +49,8 @@ func (s *Service) GetOrCreateFloatingIP(openStackCluster *infrav1.OpenStackClust
 	fpCreateOpts.FloatingNetworkID = openStackCluster.Status.ExternalNetwork.ID
 	fpCreateOpts.Description = names.GetDescription(clusterName)
 
-	mc := metrics.NewMetricPrometheusContext("floating_ip", "create")
 	fp, err = s.client.CreateFloatingIP(fpCreateOpts)
-	if mc.ObserveRequest(err) != nil {
+	if err != nil {
 		record.Warnf(openStackCluster, "FailedCreateFloatingIP", "Failed to create floating IP %s: %v", ip, err)
 		return nil, err
 	}
@@ -102,9 +101,8 @@ func (s *Service) DeleteFloatingIP(openStackCluster *infrav1.OpenStackCluster, i
 		return nil
 	}
 
-	mc := metrics.NewMetricPrometheusContext("floating_ip", "delete")
 	err = s.client.DeleteFloatingIP(fip.ID)
-	if mc.ObserveRequest(err) != nil {
+	if err != nil {
 		record.Warnf(openStackCluster, "FailedDeleteFloatingIP", "Failed to delete floating IP %s: %v", ip, err)
 		return err
 	}
@@ -127,9 +125,8 @@ func (s *Service) AssociateFloatingIP(openStackCluster *infrav1.OpenStackCluster
 		PortID: &portID,
 	}
 
-	mc := metrics.NewMetricPrometheusContext("floating_ip", "update")
 	_, err := s.client.UpdateFloatingIP(fp.ID, fpUpdateOpts)
-	if mc.ObserveRequest(err) != nil {
+	if err != nil {
 		record.Warnf(openStackCluster, "FailedAssociateFloatingIP", "Failed to associate floating IP %s with port %s: %v", fp.FloatingIP, portID, err)
 		return err
 	}
@@ -159,9 +156,8 @@ func (s *Service) DisassociateFloatingIP(openStackCluster *infrav1.OpenStackClus
 		PortID: nil,
 	}
 
-	mc := metrics.NewMetricPrometheusContext("floating_ip", "update")
 	_, err = s.client.UpdateFloatingIP(fip.ID, fpUpdateOpts)
-	if mc.ObserveRequest(err) != nil {
+	if err != nil {
 		record.Warnf(openStackCluster, "FailedDisassociateFloatingIP", "Failed to disassociate floating IP %s: %v", fip.FloatingIP, err)
 		return err
 	}

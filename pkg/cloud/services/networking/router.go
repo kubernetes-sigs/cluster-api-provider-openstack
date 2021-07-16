@@ -25,7 +25,6 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
@@ -130,11 +129,8 @@ func (s *Service) createRouter(openStackCluster *infrav1.OpenStackCluster, clust
 		}
 	}
 
-	mc := metrics.NewMetricPrometheusContext("router", "create")
-
 	router, err := s.client.CreateRouter(opts)
-
-	if mc.ObserveRequest(err) != nil {
+	if err != nil {
 		record.Warnf(openStackCluster, "FailedCreateRouter", "Failed to create router %s: %v", name, err)
 		return nil, err
 	}
@@ -178,9 +174,8 @@ func (s *Service) setRouterExternalIPs(openStackCluster *infrav1.OpenStackCluste
 		})
 	}
 
-	mc := metrics.NewMetricPrometheusContext("router", "update")
 	_, err := s.client.UpdateRouter(router.ID, updateOpts)
-	if mc.ObserveRequest(err) != nil {
+	if err != nil {
 		record.Warnf(openStackCluster, "FailedUpdateRouter", "Failed to update router %s with id %s: %v", router.Name, router.ID, err)
 		return err
 	}
@@ -213,9 +208,8 @@ func (s *Service) DeleteRouter(openStackCluster *infrav1.OpenStackCluster, clust
 		}
 	}
 
-	mc := metrics.NewMetricPrometheusContext("router", "delete")
 	err = s.client.DeleteRouter(router.ID)
-	if mc.ObserveRequest(err) != nil {
+	if err != nil {
 		record.Warnf(openStackCluster, "FailedDeleteRouter", "Failed to delete router %s with id %s: %v", router.Name, router.ID, err)
 		return err
 	}

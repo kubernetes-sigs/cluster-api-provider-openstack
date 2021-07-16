@@ -120,9 +120,8 @@ func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, c
 		}
 	}
 
-	mc := metrics.NewMetricPrometheusContext("network", "create")
 	network, err := s.client.CreateNetwork(opts)
-	if mc.ObserveRequest(err) != nil {
+	if err != nil {
 		record.Warnf(openStackCluster, "FailedCreateNetwork", "Failed to create network %s: %v", networkName, err)
 		return err
 	}
@@ -155,9 +154,8 @@ func (s *Service) DeleteNetwork(openStackCluster *infrav1.OpenStackCluster, clus
 		return nil
 	}
 
-	mc := metrics.NewMetricPrometheusContext("network", "delete")
 	err = s.client.DeleteNetwork(network.ID)
-	if mc.ObserveRequest(err) != nil {
+	if err != nil {
 		record.Warnf(openStackCluster, "FailedDeleteNetwork", "Failed to delete network %s with id %s: %v", network.Name, network.ID, err)
 		return err
 	}
@@ -217,11 +215,9 @@ func (s *Service) createSubnet(openStackCluster *infrav1.OpenStackCluster, clust
 		DNSNameservers: openStackCluster.Spec.DNSNameservers,
 		Description:    names.GetDescription(clusterName),
 	}
-	mc := metrics.NewMetricPrometheusContext("subnet", "create")
 
 	subnet, err := s.client.CreateSubnet(opts)
-
-	if mc.ObserveRequest(err) != nil {
+	if err != nil {
 		record.Warnf(openStackCluster, "FailedCreateSubnet", "Failed to create subnet %s: %v", name, err)
 		return nil, err
 	}
