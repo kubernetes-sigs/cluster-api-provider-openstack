@@ -20,13 +20,15 @@
 
 1. Make sure your repo is clean by git's standards.
 1. Make sure you are on the correct branch (`master` for the current release and `release-0.x` for older releases).
-1. Create an annotated tag
+1. Set an environment variable with the version, e.g.:
+    - `VERSION=v0.4.0`
+3. Create an annotated tag
     - `git tag -s -a $VERSION -m $VERSION`.
-1. Push the tag to the GitHub repository:
+4. Push the tag to the GitHub repository:
    > NOTE: `upstream` should be the name of the remote pointing to `github.com/kubernetes-sigs/cluster-api-provider-openstack`
     - `git push upstream $VERSION`
-1. Run `make release` to build artifacts (the image is automatically built by CI)
-1. Follow the [image promotion process](https://github.com/kubernetes/k8s.io/tree/main/k8s.gcr.io#image-promoter) to promote the image from the staging repo to `k8s.gcr.io/capi-openstack`.
+5. Run `make release` to build artifacts (the image is automatically built by CI)
+6. Follow the [image promotion process](https://github.com/kubernetes/k8s.io/tree/main/k8s.gcr.io#image-promoter) to promote the image from the staging repo to `k8s.gcr.io/capi-openstack`.
    The staging repository can be inspected at https://console.cloud.google.com/gcr/images/k8s-staging-capi-openstack/GLOBAL. Be
    sure to choose the top level `capi-openstack-controller`, which will provide the multi-arch manifest, rather than one for a specific architecture.
    The image build logs are available at [Cloud Build](https://console.cloud.google.com/cloud-build/builds?project=k8s-staging-capi-openstack).
