@@ -20,3 +20,6 @@ resources:
 - group: infrastructure
   version: v1alpha4
   kind: OpenStackMachineTemplate
+- group: infrastructure
+  kind: OpenStackClusterTemplate
+  version: v1alpha4
