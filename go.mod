@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/go-logr/logr v0.4.0
+	github.com/golang/mock v1.6.0
 	github.com/gophercloud/gophercloud v0.16.0
 	github.com/gophercloud/utils v0.0.0-20210323225332-7b186010c04f
 	github.com/onsi/ginkgo v1.16.4
