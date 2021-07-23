@@ -19,6 +19,7 @@ package v1alpha3
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha3"
 	"sigs.k8s.io/cluster-api/errors"
 )
 
@@ -126,6 +127,10 @@ type OpenStackMachineStatus struct {
 	// controller's output.
 	// +optional
 	FailureMessage *string `json:"errorMessage,omitempty"`
+
+	// Conditions defines current service state of the OpenStackMachine.
+	// +optional
+	Conditions clusterv1.Conditions `json:"conditions,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -144,6 +149,16 @@ type OpenStackMachine struct {
 
 	Spec   OpenStackMachineSpec   `json:"spec,omitempty"`
 	Status OpenStackMachineStatus `json:"status,omitempty"`
+}
+
+// GetConditions returns the observations of the operational state of the OpenStackMachine resource.
+func (r *OpenStackMachine) GetConditions() clusterv1.Conditions {
+	return r.Status.Conditions
+}
+
+// SetConditions sets the underlying service state of the OpenStackMachine to the predescribed clusterv1.Conditions.
+func (r *OpenStackMachine) SetConditions(conditions clusterv1.Conditions) {
+	r.Status.Conditions = conditions
 }
 
 // +kubebuilder:object:root=true
