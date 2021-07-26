@@ -290,6 +290,8 @@ func reconcileNormal(ctx context.Context, log logr.Logger, client client.Client,
 	}
 
 	openStackCluster.Status.Ready = true
+	openStackCluster.Status.FailureMessage = nil
+	openStackCluster.Status.FailureReason = nil
 	log.Info("Reconciled Cluster create successfully")
 	return reconcile.Result{}, nil
 }
