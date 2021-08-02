@@ -333,7 +333,13 @@ func reconcileBastion(log logr.Logger, osProviderClient *gophercloud.ProviderCli
 		handleUpdateOSCError(openStackCluster, errors.Errorf("failed to get or create floating IP for bastion: %v", err))
 		return errors.Errorf("failed to get or create floating IP for bastion: %v", err)
 	}
-	err = computeService.AssociateFloatingIP(instance.ID, fp.FloatingIP)
+	port, err := computeService.GetManagementPort(instance)
+	if err != nil {
+		err = errors.Errorf("getting management port for bastion: %v", err)
+		handleUpdateOSCError(openStackCluster, err)
+		return err
+	}
+	err = networkingService.AssociateFloatingIP(openStackCluster, fp, port.ID)
 	if err != nil {
 		handleUpdateOSCError(openStackCluster, errors.Errorf("failed to associate floating IP with bastion: %v", err))
 		return errors.Errorf("failed to associate floating IP with bastion: %v", err)
