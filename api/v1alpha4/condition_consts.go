@@ -1,9 +1,12 @@
 /*
 Copyright 2020 The Kubernetes Authors.
+
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
+
     http://www.apache.org/licenses/LICENSE-2.0
+
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,8 +34,8 @@ const (
 const (
 	// MachineRunningCondition reports on current status of the Openstack Machine.
 	MachineRunningCondition clusterv1.ConditionType = "MachineRunning"
-	// MachineCreatingReason used when the Machine creation is in progress.
-	MachineCreatingReason = "MachineCreating"
+	// MachineNCreatingReason used when the Machine creation is in progress.
+	MachineNCreatingReason = "MachineCreating"
 	// MachineNUpdatingReason used when the Machine updating is in progress.
 	MachineNUpdatingReason = "MachineUpdating"
 	// MachineNotFoundReason used when the Machine couldn't be retrieved.

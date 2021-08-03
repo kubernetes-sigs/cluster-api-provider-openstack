@@ -234,7 +234,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 	if instance.Name != "" {
 		if err = computeService.DeleteInstance(openStackMachine, instance.Name); err != nil {
 			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error deleting Openstack instance: %v", err))
-			conditions.MarkFalse(openStackMachine, infrav1.VMRunningCondition, clusterv1.DeletionFailedReason, clusterv1.ConditionSeverityWarning, err.Error())
+			conditions.MarkFalse(openStackMachine, infrav1.MachineRunningCondition, clusterv1.DeletionFailedReason, clusterv1.ConditionSeverityWarning, err.Error())
 			return ctrl.Result{}, nil
 		}
 	}
@@ -270,14 +270,14 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 
 	if !cluster.Status.InfrastructureReady {
 		logger.Info("Cluster infrastructure is not ready yet, requeuing machine")
-		conditions.MarkFalse(openStackMachine, infrav1.VMRunningCondition, infrav1.WaitingForClusterInfrastructureReason, clusterv1.ConditionSeverityInfo, "")
+		conditions.MarkFalse(openStackMachine, infrav1.MachineRunningCondition, infrav1.WaitingForClusterInfrastructureReason, clusterv1.ConditionSeverityInfo, "")
 		return ctrl.Result{RequeueAfter: waitForClusterInfrastructureReadyDuration}, nil
 	}
 
 	// Make sure bootstrap data is available and populated.
 	if machine.Spec.Bootstrap.DataSecretName == nil {
 		logger.Info("Bootstrap data secret reference is not yet available")
-		conditions.MarkFalse(openStackMachine, infrav1.VMRunningCondition, infrav1.WaitingForBootstrapDataReason, clusterv1.ConditionSeverityInfo, "")
+		conditions.MarkFalse(openStackMachine, infrav1.MachineRunningCondition, infrav1.WaitingForBootstrapDataReason, clusterv1.ConditionSeverityInfo, "")
 		return ctrl.Result{}, nil
 	}
 	userData, err := r.getBootstrapData(machine, openStackMachine)
