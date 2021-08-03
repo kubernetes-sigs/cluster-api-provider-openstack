@@ -29,20 +29,20 @@ const (
 
 // OpenStackMachine Conditions and Reasons.
 const (
-	// VMRunningCondition reports on current status of the Azure VM.
-	VMRunningCondition clusterv1.ConditionType = "VMRunning"
-	// VMNCreatingReason used when the vm creation is in progress.
-	VMNCreatingReason = "VMCreating"
-	// VMNUpdatingReason used when the vm updating is in progress.
-	VMNUpdatingReason = "VMUpdating"
-	// VMNotFoundReason used when the vm couldn't be retrieved.
-	VMNotFoundReason = "VMNotFound"
-	// VMDeletingReason used when the vm is in a deleting state.
-	VMDDeletingReason = "VMDeleting"
-	// VMStoppedReason vm is in a stopped state.
-	VMStoppedReason = "VMStopped"
-	// VMProvisionFailedReason used for failures during vm provisioning.
-	VMProvisionFailedReason = "VMProvisionFailed"
+	// MachineRunningCondition reports on current status of the Openstack Machine.
+	MachineRunningCondition clusterv1.ConditionType = "MachineRunning"
+	// MachineCreatingReason used when the Machine creation is in progress.
+	MachineCreatingReason = "MachineCreating"
+	// MachineNUpdatingReason used when the Machine updating is in progress.
+	MachineNUpdatingReason = "MachineUpdating"
+	// MachineNotFoundReason used when the Machine couldn't be retrieved.
+	MachineNotFoundReason = "MachineNotFound"
+	// MachineDeletingReason used when the Machine is in a deleting state.
+	MachineDDeletingReason = "MachineDeleting"
+	// MachineStoppedReason Machine is in a stopped state.
+	MachineStoppedReason = "MachineStopped"
+	// MachineProvisionFailedReason used for failures during Machine provisioning.
+	MachineProvisionFailedReason = "MachineProvisionFailed"
 	// WaitingForClusterInfrastructureReason used when machine is waiting for cluster infrastructure to be ready before proceeding.
 	WaitingForClusterInfrastructureReason = "WaitingForClusterInfrastructure"
 	// WaitingForBootstrapDataReason used when machine is waiting for bootstrap data to be ready before proceeding.
