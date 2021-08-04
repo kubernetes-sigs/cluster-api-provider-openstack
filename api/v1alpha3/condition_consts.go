@@ -34,10 +34,10 @@ const (
 const (
 	// MachineRunningCondition reports on current status of the Openstack Machine.
 	MachineRunningCondition clusterv1.ConditionType = "MachineRunning"
-	// MachineNCreatingReason used when the Machine creation is in progress.
-	MachineNCreatingReason = "MachineCreating"
+	// MachineCreatingReason used when the Machine creation is in progress.
+	MachineCreatingReason = "MachineCreating"
 	// MachineNUpdatingReason used when the Machine updating is in progress.
-	MachineNUpdatingReason = "MachineUpdating"
+	MachineUpdatingReason = "MachineUpdating"
 	// MachineNotFoundReason used when the Machine couldn't be retrieved.
 	MachineNotFoundReason = "MachineNotFound"
 	// MachineDeletingReason used when the Machine is in a deleting state.
