@@ -651,7 +651,7 @@ func (s *Service) GetManagementPort(instance *infrav1.Instance) (*ports.Port, er
 }
 
 func (s *Service) DeleteInstance(eventObject runtime.Object, instanceName string) error {
-	instance, err := s.InstanceExists(instanceName)
+	instance, err := s.GetInstanceByName(eventObject, instanceName)
 	if err != nil {
 		return err
 	}
@@ -880,7 +880,7 @@ func (s *Service) GetInstance(resourceID string) (instance *infrav1.Instance, er
 	return serverToInstance(server)
 }
 
-func (s *Service) InstanceExists(name string) (instance *infrav1.Instance, err error) {
+func (s *Service) GetInstanceByName(eventObject runtime.Object, name string) (instance *infrav1.Instance, err error) {
 	var listOpts servers.ListOpts
 	if name != "" {
 		listOpts = servers.ListOpts{
@@ -902,19 +902,16 @@ func (s *Service) InstanceExists(name string) (instance *infrav1.Instance, err e
 	if err != nil {
 		return nil, fmt.Errorf("extract server list: %v", err)
 	}
-	instanceList := []*infrav1.Instance{}
-	for _, server := range serverList {
-		server := server
-		i, err := serverToInstance(&server)
-		if err != nil {
-			return nil, err
-		}
-		instanceList = append(instanceList, i)
+
+	if len(serverList) > 1 {
+		record.Warnf(eventObject, "DuplicateServerNames", "Found %d servers with name '%s'. This is likely to cause errors.", len(serverList), name)
 	}
-	if len(instanceList) == 0 {
-		return nil, nil
+
+	// Return the first returned server, if any
+	for i := range serverList {
+		return serverToInstance(&serverList[i])
 	}
-	return instanceList[0], nil
+	return nil, nil
 }
 
 func isDuplicate(list []string, name string) bool {

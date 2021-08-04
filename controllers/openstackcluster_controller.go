@@ -196,7 +196,7 @@ func deleteBastion(log logr.Logger, osProviderClient *gophercloud.ProviderClient
 		return err
 	}
 
-	instance, err := computeService.InstanceExists(fmt.Sprintf("%s-bastion", cluster.Name))
+	instance, err := computeService.GetInstanceByName(openStackCluster, fmt.Sprintf("%s-bastion", cluster.Name))
 	if err != nil {
 		return err
 	}
@@ -308,7 +308,7 @@ func reconcileBastion(log logr.Logger, osProviderClient *gophercloud.ProviderCli
 		return err
 	}
 
-	instance, err := computeService.InstanceExists(fmt.Sprintf("%s-bastion", cluster.Name))
+	instance, err := computeService.GetInstanceByName(openStackCluster, fmt.Sprintf("%s-bastion", cluster.Name))
 	if err != nil {
 		return err
 	}

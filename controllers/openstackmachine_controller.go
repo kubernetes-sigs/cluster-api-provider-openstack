@@ -216,7 +216,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 		}
 	}
 
-	instance, err := computeService.InstanceExists(openStackMachine.Name)
+	instance, err := computeService.GetInstanceByName(openStackMachine, openStackMachine.Name)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -371,7 +371,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 }
 
 func (r *OpenStackMachineReconciler) getOrCreate(logger logr.Logger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, computeService *compute.Service, userData string) (*infrav1.Instance, error) {
-	instance, err := computeService.InstanceExists(openStackMachine.Name)
+	instance, err := computeService.GetInstanceByName(openStackMachine, openStackMachine.Name)
 	if err != nil {
 		return nil, err
 	}
