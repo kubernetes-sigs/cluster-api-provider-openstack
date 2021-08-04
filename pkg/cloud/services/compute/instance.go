@@ -27,7 +27,6 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/common/extensions"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/bootfromvolume"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/schedulerhints"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
@@ -610,16 +609,31 @@ func (s *Service) getImageID(imageName string) (string, error) {
 	}
 }
 
-func (s *Service) AssociateFloatingIP(instanceID, floatingIP string) error {
-	opts := floatingips.AssociateOpts{
-		FloatingIP: floatingIP,
+// GetManagementPort returns the port which is used for management and external
+// traffic. Cluster floating IPs must be associated with this port.
+func (s *Service) GetManagementPort(instance *infrav1.Instance) (*ports.Port, error) {
+	mc := metrics.NewMetricPrometheusContext("port", "list")
+	portOpts := ports.ListOpts{
+		DeviceID: instance.ID,
+		FixedIPs: []ports.FixedIPOpts{
+			{
+				IPAddress: instance.IP,
+			},
+		},
+		Limit: 1,
 	}
-	mc := metrics.NewMetricPrometheusContext("floating_ip", "update")
-	err := floatingips.AssociateInstance(s.computeClient, instanceID, opts).ExtractErr()
+	allPages, err := ports.List(s.networkClient, portOpts).AllPages()
 	if mc.ObserveRequest(err) != nil {
-		return err
+		return nil, fmt.Errorf("lookup management port for server %s: %w", instance.ID, err)
 	}
-	return nil
+	allPorts, err := ports.ExtractPorts(allPages)
+	if err != nil {
+		return nil, err
+	}
+	if len(allPorts) < 1 {
+		return nil, fmt.Errorf("did not find management port for server %s", instance.ID)
+	}
+	return &allPorts[0], nil
 }
 
 func (s *Service) DeleteInstance(eventObject runtime.Object, instanceName string) error {

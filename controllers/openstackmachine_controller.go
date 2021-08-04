@@ -353,7 +353,13 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("Floating IP cannot be got or created: %v", err))
 			return ctrl.Result{}, nil
 		}
-		err = computeService.AssociateFloatingIP(instance.ID, fp.FloatingIP)
+		port, err := computeService.GetManagementPort(instance)
+		if err != nil {
+			err = errors.Errorf("getting management port for control plane machine %s: %v", machine.Name, err)
+			handleUpdateMachineError(logger, openStackMachine, err)
+			return ctrl.Result{}, nil
+		}
+		err = networkingService.AssociateFloatingIP(openStackCluster, fp, port.ID)
 		if err != nil {
 			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("Floating IP cannot be associated: %v", err))
 			return ctrl.Result{}, nil
