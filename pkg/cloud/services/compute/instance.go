@@ -667,7 +667,7 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instance *infrav1.I
 	}
 	// get and delete trunks
 	for _, port := range instanceInterfaces {
-		if err = s.deleteAttachInterface(eventObject, instance.ID, port.PortID); err != nil {
+		if err = s.deleteAttachInterface(eventObject, instance, port.PortID); err != nil {
 			return err
 		}
 
@@ -697,7 +697,10 @@ func (s *Service) deletePort(eventObject runtime.Object, portID string) error {
 	err = util.PollImmediate(retryIntervalPortDelete, timeoutPortDelete, func() (bool, error) {
 		mc := metrics.NewMetricPrometheusContext("port", "delete")
 		err := ports.Delete(s.networkClient, port.ID).ExtractErr()
-		if mc.ObserveRequest(err) != nil {
+		if mc.ObserveRequestIgnoreNotFound(err) != nil {
+			if capoerrors.IsNotFound(err) {
+				record.Eventf(eventObject, "SuccessfulDeletePort", "Port %s with id %d did not exist", port.Name, port.ID)
+			}
 			if capoerrors.IsRetryable(err) {
 				return false, nil
 			}
@@ -723,27 +726,12 @@ func (s *Service) deletePorts(eventObject runtime.Object, nets []servers.Network
 	return nil
 }
 
-func (s *Service) deleteAttachInterface(eventObject runtime.Object, instanceID, portID string) error {
-	instance, err := s.GetInstance(instanceID)
-	if err != nil {
-		return err
-	}
-	if instance == nil || instance.ID == "" {
-		return nil
-	}
-
-	port, err := s.getPort(portID)
-	if err != nil {
-		return err
-	}
-	if port == nil {
-		return nil
-	}
-
+func (s *Service) deleteAttachInterface(eventObject runtime.Object, instance *infrav1.Instance, portID string) error {
 	mc := metrics.NewMetricPrometheusContext("server_os_interface", "delete")
-	err = attachinterfaces.Delete(s.computeClient, instanceID, portID).ExtractErr()
+	err := attachinterfaces.Delete(s.computeClient, instance.ID, portID).ExtractErr()
 	if mc.ObserveRequestIgnoreNotFoundorConflict(err) != nil {
 		if capoerrors.IsNotFound(err) {
+			record.Eventf(eventObject, "SuccessfulDeleteAttachInterface", "Attach interface did not exist: instance %s, port %s", instance.ID, portID)
 			return nil
 		}
 		if capoerrors.IsConflict(err) {
@@ -751,25 +739,17 @@ func (s *Service) deleteAttachInterface(eventObject runtime.Object, instanceID, 
 			// due to instance must be paused/active/shutoff in order to detach interface
 			return nil
 		}
-		record.Warnf(eventObject, "FailedDeleteAttachInterface", "Failed to delete attach interface: instance %s, port %s: %v", instance.ID, port.ID, err)
+		record.Warnf(eventObject, "FailedDeleteAttachInterface", "Failed to delete attach interface: instance %s, port %s: %v", instance.ID, portID, err)
 		return err
 	}
 
-	record.Eventf(eventObject, "SuccessfulDeleteAttachInterface", "Deleted attach interface: instance %s, port %s", instance.ID, port.ID)
+	record.Eventf(eventObject, "SuccessfulDeleteAttachInterface", "Deleted attach interface: instance %s, port %s", instance.ID, portID)
 	return nil
 }
 
 func (s *Service) deleteTrunk(eventObject runtime.Object, portID string) error {
-	port, err := s.getPort(portID)
-	if err != nil {
-		return err
-	}
-	if port == nil {
-		return nil
-	}
-
 	listOpts := trunks.ListOpts{
-		PortID: port.ID,
+		PortID: portID,
 	}
 	mc := metrics.NewMetricPrometheusContext("trunk", "list")
 	trunkList, err := trunks.List(s.networkClient, listOpts).AllPages()
@@ -786,7 +766,11 @@ func (s *Service) deleteTrunk(eventObject runtime.Object, portID string) error {
 
 	err = util.PollImmediate(retryIntervalTrunkDelete, timeoutTrunkDelete, func() (bool, error) {
 		mc := metrics.NewMetricPrometheusContext("trunk", "delete")
-		if err := trunks.Delete(s.networkClient, trunkInfo[0].ID).ExtractErr(); mc.ObserveRequest(err) != nil {
+		if err := trunks.Delete(s.networkClient, trunkInfo[0].ID).ExtractErr(); mc.ObserveRequestIgnoreNotFound(err) != nil {
+			if capoerrors.IsNotFound(err) {
+				record.Eventf(eventObject, "SuccessfulDeleteTrunk", "Trunk %s with id %s did not exist", trunkInfo[0].Name, trunkInfo[0].ID)
+				return true, nil
+			}
 			if capoerrors.IsRetryable(err) {
 				return false, nil
 			}
