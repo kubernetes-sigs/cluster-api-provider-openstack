@@ -132,11 +132,7 @@ func (s *Service) CreateInstance(openStackCluster *infrav1.OpenStackCluster, mac
 	}
 	input.Networks = nets
 
-	out, err := s.createInstance(openStackMachine, clusterName, input)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
+	return s.createInstance(openStackMachine, clusterName, input)
 }
 
 // constructNetworks builds an array of networks from the network, subnet and ports items in the machine spec.
@@ -881,11 +877,7 @@ func (s *Service) GetInstance(resourceID string) (instance *infrav1.Instance, er
 		}
 		return nil, fmt.Errorf("get server %q detail failed: %v", resourceID, err)
 	}
-	i, err := serverToInstance(server)
-	if err != nil {
-		return nil, err
-	}
-	return i, err
+	return serverToInstance(server)
 }
 
 func (s *Service) InstanceExists(name string) (instance *infrav1.Instance, err error) {
