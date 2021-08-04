@@ -650,16 +650,7 @@ func (s *Service) GetManagementPort(instance *infrav1.Instance) (*ports.Port, er
 	return &allPorts[0], nil
 }
 
-func (s *Service) DeleteInstance(eventObject runtime.Object, instanceName string) error {
-	instance, err := s.GetInstanceByName(eventObject, instanceName)
-	if err != nil {
-		return err
-	}
-
-	if instance == nil || instance.ID == "" {
-		return nil
-	}
-
+func (s *Service) DeleteInstance(eventObject runtime.Object, instance *infrav1.Instance) error {
 	mc := metrics.NewMetricPrometheusContext("server_os_interface", "list")
 	allInterfaces, err := attachinterfaces.List(s.computeClient, instance.ID).AllPages()
 	if mc.ObserveRequest(err) != nil {
@@ -668,9 +659,6 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instanceName string
 	instanceInterfaces, err := attachinterfaces.ExtractInterfaces(allInterfaces)
 	if err != nil {
 		return err
-	}
-	if len(instanceInterfaces) < 1 {
-		return s.deleteInstance(eventObject, instance.ID)
 	}
 
 	trunkSupport, err := s.getTrunkSupport()
@@ -694,7 +682,7 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instanceName string
 		}
 	}
 
-	return s.deleteInstance(eventObject, instance.ID)
+	return s.deleteInstance(eventObject, instance)
 }
 
 func (s *Service) deletePort(eventObject runtime.Object, portID string) error {
@@ -830,18 +818,14 @@ func (s *Service) getPort(portID string) (port *ports.Port, err error) {
 	return port, nil
 }
 
-func (s *Service) deleteInstance(eventObject runtime.Object, instanceID string) error {
-	instance, err := s.GetInstance(instanceID)
-	if err != nil {
-		return err
-	}
-
-	if instance == nil || instance.ID == "" {
-		return nil
-	}
+func (s *Service) deleteInstance(eventObject runtime.Object, instance *infrav1.Instance) error {
 	mc := metrics.NewMetricPrometheusContext("server", "delete")
-	err = servers.Delete(s.computeClient, instance.ID).ExtractErr()
-	if mc.ObserveRequest(err) != nil {
+	err := servers.Delete(s.computeClient, instance.ID).ExtractErr()
+	if mc.ObserveRequestIgnoreNotFound(err) != nil {
+		if capoerrors.IsNotFound(err) {
+			record.Eventf(eventObject, "SuccessfulDeleteServer", "Server %s with id %s did not exist", instance.Name, instance.ID)
+			return nil
+		}
 		record.Warnf(eventObject, "FailedDeleteServer", "Failed to deleted server %s with id %s: %v", instance.Name, instance.ID, err)
 		return err
 	}
