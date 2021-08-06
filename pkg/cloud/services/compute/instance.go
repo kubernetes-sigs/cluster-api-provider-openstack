@@ -740,8 +740,13 @@ func (s *Service) deleteAttachInterface(eventObject runtime.Object, instanceID, 
 
 	mc := metrics.NewMetricPrometheusContext("server_os_interface", "delete")
 	err = attachinterfaces.Delete(s.computeClient, instanceID, portID).ExtractErr()
-	if mc.ObserveRequestIgnoreNotFound(err) != nil {
+	if mc.ObserveRequestIgnoreNotFoundorConflict(err) != nil {
 		if capoerrors.IsNotFound(err) {
+			return nil
+		}
+		if capoerrors.IsConflict(err) {
+			// we don't want to block deletion because of Conflict
+			// due to instance must be paused/active/shutoff in order to detach interface
 			return nil
 		}
 		record.Warnf(eventObject, "FailedDeleteAttachInterface", "Failed to delete attach interface: instance %s, port %s: %v", instance.ID, port.ID, err)
