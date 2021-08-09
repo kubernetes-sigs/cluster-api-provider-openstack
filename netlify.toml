@@ -1,0 +1,27 @@
+# Netlify build instructions
+[build]
+command = "make -C docs/book build"
+publish = "docs/book/book"
+
+[build.environment]
+GO_VERSION = "1.16"
+
+# Standard Netlify redirects
+[[redirects]]
+from = "https://master--kubernetes-sigs-cluster-api-openstack.netlify.com/*"
+to = "https://master.cluster-api-openstack.sigs.k8s.io/:splat"
+status = 301
+force = true
+
+[[redirects]]
+from = "http://master--kubernetes-sigs-cluster-api-openstack.netlify.com/*"
+to = "http://master.cluster-api-openstack.sigs.k8s.io/:splat"
+status = 301
+force = true
+
+# HTTP-to-HTTPS rules
+[[redirects]]
+from = "http://master.cluster-api-openstack.sigs.k8s.io/*"
+to = "https://master.cluster-api-openstack.sigs.k8s.io/:splat"
+status = 301
+force = true
