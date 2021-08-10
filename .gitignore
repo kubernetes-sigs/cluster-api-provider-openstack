@@ -170,3 +170,6 @@ zz_generated.openapi.go
 
 # sshuttle
 sshuttle.pid
+
+# Book
+docs/book/book/
