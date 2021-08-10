@@ -214,7 +214,7 @@ spec:
 
 ## Ports
 
-A server can also be connected to networks by describing what ports to create. Describing a server's connection with `ports` allows for finer and more advanced configuration. For example, you can specify per-port security groups, fixed IPs or VNIC type.
+A server can also be connected to networks by describing what ports to create. Describing a server's connection with `ports` allows for finer and more advanced configuration. For example, you can specify per-port security groups, fixed IPs, VNIC type or profile.
 
 ```yaml
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha4
@@ -232,6 +232,9 @@ spec:
       ipAddress: <your-fixed-ip>
     securityGroups:
     - <your-security-group-id>
+    profile:
+      capabilities:
+        - <capability>
 ```
 
 Any such ports are created in addition to ports used for connections to networks or subnets.
