@@ -68,3 +68,19 @@ func IsInvalidError(err error) bool {
 
 	return false
 }
+
+func IsConflict(err error) bool {
+	var errDefault409 gophercloud.ErrDefault409
+	if errors.As(err, &errDefault409) {
+		return true
+	}
+
+	var errUnexpectedResponseCode gophercloud.ErrUnexpectedResponseCode
+	if errors.As(err, &errUnexpectedResponseCode) {
+		if errUnexpectedResponseCode.Actual == http.StatusConflict {
+			return true
+		}
+	}
+
+	return false
+}
