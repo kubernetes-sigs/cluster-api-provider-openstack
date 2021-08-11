@@ -277,7 +277,7 @@ func (s *Service) createInstance(eventObject runtime.Object, clusterName string,
 			return false, err
 		}
 		if createdInstance.State == infrav1.InstanceStateError {
-			return false, fmt.Errorf("openstack instance %s go error.", createdInstance.ID)
+			return false, fmt.Errorf("error creating OpenStack instance %s, status changed to error", createdInstance.ID)
 		}
 		return createdInstance.State == infrav1.InstanceStateActive, nil
 	})
