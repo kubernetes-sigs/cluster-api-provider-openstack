@@ -236,6 +236,22 @@ spec:
 
 Any such ports are created in addition to ports used for connections to networks or subnets.
 
+Also, `port security` can be applied to specific port to enable/disable the `port security` on that port; When not set, it takes the value of the corresponding field at the network level.
+
+```yaml
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha4
+kind: OpenStackMachine
+metadata:
+  name: <cluster-name>-controlplane
+  namespace: <cluster-name>
+spec:
+  ports:
+  - networkId: <your-network-id>
+    ...
+    disablePortSecurity: true
+    ...
+```
+
 ## Tagging
 
 You have the ability to tag all resources created by the cluster in the `cluster.yaml` file. Here is an example how to configure tagging:
@@ -251,7 +267,8 @@ spec:
   - cluster-tag
 ```
 
-To tag resources specific to a machine, add a value to the tags field in `controlplane.yaml` and `machinedeployment.yaml` like this:
+To tag 
+resources specific to a machine, add a value to the tags field in `controlplane.yaml` and `machinedeployment.yaml` like this:
 
 ```yaml
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha4
