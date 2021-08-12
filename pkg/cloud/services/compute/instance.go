@@ -518,7 +518,7 @@ func (s *Service) getOrCreatePort(eventObject runtime.Object, clusterName string
 		CreateOptsBuilder: createOpts,
 		HostID:            portOpts.HostID,
 		VNICType:          portOpts.VNICType,
-		Profile:           nil,
+		Profile:           getPortProfile(portOpts.Profile),
 	}
 
 	mc = metrics.NewMetricPrometheusContext("port", "create")
@@ -530,6 +530,21 @@ func (s *Service) getOrCreatePort(eventObject runtime.Object, clusterName string
 
 	record.Eventf(eventObject, "SuccessfulCreatePort", "Created port %s with id %s", port.Name, port.ID)
 	return port, nil
+}
+
+func getPortProfile(p map[string]string) map[string]interface{} {
+	portProfile := make(map[string]interface{})
+	for k, v := range p {
+		portProfile[k] = v
+	}
+	// We need return nil if there is no profiles
+	// to have backward compatible defaults.
+	// To set profiles, your tenant needs this permission:
+	// rule:create_port and rule:create_port:binding:profile
+	if len(portProfile) == 0 {
+		return nil
+	}
+	return portProfile
 }
 
 func (s *Service) getOrCreateTrunk(eventObject runtime.Object, clusterName, trunkName, portID string) (*trunks.Trunk, error) {

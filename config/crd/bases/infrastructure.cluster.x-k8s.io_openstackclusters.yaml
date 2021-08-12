@@ -1306,6 +1306,14 @@ spec:
                                 create the port. If unspecified, create the port on
                                 the default cluster network.
                               type: string
+                            profile:
+                              additionalProperties:
+                                type: string
+                              description: A dictionary that enables the application
+                                running on the specified host to pass and receive
+                                virtual network interface (VIF) port-specific information
+                                to the plug-in.
+                              type: object
                             projectId:
                               type: string
                             securityGroups:
@@ -1747,6 +1755,14 @@ spec:
                                 create the port. If unspecified, create the port on
                                 the default cluster network.
                               type: string
+                            profile:
+                              additionalProperties:
+                                type: string
+                              description: A dictionary that enables the application
+                                running on the specified host to pass and receive
+                                virtual network interface (VIF) port-specific information
+                                to the plug-in.
+                              type: object
                             projectId:
                               type: string
                             securityGroups:
@@ -2016,6 +2032,13 @@ spec:
                           the port. If unspecified, create the port on the default
                           cluster network.
                         type: string
+                      profile:
+                        additionalProperties:
+                          type: string
+                        description: A dictionary that enables the application running
+                          on the specified host to pass and receive virtual network
+                          interface (VIF) port-specific information to the plug-in.
+                        type: object
                       projectId:
                         type: string
                       securityGroups:
@@ -2197,6 +2220,13 @@ spec:
                           the port. If unspecified, create the port on the default
                           cluster network.
                         type: string
+                      profile:
+                        additionalProperties:
+                          type: string
+                        description: A dictionary that enables the application running
+                          on the specified host to pass and receive virtual network
+                          interface (VIF) port-specific information to the plug-in.
+                        type: object
                       projectId:
                         type: string
                       securityGroups:
