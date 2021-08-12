@@ -184,7 +184,7 @@ generate-go: $(MOCKGEN)
 		object:headerFile=./hack/boilerplate/boilerplate.generatego.txt
 
 	$(CONVERSION_GEN) \
-		--input-dirs=./api/v1alpha3 \
+		--input-dirs=./api/v1alpha4 \
 		--output-file-base=zz_generated.conversion \
 		--go-header-file=./hack/boilerplate/boilerplate.generatego.txt
 
