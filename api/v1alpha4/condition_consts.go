@@ -41,7 +41,7 @@ const (
 	// MachineNotFoundReason used when the Machine couldn't be retrieved.
 	MachineNotFoundReason = "MachineNotFound"
 	// MachineDeletingReason used when the Machine is in a deleting state.
-	MachineDDeletingReason = "MachineDeleting"
+	MachineDeletingReason = "MachineDeleting"
 	// MachineStoppedReason Machine is in a stopped state.
 	MachineStoppedReason = "MachineStopped"
 	// MachineProvisionFailedReason used for failures during Machine provisioning.
