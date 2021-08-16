@@ -216,12 +216,12 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 		}
 	}
 
-	instance, err := computeService.GetInstanceByName(openStackMachine, openStackMachine.Name)
+	instanceStatus, err := computeService.GetInstanceStatusByName(openStackMachine, openStackMachine.Name)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 
-	if instance == nil {
+	if instanceStatus == nil {
 		logger.Info("Skipped deleting machine that is already deleted")
 		controllerutil.RemoveFinalizer(openStackMachine, infrav1.MachineFinalizer)
 		if err := patchHelper.Patch(ctx, openStackMachine); err != nil {
@@ -230,15 +230,20 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 		return ctrl.Result{}, nil
 	}
 
-	if instance.Name != "" {
-		if err = computeService.DeleteInstance(openStackMachine, instance); err != nil {
-			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error deleting Openstack instance: %v", err))
-			return ctrl.Result{}, nil
-		}
+	instanceNS, err := instanceStatus.NetworkStatus()
+	if err != nil {
+		handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error getting network status for OpenStack instance %s with ID %s: %v", instanceStatus.Name(), instanceStatus.ID(), err))
+		return ctrl.Result{}, nil
 	}
 
-	if !openStackCluster.Spec.ManagedAPIServerLoadBalancer && util.IsControlPlaneMachine(machine) && openStackCluster.Spec.APIServerFloatingIP == "" && instance.FloatingIP != "" {
-		if err = networkingService.DeleteFloatingIP(openStackCluster, instance.FloatingIP); err != nil {
+	if err = computeService.DeleteInstance(openStackMachine, instanceStatus.InstanceIdentifier()); err != nil {
+		handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error deleting OpenStack instance %s with ID %s: %v", instanceStatus.Name(), instanceStatus.ID(), err))
+		return ctrl.Result{}, nil
+	}
+
+	floatingIP := instanceNS.FloatingIP()
+	if !openStackCluster.Spec.ManagedAPIServerLoadBalancer && util.IsControlPlaneMachine(machine) && openStackCluster.Spec.APIServerFloatingIP == "" && floatingIP != "" {
+		if err = networkingService.DeleteFloatingIP(openStackCluster, floatingIP); err != nil {
 			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error deleting Openstack floating IP: %v", err))
 			return ctrl.Result{}, nil
 		}
@@ -299,30 +304,37 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 		return ctrl.Result{}, err
 	}
 
-	instance, err := r.getOrCreate(logger, cluster, openStackCluster, machine, openStackMachine, computeService, userData)
+	instanceStatus, err := r.getOrCreate(logger, cluster, openStackCluster, machine, openStackMachine, computeService, userData)
 	if err != nil {
 		handleUpdateMachineError(logger, openStackMachine, errors.Errorf("OpenStack instance cannot be created: %v", err))
 		return ctrl.Result{}, err
 	}
 
 	// Set an error message if we couldn't find the instance.
-	if instance == nil {
+	if instanceStatus == nil {
 		handleUpdateMachineError(logger, openStackMachine, errors.New("OpenStack instance cannot be found"))
 		return ctrl.Result{}, nil
 	}
 
 	// TODO(sbueringer) From CAPA: TODO(ncdc): move this validation logic into a validating webhook (for us: create validation logic in webhook)
 
-	openStackMachine.Spec.ProviderID = pointer.StringPtr(fmt.Sprintf("openstack:///%s", instance.ID))
-	openStackMachine.Spec.InstanceID = pointer.StringPtr(instance.ID)
+	openStackMachine.Spec.ProviderID = pointer.StringPtr(fmt.Sprintf("openstack:///%s", instanceStatus.ID()))
+	openStackMachine.Spec.InstanceID = pointer.StringPtr(instanceStatus.ID())
 
-	openStackMachine.Status.InstanceState = &instance.State
+	state := instanceStatus.State()
+	openStackMachine.Status.InstanceState = &state
 
-	address := []corev1.NodeAddress{{Type: corev1.NodeInternalIP, Address: instance.IP}}
-	if instance.FloatingIP != "" {
-		address = append(address, []corev1.NodeAddress{{Type: corev1.NodeExternalIP, Address: instance.FloatingIP}}...)
+	instanceNS, err := instanceStatus.NetworkStatus()
+	if err != nil {
+		handleUpdateMachineError(logger, openStackMachine, errors.Errorf("Unable to get network status for OpenStack instance %s with ID %s: %v", instanceStatus.Name(), instanceStatus.ID(), err))
+		return ctrl.Result{}, nil
 	}
-	openStackMachine.Status.Addresses = address
+
+	addresses := []corev1.NodeAddress{{Type: corev1.NodeInternalIP, Address: instanceNS.IP()}}
+	if instanceNS.FloatingIP() != "" {
+		addresses = append(addresses, []corev1.NodeAddress{{Type: corev1.NodeExternalIP, Address: instanceNS.FloatingIP()}}...)
+	}
+	openStackMachine.Status.Addresses = addresses
 
 	// TODO(sbueringer) From CAPA: TODO(vincepri): Remove this annotation when clusterctl is no longer relevant.
 	if openStackMachine.Annotations == nil {
@@ -330,19 +342,19 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 	}
 	openStackMachine.Annotations["cluster-api-provider-openstack"] = "true"
 
-	switch instance.State {
+	switch instanceStatus.State() {
 	case infrav1.InstanceStateActive:
-		logger.Info("Machine instance is ACTIVE", "instance-id", instance.ID)
+		logger.Info("Machine instance is ACTIVE", "instance-id", instanceStatus.ID())
 		openStackMachine.Status.Ready = true
 	case infrav1.InstanceStateBuilding:
-		logger.Info("Machine instance is BUILDING", "instance-id", instance.ID)
+		logger.Info("Machine instance is BUILDING", "instance-id", instanceStatus.ID())
 	default:
-		handleUpdateMachineError(logger, openStackMachine, errors.Errorf("OpenStack instance state %q is unexpected", instance.State))
+		handleUpdateMachineError(logger, openStackMachine, errors.Errorf("OpenStack instance state %q is unexpected", instanceStatus.State()))
 		return ctrl.Result{}, nil
 	}
 
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
-		err = r.reconcileLoadBalancerMember(logger, osProviderClient, clientOpts, openStackCluster, machine, openStackMachine, instance, clusterName)
+		err = r.reconcileLoadBalancerMember(logger, osProviderClient, clientOpts, openStackCluster, machine, openStackMachine, instanceNS, clusterName)
 		if err != nil {
 			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("LoadBalancerMember cannot be reconciled: %v", err))
 			return ctrl.Result{}, nil
@@ -353,7 +365,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("Floating IP cannot be got or created: %v", err))
 			return ctrl.Result{}, nil
 		}
-		port, err := computeService.GetManagementPort(instance)
+		port, err := computeService.GetManagementPort(instanceStatus)
 		if err != nil {
 			err = errors.Errorf("getting management port for control plane machine %s: %v", machine.Name, err)
 			handleUpdateMachineError(logger, openStackMachine, err)
@@ -370,21 +382,21 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 	return ctrl.Result{}, nil
 }
 
-func (r *OpenStackMachineReconciler) getOrCreate(logger logr.Logger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, computeService *compute.Service, userData string) (*infrav1.Instance, error) {
-	instance, err := computeService.GetInstanceByName(openStackMachine, openStackMachine.Name)
+func (r *OpenStackMachineReconciler) getOrCreate(logger logr.Logger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, computeService *compute.Service, userData string) (*compute.InstanceStatus, error) {
+	instanceStatus, err := computeService.GetInstanceStatusByName(openStackMachine, openStackMachine.Name)
 	if err != nil {
 		return nil, err
 	}
 
-	if instance == nil {
+	if instanceStatus == nil {
 		logger.Info("Machine not exist, Creating Machine", "Machine", openStackMachine.Name)
-		instance, err = computeService.CreateInstance(openStackCluster, machine, openStackMachine, cluster.Name, userData)
+		instanceStatus, err = computeService.CreateInstance(openStackCluster, machine, openStackMachine, cluster.Name, userData)
 		if err != nil {
 			return nil, errors.Errorf("error creating Openstack instance: %v", err)
 		}
 	}
 
-	return instance, nil
+	return instanceStatus, nil
 }
 
 func handleUpdateMachineError(logger logr.Logger, openstackMachine *infrav1.OpenStackMachine, message error) {
@@ -395,8 +407,8 @@ func handleUpdateMachineError(logger logr.Logger, openstackMachine *infrav1.Open
 	logger.Error(fmt.Errorf(string(err)), message.Error())
 }
 
-func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(logger logr.Logger, osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, instance *infrav1.Instance, clusterName string) error {
-	ip := instance.IP
+func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(logger logr.Logger, osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, instanceNS *compute.InstanceNetworkStatus, clusterName string) error {
+	ip := instanceNS.IP()
 	loadbalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, logger)
 	if err != nil {
 		return err

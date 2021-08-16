@@ -175,13 +175,15 @@ func getOpenStackServers(e2eCtx *E2EContext) (map[string]server, error) {
 	}
 
 	srvs := map[string]server{}
-	for _, srv := range serverList {
-		addrMap, err := compute.GetIPFromInstance(srv)
+	for i := range serverList {
+		srv := &serverList[i]
+		instanceStatus := compute.NewInstanceStatusFromServer(srv)
+		instanceNS, err := instanceStatus.NetworkStatus()
 		if err != nil {
-			return nil, fmt.Errorf("error getting ip for server %s: %v", srv.Name, err)
+			return nil, fmt.Errorf("error getting network status for server %s: %v", srv.Name, err)
 		}
-		ip, ok := addrMap["internal"]
-		if !ok {
+
+		if instanceNS.IP() == "" {
 			_, _ = fmt.Fprintf(GinkgoWriter, "error getting internal ip for server %s: internal ip doesn't exist (yet)\n", srv.Name)
 			continue
 		}
@@ -189,7 +191,7 @@ func getOpenStackServers(e2eCtx *E2EContext) (map[string]server, error) {
 		srvs[srv.Name] = server{
 			name: srv.Name,
 			id:   srv.ID,
-			ip:   ip,
+			ip:   instanceNS.IP(),
 		}
 	}
 	return srvs, nil

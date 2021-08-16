@@ -22,9 +22,9 @@ import (
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 )
 
-func (s *Service) CreateBastion(openStackCluster *infrav1.OpenStackCluster, clusterName string) (*infrav1.Instance, error) {
+func (s *Service) CreateBastion(openStackCluster *infrav1.OpenStackCluster, clusterName string) (*InstanceStatus, error) {
 	name := fmt.Sprintf("%s-bastion", clusterName)
-	input := &infrav1.Instance{
+	instanceSpec := &InstanceSpec{
 		Name:          name,
 		Flavor:        openStackCluster.Spec.Bastion.Instance.Flavor,
 		SSHKeyName:    openStackCluster.Spec.Bastion.Instance.SSHKeyName,
@@ -40,7 +40,7 @@ func (s *Service) CreateBastion(openStackCluster *infrav1.OpenStackCluster, clus
 	if openStackCluster.Spec.ManagedSecurityGroups {
 		securityGroups = append(securityGroups, openStackCluster.Status.BastionSecurityGroup.ID)
 	}
-	input.SecurityGroups = &securityGroups
+	instanceSpec.SecurityGroups = securityGroups
 
 	var nets []infrav1.Network
 	if len(openStackCluster.Spec.Bastion.Instance.Networks) > 0 {
@@ -57,7 +57,7 @@ func (s *Service) CreateBastion(openStackCluster *infrav1.OpenStackCluster, clus
 			},
 		}}
 	}
-	input.Networks = &nets
+	instanceSpec.Networks = nets
 
-	return s.createInstance(openStackCluster, clusterName, input)
+	return s.createInstance(openStackCluster, clusterName, instanceSpec)
 }
