@@ -59,10 +59,5 @@ func (s *Service) CreateBastion(openStackCluster *infrav1.OpenStackCluster, clus
 	}
 	input.Networks = &nets
 
-	out, err := s.createInstance(openStackCluster, clusterName, input)
-	if err != nil {
-		return nil, err
-	}
-
-	return out, nil
+	return s.createInstance(openStackCluster, clusterName, input)
 }

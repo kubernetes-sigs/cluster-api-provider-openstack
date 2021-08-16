@@ -132,11 +132,7 @@ func (s *Service) CreateInstance(openStackCluster *infrav1.OpenStackCluster, mac
 	}
 	input.Networks = nets
 
-	out, err := s.createInstance(openStackMachine, clusterName, input)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
+	return s.createInstance(openStackMachine, clusterName, input)
 }
 
 // constructNetworks builds an array of networks from the network, subnet and ports items in the machine spec.
@@ -654,16 +650,7 @@ func (s *Service) GetManagementPort(instance *infrav1.Instance) (*ports.Port, er
 	return &allPorts[0], nil
 }
 
-func (s *Service) DeleteInstance(eventObject runtime.Object, instanceName string) error {
-	instance, err := s.InstanceExists(instanceName)
-	if err != nil {
-		return err
-	}
-
-	if instance == nil || instance.ID == "" {
-		return nil
-	}
-
+func (s *Service) DeleteInstance(eventObject runtime.Object, instance *infrav1.Instance) error {
 	mc := metrics.NewMetricPrometheusContext("server_os_interface", "list")
 	allInterfaces, err := attachinterfaces.List(s.computeClient, instance.ID).AllPages()
 	if mc.ObserveRequest(err) != nil {
@@ -673,9 +660,6 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instanceName string
 	if err != nil {
 		return err
 	}
-	if len(instanceInterfaces) < 1 {
-		return s.deleteInstance(eventObject, instance.ID)
-	}
 
 	trunkSupport, err := s.getTrunkSupport()
 	if err != nil {
@@ -683,7 +667,7 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instanceName string
 	}
 	// get and delete trunks
 	for _, port := range instanceInterfaces {
-		if err = s.deleteAttachInterface(eventObject, instance.ID, port.PortID); err != nil {
+		if err = s.deleteAttachInterface(eventObject, instance, port.PortID); err != nil {
 			return err
 		}
 
@@ -698,7 +682,7 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instanceName string
 		}
 	}
 
-	return s.deleteInstance(eventObject, instance.ID)
+	return s.deleteInstance(eventObject, instance)
 }
 
 func (s *Service) deletePort(eventObject runtime.Object, portID string) error {
@@ -713,7 +697,10 @@ func (s *Service) deletePort(eventObject runtime.Object, portID string) error {
 	err = util.PollImmediate(retryIntervalPortDelete, timeoutPortDelete, func() (bool, error) {
 		mc := metrics.NewMetricPrometheusContext("port", "delete")
 		err := ports.Delete(s.networkClient, port.ID).ExtractErr()
-		if mc.ObserveRequest(err) != nil {
+		if mc.ObserveRequestIgnoreNotFound(err) != nil {
+			if capoerrors.IsNotFound(err) {
+				record.Eventf(eventObject, "SuccessfulDeletePort", "Port %s with id %d did not exist", port.Name, port.ID)
+			}
 			if capoerrors.IsRetryable(err) {
 				return false, nil
 			}
@@ -739,27 +726,12 @@ func (s *Service) deletePorts(eventObject runtime.Object, nets []servers.Network
 	return nil
 }
 
-func (s *Service) deleteAttachInterface(eventObject runtime.Object, instanceID, portID string) error {
-	instance, err := s.GetInstance(instanceID)
-	if err != nil {
-		return err
-	}
-	if instance == nil || instance.ID == "" {
-		return nil
-	}
-
-	port, err := s.getPort(portID)
-	if err != nil {
-		return err
-	}
-	if port == nil {
-		return nil
-	}
-
+func (s *Service) deleteAttachInterface(eventObject runtime.Object, instance *infrav1.Instance, portID string) error {
 	mc := metrics.NewMetricPrometheusContext("server_os_interface", "delete")
-	err = attachinterfaces.Delete(s.computeClient, instanceID, portID).ExtractErr()
+	err := attachinterfaces.Delete(s.computeClient, instance.ID, portID).ExtractErr()
 	if mc.ObserveRequestIgnoreNotFoundorConflict(err) != nil {
 		if capoerrors.IsNotFound(err) {
+			record.Eventf(eventObject, "SuccessfulDeleteAttachInterface", "Attach interface did not exist: instance %s, port %s", instance.ID, portID)
 			return nil
 		}
 		if capoerrors.IsConflict(err) {
@@ -767,25 +739,17 @@ func (s *Service) deleteAttachInterface(eventObject runtime.Object, instanceID, 
 			// due to instance must be paused/active/shutoff in order to detach interface
 			return nil
 		}
-		record.Warnf(eventObject, "FailedDeleteAttachInterface", "Failed to delete attach interface: instance %s, port %s: %v", instance.ID, port.ID, err)
+		record.Warnf(eventObject, "FailedDeleteAttachInterface", "Failed to delete attach interface: instance %s, port %s: %v", instance.ID, portID, err)
 		return err
 	}
 
-	record.Eventf(eventObject, "SuccessfulDeleteAttachInterface", "Deleted attach interface: instance %s, port %s", instance.ID, port.ID)
+	record.Eventf(eventObject, "SuccessfulDeleteAttachInterface", "Deleted attach interface: instance %s, port %s", instance.ID, portID)
 	return nil
 }
 
 func (s *Service) deleteTrunk(eventObject runtime.Object, portID string) error {
-	port, err := s.getPort(portID)
-	if err != nil {
-		return err
-	}
-	if port == nil {
-		return nil
-	}
-
 	listOpts := trunks.ListOpts{
-		PortID: port.ID,
+		PortID: portID,
 	}
 	mc := metrics.NewMetricPrometheusContext("trunk", "list")
 	trunkList, err := trunks.List(s.networkClient, listOpts).AllPages()
@@ -802,7 +766,11 @@ func (s *Service) deleteTrunk(eventObject runtime.Object, portID string) error {
 
 	err = util.PollImmediate(retryIntervalTrunkDelete, timeoutTrunkDelete, func() (bool, error) {
 		mc := metrics.NewMetricPrometheusContext("trunk", "delete")
-		if err := trunks.Delete(s.networkClient, trunkInfo[0].ID).ExtractErr(); mc.ObserveRequest(err) != nil {
+		if err := trunks.Delete(s.networkClient, trunkInfo[0].ID).ExtractErr(); mc.ObserveRequestIgnoreNotFound(err) != nil {
+			if capoerrors.IsNotFound(err) {
+				record.Eventf(eventObject, "SuccessfulDeleteTrunk", "Trunk %s with id %s did not exist", trunkInfo[0].Name, trunkInfo[0].ID)
+				return true, nil
+			}
 			if capoerrors.IsRetryable(err) {
 				return false, nil
 			}
@@ -834,18 +802,14 @@ func (s *Service) getPort(portID string) (port *ports.Port, err error) {
 	return port, nil
 }
 
-func (s *Service) deleteInstance(eventObject runtime.Object, instanceID string) error {
-	instance, err := s.GetInstance(instanceID)
-	if err != nil {
-		return err
-	}
-
-	if instance == nil || instance.ID == "" {
-		return nil
-	}
+func (s *Service) deleteInstance(eventObject runtime.Object, instance *infrav1.Instance) error {
 	mc := metrics.NewMetricPrometheusContext("server", "delete")
-	err = servers.Delete(s.computeClient, instance.ID).ExtractErr()
-	if mc.ObserveRequest(err) != nil {
+	err := servers.Delete(s.computeClient, instance.ID).ExtractErr()
+	if mc.ObserveRequestIgnoreNotFound(err) != nil {
+		if capoerrors.IsNotFound(err) {
+			record.Eventf(eventObject, "SuccessfulDeleteServer", "Server %s with id %s did not exist", instance.Name, instance.ID)
+			return nil
+		}
 		record.Warnf(eventObject, "FailedDeleteServer", "Failed to deleted server %s with id %s: %v", instance.Name, instance.ID, err)
 		return err
 	}
@@ -881,14 +845,10 @@ func (s *Service) GetInstance(resourceID string) (instance *infrav1.Instance, er
 		}
 		return nil, fmt.Errorf("get server %q detail failed: %v", resourceID, err)
 	}
-	i, err := serverToInstance(server)
-	if err != nil {
-		return nil, err
-	}
-	return i, err
+	return serverToInstance(server)
 }
 
-func (s *Service) InstanceExists(name string) (instance *infrav1.Instance, err error) {
+func (s *Service) GetInstanceByName(eventObject runtime.Object, name string) (instance *infrav1.Instance, err error) {
 	var listOpts servers.ListOpts
 	if name != "" {
 		listOpts = servers.ListOpts{
@@ -910,19 +870,16 @@ func (s *Service) InstanceExists(name string) (instance *infrav1.Instance, err e
 	if err != nil {
 		return nil, fmt.Errorf("extract server list: %v", err)
 	}
-	instanceList := []*infrav1.Instance{}
-	for _, server := range serverList {
-		server := server
-		i, err := serverToInstance(&server)
-		if err != nil {
-			return nil, err
-		}
-		instanceList = append(instanceList, i)
+
+	if len(serverList) > 1 {
+		record.Warnf(eventObject, "DuplicateServerNames", "Found %d servers with name '%s'. This is likely to cause errors.", len(serverList), name)
 	}
-	if len(instanceList) == 0 {
-		return nil, nil
+
+	// Return the first returned server, if any
+	for i := range serverList {
+		return serverToInstance(&serverList[i])
 	}
-	return instanceList[0], nil
+	return nil, nil
 }
 
 func isDuplicate(list []string, name string) bool {
