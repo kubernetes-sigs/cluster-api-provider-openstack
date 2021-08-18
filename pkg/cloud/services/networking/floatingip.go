@@ -17,7 +17,6 @@ limitations under the License.
 package networking
 
 import (
-	"errors"
 	"time"
 
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
@@ -45,11 +44,6 @@ func (s *Service) GetOrCreateFloatingIP(openStackCluster *infrav1.OpenStackClust
 		}
 		// only admin can add ip address
 		fpCreateOpts.FloatingIP = ip
-	}
-
-	// Trying to create a new floating IP is not possible without an external network
-	if openStackCluster.Status.ExternalNetwork == nil || openStackCluster.Status.ExternalNetwork.ID == "" {
-		return nil, errors.New("cannot create floating IP without external network")
 	}
 
 	fpCreateOpts.FloatingNetworkID = openStackCluster.Status.ExternalNetwork.ID
