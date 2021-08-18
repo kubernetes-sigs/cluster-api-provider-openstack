@@ -40,7 +40,7 @@ const (
 	kubeapiLBSuffix string = "kubeapi"
 )
 
-func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
+func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterName string, apiServerPort int) error {
 	loadBalancerName := getLoadBalancerName(clusterName)
 	s.logger.Info("Reconciling load balancer", "name", loadBalancerName)
 
@@ -49,19 +49,25 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 		return err
 	}
 
-	floatingIPAddress := openStackCluster.Spec.ControlPlaneEndpoint.Host
-	if openStackCluster.Spec.APIServerFloatingIP != "" {
-		floatingIPAddress = openStackCluster.Spec.APIServerFloatingIP
-	}
-	fp, err := s.networkingService.GetOrCreateFloatingIP(openStackCluster, clusterName, floatingIPAddress)
-	if err != nil {
-		return err
-	}
-	if err = s.networkingService.AssociateFloatingIP(openStackCluster, fp, lb.VipPortID); err != nil {
-		return err
+	var lbFloatingIP string
+	if !openStackCluster.Spec.DisableAPIServerFloatingIP {
+		var floatingIPAddress string
+		if openStackCluster.Spec.APIServerFloatingIP != "" {
+			floatingIPAddress = openStackCluster.Spec.APIServerFloatingIP
+		} else if openStackCluster.Spec.ControlPlaneEndpoint.IsValid() {
+			floatingIPAddress = openStackCluster.Spec.ControlPlaneEndpoint.Host
+		}
+		fp, err := s.networkingService.GetOrCreateFloatingIP(openStackCluster, clusterName, floatingIPAddress)
+		if err != nil {
+			return err
+		}
+		if err = s.networkingService.AssociateFloatingIP(openStackCluster, fp, lb.VipPortID); err != nil {
+			return err
+		}
+		lbFloatingIP = fp.FloatingIP
 	}
 
-	portList := []int{int(openStackCluster.Spec.ControlPlaneEndpoint.Port)}
+	portList := []int{apiServerPort}
 	portList = append(portList, openStackCluster.Spec.APIServerLoadBalancerAdditionalPorts...)
 	for _, port := range portList {
 		lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)
@@ -84,7 +90,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 		Name:       lb.Name,
 		ID:         lb.ID,
 		InternalIP: lb.VipAddress,
-		IP:         fp.FloatingIP,
+		IP:         lbFloatingIP,
 	}
 	return nil
 }

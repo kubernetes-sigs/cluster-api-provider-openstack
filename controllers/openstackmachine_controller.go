@@ -360,8 +360,12 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("LoadBalancerMember cannot be reconciled: %v", err))
 			return ctrl.Result{}, nil
 		}
-	} else if util.IsControlPlaneMachine(machine) {
-		fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, clusterName, openStackCluster.Spec.ControlPlaneEndpoint.Host)
+	} else if util.IsControlPlaneMachine(machine) && !openStackCluster.Spec.DisableAPIServerFloatingIP {
+		floatingIPAddress := openStackCluster.Spec.ControlPlaneEndpoint.Host
+		if openStackCluster.Spec.APIServerFloatingIP != "" {
+			floatingIPAddress = openStackCluster.Spec.APIServerFloatingIP
+		}
+		fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, clusterName, floatingIPAddress)
 		if err != nil {
 			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("Floating IP cannot be got or created: %v", err))
 			return ctrl.Result{}, nil

@@ -58,14 +58,29 @@ type OpenStackClusterSpec struct {
 	ExternalNetworkID string `json:"externalNetworkId,omitempty"`
 
 	// ManagedAPIServerLoadBalancer defines whether a LoadBalancer for the
-	// APIServer should be created. If set to true the following properties are
-	// mandatory: APIServerFloatingIP, APIServerPort
+	// APIServer should be created.
 	// +optional
 	ManagedAPIServerLoadBalancer bool `json:"managedAPIServerLoadBalancer"`
 
-	// APIServerFloatingIP is the floatingIP which will be associated
-	// to the APIServer. The floatingIP will be created if it not
-	// already exists.
+	// DisableAPIServerFloatingIP determines whether or not to attempt to attach a floating
+	// IP to the API server. This allows for the creation of clusters when attaching a floating
+	// IP to the API server (and hence, in many cases, exposing the API server to the internet)
+	// is not possible or desirable, e.g. if using a shared VLAN for communication between
+	// management and workload clusters or when the management cluster is inside the
+	// project network.
+	// This option requires that the API server use a VIP on the cluster network so that the
+	// underlying machines can change without changing ControlPlaneEndpoint.Host.
+	// When using a managed load balancer, this VIP will be managed automatically.
+	// If not using a managed load balancer, cluster configuration will fail without additional
+	// configuration to manage the VIP on the control plane machines, which falls outside of
+	// the scope of this controller.
+	// +optional
+	DisableAPIServerFloatingIP bool `json:"disableAPIServerFloatingIP"`
+
+	// APIServerFloatingIP is the floatingIP which will be associated with the API server.
+	// The floatingIP will be created if it does not already exist.
+	// If not specified, a new floatingIP is allocated.
+	// This field is not used if DisableAPIServerFloatingIP is set.
 	APIServerFloatingIP string `json:"apiServerFloatingIP,omitempty"`
 
 	// APIServerPort is the port on which the listener on the APIServer
