@@ -277,7 +277,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 	// Make sure bootstrap data is available and populated.
 	if machine.Spec.Bootstrap.DataSecretName == nil {
 		logger.Info("Bootstrap data secret reference is not yet available")
-                conditions.MarkFalse(openStackMachine, infrav1.MachineRunningCondition, infrav1.WaitingForBootstrapDataReason, clusterv1.ConditionSeverityInfo, "")
+		conditions.MarkFalse(openStackMachine, infrav1.MachineRunningCondition, infrav1.WaitingForBootstrapDataReason, clusterv1.ConditionSeverityInfo, "")
 		return ctrl.Result{}, nil
 	}
 	userData, err := r.getBootstrapData(machine, openStackMachine)
