@@ -129,6 +129,7 @@ type OpenStackMachineStatus struct {
 	FailureMessage *string `json:"errorMessage,omitempty"`
 
 	// Conditions defines current service state of the OpenStackMachine.
+
 	// +optional
 	Conditions clusterv1.Conditions `json:"conditions,omitempty"`
 }
