@@ -447,11 +447,12 @@ func reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.P
 
 	// Calculate the port that we will use for the API server
 	var apiServerPort int
-	if openStackCluster.Spec.ControlPlaneEndpoint.IsValid() {
+	switch {
+	case openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
 		apiServerPort = int(openStackCluster.Spec.ControlPlaneEndpoint.Port)
-	} else if openStackCluster.Spec.APIServerPort != 0 {
+	case openStackCluster.Spec.APIServerPort != 0:
 		apiServerPort = openStackCluster.Spec.APIServerPort
-	} else {
+	default:
 		apiServerPort = 6443
 	}
 
@@ -471,13 +472,14 @@ func reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.P
 	if !openStackCluster.Spec.ControlPlaneEndpoint.IsValid() {
 		var host string
 		// If there is a load balancer use the floating IP for it if set, falling back to the internal IP
-		if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
+		switch {
+		case openStackCluster.Spec.ManagedAPIServerLoadBalancer:
 			if openStackCluster.Status.Network.APIServerLoadBalancer.IP != "" {
 				host = openStackCluster.Status.Network.APIServerLoadBalancer.IP
 			} else {
 				host = openStackCluster.Status.Network.APIServerLoadBalancer.InternalIP
 			}
-		} else if !openStackCluster.Spec.DisableAPIServerFloatingIP {
+		case !openStackCluster.Spec.DisableAPIServerFloatingIP:
 			// If floating IPs are not disabled, get one to use as the VIP for the control plane
 			fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, clusterName, openStackCluster.Spec.APIServerFloatingIP)
 			if err != nil {
@@ -485,7 +487,7 @@ func reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.P
 				return errors.Errorf("Floating IP cannot be got or created: %v", err)
 			}
 			host = fp.FloatingIP
-		} else {
+		default:
 			// This case is not managed for now (i.e. no load balancer + no floating IP)
 			// We could manage a VIP port on the cluster network and set allowedAddressPairs accordingly
 			// when creating control plane machines, but this would require us to deploy software on the
