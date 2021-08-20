@@ -196,24 +196,30 @@ func deleteBastion(log logr.Logger, osProviderClient *gophercloud.ProviderClient
 		return err
 	}
 
-	instance, err := computeService.GetInstanceByName(openStackCluster, fmt.Sprintf("%s-bastion", cluster.Name))
+	instanceStatus, err := computeService.GetInstanceStatusByName(openStackCluster, fmt.Sprintf("%s-bastion", cluster.Name))
 	if err != nil {
 		return err
 	}
 
-	if instance != nil && instance.FloatingIP != "" {
-		if err = networkingService.DisassociateFloatingIP(openStackCluster, instance.FloatingIP); err != nil {
-			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to disassociate floating IP: %v", err))
-			return errors.Errorf("failed to disassociate floating IP: %v", err)
+	if instanceStatus != nil {
+		instanceNS, err := instanceStatus.NetworkStatus()
+		if err != nil {
+			return err
 		}
-		if err = networkingService.DeleteFloatingIP(openStackCluster, instance.FloatingIP); err != nil {
-			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete floating IP: %v", err))
-			return errors.Errorf("failed to delete floating IP: %v", err)
-		}
-	}
 
-	if instance != nil && instance.Name != "" {
-		if err = computeService.DeleteInstance(openStackCluster, instance); err != nil {
+		floatingIP := instanceNS.FloatingIP()
+		if floatingIP != "" {
+			if err = networkingService.DisassociateFloatingIP(openStackCluster, floatingIP); err != nil {
+				handleUpdateOSCError(openStackCluster, errors.Errorf("failed to disassociate floating IP: %v", err))
+				return errors.Errorf("failed to disassociate floating IP: %v", err)
+			}
+			if err = networkingService.DeleteFloatingIP(openStackCluster, floatingIP); err != nil {
+				handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete floating IP: %v", err))
+				return errors.Errorf("failed to delete floating IP: %v", err)
+			}
+		}
+
+		if err = computeService.DeleteInstance(openStackCluster, instanceStatus.InstanceIdentifier()); err != nil {
 			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete bastion: %v", err))
 			return errors.Errorf("failed to delete bastion: %v", err)
 		}
@@ -308,16 +314,20 @@ func reconcileBastion(log logr.Logger, osProviderClient *gophercloud.ProviderCli
 		return err
 	}
 
-	instance, err := computeService.GetInstanceByName(openStackCluster, fmt.Sprintf("%s-bastion", cluster.Name))
+	instanceStatus, err := computeService.GetInstanceStatusByName(openStackCluster, fmt.Sprintf("%s-bastion", cluster.Name))
 	if err != nil {
 		return err
 	}
-	if instance != nil {
-		openStackCluster.Status.Bastion = instance
+	if instanceStatus != nil {
+		bastion, err := instanceStatus.APIInstance()
+		if err != nil {
+			return err
+		}
+		openStackCluster.Status.Bastion = bastion
 		return nil
 	}
 
-	instance, err = computeService.CreateBastion(openStackCluster, cluster.Name)
+	instanceStatus, err = computeService.CreateBastion(openStackCluster, cluster.Name)
 	if err != nil {
 		handleUpdateOSCError(openStackCluster, errors.Errorf("failed to reconcile bastion: %v", err))
 		return errors.Errorf("failed to reconcile bastion: %v", err)
@@ -333,7 +343,7 @@ func reconcileBastion(log logr.Logger, osProviderClient *gophercloud.ProviderCli
 		handleUpdateOSCError(openStackCluster, errors.Errorf("failed to get or create floating IP for bastion: %v", err))
 		return errors.Errorf("failed to get or create floating IP for bastion: %v", err)
 	}
-	port, err := computeService.GetManagementPort(instance)
+	port, err := computeService.GetManagementPort(instanceStatus)
 	if err != nil {
 		err = errors.Errorf("getting management port for bastion: %v", err)
 		handleUpdateOSCError(openStackCluster, err)
@@ -344,8 +354,13 @@ func reconcileBastion(log logr.Logger, osProviderClient *gophercloud.ProviderCli
 		handleUpdateOSCError(openStackCluster, errors.Errorf("failed to associate floating IP with bastion: %v", err))
 		return errors.Errorf("failed to associate floating IP with bastion: %v", err)
 	}
-	instance.FloatingIP = fp.FloatingIP
-	openStackCluster.Status.Bastion = instance
+
+	bastion, err := instanceStatus.APIInstance()
+	if err != nil {
+		return err
+	}
+	bastion.FloatingIP = fp.FloatingIP
+	openStackCluster.Status.Bastion = bastion
 	return nil
 }
 
