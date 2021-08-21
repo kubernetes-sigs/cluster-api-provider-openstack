@@ -236,7 +236,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 		return ctrl.Result{}, nil
 	}
 
-	if err = computeService.DeleteInstance(openStackMachine, instanceStatus.InstanceIdentifier()); err != nil {
+	if err = computeService.DeleteInstance(openStackMachine, instanceStatus); err != nil {
 		handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error deleting OpenStack instance %s with ID %s: %v", instanceStatus.Name(), instanceStatus.ID(), err))
 		return ctrl.Result{}, nil
 	}
