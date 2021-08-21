@@ -653,9 +653,30 @@ func (s *Service) GetManagementPort(instanceStatus *InstanceStatus) (*ports.Port
 	return &allPorts[0], nil
 }
 
-func (s *Service) DeleteInstance(eventObject runtime.Object, instance *InstanceIdentifier) error {
+func (s *Service) garbageCollectErrorInstancesPort(eventObject runtime.Object, instance *InstanceStatus) error {
+	pager, err := ports.List(s.networkClient, ports.ListOpts{
+		Name: instance.Name(),
+	}).AllPages()
+	if err != nil {
+		return err
+	}
+	portList, err := ports.ExtractPorts(pager)
+	if err != nil {
+		return err
+	}
+	for _, p := range portList {
+		if err := s.deletePort(eventObject, p.ID); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *Service) DeleteInstance(eventObject runtime.Object, instance *InstanceStatus) error {
 	mc := metrics.NewMetricPrometheusContext("server_os_interface", "list")
-	allInterfaces, err := attachinterfaces.List(s.computeClient, instance.ID).AllPages()
+	instanceIdentifier := instance.InstanceIdentifier()
+	allInterfaces, err := attachinterfaces.List(s.computeClient, instanceIdentifier.ID).AllPages()
 	if mc.ObserveRequest(err) != nil {
 		return err
 	}
@@ -670,7 +691,7 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instance *InstanceI
 	}
 	// get and delete trunks
 	for _, port := range instanceInterfaces {
-		if err = s.deleteAttachInterface(eventObject, instance, port.PortID); err != nil {
+		if err = s.deleteAttachInterface(eventObject, instanceIdentifier, port.PortID); err != nil {
 			return err
 		}
 
@@ -685,7 +706,14 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instance *InstanceI
 		}
 	}
 
-	return s.deleteInstance(eventObject, instance)
+	// delete port of error instance
+	if instance.State() == infrav1.InstanceStateError {
+		if err := s.garbageCollectErrorInstancesPort(eventObject, instance); err != nil {
+			return err
+		}
+	}
+
+	return s.deleteInstance(eventObject, instanceIdentifier)
 }
 
 func (s *Service) deletePort(eventObject runtime.Object, portID string) error {
