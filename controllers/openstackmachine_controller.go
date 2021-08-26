@@ -205,11 +205,12 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 		return ctrl.Result{}, err
 	}
 
-	loadBalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, logger)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
+		loadBalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, logger)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
 		err = loadBalancerService.DeleteLoadBalancerMember(openStackCluster, machine, openStackMachine, clusterName)
 		if err != nil {
 			return ctrl.Result{}, err
