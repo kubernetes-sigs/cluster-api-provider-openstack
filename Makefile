@@ -99,6 +99,9 @@ LDFLAGS := $(shell source ./hack/version.sh; version::ldflags)
 ## Testing
 ## --------------------------------------
 
+# The number of ginkgo tests to run concurrently
+E2E_GINKGO_PARALLEL=2
+
 E2E_ARGS ?=
 
 $(ARTIFACTS):
@@ -114,7 +117,7 @@ test: ## Run tests
 E2E_GINKGO_ARGS ?= -stream
 .PHONY: test-e2e ## Run e2e tests using clusterctl
 test-e2e: $(GINKGO) $(KIND) $(KUSTOMIZE) e2e-image ## Run e2e tests
-	time $(GINKGO) -trace -progress -v -tags=e2e --nodes=2 $(E2E_GINKGO_ARGS) ./test/e2e/suites/e2e/... -- -config-path="$(E2E_CONF_PATH)" -artifacts-folder="$(ARTIFACTS)" --data-folder="$(E2E_DATA_DIR)" $(E2E_ARGS)
+	time $(GINKGO) -trace -progress -v -tags=e2e --nodes=$(E2E_GINKGO_PARALLEL) $(E2E_GINKGO_ARGS) ./test/e2e/suites/e2e/... -- -config-path="$(E2E_CONF_PATH)" -artifacts-folder="$(ARTIFACTS)" --data-folder="$(E2E_DATA_DIR)" $(E2E_ARGS)
 
 .PHONY: e2e-image
 e2e-image: docker-pull-prerequisites
