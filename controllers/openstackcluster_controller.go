@@ -136,14 +136,14 @@ func reconcileDelete(ctx context.Context, log logr.Logger, client client.Client,
 		return reconcile.Result{}, err
 	}
 
-	loadBalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, log)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
 	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
 
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
+		loadBalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, log)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+
 		if err = loadBalancerService.DeleteLoadBalancer(openStackCluster, clusterName); err != nil {
 			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete load balancer: %v", err))
 			return reconcile.Result{}, errors.Errorf("failed to delete load balancer: %v", err)
@@ -372,11 +372,6 @@ func reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.P
 		return err
 	}
 
-	loadBalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, log)
-	if err != nil {
-		return err
-	}
-
 	log.Info("Reconciling network components")
 
 	err = networkingService.ReconcileExternalNetwork(openStackCluster)
@@ -468,6 +463,11 @@ func reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.P
 	}
 
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
+		loadBalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, log)
+		if err != nil {
+			return err
+		}
+
 		err = loadBalancerService.ReconcileLoadBalancer(openStackCluster, clusterName)
 		if err != nil {
 			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to reconcile load balancer: %v", err))
