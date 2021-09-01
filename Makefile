@@ -83,6 +83,7 @@ ALL_ARCH ?= amd64 arm arm64 ppc64le s390x
 # main controller
 IMAGE_NAME ?= capi-openstack-controller
 CONTROLLER_IMG ?= $(REGISTRY)/$(IMAGE_NAME)
+CONTROLLER_IMG_TAG ?= $(CONTROLLER_IMG)-$(ARCH):$(TAG)
 CONTROLLER_ORIGINAL_IMG := gcr.io/k8s-staging-capi-openstack/capi-openstack-controller
 CONTROLLER_NAME := capo-controller-manager
 MANIFEST_FILE := infrastructure-components
@@ -127,8 +128,8 @@ test-e2e: $(GINKGO) $(KIND) $(KUSTOMIZE) e2e-image test-e2e-image-prerequisites 
 	time $(GINKGO) -trace -progress -v -tags=e2e --nodes=$(E2E_GINKGO_PARALLEL) $(E2E_GINKGO_ARGS) ./test/e2e/suites/e2e/... -- -config-path="$(E2E_CONF_PATH)" -artifacts-folder="$(ARTIFACTS)" --data-folder="$(E2E_DATA_DIR)" $(E2E_ARGS)
 
 .PHONY: e2e-image
-e2e-image: docker-pull-prerequisites
-	docker build -f $(CONTAINERFILE) --tag="gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e" .
+e2e-image: CONTROLLER_IMG_TAG = "gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e"
+e2e-image: docker-build
 
 # Pull all the images references in test/e2e/data/e2e_conf.yaml
 test-e2e-image-prerequisites:
@@ -226,11 +227,11 @@ generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
 
 .PHONY: docker-build
 docker-build: docker-pull-prerequisites ## Build the docker image for controller-manager
-	docker build -f $(CONTAINERFILE) --build-arg goproxy=$(GOPROXY) --build-arg ARCH=$(ARCH) --build-arg LDFLAGS="$(LDFLAGS)" . -t $(CONTROLLER_IMG)-$(ARCH):$(TAG)
+	docker build -f $(CONTAINERFILE) --build-arg goproxy=$(GOPROXY) --build-arg ARCH=$(ARCH) --build-arg LDFLAGS="$(LDFLAGS)" . -t $(CONTROLLER_IMG_TAG)
 
 .PHONY: docker-push
 docker-push: ## Push the docker image
-	docker push $(CONTROLLER_IMG)-$(ARCH):$(TAG)
+	docker push $(CONTROLLER_IMG_TAG)
 
 .PHONY: docker-pull-prerequisites
 docker-pull-prerequisites:
