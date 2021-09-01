@@ -57,6 +57,13 @@ PATH := $(abspath $(TOOLS_BIN_DIR)):$(PATH)
 DOCKER_CLI_EXPERIMENTAL=enabled
 DOCKER_BUILDKIT=1
 
+PODMAN ?= 0
+ifeq ($(PODMAN), 1)
+	CONTAINERFILE ?= Containerfile
+else
+	CONTAINERFILE ?= Dockerfile
+endif
+
 # Release variables
 
 STAGING_REGISTRY := gcr.io/k8s-staging-capi-openstack
@@ -121,7 +128,7 @@ test-e2e: $(GINKGO) $(KIND) $(KUSTOMIZE) e2e-image ## Run e2e tests
 
 .PHONY: e2e-image
 e2e-image: docker-pull-prerequisites
-	docker build -f Dockerfile --tag="gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e" .
+	docker build -f $(CONTAINERFILE) --tag="gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e" .
 
 CONFORMANCE_E2E_ARGS ?= -kubetest.config-file=$(KUBETEST_CONF_PATH)
 CONFORMANCE_E2E_ARGS += $(E2E_ARGS)
@@ -210,7 +217,7 @@ generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
 
 .PHONY: docker-build
 docker-build: docker-pull-prerequisites ## Build the docker image for controller-manager
-	docker build --build-arg goproxy=$(GOPROXY) --build-arg ARCH=$(ARCH) --build-arg LDFLAGS="$(LDFLAGS)" . -t $(CONTROLLER_IMG)-$(ARCH):$(TAG)
+	docker build -f $(CONTAINERFILE) --build-arg goproxy=$(GOPROXY) --build-arg ARCH=$(ARCH) --build-arg LDFLAGS="$(LDFLAGS)" . -t $(CONTROLLER_IMG)-$(ARCH):$(TAG)
 
 .PHONY: docker-push
 docker-push: ## Push the docker image
@@ -218,7 +225,7 @@ docker-push: ## Push the docker image
 
 .PHONY: docker-pull-prerequisites
 docker-pull-prerequisites:
-	docker pull docker.io/docker/dockerfile:1.1-experimental
+	[ "$(PODMAN)" -eq 0 ] && docker pull docker.io/docker/dockerfile:1.1-experimental
 	docker pull docker.io/library/golang:$(GOLANG_VERSION)
 	docker pull gcr.io/distroless/static:latest
 
