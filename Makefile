@@ -123,12 +123,21 @@ test: ## Run tests
 # E2E_GINKGO_ARGS="-stream -focus='default'" E2E_ARGS="-use-existing-cluster='true'" make test-e2e
 E2E_GINKGO_ARGS ?= -stream
 .PHONY: test-e2e ## Run e2e tests using clusterctl
-test-e2e: $(GINKGO) $(KIND) $(KUSTOMIZE) e2e-image ## Run e2e tests
+test-e2e: $(GINKGO) $(KIND) $(KUSTOMIZE) e2e-image test-e2e-image-prerequisites ## Run e2e tests
 	time $(GINKGO) -trace -progress -v -tags=e2e --nodes=$(E2E_GINKGO_PARALLEL) $(E2E_GINKGO_ARGS) ./test/e2e/suites/e2e/... -- -config-path="$(E2E_CONF_PATH)" -artifacts-folder="$(ARTIFACTS)" --data-folder="$(E2E_DATA_DIR)" $(E2E_ARGS)
 
 .PHONY: e2e-image
 e2e-image: docker-pull-prerequisites
 	docker build -f $(CONTAINERFILE) --tag="gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e" .
+
+# Pull all the images references in test/e2e/data/e2e_conf.yaml
+test-e2e-image-prerequisites:
+	docker pull gcr.io/k8s-staging-cluster-api/cluster-api-controller:v0.4.0
+	docker pull gcr.io/k8s-staging-cluster-api/kubeadm-bootstrap-controller:v0.4.0
+	docker pull gcr.io/k8s-staging-cluster-api/kubeadm-control-plane-controller:v0.4.0
+	docker pull quay.io/jetstack/cert-manager-cainjector:v1.1.0
+	docker pull quay.io/jetstack/cert-manager-webhook:v1.1.0
+	docker pull quay.io/jetstack/cert-manager-controller:v1.1.0
 
 CONFORMANCE_E2E_ARGS ?= -kubetest.config-file=$(KUBETEST_CONF_PATH)
 CONFORMANCE_E2E_ARGS += $(E2E_ARGS)
