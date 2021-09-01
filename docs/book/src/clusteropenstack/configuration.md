@@ -133,7 +133,7 @@ When running CAPO with `--v=6` the gophercloud client logs its requests to the O
 
 ## External network
 
-External network is automatically found, but you can specify the external network explicitly by `spec.externalNetworkId` of `OpenStackCluster`.
+If there is only a single external network it will be detected automatically. If there is more than one external network you can specify which one the cluster should use by setting the environment variable `OPENSTACK_EXTERNAL_NETWORK_ID`.
 
 The public network id can be obtained by using command,
 
