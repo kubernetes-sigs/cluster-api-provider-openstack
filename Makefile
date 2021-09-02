@@ -57,6 +57,13 @@ PATH := $(abspath $(TOOLS_BIN_DIR)):$(PATH)
 DOCKER_CLI_EXPERIMENTAL=enabled
 DOCKER_BUILDKIT=1
 
+PODMAN ?= 0
+ifeq ($(PODMAN), 1)
+	CONTAINERFILE ?= Containerfile
+else
+	CONTAINERFILE ?= Dockerfile
+endif
+
 # Release variables
 
 STAGING_REGISTRY := gcr.io/k8s-staging-capi-openstack
@@ -76,6 +83,7 @@ ALL_ARCH ?= amd64 arm arm64 ppc64le s390x
 # main controller
 IMAGE_NAME ?= capi-openstack-controller
 CONTROLLER_IMG ?= $(REGISTRY)/$(IMAGE_NAME)
+CONTROLLER_IMG_TAG ?= $(CONTROLLER_IMG)-$(ARCH):$(TAG)
 CONTROLLER_ORIGINAL_IMG := gcr.io/k8s-staging-capi-openstack/capi-openstack-controller
 CONTROLLER_NAME := capo-controller-manager
 MANIFEST_FILE := infrastructure-components
@@ -99,6 +107,9 @@ LDFLAGS := $(shell source ./hack/version.sh; version::ldflags)
 ## Testing
 ## --------------------------------------
 
+# The number of ginkgo tests to run concurrently
+E2E_GINKGO_PARALLEL=2
+
 E2E_ARGS ?=
 
 $(ARTIFACTS):
@@ -113,12 +124,21 @@ test: ## Run tests
 # E2E_GINKGO_ARGS="-stream -focus='default'" E2E_ARGS="-use-existing-cluster='true'" make test-e2e
 E2E_GINKGO_ARGS ?= -stream
 .PHONY: test-e2e ## Run e2e tests using clusterctl
-test-e2e: $(GINKGO) $(KIND) $(KUSTOMIZE) e2e-image ## Run e2e tests
-	time $(GINKGO) -trace -progress -v -tags=e2e --nodes=2 $(E2E_GINKGO_ARGS) ./test/e2e/suites/e2e/... -- -config-path="$(E2E_CONF_PATH)" -artifacts-folder="$(ARTIFACTS)" --data-folder="$(E2E_DATA_DIR)" $(E2E_ARGS)
+test-e2e: $(GINKGO) $(KIND) $(KUSTOMIZE) e2e-image test-e2e-image-prerequisites ## Run e2e tests
+	time $(GINKGO) -trace -progress -v -tags=e2e --nodes=$(E2E_GINKGO_PARALLEL) $(E2E_GINKGO_ARGS) ./test/e2e/suites/e2e/... -- -config-path="$(E2E_CONF_PATH)" -artifacts-folder="$(ARTIFACTS)" --data-folder="$(E2E_DATA_DIR)" $(E2E_ARGS)
 
 .PHONY: e2e-image
-e2e-image: docker-pull-prerequisites
-	docker build -f Dockerfile --tag="gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e" .
+e2e-image: CONTROLLER_IMG_TAG = "gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e"
+e2e-image: docker-build
+
+# Pull all the images references in test/e2e/data/e2e_conf.yaml
+test-e2e-image-prerequisites:
+	docker pull gcr.io/k8s-staging-cluster-api/cluster-api-controller:v0.4.0
+	docker pull gcr.io/k8s-staging-cluster-api/kubeadm-bootstrap-controller:v0.4.0
+	docker pull gcr.io/k8s-staging-cluster-api/kubeadm-control-plane-controller:v0.4.0
+	docker pull quay.io/jetstack/cert-manager-cainjector:v1.1.0
+	docker pull quay.io/jetstack/cert-manager-webhook:v1.1.0
+	docker pull quay.io/jetstack/cert-manager-controller:v1.1.0
 
 CONFORMANCE_E2E_ARGS ?= -kubetest.config-file=$(KUBETEST_CONF_PATH)
 CONFORMANCE_E2E_ARGS += $(E2E_ARGS)
@@ -207,15 +227,15 @@ generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
 
 .PHONY: docker-build
 docker-build: docker-pull-prerequisites ## Build the docker image for controller-manager
-	docker build --build-arg goproxy=$(GOPROXY) --build-arg ARCH=$(ARCH) --build-arg LDFLAGS="$(LDFLAGS)" . -t $(CONTROLLER_IMG)-$(ARCH):$(TAG)
+	docker build -f $(CONTAINERFILE) --build-arg goproxy=$(GOPROXY) --build-arg ARCH=$(ARCH) --build-arg LDFLAGS="$(LDFLAGS)" . -t $(CONTROLLER_IMG_TAG)
 
 .PHONY: docker-push
 docker-push: ## Push the docker image
-	docker push $(CONTROLLER_IMG)-$(ARCH):$(TAG)
+	docker push $(CONTROLLER_IMG_TAG)
 
 .PHONY: docker-pull-prerequisites
 docker-pull-prerequisites:
-	docker pull docker.io/docker/dockerfile:1.1-experimental
+	[ "$(PODMAN)" -eq 0 ] && docker pull docker.io/docker/dockerfile:1.1-experimental
 	docker pull docker.io/library/golang:$(GOLANG_VERSION)
 	docker pull gcr.io/distroless/static:latest
 
