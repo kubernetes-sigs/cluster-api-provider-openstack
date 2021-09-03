@@ -46,11 +46,12 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
 )
 
+const specName = "e2e"
+
 var _ = Describe("e2e tests", func() {
 	var (
 		namespace *corev1.Namespace
 		ctx       context.Context
-		specName  = "e2e"
 	)
 
 	BeforeEach(func() {
@@ -71,7 +72,7 @@ var _ = Describe("e2e tests", func() {
 			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(3)
 			configCluster.WorkerMachineCount = pointer.Int64Ptr(1)
 			configCluster.Flavor = shared.FlavorDefault
-			md := createCluster(ctx, configCluster, specName)
+			md := createCluster(ctx, configCluster)
 
 			workerMachines := framework.GetMachinesByMachineDeployments(ctx, framework.GetMachinesByMachineDeploymentsInput{
 				Lister:            e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
@@ -97,7 +98,7 @@ var _ = Describe("e2e tests", func() {
 			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(1)
 			configCluster.WorkerMachineCount = pointer.Int64Ptr(1)
 			configCluster.Flavor = shared.FlavorExternalCloudProvider
-			md := createCluster(ctx, configCluster, specName)
+			md := createCluster(ctx, configCluster)
 
 			workerMachines := framework.GetMachinesByMachineDeployments(ctx, framework.GetMachinesByMachineDeploymentsInput{
 				Lister:            e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
@@ -138,7 +139,7 @@ var _ = Describe("e2e tests", func() {
 			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(1)
 			configCluster.WorkerMachineCount = pointer.Int64Ptr(1)
 			configCluster.Flavor = shared.FlavorWithoutLB
-			_ = createCluster(ctx, configCluster, specName)
+			_ = createCluster(ctx, configCluster)
 
 			shared.Byf("Creating MachineDeployment with custom port options")
 			md3Name := clusterName + "-md-3"
@@ -174,7 +175,7 @@ var _ = Describe("e2e tests", func() {
 			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(1)
 			configCluster.WorkerMachineCount = pointer.Int64Ptr(1)
 			configCluster.Flavor = shared.FlavorWithoutLB
-			md := createCluster(ctx, configCluster, specName)
+			md := createCluster(ctx, configCluster)
 
 			workerMachines := framework.GetMachinesByMachineDeployments(ctx, framework.GetMachinesByMachineDeploymentsInput{
 				Lister:            e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
@@ -200,7 +201,7 @@ var _ = Describe("e2e tests", func() {
 			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(1)
 			configCluster.WorkerMachineCount = pointer.Int64Ptr(0)
 			configCluster.Flavor = shared.FlavorDefault
-			_ = createCluster(ctx, configCluster, specName)
+			_ = createCluster(ctx, configCluster)
 
 			shared.Byf("Creating Machine Deployment with invalid subnet id")
 			md1Name := clusterName + "-md-1"
@@ -243,7 +244,7 @@ var _ = Describe("e2e tests", func() {
 	})
 })
 
-func createCluster(ctx context.Context, configCluster clusterctl.ConfigClusterInput, specName string) []*clusterv1.MachineDeployment {
+func createCluster(ctx context.Context, configCluster clusterctl.ConfigClusterInput) []*clusterv1.MachineDeployment {
 	result := &clusterctl.ApplyClusterTemplateAndWaitResult{}
 	clusterctl.ApplyClusterTemplateAndWait(ctx, clusterctl.ApplyClusterTemplateAndWaitInput{
 		ClusterProxy:                 e2eCtx.Environment.BootstrapClusterProxy,
