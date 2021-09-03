@@ -97,7 +97,7 @@ $ openstack network list --external
 
 ### OpenStack prerequisites
 
-The file `test/e2e/data/e2e_conf.yaml` and the test templates under `test/e2e/data/infrastructure-openstack` reference several OpenStack resources which must exist before running the test:
+The file [`test/e2e/data/e2e_conf.yaml`](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/master/test/e2e/data/e2e_conf.yaml) and the test templates under [`test/e2e/data/infrastructure-openstack`](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/tree/master/test/e2e/data/infrastructure-openstack) reference several OpenStack resources which must exist before running the test:
 
 * Glance images
   * `cirros-0.5.1-x86_64-disk`
@@ -125,9 +125,9 @@ make test-e2e OPENSTACK_CLOUD_YAML_FILE=/path/to/clouds.yaml OPENSTACK_CLOUD=my_
 
 ### Host configuration
 
-Firstly, you must be using kernel >=5.11. Fedora 34 is the oldest distribution with this kernel.
+Firstly, you must be using kernel >=5.11. If you are using Fedora, this means Fedora >= 34.
 
-You *MUST* configure systemd and iptables as described in https://kind.sigs.k8s.io/docs/user/rootless/. There is no need to configure cgroups v2 as Fedora uses this by default.
+You must configure systemd and iptables as described in https://kind.sigs.k8s.io/docs/user/rootless/. There is no need to configure cgroups v2 on Fedora, as it uses this by default.
 
 You must install the `podman-docker` package to emulate the docker cli tool. However, this is not sufficient on its own as described below.
 
