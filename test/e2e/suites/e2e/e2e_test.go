@@ -23,10 +23,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -52,6 +54,9 @@ var _ = Describe("e2e tests", func() {
 	var (
 		namespace *corev1.Namespace
 		ctx       context.Context
+
+		// Cleanup functions which cannot run until after the cluster has been deleted
+		postClusterCleanup []func()
 	)
 
 	BeforeEach(func() {
@@ -62,6 +67,7 @@ var _ = Describe("e2e tests", func() {
 		Expect(e2eCtx.E2EConfig).ToNot(BeNil(), "Invalid argument. e2eConfig can't be nil when calling %s spec", specName)
 		Expect(e2eCtx.E2EConfig.Variables).To(HaveKey(shared.KubernetesVersion))
 		shared.SetEnvVar("USE_CI_ARTIFACTS", "true", false)
+		postClusterCleanup = nil
 	})
 
 	Describe("Workload cluster (default)", func() {
@@ -193,6 +199,117 @@ var _ = Describe("e2e tests", func() {
 		})
 	})
 
+	Describe("Workload cluster (multiple attached networks)", func() {
+		var extraNet1, extraNet2 *networks.Network
+
+		BeforeEach(func() {
+			var err error
+
+			// Create 2 additional networks to be attached to all cluster nodes
+			// We can't clean up these networks in a corresponding AfterEach because they will still be in use by the cluster.
+			// Instead we clean them up after the cluster has been deleted.
+
+			shared.Byf("Creating additional networks")
+
+			extraNet1, err = shared.CreateOpenStackNetwork(e2eCtx, fmt.Sprintf("%s-extraNet1", namespace.Name), "10.14.0.0/24")
+			Expect(err).NotTo(HaveOccurred())
+			postClusterCleanup = append(postClusterCleanup, func() {
+				shared.Byf("Deleting additional network %s", extraNet1.Name)
+				err := shared.DeleteOpenStackNetwork(e2eCtx, extraNet1.ID)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			extraNet2, err = shared.CreateOpenStackNetwork(e2eCtx, fmt.Sprintf("%s-extraNet2", namespace.Name), "10.14.1.0/24")
+			Expect(err).NotTo(HaveOccurred())
+			postClusterCleanup = append(postClusterCleanup, func() {
+				shared.Byf("Deleting additional network %s", extraNet2.Name)
+				err := shared.DeleteOpenStackNetwork(e2eCtx, extraNet2.ID)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			os.Setenv("CLUSTER_EXTRA_NET_1", extraNet1.ID)
+			os.Setenv("CLUSTER_EXTRA_NET_2", extraNet2.ID)
+		})
+
+		It("should attach all machines to multiple networks", func() {
+			shared.Byf("Creating a cluster")
+			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
+			configCluster := defaultConfigCluster(clusterName, namespace.Name)
+			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(1)
+			configCluster.WorkerMachineCount = pointer.Int64Ptr(1)
+			configCluster.Flavor = shared.FlavorMultiNetwork
+			md := createCluster(ctx, configCluster)
+
+			workerMachines := framework.GetMachinesByMachineDeployments(ctx, framework.GetMachinesByMachineDeploymentsInput{
+				Lister:            e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
+				ClusterName:       clusterName,
+				Namespace:         namespace.Name,
+				MachineDeployment: *md[0],
+			})
+			controlPlaneMachines := framework.GetControlPlaneMachinesByCluster(ctx, framework.GetControlPlaneMachinesByClusterInput{
+				Lister:      e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
+				ClusterName: clusterName,
+				Namespace:   namespace.Name,
+			})
+			Expect(workerMachines).To(HaveLen(int(*configCluster.WorkerMachineCount)))
+			Expect(controlPlaneMachines).To(HaveLen(int(*configCluster.ControlPlaneMachineCount)))
+
+			openStackCluster, err := shared.ClusterForSpec(ctx, e2eCtx, namespace)
+			Expect(err).NotTo(HaveOccurred())
+
+			var allMachines []clusterv1.Machine
+			allMachines = append(allMachines, controlPlaneMachines...)
+			allMachines = append(allMachines, workerMachines...)
+
+			// We expect each machine to have 3 ports in each of these 3 networks with the given description.
+			expectedPorts := map[string]string{
+				openStackCluster.Status.Network.ID: "primary",
+				extraNet1.ID:                       "Extra Network 1",
+				extraNet2.ID:                       "Extra Network 2",
+			}
+
+			for i := range allMachines {
+				machine := &allMachines[i]
+				shared.Byf("Checking ports for machine %s", machine.Name)
+				instanceID := getInstanceIDForMachine(machine)
+
+				shared.Byf("Fetching ports for instance %s", instanceID)
+				ports, err := shared.DumpOpenStackPorts(e2eCtx, ports.ListOpts{
+					DeviceID: instanceID,
+				})
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ports).To(HaveLen(len(expectedPorts)))
+
+				var seen []string
+				var seenAddresses clusterv1.MachineAddresses
+				for j := range ports {
+					port := &ports[j]
+
+					// Check that the port has an expected network ID
+					expectedDescription, ok := expectedPorts[port.NetworkID]
+					Expect(ok).To(BeTrue())
+
+					// Check that the port has the expected description for that network ID
+					Expect(port.Description).To(Equal(expectedDescription))
+
+					// Check that we don't have duplicate networks
+					Expect(seen).ToNot(ContainElement(port.NetworkID))
+					seen = append(seen, port.NetworkID)
+
+					for k := range port.FixedIPs {
+						seenAddresses = append(seenAddresses, clusterv1.MachineAddress{
+							Type:    clusterv1.MachineInternalIP,
+							Address: port.FixedIPs[k].IPAddress,
+						})
+					}
+				}
+
+				// All IP addresses on all ports should be reported in Addresses
+				Expect(machine.Status.Addresses).To(ContainElements(seenAddresses))
+			}
+		})
+	})
+
 	Describe("MachineDeployment misconfigurations", func() {
 		It("Should fail to create MachineDeployment with invalid subnet or invalid availability zone", func() {
 			shared.Byf("Creating a cluster")
@@ -241,6 +358,11 @@ var _ = Describe("e2e tests", func() {
 		shared.SetEnvVar("USE_CI_ARTIFACTS", "false", false)
 		// Dumps all the resources in the spec namespace, then cleanups the cluster object and the spec namespace itself.
 		shared.DumpSpecResourcesAndCleanup(ctx, specName, namespace, e2eCtx)
+
+		// Cleanup resources which can't be cleaned up until the cluster has been deleted
+		for _, cleanup := range postClusterCleanup {
+			cleanup()
+		}
 	})
 })
 
@@ -276,6 +398,15 @@ func getEvents(namespace string) *corev1.EventList {
 	}
 
 	return eventsList
+}
+
+func getInstanceIDForMachine(machine *clusterv1.Machine) string {
+	providerID := machine.Spec.ProviderID
+	Expect(providerID).NotTo(BeNil())
+
+	providerIDSplit := strings.SplitN(*providerID, ":///", 2)
+	Expect(providerIDSplit[0]).To(Equal("openstack"))
+	return providerIDSplit[1]
 }
 
 func isErrorEventExists(namespace, machineDeploymentName, eventReason, errorMsg string, eList *corev1.EventList) bool {

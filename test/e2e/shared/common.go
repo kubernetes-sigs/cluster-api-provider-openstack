@@ -81,7 +81,7 @@ func DumpSpecResourcesAndCleanup(ctx context.Context, specName string, namespace
 }
 
 func dumpMachines(ctx context.Context, e2eCtx *E2EContext, namespace *corev1.Namespace) {
-	cluster, err := clusterForSpec(ctx, e2eCtx.Environment.BootstrapClusterProxy, namespace)
+	cluster, err := ClusterForSpec(ctx, e2eCtx, namespace)
 	if err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "cannot dump machines, couldn't get cluster in namespace %s: %v\n", namespace.Name, err)
 		return
@@ -109,8 +109,8 @@ func dumpMachines(ctx context.Context, e2eCtx *E2EContext, namespace *corev1.Nam
 	}
 }
 
-func clusterForSpec(ctx context.Context, clusterProxy framework.ClusterProxy, namespace *corev1.Namespace) (*infrav1.OpenStackCluster, error) {
-	lister := clusterProxy.GetClient()
+func ClusterForSpec(ctx context.Context, e2eCtx *E2EContext, namespace *corev1.Namespace) (*infrav1.OpenStackCluster, error) {
+	lister := e2eCtx.Environment.BootstrapClusterProxy.GetClient()
 	list := new(infrav1.OpenStackClusterList)
 	if err := lister.List(ctx, list, client.InNamespace(namespace.GetName())); err != nil {
 		return nil, fmt.Errorf("error listing cluster: %v", err)

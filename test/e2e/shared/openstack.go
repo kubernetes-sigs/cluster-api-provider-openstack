@@ -36,7 +36,9 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -322,4 +324,58 @@ func getOpenStackCloudYAML(cloudYAML string) []byte {
 	cloudYAMLContent, err := os.ReadFile(cloudYAML)
 	Expect(err).NotTo(HaveOccurred())
 	return cloudYAMLContent
+}
+
+func CreateOpenStackNetwork(e2eCtx *E2EContext, name, cidr string) (*networks.Network, error) {
+	providerClient, clientOpts, err := getProviderClient(e2eCtx)
+	if err != nil {
+		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
+		return nil, err
+	}
+
+	networkClient, err := openstack.NewNetworkV2(providerClient, gophercloud.EndpointOpts{
+		Region: clientOpts.RegionName,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error creating network client: %s", err)
+	}
+
+	netCreateOpts := networks.CreateOpts{
+		Name:         name,
+		AdminStateUp: gophercloud.Enabled,
+	}
+	net, err := networks.Create(networkClient, netCreateOpts).Extract()
+	if err != nil {
+		return net, err
+	}
+
+	subnetCreateOpts := subnets.CreateOpts{
+		Name:      name,
+		NetworkID: net.ID,
+		IPVersion: 4,
+		CIDR:      cidr,
+	}
+	_, err = subnets.Create(networkClient, subnetCreateOpts).Extract()
+	if err != nil {
+		networks.Delete(networkClient, net.ID)
+		return nil, err
+	}
+	return net, nil
+}
+
+func DeleteOpenStackNetwork(e2eCtx *E2EContext, id string) error {
+	providerClient, clientOpts, err := getProviderClient(e2eCtx)
+	if err != nil {
+		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
+		return err
+	}
+
+	networkClient, err := openstack.NewNetworkV2(providerClient, gophercloud.EndpointOpts{
+		Region: clientOpts.RegionName,
+	})
+	if err != nil {
+		return fmt.Errorf("error creating network client: %s", err)
+	}
+
+	return networks.Delete(networkClient, id).ExtractErr()
 }
