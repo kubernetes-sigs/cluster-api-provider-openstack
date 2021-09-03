@@ -23,6 +23,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -52,6 +53,9 @@ var _ = Describe("e2e tests", func() {
 	var (
 		namespace *corev1.Namespace
 		ctx       context.Context
+
+		// Cleanup functions which cannot run until after the cluster has been deleted
+		postClusterCleanup []func()
 	)
 
 	BeforeEach(func() {
@@ -62,6 +66,7 @@ var _ = Describe("e2e tests", func() {
 		Expect(e2eCtx.E2EConfig).ToNot(BeNil(), "Invalid argument. e2eConfig can't be nil when calling %s spec", specName)
 		Expect(e2eCtx.E2EConfig.Variables).To(HaveKey(shared.KubernetesVersion))
 		shared.SetEnvVar("USE_CI_ARTIFACTS", "true", false)
+		postClusterCleanup = nil
 	})
 
 	Describe("Workload cluster (default)", func() {
@@ -193,6 +198,59 @@ var _ = Describe("e2e tests", func() {
 		})
 	})
 
+	Describe("Workload cluster (multiple attached networks)", func() {
+		BeforeEach(func() {
+			// Create 2 additional networks to be attached to all cluster nodes
+			// We can't clean up these networks in a corresponding AfterEach because they will still be in use by the cluster.
+			// Instead we clean them up after the cluster has been deleted.
+
+			shared.Byf("Creating additional networks")
+
+			extraNet1, err := shared.CreateOpenStackNetwork(e2eCtx, fmt.Sprintf("%s-extraNet1", namespace.Name), "10.14.0.0/24")
+			Expect(err).NotTo(HaveOccurred())
+			postClusterCleanup = append(postClusterCleanup, func() {
+				shared.Byf("Deleting additional network %s", extraNet1.Name)
+				err := shared.DeleteOpenStackNetwork(e2eCtx, extraNet1.ID)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			extraNet2, err := shared.CreateOpenStackNetwork(e2eCtx, fmt.Sprintf("%s-extraNet2", namespace.Name), "10.14.1.0/24")
+			Expect(err).NotTo(HaveOccurred())
+			postClusterCleanup = append(postClusterCleanup, func() {
+				shared.Byf("Deleting additional network %s", extraNet2.Name)
+				err := shared.DeleteOpenStackNetwork(e2eCtx, extraNet2.ID)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			os.Setenv("CLUSTER_EXTRA_NET_1", extraNet1.ID)
+			os.Setenv("CLUSTER_EXTRA_NET_2", extraNet2.ID)
+		})
+
+		It("It should be creatable and deletable", func() {
+			shared.Byf("Creating a cluster")
+			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
+			configCluster := defaultConfigCluster(clusterName, namespace.Name)
+			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(3)
+			configCluster.WorkerMachineCount = pointer.Int64Ptr(1)
+			configCluster.Flavor = shared.FlavorMultiNetwork
+			md := createCluster(ctx, configCluster)
+
+			workerMachines := framework.GetMachinesByMachineDeployments(ctx, framework.GetMachinesByMachineDeploymentsInput{
+				Lister:            e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
+				ClusterName:       clusterName,
+				Namespace:         namespace.Name,
+				MachineDeployment: *md[0],
+			})
+			controlPlaneMachines := framework.GetControlPlaneMachinesByCluster(ctx, framework.GetControlPlaneMachinesByClusterInput{
+				Lister:      e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
+				ClusterName: clusterName,
+				Namespace:   namespace.Name,
+			})
+			Expect(len(workerMachines)).To(Equal(1))
+			Expect(len(controlPlaneMachines)).To(Equal(3))
+		})
+	})
+
 	Describe("MachineDeployment misconfigurations", func() {
 		It("Should fail to create MachineDeployment with invalid subnet or invalid availability zone", func() {
 			shared.Byf("Creating a cluster")
@@ -241,6 +299,11 @@ var _ = Describe("e2e tests", func() {
 		shared.SetEnvVar("USE_CI_ARTIFACTS", "false", false)
 		// Dumps all the resources in the spec namespace, then cleanups the cluster object and the spec namespace itself.
 		shared.DumpSpecResourcesAndCleanup(ctx, specName, namespace, e2eCtx)
+
+		// Cleanup resources which can't be cleaned up until the cluster has been deleted
+		for _, cleanup := range postClusterCleanup {
+			cleanup()
+		}
 	})
 })
 
