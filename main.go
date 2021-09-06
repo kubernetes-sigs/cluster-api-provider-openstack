@@ -37,6 +37,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
+	infrav1old "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 	"sigs.k8s.io/cluster-api-provider-openstack/controllers"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
@@ -71,6 +72,7 @@ func init() {
 	_ = clientgoscheme.AddToScheme(scheme)
 	_ = clusterv1.AddToScheme(scheme)
 	_ = infrav1.AddToScheme(scheme)
+	_ = infrav1old.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 
 	metrics.RegisterAPIPrometheusMetrics()
