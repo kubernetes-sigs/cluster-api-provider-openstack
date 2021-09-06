@@ -131,6 +131,7 @@ func Convert_v1alpha3_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(in *
 	if in.CloudsSecret != nil {
 		out.IdentityRef = &v1alpha4.OpenStackIdentityReference{
 			Name: in.CloudsSecret.Name,
+			Kind: "Secret",
 		}
 	}
 	return autoConvert_v1alpha3_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(in, out, s)
