@@ -397,11 +397,12 @@ func reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.P
 			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to find only one network (result: %v): %v", networkList, err))
 			return errors.Errorf("failed to find only one network (result: %v): %v", networkList, err)
 		}
-		openStackCluster.Status.Network = &infrav1.Network{
-			ID:   networkList[0].ID,
-			Name: networkList[0].Name,
-			Tags: networkList[0].Tags,
+		if openStackCluster.Status.Network == nil {
+			openStackCluster.Status.Network = &infrav1.Network{}
 		}
+		openStackCluster.Status.Network.ID = networkList[0].ID
+		openStackCluster.Status.Network.Name = networkList[0].Name
+		openStackCluster.Status.Network.Tags = networkList[0].Tags
 
 		subnetOpts := subnets.ListOpts(openStackCluster.Spec.Subnet)
 		subnetOpts.NetworkID = networkList[0].ID
