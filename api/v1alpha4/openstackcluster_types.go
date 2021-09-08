@@ -68,6 +68,10 @@ type OpenStackClusterSpec struct {
 	// already exists.
 	APIServerFloatingIP string `json:"apiServerFloatingIP,omitempty"`
 
+	// UseControlPlaneFIP specifies whether to use a floating IP for the
+	// control plane address. Default: true.
+	UseControlPlaneFIP *bool `json:"useControlPlaneFIP,omitempty"`
+
 	// APIServerPort is the port on which the listener on the APIServer
 	// will be created
 	APIServerPort int `json:"apiServerPort,omitempty"`

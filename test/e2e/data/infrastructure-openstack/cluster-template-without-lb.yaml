@@ -30,6 +30,7 @@ spec:
     kind: Secret
   managedSecurityGroups: true
   nodeCidr: 10.6.0.0/24
+  useControlPlaneFIP: ${OPENSTACK_USE_CONTROL_PLANE_FIP:=true}
   dnsNameservers:
   - ${OPENSTACK_DNS_NAMESERVERS}
   bastion:

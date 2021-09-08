@@ -44,21 +44,35 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 	loadBalancerName := getLoadBalancerName(clusterName)
 	s.logger.Info("Reconciling load balancer", "name", loadBalancerName)
 
-	lb, err := s.getOrCreateLoadBalancer(openStackCluster, loadBalancerName, openStackCluster.Status.Network.Subnet.ID, clusterName)
+	// The control plane endpoint is assigned to the load balancer port
+	// either as a floating ip or as a fixed IP, depending on the
+	// "useControlPlaneFIP" option.
+	loadBalancerIP := openStackCluster.Spec.ControlPlaneEndpoint.Host
+	loadBalancerFixedIP := ""
+	// For backwards compatibility reasons, UseControlPlaneFIP defaults to true.
+	useFIP := openStackCluster.Spec.UseControlPlaneFIP == nil || *openStackCluster.Spec.UseControlPlaneFIP
+	if !useFIP {
+		loadBalancerFixedIP = openStackCluster.Spec.ControlPlaneEndpoint.Host
+	}
+
+	lb, err := s.getOrCreateLoadBalancer(openStackCluster, loadBalancerName, openStackCluster.Status.Network.Subnet.ID, clusterName, loadBalancerFixedIP)
 	if err != nil {
 		return err
 	}
 
-	floatingIPAddress := openStackCluster.Spec.ControlPlaneEndpoint.Host
-	if openStackCluster.Spec.APIServerFloatingIP != "" {
-		floatingIPAddress = openStackCluster.Spec.APIServerFloatingIP
-	}
-	fp, err := s.networkingService.GetOrCreateFloatingIP(openStackCluster, clusterName, floatingIPAddress)
-	if err != nil {
-		return err
-	}
-	if err = s.networkingService.AssociateFloatingIP(openStackCluster, fp, lb.VipPortID); err != nil {
-		return err
+	if useFIP {
+		floatingIPAddress := openStackCluster.Spec.ControlPlaneEndpoint.Host
+		if openStackCluster.Spec.APIServerFloatingIP != "" {
+			floatingIPAddress = openStackCluster.Spec.APIServerFloatingIP
+		}
+		fp, err := s.networkingService.GetOrCreateFloatingIP(openStackCluster, clusterName, floatingIPAddress)
+		if err != nil {
+			return err
+		}
+		loadBalancerIP = fp.FloatingIP
+		if err = s.networkingService.AssociateFloatingIP(openStackCluster, fp, lb.VipPortID); err != nil {
+			return err
+		}
 	}
 
 	portList := []int{int(openStackCluster.Spec.ControlPlaneEndpoint.Port)}
@@ -84,12 +98,12 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 		Name:       lb.Name,
 		ID:         lb.ID,
 		InternalIP: lb.VipAddress,
-		IP:         fp.FloatingIP,
+		IP:         loadBalancerIP,
 	}
 	return nil
 }
 
-func (s *Service) getOrCreateLoadBalancer(openStackCluster *infrav1.OpenStackCluster, loadBalancerName, subnetID, clusterName string) (*loadbalancers.LoadBalancer, error) {
+func (s *Service) getOrCreateLoadBalancer(openStackCluster *infrav1.OpenStackCluster, loadBalancerName, subnetID, clusterName string, vipAddress string) (*loadbalancers.LoadBalancer, error) {
 	lb, err := s.checkIfLbExists(loadBalancerName)
 	if err != nil {
 		return nil, err
@@ -104,6 +118,7 @@ func (s *Service) getOrCreateLoadBalancer(openStackCluster *infrav1.OpenStackClu
 	lbCreateOpts := loadbalancers.CreateOpts{
 		Name:        loadBalancerName,
 		VipSubnetID: subnetID,
+		VipAddress:  vipAddress,
 		Description: names.GetDescription(clusterName),
 	}
 	mc := metrics.NewMetricPrometheusContext("loadbalancer", "create")

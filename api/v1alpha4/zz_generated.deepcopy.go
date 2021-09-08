@@ -326,6 +326,11 @@ func (in *OpenStackClusterSpec) DeepCopyInto(out *OpenStackClusterSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.UseControlPlaneFIP != nil {
+		in, out := &in.UseControlPlaneFIP, &out.UseControlPlaneFIP
+		*out = new(bool)
+		**out = **in
+	}
 	if in.APIServerLoadBalancerAdditionalPorts != nil {
 		in, out := &in.APIServerLoadBalancerAdditionalPorts, &out.APIServerLoadBalancerAdditionalPorts
 		*out = make([]int, len(*in))

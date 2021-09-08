@@ -354,13 +354,15 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 		return ctrl.Result{}, nil
 	}
 
+	// For backwards compatibility reasons, UseControlPlaneFIP defaults to true.
+	useFIP := openStackCluster.Spec.UseControlPlaneFIP == nil || *openStackCluster.Spec.UseControlPlaneFIP
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
 		err = r.reconcileLoadBalancerMember(logger, osProviderClient, clientOpts, openStackCluster, machine, openStackMachine, instanceNS, clusterName)
 		if err != nil {
 			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("LoadBalancerMember cannot be reconciled: %v", err))
 			return ctrl.Result{}, nil
 		}
-	} else if util.IsControlPlaneMachine(machine) {
+	} else if util.IsControlPlaneMachine(machine) && useFIP {
 		fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, clusterName, openStackCluster.Spec.ControlPlaneEndpoint.Host)
 		if err != nil {
 			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("Floating IP cannot be got or created: %v", err))

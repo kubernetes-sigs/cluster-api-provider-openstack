@@ -1655,6 +1655,10 @@ spec:
                 items:
                   type: string
                 type: array
+              useControlPlaneFIP:
+                description: 'UseControlPlaneFIP specifies whether to use a floating
+                  IP for the control plane address. Default: true.'
+                type: boolean
             type: object
           status:
             description: OpenStackClusterStatus defines the observed state of OpenStackCluster.
