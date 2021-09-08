@@ -188,8 +188,6 @@ func (r *OpenStackMachineReconciler) SetupWithManager(ctx context.Context, mgr c
 func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger logr.Logger, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (ctrl.Result, error) {
 	logger.Info("Reconciling Machine delete")
 
-	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
-
 	osProviderClient, clientOpts, err := provider.NewClientFromMachine(ctx, r.Client, openStackMachine)
 	if err != nil {
 		return ctrl.Result{}, err
@@ -205,6 +203,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 		return ctrl.Result{}, err
 	}
 
+	clusterName := getClusterName(cluster)
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
 		loadBalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, logger)
 		if err != nil {
@@ -288,8 +287,6 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 	}
 	logger.Info("Reconciling Machine")
 
-	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
-
 	osProviderClient, clientOpts, err := provider.NewClientFromMachine(ctx, r.Client, openStackMachine)
 	if err != nil {
 		return ctrl.Result{}, err
@@ -354,6 +351,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 		return ctrl.Result{}, nil
 	}
 
+	clusterName := getClusterName(cluster)
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
 		err = r.reconcileLoadBalancerMember(logger, osProviderClient, clientOpts, openStackCluster, machine, openStackMachine, instanceNS, clusterName)
 		if err != nil {

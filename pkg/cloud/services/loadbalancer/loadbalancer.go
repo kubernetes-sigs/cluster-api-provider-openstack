@@ -17,7 +17,6 @@ limitations under the License.
 package loadbalancer
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -25,6 +24,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/loadbalancers"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/monitors"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/pools"
+	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/wait"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha4"
 	"sigs.k8s.io/cluster-api/util"
@@ -318,13 +318,18 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 	return nil
 }
 
+// DeleteLoadBalancer deletes a load balancer identified by its name and all child objects (cascade).
 func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
 	loadBalancerName := getLoadBalancerName(clusterName)
 	lb, err := s.checkIfLbExists(loadBalancerName)
 	if err != nil {
 		return err
 	}
+	return s.deleteLoadBalancer(openStackCluster, lb)
+}
 
+// deleteLoadBalancer deletes the load balancer and all child objects (cascade).
+func (s *Service) deleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster, lb *loadbalancers.LoadBalancer) error {
 	if lb == nil {
 		return nil
 	}
@@ -332,15 +337,15 @@ func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster,
 	if lb.VipPortID != "" {
 		fip, err := s.networkingService.GetFloatingIPByPortID(lb.VipPortID)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "get floating IP by port ID %s", lb.VipPortID)
 		}
 
 		if fip != nil && fip.FloatingIP != "" {
 			if err = s.networkingService.DisassociateFloatingIP(openStackCluster, fip.FloatingIP); err != nil {
-				return err
+				return errors.Wrapf(err, "dissassociate floating IP %s", fip.FloatingIP)
 			}
 			if err = s.networkingService.DeleteFloatingIP(openStackCluster, fip.FloatingIP); err != nil {
-				return err
+				return errors.Wrapf(err, "delete floating IP %s", fip.FloatingIP)
 			}
 		}
 	}
@@ -348,15 +353,42 @@ func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster,
 	deleteOpts := loadbalancers.DeleteOpts{
 		Cascade: true,
 	}
-	s.logger.Info("Deleting load balancer", "name", loadBalancerName, "cascade", deleteOpts.Cascade)
+	s.logger.Info("Deleting load balancer", "id", lb.ID, "name", lb.Name, "cascade", deleteOpts.Cascade)
 	mc := metrics.NewMetricPrometheusContext("loadbalancer", "delete")
-	err = loadbalancers.Delete(s.loadbalancerClient, lb.ID, deleteOpts).ExtractErr()
+	err := loadbalancers.Delete(s.loadbalancerClient, lb.ID, deleteOpts).ExtractErr()
 	if mc.ObserveRequest(err) != nil {
 		record.Warnf(openStackCluster, "FailedDeleteLoadBalancer", "Failed to delete load balancer %s with id %s: %v", lb.Name, lb.ID, err)
-		return err
+		return errors.Wrapf(err, "delete loadbalancer by ID %s", lb.ID)
 	}
 
 	record.Eventf(openStackCluster, "SuccessfulDeleteLoadBalancer", "Deleted load balancer %s with id %s", lb.Name, lb.ID)
+	return nil
+}
+
+// DeleteLoadBalancersByNetworkID deletes all remaining load balancers in the network
+// identified by openStackCluster.Status.Network.ID.
+func (s *Service) DeleteLoadBalancersByNetworkID(openStackCluster *infrav1.OpenStackCluster) error {
+	if openStackCluster.Status.Network == nil || openStackCluster.Status.Network.ID == "" {
+		return errors.Errorf("expected status.network.id for OpenStackCluster %s/%s", openStackCluster.Namespace, openStackCluster.Name)
+	}
+	lbList, err := loadbalancers.List(s.loadbalancerClient, loadbalancers.ListOpts{
+		VipNetworkID: openStackCluster.Status.Network.ID,
+	}).AllPages()
+	if err != nil {
+		return errors.Wrapf(err, "list load balancer by network ID %s", openStackCluster.Status.Network.ID)
+	}
+
+	orphanedLoadBalancers, err := loadbalancers.ExtractLoadBalancers(lbList)
+	if err != nil {
+		return errors.Wrap(err, "extract load balancers")
+	}
+
+	for _, lb := range orphanedLoadBalancers {
+		orphanedLoadBalancer := lb
+		if err = s.deleteLoadBalancer(openStackCluster, &orphanedLoadBalancer); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -425,11 +457,11 @@ func (s *Service) checkIfLbExists(name string) (*loadbalancers.LoadBalancer, err
 	mc := metrics.NewMetricPrometheusContext("loadbalancer", "list")
 	allPages, err := loadbalancers.List(s.loadbalancerClient, loadbalancers.ListOpts{Name: name}).AllPages()
 	if mc.ObserveRequest(err) != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "list load balancer by name %s", name)
 	}
 	lbList, err := loadbalancers.ExtractLoadBalancers(allPages)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "extract load balancers")
 	}
 	if len(lbList) == 0 {
 		return nil, nil

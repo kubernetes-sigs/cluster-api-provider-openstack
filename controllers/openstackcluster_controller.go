@@ -136,7 +136,7 @@ func reconcileDelete(ctx context.Context, log logr.Logger, client client.Client,
 		return reconcile.Result{}, err
 	}
 
-	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
+	clusterName := getClusterName(cluster)
 
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
 		loadBalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, log)
@@ -145,26 +145,35 @@ func reconcileDelete(ctx context.Context, log logr.Logger, client client.Client,
 		}
 
 		if err = loadBalancerService.DeleteLoadBalancer(openStackCluster, clusterName); err != nil {
-			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete load balancer: %v", err))
-			return reconcile.Result{}, errors.Errorf("failed to delete load balancer: %v", err)
+			handleUpdateOSCError(openStackCluster, errors.Wrap(err, "failed to delete load balancer"))
+			return reconcile.Result{}, errors.Wrap(err, "failed to delete load balancer")
 		}
 	}
 
 	if err = networkingService.DeleteSecurityGroups(openStackCluster, clusterName); err != nil {
-		handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete security groups: %v", err))
-		return reconcile.Result{}, errors.Errorf("failed to delete security groups: %v", err)
+		handleUpdateOSCError(openStackCluster, errors.Wrap(err, "failed to delete security groups"))
+		return reconcile.Result{}, errors.Wrap(err, "failed to delete security groups")
 	}
 
 	// if NodeCIDR was not set, no network was created.
 	if openStackCluster.Spec.NodeCIDR != "" {
+		loadBalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, log)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+
+		if err = loadBalancerService.DeleteLoadBalancersByNetworkID(openStackCluster); err != nil {
+			handleUpdateOSCError(openStackCluster, errors.Wrap(err, "failed to delete load balancer"))
+		}
+
 		if err = networkingService.DeleteRouter(openStackCluster, clusterName); err != nil {
-			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete router: %v", err))
-			return ctrl.Result{}, errors.Errorf("failed to delete router: %v", err)
+			handleUpdateOSCError(openStackCluster, errors.Wrap(err, "failed to delete router"))
+			return ctrl.Result{}, errors.Wrap(err, "failed to delete router")
 		}
 
 		if err = networkingService.DeleteNetwork(openStackCluster, clusterName); err != nil {
-			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete network: %v", err))
-			return ctrl.Result{}, errors.Errorf("failed to delete network: %v", err)
+			handleUpdateOSCError(openStackCluster, errors.Wrap(err, "failed to delete network"))
+			return ctrl.Result{}, errors.Wrap(err, "failed to delete network")
 		}
 	}
 
@@ -196,7 +205,8 @@ func deleteBastion(log logr.Logger, osProviderClient *gophercloud.ProviderClient
 		return err
 	}
 
-	instanceStatus, err := computeService.GetInstanceStatusByName(openStackCluster, fmt.Sprintf("%s-bastion", cluster.Name))
+	bastionName := getBastionName(cluster)
+	instanceStatus, err := computeService.GetInstanceStatusByName(openStackCluster, bastionName)
 	if err != nil {
 		return err
 	}
@@ -227,7 +237,8 @@ func deleteBastion(log logr.Logger, osProviderClient *gophercloud.ProviderClient
 
 	openStackCluster.Status.Bastion = nil
 
-	if err = networkingService.DeleteBastionSecurityGroup(openStackCluster, fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)); err != nil {
+	clusterName := getClusterName(cluster)
+	if err = networkingService.DeleteBastionSecurityGroup(openStackCluster, clusterName); err != nil {
 		handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete bastion security group: %v", err))
 		return errors.Errorf("failed to delete bastion security group: %v", err)
 	}
@@ -314,7 +325,8 @@ func reconcileBastion(log logr.Logger, osProviderClient *gophercloud.ProviderCli
 		return err
 	}
 
-	instanceStatus, err := computeService.GetInstanceStatusByName(openStackCluster, fmt.Sprintf("%s-bastion", cluster.Name))
+	bastionName := getBastionName(cluster)
+	instanceStatus, err := computeService.GetInstanceStatusByName(openStackCluster, bastionName)
 	if err != nil {
 		return err
 	}
@@ -337,7 +349,7 @@ func reconcileBastion(log logr.Logger, osProviderClient *gophercloud.ProviderCli
 	if err != nil {
 		return err
 	}
-	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
+	clusterName := getClusterName(cluster)
 	fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, clusterName, openStackCluster.Spec.Bastion.Instance.FloatingIP)
 	if err != nil {
 		handleUpdateOSCError(openStackCluster, errors.Errorf("failed to get or create floating IP for bastion: %v", err))
@@ -365,8 +377,6 @@ func reconcileBastion(log logr.Logger, osProviderClient *gophercloud.ProviderCli
 }
 
 func reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
-	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
-
 	networkingService, err := networking.NewService(osProviderClient, clientOpts, log)
 	if err != nil {
 		return err
@@ -379,6 +389,8 @@ func reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.P
 		handleUpdateOSCError(openStackCluster, errors.Errorf("failed to reconcile external network: %v", err))
 		return errors.Errorf("failed to reconcile external network: %v", err)
 	}
+
+	clusterName := getClusterName(cluster)
 
 	if openStackCluster.Spec.NodeCIDR == "" {
 		log.V(4).Info("No need to reconcile network, searching network and subnet instead")
@@ -531,4 +543,12 @@ func handleUpdateOSCError(openstackCluster *infrav1.OpenStackCluster, message er
 	err := capierrors.UpdateClusterError
 	openstackCluster.Status.FailureReason = &err
 	openstackCluster.Status.FailureMessage = pointer.StringPtr(message.Error())
+}
+
+func getClusterName(cluster *clusterv1.Cluster) string {
+	return fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
+}
+
+func getBastionName(cluster *clusterv1.Cluster) string {
+	return fmt.Sprintf("%s-bastion", cluster.Name)
 }
