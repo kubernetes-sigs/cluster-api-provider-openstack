@@ -33,7 +33,6 @@ type Service struct {
 	projectID         string
 	computeClient     *gophercloud.ServiceClient
 	identityClient    *gophercloud.ServiceClient
-	networkClient     *gophercloud.ServiceClient
 	imagesClient      *gophercloud.ServiceClient
 	networkingService *networking.Service
 	logger            logr.Logger
@@ -67,13 +66,6 @@ func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.Cli
 	}
 	computeClient.Microversion = NovaMinimumMicroversion
 
-	networkingClient, err := openstack.NewNetworkV2(client, gophercloud.EndpointOpts{
-		Region: clientOpts.RegionName,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to create networking service client: %v", err)
-	}
-
 	imagesClient, err := openstack.NewImageServiceV2(client, gophercloud.EndpointOpts{
 		Region: clientOpts.RegionName,
 	})
@@ -106,7 +98,6 @@ func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.Cli
 		projectID:         projectID,
 		identityClient:    identityClient,
 		computeClient:     computeClient,
-		networkClient:     networkingClient,
 		networkingService: networkingService,
 		imagesClient:      imagesClient,
 		logger:            logger,
