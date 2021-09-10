@@ -20,10 +20,17 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/availabilityzones"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 )
+
+// ServerExt is the base gophercloud Server with extensions used by InstanceStatus.
+type ServerExt struct {
+	servers.Server
+	availabilityzones.ServerAvailabilityZoneExt
+}
 
 // InstanceSpec defines the fields which can be set on a new OpenStack instance.
 //
@@ -55,10 +62,10 @@ type InstanceIdentifier struct {
 
 // InstanceStatus represents instance data which has been returned by OpenStack.
 type InstanceStatus struct {
-	server *servers.Server
+	server *ServerExt
 }
 
-func NewInstanceStatusFromServer(server *servers.Server) *InstanceStatus {
+func NewInstanceStatusFromServer(server *ServerExt) *InstanceStatus {
 	return &InstanceStatus{server}
 }
 
@@ -89,6 +96,10 @@ func (is *InstanceStatus) State() infrav1.InstanceState {
 
 func (is *InstanceStatus) SSHKeyName() string {
 	return is.server.KeyName
+}
+
+func (is *InstanceStatus) AvailabilityZone() string {
+	return is.server.AvailabilityZone
 }
 
 // APIInstance returns an infrav1.Instance object for use by the API.
