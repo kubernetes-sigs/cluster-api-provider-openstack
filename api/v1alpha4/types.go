@@ -55,7 +55,9 @@ type SecurityGroupFilter struct {
 }
 
 type NetworkParam struct {
-	// The UUID of the network. Required if you omit the port attribute.
+	// Optional UUID of the network.
+	// If specified this will not be validated prior to server creation.
+	// Required if `Subnets` specifies a subnet by UUID.
 	UUID string `json:"uuid,omitempty"`
 	// A fixed IPv4 address for the NIC.
 	FixedIP string `json:"fixedIP,omitempty"`
@@ -85,10 +87,12 @@ type Filter struct {
 }
 
 type SubnetParam struct {
-	// The UUID of the network. Required if you omit the port attribute.
+	// Optional UUID of the subnet.
+	// If specified this will not be validated prior to server creation.
+	// If specified, the enclosing `NetworkParam` must also be specified by UUID.
 	UUID string `json:"uuid,omitempty"`
 
-	// Filters for optional network query
+	// Filters for optional subnet query
 	Filter SubnetFilter `json:"filter,omitempty"`
 }
 

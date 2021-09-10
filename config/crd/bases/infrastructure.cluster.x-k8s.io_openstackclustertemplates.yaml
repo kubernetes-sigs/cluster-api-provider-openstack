@@ -194,7 +194,7 @@ spec:
                                       items:
                                         properties:
                                           filter:
-                                            description: Filters for optional network
+                                            description: Filters for optional subnet
                                               query
                                             properties:
                                               cidr:
@@ -241,14 +241,19 @@ spec:
                                                 type: string
                                             type: object
                                           uuid:
-                                            description: The UUID of the network.
-                                              Required if you omit the port attribute.
+                                            description: Optional UUID of the subnet.
+                                              If specified this will not be validated
+                                              prior to server creation. If specified,
+                                              the enclosing `NetworkParam` must also
+                                              be specified by UUID.
                                             type: string
                                         type: object
                                       type: array
                                     uuid:
-                                      description: The UUID of the network. Required
-                                        if you omit the port attribute.
+                                      description: Optional UUID of the network. If
+                                        specified this will not be validated prior
+                                        to server creation. Required if `Subnets`
+                                        specifies a subnet by UUID.
                                       type: string
                                   type: object
                                 type: array
@@ -501,7 +506,7 @@ spec:
                                 for the Gateway of this router
                               properties:
                                 filter:
-                                  description: Filters for optional network query
+                                  description: Filters for optional subnet query
                                   properties:
                                     cidr:
                                       type: string
@@ -547,8 +552,10 @@ spec:
                                       type: string
                                   type: object
                                 uuid:
-                                  description: The UUID of the network. Required if
-                                    you omit the port attribute.
+                                  description: Optional UUID of the subnet. If specified
+                                    this will not be validated prior to server creation.
+                                    If specified, the enclosing `NetworkParam` must
+                                    also be specified by UUID.
                                   type: string
                               type: object
                           required:
