@@ -19,9 +19,16 @@ package compute
 import (
 	"testing"
 
+	"github.com/go-logr/logr"
+	"github.com/golang/mock/gomock"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
+	. "github.com/onsi/gomega"
 	"k8s.io/utils/pointer"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking/mock_networking"
 )
 
 func Test_getPortName(t *testing.T) {
@@ -61,6 +68,362 @@ func Test_getPortName(t *testing.T) {
 			if got := getPortName(tt.args.instanceName, tt.args.opts, tt.args.netIndex); got != tt.want {
 				t.Errorf("getPortName() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func TestService_getServerNetworks(t *testing.T) {
+	const testClusterTag = "cluster=mycluster"
+
+	// Network A:
+	//  Network is tagged
+	//  Has 3 subnets
+	//  Subnets A1 and A2 are tagged
+	//  Subnet A3 is not tagged
+	// Network B:
+	//  Network is tagged
+	//  Has 1 subnet, B1, which is also tagged
+	// Network C:
+	//  Network is not tagged
+	//  Has 1 subnet, C1, which is also not tagged
+
+	networkAUUID := "7f0a7cc9-d7c8-41d2-87a2-2fc7f5ec544e"
+	networkBUUID := "607559d9-a5a4-4a0b-a92d-75eba89e3343"
+	networkCUUID := "9d7b0284-b22e-4bc7-b90e-28a652cac7cc"
+	subnetA1UUID := "869f6790-17a9-44d5-83a1-89e180514515"
+	subnetA2UUID := "bd926900-5277-47a5-bd71-c6f713165dbd"
+	subnetA3UUID := "79dfde1b-07f1-48a0-97fd-07e2f6018c46"
+	subnetB1UUID := "efc2cc7d-c6e0-45c6-8147-0e08b8530664"
+	subnetC1UUID := "b33271f4-6bb1-430a-88bf-789394815aaf"
+
+	testNetworkA := networks.Network{
+		ID:      networkAUUID,
+		Name:    "network-a",
+		Subnets: []string{subnetA1UUID, subnetA2UUID},
+		Tags:    []string{testClusterTag},
+	}
+	testNetworkB := networks.Network{
+		ID:      networkBUUID,
+		Name:    "network-b",
+		Subnets: []string{subnetB1UUID},
+		Tags:    []string{testClusterTag},
+	}
+	testNetworkC := networks.Network{
+		ID:      networkCUUID,
+		Name:    "network-c",
+		Subnets: []string{subnetC1UUID},
+	}
+
+	testSubnetA1 := subnets.Subnet{
+		ID:        subnetA1UUID,
+		Name:      "subnet-a1",
+		NetworkID: networkAUUID,
+		Tags:      []string{testClusterTag},
+	}
+	testSubnetA2 := subnets.Subnet{
+		ID:        subnetA2UUID,
+		Name:      "subnet-a2",
+		NetworkID: networkAUUID,
+		Tags:      []string{testClusterTag},
+	}
+	testSubnetA3 := subnets.Subnet{
+		ID:        subnetA3UUID,
+		Name:      "subnet-a3",
+		NetworkID: networkAUUID,
+	}
+	testSubnetB1 := subnets.Subnet{
+		ID:        subnetB1UUID,
+		Name:      "subnet-b1",
+		NetworkID: networkBUUID,
+		Tags:      []string{testClusterTag},
+	}
+	testSubnetC1 := subnets.Subnet{
+		ID:        subnetC1UUID,
+		Name:      "subnet-c1",
+		NetworkID: networkCUUID,
+	}
+
+	// Define arbitrary test network and subnet filters for use in multiple tests,
+	// the gophercloud ListOpts they should translate to, and the arbitrary returned networks/subnets.
+	testNetworkFilter := infrav1.Filter{Tags: testClusterTag}
+	testNetworkListOpts := networks.ListOpts{Tags: testClusterTag}
+	testSubnetFilter := infrav1.SubnetFilter{Tags: testClusterTag}
+	testSubnetListOpts := subnets.ListOpts{Tags: testClusterTag}
+
+	// Expect a list query by network UUID which returns the network with the same UUID
+	expectNetworkListByUUID := func(m *mock_networking.MockNetworkClientMockRecorder, network *networks.Network) {
+		m.ListNetwork(&networks.ListOpts{ID: network.ID}).
+			Return([]networks.Network{*network}, nil)
+	}
+
+	// Expect a list query by subnet and network UUID which returns the subnet with the same UUID
+	expectSubnetListByUUID := func(m *mock_networking.MockNetworkClientMockRecorder, subnet *subnets.Subnet) {
+		m.ListSubnet(&subnets.ListOpts{ID: subnet.ID, NetworkID: subnet.NetworkID}).
+			Return([]subnets.Subnet{*subnet}, nil)
+	}
+
+	tests := []struct {
+		name          string
+		networkParams []infrav1.NetworkParam
+		want          []infrav1.Network
+		expect        func(m *mock_networking.MockNetworkClientMockRecorder)
+		wantErr       bool
+	}{
+		{
+			name: "Network UUID without subnet",
+			networkParams: []infrav1.NetworkParam{
+				{UUID: networkAUUID},
+			},
+			want: []infrav1.Network{
+				{ID: networkAUUID, Subnet: &infrav1.Subnet{}},
+			},
+			expect: func(m *mock_networking.MockNetworkClientMockRecorder) {
+				expectNetworkListByUUID(m, &testNetworkA)
+			},
+			wantErr: false,
+		},
+		{
+			name: "Network filter without subnet",
+			networkParams: []infrav1.NetworkParam{
+				{Filter: testNetworkFilter},
+			},
+			want: []infrav1.Network{
+				{ID: networkAUUID, Subnet: &infrav1.Subnet{}},
+				{ID: networkBUUID, Subnet: &infrav1.Subnet{}},
+			},
+			expect: func(m *mock_networking.MockNetworkClientMockRecorder) {
+				// List tagged networks (A & B)
+				m.ListNetwork(&testNetworkListOpts).
+					Return([]networks.Network{testNetworkA, testNetworkB}, nil)
+			},
+			wantErr: false,
+		},
+		{
+			name: "Subnet by filter without network",
+			networkParams: []infrav1.NetworkParam{
+				{
+					Subnets: []infrav1.SubnetParam{{Filter: testSubnetFilter}},
+				},
+			},
+			want: nil,
+			/* We expect this to return all tagged subnets in any network, but it returns error
+
+			[]infrav1.Network{
+				{ID: networkAUUID, Subnet: &infrav1.Subnet{ID: subnetA1UUID}},
+				{ID: networkAUUID, Subnet: &infrav1.Subnet{ID: subnetA2UUID}},
+				{ID: networkAUUID, Subnet: &infrav1.Subnet{ID: subnetB1UUID}},
+			},
+			*/
+			expect: func(m *mock_networking.MockNetworkClientMockRecorder) {
+				// Empty list query returns all networks
+				m.ListNetwork(&networks.ListOpts{}).
+					Return([]networks.Network{testNetworkA, testNetworkB, testNetworkC}, nil)
+
+				// List tagged subnets in network A (A1 & A2)
+				networkAFilter := testSubnetListOpts
+				networkAFilter.NetworkID = networkAUUID
+				m.ListSubnet(&networkAFilter).
+					Return([]subnets.Subnet{testSubnetA1, testSubnetA2}, nil)
+
+				// List tagged subnets in network B (B1)
+				networkBFilter := testSubnetListOpts
+				networkBFilter.NetworkID = networkBUUID
+				m.ListSubnet(&networkBFilter).
+					Return([]subnets.Subnet{testSubnetB1}, nil)
+
+				// List tagged subnets in network C (none)
+				networkCFilter := testSubnetListOpts
+				networkCFilter.NetworkID = networkCUUID
+				m.ListSubnet(&networkCFilter).
+					Return([]subnets.Subnet{}, nil)
+			},
+			wantErr: true,
+		},
+		{
+			name: "Network UUID and subnet filter",
+			networkParams: []infrav1.NetworkParam{
+				{
+					UUID: networkAUUID,
+					Subnets: []infrav1.SubnetParam{
+						{Filter: testSubnetFilter},
+					},
+				},
+			},
+			want: []infrav1.Network{
+				{ID: networkAUUID, Subnet: &infrav1.Subnet{ID: subnetA1UUID}},
+				{ID: networkAUUID, Subnet: &infrav1.Subnet{ID: subnetA2UUID}},
+			},
+			expect: func(m *mock_networking.MockNetworkClientMockRecorder) {
+				// List network A by UUID
+				expectNetworkListByUUID(m, &testNetworkA)
+
+				// List tagged subnets in network A (A1 & A2)
+				networkAFilter := testSubnetListOpts
+				networkAFilter.NetworkID = networkAUUID
+				m.ListSubnet(&networkAFilter).
+					Return([]subnets.Subnet{testSubnetA1, testSubnetA2}, nil)
+			},
+			wantErr: false,
+		},
+		{
+			name: "Network UUID and subnet UUID",
+			networkParams: []infrav1.NetworkParam{
+				{
+					UUID: networkAUUID,
+					Subnets: []infrav1.SubnetParam{
+						{UUID: subnetA1UUID},
+					},
+				},
+			},
+			want: []infrav1.Network{
+				{ID: networkAUUID, Subnet: &infrav1.Subnet{ID: subnetA1UUID}},
+			},
+			expect: func(m *mock_networking.MockNetworkClientMockRecorder) {
+				// List network A by uuid
+				expectNetworkListByUUID(m, &testNetworkA)
+
+				// List subnet A1 by uuid
+				expectSubnetListByUUID(m, &testSubnetA1)
+			},
+			wantErr: false,
+		},
+		{
+			name: "Network UUID and multiple subnet params",
+			networkParams: []infrav1.NetworkParam{
+				{
+					UUID: networkAUUID,
+					Subnets: []infrav1.SubnetParam{
+						{UUID: subnetA3UUID},
+						{Filter: testSubnetFilter},
+					},
+				},
+			},
+			want: []infrav1.Network{
+				{ID: networkAUUID, Subnet: &infrav1.Subnet{ID: subnetA3UUID}},
+				{ID: networkAUUID, Subnet: &infrav1.Subnet{ID: subnetA1UUID}},
+				{ID: networkAUUID, Subnet: &infrav1.Subnet{ID: subnetA2UUID}},
+			},
+			expect: func(m *mock_networking.MockNetworkClientMockRecorder) {
+				// List network A by uuid
+				expectNetworkListByUUID(m, &testNetworkA)
+
+				// List subnet A3 by uuid
+				expectSubnetListByUUID(m, &testSubnetA3)
+
+				// List tagged subnets in network A
+				networkAFilter := testSubnetListOpts
+				networkAFilter.NetworkID = networkAUUID
+				m.ListSubnet(&networkAFilter).
+					Return([]subnets.Subnet{testSubnetA1, testSubnetA2}, nil)
+			},
+			wantErr: false,
+		},
+		{
+			name: "Multiple network params",
+			networkParams: []infrav1.NetworkParam{
+				{
+					UUID: networkCUUID,
+					Subnets: []infrav1.SubnetParam{
+						{UUID: subnetC1UUID},
+					},
+				},
+				{
+					Filter: testNetworkFilter,
+					Subnets: []infrav1.SubnetParam{
+						{Filter: testSubnetFilter},
+					},
+				},
+			},
+			want: []infrav1.Network{
+				{ID: networkCUUID, Subnet: &infrav1.Subnet{ID: subnetC1UUID}},
+				{ID: networkAUUID, Subnet: &infrav1.Subnet{ID: subnetA1UUID}},
+				{ID: networkAUUID, Subnet: &infrav1.Subnet{ID: subnetA2UUID}},
+				{ID: networkBUUID, Subnet: &infrav1.Subnet{ID: subnetB1UUID}},
+			},
+			expect: func(m *mock_networking.MockNetworkClientMockRecorder) {
+				// List network C by uuid
+				expectNetworkListByUUID(m, &testNetworkC)
+
+				// List subnet C1 by uuid
+				expectSubnetListByUUID(m, &testSubnetC1)
+
+				// List tagged networks (A & B)
+				m.ListNetwork(&testNetworkListOpts).
+					Return([]networks.Network{testNetworkA, testNetworkB}, nil)
+
+				// List tagged subnets in network A (A1 & A2)
+				networkAFilter := testSubnetListOpts
+				networkAFilter.NetworkID = networkAUUID
+				m.ListSubnet(&networkAFilter).
+					Return([]subnets.Subnet{testSubnetA1, testSubnetA2}, nil)
+
+				// List tagged subnets in network B (B1)
+				networkBFilter := testSubnetListOpts
+				networkBFilter.NetworkID = networkBUUID
+				m.ListSubnet(&networkBFilter).
+					Return([]subnets.Subnet{testSubnetB1}, nil)
+			},
+			wantErr: false,
+		},
+		{
+			// Expect an error if a network filter doesn't match any networks
+			name: "Network filter matches no networks",
+			networkParams: []infrav1.NetworkParam{
+				{Filter: testNetworkFilter},
+			},
+			want: nil,
+			expect: func(m *mock_networking.MockNetworkClientMockRecorder) {
+				// List tagged networks (none for this test)
+				m.ListNetwork(&testNetworkListOpts).Return([]networks.Network{}, nil)
+			},
+			wantErr: true,
+		},
+		{
+			// Expect an error if a subnet filter doesn't match any subnets
+			name: "Subnet filter matches no subnets",
+			networkParams: []infrav1.NetworkParam{
+				{
+					UUID: networkAUUID,
+					Subnets: []infrav1.SubnetParam{
+						{Filter: testSubnetFilter},
+					},
+				},
+			},
+			want: nil,
+			expect: func(m *mock_networking.MockNetworkClientMockRecorder) {
+				// List network A by UUID
+				expectNetworkListByUUID(m, &testNetworkA)
+
+				// List tagged subnets in network A
+				networkAFilter := testSubnetListOpts
+				networkAFilter.NetworkID = networkAUUID
+				m.ListSubnet(&networkAFilter).Return([]subnets.Subnet{}, nil)
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockCtrl := gomock.NewController(t)
+			mockNetworkClient := mock_networking.NewMockNetworkClient(mockCtrl)
+			tt.expect(mockNetworkClient.EXPECT())
+
+			networkingService := networking.NewTestService(
+				"", mockNetworkClient, logr.Discard(),
+			)
+			s := &Service{
+				networkingService: networkingService,
+			}
+
+			got, err := s.getServerNetworks(tt.networkParams)
+			g := NewWithT(t)
+			if tt.wantErr {
+				g.Expect(err).To(HaveOccurred())
+			} else {
+				g.Expect(err).NotTo(HaveOccurred())
+			}
+			g.Expect(got).To(Equal(tt.want))
 		})
 	}
 }
