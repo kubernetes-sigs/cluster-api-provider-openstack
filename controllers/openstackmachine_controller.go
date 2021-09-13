@@ -235,7 +235,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 	instanceNS, err := instanceStatus.NetworkStatus()
 	if err != nil {
 		handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error getting network status for OpenStack instance %s with ID %s: %v", instanceStatus.Name(), instanceStatus.ID(), err))
-    		conditions.MarkFalse(openStackMachine, infrav1.MachineRunningCondition, clusterv1.DeletionFailedReason, clusterv1.ConditionSeverityWarning, err.Error())
+		conditions.MarkFalse(openStackMachine, infrav1.MachineRunningCondition, clusterv1.DeletionFailedReason, clusterv1.ConditionSeverityWarning, err.Error())
 		return ctrl.Result{}, nil
 	}
 
