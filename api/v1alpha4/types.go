@@ -130,12 +130,23 @@ type PortOpts struct {
 	ProjectID           string        `json:"projectId,omitempty"`
 	SecurityGroups      *[]string     `json:"securityGroups,omitempty"`
 	AllowedAddressPairs []AddressPair `json:"allowedAddressPairs,omitempty"`
+	// Enables and disables trunk at port level. If not provided, openStackMachine.Spec.Trunk is inherited.
+	Trunk *bool `json:"trunk,omitempty"`
 
 	// The ID of the host where the port is allocated
 	HostID string `json:"hostId,omitempty"`
 
 	// The virtual network interface card (vNIC) type that is bound to the neutron port.
 	VNICType string `json:"vnicType,omitempty"`
+
+	// A dictionary that enables the application running on the specified
+	// host to pass and receive virtual network interface (VIF) port-specific
+	// information to the plug-in.
+	Profile map[string]string `json:"profile,omitempty"`
+
+	// DisablePortSecurity enables or disables the port security when set.
+	// When not set, it takes the value of the corresponding field at the network level.
+	DisablePortSecurity *bool `json:"disablePortSecurity,omitempty"`
 }
 
 type FixedIP struct {

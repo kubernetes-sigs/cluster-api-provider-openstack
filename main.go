@@ -36,8 +36,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/healthz"
 
+	infrav1old "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 	"sigs.k8s.io/cluster-api-provider-openstack/controllers"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
@@ -72,6 +72,7 @@ func init() {
 	_ = clientgoscheme.AddToScheme(scheme)
 	_ = clusterv1.AddToScheme(scheme)
 	_ = infrav1.AddToScheme(scheme)
+	_ = infrav1old.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 
 	metrics.RegisterAPIPrometheusMetrics()
@@ -184,12 +185,12 @@ func main() {
 }
 
 func setupChecks(mgr ctrl.Manager) {
-	if err := mgr.AddReadyzCheck("ping", healthz.Ping); err != nil {
+	if err := mgr.AddReadyzCheck("webhook", mgr.GetWebhookServer().StartedChecker()); err != nil {
 		setupLog.Error(err, "unable to create ready check")
 		os.Exit(1)
 	}
 
-	if err := mgr.AddHealthzCheck("ping", healthz.Ping); err != nil {
+	if err := mgr.AddHealthzCheck("webhook", mgr.GetWebhookServer().StartedChecker()); err != nil {
 		setupLog.Error(err, "unable to create health check")
 		os.Exit(1)
 	}
@@ -225,6 +226,10 @@ func setupWebhooks(mgr ctrl.Manager) {
 	}
 	if err := (&infrav1.OpenStackCluster{}).SetupWebhookWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackCluster")
+		os.Exit(1)
+	}
+	if err := (&infrav1.OpenStackClusterTemplate{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackClusterTemplate")
 		os.Exit(1)
 	}
 	if err := (&infrav1.OpenStackMachine{}).SetupWebhookWithManager(mgr); err != nil {

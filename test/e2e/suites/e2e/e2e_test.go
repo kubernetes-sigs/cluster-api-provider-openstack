@@ -1,3 +1,4 @@
+//go:build e2e
 // +build e2e
 
 /*
@@ -136,7 +137,7 @@ var _ = Describe("e2e tests", func() {
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
 			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(1)
 			configCluster.WorkerMachineCount = pointer.Int64Ptr(1)
-			configCluster.Flavor = shared.FlavorDefault
+			configCluster.Flavor = shared.FlavorWithoutLB
 			_ = createCluster(ctx, configCluster, specName)
 
 			shared.Byf("Creating MachineDeployment with custom port options")

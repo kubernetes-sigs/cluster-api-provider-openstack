@@ -37,27 +37,35 @@ previous cluster managers such as [kops][kops] and
 
 This provider's versions are compatible with the following versions of Cluster API:
 
-| | Cluster API v1alpha1 (v0.1) | Cluster API v1alpha2 (v0.2) | Cluster API v1alpha3 (v0.3) |
-|-------------------------------------------------|---|---|---|
-| OpenStack Provider v1alpha1 (release-0.1 branch)| ✓ |   |   |
-| OpenStack Provider v1alpha2 (v0.2)              |   | ✓ |   |
-| OpenStack Provider v1alpha3 (v0.3)              |   |   | ✓ |
+|                             | OpenStack Provider v1alpha2 (v0.2) | OpenStack Provider v1alpha3 (v0.3) | OpenStack Provider v1alpha4 (v0.4) |
+|-----------------------------|------------------------------------|------------------------------------|------------------------------------|
+| Cluster API v1alpha2 (v0.2) | ✓                                  |                                    |                                    |
+| Cluster API v1alpha3 (v0.3) |                                    | ✓                                  |                                    |
+| Cluster API v1alpha4 (v0.4) |                                    |                                    | ✓                                  |
 
 This provider's versions are able to install and manage the following versions of Kubernetes:
 
-| | Kubernetes 1.13 | Kubernetes 1.14 | Kubernetes 1.15 | Kubernetes 1.16 | Kubernetes 1.17 | Kubernetes 1.18 | Kubernetes 1.19 | Kubernetes 1.20 |
-|-------------------------------------------------|---|---|---|---|---|---|---|---|
-|OpenStack Provider v1alpha1 (release-0.1 branch) | ✓ | ✓ | ✓ |   |   |   |   |   |
-|OpenStack Provider v1alpha2 (v0.2)               |   |   | ✓ |   |   |   |   |   |
-|OpenStack Provider v1alpha3 (v0.3)               |   |   |   | ✓ | ✓ | ✓ | ✓ | ✓ |
+|                 | OpenStack Provider v1alpha2 (v0.2) | OpenStack Provider v1alpha3 (v0.3) | OpenStack Provider v1alpha4 (v0.4) |
+|-----------------|------------------------------------|------------------------------------|------------------------------------|
+| Kubernetes 1.15 | ✓                                  |                                    |                                    |
+| Kubernetes 1.16 |                                    | ✓                                  |                                    |
+| Kubernetes 1.17 |                                    | ✓                                  |                                    |
+| Kubernetes 1.18 |                                    | ✓                                  |                                    |
+| Kubernetes 1.19 |                                    | ✓                                  |                                    |
+| Kubernetes 1.20 |                                    | ✓                                  | ✓                                  |
+| Kubernetes 1.21 |                                    |                                    | ✓                                  |
 
 This provider's versions are able to install Kubernetes to the following versions of OpenStack:
 
-| | OpenStack Pike | OpenStack Queens | OpenStack Rocky | OpenStack Stein | OpenStack Train | OpenStack Ussuri | OpenStack Victoria |
-|-------------------------------------------------|---|---|---|---|---|---|---|
-| OpenStack Provider v1alpha1 (release-0.1 branch)| ✓ | ✓ | ✓ | ✓ | + | + | + |
-| OpenStack Provider v1alpha2 (v0.2)              | + | ✓ | + | ✓ | + | + | + |
-| OpenStack Provider v1alpha3 (v0.3)              | + | + | + | ✓ | ✓ | ✓ | ✓ |
+|                    | OpenStack Provider v1alpha2 (v0.2) | OpenStack Provider v1alpha3 (v0.3) | OpenStack Provider v1alpha4 (v0.4) |
+|--------------------|------------------------------------|------------------------------------|------------------------------------|
+| OpenStack Pike     | +                                  | +                                  | +                                  |
+| OpenStack Queens   | ✓                                  | +                                  | +                                  |
+| OpenStack Rocky    | +                                  | +                                  | +                                  |
+| OpenStack Stein    | ✓                                  | ✓                                  | +                                  |
+| OpenStack Train    | +                                  | ✓                                  | +                                  |
+| OpenStack Ussuri   | +                                  | ✓                                  | +                                  |
+| OpenStack Victoria | +                                  | ✓                                  | ✓                                  |
 
 Test status:
 * `✓` tested

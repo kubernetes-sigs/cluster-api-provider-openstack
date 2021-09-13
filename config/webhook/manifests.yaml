@@ -15,7 +15,7 @@ webhooks:
       path: /mutate-infrastructure-cluster-x-k8s-io-v1alpha4-openstackcluster
   failurePolicy: Fail
   matchPolicy: Equivalent
-  name: default.openstackcluster.infrastructure.x-k8s.io
+  name: default.openstackcluster.infrastructure.cluster.x-k8s.io
   rules:
   - apiGroups:
     - infrastructure.cluster.x-k8s.io
@@ -26,6 +26,27 @@ webhooks:
     - UPDATE
     resources:
     - openstackcluster
+  sideEffects: None
+- admissionReviewVersions:
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-infrastructure-cluster-x-k8s-io-v1alpha4-openstackclustertemplate
+  failurePolicy: Fail
+  matchPolicy: Equivalent
+  name: default.openstackclustertemplate.infrastructure.cluster.x-k8s.io
+  rules:
+  - apiGroups:
+    - infrastructure.cluster.x-k8s.io
+    apiVersions:
+    - v1alpha4
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - openstackclustertemplates
   sideEffects: None
 - admissionReviewVersions:
   - v1beta1
@@ -65,7 +86,7 @@ webhooks:
       path: /validate-infrastructure-cluster-x-k8s-io-v1alpha4-openstackcluster
   failurePolicy: Fail
   matchPolicy: Equivalent
-  name: validation.openstackcluster.infrastructure.x-k8s.io
+  name: validation.openstackcluster.infrastructure.cluster.x-k8s.io
   rules:
   - apiGroups:
     - infrastructure.cluster.x-k8s.io
@@ -76,6 +97,27 @@ webhooks:
     - UPDATE
     resources:
     - openstackcluster
+  sideEffects: None
+- admissionReviewVersions:
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-infrastructure-cluster-x-k8s-io-v1alpha4-openstackclustertemplate
+  failurePolicy: Fail
+  matchPolicy: Equivalent
+  name: validation.openstackclustertemplate.infrastructure.cluster.x-k8s.io
+  rules:
+  - apiGroups:
+    - infrastructure.cluster.x-k8s.io
+    apiVersions:
+    - v1alpha4
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - openstackclustertemplates
   sideEffects: None
 - admissionReviewVersions:
   - v1beta1
@@ -107,7 +149,7 @@ webhooks:
       path: /validate-infrastructure-cluster-x-k8s-io-v1alpha4-openstackmachinetemplate
   failurePolicy: Fail
   matchPolicy: Equivalent
-  name: validation.openstackmachinetemplate.infrastructure.x-k8s.io
+  name: validation.openstackmachinetemplate.infrastructure.cluster.x-k8s.io
   rules:
   - apiGroups:
     - infrastructure.cluster.x-k8s.io
