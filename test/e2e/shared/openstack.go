@@ -1,3 +1,4 @@
+//go:build e2e
 // +build e2e
 
 /*
@@ -175,13 +176,15 @@ func getOpenStackServers(e2eCtx *E2EContext) (map[string]server, error) {
 	}
 
 	srvs := map[string]server{}
-	for _, srv := range serverList {
-		addrMap, err := compute.GetIPFromInstance(srv)
+	for i := range serverList {
+		srv := &serverList[i]
+		instanceStatus := compute.NewInstanceStatusFromServer(srv)
+		instanceNS, err := instanceStatus.NetworkStatus()
 		if err != nil {
-			return nil, fmt.Errorf("error getting ip for server %s: %v", srv.Name, err)
+			return nil, fmt.Errorf("error getting network status for server %s: %v", srv.Name, err)
 		}
-		ip, ok := addrMap["internal"]
-		if !ok {
+
+		if instanceNS.IP() == "" {
 			_, _ = fmt.Fprintf(GinkgoWriter, "error getting internal ip for server %s: internal ip doesn't exist (yet)\n", srv.Name)
 			continue
 		}
@@ -189,7 +192,7 @@ func getOpenStackServers(e2eCtx *E2EContext) (map[string]server, error) {
 		srvs[srv.Name] = server{
 			name: srv.Name,
 			id:   srv.ID,
-			ip:   ip,
+			ip:   instanceNS.IP(),
 		}
 	}
 	return srvs, nil
@@ -225,6 +228,8 @@ type AuthOpts struct {
 	TenantName string `ini:"tenant-name"`
 	DomainID   string `ini:"domain-id"`
 	DomainName string `ini:"domain-name"`
+
+	// In-tree cloud provider will fail to start if these are present
 	// TenantDomainID   string `ini:"tenant-domain-id"`
 	// TenantDomainName string `ini:"tenant-domain-name"`
 	// UserDomainID     string `ini:"user-domain-id"`
@@ -248,18 +253,45 @@ func getEncodedOpenStackCloudYAML(cloudYAML string) string {
 func getEncodedOpenStackCloudProviderConf(cloudYAML, cloudName string) string {
 	clouds := getParsedOpenStackCloudYAML(cloudYAML)
 	cloud := clouds.Clouds[cloudName]
+
+	authopts := AuthOpts{
+		AuthURL:    cloud.AuthInfo.AuthURL,
+		UserID:     cloud.AuthInfo.UserID,
+		Username:   cloud.AuthInfo.Username,
+		Password:   cloud.AuthInfo.Password,
+		TenantID:   cloud.AuthInfo.ProjectID,
+		TenantName: cloud.AuthInfo.ProjectName,
+		Region:     cloud.RegionName,
+	}
+
+	// In-tree OpenStack cloud provider does not support
+	// {Tenant,User}Domain{ID,Name}, but external cloud provider does.
+	// Here we manually set Domain{ID,Name} depending on the most specific config available
+	switch {
+	case cloud.AuthInfo.UserDomainID != "":
+		authopts.DomainID = cloud.AuthInfo.UserDomainID
+	case cloud.AuthInfo.UserDomainName != "":
+		authopts.DomainName = cloud.AuthInfo.UserDomainName
+	case cloud.AuthInfo.ProjectDomainID != "":
+		authopts.DomainID = cloud.AuthInfo.UserDomainID
+	case cloud.AuthInfo.ProjectDomainName != "":
+		authopts.DomainName = cloud.AuthInfo.ProjectDomainName
+	case cloud.AuthInfo.DomainID != "":
+		authopts.DomainID = cloud.AuthInfo.DomainID
+	case cloud.AuthInfo.DomainName != "":
+		authopts.DomainName = cloud.AuthInfo.DomainName
+	}
+
+	// Regardless of the path to a CA cert specified in the input
+	// clouds.yaml, we will deploy the cert to /etc/certs/cacert in the
+	// target cluster as specified in KubeadmControlPlane and KubeadmConfig
+	// for the control plane and workers respectively in the E2E cluster templates.
+	if cloud.CACertFile != "" {
+		authopts.CAFile = "/etc/certs/cacert"
+	}
+
 	cloudProviderConf := &Config{
-		Global: AuthOpts{
-			AuthURL:    cloud.AuthInfo.AuthURL,
-			UserID:     cloud.AuthInfo.UserID,
-			Username:   cloud.AuthInfo.Username,
-			Password:   cloud.AuthInfo.Password,
-			TenantID:   cloud.AuthInfo.ProjectID,
-			TenantName: cloud.AuthInfo.ProjectName,
-			DomainID:   cloud.AuthInfo.DomainID,
-			DomainName: cloud.AuthInfo.DomainName,
-			Region:     cloud.RegionName,
-		},
+		Global: authopts,
 	}
 
 	cfg := ini.Empty()

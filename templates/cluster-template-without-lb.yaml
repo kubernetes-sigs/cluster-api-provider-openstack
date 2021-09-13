@@ -30,6 +30,7 @@ spec:
   nodeCidr: 10.6.0.0/24
   dnsNameservers:
   - ${OPENSTACK_DNS_NAMESERVERS}
+  externalNetworkId: ${OPENSTACK_EXTERNAL_NETWORK_ID}
 ---
 kind: KubeadmControlPlane
 apiVersion: controlplane.cluster.x-k8s.io/v1alpha4

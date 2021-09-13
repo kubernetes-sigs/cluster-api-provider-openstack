@@ -93,7 +93,7 @@ providers:
 variables:
   # used to ensure we deploy to the correct management cluster
   KUBE_CONTEXT: "kind-capo-e2e"
-  KUBERNETES_VERSION: "v1.20.6"
+  KUBERNETES_VERSION: "v1.21.3"
   CNI: "../../data/cni/calico.yaml"
   CCM: "../../data/ccm/cloud-controller-manager.yaml"
   EXP_CLUSTER_RESOURCE_SET: "true"
@@ -108,6 +108,7 @@ variables:
   OPENSTACK_IMAGE_NAME: "ubuntu-2004-kube-v1.18.15"
   OPENSTACK_NODE_MACHINE_FLAVOR: "m1.small"
   OPENSTACK_SSH_KEY_NAME: "cluster-api-provider-openstack-sigs-k8s-io"
+  OPENSTACK_EXTERNAL_NETWORK_ID: ""
   CONFORMANCE_WORKER_MACHINE_COUNT: "5"
   CONFORMANCE_CONTROL_PLANE_MACHINE_COUNT: "1"
 

@@ -564,6 +564,11 @@ spec:
                       type: array
                     description:
                       type: string
+                    disablePortSecurity:
+                      description: DisablePortSecurity enables or disables the port
+                        security when set. When not set, it takes the value of the
+                        corresponding field at the network level.
+                      type: boolean
                     fixedIPs:
                       description: Specify pairs of subnet and/or IP address. These
                         should be subnets of the network with the given NetworkID.
@@ -591,6 +596,13 @@ spec:
                         the port. If unspecified, create the port on the default cluster
                         network.
                       type: string
+                    profile:
+                      additionalProperties:
+                        type: string
+                      description: A dictionary that enables the application running
+                        on the specified host to pass and receive virtual network
+                        interface (VIF) port-specific information to the plug-in.
+                      type: object
                     projectId:
                       type: string
                     securityGroups:
@@ -599,6 +611,10 @@ spec:
                       type: array
                     tenantId:
                       type: string
+                    trunk:
+                      description: Enables and disables trunk at port level. If not
+                        provided, openStackMachine.Spec.Trunk is inherited.
+                      type: boolean
                     vnicType:
                       description: The virtual network interface card (vNIC) type
                         that is bound to the neutron port.

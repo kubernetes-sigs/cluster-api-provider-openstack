@@ -61,6 +61,19 @@ func (mc *MetricPrometheusContext) ObserveRequestIgnoreNotFound(err error) error
 	return mc.ObserveRequest(err)
 }
 
+// ObserveRequestIgnoreNotFoundorConflict records the request latency and counts the errors if it's not IsNotFound or IsConflict.
+func (mc *MetricPrometheusContext) ObserveRequestIgnoreNotFoundorConflict(err error) error {
+	if capoerrors.IsNotFound(err) {
+		_ = mc.ObserveRequest(nil)
+		return err
+	}
+	if capoerrors.IsConflict(err) {
+		_ = mc.ObserveRequest(nil)
+		return err
+	}
+	return mc.ObserveRequest(err)
+}
+
 // Observe records the request latency and counts the errors.
 func (mc *MetricPrometheusContext) Observe(om *OpenstackPrometheusMetrics, err error) error {
 	if om == nil {
