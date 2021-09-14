@@ -83,6 +83,16 @@ type OpenStackClusterSpec struct {
 	// This field is not used if DisableAPIServerFloatingIP is set.
 	APIServerFloatingIP string `json:"apiServerFloatingIP,omitempty"`
 
+	// APIServerFixedIP is the fixed IP which will be associated with the API server.
+	// In the case where the API server has a floating IP but not a managed load balancer,
+	// this field is not used.
+	// If a managed load balancer is used and this field is not specified, a fixed IP will
+	// be dynamically allocated for the load balancer.
+	// If a managed load balancer is not used AND the API server floating IP is disabled,
+	// this field MUST be specified and should correspond to a pre-allocated port that
+	// holds the fixed IP to be used as a VIP.
+	APIServerFixedIP string `json:"apiServerFixedIP,omitempty"`
+
 	// APIServerPort is the port on which the listener on the APIServer
 	// will be created
 	APIServerPort int `json:"apiServerPort,omitempty"`

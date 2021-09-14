@@ -487,13 +487,17 @@ func reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.P
 				return errors.Errorf("Floating IP cannot be got or created: %v", err)
 			}
 			host = fp.FloatingIP
+		case openStackCluster.Spec.APIServerFixedIP != "":
+			// If a fixed IP was specified, assume that the user is providing the extra configuration
+			// to use that IP as the VIP for the API server, e.g. using keepalived or kube-vip
+			host = openStackCluster.Spec.APIServerFixedIP
 		default:
-			// This case is not managed for now (i.e. no load balancer + no floating IP)
-			// We could manage a VIP port on the cluster network and set allowedAddressPairs accordingly
-			// when creating control plane machines, but this would require us to deploy software on the
-			// control plane hosts to manage the VIP (e.g. keepalived/kube-vip)
-			// It is still possible for a user to deploy this case manually using existing options
-			return errors.New("unable to determine VIP for API server - either load balancer or floating IP must be enabled")
+			// For now, we do not provide a managed VIP without either a load balancer or a floating IP
+			// In the future, we could manage a VIP port on the cluster network and set allowedAddressPairs
+			// accordingly when creating control plane machines
+			// However this would require us to deploy software on the control plane hosts to manage the
+			// VIP (e.g. keepalived/kube-vip)
+			return errors.New("unable to determine VIP for API server")
 		}
 
 		// Set APIEndpoints so the Cluster API Cluster Controller can pull them
