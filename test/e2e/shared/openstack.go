@@ -170,7 +170,8 @@ func getOpenStackServers(e2eCtx *E2EContext) (map[string]server, error) {
 		return nil, fmt.Errorf("error listing server: %v", err)
 	}
 
-	serverList, err := servers.ExtractServers(allPages)
+	var serverList []compute.ServerExt
+	err = servers.ExtractServersInto(allPages, &serverList)
 	if err != nil {
 		return nil, fmt.Errorf("error extracting server: %v", err)
 	}

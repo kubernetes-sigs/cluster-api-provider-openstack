@@ -498,19 +498,18 @@ func (s *Service) GetInstanceStatus(resourceID string) (instance *InstanceStatus
 	if resourceID == "" {
 		return nil, fmt.Errorf("resourceId should be specified to get detail")
 	}
+
 	mc := metrics.NewMetricPrometheusContext("server", "get")
-	server, err := servers.Get(s.computeClient, resourceID).Extract()
+	var server ServerExt
+	err = servers.Get(s.computeClient, resourceID).ExtractInto(&server)
 	if mc.ObserveRequestIgnoreNotFound(err) != nil {
 		if capoerrors.IsNotFound(err) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("get server %q detail failed: %v", resourceID, err)
 	}
-	if server == nil {
-		return nil, nil
-	}
 
-	return &InstanceStatus{server: server}, nil
+	return &InstanceStatus{server: &server}, nil
 }
 
 func (s *Service) GetInstanceStatusByName(eventObject runtime.Object, name string) (instance *InstanceStatus, err error) {
@@ -531,7 +530,8 @@ func (s *Service) GetInstanceStatusByName(eventObject runtime.Object, name strin
 	if mc.ObserveRequest(err) != nil {
 		return nil, fmt.Errorf("get server list: %v", err)
 	}
-	serverList, err := servers.ExtractServers(allPages)
+	var serverList []ServerExt
+	err = servers.ExtractServersInto(allPages, &serverList)
 	if err != nil {
 		return nil, fmt.Errorf("extract server list: %v", err)
 	}
