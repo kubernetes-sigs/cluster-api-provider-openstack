@@ -104,7 +104,7 @@ Reference images can be found in [kubernetes-sigs/image-builder](https://github.
 
 ## Documentation
 
-Documentation can be found in the [doc](docs/book/src/) directory
+Please see our [book](https://cluster-api-openstack.sigs.k8s.io) for in-depth documentation.
 
 ## Getting involved and contributing
 
