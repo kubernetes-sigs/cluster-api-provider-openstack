@@ -158,13 +158,13 @@ prevent a floating IP from being allocated.
 > **WARNING**
 >
 > If the API server does not have a floating IP, workload clusters will only deploy successfully
-> when the management cluster and control plane nodes are on the same network. This can be
-> a project-specific network, if the management cluster lives in the same project as the workload
-> cluster, or a network that is shared across multiple projects.
+> when the management cluster and workload cluster control plane nodes are on the same network.
+> This can be a project-specific network, if the management cluster lives in the same project
+> as the workload cluster, or a network that is shared across multiple projects.
 >
 > In particular, this means that the cluster **cannot** use `OpenStackCluster.spec.nodeCidr`
 > to provision a new network for the cluster. Instead, use `OpenStackCluster.spec.network`
-> to explicitly specify the network that the management cluster is on.
+> to explicitly specify the same network as the management cluster is on.
 
 When the API server floating IP is disabled, it is **not possible** to provision a cluster
 without a load balancer without additional configuration (an advanced use-case that is not
@@ -173,7 +173,7 @@ documented here). This is because the API server must still have a
 a particular control plane node in order to allow the nodes to change underneath, e.g.
 during an upgrade. When the API server has a floating IP, this role is fulfilled by the
 floating IP even if there is no load balancer. When the API server does not have a floating
-IP, the load balancer virtual IP is used.
+IP, the load balancer virtual IP on the cluster network is used.
 
 ## Network Filters
 
