@@ -80,7 +80,7 @@ type OpenStackClusterSpec struct {
 	// APIServerFloatingIP is the floatingIP which will be associated with the API server.
 	// The floatingIP will be created if it does not already exist.
 	// If not specified, a new floatingIP is allocated.
-	// This field is not used if DisableAPIServerFloatingIP is set.
+	// This field is not used if DisableAPIServerFloatingIP is set to true.
 	APIServerFloatingIP string `json:"apiServerFloatingIP,omitempty"`
 
 	// APIServerFixedIP is the fixed IP which will be associated with the API server.

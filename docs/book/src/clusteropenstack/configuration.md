@@ -134,9 +134,11 @@ openstack network list --external
 
 Note: If your openstack cluster does not already have a public network, you should contact your cloud service provider. We will not review how to troubleshoot this here.
 
-## Floating IP
+## API server floating IP
 
-A floating IP is automatically created and associated with the load balancer or controller node, but you can specify the floating IP explicitly by `spec.apiServerFloatingIP` of `OpenStackCluster`.
+Unless explicitly disabled, a floating IP is automatically created and associated with the load balancer
+or controller node. If required, you can specify the floating IP explicitly by `spec.apiServerFloatingIP`
+of `OpenStackCluster`.
 
 You have to be able to create a floating IP in your OpenStack in advance. You can create one using,
 
@@ -146,6 +148,31 @@ openstack floating ip create <public network>
 
 Note: Only user with admin role can create a floating IP with specific IP.
 
+### Disabling the API server floating IP
+
+It is possible to provision a cluster without a floating IP for the API server by setting
+`OpenStackCluster.spec.disableAPIServerFloatingIP: true` (the default is `false`). This will
+prevent a floating IP from being allocated.
+
+> **WARNING**
+>
+> If the API server does not have a floating IP, workload clusters will only deploy successfully
+> when the management cluster and control plane nodes are on the same network. This can be
+> a project-specific network, if the management cluster lives in the same project as the workload
+> cluster, or a network that is shared across multiple projects.
+>
+> In particular, this means that the cluster **cannot** use `OpenStackCluster.spec.nodeCidr`
+> to provision a new network for the cluster. Instead, use `OpenStackCluster.spec.network`
+> to explicitly specify the network that the management cluster is on.
+
+When the API server floating IP is disabled, it is **not possible** to provision a cluster
+without a load balancer without additional configuration (an advanced use-case that is not
+documented here). This is because the API server must still have a
+[virtual IP](https://en.wikipedia.org/wiki/Virtual_IP_address) that is not associated with
+a particular control plane node in order to allow the nodes to change underneath, e.g.
+during an upgrade. When the API server has a floating IP, this role is fulfilled by the
+floating IP even if there is no load balancer. When the API server does not have a floating
+IP, the load balancer virtual IP is used.
 
 ## Network Filters
 
