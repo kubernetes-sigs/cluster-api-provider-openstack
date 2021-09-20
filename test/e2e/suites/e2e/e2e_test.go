@@ -154,7 +154,6 @@ var _ = Describe("e2e tests", func() {
 				BootstrapConfigTemplate: makeJoinBootstrapConfigTemplate(namespace.Name, md3Name),
 				InfraMachineTemplate:    makeOpenStackMachineTemplateWithPortOptions(namespace.Name, clusterName, md3Name, customPortOptions),
 			})
-
 			shared.Byf("Waiting for custom port to be created")
 			var plist *[]ports.Port
 			var err error
