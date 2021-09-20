@@ -84,7 +84,7 @@ write_files:
     ENABLED_SERVICES+=,g-api,g-reg
 
     # Octavia-Neutron
-    ENABLED_SERVICES+=,neutron-api,neutron-agent,neutron-dhcp,neutron-l3
+    ENABLED_SERVICES+=,neutron-api,neutron-agent,neutron-dhcp,neutron-l3,neutron-trunk
     ENABLED_SERVICES+=,neutron-metadata-agent,neutron-qos
     # Octavia
     ENABLED_SERVICES+=,octavia,o-api,o-cw,o-hm,o-hk,o-da
