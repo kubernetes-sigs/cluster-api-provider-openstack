@@ -196,7 +196,7 @@ func (s *Service) createInstance(eventObject runtime.Object, clusterName string,
 	}
 
 	if instanceSpec.Subnet != "" && accessIPv4 == "" {
-		if err := s.networkingService.DeletePorts(eventObject, portList); err != nil {
+		if err := s.deletePorts(eventObject, portList); err != nil {
 			return nil, err
 		}
 		return nil, fmt.Errorf("no ports with fixed IPs found on Subnet %q", instanceSpec.Subnet)
@@ -239,7 +239,7 @@ func (s *Service) createInstance(eventObject runtime.Object, clusterName string,
 
 	if mc.ObserveRequest(err) != nil {
 		serverErr := err
-		if err = s.networkingService.DeletePorts(eventObject, portList); err != nil {
+		if err = s.deletePorts(eventObject, portList); err != nil {
 			return nil, fmt.Errorf("error creating OpenStack instance: %v, error deleting ports: %v", serverErr, err)
 		}
 		return nil, fmt.Errorf("error creating Openstack instance: %v", serverErr)
@@ -440,6 +440,15 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instance *InstanceS
 	}
 
 	return s.deleteInstance(eventObject, instanceIdentifier)
+}
+
+func (s *Service) deletePorts(eventObject runtime.Object, nets []servers.Network) error {
+	for _, n := range nets {
+		if err := s.networkingService.DeletePort(eventObject, n.Port); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (s *Service) deleteAttachInterface(eventObject runtime.Object, instance *InstanceIdentifier, portID string) error {
