@@ -31,6 +31,7 @@ spec:
     kind: Secret
   managedAPIServerLoadBalancer: true
   managedSecurityGroups: true
+  allowAllInClusterTraffic: true
   nodeCidr: 10.6.0.0/24
   dnsNameservers:
   - ${OPENSTACK_DNS_NAMESERVERS}
