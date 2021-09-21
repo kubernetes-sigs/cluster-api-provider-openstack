@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/portsbinding"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/portsecurity"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
@@ -222,15 +221,6 @@ func (s *Service) DeletePort(eventObject runtime.Object, portID string) error {
 	}
 
 	record.Eventf(eventObject, "SuccessfulDeletePort", "Deleted port %s with id %s", port.Name, port.ID)
-	return nil
-}
-
-func (s *Service) DeletePorts(eventObject runtime.Object, nets []servers.Network) error {
-	for _, n := range nets {
-		if err := s.DeletePort(eventObject, n.Port); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
