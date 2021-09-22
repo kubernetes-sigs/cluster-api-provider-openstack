@@ -50,6 +50,13 @@ spec:
                     description: OpenStackClusterSpec defines the desired state of
                       OpenStackCluster.
                     properties:
+                      allowAllInClusterTraffic:
+                        description: AllowAllInClusterTraffic is only used when managed
+                          security groups are in use. If set to true, the rules for
+                          the managed security groups are configured so that all ingress
+                          and egress between cluster nodes is permitted, allowing
+                          CNIs other than Calico to be used.
+                        type: boolean
                       apiServerFloatingIP:
                         description: APIServerFloatingIP is the floatingIP which will
                           be associated to the APIServer. The floatingIP will be created
@@ -544,13 +551,13 @@ spec:
                           APIServerPort'
                         type: boolean
                       managedSecurityGroups:
-                        description: 'ManagedSecurityGroups defines that kubernetes
-                          manages the OpenStack security groups for now, that means
-                          that we''ll create security group allows traffic to/from
-                          machines belonging to that group based on Calico CNI plugin
-                          default network requirements: BGP and IP-in-IP for master
-                          node(s) and worker node(s) respectively. In the future,
-                          we could make this more flexible.'
+                        description: ManagedSecurityGroups determines whether OpenStack
+                          security groups for the cluster will be managed by the OpenStack
+                          provider or whether pre-existing security groups will be
+                          specified as part of the configuration. By default, the
+                          managed security groups have rules that allow the Kubelet,
+                          etcd, the Kubernetes API server and the Calico CNI plugin
+                          to function correctly.
                         type: boolean
                       network:
                         description: If NodeCIDR cannot be set this can be used to

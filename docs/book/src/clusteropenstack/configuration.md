@@ -3,7 +3,7 @@
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
 - [Required configuration](#required-configuration)
-  - [OpenStack Version](#openstack-version)
+  - [OpenStack version](#openstack-version)
   - [Operating system image](#operating-system-image)
   - [SSH key pair](#ssh-key-pair)
   - [OpenStack credential](#openstack-credential)
@@ -19,6 +19,7 @@
   - [Multiple Networks](#multiple-networks)
   - [Subnet Filters](#subnet-filters)
   - [Ports](#ports)
+  - [Security groups](#security-groups)
   - [Tagging](#tagging)
   - [Metadata](#metadata)
   - [Boot From Volume](#boot-from-volume)
@@ -77,19 +78,9 @@ openstack keypair create [--public-key <file> | --private-key <file>] <name>
 
 The key pair name must be exposed as an environment variable `OPENSTACK_SSH_KEY_NAME`.
 
-If you want to login to each machine by ssh,  you can [access nodes through the bastion host via SSH](#accessing-nodes-through-the-bastion-host-via-ssh). Otherwise you have to configure security groups. If `spec.managedSecurityGroups` of `OpenStackCluster` set to true, two security groups will be created and added to the instances. One is `k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-controlplane`, another is `k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-worker`. These security group rules include the kubeadm's [Check required ports](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#check-required-ports) so that each node can not be logged in through ssh by default. Please add pre-existing security group allowing ssh port to OpenStackMachineTemplate spec. Here is an example:
-
-```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha4
-kind: OpenStackMachineTemplate
-metadata:
-  name: ${CLUSTER_NAME}-control-plane
-spec:
-  template:
-    spec:
-      securityGroups:
-      - name: allow-ssh
-```
+In order to access cluster nodes via SSH, you must either
+[access nodes through the bastion host](#accessing-nodes-through-the-bastion-host-via-ssh)
+or [configure custom security groups](#security-groups) with rules allowing ingress for port 22.
 
 ## OpenStack credential
 
@@ -253,6 +244,47 @@ spec:
     ...
     disablePortSecurity: true
     ...
+```
+
+## Security groups
+
+Security groups are used to determine which ports of the cluster nodes are accessible from where.
+
+If `spec.managedSecurityGroups` of `OpenStackCluster` is set to `true`, two security groups named
+`k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-controlplane` and
+`k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-worker` will be created and added to the control
+plane and worker nodes respectively.
+
+By default, these groups have rules that allow the following traffic:
+
+  * Control plane nodes 
+    * API server traffic from anywhere
+    * Etcd traffic from other control plane nodes
+    * Kubelet traffic from other cluster nodes
+    * Calico CNI traffic from other cluster nodes
+  * Worker nodes
+    * Node port traffic from anywhere
+    * Kubelet traffic from other cluster nodes
+    * Calico CNI traffic from other cluster nodes
+
+To use a CNI other than Calico, the flag `OpenStackCluster.spec.allowAllInClusterTraffic` can be
+set to `true`. With this flag set, the rules for the managed security groups permit all traffic
+between cluster nodes on all ports and protocols (API server and node port traffic is still
+permitted from anywhere, as with the default rules).
+
+If this is not flexible enough, pre-existing security groups can be added to the
+spec of an `OpenStackMachineTemplate`, e.g.:
+
+```yaml
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha4
+kind: OpenStackMachineTemplate
+metadata:
+  name: ${CLUSTER_NAME}-control-plane
+spec:
+  template:
+    spec:
+      securityGroups:
+      - name: allow-ssh
 ```
 
 ## Tagging
