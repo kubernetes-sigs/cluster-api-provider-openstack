@@ -58,15 +58,40 @@ type OpenStackClusterSpec struct {
 	ExternalNetworkID string `json:"externalNetworkId,omitempty"`
 
 	// ManagedAPIServerLoadBalancer defines whether a LoadBalancer for the
-	// APIServer should be created. If set to true the following properties are
-	// mandatory: APIServerFloatingIP, APIServerPort
+	// APIServer should be created.
 	// +optional
 	ManagedAPIServerLoadBalancer bool `json:"managedAPIServerLoadBalancer"`
 
-	// APIServerFloatingIP is the floatingIP which will be associated
-	// to the APIServer. The floatingIP will be created if it not
-	// already exists.
+	// DisableAPIServerFloatingIP determines whether or not to attempt to attach a floating
+	// IP to the API server. This allows for the creation of clusters when attaching a floating
+	// IP to the API server (and hence, in many cases, exposing the API server to the internet)
+	// is not possible or desirable, e.g. if using a shared VLAN for communication between
+	// management and workload clusters or when the management cluster is inside the
+	// project network.
+	// This option requires that the API server use a VIP on the cluster network so that the
+	// underlying machines can change without changing ControlPlaneEndpoint.Host.
+	// When using a managed load balancer, this VIP will be managed automatically.
+	// If not using a managed load balancer, cluster configuration will fail without additional
+	// configuration to manage the VIP on the control plane machines, which falls outside of
+	// the scope of this controller.
+	// +optional
+	DisableAPIServerFloatingIP bool `json:"disableAPIServerFloatingIP"`
+
+	// APIServerFloatingIP is the floatingIP which will be associated with the API server.
+	// The floatingIP will be created if it does not already exist.
+	// If not specified, a new floatingIP is allocated.
+	// This field is not used if DisableAPIServerFloatingIP is set to true.
 	APIServerFloatingIP string `json:"apiServerFloatingIP,omitempty"`
+
+	// APIServerFixedIP is the fixed IP which will be associated with the API server.
+	// In the case where the API server has a floating IP but not a managed load balancer,
+	// this field is not used.
+	// If a managed load balancer is used and this field is not specified, a fixed IP will
+	// be dynamically allocated for the load balancer.
+	// If a managed load balancer is not used AND the API server floating IP is disabled,
+	// this field MUST be specified and should correspond to a pre-allocated port that
+	// holds the fixed IP to be used as a VIP.
+	APIServerFixedIP string `json:"apiServerFixedIP,omitempty"`
 
 	// APIServerPort is the port on which the listener on the APIServer
 	// will be created
