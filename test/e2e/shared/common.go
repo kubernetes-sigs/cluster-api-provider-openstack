@@ -95,7 +95,7 @@ func dumpMachines(ctx context.Context, e2eCtx *E2EContext, namespace *corev1.Nam
 		_, _ = fmt.Fprintf(GinkgoWriter, "cannot dump machines, could not get machines: %v\n", err)
 		return
 	}
-	srvs, err := getOpenStackServers(e2eCtx)
+	srvs, err := getOpenStackServers(e2eCtx, cluster)
 	if err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "cannot dump machines, could not get servers from OpenStack: %v\n", err)
 		return

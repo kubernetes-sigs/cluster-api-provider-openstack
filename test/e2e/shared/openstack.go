@@ -30,6 +30,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/go-logr/logr"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
@@ -42,6 +43,7 @@ import (
 	"gopkg.in/ini.v1"
 	"sigs.k8s.io/yaml"
 
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/provider"
 )
@@ -152,7 +154,7 @@ func DumpOpenStackPorts(e2eCtx *E2EContext, filter ports.ListOpts) (*[]ports.Por
 
 // getOpenStackServers gets all OpenStack servers at once, to save on DescribeInstances
 // calls.
-func getOpenStackServers(e2eCtx *E2EContext) (map[string]server, error) {
+func getOpenStackServers(e2eCtx *E2EContext, openStackCluster *infrav1.OpenStackCluster) (map[string]server, error) {
 	providerClient, clientOpts, err := getProviderClient(e2eCtx)
 	if err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
@@ -179,13 +181,14 @@ func getOpenStackServers(e2eCtx *E2EContext) (map[string]server, error) {
 	srvs := map[string]server{}
 	for i := range serverList {
 		srv := &serverList[i]
-		instanceStatus := compute.NewInstanceStatusFromServer(srv)
+		instanceStatus := compute.NewInstanceStatusFromServer(srv, logr.Discard())
 		instanceNS, err := instanceStatus.NetworkStatus()
 		if err != nil {
 			return nil, fmt.Errorf("error getting network status for server %s: %v", srv.Name, err)
 		}
 
-		if instanceNS.IP() == "" {
+		ip := instanceNS.IP(openStackCluster.Status.Network.Name)
+		if ip == "" {
 			_, _ = fmt.Fprintf(GinkgoWriter, "error getting internal ip for server %s: internal ip doesn't exist (yet)\n", srv.Name)
 			continue
 		}
@@ -193,7 +196,7 @@ func getOpenStackServers(e2eCtx *E2EContext) (map[string]server, error) {
 		srvs[srv.Name] = server{
 			name: srv.Name,
 			id:   srv.ID,
-			ip:   instanceNS.IP(),
+			ip:   ip,
 		}
 	}
 	return srvs, nil
