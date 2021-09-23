@@ -108,7 +108,12 @@ func (c networkClient) RemoveRouterInterface(id string, opts routers.RemoveInter
 }
 
 func (c networkClient) ReplaceAllAttributesTags(resourceType string, resourceID string, opts attributestags.ReplaceAllOptsBuilder) ([]string, error) {
-	return attributestags.ReplaceAll(c.serviceClient, resourceType, resourceID, opts).Extract()
+	mc := metrics.NewMetricPrometheusContext("attributes_tags", "replace_all")
+	tags, err := attributestags.ReplaceAll(c.serviceClient, resourceType, resourceID, opts).Extract()
+	if mc.ObserveRequest(err) != nil {
+		return nil, err
+	}
+	return tags, nil
 }
 
 func (c networkClient) ListRouter(opts routers.ListOpts) ([]routers.Router, error) {
@@ -140,13 +145,13 @@ func (c networkClient) CreateFloatingIP(opts floatingips.CreateOptsBuilder) (*fl
 
 func (c networkClient) DeleteFloatingIP(id string) error {
 	mc := metrics.NewMetricPrometheusContext("floating_ip", "delete")
-	return mc.ObserveRequest(floatingips.Delete(c.serviceClient, id).ExtractErr())
+	return mc.ObserveRequestIgnoreNotFound(floatingips.Delete(c.serviceClient, id).ExtractErr())
 }
 
 func (c networkClient) GetFloatingIP(id string) (*floatingips.FloatingIP, error) {
 	mc := metrics.NewMetricPrometheusContext("floating_ip", "list")
 	fip, err := floatingips.Get(c.serviceClient, id).Extract()
-	if mc.ObserveRequest(err) != nil {
+	if mc.ObserveRequestIgnoreNotFound(err) != nil {
 		return nil, err
 	}
 	return fip, nil
@@ -181,7 +186,7 @@ func (c networkClient) CreatePort(opts ports.CreateOptsBuilder) (*ports.Port, er
 
 func (c networkClient) DeletePort(id string) error {
 	mc := metrics.NewMetricPrometheusContext("port", "delete")
-	return mc.ObserveRequest(ports.Delete(c.serviceClient, id).ExtractErr())
+	return mc.ObserveRequestIgnoreNotFound(ports.Delete(c.serviceClient, id).ExtractErr())
 }
 
 func (c networkClient) GetPort(id string) (*ports.Port, error) {
@@ -194,7 +199,12 @@ func (c networkClient) GetPort(id string) (*ports.Port, error) {
 }
 
 func (c networkClient) UpdatePort(id string, opts ports.UpdateOptsBuilder) (*ports.Port, error) {
-	return ports.Update(c.serviceClient, id, opts).Extract()
+	mc := metrics.NewMetricPrometheusContext("port", "update")
+	port, err := ports.Update(c.serviceClient, id, opts).Extract()
+	if mc.ObserveRequest(err) != nil {
+		return nil, err
+	}
+	return port, nil
 }
 
 func (c networkClient) CreateTrunk(opts trunks.CreateOptsBuilder) (*trunks.Trunk, error) {
@@ -208,7 +218,7 @@ func (c networkClient) CreateTrunk(opts trunks.CreateOptsBuilder) (*trunks.Trunk
 
 func (c networkClient) DeleteTrunk(id string) error {
 	mc := metrics.NewMetricPrometheusContext("trunk", "delete")
-	return mc.ObserveRequest(trunks.Delete(c.serviceClient, id).ExtractErr())
+	return mc.ObserveRequestIgnoreNotFound(trunks.Delete(c.serviceClient, id).ExtractErr())
 }
 
 func (c networkClient) ListTrunk(opts trunks.ListOptsBuilder) ([]trunks.Trunk, error) {
@@ -231,11 +241,16 @@ func (c networkClient) CreateRouter(opts routers.CreateOptsBuilder) (*routers.Ro
 
 func (c networkClient) DeleteRouter(id string) error {
 	mc := metrics.NewMetricPrometheusContext("router", "delete")
-	return mc.ObserveRequest(routers.Delete(c.serviceClient, id).ExtractErr())
+	return mc.ObserveRequestIgnoreNotFound(routers.Delete(c.serviceClient, id).ExtractErr())
 }
 
 func (c networkClient) GetRouter(id string) (*routers.Router, error) {
-	return routers.Get(c.serviceClient, id).Extract()
+	mc := metrics.NewMetricPrometheusContext("router", "get")
+	router, err := routers.Get(c.serviceClient, id).Extract()
+	if mc.ObserveRequestIgnoreNotFound(err) != nil {
+		return nil, err
+	}
+	return router, nil
 }
 
 func (c networkClient) UpdateRouter(id string, opts routers.UpdateOptsBuilder) (*routers.Router, error) {
@@ -267,20 +282,31 @@ func (c networkClient) CreateSecGroup(opts groups.CreateOptsBuilder) (*groups.Se
 
 func (c networkClient) DeleteSecGroup(id string) error {
 	mc := metrics.NewMetricPrometheusContext("security_group", "delete")
-	return mc.ObserveRequest(groups.Delete(c.serviceClient, id).ExtractErr())
+	return mc.ObserveRequestIgnoreNotFound(groups.Delete(c.serviceClient, id).ExtractErr())
 }
 
 func (c networkClient) GetSecGroup(id string) (*groups.SecGroup, error) {
-	return groups.Get(c.serviceClient, id).Extract()
+	mc := metrics.NewMetricPrometheusContext("security_group", "get")
+	group, err := groups.Get(c.serviceClient, id).Extract()
+	if mc.ObserveRequestIgnoreNotFound(err) != nil {
+		return nil, err
+	}
+	return group, nil
 }
 
 func (c networkClient) UpdateSecGroup(id string, opts groups.UpdateOptsBuilder) (*groups.SecGroup, error) {
-	return groups.Update(c.serviceClient, id, opts).Extract()
+	mc := metrics.NewMetricPrometheusContext("security_group", "update")
+	group, err := groups.Update(c.serviceClient, id, opts).Extract()
+	if mc.ObserveRequest(err) != nil {
+		return nil, err
+	}
+	return group, nil
 }
 
 func (c networkClient) ListSecGroupRule(opts rules.ListOpts) ([]rules.SecGroupRule, error) {
+	mc := metrics.NewMetricPrometheusContext("security_group_rule", "list")
 	allPages, err := rules.List(c.serviceClient, opts).AllPages()
-	if err != nil {
+	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return rules.ExtractRules(allPages)
@@ -297,11 +323,16 @@ func (c networkClient) CreateSecGroupRule(opts rules.CreateOptsBuilder) (*rules.
 
 func (c networkClient) DeleteSecGroupRule(id string) error {
 	mc := metrics.NewMetricPrometheusContext("security_group_rule", "delete")
-	return mc.ObserveRequest(rules.Delete(c.serviceClient, id).ExtractErr())
+	return mc.ObserveRequestIgnoreNotFound(rules.Delete(c.serviceClient, id).ExtractErr())
 }
 
 func (c networkClient) GetSecGroupRule(id string) (*rules.SecGroupRule, error) {
-	return rules.Get(c.serviceClient, id).Extract()
+	mc := metrics.NewMetricPrometheusContext("security_group_rule", "get")
+	rule, err := rules.Get(c.serviceClient, id).Extract()
+	if mc.ObserveRequestIgnoreNotFound(err) != nil {
+		return nil, err
+	}
+	return rule, nil
 }
 
 func (c networkClient) ListNetwork(opts networks.ListOptsBuilder) ([]networks.Network, error) {
@@ -324,15 +355,25 @@ func (c networkClient) CreateNetwork(opts networks.CreateOptsBuilder) (*networks
 
 func (c networkClient) DeleteNetwork(id string) error {
 	mc := metrics.NewMetricPrometheusContext("network", "delete")
-	return mc.ObserveRequest(networks.Delete(c.serviceClient, id).ExtractErr())
+	return mc.ObserveRequestIgnoreNotFound(networks.Delete(c.serviceClient, id).ExtractErr())
 }
 
 func (c networkClient) GetNetwork(id string) (*networks.Network, error) {
-	return networks.Get(c.serviceClient, id).Extract()
+	mc := metrics.NewMetricPrometheusContext("network", "get")
+	net, err := networks.Get(c.serviceClient, id).Extract()
+	if mc.ObserveRequestIgnoreNotFound(err) != nil {
+		return nil, err
+	}
+	return net, nil
 }
 
 func (c networkClient) UpdateNetwork(id string, opts networks.UpdateOptsBuilder) (*networks.Network, error) {
-	return networks.Update(c.serviceClient, id, opts).Extract()
+	mc := metrics.NewMetricPrometheusContext("network", "update")
+	net, err := networks.Update(c.serviceClient, id, opts).Extract()
+	if mc.ObserveRequest(err) != nil {
+		return nil, err
+	}
+	return net, nil
 }
 
 func (c networkClient) ListSubnet(opts subnets.ListOptsBuilder) ([]subnets.Subnet, error) {
@@ -354,15 +395,26 @@ func (c networkClient) CreateSubnet(opts subnets.CreateOptsBuilder) (*subnets.Su
 }
 
 func (c networkClient) DeleteSubnet(id string) error {
-	return subnets.Delete(c.serviceClient, id).ExtractErr()
+	mc := metrics.NewMetricPrometheusContext("subnet", "delete")
+	return mc.ObserveRequestIgnoreNotFound(subnets.Delete(c.serviceClient, id).ExtractErr())
 }
 
 func (c networkClient) GetSubnet(id string) (*subnets.Subnet, error) {
-	return subnets.Get(c.serviceClient, id).Extract()
+	mc := metrics.NewMetricPrometheusContext("subnet", "get")
+	subnet, err := subnets.Get(c.serviceClient, id).Extract()
+	if mc.ObserveRequestIgnoreNotFound(err) != nil {
+		return nil, err
+	}
+	return subnet, nil
 }
 
 func (c networkClient) UpdateSubnet(id string, opts subnets.UpdateOptsBuilder) (*subnets.Subnet, error) {
-	return subnets.Update(c.serviceClient, id, opts).Extract()
+	mc := metrics.NewMetricPrometheusContext("subnet", "update")
+	subnet, err := subnets.Update(c.serviceClient, id, opts).Extract()
+	if mc.ObserveRequest(err) != nil {
+		return nil, err
+	}
+	return subnet, nil
 }
 
 func (c networkClient) ListExtensions() ([]extensions.Extension, error) {

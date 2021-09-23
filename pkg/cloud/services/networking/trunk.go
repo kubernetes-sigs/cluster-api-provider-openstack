@@ -25,7 +25,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/cluster-api/util"
 
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
@@ -80,11 +79,10 @@ func (s *Service) getOrCreateTrunk(eventObject runtime.Object, clusterName, trun
 }
 
 func (s *Service) replaceAllAttributesTags(eventObject runtime.Object, trunkID string, tags []string) error {
-	mc := metrics.NewMetricPrometheusContext("trunk", "update")
 	_, err := s.client.ReplaceAllAttributesTags("trunks", trunkID, attributestags.ReplaceAllOpts{
 		Tags: tags,
 	})
-	if mc.ObserveRequest(err) != nil {
+	if err != nil {
 		record.Warnf(eventObject, "FailedReplaceAllAttributesTags", "Failed to replace all attributestags, trunk %s: %v", trunkID, err)
 		return err
 	}
