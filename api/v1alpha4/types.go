@@ -148,6 +148,9 @@ type PortOpts struct {
 	// information to the plug-in.
 	Profile map[string]string `json:"profile,omitempty"`
 
+	// A string for the QoS policy ID of the network where this port is plugged.
+	QoSPolicyID string `json:"qosPolicyId,omitempty"`
+
 	// DisablePortSecurity enables or disables the port security when set.
 	// When not set, it takes the value of the corresponding field at the network level.
 	DisablePortSecurity *bool `json:"disablePortSecurity,omitempty"`

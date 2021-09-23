@@ -208,6 +208,9 @@ main() {
   openstack quota set --cores 32 demo
   openstack quota set --secgroups 50 demo
 
+  # Create a Neutron QoS policy
+  openstack network qos policy create --share demo-policy
+  
   export OS_TENANT_NAME=demo
   export OS_USERNAME=demo
   export OS_PROJECT_NAME=demo

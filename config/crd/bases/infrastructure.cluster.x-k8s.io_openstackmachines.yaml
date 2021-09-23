@@ -608,6 +608,10 @@ spec:
                       type: object
                     projectId:
                       type: string
+                    qosPolicyId:
+                      description: A string for the QoS policy ID of the network where
+                        this port is plugged.
+                      type: string
                     securityGroups:
                       items:
                         type: string

@@ -201,6 +201,7 @@ var _ = Describe("e2e tests", func() {
 
 	Describe("Workload cluster (multiple attached networks)", func() {
 		var extraNet1, extraNet2 *networks.Network
+		var policyID string
 
 		BeforeEach(func() {
 			var err error
@@ -229,6 +230,12 @@ var _ = Describe("e2e tests", func() {
 
 			os.Setenv("CLUSTER_EXTRA_NET_1", extraNet1.ID)
 			os.Setenv("CLUSTER_EXTRA_NET_2", extraNet2.ID)
+
+			policyName := "demo-policy"
+			policyID, err = shared.GetOpenStackQosPolicyID(e2eCtx, policyName)
+			Expect(err).To(BeNil())
+			Expect(policyID).NotTo(BeNil(), "Neutron QoS policy does not exist: %s", policyName)
+			os.Setenv("CLUSTER_QOS_POLICY_ID", policyID)
 		})
 
 		It("should attach all machines to multiple networks", func() {

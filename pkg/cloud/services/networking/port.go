@@ -22,6 +22,7 @@ import (
 
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/portsbinding"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/portsecurity"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/qos/policies"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/cluster-api/util"
@@ -139,6 +140,14 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 		SecurityGroups:      securityGroups,
 		AllowedAddressPairs: addressPairs,
 		FixedIPs:            fixedIPs,
+	}
+
+	if portOpts.QoSPolicyID != "" {
+		policyID := portOpts.QoSPolicyID
+		createOpts = policies.PortCreateOptsExt{
+			CreateOptsBuilder: createOpts,
+			QoSPolicyID:       policyID,
+		}
 	}
 
 	if portOpts.DisablePortSecurity != nil {

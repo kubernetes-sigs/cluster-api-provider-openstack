@@ -36,6 +36,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/qos/policies"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
@@ -324,6 +325,41 @@ func getOpenStackCloudYAML(cloudYAML string) []byte {
 	cloudYAMLContent, err := os.ReadFile(cloudYAML)
 	Expect(err).NotTo(HaveOccurred())
 	return cloudYAMLContent
+}
+
+// GetOpenStackQosPolicyID will return a Neutron QoS Policy ID for the first
+// match found when listing all policies by their name. If no policy is found,
+// it'll return "".
+func GetOpenStackQosPolicyID(e2eCtx *E2EContext, name string) (string, error) {
+	providerClient, clientOpts, err := getProviderClient(e2eCtx)
+	if err != nil {
+		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
+		return "", err
+	}
+
+	networkClient, err := openstack.NewNetworkV2(providerClient, gophercloud.EndpointOpts{
+		Region: clientOpts.RegionName,
+	})
+	if err != nil {
+		return "", fmt.Errorf("error creating network client: %s", err)
+	}
+
+	qosListOpts := policies.ListOpts{
+		Name: name,
+	}
+	allPages, err := policies.List(networkClient, qosListOpts).AllPages()
+	if err != nil {
+		return "", err
+	}
+	allPolicies, err := policies.ExtractPolicies(allPages)
+	if err != nil {
+		return "", err
+	}
+	for _, policy := range allPolicies {
+		return policy.ID, nil
+	}
+
+	return "", nil
 }
 
 func CreateOpenStackNetwork(e2eCtx *E2EContext, name, cidr string) (*networks.Network, error) {
