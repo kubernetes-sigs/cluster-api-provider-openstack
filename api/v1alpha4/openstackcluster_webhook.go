@@ -17,6 +17,10 @@ limitations under the License.
 package v1alpha4
 
 import (
+	"reflect"
+
+	"github.com/pkg/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
@@ -34,8 +38,8 @@ func (r *OpenStackCluster) SetupWebhookWithManager(mgr manager.Manager) error {
 		Complete()
 }
 
-// +kubebuilder:webhook:verbs=create;update,path=/validate-infrastructure-cluster-x-k8s-io-v1alpha4-openstackcluster,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=infrastructure.cluster.x-k8s.io,resources=openstackcluster,versions=v1alpha4,name=validation.openstackcluster.infrastructure.cluster.x-k8s.io,sideEffects=None,admissionReviewVersions=v1beta1
-// +kubebuilder:webhook:verbs=create;update,path=/mutate-infrastructure-cluster-x-k8s-io-v1alpha4-openstackcluster,mutating=true,failurePolicy=fail,matchPolicy=Equivalent,groups=infrastructure.cluster.x-k8s.io,resources=openstackcluster,versions=v1alpha4,name=default.openstackcluster.infrastructure.cluster.x-k8s.io,sideEffects=None,admissionReviewVersions=v1beta1
+// +kubebuilder:webhook:verbs=create;update,path=/validate-infrastructure-cluster-x-k8s-io-v1alpha4-openstackcluster,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=infrastructure.cluster.x-k8s.io,resources=openstackclusters,versions=v1alpha4,name=validation.openstackcluster.infrastructure.cluster.x-k8s.io,sideEffects=None,admissionReviewVersions=v1beta1
+// +kubebuilder:webhook:verbs=create;update,path=/mutate-infrastructure-cluster-x-k8s-io-v1alpha4-openstackcluster,mutating=true,failurePolicy=fail,matchPolicy=Equivalent,groups=infrastructure.cluster.x-k8s.io,resources=openstackclusters,versions=v1alpha4,name=default.openstackcluster.infrastructure.cluster.x-k8s.io,sideEffects=None,admissionReviewVersions=v1beta1
 
 var (
 	_ webhook.Defaulter = &OpenStackCluster{}
@@ -64,8 +68,32 @@ func (r *OpenStackCluster) ValidateCreate() error {
 func (r *OpenStackCluster) ValidateUpdate(old runtime.Object) error {
 	var allErrs field.ErrorList
 
+	newOpenStackCluster, err := runtime.DefaultUnstructuredConverter.ToUnstructured(r)
+	if err != nil {
+		return apierrors.NewInvalid(GroupVersion.WithKind("OpenStackCluster").GroupKind(), r.Name, field.ErrorList{
+			field.InternalError(nil, errors.Wrap(err, "failed to convert new OpenStackCluster to unstructured object")),
+		})
+	}
+	oldOpenStackCluster, err := runtime.DefaultUnstructuredConverter.ToUnstructured(old)
+	if err != nil {
+		return apierrors.NewInvalid(GroupVersion.WithKind("OpenStackCluster").GroupKind(), r.Name, field.ErrorList{
+			field.InternalError(nil, errors.Wrap(err, "failed to convert old OpenStackCluster to unstructured object")),
+		})
+	}
+
 	if r.Spec.IdentityRef != nil && r.Spec.IdentityRef.Kind != defaultIdentityRefKind {
 		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "identityRef", "kind"), "must be a Secret"))
+	}
+
+	newOpenStackClusterSpec := newOpenStackCluster["spec"].(map[string]interface{})
+	oldOpenStackClusterSpec := oldOpenStackCluster["spec"].(map[string]interface{})
+
+	// allow changes to ControlPlaneEndpoint
+	delete(oldOpenStackClusterSpec, "controlPlaneEndpoint")
+	delete(newOpenStackClusterSpec, "controlPlaneEndpoint")
+
+	if !reflect.DeepEqual(oldOpenStackClusterSpec, newOpenStackClusterSpec) {
+		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec"), "cannot be modified"))
 	}
 
 	return aggregateObjErrors(r.GroupVersionKind().GroupKind(), r.Name, allErrs)

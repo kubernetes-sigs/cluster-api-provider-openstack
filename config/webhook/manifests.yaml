@@ -25,7 +25,7 @@ webhooks:
     - CREATE
     - UPDATE
     resources:
-    - openstackcluster
+    - openstackclusters
   sideEffects: None
 - admissionReviewVersions:
   - v1beta1
@@ -96,7 +96,7 @@ webhooks:
     - CREATE
     - UPDATE
     resources:
-    - openstackcluster
+    - openstackclusters
   sideEffects: None
 - admissionReviewVersions:
   - v1beta1
