@@ -183,6 +183,19 @@ main() {
   # Wait until cloud-init is done
   retry 120 30 "ssh ubuntu@${PUBLIC_IP} -o 'StrictHostKeyChecking no' -o 'UserKnownHostsFile=/dev/null' -- cat /var/lib/cloud/instance/boot-finished"
 
+
+  # Capture cloud-init logs
+  # Devstack logs are in cloud-final
+  for service in cloud-config cloud-final cloud-init-local cloud-init; do
+      ssh -o 'StrictHostKeyChecking no' -o 'UserKnownHostsFile=/dev/null' ubuntu@${PUBLIC_IP} -- \
+          journalctl -u ${service} > ${ARTIFACTS}/logs/${service}.log
+
+      # Fail early if any cloud-init service failed
+      ssh -o 'StrictHostKeyChecking no' -o 'UserKnownHostsFile=/dev/null' ubuntu@${PUBLIC_IP} -- \
+          systemctl status ${service} || exit 1
+  done
+
+
   # Open tunnel
   echo "Opening tunnel to ${PRIVATE_IP} via ${PUBLIC_IP}"
   sshuttle -r "ubuntu@${PUBLIC_IP}" "${PRIVATE_IP}/32" 172.24.4.0/24 --ssh-cmd='ssh -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null"' -l 0.0.0.0 -D

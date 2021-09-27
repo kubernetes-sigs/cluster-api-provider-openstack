@@ -208,6 +208,22 @@ main() {
   # Wait until cloud-init is done
   retry 120 30 "gcloud compute ssh --project ${GCP_PROJECT} --zone ${GCP_ZONE} openstack -- cat /var/lib/cloud/instance/boot-finished"
 
+  # Capture cloud-init logs
+  # Devstack logs are in cloud-final
+  for service in cloud-config cloud-final cloud-init-local cloud-init; do
+      # NOTE(mdbooth): `gcloud compute ssh` occasionally truncates output. This
+      # seems more robust, but I may be imagining it.
+      ssh -i ~/.ssh/google_compute_engine \
+          -o "StrictHostKeyChecking no" \
+          -o "UserKnownHostsFile=/dev/null" \
+          -o "IdentitiesOnly=yes" ${PUBLIC_IP} \
+          journalctl -u ${service} > ${ARTIFACTS}/logs/${service}.log
+
+      # Fail early if any cloud-init service failed
+      gcloud compute ssh --project ${GCP_PROJECT} --zone ${GCP_ZONE} openstack \
+          --command="systemctl status ${service}" || exit 1
+  done
+
   # Open tunnel
   echo "Opening tunnel to ${PRIVATE_IP} via ${PUBLIC_IP}"
   sshuttle -r "${PUBLIC_IP}" "${PRIVATE_IP}/32" 172.24.4.0/24 --ssh-cmd='ssh -i ~/.ssh/google_compute_engine -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -o "IdentitiesOnly=yes"' -l 0.0.0.0 -D
