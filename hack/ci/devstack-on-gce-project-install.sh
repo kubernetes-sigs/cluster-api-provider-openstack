@@ -239,7 +239,7 @@ main() {
   export OS_IDENTITY_API_VERSION=3
 
   # Wait until the OpenStack API is reachable
-  retry 120 30 "openstack versions show"
+  retry 5 30 "openstack versions show"
 
   nova hypervisor-stats
   openstack host list
