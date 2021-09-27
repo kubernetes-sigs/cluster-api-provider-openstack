@@ -42,7 +42,7 @@ write_files:
   permissions: 0644
   content: |
     # Stack that stack!
-    su - stack -c /opt/stack/devstack/stack.sh
+    su - stack -c "TERM=vt100 /opt/stack/devstack/stack.sh"
 
     # Add environment variables for auth/endpoints
     echo 'source /opt/stack/devstack/openrc admin admin' >> /opt/stack/.bashrc
