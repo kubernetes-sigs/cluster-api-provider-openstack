@@ -19,6 +19,7 @@
 #  This program runs the clusterctl conformance e2e tests.
 ################################################################################
 
+set -x
 set -o nounset
 set -o pipefail
 

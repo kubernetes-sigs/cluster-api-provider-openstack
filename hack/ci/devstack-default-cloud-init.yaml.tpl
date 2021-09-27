@@ -77,7 +77,7 @@
 - content: |
     #!/bin/bash
 
-    set -o errexit -o nounset -o pipefail
+    set -x -o errexit -o nounset -o pipefail
 
     # Install kvm
     sudo apt-get update && sudo apt-get install qemu-kvm jq net-tools -y

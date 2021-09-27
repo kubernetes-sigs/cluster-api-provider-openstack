@@ -16,6 +16,7 @@
 
 # hack script for preparing AWS to run cluster-api-provider-openstack e2e
 
+set -x
 set -o errexit -o nounset -o pipefail
 
 # For apt-get

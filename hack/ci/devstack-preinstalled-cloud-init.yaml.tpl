@@ -1,7 +1,7 @@
 - content: |
     #!/bin/bash
 
-    set -o errexit -o nounset -o pipefail
+    set -x -o errexit -o nounset -o pipefail
 
     source /tmp/devstack-common-kvm.sh
     source /tmp/devstack-common-resize-disks.sh
