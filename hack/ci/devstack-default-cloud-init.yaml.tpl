@@ -1,50 +1,6 @@
-#cloud-config
-hostname: localhost
-users:
-- name: ubuntu
-  lock_passwd: true
-  sudo: ALL=(ALL) NOPASSWD:ALL
-  ssh_authorized_keys:
-  ${SSH_PUBLIC_KEY}
-write_files:
-- content: |
-    net.ipv4.ip_forward=1
-    net.ipv4.conf.default.rp_filter=0
-    net.ipv4.conf.all.rp_filter=0
-  path: /etc/sysctl.d/devstack.conf
-- content: |
-    #!/bin/bash
-
-    set -o errexit -o nounset -o pipefail
-
-    # Install kvm / ensure nested virtualization
-    sudo apt-get update && sudo apt-get install qemu-kvm jq net-tools -y
-    kvm-ok
-    sudo modprobe kvm-intel
-
-    # Resize disk
-    lsblk
-    df -h
-    for disk in $(lsblk -d -o NAME | grep -v "loop\|NAME")
-    do
-      # should not fail if there is nothing to do
-      sudo growpart /dev/${disk} 1 || true
-    done
-    # Resize root disk
-    sudo resize2fs $(df -hT | grep /$ | awk '{print $1}')
-    lsblk
-    df -h
-
-    if [[ ${OPENSTACK_ENABLE_HORIZON} = "true" ]]
-    then
-      OPENSTACK_ADDITIONAL_SERVICES=",horizon"
-    fi
-
-    # from https://raw.githubusercontent.com/openstack/octavia/master/devstack/contrib/new-octavia-devstack.sh
-    git clone -b stable/${OPENSTACK_RELEASE} https://github.com/openstack/devstack.git /tmp/devstack
-
-    cat <<EOF > /tmp/devstack/local.conf
-
+- path: /tmp/local.conf
+  permissions: 0644
+  content: |
     [[local|localrc]]
     GIT_BASE=https://github.com
     HOST_IP=10.0.2.15
@@ -113,12 +69,25 @@ write_files:
     # * openstack hypervisor stats show
     # * openstack hypervisor list
     # * openstack hypervisor show openstack
-    # A CPU allocation ratio von 32 gives us 32 vCPUs in devstack
+    # A CPU allocation ratio of 32 gives us 32 vCPUs in devstack
     # This should be enough to run multiple e2e tests at the same time
     [[post-config|\$NOVA_CONF]]
     [DEFAULT]
     cpu_allocation_ratio = 32.0
-    EOF
+- content: |
+    #!/bin/bash
+
+    set -o errexit -o nounset -o pipefail
+
+    # Install kvm
+    sudo apt-get update && sudo apt-get install qemu-kvm jq net-tools -y
+
+    source /tmp/devstack-common-kvm.sh
+    source /tmp/devstack-common-resize-disks.sh
+
+    # from https://raw.githubusercontent.com/openstack/octavia/master/devstack/contrib/new-octavia-devstack.sh
+    git clone -b stable/${OPENSTACK_RELEASE} https://github.com/openstack/devstack.git /tmp/devstack
+    cp /tmp/local.conf /tmp/devstack/
 
     # Create the stack user
     HOST_IP=10.0.2.15 /tmp/devstack/tools/create-stack-user.sh
@@ -127,24 +96,6 @@ write_files:
     mv /tmp/devstack /opt/stack/
     chown -R stack:stack /opt/stack/devstack/
 
-    # Stack that stack!
-    su - stack -c /opt/stack/devstack/stack.sh
-
-    # Add environment variables for auth/endpoints
-    echo 'source /opt/stack/devstack/openrc admin admin' >> /opt/stack/.bashrc
-
-    # Upload the images so we don't have to upload them from Prow
-    su - stack -c "source /opt/stack/devstack/openrc admin admin && /opt/stack/devstack/tools/upload_image.sh https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/ubuntu/2021-03-27/ubuntu-2004-kube-v1.18.15.qcow2"
-    su - stack -c "source /opt/stack/devstack/openrc admin admin && /opt/stack/devstack/tools/upload_image.sh https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/cirros/2021-03-27/cirros-0.5.1-x86_64-disk.img"
-
-    # Use the network interface of the private ip
-    INTERFACE=$(ifconfig | grep -B1 10.0.2.15 | grep -o "^\w*")
-    sudo iptables -t nat -I POSTROUTING -o ${INTERFACE} -s 172.24.4.0/24 -j MASQUERADE
-    sudo iptables -I FORWARD -s 172.24.4.0/24 -j ACCEPT
-
+    source /tmp/devstack-common-install.sh
   path: /root/devstack.sh
-  permissions: '0777'
-runcmd:
-- sysctl -p /etc/sysctl.d/devstack.conf
-- /root/devstack.sh
-final_message: "The system is finally up, after $UPTIME seconds"
+  permissions: 0755

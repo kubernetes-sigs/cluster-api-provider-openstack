@@ -18,6 +18,9 @@
 
 set -o errexit -o nounset -o pipefail
 
+# For apt-get
+export DEBIAN_FRONTEND=noninteractive
+
 REPO_ROOT=$(dirname "${BASH_SOURCE[0]}")/../../
 cd "${REPO_ROOT}" || exit 1
 REPO_ROOT_ABSOLUTE=$(pwd)
@@ -106,6 +109,12 @@ main() {
     init_networks
   fi
 
+  # Ensure envsubst is available
+  if ! command -v envsubst;
+  then
+    apt-get update && apt-get install -y gettext
+  fi
+
   if [[ ${FLAVOR} = "default" ]]
   then
     if ! gcloud compute disks describe devstack-${FLAVOR} --project "${GCP_PROJECT}" --zone "${GCP_ZONE}" > /dev/null;
@@ -138,10 +147,23 @@ main() {
 
   if ! gcloud compute instances describe openstack --project "${GCP_PROJECT}" --zone "${GCP_ZONE}" > /dev/null;
   then
-    < ./hack/ci/devstack-${FLAVOR}-cloud-init.yaml.tpl \
-	    sed "s|\${OPENSTACK_ENABLE_HORIZON}|${OPENSTACK_ENABLE_HORIZON}|" | \
-      sed "s|\${OPENSTACK_RELEASE}|${OPENSTACK_RELEASE}|" \
-	    > ./hack/ci/devstack-${FLAVOR}-cloud-init.yaml
+    # Generate local ssh configuration
+    # NOTE(mdbooth): This command successfully populates ssh config, and then
+    # fails for some reason I don't understand. We ignore the failure.
+    gcloud compute config-ssh || true
+
+    if [[ ${OPENSTACK_ENABLE_HORIZON} = "true" ]]
+    then
+        OPENSTACK_ADDITIONAL_SERVICES="${OPENSTACK_ADDITIONAL_SERVICES},horizon"
+    fi
+
+    for tpl in common ${FLAVOR}; do
+        SSH_PUBLIC_KEY="- $(cat ~/.ssh/google_compute_engine.pub)" \
+        OPENSTACK_ADDITIONAL_SERVICES=${OPENSTACK_ADDITIONAL_SERVICES:-""} \
+        OPENSTACK_RELEASE=${OPENSTACK_RELEASE} \
+            envsubst '${SSH_PUBLIC_KEY} ${OPENSTACK_ADDITIONAL_SERVICES} ${OPENSTACK_RELEASE}' \
+                < ./hack/ci/devstack-${tpl}-cloud-init.yaml.tpl >> ${ARTIFACTS}/cloud-init.yaml
+    done
 
     gcloud compute instances create openstack \
       --project "${GCP_PROJECT}" \
@@ -154,7 +176,7 @@ main() {
       --min-cpu-platform "${GCP_MACHINE_MIN_CPU_PLATFORM}" \
       --machine-type "${GCP_MACHINE_TYPE}" \
       --network-interface="private-network-ip=10.0.2.15,network=${CLUSTER_NAME}-mynetwork,subnet=${CLUSTER_NAME}-mynetwork" \
-      --metadata-from-file user-data=./hack/ci/devstack-${FLAVOR}-cloud-init.yaml
+      --metadata-from-file user-data=${ARTIFACTS}/cloud-init.yaml
   fi
 
   # Install some local dependencies we later need in the meantime (we have to wait for cloud init anyway)
@@ -171,7 +193,7 @@ main() {
   fi
   if ! command -v openstack;
   then
-    apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3-dev
+    apt-get install -y python3-dev
     # install PyYAML first because otherwise we get an error because pip3 doesn't upgrade PyYAML to the correct version
     # ERROR: Cannot uninstall 'PyYAML'. It is a distutils installed project and thus we cannot accurately determine which
     # files belong to it which would lead to only a partial uninstall.

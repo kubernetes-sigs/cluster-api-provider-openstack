@@ -18,6 +18,9 @@
 
 set -o errexit -o nounset -o pipefail
 
+# For apt-get
+export DEBIAN_FRONTEND=noninteractive
+
 REPO_ROOT=$(dirname "${BASH_SOURCE[0]}")/../../
 cd "${REPO_ROOT}" || exit 1
 REPO_ROOT_ABSOLUTE=$(pwd)
@@ -107,14 +110,26 @@ main() {
     init_networks
   fi
 
+  # Ensure envsubst is available
+  if ! command -v envsubst;
+  then
+    apt-get update && apt-get install -y gettext
+  fi
+
   if [[ $(aws ec2 describe-instances --filters Name=tag:Name,Values=openstack --region="${AWS_REGION}" --query 'length(*[0])') = "0" ]];
   then
-    SSH_PUBLIC_KEY="- $(cat ~/.ssh/aws-capo-e2e.pub)"
-    < ./hack/ci/devstack-${FLAVOR}-cloud-init.yaml.tpl \
-	    sed "s|\${OPENSTACK_ENABLE_HORIZON}|${OPENSTACK_ENABLE_HORIZON}|" | \
-      sed "s|\${OPENSTACK_RELEASE}|${OPENSTACK_RELEASE}|" | \
-      sed "s|\${SSH_PUBLIC_KEY}|${SSH_PUBLIC_KEY}|" \
-	    > ./hack/ci/devstack-${FLAVOR}-cloud-init.yaml
+    if [[ ${OPENSTACK_ENABLE_HORIZON} = "true" ]]
+    then
+        OPENSTACK_ADDITIONAL_SERVICES="${OPENSTACK_ADDITIONAL_SERVICES},horizon"
+    fi
+
+    for tpl in common ${FLAVOR}; do
+        SSH_PUBLIC_KEY="- $(cat ~/.ssh/aws-capo-e2e.pub)" \
+        OPENSTACK_ADDITIONAL_SERVICES=${OPENSTACK_ADDITIONAL_SERVICES:-""} \
+        OPENSTACK_RELEASE=${OPENSTACK_RELEASE} \
+            envsubst '${SSH_PUBLIC_KEY} ${OPENSTACK_ADDITIONAL_SERVICES} ${OPENSTACK_RELEASE}' \
+                < ./hack/ci/devstack-${tpl}-cloud-init.yaml.tpl >> ${ARTIFACTS}/cloud-init.tpl
+    done
 
     AWS_SUBNET_ID=$(aws ec2 describe-subnets --filters Name=tag:Name,Values=capo-e2e-mynetwork --region "${AWS_REGION}" --query '*[0].SubnetId' --output text)
     AWS_SECURITY_GROUP_ID=$(aws ec2 describe-security-groups --filters Name=tag:Name,Values=capo-e2e-mynetwork --region "${AWS_REGION}" --query '*[0].GroupId' --output text)
@@ -132,7 +147,7 @@ main() {
       --associate-public-ip-address \
       --security-group-ids "${AWS_SECURITY_GROUP_ID}"  \
       --key-name "${AWS_KEY_PAIR}" \
-      --user-data file://hack/ci/devstack-${FLAVOR}-cloud-init.yaml \
+      --user-data file://${ARTIFACTS}/cloud-init.yaml \
       --no-paginate
   fi
 
@@ -150,7 +165,7 @@ main() {
   fi
   if ! command -v openstack;
   then
-    apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3-dev
+    apt-get update && apt-get install -y python3-dev
     # install PyYAML first because otherwise we get an error because pip3 doesn't upgrade PyYAML to the correct version
     # ERROR: Cannot uninstall 'PyYAML'. It is a distutils installed project and thus we cannot accurately determine which
     # files belong to it which would lead to only a partial uninstall.
