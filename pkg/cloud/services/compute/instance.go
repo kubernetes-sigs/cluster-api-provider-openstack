@@ -71,17 +71,17 @@ func (s *Service) CreateInstance(openStackCluster *infrav1.OpenStackCluster, mac
 		ServerGroupID: openStackMachine.Spec.ServerGroupID,
 	}
 
+	// verify that trunk is supported if set at instance level.
 	if openStackMachine.Spec.Trunk {
-		trunkSupport, err := s.networkingService.GetTrunkSupport()
+		trunkSupported, err := s.isTrunkExtSupported()
 		if err != nil {
-			return nil, fmt.Errorf("there was an issue verifying whether trunk support is available, please disable it: %v", err)
+			return nil, err
 		}
-		if !trunkSupport {
-			return nil, fmt.Errorf("there is no trunk support. Please disable it")
+		if !trunkSupported {
+			return nil, fmt.Errorf("there is no trunk support. please ensure that the trunk extension is enabled in your OpenStack deployment")
 		}
-		instanceSpec.Trunk = trunkSupport
+		instanceSpec.Trunk = true
 	}
-
 	machineTags := []string{}
 
 	// Append machine specific tags
@@ -112,6 +112,17 @@ func (s *Service) CreateInstance(openStackCluster *infrav1.OpenStackCluster, mac
 	nets, err := s.constructNetworks(openStackCluster, openStackMachine)
 	if err != nil {
 		return nil, err
+	}
+
+	trunkConfigured := s.isTrunkConfigured(nets, instanceSpec.Trunk)
+	if trunkConfigured {
+		trunkSupported, err := s.isTrunkExtSupported()
+		if err != nil {
+			return nil, err
+		}
+		if !trunkSupported {
+			return nil, fmt.Errorf("there is no trunk support. please ensure that the trunk extension is enabled in your OpenStack deployment")
+		}
 	}
 	instanceSpec.Networks = nets
 
@@ -444,7 +455,7 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instance *InstanceS
 		return err
 	}
 
-	trunkSupport, err := s.networkingService.GetTrunkSupport()
+	trunkSupported, err := s.isTrunkExtSupported()
 	if err != nil {
 		return fmt.Errorf("obtaining network extensions: %v", err)
 	}
@@ -454,12 +465,11 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instance *InstanceS
 			return err
 		}
 
-		if trunkSupport {
+		if trunkSupported {
 			if err = s.networkingService.DeleteTrunk(eventObject, port.PortID); err != nil {
 				return err
 			}
 		}
-
 		if err = s.networkingService.DeletePort(eventObject, port.PortID); err != nil {
 			return err
 		}
@@ -614,4 +624,32 @@ func getTimeout(name string, timeout int) time.Duration {
 		}
 	}
 	return time.Duration(timeout)
+}
+
+// isTrunkExtSupported verifies trunk setup on the OpenStack deployment.
+func (s *Service) isTrunkExtSupported() (trunknSupported bool, err error) {
+	trunkSupport, err := s.networkingService.GetTrunkSupport()
+	if err != nil {
+		return false, fmt.Errorf("there was an issue verifying whether trunk support is available, Please try again later: %v", err)
+	}
+	if !trunkSupport {
+		return false, nil
+	}
+	return true, nil
+}
+
+// isTrunkConfigured verifies trunk configuration at instance and port levels, useful for avoiding multple api calls to verify trunk support.
+func (s *Service) isTrunkConfigured(nets []infrav1.Network, instanceLevelTrunk bool) bool {
+	if instanceLevelTrunk {
+		return true
+	}
+	for _, net := range nets {
+		port := net.PortOpts
+		if port != nil {
+			if port.Trunk != nil && *port.Trunk {
+				return true
+			}
+		}
+	}
+	return false
 }
