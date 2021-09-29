@@ -88,9 +88,15 @@ func (r *OpenStackCluster) ValidateUpdate(old runtime.Object) error {
 	newOpenStackClusterSpec := newOpenStackCluster["spec"].(map[string]interface{})
 	oldOpenStackClusterSpec := oldOpenStackCluster["spec"].(map[string]interface{})
 
-	// allow changes to ControlPlaneEndpoint
-	delete(oldOpenStackClusterSpec, "controlPlaneEndpoint")
-	delete(newOpenStackClusterSpec, "controlPlaneEndpoint")
+	// get controlPlaneEndpoint, something like {"host":"", "port":""}
+	cpe := oldOpenStackClusterSpec["controlPlaneEndpoint"].(map[string]interface{})
+
+	// allow change only for the first time
+	host, ok := cpe["host"].(string)
+	if ok && len(host) == 0 {
+		delete(oldOpenStackClusterSpec, "controlPlaneEndpoint")
+		delete(newOpenStackClusterSpec, "controlPlaneEndpoint")
+	}
 
 	if !reflect.DeepEqual(oldOpenStackClusterSpec, newOpenStackClusterSpec) {
 		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec"), "cannot be modified"))
