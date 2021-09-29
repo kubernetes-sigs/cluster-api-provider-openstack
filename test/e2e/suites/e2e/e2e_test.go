@@ -36,6 +36,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	apimachinerytypes "k8s.io/apimachinery/pkg/types"
+	utilrand "k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/utils/pointer"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha4"
 	bootstrapv1 "sigs.k8s.io/cluster-api/bootstrap/kubeadm/api/v1alpha4"
@@ -153,26 +154,30 @@ var _ = Describe("e2e tests", func() {
 				{Description: "primary"},
 			}
 
+			testTag := utilrand.String(6)
+			machineTags := []string{testTag}
+
 			// Note that as the bootstrap config does not have cloud.conf, the node will not be added to the cluster.
 			// We still expect the port for the machine to be created.
 			framework.CreateMachineDeployment(ctx, framework.CreateMachineDeploymentInput{
 				Creator:                 e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
 				MachineDeployment:       makeMachineDeployment(namespace.Name, md3Name, clusterName, "", 1),
 				BootstrapConfigTemplate: makeJoinBootstrapConfigTemplate(namespace.Name, md3Name),
-				InfraMachineTemplate:    makeOpenStackMachineTemplateWithPortOptions(namespace.Name, clusterName, md3Name, customPortOptions),
+				InfraMachineTemplate:    makeOpenStackMachineTemplateWithPortOptions(namespace.Name, clusterName, md3Name, customPortOptions, machineTags),
 			})
 
 			shared.Byf("Waiting for custom port to be created")
 			var plist []ports.Port
 			var err error
 			Eventually(func() int {
-				plist, err = shared.DumpOpenStackPorts(e2eCtx, ports.ListOpts{Description: "primary"})
+				plist, err = shared.DumpOpenStackPorts(e2eCtx, ports.ListOpts{Description: "primary", Tags: testTag})
 				Expect(err).To(BeNil())
 				return len(plist)
 			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(Equal(1))
 
 			port := plist[0]
 			Expect(port.Description).To(Equal("primary"))
+			Expect(port.Tags).To(ContainElement(testTag))
 		})
 		It("It should be creatable and deletable", func() {
 			shared.Byf("Creating a cluster")
@@ -465,7 +470,7 @@ func makeOpenStackMachineTemplate(namespace, clusterName, name string, subnetID 
 	}
 }
 
-func makeOpenStackMachineTemplateWithPortOptions(namespace, clusterName, name string, portOpts *[]infrav1.PortOpts) *infrav1.OpenStackMachineTemplate {
+func makeOpenStackMachineTemplateWithPortOptions(namespace, clusterName, name string, portOpts *[]infrav1.PortOpts, machineTags []string) *infrav1.OpenStackMachineTemplate {
 	return &infrav1.OpenStackMachineTemplate{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -483,6 +488,7 @@ func makeOpenStackMachineTemplateWithPortOptions(namespace, clusterName, name st
 						Name: fmt.Sprintf("%s-cloud-config", clusterName),
 					},
 					Ports: *portOpts,
+					Tags:  machineTags,
 				},
 			},
 		},
