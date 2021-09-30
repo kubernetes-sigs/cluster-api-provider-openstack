@@ -157,15 +157,15 @@ var _ = Describe("e2e tests", func() {
 			})
 
 			shared.Byf("Waiting for custom port to be created")
-			var plist *[]ports.Port
+			var plist []ports.Port
 			var err error
 			Eventually(func() int {
 				plist, err = shared.DumpOpenStackPorts(e2eCtx, ports.ListOpts{Description: "primary"})
 				Expect(err).To(BeNil())
-				return len(*plist)
+				return len(plist)
 			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(Equal(1))
 
-			port := (*plist)[0]
+			port := plist[0]
 			Expect(port.Description).To(Equal("primary"))
 		})
 		It("It should be creatable and deletable", func() {

@@ -127,7 +127,7 @@ func dumpOpenStackImages(providerClient *gophercloud.ProviderClient, clientOpts 
 	return nil
 }
 
-func DumpOpenStackPorts(e2eCtx *E2EContext, filter ports.ListOpts) (*[]ports.Port, error) {
+func DumpOpenStackPorts(e2eCtx *E2EContext, filter ports.ListOpts) ([]ports.Port, error) {
 	providerClient, clientOpts, err := getProviderClient(e2eCtx)
 	if err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
@@ -149,7 +149,7 @@ func DumpOpenStackPorts(e2eCtx *E2EContext, filter ports.ListOpts) (*[]ports.Por
 	if err != nil {
 		return nil, fmt.Errorf("error extracting ports: %s", err)
 	}
-	return &portsList, nil
+	return portsList, nil
 }
 
 // getOpenStackServers gets all OpenStack servers at once, to save on DescribeInstances
