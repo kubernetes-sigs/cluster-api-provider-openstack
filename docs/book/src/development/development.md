@@ -67,7 +67,7 @@ If your cloud requires a cacert you must also pass this to make via `OPENSTACK_C
 
 ```bash
 make test-e2e OPENSTACK_CLOUD_YAML_FILE=/path/to/clouds.yaml OPENSTACK_CLOUD=my_cloud \
-              OPENSTACK_CLOUD_CACERT_B64=$(base64 -w /path/to/mycloud-ca.crt)
+              OPENSTACK_CLOUD_CACERT_B64=$(base64 -w0 /path/to/mycloud-ca.crt)
 ```
 
 CAPO deployed in the local kind cluster will automatically pick up a `cacert` defined in your `clouds.yaml` so you will see servers created in OpenStack without specifying `OPENSTACK_CLOUD_CACERT_B64`. However, the cacert won't be deployed to those servers, so kubelet will fail to start.
