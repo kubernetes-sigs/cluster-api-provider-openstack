@@ -43,6 +43,7 @@ const (
 	FlavorDefault               = "ci-artifacts"
 	FlavorWithoutLB             = "without-lb-ci-artifacts"
 	FlavorExternalCloudProvider = "external-cloud-provider-ci-artifacts"
+	FlavorMultiNetwork          = "multi-network-ci-artifacts"
 )
 
 // DefaultScheme returns the default scheme to use for testing.

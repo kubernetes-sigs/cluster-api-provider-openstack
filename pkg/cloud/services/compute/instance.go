@@ -417,12 +417,12 @@ func (s *Service) getImageID(imageName string) (string, error) {
 
 // GetManagementPort returns the port which is used for management and external
 // traffic. Cluster floating IPs must be associated with this port.
-func (s *Service) GetManagementPort(instanceStatus *InstanceStatus) (*ports.Port, error) {
+func (s *Service) GetManagementPort(openStackCluster *infrav1.OpenStackCluster, instanceStatus *InstanceStatus) (*ports.Port, error) {
 	ns, err := instanceStatus.NetworkStatus()
 	if err != nil {
 		return nil, err
 	}
-	allPorts, err := s.networkingService.GetPortFromInstanceIP(instanceStatus.ID(), ns.IP())
+	allPorts, err := s.networkingService.GetPortFromInstanceIP(instanceStatus.ID(), ns.IP(openStackCluster.Status.Network.Name))
 	if err != nil {
 		return nil, fmt.Errorf("lookup management port for server %s: %w", instanceStatus.ID(), err)
 	}
@@ -551,7 +551,7 @@ func (s *Service) GetInstanceStatus(resourceID string) (instance *InstanceStatus
 		return nil, fmt.Errorf("get server %q detail failed: %v", resourceID, err)
 	}
 
-	return &InstanceStatus{server: &server}, nil
+	return &InstanceStatus{&server, s.logger}, nil
 }
 
 func (s *Service) GetInstanceStatusByName(eventObject runtime.Object, name string) (instance *InstanceStatus, err error) {
@@ -584,7 +584,7 @@ func (s *Service) GetInstanceStatusByName(eventObject runtime.Object, name strin
 
 	// Return the first returned server, if any
 	for i := range serverList {
-		return &InstanceStatus{server: &serverList[i]}, nil
+		return &InstanceStatus{&serverList[i], s.logger}, nil
 	}
 	return nil, nil
 }

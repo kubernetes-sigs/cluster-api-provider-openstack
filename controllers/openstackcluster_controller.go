@@ -27,6 +27,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	"github.com/pkg/errors"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/pointer"
@@ -206,16 +207,14 @@ func deleteBastion(log logr.Logger, osProviderClient *gophercloud.ProviderClient
 		if err != nil {
 			return err
 		}
+		addresses := instanceNS.Addresses()
 
-		floatingIP := instanceNS.FloatingIP()
-		if floatingIP != "" {
-			if err = networkingService.DisassociateFloatingIP(openStackCluster, floatingIP); err != nil {
-				handleUpdateOSCError(openStackCluster, errors.Errorf("failed to disassociate floating IP: %v", err))
-				return errors.Errorf("failed to disassociate floating IP: %v", err)
-			}
-			if err = networkingService.DeleteFloatingIP(openStackCluster, floatingIP); err != nil {
-				handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete floating IP: %v", err))
-				return errors.Errorf("failed to delete floating IP: %v", err)
+		for _, address := range addresses {
+			if address.Type == corev1.NodeExternalIP {
+				if err = networkingService.DeleteFloatingIP(openStackCluster, address.Address); err != nil {
+					handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete floating IP: %v", err))
+					return errors.Errorf("failed to delete floating IP: %v", err)
+				}
 			}
 		}
 
@@ -319,7 +318,7 @@ func reconcileBastion(log logr.Logger, osProviderClient *gophercloud.ProviderCli
 		return err
 	}
 	if instanceStatus != nil {
-		bastion, err := instanceStatus.APIInstance()
+		bastion, err := instanceStatus.APIInstance(openStackCluster)
 		if err != nil {
 			return err
 		}
@@ -343,7 +342,7 @@ func reconcileBastion(log logr.Logger, osProviderClient *gophercloud.ProviderCli
 		handleUpdateOSCError(openStackCluster, errors.Errorf("failed to get or create floating IP for bastion: %v", err))
 		return errors.Errorf("failed to get or create floating IP for bastion: %v", err)
 	}
-	port, err := computeService.GetManagementPort(instanceStatus)
+	port, err := computeService.GetManagementPort(openStackCluster, instanceStatus)
 	if err != nil {
 		err = errors.Errorf("getting management port for bastion: %v", err)
 		handleUpdateOSCError(openStackCluster, err)
@@ -355,7 +354,7 @@ func reconcileBastion(log logr.Logger, osProviderClient *gophercloud.ProviderCli
 		return errors.Errorf("failed to associate floating IP with bastion: %v", err)
 	}
 
-	bastion, err := instanceStatus.APIInstance()
+	bastion, err := instanceStatus.APIInstance(openStackCluster)
 	if err != nil {
 		return err
 	}
