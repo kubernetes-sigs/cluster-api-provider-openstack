@@ -8,22 +8,22 @@ require (
 	github.com/gophercloud/gophercloud v0.16.0
 	github.com/gophercloud/utils v0.0.0-20210323225332-7b186010c04f
 	github.com/onsi/ginkgo v1.16.4
-	github.com/onsi/gomega v1.14.0
+	github.com/onsi/gomega v1.15.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.11.0
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 	gopkg.in/ini.v1 v1.62.0
-	k8s.io/api v0.21.3
-	k8s.io/apimachinery v0.21.3
-	k8s.io/client-go v0.21.3
-	k8s.io/component-base v0.21.3
+	k8s.io/api v0.21.4
+	k8s.io/apimachinery v0.21.4
+	k8s.io/client-go v0.21.4
+	k8s.io/component-base v0.21.4
 	k8s.io/klog/v2 v2.9.0
-	k8s.io/utils v0.0.0-20210722164352-7f3ee0f31471
-	sigs.k8s.io/cluster-api v0.4.0
-	sigs.k8s.io/cluster-api/test v0.4.1-0.20210713191401-bc94459d95c6
-	sigs.k8s.io/controller-runtime v0.9.6
+	k8s.io/utils v0.0.0-20210802155522-efc7438f0176
+	sigs.k8s.io/cluster-api v0.4.3
+	sigs.k8s.io/cluster-api/test v0.4.3
+	sigs.k8s.io/controller-runtime v0.9.7
 	sigs.k8s.io/yaml v1.2.0
 )
 
-replace sigs.k8s.io/cluster-api => sigs.k8s.io/cluster-api v0.4.0
+replace sigs.k8s.io/cluster-api => sigs.k8s.io/cluster-api v0.4.3

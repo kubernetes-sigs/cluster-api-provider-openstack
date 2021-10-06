@@ -3,7 +3,7 @@
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
 - [Required configuration](#required-configuration)
-  - [OpenStack Version](#openstack-version)
+  - [OpenStack version](#openstack-version)
   - [Operating system image](#operating-system-image)
   - [SSH key pair](#ssh-key-pair)
   - [OpenStack credential](#openstack-credential)
@@ -14,11 +14,13 @@
 - [Optional Configuration](#optional-configuration)
   - [Log level](#log-level)
   - [External network](#external-network)
-  - [Floating IP](#floating-ip)
+  - [API server floating IP](#api-server-floating-ip)
+    - [Disabling the API server floating IP](#disabling-the-api-server-floating-ip)
   - [Network Filters](#network-filters)
   - [Multiple Networks](#multiple-networks)
   - [Subnet Filters](#subnet-filters)
   - [Ports](#ports)
+  - [Security groups](#security-groups)
   - [Tagging](#tagging)
   - [Metadata](#metadata)
   - [Boot From Volume](#boot-from-volume)
@@ -77,19 +79,9 @@ openstack keypair create [--public-key <file> | --private-key <file>] <name>
 
 The key pair name must be exposed as an environment variable `OPENSTACK_SSH_KEY_NAME`.
 
-If you want to login to each machine by ssh,  you can [access nodes through the bastion host via SSH](#accessing-nodes-through-the-bastion-host-via-ssh). Otherwise you have to configure security groups. If `spec.managedSecurityGroups` of `OpenStackCluster` set to true, two security groups will be created and added to the instances. One is `k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-controlplane`, another is `k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-worker`. These security group rules include the kubeadm's [Check required ports](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#check-required-ports) so that each node can not be logged in through ssh by default. Please add pre-existing security group allowing ssh port to OpenStackMachineTemplate spec. Here is an example:
-
-```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha4
-kind: OpenStackMachineTemplate
-metadata:
-  name: ${CLUSTER_NAME}-control-plane
-spec:
-  template:
-    spec:
-      securityGroups:
-      - name: allow-ssh
-```
+In order to access cluster nodes via SSH, you must either
+[access nodes through the bastion host](#accessing-nodes-through-the-bastion-host-via-ssh)
+or [configure custom security groups](#security-groups) with rules allowing ingress for port 22.
 
 ## OpenStack credential
 
@@ -143,9 +135,11 @@ openstack network list --external
 
 Note: If your openstack cluster does not already have a public network, you should contact your cloud service provider. We will not review how to troubleshoot this here.
 
-## Floating IP
+## API server floating IP
 
-A floating IP is automatically created and associated with the load balancer or controller node, but you can specify the floating IP explicitly by `spec.apiServerFloatingIP` of `OpenStackCluster`.
+Unless explicitly disabled, a floating IP is automatically created and associated with the load balancer
+or controller node. If required, you can specify the floating IP explicitly by `spec.apiServerFloatingIP`
+of `OpenStackCluster`.
 
 You have to be able to create a floating IP in your OpenStack in advance. You can create one using,
 
@@ -155,6 +149,31 @@ openstack floating ip create <public network>
 
 Note: Only user with admin role can create a floating IP with specific IP.
 
+### Disabling the API server floating IP
+
+It is possible to provision a cluster without a floating IP for the API server by setting
+`OpenStackCluster.spec.disableAPIServerFloatingIP: true` (the default is `false`). This will
+prevent a floating IP from being allocated.
+
+> **WARNING**
+>
+> If the API server does not have a floating IP, workload clusters will only deploy successfully
+> when the management cluster and workload cluster control plane nodes are on the same network.
+> This can be a project-specific network, if the management cluster lives in the same project
+> as the workload cluster, or a network that is shared across multiple projects.
+>
+> In particular, this means that the cluster **cannot** use `OpenStackCluster.spec.nodeCidr`
+> to provision a new network for the cluster. Instead, use `OpenStackCluster.spec.network`
+> to explicitly specify the same network as the management cluster is on.
+
+When the API server floating IP is disabled, it is **not possible** to provision a cluster
+without a load balancer without additional configuration (an advanced use-case that is not
+documented here). This is because the API server must still have a
+[virtual IP](https://en.wikipedia.org/wiki/Virtual_IP_address) that is not associated with
+a particular control plane node in order to allow the nodes to change underneath, e.g.
+during an upgrade. When the API server has a floating IP, this role is fulfilled by the
+floating IP even if there is no load balancer. When the API server does not have a floating
+IP, the load balancer virtual IP on the cluster network is used.
 
 ## Network Filters
 
@@ -253,6 +272,47 @@ spec:
     ...
     disablePortSecurity: true
     ...
+```
+
+## Security groups
+
+Security groups are used to determine which ports of the cluster nodes are accessible from where.
+
+If `spec.managedSecurityGroups` of `OpenStackCluster` is set to `true`, two security groups named
+`k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-controlplane` and
+`k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-worker` will be created and added to the control
+plane and worker nodes respectively.
+
+By default, these groups have rules that allow the following traffic:
+
+  * Control plane nodes 
+    * API server traffic from anywhere
+    * Etcd traffic from other control plane nodes
+    * Kubelet traffic from other cluster nodes
+    * Calico CNI traffic from other cluster nodes
+  * Worker nodes
+    * Node port traffic from anywhere
+    * Kubelet traffic from other cluster nodes
+    * Calico CNI traffic from other cluster nodes
+
+To use a CNI other than Calico, the flag `OpenStackCluster.spec.allowAllInClusterTraffic` can be
+set to `true`. With this flag set, the rules for the managed security groups permit all traffic
+between cluster nodes on all ports and protocols (API server and node port traffic is still
+permitted from anywhere, as with the default rules).
+
+If this is not flexible enough, pre-existing security groups can be added to the
+spec of an `OpenStackMachineTemplate`, e.g.:
+
+```yaml
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha4
+kind: OpenStackMachineTemplate
+metadata:
+  name: ${CLUSTER_NAME}-control-plane
+spec:
+  template:
+    spec:
+      securityGroups:
+      - name: allow-ssh
 ```
 
 ## Tagging

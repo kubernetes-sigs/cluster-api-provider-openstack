@@ -27,6 +27,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	"github.com/pkg/errors"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/pointer"
@@ -206,16 +207,14 @@ func deleteBastion(log logr.Logger, osProviderClient *gophercloud.ProviderClient
 		if err != nil {
 			return err
 		}
+		addresses := instanceNS.Addresses()
 
-		floatingIP := instanceNS.FloatingIP()
-		if floatingIP != "" {
-			if err = networkingService.DisassociateFloatingIP(openStackCluster, floatingIP); err != nil {
-				handleUpdateOSCError(openStackCluster, errors.Errorf("failed to disassociate floating IP: %v", err))
-				return errors.Errorf("failed to disassociate floating IP: %v", err)
-			}
-			if err = networkingService.DeleteFloatingIP(openStackCluster, floatingIP); err != nil {
-				handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete floating IP: %v", err))
-				return errors.Errorf("failed to delete floating IP: %v", err)
+		for _, address := range addresses {
+			if address.Type == corev1.NodeExternalIP {
+				if err = networkingService.DeleteFloatingIP(openStackCluster, address.Address); err != nil {
+					handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete floating IP: %v", err))
+					return errors.Errorf("failed to delete floating IP: %v", err)
+				}
 			}
 		}
 
@@ -319,7 +318,7 @@ func reconcileBastion(log logr.Logger, osProviderClient *gophercloud.ProviderCli
 		return err
 	}
 	if instanceStatus != nil {
-		bastion, err := instanceStatus.APIInstance()
+		bastion, err := instanceStatus.APIInstance(openStackCluster)
 		if err != nil {
 			return err
 		}
@@ -343,7 +342,7 @@ func reconcileBastion(log logr.Logger, osProviderClient *gophercloud.ProviderCli
 		handleUpdateOSCError(openStackCluster, errors.Errorf("failed to get or create floating IP for bastion: %v", err))
 		return errors.Errorf("failed to get or create floating IP for bastion: %v", err)
 	}
-	port, err := computeService.GetManagementPort(instanceStatus)
+	port, err := computeService.GetManagementPort(openStackCluster, instanceStatus)
 	if err != nil {
 		err = errors.Errorf("getting management port for bastion: %v", err)
 		handleUpdateOSCError(openStackCluster, err)
@@ -355,7 +354,7 @@ func reconcileBastion(log logr.Logger, osProviderClient *gophercloud.ProviderCli
 		return errors.Errorf("failed to associate floating IP with bastion: %v", err)
 	}
 
-	bastion, err := instanceStatus.APIInstance()
+	bastion, err := instanceStatus.APIInstance(openStackCluster)
 	if err != nil {
 		return err
 	}
@@ -438,29 +437,22 @@ func reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.P
 			return errors.Errorf("failed to reconcile router: %v", err)
 		}
 	}
-	if !openStackCluster.Spec.ControlPlaneEndpoint.IsValid() {
-		var port int32
-		if openStackCluster.Spec.APIServerPort == 0 {
-			port = 6443
-		} else {
-			port = int32(openStackCluster.Spec.APIServerPort)
-		}
-		fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, clusterName, openStackCluster.Spec.APIServerFloatingIP)
-		if err != nil {
-			handleUpdateOSCError(openStackCluster, errors.Errorf("Floating IP cannot be got or created: %v", err))
-			return errors.Errorf("Floating IP cannot be got or created: %v", err)
-		}
-		// Set APIEndpoints so the Cluster API Cluster Controller can pull them
-		openStackCluster.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{
-			Host: fp.FloatingIP,
-			Port: port,
-		}
-	}
 
 	err = networkingService.ReconcileSecurityGroups(openStackCluster, clusterName)
 	if err != nil {
 		handleUpdateOSCError(openStackCluster, errors.Errorf("failed to reconcile security groups: %v", err))
 		return errors.Errorf("failed to reconcile security groups: %v", err)
+	}
+
+	// Calculate the port that we will use for the API server
+	var apiServerPort int
+	switch {
+	case openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
+		apiServerPort = int(openStackCluster.Spec.ControlPlaneEndpoint.Port)
+	case openStackCluster.Spec.APIServerPort != 0:
+		apiServerPort = openStackCluster.Spec.APIServerPort
+	default:
+		apiServerPort = 6443
 	}
 
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
@@ -469,10 +461,48 @@ func reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.P
 			return err
 		}
 
-		err = loadBalancerService.ReconcileLoadBalancer(openStackCluster, clusterName)
+		err = loadBalancerService.ReconcileLoadBalancer(openStackCluster, clusterName, apiServerPort)
 		if err != nil {
 			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to reconcile load balancer: %v", err))
 			return errors.Errorf("failed to reconcile load balancer: %v", err)
+		}
+	}
+
+	if !openStackCluster.Spec.ControlPlaneEndpoint.IsValid() {
+		var host string
+		// If there is a load balancer use the floating IP for it if set, falling back to the internal IP
+		switch {
+		case openStackCluster.Spec.ManagedAPIServerLoadBalancer:
+			if openStackCluster.Status.Network.APIServerLoadBalancer.IP != "" {
+				host = openStackCluster.Status.Network.APIServerLoadBalancer.IP
+			} else {
+				host = openStackCluster.Status.Network.APIServerLoadBalancer.InternalIP
+			}
+		case !openStackCluster.Spec.DisableAPIServerFloatingIP:
+			// If floating IPs are not disabled, get one to use as the VIP for the control plane
+			fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, clusterName, openStackCluster.Spec.APIServerFloatingIP)
+			if err != nil {
+				handleUpdateOSCError(openStackCluster, errors.Errorf("Floating IP cannot be got or created: %v", err))
+				return errors.Errorf("Floating IP cannot be got or created: %v", err)
+			}
+			host = fp.FloatingIP
+		case openStackCluster.Spec.APIServerFixedIP != "":
+			// If a fixed IP was specified, assume that the user is providing the extra configuration
+			// to use that IP as the VIP for the API server, e.g. using keepalived or kube-vip
+			host = openStackCluster.Spec.APIServerFixedIP
+		default:
+			// For now, we do not provide a managed VIP without either a load balancer or a floating IP
+			// In the future, we could manage a VIP port on the cluster network and set allowedAddressPairs
+			// accordingly when creating control plane machines
+			// However this would require us to deploy software on the control plane hosts to manage the
+			// VIP (e.g. keepalived/kube-vip)
+			return errors.New("unable to determine VIP for API server")
+		}
+
+		// Set APIEndpoints so the Cluster API Cluster Controller can pull them
+		openStackCluster.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{
+			Host: host,
+			Port: int32(apiServerPort),
 		}
 	}
 

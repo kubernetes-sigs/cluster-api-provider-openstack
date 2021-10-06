@@ -225,29 +225,28 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 
 	if instanceStatus == nil {
 		logger.Info("Skipped deleting machine that is already deleted")
-		controllerutil.RemoveFinalizer(openStackMachine, infrav1.MachineFinalizer)
-		if err := patchHelper.Patch(ctx, openStackMachine); err != nil {
-			return ctrl.Result{}, err
+	} else {
+		if !openStackCluster.Spec.ManagedAPIServerLoadBalancer && util.IsControlPlaneMachine(machine) && openStackCluster.Spec.APIServerFloatingIP == "" {
+			instanceNS, err := instanceStatus.NetworkStatus()
+			if err != nil {
+				handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error getting network status for OpenStack instance %s with ID %s: %v", instanceStatus.Name(), instanceStatus.ID(), err))
+        conditions.MarkFalse(openStackMachine, infrav1.MachineRunningCondition, clusterv1.DeletionFailedReason, clusterv1.ConditionSeverityWarning, err.Error())
+				return ctrl.Result{}, nil
+			}
+
+			addresses := instanceNS.Addresses()
+			for _, address := range addresses {
+				if address.Type == corev1.NodeExternalIP {
+					if err = networkingService.DeleteFloatingIP(openStackCluster, address.Address); err != nil {
+						handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error deleting Openstack floating IP: %v", err))
+						return ctrl.Result{}, nil
+					}
+				}
+			}
 		}
-		return ctrl.Result{}, nil
-	}
 
-	instanceNS, err := instanceStatus.NetworkStatus()
-	if err != nil {
-		handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error getting network status for OpenStack instance %s with ID %s: %v", instanceStatus.Name(), instanceStatus.ID(), err))
-		conditions.MarkFalse(openStackMachine, infrav1.MachineRunningCondition, clusterv1.DeletionFailedReason, clusterv1.ConditionSeverityWarning, err.Error())
-		return ctrl.Result{}, nil
-	}
-
-	if err = computeService.DeleteInstance(openStackMachine, instanceStatus); err != nil {
-		handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error deleting OpenStack instance %s with ID %s: %v", instanceStatus.Name(), instanceStatus.ID(), err))
-		return ctrl.Result{}, nil
-	}
-
-	floatingIP := instanceNS.FloatingIP()
-	if !openStackCluster.Spec.ManagedAPIServerLoadBalancer && util.IsControlPlaneMachine(machine) && openStackCluster.Spec.APIServerFloatingIP == "" && floatingIP != "" {
-		if err = networkingService.DeleteFloatingIP(openStackCluster, floatingIP); err != nil {
-			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error deleting Openstack floating IP: %v", err))
+		if err := computeService.DeleteInstance(openStackMachine, instanceStatus); err != nil {
+			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error deleting OpenStack instance %s with ID %s: %v", instanceStatus.Name(), instanceStatus.ID(), err))
 			return ctrl.Result{}, nil
 		}
 	}
@@ -286,7 +285,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 		conditions.MarkFalse(openStackMachine, infrav1.MachineRunningCondition, infrav1.WaitingForBootstrapDataReason, clusterv1.ConditionSeverityInfo, "")
 		return ctrl.Result{}, nil
 	}
-	userData, err := r.getBootstrapData(machine, openStackMachine)
+	userData, err := r.getBootstrapData(ctx, machine, openStackMachine)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -335,10 +334,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 		return ctrl.Result{}, nil
 	}
 
-	addresses := []corev1.NodeAddress{{Type: corev1.NodeInternalIP, Address: instanceNS.IP()}}
-	if instanceNS.FloatingIP() != "" {
-		addresses = append(addresses, []corev1.NodeAddress{{Type: corev1.NodeExternalIP, Address: instanceNS.FloatingIP()}}...)
-	}
+	addresses := instanceNS.Addresses()
 	openStackMachine.Status.Addresses = addresses
 
 	// TODO(sbueringer) From CAPA: TODO(vincepri): Remove this annotation when clusterctl is no longer relevant.
@@ -364,13 +360,17 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("LoadBalancerMember cannot be reconciled: %v", err))
 			return ctrl.Result{}, nil
 		}
-	} else if util.IsControlPlaneMachine(machine) {
-		fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, clusterName, openStackCluster.Spec.ControlPlaneEndpoint.Host)
+	} else if util.IsControlPlaneMachine(machine) && !openStackCluster.Spec.DisableAPIServerFloatingIP {
+		floatingIPAddress := openStackCluster.Spec.ControlPlaneEndpoint.Host
+		if openStackCluster.Spec.APIServerFloatingIP != "" {
+			floatingIPAddress = openStackCluster.Spec.APIServerFloatingIP
+		}
+		fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, clusterName, floatingIPAddress)
 		if err != nil {
 			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("Floating IP cannot be got or created: %v", err))
 			return ctrl.Result{}, nil
 		}
-		port, err := computeService.GetManagementPort(instanceStatus)
+		port, err := computeService.GetManagementPort(openStackCluster, instanceStatus)
 		if err != nil {
 			err = errors.Errorf("getting management port for control plane machine %s: %v", machine.Name, err)
 			handleUpdateMachineError(logger, openStackMachine, err)
@@ -413,7 +413,7 @@ func handleUpdateMachineError(logger logr.Logger, openstackMachine *infrav1.Open
 }
 
 func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(logger logr.Logger, osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, instanceNS *compute.InstanceNetworkStatus, clusterName string) error {
-	ip := instanceNS.IP()
+	ip := instanceNS.IP(openStackCluster.Status.Network.Name)
 	loadbalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, logger)
 	if err != nil {
 		return err
@@ -440,7 +440,7 @@ func (r *OpenStackMachineReconciler) OpenStackClusterToOpenStackMachines(ctx con
 			return nil
 		}
 
-		cluster, err := util.GetOwnerCluster(context.TODO(), r.Client, c.ObjectMeta)
+		cluster, err := util.GetOwnerCluster(ctx, r.Client, c.ObjectMeta)
 		switch {
 		case apierrors.IsNotFound(err) || cluster == nil:
 			log.V(4).Info("Cluster for OpenStackCluster not found, skipping mapping.")
@@ -450,18 +450,18 @@ func (r *OpenStackMachineReconciler) OpenStackClusterToOpenStackMachines(ctx con
 			return nil
 		}
 
-		return r.requestsForCluster(log, cluster.Namespace, cluster.Name)
+		return r.requestsForCluster(ctx, log, cluster.Namespace, cluster.Name)
 	}
 }
 
-func (r *OpenStackMachineReconciler) getBootstrapData(machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (string, error) {
+func (r *OpenStackMachineReconciler) getBootstrapData(ctx context.Context, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (string, error) {
 	if machine.Spec.Bootstrap.DataSecretName == nil {
 		return "", errors.New("error retrieving bootstrap data: linked Machine's bootstrap.dataSecretName is nil")
 	}
 
 	secret := &corev1.Secret{}
 	key := types.NamespacedName{Namespace: machine.Namespace, Name: *machine.Spec.Bootstrap.DataSecretName}
-	if err := r.Client.Get(context.TODO(), key, secret); err != nil {
+	if err := r.Client.Get(ctx, key, secret); err != nil {
 		return "", errors.Wrapf(err, "failed to retrieve bootstrap data secret for Openstack Machine %s/%s", machine.Namespace, openStackMachine.Name)
 	}
 
@@ -489,14 +489,14 @@ func (r *OpenStackMachineReconciler) requeueOpenStackMachinesForUnpausedCluster(
 			return nil
 		}
 
-		return r.requestsForCluster(log, c.Namespace, c.Name)
+		return r.requestsForCluster(ctx, log, c.Namespace, c.Name)
 	}
 }
 
-func (r *OpenStackMachineReconciler) requestsForCluster(log logr.Logger, namespace, name string) []ctrl.Request {
+func (r *OpenStackMachineReconciler) requestsForCluster(ctx context.Context, log logr.Logger, namespace, name string) []ctrl.Request {
 	labels := map[string]string{clusterv1.ClusterLabelName: name}
 	machineList := &clusterv1.MachineList{}
-	if err := r.Client.List(context.TODO(), machineList, client.InNamespace(namespace), client.MatchingLabels(labels)); err != nil {
+	if err := r.Client.List(ctx, machineList, client.InNamespace(namespace), client.MatchingLabels(labels)); err != nil {
 		log.Error(err, "Failed to get owned Machines, skipping mapping.")
 		return nil
 	}

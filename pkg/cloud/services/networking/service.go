@@ -69,3 +69,12 @@ func NewService(providerClient *gophercloud.ProviderClient, clientOpts *clientco
 		logger:    logger,
 	}, nil
 }
+
+// NewTestService returns a Service with no initialisation. It should only be used by tests.
+func NewTestService(projectID string, client NetworkClient, logger logr.Logger) *Service {
+	return &Service{
+		projectID: projectID,
+		client:    client,
+		logger:    logger,
+	}
+}

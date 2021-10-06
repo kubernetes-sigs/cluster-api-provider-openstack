@@ -88,13 +88,17 @@ func (r *OpenStackMachine) ValidateUpdate(old runtime.Object) error {
 	newOpenStackMachineSpec := newOpenStackMachine["spec"].(map[string]interface{})
 	oldOpenStackMachineSpec := oldOpenStackMachine["spec"].(map[string]interface{})
 
-	// allow changes to providerID
-	delete(oldOpenStackMachineSpec, "providerID")
-	delete(newOpenStackMachineSpec, "providerID")
+	// allow changes to providerID once
+	if oldOpenStackMachineSpec["providerID"] == nil {
+		delete(oldOpenStackMachineSpec, "providerID")
+		delete(newOpenStackMachineSpec, "providerID")
+	}
 
-	// allow changes to instanceID
-	delete(oldOpenStackMachineSpec, "instanceID")
-	delete(newOpenStackMachineSpec, "instanceID")
+	// allow changes to instanceID once
+	if oldOpenStackMachineSpec["instanceID"] == nil {
+		delete(oldOpenStackMachineSpec, "instanceID")
+		delete(newOpenStackMachineSpec, "instanceID")
+	}
 
 	if !reflect.DeepEqual(oldOpenStackMachineSpec, newOpenStackMachineSpec) {
 		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec"), "cannot be modified"))
