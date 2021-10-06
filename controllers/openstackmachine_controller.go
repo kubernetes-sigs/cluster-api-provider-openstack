@@ -230,7 +230,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 			instanceNS, err := instanceStatus.NetworkStatus()
 			if err != nil {
 				handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error getting network status for OpenStack instance %s with ID %s: %v", instanceStatus.Name(), instanceStatus.ID(), err))
-        conditions.MarkFalse(openStackMachine, infrav1.MachineRunningCondition, clusterv1.DeletionFailedReason, clusterv1.ConditionSeverityWarning, err.Error())
+				conditions.MarkFalse(openStackMachine, infrav1.MachineRunningCondition, clusterv1.DeletionFailedReason, clusterv1.ConditionSeverityWarning, err.Error())
 				return ctrl.Result{}, nil
 			}
 
@@ -311,12 +311,14 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 	instanceStatus, err := r.getOrCreate(logger, cluster, openStackCluster, machine, openStackMachine, computeService, userData)
 	if err != nil {
 		handleUpdateMachineError(logger, openStackMachine, errors.Errorf("OpenStack instance cannot be created: %v", err))
+		conditions.MarkFalse(openStackMachine, infrav1.MachineRunningCondition, infrav1.MachineProvisionFailedReason, clusterv1.ConditionSeverityError, err.Error())
 		return ctrl.Result{}, err
 	}
 
 	// Set an error message if we couldn't find the instance.
 	if instanceStatus == nil {
 		handleUpdateMachineError(logger, openStackMachine, errors.New("OpenStack instance cannot be found"))
+		conditions.MarkUnknown(openStackMachine, infrav1.MachineRunningCondition, infrav1.MachineNotFoundReason, err.Error())
 		return ctrl.Result{}, nil
 	}
 
@@ -521,3 +523,4 @@ func (r *OpenStackMachineReconciler) getInfraCluster(ctx context.Context, cluste
 	}
 	return openStackCluster, nil
 }
+
