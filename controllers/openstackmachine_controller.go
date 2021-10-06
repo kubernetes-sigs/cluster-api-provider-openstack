@@ -523,4 +523,3 @@ func (r *OpenStackMachineReconciler) getInfraCluster(ctx context.Context, cluste
 	}
 	return openStackCluster, nil
 }
-
