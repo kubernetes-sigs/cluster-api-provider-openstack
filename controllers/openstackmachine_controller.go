@@ -281,7 +281,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 		logger.Info("Bootstrap data secret reference is not yet available")
 		return ctrl.Result{}, nil
 	}
-	userData, err := r.getBootstrapData(machine, openStackMachine)
+	userData, err := r.getBootstrapData(ctx, machine, openStackMachine)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -436,7 +436,7 @@ func (r *OpenStackMachineReconciler) OpenStackClusterToOpenStackMachines(ctx con
 			return nil
 		}
 
-		cluster, err := util.GetOwnerCluster(context.TODO(), r.Client, c.ObjectMeta)
+		cluster, err := util.GetOwnerCluster(ctx, r.Client, c.ObjectMeta)
 		switch {
 		case apierrors.IsNotFound(err) || cluster == nil:
 			log.V(4).Info("Cluster for OpenStackCluster not found, skipping mapping.")
@@ -446,18 +446,18 @@ func (r *OpenStackMachineReconciler) OpenStackClusterToOpenStackMachines(ctx con
 			return nil
 		}
 
-		return r.requestsForCluster(log, cluster.Namespace, cluster.Name)
+		return r.requestsForCluster(ctx, log, cluster.Namespace, cluster.Name)
 	}
 }
 
-func (r *OpenStackMachineReconciler) getBootstrapData(machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (string, error) {
+func (r *OpenStackMachineReconciler) getBootstrapData(ctx context.Context, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (string, error) {
 	if machine.Spec.Bootstrap.DataSecretName == nil {
 		return "", errors.New("error retrieving bootstrap data: linked Machine's bootstrap.dataSecretName is nil")
 	}
 
 	secret := &corev1.Secret{}
 	key := types.NamespacedName{Namespace: machine.Namespace, Name: *machine.Spec.Bootstrap.DataSecretName}
-	if err := r.Client.Get(context.TODO(), key, secret); err != nil {
+	if err := r.Client.Get(ctx, key, secret); err != nil {
 		return "", errors.Wrapf(err, "failed to retrieve bootstrap data secret for Openstack Machine %s/%s", machine.Namespace, openStackMachine.Name)
 	}
 
@@ -485,14 +485,14 @@ func (r *OpenStackMachineReconciler) requeueOpenStackMachinesForUnpausedCluster(
 			return nil
 		}
 
-		return r.requestsForCluster(log, c.Namespace, c.Name)
+		return r.requestsForCluster(ctx, log, c.Namespace, c.Name)
 	}
 }
 
-func (r *OpenStackMachineReconciler) requestsForCluster(log logr.Logger, namespace, name string) []ctrl.Request {
+func (r *OpenStackMachineReconciler) requestsForCluster(ctx context.Context, log logr.Logger, namespace, name string) []ctrl.Request {
 	labels := map[string]string{clusterv1.ClusterLabelName: name}
 	machineList := &clusterv1.MachineList{}
-	if err := r.Client.List(context.TODO(), machineList, client.InNamespace(namespace), client.MatchingLabels(labels)); err != nil {
+	if err := r.Client.List(ctx, machineList, client.InNamespace(namespace), client.MatchingLabels(labels)); err != nil {
 		log.Error(err, "Failed to get owned Machines, skipping mapping.")
 		return nil
 	}
