@@ -18,34 +18,17 @@ package v1alpha4
 
 import clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha4"
 
-// OpenstackCluster Conditions and Reasons.
+// OpenStackInstance Conditions and Reasons.
 const (
-	// NetworkInfrastructureReadyCondition reports of current status of cluster infrastructure.
-	NetworkInfrastructureReadyCondition = "NetworkInfrastructureReady"
-	// LoadBalancerProvisioningReason API Server endpoint for the loadbalancer.
-	LoadBalancerProvisioningReason = "LoadBalancerProvisioning"
-	// LoadBalancerProvisioningFailedReason used for failure during provisioning of loadbalancer.
-	LoadBalancerProvisioningFailedReason = "LoadBalancerProvisioningFailed"
-	// NamespaceNotAllowedByIdentity used to indicate cluster in a namespace not allowed by identity.
-	NamespaceNotAllowedByIdentity = "NamespaceNotAllowedByIdentity"
-)
-
-// OpenStackMachine Conditions and Reasons.
-const (
-	// MachineRunningCondition reports on current status of the Openstack Machine.
-	MachineRunningCondition clusterv1.ConditionType = "MachineRunning"
-	// MachineUpdatingReason used when the Machine updating is in progress.
-	MachineUpdatingReason = "MachineUpdating"
-	// MachineNotFoundReason used when the Machine couldn't be retrieved.
-	MachineNotFoundReason = "MachineNotFound"
-	// MachineDeletingReason used when the Machine is in a deleting state.
-	MachineDeletingReason = "MachineDeleting"
-	// MachineStoppedReason Machine is in a stopped state.
-	MachineStoppedReason = "MachineStopped"
-	// MachineProvisionFailedReason used for failures during Machine provisioning.
-	MachineProvisionFailedReason = "MachineProvisionFailed"
-	// WaitingForClusterInfrastructureReason used when machine is waiting for cluster infrastructure to be ready before proceeding.
+	// InstanceRunningCondition reports on current status of the Openstack Instance.
+	InstanceRunningCondition clusterv1.ConditionType = "InstanceRunning"
+	// InstanceNotFoundReason used when the Instance couldn't be retrieved.
+	InstanceNotFoundReason = "InstanceNotFound"
+	// InstanceProvisionFailedReason used for failures during Instance provisioning.
+	InstanceProvisionFailedReason = "InstanceProvisionFailed"
+	// WaitingForClusterInfrastructureReason used when Instance is waiting for cluster infrastructure to be ready before proceeding.
 	WaitingForClusterInfrastructureReason = "WaitingForClusterInfrastructure"
-	// WaitingForBootstrapDataReason used when machine is waiting for bootstrap data to be ready before proceeding.
+	// WaitingForBootstrapDataReason used when Instance is waiting for bootstrap data to be ready before proceeding.
 	WaitingForBootstrapDataReason = "WaitingForBootstrapData"
 )
+
