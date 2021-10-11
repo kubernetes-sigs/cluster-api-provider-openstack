@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/trunks"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/cluster-api/util"
@@ -76,19 +75,6 @@ func (s *Service) getOrCreateTrunk(eventObject runtime.Object, clusterName, trun
 
 	record.Eventf(eventObject, "SuccessfulCreateTrunk", "Created trunk %s with id %s", trunk.Name, trunk.ID)
 	return trunk, nil
-}
-
-func (s *Service) replaceAllAttributesTags(eventObject runtime.Object, trunkID string, tags []string) error {
-	_, err := s.client.ReplaceAllAttributesTags("trunks", trunkID, attributestags.ReplaceAllOpts{
-		Tags: tags,
-	})
-	if err != nil {
-		record.Warnf(eventObject, "FailedReplaceAllAttributesTags", "Failed to replace all attributestags, trunk %s: %v", trunkID, err)
-		return err
-	}
-
-	record.Eventf(eventObject, "SuccessfulReplaceAllAttributeTags", "Replaced all attributestags %s with tags %s", trunkID, tags)
-	return nil
 }
 
 func (s *Service) DeleteTrunk(eventObject runtime.Object, portID string) error {

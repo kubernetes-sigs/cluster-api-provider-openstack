@@ -161,7 +161,12 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 		record.Warnf(eventObject, "FailedCreatePort", "Failed to create port %s: %v", portName, err)
 		return nil, err
 	}
-
+	if len(tags) > 0 {
+		if err = s.replaceAllAttributesTags(eventObject, portResource, port.ID, tags); err != nil {
+			record.Warnf(eventObject, "FailedReplaceTags", "Failed to replace port tags %s: %v", portName, err)
+			return nil, err
+		}
+	}
 	record.Eventf(eventObject, "SuccessfulCreatePort", "Created port %s with id %s", port.Name, port.ID)
 	if portOpts.Trunk != nil && *portOpts.Trunk {
 		trunk, err := s.getOrCreateTrunk(eventObject, clusterName, port.Name, port.ID)
@@ -169,7 +174,7 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 			record.Warnf(eventObject, "FailedCreateTrunk", "Failed to create trunk for port %s: %v", portName, err)
 			return nil, err
 		}
-		if err = s.replaceAllAttributesTags(eventObject, trunk.ID, tags); err != nil {
+		if err = s.replaceAllAttributesTags(eventObject, trunkResource, trunk.ID, tags); err != nil {
 			record.Warnf(eventObject, "FailedReplaceTags", "Failed to replace trunk tags %s: %v", portName, err)
 			return nil, err
 		}
