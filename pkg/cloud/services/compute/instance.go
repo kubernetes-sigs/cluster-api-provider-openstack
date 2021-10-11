@@ -513,7 +513,7 @@ func (s *Service) deleteInstance(eventObject runtime.Object, instance *InstanceI
 			record.Eventf(eventObject, "SuccessfulDeleteServer", "Server %s with id %s did not exist", instance.Name, instance.ID)
 			return nil
 		}
-		record.Warnf(eventObject, "FailedDeleteServer", "Failed to deleted server %s with id %s: %v", instance.Name, instance.ID, err)
+		record.Warnf(eventObject, "FailedDeleteServer", "Failed to delete server %s with id %s: %v", instance.Name, instance.ID, err)
 		return err
 	}
 
