@@ -38,6 +38,7 @@ const (
 	OpenStackCloudYAMLFile      = "OPENSTACK_CLOUD_YAML_FILE"
 	OpenStackCloud              = "OPENSTACK_CLOUD"
 	OpenStackFailureDomain      = "OPENSTACK_FAILURE_DOMAIN"
+	OpenStackFailureDomainAlt   = "OPENSTACK_FAILURE_DOMAIN_ALT"
 	OpenStackImageName          = "OPENSTACK_IMAGE_NAME"
 	OpenStackNodeMachineFlavor  = "OPENSTACK_NODE_MACHINE_FLAVOR"
 	FlavorDefault               = "ci-artifacts"

@@ -28,6 +28,8 @@ spec:
   identityRef:
     name: ${CLUSTER_NAME}-cloud-config
     kind: Secret
+  controlPlaneAvailabilityZones:
+  - ${OPENSTACK_FAILURE_DOMAIN}
   managedAPIServerLoadBalancer: true
   managedSecurityGroups: true
   nodeCidr: 10.6.0.0/24
