@@ -120,4 +120,4 @@ intervals:
   default/wait-cluster: ["20m", "10s"]
   default/wait-control-plane: ["30m", "10s"]
   default/wait-worker-nodes: ["30m", "10s"]
-  default/wait-delete-cluster: ["30m", "10s"]
+  default/wait-delete-cluster: ["5m", "10s"]
