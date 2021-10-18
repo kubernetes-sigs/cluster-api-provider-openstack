@@ -612,6 +612,14 @@ spec:
                       items:
                         type: string
                       type: array
+                    tags:
+                      description: Tags applied to the port (and corresponding trunk,
+                        if a trunk is configured.) These tags are applied in addition
+                        to the instance's tags, which will also be applied to the
+                        port.
+                      items:
+                        type: string
+                      type: array
                     tenantId:
                       type: string
                     trunk:
