@@ -121,3 +121,4 @@ intervals:
   default/wait-control-plane: ["30m", "10s"]
   default/wait-worker-nodes: ["30m", "10s"]
   default/wait-delete-cluster: ["5m", "10s"]
+  default/wait-alt-az: ["20m", "30s"]

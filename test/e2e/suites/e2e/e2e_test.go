@@ -350,6 +350,122 @@ var _ = Describe("e2e tests", func() {
 		})
 	})
 
+	Describe("Workload cluster (multi-AZ)", func() {
+		var (
+			clusterName                     string
+			md                              []*clusterv1.MachineDeployment
+			failureDomain, failureDomainAlt string
+			cluster                         *infrav1.OpenStackCluster
+		)
+
+		BeforeEach(func() {
+			failureDomain = e2eCtx.E2EConfig.GetVariable(shared.OpenStackFailureDomain)
+			failureDomainAlt = e2eCtx.E2EConfig.GetVariable(shared.OpenStackFailureDomainAlt)
+
+			// We create the second compute host asynchronously, so
+			// we need to ensure the alternate failure domain exists
+			// before running these tests.
+			//
+			// For efficiency we run the multi-AZ tests late in the
+			// test suite. In practise this should mean that the
+			// second compute is already up by the time we get here,
+			// and we don't have to wait.
+			Eventually(func() []string {
+				shared.Byf("Waiting for the alternate AZ '%s' to be created", failureDomainAlt)
+				return shared.GetComputeAvailabilityZones(e2eCtx)
+			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-alt-az")...).Should(ContainElement(failureDomainAlt))
+
+			shared.Byf("Creating a cluster")
+			clusterName = fmt.Sprintf("cluster-%s", namespace.Name)
+			configCluster := defaultConfigCluster(clusterName, namespace.Name)
+			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(3)
+			configCluster.WorkerMachineCount = pointer.Int64Ptr(2)
+			configCluster.Flavor = shared.FlavorMultiAZ
+			md = createCluster(ctx, configCluster)
+
+			var err error
+			cluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("It should be creatable and deletable", func() {
+			workerMachines := framework.GetMachinesByMachineDeployments(ctx, framework.GetMachinesByMachineDeploymentsInput{
+				Lister:            e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
+				ClusterName:       clusterName,
+				Namespace:         namespace.Name,
+				MachineDeployment: *md[0],
+			})
+			controlPlaneMachines := framework.GetControlPlaneMachinesByCluster(ctx, framework.GetControlPlaneMachinesByClusterInput{
+				Lister:      e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
+				ClusterName: clusterName,
+				Namespace:   namespace.Name,
+			})
+			Expect(controlPlaneMachines).To(
+				HaveLen(3),
+				fmt.Sprintf("Cluster %s does not have the expected number of control plane machines", cluster.Name))
+			Expect(workerMachines).To(
+				HaveLen(2),
+				fmt.Sprintf("Cluster %s does not have the expected number of worker machines", cluster.Name))
+
+			getAZsForMachines := func(machines []clusterv1.Machine) []string {
+				azs := make(map[string]struct{})
+				for _, machine := range machines {
+					failureDomain := machine.Spec.FailureDomain
+					if failureDomain == nil {
+						continue
+					}
+					azs[*failureDomain] = struct{}{}
+				}
+
+				azSlice := make([]string, 0, len(azs))
+				for az := range azs {
+					azSlice = append(azSlice, az)
+				}
+
+				return azSlice
+			}
+
+			// The control plane should be spread across both AZs
+			controlPlaneAZs := getAZsForMachines(controlPlaneMachines)
+			Expect(controlPlaneAZs).To(
+				ConsistOf(failureDomain, failureDomainAlt),
+				fmt.Sprintf("Cluster %s: control plane machines were not scheduled in the expected AZs", cluster.Name))
+
+			// All workers should be in the alt AZ
+			workerAZs := getAZsForMachines(workerMachines)
+			Expect(workerAZs).To(
+				ConsistOf(failureDomainAlt),
+				fmt.Sprintf("Cluster %s: worker machines were not scheduled in the expected AZ", cluster.Name))
+
+			// Check that all machines were actually scheduled in the correct AZ
+			var allMachines []clusterv1.Machine
+			allMachines = append(allMachines, controlPlaneMachines...)
+			allMachines = append(allMachines, workerMachines...)
+
+			allServers, err := shared.GetOpenStackServers(e2eCtx, cluster)
+			Expect(err).NotTo(HaveOccurred())
+
+			allServerNames := make([]string, 0, len(allServers))
+			for name := range allServers {
+				allServerNames = append(allServerNames, name)
+			}
+
+			for _, machine := range allMachines {
+				// The output of a HaveKey() failure against
+				// allServers is too long and overflows
+				openstackMachineName := machine.Spec.InfrastructureRef.Name
+				Expect(allServerNames).To(
+					ContainElement(openstackMachineName),
+					fmt.Sprintf("Cluster %s: did not find a server for machine %s", cluster.Name, openstackMachineName))
+
+				server := allServers[openstackMachineName]
+				Expect(server.AvailabilityZone).To(
+					Equal(*machine.Spec.FailureDomain),
+					fmt.Sprintf("Server %s was not scheduled in the correct AZ", machine.Name))
+			}
+		})
+	})
+
 	AfterEach(func() {
 		shared.SetEnvVar("USE_CI_ARTIFACTS", "false", false)
 		// Dumps all the resources in the spec namespace, then cleanups the cluster object and the spec namespace itself.
