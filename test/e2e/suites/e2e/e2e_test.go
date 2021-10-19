@@ -92,8 +92,8 @@ var _ = Describe("e2e tests", func() {
 				ClusterName: clusterName,
 				Namespace:   namespace.Name,
 			})
-			Expect(len(workerMachines)).To(Equal(1))
-			Expect(len(controlPlaneMachines)).To(Equal(3))
+			Expect(workerMachines).To(HaveLen(1))
+			Expect(controlPlaneMachines).To(HaveLen(3))
 		})
 	})
 
@@ -118,8 +118,8 @@ var _ = Describe("e2e tests", func() {
 				ClusterName: clusterName,
 				Namespace:   namespace.Name,
 			})
-			Expect(len(workerMachines)).To(Equal(1))
-			Expect(len(controlPlaneMachines)).To(Equal(1))
+			Expect(workerMachines).To(HaveLen(1))
+			Expect(controlPlaneMachines).To(HaveLen(1))
 
 			shared.Byf("Waiting for worker nodes to be in Running phase")
 			statusChecks := []framework.MachineStatusCheck{framework.MachinePhaseCheck(string(clusterv1.MachinePhaseRunning))}
