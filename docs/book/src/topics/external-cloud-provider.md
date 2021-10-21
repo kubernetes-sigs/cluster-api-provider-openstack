@@ -1,3 +1,12 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [External Cloud Provider](#external-cloud-provider)
+  - [Steps](#steps)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # External Cloud Provider
 
 To deploy a cluster using [external cloud provider](https://github.com/kubernetes/cloud-provider-openstack), create a cluster configuration with the [external cloud provider template](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/master/templates/cluster-template-external-cloud-provider.yaml).
