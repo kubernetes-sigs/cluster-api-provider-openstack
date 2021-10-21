@@ -165,7 +165,9 @@ var _ = Describe("e2e tests", func() {
 			shared.Byf("Creating MachineDeployment with custom port options")
 			md3Name := clusterName + "-md-3"
 			customPortOptions := &[]infrav1.PortOpts{
-				{Description: "primary"},
+				{
+					Description: "primary",
+				},
 			}
 
 			testTag := utilrand.String(6)

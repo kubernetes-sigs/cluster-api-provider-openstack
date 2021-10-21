@@ -841,15 +841,9 @@ spec:
                                     filter:
                                       description: Filters for optional network query
                                       properties:
-                                        adminStateUp:
-                                          type: boolean
                                         description:
                                           type: string
                                         id:
-                                          type: string
-                                        limit:
-                                          type: integer
-                                        marker:
                                           type: string
                                         name:
                                           type: string
@@ -859,19 +853,9 @@ spec:
                                           type: string
                                         projectId:
                                           type: string
-                                        shared:
-                                          type: boolean
-                                        sortDir:
-                                          type: string
-                                        sortKey:
-                                          type: string
-                                        status:
-                                          type: string
                                         tags:
                                           type: string
                                         tagsAny:
-                                          type: string
-                                        tenantId:
                                           type: string
                                       type: object
                                     fixedIP:
@@ -889,8 +873,6 @@ spec:
                                                 type: string
                                               description:
                                                 type: string
-                                              enableDhcp:
-                                                type: boolean
                                               gateway_ip:
                                                 type: string
                                               id:
@@ -901,13 +883,7 @@ spec:
                                                 type: string
                                               ipv6RaMode:
                                                 type: string
-                                              limit:
-                                                type: integer
-                                              marker:
-                                                type: string
                                               name:
-                                                type: string
-                                              networkId:
                                                 type: string
                                               notTags:
                                                 type: string
@@ -915,17 +891,9 @@ spec:
                                                 type: string
                                               projectId:
                                                 type: string
-                                              sortDir:
-                                                type: string
-                                              sortKey:
-                                                type: string
-                                              subnetpoolId:
-                                                type: string
                                               tags:
                                                 type: string
                                               tagsAny:
-                                                type: string
-                                              tenantId:
                                                 type: string
                                             type: object
                                           uuid:
@@ -980,10 +948,42 @@ spec:
                                         properties:
                                           ipAddress:
                                             type: string
-                                          subnetId:
-                                            type: string
+                                          subnet:
+                                            description: Subnet is an openstack subnet
+                                              query that will return the id of a subnet
+                                              to create the fixed IP of a port in.
+                                              This query must not return more than
+                                              one subnet.
+                                            properties:
+                                              cidr:
+                                                type: string
+                                              description:
+                                                type: string
+                                              gateway_ip:
+                                                type: string
+                                              id:
+                                                type: string
+                                              ipVersion:
+                                                type: integer
+                                              ipv6AddressMode:
+                                                type: string
+                                              ipv6RaMode:
+                                                type: string
+                                              name:
+                                                type: string
+                                              notTags:
+                                                type: string
+                                              notTagsAny:
+                                                type: string
+                                              projectId:
+                                                type: string
+                                              tags:
+                                                type: string
+                                              tagsAny:
+                                                type: string
+                                            type: object
                                         required:
-                                        - subnetId
+                                        - subnet
                                         type: object
                                       type: array
                                     hostId:
@@ -997,11 +997,29 @@ spec:
                                         unique. If unspecified, instead the 0-based
                                         index of the port in the list is used.
                                       type: string
-                                    networkId:
-                                      description: ID of the OpenStack network on
-                                        which to create the port. If unspecified,
-                                        create the port on the default cluster network.
-                                      type: string
+                                    network:
+                                      description: Network is a query for an openstack
+                                        network that the port will be created or discovered
+                                        on. This will fail if the query returns more
+                                        than one network.
+                                      properties:
+                                        description:
+                                          type: string
+                                        id:
+                                          type: string
+                                        name:
+                                          type: string
+                                        notTags:
+                                          type: string
+                                        notTagsAny:
+                                          type: string
+                                        projectId:
+                                          type: string
+                                        tags:
+                                          type: string
+                                        tagsAny:
+                                          type: string
+                                      type: object
                                     profile:
                                       additionalProperties:
                                         type: string
@@ -1208,8 +1226,6 @@ spec:
                                       type: string
                                     description:
                                       type: string
-                                    enableDhcp:
-                                      type: boolean
                                     gateway_ip:
                                       type: string
                                     id:
@@ -1220,13 +1236,7 @@ spec:
                                       type: string
                                     ipv6RaMode:
                                       type: string
-                                    limit:
-                                      type: integer
-                                    marker:
-                                      type: string
                                     name:
-                                      type: string
-                                    networkId:
                                       type: string
                                     notTags:
                                       type: string
@@ -1234,17 +1244,9 @@ spec:
                                       type: string
                                     projectId:
                                       type: string
-                                    sortDir:
-                                      type: string
-                                    sortKey:
-                                      type: string
-                                    subnetpoolId:
-                                      type: string
                                     tags:
                                       type: string
                                     tagsAny:
-                                      type: string
-                                    tenantId:
                                       type: string
                                   type: object
                                 uuid:
@@ -1295,15 +1297,9 @@ spec:
                         description: If NodeCIDR cannot be set this can be used to
                           detect an existing network.
                         properties:
-                          adminStateUp:
-                            type: boolean
                           description:
                             type: string
                           id:
-                            type: string
-                          limit:
-                            type: integer
-                          marker:
                             type: string
                           name:
                             type: string
@@ -1313,19 +1309,9 @@ spec:
                             type: string
                           projectId:
                             type: string
-                          shared:
-                            type: boolean
-                          sortDir:
-                            type: string
-                          sortKey:
-                            type: string
-                          status:
-                            type: string
                           tags:
                             type: string
                           tagsAny:
-                            type: string
-                          tenantId:
                             type: string
                         type: object
                       nodeCidr:
@@ -1342,8 +1328,6 @@ spec:
                             type: string
                           description:
                             type: string
-                          enableDhcp:
-                            type: boolean
                           gateway_ip:
                             type: string
                           id:
@@ -1354,13 +1338,7 @@ spec:
                             type: string
                           ipv6RaMode:
                             type: string
-                          limit:
-                            type: integer
-                          marker:
-                            type: string
                           name:
-                            type: string
-                          networkId:
                             type: string
                           notTags:
                             type: string
@@ -1368,17 +1346,9 @@ spec:
                             type: string
                           projectId:
                             type: string
-                          sortDir:
-                            type: string
-                          sortKey:
-                            type: string
-                          subnetpoolId:
-                            type: string
                           tags:
                             type: string
                           tagsAny:
-                            type: string
-                          tenantId:
                             type: string
                         type: object
                       tags:

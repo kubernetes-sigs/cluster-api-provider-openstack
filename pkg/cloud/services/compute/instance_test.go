@@ -59,7 +59,7 @@ func Test_getPortName(t *testing.T) {
 		},
 		{
 			name: "with PortOpts name suffix",
-			args: args{"test-1-instance", &infrav1.PortOpts{NameSuffix: "foo2", NetworkID: "bar", DisablePortSecurity: pointer.Bool(true)}, 4},
+			args: args{"test-1-instance", &infrav1.PortOpts{NameSuffix: "foo2", Network: &infrav1.NetworkFilter{ID: "bar"}, DisablePortSecurity: pointer.Bool(true)}, 4},
 			want: "test-1-instance-foo2",
 		},
 	}
@@ -130,7 +130,7 @@ func TestService_getServerNetworks(t *testing.T) {
 
 	// Define arbitrary test network and subnet filters for use in multiple tests,
 	// the gophercloud ListOpts they should translate to, and the arbitrary returned networks/subnets.
-	testNetworkFilter := infrav1.Filter{Tags: testClusterTag}
+	testNetworkFilter := infrav1.NetworkFilter{Tags: testClusterTag}
 	testNetworkListOpts := networks.ListOpts{Tags: testClusterTag}
 	testSubnetFilter := infrav1.SubnetFilter{Tags: testClusterTag}
 	testSubnetListOpts := subnets.ListOpts{Tags: testClusterTag}

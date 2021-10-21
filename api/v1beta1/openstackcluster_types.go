@@ -40,7 +40,7 @@ type OpenStackClusterSpec struct {
 	NodeCIDR string `json:"nodeCidr,omitempty"`
 
 	// If NodeCIDR cannot be set this can be used to detect an existing network.
-	Network Filter `json:"network,omitempty"`
+	Network NetworkFilter `json:"network,omitempty"`
 
 	// If NodeCIDR cannot be set this can be used to detect an existing subnet.
 	Subnet SubnetFilter `json:"subnet,omitempty"`
