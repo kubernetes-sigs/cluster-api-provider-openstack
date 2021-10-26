@@ -66,7 +66,7 @@ func (s *Service) GetPortFromInstanceIP(instanceID string, ip string) ([]ports.P
 	return s.client.ListPort(portOpts)
 }
 
-func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string, portName string, net infrav1.Network, instanceSecurityGroups *[]string, tags []string) (*ports.Port, error) {
+func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string, portName string, net infrav1.Network, instanceSecurityGroups *[]string, instanceTags []string) (*ports.Port, error) {
 	existingPorts, err := s.client.ListPort(ports.ListOpts{
 		Name:      portName,
 		NetworkID: net.ID,
@@ -161,6 +161,10 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 		record.Warnf(eventObject, "FailedCreatePort", "Failed to create port %s: %v", portName, err)
 		return nil, err
 	}
+
+	var tags []string
+	tags = append(tags, instanceTags...)
+	tags = append(tags, portOpts.Tags...)
 	if len(tags) > 0 {
 		if err = s.replaceAllAttributesTags(eventObject, portResource, port.ID, tags); err != nil {
 			record.Warnf(eventObject, "FailedReplaceTags", "Failed to replace port tags %s: %v", portName, err)

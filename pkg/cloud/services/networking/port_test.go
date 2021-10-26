@@ -174,6 +174,7 @@ func Test_GetOrCreatePort(t *testing.T) {
 					VNICType:            "direct",
 					Profile:             map[string]string{"interface_name": "eno1"},
 					DisablePortSecurity: pointerToFalse,
+					Tags:                []string{"my-port-tag"},
 				},
 			},
 			nil,
@@ -223,6 +224,7 @@ func Test_GetOrCreatePort(t *testing.T) {
 					Return(&ports.Port{
 						ID: portID1,
 					}, nil)
+				m.ReplaceAllAttributesTags("ports", portID1, attributestags.ReplaceAllOpts{Tags: []string{"my-port-tag"}}).Return([]string{"my-port-tag"}, nil)
 			},
 			&ports.Port{
 				ID: portID1,
@@ -263,14 +265,14 @@ func Test_GetOrCreatePort(t *testing.T) {
 			false,
 		},
 		{
-			"creates port with tags passed to function",
+			"creates port with instance tags when port tags aren't specified",
 			"foo-port-1",
 			infrav1.Network{
 				ID:       netID,
 				PortOpts: &infrav1.PortOpts{},
 			},
 			nil,
-			[]string{"my-tag"},
+			[]string{"my-instance-tag"},
 			func(m *mock_networking.MockNetworkClientMockRecorder) {
 				// No ports found
 				m.
@@ -286,7 +288,38 @@ func Test_GetOrCreatePort(t *testing.T) {
 						AllowedAddressPairs: []ports.AddressPair{},
 					},
 				}).Return(&ports.Port{ID: portID1}, nil)
-				m.ReplaceAllAttributesTags("ports", portID1, attributestags.ReplaceAllOpts{Tags: []string{"my-tag"}}).Return([]string{"my-tag"}, nil)
+				m.ReplaceAllAttributesTags("ports", portID1, attributestags.ReplaceAllOpts{Tags: []string{"my-instance-tag"}}).Return([]string{"my-instance-tag"}, nil)
+			},
+			&ports.Port{ID: portID1},
+			false,
+		},
+		{
+			"creates port with port specific tags appending to instance tags",
+			"foo-port-1",
+			infrav1.Network{
+				ID:       netID,
+				PortOpts: &infrav1.PortOpts{Tags: []string{"my-port-tag"}},
+			},
+			nil,
+			[]string{"my-instance-tag"},
+			func(m *mock_networking.MockNetworkClientMockRecorder) {
+				// No ports found
+				m.
+					ListPort(ports.ListOpts{
+						Name:      "foo-port-1",
+						NetworkID: netID,
+					}).Return([]ports.Port{}, nil)
+				m.CreatePort(portsbinding.CreateOptsExt{
+					CreateOptsBuilder: ports.CreateOpts{
+						Name:                "foo-port-1",
+						Description:         "Created by cluster-api-provider-openstack cluster test-cluster",
+						NetworkID:           netID,
+						AllowedAddressPairs: []ports.AddressPair{},
+					},
+				}).Return(&ports.Port{ID: portID1}, nil)
+				m.
+					ReplaceAllAttributesTags("ports", portID1, attributestags.ReplaceAllOpts{Tags: []string{"my-instance-tag", "my-port-tag"}}).
+					Return([]string{"my-instance-tag", "my-port-tag"}, nil)
 			},
 			&ports.Port{ID: portID1},
 			false,
