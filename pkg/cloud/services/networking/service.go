@@ -57,15 +57,9 @@ func NewService(providerClient *gophercloud.ProviderClient, clientOpts *clientco
 		return nil, fmt.Errorf("failed to get project id: authInfo must be set")
 	}
 
-	projectID := clientOpts.AuthInfo.ProjectID
-	if projectID == "" && clientOpts.AuthInfo.ProjectName != "" {
-		projectID, err = provider.GetProjectID(providerClient, clientOpts.AuthInfo.ProjectName)
-		if err != nil {
-			return nil, fmt.Errorf("error retrieveing project id: %v", err)
-		}
-	}
-	if projectID == "" {
-		return nil, fmt.Errorf("failed to get project id")
+	projectID, err := provider.GetProjectID(providerClient, clientOpts)
+	if err != nil {
+		return nil, fmt.Errorf("error retrieveing project id: %v", err)
 	}
 
 	return &Service{

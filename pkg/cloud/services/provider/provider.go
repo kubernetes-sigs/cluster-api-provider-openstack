@@ -170,7 +170,16 @@ type projects struct {
 	Projects []project `json:"projects"`
 }
 
-func GetProjectID(client *gophercloud.ProviderClient, name string) (string, error) {
+func GetProjectID(client *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts) (string, error) {
+	if clientOpts.AuthInfo.ProjectID != "" {
+		return clientOpts.AuthInfo.ProjectID, nil
+	}
+
+	projectName := clientOpts.AuthInfo.ProjectName
+	if projectName == "" {
+		return "", fmt.Errorf("failed to get project id")
+	}
+
 	c, err := openstack.NewIdentityV3(client, gophercloud.EndpointOpts{})
 	if err != nil {
 		return "", fmt.Errorf("failed to create identity service client: %v", err)
@@ -185,9 +194,9 @@ func GetProjectID(client *gophercloud.ProviderClient, name string) (string, erro
 	defer resp.Body.Close()
 
 	for _, project := range jsonResp.Projects {
-		if project.Name == name {
+		if project.Name == projectName {
 			return project.ID, nil
 		}
 	}
-	return "", fmt.Errorf("project %s not found", name)
+	return "", fmt.Errorf("project %s not found", projectName)
 }
