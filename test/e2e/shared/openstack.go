@@ -33,6 +33,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/availabilityzones"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
@@ -49,6 +50,11 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/provider"
 )
+
+type ServerExtWithIP struct {
+	compute.ServerExt
+	ip string
+}
 
 // ensureSSHKeyPair ensures A SSH key is present under the name.
 func ensureSSHKeyPair(e2eCtx *E2EContext) {
@@ -154,9 +160,9 @@ func DumpOpenStackPorts(e2eCtx *E2EContext, filter ports.ListOpts) ([]ports.Port
 	return portsList, nil
 }
 
-// getOpenStackServers gets all OpenStack servers at once, to save on DescribeInstances
+// GetOpenStackServers gets all OpenStack servers at once, to save on DescribeInstances
 // calls.
-func getOpenStackServers(e2eCtx *E2EContext, openStackCluster *infrav1.OpenStackCluster) (map[string]server, error) {
+func GetOpenStackServers(e2eCtx *E2EContext, openStackCluster *infrav1.OpenStackCluster) (map[string]ServerExtWithIP, error) {
 	providerClient, clientOpts, err := getProviderClient(e2eCtx)
 	if err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
@@ -180,7 +186,7 @@ func getOpenStackServers(e2eCtx *E2EContext, openStackCluster *infrav1.OpenStack
 		return nil, fmt.Errorf("error extracting server: %v", err)
 	}
 
-	srvs := map[string]server{}
+	srvs := map[string]ServerExtWithIP{}
 	for i := range serverList {
 		srv := &serverList[i]
 		instanceStatus := compute.NewInstanceStatusFromServer(srv, logr.Discard())
@@ -195,10 +201,9 @@ func getOpenStackServers(e2eCtx *E2EContext, openStackCluster *infrav1.OpenStack
 			continue
 		}
 
-		srvs[srv.Name] = server{
-			name: srv.Name,
-			id:   srv.ID,
-			ip:   ip,
+		srvs[srv.Name] = ServerExtWithIP{
+			ServerExt: *srv,
+			ip:        ip,
 		}
 	}
 	return srvs, nil
@@ -324,6 +329,28 @@ func getOpenStackCloudYAML(cloudYAML string) []byte {
 	cloudYAMLContent, err := os.ReadFile(cloudYAML)
 	Expect(err).NotTo(HaveOccurred())
 	return cloudYAMLContent
+}
+
+func GetComputeAvailabilityZones(e2eCtx *E2EContext) []string {
+	providerClient, clientOpts, err := getProviderClient(e2eCtx)
+	Expect(err).NotTo(HaveOccurred())
+
+	computeClient, err := openstack.NewComputeV2(providerClient, gophercloud.EndpointOpts{Region: clientOpts.RegionName})
+	Expect(err).NotTo(HaveOccurred())
+
+	allPages, err := availabilityzones.List(computeClient).AllPages()
+	Expect(err).NotTo(HaveOccurred())
+	availabilityZoneList, err := availabilityzones.ExtractAvailabilityZones(allPages)
+	Expect(err).NotTo(HaveOccurred())
+
+	var azs []string
+	for _, az := range availabilityZoneList {
+		if az.ZoneState.Available {
+			azs = append(azs, az.ZoneName)
+		}
+	}
+
+	return azs
 }
 
 func CreateOpenStackNetwork(e2eCtx *E2EContext, name, cidr string) (*networks.Network, error) {

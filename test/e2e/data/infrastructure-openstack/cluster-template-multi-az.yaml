@@ -30,6 +30,7 @@ spec:
     kind: Secret
   controlPlaneAvailabilityZones:
   - ${OPENSTACK_FAILURE_DOMAIN}
+  - ${OPENSTACK_FAILURE_DOMAIN_ALT}
   managedAPIServerLoadBalancer: true
   managedSecurityGroups: true
   nodeCidr: 10.6.0.0/24
@@ -132,7 +133,7 @@ spec:
     spec:
       clusterName: "${CLUSTER_NAME}"
       version: "${KUBERNETES_VERSION}"
-      failureDomain: ${OPENSTACK_FAILURE_DOMAIN}
+      failureDomain: ${OPENSTACK_FAILURE_DOMAIN_ALT}
       bootstrap:
         configRef:
           name: "${CLUSTER_NAME}-md-0"

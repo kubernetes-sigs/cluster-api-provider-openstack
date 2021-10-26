@@ -7,6 +7,13 @@
     - [Building and upload your own capi-openstack controller image](#building-and-upload-your-own-capi-openstack-controller-image)
     - [Using your own capi-openstack controller image](#using-your-own-capi-openstack-controller-image)
   - [Developing with Tilt](#developing-with-tilt)
+  - [Running E2E tests locally](#running-e2e-tests-locally)
+    - [Support for clouds using SSL](#support-for-clouds-using-ssl)
+    - [Support for clouds with multiple external networks](#support-for-clouds-with-multiple-external-networks)
+    - [OpenStack prerequisites](#openstack-prerequisites)
+  - [Running E2E tests using rootless podman](#running-e2e-tests-using-rootless-podman)
+    - [Host configuration](#host-configuration)
+    - [Running podman system service to emulate docker daemon](#running-podman-system-service-to-emulate-docker-daemon)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 

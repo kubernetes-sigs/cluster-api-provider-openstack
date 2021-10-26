@@ -3,9 +3,8 @@
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
 - [Pre-condition](#pre-condition)
-- [Install openstack providers into target cluster](#install-openstack-providers-into-target-cluster)
-- [Move objects in `bootstrap` cluster into `target` cluster.](#move-objects-in-bootstrap-cluster-into-target-cluster)
-- [Create secret in `target` cluster](#create-secret-in-target-cluster)
+- [Install OpenStack Cluster API provider into target cluster](#install-openstack-cluster-api-provider-into-target-cluster)
+- [Move objects from `bootstrap` cluster into `target` cluster.](#move-objects-from-bootstrap-cluster-into-target-cluster)
 - [Check cluster status](#check-cluster-status)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->

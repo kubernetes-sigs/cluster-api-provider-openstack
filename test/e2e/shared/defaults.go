@@ -38,12 +38,14 @@ const (
 	OpenStackCloudYAMLFile      = "OPENSTACK_CLOUD_YAML_FILE"
 	OpenStackCloud              = "OPENSTACK_CLOUD"
 	OpenStackFailureDomain      = "OPENSTACK_FAILURE_DOMAIN"
+	OpenStackFailureDomainAlt   = "OPENSTACK_FAILURE_DOMAIN_ALT"
 	OpenStackImageName          = "OPENSTACK_IMAGE_NAME"
 	OpenStackNodeMachineFlavor  = "OPENSTACK_NODE_MACHINE_FLAVOR"
 	FlavorDefault               = "ci-artifacts"
 	FlavorWithoutLB             = "without-lb-ci-artifacts"
 	FlavorExternalCloudProvider = "external-cloud-provider-ci-artifacts"
 	FlavorMultiNetwork          = "multi-network-ci-artifacts"
+	FlavorMultiAZ               = "multi-az-ci-artifacts"
 )
 
 // DefaultScheme returns the default scheme to use for testing.

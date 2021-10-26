@@ -34,12 +34,6 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-type server struct {
-	name string
-	id   string
-	ip   string
-}
-
 type command struct {
 	title string
 	cmd   string
