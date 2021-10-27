@@ -195,7 +195,8 @@ func deleteBastion(log logr.Logger, osProviderClient *gophercloud.ProviderClient
 		return err
 	}
 
-	instanceStatus, err := computeService.GetInstanceStatusByName(openStackCluster, fmt.Sprintf("%s-bastion", cluster.Name))
+	instanceName := fmt.Sprintf("%s-bastion", cluster.Name)
+	instanceStatus, err := computeService.GetInstanceStatusByName(openStackCluster, instanceName)
 	if err != nil {
 		return err
 	}
@@ -215,11 +216,12 @@ func deleteBastion(log logr.Logger, osProviderClient *gophercloud.ProviderClient
 				}
 			}
 		}
+	}
 
-		if err = computeService.DeleteInstance(openStackCluster, instanceStatus); err != nil {
-			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete bastion: %v", err))
-			return errors.Errorf("failed to delete bastion: %v", err)
-		}
+	machineSpec := &openStackCluster.Spec.Bastion.Instance
+	if err = computeService.DeleteInstance(openStackCluster, machineSpec, instanceName, instanceStatus); err != nil {
+		handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete bastion: %v", err))
+		return errors.Errorf("failed to delete bastion: %v", err)
 	}
 
 	openStackCluster.Status.Bastion = nil

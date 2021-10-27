@@ -22,6 +22,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/bootfromvolume"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/schedulerhints"
@@ -259,7 +260,40 @@ func (s *Service) createInstance(eventObject runtime.Object, clusterName string,
 		AccessIPv4:       accessIPv4,
 	}
 
-	serverCreateOpts = applyRootVolume(serverCreateOpts, instanceSpec.RootVolume)
+	volume, err := s.getOrCreateRootVolume(eventObject, instanceSpec, imageID)
+	if err != nil {
+		return nil, fmt.Errorf("error in get or create root volume: %w", err)
+	}
+
+	instanceCreateTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT", timeoutInstanceCreate)
+	instanceCreateTimeout *= time.Minute
+
+	// Wait for volume to become available
+	if volume != nil {
+		err = util.PollImmediate(retryIntervalInstanceStatus, instanceCreateTimeout, func() (bool, error) {
+			createdVolume, err := s.computeService.GetVolume(volume.ID)
+			if err != nil {
+				if capoerrors.IsRetryable(err) {
+					return false, nil
+				}
+				return false, err
+			}
+
+			switch createdVolume.Status {
+			case "available":
+				return true, nil
+			case "error":
+				return false, fmt.Errorf("volume %s is in error state", volume.ID)
+			default:
+				return false, nil
+			}
+		})
+		if err != nil {
+			return nil, fmt.Errorf("volume %s did not become available: %w", volume.ID, err)
+		}
+	}
+
+	serverCreateOpts = applyRootVolume(serverCreateOpts, volume)
 
 	serverCreateOpts = applyServerGroupID(serverCreateOpts, instanceSpec.ServerGroupID)
 
@@ -271,8 +305,6 @@ func (s *Service) createInstance(eventObject runtime.Object, clusterName string,
 		return nil, fmt.Errorf("error creating Openstack instance: %v", err)
 	}
 
-	instanceCreateTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT", timeoutInstanceCreate)
-	instanceCreateTimeout *= time.Minute
 	var createdInstance *InstanceStatus
 	err = util.PollImmediate(retryInterval, instanceCreateTimeout, func() (bool, error) {
 		createdInstance, err = s.GetInstanceStatus(server.ID)
@@ -304,24 +336,103 @@ func getPortName(instanceName string, opts *infrav1.PortOpts, netIndex int) stri
 	return fmt.Sprintf("%s-%d", instanceName, netIndex)
 }
 
-// applyRootVolume sets a root volume if the root volume Size is not 0.
-func applyRootVolume(opts servers.CreateOptsBuilder, rootVolume *infrav1.RootVolume) servers.CreateOptsBuilder {
-	if rootVolume != nil && rootVolume.Size != 0 {
-		block := bootfromvolume.BlockDevice{
-			SourceType:          bootfromvolume.SourceType(rootVolume.SourceType),
-			BootIndex:           0,
-			UUID:                rootVolume.SourceUUID,
-			DeleteOnTermination: true,
-			DestinationType:     bootfromvolume.DestinationVolume,
-			VolumeSize:          rootVolume.Size,
-			DeviceType:          rootVolume.DeviceType,
-		}
-		return bootfromvolume.CreateOptsExt{
-			CreateOptsBuilder: opts,
-			BlockDevice:       []bootfromvolume.BlockDevice{block},
-		}
+func rootVolumeName(instanceName string) string {
+	return fmt.Sprintf("%s-root", instanceName)
+}
+
+func hasRootVolume(rootVolume *infrav1.RootVolume) bool {
+	return rootVolume != nil && rootVolume.Size > 0
+}
+
+func (s *Service) getVolumeByName(name string) (*volumes.Volume, error) {
+	listOpts := volumes.ListOpts{
+		AllTenants: false,
+		Name:       name,
+		TenantID:   s.projectID,
 	}
-	return opts
+	volumeList, err := s.computeService.ListVolumes(listOpts)
+	if err != nil {
+		return nil, fmt.Errorf("error listing volumes: %w", err)
+	}
+	if len(volumeList) > 1 {
+		return nil, fmt.Errorf("expected to find a single volume called %s; found %d", name, len(volumeList))
+	}
+	if len(volumeList) == 0 {
+		return nil, nil
+	}
+	return &volumeList[0], nil
+}
+
+func (s *Service) getOrCreateRootVolume(eventObject runtime.Object, instanceSpec *InstanceSpec, imageID string) (*volumes.Volume, error) {
+	rootVolume := instanceSpec.RootVolume
+	if !hasRootVolume(rootVolume) {
+		return nil, nil
+	}
+
+	// TODO: Remove SourceType and DeviceType from the API because we don't support customising them
+	if rootVolume.SourceType != "" && rootVolume.SourceType != string(bootfromvolume.SourceImage) {
+		return nil, fmt.Errorf("only volume source type '%s' is supported; got: %s", bootfromvolume.SourceImage, rootVolume.SourceType)
+	}
+
+	if rootVolume.DeviceType != "" && rootVolume.DeviceType != "disk" {
+		return nil, fmt.Errorf("only volume device type 'disk' is supported; got: %s", rootVolume.DeviceType)
+	}
+
+	name := rootVolumeName(instanceSpec.Name)
+	size := rootVolume.Size
+	if rootVolume.SourceUUID != "" {
+		imageID = rootVolume.SourceUUID
+	}
+
+	volume, err := s.getVolumeByName(name)
+	if err != nil {
+		return nil, err
+	}
+	if volume != nil {
+		if volume.Size != size {
+			return nil, fmt.Errorf("exected to find volume %s with size %d; found size %d", name, size, volume.Size)
+		}
+
+		s.logger.Info("using existing root volume %s", name)
+		return volume, nil
+	}
+
+	availabilityZone := instanceSpec.FailureDomain
+
+	createOpts := volumes.CreateOpts{
+		Size:             rootVolume.Size,
+		Description:      fmt.Sprintf("Root volume for %s", instanceSpec.Name),
+		Name:             rootVolumeName(instanceSpec.Name),
+		ImageID:          imageID,
+		Multiattach:      false,
+		AvailabilityZone: availabilityZone,
+	}
+	volume, err = s.computeService.CreateVolume(createOpts)
+	if err != nil {
+		record.Eventf(eventObject, "FailedCreateVolume", "Failed to create root volume; size=%d imageID=%s err=%v", size, imageID, err)
+		return nil, err
+	}
+	record.Eventf(eventObject, "SuccessfulCreateVolume", "Created root volume; id=%s", volume.ID)
+	return volume, err
+}
+
+// applyRootVolume sets a root volume if the root volume Size is not 0.
+func applyRootVolume(opts servers.CreateOptsBuilder, volume *volumes.Volume) servers.CreateOptsBuilder {
+	if volume == nil {
+		return opts
+	}
+
+	block := bootfromvolume.BlockDevice{
+		SourceType:          bootfromvolume.SourceVolume,
+		BootIndex:           0,
+		UUID:                volume.ID,
+		DeleteOnTermination: true,
+		DestinationType:     bootfromvolume.DestinationVolume,
+	}
+	return bootfromvolume.CreateOptsExt{
+		CreateOptsBuilder: opts,
+		BlockDevice:       []bootfromvolume.BlockDevice{block},
+	}
 }
 
 // applyServerGroupID adds a scheduler hint to the CreateOptsBuilder, if the
@@ -462,8 +573,45 @@ func (s *Service) GetManagementPort(openStackCluster *infrav1.OpenStackCluster, 
 	return &allPorts[0], nil
 }
 
-func (s *Service) DeleteInstance(eventObject runtime.Object, instance *InstanceStatus) error {
-	instanceInterfaces, err := s.computeService.ListAttachedInterfaces(instance.ID())
+func (s *Service) DeleteInstance(eventObject runtime.Object, openStackMachineSpec *infrav1.OpenStackMachineSpec, instanceName string, instanceStatus *InstanceStatus) error {
+	if instanceStatus == nil {
+		/*
+			We create a boot-from-volume instance in 2 steps:
+			1. Create the volume
+			2. Create the instance with the created root volume and set DeleteOnTermination
+
+			This introduces a new failure mode which has implications for safely deleting instances: we
+			might create the volume, but the instance create fails. This would leave us with a dangling
+			volume with no instance.
+
+			To handle this safely, we ensure that we never remove a machine finalizer until all resources
+			associated with the instance, including a root volume, have been deleted. To achieve this:
+			* We always call DeleteInstance when reconciling a delete, regardless of
+			  whether the instance exists or not.
+			* If the instance was already deleted we check that the volume is also gone.
+
+			Note that we don't need to separately delete the root volume when deleting the instance because
+			DeleteOnTermination will ensure it is deleted in that case.
+		*/
+		rootVolume := openStackMachineSpec.RootVolume
+		if hasRootVolume(rootVolume) {
+			name := rootVolumeName(instanceName)
+			volume, err := s.getVolumeByName(name)
+			if err != nil {
+				return err
+			}
+			if volume == nil {
+				return nil
+			}
+
+			s.logger.Info("deleting dangling root volume %s(%s)", volume.Name, volume.ID)
+			return s.computeService.DeleteVolume(volume.ID, volumes.DeleteOpts{})
+		}
+
+		return nil
+	}
+
+	instanceInterfaces, err := s.computeService.ListAttachedInterfaces(instanceStatus.ID())
 	if err != nil {
 		return err
 	}
@@ -475,7 +623,7 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instance *InstanceS
 
 	// get and delete trunks
 	for _, port := range instanceInterfaces {
-		if err = s.deleteAttachInterface(eventObject, instance.InstanceIdentifier(), port.PortID); err != nil {
+		if err = s.deleteAttachInterface(eventObject, instanceStatus.InstanceIdentifier(), port.PortID); err != nil {
 			return err
 		}
 
@@ -490,13 +638,13 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instance *InstanceS
 	}
 
 	// delete port of error instance
-	if instance.State() == infrav1.InstanceStateError {
-		if err := s.networkingService.GarbageCollectErrorInstancesPort(eventObject, instance.Name()); err != nil {
+	if instanceStatus.State() == infrav1.InstanceStateError {
+		if err := s.networkingService.GarbageCollectErrorInstancesPort(eventObject, instanceStatus.Name()); err != nil {
 			return err
 		}
 	}
 
-	return s.deleteInstance(eventObject, instance.InstanceIdentifier())
+	return s.deleteInstance(eventObject, instanceStatus.InstanceIdentifier())
 }
 
 func (s *Service) deletePorts(eventObject runtime.Object, nets []servers.Network) error {
