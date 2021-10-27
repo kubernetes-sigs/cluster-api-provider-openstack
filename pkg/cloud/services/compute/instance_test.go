@@ -17,10 +17,12 @@ limitations under the License.
 package compute
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/go-logr/logr"
 	"github.com/golang/mock/gomock"
+	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	. "github.com/onsi/gomega"
@@ -363,6 +365,89 @@ func TestService_getServerNetworks(t *testing.T) {
 				g.Expect(err).NotTo(HaveOccurred())
 			}
 			g.Expect(got).To(Equal(tt.want))
+		})
+	}
+}
+
+func TestService_getImageID(t *testing.T) {
+	const imageIDA = "ce96e584-7ebc-46d6-9e55-987d72e3806c"
+	const imageIDB = "8f536889-5198-42d7-8314-cb78f4f4755c"
+
+	tests := []struct {
+		testName  string
+		imageName string
+		expect    func(m *MockClientMockRecorder)
+		want      string
+		wantErr   bool
+	}{
+		{
+			testName:  "Return image ID",
+			imageName: "test-image",
+			expect: func(m *MockClientMockRecorder) {
+				m.ListImages(images.ListOpts{Name: "test-image"}).Return(
+					[]images.Image{{ID: imageIDA, Name: "test-image"}},
+					nil)
+			},
+			want:    imageIDA,
+			wantErr: false,
+		},
+		{
+			testName:  "Return no results",
+			imageName: "test-image",
+			expect: func(m *MockClientMockRecorder) {
+				m.ListImages(images.ListOpts{Name: "test-image"}).Return(
+					[]images.Image{},
+					nil)
+			},
+			want:    "",
+			wantErr: true,
+		},
+		{
+			testName:  "Return multiple results",
+			imageName: "test-image",
+			expect: func(m *MockClientMockRecorder) {
+				m.ListImages(images.ListOpts{Name: "test-image"}).Return(
+					[]images.Image{
+						{ID: imageIDA, Name: "test-image"},
+						{ID: imageIDB, Name: "test-image"},
+					}, nil)
+			},
+			want:    "",
+			wantErr: true,
+		},
+		{
+			testName:  "OpenStack returns error",
+			imageName: "test-image",
+			expect: func(m *MockClientMockRecorder) {
+				m.ListImages(images.ListOpts{Name: "test-image"}).Return(
+					nil,
+					fmt.Errorf("test error"))
+			},
+			want:    "",
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.testName, func(t *testing.T) {
+			mockCtrl := gomock.NewController(t)
+			mockComputeClient := NewMockClient(mockCtrl)
+			tt.expect(mockComputeClient.EXPECT())
+
+			s := Service{
+				projectID:         "",
+				computeService:    mockComputeClient,
+				networkingService: &networking.Service{},
+				logger:            logr.Discard(),
+			}
+
+			got, err := s.getImageID(tt.imageName)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Service.getImageID() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("Service.getImageID() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }
