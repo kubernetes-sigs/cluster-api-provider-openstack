@@ -22,7 +22,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/bootfromvolume"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/schedulerhints"
@@ -31,13 +30,11 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
-	"github.com/gophercloud/utils/openstack/compute/v2/flavors"
 	"k8s.io/apimachinery/pkg/runtime"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 )
@@ -218,7 +215,7 @@ func (s *Service) createInstance(eventObject runtime.Object, clusterName string,
 		return nil, fmt.Errorf("create new server: %v", err)
 	}
 
-	flavorID, err := flavors.IDFromName(s.computeClient, instanceSpec.Flavor)
+	flavorID, err := s.computeService.GetFlavorIDFromName(instanceSpec.Flavor)
 	if err != nil {
 		return nil, fmt.Errorf("error getting flavor id from flavor name %s: %v", instanceSpec.Flavor, err)
 	}
@@ -241,20 +238,18 @@ func (s *Service) createInstance(eventObject runtime.Object, clusterName string,
 
 	serverCreateOpts = applyServerGroupID(serverCreateOpts, instanceSpec.ServerGroupID)
 
-	mc := metrics.NewMetricPrometheusContext("server", "create")
-
-	server, err := servers.Create(s.computeClient, keypairs.CreateOptsExt{
+	server, err := s.computeService.CreateServer(keypairs.CreateOptsExt{
 		CreateOptsBuilder: serverCreateOpts,
 		KeyName:           instanceSpec.SSHKeyName,
-	}).Extract()
-
-	if mc.ObserveRequest(err) != nil {
+	})
+	if err != nil {
 		serverErr := err
 		if err = s.deletePorts(eventObject, portList); err != nil {
 			return nil, fmt.Errorf("error creating OpenStack instance: %v, error deleting ports: %v", serverErr, err)
 		}
 		return nil, fmt.Errorf("error creating Openstack instance: %v", serverErr)
 	}
+
 	instanceCreateTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT", timeoutInstanceCreate)
 	instanceCreateTimeout *= time.Minute
 	var createdInstance *InstanceStatus
@@ -404,14 +399,7 @@ func (s *Service) getImageID(imageName string) (string, error) {
 	opts := images.ListOpts{
 		Name: imageName,
 	}
-
-	mc := metrics.NewMetricPrometheusContext("image", "list")
-	pages, err := images.List(s.imagesClient, opts).AllPages()
-	if mc.ObserveRequest(err) != nil {
-		return "", err
-	}
-
-	allImages, err := images.ExtractImages(pages)
+	allImages, err := s.computeService.ListImages(opts)
 	if err != nil {
 		return "", err
 	}
@@ -444,13 +432,7 @@ func (s *Service) GetManagementPort(openStackCluster *infrav1.OpenStackCluster, 
 }
 
 func (s *Service) DeleteInstance(eventObject runtime.Object, instance *InstanceStatus) error {
-	mc := metrics.NewMetricPrometheusContext("server_os_interface", "list")
-	instanceIdentifier := instance.InstanceIdentifier()
-	allInterfaces, err := attachinterfaces.List(s.computeClient, instanceIdentifier.ID).AllPages()
-	if mc.ObserveRequest(err) != nil {
-		return err
-	}
-	instanceInterfaces, err := attachinterfaces.ExtractInterfaces(allInterfaces)
+	instanceInterfaces, err := s.computeService.ListAttachedInterfaces(instance.ID())
 	if err != nil {
 		return err
 	}
@@ -459,9 +441,10 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instance *InstanceS
 	if err != nil {
 		return fmt.Errorf("obtaining network extensions: %v", err)
 	}
+
 	// get and delete trunks
 	for _, port := range instanceInterfaces {
-		if err = s.deleteAttachInterface(eventObject, instanceIdentifier, port.PortID); err != nil {
+		if err = s.deleteAttachInterface(eventObject, instance.InstanceIdentifier(), port.PortID); err != nil {
 			return err
 		}
 
@@ -482,7 +465,7 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instance *InstanceS
 		}
 	}
 
-	return s.deleteInstance(eventObject, instanceIdentifier)
+	return s.deleteInstance(eventObject, instance.InstanceIdentifier())
 }
 
 func (s *Service) deletePorts(eventObject runtime.Object, nets []servers.Network) error {
@@ -495,9 +478,8 @@ func (s *Service) deletePorts(eventObject runtime.Object, nets []servers.Network
 }
 
 func (s *Service) deleteAttachInterface(eventObject runtime.Object, instance *InstanceIdentifier, portID string) error {
-	mc := metrics.NewMetricPrometheusContext("server_os_interface", "delete")
-	err := attachinterfaces.Delete(s.computeClient, instance.ID, portID).ExtractErr()
-	if mc.ObserveRequestIgnoreNotFoundorConflict(err) != nil {
+	err := s.computeService.DeleteAttachedInterface(instance.ID, portID)
+	if err != nil {
 		if capoerrors.IsNotFound(err) {
 			record.Eventf(eventObject, "SuccessfulDeleteAttachInterface", "Attach interface did not exist: instance %s, port %s", instance.ID, portID)
 			return nil
@@ -516,9 +498,8 @@ func (s *Service) deleteAttachInterface(eventObject runtime.Object, instance *In
 }
 
 func (s *Service) deleteInstance(eventObject runtime.Object, instance *InstanceIdentifier) error {
-	mc := metrics.NewMetricPrometheusContext("server", "delete")
-	err := servers.Delete(s.computeClient, instance.ID).ExtractErr()
-	if mc.ObserveRequestIgnoreNotFound(err) != nil {
+	err := s.computeService.DeleteServer(instance.ID)
+	if err != nil {
 		if capoerrors.IsNotFound(err) {
 			record.Eventf(eventObject, "SuccessfulDeleteServer", "Server %s with id %s did not exist", instance.Name, instance.ID)
 			return nil
@@ -551,17 +532,15 @@ func (s *Service) GetInstanceStatus(resourceID string) (instance *InstanceStatus
 		return nil, fmt.Errorf("resourceId should be specified to get detail")
 	}
 
-	mc := metrics.NewMetricPrometheusContext("server", "get")
-	var server ServerExt
-	err = servers.Get(s.computeClient, resourceID).ExtractInto(&server)
-	if mc.ObserveRequestIgnoreNotFound(err) != nil {
+	server, err := s.computeService.GetServer(resourceID)
+	if err != nil {
 		if capoerrors.IsNotFound(err) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("get server %q detail failed: %v", resourceID, err)
 	}
 
-	return &InstanceStatus{&server, s.logger}, nil
+	return &InstanceStatus{server, s.logger}, nil
 }
 
 func (s *Service) GetInstanceStatusByName(eventObject runtime.Object, name string) (instance *InstanceStatus, err error) {
@@ -577,15 +556,9 @@ func (s *Service) GetInstanceStatusByName(eventObject runtime.Object, name strin
 		listOpts = servers.ListOpts{}
 	}
 
-	mc := metrics.NewMetricPrometheusContext("server", "list")
-	allPages, err := servers.List(s.computeClient, listOpts).AllPages()
-	if mc.ObserveRequest(err) != nil {
-		return nil, fmt.Errorf("get server list: %v", err)
-	}
-	var serverList []ServerExt
-	err = servers.ExtractServersInto(allPages, &serverList)
+	serverList, err := s.computeService.ListServers(listOpts)
 	if err != nil {
-		return nil, fmt.Errorf("extract server list: %v", err)
+		return nil, fmt.Errorf("get server list: %v", err)
 	}
 
 	if len(serverList) > 1 {

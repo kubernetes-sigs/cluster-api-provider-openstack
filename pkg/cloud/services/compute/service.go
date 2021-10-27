@@ -30,8 +30,7 @@ import (
 
 type Service struct {
 	projectID         string
-	computeClient     *gophercloud.ServiceClient
-	imagesClient      *gophercloud.ServiceClient
+	computeService    Client
 	networkingService *networking.Service
 	logger            logr.Logger
 }
@@ -64,8 +63,10 @@ func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.Cli
 		return nil, fmt.Errorf("failed to create image service client: %v", err)
 	}
 
+	computeService := serviceClient{computeClient, imagesClient}
+
 	if clientOpts.AuthInfo == nil {
-		return nil, fmt.Errorf("failed to get project id: authInfo must be set")
+		return nil, fmt.Errorf("authInfo must be set")
 	}
 
 	projectID, err := provider.GetProjectID(client, clientOpts)
@@ -80,9 +81,8 @@ func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.Cli
 
 	return &Service{
 		projectID:         projectID,
-		computeClient:     computeClient,
+		computeService:    computeService,
 		networkingService: networkingService,
-		imagesClient:      imagesClient,
 		logger:            logger,
 	}, nil
 }
