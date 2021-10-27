@@ -48,7 +48,7 @@ After generating `infrastructure-components.yaml`, replace the `us.gcr.io/k8s-ar
 
 ## Developing with Tilt
 
-We have support for using [Tilt](https://tilt.dev/) for rapid iterative development. Please visit the [Cluster API documentation on Tilt](https://master.cluster-api.sigs.k8s.io/developer/tilt.html) for information on how to set up your development environment. 
+We have support for using [Tilt](https://tilt.dev/) for rapid iterative development. Please visit the [Cluster API documentation on Tilt](https://cluster-api.sigs.k8s.io/developer/tilt.html) for information on how to set up your development environment. 
 
 ## Running E2E tests locally
 
@@ -104,7 +104,7 @@ $ openstack network list --external
 
 ### OpenStack prerequisites
 
-The file [`test/e2e/data/e2e_conf.yaml`](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/master/test/e2e/data/e2e_conf.yaml) and the test templates under [`test/e2e/data/infrastructure-openstack`](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/tree/master/test/e2e/data/infrastructure-openstack) reference several OpenStack resources which must exist before running the test:
+The file [`test/e2e/data/e2e_conf.yaml`](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/test/e2e/data/e2e_conf.yaml) and the test templates under [`test/e2e/data/infrastructure-openstack`](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/tree/main/test/e2e/data/infrastructure-openstack) reference several OpenStack resources which must exist before running the test:
 
 * Glance images
   * `cirros-0.5.1-x86_64-disk`
