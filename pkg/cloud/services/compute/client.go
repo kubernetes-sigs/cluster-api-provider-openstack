@@ -27,6 +27,9 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
 )
 
+//go:generate mockgen -package=compute -self_package sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute -destination=client_mock.go sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute Client
+//go:generate /usr/bin/env bash -c "cat ../../../../hack/boilerplate/boilerplate.generatego.txt client_mock.go > _client_mock.go && mv _client_mock.go client_mock.go"
+
 // ServerExt is the base gophercloud Server with extensions used by InstanceStatus.
 type ServerExt struct {
 	servers.Server
