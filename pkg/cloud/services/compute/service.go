@@ -29,10 +29,8 @@ import (
 )
 
 type Service struct {
-	provider          *gophercloud.ProviderClient
 	projectID         string
 	computeClient     *gophercloud.ServiceClient
-	identityClient    *gophercloud.ServiceClient
 	imagesClient      *gophercloud.ServiceClient
 	networkingService *networking.Service
 	logger            logr.Logger
@@ -51,13 +49,6 @@ const NovaMinimumMicroversion = "2.53"
 
 // NewService returns an instance of the compute service.
 func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, logger logr.Logger) (*Service, error) {
-	identityClient, err := openstack.NewIdentityV3(client, gophercloud.EndpointOpts{
-		Region: "",
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to create identity service client: %v", err)
-	}
-
 	computeClient, err := openstack.NewComputeV2(client, gophercloud.EndpointOpts{
 		Region: clientOpts.RegionName,
 	})
@@ -88,9 +79,7 @@ func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.Cli
 	}
 
 	return &Service{
-		provider:          client,
 		projectID:         projectID,
-		identityClient:    identityClient,
 		computeClient:     computeClient,
 		networkingService: networkingService,
 		imagesClient:      imagesClient,
