@@ -71,11 +71,11 @@ providers:
 - name: openstack
   type: InfrastructureProvider
   versions:
-  - name: v0.5.0
+  - name: v1.0.0
     value: ../../../config/default
     contract: v1beta1
     files:
-    - sourcePath: "../data/shared/v1alpha4_provider/metadata.yaml"
+    - sourcePath: "../data/shared/v1beta1_provider/metadata.yaml"
     - sourcePath: "./infrastructure-openstack/cluster-template.yaml"
     - sourcePath: "./infrastructure-openstack/cluster-template-external-cloud-provider.yaml"
     - sourcePath: "./infrastructure-openstack/cluster-template-without-lb.yaml"

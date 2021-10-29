@@ -37,8 +37,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
-	infrav1old "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
+	infrav1alpha3 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
+	infrav1alpha4 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/controllers"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
@@ -72,7 +73,8 @@ func init() {
 	_ = clientgoscheme.AddToScheme(scheme)
 	_ = clusterv1.AddToScheme(scheme)
 	_ = infrav1.AddToScheme(scheme)
-	_ = infrav1old.AddToScheme(scheme)
+	_ = infrav1alpha3.AddToScheme(scheme)
+	_ = infrav1alpha4.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 
 	metrics.RegisterAPIPrometheusMetrics()
@@ -241,6 +243,36 @@ func setupWebhooks(mgr ctrl.Manager) {
 		os.Exit(1)
 	}
 	if err := (&infrav1.OpenStackClusterList{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackClusterList")
+		os.Exit(1)
+	}
+
+	// infrav1alpha4
+	if err := (&infrav1alpha4.OpenStackMachineTemplate{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackMachineTemplate")
+		os.Exit(1)
+	}
+	if err := (&infrav1alpha4.OpenStackMachineTemplateList{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackMachineTemplateList")
+		os.Exit(1)
+	}
+	if err := (&infrav1alpha4.OpenStackCluster{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackCluster")
+		os.Exit(1)
+	}
+	if err := (&infrav1alpha4.OpenStackClusterTemplate{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackClusterTemplate")
+		os.Exit(1)
+	}
+	if err := (&infrav1alpha4.OpenStackMachine{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackMachine")
+		os.Exit(1)
+	}
+	if err := (&infrav1alpha4.OpenStackMachineList{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackMachineList")
+		os.Exit(1)
+	}
+	if err := (&infrav1alpha4.OpenStackClusterList{}).SetupWebhookWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackClusterList")
 		os.Exit(1)
 	}

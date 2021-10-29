@@ -19,7 +19,7 @@ package compute
 import (
 	"fmt"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
 func (s *Service) CreateBastion(openStackCluster *infrav1.OpenStackCluster, clusterName string) (*InstanceStatus, error) {
