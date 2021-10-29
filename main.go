@@ -276,7 +276,6 @@ func setupWebhooks(mgr ctrl.Manager) {
 		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackClusterList")
 		os.Exit(1)
 	}
-
 }
 
 func concurrency(c int) controller.Options {
