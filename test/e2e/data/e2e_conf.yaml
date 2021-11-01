@@ -36,7 +36,7 @@ providers:
     value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/v0.4.3/core-components.yaml"
     type: url
     files:
-    - sourcePath: "../data/shared/v1alpha5/metadata.yaml"
+    - sourcePath: "../data/shared/v1alpha4/metadata.yaml"
     replacements:
     - old: "imagePullPolicy: Always"
       new: "imagePullPolicy: IfNotPresent"
@@ -49,7 +49,7 @@ providers:
     value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/v0.4.3/bootstrap-components.yaml"
     type: url
     files:
-    - sourcePath: "../data/shared/v1alpha5/metadata.yaml"
+    - sourcePath: "../data/shared/v1alpha4/metadata.yaml"
     replacements:
     - old: "imagePullPolicy: Always"
       new: "imagePullPolicy: IfNotPresent"
@@ -62,7 +62,7 @@ providers:
     value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/v0.4.3/control-plane-components.yaml"
     type: url
     files:
-    - sourcePath: "../data/shared/v1alpha5/metadata.yaml"
+    - sourcePath: "../data/shared/v1alpha4/metadata.yaml"
     replacements:
     - old: "imagePullPolicy: Always"
       new: "imagePullPolicy: IfNotPresent"
