@@ -196,7 +196,13 @@ var _ = Describe("e2e tests", func() {
 	})
 
 	Describe("Workload cluster (multiple attached networks)", func() {
-		var extraNet1, extraNet2 *networks.Network
+		var (
+			clusterName   string
+			configCluster clusterctl.ConfigClusterInput
+			md            []*clusterv1.MachineDeployment
+
+			extraNet1, extraNet2 *networks.Network
+		)
 
 		BeforeEach(func() {
 			var err error
@@ -225,17 +231,17 @@ var _ = Describe("e2e tests", func() {
 
 			os.Setenv("CLUSTER_EXTRA_NET_1", extraNet1.ID)
 			os.Setenv("CLUSTER_EXTRA_NET_2", extraNet2.ID)
-		})
 
-		It("should attach all machines to multiple networks", func() {
 			shared.Byf("Creating a cluster")
-			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
-			configCluster := defaultConfigCluster(clusterName, namespace.Name)
+			clusterName = fmt.Sprintf("cluster-%s", namespace.Name)
+			configCluster = defaultConfigCluster(clusterName, namespace.Name)
 			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(1)
 			configCluster.WorkerMachineCount = pointer.Int64Ptr(1)
 			configCluster.Flavor = shared.FlavorMultiNetwork
-			md := createCluster(ctx, configCluster)
+			md = createCluster(ctx, configCluster)
+		})
 
+		It("should attach all machines to multiple networks", func() {
 			workerMachines := framework.GetMachinesByMachineDeployments(ctx, framework.GetMachinesByMachineDeploymentsInput{
 				Lister:            e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
 				ClusterName:       clusterName,
@@ -276,21 +282,17 @@ var _ = Describe("e2e tests", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(ports).To(HaveLen(len(expectedPorts)))
 
-				var seen []string
+				var seenNetworks []string
 				var seenAddresses clusterv1.MachineAddresses
 				for j := range ports {
 					port := &ports[j]
 
-					// Check that the port has an expected network ID
-					expectedDescription, ok := expectedPorts[port.NetworkID]
-					Expect(ok).To(BeTrue())
+					// Check that the port has an expected network ID and description
+					Expect(expectedPorts).To(HaveKeyWithValue(port.NetworkID, port.Description))
 
-					// Check that the port has the expected description for that network ID
-					Expect(port.Description).To(Equal(expectedDescription))
-
-					// Check that we don't have duplicate networks
-					Expect(seen).ToNot(ContainElement(port.NetworkID))
-					seen = append(seen, port.NetworkID)
+					// We don't expect to see another port with this network on this machine
+					Expect(seenNetworks).ToNot(ContainElement(port.NetworkID))
+					seenNetworks = append(seenNetworks, port.NetworkID)
 
 					for k := range port.FixedIPs {
 						seenAddresses = append(seenAddresses, clusterv1.MachineAddress{
