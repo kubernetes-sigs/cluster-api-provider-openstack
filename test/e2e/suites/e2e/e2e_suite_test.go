@@ -20,6 +20,7 @@ limitations under the License.
 package e2e
 
 import (
+	"os"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
@@ -34,6 +35,12 @@ var e2eCtx *shared.E2EContext
 func init() {
 	e2eCtx = shared.NewE2EContext()
 	shared.CreateDefaultFlags(e2eCtx)
+
+	// Gophercloud will ignore any explicitly passed configuration if
+	// OS_CLOUD is set. This will always cause this test to fail, as we use
+	// at least 2 cloud definitions (tenant and admin).
+	// https://github.com/gophercloud/utils/issues/164
+	os.Unsetenv("OS_CLOUD")
 }
 
 func TestE2E(t *testing.T) {
@@ -42,7 +49,9 @@ func TestE2E(t *testing.T) {
 }
 
 var _ = SynchronizedBeforeSuite(func() []byte {
-	return shared.Node1BeforeSuite(e2eCtx)
+	data := shared.Node1BeforeSuite(e2eCtx)
+	createTestVolumeType(e2eCtx)
+	return data
 }, func(data []byte) {
 	shared.AllNodesBeforeSuite(e2eCtx, data)
 })
@@ -50,5 +59,6 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 var _ = SynchronizedAfterSuite(func() {
 	shared.AllNodesAfterSuite(e2eCtx)
 }, func() {
+	cleanupTestVolumeType(e2eCtx)
 	shared.Node1AfterSuite(e2eCtx)
 })
