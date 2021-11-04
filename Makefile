@@ -54,8 +54,9 @@ MOCKGEN := $(TOOLS_BIN_DIR)/mockgen
 RELEASE_NOTES := $(TOOLS_BIN_DIR)/release-notes
 
 PATH := $(abspath $(TOOLS_BIN_DIR)):$(PATH)
-DOCKER_CLI_EXPERIMENTAL=enabled
-DOCKER_BUILDKIT=1
+export PATH
+export DOCKER_CLI_EXPERIMENTAL=enabled
+export DOCKER_BUILDKIT=1
 
 PODMAN ?= 0
 ifeq ($(PODMAN), 1)
