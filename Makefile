@@ -280,15 +280,18 @@ list-staging-releases: ## List staging images for image promotion
 list-image:
 	gcloud container images list-tags $(STAGING_REGISTRY)/$(IMAGE) --filter="tags=('$(RELEASE_TAG)')" --format=json
 
+## Builds and push container images using the latest git tag for the commit.
 .PHONY: release
-release: $(RELEASE_NOTES) clean-release $(RELEASE_DIR)  ## Builds and push container images using the latest git tag for the commit.
+release: $(RELEASE_NOTES) clean-release release-checkout-tag release-manifest-modification release-manifests release-templates | $(RELEASE_DIR)
+
+release-checkout-tag:
 	@if [ -z "${RELEASE_TAG}" ]; then echo "RELEASE_TAG is not set"; exit 1; fi
 	@if ! [ -z "$$(git status --porcelain)" ]; then echo "Your local git repository contains uncommitted changes, use git clean before proceeding."; fi
 	git checkout "${RELEASE_TAG}"
-	# Set the manifest image to the production bucket.
-	$(MAKE) manifest-modification REGISTRY=$(PROD_REGISTRY)
-	$(MAKE) release-manifests
-	$(MAKE) release-templates
+
+.PHONY: release-manifest-modification
+release-manifest-modification: REGISTRY=$(PROD_REGISTRY)
+release-manifest-modification: manifest-modification
 
 .PHONY: manifest-modification
 manifest-modification: # Set the manifest images to the staging/production bucket.
