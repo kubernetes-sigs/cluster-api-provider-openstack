@@ -248,8 +248,7 @@ docker-build-%:
 	$(MAKE) ARCH=$* docker-build
 
 .PHONY: docker-push-all ## Push all the architecture docker images
-docker-push-all: $(addprefix docker-push-,$(ALL_ARCH))
-	$(MAKE) docker-push-manifest
+docker-push-all: $(addprefix docker-push-,$(ALL_ARCH)) docker-push-manifest
 
 docker-push-%:
 	$(MAKE) ARCH=$* docker-push
