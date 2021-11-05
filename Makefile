@@ -357,21 +357,13 @@ IMAGE_PATCH_DIR := $(ARTIFACTS)/image-patch
 $(IMAGE_PATCH_DIR): $(ARTIFACTS)
 	mkdir -p $@
 
-.PHONY: $(RELEASE_DIR)/$(MANIFEST_FILE).yaml
-$(RELEASE_DIR)/$(MANIFEST_FILE).yaml:
-	$(MAKE) compiled-manifest \
-		PROVIDER=$(MANIFEST_FILE) \
-		OLD_IMG=$(CONTROLLER_ORIGINAL_IMG) \
-		MANIFEST_IMG=$(CONTROLLER_IMG) \
-		CONTROLLER_NAME=$(CONTROLLER_NAME) \
-		PROVIDER_CONFIG_DIR=$(CONFIG_DIR) \
-		NAMESPACE=$(NAMESPACE)
-
+$(RELEASE_DIR)/$(MANIFEST_FILE).yaml: compiled-manifest
 .PHONY: compiled-manifest
-compiled-manifest: $(RELEASE_DIR) $(KUSTOMIZE)
-	$(MAKE) image-patch-source-manifest
-	$(MAKE) image-patch-pull-policy
-	$(MAKE) image-patch-kustomization
+compiled-manifest: PROVIDER=$(MANIFEST_FILE)
+compiled-manifest: OLD_IMG=$(CONTROLLER_ORIGINAL_IMG)
+compiled-manifest: MANIFEST_IMG=$(CONTROLLER_IMG)
+compiled-manifest: PROVIDER_CONFIG_DIR=$(CONFIG_DIR)
+compiled-manifest: $(KUSTOMIZE) image-patch-source-manifest image-patch-pull-policy image-patch-kustomization | $(RELEASE_DIR)
 	$(KUSTOMIZE) build $(IMAGE_PATCH_DIR)/$(PROVIDER) > $(RELEASE_DIR)/$(PROVIDER).yaml
 
 .PHONY: image-patch-source-manifest
