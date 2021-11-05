@@ -161,8 +161,7 @@ test-conformance-fast: test-conformance
 binaries: managers ## Builds and installs all binaries
 
 .PHONY: managers
-managers:
-	$(MAKE) manager-openstack-infrastructure
+managers: manager-openstack-infrastructure
 
 .PHONY: manager-openstack-infrastructure
 manager-openstack-infrastructure: ## Build manager binary.
