@@ -261,8 +261,9 @@ docker-push-manifest: ## Push the fat manifest docker image.
 	docker manifest push --purge ${CONTROLLER_IMG}:${TAG}
 
 .PHONY: staging-manifests
-staging-manifests:
-	$(MAKE) $(RELEASE_DIR)/$(MANIFEST_FILE).yaml PULL_POLICY=IfNotPresent TAG=$(RELEASE_ALIAS_TAG)
+staging-manifests: PULL_POLICY=IfNotPresent
+staging-manifests: TAG=$(RELEASE_ALIAS_TAG)
+staging-manifests: compiled-manifest
 
 ## --------------------------------------
 ## Release
