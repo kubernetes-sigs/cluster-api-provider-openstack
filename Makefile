@@ -311,8 +311,9 @@ set-manifest-pull-policy:
 	sed -i'' -e 's@imagePullPolicy: .*@imagePullPolicy: '"$(PULL_POLICY)"'@' ./config/default/manager_pull_policy.yaml
 
 .PHONY: release-manifests
-release-manifests:
-	$(MAKE) $(RELEASE_DIR)/$(MANIFEST_FILE).yaml TAG=$(RELEASE_TAG) PULL_POLICY=IfNotPresent
+release-manifests: TAG=$(RELEASE_TAG)
+release-manifests: PULL_POLICY=IfNotPresent
+release-manifests: compiled-manifest
 	# Add metadata to the release artifacts
 	cp metadata.yaml $(RELEASE_DIR)/metadata.yaml
 
