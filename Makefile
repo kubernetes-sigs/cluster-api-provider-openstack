@@ -318,13 +318,11 @@ release-manifests: compiled-manifest
 .PHONY: release-staging
 release-staging: docker-build-all docker-push-all release-alias-tag staging-manifests upload-staging-artifacts
 
+## Tags and push container images to the staging bucket. Example image tag: capi-openstack-controller:nightly_master_20210121
 .PHONY: release-staging-nightly
-release-staging-nightly: ## Tags and push container images to the staging bucket. Example image tag: capi-openstack-controller:nightly_master_20210121
-	$(eval NEW_RELEASE_ALIAS_TAG := nightly_$(RELEASE_ALIAS_TAG)_$(shell date +'%Y%m%d'))
-	echo $(NEW_RELEASE_ALIAS_TAG)
-	$(MAKE) release-alias-tag TAG=$(RELEASE_ALIAS_TAG) RELEASE_ALIAS_TAG=$(NEW_RELEASE_ALIAS_TAG)
-	$(MAKE) staging-manifests RELEASE_ALIAS_TAG=$(NEW_RELEASE_ALIAS_TAG)
-	$(MAKE) upload-staging-artifacts RELEASE_ALIAS_TAG=$(NEW_RELEASE_ALIAS_TAG)
+release-staging-nightly: RELEASE_ALIAS_TAG := nightly_$(RELEASE_ALIAS_TAG)_$(shell date +'%Y%m%d')
+release-staging-nightly: TAG=$(RELEASE_ALIAS_TAG)
+release-staging-nightly: release-alias-tag staging-manifests upload-staging-artifacts
 
 .PHONY: upload-staging-artifacts
 upload-staging-artifacts: ## Upload release artifacts to the staging bucket
