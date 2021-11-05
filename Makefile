@@ -314,13 +314,9 @@ release-manifests: compiled-manifest
 	# Add metadata to the release artifacts
 	cp metadata.yaml $(RELEASE_DIR)/metadata.yaml
 
+## Builds and push container images and manifests to the staging bucket.
 .PHONY: release-staging
-release-staging: ## Builds and push container images and manifests to the staging bucket.
-	$(MAKE) docker-build-all
-	$(MAKE) docker-push-all
-	$(MAKE) release-alias-tag
-	$(MAKE) staging-manifests
-	$(MAKE) upload-staging-artifacts
+release-staging: docker-build-all docker-push-all release-alias-tag staging-manifests upload-staging-artifacts
 
 .PHONY: release-staging-nightly
 release-staging-nightly: ## Tags and push container images to the staging bucket. Example image tag: capi-openstack-controller:nightly_master_20210121
