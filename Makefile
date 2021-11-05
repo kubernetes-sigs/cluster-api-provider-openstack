@@ -293,22 +293,22 @@ release-checkout-tag:
 release-manifest-modification: REGISTRY=$(PROD_REGISTRY)
 release-manifest-modification: manifest-modification
 
+## Set the manifest images to the staging/production bucket.
 .PHONY: manifest-modification
-manifest-modification: # Set the manifest images to the staging/production bucket.
-	$(MAKE) set-manifest-image \
-		MANIFEST_IMG=$(REGISTRY)/$(IMAGE_NAME) MANIFEST_TAG=$(RELEASE_TAG) \
-		TARGET_RESOURCE="./config/default/manager_image_patch.yaml"
-	$(MAKE) set-manifest-pull-policy PULL_POLICY=IfNotPresent TARGET_RESOURCE="./config/default/manager_pull_policy.yaml"
+manifest-modification: MANIFEST_IMG=$(REGISTRY)/$(IMAGE_NAME)
+manifest-modification: MANIFEST_TAG=$(RELEASE_TAG)
+manifest-modification: PULL_POLICY=IfNotPresent
+manifest-modification: set-manifest-image set-manifest-pull-policy
 
 .PHONY: set-manifest-image
 set-manifest-image:
 	$(info Updating kustomize image patch file for manager resource)
-	sed -i'' -e 's@image: .*@image: '"${MANIFEST_IMG}:$(MANIFEST_TAG)"'@' $(TARGET_RESOURCE)
+	sed -i'' -e 's@image: .*@image: '"${MANIFEST_IMG}:$(MANIFEST_TAG)"'@' ./config/default/manager_image_patch.yaml
 
 .PHONY: set-manifest-pull-policy
 set-manifest-pull-policy:
 	$(info Updating kustomize pull policy file for manager resources)
-	sed -i'' -e 's@imagePullPolicy: .*@imagePullPolicy: '"$(PULL_POLICY)"'@' $(TARGET_RESOURCE)
+	sed -i'' -e 's@imagePullPolicy: .*@imagePullPolicy: '"$(PULL_POLICY)"'@' ./config/default/manager_pull_policy.yaml
 
 .PHONY: release-manifests
 release-manifests:
