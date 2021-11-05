@@ -192,9 +192,7 @@ modules: ## Runs go mod to ensure proper vendoring.
 	cd $(TOOLS_DIR); go mod tidy
 
 .PHONY: generate
-generate: ## Generate code
-	$(MAKE) generate-go
-	$(MAKE) generate-manifests
+generate: generate-go generate-manifests
 
 .PHONY: generate-go
 generate-go: $(MOCKGEN)
