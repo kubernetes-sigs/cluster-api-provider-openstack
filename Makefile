@@ -282,28 +282,24 @@ list-image:
 
 ## Builds and push container images using the latest git tag for the commit.
 .PHONY: release
-release: $(RELEASE_NOTES) clean-release release-checkout-tag release-manifest-modification release-manifests release-templates | $(RELEASE_DIR)
+release: REGISTRY=$(PROD_REGISTRY)
+release: TAG=$(RELEASE_TAG)
+release: PULL_POLICY=IfNotPresent
+release: $(RELEASE_NOTES) clean-release release-checkout-tag manifest-modification release-manifests release-templates | $(RELEASE_DIR)
 
 release-checkout-tag:
 	@if [ -z "${RELEASE_TAG}" ]; then echo "RELEASE_TAG is not set"; exit 1; fi
 	@if ! [ -z "$$(git status --porcelain)" ]; then echo "Your local git repository contains uncommitted changes, use git clean before proceeding."; fi
 	git checkout "${RELEASE_TAG}"
 
-.PHONY: release-manifest-modification
-release-manifest-modification: REGISTRY=$(PROD_REGISTRY)
-release-manifest-modification: manifest-modification
-
 ## Set the manifest images to the staging/production bucket.
 .PHONY: manifest-modification
-manifest-modification: MANIFEST_IMG=$(REGISTRY)/$(IMAGE_NAME)
-manifest-modification: MANIFEST_TAG=$(RELEASE_TAG)
-manifest-modification: PULL_POLICY=IfNotPresent
 manifest-modification: set-manifest-image set-manifest-pull-policy
 
 .PHONY: set-manifest-image
 set-manifest-image:
 	$(info Updating kustomize image patch file for manager resource)
-	sed -i'' -e 's@image: .*@image: '"${MANIFEST_IMG}:$(MANIFEST_TAG)"'@' ./config/default/manager_image_patch.yaml
+	sed -i'' -e 's@image: .*@image: '"$(REGISTRY)/$(IMAGE_NAME):$(RELEASE_TAG)"'@' ./config/default/manager_image_patch.yaml
 
 .PHONY: set-manifest-pull-policy
 set-manifest-pull-policy:
