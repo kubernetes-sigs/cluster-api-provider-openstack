@@ -195,9 +195,8 @@ modules: ## Runs go mod to ensure proper vendoring.
 generate: generate-go generate-manifests
 
 .PHONY: generate-go
-generate-go: $(MOCKGEN)
+generate-go: $(MOCKGEN) $(CONTROLLER_GEN) $(CONVERSION_GEN) $(DEFAULTER_GEN)
 	go generate ./...
-	$(MAKE) -B $(CONTROLLER_GEN) $(CONVERSION_GEN) $(DEFAULTER_GEN)
 	$(CONTROLLER_GEN) \
 		paths=./api/... \
 		object:headerFile=./hack/boilerplate/boilerplate.generatego.txt
