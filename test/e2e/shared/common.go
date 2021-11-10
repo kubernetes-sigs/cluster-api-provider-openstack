@@ -133,9 +133,11 @@ func dumpMachine(ctx context.Context, e2eCtx *E2EContext, machine infrav1.OpenSt
 	logPath := filepath.Join(e2eCtx.Settings.ArtifactFolder, "clusters", e2eCtx.Environment.BootstrapClusterProxy.GetName())
 	machineLogBase := path.Join(logPath, "instances", machine.Namespace, machine.Name)
 	metaLog := path.Join(machineLogBase, "instance.log")
+
 	if err := os.MkdirAll(filepath.Dir(metaLog), 0o750); err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "couldn't create directory %q for file: %s\n", metaLog, err)
 	}
+
 	f, err := os.OpenFile(metaLog, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "couldn't open file %q: %s\n", metaLog, err)
