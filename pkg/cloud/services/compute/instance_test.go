@@ -366,3 +366,146 @@ func TestService_getServerNetworks(t *testing.T) {
 		})
 	}
 }
+
+func TestGetPortNetworks(t *testing.T) {
+	networkAName := "multi-subnet"
+	networkAUUID := "7f0a7cc9-d7c8-41d2-87a2-2fc7f5ec544e"
+	networkBUUID := "607559d9-a5a4-4a0b-a92d-75eba89e3343"
+	clusterNetID := "9d7b0284-b22e-4bc7-b90e-28a652cac7cc"
+	clusterSubID := "b33271f4-6bb1-430a-88bf-789394815aaf"
+	falseBool := false
+
+	tests := []struct {
+		name    string
+		ports   []infrav1.PortOpts
+		trunk   bool
+		want    []infrav1.Network
+		expect  func(m *mock_networking.MockNetworkClientMockRecorder)
+		wantErr bool
+	}{
+		{
+			name:    "empty list of ports returns empty list of networks",
+			ports:   []infrav1.PortOpts{},
+			trunk:   false,
+			want:    []infrav1.Network{},
+			expect:  func(m *mock_networking.MockNetworkClientMockRecorder) {},
+			wantErr: false,
+		},
+		{
+			name: "port network by name",
+			ports: []infrav1.PortOpts{
+				{
+					Network: &infrav1.NetworkFilter{
+						Name: networkAName,
+					},
+					NameSuffix: "foo",
+				},
+			},
+			trunk: false,
+			want: []infrav1.Network{
+				{
+					ID:     networkAUUID,
+					Subnet: &infrav1.Subnet{},
+					PortOpts: &infrav1.PortOpts{
+						Network: &infrav1.NetworkFilter{
+							Name: networkAName,
+						},
+						NameSuffix: "foo",
+						Trunk:      &falseBool,
+					},
+				},
+			},
+			expect: func(m *mock_networking.MockNetworkClientMockRecorder) {
+				m.ListNetwork(infrav1.NetworkFilter{
+					Name: networkAName,
+				}.ToListOpt()).Return(
+					[]networks.Network{
+						{
+							ID:   networkAUUID,
+							Name: networkAName,
+						},
+					},
+					nil,
+				)
+			},
+			wantErr: false,
+		},
+		{
+			name: "port network query returns too many networks",
+			ports: []infrav1.PortOpts{
+				{
+					Network: &infrav1.NetworkFilter{
+						Tags: "foo-tag",
+					},
+					NameSuffix: "foo",
+				},
+			},
+			trunk: false,
+			want:  nil,
+			expect: func(m *mock_networking.MockNetworkClientMockRecorder) {
+				m.ListNetwork(infrav1.NetworkFilter{
+					Tags: "foo-tag",
+				}.ToListOpt()).Return(
+					[]networks.Network{
+						{
+							ID:   networkAUUID,
+							Tags: []string{"foo-tag"},
+						},
+						{
+							ID:   networkBUUID,
+							Tags: []string{"foo-tag"},
+						},
+					},
+					nil,
+				)
+			},
+			wantErr: true,
+		},
+		{
+			name: "port network query returns no networks",
+			ports: []infrav1.PortOpts{
+				{
+					Network: &infrav1.NetworkFilter{
+						Tags: "nil-tag",
+					},
+					NameSuffix: "nil",
+				},
+			},
+			trunk: false,
+			want:  nil,
+			expect: func(m *mock_networking.MockNetworkClientMockRecorder) {
+				m.ListNetwork(infrav1.NetworkFilter{
+					Tags: "nil-tag",
+				}.ToListOpt()).Return(
+					[]networks.Network{},
+					nil,
+				)
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockCtrl := gomock.NewController(t)
+			mockNetworkClient := mock_networking.NewMockNetworkClient(mockCtrl)
+			tt.expect(mockNetworkClient.EXPECT())
+
+			networkingService := networking.NewTestService(
+				"", mockNetworkClient, logr.Discard(),
+			)
+			s := &Service{
+				networkingService: networkingService,
+			}
+
+			got, err := s.getPortNetworks(clusterNetID, clusterSubID, tt.ports, tt.trunk)
+			g := NewWithT(t)
+			if tt.wantErr {
+				g.Expect(err).To(HaveOccurred())
+			} else {
+				g.Expect(err).NotTo(HaveOccurred())
+			}
+			g.Expect(got).To(Equal(tt.want))
+		})
+	}
+}

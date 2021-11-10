@@ -138,11 +138,35 @@ func (s *Service) constructNetworks(openStackCluster *infrav1.OpenStackCluster, 
 			return nil, err
 		}
 	}
-	for i, port := range openStackMachine.Spec.Ports {
-		pOpts := &openStackMachine.Spec.Ports[i]
+	portNetworks, err := s.getPortNetworks(openStackCluster.Status.Network.ID, openStackCluster.Status.Network.Subnet.ID, openStackMachine.Spec.Ports, openStackMachine.Spec.Trunk)
+	if err != nil {
+		return nil, err
+	}
+	nets = append(nets, portNetworks...)
+
+	// no networks or ports found in the spec, so create a port on the cluster network
+	if len(nets) == 0 {
+		nets = []infrav1.Network{{
+			ID: openStackCluster.Status.Network.ID,
+			Subnet: &infrav1.Subnet{
+				ID: openStackCluster.Status.Network.Subnet.ID,
+			},
+			PortOpts: &infrav1.PortOpts{
+				Trunk: &openStackMachine.Spec.Trunk,
+			},
+		}}
+	}
+	return nets, nil
+}
+
+func (s *Service) getPortNetworks(clusterNetworkID string, clusterSubnetID string, ports []infrav1.PortOpts, trunk bool) ([]infrav1.Network, error) {
+	nets := []infrav1.Network{}
+
+	for i, port := range ports {
+		pOpts := &ports[i]
 		// No Trunk field specified for the port, inherit openStackMachine.Spec.Trunk.
 		if pOpts.Trunk == nil {
-			pOpts.Trunk = &openStackMachine.Spec.Trunk
+			pOpts.Trunk = &trunk
 		}
 		if port.Network != nil {
 			netID := port.Network.ID
@@ -165,25 +189,13 @@ func (s *Service) constructNetworks(openStackCluster *infrav1.OpenStackCluster, 
 			})
 		} else {
 			nets = append(nets, infrav1.Network{
-				ID: openStackCluster.Status.Network.ID,
+				ID: clusterNetworkID,
 				Subnet: &infrav1.Subnet{
-					ID: openStackCluster.Status.Network.Subnet.ID,
+					ID: clusterSubnetID,
 				},
 				PortOpts: pOpts,
 			})
 		}
-	}
-	// no networks or ports found in the spec, so create a port on the cluster network
-	if len(nets) == 0 {
-		nets = []infrav1.Network{{
-			ID: openStackCluster.Status.Network.ID,
-			Subnet: &infrav1.Subnet{
-				ID: openStackCluster.Status.Network.Subnet.ID,
-			},
-			PortOpts: &infrav1.PortOpts{
-				Trunk: &openStackMachine.Spec.Trunk,
-			},
-		}}
 	}
 	return nets, nil
 }
