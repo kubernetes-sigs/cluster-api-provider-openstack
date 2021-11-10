@@ -86,7 +86,7 @@ providers:
     - old: "imagePullPolicy: Always"
       new: "imagePullPolicy: IfNotPresent"
     - old: "--v=2"
-      new: "--v=4"
+      new: "--v=9"
     - old: "--leader-elect"
       new: "--leader-elect=false\n        - --sync-period=1m"
 
