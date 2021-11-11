@@ -46,6 +46,6 @@ write_files:
       echo 'source /opt/stack/devstack/openrc admin admin' >> /opt/stack/.bashrc
 
       # Upload the images so we don't have to upload them from Prow
-      su - stack -c "source /opt/stack/devstack/openrc admin admin && /opt/stack/devstack/tools/upload_image.sh https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/ubuntu/2021-03-27/ubuntu-2004-kube-v1.18.15.qcow2"
+      su - stack -c "source /opt/stack/devstack/openrc admin admin && /opt/stack/devstack/tools/upload_image.sh https://github.com/hidekazuna/cluster-api-provider-openstack-images/releases/download/v1.20.10/ubuntu-2004-kube-v1.20.10.qcow2"
       su - stack -c "source /opt/stack/devstack/openrc admin admin && /opt/stack/devstack/tools/upload_image.sh https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/cirros/2021-03-27/cirros-0.5.1-x86_64-disk.img"
     }
