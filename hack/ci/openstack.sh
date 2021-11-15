@@ -79,7 +79,7 @@ function init_infrastructure() {
 
     # If OPENSTACK_PUBLIC_IP is not set, look for an existing unattached tagged floating ip before creating one
     [ -z "${OPENSTACK_PUBLIC_IP:-}" ] && \
-        OPENSTACK_PUBLIC_IP=$(openstack floating ip list --tags "${CLUSTER_NAME}-devstack" -f value -c "Floating IP Address" | head -n 1)
+        OPENSTACK_PUBLIC_IP=$(openstack floating ip list --tags "${CLUSTER_NAME}" -f value -c "Floating IP Address" | head -n 1)
     [ -z "${OPENSTACK_PUBLIC_IP:-}" ] && \
         OPENSTACK_PUBLIC_IP=$(openstack floating ip create --tag "$CLUSTER_NAME" \
                 "$OPENSTACK_PUBLIC_NETWORK" -f value -c floating_ip_address)
