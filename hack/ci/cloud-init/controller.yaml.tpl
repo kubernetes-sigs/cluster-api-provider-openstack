@@ -117,12 +117,46 @@
 
     [Install]
     WantedBy=multi-user.target
+- path: /tmp/devstack-post.sh
+  permissions: 0755
+  content: |
+    #!/bin/bash
+
+    set -o -x
+
+    # Add environment variables for auth/endpoints
+    echo 'source /opt/stack/devstack/openrc admin admin' >> /opt/stack/.bashrc
+
+    source /opt/stack/devstack/openrc admin admin
+
+    # Upload the images so we don't have to upload them from Prow
+    /opt/stack/devstack/tools/upload_image.sh https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/ubuntu/2021-03-27/ubuntu-2004-kube-v1.18.15.qcow2
+    /opt/stack/devstack/tools/upload_image.sh https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/cirros/2021-03-27/cirros-0.5.1-x86_64-disk.img
+
+    # Add the controller to its own host aggregate and availability zone
+    aggregateid=$(openstack aggregate create --zone "${PRIMARY_AZ}" "${PRIMARY_AZ}" -f value -c id)
+    for host in $(openstack compute service list --service nova-compute -f value -c Host)
+    do
+        openstack aggregate add host "$aggregateid" "$host"
+    done
+
+    # the flavors are created in a way that we can execute at least 2 e2e tests in parallel (overall we have 32 vCPUs)
+    openstack flavor delete m1.tiny
+    openstack flavor create --ram 512 --disk 1 --vcpus 1 --public --id 1 m1.tiny --property hw_rng:allowed='True'
+    openstack flavor delete m1.small
+    openstack flavor create --ram 4192 --disk 10 --vcpus 2 --public --id 2 m1.small --property hw_rng:allowed='True'
+    openstack flavor delete m1.medium
+    openstack flavor create --ram 6144 --disk 10 --vcpus 4 --public --id 3 m1.medium --property hw_rng:allowed='True'
+
+    # Adjust the CPU quota
+    openstack quota set --cores 32 demo
+    openstack quota set --secgroups 50 demo
 - path: /root/devstack.sh
   permissions: 0755
   content: |
     #!/bin/bash
 
-    set -x -o errexit -o nounset -o pipefail
+    set -o -x -o errexit -o nounset -o pipefail
 
     source /tmp/devstack-common.sh
 
@@ -141,7 +175,9 @@
     chown -R stack:stack /opt/stack/devstack/
 
     run_devstack
-    upload_images
+
+    # Run post-configuration as stack user
+    su - stack -c /tmp/devstack-post.sh
 
     # When using ML2/OVS all public traffic will be routed via the L3 agent,
     # which is only running on the controller
