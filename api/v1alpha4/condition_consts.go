@@ -22,6 +22,8 @@ import clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha4"
 const (
 	// InstanceRunningCondition reports on current status of the Openstack Instance.
 	InstanceRunningCondition clusterv1.ConditionType = "InstanceRunning"
+	// InstanceCreatingReason used when the Instance creation is in progress.
+	InstanceCreatingReason = "InstanceCreating"
 	// InstanceNotFoundReason used when the Instance couldn't be retrieved.
 	InstanceNotFoundReason = "InstanceNotFound"
 	// InstanceProvisionFailedReason used for failures during Instance provisioning.

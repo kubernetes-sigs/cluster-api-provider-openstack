@@ -349,10 +349,13 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 	case infrav1.InstanceStateActive:
 		logger.Info("Machine instance is ACTIVE", "instance-id", instanceStatus.ID())
 		openStackMachine.Status.Ready = true
+		conditions.MarkTrue(openStackMachine, infrav1.InstanceRunningCondition)
 	case infrav1.InstanceStateBuilding:
 		logger.Info("Machine instance is BUILDING", "instance-id", instanceStatus.ID())
+		conditions.MarkFalse(openStackMachine, infrav1.InstanceRunningCondition, infrav1.InstanceCreatingReason, clusterv1.ConditionSeverityError, err.Error())
 	default:
 		handleUpdateMachineError(logger, openStackMachine, errors.Errorf("OpenStack instance state %q is unexpected", instanceStatus.State()))
+		conditions.MarkUnknown(openStackMachine, infrav1.InstanceRunningCondition, "", "")
 		return ctrl.Result{}, nil
 	}
 
