@@ -29,7 +29,7 @@ import (
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	v1alpha4 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 	apiv1alpha3 "sigs.k8s.io/cluster-api/api/v1alpha3"
-	apiv1alpha4 "sigs.k8s.io/cluster-api/api/v1alpha4"
+	v1beta1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	errors "sigs.k8s.io/cluster-api/errors"
 )
 
@@ -300,8 +300,8 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*apiv1alpha3.APIEndpoint)(nil), (*apiv1alpha4.APIEndpoint)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha3_APIEndpoint_To_v1alpha4_APIEndpoint(a.(*apiv1alpha3.APIEndpoint), b.(*apiv1alpha4.APIEndpoint), scope)
+	if err := s.AddConversionFunc((*apiv1alpha3.APIEndpoint)(nil), (*v1beta1.APIEndpoint)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha3_APIEndpoint_To_v1beta1_APIEndpoint(a.(*apiv1alpha3.APIEndpoint), b.(*v1beta1.APIEndpoint), scope)
 	}); err != nil {
 		return err
 	}
@@ -312,11 +312,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddConversionFunc((*OpenStackMachineSpec)(nil), (*v1alpha4.OpenStackMachineSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha3_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(a.(*OpenStackMachineSpec), b.(*v1alpha4.OpenStackMachineSpec), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddConversionFunc((*apiv1alpha4.APIEndpoint)(nil), (*apiv1alpha3.APIEndpoint)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_APIEndpoint_To_v1alpha3_APIEndpoint(a.(*apiv1alpha4.APIEndpoint), b.(*apiv1alpha3.APIEndpoint), scope)
 	}); err != nil {
 		return err
 	}
@@ -337,6 +332,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddConversionFunc((*v1alpha4.OpenStackMachineSpec)(nil), (*OpenStackMachineSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha4_OpenStackMachineSpec_To_v1alpha3_OpenStackMachineSpec(a.(*v1alpha4.OpenStackMachineSpec), b.(*OpenStackMachineSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1beta1.APIEndpoint)(nil), (*apiv1alpha3.APIEndpoint)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1beta1_APIEndpoint_To_v1alpha3_APIEndpoint(a.(*v1beta1.APIEndpoint), b.(*apiv1alpha3.APIEndpoint), scope)
 	}); err != nil {
 		return err
 	}
@@ -696,7 +696,7 @@ func autoConvert_v1alpha3_OpenStackClusterSpec_To_v1alpha4_OpenStackClusterSpec(
 	out.ManagedSecurityGroups = in.ManagedSecurityGroups
 	out.DisablePortSecurity = in.DisablePortSecurity
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
-	if err := Convert_v1alpha3_APIEndpoint_To_v1alpha4_APIEndpoint(&in.ControlPlaneEndpoint, &out.ControlPlaneEndpoint, s); err != nil {
+	if err := Convert_v1alpha3_APIEndpoint_To_v1beta1_APIEndpoint(&in.ControlPlaneEndpoint, &out.ControlPlaneEndpoint, s); err != nil {
 		return err
 	}
 	out.ControlPlaneAvailabilityZones = *(*[]string)(unsafe.Pointer(&in.ControlPlaneAvailabilityZones))
@@ -725,13 +725,16 @@ func autoConvert_v1alpha4_OpenStackClusterSpec_To_v1alpha3_OpenStackClusterSpec(
 	out.ExternalRouterIPs = *(*[]ExternalRouterIPParam)(unsafe.Pointer(&in.ExternalRouterIPs))
 	out.ExternalNetworkID = in.ExternalNetworkID
 	out.ManagedAPIServerLoadBalancer = in.ManagedAPIServerLoadBalancer
+	// WARNING: in.DisableAPIServerFloatingIP requires manual conversion: does not exist in peer-type
 	out.APIServerFloatingIP = in.APIServerFloatingIP
+	// WARNING: in.APIServerFixedIP requires manual conversion: does not exist in peer-type
 	out.APIServerPort = in.APIServerPort
 	out.APIServerLoadBalancerAdditionalPorts = *(*[]int)(unsafe.Pointer(&in.APIServerLoadBalancerAdditionalPorts))
 	out.ManagedSecurityGroups = in.ManagedSecurityGroups
+	// WARNING: in.AllowAllInClusterTraffic requires manual conversion: does not exist in peer-type
 	out.DisablePortSecurity = in.DisablePortSecurity
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
-	if err := Convert_v1alpha4_APIEndpoint_To_v1alpha3_APIEndpoint(&in.ControlPlaneEndpoint, &out.ControlPlaneEndpoint, s); err != nil {
+	if err := Convert_v1beta1_APIEndpoint_To_v1alpha3_APIEndpoint(&in.ControlPlaneEndpoint, &out.ControlPlaneEndpoint, s); err != nil {
 		return err
 	}
 	out.ControlPlaneAvailabilityZones = *(*[]string)(unsafe.Pointer(&in.ControlPlaneAvailabilityZones))
@@ -768,7 +771,7 @@ func autoConvert_v1alpha3_OpenStackClusterStatus_To_v1alpha4_OpenStackClusterSta
 	} else {
 		out.ExternalNetwork = nil
 	}
-	out.FailureDomains = *(*apiv1alpha4.FailureDomains)(unsafe.Pointer(&in.FailureDomains))
+	out.FailureDomains = *(*v1beta1.FailureDomains)(unsafe.Pointer(&in.FailureDomains))
 	out.ControlPlaneSecurityGroup = (*v1alpha4.SecurityGroup)(unsafe.Pointer(in.ControlPlaneSecurityGroup))
 	out.WorkerSecurityGroup = (*v1alpha4.SecurityGroup)(unsafe.Pointer(in.WorkerSecurityGroup))
 	out.BastionSecurityGroup = (*v1alpha4.SecurityGroup)(unsafe.Pointer(in.BastionSecurityGroup))
