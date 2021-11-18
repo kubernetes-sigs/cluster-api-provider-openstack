@@ -14,25 +14,23 @@
    example, in the `v0.2.0` release, the container image location is
    `us.gcr.io/k8s-artifacts-prod/capi-openstack/capi-openstack-controller:v0.2.0`
 
-
 ## Process
-
 
 1. Make sure your repo is clean by git's standards.
 1. Make sure you are on the correct branch (`main` for the current release and `release-0.x` for older releases).
 1. Set an environment variable with the version, e.g.:
     - `VERSION=v0.4.0`
-3. Create an annotated tag
+1. Create an annotated tag
     - `git tag -s -a $VERSION -m $VERSION`.
-4. Push the tag to the GitHub repository:
+1. Push the tag to the GitHub repository:
    > NOTE: `upstream` should be the name of the remote pointing to `github.com/kubernetes-sigs/cluster-api-provider-openstack`
     - `git push upstream $VERSION`
-5. Run `make release` to build artifacts (the image is automatically built by CI)
-6. Follow the [image promotion process](https://github.com/kubernetes/k8s.io/tree/main/k8s.gcr.io#image-promoter) to promote the image from the staging repo to `k8s.gcr.io/capi-openstack`.
+1. Run `make release` to build artifacts (the image is automatically built by CI)
+1. Follow the [image promotion process](https://github.com/kubernetes/k8s.io/tree/main/k8s.gcr.io#image-promoter) to promote the image from the staging repo to `k8s.gcr.io/capi-openstack`.
    The staging repository can be inspected at https://console.cloud.google.com/gcr/images/k8s-staging-capi-openstack/GLOBAL. Be
    sure to choose the top level `capi-openstack-controller`, which will provide the multi-arch manifest, rather than one for a specific architecture.
    The image build logs are available at [Cloud Build](https://console.cloud.google.com/cloud-build/builds?project=k8s-staging-capi-openstack).
-   Add the new sha=>tag mapping to the [images.yaml](https://github.com/kubernetes/k8s.io/edit/main/k8s.gcr.io/images/k8s-staging-capi-openstack/images.yaml) (use the sha of the image with the corresponding tag)
+   Add the new sha=>tag mapping to the [images.yaml](https://github.com/kubernetes/k8s.io/edit/main/k8s.gcr.io/images/k8s-staging-capi-openstack/images.yaml) (use the sha of the image with the corresponding tag). The PR to update the [images.yaml](https://github.com/kubernetes/k8s.io/edit/main/k8s.gcr.io/images/k8s-staging-capi-openstack/images.yaml) must be approved in the [OWNERS](https://github.com/kubernetes/k8s.io/blob/main/k8s.gcr.io/images/k8s-staging-capi-openstack/OWNERS) file and merged.
 1. Create a draft release in GitHub based on the tag created above
 1. Generate and finalize the release notes and add them to the draft release:
     - Run `make release-notes` to gather changes since the last revision. If you need to specify a specific tag to look for changes
