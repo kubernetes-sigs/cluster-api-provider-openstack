@@ -52,8 +52,8 @@ We build `controller` first, and then `worker`. We let `worker` build asynchrono
 
 Both instances share a common network which uses the CIDR defined in `PRIVATE_NETORK_CIDR` in `hack/ci/create_devstack.sh`. Each instance has a single IP on this network:
 
-* `controller`: `10.0.2.15`
-* `worker`: `10.0.2.16`
+* `controller`: `10.0.3.15`
+* `worker`: `10.0.3.16`
 
 In addition, DevStack will create a floating IP network using CIDR defined in `FLOATING_RANGE` in `hack/ci/create_devstack.sh`. As the neutron L3 agent is only running on the controller, all of this traffic is handled on the controller, even if the source is an instance running on the worker. The controller creates `iptables` rules to NAT this traffic.
 
