@@ -30,6 +30,7 @@
 
     # Nova
     ENABLED_SERVICES=n-cpu,placement-client,c-vol,neutron-agent
+    VOLUME_BACKING_FILE_SIZE=100G
 
     # Additional services
     ENABLED_SERVICES+=${OPENSTACK_ADDITIONAL_SERVICES}

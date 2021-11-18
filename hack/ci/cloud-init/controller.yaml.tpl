@@ -45,6 +45,7 @@
 
     # Cinder
     ENABLED_SERVICES+=,c-sch,c-api,c-vol
+    VOLUME_BACKING_FILE_SIZE=100G
 
     # Additional services
     ENABLED_SERVICES+=${OPENSTACK_ADDITIONAL_SERVICES}
