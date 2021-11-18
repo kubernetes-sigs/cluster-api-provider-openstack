@@ -205,7 +205,7 @@ metadata:
   namespace: <cluster-name>
 spec:
   networks:
-  - filters:
+  - filter:
       name: myNetwork
       tags: myTag
   - uuid: your_network_id
