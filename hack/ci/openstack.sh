@@ -171,6 +171,10 @@ function cloud_cleanup {
         openstack network delete "$networkid"
     done
 
+    for subnetid in $(openstack subnet list --tag "$CLUSTER_NAME" -f value -c ID); do
+        openstack subnet delete "$subnetid"
+    done
+
     for secgroupid in $(openstack security group list --tag "$CLUSTER_NAME" -f value -c ID); do
         openstack security group delete "$secgroupid"
     done
