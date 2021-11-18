@@ -112,6 +112,9 @@ function start_sshuttle {
     echo "Opening tunnel to ${PRIVATE_NETWORK_CIDR} and ${FLOATING_RANGE} via ${public_ip}"
     # sshuttle won't succeed until ssh is up and python is installed on the destination
     retry 50 30 sshuttle -r "$public_ip" "$PRIVATE_NETWORK_CIDR" "$FLOATING_RANGE" --ssh-cmd=\""$(get_ssh_cmd)"\" -l 0.0.0.0 -D
+
+    # Give sshuttle a few seconds to be fully up
+    sleep 5
 }
 
 function kill_sshuttle {
