@@ -707,6 +707,694 @@ spec:
             type: object
         type: object
     served: true
+    storage: false
+  - name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: OpenStackClusterTemplate is the Schema for the openstackclustertemplates
+          API.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: OpenStackClusterTemplateSpec defines the desired state of
+              OpenStackClusterTemplate.
+            properties:
+              template:
+                description: OpenStackClusterTemplateResource describes the data needed
+                  to create a OpenStackCluster from a template.
+                properties:
+                  spec:
+                    description: OpenStackClusterSpec defines the desired state of
+                      OpenStackCluster.
+                    properties:
+                      allowAllInClusterTraffic:
+                        description: AllowAllInClusterTraffic is only used when managed
+                          security groups are in use. If set to true, the rules for
+                          the managed security groups are configured so that all ingress
+                          and egress between cluster nodes is permitted, allowing
+                          CNIs other than Calico to be used.
+                        type: boolean
+                      apiServerFixedIP:
+                        description: APIServerFixedIP is the fixed IP which will be
+                          associated with the API server. In the case where the API
+                          server has a floating IP but not a managed load balancer,
+                          this field is not used. If a managed load balancer is used
+                          and this field is not specified, a fixed IP will be dynamically
+                          allocated for the load balancer. If a managed load balancer
+                          is not used AND the API server floating IP is disabled,
+                          this field MUST be specified and should correspond to a
+                          pre-allocated port that holds the fixed IP to be used as
+                          a VIP.
+                        type: string
+                      apiServerFloatingIP:
+                        description: APIServerFloatingIP is the floatingIP which will
+                          be associated with the API server. The floatingIP will be
+                          created if it does not already exist. If not specified,
+                          a new floatingIP is allocated. This field is not used if
+                          DisableAPIServerFloatingIP is set to true.
+                        type: string
+                      apiServerLoadBalancerAdditionalPorts:
+                        description: APIServerLoadBalancerAdditionalPorts adds additional
+                          ports to the APIServerLoadBalancer
+                        items:
+                          type: integer
+                        type: array
+                      apiServerPort:
+                        description: APIServerPort is the port on which the listener
+                          on the APIServer will be created
+                        type: integer
+                      bastion:
+                        description: Bastion is the OpenStack instance to login the
+                          nodes
+                        properties:
+                          availabilityZone:
+                            type: string
+                          enabled:
+                            type: boolean
+                          instance:
+                            description: Instance for the bastion itself
+                            properties:
+                              cloudName:
+                                description: The name of the cloud to use from the
+                                  clouds secret
+                                type: string
+                              configDrive:
+                                description: Config Drive support
+                                type: boolean
+                              flavor:
+                                description: The flavor reference for the flavor for
+                                  your server instance.
+                                type: string
+                              floatingIP:
+                                description: The floatingIP which will be associated
+                                  to the machine, only used for master. The floatingIP
+                                  should have been created and haven't been associated.
+                                type: string
+                              identityRef:
+                                description: IdentityRef is a reference to a identity
+                                  to be used when reconciling this cluster
+                                properties:
+                                  kind:
+                                    description: Kind of the identity. Must be supported
+                                      by the infrastructure provider and may be either
+                                      cluster or namespace-scoped.
+                                    minLength: 1
+                                    type: string
+                                  name:
+                                    description: Name of the infrastructure identity
+                                      to be used. Must be either a cluster-scoped
+                                      resource, or namespaced-scoped resource the
+                                      same namespace as the resource(s) being provisioned.
+                                    type: string
+                                required:
+                                - kind
+                                - name
+                                type: object
+                              image:
+                                description: The name of the image to use for your
+                                  server instance. If the RootVolume is specified,
+                                  this will be ignored and use rootVolume directly.
+                                type: string
+                              instanceID:
+                                description: InstanceID is the OpenStack instance
+                                  ID for this machine.
+                                type: string
+                              networks:
+                                description: A networks object. Required parameter
+                                  when there are multiple networks defined for the
+                                  tenant. When you do not specify both networks and
+                                  ports parameters, the server attaches to the only
+                                  network created for the current tenant.
+                                items:
+                                  properties:
+                                    filter:
+                                      description: Filters for optional network query
+                                      properties:
+                                        adminStateUp:
+                                          type: boolean
+                                        description:
+                                          type: string
+                                        id:
+                                          type: string
+                                        limit:
+                                          type: integer
+                                        marker:
+                                          type: string
+                                        name:
+                                          type: string
+                                        notTags:
+                                          type: string
+                                        notTagsAny:
+                                          type: string
+                                        projectId:
+                                          type: string
+                                        shared:
+                                          type: boolean
+                                        sortDir:
+                                          type: string
+                                        sortKey:
+                                          type: string
+                                        status:
+                                          type: string
+                                        tags:
+                                          type: string
+                                        tagsAny:
+                                          type: string
+                                        tenantId:
+                                          type: string
+                                      type: object
+                                    fixedIP:
+                                      description: A fixed IPv4 address for the NIC.
+                                      type: string
+                                    subnets:
+                                      description: Subnet within a network to use
+                                      items:
+                                        properties:
+                                          filter:
+                                            description: Filters for optional subnet
+                                              query
+                                            properties:
+                                              cidr:
+                                                type: string
+                                              description:
+                                                type: string
+                                              enableDhcp:
+                                                type: boolean
+                                              gateway_ip:
+                                                type: string
+                                              id:
+                                                type: string
+                                              ipVersion:
+                                                type: integer
+                                              ipv6AddressMode:
+                                                type: string
+                                              ipv6RaMode:
+                                                type: string
+                                              limit:
+                                                type: integer
+                                              marker:
+                                                type: string
+                                              name:
+                                                type: string
+                                              networkId:
+                                                type: string
+                                              notTags:
+                                                type: string
+                                              notTagsAny:
+                                                type: string
+                                              projectId:
+                                                type: string
+                                              sortDir:
+                                                type: string
+                                              sortKey:
+                                                type: string
+                                              subnetpoolId:
+                                                type: string
+                                              tags:
+                                                type: string
+                                              tagsAny:
+                                                type: string
+                                              tenantId:
+                                                type: string
+                                            type: object
+                                          uuid:
+                                            description: Optional UUID of the subnet.
+                                              If specified this will not be validated
+                                              prior to server creation. If specified,
+                                              the enclosing `NetworkParam` must also
+                                              be specified by UUID.
+                                            type: string
+                                        type: object
+                                      type: array
+                                    uuid:
+                                      description: Optional UUID of the network. If
+                                        specified this will not be validated prior
+                                        to server creation. Required if `Subnets`
+                                        specifies a subnet by UUID.
+                                      type: string
+                                  type: object
+                                type: array
+                              ports:
+                                description: Ports to be attached to the server instance.
+                                  They are created if a port with the given name does
+                                  not already exist. When you do not specify both
+                                  networks and ports parameters, the server attaches
+                                  to the only network created for the current tenant.
+                                items:
+                                  properties:
+                                    adminStateUp:
+                                      type: boolean
+                                    allowedAddressPairs:
+                                      items:
+                                        properties:
+                                          ipAddress:
+                                            type: string
+                                          macAddress:
+                                            type: string
+                                        type: object
+                                      type: array
+                                    description:
+                                      type: string
+                                    disablePortSecurity:
+                                      description: DisablePortSecurity enables or
+                                        disables the port security when set. When
+                                        not set, it takes the value of the corresponding
+                                        field at the network level.
+                                      type: boolean
+                                    fixedIPs:
+                                      description: Specify pairs of subnet and/or
+                                        IP address. These should be subnets of the
+                                        network with the given NetworkID.
+                                      items:
+                                        properties:
+                                          ipAddress:
+                                            type: string
+                                          subnetId:
+                                            type: string
+                                        required:
+                                        - subnetId
+                                        type: object
+                                      type: array
+                                    hostId:
+                                      description: The ID of the host where the port
+                                        is allocated
+                                      type: string
+                                    macAddress:
+                                      type: string
+                                    nameSuffix:
+                                      description: Used to make the name of the port
+                                        unique. If unspecified, instead the 0-based
+                                        index of the port in the list is used.
+                                      type: string
+                                    networkId:
+                                      description: ID of the OpenStack network on
+                                        which to create the port. If unspecified,
+                                        create the port on the default cluster network.
+                                      type: string
+                                    profile:
+                                      additionalProperties:
+                                        type: string
+                                      description: A dictionary that enables the application
+                                        running on the specified host to pass and
+                                        receive virtual network interface (VIF) port-specific
+                                        information to the plug-in.
+                                      type: object
+                                    projectId:
+                                      type: string
+                                    securityGroups:
+                                      items:
+                                        type: string
+                                      type: array
+                                    tags:
+                                      description: Tags applied to the port (and corresponding
+                                        trunk, if a trunk is configured.) These tags
+                                        are applied in addition to the instance's
+                                        tags, which will also be applied to the port.
+                                      items:
+                                        type: string
+                                      type: array
+                                    tenantId:
+                                      type: string
+                                    trunk:
+                                      description: Enables and disables trunk at port
+                                        level. If not provided, openStackMachine.Spec.Trunk
+                                        is inherited.
+                                      type: boolean
+                                    vnicType:
+                                      description: The virtual network interface card
+                                        (vNIC) type that is bound to the neutron port.
+                                      type: string
+                                  type: object
+                                type: array
+                              providerID:
+                                description: ProviderID is the unique identifier as
+                                  specified by the cloud provider.
+                                type: string
+                              rootVolume:
+                                description: The volume metadata to boot from
+                                properties:
+                                  deviceType:
+                                    type: string
+                                  diskSize:
+                                    type: integer
+                                  sourceType:
+                                    type: string
+                                  sourceUUID:
+                                    type: string
+                                type: object
+                              securityGroups:
+                                description: The names of the security groups to assign
+                                  to the instance
+                                items:
+                                  properties:
+                                    filter:
+                                      description: Filters used to query security
+                                        groups in openstack
+                                      properties:
+                                        description:
+                                          type: string
+                                        id:
+                                          type: string
+                                        limit:
+                                          type: integer
+                                        marker:
+                                          type: string
+                                        name:
+                                          type: string
+                                        notTags:
+                                          type: string
+                                        notTagsAny:
+                                          type: string
+                                        projectId:
+                                          type: string
+                                        sortDir:
+                                          type: string
+                                        sortKey:
+                                          type: string
+                                        tags:
+                                          type: string
+                                        tagsAny:
+                                          type: string
+                                        tenantId:
+                                          type: string
+                                      type: object
+                                    name:
+                                      description: Security Group name
+                                      type: string
+                                    uuid:
+                                      description: Security Group UID
+                                      type: string
+                                  type: object
+                                type: array
+                              serverGroupID:
+                                description: The server group to assign the machine
+                                  to
+                                type: string
+                              serverMetadata:
+                                additionalProperties:
+                                  type: string
+                                description: Metadata mapping. Allows you to create
+                                  a map of key value pairs to add to the server instance.
+                                type: object
+                              sshKeyName:
+                                description: The ssh key to inject in the instance
+                                type: string
+                              subnet:
+                                description: UUID, IP address of a port from this
+                                  subnet will be marked as AccessIPv4 on the created
+                                  compute instance
+                                type: string
+                              tags:
+                                description: Machine tags Requires Nova api 2.52 minimum!
+                                items:
+                                  type: string
+                                type: array
+                              trunk:
+                                description: Whether the server instance is created
+                                  on a trunk port or not.
+                                type: boolean
+                            required:
+                            - flavor
+                            type: object
+                        type: object
+                      cloudName:
+                        description: The name of the cloud to use from the clouds
+                          secret
+                        type: string
+                      controlPlaneAvailabilityZones:
+                        description: ControlPlaneAvailabilityZones is the az to deploy
+                          control plane to
+                        items:
+                          type: string
+                        type: array
+                      controlPlaneEndpoint:
+                        description: ControlPlaneEndpoint represents the endpoint
+                          used to communicate with the control plane.
+                        properties:
+                          host:
+                            description: The hostname on which the API server is serving.
+                            type: string
+                          port:
+                            description: The port on which the API server is serving.
+                            format: int32
+                            type: integer
+                        required:
+                        - host
+                        - port
+                        type: object
+                      disableAPIServerFloatingIP:
+                        description: DisableAPIServerFloatingIP determines whether
+                          or not to attempt to attach a floating IP to the API server.
+                          This allows for the creation of clusters when attaching
+                          a floating IP to the API server (and hence, in many cases,
+                          exposing the API server to the internet) is not possible
+                          or desirable, e.g. if using a shared VLAN for communication
+                          between management and workload clusters or when the management
+                          cluster is inside the project network. This option requires
+                          that the API server use a VIP on the cluster network so
+                          that the underlying machines can change without changing
+                          ControlPlaneEndpoint.Host. When using a managed load balancer,
+                          this VIP will be managed automatically. If not using a managed
+                          load balancer, cluster configuration will fail without additional
+                          configuration to manage the VIP on the control plane machines,
+                          which falls outside of the scope of this controller.
+                        type: boolean
+                      disablePortSecurity:
+                        description: DisablePortSecurity disables the port security
+                          of the network created for the Kubernetes cluster, which
+                          also disables SecurityGroups
+                        type: boolean
+                      dnsNameservers:
+                        description: DNSNameservers is the list of nameservers for
+                          OpenStack Subnet being created. Set this value when you
+                          need create a new network/subnet while the access through
+                          DNS is required.
+                        items:
+                          type: string
+                        type: array
+                      externalNetworkId:
+                        description: ExternalNetworkID is the ID of an external OpenStack
+                          Network. This is necessary to get public internet to the
+                          VMs.
+                        type: string
+                      externalRouterIPs:
+                        description: ExternalRouterIPs is an array of externalIPs
+                          on the respective subnets. This is necessary if the router
+                          needs a fixed ip in a specific subnet.
+                        items:
+                          properties:
+                            fixedIP:
+                              description: The FixedIP in the corresponding subnet
+                              type: string
+                            subnet:
+                              description: The subnet in which the FixedIP is used
+                                for the Gateway of this router
+                              properties:
+                                filter:
+                                  description: Filters for optional subnet query
+                                  properties:
+                                    cidr:
+                                      type: string
+                                    description:
+                                      type: string
+                                    enableDhcp:
+                                      type: boolean
+                                    gateway_ip:
+                                      type: string
+                                    id:
+                                      type: string
+                                    ipVersion:
+                                      type: integer
+                                    ipv6AddressMode:
+                                      type: string
+                                    ipv6RaMode:
+                                      type: string
+                                    limit:
+                                      type: integer
+                                    marker:
+                                      type: string
+                                    name:
+                                      type: string
+                                    networkId:
+                                      type: string
+                                    notTags:
+                                      type: string
+                                    notTagsAny:
+                                      type: string
+                                    projectId:
+                                      type: string
+                                    sortDir:
+                                      type: string
+                                    sortKey:
+                                      type: string
+                                    subnetpoolId:
+                                      type: string
+                                    tags:
+                                      type: string
+                                    tagsAny:
+                                      type: string
+                                    tenantId:
+                                      type: string
+                                  type: object
+                                uuid:
+                                  description: Optional UUID of the subnet. If specified
+                                    this will not be validated prior to server creation.
+                                    If specified, the enclosing `NetworkParam` must
+                                    also be specified by UUID.
+                                  type: string
+                              type: object
+                          required:
+                          - subnet
+                          type: object
+                        type: array
+                      identityRef:
+                        description: IdentityRef is a reference to a identity to be
+                          used when reconciling this cluster
+                        properties:
+                          kind:
+                            description: Kind of the identity. Must be supported by
+                              the infrastructure provider and may be either cluster
+                              or namespace-scoped.
+                            minLength: 1
+                            type: string
+                          name:
+                            description: Name of the infrastructure identity to be
+                              used. Must be either a cluster-scoped resource, or namespaced-scoped
+                              resource the same namespace as the resource(s) being
+                              provisioned.
+                            type: string
+                        required:
+                        - kind
+                        - name
+                        type: object
+                      managedAPIServerLoadBalancer:
+                        description: ManagedAPIServerLoadBalancer defines whether
+                          a LoadBalancer for the APIServer should be created.
+                        type: boolean
+                      managedSecurityGroups:
+                        description: ManagedSecurityGroups determines whether OpenStack
+                          security groups for the cluster will be managed by the OpenStack
+                          provider or whether pre-existing security groups will be
+                          specified as part of the configuration. By default, the
+                          managed security groups have rules that allow the Kubelet,
+                          etcd, the Kubernetes API server and the Calico CNI plugin
+                          to function correctly.
+                        type: boolean
+                      network:
+                        description: If NodeCIDR cannot be set this can be used to
+                          detect an existing network.
+                        properties:
+                          adminStateUp:
+                            type: boolean
+                          description:
+                            type: string
+                          id:
+                            type: string
+                          limit:
+                            type: integer
+                          marker:
+                            type: string
+                          name:
+                            type: string
+                          notTags:
+                            type: string
+                          notTagsAny:
+                            type: string
+                          projectId:
+                            type: string
+                          shared:
+                            type: boolean
+                          sortDir:
+                            type: string
+                          sortKey:
+                            type: string
+                          status:
+                            type: string
+                          tags:
+                            type: string
+                          tagsAny:
+                            type: string
+                          tenantId:
+                            type: string
+                        type: object
+                      nodeCidr:
+                        description: NodeCIDR is the OpenStack Subnet to be created.
+                          Cluster actuator will create a network, a subnet with NodeCIDR,
+                          and a router connected to this subnet. If you leave this
+                          empty, no network will be created.
+                        type: string
+                      subnet:
+                        description: If NodeCIDR cannot be set this can be used to
+                          detect an existing subnet.
+                        properties:
+                          cidr:
+                            type: string
+                          description:
+                            type: string
+                          enableDhcp:
+                            type: boolean
+                          gateway_ip:
+                            type: string
+                          id:
+                            type: string
+                          ipVersion:
+                            type: integer
+                          ipv6AddressMode:
+                            type: string
+                          ipv6RaMode:
+                            type: string
+                          limit:
+                            type: integer
+                          marker:
+                            type: string
+                          name:
+                            type: string
+                          networkId:
+                            type: string
+                          notTags:
+                            type: string
+                          notTagsAny:
+                            type: string
+                          projectId:
+                            type: string
+                          sortDir:
+                            type: string
+                          sortKey:
+                            type: string
+                          subnetpoolId:
+                            type: string
+                          tags:
+                            type: string
+                          tagsAny:
+                            type: string
+                          tenantId:
+                            type: string
+                        type: object
+                      tags:
+                        description: Tags for all resources in cluster
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                required:
+                - spec
+                type: object
+            required:
+            - template
+            type: object
+        type: object
+    served: true
     storage: true
 status:
   acceptedNames:

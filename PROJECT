@@ -23,3 +23,15 @@ resources:
 - group: infrastructure
   kind: OpenStackClusterTemplate
   version: v1alpha4
+- group: infrastructure
+  version: v1beta1
+  kind: OpenStackCluster
+- group: infrastructure
+  version: v1beta1
+  kind: OpenStackMachine
+- group: infrastructure
+  version: v1beta1
+  kind: OpenStackMachineTemplate
+- group: infrastructure
+  kind: OpenStackClusterTemplate
+  version: v1beta1

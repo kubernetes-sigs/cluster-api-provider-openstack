@@ -28,7 +28,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	. "github.com/onsi/gomega"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking/mock_networking"
 )
 
