@@ -79,6 +79,7 @@ func ensureSSHKeyPair(e2eCtx *E2EContext) {
 
 	sshDir := filepath.Join(e2eCtx.Settings.ArtifactFolder, "ssh")
 	Byf("Storing keypair in %q", sshDir)
+
 	err = os.MkdirAll(sshDir, 0o750)
 	Expect(err).NotTo(HaveOccurred())
 
