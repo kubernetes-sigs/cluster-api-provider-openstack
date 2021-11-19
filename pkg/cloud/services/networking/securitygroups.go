@@ -19,6 +19,7 @@ package networking
 import (
 	"fmt"
 
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/rules"
 
@@ -546,6 +547,16 @@ func (s *Service) createSecurityGroupIfNotExists(openStackCluster *infrav1.OpenS
 			record.Warnf(openStackCluster, "FailedCreateSecurityGroup", "Failed to create security group %s: %v", groupName, err)
 			return err
 		}
+
+		if len(openStackCluster.Spec.Tags) > 0 {
+			_, err = s.client.ReplaceAllAttributesTags("security-groups", group.ID, attributestags.ReplaceAllOpts{
+				Tags: openStackCluster.Spec.Tags,
+			})
+			if err != nil {
+				return err
+			}
+		}
+
 		record.Eventf(openStackCluster, "SuccessfulCreateSecurityGroup", "Created security group %s with id %s", groupName, group.ID)
 		return nil
 	}

@@ -28,8 +28,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	appsv1 "k8s.io/api/apps/v1"
@@ -94,6 +98,40 @@ var _ = Describe("e2e tests", func() {
 			})
 			Expect(workerMachines).To(HaveLen(1))
 			Expect(controlPlaneMachines).To(HaveLen(3))
+
+			// Tag: clusterName is declared on OpenStackCluster and gets propagated to all machines
+			// except the bastion host
+			allServers, err := shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{Tags: clusterName})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(allServers).To(HaveLen(4))
+
+			// When listing servers with multiple tags, nova api requires a single, comma-separated string
+			// with all the tags
+			controlPlaneTags := fmt.Sprintf("%s,%s", clusterName, "control-plane")
+			controlPlaneServers, err := shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{Tags: controlPlaneTags})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(controlPlaneServers).To(HaveLen(3))
+
+			machineTags := fmt.Sprintf("%s,%s", clusterName, "machine")
+			machineServers, err := shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{Tags: machineTags})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(machineServers).To(HaveLen(1))
+
+			networksList, err := shared.DumpOpenStackNetworks(e2eCtx, networks.ListOpts{Tags: clusterName})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(networksList).To(HaveLen(1))
+
+			subnetsList, err := shared.DumpOpenStackSubnets(e2eCtx, subnets.ListOpts{Tags: clusterName})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(subnetsList).To(HaveLen(1))
+
+			routersList, err := shared.DumpOpenStackRouters(e2eCtx, routers.ListOpts{Tags: clusterName})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(routersList).To(HaveLen(1))
+
+			securityGroupsList, err := shared.DumpOpenStackSecurityGroups(e2eCtx, groups.ListOpts{Tags: clusterName})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(securityGroupsList).To(HaveLen(3))
 		})
 	})
 
