@@ -535,7 +535,9 @@ func Convert_v1alpha4_FixedIP_To_v1beta1_FixedIP(in *FixedIP, out *v1beta1.Fixed
 }
 
 func autoConvert_v1beta1_FixedIP_To_v1alpha4_FixedIP(in *v1beta1.FixedIP, out *FixedIP, s conversion.Scope) error {
-	out.SubnetID = in.Subnet.ID
+	if in.Subnet != nil {
+		out.SubnetID = in.Subnet.ID
+	}
 	out.IPAddress = in.IPAddress
 	return nil
 }

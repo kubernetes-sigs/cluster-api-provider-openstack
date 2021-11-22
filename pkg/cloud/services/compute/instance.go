@@ -148,12 +148,19 @@ func (s *Service) constructNetworks(openStackCluster *infrav1.OpenStackCluster, 
 	if len(nets) == 0 {
 		nets = []infrav1.Network{{
 			ID: openStackCluster.Status.Network.ID,
-			Subnet: &infrav1.Subnet{
-				ID: openStackCluster.Status.Network.Subnet.ID,
-			},
 			PortOpts: &infrav1.PortOpts{
 				NameSuffix: "cluster-network-port",
-				Trunk:      &openStackMachine.Spec.Trunk,
+				Network: &infrav1.NetworkFilter{
+					ID: openStackCluster.Status.Network.ID,
+				},
+				Trunk: &openStackMachine.Spec.Trunk,
+				FixedIPs: []infrav1.FixedIP{
+					{
+						Subnet: &infrav1.SubnetFilter{
+							ID: openStackCluster.Status.Network.Subnet.ID,
+						},
+					},
+				},
 			},
 		}}
 	}
