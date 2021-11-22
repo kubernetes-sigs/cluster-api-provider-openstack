@@ -21,7 +21,10 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 )
 
-func (subnetFilter SubnetFilter) ToListOpt() subnets.ListOpts {
+func (subnetFilter *SubnetFilter) ToListOpt() subnets.ListOpts {
+	if subnetFilter == nil {
+		return subnets.ListOpts{}
+	}
 	return subnets.ListOpts{
 		Name:            subnetFilter.Name,
 		Description:     subnetFilter.Description,
@@ -39,7 +42,10 @@ func (subnetFilter SubnetFilter) ToListOpt() subnets.ListOpts {
 	}
 }
 
-func (networkFilter NetworkFilter) ToListOpt() networks.ListOpts {
+func (networkFilter *NetworkFilter) ToListOpt() networks.ListOpts {
+	if networkFilter == nil {
+		return networks.ListOpts{}
+	}
 	return networks.ListOpts{
 		Name:        networkFilter.Name,
 		Description: networkFilter.Description,

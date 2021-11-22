@@ -152,7 +152,8 @@ func (s *Service) constructNetworks(openStackCluster *infrav1.OpenStackCluster, 
 				ID: openStackCluster.Status.Network.Subnet.ID,
 			},
 			PortOpts: &infrav1.PortOpts{
-				Trunk: &openStackMachine.Spec.Trunk,
+				NameSuffix: "cluster-network-port",
+				Trunk:      &openStackMachine.Spec.Trunk,
 			},
 		}}
 	}
@@ -188,13 +189,7 @@ func (s *Service) getPortNetworks(clusterNetworkID string, clusterSubnetID strin
 				PortOpts: pOpts,
 			})
 		} else {
-			nets = append(nets, infrav1.Network{
-				ID: clusterNetworkID,
-				Subnet: &infrav1.Subnet{
-					ID: clusterSubnetID,
-				},
-				PortOpts: pOpts,
-			})
+			return nil, fmt.Errorf("invalid port %s: network is a required field and can not be nil", port.NameSuffix)
 		}
 	}
 	return nets, nil

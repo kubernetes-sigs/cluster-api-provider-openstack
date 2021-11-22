@@ -416,9 +416,10 @@ func TestGetPortNetworks(t *testing.T) {
 				},
 			},
 			expect: func(m *mock_networking.MockNetworkClientMockRecorder) {
-				m.ListNetwork(infrav1.NetworkFilter{
+				network := infrav1.NetworkFilter{
 					Name: networkAName,
-				}.ToListOpt()).Return(
+				}
+				m.ListNetwork(network.ToListOpt()).Return(
 					[]networks.Network{
 						{
 							ID:   networkAUUID,
@@ -443,9 +444,10 @@ func TestGetPortNetworks(t *testing.T) {
 			trunk: false,
 			want:  nil,
 			expect: func(m *mock_networking.MockNetworkClientMockRecorder) {
-				m.ListNetwork(infrav1.NetworkFilter{
+				network := infrav1.NetworkFilter{
 					Tags: "foo-tag",
-				}.ToListOpt()).Return(
+				}
+				m.ListNetwork(network.ToListOpt()).Return(
 					[]networks.Network{
 						{
 							ID:   networkAUUID,
@@ -474,9 +476,10 @@ func TestGetPortNetworks(t *testing.T) {
 			trunk: false,
 			want:  nil,
 			expect: func(m *mock_networking.MockNetworkClientMockRecorder) {
-				m.ListNetwork(infrav1.NetworkFilter{
+				network := infrav1.NetworkFilter{
 					Tags: "nil-tag",
-				}.ToListOpt()).Return(
+				}
+				m.ListNetwork(network.ToListOpt()).Return(
 					[]networks.Network{},
 					nil,
 				)
