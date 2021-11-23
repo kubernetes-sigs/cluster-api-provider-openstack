@@ -39,9 +39,9 @@ FLOATING_RANGE=${FLOATING_RANGE:-"172.24.4.0/24"}
 
 # Servers will be directly attached to the private network
 # We create a route to it with sshuttle
-PRIVATE_NETWORK_CIDR=${PRIVATE_NETWORK_CIDR:-"10.0.2.0/24"}
-CONTROLLER_IP=${CONTROLLER_IP:-"10.0.2.15"}
-WORKER_IP=${WORKER_IP:-"10.0.2.16"}
+PRIVATE_NETWORK_CIDR=${PRIVATE_NETWORK_CIDR:-"10.0.3.0/24"}
+CONTROLLER_IP=${CONTROLLER_IP:-"10.0.3.15"}
+WORKER_IP=${WORKER_IP:-"10.0.3.16"}
 
 PRIMARY_AZ=testaz1
 SECONDARY_AZ=testaz2
@@ -112,6 +112,9 @@ function start_sshuttle {
     echo "Opening tunnel to ${PRIVATE_NETWORK_CIDR} and ${FLOATING_RANGE} via ${public_ip}"
     # sshuttle won't succeed until ssh is up and python is installed on the destination
     retry 50 30 sshuttle -r "$public_ip" "$PRIVATE_NETWORK_CIDR" "$FLOATING_RANGE" --ssh-cmd=\""$(get_ssh_cmd)"\" -l 0.0.0.0 -D
+
+    # Give sshuttle a few seconds to be fully up
+    sleep 5
 }
 
 function kill_sshuttle {
@@ -286,13 +289,7 @@ EOF
     # Wait until the OpenStack API is reachable
     retry 5 30 "openstack versions show"
 
-    # Add the controller to its own host aggregate and availability zone
-    aggregateid=$(openstack aggregate create --zone "$PRIMARY_AZ" "$PRIMARY_AZ" -f value -c id)
-    for host in $(openstack compute service list --service nova-compute -f value -c Host)
-    do
-        openstack aggregate add host "$aggregateid" "$host"
-    done
-
+    # Log some useful info
     openstack hypervisor stats show
     openstack host list
     openstack usage list
@@ -304,18 +301,6 @@ EOF
     openstack server list
     openstack availability zone list
     openstack domain list
-
-    # the flavors are created in a way that we can execute at least 2 e2e tests in parallel (overall we have 32 vCPUs)
-    openstack flavor delete m1.tiny
-    openstack flavor create --ram 512 --disk 1 --vcpus 1 --public --id 1 m1.tiny --property hw_rng:allowed='True'
-    openstack flavor delete m1.small
-    openstack flavor create --ram 4192 --disk 10 --vcpus 2 --public --id 2 m1.small --property hw_rng:allowed='True'
-    openstack flavor delete m1.medium
-    openstack flavor create --ram 6144 --disk 10 --vcpus 4 --public --id 3 m1.medium --property hw_rng:allowed='True'
-
-    # Adjust the CPU quota
-    openstack quota set --cores 32 demo
-    openstack quota set --secgroups 50 demo
 
     echo "${REPO_ROOT_ABSOLUTE}/clouds.yaml:"
     cat "${REPO_ROOT_ABSOLUTE}/clouds.yaml"

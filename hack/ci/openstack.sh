@@ -32,8 +32,9 @@ function cloud_init {
     OPENSTACK_ROUTER_NAME=${OPENSTACK_ROUTER_NAME:-${CLUSTER_NAME}-router}
     OPENSTACK_IMAGE_NAME=${OPENSTACK_IMAGE_NAME:-ubuntu-2004-lts}
 
-    OPENSTACK_FLAVOR_controller=${OPENSTACK_FLAVOR:-m1.xlarge}
-    OPENSTACK_FLAVOR_worker=${OPENSTACK_FLAVOR:-m1.large}
+    OPENSTACK_FLAVOR=${OPENSTACK_FLAVOR:-m1.xlarge}
+    OPENSTACK_FLAVOR_controller=${OPENSTACK_FLAVOR_controller:-$OPENSTACK_FLAVOR}
+    OPENSTACK_FLAVOR_worker=${OPENSTACK_FLAVOR_worker:-$OPENSTACK_FLAVOR}
 
     ensure_openstack_client
 }
@@ -79,7 +80,7 @@ function init_infrastructure() {
 
     # If OPENSTACK_PUBLIC_IP is not set, look for an existing unattached tagged floating ip before creating one
     [ -z "${OPENSTACK_PUBLIC_IP:-}" ] && \
-        OPENSTACK_PUBLIC_IP=$(openstack floating ip list --tags "${CLUSTER_NAME}-devstack" -f value -c "Floating IP Address" | head -n 1)
+        OPENSTACK_PUBLIC_IP=$(openstack floating ip list --tags "${CLUSTER_NAME}" -f value -c "Floating IP Address" | head -n 1)
     [ -z "${OPENSTACK_PUBLIC_IP:-}" ] && \
         OPENSTACK_PUBLIC_IP=$(openstack floating ip create --tag "$CLUSTER_NAME" \
                 "$OPENSTACK_PUBLIC_NETWORK" -f value -c floating_ip_address)
@@ -168,6 +169,10 @@ function cloud_cleanup {
             openstack port delete "$portid"
         done
         openstack network delete "$networkid"
+    done
+
+    for subnetid in $(openstack subnet list --tag "$CLUSTER_NAME" -f value -c ID); do
+        openstack subnet delete "$subnetid"
     done
 
     for secgroupid in $(openstack security group list --tag "$CLUSTER_NAME" -f value -c ID); do
