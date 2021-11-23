@@ -59,5 +59,5 @@ func (s *Service) CreateBastion(openStackCluster *infrav1.OpenStackCluster, clus
 	}
 	instanceSpec.Networks = nets
 
-	return s.createInstance(openStackCluster, clusterName, instanceSpec)
+	return s.createInstance(openStackCluster, clusterName, instanceSpec, retryIntervalInstanceStatus)
 }

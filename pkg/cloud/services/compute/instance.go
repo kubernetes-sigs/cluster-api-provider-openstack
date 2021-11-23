@@ -40,12 +40,16 @@ import (
 )
 
 const (
-	timeoutInstanceCreate       = 5
 	retryIntervalInstanceStatus = 10 * time.Second
+	timeoutInstanceCreate       = 5
 	timeoutInstanceDelete       = 5 * time.Minute
 )
 
 func (s *Service) CreateInstance(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, clusterName string, userData string) (instance *InstanceStatus, err error) {
+	return s.createInstanceImpl(openStackCluster, machine, openStackMachine, clusterName, userData, retryIntervalInstanceStatus)
+}
+
+func (s *Service) createInstanceImpl(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, clusterName string, userData string, retryInterval time.Duration) (instance *InstanceStatus, err error) {
 	if openStackMachine == nil {
 		return nil, fmt.Errorf("create Options need be specified to create instace")
 	}
@@ -123,7 +127,7 @@ func (s *Service) CreateInstance(openStackCluster *infrav1.OpenStackCluster, mac
 	}
 	instanceSpec.Networks = nets
 
-	return s.createInstance(openStackMachine, clusterName, &instanceSpec)
+	return s.createInstance(openStackMachine, clusterName, &instanceSpec, retryInterval)
 }
 
 // constructNetworks builds an array of networks from the network, subnet and ports items in the machine spec.
@@ -174,7 +178,7 @@ func (s *Service) constructNetworks(openStackCluster *infrav1.OpenStackCluster, 
 	return nets, nil
 }
 
-func (s *Service) createInstance(eventObject runtime.Object, clusterName string, instanceSpec *InstanceSpec) (*InstanceStatus, error) {
+func (s *Service) createInstance(eventObject runtime.Object, clusterName string, instanceSpec *InstanceSpec, retryInterval time.Duration) (*InstanceStatus, error) {
 	accessIPv4 := ""
 	portList := []servers.Network{}
 
@@ -253,7 +257,7 @@ func (s *Service) createInstance(eventObject runtime.Object, clusterName string,
 	instanceCreateTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT", timeoutInstanceCreate)
 	instanceCreateTimeout *= time.Minute
 	var createdInstance *InstanceStatus
-	err = util.PollImmediate(retryIntervalInstanceStatus, instanceCreateTimeout, func() (bool, error) {
+	err = util.PollImmediate(retryInterval, instanceCreateTimeout, func() (bool, error) {
 		createdInstance, err = s.GetInstanceStatus(server.ID)
 		if err != nil {
 			if capoerrors.IsRetryable(err) {
