@@ -333,12 +333,6 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 	addresses := instanceNS.Addresses()
 	openStackMachine.Status.Addresses = addresses
 
-	// TODO(sbueringer) From CAPA: TODO(vincepri): Remove this annotation when clusterctl is no longer relevant.
-	if openStackMachine.Annotations == nil {
-		openStackMachine.Annotations = map[string]string{}
-	}
-	openStackMachine.Annotations["cluster-api-provider-openstack"] = "true"
-
 	switch instanceStatus.State() {
 	case infrav1.InstanceStateActive:
 		logger.Info("Machine instance is ACTIVE", "instance-id", instanceStatus.ID())
