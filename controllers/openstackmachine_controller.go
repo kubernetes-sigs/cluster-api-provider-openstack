@@ -64,6 +64,7 @@ type OpenStackMachineReconciler struct {
 
 const (
 	waitForClusterInfrastructureReadyDuration = 15 * time.Second
+	waitForInstanceBecomeActiveToReconcile    = 60 * time.Second
 )
 
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackmachines,verbs=get;list;watch;create;update;patch;delete
@@ -337,11 +338,19 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 	case infrav1.InstanceStateActive:
 		logger.Info("Machine instance is ACTIVE", "instance-id", instanceStatus.ID())
 		openStackMachine.Status.Ready = true
-	case infrav1.InstanceStateBuilding:
-		logger.Info("Machine instance is BUILDING", "instance-id", instanceStatus.ID())
-	default:
+	case infrav1.InstanceStateError:
+		// Error is unexpected, thus we report error and never retry
 		handleUpdateMachineError(logger, openStackMachine, errors.Errorf("OpenStack instance state %q is unexpected", instanceStatus.State()))
 		return ctrl.Result{}, nil
+	case infrav1.InstanceStateDeleted:
+		// we should avoid further actions for DELETED VM
+		logger.Info("Instance state is DELETED, no actions")
+		return ctrl.Result{}, nil
+	default:
+		// The other state is normal (for example, migrating, shutoff) but we don't want to proceed until it's ACTIVE
+		// due to potential conflict or unexpected actions
+		logger.Info("Waiting for instance to become ACTIVE", "instance-id", instanceStatus.ID(), "status", instanceStatus.State())
+		return ctrl.Result{RequeueAfter: waitForInstanceBecomeActiveToReconcile}, nil
 	}
 
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {

@@ -293,6 +293,9 @@ var (
 
 	// InstanceStateShutoff is the string representing an instance in a shutoff state.
 	InstanceStateShutoff = InstanceState("SHUTOFF")
+
+	// InstanceStateDeleted is the string representing an instance in a deleted state.
+	InstanceStateDeleted = InstanceState("DELETED")
 )
 
 // Bastion represents basic information about the bastion node.
