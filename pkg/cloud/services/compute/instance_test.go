@@ -25,6 +25,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/golang/mock/gomock"
 	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
 	common "github.com/gophercloud/gophercloud/openstack/common/extensions"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/availabilityzones"
@@ -525,6 +526,7 @@ const (
 	controlPlaneSecurityGroupUUID = "c9817a91-4821-42db-8367-2301002ab659"
 	workerSecurityGroupUUID       = "9c6c0d28-03c9-436c-815d-58440ac2c1c8"
 	serverGroupUUID               = "7b940d62-68ef-4e42-a76a-1a62e290509c"
+	volumeUUID                    = "d84fe775-e25d-4f80-9888-f701e996c689"
 
 	openStackMachineName = "test-openstack-machine"
 	portName             = "test-openstack-machine-0"
@@ -714,6 +716,24 @@ func TestService_CreateInstance(t *testing.T) {
 		expectServerPoll(computeRecorder, []string{"ACTIVE"})
 	}
 
+	returnedVolume := func(status string) *volumes.Volume {
+		return &volumes.Volume{
+			ID:     volumeUUID,
+			Status: status,
+		}
+	}
+
+	// Expected calls when polling for server creation
+	expectVolumePoll := func(computeRecorder *MockClientMockRecorder, states []string) {
+		for _, state := range states {
+			computeRecorder.GetVolume(volumeUUID).Return(returnedVolume(state), nil)
+		}
+	}
+
+	expectVolumePollSuccess := func(computeRecorder *MockClientMockRecorder) {
+		expectVolumePoll(computeRecorder, []string{"available"})
+	}
+
 	// *******************
 	// START OF TEST CASES
 	// *******************
@@ -812,6 +832,82 @@ func TestService_CreateInstance(t *testing.T) {
 				expectServerPoll(computeRecorder, []string{"BUILDING", "ERROR"})
 
 				// Don't delete ports because the server is created: DeleteInstance will do it
+			},
+			wantErr: true,
+		},
+		{
+			name:                "Boot from volume success",
+			getMachine:          getDefaultMachine,
+			getOpenStackCluster: getDefaultOpenStackCluster,
+			getOpenStackMachine: func() *infrav1.OpenStackMachine {
+				osMachine := getDefaultOpenStackMachine()
+				osMachine.Spec.RootVolume = &infrav1.RootVolume{
+					Size: 50,
+				}
+				return osMachine
+			},
+			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
+				expectUseExistingDefaultPort(networkRecorder)
+				expectDefaultImageAndFlavor(computeRecorder)
+
+				computeRecorder.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
+					Return([]volumes.Volume{}, nil)
+				computeRecorder.CreateVolume(volumes.CreateOpts{
+					Size:             50,
+					AvailabilityZone: failureDomain,
+					Description:      fmt.Sprintf("Root volume for %s", openStackMachineName),
+					Name:             fmt.Sprintf("%s-root", openStackMachineName),
+					ImageID:          imageUUID,
+					Multiattach:      false,
+				}).Return(&volumes.Volume{ID: volumeUUID}, nil)
+				expectVolumePollSuccess(computeRecorder)
+
+				createMap := getDefaultServerMap()
+				serverMap := createMap["server"].(map[string]interface{})
+				serverMap["block_device_mapping_v2"] = []map[string]interface{}{
+					{
+						"delete_on_termination": true,
+						"destination_type":      "volume",
+						"source_type":           "volume",
+						"uuid":                  volumeUUID,
+						"boot_index":            float64(0),
+					},
+				}
+				expectCreateServer(computeRecorder, createMap, false)
+				expectServerPollSuccess(computeRecorder)
+
+				// Don't delete ports because the server is created: DeleteInstance will do it
+			},
+			wantErr: false,
+		},
+		{
+			name:                "Boot from volume failure cleans up ports",
+			getMachine:          getDefaultMachine,
+			getOpenStackCluster: getDefaultOpenStackCluster,
+			getOpenStackMachine: func() *infrav1.OpenStackMachine {
+				osMachine := getDefaultOpenStackMachine()
+				osMachine.Spec.RootVolume = &infrav1.RootVolume{
+					Size: 50,
+				}
+				return osMachine
+			},
+			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
+				expectUseExistingDefaultPort(networkRecorder)
+				expectDefaultImageAndFlavor(computeRecorder)
+
+				computeRecorder.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
+					Return([]volumes.Volume{}, nil)
+				computeRecorder.CreateVolume(volumes.CreateOpts{
+					Size:             50,
+					AvailabilityZone: failureDomain,
+					Description:      fmt.Sprintf("Root volume for %s", openStackMachineName),
+					Name:             fmt.Sprintf("%s-root", openStackMachineName),
+					ImageID:          imageUUID,
+					Multiattach:      false,
+				}).Return(&volumes.Volume{ID: volumeUUID}, nil)
+				expectVolumePoll(computeRecorder, []string{"creating", "error"})
+
+				expectCleanupDefaultPort(networkRecorder)
 			},
 			wantErr: true,
 		},
@@ -1054,6 +1150,34 @@ func TestService_DeleteInstance(t *testing.T) {
 
 				computeRecorder.DeleteServer(instanceUUID).Return(nil)
 				computeRecorder.GetServer(instanceUUID).Return(nil, gophercloud.ErrDefault404{})
+			},
+			wantErr: false,
+		},
+		{
+			name:        "Dangling volume",
+			eventObject: getEventObject(),
+			getOpenStackMachineSpec: func() *infrav1.OpenStackMachineSpec {
+				spec := getDefaultOpenStackMachineSpec()
+				spec.RootVolume = &infrav1.RootVolume{
+					Size: 50,
+				}
+				return spec
+			},
+			getInstanceStatus: func() *InstanceStatus { return nil },
+			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
+				// Fetch volume by name
+				volumeName := fmt.Sprintf("%s-root", instanceName)
+				computeRecorder.ListVolumes(volumes.ListOpts{
+					AllTenants: false,
+					Name:       volumeName,
+					TenantID:   "",
+				}).Return([]volumes.Volume{{
+					ID:   volumeUUID,
+					Name: volumeName,
+				}}, nil)
+
+				// Delete volume
+				computeRecorder.DeleteVolume(volumeUUID, volumes.DeleteOpts{}).Return(nil)
 			},
 			wantErr: false,
 		},
