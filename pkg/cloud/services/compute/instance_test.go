@@ -24,7 +24,9 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/golang/mock/gomock"
+	"github.com/gophercloud/gophercloud"
 	common "github.com/gophercloud/gophercloud/openstack/common/extensions"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/availabilityzones"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
@@ -39,6 +41,7 @@ import (
 	. "github.com/onsi/gomega/gstruct"
 	gomegatypes "github.com/onsi/gomega/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/pointer"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 
@@ -983,6 +986,99 @@ func TestService_CreateInstance(t *testing.T) {
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Service.CreateInstance() error = %v, wantErr %v", err, tt.wantErr)
 				return
+			}
+		})
+	}
+}
+
+func TestService_DeleteInstance(t *testing.T) {
+	RegisterTestingT(t)
+
+	const instanceUUID = "7b8a2800-c615-4f52-9b75-d2ba60a2af66"
+	const portUUID = "94f3e9cb-89d5-4313-ad6d-44035722342b"
+
+	const instanceName = "test-instance"
+
+	getEventObject := func() runtime.Object {
+		return &infrav1.OpenStackMachine{}
+	}
+
+	getDefaultInstanceStatus := func() *InstanceStatus {
+		return &InstanceStatus{
+			server: &ServerExt{
+				Server: servers.Server{
+					ID: instanceUUID,
+				},
+			},
+		}
+	}
+
+	getDefaultOpenStackMachineSpec := func() *infrav1.OpenStackMachineSpec {
+		return &getDefaultOpenStackMachine().Spec
+	}
+
+	// *******************
+	// START OF TEST CASES
+	// *******************
+
+	tests := []struct {
+		name                    string
+		eventObject             runtime.Object
+		getOpenStackMachineSpec func() *infrav1.OpenStackMachineSpec
+		getInstanceStatus       func() *InstanceStatus
+		expect                  func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder)
+		wantErr                 bool
+	}{
+		{
+			name:                    "Defaults",
+			eventObject:             getEventObject(),
+			getOpenStackMachineSpec: getDefaultOpenStackMachineSpec,
+			getInstanceStatus:       getDefaultInstanceStatus,
+			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
+				computeRecorder.ListAttachedInterfaces(instanceUUID).Return([]attachinterfaces.Interface{
+					{
+						PortID: portUUID,
+					},
+				}, nil)
+				networkRecorder.ListExtensions().Return([]extensions.Extension{{
+					Extension: common.Extension{
+						Alias: "trunk",
+					},
+				}}, nil)
+				computeRecorder.DeleteAttachedInterface(instanceUUID, portUUID).Return(nil)
+				// FIXME: Why we are looking for a trunk when we know the port is not trunked?
+				networkRecorder.ListTrunk(trunks.ListOpts{PortID: portUUID}).Return([]trunks.Trunk{}, nil)
+				// FIXME: Why are we fetching the port before deletion? We should delete the port and handle the 404
+				networkRecorder.GetPort(portUUID).Return(&ports.Port{ID: portUUID}, nil)
+				networkRecorder.DeletePort(portUUID).Return(nil)
+
+				computeRecorder.DeleteServer(instanceUUID).Return(nil)
+				computeRecorder.GetServer(instanceUUID).Return(nil, gophercloud.ErrDefault404{})
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockCtrl := gomock.NewController(t)
+			mockComputeClient := NewMockClient(mockCtrl)
+			mockNetworkClient := mock_networking.NewMockNetworkClient(mockCtrl)
+
+			computeRecorder := mockComputeClient.EXPECT()
+			networkRecorder := mockNetworkClient.EXPECT()
+
+			tt.expect(computeRecorder, networkRecorder)
+
+			s := Service{
+				projectID:      "",
+				computeService: mockComputeClient,
+				networkingService: networking.NewTestService(
+					"", mockNetworkClient, logr.Discard(),
+				),
+				logger: logr.Discard(),
+			}
+			if err := s.DeleteInstance(tt.eventObject, tt.getOpenStackMachineSpec(), instanceName, tt.getInstanceStatus()); (err != nil) != tt.wantErr {
+				t.Errorf("Service.DeleteInstance() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
