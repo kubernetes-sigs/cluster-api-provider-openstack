@@ -151,7 +151,13 @@ func Convert_v1alpha3_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in *O
 			Kind: "Secret",
 		}
 	}
-	return autoConvert_v1alpha3_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in, out, s)
+	if err := autoConvert_v1alpha3_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in, out, s); err != nil {
+		return err
+	}
+	if in.RootVolume != nil && in.RootVolume.Size > 0 {
+		out.Image = in.RootVolume.SourceUUID
+	}
+	return nil
 }
 
 // Convert_v1beta1_Network_To_v1alpha3_Network has to be added by us for the new portOpts
@@ -164,12 +170,19 @@ func Convert_v1beta1_Network_To_v1alpha3_Network(in *infrav1.Network, out *Netwo
 // parameter in v1beta1. There is no intention to support this parameter in v1alpha3, so the field is just dropped.
 // Further, we want to convert the Type of CloudsSecret from SecretReference to string.
 func Convert_v1beta1_OpenStackMachineSpec_To_v1alpha3_OpenStackMachineSpec(in *infrav1.OpenStackMachineSpec, out *OpenStackMachineSpec, s conversion.Scope) error {
+	if err := autoConvert_v1beta1_OpenStackMachineSpec_To_v1alpha3_OpenStackMachineSpec(in, out, s); err != nil {
+		return err
+	}
 	if in.IdentityRef != nil {
 		out.CloudsSecret = &corev1.SecretReference{
 			Name: in.IdentityRef.Name,
 		}
 	}
-	return autoConvert_v1beta1_OpenStackMachineSpec_To_v1alpha3_OpenStackMachineSpec(in, out, s)
+	if in.RootVolume != nil && in.RootVolume.Size > 0 {
+		out.RootVolume.SourceUUID = in.Image
+		out.Image = ""
+	}
+	return nil
 }
 
 // Convert_v1beta1_OpenStackClusterStatus_To_v1alpha3_OpenStackClusterStatus has to be added
@@ -257,6 +270,41 @@ func Convert_v1beta1_NetworkFilter_To_v1alpha3_Filter(in *infrav1.NetworkFilter,
 	return nil
 }
 
+/*
+ * RootVolume changes:
+ * - DeviceType is removed in v1beta1, hard-coded to disk for prior versions
+ * - SourceType is removed in v1beta1, hard-coded to image for prior versions
+ * - SourceUUID is removed in v1beta1, comes from the parent context
+ */
+
+func Convert_v1beta1_RootVolume_To_v1alpha3_RootVolume(in *infrav1.RootVolume, out *RootVolume, s conversion.Scope) error {
+	out.DeviceType = "disk"
+	out.SourceType = "image"
+	// SourceUUID needs to come from the parent context
+	return autoConvert_v1beta1_RootVolume_To_v1alpha3_RootVolume(in, out, s)
+}
+
+func Convert_v1alpha3_RootVolume_To_v1beta1_RootVolume(in *RootVolume, out *infrav1.RootVolume, s conversion.Scope) error {
+	return autoConvert_v1alpha3_RootVolume_To_v1beta1_RootVolume(in, out, s)
+}
+
+func Convert_v1alpha3_Instance_To_v1beta1_Instance(in *Instance, out *infrav1.Instance, s conversion.Scope) error {
+	if err := autoConvert_v1alpha3_Instance_To_v1beta1_Instance(in, out, s); err != nil {
+		return err
+	}
+	if in.RootVolume != nil && in.RootVolume.Size > 0 {
+		out.Image = in.RootVolume.SourceUUID
+	}
+	return nil
+}
+
 func Convert_v1beta1_Instance_To_v1alpha3_Instance(in *infrav1.Instance, out *Instance, s conversion.Scope) error {
-	return autoConvert_v1beta1_Instance_To_v1alpha3_Instance(in, out, s)
+	if err := autoConvert_v1beta1_Instance_To_v1alpha3_Instance(in, out, s); err != nil {
+		return err
+	}
+	if in.RootVolume != nil && in.RootVolume.Size > 0 {
+		out.RootVolume.SourceUUID = in.Image
+		out.Image = ""
+	}
+	return nil
 }

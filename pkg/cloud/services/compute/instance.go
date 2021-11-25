@@ -369,20 +369,8 @@ func (s *Service) getOrCreateRootVolume(eventObject runtime.Object, instanceSpec
 		return nil, nil
 	}
 
-	// TODO: Remove SourceType and DeviceType from the API because we don't support customising them
-	if rootVolume.SourceType != "" && rootVolume.SourceType != string(bootfromvolume.SourceImage) {
-		return nil, fmt.Errorf("only volume source type '%s' is supported; got: %s", bootfromvolume.SourceImage, rootVolume.SourceType)
-	}
-
-	if rootVolume.DeviceType != "" && rootVolume.DeviceType != "disk" {
-		return nil, fmt.Errorf("only volume device type 'disk' is supported; got: %s", rootVolume.DeviceType)
-	}
-
 	name := rootVolumeName(instanceSpec.Name)
 	size := rootVolume.Size
-	if rootVolume.SourceUUID != "" {
-		imageID = rootVolume.SourceUUID
-	}
 
 	volume, err := s.getVolumeByName(name)
 	if err != nil {

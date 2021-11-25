@@ -49,6 +49,13 @@ func TestFuzzyConversion(t *testing.T) {
 					v1alpha3ClusterSpec.CloudsSecret.Namespace = ""
 				}
 			},
+			func(v1alpha3RootVolume *RootVolume, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha3RootVolume)
+
+				// In v1beta1 only DeviceType="disk" and SourceType="image" are supported
+				v1alpha3RootVolume.DeviceType = "disk"
+				v1alpha3RootVolume.SourceType = "image"
+			},
 			func(v1alpha3MachineSpec *OpenStackMachineSpec, c fuzz.Continue) {
 				c.FuzzNoCustom(v1alpha3MachineSpec)
 
@@ -58,6 +65,19 @@ func TestFuzzyConversion(t *testing.T) {
 					// In switching to IdentityRef, fetching the cloud secret
 					// from a different namespace is no longer supported
 					v1alpha3MachineSpec.CloudsSecret.Namespace = ""
+				}
+
+				if v1alpha3MachineSpec.RootVolume != nil {
+					// OpenStackMachineSpec.Image is ignored in v1alpha3 if RootVolume is set
+					v1alpha3MachineSpec.Image = ""
+				}
+			},
+			func(v1alpha3Instance *Instance, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha3Instance)
+
+				if v1alpha3Instance.RootVolume != nil {
+					// OpenStackInstance.Image is ignored in v1alpha3 if RootVolume is set
+					v1alpha3Instance.Image = ""
 				}
 			},
 			func(v1alpha3SubnetFilter *SubnetFilter, c fuzz.Continue) {

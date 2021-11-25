@@ -70,11 +70,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*Instance)(nil), (*v1beta1.Instance)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_Instance_To_v1beta1_Instance(a.(*Instance), b.(*v1beta1.Instance), scope)
-	}); err != nil {
-		return err
-	}
 	if err := s.AddGeneratedConversionFunc((*LoadBalancer)(nil), (*v1beta1.LoadBalancer)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha4_LoadBalancer_To_v1beta1_LoadBalancer(a.(*LoadBalancer), b.(*v1beta1.LoadBalancer), scope)
 	}); err != nil {
@@ -215,11 +210,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*OpenStackMachineSpec)(nil), (*v1beta1.OpenStackMachineSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(a.(*OpenStackMachineSpec), b.(*v1beta1.OpenStackMachineSpec), scope)
-	}); err != nil {
-		return err
-	}
 	if err := s.AddGeneratedConversionFunc((*OpenStackMachineStatus)(nil), (*v1beta1.OpenStackMachineStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha4_OpenStackMachineStatus_To_v1beta1_OpenStackMachineStatus(a.(*OpenStackMachineStatus), b.(*v1beta1.OpenStackMachineStatus), scope)
 	}); err != nil {
@@ -267,16 +257,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddGeneratedConversionFunc((*v1beta1.OpenStackMachineTemplateSpec)(nil), (*OpenStackMachineTemplateSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1beta1_OpenStackMachineTemplateSpec_To_v1alpha4_OpenStackMachineTemplateSpec(a.(*v1beta1.OpenStackMachineTemplateSpec), b.(*OpenStackMachineTemplateSpec), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*RootVolume)(nil), (*v1beta1.RootVolume)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_RootVolume_To_v1beta1_RootVolume(a.(*RootVolume), b.(*v1beta1.RootVolume), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*v1beta1.RootVolume)(nil), (*RootVolume)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1beta1_RootVolume_To_v1alpha4_RootVolume(a.(*v1beta1.RootVolume), b.(*RootVolume), scope)
 	}); err != nil {
 		return err
 	}
@@ -375,8 +355,23 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddConversionFunc((*Instance)(nil), (*v1beta1.Instance)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_Instance_To_v1beta1_Instance(a.(*Instance), b.(*v1beta1.Instance), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*OpenStackMachineSpec)(nil), (*v1beta1.OpenStackMachineSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(a.(*OpenStackMachineSpec), b.(*v1beta1.OpenStackMachineSpec), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddConversionFunc((*PortOpts)(nil), (*v1beta1.PortOpts)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha4_PortOpts_To_v1beta1_PortOpts(a.(*PortOpts), b.(*v1beta1.PortOpts), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*RootVolume)(nil), (*v1beta1.RootVolume)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_RootVolume_To_v1beta1_RootVolume(a.(*RootVolume), b.(*v1beta1.RootVolume), scope)
 	}); err != nil {
 		return err
 	}
@@ -412,6 +407,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddConversionFunc((*v1beta1.PortOpts)(nil), (*PortOpts)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1beta1_PortOpts_To_v1alpha4_PortOpts(a.(*v1beta1.PortOpts), b.(*PortOpts), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1beta1.RootVolume)(nil), (*RootVolume)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1beta1_RootVolume_To_v1alpha4_RootVolume(a.(*v1beta1.RootVolume), b.(*RootVolume), scope)
 	}); err != nil {
 		return err
 	}
@@ -534,17 +534,20 @@ func autoConvert_v1alpha4_Instance_To_v1beta1_Instance(in *Instance, out *v1beta
 	out.UserData = in.UserData
 	out.Metadata = *(*map[string]string)(unsafe.Pointer(&in.Metadata))
 	out.ConfigDrive = (*bool)(unsafe.Pointer(in.ConfigDrive))
-	out.RootVolume = (*v1beta1.RootVolume)(unsafe.Pointer(in.RootVolume))
+	if in.RootVolume != nil {
+		in, out := &in.RootVolume, &out.RootVolume
+		*out = new(v1beta1.RootVolume)
+		if err := Convert_v1alpha4_RootVolume_To_v1beta1_RootVolume(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.RootVolume = nil
+	}
 	out.ServerGroupID = in.ServerGroupID
 	out.State = v1beta1.InstanceState(in.State)
 	out.IP = in.IP
 	out.FloatingIP = in.FloatingIP
 	return nil
-}
-
-// Convert_v1alpha4_Instance_To_v1beta1_Instance is an autogenerated conversion function.
-func Convert_v1alpha4_Instance_To_v1beta1_Instance(in *Instance, out *v1beta1.Instance, s conversion.Scope) error {
-	return autoConvert_v1alpha4_Instance_To_v1beta1_Instance(in, out, s)
 }
 
 func autoConvert_v1beta1_Instance_To_v1alpha4_Instance(in *v1beta1.Instance, out *Instance, s conversion.Scope) error {
@@ -571,7 +574,15 @@ func autoConvert_v1beta1_Instance_To_v1alpha4_Instance(in *v1beta1.Instance, out
 	out.UserData = in.UserData
 	out.Metadata = *(*map[string]string)(unsafe.Pointer(&in.Metadata))
 	out.ConfigDrive = (*bool)(unsafe.Pointer(in.ConfigDrive))
-	out.RootVolume = (*RootVolume)(unsafe.Pointer(in.RootVolume))
+	if in.RootVolume != nil {
+		in, out := &in.RootVolume, &out.RootVolume
+		*out = new(RootVolume)
+		if err := Convert_v1beta1_RootVolume_To_v1alpha4_RootVolume(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.RootVolume = nil
+	}
 	out.ServerGroupID = in.ServerGroupID
 	out.State = InstanceState(in.State)
 	out.IP = in.IP
@@ -1215,15 +1226,18 @@ func autoConvert_v1alpha4_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(i
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.ServerMetadata = *(*map[string]string)(unsafe.Pointer(&in.ServerMetadata))
 	out.ConfigDrive = (*bool)(unsafe.Pointer(in.ConfigDrive))
-	out.RootVolume = (*v1beta1.RootVolume)(unsafe.Pointer(in.RootVolume))
+	if in.RootVolume != nil {
+		in, out := &in.RootVolume, &out.RootVolume
+		*out = new(v1beta1.RootVolume)
+		if err := Convert_v1alpha4_RootVolume_To_v1beta1_RootVolume(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.RootVolume = nil
+	}
 	out.ServerGroupID = in.ServerGroupID
 	out.IdentityRef = (*v1beta1.OpenStackIdentityReference)(unsafe.Pointer(in.IdentityRef))
 	return nil
-}
-
-// Convert_v1alpha4_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec is an autogenerated conversion function.
-func Convert_v1alpha4_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in *OpenStackMachineSpec, out *v1beta1.OpenStackMachineSpec, s conversion.Scope) error {
-	return autoConvert_v1alpha4_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in, out, s)
 }
 
 func autoConvert_v1beta1_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(in *v1beta1.OpenStackMachineSpec, out *OpenStackMachineSpec, s conversion.Scope) error {
@@ -1263,7 +1277,15 @@ func autoConvert_v1beta1_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(i
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.ServerMetadata = *(*map[string]string)(unsafe.Pointer(&in.ServerMetadata))
 	out.ConfigDrive = (*bool)(unsafe.Pointer(in.ConfigDrive))
-	out.RootVolume = (*RootVolume)(unsafe.Pointer(in.RootVolume))
+	if in.RootVolume != nil {
+		in, out := &in.RootVolume, &out.RootVolume
+		*out = new(RootVolume)
+		if err := Convert_v1beta1_RootVolume_To_v1alpha4_RootVolume(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.RootVolume = nil
+	}
 	out.ServerGroupID = in.ServerGroupID
 	out.IdentityRef = (*OpenStackIdentityReference)(unsafe.Pointer(in.IdentityRef))
 	return nil
@@ -1474,29 +1496,16 @@ func autoConvert_v1beta1_PortOpts_To_v1alpha4_PortOpts(in *v1beta1.PortOpts, out
 }
 
 func autoConvert_v1alpha4_RootVolume_To_v1beta1_RootVolume(in *RootVolume, out *v1beta1.RootVolume, s conversion.Scope) error {
-	out.SourceType = in.SourceType
-	out.SourceUUID = in.SourceUUID
-	out.DeviceType = in.DeviceType
+	// WARNING: in.SourceType requires manual conversion: does not exist in peer-type
+	// WARNING: in.SourceUUID requires manual conversion: does not exist in peer-type
+	// WARNING: in.DeviceType requires manual conversion: does not exist in peer-type
 	out.Size = in.Size
 	return nil
-}
-
-// Convert_v1alpha4_RootVolume_To_v1beta1_RootVolume is an autogenerated conversion function.
-func Convert_v1alpha4_RootVolume_To_v1beta1_RootVolume(in *RootVolume, out *v1beta1.RootVolume, s conversion.Scope) error {
-	return autoConvert_v1alpha4_RootVolume_To_v1beta1_RootVolume(in, out, s)
 }
 
 func autoConvert_v1beta1_RootVolume_To_v1alpha4_RootVolume(in *v1beta1.RootVolume, out *RootVolume, s conversion.Scope) error {
-	out.SourceType = in.SourceType
-	out.SourceUUID = in.SourceUUID
-	out.DeviceType = in.DeviceType
 	out.Size = in.Size
 	return nil
-}
-
-// Convert_v1beta1_RootVolume_To_v1alpha4_RootVolume is an autogenerated conversion function.
-func Convert_v1beta1_RootVolume_To_v1alpha4_RootVolume(in *v1beta1.RootVolume, out *RootVolume, s conversion.Scope) error {
-	return autoConvert_v1beta1_RootVolume_To_v1alpha4_RootVolume(in, out, s)
 }
 
 func autoConvert_v1alpha4_Router_To_v1beta1_Router(in *Router, out *v1beta1.Router, s conversion.Scope) error {

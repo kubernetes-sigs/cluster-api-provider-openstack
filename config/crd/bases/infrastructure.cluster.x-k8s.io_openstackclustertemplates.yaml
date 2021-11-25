@@ -1067,14 +1067,8 @@ spec:
                               rootVolume:
                                 description: The volume metadata to boot from
                                 properties:
-                                  deviceType:
-                                    type: string
                                   diskSize:
                                     type: integer
-                                  sourceType:
-                                    type: string
-                                  sourceUUID:
-                                    type: string
                                 type: object
                               securityGroups:
                                 description: The names of the security groups to assign

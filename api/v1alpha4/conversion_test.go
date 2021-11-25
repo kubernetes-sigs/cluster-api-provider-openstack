@@ -169,6 +169,29 @@ func TestFuzzyConversion(t *testing.T) {
 				// Test that we restore TenantID from ProjectID
 				v1alpha3Filter.TenantID = v1alpha3Filter.ProjectID
 			},
+			func(v1alpha4RootVolume *RootVolume, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha4RootVolume)
+
+				// In v1beta1 only DeviceType="disk" and SourceType="image" are supported
+				v1alpha4RootVolume.DeviceType = "disk"
+				v1alpha4RootVolume.SourceType = "image"
+			},
+			func(v1alpha4MachineSpec *OpenStackMachineSpec, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha4MachineSpec)
+
+				if v1alpha4MachineSpec.RootVolume != nil {
+					// OpenStackMachineSpec.Image is ignored in v1alpha4 if RootVolume is set
+					v1alpha4MachineSpec.Image = ""
+				}
+			},
+			func(v1alpha4Instance *Instance, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha4Instance)
+
+				if v1alpha4Instance.RootVolume != nil {
+					// OpenStackInstance.Image is ignored in v1alpha4 if RootVolume is set
+					v1alpha4Instance.Image = ""
+				}
+			},
 
 			// Don't test hub-spoke-hub conversion of infrav1 fields which are not in v1alpha4
 			func(v1beta1PortOpts *infrav1.PortOpts, c fuzz.Continue) {
