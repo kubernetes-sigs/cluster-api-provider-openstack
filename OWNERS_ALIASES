@@ -20,7 +20,6 @@ aliases:
     - CecileRobertMichon
   cluster-api-openstack-maintainers:
     - jichenjc
-    - sbueringer
     - hidekazuna
   cluster-api-openstack-reviewers:
     - chrischdi

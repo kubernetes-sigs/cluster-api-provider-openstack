@@ -7,6 +7,13 @@
     - [Building and upload your own capi-openstack controller image](#building-and-upload-your-own-capi-openstack-controller-image)
     - [Using your own capi-openstack controller image](#using-your-own-capi-openstack-controller-image)
   - [Developing with Tilt](#developing-with-tilt)
+  - [Running E2E tests locally](#running-e2e-tests-locally)
+    - [Support for clouds using SSL](#support-for-clouds-using-ssl)
+    - [Support for clouds with multiple external networks](#support-for-clouds-with-multiple-external-networks)
+    - [OpenStack prerequisites](#openstack-prerequisites)
+  - [Running E2E tests using rootless podman](#running-e2e-tests-using-rootless-podman)
+    - [Host configuration](#host-configuration)
+    - [Running podman system service to emulate docker daemon](#running-podman-system-service-to-emulate-docker-daemon)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -41,7 +48,7 @@ After generating `infrastructure-components.yaml`, replace the `us.gcr.io/k8s-ar
 
 ## Developing with Tilt
 
-We have support for using [Tilt](https://tilt.dev/) for rapid iterative development. Please visit the [Cluster API documentation on Tilt](https://master.cluster-api.sigs.k8s.io/developer/tilt.html) for information on how to set up your development environment. 
+We have support for using [Tilt](https://tilt.dev/) for rapid iterative development. Please visit the [Cluster API documentation on Tilt](https://cluster-api.sigs.k8s.io/developer/tilt.html) for information on how to set up your development environment. 
 
 ## Running E2E tests locally
 
@@ -67,7 +74,7 @@ If your cloud requires a cacert you must also pass this to make via `OPENSTACK_C
 
 ```bash
 make test-e2e OPENSTACK_CLOUD_YAML_FILE=/path/to/clouds.yaml OPENSTACK_CLOUD=my_cloud \
-              OPENSTACK_CLOUD_CACERT_B64=$(base64 -w /path/to/mycloud-ca.crt)
+              OPENSTACK_CLOUD_CACERT_B64=$(base64 -w0 /path/to/mycloud-ca.crt)
 ```
 
 CAPO deployed in the local kind cluster will automatically pick up a `cacert` defined in your `clouds.yaml` so you will see servers created in OpenStack without specifying `OPENSTACK_CLOUD_CACERT_B64`. However, the cacert won't be deployed to those servers, so kubelet will fail to start.
@@ -97,7 +104,7 @@ $ openstack network list --external
 
 ### OpenStack prerequisites
 
-The file [`test/e2e/data/e2e_conf.yaml`](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/master/test/e2e/data/e2e_conf.yaml) and the test templates under [`test/e2e/data/infrastructure-openstack`](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/tree/master/test/e2e/data/infrastructure-openstack) reference several OpenStack resources which must exist before running the test:
+The file [`test/e2e/data/e2e_conf.yaml`](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/test/e2e/data/e2e_conf.yaml) and the test templates under [`test/e2e/data/infrastructure-openstack`](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/tree/main/test/e2e/data/infrastructure-openstack) reference several OpenStack resources which must exist before running the test:
 
 * Glance images
   * `cirros-0.5.1-x86_64-disk`

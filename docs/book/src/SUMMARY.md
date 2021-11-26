@@ -7,3 +7,5 @@
     - [external cloud provider](./topics/external-cloud-provider.md)
     - [move from bootstrap](./topics/mover.md)
     - [trouble shooting](./topics/troubleshooting.md)
+- [Development](./development/development.md)
+- [Hacking CI](./development/ci.md)

@@ -151,6 +151,10 @@ type PortOpts struct {
 	// DisablePortSecurity enables or disables the port security when set.
 	// When not set, it takes the value of the corresponding field at the network level.
 	DisablePortSecurity *bool `json:"disablePortSecurity,omitempty"`
+
+	// Tags applied to the port (and corresponding trunk, if a trunk is configured.)
+	// These tags are applied in addition to the instance's tags, which will also be applied to the port.
+	Tags []string `json:"tags,omitempty"`
 }
 
 type FixedIP struct {
@@ -275,9 +279,6 @@ func (r SecurityGroupRule) Equal(x SecurityGroupRule) bool {
 type InstanceState string
 
 var (
-	// InstanceStateBuilding is the string representing an instance in a building state.
-	InstanceStateBuilding = InstanceState("BUILDING")
-
 	// InstanceStateActive is the string representing an instance in an active state.
 	InstanceStateActive = InstanceState("ACTIVE")
 
@@ -289,6 +290,9 @@ var (
 
 	// InstanceStateShutoff is the string representing an instance in a shutoff state.
 	InstanceStateShutoff = InstanceState("SHUTOFF")
+
+	// InstanceStateDeleted is the string representing an instance in a deleted state.
+	InstanceStateDeleted = InstanceState("DELETED")
 )
 
 // Bastion represents basic information about the bastion node.

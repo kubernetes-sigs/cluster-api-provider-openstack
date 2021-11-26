@@ -32,7 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/pointer"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha4"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	capierrors "sigs.k8s.io/cluster-api/errors"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/annotations"
@@ -49,7 +49,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/loadbalancer"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
@@ -65,6 +65,7 @@ type OpenStackMachineReconciler struct {
 
 const (
 	waitForClusterInfrastructureReadyDuration = 15 * time.Second
+	waitForInstanceBecomeActiveToReconcile    = 60 * time.Second
 )
 
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackmachines,verbs=get;list;watch;create;update;patch;delete
@@ -339,24 +340,24 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 	addresses := instanceNS.Addresses()
 	openStackMachine.Status.Addresses = addresses
 
-	// TODO(sbueringer) From CAPA: TODO(vincepri): Remove this annotation when clusterctl is no longer relevant.
-	if openStackMachine.Annotations == nil {
-		openStackMachine.Annotations = map[string]string{}
-	}
-	openStackMachine.Annotations["cluster-api-provider-openstack"] = "true"
-
 	switch instanceStatus.State() {
 	case infrav1.InstanceStateActive:
 		logger.Info("Machine instance is ACTIVE", "instance-id", instanceStatus.ID())
 		openStackMachine.Status.Ready = true
-		conditions.MarkTrue(openStackMachine, infrav1.InstanceRunningCondition)
-	case infrav1.InstanceStateBuilding:
-		logger.Info("Machine instance is BUILDING", "instance-id", instanceStatus.ID())
-		conditions.MarkFalse(openStackMachine, infrav1.InstanceRunningCondition, infrav1.InstanceCreatingReason, clusterv1.ConditionSeverityError, err.Error())
-	default:
+	case infrav1.InstanceStateError:
+		// Error is unexpected, thus we report error and never retry
 		handleUpdateMachineError(logger, openStackMachine, errors.Errorf("OpenStack instance state %q is unexpected", instanceStatus.State()))
 		conditions.MarkUnknown(openStackMachine, infrav1.InstanceRunningCondition, "", "")
 		return ctrl.Result{}, nil
+	case infrav1.InstanceStateDeleted:
+		// we should avoid further actions for DELETED VM
+		logger.Info("Instance state is DELETED, no actions")
+		return ctrl.Result{}, nil
+	default:
+		// The other state is normal (for example, migrating, shutoff) but we don't want to proceed until it's ACTIVE
+		// due to potential conflict or unexpected actions
+		logger.Info("Waiting for instance to become ACTIVE", "instance-id", instanceStatus.ID(), "status", instanceStatus.State())
+		return ctrl.Result{RequeueAfter: waitForInstanceBecomeActiveToReconcile}, nil
 	}
 
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {

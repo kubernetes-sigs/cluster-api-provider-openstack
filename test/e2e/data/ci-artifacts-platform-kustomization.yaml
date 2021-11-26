@@ -3,7 +3,7 @@
 # We currently don't need to patch anything, but the shared util func (GenerateCIArtifactsInjectedTemplateForDebian)
 # which is using this does not allow an empty patch
 ---
-apiVersion: controlplane.cluster.x-k8s.io/v1alpha4
+apiVersion: controlplane.cluster.x-k8s.io/v1beta1
 kind: KubeadmControlPlane
 metadata:
   name: ${CLUSTER_NAME}-control-plane
@@ -18,7 +18,7 @@ spec:
 #      passwd: "$6$rounds=4096$yKTFKL6RmN128$a7cGMiNjeTSd091s6QzZcUNrMTgm3HhML5rVmpDFlCfgD7scTW7ZHr0OChcXCaeiO/kbhdn0XzIzWk63nSqRH1"
 #      lockPassword: false
 #---
-#apiVersion: bootstrap.cluster.x-k8s.io/v1alpha4
+#apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
 #kind: KubeadmConfigTemplate
 #metadata:
 #  name: ${CLUSTER_NAME}-md-0

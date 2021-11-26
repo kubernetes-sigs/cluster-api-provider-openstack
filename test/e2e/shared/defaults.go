@@ -26,7 +26,7 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/cluster-api/test/framework"
 
-	"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
+	"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
 const (
@@ -38,19 +38,21 @@ const (
 	OpenStackCloudYAMLFile      = "OPENSTACK_CLOUD_YAML_FILE"
 	OpenStackCloud              = "OPENSTACK_CLOUD"
 	OpenStackFailureDomain      = "OPENSTACK_FAILURE_DOMAIN"
+	OpenStackFailureDomainAlt   = "OPENSTACK_FAILURE_DOMAIN_ALT"
 	OpenStackImageName          = "OPENSTACK_IMAGE_NAME"
 	OpenStackNodeMachineFlavor  = "OPENSTACK_NODE_MACHINE_FLAVOR"
 	FlavorDefault               = "ci-artifacts"
 	FlavorWithoutLB             = "without-lb-ci-artifacts"
 	FlavorExternalCloudProvider = "external-cloud-provider-ci-artifacts"
 	FlavorMultiNetwork          = "multi-network-ci-artifacts"
+	FlavorMultiAZ               = "multi-az-ci-artifacts"
 )
 
 // DefaultScheme returns the default scheme to use for testing.
 func DefaultScheme() *runtime.Scheme {
 	sc := runtime.NewScheme()
 	framework.TryAddDefaultSchemes(sc)
-	_ = v1alpha4.AddToScheme(sc)
+	_ = v1beta1.AddToScheme(sc)
 	_ = clientgoscheme.AddToScheme(sc)
 	return sc
 }

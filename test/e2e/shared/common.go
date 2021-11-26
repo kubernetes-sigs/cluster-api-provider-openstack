@@ -36,7 +36,7 @@ import (
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
 func SetupSpecNamespace(ctx context.Context, specName string, e2eCtx *E2EContext) *corev1.Namespace {
@@ -95,7 +95,7 @@ func dumpMachines(ctx context.Context, e2eCtx *E2EContext, namespace *corev1.Nam
 		_, _ = fmt.Fprintf(GinkgoWriter, "cannot dump machines, could not get machines: %v\n", err)
 		return
 	}
-	srvs, err := getOpenStackServers(e2eCtx, cluster)
+	srvs, err := GetOpenStackServers(e2eCtx, cluster)
 	if err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "cannot dump machines, could not get servers from OpenStack: %v\n", err)
 		return
@@ -129,14 +129,16 @@ func machinesForSpec(ctx context.Context, clusterProxy framework.ClusterProxy, n
 	return list, nil
 }
 
-func dumpMachine(ctx context.Context, e2eCtx *E2EContext, machine infrav1.OpenStackMachine, srv server, bastionIP string) {
+func dumpMachine(ctx context.Context, e2eCtx *E2EContext, machine infrav1.OpenStackMachine, srv ServerExtWithIP, bastionIP string) {
 	logPath := filepath.Join(e2eCtx.Settings.ArtifactFolder, "clusters", e2eCtx.Environment.BootstrapClusterProxy.GetName())
 	machineLogBase := path.Join(logPath, "instances", machine.Namespace, machine.Name)
 	metaLog := path.Join(machineLogBase, "instance.log")
-	if err := os.MkdirAll(filepath.Dir(metaLog), 0750); err != nil {
+
+	if err := os.MkdirAll(filepath.Dir(metaLog), 0o750); err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "couldn't create directory %q for file: %s\n", metaLog, err)
 	}
-	f, err := os.OpenFile(metaLog, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+
+	f, err := os.OpenFile(metaLog, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "couldn't open file %q: %s\n", metaLog, err)
 		return
@@ -151,7 +153,7 @@ func dumpMachine(ctx context.Context, e2eCtx *E2EContext, machine infrav1.OpenSt
 		_, _ = fmt.Fprintf(GinkgoWriter, "error writing server JSON %s: %s", serverJSON, err)
 	}
 
-	_, _ = fmt.Fprintf(f, "instance found: %q\n", srv.id)
+	_, _ = fmt.Fprintf(f, "instance found: %q\n", srv.ID)
 	executeCommands(
 		ctx,
 		e2eCtx.Settings.ArtifactFolder,

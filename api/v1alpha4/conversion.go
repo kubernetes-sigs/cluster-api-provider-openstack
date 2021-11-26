@@ -16,20 +16,94 @@ limitations under the License.
 
 package v1alpha4
 
-// Hub marks OpenStackCluster as a conversion hub.
-func (*OpenStackCluster) Hub() {}
+import (
+	// corev1 "k8s.io/api/core/v1"
+	// conversion "k8s.io/apimachinery/pkg/conversion"
+	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
 
-// Hub marks OpenStackClusterList as a conversion hub.
-func (*OpenStackClusterList) Hub() {}
+	"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+)
 
-// Hub marks OpenStackMachine as a conversion hub.
-func (*OpenStackMachine) Hub() {}
+var _ ctrlconversion.Convertible = &OpenStackCluster{}
 
-// Hub marks OpenStackMachineList as a conversion hub.
-func (*OpenStackMachineList) Hub() {}
+func (r *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {
+	dst := dstRaw.(*v1beta1.OpenStackCluster)
 
-// Hub marks OpenStackMachineTemplate as a conversion hub.
-func (*OpenStackMachineTemplate) Hub() {}
+	return Convert_v1alpha4_OpenStackCluster_To_v1beta1_OpenStackCluster(r, dst, nil)
+}
 
-// Hub marks OpenStackMachineTemplateList as a conversion hub.
-func (*OpenStackMachineTemplateList) Hub() {}
+func (r *OpenStackCluster) ConvertFrom(srcRaw ctrlconversion.Hub) error {
+	src := srcRaw.(*v1beta1.OpenStackCluster)
+
+	return Convert_v1beta1_OpenStackCluster_To_v1alpha4_OpenStackCluster(src, r, nil)
+}
+
+var _ ctrlconversion.Convertible = &OpenStackClusterList{}
+
+func (r *OpenStackClusterList) ConvertTo(dstRaw ctrlconversion.Hub) error {
+	dst := dstRaw.(*v1beta1.OpenStackClusterList)
+
+	return Convert_v1alpha4_OpenStackClusterList_To_v1beta1_OpenStackClusterList(r, dst, nil)
+}
+
+func (r *OpenStackClusterList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
+	src := srcRaw.(*v1beta1.OpenStackClusterList)
+
+	return Convert_v1beta1_OpenStackClusterList_To_v1alpha4_OpenStackClusterList(src, r, nil)
+}
+
+var _ ctrlconversion.Convertible = &OpenStackMachine{}
+
+func (r *OpenStackMachine) ConvertTo(dstRaw ctrlconversion.Hub) error {
+	dst := dstRaw.(*v1beta1.OpenStackMachine)
+
+	return Convert_v1alpha4_OpenStackMachine_To_v1beta1_OpenStackMachine(r, dst, nil)
+}
+
+func (r *OpenStackMachine) ConvertFrom(srcRaw ctrlconversion.Hub) error {
+	src := srcRaw.(*v1beta1.OpenStackMachine)
+
+	return Convert_v1beta1_OpenStackMachine_To_v1alpha4_OpenStackMachine(src, r, nil)
+}
+
+var _ ctrlconversion.Convertible = &OpenStackMachineList{}
+
+func (r *OpenStackMachineList) ConvertTo(dstRaw ctrlconversion.Hub) error {
+	dst := dstRaw.(*v1beta1.OpenStackMachineList)
+
+	return Convert_v1alpha4_OpenStackMachineList_To_v1beta1_OpenStackMachineList(r, dst, nil)
+}
+
+func (r *OpenStackMachineList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
+	src := srcRaw.(*v1beta1.OpenStackMachineList)
+
+	return Convert_v1beta1_OpenStackMachineList_To_v1alpha4_OpenStackMachineList(src, r, nil)
+}
+
+var _ ctrlconversion.Convertible = &OpenStackMachineTemplate{}
+
+func (r *OpenStackMachineTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error {
+	dst := dstRaw.(*v1beta1.OpenStackMachineTemplate)
+
+	return Convert_v1alpha4_OpenStackMachineTemplate_To_v1beta1_OpenStackMachineTemplate(r, dst, nil)
+}
+
+func (r *OpenStackMachineTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) error {
+	src := srcRaw.(*v1beta1.OpenStackMachineTemplate)
+
+	return Convert_v1beta1_OpenStackMachineTemplate_To_v1alpha4_OpenStackMachineTemplate(src, r, nil)
+}
+
+var _ ctrlconversion.Convertible = &OpenStackMachineTemplateList{}
+
+func (r *OpenStackMachineTemplateList) ConvertTo(dstRaw ctrlconversion.Hub) error {
+	dst := dstRaw.(*v1beta1.OpenStackMachineTemplateList)
+
+	return Convert_v1alpha4_OpenStackMachineTemplateList_To_v1beta1_OpenStackMachineTemplateList(r, dst, nil)
+}
+
+func (r *OpenStackMachineTemplateList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
+	src := srcRaw.(*v1beta1.OpenStackMachineTemplateList)
+
+	return Convert_v1beta1_OpenStackMachineTemplateList_To_v1alpha4_OpenStackMachineTemplateList(src, r, nil)
+}

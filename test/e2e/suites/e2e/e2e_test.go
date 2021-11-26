@@ -36,15 +36,16 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	apimachinerytypes "k8s.io/apimachinery/pkg/types"
+	utilrand "k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/utils/pointer"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha4"
-	bootstrapv1 "sigs.k8s.io/cluster-api/bootstrap/kubeadm/api/v1alpha4"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	bootstrapv1 "sigs.k8s.io/cluster-api/bootstrap/kubeadm/api/v1beta1"
 	"sigs.k8s.io/cluster-api/controllers/noderefutil"
 	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/cluster-api/test/framework/clusterctl"
 	crclient "sigs.k8s.io/controller-runtime/pkg/client"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
 )
 
@@ -91,8 +92,8 @@ var _ = Describe("e2e tests", func() {
 				ClusterName: clusterName,
 				Namespace:   namespace.Name,
 			})
-			Expect(len(workerMachines)).To(Equal(1))
-			Expect(len(controlPlaneMachines)).To(Equal(3))
+			Expect(workerMachines).To(HaveLen(1))
+			Expect(controlPlaneMachines).To(HaveLen(3))
 		})
 	})
 
@@ -117,8 +118,8 @@ var _ = Describe("e2e tests", func() {
 				ClusterName: clusterName,
 				Namespace:   namespace.Name,
 			})
-			Expect(len(workerMachines)).To(Equal(1))
-			Expect(len(controlPlaneMachines)).To(Equal(1))
+			Expect(workerMachines).To(HaveLen(1))
+			Expect(controlPlaneMachines).To(HaveLen(1))
 
 			shared.Byf("Waiting for worker nodes to be in Running phase")
 			statusChecks := []framework.MachineStatusCheck{framework.MachinePhaseCheck(string(clusterv1.MachinePhaseRunning))}
@@ -145,42 +146,6 @@ var _ = Describe("e2e tests", func() {
 			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(1)
 			configCluster.WorkerMachineCount = pointer.Int64Ptr(1)
 			configCluster.Flavor = shared.FlavorWithoutLB
-			_ = createCluster(ctx, configCluster)
-
-			shared.Byf("Creating MachineDeployment with custom port options")
-			md3Name := clusterName + "-md-3"
-			customPortOptions := &[]infrav1.PortOpts{
-				{Description: "primary"},
-			}
-
-			// Note that as the bootstrap config does not have cloud.conf, the node will not be added to the cluster.
-			// We still expect the port for the machine to be created.
-			framework.CreateMachineDeployment(ctx, framework.CreateMachineDeploymentInput{
-				Creator:                 e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
-				MachineDeployment:       makeMachineDeployment(namespace.Name, md3Name, clusterName, "", 1),
-				BootstrapConfigTemplate: makeJoinBootstrapConfigTemplate(namespace.Name, md3Name),
-				InfraMachineTemplate:    makeOpenStackMachineTemplateWithPortOptions(namespace.Name, clusterName, md3Name, customPortOptions),
-			})
-
-			shared.Byf("Waiting for custom port to be created")
-			var plist []ports.Port
-			var err error
-			Eventually(func() int {
-				plist, err = shared.DumpOpenStackPorts(e2eCtx, ports.ListOpts{Description: "primary"})
-				Expect(err).To(BeNil())
-				return len(plist)
-			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(Equal(1))
-
-			port := plist[0]
-			Expect(port.Description).To(Equal("primary"))
-		})
-		It("It should be creatable and deletable", func() {
-			shared.Byf("Creating a cluster")
-			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
-			configCluster := defaultConfigCluster(clusterName, namespace.Name)
-			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(1)
-			configCluster.WorkerMachineCount = pointer.Int64Ptr(1)
-			configCluster.Flavor = shared.FlavorWithoutLB
 			md := createCluster(ctx, configCluster)
 
 			workerMachines := framework.GetMachinesByMachineDeployments(ctx, framework.GetMachinesByMachineDeploymentsInput{
@@ -194,13 +159,50 @@ var _ = Describe("e2e tests", func() {
 				ClusterName: clusterName,
 				Namespace:   namespace.Name,
 			})
-			Expect(len(workerMachines)).To(Equal(1))
-			Expect(len(controlPlaneMachines)).To(Equal(1))
+			Expect(workerMachines).To(HaveLen(1))
+			Expect(controlPlaneMachines).To(HaveLen(1))
+
+			shared.Byf("Creating MachineDeployment with custom port options")
+			md3Name := clusterName + "-md-3"
+			customPortOptions := &[]infrav1.PortOpts{
+				{Description: "primary"},
+			}
+
+			testTag := utilrand.String(6)
+			machineTags := []string{testTag}
+
+			// Note that as the bootstrap config does not have cloud.conf, the node will not be added to the cluster.
+			// We still expect the port for the machine to be created.
+			framework.CreateMachineDeployment(ctx, framework.CreateMachineDeploymentInput{
+				Creator:                 e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
+				MachineDeployment:       makeMachineDeployment(namespace.Name, md3Name, clusterName, "", 1),
+				BootstrapConfigTemplate: makeJoinBootstrapConfigTemplate(namespace.Name, md3Name),
+				InfraMachineTemplate:    makeOpenStackMachineTemplateWithPortOptions(namespace.Name, clusterName, md3Name, customPortOptions, machineTags),
+			})
+
+			shared.Byf("Waiting for custom port to be created")
+			var plist []ports.Port
+			var err error
+			Eventually(func() int {
+				plist, err = shared.DumpOpenStackPorts(e2eCtx, ports.ListOpts{Description: "primary", Tags: testTag})
+				Expect(err).To(BeNil())
+				return len(plist)
+			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(Equal(1))
+
+			port := plist[0]
+			Expect(port.Description).To(Equal("primary"))
+			Expect(port.Tags).To(ContainElement(testTag))
 		})
 	})
 
 	Describe("Workload cluster (multiple attached networks)", func() {
-		var extraNet1, extraNet2 *networks.Network
+		var (
+			clusterName   string
+			configCluster clusterctl.ConfigClusterInput
+			md            []*clusterv1.MachineDeployment
+
+			extraNet1, extraNet2 *networks.Network
+		)
 
 		BeforeEach(func() {
 			var err error
@@ -229,17 +231,17 @@ var _ = Describe("e2e tests", func() {
 
 			os.Setenv("CLUSTER_EXTRA_NET_1", extraNet1.ID)
 			os.Setenv("CLUSTER_EXTRA_NET_2", extraNet2.ID)
-		})
 
-		It("should attach all machines to multiple networks", func() {
 			shared.Byf("Creating a cluster")
-			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
-			configCluster := defaultConfigCluster(clusterName, namespace.Name)
+			clusterName = fmt.Sprintf("cluster-%s", namespace.Name)
+			configCluster = defaultConfigCluster(clusterName, namespace.Name)
 			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(1)
 			configCluster.WorkerMachineCount = pointer.Int64Ptr(1)
 			configCluster.Flavor = shared.FlavorMultiNetwork
-			md := createCluster(ctx, configCluster)
+			md = createCluster(ctx, configCluster)
+		})
 
+		It("should attach all machines to multiple networks", func() {
 			workerMachines := framework.GetMachinesByMachineDeployments(ctx, framework.GetMachinesByMachineDeploymentsInput{
 				Lister:            e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
 				ClusterName:       clusterName,
@@ -280,21 +282,17 @@ var _ = Describe("e2e tests", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(ports).To(HaveLen(len(expectedPorts)))
 
-				var seen []string
+				var seenNetworks []string
 				var seenAddresses clusterv1.MachineAddresses
 				for j := range ports {
 					port := &ports[j]
 
-					// Check that the port has an expected network ID
-					expectedDescription, ok := expectedPorts[port.NetworkID]
-					Expect(ok).To(BeTrue())
+					// Check that the port has an expected network ID and description
+					Expect(expectedPorts).To(HaveKeyWithValue(port.NetworkID, port.Description))
 
-					// Check that the port has the expected description for that network ID
-					Expect(port.Description).To(Equal(expectedDescription))
-
-					// Check that we don't have duplicate networks
-					Expect(seen).ToNot(ContainElement(port.NetworkID))
-					seen = append(seen, port.NetworkID)
+					// We don't expect to see another port with this network on this machine
+					Expect(seenNetworks).ToNot(ContainElement(port.NetworkID))
+					seenNetworks = append(seenNetworks, port.NetworkID)
 
 					for k := range port.FixedIPs {
 						seenAddresses = append(seenAddresses, clusterv1.MachineAddress{
@@ -351,6 +349,122 @@ var _ = Describe("e2e tests", func() {
 				azError := "The requested availability zone is not available"
 				return isErrorEventExists(namespace.Name, md2Name, "FailedCreateServer", azError, eventList)
 			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(BeTrue())
+		})
+	})
+
+	Describe("Workload cluster (multi-AZ)", func() {
+		var (
+			clusterName                     string
+			md                              []*clusterv1.MachineDeployment
+			failureDomain, failureDomainAlt string
+			cluster                         *infrav1.OpenStackCluster
+		)
+
+		BeforeEach(func() {
+			failureDomain = e2eCtx.E2EConfig.GetVariable(shared.OpenStackFailureDomain)
+			failureDomainAlt = e2eCtx.E2EConfig.GetVariable(shared.OpenStackFailureDomainAlt)
+
+			// We create the second compute host asynchronously, so
+			// we need to ensure the alternate failure domain exists
+			// before running these tests.
+			//
+			// For efficiency we run the multi-AZ tests late in the
+			// test suite. In practise this should mean that the
+			// second compute is already up by the time we get here,
+			// and we don't have to wait.
+			Eventually(func() []string {
+				shared.Byf("Waiting for the alternate AZ '%s' to be created", failureDomainAlt)
+				return shared.GetComputeAvailabilityZones(e2eCtx)
+			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-alt-az")...).Should(ContainElement(failureDomainAlt))
+
+			shared.Byf("Creating a cluster")
+			clusterName = fmt.Sprintf("cluster-%s", namespace.Name)
+			configCluster := defaultConfigCluster(clusterName, namespace.Name)
+			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(3)
+			configCluster.WorkerMachineCount = pointer.Int64Ptr(2)
+			configCluster.Flavor = shared.FlavorMultiAZ
+			md = createCluster(ctx, configCluster)
+
+			var err error
+			cluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("It should be creatable and deletable", func() {
+			workerMachines := framework.GetMachinesByMachineDeployments(ctx, framework.GetMachinesByMachineDeploymentsInput{
+				Lister:            e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
+				ClusterName:       clusterName,
+				Namespace:         namespace.Name,
+				MachineDeployment: *md[0],
+			})
+			controlPlaneMachines := framework.GetControlPlaneMachinesByCluster(ctx, framework.GetControlPlaneMachinesByClusterInput{
+				Lister:      e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
+				ClusterName: clusterName,
+				Namespace:   namespace.Name,
+			})
+			Expect(controlPlaneMachines).To(
+				HaveLen(3),
+				fmt.Sprintf("Cluster %s does not have the expected number of control plane machines", cluster.Name))
+			Expect(workerMachines).To(
+				HaveLen(2),
+				fmt.Sprintf("Cluster %s does not have the expected number of worker machines", cluster.Name))
+
+			getAZsForMachines := func(machines []clusterv1.Machine) []string {
+				azs := make(map[string]struct{})
+				for _, machine := range machines {
+					failureDomain := machine.Spec.FailureDomain
+					if failureDomain == nil {
+						continue
+					}
+					azs[*failureDomain] = struct{}{}
+				}
+
+				azSlice := make([]string, 0, len(azs))
+				for az := range azs {
+					azSlice = append(azSlice, az)
+				}
+
+				return azSlice
+			}
+
+			// The control plane should be spread across both AZs
+			controlPlaneAZs := getAZsForMachines(controlPlaneMachines)
+			Expect(controlPlaneAZs).To(
+				ConsistOf(failureDomain, failureDomainAlt),
+				fmt.Sprintf("Cluster %s: control plane machines were not scheduled in the expected AZs", cluster.Name))
+
+			// All workers should be in the alt AZ
+			workerAZs := getAZsForMachines(workerMachines)
+			Expect(workerAZs).To(
+				ConsistOf(failureDomainAlt),
+				fmt.Sprintf("Cluster %s: worker machines were not scheduled in the expected AZ", cluster.Name))
+
+			// Check that all machines were actually scheduled in the correct AZ
+			var allMachines []clusterv1.Machine
+			allMachines = append(allMachines, controlPlaneMachines...)
+			allMachines = append(allMachines, workerMachines...)
+
+			allServers, err := shared.GetOpenStackServers(e2eCtx, cluster)
+			Expect(err).NotTo(HaveOccurred())
+
+			allServerNames := make([]string, 0, len(allServers))
+			for name := range allServers {
+				allServerNames = append(allServerNames, name)
+			}
+
+			for _, machine := range allMachines {
+				// The output of a HaveKey() failure against
+				// allServers is too long and overflows
+				openstackMachineName := machine.Spec.InfrastructureRef.Name
+				Expect(allServerNames).To(
+					ContainElement(openstackMachineName),
+					fmt.Sprintf("Cluster %s: did not find a server for machine %s", cluster.Name, openstackMachineName))
+
+				server := allServers[openstackMachineName]
+				Expect(server.AvailabilityZone).To(
+					Equal(*machine.Spec.FailureDomain),
+					fmt.Sprintf("Server %s was not scheduled in the correct AZ", machine.Name))
+			}
 		})
 	})
 
@@ -465,7 +579,7 @@ func makeOpenStackMachineTemplate(namespace, clusterName, name string, subnetID 
 	}
 }
 
-func makeOpenStackMachineTemplateWithPortOptions(namespace, clusterName, name string, portOpts *[]infrav1.PortOpts) *infrav1.OpenStackMachineTemplate {
+func makeOpenStackMachineTemplateWithPortOptions(namespace, clusterName, name string, portOpts *[]infrav1.PortOpts, machineTags []string) *infrav1.OpenStackMachineTemplate {
 	return &infrav1.OpenStackMachineTemplate{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -483,6 +597,7 @@ func makeOpenStackMachineTemplateWithPortOptions(namespace, clusterName, name st
 						Name: fmt.Sprintf("%s-cloud-config", clusterName),
 					},
 					Ports: *portOpts,
+					Tags:  machineTags,
 				},
 			},
 		},

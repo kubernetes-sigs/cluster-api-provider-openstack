@@ -27,12 +27,10 @@ cd "${REPO_ROOT}" || exit 1
 
 # shellcheck source=../hack/ensure-go.sh
 source "${REPO_ROOT}/hack/ensure-go.sh"
-# shellcheck source=../hack/ensure-kind.sh
-source "${REPO_ROOT}/hack/ensure-kind.sh"
 # shellcheck source=../hack/ensure-kubectl.sh
 source "${REPO_ROOT}/hack/ensure-kubectl.sh"
 
-RESOURCE_TYPE="${RESOURCE_TYPE:-"gce-project"}"
+export RESOURCE_TYPE="${RESOURCE_TYPE:-"gce-project"}"
 
 ARTIFACTS="${ARTIFACTS:-${PWD}/_artifacts}"
 mkdir -p "${ARTIFACTS}/logs/"
@@ -78,7 +76,7 @@ if [ -n "${BOSKOS_HOST:-}" ]; then
   HEART_BEAT_PID=$!
 fi
 
-"hack/ci/devstack-on-${RESOURCE_TYPE}-install.sh"
+"hack/ci/create_devstack.sh"
 
 export OPENSTACK_CLOUD_YAML_FILE
 OPENSTACK_CLOUD_YAML_FILE="$(pwd)/clouds.yaml"
