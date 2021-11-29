@@ -1075,8 +1075,12 @@ spec:
               rootVolume:
                 description: The volume metadata to boot from
                 properties:
+                  availabilityZone:
+                    type: string
                   diskSize:
                     type: integer
+                  volumeType:
+                    type: string
                 type: object
               securityGroups:
                 description: The names of the security groups to assign to the instance

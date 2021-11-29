@@ -1136,6 +1136,8 @@ func autoConvert_v1alpha3_RootVolume_To_v1beta1_RootVolume(in *RootVolume, out *
 
 func autoConvert_v1beta1_RootVolume_To_v1alpha3_RootVolume(in *v1beta1.RootVolume, out *RootVolume, s conversion.Scope) error {
 	out.Size = in.Size
+	// WARNING: in.VolumeType requires manual conversion: does not exist in peer-type
+	// WARNING: in.AvailabilityZone requires manual conversion: does not exist in peer-type
 	return nil
 }
 

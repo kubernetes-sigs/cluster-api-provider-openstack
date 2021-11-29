@@ -386,6 +386,9 @@ func (s *Service) getOrCreateRootVolume(eventObject runtime.Object, instanceSpec
 	}
 
 	availabilityZone := instanceSpec.FailureDomain
+	if rootVolume.AvailabilityZone != "" {
+		availabilityZone = rootVolume.AvailabilityZone
+	}
 
 	createOpts := volumes.CreateOpts{
 		Size:             rootVolume.Size,
@@ -394,6 +397,7 @@ func (s *Service) getOrCreateRootVolume(eventObject runtime.Object, instanceSpec
 		ImageID:          imageID,
 		Multiattach:      false,
 		AvailabilityZone: availabilityZone,
+		VolumeType:       rootVolume.VolumeType,
 	}
 	volume, err = s.computeService.CreateVolume(createOpts)
 	if err != nil {

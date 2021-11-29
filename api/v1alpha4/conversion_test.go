@@ -236,6 +236,12 @@ func TestFuzzyConversion(t *testing.T) {
 
 				v1beta1MachineSpec.ImageUUID = ""
 			},
+			func(v1beta1RootVolume *infrav1.RootVolume, c fuzz.Continue) {
+				c.FuzzNoCustom(v1beta1RootVolume)
+
+				v1beta1RootVolume.VolumeType = ""
+				v1beta1RootVolume.AvailabilityZone = ""
+			},
 		}
 	}
 

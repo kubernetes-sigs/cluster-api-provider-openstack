@@ -143,6 +143,12 @@ func TestFuzzyConversion(t *testing.T) {
 				// IdentityRef was assumed to be a Secret in v1alpha3
 				v1beta1OpenStackIdentityRef.Kind = "Secret"
 			},
+			func(v1beta1RootVolume *infrav1.RootVolume, c fuzz.Continue) {
+				c.FuzzNoCustom(v1beta1RootVolume)
+
+				v1beta1RootVolume.VolumeType = ""
+				v1beta1RootVolume.AvailabilityZone = ""
+			},
 		}
 	}
 
