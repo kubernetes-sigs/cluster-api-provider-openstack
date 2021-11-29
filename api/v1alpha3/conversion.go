@@ -111,6 +111,12 @@ func (r *OpenStackMachineTemplateList) ConvertFrom(srcRaw ctrlconversion.Hub) er
 // Convert_v1alpha3_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec has to be added by us because we dropped
 // the useOctavia parameter. We don't have to migrate this parameter to v1beta1 so there is nothing to do.
 func Convert_v1alpha3_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *OpenStackClusterSpec, out *v1beta1.OpenStackClusterSpec, s conversion.Scope) error {
+	if in.CloudsSecret != nil {
+		out.IdentityRef = &v1beta1.OpenStackIdentityReference{
+			Kind: "Secret",
+			Name: in.CloudsSecret.Name,
+		}
+	}
 	return autoConvert_v1alpha3_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in, out, s)
 }
 
@@ -120,6 +126,17 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha3_OpenStackClusterSpec(in *v
 	if in.IdentityRef != nil {
 		out.CloudsSecret = &corev1.SecretReference{
 			Name: in.IdentityRef.Name,
+		}
+	}
+
+	if in.Bastion != nil && in.Bastion.Instance.IdentityRef != nil {
+		outBastion := out.Bastion
+		if outBastion == nil {
+			outBastion = &Bastion{}
+		}
+
+		outBastion.Instance.CloudsSecret = &corev1.SecretReference{
+			Name: in.Bastion.Instance.IdentityRef.Name,
 		}
 	}
 	return autoConvert_v1beta1_OpenStackClusterSpec_To_v1alpha3_OpenStackClusterSpec(in, out, s)
@@ -147,6 +164,11 @@ func Convert_v1beta1_Network_To_v1alpha3_Network(in *v1beta1.Network, out *Netwo
 // parameter in v1beta1. There is no intention to support this parameter in v1alpha3, so the field is just dropped.
 // Further, we want to convert the Type of CloudsSecret from SecretReference to string.
 func Convert_v1beta1_OpenStackMachineSpec_To_v1alpha3_OpenStackMachineSpec(in *v1beta1.OpenStackMachineSpec, out *OpenStackMachineSpec, s conversion.Scope) error {
+	if in.IdentityRef != nil {
+		out.CloudsSecret = &corev1.SecretReference{
+			Name: in.IdentityRef.Name,
+		}
+	}
 	return autoConvert_v1beta1_OpenStackMachineSpec_To_v1alpha3_OpenStackMachineSpec(in, out, s)
 }
 
