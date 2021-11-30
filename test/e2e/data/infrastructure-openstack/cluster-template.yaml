@@ -24,6 +24,8 @@ kind: OpenStackCluster
 metadata:
   name: ${CLUSTER_NAME}
 spec:
+  tags:
+  - ${CLUSTER_NAME}
   cloudName: ${OPENSTACK_CLOUD}
   identityRef:
     name: ${CLUSTER_NAME}-cloud-config
@@ -111,6 +113,8 @@ metadata:
 spec:
   template:
     spec:
+      tags:
+      - control-plane
       flavor: ${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR}
       image: ${OPENSTACK_IMAGE_NAME}
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
@@ -150,6 +154,8 @@ metadata:
 spec:
   template:
     spec:
+      tags:
+      - machine
       cloudName: ${OPENSTACK_CLOUD}
       identityRef:
         name: ${CLUSTER_NAME}-cloud-config
