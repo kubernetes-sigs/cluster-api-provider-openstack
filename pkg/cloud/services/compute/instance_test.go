@@ -881,6 +881,54 @@ func TestService_CreateInstance(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name:                "Boot from volume with explicit AZ and volume type",
+			getMachine:          getDefaultMachine,
+			getOpenStackCluster: getDefaultOpenStackCluster,
+			getOpenStackMachine: func() *infrav1.OpenStackMachine {
+				osMachine := getDefaultOpenStackMachine()
+				osMachine.Spec.RootVolume = &infrav1.RootVolume{
+					Size:             50,
+					AvailabilityZone: "test-alternate-az",
+					VolumeType:       "test-volume-type",
+				}
+				return osMachine
+			},
+			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
+				expectUseExistingDefaultPort(networkRecorder)
+				expectDefaultImageAndFlavor(computeRecorder)
+
+				computeRecorder.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
+					Return([]volumes.Volume{}, nil)
+				computeRecorder.CreateVolume(volumes.CreateOpts{
+					Size:             50,
+					AvailabilityZone: "test-alternate-az",
+					VolumeType:       "test-volume-type",
+					Description:      fmt.Sprintf("Root volume for %s", openStackMachineName),
+					Name:             fmt.Sprintf("%s-root", openStackMachineName),
+					ImageID:          imageUUID,
+					Multiattach:      false,
+				}).Return(&volumes.Volume{ID: volumeUUID}, nil)
+				expectVolumePollSuccess(computeRecorder)
+
+				createMap := getDefaultServerMap()
+				serverMap := createMap["server"].(map[string]interface{})
+				serverMap["block_device_mapping_v2"] = []map[string]interface{}{
+					{
+						"delete_on_termination": true,
+						"destination_type":      "volume",
+						"source_type":           "volume",
+						"uuid":                  volumeUUID,
+						"boot_index":            float64(0),
+					},
+				}
+				expectCreateServer(computeRecorder, createMap, false)
+				expectServerPollSuccess(computeRecorder)
+
+				// Don't delete ports because the server is created: DeleteInstance will do it
+			},
+			wantErr: false,
+		},
+		{
 			name:                "Boot from volume failure cleans up ports",
 			getMachine:          getDefaultMachine,
 			getOpenStackCluster: getDefaultOpenStackCluster,
