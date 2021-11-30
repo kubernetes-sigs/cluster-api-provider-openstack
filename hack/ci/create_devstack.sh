@@ -262,7 +262,7 @@ function main() {
     public_ip=$(get_public_ip)
     cat << EOF > "${REPO_ROOT_ABSOLUTE}/clouds.yaml"
 clouds:
-  ${CLUSTER_NAME}:
+  capo-e2e:
     auth:
       username: demo
       password: secretadmin
@@ -272,7 +272,7 @@ clouds:
       project_name: demo
     verify: false
     region_name: RegionOne
-  ${CLUSTER_NAME}-admin:
+  capo-e2e-admin:
     auth:
       username: admin
       password: secretadmin
@@ -284,7 +284,7 @@ clouds:
     region_name: RegionOne
 EOF
 
-    export OS_CLOUD="${CLUSTER_NAME}-admin"
+    export OS_CLOUD="capo-e2e-admin"
 
     # Wait until the OpenStack API is reachable
     retry 5 30 "openstack versions show"
