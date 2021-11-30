@@ -20,17 +20,10 @@ import (
 	"fmt"
 
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/availabilityzones"
-
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
 )
 
 func (s *Service) GetAvailabilityZones() ([]availabilityzones.AvailabilityZone, error) {
-	mc := metrics.NewMetricPrometheusContext("availability_zone", "list")
-	allPages, err := availabilityzones.List(s.computeClient).AllPages()
-	if mc.ObserveRequest(err) != nil {
-		return nil, fmt.Errorf("error  getting availability zone list: %v", err)
-	}
-	availabilityZoneList, err := availabilityzones.ExtractAvailabilityZones(allPages)
+	availabilityZoneList, err := s.computeService.ListAvailabilityZones()
 	if err != nil {
 		return nil, fmt.Errorf("error extracting availability zone list: %v", err)
 	}
