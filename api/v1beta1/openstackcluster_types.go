@@ -135,7 +135,6 @@ type OpenStackClusterSpec struct {
 
 	// IdentityRef is a reference to a identity to be used when reconciling this cluster
 	// +optional
-	// +k8s:conversion-gen=false
 	IdentityRef *OpenStackIdentityReference `json:"identityRef,omitempty"`
 }
 

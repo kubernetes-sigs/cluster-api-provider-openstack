@@ -747,7 +747,7 @@ func autoConvert_v1beta1_OpenStackClusterSpec_To_v1alpha3_OpenStackClusterSpec(i
 	} else {
 		out.Bastion = nil
 	}
-	// INFO: in.IdentityRef opted out of conversion generation
+	// WARNING: in.IdentityRef requires manual conversion: does not exist in peer-type
 	return nil
 }
 
@@ -944,7 +944,7 @@ func autoConvert_v1beta1_OpenStackMachineSpec_To_v1alpha3_OpenStackMachineSpec(i
 	out.ConfigDrive = (*bool)(unsafe.Pointer(in.ConfigDrive))
 	out.RootVolume = (*RootVolume)(unsafe.Pointer(in.RootVolume))
 	out.ServerGroupID = in.ServerGroupID
-	// INFO: in.IdentityRef opted out of conversion generation
+	// WARNING: in.IdentityRef requires manual conversion: does not exist in peer-type
 	return nil
 }
 

@@ -784,7 +784,7 @@ func autoConvert_v1alpha4_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(i
 	out.ControlPlaneEndpoint = in.ControlPlaneEndpoint
 	out.ControlPlaneAvailabilityZones = *(*[]string)(unsafe.Pointer(&in.ControlPlaneAvailabilityZones))
 	out.Bastion = (*v1beta1.Bastion)(unsafe.Pointer(in.Bastion))
-	// INFO: in.IdentityRef opted out of conversion generation
+	out.IdentityRef = (*v1beta1.OpenStackIdentityReference)(unsafe.Pointer(in.IdentityRef))
 	return nil
 }
 
@@ -818,7 +818,7 @@ func autoConvert_v1beta1_OpenStackClusterSpec_To_v1alpha4_OpenStackClusterSpec(i
 	out.ControlPlaneEndpoint = in.ControlPlaneEndpoint
 	out.ControlPlaneAvailabilityZones = *(*[]string)(unsafe.Pointer(&in.ControlPlaneAvailabilityZones))
 	out.Bastion = (*Bastion)(unsafe.Pointer(in.Bastion))
-	// INFO: in.IdentityRef opted out of conversion generation
+	out.IdentityRef = (*OpenStackIdentityReference)(unsafe.Pointer(in.IdentityRef))
 	return nil
 }
 
@@ -1055,7 +1055,7 @@ func autoConvert_v1alpha4_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(i
 	out.ConfigDrive = (*bool)(unsafe.Pointer(in.ConfigDrive))
 	out.RootVolume = (*v1beta1.RootVolume)(unsafe.Pointer(in.RootVolume))
 	out.ServerGroupID = in.ServerGroupID
-	// INFO: in.IdentityRef opted out of conversion generation
+	out.IdentityRef = (*v1beta1.OpenStackIdentityReference)(unsafe.Pointer(in.IdentityRef))
 	return nil
 }
 
@@ -1082,7 +1082,7 @@ func autoConvert_v1beta1_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(i
 	out.ConfigDrive = (*bool)(unsafe.Pointer(in.ConfigDrive))
 	out.RootVolume = (*RootVolume)(unsafe.Pointer(in.RootVolume))
 	out.ServerGroupID = in.ServerGroupID
-	// INFO: in.IdentityRef opted out of conversion generation
+	out.IdentityRef = (*OpenStackIdentityReference)(unsafe.Pointer(in.IdentityRef))
 	return nil
 }
 
