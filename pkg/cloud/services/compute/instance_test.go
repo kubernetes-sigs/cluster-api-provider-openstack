@@ -667,8 +667,7 @@ func TestService_CreateInstance(t *testing.T) {
 
 				computeRecorder.ListImages(images.ListOpts{Name: imageName}).Return(nil, fmt.Errorf("test error"))
 
-				// FIXME: This should cleanup ports
-				// expectCleanupDefaultPort(networkRecorder)
+				expectCleanupDefaultPort(networkRecorder)
 			},
 			wantErr: true,
 		},
@@ -683,8 +682,7 @@ func TestService_CreateInstance(t *testing.T) {
 				computeRecorder.ListImages(images.ListOpts{Name: imageName}).Return([]images.Image{{ID: imageUUID}}, nil)
 				computeRecorder.GetFlavorIDFromName(flavorName).Return("", fmt.Errorf("test error"))
 
-				// FIXME: This should cleanup ports
-				// expectCleanupDefaultPort(networkRecorder)
+				expectCleanupDefaultPort(networkRecorder)
 			},
 			wantErr: true,
 		},
@@ -700,6 +698,32 @@ func TestService_CreateInstance(t *testing.T) {
 				expectCreateServer(computeRecorder, getDefaultServerMap(), true)
 
 				// Make sure we delete ports
+				expectCleanupDefaultPort(networkRecorder)
+			},
+			wantErr: true,
+		},
+		{
+			name:                "Delete previously created ports on port creation error",
+			getMachine:          getDefaultMachine,
+			getOpenStackCluster: getDefaultOpenStackCluster,
+			getOpenStackMachine: func() *infrav1.OpenStackMachine {
+				m := getDefaultOpenStackMachine()
+				m.Spec.Ports = []infrav1.PortOpts{
+					{Description: "Test port 0"},
+					{Description: "Test port 1"},
+				}
+				return m
+			},
+			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
+				expectCreateDefaultPort(networkRecorder)
+
+				// Looking up the second port fails
+				networkRecorder.ListPort(ports.ListOpts{
+					Name:      "test-openstack-machine-1",
+					NetworkID: networkUUID,
+				}).Return(nil, fmt.Errorf("test error"))
+
+				// We should cleanup the first port
 				expectCleanupDefaultPort(networkRecorder)
 			},
 			wantErr: true,
