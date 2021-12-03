@@ -145,9 +145,22 @@ func (s *Service) constructNetworks(openStackCluster *infrav1.OpenStackCluster, 
 		if pOpts.Trunk == nil {
 			pOpts.Trunk = &openStackMachine.Spec.Trunk
 		}
-		if port.NetworkID != "" {
+		if port.Network != nil {
+			netID := port.Network.ID
+			if netID == "" {
+				netIDs, err := s.networkingService.GetNetworkIDsByFilter(port.Network.ToListOpt())
+				if err != nil {
+					return nil, err
+				}
+				if len(netIDs) > 1 {
+					return nil, fmt.Errorf("network filter for port %s returns more than one result", port.NameSuffix)
+				} else if len(netIDs) == 0 {
+					return nil, fmt.Errorf("network filter for port %s returns no networks", port.NameSuffix)
+				}
+				netID = netIDs[0]
+			}
 			nets = append(nets, infrav1.Network{
-				ID:       port.NetworkID,
+				ID:       netID,
 				Subnet:   &infrav1.Subnet{},
 				PortOpts: pOpts,
 			})

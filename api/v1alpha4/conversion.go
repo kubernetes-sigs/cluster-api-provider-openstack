@@ -163,3 +163,46 @@ func Convert_v1beta1_NetworkFilter_To_v1alpha4_Filter(in *v1beta1.NetworkFilter,
 	out.NotTagsAny = in.NotTagsAny
 	return nil
 }
+
+func Convert_v1alpha4_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *v1beta1.PortOpts, s conversion.Scope) error {
+	err := autoConvert_v1alpha4_PortOpts_To_v1beta1_PortOpts(in, out, s)
+	if err != nil {
+		return err
+	}
+	if in.NetworkID != "" {
+		out.Network = &v1beta1.NetworkFilter{ID: in.NetworkID}
+	}
+	return nil
+}
+
+func Convert_v1beta1_PortOpts_To_v1alpha4_PortOpts(in *v1beta1.PortOpts, out *PortOpts, s conversion.Scope) error {
+	err := autoConvert_v1beta1_PortOpts_To_v1alpha4_PortOpts(in, out, s)
+	if err != nil {
+		return err
+	}
+	if in.Network != nil {
+		out.NetworkID = in.Network.ID
+	}
+	return nil
+}
+
+func Convert_Slice_v1alpha4_Network_To_Slice_v1beta1_Network(in *[]Network, out *[]v1beta1.Network, s conversion.Scope) error {
+	*out = make([]v1beta1.Network, len(*in))
+	for i := range *in {
+		if err := Convert_v1alpha4_Network_To_v1beta1_Network(&(*in)[i], &(*out)[i], s); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func Convert_Slice_v1beta1_Network_To_Slice_v1alpha4_Network(in *[]v1beta1.Network, out *[]Network, s conversion.Scope) error {
+	*out = make([]Network, len(*in))
+	for i := range *in {
+		if err := Convert_v1beta1_Network_To_v1alpha4_Network(&(*in)[i], &(*out)[i], s); err != nil {
+			return err
+		}
+	}
+	return nil
+}

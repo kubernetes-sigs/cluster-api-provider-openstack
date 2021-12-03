@@ -69,7 +69,7 @@ func Test_getPortName(t *testing.T) {
 		},
 		{
 			name: "with PortOpts name suffix",
-			args: args{"test-1-instance", &infrav1.PortOpts{NameSuffix: "foo2", NetworkID: "bar", DisablePortSecurity: pointer.Bool(true)}, 4},
+			args: args{"test-1-instance", &infrav1.PortOpts{NameSuffix: "foo2", Network: &infrav1.NetworkFilter{ID: "bar"}, DisablePortSecurity: pointer.Bool(true)}, 4},
 			want: "test-1-instance-foo2",
 		},
 	}

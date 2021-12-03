@@ -66,6 +66,23 @@ func TestFuzzyConversion(t *testing.T) {
 				// Test that we restore TenantID from ProjectID
 				v1alpha3Filter.TenantID = v1alpha3Filter.ProjectID
 			},
+
+			// Don't test hub-spoke-hub conversion of v1beta1 fields which are not in v1alpha4
+			func(v1beta1PortOpts *v1beta1.PortOpts, c fuzz.Continue) {
+				c.FuzzNoCustom(v1beta1PortOpts)
+
+				// v1alpha4 PortOpts has only NetworkID, so only Network.ID filter can be translated
+				if v1beta1PortOpts.Network != nil {
+					v1beta1PortOpts.Network = &v1beta1.NetworkFilter{ID: v1beta1PortOpts.Network.ID}
+
+					// We have no way to differentiate between a nil NetworkFilter and an
+					// empty NetworkFilter after conversion because they both translate into an
+					// empty string in v1alpha4
+					if *v1beta1PortOpts.Network == (v1beta1.NetworkFilter{}) {
+						v1beta1PortOpts.Network = nil
+					}
+				}
+			},
 		}
 	}
 

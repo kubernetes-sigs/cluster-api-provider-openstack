@@ -121,9 +121,11 @@ spec:
       ports:
         - description: "primary"
         - description: "Extra Network 1"
-          networkId: "${CLUSTER_EXTRA_NET_1}"
+          network:
+            id: "${CLUSTER_EXTRA_NET_1}"
         - description: "Extra Network 2"
-          networkId: "${CLUSTER_EXTRA_NET_2}"
+          network:
+            id: "${CLUSTER_EXTRA_NET_2}"
 ---
 apiVersion: cluster.x-k8s.io/v1beta1
 kind: MachineDeployment
@@ -166,9 +168,11 @@ spec:
       ports:
         - description: "primary"
         - description: "Extra Network 1"
-          networkId: "${CLUSTER_EXTRA_NET_1}"
+          network:
+            id: "${CLUSTER_EXTRA_NET_1}"
         - description: "Extra Network 2"
-          networkId: "${CLUSTER_EXTRA_NET_2}"
+          network:
+            id: "${CLUSTER_EXTRA_NET_2}"
 ---
 apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
 kind: KubeadmConfigTemplate

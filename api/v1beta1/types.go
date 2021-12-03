@@ -105,8 +105,9 @@ type SubnetFilter struct {
 }
 
 type PortOpts struct {
-	// ID of the OpenStack network on which to create the port. If unspecified, create the port on the default cluster network.
-	NetworkID string `json:"networkId,omitempty"`
+	// Network is a query for an openstack network that the port will be created or discovered on.
+	// This will fail if the query returns more than one network.
+	Network *NetworkFilter `json:"network,omitempty"`
 	// Used to make the name of the port unique. If unspecified, instead the 0-based index of the port in the list is used.
 	NameSuffix   string `json:"nameSuffix,omitempty"`
 	Description  string `json:"description,omitempty"`
