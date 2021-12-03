@@ -19,6 +19,7 @@ package v1alpha4
 import (
 	// corev1 "k8s.io/api/core/v1"
 	// conversion "k8s.io/apimachinery/pkg/conversion"
+
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
 
@@ -203,6 +204,28 @@ func Convert_Slice_v1beta1_Network_To_Slice_v1alpha4_Network(in *[]v1beta1.Netwo
 		if err := Convert_v1beta1_Network_To_v1alpha4_Network(&(*in)[i], &(*out)[i], s); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func Convert_v1alpha4_FixedIP_To_v1beta1_FixedIP(in *FixedIP, out *v1beta1.FixedIP, s conversion.Scope) error {
+	err := autoConvert_v1alpha4_FixedIP_To_v1beta1_FixedIP(in, out, s)
+	if err != nil {
+		return err
+	}
+	if in.SubnetID != "" {
+		out.Subnet = &v1beta1.SubnetFilter{ID: in.SubnetID}
+	}
+	return nil
+}
+
+func Convert_v1beta1_FixedIP_To_v1alpha4_FixedIP(in *v1beta1.FixedIP, out *FixedIP, s conversion.Scope) error {
+	err := autoConvert_v1beta1_FixedIP_To_v1alpha4_FixedIP(in, out, s)
+	if err != nil {
+		return err
+	}
+	if in.Subnet != nil && in.Subnet.ID != "" {
+		out.SubnetID = in.Subnet.ID
 	}
 	return nil
 }

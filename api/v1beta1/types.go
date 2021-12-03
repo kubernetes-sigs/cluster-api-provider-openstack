@@ -143,8 +143,10 @@ type PortOpts struct {
 }
 
 type FixedIP struct {
-	SubnetID  string `json:"subnetId"`
-	IPAddress string `json:"ipAddress,omitempty"`
+	// Subnet is an openstack subnet query that will return the id of a subnet to create
+	// the fixed IP of a port in. This query must not return more than one subnet.
+	Subnet    *SubnetFilter `json:"subnet"`
+	IPAddress string        `json:"ipAddress,omitempty"`
 }
 
 type AddressPair struct {

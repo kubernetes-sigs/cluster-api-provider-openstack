@@ -27,7 +27,110 @@ import (
 	runtimeserializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
+	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
 )
+
+func TestConvertTo(t *testing.T) {
+	g := gomega.NewWithT(t)
+	scheme := runtime.NewScheme()
+	g.Expect(AddToScheme(scheme)).To(gomega.Succeed())
+	g.Expect(v1beta1.AddToScheme(scheme)).To(gomega.Succeed())
+
+	const subnetID = "986f5848-127f-4357-944e-5dd75472def8"
+
+	tests := []struct {
+		name  string
+		spoke ctrlconversion.Convertible
+		hub   ctrlconversion.Hub
+		want  ctrlconversion.Hub
+	}{
+		{
+			name: "FixedIP with SubnetID",
+			spoke: &OpenStackMachine{
+				Spec: OpenStackMachineSpec{
+					Ports: []PortOpts{
+						{
+							FixedIPs: []FixedIP{
+								{SubnetID: subnetID},
+							},
+						},
+					},
+				},
+			},
+			hub: &v1beta1.OpenStackMachine{},
+			want: &v1beta1.OpenStackMachine{
+				Spec: v1beta1.OpenStackMachineSpec{
+					Ports: []v1beta1.PortOpts{
+						{
+							FixedIPs: []v1beta1.FixedIP{
+								{Subnet: &v1beta1.SubnetFilter{ID: subnetID}},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.spoke.ConvertTo(tt.hub)
+			g.Expect(err).NotTo(gomega.HaveOccurred())
+			g.Expect(tt.hub).To(gomega.Equal(tt.want))
+		})
+	}
+}
+
+func TestConvertFrom(t *testing.T) {
+	g := gomega.NewWithT(t)
+	scheme := runtime.NewScheme()
+	g.Expect(AddToScheme(scheme)).To(gomega.Succeed())
+	g.Expect(v1beta1.AddToScheme(scheme)).To(gomega.Succeed())
+
+	const subnetID = "986f5848-127f-4357-944e-5dd75472def8"
+
+	tests := []struct {
+		name  string
+		spoke ctrlconversion.Convertible
+		hub   ctrlconversion.Hub
+		want  ctrlconversion.Convertible
+	}{
+		{
+			name:  "FixedIP with SubnetFilter.ID",
+			spoke: &OpenStackMachine{},
+			hub: &v1beta1.OpenStackMachine{
+				Spec: v1beta1.OpenStackMachineSpec{
+					Ports: []v1beta1.PortOpts{
+						{
+							FixedIPs: []v1beta1.FixedIP{
+								{Subnet: &v1beta1.SubnetFilter{ID: subnetID}},
+							},
+						},
+					},
+				},
+			},
+			want: &OpenStackMachine{
+				Spec: OpenStackMachineSpec{
+					Ports: []PortOpts{
+						{
+							FixedIPs: []FixedIP{
+								{SubnetID: subnetID},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.spoke.ConvertFrom(tt.hub)
+			g.Expect(err).NotTo(gomega.HaveOccurred())
+			g.Expect(tt.spoke).To(gomega.Equal(tt.want))
+		})
+	}
+}
 
 func TestFuzzyConversion(t *testing.T) {
 	g := gomega.NewWithT(t)
@@ -80,6 +183,21 @@ func TestFuzzyConversion(t *testing.T) {
 					// empty string in v1alpha4
 					if *v1beta1PortOpts.Network == (v1beta1.NetworkFilter{}) {
 						v1beta1PortOpts.Network = nil
+					}
+				}
+			},
+			func(v1beta1FixedIP *v1beta1.FixedIP, c fuzz.Continue) {
+				c.FuzzNoCustom(v1beta1FixedIP)
+
+				// v1alpha4 only supports subnet specified by ID
+				if v1beta1FixedIP.Subnet != nil {
+					v1beta1FixedIP.Subnet = &v1beta1.SubnetFilter{ID: v1beta1FixedIP.Subnet.ID}
+
+					// We have no way to differentiate between a nil SubnetFilter and an
+					// empty SubnetFilter after conversion because they both translate into an
+					// empty string in v1alpha4
+					if *v1beta1FixedIP.Subnet == (v1beta1.SubnetFilter{}) {
+						v1beta1FixedIP.Subnet = nil
 					}
 				}
 			},
