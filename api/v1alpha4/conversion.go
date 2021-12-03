@@ -19,6 +19,7 @@ package v1alpha4
 import (
 	// corev1 "k8s.io/api/core/v1"
 	// conversion "k8s.io/apimachinery/pkg/conversion"
+	conversion "k8s.io/apimachinery/pkg/conversion"
 	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -106,4 +107,30 @@ func (r *OpenStackMachineTemplateList) ConvertFrom(srcRaw ctrlconversion.Hub) er
 	src := srcRaw.(*v1beta1.OpenStackMachineTemplateList)
 
 	return Convert_v1beta1_OpenStackMachineTemplateList_To_v1alpha4_OpenStackMachineTemplateList(src, r, nil)
+}
+
+func Convert_v1alpha4_SubnetFilter_To_v1beta1_SubnetFilter(in *SubnetFilter, out *v1beta1.SubnetFilter, s conversion.Scope) error {
+	out.Name = in.Name
+	out.Description = in.Description
+	if in.ProjectID != "" {
+		out.ProjectID = in.ProjectID
+	} else {
+		out.ProjectID = in.TenantID
+	}
+	out.IPVersion = in.IPVersion
+	out.GatewayIP = in.GatewayIP
+	out.CIDR = in.CIDR
+	out.IPv6AddressMode = in.IPv6AddressMode
+	out.IPv6RAMode = in.IPv6RAMode
+	out.ID = in.ID
+	out.Tags = in.Tags
+	out.TagsAny = in.TagsAny
+	out.NotTags = in.NotTags
+	out.NotTagsAny = in.NotTagsAny
+	return nil
+}
+
+func Convert_v1beta1_SubnetFilter_To_v1alpha4_SubnetFilter(in *v1beta1.SubnetFilter, out *SubnetFilter, s conversion.Scope) error {
+	out.TenantID = in.ProjectID
+	return autoConvert_v1beta1_SubnetFilter_To_v1alpha4_SubnetFilter(in, out, s)
 }

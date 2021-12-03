@@ -29,7 +29,6 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"k8s.io/apimachinery/pkg/runtime"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util"
@@ -356,7 +355,7 @@ func (s *Service) getServerNetworks(networkParams []infrav1.NetworkParam) ([]inf
 
 				addSubnet(netID, subnet.UUID)
 			} else {
-				subnetOpts := subnets.ListOpts(subnet.Filter)
+				subnetOpts := subnet.Filter.ToListOpt()
 				if netID != "" {
 					subnetOpts.NetworkID = netID
 				}

@@ -99,9 +99,6 @@ type SubnetParam struct {
 type SubnetFilter struct {
 	Name            string `json:"name,omitempty"`
 	Description     string `json:"description,omitempty"`
-	EnableDHCP      *bool  `json:"enableDhcp,omitempty"`
-	NetworkID       string `json:"networkId,omitempty"`
-	TenantID        string `json:"tenantId,omitempty"`
 	ProjectID       string `json:"projectId,omitempty"`
 	IPVersion       int    `json:"ipVersion,omitempty"`
 	GatewayIP       string `json:"gateway_ip,omitempty"`
@@ -109,11 +106,6 @@ type SubnetFilter struct {
 	IPv6AddressMode string `json:"ipv6AddressMode,omitempty"`
 	IPv6RAMode      string `json:"ipv6RaMode,omitempty"`
 	ID              string `json:"id,omitempty"`
-	SubnetPoolID    string `json:"subnetpoolId,omitempty"`
-	Limit           int    `json:"limit,omitempty"`
-	Marker          string `json:"marker,omitempty"`
-	SortKey         string `json:"sortKey,omitempty"`
-	SortDir         string `json:"sortDir,omitempty"`
 	Tags            string `json:"tags,omitempty"`
 	TagsAny         string `json:"tagsAny,omitempty"`
 	NotTags         string `json:"notTags,omitempty"`

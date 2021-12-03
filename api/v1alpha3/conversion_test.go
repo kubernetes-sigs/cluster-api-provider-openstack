@@ -60,6 +60,20 @@ func TestFuzzyConversion(t *testing.T) {
 					v1alpha3MachineSpec.CloudsSecret.Namespace = ""
 				}
 			},
+			func(v1alpha3SubnetFilter *SubnetFilter, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha3SubnetFilter)
+				v1alpha3SubnetFilter.EnableDHCP = nil
+				v1alpha3SubnetFilter.NetworkID = ""
+				v1alpha3SubnetFilter.SubnetPoolID = ""
+				v1alpha3SubnetFilter.Limit = 0
+				v1alpha3SubnetFilter.Marker = ""
+				v1alpha3SubnetFilter.SortKey = ""
+				v1alpha3SubnetFilter.SortDir = ""
+
+				// TenantID and ProjectID are the same thing, so TenantID is removed in v1beta1
+				// Test that we restore TenantID from ProjectID
+				v1alpha3SubnetFilter.TenantID = v1alpha3SubnetFilter.ProjectID
+			},
 
 			// Don't test hub-spoke-hub conversion of v1beta1 fields which are not in v1alpha3
 			func(v1beta1ClusterSpec *v1beta1.OpenStackClusterSpec, c fuzz.Continue) {

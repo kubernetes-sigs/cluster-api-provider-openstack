@@ -201,3 +201,29 @@ func Convert_Slice_v1alpha3_Network_To_Slice_v1beta1_Network(in *[]Network, out 
 	}
 	return nil
 }
+
+func Convert_v1alpha3_SubnetFilter_To_v1beta1_SubnetFilter(in *SubnetFilter, out *v1beta1.SubnetFilter, s conversion.Scope) error {
+	out.Name = in.Name
+	out.Description = in.Description
+	if in.ProjectID != "" {
+		out.ProjectID = in.ProjectID
+	} else {
+		out.ProjectID = in.TenantID
+	}
+	out.IPVersion = in.IPVersion
+	out.GatewayIP = in.GatewayIP
+	out.CIDR = in.CIDR
+	out.IPv6AddressMode = in.IPv6AddressMode
+	out.IPv6RAMode = in.IPv6RAMode
+	out.ID = in.ID
+	out.Tags = in.Tags
+	out.TagsAny = in.TagsAny
+	out.NotTags = in.NotTags
+	out.NotTagsAny = in.NotTagsAny
+	return nil
+}
+
+func Convert_v1beta1_SubnetFilter_To_v1alpha3_SubnetFilter(in *v1beta1.SubnetFilter, out *SubnetFilter, s conversion.Scope) error {
+	out.TenantID = in.ProjectID
+	return autoConvert_v1beta1_SubnetFilter_To_v1alpha3_SubnetFilter(in, out, s)
+}

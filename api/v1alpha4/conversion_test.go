@@ -19,9 +19,12 @@ package v1alpha4
 import (
 	"testing"
 
+	fuzz "github.com/google/gofuzz"
 	"github.com/onsi/gomega"
 
+	"k8s.io/apimachinery/pkg/api/apitesting/fuzzer"
 	runtime "k8s.io/apimachinery/pkg/runtime"
+	runtimeserializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
 )
@@ -32,21 +35,44 @@ func TestFuzzyConversion(t *testing.T) {
 	g.Expect(AddToScheme(scheme)).To(gomega.Succeed())
 	g.Expect(v1beta1.AddToScheme(scheme)).To(gomega.Succeed())
 
+	fuzzerFuncs := func(_ runtimeserializer.CodecFactory) []interface{} {
+		return []interface{}{
+			// Don't test spoke-hub-spoke conversion of v1alpha4 fields which are not in v1beta1
+			func(v1alpha3SubnetFilter *SubnetFilter, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha3SubnetFilter)
+				v1alpha3SubnetFilter.EnableDHCP = nil
+				v1alpha3SubnetFilter.NetworkID = ""
+				v1alpha3SubnetFilter.SubnetPoolID = ""
+				v1alpha3SubnetFilter.Limit = 0
+				v1alpha3SubnetFilter.Marker = ""
+				v1alpha3SubnetFilter.SortKey = ""
+				v1alpha3SubnetFilter.SortDir = ""
+
+				// TenantID and ProjectID are the same thing, so TenantID is removed in v1beta1
+				// Test that we restore TenantID from ProjectID
+				v1alpha3SubnetFilter.TenantID = v1alpha3SubnetFilter.ProjectID
+			},
+		}
+	}
+
 	t.Run("for OpenStackCluster", utilconversion.FuzzTestFunc(utilconversion.FuzzTestFuncInput{
-		Scheme: scheme,
-		Hub:    &v1beta1.OpenStackCluster{},
-		Spoke:  &OpenStackCluster{},
+		Scheme:      scheme,
+		Hub:         &v1beta1.OpenStackCluster{},
+		Spoke:       &OpenStackCluster{},
+		FuzzerFuncs: []fuzzer.FuzzerFuncs{fuzzerFuncs},
 	}))
 
 	t.Run("for OpenStackMachine", utilconversion.FuzzTestFunc(utilconversion.FuzzTestFuncInput{
-		Scheme: scheme,
-		Hub:    &v1beta1.OpenStackMachine{},
-		Spoke:  &OpenStackMachine{},
+		Scheme:      scheme,
+		Hub:         &v1beta1.OpenStackMachine{},
+		Spoke:       &OpenStackMachine{},
+		FuzzerFuncs: []fuzzer.FuzzerFuncs{fuzzerFuncs},
 	}))
 
 	t.Run("for OpenStackMachineTemplate", utilconversion.FuzzTestFunc(utilconversion.FuzzTestFuncInput{
-		Scheme: scheme,
-		Hub:    &v1beta1.OpenStackMachineTemplate{},
-		Spoke:  &OpenStackMachineTemplate{},
+		Scheme:      scheme,
+		Hub:         &v1beta1.OpenStackMachineTemplate{},
+		Spoke:       &OpenStackMachineTemplate{},
+		FuzzerFuncs: []fuzzer.FuzzerFuncs{fuzzerFuncs},
 	}))
 }

@@ -24,7 +24,6 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -403,7 +402,7 @@ func reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.P
 		openStackCluster.Status.Network.Name = networkList[0].Name
 		openStackCluster.Status.Network.Tags = networkList[0].Tags
 
-		subnetOpts := subnets.ListOpts(openStackCluster.Spec.Subnet)
+		subnetOpts := openStackCluster.Spec.Subnet.ToListOpt()
 		subnetOpts.NetworkID = networkList[0].ID
 		subnetList, err := networkingService.GetSubnetsByFilter(&subnetOpts)
 		if err != nil || len(subnetList) == 0 {
