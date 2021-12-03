@@ -95,7 +95,7 @@ source env.rc <path/to/clouds.yaml> <cloud>
 The following variables are set.
 
 | Variable | Meaning |
- :----- | :-------- 
+ :----- | :--------
 | OPENSTACK_CLOUD | The cloud name which is used as second argument |
 | OPENSTACK_CLOUD_YAML_B64 | The secret used by Cluster API Provider OpenStack accessing OpenStack |
 | OPENSTACK_CLOUD_PROVIDER_CONF_B64 | The content of [cloud.conf](https://kubernetes.io/docs/concepts/cluster-administration/cloud-providers/#cloud-conf) which is used by OpenStack cloud provider |
@@ -115,7 +115,7 @@ The DNS servers must be exposed as an environment variable `OPENSTACK_DNS_NAMESE
 
 ## Machine flavor
 
-The flavors for control plane and worker node machines must be exposed as environment variables `OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR` and `OPENSTACK_NODE_MACHINE_FLAVOR` respectively. 
+The flavors for control plane and worker node machines must be exposed as environment variables `OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR` and `OPENSTACK_NODE_MACHINE_FLAVOR` respectively.
 
 # Optional Configuration
 
@@ -243,12 +243,20 @@ metadata:
   namespace: <cluster-name>
 spec:
   ports:
-  - networkId: <your-network-id>
+  - network:
+      id: <your-network-id>
+    nameSuffix: <your-port-name>
     description: <your-custom-port-description>
     vnicType: normal
     fixedIPs:
-    - subnetId: <your-subnet-id>
+    - subnet:
+        id: <your-subnet-id>
       ipAddress: <your-fixed-ip>
+    - subnet:
+        name: <your-subnet-name>
+        tags:
+          - tag1
+          - tag2
     securityGroups:
     - <your-security-group-id>
     profile:
@@ -285,7 +293,7 @@ plane and worker nodes respectively.
 
 By default, these groups have rules that allow the following traffic:
 
-  * Control plane nodes 
+  * Control plane nodes
     * API server traffic from anywhere
     * Etcd traffic from other control plane nodes
     * Kubelet traffic from other cluster nodes
