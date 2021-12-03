@@ -62,28 +62,20 @@ type NetworkParam struct {
 	// A fixed IPv4 address for the NIC.
 	FixedIP string `json:"fixedIP,omitempty"`
 	// Filters for optional network query
-	Filter Filter `json:"filter,omitempty"`
+	Filter NetworkFilter `json:"filter,omitempty"`
 	// Subnet within a network to use
 	Subnets []SubnetParam `json:"subnets,omitempty"`
 }
 
-type Filter struct {
-	Status       string `json:"status,omitempty"`
-	Name         string `json:"name,omitempty"`
-	Description  string `json:"description,omitempty"`
-	AdminStateUp *bool  `json:"adminStateUp,omitempty"`
-	TenantID     string `json:"tenantId,omitempty"`
-	ProjectID    string `json:"projectId,omitempty"`
-	Shared       *bool  `json:"shared,omitempty"`
-	ID           string `json:"id,omitempty"`
-	Marker       string `json:"marker,omitempty"`
-	Limit        int    `json:"limit,omitempty"`
-	SortKey      string `json:"sortKey,omitempty"`
-	SortDir      string `json:"sortDir,omitempty"`
-	Tags         string `json:"tags,omitempty"`
-	TagsAny      string `json:"tagsAny,omitempty"`
-	NotTags      string `json:"notTags,omitempty"`
-	NotTagsAny   string `json:"notTagsAny,omitempty"`
+type NetworkFilter struct {
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
+	ProjectID   string `json:"projectId,omitempty"`
+	ID          string `json:"id,omitempty"`
+	Tags        string `json:"tags,omitempty"`
+	TagsAny     string `json:"tagsAny,omitempty"`
+	NotTags     string `json:"notTags,omitempty"`
+	NotTagsAny  string `json:"notTagsAny,omitempty"`
 }
 
 type SubnetParam struct {

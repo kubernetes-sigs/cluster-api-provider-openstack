@@ -134,3 +134,32 @@ func Convert_v1beta1_SubnetFilter_To_v1alpha4_SubnetFilter(in *v1beta1.SubnetFil
 	out.TenantID = in.ProjectID
 	return autoConvert_v1beta1_SubnetFilter_To_v1alpha4_SubnetFilter(in, out, s)
 }
+
+func Convert_v1alpha4_Filter_To_v1beta1_NetworkFilter(in *Filter, out *v1beta1.NetworkFilter, s conversion.Scope) error {
+	out.Name = in.Name
+	out.Description = in.Description
+	if in.ProjectID != "" {
+		out.ProjectID = in.ProjectID
+	} else {
+		out.ProjectID = in.TenantID
+	}
+	out.ID = in.ID
+	out.Tags = in.Tags
+	out.TagsAny = in.TagsAny
+	out.NotTags = in.NotTags
+	out.NotTagsAny = in.NotTagsAny
+	return nil
+}
+
+func Convert_v1beta1_NetworkFilter_To_v1alpha4_Filter(in *v1beta1.NetworkFilter, out *Filter, s conversion.Scope) error {
+	out.Name = in.Name
+	out.Description = in.Description
+	out.ProjectID = in.ProjectID
+	out.TenantID = in.ProjectID
+	out.ID = in.ID
+	out.Tags = in.Tags
+	out.TagsAny = in.TagsAny
+	out.NotTags = in.NotTags
+	out.NotTagsAny = in.NotTagsAny
+	return nil
+}

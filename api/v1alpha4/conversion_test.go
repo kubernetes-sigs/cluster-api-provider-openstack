@@ -52,6 +52,20 @@ func TestFuzzyConversion(t *testing.T) {
 				// Test that we restore TenantID from ProjectID
 				v1alpha3SubnetFilter.TenantID = v1alpha3SubnetFilter.ProjectID
 			},
+			func(v1alpha3Filter *Filter, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha3Filter)
+				v1alpha3Filter.Status = ""
+				v1alpha3Filter.AdminStateUp = nil
+				v1alpha3Filter.Shared = nil
+				v1alpha3Filter.Marker = ""
+				v1alpha3Filter.Limit = 0
+				v1alpha3Filter.SortKey = ""
+				v1alpha3Filter.SortDir = ""
+
+				// TenantID and ProjectID are the same thing, so TenantID is removed in v1beta1
+				// Test that we restore TenantID from ProjectID
+				v1alpha3Filter.TenantID = v1alpha3Filter.ProjectID
+			},
 		}
 	}
 

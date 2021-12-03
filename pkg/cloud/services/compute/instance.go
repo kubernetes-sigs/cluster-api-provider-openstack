@@ -27,7 +27,6 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/schedulerhints"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"k8s.io/apimachinery/pkg/runtime"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
@@ -378,13 +377,13 @@ func (s *Service) getServerNetworks(networkParams []infrav1.NetworkParam) ([]inf
 		// If there is no explicit network UUID and no network filter,
 		// we will look for subnets matching any given subnet filters in
 		// all networks.
-		if networkParam.UUID != "" || networkParam.Filter == (infrav1.Filter{}) {
+		if networkParam.UUID != "" || networkParam.Filter == (infrav1.NetworkFilter{}) {
 			if err := addSubnets(networkParam, networkParam.UUID); err != nil {
 				return nil, err
 			}
 			continue
 		}
-		opts := networks.ListOpts(networkParam.Filter)
+		opts := networkParam.Filter.ToListOpt()
 		ids, err := s.networkingService.GetNetworkIDsByFilter(&opts)
 		if err != nil {
 			return nil, err

@@ -140,7 +140,7 @@ func TestService_getServerNetworks(t *testing.T) {
 
 	// Define arbitrary test network and subnet filters for use in multiple tests,
 	// the gophercloud ListOpts they should translate to, and the arbitrary returned networks/subnets.
-	testNetworkFilter := infrav1.Filter{Tags: testClusterTag}
+	testNetworkFilter := infrav1.NetworkFilter{Tags: testClusterTag}
 	testNetworkListOpts := networks.ListOpts{Tags: testClusterTag}
 	testSubnetFilter := infrav1.SubnetFilter{Tags: testClusterTag}
 	testSubnetListOpts := subnets.ListOpts{Tags: testClusterTag}

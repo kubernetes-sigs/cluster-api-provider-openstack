@@ -23,7 +23,6 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -381,7 +380,7 @@ func reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.P
 	if openStackCluster.Spec.NodeCIDR == "" {
 		log.V(4).Info("No need to reconcile network, searching network and subnet instead")
 
-		netOpts := networks.ListOpts(openStackCluster.Spec.Network)
+		netOpts := openStackCluster.Spec.Network.ToListOpt()
 		networkList, err := networkingService.GetNetworksByFilter(&netOpts)
 		if err != nil {
 			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to find network: %v", err))
