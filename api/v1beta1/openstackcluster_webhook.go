@@ -74,7 +74,29 @@ func (r *OpenStackCluster) ValidateUpdate(oldRaw runtime.Object) error {
 	}
 
 	if r.Spec.IdentityRef != nil && r.Spec.IdentityRef.Kind != defaultIdentityRefKind {
-		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "identityRef", "kind"), "must be a Secret"))
+		allErrs = append(allErrs,
+			field.Invalid(field.NewPath("spec", "identityRef", "kind"),
+				r.Spec.IdentityRef, "must be a Secret"),
+		)
+	}
+
+	// Allow changes to Spec.IdentityRef.Name.
+	if old.Spec.IdentityRef != nil && r.Spec.IdentityRef != nil {
+		old.Spec.IdentityRef.Name = ""
+		r.Spec.IdentityRef.Name = ""
+	}
+
+	// Allow changes to Spec.IdentityRef if it was unset.
+	if old.Spec.IdentityRef == nil && r.Spec.IdentityRef != nil {
+		old.Spec.IdentityRef = &OpenStackIdentityReference{}
+		r.Spec.IdentityRef = &OpenStackIdentityReference{}
+	}
+
+	if old.Spec.IdentityRef != nil && r.Spec.IdentityRef == nil {
+		allErrs = append(allErrs,
+			field.Invalid(field.NewPath("spec", "identityRef"),
+				r.Spec.IdentityRef, "field cannot be set to nil"),
+		)
 	}
 
 	// Allow change only for the first time.
