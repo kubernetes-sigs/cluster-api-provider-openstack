@@ -17,12 +17,13 @@ limitations under the License.
 package v1alpha4
 
 import (
+	"fmt"
 	"reflect"
 
-	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -65,40 +66,24 @@ func (r *OpenStackCluster) ValidateCreate() error {
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type.
-func (r *OpenStackCluster) ValidateUpdate(old runtime.Object) error {
+func (r *OpenStackCluster) ValidateUpdate(oldRaw runtime.Object) error {
 	var allErrs field.ErrorList
-
-	newOpenStackCluster, err := runtime.DefaultUnstructuredConverter.ToUnstructured(r)
-	if err != nil {
-		return apierrors.NewInvalid(GroupVersion.WithKind("OpenStackCluster").GroupKind(), r.Name, field.ErrorList{
-			field.InternalError(nil, errors.Wrap(err, "failed to convert new OpenStackCluster to unstructured object")),
-		})
-	}
-	oldOpenStackCluster, err := runtime.DefaultUnstructuredConverter.ToUnstructured(old)
-	if err != nil {
-		return apierrors.NewInvalid(GroupVersion.WithKind("OpenStackCluster").GroupKind(), r.Name, field.ErrorList{
-			field.InternalError(nil, errors.Wrap(err, "failed to convert old OpenStackCluster to unstructured object")),
-		})
+	old, ok := oldRaw.(*OpenStackCluster)
+	if !ok {
+		return apierrors.NewBadRequest(fmt.Sprintf("expected an OpenStackCluster but got a %T", oldRaw))
 	}
 
 	if r.Spec.IdentityRef != nil && r.Spec.IdentityRef.Kind != defaultIdentityRefKind {
 		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "identityRef", "kind"), "must be a Secret"))
 	}
 
-	newOpenStackClusterSpec := newOpenStackCluster["spec"].(map[string]interface{})
-	oldOpenStackClusterSpec := oldOpenStackCluster["spec"].(map[string]interface{})
-
-	// get controlPlaneEndpoint, something like {"host":"", "port":""}
-	cpe := oldOpenStackClusterSpec["controlPlaneEndpoint"].(map[string]interface{})
-
-	// allow change only for the first time
-	host, ok := cpe["host"].(string)
-	if ok && len(host) == 0 {
-		delete(oldOpenStackClusterSpec, "controlPlaneEndpoint")
-		delete(newOpenStackClusterSpec, "controlPlaneEndpoint")
+	// Allow change only for the first time.
+	if old.Spec.ControlPlaneEndpoint.Host == "" {
+		old.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{}
+		r.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{}
 	}
 
-	if !reflect.DeepEqual(oldOpenStackClusterSpec, newOpenStackClusterSpec) {
+	if !reflect.DeepEqual(old.Spec, r.Spec) {
 		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec"), "cannot be modified"))
 	}
 
