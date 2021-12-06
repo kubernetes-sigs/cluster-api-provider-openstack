@@ -889,8 +889,6 @@ spec:
                                                 type: string
                                               description:
                                                 type: string
-                                              enableDhcp:
-                                                type: boolean
                                               gateway_ip:
                                                 type: string
                                               id:
@@ -901,13 +899,7 @@ spec:
                                                 type: string
                                               ipv6RaMode:
                                                 type: string
-                                              limit:
-                                                type: integer
-                                              marker:
-                                                type: string
                                               name:
-                                                type: string
-                                              networkId:
                                                 type: string
                                               notTags:
                                                 type: string
@@ -915,17 +907,9 @@ spec:
                                                 type: string
                                               projectId:
                                                 type: string
-                                              sortDir:
-                                                type: string
-                                              sortKey:
-                                                type: string
-                                              subnetpoolId:
-                                                type: string
                                               tags:
                                                 type: string
                                               tagsAny:
-                                                type: string
-                                              tenantId:
                                                 type: string
                                             type: object
                                           uuid:
@@ -1208,8 +1192,6 @@ spec:
                                       type: string
                                     description:
                                       type: string
-                                    enableDhcp:
-                                      type: boolean
                                     gateway_ip:
                                       type: string
                                     id:
@@ -1220,13 +1202,7 @@ spec:
                                       type: string
                                     ipv6RaMode:
                                       type: string
-                                    limit:
-                                      type: integer
-                                    marker:
-                                      type: string
                                     name:
-                                      type: string
-                                    networkId:
                                       type: string
                                     notTags:
                                       type: string
@@ -1234,17 +1210,9 @@ spec:
                                       type: string
                                     projectId:
                                       type: string
-                                    sortDir:
-                                      type: string
-                                    sortKey:
-                                      type: string
-                                    subnetpoolId:
-                                      type: string
                                     tags:
                                       type: string
                                     tagsAny:
-                                      type: string
-                                    tenantId:
                                       type: string
                                   type: object
                                 uuid:
@@ -1342,8 +1310,6 @@ spec:
                             type: string
                           description:
                             type: string
-                          enableDhcp:
-                            type: boolean
                           gateway_ip:
                             type: string
                           id:
@@ -1354,13 +1320,7 @@ spec:
                             type: string
                           ipv6RaMode:
                             type: string
-                          limit:
-                            type: integer
-                          marker:
-                            type: string
                           name:
-                            type: string
-                          networkId:
                             type: string
                           notTags:
                             type: string
@@ -1368,17 +1328,9 @@ spec:
                             type: string
                           projectId:
                             type: string
-                          sortDir:
-                            type: string
-                          sortKey:
-                            type: string
-                          subnetpoolId:
-                            type: string
                           tags:
                             type: string
                           tagsAny:
-                            type: string
-                          tenantId:
                             type: string
                         type: object
                       tags:
