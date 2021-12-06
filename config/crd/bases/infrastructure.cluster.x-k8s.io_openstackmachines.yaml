@@ -862,15 +862,9 @@ spec:
                     filter:
                       description: Filters for optional network query
                       properties:
-                        adminStateUp:
-                          type: boolean
                         description:
                           type: string
                         id:
-                          type: string
-                        limit:
-                          type: integer
-                        marker:
                           type: string
                         name:
                           type: string
@@ -880,19 +874,9 @@ spec:
                           type: string
                         projectId:
                           type: string
-                        shared:
-                          type: boolean
-                        sortDir:
-                          type: string
-                        sortKey:
-                          type: string
-                        status:
-                          type: string
                         tags:
                           type: string
                         tagsAny:
-                          type: string
-                        tenantId:
                           type: string
                       type: object
                     fixedIP:
