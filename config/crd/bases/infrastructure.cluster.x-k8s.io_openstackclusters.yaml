@@ -2694,11 +2694,28 @@ spec:
                                 If unspecified, instead the 0-based index of the port
                                 in the list is used.
                               type: string
-                            networkId:
-                              description: ID of the OpenStack network on which to
-                                create the port. If unspecified, create the port on
-                                the default cluster network.
-                              type: string
+                            network:
+                              description: Network is a query for an openstack network
+                                that the port will be created or discovered on. This
+                                will fail if the query returns more than one network.
+                              properties:
+                                description:
+                                  type: string
+                                id:
+                                  type: string
+                                name:
+                                  type: string
+                                notTags:
+                                  type: string
+                                notTagsAny:
+                                  type: string
+                                projectId:
+                                  type: string
+                                tags:
+                                  type: string
+                                tagsAny:
+                                  type: string
+                              type: object
                             profile:
                               additionalProperties:
                                 type: string
@@ -3123,11 +3140,28 @@ spec:
                                 If unspecified, instead the 0-based index of the port
                                 in the list is used.
                               type: string
-                            networkId:
-                              description: ID of the OpenStack network on which to
-                                create the port. If unspecified, create the port on
-                                the default cluster network.
-                              type: string
+                            network:
+                              description: Network is a query for an openstack network
+                                that the port will be created or discovered on. This
+                                will fail if the query returns more than one network.
+                              properties:
+                                description:
+                                  type: string
+                                id:
+                                  type: string
+                                name:
+                                  type: string
+                                notTags:
+                                  type: string
+                                notTagsAny:
+                                  type: string
+                                projectId:
+                                  type: string
+                                tags:
+                                  type: string
+                                tagsAny:
+                                  type: string
+                              type: object
                             profile:
                               additionalProperties:
                                 type: string
@@ -3412,11 +3446,28 @@ spec:
                           unspecified, instead the 0-based index of the port in the
                           list is used.
                         type: string
-                      networkId:
-                        description: ID of the OpenStack network on which to create
-                          the port. If unspecified, create the port on the default
-                          cluster network.
-                        type: string
+                      network:
+                        description: Network is a query for an openstack network that
+                          the port will be created or discovered on. This will fail
+                          if the query returns more than one network.
+                        properties:
+                          description:
+                            type: string
+                          id:
+                            type: string
+                          name:
+                            type: string
+                          notTags:
+                            type: string
+                          notTagsAny:
+                            type: string
+                          projectId:
+                            type: string
+                          tags:
+                            type: string
+                          tagsAny:
+                            type: string
+                        type: object
                       profile:
                         additionalProperties:
                           type: string
@@ -3612,11 +3663,28 @@ spec:
                           unspecified, instead the 0-based index of the port in the
                           list is used.
                         type: string
-                      networkId:
-                        description: ID of the OpenStack network on which to create
-                          the port. If unspecified, create the port on the default
-                          cluster network.
-                        type: string
+                      network:
+                        description: Network is a query for an openstack network that
+                          the port will be created or discovered on. This will fail
+                          if the query returns more than one network.
+                        properties:
+                          description:
+                            type: string
+                          id:
+                            type: string
+                          name:
+                            type: string
+                          notTags:
+                            type: string
+                          notTagsAny:
+                            type: string
+                          projectId:
+                            type: string
+                          tags:
+                            type: string
+                          tagsAny:
+                            type: string
+                        type: object
                       profile:
                         additionalProperties:
                           type: string

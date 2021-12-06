@@ -290,16 +290,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*PortOpts)(nil), (*v1beta1.PortOpts)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_PortOpts_To_v1beta1_PortOpts(a.(*PortOpts), b.(*v1beta1.PortOpts), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*v1beta1.PortOpts)(nil), (*PortOpts)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1beta1_PortOpts_To_v1alpha4_PortOpts(a.(*v1beta1.PortOpts), b.(*PortOpts), scope)
-	}); err != nil {
-		return err
-	}
 	if err := s.AddGeneratedConversionFunc((*RootVolume)(nil), (*v1beta1.RootVolume)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha4_RootVolume_To_v1beta1_RootVolume(a.(*RootVolume), b.(*v1beta1.RootVolume), scope)
 	}); err != nil {
@@ -380,6 +370,16 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddConversionFunc((*[]Network)(nil), (*[]v1beta1.Network)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_Slice_v1alpha4_Network_To_Slice_v1beta1_Network(a.(*[]Network), b.(*[]v1beta1.Network), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*[]v1beta1.Network)(nil), (*[]Network)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_Slice_v1beta1_Network_To_Slice_v1alpha4_Network(a.(*[]v1beta1.Network), b.(*[]Network), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddConversionFunc((*apiv1alpha4.APIEndpoint)(nil), (*apiv1beta1.APIEndpoint)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha4_APIEndpoint_To_v1beta1_APIEndpoint(a.(*apiv1alpha4.APIEndpoint), b.(*apiv1beta1.APIEndpoint), scope)
 	}); err != nil {
@@ -387,6 +387,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddConversionFunc((*Filter)(nil), (*v1beta1.NetworkFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha4_Filter_To_v1beta1_NetworkFilter(a.(*Filter), b.(*v1beta1.NetworkFilter), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*PortOpts)(nil), (*v1beta1.PortOpts)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_PortOpts_To_v1beta1_PortOpts(a.(*PortOpts), b.(*v1beta1.PortOpts), scope)
 	}); err != nil {
 		return err
 	}
@@ -402,6 +407,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddConversionFunc((*v1beta1.NetworkFilter)(nil), (*Filter)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1beta1_NetworkFilter_To_v1alpha4_Filter(a.(*v1beta1.NetworkFilter), b.(*Filter), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1beta1.PortOpts)(nil), (*PortOpts)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1beta1_PortOpts_To_v1alpha4_PortOpts(a.(*v1beta1.PortOpts), b.(*PortOpts), scope)
 	}); err != nil {
 		return err
 	}
@@ -517,7 +527,15 @@ func autoConvert_v1alpha4_Instance_To_v1beta1_Instance(in *Instance, out *v1beta
 	out.Trunk = in.Trunk
 	out.FailureDomain = in.FailureDomain
 	out.SecurityGroups = (*[]string)(unsafe.Pointer(in.SecurityGroups))
-	out.Networks = (*[]v1beta1.Network)(unsafe.Pointer(in.Networks))
+	if in.Networks != nil {
+		in, out := &in.Networks, &out.Networks
+		*out = new([]v1beta1.Network)
+		if err := Convert_Slice_v1alpha4_Network_To_Slice_v1beta1_Network(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Networks = nil
+	}
 	out.Subnet = in.Subnet
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.Image = in.Image
@@ -545,7 +563,15 @@ func autoConvert_v1beta1_Instance_To_v1alpha4_Instance(in *v1beta1.Instance, out
 	out.Trunk = in.Trunk
 	out.FailureDomain = in.FailureDomain
 	out.SecurityGroups = (*[]string)(unsafe.Pointer(in.SecurityGroups))
-	out.Networks = (*[]Network)(unsafe.Pointer(in.Networks))
+	if in.Networks != nil {
+		in, out := &in.Networks, &out.Networks
+		*out = new([]Network)
+		if err := Convert_Slice_v1beta1_Network_To_Slice_v1alpha4_Network(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Networks = nil
+	}
 	out.Subnet = in.Subnet
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.Image = in.Image
@@ -598,7 +624,15 @@ func autoConvert_v1alpha4_Network_To_v1beta1_Network(in *Network, out *v1beta1.N
 	out.ID = in.ID
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.Subnet = (*v1beta1.Subnet)(unsafe.Pointer(in.Subnet))
-	out.PortOpts = (*v1beta1.PortOpts)(unsafe.Pointer(in.PortOpts))
+	if in.PortOpts != nil {
+		in, out := &in.PortOpts, &out.PortOpts
+		*out = new(v1beta1.PortOpts)
+		if err := Convert_v1alpha4_PortOpts_To_v1beta1_PortOpts(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.PortOpts = nil
+	}
 	out.Router = (*v1beta1.Router)(unsafe.Pointer(in.Router))
 	out.APIServerLoadBalancer = (*v1beta1.LoadBalancer)(unsafe.Pointer(in.APIServerLoadBalancer))
 	return nil
@@ -614,7 +648,15 @@ func autoConvert_v1beta1_Network_To_v1alpha4_Network(in *v1beta1.Network, out *N
 	out.ID = in.ID
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.Subnet = (*Subnet)(unsafe.Pointer(in.Subnet))
-	out.PortOpts = (*PortOpts)(unsafe.Pointer(in.PortOpts))
+	if in.PortOpts != nil {
+		in, out := &in.PortOpts, &out.PortOpts
+		*out = new(PortOpts)
+		if err := Convert_v1beta1_PortOpts_To_v1alpha4_PortOpts(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.PortOpts = nil
+	}
 	out.Router = (*Router)(unsafe.Pointer(in.Router))
 	out.APIServerLoadBalancer = (*LoadBalancer)(unsafe.Pointer(in.APIServerLoadBalancer))
 	return nil
@@ -855,13 +897,37 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha4_OpenStackClusterSpec(in *v
 
 func autoConvert_v1alpha4_OpenStackClusterStatus_To_v1beta1_OpenStackClusterStatus(in *OpenStackClusterStatus, out *v1beta1.OpenStackClusterStatus, s conversion.Scope) error {
 	out.Ready = in.Ready
-	out.Network = (*v1beta1.Network)(unsafe.Pointer(in.Network))
-	out.ExternalNetwork = (*v1beta1.Network)(unsafe.Pointer(in.ExternalNetwork))
+	if in.Network != nil {
+		in, out := &in.Network, &out.Network
+		*out = new(v1beta1.Network)
+		if err := Convert_v1alpha4_Network_To_v1beta1_Network(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Network = nil
+	}
+	if in.ExternalNetwork != nil {
+		in, out := &in.ExternalNetwork, &out.ExternalNetwork
+		*out = new(v1beta1.Network)
+		if err := Convert_v1alpha4_Network_To_v1beta1_Network(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.ExternalNetwork = nil
+	}
 	out.FailureDomains = *(*apiv1beta1.FailureDomains)(unsafe.Pointer(&in.FailureDomains))
 	out.ControlPlaneSecurityGroup = (*v1beta1.SecurityGroup)(unsafe.Pointer(in.ControlPlaneSecurityGroup))
 	out.WorkerSecurityGroup = (*v1beta1.SecurityGroup)(unsafe.Pointer(in.WorkerSecurityGroup))
 	out.BastionSecurityGroup = (*v1beta1.SecurityGroup)(unsafe.Pointer(in.BastionSecurityGroup))
-	out.Bastion = (*v1beta1.Instance)(unsafe.Pointer(in.Bastion))
+	if in.Bastion != nil {
+		in, out := &in.Bastion, &out.Bastion
+		*out = new(v1beta1.Instance)
+		if err := Convert_v1alpha4_Instance_To_v1beta1_Instance(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Bastion = nil
+	}
 	out.FailureReason = (*errors.ClusterStatusError)(unsafe.Pointer(in.FailureReason))
 	out.FailureMessage = (*string)(unsafe.Pointer(in.FailureMessage))
 	return nil
@@ -874,13 +940,37 @@ func Convert_v1alpha4_OpenStackClusterStatus_To_v1beta1_OpenStackClusterStatus(i
 
 func autoConvert_v1beta1_OpenStackClusterStatus_To_v1alpha4_OpenStackClusterStatus(in *v1beta1.OpenStackClusterStatus, out *OpenStackClusterStatus, s conversion.Scope) error {
 	out.Ready = in.Ready
-	out.Network = (*Network)(unsafe.Pointer(in.Network))
-	out.ExternalNetwork = (*Network)(unsafe.Pointer(in.ExternalNetwork))
+	if in.Network != nil {
+		in, out := &in.Network, &out.Network
+		*out = new(Network)
+		if err := Convert_v1beta1_Network_To_v1alpha4_Network(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Network = nil
+	}
+	if in.ExternalNetwork != nil {
+		in, out := &in.ExternalNetwork, &out.ExternalNetwork
+		*out = new(Network)
+		if err := Convert_v1beta1_Network_To_v1alpha4_Network(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.ExternalNetwork = nil
+	}
 	out.FailureDomains = *(*apiv1beta1.FailureDomains)(unsafe.Pointer(&in.FailureDomains))
 	out.ControlPlaneSecurityGroup = (*SecurityGroup)(unsafe.Pointer(in.ControlPlaneSecurityGroup))
 	out.WorkerSecurityGroup = (*SecurityGroup)(unsafe.Pointer(in.WorkerSecurityGroup))
 	out.BastionSecurityGroup = (*SecurityGroup)(unsafe.Pointer(in.BastionSecurityGroup))
-	out.Bastion = (*Instance)(unsafe.Pointer(in.Bastion))
+	if in.Bastion != nil {
+		in, out := &in.Bastion, &out.Bastion
+		*out = new(Instance)
+		if err := Convert_v1beta1_Instance_To_v1alpha4_Instance(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Bastion = nil
+	}
 	out.FailureReason = (*errors.ClusterStatusError)(unsafe.Pointer(in.FailureReason))
 	out.FailureMessage = (*string)(unsafe.Pointer(in.FailureMessage))
 	return nil
@@ -1121,7 +1211,17 @@ func autoConvert_v1alpha4_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(i
 	} else {
 		out.Networks = nil
 	}
-	out.Ports = *(*[]v1beta1.PortOpts)(unsafe.Pointer(&in.Ports))
+	if in.Ports != nil {
+		in, out := &in.Ports, &out.Ports
+		*out = make([]v1beta1.PortOpts, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha4_PortOpts_To_v1beta1_PortOpts(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Ports = nil
+	}
 	out.Subnet = in.Subnet
 	out.FloatingIP = in.FloatingIP
 	out.SecurityGroups = *(*[]v1beta1.SecurityGroupParam)(unsafe.Pointer(&in.SecurityGroups))
@@ -1158,7 +1258,17 @@ func autoConvert_v1beta1_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(i
 	} else {
 		out.Networks = nil
 	}
-	out.Ports = *(*[]PortOpts)(unsafe.Pointer(&in.Ports))
+	if in.Ports != nil {
+		in, out := &in.Ports, &out.Ports
+		*out = make([]PortOpts, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta1_PortOpts_To_v1alpha4_PortOpts(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Ports = nil
+	}
 	out.Subnet = in.Subnet
 	out.FloatingIP = in.FloatingIP
 	out.SecurityGroups = *(*[]SecurityGroupParam)(unsafe.Pointer(&in.SecurityGroups))
@@ -1322,7 +1432,7 @@ func Convert_v1beta1_OpenStackMachineTemplateSpec_To_v1alpha4_OpenStackMachineTe
 }
 
 func autoConvert_v1alpha4_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *v1beta1.PortOpts, s conversion.Scope) error {
-	out.NetworkID = in.NetworkID
+	// WARNING: in.NetworkID requires manual conversion: does not exist in peer-type
 	out.NameSuffix = in.NameSuffix
 	out.Description = in.Description
 	out.AdminStateUp = (*bool)(unsafe.Pointer(in.AdminStateUp))
@@ -1341,13 +1451,8 @@ func autoConvert_v1alpha4_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *v1beta
 	return nil
 }
 
-// Convert_v1alpha4_PortOpts_To_v1beta1_PortOpts is an autogenerated conversion function.
-func Convert_v1alpha4_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *v1beta1.PortOpts, s conversion.Scope) error {
-	return autoConvert_v1alpha4_PortOpts_To_v1beta1_PortOpts(in, out, s)
-}
-
 func autoConvert_v1beta1_PortOpts_To_v1alpha4_PortOpts(in *v1beta1.PortOpts, out *PortOpts, s conversion.Scope) error {
-	out.NetworkID = in.NetworkID
+	// WARNING: in.Network requires manual conversion: does not exist in peer-type
 	out.NameSuffix = in.NameSuffix
 	out.Description = in.Description
 	out.AdminStateUp = (*bool)(unsafe.Pointer(in.AdminStateUp))
@@ -1364,11 +1469,6 @@ func autoConvert_v1beta1_PortOpts_To_v1alpha4_PortOpts(in *v1beta1.PortOpts, out
 	out.DisablePortSecurity = (*bool)(unsafe.Pointer(in.DisablePortSecurity))
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	return nil
-}
-
-// Convert_v1beta1_PortOpts_To_v1alpha4_PortOpts is an autogenerated conversion function.
-func Convert_v1beta1_PortOpts_To_v1alpha4_PortOpts(in *v1beta1.PortOpts, out *PortOpts, s conversion.Scope) error {
-	return autoConvert_v1beta1_PortOpts_To_v1alpha4_PortOpts(in, out, s)
 }
 
 func autoConvert_v1alpha4_RootVolume_To_v1beta1_RootVolume(in *RootVolume, out *v1beta1.RootVolume, s conversion.Scope) error {
