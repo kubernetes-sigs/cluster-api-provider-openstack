@@ -2678,10 +2678,41 @@ spec:
                                 properties:
                                   ipAddress:
                                     type: string
-                                  subnetId:
-                                    type: string
+                                  subnet:
+                                    description: Subnet is an openstack subnet query
+                                      that will return the id of a subnet to create
+                                      the fixed IP of a port in. This query must not
+                                      return more than one subnet.
+                                    properties:
+                                      cidr:
+                                        type: string
+                                      description:
+                                        type: string
+                                      gateway_ip:
+                                        type: string
+                                      id:
+                                        type: string
+                                      ipVersion:
+                                        type: integer
+                                      ipv6AddressMode:
+                                        type: string
+                                      ipv6RaMode:
+                                        type: string
+                                      name:
+                                        type: string
+                                      notTags:
+                                        type: string
+                                      notTagsAny:
+                                        type: string
+                                      projectId:
+                                        type: string
+                                      tags:
+                                        type: string
+                                      tagsAny:
+                                        type: string
+                                    type: object
                                 required:
-                                - subnetId
+                                - subnet
                                 type: object
                               type: array
                             hostId:
@@ -3124,10 +3155,41 @@ spec:
                                 properties:
                                   ipAddress:
                                     type: string
-                                  subnetId:
-                                    type: string
+                                  subnet:
+                                    description: Subnet is an openstack subnet query
+                                      that will return the id of a subnet to create
+                                      the fixed IP of a port in. This query must not
+                                      return more than one subnet.
+                                    properties:
+                                      cidr:
+                                        type: string
+                                      description:
+                                        type: string
+                                      gateway_ip:
+                                        type: string
+                                      id:
+                                        type: string
+                                      ipVersion:
+                                        type: integer
+                                      ipv6AddressMode:
+                                        type: string
+                                      ipv6RaMode:
+                                        type: string
+                                      name:
+                                        type: string
+                                      notTags:
+                                        type: string
+                                      notTagsAny:
+                                        type: string
+                                      projectId:
+                                        type: string
+                                      tags:
+                                        type: string
+                                      tagsAny:
+                                        type: string
+                                    type: object
                                 required:
-                                - subnetId
+                                - subnet
                                 type: object
                               type: array
                             hostId:
@@ -3430,10 +3492,41 @@ spec:
                           properties:
                             ipAddress:
                               type: string
-                            subnetId:
-                              type: string
+                            subnet:
+                              description: Subnet is an openstack subnet query that
+                                will return the id of a subnet to create the fixed
+                                IP of a port in. This query must not return more than
+                                one subnet.
+                              properties:
+                                cidr:
+                                  type: string
+                                description:
+                                  type: string
+                                gateway_ip:
+                                  type: string
+                                id:
+                                  type: string
+                                ipVersion:
+                                  type: integer
+                                ipv6AddressMode:
+                                  type: string
+                                ipv6RaMode:
+                                  type: string
+                                name:
+                                  type: string
+                                notTags:
+                                  type: string
+                                notTagsAny:
+                                  type: string
+                                projectId:
+                                  type: string
+                                tags:
+                                  type: string
+                                tagsAny:
+                                  type: string
+                              type: object
                           required:
-                          - subnetId
+                          - subnet
                           type: object
                         type: array
                       hostId:
@@ -3647,10 +3740,41 @@ spec:
                           properties:
                             ipAddress:
                               type: string
-                            subnetId:
-                              type: string
+                            subnet:
+                              description: Subnet is an openstack subnet query that
+                                will return the id of a subnet to create the fixed
+                                IP of a port in. This query must not return more than
+                                one subnet.
+                              properties:
+                                cidr:
+                                  type: string
+                                description:
+                                  type: string
+                                gateway_ip:
+                                  type: string
+                                id:
+                                  type: string
+                                ipVersion:
+                                  type: integer
+                                ipv6AddressMode:
+                                  type: string
+                                ipv6RaMode:
+                                  type: string
+                                name:
+                                  type: string
+                                notTags:
+                                  type: string
+                                notTagsAny:
+                                  type: string
+                                projectId:
+                                  type: string
+                                tags:
+                                  type: string
+                                tagsAny:
+                                  type: string
+                              type: object
                           required:
-                          - subnetId
+                          - subnet
                           type: object
                         type: array
                       hostId:
