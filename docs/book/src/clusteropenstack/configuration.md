@@ -401,6 +401,11 @@ To configure the Cluster API Provider for OpenStack to create a SSH bastion host
       sshKeyName: <Key pair name>
 ```
 
+The `enabled` flag is toggleable. Thus, you're able to save resources while the bastion host is not needed.  
+All other parameters can be changed via an `OpenStackCluster` update while the bastion host is not running.
+
+> Note: as a rolling update is not ideal during a bastion host session, we prevent changes to a running bastion configuration.
+
 A floating IP is created and associated to the bastion host automatically, but you can add the IP address explicitly:
 
 ```yaml
