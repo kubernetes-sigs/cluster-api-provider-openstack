@@ -17,8 +17,10 @@ limitations under the License.
 package v1alpha4
 
 import (
+	"fmt"
 	"reflect"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -62,8 +64,11 @@ func (r *OpenStackClusterTemplate) ValidateCreate() error {
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type.
 func (r *OpenStackClusterTemplate) ValidateUpdate(oldRaw runtime.Object) error {
 	var allErrs field.ErrorList
+	old, ok := oldRaw.(*OpenStackClusterTemplate)
+	if !ok {
+		return apierrors.NewBadRequest(fmt.Sprintf("expected an OpenStackClusterTemplate but got a %T", oldRaw))
+	}
 
-	old := oldRaw.(*OpenStackClusterTemplate)
 	if !reflect.DeepEqual(r.Spec.Template.Spec, old.Spec.Template.Spec) {
 		allErrs = append(allErrs,
 			field.Invalid(field.NewPath("OpenStackClusterTemplate", "spec", "template", "spec"), r, openStackClusterTemplateImmutableMsg),
