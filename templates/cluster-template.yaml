@@ -104,6 +104,7 @@ spec:
       flavor: ${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR}
       image: ${OPENSTACK_IMAGE_NAME}
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
+      adminPass: ${OPENSTACK_ADMINPASS}
       cloudName: ${OPENSTACK_CLOUD}
       identityRef:
         name: ${CLUSTER_NAME}-cloud-config
@@ -147,6 +148,7 @@ spec:
       flavor: ${OPENSTACK_NODE_MACHINE_FLAVOR}
       image: ${OPENSTACK_IMAGE_NAME}
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
+      adminPass: ${OPENSTACK_ADMINPASS}
 ---
 apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
 kind: KubeadmConfigTemplate

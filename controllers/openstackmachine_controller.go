@@ -17,6 +17,7 @@ limitations under the License.
 package controllers
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"fmt"
@@ -469,7 +470,16 @@ func (r *OpenStackMachineReconciler) getBootstrapData(ctx context.Context, machi
 		return "", errors.New("error retrieving bootstrap data: secret value key is missing")
 	}
 
-	return base64.StdEncoding.EncodeToString(value), nil
+	//return base64.StdEncoding.EncodeToString(value), nil
+	var buffer bytes.Buffer
+	buffer.Write(value)
+	if openStackMachine.Spec.AdminPass != ""{
+		adminPass := openStackMachine.Spec.AdminPass
+		resetpwd := "  - '(echo "+ adminPass +";sleep 1; echo "+ adminPass +") | passwd root' "
+		userPwd := []byte(resetpwd)
+		buffer.Write(userPwd)
+	}
+	return base64.StdEncoding.EncodeToString(buffer.Bytes()), nil
 }
 
 func (r *OpenStackMachineReconciler) requeueOpenStackMachinesForUnpausedCluster(ctx context.Context) handler.MapFunc {

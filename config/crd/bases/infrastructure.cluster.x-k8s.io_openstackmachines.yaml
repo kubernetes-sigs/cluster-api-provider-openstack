@@ -273,6 +273,9 @@ spec:
               sshKeyName:
                 description: The ssh key to inject in the instance
                 type: string
+              adminPass:
+                description: The admin password to inject in the instance
+                type: string
               subnet:
                 description: UUID, IP address of a port from this subnet will be marked
                   as AccessIPv4 on the created compute instance
@@ -702,6 +705,9 @@ spec:
               sshKeyName:
                 description: The ssh key to inject in the instance
                 type: string
+              adminPass:
+                description: the adminpass to inject in the instance
+                type: string
               subnet:
                 description: UUID, IP address of a port from this subnet will be marked
                   as AccessIPv4 on the created compute instance
@@ -1117,6 +1123,9 @@ spec:
                 type: object
               sshKeyName:
                 description: The ssh key to inject in the instance
+                type: string
+              adminPass:
+                description: The admin pass to inject in the instance
                 type: string
               subnet:
                 description: UUID, IP address of a port from this subnet will be marked
