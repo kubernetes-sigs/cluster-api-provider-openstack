@@ -21,19 +21,19 @@ import (
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
 
-	"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
 var _ ctrlconversion.Convertible = &OpenStackCluster{}
 
 func (r *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {
-	dst := dstRaw.(*v1beta1.OpenStackCluster)
+	dst := dstRaw.(*infrav1.OpenStackCluster)
 
 	return Convert_v1alpha3_OpenStackCluster_To_v1beta1_OpenStackCluster(r, dst, nil)
 }
 
 func (r *OpenStackCluster) ConvertFrom(srcRaw ctrlconversion.Hub) error {
-	src := srcRaw.(*v1beta1.OpenStackCluster)
+	src := srcRaw.(*infrav1.OpenStackCluster)
 
 	return Convert_v1beta1_OpenStackCluster_To_v1alpha3_OpenStackCluster(src, r, nil)
 }
@@ -41,13 +41,13 @@ func (r *OpenStackCluster) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 var _ ctrlconversion.Convertible = &OpenStackClusterList{}
 
 func (r *OpenStackClusterList) ConvertTo(dstRaw ctrlconversion.Hub) error {
-	dst := dstRaw.(*v1beta1.OpenStackClusterList)
+	dst := dstRaw.(*infrav1.OpenStackClusterList)
 
 	return Convert_v1alpha3_OpenStackClusterList_To_v1beta1_OpenStackClusterList(r, dst, nil)
 }
 
 func (r *OpenStackClusterList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
-	src := srcRaw.(*v1beta1.OpenStackClusterList)
+	src := srcRaw.(*infrav1.OpenStackClusterList)
 
 	return Convert_v1beta1_OpenStackClusterList_To_v1alpha3_OpenStackClusterList(src, r, nil)
 }
@@ -55,13 +55,13 @@ func (r *OpenStackClusterList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 var _ ctrlconversion.Convertible = &OpenStackMachine{}
 
 func (r *OpenStackMachine) ConvertTo(dstRaw ctrlconversion.Hub) error {
-	dst := dstRaw.(*v1beta1.OpenStackMachine)
+	dst := dstRaw.(*infrav1.OpenStackMachine)
 
 	return Convert_v1alpha3_OpenStackMachine_To_v1beta1_OpenStackMachine(r, dst, nil)
 }
 
 func (r *OpenStackMachine) ConvertFrom(srcRaw ctrlconversion.Hub) error {
-	src := srcRaw.(*v1beta1.OpenStackMachine)
+	src := srcRaw.(*infrav1.OpenStackMachine)
 
 	return Convert_v1beta1_OpenStackMachine_To_v1alpha3_OpenStackMachine(src, r, nil)
 }
@@ -69,13 +69,13 @@ func (r *OpenStackMachine) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 var _ ctrlconversion.Convertible = &OpenStackMachineList{}
 
 func (r *OpenStackMachineList) ConvertTo(dstRaw ctrlconversion.Hub) error {
-	dst := dstRaw.(*v1beta1.OpenStackMachineList)
+	dst := dstRaw.(*infrav1.OpenStackMachineList)
 
 	return Convert_v1alpha3_OpenStackMachineList_To_v1beta1_OpenStackMachineList(r, dst, nil)
 }
 
 func (r *OpenStackMachineList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
-	src := srcRaw.(*v1beta1.OpenStackMachineList)
+	src := srcRaw.(*infrav1.OpenStackMachineList)
 
 	return Convert_v1beta1_OpenStackMachineList_To_v1alpha3_OpenStackMachineList(src, r, nil)
 }
@@ -83,13 +83,13 @@ func (r *OpenStackMachineList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 var _ ctrlconversion.Convertible = &OpenStackMachineTemplate{}
 
 func (r *OpenStackMachineTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error {
-	dst := dstRaw.(*v1beta1.OpenStackMachineTemplate)
+	dst := dstRaw.(*infrav1.OpenStackMachineTemplate)
 
 	return Convert_v1alpha3_OpenStackMachineTemplate_To_v1beta1_OpenStackMachineTemplate(r, dst, nil)
 }
 
 func (r *OpenStackMachineTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) error {
-	src := srcRaw.(*v1beta1.OpenStackMachineTemplate)
+	src := srcRaw.(*infrav1.OpenStackMachineTemplate)
 
 	return Convert_v1beta1_OpenStackMachineTemplate_To_v1alpha3_OpenStackMachineTemplate(src, r, nil)
 }
@@ -97,22 +97,22 @@ func (r *OpenStackMachineTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) error 
 var _ ctrlconversion.Convertible = &OpenStackMachineTemplateList{}
 
 func (r *OpenStackMachineTemplateList) ConvertTo(dstRaw ctrlconversion.Hub) error {
-	dst := dstRaw.(*v1beta1.OpenStackMachineTemplateList)
+	dst := dstRaw.(*infrav1.OpenStackMachineTemplateList)
 
 	return Convert_v1alpha3_OpenStackMachineTemplateList_To_v1beta1_OpenStackMachineTemplateList(r, dst, nil)
 }
 
 func (r *OpenStackMachineTemplateList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
-	src := srcRaw.(*v1beta1.OpenStackMachineTemplateList)
+	src := srcRaw.(*infrav1.OpenStackMachineTemplateList)
 
 	return Convert_v1beta1_OpenStackMachineTemplateList_To_v1alpha3_OpenStackMachineTemplateList(src, r, nil)
 }
 
 // Convert_v1alpha3_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec has to be added by us because we dropped
 // the useOctavia parameter. We don't have to migrate this parameter to v1beta1 so there is nothing to do.
-func Convert_v1alpha3_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *OpenStackClusterSpec, out *v1beta1.OpenStackClusterSpec, s conversion.Scope) error {
+func Convert_v1alpha3_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *OpenStackClusterSpec, out *infrav1.OpenStackClusterSpec, s conversion.Scope) error {
 	if in.CloudsSecret != nil {
-		out.IdentityRef = &v1beta1.OpenStackIdentityReference{
+		out.IdentityRef = &infrav1.OpenStackIdentityReference{
 			Kind: "Secret",
 			Name: in.CloudsSecret.Name,
 		}
@@ -122,7 +122,7 @@ func Convert_v1alpha3_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 
 // Convert_v1beta1_OpenStackClusterSpec_To_v1alpha3_OpenStackClusterSpec has to be added by us because we have to
 // convert the Type of CloudsSecret from SecretReference to string.
-func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha3_OpenStackClusterSpec(in *v1beta1.OpenStackClusterSpec, out *OpenStackClusterSpec, s conversion.Scope) error {
+func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha3_OpenStackClusterSpec(in *infrav1.OpenStackClusterSpec, out *OpenStackClusterSpec, s conversion.Scope) error {
 	if in.IdentityRef != nil {
 		out.CloudsSecret = &corev1.SecretReference{
 			Name: in.IdentityRef.Name,
@@ -144,9 +144,9 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha3_OpenStackClusterSpec(in *v
 
 // Convert_v1alpha3_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec is an autogenerated conversion function.
 // v1beta1 drops the field .UserDataSecret which is why we reuqire to define the function here.
-func Convert_v1alpha3_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in *OpenStackMachineSpec, out *v1beta1.OpenStackMachineSpec, s conversion.Scope) error {
+func Convert_v1alpha3_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in *OpenStackMachineSpec, out *infrav1.OpenStackMachineSpec, s conversion.Scope) error {
 	if in.CloudsSecret != nil {
-		out.IdentityRef = &v1beta1.OpenStackIdentityReference{
+		out.IdentityRef = &infrav1.OpenStackIdentityReference{
 			Name: in.CloudsSecret.Name,
 			Kind: "Secret",
 		}
@@ -156,14 +156,14 @@ func Convert_v1alpha3_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in *O
 
 // Convert_v1beta1_Network_To_v1alpha3_Network has to be added by us for the new portOpts
 // parameter in v1beta1. There is no intention to support this parameter in v1alpha3, so the field is just dropped.
-func Convert_v1beta1_Network_To_v1alpha3_Network(in *v1beta1.Network, out *Network, s conversion.Scope) error {
+func Convert_v1beta1_Network_To_v1alpha3_Network(in *infrav1.Network, out *Network, s conversion.Scope) error {
 	return autoConvert_v1beta1_Network_To_v1alpha3_Network(in, out, s)
 }
 
 // Convert_v1beta1_OpenStackMachineSpec_To_v1alpha3_OpenStackMachineSpec has to be added by us for the new ports
 // parameter in v1beta1. There is no intention to support this parameter in v1alpha3, so the field is just dropped.
 // Further, we want to convert the Type of CloudsSecret from SecretReference to string.
-func Convert_v1beta1_OpenStackMachineSpec_To_v1alpha3_OpenStackMachineSpec(in *v1beta1.OpenStackMachineSpec, out *OpenStackMachineSpec, s conversion.Scope) error {
+func Convert_v1beta1_OpenStackMachineSpec_To_v1alpha3_OpenStackMachineSpec(in *infrav1.OpenStackMachineSpec, out *OpenStackMachineSpec, s conversion.Scope) error {
 	if in.IdentityRef != nil {
 		out.CloudsSecret = &corev1.SecretReference{
 			Name: in.IdentityRef.Name,
@@ -174,11 +174,11 @@ func Convert_v1beta1_OpenStackMachineSpec_To_v1alpha3_OpenStackMachineSpec(in *v
 
 // Convert_v1beta1_OpenStackClusterStatus_To_v1alpha3_OpenStackClusterStatus has to be added
 // in order to drop the FailureReason and FailureMessage fields that are not present in v1alpha3.
-func Convert_v1beta1_OpenStackClusterStatus_To_v1alpha3_OpenStackClusterStatus(in *v1beta1.OpenStackClusterStatus, out *OpenStackClusterStatus, s conversion.Scope) error {
+func Convert_v1beta1_OpenStackClusterStatus_To_v1alpha3_OpenStackClusterStatus(in *infrav1.OpenStackClusterStatus, out *OpenStackClusterStatus, s conversion.Scope) error {
 	return autoConvert_v1beta1_OpenStackClusterStatus_To_v1alpha3_OpenStackClusterStatus(in, out, s)
 }
 
-func Convert_Slice_v1beta1_Network_To_Slice_v1alpha3_Network(in *[]v1beta1.Network, out *[]Network, s conversion.Scope) error {
+func Convert_Slice_v1beta1_Network_To_Slice_v1alpha3_Network(in *[]infrav1.Network, out *[]Network, s conversion.Scope) error {
 	for i := range *in {
 		inNet := &(*in)[i]
 		outNet := new(Network)
@@ -190,10 +190,10 @@ func Convert_Slice_v1beta1_Network_To_Slice_v1alpha3_Network(in *[]v1beta1.Netwo
 	return nil
 }
 
-func Convert_Slice_v1alpha3_Network_To_Slice_v1beta1_Network(in *[]Network, out *[]v1beta1.Network, s conversion.Scope) error {
+func Convert_Slice_v1alpha3_Network_To_Slice_v1beta1_Network(in *[]Network, out *[]infrav1.Network, s conversion.Scope) error {
 	for i := range *in {
 		inNet := &(*in)[i]
-		outNet := new(v1beta1.Network)
+		outNet := new(infrav1.Network)
 		if err := autoConvert_v1alpha3_Network_To_v1beta1_Network(inNet, outNet, s); err != nil {
 			return err
 		}
@@ -202,7 +202,7 @@ func Convert_Slice_v1alpha3_Network_To_Slice_v1beta1_Network(in *[]Network, out 
 	return nil
 }
 
-func Convert_v1alpha3_SubnetFilter_To_v1beta1_SubnetFilter(in *SubnetFilter, out *v1beta1.SubnetFilter, s conversion.Scope) error {
+func Convert_v1alpha3_SubnetFilter_To_v1beta1_SubnetFilter(in *SubnetFilter, out *infrav1.SubnetFilter, s conversion.Scope) error {
 	out.Name = in.Name
 	out.Description = in.Description
 	if in.ProjectID != "" {
@@ -223,12 +223,12 @@ func Convert_v1alpha3_SubnetFilter_To_v1beta1_SubnetFilter(in *SubnetFilter, out
 	return nil
 }
 
-func Convert_v1beta1_SubnetFilter_To_v1alpha3_SubnetFilter(in *v1beta1.SubnetFilter, out *SubnetFilter, s conversion.Scope) error {
+func Convert_v1beta1_SubnetFilter_To_v1alpha3_SubnetFilter(in *infrav1.SubnetFilter, out *SubnetFilter, s conversion.Scope) error {
 	out.TenantID = in.ProjectID
 	return autoConvert_v1beta1_SubnetFilter_To_v1alpha3_SubnetFilter(in, out, s)
 }
 
-func Convert_v1alpha3_Filter_To_v1beta1_NetworkFilter(in *Filter, out *v1beta1.NetworkFilter, s conversion.Scope) error {
+func Convert_v1alpha3_Filter_To_v1beta1_NetworkFilter(in *Filter, out *infrav1.NetworkFilter, s conversion.Scope) error {
 	out.Name = in.Name
 	out.Description = in.Description
 	if in.ProjectID != "" {
@@ -244,7 +244,7 @@ func Convert_v1alpha3_Filter_To_v1beta1_NetworkFilter(in *Filter, out *v1beta1.N
 	return nil
 }
 
-func Convert_v1beta1_NetworkFilter_To_v1alpha3_Filter(in *v1beta1.NetworkFilter, out *Filter, s conversion.Scope) error {
+func Convert_v1beta1_NetworkFilter_To_v1alpha3_Filter(in *infrav1.NetworkFilter, out *Filter, s conversion.Scope) error {
 	out.Name = in.Name
 	out.Description = in.Description
 	out.ProjectID = in.ProjectID
