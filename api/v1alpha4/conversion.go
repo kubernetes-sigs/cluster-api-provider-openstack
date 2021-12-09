@@ -19,6 +19,8 @@ package v1alpha4
 import (
 	// corev1 "k8s.io/api/core/v1"
 	// conversion "k8s.io/apimachinery/pkg/conversion"
+
+	conversion "k8s.io/apimachinery/pkg/conversion"
 	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -106,4 +108,124 @@ func (r *OpenStackMachineTemplateList) ConvertFrom(srcRaw ctrlconversion.Hub) er
 	src := srcRaw.(*v1beta1.OpenStackMachineTemplateList)
 
 	return Convert_v1beta1_OpenStackMachineTemplateList_To_v1alpha4_OpenStackMachineTemplateList(src, r, nil)
+}
+
+func Convert_v1alpha4_SubnetFilter_To_v1beta1_SubnetFilter(in *SubnetFilter, out *v1beta1.SubnetFilter, s conversion.Scope) error {
+	out.Name = in.Name
+	out.Description = in.Description
+	if in.ProjectID != "" {
+		out.ProjectID = in.ProjectID
+	} else {
+		out.ProjectID = in.TenantID
+	}
+	out.IPVersion = in.IPVersion
+	out.GatewayIP = in.GatewayIP
+	out.CIDR = in.CIDR
+	out.IPv6AddressMode = in.IPv6AddressMode
+	out.IPv6RAMode = in.IPv6RAMode
+	out.ID = in.ID
+	out.Tags = in.Tags
+	out.TagsAny = in.TagsAny
+	out.NotTags = in.NotTags
+	out.NotTagsAny = in.NotTagsAny
+	return nil
+}
+
+func Convert_v1beta1_SubnetFilter_To_v1alpha4_SubnetFilter(in *v1beta1.SubnetFilter, out *SubnetFilter, s conversion.Scope) error {
+	out.TenantID = in.ProjectID
+	return autoConvert_v1beta1_SubnetFilter_To_v1alpha4_SubnetFilter(in, out, s)
+}
+
+func Convert_v1alpha4_Filter_To_v1beta1_NetworkFilter(in *Filter, out *v1beta1.NetworkFilter, s conversion.Scope) error {
+	out.Name = in.Name
+	out.Description = in.Description
+	if in.ProjectID != "" {
+		out.ProjectID = in.ProjectID
+	} else {
+		out.ProjectID = in.TenantID
+	}
+	out.ID = in.ID
+	out.Tags = in.Tags
+	out.TagsAny = in.TagsAny
+	out.NotTags = in.NotTags
+	out.NotTagsAny = in.NotTagsAny
+	return nil
+}
+
+func Convert_v1beta1_NetworkFilter_To_v1alpha4_Filter(in *v1beta1.NetworkFilter, out *Filter, s conversion.Scope) error {
+	out.Name = in.Name
+	out.Description = in.Description
+	out.ProjectID = in.ProjectID
+	out.TenantID = in.ProjectID
+	out.ID = in.ID
+	out.Tags = in.Tags
+	out.TagsAny = in.TagsAny
+	out.NotTags = in.NotTags
+	out.NotTagsAny = in.NotTagsAny
+	return nil
+}
+
+func Convert_v1alpha4_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *v1beta1.PortOpts, s conversion.Scope) error {
+	err := autoConvert_v1alpha4_PortOpts_To_v1beta1_PortOpts(in, out, s)
+	if err != nil {
+		return err
+	}
+	if in.NetworkID != "" {
+		out.Network = &v1beta1.NetworkFilter{ID: in.NetworkID}
+	}
+	return nil
+}
+
+func Convert_v1beta1_PortOpts_To_v1alpha4_PortOpts(in *v1beta1.PortOpts, out *PortOpts, s conversion.Scope) error {
+	err := autoConvert_v1beta1_PortOpts_To_v1alpha4_PortOpts(in, out, s)
+	if err != nil {
+		return err
+	}
+	if in.Network != nil {
+		out.NetworkID = in.Network.ID
+	}
+	return nil
+}
+
+func Convert_Slice_v1alpha4_Network_To_Slice_v1beta1_Network(in *[]Network, out *[]v1beta1.Network, s conversion.Scope) error {
+	*out = make([]v1beta1.Network, len(*in))
+	for i := range *in {
+		if err := Convert_v1alpha4_Network_To_v1beta1_Network(&(*in)[i], &(*out)[i], s); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func Convert_Slice_v1beta1_Network_To_Slice_v1alpha4_Network(in *[]v1beta1.Network, out *[]Network, s conversion.Scope) error {
+	*out = make([]Network, len(*in))
+	for i := range *in {
+		if err := Convert_v1beta1_Network_To_v1alpha4_Network(&(*in)[i], &(*out)[i], s); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func Convert_v1alpha4_FixedIP_To_v1beta1_FixedIP(in *FixedIP, out *v1beta1.FixedIP, s conversion.Scope) error {
+	err := autoConvert_v1alpha4_FixedIP_To_v1beta1_FixedIP(in, out, s)
+	if err != nil {
+		return err
+	}
+	if in.SubnetID != "" {
+		out.Subnet = &v1beta1.SubnetFilter{ID: in.SubnetID}
+	}
+	return nil
+}
+
+func Convert_v1beta1_FixedIP_To_v1alpha4_FixedIP(in *v1beta1.FixedIP, out *FixedIP, s conversion.Scope) error {
+	err := autoConvert_v1beta1_FixedIP_To_v1alpha4_FixedIP(in, out, s)
+	if err != nil {
+		return err
+	}
+	if in.Subnet != nil && in.Subnet.ID != "" {
+		out.SubnetID = in.Subnet.ID
+	}
+	return nil
 }

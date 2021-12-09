@@ -116,8 +116,12 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 	if len(portOpts.FixedIPs) > 0 {
 		fips := make([]ports.IP, 0, len(portOpts.FixedIPs)+1)
 		for _, fixedIP := range portOpts.FixedIPs {
+			subnetID, err := s.getSubnetIDForFixedIP(fixedIP.Subnet, net.ID)
+			if err != nil {
+				return nil, err
+			}
 			fips = append(fips, ports.IP{
-				SubnetID:  fixedIP.SubnetID,
+				SubnetID:  subnetID,
 				IPAddress: fixedIP.IPAddress,
 			})
 		}
@@ -185,6 +189,32 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 	}
 
 	return port, nil
+}
+
+func (s *Service) getSubnetIDForFixedIP(subnet *infrav1.SubnetFilter, networkID string) (string, error) {
+	if subnet == nil {
+		return "", nil
+	}
+	// Do not query for subnets if UUID is already provided
+	if subnet.ID != "" {
+		return subnet.ID, nil
+	}
+
+	opts := subnet.ToListOpt()
+	opts.NetworkID = networkID
+	subnets, err := s.client.ListSubnet(opts)
+	if err != nil {
+		return "", err
+	}
+
+	switch len(subnets) {
+	case 0:
+		return "", fmt.Errorf("subnet query %v, returns no subnets", *subnet)
+	case 1:
+		return subnets[0].ID, nil
+	default:
+		return "", fmt.Errorf("subnet query %v, returns too many subnets: %v", *subnet, subnets)
+	}
 }
 
 func getPortProfile(p map[string]string) map[string]interface{} {

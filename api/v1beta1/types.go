@@ -62,28 +62,20 @@ type NetworkParam struct {
 	// A fixed IPv4 address for the NIC.
 	FixedIP string `json:"fixedIP,omitempty"`
 	// Filters for optional network query
-	Filter Filter `json:"filter,omitempty"`
+	Filter NetworkFilter `json:"filter,omitempty"`
 	// Subnet within a network to use
 	Subnets []SubnetParam `json:"subnets,omitempty"`
 }
 
-type Filter struct {
-	Status       string `json:"status,omitempty"`
-	Name         string `json:"name,omitempty"`
-	Description  string `json:"description,omitempty"`
-	AdminStateUp *bool  `json:"adminStateUp,omitempty"`
-	TenantID     string `json:"tenantId,omitempty"`
-	ProjectID    string `json:"projectId,omitempty"`
-	Shared       *bool  `json:"shared,omitempty"`
-	ID           string `json:"id,omitempty"`
-	Marker       string `json:"marker,omitempty"`
-	Limit        int    `json:"limit,omitempty"`
-	SortKey      string `json:"sortKey,omitempty"`
-	SortDir      string `json:"sortDir,omitempty"`
-	Tags         string `json:"tags,omitempty"`
-	TagsAny      string `json:"tagsAny,omitempty"`
-	NotTags      string `json:"notTags,omitempty"`
-	NotTagsAny   string `json:"notTagsAny,omitempty"`
+type NetworkFilter struct {
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
+	ProjectID   string `json:"projectId,omitempty"`
+	ID          string `json:"id,omitempty"`
+	Tags        string `json:"tags,omitempty"`
+	TagsAny     string `json:"tagsAny,omitempty"`
+	NotTags     string `json:"notTags,omitempty"`
+	NotTagsAny  string `json:"notTagsAny,omitempty"`
 }
 
 type SubnetParam struct {
@@ -99,9 +91,6 @@ type SubnetParam struct {
 type SubnetFilter struct {
 	Name            string `json:"name,omitempty"`
 	Description     string `json:"description,omitempty"`
-	EnableDHCP      *bool  `json:"enableDhcp,omitempty"`
-	NetworkID       string `json:"networkId,omitempty"`
-	TenantID        string `json:"tenantId,omitempty"`
 	ProjectID       string `json:"projectId,omitempty"`
 	IPVersion       int    `json:"ipVersion,omitempty"`
 	GatewayIP       string `json:"gateway_ip,omitempty"`
@@ -109,11 +98,6 @@ type SubnetFilter struct {
 	IPv6AddressMode string `json:"ipv6AddressMode,omitempty"`
 	IPv6RAMode      string `json:"ipv6RaMode,omitempty"`
 	ID              string `json:"id,omitempty"`
-	SubnetPoolID    string `json:"subnetpoolId,omitempty"`
-	Limit           int    `json:"limit,omitempty"`
-	Marker          string `json:"marker,omitempty"`
-	SortKey         string `json:"sortKey,omitempty"`
-	SortDir         string `json:"sortDir,omitempty"`
 	Tags            string `json:"tags,omitempty"`
 	TagsAny         string `json:"tagsAny,omitempty"`
 	NotTags         string `json:"notTags,omitempty"`
@@ -121,8 +105,9 @@ type SubnetFilter struct {
 }
 
 type PortOpts struct {
-	// ID of the OpenStack network on which to create the port. If unspecified, create the port on the default cluster network.
-	NetworkID string `json:"networkId,omitempty"`
+	// Network is a query for an openstack network that the port will be created or discovered on.
+	// This will fail if the query returns more than one network.
+	Network *NetworkFilter `json:"network,omitempty"`
 	// Used to make the name of the port unique. If unspecified, instead the 0-based index of the port in the list is used.
 	NameSuffix   string `json:"nameSuffix,omitempty"`
 	Description  string `json:"description,omitempty"`
@@ -158,8 +143,10 @@ type PortOpts struct {
 }
 
 type FixedIP struct {
-	SubnetID  string `json:"subnetId"`
-	IPAddress string `json:"ipAddress,omitempty"`
+	// Subnet is an openstack subnet query that will return the id of a subnet to create
+	// the fixed IP of a port in. This query must not return more than one subnet.
+	Subnet    *SubnetFilter `json:"subnet"`
+	IPAddress string        `json:"ipAddress,omitempty"`
 }
 
 type AddressPair struct {

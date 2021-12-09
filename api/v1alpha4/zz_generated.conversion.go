@@ -70,26 +70,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*Filter)(nil), (*v1beta1.Filter)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_Filter_To_v1beta1_Filter(a.(*Filter), b.(*v1beta1.Filter), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*v1beta1.Filter)(nil), (*Filter)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1beta1_Filter_To_v1alpha4_Filter(a.(*v1beta1.Filter), b.(*Filter), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*FixedIP)(nil), (*v1beta1.FixedIP)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_FixedIP_To_v1beta1_FixedIP(a.(*FixedIP), b.(*v1beta1.FixedIP), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*v1beta1.FixedIP)(nil), (*FixedIP)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1beta1_FixedIP_To_v1alpha4_FixedIP(a.(*v1beta1.FixedIP), b.(*FixedIP), scope)
-	}); err != nil {
-		return err
-	}
 	if err := s.AddGeneratedConversionFunc((*Instance)(nil), (*v1beta1.Instance)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha4_Instance_To_v1beta1_Instance(a.(*Instance), b.(*v1beta1.Instance), scope)
 	}); err != nil {
@@ -300,16 +280,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*PortOpts)(nil), (*v1beta1.PortOpts)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_PortOpts_To_v1beta1_PortOpts(a.(*PortOpts), b.(*v1beta1.PortOpts), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*v1beta1.PortOpts)(nil), (*PortOpts)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1beta1_PortOpts_To_v1alpha4_PortOpts(a.(*v1beta1.PortOpts), b.(*PortOpts), scope)
-	}); err != nil {
-		return err
-	}
 	if err := s.AddGeneratedConversionFunc((*RootVolume)(nil), (*v1beta1.RootVolume)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha4_RootVolume_To_v1beta1_RootVolume(a.(*RootVolume), b.(*v1beta1.RootVolume), scope)
 	}); err != nil {
@@ -380,16 +350,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*SubnetFilter)(nil), (*v1beta1.SubnetFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_SubnetFilter_To_v1beta1_SubnetFilter(a.(*SubnetFilter), b.(*v1beta1.SubnetFilter), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*v1beta1.SubnetFilter)(nil), (*SubnetFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1beta1_SubnetFilter_To_v1alpha4_SubnetFilter(a.(*v1beta1.SubnetFilter), b.(*SubnetFilter), scope)
-	}); err != nil {
-		return err
-	}
 	if err := s.AddGeneratedConversionFunc((*SubnetParam)(nil), (*v1beta1.SubnetParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha4_SubnetParam_To_v1beta1_SubnetParam(a.(*SubnetParam), b.(*v1beta1.SubnetParam), scope)
 	}); err != nil {
@@ -400,13 +360,63 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddConversionFunc((*[]Network)(nil), (*[]v1beta1.Network)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_Slice_v1alpha4_Network_To_Slice_v1beta1_Network(a.(*[]Network), b.(*[]v1beta1.Network), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*[]v1beta1.Network)(nil), (*[]Network)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_Slice_v1beta1_Network_To_Slice_v1alpha4_Network(a.(*[]v1beta1.Network), b.(*[]Network), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddConversionFunc((*apiv1alpha4.APIEndpoint)(nil), (*apiv1beta1.APIEndpoint)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha4_APIEndpoint_To_v1beta1_APIEndpoint(a.(*apiv1alpha4.APIEndpoint), b.(*apiv1beta1.APIEndpoint), scope)
 	}); err != nil {
 		return err
 	}
+	if err := s.AddConversionFunc((*Filter)(nil), (*v1beta1.NetworkFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_Filter_To_v1beta1_NetworkFilter(a.(*Filter), b.(*v1beta1.NetworkFilter), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*FixedIP)(nil), (*v1beta1.FixedIP)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_FixedIP_To_v1beta1_FixedIP(a.(*FixedIP), b.(*v1beta1.FixedIP), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*PortOpts)(nil), (*v1beta1.PortOpts)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_PortOpts_To_v1beta1_PortOpts(a.(*PortOpts), b.(*v1beta1.PortOpts), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*SubnetFilter)(nil), (*v1beta1.SubnetFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_SubnetFilter_To_v1beta1_SubnetFilter(a.(*SubnetFilter), b.(*v1beta1.SubnetFilter), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddConversionFunc((*apiv1beta1.APIEndpoint)(nil), (*apiv1alpha4.APIEndpoint)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1beta1_APIEndpoint_To_v1alpha4_APIEndpoint(a.(*apiv1beta1.APIEndpoint), b.(*apiv1alpha4.APIEndpoint), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1beta1.FixedIP)(nil), (*FixedIP)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1beta1_FixedIP_To_v1alpha4_FixedIP(a.(*v1beta1.FixedIP), b.(*FixedIP), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1beta1.NetworkFilter)(nil), (*Filter)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1beta1_NetworkFilter_To_v1alpha4_Filter(a.(*v1beta1.NetworkFilter), b.(*Filter), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1beta1.PortOpts)(nil), (*PortOpts)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1beta1_PortOpts_To_v1alpha4_PortOpts(a.(*v1beta1.PortOpts), b.(*PortOpts), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1beta1.SubnetFilter)(nil), (*SubnetFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1beta1_SubnetFilter_To_v1alpha4_SubnetFilter(a.(*v1beta1.SubnetFilter), b.(*SubnetFilter), scope)
 	}); err != nil {
 		return err
 	}
@@ -489,76 +499,16 @@ func Convert_v1beta1_ExternalRouterIPParam_To_v1alpha4_ExternalRouterIPParam(in 
 	return autoConvert_v1beta1_ExternalRouterIPParam_To_v1alpha4_ExternalRouterIPParam(in, out, s)
 }
 
-func autoConvert_v1alpha4_Filter_To_v1beta1_Filter(in *Filter, out *v1beta1.Filter, s conversion.Scope) error {
-	out.Status = in.Status
-	out.Name = in.Name
-	out.Description = in.Description
-	out.AdminStateUp = (*bool)(unsafe.Pointer(in.AdminStateUp))
-	out.TenantID = in.TenantID
-	out.ProjectID = in.ProjectID
-	out.Shared = (*bool)(unsafe.Pointer(in.Shared))
-	out.ID = in.ID
-	out.Marker = in.Marker
-	out.Limit = in.Limit
-	out.SortKey = in.SortKey
-	out.SortDir = in.SortDir
-	out.Tags = in.Tags
-	out.TagsAny = in.TagsAny
-	out.NotTags = in.NotTags
-	out.NotTagsAny = in.NotTagsAny
-	return nil
-}
-
-// Convert_v1alpha4_Filter_To_v1beta1_Filter is an autogenerated conversion function.
-func Convert_v1alpha4_Filter_To_v1beta1_Filter(in *Filter, out *v1beta1.Filter, s conversion.Scope) error {
-	return autoConvert_v1alpha4_Filter_To_v1beta1_Filter(in, out, s)
-}
-
-func autoConvert_v1beta1_Filter_To_v1alpha4_Filter(in *v1beta1.Filter, out *Filter, s conversion.Scope) error {
-	out.Status = in.Status
-	out.Name = in.Name
-	out.Description = in.Description
-	out.AdminStateUp = (*bool)(unsafe.Pointer(in.AdminStateUp))
-	out.TenantID = in.TenantID
-	out.ProjectID = in.ProjectID
-	out.Shared = (*bool)(unsafe.Pointer(in.Shared))
-	out.ID = in.ID
-	out.Marker = in.Marker
-	out.Limit = in.Limit
-	out.SortKey = in.SortKey
-	out.SortDir = in.SortDir
-	out.Tags = in.Tags
-	out.TagsAny = in.TagsAny
-	out.NotTags = in.NotTags
-	out.NotTagsAny = in.NotTagsAny
-	return nil
-}
-
-// Convert_v1beta1_Filter_To_v1alpha4_Filter is an autogenerated conversion function.
-func Convert_v1beta1_Filter_To_v1alpha4_Filter(in *v1beta1.Filter, out *Filter, s conversion.Scope) error {
-	return autoConvert_v1beta1_Filter_To_v1alpha4_Filter(in, out, s)
-}
-
 func autoConvert_v1alpha4_FixedIP_To_v1beta1_FixedIP(in *FixedIP, out *v1beta1.FixedIP, s conversion.Scope) error {
-	out.SubnetID = in.SubnetID
+	// WARNING: in.SubnetID requires manual conversion: does not exist in peer-type
 	out.IPAddress = in.IPAddress
 	return nil
-}
-
-// Convert_v1alpha4_FixedIP_To_v1beta1_FixedIP is an autogenerated conversion function.
-func Convert_v1alpha4_FixedIP_To_v1beta1_FixedIP(in *FixedIP, out *v1beta1.FixedIP, s conversion.Scope) error {
-	return autoConvert_v1alpha4_FixedIP_To_v1beta1_FixedIP(in, out, s)
 }
 
 func autoConvert_v1beta1_FixedIP_To_v1alpha4_FixedIP(in *v1beta1.FixedIP, out *FixedIP, s conversion.Scope) error {
-	out.SubnetID = in.SubnetID
+	// WARNING: in.Subnet requires manual conversion: does not exist in peer-type
 	out.IPAddress = in.IPAddress
 	return nil
-}
-
-// Convert_v1beta1_FixedIP_To_v1alpha4_FixedIP is an autogenerated conversion function.
-func Convert_v1beta1_FixedIP_To_v1alpha4_FixedIP(in *v1beta1.FixedIP, out *FixedIP, s conversion.Scope) error {
-	return autoConvert_v1beta1_FixedIP_To_v1alpha4_FixedIP(in, out, s)
 }
 
 func autoConvert_v1alpha4_Instance_To_v1beta1_Instance(in *Instance, out *v1beta1.Instance, s conversion.Scope) error {
@@ -567,7 +517,15 @@ func autoConvert_v1alpha4_Instance_To_v1beta1_Instance(in *Instance, out *v1beta
 	out.Trunk = in.Trunk
 	out.FailureDomain = in.FailureDomain
 	out.SecurityGroups = (*[]string)(unsafe.Pointer(in.SecurityGroups))
-	out.Networks = (*[]v1beta1.Network)(unsafe.Pointer(in.Networks))
+	if in.Networks != nil {
+		in, out := &in.Networks, &out.Networks
+		*out = new([]v1beta1.Network)
+		if err := Convert_Slice_v1alpha4_Network_To_Slice_v1beta1_Network(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Networks = nil
+	}
 	out.Subnet = in.Subnet
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.Image = in.Image
@@ -595,7 +553,15 @@ func autoConvert_v1beta1_Instance_To_v1alpha4_Instance(in *v1beta1.Instance, out
 	out.Trunk = in.Trunk
 	out.FailureDomain = in.FailureDomain
 	out.SecurityGroups = (*[]string)(unsafe.Pointer(in.SecurityGroups))
-	out.Networks = (*[]Network)(unsafe.Pointer(in.Networks))
+	if in.Networks != nil {
+		in, out := &in.Networks, &out.Networks
+		*out = new([]Network)
+		if err := Convert_Slice_v1beta1_Network_To_Slice_v1alpha4_Network(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Networks = nil
+	}
 	out.Subnet = in.Subnet
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.Image = in.Image
@@ -648,7 +614,15 @@ func autoConvert_v1alpha4_Network_To_v1beta1_Network(in *Network, out *v1beta1.N
 	out.ID = in.ID
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.Subnet = (*v1beta1.Subnet)(unsafe.Pointer(in.Subnet))
-	out.PortOpts = (*v1beta1.PortOpts)(unsafe.Pointer(in.PortOpts))
+	if in.PortOpts != nil {
+		in, out := &in.PortOpts, &out.PortOpts
+		*out = new(v1beta1.PortOpts)
+		if err := Convert_v1alpha4_PortOpts_To_v1beta1_PortOpts(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.PortOpts = nil
+	}
 	out.Router = (*v1beta1.Router)(unsafe.Pointer(in.Router))
 	out.APIServerLoadBalancer = (*v1beta1.LoadBalancer)(unsafe.Pointer(in.APIServerLoadBalancer))
 	return nil
@@ -664,7 +638,15 @@ func autoConvert_v1beta1_Network_To_v1alpha4_Network(in *v1beta1.Network, out *N
 	out.ID = in.ID
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.Subnet = (*Subnet)(unsafe.Pointer(in.Subnet))
-	out.PortOpts = (*PortOpts)(unsafe.Pointer(in.PortOpts))
+	if in.PortOpts != nil {
+		in, out := &in.PortOpts, &out.PortOpts
+		*out = new(PortOpts)
+		if err := Convert_v1beta1_PortOpts_To_v1alpha4_PortOpts(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.PortOpts = nil
+	}
 	out.Router = (*Router)(unsafe.Pointer(in.Router))
 	out.APIServerLoadBalancer = (*LoadBalancer)(unsafe.Pointer(in.APIServerLoadBalancer))
 	return nil
@@ -678,10 +660,20 @@ func Convert_v1beta1_Network_To_v1alpha4_Network(in *v1beta1.Network, out *Netwo
 func autoConvert_v1alpha4_NetworkParam_To_v1beta1_NetworkParam(in *NetworkParam, out *v1beta1.NetworkParam, s conversion.Scope) error {
 	out.UUID = in.UUID
 	out.FixedIP = in.FixedIP
-	if err := Convert_v1alpha4_Filter_To_v1beta1_Filter(&in.Filter, &out.Filter, s); err != nil {
+	if err := Convert_v1alpha4_Filter_To_v1beta1_NetworkFilter(&in.Filter, &out.Filter, s); err != nil {
 		return err
 	}
-	out.Subnets = *(*[]v1beta1.SubnetParam)(unsafe.Pointer(&in.Subnets))
+	if in.Subnets != nil {
+		in, out := &in.Subnets, &out.Subnets
+		*out = make([]v1beta1.SubnetParam, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha4_SubnetParam_To_v1beta1_SubnetParam(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Subnets = nil
+	}
 	return nil
 }
 
@@ -693,10 +685,20 @@ func Convert_v1alpha4_NetworkParam_To_v1beta1_NetworkParam(in *NetworkParam, out
 func autoConvert_v1beta1_NetworkParam_To_v1alpha4_NetworkParam(in *v1beta1.NetworkParam, out *NetworkParam, s conversion.Scope) error {
 	out.UUID = in.UUID
 	out.FixedIP = in.FixedIP
-	if err := Convert_v1beta1_Filter_To_v1alpha4_Filter(&in.Filter, &out.Filter, s); err != nil {
+	if err := Convert_v1beta1_NetworkFilter_To_v1alpha4_Filter(&in.Filter, &out.Filter, s); err != nil {
 		return err
 	}
-	out.Subnets = *(*[]SubnetParam)(unsafe.Pointer(&in.Subnets))
+	if in.Subnets != nil {
+		in, out := &in.Subnets, &out.Subnets
+		*out = make([]SubnetParam, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta1_SubnetParam_To_v1alpha4_SubnetParam(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Subnets = nil
+	}
 	return nil
 }
 
@@ -739,7 +741,17 @@ func Convert_v1beta1_OpenStackCluster_To_v1alpha4_OpenStackCluster(in *v1beta1.O
 
 func autoConvert_v1alpha4_OpenStackClusterList_To_v1beta1_OpenStackClusterList(in *OpenStackClusterList, out *v1beta1.OpenStackClusterList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
-	out.Items = *(*[]v1beta1.OpenStackCluster)(unsafe.Pointer(&in.Items))
+	if in.Items != nil {
+		in, out := &in.Items, &out.Items
+		*out = make([]v1beta1.OpenStackCluster, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha4_OpenStackCluster_To_v1beta1_OpenStackCluster(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Items = nil
+	}
 	return nil
 }
 
@@ -750,7 +762,17 @@ func Convert_v1alpha4_OpenStackClusterList_To_v1beta1_OpenStackClusterList(in *O
 
 func autoConvert_v1beta1_OpenStackClusterList_To_v1alpha4_OpenStackClusterList(in *v1beta1.OpenStackClusterList, out *OpenStackClusterList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
-	out.Items = *(*[]OpenStackCluster)(unsafe.Pointer(&in.Items))
+	if in.Items != nil {
+		in, out := &in.Items, &out.Items
+		*out = make([]OpenStackCluster, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta1_OpenStackCluster_To_v1alpha4_OpenStackCluster(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Items = nil
+	}
 	return nil
 }
 
@@ -762,14 +784,24 @@ func Convert_v1beta1_OpenStackClusterList_To_v1alpha4_OpenStackClusterList(in *v
 func autoConvert_v1alpha4_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *OpenStackClusterSpec, out *v1beta1.OpenStackClusterSpec, s conversion.Scope) error {
 	out.CloudName = in.CloudName
 	out.NodeCIDR = in.NodeCIDR
-	if err := Convert_v1alpha4_Filter_To_v1beta1_Filter(&in.Network, &out.Network, s); err != nil {
+	if err := Convert_v1alpha4_Filter_To_v1beta1_NetworkFilter(&in.Network, &out.Network, s); err != nil {
 		return err
 	}
 	if err := Convert_v1alpha4_SubnetFilter_To_v1beta1_SubnetFilter(&in.Subnet, &out.Subnet, s); err != nil {
 		return err
 	}
 	out.DNSNameservers = *(*[]string)(unsafe.Pointer(&in.DNSNameservers))
-	out.ExternalRouterIPs = *(*[]v1beta1.ExternalRouterIPParam)(unsafe.Pointer(&in.ExternalRouterIPs))
+	if in.ExternalRouterIPs != nil {
+		in, out := &in.ExternalRouterIPs, &out.ExternalRouterIPs
+		*out = make([]v1beta1.ExternalRouterIPParam, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha4_ExternalRouterIPParam_To_v1beta1_ExternalRouterIPParam(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.ExternalRouterIPs = nil
+	}
 	out.ExternalNetworkID = in.ExternalNetworkID
 	out.ManagedAPIServerLoadBalancer = in.ManagedAPIServerLoadBalancer
 	out.DisableAPIServerFloatingIP = in.DisableAPIServerFloatingIP
@@ -783,7 +815,15 @@ func autoConvert_v1alpha4_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(i
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.ControlPlaneEndpoint = in.ControlPlaneEndpoint
 	out.ControlPlaneAvailabilityZones = *(*[]string)(unsafe.Pointer(&in.ControlPlaneAvailabilityZones))
-	out.Bastion = (*v1beta1.Bastion)(unsafe.Pointer(in.Bastion))
+	if in.Bastion != nil {
+		in, out := &in.Bastion, &out.Bastion
+		*out = new(v1beta1.Bastion)
+		if err := Convert_v1alpha4_Bastion_To_v1beta1_Bastion(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Bastion = nil
+	}
 	out.IdentityRef = (*v1beta1.OpenStackIdentityReference)(unsafe.Pointer(in.IdentityRef))
 	return nil
 }
@@ -796,14 +836,24 @@ func Convert_v1alpha4_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 func autoConvert_v1beta1_OpenStackClusterSpec_To_v1alpha4_OpenStackClusterSpec(in *v1beta1.OpenStackClusterSpec, out *OpenStackClusterSpec, s conversion.Scope) error {
 	out.CloudName = in.CloudName
 	out.NodeCIDR = in.NodeCIDR
-	if err := Convert_v1beta1_Filter_To_v1alpha4_Filter(&in.Network, &out.Network, s); err != nil {
+	if err := Convert_v1beta1_NetworkFilter_To_v1alpha4_Filter(&in.Network, &out.Network, s); err != nil {
 		return err
 	}
 	if err := Convert_v1beta1_SubnetFilter_To_v1alpha4_SubnetFilter(&in.Subnet, &out.Subnet, s); err != nil {
 		return err
 	}
 	out.DNSNameservers = *(*[]string)(unsafe.Pointer(&in.DNSNameservers))
-	out.ExternalRouterIPs = *(*[]ExternalRouterIPParam)(unsafe.Pointer(&in.ExternalRouterIPs))
+	if in.ExternalRouterIPs != nil {
+		in, out := &in.ExternalRouterIPs, &out.ExternalRouterIPs
+		*out = make([]ExternalRouterIPParam, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta1_ExternalRouterIPParam_To_v1alpha4_ExternalRouterIPParam(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.ExternalRouterIPs = nil
+	}
 	out.ExternalNetworkID = in.ExternalNetworkID
 	out.ManagedAPIServerLoadBalancer = in.ManagedAPIServerLoadBalancer
 	out.DisableAPIServerFloatingIP = in.DisableAPIServerFloatingIP
@@ -817,7 +867,15 @@ func autoConvert_v1beta1_OpenStackClusterSpec_To_v1alpha4_OpenStackClusterSpec(i
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.ControlPlaneEndpoint = in.ControlPlaneEndpoint
 	out.ControlPlaneAvailabilityZones = *(*[]string)(unsafe.Pointer(&in.ControlPlaneAvailabilityZones))
-	out.Bastion = (*Bastion)(unsafe.Pointer(in.Bastion))
+	if in.Bastion != nil {
+		in, out := &in.Bastion, &out.Bastion
+		*out = new(Bastion)
+		if err := Convert_v1beta1_Bastion_To_v1alpha4_Bastion(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Bastion = nil
+	}
 	out.IdentityRef = (*OpenStackIdentityReference)(unsafe.Pointer(in.IdentityRef))
 	return nil
 }
@@ -829,13 +887,37 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha4_OpenStackClusterSpec(in *v
 
 func autoConvert_v1alpha4_OpenStackClusterStatus_To_v1beta1_OpenStackClusterStatus(in *OpenStackClusterStatus, out *v1beta1.OpenStackClusterStatus, s conversion.Scope) error {
 	out.Ready = in.Ready
-	out.Network = (*v1beta1.Network)(unsafe.Pointer(in.Network))
-	out.ExternalNetwork = (*v1beta1.Network)(unsafe.Pointer(in.ExternalNetwork))
+	if in.Network != nil {
+		in, out := &in.Network, &out.Network
+		*out = new(v1beta1.Network)
+		if err := Convert_v1alpha4_Network_To_v1beta1_Network(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Network = nil
+	}
+	if in.ExternalNetwork != nil {
+		in, out := &in.ExternalNetwork, &out.ExternalNetwork
+		*out = new(v1beta1.Network)
+		if err := Convert_v1alpha4_Network_To_v1beta1_Network(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.ExternalNetwork = nil
+	}
 	out.FailureDomains = *(*apiv1beta1.FailureDomains)(unsafe.Pointer(&in.FailureDomains))
 	out.ControlPlaneSecurityGroup = (*v1beta1.SecurityGroup)(unsafe.Pointer(in.ControlPlaneSecurityGroup))
 	out.WorkerSecurityGroup = (*v1beta1.SecurityGroup)(unsafe.Pointer(in.WorkerSecurityGroup))
 	out.BastionSecurityGroup = (*v1beta1.SecurityGroup)(unsafe.Pointer(in.BastionSecurityGroup))
-	out.Bastion = (*v1beta1.Instance)(unsafe.Pointer(in.Bastion))
+	if in.Bastion != nil {
+		in, out := &in.Bastion, &out.Bastion
+		*out = new(v1beta1.Instance)
+		if err := Convert_v1alpha4_Instance_To_v1beta1_Instance(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Bastion = nil
+	}
 	out.FailureReason = (*errors.ClusterStatusError)(unsafe.Pointer(in.FailureReason))
 	out.FailureMessage = (*string)(unsafe.Pointer(in.FailureMessage))
 	return nil
@@ -848,13 +930,37 @@ func Convert_v1alpha4_OpenStackClusterStatus_To_v1beta1_OpenStackClusterStatus(i
 
 func autoConvert_v1beta1_OpenStackClusterStatus_To_v1alpha4_OpenStackClusterStatus(in *v1beta1.OpenStackClusterStatus, out *OpenStackClusterStatus, s conversion.Scope) error {
 	out.Ready = in.Ready
-	out.Network = (*Network)(unsafe.Pointer(in.Network))
-	out.ExternalNetwork = (*Network)(unsafe.Pointer(in.ExternalNetwork))
+	if in.Network != nil {
+		in, out := &in.Network, &out.Network
+		*out = new(Network)
+		if err := Convert_v1beta1_Network_To_v1alpha4_Network(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Network = nil
+	}
+	if in.ExternalNetwork != nil {
+		in, out := &in.ExternalNetwork, &out.ExternalNetwork
+		*out = new(Network)
+		if err := Convert_v1beta1_Network_To_v1alpha4_Network(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.ExternalNetwork = nil
+	}
 	out.FailureDomains = *(*apiv1beta1.FailureDomains)(unsafe.Pointer(&in.FailureDomains))
 	out.ControlPlaneSecurityGroup = (*SecurityGroup)(unsafe.Pointer(in.ControlPlaneSecurityGroup))
 	out.WorkerSecurityGroup = (*SecurityGroup)(unsafe.Pointer(in.WorkerSecurityGroup))
 	out.BastionSecurityGroup = (*SecurityGroup)(unsafe.Pointer(in.BastionSecurityGroup))
-	out.Bastion = (*Instance)(unsafe.Pointer(in.Bastion))
+	if in.Bastion != nil {
+		in, out := &in.Bastion, &out.Bastion
+		*out = new(Instance)
+		if err := Convert_v1beta1_Instance_To_v1alpha4_Instance(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Bastion = nil
+	}
 	out.FailureReason = (*errors.ClusterStatusError)(unsafe.Pointer(in.FailureReason))
 	out.FailureMessage = (*string)(unsafe.Pointer(in.FailureMessage))
 	return nil
@@ -893,7 +999,17 @@ func Convert_v1beta1_OpenStackClusterTemplate_To_v1alpha4_OpenStackClusterTempla
 
 func autoConvert_v1alpha4_OpenStackClusterTemplateList_To_v1beta1_OpenStackClusterTemplateList(in *OpenStackClusterTemplateList, out *v1beta1.OpenStackClusterTemplateList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
-	out.Items = *(*[]v1beta1.OpenStackClusterTemplate)(unsafe.Pointer(&in.Items))
+	if in.Items != nil {
+		in, out := &in.Items, &out.Items
+		*out = make([]v1beta1.OpenStackClusterTemplate, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha4_OpenStackClusterTemplate_To_v1beta1_OpenStackClusterTemplate(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Items = nil
+	}
 	return nil
 }
 
@@ -904,7 +1020,17 @@ func Convert_v1alpha4_OpenStackClusterTemplateList_To_v1beta1_OpenStackClusterTe
 
 func autoConvert_v1beta1_OpenStackClusterTemplateList_To_v1alpha4_OpenStackClusterTemplateList(in *v1beta1.OpenStackClusterTemplateList, out *OpenStackClusterTemplateList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
-	out.Items = *(*[]OpenStackClusterTemplate)(unsafe.Pointer(&in.Items))
+	if in.Items != nil {
+		in, out := &in.Items, &out.Items
+		*out = make([]OpenStackClusterTemplate, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta1_OpenStackClusterTemplate_To_v1alpha4_OpenStackClusterTemplate(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Items = nil
+	}
 	return nil
 }
 
@@ -1017,7 +1143,17 @@ func Convert_v1beta1_OpenStackMachine_To_v1alpha4_OpenStackMachine(in *v1beta1.O
 
 func autoConvert_v1alpha4_OpenStackMachineList_To_v1beta1_OpenStackMachineList(in *OpenStackMachineList, out *v1beta1.OpenStackMachineList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
-	out.Items = *(*[]v1beta1.OpenStackMachine)(unsafe.Pointer(&in.Items))
+	if in.Items != nil {
+		in, out := &in.Items, &out.Items
+		*out = make([]v1beta1.OpenStackMachine, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha4_OpenStackMachine_To_v1beta1_OpenStackMachine(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Items = nil
+	}
 	return nil
 }
 
@@ -1028,7 +1164,17 @@ func Convert_v1alpha4_OpenStackMachineList_To_v1beta1_OpenStackMachineList(in *O
 
 func autoConvert_v1beta1_OpenStackMachineList_To_v1alpha4_OpenStackMachineList(in *v1beta1.OpenStackMachineList, out *OpenStackMachineList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
-	out.Items = *(*[]OpenStackMachine)(unsafe.Pointer(&in.Items))
+	if in.Items != nil {
+		in, out := &in.Items, &out.Items
+		*out = make([]OpenStackMachine, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta1_OpenStackMachine_To_v1alpha4_OpenStackMachine(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Items = nil
+	}
 	return nil
 }
 
@@ -1044,8 +1190,28 @@ func autoConvert_v1alpha4_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(i
 	out.Flavor = in.Flavor
 	out.Image = in.Image
 	out.SSHKeyName = in.SSHKeyName
-	out.Networks = *(*[]v1beta1.NetworkParam)(unsafe.Pointer(&in.Networks))
-	out.Ports = *(*[]v1beta1.PortOpts)(unsafe.Pointer(&in.Ports))
+	if in.Networks != nil {
+		in, out := &in.Networks, &out.Networks
+		*out = make([]v1beta1.NetworkParam, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha4_NetworkParam_To_v1beta1_NetworkParam(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Networks = nil
+	}
+	if in.Ports != nil {
+		in, out := &in.Ports, &out.Ports
+		*out = make([]v1beta1.PortOpts, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha4_PortOpts_To_v1beta1_PortOpts(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Ports = nil
+	}
 	out.Subnet = in.Subnet
 	out.FloatingIP = in.FloatingIP
 	out.SecurityGroups = *(*[]v1beta1.SecurityGroupParam)(unsafe.Pointer(&in.SecurityGroups))
@@ -1071,8 +1237,28 @@ func autoConvert_v1beta1_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(i
 	out.Flavor = in.Flavor
 	out.Image = in.Image
 	out.SSHKeyName = in.SSHKeyName
-	out.Networks = *(*[]NetworkParam)(unsafe.Pointer(&in.Networks))
-	out.Ports = *(*[]PortOpts)(unsafe.Pointer(&in.Ports))
+	if in.Networks != nil {
+		in, out := &in.Networks, &out.Networks
+		*out = make([]NetworkParam, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta1_NetworkParam_To_v1alpha4_NetworkParam(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Networks = nil
+	}
+	if in.Ports != nil {
+		in, out := &in.Ports, &out.Ports
+		*out = make([]PortOpts, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta1_PortOpts_To_v1alpha4_PortOpts(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Ports = nil
+	}
 	out.Subnet = in.Subnet
 	out.FloatingIP = in.FloatingIP
 	out.SecurityGroups = *(*[]SecurityGroupParam)(unsafe.Pointer(&in.SecurityGroups))
@@ -1147,7 +1333,17 @@ func Convert_v1beta1_OpenStackMachineTemplate_To_v1alpha4_OpenStackMachineTempla
 
 func autoConvert_v1alpha4_OpenStackMachineTemplateList_To_v1beta1_OpenStackMachineTemplateList(in *OpenStackMachineTemplateList, out *v1beta1.OpenStackMachineTemplateList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
-	out.Items = *(*[]v1beta1.OpenStackMachineTemplate)(unsafe.Pointer(&in.Items))
+	if in.Items != nil {
+		in, out := &in.Items, &out.Items
+		*out = make([]v1beta1.OpenStackMachineTemplate, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha4_OpenStackMachineTemplate_To_v1beta1_OpenStackMachineTemplate(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Items = nil
+	}
 	return nil
 }
 
@@ -1158,7 +1354,17 @@ func Convert_v1alpha4_OpenStackMachineTemplateList_To_v1beta1_OpenStackMachineTe
 
 func autoConvert_v1beta1_OpenStackMachineTemplateList_To_v1alpha4_OpenStackMachineTemplateList(in *v1beta1.OpenStackMachineTemplateList, out *OpenStackMachineTemplateList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
-	out.Items = *(*[]OpenStackMachineTemplate)(unsafe.Pointer(&in.Items))
+	if in.Items != nil {
+		in, out := &in.Items, &out.Items
+		*out = make([]OpenStackMachineTemplate, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta1_OpenStackMachineTemplate_To_v1alpha4_OpenStackMachineTemplate(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Items = nil
+	}
 	return nil
 }
 
@@ -1216,12 +1422,22 @@ func Convert_v1beta1_OpenStackMachineTemplateSpec_To_v1alpha4_OpenStackMachineTe
 }
 
 func autoConvert_v1alpha4_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *v1beta1.PortOpts, s conversion.Scope) error {
-	out.NetworkID = in.NetworkID
+	// WARNING: in.NetworkID requires manual conversion: does not exist in peer-type
 	out.NameSuffix = in.NameSuffix
 	out.Description = in.Description
 	out.AdminStateUp = (*bool)(unsafe.Pointer(in.AdminStateUp))
 	out.MACAddress = in.MACAddress
-	out.FixedIPs = *(*[]v1beta1.FixedIP)(unsafe.Pointer(&in.FixedIPs))
+	if in.FixedIPs != nil {
+		in, out := &in.FixedIPs, &out.FixedIPs
+		*out = make([]v1beta1.FixedIP, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha4_FixedIP_To_v1beta1_FixedIP(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.FixedIPs = nil
+	}
 	out.TenantID = in.TenantID
 	out.ProjectID = in.ProjectID
 	out.SecurityGroups = (*[]string)(unsafe.Pointer(in.SecurityGroups))
@@ -1235,18 +1451,23 @@ func autoConvert_v1alpha4_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *v1beta
 	return nil
 }
 
-// Convert_v1alpha4_PortOpts_To_v1beta1_PortOpts is an autogenerated conversion function.
-func Convert_v1alpha4_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *v1beta1.PortOpts, s conversion.Scope) error {
-	return autoConvert_v1alpha4_PortOpts_To_v1beta1_PortOpts(in, out, s)
-}
-
 func autoConvert_v1beta1_PortOpts_To_v1alpha4_PortOpts(in *v1beta1.PortOpts, out *PortOpts, s conversion.Scope) error {
-	out.NetworkID = in.NetworkID
+	// WARNING: in.Network requires manual conversion: does not exist in peer-type
 	out.NameSuffix = in.NameSuffix
 	out.Description = in.Description
 	out.AdminStateUp = (*bool)(unsafe.Pointer(in.AdminStateUp))
 	out.MACAddress = in.MACAddress
-	out.FixedIPs = *(*[]FixedIP)(unsafe.Pointer(&in.FixedIPs))
+	if in.FixedIPs != nil {
+		in, out := &in.FixedIPs, &out.FixedIPs
+		*out = make([]FixedIP, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta1_FixedIP_To_v1alpha4_FixedIP(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.FixedIPs = nil
+	}
 	out.TenantID = in.TenantID
 	out.ProjectID = in.ProjectID
 	out.SecurityGroups = (*[]string)(unsafe.Pointer(in.SecurityGroups))
@@ -1258,11 +1479,6 @@ func autoConvert_v1beta1_PortOpts_To_v1alpha4_PortOpts(in *v1beta1.PortOpts, out
 	out.DisablePortSecurity = (*bool)(unsafe.Pointer(in.DisablePortSecurity))
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	return nil
-}
-
-// Convert_v1beta1_PortOpts_To_v1alpha4_PortOpts is an autogenerated conversion function.
-func Convert_v1beta1_PortOpts_To_v1alpha4_PortOpts(in *v1beta1.PortOpts, out *PortOpts, s conversion.Scope) error {
-	return autoConvert_v1beta1_PortOpts_To_v1alpha4_PortOpts(in, out, s)
 }
 
 func autoConvert_v1alpha4_RootVolume_To_v1beta1_RootVolume(in *RootVolume, out *v1beta1.RootVolume, s conversion.Scope) error {
@@ -1478,9 +1694,9 @@ func Convert_v1beta1_Subnet_To_v1alpha4_Subnet(in *v1beta1.Subnet, out *Subnet, 
 func autoConvert_v1alpha4_SubnetFilter_To_v1beta1_SubnetFilter(in *SubnetFilter, out *v1beta1.SubnetFilter, s conversion.Scope) error {
 	out.Name = in.Name
 	out.Description = in.Description
-	out.EnableDHCP = (*bool)(unsafe.Pointer(in.EnableDHCP))
-	out.NetworkID = in.NetworkID
-	out.TenantID = in.TenantID
+	// WARNING: in.EnableDHCP requires manual conversion: does not exist in peer-type
+	// WARNING: in.NetworkID requires manual conversion: does not exist in peer-type
+	// WARNING: in.TenantID requires manual conversion: does not exist in peer-type
 	out.ProjectID = in.ProjectID
 	out.IPVersion = in.IPVersion
 	out.GatewayIP = in.GatewayIP
@@ -1488,29 +1704,21 @@ func autoConvert_v1alpha4_SubnetFilter_To_v1beta1_SubnetFilter(in *SubnetFilter,
 	out.IPv6AddressMode = in.IPv6AddressMode
 	out.IPv6RAMode = in.IPv6RAMode
 	out.ID = in.ID
-	out.SubnetPoolID = in.SubnetPoolID
-	out.Limit = in.Limit
-	out.Marker = in.Marker
-	out.SortKey = in.SortKey
-	out.SortDir = in.SortDir
+	// WARNING: in.SubnetPoolID requires manual conversion: does not exist in peer-type
+	// WARNING: in.Limit requires manual conversion: does not exist in peer-type
+	// WARNING: in.Marker requires manual conversion: does not exist in peer-type
+	// WARNING: in.SortKey requires manual conversion: does not exist in peer-type
+	// WARNING: in.SortDir requires manual conversion: does not exist in peer-type
 	out.Tags = in.Tags
 	out.TagsAny = in.TagsAny
 	out.NotTags = in.NotTags
 	out.NotTagsAny = in.NotTagsAny
 	return nil
-}
-
-// Convert_v1alpha4_SubnetFilter_To_v1beta1_SubnetFilter is an autogenerated conversion function.
-func Convert_v1alpha4_SubnetFilter_To_v1beta1_SubnetFilter(in *SubnetFilter, out *v1beta1.SubnetFilter, s conversion.Scope) error {
-	return autoConvert_v1alpha4_SubnetFilter_To_v1beta1_SubnetFilter(in, out, s)
 }
 
 func autoConvert_v1beta1_SubnetFilter_To_v1alpha4_SubnetFilter(in *v1beta1.SubnetFilter, out *SubnetFilter, s conversion.Scope) error {
 	out.Name = in.Name
 	out.Description = in.Description
-	out.EnableDHCP = (*bool)(unsafe.Pointer(in.EnableDHCP))
-	out.NetworkID = in.NetworkID
-	out.TenantID = in.TenantID
 	out.ProjectID = in.ProjectID
 	out.IPVersion = in.IPVersion
 	out.GatewayIP = in.GatewayIP
@@ -1518,21 +1726,11 @@ func autoConvert_v1beta1_SubnetFilter_To_v1alpha4_SubnetFilter(in *v1beta1.Subne
 	out.IPv6AddressMode = in.IPv6AddressMode
 	out.IPv6RAMode = in.IPv6RAMode
 	out.ID = in.ID
-	out.SubnetPoolID = in.SubnetPoolID
-	out.Limit = in.Limit
-	out.Marker = in.Marker
-	out.SortKey = in.SortKey
-	out.SortDir = in.SortDir
 	out.Tags = in.Tags
 	out.TagsAny = in.TagsAny
 	out.NotTags = in.NotTags
 	out.NotTagsAny = in.NotTagsAny
 	return nil
-}
-
-// Convert_v1beta1_SubnetFilter_To_v1alpha4_SubnetFilter is an autogenerated conversion function.
-func Convert_v1beta1_SubnetFilter_To_v1alpha4_SubnetFilter(in *v1beta1.SubnetFilter, out *SubnetFilter, s conversion.Scope) error {
-	return autoConvert_v1beta1_SubnetFilter_To_v1alpha4_SubnetFilter(in, out, s)
 }
 
 func autoConvert_v1alpha4_SubnetParam_To_v1beta1_SubnetParam(in *SubnetParam, out *v1beta1.SubnetParam, s conversion.Scope) error {

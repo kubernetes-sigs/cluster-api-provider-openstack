@@ -26,6 +26,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/portsecurity"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/trunks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	. "github.com/onsi/gomega"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -38,7 +39,8 @@ func Test_GetOrCreatePort(t *testing.T) {
 
 	// Arbitrary GUIDs used in the tests
 	netID := "7fd24ceb-788a-441f-ad0a-d8e2f5d31a1d"
-	subnetID := "d9c88a6d-0b8c-48ff-8f0e-8d85a078c194"
+	subnetID1 := "d9c88a6d-0b8c-48ff-8f0e-8d85a078c194"
+	subnetID2 := "d9c2346d-05gc-48er-9ut4-ig83ayt8c7h4"
 	portID1 := "50214c48-c09e-4a54-914f-97b40fd22802"
 	portID2 := "4c096384-f0a5-466d-9534-06a7ed281a79"
 	hostID := "825c1b11-3dca-4bfe-a2d8-a3cc1964c8d5"
@@ -160,7 +162,9 @@ func Test_GetOrCreatePort(t *testing.T) {
 					MACAddress:   "fe:fe:fe:fe:fe:fe",
 					AdminStateUp: pointerToTrue,
 					FixedIPs: []infrav1.FixedIP{{
-						SubnetID:  subnetID,
+						Subnet: &infrav1.SubnetFilter{
+							Name: "subnetFoo",
+						},
 						IPAddress: "192.168.0.50",
 					}, {IPAddress: "192.168.1.50"}},
 					TenantID:       tenantID,
@@ -188,7 +192,7 @@ func Test_GetOrCreatePort(t *testing.T) {
 					MACAddress:   "fe:fe:fe:fe:fe:fe",
 					FixedIPs: []ports.IP{
 						{
-							SubnetID:  subnetID,
+							SubnetID:  subnetID1,
 							IPAddress: "192.168.0.50",
 						}, {
 							IPAddress: "192.168.1.50",
@@ -225,11 +229,67 @@ func Test_GetOrCreatePort(t *testing.T) {
 						ID: portID1,
 					}, nil)
 				m.ReplaceAllAttributesTags("ports", portID1, attributestags.ReplaceAllOpts{Tags: []string{"my-port-tag"}}).Return([]string{"my-port-tag"}, nil)
+				m.
+					ListSubnet(subnets.ListOpts{
+						Name:      "subnetFoo",
+						NetworkID: netID,
+					}).Return([]subnets.Subnet{
+					{
+						ID:        subnetID1,
+						Name:      "subnetFoo",
+						NetworkID: netID,
+					},
+				}, nil)
 			},
 			&ports.Port{
 				ID: portID1,
 			},
 			false,
+		},
+		{
+			"fails to create port with specified portOpts if subnet query returns more than one subnet",
+			"foo-port-bar",
+			infrav1.Network{
+				ID:     netID,
+				Subnet: &infrav1.Subnet{},
+				PortOpts: &infrav1.PortOpts{
+					NameSuffix:  "foo-port-bar",
+					Description: "this is a test port",
+					FixedIPs: []infrav1.FixedIP{{
+						Subnet: &infrav1.SubnetFilter{
+							Tags: "Foo",
+						},
+						IPAddress: "192.168.0.50",
+					}},
+				},
+			},
+			nil,
+			nil,
+			func(m *mock_networking.MockNetworkClientMockRecorder) {
+				m.
+					ListPort(ports.ListOpts{
+						Name:      "foo-port-bar",
+						NetworkID: netID,
+					}).Return([]ports.Port{}, nil)
+				m.
+					ListSubnet(subnets.ListOpts{
+						Tags:      "Foo",
+						NetworkID: netID,
+					}).Return([]subnets.Subnet{
+					{
+						ID:        subnetID1,
+						NetworkID: netID,
+						Name:      "subnetFoo",
+					},
+					{
+						ID:        subnetID2,
+						NetworkID: netID,
+						Name:      "subnetBar",
+					},
+				}, nil)
+			},
+			nil,
+			true,
 		},
 		{
 			"overrides default (instance) security groups if port security groups are specified",
