@@ -19,9 +19,13 @@ aliases:
     - vincepri
     - CecileRobertMichon
   cluster-api-openstack-maintainers:
-    - jichenjc
-    - hidekazuna
-  cluster-api-openstack-reviewers:
     - chrischdi
-    - prankul88
+    - hidekazuna
+    - jichenjc
+    - mdbooth
     - seanschneeweiss
+    - tobiasgiese
+  cluster-api-openstack-reviewers:
+    - iamemilio
+    - macaptain
+    - prankul88
