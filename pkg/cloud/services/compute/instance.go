@@ -70,6 +70,7 @@ func (s *Service) createInstanceImpl(openStackCluster *infrav1.OpenStackCluster,
 		RootVolume:    openStackMachine.Spec.RootVolume,
 		Subnet:        openStackMachine.Spec.Subnet,
 		ServerGroupID: openStackMachine.Spec.ServerGroupID,
+		AdminPass:     openStackMachine.Spec.AdminPass,
 	}
 
 	// verify that trunk is supported if set at instance level.
@@ -245,6 +246,7 @@ func (s *Service) createInstance(eventObject runtime.Object, clusterName string,
 		Metadata:         instanceSpec.Metadata,
 		ConfigDrive:      &instanceSpec.ConfigDrive,
 		AccessIPv4:       accessIPv4,
+		AdminPass:        instanceSpec.AdminPass,
 	}
 
 	serverCreateOpts = applyRootVolume(serverCreateOpts, instanceSpec.RootVolume)

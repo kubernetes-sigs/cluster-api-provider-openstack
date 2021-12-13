@@ -47,6 +47,7 @@ type InstanceSpec struct {
 	Tags           []string
 	SecurityGroups []string
 	Networks       []infrav1.Network
+	AdminPass      string
 }
 
 // InstanceIdentifier describes an instance which has not necessarily been fetched.
