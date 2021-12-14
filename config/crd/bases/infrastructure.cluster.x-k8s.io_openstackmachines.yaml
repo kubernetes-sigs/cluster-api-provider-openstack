@@ -273,9 +273,6 @@ spec:
               sshKeyName:
                 description: The ssh key to inject in the instance
                 type: string
-              adminPass:
-                description: The admin password to inject in the instance
-                type: string
               subnet:
                 description: UUID, IP address of a port from this subnet will be marked
                   as AccessIPv4 on the created compute instance
@@ -302,6 +299,9 @@ spec:
                       name must be unique.
                     type: string
                 type: object
+              adminPass:
+                description: The admin password to inject in the instance
+                type: string
             required:
             - flavor
             type: object
@@ -705,9 +705,6 @@ spec:
               sshKeyName:
                 description: The ssh key to inject in the instance
                 type: string
-              adminPass:
-                description: the adminpass to inject in the instance
-                type: string
               subnet:
                 description: UUID, IP address of a port from this subnet will be marked
                   as AccessIPv4 on the created compute instance
@@ -721,6 +718,9 @@ spec:
                 description: Whether the server instance is created on a trunk port
                   or not.
                 type: boolean
+              adminPass:
+                description: the admin password to inject in the instance
+                type: string
             required:
             - flavor
             type: object
@@ -1124,9 +1124,6 @@ spec:
               sshKeyName:
                 description: The ssh key to inject in the instance
                 type: string
-              adminPass:
-                description: The admin pass to inject in the instance
-                type: string
               subnet:
                 description: UUID, IP address of a port from this subnet will be marked
                   as AccessIPv4 on the created compute instance
@@ -1140,6 +1137,9 @@ spec:
                 description: Whether the server instance is created on a trunk port
                   or not.
                 type: boolean
+              adminPass:
+                description: The admin password to inject in the instance
+                type: string
             required:
             - flavor
             type: object
