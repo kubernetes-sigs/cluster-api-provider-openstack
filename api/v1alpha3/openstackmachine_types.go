@@ -90,9 +90,6 @@ type OpenStackMachineSpec struct {
 
 	// The server group to assign the machine to
 	ServerGroupID string `json:"serverGroupID,omitempty"`
-
-	// The admin password to inject in the instance
-	AdminPass string `json:"adminPass,omitempty"`
 }
 
 // OpenStackMachineStatus defines the observed state of OpenStackMachine.

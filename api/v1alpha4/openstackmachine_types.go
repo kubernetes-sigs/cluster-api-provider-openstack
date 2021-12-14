@@ -90,8 +90,6 @@ type OpenStackMachineSpec struct {
 	// IdentityRef is a reference to a identity to be used when reconciling this cluster
 	// +optional
 	IdentityRef *OpenStackIdentityReference `json:"identityRef,omitempty"`
-
-	AdminPass string `json:"adminPass,omitempty"`
 }
 
 // OpenStackMachineStatus defines the observed state of OpenStackMachine.

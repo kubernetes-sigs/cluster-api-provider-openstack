@@ -436,9 +436,6 @@ spec:
                                 description: Whether the server instance is created
                                   on a trunk port or not.
                                 type: boolean
-                              adminPass:
-                                description: The admin password to inject in the instance
-                                type: string
                             required:
                             - flavor
                             type: object

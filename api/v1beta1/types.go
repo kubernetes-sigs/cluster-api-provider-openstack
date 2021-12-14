@@ -187,6 +187,7 @@ type Instance struct {
 	State          InstanceState     `json:"state,omitempty"`
 	IP             string            `json:"ip,omitempty"`
 	FloatingIP     string            `json:"floatingIP,omitempty"`
+	AdminPass      string            `json:"adminPass,omitempty"`
 }
 
 type RootVolume struct {
