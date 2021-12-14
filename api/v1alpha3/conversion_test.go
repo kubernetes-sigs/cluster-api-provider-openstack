@@ -21,19 +21,19 @@ import (
 
 	fuzz "github.com/google/gofuzz"
 	"github.com/onsi/gomega"
-
 	"k8s.io/apimachinery/pkg/api/apitesting/fuzzer"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	runtimeserializer "k8s.io/apimachinery/pkg/runtime/serializer"
-	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
+
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
 func TestFuzzyConversion(t *testing.T) {
 	g := gomega.NewWithT(t)
 	scheme := runtime.NewScheme()
 	g.Expect(AddToScheme(scheme)).To(gomega.Succeed())
-	g.Expect(v1beta1.AddToScheme(scheme)).To(gomega.Succeed())
+	g.Expect(infrav1.AddToScheme(scheme)).To(gomega.Succeed())
 
 	fuzzerFuncs := func(_ runtimeserializer.CodecFactory) []interface{} {
 		return []interface{}{
@@ -90,30 +90,30 @@ func TestFuzzyConversion(t *testing.T) {
 			},
 
 			// Don't test hub-spoke-hub conversion of v1beta1 fields which are not in v1alpha3
-			func(v1beta1ClusterSpec *v1beta1.OpenStackClusterSpec, c fuzz.Continue) {
+			func(v1beta1ClusterSpec *infrav1.OpenStackClusterSpec, c fuzz.Continue) {
 				c.FuzzNoCustom(v1beta1ClusterSpec)
 
 				v1beta1ClusterSpec.APIServerFixedIP = ""
 				v1beta1ClusterSpec.AllowAllInClusterTraffic = false
 				v1beta1ClusterSpec.DisableAPIServerFloatingIP = false
 			},
-			func(v1beta1MachineSpec *v1beta1.OpenStackMachineSpec, c fuzz.Continue) {
+			func(v1beta1MachineSpec *infrav1.OpenStackMachineSpec, c fuzz.Continue) {
 				c.FuzzNoCustom(v1beta1MachineSpec)
 
 				v1beta1MachineSpec.Ports = nil
 			},
-			func(v1beta1Network *v1beta1.Network, c fuzz.Continue) {
+			func(v1beta1Network *infrav1.Network, c fuzz.Continue) {
 				c.FuzzNoCustom(v1beta1Network)
 
 				v1beta1Network.PortOpts = nil
 			},
-			func(v1beta1ClusterStatus *v1beta1.OpenStackClusterStatus, c fuzz.Continue) {
+			func(v1beta1ClusterStatus *infrav1.OpenStackClusterStatus, c fuzz.Continue) {
 				c.FuzzNoCustom(v1beta1ClusterStatus)
 
 				v1beta1ClusterStatus.FailureMessage = nil
 				v1beta1ClusterStatus.FailureReason = nil
 			},
-			func(v1beta1OpenStackIdentityRef *v1beta1.OpenStackIdentityReference, c fuzz.Continue) {
+			func(v1beta1OpenStackIdentityRef *infrav1.OpenStackIdentityReference, c fuzz.Continue) {
 				c.FuzzNoCustom(v1beta1OpenStackIdentityRef)
 
 				// IdentityRef was assumed to be a Secret in v1alpha3
@@ -124,21 +124,21 @@ func TestFuzzyConversion(t *testing.T) {
 
 	t.Run("for OpenStackCluster", utilconversion.FuzzTestFunc(utilconversion.FuzzTestFuncInput{
 		Scheme:      scheme,
-		Hub:         &v1beta1.OpenStackCluster{},
+		Hub:         &infrav1.OpenStackCluster{},
 		Spoke:       &OpenStackCluster{},
 		FuzzerFuncs: []fuzzer.FuzzerFuncs{fuzzerFuncs},
 	}))
 
 	t.Run("for OpenStackMachine", utilconversion.FuzzTestFunc(utilconversion.FuzzTestFuncInput{
 		Scheme:      scheme,
-		Hub:         &v1beta1.OpenStackMachine{},
+		Hub:         &infrav1.OpenStackMachine{},
 		Spoke:       &OpenStackMachine{},
 		FuzzerFuncs: []fuzzer.FuzzerFuncs{fuzzerFuncs},
 	}))
 
 	t.Run("for OpenStackMachineTemplate", utilconversion.FuzzTestFunc(utilconversion.FuzzTestFuncInput{
 		Scheme:      scheme,
-		Hub:         &v1beta1.OpenStackMachineTemplate{},
+		Hub:         &infrav1.OpenStackMachineTemplate{},
 		Spoke:       &OpenStackMachineTemplate{},
 		FuzzerFuncs: []fuzzer.FuzzerFuncs{fuzzerFuncs},
 	}))
