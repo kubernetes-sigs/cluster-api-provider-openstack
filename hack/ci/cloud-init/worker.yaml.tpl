@@ -34,8 +34,6 @@
     # Additional services
     ENABLED_SERVICES+=${OPENSTACK_ADDITIONAL_SERVICES}
 
-    LIBVIRT_TYPE=kvm
-
     [[post-config|$NOVA_CONF]]
     [DEFAULT]
     cpu_allocation_ratio = 2.0

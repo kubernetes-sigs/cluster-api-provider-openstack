@@ -34,7 +34,7 @@
     # Glance
     ENABLED_SERVICES+=,g-api
 
-    # Octavia-Neutron
+    # Neutron
     ENABLED_SERVICES+=,neutron-api,neutron-agent,neutron-dhcp,neutron-l3
     ENABLED_SERVICES+=,neutron-metadata-agent,neutron-qos
     # Octavia
@@ -48,8 +48,6 @@
 
     # Additional services
     ENABLED_SERVICES+=${OPENSTACK_ADDITIONAL_SERVICES}
-
-    LIBVIRT_TYPE=kvm
 
     # Don't download default images, just our test images
     DOWNLOAD_DEFAULT_IMAGES=False
@@ -93,7 +91,7 @@
     done
 
     nova-manage cell_v2 discover_hosts
-    
+
     # Look for hypervisors other than the current host and add them to a
     # secondary AZ
     if ! openstack aggregate show ${SECONDARY_AZ} > /dev/null 2>&1; then
@@ -160,7 +158,7 @@
 
     source /tmp/devstack-common.sh
 
-    ensure_kvm    
+    ensure_kvm
 
     # from https://raw.githubusercontent.com/openstack/octavia/master/devstack/contrib/new-octavia-devstack.sh
     git clone -b stable/${OPENSTACK_RELEASE} https://github.com/openstack/devstack.git /tmp/devstack
