@@ -20,7 +20,7 @@ previous cluster managers such as [kops][kops] and
 
 ## Launching a Kubernetes cluster on OpenStack
 
-- Check out the [Cluster API Quick Start](https://cluster-api.sigs.k8s.io/user/quick-start.html) to create your first Kubernetes cluster on OpenStack using Cluster API. If you wish to use the external cloud provider, check out the [External Cloud Provider](docs/book/src/topics/external-cloud-provider.md) as well. 
+- Check out the [Cluster API Quick Start](https://cluster-api.sigs.k8s.io/user/quick-start.html) to create your first Kubernetes cluster on OpenStack using Cluster API. If you wish to use the external cloud provider, check out the [External Cloud Provider](docs/book/src/topics/external-cloud-provider.md) as well.
 
 ## Features
 
@@ -58,14 +58,15 @@ This provider's versions are able to install Kubernetes to the following version
 
 |                                    | Pike | Queens | Rocky | Stein | Train | Ussuri | Victoria |
 | ---------------------------------- | ---- | ------ | ----- | ----- | ----- | ------ | -------- |
-| OpenStack Provider v1alpha3 (v0.3) | +    | +      | +     | ✓    | ✓    | ✓     | ✓        |
+| OpenStack Provider v1alpha3 (v0.3) | +    | +      | +     | ✓     | ✓     | ✓      | ✓        |
 | OpenStack Provider v1alpha4 (v0.4) | +    | +      | +     | +     | +     | +      | ✓        |
 | OpenStack Provider v1alpha4 (v0.5) | +    | +      | +     | +     | +     | +      | ✓        |
 | OpenStack Provider v1beta1         | +    | +      | +     | +     | +     | +      | ✓        |
 
 Test status:
-* `✓` tested
-* `+` should work, but we weren't able to test it
+
+- `✓` tested
+- `+` should work, but we weren't able to test it
 
 Each version of Cluster API for OpenStack will attempt to support two Kubernetes versions.
 
@@ -77,13 +78,14 @@ policy may be made to more closely aligned with other providers in the Cluster A
 ## Development versions
 
 ClusterAPI provider OpenStack images and manifests are published after every PR merge and once every day:
+
 * With a Google Cloud account you can get a quick overview [here](https://console.cloud.google.com/storage/browser/artifacts.k8s-staging-capi-openstack.appspot.com/components)
 * The manifests are available under:
-  * [master/infrastructure-components.yaml](https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/components/master/infrastructure-components.yaml): 
+  * [master/infrastructure-components.yaml](https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/components/master/infrastructure-components.yaml):
     latest build from the main branch, overwritten after every merge
   * e.g. [nightly_master_20210407/infrastructure-components.yaml](https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/components/nightly_master_20210407/infrastructure-components.yaml): build of the main branch from 7th April
-    
-These artifacts are published via Prow and Google Cloud Build. The corresponding job definitions can 
+
+These artifacts are published via Prow and Google Cloud Build. The corresponding job definitions can
 be found [here](https://github.com/kubernetes/test-infra/blob/4d146721aaec27a3c93299956f8d64af2357d64a/config/jobs/image-pushing/k8s-staging-cluster-api.yaml).
 
 ------
@@ -93,8 +95,8 @@ be found [here](https://github.com/kubernetes/test-infra/blob/4d146721aaec27a3c9
 Note: Cluster API Provider OpenStack relies on a few prerequisites which have to be already
 installed in the used operating system images, e.g. a container runtime, kubelet, kubeadm,.. .
 Reference images can be found in [kubernetes-sigs/image-builder](https://github.com/kubernetes-sigs/image-builder/tree/master/images/capi). If it isn't possible to pre-install those
- prerequisites in the image, you can always deploy and execute some custom scripts 
- through the [KubeadmConfig](https://github.com/kubernetes-sigs/cluster-api-bootstrap-provider-kubeadm).  
+ prerequisites in the image, you can always deploy and execute some custom scripts
+ through the [KubeadmConfig](https://github.com/kubernetes-sigs/cluster-api-bootstrap-provider-kubeadm).
 
 ------
 
