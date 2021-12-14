@@ -74,7 +74,7 @@ Your management cluster has been initialized successfully!
 
 You can now create your first workload cluster by running the following:
 
-  clusterctl config cluster [name] --kubernetes-version [version] | kubectl apply -f -
+  clusterctl generate cluster [name] --kubernetes-version [version] | kubectl apply -f -
 ```
 
 # Move objects from `bootstrap` cluster into `target` cluster.
