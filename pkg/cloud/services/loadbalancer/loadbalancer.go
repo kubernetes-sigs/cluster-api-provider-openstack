@@ -288,8 +288,8 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 		if lbMember != nil {
 			// check if we have to recreate the LB Member
 			if lbMember.Address == ip {
-				// nothing to do return
-				return nil
+				// nothing to do continue to next port
+				continue
 			}
 
 			s.logger.Info("Deleting load balancer member (because the IP of the machine changed)", "name", name)
