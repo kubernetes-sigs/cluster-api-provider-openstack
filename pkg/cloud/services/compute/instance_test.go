@@ -658,35 +658,6 @@ func TestService_CreateInstance(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:                "Delete ports on image error",
-			getMachine:          getDefaultMachine,
-			getOpenStackCluster: getDefaultOpenStackCluster,
-			getOpenStackMachine: getDefaultOpenStackMachine,
-			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
-				expectCreateDefaultPort(networkRecorder)
-
-				computeRecorder.ListImages(images.ListOpts{Name: imageName}).Return(nil, fmt.Errorf("test error"))
-
-				expectCleanupDefaultPort(networkRecorder)
-			},
-			wantErr: true,
-		},
-		{
-			name:                "Delete ports on flavor error",
-			getMachine:          getDefaultMachine,
-			getOpenStackCluster: getDefaultOpenStackCluster,
-			getOpenStackMachine: getDefaultOpenStackMachine,
-			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
-				expectCreateDefaultPort(networkRecorder)
-
-				computeRecorder.ListImages(images.ListOpts{Name: imageName}).Return([]images.Image{{ID: imageUUID}}, nil)
-				computeRecorder.GetFlavorIDFromName(flavorName).Return("", fmt.Errorf("test error"))
-
-				expectCleanupDefaultPort(networkRecorder)
-			},
-			wantErr: true,
-		},
-		{
 			name:                "Delete ports on server create error",
 			getMachine:          getDefaultMachine,
 			getOpenStackCluster: getDefaultOpenStackCluster,
@@ -715,6 +686,9 @@ func TestService_CreateInstance(t *testing.T) {
 				return m
 			},
 			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
+				computeRecorder.ListImages(images.ListOpts{Name: imageName}).Return([]images.Image{{ID: imageUUID}}, nil)
+				computeRecorder.GetFlavorIDFromName(flavorName).Return(flavorUUID, nil)
+
 				expectCreateDefaultPort(networkRecorder)
 
 				// Looking up the second port fails

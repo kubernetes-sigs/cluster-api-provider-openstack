@@ -194,6 +194,20 @@ func (s *Service) createInstance(eventObject runtime.Object, clusterName string,
 	accessIPv4 := ""
 	portList := []servers.Network{}
 
+	if instanceSpec.Subnet != "" && accessIPv4 == "" {
+		return nil, fmt.Errorf("no ports with fixed IPs found on Subnet %q", instanceSpec.Subnet)
+	}
+
+	imageID, err := s.getImageID(instanceSpec.Image)
+	if err != nil {
+		return nil, fmt.Errorf("error getting image ID: %v", err)
+	}
+
+	flavorID, err := s.computeService.GetFlavorIDFromName(instanceSpec.Flavor)
+	if err != nil {
+		return nil, fmt.Errorf("error getting flavor id from flavor name %s: %v", instanceSpec.Flavor, err)
+	}
+
 	// Ensure we delete the ports we created if we haven't created the server.
 	defer func() {
 		if server != nil {
@@ -228,20 +242,6 @@ func (s *Service) createInstance(eventObject runtime.Object, clusterName string,
 		portList = append(portList, servers.Network{
 			Port: port.ID,
 		})
-	}
-
-	if instanceSpec.Subnet != "" && accessIPv4 == "" {
-		return nil, fmt.Errorf("no ports with fixed IPs found on Subnet %q", instanceSpec.Subnet)
-	}
-
-	imageID, err := s.getImageID(instanceSpec.Image)
-	if err != nil {
-		return nil, fmt.Errorf("create new server: %v", err)
-	}
-
-	flavorID, err := s.computeService.GetFlavorIDFromName(instanceSpec.Flavor)
-	if err != nil {
-		return nil, fmt.Errorf("error getting flavor id from flavor name %s: %v", instanceSpec.Flavor, err)
 	}
 
 	var serverCreateOpts servers.CreateOptsBuilder = servers.CreateOpts{
