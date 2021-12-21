@@ -502,7 +502,7 @@ func (s *Service) checkIfMonitorExists(name string) (*monitors.Monitor, error) {
 }
 
 func (s *Service) checkIfLbMemberExists(poolID, name string) (*pools.Member, error) {
-	mc := metrics.NewMetricPrometheusContext("loadbalancer_pool", "list")
+	mc := metrics.NewMetricPrometheusContext("loadbalancer_member", "list")
 	allPages, err := pools.ListMembers(s.loadbalancerClient, poolID, pools.ListMembersOpts{Name: name}).AllPages()
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
