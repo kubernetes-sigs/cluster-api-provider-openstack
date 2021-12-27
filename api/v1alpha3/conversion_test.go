@@ -101,6 +101,7 @@ func TestFuzzyConversion(t *testing.T) {
 				c.FuzzNoCustom(v1beta1MachineSpec)
 
 				v1beta1MachineSpec.Ports = nil
+				v1beta1MachineSpec.ImageUUID = ""
 			},
 			func(v1beta1Network *infrav1.Network, c fuzz.Continue) {
 				c.FuzzNoCustom(v1beta1Network)
@@ -112,6 +113,9 @@ func TestFuzzyConversion(t *testing.T) {
 
 				v1beta1ClusterStatus.FailureMessage = nil
 				v1beta1ClusterStatus.FailureReason = nil
+				if v1beta1ClusterStatus.Bastion != nil {
+					v1beta1ClusterStatus.Bastion.ImageUUID = ""
+				}
 			},
 			func(v1beta1OpenStackIdentityRef *infrav1.OpenStackIdentityReference, c fuzz.Continue) {
 				c.FuzzNoCustom(v1beta1OpenStackIdentityRef)

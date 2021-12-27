@@ -59,6 +59,7 @@ func (s *Service) createInstanceImpl(openStackCluster *infrav1.OpenStackCluster,
 	instanceSpec := InstanceSpec{
 		Name:          openStackMachine.Name,
 		Image:         openStackMachine.Spec.Image,
+		ImageUUID:     openStackMachine.Spec.ImageUUID,
 		Flavor:        openStackMachine.Spec.Flavor,
 		SSHKeyName:    openStackMachine.Spec.SSHKeyName,
 		UserData:      userData,
@@ -198,7 +199,7 @@ func (s *Service) createInstance(eventObject runtime.Object, clusterName string,
 		return nil, fmt.Errorf("no ports with fixed IPs found on Subnet %q", instanceSpec.Subnet)
 	}
 
-	imageID, err := s.getImageID(instanceSpec.Image)
+	imageID, err := s.getImageID(instanceSpec.ImageUUID, instanceSpec.Image)
 	if err != nil {
 		return nil, fmt.Errorf("error getting image ID: %v", err)
 	}
@@ -410,15 +411,12 @@ func (s *Service) getServerNetworks(networkParams []infrav1.NetworkParam) ([]inf
 	return nets, nil
 }
 
-// Helper function for getting image ID from name.
-func (s *Service) getImageID(imageName string) (string, error) {
-	if imageName == "" {
-		return "", nil
-	}
+// Helper function for getting image id from name.
+func (s *Service) getImageIDFromName(imageName string) (string, error) {
+	var opts images.ListOpts
 
-	opts := images.ListOpts{
-		Name: imageName,
-	}
+	opts.Name = imageName
+
 	allImages, err := s.computeService.ListImages(opts)
 	if err != nil {
 		return "", err
@@ -426,12 +424,25 @@ func (s *Service) getImageID(imageName string) (string, error) {
 
 	switch len(allImages) {
 	case 0:
-		return "", fmt.Errorf("no image with the name %s could be found", imageName)
+		return "", fmt.Errorf("no image with the Name %s could be found", imageName)
 	case 1:
 		return allImages[0].ID, nil
 	default:
+		// this should never happen
 		return "", fmt.Errorf("too many images with the name, %s, were found", imageName)
 	}
+}
+
+// Helper function for getting image ID from name or ID.
+func (s *Service) getImageID(imageUUID, imageName string) (string, error) {
+	if imageUUID != "" {
+		// we return imageUUID without check
+		return imageUUID, nil
+	} else if imageName != "" {
+		return s.getImageIDFromName(imageName)
+	}
+
+	return "", nil
 }
 
 // GetManagementPort returns the port which is used for management and external

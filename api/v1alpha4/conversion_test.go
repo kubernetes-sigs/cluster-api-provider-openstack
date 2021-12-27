@@ -201,6 +201,18 @@ func TestFuzzyConversion(t *testing.T) {
 					}
 				}
 			},
+			func(v1beta1ClusterStatus *infrav1.OpenStackClusterStatus, c fuzz.Continue) {
+				c.FuzzNoCustom(v1beta1ClusterStatus)
+
+				if v1beta1ClusterStatus.Bastion != nil {
+					v1beta1ClusterStatus.Bastion.ImageUUID = ""
+				}
+			},
+			func(v1beta1MachineSpec *infrav1.OpenStackMachineSpec, c fuzz.Continue) {
+				c.FuzzNoCustom(v1beta1MachineSpec)
+
+				v1beta1MachineSpec.ImageUUID = ""
+			},
 		}
 	}
 

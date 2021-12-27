@@ -380,14 +380,33 @@ func TestService_getServerNetworks(t *testing.T) {
 func TestService_getImageID(t *testing.T) {
 	const imageIDA = "ce96e584-7ebc-46d6-9e55-987d72e3806c"
 	const imageIDB = "8f536889-5198-42d7-8314-cb78f4f4755c"
+	const imageIDC = "8f536889-5198-42d7-8314-cb78f4f4755d"
 
 	tests := []struct {
 		testName  string
+		imageUUID string
 		imageName string
 		expect    func(m *MockClientMockRecorder)
 		want      string
 		wantErr   bool
 	}{
+		{
+			testName:  "Return image uuid if uuid given",
+			imageUUID: imageIDC,
+			want:      imageIDC,
+			expect: func(m *MockClientMockRecorder) {
+			},
+			wantErr: false,
+		},
+		{
+			testName:  "Return through uuid if both uuid and name given",
+			imageName: "dummy",
+			imageUUID: imageIDC,
+			expect: func(m *MockClientMockRecorder) {
+			},
+			want:    imageIDC,
+			wantErr: false,
+		},
 		{
 			testName:  "Return image ID",
 			imageName: "test-image",
@@ -448,7 +467,7 @@ func TestService_getImageID(t *testing.T) {
 				logger:            logr.Discard(),
 			}
 
-			got, err := s.getImageID(tt.imageName)
+			got, err := s.getImageID(tt.imageUUID, tt.imageName)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Service.getImageID() error = %v, wantErr %v", err, tt.wantErr)
 				return

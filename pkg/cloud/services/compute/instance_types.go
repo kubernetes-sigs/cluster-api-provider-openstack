@@ -34,6 +34,7 @@ import (
 type InstanceSpec struct {
 	Name           string
 	Image          string
+	ImageUUID      string
 	Flavor         string
 	SSHKeyName     string
 	UserData       string
