@@ -263,7 +263,7 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 	}
 
 	loadBalancerName := getLoadBalancerName(clusterName)
-	s.logger.Info("Reconciling load balancer", "name", loadBalancerName)
+	s.logger.Info("Reconciling load balancer member", "name", loadBalancerName)
 
 	lbID := openStackCluster.Status.Network.APIServerLoadBalancer.ID
 	portList := []int{int(openStackCluster.Spec.ControlPlaneEndpoint.Port)}
