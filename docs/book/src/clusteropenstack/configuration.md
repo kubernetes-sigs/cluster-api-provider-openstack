@@ -401,6 +401,9 @@ If `192.168.0.0/16` is already in use within your network, you must select a dif
 To configure the Cluster API Provider for OpenStack to create a SSH bastion host, add this line to the OpenStackCluster spec after `clusterctl generate cluster` was successfully executed:
 
 ```yaml
+
+spec:
+  ...
   bastion:
     enabled: true
     instance:
@@ -417,6 +420,9 @@ All other parameters can be changed via an `OpenStackCluster` update while the b
 A floating IP is created and associated to the bastion host automatically, but you can add the IP address explicitly:
 
 ```yaml
+
+spec:
+  ...
   bastion:
     ...
         floatingIP: <Floating IP address>
