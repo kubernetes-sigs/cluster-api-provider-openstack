@@ -226,3 +226,11 @@ func Convert_v1beta1_FixedIP_To_v1alpha4_FixedIP(in *infrav1.FixedIP, out *Fixed
 	}
 	return nil
 }
+
+func Convert_v1beta1_Instance_To_v1alpha4_Instance(in *infrav1.Instance, out *Instance, s conversion.Scope) error {
+	return autoConvert_v1beta1_Instance_To_v1alpha4_Instance(in, out, s)
+}
+
+func Convert_v1beta1_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(in *infrav1.OpenStackMachineSpec, out *OpenStackMachineSpec, s conversion.Scope) error {
+	return autoConvert_v1beta1_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(in, out, s)
+}

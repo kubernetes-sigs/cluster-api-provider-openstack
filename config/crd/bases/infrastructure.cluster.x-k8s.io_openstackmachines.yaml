@@ -849,6 +849,10 @@ spec:
                   If the RootVolume is specified, this will be ignored and use rootVolume
                   directly.
                 type: string
+              imageUUID:
+                description: The uuid of the image to use for your server instance.
+                  if it's empty, Image name will be used
+                type: string
               instanceID:
                 description: InstanceID is the OpenStack instance ID for this machine.
                 type: string

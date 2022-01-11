@@ -256,3 +256,7 @@ func Convert_v1beta1_NetworkFilter_To_v1alpha3_Filter(in *infrav1.NetworkFilter,
 	out.NotTagsAny = in.NotTagsAny
 	return nil
 }
+
+func Convert_v1beta1_Instance_To_v1alpha3_Instance(in *infrav1.Instance, out *Instance, s conversion.Scope) error {
+	return autoConvert_v1beta1_Instance_To_v1alpha3_Instance(in, out, s)
+}

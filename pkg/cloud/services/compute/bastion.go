@@ -29,6 +29,7 @@ func (s *Service) CreateBastion(openStackCluster *infrav1.OpenStackCluster, clus
 		Flavor:        openStackCluster.Spec.Bastion.Instance.Flavor,
 		SSHKeyName:    openStackCluster.Spec.Bastion.Instance.SSHKeyName,
 		Image:         openStackCluster.Spec.Bastion.Instance.Image,
+		ImageUUID:     openStackCluster.Spec.Bastion.Instance.ImageUUID,
 		FailureDomain: openStackCluster.Spec.Bastion.AvailabilityZone,
 		RootVolume:    openStackCluster.Spec.Bastion.Instance.RootVolume,
 	}

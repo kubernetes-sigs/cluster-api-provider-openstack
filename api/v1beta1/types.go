@@ -164,6 +164,7 @@ type Instance struct {
 	Subnet         string            `json:"subnet,omitempty"`
 	Tags           []string          `json:"tags,omitempty"`
 	Image          string            `json:"image,omitempty"`
+	ImageUUID      string            `json:"imageUUID,omitempty"`
 	Flavor         string            `json:"flavor,omitempty"`
 	SSHKeyName     string            `json:"sshKeyName,omitempty"`
 	UserData       string            `json:"userData,omitempty"`
