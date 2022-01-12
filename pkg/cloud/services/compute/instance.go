@@ -500,7 +500,17 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instance *InstanceS
 }
 
 func (s *Service) deletePorts(eventObject runtime.Object, nets []servers.Network) error {
+	trunkSupported, err := s.isTrunkExtSupported()
+	if err != nil {
+		return err
+	}
+
 	for _, n := range nets {
+		if trunkSupported {
+			if err = s.networkingService.DeleteTrunk(eventObject, n.Port); err != nil {
+				return err
+			}
+		}
 		if err := s.networkingService.DeletePort(eventObject, n.Port); err != nil {
 			return err
 		}

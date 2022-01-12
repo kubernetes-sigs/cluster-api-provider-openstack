@@ -24,14 +24,20 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/golang/mock/gomock"
+	common "github.com/gophercloud/gophercloud/openstack/common/extensions"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/availabilityzones"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/trunks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
+	gomegatypes "github.com/onsi/gomega/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
@@ -40,6 +46,31 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking/mock_networking"
 )
+
+type gomegaMockMatcher struct {
+	matcher     gomegatypes.GomegaMatcher
+	description string
+}
+
+func newGomegaMockMatcher(matcher gomegatypes.GomegaMatcher) *gomegaMockMatcher {
+	return &gomegaMockMatcher{
+		matcher:     matcher,
+		description: "",
+	}
+}
+
+func (m *gomegaMockMatcher) String() string {
+	return m.description
+}
+
+func (m *gomegaMockMatcher) Matches(x interface{}) bool {
+	success, err := m.matcher.Match(x)
+	Expect(err).NotTo(HaveOccurred())
+	if !success {
+		m.description = m.matcher.FailureMessage(x)
+	}
+	return success
+}
 
 func Test_getPortName(t *testing.T) {
 	type args struct {
@@ -483,6 +514,7 @@ const (
 	networkUUID                   = "d412171b-9fd7-41c1-95a6-c24e5953974d"
 	subnetUUID                    = "d2d8d98d-b234-477e-a547-868b7cb5d6a5"
 	portUUID                      = "e7b7f3d1-0a81-40b1-bfa6-a22a31b17816"
+	trunkUUID                     = "2cf74a9f-3e89-4546-9779-20f2503c4ae8"
 	imageUUID                     = "652b5a05-27fa-41d4-ac82-3e63cf6f7ab7"
 	flavorUUID                    = "6dc820db-f912-454e-a1e3-1081f3b8cc72"
 	instanceUUID                  = "383a8ec1-b6ea-4493-99dd-fc790da04ba9"
@@ -593,7 +625,7 @@ func TestService_CreateInstance(t *testing.T) {
 	}
 
 	// Expected calls to create a server with a single default port
-	expectCreateDefaultPort := func(networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
+	expectUseExistingDefaultPort := func(networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
 		// Returning a pre-existing port requires fewer mocks
 		networkRecorder.ListPort(ports.ListOpts{
 			Name:      portName,
@@ -606,8 +638,37 @@ func TestService_CreateInstance(t *testing.T) {
 		}, nil)
 	}
 
+	expectCreatePort := func(networkRecorder *mock_networking.MockNetworkClientMockRecorder, name string, networkID string) {
+		networkRecorder.ListPort(ports.ListOpts{
+			Name:      name,
+			NetworkID: networkID,
+		}).Return([]ports.Port{}, nil)
+
+		// gomock won't match a pointer to a nil slice in SecurityGroups, so we do this
+		networkRecorder.CreatePort(gomock.Any()).DoAndReturn(func(createOpts ports.CreateOptsBuilder) (*ports.Port, error) {
+			createOptsMap, err := createOpts.ToPortCreateMap()
+			Expect(err).NotTo(HaveOccurred())
+
+			// Match only the fields we're interested in
+			portOpts := createOptsMap["port"].(map[string]interface{})
+			Expect(portOpts).To(MatchKeys(IgnoreExtras, Keys{
+				"network_id": Equal(networkUUID),
+				"name":       Equal(portName),
+			}))
+
+			return &ports.Port{
+				ID:          portUUID,
+				NetworkID:   networkUUID,
+				Name:        portName,
+				Description: portOpts["description"].(string),
+			}, nil
+		})
+		networkRecorder.ReplaceAllAttributesTags("ports", portUUID, attributestags.ReplaceAllOpts{Tags: []string{"test-tag"}}).Return(nil, nil)
+	}
+
 	// Expected calls if we delete the network port
 	expectCleanupDefaultPort := func(networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
+		networkRecorder.ListExtensions()
 		networkRecorder.GetPort(portUUID).Return(&ports.Port{ID: portUUID, Name: portName}, nil)
 		networkRecorder.DeletePort(portUUID).Return(nil)
 	}
@@ -668,7 +729,7 @@ func TestService_CreateInstance(t *testing.T) {
 			getOpenStackCluster: getDefaultOpenStackCluster,
 			getOpenStackMachine: getDefaultOpenStackMachine,
 			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
-				expectCreateDefaultPort(networkRecorder)
+				expectUseExistingDefaultPort(networkRecorder)
 				expectDefaultImageAndFlavor(computeRecorder)
 
 				expectCreateServer(computeRecorder, getDefaultServerMap(), false)
@@ -682,7 +743,7 @@ func TestService_CreateInstance(t *testing.T) {
 			getOpenStackCluster: getDefaultOpenStackCluster,
 			getOpenStackMachine: getDefaultOpenStackMachine,
 			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
-				expectCreateDefaultPort(networkRecorder)
+				expectUseExistingDefaultPort(networkRecorder)
 				expectDefaultImageAndFlavor(computeRecorder)
 
 				expectCreateServer(computeRecorder, getDefaultServerMap(), true)
@@ -708,7 +769,7 @@ func TestService_CreateInstance(t *testing.T) {
 				computeRecorder.ListImages(images.ListOpts{Name: imageName}).Return([]images.Image{{ID: imageUUID}}, nil)
 				computeRecorder.GetFlavorIDFromName(flavorName).Return(flavorUUID, nil)
 
-				expectCreateDefaultPort(networkRecorder)
+				expectUseExistingDefaultPort(networkRecorder)
 
 				// Looking up the second port fails
 				networkRecorder.ListPort(ports.ListOpts{
@@ -727,7 +788,7 @@ func TestService_CreateInstance(t *testing.T) {
 			getOpenStackCluster: getDefaultOpenStackCluster,
 			getOpenStackMachine: getDefaultOpenStackMachine,
 			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
-				expectCreateDefaultPort(networkRecorder)
+				expectUseExistingDefaultPort(networkRecorder)
 				expectDefaultImageAndFlavor(computeRecorder)
 
 				expectCreateServer(computeRecorder, getDefaultServerMap(), false)
@@ -741,7 +802,7 @@ func TestService_CreateInstance(t *testing.T) {
 			getOpenStackCluster: getDefaultOpenStackCluster,
 			getOpenStackMachine: getDefaultOpenStackMachine,
 			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
-				expectCreateDefaultPort(networkRecorder)
+				expectUseExistingDefaultPort(networkRecorder)
 				expectDefaultImageAndFlavor(computeRecorder)
 
 				expectCreateServer(computeRecorder, getDefaultServerMap(), false)
@@ -767,7 +828,7 @@ func TestService_CreateInstance(t *testing.T) {
 			},
 			getOpenStackMachine: getDefaultOpenStackMachine,
 			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
-				expectCreateDefaultPort(networkRecorder)
+				expectUseExistingDefaultPort(networkRecorder)
 				expectDefaultImageAndFlavor(computeRecorder)
 
 				createMap := getDefaultServerMap()
@@ -790,7 +851,7 @@ func TestService_CreateInstance(t *testing.T) {
 			},
 			getOpenStackMachine: getDefaultOpenStackMachine,
 			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
-				expectCreateDefaultPort(networkRecorder)
+				expectUseExistingDefaultPort(networkRecorder)
 				expectDefaultImageAndFlavor(computeRecorder)
 
 				createMap := getDefaultServerMap()
@@ -817,7 +878,7 @@ func TestService_CreateInstance(t *testing.T) {
 				return osMachine
 			},
 			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
-				expectCreateDefaultPort(networkRecorder)
+				expectUseExistingDefaultPort(networkRecorder)
 				expectDefaultImageAndFlavor(computeRecorder)
 
 				// TODO: Shortcut this API call if security groups are passed by UUID
@@ -834,6 +895,68 @@ func TestService_CreateInstance(t *testing.T) {
 				expectServerPollSuccess(computeRecorder)
 			},
 			wantErr: false,
+		},
+		{
+			name:                "Delete trunks on port creation error",
+			getMachine:          getDefaultMachine,
+			getOpenStackCluster: getDefaultOpenStackCluster,
+			getOpenStackMachine: func() *infrav1.OpenStackMachine {
+				m := getDefaultOpenStackMachine()
+				m.Spec.Ports = []infrav1.PortOpts{
+					{Description: "Test port 0", Trunk: pointer.BoolPtr(true)},
+					{Description: "Test port 1"},
+				}
+				return m
+			},
+			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
+				computeRecorder.ListImages(images.ListOpts{Name: imageName}).Return([]images.Image{{ID: imageUUID}}, nil)
+				computeRecorder.GetFlavorIDFromName(flavorName).Return(flavorUUID, nil)
+
+				extensions := []extensions.Extension{
+					{Extension: common.Extension{Alias: "trunk"}},
+				}
+				networkRecorder.ListExtensions().Return(extensions, nil)
+
+				expectCreatePort(networkRecorder, portName, networkUUID)
+
+				// Check for existing trunk
+				networkRecorder.ListTrunk(newGomegaMockMatcher(
+					MatchFields(IgnoreExtras, Fields{
+						"Name":   Equal(portName),
+						"PortID": Equal(portUUID),
+					}),
+				)).Return([]trunks.Trunk{}, nil)
+
+				// Create new trunk
+				networkRecorder.CreateTrunk(newGomegaMockMatcher(MatchFields(IgnoreExtras, Fields{
+					"Name":   Equal(portName),
+					"PortID": Equal(portUUID),
+				}))).Return(&trunks.Trunk{
+					PortID: portUUID,
+					ID:     trunkUUID,
+				}, nil)
+				networkRecorder.ReplaceAllAttributesTags("trunks", trunkUUID, attributestags.ReplaceAllOpts{Tags: []string{"test-tag"}}).Return(nil, nil)
+
+				// Looking up the second port fails
+				networkRecorder.ListPort(ports.ListOpts{
+					Name:      "test-openstack-machine-1",
+					NetworkID: networkUUID,
+				}).Return(nil, fmt.Errorf("test error"))
+
+				networkRecorder.ListExtensions().Return(extensions, nil)
+
+				networkRecorder.ListTrunk(newGomegaMockMatcher(
+					MatchFields(IgnoreExtras, Fields{
+						"PortID": Equal(portUUID),
+					}),
+				)).Return([]trunks.Trunk{{ID: trunkUUID}}, nil)
+
+				// We should cleanup the first port and its trunk
+				networkRecorder.DeleteTrunk(trunkUUID).Return(nil)
+				networkRecorder.GetPort(portUUID).Return(&ports.Port{ID: portUUID, Name: portName}, nil)
+				networkRecorder.DeletePort(portUUID).Return(nil)
+			},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
