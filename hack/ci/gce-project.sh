@@ -92,6 +92,11 @@ function create_vm {
   local diskname="${CLUSTER_NAME}-disk"
   local imagename="${servername}-image"
 
+  # Create the base disk image based on the public Ubuntu 20.04 LTS cloud image
+  # Note that this has also been verified to work with CentOS 8 as of
+  # 2021-01-12, but this is not tested regularly.
+  # To use CentOS 8:
+  #   --image-project centos-cloud --image-family centos-stream-8
   if ! gcloud compute disks describe "$diskname" --project "$GCP_PROJECT" --zone "$GCP_ZONE" > /dev/null;
   then
     gcloud compute disks create "$diskname" \
