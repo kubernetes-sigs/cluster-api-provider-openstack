@@ -381,10 +381,14 @@ For example in `OpenStackMachineTemplate` set `spec.rootVolume.diskSize` to some
    ...
      rootVolume:
        diskSize: <image size>
-       sourceType: "image"
-       sourceUUID: <image id>
+       volumeType: <a cinder volume type (*optional)>
+       availabilityZone: <the cinder availability zone for the root volume (*optional)>
    ...
    ```
+
+If `volumeType` is not specified, cinder will use the default volume type.
+
+If `availabilityZone` is not specified, the volume will be created in the cinder availability zone specified in the MachineSpec's `failureDomain`. This same value is also used as the nova availability zone when creating the server. Note that this will fail if cinder and nova do not have matching availability zones. In this case, cinder `availabilityZone` **must** be specified explicitly on `rootVolume`.
 
 ## Timeout settings
 

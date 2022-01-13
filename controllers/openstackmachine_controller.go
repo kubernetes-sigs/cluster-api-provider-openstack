@@ -222,11 +222,8 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-
-	if instanceStatus == nil {
-		logger.Info("Skipped deleting machine that is already deleted")
-	} else {
-		if !openStackCluster.Spec.ManagedAPIServerLoadBalancer && util.IsControlPlaneMachine(machine) && openStackCluster.Spec.APIServerFloatingIP == "" {
+	if !openStackCluster.Spec.ManagedAPIServerLoadBalancer && util.IsControlPlaneMachine(machine) && openStackCluster.Spec.APIServerFloatingIP == "" {
+		if instanceStatus != nil {
 			instanceNS, err := instanceStatus.NetworkStatus()
 			if err != nil {
 				handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error getting network status for OpenStack instance %s with ID %s: %v", instanceStatus.Name(), instanceStatus.ID(), err))
@@ -243,11 +240,11 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 				}
 			}
 		}
+	}
 
-		if err := computeService.DeleteInstance(openStackMachine, instanceStatus); err != nil {
-			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error deleting OpenStack instance %s with ID %s: %v", instanceStatus.Name(), instanceStatus.ID(), err))
-			return ctrl.Result{}, nil
-		}
+	if err := computeService.DeleteInstance(openStackMachine, &openStackMachine.Spec, openStackMachine.Name, instanceStatus); err != nil {
+		handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error deleting OpenStack instance %s with ID %s: %v", instanceStatus.Name(), instanceStatus.ID(), err))
+		return ctrl.Result{}, nil
 	}
 
 	controllerutil.RemoveFinalizer(openStackMachine, infrav1.MachineFinalizer)

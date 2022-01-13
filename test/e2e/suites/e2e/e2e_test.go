@@ -28,6 +28,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack"
+	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
+	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumetypes"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
@@ -36,6 +40,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -50,6 +55,7 @@ import (
 	crclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 	"sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
 )
 
@@ -395,12 +401,14 @@ var _ = Describe("e2e tests", func() {
 			clusterName                     string
 			md                              []*clusterv1.MachineDeployment
 			failureDomain, failureDomainAlt string
+			volumeTypeAlt                   string
 			cluster                         *infrav1.OpenStackCluster
 		)
 
 		BeforeEach(func() {
 			failureDomain = e2eCtx.E2EConfig.GetVariable(shared.OpenStackFailureDomain)
 			failureDomainAlt = e2eCtx.E2EConfig.GetVariable(shared.OpenStackFailureDomainAlt)
+			volumeTypeAlt = e2eCtx.E2EConfig.GetVariable(shared.OpenStackVolumeTypeAlt)
 
 			// We create the second compute host asynchronously, so
 			// we need to ensure the alternate failure domain exists
@@ -490,6 +498,8 @@ var _ = Describe("e2e tests", func() {
 				allServerNames = append(allServerNames, name)
 			}
 
+			bootVolumes := make(map[string]*volumes.Volume)
+
 			for _, machine := range allMachines {
 				// The output of a HaveKey() failure against
 				// allServers is too long and overflows
@@ -502,6 +512,34 @@ var _ = Describe("e2e tests", func() {
 				Expect(server.AvailabilityZone).To(
 					Equal(*machine.Spec.FailureDomain),
 					fmt.Sprintf("Server %s was not scheduled in the correct AZ", machine.Name))
+
+				// Check that all machines have the expected boot volume
+				volumes := server.AttachedVolumes
+				Expect(volumes).To(HaveLen(1))
+
+				bootVolume, err := shared.GetOpenStackVolume(e2eCtx, volumes[0].ID)
+				Expect(err).NotTo(HaveOccurred(), "failed to get OpenStack volume %s for machine %s", volumes[0].ID, machine.Name)
+				bootVolumes[machine.Name] = bootVolume
+
+				Expect(*bootVolume).To(MatchFields(IgnoreExtras, Fields{
+					"Name":     Equal(fmt.Sprintf("%s-root", server.Name)),
+					"Size":     Equal(15),
+					"Bootable": Equal("true"), // This is genuinely a string, not a bool
+				}), "Boot volume %s for machine %s not as expected", bootVolume.ID, machine.Name)
+			}
+
+			// Expect all control plane machines to have a root volume in the same AZ as the machine, and the default volume type
+			for _, machine := range controlPlaneMachines {
+				bootVolume := bootVolumes[machine.Name]
+				Expect(bootVolume.AvailabilityZone).To(Equal(*machine.Spec.FailureDomain))
+				Expect(bootVolume.VolumeType).NotTo(Equal(volumeTypeAlt))
+			}
+
+			// Expect all worker machines to have a root volume in the primary AZ, and the test volume type
+			for _, machine := range workerMachines {
+				bootVolume := bootVolumes[machine.Name]
+				Expect(bootVolume.AvailabilityZone).To(Equal(failureDomain))
+				Expect(bootVolume.VolumeType).To(Equal(volumeTypeAlt))
 			}
 		})
 	})
@@ -764,4 +802,30 @@ func isCloudProviderInitialized(taints []corev1.Taint) bool {
 		}
 	}
 	return true
+}
+
+func createTestVolumeType(e2eCtx *shared.E2EContext) {
+	providerClient, clientOpts, err := shared.GetAdminProviderClient(e2eCtx)
+	Expect(err).NotTo(HaveOccurred())
+
+	volumeClient, err := openstack.NewBlockStorageV3(providerClient, gophercloud.EndpointOpts{Region: clientOpts.RegionName})
+	Expect(err).NotTo(HaveOccurred())
+
+	shared.Byf("Creating test volume type")
+	_, err = volumetypes.Create(volumeClient, &volumetypes.CreateOpts{
+		Name:        e2eCtx.E2EConfig.GetVariable(shared.OpenStackVolumeTypeAlt),
+		Description: "Test volume type",
+		IsPublic:    pointer.BoolPtr(true),
+		ExtraSpecs:  map[string]string{},
+	}).Extract()
+	if capoerrors.IsConflict(err) {
+		shared.Byf("Volume type already exists. This may happen in development environments, but it is not expected in CI.")
+		return
+	}
+	Expect(err).NotTo(HaveOccurred())
+}
+
+func cleanupTestVolumeType(e2eCtx *shared.E2EContext) {
+	// We don't delete the volume type because it's unnecessarily complex when we're going to delete the environment anyway.
+	// See https://bugs.launchpad.net/cinder/+bug/1823880 for a discussion of this same issue in an OpenStack tempest test.
 }

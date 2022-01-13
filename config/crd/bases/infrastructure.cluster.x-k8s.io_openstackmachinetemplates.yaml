@@ -982,13 +982,11 @@ spec:
                       rootVolume:
                         description: The volume metadata to boot from
                         properties:
-                          deviceType:
+                          availabilityZone:
                             type: string
                           diskSize:
                             type: integer
-                          sourceType:
-                            type: string
-                          sourceUUID:
+                          volumeType:
                             type: string
                         type: object
                       securityGroups:

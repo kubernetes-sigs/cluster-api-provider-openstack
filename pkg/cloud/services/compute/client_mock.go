@@ -24,6 +24,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	volumes "github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
 	attachinterfaces "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	availabilityzones "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/availabilityzones"
 	servers "github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
@@ -68,6 +69,21 @@ func (mr *MockClientMockRecorder) CreateServer(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateServer", reflect.TypeOf((*MockClient)(nil).CreateServer), arg0)
 }
 
+// CreateVolume mocks base method.
+func (m *MockClient) CreateVolume(arg0 volumes.CreateOptsBuilder) (*volumes.Volume, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateVolume", arg0)
+	ret0, _ := ret[0].(*volumes.Volume)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateVolume indicates an expected call of CreateVolume.
+func (mr *MockClientMockRecorder) CreateVolume(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateVolume", reflect.TypeOf((*MockClient)(nil).CreateVolume), arg0)
+}
+
 // DeleteAttachedInterface mocks base method.
 func (m *MockClient) DeleteAttachedInterface(arg0, arg1 string) error {
 	m.ctrl.T.Helper()
@@ -94,6 +110,20 @@ func (m *MockClient) DeleteServer(arg0 string) error {
 func (mr *MockClientMockRecorder) DeleteServer(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteServer", reflect.TypeOf((*MockClient)(nil).DeleteServer), arg0)
+}
+
+// DeleteVolume mocks base method.
+func (m *MockClient) DeleteVolume(arg0 string, arg1 volumes.DeleteOptsBuilder) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteVolume", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteVolume indicates an expected call of DeleteVolume.
+func (mr *MockClientMockRecorder) DeleteVolume(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteVolume", reflect.TypeOf((*MockClient)(nil).DeleteVolume), arg0, arg1)
 }
 
 // GetFlavorIDFromName mocks base method.
@@ -124,6 +154,21 @@ func (m *MockClient) GetServer(arg0 string) (*ServerExt, error) {
 func (mr *MockClientMockRecorder) GetServer(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetServer", reflect.TypeOf((*MockClient)(nil).GetServer), arg0)
+}
+
+// GetVolume mocks base method.
+func (m *MockClient) GetVolume(arg0 string) (*volumes.Volume, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetVolume", arg0)
+	ret0, _ := ret[0].(*volumes.Volume)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetVolume indicates an expected call of GetVolume.
+func (mr *MockClientMockRecorder) GetVolume(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVolume", reflect.TypeOf((*MockClient)(nil).GetVolume), arg0)
 }
 
 // ListAttachedInterfaces mocks base method.
@@ -184,4 +229,19 @@ func (m *MockClient) ListServers(arg0 servers.ListOptsBuilder) ([]ServerExt, err
 func (mr *MockClientMockRecorder) ListServers(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListServers", reflect.TypeOf((*MockClient)(nil).ListServers), arg0)
+}
+
+// ListVolumes mocks base method.
+func (m *MockClient) ListVolumes(arg0 volumes.ListOptsBuilder) ([]volumes.Volume, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListVolumes", arg0)
+	ret0, _ := ret[0].([]volumes.Volume)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListVolumes indicates an expected call of ListVolumes.
+func (mr *MockClientMockRecorder) ListVolumes(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListVolumes", reflect.TypeOf((*MockClient)(nil).ListVolumes), arg0)
 }

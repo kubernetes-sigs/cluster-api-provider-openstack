@@ -24,7 +24,10 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/golang/mock/gomock"
+	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
 	common "github.com/gophercloud/gophercloud/openstack/common/extensions"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/availabilityzones"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
@@ -39,6 +42,7 @@ import (
 	. "github.com/onsi/gomega/gstruct"
 	gomegatypes "github.com/onsi/gomega/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/pointer"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 
@@ -522,6 +526,7 @@ const (
 	controlPlaneSecurityGroupUUID = "c9817a91-4821-42db-8367-2301002ab659"
 	workerSecurityGroupUUID       = "9c6c0d28-03c9-436c-815d-58440ac2c1c8"
 	serverGroupUUID               = "7b940d62-68ef-4e42-a76a-1a62e290509c"
+	volumeUUID                    = "d84fe775-e25d-4f80-9888-f701e996c689"
 
 	openStackMachineName = "test-openstack-machine"
 	portName             = "test-openstack-machine-0"
@@ -711,6 +716,24 @@ func TestService_CreateInstance(t *testing.T) {
 		expectServerPoll(computeRecorder, []string{"ACTIVE"})
 	}
 
+	returnedVolume := func(status string) *volumes.Volume {
+		return &volumes.Volume{
+			ID:     volumeUUID,
+			Status: status,
+		}
+	}
+
+	// Expected calls when polling for server creation
+	expectVolumePoll := func(computeRecorder *MockClientMockRecorder, states []string) {
+		for _, state := range states {
+			computeRecorder.GetVolume(volumeUUID).Return(returnedVolume(state), nil)
+		}
+	}
+
+	expectVolumePollSuccess := func(computeRecorder *MockClientMockRecorder) {
+		expectVolumePoll(computeRecorder, []string{"available"})
+	}
+
 	// *******************
 	// START OF TEST CASES
 	// *******************
@@ -809,6 +832,130 @@ func TestService_CreateInstance(t *testing.T) {
 				expectServerPoll(computeRecorder, []string{"BUILDING", "ERROR"})
 
 				// Don't delete ports because the server is created: DeleteInstance will do it
+			},
+			wantErr: true,
+		},
+		{
+			name:                "Boot from volume success",
+			getMachine:          getDefaultMachine,
+			getOpenStackCluster: getDefaultOpenStackCluster,
+			getOpenStackMachine: func() *infrav1.OpenStackMachine {
+				osMachine := getDefaultOpenStackMachine()
+				osMachine.Spec.RootVolume = &infrav1.RootVolume{
+					Size: 50,
+				}
+				return osMachine
+			},
+			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
+				expectUseExistingDefaultPort(networkRecorder)
+				expectDefaultImageAndFlavor(computeRecorder)
+
+				computeRecorder.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
+					Return([]volumes.Volume{}, nil)
+				computeRecorder.CreateVolume(volumes.CreateOpts{
+					Size:             50,
+					AvailabilityZone: failureDomain,
+					Description:      fmt.Sprintf("Root volume for %s", openStackMachineName),
+					Name:             fmt.Sprintf("%s-root", openStackMachineName),
+					ImageID:          imageUUID,
+					Multiattach:      false,
+				}).Return(&volumes.Volume{ID: volumeUUID}, nil)
+				expectVolumePollSuccess(computeRecorder)
+
+				createMap := getDefaultServerMap()
+				serverMap := createMap["server"].(map[string]interface{})
+				serverMap["block_device_mapping_v2"] = []map[string]interface{}{
+					{
+						"delete_on_termination": true,
+						"destination_type":      "volume",
+						"source_type":           "volume",
+						"uuid":                  volumeUUID,
+						"boot_index":            float64(0),
+					},
+				}
+				expectCreateServer(computeRecorder, createMap, false)
+				expectServerPollSuccess(computeRecorder)
+
+				// Don't delete ports because the server is created: DeleteInstance will do it
+			},
+			wantErr: false,
+		},
+		{
+			name:                "Boot from volume with explicit AZ and volume type",
+			getMachine:          getDefaultMachine,
+			getOpenStackCluster: getDefaultOpenStackCluster,
+			getOpenStackMachine: func() *infrav1.OpenStackMachine {
+				osMachine := getDefaultOpenStackMachine()
+				osMachine.Spec.RootVolume = &infrav1.RootVolume{
+					Size:             50,
+					AvailabilityZone: "test-alternate-az",
+					VolumeType:       "test-volume-type",
+				}
+				return osMachine
+			},
+			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
+				expectUseExistingDefaultPort(networkRecorder)
+				expectDefaultImageAndFlavor(computeRecorder)
+
+				computeRecorder.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
+					Return([]volumes.Volume{}, nil)
+				computeRecorder.CreateVolume(volumes.CreateOpts{
+					Size:             50,
+					AvailabilityZone: "test-alternate-az",
+					VolumeType:       "test-volume-type",
+					Description:      fmt.Sprintf("Root volume for %s", openStackMachineName),
+					Name:             fmt.Sprintf("%s-root", openStackMachineName),
+					ImageID:          imageUUID,
+					Multiattach:      false,
+				}).Return(&volumes.Volume{ID: volumeUUID}, nil)
+				expectVolumePollSuccess(computeRecorder)
+
+				createMap := getDefaultServerMap()
+				serverMap := createMap["server"].(map[string]interface{})
+				serverMap["block_device_mapping_v2"] = []map[string]interface{}{
+					{
+						"delete_on_termination": true,
+						"destination_type":      "volume",
+						"source_type":           "volume",
+						"uuid":                  volumeUUID,
+						"boot_index":            float64(0),
+					},
+				}
+				expectCreateServer(computeRecorder, createMap, false)
+				expectServerPollSuccess(computeRecorder)
+
+				// Don't delete ports because the server is created: DeleteInstance will do it
+			},
+			wantErr: false,
+		},
+		{
+			name:                "Boot from volume failure cleans up ports",
+			getMachine:          getDefaultMachine,
+			getOpenStackCluster: getDefaultOpenStackCluster,
+			getOpenStackMachine: func() *infrav1.OpenStackMachine {
+				osMachine := getDefaultOpenStackMachine()
+				osMachine.Spec.RootVolume = &infrav1.RootVolume{
+					Size: 50,
+				}
+				return osMachine
+			},
+			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
+				expectUseExistingDefaultPort(networkRecorder)
+				expectDefaultImageAndFlavor(computeRecorder)
+
+				computeRecorder.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
+					Return([]volumes.Volume{}, nil)
+				computeRecorder.CreateVolume(volumes.CreateOpts{
+					Size:             50,
+					AvailabilityZone: failureDomain,
+					Description:      fmt.Sprintf("Root volume for %s", openStackMachineName),
+					Name:             fmt.Sprintf("%s-root", openStackMachineName),
+					ImageID:          imageUUID,
+					Multiattach:      false,
+				}).Return(&volumes.Volume{ID: volumeUUID}, nil)
+				expectVolumePoll(computeRecorder, []string{"creating", "error"})
+
+				expectCleanupDefaultPort(networkRecorder)
 			},
 			wantErr: true,
 		},
@@ -983,6 +1130,127 @@ func TestService_CreateInstance(t *testing.T) {
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Service.CreateInstance() error = %v, wantErr %v", err, tt.wantErr)
 				return
+			}
+		})
+	}
+}
+
+func TestService_DeleteInstance(t *testing.T) {
+	RegisterTestingT(t)
+
+	const instanceUUID = "7b8a2800-c615-4f52-9b75-d2ba60a2af66"
+	const portUUID = "94f3e9cb-89d5-4313-ad6d-44035722342b"
+
+	const instanceName = "test-instance"
+
+	getEventObject := func() runtime.Object {
+		return &infrav1.OpenStackMachine{}
+	}
+
+	getDefaultInstanceStatus := func() *InstanceStatus {
+		return &InstanceStatus{
+			server: &ServerExt{
+				Server: servers.Server{
+					ID: instanceUUID,
+				},
+			},
+		}
+	}
+
+	getDefaultOpenStackMachineSpec := func() *infrav1.OpenStackMachineSpec {
+		return &getDefaultOpenStackMachine().Spec
+	}
+
+	// *******************
+	// START OF TEST CASES
+	// *******************
+
+	tests := []struct {
+		name                    string
+		eventObject             runtime.Object
+		getOpenStackMachineSpec func() *infrav1.OpenStackMachineSpec
+		getInstanceStatus       func() *InstanceStatus
+		expect                  func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder)
+		wantErr                 bool
+	}{
+		{
+			name:                    "Defaults",
+			eventObject:             getEventObject(),
+			getOpenStackMachineSpec: getDefaultOpenStackMachineSpec,
+			getInstanceStatus:       getDefaultInstanceStatus,
+			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
+				computeRecorder.ListAttachedInterfaces(instanceUUID).Return([]attachinterfaces.Interface{
+					{
+						PortID: portUUID,
+					},
+				}, nil)
+				networkRecorder.ListExtensions().Return([]extensions.Extension{{
+					Extension: common.Extension{
+						Alias: "trunk",
+					},
+				}}, nil)
+				computeRecorder.DeleteAttachedInterface(instanceUUID, portUUID).Return(nil)
+				// FIXME: Why we are looking for a trunk when we know the port is not trunked?
+				networkRecorder.ListTrunk(trunks.ListOpts{PortID: portUUID}).Return([]trunks.Trunk{}, nil)
+				// FIXME: Why are we fetching the port before deletion? We should delete the port and handle the 404
+				networkRecorder.GetPort(portUUID).Return(&ports.Port{ID: portUUID}, nil)
+				networkRecorder.DeletePort(portUUID).Return(nil)
+
+				computeRecorder.DeleteServer(instanceUUID).Return(nil)
+				computeRecorder.GetServer(instanceUUID).Return(nil, gophercloud.ErrDefault404{})
+			},
+			wantErr: false,
+		},
+		{
+			name:        "Dangling volume",
+			eventObject: getEventObject(),
+			getOpenStackMachineSpec: func() *infrav1.OpenStackMachineSpec {
+				spec := getDefaultOpenStackMachineSpec()
+				spec.RootVolume = &infrav1.RootVolume{
+					Size: 50,
+				}
+				return spec
+			},
+			getInstanceStatus: func() *InstanceStatus { return nil },
+			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
+				// Fetch volume by name
+				volumeName := fmt.Sprintf("%s-root", instanceName)
+				computeRecorder.ListVolumes(volumes.ListOpts{
+					AllTenants: false,
+					Name:       volumeName,
+					TenantID:   "",
+				}).Return([]volumes.Volume{{
+					ID:   volumeUUID,
+					Name: volumeName,
+				}}, nil)
+
+				// Delete volume
+				computeRecorder.DeleteVolume(volumeUUID, volumes.DeleteOpts{}).Return(nil)
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockCtrl := gomock.NewController(t)
+			mockComputeClient := NewMockClient(mockCtrl)
+			mockNetworkClient := mock_networking.NewMockNetworkClient(mockCtrl)
+
+			computeRecorder := mockComputeClient.EXPECT()
+			networkRecorder := mockNetworkClient.EXPECT()
+
+			tt.expect(computeRecorder, networkRecorder)
+
+			s := Service{
+				projectID:      "",
+				computeService: mockComputeClient,
+				networkingService: networking.NewTestService(
+					"", mockNetworkClient, logr.Discard(),
+				),
+				logger: logr.Discard(),
+			}
+			if err := s.DeleteInstance(tt.eventObject, tt.getOpenStackMachineSpec(), instanceName, tt.getInstanceStatus()); (err != nil) != tt.wantErr {
+				t.Errorf("Service.DeleteInstance() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

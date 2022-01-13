@@ -114,6 +114,8 @@ spec:
     spec:
       flavor: ${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR}
       image: ${OPENSTACK_IMAGE_NAME}
+      rootVolume:
+        diskSize: 15
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
       cloudName: ${OPENSTACK_CLOUD}
       identityRef:
@@ -157,6 +159,10 @@ spec:
         kind: Secret
       flavor: ${OPENSTACK_NODE_MACHINE_FLAVOR}
       image: ${OPENSTACK_IMAGE_NAME}
+      rootVolume:
+        diskSize: 15
+        volumeType: ${OPENSTACK_VOLUME_TYPE_ALT}
+        availabilityZone: ${OPENSTACK_FAILURE_DOMAIN}
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
 ---
 apiVersion: bootstrap.cluster.x-k8s.io/v1beta1

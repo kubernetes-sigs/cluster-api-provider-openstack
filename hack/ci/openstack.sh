@@ -115,6 +115,7 @@ function create_vm {
         serverid=$(openstack server create -f value -c id \
             --os-compute-api-version 2.52 --tag "$CLUSTER_NAME" \
             --image "$imageid" --flavor "$flavor" \
+            --boot-from-volume 200 \
             --nic net-id="$networkid",v4-fixed-ip="$ip" \
             --security-group "$secgroupid" \
             --user-data "$userdata" \

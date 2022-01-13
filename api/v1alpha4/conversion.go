@@ -227,10 +227,62 @@ func Convert_v1beta1_FixedIP_To_v1alpha4_FixedIP(in *infrav1.FixedIP, out *Fixed
 	return nil
 }
 
+/*
+ * RootVolume changes:
+ * - DeviceType is removed in v1beta1, hard-coded to disk for prior versions
+ * - SourceType is removed in v1beta1, hard-coded to image for prior versions
+ * - SourceUUID is removed in v1beta1, comes from the parent context
+ */
+
+func Convert_v1beta1_RootVolume_To_v1alpha4_RootVolume(in *infrav1.RootVolume, out *RootVolume, s conversion.Scope) error {
+	out.DeviceType = "disk"
+	out.SourceType = "image"
+	// SourceUUID needs to come from the parent context
+	return autoConvert_v1beta1_RootVolume_To_v1alpha4_RootVolume(in, out, s)
+}
+
+func Convert_v1alpha4_RootVolume_To_v1beta1_RootVolume(in *RootVolume, out *infrav1.RootVolume, s conversion.Scope) error {
+	return autoConvert_v1alpha4_RootVolume_To_v1beta1_RootVolume(in, out, s)
+}
+
+func Convert_v1alpha4_Instance_To_v1beta1_Instance(in *Instance, out *infrav1.Instance, s conversion.Scope) error {
+	if err := autoConvert_v1alpha4_Instance_To_v1beta1_Instance(in, out, s); err != nil {
+		return err
+	}
+	if in.RootVolume != nil && in.RootVolume.Size > 0 {
+		out.Image = in.RootVolume.SourceUUID
+	}
+	return nil
+}
+
 func Convert_v1beta1_Instance_To_v1alpha4_Instance(in *infrav1.Instance, out *Instance, s conversion.Scope) error {
-	return autoConvert_v1beta1_Instance_To_v1alpha4_Instance(in, out, s)
+	if err := autoConvert_v1beta1_Instance_To_v1alpha4_Instance(in, out, s); err != nil {
+		return err
+	}
+	if in.RootVolume != nil && in.RootVolume.Size > 0 {
+		out.RootVolume.SourceUUID = in.Image
+		out.Image = ""
+	}
+	return nil
+}
+
+func Convert_v1alpha4_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in *OpenStackMachineSpec, out *infrav1.OpenStackMachineSpec, s conversion.Scope) error {
+	if err := autoConvert_v1alpha4_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in, out, s); err != nil {
+		return err
+	}
+	if in.RootVolume != nil && in.RootVolume.Size > 0 {
+		out.Image = in.RootVolume.SourceUUID
+	}
+	return nil
 }
 
 func Convert_v1beta1_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(in *infrav1.OpenStackMachineSpec, out *OpenStackMachineSpec, s conversion.Scope) error {
-	return autoConvert_v1beta1_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(in, out, s)
+	if err := autoConvert_v1beta1_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(in, out, s); err != nil {
+		return err
+	}
+	if in.RootVolume != nil && in.RootVolume.Size > 0 {
+		out.RootVolume.SourceUUID = in.Image
+		out.Image = ""
+	}
+	return nil
 }

@@ -63,7 +63,14 @@ func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.Cli
 		return nil, fmt.Errorf("failed to create image service client: %v", err)
 	}
 
-	computeService := serviceClient{computeClient, imagesClient}
+	volumeClient, err := openstack.NewBlockStorageV3(client, gophercloud.EndpointOpts{
+		Region: clientOpts.RegionName,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create volume service client: %v", err)
+	}
+
+	computeService := serviceClient{computeClient, imagesClient, volumeClient}
 
 	if clientOpts.AuthInfo == nil {
 		return nil, fmt.Errorf("authInfo must be set")
