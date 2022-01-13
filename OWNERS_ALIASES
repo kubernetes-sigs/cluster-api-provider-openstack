@@ -26,6 +26,5 @@ aliases:
     - seanschneeweiss
     - tobiasgiese
   cluster-api-openstack-reviewers:
-    - iamemilio
     - macaptain
     - prankul88
