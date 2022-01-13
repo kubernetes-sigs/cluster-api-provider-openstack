@@ -82,7 +82,7 @@ func NewTestService(projectID string, client NetworkClient, logger logr.Logger) 
 // the value of resourceType must match one of the allowed constants: trunkResource or portResource.
 func (s *Service) replaceAllAttributesTags(eventObject runtime.Object, resourceType string, resourceID string, tags []string) error {
 	if len(tags) == 0 {
-		s.logger.Info("IgnoreReplaceAllAttributesTags", "no tags provided: , %s", resourceID)
+		s.logger.Info("no tags provided to ReplaceAllAttributesTags", "resourceType", resourceType, "resourceID", resourceID)
 		return nil
 	}
 	if resourceType != trunkResource && resourceType != portResource {
