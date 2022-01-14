@@ -40,6 +40,8 @@ const (
 	kubeapiLBSuffix string = "kubeapi"
 )
 
+const loadBalancerProvisioningStatusActive = "ACTIVE"
+
 func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterName string, apiServerPort int) error {
 	loadBalancerName := getLoadBalancerName(clusterName)
 	s.logger.Info("Reconciling load balancer", "name", loadBalancerName)
@@ -55,6 +57,9 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 	lb, err := s.getOrCreateLoadBalancer(openStackCluster, loadBalancerName, openStackCluster.Status.Network.Subnet.ID, clusterName, fixedIPAddress)
 	if err != nil {
 		return err
+	}
+	if lb.ProvisioningStatus != loadBalancerProvisioningStatusActive {
+		return fmt.Errorf("load balancer %q is not in expected state %s, current state is %s", lb.ID, loadBalancerProvisioningStatusActive, lb.ProvisioningStatus)
 	}
 
 	var lbFloatingIP string
@@ -524,7 +529,7 @@ var backoff = wait.Backoff{
 	Jitter:   0.1,
 }
 
-// Possible LoadBalancer states are documented here: https://developer.openstack.org/api-ref/network/v2/?expanded=show-load-balancer-status-tree-detail#load-balancer-statuses
+// Possible LoadBalancer states are documented here: https://docs.openstack.org/api-ref/load-balancer/v2/index.html#prov-status
 func (s *Service) waitForLoadBalancerActive(id string) error {
 	s.logger.Info("Waiting for load balancer", "id", id, "targetStatus", "ACTIVE")
 	return wait.ExponentialBackoff(backoff, func() (bool, error) {
@@ -533,7 +538,7 @@ func (s *Service) waitForLoadBalancerActive(id string) error {
 		if mc.ObserveRequest(err) != nil {
 			return false, err
 		}
-		return lb.ProvisioningStatus == "ACTIVE", nil
+		return lb.ProvisioningStatus == loadBalancerProvisioningStatusActive, nil
 	})
 }
 
