@@ -89,15 +89,25 @@ func (s *Service) replaceAllAttributesTags(eventObject runtime.Object, resourceT
 		record.Warnf(eventObject, "FailedReplaceAllAttributesTags", "Invalid resourceType argument in function call")
 		panic(fmt.Errorf("invalid argument: resourceType, %s, does not match allowed arguments: %s or %s", resourceType, trunkResource, portResource))
 	}
+	// remove duplicate values from tags
+	tagsMap := make(map[string]string)
+	for _, t := range tags {
+		tagsMap[t] = t
+	}
+
+	uniqueTags := []string{}
+	for k := range tagsMap {
+		uniqueTags = append(uniqueTags, k)
+	}
 
 	_, err := s.client.ReplaceAllAttributesTags(resourceType, resourceID, attributestags.ReplaceAllOpts{
-		Tags: tags,
+		Tags: uniqueTags,
 	})
 	if err != nil {
 		record.Warnf(eventObject, "FailedReplaceAllAttributesTags", "Failed to replace all attributestags, %s: %v", resourceID, err)
 		return err
 	}
 
-	record.Eventf(eventObject, "SuccessfulReplaceAllAttributeTags", "Replaced all attributestags for %s with tags %s", resourceID, tags)
+	record.Eventf(eventObject, "SuccessfulReplaceAllAttributeTags", "Replaced all attributestags for %s with tags %s", resourceID, uniqueTags)
 	return nil
 }
