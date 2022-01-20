@@ -95,6 +95,10 @@ metadata:
 spec:
   template:
     spec:
+      trunk: false
+      ports:
+      - description: "Port 1, trunk=true"
+        trunk: true
       flavor: ${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR}
       image: ${OPENSTACK_IMAGE_NAME}
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}

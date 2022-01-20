@@ -39,9 +39,11 @@ import (
 )
 
 const (
-	retryIntervalInstanceStatus = 10 * time.Second
-	timeoutInstanceCreate       = 5
-	timeoutInstanceDelete       = 5 * time.Minute
+	retryIntervalInstanceStatus  = 10 * time.Second
+	timeoutInstanceCreate        = 5
+	timeoutInstanceDelete        = 5 * time.Minute
+	retryDetachInterfaceCount    = 5
+	retryDetachInterfaceInterval = 2 * time.Second
 )
 
 func (s *Service) CreateInstance(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, clusterName string, userData string) (instance *InstanceStatus, err error) {
@@ -615,13 +617,37 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, openStackMachineSpe
 
 	// get and delete trunks
 	for _, port := range instanceInterfaces {
+		// This could be a blocker in async
 		if err = s.deleteAttachInterface(eventObject, instanceStatus.InstanceIdentifier(), port.PortID); err != nil {
 			return err
 		}
 
 		if trunkSupported {
 			if err = s.networkingService.DeleteTrunk(eventObject, port.PortID); err != nil {
-				return err
+				// first call has conflict, try again
+				if capoerrors.IsConflict(err) {
+					for i := 0; i < retryDetachInterfaceCount; i++ {
+						time.Sleep(retryDetachInterfaceInterval)
+						err = s.networkingService.DeleteTrunk(eventObject, port.PortID)
+						// current iternation has no error
+						if capoerrors.IsConflict(err) {
+							record.Warnf(eventObject, "RetryingDeleteAttachInterface", "Failed to delete attach interface: port %s: %v", port.PortID, err)
+							continue
+						}
+						// we still have conflict, continue trying
+						if err != nil {
+							// Error is nothing conflict type, we are not handling it
+							record.Eventf(eventObject, "FailedDeleteAttachInterface", "Failed to delete attach interface: %s: %v", port.PortID, err)
+							return err
+						}
+						// current iternation has no error
+						record.Eventf(eventObject, "SuccessfulDeleteAttachInterface", "Deleted attach interface: port %s", port.PortID)
+						break
+					}
+				} else {
+					record.Eventf(eventObject, "FailedDeleteAttachInterface", "Failed to delete attach interface: %s: %v", port.PortID, err)
+					return err
+				}
 			}
 		}
 		if err = s.networkingService.DeletePort(eventObject, port.PortID); err != nil {
