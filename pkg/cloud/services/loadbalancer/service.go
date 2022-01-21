@@ -29,7 +29,8 @@ import (
 
 // Service interfaces with the OpenStack Neutron LBaaS v2 API.
 type Service struct {
-	loadbalancerClient *gophercloud.ServiceClient
+	projectID          string
+	loadbalancerClient LbClient
 	networkingService  *networking.Service
 	logger             logr.Logger
 }
@@ -49,8 +50,21 @@ func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.Cli
 	}
 
 	return &Service{
-		loadbalancerClient: loadbalancerClient,
-		networkingService:  networkingService,
-		logger:             logger,
+		loadbalancerClient: lbClient{
+			serviceClient: loadbalancerClient,
+		},
+		networkingService: networkingService,
+		logger:            logger,
 	}, nil
+}
+
+// NewLoadBalancerTestService returns a Service with no initialization. It should only be used by tests.
+// It helps to mock the load balancer service in other packages.
+func NewLoadBalancerTestService(projectID string, lbClient LbClient, client *networking.Service, logger logr.Logger) *Service {
+	return &Service{
+		projectID:          projectID,
+		loadbalancerClient: lbClient,
+		networkingService:  client,
+		logger:             logger,
+	}
 }

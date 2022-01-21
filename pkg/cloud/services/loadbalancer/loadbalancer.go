@@ -30,8 +30,8 @@ import (
 	"sigs.k8s.io/cluster-api/util"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
+	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
@@ -127,9 +127,8 @@ func (s *Service) getOrCreateLoadBalancer(openStackCluster *infrav1.OpenStackClu
 		VipAddress:  vipAddress,
 		Description: names.GetDescription(clusterName),
 	}
-	mc := metrics.NewMetricPrometheusContext("loadbalancer", "create")
-	lb, err = loadbalancers.Create(s.loadbalancerClient, lbCreateOpts).Extract()
-	if mc.ObserveRequest(err) != nil {
+	lb, err = s.loadbalancerClient.CreateLoadBalancer(lbCreateOpts)
+	if err != nil {
 		record.Warnf(openStackCluster, "FailedCreateLoadBalancer", "Failed to create load balancer %s: %v", loadBalancerName, err)
 		return nil, err
 	}
@@ -161,9 +160,8 @@ func (s *Service) getOrCreateListener(openStackCluster *infrav1.OpenStackCluster
 		ProtocolPort:   port,
 		LoadbalancerID: lbID,
 	}
-	mc := metrics.NewMetricPrometheusContext("loadbalancer_listener", "create")
-	listener, err = listeners.Create(s.loadbalancerClient, listenerCreateOpts).Extract()
-	if mc.ObserveRequest(err) != nil {
+	listener, err = s.loadbalancerClient.CreateListener(listenerCreateOpts)
+	if err != nil {
 		record.Warnf(openStackCluster, "FailedCreateListener", "Failed to create listener %s: %v", listenerName, err)
 		return nil, err
 	}
@@ -200,9 +198,8 @@ func (s *Service) getOrCreatePool(openStackCluster *infrav1.OpenStackCluster, po
 		LBMethod:   pools.LBMethodRoundRobin,
 		ListenerID: listenerID,
 	}
-	mc := metrics.NewMetricPrometheusContext("loadbalancer_pool", "create")
-	pool, err = pools.Create(s.loadbalancerClient, poolCreateOpts).Extract()
-	if mc.ObserveRequest(err) != nil {
+	pool, err = s.loadbalancerClient.CreatePool(poolCreateOpts)
+	if err != nil {
 		record.Warnf(openStackCluster, "FailedCreatePool", "Failed to create pool %s: %v", poolName, err)
 		return nil, err
 	}
@@ -236,9 +233,8 @@ func (s *Service) getOrCreateMonitor(openStackCluster *infrav1.OpenStackCluster,
 		Timeout:    5,
 		MaxRetries: 3,
 	}
-	mc := metrics.NewMetricPrometheusContext("loadbalancer_healthmonitor", "create")
-	monitor, err = monitors.Create(s.loadbalancerClient, monitorCreateOpts).Extract()
-	if mc.ObserveRequest(err) != nil {
+	monitor, err = s.loadbalancerClient.CreateMonitor(monitorCreateOpts)
+	if err != nil {
 		record.Warnf(openStackCluster, "FailedCreateMonitor", "Failed to create monitor %s: %v", monitorName, err)
 		return err
 	}
@@ -304,10 +300,8 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 			if err != nil {
 				return err
 			}
-			mc := metrics.NewMetricPrometheusContext("loadbalancer_member", "delete")
-			err = pools.DeleteMember(s.loadbalancerClient, pool.ID, lbMember.ID).ExtractErr()
-			if mc.ObserveRequest(err) != nil {
-				return fmt.Errorf("error deleting lbmember: %s", err)
+			if err := s.loadbalancerClient.DeletePoolMember(pool.ID, lbMember.ID); err != nil {
+				return err
 			}
 			err = s.waitForLoadBalancerActive(lbID)
 			if err != nil {
@@ -327,11 +321,11 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 		if err := s.waitForLoadBalancerActive(lbID); err != nil {
 			return err
 		}
-		mc := metrics.NewMetricPrometheusContext("loadbalancer_member", "create")
-		_, err = pools.CreateMember(s.loadbalancerClient, pool.ID, lbMemberOpts).Extract()
-		if mc.ObserveRequest(err) != nil {
-			return fmt.Errorf("error create lbmember: %s", err)
+
+		if _, err := s.loadbalancerClient.CreatePoolMember(pool.ID, lbMemberOpts); err != nil {
+			return err
 		}
+
 		if err := s.waitForLoadBalancerActive(lbID); err != nil {
 			return err
 		}
@@ -370,9 +364,8 @@ func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster,
 		Cascade: true,
 	}
 	s.logger.Info("Deleting load balancer", "name", loadBalancerName, "cascade", deleteOpts.Cascade)
-	mc := metrics.NewMetricPrometheusContext("loadbalancer", "delete")
-	err = loadbalancers.Delete(s.loadbalancerClient, lb.ID, deleteOpts).ExtractErr()
-	if mc.ObserveRequest(err) != nil {
+	err = s.loadbalancerClient.DeleteLoadBalancer(lb.ID, deleteOpts)
+	if err != nil && !capoerrors.IsNotFound(err) {
 		record.Warnf(openStackCluster, "FailedDeleteLoadBalancer", "Failed to delete load balancer %s with id %s: %v", lb.Name, lb.ID, err)
 		return err
 	}
@@ -424,10 +417,8 @@ func (s *Service) DeleteLoadBalancerMember(openStackCluster *infrav1.OpenStackCl
 			if err != nil {
 				return err
 			}
-			mc := metrics.NewMetricPrometheusContext("loadbalancer_member", "delete")
-			err = pools.DeleteMember(s.loadbalancerClient, pool.ID, lbMember.ID).ExtractErr()
-			if mc.ObserveRequest(err) != nil {
-				return fmt.Errorf("error deleting load balancer member: %s", err)
+			if err := s.loadbalancerClient.DeletePoolMember(pool.ID, lbMember.ID); err != nil {
+				return err
 			}
 			err = s.waitForLoadBalancerActive(lbID)
 			if err != nil {
@@ -443,12 +434,7 @@ func getLoadBalancerName(clusterName string) string {
 }
 
 func (s *Service) checkIfLbExists(name string) (*loadbalancers.LoadBalancer, error) {
-	mc := metrics.NewMetricPrometheusContext("loadbalancer", "list")
-	allPages, err := loadbalancers.List(s.loadbalancerClient, loadbalancers.ListOpts{Name: name}).AllPages()
-	if mc.ObserveRequest(err) != nil {
-		return nil, err
-	}
-	lbList, err := loadbalancers.ExtractLoadBalancers(allPages)
+	lbList, err := s.loadbalancerClient.ListLoadBalancers(loadbalancers.ListOpts{Name: name})
 	if err != nil {
 		return nil, err
 	}
@@ -459,12 +445,7 @@ func (s *Service) checkIfLbExists(name string) (*loadbalancers.LoadBalancer, err
 }
 
 func (s *Service) checkIfListenerExists(name string) (*listeners.Listener, error) {
-	mc := metrics.NewMetricPrometheusContext("loadbalancer_listener", "list")
-	allPages, err := listeners.List(s.loadbalancerClient, listeners.ListOpts{Name: name}).AllPages()
-	if mc.ObserveRequest(err) != nil {
-		return nil, err
-	}
-	listenerList, err := listeners.ExtractListeners(allPages)
+	listenerList, err := s.loadbalancerClient.ListListeners(listeners.ListOpts{Name: name})
 	if err != nil {
 		return nil, err
 	}
@@ -475,12 +456,7 @@ func (s *Service) checkIfListenerExists(name string) (*listeners.Listener, error
 }
 
 func (s *Service) checkIfPoolExists(name string) (*pools.Pool, error) {
-	mc := metrics.NewMetricPrometheusContext("loadbalancer_pool", "list")
-	allPages, err := pools.List(s.loadbalancerClient, pools.ListOpts{Name: name}).AllPages()
-	if mc.ObserveRequest(err) != nil {
-		return nil, err
-	}
-	poolList, err := pools.ExtractPools(allPages)
+	poolList, err := s.loadbalancerClient.ListPools(pools.ListOpts{Name: name})
 	if err != nil {
 		return nil, err
 	}
@@ -491,12 +467,7 @@ func (s *Service) checkIfPoolExists(name string) (*pools.Pool, error) {
 }
 
 func (s *Service) checkIfMonitorExists(name string) (*monitors.Monitor, error) {
-	mc := metrics.NewMetricPrometheusContext("loadbalancer_healthmonitor", "list")
-	allPages, err := monitors.List(s.loadbalancerClient, monitors.ListOpts{Name: name}).AllPages()
-	if mc.ObserveRequest(err) != nil {
-		return nil, err
-	}
-	monitorList, err := monitors.ExtractMonitors(allPages)
+	monitorList, err := s.loadbalancerClient.ListMonitors(monitors.ListOpts{Name: name})
 	if err != nil {
 		return nil, err
 	}
@@ -507,12 +478,7 @@ func (s *Service) checkIfMonitorExists(name string) (*monitors.Monitor, error) {
 }
 
 func (s *Service) checkIfLbMemberExists(poolID, name string) (*pools.Member, error) {
-	mc := metrics.NewMetricPrometheusContext("loadbalancer_member", "list")
-	allPages, err := pools.ListMembers(s.loadbalancerClient, poolID, pools.ListMembersOpts{Name: name}).AllPages()
-	if mc.ObserveRequest(err) != nil {
-		return nil, err
-	}
-	lbMemberList, err := pools.ExtractMembers(allPages)
+	lbMemberList, err := s.loadbalancerClient.ListPoolMember(poolID, pools.ListMembersOpts{Name: name})
 	if err != nil {
 		return nil, err
 	}
@@ -533,9 +499,8 @@ var backoff = wait.Backoff{
 func (s *Service) waitForLoadBalancerActive(id string) error {
 	s.logger.Info("Waiting for load balancer", "id", id, "targetStatus", "ACTIVE")
 	return wait.ExponentialBackoff(backoff, func() (bool, error) {
-		mc := metrics.NewMetricPrometheusContext("loadbalancer", "get")
-		lb, err := loadbalancers.Get(s.loadbalancerClient, id).Extract()
-		if mc.ObserveRequest(err) != nil {
+		lb, err := s.loadbalancerClient.GetLoadBalancer(id)
+		if err != nil {
 			return false, err
 		}
 		return lb.ProvisioningStatus == loadBalancerProvisioningStatusActive, nil
@@ -545,9 +510,8 @@ func (s *Service) waitForLoadBalancerActive(id string) error {
 func (s *Service) waitForListener(id, target string) error {
 	s.logger.Info("Waiting for load balancer listener", "id", id, "targetStatus", target)
 	return wait.ExponentialBackoff(backoff, func() (bool, error) {
-		mc := metrics.NewMetricPrometheusContext("loadbalancer_listener", "get")
-		_, err := listeners.Get(s.loadbalancerClient, id).Extract()
-		if mc.ObserveRequest(err) != nil {
+		_, err := s.loadbalancerClient.GetListener(id)
+		if err != nil {
 			return false, err
 		}
 		// The listener resource has no Status attribute, so a successful Get is the best we can do
