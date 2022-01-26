@@ -69,7 +69,7 @@ func (s *Service) getOrCreateTrunk(eventObject runtime.Object, clusterName, trun
 
 	trunk, err := s.client.CreateTrunk(trunkCreateOpts)
 	if err != nil {
-		record.Warnf(eventObject, "FailedCreateTrunk", "Failed to create trunk %s: %v", trunkName, err)
+		record.Errorf(eventObject, "FailedCreateTrunk", "Failed to create trunk %s: %v", trunkName, err)
 		return nil, err
 	}
 
@@ -103,7 +103,7 @@ func (s *Service) DeleteTrunk(eventObject runtime.Object, portID string) error {
 		return true, nil
 	})
 	if err != nil {
-		record.Warnf(eventObject, "FailedDeleteTrunk", "Failed to delete trunk %s with id %s: %v", trunkInfo[0].Name, trunkInfo[0].ID, err)
+		record.Errorf(eventObject, "FailedDeleteTrunk", "Failed to delete trunk %s with id %s: %v", trunkInfo[0].Name, trunkInfo[0].ID, err)
 		return err
 	}
 

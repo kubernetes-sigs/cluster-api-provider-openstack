@@ -31,6 +31,10 @@ var (
 	defaultRecorder record.EventRecorder
 )
 
+const (
+	EventTypeError string = "Error"
+)
+
 func init() {
 	defaultRecorder = new(record.FakeRecorder)
 }
@@ -61,4 +65,14 @@ func Warn(object runtime.Object, reason, message string) {
 // Warnf is just like Warn, but with Sprintf for the message field.
 func Warnf(object runtime.Object, reason, message string, args ...interface{}) {
 	defaultRecorder.Eventf(object, corev1.EventTypeWarning, strings.Title(reason), message, args...)
+}
+
+// Error constructs an Error event from the given information and puts it in the queue for sending.
+func Error(object runtime.Object, reason, message string) {
+	defaultRecorder.Event(object, EventTypeError, strings.Title(reason), message)
+}
+
+// Errorf is just like Error, but with Sprintf for the message field.
+func Errorf(object runtime.Object, reason, message string, args ...interface{}) {
+	defaultRecorder.Eventf(object, EventTypeError, strings.Title(reason), message, args...)
 }

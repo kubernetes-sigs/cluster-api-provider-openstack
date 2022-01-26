@@ -51,7 +51,7 @@ func (s *Service) GetOrCreateFloatingIP(openStackCluster *infrav1.OpenStackClust
 
 	fp, err = s.client.CreateFloatingIP(fpCreateOpts)
 	if err != nil {
-		record.Warnf(openStackCluster, "FailedCreateFloatingIP", "Failed to create floating IP %s: %v", ip, err)
+		record.Errorf(openStackCluster, "FailedCreateFloatingIP", "Failed to create floating IP %s: %v", ip, err)
 		return nil, err
 	}
 
@@ -103,7 +103,7 @@ func (s *Service) DeleteFloatingIP(openStackCluster *infrav1.OpenStackCluster, i
 
 	err = s.client.DeleteFloatingIP(fip.ID)
 	if err != nil {
-		record.Warnf(openStackCluster, "FailedDeleteFloatingIP", "Failed to delete floating IP %s: %v", ip, err)
+		record.Errorf(openStackCluster, "FailedDeleteFloatingIP", "Failed to delete floating IP %s: %v", ip, err)
 		return err
 	}
 
@@ -132,12 +132,12 @@ func (s *Service) AssociateFloatingIP(openStackCluster *infrav1.OpenStackCluster
 
 	_, err := s.client.UpdateFloatingIP(fp.ID, fpUpdateOpts)
 	if err != nil {
-		record.Warnf(openStackCluster, "FailedAssociateFloatingIP", "Failed to associate floating IP %s with port %s: %v", fp.FloatingIP, portID, err)
+		record.Errorf(openStackCluster, "FailedAssociateFloatingIP", "Failed to associate floating IP %s with port %s: %v", fp.FloatingIP, portID, err)
 		return err
 	}
 
 	if err = s.waitForFloatingIP(fp.ID, "ACTIVE"); err != nil {
-		record.Warnf(openStackCluster, "FailedAssociateFloatingIP", "Failed to associate floating IP %s with port %s: wait for floating IP ACTIVE: %v", fp.FloatingIP, portID, err)
+		record.Errorf(openStackCluster, "FailedAssociateFloatingIP", "Failed to associate floating IP %s with port %s: wait for floating IP ACTIVE: %v", fp.FloatingIP, portID, err)
 		return err
 	}
 
@@ -163,12 +163,12 @@ func (s *Service) DisassociateFloatingIP(openStackCluster *infrav1.OpenStackClus
 
 	_, err = s.client.UpdateFloatingIP(fip.ID, fpUpdateOpts)
 	if err != nil {
-		record.Warnf(openStackCluster, "FailedDisassociateFloatingIP", "Failed to disassociate floating IP %s: %v", fip.FloatingIP, err)
+		record.Errorf(openStackCluster, "FailedDisassociateFloatingIP", "Failed to disassociate floating IP %s: %v", fip.FloatingIP, err)
 		return err
 	}
 
 	if err = s.waitForFloatingIP(fip.ID, "DOWN"); err != nil {
-		record.Warnf(openStackCluster, "FailedDisassociateFloatingIP", "Failed to disassociate floating IP: wait for floating IP DOWN: %v", fip.FloatingIP, err)
+		record.Errorf(openStackCluster, "FailedDisassociateFloatingIP", "Failed to disassociate floating IP: wait for floating IP DOWN: %v", fip.FloatingIP, err)
 		return err
 	}
 

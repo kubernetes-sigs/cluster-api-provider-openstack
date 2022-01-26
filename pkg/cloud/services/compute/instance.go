@@ -320,7 +320,7 @@ func (s *Service) createInstance(eventObject runtime.Object, clusterName string,
 		return createdInstance.State() == infrav1.InstanceStateActive, nil
 	})
 	if err != nil {
-		record.Warnf(eventObject, "FailedCreateServer", "Failed to create server %s: %v", createdInstance.Name(), err)
+		record.Errorf(eventObject, "FailedCreateServer", "Failed to create server %s: %v", createdInstance.Name(), err)
 		return nil, err
 	}
 
@@ -670,7 +670,7 @@ func (s *Service) deleteAttachInterface(eventObject runtime.Object, instance *In
 			// due to instance must be paused/active/shutoff in order to detach interface
 			return nil
 		}
-		record.Warnf(eventObject, "FailedDeleteAttachInterface", "Failed to delete attach interface: instance %s, port %s: %v", instance.ID, portID, err)
+		record.Errorf(eventObject, "FailedDeleteAttachInterface", "Failed to delete attach interface: instance %s, port %s: %v", instance.ID, portID, err)
 		return err
 	}
 
@@ -685,7 +685,7 @@ func (s *Service) deleteInstance(eventObject runtime.Object, instance *InstanceI
 			record.Eventf(eventObject, "SuccessfulDeleteServer", "Server %s with id %s did not exist", instance.Name, instance.ID)
 			return nil
 		}
-		record.Warnf(eventObject, "FailedDeleteServer", "Failed to delete server %s with id %s: %v", instance.Name, instance.ID, err)
+		record.Errorf(eventObject, "FailedDeleteServer", "Failed to delete server %s with id %s: %v", instance.Name, instance.ID, err)
 		return err
 	}
 
@@ -700,7 +700,7 @@ func (s *Service) deleteInstance(eventObject runtime.Object, instance *InstanceI
 		return true, nil
 	})
 	if err != nil {
-		record.Warnf(eventObject, "FailedDeleteServer", "Failed to delete server %s with id %s: %v", instance.Name, instance.ID, err)
+		record.Errorf(eventObject, "FailedDeleteServer", "Failed to delete server %s with id %s: %v", instance.Name, instance.ID, err)
 		return err
 	}
 
@@ -743,7 +743,7 @@ func (s *Service) GetInstanceStatusByName(eventObject runtime.Object, name strin
 	}
 
 	if len(serverList) > 1 {
-		record.Warnf(eventObject, "DuplicateServerNames", "Found %d servers with name '%s'. This is likely to cause errors.", len(serverList), name)
+		record.Errorf(eventObject, "DuplicateServerNames", "Found %d servers with name '%s'. This is likely to cause errors.", len(serverList), name)
 	}
 
 	// Return the first returned server, if any

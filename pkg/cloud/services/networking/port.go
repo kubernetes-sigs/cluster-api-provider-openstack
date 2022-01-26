@@ -162,7 +162,7 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 
 	port, err := s.client.CreatePort(createOpts)
 	if err != nil {
-		record.Warnf(eventObject, "FailedCreatePort", "Failed to create port %s: %v", portName, err)
+		record.Errorf(eventObject, "FailedCreatePort", "Failed to create port %s: %v", portName, err)
 		return nil, err
 	}
 
@@ -171,7 +171,7 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 	tags = append(tags, portOpts.Tags...)
 	if len(tags) > 0 {
 		if err = s.replaceAllAttributesTags(eventObject, portResource, port.ID, tags); err != nil {
-			record.Warnf(eventObject, "FailedReplaceTags", "Failed to replace port tags %s: %v", portName, err)
+			record.Errorf(eventObject, "FailedReplaceTags", "Failed to replace port tags %s: %v", portName, err)
 			return nil, err
 		}
 	}
@@ -179,11 +179,11 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 	if portOpts.Trunk != nil && *portOpts.Trunk {
 		trunk, err := s.getOrCreateTrunk(eventObject, clusterName, port.Name, port.ID)
 		if err != nil {
-			record.Warnf(eventObject, "FailedCreateTrunk", "Failed to create trunk for port %s: %v", portName, err)
+			record.Errorf(eventObject, "FailedCreateTrunk", "Failed to create trunk for port %s: %v", portName, err)
 			return nil, err
 		}
 		if err = s.replaceAllAttributesTags(eventObject, trunkResource, trunk.ID, tags); err != nil {
-			record.Warnf(eventObject, "FailedReplaceTags", "Failed to replace trunk tags %s: %v", portName, err)
+			record.Errorf(eventObject, "FailedReplaceTags", "Failed to replace trunk tags %s: %v", portName, err)
 			return nil, err
 		}
 	}
@@ -255,7 +255,7 @@ func (s *Service) DeletePort(eventObject runtime.Object, portID string) error {
 		return true, nil
 	})
 	if err != nil {
-		record.Warnf(eventObject, "FailedDeletePort", "Failed to delete port %s with id %s: %v", port.Name, port.ID, err)
+		record.Errorf(eventObject, "FailedDeletePort", "Failed to delete port %s with id %s: %v", port.Name, port.ID, err)
 		return err
 	}
 

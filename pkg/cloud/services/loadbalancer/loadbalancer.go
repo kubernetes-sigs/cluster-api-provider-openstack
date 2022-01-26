@@ -130,12 +130,12 @@ func (s *Service) getOrCreateLoadBalancer(openStackCluster *infrav1.OpenStackClu
 	mc := metrics.NewMetricPrometheusContext("loadbalancer", "create")
 	lb, err = loadbalancers.Create(s.loadbalancerClient, lbCreateOpts).Extract()
 	if mc.ObserveRequest(err) != nil {
-		record.Warnf(openStackCluster, "FailedCreateLoadBalancer", "Failed to create load balancer %s: %v", loadBalancerName, err)
+		record.Errorf(openStackCluster, "FailedCreateLoadBalancer", "Failed to create load balancer %s: %v", loadBalancerName, err)
 		return nil, err
 	}
 
 	if err := s.waitForLoadBalancerActive(lb.ID); err != nil {
-		record.Warnf(openStackCluster, "FailedCreateLoadBalancer", "Failed to create load balancer %s with id %s: wait for load balancer active: %v", loadBalancerName, lb.ID, err)
+		record.Errorf(openStackCluster, "FailedCreateLoadBalancer", "Failed to create load balancer %s with id %s: wait for load balancer active: %v", loadBalancerName, lb.ID, err)
 		return nil, err
 	}
 
@@ -164,17 +164,17 @@ func (s *Service) getOrCreateListener(openStackCluster *infrav1.OpenStackCluster
 	mc := metrics.NewMetricPrometheusContext("loadbalancer_listener", "create")
 	listener, err = listeners.Create(s.loadbalancerClient, listenerCreateOpts).Extract()
 	if mc.ObserveRequest(err) != nil {
-		record.Warnf(openStackCluster, "FailedCreateListener", "Failed to create listener %s: %v", listenerName, err)
+		record.Errorf(openStackCluster, "FailedCreateListener", "Failed to create listener %s: %v", listenerName, err)
 		return nil, err
 	}
 
 	if err := s.waitForLoadBalancerActive(lbID); err != nil {
-		record.Warnf(openStackCluster, "FailedCreateListener", "Failed to create listener %s with id %s: wait for load balancer active %s: %v", listenerName, listener.ID, lbID, err)
+		record.Errorf(openStackCluster, "FailedCreateListener", "Failed to create listener %s with id %s: wait for load balancer active %s: %v", listenerName, listener.ID, lbID, err)
 		return nil, err
 	}
 
 	if err := s.waitForListener(listener.ID, "ACTIVE"); err != nil {
-		record.Warnf(openStackCluster, "FailedCreateListener", "Failed to create listener %s with id %s: wait for listener active: %v", listenerName, listener.ID, err)
+		record.Errorf(openStackCluster, "FailedCreateListener", "Failed to create listener %s with id %s: wait for listener active: %v", listenerName, listener.ID, err)
 		return nil, err
 	}
 
@@ -203,12 +203,12 @@ func (s *Service) getOrCreatePool(openStackCluster *infrav1.OpenStackCluster, po
 	mc := metrics.NewMetricPrometheusContext("loadbalancer_pool", "create")
 	pool, err = pools.Create(s.loadbalancerClient, poolCreateOpts).Extract()
 	if mc.ObserveRequest(err) != nil {
-		record.Warnf(openStackCluster, "FailedCreatePool", "Failed to create pool %s: %v", poolName, err)
+		record.Errorf(openStackCluster, "FailedCreatePool", "Failed to create pool %s: %v", poolName, err)
 		return nil, err
 	}
 
 	if err := s.waitForLoadBalancerActive(lbID); err != nil {
-		record.Warnf(openStackCluster, "FailedCreatePool", "Failed to create pool %s with id %s: wait for load balancer active %s: %v", poolName, pool.ID, lbID, err)
+		record.Errorf(openStackCluster, "FailedCreatePool", "Failed to create pool %s with id %s: wait for load balancer active %s: %v", poolName, pool.ID, lbID, err)
 		return nil, err
 	}
 
@@ -239,12 +239,12 @@ func (s *Service) getOrCreateMonitor(openStackCluster *infrav1.OpenStackCluster,
 	mc := metrics.NewMetricPrometheusContext("loadbalancer_healthmonitor", "create")
 	monitor, err = monitors.Create(s.loadbalancerClient, monitorCreateOpts).Extract()
 	if mc.ObserveRequest(err) != nil {
-		record.Warnf(openStackCluster, "FailedCreateMonitor", "Failed to create monitor %s: %v", monitorName, err)
+		record.Errorf(openStackCluster, "FailedCreateMonitor", "Failed to create monitor %s: %v", monitorName, err)
 		return err
 	}
 
 	if err = s.waitForLoadBalancerActive(lbID); err != nil {
-		record.Warnf(openStackCluster, "FailedCreateMonitor", "Failed to create monitor %s with id %s: wait for load balancer active %s: %v", monitorName, monitor.ID, lbID, err)
+		record.Errorf(openStackCluster, "FailedCreateMonitor", "Failed to create monitor %s with id %s: wait for load balancer active %s: %v", monitorName, monitor.ID, lbID, err)
 		return err
 	}
 
@@ -373,7 +373,7 @@ func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster,
 	mc := metrics.NewMetricPrometheusContext("loadbalancer", "delete")
 	err = loadbalancers.Delete(s.loadbalancerClient, lb.ID, deleteOpts).ExtractErr()
 	if mc.ObserveRequest(err) != nil {
-		record.Warnf(openStackCluster, "FailedDeleteLoadBalancer", "Failed to delete load balancer %s with id %s: %v", lb.Name, lb.ID, err)
+		record.Errorf(openStackCluster, "FailedDeleteLoadBalancer", "Failed to delete load balancer %s with id %s: %v", lb.Name, lb.ID, err)
 		return err
 	}
 

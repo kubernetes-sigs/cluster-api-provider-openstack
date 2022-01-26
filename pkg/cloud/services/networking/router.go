@@ -130,7 +130,7 @@ func (s *Service) createRouter(openStackCluster *infrav1.OpenStackCluster, clust
 
 	router, err := s.client.CreateRouter(opts)
 	if err != nil {
-		record.Warnf(openStackCluster, "FailedCreateRouter", "Failed to create router %s: %v", name, err)
+		record.Errorf(openStackCluster, "FailedCreateRouter", "Failed to create router %s: %v", name, err)
 		return nil, err
 	}
 	record.Eventf(openStackCluster, "SuccessfulCreateRouter", "Created router %s with id %s", name, router.ID)
@@ -175,7 +175,7 @@ func (s *Service) setRouterExternalIPs(openStackCluster *infrav1.OpenStackCluste
 
 	_, err := s.client.UpdateRouter(router.ID, updateOpts)
 	if err != nil {
-		record.Warnf(openStackCluster, "FailedUpdateRouter", "Failed to update router %s with id %s: %v", router.Name, router.ID, err)
+		record.Errorf(openStackCluster, "FailedUpdateRouter", "Failed to update router %s with id %s: %v", router.Name, router.ID, err)
 		return err
 	}
 
@@ -209,7 +209,7 @@ func (s *Service) DeleteRouter(openStackCluster *infrav1.OpenStackCluster, clust
 
 	err = s.client.DeleteRouter(router.ID)
 	if err != nil {
-		record.Warnf(openStackCluster, "FailedDeleteRouter", "Failed to delete router %s with id %s: %v", router.Name, router.ID, err)
+		record.Errorf(openStackCluster, "FailedDeleteRouter", "Failed to delete router %s with id %s: %v", router.Name, router.ID, err)
 		return err
 	}
 

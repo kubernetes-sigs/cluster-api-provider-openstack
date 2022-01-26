@@ -125,7 +125,7 @@ func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, c
 
 	network, err := s.client.CreateNetwork(opts)
 	if err != nil {
-		record.Warnf(openStackCluster, "FailedCreateNetwork", "Failed to create network %s: %v", networkName, err)
+		record.Errorf(openStackCluster, "FailedCreateNetwork", "Failed to create network %s: %v", networkName, err)
 		return err
 	}
 	record.Eventf(openStackCluster, "SuccessfulCreateNetwork", "Created network %s with id %s", networkName, network.ID)
@@ -159,7 +159,7 @@ func (s *Service) DeleteNetwork(openStackCluster *infrav1.OpenStackCluster, clus
 
 	err = s.client.DeleteNetwork(network.ID)
 	if err != nil {
-		record.Warnf(openStackCluster, "FailedDeleteNetwork", "Failed to delete network %s with id %s: %v", network.Name, network.ID, err)
+		record.Errorf(openStackCluster, "FailedDeleteNetwork", "Failed to delete network %s with id %s: %v", network.Name, network.ID, err)
 		return err
 	}
 
@@ -221,7 +221,7 @@ func (s *Service) createSubnet(openStackCluster *infrav1.OpenStackCluster, clust
 
 	subnet, err := s.client.CreateSubnet(opts)
 	if err != nil {
-		record.Warnf(openStackCluster, "FailedCreateSubnet", "Failed to create subnet %s: %v", name, err)
+		record.Errorf(openStackCluster, "FailedCreateSubnet", "Failed to create subnet %s: %v", name, err)
 		return nil, err
 	}
 	record.Eventf(openStackCluster, "SuccessfulCreateSubnet", "Created subnet %s with id %s", name, subnet.ID)

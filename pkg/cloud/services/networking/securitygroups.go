@@ -448,7 +448,7 @@ func (s *Service) deleteSecurityGroup(openStackCluster *infrav1.OpenStackCluster
 	}
 	err = s.client.DeleteSecGroup(group.ID)
 	if err != nil {
-		record.Warnf(openStackCluster, "FailedDeleteSecurityGroup", "Failed to delete security group %s with id %s: %v", group.Name, group.ID, err)
+		record.Errorf(openStackCluster, "FailedDeleteSecurityGroup", "Failed to delete security group %s with id %s: %v", group.Name, group.ID, err)
 		return err
 	}
 
@@ -544,7 +544,7 @@ func (s *Service) createSecurityGroupIfNotExists(openStackCluster *infrav1.OpenS
 
 		group, err := s.client.CreateSecGroup(createOpts)
 		if err != nil {
-			record.Warnf(openStackCluster, "FailedCreateSecurityGroup", "Failed to create security group %s: %v", groupName, err)
+			record.Errorf(openStackCluster, "FailedCreateSecurityGroup", "Failed to create security group %s: %v", groupName, err)
 			return err
 		}
 
