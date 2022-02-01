@@ -35,6 +35,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/trunks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
@@ -208,8 +209,15 @@ var _ = Describe("e2e tests", func() {
 
 			shared.Byf("Creating MachineDeployment with custom port options")
 			md3Name := clusterName + "-md-3"
+
 			customPortOptions := &[]infrav1.PortOpts{
-				{Description: "primary"},
+				{
+					Description: "primary",
+				},
+				{
+					Description: "trunked",
+					Trunk:       pointer.Bool(true),
+				},
 			}
 
 			testTag := utilrand.String(6)
@@ -236,6 +244,26 @@ var _ = Describe("e2e tests", func() {
 			port := plist[0]
 			Expect(port.Description).To(Equal("primary"))
 			Expect(port.Tags).To(ContainElement(testTag))
+
+			// assert trunked port is created.
+			Eventually(func() int {
+				plist, err = shared.DumpOpenStackPorts(e2eCtx, ports.ListOpts{Description: "trunked", Tags: testTag})
+				Expect(err).To(BeNil())
+				return len(plist)
+			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(Equal(1))
+			port = plist[0]
+			Expect(port.Description).To(Equal("trunked"))
+			Expect(port.Tags).To(ContainElement(testTag))
+
+			// assert trunk data.
+			var trunk *trunks.Trunk
+			Eventually(func() int {
+				trunk, err = shared.DumpOpenStackTrunks(e2eCtx, port.ID)
+				Expect(err).To(BeNil())
+				Expect(trunk).NotTo(BeNil())
+				return 1
+			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(Equal(1))
+			Expect(trunk.PortID).To(Equal(port.ID))
 		})
 	})
 
