@@ -95,6 +95,9 @@ func (s *Service) DeleteTrunk(eventObject runtime.Object, portID string) error {
 				record.Eventf(eventObject, "SuccessfulDeleteTrunk", "Trunk %s with id %s did not exist", trunkInfo[0].Name, trunkInfo[0].ID)
 				return true, nil
 			}
+			if capoerrors.IsConflict(err) {
+				return false, nil
+			}
 			if capoerrors.IsRetryable(err) {
 				return false, nil
 			}
