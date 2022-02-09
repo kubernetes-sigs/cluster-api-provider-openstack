@@ -19,7 +19,6 @@ package networking
 import (
 	"testing"
 
-	"github.com/go-logr/logr"
 	"github.com/golang/mock/gomock"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
 	. "github.com/onsi/gomega"
@@ -77,7 +76,6 @@ func Test_GetOrCreateFloatingIP(t *testing.T) {
 			tt.expect(mockClient.EXPECT())
 			s := Service{
 				client: mockClient,
-				logger: logr.DiscardLogger{},
 			}
 			got, err := s.GetOrCreateFloatingIP(openStackCluster, "test-cluster", tt.ip)
 			g.Expect(err).ShouldNot(HaveOccurred())

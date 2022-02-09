@@ -19,7 +19,6 @@ package networking
 import (
 	"testing"
 
-	"github.com/go-logr/logr"
 	"github.com/golang/mock/gomock"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/portsbinding"
@@ -439,7 +438,6 @@ func Test_GetOrCreatePort(t *testing.T) {
 			tt.expect(mockClient.EXPECT())
 			s := Service{
 				client: mockClient,
-				logger: logr.DiscardLogger{},
 			}
 			got, err := s.GetOrCreatePort(
 				eventObject,
