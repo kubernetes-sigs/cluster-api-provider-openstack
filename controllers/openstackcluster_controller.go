@@ -328,7 +328,6 @@ func reconcileBastion(log logr.Logger, osProviderClient *gophercloud.ProviderCli
 
 	instanceStatus, err = computeService.CreateBastion(openStackCluster, cluster.Name)
 	if err != nil {
-		handleUpdateOSCError(openStackCluster, errors.Errorf("failed to reconcile bastion: %v", err))
 		return errors.Errorf("failed to reconcile bastion: %v", err)
 	}
 
