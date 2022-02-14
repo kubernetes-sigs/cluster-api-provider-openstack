@@ -393,26 +393,34 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 func (s *Service) GetSecurityGroups(securityGroupParams []infrav1.SecurityGroupParam) ([]string, error) {
 	var sgIDs []string
 	for _, sg := range securityGroupParams {
-		listOpts := groups.ListOpts(sg.Filter)
-		if listOpts.ProjectID == "" {
-			listOpts.ProjectID = s.projectID
-		}
-		listOpts.Name = sg.Name
-		listOpts.ID = sg.UUID
-		SGList, err := s.client.ListSecGroup(listOpts)
-		if err != nil {
-			return nil, err
-		}
-
-		if len(SGList) == 0 {
-			return nil, fmt.Errorf("security group %s not found", sg.Name)
-		}
-
-		for _, group := range SGList {
-			if isDuplicate(sgIDs, group.ID) {
+		// Don't validate an explicit UUID if we were given one
+		if sg.UUID != "" {
+			if isDuplicate(sgIDs, sg.UUID) {
 				continue
 			}
-			sgIDs = append(sgIDs, group.ID)
+			sgIDs = append(sgIDs, sg.UUID)
+		} else {
+			listOpts := groups.ListOpts(sg.Filter)
+			if listOpts.ProjectID == "" {
+				listOpts.ProjectID = s.projectID
+			}
+			listOpts.Name = sg.Name
+			listOpts.ID = sg.UUID
+			SGList, err := s.client.ListSecGroup(listOpts)
+			if err != nil {
+				return nil, err
+			}
+
+			if len(SGList) == 0 {
+				return nil, fmt.Errorf("security group %s not found", sg.Name)
+			}
+
+			for _, group := range SGList {
+				if isDuplicate(sgIDs, group.ID) {
+					continue
+				}
+				sgIDs = append(sgIDs, group.ID)
+			}
 		}
 	}
 	return sgIDs, nil
