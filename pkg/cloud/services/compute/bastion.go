@@ -34,31 +34,15 @@ func (s *Service) CreateBastion(openStackCluster *infrav1.OpenStackCluster, clus
 		RootVolume:    openStackCluster.Spec.Bastion.Instance.RootVolume,
 	}
 
-	securityGroups, err := s.networkingService.GetSecurityGroups(openStackCluster.Spec.Bastion.Instance.SecurityGroups)
-	if err != nil {
-		return nil, err
-	}
+	instanceSpec.SecurityGroups = openStackCluster.Spec.Bastion.Instance.SecurityGroups
 	if openStackCluster.Spec.ManagedSecurityGroups {
-		securityGroups = append(securityGroups, openStackCluster.Status.BastionSecurityGroup.ID)
+		instanceSpec.SecurityGroups = append(instanceSpec.SecurityGroups, infrav1.SecurityGroupParam{
+			UUID: openStackCluster.Status.BastionSecurityGroup.ID,
+		})
 	}
-	instanceSpec.SecurityGroups = securityGroups
 
-	var nets []infrav1.Network
-	if len(openStackCluster.Spec.Bastion.Instance.Networks) > 0 {
-		var err error
-		nets, err = s.getServerNetworks(openStackCluster.Spec.Bastion.Instance.Networks)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		nets = []infrav1.Network{{
-			ID: openStackCluster.Status.Network.ID,
-			Subnet: &infrav1.Subnet{
-				ID: openStackCluster.Status.Network.Subnet.ID,
-			},
-		}}
-	}
-	instanceSpec.Networks = nets
+	instanceSpec.Networks = openStackCluster.Spec.Bastion.Instance.Networks
+	instanceSpec.Ports = openStackCluster.Spec.Bastion.Instance.Ports
 
-	return s.createInstance(openStackCluster, clusterName, instanceSpec, retryIntervalInstanceStatus)
+	return s.createInstance(openStackCluster, openStackCluster, clusterName, instanceSpec, retryIntervalInstanceStatus)
 }
