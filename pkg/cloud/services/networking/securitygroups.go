@@ -393,6 +393,15 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 func (s *Service) GetSecurityGroups(securityGroupParams []infrav1.SecurityGroupParam) ([]string, error) {
 	var sgIDs []string
 	for _, sg := range securityGroupParams {
+		// Don't validate an explicit UUID if we were given one
+		if sg.UUID != "" {
+			if isDuplicate(sgIDs, sg.UUID) {
+				continue
+			}
+			sgIDs = append(sgIDs, sg.UUID)
+			continue
+		}
+
 		listOpts := groups.ListOpts(sg.Filter)
 		if listOpts.ProjectID == "" {
 			listOpts.ProjectID = s.projectID
