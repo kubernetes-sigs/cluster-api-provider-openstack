@@ -33,7 +33,6 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/trunks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
@@ -1029,10 +1028,6 @@ func TestService_CreateInstance(t *testing.T) {
 			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
 				expectUseExistingDefaultPort(networkRecorder)
 				expectDefaultImageAndFlavor(computeRecorder)
-
-				// TODO: Shortcut this API call if security groups are passed by UUID
-				networkRecorder.ListSecGroup(groups.ListOpts{ID: extraSecurityGroupUUID}).
-					Return([]groups.SecGroup{{ID: extraSecurityGroupUUID}}, nil)
 
 				createMap := getDefaultServerMap()
 				serverMap := createMap["server"].(map[string]interface{})
