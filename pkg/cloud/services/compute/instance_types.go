@@ -46,8 +46,9 @@ type InstanceSpec struct {
 	ServerGroupID  string
 	Trunk          bool
 	Tags           []string
-	SecurityGroups []string
-	Networks       []infrav1.Network
+	SecurityGroups []infrav1.SecurityGroupParam
+	Networks       []infrav1.NetworkParam
+	Ports          []infrav1.PortOpts
 }
 
 // InstanceIdentifier describes an instance which has not necessarily been fetched.
