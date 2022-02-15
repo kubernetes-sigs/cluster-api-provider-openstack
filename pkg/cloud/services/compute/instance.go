@@ -44,11 +44,11 @@ const (
 	timeoutInstanceDelete       = 5 * time.Minute
 )
 
-func (s *Service) CreateInstance(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, clusterName string, userData string) (instance *InstanceStatus, err error) {
-	return s.createInstanceImpl(openStackCluster, machine, openStackMachine, clusterName, userData, retryIntervalInstanceStatus)
+func (s *Service) ReconcileMachine(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, clusterName string, userData string) (instance *InstanceStatus, err error) {
+	return s.reconcileMachineImpl(openStackCluster, machine, openStackMachine, clusterName, userData, retryIntervalInstanceStatus)
 }
 
-func (s *Service) createInstanceImpl(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, clusterName string, userData string, retryInterval time.Duration) (instance *InstanceStatus, err error) {
+func (s *Service) reconcileMachineImpl(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, clusterName string, userData string, retryInterval time.Duration) (instance *InstanceStatus, err error) {
 	if openStackMachine == nil {
 		return nil, fmt.Errorf("create Options need be specified to create instace")
 	}
@@ -103,7 +103,7 @@ func (s *Service) createInstanceImpl(openStackCluster *infrav1.OpenStackCluster,
 	instanceSpec.Networks = openStackMachine.Spec.Networks
 	instanceSpec.Ports = openStackMachine.Spec.Ports
 
-	return s.createInstance(openStackMachine, openStackCluster, clusterName, &instanceSpec, retryInterval)
+	return s.reconcileInstance(openStackMachine, openStackCluster, clusterName, &instanceSpec, retryInterval)
 }
 
 // constructNetworks builds an array of networks from the network, subnet and ports items in the instance spec.
@@ -181,7 +181,16 @@ func (s *Service) constructNetworks(openStackCluster *infrav1.OpenStackCluster, 
 	return nets, nil
 }
 
-func (s *Service) createInstance(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, clusterName string, instanceSpec *InstanceSpec, retryInterval time.Duration) (*InstanceStatus, error) {
+// reconcileInstance is a common function for reconciling an OpenStack instance and its dependencies used by both Machines and the Bastion.
+func (s *Service) reconcileInstance(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, clusterName string, instanceSpec *InstanceSpec, retryInterval time.Duration) (*InstanceStatus, error) {
+	instanceStatus, err := s.GetInstanceStatusByName(openStackCluster, instanceSpec.Name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get instance status for %s: %w", instanceSpec.Name, err)
+	}
+	if instanceStatus != nil {
+		return instanceStatus, nil
+	}
+
 	var server *ServerExt
 	accessIPv4 := ""
 	portList := []servers.Network{}
