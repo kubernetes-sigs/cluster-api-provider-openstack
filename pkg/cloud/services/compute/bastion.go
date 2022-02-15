@@ -22,7 +22,7 @@ import (
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
-func (s *Service) CreateBastion(openStackCluster *infrav1.OpenStackCluster, clusterName string) (*InstanceStatus, error) {
+func (s *Service) ReconcileBastion(openStackCluster *infrav1.OpenStackCluster, clusterName string) (*InstanceStatus, error) {
 	name := fmt.Sprintf("%s-bastion", clusterName)
 	instanceSpec := &InstanceSpec{
 		Name:          name,
@@ -44,5 +44,5 @@ func (s *Service) CreateBastion(openStackCluster *infrav1.OpenStackCluster, clus
 	instanceSpec.Networks = openStackCluster.Spec.Bastion.Instance.Networks
 	instanceSpec.Ports = openStackCluster.Spec.Bastion.Instance.Ports
 
-	return s.createInstance(openStackCluster, openStackCluster, clusterName, instanceSpec, retryIntervalInstanceStatus)
+	return s.reconcileInstance(openStackCluster, openStackCluster, clusterName, instanceSpec, retryIntervalInstanceStatus)
 }

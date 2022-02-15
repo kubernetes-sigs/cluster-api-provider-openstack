@@ -130,8 +130,12 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 func reconcileDelete(ctx context.Context, scope *scope.Scope, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
 	scope.Logger.Info("Reconciling Cluster delete")
 
-	if err := deleteBastion(scope, cluster, openStackCluster); err != nil {
+	deleted, err := deleteBastion(scope, cluster, openStackCluster)
+	if err != nil {
 		return reconcile.Result{}, err
+	}
+	if !deleted {
+		return reconcile.Result{RequeueAfter: defaultOpenStackBackOff}, nil
 	}
 
 	networkingService, err := networking.NewService(scope)
@@ -189,34 +193,33 @@ func contains(arr []string, target string) bool {
 	return false
 }
 
-func deleteBastion(scope *scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
+func deleteBastion(scope *scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (bool, error) {
 	computeService, err := compute.NewService(scope)
 	if err != nil {
-		return err
+		return false, err
 	}
 	networkingService, err := networking.NewService(scope)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	instanceName := fmt.Sprintf("%s-bastion", cluster.Name)
 	instanceStatus, err := computeService.GetInstanceStatusByName(openStackCluster, instanceName)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	if instanceStatus != nil {
 		instanceNS, err := instanceStatus.NetworkStatus()
 		if err != nil {
-			return err
+			return false, err
 		}
 		addresses := instanceNS.Addresses()
 
 		for _, address := range addresses {
 			if address.Type == corev1.NodeExternalIP {
 				if err = networkingService.DeleteFloatingIP(openStackCluster, address.Address); err != nil {
-					handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete floating IP: %v", err))
-					return errors.Errorf("failed to delete floating IP: %v", err)
+					return false, errors.Errorf("failed to delete floating IP: %v", err)
 				}
 			}
 		}
@@ -224,19 +227,17 @@ func deleteBastion(scope *scope.Scope, cluster *clusterv1.Cluster, openStackClus
 
 	machineSpec := &openStackCluster.Spec.Bastion.Instance
 	if err = computeService.DeleteInstance(openStackCluster, machineSpec, instanceName, instanceStatus); err != nil {
-		handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete bastion: %v", err))
-		return errors.Errorf("failed to delete bastion: %v", err)
+		return false, errors.Errorf("failed to delete bastion: %v", err)
 	}
 
 	openStackCluster.Status.Bastion = nil
 
 	if err = networkingService.DeleteBastionSecurityGroup(openStackCluster, fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)); err != nil {
-		handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete bastion security group: %v", err))
-		return errors.Errorf("failed to delete bastion security group: %v", err)
+		return false, errors.Errorf("failed to delete bastion security group: %v", err)
 	}
 	openStackCluster.Status.BastionSecurityGroup = nil
 
-	return nil
+	return true, nil
 }
 
 func reconcileNormal(ctx context.Context, scope *scope.Scope, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
@@ -256,10 +257,6 @@ func reconcileNormal(ctx context.Context, scope *scope.Scope, patchHelper *patch
 
 	err = reconcileNetworkComponents(scope, cluster, openStackCluster)
 	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	if err = reconcileBastion(scope, cluster, openStackCluster); err != nil {
 		return reconcile.Result{}, err
 	}
 
@@ -288,14 +285,30 @@ func reconcileNormal(ctx context.Context, scope *scope.Scope, patchHelper *patch
 		}
 	}
 
-	openStackCluster.Status.Ready = true
 	openStackCluster.Status.FailureMessage = nil
 	openStackCluster.Status.FailureReason = nil
+	if !openStackCluster.Status.Ready {
+		openStackCluster.Status.Ready = true
+
+		// If we're setting Ready, return early to update status and
+		// allow dependent operations to proceed. Ensure we call
+		// reconcile again to create the bastion.
+		return reconcile.Result{Requeue: true}, nil
+	}
+
+	reconciled, err := reconcileBastion(scope, cluster, openStackCluster)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if !reconciled {
+		return reconcile.Result{RequeueAfter: defaultOpenStackBackOff}, nil
+	}
+
 	scope.Logger.Info("Reconciled Cluster create successfully")
 	return reconcile.Result{}, nil
 }
 
-func reconcileBastion(scope *scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
+func reconcileBastion(scope *scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (bool, error) {
 	scope.Logger.Info("Reconciling Bastion")
 
 	if openStackCluster.Spec.Bastion == nil || !openStackCluster.Spec.Bastion.Enabled {
@@ -304,56 +317,61 @@ func reconcileBastion(scope *scope.Scope, cluster *clusterv1.Cluster, openStackC
 
 	computeService, err := compute.NewService(scope)
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	instanceStatus, err := computeService.GetInstanceStatusByName(openStackCluster, fmt.Sprintf("%s-bastion", cluster.Name))
+	instanceStatus, err := computeService.ReconcileBastion(openStackCluster, cluster.Name)
 	if err != nil {
-		return err
+		return false, errors.Errorf("failed to reconcile bastion: %v", err)
 	}
-	if instanceStatus != nil {
-		bastion, err := instanceStatus.APIInstance(openStackCluster)
-		if err != nil {
-			return err
-		}
-		openStackCluster.Status.Bastion = bastion
-		return nil
+	if instanceStatus == nil {
+		// Bastion is not ready yet
+		return false, nil
 	}
 
-	instanceStatus, err = computeService.CreateBastion(openStackCluster, cluster.Name)
-	if err != nil {
-		return errors.Errorf("failed to reconcile bastion: %v", err)
-	}
-
-	networkingService, err := networking.NewService(scope)
-	if err != nil {
-		return err
-	}
-	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
-	fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterName, openStackCluster.Spec.Bastion.Instance.FloatingIP)
-	if err != nil {
-		handleUpdateOSCError(openStackCluster, errors.Errorf("failed to get or create floating IP for bastion: %v", err))
-		return errors.Errorf("failed to get or create floating IP for bastion: %v", err)
-	}
-	port, err := computeService.GetManagementPort(openStackCluster, instanceStatus)
-	if err != nil {
-		err = errors.Errorf("getting management port for bastion: %v", err)
-		handleUpdateOSCError(openStackCluster, err)
-		return err
-	}
-	err = networkingService.AssociateFloatingIP(openStackCluster, fp, port.ID)
-	if err != nil {
-		handleUpdateOSCError(openStackCluster, errors.Errorf("failed to associate floating IP with bastion: %v", err))
-		return errors.Errorf("failed to associate floating IP with bastion: %v", err)
+	// We overwrite the bastion status with the status of the instance from
+	// OpenStack. However, we don't want to lose any previously created
+	// floating IP which hasn't been associated yet, so we keep a reference
+	// to it here.
+	var floatingIP string
+	if openStackCluster.Status.Bastion != nil {
+		floatingIP = openStackCluster.Status.Bastion.FloatingIP
 	}
 
 	bastion, err := instanceStatus.APIInstance(openStackCluster)
 	if err != nil {
-		return err
+		return false, err
+	}
+	openStackCluster.Status.Bastion = bastion
+
+	// Bastion already has a floating IP
+	if bastion.FloatingIP != "" {
+		return true, nil
+	}
+
+	networkingService, err := networking.NewService(scope)
+	if err != nil {
+		return false, err
+	}
+
+	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
+	fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterName, floatingIP)
+	if err != nil {
+		return false, errors.Errorf("failed to get or create floating IP for bastion: %v", err)
 	}
 	bastion.FloatingIP = fp.FloatingIP
-	openStackCluster.Status.Bastion = bastion
-	return nil
+
+	port, err := computeService.GetManagementPort(openStackCluster, instanceStatus)
+	if err != nil {
+		return false, errors.Errorf("getting management port for bastion: %v", err)
+	}
+
+	err = networkingService.AssociateFloatingIP(openStackCluster, fp, port.ID)
+	if err != nil {
+		return false, errors.Errorf("failed to associate floating IP with bastion: %v", err)
+	}
+
+	return true, nil
 }
 
 func reconcileNetworkComponents(scope *scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {

@@ -685,6 +685,10 @@ func TestService_CreateInstance(t *testing.T) {
 		computeRecorder.GetFlavorIDFromName(flavorName).Return(flavorUUID, nil)
 	}
 
+	expectGetDefaultServerByName := func(computeRecorder *MockClientMockRecorder) {
+		computeRecorder.ListServers(servers.ListOpts{Name: fmt.Sprintf("^%s$", openStackMachineName)}).Return([]ServerExt{}, nil)
+	}
+
 	// Expected calls and custom match function for creating a server
 	expectCreateServer := func(computeRecorder *MockClientMockRecorder, expectedCreateOpts map[string]interface{}, wantError bool) {
 		// This nonsense is because ConfigDrive is a bool pointer, so we
@@ -1111,6 +1115,7 @@ func TestService_CreateInstance(t *testing.T) {
 			computeRecorder := mockComputeClient.EXPECT()
 			networkRecorder := mockNetworkClient.EXPECT()
 
+			expectGetDefaultServerByName(computeRecorder)
 			tt.expect(computeRecorder, networkRecorder)
 
 			s := Service{
@@ -1124,7 +1129,7 @@ func TestService_CreateInstance(t *testing.T) {
 				),
 			}
 			// Call CreateInstance with a reduced retry interval to speed up the test
-			_, err := s.createInstanceImpl(tt.getOpenStackCluster(), tt.getMachine(), tt.getOpenStackMachine(), "cluster-name", "user-data", time.Second)
+			_, err := s.reconcileMachineImpl(tt.getOpenStackCluster(), tt.getMachine(), tt.getOpenStackMachine(), "cluster-name", "user-data", time.Second)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Service.CreateInstance() error = %v, wantErr %v", err, tt.wantErr)
 				return

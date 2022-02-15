@@ -63,8 +63,8 @@ type OpenStackMachineReconciler struct {
 }
 
 const (
-	waitForClusterInfrastructureReadyDuration = 15 * time.Second
-	waitForInstanceBecomeActiveToReconcile    = 60 * time.Second
+	defaultOpenStackBackOff                = 15 * time.Second
+	waitForInstanceBecomeActiveToReconcile = 60 * time.Second
 )
 
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackmachines,verbs=get;list;watch;create;update;patch;delete
@@ -277,7 +277,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 
 	if !cluster.Status.InfrastructureReady {
 		scope.Logger.Info("Cluster infrastructure is not ready yet, requeuing machine")
-		return ctrl.Result{RequeueAfter: waitForClusterInfrastructureReadyDuration}, nil
+		return ctrl.Result{RequeueAfter: defaultOpenStackBackOff}, nil
 	}
 
 	// Make sure bootstrap data is available and populated.
@@ -303,16 +303,13 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		return ctrl.Result{}, err
 	}
 
-	instanceStatus, err := r.getOrCreate(scope.Logger, cluster, openStackCluster, machine, openStackMachine, computeService, userData)
+	instanceStatus, err := computeService.ReconcileMachine(openStackCluster, machine, openStackMachine, cluster.Name, userData)
 	if err != nil {
 		handleUpdateMachineError(scope.Logger, openStackMachine, errors.Errorf("OpenStack instance cannot be created: %v", err))
-		return ctrl.Result{}, err
+		return ctrl.Result{}, errors.Errorf("error creating Openstack instance: %v", err)
 	}
-
-	// Set an error message if we couldn't find the instance.
 	if instanceStatus == nil {
-		handleUpdateMachineError(scope.Logger, openStackMachine, errors.New("OpenStack instance cannot be found"))
-		return ctrl.Result{}, nil
+		return ctrl.Result{RequeueAfter: defaultOpenStackBackOff}, nil
 	}
 
 	// TODO(sbueringer) From CAPA: TODO(ncdc): move this validation logic into a validating webhook (for us: create validation logic in webhook)
@@ -382,23 +379,6 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 
 	scope.Logger.Info("Reconciled Machine create successfully")
 	return ctrl.Result{}, nil
-}
-
-func (r *OpenStackMachineReconciler) getOrCreate(logger logr.Logger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, computeService *compute.Service, userData string) (*compute.InstanceStatus, error) {
-	instanceStatus, err := computeService.GetInstanceStatusByName(openStackMachine, openStackMachine.Name)
-	if err != nil {
-		return nil, err
-	}
-
-	if instanceStatus == nil {
-		logger.Info("Machine not exist, Creating Machine", "Machine", openStackMachine.Name)
-		instanceStatus, err = computeService.CreateInstance(openStackCluster, machine, openStackMachine, cluster.Name, userData)
-		if err != nil {
-			return nil, errors.Errorf("error creating Openstack instance: %v", err)
-		}
-	}
-
-	return instanceStatus, nil
 }
 
 func handleUpdateMachineError(logger logr.Logger, openstackMachine *infrav1.OpenStackMachine, message error) {
