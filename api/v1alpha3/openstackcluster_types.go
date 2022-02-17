@@ -135,9 +135,9 @@ type OpenStackClusterStatus struct {
 	// Group that needs to be applied to worker nodes.
 	WorkerSecurityGroup *SecurityGroup `json:"workerSecurityGroup,omitempty"`
 
-	BastionSecurityGroup *SecurityGroup `json:"bastionSecurityGroup,omitempty"`
-
-	Bastion *Instance `json:"bastion,omitempty"`
+	BastionSecurityGroup *SecurityGroup            `json:"bastionSecurityGroup,omitempty"`
+	Bastion              *Instance                 `json:"bastion,omitempty"`
+	BastionResources     OpenStackMachineResources `json:"bastionResources,omitempty"`
 }
 
 // +kubebuilder:object:root=true

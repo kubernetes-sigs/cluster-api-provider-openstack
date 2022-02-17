@@ -254,3 +254,12 @@ type Bastion struct {
 	//+optional
 	AvailabilityZone string `json:"availabilityZone,omitempty"`
 }
+
+type OpenStackResource struct {
+	ID    string `json:"id,omitempty"`
+	Ready bool   `json:"ready,omitempty"`
+}
+
+type OpenStackMachineResources struct {
+	RootVolume OpenStackResource `json:"rootVolume,omitempty"`
+}

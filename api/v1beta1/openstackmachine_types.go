@@ -110,6 +110,9 @@ type OpenStackMachineStatus struct {
 	// +optional
 	InstanceState *InstanceState `json:"instanceState,omitempty"`
 
+	// Resources holds references to OpenStack cloud resources created for this machine.
+	Resources OpenStackMachineResources `json:"resources,omitempty"`
+
 	FailureReason *errors.MachineStatusError `json:"errorReason,omitempty"`
 
 	// FailureMessage will be set in the event that there is a terminal problem
