@@ -703,6 +703,16 @@ spec:
                   userData:
                     type: string
                 type: object
+              bastionResources:
+                properties:
+                  rootVolume:
+                    properties:
+                      id:
+                        type: string
+                      ready:
+                        type: boolean
+                    type: object
+                type: object
               bastionSecurityGroup:
                 description: SecurityGroup represents the basic information of the
                   associated OpenStack Neutron Security Group.
@@ -1914,6 +1924,16 @@ spec:
                     type: boolean
                   userData:
                     type: string
+                type: object
+              bastionResources:
+                properties:
+                  rootVolume:
+                    properties:
+                      id:
+                        type: string
+                      ready:
+                        type: boolean
+                    type: object
                 type: object
               bastionSecurityGroup:
                 description: SecurityGroup represents the basic information of the
@@ -3336,6 +3356,16 @@ spec:
                     type: boolean
                   userData:
                     type: string
+                type: object
+              bastionResources:
+                properties:
+                  rootVolume:
+                    properties:
+                      id:
+                        type: string
+                      ready:
+                        type: boolean
+                    type: object
                 type: object
               bastionSecurityGroup:
                 description: SecurityGroup represents the basic information of the

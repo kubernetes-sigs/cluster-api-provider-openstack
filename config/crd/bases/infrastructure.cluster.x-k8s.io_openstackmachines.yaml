@@ -349,6 +349,18 @@ spec:
               ready:
                 description: Ready is true when the provider resource is ready.
                 type: boolean
+              resources:
+                description: Resources holds references to OpenStack cloud resources
+                  created for this machine.
+                properties:
+                  rootVolume:
+                    properties:
+                      id:
+                        type: string
+                      ready:
+                        type: boolean
+                    type: object
+                type: object
             type: object
         type: object
     served: true
@@ -765,6 +777,18 @@ spec:
               ready:
                 description: Ready is true when the provider resource is ready.
                 type: boolean
+              resources:
+                description: Resources holds references to OpenStack cloud resources
+                  created for this machine.
+                properties:
+                  rootVolume:
+                    properties:
+                      id:
+                        type: string
+                      ready:
+                        type: boolean
+                    type: object
+                type: object
             type: object
         type: object
     served: true
@@ -1199,6 +1223,18 @@ spec:
               ready:
                 description: Ready is true when the provider resource is ready.
                 type: boolean
+              resources:
+                description: Resources holds references to OpenStack cloud resources
+                  created for this machine.
+                properties:
+                  rootVolume:
+                    properties:
+                      id:
+                        type: string
+                      ready:
+                        type: boolean
+                    type: object
+                type: object
             type: object
         type: object
     served: true
