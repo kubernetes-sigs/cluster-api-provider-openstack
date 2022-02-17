@@ -22,7 +22,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/bootfromvolume"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/schedulerhints"
@@ -103,7 +102,7 @@ func (s *Service) reconcileMachineImpl(openStackCluster *infrav1.OpenStackCluste
 	instanceSpec.Networks = openStackMachine.Spec.Networks
 	instanceSpec.Ports = openStackMachine.Spec.Ports
 
-	return s.reconcileInstance(openStackMachine, openStackCluster, clusterName, &instanceSpec, retryInterval)
+	return s.reconcileInstance(openStackMachine, openStackCluster, clusterName, &instanceSpec, &openStackMachine.Status.Resources, retryInterval)
 }
 
 // constructNetworks builds an array of networks from the network, subnet and ports items in the instance spec.
@@ -182,11 +181,22 @@ func (s *Service) constructNetworks(openStackCluster *infrav1.OpenStackCluster, 
 }
 
 // reconcileInstance is a common function for reconciling an OpenStack instance and its dependencies used by both Machines and the Bastion.
-func (s *Service) reconcileInstance(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, clusterName string, instanceSpec *InstanceSpec, retryInterval time.Duration) (*InstanceStatus, error) {
+func (s *Service) reconcileInstance(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, clusterName string, instanceSpec *InstanceSpec, resources *infrav1.OpenStackMachineResources, retryInterval time.Duration) (*InstanceStatus, error) {
 	instanceStatus, err := s.GetInstanceStatusByName(openStackCluster, instanceSpec.Name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get instance status for %s: %w", instanceSpec.Name, err)
 	}
+
+	rootVolumeReconciled, err := s.reconcileRootVolume(openStackCluster, instanceSpec, resources, instanceStatus)
+	if err != nil {
+		return nil, err
+	}
+	if !rootVolumeReconciled {
+		return nil, nil
+	}
+
+	// Shortcut reconciliation if the instance already exists
+	// Code beyond this point is not yet idempotent
 	if instanceStatus != nil {
 		return instanceStatus, nil
 	}
@@ -197,11 +207,6 @@ func (s *Service) reconcileInstance(eventObject runtime.Object, openStackCluster
 
 	if instanceSpec.Subnet != "" && accessIPv4 == "" {
 		return nil, fmt.Errorf("no ports with fixed IPs found on Subnet %q", instanceSpec.Subnet)
-	}
-
-	imageID, err := s.getImageID(instanceSpec.ImageUUID, instanceSpec.Image)
-	if err != nil {
-		return nil, fmt.Errorf("error getting image ID: %v", err)
 	}
 
 	flavorID, err := s.computeService.GetFlavorIDFromName(instanceSpec.Flavor)
@@ -255,6 +260,11 @@ func (s *Service) reconcileInstance(eventObject runtime.Object, openStackCluster
 		})
 	}
 
+	imageID, err := s.getImageID(instanceSpec.ImageUUID, instanceSpec.Image)
+	if err != nil {
+		return nil, fmt.Errorf("error getting image ID: %v", err)
+	}
+
 	var serverCreateOpts servers.CreateOptsBuilder = servers.CreateOpts{
 		Name:             instanceSpec.Name,
 		ImageRef:         imageID,
@@ -269,40 +279,7 @@ func (s *Service) reconcileInstance(eventObject runtime.Object, openStackCluster
 		AccessIPv4:       accessIPv4,
 	}
 
-	volume, err := s.getOrCreateRootVolume(eventObject, instanceSpec, imageID)
-	if err != nil {
-		return nil, fmt.Errorf("error in get or create root volume: %w", err)
-	}
-
-	instanceCreateTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT", timeoutInstanceCreate)
-	instanceCreateTimeout *= time.Minute
-
-	// Wait for volume to become available
-	if volume != nil {
-		err = util.PollImmediate(retryIntervalInstanceStatus, instanceCreateTimeout, func() (bool, error) {
-			createdVolume, err := s.computeService.GetVolume(volume.ID)
-			if err != nil {
-				if capoerrors.IsRetryable(err) {
-					return false, nil
-				}
-				return false, err
-			}
-
-			switch createdVolume.Status {
-			case "available":
-				return true, nil
-			case "error":
-				return false, fmt.Errorf("volume %s is in error state", volume.ID)
-			default:
-				return false, nil
-			}
-		})
-		if err != nil {
-			return nil, fmt.Errorf("volume %s did not become available: %w", volume.ID, err)
-		}
-	}
-
-	serverCreateOpts = applyRootVolume(serverCreateOpts, volume)
+	serverCreateOpts = applyRootVolume(serverCreateOpts, resources)
 
 	serverCreateOpts = applyServerGroupID(serverCreateOpts, instanceSpec.ServerGroupID)
 
@@ -313,6 +290,9 @@ func (s *Service) reconcileInstance(eventObject runtime.Object, openStackCluster
 	if err != nil {
 		return nil, fmt.Errorf("error creating Openstack instance: %v", err)
 	}
+
+	instanceCreateTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT", timeoutInstanceCreate)
+	instanceCreateTimeout *= time.Minute
 
 	var createdInstance *InstanceStatus
 	err = util.PollImmediate(retryInterval, instanceCreateTimeout, func() (bool, error) {
@@ -345,88 +325,17 @@ func getPortName(instanceName string, opts *infrav1.PortOpts, netIndex int) stri
 	return fmt.Sprintf("%s-%d", instanceName, netIndex)
 }
 
-func rootVolumeName(instanceName string) string {
-	return fmt.Sprintf("%s-root", instanceName)
-}
-
-func hasRootVolume(rootVolume *infrav1.RootVolume) bool {
-	return rootVolume != nil && rootVolume.Size > 0
-}
-
-func (s *Service) getVolumeByName(name string) (*volumes.Volume, error) {
-	listOpts := volumes.ListOpts{
-		AllTenants: false,
-		Name:       name,
-		TenantID:   s.projectID,
-	}
-	volumeList, err := s.computeService.ListVolumes(listOpts)
-	if err != nil {
-		return nil, fmt.Errorf("error listing volumes: %w", err)
-	}
-	if len(volumeList) > 1 {
-		return nil, fmt.Errorf("expected to find a single volume called %s; found %d", name, len(volumeList))
-	}
-	if len(volumeList) == 0 {
-		return nil, nil
-	}
-	return &volumeList[0], nil
-}
-
-func (s *Service) getOrCreateRootVolume(eventObject runtime.Object, instanceSpec *InstanceSpec, imageID string) (*volumes.Volume, error) {
-	rootVolume := instanceSpec.RootVolume
-	if !hasRootVolume(rootVolume) {
-		return nil, nil
-	}
-
-	name := rootVolumeName(instanceSpec.Name)
-	size := rootVolume.Size
-
-	volume, err := s.getVolumeByName(name)
-	if err != nil {
-		return nil, err
-	}
-	if volume != nil {
-		if volume.Size != size {
-			return nil, fmt.Errorf("exected to find volume %s with size %d; found size %d", name, size, volume.Size)
-		}
-
-		s.logger.Info("using existing root volume %s", name)
-		return volume, nil
-	}
-
-	availabilityZone := instanceSpec.FailureDomain
-	if rootVolume.AvailabilityZone != "" {
-		availabilityZone = rootVolume.AvailabilityZone
-	}
-
-	createOpts := volumes.CreateOpts{
-		Size:             rootVolume.Size,
-		Description:      fmt.Sprintf("Root volume for %s", instanceSpec.Name),
-		Name:             rootVolumeName(instanceSpec.Name),
-		ImageID:          imageID,
-		Multiattach:      false,
-		AvailabilityZone: availabilityZone,
-		VolumeType:       rootVolume.VolumeType,
-	}
-	volume, err = s.computeService.CreateVolume(createOpts)
-	if err != nil {
-		record.Eventf(eventObject, "FailedCreateVolume", "Failed to create root volume; size=%d imageID=%s err=%v", size, imageID, err)
-		return nil, err
-	}
-	record.Eventf(eventObject, "SuccessfulCreateVolume", "Created root volume; id=%s", volume.ID)
-	return volume, err
-}
-
 // applyRootVolume sets a root volume if the root volume Size is not 0.
-func applyRootVolume(opts servers.CreateOptsBuilder, volume *volumes.Volume) servers.CreateOptsBuilder {
-	if volume == nil {
+func applyRootVolume(opts servers.CreateOptsBuilder, resources *infrav1.OpenStackMachineResources) servers.CreateOptsBuilder {
+	volumeID := resources.RootVolume.ID
+	if volumeID == "" {
 		return opts
 	}
 
 	block := bootfromvolume.BlockDevice{
 		SourceType:          bootfromvolume.SourceVolume,
 		BootIndex:           0,
-		UUID:                volume.ID,
+		UUID:                volumeID,
 		DeleteOnTermination: true,
 		DestinationType:     bootfromvolume.DestinationVolume,
 	}
@@ -574,7 +483,7 @@ func (s *Service) GetManagementPort(openStackCluster *infrav1.OpenStackCluster, 
 	return &allPorts[0], nil
 }
 
-func (s *Service) DeleteInstance(eventObject runtime.Object, openStackMachineSpec *infrav1.OpenStackMachineSpec, instanceName string, instanceStatus *InstanceStatus) error {
+func (s *Service) DeleteInstance(eventObject runtime.Object, openStackMachineSpec *infrav1.OpenStackMachineSpec, instanceName string, resources *infrav1.OpenStackMachineResources, instanceStatus *InstanceStatus) error {
 	if instanceStatus == nil {
 		/*
 			We create a boot-from-volume instance in 2 steps:
@@ -594,22 +503,7 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, openStackMachineSpe
 			Note that we don't need to separately delete the root volume when deleting the instance because
 			DeleteOnTermination will ensure it is deleted in that case.
 		*/
-		rootVolume := openStackMachineSpec.RootVolume
-		if hasRootVolume(rootVolume) {
-			name := rootVolumeName(instanceName)
-			volume, err := s.getVolumeByName(name)
-			if err != nil {
-				return err
-			}
-			if volume == nil {
-				return nil
-			}
-
-			s.logger.Info("deleting dangling root volume %s(%s)", volume.Name, volume.ID)
-			return s.computeService.DeleteVolume(volume.ID, volumes.DeleteOpts{})
-		}
-
-		return nil
+		return s.deleteRootVolume(eventObject, openStackMachineSpec, instanceName, resources, instanceStatus)
 	}
 
 	instanceInterfaces, err := s.computeService.ListAttachedInterfaces(instanceStatus.ID())

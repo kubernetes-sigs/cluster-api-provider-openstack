@@ -18,6 +18,7 @@ package compute
 
 import (
 	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/attachments"
 	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/availabilityzones"
@@ -55,6 +56,7 @@ type Client interface {
 	CreateVolume(opts volumes.CreateOptsBuilder) (*volumes.Volume, error)
 	DeleteVolume(volumeID string, opts volumes.DeleteOptsBuilder) error
 	GetVolume(volumeID string) (*volumes.Volume, error)
+	ListVolumeAttachments(opts attachments.ListOptsBuilder) ([]attachments.Attachment, error)
 }
 
 type serviceClient struct {
@@ -164,4 +166,13 @@ func (s serviceClient) GetVolume(volumeID string) (*volumes.Volume, error) {
 	mc := metrics.NewMetricPrometheusContext("volume", "get")
 	volume, err := volumes.Get(s.volume, volumeID).Extract()
 	return volume, mc.ObserveRequestIgnoreNotFound(err)
+}
+
+func (s serviceClient) ListVolumeAttachments(opts attachments.ListOptsBuilder) ([]attachments.Attachment, error) {
+	mc := metrics.NewMetricPrometheusContext("volume_attachment", "list")
+	pages, err := attachments.List(s.volume, opts).AllPages()
+	if mc.ObserveRequest(err) != nil {
+		return nil, err
+	}
+	return attachments.ExtractAttachments(pages)
 }

@@ -223,7 +223,7 @@ func deleteBastion(log logr.Logger, osProviderClient *gophercloud.ProviderClient
 	}
 
 	machineSpec := &openStackCluster.Spec.Bastion.Instance
-	if err = computeService.DeleteInstance(openStackCluster, machineSpec, instanceName, instanceStatus); err != nil {
+	if err = computeService.DeleteInstance(openStackCluster, machineSpec, instanceName, &openStackCluster.Status.BastionResources, instanceStatus); err != nil {
 		return false, errors.Errorf("failed to delete bastion: %v", err)
 	}
 

@@ -24,6 +24,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	attachments "github.com/gophercloud/gophercloud/openstack/blockstorage/v3/attachments"
 	volumes "github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
 	attachinterfaces "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	availabilityzones "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/availabilityzones"
@@ -229,6 +230,21 @@ func (m *MockClient) ListServers(arg0 servers.ListOptsBuilder) ([]ServerExt, err
 func (mr *MockClientMockRecorder) ListServers(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListServers", reflect.TypeOf((*MockClient)(nil).ListServers), arg0)
+}
+
+// ListVolumeAttachments mocks base method.
+func (m *MockClient) ListVolumeAttachments(arg0 attachments.ListOptsBuilder) ([]attachments.Attachment, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListVolumeAttachments", arg0)
+	ret0, _ := ret[0].([]attachments.Attachment)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListVolumeAttachments indicates an expected call of ListVolumeAttachments.
+func (mr *MockClientMockRecorder) ListVolumeAttachments(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListVolumeAttachments", reflect.TypeOf((*MockClient)(nil).ListVolumeAttachments), arg0)
 }
 
 // ListVolumes mocks base method.

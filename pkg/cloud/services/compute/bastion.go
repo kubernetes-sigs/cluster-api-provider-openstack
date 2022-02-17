@@ -44,5 +44,5 @@ func (s *Service) ReconcileBastion(openStackCluster *infrav1.OpenStackCluster, c
 	instanceSpec.Networks = openStackCluster.Spec.Bastion.Instance.Networks
 	instanceSpec.Ports = openStackCluster.Spec.Bastion.Instance.Ports
 
-	return s.reconcileInstance(openStackCluster, openStackCluster, clusterName, instanceSpec, retryIntervalInstanceStatus)
+	return s.reconcileInstance(openStackCluster, openStackCluster, clusterName, instanceSpec, &openStackCluster.Status.BastionResources, retryIntervalInstanceStatus)
 }
