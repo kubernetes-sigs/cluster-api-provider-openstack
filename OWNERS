@@ -10,7 +10,7 @@ reviewers:
   - cluster-api-openstack-maintainers
   - cluster-api-openstack-reviewers
 
-emeritus_maintainers:
+emeritus_approvers:
   - ncdc
   - chaosaffe
   - chrigl
@@ -20,6 +20,3 @@ emeritus_maintainers:
   - m1093782566
   - sbueringer
 
-emeritus_reviewers:
-  - YorikSar
-  - iamemilio
