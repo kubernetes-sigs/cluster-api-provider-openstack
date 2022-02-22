@@ -112,8 +112,8 @@ function get_mtu {
     echo 1300
 }
 
-function get_ssh_public_key {
-  cat "${SSH_PUBLIC_KEY_FILE}"
+function get_ssh_public_key_file {
+  echo "${SSH_PUBLIC_KEY_FILE}"
 }
 
 function get_ssh_private_key_file {

@@ -137,12 +137,13 @@ function get_mtu {
     echo "$mtu"
 }
 
-function get_ssh_public_key {
-    cat "$SSH_PUBLIC_KEY_FILE"
+function get_ssh_public_key_file {
+    echo "$SSH_PUBLIC_KEY_FILE"
 }
 
 function get_ssh_private_key_file {
-    echo "$SSH_PRIVATE_KEY_FILE"
+    # Allow this to be unbound. This is handled in create_devstack.sh
+    echo "${SSH_PRIVATE_KEY_FILE:-}"
 }
 
 function cloud_cleanup {
