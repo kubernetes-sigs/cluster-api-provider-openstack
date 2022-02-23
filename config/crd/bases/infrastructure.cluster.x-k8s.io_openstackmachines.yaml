@@ -1173,7 +1173,7 @@ spec:
                   - type
                   type: object
                 type: array
-              errorMessage:
+              failureMessage:
                 description: "FailureMessage will be set in the event that there is
                   a terminal problem reconciling the Machine and will contain a more
                   verbose string suitable for logging and human consumption. \n This
@@ -1188,7 +1188,7 @@ spec:
                   occur during the reconciliation of Machines can be added as events
                   to the Machine object and/or logged in the controller's output."
                 type: string
-              errorReason:
+              failureReason:
                 description: MachineStatusError defines errors states for Machine
                   objects.
                 type: string
