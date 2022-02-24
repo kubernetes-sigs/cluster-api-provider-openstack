@@ -40,7 +40,6 @@ import (
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
 	gomegatypes "github.com/onsi/gomega/types"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/pointer"
 
@@ -530,7 +529,6 @@ const (
 
 	openStackMachineName = "test-openstack-machine"
 	portName             = "test-openstack-machine-0"
-	namespace            = "test-namespace"
 	imageName            = "test-image"
 	flavorName           = "test-flavor"
 	sshKeyName           = "test-ssh-key"
@@ -549,31 +547,6 @@ func getDefaultOpenStackCluster() *infrav1.OpenStackCluster {
 			},
 			ControlPlaneSecurityGroup: &infrav1.SecurityGroup{ID: controlPlaneSecurityGroupUUID},
 			WorkerSecurityGroup:       &infrav1.SecurityGroup{ID: workerSecurityGroupUUID},
-		},
-	}
-}
-
-func getDefaultOpenStackMachine() *infrav1.OpenStackMachine {
-	return &infrav1.OpenStackMachine{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      openStackMachineName,
-			Namespace: namespace,
-		},
-		Spec: infrav1.OpenStackMachineSpec{
-			// ProviderID is set by the controller
-			// InstanceID is set by the controller
-			// FloatingIP is only used by the cluster controller for the Bastion
-			// TODO: Test Networks, Ports, Subnet, and Trunk separately
-			CloudName:  "test-cloud",
-			Flavor:     flavorName,
-			Image:      imageName,
-			SSHKeyName: sshKeyName,
-			Tags:       []string{"test-tag"},
-			ServerMetadata: map[string]string{
-				"test-metadata": "test-value",
-			},
-			ConfigDrive:   pointer.BoolPtr(true),
-			ServerGroupID: serverGroupUUID,
 		},
 	}
 }
@@ -1046,15 +1019,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 func TestService_DeleteInstance(t *testing.T) {
 	RegisterTestingT(t)
 
-	const instanceUUID = "7b8a2800-c615-4f52-9b75-d2ba60a2af66"
-	const portUUID = "94f3e9cb-89d5-4313-ad6d-44035722342b"
-
-	const instanceName = "test-instance"
-
-	getEventObject := func() runtime.Object {
-		return &infrav1.OpenStackMachine{}
-	}
-
 	getDefaultInstanceStatus := func() *InstanceStatus {
 		return &InstanceStatus{
 			server: &ServerExt{
@@ -1065,27 +1029,23 @@ func TestService_DeleteInstance(t *testing.T) {
 		}
 	}
 
-	getDefaultOpenStackMachineSpec := func() *infrav1.OpenStackMachineSpec {
-		return &getDefaultOpenStackMachine().Spec
-	}
-
 	// *******************
 	// START OF TEST CASES
 	// *******************
 
 	tests := []struct {
-		name                    string
-		eventObject             runtime.Object
-		getOpenStackMachineSpec func() *infrav1.OpenStackMachineSpec
-		getInstanceStatus       func() *InstanceStatus
-		expect                  func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder)
-		wantErr                 bool
+		name           string
+		eventObject    runtime.Object
+		instanceSpec   func() *InstanceSpec
+		instanceStatus func() *InstanceStatus
+		expect         func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder)
+		wantErr        bool
 	}{
 		{
-			name:                    "Defaults",
-			eventObject:             getEventObject(),
-			getOpenStackMachineSpec: getDefaultOpenStackMachineSpec,
-			getInstanceStatus:       getDefaultInstanceStatus,
+			name:           "Defaults",
+			eventObject:    &infrav1.OpenStackMachine{},
+			instanceSpec:   getDefaultInstanceSpec,
+			instanceStatus: getDefaultInstanceStatus,
 			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
 				computeRecorder.ListAttachedInterfaces(instanceUUID).Return([]attachinterfaces.Interface{
 					{
@@ -1109,18 +1069,18 @@ func TestService_DeleteInstance(t *testing.T) {
 		},
 		{
 			name:        "Dangling volume",
-			eventObject: getEventObject(),
-			getOpenStackMachineSpec: func() *infrav1.OpenStackMachineSpec {
-				spec := getDefaultOpenStackMachineSpec()
+			eventObject: &infrav1.OpenStackMachine{},
+			instanceSpec: func() *InstanceSpec {
+				spec := getDefaultInstanceSpec()
 				spec.RootVolume = &infrav1.RootVolume{
 					Size: 50,
 				}
 				return spec
 			},
-			getInstanceStatus: func() *InstanceStatus { return nil },
+			instanceStatus: func() *InstanceStatus { return nil },
 			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
 				// Fetch volume by name
-				volumeName := fmt.Sprintf("%s-root", instanceName)
+				volumeName := fmt.Sprintf("%s-root", openStackMachineName)
 				computeRecorder.ListVolumes(volumes.ListOpts{
 					AllTenants: false,
 					Name:       volumeName,
@@ -1157,7 +1117,7 @@ func TestService_DeleteInstance(t *testing.T) {
 					"", mockNetworkClient, logr.Discard(),
 				),
 			}
-			if err := s.DeleteInstance(tt.eventObject, tt.getOpenStackMachineSpec(), instanceName, tt.getInstanceStatus()); (err != nil) != tt.wantErr {
+			if err := s.DeleteInstance(tt.eventObject, tt.instanceSpec(), tt.instanceStatus()); (err != nil) != tt.wantErr {
 				t.Errorf("Service.DeleteInstance() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
