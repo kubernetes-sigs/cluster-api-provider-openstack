@@ -303,10 +303,18 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		return ctrl.Result{}, err
 	}
 
-	instanceStatus, err := computeService.ReconcileMachine(openStackCluster, machine, openStackMachine, cluster.Name, userData)
+	instanceSpec, err := machineToInstanceSpec(openStackCluster, machine, openStackMachine, userData)
 	if err != nil {
-		handleUpdateMachineError(scope.Logger, openStackMachine, errors.Errorf("OpenStack instance cannot be created: %v", err))
-		return ctrl.Result{}, errors.Errorf("error creating Openstack instance: %v", err)
+		err = errors.Errorf("machine spec is invalid: %v", err)
+		handleUpdateMachineError(scope.Logger, openStackMachine, err)
+		return ctrl.Result{}, err
+	}
+
+	instanceStatus, err := computeService.ReconcileInstance(openStackMachine, openStackCluster, instanceSpec, cluster.Name)
+	if err != nil {
+		err = errors.Errorf("openstack instance cannot be created: %v", err)
+		handleUpdateMachineError(scope.Logger, openStackMachine, err)
+		return ctrl.Result{}, err
 	}
 	if instanceStatus == nil {
 		return ctrl.Result{RequeueAfter: defaultOpenStackBackOff}, nil
@@ -379,6 +387,75 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 
 	scope.Logger.Info("Reconciled Machine create successfully")
 	return ctrl.Result{}, nil
+}
+
+func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, userData string) (*compute.InstanceSpec, error) {
+	if openStackMachine == nil {
+		return nil, fmt.Errorf("create Options need be specified to create instace")
+	}
+
+	if machine.Spec.FailureDomain == nil {
+		return nil, fmt.Errorf("failure domain not set")
+	}
+
+	instanceSpec := compute.InstanceSpec{
+		Name:          openStackMachine.Name,
+		Image:         openStackMachine.Spec.Image,
+		ImageUUID:     openStackMachine.Spec.ImageUUID,
+		Flavor:        openStackMachine.Spec.Flavor,
+		SSHKeyName:    openStackMachine.Spec.SSHKeyName,
+		UserData:      userData,
+		Metadata:      openStackMachine.Spec.ServerMetadata,
+		ConfigDrive:   openStackMachine.Spec.ConfigDrive != nil && *openStackMachine.Spec.ConfigDrive,
+		FailureDomain: *machine.Spec.FailureDomain,
+		RootVolume:    openStackMachine.Spec.RootVolume,
+		Subnet:        openStackMachine.Spec.Subnet,
+		ServerGroupID: openStackMachine.Spec.ServerGroupID,
+		Trunk:         openStackMachine.Spec.Trunk,
+	}
+
+	machineTags := []string{}
+
+	// Append machine specific tags
+	machineTags = append(machineTags, openStackMachine.Spec.Tags...)
+
+	// Append cluster scope tags
+	machineTags = append(machineTags, openStackCluster.Spec.Tags...)
+
+	// tags need to be unique or the "apply tags" call will fail.
+	deduplicate := func(tags []string) []string {
+		seen := make(map[string]struct{}, len(machineTags))
+		unique := make([]string, 0, len(machineTags))
+		for _, tag := range tags {
+			if _, ok := seen[tag]; !ok {
+				seen[tag] = struct{}{}
+				unique = append(unique, tag)
+			}
+		}
+		return unique
+	}
+	machineTags = deduplicate(machineTags)
+
+	instanceSpec.Tags = machineTags
+
+	instanceSpec.SecurityGroups = openStackMachine.Spec.SecurityGroups
+	if openStackCluster.Spec.ManagedSecurityGroups {
+		var managedSecurityGroup string
+		if util.IsControlPlaneMachine(machine) {
+			managedSecurityGroup = openStackCluster.Status.ControlPlaneSecurityGroup.ID
+		} else {
+			managedSecurityGroup = openStackCluster.Status.WorkerSecurityGroup.ID
+		}
+
+		instanceSpec.SecurityGroups = append(instanceSpec.SecurityGroups, infrav1.SecurityGroupParam{
+			UUID: managedSecurityGroup,
+		})
+	}
+
+	instanceSpec.Networks = openStackMachine.Spec.Networks
+	instanceSpec.Ports = openStackMachine.Spec.Ports
+
+	return &instanceSpec, nil
 }
 
 func handleUpdateMachineError(logger logr.Logger, openstackMachine *infrav1.OpenStackMachine, message error) {

@@ -320,7 +320,8 @@ func reconcileBastion(scope *scope.Scope, cluster *clusterv1.Cluster, openStackC
 		return false, err
 	}
 
-	instanceStatus, err := computeService.ReconcileBastion(openStackCluster, cluster.Name)
+	instanceSpec := bastionToInstanceSpec(openStackCluster, cluster.Name)
+	instanceStatus, err := computeService.ReconcileInstance(openStackCluster, openStackCluster, instanceSpec, cluster.Name)
 	if err != nil {
 		return false, errors.Errorf("failed to reconcile bastion: %v", err)
 	}
@@ -372,6 +373,31 @@ func reconcileBastion(scope *scope.Scope, cluster *clusterv1.Cluster, openStackC
 	}
 
 	return true, nil
+}
+
+func bastionToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, clusterName string) *compute.InstanceSpec {
+	name := fmt.Sprintf("%s-bastion", clusterName)
+	instanceSpec := &compute.InstanceSpec{
+		Name:          name,
+		Flavor:        openStackCluster.Spec.Bastion.Instance.Flavor,
+		SSHKeyName:    openStackCluster.Spec.Bastion.Instance.SSHKeyName,
+		Image:         openStackCluster.Spec.Bastion.Instance.Image,
+		ImageUUID:     openStackCluster.Spec.Bastion.Instance.ImageUUID,
+		FailureDomain: openStackCluster.Spec.Bastion.AvailabilityZone,
+		RootVolume:    openStackCluster.Spec.Bastion.Instance.RootVolume,
+	}
+
+	instanceSpec.SecurityGroups = openStackCluster.Spec.Bastion.Instance.SecurityGroups
+	if openStackCluster.Spec.ManagedSecurityGroups {
+		instanceSpec.SecurityGroups = append(instanceSpec.SecurityGroups, infrav1.SecurityGroupParam{
+			UUID: openStackCluster.Status.BastionSecurityGroup.ID,
+		})
+	}
+
+	instanceSpec.Networks = openStackCluster.Spec.Bastion.Instance.Networks
+	instanceSpec.Ports = openStackCluster.Spec.Bastion.Instance.Ports
+
+	return instanceSpec
 }
 
 func reconcileNetworkComponents(scope *scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
