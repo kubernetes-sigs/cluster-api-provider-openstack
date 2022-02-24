@@ -166,7 +166,15 @@ function wait_for_devstack {
 }
 
 function get_ssh_cmd {
-    echo "ssh -i $(get_ssh_private_key_file) -l cloud " \
+    local private_key_file=$(get_ssh_private_key_file)
+    if [ -z "$private_key_file" ]; then
+        # If there's no private key file use the public key instead
+        # This allows us to specify a private key which is held only on a
+        # hardware device and therefore has no key file
+        private_key_file=$(get_ssh_public_key_file)
+    fi
+
+    echo "ssh -i ${private_key_file} -l cloud " \
          "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -o PasswordAuthentication=no "
 }
 
@@ -191,7 +199,7 @@ function create_devstack {
     truncate --size 0 "$cloud_init"
 
     for tpl in common "$name"; do
-        SSH_PUBLIC_KEY="$(get_ssh_public_key)" \
+        SSH_PUBLIC_KEY="$(cat $(get_ssh_public_key_file))" \
         OPENSTACK_ADDITIONAL_SERVICES="${OPENSTACK_ADDITIONAL_SERVICES:-}" \
         OPENSTACK_RELEASE="$OPENSTACK_RELEASE" \
         HOST_IP="$ip" \

@@ -147,8 +147,8 @@ function get_mtu {
   echo 1460
 }
 
-function get_ssh_public_key {
-  cat /root/.ssh/google_compute_engine.pub
+function get_ssh_public_key_file {
+  echo /root/.ssh/google_compute_engine.pub
 }
 
 function get_ssh_private_key_file {
