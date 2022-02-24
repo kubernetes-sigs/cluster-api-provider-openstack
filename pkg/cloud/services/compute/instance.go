@@ -30,7 +30,6 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"k8s.io/apimachinery/pkg/runtime"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -43,68 +42,6 @@ const (
 	timeoutInstanceCreate       = 5
 	timeoutInstanceDelete       = 5 * time.Minute
 )
-
-func (s *Service) CreateInstance(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, clusterName string, userData string) (instance *InstanceStatus, err error) {
-	return s.createInstanceImpl(openStackCluster, machine, openStackMachine, clusterName, userData, retryIntervalInstanceStatus)
-}
-
-func (s *Service) createInstanceImpl(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, clusterName string, userData string, retryInterval time.Duration) (instance *InstanceStatus, err error) {
-	if openStackMachine == nil {
-		return nil, fmt.Errorf("create Options need be specified to create instace")
-	}
-
-	if machine.Spec.FailureDomain == nil {
-		return nil, fmt.Errorf("failure domain not set")
-	}
-
-	instanceSpec := InstanceSpec{
-		Name:          openStackMachine.Name,
-		Image:         openStackMachine.Spec.Image,
-		ImageUUID:     openStackMachine.Spec.ImageUUID,
-		Flavor:        openStackMachine.Spec.Flavor,
-		SSHKeyName:    openStackMachine.Spec.SSHKeyName,
-		UserData:      userData,
-		Metadata:      openStackMachine.Spec.ServerMetadata,
-		ConfigDrive:   openStackMachine.Spec.ConfigDrive != nil && *openStackMachine.Spec.ConfigDrive,
-		FailureDomain: *machine.Spec.FailureDomain,
-		RootVolume:    openStackMachine.Spec.RootVolume,
-		Subnet:        openStackMachine.Spec.Subnet,
-		ServerGroupID: openStackMachine.Spec.ServerGroupID,
-		Trunk:         openStackMachine.Spec.Trunk,
-	}
-
-	machineTags := []string{}
-
-	// Append machine specific tags
-	machineTags = append(machineTags, openStackMachine.Spec.Tags...)
-
-	// Append cluster scope tags
-	machineTags = append(machineTags, openStackCluster.Spec.Tags...)
-
-	// tags need to be unique or the "apply tags" call will fail.
-	machineTags = deduplicate(machineTags)
-
-	instanceSpec.Tags = machineTags
-
-	instanceSpec.SecurityGroups = openStackMachine.Spec.SecurityGroups
-	if openStackCluster.Spec.ManagedSecurityGroups {
-		var managedSecurityGroup string
-		if util.IsControlPlaneMachine(machine) {
-			managedSecurityGroup = openStackCluster.Status.ControlPlaneSecurityGroup.ID
-		} else {
-			managedSecurityGroup = openStackCluster.Status.WorkerSecurityGroup.ID
-		}
-
-		instanceSpec.SecurityGroups = append(instanceSpec.SecurityGroups, infrav1.SecurityGroupParam{
-			UUID: managedSecurityGroup,
-		})
-	}
-
-	instanceSpec.Networks = openStackMachine.Spec.Networks
-	instanceSpec.Ports = openStackMachine.Spec.Ports
-
-	return s.createInstance(openStackMachine, openStackCluster, clusterName, &instanceSpec, retryInterval)
-}
 
 // constructNetworks builds an array of networks from the network, subnet and ports items in the instance spec.
 // If no networks or ports are in the spec, returns a single network item for a network connection to the default cluster network.
@@ -182,7 +119,11 @@ func (s *Service) constructNetworks(openStackCluster *infrav1.OpenStackCluster, 
 	return nets, nil
 }
 
-func (s *Service) createInstance(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, clusterName string, instanceSpec *InstanceSpec, retryInterval time.Duration) (*InstanceStatus, error) {
+func (s *Service) CreateInstance(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec, clusterName string) (*InstanceStatus, error) {
+	return s.createInstanceImpl(eventObject, openStackCluster, instanceSpec, clusterName, retryIntervalInstanceStatus)
+}
+
+func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec, clusterName string, retryInterval time.Duration) (*InstanceStatus, error) {
 	var server *ServerExt
 	accessIPv4 := ""
 	portList := []servers.Network{}
@@ -208,7 +149,7 @@ func (s *Service) createInstance(eventObject runtime.Object, openStackCluster *i
 		}
 
 		if err := s.deletePorts(eventObject, portList); err != nil {
-			s.scope.Logger.V(4).Error(err, "failed to clean up ports after failure", "cluster", clusterName, "machine", instanceSpec.Name)
+			s.scope.Logger.V(4).Error(err, "Failed to clean up ports after failure")
 		}
 	}()
 
@@ -752,23 +693,6 @@ func (s *Service) GetInstanceStatusByName(eventObject runtime.Object, name strin
 		return &InstanceStatus{&serverList[i], s.scope.Logger}, nil
 	}
 	return nil, nil
-}
-
-// deduplicate takes a slice of input strings and filters out any duplicate
-// string occurrences, for example making ["a", "b", "a", "c"] become ["a", "b",
-// "c"].
-func deduplicate(sequence []string) []string {
-	var unique []string
-	set := make(map[string]bool)
-
-	for _, s := range sequence {
-		if _, ok := set[s]; !ok {
-			unique = append(unique, s)
-			set[s] = true
-		}
-	}
-
-	return unique
 }
 
 func getTimeout(name string, timeout int) time.Duration {
