@@ -248,7 +248,14 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, scope 
 		}
 	}
 
-	if err := computeService.DeleteInstance(openStackMachine, &openStackMachine.Spec, openStackMachine.Name, instanceStatus); err != nil {
+	instanceSpec, err := machineToInstanceSpec(openStackCluster, machine, openStackMachine, "")
+	if err != nil {
+		err = errors.Errorf("machine spec is invalid: %v", err)
+		handleUpdateMachineError(scope.Logger, openStackMachine, err)
+		return ctrl.Result{}, err
+	}
+
+	if err := computeService.DeleteInstance(openStackMachine, instanceSpec, instanceStatus); err != nil {
 		handleUpdateMachineError(scope.Logger, openStackMachine, errors.Errorf("error deleting OpenStack instance %s with ID %s: %v", instanceStatus.Name(), instanceStatus.ID(), err))
 		return ctrl.Result{}, nil
 	}
