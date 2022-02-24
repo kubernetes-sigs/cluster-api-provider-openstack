@@ -26,7 +26,6 @@ aliases:
     - CecileRobertMichon
   cluster-api-openstack-maintainers:
     - chrischdi
-    - hidekazuna
     - jichenjc
     - mdbooth
     - seanschneeweiss
