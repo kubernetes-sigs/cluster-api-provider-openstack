@@ -32,6 +32,7 @@ import (
 type Scope struct {
 	ProviderClient     *gophercloud.ProviderClient
 	ProviderClientOpts *clientconfig.ClientOpts
+	ProjectID          string
 
 	Logger logr.Logger
 }

@@ -140,7 +140,7 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}()
 
-	osProviderClient, clientOpts, err := provider.NewClientFromMachine(ctx, r.Client, openStackMachine)
+	osProviderClient, clientOpts, projectID, err := provider.NewClientFromMachine(ctx, r.Client, openStackMachine)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -148,6 +148,7 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	scope := &scope.Scope{
 		ProviderClient:     osProviderClient,
 		ProviderClientOpts: clientOpts,
+		ProjectID:          projectID,
 		Logger:             log,
 	}
 

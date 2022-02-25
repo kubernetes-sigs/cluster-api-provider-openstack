@@ -64,7 +64,7 @@ type ServerExtWithIP struct {
 func ensureSSHKeyPair(e2eCtx *E2EContext) {
 	Byf("Ensuring presence of SSH key %q in OpenStack", DefaultSSHKeyPairName)
 
-	providerClient, clientOpts, err := GetTenantProviderClient(e2eCtx)
+	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
 	Expect(err).NotTo(HaveOccurred())
 
 	computeClient, err := openstack.NewComputeV2(providerClient, gophercloud.EndpointOpts{Region: clientOpts.RegionName})
@@ -103,7 +103,7 @@ func dumpOpenStack(_ context.Context, e2eCtx *E2EContext, bootstrapClusterProxyN
 	}
 	_, _ = fmt.Fprintf(GinkgoWriter, "folder created for OpenStack clusters: %s\n", logPath)
 
-	providerClient, clientOpts, err := GetTenantProviderClient(e2eCtx)
+	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
 	if err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
 		return
@@ -141,7 +141,7 @@ func dumpOpenStackImages(providerClient *gophercloud.ProviderClient, clientOpts 
 }
 
 func DumpOpenStackServers(e2eCtx *E2EContext, filter servers.ListOpts) ([]servers.Server, error) {
-	providerClient, clientOpts, err := GetTenantProviderClient(e2eCtx)
+	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
 	if err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
 		return nil, nil
@@ -167,7 +167,7 @@ func DumpOpenStackServers(e2eCtx *E2EContext, filter servers.ListOpts) ([]server
 }
 
 func DumpOpenStackNetworks(e2eCtx *E2EContext, filter networks.ListOpts) ([]networks.Network, error) {
-	providerClient, clientOpts, err := GetTenantProviderClient(e2eCtx)
+	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
 	if err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
 		return nil, nil
@@ -192,7 +192,7 @@ func DumpOpenStackNetworks(e2eCtx *E2EContext, filter networks.ListOpts) ([]netw
 }
 
 func DumpOpenStackSubnets(e2eCtx *E2EContext, filter subnets.ListOpts) ([]subnets.Subnet, error) {
-	providerClient, clientOpts, err := GetTenantProviderClient(e2eCtx)
+	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
 	if err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
 		return nil, nil
@@ -217,7 +217,7 @@ func DumpOpenStackSubnets(e2eCtx *E2EContext, filter subnets.ListOpts) ([]subnet
 }
 
 func DumpOpenStackRouters(e2eCtx *E2EContext, filter routers.ListOpts) ([]routers.Router, error) {
-	providerClient, clientOpts, err := GetTenantProviderClient(e2eCtx)
+	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
 	if err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
 		return nil, nil
@@ -242,7 +242,7 @@ func DumpOpenStackRouters(e2eCtx *E2EContext, filter routers.ListOpts) ([]router
 }
 
 func DumpOpenStackSecurityGroups(e2eCtx *E2EContext, filter groups.ListOpts) ([]groups.SecGroup, error) {
-	providerClient, clientOpts, err := GetTenantProviderClient(e2eCtx)
+	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
 	if err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
 		return nil, nil
@@ -267,7 +267,7 @@ func DumpOpenStackSecurityGroups(e2eCtx *E2EContext, filter groups.ListOpts) ([]
 }
 
 func DumpOpenStackPorts(e2eCtx *E2EContext, filter ports.ListOpts) ([]ports.Port, error) {
-	providerClient, clientOpts, err := GetTenantProviderClient(e2eCtx)
+	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
 	if err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
 		return nil, err
@@ -293,7 +293,7 @@ func DumpOpenStackPorts(e2eCtx *E2EContext, filter ports.ListOpts) ([]ports.Port
 
 // DumpOpenStackTrunks trunks for a given port.
 func DumpOpenStackTrunks(e2eCtx *E2EContext, portID string) (*trunks.Trunk, error) {
-	providerClient, clientOpts, err := GetTenantProviderClient(e2eCtx)
+	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
 	if err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
 		return nil, err
@@ -325,7 +325,7 @@ func DumpOpenStackTrunks(e2eCtx *E2EContext, portID string) (*trunks.Trunk, erro
 // GetOpenStackServers gets all OpenStack servers at once, to save on DescribeInstances
 // calls.
 func GetOpenStackServers(e2eCtx *E2EContext, openStackCluster *infrav1.OpenStackCluster) (map[string]ServerExtWithIP, error) {
-	providerClient, clientOpts, err := GetTenantProviderClient(e2eCtx)
+	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
 	if err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
 		return nil, nil
@@ -371,28 +371,28 @@ func GetOpenStackServers(e2eCtx *E2EContext, openStackCluster *infrav1.OpenStack
 	return srvs, nil
 }
 
-func GetTenantProviderClient(e2eCtx *E2EContext) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, error) {
+func GetTenantProviderClient(e2eCtx *E2EContext) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, *string, error) {
 	openstackCloud := e2eCtx.E2EConfig.GetVariable(OpenStackCloud)
 	return getProviderClient(e2eCtx, openstackCloud)
 }
 
-func GetAdminProviderClient(e2eCtx *E2EContext) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, error) {
+func GetAdminProviderClient(e2eCtx *E2EContext) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, *string, error) {
 	openstackCloud := e2eCtx.E2EConfig.GetVariable(OpenStackCloudAdmin)
 	return getProviderClient(e2eCtx, openstackCloud)
 }
 
-func getProviderClient(e2eCtx *E2EContext, openstackCloud string) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, error) {
+func getProviderClient(e2eCtx *E2EContext, openstackCloud string) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, *string, error) {
 	openStackCloudYAMLFile := e2eCtx.E2EConfig.GetVariable(OpenStackCloudYAMLFile)
 
 	clouds := getParsedOpenStackCloudYAML(openStackCloudYAMLFile)
 	cloud := clouds.Clouds[openstackCloud]
 
-	providerClient, clientOpts, err := provider.NewClient(cloud, nil)
+	providerClient, clientOpts, projectID, err := provider.NewClient(cloud, nil)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
-	return providerClient, clientOpts, nil
+	return providerClient, clientOpts, &projectID, nil
 }
 
 // Config is used to read and store information from the cloud configuration file
@@ -503,7 +503,7 @@ func getOpenStackCloudYAML(cloudYAML string) []byte {
 }
 
 func GetComputeAvailabilityZones(e2eCtx *E2EContext) []string {
-	providerClient, clientOpts, err := GetTenantProviderClient(e2eCtx)
+	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
 	Expect(err).NotTo(HaveOccurred())
 
 	computeClient, err := openstack.NewComputeV2(providerClient, gophercloud.EndpointOpts{Region: clientOpts.RegionName})
@@ -525,7 +525,7 @@ func GetComputeAvailabilityZones(e2eCtx *E2EContext) []string {
 }
 
 func CreateOpenStackNetwork(e2eCtx *E2EContext, name, cidr string) (*networks.Network, error) {
-	providerClient, clientOpts, err := GetTenantProviderClient(e2eCtx)
+	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
 	if err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
 		return nil, err
@@ -562,7 +562,7 @@ func CreateOpenStackNetwork(e2eCtx *E2EContext, name, cidr string) (*networks.Ne
 }
 
 func DeleteOpenStackNetwork(e2eCtx *E2EContext, id string) error {
-	providerClient, clientOpts, err := GetTenantProviderClient(e2eCtx)
+	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
 	if err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
 		return err
@@ -579,7 +579,7 @@ func DeleteOpenStackNetwork(e2eCtx *E2EContext, id string) error {
 }
 
 func GetOpenStackVolume(e2eCtx *E2EContext, name string) (*volumes.Volume, error) {
-	providerClient, clientOpts, err := GetTenantProviderClient(e2eCtx)
+	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
 	if err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
 		return nil, err

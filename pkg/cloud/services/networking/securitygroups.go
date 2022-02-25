@@ -404,7 +404,7 @@ func (s *Service) GetSecurityGroups(securityGroupParams []infrav1.SecurityGroupP
 
 		listOpts := groups.ListOpts(sg.Filter)
 		if listOpts.ProjectID == "" {
-			listOpts.ProjectID = s.projectID
+			listOpts.ProjectID = s.scope.ProjectID
 		}
 		listOpts.Name = sg.Name
 		listOpts.ID = sg.UUID

@@ -26,7 +26,6 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/provider"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
@@ -40,9 +39,8 @@ const (
 // Service interfaces with the OpenStack Networking API.
 // It will create a network related infrastructure for the cluster, like network, subnet, router, security groups.
 type Service struct {
-	projectID string
-	scope     *scope.Scope
-	client    NetworkClient
+	scope  *scope.Scope
+	client NetworkClient
 }
 
 // NewService returns an instance of the networking service.
@@ -58,24 +56,18 @@ func NewService(scope *scope.Scope) (*Service, error) {
 		return nil, fmt.Errorf("failed to get project id: authInfo must be set")
 	}
 
-	projectID, err := provider.GetProjectID(scope.ProviderClient, scope.ProviderClientOpts)
-	if err != nil {
-		return nil, fmt.Errorf("error retrieveing project id: %v", err)
-	}
-
 	return &Service{
-		projectID: projectID,
-		scope:     scope,
-		client:    networkClient{serviceClient},
+		scope:  scope,
+		client: networkClient{serviceClient},
 	}, nil
 }
 
 // NewTestService returns a Service with no initialisation. It should only be used by tests.
 func NewTestService(projectID string, client NetworkClient, logger logr.Logger) *Service {
 	return &Service{
-		projectID: projectID,
 		scope: &scope.Scope{
-			Logger: logger,
+			ProjectID: projectID,
+			Logger:    logger,
 		},
 		client: client,
 	}
