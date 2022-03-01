@@ -37,20 +37,6 @@ const (
 	retryIntervalPortDelete = 5 * time.Second
 )
 
-func (s *Service) getPort(portID string) (port *ports.Port, err error) {
-	if portID == "" {
-		return nil, fmt.Errorf("portID should be specified to get detail")
-	}
-	port, err = s.client.GetPort(portID)
-	if err != nil {
-		if capoerrors.IsNotFound(err) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("get port %q detail failed: %v", portID, err)
-	}
-	return port, nil
-}
-
 // GetPortFromInstanceIP returns at most one port attached to the instance with given ID
 // and with the IP address provided.
 func (s *Service) GetPortFromInstanceIP(instanceID string, ip string) ([]ports.Port, error) {
@@ -233,19 +219,12 @@ func getPortProfile(p map[string]string) map[string]interface{} {
 }
 
 func (s *Service) DeletePort(eventObject runtime.Object, portID string) error {
-	port, err := s.getPort(portID)
-	if err != nil {
-		return err
-	}
-	if port == nil {
-		return nil
-	}
-
+	var err error
 	err = util.PollImmediate(retryIntervalPortDelete, timeoutPortDelete, func() (bool, error) {
-		err := s.client.DeletePort(port.ID)
+		err = s.client.DeletePort(portID)
 		if err != nil {
 			if capoerrors.IsNotFound(err) {
-				record.Eventf(eventObject, "SuccessfulDeletePort", "Port %s with id %d did not exist", port.Name, port.ID)
+				record.Eventf(eventObject, "SuccessfulDeletePort", "Port with id %d did not exist", portID)
 			}
 			if capoerrors.IsRetryable(err) {
 				return false, nil
@@ -255,11 +234,11 @@ func (s *Service) DeletePort(eventObject runtime.Object, portID string) error {
 		return true, nil
 	})
 	if err != nil {
-		record.Warnf(eventObject, "FailedDeletePort", "Failed to delete port %s with id %s: %v", port.Name, port.ID, err)
+		record.Warnf(eventObject, "FailedDeletePort", "Failed to delete port with id %s: %v", portID, err)
 		return err
 	}
 
-	record.Eventf(eventObject, "SuccessfulDeletePort", "Deleted port %s with id %s", port.Name, port.ID)
+	record.Eventf(eventObject, "SuccessfulDeletePort", "Deleted port with id %s", portID)
 	return nil
 }
 

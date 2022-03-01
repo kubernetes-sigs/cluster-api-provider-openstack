@@ -674,7 +674,6 @@ func TestService_CreateInstance(t *testing.T) {
 	// Expected calls if we delete the network port
 	expectCleanupDefaultPort := func(networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
 		networkRecorder.ListExtensions()
-		networkRecorder.GetPort(portUUID).Return(&ports.Port{ID: portUUID, Name: portName}, nil)
 		networkRecorder.DeletePort(portUUID).Return(nil)
 	}
 
@@ -1100,7 +1099,6 @@ func TestService_CreateInstance(t *testing.T) {
 
 				// We should cleanup the first port and its trunk
 				networkRecorder.DeleteTrunk(trunkUUID).Return(nil)
-				networkRecorder.GetPort(portUUID).Return(&ports.Port{ID: portUUID, Name: portName}, nil)
 				networkRecorder.DeletePort(portUUID).Return(nil)
 			},
 			wantErr: true,
@@ -1192,8 +1190,6 @@ func TestService_DeleteInstance(t *testing.T) {
 				computeRecorder.DeleteAttachedInterface(instanceUUID, portUUID).Return(nil)
 				// FIXME: Why we are looking for a trunk when we know the port is not trunked?
 				networkRecorder.ListTrunk(trunks.ListOpts{PortID: portUUID}).Return([]trunks.Trunk{}, nil)
-				// FIXME: Why are we fetching the port before deletion? We should delete the port and handle the 404
-				networkRecorder.GetPort(portUUID).Return(&ports.Port{ID: portUUID}, nil)
 				networkRecorder.DeletePort(portUUID).Return(nil)
 
 				computeRecorder.DeleteServer(instanceUUID).Return(nil)
