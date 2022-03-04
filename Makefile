@@ -12,9 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ROOT_DIR_RELATIVE := .
-
-include $(ROOT_DIR_RELATIVE)/common.mk
+REPO_ROOT := $(shell git rev-parse --show-toplevel)
+include $(REPO_ROOT)/common.mk
 
 # If you update this file, please follow
 # https://suva.sh/posts/well-documented-makefiles
@@ -24,15 +23,12 @@ export GO111MODULE=on
 unexport GOPATH
 
 # Directories.
-ARTIFACTS ?= $(REPO_ROOT)/_artifacts
-TOOLS_DIR := hack/tools
-TOOLS_DIR_DEPS := $(TOOLS_DIR)/go.sum $(TOOLS_DIR)/go.mod $(TOOLS_DIR)/Makefile
-TOOLS_BIN_DIR := $(TOOLS_DIR)/bin
+TEST_DIR=test
 
 BIN_DIR := bin
-REPO_ROOT := $(shell git rev-parse --show-toplevel)
 GH_REPO ?= kubernetes-sigs/cluster-api-provider-openstack
 TEST_E2E_DIR := test/e2e
+GO_INSTALL := ./scripts/go_install.sh
 
 # Files
 E2E_DATA_DIR ?= $(REPO_ROOT)/test/e2e/data
@@ -41,7 +37,15 @@ KUBETEST_CONF_PATH ?= $(abspath $(E2E_DATA_DIR)/kubetest/conformance.yaml)
 KUBETEST_FAST_CONF_PATH ?= $(abspath $(E2E_DATA_DIR)/kubetest/conformance-fast.yaml)
 GO_INSTALL := ./scripts/go_install.sh
 
+#
 # Binaries.
+#
+# Note: Need to use abspath so we can invoke these from subdirectories
+KUSTOMIZE_VER := v4.5.2
+KUSTOMIZE_BIN := kustomize
+KUSTOMIZE := $(abspath $(TOOLS_BIN_DIR)/$(KUSTOMIZE_BIN)-$(KUSTOMIZE_VER))
+KUSTOMIZE_PKG := sigs.k8s.io/kustomize/kustomize/v4
+
 CONTROLLER_GEN := $(TOOLS_BIN_DIR)/controller-gen
 CONVERSION_GEN := $(TOOLS_BIN_DIR)/conversion-gen
 DEFAULTER_GEN := $(TOOLS_BIN_DIR)/defaulter-gen
@@ -50,7 +54,6 @@ GINKGO := $(TOOLS_BIN_DIR)/ginkgo
 GOJQ := $(TOOLS_BIN_DIR)/gojq
 GOLANGCI_LINT := $(TOOLS_BIN_DIR)/golangci-lint
 KIND := $(TOOLS_BIN_DIR)/kind
-KUSTOMIZE := $(TOOLS_BIN_DIR)/kustomize
 MOCKGEN := $(TOOLS_BIN_DIR)/mockgen
 RELEASE_NOTES := $(TOOLS_BIN_DIR)/release-notes
 
@@ -124,6 +127,10 @@ LDFLAGS := $(shell source ./hack/version.sh; version::ldflags)
 E2E_GINKGO_PARALLEL=2
 
 E2E_ARGS ?=
+export E2E_ARGS
+
+ARTIFACTS ?= $(REPO_ROOT)/_artifacts
+export ARTIFACTS
 
 $(ARTIFACTS):
 	mkdir -p $@
@@ -143,8 +150,8 @@ test: $(SETUP_ENVTEST) ## Run tests
 # E2E_GINKGO_ARGS="-stream -focus='default'" E2E_ARGS="-use-existing-cluster='true'" make test-e2e
 E2E_GINKGO_ARGS ?=
 .PHONY: test-e2e ## Run e2e tests using clusterctl
-test-e2e: $(GINKGO) $(KIND) $(KUSTOMIZE) e2e-image test-e2e-image-prerequisites ## Run e2e tests
-	time $(GINKGO) --failFast -trace -progress -v -tags=e2e --nodes=$(E2E_GINKGO_PARALLEL) $(E2E_GINKGO_ARGS) ./test/e2e/suites/e2e/... -- -config-path="$(E2E_CONF_PATH)" -artifacts-folder="$(ARTIFACTS)" --data-folder="$(E2E_DATA_DIR)" $(E2E_ARGS)
+test-e2e: e2e-image test-e2e-image-prerequisites ## Run e2e tests
+	$(MAKE) -C $(TEST_DIR)/e2e run GINKGO_ARGS=$(E2E_GINKGO_ARGS) GINKGO_NODES=$(E2E_GINKGO_PARALLEL) TEST_ARGS=$(E2E_ARGS)
 
 .PHONY: e2e-image
 e2e-image: CONTROLLER_IMG_TAG = "gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e"
@@ -161,11 +168,9 @@ test-e2e-image-prerequisites:
 
 CONFORMANCE_E2E_ARGS ?= -kubetest.config-file=$(KUBETEST_CONF_PATH)
 CONFORMANCE_E2E_ARGS += $(E2E_ARGS)
-CONFORMANCE_GINKGO_ARGS ?= -stream
 .PHONY: test-conformance
-test-conformance: $(GINKGO) $(KIND) $(KUSTOMIZE) e2e-image ## Run clusterctl based conformance test on workload cluster (requires Docker).
-	time $(GINKGO) -trace -progress -v -tags=e2e -focus="conformance" $(CONFORMANCE_GINKGO_ARGS) ./test/e2e/suites/conformance/... -- -config-path="$(E2E_CONF_PATH)" -artifacts-folder="$(ARTIFACTS)" --data-folder="$(E2E_DATA_DIR)" $(CONFORMANCE_E2E_ARGS)
-
+test-conformance: e2e-image test-e2e-image-prerequisites ## Run e2e tests
+	$(MAKE) -C $(TEST_DIR)/e2e run SUITE=conformance GINKGO_FOCUS=conformance GINKGO_ARGS=$(CONFORMANCE_GINKGO_ARGS) TEST_ARGS=$(CONFORMANCE_E2E_ARGS)
 
 test-conformance-fast: ## Run clusterctl based conformance test on workload cluster (requires Docker) using a subset of the conformance suite in parallel.
 	$(MAKE) test-conformance CONFORMANCE_E2E_ARGS="-kubetest.config-file=$(KUBETEST_FAST_CONF_PATH) -kubetest.ginkgo-nodes=5 $(E2E_ARGS)"
@@ -470,3 +475,15 @@ verify-gen: generate
 .PHONY: compile-e2e
 compile-e2e: ## Test e2e compilation
 	go test -c -o /dev/null -tags=e2e ./test/e2e/suites/conformance
+
+## --------------------------------------
+## Hack / Tools
+## --------------------------------------
+
+##@ hack/tools:
+
+.PHONY: $(KUSTOMIZE_BIN)
+$(KUSTOMIZE_BIN): $(KUSTOMIZE) ## Build a local copy of kustomize.
+
+$(KUSTOMIZE): # Build kustomize from tools folder.
+	CGO_ENABLED=0 GOBIN=$(TOOLS_BIN_DIR) $(GO_INSTALL) $(KUSTOMIZE_PKG) $(KUSTOMIZE_BIN) $(KUSTOMIZE_VER)

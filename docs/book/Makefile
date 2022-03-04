@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ROOT_DIR_RELATIVE := ../..
-include $(ROOT_DIR_RELATIVE)/common.mk
+REPO_ROOT := $(shell git rev-parse --show-toplevel)
+include $(REPO_ROOT)/common.mk
 
 # Directories.
 MDBOOK := $(TOOLS_BIN_DIR)/mdbook

@@ -1,0 +1,26 @@
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: OpenStackCluster
+metadata:
+  name: ${CLUSTER_NAME}
+spec:
+  tags:
+  - ${CLUSTER_NAME}
+  cloudName: ${OPENSTACK_CLOUD}
+  identityRef:
+    name: ${CLUSTER_NAME}-cloud-config
+    kind: Secret
+  controlPlaneAvailabilityZones:
+  - ${OPENSTACK_FAILURE_DOMAIN}
+  apiServerLoadBalancer:
+    enabled: true
+  managedSecurityGroups: true
+  nodeCidr: 10.6.0.0/24
+  dnsNameservers:
+  - ${OPENSTACK_DNS_NAMESERVERS}
+  bastion:
+    enabled: true
+    instance:
+      flavor: ${OPENSTACK_BASTION_MACHINE_FLAVOR}
+      image: ${OPENSTACK_BASTION_IMAGE_NAME}
+      sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
+  externalNetworkId: ${OPENSTACK_EXTERNAL_NETWORK_ID}

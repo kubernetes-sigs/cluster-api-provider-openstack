@@ -1,0 +1,11 @@
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: OpenStackMachineTemplate
+metadata:
+  name: ${CLUSTER_NAME}-md-0
+spec:
+  template:
+    spec:
+      rootVolume:
+        diskSize: 15
+        volumeType: ${OPENSTACK_VOLUME_TYPE_ALT}
+        availabilityZone: ${OPENSTACK_FAILURE_DOMAIN}

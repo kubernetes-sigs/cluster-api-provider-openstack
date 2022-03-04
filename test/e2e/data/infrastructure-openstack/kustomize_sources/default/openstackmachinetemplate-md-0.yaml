@@ -1,0 +1,16 @@
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: OpenStackMachineTemplate
+metadata:
+  name: ${CLUSTER_NAME}-md-0
+spec:
+  template:
+    spec:
+      tags:
+      - machine
+      cloudName: ${OPENSTACK_CLOUD}
+      identityRef:
+        name: ${CLUSTER_NAME}-cloud-config
+        kind: Secret
+      flavor: ${OPENSTACK_NODE_MACHINE_FLAVOR}
+      image: ${OPENSTACK_IMAGE_NAME}
+      sshKeyName: ${OPENSTACK_SSH_KEY_NAME}

@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- cluster.yaml
+- clusterresourceset-crs-0.yaml
+- configmap-cni-crs-0.yaml
+- kubeadmconfigtemplate-md-0.yaml
+- kubeadmcontrolplane.yaml
+- machinedeployment-md-0.yaml
+- openstackcluster.yaml
+- openstackmachinetemplate-control-plane.yaml
+- openstackmachinetemplate-md-0.yaml
+- secret-cloud-config.yaml

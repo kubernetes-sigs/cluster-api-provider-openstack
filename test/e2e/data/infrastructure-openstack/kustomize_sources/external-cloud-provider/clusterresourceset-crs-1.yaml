@@ -1,0 +1,12 @@
+apiVersion: addons.cluster.x-k8s.io/v1beta1
+kind: ClusterResourceSet
+metadata:
+  name:  "${CLUSTER_NAME}-crs-1"
+spec:
+  strategy: ApplyOnce
+  clusterSelector:
+    matchLabels:
+      ccm: "${CLUSTER_NAME}-crs-1"
+  resources:
+    - name: "ccm-${CLUSTER_NAME}-crs-1"
+      kind: ConfigMap

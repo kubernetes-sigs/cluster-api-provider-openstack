@@ -15,8 +15,8 @@
 # If you update this file, please follow
 # https://suva.sh/posts/well-documented-makefiles
 
-ROOT_DIR_RELATIVE := ..
-include $(ROOT_DIR_RELATIVE)/common.mk
+REPO_ROOT := $(shell git rev-parse --show-toplevel)
+include $(REPO_ROOT)/common.mk
 
 DIAGRAM_SRCS := $(call rwildcard,.,*.md,*.plantuml)
 

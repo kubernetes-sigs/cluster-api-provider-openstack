@@ -1,0 +1,29 @@
+kind: KubeadmControlPlane
+apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+metadata:
+  name: "${CLUSTER_NAME}-control-plane"
+spec:
+  kubeadmConfigSpec:
+    initConfiguration:
+      nodeRegistration:
+        kubeletExtraArgs:
+          cloud-provider: external
+          cloud-config: null
+    clusterConfiguration:
+      imageRepository: k8s.gcr.io
+      apiServer:
+        extraArgs:
+          cloud-provider: external
+          cloud-config: null
+        extraVolumes: null
+      controllerManager:
+        extraArgs:
+          cloud-provider: external
+          cloud-config: null
+        extraVolumes: null
+    joinConfiguration:
+      nodeRegistration:
+        kubeletExtraArgs:
+          cloud-provider: external
+          cloud-config: null
+    files: null

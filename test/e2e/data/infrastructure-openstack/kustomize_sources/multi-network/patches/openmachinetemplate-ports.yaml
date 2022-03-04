@@ -1,0 +1,15 @@
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: OpenStackMachineTemplate
+metadata:
+  name: not-used
+spec:
+  template:
+    spec:
+      ports:
+      - description: "primary"
+      - description: "Extra Network 1"
+        network:
+          id: "${CLUSTER_EXTRA_NET_1}"
+      - description: "Extra Network 2"
+        network:
+          id: "${CLUSTER_EXTRA_NET_2}"
