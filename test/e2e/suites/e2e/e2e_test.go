@@ -142,7 +142,7 @@ var _ = Describe("e2e tests", func() {
 		})
 	})
 
-	Describe("Workload cluster (external cloud provider)", func() {
+	FDescribe("Workload cluster (external cloud provider)", func() {
 		It("It should be creatable and deletable", func() {
 			shared.Byf("Creating a cluster")
 			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
