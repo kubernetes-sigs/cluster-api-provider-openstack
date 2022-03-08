@@ -109,8 +109,13 @@ Please see our [book](https://cluster-api-openstack.sigs.k8s.io) for in-depth do
 Are you interested in contributing to cluster-api-provider-openstack? We, the
 maintainers and community, would love your suggestions, contributions, and help!
 Also, the maintainers can be contacted at any time to learn more about how to get
-involved via the [cluster-api-openstack channel on Kubernetes Slack][slack] or the
-[SIG-Cluster-Lifecycle Mailing List](https://groups.google.com/forum/#!forum/kubernetes-sig-cluster-lifecycle).
+involved:
+
+- via the [cluster-api-openstack channel on Kubernetes Slack][slack]
+- via the [SIG-Cluster-Lifecycle Mailing List](https://groups.google.com/forum/#!forum/kubernetes-sig-cluster-lifecycle).
+- during our Office Hours
+  - bi-weekly on Wednesdays @ 14:00 UTC on Zoom (link in meeting notes)
+  - Previous meetings: [ [notes][office-hours-notes] | [recordings][office-hours-recordings] ]
 
 In the interest of getting more new people involved we try to tag issues with
 [`good first issue`][good_first_issue].
@@ -166,6 +171,8 @@ We also use the issue tracker to track features. If you have an idea for a featu
 [kops]: https://github.com/kubernetes/kops
 [kubicorn]: http://kubicorn.io/
 [slack]: https://kubernetes.slack.com/messages/cluster-api-openstack
+[office-hours-notes]: https://docs.google.com/document/d/1hzi6nr04mhQYBKrwL2NDTNPvgI4RgO9a-gqmk31kXMA/edit
+[office-hours-recordings]: https://www.youtube.com/playlist?list=PL69nYSiGNLP29D0nYgAGWt1ZFqS9Z7lw4
 [good_first_issue]: https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc+label%3A%22good+first+issue%22
 [prow]: https://go.k8s.io/bot-commands
 [new_bug_issue]: https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/new?assignees=&labels=&template=bug_report.md
