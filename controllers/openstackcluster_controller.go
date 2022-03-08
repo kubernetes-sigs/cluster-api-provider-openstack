@@ -268,9 +268,9 @@ func reconcileNormal(ctx context.Context, log logr.Logger, client client.Client,
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	if openStackCluster.Status.FailureDomains == nil {
-		openStackCluster.Status.FailureDomains = make(clusterv1.FailureDomains)
-	}
+	// Create a new list to remove any Availability
+	// Zones that have been removed from OpenStack
+	openStackCluster.Status.FailureDomains = make(clusterv1.FailureDomains)
 	for _, az := range availabilityZones {
 		// I'm actually not sure if that's just my local devstack,
 		// but we probably shouldn't use the "internal" AZ
