@@ -44,7 +44,7 @@ const loadBalancerProvisioningStatusActive = "ACTIVE"
 
 func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterName string, apiServerPort int) error {
 	loadBalancerName := getLoadBalancerName(clusterName)
-	s.logger.Info("Reconciling load balancer", "name", loadBalancerName)
+	s.scope.Logger.Info("Reconciling load balancer", "name", loadBalancerName)
 
 	var fixedIPAddress string
 	switch {
@@ -119,7 +119,7 @@ func (s *Service) getOrCreateLoadBalancer(openStackCluster *infrav1.OpenStackClu
 		return lb, nil
 	}
 
-	s.logger.Info(fmt.Sprintf("Creating load balancer in subnet: %q", subnetID), "name", loadBalancerName)
+	s.scope.Logger.Info(fmt.Sprintf("Creating load balancer in subnet: %q", subnetID), "name", loadBalancerName)
 
 	lbCreateOpts := loadbalancers.CreateOpts{
 		Name:        loadBalancerName,
@@ -152,7 +152,7 @@ func (s *Service) getOrCreateListener(openStackCluster *infrav1.OpenStackCluster
 		return listener, nil
 	}
 
-	s.logger.Info("Creating load balancer listener", "name", listenerName, "lb-id", lbID)
+	s.scope.Logger.Info("Creating load balancer listener", "name", listenerName, "lb-id", lbID)
 
 	listenerCreateOpts := listeners.CreateOpts{
 		Name:           listenerName,
@@ -190,7 +190,7 @@ func (s *Service) getOrCreatePool(openStackCluster *infrav1.OpenStackCluster, po
 		return pool, nil
 	}
 
-	s.logger.Info(fmt.Sprintf("Creating load balancer pool for listener %q", listenerID), "name", poolName, "lb-id", lbID)
+	s.scope.Logger.Info(fmt.Sprintf("Creating load balancer pool for listener %q", listenerID), "name", poolName, "lb-id", lbID)
 
 	poolCreateOpts := pools.CreateOpts{
 		Name:       poolName,
@@ -223,7 +223,7 @@ func (s *Service) getOrCreateMonitor(openStackCluster *infrav1.OpenStackCluster,
 		return nil
 	}
 
-	s.logger.Info(fmt.Sprintf("Creating load balancer monitor for pool %q", poolID), "name", monitorName, "lb-id", lbID)
+	s.scope.Logger.Info(fmt.Sprintf("Creating load balancer monitor for pool %q", poolID), "name", monitorName, "lb-id", lbID)
 
 	monitorCreateOpts := monitors.CreateOpts{
 		Name:       monitorName,
@@ -264,7 +264,7 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 	}
 
 	loadBalancerName := getLoadBalancerName(clusterName)
-	s.logger.Info("Reconciling load balancer member", "name", loadBalancerName)
+	s.scope.Logger.Info("Reconciling load balancer member", "name", loadBalancerName)
 
 	lbID := openStackCluster.Status.Network.APIServerLoadBalancer.ID
 	portList := []int{int(openStackCluster.Spec.ControlPlaneEndpoint.Port)}
@@ -293,7 +293,7 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 				continue
 			}
 
-			s.logger.Info("Deleting load balancer member (because the IP of the machine changed)", "name", name)
+			s.scope.Logger.Info("Deleting load balancer member (because the IP of the machine changed)", "name", name)
 
 			// lb member changed so let's delete it so we can create it again with the correct IP
 			err = s.waitForLoadBalancerActive(lbID)
@@ -309,7 +309,7 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 			}
 		}
 
-		s.logger.Info("Creating load balancer member", "name", name)
+		s.scope.Logger.Info("Creating load balancer member", "name", name)
 
 		// if we got to this point we should either create or re-create the lb member
 		lbMemberOpts := pools.CreateMemberOpts{
@@ -363,7 +363,7 @@ func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster,
 	deleteOpts := loadbalancers.DeleteOpts{
 		Cascade: true,
 	}
-	s.logger.Info("Deleting load balancer", "name", loadBalancerName, "cascade", deleteOpts.Cascade)
+	s.scope.Logger.Info("Deleting load balancer", "name", loadBalancerName, "cascade", deleteOpts.Cascade)
 	err = s.loadbalancerClient.DeleteLoadBalancer(lb.ID, deleteOpts)
 	if err != nil && !capoerrors.IsNotFound(err) {
 		record.Warnf(openStackCluster, "FailedDeleteLoadBalancer", "Failed to delete load balancer %s with id %s: %v", lb.Name, lb.ID, err)
@@ -402,7 +402,7 @@ func (s *Service) DeleteLoadBalancerMember(openStackCluster *infrav1.OpenStackCl
 			return err
 		}
 		if pool == nil {
-			s.logger.Info("Load balancer pool does not exist", "name", lbPortObjectsName)
+			s.scope.Logger.Info("Load balancer pool does not exist", "name", lbPortObjectsName)
 			continue
 		}
 
@@ -497,7 +497,7 @@ var backoff = wait.Backoff{
 
 // Possible LoadBalancer states are documented here: https://docs.openstack.org/api-ref/load-balancer/v2/index.html#prov-status
 func (s *Service) waitForLoadBalancerActive(id string) error {
-	s.logger.Info("Waiting for load balancer", "id", id, "targetStatus", "ACTIVE")
+	s.scope.Logger.Info("Waiting for load balancer", "id", id, "targetStatus", "ACTIVE")
 	return wait.ExponentialBackoff(backoff, func() (bool, error) {
 		lb, err := s.loadbalancerClient.GetLoadBalancer(id)
 		if err != nil {
@@ -508,7 +508,7 @@ func (s *Service) waitForLoadBalancerActive(id string) error {
 }
 
 func (s *Service) waitForListener(id, target string) error {
-	s.logger.Info("Waiting for load balancer listener", "id", id, "targetStatus", target)
+	s.scope.Logger.Info("Waiting for load balancer listener", "id", id, "targetStatus", target)
 	return wait.ExponentialBackoff(backoff, func() (bool, error) {
 		_, err := s.loadbalancerClient.GetListener(id)
 		if err != nil {

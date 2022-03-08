@@ -21,9 +21,6 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/go-logr/logr"
-	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/utils/openstack/clientconfig"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -51,6 +48,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/loadbalancer"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/provider"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
 // OpenStackClusterReconciler reconciles a OpenStackCluster object.
@@ -109,28 +107,34 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}()
 
-	// Handle deleted clusters
-	if !openStackCluster.DeletionTimestamp.IsZero() {
-		return reconcileDelete(ctx, log, r.Client, patchHelper, cluster, openStackCluster)
-	}
-
-	// Handle non-deleted clusters
-	return reconcileNormal(ctx, log, r.Client, patchHelper, cluster, openStackCluster)
-}
-
-func reconcileDelete(ctx context.Context, log logr.Logger, client client.Client, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
-	log.Info("Reconciling Cluster delete")
-
-	osProviderClient, clientOpts, err := provider.NewClientFromCluster(ctx, client, openStackCluster)
+	osProviderClient, clientOpts, err := provider.NewClientFromCluster(ctx, r.Client, openStackCluster)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	if err = deleteBastion(log, osProviderClient, clientOpts, cluster, openStackCluster); err != nil {
+	scope := &scope.Scope{
+		ProviderClient:     osProviderClient,
+		ProviderClientOpts: clientOpts,
+		Logger:             log,
+	}
+
+	// Handle deleted clusters
+	if !openStackCluster.DeletionTimestamp.IsZero() {
+		return reconcileDelete(ctx, scope, patchHelper, cluster, openStackCluster)
+	}
+
+	// Handle non-deleted clusters
+	return reconcileNormal(ctx, scope, patchHelper, cluster, openStackCluster)
+}
+
+func reconcileDelete(ctx context.Context, scope *scope.Scope, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
+	scope.Logger.Info("Reconciling Cluster delete")
+
+	if err := deleteBastion(scope, cluster, openStackCluster); err != nil {
 		return reconcile.Result{}, err
 	}
 
-	networkingService, err := networking.NewService(osProviderClient, clientOpts, log)
+	networkingService, err := networking.NewService(scope)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -138,7 +142,7 @@ func reconcileDelete(ctx context.Context, log logr.Logger, client client.Client,
 	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
 
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
-		loadBalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, log)
+		loadBalancerService, err := loadbalancer.NewService(scope)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -169,7 +173,7 @@ func reconcileDelete(ctx context.Context, log logr.Logger, client client.Client,
 
 	// Cluster is deleted so remove the finalizer.
 	controllerutil.RemoveFinalizer(openStackCluster, infrav1.ClusterFinalizer)
-	log.Info("Reconciled Cluster delete successfully")
+	scope.Logger.Info("Reconciled Cluster delete successfully")
 	if err := patchHelper.Patch(ctx, openStackCluster); err != nil {
 		return ctrl.Result{}, err
 	}
@@ -185,12 +189,12 @@ func contains(arr []string, target string) bool {
 	return false
 }
 
-func deleteBastion(log logr.Logger, osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
-	computeService, err := compute.NewService(osProviderClient, clientOpts, log)
+func deleteBastion(scope *scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
+	computeService, err := compute.NewService(scope)
 	if err != nil {
 		return err
 	}
-	networkingService, err := networking.NewService(osProviderClient, clientOpts, log)
+	networkingService, err := networking.NewService(scope)
 	if err != nil {
 		return err
 	}
@@ -235,8 +239,8 @@ func deleteBastion(log logr.Logger, osProviderClient *gophercloud.ProviderClient
 	return nil
 }
 
-func reconcileNormal(ctx context.Context, log logr.Logger, client client.Client, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
-	log.Info("Reconciling Cluster")
+func reconcileNormal(ctx context.Context, scope *scope.Scope, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
+	scope.Logger.Info("Reconciling Cluster")
 
 	// If the OpenStackCluster doesn't have our finalizer, add it.
 	controllerutil.AddFinalizer(openStackCluster, infrav1.ClusterFinalizer)
@@ -245,22 +249,17 @@ func reconcileNormal(ctx context.Context, log logr.Logger, client client.Client,
 		return reconcile.Result{}, err
 	}
 
-	osProviderClient, clientOpts, err := provider.NewClientFromCluster(ctx, client, openStackCluster)
+	computeService, err := compute.NewService(scope)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	computeService, err := compute.NewService(osProviderClient, clientOpts, log)
+	err = reconcileNetworkComponents(scope, cluster, openStackCluster)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = reconcileNetworkComponents(log, osProviderClient, clientOpts, cluster, openStackCluster)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	if err = reconcileBastion(log, osProviderClient, clientOpts, cluster, openStackCluster); err != nil {
+	if err = reconcileBastion(scope, cluster, openStackCluster); err != nil {
 		return reconcile.Result{}, err
 	}
 
@@ -292,18 +291,18 @@ func reconcileNormal(ctx context.Context, log logr.Logger, client client.Client,
 	openStackCluster.Status.Ready = true
 	openStackCluster.Status.FailureMessage = nil
 	openStackCluster.Status.FailureReason = nil
-	log.Info("Reconciled Cluster create successfully")
+	scope.Logger.Info("Reconciled Cluster create successfully")
 	return reconcile.Result{}, nil
 }
 
-func reconcileBastion(log logr.Logger, osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
-	log.Info("Reconciling Bastion")
+func reconcileBastion(scope *scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
+	scope.Logger.Info("Reconciling Bastion")
 
 	if openStackCluster.Spec.Bastion == nil || !openStackCluster.Spec.Bastion.Enabled {
-		return deleteBastion(log, osProviderClient, clientOpts, cluster, openStackCluster)
+		return deleteBastion(scope, cluster, openStackCluster)
 	}
 
-	computeService, err := compute.NewService(osProviderClient, clientOpts, log)
+	computeService, err := compute.NewService(scope)
 	if err != nil {
 		return err
 	}
@@ -326,7 +325,7 @@ func reconcileBastion(log logr.Logger, osProviderClient *gophercloud.ProviderCli
 		return errors.Errorf("failed to reconcile bastion: %v", err)
 	}
 
-	networkingService, err := networking.NewService(osProviderClient, clientOpts, log)
+	networkingService, err := networking.NewService(scope)
 	if err != nil {
 		return err
 	}
@@ -357,15 +356,15 @@ func reconcileBastion(log logr.Logger, osProviderClient *gophercloud.ProviderCli
 	return nil
 }
 
-func reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
+func reconcileNetworkComponents(scope *scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
 	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
 
-	networkingService, err := networking.NewService(osProviderClient, clientOpts, log)
+	networkingService, err := networking.NewService(scope)
 	if err != nil {
 		return err
 	}
 
-	log.Info("Reconciling network components")
+	scope.Logger.Info("Reconciling network components")
 
 	err = networkingService.ReconcileExternalNetwork(openStackCluster)
 	if err != nil {
@@ -374,7 +373,7 @@ func reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.P
 	}
 
 	if openStackCluster.Spec.NodeCIDR == "" {
-		log.V(4).Info("No need to reconcile network, searching network and subnet instead")
+		scope.Logger.V(4).Info("No need to reconcile network, searching network and subnet instead")
 
 		netOpts := openStackCluster.Spec.Network.ToListOpt()
 		networkList, err := networkingService.GetNetworksByFilter(&netOpts)
@@ -450,7 +449,7 @@ func reconcileNetworkComponents(log logr.Logger, osProviderClient *gophercloud.P
 	}
 
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
-		loadBalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, log)
+		loadBalancerService, err := loadbalancer.NewService(scope)
 		if err != nil {
 			return err
 		}

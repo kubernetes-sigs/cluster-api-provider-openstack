@@ -19,20 +19,19 @@ package compute
 import (
 	"fmt"
 
-	"github.com/go-logr/logr"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
-	"github.com/gophercloud/utils/openstack/clientconfig"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/provider"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
 type Service struct {
 	projectID         string
+	scope             *scope.Scope
 	computeService    Client
 	networkingService *networking.Service
-	logger            logr.Logger
 }
 
 /*
@@ -47,24 +46,24 @@ type Service struct {
 const NovaMinimumMicroversion = "2.53"
 
 // NewService returns an instance of the compute service.
-func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, logger logr.Logger) (*Service, error) {
-	computeClient, err := openstack.NewComputeV2(client, gophercloud.EndpointOpts{
-		Region: clientOpts.RegionName,
+func NewService(scope *scope.Scope) (*Service, error) {
+	computeClient, err := openstack.NewComputeV2(scope.ProviderClient, gophercloud.EndpointOpts{
+		Region: scope.ProviderClientOpts.RegionName,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create compute service client: %v", err)
 	}
 	computeClient.Microversion = NovaMinimumMicroversion
 
-	imagesClient, err := openstack.NewImageServiceV2(client, gophercloud.EndpointOpts{
-		Region: clientOpts.RegionName,
+	imagesClient, err := openstack.NewImageServiceV2(scope.ProviderClient, gophercloud.EndpointOpts{
+		Region: scope.ProviderClientOpts.RegionName,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create image service client: %v", err)
 	}
 
-	volumeClient, err := openstack.NewBlockStorageV3(client, gophercloud.EndpointOpts{
-		Region: clientOpts.RegionName,
+	volumeClient, err := openstack.NewBlockStorageV3(scope.ProviderClient, gophercloud.EndpointOpts{
+		Region: scope.ProviderClientOpts.RegionName,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create volume service client: %v", err)
@@ -72,24 +71,24 @@ func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.Cli
 
 	computeService := serviceClient{computeClient, imagesClient, volumeClient}
 
-	if clientOpts.AuthInfo == nil {
+	if scope.ProviderClientOpts.AuthInfo == nil {
 		return nil, fmt.Errorf("authInfo must be set")
 	}
 
-	projectID, err := provider.GetProjectID(client, clientOpts)
+	projectID, err := provider.GetProjectID(scope.ProviderClient, scope.ProviderClientOpts)
 	if err != nil {
 		return nil, fmt.Errorf("error retrieveing project id: %v", err)
 	}
 
-	networkingService, err := networking.NewService(client, clientOpts, logger)
+	networkingService, err := networking.NewService(scope)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create networking service: %v", err)
 	}
 
 	return &Service{
 		projectID:         projectID,
+		scope:             scope,
 		computeService:    computeService,
 		networkingService: networkingService,
-		logger:            logger,
 	}, nil
 }

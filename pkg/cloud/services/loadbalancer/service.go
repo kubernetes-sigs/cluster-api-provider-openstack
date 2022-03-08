@@ -22,39 +22,39 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
-	"github.com/gophercloud/utils/openstack/clientconfig"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
 // Service interfaces with the OpenStack Neutron LBaaS v2 API.
 type Service struct {
 	projectID          string
+	scope              *scope.Scope
 	loadbalancerClient LbClient
 	networkingService  *networking.Service
-	logger             logr.Logger
 }
 
 // NewService returns an instance of the loadbalancer service.
-func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, logger logr.Logger) (*Service, error) {
-	loadbalancerClient, err := openstack.NewLoadBalancerV2(client, gophercloud.EndpointOpts{
-		Region: clientOpts.RegionName,
+func NewService(scope *scope.Scope) (*Service, error) {
+	loadbalancerClient, err := openstack.NewLoadBalancerV2(scope.ProviderClient, gophercloud.EndpointOpts{
+		Region: scope.ProviderClientOpts.RegionName,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create load balancer service client: %v", err)
 	}
 
-	networkingService, err := networking.NewService(client, clientOpts, logger)
+	networkingService, err := networking.NewService(scope)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create networking service: %v", err)
 	}
 
 	return &Service{
+		scope: scope,
 		loadbalancerClient: lbClient{
 			serviceClient: loadbalancerClient,
 		},
 		networkingService: networkingService,
-		logger:            logger,
 	}, nil
 }
 
@@ -62,9 +62,11 @@ func NewService(client *gophercloud.ProviderClient, clientOpts *clientconfig.Cli
 // It helps to mock the load balancer service in other packages.
 func NewLoadBalancerTestService(projectID string, lbClient LbClient, client *networking.Service, logger logr.Logger) *Service {
 	return &Service{
-		projectID:          projectID,
+		projectID: projectID,
+		scope: &scope.Scope{
+			Logger: logger,
+		},
 		loadbalancerClient: lbClient,
 		networkingService:  client,
-		logger:             logger,
 	}
 }

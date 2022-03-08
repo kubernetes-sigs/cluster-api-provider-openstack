@@ -58,9 +58,9 @@ var defaultRules = []infrav1.SecurityGroupRule{
 
 // ReconcileSecurityGroups reconcile the security groups.
 func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
-	s.logger.Info("Reconciling security groups", "cluster", clusterName)
+	s.scope.Logger.Info("Reconciling security groups", "cluster", clusterName)
 	if !openStackCluster.Spec.ManagedSecurityGroups {
-		s.logger.V(4).Info("No need to reconcile security groups", "cluster", clusterName)
+		s.scope.Logger.V(4).Info("No need to reconcile security groups", "cluster", clusterName)
 		return nil
 	}
 
@@ -501,16 +501,16 @@ func (s *Service) reconcileGroupRules(desired, observed infrav1.SecurityGroup) (
 		}
 	}
 
-	s.logger.V(4).Info("Deleting rules not needed anymore for group", "name", observed.Name, "amount", len(rulesToDelete))
+	s.scope.Logger.V(4).Info("Deleting rules not needed anymore for group", "name", observed.Name, "amount", len(rulesToDelete))
 	for _, rule := range rulesToDelete {
-		s.logger.V(6).Info("Deleting rule", "ruleID", rule.ID, "groupName", observed.Name)
+		s.scope.Logger.V(6).Info("Deleting rule", "ruleID", rule.ID, "groupName", observed.Name)
 		err := s.client.DeleteSecGroupRule(rule.ID)
 		if err != nil {
 			return infrav1.SecurityGroup{}, err
 		}
 	}
 
-	s.logger.V(4).Info("Creating new rules needed for group", "name", observed.Name, "amount", len(rulesToCreate))
+	s.scope.Logger.V(4).Info("Creating new rules needed for group", "name", observed.Name, "amount", len(rulesToCreate))
 	for _, rule := range rulesToCreate {
 		r := rule
 		r.SecurityGroupID = observed.ID
@@ -534,13 +534,13 @@ func (s *Service) createSecurityGroupIfNotExists(openStackCluster *infrav1.OpenS
 		return err
 	}
 	if secGroup == nil || secGroup.ID == "" {
-		s.logger.V(6).Info("Group doesn't exist, creating it.", "name", groupName)
+		s.scope.Logger.V(6).Info("Group doesn't exist, creating it.", "name", groupName)
 
 		createOpts := groups.CreateOpts{
 			Name:        groupName,
 			Description: "Cluster API managed group",
 		}
-		s.logger.V(6).Info("Creating group", "name", groupName)
+		s.scope.Logger.V(6).Info("Creating group", "name", groupName)
 
 		group, err := s.client.CreateSecGroup(createOpts)
 		if err != nil {
@@ -562,7 +562,7 @@ func (s *Service) createSecurityGroupIfNotExists(openStackCluster *infrav1.OpenS
 	}
 
 	sInfo := fmt.Sprintf("Reuse Existing SecurityGroup %s with %s", groupName, secGroup.ID)
-	s.logger.V(6).Info(sInfo)
+	s.scope.Logger.V(6).Info(sInfo)
 
 	return nil
 }
@@ -572,7 +572,7 @@ func (s *Service) getSecurityGroupByName(name string) (*infrav1.SecurityGroup, e
 		Name: name,
 	}
 
-	s.logger.V(6).Info("Attempting to fetch security group with", "name", name)
+	s.scope.Logger.V(6).Info("Attempting to fetch security group with", "name", name)
 	allGroups, err := s.client.ListSecGroup(opts)
 	if err != nil {
 		return &infrav1.SecurityGroup{}, err
@@ -604,7 +604,7 @@ func (s *Service) createRule(r infrav1.SecurityGroupRule) (infrav1.SecurityGroup
 		RemoteIPPrefix: r.RemoteIPPrefix,
 		SecGroupID:     r.SecurityGroupID,
 	}
-	s.logger.V(6).Info("Creating rule", "Description", r.Description, "Direction", dir, "PortRangeMin", r.PortRangeMin, "PortRangeMax", r.PortRangeMax, "Proto", proto, "etherType", etherType, "RemoteGroupID", r.RemoteGroupID, "RemoteIPPrefix", r.RemoteIPPrefix, "SecurityGroupID", r.SecurityGroupID)
+	s.scope.Logger.V(6).Info("Creating rule", "Description", r.Description, "Direction", dir, "PortRangeMin", r.PortRangeMin, "PortRangeMax", r.PortRangeMax, "Proto", proto, "etherType", etherType, "RemoteGroupID", r.RemoteGroupID, "RemoteIPPrefix", r.RemoteIPPrefix, "SecurityGroupID", r.SecurityGroupID)
 	rule, err := s.client.CreateSecGroupRule(createOpts)
 	if err != nil {
 		return infrav1.SecurityGroupRule{}, err
