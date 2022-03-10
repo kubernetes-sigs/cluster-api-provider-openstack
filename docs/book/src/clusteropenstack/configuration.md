@@ -86,7 +86,7 @@ or [configure custom security groups](#security-groups) with rules allowing ingr
 ## OpenStack credential
 
 ### Generate credentials
-The [env.rc](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/templates/env.rc) script sets the environment variables related to credentials.
+The [env.rc](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/templates/env.rc) script sets the environment variables related to credentials. It's highly recommend to avoid using `admin` credential.
 
 ```bash
 source env.rc <path/to/clouds.yaml> <cloud>
@@ -108,6 +108,8 @@ Note: you need to set `clusterctl.cluster.x-k8s.io/move` label for the secret cr
 ## Availability zone
 
 The availability zone names must be exposed as an environment variable `OPENSTACK_FAILURE_DOMAIN`.
+
+By default, if `Availability zone` is not given, all `Availability zone` that defined in openstack will be a candidate to provision from, If administrator credential is used then `internal` Availability zone which is internal only Availability zone inside `nova` will be returned and can cause potential problem, see [PR 1165](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/pull/1165) for further information. So we highly recommend to set `Availability zone` explicitly.
 
 ## DNS server
 
