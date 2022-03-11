@@ -77,7 +77,8 @@ func Test_GetOrCreateFloatingIP(t *testing.T) {
 			s := Service{
 				client: mockClient,
 			}
-			got, err := s.GetOrCreateFloatingIP(openStackCluster, "test-cluster", tt.ip)
+			eventObject := infrav1.OpenStackMachine{}
+			got, err := s.GetOrCreateFloatingIP(&eventObject, openStackCluster, "test-cluster", tt.ip)
 			g.Expect(err).ShouldNot(HaveOccurred())
 			g.Expect(got).To(Equal(tt.want))
 		})

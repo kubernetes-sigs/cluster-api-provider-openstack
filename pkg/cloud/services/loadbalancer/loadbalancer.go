@@ -71,7 +71,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 		case openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
 			floatingIPAddress = openStackCluster.Spec.ControlPlaneEndpoint.Host
 		}
-		fp, err := s.networkingService.GetOrCreateFloatingIP(openStackCluster, clusterName, floatingIPAddress)
+		fp, err := s.networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterName, floatingIPAddress)
 		if err != nil {
 			return err
 		}
