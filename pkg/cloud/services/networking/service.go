@@ -18,6 +18,7 @@ package networking
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/go-logr/logr"
 	"github.com/gophercloud/gophercloud"
@@ -99,6 +100,9 @@ func (s *Service) replaceAllAttributesTags(eventObject runtime.Object, resourceT
 	for k := range tagsMap {
 		uniqueTags = append(uniqueTags, k)
 	}
+
+	// Sort the tags so that we always get fixed order of tags to make UT easier
+	sort.Strings(uniqueTags)
 
 	_, err := s.client.ReplaceAllAttributesTags(resourceType, resourceID, attributestags.ReplaceAllOpts{
 		Tags: uniqueTags,
