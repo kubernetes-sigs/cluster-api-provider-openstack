@@ -233,7 +233,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 			addresses := instanceNS.Addresses()
 			for _, address := range addresses {
 				if address.Type == corev1.NodeExternalIP {
-					if err = networkingService.DeleteFloatingIP(openStackCluster, address.Address); err != nil {
+					if err = networkingService.DeleteFloatingIP(openStackMachine, address.Address); err != nil {
 						handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error deleting Openstack floating IP: %v", err))
 						return ctrl.Result{}, nil
 					}
@@ -361,7 +361,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 		if openStackCluster.Spec.APIServerFloatingIP != "" {
 			floatingIPAddress = openStackCluster.Spec.APIServerFloatingIP
 		}
-		fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, clusterName, floatingIPAddress)
+		fp, err := networkingService.GetOrCreateFloatingIP(openStackMachine, openStackCluster, clusterName, floatingIPAddress)
 		if err != nil {
 			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("Floating IP cannot be got or created: %v", err))
 			return ctrl.Result{}, nil
@@ -372,7 +372,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 			handleUpdateMachineError(logger, openStackMachine, err)
 			return ctrl.Result{}, nil
 		}
-		err = networkingService.AssociateFloatingIP(openStackCluster, fp, port.ID)
+		err = networkingService.AssociateFloatingIP(openStackMachine, fp, port.ID)
 		if err != nil {
 			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("Floating IP cannot be associated: %v", err))
 			return ctrl.Result{}, nil

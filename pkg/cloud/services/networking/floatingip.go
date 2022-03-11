@@ -21,6 +21,7 @@ import (
 
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -29,7 +30,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
-func (s *Service) GetOrCreateFloatingIP(openStackCluster *infrav1.OpenStackCluster, clusterName, ip string) (*floatingips.FloatingIP, error) {
+func (s *Service) GetOrCreateFloatingIP(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, clusterName, ip string) (*floatingips.FloatingIP, error) {
 	var fp *floatingips.FloatingIP
 	var err error
 	var fpCreateOpts floatingips.CreateOpts
@@ -51,7 +52,7 @@ func (s *Service) GetOrCreateFloatingIP(openStackCluster *infrav1.OpenStackClust
 
 	fp, err = s.client.CreateFloatingIP(fpCreateOpts)
 	if err != nil {
-		record.Warnf(openStackCluster, "FailedCreateFloatingIP", "Failed to create floating IP %s: %v", ip, err)
+		record.Warnf(eventObject, "FailedCreateFloatingIP", "Failed to create floating IP %s: %v", ip, err)
 		return nil, err
 	}
 
@@ -65,7 +66,7 @@ func (s *Service) GetOrCreateFloatingIP(openStackCluster *infrav1.OpenStackClust
 		}
 	}
 
-	record.Eventf(openStackCluster, "SuccessfulCreateFloatingIP", "Created floating IP %s with id %s", fp.FloatingIP, fp.ID)
+	record.Eventf(eventObject, "SuccessfulCreateFloatingIP", "Created floating IP %s with id %s", fp.FloatingIP, fp.ID)
 	return fp, nil
 }
 
@@ -91,7 +92,7 @@ func (s *Service) GetFloatingIPByPortID(portID string) (*floatingips.FloatingIP,
 	return &fpList[0], nil
 }
 
-func (s *Service) DeleteFloatingIP(openStackCluster *infrav1.OpenStackCluster, ip string) error {
+func (s *Service) DeleteFloatingIP(eventObject runtime.Object, ip string) error {
 	fip, err := s.checkIfFloatingIPExists(ip)
 	if err != nil {
 		return err
@@ -103,11 +104,11 @@ func (s *Service) DeleteFloatingIP(openStackCluster *infrav1.OpenStackCluster, i
 
 	err = s.client.DeleteFloatingIP(fip.ID)
 	if err != nil {
-		record.Warnf(openStackCluster, "FailedDeleteFloatingIP", "Failed to delete floating IP %s: %v", ip, err)
+		record.Warnf(eventObject, "FailedDeleteFloatingIP", "Failed to delete floating IP %s: %v", ip, err)
 		return err
 	}
 
-	record.Eventf(openStackCluster, "SuccessfulDeleteFloatingIP", "Deleted floating IP %s", ip)
+	record.Eventf(eventObject, "SuccessfulDeleteFloatingIP", "Deleted floating IP %s", ip)
 	return nil
 }
 
@@ -118,11 +119,11 @@ var backoff = wait.Backoff{
 	Jitter:   0.1,
 }
 
-func (s *Service) AssociateFloatingIP(openStackCluster *infrav1.OpenStackCluster, fp *floatingips.FloatingIP, portID string) error {
+func (s *Service) AssociateFloatingIP(eventObject runtime.Object, fp *floatingips.FloatingIP, portID string) error {
 	s.logger.Info("Associating floating IP", "id", fp.ID, "ip", fp.FloatingIP)
 
 	if fp.PortID == portID {
-		record.Eventf(openStackCluster, "SuccessfulAssociateFloatingIP", "Floating IP %s already associated with port %s", fp.FloatingIP, portID)
+		record.Eventf(eventObject, "SuccessfulAssociateFloatingIP", "Floating IP %s already associated with port %s", fp.FloatingIP, portID)
 		return nil
 	}
 
@@ -132,20 +133,20 @@ func (s *Service) AssociateFloatingIP(openStackCluster *infrav1.OpenStackCluster
 
 	_, err := s.client.UpdateFloatingIP(fp.ID, fpUpdateOpts)
 	if err != nil {
-		record.Warnf(openStackCluster, "FailedAssociateFloatingIP", "Failed to associate floating IP %s with port %s: %v", fp.FloatingIP, portID, err)
+		record.Warnf(eventObject, "FailedAssociateFloatingIP", "Failed to associate floating IP %s with port %s: %v", fp.FloatingIP, portID, err)
 		return err
 	}
 
 	if err = s.waitForFloatingIP(fp.ID, "ACTIVE"); err != nil {
-		record.Warnf(openStackCluster, "FailedAssociateFloatingIP", "Failed to associate floating IP %s with port %s: wait for floating IP ACTIVE: %v", fp.FloatingIP, portID, err)
+		record.Warnf(eventObject, "FailedAssociateFloatingIP", "Failed to associate floating IP %s with port %s: wait for floating IP ACTIVE: %v", fp.FloatingIP, portID, err)
 		return err
 	}
 
-	record.Eventf(openStackCluster, "SuccessfulAssociateFloatingIP", "Associated floating IP %s with port %s", fp.FloatingIP, portID)
+	record.Eventf(eventObject, "SuccessfulAssociateFloatingIP", "Associated floating IP %s with port %s", fp.FloatingIP, portID)
 	return nil
 }
 
-func (s *Service) DisassociateFloatingIP(openStackCluster *infrav1.OpenStackCluster, ip string) error {
+func (s *Service) DisassociateFloatingIP(eventObject runtime.Object, ip string) error {
 	fip, err := s.checkIfFloatingIPExists(ip)
 	if err != nil {
 		return err
@@ -163,16 +164,16 @@ func (s *Service) DisassociateFloatingIP(openStackCluster *infrav1.OpenStackClus
 
 	_, err = s.client.UpdateFloatingIP(fip.ID, fpUpdateOpts)
 	if err != nil {
-		record.Warnf(openStackCluster, "FailedDisassociateFloatingIP", "Failed to disassociate floating IP %s: %v", fip.FloatingIP, err)
+		record.Warnf(eventObject, "FailedDisassociateFloatingIP", "Failed to disassociate floating IP %s: %v", fip.FloatingIP, err)
 		return err
 	}
 
 	if err = s.waitForFloatingIP(fip.ID, "DOWN"); err != nil {
-		record.Warnf(openStackCluster, "FailedDisassociateFloatingIP", "Failed to disassociate floating IP: wait for floating IP DOWN: %v", fip.FloatingIP, err)
+		record.Warnf(eventObject, "FailedDisassociateFloatingIP", "Failed to disassociate floating IP: wait for floating IP DOWN: %v", fip.FloatingIP, err)
 		return err
 	}
 
-	record.Eventf(openStackCluster, "SuccessfulDisassociateFloatingIP", "Disassociated floating IP %s", fip.FloatingIP)
+	record.Eventf(eventObject, "SuccessfulDisassociateFloatingIP", "Disassociated floating IP %s", fip.FloatingIP)
 	return nil
 }
 
