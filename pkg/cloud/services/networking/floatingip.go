@@ -36,7 +36,7 @@ func (s *Service) GetOrCreateFloatingIP(eventObject runtime.Object, openStackClu
 	var fpCreateOpts floatingips.CreateOpts
 
 	if ip != "" {
-		fp, err = s.checkIfFloatingIPExists(ip)
+		fp, err = s.GetFloatingIP(ip)
 		if err != nil {
 			return nil, err
 		}
@@ -70,7 +70,7 @@ func (s *Service) GetOrCreateFloatingIP(eventObject runtime.Object, openStackClu
 	return fp, nil
 }
 
-func (s *Service) checkIfFloatingIPExists(ip string) (*floatingips.FloatingIP, error) {
+func (s *Service) GetFloatingIP(ip string) (*floatingips.FloatingIP, error) {
 	fpList, err := s.client.ListFloatingIP(floatingips.ListOpts{FloatingIP: ip})
 	if err != nil {
 		return nil, err
@@ -93,7 +93,7 @@ func (s *Service) GetFloatingIPByPortID(portID string) (*floatingips.FloatingIP,
 }
 
 func (s *Service) DeleteFloatingIP(eventObject runtime.Object, ip string) error {
-	fip, err := s.checkIfFloatingIPExists(ip)
+	fip, err := s.GetFloatingIP(ip)
 	if err != nil {
 		return err
 	}
@@ -147,7 +147,7 @@ func (s *Service) AssociateFloatingIP(eventObject runtime.Object, fp *floatingip
 }
 
 func (s *Service) DisassociateFloatingIP(eventObject runtime.Object, ip string) error {
-	fip, err := s.checkIfFloatingIPExists(ip)
+	fip, err := s.GetFloatingIP(ip)
 	if err != nil {
 		return err
 	}
