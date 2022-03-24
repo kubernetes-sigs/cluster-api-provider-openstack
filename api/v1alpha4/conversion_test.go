@@ -27,7 +27,7 @@ import (
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
 	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha5"
 )
 
 func TestConvertTo(t *testing.T) {
@@ -208,7 +208,7 @@ func TestFuzzyConversion(t *testing.T) {
 			func(v1alpha4RootVolume *RootVolume, c fuzz.Continue) {
 				c.FuzzNoCustom(v1alpha4RootVolume)
 
-				// In v1beta1 only DeviceType="disk" and SourceType="image" are supported
+				// In v1alpha5 only DeviceType="disk" and SourceType="image" are supported
 				v1alpha4RootVolume.DeviceType = "disk"
 				v1alpha4RootVolume.SourceType = "image"
 			},
@@ -230,53 +230,53 @@ func TestFuzzyConversion(t *testing.T) {
 			},
 
 			// Don't test hub-spoke-hub conversion of infrav1 fields which are not in v1alpha4
-			func(v1beta1PortOpts *infrav1.PortOpts, c fuzz.Continue) {
-				c.FuzzNoCustom(v1beta1PortOpts)
+			func(v1alpha5PortOpts *infrav1.PortOpts, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha5PortOpts)
 
 				// v1alpha4 PortOpts has only NetworkID, so only Network.ID filter can be translated
-				if v1beta1PortOpts.Network != nil {
-					v1beta1PortOpts.Network = &infrav1.NetworkFilter{ID: v1beta1PortOpts.Network.ID}
+				if v1alpha5PortOpts.Network != nil {
+					v1alpha5PortOpts.Network = &infrav1.NetworkFilter{ID: v1alpha5PortOpts.Network.ID}
 
 					// We have no way to differentiate between a nil NetworkFilter and an
 					// empty NetworkFilter after conversion because they both translate into an
 					// empty string in v1alpha4
-					if *v1beta1PortOpts.Network == (infrav1.NetworkFilter{}) {
-						v1beta1PortOpts.Network = nil
+					if *v1alpha5PortOpts.Network == (infrav1.NetworkFilter{}) {
+						v1alpha5PortOpts.Network = nil
 					}
 				}
 			},
-			func(v1beta1FixedIP *infrav1.FixedIP, c fuzz.Continue) {
-				c.FuzzNoCustom(v1beta1FixedIP)
+			func(v1alpha5FixedIP *infrav1.FixedIP, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha5FixedIP)
 
 				// v1alpha4 only supports subnet specified by ID
-				if v1beta1FixedIP.Subnet != nil {
-					v1beta1FixedIP.Subnet = &infrav1.SubnetFilter{ID: v1beta1FixedIP.Subnet.ID}
+				if v1alpha5FixedIP.Subnet != nil {
+					v1alpha5FixedIP.Subnet = &infrav1.SubnetFilter{ID: v1alpha5FixedIP.Subnet.ID}
 
 					// We have no way to differentiate between a nil SubnetFilter and an
 					// empty SubnetFilter after conversion because they both translate into an
 					// empty string in v1alpha4
-					if *v1beta1FixedIP.Subnet == (infrav1.SubnetFilter{}) {
-						v1beta1FixedIP.Subnet = nil
+					if *v1alpha5FixedIP.Subnet == (infrav1.SubnetFilter{}) {
+						v1alpha5FixedIP.Subnet = nil
 					}
 				}
 			},
-			func(v1beta1ClusterStatus *infrav1.OpenStackClusterStatus, c fuzz.Continue) {
-				c.FuzzNoCustom(v1beta1ClusterStatus)
+			func(v1alpha5ClusterStatus *infrav1.OpenStackClusterStatus, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha5ClusterStatus)
 
-				if v1beta1ClusterStatus.Bastion != nil {
-					v1beta1ClusterStatus.Bastion.ImageUUID = ""
+				if v1alpha5ClusterStatus.Bastion != nil {
+					v1alpha5ClusterStatus.Bastion.ImageUUID = ""
 				}
 			},
-			func(v1beta1MachineSpec *infrav1.OpenStackMachineSpec, c fuzz.Continue) {
-				c.FuzzNoCustom(v1beta1MachineSpec)
+			func(v1alpha5MachineSpec *infrav1.OpenStackMachineSpec, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha5MachineSpec)
 
-				v1beta1MachineSpec.ImageUUID = ""
+				v1alpha5MachineSpec.ImageUUID = ""
 			},
-			func(v1beta1RootVolume *infrav1.RootVolume, c fuzz.Continue) {
-				c.FuzzNoCustom(v1beta1RootVolume)
+			func(v1alpha5RootVolume *infrav1.RootVolume, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha5RootVolume)
 
-				v1beta1RootVolume.VolumeType = ""
-				v1beta1RootVolume.AvailabilityZone = ""
+				v1alpha5RootVolume.VolumeType = ""
+				v1alpha5RootVolume.AvailabilityZone = ""
 			},
 		}
 	}

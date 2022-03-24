@@ -14,5 +14,5 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// +k8s:conversion-gen=sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1
+// +k8s:conversion-gen=sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha5
 package v1alpha3

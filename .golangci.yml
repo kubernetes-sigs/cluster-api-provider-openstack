@@ -83,7 +83,7 @@ linters-settings:
         alias: infrav1alpha3
       - pkg: sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4
         alias: infrav1alpha4
-      - pkg: sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1
+      - pkg: sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha5
         alias: infrav1
       - pkg: sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors
         alias: capoerrors

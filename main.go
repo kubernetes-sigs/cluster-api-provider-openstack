@@ -39,7 +39,7 @@ import (
 
 	infrav1alpha3 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
 	infrav1alpha4 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha5"
 	"sigs.k8s.io/cluster-api-provider-openstack/controllers"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"

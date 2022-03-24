@@ -679,7 +679,7 @@ spec:
         type: object
     served: true
     storage: false
-  - name: v1beta1
+  - name: v1alpha5
     schema:
       openAPIV3Schema:
         description: OpenStackMachineTemplate is the Schema for the openstackmachinetemplates
