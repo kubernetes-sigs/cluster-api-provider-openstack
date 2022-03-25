@@ -26,7 +26,8 @@ spec:
   identityRef:
     name: ${CLUSTER_NAME}-cloud-config
     kind: Secret
-  managedAPIServerLoadBalancer: true
+  apiServerLoadBalancer:
+    enabled: true
   managedSecurityGroups: true
   nodeCidr: 10.6.0.0/24
   dnsNameservers:

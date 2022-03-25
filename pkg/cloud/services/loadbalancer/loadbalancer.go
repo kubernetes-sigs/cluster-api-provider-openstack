@@ -82,7 +82,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 	}
 
 	portList := []int{apiServerPort}
-	portList = append(portList, openStackCluster.Spec.APIServerLoadBalancerAdditionalPorts...)
+	portList = append(portList, openStackCluster.Spec.APIServerLoadBalancer.AdditionalPorts...)
 	for _, port := range portList {
 		lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)
 		listener, err := s.getOrCreateListener(openStackCluster, lbPortObjectsName, lb.ID, port)
@@ -268,7 +268,7 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 
 	lbID := openStackCluster.Status.Network.APIServerLoadBalancer.ID
 	portList := []int{int(openStackCluster.Spec.ControlPlaneEndpoint.Port)}
-	portList = append(portList, openStackCluster.Spec.APIServerLoadBalancerAdditionalPorts...)
+	portList = append(portList, openStackCluster.Spec.APIServerLoadBalancer.AdditionalPorts...)
 	for _, port := range portList {
 		lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)
 		name := lbPortObjectsName + "-" + openStackMachine.Name
@@ -392,7 +392,7 @@ func (s *Service) DeleteLoadBalancerMember(openStackCluster *infrav1.OpenStackCl
 	lbID := lb.ID
 
 	portList := []int{int(openStackCluster.Spec.ControlPlaneEndpoint.Port)}
-	portList = append(portList, openStackCluster.Spec.APIServerLoadBalancerAdditionalPorts...)
+	portList = append(portList, openStackCluster.Spec.APIServerLoadBalancer.AdditionalPorts...)
 	for _, port := range portList {
 		lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)
 		name := lbPortObjectsName + "-" + openStackMachine.Name

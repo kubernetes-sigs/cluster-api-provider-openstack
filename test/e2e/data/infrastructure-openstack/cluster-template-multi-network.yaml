@@ -30,7 +30,8 @@ spec:
     kind: Secret
   controlPlaneAvailabilityZones:
   - ${OPENSTACK_FAILURE_DOMAIN}
-  managedAPIServerLoadBalancer: true
+  apiServerLoadBalancer:
+    enabled: true
   managedSecurityGroups: true
   nodeCidr: 10.6.0.0/24
   dnsNameservers:

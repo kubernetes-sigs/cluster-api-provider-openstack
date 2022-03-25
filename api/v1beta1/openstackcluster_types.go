@@ -57,10 +57,10 @@ type OpenStackClusterSpec struct {
 	// +optional
 	ExternalNetworkID string `json:"externalNetworkId,omitempty"`
 
-	// ManagedAPIServerLoadBalancer defines whether a LoadBalancer for the
-	// APIServer should be created.
+	// APIServerLoadBalancer configures the optional LoadBalancer for the APIServer.
+	// It must be activated by setting `enabled: true`.
 	// +optional
-	ManagedAPIServerLoadBalancer bool `json:"managedAPIServerLoadBalancer"`
+	APIServerLoadBalancer APIServerLoadBalancer `json:"apiServerLoadBalancer,omitempty"`
 
 	// DisableAPIServerFloatingIP determines whether or not to attempt to attach a floating
 	// IP to the API server. This allows for the creation of clusters when attaching a floating
@@ -96,9 +96,6 @@ type OpenStackClusterSpec struct {
 	// APIServerPort is the port on which the listener on the APIServer
 	// will be created
 	APIServerPort int `json:"apiServerPort,omitempty"`
-
-	// APIServerLoadBalancerAdditionalPorts adds additional ports to the APIServerLoadBalancer
-	APIServerLoadBalancerAdditionalPorts []int `json:"apiServerLoadBalancerAdditionalPorts,omitempty"`
 
 	// ManagedSecurityGroups determines whether OpenStack security groups for the cluster
 	// will be managed by the OpenStack provider or whether pre-existing security groups will

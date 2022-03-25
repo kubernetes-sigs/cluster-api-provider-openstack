@@ -25,9 +25,92 @@ import (
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	runtimeserializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
+	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
+
+func TestConvertTo(t *testing.T) {
+	g := gomega.NewWithT(t)
+	scheme := runtime.NewScheme()
+	g.Expect(AddToScheme(scheme)).To(gomega.Succeed())
+	g.Expect(infrav1.AddToScheme(scheme)).To(gomega.Succeed())
+
+	tests := []struct {
+		name  string
+		spoke ctrlconversion.Convertible
+		hub   ctrlconversion.Hub
+		want  ctrlconversion.Hub
+	}{
+		{
+			name: "APIServer LoadBalancer Configuration",
+			spoke: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					ManagedAPIServerLoadBalancer:         true,
+					APIServerLoadBalancerAdditionalPorts: []int{80, 443},
+				},
+			},
+			hub: &infrav1.OpenStackCluster{},
+			want: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					APIServerLoadBalancer: infrav1.APIServerLoadBalancer{
+						Enabled:         true,
+						AdditionalPorts: []int{80, 443},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.spoke.ConvertTo(tt.hub)
+			g.Expect(err).NotTo(gomega.HaveOccurred())
+			g.Expect(tt.hub).To(gomega.Equal(tt.want))
+		})
+	}
+}
+
+func TestConvertFrom(t *testing.T) {
+	g := gomega.NewWithT(t)
+	scheme := runtime.NewScheme()
+	g.Expect(AddToScheme(scheme)).To(gomega.Succeed())
+	g.Expect(infrav1.AddToScheme(scheme)).To(gomega.Succeed())
+
+	tests := []struct {
+		name  string
+		spoke ctrlconversion.Convertible
+		hub   ctrlconversion.Hub
+		want  ctrlconversion.Convertible
+	}{
+		{
+			name:  "APIServer LoadBalancer Configuration",
+			spoke: &OpenStackCluster{},
+			hub: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					APIServerLoadBalancer: infrav1.APIServerLoadBalancer{
+						Enabled:         true,
+						AdditionalPorts: []int{80, 443},
+					},
+				},
+			},
+			want: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					ManagedAPIServerLoadBalancer:         true,
+					APIServerLoadBalancerAdditionalPorts: []int{80, 443},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.spoke.ConvertFrom(tt.hub)
+			g.Expect(err).NotTo(gomega.HaveOccurred())
+			g.Expect(tt.spoke).To(gomega.Equal(tt.want))
+		})
+	}
+}
 
 func TestFuzzyConversion(t *testing.T) {
 	g := gomega.NewWithT(t)

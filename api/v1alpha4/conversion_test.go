@@ -70,6 +70,24 @@ func TestConvertTo(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "APIServer LoadBalancer Configuration",
+			spoke: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					ManagedAPIServerLoadBalancer:         true,
+					APIServerLoadBalancerAdditionalPorts: []int{80, 443},
+				},
+			},
+			hub: &infrav1.OpenStackCluster{},
+			want: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					APIServerLoadBalancer: infrav1.APIServerLoadBalancer{
+						Enabled:         true,
+						AdditionalPorts: []int{80, 443},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -118,6 +136,24 @@ func TestConvertFrom(t *testing.T) {
 							},
 						},
 					},
+				},
+			},
+		},
+		{
+			name:  "APIServer LoadBalancer Configuration",
+			spoke: &OpenStackCluster{},
+			hub: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					APIServerLoadBalancer: infrav1.APIServerLoadBalancer{
+						Enabled:         true,
+						AdditionalPorts: []int{80, 443},
+					},
+				},
+			},
+			want: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					ManagedAPIServerLoadBalancer:         true,
+					APIServerLoadBalancerAdditionalPorts: []int{80, 443},
 				},
 			},
 		},
