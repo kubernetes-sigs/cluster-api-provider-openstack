@@ -30,7 +30,6 @@ const (
 
 // OpenStackClusterSpec defines the desired state of OpenStackCluster.
 type OpenStackClusterSpec struct {
-
 	// The name of the secret containing the openstack credentials
 	// +optional
 	// +k8s:conversion-gen=false

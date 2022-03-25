@@ -94,7 +94,6 @@ type OpenStackMachineSpec struct {
 
 // OpenStackMachineStatus defines the observed state of OpenStackMachine.
 type OpenStackMachineStatus struct {
-
 	// Ready is true when the provider resource is ready.
 	// +optional
 	Ready bool `json:"ready"`
