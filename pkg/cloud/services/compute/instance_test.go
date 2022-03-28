@@ -49,6 +49,7 @@ import (
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking/mock_networking"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
 type gomegaMockMatcher struct {
@@ -496,10 +497,12 @@ func TestService_getImageID(t *testing.T) {
 			tt.expect(mockComputeClient.EXPECT())
 
 			s := Service{
-				projectID:         "",
+				projectID: "",
+				scope: &scope.Scope{
+					Logger: logr.Discard(),
+				},
 				computeService:    mockComputeClient,
 				networkingService: &networking.Service{},
-				logger:            logr.Discard(),
 			}
 
 			got, err := s.getImageID(tt.imageUUID, tt.imageName)
@@ -1116,12 +1119,14 @@ func TestService_CreateInstance(t *testing.T) {
 			tt.expect(computeRecorder, networkRecorder)
 
 			s := Service{
-				projectID:      "",
+				projectID: "",
+				scope: &scope.Scope{
+					Logger: logr.Discard(),
+				},
 				computeService: mockComputeClient,
 				networkingService: networking.NewTestService(
 					"", mockNetworkClient, logr.Discard(),
 				),
-				logger: logr.Discard(),
 			}
 			// Call CreateInstance with a reduced retry interval to speed up the test
 			_, err := s.createInstanceImpl(tt.getOpenStackCluster(), tt.getMachine(), tt.getOpenStackMachine(), "cluster-name", "user-data", time.Second)
@@ -1238,12 +1243,14 @@ func TestService_DeleteInstance(t *testing.T) {
 			tt.expect(computeRecorder, networkRecorder)
 
 			s := Service{
-				projectID:      "",
+				projectID: "",
+				scope: &scope.Scope{
+					Logger: logr.Discard(),
+				},
 				computeService: mockComputeClient,
 				networkingService: networking.NewTestService(
 					"", mockNetworkClient, logr.Discard(),
 				),
-				logger: logr.Discard(),
 			}
 			if err := s.DeleteInstance(tt.eventObject, tt.getOpenStackMachineSpec(), instanceName, tt.getInstanceStatus()); (err != nil) != tt.wantErr {
 				t.Errorf("Service.DeleteInstance() error = %v, wantErr %v", err, tt.wantErr)

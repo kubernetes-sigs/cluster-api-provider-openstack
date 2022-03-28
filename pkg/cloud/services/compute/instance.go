@@ -217,7 +217,7 @@ func (s *Service) createInstance(eventObject runtime.Object, clusterName string,
 		}
 
 		if err := s.deletePorts(eventObject, portList); err != nil {
-			s.logger.V(4).Error(err, "failed to clean up ports after failure", "cluster", clusterName, "machine", instanceSpec.Name)
+			s.scope.Logger.V(4).Error(err, "failed to clean up ports after failure", "cluster", clusterName, "machine", instanceSpec.Name)
 		}
 	}()
 
@@ -381,7 +381,7 @@ func (s *Service) getOrCreateRootVolume(eventObject runtime.Object, instanceSpec
 			return nil, fmt.Errorf("exected to find volume %s with size %d; found size %d", name, size, volume.Size)
 		}
 
-		s.logger.Info("using existing root volume %s", name)
+		s.scope.Logger.Info("using existing root volume %s", name)
 		return volume, nil
 	}
 
@@ -596,7 +596,7 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, openStackMachineSpe
 				return nil
 			}
 
-			s.logger.Info("deleting dangling root volume %s(%s)", volume.Name, volume.ID)
+			s.scope.Logger.Info("deleting dangling root volume %s(%s)", volume.Name, volume.ID)
 			return s.computeService.DeleteVolume(volume.ID, volumes.DeleteOpts{})
 		}
 
@@ -721,7 +721,7 @@ func (s *Service) GetInstanceStatus(resourceID string) (instance *InstanceStatus
 		return nil, fmt.Errorf("get server %q detail failed: %v", resourceID, err)
 	}
 
-	return &InstanceStatus{server, s.logger}, nil
+	return &InstanceStatus{server, s.scope.Logger}, nil
 }
 
 func (s *Service) GetInstanceStatusByName(eventObject runtime.Object, name string) (instance *InstanceStatus, err error) {
@@ -748,7 +748,7 @@ func (s *Service) GetInstanceStatusByName(eventObject runtime.Object, name strin
 
 	// Return the first returned server, if any
 	for i := range serverList {
-		return &InstanceStatus{&serverList[i], s.logger}, nil
+		return &InstanceStatus{&serverList[i], s.scope.Logger}, nil
 	}
 	return nil, nil
 }

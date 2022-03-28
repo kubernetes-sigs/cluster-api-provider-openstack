@@ -24,8 +24,6 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/utils/openstack/clientconfig"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -46,6 +44,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -53,6 +52,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/loadbalancer"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/provider"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
 // OpenStackMachineReconciler reconciles a OpenStackMachine object.
@@ -140,13 +140,24 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}()
 
+	osProviderClient, clientOpts, err := provider.NewClientFromMachine(ctx, r.Client, openStackMachine)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	scope := &scope.Scope{
+		ProviderClient:     osProviderClient,
+		ProviderClientOpts: clientOpts,
+		Logger:             log,
+	}
+
 	// Handle deleted machines
 	if !openStackMachine.DeletionTimestamp.IsZero() {
-		return r.reconcileDelete(ctx, log, patchHelper, cluster, infraCluster, machine, openStackMachine)
+		return r.reconcileDelete(ctx, scope, patchHelper, cluster, infraCluster, machine, openStackMachine)
 	}
 
 	// Handle non-deleted clusters
-	return r.reconcileNormal(ctx, log, patchHelper, cluster, infraCluster, machine, openStackMachine)
+	return r.reconcileNormal(ctx, scope, patchHelper, cluster, infraCluster, machine, openStackMachine)
 }
 
 func (r *OpenStackMachineReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager, options controller.Options) error {
@@ -186,28 +197,23 @@ func (r *OpenStackMachineReconciler) SetupWithManager(ctx context.Context, mgr c
 		Complete(r)
 }
 
-func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger logr.Logger, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (ctrl.Result, error) {
-	logger.Info("Reconciling Machine delete")
+func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, scope *scope.Scope, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (ctrl.Result, error) {
+	scope.Logger.Info("Reconciling Machine delete")
 
 	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
 
-	osProviderClient, clientOpts, err := provider.NewClientFromMachine(ctx, r.Client, openStackMachine)
+	computeService, err := compute.NewService(scope)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 
-	computeService, err := compute.NewService(osProviderClient, clientOpts, logger)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
-	networkingService, err := networking.NewService(osProviderClient, clientOpts, logger)
+	networkingService, err := networking.NewService(scope)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
-		loadBalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, logger)
+		loadBalancerService, err := loadbalancer.NewService(scope)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
@@ -226,7 +232,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 		if instanceStatus != nil {
 			instanceNS, err := instanceStatus.NetworkStatus()
 			if err != nil {
-				handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error getting network status for OpenStack instance %s with ID %s: %v", instanceStatus.Name(), instanceStatus.ID(), err))
+				handleUpdateMachineError(scope.Logger, openStackMachine, errors.Errorf("error getting network status for OpenStack instance %s with ID %s: %v", instanceStatus.Name(), instanceStatus.ID(), err))
 				return ctrl.Result{}, nil
 			}
 
@@ -234,7 +240,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 			for _, address := range addresses {
 				if address.Type == corev1.NodeExternalIP {
 					if err = networkingService.DeleteFloatingIP(openStackMachine, address.Address); err != nil {
-						handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error deleting Openstack floating IP: %v", err))
+						handleUpdateMachineError(scope.Logger, openStackMachine, errors.Errorf("error deleting Openstack floating IP: %v", err))
 						return ctrl.Result{}, nil
 					}
 				}
@@ -243,22 +249,22 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, logger
 	}
 
 	if err := computeService.DeleteInstance(openStackMachine, &openStackMachine.Spec, openStackMachine.Name, instanceStatus); err != nil {
-		handleUpdateMachineError(logger, openStackMachine, errors.Errorf("error deleting OpenStack instance %s with ID %s: %v", instanceStatus.Name(), instanceStatus.ID(), err))
+		handleUpdateMachineError(scope.Logger, openStackMachine, errors.Errorf("error deleting OpenStack instance %s with ID %s: %v", instanceStatus.Name(), instanceStatus.ID(), err))
 		return ctrl.Result{}, nil
 	}
 
 	controllerutil.RemoveFinalizer(openStackMachine, infrav1.MachineFinalizer)
-	logger.Info("Reconciled Machine delete successfully")
+	scope.Logger.Info("Reconciled Machine delete successfully")
 	if err := patchHelper.Patch(ctx, openStackMachine); err != nil {
 		return ctrl.Result{}, err
 	}
 	return ctrl.Result{}, nil
 }
 
-func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger logr.Logger, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (_ ctrl.Result, reterr error) {
+func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope *scope.Scope, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (_ ctrl.Result, reterr error) {
 	// If the OpenStackMachine is in an error state, return early.
 	if openStackMachine.Status.FailureReason != nil || openStackMachine.Status.FailureMessage != nil {
-		logger.Info("Error state detected, skipping reconciliation")
+		scope.Logger.Info("Error state detected, skipping reconciliation")
 		return ctrl.Result{}, nil
 	}
 
@@ -270,47 +276,42 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 	}
 
 	if !cluster.Status.InfrastructureReady {
-		logger.Info("Cluster infrastructure is not ready yet, requeuing machine")
+		scope.Logger.Info("Cluster infrastructure is not ready yet, requeuing machine")
 		return ctrl.Result{RequeueAfter: waitForClusterInfrastructureReadyDuration}, nil
 	}
 
 	// Make sure bootstrap data is available and populated.
 	if machine.Spec.Bootstrap.DataSecretName == nil {
-		logger.Info("Bootstrap data secret reference is not yet available")
+		scope.Logger.Info("Bootstrap data secret reference is not yet available")
 		return ctrl.Result{}, nil
 	}
 	userData, err := r.getBootstrapData(ctx, machine, openStackMachine)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	logger.Info("Reconciling Machine")
+	scope.Logger.Info("Reconciling Machine")
 
 	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
 
-	osProviderClient, clientOpts, err := provider.NewClientFromMachine(ctx, r.Client, openStackMachine)
+	computeService, err := compute.NewService(scope)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 
-	computeService, err := compute.NewService(osProviderClient, clientOpts, logger)
+	networkingService, err := networking.NewService(scope)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 
-	networkingService, err := networking.NewService(osProviderClient, clientOpts, logger)
+	instanceStatus, err := r.getOrCreate(scope.Logger, cluster, openStackCluster, machine, openStackMachine, computeService, userData)
 	if err != nil {
-		return ctrl.Result{}, err
-	}
-
-	instanceStatus, err := r.getOrCreate(logger, cluster, openStackCluster, machine, openStackMachine, computeService, userData)
-	if err != nil {
-		handleUpdateMachineError(logger, openStackMachine, errors.Errorf("OpenStack instance cannot be created: %v", err))
+		handleUpdateMachineError(scope.Logger, openStackMachine, errors.Errorf("OpenStack instance cannot be created: %v", err))
 		return ctrl.Result{}, err
 	}
 
 	// Set an error message if we couldn't find the instance.
 	if instanceStatus == nil {
-		handleUpdateMachineError(logger, openStackMachine, errors.New("OpenStack instance cannot be found"))
+		handleUpdateMachineError(scope.Logger, openStackMachine, errors.New("OpenStack instance cannot be found"))
 		return ctrl.Result{}, nil
 	}
 
@@ -324,7 +325,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 
 	instanceNS, err := instanceStatus.NetworkStatus()
 	if err != nil {
-		handleUpdateMachineError(logger, openStackMachine, errors.Errorf("Unable to get network status for OpenStack instance %s with ID %s: %v", instanceStatus.Name(), instanceStatus.ID(), err))
+		handleUpdateMachineError(scope.Logger, openStackMachine, errors.Errorf("Unable to get network status for OpenStack instance %s with ID %s: %v", instanceStatus.Name(), instanceStatus.ID(), err))
 		return ctrl.Result{}, nil
 	}
 
@@ -333,27 +334,27 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 
 	switch instanceStatus.State() {
 	case infrav1.InstanceStateActive:
-		logger.Info("Machine instance is ACTIVE", "instance-id", instanceStatus.ID())
+		scope.Logger.Info("Machine instance is ACTIVE", "instance-id", instanceStatus.ID())
 		openStackMachine.Status.Ready = true
 	case infrav1.InstanceStateError:
 		// Error is unexpected, thus we report error and never retry
-		handleUpdateMachineError(logger, openStackMachine, errors.Errorf("OpenStack instance state %q is unexpected", instanceStatus.State()))
+		handleUpdateMachineError(scope.Logger, openStackMachine, errors.Errorf("OpenStack instance state %q is unexpected", instanceStatus.State()))
 		return ctrl.Result{}, nil
 	case infrav1.InstanceStateDeleted:
 		// we should avoid further actions for DELETED VM
-		logger.Info("Instance state is DELETED, no actions")
+		scope.Logger.Info("Instance state is DELETED, no actions")
 		return ctrl.Result{}, nil
 	default:
 		// The other state is normal (for example, migrating, shutoff) but we don't want to proceed until it's ACTIVE
 		// due to potential conflict or unexpected actions
-		logger.Info("Waiting for instance to become ACTIVE", "instance-id", instanceStatus.ID(), "status", instanceStatus.State())
+		scope.Logger.Info("Waiting for instance to become ACTIVE", "instance-id", instanceStatus.ID(), "status", instanceStatus.State())
 		return ctrl.Result{RequeueAfter: waitForInstanceBecomeActiveToReconcile}, nil
 	}
 
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
-		err = r.reconcileLoadBalancerMember(logger, osProviderClient, clientOpts, openStackCluster, machine, openStackMachine, instanceNS, clusterName)
+		err = r.reconcileLoadBalancerMember(scope, openStackCluster, machine, openStackMachine, instanceNS, clusterName)
 		if err != nil {
-			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("LoadBalancerMember cannot be reconciled: %v", err))
+			handleUpdateMachineError(scope.Logger, openStackMachine, errors.Errorf("LoadBalancerMember cannot be reconciled: %v", err))
 			return ctrl.Result{}, nil
 		}
 	} else if util.IsControlPlaneMachine(machine) && !openStackCluster.Spec.DisableAPIServerFloatingIP {
@@ -363,23 +364,23 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, logger
 		}
 		fp, err := networkingService.GetOrCreateFloatingIP(openStackMachine, openStackCluster, clusterName, floatingIPAddress)
 		if err != nil {
-			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("Floating IP cannot be got or created: %v", err))
+			handleUpdateMachineError(scope.Logger, openStackMachine, errors.Errorf("Floating IP cannot be got or created: %v", err))
 			return ctrl.Result{}, nil
 		}
 		port, err := computeService.GetManagementPort(openStackCluster, instanceStatus)
 		if err != nil {
 			err = errors.Errorf("getting management port for control plane machine %s: %v", machine.Name, err)
-			handleUpdateMachineError(logger, openStackMachine, err)
+			handleUpdateMachineError(scope.Logger, openStackMachine, err)
 			return ctrl.Result{}, nil
 		}
 		err = networkingService.AssociateFloatingIP(openStackMachine, fp, port.ID)
 		if err != nil {
-			handleUpdateMachineError(logger, openStackMachine, errors.Errorf("Floating IP cannot be associated: %v", err))
+			handleUpdateMachineError(scope.Logger, openStackMachine, errors.Errorf("Floating IP cannot be associated: %v", err))
 			return ctrl.Result{}, nil
 		}
 	}
 
-	logger.Info("Reconciled Machine create successfully")
+	scope.Logger.Info("Reconciled Machine create successfully")
 	return ctrl.Result{}, nil
 }
 
@@ -408,9 +409,9 @@ func handleUpdateMachineError(logger logr.Logger, openstackMachine *infrav1.Open
 	logger.Error(fmt.Errorf(string(err)), message.Error())
 }
 
-func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(logger logr.Logger, osProviderClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, instanceNS *compute.InstanceNetworkStatus, clusterName string) error {
+func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(scope *scope.Scope, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, instanceNS *compute.InstanceNetworkStatus, clusterName string) error {
 	ip := instanceNS.IP(openStackCluster.Status.Network.Name)
-	loadbalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, logger)
+	loadbalancerService, err := loadbalancer.NewService(scope)
 	if err != nil {
 		return err
 	}

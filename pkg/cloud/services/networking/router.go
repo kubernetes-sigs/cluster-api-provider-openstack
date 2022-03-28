@@ -32,20 +32,20 @@ import (
 
 func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
 	if openStackCluster.Status.Network == nil || openStackCluster.Status.Network.ID == "" {
-		s.logger.V(3).Info("No need to reconcile router since no network exists.")
+		s.scope.Logger.V(3).Info("No need to reconcile router since no network exists.")
 		return nil
 	}
 	if openStackCluster.Status.Network.Subnet == nil || openStackCluster.Status.Network.Subnet.ID == "" {
-		s.logger.V(4).Info("No need to reconcile router since no subnet exists.")
+		s.scope.Logger.V(4).Info("No need to reconcile router since no subnet exists.")
 		return nil
 	}
 	if openStackCluster.Status.ExternalNetwork == nil || openStackCluster.Status.ExternalNetwork.ID == "" {
-		s.logger.V(3).Info("No need to create router, due to missing ExternalNetworkID.")
+		s.scope.Logger.V(3).Info("No need to create router, due to missing ExternalNetworkID.")
 		return nil
 	}
 
 	routerName := getRouterName(clusterName)
-	s.logger.Info("Reconciling router", "name", routerName)
+	s.scope.Logger.Info("Reconciling router", "name", routerName)
 
 	routerList, err := s.client.ListRouter(routers.ListOpts{
 		Name: routerName,
@@ -67,7 +67,7 @@ func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, cl
 		}
 	} else {
 		router = &routerList[0]
-		s.logger.V(6).Info(fmt.Sprintf("Reuse existing Router %s with id %s", routerName, router.ID))
+		s.scope.Logger.V(6).Info(fmt.Sprintf("Reuse existing Router %s with id %s", routerName, router.ID))
 	}
 
 	openStackCluster.Status.Network.Router = &infrav1.Router{
@@ -101,14 +101,14 @@ INTERFACE_LOOP:
 
 	// ... and create a router interface for our subnet.
 	if createInterface {
-		s.logger.V(4).Info("Creating RouterInterface", "routerID", router.ID, "subnetID", openStackCluster.Status.Network.Subnet.ID)
+		s.scope.Logger.V(4).Info("Creating RouterInterface", "routerID", router.ID, "subnetID", openStackCluster.Status.Network.Subnet.ID)
 		routerInterface, err := s.client.AddRouterInterface(router.ID, routers.AddInterfaceOpts{
 			SubnetID: openStackCluster.Status.Network.Subnet.ID,
 		})
 		if err != nil {
 			return fmt.Errorf("unable to create router interface: %v", err)
 		}
-		s.logger.V(4).Info("Created RouterInterface", "id", routerInterface.ID)
+		s.scope.Logger.V(4).Info("Created RouterInterface", "id", routerInterface.ID)
 	}
 	return nil
 }
@@ -201,9 +201,9 @@ func (s *Service) DeleteRouter(openStackCluster *infrav1.OpenStackCluster, clust
 			if !capoerrors.IsNotFound(err) {
 				return fmt.Errorf("unable to remove router interface: %v", err)
 			}
-			s.logger.V(4).Info("Router Interface already removed, nothing to do", "id", router.ID)
+			s.scope.Logger.V(4).Info("Router Interface already removed, nothing to do", "id", router.ID)
 		} else {
-			s.logger.V(4).Info("Removed RouterInterface of Router", "id", router.ID)
+			s.scope.Logger.V(4).Info("Removed RouterInterface of Router", "id", router.ID)
 		}
 	}
 
