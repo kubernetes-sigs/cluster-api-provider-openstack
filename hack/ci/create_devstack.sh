@@ -94,14 +94,7 @@ function wait_for_ssh {
 function start_sshuttle {
     if ! command -v sshuttle;
     then
-        # Install sshuttle from source because we need: https://github.com/sshuttle/sshuttle/pull/661
-        # TODO(sbueringer) install via pip after the next release after 1.0.5 via:
-        # pip3 install sshuttle
-        pushd /tmp
-        git clone https://github.com/sshuttle/sshuttle.git
-        cd sshuttle
-        pip3 install .
-        popd || exit 1
+        pip3 install sshuttle
     fi
 
     kill_sshuttle
