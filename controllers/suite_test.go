@@ -17,13 +17,18 @@ limitations under the License.
 package controllers
 
 import (
+	"context"
 	"path/filepath"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
@@ -41,10 +46,6 @@ var (
 )
 
 func TestAPIs(t *testing.T) {
-	// TODO(sbueringer) controller don't work yet because kubebuilder is not installed correctly
-	// and therefore no etcd is available inside the path
-	t.Skip()
-
 	RegisterFailHandler(Fail)
 
 	RunSpecsWithDefaultAndCustomReporters(t,
@@ -82,4 +83,33 @@ var _ = AfterSuite(func() {
 	By("tearing down the test environment")
 	err := testEnv.Stop()
 	Expect(err).ToNot(HaveOccurred())
+})
+
+var _ = Describe("EnvTest sanity check", func() {
+	ctx := context.TODO()
+	It("should be able to create a namespace", func() {
+		testNamespace := "capo-test"
+		namespacedName := types.NamespacedName{
+			Name: testNamespace,
+		}
+		namespaceInput := framework.CreateNamespaceInput{
+			Creator: k8sClient,
+			Name:    testNamespace,
+		}
+
+		// Create the namespace
+		namespace := framework.CreateNamespace(ctx, namespaceInput)
+		// Check the result
+		namespaceResult := &corev1.Namespace{}
+		err := k8sClient.Get(ctx, namespacedName, namespaceResult)
+		Expect(err).To(BeNil())
+		Expect(namespaceResult).To(Equal(namespace))
+
+		// Clean up
+		foregroundDeletePropagation := metav1.DeletePropagationForeground
+		err = k8sClient.Delete(ctx, namespace, &client.DeleteOptions{PropagationPolicy: &foregroundDeletePropagation})
+		Expect(err).To(BeNil())
+		// Note: Since the controller-manager is not part of envtest the namespace
+		// will actually stay in "Terminating" state and never be completely gone.
+	})
 })
