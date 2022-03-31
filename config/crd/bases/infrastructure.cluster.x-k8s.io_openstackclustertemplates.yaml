@@ -87,8 +87,10 @@ spec:
                           on the APIServer will be created
                         type: integer
                       bastion:
-                        description: Bastion is the OpenStack instance to login the
-                          nodes
+                        description: "Bastion is the OpenStack instance to login the
+                          nodes \n As a rolling update is not ideal during a bastion
+                          host session, we prevent changes to a running bastion configuration.
+                          Set `enabled: false` to make changes."
                         properties:
                           availabilityZone:
                             type: string
@@ -775,8 +777,10 @@ spec:
                           on the APIServer will be created
                         type: integer
                       bastion:
-                        description: Bastion is the OpenStack instance to login the
-                          nodes
+                        description: "Bastion is the OpenStack instance to login the
+                          nodes \n As a rolling update is not ideal during a bastion
+                          host session, we prevent changes to a running bastion configuration.
+                          Set `enabled: false` to make changes."
                         properties:
                           availabilityZone:
                             type: string
