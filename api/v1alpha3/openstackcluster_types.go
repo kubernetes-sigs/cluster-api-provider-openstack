@@ -107,6 +107,10 @@ type OpenStackClusterSpec struct {
 	ControlPlaneAvailabilityZones []string `json:"controlPlaneAvailabilityZones,omitempty"`
 
 	// Bastion is the OpenStack instance to login the nodes
+	//
+	// As a rolling update is not ideal during a bastion host session, we
+	// prevent changes to a running bastion configuration. Set `enabled: false` to
+	// make changes.
 	//+optional
 	Bastion *Bastion `json:"bastion,omitempty"`
 }
