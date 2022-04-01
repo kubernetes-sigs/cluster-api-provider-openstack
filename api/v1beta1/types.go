@@ -296,3 +296,10 @@ type Bastion struct {
 	//+optional
 	AvailabilityZone string `json:"availabilityZone,omitempty"`
 }
+
+type APIServerLoadBalancer struct {
+	// Enabled defines whether a LoadBalancer should be created.
+	Enabled bool `json:"enabled,omitempty"`
+	// AdditionalPorts adds additional tcp ports to the Loadbalacner
+	AdditionalPorts []int `json:"additionalPorts,omitempty"`
+}

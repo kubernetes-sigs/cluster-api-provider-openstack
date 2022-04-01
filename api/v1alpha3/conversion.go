@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha3
 
 import (
+	unsafe "unsafe"
+
 	corev1 "k8s.io/api/core/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
@@ -117,6 +119,10 @@ func Convert_v1alpha3_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 			Name: in.CloudsSecret.Name,
 		}
 	}
+	out.APIServerLoadBalancer = infrav1.APIServerLoadBalancer{
+		Enabled:         in.ManagedAPIServerLoadBalancer,
+		AdditionalPorts: *(*[]int)(unsafe.Pointer(&in.APIServerLoadBalancerAdditionalPorts)),
+	}
 	return autoConvert_v1alpha3_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in, out, s)
 }
 
@@ -139,6 +145,10 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha3_OpenStackClusterSpec(in *i
 			Name: in.Bastion.Instance.IdentityRef.Name,
 		}
 	}
+
+	out.ManagedAPIServerLoadBalancer = in.APIServerLoadBalancer.Enabled
+	out.APIServerLoadBalancerAdditionalPorts = *(*[]int)(unsafe.Pointer(&in.APIServerLoadBalancer.AdditionalPorts))
+
 	return autoConvert_v1beta1_OpenStackClusterSpec_To_v1alpha3_OpenStackClusterSpec(in, out, s)
 }
 

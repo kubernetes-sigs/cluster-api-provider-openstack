@@ -212,7 +212,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, scope 
 		return ctrl.Result{}, err
 	}
 
-	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
+	if openStackCluster.Spec.APIServerLoadBalancer.Enabled {
 		loadBalancerService, err := loadbalancer.NewService(scope)
 		if err != nil {
 			return ctrl.Result{}, err
@@ -228,7 +228,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, scope 
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	if !openStackCluster.Spec.ManagedAPIServerLoadBalancer && util.IsControlPlaneMachine(machine) && openStackCluster.Spec.APIServerFloatingIP == "" {
+	if !openStackCluster.Spec.APIServerLoadBalancer.Enabled && util.IsControlPlaneMachine(machine) && openStackCluster.Spec.APIServerFloatingIP == "" {
 		if instanceStatus != nil {
 			instanceNS, err := instanceStatus.NetworkStatus()
 			if err != nil {
@@ -351,7 +351,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		return ctrl.Result{RequeueAfter: waitForInstanceBecomeActiveToReconcile}, nil
 	}
 
-	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
+	if openStackCluster.Spec.APIServerLoadBalancer.Enabled {
 		err = r.reconcileLoadBalancerMember(scope, openStackCluster, machine, openStackMachine, instanceNS, clusterName)
 		if err != nil {
 			handleUpdateMachineError(scope.Logger, openStackMachine, errors.Errorf("LoadBalancerMember cannot be reconciled: %v", err))

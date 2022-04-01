@@ -676,10 +676,10 @@ func autoConvert_v1alpha3_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(i
 	}
 	out.ExternalNetworkID = in.ExternalNetworkID
 	// WARNING: in.UseOctavia requires manual conversion: does not exist in peer-type
-	out.ManagedAPIServerLoadBalancer = in.ManagedAPIServerLoadBalancer
+	// WARNING: in.ManagedAPIServerLoadBalancer requires manual conversion: does not exist in peer-type
 	out.APIServerFloatingIP = in.APIServerFloatingIP
 	out.APIServerPort = in.APIServerPort
-	out.APIServerLoadBalancerAdditionalPorts = *(*[]int)(unsafe.Pointer(&in.APIServerLoadBalancerAdditionalPorts))
+	// WARNING: in.APIServerLoadBalancerAdditionalPorts requires manual conversion: does not exist in peer-type
 	out.ManagedSecurityGroups = in.ManagedSecurityGroups
 	out.DisablePortSecurity = in.DisablePortSecurity
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
@@ -721,12 +721,11 @@ func autoConvert_v1beta1_OpenStackClusterSpec_To_v1alpha3_OpenStackClusterSpec(i
 		out.ExternalRouterIPs = nil
 	}
 	out.ExternalNetworkID = in.ExternalNetworkID
-	out.ManagedAPIServerLoadBalancer = in.ManagedAPIServerLoadBalancer
+	// WARNING: in.APIServerLoadBalancer requires manual conversion: does not exist in peer-type
 	// WARNING: in.DisableAPIServerFloatingIP requires manual conversion: does not exist in peer-type
 	out.APIServerFloatingIP = in.APIServerFloatingIP
 	// WARNING: in.APIServerFixedIP requires manual conversion: does not exist in peer-type
 	out.APIServerPort = in.APIServerPort
-	out.APIServerLoadBalancerAdditionalPorts = *(*[]int)(unsafe.Pointer(&in.APIServerLoadBalancerAdditionalPorts))
 	out.ManagedSecurityGroups = in.ManagedSecurityGroups
 	// WARNING: in.AllowAllInClusterTraffic requires manual conversion: does not exist in peer-type
 	out.DisablePortSecurity = in.DisablePortSecurity

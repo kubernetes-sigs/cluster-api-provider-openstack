@@ -31,7 +31,8 @@ spec:
   controlPlaneAvailabilityZones:
   - ${OPENSTACK_FAILURE_DOMAIN}
   - ${OPENSTACK_FAILURE_DOMAIN_ALT}
-  managedAPIServerLoadBalancer: true
+  apiServerLoadBalancer:
+    enabled: true
   managedSecurityGroups: true
   nodeCidr: 10.6.0.0/24
   dnsNameservers:

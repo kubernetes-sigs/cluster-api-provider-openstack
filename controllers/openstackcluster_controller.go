@@ -141,7 +141,7 @@ func reconcileDelete(ctx context.Context, scope *scope.Scope, patchHelper *patch
 
 	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
 
-	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
+	if openStackCluster.Spec.APIServerLoadBalancer.Enabled {
 		loadBalancerService, err := loadbalancer.NewService(scope)
 		if err != nil {
 			return reconcile.Result{}, err
@@ -448,7 +448,7 @@ func reconcileNetworkComponents(scope *scope.Scope, cluster *clusterv1.Cluster, 
 		apiServerPort = 6443
 	}
 
-	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
+	if openStackCluster.Spec.APIServerLoadBalancer.Enabled {
 		loadBalancerService, err := loadbalancer.NewService(scope)
 		if err != nil {
 			return err
@@ -465,7 +465,7 @@ func reconcileNetworkComponents(scope *scope.Scope, cluster *clusterv1.Cluster, 
 		var host string
 		// If there is a load balancer use the floating IP for it if set, falling back to the internal IP
 		switch {
-		case openStackCluster.Spec.ManagedAPIServerLoadBalancer:
+		case openStackCluster.Spec.APIServerLoadBalancer.Enabled:
 			if openStackCluster.Status.Network.APIServerLoadBalancer.IP != "" {
 				host = openStackCluster.Status.Network.APIServerLoadBalancer.IP
 			} else {
