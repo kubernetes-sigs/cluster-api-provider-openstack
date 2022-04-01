@@ -30,7 +30,6 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"k8s.io/apimachinery/pkg/runtime"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -44,108 +43,24 @@ const (
 	timeoutInstanceDelete       = 5 * time.Minute
 )
 
-func (s *Service) CreateInstance(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, clusterName string, userData string) (instance *InstanceStatus, err error) {
-	return s.createInstanceImpl(openStackCluster, machine, openStackMachine, clusterName, userData, retryIntervalInstanceStatus)
-}
-
-func (s *Service) createInstanceImpl(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, clusterName string, userData string, retryInterval time.Duration) (instance *InstanceStatus, err error) {
-	if openStackMachine == nil {
-		return nil, fmt.Errorf("create Options need be specified to create instace")
-	}
-
-	if machine.Spec.FailureDomain == nil {
-		return nil, fmt.Errorf("failure domain not set")
-	}
-
-	instanceSpec := InstanceSpec{
-		Name:          openStackMachine.Name,
-		Image:         openStackMachine.Spec.Image,
-		ImageUUID:     openStackMachine.Spec.ImageUUID,
-		Flavor:        openStackMachine.Spec.Flavor,
-		SSHKeyName:    openStackMachine.Spec.SSHKeyName,
-		UserData:      userData,
-		Metadata:      openStackMachine.Spec.ServerMetadata,
-		ConfigDrive:   openStackMachine.Spec.ConfigDrive != nil && *openStackMachine.Spec.ConfigDrive,
-		FailureDomain: *machine.Spec.FailureDomain,
-		RootVolume:    openStackMachine.Spec.RootVolume,
-		Subnet:        openStackMachine.Spec.Subnet,
-		ServerGroupID: openStackMachine.Spec.ServerGroupID,
-	}
-
-	// verify that trunk is supported if set at instance level.
-	if openStackMachine.Spec.Trunk {
-		trunkSupported, err := s.isTrunkExtSupported()
-		if err != nil {
-			return nil, err
-		}
-		if !trunkSupported {
-			return nil, fmt.Errorf("there is no trunk support. please ensure that the trunk extension is enabled in your OpenStack deployment")
-		}
-		instanceSpec.Trunk = true
-	}
-	machineTags := []string{}
-
-	// Append machine specific tags
-	machineTags = append(machineTags, openStackMachine.Spec.Tags...)
-
-	// Append cluster scope tags
-	machineTags = append(machineTags, openStackCluster.Spec.Tags...)
-
-	// tags need to be unique or the "apply tags" call will fail.
-	machineTags = deduplicate(machineTags)
-
-	instanceSpec.Tags = machineTags
-
-	// Get security groups
-	securityGroups, err := s.networkingService.GetSecurityGroups(openStackMachine.Spec.SecurityGroups)
-	if err != nil {
-		return nil, err
-	}
-	if openStackCluster.Spec.ManagedSecurityGroups {
-		if util.IsControlPlaneMachine(machine) {
-			securityGroups = append(securityGroups, openStackCluster.Status.ControlPlaneSecurityGroup.ID)
-		} else {
-			securityGroups = append(securityGroups, openStackCluster.Status.WorkerSecurityGroup.ID)
-		}
-	}
-	instanceSpec.SecurityGroups = securityGroups
-
-	nets, err := s.constructNetworks(openStackCluster, openStackMachine)
-	if err != nil {
-		return nil, err
-	}
-
-	trunkConfigured := s.isTrunkConfigured(nets, instanceSpec.Trunk)
-	if trunkConfigured {
-		trunkSupported, err := s.isTrunkExtSupported()
-		if err != nil {
-			return nil, err
-		}
-		if !trunkSupported {
-			return nil, fmt.Errorf("there is no trunk support. please ensure that the trunk extension is enabled in your OpenStack deployment")
-		}
-	}
-	instanceSpec.Networks = nets
-
-	return s.createInstance(openStackMachine, clusterName, &instanceSpec, retryInterval)
-}
-
-// constructNetworks builds an array of networks from the network, subnet and ports items in the machine spec.
+// constructNetworks builds an array of networks from the network, subnet and ports items in the instance spec.
 // If no networks or ports are in the spec, returns a single network item for a network connection to the default cluster network.
-func (s *Service) constructNetworks(openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine) ([]infrav1.Network, error) {
-	var nets []infrav1.Network
-	if len(openStackMachine.Spec.Networks) > 0 {
-		var err error
-		nets, err = s.getServerNetworks(openStackMachine.Spec.Networks)
-		if err != nil {
-			return nil, err
-		}
+func (s *Service) constructNetworks(openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec) ([]infrav1.Network, error) {
+	trunkRequired := false
+
+	nets, err := s.getServerNetworks(instanceSpec.Networks)
+	if err != nil {
+		return nil, err
 	}
-	for i, port := range openStackMachine.Spec.Ports {
-		pOpts := &openStackMachine.Spec.Ports[i]
+
+	for i := range instanceSpec.Ports {
+		port := &instanceSpec.Ports[i]
 		// No Trunk field specified for the port, inherit openStackMachine.Spec.Trunk.
-		if pOpts.Trunk == nil {
-			pOpts.Trunk = &openStackMachine.Spec.Trunk
+		if port.Trunk == nil {
+			port.Trunk = &instanceSpec.Trunk
+		}
+		if *port.Trunk {
+			trunkRequired = true
 		}
 		if port.Network != nil {
 			netID := port.Network.ID
@@ -164,7 +79,7 @@ func (s *Service) constructNetworks(openStackCluster *infrav1.OpenStackCluster, 
 			nets = append(nets, infrav1.Network{
 				ID:       netID,
 				Subnet:   &infrav1.Subnet{},
-				PortOpts: pOpts,
+				PortOpts: port,
 			})
 		} else {
 			nets = append(nets, infrav1.Network{
@@ -172,10 +87,11 @@ func (s *Service) constructNetworks(openStackCluster *infrav1.OpenStackCluster, 
 				Subnet: &infrav1.Subnet{
 					ID: openStackCluster.Status.Network.Subnet.ID,
 				},
-				PortOpts: pOpts,
+				PortOpts: port,
 			})
 		}
 	}
+
 	// no networks or ports found in the spec, so create a port on the cluster network
 	if len(nets) == 0 {
 		nets = []infrav1.Network{{
@@ -184,14 +100,30 @@ func (s *Service) constructNetworks(openStackCluster *infrav1.OpenStackCluster, 
 				ID: openStackCluster.Status.Network.Subnet.ID,
 			},
 			PortOpts: &infrav1.PortOpts{
-				Trunk: &openStackMachine.Spec.Trunk,
+				Trunk: &instanceSpec.Trunk,
 			},
 		}}
+		trunkRequired = instanceSpec.Trunk
 	}
+
+	if trunkRequired {
+		trunkSupported, err := s.isTrunkExtSupported()
+		if err != nil {
+			return nil, err
+		}
+		if !trunkSupported {
+			return nil, fmt.Errorf("there is no trunk support. please ensure that the trunk extension is enabled in your OpenStack deployment")
+		}
+	}
+
 	return nets, nil
 }
 
-func (s *Service) createInstance(eventObject runtime.Object, clusterName string, instanceSpec *InstanceSpec, retryInterval time.Duration) (*InstanceStatus, error) {
+func (s *Service) CreateInstance(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec, clusterName string) (*InstanceStatus, error) {
+	return s.createInstanceImpl(eventObject, openStackCluster, instanceSpec, clusterName, retryIntervalInstanceStatus)
+}
+
+func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec, clusterName string, retryInterval time.Duration) (*InstanceStatus, error) {
 	var server *ServerExt
 	accessIPv4 := ""
 	portList := []servers.Network{}
@@ -217,11 +149,21 @@ func (s *Service) createInstance(eventObject runtime.Object, clusterName string,
 		}
 
 		if err := s.deletePorts(eventObject, portList); err != nil {
-			s.scope.Logger.V(4).Error(err, "failed to clean up ports after failure", "cluster", clusterName, "machine", instanceSpec.Name)
+			s.scope.Logger.V(4).Error(err, "Failed to clean up ports after failure")
 		}
 	}()
 
-	for i, network := range instanceSpec.Networks {
+	nets, err := s.constructNetworks(openStackCluster, instanceSpec)
+	if err != nil {
+		return nil, err
+	}
+
+	securityGroups, err := s.networkingService.GetSecurityGroups(instanceSpec.SecurityGroups)
+	if err != nil {
+		return nil, fmt.Errorf("error getting security groups: %v", err)
+	}
+
+	for i, network := range nets {
 		if network.ID == "" {
 			return nil, fmt.Errorf("no network was found or provided. Please check your machine configuration and try again")
 		}
@@ -230,7 +172,7 @@ func (s *Service) createInstance(eventObject runtime.Object, clusterName string,
 			iTags = instanceSpec.Tags
 		}
 		portName := getPortName(instanceSpec.Name, network.PortOpts, i)
-		port, err := s.networkingService.GetOrCreatePort(eventObject, clusterName, portName, network, &instanceSpec.SecurityGroups, iTags)
+		port, err := s.networkingService.GetOrCreatePort(eventObject, clusterName, portName, network, &securityGroups, iTags)
 		if err != nil {
 			return nil, err
 		}
@@ -253,7 +195,7 @@ func (s *Service) createInstance(eventObject runtime.Object, clusterName string,
 		AvailabilityZone: instanceSpec.FailureDomain,
 		Networks:         portList,
 		UserData:         []byte(instanceSpec.UserData),
-		SecurityGroups:   instanceSpec.SecurityGroups,
+		SecurityGroups:   securityGroups,
 		Tags:             instanceSpec.Tags,
 		Metadata:         instanceSpec.Metadata,
 		ConfigDrive:      &instanceSpec.ConfigDrive,
@@ -565,7 +507,7 @@ func (s *Service) GetManagementPort(openStackCluster *infrav1.OpenStackCluster, 
 	return &allPorts[0], nil
 }
 
-func (s *Service) DeleteInstance(eventObject runtime.Object, openStackMachineSpec *infrav1.OpenStackMachineSpec, instanceName string, instanceStatus *InstanceStatus) error {
+func (s *Service) DeleteInstance(eventObject runtime.Object, instanceSpec *InstanceSpec, instanceStatus *InstanceStatus) error {
 	if instanceStatus == nil {
 		/*
 			We create a boot-from-volume instance in 2 steps:
@@ -585,9 +527,9 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, openStackMachineSpe
 			Note that we don't need to separately delete the root volume when deleting the instance because
 			DeleteOnTermination will ensure it is deleted in that case.
 		*/
-		rootVolume := openStackMachineSpec.RootVolume
+		rootVolume := instanceSpec.RootVolume
 		if hasRootVolume(rootVolume) {
-			name := rootVolumeName(instanceName)
+			name := rootVolumeName(instanceSpec.Name)
 			volume, err := s.getVolumeByName(name)
 			if err != nil {
 				return err
@@ -753,23 +695,6 @@ func (s *Service) GetInstanceStatusByName(eventObject runtime.Object, name strin
 	return nil, nil
 }
 
-// deduplicate takes a slice of input strings and filters out any duplicate
-// string occurrences, for example making ["a", "b", "a", "c"] become ["a", "b",
-// "c"].
-func deduplicate(sequence []string) []string {
-	var unique []string
-	set := make(map[string]bool)
-
-	for _, s := range sequence {
-		if _, ok := set[s]; !ok {
-			unique = append(unique, s)
-			set[s] = true
-		}
-	}
-
-	return unique
-}
-
 func getTimeout(name string, timeout int) time.Duration {
 	if v := os.Getenv(name); v != "" {
 		timeout, err := strconv.Atoi(v)
@@ -790,20 +715,4 @@ func (s *Service) isTrunkExtSupported() (trunknSupported bool, err error) {
 		return false, nil
 	}
 	return true, nil
-}
-
-// isTrunkConfigured verifies trunk configuration at instance and port levels, useful for avoiding multple api calls to verify trunk support.
-func (s *Service) isTrunkConfigured(nets []infrav1.Network, instanceLevelTrunk bool) bool {
-	if instanceLevelTrunk {
-		return true
-	}
-	for _, net := range nets {
-		port := net.PortOpts
-		if port != nil {
-			if port.Trunk != nil && *port.Trunk {
-				return true
-			}
-		}
-	}
-	return false
 }
