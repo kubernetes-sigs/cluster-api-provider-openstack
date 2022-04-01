@@ -1,0 +1,4 @@
+cloud-controller-manager-role-bindings.yaml
+cloud-controller-manager-roles.yaml
+cloud-controller-manager.yaml
+openstack-cloud-controller-manager-ds.yaml

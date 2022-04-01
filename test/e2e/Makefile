@@ -61,16 +61,23 @@ $(KUSTOMIZE_BIN): $(KUSTOMIZE) ## Build a local copy of kustomize
 ## Templates
 ## --------------------------------------
 
-TEMPLATES_DIR := $(REPO_ROOT)/test/e2e/data/infrastructure-openstack
+DATA_DIR := $(REPO_ROOT)/test/e2e/data
+TEMPLATES_DIR := $(DATA_DIR)/infrastructure-openstack
 BASES_DIR := $(TEMPLATES_DIR)/kustomize_sources
+CCM_DIR := $(DATA_DIR)/ccm
 
 .PHONY: cluster-templates
-cluster-templates: $(KUSTOMIZE)
+cluster-templates: $(KUSTOMIZE) ccm-manifests
+	$(KUSTOMIZE) build $(CCM_DIR) > $(CCM_DIR)/cloud-controller-manager.yaml
 	$(KUSTOMIZE) build $(BASES_DIR)/default > $(TEMPLATES_DIR)/cluster-template.yaml
 	$(KUSTOMIZE) build $(BASES_DIR)/external-cloud-provider > $(TEMPLATES_DIR)/cluster-template-external-cloud-provider.yaml
 	$(KUSTOMIZE) build $(BASES_DIR)/multi-az > $(TEMPLATES_DIR)/cluster-template-multi-az.yaml
 	$(KUSTOMIZE) build $(BASES_DIR)/multi-network > $(TEMPLATES_DIR)/cluster-template-multi-network.yaml
 	$(KUSTOMIZE) build $(BASES_DIR)/without-lb > $(TEMPLATES_DIR)/cluster-template-without-lb.yaml
+
+.PHONY: ccm-manifests
+ccm-manifests:
+	$(MAKE) -C data/ccm manifests
 
 ## --------------------------------------
 ## Testing
