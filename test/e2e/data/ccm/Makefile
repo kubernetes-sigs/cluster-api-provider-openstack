@@ -1,13 +1,7 @@
-# Fetch the OpenStack CCM daemonset manifest corresponding to the current k8s
-# release
-#
-# cloud-provider-openstack versions track k8s versions except that they have a
-# major version of 1 instead of 0
-#
-# Here we get the go module version of (arbitrarily) `k8s.io/api`, and
-# substitute its major version with a 1 to get the cloud-provider-openstack
-# version
-CPO_VERSION=$(shell go list -f '{{ .Module.Version }}' k8s.io/api | sed 's/^v0\./v1\./')
+# The version of cloud-provider-openstack to install
+# This should correspond to the KUBERNETES_VERSION defined in
+# test/e2e/data/e2e_conf
+CPO_VERSION := 1.21.1
 
 MANIFESTS = openstack-cloud-controller-manager-ds.yaml \
             cloud-controller-manager-roles.yaml \
