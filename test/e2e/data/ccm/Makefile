@@ -1,7 +1,7 @@
 # The version of cloud-provider-openstack to install
 # This should correspond to the KUBERNETES_VERSION defined in
 # test/e2e/data/e2e_conf
-CPO_VERSION := v1.21.1
+CPO_VERSION := v1.23.0
 
 # MANIFESTS must also be listed as resources in kustomization.yaml
 MANIFESTS = openstack-cloud-controller-manager-ds.yaml

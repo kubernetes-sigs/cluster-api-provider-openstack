@@ -97,7 +97,7 @@ variables:
   KUBE_CONTEXT: "kind-capo-e2e"
   # When updating KUBERNETES_VERSION you should also update CPO_VERSION
   # appropriately in test/e2e/data/ccm/Makefile
-  KUBERNETES_VERSION: "v1.21.3"
+  KUBERNETES_VERSION: "v1.23.5"
   CNI: "../../data/cni/calico.yaml"
   CCM: "../../data/ccm/cloud-controller-manager.yaml"
   EXP_CLUSTER_RESOURCE_SET: "true"
