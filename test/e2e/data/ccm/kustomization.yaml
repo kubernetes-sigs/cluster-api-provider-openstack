@@ -1,7 +1,6 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+# resources must also be added to MANIFESTS in Makefile to be downloaded
 resources:
-- cloud-controller-manager-role-bindings.yaml
-- cloud-controller-manager-roles.yaml
 - openstack-cloud-controller-manager-ds.yaml

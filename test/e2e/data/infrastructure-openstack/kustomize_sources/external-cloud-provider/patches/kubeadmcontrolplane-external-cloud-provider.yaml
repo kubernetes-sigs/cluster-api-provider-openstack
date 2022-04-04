@@ -26,4 +26,10 @@ spec:
         kubeletExtraArgs:
           cloud-provider: external
           cloud-config: null
-    files: null
+    # External CCM doesn't need cloud.conf on the host
+    files:
+    - content: ${OPENSTACK_CLOUD_CACERT_B64}
+      encoding: base64
+      owner: root
+      path: /etc/certs/cacert
+      permissions: "0600"
