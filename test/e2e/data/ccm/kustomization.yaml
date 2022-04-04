@@ -4,3 +4,8 @@ kind: Kustomization
 # resources must also be added to MANIFESTS in Makefile to be downloaded
 resources:
 - openstack-cloud-controller-manager-ds.yaml
+- cloud-controller-manager-role-bindings.yaml
+- cloud-controller-manager-roles.yaml
+
+patchesStrategicMerge:
+- patches/rename-cloud-config-secret.yaml
