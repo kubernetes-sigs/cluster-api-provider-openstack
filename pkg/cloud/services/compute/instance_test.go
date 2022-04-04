@@ -663,9 +663,10 @@ func TestService_ReconcileInstance(t *testing.T) {
 	}
 
 	// Expected calls when using default image and flavor
-	expectDefaultImageAndFlavor := func(computeRecorder *MockClientMockRecorder) {
+	expectDefaultImageAndFlavorAndSSH := func(computeRecorder *MockClientMockRecorder) {
 		computeRecorder.ListImages(images.ListOpts{Name: imageName}).Return([]images.Image{{ID: imageUUID}}, nil)
 		computeRecorder.GetFlavorIDFromName(flavorName).Return(flavorUUID, nil)
+		computeRecorder.GetSSHKeyPair(sshKeyName).Return(nil, nil)
 	}
 
 	// Expected calls and custom match function for creating a server
@@ -733,7 +734,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 			getInstanceSpec: getDefaultInstanceSpec,
 			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
 				expectUseExistingDefaultPort(networkRecorder)
-				expectDefaultImageAndFlavor(computeRecorder)
+				expectDefaultImageAndFlavorAndSSH(computeRecorder)
 
 				expectCreateServer(computeRecorder, getDefaultServerMap(), false)
 				expectServerPollSuccess(computeRecorder)
@@ -745,7 +746,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 			getInstanceSpec: getDefaultInstanceSpec,
 			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
 				expectUseExistingDefaultPort(networkRecorder)
-				expectDefaultImageAndFlavor(computeRecorder)
+				expectDefaultImageAndFlavorAndSSH(computeRecorder)
 
 				expectCreateServer(computeRecorder, getDefaultServerMap(), true)
 
@@ -767,6 +768,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
 				computeRecorder.ListImages(images.ListOpts{Name: imageName}).Return([]images.Image{{ID: imageUUID}}, nil)
 				computeRecorder.GetFlavorIDFromName(flavorName).Return(flavorUUID, nil)
+				computeRecorder.GetSSHKeyPair(sshKeyName).Return(nil, nil)
 
 				expectUseExistingDefaultPort(networkRecorder)
 
@@ -786,7 +788,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 			getInstanceSpec: getDefaultInstanceSpec,
 			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
 				expectUseExistingDefaultPort(networkRecorder)
-				expectDefaultImageAndFlavor(computeRecorder)
+				expectDefaultImageAndFlavorAndSSH(computeRecorder)
 
 				expectCreateServer(computeRecorder, getDefaultServerMap(), false)
 				expectServerPoll(computeRecorder, []string{"BUILDING", "ACTIVE"})
@@ -798,7 +800,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 			getInstanceSpec: getDefaultInstanceSpec,
 			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
 				expectUseExistingDefaultPort(networkRecorder)
-				expectDefaultImageAndFlavor(computeRecorder)
+				expectDefaultImageAndFlavorAndSSH(computeRecorder)
 
 				expectCreateServer(computeRecorder, getDefaultServerMap(), false)
 				expectServerPoll(computeRecorder, []string{"BUILDING", "ERROR"})
@@ -818,7 +820,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 			},
 			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
 				expectUseExistingDefaultPort(networkRecorder)
-				expectDefaultImageAndFlavor(computeRecorder)
+				expectDefaultImageAndFlavorAndSSH(computeRecorder)
 
 				computeRecorder.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
@@ -863,7 +865,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 			},
 			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
 				expectUseExistingDefaultPort(networkRecorder)
-				expectDefaultImageAndFlavor(computeRecorder)
+				expectDefaultImageAndFlavorAndSSH(computeRecorder)
 
 				computeRecorder.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
@@ -907,7 +909,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 			},
 			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
 				expectUseExistingDefaultPort(networkRecorder)
-				expectDefaultImageAndFlavor(computeRecorder)
+				expectDefaultImageAndFlavorAndSSH(computeRecorder)
 
 				computeRecorder.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
@@ -938,6 +940,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
 				computeRecorder.ListImages(images.ListOpts{Name: imageName}).Return([]images.Image{{ID: imageUUID}}, nil)
 				computeRecorder.GetFlavorIDFromName(flavorName).Return(flavorUUID, nil)
+				computeRecorder.GetSSHKeyPair(sshKeyName).Return(nil, nil)
 
 				extensions := []extensions.Extension{
 					{Extension: common.Extension{Alias: "trunk"}},

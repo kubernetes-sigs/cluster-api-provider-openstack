@@ -27,6 +27,7 @@ import (
 	volumes "github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
 	attachinterfaces "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	availabilityzones "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/availabilityzones"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
 	servers "github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	images "github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 )
@@ -139,6 +140,20 @@ func (m *MockClient) GetFlavorIDFromName(arg0 string) (string, error) {
 func (mr *MockClientMockRecorder) GetFlavorIDFromName(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFlavorIDFromName", reflect.TypeOf((*MockClient)(nil).GetFlavorIDFromName), arg0)
+}
+
+// GetServer mocks base method.
+func (m *MockClient) GetSSHKeyPair(arg0 string) (*keypairs.KeyPair, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSSHKeyPair", arg0)
+	ret0, _ := ret[0].(*keypairs.KeyPair)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (mr *MockClientMockRecorder) GetSSHKeyPair(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSSHKeyPair", reflect.TypeOf((*MockClient)(nil).GetSSHKeyPair), arg0)
 }
 
 // GetServer mocks base method.

@@ -142,6 +142,11 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 		return nil, fmt.Errorf("error getting flavor id from flavor name %s: %v", instanceSpec.Flavor, err)
 	}
 
+	_, err = s.computeService.GetSSHKeyPair(instanceSpec.SSHKeyName)
+	if err != nil {
+		return nil, fmt.Errorf("error geting ssh key with name %s: %v", instanceSpec.SSHKeyName, err)
+	}
+
 	// Ensure we delete the ports we created if we haven't created the server.
 	defer func() {
 		if server != nil {

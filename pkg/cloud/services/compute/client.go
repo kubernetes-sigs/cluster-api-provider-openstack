@@ -21,6 +21,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/availabilityzones"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/gophercloud/utils/openstack/compute/v2/flavors"
@@ -43,6 +44,7 @@ type Client interface {
 	ListImages(listOpts images.ListOptsBuilder) ([]images.Image, error)
 
 	GetFlavorIDFromName(flavor string) (string, error)
+	GetSSHKeyPair(sshkey string) (*keypairs.KeyPair, error)
 	CreateServer(createOpts servers.CreateOptsBuilder) (*ServerExt, error)
 	DeleteServer(serverID string) error
 	GetServer(serverID string) (*ServerExt, error)
@@ -85,6 +87,15 @@ func (s serviceClient) GetFlavorIDFromName(flavor string) (string, error) {
 	mc := metrics.NewMetricPrometheusContext("flavor", "get")
 	flavorID, err := flavors.IDFromName(s.compute, flavor)
 	return flavorID, mc.ObserveRequest(err)
+}
+
+func (s serviceClient) GetSSHKeyPair(sshkey string) (*keypairs.KeyPair, error) {
+	mc := metrics.NewMetricPrometheusContext("keypair", "get")
+	k, err := keypairs.Get(s.compute, sshkey).Extract()
+	if mc.ObserveRequest(err) != nil {
+		return nil, err
+	}
+	return k, nil
 }
 
 func (s serviceClient) CreateServer(createOpts servers.CreateOptsBuilder) (*ServerExt, error) {
