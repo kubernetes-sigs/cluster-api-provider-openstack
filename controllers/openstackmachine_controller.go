@@ -339,13 +339,13 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	addresses := instanceNS.Addresses()
 	openStackMachine.Status.Addresses = addresses
 
-	switch instanceStatus.State() {
+	switch state {
 	case infrav1.InstanceStateActive:
 		scope.Logger.Info("Machine instance is ACTIVE", "instance-id", instanceStatus.ID())
 		openStackMachine.Status.Ready = true
 	case infrav1.InstanceStateError:
 		// Error is unexpected, thus we report error and never retry
-		handleUpdateMachineError(scope.Logger, openStackMachine, errors.Errorf("OpenStack instance state %q is unexpected", instanceStatus.State()))
+		handleUpdateMachineError(scope.Logger, openStackMachine, errors.Errorf("OpenStack instance state %q is unexpected", state))
 		return ctrl.Result{}, nil
 	case infrav1.InstanceStateDeleted:
 		// we should avoid further actions for DELETED VM
@@ -354,7 +354,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	default:
 		// The other state is normal (for example, migrating, shutoff) but we don't want to proceed until it's ACTIVE
 		// due to potential conflict or unexpected actions
-		scope.Logger.Info("Waiting for instance to become ACTIVE", "instance-id", instanceStatus.ID(), "status", instanceStatus.State())
+		scope.Logger.Info("Waiting for instance to become ACTIVE", "instance-id", instanceStatus.ID(), "status", state)
 		return ctrl.Result{RequeueAfter: waitForInstanceBecomeActiveToReconcile}, nil
 	}
 
