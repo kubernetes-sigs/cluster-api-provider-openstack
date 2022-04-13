@@ -17,12 +17,14 @@ limitations under the License.
 package loadbalancer
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/go-logr/logr"
 	"github.com/golang/mock/gomock"
+	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/listeners"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/loadbalancers"
+	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/monitors"
+	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/pools"
 	. "github.com/onsi/gomega"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha5"
@@ -35,16 +37,21 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	openStackCluster := &infrav1.OpenStackCluster{Status: infrav1.OpenStackClusterStatus{
-		ExternalNetwork: &infrav1.Network{
-			ID: "aaaaaaaa-bbbb-cccc-dddd-111111111111",
+	openStackCluster := &infrav1.OpenStackCluster{
+		Spec: infrav1.OpenStackClusterSpec{
+			DisableAPIServerFloatingIP: true,
 		},
-		Network: &infrav1.Network{
-			Subnet: &infrav1.Subnet{
-				ID: "aaaaaaaa-bbbb-cccc-dddd-222222222222",
+		Status: infrav1.OpenStackClusterStatus{
+			ExternalNetwork: &infrav1.Network{
+				ID: "aaaaaaaa-bbbb-cccc-dddd-111111111111",
+			},
+			Network: &infrav1.Network{
+				Subnet: &infrav1.Subnet{
+					ID: "aaaaaaaa-bbbb-cccc-dddd-222222222222",
+				},
 			},
 		},
-	}}
+	}
 	type serviceFields struct {
 		projectID          string
 		networkingClient   *mock_networking.MockNetworkClient
@@ -59,7 +66,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 		wantError          error
 	}{
 		{
-			name: "reconcile loadbalancer in non active state should should cause error",
+			name: "reconcile loadbalancer in non active state should wait for active state",
 			prepareServiceMock: func(sf *serviceFields) {
 				sf.networkingClient = mock_networking.NewMockNetworkClient(mockCtrl)
 				sf.loadbalancerClient = mock_loadbalancer.NewMockLbClient(mockCtrl)
@@ -68,17 +75,46 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 				// add network api call results here
 			},
 			expectLoadBalancer: func(m *mock_loadbalancer.MockLbClientMockRecorder) {
+				pendingLB := loadbalancers.LoadBalancer{
+					ID:                 "aaaaaaaa-bbbb-cccc-dddd-333333333333",
+					Name:               "k8s-clusterapi-cluster-AAAAA-kubeapi",
+					ProvisioningStatus: "PENDING_CREATE",
+				}
+				activeLB := pendingLB
+				activeLB.ProvisioningStatus = "ACTIVE"
+
 				// return existing loadbalancer in non-active state
-				lbList := []loadbalancers.LoadBalancer{
+				lbList := []loadbalancers.LoadBalancer{pendingLB}
+				m.ListLoadBalancers(loadbalancers.ListOpts{Name: pendingLB.Name}).Return(lbList, nil)
+
+				// wait for active loadbalancer by returning active loadbalancer on second call
+				m.GetLoadBalancer("aaaaaaaa-bbbb-cccc-dddd-333333333333").Return(&pendingLB, nil).Return(&activeLB, nil)
+
+				listenerList := []listeners.Listener{
 					{
-						ID:                 "aaaaaaaa-bbbb-cccc-dddd-333333333333",
-						Name:               "k8s-clusterapi-cluster-AAAAA-kubeapi",
-						ProvisioningStatus: "PENDING_CREATE",
+						ID:   "aaaaaaaa-bbbb-cccc-dddd-444444444444",
+						Name: "k8s-clusterapi-cluster-AAAAA-kubeapi-0",
 					},
 				}
-				m.ListLoadBalancers(loadbalancers.ListOpts{Name: "k8s-clusterapi-cluster-AAAAA-kubeapi"}).Return(lbList, nil)
+				m.ListListeners(listeners.ListOpts{Name: listenerList[0].Name}).Return(listenerList, nil)
+
+				poolList := []pools.Pool{
+					{
+						ID:   "aaaaaaaa-bbbb-cccc-dddd-555555555555",
+						Name: "k8s-clusterapi-cluster-AAAAA-kubeapi-0",
+					},
+				}
+				m.ListPools(pools.ListOpts{Name: poolList[0].Name}).Return(poolList, nil)
+
+				monitorList := []monitors.Monitor{
+					{
+						ID:   "aaaaaaaa-bbbb-cccc-dddd-666666666666",
+						Name: "k8s-clusterapi-cluster-AAAAA-kubeapi-0",
+					},
+				}
+				m.ListMonitors(monitors.ListOpts{Name: monitorList[0].Name}).Return(monitorList, nil)
 			},
-			wantError: fmt.Errorf("load balancer %q is not in expected state %s, current state is %s", "aaaaaaaa-bbbb-cccc-dddd-333333333333", "ACTIVE", "PENDING_CREATE"),
+			wantError: nil,
 		},
 	}
 	for _, tt := range lbtests {
@@ -90,7 +126,11 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 			tt.expectNetwork(tt.fields.networkingClient.EXPECT())
 			tt.expectLoadBalancer(tt.fields.loadbalancerClient.EXPECT())
 			err := lbs.ReconcileLoadBalancer(openStackCluster, "AAAAA", 0)
-			g.Expect(err).To(MatchError(tt.wantError))
+			if tt.wantError != nil {
+				g.Expect(err).To(MatchError(tt.wantError))
+			} else {
+				g.Expect(err).NotTo(HaveOccurred())
+			}
 		})
 	}
 }
