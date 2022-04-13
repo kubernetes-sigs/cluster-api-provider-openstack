@@ -24,6 +24,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -33,6 +34,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha5"
+	"sigs.k8s.io/cluster-api-provider-openstack/test/helpers/external"
 )
 
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to
@@ -56,6 +58,11 @@ var _ = BeforeSuite(func() {
 	testEnv = &envtest.Environment{
 		CRDDirectoryPaths: []string{
 			filepath.Join("..", "config", "crd", "bases"),
+		},
+		// Add fake CAPI CRDs that we reference
+		CRDs: []*apiextensionsv1.CustomResourceDefinition{
+			external.TestClusterCRD.DeepCopy(),
+			external.TestMachineCRD.DeepCopy(),
 		},
 	}
 
