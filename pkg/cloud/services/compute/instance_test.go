@@ -494,9 +494,9 @@ func TestService_getImageID(t *testing.T) {
 			tt.expect(mockComputeClient.EXPECT())
 
 			s := Service{
-				projectID: "",
 				scope: &scope.Scope{
-					Logger: logr.Discard(),
+					ProjectID: "",
+					Logger:    logr.Discard(),
 				},
 				computeService:    mockComputeClient,
 				networkingService: &networking.Service{},
@@ -997,9 +997,9 @@ func TestService_ReconcileInstance(t *testing.T) {
 			tt.expect(computeRecorder, networkRecorder)
 
 			s := Service{
-				projectID: "",
 				scope: &scope.Scope{
-					Logger: logr.Discard(),
+					Logger:    logr.Discard(),
+					ProjectID: "",
 				},
 				computeService: mockComputeClient,
 				networkingService: networking.NewTestService(
@@ -1108,9 +1108,9 @@ func TestService_DeleteInstance(t *testing.T) {
 			tt.expect(computeRecorder, networkRecorder)
 
 			s := Service{
-				projectID: "",
 				scope: &scope.Scope{
-					Logger: logr.Discard(),
+					ProjectID: "",
+					Logger:    logr.Discard(),
 				},
 				computeService: mockComputeClient,
 				networkingService: networking.NewTestService(

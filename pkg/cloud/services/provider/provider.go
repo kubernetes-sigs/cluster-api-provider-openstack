@@ -25,6 +25,7 @@ import (
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
+	"github.com/gophercloud/gophercloud/openstack/identity/v3/tokens"
 	osclient "github.com/gophercloud/utils/client"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	corev1 "k8s.io/api/core/v1"
@@ -34,7 +35,6 @@ import (
 	"sigs.k8s.io/yaml"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
 )
 
 const (
@@ -42,7 +42,7 @@ const (
 	caSecretKey     = "cacert"
 )
 
-func NewClientFromMachine(ctx context.Context, ctrlClient client.Client, openStackMachine *infrav1.OpenStackMachine) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, error) {
+func NewClientFromMachine(ctx context.Context, ctrlClient client.Client, openStackMachine *infrav1.OpenStackMachine) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, string, error) {
 	var cloud clientconfig.Cloud
 	var caCert []byte
 
@@ -50,13 +50,13 @@ func NewClientFromMachine(ctx context.Context, ctrlClient client.Client, openSta
 		var err error
 		cloud, caCert, err = getCloudFromSecret(ctx, ctrlClient, openStackMachine.Namespace, openStackMachine.Spec.IdentityRef.Name, openStackMachine.Spec.CloudName)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, "", err
 		}
 	}
 	return NewClient(cloud, caCert)
 }
 
-func NewClientFromCluster(ctx context.Context, ctrlClient client.Client, openStackCluster *infrav1.OpenStackCluster) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, error) {
+func NewClientFromCluster(ctx context.Context, ctrlClient client.Client, openStackCluster *infrav1.OpenStackCluster) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, string, error) {
 	var cloud clientconfig.Cloud
 	var caCert []byte
 
@@ -64,13 +64,13 @@ func NewClientFromCluster(ctx context.Context, ctrlClient client.Client, openSta
 		var err error
 		cloud, caCert, err = getCloudFromSecret(ctx, ctrlClient, openStackCluster.Namespace, openStackCluster.Spec.IdentityRef.Name, openStackCluster.Spec.CloudName)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, "", err
 		}
 	}
 	return NewClient(cloud, caCert)
 }
 
-func NewClient(cloud clientconfig.Cloud, caCert []byte) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, error) {
+func NewClient(cloud clientconfig.Cloud, caCert []byte) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, string, error) {
 	clientOpts := new(clientconfig.ClientOpts)
 	if cloud.AuthInfo != nil {
 		clientOpts.AuthInfo = cloud.AuthInfo
@@ -80,13 +80,13 @@ func NewClient(cloud clientconfig.Cloud, caCert []byte) (*gophercloud.ProviderCl
 
 	opts, err := clientconfig.AuthOptions(clientOpts)
 	if err != nil {
-		return nil, nil, fmt.Errorf("auth option failed for cloud %v: %v", cloud.Cloud, err)
+		return nil, nil, "", fmt.Errorf("auth option failed for cloud %v: %v", cloud.Cloud, err)
 	}
 	opts.AllowReauth = true
 
 	provider, err := openstack.NewClient(opts.IdentityEndpoint)
 	if err != nil {
-		return nil, nil, fmt.Errorf("create providerClient err: %v", err)
+		return nil, nil, "", fmt.Errorf("create providerClient err: %v", err)
 	}
 
 	config := &tls.Config{
@@ -109,9 +109,15 @@ func NewClient(cloud clientconfig.Cloud, caCert []byte) (*gophercloud.ProviderCl
 	}
 	err = openstack.Authenticate(provider, *opts)
 	if err != nil {
-		return nil, nil, fmt.Errorf("providerClient authentication err: %v", err)
+		return nil, nil, "", fmt.Errorf("providerClient authentication err: %v", err)
 	}
-	return provider, clientOpts, nil
+
+	projectID, err := getProjectIDFromAuthResult(provider.GetAuthResult())
+	if err != nil {
+		return nil, nil, "", err
+	}
+
+	return provider, clientOpts, projectID, nil
 }
 
 type defaultLogger struct{}
@@ -161,42 +167,20 @@ func getCloudFromSecret(ctx context.Context, ctrlClient client.Client, secretNam
 	return clouds.Clouds[cloudName], caCert, nil
 }
 
-type project struct {
-	ID   string `json:"id"`
-	Name string
-}
-
-type projects struct {
-	Projects []project `json:"projects"`
-}
-
-func GetProjectID(client *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts) (string, error) {
-	if clientOpts.AuthInfo.ProjectID != "" {
-		return clientOpts.AuthInfo.ProjectID, nil
-	}
-
-	projectName := clientOpts.AuthInfo.ProjectName
-	if projectName == "" {
-		return "", fmt.Errorf("failed to get project id")
-	}
-
-	c, err := openstack.NewIdentityV3(client, gophercloud.EndpointOpts{})
-	if err != nil {
-		return "", fmt.Errorf("failed to create identity service client: %v", err)
-	}
-
-	jsonResp := projects{}
-	mc := metrics.NewMetricPrometheusContext("project", "get")
-	resp, err := c.Get(c.ServiceURL("auth", "projects"), &jsonResp, &gophercloud.RequestOpts{OkCodes: []int{200}})
-	if mc.ObserveRequest(err) != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	for _, project := range jsonResp.Projects {
-		if project.Name == projectName {
-			return project.ID, nil
+// getProjectIDFromAuthResult handles different auth mechanisms to retrieve the
+// current project id. Usually we use the Identity v3 Token mechanism that
+// returns the project id in the response to the initial auth request.
+func getProjectIDFromAuthResult(authResult gophercloud.AuthResult) (string, error) {
+	switch authResult := authResult.(type) {
+	case tokens.CreateResult:
+		project, err := authResult.ExtractProject()
+		if err != nil {
+			return "", fmt.Errorf("unable to extract project from CreateResult: %v", err)
 		}
+
+		return project.ID, nil
+
+	default:
+		return "", fmt.Errorf("unable to get the project id from auth response with type %T", authResult)
 	}
-	return "", fmt.Errorf("project %s not found", projectName)
 }

@@ -290,7 +290,7 @@ func (s *Service) getVolumeByName(name string) (*volumes.Volume, error) {
 	listOpts := volumes.ListOpts{
 		AllTenants: false,
 		Name:       name,
-		TenantID:   s.projectID,
+		TenantID:   s.scope.ProjectID,
 	}
 	volumeList, err := s.computeService.ListVolumes(listOpts)
 	if err != nil {

@@ -23,12 +23,10 @@ import (
 	"github.com/gophercloud/gophercloud/openstack"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/provider"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
 type Service struct {
-	projectID         string
 	scope             *scope.Scope
 	computeService    Client
 	networkingService *networking.Service
@@ -75,18 +73,12 @@ func NewService(scope *scope.Scope) (*Service, error) {
 		return nil, fmt.Errorf("authInfo must be set")
 	}
 
-	projectID, err := provider.GetProjectID(scope.ProviderClient, scope.ProviderClientOpts)
-	if err != nil {
-		return nil, fmt.Errorf("error retrieveing project id: %v", err)
-	}
-
 	networkingService, err := networking.NewService(scope)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create networking service: %v", err)
 	}
 
 	return &Service{
-		projectID:         projectID,
 		scope:             scope,
 		computeService:    computeService,
 		networkingService: networkingService,

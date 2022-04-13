@@ -107,7 +107,7 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}()
 
-	osProviderClient, clientOpts, err := provider.NewClientFromCluster(ctx, r.Client, openStackCluster)
+	osProviderClient, clientOpts, projectID, err := provider.NewClientFromCluster(ctx, r.Client, openStackCluster)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -115,6 +115,7 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	scope := &scope.Scope{
 		ProviderClient:     osProviderClient,
 		ProviderClientOpts: clientOpts,
+		ProjectID:          projectID,
 		Logger:             log,
 	}
 

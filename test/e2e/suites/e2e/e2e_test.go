@@ -833,7 +833,7 @@ func isCloudProviderInitialized(taints []corev1.Taint) bool {
 }
 
 func createTestVolumeType(e2eCtx *shared.E2EContext) {
-	providerClient, clientOpts, err := shared.GetAdminProviderClient(e2eCtx)
+	providerClient, clientOpts, _, err := shared.GetAdminProviderClient(e2eCtx)
 	Expect(err).NotTo(HaveOccurred())
 
 	volumeClient, err := openstack.NewBlockStorageV3(providerClient, gophercloud.EndpointOpts{Region: clientOpts.RegionName})

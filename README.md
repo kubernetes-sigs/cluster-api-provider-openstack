@@ -75,6 +75,8 @@ policy may be made to more closely aligned with other providers in the Cluster A
 
 **NOTE:** The minimum microversion of CAPI using nova is `2.53` now due to `server tags` support, see [code](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/c052e7e600f0e5ebddc839c08746bb636e79be87/pkg/cloud/services/compute/service.go#L38) for additional information.
 
+**NOTE:** We require Keystone v3 for authentication.
+
 ------
 
 ## Development versions
