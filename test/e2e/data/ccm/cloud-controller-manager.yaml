@@ -25,7 +25,7 @@ spec:
         k8s-app: openstack-cloud-controller-manager
     spec:
       nodeSelector:
-        node-role.kubernetes.io/master: ""
+        node-role.kubernetes.io/control-plane: ""
       # we need user root to read the cloud.conf from the host
       securityContext:
         runAsUser: 0
@@ -35,10 +35,12 @@ spec:
           effect: NoSchedule
         - key: node-role.kubernetes.io/master
           effect: NoSchedule
+        - key: node-role.kubernetes.io/control-plane
+          effect: NoSchedule
       serviceAccountName: cloud-controller-manager
       containers:
         - name: openstack-cloud-controller-manager
-          image: docker.io/k8scloudprovider/openstack-cloud-controller-manager:v1.20.2
+          image: docker.io/k8scloudprovider/openstack-cloud-controller-manager:v1.23.1
           args:
             - /bin/openstack-cloud-controller-manager
             - --v=1
@@ -82,19 +84,6 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: cloud-node-controller
-  namespace: kube-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: system:pvl-controller
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:pvl-controller
-subjects:
-- kind: ServiceAccount
-  name: pvl-controller
   namespace: kube-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -156,10 +145,22 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - services/status
+  verbs:
+  - patch
+- apiGroups:
+  - ""
+  resources:
   - serviceaccounts
   verbs:
   - create
   - get
+- apiGroups:
+  - ""
+  resources:
+  - serviceaccounts/token
+  verbs:
+  - create
 - apiGroups:
   - ""
   resources:
@@ -210,26 +211,6 @@ rules:
   - nodes/status
   verbs:
   - patch
-- apiGroups:
-  - ""
-  resources:
-  - events
-  verbs:
-  - create
-  - patch
-  - update
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: system:pvl-controller
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - persistentvolumes
-  verbs:
-  - '*'
 - apiGroups:
   - ""
   resources:

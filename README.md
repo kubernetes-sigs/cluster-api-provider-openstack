@@ -37,22 +37,22 @@ previous cluster managers such as [kops][kops] and
 
 This provider's versions are compatible with the following versions of Cluster API:
 
-|                                    | v1alpha3 (v0.3) | v1alpha4 (v0.4) | v1beta1 (v1.0) |
+|                                    | v1alpha3 (v0.3) | v1alpha4 (v0.4) | v1beta1 (v1.1) |
 | ---------------------------------- | --------------- | --------------- | -------------- |
-| OpenStack Provider v1alpha3 (v0.3) | ✓              |                 |                |
-| OpenStack Provider v1alpha4 (v0.4) |                 | ✓              |                |
-| OpenStack Provider v1alpha4 (v0.5) |                 |                 | ✓             |
-| OpenStack Provider v1alpha5        |                 |                 | ✓             |
+| OpenStack Provider v1alpha3 (v0.3) | ✓               |                 |                |
+| OpenStack Provider v1alpha4 (v0.4) |                 | ✓               |                |
+| OpenStack Provider v1alpha4 (v0.5) |                 |                 | ✓              |
+| OpenStack Provider v1alpha5        |                 |                 | ✓              |
 
 
 This provider's versions are able to install and manage the following versions of Kubernetes:
 
-|                                    | v1.16 | v1.17 | v1.18 | v1.19 | v1.20 | v1.21 |
-| ---------------------------------- | ----- | ----- | ----- | ----- | ----- | ----- |
-| OpenStack Provider v1alpha3 (v0.3) | ✓    | ✓    | ✓     | ✓    | ✓    |       |
-| OpenStack Provider v1alpha4 (v0.4) |       |       |       |       | ✓    | ✓     |
-| OpenStack Provider v1alpha4 (v0.5) |       |       |       |       | ✓    | ✓     |
-| OpenStack Provider v1alpha5        |       |       |       |       |       | ✓     |
+|                                    | v1.16 | v1.17 | v1.18 | v1.19 | v1.20 | v1.21 | v1.22 | v1.23 |
+| ---------------------------------- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
+| OpenStack Provider v1alpha3 (v0.3) | ✓     | ✓     | ✓     | ✓     | ✓     |       |       |       |
+| OpenStack Provider v1alpha4 (v0.4) |       |       |       |       | ✓     |       |       |       |
+| OpenStack Provider v1alpha4 (v0.5) |       |       |       |       | ✓     | ✓     | +     | +     |
+| OpenStack Provider v1alpha5        |       |       |       |       |       | ✓     | +     | ✓     |
 
 This provider's versions are able to install Kubernetes to the following versions of OpenStack:
 
