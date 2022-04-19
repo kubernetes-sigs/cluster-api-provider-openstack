@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1beta1
+package v1alpha5
 
 import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"

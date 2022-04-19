@@ -14,19 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1beta1
+package v1alpha5
 
 import (
-	"sigs.k8s.io/controller-runtime/pkg/builder"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
-// log is for logging in this package.
-var _ = logf.Log.WithName("openstackclusterlist-resource")
+func aggregateObjErrors(gk schema.GroupKind, name string, allErrs field.ErrorList) error {
+	if len(allErrs) == 0 {
+		return nil
+	}
 
-func (r *OpenStackClusterList) SetupWebhookWithManager(mgr manager.Manager) error {
-	return builder.WebhookManagedBy(mgr).
-		For(r).
-		Complete()
+	return apierrors.NewInvalid(
+		gk,
+		name,
+		allErrs,
+	)
 }

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1beta1
+package v1alpha5
 
 // OpenStackMachineTemplateResource describes the data needed to create a OpenStackMachine from a template.
 type OpenStackMachineTemplateResource struct {

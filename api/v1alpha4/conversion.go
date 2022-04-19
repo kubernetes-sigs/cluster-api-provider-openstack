@@ -20,7 +20,7 @@ import (
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha5"
 )
 
 var _ ctrlconversion.Convertible = &OpenStackCluster{}
@@ -28,13 +28,13 @@ var _ ctrlconversion.Convertible = &OpenStackCluster{}
 func (r *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackCluster)
 
-	return Convert_v1alpha4_OpenStackCluster_To_v1beta1_OpenStackCluster(r, dst, nil)
+	return Convert_v1alpha4_OpenStackCluster_To_v1alpha5_OpenStackCluster(r, dst, nil)
 }
 
 func (r *OpenStackCluster) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	src := srcRaw.(*infrav1.OpenStackCluster)
 
-	return Convert_v1beta1_OpenStackCluster_To_v1alpha4_OpenStackCluster(src, r, nil)
+	return Convert_v1alpha5_OpenStackCluster_To_v1alpha4_OpenStackCluster(src, r, nil)
 }
 
 var _ ctrlconversion.Convertible = &OpenStackClusterList{}
@@ -42,13 +42,13 @@ var _ ctrlconversion.Convertible = &OpenStackClusterList{}
 func (r *OpenStackClusterList) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackClusterList)
 
-	return Convert_v1alpha4_OpenStackClusterList_To_v1beta1_OpenStackClusterList(r, dst, nil)
+	return Convert_v1alpha4_OpenStackClusterList_To_v1alpha5_OpenStackClusterList(r, dst, nil)
 }
 
 func (r *OpenStackClusterList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	src := srcRaw.(*infrav1.OpenStackClusterList)
 
-	return Convert_v1beta1_OpenStackClusterList_To_v1alpha4_OpenStackClusterList(src, r, nil)
+	return Convert_v1alpha5_OpenStackClusterList_To_v1alpha4_OpenStackClusterList(src, r, nil)
 }
 
 var _ ctrlconversion.Convertible = &OpenStackMachine{}
@@ -56,13 +56,13 @@ var _ ctrlconversion.Convertible = &OpenStackMachine{}
 func (r *OpenStackMachine) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackMachine)
 
-	return Convert_v1alpha4_OpenStackMachine_To_v1beta1_OpenStackMachine(r, dst, nil)
+	return Convert_v1alpha4_OpenStackMachine_To_v1alpha5_OpenStackMachine(r, dst, nil)
 }
 
 func (r *OpenStackMachine) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	src := srcRaw.(*infrav1.OpenStackMachine)
 
-	return Convert_v1beta1_OpenStackMachine_To_v1alpha4_OpenStackMachine(src, r, nil)
+	return Convert_v1alpha5_OpenStackMachine_To_v1alpha4_OpenStackMachine(src, r, nil)
 }
 
 var _ ctrlconversion.Convertible = &OpenStackMachineList{}
@@ -70,13 +70,13 @@ var _ ctrlconversion.Convertible = &OpenStackMachineList{}
 func (r *OpenStackMachineList) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackMachineList)
 
-	return Convert_v1alpha4_OpenStackMachineList_To_v1beta1_OpenStackMachineList(r, dst, nil)
+	return Convert_v1alpha4_OpenStackMachineList_To_v1alpha5_OpenStackMachineList(r, dst, nil)
 }
 
 func (r *OpenStackMachineList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	src := srcRaw.(*infrav1.OpenStackMachineList)
 
-	return Convert_v1beta1_OpenStackMachineList_To_v1alpha4_OpenStackMachineList(src, r, nil)
+	return Convert_v1alpha5_OpenStackMachineList_To_v1alpha4_OpenStackMachineList(src, r, nil)
 }
 
 var _ ctrlconversion.Convertible = &OpenStackMachineTemplate{}
@@ -84,13 +84,13 @@ var _ ctrlconversion.Convertible = &OpenStackMachineTemplate{}
 func (r *OpenStackMachineTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackMachineTemplate)
 
-	return Convert_v1alpha4_OpenStackMachineTemplate_To_v1beta1_OpenStackMachineTemplate(r, dst, nil)
+	return Convert_v1alpha4_OpenStackMachineTemplate_To_v1alpha5_OpenStackMachineTemplate(r, dst, nil)
 }
 
 func (r *OpenStackMachineTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	src := srcRaw.(*infrav1.OpenStackMachineTemplate)
 
-	return Convert_v1beta1_OpenStackMachineTemplate_To_v1alpha4_OpenStackMachineTemplate(src, r, nil)
+	return Convert_v1alpha5_OpenStackMachineTemplate_To_v1alpha4_OpenStackMachineTemplate(src, r, nil)
 }
 
 var _ ctrlconversion.Convertible = &OpenStackMachineTemplateList{}
@@ -98,16 +98,16 @@ var _ ctrlconversion.Convertible = &OpenStackMachineTemplateList{}
 func (r *OpenStackMachineTemplateList) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackMachineTemplateList)
 
-	return Convert_v1alpha4_OpenStackMachineTemplateList_To_v1beta1_OpenStackMachineTemplateList(r, dst, nil)
+	return Convert_v1alpha4_OpenStackMachineTemplateList_To_v1alpha5_OpenStackMachineTemplateList(r, dst, nil)
 }
 
 func (r *OpenStackMachineTemplateList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	src := srcRaw.(*infrav1.OpenStackMachineTemplateList)
 
-	return Convert_v1beta1_OpenStackMachineTemplateList_To_v1alpha4_OpenStackMachineTemplateList(src, r, nil)
+	return Convert_v1alpha5_OpenStackMachineTemplateList_To_v1alpha4_OpenStackMachineTemplateList(src, r, nil)
 }
 
-func Convert_v1alpha4_SubnetFilter_To_v1beta1_SubnetFilter(in *SubnetFilter, out *infrav1.SubnetFilter, s conversion.Scope) error {
+func Convert_v1alpha4_SubnetFilter_To_v1alpha5_SubnetFilter(in *SubnetFilter, out *infrav1.SubnetFilter, s conversion.Scope) error {
 	out.Name = in.Name
 	out.Description = in.Description
 	if in.ProjectID != "" {
@@ -128,12 +128,12 @@ func Convert_v1alpha4_SubnetFilter_To_v1beta1_SubnetFilter(in *SubnetFilter, out
 	return nil
 }
 
-func Convert_v1beta1_SubnetFilter_To_v1alpha4_SubnetFilter(in *infrav1.SubnetFilter, out *SubnetFilter, s conversion.Scope) error {
+func Convert_v1alpha5_SubnetFilter_To_v1alpha4_SubnetFilter(in *infrav1.SubnetFilter, out *SubnetFilter, s conversion.Scope) error {
 	out.TenantID = in.ProjectID
-	return autoConvert_v1beta1_SubnetFilter_To_v1alpha4_SubnetFilter(in, out, s)
+	return autoConvert_v1alpha5_SubnetFilter_To_v1alpha4_SubnetFilter(in, out, s)
 }
 
-func Convert_v1alpha4_Filter_To_v1beta1_NetworkFilter(in *Filter, out *infrav1.NetworkFilter, s conversion.Scope) error {
+func Convert_v1alpha4_Filter_To_v1alpha5_NetworkFilter(in *Filter, out *infrav1.NetworkFilter, s conversion.Scope) error {
 	out.Name = in.Name
 	out.Description = in.Description
 	if in.ProjectID != "" {
@@ -149,7 +149,7 @@ func Convert_v1alpha4_Filter_To_v1beta1_NetworkFilter(in *Filter, out *infrav1.N
 	return nil
 }
 
-func Convert_v1beta1_NetworkFilter_To_v1alpha4_Filter(in *infrav1.NetworkFilter, out *Filter, s conversion.Scope) error {
+func Convert_v1alpha5_NetworkFilter_To_v1alpha4_Filter(in *infrav1.NetworkFilter, out *Filter, s conversion.Scope) error {
 	out.Name = in.Name
 	out.Description = in.Description
 	out.ProjectID = in.ProjectID
@@ -162,8 +162,8 @@ func Convert_v1beta1_NetworkFilter_To_v1alpha4_Filter(in *infrav1.NetworkFilter,
 	return nil
 }
 
-func Convert_v1alpha4_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *infrav1.PortOpts, s conversion.Scope) error {
-	err := autoConvert_v1alpha4_PortOpts_To_v1beta1_PortOpts(in, out, s)
+func Convert_v1alpha4_PortOpts_To_v1alpha5_PortOpts(in *PortOpts, out *infrav1.PortOpts, s conversion.Scope) error {
+	err := autoConvert_v1alpha4_PortOpts_To_v1alpha5_PortOpts(in, out, s)
 	if err != nil {
 		return err
 	}
@@ -173,8 +173,8 @@ func Convert_v1alpha4_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *infrav1.Po
 	return nil
 }
 
-func Convert_v1beta1_PortOpts_To_v1alpha4_PortOpts(in *infrav1.PortOpts, out *PortOpts, s conversion.Scope) error {
-	err := autoConvert_v1beta1_PortOpts_To_v1alpha4_PortOpts(in, out, s)
+func Convert_v1alpha5_PortOpts_To_v1alpha4_PortOpts(in *infrav1.PortOpts, out *PortOpts, s conversion.Scope) error {
+	err := autoConvert_v1alpha5_PortOpts_To_v1alpha4_PortOpts(in, out, s)
 	if err != nil {
 		return err
 	}
@@ -184,10 +184,10 @@ func Convert_v1beta1_PortOpts_To_v1alpha4_PortOpts(in *infrav1.PortOpts, out *Po
 	return nil
 }
 
-func Convert_Slice_v1alpha4_Network_To_Slice_v1beta1_Network(in *[]Network, out *[]infrav1.Network, s conversion.Scope) error {
+func Convert_Slice_v1alpha4_Network_To_Slice_v1alpha5_Network(in *[]Network, out *[]infrav1.Network, s conversion.Scope) error {
 	*out = make([]infrav1.Network, len(*in))
 	for i := range *in {
-		if err := Convert_v1alpha4_Network_To_v1beta1_Network(&(*in)[i], &(*out)[i], s); err != nil {
+		if err := Convert_v1alpha4_Network_To_v1alpha5_Network(&(*in)[i], &(*out)[i], s); err != nil {
 			return err
 		}
 	}
@@ -195,18 +195,18 @@ func Convert_Slice_v1alpha4_Network_To_Slice_v1beta1_Network(in *[]Network, out 
 	return nil
 }
 
-func Convert_Slice_v1beta1_Network_To_Slice_v1alpha4_Network(in *[]infrav1.Network, out *[]Network, s conversion.Scope) error {
+func Convert_Slice_v1alpha5_Network_To_Slice_v1alpha4_Network(in *[]infrav1.Network, out *[]Network, s conversion.Scope) error {
 	*out = make([]Network, len(*in))
 	for i := range *in {
-		if err := Convert_v1beta1_Network_To_v1alpha4_Network(&(*in)[i], &(*out)[i], s); err != nil {
+		if err := Convert_v1alpha5_Network_To_v1alpha4_Network(&(*in)[i], &(*out)[i], s); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func Convert_v1alpha4_FixedIP_To_v1beta1_FixedIP(in *FixedIP, out *infrav1.FixedIP, s conversion.Scope) error {
-	err := autoConvert_v1alpha4_FixedIP_To_v1beta1_FixedIP(in, out, s)
+func Convert_v1alpha4_FixedIP_To_v1alpha5_FixedIP(in *FixedIP, out *infrav1.FixedIP, s conversion.Scope) error {
+	err := autoConvert_v1alpha4_FixedIP_To_v1alpha5_FixedIP(in, out, s)
 	if err != nil {
 		return err
 	}
@@ -216,8 +216,8 @@ func Convert_v1alpha4_FixedIP_To_v1beta1_FixedIP(in *FixedIP, out *infrav1.Fixed
 	return nil
 }
 
-func Convert_v1beta1_FixedIP_To_v1alpha4_FixedIP(in *infrav1.FixedIP, out *FixedIP, s conversion.Scope) error {
-	err := autoConvert_v1beta1_FixedIP_To_v1alpha4_FixedIP(in, out, s)
+func Convert_v1alpha5_FixedIP_To_v1alpha4_FixedIP(in *infrav1.FixedIP, out *FixedIP, s conversion.Scope) error {
+	err := autoConvert_v1alpha5_FixedIP_To_v1alpha4_FixedIP(in, out, s)
 	if err != nil {
 		return err
 	}
@@ -229,24 +229,24 @@ func Convert_v1beta1_FixedIP_To_v1alpha4_FixedIP(in *infrav1.FixedIP, out *Fixed
 
 /*
  * RootVolume changes:
- * - DeviceType is removed in v1beta1, hard-coded to disk for prior versions
- * - SourceType is removed in v1beta1, hard-coded to image for prior versions
- * - SourceUUID is removed in v1beta1, comes from the parent context
+ * - DeviceType is removed in v1alpha5, hard-coded to disk for prior versions
+ * - SourceType is removed in v1alpha5, hard-coded to image for prior versions
+ * - SourceUUID is removed in v1alpha5, comes from the parent context
  */
 
-func Convert_v1beta1_RootVolume_To_v1alpha4_RootVolume(in *infrav1.RootVolume, out *RootVolume, s conversion.Scope) error {
+func Convert_v1alpha5_RootVolume_To_v1alpha4_RootVolume(in *infrav1.RootVolume, out *RootVolume, s conversion.Scope) error {
 	out.DeviceType = "disk"
 	out.SourceType = "image"
 	// SourceUUID needs to come from the parent context
-	return autoConvert_v1beta1_RootVolume_To_v1alpha4_RootVolume(in, out, s)
+	return autoConvert_v1alpha5_RootVolume_To_v1alpha4_RootVolume(in, out, s)
 }
 
-func Convert_v1alpha4_RootVolume_To_v1beta1_RootVolume(in *RootVolume, out *infrav1.RootVolume, s conversion.Scope) error {
-	return autoConvert_v1alpha4_RootVolume_To_v1beta1_RootVolume(in, out, s)
+func Convert_v1alpha4_RootVolume_To_v1alpha5_RootVolume(in *RootVolume, out *infrav1.RootVolume, s conversion.Scope) error {
+	return autoConvert_v1alpha4_RootVolume_To_v1alpha5_RootVolume(in, out, s)
 }
 
-func Convert_v1alpha4_Instance_To_v1beta1_Instance(in *Instance, out *infrav1.Instance, s conversion.Scope) error {
-	if err := autoConvert_v1alpha4_Instance_To_v1beta1_Instance(in, out, s); err != nil {
+func Convert_v1alpha4_Instance_To_v1alpha5_Instance(in *Instance, out *infrav1.Instance, s conversion.Scope) error {
+	if err := autoConvert_v1alpha4_Instance_To_v1alpha5_Instance(in, out, s); err != nil {
 		return err
 	}
 	if in.RootVolume != nil && in.RootVolume.Size > 0 {
@@ -255,8 +255,8 @@ func Convert_v1alpha4_Instance_To_v1beta1_Instance(in *Instance, out *infrav1.In
 	return nil
 }
 
-func Convert_v1beta1_Instance_To_v1alpha4_Instance(in *infrav1.Instance, out *Instance, s conversion.Scope) error {
-	if err := autoConvert_v1beta1_Instance_To_v1alpha4_Instance(in, out, s); err != nil {
+func Convert_v1alpha5_Instance_To_v1alpha4_Instance(in *infrav1.Instance, out *Instance, s conversion.Scope) error {
+	if err := autoConvert_v1alpha5_Instance_To_v1alpha4_Instance(in, out, s); err != nil {
 		return err
 	}
 	if in.RootVolume != nil && in.RootVolume.Size > 0 {
@@ -266,8 +266,8 @@ func Convert_v1beta1_Instance_To_v1alpha4_Instance(in *infrav1.Instance, out *In
 	return nil
 }
 
-func Convert_v1alpha4_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in *OpenStackMachineSpec, out *infrav1.OpenStackMachineSpec, s conversion.Scope) error {
-	if err := autoConvert_v1alpha4_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in, out, s); err != nil {
+func Convert_v1alpha4_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(in *OpenStackMachineSpec, out *infrav1.OpenStackMachineSpec, s conversion.Scope) error {
+	if err := autoConvert_v1alpha4_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(in, out, s); err != nil {
 		return err
 	}
 	if in.RootVolume != nil && in.RootVolume.Size > 0 {
@@ -276,8 +276,8 @@ func Convert_v1alpha4_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in *O
 	return nil
 }
 
-func Convert_v1beta1_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(in *infrav1.OpenStackMachineSpec, out *OpenStackMachineSpec, s conversion.Scope) error {
-	if err := autoConvert_v1beta1_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(in, out, s); err != nil {
+func Convert_v1alpha5_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(in *infrav1.OpenStackMachineSpec, out *OpenStackMachineSpec, s conversion.Scope) error {
+	if err := autoConvert_v1alpha5_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(in, out, s); err != nil {
 		return err
 	}
 	if in.RootVolume != nil && in.RootVolume.Size > 0 {

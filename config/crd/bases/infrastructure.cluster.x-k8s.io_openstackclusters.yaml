@@ -2462,7 +2462,7 @@ spec:
       jsonPath: .status.bastion.floatingIP
       name: Bastion IP
       type: string
-    name: v1beta1
+    name: v1alpha5
     schema:
       openAPIV3Schema:
         description: OpenStackCluster is the Schema for the openstackclusters API.

@@ -792,7 +792,7 @@ spec:
       jsonPath: .metadata.ownerReferences[?(@.kind=="Machine")].name
       name: Machine
       type: string
-    name: v1beta1
+    name: v1alpha5
     schema:
       openAPIV3Schema:
         description: OpenStackMachine is the Schema for the openstackmachines API.
