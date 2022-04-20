@@ -98,7 +98,7 @@ The following variables are set.
  :----- | :--------
 | OPENSTACK_CLOUD | The cloud name which is used as second argument |
 | OPENSTACK_CLOUD_YAML_B64 | The secret used by Cluster API Provider OpenStack accessing OpenStack |
-| OPENSTACK_CLOUD_PROVIDER_CONF_B64 | The content of [cloud.conf](https://kubernetes.io/docs/concepts/cluster-administration/cloud-providers/#cloud-conf) which is used by OpenStack cloud provider |
+| OPENSTACK_CLOUD_PROVIDER_CONF_B64 | The content of [cloud.conf](https://git.k8s.io/cloud-provider-openstack/docs/openstack-cloud-controller-manager/using-openstack-cloud-controller-manager.md#deploy-a-kubernetes-cluster-with-openstack-cloud-controller-manager-using-kubeadm) which is used by OpenStack cloud provider |
 | OPENSTACK_CLOUD_CACERT_B64 | (Optional) The content of your custom CA file which can be specified in your clouds.yaml by `ca-file` |
 
 Note: Only the [external cloud provider](https://cluster-api-openstack.sigs.k8s.io/topics/external-cloud-provider.html) supports [Application Credentials](https://docs.openstack.org/keystone/latest/user/application_credentials.html).
