@@ -272,7 +272,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, scope 
 func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope *scope.Scope, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (_ ctrl.Result, reterr error) {
 	// If the OpenStackMachine is in an error state, return early.
 	if openStackMachine.Status.FailureReason != nil || openStackMachine.Status.FailureMessage != nil {
-		scope.Logger.Info("Error state detected, skipping reconciliation")
+		scope.Logger.Info("Not reconciling machine in failed state. See openStackMachine.status.failureReason, openStackMachine.status.failureMessage, or previously logged error for details")
 		return ctrl.Result{}, nil
 	}
 
