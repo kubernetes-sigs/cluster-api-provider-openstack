@@ -112,6 +112,10 @@ func dumpOpenStack(_ context.Context, e2eCtx *E2EContext, bootstrapClusterProxyN
 	if err := dumpOpenStackImages(providerClient, clientOpts, logPath); err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "error dumping OpenStack images: %s\n", err)
 	}
+
+	if err := dumpOpenStackPorts(e2eCtx, logPath); err != nil {
+		_, _ = fmt.Fprintf(GinkgoWriter, "error dumping OpenStack ports: %s\n", err)
+	}
 }
 
 func dumpOpenStackImages(providerClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, logPath string) error {
@@ -134,9 +138,25 @@ func dumpOpenStackImages(providerClient *gophercloud.ProviderClient, clientOpts 
 	if err != nil {
 		return fmt.Errorf("error marshalling images %v: %s", imagesList, err)
 	}
-	if err := os.WriteFile(path.Join(logPath, "images.txt"), imagesJSON, 0o600); err != nil {
-		return fmt.Errorf("error writing seversJSON %s: %s", imagesJSON, err)
+	if err := os.WriteFile(path.Join(logPath, "images.json"), imagesJSON, 0o600); err != nil {
+		return fmt.Errorf("error writing images.json %s: %s", imagesJSON, err)
 	}
+	return nil
+}
+
+func dumpOpenStackPorts(e2eCtx *E2EContext, logPath string) error {
+	portsList, err := DumpOpenStackPorts(e2eCtx, ports.ListOpts{})
+	if err != nil {
+		return err
+	}
+	portsJSON, err := json.MarshalIndent(portsList, "", "    ")
+	if err != nil {
+		return fmt.Errorf("error marshalling ports %v: %s", portsList, err)
+	}
+	if err := os.WriteFile(path.Join(logPath, "ports.json"), portsJSON, 0o600); err != nil {
+		return fmt.Errorf("error writing ports.json %s: %s", portsJSON, err)
+	}
+
 	return nil
 }
 
