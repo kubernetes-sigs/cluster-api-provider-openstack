@@ -270,7 +270,26 @@ func TestFuzzyConversion(t *testing.T) {
 			func(v1alpha5MachineSpec *infrav1.OpenStackMachineSpec, c fuzz.Continue) {
 				c.FuzzNoCustom(v1alpha5MachineSpec)
 
-				v1alpha5MachineSpec.ImageUUID = ""
+				// In v1alpha4 boot from volume only supports
+				// image by UUID, and boot from local only
+				// suppots image by name
+				if v1alpha5MachineSpec.RootVolume != nil && v1alpha5MachineSpec.RootVolume.Size > 0 {
+					v1alpha5MachineSpec.Image = ""
+				} else {
+					v1alpha5MachineSpec.ImageUUID = ""
+				}
+			},
+			func(v1alpha5Instance *infrav1.Instance, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha5Instance)
+
+				// In v1alpha4 boot from volume only supports
+				// image by UUID, and boot from local only
+				// suppots image by name
+				if v1alpha5Instance.RootVolume != nil && v1alpha5Instance.RootVolume.Size > 0 {
+					v1alpha5Instance.Image = ""
+				} else {
+					v1alpha5Instance.ImageUUID = ""
+				}
 			},
 			func(v1alpha5RootVolume *infrav1.RootVolume, c fuzz.Continue) {
 				c.FuzzNoCustom(v1alpha5RootVolume)
