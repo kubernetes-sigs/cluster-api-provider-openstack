@@ -188,20 +188,6 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 		})
 	}
 
-	var serverCreateOpts servers.CreateOptsBuilder = servers.CreateOpts{
-		Name:             instanceSpec.Name,
-		ImageRef:         imageID,
-		FlavorRef:        flavorID,
-		AvailabilityZone: instanceSpec.FailureDomain,
-		Networks:         portList,
-		UserData:         []byte(instanceSpec.UserData),
-		SecurityGroups:   securityGroups,
-		Tags:             instanceSpec.Tags,
-		Metadata:         instanceSpec.Metadata,
-		ConfigDrive:      &instanceSpec.ConfigDrive,
-		AccessIPv4:       accessIPv4,
-	}
-
 	volume, err := s.getOrCreateRootVolume(eventObject, instanceSpec, imageID)
 	if err != nil {
 		return nil, fmt.Errorf("error in get or create root volume: %w", err)
@@ -233,6 +219,26 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 		if err != nil {
 			return nil, fmt.Errorf("volume %s did not become available: %w", volume.ID, err)
 		}
+	}
+
+	// Don't set ImageRef on the server if we're booting from volume
+	var serverImageRef string
+	if volume == nil {
+		serverImageRef = imageID
+	}
+
+	var serverCreateOpts servers.CreateOptsBuilder = servers.CreateOpts{
+		Name:             instanceSpec.Name,
+		ImageRef:         serverImageRef,
+		FlavorRef:        flavorID,
+		AvailabilityZone: instanceSpec.FailureDomain,
+		Networks:         portList,
+		UserData:         []byte(instanceSpec.UserData),
+		SecurityGroups:   securityGroups,
+		Tags:             instanceSpec.Tags,
+		Metadata:         instanceSpec.Metadata,
+		ConfigDrive:      &instanceSpec.ConfigDrive,
+		AccessIPv4:       accessIPv4,
 	}
 
 	serverCreateOpts = applyRootVolume(serverCreateOpts, volume)
