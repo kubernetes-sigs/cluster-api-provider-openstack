@@ -834,6 +834,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 
 				createMap := getDefaultServerMap()
 				serverMap := createMap["server"].(map[string]interface{})
+				serverMap["imageRef"] = ""
 				serverMap["block_device_mapping_v2"] = []map[string]interface{}{
 					{
 						"delete_on_termination": true,
@@ -880,6 +881,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 
 				createMap := getDefaultServerMap()
 				serverMap := createMap["server"].(map[string]interface{})
+				serverMap["imageRef"] = ""
 				serverMap["block_device_mapping_v2"] = []map[string]interface{}{
 					{
 						"delete_on_termination": true,
