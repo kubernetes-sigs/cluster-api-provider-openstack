@@ -250,7 +250,7 @@ func Convert_v1alpha4_Instance_To_v1alpha5_Instance(in *Instance, out *infrav1.I
 		return err
 	}
 	if in.RootVolume != nil && in.RootVolume.Size > 0 {
-		out.Image = in.RootVolume.SourceUUID
+		out.ImageUUID = in.RootVolume.SourceUUID
 	}
 	return nil
 }
@@ -260,7 +260,7 @@ func Convert_v1alpha5_Instance_To_v1alpha4_Instance(in *infrav1.Instance, out *I
 		return err
 	}
 	if in.RootVolume != nil && in.RootVolume.Size > 0 {
-		out.RootVolume.SourceUUID = in.Image
+		out.RootVolume.SourceUUID = in.ImageUUID
 		out.Image = ""
 	}
 	return nil
@@ -271,7 +271,7 @@ func Convert_v1alpha4_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(in *
 		return err
 	}
 	if in.RootVolume != nil && in.RootVolume.Size > 0 {
-		out.Image = in.RootVolume.SourceUUID
+		out.ImageUUID = in.RootVolume.SourceUUID
 	}
 	return nil
 }
@@ -281,7 +281,7 @@ func Convert_v1alpha5_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(in *
 		return err
 	}
 	if in.RootVolume != nil && in.RootVolume.Size > 0 {
-		out.RootVolume.SourceUUID = in.Image
+		out.RootVolume.SourceUUID = in.ImageUUID
 		out.Image = ""
 	}
 	return nil
