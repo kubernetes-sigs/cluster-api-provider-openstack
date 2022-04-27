@@ -58,8 +58,8 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 	if err != nil {
 		return err
 	}
-	if lb.ProvisioningStatus != loadBalancerProvisioningStatusActive {
-		return fmt.Errorf("load balancer %q is not in expected state %s, current state is %s", lb.ID, loadBalancerProvisioningStatusActive, lb.ProvisioningStatus)
+	if err := s.waitForLoadBalancerActive(lb.ID); err != nil {
+		return fmt.Errorf("load balancer %q with id %s is not active after timeout: %v", loadBalancerName, lb.ID, err)
 	}
 
 	var lbFloatingIP string
@@ -131,11 +131,6 @@ func (s *Service) getOrCreateLoadBalancer(openStackCluster *infrav1.OpenStackClu
 	lb, err = loadbalancers.Create(s.loadbalancerClient, lbCreateOpts).Extract()
 	if mc.ObserveRequest(err) != nil {
 		record.Warnf(openStackCluster, "FailedCreateLoadBalancer", "Failed to create load balancer %s: %v", loadBalancerName, err)
-		return nil, err
-	}
-
-	if err := s.waitForLoadBalancerActive(lb.ID); err != nil {
-		record.Warnf(openStackCluster, "FailedCreateLoadBalancer", "Failed to create load balancer %s with id %s: wait for load balancer active: %v", loadBalancerName, lb.ID, err)
 		return nil, err
 	}
 
