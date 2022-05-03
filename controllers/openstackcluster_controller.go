@@ -221,12 +221,12 @@ func deleteBastion(scope *scope.Scope, cluster *clusterv1.Cluster, openStackClus
 				}
 			}
 		}
-	}
 
-	instanceSpec := bastionToInstanceSpec(openStackCluster, cluster.Name)
-	if err = computeService.DeleteInstance(openStackCluster, instanceSpec, instanceStatus); err != nil {
-		handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete bastion: %v", err))
-		return errors.Errorf("failed to delete bastion: %v", err)
+		instanceSpec := bastionToInstanceSpec(openStackCluster, cluster.Name)
+		if err = computeService.DeleteInstance(openStackCluster, instanceSpec, instanceStatus); err != nil {
+			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete bastion: %v", err))
+			return errors.Errorf("failed to delete bastion: %v", err)
+		}
 	}
 
 	openStackCluster.Status.Bastion = nil
