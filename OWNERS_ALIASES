@@ -30,5 +30,4 @@ aliases:
     - seanschneeweiss
     - tobiasgiese
   cluster-api-openstack-reviewers:
-    - macaptain
     - apricote
