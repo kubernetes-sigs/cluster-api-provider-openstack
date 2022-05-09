@@ -103,11 +103,11 @@ spec:
                           credentials
                         properties:
                           name:
-                            description: Name is unique within a namespace to reference
+                            description: name is unique within a namespace to reference
                               a secret resource.
                             type: string
                           namespace:
-                            description: Namespace defines the space within which
+                            description: namespace defines the space within which
                               the secret name must be unique.
                             type: string
                         type: object
@@ -330,11 +330,11 @@ spec:
                           (startup script in most cases)
                         properties:
                           name:
-                            description: Name is unique within a namespace to reference
+                            description: name is unique within a namespace to reference
                               a secret resource.
                             type: string
                           namespace:
-                            description: Namespace defines the space within which
+                            description: namespace defines the space within which
                               the secret name must be unique.
                             type: string
                         type: object
@@ -349,11 +349,11 @@ spec:
                 description: The name of the secret containing the openstack credentials
                 properties:
                   name:
-                    description: Name is unique within a namespace to reference a
+                    description: name is unique within a namespace to reference a
                       secret resource.
                     type: string
                   namespace:
-                    description: Namespace defines the space within which the secret
+                    description: namespace defines the space within which the secret
                       name must be unique.
                     type: string
                 type: object
@@ -2511,12 +2511,18 @@ spec:
                 properties:
                   additionalPorts:
                     description: AdditionalPorts adds additional tcp ports to the
-                      Loadbalacner
+                      load balancer.
                     items:
                       type: integer
                     type: array
+                  allowedCidrs:
+                    description: AllowedCIDRs restrict access to all API-Server listeners
+                      to the given address CIDRs.
+                    items:
+                      type: string
+                    type: array
                   enabled:
-                    description: Enabled defines whether a LoadBalancer should be
+                    description: Enabled defines whether a load balancer should be
                       created.
                     type: boolean
                 type: object
@@ -3172,6 +3178,10 @@ spec:
                             because this field is optional and therefore not set in
                             all cases
                           properties:
+                            allowedCIDRs:
+                              items:
+                                type: string
+                              type: array
                             id:
                               type: string
                             internalIP:
@@ -3373,6 +3383,10 @@ spec:
                           properties:
                             id:
                               type: string
+                            ips:
+                              items:
+                                type: string
+                              type: array
                             name:
                               type: string
                             tags:
@@ -3555,6 +3569,10 @@ spec:
                     description: Be careful when using APIServerLoadBalancer, because
                       this field is optional and therefore not set in all cases
                     properties:
+                      allowedCIDRs:
+                        items:
+                          type: string
+                        type: array
                       id:
                         type: string
                       internalIP:
@@ -3753,6 +3771,10 @@ spec:
                     properties:
                       id:
                         type: string
+                      ips:
+                        items:
+                          type: string
+                        type: array
                       name:
                         type: string
                       tags:
@@ -3849,6 +3871,10 @@ spec:
                     description: Be careful when using APIServerLoadBalancer, because
                       this field is optional and therefore not set in all cases
                     properties:
+                      allowedCIDRs:
+                        items:
+                          type: string
+                        type: array
                       id:
                         type: string
                       internalIP:
@@ -4047,6 +4073,10 @@ spec:
                     properties:
                       id:
                         type: string
+                      ips:
+                        items:
+                          type: string
+                        type: array
                       name:
                         type: string
                       tags:

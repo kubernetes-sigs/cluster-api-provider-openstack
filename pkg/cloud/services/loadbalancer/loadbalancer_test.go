@@ -21,10 +21,12 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/golang/mock/gomock"
+	"github.com/gophercloud/gophercloud/openstack/compute/apiversions"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/listeners"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/loadbalancers"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/monitors"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/pools"
+	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/providers"
 	. "github.com/onsi/gomega"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha5"
@@ -75,6 +77,13 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 				// add network api call results here
 			},
 			expectLoadBalancer: func(m *mock_loadbalancer.MockLbClientMockRecorder) {
+				// return loadbalancer providers
+				providers := []providers.Provider{
+					{Name: "amphora", Description: "The Octavia Amphora driver."},
+					{Name: "octavia", Description: "Deprecated alias of the Octavia Amphora driver."},
+				}
+				m.ListLoadBalancerProviders().Return(providers, nil)
+
 				pendingLB := loadbalancers.LoadBalancer{
 					ID:                 "aaaaaaaa-bbbb-cccc-dddd-333333333333",
 					Name:               "k8s-clusterapi-cluster-AAAAA-kubeapi",
@@ -89,6 +98,14 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 
 				// wait for active loadbalancer by returning active loadbalancer on second call
 				m.GetLoadBalancer("aaaaaaaa-bbbb-cccc-dddd-333333333333").Return(&pendingLB, nil).Return(&activeLB, nil)
+
+				// return octavia versions
+				versions := []apiversions.APIVersion{
+					{ID: "2.24"},
+					{ID: "2.23"},
+					{ID: "2.22"},
+				}
+				m.ListOctaviaVersions().Return(versions, nil)
 
 				listenerList := []listeners.Listener{
 					{

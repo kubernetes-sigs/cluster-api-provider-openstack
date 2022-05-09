@@ -24,6 +24,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	apiversions "github.com/gophercloud/gophercloud/openstack/compute/apiversions"
 	listeners "github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/listeners"
 	loadbalancers "github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/loadbalancers"
 	monitors "github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/monitors"
@@ -304,6 +305,21 @@ func (mr *MockLbClientMockRecorder) ListMonitors(arg0 interface{}) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMonitors", reflect.TypeOf((*MockLbClient)(nil).ListMonitors), arg0)
 }
 
+// ListOctaviaVersions mocks base method.
+func (m *MockLbClient) ListOctaviaVersions() ([]apiversions.APIVersion, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListOctaviaVersions")
+	ret0, _ := ret[0].([]apiversions.APIVersion)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListOctaviaVersions indicates an expected call of ListOctaviaVersions.
+func (mr *MockLbClientMockRecorder) ListOctaviaVersions() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListOctaviaVersions", reflect.TypeOf((*MockLbClient)(nil).ListOctaviaVersions))
+}
+
 // ListPoolMember mocks base method.
 func (m *MockLbClient) ListPoolMember(arg0 string, arg1 pools.ListMembersOptsBuilder) ([]pools.Member, error) {
 	m.ctrl.T.Helper()
@@ -332,4 +348,19 @@ func (m *MockLbClient) ListPools(arg0 pools.ListOptsBuilder) ([]pools.Pool, erro
 func (mr *MockLbClientMockRecorder) ListPools(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListPools", reflect.TypeOf((*MockLbClient)(nil).ListPools), arg0)
+}
+
+// UpdateListener mocks base method.
+func (m *MockLbClient) UpdateListener(arg0 string, arg1 listeners.UpdateOpts) (*listeners.Listener, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateListener", arg0, arg1)
+	ret0, _ := ret[0].(*listeners.Listener)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateListener indicates an expected call of UpdateListener.
+func (mr *MockLbClientMockRecorder) UpdateListener(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateListener", reflect.TypeOf((*MockLbClient)(nil).UpdateListener), arg0, arg1)
 }

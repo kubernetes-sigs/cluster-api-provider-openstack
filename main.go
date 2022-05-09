@@ -65,6 +65,7 @@ var (
 	webhookPort                 int
 	webhookCertDir              string
 	healthAddr                  string
+	lbProvider                  string
 )
 
 func init() {
@@ -123,6 +124,9 @@ func InitFlags(fs *pflag.FlagSet) {
 
 	fs.StringVar(&healthAddr, "health-addr", ":9440",
 		"The address the health endpoint binds to.")
+
+	fs.StringVar(&lbProvider, "lb-provider", "amphora",
+		"The name of the load balancer provider (amphora or ovn) to use (defaults to amphora).")
 }
 
 func main() {

@@ -22,6 +22,7 @@ import (
 	fuzz "github.com/google/gofuzz"
 	"github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/apitesting/fuzzer"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	runtimeserializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
@@ -147,6 +148,11 @@ func TestConvertFrom(t *testing.T) {
 						},
 					},
 				},
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"cloudName\":\"\",\"flavor\":\"\",\"ports\":[{\"fixedIPs\":[{\"subnet\":{\"id\":\"986f5848-127f-4357-944e-5dd75472def8\"}}]}]},\"status\":{\"ready\":false}}",
+					},
+				},
 			},
 		},
 		{
@@ -164,6 +170,11 @@ func TestConvertFrom(t *testing.T) {
 				Spec: OpenStackClusterSpec{
 					ManagedAPIServerLoadBalancer:         true,
 					APIServerLoadBalancerAdditionalPorts: []int{80, 443},
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"allowAllInClusterTraffic\":false,\"apiServerLoadBalancer\":{\"additionalPorts\":[80,443],\"enabled\":true},\"cloudName\":\"\",\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"managedSecurityGroups\":false,\"network\":{},\"subnet\":{}},\"status\":{\"ready\":false}}",
+					},
 				},
 			},
 		},
@@ -197,6 +208,15 @@ func TestFuzzyConversion(t *testing.T) {
 	fuzzerFuncs := func(_ runtimeserializer.CodecFactory) []interface{} {
 		return []interface{}{
 			// Don't test spoke-hub-spoke conversion of v1alpha4 fields which are not in infrav1
+			func(v1alpha4Cluster *OpenStackCluster, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha4Cluster)
+
+				v1alpha4Cluster.ObjectMeta.Annotations = map[string]string{}
+
+				if v1alpha4Cluster.Spec.Bastion != nil {
+					v1alpha4Cluster.Spec.Bastion.Instance.Image = ""
+				}
+			},
 			func(v1alpha3SubnetFilter *SubnetFilter, c fuzz.Continue) {
 				c.FuzzNoCustom(v1alpha3SubnetFilter)
 				v1alpha3SubnetFilter.EnableDHCP = nil
@@ -232,13 +252,22 @@ func TestFuzzyConversion(t *testing.T) {
 				v1alpha4RootVolume.DeviceType = "disk"
 				v1alpha4RootVolume.SourceType = "image"
 			},
-			func(v1alpha4MachineSpec *OpenStackMachineSpec, c fuzz.Continue) {
-				c.FuzzNoCustom(v1alpha4MachineSpec)
+			func(v1alpha4Machine *OpenStackMachine, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha4Machine)
 
-				if v1alpha4MachineSpec.RootVolume != nil {
+				v1alpha4Machine.ObjectMeta.Annotations = map[string]string{}
+
+				if v1alpha4Machine.Spec.RootVolume != nil {
 					// OpenStackMachineSpec.Image is ignored in v1alpha4 if RootVolume is set
-					v1alpha4MachineSpec.Image = ""
+					v1alpha4Machine.Spec.Image = ""
 				}
+			},
+			func(v1alpha4MachineTemplate *OpenStackMachineTemplate, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha4MachineTemplate)
+
+				v1alpha4MachineTemplate.ObjectMeta.Annotations = map[string]string{}
+
+				v1alpha4MachineTemplate.Spec.Template.Spec.Image = ""
 			},
 			func(v1alpha4Instance *Instance, c fuzz.Continue) {
 				c.FuzzNoCustom(v1alpha4Instance)
@@ -246,6 +275,15 @@ func TestFuzzyConversion(t *testing.T) {
 				if v1alpha4Instance.RootVolume != nil {
 					// OpenStackInstance.Image is ignored in v1alpha4 if RootVolume is set
 					v1alpha4Instance.Image = ""
+				}
+			},
+			func(v1alpha4ClusterTemplate *OpenStackClusterTemplate, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha4ClusterTemplate)
+
+				v1alpha4ClusterTemplate.ObjectMeta.Annotations = map[string]string{}
+
+				if v1alpha4ClusterTemplate.Spec.Template.Spec.Bastion != nil {
+					v1alpha4ClusterTemplate.Spec.Template.Spec.Bastion.Instance.Image = ""
 				}
 			},
 
@@ -281,24 +319,61 @@ func TestFuzzyConversion(t *testing.T) {
 					}
 				}
 			},
-			func(v1alpha5ClusterStatus *infrav1.OpenStackClusterStatus, c fuzz.Continue) {
-				c.FuzzNoCustom(v1alpha5ClusterStatus)
+			func(v1alpha5Cluster *infrav1.OpenStackCluster, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha5Cluster)
 
-				if v1alpha5ClusterStatus.Bastion != nil {
-					v1alpha5ClusterStatus.Bastion.ImageUUID = ""
+				v1alpha5Cluster.ObjectMeta.Annotations = map[string]string{}
+
+				v1alpha5Cluster.Spec.APIServerLoadBalancer.AllowedCIDRs = nil
+
+				if v1alpha5Cluster.Spec.Bastion != nil {
+					v1alpha5Cluster.Spec.Bastion.Instance.Image = ""
+				}
+
+				if v1alpha5Cluster.Status.Bastion != nil {
+					v1alpha5Cluster.Status.Bastion.ImageUUID = ""
+					v1alpha5Cluster.Status.Bastion.Image = ""
+					v1alpha5Cluster.Status.Bastion.Networks = nil
+				}
+
+				if v1alpha5Cluster.Status.Network != nil {
+					if v1alpha5Cluster.Status.Network.APIServerLoadBalancer != nil {
+						v1alpha5Cluster.Status.Network.APIServerLoadBalancer.AllowedCIDRs = nil
+					}
+					if v1alpha5Cluster.Status.Network.Router != nil {
+						v1alpha5Cluster.Status.Network.Router.IPs = []string{}
+					}
+				}
+
+				if v1alpha5Cluster.Status.ExternalNetwork != nil {
+					if v1alpha5Cluster.Status.ExternalNetwork.APIServerLoadBalancer != nil {
+						v1alpha5Cluster.Status.ExternalNetwork.APIServerLoadBalancer.AllowedCIDRs = nil
+					}
+					if v1alpha5Cluster.Status.ExternalNetwork.Router != nil {
+						v1alpha5Cluster.Status.ExternalNetwork.Router.IPs = []string{}
+					}
 				}
 			},
-			func(v1alpha5MachineSpec *infrav1.OpenStackMachineSpec, c fuzz.Continue) {
-				c.FuzzNoCustom(v1alpha5MachineSpec)
+			func(v1alpha5Machine *infrav1.OpenStackMachine, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha5Machine)
+
+				v1alpha5Machine.ObjectMeta.Annotations = map[string]string{}
 
 				// In v1alpha4 boot from volume only supports
 				// image by UUID, and boot from local only
 				// suppots image by name
-				if v1alpha5MachineSpec.RootVolume != nil && v1alpha5MachineSpec.RootVolume.Size > 0 {
-					v1alpha5MachineSpec.Image = ""
+				if v1alpha5Machine.Spec.RootVolume != nil && v1alpha5Machine.Spec.RootVolume.Size > 0 {
+					v1alpha5Machine.Spec.Image = ""
 				} else {
-					v1alpha5MachineSpec.ImageUUID = ""
+					v1alpha5Machine.Spec.ImageUUID = ""
 				}
+			},
+			func(v1alpha5MachineTemplate *infrav1.OpenStackMachineTemplate, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha5MachineTemplate)
+
+				v1alpha5MachineTemplate.ObjectMeta.Annotations = map[string]string{}
+
+				v1alpha5MachineTemplate.Spec.Template.Spec.Image = ""
 			},
 			func(v1alpha5Instance *infrav1.Instance, c fuzz.Continue) {
 				c.FuzzNoCustom(v1alpha5Instance)
@@ -317,6 +392,17 @@ func TestFuzzyConversion(t *testing.T) {
 
 				v1alpha5RootVolume.VolumeType = ""
 				v1alpha5RootVolume.AvailabilityZone = ""
+			},
+			func(v1alpha5ClusterTemplate *infrav1.OpenStackClusterTemplate, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha5ClusterTemplate)
+
+				v1alpha5ClusterTemplate.ObjectMeta.Annotations = map[string]string{}
+
+				v1alpha5ClusterTemplate.Spec.Template.Spec.APIServerLoadBalancer.AllowedCIDRs = nil
+
+				if v1alpha5ClusterTemplate.Spec.Template.Spec.Bastion != nil {
+					v1alpha5ClusterTemplate.Spec.Template.Spec.Bastion.Instance.Image = ""
+				}
 			},
 		}
 	}
