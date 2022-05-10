@@ -246,36 +246,6 @@ func setupWebhooks(mgr ctrl.Manager) {
 		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackClusterList")
 		os.Exit(1)
 	}
-
-	// infrav1alpha4
-	if err := (&infrav1alpha4.OpenStackMachineTemplate{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackMachineTemplate")
-		os.Exit(1)
-	}
-	if err := (&infrav1alpha4.OpenStackMachineTemplateList{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackMachineTemplateList")
-		os.Exit(1)
-	}
-	if err := (&infrav1alpha4.OpenStackCluster{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackCluster")
-		os.Exit(1)
-	}
-	if err := (&infrav1alpha4.OpenStackClusterTemplate{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackClusterTemplate")
-		os.Exit(1)
-	}
-	if err := (&infrav1alpha4.OpenStackMachine{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackMachine")
-		os.Exit(1)
-	}
-	if err := (&infrav1alpha4.OpenStackMachineList{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackMachineList")
-		os.Exit(1)
-	}
-	if err := (&infrav1alpha4.OpenStackClusterList{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackClusterList")
-		os.Exit(1)
-	}
 }
 
 func concurrency(c int) controller.Options {
