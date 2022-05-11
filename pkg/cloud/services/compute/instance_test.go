@@ -765,9 +765,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				return s
 			},
 			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
-				computeRecorder.ListImages(images.ListOpts{Name: imageName}).Return([]images.Image{{ID: imageUUID}}, nil)
-				computeRecorder.GetFlavorIDFromName(flavorName).Return(flavorUUID, nil)
-
+				expectDefaultImageAndFlavor(computeRecorder)
 				expectUseExistingDefaultPort(networkRecorder)
 
 				// Looking up the second port fails
@@ -938,9 +936,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				return s
 			},
 			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
-				computeRecorder.ListImages(images.ListOpts{Name: imageName}).Return([]images.Image{{ID: imageUUID}}, nil)
-				computeRecorder.GetFlavorIDFromName(flavorName).Return(flavorUUID, nil)
-
+				expectDefaultImageAndFlavor(computeRecorder)
 				extensions := []extensions.Extension{
 					{Extension: common.Extension{Alias: "trunk"}},
 				}
