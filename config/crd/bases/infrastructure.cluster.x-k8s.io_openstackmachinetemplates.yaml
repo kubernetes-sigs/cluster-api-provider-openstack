@@ -951,7 +951,53 @@ spec:
                               type: object
                             projectId:
                               type: string
+                            securityGroupFilters:
+                              description: The names, uuids, filters or any combination
+                                these of the security groups to assign to the instance
+                              items:
+                                properties:
+                                  filter:
+                                    description: Filters used to query security groups
+                                      in openstack
+                                    properties:
+                                      description:
+                                        type: string
+                                      id:
+                                        type: string
+                                      limit:
+                                        type: integer
+                                      marker:
+                                        type: string
+                                      name:
+                                        type: string
+                                      notTags:
+                                        type: string
+                                      notTagsAny:
+                                        type: string
+                                      projectId:
+                                        type: string
+                                      sortDir:
+                                        type: string
+                                      sortKey:
+                                        type: string
+                                      tags:
+                                        type: string
+                                      tagsAny:
+                                        type: string
+                                      tenantId:
+                                        type: string
+                                    type: object
+                                  name:
+                                    description: Security Group name
+                                    type: string
+                                  uuid:
+                                    description: Security Group UID
+                                    type: string
+                                type: object
+                              type: array
                             securityGroups:
+                              description: The uuids of the security groups to assign
+                                to the instance
                               items:
                                 type: string
                               type: array

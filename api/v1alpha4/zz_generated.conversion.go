@@ -1474,6 +1474,7 @@ func autoConvert_v1alpha5_PortOpts_To_v1alpha4_PortOpts(in *v1alpha5.PortOpts, o
 	out.TenantID = in.TenantID
 	out.ProjectID = in.ProjectID
 	out.SecurityGroups = (*[]string)(unsafe.Pointer(in.SecurityGroups))
+	// WARNING: in.SecurityGroupFilters requires manual conversion: does not exist in peer-type
 	out.AllowedAddressPairs = *(*[]AddressPair)(unsafe.Pointer(&in.AllowedAddressPairs))
 	out.Trunk = (*bool)(unsafe.Pointer(in.Trunk))
 	out.HostID = in.HostID

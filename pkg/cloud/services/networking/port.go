@@ -89,11 +89,12 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 				MACAddress: ap.MACAddress,
 			})
 		}
-
-		securityGroups = portOpts.SecurityGroups
-
+		securityGroups, err = s.CollectPortSecurityGroups(eventObject, portOpts.SecurityGroups, portOpts.SecurityGroupFilters)
+		if err != nil {
+			return nil, err
+		}
 		// inherit port security groups from the instance if not explicitly specified
-		if securityGroups == nil {
+		if securityGroups == nil || len(*securityGroups) == 0 {
 			securityGroups = instanceSecurityGroups
 		}
 	}
@@ -256,4 +257,42 @@ func (s *Service) GarbageCollectErrorInstancesPort(eventObject runtime.Object, i
 	}
 
 	return nil
+}
+
+// CollectPortSecurityGroups collects distinct securityGroups from port.SecurityGroups and port.SecurityGroupFilter fields.
+func (s *Service) CollectPortSecurityGroups(eventObject runtime.Object, portSecurityGroups *[]string, portSecurityGroupFilters []infrav1.SecurityGroupParam) (*[]string, error) {
+	var allSecurityGroupIDs []string
+	// security groups provided with the portSecurityGroupFilters fields
+	securityGroupFiltersByID, err := s.GetSecurityGroups(portSecurityGroupFilters)
+	if err != nil {
+		return portSecurityGroups, fmt.Errorf("error getting security groups: %v", err)
+	}
+	allSecurityGroupIDs = append(allSecurityGroupIDs, securityGroupFiltersByID...)
+	securityGroupCount := 0
+	// security groups provided with the portSecurityGroups fields
+	if portSecurityGroups != nil {
+		allSecurityGroupIDs = append(allSecurityGroupIDs, *portSecurityGroups...)
+	}
+	// generate unique values
+	uids := make(map[string]int)
+	for _, sg := range allSecurityGroupIDs {
+		if sg == "" {
+			continue
+		}
+		// count distinct values
+		_, ok := uids[sg]
+		if !ok {
+			securityGroupCount++
+		}
+		uids[sg] = 1
+	}
+	distinctSecurityGroupIDs := make([]string, 0, securityGroupCount)
+	// collect distict values
+	for key := range uids {
+		if key == "" {
+			continue
+		}
+		distinctSecurityGroupIDs = append(distinctSecurityGroupIDs, key)
+	}
+	return &distinctSecurityGroupIDs, nil
 }

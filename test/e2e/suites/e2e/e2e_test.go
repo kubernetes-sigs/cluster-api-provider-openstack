@@ -209,6 +209,13 @@ var _ = Describe("e2e tests", func() {
 
 			shared.Byf("Creating MachineDeployment with custom port options")
 			md3Name := clusterName + "-md-3"
+			testSecurityGroupName := "testSecGroup"
+			// create required test security group
+			Eventually(func() int {
+				err := shared.CreateOpenStackSecurityGroup(e2eCtx, testSecurityGroupName, "Test security group")
+				Expect(err).To(BeNil())
+				return 1
+			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(Equal(1))
 
 			customPortOptions := &[]infrav1.PortOpts{
 				{
@@ -217,6 +224,9 @@ var _ = Describe("e2e tests", func() {
 				{
 					Description: "trunked",
 					Trunk:       pointer.Bool(true),
+				},
+				{
+					SecurityGroupFilters: []infrav1.SecurityGroupParam{{Name: testSecurityGroupName}},
 				},
 			}
 
@@ -264,6 +274,10 @@ var _ = Describe("e2e tests", func() {
 				return 1
 			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(Equal(1))
 			Expect(trunk.PortID).To(Equal(port.ID))
+			// assert port level security group is created by name using SecurityGroupFilters
+			securityGroupsList, err := shared.DumpOpenStackSecurityGroups(e2eCtx, groups.ListOpts{Name: testSecurityGroupName})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(securityGroupsList).To(HaveLen(1))
 		})
 	})
 

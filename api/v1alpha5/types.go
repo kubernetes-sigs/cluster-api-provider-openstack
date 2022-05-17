@@ -114,11 +114,14 @@ type PortOpts struct {
 	AdminStateUp *bool  `json:"adminStateUp,omitempty"`
 	MACAddress   string `json:"macAddress,omitempty"`
 	// Specify pairs of subnet and/or IP address. These should be subnets of the network with the given NetworkID.
-	FixedIPs            []FixedIP     `json:"fixedIPs,omitempty"`
-	TenantID            string        `json:"tenantId,omitempty"`
-	ProjectID           string        `json:"projectId,omitempty"`
-	SecurityGroups      *[]string     `json:"securityGroups,omitempty"`
-	AllowedAddressPairs []AddressPair `json:"allowedAddressPairs,omitempty"`
+	FixedIPs  []FixedIP `json:"fixedIPs,omitempty"`
+	TenantID  string    `json:"tenantId,omitempty"`
+	ProjectID string    `json:"projectId,omitempty"`
+	// The uuids of the security groups to assign to the instance
+	SecurityGroups *[]string `json:"securityGroups,omitempty"`
+	// The names, uuids, filters or any combination these of the security groups to assign to the instance
+	SecurityGroupFilters []SecurityGroupParam `json:"securityGroupFilters,omitempty"`
+	AllowedAddressPairs  []AddressPair        `json:"allowedAddressPairs,omitempty"`
 	// Enables and disables trunk at port level. If not provided, openStackMachine.Spec.Trunk is inherited.
 	Trunk *bool `json:"trunk,omitempty"`
 
