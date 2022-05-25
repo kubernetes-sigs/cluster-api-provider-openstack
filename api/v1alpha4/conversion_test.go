@@ -88,6 +88,16 @@ func TestConvertTo(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "OpenStackClusterTemplate",
+			spoke: &OpenStackClusterTemplate{
+				Spec: OpenStackClusterTemplateSpec{},
+			},
+			hub: &infrav1.OpenStackClusterTemplate{},
+			want: &infrav1.OpenStackClusterTemplate{
+				Spec: infrav1.OpenStackClusterTemplateSpec{},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -155,6 +165,16 @@ func TestConvertFrom(t *testing.T) {
 					ManagedAPIServerLoadBalancer:         true,
 					APIServerLoadBalancerAdditionalPorts: []int{80, 443},
 				},
+			},
+		},
+		{
+			name:  "OpenStackClusterTemplate",
+			spoke: &OpenStackClusterTemplate{},
+			hub: &infrav1.OpenStackClusterTemplate{
+				Spec: infrav1.OpenStackClusterTemplateSpec{},
+			},
+			want: &OpenStackClusterTemplate{
+				Spec: OpenStackClusterTemplateSpec{},
 			},
 		},
 	}
@@ -304,6 +324,13 @@ func TestFuzzyConversion(t *testing.T) {
 		Scheme:      scheme,
 		Hub:         &infrav1.OpenStackCluster{},
 		Spoke:       &OpenStackCluster{},
+		FuzzerFuncs: []fuzzer.FuzzerFuncs{fuzzerFuncs},
+	}))
+
+	t.Run("for OpenStackClusterTemplate", utilconversion.FuzzTestFunc(utilconversion.FuzzTestFuncInput{
+		Scheme:      scheme,
+		Hub:         &infrav1.OpenStackClusterTemplate{},
+		Spoke:       &OpenStackClusterTemplate{},
 		FuzzerFuncs: []fuzzer.FuzzerFuncs{fuzzerFuncs},
 	}))
 
