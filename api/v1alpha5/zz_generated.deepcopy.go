@@ -822,6 +822,11 @@ func (in *PortOpts) DeepCopyInto(out *PortOpts) {
 			copy(*out, *in)
 		}
 	}
+	if in.SecurityGroupFilters != nil {
+		in, out := &in.SecurityGroupFilters, &out.SecurityGroupFilters
+		*out = make([]SecurityGroupParam, len(*in))
+		copy(*out, *in)
+	}
 	if in.AllowedAddressPairs != nil {
 		in, out := &in.AllowedAddressPairs, &out.AllowedAddressPairs
 		*out = make([]AddressPair, len(*in))

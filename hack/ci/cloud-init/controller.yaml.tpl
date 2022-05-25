@@ -152,7 +152,10 @@
 
     # Adjust the CPU quota
     openstack quota set --cores 32 demo
-    openstack quota set --secgroups 50 demo
+    openstack quota set --secgroups 200 demo
+    openstack quota set --secgroup-rules 1000 demo
+    openstack quota set --secgroups 100 admin
+    openstack quota set --secgroup-rules 1000 admin
 - path: /root/devstack.sh
   permissions: 0755
   content: |
