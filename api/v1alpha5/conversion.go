@@ -22,6 +22,12 @@ func (*OpenStackCluster) Hub() {}
 // Hub marks OpenStackClusterList as a conversion hub.
 func (*OpenStackClusterList) Hub() {}
 
+// Hub marks OpenStackClusterTemplate as a conversion hub.
+func (*OpenStackClusterTemplate) Hub() {}
+
+// Hub marks OpenStackClusterTemplateList as a conversion hub.
+func (*OpenStackClusterTemplateList) Hub() {}
+
 // Hub marks OpenStackMachine as a conversion hub.
 func (*OpenStackMachine) Hub() {}
 
