@@ -51,6 +51,34 @@ func (r *OpenStackClusterList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	return Convert_v1alpha5_OpenStackClusterList_To_v1alpha4_OpenStackClusterList(src, r, nil)
 }
 
+var _ ctrlconversion.Convertible = &OpenStackClusterTemplate{}
+
+func (r *OpenStackClusterTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error {
+	dst := dstRaw.(*infrav1.OpenStackClusterTemplate)
+
+	return Convert_v1alpha4_OpenStackClusterTemplate_To_v1alpha5_OpenStackClusterTemplate(r, dst, nil)
+}
+
+func (r *OpenStackClusterTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) error {
+	src := srcRaw.(*infrav1.OpenStackClusterTemplate)
+
+	return Convert_v1alpha5_OpenStackClusterTemplate_To_v1alpha4_OpenStackClusterTemplate(src, r, nil)
+}
+
+var _ ctrlconversion.Convertible = &OpenStackClusterTemplateList{}
+
+func (r *OpenStackClusterTemplateList) ConvertTo(dstRaw ctrlconversion.Hub) error {
+	dst := dstRaw.(*infrav1.OpenStackClusterTemplateList)
+
+	return Convert_v1alpha4_OpenStackClusterTemplateList_To_v1alpha5_OpenStackClusterTemplateList(r, dst, nil)
+}
+
+func (r *OpenStackClusterTemplateList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
+	src := srcRaw.(*infrav1.OpenStackClusterTemplateList)
+
+	return Convert_v1alpha5_OpenStackClusterTemplateList_To_v1alpha4_OpenStackClusterTemplateList(src, r, nil)
+}
+
 var _ ctrlconversion.Convertible = &OpenStackMachine{}
 
 func (r *OpenStackMachine) ConvertTo(dstRaw ctrlconversion.Hub) error {
