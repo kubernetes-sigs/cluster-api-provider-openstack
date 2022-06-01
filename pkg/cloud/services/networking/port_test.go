@@ -49,8 +49,7 @@ func Test_GetOrCreatePort(t *testing.T) {
 
 	// Other arbitrary variables passed in to the tests
 	instanceSecurityGroups := []string{"instance-secgroup"}
-	portSecurityGroups := []string{"port-secgroup"}
-
+	portSecurityGroups := []infrav1.SecurityGroupParam{{Name: "port-secgroup"}}
 	pointerToTrue := pointerTo(true)
 	pointerToFalse := pointerTo(false)
 
@@ -166,9 +165,8 @@ func Test_GetOrCreatePort(t *testing.T) {
 						},
 						IPAddress: "192.168.0.50",
 					}, {IPAddress: "192.168.1.50"}},
-					TenantID:       tenantID,
-					ProjectID:      projectID,
-					SecurityGroups: &portSecurityGroups,
+					TenantID:  tenantID,
+					ProjectID: projectID,
 					AllowedAddressPairs: []infrav1.AddressPair{{
 						IPAddress:  "10.10.10.10",
 						MACAddress: "f1:f1:f1:f1:f1:f1",
@@ -197,9 +195,8 @@ func Test_GetOrCreatePort(t *testing.T) {
 							IPAddress: "192.168.1.50",
 						},
 					},
-					TenantID:       tenantID,
-					ProjectID:      projectID,
-					SecurityGroups: &portSecurityGroups,
+					TenantID:  tenantID,
+					ProjectID: projectID,
 					AllowedAddressPairs: []ports.AddressPair{{
 						IPAddress:  "10.10.10.10",
 						MACAddress: "f1:f1:f1:f1:f1:f1",
@@ -313,7 +310,7 @@ func Test_GetOrCreatePort(t *testing.T) {
 						CreateOptsBuilder: ports.CreateOpts{
 							Name:                "foo-port-1",
 							Description:         "Created by cluster-api-provider-openstack cluster test-cluster",
-							SecurityGroups:      &portSecurityGroups,
+							SecurityGroups:      &instanceSecurityGroups,
 							NetworkID:           netID,
 							AllowedAddressPairs: []ports.AddressPair{},
 						},

@@ -210,13 +210,19 @@ var _ = Describe("e2e tests", func() {
 			shared.Byf("Creating MachineDeployment with custom port options")
 			md3Name := clusterName + "-md-3"
 			testSecurityGroupName := "testSecGroup"
+			var testSecurityGroupID string
+			var err error
 			// create required test security group
 			Eventually(func() int {
-				err := shared.CreateOpenStackSecurityGroup(e2eCtx, testSecurityGroupName, "Test security group")
+				testSecurityGroupID, err = shared.CreateOpenStackSecurityGroup(e2eCtx, testSecurityGroupName, "Test security group")
 				Expect(err).To(BeNil())
 				return 1
 			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(Equal(1))
-
+			postClusterCleanup = append(postClusterCleanup, func() {
+				shared.Byf("Deleting security group %s", testSecurityGroupName)
+				err := shared.DeleteOpenStackSecurityGroup(e2eCtx, testSecurityGroupID)
+				Expect(err).NotTo(HaveOccurred())
+			})
 			customPortOptions := &[]infrav1.PortOpts{
 				{
 					Description: "primary",
@@ -226,7 +232,7 @@ var _ = Describe("e2e tests", func() {
 					Trunk:       pointer.Bool(true),
 				},
 				{
-					SecurityGroupFilters: []infrav1.SecurityGroupParam{{Name: testSecurityGroupName}},
+					SecurityGroups: &[]infrav1.SecurityGroupParam{{Name: testSecurityGroupName}},
 				},
 			}
 
@@ -244,7 +250,6 @@ var _ = Describe("e2e tests", func() {
 
 			shared.Byf("Waiting for custom port to be created")
 			var plist []ports.Port
-			var err error
 			Eventually(func() int {
 				plist, err = shared.DumpOpenStackPorts(e2eCtx, ports.ListOpts{Description: "primary", Tags: testTag})
 				Expect(err).To(BeNil())

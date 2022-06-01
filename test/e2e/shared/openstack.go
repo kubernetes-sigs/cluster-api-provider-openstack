@@ -312,7 +312,33 @@ func DumpOpenStackPorts(e2eCtx *E2EContext, filter ports.ListOpts) ([]ports.Port
 }
 
 // CreateOpenStackSecurityGroup creates a security group to be consumed by a worker node.
-func CreateOpenStackSecurityGroup(e2eCtx *E2EContext, securityGroupName, description string) error {
+func CreateOpenStackSecurityGroup(e2eCtx *E2EContext, securityGroupName, description string) (string, error) {
+	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
+	if err != nil {
+		return "", fmt.Errorf("error creating provider client: %s", err)
+	}
+
+	networkClient, err := openstack.NewNetworkV2(providerClient, gophercloud.EndpointOpts{
+		Region: clientOpts.RegionName,
+	})
+	if err != nil {
+		return "", fmt.Errorf("error creating network client: %s", err)
+	}
+
+	createOpts := groups.CreateOpts{
+		Name:        securityGroupName,
+		Description: description,
+	}
+
+	group, err := groups.Create(networkClient, createOpts).Extract()
+	if err != nil {
+		return "", err
+	}
+	return group.ID, nil
+}
+
+// DeleteOpenStackSecurityGroup deletes manually created security group.
+func DeleteOpenStackSecurityGroup(e2eCtx *E2EContext, securityGroupID string) error {
 	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
 	if err != nil {
 		return fmt.Errorf("error creating provider client: %s", err)
@@ -324,13 +350,7 @@ func CreateOpenStackSecurityGroup(e2eCtx *E2EContext, securityGroupName, descrip
 	if err != nil {
 		return fmt.Errorf("error creating network client: %s", err)
 	}
-
-	createOpts := groups.CreateOpts{
-		Name:        securityGroupName,
-		Description: description,
-	}
-
-	_, err = groups.Create(networkClient, createOpts).Extract()
+	err = groups.Delete(networkClient, securityGroupID).ExtractErr()
 	if err != nil {
 		return err
 	}

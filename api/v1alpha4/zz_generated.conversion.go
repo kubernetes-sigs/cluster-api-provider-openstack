@@ -310,6 +310,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddConversionFunc((*[]string)(nil), (*[]v1alpha5.SecurityGroupParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_Slice_string_To_Slice_v1alpha5_SecurityGroupParam(a.(*[]string), b.(*[]v1alpha5.SecurityGroupParam), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddConversionFunc((*[]Network)(nil), (*[]v1alpha5.Network)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_Slice_v1alpha4_Network_To_Slice_v1alpha5_Network(a.(*[]Network), b.(*[]v1alpha5.Network), scope)
 	}); err != nil {
@@ -317,6 +322,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddConversionFunc((*[]v1alpha5.Network)(nil), (*[]Network)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_Slice_v1alpha5_Network_To_Slice_v1alpha4_Network(a.(*[]v1alpha5.Network), b.(*[]Network), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*[]v1alpha5.SecurityGroupParam)(nil), (*[]string)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_Slice_v1alpha5_SecurityGroupParam_To_Slice_string(a.(*[]v1alpha5.SecurityGroupParam), b.(*[]string), scope)
 	}); err != nil {
 		return err
 	}
@@ -1471,7 +1481,15 @@ func autoConvert_v1alpha4_PortOpts_To_v1alpha5_PortOpts(in *PortOpts, out *v1alp
 	}
 	out.TenantID = in.TenantID
 	out.ProjectID = in.ProjectID
-	out.SecurityGroups = (*[]string)(unsafe.Pointer(in.SecurityGroups))
+	if in.SecurityGroups != nil {
+		in, out := &in.SecurityGroups, &out.SecurityGroups
+		*out = new([]v1alpha5.SecurityGroupParam)
+		if err := Convert_Slice_string_To_Slice_v1alpha5_SecurityGroupParam(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.SecurityGroups = nil
+	}
 	out.AllowedAddressPairs = *(*[]v1alpha5.AddressPair)(unsafe.Pointer(&in.AllowedAddressPairs))
 	out.Trunk = (*bool)(unsafe.Pointer(in.Trunk))
 	out.HostID = in.HostID
@@ -1501,8 +1519,15 @@ func autoConvert_v1alpha5_PortOpts_To_v1alpha4_PortOpts(in *v1alpha5.PortOpts, o
 	}
 	out.TenantID = in.TenantID
 	out.ProjectID = in.ProjectID
-	out.SecurityGroups = (*[]string)(unsafe.Pointer(in.SecurityGroups))
-	// WARNING: in.SecurityGroupFilters requires manual conversion: does not exist in peer-type
+	if in.SecurityGroups != nil {
+		in, out := &in.SecurityGroups, &out.SecurityGroups
+		*out = new([]string)
+		if err := Convert_Slice_v1alpha5_SecurityGroupParam_To_Slice_string(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.SecurityGroups = nil
+	}
 	out.AllowedAddressPairs = *(*[]AddressPair)(unsafe.Pointer(&in.AllowedAddressPairs))
 	out.Trunk = (*bool)(unsafe.Pointer(in.Trunk))
 	out.HostID = in.HostID

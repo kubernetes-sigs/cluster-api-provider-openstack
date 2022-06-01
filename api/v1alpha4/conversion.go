@@ -254,6 +254,24 @@ func Convert_v1alpha5_PortOpts_To_v1alpha4_PortOpts(in *infrav1.PortOpts, out *P
 	return nil
 }
 
+func Convert_Slice_string_To_Slice_v1alpha5_SecurityGroupParam(in *[]string, out *[]infrav1.SecurityGroupParam, s conversion.Scope) error {
+	if in != nil {
+		for _, v1alpha4SecurityGroupUID := range *in {
+			*out = append(*out, infrav1.SecurityGroupParam{UUID: v1alpha4SecurityGroupUID})
+		}
+	}
+	return nil
+}
+
+func Convert_Slice_v1alpha5_SecurityGroupParam_To_Slice_string(in *[]infrav1.SecurityGroupParam, out *[]string, s conversion.Scope) error {
+	if in != nil {
+		for _, v1alpha5SecurityGroups := range *in {
+			*out = append(*out, v1alpha5SecurityGroups.UUID)
+		}
+	}
+	return nil
+}
+
 func Convert_Slice_v1alpha4_Network_To_Slice_v1alpha5_Network(in *[]Network, out *[]infrav1.Network, s conversion.Scope) error {
 	*out = make([]infrav1.Network, len(*in))
 	for i := range *in {
