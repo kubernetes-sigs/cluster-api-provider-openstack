@@ -733,6 +733,7 @@ func autoConvert_v1alpha5_OpenStackClusterSpec_To_v1alpha3_OpenStackClusterSpec(
 	if err := Convert_v1beta1_APIEndpoint_To_v1alpha3_APIEndpoint(&in.ControlPlaneEndpoint, &out.ControlPlaneEndpoint, s); err != nil {
 		return err
 	}
+	// WARNING: in.IgnoreAvailabilityZones requires manual conversion: does not exist in peer-type
 	out.ControlPlaneAvailabilityZones = *(*[]string)(unsafe.Pointer(&in.ControlPlaneAvailabilityZones))
 	if in.Bastion != nil {
 		in, out := &in.Bastion, &out.Bastion

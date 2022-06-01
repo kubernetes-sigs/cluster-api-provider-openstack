@@ -867,6 +867,7 @@ func autoConvert_v1alpha5_OpenStackClusterSpec_To_v1alpha4_OpenStackClusterSpec(
 	out.DisablePortSecurity = in.DisablePortSecurity
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.ControlPlaneEndpoint = in.ControlPlaneEndpoint
+	// WARNING: in.IgnoreAvailabilityZones requires manual conversion: does not exist in peer-type
 	out.ControlPlaneAvailabilityZones = *(*[]string)(unsafe.Pointer(&in.ControlPlaneAvailabilityZones))
 	if in.Bastion != nil {
 		in, out := &in.Bastion, &out.Bastion

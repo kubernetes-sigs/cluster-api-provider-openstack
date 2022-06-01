@@ -123,6 +123,14 @@ type OpenStackClusterSpec struct {
 	// +optional
 	ControlPlaneEndpoint clusterv1.APIEndpoint `json:"controlPlaneEndpoint"`
 
+	// IgnoreAvailabilityZones disables the use of availability zones/failure domains,
+	// allowing Nova to schedule machines in any compatible AZ.
+	// This only affects control plane nodes - explicit failure domains can still be
+	// specified for worker nodes using MachineDeployment.spec.template.spec.failureDomain
+	// if desired.
+	// +optional
+	IgnoreAvailabilityZones bool `json:"ignoreAvailabilityZones"`
+
 	// ControlPlaneAvailabilityZones is the az to deploy control plane to
 	ControlPlaneAvailabilityZones []string `json:"controlPlaneAvailabilityZones,omitempty"`
 

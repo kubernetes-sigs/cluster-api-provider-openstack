@@ -264,28 +264,30 @@ func reconcileNormal(ctx context.Context, scope *scope.Scope, patchHelper *patch
 		return reconcile.Result{}, err
 	}
 
-	availabilityZones, err := computeService.GetAvailabilityZones()
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
-	// Create a new list to remove any Availability
-	// Zones that have been removed from OpenStack
+	// Create a new list to remove any Availability Zones that have been removed from OpenStack
 	openStackCluster.Status.FailureDomains = make(clusterv1.FailureDomains)
-	for _, az := range availabilityZones {
-		found := true
-		// If Az given, then check whether it's in the allow list
-		// If no Az given, then by default put into allow list
-		if len(openStackCluster.Spec.ControlPlaneAvailabilityZones) > 0 {
-			if contains(openStackCluster.Spec.ControlPlaneAvailabilityZones, az.ZoneName) {
-				found = true
-			} else {
-				found = false
-			}
+	// Only populate the failure domains if we want them to be considered
+	if !openStackCluster.Spec.IgnoreAvailabilityZones {
+		availabilityZones, err := computeService.GetAvailabilityZones()
+		if err != nil {
+			return ctrl.Result{}, err
 		}
 
-		openStackCluster.Status.FailureDomains[az.ZoneName] = clusterv1.FailureDomainSpec{
-			ControlPlane: found,
+		for _, az := range availabilityZones {
+			found := true
+			// If Az given, then check whether it's in the allow list
+			// If no Az given, then by default put into allow list
+			if len(openStackCluster.Spec.ControlPlaneAvailabilityZones) > 0 {
+				if contains(openStackCluster.Spec.ControlPlaneAvailabilityZones, az.ZoneName) {
+					found = true
+				} else {
+					found = false
+				}
+			}
+
+			openStackCluster.Status.FailureDomains[az.ZoneName] = clusterv1.FailureDomainSpec{
+				ControlPlane: found,
+			}
 		}
 	}
 

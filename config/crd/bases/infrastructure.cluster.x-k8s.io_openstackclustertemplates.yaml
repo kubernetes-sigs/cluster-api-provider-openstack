@@ -1344,6 +1344,14 @@ spec:
                         - kind
                         - name
                         type: object
+                      ignoreAvailabilityZones:
+                        description: IgnoreAvailabilityZones disables the use of availability
+                          zones/failure domains, allowing Nova to schedule machines
+                          in any compatible AZ. This only affects control plane nodes
+                          - explicit failure domains can still be specified for worker
+                          nodes using MachineDeployment.spec.template.spec.failureDomain
+                          if desired.
+                        type: boolean
                       managedSecurityGroups:
                         description: ManagedSecurityGroups determines whether OpenStack
                           security groups for the cluster will be managed by the OpenStack
