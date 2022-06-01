@@ -318,6 +318,12 @@ func TestFuzzyConversion(t *testing.T) {
 				v1alpha5RootVolume.VolumeType = ""
 				v1alpha5RootVolume.AvailabilityZone = ""
 			},
+			// Don't test hub-spoke-hub conversion of v1alpha5 fields which are not in v1alpha4
+			func(v1alpha5ClusterSpec *infrav1.OpenStackClusterSpec, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha5ClusterSpec)
+
+				v1alpha5ClusterSpec.IgnoreAvailabilityZones = false
+			},
 		}
 	}
 

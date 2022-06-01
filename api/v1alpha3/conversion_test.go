@@ -199,6 +199,7 @@ func TestFuzzyConversion(t *testing.T) {
 				v1alpha5ClusterSpec.APIServerFixedIP = ""
 				v1alpha5ClusterSpec.AllowAllInClusterTraffic = false
 				v1alpha5ClusterSpec.DisableAPIServerFloatingIP = false
+				v1alpha5ClusterSpec.IgnoreAvailabilityZones = false
 			},
 			func(v1alpha5MachineSpec *infrav1.OpenStackMachineSpec, c fuzz.Continue) {
 				c.FuzzNoCustom(v1alpha5MachineSpec)
