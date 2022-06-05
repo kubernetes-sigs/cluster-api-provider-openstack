@@ -139,6 +139,11 @@ func reconcileDelete(ctx context.Context, log logr.Logger, client client.Client,
 
 	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
 
+	if err = networkingService.DeletePorts(openStackCluster); err != nil {
+		handleUpdateOSCError(openStackCluster, errors.Errorf("failed to delete ports: %v", err))
+		return reconcile.Result{}, errors.Errorf("failed to delete ports: %v", err)
+	}
+
 	if openStackCluster.Spec.ManagedAPIServerLoadBalancer {
 		loadBalancerService, err := loadbalancer.NewService(osProviderClient, clientOpts, log)
 		if err != nil {

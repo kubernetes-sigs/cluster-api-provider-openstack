@@ -18,6 +18,9 @@ package networking
 
 import (
 	"fmt"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
+	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
+	"strings"
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
@@ -147,6 +150,38 @@ func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, c
 	return nil
 }
 
+func (s *Service) DeletePorts(openStackCluster *infrav1.OpenStackCluster) error {
+	networkId := openStackCluster.Spec.Network.ID
+	mc := metrics.NewMetricPrometheusContext("port", "list")
+	allPages, err := ports.List(s.nsclient, ports.ListOpts{NetworkID: networkId, DeviceOwner: ""}).AllPages()
+	if mc.ObserveRequestIgnoreNotFound(err) != nil {
+		if capoerrors.IsNotFound(err) {
+			return nil
+		}
+		return fmt.Errorf("get port list of network #{networkId} failed : #{err}")
+	}
+	portslist, err := ports.ExtractPorts(allPages)
+	if mc.ObserveRequestIgnoreNotFound(err) != nil {
+		if capoerrors.IsNotFound(err) {
+			return nil
+		}
+		return fmt.Errorf("get port list of network #{networkId} failed : #{err}")
+	}
+
+	for _, port := range portslist {
+		if strings.Contains(port.Name, openStackCluster.Name) && "" == port.DeviceOwner {
+			err := ports.Delete(s.nsclient, port.ID).ExtractErr()
+			if mc.ObserveRequestIgnoreNotFound(err) != nil {
+				if capoerrors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("delete port %s of network %q failed : %v", port.ID, networkId, err)
+			}
+		}
+	}
+
+	return nil
+}
 func (s *Service) DeleteNetwork(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
 	networkName := getNetworkName(clusterName)
 	network, err := s.getNetworkByName(networkName)

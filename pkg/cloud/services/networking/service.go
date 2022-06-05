@@ -41,6 +41,7 @@ const (
 type Service struct {
 	projectID string
 	client    NetworkClient
+	nsclient  *gophercloud.ServiceClient
 	logger    logr.Logger
 }
 
