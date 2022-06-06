@@ -264,7 +264,7 @@ func reconcileNormal(ctx context.Context, scope *scope.Scope, patchHelper *patch
 		return reconcile.Result{}, err
 	}
 
-	// Create a new list to remove any Availability Zones that have been removed from OpenStack
+	// Create a new list to remove any Availability Zones from our status that no longer exist in OpenStack
 	openStackCluster.Status.FailureDomains = make(clusterv1.FailureDomains)
 	// Only populate the failure domains if we want them to be considered
 	if !openStackCluster.Spec.IgnoreAvailabilityZones {
