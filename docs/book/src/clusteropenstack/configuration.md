@@ -107,9 +107,17 @@ Note: you need to set `clusterctl.cluster.x-k8s.io/move` label for the secret cr
 
 ## Availability zone
 
-The availability zone names must be exposed as an environment variable `OPENSTACK_FAILURE_DOMAIN`.
+When using the provided templates, the availability zone name must be exposed as an environment variable `OPENSTACK_FAILURE_DOMAIN`.
 
-By default, if `Availability zone` is not given, all `Availability zone` that defined in openstack will be a candidate to provision from, If administrator credential is used then `internal` Availability zone which is internal only Availability zone inside `nova` will be returned and can cause potential problem, see [PR 1165](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/pull/1165) for further information. So we highly recommend to set `Availability zone` explicitly.
+However it is possible to provision clusters without using explicit availability zones, allowing Nova to select appropriate availability zones based on other scheduling constraints (e.g. flavor traits, host aggregates).
+
+For machine deployments (e.g. worker nodes), this can be achieved simply by not specifying a `failureDomain` in the machine template spec. For the control plane, the default behaviour is to explicitly schedule control plane nodes across all the availability zones. To disable this behaviour and allow control plane nodes _without_ explicit availability zones, you must set `OpenStackCluster.spec.ignoreAvailabilityZones: true`.
+
+> **WARNING**
+>
+> If an administrator credential is used then the `internal` availability zone will be returned, which can cause issues - see [PR 1165](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/pull/1165) for further information.
+>
+> We highly recommend **not** using an administrator credential, but if it is required you should set your availability zones explicitly using `OpenStackCluster.spec.controlPlaneAvailabilityZones` and `MachineDeployment.spec.template.spec.failureDomain`.
 
 ## DNS server
 
