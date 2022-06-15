@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack/compute/apiversions"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/listeners"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/loadbalancers"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/monitors"
@@ -37,6 +38,7 @@ type LbClient interface {
 	DeleteLoadBalancer(id string, opts loadbalancers.DeleteOptsBuilder) error
 	CreateListener(opts listeners.CreateOptsBuilder) (*listeners.Listener, error)
 	ListListeners(opts listeners.ListOptsBuilder) ([]listeners.Listener, error)
+	UpdateListener(id string, opts listeners.UpdateOpts) (*listeners.Listener, error)
 	GetListener(id string) (*listeners.Listener, error)
 	DeleteListener(id string) error
 	CreatePool(opts pools.CreateOptsBuilder) (*pools.Pool, error)
@@ -50,6 +52,7 @@ type LbClient interface {
 	ListMonitors(opts monitors.ListOptsBuilder) ([]monitors.Monitor, error)
 	DeleteMonitor(id string) error
 	ListLoadBalancerProviders() ([]providers.Provider, error)
+	ListOctaviaVersions() ([]apiversions.APIVersion, error)
 }
 
 type lbClient struct {
@@ -95,6 +98,15 @@ func (l lbClient) DeleteLoadBalancer(id string, opts loadbalancers.DeleteOptsBui
 func (l lbClient) CreateListener(opts listeners.CreateOptsBuilder) (*listeners.Listener, error) {
 	mc := metrics.NewMetricPrometheusContext("loadbalancer_listener", "create")
 	listener, err := listeners.Create(l.serviceClient, opts).Extract()
+	if mc.ObserveRequest(err) != nil {
+		return nil, err
+	}
+	return listener, nil
+}
+
+func (l lbClient) UpdateListener(id string, opts listeners.UpdateOpts) (*listeners.Listener, error) {
+	mc := metrics.NewMetricPrometheusContext("loadbalancer_listener", "update")
+	listener, err := listeners.Update(l.serviceClient, id, opts).Extract()
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
@@ -228,4 +240,13 @@ func (l lbClient) ListLoadBalancerProviders() ([]providers.Provider, error) {
 		return nil, fmt.Errorf("extracting loadbalancer providers pages: %v", err)
 	}
 	return providersList, nil
+}
+
+func (l lbClient) ListOctaviaVersions() ([]apiversions.APIVersion, error) {
+	mc := metrics.NewMetricPrometheusContext("version", "list")
+	allPages, err := apiversions.List(l.serviceClient).AllPages()
+	if mc.ObserveRequest(err) != nil {
+		return nil, err
+	}
+	return apiversions.ExtractAPIVersions(allPages)
 }

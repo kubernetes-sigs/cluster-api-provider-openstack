@@ -70,10 +70,16 @@ func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, cl
 		s.scope.Logger.V(6).Info(fmt.Sprintf("Reuse existing Router %s with id %s", routerName, router.ID))
 	}
 
+	routerIPs := []string{}
+	for _, ip := range router.GatewayInfo.ExternalFixedIPs {
+		routerIPs = append(routerIPs, ip.IPAddress)
+	}
+
 	openStackCluster.Status.Network.Router = &infrav1.Router{
 		Name: router.Name,
 		ID:   router.ID,
 		Tags: router.Tags,
+		IPs:  routerIPs,
 	}
 
 	if len(openStackCluster.Spec.ExternalRouterIPs) > 0 {

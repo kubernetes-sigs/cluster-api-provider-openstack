@@ -16,6 +16,7 @@
   - [External network](#external-network)
   - [API server floating IP](#api-server-floating-ip)
     - [Disabling the API server floating IP](#disabling-the-api-server-floating-ip)
+    - [Restrict Access to the API server](#restrict-access-to-the-api-server)
   - [Network Filters](#network-filters)
   - [Multiple Networks](#multiple-networks)
   - [Subnet Filters](#subnet-filters)
@@ -86,6 +87,7 @@ or [configure custom security groups](#security-groups) with rules allowing ingr
 ## OpenStack credential
 
 ### Generate credentials
+
 The [env.rc](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/templates/env.rc) script sets the environment variables related to credentials. It's highly recommend to avoid using `admin` credential.
 
 ```bash
@@ -176,6 +178,61 @@ a particular control plane node in order to allow the nodes to change underneath
 during an upgrade. When the API server has a floating IP, this role is fulfilled by the
 floating IP even if there is no load balancer. When the API server does not have a floating
 IP, the load balancer virtual IP on the cluster network is used.
+
+## Restrict Access to the API server
+
+> **NOTE**
+>
+> This requires "amphora" as load balancer provider at in version >= `v2.12`
+
+It is possible to restrict access to the Kubernetes API server on a network level. If required, you can specify
+the allowed CIDRs by `spec.APIServerLoadBalancer.AllowedCIDRs` of `OpenStackCluster`.
+
+```yaml
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha5
+kind: OpenStackCluster
+metadata:
+  name: <cluster-name>
+  namespace: <cluster-namespace>
+spec:
+  allowAllInClusterTraffic: true
+  apiServerLoadBalancer:
+    allowedCidrs:
+    - 192.168.10/24
+    - 10.10.0.0/16
+```
+
+All known IPs of the target cluster will be discovered dynamically (e.g. you don't have to take care of target Cluster own Router IP, internal CIDRs or any Bastion Host IP).
+**Note**: Please ensure, that at least the outgoing IP of your management Cluster is added to the list of allowed CIDRs. Otherwise CAPO can't reconcile the target Cluster correctly.
+
+All applied CIDRs (user defined + dynamically discovered) are written back into `status.network.apiServerLoadBalancer.allowedCIDRs`
+
+```yaml
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha5
+kind: OpenStackCluster
+metadata:
+  name: <cluster-name>
+  namespace: <cluster-namespace>
+status:
+  network:
+    apiServerLoadBalancer:
+      allowedCIDRs:
+        - 10.6.0.0/24 # openStackCluster.Status.Network.Subnet.CIDR
+        - 10.6.0.90/32 # bastion Host internal IP
+        - 10.10.0.0/16 # user defined
+        - 192.168.10/24 # user defined
+        - 172.16.111.100/32 # bastion host floating IP
+        - 172.16.111.85/32 # router IP
+      internalIP: 10.6.0.144
+      ip: 172.16.111.159
+      name: k8s-clusterapi-cluster-<cluster-namespace>-<cluster-name>
+```
+
+If you locked out yourself or the CAPO management cluster, you can easily clear the `allowed_cidrs` field on OpenStack via
+
+```bash
+openstack loadbalancer listener unset --allowed-cidrs <listener ID>
+```
 
 ## Network Filters
 
@@ -295,15 +352,15 @@ plane and worker nodes respectively.
 
 By default, these groups have rules that allow the following traffic:
 
-  * Control plane nodes
-    * API server traffic from anywhere
-    * Etcd traffic from other control plane nodes
-    * Kubelet traffic from other cluster nodes
-    * Calico CNI traffic from other cluster nodes
-  * Worker nodes
-    * Node port traffic from anywhere
-    * Kubelet traffic from other cluster nodes
-    * Calico CNI traffic from other cluster nodes
+- Control plane nodes
+  - API server traffic from anywhere
+  - Etcd traffic from other control plane nodes
+  - Kubelet traffic from other cluster nodes
+  - Calico CNI traffic from other cluster nodes
+- Worker nodes
+  - Node port traffic from anywhere
+  - Kubelet traffic from other cluster nodes
+  - Calico CNI traffic from other cluster nodes
 
 To use a CNI other than Calico, the flag `OpenStackCluster.spec.allowAllInClusterTraffic` can be
 set to `true`. With this flag set, the rules for the managed security groups permit all traffic
@@ -439,7 +496,6 @@ If `managedSecurityGroups: true`, security group rule opening 22/tcp is added to
 ### Obtain floating IP address of the bastion node
 
 Once the workload cluster is up and running after being configured for an SSH bastion host, you can use the kubectl get openstackcluster command to look up the floating IP address of the bastion host (make sure the kubectl context is set to the management cluster). The output will look something like this:
-
 
 ```yaml
 $ kubectl get openstackcluster

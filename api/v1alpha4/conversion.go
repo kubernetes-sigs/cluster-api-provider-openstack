@@ -18,6 +18,7 @@ package v1alpha4
 
 import (
 	conversion "k8s.io/apimachinery/pkg/conversion"
+	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
 	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha5"
@@ -28,13 +29,36 @@ var _ ctrlconversion.Convertible = &OpenStackCluster{}
 func (r *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackCluster)
 
-	return Convert_v1alpha4_OpenStackCluster_To_v1alpha5_OpenStackCluster(r, dst, nil)
+	if err := Convert_v1alpha4_OpenStackCluster_To_v1alpha5_OpenStackCluster(r, dst, nil); err != nil {
+		return err
+	}
+
+	// Manually restore data.
+	restored := &infrav1.OpenStackCluster{}
+	if ok, err := utilconversion.UnmarshalData(r, restored); err != nil || !ok {
+		return err
+	}
+
+	if restored.Spec.APIServerLoadBalancer.AllowedCIDRs != nil {
+		dst.Spec.APIServerLoadBalancer.AllowedCIDRs = restored.Spec.APIServerLoadBalancer.AllowedCIDRs
+	}
+
+	return nil
 }
 
 func (r *OpenStackCluster) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	src := srcRaw.(*infrav1.OpenStackCluster)
 
-	return Convert_v1alpha5_OpenStackCluster_To_v1alpha4_OpenStackCluster(src, r, nil)
+	if err := Convert_v1alpha5_OpenStackCluster_To_v1alpha4_OpenStackCluster(src, r, nil); err != nil {
+		return err
+	}
+
+	// Preserve Hub data on down-conversion except for metadata
+	if err := utilconversion.MarshalData(src, r); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 var _ ctrlconversion.Convertible = &OpenStackClusterList{}
@@ -90,7 +114,16 @@ func (r *OpenStackMachine) ConvertTo(dstRaw ctrlconversion.Hub) error {
 func (r *OpenStackMachine) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	src := srcRaw.(*infrav1.OpenStackMachine)
 
-	return Convert_v1alpha5_OpenStackMachine_To_v1alpha4_OpenStackMachine(src, r, nil)
+	if err := Convert_v1alpha5_OpenStackMachine_To_v1alpha4_OpenStackMachine(src, r, nil); err != nil {
+		return err
+	}
+
+	// Preserve Hub data on down-conversion except for metadata
+	if err := utilconversion.MarshalData(src, r); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 var _ ctrlconversion.Convertible = &OpenStackMachineList{}
@@ -118,7 +151,16 @@ func (r *OpenStackMachineTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error {
 func (r *OpenStackMachineTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	src := srcRaw.(*infrav1.OpenStackMachineTemplate)
 
-	return Convert_v1alpha5_OpenStackMachineTemplate_To_v1alpha4_OpenStackMachineTemplate(src, r, nil)
+	if err := Convert_v1alpha5_OpenStackMachineTemplate_To_v1alpha4_OpenStackMachineTemplate(src, r, nil); err != nil {
+		return err
+	}
+
+	// Preserve Hub data on down-conversion except for metadata
+	if err := utilconversion.MarshalData(src, r); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 var _ ctrlconversion.Convertible = &OpenStackMachineTemplateList{}
@@ -313,4 +355,12 @@ func Convert_v1alpha5_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(in *
 		out.Image = ""
 	}
 	return nil
+}
+
+func Convert_v1alpha5_Router_To_v1alpha4_Router(in *infrav1.Router, out *Router, s conversion.Scope) error {
+	return autoConvert_v1alpha5_Router_To_v1alpha4_Router(in, out, s)
+}
+
+func Convert_v1alpha5_LoadBalancer_To_v1alpha4_LoadBalancer(in *infrav1.LoadBalancer, out *LoadBalancer, s conversion.Scope) error {
+	return autoConvert_v1alpha5_LoadBalancer_To_v1alpha4_LoadBalancer(in, out, s)
 }

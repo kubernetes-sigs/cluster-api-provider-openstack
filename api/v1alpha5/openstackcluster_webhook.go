@@ -117,6 +117,12 @@ func (r *OpenStackCluster) ValidateUpdate(oldRaw runtime.Object) error {
 		r.Spec.Bastion.Enabled = true
 	}
 
+	// Allow changes on AllowedCIDRs
+	if r.Spec.APIServerLoadBalancer.Enabled {
+		old.Spec.APIServerLoadBalancer.AllowedCIDRs = []string{}
+		r.Spec.APIServerLoadBalancer.AllowedCIDRs = []string{}
+	}
+
 	if !reflect.DeepEqual(old.Spec, r.Spec) {
 		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec"), "cannot be modified"))
 	}

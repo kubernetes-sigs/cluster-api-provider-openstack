@@ -269,6 +269,35 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "Changing CIDRs on the OpenStackCluster.Spec.APIServerLoadBalancer.AllowedCIDRs is allowed",
+			oldTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					CloudName: "foobar",
+					APIServerLoadBalancer: APIServerLoadBalancer{
+						Enabled: true,
+						AllowedCIDRs: []string{
+							"0.0.0.0/0",
+							"192.168.10.0/24",
+						},
+					},
+				},
+			},
+			newTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					CloudName: "foobar",
+					APIServerLoadBalancer: APIServerLoadBalancer{
+						Enabled: true,
+						AllowedCIDRs: []string{
+							"0.0.0.0/0",
+							"192.168.10.0/24",
+							"10.6.0.0/16",
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

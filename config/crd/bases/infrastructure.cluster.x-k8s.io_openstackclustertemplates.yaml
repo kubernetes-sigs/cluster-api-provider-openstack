@@ -773,12 +773,18 @@ spec:
                         properties:
                           additionalPorts:
                             description: AdditionalPorts adds additional tcp ports
-                              to the Loadbalacner
+                              to the load balancer.
                             items:
                               type: integer
                             type: array
+                          allowedCidrs:
+                            description: AllowedCIDRs restrict access to all API-Server
+                              listeners to the given address CIDRs.
+                            items:
+                              type: string
+                            type: array
                           enabled:
-                            description: Enabled defines whether a LoadBalancer should
+                            description: Enabled defines whether a load balancer should
                               be created.
                             type: boolean
                         type: object

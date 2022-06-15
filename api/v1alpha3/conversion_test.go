@@ -22,6 +22,7 @@ import (
 	fuzz "github.com/google/gofuzz"
 	"github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/apitesting/fuzzer"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	runtimeserializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
@@ -99,6 +100,11 @@ func TestConvertFrom(t *testing.T) {
 					ManagedAPIServerLoadBalancer:         true,
 					APIServerLoadBalancerAdditionalPorts: []int{80, 443},
 				},
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"allowAllInClusterTraffic\":false,\"apiServerLoadBalancer\":{\"additionalPorts\":[80,443],\"enabled\":true},\"cloudName\":\"\",\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"managedSecurityGroups\":false,\"network\":{},\"subnet\":{}},\"status\":{\"ready\":false}}",
+					},
+				},
 			},
 		},
 	}
@@ -121,15 +127,24 @@ func TestFuzzyConversion(t *testing.T) {
 	fuzzerFuncs := func(_ runtimeserializer.CodecFactory) []interface{} {
 		return []interface{}{
 			// Don't test spoke-hub-spoke conversion of v1alpha3 fields which are not in v1alpha5
-			func(v1alpha3ClusterSpec *OpenStackClusterSpec, c fuzz.Continue) {
-				c.FuzzNoCustom(v1alpha3ClusterSpec)
+			func(v1alpha3Cluster *OpenStackCluster, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha3Cluster)
 
-				v1alpha3ClusterSpec.UseOctavia = false
+				v1alpha3Cluster.ObjectMeta.Annotations = map[string]string{}
 
-				if v1alpha3ClusterSpec.CloudsSecret != nil {
+				v1alpha3Cluster.Spec.UseOctavia = false
+				if v1alpha3Cluster.Spec.CloudsSecret != nil {
 					// In switching to IdentityRef, fetching the cloud secret
 					// from a different namespace is no longer supported
-					v1alpha3ClusterSpec.CloudsSecret.Namespace = ""
+					v1alpha3Cluster.Spec.CloudsSecret.Namespace = ""
+				}
+
+				if v1alpha3Cluster.Spec.Bastion != nil {
+					v1alpha3Cluster.Spec.Bastion.Instance.Image = ""
+					v1alpha3Cluster.Spec.Bastion.Instance.UserDataSecret = nil
+					if v1alpha3Cluster.Spec.Bastion.Instance.CloudsSecret != nil {
+						v1alpha3Cluster.Spec.Bastion.Instance.CloudsSecret.Namespace = ""
+					}
 				}
 			},
 			func(v1alpha3RootVolume *RootVolume, c fuzz.Continue) {
@@ -139,20 +154,34 @@ func TestFuzzyConversion(t *testing.T) {
 				v1alpha3RootVolume.DeviceType = "disk"
 				v1alpha3RootVolume.SourceType = "image"
 			},
-			func(v1alpha3MachineSpec *OpenStackMachineSpec, c fuzz.Continue) {
-				c.FuzzNoCustom(v1alpha3MachineSpec)
+			func(v1alpha3Machine *OpenStackMachine, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha3Machine)
 
-				v1alpha3MachineSpec.UserDataSecret = nil
+				v1alpha3Machine.ObjectMeta.Annotations = map[string]string{}
 
-				if v1alpha3MachineSpec.CloudsSecret != nil {
+				v1alpha3Machine.Spec.UserDataSecret = nil
+
+				if v1alpha3Machine.Spec.CloudsSecret != nil {
 					// In switching to IdentityRef, fetching the cloud secret
 					// from a different namespace is no longer supported
-					v1alpha3MachineSpec.CloudsSecret.Namespace = ""
+					v1alpha3Machine.Spec.CloudsSecret.Namespace = ""
 				}
 
-				if v1alpha3MachineSpec.RootVolume != nil {
+				if v1alpha3Machine.Spec.RootVolume != nil {
 					// OpenStackMachineSpec.Image is ignored in v1alpha3 if RootVolume is set
-					v1alpha3MachineSpec.Image = ""
+					v1alpha3Machine.Spec.Image = ""
+				}
+			},
+			func(v1alpha3MachineTemplate *OpenStackMachineTemplate, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha3MachineTemplate)
+
+				v1alpha3MachineTemplate.ObjectMeta.Annotations = map[string]string{}
+
+				v1alpha3MachineTemplate.Spec.Template.Spec.Image = ""
+				v1alpha3MachineTemplate.Spec.Template.Spec.UserDataSecret = nil
+
+				if v1alpha3MachineTemplate.Spec.Template.Spec.CloudsSecret != nil {
+					v1alpha3MachineTemplate.Spec.Template.Spec.CloudsSecret.Namespace = ""
 				}
 			},
 			func(v1alpha3Instance *Instance, c fuzz.Continue) {
@@ -193,32 +222,66 @@ func TestFuzzyConversion(t *testing.T) {
 			},
 
 			// Don't test hub-spoke-hub conversion of v1alpha5 fields which are not in v1alpha3
-			func(v1alpha5ClusterSpec *infrav1.OpenStackClusterSpec, c fuzz.Continue) {
-				c.FuzzNoCustom(v1alpha5ClusterSpec)
+			func(v1alpha5Cluster *infrav1.OpenStackCluster, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha5Cluster)
 
-				v1alpha5ClusterSpec.APIServerFixedIP = ""
-				v1alpha5ClusterSpec.AllowAllInClusterTraffic = false
-				v1alpha5ClusterSpec.DisableAPIServerFloatingIP = false
+				v1alpha5Cluster.ObjectMeta.Annotations = map[string]string{}
+
+				v1alpha5Cluster.Spec.APIServerFixedIP = ""
+				v1alpha5Cluster.Spec.AllowAllInClusterTraffic = false
+				v1alpha5Cluster.Spec.DisableAPIServerFloatingIP = false
+				v1alpha5Cluster.Spec.APIServerLoadBalancer.AllowedCIDRs = nil
+				if v1alpha5Cluster.Spec.Bastion != nil {
+					v1alpha5Cluster.Spec.Bastion.Instance.ImageUUID = ""
+					v1alpha5Cluster.Spec.Bastion.Instance.Ports = nil
+				}
+
+				v1alpha5Cluster.Status.FailureMessage = nil
+				v1alpha5Cluster.Status.FailureReason = nil
+
+				if v1alpha5Cluster.Status.Bastion != nil {
+					v1alpha5Cluster.Status.Bastion.ImageUUID = ""
+					v1alpha5Cluster.Status.Bastion.Networks = nil
+				}
+
+				if v1alpha5Cluster.Status.Network != nil {
+					if v1alpha5Cluster.Status.Network.APIServerLoadBalancer != nil {
+						v1alpha5Cluster.Status.Network.APIServerLoadBalancer.AllowedCIDRs = nil
+					}
+					if v1alpha5Cluster.Status.Network.Router != nil {
+						v1alpha5Cluster.Status.Network.Router.IPs = []string{}
+					}
+				}
+
+				if v1alpha5Cluster.Status.ExternalNetwork != nil {
+					if v1alpha5Cluster.Status.ExternalNetwork.APIServerLoadBalancer != nil {
+						v1alpha5Cluster.Status.ExternalNetwork.APIServerLoadBalancer.AllowedCIDRs = nil
+					}
+					if v1alpha5Cluster.Status.ExternalNetwork.Router != nil {
+						v1alpha5Cluster.Status.ExternalNetwork.Router.IPs = []string{}
+					}
+				}
 			},
-			func(v1alpha5MachineSpec *infrav1.OpenStackMachineSpec, c fuzz.Continue) {
-				c.FuzzNoCustom(v1alpha5MachineSpec)
+			func(v1alpha5Machine *infrav1.OpenStackMachine, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha5Machine)
 
-				v1alpha5MachineSpec.Ports = nil
-				v1alpha5MachineSpec.ImageUUID = ""
+				v1alpha5Machine.ObjectMeta.Annotations = map[string]string{}
+				v1alpha5Machine.Spec.Ports = nil
+				v1alpha5Machine.Spec.ImageUUID = ""
+			},
+			func(v1alpha5MachineTemplate *infrav1.OpenStackMachineTemplate, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha5MachineTemplate)
+
+				v1alpha5MachineTemplate.ObjectMeta.Annotations = map[string]string{}
+
+				v1alpha5MachineTemplate.Spec.Template.Spec.Image = ""
+				v1alpha5MachineTemplate.Spec.Template.Spec.ImageUUID = ""
+				v1alpha5MachineTemplate.Spec.Template.Spec.Ports = nil
 			},
 			func(v1alpha5Network *infrav1.Network, c fuzz.Continue) {
 				c.FuzzNoCustom(v1alpha5Network)
 
 				v1alpha5Network.PortOpts = nil
-			},
-			func(v1alpha5ClusterStatus *infrav1.OpenStackClusterStatus, c fuzz.Continue) {
-				c.FuzzNoCustom(v1alpha5ClusterStatus)
-
-				v1alpha5ClusterStatus.FailureMessage = nil
-				v1alpha5ClusterStatus.FailureReason = nil
-				if v1alpha5ClusterStatus.Bastion != nil {
-					v1alpha5ClusterStatus.Bastion.ImageUUID = ""
-				}
 			},
 			func(v1alpha5OpenStackIdentityRef *infrav1.OpenStackIdentityReference, c fuzz.Continue) {
 				c.FuzzNoCustom(v1alpha5OpenStackIdentityRef)

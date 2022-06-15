@@ -220,6 +220,8 @@ type Router struct {
 	ID   string `json:"id"`
 	//+optional
 	Tags []string `json:"tags,omitempty"`
+	//+optional
+	IPs []string `json:"ips,omitempty"`
 }
 
 // LoadBalancer represents basic information about the associated OpenStack LoadBalancer.
@@ -228,6 +230,8 @@ type LoadBalancer struct {
 	ID         string `json:"id"`
 	IP         string `json:"ip"`
 	InternalIP string `json:"internalIP"`
+	//+optional
+	AllowedCIDRs []string `json:"allowedCIDRs,omitempty"`
 }
 
 // SecurityGroup represents the basic information of the associated
@@ -301,8 +305,10 @@ type Bastion struct {
 }
 
 type APIServerLoadBalancer struct {
-	// Enabled defines whether a LoadBalancer should be created.
+	// Enabled defines whether a load balancer should be created.
 	Enabled bool `json:"enabled,omitempty"`
-	// AdditionalPorts adds additional tcp ports to the Loadbalacner
+	// AdditionalPorts adds additional tcp ports to the load balancer.
 	AdditionalPorts []int `json:"additionalPorts,omitempty"`
+	// AllowedCIDRs restrict access to all API-Server listeners to the given address CIDRs.
+	AllowedCIDRs []string `json:"allowedCidrs,omitempty"`
 }
