@@ -421,10 +421,6 @@ func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *
 		return nil, fmt.Errorf("create Options need be specified to create instace")
 	}
 
-	if machine.Spec.FailureDomain == nil {
-		return nil, fmt.Errorf("failure domain not set")
-	}
-
 	instanceSpec := compute.InstanceSpec{
 		Name:          openStackMachine.Name,
 		Image:         openStackMachine.Spec.Image,
@@ -434,11 +430,15 @@ func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *
 		UserData:      userData,
 		Metadata:      openStackMachine.Spec.ServerMetadata,
 		ConfigDrive:   openStackMachine.Spec.ConfigDrive != nil && *openStackMachine.Spec.ConfigDrive,
-		FailureDomain: *machine.Spec.FailureDomain,
 		RootVolume:    openStackMachine.Spec.RootVolume,
 		Subnet:        openStackMachine.Spec.Subnet,
 		ServerGroupID: openStackMachine.Spec.ServerGroupID,
 		Trunk:         openStackMachine.Spec.Trunk,
+	}
+
+	// Add the failure domain only if specified
+	if machine.Spec.FailureDomain != nil {
+		instanceSpec.FailureDomain = *machine.Spec.FailureDomain
 	}
 
 	machineTags := []string{}
