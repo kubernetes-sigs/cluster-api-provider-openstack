@@ -451,7 +451,7 @@ If `availabilityZone` is not specified, the volume will be created in the cinder
 
 ## Timeout settings
 
-If creating servers in your OpenStack takes a long time, you can increase the timeout, by default it's 5 minutes. You can set it via the `CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT` in your Cluster API Provider OpenStack controller deployment.
+The default timeout for instance creation is 5 minutes. If creating servers in your OpenStack takes a long time, you can increase the timeout. You can set a new value, in minutes, via the envorinment variable `CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT` in your Cluster API Provider OpenStack controller deployment.
 
 ## Custom pod network CIDR
 
