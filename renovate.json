@@ -1,0 +1,55 @@
+{
+  "extends":[
+    "config:base"
+  ],
+  "ignorePaths": [
+    "**/node_modules/**",
+    "**/bower_components/**",
+    "**/vendor/**",
+    "**/examples/**"
+  ],
+  "enabled": "true",
+  "baseBranches": ["main"],
+  "packageRules": [
+    {
+      "matchPackageNames": ["golang"],
+      "allowedVersions": "<=1.17"
+    },
+    {
+      "matchPackageNames": ["kubernetes/kubernetes"],
+      "allowedVersions": "<=1.23"
+    },
+    {
+      "extends": ["group:kubernetes"],
+      "allowedVersions": "<=0.23"
+    },
+    {
+      "matchPackageNames": ["sigs.k8s.io/cluster-api", "sigs.k8s.io/cluster-api/test"],
+      "groupName": "Cluster API"
+    }
+  ],
+  "prHourlyLimit": 5,
+  "prConcurrentLimit": 5,
+  "rangeStrategy": "bump",
+  "renovateFork": true,
+  "stabilityDays": 5,
+  "regexManagers": [
+    {
+      "fileMatch": ["^Makefile$"],
+      "matchStrings": [
+        "KUBEBUILDER_ENVTEST_KUBERNETES_VERSION .= (?<currentValue>.*?)\\n"
+      ],
+      "depNameTemplate": "kubernetes/kubernetes",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v(?<version>.*?)$"
+    },
+    {
+      "fileMatch": ["^test/e2e/data/e2e_conf.yaml$"],
+      "matchStrings": [
+        "KUBERNETES_VERSION: \"(?<currentValue>.*?)\"\\n"
+      ],
+      "depNameTemplate": "kubernetes/kubernetes",
+      "datasourceTemplate": "github-releases"
+    }
+   ]
+ }
