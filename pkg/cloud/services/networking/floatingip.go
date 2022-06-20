@@ -123,7 +123,7 @@ func (s *Service) AssociateFloatingIP(eventObject runtime.Object, fp *floatingip
 	s.scope.Logger.Info("Associating floating IP", "id", fp.ID, "ip", fp.FloatingIP)
 
 	if fp.PortID == portID {
-		record.Eventf(eventObject, "SuccessfulAssociateFloatingIP", "Floating IP %s already associated with port %s", fp.FloatingIP, portID)
+		s.scope.Logger.Info("Floating IP already associated:", "id", fp.ID, "ip", fp.FloatingIP)
 		return nil
 	}
 
