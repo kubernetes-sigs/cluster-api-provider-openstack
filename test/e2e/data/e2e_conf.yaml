@@ -71,7 +71,7 @@ providers:
 - name: openstack
   type: InfrastructureProvider
   versions:
-  - name: v0.5.99
+  - name: v0.6.99
     value: ../../../config/default
     contract: v1beta1
     files:

@@ -27,7 +27,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
-	v1alpha5 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha5"
+	v1alpha6 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
 	apiv1alpha4 "sigs.k8s.io/cluster-api/api/v1alpha4"
 	v1beta1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	errors "sigs.k8s.io/cluster-api/errors"
@@ -40,283 +40,283 @@ func init() {
 // RegisterConversions adds conversion functions to the given scheme.
 // Public to allow building arbitrary schemes.
 func RegisterConversions(s *runtime.Scheme) error {
-	if err := s.AddGeneratedConversionFunc((*AddressPair)(nil), (*v1alpha5.AddressPair)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_AddressPair_To_v1alpha5_AddressPair(a.(*AddressPair), b.(*v1alpha5.AddressPair), scope)
+	if err := s.AddGeneratedConversionFunc((*AddressPair)(nil), (*v1alpha6.AddressPair)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_AddressPair_To_v1alpha6_AddressPair(a.(*AddressPair), b.(*v1alpha6.AddressPair), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha5.AddressPair)(nil), (*AddressPair)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_AddressPair_To_v1alpha4_AddressPair(a.(*v1alpha5.AddressPair), b.(*AddressPair), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha6.AddressPair)(nil), (*AddressPair)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_AddressPair_To_v1alpha4_AddressPair(a.(*v1alpha6.AddressPair), b.(*AddressPair), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*Bastion)(nil), (*v1alpha5.Bastion)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_Bastion_To_v1alpha5_Bastion(a.(*Bastion), b.(*v1alpha5.Bastion), scope)
+	if err := s.AddGeneratedConversionFunc((*Bastion)(nil), (*v1alpha6.Bastion)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_Bastion_To_v1alpha6_Bastion(a.(*Bastion), b.(*v1alpha6.Bastion), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha5.Bastion)(nil), (*Bastion)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_Bastion_To_v1alpha4_Bastion(a.(*v1alpha5.Bastion), b.(*Bastion), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha6.Bastion)(nil), (*Bastion)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_Bastion_To_v1alpha4_Bastion(a.(*v1alpha6.Bastion), b.(*Bastion), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*ExternalRouterIPParam)(nil), (*v1alpha5.ExternalRouterIPParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_ExternalRouterIPParam_To_v1alpha5_ExternalRouterIPParam(a.(*ExternalRouterIPParam), b.(*v1alpha5.ExternalRouterIPParam), scope)
+	if err := s.AddGeneratedConversionFunc((*ExternalRouterIPParam)(nil), (*v1alpha6.ExternalRouterIPParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_ExternalRouterIPParam_To_v1alpha6_ExternalRouterIPParam(a.(*ExternalRouterIPParam), b.(*v1alpha6.ExternalRouterIPParam), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha5.ExternalRouterIPParam)(nil), (*ExternalRouterIPParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_ExternalRouterIPParam_To_v1alpha4_ExternalRouterIPParam(a.(*v1alpha5.ExternalRouterIPParam), b.(*ExternalRouterIPParam), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha6.ExternalRouterIPParam)(nil), (*ExternalRouterIPParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_ExternalRouterIPParam_To_v1alpha4_ExternalRouterIPParam(a.(*v1alpha6.ExternalRouterIPParam), b.(*ExternalRouterIPParam), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*LoadBalancer)(nil), (*v1alpha5.LoadBalancer)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_LoadBalancer_To_v1alpha5_LoadBalancer(a.(*LoadBalancer), b.(*v1alpha5.LoadBalancer), scope)
+	if err := s.AddGeneratedConversionFunc((*LoadBalancer)(nil), (*v1alpha6.LoadBalancer)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_LoadBalancer_To_v1alpha6_LoadBalancer(a.(*LoadBalancer), b.(*v1alpha6.LoadBalancer), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*Network)(nil), (*v1alpha5.Network)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_Network_To_v1alpha5_Network(a.(*Network), b.(*v1alpha5.Network), scope)
+	if err := s.AddGeneratedConversionFunc((*Network)(nil), (*v1alpha6.Network)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_Network_To_v1alpha6_Network(a.(*Network), b.(*v1alpha6.Network), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha5.Network)(nil), (*Network)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_Network_To_v1alpha4_Network(a.(*v1alpha5.Network), b.(*Network), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha6.Network)(nil), (*Network)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_Network_To_v1alpha4_Network(a.(*v1alpha6.Network), b.(*Network), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*NetworkParam)(nil), (*v1alpha5.NetworkParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_NetworkParam_To_v1alpha5_NetworkParam(a.(*NetworkParam), b.(*v1alpha5.NetworkParam), scope)
+	if err := s.AddGeneratedConversionFunc((*NetworkParam)(nil), (*v1alpha6.NetworkParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_NetworkParam_To_v1alpha6_NetworkParam(a.(*NetworkParam), b.(*v1alpha6.NetworkParam), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha5.NetworkParam)(nil), (*NetworkParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_NetworkParam_To_v1alpha4_NetworkParam(a.(*v1alpha5.NetworkParam), b.(*NetworkParam), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha6.NetworkParam)(nil), (*NetworkParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_NetworkParam_To_v1alpha4_NetworkParam(a.(*v1alpha6.NetworkParam), b.(*NetworkParam), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*OpenStackCluster)(nil), (*v1alpha5.OpenStackCluster)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_OpenStackCluster_To_v1alpha5_OpenStackCluster(a.(*OpenStackCluster), b.(*v1alpha5.OpenStackCluster), scope)
+	if err := s.AddGeneratedConversionFunc((*OpenStackCluster)(nil), (*v1alpha6.OpenStackCluster)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_OpenStackCluster_To_v1alpha6_OpenStackCluster(a.(*OpenStackCluster), b.(*v1alpha6.OpenStackCluster), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha5.OpenStackCluster)(nil), (*OpenStackCluster)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_OpenStackCluster_To_v1alpha4_OpenStackCluster(a.(*v1alpha5.OpenStackCluster), b.(*OpenStackCluster), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha6.OpenStackCluster)(nil), (*OpenStackCluster)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_OpenStackCluster_To_v1alpha4_OpenStackCluster(a.(*v1alpha6.OpenStackCluster), b.(*OpenStackCluster), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*OpenStackClusterList)(nil), (*v1alpha5.OpenStackClusterList)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_OpenStackClusterList_To_v1alpha5_OpenStackClusterList(a.(*OpenStackClusterList), b.(*v1alpha5.OpenStackClusterList), scope)
+	if err := s.AddGeneratedConversionFunc((*OpenStackClusterList)(nil), (*v1alpha6.OpenStackClusterList)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_OpenStackClusterList_To_v1alpha6_OpenStackClusterList(a.(*OpenStackClusterList), b.(*v1alpha6.OpenStackClusterList), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha5.OpenStackClusterList)(nil), (*OpenStackClusterList)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_OpenStackClusterList_To_v1alpha4_OpenStackClusterList(a.(*v1alpha5.OpenStackClusterList), b.(*OpenStackClusterList), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha6.OpenStackClusterList)(nil), (*OpenStackClusterList)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_OpenStackClusterList_To_v1alpha4_OpenStackClusterList(a.(*v1alpha6.OpenStackClusterList), b.(*OpenStackClusterList), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*OpenStackClusterStatus)(nil), (*v1alpha5.OpenStackClusterStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_OpenStackClusterStatus_To_v1alpha5_OpenStackClusterStatus(a.(*OpenStackClusterStatus), b.(*v1alpha5.OpenStackClusterStatus), scope)
+	if err := s.AddGeneratedConversionFunc((*OpenStackClusterStatus)(nil), (*v1alpha6.OpenStackClusterStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_OpenStackClusterStatus_To_v1alpha6_OpenStackClusterStatus(a.(*OpenStackClusterStatus), b.(*v1alpha6.OpenStackClusterStatus), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha5.OpenStackClusterStatus)(nil), (*OpenStackClusterStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_OpenStackClusterStatus_To_v1alpha4_OpenStackClusterStatus(a.(*v1alpha5.OpenStackClusterStatus), b.(*OpenStackClusterStatus), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha6.OpenStackClusterStatus)(nil), (*OpenStackClusterStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_OpenStackClusterStatus_To_v1alpha4_OpenStackClusterStatus(a.(*v1alpha6.OpenStackClusterStatus), b.(*OpenStackClusterStatus), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*OpenStackClusterTemplate)(nil), (*v1alpha5.OpenStackClusterTemplate)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_OpenStackClusterTemplate_To_v1alpha5_OpenStackClusterTemplate(a.(*OpenStackClusterTemplate), b.(*v1alpha5.OpenStackClusterTemplate), scope)
+	if err := s.AddGeneratedConversionFunc((*OpenStackClusterTemplate)(nil), (*v1alpha6.OpenStackClusterTemplate)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_OpenStackClusterTemplate_To_v1alpha6_OpenStackClusterTemplate(a.(*OpenStackClusterTemplate), b.(*v1alpha6.OpenStackClusterTemplate), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha5.OpenStackClusterTemplate)(nil), (*OpenStackClusterTemplate)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_OpenStackClusterTemplate_To_v1alpha4_OpenStackClusterTemplate(a.(*v1alpha5.OpenStackClusterTemplate), b.(*OpenStackClusterTemplate), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha6.OpenStackClusterTemplate)(nil), (*OpenStackClusterTemplate)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_OpenStackClusterTemplate_To_v1alpha4_OpenStackClusterTemplate(a.(*v1alpha6.OpenStackClusterTemplate), b.(*OpenStackClusterTemplate), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*OpenStackClusterTemplateList)(nil), (*v1alpha5.OpenStackClusterTemplateList)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_OpenStackClusterTemplateList_To_v1alpha5_OpenStackClusterTemplateList(a.(*OpenStackClusterTemplateList), b.(*v1alpha5.OpenStackClusterTemplateList), scope)
+	if err := s.AddGeneratedConversionFunc((*OpenStackClusterTemplateList)(nil), (*v1alpha6.OpenStackClusterTemplateList)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_OpenStackClusterTemplateList_To_v1alpha6_OpenStackClusterTemplateList(a.(*OpenStackClusterTemplateList), b.(*v1alpha6.OpenStackClusterTemplateList), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha5.OpenStackClusterTemplateList)(nil), (*OpenStackClusterTemplateList)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_OpenStackClusterTemplateList_To_v1alpha4_OpenStackClusterTemplateList(a.(*v1alpha5.OpenStackClusterTemplateList), b.(*OpenStackClusterTemplateList), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha6.OpenStackClusterTemplateList)(nil), (*OpenStackClusterTemplateList)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_OpenStackClusterTemplateList_To_v1alpha4_OpenStackClusterTemplateList(a.(*v1alpha6.OpenStackClusterTemplateList), b.(*OpenStackClusterTemplateList), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*OpenStackClusterTemplateResource)(nil), (*v1alpha5.OpenStackClusterTemplateResource)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_OpenStackClusterTemplateResource_To_v1alpha5_OpenStackClusterTemplateResource(a.(*OpenStackClusterTemplateResource), b.(*v1alpha5.OpenStackClusterTemplateResource), scope)
+	if err := s.AddGeneratedConversionFunc((*OpenStackClusterTemplateResource)(nil), (*v1alpha6.OpenStackClusterTemplateResource)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_OpenStackClusterTemplateResource_To_v1alpha6_OpenStackClusterTemplateResource(a.(*OpenStackClusterTemplateResource), b.(*v1alpha6.OpenStackClusterTemplateResource), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha5.OpenStackClusterTemplateResource)(nil), (*OpenStackClusterTemplateResource)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_OpenStackClusterTemplateResource_To_v1alpha4_OpenStackClusterTemplateResource(a.(*v1alpha5.OpenStackClusterTemplateResource), b.(*OpenStackClusterTemplateResource), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha6.OpenStackClusterTemplateResource)(nil), (*OpenStackClusterTemplateResource)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_OpenStackClusterTemplateResource_To_v1alpha4_OpenStackClusterTemplateResource(a.(*v1alpha6.OpenStackClusterTemplateResource), b.(*OpenStackClusterTemplateResource), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*OpenStackClusterTemplateSpec)(nil), (*v1alpha5.OpenStackClusterTemplateSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_OpenStackClusterTemplateSpec_To_v1alpha5_OpenStackClusterTemplateSpec(a.(*OpenStackClusterTemplateSpec), b.(*v1alpha5.OpenStackClusterTemplateSpec), scope)
+	if err := s.AddGeneratedConversionFunc((*OpenStackClusterTemplateSpec)(nil), (*v1alpha6.OpenStackClusterTemplateSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_OpenStackClusterTemplateSpec_To_v1alpha6_OpenStackClusterTemplateSpec(a.(*OpenStackClusterTemplateSpec), b.(*v1alpha6.OpenStackClusterTemplateSpec), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha5.OpenStackClusterTemplateSpec)(nil), (*OpenStackClusterTemplateSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_OpenStackClusterTemplateSpec_To_v1alpha4_OpenStackClusterTemplateSpec(a.(*v1alpha5.OpenStackClusterTemplateSpec), b.(*OpenStackClusterTemplateSpec), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha6.OpenStackClusterTemplateSpec)(nil), (*OpenStackClusterTemplateSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_OpenStackClusterTemplateSpec_To_v1alpha4_OpenStackClusterTemplateSpec(a.(*v1alpha6.OpenStackClusterTemplateSpec), b.(*OpenStackClusterTemplateSpec), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*OpenStackIdentityReference)(nil), (*v1alpha5.OpenStackIdentityReference)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_OpenStackIdentityReference_To_v1alpha5_OpenStackIdentityReference(a.(*OpenStackIdentityReference), b.(*v1alpha5.OpenStackIdentityReference), scope)
+	if err := s.AddGeneratedConversionFunc((*OpenStackIdentityReference)(nil), (*v1alpha6.OpenStackIdentityReference)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_OpenStackIdentityReference_To_v1alpha6_OpenStackIdentityReference(a.(*OpenStackIdentityReference), b.(*v1alpha6.OpenStackIdentityReference), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha5.OpenStackIdentityReference)(nil), (*OpenStackIdentityReference)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_OpenStackIdentityReference_To_v1alpha4_OpenStackIdentityReference(a.(*v1alpha5.OpenStackIdentityReference), b.(*OpenStackIdentityReference), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha6.OpenStackIdentityReference)(nil), (*OpenStackIdentityReference)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_OpenStackIdentityReference_To_v1alpha4_OpenStackIdentityReference(a.(*v1alpha6.OpenStackIdentityReference), b.(*OpenStackIdentityReference), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*OpenStackMachine)(nil), (*v1alpha5.OpenStackMachine)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_OpenStackMachine_To_v1alpha5_OpenStackMachine(a.(*OpenStackMachine), b.(*v1alpha5.OpenStackMachine), scope)
+	if err := s.AddGeneratedConversionFunc((*OpenStackMachine)(nil), (*v1alpha6.OpenStackMachine)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_OpenStackMachine_To_v1alpha6_OpenStackMachine(a.(*OpenStackMachine), b.(*v1alpha6.OpenStackMachine), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha5.OpenStackMachine)(nil), (*OpenStackMachine)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_OpenStackMachine_To_v1alpha4_OpenStackMachine(a.(*v1alpha5.OpenStackMachine), b.(*OpenStackMachine), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha6.OpenStackMachine)(nil), (*OpenStackMachine)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_OpenStackMachine_To_v1alpha4_OpenStackMachine(a.(*v1alpha6.OpenStackMachine), b.(*OpenStackMachine), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*OpenStackMachineList)(nil), (*v1alpha5.OpenStackMachineList)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_OpenStackMachineList_To_v1alpha5_OpenStackMachineList(a.(*OpenStackMachineList), b.(*v1alpha5.OpenStackMachineList), scope)
+	if err := s.AddGeneratedConversionFunc((*OpenStackMachineList)(nil), (*v1alpha6.OpenStackMachineList)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_OpenStackMachineList_To_v1alpha6_OpenStackMachineList(a.(*OpenStackMachineList), b.(*v1alpha6.OpenStackMachineList), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha5.OpenStackMachineList)(nil), (*OpenStackMachineList)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_OpenStackMachineList_To_v1alpha4_OpenStackMachineList(a.(*v1alpha5.OpenStackMachineList), b.(*OpenStackMachineList), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha6.OpenStackMachineList)(nil), (*OpenStackMachineList)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_OpenStackMachineList_To_v1alpha4_OpenStackMachineList(a.(*v1alpha6.OpenStackMachineList), b.(*OpenStackMachineList), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*OpenStackMachineStatus)(nil), (*v1alpha5.OpenStackMachineStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_OpenStackMachineStatus_To_v1alpha5_OpenStackMachineStatus(a.(*OpenStackMachineStatus), b.(*v1alpha5.OpenStackMachineStatus), scope)
+	if err := s.AddGeneratedConversionFunc((*OpenStackMachineStatus)(nil), (*v1alpha6.OpenStackMachineStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_OpenStackMachineStatus_To_v1alpha6_OpenStackMachineStatus(a.(*OpenStackMachineStatus), b.(*v1alpha6.OpenStackMachineStatus), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha5.OpenStackMachineStatus)(nil), (*OpenStackMachineStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_OpenStackMachineStatus_To_v1alpha4_OpenStackMachineStatus(a.(*v1alpha5.OpenStackMachineStatus), b.(*OpenStackMachineStatus), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha6.OpenStackMachineStatus)(nil), (*OpenStackMachineStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_OpenStackMachineStatus_To_v1alpha4_OpenStackMachineStatus(a.(*v1alpha6.OpenStackMachineStatus), b.(*OpenStackMachineStatus), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*OpenStackMachineTemplate)(nil), (*v1alpha5.OpenStackMachineTemplate)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_OpenStackMachineTemplate_To_v1alpha5_OpenStackMachineTemplate(a.(*OpenStackMachineTemplate), b.(*v1alpha5.OpenStackMachineTemplate), scope)
+	if err := s.AddGeneratedConversionFunc((*OpenStackMachineTemplate)(nil), (*v1alpha6.OpenStackMachineTemplate)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_OpenStackMachineTemplate_To_v1alpha6_OpenStackMachineTemplate(a.(*OpenStackMachineTemplate), b.(*v1alpha6.OpenStackMachineTemplate), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha5.OpenStackMachineTemplate)(nil), (*OpenStackMachineTemplate)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_OpenStackMachineTemplate_To_v1alpha4_OpenStackMachineTemplate(a.(*v1alpha5.OpenStackMachineTemplate), b.(*OpenStackMachineTemplate), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha6.OpenStackMachineTemplate)(nil), (*OpenStackMachineTemplate)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_OpenStackMachineTemplate_To_v1alpha4_OpenStackMachineTemplate(a.(*v1alpha6.OpenStackMachineTemplate), b.(*OpenStackMachineTemplate), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*OpenStackMachineTemplateList)(nil), (*v1alpha5.OpenStackMachineTemplateList)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_OpenStackMachineTemplateList_To_v1alpha5_OpenStackMachineTemplateList(a.(*OpenStackMachineTemplateList), b.(*v1alpha5.OpenStackMachineTemplateList), scope)
+	if err := s.AddGeneratedConversionFunc((*OpenStackMachineTemplateList)(nil), (*v1alpha6.OpenStackMachineTemplateList)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_OpenStackMachineTemplateList_To_v1alpha6_OpenStackMachineTemplateList(a.(*OpenStackMachineTemplateList), b.(*v1alpha6.OpenStackMachineTemplateList), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha5.OpenStackMachineTemplateList)(nil), (*OpenStackMachineTemplateList)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_OpenStackMachineTemplateList_To_v1alpha4_OpenStackMachineTemplateList(a.(*v1alpha5.OpenStackMachineTemplateList), b.(*OpenStackMachineTemplateList), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha6.OpenStackMachineTemplateList)(nil), (*OpenStackMachineTemplateList)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_OpenStackMachineTemplateList_To_v1alpha4_OpenStackMachineTemplateList(a.(*v1alpha6.OpenStackMachineTemplateList), b.(*OpenStackMachineTemplateList), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*OpenStackMachineTemplateResource)(nil), (*v1alpha5.OpenStackMachineTemplateResource)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_OpenStackMachineTemplateResource_To_v1alpha5_OpenStackMachineTemplateResource(a.(*OpenStackMachineTemplateResource), b.(*v1alpha5.OpenStackMachineTemplateResource), scope)
+	if err := s.AddGeneratedConversionFunc((*OpenStackMachineTemplateResource)(nil), (*v1alpha6.OpenStackMachineTemplateResource)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_OpenStackMachineTemplateResource_To_v1alpha6_OpenStackMachineTemplateResource(a.(*OpenStackMachineTemplateResource), b.(*v1alpha6.OpenStackMachineTemplateResource), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha5.OpenStackMachineTemplateResource)(nil), (*OpenStackMachineTemplateResource)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_OpenStackMachineTemplateResource_To_v1alpha4_OpenStackMachineTemplateResource(a.(*v1alpha5.OpenStackMachineTemplateResource), b.(*OpenStackMachineTemplateResource), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha6.OpenStackMachineTemplateResource)(nil), (*OpenStackMachineTemplateResource)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_OpenStackMachineTemplateResource_To_v1alpha4_OpenStackMachineTemplateResource(a.(*v1alpha6.OpenStackMachineTemplateResource), b.(*OpenStackMachineTemplateResource), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*OpenStackMachineTemplateSpec)(nil), (*v1alpha5.OpenStackMachineTemplateSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_OpenStackMachineTemplateSpec_To_v1alpha5_OpenStackMachineTemplateSpec(a.(*OpenStackMachineTemplateSpec), b.(*v1alpha5.OpenStackMachineTemplateSpec), scope)
+	if err := s.AddGeneratedConversionFunc((*OpenStackMachineTemplateSpec)(nil), (*v1alpha6.OpenStackMachineTemplateSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_OpenStackMachineTemplateSpec_To_v1alpha6_OpenStackMachineTemplateSpec(a.(*OpenStackMachineTemplateSpec), b.(*v1alpha6.OpenStackMachineTemplateSpec), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha5.OpenStackMachineTemplateSpec)(nil), (*OpenStackMachineTemplateSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_OpenStackMachineTemplateSpec_To_v1alpha4_OpenStackMachineTemplateSpec(a.(*v1alpha5.OpenStackMachineTemplateSpec), b.(*OpenStackMachineTemplateSpec), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha6.OpenStackMachineTemplateSpec)(nil), (*OpenStackMachineTemplateSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_OpenStackMachineTemplateSpec_To_v1alpha4_OpenStackMachineTemplateSpec(a.(*v1alpha6.OpenStackMachineTemplateSpec), b.(*OpenStackMachineTemplateSpec), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*Router)(nil), (*v1alpha5.Router)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_Router_To_v1alpha5_Router(a.(*Router), b.(*v1alpha5.Router), scope)
+	if err := s.AddGeneratedConversionFunc((*Router)(nil), (*v1alpha6.Router)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_Router_To_v1alpha6_Router(a.(*Router), b.(*v1alpha6.Router), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*SecurityGroup)(nil), (*v1alpha5.SecurityGroup)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_SecurityGroup_To_v1alpha5_SecurityGroup(a.(*SecurityGroup), b.(*v1alpha5.SecurityGroup), scope)
+	if err := s.AddGeneratedConversionFunc((*SecurityGroup)(nil), (*v1alpha6.SecurityGroup)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_SecurityGroup_To_v1alpha6_SecurityGroup(a.(*SecurityGroup), b.(*v1alpha6.SecurityGroup), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha5.SecurityGroup)(nil), (*SecurityGroup)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_SecurityGroup_To_v1alpha4_SecurityGroup(a.(*v1alpha5.SecurityGroup), b.(*SecurityGroup), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha6.SecurityGroup)(nil), (*SecurityGroup)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_SecurityGroup_To_v1alpha4_SecurityGroup(a.(*v1alpha6.SecurityGroup), b.(*SecurityGroup), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*SecurityGroupFilter)(nil), (*v1alpha5.SecurityGroupFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_SecurityGroupFilter_To_v1alpha5_SecurityGroupFilter(a.(*SecurityGroupFilter), b.(*v1alpha5.SecurityGroupFilter), scope)
+	if err := s.AddGeneratedConversionFunc((*SecurityGroupFilter)(nil), (*v1alpha6.SecurityGroupFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_SecurityGroupFilter_To_v1alpha6_SecurityGroupFilter(a.(*SecurityGroupFilter), b.(*v1alpha6.SecurityGroupFilter), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha5.SecurityGroupFilter)(nil), (*SecurityGroupFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_SecurityGroupFilter_To_v1alpha4_SecurityGroupFilter(a.(*v1alpha5.SecurityGroupFilter), b.(*SecurityGroupFilter), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha6.SecurityGroupFilter)(nil), (*SecurityGroupFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_SecurityGroupFilter_To_v1alpha4_SecurityGroupFilter(a.(*v1alpha6.SecurityGroupFilter), b.(*SecurityGroupFilter), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*SecurityGroupParam)(nil), (*v1alpha5.SecurityGroupParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_SecurityGroupParam_To_v1alpha5_SecurityGroupParam(a.(*SecurityGroupParam), b.(*v1alpha5.SecurityGroupParam), scope)
+	if err := s.AddGeneratedConversionFunc((*SecurityGroupParam)(nil), (*v1alpha6.SecurityGroupParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_SecurityGroupParam_To_v1alpha6_SecurityGroupParam(a.(*SecurityGroupParam), b.(*v1alpha6.SecurityGroupParam), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha5.SecurityGroupParam)(nil), (*SecurityGroupParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_SecurityGroupParam_To_v1alpha4_SecurityGroupParam(a.(*v1alpha5.SecurityGroupParam), b.(*SecurityGroupParam), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha6.SecurityGroupParam)(nil), (*SecurityGroupParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_SecurityGroupParam_To_v1alpha4_SecurityGroupParam(a.(*v1alpha6.SecurityGroupParam), b.(*SecurityGroupParam), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*SecurityGroupRule)(nil), (*v1alpha5.SecurityGroupRule)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_SecurityGroupRule_To_v1alpha5_SecurityGroupRule(a.(*SecurityGroupRule), b.(*v1alpha5.SecurityGroupRule), scope)
+	if err := s.AddGeneratedConversionFunc((*SecurityGroupRule)(nil), (*v1alpha6.SecurityGroupRule)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_SecurityGroupRule_To_v1alpha6_SecurityGroupRule(a.(*SecurityGroupRule), b.(*v1alpha6.SecurityGroupRule), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha5.SecurityGroupRule)(nil), (*SecurityGroupRule)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_SecurityGroupRule_To_v1alpha4_SecurityGroupRule(a.(*v1alpha5.SecurityGroupRule), b.(*SecurityGroupRule), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha6.SecurityGroupRule)(nil), (*SecurityGroupRule)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_SecurityGroupRule_To_v1alpha4_SecurityGroupRule(a.(*v1alpha6.SecurityGroupRule), b.(*SecurityGroupRule), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*Subnet)(nil), (*v1alpha5.Subnet)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_Subnet_To_v1alpha5_Subnet(a.(*Subnet), b.(*v1alpha5.Subnet), scope)
+	if err := s.AddGeneratedConversionFunc((*Subnet)(nil), (*v1alpha6.Subnet)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_Subnet_To_v1alpha6_Subnet(a.(*Subnet), b.(*v1alpha6.Subnet), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha5.Subnet)(nil), (*Subnet)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_Subnet_To_v1alpha4_Subnet(a.(*v1alpha5.Subnet), b.(*Subnet), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha6.Subnet)(nil), (*Subnet)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_Subnet_To_v1alpha4_Subnet(a.(*v1alpha6.Subnet), b.(*Subnet), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*SubnetParam)(nil), (*v1alpha5.SubnetParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_SubnetParam_To_v1alpha5_SubnetParam(a.(*SubnetParam), b.(*v1alpha5.SubnetParam), scope)
+	if err := s.AddGeneratedConversionFunc((*SubnetParam)(nil), (*v1alpha6.SubnetParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_SubnetParam_To_v1alpha6_SubnetParam(a.(*SubnetParam), b.(*v1alpha6.SubnetParam), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha5.SubnetParam)(nil), (*SubnetParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_SubnetParam_To_v1alpha4_SubnetParam(a.(*v1alpha5.SubnetParam), b.(*SubnetParam), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha6.SubnetParam)(nil), (*SubnetParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_SubnetParam_To_v1alpha4_SubnetParam(a.(*v1alpha6.SubnetParam), b.(*SubnetParam), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*[]Network)(nil), (*[]v1alpha5.Network)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_Slice_v1alpha4_Network_To_Slice_v1alpha5_Network(a.(*[]Network), b.(*[]v1alpha5.Network), scope)
+	if err := s.AddConversionFunc((*[]Network)(nil), (*[]v1alpha6.Network)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_Slice_v1alpha4_Network_To_Slice_v1alpha6_Network(a.(*[]Network), b.(*[]v1alpha6.Network), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*[]v1alpha5.Network)(nil), (*[]Network)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_Slice_v1alpha5_Network_To_Slice_v1alpha4_Network(a.(*[]v1alpha5.Network), b.(*[]Network), scope)
+	if err := s.AddConversionFunc((*[]v1alpha6.Network)(nil), (*[]Network)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_Slice_v1alpha6_Network_To_Slice_v1alpha4_Network(a.(*[]v1alpha6.Network), b.(*[]Network), scope)
 	}); err != nil {
 		return err
 	}
@@ -325,93 +325,93 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*Filter)(nil), (*v1alpha5.NetworkFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_Filter_To_v1alpha5_NetworkFilter(a.(*Filter), b.(*v1alpha5.NetworkFilter), scope)
+	if err := s.AddConversionFunc((*Filter)(nil), (*v1alpha6.NetworkFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_Filter_To_v1alpha6_NetworkFilter(a.(*Filter), b.(*v1alpha6.NetworkFilter), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*FixedIP)(nil), (*v1alpha5.FixedIP)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_FixedIP_To_v1alpha5_FixedIP(a.(*FixedIP), b.(*v1alpha5.FixedIP), scope)
+	if err := s.AddConversionFunc((*FixedIP)(nil), (*v1alpha6.FixedIP)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_FixedIP_To_v1alpha6_FixedIP(a.(*FixedIP), b.(*v1alpha6.FixedIP), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*Instance)(nil), (*v1alpha5.Instance)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_Instance_To_v1alpha5_Instance(a.(*Instance), b.(*v1alpha5.Instance), scope)
+	if err := s.AddConversionFunc((*Instance)(nil), (*v1alpha6.Instance)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_Instance_To_v1alpha6_Instance(a.(*Instance), b.(*v1alpha6.Instance), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*OpenStackClusterSpec)(nil), (*v1alpha5.OpenStackClusterSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(a.(*OpenStackClusterSpec), b.(*v1alpha5.OpenStackClusterSpec), scope)
+	if err := s.AddConversionFunc((*OpenStackClusterSpec)(nil), (*v1alpha6.OpenStackClusterSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(a.(*OpenStackClusterSpec), b.(*v1alpha6.OpenStackClusterSpec), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*OpenStackMachineSpec)(nil), (*v1alpha5.OpenStackMachineSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(a.(*OpenStackMachineSpec), b.(*v1alpha5.OpenStackMachineSpec), scope)
+	if err := s.AddConversionFunc((*OpenStackMachineSpec)(nil), (*v1alpha6.OpenStackMachineSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(a.(*OpenStackMachineSpec), b.(*v1alpha6.OpenStackMachineSpec), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*PortOpts)(nil), (*v1alpha5.PortOpts)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_PortOpts_To_v1alpha5_PortOpts(a.(*PortOpts), b.(*v1alpha5.PortOpts), scope)
+	if err := s.AddConversionFunc((*PortOpts)(nil), (*v1alpha6.PortOpts)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_PortOpts_To_v1alpha6_PortOpts(a.(*PortOpts), b.(*v1alpha6.PortOpts), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*RootVolume)(nil), (*v1alpha5.RootVolume)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_RootVolume_To_v1alpha5_RootVolume(a.(*RootVolume), b.(*v1alpha5.RootVolume), scope)
+	if err := s.AddConversionFunc((*RootVolume)(nil), (*v1alpha6.RootVolume)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_RootVolume_To_v1alpha6_RootVolume(a.(*RootVolume), b.(*v1alpha6.RootVolume), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*SubnetFilter)(nil), (*v1alpha5.SubnetFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha4_SubnetFilter_To_v1alpha5_SubnetFilter(a.(*SubnetFilter), b.(*v1alpha5.SubnetFilter), scope)
+	if err := s.AddConversionFunc((*SubnetFilter)(nil), (*v1alpha6.SubnetFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha4_SubnetFilter_To_v1alpha6_SubnetFilter(a.(*SubnetFilter), b.(*v1alpha6.SubnetFilter), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*v1alpha5.FixedIP)(nil), (*FixedIP)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_FixedIP_To_v1alpha4_FixedIP(a.(*v1alpha5.FixedIP), b.(*FixedIP), scope)
+	if err := s.AddConversionFunc((*v1alpha6.FixedIP)(nil), (*FixedIP)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_FixedIP_To_v1alpha4_FixedIP(a.(*v1alpha6.FixedIP), b.(*FixedIP), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*v1alpha5.Instance)(nil), (*Instance)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_Instance_To_v1alpha4_Instance(a.(*v1alpha5.Instance), b.(*Instance), scope)
+	if err := s.AddConversionFunc((*v1alpha6.Instance)(nil), (*Instance)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_Instance_To_v1alpha4_Instance(a.(*v1alpha6.Instance), b.(*Instance), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*v1alpha5.LoadBalancer)(nil), (*LoadBalancer)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_LoadBalancer_To_v1alpha4_LoadBalancer(a.(*v1alpha5.LoadBalancer), b.(*LoadBalancer), scope)
+	if err := s.AddConversionFunc((*v1alpha6.LoadBalancer)(nil), (*LoadBalancer)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_LoadBalancer_To_v1alpha4_LoadBalancer(a.(*v1alpha6.LoadBalancer), b.(*LoadBalancer), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*v1alpha5.NetworkFilter)(nil), (*Filter)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_NetworkFilter_To_v1alpha4_Filter(a.(*v1alpha5.NetworkFilter), b.(*Filter), scope)
+	if err := s.AddConversionFunc((*v1alpha6.NetworkFilter)(nil), (*Filter)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_NetworkFilter_To_v1alpha4_Filter(a.(*v1alpha6.NetworkFilter), b.(*Filter), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*v1alpha5.OpenStackClusterSpec)(nil), (*OpenStackClusterSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_OpenStackClusterSpec_To_v1alpha4_OpenStackClusterSpec(a.(*v1alpha5.OpenStackClusterSpec), b.(*OpenStackClusterSpec), scope)
+	if err := s.AddConversionFunc((*v1alpha6.OpenStackClusterSpec)(nil), (*OpenStackClusterSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_OpenStackClusterSpec_To_v1alpha4_OpenStackClusterSpec(a.(*v1alpha6.OpenStackClusterSpec), b.(*OpenStackClusterSpec), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*v1alpha5.OpenStackMachineSpec)(nil), (*OpenStackMachineSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(a.(*v1alpha5.OpenStackMachineSpec), b.(*OpenStackMachineSpec), scope)
+	if err := s.AddConversionFunc((*v1alpha6.OpenStackMachineSpec)(nil), (*OpenStackMachineSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(a.(*v1alpha6.OpenStackMachineSpec), b.(*OpenStackMachineSpec), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*v1alpha5.PortOpts)(nil), (*PortOpts)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_PortOpts_To_v1alpha4_PortOpts(a.(*v1alpha5.PortOpts), b.(*PortOpts), scope)
+	if err := s.AddConversionFunc((*v1alpha6.PortOpts)(nil), (*PortOpts)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_PortOpts_To_v1alpha4_PortOpts(a.(*v1alpha6.PortOpts), b.(*PortOpts), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*v1alpha5.RootVolume)(nil), (*RootVolume)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_RootVolume_To_v1alpha4_RootVolume(a.(*v1alpha5.RootVolume), b.(*RootVolume), scope)
+	if err := s.AddConversionFunc((*v1alpha6.RootVolume)(nil), (*RootVolume)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_RootVolume_To_v1alpha4_RootVolume(a.(*v1alpha6.RootVolume), b.(*RootVolume), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*v1alpha5.Router)(nil), (*Router)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_Router_To_v1alpha4_Router(a.(*v1alpha5.Router), b.(*Router), scope)
+	if err := s.AddConversionFunc((*v1alpha6.Router)(nil), (*Router)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_Router_To_v1alpha4_Router(a.(*v1alpha6.Router), b.(*Router), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*v1alpha5.SubnetFilter)(nil), (*SubnetFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha5_SubnetFilter_To_v1alpha4_SubnetFilter(a.(*v1alpha5.SubnetFilter), b.(*SubnetFilter), scope)
+	if err := s.AddConversionFunc((*v1alpha6.SubnetFilter)(nil), (*SubnetFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_SubnetFilter_To_v1alpha4_SubnetFilter(a.(*v1alpha6.SubnetFilter), b.(*SubnetFilter), scope)
 	}); err != nil {
 		return err
 	}
@@ -423,95 +423,95 @@ func RegisterConversions(s *runtime.Scheme) error {
 	return nil
 }
 
-func autoConvert_v1alpha4_AddressPair_To_v1alpha5_AddressPair(in *AddressPair, out *v1alpha5.AddressPair, s conversion.Scope) error {
+func autoConvert_v1alpha4_AddressPair_To_v1alpha6_AddressPair(in *AddressPair, out *v1alpha6.AddressPair, s conversion.Scope) error {
 	out.IPAddress = in.IPAddress
 	out.MACAddress = in.MACAddress
 	return nil
 }
 
-// Convert_v1alpha4_AddressPair_To_v1alpha5_AddressPair is an autogenerated conversion function.
-func Convert_v1alpha4_AddressPair_To_v1alpha5_AddressPair(in *AddressPair, out *v1alpha5.AddressPair, s conversion.Scope) error {
-	return autoConvert_v1alpha4_AddressPair_To_v1alpha5_AddressPair(in, out, s)
+// Convert_v1alpha4_AddressPair_To_v1alpha6_AddressPair is an autogenerated conversion function.
+func Convert_v1alpha4_AddressPair_To_v1alpha6_AddressPair(in *AddressPair, out *v1alpha6.AddressPair, s conversion.Scope) error {
+	return autoConvert_v1alpha4_AddressPair_To_v1alpha6_AddressPair(in, out, s)
 }
 
-func autoConvert_v1alpha5_AddressPair_To_v1alpha4_AddressPair(in *v1alpha5.AddressPair, out *AddressPair, s conversion.Scope) error {
+func autoConvert_v1alpha6_AddressPair_To_v1alpha4_AddressPair(in *v1alpha6.AddressPair, out *AddressPair, s conversion.Scope) error {
 	out.IPAddress = in.IPAddress
 	out.MACAddress = in.MACAddress
 	return nil
 }
 
-// Convert_v1alpha5_AddressPair_To_v1alpha4_AddressPair is an autogenerated conversion function.
-func Convert_v1alpha5_AddressPair_To_v1alpha4_AddressPair(in *v1alpha5.AddressPair, out *AddressPair, s conversion.Scope) error {
-	return autoConvert_v1alpha5_AddressPair_To_v1alpha4_AddressPair(in, out, s)
+// Convert_v1alpha6_AddressPair_To_v1alpha4_AddressPair is an autogenerated conversion function.
+func Convert_v1alpha6_AddressPair_To_v1alpha4_AddressPair(in *v1alpha6.AddressPair, out *AddressPair, s conversion.Scope) error {
+	return autoConvert_v1alpha6_AddressPair_To_v1alpha4_AddressPair(in, out, s)
 }
 
-func autoConvert_v1alpha4_Bastion_To_v1alpha5_Bastion(in *Bastion, out *v1alpha5.Bastion, s conversion.Scope) error {
+func autoConvert_v1alpha4_Bastion_To_v1alpha6_Bastion(in *Bastion, out *v1alpha6.Bastion, s conversion.Scope) error {
 	out.Enabled = in.Enabled
-	if err := Convert_v1alpha4_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(&in.Instance, &out.Instance, s); err != nil {
+	if err := Convert_v1alpha4_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(&in.Instance, &out.Instance, s); err != nil {
 		return err
 	}
 	out.AvailabilityZone = in.AvailabilityZone
 	return nil
 }
 
-// Convert_v1alpha4_Bastion_To_v1alpha5_Bastion is an autogenerated conversion function.
-func Convert_v1alpha4_Bastion_To_v1alpha5_Bastion(in *Bastion, out *v1alpha5.Bastion, s conversion.Scope) error {
-	return autoConvert_v1alpha4_Bastion_To_v1alpha5_Bastion(in, out, s)
+// Convert_v1alpha4_Bastion_To_v1alpha6_Bastion is an autogenerated conversion function.
+func Convert_v1alpha4_Bastion_To_v1alpha6_Bastion(in *Bastion, out *v1alpha6.Bastion, s conversion.Scope) error {
+	return autoConvert_v1alpha4_Bastion_To_v1alpha6_Bastion(in, out, s)
 }
 
-func autoConvert_v1alpha5_Bastion_To_v1alpha4_Bastion(in *v1alpha5.Bastion, out *Bastion, s conversion.Scope) error {
+func autoConvert_v1alpha6_Bastion_To_v1alpha4_Bastion(in *v1alpha6.Bastion, out *Bastion, s conversion.Scope) error {
 	out.Enabled = in.Enabled
-	if err := Convert_v1alpha5_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(&in.Instance, &out.Instance, s); err != nil {
+	if err := Convert_v1alpha6_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(&in.Instance, &out.Instance, s); err != nil {
 		return err
 	}
 	out.AvailabilityZone = in.AvailabilityZone
 	return nil
 }
 
-// Convert_v1alpha5_Bastion_To_v1alpha4_Bastion is an autogenerated conversion function.
-func Convert_v1alpha5_Bastion_To_v1alpha4_Bastion(in *v1alpha5.Bastion, out *Bastion, s conversion.Scope) error {
-	return autoConvert_v1alpha5_Bastion_To_v1alpha4_Bastion(in, out, s)
+// Convert_v1alpha6_Bastion_To_v1alpha4_Bastion is an autogenerated conversion function.
+func Convert_v1alpha6_Bastion_To_v1alpha4_Bastion(in *v1alpha6.Bastion, out *Bastion, s conversion.Scope) error {
+	return autoConvert_v1alpha6_Bastion_To_v1alpha4_Bastion(in, out, s)
 }
 
-func autoConvert_v1alpha4_ExternalRouterIPParam_To_v1alpha5_ExternalRouterIPParam(in *ExternalRouterIPParam, out *v1alpha5.ExternalRouterIPParam, s conversion.Scope) error {
+func autoConvert_v1alpha4_ExternalRouterIPParam_To_v1alpha6_ExternalRouterIPParam(in *ExternalRouterIPParam, out *v1alpha6.ExternalRouterIPParam, s conversion.Scope) error {
 	out.FixedIP = in.FixedIP
-	if err := Convert_v1alpha4_SubnetParam_To_v1alpha5_SubnetParam(&in.Subnet, &out.Subnet, s); err != nil {
+	if err := Convert_v1alpha4_SubnetParam_To_v1alpha6_SubnetParam(&in.Subnet, &out.Subnet, s); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Convert_v1alpha4_ExternalRouterIPParam_To_v1alpha5_ExternalRouterIPParam is an autogenerated conversion function.
-func Convert_v1alpha4_ExternalRouterIPParam_To_v1alpha5_ExternalRouterIPParam(in *ExternalRouterIPParam, out *v1alpha5.ExternalRouterIPParam, s conversion.Scope) error {
-	return autoConvert_v1alpha4_ExternalRouterIPParam_To_v1alpha5_ExternalRouterIPParam(in, out, s)
+// Convert_v1alpha4_ExternalRouterIPParam_To_v1alpha6_ExternalRouterIPParam is an autogenerated conversion function.
+func Convert_v1alpha4_ExternalRouterIPParam_To_v1alpha6_ExternalRouterIPParam(in *ExternalRouterIPParam, out *v1alpha6.ExternalRouterIPParam, s conversion.Scope) error {
+	return autoConvert_v1alpha4_ExternalRouterIPParam_To_v1alpha6_ExternalRouterIPParam(in, out, s)
 }
 
-func autoConvert_v1alpha5_ExternalRouterIPParam_To_v1alpha4_ExternalRouterIPParam(in *v1alpha5.ExternalRouterIPParam, out *ExternalRouterIPParam, s conversion.Scope) error {
+func autoConvert_v1alpha6_ExternalRouterIPParam_To_v1alpha4_ExternalRouterIPParam(in *v1alpha6.ExternalRouterIPParam, out *ExternalRouterIPParam, s conversion.Scope) error {
 	out.FixedIP = in.FixedIP
-	if err := Convert_v1alpha5_SubnetParam_To_v1alpha4_SubnetParam(&in.Subnet, &out.Subnet, s); err != nil {
+	if err := Convert_v1alpha6_SubnetParam_To_v1alpha4_SubnetParam(&in.Subnet, &out.Subnet, s); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Convert_v1alpha5_ExternalRouterIPParam_To_v1alpha4_ExternalRouterIPParam is an autogenerated conversion function.
-func Convert_v1alpha5_ExternalRouterIPParam_To_v1alpha4_ExternalRouterIPParam(in *v1alpha5.ExternalRouterIPParam, out *ExternalRouterIPParam, s conversion.Scope) error {
-	return autoConvert_v1alpha5_ExternalRouterIPParam_To_v1alpha4_ExternalRouterIPParam(in, out, s)
+// Convert_v1alpha6_ExternalRouterIPParam_To_v1alpha4_ExternalRouterIPParam is an autogenerated conversion function.
+func Convert_v1alpha6_ExternalRouterIPParam_To_v1alpha4_ExternalRouterIPParam(in *v1alpha6.ExternalRouterIPParam, out *ExternalRouterIPParam, s conversion.Scope) error {
+	return autoConvert_v1alpha6_ExternalRouterIPParam_To_v1alpha4_ExternalRouterIPParam(in, out, s)
 }
 
-func autoConvert_v1alpha4_FixedIP_To_v1alpha5_FixedIP(in *FixedIP, out *v1alpha5.FixedIP, s conversion.Scope) error {
+func autoConvert_v1alpha4_FixedIP_To_v1alpha6_FixedIP(in *FixedIP, out *v1alpha6.FixedIP, s conversion.Scope) error {
 	// WARNING: in.SubnetID requires manual conversion: does not exist in peer-type
 	out.IPAddress = in.IPAddress
 	return nil
 }
 
-func autoConvert_v1alpha5_FixedIP_To_v1alpha4_FixedIP(in *v1alpha5.FixedIP, out *FixedIP, s conversion.Scope) error {
+func autoConvert_v1alpha6_FixedIP_To_v1alpha4_FixedIP(in *v1alpha6.FixedIP, out *FixedIP, s conversion.Scope) error {
 	// WARNING: in.Subnet requires manual conversion: does not exist in peer-type
 	out.IPAddress = in.IPAddress
 	return nil
 }
 
-func autoConvert_v1alpha4_Instance_To_v1alpha5_Instance(in *Instance, out *v1alpha5.Instance, s conversion.Scope) error {
+func autoConvert_v1alpha4_Instance_To_v1alpha6_Instance(in *Instance, out *v1alpha6.Instance, s conversion.Scope) error {
 	out.ID = in.ID
 	out.Name = in.Name
 	out.Trunk = in.Trunk
@@ -519,8 +519,8 @@ func autoConvert_v1alpha4_Instance_To_v1alpha5_Instance(in *Instance, out *v1alp
 	out.SecurityGroups = (*[]string)(unsafe.Pointer(in.SecurityGroups))
 	if in.Networks != nil {
 		in, out := &in.Networks, &out.Networks
-		*out = new([]v1alpha5.Network)
-		if err := Convert_Slice_v1alpha4_Network_To_Slice_v1alpha5_Network(*in, *out, s); err != nil {
+		*out = new([]v1alpha6.Network)
+		if err := Convert_Slice_v1alpha4_Network_To_Slice_v1alpha6_Network(*in, *out, s); err != nil {
 			return err
 		}
 	} else {
@@ -536,21 +536,21 @@ func autoConvert_v1alpha4_Instance_To_v1alpha5_Instance(in *Instance, out *v1alp
 	out.ConfigDrive = (*bool)(unsafe.Pointer(in.ConfigDrive))
 	if in.RootVolume != nil {
 		in, out := &in.RootVolume, &out.RootVolume
-		*out = new(v1alpha5.RootVolume)
-		if err := Convert_v1alpha4_RootVolume_To_v1alpha5_RootVolume(*in, *out, s); err != nil {
+		*out = new(v1alpha6.RootVolume)
+		if err := Convert_v1alpha4_RootVolume_To_v1alpha6_RootVolume(*in, *out, s); err != nil {
 			return err
 		}
 	} else {
 		out.RootVolume = nil
 	}
 	out.ServerGroupID = in.ServerGroupID
-	out.State = v1alpha5.InstanceState(in.State)
+	out.State = v1alpha6.InstanceState(in.State)
 	out.IP = in.IP
 	out.FloatingIP = in.FloatingIP
 	return nil
 }
 
-func autoConvert_v1alpha5_Instance_To_v1alpha4_Instance(in *v1alpha5.Instance, out *Instance, s conversion.Scope) error {
+func autoConvert_v1alpha6_Instance_To_v1alpha4_Instance(in *v1alpha6.Instance, out *Instance, s conversion.Scope) error {
 	out.ID = in.ID
 	out.Name = in.Name
 	out.Trunk = in.Trunk
@@ -559,7 +559,7 @@ func autoConvert_v1alpha5_Instance_To_v1alpha4_Instance(in *v1alpha5.Instance, o
 	if in.Networks != nil {
 		in, out := &in.Networks, &out.Networks
 		*out = new([]Network)
-		if err := Convert_Slice_v1alpha5_Network_To_Slice_v1alpha4_Network(*in, *out, s); err != nil {
+		if err := Convert_Slice_v1alpha6_Network_To_Slice_v1alpha4_Network(*in, *out, s); err != nil {
 			return err
 		}
 	} else {
@@ -577,7 +577,7 @@ func autoConvert_v1alpha5_Instance_To_v1alpha4_Instance(in *v1alpha5.Instance, o
 	if in.RootVolume != nil {
 		in, out := &in.RootVolume, &out.RootVolume
 		*out = new(RootVolume)
-		if err := Convert_v1alpha5_RootVolume_To_v1alpha4_RootVolume(*in, *out, s); err != nil {
+		if err := Convert_v1alpha6_RootVolume_To_v1alpha4_RootVolume(*in, *out, s); err != nil {
 			return err
 		}
 	} else {
@@ -590,7 +590,7 @@ func autoConvert_v1alpha5_Instance_To_v1alpha4_Instance(in *v1alpha5.Instance, o
 	return nil
 }
 
-func autoConvert_v1alpha4_LoadBalancer_To_v1alpha5_LoadBalancer(in *LoadBalancer, out *v1alpha5.LoadBalancer, s conversion.Scope) error {
+func autoConvert_v1alpha4_LoadBalancer_To_v1alpha6_LoadBalancer(in *LoadBalancer, out *v1alpha6.LoadBalancer, s conversion.Scope) error {
 	out.Name = in.Name
 	out.ID = in.ID
 	out.IP = in.IP
@@ -598,12 +598,12 @@ func autoConvert_v1alpha4_LoadBalancer_To_v1alpha5_LoadBalancer(in *LoadBalancer
 	return nil
 }
 
-// Convert_v1alpha4_LoadBalancer_To_v1alpha5_LoadBalancer is an autogenerated conversion function.
-func Convert_v1alpha4_LoadBalancer_To_v1alpha5_LoadBalancer(in *LoadBalancer, out *v1alpha5.LoadBalancer, s conversion.Scope) error {
-	return autoConvert_v1alpha4_LoadBalancer_To_v1alpha5_LoadBalancer(in, out, s)
+// Convert_v1alpha4_LoadBalancer_To_v1alpha6_LoadBalancer is an autogenerated conversion function.
+func Convert_v1alpha4_LoadBalancer_To_v1alpha6_LoadBalancer(in *LoadBalancer, out *v1alpha6.LoadBalancer, s conversion.Scope) error {
+	return autoConvert_v1alpha4_LoadBalancer_To_v1alpha6_LoadBalancer(in, out, s)
 }
 
-func autoConvert_v1alpha5_LoadBalancer_To_v1alpha4_LoadBalancer(in *v1alpha5.LoadBalancer, out *LoadBalancer, s conversion.Scope) error {
+func autoConvert_v1alpha6_LoadBalancer_To_v1alpha4_LoadBalancer(in *v1alpha6.LoadBalancer, out *LoadBalancer, s conversion.Scope) error {
 	out.Name = in.Name
 	out.ID = in.ID
 	out.IP = in.IP
@@ -612,15 +612,15 @@ func autoConvert_v1alpha5_LoadBalancer_To_v1alpha4_LoadBalancer(in *v1alpha5.Loa
 	return nil
 }
 
-func autoConvert_v1alpha4_Network_To_v1alpha5_Network(in *Network, out *v1alpha5.Network, s conversion.Scope) error {
+func autoConvert_v1alpha4_Network_To_v1alpha6_Network(in *Network, out *v1alpha6.Network, s conversion.Scope) error {
 	out.Name = in.Name
 	out.ID = in.ID
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
-	out.Subnet = (*v1alpha5.Subnet)(unsafe.Pointer(in.Subnet))
+	out.Subnet = (*v1alpha6.Subnet)(unsafe.Pointer(in.Subnet))
 	if in.PortOpts != nil {
 		in, out := &in.PortOpts, &out.PortOpts
-		*out = new(v1alpha5.PortOpts)
-		if err := Convert_v1alpha4_PortOpts_To_v1alpha5_PortOpts(*in, *out, s); err != nil {
+		*out = new(v1alpha6.PortOpts)
+		if err := Convert_v1alpha4_PortOpts_To_v1alpha6_PortOpts(*in, *out, s); err != nil {
 			return err
 		}
 	} else {
@@ -628,8 +628,8 @@ func autoConvert_v1alpha4_Network_To_v1alpha5_Network(in *Network, out *v1alpha5
 	}
 	if in.Router != nil {
 		in, out := &in.Router, &out.Router
-		*out = new(v1alpha5.Router)
-		if err := Convert_v1alpha4_Router_To_v1alpha5_Router(*in, *out, s); err != nil {
+		*out = new(v1alpha6.Router)
+		if err := Convert_v1alpha4_Router_To_v1alpha6_Router(*in, *out, s); err != nil {
 			return err
 		}
 	} else {
@@ -637,8 +637,8 @@ func autoConvert_v1alpha4_Network_To_v1alpha5_Network(in *Network, out *v1alpha5
 	}
 	if in.APIServerLoadBalancer != nil {
 		in, out := &in.APIServerLoadBalancer, &out.APIServerLoadBalancer
-		*out = new(v1alpha5.LoadBalancer)
-		if err := Convert_v1alpha4_LoadBalancer_To_v1alpha5_LoadBalancer(*in, *out, s); err != nil {
+		*out = new(v1alpha6.LoadBalancer)
+		if err := Convert_v1alpha4_LoadBalancer_To_v1alpha6_LoadBalancer(*in, *out, s); err != nil {
 			return err
 		}
 	} else {
@@ -647,12 +647,12 @@ func autoConvert_v1alpha4_Network_To_v1alpha5_Network(in *Network, out *v1alpha5
 	return nil
 }
 
-// Convert_v1alpha4_Network_To_v1alpha5_Network is an autogenerated conversion function.
-func Convert_v1alpha4_Network_To_v1alpha5_Network(in *Network, out *v1alpha5.Network, s conversion.Scope) error {
-	return autoConvert_v1alpha4_Network_To_v1alpha5_Network(in, out, s)
+// Convert_v1alpha4_Network_To_v1alpha6_Network is an autogenerated conversion function.
+func Convert_v1alpha4_Network_To_v1alpha6_Network(in *Network, out *v1alpha6.Network, s conversion.Scope) error {
+	return autoConvert_v1alpha4_Network_To_v1alpha6_Network(in, out, s)
 }
 
-func autoConvert_v1alpha5_Network_To_v1alpha4_Network(in *v1alpha5.Network, out *Network, s conversion.Scope) error {
+func autoConvert_v1alpha6_Network_To_v1alpha4_Network(in *v1alpha6.Network, out *Network, s conversion.Scope) error {
 	out.Name = in.Name
 	out.ID = in.ID
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
@@ -660,7 +660,7 @@ func autoConvert_v1alpha5_Network_To_v1alpha4_Network(in *v1alpha5.Network, out 
 	if in.PortOpts != nil {
 		in, out := &in.PortOpts, &out.PortOpts
 		*out = new(PortOpts)
-		if err := Convert_v1alpha5_PortOpts_To_v1alpha4_PortOpts(*in, *out, s); err != nil {
+		if err := Convert_v1alpha6_PortOpts_To_v1alpha4_PortOpts(*in, *out, s); err != nil {
 			return err
 		}
 	} else {
@@ -669,7 +669,7 @@ func autoConvert_v1alpha5_Network_To_v1alpha4_Network(in *v1alpha5.Network, out 
 	if in.Router != nil {
 		in, out := &in.Router, &out.Router
 		*out = new(Router)
-		if err := Convert_v1alpha5_Router_To_v1alpha4_Router(*in, *out, s); err != nil {
+		if err := Convert_v1alpha6_Router_To_v1alpha4_Router(*in, *out, s); err != nil {
 			return err
 		}
 	} else {
@@ -678,7 +678,7 @@ func autoConvert_v1alpha5_Network_To_v1alpha4_Network(in *v1alpha5.Network, out 
 	if in.APIServerLoadBalancer != nil {
 		in, out := &in.APIServerLoadBalancer, &out.APIServerLoadBalancer
 		*out = new(LoadBalancer)
-		if err := Convert_v1alpha5_LoadBalancer_To_v1alpha4_LoadBalancer(*in, *out, s); err != nil {
+		if err := Convert_v1alpha6_LoadBalancer_To_v1alpha4_LoadBalancer(*in, *out, s); err != nil {
 			return err
 		}
 	} else {
@@ -687,22 +687,22 @@ func autoConvert_v1alpha5_Network_To_v1alpha4_Network(in *v1alpha5.Network, out 
 	return nil
 }
 
-// Convert_v1alpha5_Network_To_v1alpha4_Network is an autogenerated conversion function.
-func Convert_v1alpha5_Network_To_v1alpha4_Network(in *v1alpha5.Network, out *Network, s conversion.Scope) error {
-	return autoConvert_v1alpha5_Network_To_v1alpha4_Network(in, out, s)
+// Convert_v1alpha6_Network_To_v1alpha4_Network is an autogenerated conversion function.
+func Convert_v1alpha6_Network_To_v1alpha4_Network(in *v1alpha6.Network, out *Network, s conversion.Scope) error {
+	return autoConvert_v1alpha6_Network_To_v1alpha4_Network(in, out, s)
 }
 
-func autoConvert_v1alpha4_NetworkParam_To_v1alpha5_NetworkParam(in *NetworkParam, out *v1alpha5.NetworkParam, s conversion.Scope) error {
+func autoConvert_v1alpha4_NetworkParam_To_v1alpha6_NetworkParam(in *NetworkParam, out *v1alpha6.NetworkParam, s conversion.Scope) error {
 	out.UUID = in.UUID
 	out.FixedIP = in.FixedIP
-	if err := Convert_v1alpha4_Filter_To_v1alpha5_NetworkFilter(&in.Filter, &out.Filter, s); err != nil {
+	if err := Convert_v1alpha4_Filter_To_v1alpha6_NetworkFilter(&in.Filter, &out.Filter, s); err != nil {
 		return err
 	}
 	if in.Subnets != nil {
 		in, out := &in.Subnets, &out.Subnets
-		*out = make([]v1alpha5.SubnetParam, len(*in))
+		*out = make([]v1alpha6.SubnetParam, len(*in))
 		for i := range *in {
-			if err := Convert_v1alpha4_SubnetParam_To_v1alpha5_SubnetParam(&(*in)[i], &(*out)[i], s); err != nil {
+			if err := Convert_v1alpha4_SubnetParam_To_v1alpha6_SubnetParam(&(*in)[i], &(*out)[i], s); err != nil {
 				return err
 			}
 		}
@@ -712,22 +712,22 @@ func autoConvert_v1alpha4_NetworkParam_To_v1alpha5_NetworkParam(in *NetworkParam
 	return nil
 }
 
-// Convert_v1alpha4_NetworkParam_To_v1alpha5_NetworkParam is an autogenerated conversion function.
-func Convert_v1alpha4_NetworkParam_To_v1alpha5_NetworkParam(in *NetworkParam, out *v1alpha5.NetworkParam, s conversion.Scope) error {
-	return autoConvert_v1alpha4_NetworkParam_To_v1alpha5_NetworkParam(in, out, s)
+// Convert_v1alpha4_NetworkParam_To_v1alpha6_NetworkParam is an autogenerated conversion function.
+func Convert_v1alpha4_NetworkParam_To_v1alpha6_NetworkParam(in *NetworkParam, out *v1alpha6.NetworkParam, s conversion.Scope) error {
+	return autoConvert_v1alpha4_NetworkParam_To_v1alpha6_NetworkParam(in, out, s)
 }
 
-func autoConvert_v1alpha5_NetworkParam_To_v1alpha4_NetworkParam(in *v1alpha5.NetworkParam, out *NetworkParam, s conversion.Scope) error {
+func autoConvert_v1alpha6_NetworkParam_To_v1alpha4_NetworkParam(in *v1alpha6.NetworkParam, out *NetworkParam, s conversion.Scope) error {
 	out.UUID = in.UUID
 	out.FixedIP = in.FixedIP
-	if err := Convert_v1alpha5_NetworkFilter_To_v1alpha4_Filter(&in.Filter, &out.Filter, s); err != nil {
+	if err := Convert_v1alpha6_NetworkFilter_To_v1alpha4_Filter(&in.Filter, &out.Filter, s); err != nil {
 		return err
 	}
 	if in.Subnets != nil {
 		in, out := &in.Subnets, &out.Subnets
 		*out = make([]SubnetParam, len(*in))
 		for i := range *in {
-			if err := Convert_v1alpha5_SubnetParam_To_v1alpha4_SubnetParam(&(*in)[i], &(*out)[i], s); err != nil {
+			if err := Convert_v1alpha6_SubnetParam_To_v1alpha4_SubnetParam(&(*in)[i], &(*out)[i], s); err != nil {
 				return err
 			}
 		}
@@ -737,50 +737,50 @@ func autoConvert_v1alpha5_NetworkParam_To_v1alpha4_NetworkParam(in *v1alpha5.Net
 	return nil
 }
 
-// Convert_v1alpha5_NetworkParam_To_v1alpha4_NetworkParam is an autogenerated conversion function.
-func Convert_v1alpha5_NetworkParam_To_v1alpha4_NetworkParam(in *v1alpha5.NetworkParam, out *NetworkParam, s conversion.Scope) error {
-	return autoConvert_v1alpha5_NetworkParam_To_v1alpha4_NetworkParam(in, out, s)
+// Convert_v1alpha6_NetworkParam_To_v1alpha4_NetworkParam is an autogenerated conversion function.
+func Convert_v1alpha6_NetworkParam_To_v1alpha4_NetworkParam(in *v1alpha6.NetworkParam, out *NetworkParam, s conversion.Scope) error {
+	return autoConvert_v1alpha6_NetworkParam_To_v1alpha4_NetworkParam(in, out, s)
 }
 
-func autoConvert_v1alpha4_OpenStackCluster_To_v1alpha5_OpenStackCluster(in *OpenStackCluster, out *v1alpha5.OpenStackCluster, s conversion.Scope) error {
+func autoConvert_v1alpha4_OpenStackCluster_To_v1alpha6_OpenStackCluster(in *OpenStackCluster, out *v1alpha6.OpenStackCluster, s conversion.Scope) error {
 	out.ObjectMeta = in.ObjectMeta
-	if err := Convert_v1alpha4_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(&in.Spec, &out.Spec, s); err != nil {
+	if err := Convert_v1alpha4_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
-	if err := Convert_v1alpha4_OpenStackClusterStatus_To_v1alpha5_OpenStackClusterStatus(&in.Status, &out.Status, s); err != nil {
+	if err := Convert_v1alpha4_OpenStackClusterStatus_To_v1alpha6_OpenStackClusterStatus(&in.Status, &out.Status, s); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Convert_v1alpha4_OpenStackCluster_To_v1alpha5_OpenStackCluster is an autogenerated conversion function.
-func Convert_v1alpha4_OpenStackCluster_To_v1alpha5_OpenStackCluster(in *OpenStackCluster, out *v1alpha5.OpenStackCluster, s conversion.Scope) error {
-	return autoConvert_v1alpha4_OpenStackCluster_To_v1alpha5_OpenStackCluster(in, out, s)
+// Convert_v1alpha4_OpenStackCluster_To_v1alpha6_OpenStackCluster is an autogenerated conversion function.
+func Convert_v1alpha4_OpenStackCluster_To_v1alpha6_OpenStackCluster(in *OpenStackCluster, out *v1alpha6.OpenStackCluster, s conversion.Scope) error {
+	return autoConvert_v1alpha4_OpenStackCluster_To_v1alpha6_OpenStackCluster(in, out, s)
 }
 
-func autoConvert_v1alpha5_OpenStackCluster_To_v1alpha4_OpenStackCluster(in *v1alpha5.OpenStackCluster, out *OpenStackCluster, s conversion.Scope) error {
+func autoConvert_v1alpha6_OpenStackCluster_To_v1alpha4_OpenStackCluster(in *v1alpha6.OpenStackCluster, out *OpenStackCluster, s conversion.Scope) error {
 	out.ObjectMeta = in.ObjectMeta
-	if err := Convert_v1alpha5_OpenStackClusterSpec_To_v1alpha4_OpenStackClusterSpec(&in.Spec, &out.Spec, s); err != nil {
+	if err := Convert_v1alpha6_OpenStackClusterSpec_To_v1alpha4_OpenStackClusterSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
-	if err := Convert_v1alpha5_OpenStackClusterStatus_To_v1alpha4_OpenStackClusterStatus(&in.Status, &out.Status, s); err != nil {
+	if err := Convert_v1alpha6_OpenStackClusterStatus_To_v1alpha4_OpenStackClusterStatus(&in.Status, &out.Status, s); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Convert_v1alpha5_OpenStackCluster_To_v1alpha4_OpenStackCluster is an autogenerated conversion function.
-func Convert_v1alpha5_OpenStackCluster_To_v1alpha4_OpenStackCluster(in *v1alpha5.OpenStackCluster, out *OpenStackCluster, s conversion.Scope) error {
-	return autoConvert_v1alpha5_OpenStackCluster_To_v1alpha4_OpenStackCluster(in, out, s)
+// Convert_v1alpha6_OpenStackCluster_To_v1alpha4_OpenStackCluster is an autogenerated conversion function.
+func Convert_v1alpha6_OpenStackCluster_To_v1alpha4_OpenStackCluster(in *v1alpha6.OpenStackCluster, out *OpenStackCluster, s conversion.Scope) error {
+	return autoConvert_v1alpha6_OpenStackCluster_To_v1alpha4_OpenStackCluster(in, out, s)
 }
 
-func autoConvert_v1alpha4_OpenStackClusterList_To_v1alpha5_OpenStackClusterList(in *OpenStackClusterList, out *v1alpha5.OpenStackClusterList, s conversion.Scope) error {
+func autoConvert_v1alpha4_OpenStackClusterList_To_v1alpha6_OpenStackClusterList(in *OpenStackClusterList, out *v1alpha6.OpenStackClusterList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
-		*out = make([]v1alpha5.OpenStackCluster, len(*in))
+		*out = make([]v1alpha6.OpenStackCluster, len(*in))
 		for i := range *in {
-			if err := Convert_v1alpha4_OpenStackCluster_To_v1alpha5_OpenStackCluster(&(*in)[i], &(*out)[i], s); err != nil {
+			if err := Convert_v1alpha4_OpenStackCluster_To_v1alpha6_OpenStackCluster(&(*in)[i], &(*out)[i], s); err != nil {
 				return err
 			}
 		}
@@ -790,18 +790,18 @@ func autoConvert_v1alpha4_OpenStackClusterList_To_v1alpha5_OpenStackClusterList(
 	return nil
 }
 
-// Convert_v1alpha4_OpenStackClusterList_To_v1alpha5_OpenStackClusterList is an autogenerated conversion function.
-func Convert_v1alpha4_OpenStackClusterList_To_v1alpha5_OpenStackClusterList(in *OpenStackClusterList, out *v1alpha5.OpenStackClusterList, s conversion.Scope) error {
-	return autoConvert_v1alpha4_OpenStackClusterList_To_v1alpha5_OpenStackClusterList(in, out, s)
+// Convert_v1alpha4_OpenStackClusterList_To_v1alpha6_OpenStackClusterList is an autogenerated conversion function.
+func Convert_v1alpha4_OpenStackClusterList_To_v1alpha6_OpenStackClusterList(in *OpenStackClusterList, out *v1alpha6.OpenStackClusterList, s conversion.Scope) error {
+	return autoConvert_v1alpha4_OpenStackClusterList_To_v1alpha6_OpenStackClusterList(in, out, s)
 }
 
-func autoConvert_v1alpha5_OpenStackClusterList_To_v1alpha4_OpenStackClusterList(in *v1alpha5.OpenStackClusterList, out *OpenStackClusterList, s conversion.Scope) error {
+func autoConvert_v1alpha6_OpenStackClusterList_To_v1alpha4_OpenStackClusterList(in *v1alpha6.OpenStackClusterList, out *OpenStackClusterList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]OpenStackCluster, len(*in))
 		for i := range *in {
-			if err := Convert_v1alpha5_OpenStackCluster_To_v1alpha4_OpenStackCluster(&(*in)[i], &(*out)[i], s); err != nil {
+			if err := Convert_v1alpha6_OpenStackCluster_To_v1alpha4_OpenStackCluster(&(*in)[i], &(*out)[i], s); err != nil {
 				return err
 			}
 		}
@@ -811,26 +811,26 @@ func autoConvert_v1alpha5_OpenStackClusterList_To_v1alpha4_OpenStackClusterList(
 	return nil
 }
 
-// Convert_v1alpha5_OpenStackClusterList_To_v1alpha4_OpenStackClusterList is an autogenerated conversion function.
-func Convert_v1alpha5_OpenStackClusterList_To_v1alpha4_OpenStackClusterList(in *v1alpha5.OpenStackClusterList, out *OpenStackClusterList, s conversion.Scope) error {
-	return autoConvert_v1alpha5_OpenStackClusterList_To_v1alpha4_OpenStackClusterList(in, out, s)
+// Convert_v1alpha6_OpenStackClusterList_To_v1alpha4_OpenStackClusterList is an autogenerated conversion function.
+func Convert_v1alpha6_OpenStackClusterList_To_v1alpha4_OpenStackClusterList(in *v1alpha6.OpenStackClusterList, out *OpenStackClusterList, s conversion.Scope) error {
+	return autoConvert_v1alpha6_OpenStackClusterList_To_v1alpha4_OpenStackClusterList(in, out, s)
 }
 
-func autoConvert_v1alpha4_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(in *OpenStackClusterSpec, out *v1alpha5.OpenStackClusterSpec, s conversion.Scope) error {
+func autoConvert_v1alpha4_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in *OpenStackClusterSpec, out *v1alpha6.OpenStackClusterSpec, s conversion.Scope) error {
 	out.CloudName = in.CloudName
 	out.NodeCIDR = in.NodeCIDR
-	if err := Convert_v1alpha4_Filter_To_v1alpha5_NetworkFilter(&in.Network, &out.Network, s); err != nil {
+	if err := Convert_v1alpha4_Filter_To_v1alpha6_NetworkFilter(&in.Network, &out.Network, s); err != nil {
 		return err
 	}
-	if err := Convert_v1alpha4_SubnetFilter_To_v1alpha5_SubnetFilter(&in.Subnet, &out.Subnet, s); err != nil {
+	if err := Convert_v1alpha4_SubnetFilter_To_v1alpha6_SubnetFilter(&in.Subnet, &out.Subnet, s); err != nil {
 		return err
 	}
 	out.DNSNameservers = *(*[]string)(unsafe.Pointer(&in.DNSNameservers))
 	if in.ExternalRouterIPs != nil {
 		in, out := &in.ExternalRouterIPs, &out.ExternalRouterIPs
-		*out = make([]v1alpha5.ExternalRouterIPParam, len(*in))
+		*out = make([]v1alpha6.ExternalRouterIPParam, len(*in))
 		for i := range *in {
-			if err := Convert_v1alpha4_ExternalRouterIPParam_To_v1alpha5_ExternalRouterIPParam(&(*in)[i], &(*out)[i], s); err != nil {
+			if err := Convert_v1alpha4_ExternalRouterIPParam_To_v1alpha6_ExternalRouterIPParam(&(*in)[i], &(*out)[i], s); err != nil {
 				return err
 			}
 		}
@@ -852,24 +852,24 @@ func autoConvert_v1alpha4_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(
 	out.ControlPlaneAvailabilityZones = *(*[]string)(unsafe.Pointer(&in.ControlPlaneAvailabilityZones))
 	if in.Bastion != nil {
 		in, out := &in.Bastion, &out.Bastion
-		*out = new(v1alpha5.Bastion)
-		if err := Convert_v1alpha4_Bastion_To_v1alpha5_Bastion(*in, *out, s); err != nil {
+		*out = new(v1alpha6.Bastion)
+		if err := Convert_v1alpha4_Bastion_To_v1alpha6_Bastion(*in, *out, s); err != nil {
 			return err
 		}
 	} else {
 		out.Bastion = nil
 	}
-	out.IdentityRef = (*v1alpha5.OpenStackIdentityReference)(unsafe.Pointer(in.IdentityRef))
+	out.IdentityRef = (*v1alpha6.OpenStackIdentityReference)(unsafe.Pointer(in.IdentityRef))
 	return nil
 }
 
-func autoConvert_v1alpha5_OpenStackClusterSpec_To_v1alpha4_OpenStackClusterSpec(in *v1alpha5.OpenStackClusterSpec, out *OpenStackClusterSpec, s conversion.Scope) error {
+func autoConvert_v1alpha6_OpenStackClusterSpec_To_v1alpha4_OpenStackClusterSpec(in *v1alpha6.OpenStackClusterSpec, out *OpenStackClusterSpec, s conversion.Scope) error {
 	out.CloudName = in.CloudName
 	out.NodeCIDR = in.NodeCIDR
-	if err := Convert_v1alpha5_NetworkFilter_To_v1alpha4_Filter(&in.Network, &out.Network, s); err != nil {
+	if err := Convert_v1alpha6_NetworkFilter_To_v1alpha4_Filter(&in.Network, &out.Network, s); err != nil {
 		return err
 	}
-	if err := Convert_v1alpha5_SubnetFilter_To_v1alpha4_SubnetFilter(&in.Subnet, &out.Subnet, s); err != nil {
+	if err := Convert_v1alpha6_SubnetFilter_To_v1alpha4_SubnetFilter(&in.Subnet, &out.Subnet, s); err != nil {
 		return err
 	}
 	out.DNSNameservers = *(*[]string)(unsafe.Pointer(&in.DNSNameservers))
@@ -877,7 +877,7 @@ func autoConvert_v1alpha5_OpenStackClusterSpec_To_v1alpha4_OpenStackClusterSpec(
 		in, out := &in.ExternalRouterIPs, &out.ExternalRouterIPs
 		*out = make([]ExternalRouterIPParam, len(*in))
 		for i := range *in {
-			if err := Convert_v1alpha5_ExternalRouterIPParam_To_v1alpha4_ExternalRouterIPParam(&(*in)[i], &(*out)[i], s); err != nil {
+			if err := Convert_v1alpha6_ExternalRouterIPParam_To_v1alpha4_ExternalRouterIPParam(&(*in)[i], &(*out)[i], s); err != nil {
 				return err
 			}
 		}
@@ -899,7 +899,7 @@ func autoConvert_v1alpha5_OpenStackClusterSpec_To_v1alpha4_OpenStackClusterSpec(
 	if in.Bastion != nil {
 		in, out := &in.Bastion, &out.Bastion
 		*out = new(Bastion)
-		if err := Convert_v1alpha5_Bastion_To_v1alpha4_Bastion(*in, *out, s); err != nil {
+		if err := Convert_v1alpha6_Bastion_To_v1alpha4_Bastion(*in, *out, s); err != nil {
 			return err
 		}
 	} else {
@@ -909,12 +909,12 @@ func autoConvert_v1alpha5_OpenStackClusterSpec_To_v1alpha4_OpenStackClusterSpec(
 	return nil
 }
 
-func autoConvert_v1alpha4_OpenStackClusterStatus_To_v1alpha5_OpenStackClusterStatus(in *OpenStackClusterStatus, out *v1alpha5.OpenStackClusterStatus, s conversion.Scope) error {
+func autoConvert_v1alpha4_OpenStackClusterStatus_To_v1alpha6_OpenStackClusterStatus(in *OpenStackClusterStatus, out *v1alpha6.OpenStackClusterStatus, s conversion.Scope) error {
 	out.Ready = in.Ready
 	if in.Network != nil {
 		in, out := &in.Network, &out.Network
-		*out = new(v1alpha5.Network)
-		if err := Convert_v1alpha4_Network_To_v1alpha5_Network(*in, *out, s); err != nil {
+		*out = new(v1alpha6.Network)
+		if err := Convert_v1alpha4_Network_To_v1alpha6_Network(*in, *out, s); err != nil {
 			return err
 		}
 	} else {
@@ -922,21 +922,21 @@ func autoConvert_v1alpha4_OpenStackClusterStatus_To_v1alpha5_OpenStackClusterSta
 	}
 	if in.ExternalNetwork != nil {
 		in, out := &in.ExternalNetwork, &out.ExternalNetwork
-		*out = new(v1alpha5.Network)
-		if err := Convert_v1alpha4_Network_To_v1alpha5_Network(*in, *out, s); err != nil {
+		*out = new(v1alpha6.Network)
+		if err := Convert_v1alpha4_Network_To_v1alpha6_Network(*in, *out, s); err != nil {
 			return err
 		}
 	} else {
 		out.ExternalNetwork = nil
 	}
 	out.FailureDomains = *(*v1beta1.FailureDomains)(unsafe.Pointer(&in.FailureDomains))
-	out.ControlPlaneSecurityGroup = (*v1alpha5.SecurityGroup)(unsafe.Pointer(in.ControlPlaneSecurityGroup))
-	out.WorkerSecurityGroup = (*v1alpha5.SecurityGroup)(unsafe.Pointer(in.WorkerSecurityGroup))
-	out.BastionSecurityGroup = (*v1alpha5.SecurityGroup)(unsafe.Pointer(in.BastionSecurityGroup))
+	out.ControlPlaneSecurityGroup = (*v1alpha6.SecurityGroup)(unsafe.Pointer(in.ControlPlaneSecurityGroup))
+	out.WorkerSecurityGroup = (*v1alpha6.SecurityGroup)(unsafe.Pointer(in.WorkerSecurityGroup))
+	out.BastionSecurityGroup = (*v1alpha6.SecurityGroup)(unsafe.Pointer(in.BastionSecurityGroup))
 	if in.Bastion != nil {
 		in, out := &in.Bastion, &out.Bastion
-		*out = new(v1alpha5.Instance)
-		if err := Convert_v1alpha4_Instance_To_v1alpha5_Instance(*in, *out, s); err != nil {
+		*out = new(v1alpha6.Instance)
+		if err := Convert_v1alpha4_Instance_To_v1alpha6_Instance(*in, *out, s); err != nil {
 			return err
 		}
 	} else {
@@ -947,17 +947,17 @@ func autoConvert_v1alpha4_OpenStackClusterStatus_To_v1alpha5_OpenStackClusterSta
 	return nil
 }
 
-// Convert_v1alpha4_OpenStackClusterStatus_To_v1alpha5_OpenStackClusterStatus is an autogenerated conversion function.
-func Convert_v1alpha4_OpenStackClusterStatus_To_v1alpha5_OpenStackClusterStatus(in *OpenStackClusterStatus, out *v1alpha5.OpenStackClusterStatus, s conversion.Scope) error {
-	return autoConvert_v1alpha4_OpenStackClusterStatus_To_v1alpha5_OpenStackClusterStatus(in, out, s)
+// Convert_v1alpha4_OpenStackClusterStatus_To_v1alpha6_OpenStackClusterStatus is an autogenerated conversion function.
+func Convert_v1alpha4_OpenStackClusterStatus_To_v1alpha6_OpenStackClusterStatus(in *OpenStackClusterStatus, out *v1alpha6.OpenStackClusterStatus, s conversion.Scope) error {
+	return autoConvert_v1alpha4_OpenStackClusterStatus_To_v1alpha6_OpenStackClusterStatus(in, out, s)
 }
 
-func autoConvert_v1alpha5_OpenStackClusterStatus_To_v1alpha4_OpenStackClusterStatus(in *v1alpha5.OpenStackClusterStatus, out *OpenStackClusterStatus, s conversion.Scope) error {
+func autoConvert_v1alpha6_OpenStackClusterStatus_To_v1alpha4_OpenStackClusterStatus(in *v1alpha6.OpenStackClusterStatus, out *OpenStackClusterStatus, s conversion.Scope) error {
 	out.Ready = in.Ready
 	if in.Network != nil {
 		in, out := &in.Network, &out.Network
 		*out = new(Network)
-		if err := Convert_v1alpha5_Network_To_v1alpha4_Network(*in, *out, s); err != nil {
+		if err := Convert_v1alpha6_Network_To_v1alpha4_Network(*in, *out, s); err != nil {
 			return err
 		}
 	} else {
@@ -966,7 +966,7 @@ func autoConvert_v1alpha5_OpenStackClusterStatus_To_v1alpha4_OpenStackClusterSta
 	if in.ExternalNetwork != nil {
 		in, out := &in.ExternalNetwork, &out.ExternalNetwork
 		*out = new(Network)
-		if err := Convert_v1alpha5_Network_To_v1alpha4_Network(*in, *out, s); err != nil {
+		if err := Convert_v1alpha6_Network_To_v1alpha4_Network(*in, *out, s); err != nil {
 			return err
 		}
 	} else {
@@ -979,7 +979,7 @@ func autoConvert_v1alpha5_OpenStackClusterStatus_To_v1alpha4_OpenStackClusterSta
 	if in.Bastion != nil {
 		in, out := &in.Bastion, &out.Bastion
 		*out = new(Instance)
-		if err := Convert_v1alpha5_Instance_To_v1alpha4_Instance(*in, *out, s); err != nil {
+		if err := Convert_v1alpha6_Instance_To_v1alpha4_Instance(*in, *out, s); err != nil {
 			return err
 		}
 	} else {
@@ -990,44 +990,44 @@ func autoConvert_v1alpha5_OpenStackClusterStatus_To_v1alpha4_OpenStackClusterSta
 	return nil
 }
 
-// Convert_v1alpha5_OpenStackClusterStatus_To_v1alpha4_OpenStackClusterStatus is an autogenerated conversion function.
-func Convert_v1alpha5_OpenStackClusterStatus_To_v1alpha4_OpenStackClusterStatus(in *v1alpha5.OpenStackClusterStatus, out *OpenStackClusterStatus, s conversion.Scope) error {
-	return autoConvert_v1alpha5_OpenStackClusterStatus_To_v1alpha4_OpenStackClusterStatus(in, out, s)
+// Convert_v1alpha6_OpenStackClusterStatus_To_v1alpha4_OpenStackClusterStatus is an autogenerated conversion function.
+func Convert_v1alpha6_OpenStackClusterStatus_To_v1alpha4_OpenStackClusterStatus(in *v1alpha6.OpenStackClusterStatus, out *OpenStackClusterStatus, s conversion.Scope) error {
+	return autoConvert_v1alpha6_OpenStackClusterStatus_To_v1alpha4_OpenStackClusterStatus(in, out, s)
 }
 
-func autoConvert_v1alpha4_OpenStackClusterTemplate_To_v1alpha5_OpenStackClusterTemplate(in *OpenStackClusterTemplate, out *v1alpha5.OpenStackClusterTemplate, s conversion.Scope) error {
+func autoConvert_v1alpha4_OpenStackClusterTemplate_To_v1alpha6_OpenStackClusterTemplate(in *OpenStackClusterTemplate, out *v1alpha6.OpenStackClusterTemplate, s conversion.Scope) error {
 	out.ObjectMeta = in.ObjectMeta
-	if err := Convert_v1alpha4_OpenStackClusterTemplateSpec_To_v1alpha5_OpenStackClusterTemplateSpec(&in.Spec, &out.Spec, s); err != nil {
+	if err := Convert_v1alpha4_OpenStackClusterTemplateSpec_To_v1alpha6_OpenStackClusterTemplateSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Convert_v1alpha4_OpenStackClusterTemplate_To_v1alpha5_OpenStackClusterTemplate is an autogenerated conversion function.
-func Convert_v1alpha4_OpenStackClusterTemplate_To_v1alpha5_OpenStackClusterTemplate(in *OpenStackClusterTemplate, out *v1alpha5.OpenStackClusterTemplate, s conversion.Scope) error {
-	return autoConvert_v1alpha4_OpenStackClusterTemplate_To_v1alpha5_OpenStackClusterTemplate(in, out, s)
+// Convert_v1alpha4_OpenStackClusterTemplate_To_v1alpha6_OpenStackClusterTemplate is an autogenerated conversion function.
+func Convert_v1alpha4_OpenStackClusterTemplate_To_v1alpha6_OpenStackClusterTemplate(in *OpenStackClusterTemplate, out *v1alpha6.OpenStackClusterTemplate, s conversion.Scope) error {
+	return autoConvert_v1alpha4_OpenStackClusterTemplate_To_v1alpha6_OpenStackClusterTemplate(in, out, s)
 }
 
-func autoConvert_v1alpha5_OpenStackClusterTemplate_To_v1alpha4_OpenStackClusterTemplate(in *v1alpha5.OpenStackClusterTemplate, out *OpenStackClusterTemplate, s conversion.Scope) error {
+func autoConvert_v1alpha6_OpenStackClusterTemplate_To_v1alpha4_OpenStackClusterTemplate(in *v1alpha6.OpenStackClusterTemplate, out *OpenStackClusterTemplate, s conversion.Scope) error {
 	out.ObjectMeta = in.ObjectMeta
-	if err := Convert_v1alpha5_OpenStackClusterTemplateSpec_To_v1alpha4_OpenStackClusterTemplateSpec(&in.Spec, &out.Spec, s); err != nil {
+	if err := Convert_v1alpha6_OpenStackClusterTemplateSpec_To_v1alpha4_OpenStackClusterTemplateSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Convert_v1alpha5_OpenStackClusterTemplate_To_v1alpha4_OpenStackClusterTemplate is an autogenerated conversion function.
-func Convert_v1alpha5_OpenStackClusterTemplate_To_v1alpha4_OpenStackClusterTemplate(in *v1alpha5.OpenStackClusterTemplate, out *OpenStackClusterTemplate, s conversion.Scope) error {
-	return autoConvert_v1alpha5_OpenStackClusterTemplate_To_v1alpha4_OpenStackClusterTemplate(in, out, s)
+// Convert_v1alpha6_OpenStackClusterTemplate_To_v1alpha4_OpenStackClusterTemplate is an autogenerated conversion function.
+func Convert_v1alpha6_OpenStackClusterTemplate_To_v1alpha4_OpenStackClusterTemplate(in *v1alpha6.OpenStackClusterTemplate, out *OpenStackClusterTemplate, s conversion.Scope) error {
+	return autoConvert_v1alpha6_OpenStackClusterTemplate_To_v1alpha4_OpenStackClusterTemplate(in, out, s)
 }
 
-func autoConvert_v1alpha4_OpenStackClusterTemplateList_To_v1alpha5_OpenStackClusterTemplateList(in *OpenStackClusterTemplateList, out *v1alpha5.OpenStackClusterTemplateList, s conversion.Scope) error {
+func autoConvert_v1alpha4_OpenStackClusterTemplateList_To_v1alpha6_OpenStackClusterTemplateList(in *OpenStackClusterTemplateList, out *v1alpha6.OpenStackClusterTemplateList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
-		*out = make([]v1alpha5.OpenStackClusterTemplate, len(*in))
+		*out = make([]v1alpha6.OpenStackClusterTemplate, len(*in))
 		for i := range *in {
-			if err := Convert_v1alpha4_OpenStackClusterTemplate_To_v1alpha5_OpenStackClusterTemplate(&(*in)[i], &(*out)[i], s); err != nil {
+			if err := Convert_v1alpha4_OpenStackClusterTemplate_To_v1alpha6_OpenStackClusterTemplate(&(*in)[i], &(*out)[i], s); err != nil {
 				return err
 			}
 		}
@@ -1037,18 +1037,18 @@ func autoConvert_v1alpha4_OpenStackClusterTemplateList_To_v1alpha5_OpenStackClus
 	return nil
 }
 
-// Convert_v1alpha4_OpenStackClusterTemplateList_To_v1alpha5_OpenStackClusterTemplateList is an autogenerated conversion function.
-func Convert_v1alpha4_OpenStackClusterTemplateList_To_v1alpha5_OpenStackClusterTemplateList(in *OpenStackClusterTemplateList, out *v1alpha5.OpenStackClusterTemplateList, s conversion.Scope) error {
-	return autoConvert_v1alpha4_OpenStackClusterTemplateList_To_v1alpha5_OpenStackClusterTemplateList(in, out, s)
+// Convert_v1alpha4_OpenStackClusterTemplateList_To_v1alpha6_OpenStackClusterTemplateList is an autogenerated conversion function.
+func Convert_v1alpha4_OpenStackClusterTemplateList_To_v1alpha6_OpenStackClusterTemplateList(in *OpenStackClusterTemplateList, out *v1alpha6.OpenStackClusterTemplateList, s conversion.Scope) error {
+	return autoConvert_v1alpha4_OpenStackClusterTemplateList_To_v1alpha6_OpenStackClusterTemplateList(in, out, s)
 }
 
-func autoConvert_v1alpha5_OpenStackClusterTemplateList_To_v1alpha4_OpenStackClusterTemplateList(in *v1alpha5.OpenStackClusterTemplateList, out *OpenStackClusterTemplateList, s conversion.Scope) error {
+func autoConvert_v1alpha6_OpenStackClusterTemplateList_To_v1alpha4_OpenStackClusterTemplateList(in *v1alpha6.OpenStackClusterTemplateList, out *OpenStackClusterTemplateList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]OpenStackClusterTemplate, len(*in))
 		for i := range *in {
-			if err := Convert_v1alpha5_OpenStackClusterTemplate_To_v1alpha4_OpenStackClusterTemplate(&(*in)[i], &(*out)[i], s); err != nil {
+			if err := Convert_v1alpha6_OpenStackClusterTemplate_To_v1alpha4_OpenStackClusterTemplate(&(*in)[i], &(*out)[i], s); err != nil {
 				return err
 			}
 		}
@@ -1058,120 +1058,120 @@ func autoConvert_v1alpha5_OpenStackClusterTemplateList_To_v1alpha4_OpenStackClus
 	return nil
 }
 
-// Convert_v1alpha5_OpenStackClusterTemplateList_To_v1alpha4_OpenStackClusterTemplateList is an autogenerated conversion function.
-func Convert_v1alpha5_OpenStackClusterTemplateList_To_v1alpha4_OpenStackClusterTemplateList(in *v1alpha5.OpenStackClusterTemplateList, out *OpenStackClusterTemplateList, s conversion.Scope) error {
-	return autoConvert_v1alpha5_OpenStackClusterTemplateList_To_v1alpha4_OpenStackClusterTemplateList(in, out, s)
+// Convert_v1alpha6_OpenStackClusterTemplateList_To_v1alpha4_OpenStackClusterTemplateList is an autogenerated conversion function.
+func Convert_v1alpha6_OpenStackClusterTemplateList_To_v1alpha4_OpenStackClusterTemplateList(in *v1alpha6.OpenStackClusterTemplateList, out *OpenStackClusterTemplateList, s conversion.Scope) error {
+	return autoConvert_v1alpha6_OpenStackClusterTemplateList_To_v1alpha4_OpenStackClusterTemplateList(in, out, s)
 }
 
-func autoConvert_v1alpha4_OpenStackClusterTemplateResource_To_v1alpha5_OpenStackClusterTemplateResource(in *OpenStackClusterTemplateResource, out *v1alpha5.OpenStackClusterTemplateResource, s conversion.Scope) error {
-	if err := Convert_v1alpha4_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(&in.Spec, &out.Spec, s); err != nil {
+func autoConvert_v1alpha4_OpenStackClusterTemplateResource_To_v1alpha6_OpenStackClusterTemplateResource(in *OpenStackClusterTemplateResource, out *v1alpha6.OpenStackClusterTemplateResource, s conversion.Scope) error {
+	if err := Convert_v1alpha4_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Convert_v1alpha4_OpenStackClusterTemplateResource_To_v1alpha5_OpenStackClusterTemplateResource is an autogenerated conversion function.
-func Convert_v1alpha4_OpenStackClusterTemplateResource_To_v1alpha5_OpenStackClusterTemplateResource(in *OpenStackClusterTemplateResource, out *v1alpha5.OpenStackClusterTemplateResource, s conversion.Scope) error {
-	return autoConvert_v1alpha4_OpenStackClusterTemplateResource_To_v1alpha5_OpenStackClusterTemplateResource(in, out, s)
+// Convert_v1alpha4_OpenStackClusterTemplateResource_To_v1alpha6_OpenStackClusterTemplateResource is an autogenerated conversion function.
+func Convert_v1alpha4_OpenStackClusterTemplateResource_To_v1alpha6_OpenStackClusterTemplateResource(in *OpenStackClusterTemplateResource, out *v1alpha6.OpenStackClusterTemplateResource, s conversion.Scope) error {
+	return autoConvert_v1alpha4_OpenStackClusterTemplateResource_To_v1alpha6_OpenStackClusterTemplateResource(in, out, s)
 }
 
-func autoConvert_v1alpha5_OpenStackClusterTemplateResource_To_v1alpha4_OpenStackClusterTemplateResource(in *v1alpha5.OpenStackClusterTemplateResource, out *OpenStackClusterTemplateResource, s conversion.Scope) error {
-	if err := Convert_v1alpha5_OpenStackClusterSpec_To_v1alpha4_OpenStackClusterSpec(&in.Spec, &out.Spec, s); err != nil {
+func autoConvert_v1alpha6_OpenStackClusterTemplateResource_To_v1alpha4_OpenStackClusterTemplateResource(in *v1alpha6.OpenStackClusterTemplateResource, out *OpenStackClusterTemplateResource, s conversion.Scope) error {
+	if err := Convert_v1alpha6_OpenStackClusterSpec_To_v1alpha4_OpenStackClusterSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Convert_v1alpha5_OpenStackClusterTemplateResource_To_v1alpha4_OpenStackClusterTemplateResource is an autogenerated conversion function.
-func Convert_v1alpha5_OpenStackClusterTemplateResource_To_v1alpha4_OpenStackClusterTemplateResource(in *v1alpha5.OpenStackClusterTemplateResource, out *OpenStackClusterTemplateResource, s conversion.Scope) error {
-	return autoConvert_v1alpha5_OpenStackClusterTemplateResource_To_v1alpha4_OpenStackClusterTemplateResource(in, out, s)
+// Convert_v1alpha6_OpenStackClusterTemplateResource_To_v1alpha4_OpenStackClusterTemplateResource is an autogenerated conversion function.
+func Convert_v1alpha6_OpenStackClusterTemplateResource_To_v1alpha4_OpenStackClusterTemplateResource(in *v1alpha6.OpenStackClusterTemplateResource, out *OpenStackClusterTemplateResource, s conversion.Scope) error {
+	return autoConvert_v1alpha6_OpenStackClusterTemplateResource_To_v1alpha4_OpenStackClusterTemplateResource(in, out, s)
 }
 
-func autoConvert_v1alpha4_OpenStackClusterTemplateSpec_To_v1alpha5_OpenStackClusterTemplateSpec(in *OpenStackClusterTemplateSpec, out *v1alpha5.OpenStackClusterTemplateSpec, s conversion.Scope) error {
-	if err := Convert_v1alpha4_OpenStackClusterTemplateResource_To_v1alpha5_OpenStackClusterTemplateResource(&in.Template, &out.Template, s); err != nil {
+func autoConvert_v1alpha4_OpenStackClusterTemplateSpec_To_v1alpha6_OpenStackClusterTemplateSpec(in *OpenStackClusterTemplateSpec, out *v1alpha6.OpenStackClusterTemplateSpec, s conversion.Scope) error {
+	if err := Convert_v1alpha4_OpenStackClusterTemplateResource_To_v1alpha6_OpenStackClusterTemplateResource(&in.Template, &out.Template, s); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Convert_v1alpha4_OpenStackClusterTemplateSpec_To_v1alpha5_OpenStackClusterTemplateSpec is an autogenerated conversion function.
-func Convert_v1alpha4_OpenStackClusterTemplateSpec_To_v1alpha5_OpenStackClusterTemplateSpec(in *OpenStackClusterTemplateSpec, out *v1alpha5.OpenStackClusterTemplateSpec, s conversion.Scope) error {
-	return autoConvert_v1alpha4_OpenStackClusterTemplateSpec_To_v1alpha5_OpenStackClusterTemplateSpec(in, out, s)
+// Convert_v1alpha4_OpenStackClusterTemplateSpec_To_v1alpha6_OpenStackClusterTemplateSpec is an autogenerated conversion function.
+func Convert_v1alpha4_OpenStackClusterTemplateSpec_To_v1alpha6_OpenStackClusterTemplateSpec(in *OpenStackClusterTemplateSpec, out *v1alpha6.OpenStackClusterTemplateSpec, s conversion.Scope) error {
+	return autoConvert_v1alpha4_OpenStackClusterTemplateSpec_To_v1alpha6_OpenStackClusterTemplateSpec(in, out, s)
 }
 
-func autoConvert_v1alpha5_OpenStackClusterTemplateSpec_To_v1alpha4_OpenStackClusterTemplateSpec(in *v1alpha5.OpenStackClusterTemplateSpec, out *OpenStackClusterTemplateSpec, s conversion.Scope) error {
-	if err := Convert_v1alpha5_OpenStackClusterTemplateResource_To_v1alpha4_OpenStackClusterTemplateResource(&in.Template, &out.Template, s); err != nil {
+func autoConvert_v1alpha6_OpenStackClusterTemplateSpec_To_v1alpha4_OpenStackClusterTemplateSpec(in *v1alpha6.OpenStackClusterTemplateSpec, out *OpenStackClusterTemplateSpec, s conversion.Scope) error {
+	if err := Convert_v1alpha6_OpenStackClusterTemplateResource_To_v1alpha4_OpenStackClusterTemplateResource(&in.Template, &out.Template, s); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Convert_v1alpha5_OpenStackClusterTemplateSpec_To_v1alpha4_OpenStackClusterTemplateSpec is an autogenerated conversion function.
-func Convert_v1alpha5_OpenStackClusterTemplateSpec_To_v1alpha4_OpenStackClusterTemplateSpec(in *v1alpha5.OpenStackClusterTemplateSpec, out *OpenStackClusterTemplateSpec, s conversion.Scope) error {
-	return autoConvert_v1alpha5_OpenStackClusterTemplateSpec_To_v1alpha4_OpenStackClusterTemplateSpec(in, out, s)
+// Convert_v1alpha6_OpenStackClusterTemplateSpec_To_v1alpha4_OpenStackClusterTemplateSpec is an autogenerated conversion function.
+func Convert_v1alpha6_OpenStackClusterTemplateSpec_To_v1alpha4_OpenStackClusterTemplateSpec(in *v1alpha6.OpenStackClusterTemplateSpec, out *OpenStackClusterTemplateSpec, s conversion.Scope) error {
+	return autoConvert_v1alpha6_OpenStackClusterTemplateSpec_To_v1alpha4_OpenStackClusterTemplateSpec(in, out, s)
 }
 
-func autoConvert_v1alpha4_OpenStackIdentityReference_To_v1alpha5_OpenStackIdentityReference(in *OpenStackIdentityReference, out *v1alpha5.OpenStackIdentityReference, s conversion.Scope) error {
+func autoConvert_v1alpha4_OpenStackIdentityReference_To_v1alpha6_OpenStackIdentityReference(in *OpenStackIdentityReference, out *v1alpha6.OpenStackIdentityReference, s conversion.Scope) error {
 	out.Kind = in.Kind
 	out.Name = in.Name
 	return nil
 }
 
-// Convert_v1alpha4_OpenStackIdentityReference_To_v1alpha5_OpenStackIdentityReference is an autogenerated conversion function.
-func Convert_v1alpha4_OpenStackIdentityReference_To_v1alpha5_OpenStackIdentityReference(in *OpenStackIdentityReference, out *v1alpha5.OpenStackIdentityReference, s conversion.Scope) error {
-	return autoConvert_v1alpha4_OpenStackIdentityReference_To_v1alpha5_OpenStackIdentityReference(in, out, s)
+// Convert_v1alpha4_OpenStackIdentityReference_To_v1alpha6_OpenStackIdentityReference is an autogenerated conversion function.
+func Convert_v1alpha4_OpenStackIdentityReference_To_v1alpha6_OpenStackIdentityReference(in *OpenStackIdentityReference, out *v1alpha6.OpenStackIdentityReference, s conversion.Scope) error {
+	return autoConvert_v1alpha4_OpenStackIdentityReference_To_v1alpha6_OpenStackIdentityReference(in, out, s)
 }
 
-func autoConvert_v1alpha5_OpenStackIdentityReference_To_v1alpha4_OpenStackIdentityReference(in *v1alpha5.OpenStackIdentityReference, out *OpenStackIdentityReference, s conversion.Scope) error {
+func autoConvert_v1alpha6_OpenStackIdentityReference_To_v1alpha4_OpenStackIdentityReference(in *v1alpha6.OpenStackIdentityReference, out *OpenStackIdentityReference, s conversion.Scope) error {
 	out.Kind = in.Kind
 	out.Name = in.Name
 	return nil
 }
 
-// Convert_v1alpha5_OpenStackIdentityReference_To_v1alpha4_OpenStackIdentityReference is an autogenerated conversion function.
-func Convert_v1alpha5_OpenStackIdentityReference_To_v1alpha4_OpenStackIdentityReference(in *v1alpha5.OpenStackIdentityReference, out *OpenStackIdentityReference, s conversion.Scope) error {
-	return autoConvert_v1alpha5_OpenStackIdentityReference_To_v1alpha4_OpenStackIdentityReference(in, out, s)
+// Convert_v1alpha6_OpenStackIdentityReference_To_v1alpha4_OpenStackIdentityReference is an autogenerated conversion function.
+func Convert_v1alpha6_OpenStackIdentityReference_To_v1alpha4_OpenStackIdentityReference(in *v1alpha6.OpenStackIdentityReference, out *OpenStackIdentityReference, s conversion.Scope) error {
+	return autoConvert_v1alpha6_OpenStackIdentityReference_To_v1alpha4_OpenStackIdentityReference(in, out, s)
 }
 
-func autoConvert_v1alpha4_OpenStackMachine_To_v1alpha5_OpenStackMachine(in *OpenStackMachine, out *v1alpha5.OpenStackMachine, s conversion.Scope) error {
+func autoConvert_v1alpha4_OpenStackMachine_To_v1alpha6_OpenStackMachine(in *OpenStackMachine, out *v1alpha6.OpenStackMachine, s conversion.Scope) error {
 	out.ObjectMeta = in.ObjectMeta
-	if err := Convert_v1alpha4_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(&in.Spec, &out.Spec, s); err != nil {
+	if err := Convert_v1alpha4_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
-	if err := Convert_v1alpha4_OpenStackMachineStatus_To_v1alpha5_OpenStackMachineStatus(&in.Status, &out.Status, s); err != nil {
+	if err := Convert_v1alpha4_OpenStackMachineStatus_To_v1alpha6_OpenStackMachineStatus(&in.Status, &out.Status, s); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Convert_v1alpha4_OpenStackMachine_To_v1alpha5_OpenStackMachine is an autogenerated conversion function.
-func Convert_v1alpha4_OpenStackMachine_To_v1alpha5_OpenStackMachine(in *OpenStackMachine, out *v1alpha5.OpenStackMachine, s conversion.Scope) error {
-	return autoConvert_v1alpha4_OpenStackMachine_To_v1alpha5_OpenStackMachine(in, out, s)
+// Convert_v1alpha4_OpenStackMachine_To_v1alpha6_OpenStackMachine is an autogenerated conversion function.
+func Convert_v1alpha4_OpenStackMachine_To_v1alpha6_OpenStackMachine(in *OpenStackMachine, out *v1alpha6.OpenStackMachine, s conversion.Scope) error {
+	return autoConvert_v1alpha4_OpenStackMachine_To_v1alpha6_OpenStackMachine(in, out, s)
 }
 
-func autoConvert_v1alpha5_OpenStackMachine_To_v1alpha4_OpenStackMachine(in *v1alpha5.OpenStackMachine, out *OpenStackMachine, s conversion.Scope) error {
+func autoConvert_v1alpha6_OpenStackMachine_To_v1alpha4_OpenStackMachine(in *v1alpha6.OpenStackMachine, out *OpenStackMachine, s conversion.Scope) error {
 	out.ObjectMeta = in.ObjectMeta
-	if err := Convert_v1alpha5_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(&in.Spec, &out.Spec, s); err != nil {
+	if err := Convert_v1alpha6_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
-	if err := Convert_v1alpha5_OpenStackMachineStatus_To_v1alpha4_OpenStackMachineStatus(&in.Status, &out.Status, s); err != nil {
+	if err := Convert_v1alpha6_OpenStackMachineStatus_To_v1alpha4_OpenStackMachineStatus(&in.Status, &out.Status, s); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Convert_v1alpha5_OpenStackMachine_To_v1alpha4_OpenStackMachine is an autogenerated conversion function.
-func Convert_v1alpha5_OpenStackMachine_To_v1alpha4_OpenStackMachine(in *v1alpha5.OpenStackMachine, out *OpenStackMachine, s conversion.Scope) error {
-	return autoConvert_v1alpha5_OpenStackMachine_To_v1alpha4_OpenStackMachine(in, out, s)
+// Convert_v1alpha6_OpenStackMachine_To_v1alpha4_OpenStackMachine is an autogenerated conversion function.
+func Convert_v1alpha6_OpenStackMachine_To_v1alpha4_OpenStackMachine(in *v1alpha6.OpenStackMachine, out *OpenStackMachine, s conversion.Scope) error {
+	return autoConvert_v1alpha6_OpenStackMachine_To_v1alpha4_OpenStackMachine(in, out, s)
 }
 
-func autoConvert_v1alpha4_OpenStackMachineList_To_v1alpha5_OpenStackMachineList(in *OpenStackMachineList, out *v1alpha5.OpenStackMachineList, s conversion.Scope) error {
+func autoConvert_v1alpha4_OpenStackMachineList_To_v1alpha6_OpenStackMachineList(in *OpenStackMachineList, out *v1alpha6.OpenStackMachineList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
-		*out = make([]v1alpha5.OpenStackMachine, len(*in))
+		*out = make([]v1alpha6.OpenStackMachine, len(*in))
 		for i := range *in {
-			if err := Convert_v1alpha4_OpenStackMachine_To_v1alpha5_OpenStackMachine(&(*in)[i], &(*out)[i], s); err != nil {
+			if err := Convert_v1alpha4_OpenStackMachine_To_v1alpha6_OpenStackMachine(&(*in)[i], &(*out)[i], s); err != nil {
 				return err
 			}
 		}
@@ -1181,18 +1181,18 @@ func autoConvert_v1alpha4_OpenStackMachineList_To_v1alpha5_OpenStackMachineList(
 	return nil
 }
 
-// Convert_v1alpha4_OpenStackMachineList_To_v1alpha5_OpenStackMachineList is an autogenerated conversion function.
-func Convert_v1alpha4_OpenStackMachineList_To_v1alpha5_OpenStackMachineList(in *OpenStackMachineList, out *v1alpha5.OpenStackMachineList, s conversion.Scope) error {
-	return autoConvert_v1alpha4_OpenStackMachineList_To_v1alpha5_OpenStackMachineList(in, out, s)
+// Convert_v1alpha4_OpenStackMachineList_To_v1alpha6_OpenStackMachineList is an autogenerated conversion function.
+func Convert_v1alpha4_OpenStackMachineList_To_v1alpha6_OpenStackMachineList(in *OpenStackMachineList, out *v1alpha6.OpenStackMachineList, s conversion.Scope) error {
+	return autoConvert_v1alpha4_OpenStackMachineList_To_v1alpha6_OpenStackMachineList(in, out, s)
 }
 
-func autoConvert_v1alpha5_OpenStackMachineList_To_v1alpha4_OpenStackMachineList(in *v1alpha5.OpenStackMachineList, out *OpenStackMachineList, s conversion.Scope) error {
+func autoConvert_v1alpha6_OpenStackMachineList_To_v1alpha4_OpenStackMachineList(in *v1alpha6.OpenStackMachineList, out *OpenStackMachineList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]OpenStackMachine, len(*in))
 		for i := range *in {
-			if err := Convert_v1alpha5_OpenStackMachine_To_v1alpha4_OpenStackMachine(&(*in)[i], &(*out)[i], s); err != nil {
+			if err := Convert_v1alpha6_OpenStackMachine_To_v1alpha4_OpenStackMachine(&(*in)[i], &(*out)[i], s); err != nil {
 				return err
 			}
 		}
@@ -1202,12 +1202,12 @@ func autoConvert_v1alpha5_OpenStackMachineList_To_v1alpha4_OpenStackMachineList(
 	return nil
 }
 
-// Convert_v1alpha5_OpenStackMachineList_To_v1alpha4_OpenStackMachineList is an autogenerated conversion function.
-func Convert_v1alpha5_OpenStackMachineList_To_v1alpha4_OpenStackMachineList(in *v1alpha5.OpenStackMachineList, out *OpenStackMachineList, s conversion.Scope) error {
-	return autoConvert_v1alpha5_OpenStackMachineList_To_v1alpha4_OpenStackMachineList(in, out, s)
+// Convert_v1alpha6_OpenStackMachineList_To_v1alpha4_OpenStackMachineList is an autogenerated conversion function.
+func Convert_v1alpha6_OpenStackMachineList_To_v1alpha4_OpenStackMachineList(in *v1alpha6.OpenStackMachineList, out *OpenStackMachineList, s conversion.Scope) error {
+	return autoConvert_v1alpha6_OpenStackMachineList_To_v1alpha4_OpenStackMachineList(in, out, s)
 }
 
-func autoConvert_v1alpha4_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(in *OpenStackMachineSpec, out *v1alpha5.OpenStackMachineSpec, s conversion.Scope) error {
+func autoConvert_v1alpha4_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(in *OpenStackMachineSpec, out *v1alpha6.OpenStackMachineSpec, s conversion.Scope) error {
 	out.ProviderID = (*string)(unsafe.Pointer(in.ProviderID))
 	out.InstanceID = (*string)(unsafe.Pointer(in.InstanceID))
 	out.CloudName = in.CloudName
@@ -1216,9 +1216,9 @@ func autoConvert_v1alpha4_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(
 	out.SSHKeyName = in.SSHKeyName
 	if in.Networks != nil {
 		in, out := &in.Networks, &out.Networks
-		*out = make([]v1alpha5.NetworkParam, len(*in))
+		*out = make([]v1alpha6.NetworkParam, len(*in))
 		for i := range *in {
-			if err := Convert_v1alpha4_NetworkParam_To_v1alpha5_NetworkParam(&(*in)[i], &(*out)[i], s); err != nil {
+			if err := Convert_v1alpha4_NetworkParam_To_v1alpha6_NetworkParam(&(*in)[i], &(*out)[i], s); err != nil {
 				return err
 			}
 		}
@@ -1227,9 +1227,9 @@ func autoConvert_v1alpha4_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(
 	}
 	if in.Ports != nil {
 		in, out := &in.Ports, &out.Ports
-		*out = make([]v1alpha5.PortOpts, len(*in))
+		*out = make([]v1alpha6.PortOpts, len(*in))
 		for i := range *in {
-			if err := Convert_v1alpha4_PortOpts_To_v1alpha5_PortOpts(&(*in)[i], &(*out)[i], s); err != nil {
+			if err := Convert_v1alpha4_PortOpts_To_v1alpha6_PortOpts(&(*in)[i], &(*out)[i], s); err != nil {
 				return err
 			}
 		}
@@ -1238,26 +1238,26 @@ func autoConvert_v1alpha4_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(
 	}
 	out.Subnet = in.Subnet
 	out.FloatingIP = in.FloatingIP
-	out.SecurityGroups = *(*[]v1alpha5.SecurityGroupParam)(unsafe.Pointer(&in.SecurityGroups))
+	out.SecurityGroups = *(*[]v1alpha6.SecurityGroupParam)(unsafe.Pointer(&in.SecurityGroups))
 	out.Trunk = in.Trunk
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.ServerMetadata = *(*map[string]string)(unsafe.Pointer(&in.ServerMetadata))
 	out.ConfigDrive = (*bool)(unsafe.Pointer(in.ConfigDrive))
 	if in.RootVolume != nil {
 		in, out := &in.RootVolume, &out.RootVolume
-		*out = new(v1alpha5.RootVolume)
-		if err := Convert_v1alpha4_RootVolume_To_v1alpha5_RootVolume(*in, *out, s); err != nil {
+		*out = new(v1alpha6.RootVolume)
+		if err := Convert_v1alpha4_RootVolume_To_v1alpha6_RootVolume(*in, *out, s); err != nil {
 			return err
 		}
 	} else {
 		out.RootVolume = nil
 	}
 	out.ServerGroupID = in.ServerGroupID
-	out.IdentityRef = (*v1alpha5.OpenStackIdentityReference)(unsafe.Pointer(in.IdentityRef))
+	out.IdentityRef = (*v1alpha6.OpenStackIdentityReference)(unsafe.Pointer(in.IdentityRef))
 	return nil
 }
 
-func autoConvert_v1alpha5_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(in *v1alpha5.OpenStackMachineSpec, out *OpenStackMachineSpec, s conversion.Scope) error {
+func autoConvert_v1alpha6_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(in *v1alpha6.OpenStackMachineSpec, out *OpenStackMachineSpec, s conversion.Scope) error {
 	out.ProviderID = (*string)(unsafe.Pointer(in.ProviderID))
 	out.InstanceID = (*string)(unsafe.Pointer(in.InstanceID))
 	out.CloudName = in.CloudName
@@ -1269,7 +1269,7 @@ func autoConvert_v1alpha5_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(
 		in, out := &in.Networks, &out.Networks
 		*out = make([]NetworkParam, len(*in))
 		for i := range *in {
-			if err := Convert_v1alpha5_NetworkParam_To_v1alpha4_NetworkParam(&(*in)[i], &(*out)[i], s); err != nil {
+			if err := Convert_v1alpha6_NetworkParam_To_v1alpha4_NetworkParam(&(*in)[i], &(*out)[i], s); err != nil {
 				return err
 			}
 		}
@@ -1280,7 +1280,7 @@ func autoConvert_v1alpha5_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(
 		in, out := &in.Ports, &out.Ports
 		*out = make([]PortOpts, len(*in))
 		for i := range *in {
-			if err := Convert_v1alpha5_PortOpts_To_v1alpha4_PortOpts(&(*in)[i], &(*out)[i], s); err != nil {
+			if err := Convert_v1alpha6_PortOpts_To_v1alpha4_PortOpts(&(*in)[i], &(*out)[i], s); err != nil {
 				return err
 			}
 		}
@@ -1297,7 +1297,7 @@ func autoConvert_v1alpha5_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(
 	if in.RootVolume != nil {
 		in, out := &in.RootVolume, &out.RootVolume
 		*out = new(RootVolume)
-		if err := Convert_v1alpha5_RootVolume_To_v1alpha4_RootVolume(*in, *out, s); err != nil {
+		if err := Convert_v1alpha6_RootVolume_To_v1alpha4_RootVolume(*in, *out, s); err != nil {
 			return err
 		}
 	} else {
@@ -1308,21 +1308,21 @@ func autoConvert_v1alpha5_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(
 	return nil
 }
 
-func autoConvert_v1alpha4_OpenStackMachineStatus_To_v1alpha5_OpenStackMachineStatus(in *OpenStackMachineStatus, out *v1alpha5.OpenStackMachineStatus, s conversion.Scope) error {
+func autoConvert_v1alpha4_OpenStackMachineStatus_To_v1alpha6_OpenStackMachineStatus(in *OpenStackMachineStatus, out *v1alpha6.OpenStackMachineStatus, s conversion.Scope) error {
 	out.Ready = in.Ready
 	out.Addresses = *(*[]v1.NodeAddress)(unsafe.Pointer(&in.Addresses))
-	out.InstanceState = (*v1alpha5.InstanceState)(unsafe.Pointer(in.InstanceState))
+	out.InstanceState = (*v1alpha6.InstanceState)(unsafe.Pointer(in.InstanceState))
 	out.FailureReason = (*errors.MachineStatusError)(unsafe.Pointer(in.FailureReason))
 	out.FailureMessage = (*string)(unsafe.Pointer(in.FailureMessage))
 	return nil
 }
 
-// Convert_v1alpha4_OpenStackMachineStatus_To_v1alpha5_OpenStackMachineStatus is an autogenerated conversion function.
-func Convert_v1alpha4_OpenStackMachineStatus_To_v1alpha5_OpenStackMachineStatus(in *OpenStackMachineStatus, out *v1alpha5.OpenStackMachineStatus, s conversion.Scope) error {
-	return autoConvert_v1alpha4_OpenStackMachineStatus_To_v1alpha5_OpenStackMachineStatus(in, out, s)
+// Convert_v1alpha4_OpenStackMachineStatus_To_v1alpha6_OpenStackMachineStatus is an autogenerated conversion function.
+func Convert_v1alpha4_OpenStackMachineStatus_To_v1alpha6_OpenStackMachineStatus(in *OpenStackMachineStatus, out *v1alpha6.OpenStackMachineStatus, s conversion.Scope) error {
+	return autoConvert_v1alpha4_OpenStackMachineStatus_To_v1alpha6_OpenStackMachineStatus(in, out, s)
 }
 
-func autoConvert_v1alpha5_OpenStackMachineStatus_To_v1alpha4_OpenStackMachineStatus(in *v1alpha5.OpenStackMachineStatus, out *OpenStackMachineStatus, s conversion.Scope) error {
+func autoConvert_v1alpha6_OpenStackMachineStatus_To_v1alpha4_OpenStackMachineStatus(in *v1alpha6.OpenStackMachineStatus, out *OpenStackMachineStatus, s conversion.Scope) error {
 	out.Ready = in.Ready
 	out.Addresses = *(*[]v1.NodeAddress)(unsafe.Pointer(&in.Addresses))
 	out.InstanceState = (*InstanceState)(unsafe.Pointer(in.InstanceState))
@@ -1331,44 +1331,44 @@ func autoConvert_v1alpha5_OpenStackMachineStatus_To_v1alpha4_OpenStackMachineSta
 	return nil
 }
 
-// Convert_v1alpha5_OpenStackMachineStatus_To_v1alpha4_OpenStackMachineStatus is an autogenerated conversion function.
-func Convert_v1alpha5_OpenStackMachineStatus_To_v1alpha4_OpenStackMachineStatus(in *v1alpha5.OpenStackMachineStatus, out *OpenStackMachineStatus, s conversion.Scope) error {
-	return autoConvert_v1alpha5_OpenStackMachineStatus_To_v1alpha4_OpenStackMachineStatus(in, out, s)
+// Convert_v1alpha6_OpenStackMachineStatus_To_v1alpha4_OpenStackMachineStatus is an autogenerated conversion function.
+func Convert_v1alpha6_OpenStackMachineStatus_To_v1alpha4_OpenStackMachineStatus(in *v1alpha6.OpenStackMachineStatus, out *OpenStackMachineStatus, s conversion.Scope) error {
+	return autoConvert_v1alpha6_OpenStackMachineStatus_To_v1alpha4_OpenStackMachineStatus(in, out, s)
 }
 
-func autoConvert_v1alpha4_OpenStackMachineTemplate_To_v1alpha5_OpenStackMachineTemplate(in *OpenStackMachineTemplate, out *v1alpha5.OpenStackMachineTemplate, s conversion.Scope) error {
+func autoConvert_v1alpha4_OpenStackMachineTemplate_To_v1alpha6_OpenStackMachineTemplate(in *OpenStackMachineTemplate, out *v1alpha6.OpenStackMachineTemplate, s conversion.Scope) error {
 	out.ObjectMeta = in.ObjectMeta
-	if err := Convert_v1alpha4_OpenStackMachineTemplateSpec_To_v1alpha5_OpenStackMachineTemplateSpec(&in.Spec, &out.Spec, s); err != nil {
+	if err := Convert_v1alpha4_OpenStackMachineTemplateSpec_To_v1alpha6_OpenStackMachineTemplateSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Convert_v1alpha4_OpenStackMachineTemplate_To_v1alpha5_OpenStackMachineTemplate is an autogenerated conversion function.
-func Convert_v1alpha4_OpenStackMachineTemplate_To_v1alpha5_OpenStackMachineTemplate(in *OpenStackMachineTemplate, out *v1alpha5.OpenStackMachineTemplate, s conversion.Scope) error {
-	return autoConvert_v1alpha4_OpenStackMachineTemplate_To_v1alpha5_OpenStackMachineTemplate(in, out, s)
+// Convert_v1alpha4_OpenStackMachineTemplate_To_v1alpha6_OpenStackMachineTemplate is an autogenerated conversion function.
+func Convert_v1alpha4_OpenStackMachineTemplate_To_v1alpha6_OpenStackMachineTemplate(in *OpenStackMachineTemplate, out *v1alpha6.OpenStackMachineTemplate, s conversion.Scope) error {
+	return autoConvert_v1alpha4_OpenStackMachineTemplate_To_v1alpha6_OpenStackMachineTemplate(in, out, s)
 }
 
-func autoConvert_v1alpha5_OpenStackMachineTemplate_To_v1alpha4_OpenStackMachineTemplate(in *v1alpha5.OpenStackMachineTemplate, out *OpenStackMachineTemplate, s conversion.Scope) error {
+func autoConvert_v1alpha6_OpenStackMachineTemplate_To_v1alpha4_OpenStackMachineTemplate(in *v1alpha6.OpenStackMachineTemplate, out *OpenStackMachineTemplate, s conversion.Scope) error {
 	out.ObjectMeta = in.ObjectMeta
-	if err := Convert_v1alpha5_OpenStackMachineTemplateSpec_To_v1alpha4_OpenStackMachineTemplateSpec(&in.Spec, &out.Spec, s); err != nil {
+	if err := Convert_v1alpha6_OpenStackMachineTemplateSpec_To_v1alpha4_OpenStackMachineTemplateSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Convert_v1alpha5_OpenStackMachineTemplate_To_v1alpha4_OpenStackMachineTemplate is an autogenerated conversion function.
-func Convert_v1alpha5_OpenStackMachineTemplate_To_v1alpha4_OpenStackMachineTemplate(in *v1alpha5.OpenStackMachineTemplate, out *OpenStackMachineTemplate, s conversion.Scope) error {
-	return autoConvert_v1alpha5_OpenStackMachineTemplate_To_v1alpha4_OpenStackMachineTemplate(in, out, s)
+// Convert_v1alpha6_OpenStackMachineTemplate_To_v1alpha4_OpenStackMachineTemplate is an autogenerated conversion function.
+func Convert_v1alpha6_OpenStackMachineTemplate_To_v1alpha4_OpenStackMachineTemplate(in *v1alpha6.OpenStackMachineTemplate, out *OpenStackMachineTemplate, s conversion.Scope) error {
+	return autoConvert_v1alpha6_OpenStackMachineTemplate_To_v1alpha4_OpenStackMachineTemplate(in, out, s)
 }
 
-func autoConvert_v1alpha4_OpenStackMachineTemplateList_To_v1alpha5_OpenStackMachineTemplateList(in *OpenStackMachineTemplateList, out *v1alpha5.OpenStackMachineTemplateList, s conversion.Scope) error {
+func autoConvert_v1alpha4_OpenStackMachineTemplateList_To_v1alpha6_OpenStackMachineTemplateList(in *OpenStackMachineTemplateList, out *v1alpha6.OpenStackMachineTemplateList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
-		*out = make([]v1alpha5.OpenStackMachineTemplate, len(*in))
+		*out = make([]v1alpha6.OpenStackMachineTemplate, len(*in))
 		for i := range *in {
-			if err := Convert_v1alpha4_OpenStackMachineTemplate_To_v1alpha5_OpenStackMachineTemplate(&(*in)[i], &(*out)[i], s); err != nil {
+			if err := Convert_v1alpha4_OpenStackMachineTemplate_To_v1alpha6_OpenStackMachineTemplate(&(*in)[i], &(*out)[i], s); err != nil {
 				return err
 			}
 		}
@@ -1378,18 +1378,18 @@ func autoConvert_v1alpha4_OpenStackMachineTemplateList_To_v1alpha5_OpenStackMach
 	return nil
 }
 
-// Convert_v1alpha4_OpenStackMachineTemplateList_To_v1alpha5_OpenStackMachineTemplateList is an autogenerated conversion function.
-func Convert_v1alpha4_OpenStackMachineTemplateList_To_v1alpha5_OpenStackMachineTemplateList(in *OpenStackMachineTemplateList, out *v1alpha5.OpenStackMachineTemplateList, s conversion.Scope) error {
-	return autoConvert_v1alpha4_OpenStackMachineTemplateList_To_v1alpha5_OpenStackMachineTemplateList(in, out, s)
+// Convert_v1alpha4_OpenStackMachineTemplateList_To_v1alpha6_OpenStackMachineTemplateList is an autogenerated conversion function.
+func Convert_v1alpha4_OpenStackMachineTemplateList_To_v1alpha6_OpenStackMachineTemplateList(in *OpenStackMachineTemplateList, out *v1alpha6.OpenStackMachineTemplateList, s conversion.Scope) error {
+	return autoConvert_v1alpha4_OpenStackMachineTemplateList_To_v1alpha6_OpenStackMachineTemplateList(in, out, s)
 }
 
-func autoConvert_v1alpha5_OpenStackMachineTemplateList_To_v1alpha4_OpenStackMachineTemplateList(in *v1alpha5.OpenStackMachineTemplateList, out *OpenStackMachineTemplateList, s conversion.Scope) error {
+func autoConvert_v1alpha6_OpenStackMachineTemplateList_To_v1alpha4_OpenStackMachineTemplateList(in *v1alpha6.OpenStackMachineTemplateList, out *OpenStackMachineTemplateList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]OpenStackMachineTemplate, len(*in))
 		for i := range *in {
-			if err := Convert_v1alpha5_OpenStackMachineTemplate_To_v1alpha4_OpenStackMachineTemplate(&(*in)[i], &(*out)[i], s); err != nil {
+			if err := Convert_v1alpha6_OpenStackMachineTemplate_To_v1alpha4_OpenStackMachineTemplate(&(*in)[i], &(*out)[i], s); err != nil {
 				return err
 			}
 		}
@@ -1399,60 +1399,60 @@ func autoConvert_v1alpha5_OpenStackMachineTemplateList_To_v1alpha4_OpenStackMach
 	return nil
 }
 
-// Convert_v1alpha5_OpenStackMachineTemplateList_To_v1alpha4_OpenStackMachineTemplateList is an autogenerated conversion function.
-func Convert_v1alpha5_OpenStackMachineTemplateList_To_v1alpha4_OpenStackMachineTemplateList(in *v1alpha5.OpenStackMachineTemplateList, out *OpenStackMachineTemplateList, s conversion.Scope) error {
-	return autoConvert_v1alpha5_OpenStackMachineTemplateList_To_v1alpha4_OpenStackMachineTemplateList(in, out, s)
+// Convert_v1alpha6_OpenStackMachineTemplateList_To_v1alpha4_OpenStackMachineTemplateList is an autogenerated conversion function.
+func Convert_v1alpha6_OpenStackMachineTemplateList_To_v1alpha4_OpenStackMachineTemplateList(in *v1alpha6.OpenStackMachineTemplateList, out *OpenStackMachineTemplateList, s conversion.Scope) error {
+	return autoConvert_v1alpha6_OpenStackMachineTemplateList_To_v1alpha4_OpenStackMachineTemplateList(in, out, s)
 }
 
-func autoConvert_v1alpha4_OpenStackMachineTemplateResource_To_v1alpha5_OpenStackMachineTemplateResource(in *OpenStackMachineTemplateResource, out *v1alpha5.OpenStackMachineTemplateResource, s conversion.Scope) error {
-	if err := Convert_v1alpha4_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(&in.Spec, &out.Spec, s); err != nil {
+func autoConvert_v1alpha4_OpenStackMachineTemplateResource_To_v1alpha6_OpenStackMachineTemplateResource(in *OpenStackMachineTemplateResource, out *v1alpha6.OpenStackMachineTemplateResource, s conversion.Scope) error {
+	if err := Convert_v1alpha4_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Convert_v1alpha4_OpenStackMachineTemplateResource_To_v1alpha5_OpenStackMachineTemplateResource is an autogenerated conversion function.
-func Convert_v1alpha4_OpenStackMachineTemplateResource_To_v1alpha5_OpenStackMachineTemplateResource(in *OpenStackMachineTemplateResource, out *v1alpha5.OpenStackMachineTemplateResource, s conversion.Scope) error {
-	return autoConvert_v1alpha4_OpenStackMachineTemplateResource_To_v1alpha5_OpenStackMachineTemplateResource(in, out, s)
+// Convert_v1alpha4_OpenStackMachineTemplateResource_To_v1alpha6_OpenStackMachineTemplateResource is an autogenerated conversion function.
+func Convert_v1alpha4_OpenStackMachineTemplateResource_To_v1alpha6_OpenStackMachineTemplateResource(in *OpenStackMachineTemplateResource, out *v1alpha6.OpenStackMachineTemplateResource, s conversion.Scope) error {
+	return autoConvert_v1alpha4_OpenStackMachineTemplateResource_To_v1alpha6_OpenStackMachineTemplateResource(in, out, s)
 }
 
-func autoConvert_v1alpha5_OpenStackMachineTemplateResource_To_v1alpha4_OpenStackMachineTemplateResource(in *v1alpha5.OpenStackMachineTemplateResource, out *OpenStackMachineTemplateResource, s conversion.Scope) error {
-	if err := Convert_v1alpha5_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(&in.Spec, &out.Spec, s); err != nil {
+func autoConvert_v1alpha6_OpenStackMachineTemplateResource_To_v1alpha4_OpenStackMachineTemplateResource(in *v1alpha6.OpenStackMachineTemplateResource, out *OpenStackMachineTemplateResource, s conversion.Scope) error {
+	if err := Convert_v1alpha6_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Convert_v1alpha5_OpenStackMachineTemplateResource_To_v1alpha4_OpenStackMachineTemplateResource is an autogenerated conversion function.
-func Convert_v1alpha5_OpenStackMachineTemplateResource_To_v1alpha4_OpenStackMachineTemplateResource(in *v1alpha5.OpenStackMachineTemplateResource, out *OpenStackMachineTemplateResource, s conversion.Scope) error {
-	return autoConvert_v1alpha5_OpenStackMachineTemplateResource_To_v1alpha4_OpenStackMachineTemplateResource(in, out, s)
+// Convert_v1alpha6_OpenStackMachineTemplateResource_To_v1alpha4_OpenStackMachineTemplateResource is an autogenerated conversion function.
+func Convert_v1alpha6_OpenStackMachineTemplateResource_To_v1alpha4_OpenStackMachineTemplateResource(in *v1alpha6.OpenStackMachineTemplateResource, out *OpenStackMachineTemplateResource, s conversion.Scope) error {
+	return autoConvert_v1alpha6_OpenStackMachineTemplateResource_To_v1alpha4_OpenStackMachineTemplateResource(in, out, s)
 }
 
-func autoConvert_v1alpha4_OpenStackMachineTemplateSpec_To_v1alpha5_OpenStackMachineTemplateSpec(in *OpenStackMachineTemplateSpec, out *v1alpha5.OpenStackMachineTemplateSpec, s conversion.Scope) error {
-	if err := Convert_v1alpha4_OpenStackMachineTemplateResource_To_v1alpha5_OpenStackMachineTemplateResource(&in.Template, &out.Template, s); err != nil {
+func autoConvert_v1alpha4_OpenStackMachineTemplateSpec_To_v1alpha6_OpenStackMachineTemplateSpec(in *OpenStackMachineTemplateSpec, out *v1alpha6.OpenStackMachineTemplateSpec, s conversion.Scope) error {
+	if err := Convert_v1alpha4_OpenStackMachineTemplateResource_To_v1alpha6_OpenStackMachineTemplateResource(&in.Template, &out.Template, s); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Convert_v1alpha4_OpenStackMachineTemplateSpec_To_v1alpha5_OpenStackMachineTemplateSpec is an autogenerated conversion function.
-func Convert_v1alpha4_OpenStackMachineTemplateSpec_To_v1alpha5_OpenStackMachineTemplateSpec(in *OpenStackMachineTemplateSpec, out *v1alpha5.OpenStackMachineTemplateSpec, s conversion.Scope) error {
-	return autoConvert_v1alpha4_OpenStackMachineTemplateSpec_To_v1alpha5_OpenStackMachineTemplateSpec(in, out, s)
+// Convert_v1alpha4_OpenStackMachineTemplateSpec_To_v1alpha6_OpenStackMachineTemplateSpec is an autogenerated conversion function.
+func Convert_v1alpha4_OpenStackMachineTemplateSpec_To_v1alpha6_OpenStackMachineTemplateSpec(in *OpenStackMachineTemplateSpec, out *v1alpha6.OpenStackMachineTemplateSpec, s conversion.Scope) error {
+	return autoConvert_v1alpha4_OpenStackMachineTemplateSpec_To_v1alpha6_OpenStackMachineTemplateSpec(in, out, s)
 }
 
-func autoConvert_v1alpha5_OpenStackMachineTemplateSpec_To_v1alpha4_OpenStackMachineTemplateSpec(in *v1alpha5.OpenStackMachineTemplateSpec, out *OpenStackMachineTemplateSpec, s conversion.Scope) error {
-	if err := Convert_v1alpha5_OpenStackMachineTemplateResource_To_v1alpha4_OpenStackMachineTemplateResource(&in.Template, &out.Template, s); err != nil {
+func autoConvert_v1alpha6_OpenStackMachineTemplateSpec_To_v1alpha4_OpenStackMachineTemplateSpec(in *v1alpha6.OpenStackMachineTemplateSpec, out *OpenStackMachineTemplateSpec, s conversion.Scope) error {
+	if err := Convert_v1alpha6_OpenStackMachineTemplateResource_To_v1alpha4_OpenStackMachineTemplateResource(&in.Template, &out.Template, s); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Convert_v1alpha5_OpenStackMachineTemplateSpec_To_v1alpha4_OpenStackMachineTemplateSpec is an autogenerated conversion function.
-func Convert_v1alpha5_OpenStackMachineTemplateSpec_To_v1alpha4_OpenStackMachineTemplateSpec(in *v1alpha5.OpenStackMachineTemplateSpec, out *OpenStackMachineTemplateSpec, s conversion.Scope) error {
-	return autoConvert_v1alpha5_OpenStackMachineTemplateSpec_To_v1alpha4_OpenStackMachineTemplateSpec(in, out, s)
+// Convert_v1alpha6_OpenStackMachineTemplateSpec_To_v1alpha4_OpenStackMachineTemplateSpec is an autogenerated conversion function.
+func Convert_v1alpha6_OpenStackMachineTemplateSpec_To_v1alpha4_OpenStackMachineTemplateSpec(in *v1alpha6.OpenStackMachineTemplateSpec, out *OpenStackMachineTemplateSpec, s conversion.Scope) error {
+	return autoConvert_v1alpha6_OpenStackMachineTemplateSpec_To_v1alpha4_OpenStackMachineTemplateSpec(in, out, s)
 }
 
-func autoConvert_v1alpha4_PortOpts_To_v1alpha5_PortOpts(in *PortOpts, out *v1alpha5.PortOpts, s conversion.Scope) error {
+func autoConvert_v1alpha4_PortOpts_To_v1alpha6_PortOpts(in *PortOpts, out *v1alpha6.PortOpts, s conversion.Scope) error {
 	// WARNING: in.NetworkID requires manual conversion: does not exist in peer-type
 	out.NameSuffix = in.NameSuffix
 	out.Description = in.Description
@@ -1460,9 +1460,9 @@ func autoConvert_v1alpha4_PortOpts_To_v1alpha5_PortOpts(in *PortOpts, out *v1alp
 	out.MACAddress = in.MACAddress
 	if in.FixedIPs != nil {
 		in, out := &in.FixedIPs, &out.FixedIPs
-		*out = make([]v1alpha5.FixedIP, len(*in))
+		*out = make([]v1alpha6.FixedIP, len(*in))
 		for i := range *in {
-			if err := Convert_v1alpha4_FixedIP_To_v1alpha5_FixedIP(&(*in)[i], &(*out)[i], s); err != nil {
+			if err := Convert_v1alpha4_FixedIP_To_v1alpha6_FixedIP(&(*in)[i], &(*out)[i], s); err != nil {
 				return err
 			}
 		}
@@ -1472,7 +1472,7 @@ func autoConvert_v1alpha4_PortOpts_To_v1alpha5_PortOpts(in *PortOpts, out *v1alp
 	out.TenantID = in.TenantID
 	out.ProjectID = in.ProjectID
 	out.SecurityGroups = (*[]string)(unsafe.Pointer(in.SecurityGroups))
-	out.AllowedAddressPairs = *(*[]v1alpha5.AddressPair)(unsafe.Pointer(&in.AllowedAddressPairs))
+	out.AllowedAddressPairs = *(*[]v1alpha6.AddressPair)(unsafe.Pointer(&in.AllowedAddressPairs))
 	out.Trunk = (*bool)(unsafe.Pointer(in.Trunk))
 	out.HostID = in.HostID
 	out.VNICType = in.VNICType
@@ -1482,7 +1482,7 @@ func autoConvert_v1alpha4_PortOpts_To_v1alpha5_PortOpts(in *PortOpts, out *v1alp
 	return nil
 }
 
-func autoConvert_v1alpha5_PortOpts_To_v1alpha4_PortOpts(in *v1alpha5.PortOpts, out *PortOpts, s conversion.Scope) error {
+func autoConvert_v1alpha6_PortOpts_To_v1alpha4_PortOpts(in *v1alpha6.PortOpts, out *PortOpts, s conversion.Scope) error {
 	// WARNING: in.Network requires manual conversion: does not exist in peer-type
 	out.NameSuffix = in.NameSuffix
 	out.Description = in.Description
@@ -1492,7 +1492,7 @@ func autoConvert_v1alpha5_PortOpts_To_v1alpha4_PortOpts(in *v1alpha5.PortOpts, o
 		in, out := &in.FixedIPs, &out.FixedIPs
 		*out = make([]FixedIP, len(*in))
 		for i := range *in {
-			if err := Convert_v1alpha5_FixedIP_To_v1alpha4_FixedIP(&(*in)[i], &(*out)[i], s); err != nil {
+			if err := Convert_v1alpha6_FixedIP_To_v1alpha4_FixedIP(&(*in)[i], &(*out)[i], s); err != nil {
 				return err
 			}
 		}
@@ -1513,7 +1513,7 @@ func autoConvert_v1alpha5_PortOpts_To_v1alpha4_PortOpts(in *v1alpha5.PortOpts, o
 	return nil
 }
 
-func autoConvert_v1alpha4_RootVolume_To_v1alpha5_RootVolume(in *RootVolume, out *v1alpha5.RootVolume, s conversion.Scope) error {
+func autoConvert_v1alpha4_RootVolume_To_v1alpha6_RootVolume(in *RootVolume, out *v1alpha6.RootVolume, s conversion.Scope) error {
 	// WARNING: in.SourceType requires manual conversion: does not exist in peer-type
 	// WARNING: in.SourceUUID requires manual conversion: does not exist in peer-type
 	// WARNING: in.DeviceType requires manual conversion: does not exist in peer-type
@@ -1521,26 +1521,26 @@ func autoConvert_v1alpha4_RootVolume_To_v1alpha5_RootVolume(in *RootVolume, out 
 	return nil
 }
 
-func autoConvert_v1alpha5_RootVolume_To_v1alpha4_RootVolume(in *v1alpha5.RootVolume, out *RootVolume, s conversion.Scope) error {
+func autoConvert_v1alpha6_RootVolume_To_v1alpha4_RootVolume(in *v1alpha6.RootVolume, out *RootVolume, s conversion.Scope) error {
 	out.Size = in.Size
 	// WARNING: in.VolumeType requires manual conversion: does not exist in peer-type
 	// WARNING: in.AvailabilityZone requires manual conversion: does not exist in peer-type
 	return nil
 }
 
-func autoConvert_v1alpha4_Router_To_v1alpha5_Router(in *Router, out *v1alpha5.Router, s conversion.Scope) error {
+func autoConvert_v1alpha4_Router_To_v1alpha6_Router(in *Router, out *v1alpha6.Router, s conversion.Scope) error {
 	out.Name = in.Name
 	out.ID = in.ID
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	return nil
 }
 
-// Convert_v1alpha4_Router_To_v1alpha5_Router is an autogenerated conversion function.
-func Convert_v1alpha4_Router_To_v1alpha5_Router(in *Router, out *v1alpha5.Router, s conversion.Scope) error {
-	return autoConvert_v1alpha4_Router_To_v1alpha5_Router(in, out, s)
+// Convert_v1alpha4_Router_To_v1alpha6_Router is an autogenerated conversion function.
+func Convert_v1alpha4_Router_To_v1alpha6_Router(in *Router, out *v1alpha6.Router, s conversion.Scope) error {
+	return autoConvert_v1alpha4_Router_To_v1alpha6_Router(in, out, s)
 }
 
-func autoConvert_v1alpha5_Router_To_v1alpha4_Router(in *v1alpha5.Router, out *Router, s conversion.Scope) error {
+func autoConvert_v1alpha6_Router_To_v1alpha4_Router(in *v1alpha6.Router, out *Router, s conversion.Scope) error {
 	out.Name = in.Name
 	out.ID = in.ID
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
@@ -1548,31 +1548,31 @@ func autoConvert_v1alpha5_Router_To_v1alpha4_Router(in *v1alpha5.Router, out *Ro
 	return nil
 }
 
-func autoConvert_v1alpha4_SecurityGroup_To_v1alpha5_SecurityGroup(in *SecurityGroup, out *v1alpha5.SecurityGroup, s conversion.Scope) error {
+func autoConvert_v1alpha4_SecurityGroup_To_v1alpha6_SecurityGroup(in *SecurityGroup, out *v1alpha6.SecurityGroup, s conversion.Scope) error {
 	out.Name = in.Name
 	out.ID = in.ID
-	out.Rules = *(*[]v1alpha5.SecurityGroupRule)(unsafe.Pointer(&in.Rules))
+	out.Rules = *(*[]v1alpha6.SecurityGroupRule)(unsafe.Pointer(&in.Rules))
 	return nil
 }
 
-// Convert_v1alpha4_SecurityGroup_To_v1alpha5_SecurityGroup is an autogenerated conversion function.
-func Convert_v1alpha4_SecurityGroup_To_v1alpha5_SecurityGroup(in *SecurityGroup, out *v1alpha5.SecurityGroup, s conversion.Scope) error {
-	return autoConvert_v1alpha4_SecurityGroup_To_v1alpha5_SecurityGroup(in, out, s)
+// Convert_v1alpha4_SecurityGroup_To_v1alpha6_SecurityGroup is an autogenerated conversion function.
+func Convert_v1alpha4_SecurityGroup_To_v1alpha6_SecurityGroup(in *SecurityGroup, out *v1alpha6.SecurityGroup, s conversion.Scope) error {
+	return autoConvert_v1alpha4_SecurityGroup_To_v1alpha6_SecurityGroup(in, out, s)
 }
 
-func autoConvert_v1alpha5_SecurityGroup_To_v1alpha4_SecurityGroup(in *v1alpha5.SecurityGroup, out *SecurityGroup, s conversion.Scope) error {
+func autoConvert_v1alpha6_SecurityGroup_To_v1alpha4_SecurityGroup(in *v1alpha6.SecurityGroup, out *SecurityGroup, s conversion.Scope) error {
 	out.Name = in.Name
 	out.ID = in.ID
 	out.Rules = *(*[]SecurityGroupRule)(unsafe.Pointer(&in.Rules))
 	return nil
 }
 
-// Convert_v1alpha5_SecurityGroup_To_v1alpha4_SecurityGroup is an autogenerated conversion function.
-func Convert_v1alpha5_SecurityGroup_To_v1alpha4_SecurityGroup(in *v1alpha5.SecurityGroup, out *SecurityGroup, s conversion.Scope) error {
-	return autoConvert_v1alpha5_SecurityGroup_To_v1alpha4_SecurityGroup(in, out, s)
+// Convert_v1alpha6_SecurityGroup_To_v1alpha4_SecurityGroup is an autogenerated conversion function.
+func Convert_v1alpha6_SecurityGroup_To_v1alpha4_SecurityGroup(in *v1alpha6.SecurityGroup, out *SecurityGroup, s conversion.Scope) error {
+	return autoConvert_v1alpha6_SecurityGroup_To_v1alpha4_SecurityGroup(in, out, s)
 }
 
-func autoConvert_v1alpha4_SecurityGroupFilter_To_v1alpha5_SecurityGroupFilter(in *SecurityGroupFilter, out *v1alpha5.SecurityGroupFilter, s conversion.Scope) error {
+func autoConvert_v1alpha4_SecurityGroupFilter_To_v1alpha6_SecurityGroupFilter(in *SecurityGroupFilter, out *v1alpha6.SecurityGroupFilter, s conversion.Scope) error {
 	out.ID = in.ID
 	out.Name = in.Name
 	out.Description = in.Description
@@ -1589,12 +1589,12 @@ func autoConvert_v1alpha4_SecurityGroupFilter_To_v1alpha5_SecurityGroupFilter(in
 	return nil
 }
 
-// Convert_v1alpha4_SecurityGroupFilter_To_v1alpha5_SecurityGroupFilter is an autogenerated conversion function.
-func Convert_v1alpha4_SecurityGroupFilter_To_v1alpha5_SecurityGroupFilter(in *SecurityGroupFilter, out *v1alpha5.SecurityGroupFilter, s conversion.Scope) error {
-	return autoConvert_v1alpha4_SecurityGroupFilter_To_v1alpha5_SecurityGroupFilter(in, out, s)
+// Convert_v1alpha4_SecurityGroupFilter_To_v1alpha6_SecurityGroupFilter is an autogenerated conversion function.
+func Convert_v1alpha4_SecurityGroupFilter_To_v1alpha6_SecurityGroupFilter(in *SecurityGroupFilter, out *v1alpha6.SecurityGroupFilter, s conversion.Scope) error {
+	return autoConvert_v1alpha4_SecurityGroupFilter_To_v1alpha6_SecurityGroupFilter(in, out, s)
 }
 
-func autoConvert_v1alpha5_SecurityGroupFilter_To_v1alpha4_SecurityGroupFilter(in *v1alpha5.SecurityGroupFilter, out *SecurityGroupFilter, s conversion.Scope) error {
+func autoConvert_v1alpha6_SecurityGroupFilter_To_v1alpha4_SecurityGroupFilter(in *v1alpha6.SecurityGroupFilter, out *SecurityGroupFilter, s conversion.Scope) error {
 	out.ID = in.ID
 	out.Name = in.Name
 	out.Description = in.Description
@@ -1611,40 +1611,40 @@ func autoConvert_v1alpha5_SecurityGroupFilter_To_v1alpha4_SecurityGroupFilter(in
 	return nil
 }
 
-// Convert_v1alpha5_SecurityGroupFilter_To_v1alpha4_SecurityGroupFilter is an autogenerated conversion function.
-func Convert_v1alpha5_SecurityGroupFilter_To_v1alpha4_SecurityGroupFilter(in *v1alpha5.SecurityGroupFilter, out *SecurityGroupFilter, s conversion.Scope) error {
-	return autoConvert_v1alpha5_SecurityGroupFilter_To_v1alpha4_SecurityGroupFilter(in, out, s)
+// Convert_v1alpha6_SecurityGroupFilter_To_v1alpha4_SecurityGroupFilter is an autogenerated conversion function.
+func Convert_v1alpha6_SecurityGroupFilter_To_v1alpha4_SecurityGroupFilter(in *v1alpha6.SecurityGroupFilter, out *SecurityGroupFilter, s conversion.Scope) error {
+	return autoConvert_v1alpha6_SecurityGroupFilter_To_v1alpha4_SecurityGroupFilter(in, out, s)
 }
 
-func autoConvert_v1alpha4_SecurityGroupParam_To_v1alpha5_SecurityGroupParam(in *SecurityGroupParam, out *v1alpha5.SecurityGroupParam, s conversion.Scope) error {
+func autoConvert_v1alpha4_SecurityGroupParam_To_v1alpha6_SecurityGroupParam(in *SecurityGroupParam, out *v1alpha6.SecurityGroupParam, s conversion.Scope) error {
 	out.UUID = in.UUID
 	out.Name = in.Name
-	if err := Convert_v1alpha4_SecurityGroupFilter_To_v1alpha5_SecurityGroupFilter(&in.Filter, &out.Filter, s); err != nil {
+	if err := Convert_v1alpha4_SecurityGroupFilter_To_v1alpha6_SecurityGroupFilter(&in.Filter, &out.Filter, s); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Convert_v1alpha4_SecurityGroupParam_To_v1alpha5_SecurityGroupParam is an autogenerated conversion function.
-func Convert_v1alpha4_SecurityGroupParam_To_v1alpha5_SecurityGroupParam(in *SecurityGroupParam, out *v1alpha5.SecurityGroupParam, s conversion.Scope) error {
-	return autoConvert_v1alpha4_SecurityGroupParam_To_v1alpha5_SecurityGroupParam(in, out, s)
+// Convert_v1alpha4_SecurityGroupParam_To_v1alpha6_SecurityGroupParam is an autogenerated conversion function.
+func Convert_v1alpha4_SecurityGroupParam_To_v1alpha6_SecurityGroupParam(in *SecurityGroupParam, out *v1alpha6.SecurityGroupParam, s conversion.Scope) error {
+	return autoConvert_v1alpha4_SecurityGroupParam_To_v1alpha6_SecurityGroupParam(in, out, s)
 }
 
-func autoConvert_v1alpha5_SecurityGroupParam_To_v1alpha4_SecurityGroupParam(in *v1alpha5.SecurityGroupParam, out *SecurityGroupParam, s conversion.Scope) error {
+func autoConvert_v1alpha6_SecurityGroupParam_To_v1alpha4_SecurityGroupParam(in *v1alpha6.SecurityGroupParam, out *SecurityGroupParam, s conversion.Scope) error {
 	out.UUID = in.UUID
 	out.Name = in.Name
-	if err := Convert_v1alpha5_SecurityGroupFilter_To_v1alpha4_SecurityGroupFilter(&in.Filter, &out.Filter, s); err != nil {
+	if err := Convert_v1alpha6_SecurityGroupFilter_To_v1alpha4_SecurityGroupFilter(&in.Filter, &out.Filter, s); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Convert_v1alpha5_SecurityGroupParam_To_v1alpha4_SecurityGroupParam is an autogenerated conversion function.
-func Convert_v1alpha5_SecurityGroupParam_To_v1alpha4_SecurityGroupParam(in *v1alpha5.SecurityGroupParam, out *SecurityGroupParam, s conversion.Scope) error {
-	return autoConvert_v1alpha5_SecurityGroupParam_To_v1alpha4_SecurityGroupParam(in, out, s)
+// Convert_v1alpha6_SecurityGroupParam_To_v1alpha4_SecurityGroupParam is an autogenerated conversion function.
+func Convert_v1alpha6_SecurityGroupParam_To_v1alpha4_SecurityGroupParam(in *v1alpha6.SecurityGroupParam, out *SecurityGroupParam, s conversion.Scope) error {
+	return autoConvert_v1alpha6_SecurityGroupParam_To_v1alpha4_SecurityGroupParam(in, out, s)
 }
 
-func autoConvert_v1alpha4_SecurityGroupRule_To_v1alpha5_SecurityGroupRule(in *SecurityGroupRule, out *v1alpha5.SecurityGroupRule, s conversion.Scope) error {
+func autoConvert_v1alpha4_SecurityGroupRule_To_v1alpha6_SecurityGroupRule(in *SecurityGroupRule, out *v1alpha6.SecurityGroupRule, s conversion.Scope) error {
 	out.Description = in.Description
 	out.ID = in.ID
 	out.Direction = in.Direction
@@ -1658,12 +1658,12 @@ func autoConvert_v1alpha4_SecurityGroupRule_To_v1alpha5_SecurityGroupRule(in *Se
 	return nil
 }
 
-// Convert_v1alpha4_SecurityGroupRule_To_v1alpha5_SecurityGroupRule is an autogenerated conversion function.
-func Convert_v1alpha4_SecurityGroupRule_To_v1alpha5_SecurityGroupRule(in *SecurityGroupRule, out *v1alpha5.SecurityGroupRule, s conversion.Scope) error {
-	return autoConvert_v1alpha4_SecurityGroupRule_To_v1alpha5_SecurityGroupRule(in, out, s)
+// Convert_v1alpha4_SecurityGroupRule_To_v1alpha6_SecurityGroupRule is an autogenerated conversion function.
+func Convert_v1alpha4_SecurityGroupRule_To_v1alpha6_SecurityGroupRule(in *SecurityGroupRule, out *v1alpha6.SecurityGroupRule, s conversion.Scope) error {
+	return autoConvert_v1alpha4_SecurityGroupRule_To_v1alpha6_SecurityGroupRule(in, out, s)
 }
 
-func autoConvert_v1alpha5_SecurityGroupRule_To_v1alpha4_SecurityGroupRule(in *v1alpha5.SecurityGroupRule, out *SecurityGroupRule, s conversion.Scope) error {
+func autoConvert_v1alpha6_SecurityGroupRule_To_v1alpha4_SecurityGroupRule(in *v1alpha6.SecurityGroupRule, out *SecurityGroupRule, s conversion.Scope) error {
 	out.Description = in.Description
 	out.ID = in.ID
 	out.Direction = in.Direction
@@ -1677,12 +1677,12 @@ func autoConvert_v1alpha5_SecurityGroupRule_To_v1alpha4_SecurityGroupRule(in *v1
 	return nil
 }
 
-// Convert_v1alpha5_SecurityGroupRule_To_v1alpha4_SecurityGroupRule is an autogenerated conversion function.
-func Convert_v1alpha5_SecurityGroupRule_To_v1alpha4_SecurityGroupRule(in *v1alpha5.SecurityGroupRule, out *SecurityGroupRule, s conversion.Scope) error {
-	return autoConvert_v1alpha5_SecurityGroupRule_To_v1alpha4_SecurityGroupRule(in, out, s)
+// Convert_v1alpha6_SecurityGroupRule_To_v1alpha4_SecurityGroupRule is an autogenerated conversion function.
+func Convert_v1alpha6_SecurityGroupRule_To_v1alpha4_SecurityGroupRule(in *v1alpha6.SecurityGroupRule, out *SecurityGroupRule, s conversion.Scope) error {
+	return autoConvert_v1alpha6_SecurityGroupRule_To_v1alpha4_SecurityGroupRule(in, out, s)
 }
 
-func autoConvert_v1alpha4_Subnet_To_v1alpha5_Subnet(in *Subnet, out *v1alpha5.Subnet, s conversion.Scope) error {
+func autoConvert_v1alpha4_Subnet_To_v1alpha6_Subnet(in *Subnet, out *v1alpha6.Subnet, s conversion.Scope) error {
 	out.Name = in.Name
 	out.ID = in.ID
 	out.CIDR = in.CIDR
@@ -1690,12 +1690,12 @@ func autoConvert_v1alpha4_Subnet_To_v1alpha5_Subnet(in *Subnet, out *v1alpha5.Su
 	return nil
 }
 
-// Convert_v1alpha4_Subnet_To_v1alpha5_Subnet is an autogenerated conversion function.
-func Convert_v1alpha4_Subnet_To_v1alpha5_Subnet(in *Subnet, out *v1alpha5.Subnet, s conversion.Scope) error {
-	return autoConvert_v1alpha4_Subnet_To_v1alpha5_Subnet(in, out, s)
+// Convert_v1alpha4_Subnet_To_v1alpha6_Subnet is an autogenerated conversion function.
+func Convert_v1alpha4_Subnet_To_v1alpha6_Subnet(in *Subnet, out *v1alpha6.Subnet, s conversion.Scope) error {
+	return autoConvert_v1alpha4_Subnet_To_v1alpha6_Subnet(in, out, s)
 }
 
-func autoConvert_v1alpha5_Subnet_To_v1alpha4_Subnet(in *v1alpha5.Subnet, out *Subnet, s conversion.Scope) error {
+func autoConvert_v1alpha6_Subnet_To_v1alpha4_Subnet(in *v1alpha6.Subnet, out *Subnet, s conversion.Scope) error {
 	out.Name = in.Name
 	out.ID = in.ID
 	out.CIDR = in.CIDR
@@ -1703,12 +1703,12 @@ func autoConvert_v1alpha5_Subnet_To_v1alpha4_Subnet(in *v1alpha5.Subnet, out *Su
 	return nil
 }
 
-// Convert_v1alpha5_Subnet_To_v1alpha4_Subnet is an autogenerated conversion function.
-func Convert_v1alpha5_Subnet_To_v1alpha4_Subnet(in *v1alpha5.Subnet, out *Subnet, s conversion.Scope) error {
-	return autoConvert_v1alpha5_Subnet_To_v1alpha4_Subnet(in, out, s)
+// Convert_v1alpha6_Subnet_To_v1alpha4_Subnet is an autogenerated conversion function.
+func Convert_v1alpha6_Subnet_To_v1alpha4_Subnet(in *v1alpha6.Subnet, out *Subnet, s conversion.Scope) error {
+	return autoConvert_v1alpha6_Subnet_To_v1alpha4_Subnet(in, out, s)
 }
 
-func autoConvert_v1alpha4_SubnetFilter_To_v1alpha5_SubnetFilter(in *SubnetFilter, out *v1alpha5.SubnetFilter, s conversion.Scope) error {
+func autoConvert_v1alpha4_SubnetFilter_To_v1alpha6_SubnetFilter(in *SubnetFilter, out *v1alpha6.SubnetFilter, s conversion.Scope) error {
 	out.Name = in.Name
 	out.Description = in.Description
 	// WARNING: in.EnableDHCP requires manual conversion: does not exist in peer-type
@@ -1733,7 +1733,7 @@ func autoConvert_v1alpha4_SubnetFilter_To_v1alpha5_SubnetFilter(in *SubnetFilter
 	return nil
 }
 
-func autoConvert_v1alpha5_SubnetFilter_To_v1alpha4_SubnetFilter(in *v1alpha5.SubnetFilter, out *SubnetFilter, s conversion.Scope) error {
+func autoConvert_v1alpha6_SubnetFilter_To_v1alpha4_SubnetFilter(in *v1alpha6.SubnetFilter, out *SubnetFilter, s conversion.Scope) error {
 	out.Name = in.Name
 	out.Description = in.Description
 	out.ProjectID = in.ProjectID
@@ -1750,28 +1750,28 @@ func autoConvert_v1alpha5_SubnetFilter_To_v1alpha4_SubnetFilter(in *v1alpha5.Sub
 	return nil
 }
 
-func autoConvert_v1alpha4_SubnetParam_To_v1alpha5_SubnetParam(in *SubnetParam, out *v1alpha5.SubnetParam, s conversion.Scope) error {
+func autoConvert_v1alpha4_SubnetParam_To_v1alpha6_SubnetParam(in *SubnetParam, out *v1alpha6.SubnetParam, s conversion.Scope) error {
 	out.UUID = in.UUID
-	if err := Convert_v1alpha4_SubnetFilter_To_v1alpha5_SubnetFilter(&in.Filter, &out.Filter, s); err != nil {
+	if err := Convert_v1alpha4_SubnetFilter_To_v1alpha6_SubnetFilter(&in.Filter, &out.Filter, s); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Convert_v1alpha4_SubnetParam_To_v1alpha5_SubnetParam is an autogenerated conversion function.
-func Convert_v1alpha4_SubnetParam_To_v1alpha5_SubnetParam(in *SubnetParam, out *v1alpha5.SubnetParam, s conversion.Scope) error {
-	return autoConvert_v1alpha4_SubnetParam_To_v1alpha5_SubnetParam(in, out, s)
+// Convert_v1alpha4_SubnetParam_To_v1alpha6_SubnetParam is an autogenerated conversion function.
+func Convert_v1alpha4_SubnetParam_To_v1alpha6_SubnetParam(in *SubnetParam, out *v1alpha6.SubnetParam, s conversion.Scope) error {
+	return autoConvert_v1alpha4_SubnetParam_To_v1alpha6_SubnetParam(in, out, s)
 }
 
-func autoConvert_v1alpha5_SubnetParam_To_v1alpha4_SubnetParam(in *v1alpha5.SubnetParam, out *SubnetParam, s conversion.Scope) error {
+func autoConvert_v1alpha6_SubnetParam_To_v1alpha4_SubnetParam(in *v1alpha6.SubnetParam, out *SubnetParam, s conversion.Scope) error {
 	out.UUID = in.UUID
-	if err := Convert_v1alpha5_SubnetFilter_To_v1alpha4_SubnetFilter(&in.Filter, &out.Filter, s); err != nil {
+	if err := Convert_v1alpha6_SubnetFilter_To_v1alpha4_SubnetFilter(&in.Filter, &out.Filter, s); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Convert_v1alpha5_SubnetParam_To_v1alpha4_SubnetParam is an autogenerated conversion function.
-func Convert_v1alpha5_SubnetParam_To_v1alpha4_SubnetParam(in *v1alpha5.SubnetParam, out *SubnetParam, s conversion.Scope) error {
-	return autoConvert_v1alpha5_SubnetParam_To_v1alpha4_SubnetParam(in, out, s)
+// Convert_v1alpha6_SubnetParam_To_v1alpha4_SubnetParam is an autogenerated conversion function.
+func Convert_v1alpha6_SubnetParam_To_v1alpha4_SubnetParam(in *v1alpha6.SubnetParam, out *SubnetParam, s conversion.Scope) error {
+	return autoConvert_v1alpha6_SubnetParam_To_v1alpha4_SubnetParam(in, out, s)
 }

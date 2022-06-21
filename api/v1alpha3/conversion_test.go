@@ -28,7 +28,7 @@ import (
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
 	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha5"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
 )
 
 func TestConvertTo(t *testing.T) {
@@ -126,7 +126,7 @@ func TestFuzzyConversion(t *testing.T) {
 
 	fuzzerFuncs := func(_ runtimeserializer.CodecFactory) []interface{} {
 		return []interface{}{
-			// Don't test spoke-hub-spoke conversion of v1alpha3 fields which are not in v1alpha5
+			// Don't test spoke-hub-spoke conversion of v1alpha3 fields which are not in v1alpha6
 			func(v1alpha3Cluster *OpenStackCluster, c fuzz.Continue) {
 				c.FuzzNoCustom(v1alpha3Cluster)
 
@@ -150,7 +150,7 @@ func TestFuzzyConversion(t *testing.T) {
 			func(v1alpha3RootVolume *RootVolume, c fuzz.Continue) {
 				c.FuzzNoCustom(v1alpha3RootVolume)
 
-				// In v1alpha5 only DeviceType="disk" and SourceType="image" are supported
+				// In v1alpha6 only DeviceType="disk" and SourceType="image" are supported
 				v1alpha3RootVolume.DeviceType = "disk"
 				v1alpha3RootVolume.SourceType = "image"
 			},
@@ -202,7 +202,7 @@ func TestFuzzyConversion(t *testing.T) {
 				v1alpha3SubnetFilter.SortKey = ""
 				v1alpha3SubnetFilter.SortDir = ""
 
-				// TenantID and ProjectID are the same thing, so TenantID is removed in v1alpha5
+				// TenantID and ProjectID are the same thing, so TenantID is removed in v1alpha6
 				// Test that we restore TenantID from ProjectID
 				v1alpha3SubnetFilter.TenantID = v1alpha3SubnetFilter.ProjectID
 			},
@@ -216,84 +216,84 @@ func TestFuzzyConversion(t *testing.T) {
 				v1alpha3Filter.SortKey = ""
 				v1alpha3Filter.SortDir = ""
 
-				// TenantID and ProjectID are the same thing, so TenantID is removed in v1alpha5
+				// TenantID and ProjectID are the same thing, so TenantID is removed in v1alpha6
 				// Test that we restore TenantID from ProjectID
 				v1alpha3Filter.TenantID = v1alpha3Filter.ProjectID
 			},
 
-			// Don't test hub-spoke-hub conversion of v1alpha5 fields which are not in v1alpha3
-			func(v1alpha5Cluster *infrav1.OpenStackCluster, c fuzz.Continue) {
-				c.FuzzNoCustom(v1alpha5Cluster)
+			// Don't test hub-spoke-hub conversion of v1alpha6 fields which are not in v1alpha3
+			func(v1alpha6Cluster *infrav1.OpenStackCluster, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha6Cluster)
 
-				v1alpha5Cluster.ObjectMeta.Annotations = map[string]string{}
+				v1alpha6Cluster.ObjectMeta.Annotations = map[string]string{}
 
-				v1alpha5Cluster.Spec.APIServerFixedIP = ""
-				v1alpha5Cluster.Spec.AllowAllInClusterTraffic = false
-				v1alpha5Cluster.Spec.DisableAPIServerFloatingIP = false
-				v1alpha5Cluster.Spec.APIServerLoadBalancer.AllowedCIDRs = nil
-				if v1alpha5Cluster.Spec.Bastion != nil {
-					v1alpha5Cluster.Spec.Bastion.Instance.ImageUUID = ""
-					v1alpha5Cluster.Spec.Bastion.Instance.Ports = nil
+				v1alpha6Cluster.Spec.APIServerFixedIP = ""
+				v1alpha6Cluster.Spec.AllowAllInClusterTraffic = false
+				v1alpha6Cluster.Spec.DisableAPIServerFloatingIP = false
+				v1alpha6Cluster.Spec.APIServerLoadBalancer.AllowedCIDRs = nil
+				if v1alpha6Cluster.Spec.Bastion != nil {
+					v1alpha6Cluster.Spec.Bastion.Instance.ImageUUID = ""
+					v1alpha6Cluster.Spec.Bastion.Instance.Ports = nil
 				}
 
-				v1alpha5Cluster.Status.FailureMessage = nil
-				v1alpha5Cluster.Status.FailureReason = nil
+				v1alpha6Cluster.Status.FailureMessage = nil
+				v1alpha6Cluster.Status.FailureReason = nil
 
-				if v1alpha5Cluster.Status.Bastion != nil {
-					v1alpha5Cluster.Status.Bastion.ImageUUID = ""
-					v1alpha5Cluster.Status.Bastion.Networks = nil
+				if v1alpha6Cluster.Status.Bastion != nil {
+					v1alpha6Cluster.Status.Bastion.ImageUUID = ""
+					v1alpha6Cluster.Status.Bastion.Networks = nil
 				}
 
-				if v1alpha5Cluster.Status.Network != nil {
-					if v1alpha5Cluster.Status.Network.APIServerLoadBalancer != nil {
-						v1alpha5Cluster.Status.Network.APIServerLoadBalancer.AllowedCIDRs = nil
+				if v1alpha6Cluster.Status.Network != nil {
+					if v1alpha6Cluster.Status.Network.APIServerLoadBalancer != nil {
+						v1alpha6Cluster.Status.Network.APIServerLoadBalancer.AllowedCIDRs = nil
 					}
-					if v1alpha5Cluster.Status.Network.Router != nil {
-						v1alpha5Cluster.Status.Network.Router.IPs = []string{}
+					if v1alpha6Cluster.Status.Network.Router != nil {
+						v1alpha6Cluster.Status.Network.Router.IPs = []string{}
 					}
 				}
 
-				if v1alpha5Cluster.Status.ExternalNetwork != nil {
-					if v1alpha5Cluster.Status.ExternalNetwork.APIServerLoadBalancer != nil {
-						v1alpha5Cluster.Status.ExternalNetwork.APIServerLoadBalancer.AllowedCIDRs = nil
+				if v1alpha6Cluster.Status.ExternalNetwork != nil {
+					if v1alpha6Cluster.Status.ExternalNetwork.APIServerLoadBalancer != nil {
+						v1alpha6Cluster.Status.ExternalNetwork.APIServerLoadBalancer.AllowedCIDRs = nil
 					}
-					if v1alpha5Cluster.Status.ExternalNetwork.Router != nil {
-						v1alpha5Cluster.Status.ExternalNetwork.Router.IPs = []string{}
+					if v1alpha6Cluster.Status.ExternalNetwork.Router != nil {
+						v1alpha6Cluster.Status.ExternalNetwork.Router.IPs = []string{}
 					}
 				}
 			},
-			func(v1alpha5Machine *infrav1.OpenStackMachine, c fuzz.Continue) {
-				c.FuzzNoCustom(v1alpha5Machine)
+			func(v1alpha6Machine *infrav1.OpenStackMachine, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha6Machine)
 
-				v1alpha5Machine.ObjectMeta.Annotations = map[string]string{}
-				v1alpha5Machine.Spec.Ports = nil
-				v1alpha5Machine.Spec.ImageUUID = ""
+				v1alpha6Machine.ObjectMeta.Annotations = map[string]string{}
+				v1alpha6Machine.Spec.Ports = nil
+				v1alpha6Machine.Spec.ImageUUID = ""
 			},
-			func(v1alpha5MachineTemplate *infrav1.OpenStackMachineTemplate, c fuzz.Continue) {
-				c.FuzzNoCustom(v1alpha5MachineTemplate)
+			func(v1alpha6MachineTemplate *infrav1.OpenStackMachineTemplate, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha6MachineTemplate)
 
-				v1alpha5MachineTemplate.ObjectMeta.Annotations = map[string]string{}
+				v1alpha6MachineTemplate.ObjectMeta.Annotations = map[string]string{}
 
-				v1alpha5MachineTemplate.Spec.Template.Spec.Image = ""
-				v1alpha5MachineTemplate.Spec.Template.Spec.ImageUUID = ""
-				v1alpha5MachineTemplate.Spec.Template.Spec.Ports = nil
+				v1alpha6MachineTemplate.Spec.Template.Spec.Image = ""
+				v1alpha6MachineTemplate.Spec.Template.Spec.ImageUUID = ""
+				v1alpha6MachineTemplate.Spec.Template.Spec.Ports = nil
 			},
-			func(v1alpha5Network *infrav1.Network, c fuzz.Continue) {
-				c.FuzzNoCustom(v1alpha5Network)
+			func(v1alpha6Network *infrav1.Network, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha6Network)
 
-				v1alpha5Network.PortOpts = nil
+				v1alpha6Network.PortOpts = nil
 			},
-			func(v1alpha5OpenStackIdentityRef *infrav1.OpenStackIdentityReference, c fuzz.Continue) {
-				c.FuzzNoCustom(v1alpha5OpenStackIdentityRef)
+			func(v1alpha6OpenStackIdentityRef *infrav1.OpenStackIdentityReference, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha6OpenStackIdentityRef)
 
 				// IdentityRef was assumed to be a Secret in v1alpha3
-				v1alpha5OpenStackIdentityRef.Kind = "Secret"
+				v1alpha6OpenStackIdentityRef.Kind = "Secret"
 			},
-			func(v1alpha5RootVolume *infrav1.RootVolume, c fuzz.Continue) {
-				c.FuzzNoCustom(v1alpha5RootVolume)
+			func(v1alpha6RootVolume *infrav1.RootVolume, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha6RootVolume)
 
-				v1alpha5RootVolume.VolumeType = ""
-				v1alpha5RootVolume.AvailabilityZone = ""
+				v1alpha6RootVolume.VolumeType = ""
+				v1alpha6RootVolume.AvailabilityZone = ""
 			},
 		}
 	}
