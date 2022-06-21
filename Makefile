@@ -378,8 +378,20 @@ release-alias-tag: # Adds the tag to the last build tag.
 release-notes: $(RELEASE_NOTES) ## Generate release notes
 	$(RELEASE_NOTES) $(RELEASE_NOTES_ARGS)
 
+.PHONY: templates
+templates: ## Generate cluster templates
+templates: templates/cluster-template.yaml \
+	   templates/cluster-template-without-lb.yaml \
+	   templates/cluster-template-external-cloud-provider.yaml
+
+templates/cluster-template.yaml: kustomize/v1alpha6/default $(KUSTOMIZE) FORCE
+	$(KUSTOMIZE) build "$<" > "$@"
+
+templates/cluster-template-%.yaml: kustomize/v1alpha6/% $(KUSTOMIZE) FORCE
+	$(KUSTOMIZE) build "$<" > "$@"
+
 .PHONY: release-templates
-release-templates: $(RELEASE_DIR) ## Generate release templates
+release-templates: $(RELEASE_DIR) templates ## Generate release templates
 	cp templates/cluster-template*.yaml $(RELEASE_DIR)/
 
 IMAGE_PATCH_DIR := $(ARTIFACTS)/image-patch
@@ -469,3 +481,6 @@ verify-gen: generate
 .PHONY: compile-e2e
 compile-e2e: ## Test e2e compilation
 	go test -c -o /dev/null -tags=e2e ./test/e2e/suites/conformance
+
+.PHONY: FORCE
+FORCE:
