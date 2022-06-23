@@ -9,9 +9,9 @@
 
 # External Cloud Provider
 
-To deploy a cluster using [external cloud provider](https://github.com/kubernetes/cloud-provider-openstack), create a cluster configuration with the [external cloud provider template](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/templates/cluster-template-external-cloud-provider.yaml).
+To deploy a cluster using [external cloud provider](https://github.com/kubernetes/cloud-provider-openstack), create a cluster configuration with the [external cloud provider template](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/templates/cluster-template-external-cloud-provider.yaml) or refer to [helm chart](https://github.com/kubernetes/cloud-provider-openstack/tree/master/charts/openstack-cloud-controller-manager).
 
-## Steps
+## Steps of using external cloud provider template
 
 - After control plane is up and running, retrieve the workload cluster Kubeconfig:
 
@@ -19,10 +19,12 @@ To deploy a cluster using [external cloud provider](https://github.com/kubernete
     clusterctl get kubeconfig ${CLUSTER_NAME} --namespace default > ./${CLUSTER_NAME}.kubeconfig
     ```
 
-- Deploy a CNI solution
+- Deploy a CNI solution (using Calico now)
+
+    Note: choose desired version by replace <v3.23> below
 
     ```shell
-    curl https://docs.projectcalico.org/v3.19/manifests/calico.yaml | sed "s/veth_mtu:.*/veth_mtu: \"1430\"/g" | kubectl --kubeconfig=./${CLUSTER_NAME}.kubeconfig apply -f -
+    kubectl --kubeconfig=./${CLUSTER_NAME}.kubeconfig apply -f https://docs.projectcalico.org/v3.23/manifests/calico.yaml
     ```
 
 - Create a secret containing the cloud configuration
