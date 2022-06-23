@@ -186,6 +186,11 @@ func TestConvertFrom(t *testing.T) {
 			},
 			want: &OpenStackClusterTemplate{
 				Spec: OpenStackClusterTemplateSpec{},
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"template\":{\"spec\":{\"allowAllInClusterTraffic\":false,\"apiServerLoadBalancer\":{},\"cloudName\":\"\",\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"managedSecurityGroups\":false,\"network\":{},\"subnet\":{}}}}}",
+					},
+				},
 			},
 		},
 	}

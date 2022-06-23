@@ -80,13 +80,32 @@ var _ ctrlconversion.Convertible = &OpenStackClusterTemplate{}
 func (r *OpenStackClusterTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackClusterTemplate)
 
-	return Convert_v1alpha4_OpenStackClusterTemplate_To_v1alpha6_OpenStackClusterTemplate(r, dst, nil)
+	if err := Convert_v1alpha4_OpenStackClusterTemplate_To_v1alpha6_OpenStackClusterTemplate(r, dst, nil); err != nil {
+		return err
+	}
+
+	// Manually restore data.
+	restored := &infrav1.OpenStackClusterTemplate{}
+	if ok, err := utilconversion.UnmarshalData(r, restored); err != nil || !ok {
+		return err
+	}
+
+	return nil
 }
 
 func (r *OpenStackClusterTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	src := srcRaw.(*infrav1.OpenStackClusterTemplate)
 
-	return Convert_v1alpha6_OpenStackClusterTemplate_To_v1alpha4_OpenStackClusterTemplate(src, r, nil)
+	if err := Convert_v1alpha6_OpenStackClusterTemplate_To_v1alpha4_OpenStackClusterTemplate(src, r, nil); err != nil {
+		return err
+	}
+
+	// Preserve Hub data on down-conversion except for metadata
+	if err := utilconversion.MarshalData(src, r); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 var _ ctrlconversion.Convertible = &OpenStackClusterTemplateList{}
@@ -108,7 +127,17 @@ var _ ctrlconversion.Convertible = &OpenStackMachine{}
 func (r *OpenStackMachine) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackMachine)
 
-	return Convert_v1alpha4_OpenStackMachine_To_v1alpha6_OpenStackMachine(r, dst, nil)
+	if err := Convert_v1alpha4_OpenStackMachine_To_v1alpha6_OpenStackMachine(r, dst, nil); err != nil {
+		return err
+	}
+
+	// Manually restore data.
+	restored := &infrav1.OpenStackMachine{}
+	if ok, err := utilconversion.UnmarshalData(r, restored); err != nil || !ok {
+		return err
+	}
+
+	return nil
 }
 
 func (r *OpenStackMachine) ConvertFrom(srcRaw ctrlconversion.Hub) error {
@@ -145,7 +174,17 @@ var _ ctrlconversion.Convertible = &OpenStackMachineTemplate{}
 func (r *OpenStackMachineTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackMachineTemplate)
 
-	return Convert_v1alpha4_OpenStackMachineTemplate_To_v1alpha6_OpenStackMachineTemplate(r, dst, nil)
+	if err := Convert_v1alpha4_OpenStackMachineTemplate_To_v1alpha6_OpenStackMachineTemplate(r, dst, nil); err != nil {
+		return err
+	}
+
+	// Manually restore data.
+	restored := &infrav1.OpenStackMachineTemplate{}
+	if ok, err := utilconversion.UnmarshalData(r, restored); err != nil || !ok {
+		return err
+	}
+
+	return nil
 }
 
 func (r *OpenStackMachineTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) error {
