@@ -1015,6 +1015,7 @@ func autoConvert_v1alpha3_OpenStackMachineStatus_To_v1alpha6_OpenStackMachineSta
 	out.InstanceState = (*v1alpha6.InstanceState)(unsafe.Pointer(in.InstanceState))
 	out.FailureReason = (*errors.MachineStatusError)(unsafe.Pointer(in.FailureReason))
 	out.FailureMessage = (*string)(unsafe.Pointer(in.FailureMessage))
+	out.Conditions = *(*v1beta1.Conditions)(unsafe.Pointer(&in.Conditions))
 	return nil
 }
 
@@ -1029,6 +1030,7 @@ func autoConvert_v1alpha6_OpenStackMachineStatus_To_v1alpha3_OpenStackMachineSta
 	out.InstanceState = (*InstanceState)(unsafe.Pointer(in.InstanceState))
 	out.FailureReason = (*errors.MachineStatusError)(unsafe.Pointer(in.FailureReason))
 	out.FailureMessage = (*string)(unsafe.Pointer(in.FailureMessage))
+	out.Conditions = *(*v1beta1.Conditions)(unsafe.Pointer(&in.Conditions))
 	return nil
 }
 
