@@ -32,7 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/cluster-api/util"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha5"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 )

@@ -1,5 +1,5 @@
 /*
-Copyright 2021 The Kubernetes Authors.
+Copyright 2022 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha5
+package v1alpha6
+
+const defaultIdentityRefKind = "Secret"
 
 // OpenStackIdentityReference is a reference to an infrastructure
 // provider identity to be used to provision cluster resources.
