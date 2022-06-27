@@ -1272,6 +1272,10 @@ spec:
       jsonPath: .metadata.ownerReferences[?(@.kind=="Machine")].name
       name: Machine
       type: string
+    - description: Time duration since creation of OpenStackMachine
+      jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
     name: v1alpha6
     schema:
       openAPIV3Schema:

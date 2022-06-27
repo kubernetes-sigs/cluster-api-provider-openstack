@@ -4202,6 +4202,10 @@ spec:
       jsonPath: .status.bastion.floatingIP
       name: Bastion IP
       type: string
+    - description: Time duration since creation of OpenStackCluster
+      jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
     name: v1alpha6
     schema:
       openAPIV3Schema:
