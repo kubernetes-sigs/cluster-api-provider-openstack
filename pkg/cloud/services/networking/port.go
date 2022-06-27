@@ -18,6 +18,7 @@ package networking
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/portsbinding"
@@ -240,6 +241,32 @@ func (s *Service) DeletePort(eventObject runtime.Object, portID string) error {
 	}
 
 	record.Eventf(eventObject, "SuccessfulDeletePort", "Deleted port with id %s", portID)
+	return nil
+}
+
+func (s *Service) DeletePorts(openStackCluster *infrav1.OpenStackCluster) error {
+	networkID := openStackCluster.Spec.Network.ID
+	portList, err := s.client.ListPort(ports.ListOpts{
+		NetworkID:   networkID,
+		DeviceOwner: "",
+	})
+	if err != nil {
+		if capoerrors.IsNotFound(err) {
+			return nil
+		}
+		return fmt.Errorf("list ports of network %q: %v", networkID, err)
+	}
+
+	for _, port := range portList {
+		if strings.HasPrefix(port.Name, openStackCluster.Name) {
+			err := s.DeletePort(openStackCluster, port.ID)
+			if capoerrors.IsNotFound(err) {
+				continue
+			}
+			return fmt.Errorf("delete port %s of network %q failed : %v", port.ID, networkID, err)
+		}
+	}
+
 	return nil
 }
 
