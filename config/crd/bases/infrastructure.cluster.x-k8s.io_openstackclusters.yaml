@@ -46,6 +46,10 @@ spec:
       jsonPath: .status.bastion.floatingIP
       name: Bastion
       type: string
+    - description: Time duration since creation of OpenStackCluster
+      jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
     name: v1alpha3
     schema:
       openAPIV3Schema:
@@ -1055,6 +1059,10 @@ spec:
       jsonPath: .status.bastion.floatingIP
       name: Bastion IP
       type: string
+    - description: Time duration since creation of OpenStackCluster
+      jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
     name: v1alpha4
     schema:
       openAPIV3Schema:
@@ -2462,6 +2470,10 @@ spec:
       jsonPath: .status.bastion.floatingIP
       name: Bastion IP
       type: string
+    - description: Time duration since creation of OpenStackCluster
+      jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
     name: v1alpha5
     schema:
       openAPIV3Schema:

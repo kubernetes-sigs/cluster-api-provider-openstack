@@ -41,6 +41,10 @@ spec:
       jsonPath: .metadata.ownerReferences[?(@.kind=="Machine")].name
       name: Machine
       type: string
+    - description: Time duration since creation of OpenStackMachine
+      jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
     name: v1alpha3
     schema:
       openAPIV3Schema:
@@ -376,6 +380,10 @@ spec:
       jsonPath: .metadata.ownerReferences[?(@.kind=="Machine")].name
       name: Machine
       type: string
+    - description: Time duration since creation of OpenStackMachine
+      jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
     name: v1alpha4
     schema:
       openAPIV3Schema:
@@ -792,6 +800,10 @@ spec:
       jsonPath: .metadata.ownerReferences[?(@.kind=="Machine")].name
       name: Machine
       type: string
+    - description: Time duration since creation of OpenStackMachine
+      jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
     name: v1alpha5
     schema:
       openAPIV3Schema:
