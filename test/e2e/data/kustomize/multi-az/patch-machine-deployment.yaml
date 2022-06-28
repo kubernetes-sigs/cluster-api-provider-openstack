@@ -1,0 +1,4 @@
+---
+- op: replace
+  path: /spec/template/spec/failureDomain
+  value: ${OPENSTACK_FAILURE_DOMAIN_ALT}

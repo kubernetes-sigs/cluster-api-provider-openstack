@@ -1,0 +1,16 @@
+---
+resources:
+- ../../../../../kustomize/v1alpha6/external-cloud-provider
+- ccm.yaml
+
+components:
+- ../common-patches
+
+patchesStrategicMerge:
+- patch-ccm.yaml
+
+patches:
+- target:
+    kind: OpenStackCluster
+    name: \${CLUSTER_NAME}
+  path: patch-allow-all-in-cluster-traffic.yaml

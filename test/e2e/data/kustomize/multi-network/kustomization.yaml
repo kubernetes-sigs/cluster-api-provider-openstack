@@ -1,0 +1,8 @@
+---
+resources:
+- ../default
+
+patches:
+- target:
+    kind: OpenStackMachineTemplate
+  path: patch-machine-template-networks.yaml

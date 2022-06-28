@@ -138,12 +138,30 @@ endif
 test: $(SETUP_ENVTEST) ## Run tests
 	KUBEBUILDER_ASSETS="$(KUBEBUILDER_ASSETS)" go test -v ./... $(TEST_ARGS)
 
+E2E_TEMPLATES_DIR=test/e2e/data/infrastructure-openstack
+E2E_KUSTOMIZE_DIR=test/e2e/data/kustomize
+
+.PHONY: e2e-templates
+e2e-templates: ## Generate cluster templates for e2e tests
+e2e-templates: $(addprefix $(E2E_TEMPLATES_DIR)/, \
+		 cluster-template-external-cloud-provider.yaml \
+		 cluster-template-multi-az.yaml \
+		 cluster-template-multi-network.yaml \
+		 cluster-template-without-lb.yaml \
+		 cluster-template.yaml)
+
+$(E2E_TEMPLATES_DIR)/cluster-template.yaml: $(E2E_KUSTOMIZE_DIR)/with-tags $(KUSTOMIZE) FORCE
+	$(KUSTOMIZE) build "$<" > "$@"
+
+$(E2E_TEMPLATES_DIR)/cluster-template-%.yaml: $(E2E_KUSTOMIZE_DIR)/% $(KUSTOMIZE) FORCE
+	$(KUSTOMIZE) build "$<" > "$@"
+
 # Can be run manually, e.g. via:
 # export OPENSTACK_CLOUD_YAML_FILE="$(pwd)/clouds.yaml"
 # E2E_GINKGO_ARGS="-stream -focus='default'" E2E_ARGS="-use-existing-cluster='true'" make test-e2e
 E2E_GINKGO_ARGS ?=
 .PHONY: test-e2e ## Run e2e tests using clusterctl
-test-e2e: $(GINKGO) $(KIND) $(KUSTOMIZE) e2e-image test-e2e-image-prerequisites ## Run e2e tests
+test-e2e: $(GINKGO) $(KIND) $(KUSTOMIZE) e2e-templates e2e-image test-e2e-image-prerequisites ## Run e2e tests
 	time $(GINKGO) --failFast -trace -progress -v -tags=e2e --nodes=$(E2E_GINKGO_PARALLEL) $(E2E_GINKGO_ARGS) ./test/e2e/suites/e2e/... -- -config-path="$(E2E_CONF_PATH)" -artifacts-folder="$(ARTIFACTS)" --data-folder="$(E2E_DATA_DIR)" $(E2E_ARGS)
 
 .PHONY: e2e-image

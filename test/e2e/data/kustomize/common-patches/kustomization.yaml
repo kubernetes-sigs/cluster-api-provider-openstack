@@ -1,0 +1,16 @@
+# Modifications to release templates common to all e2e test scenarios
+---
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+resources:
+- cni.yaml
+
+patchesStrategicMerge:
+- patch-cni.yaml
+
+patches:
+- target:
+    kind: OpenStackCluster
+    name: \${CLUSTER_NAME}
+  path: patch-cluster.yaml
