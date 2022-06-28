@@ -68,9 +68,9 @@ func NewInstanceStatusFromServer(server *ServerExt, logger logr.Logger) *Instanc
 }
 
 type networkInterface struct {
-	Address string  `json:"addr"`
-	Version float64 `json:"version"`
-	Type    string  `json:"OS-EXT-IPS:type"`
+	Address string `json:"addr"`
+	Version int    `json:"version"`
+	Type    string `json:"OS-EXT-IPS:type"`
 }
 
 // InstanceNetworkStatus represents the network status of an OpenStack instance
