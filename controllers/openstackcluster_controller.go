@@ -537,7 +537,7 @@ func reconcileNetworkComponents(scope *scope.Scope, cluster *clusterv1.Cluster, 
 }
 
 func (r *OpenStackClusterReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager, options controller.Options) error {
-	clusterToInfraFn := util.ClusterToInfrastructureMapFunc(infrav1.GroupVersion.WithKind("OpenStackCluster"))
+	clusterToInfraFn := util.ClusterToInfrastructureMapFunc(ctx, infrav1.GroupVersion.WithKind("OpenStackCluster"), mgr.GetClient(), &infrav1.OpenStackCluster{})
 	log := ctrl.LoggerFrom(ctx)
 
 	return ctrl.NewControllerManagedBy(mgr).

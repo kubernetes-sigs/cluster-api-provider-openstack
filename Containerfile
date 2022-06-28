@@ -24,7 +24,7 @@
 #         media type: "application/vnd.oci.image.layer.v1.tar+gzip"
 
 # Build the manager binary
-FROM golang:1.17.6 as builder
+FROM golang:1.18.3 as builder
 WORKDIR /workspace
 
 # Run this with docker build --build_arg goproxy=$(go env GOPROXY) to override the goproxy
