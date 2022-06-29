@@ -3,12 +3,12 @@
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
 - [v1alpha4 compared to v1alpha5](#v1alpha4-compared-to-v1alpha5)
-  - [Conversion from v1alpha4 to v1alpha5](#conversion-from-v1alpha4-to-v1alpha5)
+  - [Migration](#migration)
   - [API Changes](#api-changes)
     - [`OpenStackCluster`](#openstackcluster)
       - [Managed API LoadBalancer](#managed-api-loadbalancer)
-      - [Major Changes to Ports and Networks](#major-changes-to-ports-and-networks)
     - [`OpenStackMachine`](#openstackmachine)
+      - [Major Changes to Ports and Networks](#major-changes-to-ports-and-networks)
       - [Rename of `status.error{Reason,Message}` to `status.failure{Reason,Message}`](#rename-of-statuserrorreasonmessage-to-statusfailurereasonmessage)
       - [Changes to `rootVolume`](#changes-to-rootvolume)
 
