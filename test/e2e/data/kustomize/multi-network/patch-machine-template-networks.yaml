@@ -1,0 +1,11 @@
+---
+- op: add
+  path: /spec/template/spec/ports
+  value:
+  - description: "primary"
+  - description: "Extra Network 1"
+    network:
+      id: "${CLUSTER_EXTRA_NET_1}"
+  - description: "Extra Network 2"
+    network:
+      id: "${CLUSTER_EXTRA_NET_2}"

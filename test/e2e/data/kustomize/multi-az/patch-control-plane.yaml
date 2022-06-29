@@ -1,0 +1,4 @@
+---
+- op: add
+  path: /spec/controlPlaneAvailabilityZones/-
+  value: ${OPENSTACK_FAILURE_DOMAIN_ALT}

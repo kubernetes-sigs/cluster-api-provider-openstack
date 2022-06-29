@@ -1,0 +1,17 @@
+---
+resources:
+- ../default
+
+patches:
+- target:
+    kind: OpenStackCluster
+    name: \${CLUSTER_NAME}
+  path: patch-cluster.yaml
+- target:
+    kind: OpenStackMachineTemplate
+    name: \${CLUSTER_NAME}-control-plane
+  path: patch-machine-template-control-plane.yaml
+- target:
+    kind: OpenStackMachineTemplate
+    name: \${CLUSTER_NAME}-md-0
+  path: patch-machine-template-worker.yaml

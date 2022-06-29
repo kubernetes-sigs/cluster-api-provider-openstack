@@ -1,0 +1,5 @@
+resources:
+- ../default
+
+patchesStrategicMerge:
+- patch-without-lb.yaml
