@@ -101,10 +101,6 @@ GOLANGCI_LINT := $(BIN_DIR)/golangci-lint
 $(GOLANGCI_LINT): $(BIN_DIR) go.mod go.sum # Build golangci-lint from tools folder.
 	go build -tags=tools -o $@ github.com/golangci/golangci-lint/cmd/golangci-lint
 
-KIND := $(BIN_DIR)/kind
-$(KIND): $(BIN_DIR) go.mod go.sum
-	go build -tags tools -o $@ sigs.k8s.io/kind
-
 KUSTOMIZE := $(BIN_DIR)/kustomize
 $(KUSTOMIZE): $(BIN_DIR) go.mod go.sum # Build kustomize from tools folder.
 	CGO_ENABLED=0 go build -tags=tools -o $@ sigs.k8s.io/kustomize/kustomize/v4
