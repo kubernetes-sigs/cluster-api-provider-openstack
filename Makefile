@@ -156,12 +156,14 @@ $(E2E_TEMPLATES_DIR)/cluster-template.yaml: $(E2E_KUSTOMIZE_DIR)/with-tags $(KUS
 $(E2E_TEMPLATES_DIR)/cluster-template-%.yaml: $(E2E_KUSTOMIZE_DIR)/% $(KUSTOMIZE) FORCE
 	$(KUSTOMIZE) build "$<" > "$@"
 
+e2e-prerequisites: $(GINKGO) $(KIND) e2e-templates e2e-image test-e2e-image-prerequisites ## Build all artifacts required by e2e tests
+
 # Can be run manually, e.g. via:
 # export OPENSTACK_CLOUD_YAML_FILE="$(pwd)/clouds.yaml"
 # E2E_GINKGO_ARGS="-stream -focus='default'" E2E_ARGS="-use-existing-cluster='true'" make test-e2e
 E2E_GINKGO_ARGS ?=
 .PHONY: test-e2e ## Run e2e tests using clusterctl
-test-e2e: $(GINKGO) $(KIND) $(KUSTOMIZE) e2e-templates e2e-image test-e2e-image-prerequisites ## Run e2e tests
+test-e2e: e2e-prerequisites ## Run e2e tests
 	time $(GINKGO) --failFast -trace -progress -v -tags=e2e --nodes=$(E2E_GINKGO_PARALLEL) $(E2E_GINKGO_ARGS) ./test/e2e/suites/e2e/... -- -config-path="$(E2E_CONF_PATH)" -artifacts-folder="$(ARTIFACTS)" --data-folder="$(E2E_DATA_DIR)" $(E2E_ARGS)
 
 .PHONY: e2e-image
@@ -181,12 +183,12 @@ CONFORMANCE_E2E_ARGS ?= -kubetest.config-file=$(KUBETEST_CONF_PATH)
 CONFORMANCE_E2E_ARGS += $(E2E_ARGS)
 CONFORMANCE_GINKGO_ARGS ?= -stream
 .PHONY: test-conformance
-test-conformance: $(GINKGO) $(KIND) $(KUSTOMIZE) e2e-image ## Run clusterctl based conformance test on workload cluster (requires Docker).
+test-conformance: e2e-prerequisites ## Run clusterctl based conformance test on workload cluster (requires Docker).
 	time $(GINKGO) -trace -progress -v -tags=e2e -focus="conformance" $(CONFORMANCE_GINKGO_ARGS) ./test/e2e/suites/conformance/... -- -config-path="$(E2E_CONF_PATH)" -artifacts-folder="$(ARTIFACTS)" --data-folder="$(E2E_DATA_DIR)" $(CONFORMANCE_E2E_ARGS)
-
 
 test-conformance-fast: ## Run clusterctl based conformance test on workload cluster (requires Docker) using a subset of the conformance suite in parallel.
 	$(MAKE) test-conformance CONFORMANCE_E2E_ARGS="-kubetest.config-file=$(KUBETEST_FAST_CONF_PATH) -kubetest.ginkgo-nodes=5 $(E2E_ARGS)"
+
 
 ## --------------------------------------
 ## Binaries
