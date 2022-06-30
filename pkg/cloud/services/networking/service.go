@@ -21,11 +21,10 @@ import (
 	"sort"
 
 	"github.com/go-logr/logr"
-	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"k8s.io/apimachinery/pkg/runtime"
 
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
@@ -40,16 +39,14 @@ const (
 // It will create a network related infrastructure for the cluster, like network, subnet, router, security groups.
 type Service struct {
 	scope  *scope.Scope
-	client NetworkClient
+	client clients.NetworkClient
 }
 
 // NewService returns an instance of the networking service.
 func NewService(scope *scope.Scope) (*Service, error) {
-	serviceClient, err := openstack.NewNetworkV2(scope.ProviderClient, gophercloud.EndpointOpts{
-		Region: scope.ProviderClientOpts.RegionName,
-	})
+	networkClient, err := clients.NewNetworkClient(scope)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create networking service providerClient: %v", err)
+		return nil, err
 	}
 
 	if scope.ProviderClientOpts.AuthInfo == nil {
@@ -58,12 +55,12 @@ func NewService(scope *scope.Scope) (*Service, error) {
 
 	return &Service{
 		scope:  scope,
-		client: networkClient{serviceClient},
+		client: networkClient,
 	}, nil
 }
 
 // NewTestService returns a Service with no initialisation. It should only be used by tests.
-func NewTestService(projectID string, client NetworkClient, logger logr.Logger) *Service {
+func NewTestService(projectID string, client clients.NetworkClient, logger logr.Logger) *Service {
 	return &Service{
 		scope: &scope.Scope{
 			ProjectID: projectID,

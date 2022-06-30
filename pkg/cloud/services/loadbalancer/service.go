@@ -20,9 +20,8 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
-	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack"
 
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
@@ -31,17 +30,15 @@ import (
 type Service struct {
 	projectID          string
 	scope              *scope.Scope
-	loadbalancerClient LbClient
+	loadbalancerClient clients.LbClient
 	networkingService  *networking.Service
 }
 
 // NewService returns an instance of the loadbalancer service.
 func NewService(scope *scope.Scope) (*Service, error) {
-	loadbalancerClient, err := openstack.NewLoadBalancerV2(scope.ProviderClient, gophercloud.EndpointOpts{
-		Region: scope.ProviderClientOpts.RegionName,
-	})
+	loadbalancerClient, err := clients.NewLbClient(scope)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create load balancer service client: %v", err)
+		return nil, err
 	}
 
 	networkingService, err := networking.NewService(scope)
@@ -50,17 +47,15 @@ func NewService(scope *scope.Scope) (*Service, error) {
 	}
 
 	return &Service{
-		scope: scope,
-		loadbalancerClient: lbClient{
-			serviceClient: loadbalancerClient,
-		},
-		networkingService: networkingService,
+		scope:              scope,
+		loadbalancerClient: loadbalancerClient,
+		networkingService:  networkingService,
 	}, nil
 }
 
 // NewLoadBalancerTestService returns a Service with no initialization. It should only be used by tests.
 // It helps to mock the load balancer service in other packages.
-func NewLoadBalancerTestService(projectID string, lbClient LbClient, client *networking.Service, logger logr.Logger) *Service {
+func NewLoadBalancerTestService(projectID string, lbClient clients.LbClient, client *networking.Service, logger logr.Logger) *Service {
 	return &Service{
 		projectID: projectID,
 		scope: &scope.Scope{

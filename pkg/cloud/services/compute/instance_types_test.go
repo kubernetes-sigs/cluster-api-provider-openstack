@@ -22,6 +22,8 @@ import (
 	"github.com/go-logr/logr"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 )
 
 // Some arbitrary MAC addresses.
@@ -41,8 +43,8 @@ type networkAddress struct {
 	MacAddr string `json:"OS-EXT-IPS:mac_addr"`
 }
 
-func serverWithAddresses(addresses map[string][]networkAddress) *ServerExt {
-	var server ServerExt
+func serverWithAddresses(addresses map[string][]networkAddress) *clients.ServerExt {
+	var server clients.ServerExt
 
 	server.Addresses = make(map[string]interface{})
 	for network, addressList := range addresses {

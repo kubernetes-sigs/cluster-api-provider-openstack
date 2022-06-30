@@ -14,10 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package networking
+package clients
 
 import (
+	"fmt"
+
 	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
@@ -30,6 +33,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
 type NetworkClient interface {
@@ -87,6 +91,18 @@ type NetworkClient interface {
 
 type networkClient struct {
 	serviceClient *gophercloud.ServiceClient
+}
+
+// NewNetworkClient returns an instance of the networking service.
+func NewNetworkClient(scope *scope.Scope) (NetworkClient, error) {
+	serviceClient, err := openstack.NewNetworkV2(scope.ProviderClient, gophercloud.EndpointOpts{
+		Region: scope.ProviderClientOpts.RegionName,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create networking service providerClient: %v", err)
+	}
+
+	return networkClient{serviceClient}, nil
 }
 
 func (c networkClient) AddRouterInterface(id string, opts routers.AddInterfaceOptsBuilder) (*routers.InterfaceInfo, error) {

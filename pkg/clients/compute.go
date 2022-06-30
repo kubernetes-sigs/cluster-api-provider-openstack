@@ -14,10 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package compute
+package clients
 
 import (
+	"fmt"
+
 	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/availabilityzones"
@@ -26,10 +29,19 @@ import (
 	"github.com/gophercloud/utils/openstack/compute/v2/flavors"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
-//go:generate mockgen -package=compute -self_package sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute -destination=client_mock.go sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute Client
-//go:generate /usr/bin/env bash -c "cat ../../../../hack/boilerplate/boilerplate.generatego.txt client_mock.go > _client_mock.go && mv _client_mock.go client_mock.go"
+/*
+NovaMinimumMicroversion is the minimum Nova microversion supported by CAPO
+2.53 corresponds to OpenStack Pike
+
+For the canonical description of Nova microversions, see
+https://docs.openstack.org/nova/latest/reference/api-microversion-history.html
+
+CAPO uses server tags, which were added in microversion 2.52.
+*/
+const NovaMinimumMicroversion = "2.53"
 
 // ServerExt is the base gophercloud Server with extensions used by InstanceStatus.
 type ServerExt struct {
@@ -37,7 +49,7 @@ type ServerExt struct {
 	availabilityzones.ServerAvailabilityZoneExt
 }
 
-type Client interface {
+type ComputeClient interface {
 	ListAvailabilityZones() ([]availabilityzones.AvailabilityZone, error)
 
 	ListImages(listOpts images.ListOptsBuilder) ([]images.Image, error)
@@ -57,13 +69,40 @@ type Client interface {
 	GetVolume(volumeID string) (*volumes.Volume, error)
 }
 
-type serviceClient struct {
+type computeClient struct {
 	compute *gophercloud.ServiceClient
 	images  *gophercloud.ServiceClient
 	volume  *gophercloud.ServiceClient
 }
 
-func (s serviceClient) ListAvailabilityZones() ([]availabilityzones.AvailabilityZone, error) {
+// NewComputeClient returns a new compute client.
+func NewComputeClient(scope *scope.Scope) (ComputeClient, error) {
+	compute, err := openstack.NewComputeV2(scope.ProviderClient, gophercloud.EndpointOpts{
+		Region: scope.ProviderClientOpts.RegionName,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create compute service client: %v", err)
+	}
+	compute.Microversion = NovaMinimumMicroversion
+
+	images, err := openstack.NewImageServiceV2(scope.ProviderClient, gophercloud.EndpointOpts{
+		Region: scope.ProviderClientOpts.RegionName,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create image service client: %v", err)
+	}
+
+	volume, err := openstack.NewBlockStorageV3(scope.ProviderClient, gophercloud.EndpointOpts{
+		Region: scope.ProviderClientOpts.RegionName,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create volume service client: %v", err)
+	}
+
+	return &computeClient{compute, images, volume}, nil
+}
+
+func (s computeClient) ListAvailabilityZones() ([]availabilityzones.AvailabilityZone, error) {
 	mc := metrics.NewMetricPrometheusContext("availability_zone", "list")
 	allPages, err := availabilityzones.List(s.compute).AllPages()
 	if mc.ObserveRequest(err) != nil {
@@ -72,7 +111,7 @@ func (s serviceClient) ListAvailabilityZones() ([]availabilityzones.Availability
 	return availabilityzones.ExtractAvailabilityZones(allPages)
 }
 
-func (s serviceClient) ListImages(listOpts images.ListOptsBuilder) ([]images.Image, error) {
+func (s computeClient) ListImages(listOpts images.ListOptsBuilder) ([]images.Image, error) {
 	mc := metrics.NewMetricPrometheusContext("image", "list")
 	pages, err := images.List(s.images, listOpts).AllPages()
 	if mc.ObserveRequest(err) != nil {
@@ -81,13 +120,13 @@ func (s serviceClient) ListImages(listOpts images.ListOptsBuilder) ([]images.Ima
 	return images.ExtractImages(pages)
 }
 
-func (s serviceClient) GetFlavorIDFromName(flavor string) (string, error) {
+func (s computeClient) GetFlavorIDFromName(flavor string) (string, error) {
 	mc := metrics.NewMetricPrometheusContext("flavor", "get")
 	flavorID, err := flavors.IDFromName(s.compute, flavor)
 	return flavorID, mc.ObserveRequest(err)
 }
 
-func (s serviceClient) CreateServer(createOpts servers.CreateOptsBuilder) (*ServerExt, error) {
+func (s computeClient) CreateServer(createOpts servers.CreateOptsBuilder) (*ServerExt, error) {
 	var server ServerExt
 	mc := metrics.NewMetricPrometheusContext("server", "create")
 	err := servers.Create(s.compute, createOpts).ExtractInto(&server)
@@ -97,13 +136,13 @@ func (s serviceClient) CreateServer(createOpts servers.CreateOptsBuilder) (*Serv
 	return &server, nil
 }
 
-func (s serviceClient) DeleteServer(serverID string) error {
+func (s computeClient) DeleteServer(serverID string) error {
 	mc := metrics.NewMetricPrometheusContext("server", "delete")
 	err := servers.Delete(s.compute, serverID).ExtractErr()
 	return mc.ObserveRequestIgnoreNotFound(err)
 }
 
-func (s serviceClient) GetServer(serverID string) (*ServerExt, error) {
+func (s computeClient) GetServer(serverID string) (*ServerExt, error) {
 	var server ServerExt
 	mc := metrics.NewMetricPrometheusContext("server", "get")
 	err := servers.Get(s.compute, serverID).ExtractInto(&server)
@@ -113,7 +152,7 @@ func (s serviceClient) GetServer(serverID string) (*ServerExt, error) {
 	return &server, nil
 }
 
-func (s serviceClient) ListServers(listOpts servers.ListOptsBuilder) ([]ServerExt, error) {
+func (s computeClient) ListServers(listOpts servers.ListOptsBuilder) ([]ServerExt, error) {
 	var serverList []ServerExt
 	mc := metrics.NewMetricPrometheusContext("server", "list")
 	allPages, err := servers.List(s.compute, listOpts).AllPages()
@@ -124,7 +163,7 @@ func (s serviceClient) ListServers(listOpts servers.ListOptsBuilder) ([]ServerEx
 	return serverList, err
 }
 
-func (s serviceClient) ListAttachedInterfaces(serverID string) ([]attachinterfaces.Interface, error) {
+func (s computeClient) ListAttachedInterfaces(serverID string) ([]attachinterfaces.Interface, error) {
 	mc := metrics.NewMetricPrometheusContext("server_os_interface", "list")
 	interfaces, err := attachinterfaces.List(s.compute, serverID).AllPages()
 	if mc.ObserveRequest(err) != nil {
@@ -133,13 +172,13 @@ func (s serviceClient) ListAttachedInterfaces(serverID string) ([]attachinterfac
 	return attachinterfaces.ExtractInterfaces(interfaces)
 }
 
-func (s serviceClient) DeleteAttachedInterface(serverID, portID string) error {
+func (s computeClient) DeleteAttachedInterface(serverID, portID string) error {
 	mc := metrics.NewMetricPrometheusContext("server_os_interface", "delete")
 	err := attachinterfaces.Delete(s.compute, serverID, portID).ExtractErr()
 	return mc.ObserveRequestIgnoreNotFoundorConflict(err)
 }
 
-func (s serviceClient) ListVolumes(opts volumes.ListOptsBuilder) ([]volumes.Volume, error) {
+func (s computeClient) ListVolumes(opts volumes.ListOptsBuilder) ([]volumes.Volume, error) {
 	mc := metrics.NewMetricPrometheusContext("volume", "list")
 	pages, err := volumes.List(s.volume, opts).AllPages()
 	if mc.ObserveRequest(err) != nil {
@@ -148,19 +187,19 @@ func (s serviceClient) ListVolumes(opts volumes.ListOptsBuilder) ([]volumes.Volu
 	return volumes.ExtractVolumes(pages)
 }
 
-func (s serviceClient) CreateVolume(opts volumes.CreateOptsBuilder) (*volumes.Volume, error) {
+func (s computeClient) CreateVolume(opts volumes.CreateOptsBuilder) (*volumes.Volume, error) {
 	mc := metrics.NewMetricPrometheusContext("volume", "create")
 	volume, err := volumes.Create(s.volume, opts).Extract()
 	return volume, mc.ObserveRequest(err)
 }
 
-func (s serviceClient) DeleteVolume(volumeID string, opts volumes.DeleteOptsBuilder) error {
+func (s computeClient) DeleteVolume(volumeID string, opts volumes.DeleteOptsBuilder) error {
 	mc := metrics.NewMetricPrometheusContext("volume", "delete")
 	err := volumes.Delete(s.volume, volumeID, opts).ExtractErr()
 	return mc.ObserveRequestIgnoreNotFound(err)
 }
 
-func (s serviceClient) GetVolume(volumeID string) (*volumes.Volume, error) {
+func (s computeClient) GetVolume(volumeID string) (*volumes.Volume, error) {
 	mc := metrics.NewMetricPrometheusContext("volume", "get")
 	volume, err := volumes.Get(s.volume, volumeID).Extract()
 	return volume, mc.ObserveRequestIgnoreNotFound(err)
