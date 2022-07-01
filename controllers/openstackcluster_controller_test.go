@@ -20,7 +20,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/go-logr/logr"
 	"github.com/golang/mock/gomock"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,6 +36,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
@@ -178,49 +182,30 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(MatchError(clientCreateErr))
 		Expect(result).To(Equal(reconcile.Result{}))
 	})
+	It("should be able to reconcile when bastion is disabled and does not exist", func() {
+		testCluster.SetName("no-bastion")
+		testCluster.Spec = infrav1.OpenStackClusterSpec{
+			Bastion: &infrav1.Bastion{
+				Enabled: false,
+			},
+		}
+		err := k8sClient.Create(ctx, testCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, capiCluster)
+		Expect(err).To(BeNil())
+		scope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, logr.Discard())
+		Expect(err).To(BeNil())
 
-	// TODO: This test is set to pending (PIt instead of It) since it is not working.
-	PIt("should be able to reconcile when basition disabled", func() {
-		// verify := false
-		// cloud := clientconfig.Cloud{
-		// 	Cloud:      "test",
-		// 	RegionName: "test",
-		// 	Verify:     &verify,
-		// 	AuthInfo: &clientconfig.AuthInfo{
-		// 		AuthURL:        "https://example.com:5000",
-		// 		Username:       "testuser",
-		// 		Password:       "secret",
-		// 		ProjectName:    "test",
-		// 		DomainName:     "test",
-		// 		UserDomainName: "test",
-		// 	},
-		// }
-		// // TODO: Can we fake the client in some way?
-		// providerClient, clientOpts, _, err := scope.NewProviderClient(cloud, nil)
-		// Expect(err).To(BeNil())
-		// scope := &scope.Scope{
-		// 	ProviderClient:     providerClient,
-		// 	ProviderClientOpts: clientOpts,
-		// }
+		computeClientRecorder := mockScopeFactory.ComputeClient.EXPECT()
+		computeClientRecorder.ListServers(servers.ListOpts{
+			Name: "^capi-cluster-bastion$",
+		}).Return([]clients.ServerExt{}, nil)
 
-		// TODO: This won't work without filling in proper values.
-		// scope := &scope.Scope{
-		//	ProviderClient:     &gophercloud.ProviderClient{},
-		//	ProviderClientOpts: &clientconfig.ClientOpts{},
-		// }
-		// testCluster.SetName("no-bastion")
-		// testCluster.Spec = infrav1.OpenStackClusterSpec{
-		//	Bastion: &infrav1.Bastion{
-		//		Enabled: false,
-		// 	},
-		// }
-		// err := k8sClient.Create(ctx, testCluster)
-		// Expect(err).To(BeNil())
-		// err = k8sClient.Create(ctx, capiCluster)
-		// Expect(err).To(BeNil())
-		//
-		// err = deleteBastion(scope, capiCluster, testCluster)
-		// Expect(err).To(BeNil())
+		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
+		networkClientRecorder.ListSecGroup(gomock.Any()).Return([]groups.SecGroup{}, nil)
+
+		err = deleteBastion(scope, capiCluster, testCluster)
+		Expect(err).To(BeNil())
 	})
 })
 
