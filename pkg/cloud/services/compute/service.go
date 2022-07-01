@@ -45,7 +45,7 @@ func NewService(scope *scope.Scope) (*Service, error) {
 
 func (s Service) getComputeClient() clients.ComputeClient {
 	if s._computeClient == nil {
-		computeClient, err := clients.NewComputeClient(s.scope)
+		computeClient, err := clients.NewComputeClient(s.scope.ProviderClient, s.scope.ProviderClientOpts)
 		if err != nil {
 			return clients.NewComputeErrorClient(err)
 		}
@@ -58,7 +58,7 @@ func (s Service) getComputeClient() clients.ComputeClient {
 
 func (s Service) getVolumeClient() clients.VolumeClient {
 	if s._volumeClient == nil {
-		volumeClient, err := clients.NewVolumeClient(s.scope)
+		volumeClient, err := clients.NewVolumeClient(s.scope.ProviderClient, s.scope.ProviderClientOpts)
 		if err != nil {
 			return clients.NewVolumeErrorClient(err)
 		}
@@ -71,7 +71,7 @@ func (s Service) getVolumeClient() clients.VolumeClient {
 
 func (s Service) getImageClient() clients.ImageClient {
 	if s._imageClient == nil {
-		imageClient, err := clients.NewImageClient(s.scope)
+		imageClient, err := clients.NewImageClient(s.scope.ProviderClient, s.scope.ProviderClientOpts)
 		if err != nil {
 			return clients.NewImageErrorClient(err)
 		}

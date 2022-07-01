@@ -44,7 +44,7 @@ type Service struct {
 
 // NewService returns an instance of the networking service.
 func NewService(scope *scope.Scope) (*Service, error) {
-	networkClient, err := clients.NewNetworkClient(scope)
+	networkClient, err := clients.NewNetworkClient(scope.ProviderClient, scope.ProviderClientOpts)
 	if err != nil {
 		return nil, err
 	}
