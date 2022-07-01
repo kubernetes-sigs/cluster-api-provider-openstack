@@ -36,7 +36,7 @@ type Service struct {
 
 // NewService returns an instance of the loadbalancer service.
 func NewService(scope *scope.Scope) (*Service, error) {
-	loadbalancerClient, err := clients.NewLbClient(scope)
+	loadbalancerClient, err := clients.NewLbClient(scope.ProviderClient, scope.ProviderClientOpts)
 	if err != nil {
 		return nil, err
 	}
