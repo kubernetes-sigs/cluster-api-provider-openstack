@@ -186,7 +186,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		// 	},
 		// }
 		// // TODO: Can we fake the client in some way?
-		// providerClient, clientOpts, _, err := provider.NewClient(cloud, nil)
+		// providerClient, clientOpts, _, err := scope.NewProviderClient(cloud, nil)
 		// Expect(err).To(BeNil())
 		// scope := &scope.Scope{
 		// 	ProviderClient:     providerClient,
