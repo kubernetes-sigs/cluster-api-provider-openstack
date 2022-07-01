@@ -59,6 +59,7 @@ type OpenStackClusterReconciler struct {
 	Client           client.Client
 	Recorder         record.EventRecorder
 	WatchFilterValue string
+	ScopeFactory     scope.Factory
 }
 
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackclusters,verbs=get;list;watch;create;update;patch;delete
@@ -110,16 +111,9 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}()
 
-	osProviderClient, clientOpts, projectID, err := scope.NewClientFromCluster(ctx, r.Client, openStackCluster)
+	scope, err := r.ScopeFactory.NewClientScopeFromCluster(ctx, r.Client, openStackCluster, log)
 	if err != nil {
 		return reconcile.Result{}, err
-	}
-
-	scope := &scope.Scope{
-		ProviderClient:     osProviderClient,
-		ProviderClientOpts: clientOpts,
-		ProjectID:          projectID,
-		Logger:             log,
 	}
 
 	// Handle deleted clusters
@@ -131,8 +125,8 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	return reconcileNormal(ctx, scope, patchHelper, cluster, openStackCluster)
 }
 
-func reconcileDelete(ctx context.Context, scope *scope.Scope, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
-	scope.Logger.Info("Reconciling Cluster delete")
+func reconcileDelete(ctx context.Context, scope scope.Scope, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
+	scope.Logger().Info("Reconciling Cluster delete")
 
 	if err := deleteBastion(scope, cluster, openStackCluster); err != nil {
 		return reconcile.Result{}, err
@@ -182,7 +176,7 @@ func reconcileDelete(ctx context.Context, scope *scope.Scope, patchHelper *patch
 
 	// Cluster is deleted so remove the finalizer.
 	controllerutil.RemoveFinalizer(openStackCluster, infrav1.ClusterFinalizer)
-	scope.Logger.Info("Reconciled Cluster delete successfully")
+	scope.Logger().Info("Reconciled Cluster delete successfully")
 	if err := patchHelper.Patch(ctx, openStackCluster); err != nil {
 		return ctrl.Result{}, err
 	}
@@ -198,7 +192,7 @@ func contains(arr []string, target string) bool {
 	return false
 }
 
-func deleteBastion(scope *scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
+func deleteBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
 	computeService, err := compute.NewService(scope)
 	if err != nil {
 		return err
@@ -250,8 +244,8 @@ func deleteBastion(scope *scope.Scope, cluster *clusterv1.Cluster, openStackClus
 	return nil
 }
 
-func reconcileNormal(ctx context.Context, scope *scope.Scope, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
-	scope.Logger.Info("Reconciling Cluster")
+func reconcileNormal(ctx context.Context, scope scope.Scope, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
+	scope.Logger().Info("Reconciling Cluster")
 
 	// If the OpenStackCluster doesn't have our finalizer, add it.
 	controllerutil.AddFinalizer(openStackCluster, infrav1.ClusterFinalizer)
@@ -297,12 +291,12 @@ func reconcileNormal(ctx context.Context, scope *scope.Scope, patchHelper *patch
 	openStackCluster.Status.Ready = true
 	openStackCluster.Status.FailureMessage = nil
 	openStackCluster.Status.FailureReason = nil
-	scope.Logger.Info("Reconciled Cluster create successfully")
+	scope.Logger().Info("Reconciled Cluster create successfully")
 	return reconcile.Result{}, nil
 }
 
-func reconcileBastion(scope *scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
-	scope.Logger.Info("Reconciling Bastion")
+func reconcileBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
+	scope.Logger().Info("Reconciling Bastion")
 
 	if openStackCluster.Spec.Bastion == nil || !openStackCluster.Spec.Bastion.Enabled {
 		return deleteBastion(scope, cluster, openStackCluster)
@@ -415,7 +409,7 @@ func bastionHashHasChanged(computeHash string, clusterAnnotations map[string]str
 	return latestHash != computeHash
 }
 
-func reconcileNetworkComponents(scope *scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
+func reconcileNetworkComponents(scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
 	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
 
 	networkingService, err := networking.NewService(scope)
@@ -423,7 +417,7 @@ func reconcileNetworkComponents(scope *scope.Scope, cluster *clusterv1.Cluster, 
 		return err
 	}
 
-	scope.Logger.Info("Reconciling network components")
+	scope.Logger().Info("Reconciling network components")
 
 	err = networkingService.ReconcileExternalNetwork(openStackCluster)
 	if err != nil {
@@ -432,7 +426,7 @@ func reconcileNetworkComponents(scope *scope.Scope, cluster *clusterv1.Cluster, 
 	}
 
 	if openStackCluster.Spec.NodeCIDR == "" {
-		scope.Logger.V(4).Info("No need to reconcile network, searching network and subnet instead")
+		scope.Logger().V(4).Info("No need to reconcile network, searching network and subnet instead")
 
 		netOpts := openStackCluster.Spec.Network.ToListOpt()
 		networkList, err := networkingService.GetNetworksByFilter(&netOpts)
