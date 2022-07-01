@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package provider
+package scope
 
 import (
 	"context"
@@ -58,7 +58,7 @@ func NewClientFromMachine(ctx context.Context, ctrlClient client.Client, openSta
 		caCert = defaultCACert
 	}
 
-	return NewClient(cloud, caCert)
+	return NewProviderClient(cloud, caCert)
 }
 
 func NewClientFromCluster(ctx context.Context, ctrlClient client.Client, openStackCluster *infrav1.OpenStackCluster, defaultCACert []byte) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, string, error) {
@@ -77,10 +77,10 @@ func NewClientFromCluster(ctx context.Context, ctrlClient client.Client, openSta
 		caCert = defaultCACert
 	}
 
-	return NewClient(cloud, caCert)
+	return NewProviderClient(cloud, caCert)
 }
 
-func NewClient(cloud clientconfig.Cloud, caCert []byte) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, string, error) {
+func NewProviderClient(cloud clientconfig.Cloud, caCert []byte) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, string, error) {
 	clientOpts := new(clientconfig.ClientOpts)
 	if cloud.AuthInfo != nil {
 		clientOpts.AuthInfo = cloud.AuthInfo

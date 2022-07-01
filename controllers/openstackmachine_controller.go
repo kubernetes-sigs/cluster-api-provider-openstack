@@ -53,7 +53,6 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/loadbalancer"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/provider"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
@@ -141,7 +140,7 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}()
 
-	osProviderClient, clientOpts, projectID, err := provider.NewClientFromMachine(ctx, r.Client, openStackMachine, r.CaCertificates)
+	osProviderClient, clientOpts, projectID, err := scope.NewClientFromMachine(ctx, r.Client, openStackMachine, r.CaCertificates)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

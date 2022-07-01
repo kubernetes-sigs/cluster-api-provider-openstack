@@ -53,7 +53,7 @@ import (
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/provider"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
 type ServerExtWithIP struct {
@@ -494,7 +494,7 @@ func getProviderClient(e2eCtx *E2EContext, openstackCloud string) (*gophercloud.
 	clouds := getParsedOpenStackCloudYAML(openStackCloudYAMLFile)
 	cloud := clouds.Clouds[openstackCloud]
 
-	providerClient, clientOpts, projectID, err := provider.NewClient(cloud, nil)
+	providerClient, clientOpts, projectID, err := scope.NewProviderClient(cloud, nil)
 	if err != nil {
 		return nil, nil, nil, err
 	}
