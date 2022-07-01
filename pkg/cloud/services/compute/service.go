@@ -25,7 +25,7 @@ import (
 )
 
 type Service struct {
-	scope              *scope.Scope
+	scope              scope.Scope
 	_computeClient     clients.ComputeClient
 	_volumeClient      clients.VolumeClient
 	_imageClient       clients.ImageClient
@@ -33,11 +33,7 @@ type Service struct {
 }
 
 // NewService returns an instance of the compute service.
-func NewService(scope *scope.Scope) (*Service, error) {
-	if scope.ProviderClientOpts.AuthInfo == nil {
-		return nil, fmt.Errorf("authInfo must be set")
-	}
-
+func NewService(scope scope.Scope) (*Service, error) {
 	return &Service{
 		scope: scope,
 	}, nil
@@ -45,7 +41,7 @@ func NewService(scope *scope.Scope) (*Service, error) {
 
 func (s Service) getComputeClient() clients.ComputeClient {
 	if s._computeClient == nil {
-		computeClient, err := clients.NewComputeClient(s.scope.ProviderClient, s.scope.ProviderClientOpts)
+		computeClient, err := s.scope.NewComputeClient()
 		if err != nil {
 			return clients.NewComputeErrorClient(err)
 		}
@@ -58,7 +54,7 @@ func (s Service) getComputeClient() clients.ComputeClient {
 
 func (s Service) getVolumeClient() clients.VolumeClient {
 	if s._volumeClient == nil {
-		volumeClient, err := clients.NewVolumeClient(s.scope.ProviderClient, s.scope.ProviderClientOpts)
+		volumeClient, err := s.scope.NewVolumeClient()
 		if err != nil {
 			return clients.NewVolumeErrorClient(err)
 		}
@@ -71,7 +67,7 @@ func (s Service) getVolumeClient() clients.VolumeClient {
 
 func (s Service) getImageClient() clients.ImageClient {
 	if s._imageClient == nil {
-		imageClient, err := clients.NewImageClient(s.scope.ProviderClient, s.scope.ProviderClientOpts)
+		imageClient, err := s.scope.NewImageClient()
 		if err != nil {
 			return clients.NewImageErrorClient(err)
 		}

@@ -61,6 +61,7 @@ type OpenStackMachineReconciler struct {
 	Client           client.Client
 	Recorder         record.EventRecorder
 	WatchFilterValue string
+	ScopeFactory     scope.Factory
 	CaCertificates   []byte // PEM encoded ca certificates.
 }
 
@@ -140,16 +141,9 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}()
 
-	osProviderClient, clientOpts, projectID, err := scope.NewClientFromMachine(ctx, r.Client, openStackMachine, r.CaCertificates)
+	scope, err := r.ScopeFactory.NewClientScopeFromMachine(ctx, r.Client, openStackMachine, r.CaCertificates, log)
 	if err != nil {
 		return reconcile.Result{}, err
-	}
-
-	scope := &scope.Scope{
-		ProviderClient:     osProviderClient,
-		ProviderClientOpts: clientOpts,
-		ProjectID:          projectID,
-		Logger:             log,
 	}
 
 	// Handle deleted machines
@@ -225,8 +219,8 @@ func (r *OpenStackMachineReconciler) SetupWithManager(ctx context.Context, mgr c
 		Complete(r)
 }
 
-func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, scope *scope.Scope, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (ctrl.Result, error) {
-	scope.Logger.Info("Reconciling Machine delete")
+func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, scope scope.Scope, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (ctrl.Result, error) {
+	scope.Logger().Info("Reconciling Machine delete")
 
 	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
 
@@ -286,17 +280,17 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, scope 
 	}
 
 	controllerutil.RemoveFinalizer(openStackMachine, infrav1.MachineFinalizer)
-	scope.Logger.Info("Reconciled Machine delete successfully")
+	scope.Logger().Info("Reconciled Machine delete successfully")
 	if err := patchHelper.Patch(ctx, openStackMachine); err != nil {
 		return ctrl.Result{}, err
 	}
 	return ctrl.Result{}, nil
 }
 
-func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope *scope.Scope, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (_ ctrl.Result, reterr error) {
+func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope scope.Scope, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (_ ctrl.Result, reterr error) {
 	// If the OpenStackMachine is in an error state, return early.
 	if openStackMachine.Status.FailureReason != nil || openStackMachine.Status.FailureMessage != nil {
-		scope.Logger.Info("Not reconciling machine in failed state. See openStackMachine.status.failureReason, openStackMachine.status.failureMessage, or previously logged error for details")
+		scope.Logger().Info("Not reconciling machine in failed state. See openStackMachine.status.failureReason, openStackMachine.status.failureMessage, or previously logged error for details")
 		return ctrl.Result{}, nil
 	}
 
@@ -308,14 +302,14 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	}
 
 	if !cluster.Status.InfrastructureReady {
-		scope.Logger.Info("Cluster infrastructure is not ready yet, requeuing machine")
+		scope.Logger().Info("Cluster infrastructure is not ready yet, requeuing machine")
 		conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.WaitingForClusterInfrastructureReason, clusterv1.ConditionSeverityInfo, "")
 		return ctrl.Result{RequeueAfter: waitForClusterInfrastructureReadyDuration}, nil
 	}
 
 	// Make sure bootstrap data is available and populated.
 	if machine.Spec.Bootstrap.DataSecretName == nil {
-		scope.Logger.Info("Bootstrap data secret reference is not yet available")
+		scope.Logger().Info("Bootstrap data secret reference is not yet available")
 		conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.WaitingForBootstrapDataReason, clusterv1.ConditionSeverityInfo, "")
 		return ctrl.Result{}, nil
 	}
@@ -323,7 +317,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	scope.Logger.Info("Reconciling Machine")
+	scope.Logger().Info("Reconciling Machine")
 
 	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
 
@@ -337,7 +331,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		return ctrl.Result{}, err
 	}
 
-	instanceStatus, err := r.getOrCreate(scope.Logger, cluster, openStackCluster, machine, openStackMachine, computeService, userData)
+	instanceStatus, err := r.getOrCreate(scope.Logger(), cluster, openStackCluster, machine, openStackMachine, computeService, userData)
 	if err != nil {
 		// Conditions set in getOrCreate
 		return ctrl.Result{}, err
@@ -369,31 +363,31 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 
 	switch instanceStatus.State() {
 	case infrav1.InstanceStateActive:
-		scope.Logger.Info("Machine instance state is ACTIVE", "instance-id", instanceStatus.ID())
+		scope.Logger().Info("Machine instance state is ACTIVE", "instance-id", instanceStatus.ID())
 		conditions.MarkTrue(openStackMachine, infrav1.InstanceReadyCondition)
 		openStackMachine.Status.Ready = true
 	case infrav1.InstanceStateError:
 		// Error is unexpected, thus we report error and never retry
-		scope.Logger.Info("Machine instance state is ERROR", "instance-id", instanceStatus.ID())
+		scope.Logger().Info("Machine instance state is ERROR", "instance-id", instanceStatus.ID())
 		err = fmt.Errorf("instance state %q is unexpected", instanceStatus.State())
 		openStackMachine.SetFailure(capierrors.UpdateMachineError, err)
 		conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceStateErrorReason, clusterv1.ConditionSeverityError, "")
 		return ctrl.Result{}, nil
 	case infrav1.InstanceStateDeleted:
 		// we should avoid further actions for DELETED VM
-		scope.Logger.Info("Machine instance state is DELETED, no actions")
+		scope.Logger().Info("Machine instance state is DELETED, no actions")
 		conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceDeletedReason, clusterv1.ConditionSeverityError, "")
 		return ctrl.Result{}, nil
 	default:
 		// The other state is normal (for example, migrating, shutoff) but we don't want to proceed until it's ACTIVE
 		// due to potential conflict or unexpected actions
-		scope.Logger.Info("Waiting for instance to become ACTIVE", "instance-id", instanceStatus.ID(), "status", instanceStatus.State())
+		scope.Logger().Info("Waiting for instance to become ACTIVE", "instance-id", instanceStatus.ID(), "status", instanceStatus.State())
 		conditions.MarkUnknown(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceNotReadyReason, "Instance state is not handled: %s", instanceStatus.State())
 		return ctrl.Result{RequeueAfter: waitForInstanceBecomeActiveToReconcile}, nil
 	}
 
 	if !util.IsControlPlaneMachine(machine) {
-		scope.Logger.Info("Not a Control plane machine, no floating ip reconcile needed, Reconciled Machine create successfully")
+		scope.Logger().Info("Not a Control plane machine, no floating ip reconcile needed, Reconciled Machine create successfully")
 		return ctrl.Result{}, nil
 	}
 
@@ -420,7 +414,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		}
 
 		if fp.PortID != "" {
-			scope.Logger.Info("Floating IP already associated to a port:", "id", fp.ID, "fixed ip", fp.FixedIP, "portID", port.ID)
+			scope.Logger().Info("Floating IP already associated to a port:", "id", fp.ID, "fixed ip", fp.FixedIP, "portID", port.ID)
 		} else {
 			err = networkingService.AssociateFloatingIP(openStackMachine, fp, port.ID)
 			if err != nil {
@@ -431,7 +425,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	}
 	conditions.MarkTrue(openStackMachine, infrav1.APIServerIngressReadyCondition)
 
-	scope.Logger.Info("Reconciled Machine create successfully")
+	scope.Logger().Info("Reconciled Machine create successfully")
 	return ctrl.Result{}, nil
 }
 
@@ -519,7 +513,7 @@ func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *
 	return &instanceSpec
 }
 
-func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(scope *scope.Scope, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, instanceNS *compute.InstanceNetworkStatus, clusterName string) error {
+func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(scope scope.Scope, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, instanceNS *compute.InstanceNetworkStatus, clusterName string) error {
 	ip := instanceNS.IP(openStackCluster.Status.Network.Name)
 	loadbalancerService, err := loadbalancer.NewService(scope)
 	if err != nil {

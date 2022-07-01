@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/go-logr/logr"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/identity/v3/tokens"
@@ -42,7 +43,12 @@ const (
 	caSecretKey     = "cacert"
 )
 
-func NewClientFromMachine(ctx context.Context, ctrlClient client.Client, openStackMachine *infrav1.OpenStackMachine, defaultCACert []byte) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, string, error) {
+// ScopeFactory is the default scope factory. It generates service clients which make OpenStack API calls against a running cloud.
+var ScopeFactory Factory = scopeFactory{}
+
+type scopeFactory struct{}
+
+func (scopeFactory) NewClientScopeFromMachine(ctx context.Context, ctrlClient client.Client, openStackMachine *infrav1.OpenStackMachine, defaultCACert []byte, logger logr.Logger) (Scope, error) {
 	var cloud clientconfig.Cloud
 	var caCert []byte
 
@@ -50,7 +56,7 @@ func NewClientFromMachine(ctx context.Context, ctrlClient client.Client, openSta
 		var err error
 		cloud, caCert, err = getCloudFromSecret(ctx, ctrlClient, openStackMachine.Namespace, openStackMachine.Spec.IdentityRef.Name, openStackMachine.Spec.CloudName)
 		if err != nil {
-			return nil, nil, "", err
+			return nil, err
 		}
 	}
 
@@ -58,10 +64,10 @@ func NewClientFromMachine(ctx context.Context, ctrlClient client.Client, openSta
 		caCert = defaultCACert
 	}
 
-	return NewProviderClient(cloud, caCert)
+	return NewScope(cloud, caCert, logger)
 }
 
-func NewClientFromCluster(ctx context.Context, ctrlClient client.Client, openStackCluster *infrav1.OpenStackCluster, defaultCACert []byte) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, string, error) {
+func (scopeFactory) NewClientScopeFromCluster(ctx context.Context, ctrlClient client.Client, openStackCluster *infrav1.OpenStackCluster, defaultCACert []byte, logger logr.Logger) (Scope, error) {
 	var cloud clientconfig.Cloud
 	var caCert []byte
 
@@ -69,7 +75,7 @@ func NewClientFromCluster(ctx context.Context, ctrlClient client.Client, openSta
 		var err error
 		cloud, caCert, err = getCloudFromSecret(ctx, ctrlClient, openStackCluster.Namespace, openStackCluster.Spec.IdentityRef.Name, openStackCluster.Spec.CloudName)
 		if err != nil {
-			return nil, nil, "", err
+			return nil, err
 		}
 	}
 
@@ -77,7 +83,7 @@ func NewClientFromCluster(ctx context.Context, ctrlClient client.Client, openSta
 		caCert = defaultCACert
 	}
 
-	return NewProviderClient(cloud, caCert)
+	return NewScope(cloud, caCert, logger)
 }
 
 func NewProviderClient(cloud clientconfig.Cloud, caCert []byte) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, string, error) {
