@@ -277,6 +277,37 @@ func TestInstanceNetworkStatus(t *testing.T) {
 			wantFloatingIP: "10.0.0.1",
 		},
 		{
+			name: "Ignore unknown address type",
+			addresses: map[string][]networkAddress{
+				"primary": {
+					{
+						Version: 4,
+						Addr:    "192.168.0.2",
+						Type:    "not-valid",
+						MacAddr: macAddr1,
+					}, {
+						Version: 4,
+						Addr:    "192.168.0.3",
+						Type:    "unknown",
+						MacAddr: macAddr2,
+					}, {
+						Version: 4,
+						Addr:    "10.0.0.1",
+						Type:    "floating",
+						MacAddr: macAddr3,
+					}, {
+						Version: 4,
+						Addr:    "192.168.0.1",
+						Type:    "fixed",
+						MacAddr: macAddr4,
+					},
+				},
+			},
+			networkName:    "primary",
+			wantIP:         "192.168.0.1",
+			wantFloatingIP: "10.0.0.1",
+		},
+		{
 			name: "Multiple networks",
 			addresses: map[string][]networkAddress{
 				"primary": {

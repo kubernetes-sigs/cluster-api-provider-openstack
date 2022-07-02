@@ -157,7 +157,7 @@ func (is *InstanceStatus) NetworkStatus() (*InstanceNetworkStatus, error) {
 
 			// Only consider IPv4
 			if address.Version != 4 {
-				is.logger.V(6).Info("Ignoring IPv%d address %s: only IPv4 is supported", address.Version, address.Address)
+				is.logger.V(6).Info("Ignoring IP address: only IPv4 is supported", "version", address.Version, "address", address.Address)
 				continue
 			}
 
@@ -168,7 +168,7 @@ func (is *InstanceStatus) NetworkStatus() (*InstanceNetworkStatus, error) {
 			case "fixed":
 				addressType = corev1.NodeInternalIP
 			default:
-				is.logger.V(6).Info("Ignoring address %s with unknown type '%s'", address.Address, address.Type)
+				is.logger.V(6).Info("Ignoring address with unknown type", "address", address.Address, "type", address.Type)
 				continue
 			}
 
