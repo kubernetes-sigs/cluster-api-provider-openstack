@@ -231,3 +231,17 @@ func Convert_Slice_v1alpha7_Network_To_Slice_v1alpha5_Network(in *[]infrav1.Netw
 	}
 	return nil
 }
+
+func Convert_v1alpha5_PortOpts_To_v1alpha7_PortOpts(in *PortOpts, out *infrav1.PortOpts, s conversion.Scope) error {
+	err := autoConvert_v1alpha5_PortOpts_To_v1alpha7_PortOpts(in, out, s)
+	if err != nil {
+		return err
+	}
+	// SecurityGroupFilters were removed in v1alpha7. It is included in the SecurityGroups field in v1alpha7.
+	if in.SecurityGroupFilters != nil {
+		for _, v1alpha5SecurityGroupParam := range in.SecurityGroupFilters {
+			*out.SecurityGroups = append(*out.SecurityGroups, infrav1.SecurityGroupParam{UUID: v1alpha5SecurityGroupParam.UUID})
+		}
+	}
+	return nil
+}

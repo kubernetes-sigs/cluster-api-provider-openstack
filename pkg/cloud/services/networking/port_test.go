@@ -46,10 +46,11 @@ func Test_GetOrCreatePort(t *testing.T) {
 	tenantID := "62b523a7-f838-45fd-904f-d2db2bb58e04"
 	projectID := "063171b1-0595-4882-98cd-3ee79676ff87"
 	trunkID := "eb7541fa-5e2a-4cca-b2c3-dfa409b917ce"
+	portSecurityGroupID := "f51d1206-fc5a-4f7a-a5c0-2e03e44e4dc0"
 
 	// Other arbitrary variables passed in to the tests
 	instanceSecurityGroups := []string{"instance-secgroup"}
-	portSecurityGroups := []string{"port-secgroup"}
+	portSecurityGroups := []infrav1.SecurityGroupParam{{UUID: portSecurityGroupID, Name: "port-secgroup"}}
 	valueSpecs := map[string]string{"key": "value"}
 
 	pointerToTrue := pointerTo(true)
@@ -167,9 +168,8 @@ func Test_GetOrCreatePort(t *testing.T) {
 						},
 						IPAddress: "192.168.0.50",
 					}, {IPAddress: "192.168.1.50"}},
-					TenantID:       tenantID,
-					ProjectID:      projectID,
-					SecurityGroups: &portSecurityGroups,
+					TenantID:  tenantID,
+					ProjectID: projectID,
 					AllowedAddressPairs: []infrav1.AddressPair{{
 						IPAddress:  "10.10.10.10",
 						MACAddress: "f1:f1:f1:f1:f1:f1",
@@ -198,9 +198,8 @@ func Test_GetOrCreatePort(t *testing.T) {
 							IPAddress: "192.168.1.50",
 						},
 					},
-					TenantID:       tenantID,
-					ProjectID:      projectID,
-					SecurityGroups: &portSecurityGroups,
+					TenantID:  tenantID,
+					ProjectID: projectID,
 					AllowedAddressPairs: []ports.AddressPair{{
 						IPAddress:  "10.10.10.10",
 						MACAddress: "f1:f1:f1:f1:f1:f1",
@@ -314,7 +313,7 @@ func Test_GetOrCreatePort(t *testing.T) {
 						CreateOptsBuilder: ports.CreateOpts{
 							Name:                "foo-port-1",
 							Description:         "Created by cluster-api-provider-openstack cluster test-cluster",
-							SecurityGroups:      &portSecurityGroups,
+							SecurityGroups:      &[]string{portSecurityGroupID},
 							NetworkID:           netID,
 							AllowedAddressPairs: []ports.AddressPair{},
 						},

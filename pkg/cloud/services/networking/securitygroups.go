@@ -165,6 +165,7 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 	return desiredSecGroups, nil
 }
 
+// GetSecurityGroups finds and returns the IDs of all security groups (if any) matching the input.
 func (s *Service) GetSecurityGroups(securityGroupParams []infrav1.SecurityGroupParam) ([]string, error) {
 	var sgIDs []string
 	for _, sg := range securityGroupParams {
@@ -187,11 +188,7 @@ func (s *Service) GetSecurityGroups(securityGroupParams []infrav1.SecurityGroupP
 		if err != nil {
 			return nil, err
 		}
-
-		if len(SGList) == 0 {
-			return nil, fmt.Errorf("security group %s not found", sg.Name)
-		}
-
+		// Check for duplicates
 		for _, group := range SGList {
 			if isDuplicate(sgIDs, group.ID) {
 				continue

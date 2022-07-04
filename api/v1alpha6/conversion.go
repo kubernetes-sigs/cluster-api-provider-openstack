@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha6
 
 import (
+	conversion "k8s.io/apimachinery/pkg/conversion"
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
 	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
 
@@ -195,4 +196,38 @@ func (r *OpenStackMachineTemplateList) ConvertFrom(srcRaw ctrlconversion.Hub) er
 	src := srcRaw.(*infrav1.OpenStackMachineTemplateList)
 
 	return Convert_v1alpha7_OpenStackMachineTemplateList_To_v1alpha6_OpenStackMachineTemplateList(src, r, nil)
+}
+
+func Convert_v1alpha6_PortOpts_To_v1alpha7_PortOpts(in *PortOpts, out *infrav1.PortOpts, s conversion.Scope) error {
+	err := autoConvert_v1alpha6_PortOpts_To_v1alpha7_PortOpts(in, out, s)
+	if err != nil {
+		return err
+	}
+	// SecurityGroupFilters were removed in v1alpha7. It is included in the SecurityGroups field in v1alpha7.
+	if in.SecurityGroupFilters != nil {
+		for _, v1alpha5SecurityGroupParam := range in.SecurityGroupFilters {
+			*out.SecurityGroups = append(*out.SecurityGroups, infrav1.SecurityGroupParam{UUID: v1alpha5SecurityGroupParam.UUID})
+		}
+	}
+	return nil
+}
+
+func Convert_Slice_v1alpha6_Network_To_Slice_v1alpha7_Network(in *[]Network, out *[]infrav1.Network, s conversion.Scope) error {
+	*out = make([]infrav1.Network, len(*in))
+	for i := range *in {
+		if err := Convert_v1alpha6_Network_To_v1alpha7_Network(&(*in)[i], &(*out)[i], s); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func Convert_Slice_v1alpha7_Network_To_Slice_v1alpha6_Network(in *[]infrav1.Network, out *[]Network, s conversion.Scope) error {
+	*out = make([]Network, len(*in))
+	for i := range *in {
+		if err := Convert_v1alpha7_Network_To_v1alpha6_Network(&(*in)[i], &(*out)[i], s); err != nil {
+			return err
+		}
+	}
+	return nil
 }

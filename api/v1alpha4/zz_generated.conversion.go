@@ -1475,7 +1475,15 @@ func autoConvert_v1alpha4_PortOpts_To_v1alpha7_PortOpts(in *PortOpts, out *v1alp
 	}
 	out.TenantID = in.TenantID
 	out.ProjectID = in.ProjectID
-	out.SecurityGroups = (*[]string)(unsafe.Pointer(in.SecurityGroups))
+	if in.SecurityGroups != nil {
+		in, out := &in.SecurityGroups, &out.SecurityGroups
+		*out = new([]v1alpha7.SecurityGroupParam)
+		if err := v1alpha7.Convert_Slice_string_To_Slice_v1alpha7_SecurityGroupParam(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.SecurityGroups = nil
+	}
 	out.AllowedAddressPairs = *(*[]v1alpha7.AddressPair)(unsafe.Pointer(&in.AllowedAddressPairs))
 	out.Trunk = (*bool)(unsafe.Pointer(in.Trunk))
 	out.HostID = in.HostID
@@ -1505,8 +1513,15 @@ func autoConvert_v1alpha7_PortOpts_To_v1alpha4_PortOpts(in *v1alpha7.PortOpts, o
 	}
 	out.TenantID = in.TenantID
 	out.ProjectID = in.ProjectID
-	out.SecurityGroups = (*[]string)(unsafe.Pointer(in.SecurityGroups))
-	// WARNING: in.SecurityGroupFilters requires manual conversion: does not exist in peer-type
+	if in.SecurityGroups != nil {
+		in, out := &in.SecurityGroups, &out.SecurityGroups
+		*out = new([]string)
+		if err := v1alpha7.Convert_Slice_v1alpha7_SecurityGroupParam_To_Slice_string(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.SecurityGroups = nil
+	}
 	out.AllowedAddressPairs = *(*[]AddressPair)(unsafe.Pointer(&in.AllowedAddressPairs))
 	out.Trunk = (*bool)(unsafe.Pointer(in.Trunk))
 	out.HostID = in.HostID

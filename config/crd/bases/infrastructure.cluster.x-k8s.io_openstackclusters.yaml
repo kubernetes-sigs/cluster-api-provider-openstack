@@ -6434,9 +6434,9 @@ spec:
                               type: object
                             projectId:
                               type: string
-                            securityGroupFilters:
+                            securityGroups:
                               description: The names, uuids, filters or any combination
-                                these of the security groups to assign to the instance
+                                of these of the security groups to assign to the port
                               items:
                                 properties:
                                   filter:
@@ -6478,13 +6478,6 @@ spec:
                                     type: string
                                 type: object
                               type: array
-                            securityGroups:
-                              description: The uuids of the security groups to assign
-                                to the instance
-                              items:
-                                type: string
-                              type: array
-                              x-kubernetes-list-type: set
                             tags:
                               description: Tags applied to the port (and corresponding
                                 trunk, if a trunk is configured.) These tags are applied
@@ -7002,9 +6995,9 @@ spec:
                               type: object
                             projectId:
                               type: string
-                            securityGroupFilters:
+                            securityGroups:
                               description: The names, uuids, filters or any combination
-                                these of the security groups to assign to the instance
+                                of these of the security groups to assign to the port
                               items:
                                 properties:
                                   filter:
@@ -7046,13 +7039,6 @@ spec:
                                     type: string
                                 type: object
                               type: array
-                            securityGroups:
-                              description: The uuids of the security groups to assign
-                                to the instance
-                              items:
-                                type: string
-                              type: array
-                              x-kubernetes-list-type: set
                             tags:
                               description: Tags applied to the port (and corresponding
                                 trunk, if a trunk is configured.) These tags are applied
@@ -7426,9 +7412,9 @@ spec:
                         type: object
                       projectId:
                         type: string
-                      securityGroupFilters:
+                      securityGroups:
                         description: The names, uuids, filters or any combination
-                          these of the security groups to assign to the instance
+                          of these of the security groups to assign to the port
                         items:
                           properties:
                             filter:
@@ -7470,13 +7456,6 @@ spec:
                               type: string
                           type: object
                         type: array
-                      securityGroups:
-                        description: The uuids of the security groups to assign to
-                          the instance
-                        items:
-                          type: string
-                        type: array
-                        x-kubernetes-list-type: set
                       tags:
                         description: Tags applied to the port (and corresponding trunk,
                           if a trunk is configured.) These tags are applied in addition
@@ -7763,9 +7742,9 @@ spec:
                         type: object
                       projectId:
                         type: string
-                      securityGroupFilters:
+                      securityGroups:
                         description: The names, uuids, filters or any combination
-                          these of the security groups to assign to the instance
+                          of these of the security groups to assign to the port
                         items:
                           properties:
                             filter:
@@ -7807,13 +7786,6 @@ spec:
                               type: string
                           type: object
                         type: array
-                      securityGroups:
-                        description: The uuids of the security groups to assign to
-                          the instance
-                        items:
-                          type: string
-                        type: array
-                        x-kubernetes-list-type: set
                       tags:
                         description: Tags applied to the port (and corresponding trunk,
                           if a trunk is configured.) These tags are applied in addition

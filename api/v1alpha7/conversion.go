@@ -16,6 +16,8 @@ limitations under the License.
 
 package v1alpha7
 
+import "k8s.io/apimachinery/pkg/conversion"
+
 // Hub marks OpenStackCluster as a conversion hub.
 func (*OpenStackCluster) Hub() {}
 
@@ -39,3 +41,21 @@ func (*OpenStackMachineTemplate) Hub() {}
 
 // Hub marks OpenStackMachineTemplateList as a conversion hub.
 func (*OpenStackMachineTemplateList) Hub() {}
+
+func Convert_Slice_string_To_Slice_v1alpha7_SecurityGroupParam(in *[]string, out *[]SecurityGroupParam, s conversion.Scope) error {
+	if in != nil {
+		for _, securityGroupUID := range *in {
+			*out = append(*out, SecurityGroupParam{UUID: securityGroupUID})
+		}
+	}
+	return nil
+}
+
+func Convert_Slice_v1alpha7_SecurityGroupParam_To_Slice_string(in *[]SecurityGroupParam, out *[]string, s conversion.Scope) error {
+	if in != nil {
+		for _, v1alpha7SecurityGroups := range *in {
+			*out = append(*out, v1alpha7SecurityGroups.UUID)
+		}
+	}
+	return nil
+}
