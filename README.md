@@ -37,7 +37,7 @@ previous cluster managers such as [kops][kops] and
 
 This provider's versions are compatible with the following versions of Cluster API:
 
-|                                    | v1alpha3 (v0.3) | v1alpha4 (v0.4) | v1beta1 (v1.1) |
+|                                    | v1alpha3 (v0.3) | v1alpha4 (v0.4) | v1beta1 (v1.x) |
 |------------------------------------| --------------- | --------------- | -------------- |
 | OpenStack Provider v1alpha3 (v0.3) | ✓               |                 |                |
 | OpenStack Provider v1alpha4 (v0.4) |                 | ✓               |                |
