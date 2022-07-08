@@ -3,7 +3,8 @@
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
 - [External Cloud Provider](#external-cloud-provider)
-  - [Steps](#steps)
+  - [Use automatic scripts)(#Use automatic scripts)
+  - [Step by step](#steps)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -11,7 +12,60 @@
 
 To deploy a cluster using [external cloud provider](https://github.com/kubernetes/cloud-provider-openstack), create a cluster configuration with the [external cloud provider template](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/templates/cluster-template-external-cloud-provider.yaml) or refer to [helm chart](https://github.com/kubernetes/cloud-provider-openstack/tree/master/charts/openstack-cloud-controller-manager).
 
-## Steps of using external cloud provider template
+## Use automatic scripts (easier way)
+
+Use `./templates/external_cloud_setup.sh` to apply all the manifests needed. Refer to following command as reference.
+
+```
+# bash external_cloud_setup.sh capi-quickstart
+##########################################
+Create kubeconfig file capi-quickstart.kubeconfig for cluster capi-quickstart
+
+New clusterctl version available: v1.1.4 -> v1.1.5
+https://github.com/kubernetes-sigs/cluster-api/releases/tag/v1.1.5
+##########################################
+Create secret cloud-config
+secret/cloud-config created
+##########################################
+Apply OCCM manifests
+clusterrole.rbac.authorization.k8s.io/system:cloud-controller-manager created
+clusterrole.rbac.authorization.k8s.io/system:cloud-node-controller created
+clusterrolebinding.rbac.authorization.k8s.io/system:cloud-node-controller created
+clusterrolebinding.rbac.authorization.k8s.io/system:cloud-controller-manager created
+serviceaccount/cloud-controller-manager created
+daemonset.apps/openstack-cloud-controller-manager created
+##########################################
+Install CNI, currently it's calico
+configmap/calico-config created
+customresourcedefinition.apiextensions.k8s.io/bgpconfigurations.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/bgppeers.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/blockaffinities.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/caliconodestatuses.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/clusterinformations.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/felixconfigurations.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/globalnetworkpolicies.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/globalnetworksets.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/hostendpoints.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/ipamblocks.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/ipamconfigs.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/ipamhandles.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/ippools.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/ipreservations.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/kubecontrollersconfigurations.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/networkpolicies.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/networksets.crd.projectcalico.org created
+clusterrole.rbac.authorization.k8s.io/calico-kube-controllers created
+clusterrolebinding.rbac.authorization.k8s.io/calico-kube-controllers created
+clusterrole.rbac.authorization.k8s.io/calico-node created
+clusterrolebinding.rbac.authorization.k8s.io/calico-node created
+daemonset.apps/calico-node created
+serviceaccount/calico-node created
+deployment.apps/calico-kube-controllers created
+serviceaccount/calico-kube-controllers created
+poddisruptionbudget.policy/calico-kube-controllers created
+```
+
+## Steps of using external cloud provider template (step by step)
 
 - After control plane is up and running, retrieve the workload cluster Kubeconfig:
 
