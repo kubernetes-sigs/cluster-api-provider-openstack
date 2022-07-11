@@ -359,32 +359,34 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		return ctrl.Result{RequeueAfter: waitForInstanceBecomeActiveToReconcile}, nil
 	}
 
-	if openStackCluster.Spec.APIServerLoadBalancer.Enabled {
-		err = r.reconcileLoadBalancerMember(scope, openStackCluster, machine, openStackMachine, instanceNS, clusterName)
-		if err != nil {
-			handleUpdateMachineError(scope.Logger, openStackMachine, errors.Errorf("LoadBalancerMember cannot be reconciled: %v", err))
-			return ctrl.Result{}, nil
-		}
-	} else if util.IsControlPlaneMachine(machine) && !openStackCluster.Spec.DisableAPIServerFloatingIP {
-		floatingIPAddress := openStackCluster.Spec.ControlPlaneEndpoint.Host
-		if openStackCluster.Spec.APIServerFloatingIP != "" {
-			floatingIPAddress = openStackCluster.Spec.APIServerFloatingIP
-		}
-		fp, err := networkingService.GetOrCreateFloatingIP(openStackMachine, openStackCluster, clusterName, floatingIPAddress)
-		if err != nil {
-			handleUpdateMachineError(scope.Logger, openStackMachine, errors.Errorf("Floating IP cannot be got or created: %v", err))
-			return ctrl.Result{}, nil
-		}
-		port, err := computeService.GetManagementPort(openStackCluster, instanceStatus)
-		if err != nil {
-			err = errors.Errorf("getting management port for control plane machine %s: %v", machine.Name, err)
-			handleUpdateMachineError(scope.Logger, openStackMachine, err)
-			return ctrl.Result{}, nil
-		}
-		err = networkingService.AssociateFloatingIP(openStackMachine, fp, port.ID)
-		if err != nil {
-			handleUpdateMachineError(scope.Logger, openStackMachine, errors.Errorf("Floating IP cannot be associated: %v", err))
-			return ctrl.Result{}, nil
+	if util.IsControlPlaneMachine(machine) {
+		if openStackCluster.Spec.APIServerLoadBalancer.Enabled {
+			err = r.reconcileLoadBalancerMember(scope, openStackCluster, machine, openStackMachine, instanceNS, clusterName)
+			if err != nil {
+				handleUpdateMachineError(scope.Logger, openStackMachine, errors.Errorf("LoadBalancerMember cannot be reconciled: %v", err))
+				return ctrl.Result{}, nil
+			}
+		} else if !openStackCluster.Spec.DisableAPIServerFloatingIP {
+			floatingIPAddress := openStackCluster.Spec.ControlPlaneEndpoint.Host
+			if openStackCluster.Spec.APIServerFloatingIP != "" {
+				floatingIPAddress = openStackCluster.Spec.APIServerFloatingIP
+			}
+			fp, err := networkingService.GetOrCreateFloatingIP(openStackMachine, openStackCluster, clusterName, floatingIPAddress)
+			if err != nil {
+				handleUpdateMachineError(scope.Logger, openStackMachine, errors.Errorf("Floating IP cannot be got or created: %v", err))
+				return ctrl.Result{}, nil
+			}
+			port, err := computeService.GetManagementPort(openStackCluster, instanceStatus)
+			if err != nil {
+				err = errors.Errorf("getting management port for control plane machine %s: %v", machine.Name, err)
+				handleUpdateMachineError(scope.Logger, openStackMachine, err)
+				return ctrl.Result{}, nil
+			}
+			err = networkingService.AssociateFloatingIP(openStackMachine, fp, port.ID)
+			if err != nil {
+				handleUpdateMachineError(scope.Logger, openStackMachine, errors.Errorf("Floating IP cannot be associated: %v", err))
+				return ctrl.Result{}, nil
+			}
 		}
 	}
 
