@@ -17,59 +17,82 @@ limitations under the License.
 package v1alpha6
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"sigs.k8s.io/cluster-api/util/topology"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 // OpenStackMachineTemplateImmutableMsg ...
 const OpenStackMachineTemplateImmutableMsg = "OpenStackMachineTemplate spec.template.spec field is immutable. Please create a new resource instead. Ref doc: https://cluster-api.sigs.k8s.io/tasks/change-machine-template.html"
 
-func (r *OpenStackMachineTemplate) SetupWebhookWithManager(mgr manager.Manager) error {
+// +kubebuilder:object:generate=false
+type OpenStackMachineTemplateWebhook struct{}
+
+func (r *OpenStackMachineTemplateWebhook) SetupWebhookWithManager(mgr manager.Manager) error {
 	return builder.WebhookManagedBy(mgr).
-		For(r).
+		For(&OpenStackMachineTemplate{}).
+		WithValidator(r).
 		Complete()
 }
 
 // +kubebuilder:webhook:verbs=create;update,path=/validate-infrastructure-cluster-x-k8s-io-v1alpha6-openstackmachinetemplate,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=infrastructure.cluster.x-k8s.io,resources=openstackmachinetemplates,versions=v1alpha6,name=validation.openstackmachinetemplate.infrastructure.cluster.x-k8s.io,sideEffects=None,admissionReviewVersions=v1beta1
 
-var _ webhook.Validator = &OpenStackMachineTemplate{}
+var _ webhook.CustomValidator = &OpenStackMachineTemplateWebhook{}
 
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type.
-func (r *OpenStackMachineTemplate) ValidateCreate() error {
+// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type.
+func (r *OpenStackMachineTemplateWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) error {
+	openStackMachineTemplate, ok := obj.(*OpenStackMachineTemplate)
+	if !ok {
+		return apierrors.NewBadRequest(fmt.Sprintf("expected an OpenStackMachineTemplate but got a %T", obj))
+	}
+
 	var allErrs field.ErrorList
 
-	if r.Spec.Template.Spec.ProviderID != nil {
+	if openStackMachineTemplate.Spec.Template.Spec.ProviderID != nil {
 		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "template", "spec", "providerID"), "cannot be set in templates"))
 	}
 
-	return aggregateObjErrors(r.GroupVersionKind().GroupKind(), r.Name, allErrs)
+	return aggregateObjErrors(openStackMachineTemplate.GroupVersionKind().GroupKind(), openStackMachineTemplate.Name, allErrs)
 }
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type.
-func (r *OpenStackMachineTemplate) ValidateUpdate(oldRaw runtime.Object) error {
+// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type.
+func (r *OpenStackMachineTemplateWebhook) ValidateUpdate(ctx context.Context, oldRaw runtime.Object, newRaw runtime.Object) error {
 	var allErrs field.ErrorList
 	old, ok := oldRaw.(*OpenStackMachineTemplate)
 	if !ok {
 		return apierrors.NewBadRequest(fmt.Sprintf("expected an OpenStackMachineTemplate but got a %T", oldRaw))
 	}
 
-	if !reflect.DeepEqual(r.Spec.Template.Spec, old.Spec.Template.Spec) {
+	newObj, ok := newRaw.(*OpenStackMachineTemplate)
+	if !ok {
+		return apierrors.NewBadRequest(fmt.Sprintf("expected an OpenStackMachineTemplate but got a %T", oldRaw))
+	}
+
+	req, err := admission.RequestFromContext(ctx)
+	if err != nil {
+		return apierrors.NewBadRequest(fmt.Sprintf("expected a admission.Request inside context: %v", err))
+	}
+
+	if !topology.ShouldSkipImmutabilityChecks(req, newObj) &&
+		!reflect.DeepEqual(newObj.Spec.Template.Spec, old.Spec.Template.Spec) {
 		allErrs = append(allErrs,
 			field.Invalid(field.NewPath("spec", "template", "spec"), r, OpenStackMachineTemplateImmutableMsg),
 		)
 	}
 
-	return aggregateObjErrors(r.GroupVersionKind().GroupKind(), r.Name, allErrs)
+	return aggregateObjErrors(newObj.GroupVersionKind().GroupKind(), newObj.Name, allErrs)
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type.
-func (r *OpenStackMachineTemplate) ValidateDelete() error {
+// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type.
+func (r *OpenStackMachineTemplateWebhook) ValidateDelete(_ context.Context, _ runtime.Object) error {
 	return nil
 }

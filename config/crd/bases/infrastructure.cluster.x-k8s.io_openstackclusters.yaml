@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.8.0
+    controller-gen.kubebuilder.io/version: v0.9.2
   creationTimestamp: null
   name: openstackclusters.infrastructure.cluster.x-k8s.io
 spec:
@@ -114,6 +114,7 @@ spec:
                               the secret name must be unique.
                             type: string
                         type: object
+                        x-kubernetes-map-type: atomic
                       configDrive:
                         description: Config Drive support
                         type: boolean
@@ -341,6 +342,7 @@ spec:
                               the secret name must be unique.
                             type: string
                         type: object
+                        x-kubernetes-map-type: atomic
                     required:
                     - flavor
                     type: object
@@ -360,6 +362,7 @@ spec:
                       name must be unique.
                     type: string
                 type: object
+                x-kubernetes-map-type: atomic
               controlPlaneAvailabilityZones:
                 description: ControlPlaneAvailabilityZones is the az to deploy control
                   plane to
@@ -5931,9 +5934,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []

@@ -10,7 +10,7 @@ require (
 	github.com/onsi/ginkgo v1.16.5
 	k8s.io/code-generator v0.24.2
 	sigs.k8s.io/cluster-api/hack/tools v0.0.0-20220628052357-28d146bf9046
-	sigs.k8s.io/controller-tools v0.8.0
+	sigs.k8s.io/controller-tools v0.9.2
 	sigs.k8s.io/kind v0.14.0
 	sigs.k8s.io/kustomize/kustomize/v4 v4.4.0
 )
