@@ -352,10 +352,6 @@ func (s *Service) getOrCreateMonitor(openStackCluster *infrav1.OpenStackCluster,
 }
 
 func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, clusterName, ip string) error {
-	if !util.IsControlPlaneMachine(machine) {
-		return nil
-	}
-
 	if openStackCluster.Status.Network == nil {
 		return errors.New("network is not yet available in openStackCluster.Status")
 	}
