@@ -233,7 +233,7 @@ func setupReconcilers(ctx context.Context, mgr ctrl.Manager) {
 }
 
 func setupWebhooks(mgr ctrl.Manager) {
-	if err := (&infrav1.OpenStackMachineTemplate{}).SetupWebhookWithManager(mgr); err != nil {
+	if err := (&infrav1.OpenStackMachineTemplateWebhook{}).SetupWebhookWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackMachineTemplate")
 		os.Exit(1)
 	}
