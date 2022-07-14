@@ -178,7 +178,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		mockScopeFactory.SetClientScopeCreateError(clientCreateErr)
 
 		result, err := reconciler.Reconcile(ctx, req)
-		// Expect error for getting OS clinet and empty result
+		// Expect error for getting OS client and empty result
 		Expect(err).To(MatchError(clientCreateErr))
 		Expect(result).To(Equal(reconcile.Result{}))
 	})
