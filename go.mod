@@ -24,8 +24,8 @@ require (
 	k8s.io/component-base v0.24.2
 	k8s.io/klog/v2 v2.60.1
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9
-	sigs.k8s.io/cluster-api v1.2.0-rc.0
-	sigs.k8s.io/cluster-api/test v1.2.0-rc.0
+	sigs.k8s.io/cluster-api v1.2.0
+	sigs.k8s.io/cluster-api/test v1.2.0
 	sigs.k8s.io/controller-runtime v0.12.3
 	sigs.k8s.io/yaml v1.3.0
 )
@@ -130,4 +130,4 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 )
 
-replace sigs.k8s.io/cluster-api => sigs.k8s.io/cluster-api v1.2.0-rc.0
+replace sigs.k8s.io/cluster-api => sigs.k8s.io/cluster-api v1.2.0
