@@ -475,10 +475,9 @@ spec:
       sshKeyName: <Key pair name>
 ```
 
-The `enabled` flag is toggleable. Thus, you're able to save resources while the bastion host is not needed.  
-All other parameters can be changed via an `OpenStackCluster` update while the bastion host is not running.
-
-> Note: as a rolling update is not ideal during a bastion host session, we prevent changes to a running bastion configuration.
+All parameters are mutable during the runtime of the bastion host.
+The bastion host will be re-created if it's enabled and the instance spec has been changed.
+This is done by a simple checksum validation of the instance spec which is stored in the `OpenStackCluster` annotation `infrastructure.cluster.x-k8s.io/bastion-hash`.
 
 A floating IP is created and associated to the bastion host automatically, but you can add the IP address explicitly:
 
