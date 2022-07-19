@@ -105,17 +105,9 @@ func (r *OpenStackCluster) ValidateUpdate(oldRaw runtime.Object) error {
 		r.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{}
 	}
 
-	// Allow changes to the bastion spec only if no bastion host is deployed (i.e. Spec.Bastion.Enabled=false).
-	if old.Status.Bastion == nil {
-		old.Spec.Bastion = &Bastion{}
-		r.Spec.Bastion = &Bastion{}
-	}
-
-	// Allow toggling the bastion enabled flag.
-	if old.Spec.Bastion != nil && r.Spec.Bastion != nil {
-		old.Spec.Bastion.Enabled = true
-		r.Spec.Bastion.Enabled = true
-	}
+	// Allow changes to the bastion spec.
+	old.Spec.Bastion = &Bastion{}
+	r.Spec.Bastion = &Bastion{}
 
 	// Allow changes on AllowedCIDRs
 	if r.Spec.APIServerLoadBalancer.Enabled {

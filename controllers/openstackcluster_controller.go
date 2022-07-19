@@ -51,6 +51,10 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
+const (
+	BastionInstanceHashAnnotation = "infrastructure.cluster.x-k8s.io/bastion-hash"
+)
+
 // OpenStackClusterReconciler reconciles a OpenStackCluster object.
 type OpenStackClusterReconciler struct {
 	Client           client.Client
@@ -242,6 +246,8 @@ func deleteBastion(scope *scope.Scope, cluster *clusterv1.Cluster, openStackClus
 	}
 	openStackCluster.Status.BastionSecurityGroup = nil
 
+	delete(openStackCluster.ObjectMeta.Annotations, BastionInstanceHashAnnotation)
+
 	return nil
 }
 
@@ -313,20 +319,35 @@ func reconcileBastion(scope *scope.Scope, cluster *clusterv1.Cluster, openStackC
 		return err
 	}
 
+	instanceSpec := bastionToInstanceSpec(openStackCluster, cluster.Name)
+	bastionHash, err := compute.HashInstanceSpec(instanceSpec)
+	if err != nil {
+		return errors.Wrap(err, "failed computing bastion hash from instance spec")
+	}
+
 	instanceStatus, err := computeService.GetInstanceStatusByName(openStackCluster, fmt.Sprintf("%s-bastion", cluster.Name))
 	if err != nil {
 		return err
 	}
 	if instanceStatus != nil {
-		bastion, err := instanceStatus.APIInstance(openStackCluster)
-		if err != nil {
+		if !bastionHashHasChanged(bastionHash, openStackCluster.ObjectMeta.Annotations) {
+			bastion, err := instanceStatus.APIInstance(openStackCluster)
+			if err != nil {
+				return err
+			}
+			// Add the current hash if no annotation is set.
+			if _, ok := openStackCluster.ObjectMeta.Annotations[BastionInstanceHashAnnotation]; !ok {
+				annotations.AddAnnotations(openStackCluster, map[string]string{BastionInstanceHashAnnotation: bastionHash})
+			}
+			openStackCluster.Status.Bastion = bastion
+			return nil
+		}
+
+		if err := deleteBastion(scope, cluster, openStackCluster); err != nil {
 			return err
 		}
-		openStackCluster.Status.Bastion = bastion
-		return nil
 	}
 
-	instanceSpec := bastionToInstanceSpec(openStackCluster, cluster.Name)
 	instanceStatus, err = computeService.CreateInstance(openStackCluster, openStackCluster, instanceSpec, cluster.Name)
 	if err != nil {
 		return errors.Errorf("failed to reconcile bastion: %v", err)
@@ -360,6 +381,7 @@ func reconcileBastion(scope *scope.Scope, cluster *clusterv1.Cluster, openStackC
 	}
 	bastion.FloatingIP = fp.FloatingIP
 	openStackCluster.Status.Bastion = bastion
+	annotations.AddAnnotations(openStackCluster, map[string]string{BastionInstanceHashAnnotation: bastionHash})
 	return nil
 }
 
@@ -388,6 +410,15 @@ func bastionToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, clusterNa
 	instanceSpec.Ports = openStackCluster.Spec.Bastion.Instance.Ports
 
 	return instanceSpec
+}
+
+// bastionHashHasChanged returns a boolean whether if the latest bastion hash, built from the instance spec, has changed or not.
+func bastionHashHasChanged(computeHash string, clusterAnnotations map[string]string) bool {
+	latestHash, ok := clusterAnnotations[BastionInstanceHashAnnotation]
+	if !ok {
+		return false
+	}
+	return latestHash != computeHash
 }
 
 func reconcileNetworkComponents(scope *scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
