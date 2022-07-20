@@ -53,7 +53,6 @@ spec:
           cloud-provider: openstack
           cloud-config: /etc/kubernetes/cloud.conf
     clusterConfiguration:
-      imageRepository: k8s.gcr.io
       apiServer:
         extraArgs:
           cloud-provider: openstack
