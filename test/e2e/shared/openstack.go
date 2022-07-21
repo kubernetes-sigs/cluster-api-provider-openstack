@@ -116,6 +116,18 @@ func dumpOpenStack(_ context.Context, e2eCtx *E2EContext, bootstrapClusterProxyN
 	if err := dumpOpenStackPorts(e2eCtx, logPath); err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "error dumping OpenStack ports: %s\n", err)
 	}
+
+	if err := dumpOpenStackSG(e2eCtx, logPath); err != nil {
+		_, _ = fmt.Fprintf(GinkgoWriter, "error dumping OpenStack sgs: %s\n", err)
+	}
+
+	if err := dumpOpenStackNetworks(e2eCtx, logPath); err != nil {
+		_, _ = fmt.Fprintf(GinkgoWriter, "error dumping OpenStack networks: %s\n", err)
+	}
+
+	if err := dumpOpenStackSubnets(e2eCtx, logPath); err != nil {
+		_, _ = fmt.Fprintf(GinkgoWriter, "error dumping OpenStack subnets: %s\n", err)
+	}
 }
 
 func dumpOpenStackImages(providerClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, logPath string) error {
@@ -155,6 +167,54 @@ func dumpOpenStackPorts(e2eCtx *E2EContext, logPath string) error {
 	}
 	if err := os.WriteFile(path.Join(logPath, "ports.json"), portsJSON, 0o600); err != nil {
 		return fmt.Errorf("error writing ports.json %s: %s", portsJSON, err)
+	}
+
+	return nil
+}
+
+func dumpOpenStackSG(e2eCtx *E2EContext, logPath string) error {
+	sgsList, err := DumpOpenStackSecurityGroups(e2eCtx, groups.ListOpts{})
+	if err != nil {
+		return err
+	}
+	sgsJSON, err := json.MarshalIndent(sgsList, "", "    ")
+	if err != nil {
+		return fmt.Errorf("error marshalling SGs %v: %s", sgsList, err)
+	}
+	if err := os.WriteFile(path.Join(logPath, "secgrps.json"), sgsJSON, 0o600); err != nil {
+		return fmt.Errorf("error writing secgrps.json %s: %s", sgsJSON, err)
+	}
+
+	return nil
+}
+
+func dumpOpenStackNetworks(e2eCtx *E2EContext, logPath string) error {
+	networksList, err := DumpOpenStackNetworks(e2eCtx, networks.ListOpts{})
+	if err != nil {
+		return err
+	}
+	networkJSON, err := json.MarshalIndent(networksList, "", "    ")
+	if err != nil {
+		return fmt.Errorf("error marshalling networks %v: %s", networksList, err)
+	}
+	if err := os.WriteFile(path.Join(logPath, "networks.json"), networkJSON, 0o600); err != nil {
+		return fmt.Errorf("error writing networks.json %s: %s", networkJSON, err)
+	}
+
+	return nil
+}
+
+func dumpOpenStackSubnets(e2eCtx *E2EContext, logPath string) error {
+	subnetsList, err := DumpOpenStackSubnets(e2eCtx, subnets.ListOpts{})
+	if err != nil {
+		return err
+	}
+	subnetJSON, err := json.MarshalIndent(subnetsList, "", "    ")
+	if err != nil {
+		return fmt.Errorf("error marshalling subnets %v: %s", subnetsList, err)
+	}
+	if err := os.WriteFile(path.Join(logPath, "subnets.json"), subnetJSON, 0o600); err != nil {
+		return fmt.Errorf("error writing subnets.json %s: %s", subnetJSON, err)
 	}
 
 	return nil
