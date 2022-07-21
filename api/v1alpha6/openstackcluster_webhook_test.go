@@ -112,90 +112,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "Toggle OpenStackCluster.Spec.Bastion.Enabled flag is allowed",
-			oldTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
-					Bastion: &Bastion{
-						Instance: OpenStackMachineSpec{
-							CloudName: "foobar",
-							Image:     "foobar",
-							Flavor:    "minimal",
-						},
-						Enabled: false,
-					},
-				},
-			},
-			newTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
-					Bastion: &Bastion{
-						Instance: OpenStackMachineSpec{
-							CloudName: "foobarbaz",
-							Image:     "foobarbaz",
-							Flavor:    "medium",
-						},
-						Enabled: true,
-					},
-				},
-			},
-			wantErr: false,
-		},
-		{
-			name: "Changing empty OpenStackCluster.Spec.Bastion is allowed",
-			oldTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
-				},
-			},
-			newTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
-					Bastion: &Bastion{
-						Instance: OpenStackMachineSpec{
-							CloudName: "foobar",
-							Image:     "foobar",
-							Flavor:    "medium",
-						},
-						Enabled: true,
-					},
-				},
-			},
-			wantErr: false,
-		},
-		{
-			name: "Changing OpenStackCluster.Spec.Bastion with no deployed bastion host is allowed",
-			oldTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
-					Bastion: &Bastion{
-						Instance: OpenStackMachineSpec{
-							CloudName: "foobar",
-							Image:     "foobar",
-							Flavor:    "minimal",
-						},
-						Enabled: false,
-					},
-				},
-				Status: OpenStackClusterStatus{},
-			},
-			newTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
-					Bastion: &Bastion{
-						Instance: OpenStackMachineSpec{
-							CloudName: "foobarbaz",
-							Image:     "foobarbaz",
-							Flavor:    "medium",
-						},
-						Enabled: true,
-					},
-				},
-			},
-			wantErr: false,
-		},
-		{
-			name: "Changing OpenStackCluster.Spec.Bastion with deployed bastion host is not allowed",
+			name: "Changing OpenStackCluster.Spec.Bastion is allowed",
 			oldTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
 					CloudName: "foobar",
@@ -224,46 +141,6 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 							Flavor:    "medium",
 						},
 						Enabled: true,
-					},
-				},
-			},
-			wantErr: true,
-		},
-		{
-			name: "Disabling the OpenStackCluster.Spec.Bastion while it's running is allowed",
-			oldTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
-					Bastion: &Bastion{
-						Instance: OpenStackMachineSpec{
-							CloudName: "foobar",
-							Image:     "foobar",
-							Flavor:    "minimal",
-						},
-						Enabled: true,
-					},
-				},
-				Status: OpenStackClusterStatus{
-					Bastion: &Instance{
-						Name: "foobar",
-					},
-				},
-			},
-			newTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
-					Bastion: &Bastion{
-						Instance: OpenStackMachineSpec{
-							CloudName: "foobar",
-							Image:     "foobar",
-							Flavor:    "minimal",
-						},
-						Enabled: false,
-					},
-				},
-				Status: OpenStackClusterStatus{
-					Bastion: &Instance{
-						Name: "foobar",
 					},
 				},
 			},
