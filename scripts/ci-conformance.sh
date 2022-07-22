@@ -45,7 +45,12 @@ cleanup() {
 }
 trap cleanup EXIT
 
-#Install requests module explicitly for HTTP calls
+# Set correct pip3.7 location for python3.
+if ! test -f /usr/bin/pip3.7 && test -f /usr/local/bin/pip3.7; then
+  ln -s /usr/local/bin/pip3.7 /usr/bin/pip3.7
+fi
+
+# Install requests module explicitly for HTTP calls.
 python3 -m pip install requests
 
 # If BOSKOS_HOST is set then acquire a resource of type ${RESOURCE_TYPE} from Boskos.
