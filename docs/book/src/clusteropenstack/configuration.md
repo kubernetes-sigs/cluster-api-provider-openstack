@@ -153,6 +153,12 @@ openstack floating ip create <public network>
 
 Note: Only user with admin role can create a floating IP with specific IP.
 
+Note: When associating a floating IP to a cluster with more than 1 controller node, the floatingIP will be
+associated to the first controller node and the other controller nodes have no floating IP assigned. When
+ the controller node has the floating IP status down CAPO will NOT auto assign the floating IP address
+to any other controller node. So we recommend to only set one controller node when floating IP is needed,
+or please consider using load balancer instead, see [issue #1265](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/1265) for further information.
+
 ### Disabling the API server floating IP
 
 It is possible to provision a cluster without a floating IP for the API server by setting
