@@ -27,7 +27,7 @@ function cloud_init {
   GCP_NETWORK_NAME=${GCP_NETWORK_NAME:-"${CLUSTER_NAME}-mynetwork"}
 
   # We have a quota of 24 vCPUs
-  GCP_MACHINE_TYPE_controller=${GCP_MACHINE_TYPE:-"n2-standard-16"}
+  GCP_MACHINE_TYPE_controller=${GCP_MACHINE_TYPE:-"n2-highmem-8"}
   GCP_MACHINE_TYPE_worker=${GCP_MACHINE_TYPE:-"n2-standard-8"}
 
   echo "Using: GCP_PROJECT: ${GCP_PROJECT} GCP_REGION: ${GCP_REGION} GCP_NETWORK_NAME: ${GCP_NETWORK_NAME}"

@@ -81,6 +81,7 @@ if [ -n "${BOSKOS_HOST:-}" ]; then
   HEART_BEAT_PID=$!
 fi
 
+export GCP_MACHINE_TYPE="n2-highmem-4"
 "hack/ci/create_devstack.sh"
 
 export OPENSTACK_CLOUD_YAML_FILE
