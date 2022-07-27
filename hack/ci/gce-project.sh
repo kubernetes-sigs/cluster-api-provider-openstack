@@ -130,6 +130,14 @@ function create_vm {
   fi
 }
 
+function list_all_resources {
+  echo "Listing all resources - should be empty."
+  for resource in networks firewall-rules routers "routers nats" disks images instances; do
+    echo "  ${resource}:"
+    echo "gcloud compute $resource list --project=\"$GCP_PROJECT\""
+  done
+}
+
 function get_public_ip {
   local ip
   while ! ip=$(gcloud compute instances describe "${CLUSTER_NAME}-controller" \

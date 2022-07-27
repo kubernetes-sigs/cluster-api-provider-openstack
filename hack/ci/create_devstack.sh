@@ -228,6 +228,9 @@ function main() {
         cleanup
     fi
 
+    # List all resources in this project
+    list_all_resources
+
     # Initialize the necessary infrastructure requirements
     cloud_init
     if [[ -n "${SKIP_INIT_INFRA:-}" ]]; then
