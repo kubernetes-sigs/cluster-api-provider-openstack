@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,13 +33,13 @@ type Service struct {
 }
 
 /*
- NovaMinimumMicroversion is the minimum Nova microversion supported by CAPO
- 2.53 corresponds to OpenStack Pike
+NovaMinimumMicroversion is the minimum Nova microversion supported by CAPO
+2.53 corresponds to OpenStack Pike
 
- For the canonical description of Nova microversions, see
- https://docs.openstack.org/nova/latest/reference/api-microversion-history.html
+For the canonical description of Nova microversions, see
+https://docs.openstack.org/nova/latest/reference/api-microversion-history.html
 
- CAPO uses server tags, which were added in microversion 2.52.
+CAPO uses server tags, which were added in microversion 2.52.
 */
 const NovaMinimumMicroversion = "2.53"
 
