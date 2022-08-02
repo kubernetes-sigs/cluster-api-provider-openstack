@@ -235,7 +235,6 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 		AvailabilityZone: instanceSpec.FailureDomain,
 		Networks:         portList,
 		UserData:         []byte(instanceSpec.UserData),
-		SecurityGroups:   securityGroups,
 		Tags:             instanceSpec.Tags,
 		Metadata:         instanceSpec.Metadata,
 		ConfigDrive:      &instanceSpec.ConfigDrive,
