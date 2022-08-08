@@ -750,7 +750,17 @@ func Convert_v1alpha6_OpenStackCluster_To_v1alpha5_OpenStackCluster(in *v1alpha6
 
 func autoConvert_v1alpha5_OpenStackClusterList_To_v1alpha6_OpenStackClusterList(in *OpenStackClusterList, out *v1alpha6.OpenStackClusterList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
-	out.Items = *(*[]v1alpha6.OpenStackCluster)(unsafe.Pointer(&in.Items))
+	if in.Items != nil {
+		in, out := &in.Items, &out.Items
+		*out = make([]v1alpha6.OpenStackCluster, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha5_OpenStackCluster_To_v1alpha6_OpenStackCluster(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Items = nil
+	}
 	return nil
 }
 
@@ -761,7 +771,17 @@ func Convert_v1alpha5_OpenStackClusterList_To_v1alpha6_OpenStackClusterList(in *
 
 func autoConvert_v1alpha6_OpenStackClusterList_To_v1alpha5_OpenStackClusterList(in *v1alpha6.OpenStackClusterList, out *OpenStackClusterList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
-	out.Items = *(*[]OpenStackCluster)(unsafe.Pointer(&in.Items))
+	if in.Items != nil {
+		in, out := &in.Items, &out.Items
+		*out = make([]OpenStackCluster, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha6_OpenStackCluster_To_v1alpha5_OpenStackCluster(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Items = nil
+	}
 	return nil
 }
 
@@ -830,6 +850,7 @@ func autoConvert_v1alpha6_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.ControlPlaneEndpoint = in.ControlPlaneEndpoint
 	out.ControlPlaneAvailabilityZones = *(*[]string)(unsafe.Pointer(&in.ControlPlaneAvailabilityZones))
+	// WARNING: in.ControlPlaneOmitAvailabilityZone requires manual conversion: does not exist in peer-type
 	out.Bastion = (*Bastion)(unsafe.Pointer(in.Bastion))
 	out.IdentityRef = (*OpenStackIdentityReference)(unsafe.Pointer(in.IdentityRef))
 	return nil
@@ -906,7 +927,17 @@ func Convert_v1alpha6_OpenStackClusterTemplate_To_v1alpha5_OpenStackClusterTempl
 
 func autoConvert_v1alpha5_OpenStackClusterTemplateList_To_v1alpha6_OpenStackClusterTemplateList(in *OpenStackClusterTemplateList, out *v1alpha6.OpenStackClusterTemplateList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
-	out.Items = *(*[]v1alpha6.OpenStackClusterTemplate)(unsafe.Pointer(&in.Items))
+	if in.Items != nil {
+		in, out := &in.Items, &out.Items
+		*out = make([]v1alpha6.OpenStackClusterTemplate, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha5_OpenStackClusterTemplate_To_v1alpha6_OpenStackClusterTemplate(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Items = nil
+	}
 	return nil
 }
 
@@ -917,7 +948,17 @@ func Convert_v1alpha5_OpenStackClusterTemplateList_To_v1alpha6_OpenStackClusterT
 
 func autoConvert_v1alpha6_OpenStackClusterTemplateList_To_v1alpha5_OpenStackClusterTemplateList(in *v1alpha6.OpenStackClusterTemplateList, out *OpenStackClusterTemplateList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
-	out.Items = *(*[]OpenStackClusterTemplate)(unsafe.Pointer(&in.Items))
+	if in.Items != nil {
+		in, out := &in.Items, &out.Items
+		*out = make([]OpenStackClusterTemplate, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha6_OpenStackClusterTemplate_To_v1alpha5_OpenStackClusterTemplate(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Items = nil
+	}
 	return nil
 }
 
