@@ -173,7 +173,7 @@ func TestConvertFrom(t *testing.T) {
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
-						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"allowAllInClusterTraffic\":false,\"apiServerLoadBalancer\":{\"additionalPorts\":[80,443],\"enabled\":true},\"cloudName\":\"\",\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"managedSecurityGroups\":false,\"network\":{},\"subnet\":{}},\"status\":{\"ready\":false}}",
+						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"CNI\":\"\",\"allowAllInClusterTraffic\":false,\"apiServerLoadBalancer\":{\"additionalPorts\":[80,443],\"enabled\":true},\"cloudName\":\"\",\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"managedSecurityGroups\":false,\"network\":{},\"subnet\":{}},\"status\":{\"ready\":false}}",
 					},
 				},
 			},
@@ -188,7 +188,7 @@ func TestConvertFrom(t *testing.T) {
 				Spec: OpenStackClusterTemplateSpec{},
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
-						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"template\":{\"spec\":{\"allowAllInClusterTraffic\":false,\"apiServerLoadBalancer\":{},\"cloudName\":\"\",\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"managedSecurityGroups\":false,\"network\":{},\"subnet\":{}}}}}",
+						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"template\":{\"spec\":{\"CNI\":\"\",\"allowAllInClusterTraffic\":false,\"apiServerLoadBalancer\":{},\"cloudName\":\"\",\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"managedSecurityGroups\":false,\"network\":{},\"subnet\":{}}}}}",
 					},
 				},
 			},
@@ -337,6 +337,8 @@ func TestFuzzyConversion(t *testing.T) {
 					v1alpha6Cluster.Spec.Bastion.Instance.Image = ""
 				}
 
+				v1alpha6Cluster.Spec.CNI = ""
+
 				if v1alpha6Cluster.Status.Bastion != nil {
 					v1alpha6Cluster.Status.Bastion.ImageUUID = ""
 					v1alpha6Cluster.Status.Bastion.Image = ""
@@ -406,6 +408,7 @@ func TestFuzzyConversion(t *testing.T) {
 				v1alpha6ClusterTemplate.ObjectMeta.Annotations = map[string]string{}
 
 				v1alpha6ClusterTemplate.Spec.Template.Spec.APIServerLoadBalancer.AllowedCIDRs = nil
+				v1alpha6ClusterTemplate.Spec.Template.Spec.CNI = ""
 
 				v1alpha6ClusterTemplate.Spec.Template.Spec.ControlPlaneOmitAvailabilityZone = false
 

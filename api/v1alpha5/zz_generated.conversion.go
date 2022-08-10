@@ -846,6 +846,7 @@ func autoConvert_v1alpha6_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(
 	out.APIServerPort = in.APIServerPort
 	out.ManagedSecurityGroups = in.ManagedSecurityGroups
 	out.AllowAllInClusterTraffic = in.AllowAllInClusterTraffic
+	// WARNING: in.CNI requires manual conversion: does not exist in peer-type
 	out.DisablePortSecurity = in.DisablePortSecurity
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.ControlPlaneEndpoint = in.ControlPlaneEndpoint

@@ -102,7 +102,7 @@ func TestConvertFrom(t *testing.T) {
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
-						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"allowAllInClusterTraffic\":false,\"apiServerLoadBalancer\":{\"additionalPorts\":[80,443],\"enabled\":true},\"cloudName\":\"\",\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"managedSecurityGroups\":false,\"network\":{},\"subnet\":{}},\"status\":{\"ready\":false}}",
+						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"CNI\":\"\",\"allowAllInClusterTraffic\":false,\"apiServerLoadBalancer\":{\"additionalPorts\":[80,443],\"enabled\":true},\"cloudName\":\"\",\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"managedSecurityGroups\":false,\"network\":{},\"subnet\":{}},\"status\":{\"ready\":false}}",
 					},
 				},
 			},
@@ -236,6 +236,7 @@ func TestFuzzyConversion(t *testing.T) {
 					v1alpha6Cluster.Spec.Bastion.Instance.Ports = nil
 				}
 				v1alpha6Cluster.Spec.ControlPlaneOmitAvailabilityZone = false
+				v1alpha6Cluster.Spec.CNI = ""
 
 				v1alpha6Cluster.Status.FailureMessage = nil
 				v1alpha6Cluster.Status.FailureReason = nil

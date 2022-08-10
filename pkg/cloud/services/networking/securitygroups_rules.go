@@ -17,8 +17,12 @@ limitations under the License.
 package networking
 
 import (
+	"github.com/go-logr/logr"
+
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
 )
+
+var CALICOCNI = "calico"
 
 var defaultRules = []infrav1.SecurityGroupRule{
 	{
@@ -283,16 +287,47 @@ func GetSGWorkerAllowAll(remoteGroupIDSelf, secControlPlaneGroupID string) []inf
 	}
 }
 
-func GetSGControlPlaneGeneral(remoteGroupIDSelf, secWorkerGroupID string) []infrav1.SecurityGroupRule {
+func getSGControlPlaneCNI(openStackCluster *infrav1.OpenStackCluster, remoteGroupIDSelf, secWorkerGroupID string, logger logr.Logger) []infrav1.SecurityGroupRule {
+	cni := openStackCluster.Spec.CNI
+	if len(cni) == 0 {
+		cni = CALICOCNI
+	}
+
+	switch cni {
+	case CALICOCNI:
+		return getSGControlPlaneCalico(remoteGroupIDSelf, secWorkerGroupID)
+	default:
+		logger.Info("Current cni is not in supported list, default to empty", "cni", cni)
+		return []infrav1.SecurityGroupRule{}
+	}
+}
+
+func getSGWorkerCNI(openStackCluster *infrav1.OpenStackCluster, remoteGroupIDSelf, secControlPlaneGroupID string, logger logr.Logger) []infrav1.SecurityGroupRule {
+	cni := openStackCluster.Spec.CNI
+	if len(cni) == 0 {
+		cni = CALICOCNI
+	}
+
+	switch cni {
+	case CALICOCNI:
+		return getSGWorkerCalico(remoteGroupIDSelf, secControlPlaneGroupID)
+	default:
+		// not a valid option as we can only enter here if it's managedSecgroup
+		logger.Info("Current cni is not in supported list, default to empty", "cni", cni)
+		return []infrav1.SecurityGroupRule{}
+	}
+}
+
+func GetSGControlPlaneGeneral(openStackCluster *infrav1.OpenStackCluster, remoteGroupIDSelf, secWorkerGroupID string, logger logr.Logger) []infrav1.SecurityGroupRule {
 	controlPlaneRules := []infrav1.SecurityGroupRule{}
 	controlPlaneRules = append(controlPlaneRules, getSGControlPlaneCommon(remoteGroupIDSelf, secWorkerGroupID)...)
-	controlPlaneRules = append(controlPlaneRules, getSGControlPlaneCalico(remoteGroupIDSelf, secWorkerGroupID)...)
+	controlPlaneRules = append(controlPlaneRules, getSGControlPlaneCNI(openStackCluster, remoteGroupIDSelf, secWorkerGroupID, logger)...)
 	return controlPlaneRules
 }
 
-func GetSGWorkerGeneral(remoteGroupIDSelf, secControlPlaneGroupID string) []infrav1.SecurityGroupRule {
+func GetSGWorkerGeneral(openStackCluster *infrav1.OpenStackCluster, remoteGroupIDSelf, secControlPlaneGroupID string, logger logr.Logger) []infrav1.SecurityGroupRule {
 	workerRules := []infrav1.SecurityGroupRule{}
 	workerRules = append(workerRules, getSGWorkerCommon(remoteGroupIDSelf, secControlPlaneGroupID)...)
-	workerRules = append(workerRules, getSGWorkerCalico(remoteGroupIDSelf, secControlPlaneGroupID)...)
+	workerRules = append(workerRules, getSGWorkerCNI(openStackCluster, remoteGroupIDSelf, secControlPlaneGroupID, logger)...)
 	return workerRules
 }

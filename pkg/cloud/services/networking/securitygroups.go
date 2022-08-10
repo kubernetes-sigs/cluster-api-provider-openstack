@@ -126,8 +126,8 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 		controlPlaneRules = append(controlPlaneRules, GetSGControlPlaneAllowAll(remoteGroupIDSelf, secWorkerGroupID)...)
 		workerRules = append(workerRules, GetSGWorkerAllowAll(remoteGroupIDSelf, secControlPlaneGroupID)...)
 	} else {
-		controlPlaneRules = append(controlPlaneRules, GetSGControlPlaneGeneral(remoteGroupIDSelf, secWorkerGroupID)...)
-		workerRules = append(workerRules, GetSGWorkerGeneral(remoteGroupIDSelf, secControlPlaneGroupID)...)
+		controlPlaneRules = append(controlPlaneRules, GetSGControlPlaneGeneral(openStackCluster, remoteGroupIDSelf, secWorkerGroupID, s.scope.Logger)...)
+		workerRules = append(workerRules, GetSGWorkerGeneral(openStackCluster, remoteGroupIDSelf, secControlPlaneGroupID, s.scope.Logger)...)
 	}
 
 	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {

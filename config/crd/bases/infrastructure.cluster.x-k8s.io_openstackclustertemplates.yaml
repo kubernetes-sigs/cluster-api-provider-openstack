@@ -1461,6 +1461,12 @@ spec:
                     description: OpenStackClusterSpec defines the desired state of
                       OpenStackCluster.
                     properties:
+                      CNI:
+                        description: CNI is used when you deploy different CNI AllowAll
+                          means allow all traffic Calico creates security group rules
+                          for Calico CNI and it's the default not supported value
+                          will print a warning and no security group applied
+                        type: string
                       allowAllInClusterTraffic:
                         description: AllowAllInClusterTraffic is only used when managed
                           security groups are in use. If set to true, the rules for

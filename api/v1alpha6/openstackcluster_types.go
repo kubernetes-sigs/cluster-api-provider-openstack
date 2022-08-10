@@ -113,6 +113,13 @@ type OpenStackClusterSpec struct {
 	// +optional
 	AllowAllInClusterTraffic bool `json:"allowAllInClusterTraffic"`
 
+	// CNI is used when you deploy different CNI
+	// AllowAll means allow all traffic
+	// Calico creates security group rules for Calico CNI and it's the default
+	// not supported value will print a warning and no security group applied
+	// +optional
+	CNI string `json:"CNI"`
+
 	// DisablePortSecurity disables the port security of the network created for the
 	// Kubernetes cluster, which also disables SecurityGroups
 	DisablePortSecurity bool `json:"disablePortSecurity,omitempty"`
