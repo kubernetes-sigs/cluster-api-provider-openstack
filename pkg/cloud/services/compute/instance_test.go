@@ -582,9 +582,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 				"imageRef":          imageUUID,
 				"flavorRef":         flavorUUID,
 				"availability_zone": failureDomain,
-				"security_groups": []map[string]interface{}{
-					{"name": workerSecurityGroupUUID},
-				},
 				"networks": []map[string]interface{}{
 					{"port": portUUID},
 				},
