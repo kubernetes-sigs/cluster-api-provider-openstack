@@ -48,6 +48,7 @@ type OpenStackClusterSpec struct {
 	// DNSNameservers is the list of nameservers for OpenStack Subnet being created.
 	// Set this value when you need create a new network/subnet while the access
 	// through DNS is required.
+	// +listType=set
 	DNSNameservers []string `json:"dnsNameservers,omitempty"`
 	// ExternalRouterIPs is an array of externalIPs on the respective subnets.
 	// This is necessary if the router needs a fixed ip in a specific subnet.
@@ -117,6 +118,7 @@ type OpenStackClusterSpec struct {
 	DisablePortSecurity bool `json:"disablePortSecurity,omitempty"`
 
 	// Tags for all resources in cluster
+	// +listType=set
 	Tags []string `json:"tags,omitempty"`
 
 	// ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
@@ -124,6 +126,7 @@ type OpenStackClusterSpec struct {
 	ControlPlaneEndpoint clusterv1.APIEndpoint `json:"controlPlaneEndpoint"`
 
 	// ControlPlaneAvailabilityZones is the az to deploy control plane to
+	// +listType=set
 	ControlPlaneAvailabilityZones []string `json:"controlPlaneAvailabilityZones,omitempty"`
 
 	// Bastion is the OpenStack instance to login the nodes

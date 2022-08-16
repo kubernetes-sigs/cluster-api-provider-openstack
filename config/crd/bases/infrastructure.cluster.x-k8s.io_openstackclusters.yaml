@@ -4593,6 +4593,7 @@ spec:
                               items:
                                 type: string
                               type: array
+                              x-kubernetes-list-type: set
                             tags:
                               description: Tags applied to the port (and corresponding
                                 trunk, if a trunk is configured.) These tags are applied
@@ -4601,6 +4602,7 @@ spec:
                               items:
                                 type: string
                               type: array
+                              x-kubernetes-list-type: set
                             tenantId:
                               type: string
                             trunk:
@@ -4692,6 +4694,7 @@ spec:
                         items:
                           type: string
                         type: array
+                        x-kubernetes-list-type: set
                       trunk:
                         description: Whether the server instance is created on a trunk
                           port or not.
@@ -4709,6 +4712,7 @@ spec:
                 items:
                   type: string
                 type: array
+                x-kubernetes-list-type: set
               controlPlaneEndpoint:
                 description: ControlPlaneEndpoint represents the endpoint used to
                   communicate with the control plane.
@@ -4751,6 +4755,7 @@ spec:
                 items:
                   type: string
                 type: array
+                x-kubernetes-list-type: set
               externalNetworkId:
                 description: ExternalNetworkID is the ID of an external OpenStack
                   Network. This is necessary to get public internet to the VMs.
@@ -4898,6 +4903,7 @@ spec:
                 items:
                   type: string
                 type: array
+                x-kubernetes-list-type: set
             type: object
           status:
             description: OpenStackClusterStatus defines the observed state of OpenStackCluster.
@@ -5116,6 +5122,7 @@ spec:
                               items:
                                 type: string
                               type: array
+                              x-kubernetes-list-type: set
                             tags:
                               description: Tags applied to the port (and corresponding
                                 trunk, if a trunk is configured.) These tags are applied
@@ -5124,6 +5131,7 @@ spec:
                               items:
                                 type: string
                               type: array
+                              x-kubernetes-list-type: set
                             tenantId:
                               type: string
                             trunk:
@@ -5504,6 +5512,7 @@ spec:
                         items:
                           type: string
                         type: array
+                        x-kubernetes-list-type: set
                       tags:
                         description: Tags applied to the port (and corresponding trunk,
                           if a trunk is configured.) These tags are applied in addition
@@ -5512,6 +5521,7 @@ spec:
                         items:
                           type: string
                         type: array
+                        x-kubernetes-list-type: set
                       tenantId:
                         type: string
                       trunk:
@@ -5806,6 +5816,7 @@ spec:
                         items:
                           type: string
                         type: array
+                        x-kubernetes-list-type: set
                       tags:
                         description: Tags applied to the port (and corresponding trunk,
                           if a trunk is configured.) These tags are applied in addition
@@ -5814,6 +5825,7 @@ spec:
                         items:
                           type: string
                         type: array
+                        x-kubernetes-list-type: set
                       tenantId:
                         type: string
                       trunk:

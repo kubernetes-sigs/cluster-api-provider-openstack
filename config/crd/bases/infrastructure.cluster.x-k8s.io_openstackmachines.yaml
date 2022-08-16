@@ -1729,6 +1729,7 @@ spec:
                       items:
                         type: string
                       type: array
+                      x-kubernetes-list-type: set
                     tags:
                       description: Tags applied to the port (and corresponding trunk,
                         if a trunk is configured.) These tags are applied in addition
@@ -1737,6 +1738,7 @@ spec:
                       items:
                         type: string
                       type: array
+                      x-kubernetes-list-type: set
                     tenantId:
                       type: string
                     trunk:
@@ -1826,6 +1828,7 @@ spec:
                 items:
                   type: string
                 type: array
+                x-kubernetes-list-type: set
               trunk:
                 description: Whether the server instance is created on a trunk port
                   or not.
