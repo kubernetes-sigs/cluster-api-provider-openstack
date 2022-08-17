@@ -118,6 +118,7 @@ type PortOpts struct {
 	TenantID  string    `json:"tenantId,omitempty"`
 	ProjectID string    `json:"projectId,omitempty"`
 	// The uuids of the security groups to assign to the instance
+	// +listType=set
 	SecurityGroups *[]string `json:"securityGroups,omitempty"`
 	// The names, uuids, filters or any combination these of the security groups to assign to the instance
 	SecurityGroupFilters []SecurityGroupParam `json:"securityGroupFilters,omitempty"`
@@ -142,6 +143,7 @@ type PortOpts struct {
 
 	// Tags applied to the port (and corresponding trunk, if a trunk is configured.)
 	// These tags are applied in addition to the instance's tags, which will also be applied to the port.
+	// +listType=set
 	Tags []string `json:"tags,omitempty"`
 }
 

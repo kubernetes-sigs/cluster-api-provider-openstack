@@ -78,6 +78,7 @@ type OpenStackMachineSpec struct {
 
 	// Machine tags
 	// Requires Nova api 2.52 minimum!
+	// +listType=set
 	Tags []string `json:"tags,omitempty"`
 
 	// Metadata mapping. Allows you to create a map of key value pairs to add to the server instance.
