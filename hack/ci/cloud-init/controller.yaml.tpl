@@ -79,6 +79,10 @@
     [[post-config|/$NEUTRON_CORE_PLUGIN_CONF]]
     [ml2]
     path_mtu = ${MTU}
+
+    [[post-config|$NEUTRON_CONF]]
+    [DEFAULT]
+    service_plugins = ovn-router,trunk, router
 - path: /tmp/register-worker.sh
   permissions: 0755
   content: |
