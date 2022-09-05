@@ -29,5 +29,4 @@ aliases:
     - mdbooth
     - seanschneeweiss
     - tobiasgiese
-  cluster-api-openstack-reviewers:
-    - apricote
+  cluster-api-openstack-reviewers: []
