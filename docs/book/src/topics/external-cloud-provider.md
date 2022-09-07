@@ -24,7 +24,7 @@ To deploy a cluster using [external cloud provider](https://github.com/kubernete
     Note: choose desired version by replace <v3.23> below
 
     ```shell
-    kubectl --kubeconfig=./${CLUSTER_NAME}.kubeconfig apply -f https://docs.projectcalico.org/v3.23/manifests/calico.yaml
+    kubectl --kubeconfig=./${CLUSTER_NAME}.kubeconfig apply -f https://docs.projectcalico.org/archive/v3.23/manifests/calico.yaml
     ```
 
 - Create a secret containing the cloud configuration
