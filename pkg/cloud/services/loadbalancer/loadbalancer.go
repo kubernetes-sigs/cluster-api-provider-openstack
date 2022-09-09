@@ -134,10 +134,13 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 		}
 
 		if allowedCIDRsSupported {
-			if err := s.getOrUpdateAllowedCIDRS(openStackCluster, listener); err != nil {
-				return err
+			// Skip reconciliation if network status is nil (e.g. during clusterctl move)
+			if openStackCluster.Status.Network != nil {
+				if err := s.getOrUpdateAllowedCIDRS(openStackCluster, listener); err != nil {
+					return err
+				}
+				allowedCIDRs = listener.AllowedCIDRs
 			}
-			allowedCIDRs = listener.AllowedCIDRs
 		}
 	}
 
