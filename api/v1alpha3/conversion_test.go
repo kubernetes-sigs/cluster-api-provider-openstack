@@ -235,6 +235,7 @@ func TestFuzzyConversion(t *testing.T) {
 					v1alpha6Cluster.Spec.Bastion.Instance.ImageUUID = ""
 					v1alpha6Cluster.Spec.Bastion.Instance.Ports = nil
 				}
+				v1alpha6Cluster.Spec.ControlPlaneOmitAvailabilityZone = false
 
 				v1alpha6Cluster.Status.FailureMessage = nil
 				v1alpha6Cluster.Status.FailureReason = nil
