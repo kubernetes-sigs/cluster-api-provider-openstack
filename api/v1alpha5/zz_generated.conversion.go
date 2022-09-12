@@ -164,11 +164,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha6.OpenStackClusterSpec)(nil), (*OpenStackClusterSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha6_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(a.(*v1alpha6.OpenStackClusterSpec), b.(*OpenStackClusterSpec), scope)
-	}); err != nil {
-		return err
-	}
 	if err := s.AddGeneratedConversionFunc((*OpenStackClusterStatus)(nil), (*v1alpha6.OpenStackClusterStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha5_OpenStackClusterStatus_To_v1alpha6_OpenStackClusterStatus(a.(*OpenStackClusterStatus), b.(*v1alpha6.OpenStackClusterStatus), scope)
 	}); err != nil {
@@ -406,6 +401,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddGeneratedConversionFunc((*v1alpha6.SubnetParam)(nil), (*SubnetParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha6_SubnetParam_To_v1alpha5_SubnetParam(a.(*v1alpha6.SubnetParam), b.(*SubnetParam), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1alpha6.OpenStackClusterSpec)(nil), (*OpenStackClusterSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(a.(*v1alpha6.OpenStackClusterSpec), b.(*OpenStackClusterSpec), scope)
 	}); err != nil {
 		return err
 	}
