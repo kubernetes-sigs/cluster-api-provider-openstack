@@ -49,7 +49,7 @@ $(TOOLS_BIN_DIR)/%: $(TOOLS_DIR_DEPS)
 	make -C $(TOOLS_DIR) $(subst $(TOOLS_DIR)/,,$@)
 
 ## --------------------------------------
-## Help
+##@ Help
 ## --------------------------------------
 
 help:  ## Display this help

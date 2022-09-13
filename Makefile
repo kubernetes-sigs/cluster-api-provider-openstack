@@ -17,7 +17,7 @@ ROOT_DIR_RELATIVE := .
 include $(ROOT_DIR_RELATIVE)/common.mk
 
 # If you update this file, please follow
-# https://suva.sh/posts/well-documented-makefiles
+# https://www.thapaliya.com/en/writings/well-documented-makefiles/
 
 # Active module mode, as we use go modules to manage dependencies
 export GO111MODULE=on
@@ -116,7 +116,7 @@ LDFLAGS := $(shell source ./hack/version.sh; version::ldflags)
 
 
 ## --------------------------------------
-## Testing
+##@ Testing
 ## --------------------------------------
 
 # The number of ginkgo tests to run concurrently
@@ -190,7 +190,7 @@ test-conformance-fast: ## Run clusterctl based conformance test on workload clus
 
 
 ## --------------------------------------
-## Binaries
+##@ Binaries
 ## --------------------------------------
 
 .PHONY: binaries
@@ -211,7 +211,7 @@ $(SETUP_ENVTEST): # Build setup-envtest from tools folder.
 	$(SETUP_ENVTEST_BIN): $(SETUP_ENVTEST) ## Build a local copy of setup-envtest.
 
 ## --------------------------------------
-## Linting
+##@ Linting
 ## --------------------------------------
 
 .PHONY: lint
@@ -226,7 +226,7 @@ lint-fast: $(GOLANGCI_LINT) ## Run only faster linters to detect possible issues
 	$(GOLANGCI_LINT) run -v --fast=true
 
 ## --------------------------------------
-## Generate
+##@ Generate
 ## --------------------------------------
 
 .PHONY: modules
@@ -268,7 +268,7 @@ generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
 		rbac:roleName=manager-role
 
 ## --------------------------------------
-## Docker
+##@ Docker
 ## --------------------------------------
 
 .PHONY: docker-build
@@ -286,7 +286,7 @@ docker-pull-prerequisites:
 	docker pull gcr.io/distroless/static:latest
 
 ## --------------------------------------
-## Docker — All ARCH
+##@ Docker — All ARCH
 ## --------------------------------------
 
 .PHONY: docker-build-all ## Build all the architecture docker images
@@ -314,7 +314,7 @@ staging-manifests:
 	$(MAKE) $(RELEASE_DIR)/$(MANIFEST_FILE).yaml PULL_POLICY=IfNotPresent TAG=$(RELEASE_ALIAS_TAG)
 
 ## --------------------------------------
-## Release
+##@ Release
 ## --------------------------------------
 
 $(RELEASE_DIR):
@@ -454,7 +454,7 @@ image-patch-pull-policy: $(IMAGE_PATCH_DIR) $(GOJQ)
 
 
 ## --------------------------------------
-## Cleanup / Verification
+##@ Cleanup / Verification
 ## --------------------------------------
 
 .PHONY: clean
