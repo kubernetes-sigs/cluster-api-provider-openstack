@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package mock_networking // nolint
+package mock_networking //nolint
 
 //go:generate mockgen -destination=client_mock.go -package=mock_networking sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking NetworkClient
 //go:generate /usr/bin/env bash -c "cat ../../../../../hack/boilerplate/boilerplate.generatego.txt client_mock.go > _client_mock.go && mv _client_mock.go client_mock.go"

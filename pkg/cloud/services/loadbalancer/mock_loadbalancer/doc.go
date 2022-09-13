@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package mock_loadbalancer // nolint
+package mock_loadbalancer //nolint
 
 //go:generate mockgen -destination=loadbalancer_service_mock.go -package=mock_loadbalancer sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/loadbalancer LbClient
 //go:generate /usr/bin/env bash -c "cat ../../../../../hack/boilerplate/boilerplate.generatego.txt loadbalancer_service_mock.go > _loadbalancer_service_mock.go && mv _loadbalancer_service_mock.go loadbalancer_service_mock.go"

@@ -4,7 +4,6 @@ linters:
   - asciicheck
   - bodyclose
   - cyclop
-  - deadcode
   - depguard
   - dogsled
   - durationcheck
@@ -25,7 +24,6 @@ linters:
   - gosec
   - gosimple
   - govet
-  - ifshort
   - importas
   - ineffassign
   - makezero
@@ -41,14 +39,12 @@ linters:
   - rowserrcheck
   - sqlclosecheck
   - staticcheck
-  - structcheck
   - stylecheck
   - thelper
   - typecheck
   - unconvert
   - unparam
   - unused
-  - varcheck
   - wastedassign
   - whitespace
 
@@ -56,9 +52,6 @@ linters-settings:
   cyclop:
     # TODO(sbuerin) fix remaining findings and set to 20 afterwards
     max-complexity: 30
-  ifshort:
-    # Maximum length of variable declaration measured in number of characters, after which linter won't suggest using short syntax.
-    max-decl-chars: 50
   gci:
     local-prefixes: sigs.k8s.io/cluster-api-provider-openstack
   importas:
