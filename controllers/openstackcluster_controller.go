@@ -280,21 +280,16 @@ func reconcileNormal(ctx context.Context, scope *scope.Scope, patchHelper *patch
 		return ctrl.Result{}, err
 	}
 
-	// Create a new list to remove any Availability
-	// Zones that have been removed from OpenStack
+	// Create a new list in case any AZs have been removed from OpenStack
 	openStackCluster.Status.FailureDomains = make(clusterv1.FailureDomains)
 	for _, az := range availabilityZones {
-		found := true
-		// If Az given, then check whether it's in the allow list
-		// If no Az given, then by default put into allow list
+		// By default, the AZ is used or not used for control plane nodes depending on the flag
+		found := !openStackCluster.Spec.ControlPlaneOmitAvailabilityZone
+		// If explicit AZs for control plane nodes are given, they override the value
 		if len(openStackCluster.Spec.ControlPlaneAvailabilityZones) > 0 {
-			if contains(openStackCluster.Spec.ControlPlaneAvailabilityZones, az.ZoneName) {
-				found = true
-			} else {
-				found = false
-			}
+			found = contains(openStackCluster.Spec.ControlPlaneAvailabilityZones, az.ZoneName)
 		}
-
+		// Add the AZ object to the failure domains for the cluster
 		openStackCluster.Status.FailureDomains[az.ZoneName] = clusterv1.FailureDomainSpec{
 			ControlPlane: found,
 		}

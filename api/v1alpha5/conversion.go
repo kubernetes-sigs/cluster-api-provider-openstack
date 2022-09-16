@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha5
 
 import (
+	conversion "k8s.io/apimachinery/pkg/conversion"
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
 	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
 
@@ -195,4 +196,9 @@ func (r *OpenStackMachineTemplateList) ConvertFrom(srcRaw ctrlconversion.Hub) er
 	src := srcRaw.(*infrav1.OpenStackMachineTemplateList)
 
 	return Convert_v1alpha6_OpenStackMachineTemplateList_To_v1alpha5_OpenStackMachineTemplateList(src, r, nil)
+}
+
+func Convert_v1alpha6_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(in *infrav1.OpenStackClusterSpec, out *OpenStackClusterSpec, s conversion.Scope) error {
+	// Our new flag has no equivalent in v1alpha5
+	return autoConvert_v1alpha6_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(in, out, s)
 }
