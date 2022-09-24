@@ -114,6 +114,66 @@ func getSGControlPlaneCalico(remoteGroupIDSelf, secWorkerGroupID string) []infra
 	}
 }
 
+// Permit traffic for cilium.
+func getSGControlPlaneCilium(remoteGroupIDSelf, secWorkerGroupID string) []infrav1.SecurityGroupRule {
+	return []infrav1.SecurityGroupRule{
+		{
+			Description:   "HealthChecks (cilium)",
+			Direction:     "ingress",
+			EtherType:     "IPv4",
+			PortRangeMin:  4240,
+			PortRangeMax:  4240,
+			Protocol:      "tcp",
+			RemoteGroupID: remoteGroupIDSelf,
+		},
+		{
+			Description:   "HealthChecks (cilium)",
+			Direction:     "ingress",
+			EtherType:     "IPv4",
+			PortRangeMin:  4240,
+			PortRangeMax:  4240,
+			Protocol:      "tcp",
+			RemoteGroupID: secWorkerGroupID,
+		},
+		{
+			Description:   "VXLAN (cilium)",
+			Direction:     "ingress",
+			EtherType:     "IPv4",
+			PortRangeMin:  8472,
+			PortRangeMax:  8472,
+			Protocol:      "udp",
+			RemoteGroupID: remoteGroupIDSelf,
+		},
+		{
+			Description:   "VXLAN (cilium)",
+			Direction:     "ingress",
+			EtherType:     "IPv4",
+			PortRangeMin:  8472,
+			PortRangeMax:  8472,
+			Protocol:      "udp",
+			RemoteGroupID: secWorkerGroupID,
+		},
+		{
+			Description:   "ICMP HealthCheck (cilium)",
+			Direction:     "ingress",
+			EtherType:     "IPv4",
+			PortRangeMin:  8,
+			PortRangeMax:  0,
+			Protocol:      "icmp",
+			RemoteGroupID: remoteGroupIDSelf,
+		},
+		{
+			Description:   "ICMP HealthCheck (cilium)",
+			Direction:     "ingress",
+			EtherType:     "IPv4",
+			PortRangeMin:  8,
+			PortRangeMax:  0,
+			Protocol:      "icmp",
+			RemoteGroupID: secWorkerGroupID,
+		},
+	}
+}
+
 // Permit traffic for kubelet.
 func getSGWorkerCommon(remoteGroupIDSelf, secControlPlaneGroupID string) []infrav1.SecurityGroupRule {
 	return []infrav1.SecurityGroupRule{
@@ -172,6 +232,66 @@ func getSGWorkerCalico(remoteGroupIDSelf, secControlPlaneGroupID string) []infra
 			Direction:     "ingress",
 			EtherType:     "IPv4",
 			Protocol:      "ipip",
+			RemoteGroupID: secControlPlaneGroupID,
+		},
+	}
+}
+
+// Permit traffic for cilium.
+func getSGWorkerCilium(remoteGroupIDSelf, secControlPlaneGroupID string) []infrav1.SecurityGroupRule {
+	return []infrav1.SecurityGroupRule{
+		{
+			Description:   "HealthChecks (cilium)",
+			Direction:     "ingress",
+			EtherType:     "IPv4",
+			PortRangeMin:  4240,
+			PortRangeMax:  4240,
+			Protocol:      "tcp",
+			RemoteGroupID: remoteGroupIDSelf,
+		},
+		{
+			Description:   "HealthChecks (cilium)",
+			Direction:     "ingress",
+			EtherType:     "IPv4",
+			PortRangeMin:  4240,
+			PortRangeMax:  4240,
+			Protocol:      "tcp",
+			RemoteGroupID: secControlPlaneGroupID,
+		},
+		{
+			Description:   "VXLAN (cilium)",
+			Direction:     "ingress",
+			EtherType:     "IPv4",
+			PortRangeMin:  8472,
+			PortRangeMax:  8472,
+			Protocol:      "udp",
+			RemoteGroupID: remoteGroupIDSelf,
+		},
+		{
+			Description:   "VXLAN (cilium)",
+			Direction:     "ingress",
+			EtherType:     "IPv4",
+			PortRangeMin:  8472,
+			PortRangeMax:  8472,
+			Protocol:      "udp",
+			RemoteGroupID: secControlPlaneGroupID,
+		},
+		{
+			Description:   "ICMP HealthCheck (cilium)",
+			Direction:     "ingress",
+			EtherType:     "IPv4",
+			PortRangeMin:  8,
+			PortRangeMax:  0,
+			Protocol:      "icmp",
+			RemoteGroupID: remoteGroupIDSelf,
+		},
+		{
+			Description:   "ICMP HealthCheck (cilium)",
+			Direction:     "ingress",
+			EtherType:     "IPv4",
+			PortRangeMin:  8,
+			PortRangeMax:  0,
+			Protocol:      "icmp",
 			RemoteGroupID: secControlPlaneGroupID,
 		},
 	}
@@ -287,6 +407,7 @@ func GetSGControlPlaneGeneral(remoteGroupIDSelf, secWorkerGroupID string) []infr
 	controlPlaneRules := []infrav1.SecurityGroupRule{}
 	controlPlaneRules = append(controlPlaneRules, getSGControlPlaneCommon(remoteGroupIDSelf, secWorkerGroupID)...)
 	controlPlaneRules = append(controlPlaneRules, getSGControlPlaneCalico(remoteGroupIDSelf, secWorkerGroupID)...)
+	controlPlaneRules = append(controlPlaneRules, getSGControlPlaneCilium(remoteGroupIDSelf, secWorkerGroupID)...)
 	return controlPlaneRules
 }
 
@@ -294,5 +415,6 @@ func GetSGWorkerGeneral(remoteGroupIDSelf, secControlPlaneGroupID string) []infr
 	workerRules := []infrav1.SecurityGroupRule{}
 	workerRules = append(workerRules, getSGWorkerCommon(remoteGroupIDSelf, secControlPlaneGroupID)...)
 	workerRules = append(workerRules, getSGWorkerCalico(remoteGroupIDSelf, secControlPlaneGroupID)...)
+	workerRules = append(workerRules, getSGWorkerCilium(remoteGroupIDSelf, secControlPlaneGroupID)...)
 	return workerRules
 }
