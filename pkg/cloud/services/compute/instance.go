@@ -198,7 +198,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 	instanceCreateTimeout *= time.Minute
 
 	// Wait for volume to become available
-	if volume != nil {
+	if volume != nil && !s.noVolumeService {
 		err = util.PollImmediate(retryIntervalInstanceStatus, instanceCreateTimeout, func() (bool, error) {
 			createdVolume, err := s.computeService.GetVolume(volume.ID)
 			if err != nil {

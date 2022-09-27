@@ -30,6 +30,7 @@ type Service struct {
 	scope             *scope.Scope
 	computeService    Client
 	networkingService *networking.Service
+	noVolumeService   bool
 }
 
 /*
@@ -63,8 +64,12 @@ func NewService(scope *scope.Scope) (*Service, error) {
 	volumeClient, err := openstack.NewBlockStorageV3(scope.ProviderClient, gophercloud.EndpointOpts{
 		Region: scope.ProviderClientOpts.RegionName,
 	})
+	noVolumeService := false
 	if err != nil {
-		return nil, fmt.Errorf("failed to create volume service client: %v", err)
+		// failed to create volume service client, we should tolerate
+		scope.Logger.Info("failed to create volume service client, no volume related operations allowed")
+		volumeClient = nil
+		noVolumeService = true
 	}
 
 	computeService := serviceClient{computeClient, imagesClient, volumeClient}
@@ -82,5 +87,6 @@ func NewService(scope *scope.Scope) (*Service, error) {
 		scope:             scope,
 		computeService:    computeService,
 		networkingService: networkingService,
+		noVolumeService:   noVolumeService,
 	}, nil
 }
