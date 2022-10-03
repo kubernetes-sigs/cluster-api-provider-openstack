@@ -513,7 +513,7 @@ func (s *Service) GetManagementPort(openStackCluster *infrav1.OpenStackCluster, 
 	return &allPorts[0], nil
 }
 
-func (s *Service) DeleteInstance(eventObject runtime.Object, instanceSpec *InstanceSpec, instanceStatus *InstanceStatus) error {
+func (s *Service) DeleteInstance(eventObject runtime.Object, instanceStatus *InstanceStatus, instanceName string, rootVolume *infrav1.RootVolume) error {
 	if instanceStatus == nil {
 		/*
 			We create a boot-from-volume instance in 2 steps:
@@ -533,9 +533,8 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instanceSpec *Insta
 			Note that we don't need to separately delete the root volume when deleting the instance because
 			DeleteOnTermination will ensure it is deleted in that case.
 		*/
-		rootVolume := instanceSpec.RootVolume
 		if hasRootVolume(rootVolume) {
-			name := rootVolumeName(instanceSpec.Name)
+			name := rootVolumeName(instanceName)
 			volume, err := s.getVolumeByName(name)
 			if err != nil {
 				return err

@@ -1031,15 +1031,14 @@ func TestService_DeleteInstance(t *testing.T) {
 	tests := []struct {
 		name           string
 		eventObject    runtime.Object
-		instanceSpec   func() *InstanceSpec
 		instanceStatus func() *InstanceStatus
+		rootVolume     *infrav1.RootVolume
 		expect         func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder)
 		wantErr        bool
 	}{
 		{
 			name:           "Defaults",
 			eventObject:    &infrav1.OpenStackMachine{},
-			instanceSpec:   getDefaultInstanceSpec,
 			instanceStatus: getDefaultInstanceStatus,
 			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
 				computeRecorder.ListAttachedInterfaces(instanceUUID).Return([]attachinterfaces.Interface{
@@ -1063,16 +1062,12 @@ func TestService_DeleteInstance(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:        "Dangling volume",
-			eventObject: &infrav1.OpenStackMachine{},
-			instanceSpec: func() *InstanceSpec {
-				spec := getDefaultInstanceSpec()
-				spec.RootVolume = &infrav1.RootVolume{
-					Size: 50,
-				}
-				return spec
-			},
+			name:           "Dangling volume",
+			eventObject:    &infrav1.OpenStackMachine{},
 			instanceStatus: func() *InstanceStatus { return nil },
+			rootVolume: &infrav1.RootVolume{
+				Size: 50,
+			},
 			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
 				// Fetch volume by name
 				volumeName := fmt.Sprintf("%s-root", openStackMachineName)
@@ -1112,7 +1107,7 @@ func TestService_DeleteInstance(t *testing.T) {
 					"", mockNetworkClient, logr.Discard(),
 				),
 			}
-			if err := s.DeleteInstance(tt.eventObject, tt.instanceSpec(), tt.instanceStatus()); (err != nil) != tt.wantErr {
+			if err := s.DeleteInstance(tt.eventObject, tt.instanceStatus(), openStackMachineName, tt.rootVolume); (err != nil) != tt.wantErr {
 				t.Errorf("Service.DeleteInstance() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
