@@ -76,12 +76,32 @@ function retry {
 function ensure_openstack_client {
     if ! command -v openstack;
     then
-        apt-get install -y python3-dev
-        # install PyYAML first because otherwise we get an error because pip3 doesn't upgrade PyYAML to the correct version
-        # ERROR: Cannot uninstall 'PyYAML'. It is a distutils installed project and thus we cannot accurately determine which
-        # files belong to it which would lead to only a partial uninstall.
-        pip3 install --ignore-installed PyYAML
-        pip3 install python-cinderclient python-glanceclient python-keystoneclient python-neutronclient python-novaclient python-openstackclient python-octaviaclient
+        # We are running in a Debian Buster image with python 3.7. Python 3.7
+        # is starting to show its age in upstream support. Ideally we would
+        # move to a newer image with a newer python version.
+        #
+        # Until then, this script tries to carefully navigate around current
+        # issues running openstack client on python 3.7.
+        #
+        # We explicitly pin the yoga version of openstackclient. This is the
+        # last version of openstackclient which will support python 3.7.
+
+        # Install virtualenv to install the openstack client and curl to fetch
+        # the build constraints.
+        apt-get install -y python3-virtualenv curl
+        python3 -m virtualenv -p $(which python3) /tmp/openstack-venv
+        VIRTUAL_ENV_DISABLE_PROMPT=1 source /tmp/openstack-venv/bin/activate
+
+        # openstackclient has never actually supported python 3.7, only 3.6 and
+        # 3.8. Here we download the yoga constraints file and modify all the
+        # 3.8 constraints to be 3.7 constraints.
+        curl -L https://releases.openstack.org/constraints/upper/yoga -o /tmp/yoga-constraints
+        sed -i "s/python_version=='3.8'/python_version=='3.7'/" /tmp/yoga-constraints
+
+        pip install -c /tmp/yoga-constraints \
+                python-openstackclient python-cinderclient \
+                python-glanceclient python-keystoneclient \
+                python-neutronclient python-novaclient python-octaviaclient
     fi
 }
 
