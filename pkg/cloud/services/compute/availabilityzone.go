@@ -23,7 +23,7 @@ import (
 )
 
 func (s *Service) GetAvailabilityZones() ([]availabilityzones.AvailabilityZone, error) {
-	availabilityZoneList, err := s.computeService.ListAvailabilityZones()
+	availabilityZoneList, err := s.getComputeClient().ListAvailabilityZones()
 	if err != nil {
 		return nil, fmt.Errorf("error extracting availability zone list: %v", err)
 	}

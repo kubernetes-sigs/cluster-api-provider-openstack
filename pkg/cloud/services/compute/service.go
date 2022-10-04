@@ -25,30 +25,72 @@ import (
 )
 
 type Service struct {
-	scope             *scope.Scope
-	computeService    clients.ComputeClient
-	networkingService *networking.Service
+	scope              *scope.Scope
+	_computeClient     clients.ComputeClient
+	_volumeClient      clients.VolumeClient
+	_imageClient       clients.ImageClient
+	_networkingService *networking.Service
 }
 
 // NewService returns an instance of the compute service.
 func NewService(scope *scope.Scope) (*Service, error) {
-	computeService, err := clients.NewComputeClient(scope)
-	if err != nil {
-		return nil, err
-	}
-
 	if scope.ProviderClientOpts.AuthInfo == nil {
 		return nil, fmt.Errorf("authInfo must be set")
 	}
 
-	networkingService, err := networking.NewService(scope)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create networking service: %v", err)
+	return &Service{
+		scope: scope,
+	}, nil
+}
+
+func (s Service) getComputeClient() clients.ComputeClient {
+	if s._computeClient == nil {
+		computeClient, err := clients.NewComputeClient(s.scope)
+		if err != nil {
+			return clients.NewComputeErrorClient(err)
+		}
+
+		s._computeClient = computeClient
 	}
 
-	return &Service{
-		scope:             scope,
-		computeService:    computeService,
-		networkingService: networkingService,
-	}, nil
+	return s._computeClient
+}
+
+func (s Service) getVolumeClient() clients.VolumeClient {
+	if s._volumeClient == nil {
+		volumeClient, err := clients.NewVolumeClient(s.scope)
+		if err != nil {
+			return clients.NewVolumeErrorClient(err)
+		}
+
+		s._volumeClient = volumeClient
+	}
+
+	return s._volumeClient
+}
+
+func (s Service) getImageClient() clients.ImageClient {
+	if s._imageClient == nil {
+		imageClient, err := clients.NewImageClient(s.scope)
+		if err != nil {
+			return clients.NewImageErrorClient(err)
+		}
+
+		s._imageClient = imageClient
+	}
+
+	return s._imageClient
+}
+
+func (s Service) getNetworkingService() (*networking.Service, error) {
+	if s._networkingService == nil {
+		networkingService, err := networking.NewService(s.scope)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create networking service: %v", err)
+		}
+
+		s._networkingService = networkingService
+	}
+
+	return s._networkingService, nil
 }

@@ -67,7 +67,12 @@ func (s *Service) constructNetworks(openStackCluster *infrav1.OpenStackCluster, 
 		if port.Network != nil {
 			netID := port.Network.ID
 			if netID == "" {
-				netIDs, err := s.networkingService.GetNetworkIDsByFilter(port.Network.ToListOpt())
+				networkingService, err := s.getNetworkingService()
+				if err != nil {
+					return nil, err
+				}
+
+				netIDs, err := networkingService.GetNetworkIDsByFilter(port.Network.ToListOpt())
 				if err != nil {
 					return nil, err
 				}
@@ -139,7 +144,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 		return nil, fmt.Errorf("error getting image ID: %v", err)
 	}
 
-	flavorID, err := s.computeService.GetFlavorIDFromName(instanceSpec.Flavor)
+	flavorID, err := s.getComputeClient().GetFlavorIDFromName(instanceSpec.Flavor)
 	if err != nil {
 		return nil, fmt.Errorf("error getting flavor id from flavor name %s: %v", instanceSpec.Flavor, err)
 	}
@@ -160,7 +165,12 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 		return nil, err
 	}
 
-	securityGroups, err := s.networkingService.GetSecurityGroups(instanceSpec.SecurityGroups)
+	networkingService, err := s.getNetworkingService()
+	if err != nil {
+		return nil, err
+	}
+
+	securityGroups, err := networkingService.GetSecurityGroups(instanceSpec.SecurityGroups)
 	if err != nil {
 		return nil, fmt.Errorf("error getting security groups: %v", err)
 	}
@@ -174,7 +184,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 			iTags = instanceSpec.Tags
 		}
 		portName := getPortName(instanceSpec.Name, network.PortOpts, i)
-		port, err := s.networkingService.GetOrCreatePort(eventObject, clusterName, portName, network, &securityGroups, iTags)
+		port, err := networkingService.GetOrCreatePort(eventObject, clusterName, portName, network, &securityGroups, iTags)
 		if err != nil {
 			return nil, err
 		}
@@ -201,7 +211,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 	// Wait for volume to become available
 	if volume != nil {
 		err = util.PollImmediate(retryIntervalInstanceStatus, instanceCreateTimeout, func() (bool, error) {
-			createdVolume, err := s.computeService.GetVolume(volume.ID)
+			createdVolume, err := s.getVolumeClient().GetVolume(volume.ID)
 			if err != nil {
 				if capoerrors.IsRetryable(err) {
 					return false, nil
@@ -246,7 +256,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 
 	serverCreateOpts = applyServerGroupID(serverCreateOpts, instanceSpec.ServerGroupID)
 
-	server, err = s.computeService.CreateServer(keypairs.CreateOptsExt{
+	server, err = s.getComputeClient().CreateServer(keypairs.CreateOptsExt{
 		CreateOptsBuilder: serverCreateOpts,
 		KeyName:           instanceSpec.SSHKeyName,
 	})
@@ -299,7 +309,7 @@ func (s *Service) getVolumeByName(name string) (*volumes.Volume, error) {
 		Name:       name,
 		TenantID:   s.scope.ProjectID,
 	}
-	volumeList, err := s.computeService.ListVolumes(listOpts)
+	volumeList, err := s.getVolumeClient().ListVolumes(listOpts)
 	if err != nil {
 		return nil, fmt.Errorf("error listing volumes: %w", err)
 	}
@@ -348,7 +358,7 @@ func (s *Service) getOrCreateRootVolume(eventObject runtime.Object, instanceSpec
 		AvailabilityZone: availabilityZone,
 		VolumeType:       rootVolume.VolumeType,
 	}
-	volume, err = s.computeService.CreateVolume(createOpts)
+	volume, err = s.getVolumeClient().CreateVolume(createOpts)
 	if err != nil {
 		record.Eventf(eventObject, "FailedCreateVolume", "Failed to create root volume; size=%d imageID=%s err=%v", size, imageID, err)
 		return nil, err
@@ -424,7 +434,13 @@ func (s *Service) getServerNetworks(networkParams []infrav1.NetworkParam) ([]inf
 				if netID != "" {
 					subnetOpts.NetworkID = netID
 				}
-				subnetsByFilter, err := s.networkingService.GetSubnetsByFilter(&subnetOpts)
+
+				networkingService, err := s.getNetworkingService()
+				if err != nil {
+					return err
+				}
+
+				subnetsByFilter, err := networkingService.GetSubnetsByFilter(&subnetOpts)
 				if err != nil {
 					return err
 				}
@@ -449,8 +465,14 @@ func (s *Service) getServerNetworks(networkParams []infrav1.NetworkParam) ([]inf
 			}
 			continue
 		}
+
+		networkingService, err := s.getNetworkingService()
+		if err != nil {
+			return nil, err
+		}
+
 		opts := networkParam.Filter.ToListOpt()
-		ids, err := s.networkingService.GetNetworkIDsByFilter(&opts)
+		ids, err := networkingService.GetNetworkIDsByFilter(&opts)
 		if err != nil {
 			return nil, err
 		}
@@ -469,7 +491,7 @@ func (s *Service) getImageIDFromName(imageName string) (string, error) {
 
 	opts.Name = imageName
 
-	allImages, err := s.computeService.ListImages(opts)
+	allImages, err := s.getImageClient().ListImages(opts)
 	if err != nil {
 		return "", err
 	}
@@ -504,7 +526,13 @@ func (s *Service) GetManagementPort(openStackCluster *infrav1.OpenStackCluster, 
 	if err != nil {
 		return nil, err
 	}
-	allPorts, err := s.networkingService.GetPortFromInstanceIP(instanceStatus.ID(), ns.IP(openStackCluster.Status.Network.Name))
+
+	networkingService, err := s.getNetworkingService()
+	if err != nil {
+		return nil, err
+	}
+
+	allPorts, err := networkingService.GetPortFromInstanceIP(instanceStatus.ID(), ns.IP(openStackCluster.Status.Network.Name))
 	if err != nil {
 		return nil, fmt.Errorf("lookup management port for server %s: %w", instanceStatus.ID(), err)
 	}
@@ -545,13 +573,13 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instanceStatus *Ins
 			}
 
 			s.scope.Logger.Info("deleting dangling root volume %s(%s)", volume.Name, volume.ID)
-			return s.computeService.DeleteVolume(volume.ID, volumes.DeleteOpts{})
+			return s.getVolumeClient().DeleteVolume(volume.ID, volumes.DeleteOpts{})
 		}
 
 		return nil
 	}
 
-	instanceInterfaces, err := s.computeService.ListAttachedInterfaces(instanceStatus.ID())
+	instanceInterfaces, err := s.getComputeClient().ListAttachedInterfaces(instanceStatus.ID())
 	if err != nil {
 		return err
 	}
@@ -561,6 +589,11 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instanceStatus *Ins
 		return fmt.Errorf("obtaining network extensions: %v", err)
 	}
 
+	networkingService, err := s.getNetworkingService()
+	if err != nil {
+		return err
+	}
+
 	// get and delete trunks
 	for _, port := range instanceInterfaces {
 		if err = s.deleteAttachInterface(eventObject, instanceStatus.InstanceIdentifier(), port.PortID); err != nil {
@@ -568,18 +601,18 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instanceStatus *Ins
 		}
 
 		if trunkSupported {
-			if err = s.networkingService.DeleteTrunk(eventObject, port.PortID); err != nil {
+			if err = networkingService.DeleteTrunk(eventObject, port.PortID); err != nil {
 				return err
 			}
 		}
-		if err = s.networkingService.DeletePort(eventObject, port.PortID); err != nil {
+		if err = networkingService.DeletePort(eventObject, port.PortID); err != nil {
 			return err
 		}
 	}
 
 	// delete port of error instance
 	if instanceStatus.State() == infrav1.InstanceStateError {
-		if err := s.networkingService.GarbageCollectErrorInstancesPort(eventObject, instanceStatus.Name()); err != nil {
+		if err := networkingService.GarbageCollectErrorInstancesPort(eventObject, instanceStatus.Name()); err != nil {
 			return err
 		}
 	}
@@ -594,12 +627,17 @@ func (s *Service) deletePorts(eventObject runtime.Object, nets []servers.Network
 	}
 
 	for _, n := range nets {
+		networkingService, err := s.getNetworkingService()
+		if err != nil {
+			return err
+		}
+
 		if trunkSupported {
-			if err = s.networkingService.DeleteTrunk(eventObject, n.Port); err != nil {
+			if err = networkingService.DeleteTrunk(eventObject, n.Port); err != nil {
 				return err
 			}
 		}
-		if err := s.networkingService.DeletePort(eventObject, n.Port); err != nil {
+		if err := networkingService.DeletePort(eventObject, n.Port); err != nil {
 			return err
 		}
 	}
@@ -607,7 +645,7 @@ func (s *Service) deletePorts(eventObject runtime.Object, nets []servers.Network
 }
 
 func (s *Service) deleteAttachInterface(eventObject runtime.Object, instance *InstanceIdentifier, portID string) error {
-	err := s.computeService.DeleteAttachedInterface(instance.ID, portID)
+	err := s.getComputeClient().DeleteAttachedInterface(instance.ID, portID)
 	if err != nil {
 		if capoerrors.IsNotFound(err) {
 			record.Eventf(eventObject, "SuccessfulDeleteAttachInterface", "Attach interface did not exist: instance %s, port %s", instance.ID, portID)
@@ -627,7 +665,7 @@ func (s *Service) deleteAttachInterface(eventObject runtime.Object, instance *In
 }
 
 func (s *Service) deleteInstance(eventObject runtime.Object, instance *InstanceIdentifier) error {
-	err := s.computeService.DeleteServer(instance.ID)
+	err := s.getComputeClient().DeleteServer(instance.ID)
 	if err != nil {
 		if capoerrors.IsNotFound(err) {
 			record.Eventf(eventObject, "SuccessfulDeleteServer", "Server %s with id %s did not exist", instance.Name, instance.ID)
@@ -661,7 +699,7 @@ func (s *Service) GetInstanceStatus(resourceID string) (instance *InstanceStatus
 		return nil, fmt.Errorf("resourceId should be specified to get detail")
 	}
 
-	server, err := s.computeService.GetServer(resourceID)
+	server, err := s.getComputeClient().GetServer(resourceID)
 	if err != nil {
 		if capoerrors.IsNotFound(err) {
 			return nil, nil
@@ -685,7 +723,7 @@ func (s *Service) GetInstanceStatusByName(eventObject runtime.Object, name strin
 		listOpts = servers.ListOpts{}
 	}
 
-	serverList, err := s.computeService.ListServers(listOpts)
+	serverList, err := s.getComputeClient().ListServers(listOpts)
 	if err != nil {
 		return nil, fmt.Errorf("get server list: %v", err)
 	}
@@ -713,7 +751,12 @@ func getTimeout(name string, timeout int) time.Duration {
 
 // isTrunkExtSupported verifies trunk setup on the OpenStack deployment.
 func (s *Service) isTrunkExtSupported() (trunknSupported bool, err error) {
-	trunkSupport, err := s.networkingService.GetTrunkSupport()
+	networkingService, err := s.getNetworkingService()
+	if err != nil {
+		return false, err
+	}
+
+	trunkSupport, err := networkingService.GetTrunkSupport()
 	if err != nil {
 		return false, fmt.Errorf("there was an issue verifying whether trunk support is available, Please try again later: %v", err)
 	}

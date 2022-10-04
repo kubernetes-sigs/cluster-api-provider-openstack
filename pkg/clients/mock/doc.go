@@ -19,8 +19,14 @@ package mock
 //go:generate mockgen -package mock -destination=compute.go sigs.k8s.io/cluster-api-provider-openstack/pkg/clients ComputeClient
 //go:generate /usr/bin/env bash -c "cat ../../../hack/boilerplate/boilerplate.generatego.txt compute.go > _compute.go && mv _compute.go compute.go"
 
-//go:generate mockgen -package mock -destination=network.go sigs.k8s.io/cluster-api-provider-openstack/pkg/clients NetworkClient
-//go:generate /usr/bin/env bash -c "cat ../../../hack/boilerplate/boilerplate.generatego.txt network.go > _network.go && mv _network.go network.go"
+//go:generate mockgen -package mock -destination=image.go sigs.k8s.io/cluster-api-provider-openstack/pkg/clients ImageClient
+//go:generate /usr/bin/env bash -c "cat ../../../hack/boilerplate/boilerplate.generatego.txt image.go > _image.go && mv _image.go image.go"
 
 //go:generate mockgen -package mock -destination=loadbalancer.go sigs.k8s.io/cluster-api-provider-openstack/pkg/clients LbClient
 //go:generate /usr/bin/env bash -c "cat ../../../hack/boilerplate/boilerplate.generatego.txt loadbalancer.go > _loadbalancer.go && mv _loadbalancer.go loadbalancer.go"
+
+//go:generate mockgen -package mock -destination=network.go sigs.k8s.io/cluster-api-provider-openstack/pkg/clients NetworkClient
+//go:generate /usr/bin/env bash -c "cat ../../../hack/boilerplate/boilerplate.generatego.txt network.go > _network.go && mv _network.go network.go"
+
+//go:generate mockgen -package mock -destination=volume.go sigs.k8s.io/cluster-api-provider-openstack/pkg/clients VolumeClient
+//go:generate /usr/bin/env bash -c "cat ../../../hack/boilerplate/boilerplate.generatego.txt volume.go > _volume.go && mv _volume.go volume.go"

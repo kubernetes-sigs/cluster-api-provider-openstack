@@ -21,11 +21,9 @@ import (
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
-	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/availabilityzones"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
-	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/gophercloud/utils/openstack/compute/v2/flavors"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
@@ -52,8 +50,6 @@ type ServerExt struct {
 type ComputeClient interface {
 	ListAvailabilityZones() ([]availabilityzones.AvailabilityZone, error)
 
-	ListImages(listOpts images.ListOptsBuilder) ([]images.Image, error)
-
 	GetFlavorIDFromName(flavor string) (string, error)
 	CreateServer(createOpts servers.CreateOptsBuilder) (*ServerExt, error)
 	DeleteServer(serverID string) error
@@ -62,18 +58,9 @@ type ComputeClient interface {
 
 	ListAttachedInterfaces(serverID string) ([]attachinterfaces.Interface, error)
 	DeleteAttachedInterface(serverID, portID string) error
-
-	ListVolumes(opts volumes.ListOptsBuilder) ([]volumes.Volume, error)
-	CreateVolume(opts volumes.CreateOptsBuilder) (*volumes.Volume, error)
-	DeleteVolume(volumeID string, opts volumes.DeleteOptsBuilder) error
-	GetVolume(volumeID string) (*volumes.Volume, error)
 }
 
-type computeClient struct {
-	compute *gophercloud.ServiceClient
-	images  *gophercloud.ServiceClient
-	volume  *gophercloud.ServiceClient
-}
+type computeClient struct{ client *gophercloud.ServiceClient }
 
 // NewComputeClient returns a new compute client.
 func NewComputeClient(scope *scope.Scope) (ComputeClient, error) {
@@ -85,77 +72,54 @@ func NewComputeClient(scope *scope.Scope) (ComputeClient, error) {
 	}
 	compute.Microversion = NovaMinimumMicroversion
 
-	images, err := openstack.NewImageServiceV2(scope.ProviderClient, gophercloud.EndpointOpts{
-		Region: scope.ProviderClientOpts.RegionName,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to create image service client: %v", err)
-	}
-
-	volume, err := openstack.NewBlockStorageV3(scope.ProviderClient, gophercloud.EndpointOpts{
-		Region: scope.ProviderClientOpts.RegionName,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to create volume service client: %v", err)
-	}
-
-	return &computeClient{compute, images, volume}, nil
+	return &computeClient{compute}, nil
 }
 
-func (s computeClient) ListAvailabilityZones() ([]availabilityzones.AvailabilityZone, error) {
+func (c computeClient) ListAvailabilityZones() ([]availabilityzones.AvailabilityZone, error) {
 	mc := metrics.NewMetricPrometheusContext("availability_zone", "list")
-	allPages, err := availabilityzones.List(s.compute).AllPages()
+	allPages, err := availabilityzones.List(c.client).AllPages()
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return availabilityzones.ExtractAvailabilityZones(allPages)
 }
 
-func (s computeClient) ListImages(listOpts images.ListOptsBuilder) ([]images.Image, error) {
-	mc := metrics.NewMetricPrometheusContext("image", "list")
-	pages, err := images.List(s.images, listOpts).AllPages()
-	if mc.ObserveRequest(err) != nil {
-		return nil, err
-	}
-	return images.ExtractImages(pages)
-}
-
-func (s computeClient) GetFlavorIDFromName(flavor string) (string, error) {
+func (c computeClient) GetFlavorIDFromName(flavor string) (string, error) {
 	mc := metrics.NewMetricPrometheusContext("flavor", "get")
-	flavorID, err := flavors.IDFromName(s.compute, flavor)
+	flavorID, err := flavors.IDFromName(c.client, flavor)
 	return flavorID, mc.ObserveRequest(err)
 }
 
-func (s computeClient) CreateServer(createOpts servers.CreateOptsBuilder) (*ServerExt, error) {
+func (c computeClient) CreateServer(createOpts servers.CreateOptsBuilder) (*ServerExt, error) {
 	var server ServerExt
 	mc := metrics.NewMetricPrometheusContext("server", "create")
-	err := servers.Create(s.compute, createOpts).ExtractInto(&server)
+	err := servers.Create(c.client, createOpts).ExtractInto(&server)
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return &server, nil
 }
 
-func (s computeClient) DeleteServer(serverID string) error {
+func (c computeClient) DeleteServer(serverID string) error {
 	mc := metrics.NewMetricPrometheusContext("server", "delete")
-	err := servers.Delete(s.compute, serverID).ExtractErr()
+	err := servers.Delete(c.client, serverID).ExtractErr()
 	return mc.ObserveRequestIgnoreNotFound(err)
 }
 
-func (s computeClient) GetServer(serverID string) (*ServerExt, error) {
+func (c computeClient) GetServer(serverID string) (*ServerExt, error) {
 	var server ServerExt
 	mc := metrics.NewMetricPrometheusContext("server", "get")
-	err := servers.Get(s.compute, serverID).ExtractInto(&server)
+	err := servers.Get(c.client, serverID).ExtractInto(&server)
 	if mc.ObserveRequestIgnoreNotFound(err) != nil {
 		return nil, err
 	}
 	return &server, nil
 }
 
-func (s computeClient) ListServers(listOpts servers.ListOptsBuilder) ([]ServerExt, error) {
+func (c computeClient) ListServers(listOpts servers.ListOptsBuilder) ([]ServerExt, error) {
 	var serverList []ServerExt
 	mc := metrics.NewMetricPrometheusContext("server", "list")
-	allPages, err := servers.List(s.compute, listOpts).AllPages()
+	allPages, err := servers.List(c.client, listOpts).AllPages()
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
@@ -163,44 +127,56 @@ func (s computeClient) ListServers(listOpts servers.ListOptsBuilder) ([]ServerEx
 	return serverList, err
 }
 
-func (s computeClient) ListAttachedInterfaces(serverID string) ([]attachinterfaces.Interface, error) {
+func (c computeClient) ListAttachedInterfaces(serverID string) ([]attachinterfaces.Interface, error) {
 	mc := metrics.NewMetricPrometheusContext("server_os_interface", "list")
-	interfaces, err := attachinterfaces.List(s.compute, serverID).AllPages()
+	interfaces, err := attachinterfaces.List(c.client, serverID).AllPages()
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return attachinterfaces.ExtractInterfaces(interfaces)
 }
 
-func (s computeClient) DeleteAttachedInterface(serverID, portID string) error {
+func (c computeClient) DeleteAttachedInterface(serverID, portID string) error {
 	mc := metrics.NewMetricPrometheusContext("server_os_interface", "delete")
-	err := attachinterfaces.Delete(s.compute, serverID, portID).ExtractErr()
+	err := attachinterfaces.Delete(c.client, serverID, portID).ExtractErr()
 	return mc.ObserveRequestIgnoreNotFoundorConflict(err)
 }
 
-func (s computeClient) ListVolumes(opts volumes.ListOptsBuilder) ([]volumes.Volume, error) {
-	mc := metrics.NewMetricPrometheusContext("volume", "list")
-	pages, err := volumes.List(s.volume, opts).AllPages()
-	if mc.ObserveRequest(err) != nil {
-		return nil, err
-	}
-	return volumes.ExtractVolumes(pages)
+type computeErrorClient struct{ error }
+
+// NewComputeErrorClient returns a ComputeClient in which every method returns the given error.
+func NewComputeErrorClient(e error) ComputeClient {
+	return computeErrorClient{e}
 }
 
-func (s computeClient) CreateVolume(opts volumes.CreateOptsBuilder) (*volumes.Volume, error) {
-	mc := metrics.NewMetricPrometheusContext("volume", "create")
-	volume, err := volumes.Create(s.volume, opts).Extract()
-	return volume, mc.ObserveRequest(err)
+func (e computeErrorClient) ListAvailabilityZones() ([]availabilityzones.AvailabilityZone, error) {
+	return nil, e.error
 }
 
-func (s computeClient) DeleteVolume(volumeID string, opts volumes.DeleteOptsBuilder) error {
-	mc := metrics.NewMetricPrometheusContext("volume", "delete")
-	err := volumes.Delete(s.volume, volumeID, opts).ExtractErr()
-	return mc.ObserveRequestIgnoreNotFound(err)
+func (e computeErrorClient) GetFlavorIDFromName(flavor string) (string, error) {
+	return "", e.error
 }
 
-func (s computeClient) GetVolume(volumeID string) (*volumes.Volume, error) {
-	mc := metrics.NewMetricPrometheusContext("volume", "get")
-	volume, err := volumes.Get(s.volume, volumeID).Extract()
-	return volume, mc.ObserveRequestIgnoreNotFound(err)
+func (e computeErrorClient) CreateServer(createOpts servers.CreateOptsBuilder) (*ServerExt, error) {
+	return nil, e.error
+}
+
+func (e computeErrorClient) DeleteServer(serverID string) error {
+	return e.error
+}
+
+func (e computeErrorClient) GetServer(serverID string) (*ServerExt, error) {
+	return nil, e.error
+}
+
+func (e computeErrorClient) ListServers(listOpts servers.ListOptsBuilder) ([]ServerExt, error) {
+	return nil, e.error
+}
+
+func (e computeErrorClient) ListAttachedInterfaces(serverID string) ([]attachinterfaces.Interface, error) {
+	return nil, e.error
+}
+
+func (e computeErrorClient) DeleteAttachedInterface(serverID, portID string) error {
+	return e.error
 }

@@ -24,11 +24,9 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	volumes "github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
 	attachinterfaces "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	availabilityzones "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/availabilityzones"
 	servers "github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
-	images "github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	clients "sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 )
 
@@ -70,21 +68,6 @@ func (mr *MockComputeClientMockRecorder) CreateServer(arg0 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateServer", reflect.TypeOf((*MockComputeClient)(nil).CreateServer), arg0)
 }
 
-// CreateVolume mocks base method.
-func (m *MockComputeClient) CreateVolume(arg0 volumes.CreateOptsBuilder) (*volumes.Volume, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateVolume", arg0)
-	ret0, _ := ret[0].(*volumes.Volume)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateVolume indicates an expected call of CreateVolume.
-func (mr *MockComputeClientMockRecorder) CreateVolume(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateVolume", reflect.TypeOf((*MockComputeClient)(nil).CreateVolume), arg0)
-}
-
 // DeleteAttachedInterface mocks base method.
 func (m *MockComputeClient) DeleteAttachedInterface(arg0, arg1 string) error {
 	m.ctrl.T.Helper()
@@ -111,20 +94,6 @@ func (m *MockComputeClient) DeleteServer(arg0 string) error {
 func (mr *MockComputeClientMockRecorder) DeleteServer(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteServer", reflect.TypeOf((*MockComputeClient)(nil).DeleteServer), arg0)
-}
-
-// DeleteVolume mocks base method.
-func (m *MockComputeClient) DeleteVolume(arg0 string, arg1 volumes.DeleteOptsBuilder) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteVolume", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteVolume indicates an expected call of DeleteVolume.
-func (mr *MockComputeClientMockRecorder) DeleteVolume(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteVolume", reflect.TypeOf((*MockComputeClient)(nil).DeleteVolume), arg0, arg1)
 }
 
 // GetFlavorIDFromName mocks base method.
@@ -157,21 +126,6 @@ func (mr *MockComputeClientMockRecorder) GetServer(arg0 interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetServer", reflect.TypeOf((*MockComputeClient)(nil).GetServer), arg0)
 }
 
-// GetVolume mocks base method.
-func (m *MockComputeClient) GetVolume(arg0 string) (*volumes.Volume, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetVolume", arg0)
-	ret0, _ := ret[0].(*volumes.Volume)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetVolume indicates an expected call of GetVolume.
-func (mr *MockComputeClientMockRecorder) GetVolume(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVolume", reflect.TypeOf((*MockComputeClient)(nil).GetVolume), arg0)
-}
-
 // ListAttachedInterfaces mocks base method.
 func (m *MockComputeClient) ListAttachedInterfaces(arg0 string) ([]attachinterfaces.Interface, error) {
 	m.ctrl.T.Helper()
@@ -202,21 +156,6 @@ func (mr *MockComputeClientMockRecorder) ListAvailabilityZones() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAvailabilityZones", reflect.TypeOf((*MockComputeClient)(nil).ListAvailabilityZones))
 }
 
-// ListImages mocks base method.
-func (m *MockComputeClient) ListImages(arg0 images.ListOptsBuilder) ([]images.Image, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListImages", arg0)
-	ret0, _ := ret[0].([]images.Image)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListImages indicates an expected call of ListImages.
-func (mr *MockComputeClientMockRecorder) ListImages(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListImages", reflect.TypeOf((*MockComputeClient)(nil).ListImages), arg0)
-}
-
 // ListServers mocks base method.
 func (m *MockComputeClient) ListServers(arg0 servers.ListOptsBuilder) ([]clients.ServerExt, error) {
 	m.ctrl.T.Helper()
@@ -230,19 +169,4 @@ func (m *MockComputeClient) ListServers(arg0 servers.ListOptsBuilder) ([]clients
 func (mr *MockComputeClientMockRecorder) ListServers(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListServers", reflect.TypeOf((*MockComputeClient)(nil).ListServers), arg0)
-}
-
-// ListVolumes mocks base method.
-func (m *MockComputeClient) ListVolumes(arg0 volumes.ListOptsBuilder) ([]volumes.Volume, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListVolumes", arg0)
-	ret0, _ := ret[0].([]volumes.Volume)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListVolumes indicates an expected call of ListVolumes.
-func (mr *MockComputeClientMockRecorder) ListVolumes(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListVolumes", reflect.TypeOf((*MockComputeClient)(nil).ListVolumes), arg0)
 }
