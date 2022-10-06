@@ -1,0 +1,184 @@
+apiVersion: v1
+data:
+  cacert: ${OPENSTACK_CLOUD_CACERT_B64}
+  clouds.yaml: ${OPENSTACK_CLOUD_YAML_B64}
+kind: Secret
+metadata:
+  labels:
+    clusterctl.cluster.x-k8s.io/move: "true"
+  name: ${CLUSTER_NAME}-cloud-config
+---
+apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+kind: KubeadmConfigTemplate
+metadata:
+  name: ${CLUSTER_NAME}-md-0
+spec:
+  template:
+    spec:
+      files:
+      - content: ${OPENSTACK_CLOUD_PROVIDER_CONF_B64}
+        encoding: base64
+        owner: root
+        path: /etc/kubernetes/cloud.conf
+        permissions: "0600"
+      - content: ${OPENSTACK_CLOUD_CACERT_B64}
+        encoding: base64
+        owner: root
+        path: /etc/certs/cacert
+        permissions: "0600"
+      joinConfiguration:
+        nodeRegistration:
+          kubeletExtraArgs:
+            cloud-config: /etc/kubernetes/cloud.conf
+            cloud-provider: openstack
+          name: '{{ local_hostname }}'
+---
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: Cluster
+metadata:
+  name: ${CLUSTER_NAME}
+spec:
+  clusterNetwork:
+    pods:
+      cidrBlocks:
+      - 192.168.0.0/16
+    serviceDomain: cluster.local
+  controlPlaneRef:
+    apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+    kind: KubeadmControlPlane
+    name: ${CLUSTER_NAME}-control-plane
+  infrastructureRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+    kind: OpenStackCluster
+    name: ${CLUSTER_NAME}
+---
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: MachineDeployment
+metadata:
+  name: ${CLUSTER_NAME}-md-0
+spec:
+  clusterName: ${CLUSTER_NAME}
+  replicas: ${WORKER_MACHINE_COUNT}
+  selector:
+    matchLabels: null
+  template:
+    spec:
+      bootstrap:
+        configRef:
+          apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+          kind: KubeadmConfigTemplate
+          name: ${CLUSTER_NAME}-md-0
+      clusterName: ${CLUSTER_NAME}
+      failureDomain: ${OPENSTACK_FAILURE_DOMAIN}
+      infrastructureRef:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+        kind: OpenStackMachineTemplate
+        name: ${CLUSTER_NAME}-md-0
+      version: ${KUBERNETES_VERSION}
+---
+apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+kind: KubeadmControlPlane
+metadata:
+  name: ${CLUSTER_NAME}-control-plane
+spec:
+  kubeadmConfigSpec:
+    clusterConfiguration:
+      apiServer:
+        extraArgs:
+          cloud-config: /etc/kubernetes/cloud.conf
+          cloud-provider: openstack
+        extraVolumes:
+        - hostPath: /etc/kubernetes/cloud.conf
+          mountPath: /etc/kubernetes/cloud.conf
+          name: cloud
+          readOnly: true
+      controllerManager:
+        extraArgs:
+          cloud-config: /etc/kubernetes/cloud.conf
+          cloud-provider: openstack
+        extraVolumes:
+        - hostPath: /etc/kubernetes/cloud.conf
+          mountPath: /etc/kubernetes/cloud.conf
+          name: cloud
+          readOnly: true
+        - hostPath: /etc/certs/cacert
+          mountPath: /etc/certs/cacert
+          name: cacerts
+          readOnly: true
+    files:
+    - content: ${OPENSTACK_CLOUD_PROVIDER_CONF_B64}
+      encoding: base64
+      owner: root
+      path: /etc/kubernetes/cloud.conf
+      permissions: "0600"
+    - content: ${OPENSTACK_CLOUD_CACERT_B64}
+      encoding: base64
+      owner: root
+      path: /etc/certs/cacert
+      permissions: "0600"
+    initConfiguration:
+      nodeRegistration:
+        kubeletExtraArgs:
+          cloud-config: /etc/kubernetes/cloud.conf
+          cloud-provider: openstack
+        name: '{{ local_hostname }}'
+    joinConfiguration:
+      nodeRegistration:
+        kubeletExtraArgs:
+          cloud-config: /etc/kubernetes/cloud.conf
+          cloud-provider: openstack
+        name: '{{ local_hostname }}'
+  machineTemplate:
+    infrastructureRef:
+      apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+      kind: OpenStackMachineTemplate
+      name: ${CLUSTER_NAME}-control-plane
+  replicas: ${CONTROL_PLANE_MACHINE_COUNT}
+  version: ${KUBERNETES_VERSION}
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+kind: OpenStackCluster
+metadata:
+  name: ${CLUSTER_NAME}
+spec:
+  apiServerLoadBalancer:
+    enabled: true
+  cloudName: ${OPENSTACK_CLOUD}
+  dnsNameservers:
+  - ${OPENSTACK_DNS_NAMESERVERS}
+  externalNetworkId: ${OPENSTACK_EXTERNAL_NETWORK_ID}
+  identityRef:
+    kind: Secret
+    name: ${CLUSTER_NAME}-cloud-config
+  managedSecurityGroups: true
+  nodeCidr: 10.6.0.0/24
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+kind: OpenStackMachineTemplate
+metadata:
+  name: ${CLUSTER_NAME}-control-plane
+spec:
+  template:
+    spec:
+      cloudName: ${OPENSTACK_CLOUD}
+      flavor: ${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR}
+      identityRef:
+        kind: Secret
+        name: ${CLUSTER_NAME}-cloud-config
+      image: ${OPENSTACK_IMAGE_NAME}
+      sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+kind: OpenStackMachineTemplate
+metadata:
+  name: ${CLUSTER_NAME}-md-0
+spec:
+  template:
+    spec:
+      cloudName: ${OPENSTACK_CLOUD}
+      flavor: ${OPENSTACK_NODE_MACHINE_FLAVOR}
+      identityRef:
+        kind: Secret
+        name: ${CLUSTER_NAME}-cloud-config
+      image: ${OPENSTACK_IMAGE_NAME}
+      sshKeyName: ${OPENSTACK_SSH_KEY_NAME}

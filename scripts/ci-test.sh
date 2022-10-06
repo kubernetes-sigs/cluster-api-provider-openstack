@@ -22,4 +22,11 @@ REPO_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
 # shellcheck source=../hack/ensure-go.sh
 source "${REPO_ROOT}/hack/ensure-go.sh"
 
-cd "${REPO_ROOT}" && make generate lint verify test
+cd "${REPO_ROOT}" && make generate templates lint verify test
+
+# Fail if the repo is dirty after generate/templates
+if [[ -n $(git status --short) ]]; then
+  echo "There are modified and/or untracked files."
+  echo "Did you remember to run 'make generate' and/or 'make templates'"
+  echo "$(git status)"
+fi
