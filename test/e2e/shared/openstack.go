@@ -51,12 +51,13 @@ import (
 	"sigs.k8s.io/yaml"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/provider"
 )
 
 type ServerExtWithIP struct {
-	compute.ServerExt
+	clients.ServerExt
 	ip string
 }
 
@@ -232,7 +233,7 @@ func DumpOpenStackServers(e2eCtx *E2EContext, filter servers.ListOpts) ([]server
 		return nil, fmt.Errorf("error creating compute client: %v", err)
 	}
 
-	computeClient.Microversion = compute.NovaMinimumMicroversion
+	computeClient.Microversion = clients.NovaMinimumMicroversion
 	allPages, err := servers.List(computeClient, filter).AllPages()
 	if err != nil {
 		return nil, fmt.Errorf("error listing servers: %v", err)
@@ -448,7 +449,7 @@ func GetOpenStackServers(e2eCtx *E2EContext, openStackCluster *infrav1.OpenStack
 		return nil, fmt.Errorf("error listing server: %v", err)
 	}
 
-	var serverList []compute.ServerExt
+	var serverList []clients.ServerExt
 	err = servers.ExtractServersInto(allPages, &serverList)
 	if err != nil {
 		return nil, fmt.Errorf("error extracting server: %v", err)

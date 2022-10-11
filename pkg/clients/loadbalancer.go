@@ -14,12 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package loadbalancer
+package clients
 
 import (
 	"fmt"
 
 	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/compute/apiversions"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/listeners"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/loadbalancers"
@@ -28,6 +29,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/providers"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 )
 
@@ -57,6 +59,18 @@ type LbClient interface {
 
 type lbClient struct {
 	serviceClient *gophercloud.ServiceClient
+}
+
+// NewLbClient returns a new loadbalancer client.
+func NewLbClient(scope *scope.Scope) (LbClient, error) {
+	loadbalancerClient, err := openstack.NewLoadBalancerV2(scope.ProviderClient, gophercloud.EndpointOpts{
+		Region: scope.ProviderClientOpts.RegionName,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create load balancer service client: %v", err)
+	}
+
+	return &lbClient{loadbalancerClient}, nil
 }
 
 func (l lbClient) CreateLoadBalancer(opts loadbalancers.CreateOptsBuilder) (*loadbalancers.LoadBalancer, error) {

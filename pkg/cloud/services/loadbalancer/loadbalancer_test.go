@@ -30,9 +30,8 @@ import (
 	. "github.com/onsi/gomega"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/loadbalancer/mock_loadbalancer"
+	mock_clients "sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking/mock_networking"
 )
 
 func Test_ReconcileLoadBalancer(t *testing.T) {
@@ -56,27 +55,27 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 	}
 	type serviceFields struct {
 		projectID          string
-		networkingClient   *mock_networking.MockNetworkClient
-		loadbalancerClient *mock_loadbalancer.MockLbClient
+		networkingClient   *mock_clients.MockNetworkClient
+		loadbalancerClient *mock_clients.MockLbClient
 	}
 	lbtests := []struct {
 		name               string
 		fields             serviceFields
 		prepareServiceMock func(sf *serviceFields)
-		expectNetwork      func(m *mock_networking.MockNetworkClientMockRecorder)
-		expectLoadBalancer func(m *mock_loadbalancer.MockLbClientMockRecorder)
+		expectNetwork      func(m *mock_clients.MockNetworkClientMockRecorder)
+		expectLoadBalancer func(m *mock_clients.MockLbClientMockRecorder)
 		wantError          error
 	}{
 		{
 			name: "reconcile loadbalancer in non active state should wait for active state",
 			prepareServiceMock: func(sf *serviceFields) {
-				sf.networkingClient = mock_networking.NewMockNetworkClient(mockCtrl)
-				sf.loadbalancerClient = mock_loadbalancer.NewMockLbClient(mockCtrl)
+				sf.networkingClient = mock_clients.NewMockNetworkClient(mockCtrl)
+				sf.loadbalancerClient = mock_clients.NewMockLbClient(mockCtrl)
 			},
-			expectNetwork: func(m *mock_networking.MockNetworkClientMockRecorder) {
+			expectNetwork: func(m *mock_clients.MockNetworkClientMockRecorder) {
 				// add network api call results here
 			},
-			expectLoadBalancer: func(m *mock_loadbalancer.MockLbClientMockRecorder) {
+			expectLoadBalancer: func(m *mock_clients.MockLbClientMockRecorder) {
 				// return loadbalancer providers
 				providers := []providers.Provider{
 					{Name: "amphora", Description: "The Octavia Amphora driver."},

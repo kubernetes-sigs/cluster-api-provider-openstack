@@ -44,8 +44,9 @@ import (
 	"k8s.io/utils/pointer"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
+	mock_clients "sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking/mock_networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
@@ -182,7 +183,7 @@ func TestService_getServerNetworks(t *testing.T) {
 		name          string
 		networkParams []infrav1.NetworkParam
 		want          []infrav1.Network
-		expect        func(m *mock_networking.MockNetworkClientMockRecorder)
+		expect        func(m *mock_clients.MockNetworkClientMockRecorder)
 		wantErr       bool
 	}{
 		{
@@ -193,7 +194,7 @@ func TestService_getServerNetworks(t *testing.T) {
 			want: []infrav1.Network{
 				{ID: networkAUUID, Subnet: &infrav1.Subnet{}},
 			},
-			expect: func(m *mock_networking.MockNetworkClientMockRecorder) {
+			expect: func(m *mock_clients.MockNetworkClientMockRecorder) {
 			},
 			wantErr: false,
 		},
@@ -206,7 +207,7 @@ func TestService_getServerNetworks(t *testing.T) {
 				{ID: networkAUUID, Subnet: &infrav1.Subnet{}},
 				{ID: networkBUUID, Subnet: &infrav1.Subnet{}},
 			},
-			expect: func(m *mock_networking.MockNetworkClientMockRecorder) {
+			expect: func(m *mock_clients.MockNetworkClientMockRecorder) {
 				// List tagged networks (A & B)
 				m.ListNetwork(&testNetworkListOpts).
 					Return([]networks.Network{testNetworkA, testNetworkB}, nil)
@@ -225,7 +226,7 @@ func TestService_getServerNetworks(t *testing.T) {
 				{ID: networkAUUID, Subnet: &infrav1.Subnet{ID: subnetA2UUID}},
 				{ID: networkBUUID, Subnet: &infrav1.Subnet{ID: subnetB1UUID}},
 			},
-			expect: func(m *mock_networking.MockNetworkClientMockRecorder) {
+			expect: func(m *mock_clients.MockNetworkClientMockRecorder) {
 				// List all tagged subnets in any network (A1, A2, and B1)
 				m.ListSubnet(&testSubnetListOpts).
 					Return([]subnets.Subnet{testSubnetA1, testSubnetA2, testSubnetB1}, nil)
@@ -246,7 +247,7 @@ func TestService_getServerNetworks(t *testing.T) {
 				{ID: networkAUUID, Subnet: &infrav1.Subnet{ID: subnetA1UUID}},
 				{ID: networkAUUID, Subnet: &infrav1.Subnet{ID: subnetA2UUID}},
 			},
-			expect: func(m *mock_networking.MockNetworkClientMockRecorder) {
+			expect: func(m *mock_clients.MockNetworkClientMockRecorder) {
 				// List tagged subnets in network A (A1 & A2)
 				networkAFilter := testSubnetListOpts
 				networkAFilter.NetworkID = networkAUUID
@@ -268,7 +269,7 @@ func TestService_getServerNetworks(t *testing.T) {
 			want: []infrav1.Network{
 				{ID: networkAUUID, Subnet: &infrav1.Subnet{ID: subnetA1UUID}},
 			},
-			expect: func(m *mock_networking.MockNetworkClientMockRecorder) {
+			expect: func(m *mock_clients.MockNetworkClientMockRecorder) {
 			},
 			wantErr: false,
 		},
@@ -288,7 +289,7 @@ func TestService_getServerNetworks(t *testing.T) {
 				{ID: networkAUUID, Subnet: &infrav1.Subnet{ID: subnetA1UUID}},
 				{ID: networkAUUID, Subnet: &infrav1.Subnet{ID: subnetA2UUID}},
 			},
-			expect: func(m *mock_networking.MockNetworkClientMockRecorder) {
+			expect: func(m *mock_clients.MockNetworkClientMockRecorder) {
 				// List tagged subnets in network A
 				networkAFilter := testSubnetListOpts
 				networkAFilter.NetworkID = networkAUUID
@@ -319,7 +320,7 @@ func TestService_getServerNetworks(t *testing.T) {
 				{ID: networkAUUID, Subnet: &infrav1.Subnet{ID: subnetA2UUID}},
 				{ID: networkBUUID, Subnet: &infrav1.Subnet{ID: subnetB1UUID}},
 			},
-			expect: func(m *mock_networking.MockNetworkClientMockRecorder) {
+			expect: func(m *mock_clients.MockNetworkClientMockRecorder) {
 				// List tagged networks (A & B)
 				m.ListNetwork(&testNetworkListOpts).
 					Return([]networks.Network{testNetworkA, testNetworkB}, nil)
@@ -345,7 +346,7 @@ func TestService_getServerNetworks(t *testing.T) {
 				{Filter: testNetworkFilter},
 			},
 			want: nil,
-			expect: func(m *mock_networking.MockNetworkClientMockRecorder) {
+			expect: func(m *mock_clients.MockNetworkClientMockRecorder) {
 				// List tagged networks (none for this test)
 				m.ListNetwork(&testNetworkListOpts).Return([]networks.Network{}, nil)
 			},
@@ -363,7 +364,7 @@ func TestService_getServerNetworks(t *testing.T) {
 				},
 			},
 			want: nil,
-			expect: func(m *mock_networking.MockNetworkClientMockRecorder) {
+			expect: func(m *mock_clients.MockNetworkClientMockRecorder) {
 				// List tagged subnets in network A
 				networkAFilter := testSubnetListOpts
 				networkAFilter.NetworkID = networkAUUID
@@ -379,7 +380,7 @@ func TestService_getServerNetworks(t *testing.T) {
 				}},
 			},
 			want: nil,
-			expect: func(m *mock_networking.MockNetworkClientMockRecorder) {
+			expect: func(m *mock_clients.MockNetworkClientMockRecorder) {
 			},
 			wantErr: true,
 		},
@@ -388,14 +389,14 @@ func TestService_getServerNetworks(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockCtrl := gomock.NewController(t)
-			mockNetworkClient := mock_networking.NewMockNetworkClient(mockCtrl)
+			mockNetworkClient := mock_clients.NewMockNetworkClient(mockCtrl)
 			tt.expect(mockNetworkClient.EXPECT())
 
 			networkingService := networking.NewTestService(
 				"", mockNetworkClient, logr.Discard(),
 			)
 			s := &Service{
-				networkingService: networkingService,
+				_networkingService: networkingService,
 			}
 
 			got, err := s.getServerNetworks(tt.networkParams)
@@ -419,7 +420,7 @@ func TestService_getImageID(t *testing.T) {
 		testName  string
 		imageUUID string
 		imageName string
-		expect    func(m *MockClientMockRecorder)
+		expect    func(m *mock_clients.MockImageClientMockRecorder)
 		want      string
 		wantErr   bool
 	}{
@@ -427,7 +428,7 @@ func TestService_getImageID(t *testing.T) {
 			testName:  "Return image uuid if uuid given",
 			imageUUID: imageIDC,
 			want:      imageIDC,
-			expect: func(m *MockClientMockRecorder) {
+			expect: func(m *mock_clients.MockImageClientMockRecorder) {
 			},
 			wantErr: false,
 		},
@@ -435,7 +436,7 @@ func TestService_getImageID(t *testing.T) {
 			testName:  "Return through uuid if both uuid and name given",
 			imageName: "dummy",
 			imageUUID: imageIDC,
-			expect: func(m *MockClientMockRecorder) {
+			expect: func(m *mock_clients.MockImageClientMockRecorder) {
 			},
 			want:    imageIDC,
 			wantErr: false,
@@ -443,7 +444,7 @@ func TestService_getImageID(t *testing.T) {
 		{
 			testName:  "Return image ID",
 			imageName: "test-image",
-			expect: func(m *MockClientMockRecorder) {
+			expect: func(m *mock_clients.MockImageClientMockRecorder) {
 				m.ListImages(images.ListOpts{Name: "test-image"}).Return(
 					[]images.Image{{ID: imageIDA, Name: "test-image"}},
 					nil)
@@ -454,7 +455,7 @@ func TestService_getImageID(t *testing.T) {
 		{
 			testName:  "Return no results",
 			imageName: "test-image",
-			expect: func(m *MockClientMockRecorder) {
+			expect: func(m *mock_clients.MockImageClientMockRecorder) {
 				m.ListImages(images.ListOpts{Name: "test-image"}).Return(
 					[]images.Image{},
 					nil)
@@ -465,7 +466,7 @@ func TestService_getImageID(t *testing.T) {
 		{
 			testName:  "Return multiple results",
 			imageName: "test-image",
-			expect: func(m *MockClientMockRecorder) {
+			expect: func(m *mock_clients.MockImageClientMockRecorder) {
 				m.ListImages(images.ListOpts{Name: "test-image"}).Return(
 					[]images.Image{
 						{ID: imageIDA, Name: "test-image"},
@@ -478,7 +479,7 @@ func TestService_getImageID(t *testing.T) {
 		{
 			testName:  "OpenStack returns error",
 			imageName: "test-image",
-			expect: func(m *MockClientMockRecorder) {
+			expect: func(m *mock_clients.MockImageClientMockRecorder) {
 				m.ListImages(images.ListOpts{Name: "test-image"}).Return(
 					nil,
 					fmt.Errorf("test error"))
@@ -490,16 +491,16 @@ func TestService_getImageID(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
 			mockCtrl := gomock.NewController(t)
-			mockComputeClient := NewMockClient(mockCtrl)
-			tt.expect(mockComputeClient.EXPECT())
+			mockImageClient := mock_clients.NewMockImageClient(mockCtrl)
+			tt.expect(mockImageClient.EXPECT())
 
 			s := Service{
 				scope: &scope.Scope{
 					ProjectID: "",
 					Logger:    logr.Discard(),
 				},
-				computeService:    mockComputeClient,
-				networkingService: &networking.Service{},
+				_imageClient:       mockImageClient,
+				_networkingService: &networking.Service{},
 			}
 
 			got, err := s.getImageID(tt.imageUUID, tt.imageName)
@@ -599,8 +600,8 @@ func TestService_ReconcileInstance(t *testing.T) {
 		}
 	}
 
-	returnedServer := func(status string) *ServerExt {
-		return &ServerExt{
+	returnedServer := func(status string) *clients.ServerExt {
+		return &clients.ServerExt{
 			Server: servers.Server{
 				ID:      instanceUUID,
 				Name:    openStackMachineName,
@@ -612,7 +613,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 	}
 
 	// Expected calls to create a server with a single default port
-	expectUseExistingDefaultPort := func(networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
+	expectUseExistingDefaultPort := func(networkRecorder *mock_clients.MockNetworkClientMockRecorder) {
 		// Returning a pre-existing port requires fewer mocks
 		networkRecorder.ListPort(ports.ListOpts{
 			Name:      portName,
@@ -625,7 +626,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 		}, nil)
 	}
 
-	expectCreatePort := func(networkRecorder *mock_networking.MockNetworkClientMockRecorder, name string, networkID string) {
+	expectCreatePort := func(networkRecorder *mock_clients.MockNetworkClientMockRecorder, name string, networkID string) {
 		networkRecorder.ListPort(ports.ListOpts{
 			Name:      name,
 			NetworkID: networkID,
@@ -654,26 +655,26 @@ func TestService_ReconcileInstance(t *testing.T) {
 	}
 
 	// Expected calls if we delete the network port
-	expectCleanupDefaultPort := func(networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
+	expectCleanupDefaultPort := func(networkRecorder *mock_clients.MockNetworkClientMockRecorder) {
 		networkRecorder.ListExtensions()
 		networkRecorder.DeletePort(portUUID).Return(nil)
 	}
 
 	// Expected calls when using default image and flavor
-	expectDefaultImageAndFlavor := func(computeRecorder *MockClientMockRecorder) {
-		computeRecorder.ListImages(images.ListOpts{Name: imageName}).Return([]images.Image{{ID: imageUUID}}, nil)
+	expectDefaultImageAndFlavor := func(computeRecorder *mock_clients.MockComputeClientMockRecorder, imageRecorder *mock_clients.MockImageClientMockRecorder) {
+		imageRecorder.ListImages(images.ListOpts{Name: imageName}).Return([]images.Image{{ID: imageUUID}}, nil)
 		computeRecorder.GetFlavorIDFromName(flavorName).Return(flavorUUID, nil)
 	}
 
 	// Expected calls and custom match function for creating a server
-	expectCreateServer := func(computeRecorder *MockClientMockRecorder, expectedCreateOpts map[string]interface{}, wantError bool) {
+	expectCreateServer := func(computeRecorder *mock_clients.MockComputeClientMockRecorder, expectedCreateOpts map[string]interface{}, wantError bool) {
 		// This nonsense is because ConfigDrive is a bool pointer, so we
 		// can't assert its exact contents with gomock.
 		// Instead we call ToServerCreateMap() on it to obtain a
 		// map[string]interface{} of the create options, and then use
 		// gomega to assert the contents of the map, which is more flexible.
 
-		computeRecorder.CreateServer(gomock.Any()).DoAndReturn(func(createOpts servers.CreateOptsBuilder) (*ServerExt, error) {
+		computeRecorder.CreateServer(gomock.Any()).DoAndReturn(func(createOpts servers.CreateOptsBuilder) (*clients.ServerExt, error) {
 			optsMap, err := createOpts.ToServerCreateMap()
 			Expect(err).NotTo(HaveOccurred())
 
@@ -687,13 +688,13 @@ func TestService_ReconcileInstance(t *testing.T) {
 	}
 
 	// Expected calls when polling for server creation
-	expectServerPoll := func(computeRecorder *MockClientMockRecorder, states []string) {
+	expectServerPoll := func(computeRecorder *mock_clients.MockComputeClientMockRecorder, states []string) {
 		for _, state := range states {
 			computeRecorder.GetServer(instanceUUID).Return(returnedServer(state), nil)
 		}
 	}
 
-	expectServerPollSuccess := func(computeRecorder *MockClientMockRecorder) {
+	expectServerPollSuccess := func(computeRecorder *mock_clients.MockComputeClientMockRecorder) {
 		expectServerPoll(computeRecorder, []string{"ACTIVE"})
 	}
 
@@ -705,49 +706,56 @@ func TestService_ReconcileInstance(t *testing.T) {
 	}
 
 	// Expected calls when polling for server creation
-	expectVolumePoll := func(computeRecorder *MockClientMockRecorder, states []string) {
+	expectVolumePoll := func(volumeRecorder *mock_clients.MockVolumeClientMockRecorder, states []string) {
 		for _, state := range states {
-			computeRecorder.GetVolume(volumeUUID).Return(returnedVolume(state), nil)
+			volumeRecorder.GetVolume(volumeUUID).Return(returnedVolume(state), nil)
 		}
 	}
 
-	expectVolumePollSuccess := func(computeRecorder *MockClientMockRecorder) {
-		expectVolumePoll(computeRecorder, []string{"available"})
+	expectVolumePollSuccess := func(volumeRecorder *mock_clients.MockVolumeClientMockRecorder) {
+		expectVolumePoll(volumeRecorder, []string{"available"})
 	}
 
 	// *******************
 	// START OF TEST CASES
 	// *******************
 
+	type recorders struct {
+		compute *mock_clients.MockComputeClientMockRecorder
+		image   *mock_clients.MockImageClientMockRecorder
+		network *mock_clients.MockNetworkClientMockRecorder
+		volume  *mock_clients.MockVolumeClientMockRecorder
+	}
+
 	tests := []struct {
 		name            string
 		getInstanceSpec func() *InstanceSpec
-		expect          func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder)
+		expect          func(r *recorders)
 		wantErr         bool
 	}{
 		{
 			name:            "Defaults",
 			getInstanceSpec: getDefaultInstanceSpec,
-			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
-				expectUseExistingDefaultPort(networkRecorder)
-				expectDefaultImageAndFlavor(computeRecorder)
+			expect: func(r *recorders) {
+				expectUseExistingDefaultPort(r.network)
+				expectDefaultImageAndFlavor(r.compute, r.image)
 
-				expectCreateServer(computeRecorder, getDefaultServerMap(), false)
-				expectServerPollSuccess(computeRecorder)
+				expectCreateServer(r.compute, getDefaultServerMap(), false)
+				expectServerPollSuccess(r.compute)
 			},
 			wantErr: false,
 		},
 		{
 			name:            "Delete ports on server create error",
 			getInstanceSpec: getDefaultInstanceSpec,
-			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
-				expectUseExistingDefaultPort(networkRecorder)
-				expectDefaultImageAndFlavor(computeRecorder)
+			expect: func(r *recorders) {
+				expectUseExistingDefaultPort(r.network)
+				expectDefaultImageAndFlavor(r.compute, r.image)
 
-				expectCreateServer(computeRecorder, getDefaultServerMap(), true)
+				expectCreateServer(r.compute, getDefaultServerMap(), true)
 
 				// Make sure we delete ports
-				expectCleanupDefaultPort(networkRecorder)
+				expectCleanupDefaultPort(r.network)
 			},
 			wantErr: true,
 		},
@@ -761,42 +769,42 @@ func TestService_ReconcileInstance(t *testing.T) {
 				}
 				return s
 			},
-			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
-				expectDefaultImageAndFlavor(computeRecorder)
-				expectUseExistingDefaultPort(networkRecorder)
+			expect: func(r *recorders) {
+				expectDefaultImageAndFlavor(r.compute, r.image)
+				expectUseExistingDefaultPort(r.network)
 
 				// Looking up the second port fails
-				networkRecorder.ListPort(ports.ListOpts{
+				r.network.ListPort(ports.ListOpts{
 					Name:      "test-openstack-machine-1",
 					NetworkID: networkUUID,
 				}).Return(nil, fmt.Errorf("test error"))
 
 				// We should cleanup the first port
-				expectCleanupDefaultPort(networkRecorder)
+				expectCleanupDefaultPort(r.network)
 			},
 			wantErr: true,
 		},
 		{
 			name:            "Poll until server is created",
 			getInstanceSpec: getDefaultInstanceSpec,
-			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
-				expectUseExistingDefaultPort(networkRecorder)
-				expectDefaultImageAndFlavor(computeRecorder)
+			expect: func(r *recorders) {
+				expectUseExistingDefaultPort(r.network)
+				expectDefaultImageAndFlavor(r.compute, r.image)
 
-				expectCreateServer(computeRecorder, getDefaultServerMap(), false)
-				expectServerPoll(computeRecorder, []string{"BUILDING", "ACTIVE"})
+				expectCreateServer(r.compute, getDefaultServerMap(), false)
+				expectServerPoll(r.compute, []string{"BUILDING", "ACTIVE"})
 			},
 			wantErr: false,
 		},
 		{
 			name:            "Server errors during creation",
 			getInstanceSpec: getDefaultInstanceSpec,
-			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
-				expectUseExistingDefaultPort(networkRecorder)
-				expectDefaultImageAndFlavor(computeRecorder)
+			expect: func(r *recorders) {
+				expectUseExistingDefaultPort(r.network)
+				expectDefaultImageAndFlavor(r.compute, r.image)
 
-				expectCreateServer(computeRecorder, getDefaultServerMap(), false)
-				expectServerPoll(computeRecorder, []string{"BUILDING", "ERROR"})
+				expectCreateServer(r.compute, getDefaultServerMap(), false)
+				expectServerPoll(r.compute, []string{"BUILDING", "ERROR"})
 
 				// Don't delete ports because the server is created: DeleteInstance will do it
 			},
@@ -811,13 +819,13 @@ func TestService_ReconcileInstance(t *testing.T) {
 				}
 				return s
 			},
-			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
-				expectUseExistingDefaultPort(networkRecorder)
-				expectDefaultImageAndFlavor(computeRecorder)
+			expect: func(r *recorders) {
+				expectUseExistingDefaultPort(r.network)
+				expectDefaultImageAndFlavor(r.compute, r.image)
 
-				computeRecorder.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
+				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
-				computeRecorder.CreateVolume(volumes.CreateOpts{
+				r.volume.CreateVolume(volumes.CreateOpts{
 					Size:             50,
 					AvailabilityZone: failureDomain,
 					Description:      fmt.Sprintf("Root volume for %s", openStackMachineName),
@@ -825,7 +833,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 					ImageID:          imageUUID,
 					Multiattach:      false,
 				}).Return(&volumes.Volume{ID: volumeUUID}, nil)
-				expectVolumePollSuccess(computeRecorder)
+				expectVolumePollSuccess(r.volume)
 
 				createMap := getDefaultServerMap()
 				serverMap := createMap["server"].(map[string]interface{})
@@ -839,8 +847,8 @@ func TestService_ReconcileInstance(t *testing.T) {
 						"boot_index":            float64(0),
 					},
 				}
-				expectCreateServer(computeRecorder, createMap, false)
-				expectServerPollSuccess(computeRecorder)
+				expectCreateServer(r.compute, createMap, false)
+				expectServerPollSuccess(r.compute)
 
 				// Don't delete ports because the server is created: DeleteInstance will do it
 			},
@@ -857,13 +865,13 @@ func TestService_ReconcileInstance(t *testing.T) {
 				}
 				return s
 			},
-			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
-				expectUseExistingDefaultPort(networkRecorder)
-				expectDefaultImageAndFlavor(computeRecorder)
+			expect: func(r *recorders) {
+				expectUseExistingDefaultPort(r.network)
+				expectDefaultImageAndFlavor(r.compute, r.image)
 
-				computeRecorder.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
+				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
-				computeRecorder.CreateVolume(volumes.CreateOpts{
+				r.volume.CreateVolume(volumes.CreateOpts{
 					Size:             50,
 					AvailabilityZone: "test-alternate-az",
 					VolumeType:       "test-volume-type",
@@ -872,7 +880,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 					ImageID:          imageUUID,
 					Multiattach:      false,
 				}).Return(&volumes.Volume{ID: volumeUUID}, nil)
-				expectVolumePollSuccess(computeRecorder)
+				expectVolumePollSuccess(r.volume)
 
 				createMap := getDefaultServerMap()
 				serverMap := createMap["server"].(map[string]interface{})
@@ -886,8 +894,8 @@ func TestService_ReconcileInstance(t *testing.T) {
 						"boot_index":            float64(0),
 					},
 				}
-				expectCreateServer(computeRecorder, createMap, false)
-				expectServerPollSuccess(computeRecorder)
+				expectCreateServer(r.compute, createMap, false)
+				expectServerPollSuccess(r.compute)
 
 				// Don't delete ports because the server is created: DeleteInstance will do it
 			},
@@ -902,13 +910,13 @@ func TestService_ReconcileInstance(t *testing.T) {
 				}
 				return s
 			},
-			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
-				expectUseExistingDefaultPort(networkRecorder)
-				expectDefaultImageAndFlavor(computeRecorder)
+			expect: func(r *recorders) {
+				expectUseExistingDefaultPort(r.network)
+				expectDefaultImageAndFlavor(r.compute, r.image)
 
-				computeRecorder.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
+				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
-				computeRecorder.CreateVolume(volumes.CreateOpts{
+				r.volume.CreateVolume(volumes.CreateOpts{
 					Size:             50,
 					AvailabilityZone: failureDomain,
 					Description:      fmt.Sprintf("Root volume for %s", openStackMachineName),
@@ -916,9 +924,9 @@ func TestService_ReconcileInstance(t *testing.T) {
 					ImageID:          imageUUID,
 					Multiattach:      false,
 				}).Return(&volumes.Volume{ID: volumeUUID}, nil)
-				expectVolumePoll(computeRecorder, []string{"creating", "error"})
+				expectVolumePoll(r.volume, []string{"creating", "error"})
 
-				expectCleanupDefaultPort(networkRecorder)
+				expectCleanupDefaultPort(r.network)
 			},
 			wantErr: true,
 		},
@@ -932,17 +940,17 @@ func TestService_ReconcileInstance(t *testing.T) {
 				}
 				return s
 			},
-			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
-				expectDefaultImageAndFlavor(computeRecorder)
+			expect: func(r *recorders) {
+				expectDefaultImageAndFlavor(r.compute, r.image)
 				extensions := []extensions.Extension{
 					{Extension: common.Extension{Alias: "trunk"}},
 				}
-				networkRecorder.ListExtensions().Return(extensions, nil)
+				r.network.ListExtensions().Return(extensions, nil)
 
-				expectCreatePort(networkRecorder, portName, networkUUID)
+				expectCreatePort(r.network, portName, networkUUID)
 
 				// Check for existing trunk
-				networkRecorder.ListTrunk(newGomegaMockMatcher(
+				r.network.ListTrunk(newGomegaMockMatcher(
 					MatchFields(IgnoreExtras, Fields{
 						"Name":   Equal(portName),
 						"PortID": Equal(portUUID),
@@ -950,32 +958,32 @@ func TestService_ReconcileInstance(t *testing.T) {
 				)).Return([]trunks.Trunk{}, nil)
 
 				// Create new trunk
-				networkRecorder.CreateTrunk(newGomegaMockMatcher(MatchFields(IgnoreExtras, Fields{
+				r.network.CreateTrunk(newGomegaMockMatcher(MatchFields(IgnoreExtras, Fields{
 					"Name":   Equal(portName),
 					"PortID": Equal(portUUID),
 				}))).Return(&trunks.Trunk{
 					PortID: portUUID,
 					ID:     trunkUUID,
 				}, nil)
-				networkRecorder.ReplaceAllAttributesTags("trunks", trunkUUID, attributestags.ReplaceAllOpts{Tags: []string{"test-tag"}}).Return(nil, nil)
+				r.network.ReplaceAllAttributesTags("trunks", trunkUUID, attributestags.ReplaceAllOpts{Tags: []string{"test-tag"}}).Return(nil, nil)
 
 				// Looking up the second port fails
-				networkRecorder.ListPort(ports.ListOpts{
+				r.network.ListPort(ports.ListOpts{
 					Name:      "test-openstack-machine-1",
 					NetworkID: networkUUID,
 				}).Return(nil, fmt.Errorf("test error"))
 
-				networkRecorder.ListExtensions().Return(extensions, nil)
+				r.network.ListExtensions().Return(extensions, nil)
 
-				networkRecorder.ListTrunk(newGomegaMockMatcher(
+				r.network.ListTrunk(newGomegaMockMatcher(
 					MatchFields(IgnoreExtras, Fields{
 						"PortID": Equal(portUUID),
 					}),
 				)).Return([]trunks.Trunk{{ID: trunkUUID}}, nil)
 
 				// We should cleanup the first port and its trunk
-				networkRecorder.DeleteTrunk(trunkUUID).Return(nil)
-				networkRecorder.DeletePort(portUUID).Return(nil)
+				r.network.DeleteTrunk(trunkUUID).Return(nil)
+				r.network.DeletePort(portUUID).Return(nil)
 			},
 			wantErr: true,
 		},
@@ -983,23 +991,29 @@ func TestService_ReconcileInstance(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockCtrl := gomock.NewController(t)
-			mockComputeClient := NewMockClient(mockCtrl)
-			mockNetworkClient := mock_networking.NewMockNetworkClient(mockCtrl)
+			mockComputeClient := mock_clients.NewMockComputeClient(mockCtrl)
+			mockImageClient := mock_clients.NewMockImageClient(mockCtrl)
+			mockNetworkClient := mock_clients.NewMockNetworkClient(mockCtrl)
+			mockVolumeClient := mock_clients.NewMockVolumeClient(mockCtrl)
 
 			computeRecorder := mockComputeClient.EXPECT()
+			imageRecorder := mockImageClient.EXPECT()
 			networkRecorder := mockNetworkClient.EXPECT()
+			volumeRecorder := mockVolumeClient.EXPECT()
 
-			tt.expect(computeRecorder, networkRecorder)
+			tt.expect(&recorders{computeRecorder, imageRecorder, networkRecorder, volumeRecorder})
 
 			s := Service{
 				scope: &scope.Scope{
 					Logger:    logr.Discard(),
 					ProjectID: "",
 				},
-				computeService: mockComputeClient,
-				networkingService: networking.NewTestService(
+				_computeClient: mockComputeClient,
+				_imageClient:   mockImageClient,
+				_networkingService: networking.NewTestService(
 					"", mockNetworkClient, logr.Discard(),
 				),
+				_volumeClient: mockVolumeClient,
 			}
 			// Call CreateInstance with a reduced retry interval to speed up the test
 			_, err := s.createInstanceImpl(&infrav1.OpenStackMachine{}, getDefaultOpenStackCluster(), tt.getInstanceSpec(), "cluster-name", time.Nanosecond)
@@ -1016,7 +1030,7 @@ func TestService_DeleteInstance(t *testing.T) {
 
 	getDefaultInstanceStatus := func() *InstanceStatus {
 		return &InstanceStatus{
-			server: &ServerExt{
+			server: &clients.ServerExt{
 				Server: servers.Server{
 					ID: instanceUUID,
 				},
@@ -1028,36 +1042,42 @@ func TestService_DeleteInstance(t *testing.T) {
 	// START OF TEST CASES
 	// *******************
 
+	type recorders struct {
+		compute *mock_clients.MockComputeClientMockRecorder
+		network *mock_clients.MockNetworkClientMockRecorder
+		volume  *mock_clients.MockVolumeClientMockRecorder
+	}
+
 	tests := []struct {
 		name           string
 		eventObject    runtime.Object
 		instanceStatus func() *InstanceStatus
 		rootVolume     *infrav1.RootVolume
-		expect         func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder)
+		expect         func(r *recorders)
 		wantErr        bool
 	}{
 		{
 			name:           "Defaults",
 			eventObject:    &infrav1.OpenStackMachine{},
 			instanceStatus: getDefaultInstanceStatus,
-			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
-				computeRecorder.ListAttachedInterfaces(instanceUUID).Return([]attachinterfaces.Interface{
+			expect: func(r *recorders) {
+				r.compute.ListAttachedInterfaces(instanceUUID).Return([]attachinterfaces.Interface{
 					{
 						PortID: portUUID,
 					},
 				}, nil)
-				networkRecorder.ListExtensions().Return([]extensions.Extension{{
+				r.network.ListExtensions().Return([]extensions.Extension{{
 					Extension: common.Extension{
 						Alias: "trunk",
 					},
 				}}, nil)
-				computeRecorder.DeleteAttachedInterface(instanceUUID, portUUID).Return(nil)
+				r.compute.DeleteAttachedInterface(instanceUUID, portUUID).Return(nil)
 				// FIXME: Why we are looking for a trunk when we know the port is not trunked?
-				networkRecorder.ListTrunk(trunks.ListOpts{PortID: portUUID}).Return([]trunks.Trunk{}, nil)
-				networkRecorder.DeletePort(portUUID).Return(nil)
+				r.network.ListTrunk(trunks.ListOpts{PortID: portUUID}).Return([]trunks.Trunk{}, nil)
+				r.network.DeletePort(portUUID).Return(nil)
 
-				computeRecorder.DeleteServer(instanceUUID).Return(nil)
-				computeRecorder.GetServer(instanceUUID).Return(nil, gophercloud.ErrDefault404{})
+				r.compute.DeleteServer(instanceUUID).Return(nil)
+				r.compute.GetServer(instanceUUID).Return(nil, gophercloud.ErrDefault404{})
 			},
 			wantErr: false,
 		},
@@ -1068,10 +1088,10 @@ func TestService_DeleteInstance(t *testing.T) {
 			rootVolume: &infrav1.RootVolume{
 				Size: 50,
 			},
-			expect: func(computeRecorder *MockClientMockRecorder, networkRecorder *mock_networking.MockNetworkClientMockRecorder) {
+			expect: func(r *recorders) {
 				// Fetch volume by name
 				volumeName := fmt.Sprintf("%s-root", openStackMachineName)
-				computeRecorder.ListVolumes(volumes.ListOpts{
+				r.volume.ListVolumes(volumes.ListOpts{
 					AllTenants: false,
 					Name:       volumeName,
 					TenantID:   "",
@@ -1081,7 +1101,7 @@ func TestService_DeleteInstance(t *testing.T) {
 				}}, nil)
 
 				// Delete volume
-				computeRecorder.DeleteVolume(volumeUUID, volumes.DeleteOpts{}).Return(nil)
+				r.volume.DeleteVolume(volumeUUID, volumes.DeleteOpts{}).Return(nil)
 			},
 			wantErr: false,
 		},
@@ -1089,23 +1109,26 @@ func TestService_DeleteInstance(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockCtrl := gomock.NewController(t)
-			mockComputeClient := NewMockClient(mockCtrl)
-			mockNetworkClient := mock_networking.NewMockNetworkClient(mockCtrl)
+			mockComputeClient := mock_clients.NewMockComputeClient(mockCtrl)
+			mockNetworkClient := mock_clients.NewMockNetworkClient(mockCtrl)
+			mockVolumeClient := mock_clients.NewMockVolumeClient(mockCtrl)
 
 			computeRecorder := mockComputeClient.EXPECT()
 			networkRecorder := mockNetworkClient.EXPECT()
+			volumeRecorder := mockVolumeClient.EXPECT()
 
-			tt.expect(computeRecorder, networkRecorder)
+			tt.expect(&recorders{computeRecorder, networkRecorder, volumeRecorder})
 
 			s := Service{
 				scope: &scope.Scope{
 					ProjectID: "",
 					Logger:    logr.Discard(),
 				},
-				computeService: mockComputeClient,
-				networkingService: networking.NewTestService(
+				_computeClient: mockComputeClient,
+				_networkingService: networking.NewTestService(
 					"", mockNetworkClient, logr.Discard(),
 				),
+				_volumeClient: mockVolumeClient,
 			}
 			if err := s.DeleteInstance(tt.eventObject, tt.instanceStatus(), openStackMachineName, tt.rootVolume); (err != nil) != tt.wantErr {
 				t.Errorf("Service.DeleteInstance() error = %v, wantErr %v", err, tt.wantErr)
