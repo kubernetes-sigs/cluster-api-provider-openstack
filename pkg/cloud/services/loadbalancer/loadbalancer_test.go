@@ -30,7 +30,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
-	mock_clients "sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 )
 
@@ -55,27 +55,27 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 	}
 	type serviceFields struct {
 		projectID          string
-		networkingClient   *mock_clients.MockNetworkClient
-		loadbalancerClient *mock_clients.MockLbClient
+		networkingClient   *mock.MockNetworkClient
+		loadbalancerClient *mock.MockLbClient
 	}
 	lbtests := []struct {
 		name               string
 		fields             serviceFields
 		prepareServiceMock func(sf *serviceFields)
-		expectNetwork      func(m *mock_clients.MockNetworkClientMockRecorder)
-		expectLoadBalancer func(m *mock_clients.MockLbClientMockRecorder)
+		expectNetwork      func(m *mock.MockNetworkClientMockRecorder)
+		expectLoadBalancer func(m *mock.MockLbClientMockRecorder)
 		wantError          error
 	}{
 		{
 			name: "reconcile loadbalancer in non active state should wait for active state",
 			prepareServiceMock: func(sf *serviceFields) {
-				sf.networkingClient = mock_clients.NewMockNetworkClient(mockCtrl)
-				sf.loadbalancerClient = mock_clients.NewMockLbClient(mockCtrl)
+				sf.networkingClient = mock.NewMockNetworkClient(mockCtrl)
+				sf.loadbalancerClient = mock.NewMockLbClient(mockCtrl)
 			},
-			expectNetwork: func(m *mock_clients.MockNetworkClientMockRecorder) {
+			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
 				// add network api call results here
 			},
-			expectLoadBalancer: func(m *mock_clients.MockLbClientMockRecorder) {
+			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
 				// return loadbalancer providers
 				providers := []providers.Provider{
 					{Name: "amphora", Description: "The Octavia Amphora driver."},
