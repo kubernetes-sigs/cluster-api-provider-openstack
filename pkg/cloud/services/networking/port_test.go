@@ -29,7 +29,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
-	mock_clients "sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
 )
 
 func Test_GetOrCreatePort(t *testing.T) {
@@ -60,7 +60,7 @@ func Test_GetOrCreatePort(t *testing.T) {
 		net                    infrav1.Network
 		instanceSecurityGroups *[]string
 		tags                   []string
-		expect                 func(m *mock_clients.MockNetworkClientMockRecorder)
+		expect                 func(m *mock.MockNetworkClientMockRecorder)
 		// Note the 'wanted' port isn't so important, since it will be whatever we tell ListPort or CreatePort to return.
 		// Mostly in this test suite, we're checking that ListPort/CreatePort is called with the expected port opts.
 		want    *ports.Port
@@ -75,7 +75,7 @@ func Test_GetOrCreatePort(t *testing.T) {
 			},
 			nil,
 			[]string{},
-			func(m *mock_clients.MockNetworkClientMockRecorder) {
+			func(m *mock.MockNetworkClientMockRecorder) {
 				m.
 					ListPort(ports.ListOpts{
 						Name:      "foo-port-1",
@@ -98,7 +98,7 @@ func Test_GetOrCreatePort(t *testing.T) {
 			},
 			nil,
 			[]string{},
-			func(m *mock_clients.MockNetworkClientMockRecorder) {
+			func(m *mock.MockNetworkClientMockRecorder) {
 				m.
 					ListPort(ports.ListOpts{
 						Name:      "foo-port-1",
@@ -128,7 +128,7 @@ func Test_GetOrCreatePort(t *testing.T) {
 			},
 			&instanceSecurityGroups,
 			[]string{},
-			func(m *mock_clients.MockNetworkClientMockRecorder) {
+			func(m *mock.MockNetworkClientMockRecorder) {
 				// No ports found
 				m.
 					ListPort(ports.ListOpts{
@@ -182,7 +182,7 @@ func Test_GetOrCreatePort(t *testing.T) {
 			},
 			nil,
 			nil,
-			func(m *mock_clients.MockNetworkClientMockRecorder) {
+			func(m *mock.MockNetworkClientMockRecorder) {
 				portCreateOpts := ports.CreateOpts{
 					NetworkID:    netID,
 					Name:         "foo-port-bar",
@@ -264,7 +264,7 @@ func Test_GetOrCreatePort(t *testing.T) {
 			},
 			nil,
 			nil,
-			func(m *mock_clients.MockNetworkClientMockRecorder) {
+			func(m *mock.MockNetworkClientMockRecorder) {
 				m.
 					ListPort(ports.ListOpts{
 						Name:      "foo-port-bar",
@@ -301,7 +301,7 @@ func Test_GetOrCreatePort(t *testing.T) {
 			},
 			&instanceSecurityGroups,
 			[]string{},
-			func(m *mock_clients.MockNetworkClientMockRecorder) {
+			func(m *mock.MockNetworkClientMockRecorder) {
 				// No ports found
 				m.
 					ListPort(ports.ListOpts{
@@ -332,7 +332,7 @@ func Test_GetOrCreatePort(t *testing.T) {
 			},
 			nil,
 			[]string{"my-instance-tag"},
-			func(m *mock_clients.MockNetworkClientMockRecorder) {
+			func(m *mock.MockNetworkClientMockRecorder) {
 				// No ports found
 				m.
 					ListPort(ports.ListOpts{
@@ -361,7 +361,7 @@ func Test_GetOrCreatePort(t *testing.T) {
 			},
 			nil,
 			[]string{"my-instance-tag"},
-			func(m *mock_clients.MockNetworkClientMockRecorder) {
+			func(m *mock.MockNetworkClientMockRecorder) {
 				// No ports found
 				m.
 					ListPort(ports.ListOpts{
@@ -394,7 +394,7 @@ func Test_GetOrCreatePort(t *testing.T) {
 			},
 			nil,
 			[]string{"my-tag"},
-			func(m *mock_clients.MockNetworkClientMockRecorder) {
+			func(m *mock.MockNetworkClientMockRecorder) {
 				// No ports found
 				m.
 					ListPort(ports.ListOpts{
@@ -434,7 +434,7 @@ func Test_GetOrCreatePort(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewWithT(t)
-			mockClient := mock_clients.NewMockNetworkClient(mockCtrl)
+			mockClient := mock.NewMockNetworkClient(mockCtrl)
 			tt.expect(mockClient.EXPECT())
 			s := Service{
 				client: mockClient,
