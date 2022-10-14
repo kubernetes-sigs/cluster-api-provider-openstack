@@ -232,6 +232,15 @@ type LoadBalancer struct {
 	InternalIP string `json:"internalIP"`
 	//+optional
 	AllowedCIDRs []string `json:"allowedCIDRs,omitempty"`
+	//+optional
+	Monitor *Monitor `json:"monitor,omitempty"`
+}
+
+// Monitor optional health monitoring configuration for the LoadBalancer.
+type Monitor struct {
+	Delay      int `json:"delay"`
+	MaxRetries int `json:"max-retries"`
+	Timeout    int `json:"timeout"`
 }
 
 // SecurityGroup represents the basic information of the associated

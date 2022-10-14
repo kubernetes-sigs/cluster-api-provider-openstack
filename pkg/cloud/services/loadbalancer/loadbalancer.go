@@ -331,13 +331,27 @@ func (s *Service) getOrCreateMonitor(openStackCluster *infrav1.OpenStackCluster,
 
 	s.scope.Logger.Info(fmt.Sprintf("Creating load balancer monitor for pool %q", poolID), "name", monitorName, "lb-id", lbID)
 
+	delay := 30
+	timeout := 5
+	maxRetries := 3
+	if openStackCluster.Status.Network != nil {
+		if openStackCluster.Status.Network.APIServerLoadBalancer != nil {
+			if openStackCluster.Status.Network.APIServerLoadBalancer.Monitor != nil {
+				monitor := openStackCluster.Status.Network.APIServerLoadBalancer.Monitor
+				delay = monitor.Delay
+				timeout = monitor.Timeout
+				maxRetries = monitor.MaxRetries
+			}
+		}
+	}
+
 	monitorCreateOpts := monitors.CreateOpts{
 		Name:       monitorName,
 		PoolID:     poolID,
 		Type:       "TCP",
-		Delay:      30,
-		Timeout:    5,
-		MaxRetries: 3,
+		Delay:      delay,
+		Timeout:    timeout,
+		MaxRetries: maxRetries,
 	}
 	monitor, err = s.loadbalancerClient.CreateMonitor(monitorCreateOpts)
 	if err != nil {

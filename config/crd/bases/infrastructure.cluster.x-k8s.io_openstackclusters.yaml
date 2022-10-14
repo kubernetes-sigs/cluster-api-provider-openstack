@@ -622,6 +622,21 @@ spec:
                               type: string
                             ip:
                               type: string
+                            monitor:
+                              description: Monitor optional health monitoring configuration
+                                for the LoadBalancer.
+                              properties:
+                                delay:
+                                  type: integer
+                                max-retries:
+                                  type: integer
+                                timeout:
+                                  type: integer
+                              required:
+                              - delay
+                              - max-retries
+                              - timeout
+                              type: object
                             name:
                               type: string
                           required:
@@ -830,6 +845,21 @@ spec:
                         type: string
                       ip:
                         type: string
+                      monitor:
+                        description: Monitor optional health monitoring configuration
+                          for the LoadBalancer.
+                        properties:
+                          delay:
+                            type: integer
+                          max-retries:
+                            type: integer
+                          timeout:
+                            type: integer
+                        required:
+                        - delay
+                        - max-retries
+                        - timeout
+                        type: object
                       name:
                         type: string
                     required:
@@ -918,6 +948,21 @@ spec:
                         type: string
                       ip:
                         type: string
+                      monitor:
+                        description: Monitor optional health monitoring configuration
+                          for the LoadBalancer.
+                        properties:
+                          delay:
+                            type: integer
+                          max-retries:
+                            type: integer
+                          timeout:
+                            type: integer
+                        required:
+                        - delay
+                        - max-retries
+                        - timeout
+                        type: object
                       name:
                         type: string
                     required:
@@ -1758,6 +1803,21 @@ spec:
                               type: string
                             ip:
                               type: string
+                            monitor:
+                              description: Monitor optional health monitoring configuration
+                                for the LoadBalancer.
+                              properties:
+                                delay:
+                                  type: integer
+                                max-retries:
+                                  type: integer
+                                timeout:
+                                  type: integer
+                              required:
+                              - delay
+                              - max-retries
+                              - timeout
+                              type: object
                             name:
                               type: string
                           required:
@@ -2049,6 +2109,21 @@ spec:
                         type: string
                       ip:
                         type: string
+                      monitor:
+                        description: Monitor optional health monitoring configuration
+                          for the LoadBalancer.
+                        properties:
+                          delay:
+                            type: integer
+                          max-retries:
+                            type: integer
+                          timeout:
+                            type: integer
+                        required:
+                        - delay
+                        - max-retries
+                        - timeout
+                        type: object
                       name:
                         type: string
                     required:
@@ -2249,6 +2324,21 @@ spec:
                         type: string
                       ip:
                         type: string
+                      monitor:
+                        description: Monitor optional health monitoring configuration
+                          for the LoadBalancer.
+                        properties:
+                          delay:
+                            type: integer
+                          max-retries:
+                            type: integer
+                          timeout:
+                            type: integer
+                        required:
+                        - delay
+                        - max-retries
+                        - timeout
+                        type: object
                       name:
                         type: string
                     required:
@@ -3202,6 +3292,21 @@ spec:
                               type: string
                             ip:
                               type: string
+                            monitor:
+                              description: Monitor optional health monitoring configuration
+                                for the LoadBalancer.
+                              properties:
+                                delay:
+                                  type: integer
+                                max-retries:
+                                  type: integer
+                                timeout:
+                                  type: integer
+                              required:
+                              - delay
+                              - max-retries
+                              - timeout
+                              type: object
                             name:
                               type: string
                           required:
@@ -3593,6 +3698,21 @@ spec:
                         type: string
                       ip:
                         type: string
+                      monitor:
+                        description: Monitor optional health monitoring configuration
+                          for the LoadBalancer.
+                        properties:
+                          delay:
+                            type: integer
+                          max-retries:
+                            type: integer
+                          timeout:
+                            type: integer
+                        required:
+                        - delay
+                        - max-retries
+                        - timeout
+                        type: object
                       name:
                         type: string
                     required:
@@ -3895,6 +4015,21 @@ spec:
                         type: string
                       ip:
                         type: string
+                      monitor:
+                        description: Monitor optional health monitoring configuration
+                          for the LoadBalancer.
+                        properties:
+                          delay:
+                            type: integer
+                          max-retries:
+                            type: integer
+                          timeout:
+                            type: integer
+                        required:
+                        - delay
+                        - max-retries
+                        - timeout
+                        type: object
                       name:
                         type: string
                     required:
@@ -4957,6 +5092,21 @@ spec:
                               type: string
                             ip:
                               type: string
+                            monitor:
+                              description: Monitor optional health monitoring configuration
+                                for the LoadBalancer.
+                              properties:
+                                delay:
+                                  type: integer
+                                max-retries:
+                                  type: integer
+                                timeout:
+                                  type: integer
+                              required:
+                              - delay
+                              - max-retries
+                              - timeout
+                              type: object
                             name:
                               type: string
                           required:
@@ -5350,6 +5500,21 @@ spec:
                         type: string
                       ip:
                         type: string
+                      monitor:
+                        description: Monitor optional health monitoring configuration
+                          for the LoadBalancer.
+                        properties:
+                          delay:
+                            type: integer
+                          max-retries:
+                            type: integer
+                          timeout:
+                            type: integer
+                        required:
+                        - delay
+                        - max-retries
+                        - timeout
+                        type: object
                       name:
                         type: string
                     required:
@@ -5654,6 +5819,21 @@ spec:
                         type: string
                       ip:
                         type: string
+                      monitor:
+                        description: Monitor optional health monitoring configuration
+                          for the LoadBalancer.
+                        properties:
+                          delay:
+                            type: integer
+                          max-retries:
+                            type: integer
+                          timeout:
+                            type: integer
+                        required:
+                        - delay
+                        - max-retries
+                        - timeout
+                        type: object
                       name:
                         type: string
                     required:

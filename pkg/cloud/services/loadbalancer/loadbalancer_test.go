@@ -47,6 +47,13 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 				ID: "aaaaaaaa-bbbb-cccc-dddd-111111111111",
 			},
 			Network: &infrav1.Network{
+				APIServerLoadBalancer: &infrav1.LoadBalancer{
+					Monitor: &infrav1.Monitor{
+						Delay:      33,
+						Timeout:    11,
+						MaxRetries: 22,
+					},
+				},
 				Subnet: &infrav1.Subnet{
 					ID: "aaaaaaaa-bbbb-cccc-dddd-222222222222",
 				},
