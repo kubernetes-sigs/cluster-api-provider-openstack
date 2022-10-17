@@ -1,11 +1,14 @@
 linters:
   disable-all: true
   enable:
+  - asasalint
   - asciicheck
+  - bidichk
   - bodyclose
   - cyclop
   - depguard
   - dogsled
+  - dupword
   - durationcheck
   - errcheck
   - exportloopref
@@ -54,6 +57,27 @@ linters-settings:
     max-complexity: 30
   gci:
     local-prefixes: sigs.k8s.io/cluster-api-provider-openstack
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - performance
+    disabled-checks:
+      - appendAssign
+      - dupImport # https://github.com/go-critic/go-critic/issues/845
+      - evalOrder
+      - ifElseChain
+      - octalLiteral
+      - regexpSimplify
+      - sloppyReassign
+      - truncateCmp
+      - typeDefFirst
+      - unnamedResult
+      - unnecessaryDefer
+      - whyNoLint
+      - wrapperFunc
+      - rangeValCopy
+      - hugeParam
   importas:
     no-unaliased: true
     alias:

@@ -421,7 +421,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 			return ctrl.Result{}, nil
 		}
 
-		if len(fp.PortID) != 0 {
+		if fp.PortID != "" {
 			scope.Logger.Info("Floating IP already associated to a port:", "id", fp.ID, "fixed ip", fp.FixedIP, "portID", port.ID)
 		} else {
 			err = networkingService.AssociateFloatingIP(openStackMachine, fp, port.ID)
@@ -538,7 +538,7 @@ func handleUpdateMachineError(logger logr.Logger, openstackMachine *infrav1.Open
 	openstackMachine.Status.FailureReason = &err
 	openstackMachine.Status.FailureMessage = pointer.StringPtr(message.Error())
 	// TODO remove if this error is logged redundantly
-	logger.Error(fmt.Errorf(string(err)), message.Error())
+	logger.Error(fmt.Errorf("%s", string(err)), message.Error())
 }
 
 func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(scope *scope.Scope, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, instanceNS *compute.InstanceNetworkStatus, clusterName string) error {
