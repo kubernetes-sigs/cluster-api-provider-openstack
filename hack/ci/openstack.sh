@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# hack script for preparing GCP to run cluster-api-provider-openstack e2e
+# hack script for preparing Openstack to run cluster-api-provider-openstack e2e
 
 set -x -o errexit -o nounset -o pipefail
 
@@ -109,13 +109,24 @@ function create_vm {
     secgroupid=${secgroupid:-${OPENSTACK_SECGROUP_NAME}}
     imageid=${imageid:-${OPENSTACK_IMAGE_NAME}}
 
+    local volumename="${CLUSTER_NAME}-${name}"
+    local volumeid
+    if ! volumeid=$(openstack volume show "$volumename" -f value -c id 2>/dev/null)
+    then
+        volumeid=$(openstack volume create -f value -c id --size 200  \
+            --bootable --image "$imageid" "$volumename")
+        while [ "$(openstack volume show "$volumename" -f value -c status 2>/dev/null)" != "available" ]; do
+            echo "Waiting for volume to become available"
+            sleep 5
+        done
+    fi
+
     local serverid
     if ! serverid=$(openstack server show "$servername" -f value -c id 2>/dev/null)
     then
         serverid=$(openstack server create -f value -c id \
             --os-compute-api-version 2.52 --tag "$CLUSTER_NAME" \
-            --image "$imageid" --flavor "$flavor" \
-            --boot-from-volume 200 \
+            --flavor "$flavor" --volume "$volumeid" \
             --nic net-id="$networkid",v4-fixed-ip="$ip" \
             --security-group "$secgroupid" \
             --user-data "$userdata" \
@@ -156,6 +167,9 @@ function cloud_cleanup {
         name="${CLUSTER_NAME}-${name}"
         if ! openstack server delete --wait "$name"; then
             openstack server show "$name" && exit 1
+        fi
+        if ! openstack volume delete "$name"; then
+            openstack volume show "$name" && exit 1
         fi
     done
 
