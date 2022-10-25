@@ -120,7 +120,7 @@ LDFLAGS := $(shell source ./hack/version.sh; version::ldflags)
 ## --------------------------------------
 
 # The number of ginkgo tests to run concurrently
-E2E_GINKGO_PARALLEL=2
+E2E_GINKGO_PARALLEL ?= 2
 
 E2E_ARGS ?=
 
@@ -143,6 +143,7 @@ E2E_KUSTOMIZE_DIR=test/e2e/data/kustomize
 .PHONY: e2e-templates
 e2e-templates: ## Generate cluster templates for e2e tests
 e2e-templates: $(addprefix $(E2E_TEMPLATES_DIR)/, \
+		 cluster-template-v1alpha5.yaml \
 		 cluster-template-external-cloud-provider.yaml \
 		 cluster-template-multi-az.yaml \
 		 cluster-template-multi-network.yaml \

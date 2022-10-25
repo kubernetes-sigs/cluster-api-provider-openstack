@@ -35,6 +35,7 @@ providers:
   - name: v1.2.4
     value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.2.4/core-components.yaml"
     type: url
+    contract: v1beta1
     files:
     - sourcePath: "../data/shared/v1beta1/metadata.yaml"
     replacements:
@@ -48,6 +49,7 @@ providers:
   - name: v1.2.4
     value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.2.4/bootstrap-components.yaml"
     type: url
+    contract: v1beta1
     files:
     - sourcePath: "../data/shared/v1beta1/metadata.yaml"
     replacements:
@@ -61,6 +63,7 @@ providers:
   - name: v1.2.4
     value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.2.4/control-plane-components.yaml"
     type: url
+    contract: v1beta1
     files:
     - sourcePath: "../data/shared/v1beta1/metadata.yaml"
     replacements:
@@ -71,17 +74,36 @@ providers:
 - name: openstack
   type: InfrastructureProvider
   versions:
+  # This is only for clusterctl upgrade tests
+  - name: v0.6.3
+    value: "https://github.com/kubernetes-sigs/cluster-api-provider-openstack/releases/download/v0.6.3/infrastructure-components.yaml"
+    type: url
+    contract: v1beta1
+    files:
+    - sourcePath: "../data/shared/v1beta1_provider/metadata.yaml"
+    - sourcePath: "./infrastructure-openstack/cluster-template.yaml"
+    replacements:
+    - old: "imagePullPolicy: Always"
+      new: "imagePullPolicy: IfNotPresent"
+    - old: "--v=2"
+      new: "--v=4"
+    - old: "--leader-elect"
+      new: "--leader-elect=false\n        - --sync-period=1m"
   - name: v0.6.99
     value: ../../../config/default
-    contract: v1beta1
+    # This is the upcoming version.
+    # Specify no contract so that upgrade tests that start from a specific contract won't pick it up.
+    # contract: v1beta1
     files:
     - sourcePath: "../data/shared/v1beta1_provider/metadata.yaml"
     - sourcePath: "./infrastructure-openstack/cluster-template.yaml"
     - sourcePath: "./infrastructure-openstack/cluster-template-external-cloud-provider.yaml"
     - sourcePath: "./infrastructure-openstack/cluster-template-without-lb.yaml"
     replacements:
+    # TODO: We should use e2e here instead of main, but we need a way to get it into the workload cluster
+    # for upgrade tests for that to work.
     - old: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:dev
-      new: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e
+      new: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:main
     - old: "imagePullPolicy: Always"
       new: "imagePullPolicy: IfNotPresent"
     - old: "--v=2"
@@ -116,6 +138,7 @@ variables:
   OPENSTACK_VOLUME_TYPE_ALT: "test-volume-type"
   CONFORMANCE_WORKER_MACHINE_COUNT: "5"
   CONFORMANCE_CONTROL_PLANE_MACHINE_COUNT: "1"
+  INIT_WITH_KUBERNETES_VERSION: "v1.25.0"
 
 intervals:
   conformance/wait-control-plane: ["30m", "10s"]
