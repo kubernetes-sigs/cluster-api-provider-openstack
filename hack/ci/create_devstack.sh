@@ -15,7 +15,8 @@
 # limitations under the License.
 
 # hack script for preparing devstack to run cluster-api-provider-openstack e2e
-# This script is invoked by devstack-on-*-project-install.sh
+# This script invokes the ${RESOURCE_TYPE}.sh scripts to set up the infrastructure
+# needed for running devstack.
 
 set -x
 set -o errexit -o nounset -o pipefail
