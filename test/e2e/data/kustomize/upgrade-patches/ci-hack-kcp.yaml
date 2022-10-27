@@ -1,0 +1,31 @@
+---
+# Workaround for https://github.com/kubernetes-sigs/cluster-api/issues/7457
+# There is a small but important difference between these two:
+# path: /a/b/c
+# *creates* the c array, overwriting anything that was there before
+# path: /a/b/c/-
+# *adds* to the c array and does not work if the array is missing
+#
+# We add to the postKubeadmCommands (instead of pre*) since we need the CI artifacts
+# script to run first. Without this, the container images are not imported properly.
+- op: add
+  path: /spec/kubeadmConfigSpec/postKubeadmCommands
+  value:
+  - /usr/local/bin/ci-artifacts-openstack.sh
+- op: add
+  path: /spec/kubeadmConfigSpec/files/-
+  value:
+    content: |
+      #!/bin/bash
+      DOWNLOAD_E2E_IMAGE=${DOWNLOAD_E2E_IMAGE:=false}
+      if [ ! "${DOWNLOAD_E2E_IMAGE}" = true ]; then
+        echo "Not downloading E2E image, exiting"
+        exit 0
+      fi
+      # Download the locally built CAPO controller image
+      echo "Downloading ${E2E_IMAGE_URL}"
+      wget "${E2E_IMAGE_URL}" -O "/tmp/capo-controller-manager.tar"
+      sudo ctr -n k8s.io images import "/tmp/capo-controller-manager.tar" || echo "* ignoring expected 'ctr images import' result"
+    owner: root:root
+    path: /usr/local/bin/ci-artifacts-openstack.sh
+    permissions: "0750"

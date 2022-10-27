@@ -100,10 +100,8 @@ providers:
     - sourcePath: "./infrastructure-openstack/cluster-template-external-cloud-provider.yaml"
     - sourcePath: "./infrastructure-openstack/cluster-template-without-lb.yaml"
     replacements:
-    # TODO: We should use e2e here instead of main, but we need a way to get it into the workload cluster
-    # for upgrade tests for that to work.
     - old: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:dev
-      new: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:main
+      new: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e
     - old: "imagePullPolicy: Always"
       new: "imagePullPolicy: IfNotPresent"
     - old: "--v=2"

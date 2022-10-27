@@ -36,6 +36,8 @@ import (
 var _ = Describe("When testing clusterctl upgrades (v0.6=>current) [clusterctl-upgrade]", func() {
 	ctx := context.TODO()
 	shared.SetEnvVar("USE_CI_ARTIFACTS", "true", false)
+	shared.SetEnvVar("DOWNLOAD_E2E_IMAGE", "true", false)
+	shared.SetEnvVar("E2E_IMAGE_URL", "http://10.0.3.15/capo-e2e-image.tar", false)
 
 	capi_e2e.ClusterctlUpgradeSpec(ctx, func() capi_e2e.ClusterctlUpgradeSpecInput {
 		return capi_e2e.ClusterctlUpgradeSpecInput{
