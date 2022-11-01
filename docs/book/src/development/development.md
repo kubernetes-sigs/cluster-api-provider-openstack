@@ -106,16 +106,57 @@ $ openstack network list --external
 
 The file [`test/e2e/data/e2e_conf.yaml`](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/test/e2e/data/e2e_conf.yaml) and the test templates under [`test/e2e/data/infrastructure-openstack`](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/tree/main/test/e2e/data/infrastructure-openstack) reference several OpenStack resources which must exist before running the test:
 
+* System requirements
+  * Multiple nodes
+  * `controller`: 16 CPUs / 64 GB RAM
+  * `worker`: 8 CPUs / 32 GB RAM
+* Availability zones (for multi-AZ tests)
+  * `testaz1`: used by all test cases
+  * `testaz2`: used by multi-az test case
+* Services (Additional services to be enabled)
+  * Octavia
+  * Network trunking (neutron-trunk)
+  * see [Configration](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/docs/book/src/development/ci.md#configuration) for more details.
 * Glance images
   * `cirros-0.5.1-x86_64-disk`
     * Download from https://docs.openstack.org/image-guide/obtain-images.html
   * `ubuntu-2004-kube-v1.18.15`
     * Download from https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/ubuntu/2021-03-27/ubuntu-2004-kube-v1.18.15.qcow2
     * Or generate using the `images/capi` directory from https://github.com/kubernetes-sigs/image-builder
+      * Boot volume size must be less than 15GB
 * Flavors
   * `m1.medium`: used by control plane
   * `m1.small`: used by workers
   * `m1.tiny`: used by bastion
+* clouds.yaml
+  * `capo-e2e`: for general user authorization
+  * `capo-e2e-admin`: for administrator user authorization
+  * i.e.:
+    ``` yaml
+    clouds:
+      capo-e2e:
+        auth:
+          auth_url: http://Node-Address/identity
+          project_name: demo
+          project_domain_name: Default
+          user_domain_name: Default
+          username: demo
+          password: secret
+        region_name: RegionOne
+
+      capo-e2e-admin:
+        auth:
+          auth_url: http://Node-Address/identity
+          project_name: demo
+          project_domain_name: Default
+          user_domain_name: Default
+          username: admin
+          password: secret
+        region_name: RegionOne
+    ```
+
+You can also use [Hacking CI scripts](https://cluster-api-openstack.sigs.k8s.io/development/ci.html#devstack) to automatically create OpenStack environment.
+
 
 ## Running E2E tests using rootless podman
 
