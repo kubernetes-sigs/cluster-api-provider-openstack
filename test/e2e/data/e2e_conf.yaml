@@ -21,11 +21,11 @@ images:
 # Use local dev images built source tree;
 - name: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e
   loadBehavior: mustLoad
-- name: quay.io/jetstack/cert-manager-cainjector:v1.8.3
+- name: quay.io/jetstack/cert-manager-cainjector:v1.8.2
   loadBehavior: tryLoad
-- name: quay.io/jetstack/cert-manager-webhook:v1.8.3
+- name: quay.io/jetstack/cert-manager-webhook:v1.8.2
   loadBehavior: tryLoad
-- name: quay.io/jetstack/cert-manager-controller:v1.8.3
+- name: quay.io/jetstack/cert-manager-controller:v1.8.2
   loadBehavior: tryLoad
 
 providers:
