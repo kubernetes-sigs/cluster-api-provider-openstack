@@ -116,7 +116,7 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, nil
 	}
 
-	infraCluster, err := r.getInfraCluster(ctx, cluster, openStackMachine)
+	infraCluster, err := r.getInfraCluster(ctx, log, cluster, openStackMachine)
 	if err != nil {
 		return ctrl.Result{}, errors.New("error getting infra provider cluster")
 	}
@@ -639,8 +639,15 @@ func (r *OpenStackMachineReconciler) requestsForCluster(ctx context.Context, log
 	return result
 }
 
-func (r *OpenStackMachineReconciler) getInfraCluster(ctx context.Context, cluster *clusterv1.Cluster, openStackMachine *infrav1.OpenStackMachine) (*infrav1.OpenStackCluster, error) {
+func (r *OpenStackMachineReconciler) getInfraCluster(ctx context.Context, log logr.Logger, cluster *clusterv1.Cluster, openStackMachine *infrav1.OpenStackMachine) (*infrav1.OpenStackCluster, error) {
 	openStackCluster := &infrav1.OpenStackCluster{}
+
+	if cluster.Spec.InfrastructureRef == nil {
+		log.Info("Cluster InfrastructureRef not ready (nil), will retry")
+		// cluster.Spec.InfrastructureRef not ready, so we will retry
+		return nil, nil
+	}
+
 	openStackClusterName := client.ObjectKey{
 		Namespace: openStackMachine.Namespace,
 		Name:      cluster.Spec.InfrastructureRef.Name,
