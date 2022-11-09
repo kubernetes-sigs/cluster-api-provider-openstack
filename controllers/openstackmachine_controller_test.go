@@ -119,7 +119,6 @@ func Test_machineToInstanceSpec(t *testing.T) {
 		machine          func() *clusterv1.Machine
 		openStackMachine func() *infrav1.OpenStackMachine
 		wantInstanceSpec func() *compute.InstanceSpec
-		wantErr          bool
 	}{
 		{
 			name:             "Defaults",
@@ -127,7 +126,6 @@ func Test_machineToInstanceSpec(t *testing.T) {
 			machine:          getDefaultMachine,
 			openStackMachine: getDefaultOpenStackMachine,
 			wantInstanceSpec: getDefaultInstanceSpec,
-			wantErr:          false,
 		},
 		{
 			name: "Control plane security group",
@@ -149,7 +147,6 @@ func Test_machineToInstanceSpec(t *testing.T) {
 				i.SecurityGroups = []infrav1.SecurityGroupParam{{UUID: controlPlaneSecurityGroupUUID}}
 				return i
 			},
-			wantErr: false,
 		},
 		{
 			name: "Worker security group",
@@ -165,7 +162,6 @@ func Test_machineToInstanceSpec(t *testing.T) {
 				i.SecurityGroups = []infrav1.SecurityGroupParam{{UUID: workerSecurityGroupUUID}}
 				return i
 			},
-			wantErr: false,
 		},
 		{
 			name: "Extra security group",
@@ -188,7 +184,6 @@ func Test_machineToInstanceSpec(t *testing.T) {
 				}
 				return i
 			},
-			wantErr: false,
 		},
 		{
 			name: "Tags",
@@ -208,18 +203,11 @@ func Test_machineToInstanceSpec(t *testing.T) {
 				i.Tags = []string{"machine-tag", "duplicate-tag", "cluster-tag"}
 				return i
 			},
-			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := machineToInstanceSpec(tt.openStackCluster(), tt.machine(), tt.openStackMachine(), "user-data")
-			if tt.wantErr {
-				Expect(err).To(HaveOccurred())
-			} else {
-				Expect(err).NotTo(HaveOccurred())
-			}
-
+			got := machineToInstanceSpec(tt.openStackCluster(), tt.machine(), tt.openStackMachine(), "user-data")
 			Expect(got).To(Equal(tt.wantInstanceSpec()))
 		})
 	}
