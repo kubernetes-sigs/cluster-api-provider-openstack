@@ -1,0 +1,7 @@
+---
+resources:
+- ../default
+- mhc.yaml
+
+patchesStrategicMerge:
+- md.yaml

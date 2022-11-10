@@ -152,6 +152,8 @@ E2E_KUSTOMIZE_DIR=test/e2e/data/kustomize
 e2e-templates: ## Generate cluster templates for e2e tests
 e2e-templates: $(addprefix $(E2E_TEMPLATES_DIR)/, \
 		 cluster-template-v1alpha5.yaml \
+		 cluster-template-md-remediation.yaml \
+		 cluster-template-kcp-remediation.yaml \
 		 cluster-template-external-cloud-provider.yaml \
 		 cluster-template-multi-az.yaml \
 		 cluster-template-multi-network.yaml \
