@@ -24,7 +24,6 @@ import (
 	"flag"
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -73,10 +72,10 @@ func Node1BeforeSuite(e2eCtx *E2EContext) []byte {
 			return nil
 		}
 
-		sourceTemplate, err := ioutil.ReadFile(f)
+		sourceTemplate, err := os.ReadFile(f)
 		Expect(err).NotTo(HaveOccurred())
 
-		platformKustomization, err := ioutil.ReadFile(filepath.Join(e2eCtx.Settings.DataFolder, "ci-artifacts-platform-kustomization.yaml"))
+		platformKustomization, err := os.ReadFile(filepath.Join(e2eCtx.Settings.DataFolder, "ci-artifacts-platform-kustomization.yaml"))
 		Expect(err).NotTo(HaveOccurred())
 
 		ciTemplate, err := kubernetesversions.GenerateCIArtifactsInjectedTemplateForDebian(
