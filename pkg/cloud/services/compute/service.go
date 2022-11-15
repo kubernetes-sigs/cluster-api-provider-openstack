@@ -33,13 +33,13 @@ type Service struct {
 }
 
 /*
- NovaMinimumMicroversion is the minimum Nova microversion supported by CAPO
- 2.53 corresponds to OpenStack Pike
+NovaMinimumMicroversion is the minimum Nova microversion supported by CAPO
+2.53 corresponds to OpenStack Pike
 
- For the canonical description of Nova microversions, see
- https://docs.openstack.org/nova/latest/reference/api-microversion-history.html
+For the canonical description of Nova microversions, see
+https://docs.openstack.org/nova/latest/reference/api-microversion-history.html
 
- CAPO uses server tags, which were added in microversion 2.52.
+CAPO uses server tags, which were added in microversion 2.52.
 */
 const NovaMinimumMicroversion = "2.53"
 
