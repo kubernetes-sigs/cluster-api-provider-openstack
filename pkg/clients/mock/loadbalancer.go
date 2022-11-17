@@ -24,7 +24,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	apiversions "github.com/gophercloud/gophercloud/openstack/compute/apiversions"
+	apiversions "github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/apiversions"
 	listeners "github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/listeners"
 	loadbalancers "github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/loadbalancers"
 	monitors "github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/monitors"
