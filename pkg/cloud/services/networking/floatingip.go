@@ -114,9 +114,10 @@ func (s *Service) DeleteFloatingIP(eventObject runtime.Object, ip string) error 
 
 var backoff = wait.Backoff{
 	Steps:    10,
-	Duration: 30 * time.Second,
-	Factor:   1.0,
+	Duration: 1 * time.Second,
+	Factor:   2.0,
 	Jitter:   0.1,
+	Cap:      30 * time.Second,
 }
 
 func (s *Service) AssociateFloatingIP(eventObject runtime.Object, fp *floatingips.FloatingIP, portID string) error {
