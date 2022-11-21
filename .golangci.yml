@@ -170,6 +170,12 @@ issues:
     - stylecheck
     text: "ST1003: should not use underscores in Go names;"
     path: .*(api|types)\/.*\/.*conversion.*\.go$
+  # Disable goconst in the simulator package due to the large number of false
+  # positives: fields with the same name in different structs should not be
+  # combined with a common const definition.
+  - linters:
+    - goconst
+    path: pkg/clients/simulator/.*\.go$
 
 run:
   timeout: 10m
