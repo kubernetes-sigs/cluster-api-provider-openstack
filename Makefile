@@ -226,12 +226,15 @@ $(SETUP_ENVTEST): # Build setup-envtest from tools folder.
 ##@ Linting
 ## --------------------------------------
 
+# e2e-templates are a dependency of lint and lint-update to validate the
+# go:embed directive which reads them.
+
 .PHONY: lint
-lint: $(GOLANGCI_LINT) ## Lint codebase
+lint: $(GOLANGCI_LINT) e2e-templates ## Lint codebase
 	$(GOLANGCI_LINT) run -v --fast=false
 
 .PHONY: lint-update
-lint-update: $(GOLANGCI_LINT) ## Lint codebase
+lint-update: $(GOLANGCI_LINT) e2e-templates ## Lint codebase
 	$(GOLANGCI_LINT) run -v --fast=false --fix
 
 lint-fast: $(GOLANGCI_LINT) ## Run only faster linters to detect possible issues
