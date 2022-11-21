@@ -120,9 +120,17 @@ LDFLAGS := $(shell source ./hack/version.sh; version::ldflags)
 ## --------------------------------------
 
 # The number of ginkgo tests to run concurrently
-E2E_GINKGO_PARALLEL=2
+E2E_GINKGO_PARALLEL ?= 2
 
 E2E_ARGS ?=
+
+E2E_GINKGO_FOCUS ?=
+E2E_GINKGO_SKIP ?=
+
+# to set multiple ginkgo skip flags, if any
+ifneq ($(strip $(E2E_GINKGO_SKIP)),)
+_SKIP_ARGS := $(foreach arg,$(strip $(E2E_GINKGO_SKIP)),-skip="$(arg)")
+endif
 
 $(ARTIFACTS):
 	mkdir -p $@
@@ -163,7 +171,10 @@ e2e-prerequisites: $(GINKGO) e2e-templates e2e-image test-e2e-image-prerequisite
 E2E_GINKGO_ARGS ?=
 .PHONY: test-e2e ## Run e2e tests using clusterctl
 test-e2e: e2e-prerequisites ## Run e2e tests
-	time $(GINKGO) --failFast -trace -progress -v -tags=e2e --nodes=$(E2E_GINKGO_PARALLEL) $(E2E_GINKGO_ARGS) ./test/e2e/suites/e2e/... -- -config-path="$(E2E_CONF_PATH)" -artifacts-folder="$(ARTIFACTS)" --data-folder="$(E2E_DATA_DIR)" $(E2E_ARGS)
+	time $(GINKGO) --failFast -trace -progress -v -tags=e2e --nodes=$(E2E_GINKGO_PARALLEL) \
+			--focus="$(E2E_GINKGO_FOCUS)" $(_SKIP_ARGS) $(E2E_GINKGO_ARGS) ./test/e2e/suites/e2e/... -- \
+		-config-path="$(E2E_CONF_PATH)" -artifacts-folder="$(ARTIFACTS)" \
+		--data-folder="$(E2E_DATA_DIR)" $(E2E_ARGS)
 
 .PHONY: e2e-image
 e2e-image: CONTROLLER_IMG_TAG = "gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e"

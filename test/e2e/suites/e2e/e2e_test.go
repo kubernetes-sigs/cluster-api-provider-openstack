@@ -62,7 +62,7 @@ import (
 
 const specName = "e2e"
 
-var _ = Describe("e2e tests", func() {
+var _ = Describe("e2e tests [PR-Blocking]", func() {
 	var (
 		namespace *corev1.Namespace
 		ctx       context.Context

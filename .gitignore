@@ -173,3 +173,6 @@ sshuttle.pid
 
 # Book
 docs/book/book/
+
+# venv
+.venv
