@@ -125,8 +125,10 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		ProviderClient:     osProviderClient,
 		ProviderClientOpts: clientOpts,
 		ProjectID:          projectID,
-		IdentitySecret:     identitySecret,
 		Logger:             log,
+		Identity: scope.IdentityScope{
+			Secret: identitySecret,
+		},
 	}
 
 	// Handle deleted clusters

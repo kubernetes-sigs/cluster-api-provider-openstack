@@ -23,6 +23,11 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
+type IdentityScope struct {
+	Secret  *corev1.Secret
+	Machine string
+}
+
 // Scope is used to initialize Services from Controllers and includes the
 // common objects required for this.
 //
@@ -36,7 +41,7 @@ type Scope struct {
 	ProviderClient     *gophercloud.ProviderClient
 	ProviderClientOpts *clientconfig.ClientOpts
 	ProjectID          string
-	IdentitySecret     *corev1.Secret
+	Identity           IdentityScope
 
 	Logger logr.Logger
 }

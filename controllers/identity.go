@@ -57,18 +57,30 @@ func getIdentitySecretFromMachine(ctx context.Context, ctrlClient client.Client,
 	return getIdentitySecret(ctx, ctrlClient, machine.Namespace, machine.Spec.IdentityRef)
 }
 
+// identitySecretFinalizerName creates unique finalizers for each machine, this assumes
+// there is only one cluster using the secret.
+func identitySecretFinalizerName(scope *scope.Scope, finalizer string) string {
+	name := finalizer
+
+	if scope.Identity.Machine != "" {
+		name += "-" + scope.Identity.Machine
+	}
+
+	return name
+}
+
 // addIdentitySecretFinalizer adds a finalizer for either a machine or cluster to the identity
 // secret.
 func addIdentitySecretFinalizer(ctx context.Context, scope *scope.Scope, patchHelper *patch.Helper, finalizer string) error {
-	controllerutil.AddFinalizer(scope.IdentitySecret, finalizer)
+	controllerutil.AddFinalizer(scope.Identity.Secret, identitySecretFinalizerName(scope, finalizer))
 
-	return patchHelper.Patch(ctx, scope.IdentitySecret)
+	return patchHelper.Patch(ctx, scope.Identity.Secret)
 }
 
 // removeIdentitySecretFinalizer removes a finalizer from the identity secret for either
 // a machine or cluster.
 func removeIdentitySecretFinalizer(ctx context.Context, scope *scope.Scope, patchHelper *patch.Helper, finalizer string) error {
-	controllerutil.RemoveFinalizer(scope.IdentitySecret, finalizer)
+	controllerutil.RemoveFinalizer(scope.Identity.Secret, identitySecretFinalizerName(scope, finalizer))
 
-	return patchHelper.Patch(ctx, scope.IdentitySecret)
+	return patchHelper.Patch(ctx, scope.Identity.Secret)
 }
