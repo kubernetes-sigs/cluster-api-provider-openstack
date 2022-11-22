@@ -116,10 +116,16 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return reconcile.Result{}, err
 	}
 
+	identitySecret, err := getIdentitySecretFromCluster(ctx, r.Client, openStackCluster)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	scope := &scope.Scope{
 		ProviderClient:     osProviderClient,
 		ProviderClientOpts: clientOpts,
 		ProjectID:          projectID,
+		IdentitySecret:     identitySecret,
 		Logger:             log,
 	}
 
@@ -187,6 +193,12 @@ func reconcileDelete(ctx context.Context, scope *scope.Scope, patchHelper *patch
 	if err := patchHelper.Patch(ctx, openStackCluster); err != nil {
 		return ctrl.Result{}, err
 	}
+
+	// Done with the identity secret, allow that to be deleted.
+	if err := removeIdentitySecretFinalizer(ctx, scope, patchHelper, infrav1.ClusterFinalizer); err != nil {
+		return reconcile.Result{}, err
+	}
+
 	return ctrl.Result{}, nil
 }
 
@@ -258,6 +270,11 @@ func reconcileNormal(ctx context.Context, scope *scope.Scope, patchHelper *patch
 	controllerutil.AddFinalizer(openStackCluster, infrav1.ClusterFinalizer)
 	// Register the finalizer immediately to avoid orphaning OpenStack resources on delete
 	if err := patchHelper.Patch(ctx, openStackCluster); err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// Prevent the identity from being deleted until deletion has completed.
+	if err := addIdentitySecretFinalizer(ctx, scope, patchHelper, infrav1.ClusterFinalizer); err != nil {
 		return reconcile.Result{}, err
 	}
 
