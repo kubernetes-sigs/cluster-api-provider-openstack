@@ -20,13 +20,9 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/utils/openstack/clientconfig"
-	corev1 "k8s.io/api/core/v1"
-)
 
-type IdentityScope struct {
-	Secret  *corev1.Secret
-	Machine string
-}
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope/identity"
+)
 
 // Scope is used to initialize Services from Controllers and includes the
 // common objects required for this.
@@ -41,7 +37,7 @@ type Scope struct {
 	ProviderClient     *gophercloud.ProviderClient
 	ProviderClientOpts *clientconfig.ClientOpts
 	ProjectID          string
-	Identity           IdentityScope
+	Identity           *identity.Scope
 
 	Logger logr.Logger
 }

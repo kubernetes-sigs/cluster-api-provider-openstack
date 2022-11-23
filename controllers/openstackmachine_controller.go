@@ -55,6 +55,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/provider"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope/identity"
 )
 
 // OpenStackMachineReconciler reconciles a OpenStackMachine object.
@@ -145,7 +146,7 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return reconcile.Result{}, err
 	}
 
-	identitySecret, err := getIdentitySecretFromMachine(ctx, r.Client, openStackMachine)
+	identityScope, err := identity.NewForMachine(ctx, r.Client, openStackMachine)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -155,10 +156,7 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		ProviderClientOpts: clientOpts,
 		ProjectID:          projectID,
 		Logger:             log,
-		Identity: scope.IdentityScope{
-			Secret:  identitySecret,
-			Machine: openStackMachine.Name,
-		},
+		Identity:           identityScope,
 	}
 
 	// Handle deleted machines
@@ -301,7 +299,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, scope 
 	}
 
 	// Done with the identity secret, allow that to be deleted.
-	if err := removeIdentitySecretFinalizer(ctx, scope, patchHelper, infrav1.MachineFinalizer); err != nil {
+	if err := scope.Identity.RemoveFinalizer(ctx); err != nil {
 		return reconcile.Result{}, err
 	}
 
@@ -323,7 +321,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	}
 
 	// Prevent the identity from being deleted until deletion has completed.
-	if err := addIdentitySecretFinalizer(ctx, scope, patchHelper, infrav1.MachineFinalizer); err != nil {
+	if err := scope.Identity.AddFinalizer(ctx); err != nil {
 		return reconcile.Result{}, err
 	}
 
