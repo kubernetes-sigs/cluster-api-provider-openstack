@@ -232,6 +232,14 @@ func GetSGWorkerNodePort() []infrav1.SecurityGroupRule {
 			PortRangeMax: 32767,
 			Protocol:     "tcp",
 		},
+		{
+			Description:  "Node Port Services",
+			Direction:    "ingress",
+			EtherType:    "IPv4",
+			PortRangeMin: 30000,
+			PortRangeMax: 32767,
+			Protocol:     "udp",
+		},
 	}
 }
 
