@@ -167,7 +167,7 @@ function wait_for_devstack {
     $ssh_cmd "$ip" -- sudo journalctl --flush
 
     # Continuously capture devstack logs until killed
-    $ssh_cmd "$ip" -- sudo journalctl -a -b -u 'devstack@*' -f > "${devstackdir}/${name}-devstack.log" &
+    $ssh_cmd "$ip" -- sudo journalctl --no-tail -a -b -u 'devstack@*' -f > "${devstackdir}/${name}-devstack.log" &
 
     # Capture cloud-init logs
     # Devstack logs are in cloud-final
