@@ -12,7 +12,6 @@
     VERBOSE=True
     LOG_COLOR=True
 
-    # Neutron
     enable_plugin neutron https://github.com/openstack/neutron stable/${OPENSTACK_RELEASE}
 
     # Octavia
@@ -35,9 +34,10 @@
     ENABLED_SERVICES+=,g-api
 
     # Neutron
-    ENABLED_SERVICES+=,neutron-api,neutron-agent,neutron-dhcp,neutron-l3,neutron-trunk
+    #ENABLED_SERVICES+=,neutron-api,neutron-agent,neutron-dhcp,neutron-l3,neutron-trunk
+    #ENABLED_SERVICES+=,neutron-metadata-agent,neutron-qos
+    ENABLED_SERVICES+=,q-ovn-metadata-agent,q-svc,q-trunk,ovn-controller,ovn-northd,ovs-vswitchd,ovsdb-server
 
-    ENABLED_SERVICES+=,neutron-metadata-agent,neutron-qos
     # Octavia
     ENABLED_SERVICES+=,octavia,o-api,o-cw,o-hm,o-hk,o-da
 
