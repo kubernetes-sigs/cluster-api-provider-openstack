@@ -31,7 +31,7 @@ source "${scriptdir}/${RESOURCE_TYPE}.sh"
 
 CLUSTER_NAME=${CLUSTER_NAME:-"capo-e2e"}
 
-OPENSTACK_RELEASE=${OPENSTACK_RELEASE:-"yoga"}
+OPENSTACK_RELEASE=${OPENSTACK_RELEASE:-"zed"}
 OPENSTACK_ENABLE_HORIZON=${OPENSTACK_ENABLE_HORIZON:-"false"}
 
 # Devstack will create a provider network using this range
@@ -84,7 +84,7 @@ function ensure_openstack_client {
         # Until then, this script tries to carefully navigate around current
         # issues running openstack client on python 3.7.
         #
-        # We explicitly pin the yoga version of openstackclient. This is the
+        # We explicitly pin the zed version of openstackclient. This is the
         # last version of openstackclient which will support python 3.7.
 
         # Install virtualenv to install the openstack client and curl to fetch
@@ -94,12 +94,12 @@ function ensure_openstack_client {
         VIRTUAL_ENV_DISABLE_PROMPT=1 source /tmp/openstack-venv/bin/activate
 
         # openstackclient has never actually supported python 3.7, only 3.6 and
-        # 3.8. Here we download the yoga constraints file and modify all the
+        # 3.8. Here we download the zed constraints file and modify all the
         # 3.8 constraints to be 3.7 constraints.
-        curl -L https://releases.openstack.org/constraints/upper/yoga -o /tmp/yoga-constraints
-        sed -i "s/python_version=='3.8'/python_version=='3.7'/" /tmp/yoga-constraints
+        # curl -L https://releases.openstack.org/constraints/upper/zed -o /tmp/zed-constraints
+        # sed -i "s/python_version=='3.8'/python_version=='3.7'/" /tmp/zed-constraints
 
-        pip install -c /tmp/yoga-constraints \
+        pip install \
                 python-openstackclient python-cinderclient \
                 python-glanceclient python-keystoneclient \
                 python-neutronclient python-novaclient python-octaviaclient
@@ -168,6 +168,8 @@ function wait_for_devstack {
 
     # Continuously capture devstack logs until killed
     $ssh_cmd "$ip" -- sudo journalctl --no-tail -a -b -u 'devstack@*' -f > "${devstackdir}/${name}-devstack.log" &
+
+    $ssh_cmd "$ip" -- sudo journalctl --no-tail -a -b -u 'devstack@neutron-api.service' -f > "${devstackdir}/${name}-neutron.log" &
 
     # Capture cloud-init logs
     # Devstack logs are in cloud-final

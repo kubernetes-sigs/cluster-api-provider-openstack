@@ -12,7 +12,6 @@
     VERBOSE=True
     LOG_COLOR=True
 
-    # Neutron
     enable_plugin neutron https://github.com/openstack/neutron stable/${OPENSTACK_RELEASE}
 
     # Octavia
@@ -36,8 +35,8 @@
 
     # Neutron
     ENABLED_SERVICES+=,neutron-api,neutron-agent,neutron-dhcp,neutron-l3,neutron-trunk
-
     ENABLED_SERVICES+=,neutron-metadata-agent,neutron-qos
+
     # Octavia
     ENABLED_SERVICES+=,octavia,o-api,o-cw,o-hm,o-hk,o-da
 
@@ -82,7 +81,7 @@
 
     [[post-config|$NEUTRON_CONF]]
     [DEFAULT]
-    service_plugins = trunk,router
+    service_plugins = trunk, router
 - path: /tmp/register-worker.sh
   permissions: 0755
   content: |
