@@ -82,7 +82,7 @@
 
     [[post-config|$NEUTRON_CONF]]
     [DEFAULT]
-    service_plugins = ovn-router,trunk, router
+    service_plugins = trunk,router
 - path: /tmp/register-worker.sh
   permissions: 0755
   content: |
