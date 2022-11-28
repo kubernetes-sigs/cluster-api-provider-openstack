@@ -47,8 +47,8 @@ cleanup() {
 trap cleanup EXIT
 
 # Ensure that python3-pip is installed.
-apt update
-apt install -y python3-pip
+apt-get update -y
+apt-get install -y python3-pip
 rm -rf /var/lib/apt/lists/*
 
 # Install/upgrade pip and requests module explicitly for HTTP calls.
