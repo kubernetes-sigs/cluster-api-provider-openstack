@@ -1,0 +1,78 @@
+##calico control-plane 
+##{
+##        Description:   "BGP (calico)",
+##        Direction:     "ingress",
+##        EtherType:     "IPv4",
+##        PortRangeMin:  179,
+##        PortRangeMax:  179,
+##        Protocol:      "tcp",
+##        RemoteGroupID: "remoteGroupIDSelf",
+##},
+##{
+##        Description:   "BGP (calico)",
+##        Direction:     "ingress",
+##        EtherType:     "IPv4",
+##        PortRangeMin:  179,
+##        PortRangeMax:  179,
+##        Protocol:      "tcp",
+##        RemoteGroupID: "secWorkerGroupID",
+##},
+##{
+##        Description:   "IP-in-IP (calico)",
+##        Direction:     "ingress",
+##        EtherType:     "IPv4",
+##        Protocol:      "ipip",
+##        RemoteGroupID: "remoteGroupIDSelf",
+##},
+##{
+##        Description:   "IP-in-IP (calico)",
+##        Direction:     "ingress",
+##        EtherType:     "IPv4",
+##        Protocol:      "ipip",
+##        RemoteGroupID: "secWorkerGroupID",
+##}
+
+
+##calico worker
+#{
+#        Description:   "BGP (calico)",
+#        Direction:     "ingress",
+#        EtherType:     "IPv4",
+#        PortRangeMin:  179,
+#        PortRangeMax:  179,
+#        Protocol:      "tcp",
+#        RemoteGroupID: "remoteGroupIDSelf",
+#},
+#{
+#        Description:   "BGP (calico)",
+#        Direction:     "ingress",
+#        EtherType:     "IPv4",
+#        PortRangeMin:  179,
+#        PortRangeMax:  179,
+#        Protocol:      "tcp",
+#        RemoteGroupID: "secControlPlaneGroupID",
+#},
+#{
+#        Description:   "IP-in-IP (calico)",
+#        Direction:     "ingress",
+#        EtherType:     "IPv4",
+#        Protocol:      "ipip",
+#        RemoteGroupID: "remoteGroupIDSelf",
+#},
+#{
+#        Description:   "IP-in-IP (calico)",
+#        Direction:     "ingress",
+#        EtherType:     "IPv4",
+#        Protocol:      "ipip",
+#        RemoteGroupID: "secControlPlaneGroupID",
+#}
+
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: calico-sgrules
+data:
+  control-plane: ewogICAgICAgIERlc2NyaXB0aW9uOiAgICJCR1AgKGNhbGljbykiLAogICAgICAgIERpcmVjdGlvbjogICAgICJpbmdyZXNzIiwKICAgICAgICBFdGhlclR5cGU6ICAgICAiSVB2NCIsCiAgICAgICAgUG9ydFJhbmdlTWluOiAgMTc5LAogICAgICAgIFBvcnRSYW5nZU1heDogIDE3OSwKICAgICAgICBQcm90b2NvbDogICAgICAidGNwIiwKICAgICAgICBSZW1vdGVHcm91cElEOiAicmVtb3RlR3JvdXBJRFNlbGYiLAp9LAp7CiAgICAgICAgRGVzY3JpcHRpb246ICAgIkJHUCAoY2FsaWNvKSIsCiAgICAgICAgRGlyZWN0aW9uOiAgICAgImluZ3Jlc3MiLAogICAgICAgIEV0aGVyVHlwZTogICAgICJJUHY0IiwKICAgICAgICBQb3J0UmFuZ2VNaW46ICAxNzksCiAgICAgICAgUG9ydFJhbmdlTWF4OiAgMTc5LAogICAgICAgIFByb3RvY29sOiAgICAgICJ0Y3AiLAogICAgICAgIFJlbW90ZUdyb3VwSUQ6ICJzZWNXb3JrZXJHcm91cElEIiwKfSwKewogICAgICAgIERlc2NyaXB0aW9uOiAgICJJUC1pbi1JUCAoY2FsaWNvKSIsCiAgICAgICAgRGlyZWN0aW9uOiAgICAgImluZ3Jlc3MiLAogICAgICAgIEV0aGVyVHlwZTogICAgICJJUHY0IiwKICAgICAgICBQcm90b2NvbDogICAgICAiaXBpcCIsCiAgICAgICAgUmVtb3RlR3JvdXBJRDogInJlbW90ZUdyb3VwSURTZWxmIiwKfSwKewogICAgICAgIERlc2NyaXB0aW9uOiAgICJJUC1pbi1JUCAoY2FsaWNvKSIsCiAgICAgICAgRGlyZWN0aW9uOiAgICAgImluZ3Jlc3MiLAogICAgICAgIEV0aGVyVHlwZTogICAgICJJUHY0IiwKICAgICAgICBQcm90b2NvbDogICAgICAiaXBpcCIsCiAgICAgICAgUmVtb3RlR3JvdXBJRDogInNlY1dvcmtlckdyb3VwSUQiLAp9Cg==
+  worker: ewogICAgICAgIERlc2NyaXB0aW9uOiAgICJCR1AgKGNhbGljbykiLAogICAgICAgIERpcmVjdGlvbjogICAgICJpbmdyZXNzIiwKICAgICAgICBFdGhlclR5cGU6ICAgICAiSVB2NCIsCiAgICAgICAgUG9ydFJhbmdlTWluOiAgMTc5LAogICAgICAgIFBvcnRSYW5nZU1heDogIDE3OSwKICAgICAgICBQcm90b2NvbDogICAgICAidGNwIiwKICAgICAgICBSZW1vdGVHcm91cElEOiAicmVtb3RlR3JvdXBJRFNlbGYiLAp9LAp7CiAgICAgICAgRGVzY3JpcHRpb246ICAgIkJHUCAoY2FsaWNvKSIsCiAgICAgICAgRGlyZWN0aW9uOiAgICAgImluZ3Jlc3MiLAogICAgICAgIEV0aGVyVHlwZTogICAgICJJUHY0IiwKICAgICAgICBQb3J0UmFuZ2VNaW46ICAxNzksCiAgICAgICAgUG9ydFJhbmdlTWF4OiAgMTc5LAogICAgICAgIFByb3RvY29sOiAgICAgICJ0Y3AiLAogICAgICAgIFJlbW90ZUdyb3VwSUQ6ICJzZWNDb250cm9sUGxhbmVHcm91cElEIiwKfSwKewogICAgICAgIERlc2NyaXB0aW9uOiAgICJJUC1pbi1JUCAoY2FsaWNvKSIsCiAgICAgICAgRGlyZWN0aW9uOiAgICAgImluZ3Jlc3MiLAogICAgICAgIEV0aGVyVHlwZTogICAgICJJUHY0IiwKICAgICAgICBQcm90b2NvbDogICAgICAiaXBpcCIsCiAgICAgICAgUmVtb3RlR3JvdXBJRDogInJlbW90ZUdyb3VwSURTZWxmIiwKfSwKewogICAgICAgIERlc2NyaXB0aW9uOiAgICJJUC1pbi1JUCAoY2FsaWNvKSIsCiAgICAgICAgRGlyZWN0aW9uOiAgICAgImluZ3Jlc3MiLAogICAgICAgIEV0aGVyVHlwZTogICAgICJJUHY0IiwKICAgICAgICBQcm90b2NvbDogICAgICAiaXBpcCIsCiAgICAgICAgUmVtb3RlR3JvdXBJRDogInNlY0NvbnRyb2xQbGFuZUdyb3VwSUQiLAp9Cg==
+    

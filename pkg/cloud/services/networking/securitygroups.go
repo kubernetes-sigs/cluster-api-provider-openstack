@@ -126,7 +126,7 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 		controlPlaneRules = append(controlPlaneRules, GetSGControlPlaneAllowAll(remoteGroupIDSelf, secWorkerGroupID)...)
 		workerRules = append(workerRules, GetSGWorkerAllowAll(remoteGroupIDSelf, secControlPlaneGroupID)...)
 	} else {
-		controlPlaneRules = append(controlPlaneRules, GetSGControlPlaneGeneral(remoteGroupIDSelf, secWorkerGroupID)...)
+		controlPlaneRules = append(controlPlaneRules, GetSGControlPlaneGeneral(s, remoteGroupIDSelf, secWorkerGroupID)...)
 		workerRules = append(workerRules, GetSGWorkerGeneral(remoteGroupIDSelf, secControlPlaneGroupID)...)
 	}
 

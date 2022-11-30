@@ -17,6 +17,10 @@ limitations under the License.
 package networking
 
 import (
+	"encoding/json"
+        "encoding/base64"
+	"os"
+
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
 )
 
@@ -291,10 +295,29 @@ func GetSGWorkerAllowAll(remoteGroupIDSelf, secControlPlaneGroupID string) []inf
 	}
 }
 
-func GetSGControlPlaneGeneral(remoteGroupIDSelf, secWorkerGroupID string) []infrav1.SecurityGroupRule {
+func getSGControlPlaneFromConfigmap(s *Service, remoteGroupIDSelf, secWorkerGroupID string) []infrav1.SecurityGroupRule {
+	// Read from configmap
+	str, err := os.ReadFile("/etc/capo/calico/control-plane")
+	if err != nil {
+		s.scope.Logger.Info("file not found")
+		return []infrav1.SecurityGroupRule{}
+	}
+	data, err := base64.StdEncoding.DecodeString(string(str))
+        if err != nil {
+		s.scope.Logger.Info("failed to decode")
+                return []infrav1.SecurityGroupRule{}
+        }
+
+    	var sgrule []infrav1.SecurityGroupRule
+	err = json.Unmarshal([]byte(data), &sgrule)
+	return sgrule
+}
+
+func GetSGControlPlaneGeneral(s *Service, remoteGroupIDSelf, secWorkerGroupID string) []infrav1.SecurityGroupRule {
 	controlPlaneRules := []infrav1.SecurityGroupRule{}
 	controlPlaneRules = append(controlPlaneRules, getSGControlPlaneCommon(remoteGroupIDSelf, secWorkerGroupID)...)
-	controlPlaneRules = append(controlPlaneRules, getSGControlPlaneCalico(remoteGroupIDSelf, secWorkerGroupID)...)
+	// controlPlaneRules = append(controlPlaneRules, getSGControlPlaneCalico(remoteGroupIDSelf, secWorkerGroupID)...)
+	controlPlaneRules = append(controlPlaneRules, getSGControlPlaneFromConfigmap(s, remoteGroupIDSelf, secWorkerGroupID)...)
 	return controlPlaneRules
 }
 
