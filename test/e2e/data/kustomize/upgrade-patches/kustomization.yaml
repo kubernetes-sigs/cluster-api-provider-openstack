@@ -1,0 +1,14 @@
+# Modifications to release templates for clusterctl upgrade scenarios
+---
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+patches:
+- target:
+    kind: KubeadmControlPlane
+    name: \${CLUSTER_NAME}-control-plane
+  path: ci-hack-kcp.yaml
+- target:
+    kind: KubeadmConfigTemplate
+    name: \${CLUSTER_NAME}-md-0
+  path: ci-hack-kct.yaml

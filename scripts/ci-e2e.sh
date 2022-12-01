@@ -15,8 +15,8 @@
 # limitations under the License.
 
 ################################################################################
-# usage: ci-conformance.sh
-#  This program runs the clusterctl conformance e2e tests.
+# usage: ci-e2e.sh
+#  This program runs the e2e tests.
 ################################################################################
 
 set -x
@@ -83,6 +83,20 @@ if [ -n "${BOSKOS_HOST:-}" ]; then
 fi
 
 "hack/ci/create_devstack.sh"
+
+# Upload image for e2e clusterctl upgrade tests
+source "${REPO_ROOT}/hack/ci/${RESOURCE_TYPE}.sh"
+CONTAINER_ARCHIVE="${ARTIFACTS}/capo-e2e-image.tar"
+SSH_KEY="$(get_ssh_private_key_file)"
+SSH_ARGS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -o PasswordAuthentication=no"
+CONTROLLER_IP=${CONTROLLER_IP:-"10.0.3.15"}
+
+make e2e-image
+docker save -o "${CONTAINER_ARCHIVE}" gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e
+scp -i "${SSH_KEY}" ${SSH_ARGS} "${CONTAINER_ARCHIVE}" "cloud@${CONTROLLER_IP}:capo-e2e-image.tar"
+ssh -i "${SSH_KEY}" ${SSH_ARGS} "cloud@${CONTROLLER_IP}" -- sudo chown root:root capo-e2e-image.tar
+ssh -i "${SSH_KEY}" ${SSH_ARGS} "cloud@${CONTROLLER_IP}" -- sudo chmod u=rw,g=r,o=r capo-e2e-image.tar
+ssh -i "${SSH_KEY}" ${SSH_ARGS} "cloud@${CONTROLLER_IP}" -- sudo mv capo-e2e-image.tar /var/www/html/capo-e2e-image.tar
 
 export OPENSTACK_CLOUD_YAML_FILE
 OPENSTACK_CLOUD_YAML_FILE="$(pwd)/clouds.yaml"
