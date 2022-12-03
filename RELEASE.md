@@ -51,7 +51,7 @@ It is recommended to create at least one release candidate when bumping `X` or `
 
    This will cause the image to be automatically built by CI and pushed to the staging repository. As this only builds
    the image, it only takes a few minutes.
-1. Follow the [image promotion process](https://github.com/kubernetes/k8s.io/tree/main/k8s.gcr.io#image-promoter) to promote the image from the staging repo to `k8s.gcr.io/capi-openstack`.
+1. Follow the [image promotion process](https://github.com/kubernetes/k8s.io/tree/main/k8s.gcr.io#image-promoter) to promote the image from the staging repo to `registry.k8s.io/capi-openstack`.
    The staging repository can be inspected at https://console.cloud.google.com/gcr/images/k8s-staging-capi-openstack/GLOBAL. Be
    sure to choose the top level `capi-openstack-controller`, which will provide the multi-arch manifest, rather than one for a specific architecture.
    The image build logs are available at [Cloud Build](https://console.cloud.google.com/cloud-build/builds?project=k8s-staging-capi-openstack).
