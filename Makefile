@@ -81,7 +81,7 @@ endif
 STAGING_REGISTRY := gcr.io/k8s-staging-capi-openstack
 STAGING_BUCKET ?= artifacts.k8s-staging-capi-openstack.appspot.com
 BUCKET ?= $(STAGING_BUCKET)
-PROD_REGISTRY ?= k8s.gcr.io/capi-openstack
+PROD_REGISTRY ?= registry.k8s.io/capi-openstack
 REGISTRY ?= $(STAGING_REGISTRY)
 RELEASE_TAG ?= $(shell git describe --abbrev=0 2>/dev/null)
 PULL_BASE_REF ?= $(RELEASE_TAG) # PULL_BASE_REF will be provided by Prow
