@@ -46,7 +46,7 @@ var _ = Describe("When testing clusterctl upgrades (v0.6=>current) [clusterctl-u
 			BootstrapClusterProxy:     e2eCtx.Environment.BootstrapClusterProxy,
 			ArtifactFolder:            e2eCtx.Settings.ArtifactFolder,
 			SkipCleanup:               false,
-			InitWithBinary:            "https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.2.4/clusterctl-{OS}-{ARCH}",
+			InitWithBinary:            "https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.3.0/clusterctl-{OS}-{ARCH}",
 			InitWithProvidersContract: "v1beta1",
 			MgmtFlavor:                shared.FlavorDefault,
 			WorkloadFlavor:            shared.FlavorV1alpha5,
