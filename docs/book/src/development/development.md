@@ -118,10 +118,10 @@ The file [`test/e2e/data/e2e_conf.yaml`](https://github.com/kubernetes-sigs/clus
   * Network trunking (neutron-trunk)
   * see [Configration](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/docs/book/src/development/ci.md#configuration) for more details.
 * Glance images
-  * `cirros-0.5.1-x86_64-disk`
+  * `cirros-0.6.1-x86_64-disk`
     * Download from https://docs.openstack.org/image-guide/obtain-images.html
-  * `ubuntu-2004-kube-v1.18.15`
-    * Download from https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/ubuntu/2021-03-27/ubuntu-2004-kube-v1.18.15.qcow2
+  * `ubuntu-2004-kube-v1.23.10`
+    * Download from https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/ubuntu/2022-12-05/ubuntu-2004-kube-v1.23.10.qcow2
     * Or generate using the `images/capi` directory from https://github.com/kubernetes-sigs/image-builder
       * Boot volume size must be less than 15GB
 * Flavors
