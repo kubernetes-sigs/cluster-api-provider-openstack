@@ -24,9 +24,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strconv"
-	"strings"
 
-	"github.com/blang/semver"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
@@ -64,15 +62,6 @@ var _ = Describe("conformance tests", func() {
 			var err error
 			kubernetesVersion, err = kubernetesversions.LatestCIRelease()
 			Expect(err).NotTo(HaveOccurred())
-		}
-
-		// Starting with Kubernetes v1.25, the kubetest config file needs to be compatible with Ginkgo V2.
-		v125 := semver.MustParse("1.25.0-alpha.0.0")
-		v, err := semver.ParseTolerant(kubernetesVersion)
-		Expect(err).NotTo(HaveOccurred())
-		if v.GTE(v125) {
-			// Use the Ginkgo V2 config file.
-			e2eCtx.Settings.KubetestConfigFilePath = getGinkgoV2ConfigFilePath(e2eCtx.Settings.KubetestConfigFilePath)
 		}
 
 		workerMachineCount, err := strconv.ParseInt(e2eCtx.E2EConfig.GetVariable("CONFORMANCE_WORKER_MACHINE_COUNT"), 10, 64)
@@ -122,7 +111,3 @@ var _ = Describe("conformance tests", func() {
 		shared.DumpSpecResourcesAndCleanup(ctx, specName, namespace, e2eCtx)
 	})
 })
-
-func getGinkgoV2ConfigFilePath(kubetestConfigFilePath string) string {
-	return strings.Replace(kubetestConfigFilePath, ".yaml", "-ginkgo-v2.yaml", 1)
-}
