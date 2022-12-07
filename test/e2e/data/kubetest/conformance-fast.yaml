@@ -1,7 +1,7 @@
 ginkgo.focus: \[Conformance\]
 ginkgo.skip: .*\[Serial\].*
 disable-log-dump: true
-ginkgo.progress: true
+ginkgo.show-node-events: true
 ginkgo.slowSpecThreshold: 120.0
 ginkgo.flakeAttempts: 3
 ginkgo.trace: true

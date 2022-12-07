@@ -45,7 +45,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/gophercloud/utils/openstack/clientconfig"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"gopkg.in/ini.v1"
 	"sigs.k8s.io/yaml"

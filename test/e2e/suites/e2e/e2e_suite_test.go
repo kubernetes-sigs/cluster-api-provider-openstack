@@ -23,9 +23,8 @@ import (
 	"os"
 	"testing"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"sigs.k8s.io/cluster-api/test/framework"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
 )
@@ -45,7 +44,7 @@ func init() {
 
 func TestE2E(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecsWithDefaultAndCustomReporters(t, "capo-e2e", []Reporter{framework.CreateJUnitReporterForProw(e2eCtx.Settings.ArtifactFolder)})
+	RunSpecs(t, "capo-e2e")
 }
 
 var _ = SynchronizedBeforeSuite(func() []byte {
