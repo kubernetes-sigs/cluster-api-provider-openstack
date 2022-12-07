@@ -54,7 +54,7 @@ MOCKGEN := $(TOOLS_BIN_DIR)/mockgen
 RELEASE_NOTES := $(TOOLS_BIN_DIR)/release-notes
 
 # Setup-envtest
-SETUP_ENVTEST_VER := v0.0.0-20211110210527-619e6b92dab9
+SETUP_ENVTEST_VER := v0.0.0-20221201045826-d9912251cd81
 SETUP_ENVTEST_BIN := setup-envtest
 SETUP_ENVTEST := $(abspath $(TOOLS_BIN_DIR)/$(SETUP_ENVTEST_BIN)-$(SETUP_ENVTEST_VER))
 SETUP_ENVTEST_PKG := sigs.k8s.io/controller-runtime/tools/setup-envtest
@@ -172,10 +172,10 @@ e2e-prerequisites: $(GINKGO) e2e-templates e2e-image test-e2e-image-prerequisite
 E2E_GINKGO_ARGS ?=
 .PHONY: test-e2e ## Run e2e tests using clusterctl
 test-e2e: e2e-prerequisites ## Run e2e tests
-	time $(GINKGO) --failFast -trace -progress -v -tags=e2e --nodes=$(E2E_GINKGO_PARALLEL) \
-			--focus="$(E2E_GINKGO_FOCUS)" $(_SKIP_ARGS) $(E2E_GINKGO_ARGS) ./test/e2e/suites/e2e/... -- \
-		-config-path="$(E2E_CONF_PATH)" -artifacts-folder="$(ARTIFACTS)" \
-		--data-folder="$(E2E_DATA_DIR)" $(E2E_ARGS)
+	time $(GINKGO) -fail-fast -trace -timeout=3h -show-node-events -v -tags=e2e -nodes=$(E2E_GINKGO_PARALLEL) \
+		-focus="$(E2E_GINKGO_FOCUS)" $(_SKIP_ARGS) $(E2E_GINKGO_ARGS) ./test/e2e/suites/e2e/... -- \
+			-config-path="$(E2E_CONF_PATH)" -artifacts-folder="$(ARTIFACTS)" \
+			-data-folder="$(E2E_DATA_DIR)" $(E2E_ARGS)
 
 .PHONY: e2e-image
 e2e-image: CONTROLLER_IMG_TAG = "gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e"
@@ -195,7 +195,7 @@ CONFORMANCE_E2E_ARGS += $(E2E_ARGS)
 CONFORMANCE_GINKGO_ARGS ?= -stream
 .PHONY: test-conformance
 test-conformance: e2e-prerequisites ## Run clusterctl based conformance test on workload cluster (requires Docker).
-	time $(GINKGO) -trace -progress -v -tags=e2e -focus="conformance" $(CONFORMANCE_GINKGO_ARGS) ./test/e2e/suites/conformance/... -- -config-path="$(E2E_CONF_PATH)" -artifacts-folder="$(ARTIFACTS)" --data-folder="$(E2E_DATA_DIR)" $(CONFORMANCE_E2E_ARGS)
+	time $(GINKGO) -trace -show-node-events -v -tags=e2e -focus="conformance" $(CONFORMANCE_GINKGO_ARGS) ./test/e2e/suites/conformance/... -- -config-path="$(E2E_CONF_PATH)" -artifacts-folder="$(ARTIFACTS)" --data-folder="$(E2E_DATA_DIR)" $(CONFORMANCE_E2E_ARGS)
 
 test-conformance-fast: ## Run clusterctl based conformance test on workload cluster (requires Docker) using a subset of the conformance suite in parallel.
 	$(MAKE) test-conformance CONFORMANCE_E2E_ARGS="-kubetest.config-file=$(KUBETEST_FAST_CONF_PATH) -kubetest.ginkgo-nodes=5 $(E2E_ARGS)"
@@ -412,8 +412,8 @@ release-notes: $(RELEASE_NOTES) ## Generate release notes
 .PHONY: templates
 templates: ## Generate cluster templates
 templates: templates/cluster-template.yaml \
-	   templates/cluster-template-without-lb.yaml \
-	   templates/cluster-template-external-cloud-provider.yaml
+	templates/cluster-template-without-lb.yaml \
+	templates/cluster-template-external-cloud-provider.yaml
 
 templates/cluster-template.yaml: kustomize/v1alpha6/default $(KUSTOMIZE) FORCE
 	$(KUSTOMIZE) build "$<" > "$@"

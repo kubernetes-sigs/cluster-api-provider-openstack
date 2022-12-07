@@ -22,7 +22,7 @@ package e2e
 import (
 	"context"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	capi_e2e "sigs.k8s.io/cluster-api/test/e2e"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
@@ -34,22 +34,23 @@ import (
 // When new minor releases are added (with the same contract) we will need to work on this
 // if we want to continue testing v0.6.
 var _ = Describe("When testing clusterctl upgrades (v0.6=>current) [clusterctl-upgrade]", func() {
-	ctx := context.TODO()
-	shared.SetEnvVar("USE_CI_ARTIFACTS", "true", false)
-	shared.SetEnvVar("DOWNLOAD_E2E_IMAGE", "true", false)
-	shared.SetEnvVar("E2E_IMAGE_URL", "http://10.0.3.15/capo-e2e-image.tar", false)
+	It("should succeed", func() {
+		ctx := context.TODO()
+		shared.SetEnvVar("USE_CI_ARTIFACTS", "true", false)
+		shared.SetEnvVar("DOWNLOAD_E2E_IMAGE", "true", false)
 
-	capi_e2e.ClusterctlUpgradeSpec(ctx, func() capi_e2e.ClusterctlUpgradeSpecInput {
-		return capi_e2e.ClusterctlUpgradeSpecInput{
-			E2EConfig:                 e2eCtx.E2EConfig,
-			ClusterctlConfigPath:      e2eCtx.Environment.ClusterctlConfigPath,
-			BootstrapClusterProxy:     e2eCtx.Environment.BootstrapClusterProxy,
-			ArtifactFolder:            e2eCtx.Settings.ArtifactFolder,
-			SkipCleanup:               false,
-			InitWithBinary:            "https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.3.0/clusterctl-{OS}-{ARCH}",
-			InitWithProvidersContract: "v1beta1",
-			MgmtFlavor:                shared.FlavorDefault,
-			WorkloadFlavor:            shared.FlavorV1alpha5,
-		}
+		capi_e2e.ClusterctlUpgradeSpec(ctx, func() capi_e2e.ClusterctlUpgradeSpecInput {
+			return capi_e2e.ClusterctlUpgradeSpecInput{
+				E2EConfig:                 e2eCtx.E2EConfig,
+				ClusterctlConfigPath:      e2eCtx.Environment.ClusterctlConfigPath,
+				BootstrapClusterProxy:     e2eCtx.Environment.BootstrapClusterProxy,
+				ArtifactFolder:            e2eCtx.Settings.ArtifactFolder,
+				SkipCleanup:               false,
+				InitWithBinary:            "https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.3.0/clusterctl-{OS}-{ARCH}",
+				InitWithProvidersContract: "v1beta1",
+				MgmtFlavor:                shared.FlavorDefault,
+				WorkloadFlavor:            shared.FlavorV1alpha5,
+			}
+		})
 	})
 })

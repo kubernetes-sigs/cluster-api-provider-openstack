@@ -137,6 +137,7 @@ variables:
   CONFORMANCE_WORKER_MACHINE_COUNT: "5"
   CONFORMANCE_CONTROL_PLANE_MACHINE_COUNT: "1"
   INIT_WITH_KUBERNETES_VERSION: "v1.25.0"
+  E2E_IMAGE_URL: "http://10.0.3.15/capo-e2e-image.tar"
 
 intervals:
   conformance/wait-control-plane: ["30m", "10s"]
