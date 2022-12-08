@@ -30,7 +30,7 @@ import (
 	"strings"
 	"time"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	"golang.org/x/crypto/ssh"
 )
 
