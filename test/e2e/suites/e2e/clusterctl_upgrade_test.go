@@ -21,7 +21,6 @@ package e2e
 
 import (
 	"context"
-	"os"
 
 	. "github.com/onsi/ginkgo/v2"
 	capi_e2e "sigs.k8s.io/cluster-api/test/e2e"
@@ -36,13 +35,8 @@ import (
 // if we want to continue testing v0.6.
 var _ = Describe("When testing clusterctl upgrades (v0.6=>current) [clusterctl-upgrade]", func() {
 	ctx := context.TODO()
-	// Set environment variables for rendering the cluster templates.
-	// We cannot use shared.SetEnvVar here because it tries to log things
-	// using `By`, which cannot be done outside of `It` blocks.
-	// We cannot put this in an `It` block either since `ClusterctlUpgradeSpec`
-	// contains `BeforeEach` which cannot be inside `It`.
-	_ = os.Setenv("USE_CI_ARTIFACTS", "true")
-	_ = os.Setenv("DOWNLOAD_E2E_IMAGE", "true")
+	shared.SetEnvVar("USE_CI_ARTIFACTS", "true", false)
+	shared.SetEnvVar("DOWNLOAD_E2E_IMAGE", "true", false)
 
 	capi_e2e.ClusterctlUpgradeSpec(ctx, func() capi_e2e.ClusterctlUpgradeSpecInput {
 		return capi_e2e.ClusterctlUpgradeSpecInput{

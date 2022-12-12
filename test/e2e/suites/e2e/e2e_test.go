@@ -84,7 +84,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 
 	Describe("Workload cluster (default)", func() {
 		It("It should be creatable and deletable", func() {
-			shared.Byf("Creating a cluster")
+			shared.Logf("Creating a cluster")
 			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
 			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(3)
@@ -144,7 +144,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 
 	Describe("Workload cluster (external cloud provider)", func() {
 		It("It should be creatable and deletable", func() {
-			shared.Byf("Creating a cluster")
+			shared.Logf("Creating a cluster")
 			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
 			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(1)
@@ -166,7 +166,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			Expect(workerMachines).To(HaveLen(1))
 			Expect(controlPlaneMachines).To(HaveLen(1))
 
-			shared.Byf("Waiting for worker nodes to be in Running phase")
+			shared.Logf("Waiting for worker nodes to be in Running phase")
 			statusChecks := []framework.MachineStatusCheck{framework.MachinePhaseCheck(string(clusterv1.MachinePhaseRunning))}
 			machineStatusInput := framework.WaitForMachineStatusCheckInput{
 				Getter:       e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
@@ -185,7 +185,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 
 	Describe("Workload cluster (without lb)", func() {
 		It("Should create port(s) with custom options", func() {
-			shared.Byf("Creating a cluster")
+			shared.Logf("Creating a cluster")
 			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
 			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(1)
@@ -207,7 +207,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			Expect(workerMachines).To(HaveLen(1))
 			Expect(controlPlaneMachines).To(HaveLen(1))
 
-			shared.Byf("Creating MachineDeployment with custom port options")
+			shared.Logf("Creating MachineDeployment with custom port options")
 			md3Name := clusterName + "-md-3"
 			testSecurityGroupName := "testSecGroup"
 			// create required test security group
@@ -242,7 +242,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 				InfraMachineTemplate:    makeOpenStackMachineTemplateWithPortOptions(namespace.Name, clusterName, md3Name, customPortOptions, machineTags),
 			})
 
-			shared.Byf("Waiting for custom port to be created")
+			shared.Logf("Waiting for custom port to be created")
 			var plist []ports.Port
 			var err error
 			Eventually(func() int {
@@ -297,12 +297,12 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			// We can't clean up these networks in a corresponding AfterEach because they will still be in use by the cluster.
 			// Instead we clean them up after the cluster has been deleted.
 
-			shared.Byf("Creating additional networks")
+			shared.Logf("Creating additional networks")
 
 			extraNet1, err = shared.CreateOpenStackNetwork(e2eCtx, fmt.Sprintf("%s-extraNet1", namespace.Name), "10.14.0.0/24")
 			Expect(err).NotTo(HaveOccurred())
 			postClusterCleanup = append(postClusterCleanup, func() {
-				shared.Byf("Deleting additional network %s", extraNet1.Name)
+				shared.Logf("Deleting additional network %s", extraNet1.Name)
 				err := shared.DeleteOpenStackNetwork(e2eCtx, extraNet1.ID)
 				Expect(err).NotTo(HaveOccurred())
 			})
@@ -310,7 +310,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			extraNet2, err = shared.CreateOpenStackNetwork(e2eCtx, fmt.Sprintf("%s-extraNet2", namespace.Name), "10.14.1.0/24")
 			Expect(err).NotTo(HaveOccurred())
 			postClusterCleanup = append(postClusterCleanup, func() {
-				shared.Byf("Deleting additional network %s", extraNet2.Name)
+				shared.Logf("Deleting additional network %s", extraNet2.Name)
 				err := shared.DeleteOpenStackNetwork(e2eCtx, extraNet2.ID)
 				Expect(err).NotTo(HaveOccurred())
 			})
@@ -318,7 +318,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			os.Setenv("CLUSTER_EXTRA_NET_1", extraNet1.ID)
 			os.Setenv("CLUSTER_EXTRA_NET_2", extraNet2.ID)
 
-			shared.Byf("Creating a cluster")
+			shared.Logf("Creating a cluster")
 			clusterName = fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster = defaultConfigCluster(clusterName, namespace.Name)
 			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(1)
@@ -358,10 +358,10 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 
 			for i := range allMachines {
 				machine := &allMachines[i]
-				shared.Byf("Checking ports for machine %s", machine.Name)
+				shared.Logf("Checking ports for machine %s", machine.Name)
 				instanceID := getInstanceIDForMachine(machine)
 
-				shared.Byf("Fetching ports for instance %s", instanceID)
+				shared.Logf("Fetching ports for instance %s", instanceID)
 				ports, err := shared.DumpOpenStackPorts(e2eCtx, ports.ListOpts{
 					DeviceID: instanceID,
 				})
@@ -396,7 +396,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 
 	Describe("MachineDeployment misconfigurations", func() {
 		It("Should fail to create MachineDeployment with invalid subnet or invalid availability zone", func() {
-			shared.Byf("Creating a cluster")
+			shared.Logf("Creating a cluster")
 			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
 			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(1)
@@ -404,7 +404,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			configCluster.Flavor = shared.FlavorDefault
 			_ = createCluster(ctx, configCluster)
 
-			shared.Byf("Creating Machine Deployment with invalid subnet id")
+			shared.Logf("Creating Machine Deployment with invalid subnet id")
 			md1Name := clusterName + "-md-1"
 			framework.CreateMachineDeployment(ctx, framework.CreateMachineDeploymentInput{
 				Creator:                 e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
@@ -413,14 +413,14 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 				InfraMachineTemplate:    makeOpenStackMachineTemplate(namespace.Name, clusterName, md1Name, "invalid-subnet"),
 			})
 
-			shared.Byf("Looking for failure event to be reported")
+			shared.Logf("Looking for failure event to be reported")
 			Eventually(func() bool {
 				eventList := getEvents(namespace.Name)
 				subnetError := "Failed to create server: no ports with fixed IPs found on Subnet \"invalid-subnet\""
 				return isErrorEventExists(namespace.Name, md1Name, "FailedCreateServer", subnetError, eventList)
 			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(BeTrue())
 
-			shared.Byf("Creating Machine Deployment in an invalid Availability Zone")
+			shared.Logf("Creating Machine Deployment in an invalid Availability Zone")
 			md2Name := clusterName + "-md-2"
 			framework.CreateMachineDeployment(ctx, framework.CreateMachineDeploymentInput{
 				Creator:                 e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
@@ -429,7 +429,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 				InfraMachineTemplate:    makeOpenStackMachineTemplate(namespace.Name, clusterName, md2Name, ""),
 			})
 
-			shared.Byf("Looking for failure event to be reported")
+			shared.Logf("Looking for failure event to be reported")
 			Eventually(func() bool {
 				eventList := getEvents(namespace.Name)
 				azError := "The requested availability zone is not available"
@@ -461,11 +461,11 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			// second compute is already up by the time we get here,
 			// and we don't have to wait.
 			Eventually(func() []string {
-				shared.Byf("Waiting for the alternate AZ '%s' to be created", failureDomainAlt)
+				shared.Logf("Waiting for the alternate AZ '%s' to be created", failureDomainAlt)
 				return shared.GetComputeAvailabilityZones(e2eCtx)
 			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-alt-az")...).Should(ContainElement(failureDomainAlt))
 
-			shared.Byf("Creating a cluster")
+			shared.Logf("Creating a cluster")
 			clusterName = fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
 			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(3)
@@ -803,7 +803,7 @@ func makeMachineDeployment(namespace, mdName, clusterName string, failureDomain 
 }
 
 func waitForDaemonSetRunning(ctx context.Context, ctrlClient crclient.Client, namespace, name string) {
-	shared.Byf("Ensuring DaemonSet %s is running", name)
+	shared.Logf("Ensuring DaemonSet %s is running", name)
 	daemonSet := &appsv1.DaemonSet{}
 	Eventually(
 		func() (bool, error) {
@@ -816,7 +816,7 @@ func waitForDaemonSetRunning(ctx context.Context, ctrlClient crclient.Client, na
 }
 
 func waitForNodesReadyWithoutCCMTaint(ctx context.Context, ctrlClient crclient.Client, nodeCount int) {
-	shared.Byf("Waiting for the workload nodes to be ready")
+	shared.Logf("Waiting for the workload nodes to be ready")
 	Eventually(func() (int, error) {
 		nodeList := &corev1.NodeList{}
 		if err := ctrlClient.List(ctx, nodeList); err != nil {
@@ -853,7 +853,7 @@ func createTestVolumeType(e2eCtx *shared.E2EContext) {
 	volumeClient, err := openstack.NewBlockStorageV3(providerClient, gophercloud.EndpointOpts{Region: clientOpts.RegionName})
 	Expect(err).NotTo(HaveOccurred())
 
-	shared.Byf("Creating test volume type")
+	shared.Logf("Creating test volume type")
 	_, err = volumetypes.Create(volumeClient, &volumetypes.CreateOpts{
 		Name:        e2eCtx.E2EConfig.GetVariable(shared.OpenStackVolumeTypeAlt),
 		Description: "Test volume type",
@@ -861,7 +861,7 @@ func createTestVolumeType(e2eCtx *shared.E2EContext) {
 		ExtraSpecs:  map[string]string{},
 	}).Extract()
 	if capoerrors.IsConflict(err) {
-		shared.Byf("Volume type already exists. This may happen in development environments, but it is not expected in CI.")
+		shared.Logf("Volume type already exists. This may happen in development environments, but it is not expected in CI.")
 		return
 	}
 	Expect(err).NotTo(HaveOccurred())
