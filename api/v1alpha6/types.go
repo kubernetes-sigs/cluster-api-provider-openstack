@@ -145,6 +145,9 @@ type PortOpts struct {
 	// These tags are applied in addition to the instance's tags, which will also be applied to the port.
 	// +listType=set
 	Tags []string `json:"tags,omitempty"`
+
+	// Value specs are extra parameters to include in the request.
+	ValueSpecs map[string]string `json:"valueSpecs,omitempty"`
 }
 
 type FixedIP struct {

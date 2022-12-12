@@ -202,3 +202,29 @@ func Convert_v1alpha6_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(in *
 	// Our new flag has no equivalent in v1alpha5
 	return autoConvert_v1alpha6_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(in, out, s)
 }
+
+func Convert_v1alpha6_PortOpts_To_v1alpha5_PortOpts(in *infrav1.PortOpts, out *PortOpts, s conversion.Scope) error {
+	// value specs have been added in v1alpha6 but have no equivalent in v1apha5
+	return autoConvert_v1alpha6_PortOpts_To_v1alpha5_PortOpts(in, out, s)
+}
+
+func Convert_Slice_v1alpha5_Network_To_Slice_v1alpha6_Network(in *[]Network, out *[]infrav1.Network, s conversion.Scope) error {
+	*out = make([]infrav1.Network, len(*in))
+	for i := range *in {
+		if err := Convert_v1alpha5_Network_To_v1alpha6_Network(&(*in)[i], &(*out)[i], s); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func Convert_Slice_v1alpha6_Network_To_Slice_v1alpha5_Network(in *[]infrav1.Network, out *[]Network, s conversion.Scope) error {
+	*out = make([]Network, len(*in))
+	for i := range *in {
+		if err := Convert_v1alpha6_Network_To_v1alpha5_Network(&(*in)[i], &(*out)[i], s); err != nil {
+			return err
+		}
+	}
+	return nil
+}

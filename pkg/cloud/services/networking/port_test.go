@@ -137,12 +137,15 @@ func Test_GetOrCreatePort(t *testing.T) {
 					}).Return([]ports.Port{}, nil)
 				m.
 					CreatePort(portsbinding.CreateOptsExt{
-						CreateOptsBuilder: ports.CreateOpts{
-							Name:                "foo-port-1",
-							Description:         "Created by cluster-api-provider-openstack cluster test-cluster",
-							SecurityGroups:      &instanceSecurityGroups,
-							NetworkID:           netID,
-							AllowedAddressPairs: []ports.AddressPair{},
+						CreateOptsBuilder: PortCreateOpts{
+							ports.CreateOpts{
+								Name:                "foo-port-1",
+								Description:         "Created by cluster-api-provider-openstack cluster test-cluster",
+								SecurityGroups:      &instanceSecurityGroups,
+								NetworkID:           netID,
+								AllowedAddressPairs: []ports.AddressPair{},
+							},
+							nil,
 						},
 					}).Return(&ports.Port{ID: portID1}, nil)
 			},
@@ -183,28 +186,32 @@ func Test_GetOrCreatePort(t *testing.T) {
 			nil,
 			nil,
 			func(m *mock.MockNetworkClientMockRecorder) {
-				portCreateOpts := ports.CreateOpts{
-					NetworkID:    netID,
-					Name:         "foo-port-bar",
-					Description:  "this is a test port",
-					AdminStateUp: pointerToTrue,
-					MACAddress:   "fe:fe:fe:fe:fe:fe",
-					FixedIPs: []ports.IP{
-						{
-							SubnetID:  subnetID1,
-							IPAddress: "192.168.0.50",
-						}, {
-							IPAddress: "192.168.1.50",
+				portCreateOpts := PortCreateOpts{
+					ports.CreateOpts{
+						NetworkID:    netID,
+						Name:         "foo-port-bar",
+						Description:  "this is a test port",
+						AdminStateUp: pointerToTrue,
+						MACAddress:   "fe:fe:fe:fe:fe:fe",
+						FixedIPs: []ports.IP{
+							{
+								SubnetID:  subnetID1,
+								IPAddress: "192.168.0.50",
+							}, {
+								IPAddress: "192.168.1.50",
+							},
 						},
+						TenantID:       tenantID,
+						ProjectID:      projectID,
+						SecurityGroups: &portSecurityGroups,
+						AllowedAddressPairs: []ports.AddressPair{{
+							IPAddress:  "10.10.10.10",
+							MACAddress: "f1:f1:f1:f1:f1:f1",
+						}},
 					},
-					TenantID:       tenantID,
-					ProjectID:      projectID,
-					SecurityGroups: &portSecurityGroups,
-					AllowedAddressPairs: []ports.AddressPair{{
-						IPAddress:  "10.10.10.10",
-						MACAddress: "f1:f1:f1:f1:f1:f1",
-					}},
+					nil,
 				}
+
 				portsecurityCreateOptsExt := portsecurity.PortCreateOptsExt{
 					CreateOptsBuilder:   portCreateOpts,
 					PortSecurityEnabled: pointerToTrue,
@@ -310,12 +317,15 @@ func Test_GetOrCreatePort(t *testing.T) {
 					}).Return([]ports.Port{}, nil)
 				m.
 					CreatePort(portsbinding.CreateOptsExt{
-						CreateOptsBuilder: ports.CreateOpts{
-							Name:                "foo-port-1",
-							Description:         "Created by cluster-api-provider-openstack cluster test-cluster",
-							SecurityGroups:      &portSecurityGroups,
-							NetworkID:           netID,
-							AllowedAddressPairs: []ports.AddressPair{},
+						CreateOptsBuilder: PortCreateOpts{
+							ports.CreateOpts{
+								Name:                "foo-port-1",
+								Description:         "Created by cluster-api-provider-openstack cluster test-cluster",
+								SecurityGroups:      &portSecurityGroups,
+								NetworkID:           netID,
+								AllowedAddressPairs: []ports.AddressPair{},
+							},
+							nil,
 						},
 					},
 					).Return(&ports.Port{ID: portID1}, nil)
@@ -340,11 +350,14 @@ func Test_GetOrCreatePort(t *testing.T) {
 						NetworkID: netID,
 					}).Return([]ports.Port{}, nil)
 				m.CreatePort(portsbinding.CreateOptsExt{
-					CreateOptsBuilder: ports.CreateOpts{
-						Name:                "foo-port-1",
-						Description:         "Created by cluster-api-provider-openstack cluster test-cluster",
-						NetworkID:           netID,
-						AllowedAddressPairs: []ports.AddressPair{},
+					CreateOptsBuilder: PortCreateOpts{
+						ports.CreateOpts{
+							Name:                "foo-port-1",
+							Description:         "Created by cluster-api-provider-openstack cluster test-cluster",
+							NetworkID:           netID,
+							AllowedAddressPairs: []ports.AddressPair{},
+						},
+						nil,
 					},
 				}).Return(&ports.Port{ID: portID1}, nil)
 				m.ReplaceAllAttributesTags("ports", portID1, attributestags.ReplaceAllOpts{Tags: []string{"my-instance-tag"}}).Return([]string{"my-instance-tag"}, nil)
@@ -369,11 +382,14 @@ func Test_GetOrCreatePort(t *testing.T) {
 						NetworkID: netID,
 					}).Return([]ports.Port{}, nil)
 				m.CreatePort(portsbinding.CreateOptsExt{
-					CreateOptsBuilder: ports.CreateOpts{
-						Name:                "foo-port-1",
-						Description:         "Created by cluster-api-provider-openstack cluster test-cluster",
-						NetworkID:           netID,
-						AllowedAddressPairs: []ports.AddressPair{},
+					CreateOptsBuilder: PortCreateOpts{
+						ports.CreateOpts{
+							Name:                "foo-port-1",
+							Description:         "Created by cluster-api-provider-openstack cluster test-cluster",
+							NetworkID:           netID,
+							AllowedAddressPairs: []ports.AddressPair{},
+						},
+						nil,
 					},
 				}).Return(&ports.Port{ID: portID1}, nil)
 				m.
@@ -403,11 +419,14 @@ func Test_GetOrCreatePort(t *testing.T) {
 					}).Return([]ports.Port{}, nil)
 				m.
 					CreatePort(portsbinding.CreateOptsExt{
-						CreateOptsBuilder: ports.CreateOpts{
-							Name:                "foo-port-1",
-							Description:         "Created by cluster-api-provider-openstack cluster test-cluster",
-							NetworkID:           netID,
-							AllowedAddressPairs: []ports.AddressPair{},
+						CreateOptsBuilder: PortCreateOpts{
+							ports.CreateOpts{
+								Name:                "foo-port-1",
+								Description:         "Created by cluster-api-provider-openstack cluster test-cluster",
+								NetworkID:           netID,
+								AllowedAddressPairs: []ports.AddressPair{},
+							},
+							nil,
 						},
 					}).Return(&ports.Port{Name: "foo-port-1", ID: portID1}, nil)
 				m.
@@ -424,6 +443,42 @@ func Test_GetOrCreatePort(t *testing.T) {
 
 				m.ReplaceAllAttributesTags("ports", portID1, attributestags.ReplaceAllOpts{Tags: []string{"my-tag"}}).Return([]string{"my-tag"}, nil)
 				m.ReplaceAllAttributesTags("trunks", trunkID, attributestags.ReplaceAllOpts{Tags: []string{"my-tag"}}).Return([]string{"my-tag"}, nil)
+			},
+			&ports.Port{Name: "foo-port-1", ID: portID1},
+			false,
+		},
+		{
+			"creates port with value_specs",
+			"foo-port-1",
+			infrav1.Network{
+				ID: netID,
+				PortOpts: &infrav1.PortOpts{
+					ValueSpecs: map[string]string{"key": "value"},
+				},
+			},
+			nil,
+			nil,
+			func(m *mock.MockNetworkClientMockRecorder) {
+				// No ports found
+				m.
+					ListPort(ports.ListOpts{
+						Name:      "foo-port-1",
+						NetworkID: netID,
+					}).Return([]ports.Port{}, nil)
+				m.
+					CreatePort(portsbinding.CreateOptsExt{
+						CreateOptsBuilder: PortCreateOpts{
+							ports.CreateOpts{
+								Name:                "foo-port-1",
+								Description:         "Created by cluster-api-provider-openstack cluster test-cluster",
+								NetworkID:           netID,
+								AllowedAddressPairs: []ports.AddressPair{},
+							},
+							map[string]string{
+								"key": "value",
+							},
+						},
+					}).Return(&ports.Port{Name: "foo-port-1", ID: portID1}, nil)
 			},
 			&ports.Port{Name: "foo-port-1", ID: portID1},
 			false,

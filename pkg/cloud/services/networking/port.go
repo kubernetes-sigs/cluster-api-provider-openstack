@@ -21,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/portsbinding"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/portsecurity"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
@@ -37,6 +38,25 @@ const (
 	timeoutPortDelete       = 3 * time.Minute
 	retryIntervalPortDelete = 5 * time.Second
 )
+
+// PortCreateOpts represents the attributes used when creating a new port.
+type PortCreateOpts struct {
+	ports.CreateOpts
+	ValueSpecs map[string]string `json:"value_specs,omitempty"`
+}
+
+// ToPortCreateMap casts a CreateOpts struct to a map.
+// It overrides ports.ToPortCreateMap to add the ValueSpecs field.
+func (opts PortCreateOpts) ToPortCreateMap() (map[string]interface{}, error) {
+	b, err := gophercloud.BuildRequestBody(opts, "")
+	if err != nil {
+		return nil, err
+	}
+
+	b = addValueSpecs(b)
+
+	return map[string]interface{}{"port": b}, nil
+}
 
 // GetPortFromInstanceIP returns at most one port attached to the instance with given ID
 // and with the IP address provided.
@@ -120,17 +140,20 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 	}
 
 	var createOpts ports.CreateOptsBuilder
-	createOpts = ports.CreateOpts{
-		Name:                portName,
-		NetworkID:           net.ID,
-		Description:         description,
-		AdminStateUp:        portOpts.AdminStateUp,
-		MACAddress:          portOpts.MACAddress,
-		TenantID:            portOpts.TenantID,
-		ProjectID:           portOpts.ProjectID,
-		SecurityGroups:      securityGroups,
-		AllowedAddressPairs: addressPairs,
-		FixedIPs:            fixedIPs,
+	createOpts = PortCreateOpts{
+		ports.CreateOpts{
+			Name:                portName,
+			NetworkID:           net.ID,
+			Description:         description,
+			AdminStateUp:        portOpts.AdminStateUp,
+			MACAddress:          portOpts.MACAddress,
+			TenantID:            portOpts.TenantID,
+			ProjectID:           portOpts.ProjectID,
+			SecurityGroups:      securityGroups,
+			AllowedAddressPairs: addressPairs,
+			FixedIPs:            fixedIPs,
+		},
+		portOpts.ValueSpecs,
 	}
 
 	if portOpts.DisablePortSecurity != nil {
@@ -322,4 +345,17 @@ func (s *Service) CollectPortSecurityGroups(eventObject runtime.Object, portSecu
 		distinctSecurityGroupIDs = append(distinctSecurityGroupIDs, key)
 	}
 	return &distinctSecurityGroupIDs, nil
+}
+
+// addValueSpecs expands the 'value_specs' object and removes 'value_specs'
+// from the reqeust body.
+func addValueSpecs(body map[string]interface{}) map[string]interface{} {
+	if body["value_specs"] != nil {
+		for k, v := range body["value_specs"].(map[string]interface{}) {
+			body[k] = v
+		}
+		delete(body, "value_specs")
+	}
+
+	return body
 }

@@ -1745,6 +1745,12 @@ spec:
                       description: Enables and disables trunk at port level. If not
                         provided, openStackMachine.Spec.Trunk is inherited.
                       type: boolean
+                    valueSpecs:
+                      additionalProperties:
+                        type: string
+                      description: Value specs are extra parameters to include in
+                        the request.
+                      type: object
                     vnicType:
                       description: The virtual network interface card (vNIC) type
                         that is bound to the neutron port.
