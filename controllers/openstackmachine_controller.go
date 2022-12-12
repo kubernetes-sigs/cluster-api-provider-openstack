@@ -274,7 +274,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(scope scope.Scope, cluster 
 		}
 	}
 
-	if err := computeService.DeleteInstance(openStackMachine, instanceStatus, openStackMachine.Name, openStackMachine.Spec.RootVolume); err != nil {
+	if err := computeService.DeleteInstance(openStackMachine, instanceStatus, openStackMachine.Name, openStackMachine.Spec.RootVolume, openStackMachine.Status.CreatedPorts); err != nil {
 		conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceDeleteFailedReason, clusterv1.ConditionSeverityError, "Deleting instance failed: %v", err)
 		return ctrl.Result{}, fmt.Errorf("delete instance: %w", err)
 	}
@@ -434,7 +434,7 @@ func (r *OpenStackMachineReconciler) getOrCreate(logger logr.Logger, cluster *cl
 	if instanceStatus == nil {
 		instanceSpec := machineToInstanceSpec(openStackCluster, machine, openStackMachine, userData)
 		logger.Info("Machine not exist, Creating Machine", "Machine", openStackMachine.Name)
-		instanceStatus, err = computeService.CreateInstance(openStackMachine, openStackCluster, instanceSpec, cluster.Name, false)
+		instanceStatus, err = computeService.CreateInstance(openStackMachine, openStackCluster, openStackMachine, instanceSpec, cluster.Name, false)
 		if err != nil {
 			conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceCreateFailedReason, clusterv1.ConditionSeverityError, err.Error())
 			return nil, fmt.Errorf("create OpenStack instance: %w", err)

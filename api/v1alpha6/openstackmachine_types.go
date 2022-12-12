@@ -134,6 +134,9 @@ type OpenStackMachineStatus struct {
 	FailureMessage *string `json:"failureMessage,omitempty"`
 
 	Conditions clusterv1.Conditions `json:"conditions,omitempty"`
+
+	// CreatedPorts
+	CreatedPorts []string `json:"createdPorts,omitempty"`
 }
 
 // +kubebuilder:object:root=true

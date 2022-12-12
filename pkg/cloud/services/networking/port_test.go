@@ -517,7 +517,7 @@ func Test_GetOrCreatePort(t *testing.T) {
 			s := Service{
 				client: mockClient,
 			}
-			got, err := s.GetOrCreatePort(
+			got, _, err := s.GetOrCreatePort(
 				eventObject,
 				"test-cluster",
 				tt.portName,

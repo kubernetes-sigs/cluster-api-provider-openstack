@@ -239,9 +239,9 @@ func deleteBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackClust
 		}
 
 		rootVolume := openStackCluster.Spec.Bastion.Instance.RootVolume
-		if err = computeService.DeleteInstance(openStackCluster, instanceStatus, instanceName, rootVolume); err != nil {
-			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete bastion: %w", err))
-			return fmt.Errorf("failed to delete bastion: %w", err)
+		if err = computeService.DeleteInstance(openStackCluster, instanceStatus, instanceName, rootVolume, []string{}); err != nil {
+			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete bastion: %v", err))
+			return fmt.Errorf("failed to delete bastion: %v", err)
 		}
 	}
 
@@ -349,7 +349,7 @@ func reconcileBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackCl
 		}
 	}
 
-	instanceStatus, err = computeService.CreateInstance(openStackCluster, openStackCluster, instanceSpec, cluster.Name, true)
+	instanceStatus, err = computeService.CreateInstance(openStackCluster, openStackCluster, nil, instanceSpec, cluster.Name, true)
 	if err != nil {
 		return fmt.Errorf("failed to reconcile bastion: %w", err)
 	}

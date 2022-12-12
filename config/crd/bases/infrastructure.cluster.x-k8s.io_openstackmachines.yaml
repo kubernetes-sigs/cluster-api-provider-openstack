@@ -1083,6 +1083,11 @@ spec:
                   - type
                   type: object
                 type: array
+              createdPorts:
+                description: CreatedPorts
+                items:
+                  type: string
+                type: array
               failureMessage:
                 description: "FailureMessage will be set in the event that there is
                   a terminal problem reconciling the Machine and will contain a more
@@ -1522,6 +1527,11 @@ spec:
                   - status
                   - type
                   type: object
+                type: array
+              createdPorts:
+                description: CreatedPorts
+                items:
+                  type: string
                 type: array
               failureMessage:
                 description: "FailureMessage will be set in the event that there is

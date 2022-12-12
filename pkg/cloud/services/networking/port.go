@@ -53,7 +53,7 @@ func (s *Service) GetPortFromInstanceIP(instanceID string, ip string) ([]ports.P
 	return s.client.ListPort(portOpts)
 }
 
-func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string, portName string, portOpts *infrav1.PortOpts, instanceSecurityGroups []string, instanceTags []string) (*ports.Port, error) {
+func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string, portName string, portOpts *infrav1.PortOpts, instanceSecurityGroups []string, instanceTags []string) (*ports.Port, bool, error) {
 	networkID := portOpts.Network.ID
 
 	existingPorts, err := s.client.ListPort(ports.ListOpts{
@@ -61,15 +61,15 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 		NetworkID: networkID,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("searching for existing port for server: %v", err)
+		return nil, false, fmt.Errorf("searching for existing port for server: %v", err)
 	}
 
 	if len(existingPorts) == 1 {
-		return &existingPorts[0], nil
+		return &existingPorts[0], true, nil
 	}
 
 	if len(existingPorts) > 1 {
-		return nil, fmt.Errorf("multiple ports found with name \"%s\"", portName)
+		return nil, false, fmt.Errorf("multiple ports found with name \"%s\"", portName)
 	}
 
 	description := portOpts.Description
@@ -89,7 +89,7 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 		if portOpts.SecurityGroupFilters != nil {
 			securityGroups, err = s.GetSecurityGroups(portOpts.SecurityGroupFilters)
 			if err != nil {
-				return nil, fmt.Errorf("error getting security groups: %v", err)
+				return nil, false, fmt.Errorf("error getting security groups: %v", err)
 			}
 		}
 		// inherit port security groups from the instance if not explicitly specified
@@ -104,7 +104,7 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 		for _, fixedIP := range portOpts.FixedIPs {
 			subnetID, err := s.getSubnetIDForFixedIP(fixedIP.Subnet, networkID)
 			if err != nil {
-				return nil, err
+				return nil, false, err
 			}
 			fips = append(fips, ports.IP{
 				SubnetID:  subnetID,
@@ -162,7 +162,7 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 	port, err := s.client.CreatePort(createOpts)
 	if err != nil {
 		record.Warnf(eventObject, "FailedCreatePort", "Failed to create port %s: %v", portName, err)
-		return nil, err
+		return nil, false, err
 	}
 
 	var tags []string
@@ -171,7 +171,7 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 	if len(tags) > 0 {
 		if err = s.replaceAllAttributesTags(eventObject, portResource, port.ID, tags); err != nil {
 			record.Warnf(eventObject, "FailedReplaceTags", "Failed to replace port tags %s: %v", portName, err)
-			return nil, err
+			return nil, false, err
 		}
 	}
 	record.Eventf(eventObject, "SuccessfulCreatePort", "Created port %s with id %s", port.Name, port.ID)
@@ -179,15 +179,15 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 		trunk, err := s.getOrCreateTrunk(eventObject, clusterName, port.Name, port.ID)
 		if err != nil {
 			record.Warnf(eventObject, "FailedCreateTrunk", "Failed to create trunk for port %s: %v", portName, err)
-			return nil, err
+			return nil, false, err
 		}
 		if err = s.replaceAllAttributesTags(eventObject, trunkResource, trunk.ID, tags); err != nil {
 			record.Warnf(eventObject, "FailedReplaceTags", "Failed to replace trunk tags %s: %v", portName, err)
-			return nil, err
+			return nil, false, err
 		}
 	}
 
-	return port, nil
+	return port, true, nil
 }
 
 func (s *Service) getSubnetIDForFixedIP(subnet *infrav1.SubnetFilter, networkID string) (string, error) {

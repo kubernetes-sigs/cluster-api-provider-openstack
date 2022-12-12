@@ -220,8 +220,8 @@ func (s *Service) constructPorts(openStackCluster *infrav1.OpenStackCluster, ins
 	return ports, nil
 }
 
-func (s *Service) CreateInstance(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec, clusterName string, isBastion bool) (*InstanceStatus, error) {
-	return s.createInstanceImpl(eventObject, openStackCluster, instanceSpec, clusterName, isBastion, retryIntervalInstanceStatus)
+func (s *Service) CreateInstance(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, instanceSpec *InstanceSpec, clusterName string, isBastion bool) (*InstanceStatus, error) {
+	return s.createInstanceImpl(eventObject, openStackCluster, openStackMachine, instanceSpec, clusterName, isBastion, retryIntervalInstanceStatus)
 }
 
 func (s *Service) getAndValidateFlavor(flavorName string, isBastion bool) (*flavors.Flavor, error) {
@@ -236,9 +236,50 @@ func (s *Service) getAndValidateFlavor(flavorName string, isBastion bool) (*flav
 	return f, nil
 }
 
-func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec, clusterName string, isBastion bool, retryInterval time.Duration) (*InstanceStatus, error) {
-	var server *clients.ServerExt
+func (s *Service) createPorts(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, instanceSpec *InstanceSpec, clusterName string) ([]servers.Network, error) {
 	portList := []servers.Network{}
+
+	ports, err := s.constructPorts(openStackCluster, instanceSpec)
+	if err != nil {
+		return portList, err
+	}
+
+	networkingService, err := s.getNetworkingService()
+	if err != nil {
+		return portList, err
+	}
+
+	securityGroups, err := networkingService.GetSecurityGroups(instanceSpec.SecurityGroups)
+	if err != nil {
+		return portList, fmt.Errorf("error getting security groups: %v", err)
+	}
+
+	for i := range ports {
+		portOpts := &ports[i]
+		iTags := []string{}
+		if len(instanceSpec.Tags) > 0 {
+			iTags = instanceSpec.Tags
+		}
+		portName := getPortName(instanceSpec.Name, portOpts, i)
+		port, created, err := networkingService.GetOrCreatePort(eventObject, clusterName, portName, portOpts, securityGroups, iTags)
+		if err != nil {
+			return portList, err
+		}
+
+		portList = append(portList, servers.Network{
+			Port: port.ID,
+		})
+
+		if created && openStackMachine != nil {
+			openStackMachine.Status.CreatedPorts = append(openStackMachine.Status.CreatedPorts, port.ID)
+		}
+	}
+	return portList, nil
+}
+
+func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, instanceSpec *InstanceSpec, clusterName string, isBastion bool, retryInterval time.Duration) (*InstanceStatus, error) {
+	var server *clients.ServerExt
+	var portList []servers.Network
 
 	imageID, err := s.getImageID(instanceSpec.ImageUUID, instanceSpec.Image)
 	if err != nil {
@@ -257,50 +298,21 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 		}
 
 		if err := s.deletePorts(eventObject, portList); err != nil {
-			s.scope.Logger().V(4).Error(err, "Failed to clean up ports after failure")
+			s.scope.Logger().Info("Failed to clean up ports after failure: %s", err)
 		}
 	}()
 
-	ports, err := s.constructPorts(openStackCluster, instanceSpec)
+	portList, err = s.createPorts(eventObject, openStackCluster, openStackMachine, instanceSpec, clusterName)
 	if err != nil {
 		return nil, err
-	}
-
-	networkingService, err := s.getNetworkingService()
-	if err != nil {
-		return nil, err
-	}
-
-	securityGroups, err := networkingService.GetSecurityGroups(instanceSpec.SecurityGroups)
-	if err != nil {
-		return nil, fmt.Errorf("error getting security groups: %v", err)
-	}
-
-	for i := range ports {
-		portOpts := &ports[i]
-		iTags := []string{}
-		if len(instanceSpec.Tags) > 0 {
-			iTags = instanceSpec.Tags
-		}
-		portName := getPortName(instanceSpec.Name, portOpts, i)
-		port, err := networkingService.GetOrCreatePort(eventObject, clusterName, portName, portOpts, securityGroups, iTags)
-		if err != nil {
-			return nil, err
-		}
-
-		portList = append(portList, servers.Network{
-			Port: port.ID,
-		})
 	}
 
 	volume, err := s.getOrCreateRootVolume(eventObject, instanceSpec, imageID)
 	if err != nil {
 		return nil, fmt.Errorf("error in get or create root volume: %w", err)
 	}
-
 	instanceCreateTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT", timeoutInstanceCreate)
 	instanceCreateTimeout *= time.Minute
-
 	// Wait for volume to become available
 	if volume != nil {
 		err = util.PollImmediate(retryIntervalInstanceStatus, instanceCreateTimeout, func() (bool, error) {
@@ -311,7 +323,6 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 				}
 				return false, err
 			}
-
 			switch createdVolume.Status {
 			case "available":
 				return true, nil
@@ -325,13 +336,11 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 			return nil, fmt.Errorf("volume %s did not become available: %w", volume.ID, err)
 		}
 	}
-
 	// Don't set ImageRef on the server if we're booting from volume
 	var serverImageRef string
 	if volume == nil {
 		serverImageRef = imageID
 	}
-
 	var serverCreateOpts servers.CreateOptsBuilder = servers.CreateOpts{
 		Name:             instanceSpec.Name,
 		ImageRef:         serverImageRef,
@@ -343,7 +352,6 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 		Metadata:         instanceSpec.Metadata,
 		ConfigDrive:      &instanceSpec.ConfigDrive,
 	}
-
 	serverCreateOpts = applyRootVolume(serverCreateOpts, volume)
 
 	serverCreateOpts = applyServerGroupID(serverCreateOpts, instanceSpec.ServerGroupID)
@@ -372,6 +380,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 	})
 	if err != nil {
 		record.Warnf(eventObject, "FailedCreateServer", "Failed to create server %s: %v", createdInstance.Name(), err)
+
 		return nil, err
 	}
 
@@ -549,8 +558,18 @@ func (s *Service) GetManagementPort(openStackCluster *infrav1.OpenStackCluster, 
 	return &allPorts[0], nil
 }
 
-func (s *Service) DeleteInstance(eventObject runtime.Object, instanceStatus *InstanceStatus, instanceName string, rootVolume *infrav1.RootVolume) error {
+func (s *Service) DeleteInstance(eventObject runtime.Object, instanceStatus *InstanceStatus, instanceName string, rootVolume *infrav1.RootVolume, createdPorts []string) error {
+	networkingService, err := s.getNetworkingService()
+	if err != nil {
+		return err
+	}
+
 	if instanceStatus == nil {
+		for _, portID := range createdPorts {
+			if err := networkingService.DeletePort(eventObject, portID); err != nil {
+				return err
+			}
+		}
 		/*
 			We create a boot-from-volume instance in 2 steps:
 			1. Create the volume
@@ -594,11 +613,6 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instanceStatus *Ins
 	trunkSupported, err := s.isTrunkExtSupported()
 	if err != nil {
 		return fmt.Errorf("obtaining network extensions: %v", err)
-	}
-
-	networkingService, err := s.getNetworkingService()
-	if err != nil {
-		return err
 	}
 
 	// get and delete trunks

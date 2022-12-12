@@ -513,8 +513,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 
 				expectCreateServer(r.compute, getDefaultServerMap(), false)
 				expectServerPoll(r.compute, []string{"BUILDING", "ERROR"})
-
-				// Don't delete ports because the server is created: DeleteInstance will do it
 			},
 			wantErr: true,
 		},
@@ -714,7 +712,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 			}
 
 			// Call CreateInstance with a reduced retry interval to speed up the test
-			_, err = s.createInstanceImpl(&infrav1.OpenStackMachine{}, getDefaultOpenStackCluster(), tt.getInstanceSpec(), "cluster-name", false, time.Nanosecond)
+			_, err = s.createInstanceImpl(&infrav1.OpenStackMachine{}, getDefaultOpenStackCluster(), &infrav1.OpenStackMachine{}, tt.getInstanceSpec(), "cluster-name", false, time.Nanosecond)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Service.CreateInstance() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -819,7 +817,7 @@ func TestService_DeleteInstance(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Failed to create service: %v", err)
 			}
-			if err := s.DeleteInstance(tt.eventObject, tt.instanceStatus(), openStackMachineName, tt.rootVolume); (err != nil) != tt.wantErr {
+			if err := s.DeleteInstance(tt.eventObject, tt.instanceStatus(), openStackMachineName, tt.rootVolume, []string{}); (err != nil) != tt.wantErr {
 				t.Errorf("Service.DeleteInstance() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
