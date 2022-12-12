@@ -63,7 +63,7 @@ type ServerExtWithIP struct {
 
 // ensureSSHKeyPair ensures A SSH key is present under the name.
 func ensureSSHKeyPair(e2eCtx *E2EContext) {
-	Byf("Ensuring presence of SSH key %q in OpenStack", DefaultSSHKeyPairName)
+	Logf("Ensuring presence of SSH key %q in OpenStack", DefaultSSHKeyPairName)
 
 	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
 	Expect(err).NotTo(HaveOccurred())
@@ -83,7 +83,7 @@ func ensureSSHKeyPair(e2eCtx *E2EContext) {
 	}
 
 	sshDir := filepath.Join(e2eCtx.Settings.ArtifactFolder, "ssh")
-	Byf("Storing keypair in %q", sshDir)
+	Logf("Storing keypair in %q", sshDir)
 
 	err = os.MkdirAll(sshDir, 0o750)
 	Expect(err).NotTo(HaveOccurred())
@@ -96,7 +96,7 @@ func ensureSSHKeyPair(e2eCtx *E2EContext) {
 }
 
 func dumpOpenStack(_ context.Context, e2eCtx *E2EContext, bootstrapClusterProxyName string) {
-	Byf("Running dumpOpenStack")
+	Logf("Running dumpOpenStack")
 	logPath := filepath.Join(e2eCtx.Settings.ArtifactFolder, "clusters", bootstrapClusterProxyName, "openstack-resources")
 	if err := os.MkdirAll(logPath, os.ModePerm); err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "error creating directory %s: %s\n", logPath, err)

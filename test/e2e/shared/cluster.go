@@ -59,7 +59,7 @@ func createClusterctlLocalRepository(config *clusterctl.E2EConfig, repositoryFol
 
 // setupBootstrapCluster installs Cluster API components via clusterctl.
 func setupBootstrapCluster(config *clusterctl.E2EConfig, scheme *runtime.Scheme, useExistingCluster bool) (bootstrap.ClusterProvider, framework.ClusterProxy) {
-	Byf("Running setupBootstrapCluster (useExistingCluster: %t)", useExistingCluster)
+	Logf("Running setupBootstrapCluster (useExistingCluster: %t)", useExistingCluster)
 
 	// We only want to set clusterProvider if we create a new bootstrap cluster in this test.
 	// If we re-use an existing one, we don't want to delete it afterwards, so we don't set it.
@@ -78,7 +78,7 @@ func setupBootstrapCluster(config *clusterctl.E2EConfig, scheme *runtime.Scheme,
 			// Only use the kubeconfigPath if the current context is the configured kubeContext
 			// Otherwise we might deploy to the wrong cluster.
 			// TODO(sbuerin): this logic could be a lot nicer if we could hand over a kubeContext to NewClusterProxy
-			Byf("Found currentContext %q in %q (configured kubeContext is %q)", kubecfg.CurrentContext, testKubeconfigPath, kubeContext)
+			Logf("Found currentContext %q in %q (configured kubeContext is %q)", kubecfg.CurrentContext, testKubeconfigPath, kubeContext)
 			if kubecfg.CurrentContext == kubeContext {
 				kubeconfigPath = testKubeconfigPath
 			}
