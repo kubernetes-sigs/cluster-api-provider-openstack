@@ -806,7 +806,9 @@ func TestService_ReconcileInstance(t *testing.T) {
 				expectCreateServer(r.compute, getDefaultServerMap(), false)
 				expectServerPoll(r.compute, []string{"BUILDING", "ERROR"})
 
-				// Don't delete ports because the server is created: DeleteInstance will do it
+				// we should delete ports when server ERROR, as we don't know
+				// whether port attached to instance or not
+				expectCleanupDefaultPort(r.network)
 			},
 			wantErr: true,
 		},

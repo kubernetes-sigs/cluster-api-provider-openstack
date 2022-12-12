@@ -280,6 +280,10 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 	})
 	if err != nil {
 		record.Warnf(eventObject, "FailedCreateServer", "Failed to create server %s: %v", createdInstance.Name(), err)
+
+		// we failed to create instance, now with this server = nil, we will let the defer function handle the
+		// defer action to clean up all the ports as it's in infrav1.InstanceStateError status
+		server = nil
 		return nil, err
 	}
 
