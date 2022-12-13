@@ -52,17 +52,17 @@ type synchronizedBeforeTestSuiteConfig struct {
 
 // Node1BeforeSuite is the common setup down on the first ginkgo node before the test suite runs.
 func Node1BeforeSuite(e2eCtx *E2EContext) []byte {
-	Byf("Running Node1BeforeSuite")
-	defer Byf("Finished Node1BeforeSuite")
+	Logf("Running Node1BeforeSuite")
+	defer Logf("Finished Node1BeforeSuite")
 
 	flag.Parse()
 	Expect(e2eCtx.Settings.ConfigPath).To(BeAnExistingFile(), "Invalid test suite argument. configPath should be an existing file.")
 	Expect(os.MkdirAll(e2eCtx.Settings.ArtifactFolder, 0o750)).To(Succeed(), "Invalid test suite argument. Can't create artifacts-folder %q", e2eCtx.Settings.ArtifactFolder)
-	Byf("Loading the e2e test configuration from %q", e2eCtx.Settings.ConfigPath)
+	Logf("Loading the e2e test configuration from %q", e2eCtx.Settings.ConfigPath)
 	e2eCtx.E2EConfig = LoadE2EConfig(e2eCtx.Settings.ConfigPath)
 
 	Expect(e2eCtx.E2EConfig.GetVariable(OpenStackCloudYAMLFile)).To(BeAnExistingFile(), "Invalid test suite argument. Value of environment variable OPENSTACK_CLOUD_YAML_FILE should be an existing file: %s", e2eCtx.E2EConfig.GetVariable(OpenStackCloudYAMLFile))
-	Byf("Loading the clouds.yaml from %q", e2eCtx.E2EConfig.GetVariable(OpenStackCloudYAMLFile))
+	Logf("Loading the clouds.yaml from %q", e2eCtx.E2EConfig.GetVariable(OpenStackCloudYAMLFile))
 
 	// TODO(sbuerin): we always need ci artifacts, because we don't have images for every Kubernetes version
 	err := filepath.WalkDir(path.Join(e2eCtx.Settings.DataFolder, "infrastructure-openstack"), func(f string, d fs.DirEntry, _ error) error {
@@ -114,13 +114,13 @@ func Node1BeforeSuite(e2eCtx *E2EContext) []byte {
 
 	ensureSSHKeyPair(e2eCtx)
 
-	Byf("Creating a clusterctl local repository into %q", e2eCtx.Settings.ArtifactFolder)
+	Logf("Creating a clusterctl local repository into %q", e2eCtx.Settings.ArtifactFolder)
 	e2eCtx.Environment.ClusterctlConfigPath = createClusterctlLocalRepository(e2eCtx.E2EConfig, filepath.Join(e2eCtx.Settings.ArtifactFolder, "repository"))
 
-	Byf("Setting up the bootstrap cluster")
+	Logf("Setting up the bootstrap cluster")
 	e2eCtx.Environment.BootstrapClusterProvider, e2eCtx.Environment.BootstrapClusterProxy = setupBootstrapCluster(e2eCtx.E2EConfig, e2eCtx.Environment.Scheme, e2eCtx.Settings.UseExistingCluster)
 
-	Byf("Initializing the bootstrap cluster")
+	Logf("Initializing the bootstrap cluster")
 	initBootstrapCluster(e2eCtx)
 
 	conf := synchronizedBeforeTestSuiteConfig{
@@ -142,8 +142,8 @@ func Node1BeforeSuite(e2eCtx *E2EContext) []byte {
 
 // AllNodesBeforeSuite is the common setup down on each ginkgo parallel node before the test suite runs.
 func AllNodesBeforeSuite(e2eCtx *E2EContext, data []byte) {
-	Byf("Running AllNodesBeforeSuite")
-	defer Byf("Finished AllNodesBeforeSuite")
+	Logf("Running AllNodesBeforeSuite")
+	defer Logf("Finished AllNodesBeforeSuite")
 
 	conf := &synchronizedBeforeTestSuiteConfig{}
 	err := yaml.UnmarshalStrict(data, conf)
@@ -222,20 +222,20 @@ func AllNodesBeforeSuite(e2eCtx *E2EContext, data []byte) {
 
 // AllNodesAfterSuite is cleanup that runs on all ginkgo parallel nodes after the test suite finishes.
 func AllNodesAfterSuite(e2eCtx *E2EContext) {
-	Byf("Running AllNodesAfterSuite")
-	defer Byf("Finished AllNodesAfterSuite")
+	Logf("Running AllNodesAfterSuite")
+	defer Logf("Finished AllNodesAfterSuite")
 
-	Byf("Stopping ResourceTicker")
+	Logf("Stopping ResourceTicker")
 	if e2eCtx.Environment.ResourceTickerDone != nil {
 		e2eCtx.Environment.ResourceTickerDone <- true
 	}
-	Byf("Stopped ResourceTicker")
+	Logf("Stopped ResourceTicker")
 
-	Byf("Stopping MachineTicker")
+	Logf("Stopping MachineTicker")
 	if e2eCtx.Environment.MachineTickerDone != nil {
 		e2eCtx.Environment.MachineTickerDone <- true
 	}
-	Byf("Stopped MachineTicker")
+	Logf("Stopped MachineTicker")
 
 	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Minute)
 	defer cancel()
@@ -252,10 +252,10 @@ func AllNodesAfterSuite(e2eCtx *E2EContext) {
 
 // Node1AfterSuite is cleanup that runs on the first ginkgo node after the test suite finishes.
 func Node1AfterSuite(e2eCtx *E2EContext) {
-	Byf("Running Node1AfterSuite")
-	defer Byf("Finished Node1AfterSuite")
+	Logf("Running Node1AfterSuite")
+	defer Logf("Finished Node1AfterSuite")
 
-	Byf("Tearing down the management cluster")
+	Logf("Tearing down the management cluster")
 	if !e2eCtx.Settings.SkipCleanup {
 		tearDown(e2eCtx.Environment.BootstrapClusterProvider, e2eCtx.Environment.BootstrapClusterProxy)
 	}
