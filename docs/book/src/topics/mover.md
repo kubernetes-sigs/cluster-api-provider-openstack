@@ -9,7 +9,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-This documenation describes how to move `Cluster API` related objects from `bootstrap` cluster to `target` cluster. Check [clusterctl move](https://cluster-api.sigs.k8s.io/clusterctl/commands/move.html) for further information.
+This documentation describes how to move `Cluster API` related objects from `bootstrap` cluster to `target` cluster. Check [clusterctl move](https://cluster-api.sigs.k8s.io/clusterctl/commands/move.html) for further information.
 
 # Pre-condition
 

@@ -29,7 +29,7 @@ The entry point for the creation of the test DevStack is `hack/ci/create_devstac
 
 In GCE, DevStack is installed on a community-maintained Ubuntu 20.04 LTS cloud image. The cloud-init config is also intended to work on CentOS 8, and this is known to work as of 2021-01-12. However, note that this is not regularly tested. See the comment in `hack/ci/gce-project.sh` for how to deploy on CentOS.
 
-It is convenient to the project to have a viable second OS option as it gives us an option to work around issues which only affect one or the other. This is most likely when enabling new DevStack features, but may also include infrastructure issues. Consequently, when making changes to cloud-init, try not to use features specific to Ubuntu or CentOS. DevStack already supports both operating systems, so we just need to be careful in our periferal configuration, for example by using cloud-init's `packages` module rather than manually invoking `apt-get` or `yum`. Fortunately package names tend to be consistent across the two distributions.
+It is convenient to the project to have a viable second OS option as it gives us an option to work around issues which only affect one or the other. This is most likely when enabling new DevStack features, but may also include infrastructure issues. Consequently, when making changes to cloud-init, try not to use features specific to Ubuntu or CentOS. DevStack already supports both operating systems, so we just need to be careful in our peripheral configuration, for example by using cloud-init's `packages` module rather than manually invoking `apt-get` or `yum`. Fortunately package names tend to be consistent across the two distributions.
 
 ### Configuration
 
