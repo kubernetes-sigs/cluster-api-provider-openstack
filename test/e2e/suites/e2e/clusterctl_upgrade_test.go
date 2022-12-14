@@ -40,15 +40,16 @@ var _ = Describe("When testing clusterctl upgrades (v0.6=>current) [clusterctl-u
 
 	capi_e2e.ClusterctlUpgradeSpec(ctx, func() capi_e2e.ClusterctlUpgradeSpecInput {
 		return capi_e2e.ClusterctlUpgradeSpecInput{
-			E2EConfig:                 e2eCtx.E2EConfig,
-			ClusterctlConfigPath:      e2eCtx.Environment.ClusterctlConfigPath,
-			BootstrapClusterProxy:     e2eCtx.Environment.BootstrapClusterProxy,
-			ArtifactFolder:            e2eCtx.Settings.ArtifactFolder,
-			SkipCleanup:               false,
-			InitWithBinary:            "https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.3.1/clusterctl-{OS}-{ARCH}",
-			InitWithProvidersContract: "v1beta1",
-			MgmtFlavor:                shared.FlavorDefault,
-			WorkloadFlavor:            shared.FlavorV1alpha5,
+			E2EConfig:                       e2eCtx.E2EConfig,
+			ClusterctlConfigPath:            e2eCtx.Environment.ClusterctlConfigPath,
+			BootstrapClusterProxy:           e2eCtx.Environment.BootstrapClusterProxy,
+			ArtifactFolder:                  e2eCtx.Settings.ArtifactFolder,
+			SkipCleanup:                     false,
+			InitWithBinary:                  "https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.3.1/clusterctl-{OS}-{ARCH}",
+			InitWithProvidersContract:       "v1beta1",
+			InitWithInfrastructureProviders: []string{"openstack:v0.6.4"},
+			MgmtFlavor:                      shared.FlavorDefault,
+			WorkloadFlavor:                  shared.FlavorV1alpha5,
 		}
 	})
 })
