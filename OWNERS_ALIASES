@@ -29,4 +29,5 @@ aliases:
     - mdbooth
     - seanschneeweiss
     - tobiasgiese
-  cluster-api-openstack-reviewers: []
+  cluster-api-openstack-reviewers:
+    - lentzi90
