@@ -116,6 +116,10 @@ variables:
   # used to ensure we deploy to the correct management cluster
   KUBE_CONTEXT: "kind-capo-e2e"
   KUBERNETES_VERSION: "v1.25.0"
+  KUBERNETES_VERSION_UPGRADE_FROM: "v1.24.9"
+  KUBERNETES_VERSION_UPGRADE_TO: "v1.25.0"
+  ETCD_VERSION_UPGRADE_TO: "3.5.4-0"
+  COREDNS_VERSION_UPGRADE_TO: "v1.9.3"
   CNI: "../../data/cni/calico.yaml"
   CCM: "../../data/ccm/cloud-controller-manager.yaml"
   EXP_CLUSTER_RESOURCE_SET: "true"
@@ -148,3 +152,5 @@ intervals:
   default/wait-worker-nodes: ["30m", "10s"]
   default/wait-delete-cluster: ["5m", "10s"]
   default/wait-alt-az: ["20m", "30s"]
+  default/wait-machine-upgrade: ["30m", "10s"]
+  default/wait-nodes-ready: ["15m", "10s"]
