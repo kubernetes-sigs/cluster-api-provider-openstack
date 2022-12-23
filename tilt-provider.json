@@ -10,6 +10,7 @@
         "config",
         "controllers",
         "pkg"
-      ]
+      ],
+      "label": "CAPO"
     }
 }
