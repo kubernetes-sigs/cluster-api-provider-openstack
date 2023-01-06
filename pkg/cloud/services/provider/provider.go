@@ -22,6 +22,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
@@ -96,8 +97,17 @@ func NewClient(cloud clientconfig.Cloud, caCert []byte) (*gophercloud.ProviderCl
 	if cloud.Verify != nil {
 		config.InsecureSkipVerify = !*cloud.Verify
 	}
+
 	if caCert != nil {
 		config.RootCAs.AppendCertsFromPEM(caCert)
+	}
+
+	if cloud.CACertFile != "" {
+		certfile, err := os.ReadFile(cloud.CACertFile)
+		if err != nil {
+			return nil, nil, "", fmt.Errorf("can't open cloud.yaml cacert file: %w", err)
+		}
+		config.RootCAs.AppendCertsFromPEM(certfile)
 	}
 
 	provider.HTTPClient.Transport = &http.Transport{Proxy: http.ProxyFromEnvironment, TLSClientConfig: config}
