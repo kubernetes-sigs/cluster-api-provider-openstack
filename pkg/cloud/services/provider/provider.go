@@ -42,7 +42,7 @@ const (
 	caSecretKey     = "cacert"
 )
 
-func NewClientFromMachine(ctx context.Context, ctrlClient client.Client, openStackMachine *infrav1.OpenStackMachine) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, string, error) {
+func NewClientFromMachine(ctx context.Context, ctrlClient client.Client, openStackMachine *infrav1.OpenStackMachine, defaultCACert []byte) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, string, error) {
 	var cloud clientconfig.Cloud
 	var caCert []byte
 
@@ -53,10 +53,15 @@ func NewClientFromMachine(ctx context.Context, ctrlClient client.Client, openSta
 			return nil, nil, "", err
 		}
 	}
+
+	if caCert == nil {
+		caCert = defaultCACert
+	}
+
 	return NewClient(cloud, caCert)
 }
 
-func NewClientFromCluster(ctx context.Context, ctrlClient client.Client, openStackCluster *infrav1.OpenStackCluster) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, string, error) {
+func NewClientFromCluster(ctx context.Context, ctrlClient client.Client, openStackCluster *infrav1.OpenStackCluster, defaultCACert []byte) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, string, error) {
 	var cloud clientconfig.Cloud
 	var caCert []byte
 
@@ -67,6 +72,11 @@ func NewClientFromCluster(ctx context.Context, ctrlClient client.Client, openSta
 			return nil, nil, "", err
 		}
 	}
+
+	if caCert == nil {
+		caCert = defaultCACert
+	}
+
 	return NewClient(cloud, caCert)
 }
 

@@ -62,6 +62,7 @@ type OpenStackMachineReconciler struct {
 	Client           client.Client
 	Recorder         record.EventRecorder
 	WatchFilterValue string
+	CaCertificates   []byte // PEM encoded ca certificates.
 }
 
 const (
@@ -140,7 +141,7 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}()
 
-	osProviderClient, clientOpts, projectID, err := provider.NewClientFromMachine(ctx, r.Client, openStackMachine)
+	osProviderClient, clientOpts, projectID, err := provider.NewClientFromMachine(ctx, r.Client, openStackMachine, r.CaCertificates)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

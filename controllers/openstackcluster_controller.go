@@ -60,6 +60,7 @@ type OpenStackClusterReconciler struct {
 	Client           client.Client
 	Recorder         record.EventRecorder
 	WatchFilterValue string
+	CaCertificates   []byte // PEM encoded ca certificates.
 }
 
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackclusters,verbs=get;list;watch;create;update;patch;delete
@@ -111,7 +112,7 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}()
 
-	osProviderClient, clientOpts, projectID, err := provider.NewClientFromCluster(ctx, r.Client, openStackCluster)
+	osProviderClient, clientOpts, projectID, err := provider.NewClientFromCluster(ctx, r.Client, openStackCluster, r.CaCertificates)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
