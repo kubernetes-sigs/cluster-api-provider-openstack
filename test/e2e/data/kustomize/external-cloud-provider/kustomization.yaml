@@ -14,3 +14,7 @@ patches:
     kind: OpenStackCluster
     name: \${CLUSTER_NAME}
   path: patch-allow-all-in-cluster-traffic.yaml
+- target:
+    kind: KubeadmControlPlane
+    name: \${CLUSTER_NAME}-control-plane
+  path: patch-ccm-cloud-config.yaml

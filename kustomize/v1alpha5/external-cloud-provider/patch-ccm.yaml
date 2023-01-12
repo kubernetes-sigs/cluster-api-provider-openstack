@@ -26,7 +26,7 @@ spec:
         kubeletExtraArgs:
           cloud-provider: external
           cloud-config:
-    files:
+    files: []
 ---
 apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
 kind: KubeadmConfigTemplate
@@ -35,7 +35,7 @@ metadata:
 spec:
   template:
     spec:
-      files:
+      files: []
       joinConfiguration:
         nodeRegistration:
           kubeletExtraArgs:

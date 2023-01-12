@@ -135,9 +135,9 @@
 
     # Upload the images so we don't have to upload them from Prow
     # Upload cirros image first in order to avoid reach limit of project
-    # https://docs.openstack.org/glance/latest/admin/quotas.html 
+    # https://docs.openstack.org/glance/latest/admin/quotas.html
     /opt/stack/devstack/tools/upload_image.sh https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/cirros/2022-12-05/cirros-0.6.1-x86_64-disk.img
-    /opt/stack/devstack/tools/upload_image.sh https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/ubuntu/2022-12-05/ubuntu-2004-kube-v1.23.10.qcow2
+    /opt/stack/devstack/tools/upload_image.sh https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/ubuntu/2023-01-14/focal-server-cloudimg-amd64.img
 
     # Add the controller to its own host aggregate and availability zone
     aggregateid=$(openstack aggregate create --zone "${PRIMARY_AZ}" "${PRIMARY_AZ}" -f value -c id)
