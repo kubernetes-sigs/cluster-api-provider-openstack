@@ -88,7 +88,7 @@ func Test_commandsForMachine(t *testing.T) {
 			if err != nil {
 				panic(err)
 			}
-			executeCommands(context.Background(), filepath.Join(workingDir, "..", "..", "..", "_artifacts"), true, "/tmp/", tt.args.machineIP, tt.args.bastionIP, tt.args.commands)
+			executeCommands(context.Background(), filepath.Join(workingDir, "..", "..", "..", "_artifacts"), true, "/tmp/", tt.args.machineIP, tt.args.bastionIP, "ubuntu", tt.args.commands)
 		})
 	}
 }

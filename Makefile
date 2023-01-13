@@ -147,6 +147,8 @@ test: $(SETUP_ENVTEST) ## Run tests
 
 E2E_TEMPLATES_DIR=test/e2e/data/infrastructure-openstack
 E2E_KUSTOMIZE_DIR=test/e2e/data/kustomize
+# This directory holds the templates that do not require ci-artifacts script injection.
+E2E_NO_ARTIFACT_TEMPLATES_DIR=test/e2e/data/infrastructure-openstack-no-artifact
 
 .PHONY: e2e-templates
 e2e-templates: ## Generate cluster templates for e2e tests
@@ -159,12 +161,18 @@ e2e-templates: $(addprefix $(E2E_TEMPLATES_DIR)/, \
 		 cluster-template-multi-az.yaml \
 		 cluster-template-multi-network.yaml \
 		 cluster-template-without-lb.yaml \
-		 cluster-template.yaml)
+		 cluster-template.yaml) \
+		 $(addprefix $(E2E_NO_ARTIFACT_TEMPLATES_DIR)/, \
+		 cluster-template-flatcar.yaml \
+		 cluster-template-external-cloud-provider-flatcar.yaml) \
 
 $(E2E_TEMPLATES_DIR)/cluster-template.yaml: $(E2E_KUSTOMIZE_DIR)/with-tags $(KUSTOMIZE) FORCE
 	$(KUSTOMIZE) build "$<" > "$@"
 
 $(E2E_TEMPLATES_DIR)/cluster-template-%.yaml: $(E2E_KUSTOMIZE_DIR)/% $(KUSTOMIZE) FORCE
+	$(KUSTOMIZE) build "$<" > "$@"
+
+$(E2E_NO_ARTIFACT_TEMPLATES_DIR)/cluster-template-%.yaml: $(E2E_KUSTOMIZE_DIR)/% $(KUSTOMIZE) FORCE
 	$(KUSTOMIZE) build "$<" > "$@"
 
 e2e-prerequisites: $(GINKGO) e2e-templates e2e-image test-e2e-image-prerequisites ## Build all artifacts required by e2e tests
@@ -417,7 +425,9 @@ release-notes: $(RELEASE_NOTES) ## Generate release notes
 templates: ## Generate cluster templates
 templates: templates/cluster-template.yaml \
 	templates/cluster-template-without-lb.yaml \
-	templates/cluster-template-external-cloud-provider.yaml
+	templates/cluster-template-external-cloud-provider.yaml \
+	templates/cluster-template-flatcar.yaml \
+	templates/cluster-template-external-cloud-provider-flatcar.yaml \
 
 templates/cluster-template.yaml: kustomize/v1alpha7/default $(KUSTOMIZE) FORCE
 	$(KUSTOMIZE) build "$<" > "$@"

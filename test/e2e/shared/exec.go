@@ -39,9 +39,19 @@ type command struct {
 	cmd   string
 }
 
+type commandParameter struct {
+	signer      ssh.Signer
+	debug       bool
+	logDir      string
+	bastionIP   string
+	machineIP   string
+	machineUser string
+	cmd         command
+}
+
 // executeCommands opens a terminal connection
 // and executes the given commands, outputting the results to a file for each.
-func executeCommands(ctx context.Context, artifactsFolder string, debug bool, logDir, machineIP, bastionIP string, commands []command) {
+func executeCommands(ctx context.Context, artifactsFolder string, debug bool, logDir, machineIP, bastionIP, machineUser string, commands []command) {
 	privateKey, err := os.ReadFile(filepath.Join(artifactsFolder, "ssh", DefaultSSHKeyPairName))
 	if err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "could not load private key from artifacts folder: %s\n", err)
@@ -54,31 +64,39 @@ func executeCommands(ctx context.Context, artifactsFolder string, debug bool, lo
 	}
 
 	for _, cmd := range commands {
-		if err := executeCommand(ctx, signer, debug, logDir, bastionIP, machineIP, cmd); err != nil {
+		if err := executeCommand(ctx, commandParameter{
+			signer:      signer,
+			debug:       debug,
+			logDir:      logDir,
+			bastionIP:   bastionIP,
+			machineIP:   machineIP,
+			machineUser: machineUser,
+			cmd:         cmd,
+		}); err != nil {
 			_, _ = fmt.Fprintln(GinkgoWriter, err.Error())
 		}
 	}
 }
 
-func executeCommand(ctx context.Context, signer ssh.Signer, debug bool, logDir, bastionIP, machineIP string, cmd command) error {
+func executeCommand(ctx context.Context, p commandParameter) error {
 	cfg := &ssh.ClientConfig{
 		User: "cirros",
 		Auth: []ssh.AuthMethod{
-			ssh.PublicKeys(signer),
+			ssh.PublicKeys(p.signer),
 		},
 		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil },
 		Timeout:         60 * time.Second,
 	}
 	cfg.SetDefaults()
-	Debugf(debug, "dialing from local to bastion host %s", bastionIP)
-	bastionConn, err := ssh.Dial("tcp", fmt.Sprintf("%s:22", bastionIP), cfg)
+	Debugf(p.debug, "dialing from local to bastion host %s", p.bastionIP)
+	bastionConn, err := ssh.Dial("tcp", fmt.Sprintf("%s:22", p.bastionIP), cfg)
 	if err != nil {
-		return fmt.Errorf("couldn't dial from local to bastion host %s: %s", bastionIP, err)
+		return fmt.Errorf("couldn't dial from local to bastion host %s: %s", p.bastionIP, err)
 	}
 	defer bastionConn.Close()
 
 	// Dial a connection to the service host, from the bastion host
-	Debugf(debug, "dialing from bastion host %s to machine %s", bastionIP, machineIP)
+	Debugf(p.debug, "dialing from bastion host %s to machine %s", p.bastionIP, p.machineIP)
 	// we have to timeout this connection
 	// * there is no way to set a timeout in the Dial func
 	// * sometimes the server are deleted when we try this and we would be stuck infinitely
@@ -88,50 +106,50 @@ func executeCommand(ctx context.Context, signer ssh.Signer, debug bool, logDir, 
 		<-timeout.Done()
 		bastionConn.Close()
 	}()
-	conn, err := bastionConn.Dial("tcp", fmt.Sprintf("%s:22", machineIP))
+	conn, err := bastionConn.Dial("tcp", fmt.Sprintf("%s:22", p.machineIP))
 	if err != nil {
-		return fmt.Errorf("couldn't dial from bastion host %s to machine %s: %s", bastionIP, machineIP, err)
+		return fmt.Errorf("couldn't dial from bastion host %s to machine %s: %s", p.bastionIP, p.machineIP, err)
 	}
 	defer conn.Close()
 
 	cfg = &ssh.ClientConfig{
-		User: "ubuntu",
+		User: p.machineUser,
 		Auth: []ssh.AuthMethod{
-			ssh.PublicKeys(signer),
+			ssh.PublicKeys(p.signer),
 		},
 		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil },
 		Timeout:         60 * time.Second,
 	}
 	cfg.SetDefaults()
-	Debugf(debug, "dialing from local to machine %s (via tunnel)", machineIP)
-	clientConn, channels, reqs, err := ssh.NewClientConn(conn, machineIP, cfg)
+	Debugf(p.debug, "dialing from local to machine %s (via tunnel)", p.machineIP)
+	clientConn, channels, reqs, err := ssh.NewClientConn(conn, p.machineIP, cfg)
 	if err != nil {
-		return fmt.Errorf("couldn't dial from local to machine %s: %s", machineIP, err)
+		return fmt.Errorf("couldn't dial from local to machine %s: %s", p.machineIP, err)
 	}
 	defer clientConn.Close()
 
 	sshClient := ssh.NewClient(clientConn, channels, reqs)
 
-	Debugf(debug, "executing cmd %q on machine %s", cmd.cmd, machineIP)
+	Debugf(p.debug, "executing cmd %q on machine %s", p.cmd.cmd, p.machineIP)
 	session, err := sshClient.NewSession()
 	if err != nil {
-		return fmt.Errorf("couldn't open session from local to machine %s to execute cmd %q: %s", cmd.cmd, machineIP, err)
+		return fmt.Errorf("couldn't open session from local to machine %s to execute cmd %q: %s", p.cmd.cmd, p.machineIP, err)
 	}
 	defer session.Close()
 
-	logFile := path.Join(logDir, cmd.title+".log")
+	logFile := path.Join(p.logDir, p.cmd.title+".log")
 	var stdoutBuf bytes.Buffer
 	var stderrBuf bytes.Buffer
 	session.Stdout = &stdoutBuf
 	session.Stderr = &stderrBuf
-	if err := session.Run("sudo " + cmd.cmd + "\n"); err != nil {
-		return fmt.Errorf("unable to send command %q: %s", "sudo "+cmd.cmd, err)
+	if err := session.Run("sudo " + p.cmd.cmd + "\n"); err != nil {
+		return fmt.Errorf("unable to send command %q: %s", "sudo "+p.cmd.cmd, err)
 	}
 	result := strings.TrimSuffix(stdoutBuf.String(), "\n") + "\n" + strings.TrimSuffix(stderrBuf.String(), "\n")
 	if err := os.WriteFile(logFile, []byte(result), os.ModePerm); err != nil {
 		return fmt.Errorf("error writing log file: %s", err)
 	}
-	Debugf(debug, "finished executing cmd %q on machine %s", cmd.cmd, machineIP)
+	Debugf(p.debug, "finished executing cmd %q on machine %s", p.cmd.cmd, p.machineIP)
 
 	return nil
 }

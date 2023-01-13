@@ -3,5 +3,6 @@ resources:
 - ../../../../../kustomize/v1alpha7/default
 
 components:
-- ../common-patches
+- ../common-patches/cni
+- ../common-patches/containerd
 - ../upgrade-patches
