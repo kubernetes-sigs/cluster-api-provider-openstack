@@ -248,6 +248,7 @@ func (s *Service) getOrUpdateAllowedCIDRS(openStackCluster *infrav1.OpenStackClu
 	listener.AllowedCIDRs = capostrings.Unique(listener.AllowedCIDRs)
 
 	if !reflect.DeepEqual(allowedCIDRs, listener.AllowedCIDRs) {
+		s.scope.Logger.Info("CIDRs do not match, start to update listener", "expected CIDRs", allowedCIDRs, "load balancer existing CIDR", listener.AllowedCIDRs)
 		listenerUpdateOpts := listeners.UpdateOpts{
 			AllowedCIDRs: &allowedCIDRs,
 		}
