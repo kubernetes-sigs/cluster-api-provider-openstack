@@ -227,16 +227,26 @@ func (s *Service) getOrUpdateAllowedCIDRS(openStackCluster *infrav1.OpenStackClu
 	if len(openStackCluster.Spec.APIServerLoadBalancer.AllowedCIDRs) > 0 {
 		allowedCIDRs = append(allowedCIDRs, openStackCluster.Spec.APIServerLoadBalancer.AllowedCIDRs...)
 
-		if openStackCluster.Spec.Bastion.Enabled {
-			allowedCIDRs = append(allowedCIDRs, openStackCluster.Status.Bastion.FloatingIP, openStackCluster.Status.Bastion.IP)
+		// In the first reconciliation loop, only the Ready field is set in openStackCluster.Status
+		// All other fields are empty/nil
+		if openStackCluster.Status.Bastion != nil {
+			if openStackCluster.Status.Bastion.FloatingIP != "" {
+				allowedCIDRs = append(allowedCIDRs, openStackCluster.Status.Bastion.FloatingIP)
+			}
+
+			if openStackCluster.Status.Bastion.IP != "" {
+				allowedCIDRs = append(allowedCIDRs, openStackCluster.Status.Bastion.IP)
+			}
 		}
 
-		if openStackCluster.Status.Network.Subnet.CIDR != "" {
-			allowedCIDRs = append(allowedCIDRs, openStackCluster.Status.Network.Subnet.CIDR)
-		}
+		if openStackCluster.Status.Network != nil {
+			if openStackCluster.Status.Network.Subnet.CIDR != "" {
+				allowedCIDRs = append(allowedCIDRs, openStackCluster.Status.Network.Subnet.CIDR)
+			}
 
-		if len(openStackCluster.Status.Network.Router.IPs) > 0 {
-			allowedCIDRs = append(allowedCIDRs, openStackCluster.Status.Network.Router.IPs...)
+			if len(openStackCluster.Status.Network.Router.IPs) > 0 {
+				allowedCIDRs = append(allowedCIDRs, openStackCluster.Status.Network.Router.IPs...)
+			}
 		}
 	}
 
