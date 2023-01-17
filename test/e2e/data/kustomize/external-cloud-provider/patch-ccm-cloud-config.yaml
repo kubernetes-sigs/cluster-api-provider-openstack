@@ -1,0 +1,16 @@
+- op: add
+  path: /spec/kubeadmConfigSpec/files/-
+  value:
+    content: ${OPENSTACK_CLOUD_PROVIDER_CONF_B64}
+    encoding: base64
+    owner: root
+    path: /etc/kubernetes/cloud.conf
+    permissions: "0600"
+- op: add
+  path: /spec/kubeadmConfigSpec/files/-
+  value:
+    content: ${OPENSTACK_CLOUD_CACERT_B64}
+    encoding: base64
+    owner: root
+    path: /etc/certs/cacert
+    permissions: "0600"

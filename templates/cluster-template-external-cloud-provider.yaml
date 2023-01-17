@@ -15,6 +15,7 @@ metadata:
 spec:
   template:
     spec:
+      files: []
       joinConfiguration:
         nodeRegistration:
           kubeletExtraArgs:
@@ -77,6 +78,7 @@ spec:
       controllerManager:
         extraArgs:
           cloud-provider: external
+    files: []
     initConfiguration:
       nodeRegistration:
         kubeletExtraArgs:

@@ -14,3 +14,11 @@ patches:
     kind: OpenStackCluster
     name: \${CLUSTER_NAME}
   path: patch-cluster.yaml
+- target:
+    kind: KubeadmControlPlane
+    name: \${CLUSTER_NAME}-control-plane
+  path: containerd-kcp.yaml
+- target:
+    kind: KubeadmConfigTemplate
+    name: \${CLUSTER_NAME}-md-0
+  path: containerd-kct.yaml

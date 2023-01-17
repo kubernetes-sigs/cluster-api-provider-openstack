@@ -129,7 +129,7 @@ variables:
   OPENSTACK_DNS_NAMESERVERS: "8.8.8.8"
   OPENSTACK_FAILURE_DOMAIN: "testaz1"
   OPENSTACK_FAILURE_DOMAIN_ALT: "testaz2"
-  OPENSTACK_IMAGE_NAME: "ubuntu-2004-kube-v1.23.10"
+  OPENSTACK_IMAGE_NAME: "focal-server-cloudimg-amd64"
   OPENSTACK_NODE_MACHINE_FLAVOR: "m1.small"
   OPENSTACK_SSH_KEY_NAME: "cluster-api-provider-openstack-sigs-k8s-io"
   OPENSTACK_EXTERNAL_NETWORK_ID: ""

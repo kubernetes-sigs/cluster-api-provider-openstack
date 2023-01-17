@@ -5,22 +5,3 @@ metadata:
   name: ${CLUSTER_NAME}
   labels:
     ccm: ${CLUSTER_NAME}-crs-1
----
-apiVersion: controlplane.cluster.x-k8s.io/v1beta1
-kind: KubeadmControlPlane
-metadata:
-  name: ${CLUSTER_NAME}-control-plane
-spec:
-  kubeadmConfigSpec:
-    file:
-    files:
-    - content: ${OPENSTACK_CLOUD_PROVIDER_CONF_B64}
-      encoding: base64
-      owner: root
-      path: /etc/kubernetes/cloud.conf
-      permissions: "0600"
-    - content: ${OPENSTACK_CLOUD_CACERT_B64}
-      encoding: base64
-      owner: root
-      path: /etc/certs/cacert
-      permissions: "0600"
