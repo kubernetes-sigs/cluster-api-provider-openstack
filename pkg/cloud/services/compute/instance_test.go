@@ -29,6 +29,7 @@ import (
 	common "github.com/gophercloud/gophercloud/openstack/common/extensions"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/availabilityzones"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions"
@@ -663,7 +664,11 @@ func TestService_ReconcileInstance(t *testing.T) {
 	// Expected calls when using default image and flavor
 	expectDefaultImageAndFlavor := func(computeRecorder *mock.MockComputeClientMockRecorder, imageRecorder *mock.MockImageClientMockRecorder) {
 		imageRecorder.ListImages(images.ListOpts{Name: imageName}).Return([]images.Image{{ID: imageUUID}}, nil)
-		computeRecorder.GetFlavorIDFromName(flavorName).Return(flavorUUID, nil)
+		f := flavors.Flavor{
+			ID:    flavorUUID,
+			VCPUs: 2,
+		}
+		computeRecorder.GetFlavorFromName(flavorName).Return(&f, nil)
 	}
 
 	// Expected calls and custom match function for creating a server
@@ -1016,7 +1021,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				_volumeClient: mockVolumeClient,
 			}
 			// Call CreateInstance with a reduced retry interval to speed up the test
-			_, err := s.createInstanceImpl(&infrav1.OpenStackMachine{}, getDefaultOpenStackCluster(), tt.getInstanceSpec(), "cluster-name", time.Nanosecond)
+			_, err := s.createInstanceImpl(&infrav1.OpenStackMachine{}, getDefaultOpenStackCluster(), tt.getInstanceSpec(), "cluster-name", false, time.Nanosecond)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Service.CreateInstance() error = %v, wantErr %v", err, tt.wantErr)
 				return
