@@ -119,6 +119,15 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 		fixedIPs = fips
 	}
 
+	var valueSpecs *map[string]string
+	if len(portOpts.ValueSpecs) > 0 {
+		vs := make(map[string]string, len(portOpts.ValueSpecs))
+		for _, valueSpec := range portOpts.ValueSpecs {
+			vs[valueSpec.Key] = valueSpec.Value
+		}
+		valueSpecs = &vs
+	}
+
 	var createOpts ports.CreateOptsBuilder
 	createOpts = ports.CreateOpts{
 		Name:                portName,
@@ -131,6 +140,7 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 		SecurityGroups:      securityGroups,
 		AllowedAddressPairs: addressPairs,
 		FixedIPs:            fixedIPs,
+		ValueSpecs:          valueSpecs,
 	}
 
 	if portOpts.DisablePortSecurity != nil {
