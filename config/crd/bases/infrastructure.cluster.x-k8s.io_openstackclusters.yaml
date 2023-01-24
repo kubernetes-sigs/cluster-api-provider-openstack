@@ -4959,6 +4959,10 @@ spec:
                               type: string
                             name:
                               type: string
+                            tags:
+                              items:
+                                type: string
+                              type: array
                           required:
                           - id
                           - internalIP
@@ -5352,6 +5356,10 @@ spec:
                         type: string
                       name:
                         type: string
+                      tags:
+                        items:
+                          type: string
+                        type: array
                     required:
                     - id
                     - internalIP
@@ -5656,6 +5664,10 @@ spec:
                         type: string
                       name:
                         type: string
+                      tags:
+                        items:
+                          type: string
+                        type: array
                     required:
                     - id
                     - internalIP

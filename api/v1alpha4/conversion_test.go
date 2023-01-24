@@ -346,6 +346,7 @@ func TestFuzzyConversion(t *testing.T) {
 				if v1alpha6Cluster.Status.Network != nil {
 					if v1alpha6Cluster.Status.Network.APIServerLoadBalancer != nil {
 						v1alpha6Cluster.Status.Network.APIServerLoadBalancer.AllowedCIDRs = nil
+						v1alpha6Cluster.Status.Network.APIServerLoadBalancer.Tags = []string{}
 					}
 					if v1alpha6Cluster.Status.Network.Router != nil {
 						v1alpha6Cluster.Status.Network.Router.IPs = []string{}
@@ -355,6 +356,7 @@ func TestFuzzyConversion(t *testing.T) {
 				if v1alpha6Cluster.Status.ExternalNetwork != nil {
 					if v1alpha6Cluster.Status.ExternalNetwork.APIServerLoadBalancer != nil {
 						v1alpha6Cluster.Status.ExternalNetwork.APIServerLoadBalancer.AllowedCIDRs = nil
+						v1alpha6Cluster.Status.ExternalNetwork.APIServerLoadBalancer.Tags = []string{}
 					}
 					if v1alpha6Cluster.Status.ExternalNetwork.Router != nil {
 						v1alpha6Cluster.Status.ExternalNetwork.Router.IPs = []string{}

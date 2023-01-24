@@ -495,6 +495,7 @@ func autoConvert_v1alpha6_LoadBalancer_To_v1alpha3_LoadBalancer(in *v1alpha6.Loa
 	out.IP = in.IP
 	out.InternalIP = in.InternalIP
 	// WARNING: in.AllowedCIDRs requires manual conversion: does not exist in peer-type
+	// WARNING: in.Tags requires manual conversion: does not exist in peer-type
 	return nil
 }
 

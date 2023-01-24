@@ -234,6 +234,8 @@ type LoadBalancer struct {
 	InternalIP string `json:"internalIP"`
 	//+optional
 	AllowedCIDRs []string `json:"allowedCIDRs,omitempty"`
+	//+optional
+	Tags []string `json:"tags,omitempty"`
 }
 
 // SecurityGroup represents the basic information of the associated
