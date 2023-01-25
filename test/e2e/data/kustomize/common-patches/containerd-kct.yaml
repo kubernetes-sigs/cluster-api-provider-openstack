@@ -19,6 +19,18 @@
       fi
       echo "Installing containerd"
       apt-get install -y containerd
+      # TODO(lentzi90): This adds cri-tools from the kubernetes repository, since we need to make sure it is a specific version
+      # When pulled in as a dependency of kubeadm, we just get the latest version.
+      # After upgrading to v1.26 we should be able to drop this.
+      mkdir -p /etc/apt/keyrings
+      curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /etc/apt/keyrings/kubernetes.gpg
+      echo 'deb [signed-by=/etc/apt/keyrings/kubernetes.gpg] https://apt.kubernetes.io/ kubernetes-xenial main' > /etc/apt/sources.list.d/kubernetes.list
+      apt-get update
+      VERSION_WITHOUT_PREFIX="${KUBERNETES_VERSION#v}"
+      # replace . with \.
+      VERSION_REGEX="$${VERSION_WITHOUT_PREFIX//./\\.}"
+      PACKAGE_VERSION="$(apt-cache madison kubelet | grep "$${VERSION_REGEX}-" | head -n1 | cut -d '|' -f 2 | tr -d '[:space:]')"
+      apt-get install -y cri-tools="$${PACKAGE_VERSION}"
     owner: root:root
     path: /usr/local/bin/ci-pre-kubeadm.sh
     permissions: "0750"
