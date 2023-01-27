@@ -17,28 +17,40 @@ spec:
         control-plane: capo-controller-manager
     spec:
       containers:
-      - command:
-        - /manager
-        args:
-        - "--leader-elect"
-        - "--v=2"
-        - "--metrics-bind-addr=127.0.0.1:8080"
-        image: controller:latest
-        imagePullPolicy: Always
-        name: manager
-        ports:
-        - containerPort: 9440
-          name: healthz
-          protocol: TCP
-        readinessProbe:
-          httpGet:
-            path: /readyz
-            port: healthz
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: healthz
+        - command:
+            - /manager
+          args:
+            - "--leader-elect"
+            - "--v=2"
+            - "--metrics-bind-addr=127.0.0.1:8080"
+          image: controller:latest
+          imagePullPolicy: Always
+          name: manager
+          ports:
+            - containerPort: 9440
+              name: healthz
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: healthz
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: healthz
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            runAsUser: 65532
+            runAsGroup: 65532
       terminationGracePeriodSeconds: 10
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       serviceAccountName: manager
       tolerations:
         - effect: NoSchedule
