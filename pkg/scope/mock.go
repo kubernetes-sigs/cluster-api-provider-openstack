@@ -37,12 +37,12 @@ type MockScopeFactory struct {
 	ImageClient   *mock.MockImageClient
 	LbClient      *mock.MockLbClient
 
+	logger                 logr.Logger
+	projectID              string
 	clientScopeCreateError error
-
-	scope
 }
 
-func NewMockScopeFactory(mockCtrl *gomock.Controller) *MockScopeFactory {
+func NewMockScopeFactory(mockCtrl *gomock.Controller, projectID string, logger logr.Logger) *MockScopeFactory {
 	computeClient := mock.NewMockComputeClient(mockCtrl)
 	volumeClient := mock.NewMockVolumeClient(mockCtrl)
 	imageClient := mock.NewMockImageClient(mockCtrl)
@@ -55,10 +55,8 @@ func NewMockScopeFactory(mockCtrl *gomock.Controller) *MockScopeFactory {
 		ImageClient:   imageClient,
 		NetworkClient: networkClient,
 		LbClient:      lbClient,
-		scope: scope{
-			projectID: "",
-			logger:    logr.Discard(),
-		},
+		projectID:     projectID,
+		logger:        logger,
 	}
 }
 
@@ -98,4 +96,12 @@ func (f *MockScopeFactory) NewNetworkClient() (clients.NetworkClient, error) {
 
 func (f *MockScopeFactory) NewLbClient() (clients.LbClient, error) {
 	return f.LbClient, nil
+}
+
+func (f *MockScopeFactory) Logger() logr.Logger {
+	return f.logger
+}
+
+func (f *MockScopeFactory) ProjectID() string {
+	return f.projectID
 }

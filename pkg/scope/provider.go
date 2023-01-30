@@ -36,6 +36,7 @@ import (
 	"sigs.k8s.io/yaml"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 )
 
 const (
@@ -43,12 +44,9 @@ const (
 	caSecretKey     = "cacert"
 )
 
-// ScopeFactory is the default scope factory. It generates service clients which make OpenStack API calls against a running cloud.
-var ScopeFactory Factory = scopeFactory{}
+type providerScopeFactory struct{}
 
-type scopeFactory struct{}
-
-func (scopeFactory) NewClientScopeFromMachine(ctx context.Context, ctrlClient client.Client, openStackMachine *infrav1.OpenStackMachine, defaultCACert []byte, logger logr.Logger) (Scope, error) {
+func (providerScopeFactory) NewClientScopeFromMachine(ctx context.Context, ctrlClient client.Client, openStackMachine *infrav1.OpenStackMachine, defaultCACert []byte, logger logr.Logger) (Scope, error) {
 	var cloud clientconfig.Cloud
 	var caCert []byte
 
@@ -64,10 +62,10 @@ func (scopeFactory) NewClientScopeFromMachine(ctx context.Context, ctrlClient cl
 		caCert = defaultCACert
 	}
 
-	return NewScope(cloud, caCert, logger)
+	return NewProviderScope(cloud, caCert, logger)
 }
 
-func (scopeFactory) NewClientScopeFromCluster(ctx context.Context, ctrlClient client.Client, openStackCluster *infrav1.OpenStackCluster, defaultCACert []byte, logger logr.Logger) (Scope, error) {
+func (providerScopeFactory) NewClientScopeFromCluster(ctx context.Context, ctrlClient client.Client, openStackCluster *infrav1.OpenStackCluster, defaultCACert []byte, logger logr.Logger) (Scope, error) {
 	var cloud clientconfig.Cloud
 	var caCert []byte
 
@@ -83,7 +81,69 @@ func (scopeFactory) NewClientScopeFromCluster(ctx context.Context, ctrlClient cl
 		caCert = defaultCACert
 	}
 
-	return NewScope(cloud, caCert, logger)
+	return NewProviderScope(cloud, caCert, logger)
+}
+
+type providerScope struct {
+	providerClient     *gophercloud.ProviderClient
+	providerClientOpts *clientconfig.ClientOpts
+	projectID          string
+	logger             logr.Logger
+}
+
+// NewTestScope returns a Scope with no initialization. It should only be used by tests.
+func NewTestScope(projectID string, logger logr.Logger) Scope {
+	providerClient := new(gophercloud.ProviderClient)
+	clientOpts := new(clientconfig.ClientOpts)
+
+	return &providerScope{
+		providerClient:     providerClient,
+		providerClientOpts: clientOpts,
+		projectID:          projectID,
+		logger:             logger,
+	}
+}
+
+func NewProviderScope(cloud clientconfig.Cloud, caCert []byte, logger logr.Logger) (Scope, error) {
+	providerClient, clientOpts, projectID, err := NewProviderClient(cloud, caCert, logger)
+	if err != nil {
+		return nil, err
+	}
+
+	return &providerScope{
+		providerClient:     providerClient,
+		providerClientOpts: clientOpts,
+		projectID:          projectID,
+		logger:             logger,
+	}, nil
+}
+
+func (s *providerScope) Logger() logr.Logger {
+	return s.logger
+}
+
+func (s *providerScope) ProjectID() string {
+	return s.projectID
+}
+
+func (s *providerScope) NewComputeClient() (clients.ComputeClient, error) {
+	return clients.NewComputeClient(s.providerClient, s.providerClientOpts)
+}
+
+func (s *providerScope) NewNetworkClient() (clients.NetworkClient, error) {
+	return clients.NewNetworkClient(s.providerClient, s.providerClientOpts)
+}
+
+func (s *providerScope) NewVolumeClient() (clients.VolumeClient, error) {
+	return clients.NewVolumeClient(s.providerClient, s.providerClientOpts)
+}
+
+func (s *providerScope) NewImageClient() (clients.ImageClient, error) {
+	return clients.NewImageClient(s.providerClient, s.providerClientOpts)
+}
+
+func (s *providerScope) NewLbClient() (clients.LbClient, error) {
+	return clients.NewLbClient(s.providerClient, s.providerClientOpts)
 }
 
 func NewProviderClient(cloud clientconfig.Cloud, caCert []byte, logger logr.Logger) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, string, error) {

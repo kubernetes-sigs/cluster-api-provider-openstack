@@ -98,7 +98,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		framework.CreateNamespace(ctx, input)
 
 		mockCtrl = gomock.NewController(GinkgoT())
-		mockScopeFactory = scope.NewMockScopeFactory(mockCtrl)
+		mockScopeFactory = scope.NewMockScopeFactory(mockCtrl, "", logr.Discard())
 		reconciler = func() *OpenStackClusterReconciler {
 			return &OpenStackClusterReconciler{
 				Client:       k8sClient,
