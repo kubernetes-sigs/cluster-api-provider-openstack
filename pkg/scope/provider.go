@@ -86,7 +86,7 @@ func (scopeFactory) NewClientScopeFromCluster(ctx context.Context, ctrlClient cl
 	return NewScope(cloud, caCert, logger)
 }
 
-func NewProviderClient(cloud clientconfig.Cloud, caCert []byte) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, string, error) {
+func NewProviderClient(cloud clientconfig.Cloud, caCert []byte, logger logr.Logger) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, string, error) {
 	clientOpts := new(clientconfig.ClientOpts)
 	if cloud.AuthInfo != nil {
 		clientOpts.AuthInfo = cloud.AuthInfo
@@ -120,7 +120,7 @@ func NewProviderClient(cloud clientconfig.Cloud, caCert []byte) (*gophercloud.Pr
 	if klog.V(6).Enabled() {
 		provider.HTTPClient.Transport = &osclient.RoundTripper{
 			Rt:     provider.HTTPClient.Transport,
-			Logger: &defaultLogger{},
+			Logger: &gophercloudLogger{logger},
 		}
 	}
 	err = openstack.Authenticate(provider, *opts)
@@ -136,11 +136,13 @@ func NewProviderClient(cloud clientconfig.Cloud, caCert []byte) (*gophercloud.Pr
 	return provider, clientOpts, projectID, nil
 }
 
-type defaultLogger struct{}
+type gophercloudLogger struct {
+	logger logr.Logger
+}
 
 // Printf is a default Printf method.
-func (defaultLogger) Printf(format string, args ...interface{}) {
-	klog.V(6).Infof(format, args...)
+func (g gophercloudLogger) Printf(format string, args ...interface{}) {
+	g.logger.Info(fmt.Sprintf(format, args...))
 }
 
 // getCloudFromSecret extract a Cloud from the given namespace:secretName.

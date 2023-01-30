@@ -494,7 +494,7 @@ func getProviderClient(e2eCtx *E2EContext, openstackCloud string) (*gophercloud.
 	clouds := getParsedOpenStackCloudYAML(openStackCloudYAMLFile)
 	cloud := clouds.Clouds[openstackCloud]
 
-	providerClient, clientOpts, projectID, err := scope.NewProviderClient(cloud, nil)
+	providerClient, clientOpts, projectID, err := scope.NewProviderClient(cloud, nil, logr.Discard())
 	if err != nil {
 		return nil, nil, nil, err
 	}

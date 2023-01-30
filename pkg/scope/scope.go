@@ -66,7 +66,7 @@ func NewTestScope(projectID string, logger logr.Logger) Scope {
 }
 
 func NewScope(cloud clientconfig.Cloud, caCert []byte, logger logr.Logger) (Scope, error) {
-	providerClient, clientOpts, projectID, err := NewProviderClient(cloud, caCert)
+	providerClient, clientOpts, projectID, err := NewProviderClient(cloud, caCert, logger)
 	if err != nil {
 		return nil, err
 	}
