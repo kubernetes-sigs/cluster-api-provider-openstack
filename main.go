@@ -69,6 +69,7 @@ var (
 	webhookCertDir              string
 	healthAddr                  string
 	lbProvider                  string
+	caCertsPath                 string
 	logOptions                  = logs.NewOptions()
 )
 
@@ -133,6 +134,8 @@ func InitFlags(fs *pflag.FlagSet) {
 
 	fs.StringVar(&lbProvider, "lb-provider", "amphora",
 		"The name of the load balancer provider (amphora or ovn) to use (defaults to amphora).")
+
+	fs.StringVar(&caCertsPath, "ca-certs", "", "The path to a PEM-encoded CA Certificate file to supply as default for each request.")
 }
 
 func main() {
@@ -159,6 +162,15 @@ func main() {
 	cfg, err := config.GetConfigWithContext(os.Getenv("KUBECONTEXT"))
 	if err != nil {
 		setupLog.Error(err, "unable to get kubeconfig")
+	}
+
+	var caCerts []byte
+	if caCertsPath != "" {
+		caCerts, err = os.ReadFile(caCertsPath)
+		if err != nil {
+			setupLog.Error(err, "unable to read provided ca certificates file")
+			os.Exit(1)
+		}
 	}
 
 	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
@@ -191,7 +203,7 @@ func main() {
 	record.InitFromRecorder(mgr.GetEventRecorderFor("openstack-controller"))
 
 	setupChecks(mgr)
-	setupReconcilers(ctx, mgr)
+	setupReconcilers(ctx, mgr, caCerts)
 	setupWebhooks(mgr)
 
 	// +kubebuilder:scaffold:builder
@@ -214,11 +226,12 @@ func setupChecks(mgr ctrl.Manager) {
 	}
 }
 
-func setupReconcilers(ctx context.Context, mgr ctrl.Manager) {
+func setupReconcilers(ctx context.Context, mgr ctrl.Manager, caCerts []byte) {
 	if err := (&controllers.OpenStackClusterReconciler{
 		Client:           mgr.GetClient(),
 		Recorder:         mgr.GetEventRecorderFor("openstackcluster-controller"),
 		WatchFilterValue: watchFilterValue,
+		CaCertificates:   caCerts,
 	}).SetupWithManager(ctx, mgr, concurrency(openStackClusterConcurrency)); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "OpenStackCluster")
 		os.Exit(1)
@@ -227,6 +240,7 @@ func setupReconcilers(ctx context.Context, mgr ctrl.Manager) {
 		Client:           mgr.GetClient(),
 		Recorder:         mgr.GetEventRecorderFor("openstackmachine-controller"),
 		WatchFilterValue: watchFilterValue,
+		CaCertificates:   caCerts,
 	}).SetupWithManager(ctx, mgr, concurrency(openStackMachineConcurrency)); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "OpenStackMachine")
 		os.Exit(1)
