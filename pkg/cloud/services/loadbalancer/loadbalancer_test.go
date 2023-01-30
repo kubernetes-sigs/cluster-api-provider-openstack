@@ -31,7 +31,7 @@ import (
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
 func Test_ReconcileLoadBalancer(t *testing.T) {
@@ -53,25 +53,14 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 			},
 		},
 	}
-	type serviceFields struct {
-		projectID          string
-		networkingClient   *mock.MockNetworkClient
-		loadbalancerClient *mock.MockLbClient
-	}
 	lbtests := []struct {
 		name               string
-		fields             serviceFields
-		prepareServiceMock func(sf *serviceFields)
 		expectNetwork      func(m *mock.MockNetworkClientMockRecorder)
 		expectLoadBalancer func(m *mock.MockLbClientMockRecorder)
 		wantError          error
 	}{
 		{
 			name: "reconcile loadbalancer in non active state should wait for active state",
-			prepareServiceMock: func(sf *serviceFields) {
-				sf.networkingClient = mock.NewMockNetworkClient(mockCtrl)
-				sf.loadbalancerClient = mock.NewMockLbClient(mockCtrl)
-			},
 			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
 				// add network api call results here
 			},
@@ -135,13 +124,15 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 	}
 	for _, tt := range lbtests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.prepareServiceMock(&tt.fields)
-			networkingService := networking.NewTestService(tt.fields.projectID, tt.fields.networkingClient, logr.Discard())
-			lbs := NewLoadBalancerTestService(tt.fields.projectID, tt.fields.loadbalancerClient, networkingService, logr.Discard())
 			g := NewWithT(t)
-			tt.expectNetwork(tt.fields.networkingClient.EXPECT())
-			tt.expectLoadBalancer(tt.fields.loadbalancerClient.EXPECT())
-			err := lbs.ReconcileLoadBalancer(openStackCluster, "AAAAA", 0)
+
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "", logr.Discard())
+			lbs, err := NewService(mockScopeFactory)
+			g.Expect(err).NotTo(HaveOccurred())
+
+			tt.expectNetwork(mockScopeFactory.NetworkClient.EXPECT())
+			tt.expectLoadBalancer(mockScopeFactory.LbClient.EXPECT())
+			err = lbs.ReconcileLoadBalancer(openStackCluster, "AAAAA", 0)
 			if tt.wantError != nil {
 				g.Expect(err).To(MatchError(tt.wantError))
 			} else {

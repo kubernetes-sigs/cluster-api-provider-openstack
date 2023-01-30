@@ -47,7 +47,6 @@ import (
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
@@ -390,14 +389,13 @@ func TestService_getServerNetworks(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockCtrl := gomock.NewController(t)
-			mockNetworkClient := mock.NewMockNetworkClient(mockCtrl)
-			tt.expect(mockNetworkClient.EXPECT())
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "", logr.Discard())
 
-			networkingService := networking.NewTestService(
-				"", mockNetworkClient, logr.Discard(),
-			)
-			s := &Service{
-				_networkingService: networkingService,
+			tt.expect(mockScopeFactory.NetworkClient.EXPECT())
+
+			s, err := NewService(mockScopeFactory)
+			if err != nil {
+				t.Fatalf("failed to create service: %v", err)
 			}
 
 			got, err := s.getServerNetworks(tt.networkParams)
@@ -492,14 +490,13 @@ func TestService_getImageID(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
 			mockCtrl := gomock.NewController(t)
-			mockImageClient := mock.NewMockImageClient(mockCtrl)
-			tt.expect(mockImageClient.EXPECT())
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "", logr.Discard())
 
-			s := Service{
-				scope:              scope.NewTestScope("", logr.Discard()),
-				_imageClient:       mockImageClient,
-				_networkingService: &networking.Service{},
+			s, err := NewService(mockScopeFactory)
+			if err != nil {
+				t.Fatalf("Failed to create service: %v", err)
 			}
+			tt.expect(mockScopeFactory.ImageClient.EXPECT())
 
 			got, err := s.getImageID(tt.imageUUID, tt.imageName)
 			if (err != nil) != tt.wantErr {
@@ -993,29 +990,22 @@ func TestService_ReconcileInstance(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockCtrl := gomock.NewController(t)
-			mockComputeClient := mock.NewMockComputeClient(mockCtrl)
-			mockImageClient := mock.NewMockImageClient(mockCtrl)
-			mockNetworkClient := mock.NewMockNetworkClient(mockCtrl)
-			mockVolumeClient := mock.NewMockVolumeClient(mockCtrl)
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "", logr.Discard())
 
-			computeRecorder := mockComputeClient.EXPECT()
-			imageRecorder := mockImageClient.EXPECT()
-			networkRecorder := mockNetworkClient.EXPECT()
-			volumeRecorder := mockVolumeClient.EXPECT()
+			computeRecorder := mockScopeFactory.ComputeClient.EXPECT()
+			imageRecorder := mockScopeFactory.ImageClient.EXPECT()
+			networkRecorder := mockScopeFactory.NetworkClient.EXPECT()
+			volumeRecorder := mockScopeFactory.VolumeClient.EXPECT()
 
 			tt.expect(&recorders{computeRecorder, imageRecorder, networkRecorder, volumeRecorder})
 
-			s := Service{
-				scope:          scope.NewTestScope("", logr.Discard()),
-				_computeClient: mockComputeClient,
-				_imageClient:   mockImageClient,
-				_networkingService: networking.NewTestService(
-					"", mockNetworkClient, logr.Discard(),
-				),
-				_volumeClient: mockVolumeClient,
+			s, err := NewService(mockScopeFactory)
+			if err != nil {
+				t.Fatalf("Failed to create service: %v", err)
 			}
+
 			// Call CreateInstance with a reduced retry interval to speed up the test
-			_, err := s.createInstanceImpl(&infrav1.OpenStackMachine{}, getDefaultOpenStackCluster(), tt.getInstanceSpec(), "cluster-name", false, time.Nanosecond)
+			_, err = s.createInstanceImpl(&infrav1.OpenStackMachine{}, getDefaultOpenStackCluster(), tt.getInstanceSpec(), "cluster-name", false, time.Nanosecond)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Service.CreateInstance() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1108,23 +1098,17 @@ func TestService_DeleteInstance(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockCtrl := gomock.NewController(t)
-			mockComputeClient := mock.NewMockComputeClient(mockCtrl)
-			mockNetworkClient := mock.NewMockNetworkClient(mockCtrl)
-			mockVolumeClient := mock.NewMockVolumeClient(mockCtrl)
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "", logr.Discard())
 
-			computeRecorder := mockComputeClient.EXPECT()
-			networkRecorder := mockNetworkClient.EXPECT()
-			volumeRecorder := mockVolumeClient.EXPECT()
+			computeRecorder := mockScopeFactory.ComputeClient.EXPECT()
+			networkRecorder := mockScopeFactory.NetworkClient.EXPECT()
+			volumeRecorder := mockScopeFactory.VolumeClient.EXPECT()
 
 			tt.expect(&recorders{computeRecorder, networkRecorder, volumeRecorder})
 
-			s := Service{
-				scope:          scope.NewTestScope("", logr.Discard()),
-				_computeClient: mockComputeClient,
-				_networkingService: networking.NewTestService(
-					"", mockNetworkClient, logr.Discard(),
-				),
-				_volumeClient: mockVolumeClient,
+			s, err := NewService(mockScopeFactory)
+			if err != nil {
+				t.Fatalf("Failed to create service: %v", err)
 			}
 			if err := s.DeleteInstance(tt.eventObject, tt.instanceStatus(), openStackMachineName, tt.rootVolume); (err != nil) != tt.wantErr {
 				t.Errorf("Service.DeleteInstance() error = %v, wantErr %v", err, tt.wantErr)

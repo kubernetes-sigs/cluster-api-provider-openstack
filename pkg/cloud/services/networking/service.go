@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/go-logr/logr"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"k8s.io/apimachinery/pkg/runtime"
 
@@ -53,14 +52,6 @@ func NewService(scope scope.Scope) (*Service, error) {
 		scope:  scope,
 		client: networkClient,
 	}, nil
-}
-
-// NewTestService returns a Service with no initialisation. It should only be used by tests.
-func NewTestService(projectID string, client clients.NetworkClient, logger logr.Logger) *Service {
-	return &Service{
-		scope:  scope.NewTestScope(projectID, logger),
-		client: client,
-	}
 }
 
 // replaceAllAttributesTags replaces all tags on a neworking resource.

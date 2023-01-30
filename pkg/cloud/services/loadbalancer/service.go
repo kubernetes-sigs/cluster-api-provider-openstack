@@ -19,8 +19,6 @@ package loadbalancer
 import (
 	"fmt"
 
-	"github.com/go-logr/logr"
-
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
@@ -50,14 +48,4 @@ func NewService(scope scope.Scope) (*Service, error) {
 		loadbalancerClient: loadbalancerClient,
 		networkingService:  networkingService,
 	}, nil
-}
-
-// NewLoadBalancerTestService returns a Service with no initialization. It should only be used by tests.
-// It helps to mock the load balancer service in other packages.
-func NewLoadBalancerTestService(projectID string, lbClient clients.LbClient, client *networking.Service, logger logr.Logger) *Service {
-	return &Service{
-		scope:              scope.NewTestScope(projectID, logger),
-		loadbalancerClient: lbClient,
-		networkingService:  client,
-	}
 }

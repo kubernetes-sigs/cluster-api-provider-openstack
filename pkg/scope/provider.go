@@ -91,19 +91,6 @@ type providerScope struct {
 	logger             logr.Logger
 }
 
-// NewTestScope returns a Scope with no initialization. It should only be used by tests.
-func NewTestScope(projectID string, logger logr.Logger) Scope {
-	providerClient := new(gophercloud.ProviderClient)
-	clientOpts := new(clientconfig.ClientOpts)
-
-	return &providerScope{
-		providerClient:     providerClient,
-		providerClientOpts: clientOpts,
-		projectID:          projectID,
-		logger:             logger,
-	}
-}
-
 func NewProviderScope(cloud clientconfig.Cloud, caCert []byte, logger logr.Logger) (Scope, error) {
 	providerClient, clientOpts, projectID, err := NewProviderClient(cloud, caCert, logger)
 	if err != nil {
