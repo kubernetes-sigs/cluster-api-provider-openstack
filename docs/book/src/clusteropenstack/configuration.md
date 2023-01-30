@@ -412,8 +412,10 @@ metadata:
   name: <cluster-name>-controlplane
   namespace: <cluster-name>
 spec:
-  tags:
-  - machine-tag
+  template:
+    spec:
+      tags:
+      - machine-tag
 ```
 
 ## Metadata
@@ -427,9 +429,11 @@ metadata:
   name: <cluster-name>-controlplane
   namespace: <cluster-name>
 spec:
-  serverMetadata:
-    name: bob
-    nickname: bobbert
+  template:
+    spec:
+      serverMetadata:
+        name: bob
+        nickname: bobbert
 ```
 
 ## Boot From Volume
