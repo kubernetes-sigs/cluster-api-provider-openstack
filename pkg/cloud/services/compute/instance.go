@@ -26,6 +26,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/bootfromvolume"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/schedulerhints"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
@@ -126,11 +127,23 @@ func (s *Service) constructNetworks(openStackCluster *infrav1.OpenStackCluster, 
 	return nets, nil
 }
 
-func (s *Service) CreateInstance(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec, clusterName string) (*InstanceStatus, error) {
-	return s.createInstanceImpl(eventObject, openStackCluster, instanceSpec, clusterName, retryIntervalInstanceStatus)
+func (s *Service) CreateInstance(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec, clusterName string, isBastion bool) (*InstanceStatus, error) {
+	return s.createInstanceImpl(eventObject, openStackCluster, instanceSpec, clusterName, isBastion, retryIntervalInstanceStatus)
 }
 
-func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec, clusterName string, retryInterval time.Duration) (*InstanceStatus, error) {
+func (s *Service) getAndValidateFlavor(flavorName string, isBastion bool) (*flavors.Flavor, error) {
+	f, err := s.getComputeClient().GetFlavorFromName(flavorName)
+	if err != nil {
+		return nil, fmt.Errorf("error getting flavor from flavor name %s: %v", flavorName, err)
+	}
+	if !isBastion && f.VCPUs <= 1 {
+		return nil, fmt.Errorf("kubeadm requires a minimum of 2 vCPUs, pick a flavor with at least 2 vCPUs")
+	}
+
+	return f, nil
+}
+
+func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec, clusterName string, isBastion bool, retryInterval time.Duration) (*InstanceStatus, error) {
 	var server *clients.ServerExt
 	portList := []servers.Network{}
 
@@ -139,9 +152,9 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 		return nil, fmt.Errorf("error getting image ID: %v", err)
 	}
 
-	flavorID, err := s.getComputeClient().GetFlavorIDFromName(instanceSpec.Flavor)
+	flavor, err := s.getAndValidateFlavor(instanceSpec.Flavor, isBastion)
 	if err != nil {
-		return nil, fmt.Errorf("error getting flavor id from flavor name %s: %v", instanceSpec.Flavor, err)
+		return nil, err
 	}
 
 	// Ensure we delete the ports we created if we haven't created the server.
@@ -242,7 +255,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 	var serverCreateOpts servers.CreateOptsBuilder = servers.CreateOpts{
 		Name:             instanceSpec.Name,
 		ImageRef:         serverImageRef,
-		FlavorRef:        flavorID,
+		FlavorRef:        flavor.ID,
 		AvailabilityZone: instanceSpec.FailureDomain,
 		Networks:         portList,
 		UserData:         []byte(instanceSpec.UserData),

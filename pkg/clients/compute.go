@@ -23,8 +23,9 @@ import (
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/availabilityzones"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
-	"github.com/gophercloud/utils/openstack/compute/v2/flavors"
+	uflavors "github.com/gophercloud/utils/openstack/compute/v2/flavors"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
@@ -50,7 +51,7 @@ type ServerExt struct {
 type ComputeClient interface {
 	ListAvailabilityZones() ([]availabilityzones.AvailabilityZone, error)
 
-	GetFlavorIDFromName(flavor string) (string, error)
+	GetFlavorFromName(flavor string) (*flavors.Flavor, error)
 	CreateServer(createOpts servers.CreateOptsBuilder) (*ServerExt, error)
 	DeleteServer(serverID string) error
 	GetServer(serverID string) (*ServerExt, error)
@@ -84,10 +85,14 @@ func (c computeClient) ListAvailabilityZones() ([]availabilityzones.Availability
 	return availabilityzones.ExtractAvailabilityZones(allPages)
 }
 
-func (c computeClient) GetFlavorIDFromName(flavor string) (string, error) {
+func (c computeClient) GetFlavorFromName(flavor string) (*flavors.Flavor, error) {
 	mc := metrics.NewMetricPrometheusContext("flavor", "get")
-	flavorID, err := flavors.IDFromName(c.client, flavor)
-	return flavorID, mc.ObserveRequest(err)
+	flavorID, err := uflavors.IDFromName(c.client, flavor)
+	if mc.ObserveRequest(err) != nil {
+		return nil, err
+	}
+	f, err := flavors.Get(c.client, flavorID).Extract()
+	return f, mc.ObserveRequest(err)
 }
 
 func (c computeClient) CreateServer(createOpts servers.CreateOptsBuilder) (*ServerExt, error) {
@@ -153,8 +158,8 @@ func (e computeErrorClient) ListAvailabilityZones() ([]availabilityzones.Availab
 	return nil, e.error
 }
 
-func (e computeErrorClient) GetFlavorIDFromName(flavor string) (string, error) {
-	return "", e.error
+func (e computeErrorClient) GetFlavorFromName(flavor string) (*flavors.Flavor, error) {
+	return nil, e.error
 }
 
 func (e computeErrorClient) CreateServer(createOpts servers.CreateOptsBuilder) (*ServerExt, error) {

@@ -26,6 +26,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	attachinterfaces "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	availabilityzones "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/availabilityzones"
+	flavors "github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
 	servers "github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	clients "sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 )
@@ -96,19 +97,19 @@ func (mr *MockComputeClientMockRecorder) DeleteServer(arg0 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteServer", reflect.TypeOf((*MockComputeClient)(nil).DeleteServer), arg0)
 }
 
-// GetFlavorIDFromName mocks base method.
-func (m *MockComputeClient) GetFlavorIDFromName(arg0 string) (string, error) {
+// GetFlavorFromName mocks base method.
+func (m *MockComputeClient) GetFlavorFromName(arg0 string) (*flavors.Flavor, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFlavorIDFromName", arg0)
-	ret0, _ := ret[0].(string)
+	ret := m.ctrl.Call(m, "GetFlavorFromName", arg0)
+	ret0, _ := ret[0].(*flavors.Flavor)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetFlavorIDFromName indicates an expected call of GetFlavorIDFromName.
-func (mr *MockComputeClientMockRecorder) GetFlavorIDFromName(arg0 interface{}) *gomock.Call {
+// GetFlavorFromName indicates an expected call of GetFlavorFromName.
+func (mr *MockComputeClientMockRecorder) GetFlavorFromName(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFlavorIDFromName", reflect.TypeOf((*MockComputeClient)(nil).GetFlavorIDFromName), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFlavorFromName", reflect.TypeOf((*MockComputeClient)(nil).GetFlavorFromName), arg0)
 }
 
 // GetServer mocks base method.

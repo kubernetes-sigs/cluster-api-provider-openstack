@@ -445,7 +445,7 @@ func (r *OpenStackMachineReconciler) getOrCreate(logger logr.Logger, cluster *cl
 	if instanceStatus == nil {
 		instanceSpec := machineToInstanceSpec(openStackCluster, machine, openStackMachine, userData)
 		logger.Info("Machine not exist, Creating Machine", "Machine", openStackMachine.Name)
-		instanceStatus, err = computeService.CreateInstance(openStackMachine, openStackCluster, instanceSpec, cluster.Name)
+		instanceStatus, err = computeService.CreateInstance(openStackMachine, openStackCluster, instanceSpec, cluster.Name, false)
 		if err != nil {
 			conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceCreateFailedReason, clusterv1.ConditionSeverityError, err.Error())
 			return nil, fmt.Errorf("create OpenStack instance: %w", err)
