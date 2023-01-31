@@ -31,9 +31,9 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
+	"github.com/gophercloud/utils/openstack/clientconfig"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
 type NetworkClient interface {
@@ -94,9 +94,9 @@ type networkClient struct {
 }
 
 // NewNetworkClient returns an instance of the networking service.
-func NewNetworkClient(scope *scope.Scope) (NetworkClient, error) {
-	serviceClient, err := openstack.NewNetworkV2(scope.ProviderClient, gophercloud.EndpointOpts{
-		Region: scope.ProviderClientOpts.RegionName,
+func NewNetworkClient(providerClient *gophercloud.ProviderClient, providerClientOpts *clientconfig.ClientOpts) (NetworkClient, error) {
+	serviceClient, err := openstack.NewNetworkV2(providerClient, gophercloud.EndpointOpts{
+		Region: providerClientOpts.RegionName,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create networking service providerClient: %v", err)

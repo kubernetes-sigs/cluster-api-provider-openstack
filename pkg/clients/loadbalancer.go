@@ -27,9 +27,9 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/monitors"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/pools"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/providers"
+	"github.com/gophercloud/utils/openstack/clientconfig"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 )
 
@@ -62,9 +62,9 @@ type lbClient struct {
 }
 
 // NewLbClient returns a new loadbalancer client.
-func NewLbClient(scope *scope.Scope) (LbClient, error) {
-	loadbalancerClient, err := openstack.NewLoadBalancerV2(scope.ProviderClient, gophercloud.EndpointOpts{
-		Region: scope.ProviderClientOpts.RegionName,
+func NewLbClient(providerClient *gophercloud.ProviderClient, providerClientOpts *clientconfig.ClientOpts) (LbClient, error) {
+	loadbalancerClient, err := openstack.NewLoadBalancerV2(providerClient, gophercloud.EndpointOpts{
+		Region: providerClientOpts.RegionName,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create load balancer service client: %v", err)

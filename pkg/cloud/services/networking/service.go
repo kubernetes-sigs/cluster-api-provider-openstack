@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/go-logr/logr"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"k8s.io/apimachinery/pkg/runtime"
 
@@ -38,19 +37,15 @@ const (
 // Service interfaces with the OpenStack Networking API.
 // It will create a network related infrastructure for the cluster, like network, subnet, router, security groups.
 type Service struct {
-	scope  *scope.Scope
+	scope  scope.Scope
 	client clients.NetworkClient
 }
 
 // NewService returns an instance of the networking service.
-func NewService(scope *scope.Scope) (*Service, error) {
-	networkClient, err := clients.NewNetworkClient(scope)
+func NewService(scope scope.Scope) (*Service, error) {
+	networkClient, err := scope.NewNetworkClient()
 	if err != nil {
 		return nil, err
-	}
-
-	if scope.ProviderClientOpts.AuthInfo == nil {
-		return nil, fmt.Errorf("failed to get project id: authInfo must be set")
 	}
 
 	return &Service{
@@ -59,22 +54,11 @@ func NewService(scope *scope.Scope) (*Service, error) {
 	}, nil
 }
 
-// NewTestService returns a Service with no initialisation. It should only be used by tests.
-func NewTestService(projectID string, client clients.NetworkClient, logger logr.Logger) *Service {
-	return &Service{
-		scope: &scope.Scope{
-			ProjectID: projectID,
-			Logger:    logger,
-		},
-		client: client,
-	}
-}
-
 // replaceAllAttributesTags replaces all tags on a neworking resource.
 // the value of resourceType must match one of the allowed constants: trunkResource or portResource.
 func (s *Service) replaceAllAttributesTags(eventObject runtime.Object, resourceType string, resourceID string, tags []string) error {
 	if len(tags) == 0 {
-		s.scope.Logger.Info("no tags provided to ReplaceAllAttributesTags", "resourceType", resourceType, "resourceID", resourceID)
+		s.scope.Logger().Info("no tags provided to ReplaceAllAttributesTags", "resourceType", resourceType, "resourceID", resourceID)
 		return nil
 	}
 	if resourceType != trunkResource && resourceType != portResource {

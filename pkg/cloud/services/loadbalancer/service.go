@@ -19,8 +19,6 @@ package loadbalancer
 import (
 	"fmt"
 
-	"github.com/go-logr/logr"
-
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
@@ -28,15 +26,14 @@ import (
 
 // Service interfaces with the OpenStack Neutron LBaaS v2 API.
 type Service struct {
-	projectID          string
-	scope              *scope.Scope
+	scope              scope.Scope
 	loadbalancerClient clients.LbClient
 	networkingService  *networking.Service
 }
 
 // NewService returns an instance of the loadbalancer service.
-func NewService(scope *scope.Scope) (*Service, error) {
-	loadbalancerClient, err := clients.NewLbClient(scope)
+func NewService(scope scope.Scope) (*Service, error) {
+	loadbalancerClient, err := scope.NewLbClient()
 	if err != nil {
 		return nil, err
 	}
@@ -51,17 +48,4 @@ func NewService(scope *scope.Scope) (*Service, error) {
 		loadbalancerClient: loadbalancerClient,
 		networkingService:  networkingService,
 	}, nil
-}
-
-// NewLoadBalancerTestService returns a Service with no initialization. It should only be used by tests.
-// It helps to mock the load balancer service in other packages.
-func NewLoadBalancerTestService(projectID string, lbClient clients.LbClient, client *networking.Service, logger logr.Logger) *Service {
-	return &Service{
-		projectID: projectID,
-		scope: &scope.Scope{
-			Logger: logger,
-		},
-		loadbalancerClient: lbClient,
-		networkingService:  client,
-	}
 }

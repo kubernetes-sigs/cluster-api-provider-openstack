@@ -20,8 +20,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/utils/openstack/clientconfig"
+	"github.com/go-logr/logr"
+	"github.com/golang/mock/gomock"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,15 +36,18 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
 var (
-	reconciler    OpenStackClusterReconciler
-	ctx           context.Context
-	testCluster   *infrav1.OpenStackCluster
-	capiCluster   *clusterv1.Cluster
-	testNamespace string
+	reconciler       *OpenStackClusterReconciler
+	ctx              context.Context
+	testCluster      *infrav1.OpenStackCluster
+	capiCluster      *clusterv1.Cluster
+	testNamespace    string
+	mockCtrl         *gomock.Controller
+	mockScopeFactory *scope.MockScopeFactory
 )
 
 var _ = Describe("OpenStackCluster controller", func() {
@@ -52,9 +57,6 @@ var _ = Describe("OpenStackCluster controller", func() {
 
 	BeforeEach(func() {
 		ctx = context.TODO()
-		reconciler = OpenStackClusterReconciler{
-			Client: k8sClient,
-		}
 		testNum++
 		testNamespace = fmt.Sprintf("test-%d", testNum)
 
@@ -94,6 +96,15 @@ var _ = Describe("OpenStackCluster controller", func() {
 			Name:    testNamespace,
 		}
 		framework.CreateNamespace(ctx, input)
+
+		mockCtrl = gomock.NewController(GinkgoT())
+		mockScopeFactory = scope.NewMockScopeFactory(mockCtrl, "", logr.Discard())
+		reconciler = func() *OpenStackClusterReconciler {
+			return &OpenStackClusterReconciler{
+				Client:       k8sClient,
+				ScopeFactory: mockScopeFactory,
+			}
+		}()
 	})
 
 	AfterEach(func() {
@@ -163,41 +174,15 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 		req := createRequestFromOSCluster(testCluster)
 
+		clientCreateErr := fmt.Errorf("Test failure")
+		mockScopeFactory.SetClientScopeCreateError(clientCreateErr)
+
 		result, err := reconciler.Reconcile(ctx, req)
-		// Expect error for getting OS clinet and empty result
-		Expect(err).ToNot(BeNil())
+		// Expect error for getting OS client and empty result
+		Expect(err).To(MatchError(clientCreateErr))
 		Expect(result).To(Equal(reconcile.Result{}))
 	})
-
-	// TODO: This test is set to pending (PIt instead of It) since it is not working.
-	PIt("should be able to reconcile when basition disabled", func() {
-		// verify := false
-		// cloud := clientconfig.Cloud{
-		// 	Cloud:      "test",
-		// 	RegionName: "test",
-		// 	Verify:     &verify,
-		// 	AuthInfo: &clientconfig.AuthInfo{
-		// 		AuthURL:        "https://example.com:5000",
-		// 		Username:       "testuser",
-		// 		Password:       "secret",
-		// 		ProjectName:    "test",
-		// 		DomainName:     "test",
-		// 		UserDomainName: "test",
-		// 	},
-		// }
-		// // TODO: Can we fake the client in some way?
-		// providerClient, clientOpts, _, err := provider.NewClient(cloud, nil)
-		// Expect(err).To(BeNil())
-		// scope := &scope.Scope{
-		// 	ProviderClient:     providerClient,
-		// 	ProviderClientOpts: clientOpts,
-		// }
-
-		// TODO: This won't work without filling in proper values.
-		scope := &scope.Scope{
-			ProviderClient:     &gophercloud.ProviderClient{},
-			ProviderClientOpts: &clientconfig.ClientOpts{},
-		}
+	It("should be able to reconcile when bastion is disabled and does not exist", func() {
 		testCluster.SetName("no-bastion")
 		testCluster.Spec = infrav1.OpenStackClusterSpec{
 			Bastion: &infrav1.Bastion{
@@ -208,6 +193,16 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 		err = k8sClient.Create(ctx, capiCluster)
 		Expect(err).To(BeNil())
+		scope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, logr.Discard())
+		Expect(err).To(BeNil())
+
+		computeClientRecorder := mockScopeFactory.ComputeClient.EXPECT()
+		computeClientRecorder.ListServers(servers.ListOpts{
+			Name: "^capi-cluster-bastion$",
+		}).Return([]clients.ServerExt{}, nil)
+
+		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
+		networkClientRecorder.ListSecGroup(gomock.Any()).Return([]groups.SecGroup{}, nil)
 
 		err = deleteBastion(scope, capiCluster, testCluster)
 		Expect(err).To(BeNil())

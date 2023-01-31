@@ -46,6 +46,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/controllers"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 	"sigs.k8s.io/cluster-api-provider-openstack/version"
 )
 
@@ -231,6 +232,7 @@ func setupReconcilers(ctx context.Context, mgr ctrl.Manager, caCerts []byte) {
 		Client:           mgr.GetClient(),
 		Recorder:         mgr.GetEventRecorderFor("openstackcluster-controller"),
 		WatchFilterValue: watchFilterValue,
+		ScopeFactory:     scope.ScopeFactory,
 		CaCertificates:   caCerts,
 	}).SetupWithManager(ctx, mgr, concurrency(openStackClusterConcurrency)); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "OpenStackCluster")
@@ -240,6 +242,7 @@ func setupReconcilers(ctx context.Context, mgr ctrl.Manager, caCerts []byte) {
 		Client:           mgr.GetClient(),
 		Recorder:         mgr.GetEventRecorderFor("openstackmachine-controller"),
 		WatchFilterValue: watchFilterValue,
+		ScopeFactory:     scope.ScopeFactory,
 		CaCertificates:   caCerts,
 	}).SetupWithManager(ctx, mgr, concurrency(openStackMachineConcurrency)); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "OpenStackMachine")

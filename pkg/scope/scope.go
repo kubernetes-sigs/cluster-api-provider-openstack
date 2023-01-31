@@ -17,22 +17,31 @@ limitations under the License.
 package scope
 
 import (
+	"context"
+
 	"github.com/go-logr/logr"
-	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/utils/openstack/clientconfig"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 )
 
-// Scope is used to initialize Services from Controllers and includes the
-// common objects required for this.
-//
-// The Gophercloud ProviderClient and ClientOpts are required to create new
-// Gophercloud API Clients (e.g. for Networking/Neutron).
-//
-// The Logger includes context values such as the cluster name.
-type Scope struct {
-	ProviderClient     *gophercloud.ProviderClient
-	ProviderClientOpts *clientconfig.ClientOpts
-	ProjectID          string
+// ScopeFactory is the default scope factory. It generates service clients which make OpenStack API calls against a running cloud.
+var ScopeFactory Factory = providerScopeFactory{}
 
-	Logger logr.Logger
+// Factory instantiates a new Scope using credentials from either a cluster or a machine.
+type Factory interface {
+	NewClientScopeFromMachine(ctx context.Context, ctrlClient client.Client, openStackMachine *infrav1.OpenStackMachine, defaultCACert []byte, logger logr.Logger) (Scope, error)
+	NewClientScopeFromCluster(ctx context.Context, ctrlClient client.Client, openStackCluster *infrav1.OpenStackCluster, defaultCACert []byte, logger logr.Logger) (Scope, error)
+}
+
+// Scope contains arguments common to most operations.
+type Scope interface {
+	NewComputeClient() (clients.ComputeClient, error)
+	NewVolumeClient() (clients.VolumeClient, error)
+	NewImageClient() (clients.ImageClient, error)
+	NewNetworkClient() (clients.NetworkClient, error)
+	NewLbClient() (clients.LbClient, error)
+	Logger() logr.Logger
+	ProjectID() string
 }
