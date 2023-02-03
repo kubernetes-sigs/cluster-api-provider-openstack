@@ -119,14 +119,14 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	// Handle deleted clusters
 	if !openStackCluster.DeletionTimestamp.IsZero() {
-		return reconcileDelete(ctx, scope, patchHelper, cluster, openStackCluster)
+		return reconcileDelete(scope, cluster, openStackCluster)
 	}
 
 	// Handle non-deleted clusters
-	return reconcileNormal(ctx, scope, patchHelper, cluster, openStackCluster)
+	return reconcileNormal(scope, cluster, openStackCluster)
 }
 
-func reconcileDelete(ctx context.Context, scope scope.Scope, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
+func reconcileDelete(scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
 	scope.Logger().Info("Reconciling Cluster delete")
 
 	if err := deleteBastion(scope, cluster, openStackCluster); err != nil {
@@ -178,9 +178,6 @@ func reconcileDelete(ctx context.Context, scope scope.Scope, patchHelper *patch.
 	// Cluster is deleted so remove the finalizer.
 	controllerutil.RemoveFinalizer(openStackCluster, infrav1.ClusterFinalizer)
 	scope.Logger().Info("Reconciled Cluster delete successfully")
-	if err := patchHelper.Patch(ctx, openStackCluster); err != nil {
-		return ctrl.Result{}, err
-	}
 	return ctrl.Result{}, nil
 }
 
@@ -245,14 +242,13 @@ func deleteBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackClust
 	return nil
 }
 
-func reconcileNormal(ctx context.Context, scope scope.Scope, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
+func reconcileNormal(scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
 	scope.Logger().Info("Reconciling Cluster")
 
 	// If the OpenStackCluster doesn't have our finalizer, add it.
-	controllerutil.AddFinalizer(openStackCluster, infrav1.ClusterFinalizer)
-	// Register the finalizer immediately to avoid orphaning OpenStack resources on delete
-	if err := patchHelper.Patch(ctx, openStackCluster); err != nil {
-		return reconcile.Result{}, err
+	if controllerutil.AddFinalizer(openStackCluster, infrav1.ClusterFinalizer) {
+		// Register the finalizer immediately to avoid orphaning OpenStack resources on delete
+		return reconcile.Result{}, nil
 	}
 
 	computeService, err := compute.NewService(scope)

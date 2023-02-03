@@ -148,11 +148,11 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	// Handle deleted machines
 	if !openStackMachine.DeletionTimestamp.IsZero() {
-		return r.reconcileDelete(ctx, scope, patchHelper, cluster, infraCluster, machine, openStackMachine)
+		return r.reconcileDelete(scope, cluster, infraCluster, machine, openStackMachine)
 	}
 
 	// Handle non-deleted clusters
-	return r.reconcileNormal(ctx, scope, patchHelper, cluster, infraCluster, machine, openStackMachine)
+	return r.reconcileNormal(ctx, scope, cluster, infraCluster, machine, openStackMachine)
 }
 
 func patchMachine(ctx context.Context, patchHelper *patch.Helper, openStackMachine *infrav1.OpenStackMachine, machine *clusterv1.Machine, options ...patch.Option) error {
@@ -219,7 +219,7 @@ func (r *OpenStackMachineReconciler) SetupWithManager(ctx context.Context, mgr c
 		Complete(r)
 }
 
-func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, scope scope.Scope, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (ctrl.Result, error) {
+func (r *OpenStackMachineReconciler) reconcileDelete(scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (ctrl.Result, error) {
 	scope.Logger().Info("Reconciling Machine delete")
 
 	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
@@ -281,13 +281,10 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, scope 
 
 	controllerutil.RemoveFinalizer(openStackMachine, infrav1.MachineFinalizer)
 	scope.Logger().Info("Reconciled Machine delete successfully")
-	if err := patchHelper.Patch(ctx, openStackMachine); err != nil {
-		return ctrl.Result{}, err
-	}
 	return ctrl.Result{}, nil
 }
 
-func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope scope.Scope, patchHelper *patch.Helper, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (_ ctrl.Result, reterr error) {
+func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (_ ctrl.Result, reterr error) {
 	// If the OpenStackMachine is in an error state, return early.
 	if openStackMachine.Status.FailureReason != nil || openStackMachine.Status.FailureMessage != nil {
 		scope.Logger().Info("Not reconciling machine in failed state. See openStackMachine.status.failureReason, openStackMachine.status.failureMessage, or previously logged error for details")
@@ -295,10 +292,9 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	}
 
 	// If the OpenStackMachine doesn't have our finalizer, add it.
-	controllerutil.AddFinalizer(openStackMachine, infrav1.MachineFinalizer)
-	// Register the finalizer immediately to avoid orphaning OpenStack resources on delete
-	if err := patchHelper.Patch(ctx, openStackMachine); err != nil {
-		return ctrl.Result{}, err
+	if controllerutil.AddFinalizer(openStackMachine, infrav1.MachineFinalizer) {
+		// Register the finalizer immediately to avoid orphaning OpenStack resources on delete
+		return ctrl.Result{}, nil
 	}
 
 	if !cluster.Status.InfrastructureReady {
