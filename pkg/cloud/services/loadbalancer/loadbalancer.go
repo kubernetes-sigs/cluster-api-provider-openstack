@@ -150,6 +150,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 		InternalIP:   lb.VipAddress,
 		IP:           lbFloatingIP,
 		AllowedCIDRs: allowedCIDRs,
+		Tags:         lb.Tags,
 	}
 	return nil
 }
@@ -172,6 +173,7 @@ func (s *Service) getOrCreateLoadBalancer(openStackCluster *infrav1.OpenStackClu
 		VipAddress:  vipAddress,
 		Description: names.GetDescription(clusterName),
 		Provider:    provider,
+		Tags:        openStackCluster.Spec.Tags,
 	}
 	lb, err = s.loadbalancerClient.CreateLoadBalancer(lbCreateOpts)
 	if err != nil {
@@ -200,6 +202,7 @@ func (s *Service) getOrCreateListener(openStackCluster *infrav1.OpenStackCluster
 		Protocol:       "TCP",
 		ProtocolPort:   port,
 		LoadbalancerID: lbID,
+		Tags:           openStackCluster.Spec.Tags,
 	}
 	listener, err = s.loadbalancerClient.CreateListener(listenerCreateOpts)
 	if err != nil {
@@ -314,6 +317,7 @@ func (s *Service) getOrCreatePool(openStackCluster *infrav1.OpenStackCluster, po
 		Protocol:   "TCP",
 		LBMethod:   pools.LBMethodRoundRobin,
 		ListenerID: listenerID,
+		Tags:       openStackCluster.Spec.Tags,
 	}
 	pool, err = s.loadbalancerClient.CreatePool(poolCreateOpts)
 	if err != nil {
@@ -430,6 +434,7 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 			Name:         name,
 			ProtocolPort: port,
 			Address:      ip,
+			Tags:         openStackCluster.Spec.Tags,
 		}
 
 		if err := s.waitForLoadBalancerActive(lbID); err != nil {

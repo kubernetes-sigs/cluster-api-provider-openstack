@@ -202,3 +202,27 @@ func Convert_v1alpha6_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(in *
 	// Our new flag has no equivalent in v1alpha5
 	return autoConvert_v1alpha6_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(in, out, s)
 }
+
+func Convert_v1alpha6_LoadBalancer_To_v1alpha5_LoadBalancer(in *infrav1.LoadBalancer, out *LoadBalancer, s conversion.Scope) error {
+	return autoConvert_v1alpha6_LoadBalancer_To_v1alpha5_LoadBalancer(in, out, s)
+}
+
+func Convert_Slice_v1alpha5_Network_To_Slice_v1alpha6_Network(in *[]Network, out *[]infrav1.Network, s conversion.Scope) error {
+	*out = make([]infrav1.Network, len(*in))
+	for i := range *in {
+		if err := Convert_v1alpha5_Network_To_v1alpha6_Network(&(*in)[i], &(*out)[i], s); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func Convert_Slice_v1alpha6_Network_To_Slice_v1alpha5_Network(in *[]infrav1.Network, out *[]Network, s conversion.Scope) error {
+	*out = make([]Network, len(*in))
+	for i := range *in {
+		if err := Convert_v1alpha6_Network_To_v1alpha5_Network(&(*in)[i], &(*out)[i], s); err != nil {
+			return err
+		}
+	}
+	return nil
+}
