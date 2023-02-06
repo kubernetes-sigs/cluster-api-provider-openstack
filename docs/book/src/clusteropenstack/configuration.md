@@ -8,6 +8,9 @@
   - [SSH key pair](#ssh-key-pair)
   - [OpenStack credential](#openstack-credential)
     - [Generate credentials](#generate-credentials)
+  - [CA certificates](#ca-certificates)
+    - [Per cluster](#per-cluster)
+    - [Global configuration](#global-configuration)
   - [Availability zone](#availability-zone)
   - [DNS server](#dns-server)
   - [Machine flavor](#machine-flavor)
@@ -106,6 +109,29 @@ The following variables are set.
 Note: Only the [external cloud provider](https://cluster-api-openstack.sigs.k8s.io/topics/external-cloud-provider.html) supports [Application Credentials](https://docs.openstack.org/keystone/latest/user/application_credentials.html).
 
 Note: you need to set `clusterctl.cluster.x-k8s.io/move` label for the secret created from `OPENSTACK_CLOUD_YAML_B64` in order to successfully move objects from bootstrap cluster to target cluster. See [bug 626](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/626) for further information.
+
+## CA certificates
+
+When using an `https` openstack endpoint, providing CA certificates is required unless verification is explicitly disabled.
+You can choose to provide your ca certificates per cluster or globally using a specific capo flag.
+
+### Per cluster
+
+To use the per cluster ca certificate, you can use the `OPENSTACK_CLOUD_CACERT_B64` environment variable.
+The generator will set the `cacert` key with the variable's content in the cluster's cloud-config secret.
+
+### Global configuration
+
+To use the same ca certificate for all clusters you can use the `--ca-certs` flag.
+When reconciling a cluster, if no `cacert` is set in the cluster's cloud-config secret, CAPO will use the certicates provided with this flag.
+
+For instance, to use CAPO's docker image ca certificates:
+
+```bash
+kubectl patch deployment capo-controller-manager -n capo-system \
+  --type='json' \
+  -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--ca-certs=/etc/ssl/certs/ca-certificates.crt"}]'
+```
 
 ## Availability zone
 
