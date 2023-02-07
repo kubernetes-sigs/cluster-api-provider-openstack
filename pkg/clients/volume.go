@@ -20,7 +20,6 @@ import (
 	"fmt"
 
 	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 
@@ -37,10 +36,8 @@ type VolumeClient interface {
 type volumeClient struct{ client *gophercloud.ServiceClient }
 
 // NewVolumeClient returns a new cinder client.
-func NewVolumeClient(providerClient *gophercloud.ProviderClient, providerClientOpts *clientconfig.ClientOpts) (VolumeClient, error) {
-	volume, err := openstack.NewBlockStorageV3(providerClient, gophercloud.EndpointOpts{
-		Region: providerClientOpts.RegionName,
-	})
+func NewVolumeClient(providerClientOpts *clientconfig.ClientOpts) (VolumeClient, error) {
+	volume, err := clientconfig.NewServiceClient("volume", providerClientOpts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create volume service client: %v", err)
 	}

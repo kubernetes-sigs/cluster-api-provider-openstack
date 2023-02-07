@@ -20,7 +20,6 @@ import (
 	"fmt"
 
 	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/apiversions"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/listeners"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/loadbalancers"
@@ -62,10 +61,8 @@ type lbClient struct {
 }
 
 // NewLbClient returns a new loadbalancer client.
-func NewLbClient(providerClient *gophercloud.ProviderClient, providerClientOpts *clientconfig.ClientOpts) (LbClient, error) {
-	loadbalancerClient, err := openstack.NewLoadBalancerV2(providerClient, gophercloud.EndpointOpts{
-		Region: providerClientOpts.RegionName,
-	})
+func NewLbClient(providerClientOpts *clientconfig.ClientOpts) (LbClient, error) {
+	loadbalancerClient, err := clientconfig.NewServiceClient("load-balancer", providerClientOpts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create load balancer service client: %v", err)
 	}

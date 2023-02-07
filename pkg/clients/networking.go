@@ -20,7 +20,6 @@ import (
 	"fmt"
 
 	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
@@ -94,10 +93,8 @@ type networkClient struct {
 }
 
 // NewNetworkClient returns an instance of the networking service.
-func NewNetworkClient(providerClient *gophercloud.ProviderClient, providerClientOpts *clientconfig.ClientOpts) (NetworkClient, error) {
-	serviceClient, err := openstack.NewNetworkV2(providerClient, gophercloud.EndpointOpts{
-		Region: providerClientOpts.RegionName,
-	})
+func NewNetworkClient(providerClientOpts *clientconfig.ClientOpts) (NetworkClient, error) {
+	serviceClient, err := clientconfig.NewServiceClient("network", providerClientOpts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create networking service providerClient: %v", err)
 	}

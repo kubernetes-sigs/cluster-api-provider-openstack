@@ -20,7 +20,6 @@ import (
 	"fmt"
 
 	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/availabilityzones"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
@@ -64,10 +63,9 @@ type ComputeClient interface {
 type computeClient struct{ client *gophercloud.ServiceClient }
 
 // NewComputeClient returns a new compute client.
-func NewComputeClient(providerClient *gophercloud.ProviderClient, providerClientOpts *clientconfig.ClientOpts) (ComputeClient, error) {
-	compute, err := openstack.NewComputeV2(providerClient, gophercloud.EndpointOpts{
-		Region: providerClientOpts.RegionName,
-	})
+func NewComputeClient(providerClientOpts *clientconfig.ClientOpts) (ComputeClient, error) {
+	// TODO: Set env var or similar to indicate minimum microversion.
+	compute, err := clientconfig.NewServiceClient("compute", providerClientOpts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create compute service client: %v", err)
 	}

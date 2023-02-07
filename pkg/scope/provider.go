@@ -114,23 +114,23 @@ func (s *providerScope) ProjectID() string {
 }
 
 func (s *providerScope) NewComputeClient() (clients.ComputeClient, error) {
-	return clients.NewComputeClient(s.providerClient, s.providerClientOpts)
+	return clients.NewComputeClient(s.providerClientOpts)
 }
 
 func (s *providerScope) NewNetworkClient() (clients.NetworkClient, error) {
-	return clients.NewNetworkClient(s.providerClient, s.providerClientOpts)
+	return clients.NewNetworkClient(s.providerClientOpts)
 }
 
 func (s *providerScope) NewVolumeClient() (clients.VolumeClient, error) {
-	return clients.NewVolumeClient(s.providerClient, s.providerClientOpts)
+	return clients.NewVolumeClient(s.providerClientOpts)
 }
 
 func (s *providerScope) NewImageClient() (clients.ImageClient, error) {
-	return clients.NewImageClient(s.providerClient, s.providerClientOpts)
+	return clients.NewImageClient(s.providerClientOpts)
 }
 
 func (s *providerScope) NewLbClient() (clients.LbClient, error) {
-	return clients.NewLbClient(s.providerClient, s.providerClientOpts)
+	return clients.NewLbClient(s.providerClientOpts)
 }
 
 func NewProviderClient(cloud clientconfig.Cloud, caCert []byte, logger logr.Logger) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, string, error) {

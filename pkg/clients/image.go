@@ -20,7 +20,6 @@ import (
 	"fmt"
 
 	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 
@@ -34,10 +33,8 @@ type ImageClient interface {
 type imageClient struct{ client *gophercloud.ServiceClient }
 
 // NewImageClient returns a new glance client.
-func NewImageClient(providerClient *gophercloud.ProviderClient, providerClientOpts *clientconfig.ClientOpts) (ImageClient, error) {
-	images, err := openstack.NewImageServiceV2(providerClient, gophercloud.EndpointOpts{
-		Region: providerClientOpts.RegionName,
-	})
+func NewImageClient(providerClientOpts *clientconfig.ClientOpts) (ImageClient, error) {
+	images, err := clientconfig.NewServiceClient("image", providerClientOpts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create image service client: %v", err)
 	}
