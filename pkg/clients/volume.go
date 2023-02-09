@@ -37,7 +37,7 @@ type volumeClient struct{ client *gophercloud.ServiceClient }
 
 // NewVolumeClient returns a new cinder client.
 func NewVolumeClient(providerClientOpts *clientconfig.ClientOpts) (VolumeClient, error) {
-	volume, err := clientconfig.NewServiceClient("volume", providerClientOpts)
+	volume, err := clientconfig.NewServiceClient(string(clientconfig.Volume), providerClientOpts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create volume service client: %v", err)
 	}

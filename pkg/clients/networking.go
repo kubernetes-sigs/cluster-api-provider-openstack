@@ -94,7 +94,7 @@ type networkClient struct {
 
 // NewNetworkClient returns an instance of the networking service.
 func NewNetworkClient(providerClientOpts *clientconfig.ClientOpts) (NetworkClient, error) {
-	serviceClient, err := clientconfig.NewServiceClient("network", providerClientOpts)
+	serviceClient, err := clientconfig.NewServiceClient(string(clientconfig.Network), providerClientOpts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create networking service providerClient: %v", err)
 	}

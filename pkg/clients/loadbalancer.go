@@ -62,7 +62,7 @@ type lbClient struct {
 
 // NewLbClient returns a new loadbalancer client.
 func NewLbClient(providerClientOpts *clientconfig.ClientOpts) (LbClient, error) {
-	loadbalancerClient, err := clientconfig.NewServiceClient("load-balancer", providerClientOpts)
+	loadbalancerClient, err := clientconfig.NewServiceClient(string(clientconfig.LoadBalancer), providerClientOpts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create load balancer service client: %v", err)
 	}

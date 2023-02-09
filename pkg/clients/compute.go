@@ -65,7 +65,7 @@ type computeClient struct{ client *gophercloud.ServiceClient }
 // NewComputeClient returns a new compute client.
 func NewComputeClient(providerClientOpts *clientconfig.ClientOpts) (ComputeClient, error) {
 	// TODO: Set env var or similar to indicate minimum microversion.
-	compute, err := clientconfig.NewServiceClient("compute", providerClientOpts)
+	compute, err := clientconfig.NewServiceClient(string(clientconfig.Compute), providerClientOpts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create compute service client: %v", err)
 	}

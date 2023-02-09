@@ -34,7 +34,7 @@ type imageClient struct{ client *gophercloud.ServiceClient }
 
 // NewImageClient returns a new glance client.
 func NewImageClient(providerClientOpts *clientconfig.ClientOpts) (ImageClient, error) {
-	images, err := clientconfig.NewServiceClient("image", providerClientOpts)
+	images, err := clientconfig.NewServiceClient(string(clientconfig.Image), providerClientOpts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create image service client: %v", err)
 	}

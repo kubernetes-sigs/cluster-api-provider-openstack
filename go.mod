@@ -129,3 +129,5 @@ require (
 )
 
 replace sigs.k8s.io/cluster-api => sigs.k8s.io/cluster-api v1.3.0
+
+replace github.com/gophercloud/utils => github.com/Nordix/utils v0.0.0-20230209105834-15c0993ad12e
