@@ -15,6 +15,8 @@
 ROOT_DIR_RELATIVE := ../..
 include $(ROOT_DIR_RELATIVE)/common.mk
 
+GOLANGCI_LINT_VERSION := v1.51.1
+
 UNAME := $(shell uname -s)
 
 # Directories.
@@ -98,8 +100,8 @@ $(GOJQ): $(BIN_DIR) go.mod go.sum
 	go build -tags=tools -o $@ github.com/itchyny/gojq/cmd/gojq
 
 GOLANGCI_LINT := $(BIN_DIR)/golangci-lint
-$(GOLANGCI_LINT): $(BIN_DIR) go.mod go.sum # Build golangci-lint from tools folder.
-	go build -tags=tools -o $@ github.com/golangci/golangci-lint/cmd/golangci-lint
+$(GOLANGCI_LINT): Makefile ensure-golangci-lint.sh | $(BIN_DIR)
+	./ensure-golangci-lint.sh -b $(BIN_DIR) $(GOLANGCI_LINT_VERSION)
 
 KUSTOMIZE := $(BIN_DIR)/kustomize
 $(KUSTOMIZE): $(BIN_DIR) go.mod go.sum # Build kustomize from tools folder.
