@@ -95,9 +95,10 @@ func ensureSSHKeyPair(e2eCtx *E2EContext) {
 	Expect(err).NotTo(HaveOccurred())
 }
 
-func dumpOpenStack(_ context.Context, e2eCtx *E2EContext, bootstrapClusterProxyName string) {
+func dumpOpenStack(_ context.Context, e2eCtx *E2EContext, bootstrapClusterProxyName string, directory ...string) {
 	Logf("Running dumpOpenStack")
-	logPath := filepath.Join(e2eCtx.Settings.ArtifactFolder, "clusters", bootstrapClusterProxyName, "openstack-resources")
+	paths := append([]string{e2eCtx.Settings.ArtifactFolder, "clusters", bootstrapClusterProxyName, "openstack-resources"}, directory...)
+	logPath := filepath.Join(paths...)
 	if err := os.MkdirAll(logPath, os.ModePerm); err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "error creating directory %s: %s\n", logPath, err)
 		return
