@@ -23,7 +23,6 @@ package tools
 import (
 	_ "github.com/a8m/envsubst"
 	_ "github.com/golang/mock/mockgen"
-	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
 	_ "github.com/itchyny/gojq/cmd/gojq"
 	_ "github.com/onsi/ginkgo/v2/ginkgo"
 	_ "k8s.io/code-generator"
