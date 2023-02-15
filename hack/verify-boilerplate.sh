@@ -25,10 +25,13 @@ KUBE_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
 boilerDir="${KUBE_ROOT}/hack/boilerplate"
 boiler="${boilerDir}/boilerplate.py"
 
+boilerplate_out=$("$boiler" "$@")
 files_need_boilerplate=()
 while IFS=$'\n' read -r line; do
-  files_need_boilerplate+=( "$line" )
-done < <("${boiler}" "$@")
+  if [ -n "$line" ]; then
+      files_need_boilerplate+=( "$line" )
+  fi
+done <<< $boilerplate_out
 
 # Run boilerplate check
 if [[ ${#files_need_boilerplate[@]} -gt 0 ]]; then
