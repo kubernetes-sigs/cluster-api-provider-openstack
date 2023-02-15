@@ -316,3 +316,57 @@ type APIServerLoadBalancer struct {
 	// AllowedCIDRs restrict access to all API-Server listeners to the given address CIDRs.
 	AllowedCIDRs []string `json:"allowedCidrs,omitempty"`
 }
+
+// FailureDomainMachinePlacement is an enumeration of the possible machine placement strategies for a failure domain. It controls whether the failure domain is for all machines, or only workers.
+// kubebuilder:validation:Enum:="All";"WorkerOnly"
+type FailureDomainMachinePlacement string
+
+const (
+	// FailureDomainMachinePlacementAll denotes that a failure domain is suitable for both control plane and worker machines.
+	FailureDomainMachinePlacementAll FailureDomainMachinePlacement = "All"
+
+	// FailureDomainMachinePlacementNoControlPlane denotes that a failure domain will not be used for control plane machines.
+	FailureDomainMachinePlacementNoControlPlane = "NoControlPlane"
+)
+
+const (
+	FailureDomainType        = "Type"
+	FailureDomainTypeAZ      = "AvailabilityZone"
+	FailureDomainTypeCluster = "Cluster"
+)
+
+type FailureDomainDefinition struct {
+	// Name is a string by which a failure domain is referenced at creation
+	// time.
+	// As this is only a reference, it is not safe to assume that all
+	// machines created using this name were also using the same failure
+	// domain.
+	// +required
+	Name string `json:"name"`
+
+	// MachinePlacement defines which machines this failure domain is suitable for.
+	// 'All' specifies that the failure domain is suitable for all machines. Control plane machines will be automatically distributed across failure domains with a MachinePlacement of All.
+	// 'NoControlPlane' specifies that the failure domain will not be used by control plane machines. The failure domain may be referenced by worker machines, but will not be used by control plane machines.
+	// If not specified, the default is 'All'.
+	// +kubebuilder:default:="All"
+	// +optional
+	MachinePlacement FailureDomainMachinePlacement `json:"machinePlacement,omitempty"`
+
+	FailureDomain `json:",inline"`
+}
+
+type FailureDomain struct {
+	// ComputeAvailabilityZone is the name of a valid nova availability zone. The server will be created in this availability zone.
+	// +optional
+	ComputeAvailabilityZone string `json:"computeAvailabilityZone,omitempty"`
+
+	// StorageAvailabilityZone is the name of a valid cinder availability
+	// zone. This will be the availability zone of the root volume if one is
+	// specified.
+	// +optional
+	StorageAvailabilityZone string `json:"storageAvailabilityZone,omitempty"`
+
+	// Ports defines a set of ports and their attached networks. These will be prepended to any other ports attached to the server.
+	// +optional
+	Ports []PortOpts `json:"ports,omitempty"`
+}

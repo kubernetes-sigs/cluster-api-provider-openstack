@@ -134,6 +134,13 @@ type OpenStackMachineStatus struct {
 	FailureMessage *string `json:"failureMessage,omitempty"`
 
 	Conditions clusterv1.Conditions `json:"conditions,omitempty"`
+
+	// FailureDomain is a copy of the failure domain used to create the
+	// machine. Properties specified in FailureDomain substitute for the
+	// equivalent values in the OpenStackMachineSpec. See the FailureDomain
+	// type for details of the supported substitutions.
+	// +optional
+	FailureDomain *FailureDomain `json:"failureDomain,omitempty"`
 }
 
 // +kubebuilder:object:root=true

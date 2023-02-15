@@ -236,6 +236,7 @@ func TestFuzzyConversion(t *testing.T) {
 					v1alpha6Cluster.Spec.Bastion.Instance.Ports = nil
 				}
 				v1alpha6Cluster.Spec.ControlPlaneOmitAvailabilityZone = false
+				v1alpha6Cluster.Spec.FailureDomains = nil
 
 				v1alpha6Cluster.Status.FailureMessage = nil
 				v1alpha6Cluster.Status.FailureReason = nil
@@ -271,6 +272,7 @@ func TestFuzzyConversion(t *testing.T) {
 				v1alpha6Machine.ObjectMeta.Annotations = map[string]string{}
 				v1alpha6Machine.Spec.Ports = nil
 				v1alpha6Machine.Spec.ImageUUID = ""
+				v1alpha6Machine.Status.FailureDomain = nil
 			},
 			func(v1alpha6MachineTemplate *infrav1.OpenStackMachineTemplate, c fuzz.Continue) {
 				c.FuzzNoCustom(v1alpha6MachineTemplate)

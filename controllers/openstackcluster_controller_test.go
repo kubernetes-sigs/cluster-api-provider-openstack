@@ -19,9 +19,11 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"testing"
 
 	"github.com/go-logr/logr"
 	"github.com/golang/mock/gomock"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/availabilityzones"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	. "github.com/onsi/ginkgo/v2"
@@ -37,6 +39,7 @@ import (
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
@@ -215,5 +218,228 @@ func createRequestFromOSCluster(openStackCluster *infrav1.OpenStackCluster) reco
 			Name:      openStackCluster.GetName(),
 			Namespace: openStackCluster.GetNamespace(),
 		},
+	}
+}
+
+func Test_reconcileFailureDomains(t *testing.T) {
+	g := NewWithT(t)
+	mockCtrl := gomock.NewController(t)
+
+	tests := []struct {
+		name                  string
+		novaAvailabilityZones []string
+		openStackClusterSpec  infrav1.OpenStackClusterSpec
+		want                  clusterv1.FailureDomains
+		wantErr               bool
+	}{
+		{
+			name: "Only Nova AZs",
+			novaAvailabilityZones: []string{
+				"nova-az1",
+				"nova-az2",
+			},
+			openStackClusterSpec: infrav1.OpenStackClusterSpec{},
+			want: map[string]clusterv1.FailureDomainSpec{
+				"nova-az1": {
+					ControlPlane: true,
+					Attributes:   map[string]string{"Type": "AvailabilityZone"},
+				},
+				"nova-az2": {
+					ControlPlane: true,
+					Attributes:   map[string]string{"Type": "AvailabilityZone"},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Error fetching Nova AZs",
+			novaAvailabilityZones: []string{
+				"nova-az1",
+				"nova-az2",
+			},
+			openStackClusterSpec: infrav1.OpenStackClusterSpec{},
+			want:                 nil,
+			wantErr:              true,
+		},
+		{
+			name: "ControlPlaneAvailabilityZones specified",
+			novaAvailabilityZones: []string{
+				"nova-az1",
+				"nova-az2",
+			},
+			openStackClusterSpec: infrav1.OpenStackClusterSpec{
+				ControlPlaneAvailabilityZones: []string{"nova-az1"},
+			},
+			want: map[string]clusterv1.FailureDomainSpec{
+				"nova-az1": {
+					ControlPlane: true,
+					Attributes:   map[string]string{"Type": "AvailabilityZone"},
+				},
+				"nova-az2": {
+					ControlPlane: false,
+					Attributes:   map[string]string{"Type": "AvailabilityZone"},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "ControlPlaneOmitAvailabilityZone specified",
+			novaAvailabilityZones: []string{
+				"nova-az1",
+				"nova-az2",
+			},
+			openStackClusterSpec: infrav1.OpenStackClusterSpec{
+				ControlPlaneOmitAvailabilityZone: true,
+			},
+			want: map[string]clusterv1.FailureDomainSpec{
+				"nova-az1": {
+					ControlPlane: false,
+					Attributes:   map[string]string{"Type": "AvailabilityZone"},
+				},
+				"nova-az2": {
+					ControlPlane: false,
+					Attributes:   map[string]string{"Type": "AvailabilityZone"},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name:                  "Only failure domains specified",
+			novaAvailabilityZones: []string{},
+			openStackClusterSpec: infrav1.OpenStackClusterSpec{
+				FailureDomains: []infrav1.FailureDomainDefinition{
+					{
+						Name:             "fd-control-plane-1",
+						MachinePlacement: "All",
+						FailureDomain:    infrav1.FailureDomain{},
+					},
+					{
+						Name:             "fd-worker-only",
+						MachinePlacement: "NoControlPlane",
+						FailureDomain:    infrav1.FailureDomain{},
+					},
+					{
+						Name:             "fd-control-plane-2",
+						MachinePlacement: "All",
+						FailureDomain:    infrav1.FailureDomain{},
+					},
+				},
+			},
+			want: map[string]clusterv1.FailureDomainSpec{
+				"fd-control-plane-1": {
+					ControlPlane: true,
+					Attributes:   map[string]string{"Type": "Cluster"},
+				},
+				"fd-control-plane-2": {
+					ControlPlane: true,
+					Attributes:   map[string]string{"Type": "Cluster"},
+				},
+				"fd-worker-only": {
+					ControlPlane: false,
+					Attributes:   map[string]string{"Type": "Cluster"},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Both AZs and failure domains specified",
+			novaAvailabilityZones: []string{
+				"nova-az1",
+				"nova-az2",
+			},
+			openStackClusterSpec: infrav1.OpenStackClusterSpec{
+				ControlPlaneAvailabilityZones: []string{"nova-az1"},
+				FailureDomains: []infrav1.FailureDomainDefinition{
+					{
+						Name:             "fd-control-plane",
+						MachinePlacement: "All",
+						FailureDomain:    infrav1.FailureDomain{},
+					},
+					{
+						Name:             "fd-worker-only",
+						MachinePlacement: "NoControlPlane",
+						FailureDomain:    infrav1.FailureDomain{},
+					},
+				},
+			},
+			want: map[string]clusterv1.FailureDomainSpec{
+				"nova-az1": {
+					ControlPlane: true,
+					Attributes:   map[string]string{"Type": "AvailabilityZone"},
+				},
+				"nova-az2": {
+					ControlPlane: false,
+					Attributes:   map[string]string{"Type": "AvailabilityZone"},
+				},
+				"fd-control-plane": {
+					ControlPlane: true,
+					Attributes:   map[string]string{"Type": "Cluster"},
+				},
+				"fd-worker-only": {
+					ControlPlane: false,
+					Attributes:   map[string]string{"Type": "Cluster"},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Override AZ with failure domain",
+			novaAvailabilityZones: []string{
+				"nova-az1",
+				"nova-az2",
+			},
+			openStackClusterSpec: infrav1.OpenStackClusterSpec{
+				FailureDomains: []infrav1.FailureDomainDefinition{
+					{
+						Name:             "nova-az2",
+						MachinePlacement: "All",
+						FailureDomain:    infrav1.FailureDomain{},
+					},
+				},
+			},
+			want: map[string]clusterv1.FailureDomainSpec{
+				"nova-az1": {
+					ControlPlane: true,
+					Attributes:   map[string]string{"Type": "AvailabilityZone"},
+				},
+				"nova-az2": {
+					ControlPlane: true,
+					Attributes:   map[string]string{"Type": "Cluster"},
+				},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "", logr.Discard())
+
+			azs := make([]availabilityzones.AvailabilityZone, len(tt.novaAvailabilityZones))
+			for i, novaAZ := range tt.novaAvailabilityZones {
+				azs[i] = availabilityzones.AvailabilityZone{ZoneName: novaAZ}
+			}
+			wantErr := func() error {
+				if tt.wantErr {
+					return fmt.Errorf("error")
+				}
+				return nil
+			}()
+			mockScopeFactory.ComputeClient.EXPECT().ListAvailabilityZones().Return(azs, wantErr)
+
+			s, err := compute.NewService(mockScopeFactory)
+			g.Expect(err).NotTo(HaveOccurred())
+
+			openStackCluster := &infrav1.OpenStackCluster{
+				Spec: tt.openStackClusterSpec,
+			}
+			got, err := reconcileFailureDomains(s, openStackCluster)
+			if tt.wantErr {
+				g.Expect(err).To(HaveOccurred())
+				g.Expect(got).To(BeNil())
+			} else {
+				g.Expect(got).To(Equal(tt.want))
+				g.Expect(err).NotTo(HaveOccurred())
+			}
+		})
 	}
 }

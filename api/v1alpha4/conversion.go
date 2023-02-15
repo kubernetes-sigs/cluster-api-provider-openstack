@@ -403,3 +403,7 @@ func Convert_v1alpha6_Router_To_v1alpha4_Router(in *infrav1.Router, out *Router,
 func Convert_v1alpha6_LoadBalancer_To_v1alpha4_LoadBalancer(in *infrav1.LoadBalancer, out *LoadBalancer, s conversion.Scope) error {
 	return autoConvert_v1alpha6_LoadBalancer_To_v1alpha4_LoadBalancer(in, out, s)
 }
+
+func Convert_v1alpha6_OpenStackMachineStatus_To_v1alpha4_OpenStackMachineStatus(in *infrav1.OpenStackMachineStatus, out *OpenStackMachineStatus, s conversion.Scope) error {
+	return autoConvert_v1alpha6_OpenStackMachineStatus_To_v1alpha4_OpenStackMachineStatus(in, out, s)
+}

@@ -33,23 +33,23 @@ import (
 // InstanceSpec does not contain all of the fields of infrav1.Instance, as not
 // all of them can be set on a new instance.
 type InstanceSpec struct {
-	Name           string
-	Image          string
-	ImageUUID      string
-	Flavor         string
-	SSHKeyName     string
-	UserData       string
-	Metadata       map[string]string
-	ConfigDrive    bool
-	FailureDomain  string
-	RootVolume     *infrav1.RootVolume
-	Subnet         string
-	ServerGroupID  string
-	Trunk          bool
-	Tags           []string
-	SecurityGroups []infrav1.SecurityGroupParam
-	Networks       []infrav1.NetworkParam
-	Ports          []infrav1.PortOpts
+	Name                    string
+	Image                   string
+	ImageUUID               string
+	Flavor                  string
+	SSHKeyName              string
+	UserData                string
+	Metadata                map[string]string
+	ConfigDrive             bool
+	ComputeAvailabilityZone string
+	RootVolume              *infrav1.RootVolume
+	Subnet                  string
+	ServerGroupID           string
+	Trunk                   bool
+	Tags                    []string
+	SecurityGroups          []infrav1.SecurityGroupParam
+	Networks                []infrav1.NetworkParam
+	Ports                   []infrav1.PortOpts
 }
 
 // InstanceIdentifier describes an instance which has not necessarily been fetched.

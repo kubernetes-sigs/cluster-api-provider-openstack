@@ -4707,8 +4707,13 @@ spec:
                 description: The name of the cloud to use from the clouds secret
                 type: string
               controlPlaneAvailabilityZones:
-                description: ControlPlaneAvailabilityZones is the az to deploy control
-                  plane to
+                description: "ControlPlaneAvailabilityZones restricts the list of
+                  automatically discovered Nova availability zones which will be used
+                  as failure domains for control plane nodes. If defined, only availability
+                  zones in this list will be used. If undefined, all availability
+                  zones will be used. \n Note that this only affects failure domains
+                  created for automatically discovered availability zones. Explicitly
+                  defined failure domains will not be affected."
                 items:
                   type: string
                 type: array
@@ -4729,9 +4734,14 @@ spec:
                 - port
                 type: object
               controlPlaneOmitAvailabilityZone:
-                description: Indicates whether to omit the az for control plane nodes,
-                  allowing the Nova scheduler to make a decision on which az to use
-                  based on other scheduling constraints
+                description: "Indicates whether automatically discovered Nova availability
+                  zones will be used as failure domains for control plane nodes. If
+                  false or undefined, all availability zones will be used. If true,
+                  automatically discovered failure domains will not be used by the
+                  control plane unless they are specified in controlPlaneAvailabilityZones.
+                  \n To allow the nova scheduler to place control plane machines in
+                  any availability zone, set this value to true, do not define controlPlaneAvailabilityZones,
+                  and do not define any failureDomains with the default machinePlacement."
                 type: boolean
               disableAPIServerFloatingIP:
                 description: DisableAPIServerFloatingIP determines whether or not
@@ -4819,6 +4829,230 @@ spec:
                   - subnet
                   type: object
                 type: array
+              failureDomains:
+                description: FailureDomains defines a set of failure domains that
+                  can be referenced by machines in this cluster. These are in addition
+                  to automatically discovered Nova availability zones.
+                items:
+                  properties:
+                    computeAvailabilityZone:
+                      description: ComputeAvailabilityZone is the name of a valid
+                        nova availability zone. The server will be created in this
+                        availability zone.
+                      type: string
+                    machinePlacement:
+                      default: All
+                      description: MachinePlacement defines which machines this failure
+                        domain is suitable for. 'All' specifies that the failure domain
+                        is suitable for all machines. Control plane machines will
+                        be automatically distributed across failure domains with a
+                        MachinePlacement of All. 'NoControlPlane' specifies that the
+                        failure domain will not be used by control plane machines.
+                        The failure domain may be referenced by worker machines, but
+                        will not be used by control plane machines. If not specified,
+                        the default is 'All'.
+                      type: string
+                    name:
+                      description: Name is a string by which a failure domain is referenced
+                        at creation time. As this is only a reference, it is not safe
+                        to assume that all machines created using this name were also
+                        using the same failure domain.
+                      type: string
+                    ports:
+                      description: Ports defines a set of ports and their attached
+                        networks. These will be prepended to any other ports attached
+                        to the server.
+                      items:
+                        properties:
+                          adminStateUp:
+                            type: boolean
+                          allowedAddressPairs:
+                            items:
+                              properties:
+                                ipAddress:
+                                  type: string
+                                macAddress:
+                                  type: string
+                              type: object
+                            type: array
+                          description:
+                            type: string
+                          disablePortSecurity:
+                            description: DisablePortSecurity enables or disables the
+                              port security when set. When not set, it takes the value
+                              of the corresponding field at the network level.
+                            type: boolean
+                          fixedIPs:
+                            description: Specify pairs of subnet and/or IP address.
+                              These should be subnets of the network with the given
+                              NetworkID.
+                            items:
+                              properties:
+                                ipAddress:
+                                  type: string
+                                subnet:
+                                  description: Subnet is an openstack subnet query
+                                    that will return the id of a subnet to create
+                                    the fixed IP of a port in. This query must not
+                                    return more than one subnet.
+                                  properties:
+                                    cidr:
+                                      type: string
+                                    description:
+                                      type: string
+                                    gateway_ip:
+                                      type: string
+                                    id:
+                                      type: string
+                                    ipVersion:
+                                      type: integer
+                                    ipv6AddressMode:
+                                      type: string
+                                    ipv6RaMode:
+                                      type: string
+                                    name:
+                                      type: string
+                                    notTags:
+                                      type: string
+                                    notTagsAny:
+                                      type: string
+                                    projectId:
+                                      type: string
+                                    tags:
+                                      type: string
+                                    tagsAny:
+                                      type: string
+                                  type: object
+                              required:
+                              - subnet
+                              type: object
+                            type: array
+                          hostId:
+                            description: The ID of the host where the port is allocated
+                            type: string
+                          macAddress:
+                            type: string
+                          nameSuffix:
+                            description: Used to make the name of the port unique.
+                              If unspecified, instead the 0-based index of the port
+                              in the list is used.
+                            type: string
+                          network:
+                            description: Network is a query for an openstack network
+                              that the port will be created or discovered on. This
+                              will fail if the query returns more than one network.
+                            properties:
+                              description:
+                                type: string
+                              id:
+                                type: string
+                              name:
+                                type: string
+                              notTags:
+                                type: string
+                              notTagsAny:
+                                type: string
+                              projectId:
+                                type: string
+                              tags:
+                                type: string
+                              tagsAny:
+                                type: string
+                            type: object
+                          profile:
+                            additionalProperties:
+                              type: string
+                            description: A dictionary that enables the application
+                              running on the specified host to pass and receive virtual
+                              network interface (VIF) port-specific information to
+                              the plug-in.
+                            type: object
+                          projectId:
+                            type: string
+                          securityGroupFilters:
+                            description: The names, uuids, filters or any combination
+                              these of the security groups to assign to the instance
+                            items:
+                              properties:
+                                filter:
+                                  description: Filters used to query security groups
+                                    in openstack
+                                  properties:
+                                    description:
+                                      type: string
+                                    id:
+                                      type: string
+                                    limit:
+                                      type: integer
+                                    marker:
+                                      type: string
+                                    name:
+                                      type: string
+                                    notTags:
+                                      type: string
+                                    notTagsAny:
+                                      type: string
+                                    projectId:
+                                      type: string
+                                    sortDir:
+                                      type: string
+                                    sortKey:
+                                      type: string
+                                    tags:
+                                      type: string
+                                    tagsAny:
+                                      type: string
+                                    tenantId:
+                                      type: string
+                                  type: object
+                                name:
+                                  description: Security Group name
+                                  type: string
+                                uuid:
+                                  description: Security Group UID
+                                  type: string
+                              type: object
+                            type: array
+                          securityGroups:
+                            description: The uuids of the security groups to assign
+                              to the instance
+                            items:
+                              type: string
+                            type: array
+                            x-kubernetes-list-type: set
+                          tags:
+                            description: Tags applied to the port (and corresponding
+                              trunk, if a trunk is configured.) These tags are applied
+                              in addition to the instance's tags, which will also
+                              be applied to the port.
+                            items:
+                              type: string
+                            type: array
+                            x-kubernetes-list-type: set
+                          tenantId:
+                            type: string
+                          trunk:
+                            description: Enables and disables trunk at port level.
+                              If not provided, openStackMachine.Spec.Trunk is inherited.
+                            type: boolean
+                          vnicType:
+                            description: The virtual network interface card (vNIC)
+                              type that is bound to the neutron port.
+                            type: string
+                        type: object
+                      type: array
+                    storageAvailabilityZone:
+                      description: StorageAvailabilityZone is the name of a valid
+                        cinder availability zone. This will be the availability zone
+                        of the root volume if one is specified.
+                      type: string
+                  required:
+                  - name
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - name
+                x-kubernetes-list-type: map
               identityRef:
                 description: IdentityRef is a reference to a identity to be used when
                   reconciling this cluster

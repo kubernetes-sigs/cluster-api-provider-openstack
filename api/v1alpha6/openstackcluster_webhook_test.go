@@ -175,6 +175,24 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name:        "Modifying failure domains is allowed",
+			oldTemplate: &OpenStackCluster{},
+			newTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					FailureDomains: []FailureDomainDefinition{
+						{
+							Name: "failure-domain-0",
+							FailureDomain: FailureDomain{
+								ComputeAvailabilityZone: "nova-az-0",
+								StorageAvailabilityZone: "cinder-az-0",
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -303,6 +303,17 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		return ctrl.Result{RequeueAfter: waitForClusterInfrastructureReadyDuration}, nil
 	}
 
+	// Copy a referenced failure domain to the OpenStack machine spec if it hasn't been set yet.
+	if openStackMachine.Status.FailureDomain == nil {
+		failureDomain, err := getFailureDomainForMachine(machine, openStackMachine, openStackCluster)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
+		openStackMachine.Status.FailureDomain = failureDomain
+		return ctrl.Result{}, nil
+	}
+
 	// Make sure bootstrap data is available and populated.
 	if machine.Spec.Bootstrap.DataSecretName == nil {
 		scope.Logger().Info("Bootstrap data secret reference is not yet available")
@@ -432,7 +443,12 @@ func (r *OpenStackMachineReconciler) getOrCreate(logger logr.Logger, cluster *cl
 	}
 
 	if instanceStatus == nil {
-		instanceSpec := machineToInstanceSpec(openStackCluster, machine, openStackMachine, userData)
+		instanceSpec, err := machineToInstanceSpec(openStackCluster, machine, openStackMachine, userData)
+		if err != nil {
+			openStackMachine.SetFailure(capierrors.InvalidConfigurationMachineError, err)
+			conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InvalidMachineSpecReason, clusterv1.ConditionSeverityError, err.Error())
+			return nil, fmt.Errorf("invalid machine spec: %w", err)
+		}
 		logger.Info("Machine not exist, Creating Machine", "Machine", openStackMachine.Name)
 		instanceStatus, err = computeService.CreateInstance(openStackMachine, openStackCluster, instanceSpec, cluster.Name, false)
 		if err != nil {
@@ -444,7 +460,7 @@ func (r *OpenStackMachineReconciler) getOrCreate(logger logr.Logger, cluster *cl
 	return instanceStatus, nil
 }
 
-func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, userData string) *compute.InstanceSpec {
+func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, userData string) (*compute.InstanceSpec, error) {
 	instanceSpec := compute.InstanceSpec{
 		Name:          openStackMachine.Name,
 		Image:         openStackMachine.Spec.Image,
@@ -458,12 +474,22 @@ func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *
 		Subnet:        openStackMachine.Spec.Subnet,
 		ServerGroupID: openStackMachine.Spec.ServerGroupID,
 		Trunk:         openStackMachine.Spec.Trunk,
+		Networks:      openStackMachine.Spec.Networks,
+		Ports:         openStackMachine.Spec.Ports,
 	}
 
-	// Add the failure domain only if specified
-	if machine.Spec.FailureDomain != nil {
-		instanceSpec.FailureDomain = *machine.Spec.FailureDomain
+	// This will panic if FailureDomain is nil, but that's ok as that would
+	// be a bug. It should at least be empty, set earlier in the machine
+	// controller.
+	fd := *openStackMachine.Status.FailureDomain
+	instanceSpec.ComputeAvailabilityZone = fd.ComputeAvailabilityZone
+	if fd.StorageAvailabilityZone != "" && openStackMachine.Spec.RootVolume != nil {
+		if openStackMachine.Spec.RootVolume.AvailabilityZone != "" {
+			return nil, fmt.Errorf("root volume availability zone must not be set when storage failure domain is set")
+		}
+		openStackMachine.Spec.RootVolume.AvailabilityZone = fd.StorageAvailabilityZone
 	}
+	instanceSpec.Ports = append(fd.Ports, instanceSpec.Ports...)
 
 	machineTags := []string{}
 
@@ -503,10 +529,7 @@ func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *
 		})
 	}
 
-	instanceSpec.Networks = openStackMachine.Spec.Networks
-	instanceSpec.Ports = openStackMachine.Spec.Ports
-
-	return &instanceSpec
+	return &instanceSpec, nil
 }
 
 func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(scope scope.Scope, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, instanceNS *compute.InstanceNetworkStatus, clusterName string) error {
@@ -517,6 +540,59 @@ func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(scope scope.Sco
 	}
 
 	return loadbalancerService.ReconcileLoadBalancerMember(openStackCluster, machine, openStackMachine, clusterName, ip)
+}
+
+func getFailureDomainForMachine(machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster) (*infrav1.FailureDomain, error) {
+	failureDomainName := pointer.StringDeref(machine.Spec.FailureDomain, "")
+
+	// The expanded failure domain is empty if the machine has no failure domain
+	if failureDomainName == "" {
+		return &infrav1.FailureDomain{}, nil
+	}
+
+	// If we already have a providerID then this is an upgrade: the machine
+	// failure domain name was interpreted as a nova availability zone. We
+	// explicitly don't check that the failure domain is declared in the
+	// cluster status. We must not generate an error here as the machine
+	// already exists and we're just backfilling metadata.
+	if pointer.StringDeref(openStackMachine.Spec.ProviderID, "") != "" {
+		return &infrav1.FailureDomain{
+			ComputeAvailabilityZone: failureDomainName,
+		}, nil
+	}
+
+	fd, ok := openStackCluster.Status.FailureDomains[failureDomainName]
+	if !ok {
+		return nil, fmt.Errorf("failure domain %q not found in cluster status", failureDomainName)
+	}
+
+	fdType, ok := fd.Attributes[infrav1.FailureDomainType]
+	if !ok {
+		// We should always populate the Type attribute even for
+		// clusters created before the Type attribute was added.
+		// However, just in case we run before the cluster is reconciled
+		// we assume the legacy of AZ anyway.
+		fdType = infrav1.FailureDomainTypeAZ
+	}
+
+	if fdType == infrav1.FailureDomainTypeAZ {
+		return &infrav1.FailureDomain{
+			ComputeAvailabilityZone: failureDomainName,
+		}, nil
+	}
+
+	if fdType != infrav1.FailureDomainTypeCluster {
+		return nil, fmt.Errorf("unknown failure domain type %q", fdType)
+	}
+
+	for i := range openStackCluster.Spec.FailureDomains {
+		fd := &openStackCluster.Spec.FailureDomains[i]
+		if fd.Name == failureDomainName {
+			return &fd.FailureDomain, nil
+		}
+	}
+
+	return nil, fmt.Errorf("failure domain %q not found in cluster spec", failureDomainName)
 }
 
 // OpenStackClusterToOpenStackMachines is a handler.ToRequestsFunc to be used to enqeue requests for reconciliation

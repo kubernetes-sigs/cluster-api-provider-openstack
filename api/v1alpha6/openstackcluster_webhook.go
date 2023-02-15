@@ -115,6 +115,13 @@ func (r *OpenStackCluster) ValidateUpdate(oldRaw runtime.Object) error {
 		r.Spec.APIServerLoadBalancer.AllowedCIDRs = []string{}
 	}
 
+	// Allow changes to failure domains Note that changing a failure domain
+	// which is still in use by a MachineDeployment or the control plane
+	// will lead to unpredictable results. In the future we may want to add
+	// validation for what changes are allowed.
+	old.Spec.FailureDomains = nil
+	r.Spec.FailureDomains = nil
+
 	if !reflect.DeepEqual(old.Spec, r.Spec) {
 		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec"), "cannot be modified"))
 	}

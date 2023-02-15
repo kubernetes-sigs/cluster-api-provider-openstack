@@ -265,25 +265,11 @@ func reconcileNormal(scope scope.Scope, cluster *clusterv1.Cluster, openStackClu
 		return reconcile.Result{}, err
 	}
 
-	availabilityZones, err := computeService.GetAvailabilityZones()
+	failureDomains, err := reconcileFailureDomains(computeService, openStackCluster)
 	if err != nil {
-		return ctrl.Result{}, err
+		return reconcile.Result{}, err
 	}
-
-	// Create a new list in case any AZs have been removed from OpenStack
-	openStackCluster.Status.FailureDomains = make(clusterv1.FailureDomains)
-	for _, az := range availabilityZones {
-		// By default, the AZ is used or not used for control plane nodes depending on the flag
-		found := !openStackCluster.Spec.ControlPlaneOmitAvailabilityZone
-		// If explicit AZs for control plane nodes are given, they override the value
-		if len(openStackCluster.Spec.ControlPlaneAvailabilityZones) > 0 {
-			found = contains(openStackCluster.Spec.ControlPlaneAvailabilityZones, az.ZoneName)
-		}
-		// Add the AZ object to the failure domains for the cluster
-		openStackCluster.Status.FailureDomains[az.ZoneName] = clusterv1.FailureDomainSpec{
-			ControlPlane: found,
-		}
-	}
+	openStackCluster.Status.FailureDomains = failureDomains
 
 	openStackCluster.Status.Ready = true
 	openStackCluster.Status.FailureMessage = nil
@@ -373,13 +359,13 @@ func reconcileBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackCl
 func bastionToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, clusterName string) *compute.InstanceSpec {
 	name := fmt.Sprintf("%s-bastion", clusterName)
 	instanceSpec := &compute.InstanceSpec{
-		Name:          name,
-		Flavor:        openStackCluster.Spec.Bastion.Instance.Flavor,
-		SSHKeyName:    openStackCluster.Spec.Bastion.Instance.SSHKeyName,
-		Image:         openStackCluster.Spec.Bastion.Instance.Image,
-		ImageUUID:     openStackCluster.Spec.Bastion.Instance.ImageUUID,
-		FailureDomain: openStackCluster.Spec.Bastion.AvailabilityZone,
-		RootVolume:    openStackCluster.Spec.Bastion.Instance.RootVolume,
+		Name:                    name,
+		Flavor:                  openStackCluster.Spec.Bastion.Instance.Flavor,
+		SSHKeyName:              openStackCluster.Spec.Bastion.Instance.SSHKeyName,
+		Image:                   openStackCluster.Spec.Bastion.Instance.Image,
+		ImageUUID:               openStackCluster.Spec.Bastion.Instance.ImageUUID,
+		ComputeAvailabilityZone: openStackCluster.Spec.Bastion.AvailabilityZone,
+		RootVolume:              openStackCluster.Spec.Bastion.Instance.RootVolume,
 	}
 
 	instanceSpec.SecurityGroups = openStackCluster.Spec.Bastion.Instance.SecurityGroups
@@ -550,6 +536,47 @@ func reconcileNetworkComponents(scope scope.Scope, cluster *clusterv1.Cluster, o
 	}
 
 	return nil
+}
+
+func reconcileFailureDomains(computeService *compute.Service, openStackCluster *infrav1.OpenStackCluster) (clusterv1.FailureDomains, error) {
+	availabilityZones, err := computeService.GetAvailabilityZones()
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a new list in case any AZs have been removed from OpenStack
+	failureDomains := make(clusterv1.FailureDomains)
+
+	// Add failure domains for discovered Nova AZs
+	for _, az := range availabilityZones {
+		// By default, the AZ is used or not used for control plane nodes depending on the flag
+		controlPlane := !openStackCluster.Spec.ControlPlaneOmitAvailabilityZone
+		// If explicit AZs for control plane nodes are given, they override the value
+		if len(openStackCluster.Spec.ControlPlaneAvailabilityZones) > 0 {
+			controlPlane = contains(openStackCluster.Spec.ControlPlaneAvailabilityZones, az.ZoneName)
+		}
+
+		// Add the AZ object to the failure domains for the cluster
+		failureDomains[az.ZoneName] = clusterv1.FailureDomainSpec{
+			ControlPlane: controlPlane,
+			Attributes: map[string]string{
+				infrav1.FailureDomainType: infrav1.FailureDomainTypeAZ,
+			},
+		}
+	}
+
+	// Add failure domains for any explicitly configured failure domains. Failure domains with the same
+	// name as an AZ will override the automatic AZ failure domain.
+	for _, fd := range openStackCluster.Spec.FailureDomains {
+		failureDomains[fd.Name] = clusterv1.FailureDomainSpec{
+			ControlPlane: fd.MachinePlacement != infrav1.FailureDomainMachinePlacementNoControlPlane,
+			Attributes: map[string]string{
+				infrav1.FailureDomainType: infrav1.FailureDomainTypeCluster,
+			},
+		}
+	}
+
+	return failureDomains, nil
 }
 
 func (r *OpenStackClusterReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager, options controller.Options) error {

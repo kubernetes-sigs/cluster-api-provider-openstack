@@ -104,6 +104,16 @@ func (r *OpenStackMachine) ValidateUpdate(old runtime.Object) error {
 		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec"), "cannot be modified"))
 	}
 
+	newOpenStackMachineStatus := newOpenStackMachine["status"].(map[string]interface{})
+	oldOpenStackMachineStatus := oldOpenStackMachine["status"].(map[string]interface{})
+
+	// allow changes to failureDomain once
+	if oldOpenStackMachineStatus["failureDomain"] != nil {
+		if !reflect.DeepEqual(oldOpenStackMachineStatus["failureDomain"], newOpenStackMachineStatus["failureDomain"]) {
+			allErrs = append(allErrs, field.Forbidden(field.NewPath("status", "failureDomain"), "cannot be modified"))
+		}
+	}
+
 	return aggregateObjErrors(r.GroupVersionKind().GroupKind(), r.Name, allErrs)
 }
 

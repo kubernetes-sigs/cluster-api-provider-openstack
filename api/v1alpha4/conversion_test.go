@@ -333,6 +333,8 @@ func TestFuzzyConversion(t *testing.T) {
 
 				v1alpha6Cluster.Spec.ControlPlaneOmitAvailabilityZone = false
 
+				v1alpha6Cluster.Spec.FailureDomains = nil
+
 				if v1alpha6Cluster.Spec.Bastion != nil {
 					v1alpha6Cluster.Spec.Bastion.Instance.Image = ""
 				}
@@ -376,6 +378,8 @@ func TestFuzzyConversion(t *testing.T) {
 				} else {
 					v1alpha6Machine.Spec.ImageUUID = ""
 				}
+
+				v1alpha6Machine.Status.FailureDomain = nil
 			},
 			func(v1alpha6MachineTemplate *infrav1.OpenStackMachineTemplate, c fuzz.Continue) {
 				c.FuzzNoCustom(v1alpha6MachineTemplate)
@@ -410,6 +414,8 @@ func TestFuzzyConversion(t *testing.T) {
 				v1alpha6ClusterTemplate.Spec.Template.Spec.APIServerLoadBalancer.AllowedCIDRs = nil
 
 				v1alpha6ClusterTemplate.Spec.Template.Spec.ControlPlaneOmitAvailabilityZone = false
+
+				v1alpha6ClusterTemplate.Spec.Template.Spec.FailureDomains = nil
 
 				if v1alpha6ClusterTemplate.Spec.Template.Spec.Bastion != nil {
 					v1alpha6ClusterTemplate.Spec.Template.Spec.Bastion.Instance.Image = ""

@@ -226,3 +226,7 @@ func Convert_Slice_v1alpha6_Network_To_Slice_v1alpha5_Network(in *[]infrav1.Netw
 	}
 	return nil
 }
+
+func Convert_v1alpha6_OpenStackMachineStatus_To_v1alpha5_OpenStackMachineStatus(in *infrav1.OpenStackMachineStatus, out *OpenStackMachineStatus, s conversion.Scope) error {
+	return autoConvert_v1alpha6_OpenStackMachineStatus_To_v1alpha5_OpenStackMachineStatus(in, out, s)
+}

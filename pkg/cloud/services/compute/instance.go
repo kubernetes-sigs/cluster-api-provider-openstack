@@ -256,7 +256,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 		Name:             instanceSpec.Name,
 		ImageRef:         serverImageRef,
 		FlavorRef:        flavor.ID,
-		AvailabilityZone: instanceSpec.FailureDomain,
+		AvailabilityZone: instanceSpec.ComputeAvailabilityZone,
 		Networks:         portList,
 		UserData:         []byte(instanceSpec.UserData),
 		Tags:             instanceSpec.Tags,
@@ -357,7 +357,7 @@ func (s *Service) getOrCreateRootVolume(eventObject runtime.Object, instanceSpec
 		return volume, nil
 	}
 
-	availabilityZone := instanceSpec.FailureDomain
+	availabilityZone := instanceSpec.ComputeAvailabilityZone
 	if rootVolume.AvailabilityZone != "" {
 		availabilityZone = rootVolume.AvailabilityZone
 	}

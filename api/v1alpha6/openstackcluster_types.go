@@ -125,13 +125,37 @@ type OpenStackClusterSpec struct {
 	// +optional
 	ControlPlaneEndpoint clusterv1.APIEndpoint `json:"controlPlaneEndpoint"`
 
-	// ControlPlaneAvailabilityZones is the az to deploy control plane to
+	// ControlPlaneAvailabilityZones restricts the list of automatically
+	// discovered Nova availability zones which will be used as failure
+	// domains for control plane nodes. If defined, only availability zones
+	// in this list will be used. If undefined, all availability zones will
+	// be used.
+	//
+	// Note that this only affects failure domains created for automatically
+	// discovered availability zones. Explicitly defined failure domains
+	// will not be affected.
 	// +listType=set
 	ControlPlaneAvailabilityZones []string `json:"controlPlaneAvailabilityZones,omitempty"`
 
-	// Indicates whether to omit the az for control plane nodes, allowing the Nova scheduler
-	// to make a decision on which az to use based on other scheduling constraints
+	// Indicates whether automatically discovered Nova availability zones
+	// will be used as failure domains for control plane nodes. If false or
+	// undefined, all availability zones will be used. If true,
+	// automatically discovered failure domains will not be used by the
+	// control plane unless they are specified in
+	// controlPlaneAvailabilityZones.
+	//
+	// To allow the nova scheduler to place control plane machines in any
+	// availability zone, set this value to true, do not define
+	// controlPlaneAvailabilityZones, and do not define any failureDomains
+	// with the default machinePlacement.
 	ControlPlaneOmitAvailabilityZone bool `json:"controlPlaneOmitAvailabilityZone,omitempty"`
+
+	// FailureDomains defines a set of failure domains that can be
+	// referenced by machines in this cluster. These are in addition to
+	// automatically discovered Nova availability zones.
+	// +listType=map
+	// +listMapKey=name
+	FailureDomains []FailureDomainDefinition `json:"failureDomains,omitempty"`
 
 	// Bastion is the OpenStack instance to login the nodes
 	//
