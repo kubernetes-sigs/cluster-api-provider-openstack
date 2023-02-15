@@ -149,12 +149,20 @@ def file_passes(filename, refs, regexs):
 def file_extension(filename):
     return os.path.splitext(filename)[1].split(".")[-1].lower()
 
-skipped_paths = [
-        '_output',
-        '.git',
-        # Downloaded, not our copyright
-        'hack/tools/ensure-golangci-lint.sh',
+# Directories to prune while scanning the directory tree
+# Files under a directory with one of these names will not be scanned
+prune_dirs = [
+    '_output',
+    '.git',
 ]
+
+# Paths to be ignored for boilerplate detection
+# Relative to the root directory
+ignored_paths = [
+    # Downloaded, not our copyright
+    'hack/tools/ensure-golangci-lint.sh',
+]
+ignored_paths=[os.path.join(args.rootdir, p) for p in ignored_paths]
 
 # list all the files contain 'DO NOT EDIT', but are not generated
 skipped_ungenerated_files = ['hack/boilerplate/boilerplate.py']
@@ -162,7 +170,7 @@ skipped_ungenerated_files = ['hack/boilerplate/boilerplate.py']
 def normalize_files(files):
     newfiles = []
     for pathname in files:
-        if any(x in pathname for x in skipped_paths):
+        if pathname in ignored_paths:
             continue
         newfiles.append(pathname)
     for i, pathname in enumerate(newfiles):
@@ -176,12 +184,9 @@ def get_files(extensions):
         files = args.filenames
     else:
         for root, dirs, walkfiles in os.walk(args.rootdir):
-            # don't visit certain paths. This is just a performance improvement
-            # as we would prune these later in normalize_files(). But doing it
-            # cuts down the amount of filesystem walking we do and cuts down
-            # the size of the file list
-            for p in skipped_paths:
-                if p in dirs:
+            # don't visit certain paths.
+            for d in prune_dirs:
+                if d in dirs:
                     dirs.remove(d)
 
             for name in walkfiles:
