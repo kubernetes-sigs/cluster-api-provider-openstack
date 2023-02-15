@@ -3,10 +3,7 @@ resources:
 - ../default
 
 patches:
-- target:
-    kind: OpenStackCluster
-    name: \${CLUSTER_NAME}
-  path: patch-control-plane.yaml
+- path: patch-control-plane.yaml
 - target:
     kind: MachineDeployment
     name: \${CLUSTER_NAME}-md-0

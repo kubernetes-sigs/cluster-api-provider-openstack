@@ -1,4 +1,17 @@
 ---
-- op: add
-  path: /spec/controlPlaneAvailabilityZones/-
-  value: ${OPENSTACK_FAILURE_DOMAIN_ALT}
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+kind: OpenStackCluster
+metadata:
+  name: ${CLUSTER_NAME}
+spec:
+  controlPlaneAvailabilityZones:
+  controlPlaneOmitAvailabilityZone: true
+  failureDomains:
+  - name: control-plane-fd-0
+    computeAvailabilityZone: ${OPENSTACK_FAILURE_DOMAIN}
+  - name: control-plane-fd-1
+    computeAvailabilityZone: ${OPENSTACK_FAILURE_DOMAIN_ALT}
+  - name: worker-fd-0
+    machinePlacement: NoControlPlane
+    computeAvailabilityZone: ${OPENSTACK_FAILURE_DOMAIN_ALT}
+    storageAvailabilityZone: ${OPENSTACK_FAILURE_DOMAIN}

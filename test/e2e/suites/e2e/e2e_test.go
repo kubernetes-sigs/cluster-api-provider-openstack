@@ -30,7 +30,6 @@ import (
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
-	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
 	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumetypes"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
@@ -441,16 +440,37 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 
 	Describe("Workload cluster (multi-AZ)", func() {
 		var (
-			clusterName                     string
-			md                              []*clusterv1.MachineDeployment
-			failureDomain, failureDomainAlt string
-			volumeTypeAlt                   string
-			cluster                         *infrav1.OpenStackCluster
+			clusterName       string
+			md                []*clusterv1.MachineDeployment
+			azName, azNameAlt string
+			volumeTypeAlt     string
+			cluster           *infrav1.OpenStackCluster
 		)
 
+		// The multi-az cluster declares the following failure domains:
+		//
+		// failureDomains:
+		// - name: control-plane-fd-0
+		//   computeAvailabilityZone: ${OPENSTACK_FAILURE_DOMAIN}
+		// - name: control-plane-fd-1
+		//   computeAvailabilityZone: ${OPENSTACK_FAILURE_DOMAIN_ALT}
+		// - name: worker-fd-0
+		//   machinePlacement: NoControlPlane
+		//   computeAvailabilityZone: ${OPENSTACK_FAILURE_DOMAIN_ALT}
+		//   storageAvailabilityZone: ${OPENSTACK_FAILURE_DOMAIN}
+		//
+		// We expect the control plane to be distributed across
+		// control-plane-fd-0 and control-plane-fd-1. As no storage
+		// failure domain is specified, it will default to being the
+		// same as the compute AZ.
+		//
+		// The worker nodes will be created in worker-fd-0. The servers
+		// should be created in the alternate AZ, but the volumes should
+		// be created in the primary AZ.
+
 		BeforeEach(func() {
-			failureDomain = e2eCtx.E2EConfig.GetVariable(shared.OpenStackFailureDomain)
-			failureDomainAlt = e2eCtx.E2EConfig.GetVariable(shared.OpenStackFailureDomainAlt)
+			azName = e2eCtx.E2EConfig.GetVariable(shared.OpenStackFailureDomain)
+			azNameAlt = e2eCtx.E2EConfig.GetVariable(shared.OpenStackFailureDomainAlt)
 			volumeTypeAlt = e2eCtx.E2EConfig.GetVariable(shared.OpenStackVolumeTypeAlt)
 
 			// We create the second compute host asynchronously, so
@@ -462,9 +482,9 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			// second compute is already up by the time we get here,
 			// and we don't have to wait.
 			Eventually(func() []string {
-				shared.Logf("Waiting for the alternate AZ '%s' to be created", failureDomainAlt)
+				shared.Logf("Waiting for the alternate AZ '%s' to be created", azNameAlt)
 				return shared.GetComputeAvailabilityZones(e2eCtx)
-			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-alt-az")...).Should(ContainElement(failureDomainAlt))
+			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-alt-az")...).Should(ContainElement(azNameAlt))
 
 			shared.Logf("Creating a cluster")
 			clusterName = fmt.Sprintf("cluster-%s", namespace.Name)
@@ -498,14 +518,35 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 				HaveLen(2),
 				fmt.Sprintf("Cluster %s does not have the expected number of worker machines", cluster.Name))
 
+			allServerNames := sets.NewString()
+			for _, machine := range append(controlPlaneMachines, workerMachines...) {
+				allServerNames.Insert(machine.Spec.InfrastructureRef.Name)
+			}
+
+			allServers, err := shared.GetOpenStackServers(e2eCtx, cluster, allServerNames)
+			Expect(err).NotTo(HaveOccurred())
+
+			getServerForMachine := func(machine clusterv1.Machine) shared.ServerExtWithIP {
+				openstackMachineName := machine.Spec.InfrastructureRef.Name
+				Expect(openstackMachineName).ToNot(BeEmpty())
+
+				// The output of a HaveKey() failure against
+				// allServers is too long and overflows, so we
+				// check allServerNames
+				Expect(allServerNames).To(
+					ContainElement(openstackMachineName),
+					fmt.Sprintf("Cluster %s: did not find a server for machine %s", cluster.Name, openstackMachineName))
+
+				server := allServers[openstackMachineName]
+				return server
+			}
+
 			getAZsForMachines := func(machines []clusterv1.Machine) []string {
 				azs := make(map[string]struct{})
+
 				for _, machine := range machines {
-					failureDomain := machine.Spec.FailureDomain
-					if failureDomain == nil {
-						continue
-					}
-					azs[*failureDomain] = struct{}{}
+					server := getServerForMachine(machine)
+					azs[server.AvailabilityZone] = struct{}{}
 				}
 
 				azSlice := make([]string, 0, len(azs))
@@ -519,46 +560,17 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			// The control plane should be spread across both AZs
 			controlPlaneAZs := getAZsForMachines(controlPlaneMachines)
 			Expect(controlPlaneAZs).To(
-				ConsistOf(failureDomain, failureDomainAlt),
+				ConsistOf(azName, azNameAlt),
 				fmt.Sprintf("Cluster %s: control plane machines were not scheduled in the expected AZs", cluster.Name))
 
 			// All workers should be in the alt AZ
 			workerAZs := getAZsForMachines(workerMachines)
 			Expect(workerAZs).To(
-				ConsistOf(failureDomainAlt),
+				ConsistOf(azNameAlt),
 				fmt.Sprintf("Cluster %s: worker machines were not scheduled in the expected AZ", cluster.Name))
 
-			// Check that all machines were actually scheduled in the correct AZ
-			var allMachines []clusterv1.Machine
-			allMachines = append(allMachines, controlPlaneMachines...)
-			allMachines = append(allMachines, workerMachines...)
-
-			machineNames := sets.NewString()
-			for _, machine := range allMachines {
-				machineNames.Insert(machine.Spec.InfrastructureRef.Name)
-			}
-			allServers, err := shared.GetOpenStackServers(e2eCtx, cluster, machineNames)
-			Expect(err).NotTo(HaveOccurred())
-
-			allServerNames := make([]string, 0, len(allServers))
-			for name := range allServers {
-				allServerNames = append(allServerNames, name)
-			}
-
-			bootVolumes := make(map[string]*volumes.Volume)
-
-			for _, machine := range allMachines {
-				// The output of a HaveKey() failure against
-				// allServers is too long and overflows
-				openstackMachineName := machine.Spec.InfrastructureRef.Name
-				Expect(allServerNames).To(
-					ContainElement(openstackMachineName),
-					fmt.Sprintf("Cluster %s: did not find a server for machine %s", cluster.Name, openstackMachineName))
-
-				server := allServers[openstackMachineName]
-				Expect(server.AvailabilityZone).To(
-					Equal(*machine.Spec.FailureDomain),
-					fmt.Sprintf("Server %s was not scheduled in the correct AZ", machine.Name))
+			for _, machine := range controlPlaneMachines {
+				server := getServerForMachine(machine)
 
 				// Check that all machines have the expected boot volume
 				volumes := server.AttachedVolumes
@@ -566,27 +578,35 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 
 				bootVolume, err := shared.GetOpenStackVolume(e2eCtx, volumes[0].ID)
 				Expect(err).NotTo(HaveOccurred(), "failed to get OpenStack volume %s for machine %s", volumes[0].ID, machine.Name)
-				bootVolumes[machine.Name] = bootVolume
 
 				Expect(*bootVolume).To(MatchFields(IgnoreExtras, Fields{
 					"Name":     Equal(fmt.Sprintf("%s-root", server.Name)),
 					"Size":     Equal(15),
 					"Bootable": Equal("true"), // This is genuinely a string, not a bool
+					// Expect all control plane machines to have a root volume in the same AZ as the machine, and the default volume type
+					"AvailabilityZone": Equal(server.AvailabilityZone),
+					"VolumeType":       Not(Equal(volumeTypeAlt)),
 				}), "Boot volume %s for machine %s not as expected", bootVolume.ID, machine.Name)
 			}
 
-			// Expect all control plane machines to have a root volume in the same AZ as the machine, and the default volume type
-			for _, machine := range controlPlaneMachines {
-				bootVolume := bootVolumes[machine.Name]
-				Expect(bootVolume.AvailabilityZone).To(Equal(*machine.Spec.FailureDomain))
-				Expect(bootVolume.VolumeType).NotTo(Equal(volumeTypeAlt))
-			}
-
-			// Expect all worker machines to have a root volume in the primary AZ, and the test volume type
 			for _, machine := range workerMachines {
-				bootVolume := bootVolumes[machine.Name]
-				Expect(bootVolume.AvailabilityZone).To(Equal(failureDomain))
-				Expect(bootVolume.VolumeType).To(Equal(volumeTypeAlt))
+				server := getServerForMachine(machine)
+
+				// Check that all machines have the expected boot volume
+				volumes := server.AttachedVolumes
+				Expect(volumes).To(HaveLen(1))
+
+				bootVolume, err := shared.GetOpenStackVolume(e2eCtx, volumes[0].ID)
+				Expect(err).NotTo(HaveOccurred(), "failed to get OpenStack volume %s for machine %s", volumes[0].ID, machine.Name)
+
+				Expect(*bootVolume).To(MatchFields(IgnoreExtras, Fields{
+					"Name":     Equal(fmt.Sprintf("%s-root", server.Name)),
+					"Size":     Equal(15),
+					"Bootable": Equal("true"), // This is genuinely a string, not a bool
+					// Expect all worker machines to have a root volume in the primary AZ, and the test volume type
+					"AvailabilityZone": Equal(azName),
+					"VolumeType":       Equal(volumeTypeAlt),
+				}), "Boot volume %s for machine %s not as expected", bootVolume.ID, machine.Name)
 			}
 		})
 	})

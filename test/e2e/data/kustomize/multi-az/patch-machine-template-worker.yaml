@@ -4,4 +4,3 @@
   value:
     diskSize: 15
     volumeType: ${OPENSTACK_VOLUME_TYPE_ALT}
-    availabilityZone: ${OPENSTACK_FAILURE_DOMAIN}
