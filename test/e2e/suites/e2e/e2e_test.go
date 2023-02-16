@@ -47,6 +47,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	apimachinerytypes "k8s.io/apimachinery/pkg/types"
 	utilrand "k8s.io/apimachinery/pkg/util/rand"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/utils/pointer"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	bootstrapv1 "sigs.k8s.io/cluster-api/bootstrap/kubeadm/api/v1beta1"
@@ -532,7 +533,11 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			allMachines = append(allMachines, controlPlaneMachines...)
 			allMachines = append(allMachines, workerMachines...)
 
-			allServers, err := shared.GetOpenStackServers(e2eCtx, cluster)
+			machineNames := sets.NewString()
+			for _, machine := range allMachines {
+				machineNames.Insert(machine.Spec.InfrastructureRef.Name)
+			}
+			allServers, err := shared.GetOpenStackServers(e2eCtx, cluster, machineNames)
 			Expect(err).NotTo(HaveOccurred())
 
 			allServerNames := make([]string, 0, len(allServers))
