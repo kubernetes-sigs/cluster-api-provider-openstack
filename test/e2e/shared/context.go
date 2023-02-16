@@ -21,7 +21,6 @@ package shared
 
 import (
 	"context"
-	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -86,14 +85,6 @@ type RuntimeEnvironment struct {
 	BootstrapClusterProvider bootstrap.ClusterProvider
 	// BootstrapClusterProxy allows to interact with the bootstrap cluster to be used for the e2e tests.
 	BootstrapClusterProxy framework.ClusterProxy
-	// ResourceTicker for dumping resources
-	ResourceTicker *time.Ticker
-	// ResourceTickerDone to stop ticking
-	ResourceTickerDone chan bool
-	// MachineTicker for dumping resources
-	MachineTicker *time.Ticker
-	// MachineTickerDone to stop ticking
-	MachineTickerDone chan bool
 	// Namespaces holds the namespaces used in the tests
 	Namespaces map[*corev1.Namespace]context.CancelFunc
 	// ClusterctlConfigPath to be used for this test, created by generating a clusterctl local repository

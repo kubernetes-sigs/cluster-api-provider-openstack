@@ -163,79 +163,12 @@ func AllNodesBeforeSuite(e2eCtx *E2EContext, data []byte) {
 	SetEnvVar("OPENSTACK_CLOUD_YAML_B64", getEncodedOpenStackCloudYAML(openStackCloudYAMLFile), true)
 	SetEnvVar("OPENSTACK_CLOUD_PROVIDER_CONF_B64", getEncodedOpenStackCloudProviderConf(openStackCloudYAMLFile, openStackCloud), true)
 	SetEnvVar("OPENSTACK_SSH_KEY_NAME", DefaultSSHKeyPairName, false)
-
-	e2eCtx.Environment.ResourceTicker = time.NewTicker(time.Second * 10)
-	e2eCtx.Environment.ResourceTickerDone = make(chan bool)
-	// Get OpenStack server logs every 5 minutes
-	e2eCtx.Environment.MachineTicker = time.NewTicker(time.Second * 60)
-	e2eCtx.Environment.MachineTickerDone = make(chan bool)
-	resourceCtx, resourceCancel := context.WithCancel(context.Background())
-	machineCtx, machineCancel := context.WithCancel(context.Background())
-
-	debug := e2eCtx.Settings.Debug
-	// Dump resources every 5 seconds
-	go func() {
-		defer GinkgoRecover()
-		for {
-			select {
-			case <-e2eCtx.Environment.ResourceTickerDone:
-				Debugf(debug, "Running ResourceTickerDone")
-				resourceCancel()
-				Debugf(debug, "Finished ResourceTickerDone")
-				return
-			case <-e2eCtx.Environment.ResourceTicker.C:
-				Debugf(debug, "Running ResourceTicker")
-				for k := range e2eCtx.Environment.Namespaces {
-					// ensure dumpSpecResources cannot get stuck indefinitely
-					timeoutCtx, timeoutCancel := context.WithTimeout(resourceCtx, time.Second*5)
-					dumpSpecResources(timeoutCtx, e2eCtx, k)
-					timeoutCancel()
-				}
-				Debugf(debug, "Finished ResourceTicker")
-			}
-		}
-	}()
-
-	// Dump machine logs every 60 seconds
-	go func() {
-		defer GinkgoRecover()
-		for {
-			select {
-			case <-e2eCtx.Environment.MachineTickerDone:
-				Debugf(debug, "Running MachineTickerDone")
-				machineCancel()
-				Debugf(debug, "Finished MachineTickerDone")
-				return
-			case <-e2eCtx.Environment.MachineTicker.C:
-				Debugf(debug, "Running MachineTicker")
-				for k := range e2eCtx.Environment.Namespaces {
-					// ensure dumpMachines cannot get stuck indefinitely
-					timeoutCtx, timeoutCancel := context.WithTimeout(machineCtx, time.Second*30)
-					dumpMachines(timeoutCtx, e2eCtx, k)
-					timeoutCancel()
-				}
-				Debugf(debug, "Finished MachineTicker")
-			}
-		}
-	}()
 }
 
 // AllNodesAfterSuite is cleanup that runs on all ginkgo parallel nodes after the test suite finishes.
 func AllNodesAfterSuite(e2eCtx *E2EContext) {
 	Logf("Running AllNodesAfterSuite")
 	defer Logf("Finished AllNodesAfterSuite")
-
-	Logf("Stopping ResourceTicker")
-	if e2eCtx.Environment.ResourceTickerDone != nil {
-		e2eCtx.Environment.ResourceTickerDone <- true
-	}
-	Logf("Stopped ResourceTicker")
-
-	Logf("Stopping MachineTicker")
-	if e2eCtx.Environment.MachineTickerDone != nil {
-		e2eCtx.Environment.MachineTickerDone <- true
-	}
-	Logf("Stopped MachineTicker")
 
 	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Minute)
 	defer cancel()
