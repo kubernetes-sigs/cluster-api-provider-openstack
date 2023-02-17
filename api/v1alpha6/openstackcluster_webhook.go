@@ -115,6 +115,10 @@ func (r *OpenStackCluster) ValidateUpdate(oldRaw runtime.Object) error {
 		r.Spec.APIServerLoadBalancer.AllowedCIDRs = []string{}
 	}
 
+	// Allow changes to the availability zones.
+	old.Spec.ControlPlaneAvailabilityZones = []string{}
+	r.Spec.ControlPlaneAvailabilityZones = []string{}
+
 	if !reflect.DeepEqual(old.Spec, r.Spec) {
 		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec"), "cannot be modified"))
 	}
