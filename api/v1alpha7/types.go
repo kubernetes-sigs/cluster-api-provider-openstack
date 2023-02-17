@@ -152,6 +152,9 @@ type PortOpts struct {
 	// When not set, it takes the value of the corresponding field at the network level.
 	DisablePortSecurity *bool `json:"disablePortSecurity,omitempty"`
 
+	// PropageteUplinkStatus enables or disables the propagate uplink status on the port.
+	PropagateUplinkStatus *bool `json:"propagateUplinkStatus,omitempty"`
+
 	// Tags applied to the port (and corresponding trunk, if a trunk is configured.)
 	// These tags are applied in addition to the instance's tags, which will also be applied to the port.
 	// +listType=set

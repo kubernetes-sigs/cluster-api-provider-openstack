@@ -137,17 +137,18 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 	}
 
 	createOpts = ports.CreateOpts{
-		Name:                portName,
-		NetworkID:           net.ID,
-		Description:         description,
-		AdminStateUp:        portOpts.AdminStateUp,
-		MACAddress:          portOpts.MACAddress,
-		TenantID:            portOpts.TenantID,
-		ProjectID:           portOpts.ProjectID,
-		SecurityGroups:      securityGroupsPtr,
-		AllowedAddressPairs: addressPairs,
-		FixedIPs:            fixedIPs,
-		ValueSpecs:          valueSpecs,
+		Name:                  portName,
+		NetworkID:             net.ID,
+		Description:           description,
+		AdminStateUp:          portOpts.AdminStateUp,
+		MACAddress:            portOpts.MACAddress,
+		TenantID:              portOpts.TenantID,
+		ProjectID:             portOpts.ProjectID,
+		SecurityGroups:        securityGroupsPtr,
+		AllowedAddressPairs:   addressPairs,
+		FixedIPs:              fixedIPs,
+		ValueSpecs:            valueSpecs,
+		PropagateUplinkStatus: portOpts.PropagateUplinkStatus,
 	}
 
 	if portOpts.DisablePortSecurity != nil {

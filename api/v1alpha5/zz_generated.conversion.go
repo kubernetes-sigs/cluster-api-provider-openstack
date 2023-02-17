@@ -1480,6 +1480,7 @@ func autoConvert_v1alpha7_PortOpts_To_v1alpha5_PortOpts(in *v1alpha7.PortOpts, o
 	out.VNICType = in.VNICType
 	out.Profile = *(*map[string]string)(unsafe.Pointer(&in.Profile))
 	out.DisablePortSecurity = (*bool)(unsafe.Pointer(in.DisablePortSecurity))
+	// WARNING: in.PropagateUplinkStatus requires manual conversion: does not exist in peer-type
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	// WARNING: in.ValueSpecs requires manual conversion: does not exist in peer-type
 	return nil

@@ -313,6 +313,7 @@ func TestFuzzyConversion(t *testing.T) {
 				}
 				v1alpha7PortOpts.SecurityGroupFilters = nil
 				v1alpha7PortOpts.ValueSpecs = nil
+				v1alpha7PortOpts.PropagateUplinkStatus = nil
 			},
 			func(v1alpha7FixedIP *infrav1.FixedIP, c fuzz.Continue) {
 				c.FuzzNoCustom(v1alpha7FixedIP)

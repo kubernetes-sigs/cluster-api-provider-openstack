@@ -467,6 +467,39 @@ func Test_GetOrCreatePort(t *testing.T) {
 			&ports.Port{ID: portID1},
 			false,
 		},
+		{
+			"creates port with propagate uplink status",
+			"foo-port-1",
+			infrav1.Network{
+				ID: netID,
+				PortOpts: &infrav1.PortOpts{
+					PropagateUplinkStatus: pointerToTrue,
+				},
+			},
+			instanceSecurityGroups,
+			[]string{},
+			func(m *mock.MockNetworkClientMockRecorder) {
+				// No ports found
+				m.
+					ListPort(ports.ListOpts{
+						Name:      "foo-port-1",
+						NetworkID: netID,
+					}).Return([]ports.Port{}, nil)
+				m.
+					CreatePort(portsbinding.CreateOptsExt{
+						CreateOptsBuilder: ports.CreateOpts{
+							Name:                  "foo-port-1",
+							Description:           "Created by cluster-api-provider-openstack cluster test-cluster",
+							SecurityGroups:        &instanceSecurityGroups,
+							NetworkID:             netID,
+							AllowedAddressPairs:   []ports.AddressPair{},
+							PropagateUplinkStatus: pointerToTrue,
+						},
+					}).Return(&ports.Port{ID: portID1, PropagateUplinkStatus: *pointerToTrue}, nil)
+			},
+			&ports.Port{ID: portID1, PropagateUplinkStatus: *pointerToTrue},
+			false,
+		},
 	}
 
 	eventObject := &infrav1.OpenStackMachine{}
