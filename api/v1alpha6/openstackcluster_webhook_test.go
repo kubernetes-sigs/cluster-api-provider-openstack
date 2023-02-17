@@ -175,6 +175,65 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "Adding OpenStackCluster.Spec.ControlPlaneAvailabilityZones is allowed",
+			oldTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					CloudName: "foobar",
+				},
+			},
+			newTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					CloudName: "foobar",
+					ControlPlaneAvailabilityZones: []string{
+						"alice",
+						"bob",
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Modifying OpenStackCluster.Spec.ControlPlaneAvailabilityZones is allowed",
+			oldTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					CloudName: "foobar",
+					ControlPlaneAvailabilityZones: []string{
+						"alice",
+						"bob",
+					},
+				},
+			},
+			newTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					CloudName: "foobar",
+					ControlPlaneAvailabilityZones: []string{
+						"alice",
+						"bob",
+						"eve",
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Removing OpenStackCluster.Spec.ControlPlaneAvailabilityZones is allowed",
+			oldTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					CloudName: "foobar",
+					ControlPlaneAvailabilityZones: []string{
+						"alice",
+						"bob",
+					},
+				},
+			},
+			newTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					CloudName: "foobar",
+				},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
