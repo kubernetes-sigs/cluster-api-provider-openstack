@@ -18,6 +18,7 @@ package clients
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
@@ -64,13 +65,23 @@ type computeClient struct{ client *gophercloud.ServiceClient }
 
 // NewComputeClient returns a new compute client.
 func NewComputeClient(providerClientOpts *clientconfig.ClientOpts) (ComputeClient, error) {
-	// TODO: Set env var or similar to indicate minimum microversion.
 	compute, err := clientconfig.NewServiceClient(string(clientconfig.Compute), providerClientOpts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create compute service client: %v", err)
 	}
-	compute.Microversion = NovaMinimumMicroversion
+	// TODO: If no version is set, should we just set the minimum then?
+	// Any way to request a minimum version?
+	if compute.Microversion != "" {
+		v, err := strconv.ParseFloat(compute.Microversion, 32)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse nova microversion: %v", err)
+		}
+		if v < 2.53 {
+			return nil, fmt.Errorf("nova microversion is too low. At least 2.53 is required. Version: %f", v)
+		}
+	}
 
+	fmt.Println("[DEBUG]: nova microversion is set to", compute.Microversion)
 	return &computeClient{compute}, nil
 }
 

@@ -99,6 +99,8 @@ func NewNetworkClient(providerClientOpts *clientconfig.ClientOpts) (NetworkClien
 		return nil, fmt.Errorf("failed to create networking service providerClient: %v", err)
 	}
 
+	fmt.Println("[DEBUG]: network microversion is set to", serviceClient.Microversion)
+
 	return networkClient{serviceClient}, nil
 }
 
