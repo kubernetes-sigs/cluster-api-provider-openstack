@@ -48,6 +48,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"gopkg.in/ini.v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/yaml"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
@@ -430,9 +431,8 @@ func DumpOpenStackTrunks(e2eCtx *E2EContext, portID string) (*trunks.Trunk, erro
 	return nil, nil
 }
 
-// GetOpenStackServers gets all OpenStack servers at once, to save on DescribeInstances
-// calls.
-func GetOpenStackServers(e2eCtx *E2EContext, openStackCluster *infrav1.OpenStackCluster) (map[string]ServerExtWithIP, error) {
+// GetOpenStackServers gets all OpenStack servers at once to save on DescribeInstances calls, then filters them based on a list of machine names.
+func GetOpenStackServers(e2eCtx *E2EContext, openStackCluster *infrav1.OpenStackCluster, machineNames sets.String) (map[string]ServerExtWithIP, error) {
 	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
 	if err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
@@ -459,6 +459,12 @@ func GetOpenStackServers(e2eCtx *E2EContext, openStackCluster *infrav1.OpenStack
 	srvs := map[string]ServerExtWithIP{}
 	for i := range serverList {
 		srv := &serverList[i]
+
+		// Skip servers that we weren't asked for
+		if !machineNames.Has(srv.Name) {
+			continue
+		}
+
 		instanceStatus := compute.NewInstanceStatusFromServer(srv, logr.Discard())
 		instanceNS, err := instanceStatus.NetworkStatus()
 		if err != nil {

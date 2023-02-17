@@ -31,6 +31,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/cluster-api/test/framework/clusterctl"
 	"sigs.k8s.io/cluster-api/util"
@@ -111,7 +112,12 @@ func dumpMachines(ctx context.Context, e2eCtx *E2EContext, namespace *corev1.Nam
 		_, _ = fmt.Fprintf(GinkgoWriter, "cannot dump machines, could not get machines: %v\n", err)
 		return
 	}
-	srvs, err := GetOpenStackServers(e2eCtx, cluster)
+
+	machineNames := sets.NewString()
+	for _, machine := range machines.Items {
+		machineNames.Insert(machine.Name)
+	}
+	srvs, err := GetOpenStackServers(e2eCtx, cluster, machineNames)
 	if err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "cannot dump machines, could not get servers from OpenStack: %v\n", err)
 		return
