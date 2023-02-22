@@ -28,5 +28,13 @@ func (s *Service) GetAvailabilityZones() ([]availabilityzones.AvailabilityZone, 
 		return nil, fmt.Errorf("error extracting availability zone list: %v", err)
 	}
 
-	return availabilityZoneList, nil
+	available := make([]availabilityzones.AvailabilityZone, 0, len(availabilityZoneList))
+
+	for _, az := range availabilityZoneList {
+		if az.ZoneState.Available {
+			available = append(available, az)
+		}
+	}
+
+	return available, nil
 }
