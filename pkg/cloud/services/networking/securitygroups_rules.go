@@ -101,14 +101,14 @@ func getSGControlPlaneCalico(remoteGroupIDSelf, secWorkerGroupID string) []infra
 			Description:   "IP-in-IP (calico)",
 			Direction:     "ingress",
 			EtherType:     "IPv4",
-			Protocol:      "ipip",
+			Protocol:      "4",
 			RemoteGroupID: remoteGroupIDSelf,
 		},
 		{
 			Description:   "IP-in-IP (calico)",
 			Direction:     "ingress",
 			EtherType:     "IPv4",
-			Protocol:      "ipip",
+			Protocol:      "4",
 			RemoteGroupID: secWorkerGroupID,
 		},
 	}
@@ -164,14 +164,14 @@ func getSGWorkerCalico(remoteGroupIDSelf, secControlPlaneGroupID string) []infra
 			Description:   "IP-in-IP (calico)",
 			Direction:     "ingress",
 			EtherType:     "IPv4",
-			Protocol:      "ipip",
+			Protocol:      "4",
 			RemoteGroupID: remoteGroupIDSelf,
 		},
 		{
 			Description:   "IP-in-IP (calico)",
 			Direction:     "ingress",
 			EtherType:     "IPv4",
-			Protocol:      "ipip",
+			Protocol:      "4",
 			RemoteGroupID: secControlPlaneGroupID,
 		},
 	}
