@@ -132,7 +132,7 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 
 	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
 		controlPlaneRules = append(controlPlaneRules, GetSGControlPlaneSSH(secBastionGroupID)...)
-		controlPlaneRules = append(controlPlaneRules, GetSGWorkerSSH(secBastionGroupID)...)
+		workerRules = append(workerRules, GetSGWorkerSSH(secBastionGroupID)...)
 
 		desiredSecGroups[bastionSuffix] = infrav1.SecurityGroup{
 			Name: secGroupNames[bastionSuffix],
