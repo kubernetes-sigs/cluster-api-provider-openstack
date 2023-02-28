@@ -1514,6 +1514,7 @@ func autoConvert_v1alpha6_PortOpts_To_v1alpha4_PortOpts(in *v1alpha6.PortOpts, o
 	out.Profile = *(*map[string]string)(unsafe.Pointer(&in.Profile))
 	out.DisablePortSecurity = (*bool)(unsafe.Pointer(in.DisablePortSecurity))
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
+	// WARNING: in.ValueSpecs requires manual conversion: does not exist in peer-type
 	return nil
 }
 

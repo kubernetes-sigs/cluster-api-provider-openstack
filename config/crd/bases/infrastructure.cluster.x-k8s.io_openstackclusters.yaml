@@ -4609,6 +4609,36 @@ spec:
                               description: Enables and disables trunk at port level.
                                 If not provided, openStackMachine.Spec.Trunk is inherited.
                               type: boolean
+                            valueSpecs:
+                              description: Value specs are extra parameters to include
+                                in the API request with OpenStack. This is an extension
+                                point for the API, so what they do and if they are
+                                supported, depends on the specific OpenStack implementation.
+                              items:
+                                description: ValueSpec represents a single value_spec
+                                  key-value pair.
+                                properties:
+                                  key:
+                                    description: Key is the key in the key-value pair.
+                                    type: string
+                                  name:
+                                    description: Name is the name of the key-value
+                                      pair. This is just for identifying the pair
+                                      and will not be sent to the OpenStack API.
+                                    type: string
+                                  value:
+                                    description: Value is the value in the key-value
+                                      pair.
+                                    type: string
+                                required:
+                                - key
+                                - name
+                                - value
+                                type: object
+                              type: array
+                              x-kubernetes-list-map-keys:
+                              - name
+                              x-kubernetes-list-type: map
                             vnicType:
                               description: The virtual network interface card (vNIC)
                                 type that is bound to the neutron port.
@@ -5147,6 +5177,36 @@ spec:
                               description: Enables and disables trunk at port level.
                                 If not provided, openStackMachine.Spec.Trunk is inherited.
                               type: boolean
+                            valueSpecs:
+                              description: Value specs are extra parameters to include
+                                in the API request with OpenStack. This is an extension
+                                point for the API, so what they do and if they are
+                                supported, depends on the specific OpenStack implementation.
+                              items:
+                                description: ValueSpec represents a single value_spec
+                                  key-value pair.
+                                properties:
+                                  key:
+                                    description: Key is the key in the key-value pair.
+                                    type: string
+                                  name:
+                                    description: Name is the name of the key-value
+                                      pair. This is just for identifying the pair
+                                      and will not be sent to the OpenStack API.
+                                    type: string
+                                  value:
+                                    description: Value is the value in the key-value
+                                      pair.
+                                    type: string
+                                required:
+                                - key
+                                - name
+                                - value
+                                type: object
+                              type: array
+                              x-kubernetes-list-map-keys:
+                              - name
+                              x-kubernetes-list-type: map
                             vnicType:
                               description: The virtual network interface card (vNIC)
                                 type that is bound to the neutron port.
@@ -5541,6 +5601,35 @@ spec:
                         description: Enables and disables trunk at port level. If
                           not provided, openStackMachine.Spec.Trunk is inherited.
                         type: boolean
+                      valueSpecs:
+                        description: Value specs are extra parameters to include in
+                          the API request with OpenStack. This is an extension point
+                          for the API, so what they do and if they are supported,
+                          depends on the specific OpenStack implementation.
+                        items:
+                          description: ValueSpec represents a single value_spec key-value
+                            pair.
+                          properties:
+                            key:
+                              description: Key is the key in the key-value pair.
+                              type: string
+                            name:
+                              description: Name is the name of the key-value pair.
+                                This is just for identifying the pair and will not
+                                be sent to the OpenStack API.
+                              type: string
+                            value:
+                              description: Value is the value in the key-value pair.
+                              type: string
+                          required:
+                          - key
+                          - name
+                          - value
+                          type: object
+                        type: array
+                        x-kubernetes-list-map-keys:
+                        - name
+                        x-kubernetes-list-type: map
                       vnicType:
                         description: The virtual network interface card (vNIC) type
                           that is bound to the neutron port.
@@ -5849,6 +5938,35 @@ spec:
                         description: Enables and disables trunk at port level. If
                           not provided, openStackMachine.Spec.Trunk is inherited.
                         type: boolean
+                      valueSpecs:
+                        description: Value specs are extra parameters to include in
+                          the API request with OpenStack. This is an extension point
+                          for the API, so what they do and if they are supported,
+                          depends on the specific OpenStack implementation.
+                        items:
+                          description: ValueSpec represents a single value_spec key-value
+                            pair.
+                          properties:
+                            key:
+                              description: Key is the key in the key-value pair.
+                              type: string
+                            name:
+                              description: Name is the name of the key-value pair.
+                                This is just for identifying the pair and will not
+                                be sent to the OpenStack API.
+                              type: string
+                            value:
+                              description: Value is the value in the key-value pair.
+                              type: string
+                          required:
+                          - key
+                          - name
+                          - value
+                          type: object
+                        type: array
+                        x-kubernetes-list-map-keys:
+                        - name
+                        x-kubernetes-list-type: map
                       vnicType:
                         description: The virtual network interface card (vNIC) type
                           that is bound to the neutron port.

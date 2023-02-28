@@ -50,6 +50,7 @@ func Test_GetOrCreatePort(t *testing.T) {
 	// Other arbitrary variables passed in to the tests
 	instanceSecurityGroups := []string{"instance-secgroup"}
 	portSecurityGroups := []string{"port-secgroup"}
+	valueSpecs := map[string]string{"key": "value"}
 
 	pointerToTrue := pointerTo(true)
 	pointerToFalse := pointerTo(false)
@@ -426,6 +427,44 @@ func Test_GetOrCreatePort(t *testing.T) {
 				m.ReplaceAllAttributesTags("trunks", trunkID, attributestags.ReplaceAllOpts{Tags: []string{"my-tag"}}).Return([]string{"my-tag"}, nil)
 			},
 			&ports.Port{Name: "foo-port-1", ID: portID1},
+			false,
+		},
+		{
+			"creates port with value_specs",
+			"foo-port-1",
+			infrav1.Network{
+				ID: netID,
+				PortOpts: &infrav1.PortOpts{
+					ValueSpecs: []infrav1.ValueSpec{
+						{
+							Name:  "Not important",
+							Key:   "key",
+							Value: "value",
+						},
+					},
+				},
+			},
+			nil,
+			nil,
+			func(m *mock.MockNetworkClientMockRecorder) {
+				// No ports found
+				m.
+					ListPort(ports.ListOpts{
+						Name:      "foo-port-1",
+						NetworkID: netID,
+					}).Return([]ports.Port{}, nil)
+				m.
+					CreatePort(portsbinding.CreateOptsExt{
+						CreateOptsBuilder: ports.CreateOpts{
+							Name:                "foo-port-1",
+							Description:         "Created by cluster-api-provider-openstack cluster test-cluster",
+							NetworkID:           netID,
+							AllowedAddressPairs: []ports.AddressPair{},
+							ValueSpecs:          &valueSpecs,
+						},
+					}).Return(&ports.Port{ID: portID1}, nil)
+			},
+			&ports.Port{ID: portID1},
 			false,
 		},
 	}
