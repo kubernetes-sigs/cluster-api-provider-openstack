@@ -28,7 +28,7 @@ import (
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
 	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 )
 
 func TestConvertTo(t *testing.T) {
@@ -253,7 +253,7 @@ func TestFuzzyConversion(t *testing.T) {
 			func(v1alpha4RootVolume *RootVolume, c fuzz.Continue) {
 				c.FuzzNoCustom(v1alpha4RootVolume)
 
-				// In v1alpha6 only DeviceType="disk" and SourceType="image" are supported
+				// In v1alpha7 only DeviceType="disk" and SourceType="image" are supported
 				v1alpha4RootVolume.DeviceType = "disk"
 				v1alpha4RootVolume.SourceType = "image"
 			},
@@ -293,127 +293,127 @@ func TestFuzzyConversion(t *testing.T) {
 			},
 
 			// Don't test hub-spoke-hub conversion of infrav1 fields which are not in v1alpha4
-			func(v1alpha6PortOpts *infrav1.PortOpts, c fuzz.Continue) {
-				c.FuzzNoCustom(v1alpha6PortOpts)
+			func(v1alpha7PortOpts *infrav1.PortOpts, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha7PortOpts)
 
 				// v1alpha4 PortOpts has only NetworkID, so only Network.ID filter can be translated
-				if v1alpha6PortOpts.Network != nil {
-					v1alpha6PortOpts.Network = &infrav1.NetworkFilter{ID: v1alpha6PortOpts.Network.ID}
+				if v1alpha7PortOpts.Network != nil {
+					v1alpha7PortOpts.Network = &infrav1.NetworkFilter{ID: v1alpha7PortOpts.Network.ID}
 
 					// We have no way to differentiate between a nil NetworkFilter and an
 					// empty NetworkFilter after conversion because they both translate into an
 					// empty string in v1alpha4
-					if *v1alpha6PortOpts.Network == (infrav1.NetworkFilter{}) {
-						v1alpha6PortOpts.Network = nil
+					if *v1alpha7PortOpts.Network == (infrav1.NetworkFilter{}) {
+						v1alpha7PortOpts.Network = nil
 					}
 				}
-				v1alpha6PortOpts.SecurityGroupFilters = nil
-				v1alpha6PortOpts.ValueSpecs = nil
+				v1alpha7PortOpts.SecurityGroupFilters = nil
+				v1alpha7PortOpts.ValueSpecs = nil
 			},
-			func(v1alpha6FixedIP *infrav1.FixedIP, c fuzz.Continue) {
-				c.FuzzNoCustom(v1alpha6FixedIP)
+			func(v1alpha7FixedIP *infrav1.FixedIP, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha7FixedIP)
 
 				// v1alpha4 only supports subnet specified by ID
-				if v1alpha6FixedIP.Subnet != nil {
-					v1alpha6FixedIP.Subnet = &infrav1.SubnetFilter{ID: v1alpha6FixedIP.Subnet.ID}
+				if v1alpha7FixedIP.Subnet != nil {
+					v1alpha7FixedIP.Subnet = &infrav1.SubnetFilter{ID: v1alpha7FixedIP.Subnet.ID}
 
 					// We have no way to differentiate between a nil SubnetFilter and an
 					// empty SubnetFilter after conversion because they both translate into an
 					// empty string in v1alpha4
-					if *v1alpha6FixedIP.Subnet == (infrav1.SubnetFilter{}) {
-						v1alpha6FixedIP.Subnet = nil
+					if *v1alpha7FixedIP.Subnet == (infrav1.SubnetFilter{}) {
+						v1alpha7FixedIP.Subnet = nil
 					}
 				}
 			},
-			func(v1alpha6Cluster *infrav1.OpenStackCluster, c fuzz.Continue) {
-				c.FuzzNoCustom(v1alpha6Cluster)
+			func(v1alpha7Cluster *infrav1.OpenStackCluster, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha7Cluster)
 
-				v1alpha6Cluster.ObjectMeta.Annotations = map[string]string{}
+				v1alpha7Cluster.ObjectMeta.Annotations = map[string]string{}
 
-				v1alpha6Cluster.Spec.APIServerLoadBalancer.AllowedCIDRs = nil
+				v1alpha7Cluster.Spec.APIServerLoadBalancer.AllowedCIDRs = nil
 
-				v1alpha6Cluster.Spec.ControlPlaneOmitAvailabilityZone = false
+				v1alpha7Cluster.Spec.ControlPlaneOmitAvailabilityZone = false
 
-				if v1alpha6Cluster.Spec.Bastion != nil {
-					v1alpha6Cluster.Spec.Bastion.Instance.Image = ""
+				if v1alpha7Cluster.Spec.Bastion != nil {
+					v1alpha7Cluster.Spec.Bastion.Instance.Image = ""
 				}
 
-				if v1alpha6Cluster.Status.Bastion != nil {
-					v1alpha6Cluster.Status.Bastion.ImageUUID = ""
-					v1alpha6Cluster.Status.Bastion.Image = ""
-					v1alpha6Cluster.Status.Bastion.Networks = nil
+				if v1alpha7Cluster.Status.Bastion != nil {
+					v1alpha7Cluster.Status.Bastion.ImageUUID = ""
+					v1alpha7Cluster.Status.Bastion.Image = ""
+					v1alpha7Cluster.Status.Bastion.Networks = nil
 				}
 
-				if v1alpha6Cluster.Status.Network != nil {
-					if v1alpha6Cluster.Status.Network.APIServerLoadBalancer != nil {
-						v1alpha6Cluster.Status.Network.APIServerLoadBalancer.AllowedCIDRs = nil
-						v1alpha6Cluster.Status.Network.APIServerLoadBalancer.Tags = []string{}
+				if v1alpha7Cluster.Status.Network != nil {
+					if v1alpha7Cluster.Status.Network.APIServerLoadBalancer != nil {
+						v1alpha7Cluster.Status.Network.APIServerLoadBalancer.AllowedCIDRs = nil
+						v1alpha7Cluster.Status.Network.APIServerLoadBalancer.Tags = []string{}
 					}
-					if v1alpha6Cluster.Status.Network.Router != nil {
-						v1alpha6Cluster.Status.Network.Router.IPs = []string{}
+					if v1alpha7Cluster.Status.Network.Router != nil {
+						v1alpha7Cluster.Status.Network.Router.IPs = []string{}
 					}
 				}
 
-				if v1alpha6Cluster.Status.ExternalNetwork != nil {
-					if v1alpha6Cluster.Status.ExternalNetwork.APIServerLoadBalancer != nil {
-						v1alpha6Cluster.Status.ExternalNetwork.APIServerLoadBalancer.AllowedCIDRs = nil
-						v1alpha6Cluster.Status.ExternalNetwork.APIServerLoadBalancer.Tags = []string{}
+				if v1alpha7Cluster.Status.ExternalNetwork != nil {
+					if v1alpha7Cluster.Status.ExternalNetwork.APIServerLoadBalancer != nil {
+						v1alpha7Cluster.Status.ExternalNetwork.APIServerLoadBalancer.AllowedCIDRs = nil
+						v1alpha7Cluster.Status.ExternalNetwork.APIServerLoadBalancer.Tags = []string{}
 					}
-					if v1alpha6Cluster.Status.ExternalNetwork.Router != nil {
-						v1alpha6Cluster.Status.ExternalNetwork.Router.IPs = []string{}
+					if v1alpha7Cluster.Status.ExternalNetwork.Router != nil {
+						v1alpha7Cluster.Status.ExternalNetwork.Router.IPs = []string{}
 					}
 				}
 			},
-			func(v1alpha6Machine *infrav1.OpenStackMachine, c fuzz.Continue) {
-				c.FuzzNoCustom(v1alpha6Machine)
+			func(v1alpha7Machine *infrav1.OpenStackMachine, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha7Machine)
 
-				v1alpha6Machine.ObjectMeta.Annotations = map[string]string{}
+				v1alpha7Machine.ObjectMeta.Annotations = map[string]string{}
 
 				// In v1alpha4 boot from volume only supports
 				// image by UUID, and boot from local only
 				// suppots image by name
-				if v1alpha6Machine.Spec.RootVolume != nil && v1alpha6Machine.Spec.RootVolume.Size > 0 {
-					v1alpha6Machine.Spec.Image = ""
+				if v1alpha7Machine.Spec.RootVolume != nil && v1alpha7Machine.Spec.RootVolume.Size > 0 {
+					v1alpha7Machine.Spec.Image = ""
 				} else {
-					v1alpha6Machine.Spec.ImageUUID = ""
+					v1alpha7Machine.Spec.ImageUUID = ""
 				}
 			},
-			func(v1alpha6MachineTemplate *infrav1.OpenStackMachineTemplate, c fuzz.Continue) {
-				c.FuzzNoCustom(v1alpha6MachineTemplate)
+			func(v1alpha7MachineTemplate *infrav1.OpenStackMachineTemplate, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha7MachineTemplate)
 
-				v1alpha6MachineTemplate.ObjectMeta.Annotations = map[string]string{}
+				v1alpha7MachineTemplate.ObjectMeta.Annotations = map[string]string{}
 
-				v1alpha6MachineTemplate.Spec.Template.Spec.Image = ""
+				v1alpha7MachineTemplate.Spec.Template.Spec.Image = ""
 			},
-			func(v1alpha6Instance *infrav1.Instance, c fuzz.Continue) {
-				c.FuzzNoCustom(v1alpha6Instance)
+			func(v1alpha7Instance *infrav1.Instance, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha7Instance)
 
 				// In v1alpha4 boot from volume only supports
 				// image by UUID, and boot from local only
 				// suppots image by name
-				if v1alpha6Instance.RootVolume != nil && v1alpha6Instance.RootVolume.Size > 0 {
-					v1alpha6Instance.Image = ""
+				if v1alpha7Instance.RootVolume != nil && v1alpha7Instance.RootVolume.Size > 0 {
+					v1alpha7Instance.Image = ""
 				} else {
-					v1alpha6Instance.ImageUUID = ""
+					v1alpha7Instance.ImageUUID = ""
 				}
 			},
-			func(v1alpha6RootVolume *infrav1.RootVolume, c fuzz.Continue) {
-				c.FuzzNoCustom(v1alpha6RootVolume)
+			func(v1alpha7RootVolume *infrav1.RootVolume, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha7RootVolume)
 
-				v1alpha6RootVolume.VolumeType = ""
-				v1alpha6RootVolume.AvailabilityZone = ""
+				v1alpha7RootVolume.VolumeType = ""
+				v1alpha7RootVolume.AvailabilityZone = ""
 			},
-			func(v1alpha6ClusterTemplate *infrav1.OpenStackClusterTemplate, c fuzz.Continue) {
-				c.FuzzNoCustom(v1alpha6ClusterTemplate)
+			func(v1alpha7ClusterTemplate *infrav1.OpenStackClusterTemplate, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha7ClusterTemplate)
 
-				v1alpha6ClusterTemplate.ObjectMeta.Annotations = map[string]string{}
+				v1alpha7ClusterTemplate.ObjectMeta.Annotations = map[string]string{}
 
-				v1alpha6ClusterTemplate.Spec.Template.Spec.APIServerLoadBalancer.AllowedCIDRs = nil
+				v1alpha7ClusterTemplate.Spec.Template.Spec.APIServerLoadBalancer.AllowedCIDRs = nil
 
-				v1alpha6ClusterTemplate.Spec.Template.Spec.ControlPlaneOmitAvailabilityZone = false
+				v1alpha7ClusterTemplate.Spec.Template.Spec.ControlPlaneOmitAvailabilityZone = false
 
-				if v1alpha6ClusterTemplate.Spec.Template.Spec.Bastion != nil {
-					v1alpha6ClusterTemplate.Spec.Template.Spec.Bastion.Instance.Image = ""
+				if v1alpha7ClusterTemplate.Spec.Template.Spec.Bastion != nil {
+					v1alpha7ClusterTemplate.Spec.Template.Spec.Bastion.Instance.Image = ""
 				}
 			},
 		}

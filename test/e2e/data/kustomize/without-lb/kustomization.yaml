@@ -1,6 +1,6 @@
 ---
 resources:
-- ../../../../../kustomize/v1alpha6/without-lb
+- ../../../../../kustomize/v1alpha7/without-lb
 
 components:
 - ../common-patches

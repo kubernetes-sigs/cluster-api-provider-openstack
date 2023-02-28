@@ -1,0 +1,6 @@
+---
+resources:
+- ../../../../../kustomize/v1alpha6/default
+
+components:
+- ../common-patches

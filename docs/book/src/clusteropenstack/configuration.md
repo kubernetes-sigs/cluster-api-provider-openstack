@@ -221,7 +221,7 @@ It is possible to restrict access to the Kubernetes API server on a network leve
 the allowed CIDRs by `spec.APIServerLoadBalancer.AllowedCIDRs` of `OpenStackCluster`.
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
 kind: OpenStackCluster
 metadata:
   name: <cluster-name>
@@ -240,7 +240,7 @@ All known IPs of the target cluster will be discovered dynamically (e.g. you don
 All applied CIDRs (user defined + dynamically discovered) are written back into `status.network.apiServerLoadBalancer.allowedCIDRs`
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
 kind: OpenStackCluster
 metadata:
   name: <cluster-name>
@@ -273,7 +273,7 @@ If you have a complex query that you want to use to lookup a network, then you c
 By using filters to look up a network, please note that it is possible to get multiple networks as a result. This should not be a problem, however please test your filters with `openstack network list` to be certain that it returns the networks you want. Please refer to the following usage example:
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
 kind: OpenStackMachineTemplate
 metadata:
   name: <cluster-name>-controlplane
@@ -289,7 +289,7 @@ spec:
 You can specify multiple networks (or subnets) to connect your server to. To do this, simply add another entry in the networks array. The following example connects the server to 3 different networks:
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
 kind: OpenStackMachineTemplate
 metadata:
   name: <cluster-name>-controlplane
@@ -308,7 +308,7 @@ spec:
 Rather than just using a network, you have the option of specifying a specific subnet to connect your server to. The following is an example of how to specify a specific subnet of a network to use for your server.
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
 kind: OpenStackMachineTemplate
 metadata:
   name: <cluster-name>-controlplane
@@ -327,7 +327,7 @@ spec:
 A server can also be connected to networks by describing what ports to create. Describing a server's connection with `ports` allows for finer and more advanced configuration. For example, you can specify per-port security groups, fixed IPs, VNIC type or profile.
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
 kind: OpenStackMachineTemplate
 metadata:
   name: <cluster-name>-controlplane
@@ -360,7 +360,7 @@ Any such ports are created in addition to ports used for connections to networks
 Also, `port security` can be applied to specific port to enable/disable the `port security` on that port; When not set, it takes the value of the corresponding field at the network level.
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
 kind: OpenStackMachineTemplate
 metadata:
   name: <cluster-name>-controlplane
@@ -403,7 +403,7 @@ If this is not flexible enough, pre-existing security groups can be added to the
 spec of an `OpenStackMachineTemplate`, e.g.:
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
 kind: OpenStackMachineTemplate
 metadata:
   name: ${CLUSTER_NAME}-control-plane
@@ -419,7 +419,7 @@ spec:
 You have the ability to tag all resources created by the cluster in the `OpenStackCluster` spec. Here is an example how to configure tagging:
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
 kind: OpenStackCluster
 metadata:
   name: <cluster-name>
@@ -432,7 +432,7 @@ spec:
 To tag resources specific to a machine, add a value to the tags field in the `OpenStackMachineTemplate` spec like this:
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
 kind: OpenStackMachineTemplate
 metadata:
   name: <cluster-name>-controlplane
@@ -449,7 +449,7 @@ spec:
 You also have the option to add metadata to instances. Here is a usage example:
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
 kind: OpenStackMachineTemplate
 metadata:
   name: <cluster-name>-controlplane
@@ -467,7 +467,7 @@ spec:
 For example in `OpenStackMachineTemplate` set `spec.rootVolume.diskSize` to something greater than `0` means boot from volume.
 
    ```yaml
-   apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+   apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
    kind: OpenStackMachineTemplate
    metadata:
      name: <cluster-name>-controlplane

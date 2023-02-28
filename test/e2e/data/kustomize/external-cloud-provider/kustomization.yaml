@@ -1,6 +1,6 @@
 ---
 resources:
-- ../../../../../kustomize/v1alpha6/external-cloud-provider
+- ../../../../../kustomize/v1alpha7/external-cloud-provider
 - ccm.yaml
 
 components:

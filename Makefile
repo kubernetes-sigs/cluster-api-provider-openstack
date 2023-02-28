@@ -152,6 +152,7 @@ E2E_KUSTOMIZE_DIR=test/e2e/data/kustomize
 e2e-templates: ## Generate cluster templates for e2e tests
 e2e-templates: $(addprefix $(E2E_TEMPLATES_DIR)/, \
 		 cluster-template-v1alpha5.yaml \
+		 cluster-template-v1alpha6.yaml \
 		 cluster-template-md-remediation.yaml \
 		 cluster-template-kcp-remediation.yaml \
 		 cluster-template-external-cloud-provider.yaml \
@@ -264,6 +265,7 @@ generate-go: $(MOCKGEN)
 		--input-dirs=./api/v1alpha4 \
 		--input-dirs=./api/v1alpha5 \
 		--input-dirs=./api/v1alpha6 \
+		--input-dirs=./api/v1alpha7 \
 		--output-file-base=zz_generated.conversion \
 		--go-header-file=./hack/boilerplate/boilerplate.generatego.txt
 	go generate ./...
@@ -417,10 +419,10 @@ templates: templates/cluster-template.yaml \
 	templates/cluster-template-without-lb.yaml \
 	templates/cluster-template-external-cloud-provider.yaml
 
-templates/cluster-template.yaml: kustomize/v1alpha6/default $(KUSTOMIZE) FORCE
+templates/cluster-template.yaml: kustomize/v1alpha7/default $(KUSTOMIZE) FORCE
 	$(KUSTOMIZE) build "$<" > "$@"
 
-templates/cluster-template-%.yaml: kustomize/v1alpha6/% $(KUSTOMIZE) FORCE
+templates/cluster-template-%.yaml: kustomize/v1alpha7/% $(KUSTOMIZE) FORCE
 	$(KUSTOMIZE) build "$<" > "$@"
 
 .PHONY: release-templates

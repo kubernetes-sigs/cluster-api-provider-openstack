@@ -42,7 +42,8 @@ import (
 	infrav1alpha3 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha3"
 	infrav1alpha4 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha4"
 	infrav1alpha5 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha5"
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
+	infrav1alpha6 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	"sigs.k8s.io/cluster-api-provider-openstack/controllers"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
@@ -81,6 +82,7 @@ func init() {
 	_ = infrav1alpha3.AddToScheme(scheme)
 	_ = infrav1alpha4.AddToScheme(scheme)
 	_ = infrav1alpha5.AddToScheme(scheme)
+	_ = infrav1alpha6.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 
 	metrics.RegisterAPIPrometheusMetrics()

@@ -37,7 +37,7 @@ spec:
     kind: KubeadmControlPlane
     name: ${CLUSTER_NAME}-control-plane
   infrastructureRef:
-    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
     kind: OpenStackCluster
     name: ${CLUSTER_NAME}
 ---
@@ -60,7 +60,7 @@ spec:
       clusterName: ${CLUSTER_NAME}
       failureDomain: ${OPENSTACK_FAILURE_DOMAIN}
       infrastructureRef:
-        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
         kind: OpenStackMachineTemplate
         name: ${CLUSTER_NAME}-md-0
       version: ${KUBERNETES_VERSION}
@@ -91,13 +91,13 @@ spec:
         name: '{{ local_hostname }}'
   machineTemplate:
     infrastructureRef:
-      apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+      apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
       kind: OpenStackMachineTemplate
       name: ${CLUSTER_NAME}-control-plane
   replicas: ${CONTROL_PLANE_MACHINE_COUNT}
   version: ${KUBERNETES_VERSION}
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
 kind: OpenStackCluster
 metadata:
   name: ${CLUSTER_NAME}
@@ -114,7 +114,7 @@ spec:
   managedSecurityGroups: true
   nodeCidr: 10.6.0.0/24
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
 kind: OpenStackMachineTemplate
 metadata:
   name: ${CLUSTER_NAME}-control-plane
@@ -129,7 +129,7 @@ spec:
       image: ${OPENSTACK_IMAGE_NAME}
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
 kind: OpenStackMachineTemplate
 metadata:
   name: ${CLUSTER_NAME}-md-0
