@@ -1,0 +1,61 @@
+name: build
+on:
+  pull_request:
+    branches:
+    - main
+  push:
+    branches:
+    - main
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install QEMU static binaries
+      uses: docker/setup-qemu-action@v2
+
+    - name: Configure Buildkit
+      uses: docker/setup-buildx-action@v2
+
+    - name: Checkout project
+      uses: actions/checkout@v3
+
+    - name: Generate Tag
+      id: generate_tag
+      uses: anothrNick/github-tag-action@1.55.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        WITH_V: true
+        RELEASE_BRANCHES: main
+        PRERELEASE: true
+        DRY_RUN: true
+
+    - name: Authenticate with Quay.io
+      uses: docker/login-action@v2
+      if: ${{ github.event_name == 'push' }}
+      with:
+        password: ${{ secrets.QUAY_ROBOT_TOKEN }}
+        registry: quay.io
+        username: ${{ secrets.QUAY_USERNAME }}
+
+    - name: Build images
+      run: make docker-build-all
+      env:
+        REGISTRY: quay.io/vexxhost
+        TAG: ${{ steps.generate_tag.outputs.new_tag }}
+
+    - name: Push images
+      if: ${{ github.event_name == 'push' }}
+      run: make docker-push-all
+      env:
+        REGISTRY: quay.io/vexxhost
+        TAG: ${{ steps.generate_tag.outputs.new_tag }}
+
+    - name: Push Github Tag
+      uses: anothrNick/github-tag-action@1.55.0
+      if: ${{ github.event_name == 'push' }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        WITH_V: true
+        RELEASE_BRANCHES: main
+        PRERELEASE: true
+        DRY_RUN: false
