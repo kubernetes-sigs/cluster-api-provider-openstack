@@ -1,61 +1,49 @@
 name: build
+
 on:
   pull_request:
     branches:
-    - main
+      - main
   push:
     branches:
-    - main
+      - main
+  release:
+    types:
+      - published
+
 jobs:
   image:
     runs-on: ubuntu-latest
     steps:
-    - name: Install QEMU static binaries
-      uses: docker/setup-qemu-action@v2
+      - name: Configure Buildkit
+        uses: docker/setup-buildx-action@v2
 
-    - name: Configure Buildkit
-      uses: docker/setup-buildx-action@v2
+      - name: Checkout project
+        uses: actions/checkout@v3
 
-    - name: Checkout project
-      uses: actions/checkout@v3
+      - name: Authenticate with Quay.io
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' }}
+        uses: docker/login-action@v2
+        with:
+          registry: quay.io
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_ROBOT_TOKEN }}
 
-    - name: Generate Tag
-      id: generate_tag
-      uses: anothrNick/github-tag-action@1.55.0
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        WITH_V: true
-        RELEASE_BRANCHES: main
-        PRERELEASE: true
-        DRY_RUN: true
+      - name: Build image
+        run: make docker-build-all
+        env:
+          REGISTRY: quay.io/vexxhost
+          TAG: ${{ github.sha }}
 
-    - name: Authenticate with Quay.io
-      uses: docker/login-action@v2
-      if: ${{ github.event_name == 'push' }}
-      with:
-        password: ${{ secrets.QUAY_ROBOT_TOKEN }}
-        registry: quay.io
-        username: ${{ secrets.QUAY_USERNAME }}
+      - name: Push image
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' }}
+        run: make docker-push-all
+        env:
+          REGISTRY: quay.io/vexxhost
+          TAG: ${{ github.sha }}
 
-    - name: Build images
-      run: make docker-build-all
-      env:
-        REGISTRY: quay.io/vexxhost
-        TAG: ${{ steps.generate_tag.outputs.new_tag }}
-
-    - name: Push images
-      if: ${{ github.event_name == 'push' }}
-      run: make docker-push-all
-      env:
-        REGISTRY: quay.io/vexxhost
-        TAG: ${{ steps.generate_tag.outputs.new_tag }}
-
-    - name: Push Github Tag
-      uses: anothrNick/github-tag-action@1.55.0
-      if: ${{ github.event_name == 'push' }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        WITH_V: true
-        RELEASE_BRANCHES: main
-        PRERELEASE: true
-        DRY_RUN: false
+      - name: Promote image
+        if: ${{ github.event_name == 'release' }}
+        with:
+          dst: quay.io/vexxhost/capi-openstack-controller:${{ github.sha }}
+          src: quay.io/vexxhost/capi-openstack-controller:${{ github.event.release.name }}
