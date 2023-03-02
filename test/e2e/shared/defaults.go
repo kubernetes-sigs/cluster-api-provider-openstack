@@ -49,6 +49,7 @@ const (
 	FlavorMultiNetwork          = "multi-network-ci-artifacts"
 	FlavorMultiAZ               = "multi-az-ci-artifacts"
 	FlavorV1alpha5              = "v1alpha5-ci-artifacts"
+	FlavorV1alpha6              = "v1alpha6-ci-artifacts"
 	FlavorMDRemediation         = "md-remediation-ci-artifacts"
 	FlavorKCPRemediation        = "kcp-remediation-ci-artifacts"
 )
