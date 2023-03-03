@@ -23,7 +23,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
 	. "github.com/onsi/gomega"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
 )
 

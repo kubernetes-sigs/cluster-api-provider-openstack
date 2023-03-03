@@ -1,5 +1,5 @@
 /*
-Copyright 2022 The Kubernetes Authors.
+Copyright 2023 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha6
+package v1alpha7
 
 import (
 	"sigs.k8s.io/controller-runtime/pkg/builder"
@@ -23,9 +23,9 @@ import (
 )
 
 // log is for logging in this package.
-var _ = logf.Log.WithName("openstackmachinetemplatelist-resource")
+var _ = logf.Log.WithName("openstackmachinelist-resource")
 
-func (r *OpenStackMachineTemplateList) SetupWebhookWithManager(mgr manager.Manager) error {
+func (r *OpenStackMachineList) SetupWebhookWithManager(mgr manager.Manager) error {
 	return builder.WebhookManagedBy(mgr).
 		For(r).
 		Complete()

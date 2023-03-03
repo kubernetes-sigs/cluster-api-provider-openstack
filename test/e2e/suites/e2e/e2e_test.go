@@ -56,7 +56,7 @@ import (
 	"sigs.k8s.io/cluster-api/test/framework/clusterctl"
 	crclient "sigs.k8s.io/controller-runtime/pkg/client"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 	"sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
 )

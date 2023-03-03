@@ -28,7 +28,7 @@ import (
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
 	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 )
 
 func TestConvertTo(t *testing.T) {
@@ -126,7 +126,7 @@ func TestFuzzyConversion(t *testing.T) {
 
 	fuzzerFuncs := func(_ runtimeserializer.CodecFactory) []interface{} {
 		return []interface{}{
-			// Don't test spoke-hub-spoke conversion of v1alpha3 fields which are not in v1alpha6
+			// Don't test spoke-hub-spoke conversion of v1alpha3 fields which are not in v1alpha7
 			func(v1alpha3Cluster *OpenStackCluster, c fuzz.Continue) {
 				c.FuzzNoCustom(v1alpha3Cluster)
 
@@ -150,7 +150,7 @@ func TestFuzzyConversion(t *testing.T) {
 			func(v1alpha3RootVolume *RootVolume, c fuzz.Continue) {
 				c.FuzzNoCustom(v1alpha3RootVolume)
 
-				// In v1alpha6 only DeviceType="disk" and SourceType="image" are supported
+				// In v1alpha7 only DeviceType="disk" and SourceType="image" are supported
 				v1alpha3RootVolume.DeviceType = "disk"
 				v1alpha3RootVolume.SourceType = "image"
 			},
@@ -202,7 +202,7 @@ func TestFuzzyConversion(t *testing.T) {
 				v1alpha3SubnetFilter.SortKey = ""
 				v1alpha3SubnetFilter.SortDir = ""
 
-				// TenantID and ProjectID are the same thing, so TenantID is removed in v1alpha6
+				// TenantID and ProjectID are the same thing, so TenantID is removed in v1alpha7
 				// Test that we restore TenantID from ProjectID
 				v1alpha3SubnetFilter.TenantID = v1alpha3SubnetFilter.ProjectID
 			},
@@ -216,87 +216,87 @@ func TestFuzzyConversion(t *testing.T) {
 				v1alpha3Filter.SortKey = ""
 				v1alpha3Filter.SortDir = ""
 
-				// TenantID and ProjectID are the same thing, so TenantID is removed in v1alpha6
+				// TenantID and ProjectID are the same thing, so TenantID is removed in v1alpha7
 				// Test that we restore TenantID from ProjectID
 				v1alpha3Filter.TenantID = v1alpha3Filter.ProjectID
 			},
 
-			// Don't test hub-spoke-hub conversion of v1alpha6 fields which are not in v1alpha3
-			func(v1alpha6Cluster *infrav1.OpenStackCluster, c fuzz.Continue) {
-				c.FuzzNoCustom(v1alpha6Cluster)
+			// Don't test hub-spoke-hub conversion of v1alpha7 fields which are not in v1alpha3
+			func(v1alpha7Cluster *infrav1.OpenStackCluster, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha7Cluster)
 
-				v1alpha6Cluster.ObjectMeta.Annotations = map[string]string{}
+				v1alpha7Cluster.ObjectMeta.Annotations = map[string]string{}
 
-				v1alpha6Cluster.Spec.APIServerFixedIP = ""
-				v1alpha6Cluster.Spec.AllowAllInClusterTraffic = false
-				v1alpha6Cluster.Spec.DisableAPIServerFloatingIP = false
-				v1alpha6Cluster.Spec.APIServerLoadBalancer.AllowedCIDRs = nil
-				if v1alpha6Cluster.Spec.Bastion != nil {
-					v1alpha6Cluster.Spec.Bastion.Instance.ImageUUID = ""
-					v1alpha6Cluster.Spec.Bastion.Instance.Ports = nil
+				v1alpha7Cluster.Spec.APIServerFixedIP = ""
+				v1alpha7Cluster.Spec.AllowAllInClusterTraffic = false
+				v1alpha7Cluster.Spec.DisableAPIServerFloatingIP = false
+				v1alpha7Cluster.Spec.APIServerLoadBalancer.AllowedCIDRs = nil
+				if v1alpha7Cluster.Spec.Bastion != nil {
+					v1alpha7Cluster.Spec.Bastion.Instance.ImageUUID = ""
+					v1alpha7Cluster.Spec.Bastion.Instance.Ports = nil
 				}
-				v1alpha6Cluster.Spec.ControlPlaneOmitAvailabilityZone = false
+				v1alpha7Cluster.Spec.ControlPlaneOmitAvailabilityZone = false
 
-				v1alpha6Cluster.Status.FailureMessage = nil
-				v1alpha6Cluster.Status.FailureReason = nil
+				v1alpha7Cluster.Status.FailureMessage = nil
+				v1alpha7Cluster.Status.FailureReason = nil
 
-				if v1alpha6Cluster.Status.Bastion != nil {
-					v1alpha6Cluster.Status.Bastion.ImageUUID = ""
-					v1alpha6Cluster.Status.Bastion.Networks = nil
-				}
-
-				if v1alpha6Cluster.Status.Network != nil {
-					if v1alpha6Cluster.Status.Network.APIServerLoadBalancer != nil {
-						v1alpha6Cluster.Status.Network.APIServerLoadBalancer.AllowedCIDRs = nil
-						v1alpha6Cluster.Status.Network.APIServerLoadBalancer.Tags = []string{}
-					}
-					if v1alpha6Cluster.Status.Network.Router != nil {
-						v1alpha6Cluster.Status.Network.Router.IPs = []string{}
-					}
+				if v1alpha7Cluster.Status.Bastion != nil {
+					v1alpha7Cluster.Status.Bastion.ImageUUID = ""
+					v1alpha7Cluster.Status.Bastion.Networks = nil
 				}
 
-				if v1alpha6Cluster.Status.ExternalNetwork != nil {
-					if v1alpha6Cluster.Status.ExternalNetwork.APIServerLoadBalancer != nil {
-						v1alpha6Cluster.Status.ExternalNetwork.APIServerLoadBalancer.AllowedCIDRs = nil
-						v1alpha6Cluster.Status.ExternalNetwork.APIServerLoadBalancer.Tags = []string{}
+				if v1alpha7Cluster.Status.Network != nil {
+					if v1alpha7Cluster.Status.Network.APIServerLoadBalancer != nil {
+						v1alpha7Cluster.Status.Network.APIServerLoadBalancer.AllowedCIDRs = nil
+						v1alpha7Cluster.Status.Network.APIServerLoadBalancer.Tags = []string{}
 					}
-					if v1alpha6Cluster.Status.ExternalNetwork.Router != nil {
-						v1alpha6Cluster.Status.ExternalNetwork.Router.IPs = []string{}
+					if v1alpha7Cluster.Status.Network.Router != nil {
+						v1alpha7Cluster.Status.Network.Router.IPs = []string{}
+					}
+				}
+
+				if v1alpha7Cluster.Status.ExternalNetwork != nil {
+					if v1alpha7Cluster.Status.ExternalNetwork.APIServerLoadBalancer != nil {
+						v1alpha7Cluster.Status.ExternalNetwork.APIServerLoadBalancer.AllowedCIDRs = nil
+						v1alpha7Cluster.Status.ExternalNetwork.APIServerLoadBalancer.Tags = []string{}
+					}
+					if v1alpha7Cluster.Status.ExternalNetwork.Router != nil {
+						v1alpha7Cluster.Status.ExternalNetwork.Router.IPs = []string{}
 					}
 				}
 			},
-			func(v1alpha6Machine *infrav1.OpenStackMachine, c fuzz.Continue) {
-				c.FuzzNoCustom(v1alpha6Machine)
+			func(v1alpha7Machine *infrav1.OpenStackMachine, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha7Machine)
 
-				v1alpha6Machine.ObjectMeta.Annotations = map[string]string{}
-				v1alpha6Machine.Spec.Ports = nil
-				v1alpha6Machine.Spec.ImageUUID = ""
+				v1alpha7Machine.ObjectMeta.Annotations = map[string]string{}
+				v1alpha7Machine.Spec.Ports = nil
+				v1alpha7Machine.Spec.ImageUUID = ""
 			},
-			func(v1alpha6MachineTemplate *infrav1.OpenStackMachineTemplate, c fuzz.Continue) {
-				c.FuzzNoCustom(v1alpha6MachineTemplate)
+			func(v1alpha7MachineTemplate *infrav1.OpenStackMachineTemplate, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha7MachineTemplate)
 
-				v1alpha6MachineTemplate.ObjectMeta.Annotations = map[string]string{}
+				v1alpha7MachineTemplate.ObjectMeta.Annotations = map[string]string{}
 
-				v1alpha6MachineTemplate.Spec.Template.Spec.Image = ""
-				v1alpha6MachineTemplate.Spec.Template.Spec.ImageUUID = ""
-				v1alpha6MachineTemplate.Spec.Template.Spec.Ports = nil
+				v1alpha7MachineTemplate.Spec.Template.Spec.Image = ""
+				v1alpha7MachineTemplate.Spec.Template.Spec.ImageUUID = ""
+				v1alpha7MachineTemplate.Spec.Template.Spec.Ports = nil
 			},
-			func(v1alpha6Network *infrav1.Network, c fuzz.Continue) {
-				c.FuzzNoCustom(v1alpha6Network)
+			func(v1alpha7Network *infrav1.Network, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha7Network)
 
-				v1alpha6Network.PortOpts = nil
+				v1alpha7Network.PortOpts = nil
 			},
-			func(v1alpha6OpenStackIdentityRef *infrav1.OpenStackIdentityReference, c fuzz.Continue) {
-				c.FuzzNoCustom(v1alpha6OpenStackIdentityRef)
+			func(v1alpha7OpenStackIdentityRef *infrav1.OpenStackIdentityReference, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha7OpenStackIdentityRef)
 
 				// IdentityRef was assumed to be a Secret in v1alpha3
-				v1alpha6OpenStackIdentityRef.Kind = "Secret"
+				v1alpha7OpenStackIdentityRef.Kind = "Secret"
 			},
-			func(v1alpha6RootVolume *infrav1.RootVolume, c fuzz.Continue) {
-				c.FuzzNoCustom(v1alpha6RootVolume)
+			func(v1alpha7RootVolume *infrav1.RootVolume, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha7RootVolume)
 
-				v1alpha6RootVolume.VolumeType = ""
-				v1alpha6RootVolume.AvailabilityZone = ""
+				v1alpha7RootVolume.VolumeType = ""
+				v1alpha7RootVolume.AvailabilityZone = ""
 			},
 		}
 	}
