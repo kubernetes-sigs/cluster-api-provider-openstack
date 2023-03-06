@@ -102,7 +102,11 @@ $ openstack network list --external
 +--------------------------------------+----------+--------------------------------------+
 ```
 
-### OpenStack prerequisites
+### E2E test environment
+
+The test suite is executed in an existing OpenStack environment. You can create and manage this environment yourself or use the [hacking CI scripts][hacking-ci-scripts] to provision an environment with DevStack similar to the one used for continuous integration.
+
+#### Requirements
 
 The file [`test/e2e/data/e2e_conf.yaml`](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/test/e2e/data/e2e_conf.yaml) and the test templates under [`test/e2e/data/infrastructure-openstack`](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/tree/main/test/e2e/data/infrastructure-openstack) reference several OpenStack resources which must exist before running the test:
 
@@ -155,8 +159,38 @@ The file [`test/e2e/data/e2e_conf.yaml`](https://github.com/kubernetes-sigs/clus
         region_name: RegionOne
     ```
 
-You can also use [Hacking CI scripts](https://cluster-api-openstack.sigs.k8s.io/development/ci.html#devstack) to automatically create OpenStack environment.
+#### Create E2E test environment
 
+You can easily create a test environment similar to the one used during continuous integration on OpenStack, AWS or GCE with the [hacking CI scripts][hacking-ci-scripts].
+
+The entry point for the creation of the DevStack environment is the [create_devstack.sh][hack-ci-create-devstack] script, which executes specific scripts to create infrastructure on different clouds:
+
+- AWS: [aws-project.sh][hack-ci-aws-project]
+- GCE: [gce-project.sh][hack-ci-gce-project]
+- OpenStack: [openstack.sh][hack-ci-openstack]
+
+You can switch between these cloud providers, by setting the `RESOURCE_TYPE` environment variable to `aws-project`, `gce-project` or `openstack` respectively.
+
+##### OpenStack
+
+Configure the following environment variables for OpenStack:
+
+```bash
+export RESOURCE_TYPE="openstack"
+export OS_CLOUD=<your cloud>
+export OPENSTACK_FLAVOR_controller=<flavor with >= 16 cores, 64GB RAM and 50GB storage>
+export OPENSTACK_FLAVOR_worker=<flavor with >= 8 cores, 32GB RAM and 50GB storage>
+export OPENSTACK_PUBLIC_NETWORK=<name of the external network>
+export OPENSTACK_SSH_KEY_NAME=<your ssh key-pair name>
+export SSH_PUBLIC_KEY_FILE=/home/user/.ssh/id_ed25519.pub
+export SSH_PRIVATE_KEY_FILE=/home/user/.ssh/id_ed25519
+```
+
+and create the environment by running:
+
+```bash
+./hack/ci/create_devstack.sh
+```
 
 ## Running E2E tests using rootless podman
 
@@ -190,3 +224,11 @@ $ podman system service -t 0 &
 $ sudo rm /var/run/docker.sock
 $ sudo ln -s /run/user/$(id -u)/podman/podman.sock /var/run/docker.sock
 ```
+
+<!-- References -->
+
+[hacking-ci-scripts]: https://cluster-api-openstack.sigs.k8s.io/development/ci.html#devstack
+[hack-ci-aws-project]: https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/hack/ci/aws-project.sh
+[hack-ci-create-devstack]: https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/hack/ci/create_devstack.sh
+[hack-ci-gce-project]: https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/hack/ci/gce-project.sh
+[hack-ci-openstack]: https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/hack/ci/openstack.sh
