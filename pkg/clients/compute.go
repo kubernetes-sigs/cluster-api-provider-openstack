@@ -33,14 +33,15 @@ import (
 
 /*
 NovaMinimumMicroversion is the minimum Nova microversion supported by CAPO
-2.53 corresponds to OpenStack Pike
+2.60 corresponds to OpenStack Queens
 
 For the canonical description of Nova microversions, see
 https://docs.openstack.org/nova/latest/reference/api-microversion-history.html
 
 CAPO uses server tags, which were added in microversion 2.52.
+CAPO supports multiattach volume types, which were added in microversion 2.60.
 */
-const NovaMinimumMicroversion = "2.53"
+const NovaMinimumMicroversion = "2.60"
 
 // ServerExt is the base gophercloud Server with extensions used by InstanceStatus.
 type ServerExt struct {
