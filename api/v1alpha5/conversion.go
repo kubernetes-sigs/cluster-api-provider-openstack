@@ -235,3 +235,8 @@ func Convert_Slice_v1alpha7_Network_To_Slice_v1alpha5_Network(in *[]infrav1.Netw
 func Convert_v1alpha5_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in *OpenStackMachineSpec, out *infrav1.OpenStackMachineSpec, s conversion.Scope) error {
 	return autoConvert_v1alpha5_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in, out, s)
 }
+
+func Convert_v1alpha7_APIServerLoadBalancer_To_v1alpha5_APIServerLoadBalancer(in *infrav1.APIServerLoadBalancer, out *APIServerLoadBalancer, s conversion.Scope) error {
+	// Provider have been added in v1alpha7 but have no equivalent in v1alpha5
+	return autoConvert_v1alpha7_APIServerLoadBalancer_To_v1alpha5_APIServerLoadBalancer(in, out, s)
+}

@@ -6174,6 +6174,9 @@ spec:
                     description: Enabled defines whether a load balancer should be
                       created.
                     type: boolean
+                  provider:
+                    description: Octavia Provider Used to create load balancer
+                    type: string
                 type: object
               apiServerPort:
                 description: APIServerPort is the port on which the listener on the

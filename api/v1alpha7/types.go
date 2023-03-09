@@ -323,6 +323,8 @@ type APIServerLoadBalancer struct {
 	AdditionalPorts []int `json:"additionalPorts,omitempty"`
 	// AllowedCIDRs restrict access to all API-Server listeners to the given address CIDRs.
 	AllowedCIDRs []string `json:"allowedCidrs,omitempty"`
+	// Octavia Provider Used to create load balancer
+	Provider string `json:"provider,omitempty"`
 }
 
 // ValueSpec represents a single value_spec key-value pair.
