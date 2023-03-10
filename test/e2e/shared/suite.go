@@ -64,6 +64,8 @@ func Node1BeforeSuite(e2eCtx *E2EContext) []byte {
 	Expect(e2eCtx.E2EConfig.GetVariable(OpenStackCloudYAMLFile)).To(BeAnExistingFile(), "Invalid test suite argument. Value of environment variable OPENSTACK_CLOUD_YAML_FILE should be an existing file: %s", e2eCtx.E2EConfig.GetVariable(OpenStackCloudYAMLFile))
 	Logf("Loading the clouds.yaml from %q", e2eCtx.E2EConfig.GetVariable(OpenStackCloudYAMLFile))
 
+	templates := []clusterctl.Files{}
+
 	// TODO(sbuerin): we always need ci artifacts, because we don't have images for every Kubernetes version
 	err := filepath.WalkDir(path.Join(e2eCtx.Settings.DataFolder, "infrastructure-openstack"), func(f string, d fs.DirEntry, _ error) error {
 		filename := filepath.Base(f)
@@ -102,15 +104,44 @@ func Node1BeforeSuite(e2eCtx *E2EContext) []byte {
 			TargetName: targetName,
 		}
 
-		for i, prov := range e2eCtx.E2EConfig.Providers {
-			if prov.Name != "openstack" {
-				continue
-			}
-			e2eCtx.E2EConfig.Providers[i].Files = append(e2eCtx.E2EConfig.Providers[i].Files, clusterctlCITemplate)
-		}
+		templates = append(templates, clusterctlCITemplate)
+
 		return nil
 	})
 	Expect(err).NotTo(HaveOccurred())
+
+	// Walk into the "infrastructure-openstack-no-artifact" directory to simply copy the templates to the "_artifacts/templates" folder.
+	err = filepath.WalkDir(path.Join(e2eCtx.Settings.DataFolder, "infrastructure-openstack-no-artifact"), func(f string, d fs.DirEntry, _ error) error {
+		filename := filepath.Base(f)
+		if d.IsDir() || !strings.HasPrefix(filename, "cluster-template") {
+			return nil
+		}
+
+		t, err := os.ReadFile(f)
+		Expect(err).NotTo(HaveOccurred())
+
+		targetTemplate := path.Join(e2eCtx.Settings.ArtifactFolder, "templates", filename)
+
+		err = os.WriteFile(targetTemplate, t, 0o600)
+		Expect(err).NotTo(HaveOccurred())
+
+		clusterctlTemplate := clusterctl.Files{
+			SourcePath: targetTemplate,
+			TargetName: filename,
+		}
+
+		templates = append(templates, clusterctlTemplate)
+
+		return nil
+	})
+	Expect(err).NotTo(HaveOccurred())
+
+	for i, prov := range e2eCtx.E2EConfig.Providers {
+		if prov.Name != "openstack" {
+			continue
+		}
+		e2eCtx.E2EConfig.Providers[i].Files = append(e2eCtx.E2EConfig.Providers[i].Files, templates...)
+	}
 
 	ensureSSHKeyPair(e2eCtx)
 

@@ -176,6 +176,8 @@ func dumpMachine(ctx context.Context, e2eCtx *E2EContext, machine infrav1.OpenSt
 		_, _ = fmt.Fprintf(GinkgoWriter, "error writing server JSON %s: %s", serverJSON, err)
 	}
 
+	srvUser := e2eCtx.E2EConfig.GetVariable(SSHUserMachine)
+
 	_, _ = fmt.Fprintf(f, "instance found: %q\n", srv.ID)
 	executeCommands(
 		ctx,
@@ -184,6 +186,7 @@ func dumpMachine(ctx context.Context, e2eCtx *E2EContext, machine infrav1.OpenSt
 		filepath.Dir(f.Name()),
 		srv.ip,
 		bastionIP,
+		srvUser,
 		[]command{
 			// don't do this for now, it just takes to long
 			// {

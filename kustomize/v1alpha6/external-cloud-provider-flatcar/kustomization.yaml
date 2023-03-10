@@ -1,0 +1,6 @@
+resources:
+- ../default
+
+patchesStrategicMerge:
+- patch-ccm.yaml
+- patch-flatcar.yaml

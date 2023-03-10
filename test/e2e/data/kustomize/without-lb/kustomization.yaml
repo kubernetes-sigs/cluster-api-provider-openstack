@@ -3,4 +3,5 @@ resources:
 - ../../../../../kustomize/v1alpha7/without-lb
 
 components:
-- ../common-patches
+- ../common-patches/cni
+- ../common-patches/containerd

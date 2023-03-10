@@ -1,0 +1,189 @@
+apiVersion: v1
+data:
+  cacert: ${OPENSTACK_CLOUD_CACERT_B64}
+  clouds.yaml: ${OPENSTACK_CLOUD_YAML_B64}
+kind: Secret
+metadata:
+  labels:
+    clusterctl.cluster.x-k8s.io/move: "true"
+  name: ${CLUSTER_NAME}-cloud-config
+---
+apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+kind: KubeadmConfigTemplate
+metadata:
+  name: ${CLUSTER_NAME}-md-0
+spec:
+  template:
+    spec:
+      files: []
+      format: ignition
+      ignition:
+        containerLinuxConfig:
+          additionalConfig: |
+            systemd:
+              units:
+              - name: coreos-metadata-sshkeys@.service
+                enabled: true
+              - name: kubeadm.service
+                enabled: true
+                dropins:
+                - name: 10-flatcar.conf
+                  contents: |
+                    [Unit]
+                    Requires=containerd.service coreos-metadata.service
+                    After=containerd.service coreos-metadata.service
+
+                    [Service]
+                    EnvironmentFile=/run/metadata/flatcar
+      joinConfiguration:
+        nodeRegistration:
+          kubeletExtraArgs:
+            cloud-provider: external
+          name: $${COREOS_OPENSTACK_HOSTNAME}
+      preKubeadmCommands:
+      - export COREOS_OPENSTACK_HOSTNAME=$${COREOS_OPENSTACK_HOSTNAME%.*}
+      - envsubst < /etc/kubeadm.yml > /etc/kubeadm.yml.tmp
+      - mv /etc/kubeadm.yml.tmp /etc/kubeadm.yml
+---
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: Cluster
+metadata:
+  name: ${CLUSTER_NAME}
+spec:
+  clusterNetwork:
+    pods:
+      cidrBlocks:
+      - 192.168.0.0/16
+    serviceDomain: cluster.local
+  controlPlaneRef:
+    apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+    kind: KubeadmControlPlane
+    name: ${CLUSTER_NAME}-control-plane
+  infrastructureRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+    kind: OpenStackCluster
+    name: ${CLUSTER_NAME}
+---
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: MachineDeployment
+metadata:
+  name: ${CLUSTER_NAME}-md-0
+spec:
+  clusterName: ${CLUSTER_NAME}
+  replicas: ${WORKER_MACHINE_COUNT}
+  selector:
+    matchLabels: null
+  template:
+    spec:
+      bootstrap:
+        configRef:
+          apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+          kind: KubeadmConfigTemplate
+          name: ${CLUSTER_NAME}-md-0
+      clusterName: ${CLUSTER_NAME}
+      failureDomain: ${OPENSTACK_FAILURE_DOMAIN}
+      infrastructureRef:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+        kind: OpenStackMachineTemplate
+        name: ${CLUSTER_NAME}-md-0
+      version: ${KUBERNETES_VERSION}
+---
+apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+kind: KubeadmControlPlane
+metadata:
+  name: ${CLUSTER_NAME}-control-plane
+spec:
+  kubeadmConfigSpec:
+    clusterConfiguration:
+      apiServer:
+        extraArgs:
+          cloud-provider: external
+      controllerManager:
+        extraArgs:
+          cloud-provider: external
+    files: []
+    format: ignition
+    ignition:
+      containerLinuxConfig:
+        additionalConfig: |
+          systemd:
+            units:
+            - name: coreos-metadata-sshkeys@.service
+              enabled: true
+            - name: kubeadm.service
+              enabled: true
+              dropins:
+              - name: 10-flatcar.conf
+                contents: |
+                  [Unit]
+                  Requires=containerd.service coreos-metadata.service
+                  After=containerd.service coreos-metadata.service
+
+                  [Service]
+                  EnvironmentFile=/run/metadata/flatcar
+    initConfiguration:
+      nodeRegistration:
+        kubeletExtraArgs:
+          cloud-provider: external
+        name: $${COREOS_OPENSTACK_HOSTNAME}
+    joinConfiguration:
+      nodeRegistration:
+        kubeletExtraArgs:
+          cloud-provider: external
+        name: $${COREOS_OPENSTACK_HOSTNAME}
+    preKubeadmCommands:
+    - export COREOS_OPENSTACK_HOSTNAME=$${COREOS_OPENSTACK_HOSTNAME%.*}
+    - envsubst < /etc/kubeadm.yml > /etc/kubeadm.yml.tmp
+    - mv /etc/kubeadm.yml.tmp /etc/kubeadm.yml
+  machineTemplate:
+    infrastructureRef:
+      apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+      kind: OpenStackMachineTemplate
+      name: ${CLUSTER_NAME}-control-plane
+  replicas: ${CONTROL_PLANE_MACHINE_COUNT}
+  version: ${KUBERNETES_VERSION}
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+kind: OpenStackCluster
+metadata:
+  name: ${CLUSTER_NAME}
+spec:
+  cloudName: ${OPENSTACK_CLOUD}
+  dnsNameservers:
+  - ${OPENSTACK_DNS_NAMESERVERS}
+  externalNetworkId: ${OPENSTACK_EXTERNAL_NETWORK_ID}
+  identityRef:
+    kind: Secret
+    name: ${CLUSTER_NAME}-cloud-config
+  managedSecurityGroups: true
+  nodeCidr: 10.6.0.0/24
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+kind: OpenStackMachineTemplate
+metadata:
+  name: ${CLUSTER_NAME}-control-plane
+spec:
+  template:
+    spec:
+      cloudName: ${OPENSTACK_CLOUD}
+      flavor: ${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR}
+      identityRef:
+        kind: Secret
+        name: ${CLUSTER_NAME}-cloud-config
+      image: ${OPENSTACK_FLATCAR_IMAGE_NAME}
+      sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+kind: OpenStackMachineTemplate
+metadata:
+  name: ${CLUSTER_NAME}-md-0
+spec:
+  template:
+    spec:
+      cloudName: ${OPENSTACK_CLOUD}
+      flavor: ${OPENSTACK_NODE_MACHINE_FLAVOR}
+      identityRef:
+        kind: Secret
+        name: ${CLUSTER_NAME}-cloud-config
+      image: ${OPENSTACK_FLATCAR_IMAGE_NAME}
+      sshKeyName: ${OPENSTACK_SSH_KEY_NAME}

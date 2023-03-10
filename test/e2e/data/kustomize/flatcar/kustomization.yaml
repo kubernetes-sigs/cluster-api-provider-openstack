@@ -1,0 +1,5 @@
+---
+resources:
+- ../../../../../kustomize/v1alpha6/flatcar
+components:
+- ../common-patches/cni

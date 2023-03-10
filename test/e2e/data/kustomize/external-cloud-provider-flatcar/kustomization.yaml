@@ -1,11 +1,10 @@
 ---
 resources:
-- ../../../../../kustomize/v1alpha7/external-cloud-provider
+- ../../../../../kustomize/v1alpha6/external-cloud-provider-flatcar
 - ccm.yaml
 
 components:
 - ../common-patches/cni
-- ../common-patches/containerd
 
 patchesStrategicMerge:
 - patch-ccm.yaml
