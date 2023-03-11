@@ -1238,7 +1238,7 @@ func autoConvert_v1alpha4_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(
 	} else {
 		out.Ports = nil
 	}
-	out.Subnet = in.Subnet
+	// WARNING: in.Subnet requires manual conversion: does not exist in peer-type
 	out.FloatingIP = in.FloatingIP
 	out.SecurityGroups = *(*[]v1alpha7.SecurityGroupParam)(unsafe.Pointer(&in.SecurityGroups))
 	out.Trunk = in.Trunk
@@ -1289,7 +1289,6 @@ func autoConvert_v1alpha7_OpenStackMachineSpec_To_v1alpha4_OpenStackMachineSpec(
 	} else {
 		out.Ports = nil
 	}
-	out.Subnet = in.Subnet
 	out.FloatingIP = in.FloatingIP
 	out.SecurityGroups = *(*[]SecurityGroupParam)(unsafe.Pointer(&in.SecurityGroups))
 	out.Trunk = in.Trunk

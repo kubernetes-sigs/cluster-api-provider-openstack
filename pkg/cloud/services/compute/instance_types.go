@@ -43,7 +43,6 @@ type InstanceSpec struct {
 	ConfigDrive    bool
 	FailureDomain  string
 	RootVolume     *infrav1.RootVolume
-	Subnet         string
 	ServerGroupID  string
 	Trunk          bool
 	Tags           []string
