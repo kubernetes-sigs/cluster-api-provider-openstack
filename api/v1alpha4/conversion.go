@@ -279,6 +279,7 @@ func Convert_v1alpha4_PortOpts_To_v1alpha7_PortOpts(in *PortOpts, out *infrav1.P
 	if in.NetworkID != "" {
 		out.Network = &infrav1.NetworkFilter{ID: in.NetworkID}
 	}
+	// The auto conversion takes care of SecurityGroups
 	return nil
 }
 

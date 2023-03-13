@@ -205,8 +205,54 @@ func Convert_v1alpha6_PortOpts_To_v1alpha7_PortOpts(in *PortOpts, out *infrav1.P
 	}
 	// SecurityGroupFilters were removed in v1alpha7. It is included in the SecurityGroups field in v1alpha7.
 	if in.SecurityGroupFilters != nil {
-		for _, v1alpha5SecurityGroupParam := range in.SecurityGroupFilters {
-			*out.SecurityGroups = append(*out.SecurityGroups, infrav1.SecurityGroupParam{UUID: v1alpha5SecurityGroupParam.UUID})
+		// Initialize SecurityGroups if nil
+		if out.SecurityGroups == nil {
+			out.SecurityGroups = &[]infrav1.SecurityGroupParam{}
+		}
+		for _, v1alpha6SecurityGroupParam := range in.SecurityGroupFilters {
+			filter := infrav1.SecurityGroupFilter{}
+			err = autoConvert_v1alpha6_SecurityGroupFilter_To_v1alpha7_SecurityGroupFilter(&v1alpha6SecurityGroupParam.Filter, &filter, s)
+			if err != nil {
+				return err
+			}
+			outSecurityGroupParam := infrav1.SecurityGroupParam{
+				UUID:   v1alpha6SecurityGroupParam.UUID,
+				Name:   v1alpha6SecurityGroupParam.Name,
+				Filter: filter,
+			}
+			*out.SecurityGroups = append(*out.SecurityGroups, outSecurityGroupParam)
+		}
+	}
+	return nil
+}
+
+// Convert_v1alpha7_PortOpts_To_v1alpha6_PortOpts converts v1alpha7 PortOpts to v1alpha6 PortOpts by always
+// turning SecurityGroups into SecurityGroupFilters (both of type []SecurityGroupParam).
+// This conversion will never result in v1alpha6 SecurityGroups (*[]string) since they can be
+// expressed as SecurityGroupFilters anyway and this simplifies conversion.
+func Convert_v1alpha7_PortOpts_To_v1alpha6_PortOpts(in *infrav1.PortOpts, out *PortOpts, s conversion.Scope) error {
+	err := autoConvert_v1alpha7_PortOpts_To_v1alpha6_PortOpts(in, out, s)
+	if err != nil {
+		return err
+	}
+	if in.SecurityGroups != nil {
+		// Explicitly remove any automatically added v1alpha6 SecurityGroups and use SecurityGroupFilters instead.
+		out.SecurityGroups = nil
+		if out.SecurityGroupFilters == nil {
+			out.SecurityGroupFilters = []SecurityGroupParam{}
+		}
+		for _, inSecurityGroup := range *in.SecurityGroups {
+			filter := SecurityGroupFilter{}
+			err = autoConvert_v1alpha7_SecurityGroupFilter_To_v1alpha6_SecurityGroupFilter(&inSecurityGroup.Filter, &filter, s)
+			if err != nil {
+				return err
+			}
+			outSecurityGroupParam := SecurityGroupParam{
+				UUID:   inSecurityGroup.UUID,
+				Name:   inSecurityGroup.Name,
+				Filter: filter,
+			}
+			out.SecurityGroupFilters = append(out.SecurityGroupFilters, outSecurityGroupParam)
 		}
 	}
 	return nil

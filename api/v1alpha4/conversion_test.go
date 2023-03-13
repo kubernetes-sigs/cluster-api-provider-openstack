@@ -291,6 +291,19 @@ func TestFuzzyConversion(t *testing.T) {
 					v1alpha4ClusterTemplate.Spec.Template.Spec.Bastion.Instance.Image = ""
 				}
 			},
+			func(v1alpha4PortOpts *PortOpts, c fuzz.Continue) {
+				c.FuzzNoCustom(v1alpha4PortOpts)
+				// Empty UUIDs will be dropped in the conversion, so we cannot allow them.
+				filtered := []string{}
+				if v1alpha4PortOpts.SecurityGroups != nil {
+					for _, uuid := range *v1alpha4PortOpts.SecurityGroups {
+						if uuid != "" {
+							filtered = append(filtered, uuid)
+						}
+					}
+					v1alpha4PortOpts.SecurityGroups = &filtered
+				}
+			},
 
 			// Don't test hub-spoke-hub conversion of infrav1 fields which are not in v1alpha4
 			func(v1alpha7PortOpts *infrav1.PortOpts, c fuzz.Continue) {
@@ -307,7 +320,19 @@ func TestFuzzyConversion(t *testing.T) {
 						v1alpha7PortOpts.Network = nil
 					}
 				}
-				v1alpha7PortOpts.SecurityGroups = nil
+
+				// v1alpha7 SecurityGroups contain much more information than v1alpha4.
+				// Only use parameters available in v1alpha4 (UUID).
+				if v1alpha7PortOpts.SecurityGroups != nil {
+					filtered := []infrav1.SecurityGroupParam{}
+					for _, param := range *v1alpha7PortOpts.SecurityGroups {
+						if param.UUID != "" {
+							filtered = append(filtered, infrav1.SecurityGroupParam{UUID: param.UUID})
+						}
+					}
+					v1alpha7PortOpts.SecurityGroups = &filtered
+				}
+				// value specs does not exist in v1alpha4
 				v1alpha7PortOpts.ValueSpecs = nil
 			},
 			func(v1alpha7FixedIP *infrav1.FixedIP, c fuzz.Continue) {

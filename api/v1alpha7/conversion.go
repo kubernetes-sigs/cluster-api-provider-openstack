@@ -54,7 +54,10 @@ func Convert_Slice_string_To_Slice_v1alpha7_SecurityGroupParam(in *[]string, out
 func Convert_Slice_v1alpha7_SecurityGroupParam_To_Slice_string(in *[]SecurityGroupParam, out *[]string, s conversion.Scope) error {
 	if in != nil {
 		for _, v1alpha7SecurityGroups := range *in {
-			*out = append(*out, v1alpha7SecurityGroups.UUID)
+			// If a UUID is specified, use it. We cannot do anything about other fields so they are dropped.
+			if v1alpha7SecurityGroups.UUID != "" {
+				*out = append(*out, v1alpha7SecurityGroups.UUID)
+			}
 		}
 	}
 	return nil
