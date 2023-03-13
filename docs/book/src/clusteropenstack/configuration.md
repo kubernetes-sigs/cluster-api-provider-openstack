@@ -69,9 +69,20 @@ We currently require at least OpenStack Pike.
 
 ## Operating system image
 
-We currently depend on an up-to-date version of cloud-init otherwise the operating system choice is yours. The kubeadm bootstrap provider we're using also depends on some pre-installed software like a container runtime, kubelet, kubeadm, etc.. . For an examples how to build such an image take a look at [image-builder (openstack)](https://image-builder.sigs.k8s.io/capi/providers/openstack.html).
+### cloud-init based images
+
+We currently depend on an up-to-date version of cloud-init, otherwise the operating system choice is yours. The kubeadm bootstrap provider we're using also depends on some pre-installed software like a container runtime, kubelet, kubeadm, etc.. . For examples of how to build such an image take a look at [image-builder (openstack)](https://image-builder.sigs.k8s.io/capi/providers/openstack.html).
 
 The image can be referenced by exposing it as an environment variable `OPENSTACK_IMAGE_NAME`.
+
+### Ignition based images
+
+Some OS like [Fedora CoreOS](https://getfedora.org/en/coreos) or [Flatcar](https://www.flatcar.org/) do not use cloud-init but [Ignition](https://coreos.github.io/ignition/) to provision the instance. You need to enable the [Ignition experimental feature](https://cluster-api.sigs.k8s.io/tasks/experimental-features/ignition.html): `export EXP_KUBEADM_BOOTSTRAP_FORMAT_IGNITION=true`
+
+To use Flatcar image:
+* Build the image with the [image-builder](https://image-builder.sigs.k8s.io/capi/providers/openstack.html): `make OEM_ID=openstack build-qemu-flatcar`
+* Export the name of the uploaded image: `export OPENSTACK_FLATCAR_IMAGE_NAME=flatcar-stable-3374.2.5-kube-v1.25.6`
+* When generating the cluster configuration, use one of the following Cluster API [flavor](https://cluster-api.sigs.k8s.io/clusterctl/commands/generate-cluster.html?#flavors): `--flavor flatcar` or `--flavor external-cloud-provider-flatcar` (_NOTE_: If you select `external-cloud-provider-flatcar`, don't forget to refer to the [external-cloud-provider](https://cluster-api-openstack.sigs.k8s.io/topics/external-cloud-provider.html) section)
 
 ## SSH key pair
 
