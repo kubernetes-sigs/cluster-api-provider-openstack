@@ -17,6 +17,7 @@
         echo "No CI Artifacts installation, exiting"
         exit 0
       fi
+      apt update -qq
       echo "Installing containerd"
       apt-get install -y containerd
       # TODO(lentzi90): This adds cri-tools from the kubernetes repository, since we need to make sure it is a specific version
