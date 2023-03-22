@@ -54,19 +54,6 @@ type SecurityGroupFilter struct {
 	NotTagsAny  string `json:"notTagsAny,omitempty"`
 }
 
-type NetworkParam struct {
-	// Optional UUID of the network.
-	// If specified this will not be validated prior to server creation.
-	// Required if `Subnets` specifies a subnet by UUID.
-	UUID string `json:"uuid,omitempty"`
-	// A fixed IPv4 address for the NIC.
-	FixedIP string `json:"fixedIP,omitempty"`
-	// Filters for optional network query
-	Filter NetworkFilter `json:"filter,omitempty"`
-	// Subnet within a network to use
-	Subnets []SubnetParam `json:"subnets,omitempty"`
-}
-
 type NetworkFilter struct {
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`

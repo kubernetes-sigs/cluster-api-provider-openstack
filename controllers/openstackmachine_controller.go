@@ -502,7 +502,6 @@ func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *
 		})
 	}
 
-	instanceSpec.Networks = openStackMachine.Spec.Networks
 	instanceSpec.Ports = openStackMachine.Spec.Ports
 
 	return &instanceSpec

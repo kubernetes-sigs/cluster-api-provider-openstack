@@ -174,16 +174,12 @@ func (s *Service) normalizePorts(ports []infrav1.PortOpts, openStackCluster *inf
 // constructNetworks builds an array of networks from the network, subnet and ports items in the instance spec.
 // If no networks or ports are in the spec, returns a single network item for a network connection to the default cluster network.
 func (s *Service) constructNetworks(openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec) ([]infrav1.Network, error) {
-	nets, err := s.getServerNetworks(instanceSpec.Networks)
-	if err != nil {
-		return nil, err
-	}
-
 	// Ensure user-specified ports have all required fields
 	ports, err := s.normalizePorts(instanceSpec.Ports, openStackCluster, instanceSpec)
 	if err != nil {
 		return nil, err
 	}
+	nets := make([]infrav1.Network, 0, len(ports))
 	for i := range ports {
 		port := &ports[i]
 		nets = append(nets, infrav1.Network{
@@ -501,91 +497,6 @@ func applyServerGroupID(opts servers.CreateOptsBuilder, serverGroupID string) se
 		}
 	}
 	return opts
-}
-
-func (s *Service) getServerNetworks(networkParams []infrav1.NetworkParam) ([]infrav1.Network, error) {
-	var nets []infrav1.Network
-
-	addSubnet := func(netID, subnetID string) {
-		nets = append(nets, infrav1.Network{
-			ID: netID,
-			Subnet: &infrav1.Subnet{
-				ID: subnetID,
-			},
-		})
-	}
-
-	addSubnets := func(networkParam infrav1.NetworkParam, netID string) error {
-		if len(networkParam.Subnets) == 0 && netID != "" {
-			addSubnet(netID, "")
-			return nil
-		}
-
-		for _, subnet := range networkParam.Subnets {
-			// Don't lookup subnet if it was specified explicitly by UUID
-			if subnet.UUID != "" {
-				// If subnet was supplied by UUID then network
-				// must also have been supplied by UUID.
-				if netID == "" {
-					return fmt.Errorf("validation error adding network for subnet %s: "+
-						"network uuid must be specified when subnet uuid is specified", subnet.UUID)
-				}
-
-				addSubnet(netID, subnet.UUID)
-			} else {
-				subnetOpts := subnet.Filter.ToListOpt()
-				if netID != "" {
-					subnetOpts.NetworkID = netID
-				}
-
-				networkingService, err := s.getNetworkingService()
-				if err != nil {
-					return err
-				}
-
-				subnetsByFilter, err := networkingService.GetSubnetsByFilter(&subnetOpts)
-				if err != nil {
-					return err
-				}
-				for _, subnetByFilter := range subnetsByFilter {
-					addSubnet(subnetByFilter.NetworkID, subnetByFilter.ID)
-				}
-			}
-		}
-
-		return nil
-	}
-
-	for _, networkParam := range networkParams {
-		// Don't lookup network if we specified one explicitly by UUID
-		// Don't lookup network if we didn't specify a network filter
-		// If there is no explicit network UUID and no network filter,
-		// we will look for subnets matching any given subnet filters in
-		// all networks.
-		if networkParam.UUID != "" || networkParam.Filter == (infrav1.NetworkFilter{}) {
-			if err := addSubnets(networkParam, networkParam.UUID); err != nil {
-				return nil, err
-			}
-			continue
-		}
-
-		networkingService, err := s.getNetworkingService()
-		if err != nil {
-			return nil, err
-		}
-
-		opts := networkParam.Filter.ToListOpt()
-		ids, err := networkingService.GetNetworkIDsByFilter(&opts)
-		if err != nil {
-			return nil, err
-		}
-		for _, netID := range ids {
-			if err := addSubnets(networkParam, netID); err != nil {
-				return nil, err
-			}
-		}
-	}
-	return nets, nil
 }
 
 // Helper function for getting image id from name.

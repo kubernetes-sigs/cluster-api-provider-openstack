@@ -56,12 +56,8 @@ type OpenStackMachineSpec struct {
 	// The ssh key to inject in the instance
 	SSHKeyName string `json:"sshKeyName,omitempty"`
 
-	// A networks object. Required parameter when there are multiple networks defined for the tenant.
-	// When you do not specify both networks and ports parameters, the server attaches to the only network created for the current tenant.
-	Networks []NetworkParam `json:"networks,omitempty"`
-
 	// Ports to be attached to the server instance. They are created if a port with the given name does not already exist.
-	// When you do not specify both networks and ports parameters, the server attaches to the only network created for the current tenant.
+	// If not specified a default port will be added for the default cluster network.
 	Ports []PortOpts `json:"ports,omitempty"`
 
 	// The floatingIP which will be associated to the machine, only used for master.

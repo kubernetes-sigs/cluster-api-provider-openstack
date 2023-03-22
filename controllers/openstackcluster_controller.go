@@ -391,7 +391,6 @@ func bastionToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, clusterNa
 		}
 	}
 
-	instanceSpec.Networks = openStackCluster.Spec.Bastion.Instance.Networks
 	instanceSpec.Ports = openStackCluster.Spec.Bastion.Instance.Ports
 
 	return instanceSpec
