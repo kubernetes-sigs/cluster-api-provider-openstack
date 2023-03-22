@@ -949,7 +949,7 @@ func autoConvert_v1alpha3_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(
 	} else {
 		out.Networks = nil
 	}
-	out.Subnet = in.Subnet
+	// WARNING: in.Subnet requires manual conversion: does not exist in peer-type
 	out.FloatingIP = in.FloatingIP
 	out.SecurityGroups = *(*[]v1alpha7.SecurityGroupParam)(unsafe.Pointer(&in.SecurityGroups))
 	// WARNING: in.UserDataSecret requires manual conversion: does not exist in peer-type
@@ -990,7 +990,6 @@ func autoConvert_v1alpha7_OpenStackMachineSpec_To_v1alpha3_OpenStackMachineSpec(
 		out.Networks = nil
 	}
 	// WARNING: in.Ports requires manual conversion: does not exist in peer-type
-	out.Subnet = in.Subnet
 	out.FloatingIP = in.FloatingIP
 	out.SecurityGroups = *(*[]SecurityGroupParam)(unsafe.Pointer(&in.SecurityGroups))
 	out.Trunk = in.Trunk

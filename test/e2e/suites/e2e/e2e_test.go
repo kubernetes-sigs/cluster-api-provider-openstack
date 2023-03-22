@@ -475,39 +475,23 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
 			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(1)
 			configCluster.WorkerMachineCount = pointer.Int64Ptr(0)
-			configCluster.Flavor = shared.FlavorDefault
+			configCluster.Flavor = shared.FlavorWithoutLB
 			_ = createCluster(ctx, configCluster)
 
-			shared.Logf("Creating Machine Deployment with invalid subnet id")
-			md1Name := clusterName + "-md-1"
-			framework.CreateMachineDeployment(ctx, framework.CreateMachineDeploymentInput{
-				Creator:                 e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
-				MachineDeployment:       makeMachineDeployment(namespace.Name, md1Name, clusterName, "", 1),
-				BootstrapConfigTemplate: makeJoinBootstrapConfigTemplate(namespace.Name, md1Name),
-				InfraMachineTemplate:    makeOpenStackMachineTemplate(namespace.Name, clusterName, md1Name, "invalid-subnet"),
-			})
-
-			shared.Logf("Looking for failure event to be reported")
-			Eventually(func() bool {
-				eventList := getEvents(namespace.Name)
-				subnetError := "Failed to create server: no ports with fixed IPs found on Subnet \"invalid-subnet\""
-				return isErrorEventExists(namespace.Name, md1Name, "FailedCreateServer", subnetError, eventList)
-			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(BeTrue())
-
 			shared.Logf("Creating Machine Deployment in an invalid Availability Zone")
-			md2Name := clusterName + "-md-2"
+			mdInvalidAZName := clusterName + "-md-invalid-az"
 			framework.CreateMachineDeployment(ctx, framework.CreateMachineDeploymentInput{
 				Creator:                 e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
-				MachineDeployment:       makeMachineDeployment(namespace.Name, md2Name, clusterName, "invalid-az", 1),
-				BootstrapConfigTemplate: makeJoinBootstrapConfigTemplate(namespace.Name, md2Name),
-				InfraMachineTemplate:    makeOpenStackMachineTemplate(namespace.Name, clusterName, md2Name, ""),
+				MachineDeployment:       makeMachineDeployment(namespace.Name, mdInvalidAZName, clusterName, "invalid-az", 1),
+				BootstrapConfigTemplate: makeJoinBootstrapConfigTemplate(namespace.Name, mdInvalidAZName),
+				InfraMachineTemplate:    makeOpenStackMachineTemplate(namespace.Name, clusterName, mdInvalidAZName),
 			})
 
 			shared.Logf("Looking for failure event to be reported")
 			Eventually(func() bool {
 				eventList := getEvents(namespace.Name)
 				azError := "The requested availability zone is not available"
-				return isErrorEventExists(namespace.Name, md2Name, "FailedCreateServer", azError, eventList)
+				return isErrorEventExists(namespace.Name, mdInvalidAZName, "FailedCreateServer", azError, eventList)
 			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(BeTrue())
 		})
 	})
@@ -751,7 +735,7 @@ func isErrorEventExists(namespace, machineDeploymentName, eventReason, errorMsg 
 	return len(openStackMachineList.Items) == eventMachinesCnt
 }
 
-func makeOpenStackMachineTemplate(namespace, clusterName, name string, subnetID string) *infrav1.OpenStackMachineTemplate {
+func makeOpenStackMachineTemplate(namespace, clusterName, name string) *infrav1.OpenStackMachineTemplate {
 	return &infrav1.OpenStackMachineTemplate{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -768,7 +752,6 @@ func makeOpenStackMachineTemplate(namespace, clusterName, name string, subnetID 
 						Kind: "Secret",
 						Name: fmt.Sprintf("%s-cloud-config", clusterName),
 					},
-					Subnet: subnetID,
 				},
 			},
 		},

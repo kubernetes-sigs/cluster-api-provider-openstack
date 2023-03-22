@@ -142,6 +142,7 @@ func TestFuzzyConversion(t *testing.T) {
 				if v1alpha3Cluster.Spec.Bastion != nil {
 					v1alpha3Cluster.Spec.Bastion.Instance.Image = ""
 					v1alpha3Cluster.Spec.Bastion.Instance.UserDataSecret = nil
+					v1alpha3Cluster.Spec.Bastion.Instance.Subnet = ""
 					if v1alpha3Cluster.Spec.Bastion.Instance.CloudsSecret != nil {
 						v1alpha3Cluster.Spec.Bastion.Instance.CloudsSecret.Namespace = ""
 					}
@@ -160,6 +161,7 @@ func TestFuzzyConversion(t *testing.T) {
 				v1alpha3Machine.ObjectMeta.Annotations = map[string]string{}
 
 				v1alpha3Machine.Spec.UserDataSecret = nil
+				v1alpha3Machine.Spec.Subnet = ""
 
 				if v1alpha3Machine.Spec.CloudsSecret != nil {
 					// In switching to IdentityRef, fetching the cloud secret
@@ -179,6 +181,7 @@ func TestFuzzyConversion(t *testing.T) {
 
 				v1alpha3MachineTemplate.Spec.Template.Spec.Image = ""
 				v1alpha3MachineTemplate.Spec.Template.Spec.UserDataSecret = nil
+				v1alpha3MachineTemplate.Spec.Template.Spec.Subnet = ""
 
 				if v1alpha3MachineTemplate.Spec.Template.Spec.CloudsSecret != nil {
 					v1alpha3MachineTemplate.Spec.Template.Spec.CloudsSecret.Namespace = ""

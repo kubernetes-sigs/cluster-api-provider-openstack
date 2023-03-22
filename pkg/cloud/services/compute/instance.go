@@ -183,7 +183,6 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 		return nil, fmt.Errorf("error getting security groups: %v", err)
 	}
 
-	accessIPv4 := ""
 	for i, network := range nets {
 		if network.ID == "" {
 			return nil, fmt.Errorf("no network was found or provided. Please check your machine configuration and try again")
@@ -198,19 +197,9 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 			return nil, err
 		}
 
-		for _, fip := range port.FixedIPs {
-			if fip.SubnetID == instanceSpec.Subnet {
-				accessIPv4 = fip.IPAddress
-			}
-		}
-
 		portList = append(portList, servers.Network{
 			Port: port.ID,
 		})
-	}
-
-	if instanceSpec.Subnet != "" && accessIPv4 == "" {
-		return nil, fmt.Errorf("no ports with fixed IPs found on Subnet %q", instanceSpec.Subnet)
 	}
 
 	volume, err := s.getOrCreateRootVolume(eventObject, instanceSpec, imageID)
@@ -262,7 +251,6 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 		Tags:             instanceSpec.Tags,
 		Metadata:         instanceSpec.Metadata,
 		ConfigDrive:      &instanceSpec.ConfigDrive,
-		AccessIPv4:       accessIPv4,
 	}
 
 	serverCreateOpts = applyRootVolume(serverCreateOpts, volume)

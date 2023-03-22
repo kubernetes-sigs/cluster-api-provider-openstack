@@ -220,6 +220,7 @@ func TestFuzzyConversion(t *testing.T) {
 
 				if v1alpha4Cluster.Spec.Bastion != nil {
 					v1alpha4Cluster.Spec.Bastion.Instance.Image = ""
+					v1alpha4Cluster.Spec.Bastion.Instance.Subnet = ""
 				}
 			},
 			func(v1alpha3SubnetFilter *SubnetFilter, c fuzz.Continue) {
@@ -261,6 +262,7 @@ func TestFuzzyConversion(t *testing.T) {
 				c.FuzzNoCustom(v1alpha4Machine)
 
 				v1alpha4Machine.ObjectMeta.Annotations = map[string]string{}
+				v1alpha4Machine.Spec.Subnet = ""
 
 				if v1alpha4Machine.Spec.RootVolume != nil {
 					// OpenStackMachineSpec.Image is ignored in v1alpha4 if RootVolume is set
@@ -273,6 +275,7 @@ func TestFuzzyConversion(t *testing.T) {
 				v1alpha4MachineTemplate.ObjectMeta.Annotations = map[string]string{}
 
 				v1alpha4MachineTemplate.Spec.Template.Spec.Image = ""
+				v1alpha4MachineTemplate.Spec.Template.Spec.Subnet = ""
 			},
 			func(v1alpha4Instance *Instance, c fuzz.Continue) {
 				c.FuzzNoCustom(v1alpha4Instance)
@@ -289,6 +292,7 @@ func TestFuzzyConversion(t *testing.T) {
 
 				if v1alpha4ClusterTemplate.Spec.Template.Spec.Bastion != nil {
 					v1alpha4ClusterTemplate.Spec.Template.Spec.Bastion.Instance.Image = ""
+					v1alpha4ClusterTemplate.Spec.Template.Spec.Bastion.Instance.Subnet = ""
 				}
 			},
 
