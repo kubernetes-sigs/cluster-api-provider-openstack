@@ -119,7 +119,7 @@ type PortOpts struct {
 	ProjectID string    `json:"projectId,omitempty"`
 	// The uuids of the security groups to assign to the instance
 	// +listType=set
-	SecurityGroups *[]string `json:"securityGroups,omitempty"`
+	SecurityGroups []string `json:"securityGroups,omitempty"`
 	// The names, uuids, filters or any combination these of the security groups to assign to the instance
 	SecurityGroupFilters []SecurityGroupParam `json:"securityGroupFilters,omitempty"`
 	AllowedAddressPairs  []AddressPair        `json:"allowedAddressPairs,omitempty"`

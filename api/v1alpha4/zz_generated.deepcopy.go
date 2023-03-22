@@ -808,12 +808,8 @@ func (in *PortOpts) DeepCopyInto(out *PortOpts) {
 	}
 	if in.SecurityGroups != nil {
 		in, out := &in.SecurityGroups, &out.SecurityGroups
-		*out = new([]string)
-		if **in != nil {
-			in, out := *in, *out
-			*out = make([]string, len(*in))
-			copy(*out, *in)
-		}
+		*out = make([]string, len(*in))
+		copy(*out, *in)
 	}
 	if in.AllowedAddressPairs != nil {
 		in, out := &in.AllowedAddressPairs, &out.AllowedAddressPairs
