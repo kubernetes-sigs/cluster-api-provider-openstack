@@ -224,3 +224,8 @@ func Convert_v1alpha7_APIServerLoadBalancer_To_v1alpha5_APIServerLoadBalancer(in
 	// Provider was originally added in v1alpha7, but was backported to v1alpha6, but has no equivalent in v1alpha5
 	return autoConvert_v1alpha7_APIServerLoadBalancer_To_v1alpha5_APIServerLoadBalancer(in, out, s)
 }
+
+func Convert_v1alpha5_PortOpts_To_v1alpha7_PortOpts(in *PortOpts, out *infrav1.PortOpts, s conversion.Scope) error {
+	// SecurityGroups have been removed in v1alpha7.
+	return autoConvert_v1alpha5_PortOpts_To_v1alpha7_PortOpts(in, out, s)
+}

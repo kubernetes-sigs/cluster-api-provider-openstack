@@ -94,6 +94,20 @@ func restorev1alpha6MachineSpec(previous *OpenStackMachineSpec, dst *OpenStackMa
 	dst.Ports = previous.Ports
 }
 
+func restorev1alpha6ClusterStatus(previous *OpenStackClusterStatus, dst *OpenStackClusterStatus) {
+	// PortOpts.SecurityGroups have been removed in v1alpha7
+	// We restore the whole PortOpts/Networks since they are anyway immutable.
+	if previous.ExternalNetwork != nil {
+		dst.ExternalNetwork.PortOpts = previous.ExternalNetwork.PortOpts
+	}
+	if previous.Network != nil {
+		dst.Network = previous.Network
+	}
+	if previous.Bastion != nil && previous.Bastion.Networks != nil {
+		dst.Bastion.Networks = previous.Bastion.Networks
+	}
+}
+
 func restorev1alpha7MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *infrav1.OpenStackMachineSpec) {
 	// PropagateUplinkStatus has been added in v1alpha7.
 	// We restore the whole Ports since they are anyway immutable.
@@ -157,6 +171,7 @@ func (r *OpenStackCluster) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 		if prevBastion != nil {
 			restorev1alpha6MachineSpec(&prevBastion.Instance, &r.Spec.Bastion.Instance)
 		}
+		restorev1alpha6ClusterStatus(&previous.Status, &r.Status)
 	}
 
 	return nil
@@ -372,6 +387,18 @@ func convertNetworksToPorts(networks []NetworkParam) []infrav1.PortOpts {
 
 func Convert_v1alpha7_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in *infrav1.OpenStackClusterSpec, out *OpenStackClusterSpec, s conversion.Scope) error {
 	return autoConvert_v1alpha7_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in, out, s)
+}
+
+func Convert_v1alpha6_PortOpts_To_v1alpha7_PortOpts(in *PortOpts, out *infrav1.PortOpts, s conversion.Scope) error {
+	err := autoConvert_v1alpha6_PortOpts_To_v1alpha7_PortOpts(in, out, s)
+	if err != nil {
+		return err
+	}
+	// SecurityGroups are removed in v1alpha7 without replacement. SecurityGroupFilters can be used instead.
+	for i := range in.SecurityGroups {
+		out.SecurityGroupFilters = append(out.SecurityGroupFilters, infrav1.SecurityGroupParam{UUID: in.SecurityGroups[i]})
+	}
+	return nil
 }
 
 func Convert_Slice_v1alpha6_Network_To_Slice_v1alpha7_Network(in *[]Network, out *[]infrav1.Network, s conversion.Scope) error {

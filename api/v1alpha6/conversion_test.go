@@ -21,6 +21,7 @@ import (
 
 	"github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	runtime "k8s.io/apimachinery/pkg/runtime"
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
 	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
 
@@ -337,6 +338,7 @@ func TestNetworksToPorts(t *testing.T) {
 			},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			before := &OpenStackMachine{
@@ -346,6 +348,94 @@ func TestNetworksToPorts(t *testing.T) {
 
 			g.Expect(before.ConvertTo(&after)).To(gomega.Succeed())
 			g.Expect(after.Spec).To(gomega.Equal(tt.afterMachineSpec))
+		})
+	}
+}
+
+// TestPortOptsConvertTo checks conversion TO the hub version.
+// This is useful to ensure that the SecurityGroups are properly
+// converted to SecurityGroupFilters, and merged with any existing
+// SecurityGroupFilters.
+func TestPortOptsConvertTo(t *testing.T) {
+	g := gomega.NewWithT(t)
+	scheme := runtime.NewScheme()
+	g.Expect(AddToScheme(scheme)).To(gomega.Succeed())
+	g.Expect(infrav1.AddToScheme(scheme)).To(gomega.Succeed())
+
+	// Variables used in the tests
+	uuids := []string{"abc123", "123abc"}
+	securityGroupsUuids := []infrav1.SecurityGroupParam{
+		{UUID: uuids[0]},
+		{UUID: uuids[1]},
+	}
+	securityGroupFilter := []SecurityGroupParam{
+		{Name: "one"},
+		{UUID: "654cba"},
+	}
+	securityGroupFilterMerged := []infrav1.SecurityGroupParam{
+		{Name: "one"},
+		{UUID: "654cba"},
+		{UUID: uuids[0]},
+		{UUID: uuids[1]},
+	}
+
+	tests := []struct {
+		name string
+		// spokePortOpts are the PortOpts in the spoke version
+		spokePortOpts []PortOpts
+		// hubPortOpts are the PortOpts in the hub version that should be expected after conversion
+		hubPortOpts []infrav1.PortOpts
+	}{
+		{
+			// The list of security group UUIDs should be translated to proper SecurityGroupParams
+			name: "SecurityGroups to SecurityGroupFilters",
+			spokePortOpts: []PortOpts{{
+				SecurityGroups: uuids,
+			}},
+			hubPortOpts: []infrav1.PortOpts{{
+				SecurityGroupFilters: securityGroupsUuids,
+			}},
+		},
+		{
+			name: "Merge SecurityGroups and SecurityGroupFilters",
+			spokePortOpts: []PortOpts{{
+				SecurityGroups:       uuids,
+				SecurityGroupFilters: securityGroupFilter,
+			}},
+			hubPortOpts: []infrav1.PortOpts{{
+				SecurityGroupFilters: securityGroupFilterMerged,
+			}},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// The spoke machine template with added PortOpts
+			spokeMachineTemplate := OpenStackMachineTemplate{
+				Spec: OpenStackMachineTemplateSpec{
+					Template: OpenStackMachineTemplateResource{
+						Spec: OpenStackMachineSpec{
+							Ports: tt.spokePortOpts,
+						},
+					},
+				},
+			}
+			// The hub machine template with added PortOpts
+			hubMachineTemplate := infrav1.OpenStackMachineTemplate{
+				Spec: infrav1.OpenStackMachineTemplateSpec{
+					Template: infrav1.OpenStackMachineTemplateResource{
+						Spec: infrav1.OpenStackMachineSpec{
+							Ports: tt.hubPortOpts,
+						},
+					},
+				},
+			}
+			convertedHub := infrav1.OpenStackMachineTemplate{}
+
+			err := spokeMachineTemplate.ConvertTo(&convertedHub)
+			g.Expect(err).NotTo(gomega.HaveOccurred())
+			// Comparing spec only here since the conversion will also add annotations that we don't care about for the test
+			g.Expect(convertedHub.Spec).To(gomega.Equal(hubMachineTemplate.Spec))
 		})
 	}
 }
