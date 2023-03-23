@@ -279,7 +279,7 @@ openstack loadbalancer listener unset --allowed-cidrs <listener ID>
 
 ## Network Filters
 
-If you have a complex query that you want to use to lookup a network, then you can do this by using a network filter. More details about the filter can be found in [NetworkParam](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/api/v1beta1/types.go)
+If you have a complex query that you want to use to lookup a network, then you can do this by using a network filter. More details about the filter can be found in [NetworkParam](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/api/v1alpha7/types.go#L57)
 
 By using filters to look up a network, please note that it is possible to get multiple networks as a result. This should not be a problem, however please test your filters with `openstack network list` to be certain that it returns the networks you want. Please refer to the following usage example:
 
