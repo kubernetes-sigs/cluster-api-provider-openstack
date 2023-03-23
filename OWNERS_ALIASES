@@ -30,4 +30,5 @@ aliases:
     - seanschneeweiss
     - tobiasgiese
   cluster-api-openstack-reviewers:
+    - dulek
     - lentzi90
