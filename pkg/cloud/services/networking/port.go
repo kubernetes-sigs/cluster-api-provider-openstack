@@ -53,7 +53,7 @@ func (s *Service) GetPortFromInstanceIP(instanceID string, ip string) ([]ports.P
 	return s.client.ListPort(portOpts)
 }
 
-func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string, portName string, net infrav1.Network, instanceSecurityGroups *[]string, instanceTags []string) (*ports.Port, error) {
+func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string, portName string, net infrav1.Network, instanceSecurityGroups []string, instanceTags []string) (*ports.Port, error) {
 	existingPorts, err := s.client.ListPort(ports.ListOpts{
 		Name:      portName,
 		NetworkID: net.ID,
@@ -81,7 +81,7 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 		description = names.GetDescription(clusterName)
 	}
 
-	var securityGroups *[]string
+	var securityGroups []string
 	addressPairs := []ports.AddressPair{}
 	if portOpts.DisablePortSecurity == nil || !*portOpts.DisablePortSecurity {
 		for _, ap := range portOpts.AllowedAddressPairs {
@@ -90,12 +90,12 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 				MACAddress: ap.MACAddress,
 			})
 		}
-		securityGroups, err = s.CollectPortSecurityGroups(eventObject, portOpts.SecurityGroups, portOpts.SecurityGroupFilters)
+		securityGroups, err = s.collectPortSecurityGroups(portOpts.SecurityGroups, portOpts.SecurityGroupFilters)
 		if err != nil {
 			return nil, err
 		}
 		// inherit port security groups from the instance if not explicitly specified
-		if securityGroups == nil || len(*securityGroups) == 0 {
+		if len(securityGroups) == 0 {
 			securityGroups = instanceSecurityGroups
 		}
 	}
@@ -129,6 +129,13 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 	}
 
 	var createOpts ports.CreateOptsBuilder
+
+	// Gophercloud expects a *[]string. We translate a nil slice to a nil pointer.
+	var securityGroupsPtr *[]string
+	if securityGroups != nil {
+		securityGroupsPtr = &securityGroups
+	}
+
 	createOpts = ports.CreateOpts{
 		Name:                portName,
 		NetworkID:           net.ID,
@@ -137,7 +144,7 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 		MACAddress:          portOpts.MACAddress,
 		TenantID:            portOpts.TenantID,
 		ProjectID:           portOpts.ProjectID,
-		SecurityGroups:      securityGroups,
+		SecurityGroups:      securityGroupsPtr,
 		AllowedAddressPairs: addressPairs,
 		FixedIPs:            fixedIPs,
 		ValueSpecs:          valueSpecs,
@@ -296,20 +303,18 @@ func (s *Service) GarbageCollectErrorInstancesPort(eventObject runtime.Object, i
 	return nil
 }
 
-// CollectPortSecurityGroups collects distinct securityGroups from port.SecurityGroups and port.SecurityGroupFilter fields.
-func (s *Service) CollectPortSecurityGroups(eventObject runtime.Object, portSecurityGroups *[]string, portSecurityGroupFilters []infrav1.SecurityGroupParam) (*[]string, error) {
+// collectPortSecurityGroups collects distinct securityGroups from port.SecurityGroups and port.SecurityGroupFilter fields.
+func (s *Service) collectPortSecurityGroups(portSecurityGroups []string, portSecurityGroupFilters []infrav1.SecurityGroupParam) ([]string, error) {
 	var allSecurityGroupIDs []string
 	// security groups provided with the portSecurityGroupFilters fields
 	securityGroupFiltersByID, err := s.GetSecurityGroups(portSecurityGroupFilters)
 	if err != nil {
-		return portSecurityGroups, fmt.Errorf("error getting security groups: %v", err)
+		return nil, fmt.Errorf("error getting security groups: %v", err)
 	}
 	allSecurityGroupIDs = append(allSecurityGroupIDs, securityGroupFiltersByID...)
 	securityGroupCount := 0
 	// security groups provided with the portSecurityGroups fields
-	if portSecurityGroups != nil {
-		allSecurityGroupIDs = append(allSecurityGroupIDs, *portSecurityGroups...)
-	}
+	allSecurityGroupIDs = append(allSecurityGroupIDs, portSecurityGroups...)
 	// generate unique values
 	uids := make(map[string]int)
 	for _, sg := range allSecurityGroupIDs {
@@ -331,5 +336,5 @@ func (s *Service) CollectPortSecurityGroups(eventObject runtime.Object, portSecu
 		}
 		distinctSecurityGroupIDs = append(distinctSecurityGroupIDs, key)
 	}
-	return &distinctSecurityGroupIDs, nil
+	return distinctSecurityGroupIDs, nil
 }

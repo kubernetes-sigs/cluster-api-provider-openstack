@@ -132,7 +132,7 @@ type PortOpts struct {
 	FixedIPs            []FixedIP     `json:"fixedIPs,omitempty"`
 	TenantID            string        `json:"tenantId,omitempty"`
 	ProjectID           string        `json:"projectId,omitempty"`
-	SecurityGroups      *[]string     `json:"securityGroups,omitempty"`
+	SecurityGroups      []string      `json:"securityGroups,omitempty"`
 	AllowedAddressPairs []AddressPair `json:"allowedAddressPairs,omitempty"`
 	// Enables and disables trunk at port level. If not provided, openStackMachine.Spec.Trunk is inherited.
 	Trunk *bool `json:"trunk,omitempty"`

@@ -192,7 +192,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 			iTags = instanceSpec.Tags
 		}
 		portName := getPortName(instanceSpec.Name, network.PortOpts, i)
-		port, err := networkingService.GetOrCreatePort(eventObject, clusterName, portName, network, &securityGroups, iTags)
+		port, err := networkingService.GetOrCreatePort(eventObject, clusterName, portName, network, securityGroups, iTags)
 		if err != nil {
 			return nil, err
 		}

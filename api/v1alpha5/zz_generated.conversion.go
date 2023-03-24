@@ -1445,7 +1445,7 @@ func autoConvert_v1alpha5_PortOpts_To_v1alpha7_PortOpts(in *PortOpts, out *v1alp
 	out.FixedIPs = *(*[]v1alpha7.FixedIP)(unsafe.Pointer(&in.FixedIPs))
 	out.TenantID = in.TenantID
 	out.ProjectID = in.ProjectID
-	out.SecurityGroups = (*[]string)(unsafe.Pointer(in.SecurityGroups))
+	out.SecurityGroups = *(*[]string)(unsafe.Pointer(&in.SecurityGroups))
 	out.SecurityGroupFilters = *(*[]v1alpha7.SecurityGroupParam)(unsafe.Pointer(&in.SecurityGroupFilters))
 	out.AllowedAddressPairs = *(*[]v1alpha7.AddressPair)(unsafe.Pointer(&in.AllowedAddressPairs))
 	out.Trunk = (*bool)(unsafe.Pointer(in.Trunk))
@@ -1471,7 +1471,7 @@ func autoConvert_v1alpha7_PortOpts_To_v1alpha5_PortOpts(in *v1alpha7.PortOpts, o
 	out.FixedIPs = *(*[]FixedIP)(unsafe.Pointer(&in.FixedIPs))
 	out.TenantID = in.TenantID
 	out.ProjectID = in.ProjectID
-	out.SecurityGroups = (*[]string)(unsafe.Pointer(in.SecurityGroups))
+	out.SecurityGroups = *(*[]string)(unsafe.Pointer(&in.SecurityGroups))
 	out.SecurityGroupFilters = *(*[]SecurityGroupParam)(unsafe.Pointer(&in.SecurityGroupFilters))
 	out.AllowedAddressPairs = *(*[]AddressPair)(unsafe.Pointer(&in.AllowedAddressPairs))
 	out.Trunk = (*bool)(unsafe.Pointer(in.Trunk))

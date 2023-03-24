@@ -59,7 +59,7 @@ func Test_GetOrCreatePort(t *testing.T) {
 		name                   string
 		portName               string
 		net                    infrav1.Network
-		instanceSecurityGroups *[]string
+		instanceSecurityGroups []string
 		tags                   []string
 		expect                 func(m *mock.MockNetworkClientMockRecorder)
 		// Note the 'wanted' port isn't so important, since it will be whatever we tell ListPort or CreatePort to return.
@@ -127,7 +127,7 @@ func Test_GetOrCreatePort(t *testing.T) {
 				ID:       netID,
 				PortOpts: &infrav1.PortOpts{},
 			},
-			&instanceSecurityGroups,
+			instanceSecurityGroups,
 			[]string{},
 			func(m *mock.MockNetworkClientMockRecorder) {
 				// No ports found
@@ -169,7 +169,7 @@ func Test_GetOrCreatePort(t *testing.T) {
 					}, {IPAddress: "192.168.1.50"}},
 					TenantID:       tenantID,
 					ProjectID:      projectID,
-					SecurityGroups: &portSecurityGroups,
+					SecurityGroups: portSecurityGroups,
 					AllowedAddressPairs: []infrav1.AddressPair{{
 						IPAddress:  "10.10.10.10",
 						MACAddress: "f1:f1:f1:f1:f1:f1",
@@ -297,10 +297,10 @@ func Test_GetOrCreatePort(t *testing.T) {
 			infrav1.Network{
 				ID: netID,
 				PortOpts: &infrav1.PortOpts{
-					SecurityGroups: &portSecurityGroups,
+					SecurityGroups: portSecurityGroups,
 				},
 			},
-			&instanceSecurityGroups,
+			instanceSecurityGroups,
 			[]string{},
 			func(m *mock.MockNetworkClientMockRecorder) {
 				// No ports found
