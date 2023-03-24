@@ -40,9 +40,8 @@ import (
 )
 
 const (
-	networkPrefix               string = "k8s-clusterapi"
-	kubeapiLBSuffix             string = "kubeapi"
-	defaultLoadBalancerProvider string = "amphora"
+	networkPrefix   string = "k8s-clusterapi"
+	kubeapiLBSuffix string = "kubeapi"
 )
 
 const loadBalancerProvisioningStatusActive = "ACTIVE"
@@ -64,13 +63,18 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 		return err
 	}
 
-	// As mostly all LoadBalancer features are only supported on "amphora" we explicitly set the provider
-	// in the LoadBalancer create call to make sure to get the desired features - even if multiple providers exist.
-	var lbProvider string
-	for _, v := range providers {
-		if v.Name == defaultLoadBalancerProvider {
-			lbProvider = v.Name
-			break
+	// Choose the selected provider if it is set in cluster spec, if not, omit the field and Octavia will use the default provider.
+	lbProvider := ""
+	if openStackCluster.Spec.APIServerLoadBalancer.Provider != "" {
+		for _, v := range providers {
+			if v.Name == openStackCluster.Spec.APIServerLoadBalancer.Provider {
+				lbProvider = v.Name
+				break
+			}
+		}
+		if lbProvider == "" {
+			record.Warnf(openStackCluster, "OctaviaProviderNotFound", "Provider specified for Octavia not found.")
+			record.Eventf(openStackCluster, "OctaviaProviderNotFound", "Provider %s specified for Octavia not found, using the default provider.", openStackCluster.Spec.APIServerLoadBalancer.Provider)
 		}
 	}
 
@@ -124,7 +128,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 			return err
 		}
 
-		pool, err := s.getOrCreatePool(openStackCluster, lbPortObjectsName, listener.ID, lb.ID)
+		pool, err := s.getOrCreatePool(openStackCluster, lbPortObjectsName, listener.ID, lb.ID, lb.Provider)
 		if err != nil {
 			return err
 		}
@@ -300,7 +304,7 @@ func validateIPs(openStackCluster *infrav1.OpenStackCluster, definedCIDRs []stri
 	return marshaledCIDRs
 }
 
-func (s *Service) getOrCreatePool(openStackCluster *infrav1.OpenStackCluster, poolName, listenerID, lbID string) (*pools.Pool, error) {
+func (s *Service) getOrCreatePool(openStackCluster *infrav1.OpenStackCluster, poolName, listenerID, lbID string, lbProvider string) (*pools.Pool, error) {
 	pool, err := s.checkIfPoolExists(poolName)
 	if err != nil {
 		return nil, err
@@ -312,10 +316,16 @@ func (s *Service) getOrCreatePool(openStackCluster *infrav1.OpenStackCluster, po
 
 	s.scope.Logger().Info(fmt.Sprintf("Creating load balancer pool for listener %q", listenerID), "name", poolName, "lb-id", lbID)
 
+	method := pools.LBMethodRoundRobin
+
+	if lbProvider == "ovn" {
+		method = pools.LBMethodSourceIpPort
+	}
+
 	poolCreateOpts := pools.CreateOpts{
 		Name:       poolName,
 		Protocol:   "TCP",
-		LBMethod:   pools.LBMethodRoundRobin,
+		LBMethod:   method,
 		ListenerID: listenerID,
 		Tags:       openStackCluster.Spec.Tags,
 	}
@@ -356,6 +366,13 @@ func (s *Service) getOrCreateMonitor(openStackCluster *infrav1.OpenStackCluster,
 		Timeout:        5,
 	}
 	monitor, err = s.loadbalancerClient.CreateMonitor(monitorCreateOpts)
+	// Skip creating monitor if it is not supported by Octavia provider
+	if capoerrors.IsNotImplementedError(err) {
+		record.Warnf(openStackCluster, "SkippedCreateMonitor", "Health monitors are not supported with the current Octavia provider.")
+		record.Eventf(openStackCluster, "SkippedCreateMonitor", "Health Monitor is not created as it's not implemented with the current Octavia provider.")
+		return nil
+	}
+
 	if err != nil {
 		record.Warnf(openStackCluster, "FailedCreateMonitor", "Failed to create monitor %s: %v", monitorName, err)
 		return err

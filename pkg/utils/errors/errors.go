@@ -86,3 +86,14 @@ func IsConflict(err error) bool {
 
 	return false
 }
+
+func IsNotImplementedError(err error) bool {
+	var errUnexpectedResponseCode gophercloud.ErrUnexpectedResponseCode
+	if errors.As(err, &errUnexpectedResponseCode) {
+		if errUnexpectedResponseCode.Actual == http.StatusNotImplemented {
+			return true
+		}
+	}
+
+	return false
+}

@@ -335,6 +335,7 @@ func TestFuzzyConversion(t *testing.T) {
 				v1alpha7Cluster.ObjectMeta.Annotations = map[string]string{}
 
 				v1alpha7Cluster.Spec.APIServerLoadBalancer.AllowedCIDRs = nil
+				v1alpha7Cluster.Spec.APIServerLoadBalancer.Provider = ""
 
 				v1alpha7Cluster.Spec.ControlPlaneOmitAvailabilityZone = false
 
@@ -413,6 +414,7 @@ func TestFuzzyConversion(t *testing.T) {
 				v1alpha7ClusterTemplate.ObjectMeta.Annotations = map[string]string{}
 
 				v1alpha7ClusterTemplate.Spec.Template.Spec.APIServerLoadBalancer.AllowedCIDRs = nil
+				v1alpha7ClusterTemplate.Spec.Template.Spec.APIServerLoadBalancer.Provider = ""
 
 				v1alpha7ClusterTemplate.Spec.Template.Spec.ControlPlaneOmitAvailabilityZone = false
 
