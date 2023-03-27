@@ -2,15 +2,18 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
-- [v1alpha5 compared to v1alpha6](#v1alpha5-compared-to-v1alpha6)
+- [v1alpha6 compared to v1alpha7](#v1alpha6-compared-to-v1alpha7)
   - [Migration](#migration)
   - [API Changes](#api-changes)
     - [`OpenStackCluster`](#openstackcluster)
     - [`OpenStackMachine`](#openstackmachine)
+      - [Removal of Subnet](#removal-of-subnet)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# v1alpha5 compared to v1alpha6
+# v1alpha6 compared to v1alpha7
+
+> ⚠️ v1alpha7 has not been released yet.
 
 ## Migration
 
@@ -23,3 +26,10 @@ This only documents backwards incompatible changes. Fields that were added to v1
 ### `OpenStackCluster`
 
 ### `OpenStackMachine`
+
+#### Removal of Subnet
+
+The OpenStackMachine spec previously contained a `subnet` field which could used
+to set the `accessIPv4` field on Nova servers. This feature was not widely
+used, difficult to use, and could not be extended to support IPv6. It is
+removed without replacement.

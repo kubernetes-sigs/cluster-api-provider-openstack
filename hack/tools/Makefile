@@ -37,7 +37,7 @@ ifeq ($(OS), linux)
 	GTAR := tar
 endif
 
-MDBOOK_EXTRACT_COMMAND := tar xfvz $(SHARE_DIR)/mdbook.tar.gz -C bin
+MDBOOK_EXTRACT_COMMAND := tar xfvz $(SHARE_DIR)/mdbook.tar.gz -C $(BIN_DIR)
 MDBOOK_ARCHIVE_EXT := .tar.gz
 
 ifeq ($(OS), windows)
@@ -62,19 +62,19 @@ $(GTAR):
 
 
 CONTROLLER_GEN := $(BIN_DIR)/controller-gen
-$(CONTROLLER_GEN): $(BIN_DIR) go.mod go.sum # Build controller-gen from tools folder.
+$(CONTROLLER_GEN): go.mod go.sum | $(BIN_DIR) # Build controller-gen from tools folder.
 	go build -tags=tools -o $@ sigs.k8s.io/controller-tools/cmd/controller-gen
 
 CONVERSION_GEN := $(BIN_DIR)/conversion-gen
-$(CONVERSION_GEN): $(BIN_DIR) go.mod go.sum
+$(CONVERSION_GEN): go.mod go.sum | $(BIN_DIR)
 	go build -tags=tools -o $@ k8s.io/code-generator/cmd/conversion-gen
 
 DEFAULTER_GEN := $(BIN_DIR)/defaulter-gen
-$(DEFAULTER_GEN): $(BIN_DIR) go.mod go.sum
+$(DEFAULTER_GEN): go.mod go.sum | $(BIN_DIR)
 	go build -tags=tools -o $@ k8s.io/code-generator/cmd/defaulter-gen
 
 ENVSUBST := $(BIN_DIR)/envsubst
-$(ENVSUBST): $(BIN_DIR) go.mod go.sum # Build envsubst from tools folder.
+$(ENVSUBST): go.mod go.sum | $(BIN_DIR) # Build envsubst from tools folder.
 	go build -tags=tools -o $@ github.com/a8m/envsubst/cmd/envsubst
 
 GH_SHARE := $(SHARE_DIR)/gh
@@ -86,17 +86,17 @@ $(GH_SHARE)/gh.tar.gz: $(GH_SHARE)
 	curl -L "https://github.com/cli/cli/releases/download/v$(GH_VERSION)/gh_$(GH_VERSION)_$(GH_ARCH_SUFFIX).tar.gz" -o $@
 
 GH := $(BIN_DIR)/gh
-GH: $(GTAR) $(GH_SHARE)/gh.tar.gz
-	$(GTAR) -xvf share/gh/gh.tar.gz gh_$(GH_VERSION)_$(GH_ARCH_SUFFIX)/bin/gh --strip-components 1 --directory $(BIN_DIR)
+$(GH): $(GTAR) $(GH_SHARE)/gh.tar.gz | $(BIN_DIR)
+	$(GTAR) -xvf $(SHARE_DIR)/gh/gh.tar.gz gh_$(GH_VERSION)_$(GH_ARCH_SUFFIX)/bin/gh --strip-components 1 --directory $(BIN_DIR)
 	chmod +x $@
 	touch -m $@
 
 GINKGO := $(BIN_DIR)/ginkgo
-$(GINKGO): $(BIN_DIR) go.mod go.sum
+$(GINKGO): go.mod go.sum | $(BIN_DIR)
 	go build -tags=tools -o $@ github.com/onsi/ginkgo/v2/ginkgo
 
 GOJQ := $(BIN_DIR)/gojq
-$(GOJQ): $(BIN_DIR) go.mod go.sum
+$(GOJQ): go.mod go.sum | $(BIN_DIR)
 	go build -tags=tools -o $@ github.com/itchyny/gojq/cmd/gojq
 
 GOLANGCI_LINT := $(BIN_DIR)/golangci-lint
@@ -104,7 +104,7 @@ $(GOLANGCI_LINT): Makefile ensure-golangci-lint.sh | $(BIN_DIR)
 	./ensure-golangci-lint.sh -b $(BIN_DIR) $(GOLANGCI_LINT_VERSION)
 
 KUSTOMIZE := $(BIN_DIR)/kustomize
-$(KUSTOMIZE): $(BIN_DIR) go.mod go.sum # Build kustomize from tools folder.
+$(KUSTOMIZE): go.mod go.sum | $(BIN_DIR) # Build kustomize from tools folder.
 	CGO_ENABLED=0 go build -tags=tools -o $@ sigs.k8s.io/kustomize/kustomize/v4
 
 MDBOOK_SHARE := $(SHARE_DIR)/mdbook$(MDBOOK_ARCHIVE_EXT)
@@ -112,37 +112,37 @@ $(MDBOOK_SHARE): ../../versions.mk $(SHARE_DIR)
 	curl -sL -o $(MDBOOK_SHARE) "https://github.com/rust-lang/mdBook/releases/download/$(MDBOOK_VERSION)/mdBook-$(MDBOOK_VERSION)-x86_64-$(RUST_TARGET)$(MDBOOK_ARCHIVE_EXT)"
 
 MDBOOK := $(BIN_DIR)/mdbook
-$(MDBOOK): $(BIN_DIR) $(MDBOOK_SHARE)
+$(MDBOOK): $(MDBOOK_SHARE) | $(BIN_DIR)
 	$(MDBOOK_EXTRACT_COMMAND)
 	chmod +x $@
 	touch -m $@
 
 MDBOOK_EMBED := $(BIN_DIR)/mdbook-embed
-$(MDBOOK_EMBED): $(BIN_DIR) go.mod go.sum
+$(MDBOOK_EMBED): go.mod go.sum | $(BIN_DIR)
 	go build -tags=tools -o $(BIN_DIR)/mdbook-embed sigs.k8s.io/cluster-api/hack/tools/mdbook/embed
 
 MDBOOK_RELEASELINK := $(BIN_DIR)/mdbook-releaselink
-$(MDBOOK_RELEASELINK): $(BIN_DIR) go.mod go.sum
+$(MDBOOK_RELEASELINK): go.mod go.sum | $(BIN_DIR)
 	go build -tags=tools -o $(BIN_DIR)/mdbook-releaselink sigs.k8s.io/cluster-api/hack/tools/mdbook/releaselink
 
 MDBOOK_TABULATE := $(BIN_DIR)/mdbook-tabulate
-$(MDBOOK_TABULATE): $(BIN_DIR) go.mod go.sum
+$(MDBOOK_TABULATE): go.mod go.sum | $(BIN_DIR)
 	go build -tags=tools -o $(BIN_DIR)/mdbook-tabulate sigs.k8s.io/cluster-api/hack/tools/mdbook/tabulate
 
 MOCKGEN := $(BIN_DIR)/mockgen
-$(MOCKGEN): $(BIN_DIR) go.mod go.sum # Build mockgen from tools folder.
+$(MOCKGEN): go.mod go.sum | $(BIN_DIR) # Build mockgen from tools folder.
 	go build -tags=tools -o $@ github.com/golang/mock/mockgen
 
 RELEASE_NOTES := $(BIN_DIR)/release-notes
-$(RELEASE_NOTES): $(BIN_DIR) go.mod go.sum
+$(RELEASE_NOTES): go.mod go.sum | $(BIN_DIR)
 	go build -tags tools -o $@ sigs.k8s.io/cluster-api/hack/tools/release
 
 PLANTUML := $(BIN_DIR)/plantuml-sentinal
-$(PLANTUML): plantuml.Dockerfile ../../versions.mk
+$(PLANTUML): plantuml.Dockerfile ../../versions.mk | $(BIN_DIR)
 	docker build --build-arg PLANTUML_VERSION=$(PLANTUML_VERSION)  . -f plantuml.Dockerfile -t "plantuml-builder"
 	touch $@
 
 .PHONY: clean
 clean: ## Remove all tools
-	rm -rf bin
-	rm -rf share
+	rm -rf $(BIN_DIR)
+	rm -rf $(SHARE_DIR)
