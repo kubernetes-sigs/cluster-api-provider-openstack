@@ -5,6 +5,8 @@
 - [Required configuration](#required-configuration)
   - [OpenStack version](#openstack-version)
   - [Operating system image](#operating-system-image)
+    - [cloud-init based images](#cloud-init-based-images)
+    - [Ignition based images](#ignition-based-images)
   - [SSH key pair](#ssh-key-pair)
   - [OpenStack credential](#openstack-credential)
     - [Generate credentials](#generate-credentials)
@@ -222,7 +224,7 @@ during an upgrade. When the API server has a floating IP, this role is fulfilled
 floating IP even if there is no load balancer. When the API server does not have a floating
 IP, the load balancer virtual IP on the cluster network is used.
 
-## Restrict Access to the API server
+### Restrict Access to the API server
 
 > **NOTE**
 >

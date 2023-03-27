@@ -3,7 +3,7 @@
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
 - [External Cloud Provider](#external-cloud-provider)
-  - [Steps](#steps)
+  - [Steps of using external cloud provider template](#steps-of-using-external-cloud-provider-template)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 

@@ -10,5 +10,6 @@
     - [CRD Changes](./topics/crd-changes/index.md)
         - [v1alpha4 to v1alpha5](./topics/crd-changes/v1alpha4-to-v1alpha5.md)
         - [v1alpha5 to v1alpha6](./topics/crd-changes/v1alpha5-to-v1alpha6.md)
+        - [v1alpha6 to v1alpha7](./topics/crd-changes/v1alpha6-to-v1alpha7.md)
 - [Development](./development/development.md)
 - [Hacking CI](./development/ci.md)

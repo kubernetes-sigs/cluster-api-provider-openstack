@@ -5,6 +5,7 @@
 - [Hacking CI for the E2E tests](#hacking-ci-for-the-e2e-tests)
   - [Prow](#prow)
   - [DevStack](#devstack)
+    - [DevStack OS](#devstack-os)
     - [Configuration](#configuration)
     - [Build order](#build-order)
     - [Networking](#networking)
@@ -25,7 +26,7 @@ The E2E tests require an OpenStack cloud to run against, which we provision duri
 
 The entry point for the creation of the test DevStack is `hack/ci/create_devstack.sh`, which is executed by `scripts/ci-e2e.sh`. We create 2 instances: `controller` and `worker`. Each will provision itself via cloud-init using config defined in `hack/ci/cloud-init`.
 
-## DevStack OS
+### DevStack OS
 
 In GCE, DevStack is installed on a community-maintained Ubuntu 20.04 LTS cloud image. The cloud-init config is also intended to work on CentOS 8, and this is known to work as of 2021-01-12. However, note that this is not regularly tested. See the comment in `hack/ci/gce-project.sh` for how to deploy on CentOS.
 
