@@ -46,7 +46,6 @@ const (
 	SSHUserMachine                     = "SSH_USER_MACHINE"
 	FlavorDefault                      = "ci-artifacts"
 	FlavorWithoutLB                    = "without-lb-ci-artifacts"
-	FlavorExternalCloudProvider        = "external-cloud-provider-ci-artifacts"
 	FlavorMultiNetwork                 = "multi-network-ci-artifacts"
 	FlavorMultiAZ                      = "multi-az-ci-artifacts"
 	FlavorV1alpha5                     = "v1alpha5-ci-artifacts"

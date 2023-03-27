@@ -111,7 +111,6 @@ providers:
     files:
     - sourcePath: "../data/shared/v1beta1_provider/metadata.yaml"
     - sourcePath: "./infrastructure-openstack/cluster-template.yaml"
-    - sourcePath: "./infrastructure-openstack/cluster-template-external-cloud-provider.yaml"
     - sourcePath: "./infrastructure-openstack/cluster-template-without-lb.yaml"
     replacements:
     - old: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:dev

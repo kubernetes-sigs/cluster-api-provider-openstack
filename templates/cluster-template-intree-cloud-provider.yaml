@@ -15,11 +15,22 @@ metadata:
 spec:
   template:
     spec:
-      files: []
+      files:
+      - content: ${OPENSTACK_CLOUD_PROVIDER_CONF_B64}
+        encoding: base64
+        owner: root
+        path: /etc/kubernetes/cloud.conf
+        permissions: "0600"
+      - content: ${OPENSTACK_CLOUD_CACERT_B64}
+        encoding: base64
+        owner: root
+        path: /etc/certs/cacert
+        permissions: "0600"
       joinConfiguration:
         nodeRegistration:
           kubeletExtraArgs:
-            cloud-provider: external
+            cloud-config: /etc/kubernetes/cloud.conf
+            cloud-provider: openstack
           name: '{{ local_hostname }}'
 ---
 apiVersion: cluster.x-k8s.io/v1beta1
@@ -74,20 +85,48 @@ spec:
     clusterConfiguration:
       apiServer:
         extraArgs:
-          cloud-provider: external
+          cloud-config: /etc/kubernetes/cloud.conf
+          cloud-provider: openstack
+        extraVolumes:
+        - hostPath: /etc/kubernetes/cloud.conf
+          mountPath: /etc/kubernetes/cloud.conf
+          name: cloud
+          readOnly: true
       controllerManager:
         extraArgs:
-          cloud-provider: external
-    files: []
+          cloud-config: /etc/kubernetes/cloud.conf
+          cloud-provider: openstack
+        extraVolumes:
+        - hostPath: /etc/kubernetes/cloud.conf
+          mountPath: /etc/kubernetes/cloud.conf
+          name: cloud
+          readOnly: true
+        - hostPath: /etc/certs/cacert
+          mountPath: /etc/certs/cacert
+          name: cacerts
+          readOnly: true
+    files:
+    - content: ${OPENSTACK_CLOUD_PROVIDER_CONF_B64}
+      encoding: base64
+      owner: root
+      path: /etc/kubernetes/cloud.conf
+      permissions: "0600"
+    - content: ${OPENSTACK_CLOUD_CACERT_B64}
+      encoding: base64
+      owner: root
+      path: /etc/certs/cacert
+      permissions: "0600"
     initConfiguration:
       nodeRegistration:
         kubeletExtraArgs:
-          cloud-provider: external
+          cloud-config: /etc/kubernetes/cloud.conf
+          cloud-provider: openstack
         name: '{{ local_hostname }}'
     joinConfiguration:
       nodeRegistration:
         kubeletExtraArgs:
-          cloud-provider: external
+          cloud-config: /etc/kubernetes/cloud.conf
+          cloud-provider: openstack
         name: '{{ local_hostname }}'
   machineTemplate:
     infrastructureRef:

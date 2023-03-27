@@ -1,11 +1,7 @@
+# Modifications to release templates common to all e2e test scenarios
 ---
-resources:
-- ../../../../../kustomize/v1alpha7/external-cloud-provider
-- ccm.yaml
-
-components:
-- ../common-patches/cni
-- ../common-patches/containerd
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
 
 patchesStrategicMerge:
 - patch-ccm.yaml

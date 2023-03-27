@@ -157,7 +157,6 @@ e2e-templates: $(addprefix $(E2E_TEMPLATES_DIR)/, \
 		 cluster-template-v1alpha6.yaml \
 		 cluster-template-md-remediation.yaml \
 		 cluster-template-kcp-remediation.yaml \
-		 cluster-template-external-cloud-provider.yaml \
 		 cluster-template-multi-az.yaml \
 		 cluster-template-multi-network.yaml \
 		 cluster-template-without-lb.yaml \
@@ -425,7 +424,6 @@ release-notes: $(RELEASE_NOTES) ## Generate release notes
 templates: ## Generate cluster templates
 templates: templates/cluster-template.yaml \
 	templates/cluster-template-without-lb.yaml \
-	templates/cluster-template-external-cloud-provider.yaml \
 	templates/cluster-template-flatcar.yaml \
 	templates/cluster-template-external-cloud-provider-flatcar.yaml \
 

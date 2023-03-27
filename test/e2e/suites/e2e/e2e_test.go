@@ -107,6 +107,21 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			Expect(workerMachines).To(HaveLen(1))
 			Expect(controlPlaneMachines).To(HaveLen(3))
 
+			shared.Logf("Waiting for worker nodes to be in Running phase")
+			statusChecks := []framework.MachineStatusCheck{framework.MachinePhaseCheck(string(clusterv1.MachinePhaseRunning))}
+			machineStatusInput := framework.WaitForMachineStatusCheckInput{
+				Getter:       e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
+				Machine:      &workerMachines[0],
+				StatusChecks: statusChecks,
+			}
+			framework.WaitForMachineStatusCheck(ctx, machineStatusInput, e2eCtx.E2EConfig.GetIntervals(specName, "wait-machine-status")...)
+
+			workloadCluster := e2eCtx.Environment.BootstrapClusterProxy.GetWorkloadCluster(ctx, namespace.Name, clusterName)
+
+			waitForDaemonSetRunning(ctx, workloadCluster.GetClient(), "kube-system", "openstack-cloud-controller-manager")
+
+			waitForNodesReadyWithoutCCMTaint(ctx, workloadCluster.GetClient(), 4)
+
 			// Tag: clusterName is declared on OpenStackCluster and gets propagated to all machines
 			// except the bastion host
 			allServers, err := shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{Tags: clusterName})
@@ -140,47 +155,6 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			securityGroupsList, err := shared.DumpOpenStackSecurityGroups(e2eCtx, groups.ListOpts{Tags: clusterName})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(securityGroupsList).To(HaveLen(3))
-		})
-	})
-
-	Describe("Workload cluster (external cloud provider)", func() {
-		It("It should be creatable and deletable", func() {
-			shared.Logf("Creating a cluster")
-			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
-			configCluster := defaultConfigCluster(clusterName, namespace.Name)
-			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(1)
-			configCluster.WorkerMachineCount = pointer.Int64Ptr(1)
-			configCluster.Flavor = shared.FlavorExternalCloudProvider
-			md := createCluster(ctx, configCluster)
-
-			workerMachines := framework.GetMachinesByMachineDeployments(ctx, framework.GetMachinesByMachineDeploymentsInput{
-				Lister:            e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
-				ClusterName:       clusterName,
-				Namespace:         namespace.Name,
-				MachineDeployment: *md[0],
-			})
-			controlPlaneMachines := framework.GetControlPlaneMachinesByCluster(ctx, framework.GetControlPlaneMachinesByClusterInput{
-				Lister:      e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
-				ClusterName: clusterName,
-				Namespace:   namespace.Name,
-			})
-			Expect(workerMachines).To(HaveLen(1))
-			Expect(controlPlaneMachines).To(HaveLen(1))
-
-			shared.Logf("Waiting for worker nodes to be in Running phase")
-			statusChecks := []framework.MachineStatusCheck{framework.MachinePhaseCheck(string(clusterv1.MachinePhaseRunning))}
-			machineStatusInput := framework.WaitForMachineStatusCheckInput{
-				Getter:       e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
-				Machine:      &workerMachines[0],
-				StatusChecks: statusChecks,
-			}
-			framework.WaitForMachineStatusCheck(ctx, machineStatusInput, e2eCtx.E2EConfig.GetIntervals(specName, "wait-machine-status")...)
-
-			workloadCluster := e2eCtx.Environment.BootstrapClusterProxy.GetWorkloadCluster(ctx, namespace.Name, clusterName)
-
-			waitForDaemonSetRunning(ctx, workloadCluster.GetClient(), "kube-system", "openstack-cloud-controller-manager")
-
-			waitForNodesReadyWithoutCCMTaint(ctx, workloadCluster.GetClient(), 2)
 		})
 	})
 
