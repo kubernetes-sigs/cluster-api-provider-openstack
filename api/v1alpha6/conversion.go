@@ -88,14 +88,23 @@ func restorev1alpha6MachineSpec(previous *OpenStackMachineSpec, dst *OpenStackMa
 	dst.Subnet = previous.Subnet
 }
 
+func restorev1alpha7ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infrav1.OpenStackClusterSpec) {
+	// APIServerLoadBalancer.Provider is new in v1alpha7
+	dst.APIServerLoadBalancer.Provider = previous.APIServerLoadBalancer.Provider
+}
+
 var _ ctrlconversion.Convertible = &OpenStackCluster{}
 
 func (r *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackCluster)
 	var previous infrav1.OpenStackCluster
-	_, err := convertAndRestore(r, dst, &previous, Convert_v1alpha6_OpenStackCluster_To_v1alpha7_OpenStackCluster)
+	restored, err := convertAndRestore(r, dst, &previous, Convert_v1alpha6_OpenStackCluster_To_v1alpha7_OpenStackCluster)
 	if err != nil {
 		return err
+	}
+
+	if restored {
+		restorev1alpha7ClusterSpec(&previous.Spec, &dst.Spec)
 	}
 
 	return nil
@@ -138,8 +147,16 @@ var _ ctrlconversion.Convertible = &OpenStackClusterTemplate{}
 func (r *OpenStackClusterTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackClusterTemplate)
 	var previous infrav1.OpenStackClusterTemplate
-	_, err := convertAndRestore(r, dst, &previous, Convert_v1alpha6_OpenStackClusterTemplate_To_v1alpha7_OpenStackClusterTemplate)
-	return err
+	restored, err := convertAndRestore(r, dst, &previous, Convert_v1alpha6_OpenStackClusterTemplate_To_v1alpha7_OpenStackClusterTemplate)
+	if err != nil {
+		return err
+	}
+
+	if restored {
+		restorev1alpha7ClusterSpec(&previous.Spec.Template.Spec, &dst.Spec.Template.Spec)
+	}
+
+	return nil
 }
 
 func (r *OpenStackClusterTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) error {
