@@ -39,6 +39,11 @@ type OpenStackClusterSpec struct {
 	// If you leave this empty, no network will be created.
 	NodeCIDR string `json:"nodeCidr,omitempty"`
 
+	// If NodeCIDR is set this option can be used to detect an existing router.
+	// If specified, no new router will be created.
+	// +optional
+	Router *RouterFilter `json:"router,omitempty"`
+
 	// If NodeCIDR cannot be set this can be used to detect an existing network.
 	Network NetworkFilter `json:"network,omitempty"`
 

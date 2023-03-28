@@ -104,6 +104,17 @@ type SubnetFilter struct {
 	NotTagsAny      string `json:"notTagsAny,omitempty"`
 }
 
+type RouterFilter struct {
+	ID          string `json:"id,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
+	ProjectID   string `json:"projectId,omitempty"`
+	Tags        string `json:"tags,omitempty"`
+	TagsAny     string `json:"tagsAny,omitempty"`
+	NotTags     string `json:"notTags,omitempty"`
+	NotTagsAny  string `json:"notTagsAny,omitempty"`
+}
+
 type PortOpts struct {
 	// Network is a query for an openstack network that the port will be created or discovered on.
 	// This will fail if the query returns more than one network.
