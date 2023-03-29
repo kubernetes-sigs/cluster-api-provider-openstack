@@ -24,6 +24,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/golang/mock/gomock"
+	"github.com/google/go-cmp/cmp"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
 	common "github.com/gophercloud/gophercloud/openstack/common/extensions"
@@ -1113,6 +1114,367 @@ func TestService_DeleteInstance(t *testing.T) {
 			if err := s.DeleteInstance(tt.eventObject, tt.instanceStatus(), openStackMachineName, tt.rootVolume); (err != nil) != tt.wantErr {
 				t.Errorf("Service.DeleteInstance() error = %v, wantErr %v", err, tt.wantErr)
 			}
+		})
+	}
+}
+
+func TestService_normalizePorts(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	const (
+		defaultNetworkID = "3c66f3ca-2d26-4d9d-ae3b-568f54129773"
+		defaultSubnetID  = "d8dbba89-8c39-4192-a571-e702fca35bac"
+
+		networkID = "afa54944-1443-4132-9ef5-ce37eb4d6ab6"
+		subnetID  = "d786e715-c299-4a97-911d-640c10fc0392"
+	)
+
+	openStackCluster := &infrav1.OpenStackCluster{
+		Status: infrav1.OpenStackClusterStatus{
+			Network: &infrav1.Network{
+				ID: defaultNetworkID,
+				Subnet: &infrav1.Subnet{
+					ID: defaultSubnetID,
+				},
+			},
+		},
+	}
+
+	tests := []struct {
+		name          string
+		ports         []infrav1.PortOpts
+		instanceTrunk bool
+		expectNetwork func(m *mock.MockNetworkClientMockRecorder)
+		want          []infrav1.PortOpts
+		wantErr       bool
+	}{
+		{
+			name:  "No ports: no ports",
+			ports: []infrav1.PortOpts{},
+			want:  []infrav1.PortOpts{},
+		},
+		{
+			name: "Nil network, no fixed IPs: cluster defaults",
+			ports: []infrav1.PortOpts{
+				{
+					Network:  nil,
+					FixedIPs: nil,
+				},
+			},
+			want: []infrav1.PortOpts{
+				{
+					Network: &infrav1.NetworkFilter{
+						ID: defaultNetworkID,
+					},
+					FixedIPs: []infrav1.FixedIP{
+						{
+							Subnet: &infrav1.SubnetFilter{
+								ID: defaultSubnetID,
+							},
+						},
+					},
+					Trunk: pointer.BoolPtr(false),
+				},
+			},
+		},
+		{
+			name: "Empty network, no fixed IPs: cluster defaults",
+			ports: []infrav1.PortOpts{
+				{
+					Network:  &infrav1.NetworkFilter{},
+					FixedIPs: nil,
+				},
+			},
+			want: []infrav1.PortOpts{
+				{
+					Network: &infrav1.NetworkFilter{
+						ID: defaultNetworkID,
+					},
+					FixedIPs: []infrav1.FixedIP{
+						{
+							Subnet: &infrav1.SubnetFilter{
+								ID: defaultSubnetID,
+							},
+						},
+					},
+					Trunk: pointer.BoolPtr(false),
+				},
+			},
+		},
+		{
+			name: "Port inherits trunk from instance",
+			ports: []infrav1.PortOpts{
+				{
+					Network:  &infrav1.NetworkFilter{},
+					FixedIPs: nil,
+				},
+			},
+			instanceTrunk: true,
+			want: []infrav1.PortOpts{
+				{
+					Network: &infrav1.NetworkFilter{
+						ID: defaultNetworkID,
+					},
+					FixedIPs: []infrav1.FixedIP{
+						{
+							Subnet: &infrav1.SubnetFilter{
+								ID: defaultSubnetID,
+							},
+						},
+					},
+					Trunk: pointer.BoolPtr(true),
+				},
+			},
+		},
+		{
+			name: "Port overrides trunk from instance",
+			ports: []infrav1.PortOpts{
+				{
+					Network:  &infrav1.NetworkFilter{},
+					FixedIPs: nil,
+					Trunk:    pointer.BoolPtr(true),
+				},
+			},
+			want: []infrav1.PortOpts{
+				{
+					Network: &infrav1.NetworkFilter{
+						ID: defaultNetworkID,
+					},
+					FixedIPs: []infrav1.FixedIP{
+						{
+							Subnet: &infrav1.SubnetFilter{
+								ID: defaultSubnetID,
+							},
+						},
+					},
+					Trunk: pointer.BoolPtr(true),
+				},
+			},
+		},
+		{
+			name: "Network defined by ID: unchanged",
+			ports: []infrav1.PortOpts{
+				{
+					Network: &infrav1.NetworkFilter{
+						ID: networkID,
+					},
+				},
+			},
+			want: []infrav1.PortOpts{
+				{
+					Network: &infrav1.NetworkFilter{
+						ID: networkID,
+					},
+					Trunk: pointer.BoolPtr(false),
+				},
+			},
+		},
+		{
+			name: "Network defined by filter: add ID from network lookup",
+			ports: []infrav1.PortOpts{
+				{
+					Network: &infrav1.NetworkFilter{
+						Name: "test-network",
+					},
+				},
+			},
+			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
+				m.ListNetwork(networks.ListOpts{Name: "test-network"}).Return([]networks.Network{
+					{ID: networkID},
+				}, nil)
+			},
+			want: []infrav1.PortOpts{
+				{
+					Network: &infrav1.NetworkFilter{
+						ID:   networkID,
+						Name: "test-network",
+					},
+					Trunk: pointer.BoolPtr(false),
+				},
+			},
+		},
+		{
+			name: "No network, fixed IP has subnet by ID: add ID from subnet",
+			ports: []infrav1.PortOpts{
+				{
+					FixedIPs: []infrav1.FixedIP{
+						{
+							Subnet: &infrav1.SubnetFilter{
+								ID: subnetID,
+							},
+						},
+					},
+				},
+			},
+			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
+				m.GetSubnet(subnetID).Return(&subnets.Subnet{ID: subnetID, NetworkID: networkID}, nil)
+			},
+			want: []infrav1.PortOpts{
+				{
+					Network: &infrav1.NetworkFilter{
+						ID: networkID,
+					},
+					FixedIPs: []infrav1.FixedIP{
+						{
+							Subnet: &infrav1.SubnetFilter{
+								ID: subnetID,
+							},
+						},
+					},
+					Trunk: pointer.BoolPtr(false),
+				},
+			},
+		},
+		{
+			name: "No network, fixed IP has subnet by filter: add ID from subnet",
+			ports: []infrav1.PortOpts{
+				{
+					FixedIPs: []infrav1.FixedIP{
+						{
+							Subnet: &infrav1.SubnetFilter{
+								Name: "test-subnet",
+							},
+						},
+					},
+				},
+			},
+			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
+				m.ListSubnet(subnets.ListOpts{Name: "test-subnet"}).Return([]subnets.Subnet{
+					{ID: subnetID, NetworkID: networkID},
+				}, nil)
+			},
+			want: []infrav1.PortOpts{
+				{
+					Network: &infrav1.NetworkFilter{
+						ID: networkID,
+					},
+					FixedIPs: []infrav1.FixedIP{
+						{
+							Subnet: &infrav1.SubnetFilter{
+								ID:   subnetID,
+								Name: "test-subnet",
+							},
+						},
+					},
+					Trunk: pointer.BoolPtr(false),
+				},
+			},
+		},
+		{
+			name: "No network, fixed IP subnet returns no matches: error",
+			ports: []infrav1.PortOpts{
+				{
+					FixedIPs: []infrav1.FixedIP{
+						{
+							Subnet: &infrav1.SubnetFilter{
+								Name: "test-subnet",
+							},
+						},
+					},
+				},
+			},
+			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
+				m.ListSubnet(subnets.ListOpts{Name: "test-subnet"}).Return([]subnets.Subnet{}, nil)
+			},
+			wantErr: true,
+		},
+		{
+			name: "No network, only fixed IP subnet returns multiple matches: error",
+			ports: []infrav1.PortOpts{
+				{
+					FixedIPs: []infrav1.FixedIP{
+						{
+							Subnet: &infrav1.SubnetFilter{
+								Name: "test-subnet",
+							},
+						},
+					},
+				},
+			},
+			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
+				m.ListSubnet(subnets.ListOpts{Name: "test-subnet"}).Return([]subnets.Subnet{
+					{ID: subnetID, NetworkID: networkID},
+					{ID: "8008494c-301e-4e5c-951b-a8ab568447fd", NetworkID: "5d48bfda-db28-42ee-8374-50e13d1fe5ea"},
+				}, nil)
+			},
+			wantErr: true,
+		},
+		{
+			name: "No network, first fixed IP subnet returns multiple matches: used ID from second fixed IP",
+			ports: []infrav1.PortOpts{
+				{
+					FixedIPs: []infrav1.FixedIP{
+						{
+							Subnet: &infrav1.SubnetFilter{
+								Name: "test-subnet1",
+							},
+						},
+						{
+							Subnet: &infrav1.SubnetFilter{
+								Name: "test-subnet2",
+							},
+						},
+					},
+				},
+			},
+			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
+				m.ListSubnet(subnets.ListOpts{Name: "test-subnet1"}).Return([]subnets.Subnet{
+					{ID: subnetID, NetworkID: networkID},
+					{ID: "8008494c-301e-4e5c-951b-a8ab568447fd", NetworkID: "5d48bfda-db28-42ee-8374-50e13d1fe5ea"},
+				}, nil)
+				m.ListSubnet(subnets.ListOpts{Name: "test-subnet2"}).Return([]subnets.Subnet{
+					{ID: subnetID, NetworkID: networkID},
+				}, nil)
+			},
+			want: []infrav1.PortOpts{
+				{
+					Network: &infrav1.NetworkFilter{
+						ID: networkID,
+					},
+					FixedIPs: []infrav1.FixedIP{
+						{
+							Subnet: &infrav1.SubnetFilter{
+								Name: "test-subnet1",
+							},
+						},
+						{
+							Subnet: &infrav1.SubnetFilter{
+								ID:   subnetID,
+								Name: "test-subnet2",
+							},
+						},
+					},
+					Trunk: pointer.BoolPtr(false),
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewWithT(t)
+
+			// MockScopeFactory also implements Scope so no need to create separate Scope from it.
+			mockScope := scope.NewMockScopeFactory(mockCtrl, "", logr.Discard())
+			if tt.expectNetwork != nil {
+				tt.expectNetwork(mockScope.NetworkClient.EXPECT())
+			}
+
+			s := &Service{
+				scope: mockScope,
+			}
+			instanceSpec := &InstanceSpec{
+				Trunk: tt.instanceTrunk,
+			}
+
+			got, err := s.normalizePorts(tt.ports, openStackCluster, instanceSpec)
+			if tt.wantErr {
+				g.Expect(err).To(HaveOccurred())
+				return
+			}
+
+			g.Expect(err).NotTo(HaveOccurred())
+			g.Expect(got).To(Equal(tt.want), cmp.Diff(got, tt.want))
 		})
 	}
 }
