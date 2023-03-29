@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha7
 
 import (
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 )
@@ -49,5 +50,18 @@ func (networkFilter NetworkFilter) ToListOpt() networks.ListOpts {
 		TagsAny:     networkFilter.TagsAny,
 		NotTags:     networkFilter.NotTags,
 		NotTagsAny:  networkFilter.NotTagsAny,
+	}
+}
+
+func (routerFilter RouterFilter) ToListOpt() routers.ListOpts {
+	return routers.ListOpts{
+		ID:          routerFilter.ID,
+		Name:        routerFilter.Name,
+		Description: routerFilter.Description,
+		ProjectID:   routerFilter.ProjectID,
+		Tags:        routerFilter.Tags,
+		TagsAny:     routerFilter.TagsAny,
+		NotTags:     routerFilter.NotTags,
+		NotTagsAny:  routerFilter.NotTagsAny,
 	}
 }

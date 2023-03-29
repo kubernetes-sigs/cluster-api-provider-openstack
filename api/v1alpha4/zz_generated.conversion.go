@@ -867,6 +867,7 @@ func autoConvert_v1alpha4_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(
 func autoConvert_v1alpha7_OpenStackClusterSpec_To_v1alpha4_OpenStackClusterSpec(in *v1alpha7.OpenStackClusterSpec, out *OpenStackClusterSpec, s conversion.Scope) error {
 	out.CloudName = in.CloudName
 	out.NodeCIDR = in.NodeCIDR
+	// WARNING: in.Router requires manual conversion: does not exist in peer-type
 	if err := Convert_v1alpha7_NetworkFilter_To_v1alpha4_Filter(&in.Network, &out.Network, s); err != nil {
 		return err
 	}
