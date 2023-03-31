@@ -446,22 +446,23 @@ func reconcileNetworkComponents(scope scope.Scope, cluster *clusterv1.Cluster, o
 		openStackCluster.Status.Network.Name = networkList[0].Name
 		openStackCluster.Status.Network.Tags = networkList[0].Tags
 
-		subnetOpts := openStackCluster.Spec.Subnet.ToListOpt()
-		subnetOpts.NetworkID = networkList[0].ID
-		subnetList, err := networkingService.GetSubnetsByFilter(&subnetOpts)
-		if err != nil || len(subnetList) == 0 {
-			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to find subnet: %v", err))
-			return errors.Errorf("failed to find subnet: %v", err)
+		subnet, err := networkingService.GetSubnetByFilter(&openStackCluster.Spec.Subnet)
+		if err != nil {
+			err = fmt.Errorf("failed to find subnet: %w", err)
+
+			// Set the cluster to failed if subnet filter is invalid
+			if errors.Is(err, networking.ErrFilterMatch) {
+				handleUpdateOSCError(openStackCluster, err)
+			}
+
+			return err
 		}
-		if len(subnetList) > 1 {
-			handleUpdateOSCError(openStackCluster, errors.Errorf("failed to find only one subnet (result: %v): %v", subnetList, err))
-			return errors.Errorf("failed to find only one subnet (result: %v): %v", subnetList, err)
-		}
+
 		openStackCluster.Status.Network.Subnet = &infrav1.Subnet{
-			ID:   subnetList[0].ID,
-			Name: subnetList[0].Name,
-			CIDR: subnetList[0].CIDR,
-			Tags: subnetList[0].Tags,
+			ID:   subnet.ID,
+			Name: subnet.Name,
+			CIDR: subnet.CIDR,
+			Tags: subnet.Tags,
 		}
 	} else {
 		err := networkingService.ReconcileNetwork(openStackCluster, clusterName)
