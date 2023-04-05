@@ -604,5 +604,5 @@ func (r *OpenStackClusterReconciler) SetupWithManager(ctx context.Context, mgr c
 func handleUpdateOSCError(openstackCluster *infrav1.OpenStackCluster, message error) {
 	err := capierrors.UpdateClusterError
 	openstackCluster.Status.FailureReason = &err
-	openstackCluster.Status.FailureMessage = pointer.StringPtr(message.Error())
+	openstackCluster.Status.FailureMessage = pointer.String(message.Error())
 }

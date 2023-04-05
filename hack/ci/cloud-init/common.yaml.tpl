@@ -20,13 +20,13 @@ packages:
 package_upgrade: true
 write_files:
 - path: /etc/sysctl.d/devstack.conf
-  permissions: 0644
+  permissions: "0644"
   content: |
     net.ipv4.ip_forward=1
     net.ipv4.conf.default.rp_filter=0
     net.ipv4.conf.all.rp_filter=0
 - path: /tmp/devstack-common.sh
-  permissions: 0644
+  permissions: "0644"
   content: |
     # ensure nested virtualization
     function ensure_kvm {

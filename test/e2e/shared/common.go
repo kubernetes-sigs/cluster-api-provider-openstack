@@ -113,7 +113,7 @@ func dumpMachines(ctx context.Context, e2eCtx *E2EContext, namespace *corev1.Nam
 		return
 	}
 
-	machineNames := sets.NewString()
+	machineNames := sets.New[string]()
 	for _, machine := range machines.Items {
 		machineNames.Insert(machine.Name)
 	}

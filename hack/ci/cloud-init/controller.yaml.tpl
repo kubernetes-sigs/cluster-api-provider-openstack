@@ -1,5 +1,5 @@
 - path: /tmp/local.conf
-  permissions: 0644
+  permissions: "0644"
   content: |
     [[local|localrc]]
     GIT_BASE=https://github.com
@@ -84,7 +84,7 @@
     [DEFAULT]
     service_plugins = trunk,router
 - path: /tmp/register-worker.sh
-  permissions: 0755
+  permissions: "0755"
   content: |
     #!/bin/bash
 
@@ -108,7 +108,7 @@
       openstack aggregate add host ${SECONDARY_AZ} ${hypervisor}
     done
 - path: /etc/systemd/system/register-worker.service
-  permissions: 0644
+  permissions: "0644"
   content: |
     [Unit]
     Description=Register devstack worker node
@@ -122,7 +122,7 @@
     [Install]
     WantedBy=multi-user.target
 - path: /tmp/devstack-post.sh
-  permissions: 0755
+  permissions: "0755"
   content: |
     #!/bin/bash
 
@@ -162,7 +162,7 @@
     openstack quota set --secgroups 100 admin
     openstack quota set --secgroup-rules 1000 admin
 - path: /root/devstack.sh
-  permissions: 0755
+  permissions: "0755"
   content: |
     #!/bin/bash
 
