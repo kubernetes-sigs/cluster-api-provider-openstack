@@ -1,8 +1,0 @@
----
-resources:
-- ../../../../../kustomize/v1alpha6/external-cloud-provider-flatcar
-- ccm.yaml
-
-components:
-- ../common-patches/cni
-- ../common-patches/ccm

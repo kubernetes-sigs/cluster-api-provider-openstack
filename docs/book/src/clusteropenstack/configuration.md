@@ -77,7 +77,7 @@ Some OS like [Fedora CoreOS](https://getfedora.org/en/coreos) or [Flatcar](https
 To use Flatcar image:
 * Build the image with the [image-builder](https://image-builder.sigs.k8s.io/capi/providers/openstack.html): `make OEM_ID=openstack build-qemu-flatcar`
 * Export the name of the uploaded image: `export OPENSTACK_FLATCAR_IMAGE_NAME=flatcar-stable-3374.2.5-kube-v1.25.6`
-* When generating the cluster configuration, use one of the following Cluster API [flavor](https://cluster-api.sigs.k8s.io/clusterctl/commands/generate-cluster.html?#flavors): `--flavor flatcar` or `--flavor external-cloud-provider-flatcar` (_NOTE_: If you select `external-cloud-provider-flatcar`, don't forget to refer to the [external-cloud-provider](https://cluster-api-openstack.sigs.k8s.io/topics/external-cloud-provider.html) section)
+* When generating the cluster configuration, use the following Cluster API [flavor](https://cluster-api.sigs.k8s.io/clusterctl/commands/generate-cluster.html?#flavors): `--flavor flatcar` (_NOTE_: Don't forget to refer to the [external-cloud-provider](https://cluster-api-openstack.sigs.k8s.io/topics/external-cloud-provider.html) section)
 
 ## SSH key pair
 

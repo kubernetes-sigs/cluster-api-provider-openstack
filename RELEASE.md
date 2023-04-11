@@ -72,6 +72,7 @@ It is recommended to create at least one release candidate when bumping `X` or `
     - `./out/infrastructure-components.yaml`
     - `./out/cluster-template.yaml`
     - `./out/cluster-template-without-lb.yaml`
+    - `./out/cluster-template-flatcar.yaml`
     - `./out/metadata.yaml`
 1. Ensure that the release image has been promoted.
 1. Publish release.
