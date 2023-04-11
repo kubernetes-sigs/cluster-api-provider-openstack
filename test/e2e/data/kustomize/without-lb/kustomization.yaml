@@ -1,7 +1,9 @@
 ---
 resources:
 - ../../../../../kustomize/v1alpha7/without-lb
+- ccm.yaml
 
 components:
 - ../common-patches/cni
 - ../common-patches/containerd
+- ../common-patches/ccm

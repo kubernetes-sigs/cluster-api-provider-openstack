@@ -71,7 +71,6 @@ It is recommended to create at least one release candidate when bumping `X` or `
 1. Attach the following files to the draft release:
     - `./out/infrastructure-components.yaml`
     - `./out/cluster-template.yaml`
-    - `./out/cluster-template-external-cloud-provider.yaml`
     - `./out/cluster-template-without-lb.yaml`
     - `./out/metadata.yaml`
 1. Ensure that the release image has been promoted.

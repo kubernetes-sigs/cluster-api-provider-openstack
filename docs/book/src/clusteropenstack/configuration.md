@@ -46,17 +46,9 @@ This command actually uses [the template file](https://github.com/kubernetes-sig
 
 Note: You can use [the template file](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/templates/cluster-template.yaml) by manually replacing values.
 
-**Note:** By default the command creates highly available control plane with internal OpenStack cloud provider. If you wish to create highly available control plane with external OpenStack cloud provider or single control plane without load balancer, use external-cloud-provider or without-lb [flavor](https://cluster-api.sigs.k8s.io/clusterctl/commands/config-cluster.html#flavors) respectively. For example,
+**Note:** By default the command creates highly available control plane with 3 control plane nodes. If you wish to create single control plane without load balancer, use without-lb flavor. For example,
 
 ```bash
-# Using 'external-cloud-provider' flavor
-clusterctl generate cluster capi-quickstart \
-  --flavor external-cloud-provider \
-  --kubernetes-version v1.24.2 \
-  --control-plane-machine-count=3 \
-  --worker-machine-count=1 \
-  > capi-quickstart.yaml
-
 # Using 'without-lb' flavor
 clusterctl generate cluster capi-quickstart \
   --flavor without-lb \
