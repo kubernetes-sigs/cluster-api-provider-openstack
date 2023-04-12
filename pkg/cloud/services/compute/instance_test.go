@@ -557,8 +557,8 @@ func getDefaultInstanceSpec() *InstanceSpec {
 		Metadata: map[string]string{
 			"test-metadata": "test-value",
 		},
-		ConfigDrive:    *pointer.BoolPtr(true),
-		FailureDomain:  *pointer.StringPtr(failureDomain),
+		ConfigDrive:    *pointer.Bool(true),
+		FailureDomain:  *pointer.String(failureDomain),
 		ServerGroupID:  serverGroupUUID,
 		Tags:           []string{"test-tag"},
 		SecurityGroups: []infrav1.SecurityGroupParam{{UUID: workerSecurityGroupUUID}},
@@ -934,7 +934,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 			getInstanceSpec: func() *InstanceSpec {
 				s := getDefaultInstanceSpec()
 				s.Ports = []infrav1.PortOpts{
-					{Description: "Test port 0", Trunk: pointer.BoolPtr(true)},
+					{Description: "Test port 0", Trunk: pointer.Bool(true)},
 					{Description: "Test port 1"},
 				}
 				return s

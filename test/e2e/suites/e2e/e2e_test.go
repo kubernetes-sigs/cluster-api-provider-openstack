@@ -88,8 +88,8 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			shared.Logf("Creating a cluster")
 			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
-			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(3)
-			configCluster.WorkerMachineCount = pointer.Int64Ptr(1)
+			configCluster.ControlPlaneMachineCount = pointer.Int64(3)
+			configCluster.WorkerMachineCount = pointer.Int64(1)
 			configCluster.Flavor = shared.FlavorDefault
 			md := createCluster(ctx, configCluster)
 
@@ -166,8 +166,8 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			shared.Logf("Creating a cluster")
 			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
-			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(3)
-			configCluster.WorkerMachineCount = pointer.Int64Ptr(1)
+			configCluster.ControlPlaneMachineCount = pointer.Int64(3)
+			configCluster.WorkerMachineCount = pointer.Int64(1)
 			configCluster.Flavor = shared.FlavorFlatcar
 			md := createCluster(ctx, configCluster)
 
@@ -195,8 +195,8 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			shared.Logf("Creating a cluster")
 			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
-			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(1)
-			configCluster.WorkerMachineCount = pointer.Int64Ptr(1)
+			configCluster.ControlPlaneMachineCount = pointer.Int64(1)
+			configCluster.WorkerMachineCount = pointer.Int64(1)
 			configCluster.Flavor = shared.FlavorExternalCloudProviderFlatcar
 			md := createCluster(ctx, configCluster)
 
@@ -236,8 +236,8 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			shared.Logf("Creating a cluster")
 			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
-			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(1)
-			configCluster.WorkerMachineCount = pointer.Int64Ptr(1)
+			configCluster.ControlPlaneMachineCount = pointer.Int64(1)
+			configCluster.WorkerMachineCount = pointer.Int64(1)
 			configCluster.Flavor = shared.FlavorWithoutLB
 			md := createCluster(ctx, configCluster)
 
@@ -369,8 +369,8 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			shared.Logf("Creating a cluster")
 			clusterName = fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster = defaultConfigCluster(clusterName, namespace.Name)
-			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(1)
-			configCluster.WorkerMachineCount = pointer.Int64Ptr(1)
+			configCluster.ControlPlaneMachineCount = pointer.Int64(1)
+			configCluster.WorkerMachineCount = pointer.Int64(1)
 			configCluster.Flavor = shared.FlavorMultiNetwork
 			md = createCluster(ctx, configCluster)
 		})
@@ -447,8 +447,8 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			shared.Logf("Creating a cluster")
 			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
-			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(1)
-			configCluster.WorkerMachineCount = pointer.Int64Ptr(0)
+			configCluster.ControlPlaneMachineCount = pointer.Int64(1)
+			configCluster.WorkerMachineCount = pointer.Int64(0)
 			configCluster.Flavor = shared.FlavorWithoutLB
 			_ = createCluster(ctx, configCluster)
 
@@ -500,8 +500,8 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			shared.Logf("Creating a cluster")
 			clusterName = fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
-			configCluster.ControlPlaneMachineCount = pointer.Int64Ptr(3)
-			configCluster.WorkerMachineCount = pointer.Int64Ptr(2)
+			configCluster.ControlPlaneMachineCount = pointer.Int64(3)
+			configCluster.WorkerMachineCount = pointer.Int64(2)
 			configCluster.Flavor = shared.FlavorMultiAZ
 			md = createCluster(ctx, configCluster)
 
@@ -564,7 +564,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			allMachines = append(allMachines, controlPlaneMachines...)
 			allMachines = append(allMachines, workerMachines...)
 
-			machineNames := sets.NewString()
+			machineNames := sets.New[string]()
 			for _, machine := range allMachines {
 				machineNames.Insert(machine.Spec.InfrastructureRef.Name)
 			}
@@ -830,7 +830,7 @@ func makeMachineDeployment(namespace, mdName, clusterName string, failureDomain 
 						Name:       mdName,
 						Namespace:  namespace,
 					},
-					Version: pointer.StringPtr(e2eCtx.E2EConfig.GetVariable(shared.KubernetesVersion)),
+					Version: pointer.String(e2eCtx.E2EConfig.GetVariable(shared.KubernetesVersion)),
 				},
 			},
 		},
@@ -892,7 +892,7 @@ func createTestVolumeType(e2eCtx *shared.E2EContext) {
 	_, err = volumetypes.Create(volumeClient, &volumetypes.CreateOpts{
 		Name:        e2eCtx.E2EConfig.GetVariable(shared.OpenStackVolumeTypeAlt),
 		Description: "Test volume type",
-		IsPublic:    pointer.BoolPtr(true),
+		IsPublic:    pointer.Bool(true),
 		ExtraSpecs:  map[string]string{},
 	}).Extract()
 	if capoerrors.IsConflict(err) {

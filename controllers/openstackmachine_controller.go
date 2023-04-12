@@ -343,8 +343,8 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 
 	// TODO(sbueringer) From CAPA: TODO(ncdc): move this validation logic into a validating webhook (for us: create validation logic in webhook)
 
-	openStackMachine.Spec.ProviderID = pointer.StringPtr(fmt.Sprintf("openstack:///%s", instanceStatus.ID()))
-	openStackMachine.Spec.InstanceID = pointer.StringPtr(instanceStatus.ID())
+	openStackMachine.Spec.ProviderID = pointer.String(fmt.Sprintf("openstack:///%s", instanceStatus.ID()))
+	openStackMachine.Spec.InstanceID = pointer.String(instanceStatus.ID())
 
 	state := instanceStatus.State()
 	openStackMachine.Status.InstanceState = &state
@@ -590,7 +590,7 @@ func (r *OpenStackMachineReconciler) requeueOpenStackMachinesForUnpausedCluster(
 }
 
 func (r *OpenStackMachineReconciler) requestsForCluster(ctx context.Context, log logr.Logger, namespace, name string) []ctrl.Request {
-	labels := map[string]string{clusterv1.ClusterLabelName: name}
+	labels := map[string]string{clusterv1.ClusterNameLabel: name}
 	machineList := &clusterv1.MachineList{}
 	if err := r.Client.List(ctx, machineList, client.InNamespace(namespace), client.MatchingLabels(labels)); err != nil {
 		log.Error(err, "Failed to get owned Machines, skipping mapping.")

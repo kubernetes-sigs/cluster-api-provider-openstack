@@ -29,18 +29,19 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
 )
 
-var _ = Describe("When testing unhealthy machines remediation [mhc-remediations]", func() {
-	ctx := context.TODO()
-	shared.SetEnvVar("USE_CI_ARTIFACTS", "true", false)
-	capi_e2e.MachineRemediationSpec(ctx, func() capi_e2e.MachineRemediationSpecInput {
-		return capi_e2e.MachineRemediationSpecInput{
-			E2EConfig:             e2eCtx.E2EConfig,
-			ClusterctlConfigPath:  e2eCtx.Environment.ClusterctlConfigPath,
-			BootstrapClusterProxy: e2eCtx.Environment.BootstrapClusterProxy,
-			ArtifactFolder:        e2eCtx.Settings.ArtifactFolder,
-			SkipCleanup:           false,
-			KCPFlavor:             pointer.String(shared.FlavorKCPRemediation),
-			MDFlavor:              pointer.String(shared.FlavorMDRemediation),
-		}
+var _ = Describe("When testing unhealthy machines remediation", func() {
+	Describe("When testing MachineDeployment remediation", func() {
+		ctx := context.TODO()
+		shared.SetEnvVar("USE_CI_ARTIFACTS", "true", false)
+		capi_e2e.MachineDeploymentRemediationSpec(ctx, func() capi_e2e.MachineDeploymentRemediationSpecInput {
+			return capi_e2e.MachineDeploymentRemediationSpecInput{
+				E2EConfig:             e2eCtx.E2EConfig,
+				ClusterctlConfigPath:  e2eCtx.Environment.ClusterctlConfigPath,
+				BootstrapClusterProxy: e2eCtx.Environment.BootstrapClusterProxy,
+				ArtifactFolder:        e2eCtx.Settings.ArtifactFolder,
+				SkipCleanup:           false,
+				Flavor:                pointer.String(shared.FlavorMDRemediation),
+			}
+		})
 	})
 })

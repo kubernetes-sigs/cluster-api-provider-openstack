@@ -63,7 +63,7 @@ func getDefaultOpenStackCluster() *infrav1.OpenStackCluster {
 func getDefaultMachine() *clusterv1.Machine {
 	return &clusterv1.Machine{
 		Spec: clusterv1.MachineSpec{
-			FailureDomain: pointer.StringPtr(failureDomain),
+			FailureDomain: pointer.String(failureDomain),
 		},
 	}
 }
@@ -87,7 +87,7 @@ func getDefaultOpenStackMachine() *infrav1.OpenStackMachine {
 			ServerMetadata: map[string]string{
 				"test-metadata": "test-value",
 			},
-			ConfigDrive:   pointer.BoolPtr(true),
+			ConfigDrive:   pointer.Bool(true),
 			ServerGroupID: serverGroupUUID,
 		},
 	}
@@ -103,8 +103,8 @@ func getDefaultInstanceSpec() *compute.InstanceSpec {
 		Metadata: map[string]string{
 			"test-metadata": "test-value",
 		},
-		ConfigDrive:   *pointer.BoolPtr(true),
-		FailureDomain: *pointer.StringPtr(failureDomain),
+		ConfigDrive:   *pointer.Bool(true),
+		FailureDomain: *pointer.String(failureDomain),
 		ServerGroupID: serverGroupUUID,
 		Tags:          []string{"test-tag"},
 	}
@@ -137,7 +137,7 @@ func Test_machineToInstanceSpec(t *testing.T) {
 			machine: func() *clusterv1.Machine {
 				m := getDefaultMachine()
 				m.Labels = map[string]string{
-					clusterv1.MachineControlPlaneLabelName: "true",
+					clusterv1.MachineControlPlaneLabel: "true",
 				}
 				return m
 			},

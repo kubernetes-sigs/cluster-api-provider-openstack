@@ -432,7 +432,7 @@ func DumpOpenStackTrunks(e2eCtx *E2EContext, portID string) (*trunks.Trunk, erro
 }
 
 // GetOpenStackServers gets all OpenStack servers at once to save on DescribeInstances calls, then filters them based on a list of machine names.
-func GetOpenStackServers(e2eCtx *E2EContext, openStackCluster *infrav1.OpenStackCluster, machineNames sets.String) (map[string]ServerExtWithIP, error) {
+func GetOpenStackServers(e2eCtx *E2EContext, openStackCluster *infrav1.OpenStackCluster, machineNames sets.Set[string]) (map[string]ServerExtWithIP, error) {
 	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
 	if err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)

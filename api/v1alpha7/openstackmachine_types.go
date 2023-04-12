@@ -175,7 +175,7 @@ func (r *OpenStackMachine) SetConditions(conditions clusterv1.Conditions) {
 // SetFailure sets the OpenStackMachine status failure reason and failure message.
 func (r *OpenStackMachine) SetFailure(failureReason errors.MachineStatusError, failureMessage error) {
 	r.Status.FailureReason = &failureReason
-	r.Status.FailureMessage = pointer.StringPtr(failureMessage.Error())
+	r.Status.FailureMessage = pointer.String(failureMessage.Error())
 }
 
 func init() {

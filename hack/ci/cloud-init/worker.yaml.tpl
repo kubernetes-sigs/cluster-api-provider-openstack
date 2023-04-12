@@ -1,5 +1,5 @@
 - path: /tmp/local.conf
-  permissions: 0644
+  permissions: "0644"
   content: |
     [[local|localrc]]
     GIT_BASE=https://github.com
@@ -47,7 +47,7 @@
     [ml2]
     path_mtu = ${MTU}
 - path: /root/devstack.sh
-  permissions: 0755
+  permissions: "0755"
   content: |
     #!/bin/bash
 
