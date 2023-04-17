@@ -162,8 +162,7 @@ e2e-templates: $(addprefix $(E2E_TEMPLATES_DIR)/, \
 		 cluster-template-without-lb.yaml \
 		 cluster-template.yaml) \
 		 $(addprefix $(E2E_NO_ARTIFACT_TEMPLATES_DIR)/, \
-		 cluster-template-flatcar.yaml \
-		 cluster-template-external-cloud-provider-flatcar.yaml) \
+		 cluster-template-flatcar.yaml)
 
 $(E2E_TEMPLATES_DIR)/cluster-template.yaml: $(E2E_KUSTOMIZE_DIR)/with-tags $(KUSTOMIZE) FORCE
 	$(KUSTOMIZE) build "$<" > "$@"
@@ -424,8 +423,7 @@ release-notes: $(RELEASE_NOTES) ## Generate release notes
 templates: ## Generate cluster templates
 templates: templates/cluster-template.yaml \
 	templates/cluster-template-without-lb.yaml \
-	templates/cluster-template-flatcar.yaml \
-	templates/cluster-template-external-cloud-provider-flatcar.yaml \
+	templates/cluster-template-flatcar.yaml
 
 templates/cluster-template.yaml: kustomize/v1alpha7/default $(KUSTOMIZE) FORCE
 	$(KUSTOMIZE) build "$<" > "$@"
