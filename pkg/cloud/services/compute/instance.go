@@ -17,6 +17,7 @@ limitations under the License.
 package compute
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -35,6 +36,7 @@ import (
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/hash"
@@ -46,58 +48,149 @@ const (
 	timeoutInstanceDelete       = 5 * time.Minute
 )
 
+// normalizePortTarget ensures that the port has a network ID.
+func (s *Service) normalizePortTarget(port *infrav1.PortOpts, openStackCluster *infrav1.OpenStackCluster, portIdx int) error {
+	// Treat no Network and empty Network the same
+	noNetwork := port.Network == nil || (*port.Network == infrav1.NetworkFilter{})
+
+	// No network or subnets defined: use cluster defaults
+	if noNetwork && len(port.FixedIPs) == 0 {
+		port.Network = &infrav1.NetworkFilter{
+			ID: openStackCluster.Status.Network.ID,
+		}
+		port.FixedIPs = []infrav1.FixedIP{
+			{
+				Subnet: &infrav1.SubnetFilter{
+					ID: openStackCluster.Status.Network.Subnet.ID,
+				},
+			},
+		}
+
+		return nil
+	}
+
+	// No network, but fixed IPs are defined(we handled the no fixed
+	// IPs case above): try to infer network from a subnet
+	if noNetwork {
+		s.scope.Logger().V(4).Info("No network defined for port %d, attempting to infer from subnet", portIdx)
+
+		// Look for a unique subnet defined in FixedIPs.  If we find one
+		// we can use it to infer the network ID. We don't need to worry
+		// here about the case where different FixedIPs have different
+		// networks because that will cause an error later when we try
+		// to create the port.
+		networkID, err := func() (string, error) {
+			networkingService, err := s.getNetworkingService()
+			if err != nil {
+				return "", err
+			}
+
+			for i, fixedIP := range port.FixedIPs {
+				if fixedIP.Subnet == nil {
+					continue
+				}
+
+				subnet, err := networkingService.GetSubnetByFilter(fixedIP.Subnet)
+				if err != nil {
+					// Multiple matches might be ok later when we restrict matches to a single network
+					if errors.Is(err, networking.ErrMultipleMatches) {
+						s.scope.Logger().V(4).Info("Can't infer network from subnet %d: %s", i, err)
+						continue
+					}
+
+					return "", err
+				}
+
+				// Cache the subnet ID in the FixedIP
+				fixedIP.Subnet.ID = subnet.ID
+				return subnet.NetworkID, nil
+			}
+
+			// TODO: This is a spec error: it should set the machine to failed
+			return "", fmt.Errorf("port %d has no network and unable to infer from fixed IPs", portIdx)
+		}()
+		if err != nil {
+			return err
+		}
+
+		port.Network = &infrav1.NetworkFilter{
+			ID: networkID,
+		}
+
+		return nil
+	}
+
+	// Nothing to do if network ID is already set
+	if port.Network.ID != "" {
+		return nil
+	}
+
+	// Network is defined by Filter
+	networkingService, err := s.getNetworkingService()
+	if err != nil {
+		return err
+	}
+
+	netIDs, err := networkingService.GetNetworkIDsByFilter(port.Network.ToListOpt())
+	if err != nil {
+		return err
+	}
+
+	// TODO: These are spec errors: they should set the machine to failed
+	if len(netIDs) > 1 {
+		return fmt.Errorf("network filter for port %d returns more than one result", portIdx)
+	} else if len(netIDs) == 0 {
+		return fmt.Errorf("network filter for port %d returns no networks", portIdx)
+	}
+
+	port.Network.ID = netIDs[0]
+
+	return nil
+}
+
+// normalizePorts ensures that a user-specified PortOpts has all required fields set. Specifically it:
+// - sets the Trunk field to the instance spec default if not specified
+// - sets the Network ID field if not specified.
+func (s *Service) normalizePorts(ports []infrav1.PortOpts, openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec) ([]infrav1.PortOpts, error) {
+	normalizedPorts := make([]infrav1.PortOpts, 0, len(ports))
+	for i := range ports {
+		// Deep copy the port to avoid mutating the original
+		port := ports[i].DeepCopy()
+
+		// No Trunk field specified for the port, inherit the machine default
+		if port.Trunk == nil {
+			port.Trunk = &instanceSpec.Trunk
+		}
+
+		if err := s.normalizePortTarget(port, openStackCluster, i); err != nil {
+			return nil, err
+		}
+
+		normalizedPorts = append(normalizedPorts, *port)
+	}
+	return normalizedPorts, nil
+}
+
 // constructNetworks builds an array of networks from the network, subnet and ports items in the instance spec.
 // If no networks or ports are in the spec, returns a single network item for a network connection to the default cluster network.
 func (s *Service) constructNetworks(openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec) ([]infrav1.Network, error) {
-	trunkRequired := false
-
 	nets, err := s.getServerNetworks(instanceSpec.Networks)
 	if err != nil {
 		return nil, err
 	}
 
-	for i := range instanceSpec.Ports {
-		port := &instanceSpec.Ports[i]
-		// No Trunk field specified for the port, inherit openStackMachine.Spec.Trunk.
-		if port.Trunk == nil {
-			port.Trunk = &instanceSpec.Trunk
-		}
-		if *port.Trunk {
-			trunkRequired = true
-		}
-		if port.Network != nil {
-			netID := port.Network.ID
-			if netID == "" {
-				networkingService, err := s.getNetworkingService()
-				if err != nil {
-					return nil, err
-				}
-
-				netIDs, err := networkingService.GetNetworkIDsByFilter(port.Network.ToListOpt())
-				if err != nil {
-					return nil, err
-				}
-				if len(netIDs) > 1 {
-					return nil, fmt.Errorf("network filter for port %s returns more than one result", port.NameSuffix)
-				} else if len(netIDs) == 0 {
-					return nil, fmt.Errorf("network filter for port %s returns no networks", port.NameSuffix)
-				}
-				netID = netIDs[0]
-			}
-			nets = append(nets, infrav1.Network{
-				ID:       netID,
-				Subnet:   &infrav1.Subnet{},
-				PortOpts: port,
-			})
-		} else {
-			nets = append(nets, infrav1.Network{
-				ID: openStackCluster.Status.Network.ID,
-				Subnet: &infrav1.Subnet{
-					ID: openStackCluster.Status.Network.Subnet.ID,
-				},
-				PortOpts: port,
-			})
-		}
+	// Ensure user-specified ports have all required fields
+	ports, err := s.normalizePorts(instanceSpec.Ports, openStackCluster, instanceSpec)
+	if err != nil {
+		return nil, err
+	}
+	for i := range ports {
+		port := &ports[i]
+		nets = append(nets, infrav1.Network{
+			ID:       port.Network.ID,
+			Subnet:   &infrav1.Subnet{},
+			PortOpts: port,
+		})
 	}
 
 	// no networks or ports found in the spec, so create a port on the cluster network
@@ -111,10 +204,19 @@ func (s *Service) constructNetworks(openStackCluster *infrav1.OpenStackCluster, 
 				Trunk: &instanceSpec.Trunk,
 			},
 		}}
-		trunkRequired = instanceSpec.Trunk
 	}
 
-	if trunkRequired {
+	// trunk support is required if any port has trunk enabled
+	portUsesTrunk := func() bool {
+		for _, net := range nets {
+			port := net.PortOpts
+			if port != nil && port.Trunk != nil && *port.Trunk {
+				return true
+			}
+		}
+		return false
+	}
+	if portUsesTrunk() {
 		trunkSupported, err := s.isTrunkExtSupported()
 		if err != nil {
 			return nil, err
