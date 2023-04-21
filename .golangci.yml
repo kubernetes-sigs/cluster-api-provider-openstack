@@ -168,10 +168,6 @@ issues:
     - stylecheck
     text: "ST1003: should not use underscores in Go names;"
     path: .*(api|types)\/.*\/.*conversion.*\.go$
-  # Can be drop once kubernetes-sigs/cluster-api-provider-openstack#1326 is done.
-  - linters:
-    - staticcheck
-    text: "SA1019"
 
 run:
   timeout: 10m
