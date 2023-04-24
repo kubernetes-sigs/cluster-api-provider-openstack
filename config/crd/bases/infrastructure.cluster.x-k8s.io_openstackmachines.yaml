@@ -2241,6 +2241,10 @@ spec:
                       type: object
                     projectId:
                       type: string
+                    propagateUplinkStatus:
+                      description: PropageteUplinkStatus enables or disables the propagate
+                        uplink status on the port.
+                      type: boolean
                     securityGroupFilters:
                       description: The names, uuids, filters or any combination these
                         of the security groups to assign to the instance

@@ -299,11 +299,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha7.PortOpts)(nil), (*PortOpts)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha7_PortOpts_To_v1alpha6_PortOpts(a.(*v1alpha7.PortOpts), b.(*PortOpts), scope)
-	}); err != nil {
-		return err
-	}
 	if err := s.AddGeneratedConversionFunc((*RootVolume)(nil), (*v1alpha7.RootVolume)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha6_RootVolume_To_v1alpha7_RootVolume(a.(*RootVolume), b.(*v1alpha7.RootVolume), scope)
 	}); err != nil {
@@ -404,6 +399,16 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddConversionFunc((*[]Network)(nil), (*[]v1alpha7.Network)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_Slice_v1alpha6_Network_To_Slice_v1alpha7_Network(a.(*[]Network), b.(*[]v1alpha7.Network), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*[]v1alpha7.Network)(nil), (*[]Network)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_Slice_v1alpha7_Network_To_Slice_v1alpha6_Network(a.(*[]v1alpha7.Network), b.(*[]Network), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddConversionFunc((*OpenStackMachineSpec)(nil), (*v1alpha7.OpenStackMachineSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha6_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(a.(*OpenStackMachineSpec), b.(*v1alpha7.OpenStackMachineSpec), scope)
 	}); err != nil {
@@ -416,6 +421,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddConversionFunc((*v1alpha7.OpenStackClusterSpec)(nil), (*OpenStackClusterSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha7_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(a.(*v1alpha7.OpenStackClusterSpec), b.(*OpenStackClusterSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1alpha7.PortOpts)(nil), (*PortOpts)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha7_PortOpts_To_v1alpha6_PortOpts(a.(*v1alpha7.PortOpts), b.(*PortOpts), scope)
 	}); err != nil {
 		return err
 	}
@@ -546,7 +556,15 @@ func autoConvert_v1alpha6_Instance_To_v1alpha7_Instance(in *Instance, out *v1alp
 	out.Trunk = in.Trunk
 	out.FailureDomain = in.FailureDomain
 	out.SecurityGroups = (*[]string)(unsafe.Pointer(in.SecurityGroups))
-	out.Networks = (*[]v1alpha7.Network)(unsafe.Pointer(in.Networks))
+	if in.Networks != nil {
+		in, out := &in.Networks, &out.Networks
+		*out = new([]v1alpha7.Network)
+		if err := Convert_Slice_v1alpha6_Network_To_Slice_v1alpha7_Network(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Networks = nil
+	}
 	out.Subnet = in.Subnet
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.Image = in.Image
@@ -575,7 +593,15 @@ func autoConvert_v1alpha7_Instance_To_v1alpha6_Instance(in *v1alpha7.Instance, o
 	out.Trunk = in.Trunk
 	out.FailureDomain = in.FailureDomain
 	out.SecurityGroups = (*[]string)(unsafe.Pointer(in.SecurityGroups))
-	out.Networks = (*[]Network)(unsafe.Pointer(in.Networks))
+	if in.Networks != nil {
+		in, out := &in.Networks, &out.Networks
+		*out = new([]Network)
+		if err := Convert_Slice_v1alpha7_Network_To_Slice_v1alpha6_Network(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Networks = nil
+	}
 	out.Subnet = in.Subnet
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.Image = in.Image
@@ -633,7 +659,15 @@ func autoConvert_v1alpha6_Network_To_v1alpha7_Network(in *Network, out *v1alpha7
 	out.ID = in.ID
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.Subnet = (*v1alpha7.Subnet)(unsafe.Pointer(in.Subnet))
-	out.PortOpts = (*v1alpha7.PortOpts)(unsafe.Pointer(in.PortOpts))
+	if in.PortOpts != nil {
+		in, out := &in.PortOpts, &out.PortOpts
+		*out = new(v1alpha7.PortOpts)
+		if err := Convert_v1alpha6_PortOpts_To_v1alpha7_PortOpts(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.PortOpts = nil
+	}
 	out.Router = (*v1alpha7.Router)(unsafe.Pointer(in.Router))
 	out.APIServerLoadBalancer = (*v1alpha7.LoadBalancer)(unsafe.Pointer(in.APIServerLoadBalancer))
 	return nil
@@ -649,7 +683,15 @@ func autoConvert_v1alpha7_Network_To_v1alpha6_Network(in *v1alpha7.Network, out 
 	out.ID = in.ID
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.Subnet = (*Subnet)(unsafe.Pointer(in.Subnet))
-	out.PortOpts = (*PortOpts)(unsafe.Pointer(in.PortOpts))
+	if in.PortOpts != nil {
+		in, out := &in.PortOpts, &out.PortOpts
+		*out = new(PortOpts)
+		if err := Convert_v1alpha7_PortOpts_To_v1alpha6_PortOpts(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.PortOpts = nil
+	}
 	out.Router = (*Router)(unsafe.Pointer(in.Router))
 	out.APIServerLoadBalancer = (*LoadBalancer)(unsafe.Pointer(in.APIServerLoadBalancer))
 	return nil
@@ -884,13 +926,37 @@ func autoConvert_v1alpha7_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(
 
 func autoConvert_v1alpha6_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(in *OpenStackClusterStatus, out *v1alpha7.OpenStackClusterStatus, s conversion.Scope) error {
 	out.Ready = in.Ready
-	out.Network = (*v1alpha7.Network)(unsafe.Pointer(in.Network))
-	out.ExternalNetwork = (*v1alpha7.Network)(unsafe.Pointer(in.ExternalNetwork))
+	if in.Network != nil {
+		in, out := &in.Network, &out.Network
+		*out = new(v1alpha7.Network)
+		if err := Convert_v1alpha6_Network_To_v1alpha7_Network(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Network = nil
+	}
+	if in.ExternalNetwork != nil {
+		in, out := &in.ExternalNetwork, &out.ExternalNetwork
+		*out = new(v1alpha7.Network)
+		if err := Convert_v1alpha6_Network_To_v1alpha7_Network(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.ExternalNetwork = nil
+	}
 	out.FailureDomains = *(*v1beta1.FailureDomains)(unsafe.Pointer(&in.FailureDomains))
 	out.ControlPlaneSecurityGroup = (*v1alpha7.SecurityGroup)(unsafe.Pointer(in.ControlPlaneSecurityGroup))
 	out.WorkerSecurityGroup = (*v1alpha7.SecurityGroup)(unsafe.Pointer(in.WorkerSecurityGroup))
 	out.BastionSecurityGroup = (*v1alpha7.SecurityGroup)(unsafe.Pointer(in.BastionSecurityGroup))
-	out.Bastion = (*v1alpha7.Instance)(unsafe.Pointer(in.Bastion))
+	if in.Bastion != nil {
+		in, out := &in.Bastion, &out.Bastion
+		*out = new(v1alpha7.Instance)
+		if err := Convert_v1alpha6_Instance_To_v1alpha7_Instance(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Bastion = nil
+	}
 	out.FailureReason = (*errors.ClusterStatusError)(unsafe.Pointer(in.FailureReason))
 	out.FailureMessage = (*string)(unsafe.Pointer(in.FailureMessage))
 	return nil
@@ -903,13 +969,37 @@ func Convert_v1alpha6_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(
 
 func autoConvert_v1alpha7_OpenStackClusterStatus_To_v1alpha6_OpenStackClusterStatus(in *v1alpha7.OpenStackClusterStatus, out *OpenStackClusterStatus, s conversion.Scope) error {
 	out.Ready = in.Ready
-	out.Network = (*Network)(unsafe.Pointer(in.Network))
-	out.ExternalNetwork = (*Network)(unsafe.Pointer(in.ExternalNetwork))
+	if in.Network != nil {
+		in, out := &in.Network, &out.Network
+		*out = new(Network)
+		if err := Convert_v1alpha7_Network_To_v1alpha6_Network(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Network = nil
+	}
+	if in.ExternalNetwork != nil {
+		in, out := &in.ExternalNetwork, &out.ExternalNetwork
+		*out = new(Network)
+		if err := Convert_v1alpha7_Network_To_v1alpha6_Network(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.ExternalNetwork = nil
+	}
 	out.FailureDomains = *(*v1beta1.FailureDomains)(unsafe.Pointer(&in.FailureDomains))
 	out.ControlPlaneSecurityGroup = (*SecurityGroup)(unsafe.Pointer(in.ControlPlaneSecurityGroup))
 	out.WorkerSecurityGroup = (*SecurityGroup)(unsafe.Pointer(in.WorkerSecurityGroup))
 	out.BastionSecurityGroup = (*SecurityGroup)(unsafe.Pointer(in.BastionSecurityGroup))
-	out.Bastion = (*Instance)(unsafe.Pointer(in.Bastion))
+	if in.Bastion != nil {
+		in, out := &in.Bastion, &out.Bastion
+		*out = new(Instance)
+		if err := Convert_v1alpha7_Instance_To_v1alpha6_Instance(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Bastion = nil
+	}
 	out.FailureReason = (*errors.ClusterStatusError)(unsafe.Pointer(in.FailureReason))
 	out.FailureMessage = (*string)(unsafe.Pointer(in.FailureMessage))
 	return nil
@@ -1141,7 +1231,17 @@ func autoConvert_v1alpha6_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(
 	out.ImageUUID = in.ImageUUID
 	out.SSHKeyName = in.SSHKeyName
 	out.Networks = *(*[]v1alpha7.NetworkParam)(unsafe.Pointer(&in.Networks))
-	out.Ports = *(*[]v1alpha7.PortOpts)(unsafe.Pointer(&in.Ports))
+	if in.Ports != nil {
+		in, out := &in.Ports, &out.Ports
+		*out = make([]v1alpha7.PortOpts, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha6_PortOpts_To_v1alpha7_PortOpts(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Ports = nil
+	}
 	// WARNING: in.Subnet requires manual conversion: does not exist in peer-type
 	out.FloatingIP = in.FloatingIP
 	out.SecurityGroups = *(*[]v1alpha7.SecurityGroupParam)(unsafe.Pointer(&in.SecurityGroups))
@@ -1164,7 +1264,17 @@ func autoConvert_v1alpha7_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(
 	out.ImageUUID = in.ImageUUID
 	out.SSHKeyName = in.SSHKeyName
 	out.Networks = *(*[]NetworkParam)(unsafe.Pointer(&in.Networks))
-	out.Ports = *(*[]PortOpts)(unsafe.Pointer(&in.Ports))
+	if in.Ports != nil {
+		in, out := &in.Ports, &out.Ports
+		*out = make([]PortOpts, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha7_PortOpts_To_v1alpha6_PortOpts(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Ports = nil
+	}
 	out.FloatingIP = in.FloatingIP
 	out.SecurityGroups = *(*[]SecurityGroupParam)(unsafe.Pointer(&in.SecurityGroups))
 	out.Trunk = in.Trunk
@@ -1372,14 +1482,10 @@ func autoConvert_v1alpha7_PortOpts_To_v1alpha6_PortOpts(in *v1alpha7.PortOpts, o
 	out.VNICType = in.VNICType
 	out.Profile = *(*map[string]string)(unsafe.Pointer(&in.Profile))
 	out.DisablePortSecurity = (*bool)(unsafe.Pointer(in.DisablePortSecurity))
+	// WARNING: in.PropagateUplinkStatus requires manual conversion: does not exist in peer-type
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.ValueSpecs = *(*[]ValueSpec)(unsafe.Pointer(&in.ValueSpecs))
 	return nil
-}
-
-// Convert_v1alpha7_PortOpts_To_v1alpha6_PortOpts is an autogenerated conversion function.
-func Convert_v1alpha7_PortOpts_To_v1alpha6_PortOpts(in *v1alpha7.PortOpts, out *PortOpts, s conversion.Scope) error {
-	return autoConvert_v1alpha7_PortOpts_To_v1alpha6_PortOpts(in, out, s)
 }
 
 func autoConvert_v1alpha6_RootVolume_To_v1alpha7_RootVolume(in *RootVolume, out *v1alpha7.RootVolume, s conversion.Scope) error {

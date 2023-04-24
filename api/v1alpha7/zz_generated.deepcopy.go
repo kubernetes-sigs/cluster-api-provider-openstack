@@ -872,6 +872,11 @@ func (in *PortOpts) DeepCopyInto(out *PortOpts) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.PropagateUplinkStatus != nil {
+		in, out := &in.PropagateUplinkStatus, &out.PropagateUplinkStatus
+		*out = new(bool)
+		**out = **in
+	}
 	if in.Tags != nil {
 		in, out := &in.Tags, &out.Tags
 		*out = make([]string, len(*in))

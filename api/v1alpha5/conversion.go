@@ -208,7 +208,7 @@ func Convert_v1alpha7_LoadBalancer_To_v1alpha5_LoadBalancer(in *infrav1.LoadBala
 }
 
 func Convert_v1alpha7_PortOpts_To_v1alpha5_PortOpts(in *infrav1.PortOpts, out *PortOpts, s conversion.Scope) error {
-	// value specs have been added in v1alpha7 but have no equivalent in v1alpha5
+	// value specs and propagate uplink status have been added in v1alpha7 but have no equivalent in v1alpha5
 	return autoConvert_v1alpha7_PortOpts_To_v1alpha5_PortOpts(in, out, s)
 }
 

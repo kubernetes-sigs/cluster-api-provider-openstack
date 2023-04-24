@@ -88,10 +88,36 @@ func restorev1alpha6MachineSpec(previous *OpenStackMachineSpec, dst *OpenStackMa
 	dst.Subnet = previous.Subnet
 }
 
+func restorev1alpha7MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *infrav1.OpenStackMachineSpec) {
+	// PropagateUplinkStatus has been added in v1alpha7.
+	// We restore the whole Ports since they are anyway immutable.
+	dst.Ports = previous.Ports
+}
+
 func restorev1alpha7ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infrav1.OpenStackClusterSpec) {
 	// APIServerLoadBalancer.Provider is new in v1alpha7
 	dst.APIServerLoadBalancer.Provider = previous.APIServerLoadBalancer.Provider
 	dst.Router = previous.Router
+	// PropagateUplinkStatus has been added in v1alpha7.
+	// We restore the whole Ports since they are anyway immutable.
+	if previous.Bastion != nil && previous.Bastion.Instance.Ports != nil {
+		dst.Bastion.Instance.Ports = previous.Bastion.Instance.Ports
+	}
+}
+
+func restorev1alpha7ClusterStatus(previous *infrav1.OpenStackClusterStatus, dst *infrav1.OpenStackClusterStatus) {
+	// PropagateUplinkStatus has been added in v1alpha7
+	if previous.ExternalNetwork != nil && previous.ExternalNetwork.PortOpts != nil {
+		dst.ExternalNetwork.PortOpts.PropagateUplinkStatus = previous.ExternalNetwork.PortOpts.PropagateUplinkStatus
+	}
+	if previous.Network != nil && previous.Network.PortOpts != nil {
+		dst.Network.PortOpts.PropagateUplinkStatus = previous.Network.PortOpts.PropagateUplinkStatus
+	}
+	// PropagateUplinkStatus has been added in v1alpha7.
+	// We restore the whole Networks since they are anyway immutable.
+	if previous.Bastion != nil && previous.Bastion.Networks != nil {
+		dst.Bastion.Networks = previous.Bastion.Networks
+	}
 }
 
 var _ ctrlconversion.Convertible = &OpenStackCluster{}
@@ -106,6 +132,7 @@ func (r *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {
 
 	if restored {
 		restorev1alpha7ClusterSpec(&previous.Spec, &dst.Spec)
+		restorev1alpha7ClusterStatus(&previous.Status, &dst.Status)
 	}
 
 	return nil
@@ -183,7 +210,12 @@ var _ ctrlconversion.Convertible = &OpenStackMachine{}
 func (r *OpenStackMachine) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackMachine)
 	var previous infrav1.OpenStackMachine
-	_, err := convertAndRestore(r, dst, &previous, Convert_v1alpha6_OpenStackMachine_To_v1alpha7_OpenStackMachine)
+	restored, err := convertAndRestore(r, dst, &previous, Convert_v1alpha6_OpenStackMachine_To_v1alpha7_OpenStackMachine)
+
+	if restored {
+		restorev1alpha7MachineSpec(&previous.Spec, &dst.Spec)
+	}
+
 	return err
 }
 
@@ -219,7 +251,12 @@ var _ ctrlconversion.Convertible = &OpenStackMachineTemplate{}
 func (r *OpenStackMachineTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackMachineTemplate)
 	var previous infrav1.OpenStackMachineTemplate
-	_, err := convertAndRestore(r, dst, &previous, Convert_v1alpha6_OpenStackMachineTemplate_To_v1alpha7_OpenStackMachineTemplate)
+	restored, err := convertAndRestore(r, dst, &previous, Convert_v1alpha6_OpenStackMachineTemplate_To_v1alpha7_OpenStackMachineTemplate)
+
+	if restored {
+		restorev1alpha7MachineSpec(&previous.Spec.Template.Spec, &dst.Spec.Template.Spec)
+	}
+
 	return err
 }
 
@@ -261,4 +298,29 @@ func Convert_v1alpha7_APIServerLoadBalancer_To_v1alpha6_APIServerLoadBalancer(in
 
 func Convert_v1alpha7_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in *infrav1.OpenStackClusterSpec, out *OpenStackClusterSpec, s conversion.Scope) error {
 	return autoConvert_v1alpha7_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in, out, s)
+}
+
+func Convert_Slice_v1alpha6_Network_To_Slice_v1alpha7_Network(in *[]Network, out *[]infrav1.Network, s conversion.Scope) error {
+	*out = make([]infrav1.Network, len(*in))
+	for i := range *in {
+		if err := Convert_v1alpha6_Network_To_v1alpha7_Network(&(*in)[i], &(*out)[i], s); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func Convert_Slice_v1alpha7_Network_To_Slice_v1alpha6_Network(in *[]infrav1.Network, out *[]Network, s conversion.Scope) error {
+	*out = make([]Network, len(*in))
+	for i := range *in {
+		if err := Convert_v1alpha7_Network_To_v1alpha6_Network(&(*in)[i], &(*out)[i], s); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func Convert_v1alpha7_PortOpts_To_v1alpha6_PortOpts(in *infrav1.PortOpts, out *PortOpts, s conversion.Scope) error {
+	// value specs and propagate uplink status have been added in v1alpha7 but have no equivalent in v1alpha5
+	return autoConvert_v1alpha7_PortOpts_To_v1alpha6_PortOpts(in, out, s)
 }
