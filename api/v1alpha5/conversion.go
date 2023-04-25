@@ -202,3 +202,8 @@ func Convert_v1alpha6_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(in *
 	// Our new flag has no equivalent in v1alpha5
 	return autoConvert_v1alpha6_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(in, out, s)
 }
+
+func Convert_v1alpha6_APIServerLoadBalancer_To_v1alpha5_APIServerLoadBalancer(in *infrav1.APIServerLoadBalancer, out *APIServerLoadBalancer, s conversion.Scope) error {
+	// Provider has been added in v1alpha6 but has no equivalent in v1alpha5
+	return autoConvert_v1alpha6_APIServerLoadBalancer_To_v1alpha5_APIServerLoadBalancer(in, out, s)
+}
