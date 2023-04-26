@@ -237,6 +237,6 @@ func Convert_v1alpha5_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in *
 }
 
 func Convert_v1alpha7_APIServerLoadBalancer_To_v1alpha5_APIServerLoadBalancer(in *infrav1.APIServerLoadBalancer, out *APIServerLoadBalancer, s conversion.Scope) error {
-	// Provider have been added in v1alpha7 but have no equivalent in v1alpha5
+	// Provider was originally added in v1alpha7, but was backported to v1alpha6, but has no equivalent in v1alpha5
 	return autoConvert_v1alpha7_APIServerLoadBalancer_To_v1alpha5_APIServerLoadBalancer(in, out, s)
 }
