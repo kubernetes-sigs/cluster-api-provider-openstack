@@ -81,6 +81,9 @@ yqNavigating(){
 CAPO_AUTH_URL=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yqNavigating - clouds.${CAPO_CLOUD}.auth.auth_url)
 CAPO_USERNAME=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yqNavigating - clouds.${CAPO_CLOUD}.auth.username)
 CAPO_PASSWORD=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yqNavigating - clouds.${CAPO_CLOUD}.auth.password)
+if [[ "$CAPO_PASSWORD" = "" || "$CAPO_PASSWORD" = "null" ]]; then
+  CAPO_PASSWORD="${OS_PASSWORD}"
+fi
 CAPO_REGION=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yqNavigating - clouds.${CAPO_CLOUD}.region_name)
 CAPO_PROJECT_ID=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yqNavigating - clouds.${CAPO_CLOUD}.auth.project_id)
 CAPO_PROJECT_NAME=$(echo "$CAPO_OPENSTACK_CLOUD_YAML_CONTENT" | yqNavigating - clouds.${CAPO_CLOUD}.auth.project_name)
