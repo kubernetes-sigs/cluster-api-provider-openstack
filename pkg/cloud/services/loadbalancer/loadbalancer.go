@@ -368,8 +368,7 @@ func (s *Service) getOrCreateMonitor(openStackCluster *infrav1.OpenStackCluster,
 	monitor, err = s.loadbalancerClient.CreateMonitor(monitorCreateOpts)
 	// Skip creating monitor if it is not supported by Octavia provider
 	if capoerrors.IsNotImplementedError(err) {
-		record.Warnf(openStackCluster, "SkippedCreateMonitor", "Health monitors are not supported with the current Octavia provider.")
-		record.Eventf(openStackCluster, "SkippedCreateMonitor", "Health Monitor is not created as it's not implemented with the current Octavia provider.")
+		record.Warnf(openStackCluster, "SkippedCreateMonitor", "Health Monitor is not created as it's not implemented with the current Octavia provider.")
 		return nil
 	}
 
