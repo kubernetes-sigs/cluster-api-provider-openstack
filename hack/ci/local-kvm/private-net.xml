@@ -1,0 +1,16 @@
+<network>
+    <name>$CLUSTER_NAME</name>
+    <forward mode='nat'>
+        <nat>
+            <port start='1024' end='65535'/>
+        </nat>
+    </forward>
+    <bridge name='br-$CLUSTER_NAME' stp='on' delay='0'/>
+    <ip address='$ADDRESS' netmask='$NETMASK'>
+        <dhcp>
+            <range start='$DHCP_FIRST' end='$HOSTMAX'/>
+            <host mac='$CONTROLLER_MAC' name='controller' ip='$CONTROLLER_IP'/>
+            <host mac='$WORKER_MAC' name='worker' ip='$WORKER_IP'/>
+        </dhcp>
+    </ip>
+</network>

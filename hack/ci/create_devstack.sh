@@ -29,6 +29,10 @@ fi
 scriptdir=$(dirname "${BASH_SOURCE[0]}")
 source "${scriptdir}/${RESOURCE_TYPE}.sh"
 
+if [[ "$scriptdir" == "." ]]; then
+  scriptdir=$(pwd)
+fi
+
 CLUSTER_NAME=${CLUSTER_NAME:-"capo-e2e"}
 
 OPENSTACK_RELEASE=${OPENSTACK_RELEASE:-"yoga"}
@@ -89,7 +93,11 @@ function ensure_openstack_client {
 
         # Install virtualenv to install the openstack client and curl to fetch
         # the build constraints.
-        apt-get install -y python3-virtualenv curl
+        if [[ $UID -ne 0 ]]; then
+            sudo apt-get install -y python3-virtualenv curl
+        else
+            apt-get install -y python3-virtualenv curl
+        fi
         python3 -m virtualenv -p $(which python3) /tmp/openstack-venv
         VIRTUAL_ENV_DISABLE_PROMPT=1 source /tmp/openstack-venv/bin/activate
 
