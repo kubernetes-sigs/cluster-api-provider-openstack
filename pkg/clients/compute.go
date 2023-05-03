@@ -159,30 +159,30 @@ func (e computeErrorClient) ListAvailabilityZones() ([]availabilityzones.Availab
 	return nil, e.error
 }
 
-func (e computeErrorClient) GetFlavorFromName(flavor string) (*flavors.Flavor, error) {
+func (e computeErrorClient) GetFlavorFromName(_ string) (*flavors.Flavor, error) {
 	return nil, e.error
 }
 
-func (e computeErrorClient) CreateServer(createOpts servers.CreateOptsBuilder) (*ServerExt, error) {
+func (e computeErrorClient) CreateServer(_ servers.CreateOptsBuilder) (*ServerExt, error) {
 	return nil, e.error
 }
 
-func (e computeErrorClient) DeleteServer(serverID string) error {
+func (e computeErrorClient) DeleteServer(_ string) error {
 	return e.error
 }
 
-func (e computeErrorClient) GetServer(serverID string) (*ServerExt, error) {
+func (e computeErrorClient) GetServer(_ string) (*ServerExt, error) {
 	return nil, e.error
 }
 
-func (e computeErrorClient) ListServers(listOpts servers.ListOptsBuilder) ([]ServerExt, error) {
+func (e computeErrorClient) ListServers(_ servers.ListOptsBuilder) ([]ServerExt, error) {
 	return nil, e.error
 }
 
-func (e computeErrorClient) ListAttachedInterfaces(serverID string) ([]attachinterfaces.Interface, error) {
+func (e computeErrorClient) ListAttachedInterfaces(_ string) ([]attachinterfaces.Interface, error) {
 	return nil, e.error
 }
 
-func (e computeErrorClient) DeleteAttachedInterface(serverID, portID string) error {
+func (e computeErrorClient) DeleteAttachedInterface(_, _ string) error {
 	return e.error
 }

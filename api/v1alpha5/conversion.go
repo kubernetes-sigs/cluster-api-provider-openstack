@@ -50,11 +50,7 @@ func (r *OpenStackCluster) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	}
 
 	// Preserve Hub data on down-conversion except for metadata
-	if err := utilconversion.MarshalData(src, r); err != nil {
-		return err
-	}
-
-	return nil
+	return utilconversion.MarshalData(src, r)
 }
 
 var _ ctrlconversion.Convertible = &OpenStackClusterList{}
@@ -97,11 +93,7 @@ func (r *OpenStackClusterTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) error 
 	}
 
 	// Preserve Hub data on down-conversion except for metadata
-	if err := utilconversion.MarshalData(src, r); err != nil {
-		return err
-	}
-
-	return nil
+	return utilconversion.MarshalData(src, r)
 }
 
 var _ ctrlconversion.Convertible = &OpenStackMachine{}
@@ -130,11 +122,7 @@ func (r *OpenStackMachine) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	}
 
 	// Preserve Hub data on down-conversion except for metadata
-	if err := utilconversion.MarshalData(src, r); err != nil {
-		return err
-	}
-
-	return nil
+	return utilconversion.MarshalData(src, r)
 }
 
 var _ ctrlconversion.Convertible = &OpenStackMachineList{}
@@ -177,11 +165,7 @@ func (r *OpenStackMachineTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) error 
 	}
 
 	// Preserve Hub data on down-conversion except for metadata
-	if err := utilconversion.MarshalData(src, r); err != nil {
-		return err
-	}
-
-	return nil
+	return utilconversion.MarshalData(src, r)
 }
 
 var _ ctrlconversion.Convertible = &OpenStackMachineTemplateList{}

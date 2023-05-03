@@ -82,18 +82,18 @@ func NewVolumeErrorClient(e error) VolumeClient {
 	return volumeErrorClient{e}
 }
 
-func (e volumeErrorClient) ListVolumes(opts volumes.ListOptsBuilder) ([]volumes.Volume, error) {
+func (e volumeErrorClient) ListVolumes(_ volumes.ListOptsBuilder) ([]volumes.Volume, error) {
 	return nil, e.error
 }
 
-func (e volumeErrorClient) CreateVolume(opts volumes.CreateOptsBuilder) (*volumes.Volume, error) {
+func (e volumeErrorClient) CreateVolume(_ volumes.CreateOptsBuilder) (*volumes.Volume, error) {
 	return nil, e.error
 }
 
-func (e volumeErrorClient) DeleteVolume(volumeID string, opts volumes.DeleteOptsBuilder) error {
+func (e volumeErrorClient) DeleteVolume(_ string, _ volumes.DeleteOptsBuilder) error {
 	return e.error
 }
 
-func (e volumeErrorClient) GetVolume(volumeID string) (*volumes.Volume, error) {
+func (e volumeErrorClient) GetVolume(_ string) (*volumes.Volume, error) {
 	return nil, e.error
 }
