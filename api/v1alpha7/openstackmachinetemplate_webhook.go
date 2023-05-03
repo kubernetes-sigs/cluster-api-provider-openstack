@@ -49,7 +49,7 @@ func (r *OpenStackMachineTemplateWebhook) SetupWebhookWithManager(mgr manager.Ma
 var _ webhook.CustomValidator = &OpenStackMachineTemplateWebhook{}
 
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type.
-func (r *OpenStackMachineTemplateWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) error {
+func (r *OpenStackMachineTemplateWebhook) ValidateCreate(_ context.Context, obj runtime.Object) error {
 	openStackMachineTemplate, ok := obj.(*OpenStackMachineTemplate)
 	if !ok {
 		return apierrors.NewBadRequest(fmt.Sprintf("expected an OpenStackMachineTemplate but got a %T", obj))

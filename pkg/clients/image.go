@@ -61,6 +61,6 @@ func NewImageErrorClient(e error) ImageClient {
 	return imageErrorClient{e}
 }
 
-func (e imageErrorClient) ListImages(listOpts images.ListOptsBuilder) ([]images.Image, error) {
+func (e imageErrorClient) ListImages(_ images.ListOptsBuilder) ([]images.Image, error) {
 	return nil, e.error
 }

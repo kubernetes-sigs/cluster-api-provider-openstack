@@ -57,11 +57,7 @@ func (r *OpenStackCluster) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	}
 
 	// Preserve Hub data on down-conversion except for metadata
-	if err := utilconversion.MarshalData(src, r); err != nil {
-		return err
-	}
-
-	return nil
+	return utilconversion.MarshalData(src, r)
 }
 
 var _ ctrlconversion.Convertible = &OpenStackClusterList{}
@@ -94,11 +90,7 @@ func (r *OpenStackMachine) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	}
 
 	// Preserve Hub data on down-conversion except for metadata
-	if err := utilconversion.MarshalData(src, r); err != nil {
-		return err
-	}
-
-	return nil
+	return utilconversion.MarshalData(src, r)
 }
 
 var _ ctrlconversion.Convertible = &OpenStackMachineList{}
@@ -131,11 +123,7 @@ func (r *OpenStackMachineTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) error 
 	}
 
 	// Preserve Hub data on down-conversion except for metadata
-	if err := utilconversion.MarshalData(src, r); err != nil {
-		return err
-	}
-
-	return nil
+	return utilconversion.MarshalData(src, r)
 }
 
 var _ ctrlconversion.Convertible = &OpenStackMachineTemplateList{}
@@ -267,7 +255,7 @@ func Convert_Slice_v1alpha3_Network_To_Slice_v1alpha7_Network(in *[]Network, out
 	return nil
 }
 
-func Convert_v1alpha3_SubnetFilter_To_v1alpha7_SubnetFilter(in *SubnetFilter, out *infrav1.SubnetFilter, s conversion.Scope) error {
+func Convert_v1alpha3_SubnetFilter_To_v1alpha7_SubnetFilter(in *SubnetFilter, out *infrav1.SubnetFilter, _ conversion.Scope) error {
 	out.Name = in.Name
 	out.Description = in.Description
 	if in.ProjectID != "" {
@@ -293,7 +281,7 @@ func Convert_v1alpha7_SubnetFilter_To_v1alpha3_SubnetFilter(in *infrav1.SubnetFi
 	return autoConvert_v1alpha7_SubnetFilter_To_v1alpha3_SubnetFilter(in, out, s)
 }
 
-func Convert_v1alpha3_Filter_To_v1alpha7_NetworkFilter(in *Filter, out *infrav1.NetworkFilter, s conversion.Scope) error {
+func Convert_v1alpha3_Filter_To_v1alpha7_NetworkFilter(in *Filter, out *infrav1.NetworkFilter, _ conversion.Scope) error {
 	out.Name = in.Name
 	out.Description = in.Description
 	if in.ProjectID != "" {
@@ -309,7 +297,7 @@ func Convert_v1alpha3_Filter_To_v1alpha7_NetworkFilter(in *Filter, out *infrav1.
 	return nil
 }
 
-func Convert_v1alpha7_NetworkFilter_To_v1alpha3_Filter(in *infrav1.NetworkFilter, out *Filter, s conversion.Scope) error {
+func Convert_v1alpha7_NetworkFilter_To_v1alpha3_Filter(in *infrav1.NetworkFilter, out *Filter, _ conversion.Scope) error {
 	out.Name = in.Name
 	out.Description = in.Description
 	out.ProjectID = in.ProjectID

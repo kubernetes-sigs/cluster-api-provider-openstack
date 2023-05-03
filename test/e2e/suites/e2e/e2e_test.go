@@ -872,8 +872,3 @@ func createTestVolumeType(e2eCtx *shared.E2EContext) {
 	}
 	Expect(err).NotTo(HaveOccurred())
 }
-
-func cleanupTestVolumeType(e2eCtx *shared.E2EContext) {
-	// We don't delete the volume type because it's unnecessarily complex when we're going to delete the environment anyway.
-	// See https://bugs.launchpad.net/cinder/+bug/1823880 for a discussion of this same issue in an OpenStack tempest test.
-}

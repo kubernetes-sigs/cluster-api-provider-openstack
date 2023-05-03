@@ -58,6 +58,5 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 var _ = SynchronizedAfterSuite(func() {
 	shared.AllNodesAfterSuite(e2eCtx)
 }, func() {
-	cleanupTestVolumeType(e2eCtx)
 	shared.Node1AfterSuite(e2eCtx)
 })
