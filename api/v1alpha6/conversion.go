@@ -86,6 +86,12 @@ func restorev1alpha6MachineSpec(previous *OpenStackMachineSpec, dst *OpenStackMa
 	// Subnet is removed from v1alpha7 with no replacement, so can't be
 	// losslessly converted. Restore the previously stored value on down-conversion.
 	dst.Subnet = previous.Subnet
+
+	// Strictly speaking this is lossy because we lose changes in
+	// down-conversion which were made to the up-converted object. However
+	// it isn't worth implementing this as the fields are immutable.
+	dst.Networks = previous.Networks
+	dst.Ports = previous.Ports
 }
 
 func restorev1alpha7MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *infrav1.OpenStackMachineSpec) {
@@ -288,7 +294,80 @@ func (r *OpenStackMachineTemplateList) ConvertFrom(srcRaw ctrlconversion.Hub) er
 }
 
 func Convert_v1alpha6_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in *OpenStackMachineSpec, out *infrav1.OpenStackMachineSpec, s conversion.Scope) error {
-	return autoConvert_v1alpha6_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in, out, s)
+	err := autoConvert_v1alpha6_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	if len(in.Networks) > 0 {
+		ports := convertNetworksToPorts(in.Networks)
+		// Networks were previously created first, so need to come before ports
+		out.Ports = append(ports, out.Ports...)
+	}
+	return nil
+}
+
+func convertNetworksToPorts(networks []NetworkParam) []infrav1.PortOpts {
+	var ports []infrav1.PortOpts
+
+	for _, network := range networks {
+		// This will remain null if the network is not specified in NetworkParam
+		var networkFilter *infrav1.NetworkFilter
+
+		// In v1alpha6, if network.Filter resolved to multiple networks
+		// then we would add multiple ports. It is not possible to
+		// support this behaviour during k8s API conversion as it
+		// requires an OpenStack API call. A network filter returning
+		// multiple networks now becomes an error when we attempt to
+		// create the port.
+		switch {
+		case network.UUID != "":
+			networkFilter = &infrav1.NetworkFilter{
+				ID: network.UUID,
+			}
+		case network.Filter != (NetworkFilter{}):
+			networkFilter = (*infrav1.NetworkFilter)(&network.Filter)
+		}
+
+		// Note that network.FixedIP was unused in v1alpha6 so we also ignore it here.
+
+		// In v1alpha6, specifying multiple subnets created multiple
+		// ports. We maintain this behaviour in conversion by adding
+		// multiple portOpts in this case.
+		//
+		// Also, similar to network.Filter above, if a subnet filter
+		// resolved to multiple subnets then we would add a port for
+		// each subnet. Again, it is not possible to support this
+		// behaviour during k8s API conversion as it requires an
+		// OpenStack API call. A subnet filter returning multiple
+		// subnets now becomes an error when we attempt to create the
+		// port.
+		if len(network.Subnets) == 0 {
+			// If the network has no explicit subnets then we create a single port with no subnets.
+			ports = append(ports, infrav1.PortOpts{Network: networkFilter})
+		} else {
+			// If the network has explicit subnets then we create a separate port for each subnet.
+			for _, subnet := range network.Subnets {
+				if subnet.UUID != "" {
+					ports = append(ports, infrav1.PortOpts{
+						Network: networkFilter,
+						FixedIPs: []infrav1.FixedIP{
+							{Subnet: &infrav1.SubnetFilter{ID: subnet.UUID}},
+						},
+					})
+				} else {
+					ports = append(ports, infrav1.PortOpts{
+						Network: networkFilter,
+						FixedIPs: []infrav1.FixedIP{
+							{Subnet: (*infrav1.SubnetFilter)(&subnet.Filter)},
+						},
+					})
+				}
+			}
+		}
+	}
+
+	return ports
 }
 
 func Convert_v1alpha7_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in *infrav1.OpenStackClusterSpec, out *OpenStackClusterSpec, s conversion.Scope) error {

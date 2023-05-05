@@ -3820,91 +3820,11 @@ spec:
                         description: InstanceID is the OpenStack instance ID for this
                           machine.
                         type: string
-                      networks:
-                        description: A networks object. Required parameter when there
-                          are multiple networks defined for the tenant. When you do
-                          not specify both networks and ports parameters, the server
-                          attaches to the only network created for the current tenant.
-                        items:
-                          properties:
-                            filter:
-                              description: Filters for optional network query
-                              properties:
-                                description:
-                                  type: string
-                                id:
-                                  type: string
-                                name:
-                                  type: string
-                                notTags:
-                                  type: string
-                                notTagsAny:
-                                  type: string
-                                projectId:
-                                  type: string
-                                tags:
-                                  type: string
-                                tagsAny:
-                                  type: string
-                              type: object
-                            fixedIP:
-                              description: A fixed IPv4 address for the NIC.
-                              type: string
-                            subnets:
-                              description: Subnet within a network to use
-                              items:
-                                properties:
-                                  filter:
-                                    description: Filters for optional subnet query
-                                    properties:
-                                      cidr:
-                                        type: string
-                                      description:
-                                        type: string
-                                      gateway_ip:
-                                        type: string
-                                      id:
-                                        type: string
-                                      ipVersion:
-                                        type: integer
-                                      ipv6AddressMode:
-                                        type: string
-                                      ipv6RaMode:
-                                        type: string
-                                      name:
-                                        type: string
-                                      notTags:
-                                        type: string
-                                      notTagsAny:
-                                        type: string
-                                      projectId:
-                                        type: string
-                                      tags:
-                                        type: string
-                                      tagsAny:
-                                        type: string
-                                    type: object
-                                  uuid:
-                                    description: Optional UUID of the subnet. If specified
-                                      this will not be validated prior to server creation.
-                                      If specified, the enclosing `NetworkParam` must
-                                      also be specified by UUID.
-                                    type: string
-                                type: object
-                              type: array
-                            uuid:
-                              description: Optional UUID of the network. If specified
-                                this will not be validated prior to server creation.
-                                Required if `Subnets` specifies a subnet by UUID.
-                              type: string
-                          type: object
-                        type: array
                       ports:
                         description: Ports to be attached to the server instance.
                           They are created if a port with the given name does not
-                          already exist. When you do not specify both networks and
-                          ports parameters, the server attaches to the only network
-                          created for the current tenant.
+                          already exist. If not specified a default port will be added
+                          for the default cluster network.
                         items:
                           properties:
                             adminStateUp:

@@ -114,3 +114,238 @@ func TestMutation(t *testing.T) {
 		g.Expect(after.Spec.DisableAPIServerFloatingIP).To(gomega.Equal(true))
 	})
 }
+
+func TestNetworksToPorts(t *testing.T) {
+	g := gomega.NewWithT(t)
+
+	const (
+		networkuuid = "55e18f0a-d89a-4d69-b18f-160fb142cb5d"
+		subnetuuid  = "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d"
+	)
+
+	tests := []struct {
+		name              string
+		beforeMachineSpec OpenStackMachineSpec
+		afterMachineSpec  infrav1.OpenStackMachineSpec
+	}{
+		{
+			name: "Network by UUID, no subnets",
+			beforeMachineSpec: OpenStackMachineSpec{
+				Networks: []NetworkParam{
+					{
+						UUID: networkuuid,
+					},
+				},
+			},
+			afterMachineSpec: infrav1.OpenStackMachineSpec{
+				Ports: []infrav1.PortOpts{
+					{
+						Network: &infrav1.NetworkFilter{
+							ID: networkuuid,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "Network by filter, no subnets",
+			beforeMachineSpec: OpenStackMachineSpec{
+				Networks: []NetworkParam{
+					{
+						Filter: NetworkFilter{
+							Name:        "network-name",
+							Description: "network-description",
+							ProjectID:   "project-id",
+							Tags:        "tags",
+							TagsAny:     "tags-any",
+							NotTags:     "not-tags",
+							NotTagsAny:  "not-tags-any",
+						},
+					},
+				},
+			},
+			afterMachineSpec: infrav1.OpenStackMachineSpec{
+				Ports: []infrav1.PortOpts{
+					{
+						Network: &infrav1.NetworkFilter{
+							Name:        "network-name",
+							Description: "network-description",
+							ProjectID:   "project-id",
+							Tags:        "tags",
+							TagsAny:     "tags-any",
+							NotTags:     "not-tags",
+							NotTagsAny:  "not-tags-any",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "Subnet by UUID",
+			beforeMachineSpec: OpenStackMachineSpec{
+				Networks: []NetworkParam{
+					{
+						UUID: networkuuid,
+						Subnets: []SubnetParam{
+							{
+								UUID: subnetuuid,
+							},
+						},
+					},
+				},
+			},
+			afterMachineSpec: infrav1.OpenStackMachineSpec{
+				Ports: []infrav1.PortOpts{
+					{
+						Network: &infrav1.NetworkFilter{
+							ID: networkuuid,
+						},
+						FixedIPs: []infrav1.FixedIP{
+							{
+								Subnet: &infrav1.SubnetFilter{
+									ID: subnetuuid,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "Subnet by filter",
+			beforeMachineSpec: OpenStackMachineSpec{
+				Networks: []NetworkParam{
+					{
+						UUID: networkuuid,
+						Subnets: []SubnetParam{
+							{
+								Filter: SubnetFilter{
+									Name:            "subnet-name",
+									Description:     "subnet-description",
+									ProjectID:       "project-id",
+									IPVersion:       6,
+									GatewayIP:       "x.x.x.x",
+									CIDR:            "y.y.y.y",
+									IPv6AddressMode: "address-mode",
+									IPv6RAMode:      "ra-mode",
+									Tags:            "tags",
+									TagsAny:         "tags-any",
+									NotTags:         "not-tags",
+									NotTagsAny:      "not-tags-any",
+								},
+							},
+						},
+					},
+				},
+			},
+			afterMachineSpec: infrav1.OpenStackMachineSpec{
+				Ports: []infrav1.PortOpts{
+					{
+						Network: &infrav1.NetworkFilter{
+							ID: networkuuid,
+						},
+						FixedIPs: []infrav1.FixedIP{
+							{
+								Subnet: &infrav1.SubnetFilter{
+									Name:            "subnet-name",
+									Description:     "subnet-description",
+									ProjectID:       "project-id",
+									IPVersion:       6,
+									GatewayIP:       "x.x.x.x",
+									CIDR:            "y.y.y.y",
+									IPv6AddressMode: "address-mode",
+									IPv6RAMode:      "ra-mode",
+									Tags:            "tags",
+									TagsAny:         "tags-any",
+									NotTags:         "not-tags",
+									NotTagsAny:      "not-tags-any",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "Multiple subnets",
+			beforeMachineSpec: OpenStackMachineSpec{
+				Networks: []NetworkParam{
+					{
+						UUID: networkuuid,
+						Subnets: []SubnetParam{
+							{
+								UUID: subnetuuid,
+							},
+							{
+								Filter: SubnetFilter{
+									Name:            "subnet-name",
+									Description:     "subnet-description",
+									ProjectID:       "project-id",
+									IPVersion:       6,
+									GatewayIP:       "x.x.x.x",
+									CIDR:            "y.y.y.y",
+									IPv6AddressMode: "address-mode",
+									IPv6RAMode:      "ra-mode",
+									Tags:            "tags",
+									TagsAny:         "tags-any",
+									NotTags:         "not-tags",
+									NotTagsAny:      "not-tags-any",
+								},
+							},
+						},
+					},
+				},
+			},
+			afterMachineSpec: infrav1.OpenStackMachineSpec{
+				Ports: []infrav1.PortOpts{
+					{
+						Network: &infrav1.NetworkFilter{
+							ID: networkuuid,
+						},
+						FixedIPs: []infrav1.FixedIP{
+							{
+								Subnet: &infrav1.SubnetFilter{
+									ID: subnetuuid,
+								},
+							},
+						},
+					},
+					{
+						Network: &infrav1.NetworkFilter{
+							ID: networkuuid,
+						},
+						FixedIPs: []infrav1.FixedIP{
+							{
+								Subnet: &infrav1.SubnetFilter{
+									Name:            "subnet-name",
+									Description:     "subnet-description",
+									ProjectID:       "project-id",
+									IPVersion:       6,
+									GatewayIP:       "x.x.x.x",
+									CIDR:            "y.y.y.y",
+									IPv6AddressMode: "address-mode",
+									IPv6RAMode:      "ra-mode",
+									Tags:            "tags",
+									TagsAny:         "tags-any",
+									NotTags:         "not-tags",
+									NotTagsAny:      "not-tags-any",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			before := &OpenStackMachine{
+				Spec: tt.beforeMachineSpec,
+			}
+			after := infrav1.OpenStackMachine{}
+
+			g.Expect(before.ConvertTo(&after)).To(gomega.Succeed())
+			g.Expect(after.Spec).To(gomega.Equal(tt.afterMachineSpec))
+		})
+	}
+}

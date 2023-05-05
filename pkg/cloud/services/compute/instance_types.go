@@ -47,7 +47,6 @@ type InstanceSpec struct {
 	Trunk          bool
 	Tags           []string
 	SecurityGroups []infrav1.SecurityGroupParam
-	Networks       []infrav1.NetworkParam
 	Ports          []infrav1.PortOpts
 }
 
