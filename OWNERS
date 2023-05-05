@@ -2,8 +2,6 @@
 
 approvers:
   - sig-cluster-lifecycle-leads
-  - cluster-api-admins
-  - cluster-api-maintainers
   - cluster-api-openstack-maintainers
 
 reviewers:
