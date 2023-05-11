@@ -7,23 +7,19 @@
 # - https://github.com/kubernetes/k8s.io/blob/main/groups/sig-cluster-lifecycle/groups.yaml
 
 aliases:
-  # correct as of 2021/03/03
+  # sig-cluster-lifecycle-leads are included as approvers in case it's ever
+  # operationally expedient:
+  # Source:
+  # https://github.com/kubernetes/org/blob/main/config/kubernetes/sig-cluster-lifecycle/teams.yaml
+  # correct as of 2023/05/10
   sig-cluster-lifecycle-leads:
+    members:
+    - CecileRobertMichon
+    - fabriziopandini
     - justinsb
     - neolit123
-    - timothysc
-    - fabriziopandini
-  # correct as of 2021/03/03
-  cluster-api-admins:
-    - justinsb
-    - detiber
     - vincepri
-  # correct as of 2021/03/03
-  cluster-api-maintainers:
-    - justinsb
-    - detiber
-    - vincepri
-    - CecileRobertMichon
+
   cluster-api-openstack-maintainers:
     - jichenjc
     - lentzi90
