@@ -176,7 +176,7 @@ type OpenStackClusterStatus struct {
 
 	BastionSecurityGroup *SecurityGroup `json:"bastionSecurityGroup,omitempty"`
 
-	Bastion *Instance `json:"bastion,omitempty"`
+	Bastion *BastionStatus `json:"bastion,omitempty"`
 
 	// FailureReason will be set in the event that there is a terminal problem
 	// reconciling the OpenStackCluster and will contain a succinct value suitable
