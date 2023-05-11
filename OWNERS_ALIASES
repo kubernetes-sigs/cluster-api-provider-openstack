@@ -13,13 +13,11 @@ aliases:
   # https://github.com/kubernetes/org/blob/main/config/kubernetes/sig-cluster-lifecycle/teams.yaml
   # correct as of 2023/05/10
   sig-cluster-lifecycle-leads:
-    members:
     - CecileRobertMichon
     - fabriziopandini
     - justinsb
     - neolit123
     - vincepri
-
   cluster-api-openstack-maintainers:
     - jichenjc
     - lentzi90
