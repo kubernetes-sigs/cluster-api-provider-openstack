@@ -1,5 +1,0 @@
-resources:
-- ../default
-
-patchesStrategicMerge:
-- patch-ccm.yaml
