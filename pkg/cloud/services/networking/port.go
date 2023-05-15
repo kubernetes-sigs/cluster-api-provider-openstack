@@ -53,10 +53,12 @@ func (s *Service) GetPortFromInstanceIP(instanceID string, ip string) ([]ports.P
 	return s.client.ListPort(portOpts)
 }
 
-func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string, portName string, net infrav1.Network, instanceSecurityGroups []string, instanceTags []string) (*ports.Port, error) {
+func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string, portName string, portOpts *infrav1.PortOpts, instanceSecurityGroups []string, instanceTags []string) (*ports.Port, error) {
+	networkID := portOpts.Network.ID
+
 	existingPorts, err := s.client.ListPort(ports.ListOpts{
 		Name:      portName,
-		NetworkID: net.ID,
+		NetworkID: networkID,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("searching for existing port for server: %v", err)
@@ -68,12 +70,6 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 
 	if len(existingPorts) > 1 {
 		return nil, fmt.Errorf("multiple ports found with name \"%s\"", portName)
-	}
-
-	// no port found, so create the port
-	portOpts := net.PortOpts
-	if portOpts == nil {
-		portOpts = &infrav1.PortOpts{}
 	}
 
 	description := portOpts.Description
@@ -106,7 +102,7 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 	if len(portOpts.FixedIPs) > 0 {
 		fips := make([]ports.IP, 0, len(portOpts.FixedIPs)+1)
 		for _, fixedIP := range portOpts.FixedIPs {
-			subnetID, err := s.getSubnetIDForFixedIP(fixedIP.Subnet, net.ID)
+			subnetID, err := s.getSubnetIDForFixedIP(fixedIP.Subnet, networkID)
 			if err != nil {
 				return nil, err
 			}
@@ -114,9 +110,6 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 				SubnetID:  subnetID,
 				IPAddress: fixedIP.IPAddress,
 			})
-		}
-		if net.Subnet.ID != "" {
-			fips = append(fips, ports.IP{SubnetID: net.Subnet.ID})
 		}
 		fixedIPs = fips
 	}
@@ -140,7 +133,7 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 
 	createOpts = ports.CreateOpts{
 		Name:                  portName,
-		NetworkID:             net.ID,
+		NetworkID:             networkID,
 		Description:           description,
 		AdminStateUp:          portOpts.AdminStateUp,
 		MACAddress:            portOpts.MACAddress,
