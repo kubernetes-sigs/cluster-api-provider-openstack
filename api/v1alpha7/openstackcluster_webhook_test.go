@@ -126,7 +126,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 				},
 				Status: OpenStackClusterStatus{
-					Bastion: &Instance{
+					Bastion: &BastionStatus{
 						Name: "foobar",
 					},
 				},

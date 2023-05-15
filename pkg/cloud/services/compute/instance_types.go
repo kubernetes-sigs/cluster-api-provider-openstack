@@ -99,9 +99,9 @@ func (is *InstanceStatus) AvailabilityZone() string {
 	return is.server.AvailabilityZone
 }
 
-// APIInstance returns an infrav1.Instance object for use by the API.
-func (is *InstanceStatus) APIInstance(openStackCluster *infrav1.OpenStackCluster) (*infrav1.Instance, error) {
-	i := infrav1.Instance{
+// BastionStatus returns an infrav1.BastionStatus for use in the cluster status.
+func (is *InstanceStatus) BastionStatus(openStackCluster *infrav1.OpenStackCluster) (*infrav1.BastionStatus, error) {
+	i := infrav1.BastionStatus{
 		ID:         is.ID(),
 		Name:       is.Name(),
 		SSHKeyName: is.SSHKeyName(),

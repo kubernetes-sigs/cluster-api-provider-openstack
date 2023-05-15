@@ -165,27 +165,13 @@ type AddressPair struct {
 	MACAddress string `json:"macAddress,omitempty"`
 }
 
-type Instance struct {
-	ID             string            `json:"id,omitempty"`
-	Name           string            `json:"name,omitempty"`
-	Trunk          bool              `json:"trunk,omitempty"`
-	FailureDomain  string            `json:"failureDomain,omitempty"`
-	SecurityGroups *[]string         `json:"securigyGroups,omitempty"`
-	Networks       *[]Network        `json:"networks,omitempty"`
-	Subnet         string            `json:"subnet,omitempty"`
-	Tags           []string          `json:"tags,omitempty"`
-	Image          string            `json:"image,omitempty"`
-	ImageUUID      string            `json:"imageUUID,omitempty"`
-	Flavor         string            `json:"flavor,omitempty"`
-	SSHKeyName     string            `json:"sshKeyName,omitempty"`
-	UserData       string            `json:"userData,omitempty"`
-	Metadata       map[string]string `json:"metadata,omitempty"`
-	ConfigDrive    *bool             `json:"configDrive,omitempty"`
-	RootVolume     *RootVolume       `json:"rootVolume,omitempty"`
-	ServerGroupID  string            `json:"serverGroupID,omitempty"`
-	State          InstanceState     `json:"state,omitempty"`
-	IP             string            `json:"ip,omitempty"`
-	FloatingIP     string            `json:"floatingIP,omitempty"`
+type BastionStatus struct {
+	ID         string        `json:"id,omitempty"`
+	Name       string        `json:"name,omitempty"`
+	SSHKeyName string        `json:"sshKeyName,omitempty"`
+	State      InstanceState `json:"state,omitempty"`
+	IP         string        `json:"ip,omitempty"`
+	FloatingIP string        `json:"floatingIP,omitempty"`
 }
 
 type RootVolume struct {

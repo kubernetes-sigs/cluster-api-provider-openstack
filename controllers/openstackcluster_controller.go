@@ -316,7 +316,7 @@ func reconcileBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackCl
 	}
 	if instanceStatus != nil {
 		if !bastionHashHasChanged(bastionHash, openStackCluster.ObjectMeta.Annotations) {
-			bastion, err := instanceStatus.APIInstance(openStackCluster)
+			bastion, err := instanceStatus.BastionStatus(openStackCluster)
 			if err != nil {
 				return err
 			}
@@ -360,7 +360,7 @@ func reconcileBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackCl
 		return errors.Errorf("failed to associate floating IP with bastion: %v", err)
 	}
 
-	bastion, err := instanceStatus.APIInstance(openStackCluster)
+	bastion, err := instanceStatus.BastionStatus(openStackCluster)
 	if err != nil {
 		return err
 	}

@@ -19,9 +19,12 @@ package v1alpha6
 import (
 	"testing"
 
+	fuzz "github.com/google/gofuzz"
 	"github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/api/apitesting/fuzzer"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
+	runtimeserializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
 	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
 
@@ -36,10 +39,35 @@ func TestFuzzyConversion(t *testing.T) {
 		delete(obj.GetAnnotations(), utilconversion.DataAnnotation)
 	}
 
+	fuzzerFuncs := func(_ runtimeserializer.CodecFactory) []interface{} {
+		return []interface{}{
+			func(instance *Instance, c fuzz.Continue) {
+				c.FuzzNoCustom(instance)
+
+				// None of the following fields have ever been set in v1alpha6
+				instance.Trunk = false
+				instance.FailureDomain = ""
+				instance.SecurityGroups = nil
+				instance.Networks = nil
+				instance.Subnet = ""
+				instance.Tags = nil
+				instance.Image = ""
+				instance.ImageUUID = ""
+				instance.Flavor = ""
+				instance.UserData = ""
+				instance.Metadata = nil
+				instance.ConfigDrive = nil
+				instance.RootVolume = nil
+				instance.ServerGroupID = ""
+			},
+		}
+	}
+
 	t.Run("for OpenStackCluster", utilconversion.FuzzTestFunc(utilconversion.FuzzTestFuncInput{
 		Hub:              &infrav1.OpenStackCluster{},
 		Spoke:            &OpenStackCluster{},
 		HubAfterMutation: ignoreDataAnnotation,
+		FuzzerFuncs:      []fuzzer.FuzzerFuncs{fuzzerFuncs},
 	}))
 
 	t.Run("for OpenStackClusterTemplate", utilconversion.FuzzTestFunc(utilconversion.FuzzTestFuncInput{

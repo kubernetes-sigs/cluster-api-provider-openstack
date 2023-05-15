@@ -229,3 +229,25 @@ func Convert_v1alpha5_PortOpts_To_v1alpha7_PortOpts(in *PortOpts, out *infrav1.P
 	// SecurityGroups have been removed in v1alpha7.
 	return autoConvert_v1alpha5_PortOpts_To_v1alpha7_PortOpts(in, out, s)
 }
+
+func Convert_v1alpha5_Instance_To_v1alpha7_BastionStatus(in *Instance, out *infrav1.BastionStatus, _ conversion.Scope) error {
+	// BastionStatus is the same as Instance with unused fields removed
+	out.ID = in.ID
+	out.Name = in.Name
+	out.SSHKeyName = in.SSHKeyName
+	out.State = infrav1.InstanceState(in.State)
+	out.IP = in.IP
+	out.FloatingIP = in.FloatingIP
+	return nil
+}
+
+func Convert_v1alpha7_BastionStatus_To_v1alpha5_Instance(in *infrav1.BastionStatus, out *Instance, _ conversion.Scope) error {
+	// BastionStatus is the same as Instance with unused fields removed
+	out.ID = in.ID
+	out.Name = in.Name
+	out.SSHKeyName = in.SSHKeyName
+	out.State = InstanceState(in.State)
+	out.IP = in.IP
+	out.FloatingIP = in.FloatingIP
+	return nil
+}

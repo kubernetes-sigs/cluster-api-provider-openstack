@@ -133,11 +133,6 @@ func restorev1alpha7ClusterStatus(previous *infrav1.OpenStackClusterStatus, dst 
 	if previous.Network != nil && previous.Network.PortOpts != nil {
 		dst.Network.PortOpts.PropagateUplinkStatus = previous.Network.PortOpts.PropagateUplinkStatus
 	}
-	// PropagateUplinkStatus has been added in v1alpha7.
-	// We restore the whole Networks since they are anyway immutable.
-	if previous.Bastion != nil && previous.Bastion.Networks != nil {
-		dst.Bastion.Networks = previous.Bastion.Networks
-	}
 }
 
 var _ ctrlconversion.Convertible = &OpenStackCluster{}
@@ -424,4 +419,26 @@ func Convert_Slice_v1alpha7_Network_To_Slice_v1alpha6_Network(in *[]infrav1.Netw
 func Convert_v1alpha7_PortOpts_To_v1alpha6_PortOpts(in *infrav1.PortOpts, out *PortOpts, s conversion.Scope) error {
 	// value specs and propagate uplink status have been added in v1alpha7 but have no equivalent in v1alpha5
 	return autoConvert_v1alpha7_PortOpts_To_v1alpha6_PortOpts(in, out, s)
+}
+
+func Convert_v1alpha6_Instance_To_v1alpha7_BastionStatus(in *Instance, out *infrav1.BastionStatus, _ conversion.Scope) error {
+	// BastionStatus is the same as Instance with unused fields removed
+	out.ID = in.ID
+	out.Name = in.Name
+	out.SSHKeyName = in.SSHKeyName
+	out.State = infrav1.InstanceState(in.State)
+	out.IP = in.IP
+	out.FloatingIP = in.FloatingIP
+	return nil
+}
+
+func Convert_v1alpha7_BastionStatus_To_v1alpha6_Instance(in *infrav1.BastionStatus, out *Instance, _ conversion.Scope) error {
+	// BastionStatus is the same as Instance with unused fields removed
+	out.ID = in.ID
+	out.Name = in.Name
+	out.SSHKeyName = in.SSHKeyName
+	out.State = InstanceState(in.State)
+	out.IP = in.IP
+	out.FloatingIP = in.FloatingIP
+	return nil
 }
