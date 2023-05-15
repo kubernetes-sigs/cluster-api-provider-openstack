@@ -251,3 +251,8 @@ func Convert_v1alpha7_BastionStatus_To_v1alpha5_Instance(in *infrav1.BastionStat
 	out.FloatingIP = in.FloatingIP
 	return nil
 }
+
+func Convert_v1alpha5_Network_To_v1alpha7_Network(in *Network, out *infrav1.Network, s conversion.Scope) error {
+	// PortOpts has been removed in v1alpha7
+	return autoConvert_v1alpha5_Network_To_v1alpha7_Network(in, out, s)
+}

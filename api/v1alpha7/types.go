@@ -188,9 +188,8 @@ type Network struct {
 	//+optional
 	Tags []string `json:"tags,omitempty"`
 
-	Subnet   *Subnet   `json:"subnet,omitempty"`
-	PortOpts *PortOpts `json:"port,omitempty"`
-	Router   *Router   `json:"router,omitempty"`
+	Subnet *Subnet `json:"subnet,omitempty"`
+	Router *Router `json:"router,omitempty"`
 
 	// Be careful when using APIServerLoadBalancer, because this field is optional and therefore not
 	// set in all cases

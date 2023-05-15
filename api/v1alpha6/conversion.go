@@ -125,16 +125,6 @@ func restorev1alpha7ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *inf
 	}
 }
 
-func restorev1alpha7ClusterStatus(previous *infrav1.OpenStackClusterStatus, dst *infrav1.OpenStackClusterStatus) {
-	// PropagateUplinkStatus has been added in v1alpha7
-	if previous.ExternalNetwork != nil && previous.ExternalNetwork.PortOpts != nil {
-		dst.ExternalNetwork.PortOpts.PropagateUplinkStatus = previous.ExternalNetwork.PortOpts.PropagateUplinkStatus
-	}
-	if previous.Network != nil && previous.Network.PortOpts != nil {
-		dst.Network.PortOpts.PropagateUplinkStatus = previous.Network.PortOpts.PropagateUplinkStatus
-	}
-}
-
 var _ ctrlconversion.Convertible = &OpenStackCluster{}
 
 func (r *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {
@@ -147,7 +137,6 @@ func (r *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {
 
 	if restored {
 		restorev1alpha7ClusterSpec(&previous.Spec, &dst.Spec)
-		restorev1alpha7ClusterStatus(&previous.Status, &dst.Status)
 	}
 
 	return nil
@@ -441,4 +430,9 @@ func Convert_v1alpha7_BastionStatus_To_v1alpha6_Instance(in *infrav1.BastionStat
 	out.IP = in.IP
 	out.FloatingIP = in.FloatingIP
 	return nil
+}
+
+func Convert_v1alpha6_Network_To_v1alpha7_Network(in *Network, out *infrav1.Network, s conversion.Scope) error {
+	// PortOpts has been removed in v1alpha7
+	return autoConvert_v1alpha6_Network_To_v1alpha7_Network(in, out, s)
 }
