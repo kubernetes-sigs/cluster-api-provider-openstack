@@ -256,3 +256,19 @@ func Convert_v1alpha5_Network_To_v1alpha7_Network(in *Network, out *infrav1.Netw
 	// PortOpts has been removed in v1alpha7
 	return autoConvert_v1alpha5_Network_To_v1alpha7_Network(in, out, s)
 }
+
+func Convert_v1alpha5_Network_To_v1alpha7_NetworkStatus(in *Network, out *infrav1.NetworkStatus, _ conversion.Scope) error {
+	out.ID = in.ID
+	out.Name = in.Name
+	out.Tags = in.Tags
+
+	return nil
+}
+
+func Convert_v1alpha7_NetworkStatus_To_v1alpha5_Network(in *infrav1.NetworkStatus, out *Network, _ conversion.Scope) error {
+	out.ID = in.ID
+	out.Name = in.Name
+	out.Tags = in.Tags
+
+	return nil
+}

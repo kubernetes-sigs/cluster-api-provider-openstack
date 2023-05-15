@@ -43,7 +43,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 			DisableAPIServerFloatingIP: true,
 		},
 		Status: infrav1.OpenStackClusterStatus{
-			ExternalNetwork: &infrav1.Network{
+			ExternalNetwork: &infrav1.NetworkStatus{
 				ID: "aaaaaaaa-bbbb-cccc-dddd-111111111111",
 			},
 			Network: &infrav1.Network{

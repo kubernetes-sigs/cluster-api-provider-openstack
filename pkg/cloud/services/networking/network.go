@@ -76,7 +76,7 @@ func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCl
 			return err
 		}
 		if externalNetwork.ID != "" {
-			openStackCluster.Status.ExternalNetwork = &infrav1.Network{
+			openStackCluster.Status.ExternalNetwork = &infrav1.NetworkStatus{
 				ID:   externalNetwork.ID,
 				Name: externalNetwork.Name,
 				Tags: externalNetwork.Tags,
@@ -101,11 +101,11 @@ func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCl
 	switch len(networkList) {
 	case 0:
 		// Not finding an external network is fine
-		openStackCluster.Status.ExternalNetwork = &infrav1.Network{}
+		openStackCluster.Status.ExternalNetwork = &infrav1.NetworkStatus{}
 		s.scope.Logger().Info("No external network found - proceeding with internal network only")
 		return nil
 	case 1:
-		openStackCluster.Status.ExternalNetwork = &infrav1.Network{
+		openStackCluster.Status.ExternalNetwork = &infrav1.NetworkStatus{
 			ID:   networkList[0].ID,
 			Name: networkList[0].Name,
 			Tags: networkList[0].Tags,

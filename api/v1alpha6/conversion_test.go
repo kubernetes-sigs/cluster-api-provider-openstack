@@ -60,6 +60,18 @@ func TestFuzzyConversion(t *testing.T) {
 				instance.RootVolume = nil
 				instance.ServerGroupID = ""
 			},
+
+			func(status *OpenStackClusterStatus, c fuzz.Continue) {
+				c.FuzzNoCustom(status)
+
+				// None of the following fields have ever been set in v1alpha6
+				if status.ExternalNetwork != nil {
+					status.ExternalNetwork.Subnet = nil
+					status.ExternalNetwork.PortOpts = nil
+					status.ExternalNetwork.Router = nil
+					status.ExternalNetwork.APIServerLoadBalancer = nil
+				}
+			},
 		}
 	}
 

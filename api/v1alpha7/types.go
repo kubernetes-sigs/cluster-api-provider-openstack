@@ -196,6 +196,15 @@ type Network struct {
 	APIServerLoadBalancer *LoadBalancer `json:"apiServerLoadBalancer,omitempty"`
 }
 
+// NetworkStatus contains basic information about an existing neutron network.
+type NetworkStatus struct {
+	Name string `json:"name"`
+	ID   string `json:"id"`
+
+	//+optional
+	Tags []string `json:"tags,omitempty"`
+}
+
 // Subnet represents basic information about the associated OpenStack Neutron Subnet.
 type Subnet struct {
 	Name string `json:"name"`
