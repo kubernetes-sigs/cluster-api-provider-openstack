@@ -90,9 +90,11 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 				MACAddress: ap.MACAddress,
 			})
 		}
-		securityGroups, err = s.collectPortSecurityGroups(portOpts.SecurityGroups, portOpts.SecurityGroupFilters)
-		if err != nil {
-			return nil, err
+		if portOpts.SecurityGroupFilters != nil {
+			securityGroups, err = s.GetSecurityGroups(portOpts.SecurityGroupFilters)
+			if err != nil {
+				return nil, fmt.Errorf("error getting security groups: %v", err)
+			}
 		}
 		// inherit port security groups from the instance if not explicitly specified
 		if len(securityGroups) == 0 {
@@ -302,40 +304,4 @@ func (s *Service) GarbageCollectErrorInstancesPort(eventObject runtime.Object, i
 	}
 
 	return nil
-}
-
-// collectPortSecurityGroups collects distinct securityGroups from port.SecurityGroups and port.SecurityGroupFilter fields.
-func (s *Service) collectPortSecurityGroups(portSecurityGroups []string, portSecurityGroupFilters []infrav1.SecurityGroupParam) ([]string, error) {
-	var allSecurityGroupIDs []string
-	// security groups provided with the portSecurityGroupFilters fields
-	securityGroupFiltersByID, err := s.GetSecurityGroups(portSecurityGroupFilters)
-	if err != nil {
-		return nil, fmt.Errorf("error getting security groups: %v", err)
-	}
-	allSecurityGroupIDs = append(allSecurityGroupIDs, securityGroupFiltersByID...)
-	securityGroupCount := 0
-	// security groups provided with the portSecurityGroups fields
-	allSecurityGroupIDs = append(allSecurityGroupIDs, portSecurityGroups...)
-	// generate unique values
-	uids := make(map[string]int)
-	for _, sg := range allSecurityGroupIDs {
-		if sg == "" {
-			continue
-		}
-		// count distinct values
-		_, ok := uids[sg]
-		if !ok {
-			securityGroupCount++
-		}
-		uids[sg] = 1
-	}
-	distinctSecurityGroupIDs := make([]string, 0, securityGroupCount)
-	// collect distict values
-	for key := range uids {
-		if key == "" {
-			continue
-		}
-		distinctSecurityGroupIDs = append(distinctSecurityGroupIDs, key)
-	}
-	return distinctSecurityGroupIDs, nil
 }

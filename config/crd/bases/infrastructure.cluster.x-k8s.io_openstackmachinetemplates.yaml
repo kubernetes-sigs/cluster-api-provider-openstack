@@ -1166,13 +1166,6 @@ spec:
                                     type: string
                                 type: object
                               type: array
-                            securityGroups:
-                              description: The uuids of the security groups to assign
-                                to the instance
-                              items:
-                                type: string
-                              type: array
-                              x-kubernetes-list-type: set
                             tags:
                               description: Tags applied to the port (and corresponding
                                 trunk, if a trunk is configured.) These tags are applied

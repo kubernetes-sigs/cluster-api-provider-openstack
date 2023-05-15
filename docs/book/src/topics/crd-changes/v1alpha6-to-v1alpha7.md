@@ -111,3 +111,24 @@ The OpenStackMachine spec previously contained a `subnet` field which could used
 to set the `accessIPv4` field on Nova servers. This feature was not widely
 used, difficult to use, and could not be extended to support IPv6. It is
 removed without replacement.
+
+#### Removal of Port SecurityGroups
+
+The Port field of the OpenStackMachine spec previously contained both `securityGroups` and `securityGroupFilters`.
+As `securityGroups` can easily be replaced with `securityGroupFilters`, that can express the same and more, `securityGroups` has now been removed.
+CAPO can automatically convert `securityGroups` to `securityGroupFilters` when upgrading.
+
+Here is an example of how to use `securityGroupFilters` to replace `securityGroups`:
+
+```yaml
+# securityGroups are available in v1alpha6
+securityGroups:
+- 60ed83f1-8886-41c6-a1c7-fcfbdf3f04c2
+- 0ddd14d9-5c33-4734-b7d0-ac4fdf35c2d9
+- 4a131d3e-9939-4a6b-adea-788a2e89fcd8
+# securityGroupFilters are available in both v1alpha6 and v1alpha7
+securityGroupFilters:
+- uuid: 60ed83f1-8886-41c6-a1c7-fcfbdf3f04c2
+- uuid: 0ddd14d9-5c33-4734-b7d0-ac4fdf35c2d9
+- uuid: 4a131d3e-9939-4a6b-adea-788a2e89fcd8
+```
