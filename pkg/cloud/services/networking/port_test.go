@@ -60,7 +60,7 @@ func Test_GetOrCreatePort(t *testing.T) {
 	tests := []struct {
 		name                   string
 		portName               string
-		net                    infrav1.Network
+		port                   infrav1.PortOpts
 		instanceSecurityGroups []string
 		tags                   []string
 		expect                 func(m *mock.MockNetworkClientMockRecorder)
@@ -72,9 +72,10 @@ func Test_GetOrCreatePort(t *testing.T) {
 		{
 			"gets and returns existing port if name matches",
 			"foo-port-1",
-			infrav1.Network{
-				ID:     netID,
-				Subnet: &infrav1.Subnet{},
+			infrav1.PortOpts{
+				Network: &infrav1.NetworkFilter{
+					ID: netID,
+				},
 			},
 			nil,
 			[]string{},
@@ -95,9 +96,10 @@ func Test_GetOrCreatePort(t *testing.T) {
 		{
 			"errors if multiple matching ports are found",
 			"foo-port-1",
-			infrav1.Network{
-				ID:     netID,
-				Subnet: &infrav1.Subnet{},
+			infrav1.PortOpts{
+				Network: &infrav1.NetworkFilter{
+					ID: netID,
+				},
 			},
 			nil,
 			[]string{},
@@ -125,9 +127,10 @@ func Test_GetOrCreatePort(t *testing.T) {
 		{
 			"creates port with defaults (description and secgroups) if not specified in portOpts",
 			"foo-port-1",
-			infrav1.Network{
-				ID:       netID,
-				PortOpts: &infrav1.PortOpts{},
+			infrav1.PortOpts{
+				Network: &infrav1.NetworkFilter{
+					ID: netID,
+				},
 			},
 			instanceSecurityGroups,
 			[]string{},
@@ -155,33 +158,32 @@ func Test_GetOrCreatePort(t *testing.T) {
 		{
 			"creates port with specified portOpts if no matching port exists",
 			"foo-port-bar",
-			infrav1.Network{
-				ID:     netID,
-				Subnet: &infrav1.Subnet{},
-				PortOpts: &infrav1.PortOpts{
-					NameSuffix:   "bar",
-					Description:  "this is a test port",
-					MACAddress:   "fe:fe:fe:fe:fe:fe",
-					AdminStateUp: pointerToTrue,
-					FixedIPs: []infrav1.FixedIP{{
-						Subnet: &infrav1.SubnetFilter{
-							Name: "subnetFoo",
-						},
-						IPAddress: "192.168.0.50",
-					}, {IPAddress: "192.168.1.50"}},
-					TenantID:             tenantID,
-					ProjectID:            projectID,
-					SecurityGroupFilters: portSecurityGroupFilters,
-					AllowedAddressPairs: []infrav1.AddressPair{{
-						IPAddress:  "10.10.10.10",
-						MACAddress: "f1:f1:f1:f1:f1:f1",
-					}},
-					HostID:              hostID,
-					VNICType:            "direct",
-					Profile:             map[string]string{"interface_name": "eno1"},
-					DisablePortSecurity: pointerToFalse,
-					Tags:                []string{"my-port-tag"},
+			infrav1.PortOpts{
+				Network: &infrav1.NetworkFilter{
+					ID: netID,
 				},
+				NameSuffix:   "bar",
+				Description:  "this is a test port",
+				MACAddress:   "fe:fe:fe:fe:fe:fe",
+				AdminStateUp: pointerToTrue,
+				FixedIPs: []infrav1.FixedIP{{
+					Subnet: &infrav1.SubnetFilter{
+						Name: "subnetFoo",
+					},
+					IPAddress: "192.168.0.50",
+				}, {IPAddress: "192.168.1.50"}},
+				TenantID:             tenantID,
+				ProjectID:            projectID,
+				SecurityGroupFilters: portSecurityGroupFilters,
+				AllowedAddressPairs: []infrav1.AddressPair{{
+					IPAddress:  "10.10.10.10",
+					MACAddress: "f1:f1:f1:f1:f1:f1",
+				}},
+				HostID:              hostID,
+				VNICType:            "direct",
+				Profile:             map[string]string{"interface_name": "eno1"},
+				DisablePortSecurity: pointerToFalse,
+				Tags:                []string{"my-port-tag"},
 			},
 			nil,
 			nil,
@@ -251,19 +253,18 @@ func Test_GetOrCreatePort(t *testing.T) {
 		{
 			"fails to create port with specified portOpts if subnet query returns more than one subnet",
 			"foo-port-bar",
-			infrav1.Network{
-				ID:     netID,
-				Subnet: &infrav1.Subnet{},
-				PortOpts: &infrav1.PortOpts{
-					NameSuffix:  "foo-port-bar",
-					Description: "this is a test port",
-					FixedIPs: []infrav1.FixedIP{{
-						Subnet: &infrav1.SubnetFilter{
-							Tags: "Foo",
-						},
-						IPAddress: "192.168.0.50",
-					}},
+			infrav1.PortOpts{
+				Network: &infrav1.NetworkFilter{
+					ID: netID,
 				},
+				NameSuffix:  "foo-port-bar",
+				Description: "this is a test port",
+				FixedIPs: []infrav1.FixedIP{{
+					Subnet: &infrav1.SubnetFilter{
+						Tags: "Foo",
+					},
+					IPAddress: "192.168.0.50",
+				}},
 			},
 			nil,
 			nil,
@@ -296,11 +297,11 @@ func Test_GetOrCreatePort(t *testing.T) {
 		{
 			"overrides default (instance) security groups if port security groups are specified",
 			"foo-port-1",
-			infrav1.Network{
-				ID: netID,
-				PortOpts: &infrav1.PortOpts{
-					SecurityGroupFilters: portSecurityGroupFilters,
+			infrav1.PortOpts{
+				Network: &infrav1.NetworkFilter{
+					ID: netID,
 				},
+				SecurityGroupFilters: portSecurityGroupFilters,
 			},
 			instanceSecurityGroups,
 			[]string{},
@@ -329,9 +330,10 @@ func Test_GetOrCreatePort(t *testing.T) {
 		{
 			"creates port with instance tags when port tags aren't specified",
 			"foo-port-1",
-			infrav1.Network{
-				ID:       netID,
-				PortOpts: &infrav1.PortOpts{},
+			infrav1.PortOpts{
+				Network: &infrav1.NetworkFilter{
+					ID: netID,
+				},
 			},
 			nil,
 			[]string{"my-instance-tag"},
@@ -358,9 +360,11 @@ func Test_GetOrCreatePort(t *testing.T) {
 		{
 			"creates port with port specific tags appending to instance tags",
 			"foo-port-1",
-			infrav1.Network{
-				ID:       netID,
-				PortOpts: &infrav1.PortOpts{Tags: []string{"my-port-tag"}},
+			infrav1.PortOpts{
+				Network: &infrav1.NetworkFilter{
+					ID: netID,
+				},
+				Tags: []string{"my-port-tag"},
 			},
 			nil,
 			[]string{"my-instance-tag"},
@@ -389,11 +393,11 @@ func Test_GetOrCreatePort(t *testing.T) {
 		{
 			"creates port and trunk (with tags) if they aren't found",
 			"foo-port-1",
-			infrav1.Network{
-				ID: netID,
-				PortOpts: &infrav1.PortOpts{
-					Trunk: pointerToTrue,
+			infrav1.PortOpts{
+				Network: &infrav1.NetworkFilter{
+					ID: netID,
 				},
+				Trunk: pointerToTrue,
 			},
 			nil,
 			[]string{"my-tag"},
@@ -434,15 +438,15 @@ func Test_GetOrCreatePort(t *testing.T) {
 		{
 			"creates port with value_specs",
 			"foo-port-1",
-			infrav1.Network{
-				ID: netID,
-				PortOpts: &infrav1.PortOpts{
-					ValueSpecs: []infrav1.ValueSpec{
-						{
-							Name:  "Not important",
-							Key:   "key",
-							Value: "value",
-						},
+			infrav1.PortOpts{
+				Network: &infrav1.NetworkFilter{
+					ID: netID,
+				},
+				ValueSpecs: []infrav1.ValueSpec{
+					{
+						Name:  "Not important",
+						Key:   "key",
+						Value: "value",
 					},
 				},
 			},
@@ -472,11 +476,11 @@ func Test_GetOrCreatePort(t *testing.T) {
 		{
 			"creates port with propagate uplink status",
 			"foo-port-1",
-			infrav1.Network{
-				ID: netID,
-				PortOpts: &infrav1.PortOpts{
-					PropagateUplinkStatus: pointerToTrue,
+			infrav1.PortOpts{
+				Network: &infrav1.NetworkFilter{
+					ID: netID,
 				},
+				PropagateUplinkStatus: pointerToTrue,
 			},
 			instanceSecurityGroups,
 			[]string{},
@@ -517,7 +521,7 @@ func Test_GetOrCreatePort(t *testing.T) {
 				eventObject,
 				"test-cluster",
 				tt.portName,
-				tt.net,
+				&tt.port,
 				tt.instanceSecurityGroups,
 				tt.tags,
 			)

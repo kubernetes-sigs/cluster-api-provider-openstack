@@ -173,11 +173,6 @@ func (in *Network) DeepCopyInto(out *Network) {
 		*out = new(Subnet)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.PortOpts != nil {
-		in, out := &in.PortOpts, &out.PortOpts
-		*out = new(PortOpts)
-		(*in).DeepCopyInto(*out)
-	}
 	if in.Router != nil {
 		in, out := &in.Router, &out.Router
 		*out = new(Router)

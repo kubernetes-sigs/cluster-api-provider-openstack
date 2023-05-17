@@ -171,42 +171,34 @@ func (s *Service) normalizePorts(ports []infrav1.PortOpts, openStackCluster *inf
 	return normalizedPorts, nil
 }
 
-// constructNetworks builds an array of networks from the network, subnet and ports items in the instance spec.
-// If no networks or ports are in the spec, returns a single network item for a network connection to the default cluster network.
-func (s *Service) constructNetworks(openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec) ([]infrav1.Network, error) {
+// constructPorts builds an array of ports from the instance spec.
+// If no ports are in the spec, returns a single port for a network connection to the default cluster network.
+func (s *Service) constructPorts(openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec) ([]infrav1.PortOpts, error) {
 	// Ensure user-specified ports have all required fields
 	ports, err := s.normalizePorts(instanceSpec.Ports, openStackCluster, instanceSpec)
 	if err != nil {
 		return nil, err
 	}
-	nets := make([]infrav1.Network, 0, len(ports))
-	for i := range ports {
-		port := &ports[i]
-		nets = append(nets, infrav1.Network{
-			ID:       port.Network.ID,
-			Subnet:   &infrav1.Subnet{},
-			PortOpts: port,
-		})
-	}
 
 	// no networks or ports found in the spec, so create a port on the cluster network
-	if len(nets) == 0 {
-		nets = []infrav1.Network{{
-			ID: openStackCluster.Status.Network.ID,
-			Subnet: &infrav1.Subnet{
-				ID: openStackCluster.Status.Network.Subnet.ID,
+	if len(ports) == 0 {
+		ports = []infrav1.PortOpts{{
+			Network: &infrav1.NetworkFilter{
+				ID: openStackCluster.Status.Network.ID,
 			},
-			PortOpts: &infrav1.PortOpts{
-				Trunk: &instanceSpec.Trunk,
-			},
+			FixedIPs: []infrav1.FixedIP{{
+				Subnet: &infrav1.SubnetFilter{
+					ID: openStackCluster.Status.Network.Subnet.ID,
+				},
+			}},
+			Trunk: &instanceSpec.Trunk,
 		}}
 	}
 
 	// trunk support is required if any port has trunk enabled
 	portUsesTrunk := func() bool {
-		for _, net := range nets {
-			port := net.PortOpts
-			if port != nil && port.Trunk != nil && *port.Trunk {
+		for _, port := range ports {
+			if port.Trunk != nil && *port.Trunk {
 				return true
 			}
 		}
@@ -222,7 +214,7 @@ func (s *Service) constructNetworks(openStackCluster *infrav1.OpenStackCluster, 
 		}
 	}
 
-	return nets, nil
+	return ports, nil
 }
 
 func (s *Service) CreateInstance(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec, clusterName string, isBastion bool) (*InstanceStatus, error) {
@@ -266,7 +258,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 		}
 	}()
 
-	nets, err := s.constructNetworks(openStackCluster, instanceSpec)
+	ports, err := s.constructPorts(openStackCluster, instanceSpec)
 	if err != nil {
 		return nil, err
 	}
@@ -281,16 +273,14 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 		return nil, fmt.Errorf("error getting security groups: %v", err)
 	}
 
-	for i, network := range nets {
-		if network.ID == "" {
-			return nil, fmt.Errorf("no network was found or provided. Please check your machine configuration and try again")
-		}
+	for i := range ports {
+		portOpts := &ports[i]
 		iTags := []string{}
 		if len(instanceSpec.Tags) > 0 {
 			iTags = instanceSpec.Tags
 		}
-		portName := getPortName(instanceSpec.Name, network.PortOpts, i)
-		port, err := networkingService.GetOrCreatePort(eventObject, clusterName, portName, network, securityGroups, iTags)
+		portName := getPortName(instanceSpec.Name, portOpts, i)
+		port, err := networkingService.GetOrCreatePort(eventObject, clusterName, portName, portOpts, securityGroups, iTags)
 		if err != nil {
 			return nil, err
 		}
