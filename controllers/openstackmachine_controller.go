@@ -497,8 +497,8 @@ func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *
 			managedSecurityGroup = openStackCluster.Status.WorkerSecurityGroup.ID
 		}
 
-		instanceSpec.SecurityGroups = append(instanceSpec.SecurityGroups, infrav1.SecurityGroupParam{
-			UUID: managedSecurityGroup,
+		instanceSpec.SecurityGroups = append(instanceSpec.SecurityGroups, infrav1.SecurityGroupFilter{
+			ID: managedSecurityGroup,
 		})
 	}
 

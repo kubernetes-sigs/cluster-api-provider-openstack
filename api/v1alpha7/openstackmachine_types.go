@@ -65,7 +65,7 @@ type OpenStackMachineSpec struct {
 	FloatingIP string `json:"floatingIP,omitempty"`
 
 	// The names of the security groups to assign to the instance
-	SecurityGroups []SecurityGroupParam `json:"securityGroups,omitempty"`
+	SecurityGroups []SecurityGroupFilter `json:"securityGroups,omitempty"`
 
 	// Whether the server instance is created on a trunk port or not.
 	Trunk bool `json:"trunk,omitempty"`

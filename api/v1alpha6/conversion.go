@@ -92,6 +92,7 @@ func restorev1alpha6MachineSpec(previous *OpenStackMachineSpec, dst *OpenStackMa
 	// it isn't worth implementing this as the fields are immutable.
 	dst.Networks = previous.Networks
 	dst.Ports = previous.Ports
+	dst.SecurityGroups = previous.SecurityGroups
 }
 
 func restorev1alpha6ClusterStatus(previous *OpenStackClusterStatus, dst *OpenStackClusterStatus) {
@@ -380,7 +381,7 @@ func Convert_v1alpha6_PortOpts_To_v1alpha7_PortOpts(in *PortOpts, out *infrav1.P
 	}
 	// SecurityGroups are removed in v1alpha7 without replacement. SecurityGroupFilters can be used instead.
 	for i := range in.SecurityGroups {
-		out.SecurityGroupFilters = append(out.SecurityGroupFilters, infrav1.SecurityGroupParam{UUID: in.SecurityGroups[i]})
+		out.SecurityGroupFilters = append(out.SecurityGroupFilters, infrav1.SecurityGroupFilter{ID: in.SecurityGroups[i]})
 	}
 	return nil
 }
@@ -450,5 +451,29 @@ func Convert_v1alpha7_NetworkStatus_To_v1alpha6_Network(in *infrav1.NetworkStatu
 	out.Name = in.Name
 	out.Tags = in.Tags
 
+	return nil
+}
+
+func Convert_v1alpha6_SecurityGroupParam_To_v1alpha7_SecurityGroupFilter(in *SecurityGroupParam, out *infrav1.SecurityGroupFilter, _ conversion.Scope) error {
+	// SecurityGroupParam is replaced by its contained SecurityGroupFilter in v1alpha7
+	*out = infrav1.SecurityGroupFilter(in.Filter)
+	if in.UUID != "" {
+		out.ID = in.UUID
+	}
+	if in.Name != "" {
+		out.Name = in.Name
+	}
+	return nil
+}
+
+func Convert_v1alpha7_SecurityGroupFilter_To_v1alpha6_SecurityGroupParam(in *infrav1.SecurityGroupFilter, out *SecurityGroupParam, _ conversion.Scope) error {
+	// SecurityGroupParam is replaced by its contained SecurityGroupFilter in v1alpha7
+	out.Filter = SecurityGroupFilter(*in)
+	if in.ID != "" {
+		out.UUID = in.ID
+	}
+	if in.Name != "" {
+		out.Name = in.Name
+	}
 	return nil
 }

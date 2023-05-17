@@ -51,7 +51,7 @@ func Test_GetOrCreatePort(t *testing.T) {
 	// Other arbitrary variables passed in to the tests
 	instanceSecurityGroups := []string{"instance-secgroup"}
 	securityGroupUUIDs := []string{portSecurityGroupID}
-	portSecurityGroupFilters := []infrav1.SecurityGroupParam{{UUID: portSecurityGroupID, Name: "port-secgroup"}}
+	portSecurityGroupFilters := []infrav1.SecurityGroupFilter{{ID: portSecurityGroupID, Name: "port-secgroup"}}
 	valueSpecs := map[string]string{"key": "value"}
 
 	pointerToTrue := pointerTo(true)

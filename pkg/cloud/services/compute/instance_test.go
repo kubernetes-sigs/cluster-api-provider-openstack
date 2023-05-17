@@ -268,7 +268,7 @@ func getDefaultInstanceSpec() *InstanceSpec {
 		FailureDomain:  *pointer.String(failureDomain),
 		ServerGroupID:  serverGroupUUID,
 		Tags:           []string{"test-tag"},
-		SecurityGroups: []infrav1.SecurityGroupParam{{UUID: workerSecurityGroupUUID}},
+		SecurityGroups: []infrav1.SecurityGroupFilter{{ID: workerSecurityGroupUUID}},
 	}
 }
 

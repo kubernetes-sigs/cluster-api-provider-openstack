@@ -46,7 +46,7 @@ type InstanceSpec struct {
 	ServerGroupID  string
 	Trunk          bool
 	Tags           []string
-	SecurityGroups []infrav1.SecurityGroupParam
+	SecurityGroups []infrav1.SecurityGroupFilter
 	Ports          []infrav1.PortOpts
 }
 
