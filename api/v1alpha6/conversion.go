@@ -126,6 +126,22 @@ func restorev1alpha7ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *inf
 	}
 }
 
+func restorev1alpha6ClusterSpec(previous *OpenStackClusterSpec, dst *OpenStackClusterSpec) {
+	for i := range previous.ExternalRouterIPs {
+		dstIP := &dst.ExternalRouterIPs[i]
+		previousIP := &previous.ExternalRouterIPs[i]
+
+		// Subnet.Filter.ID was overwritten in up-conversion by Subnet.UUID
+		dstIP.Subnet.Filter.ID = previousIP.Subnet.Filter.ID
+
+		// If Subnet.UUID was previously unset, we overwrote it with the value of Subnet.Filter.ID
+		// Don't unset it again if it doesn't have the previous value of Subnet.Filter.ID, because that means it was genuinely changed
+		if previousIP.Subnet.UUID == "" && dstIP.Subnet.UUID == previousIP.Subnet.Filter.ID {
+			dstIP.Subnet.UUID = ""
+		}
+	}
+}
+
 var _ ctrlconversion.Convertible = &OpenStackCluster{}
 
 func (r *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {
@@ -156,6 +172,7 @@ func (r *OpenStackCluster) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 		if prevBastion != nil {
 			restorev1alpha6MachineSpec(&prevBastion.Instance, &r.Spec.Bastion.Instance)
 		}
+		restorev1alpha6ClusterSpec(&previous.Spec, &r.Spec)
 		restorev1alpha6ClusterStatus(&previous.Status, &r.Status)
 	}
 
@@ -206,6 +223,7 @@ func (r *OpenStackClusterTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) error 
 		if prevBastion != nil {
 			restorev1alpha6MachineSpec(&prevBastion.Instance, &r.Spec.Template.Spec.Bastion.Instance)
 		}
+		restorev1alpha6ClusterSpec(&previous.Spec.Template.Spec, &r.Spec.Template.Spec)
 	}
 
 	return nil
@@ -475,5 +493,20 @@ func Convert_v1alpha7_SecurityGroupFilter_To_v1alpha6_SecurityGroupParam(in *inf
 	if in.Name != "" {
 		out.Name = in.Name
 	}
+	return nil
+}
+
+func Convert_v1alpha6_SubnetParam_To_v1alpha7_SubnetFilter(in *SubnetParam, out *infrav1.SubnetFilter, _ conversion.Scope) error {
+	*out = infrav1.SubnetFilter(in.Filter)
+	if in.UUID != "" {
+		out.ID = in.UUID
+	}
+	return nil
+}
+
+func Convert_v1alpha7_SubnetFilter_To_v1alpha6_SubnetParam(in *infrav1.SubnetFilter, out *SubnetParam, _ conversion.Scope) error {
+	out.Filter = SubnetFilter(*in)
+	out.UUID = in.ID
+
 	return nil
 }

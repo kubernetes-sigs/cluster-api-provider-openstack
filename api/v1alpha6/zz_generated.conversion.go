@@ -344,16 +344,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*SubnetParam)(nil), (*v1alpha7.SubnetParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha6_SubnetParam_To_v1alpha7_SubnetParam(a.(*SubnetParam), b.(*v1alpha7.SubnetParam), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha7.SubnetParam)(nil), (*SubnetParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha7_SubnetParam_To_v1alpha6_SubnetParam(a.(*v1alpha7.SubnetParam), b.(*SubnetParam), scope)
-	}); err != nil {
-		return err
-	}
 	if err := s.AddGeneratedConversionFunc((*ValueSpec)(nil), (*v1alpha7.ValueSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha6_ValueSpec_To_v1alpha7_ValueSpec(a.(*ValueSpec), b.(*v1alpha7.ValueSpec), scope)
 	}); err != nil {
@@ -404,6 +394,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddConversionFunc((*SubnetParam)(nil), (*v1alpha7.SubnetFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_SubnetParam_To_v1alpha7_SubnetFilter(a.(*SubnetParam), b.(*v1alpha7.SubnetFilter), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddConversionFunc((*v1alpha7.BastionStatus)(nil), (*Instance)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha7_BastionStatus_To_v1alpha6_Instance(a.(*v1alpha7.BastionStatus), b.(*Instance), scope)
 	}); err != nil {
@@ -426,6 +421,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddConversionFunc((*v1alpha7.SecurityGroupFilter)(nil), (*SecurityGroupParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha7_SecurityGroupFilter_To_v1alpha6_SecurityGroupParam(a.(*v1alpha7.SecurityGroupFilter), b.(*SecurityGroupParam), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1alpha7.SubnetFilter)(nil), (*SubnetParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha7_SubnetFilter_To_v1alpha6_SubnetParam(a.(*v1alpha7.SubnetFilter), b.(*SubnetParam), scope)
 	}); err != nil {
 		return err
 	}
@@ -510,7 +510,7 @@ func Convert_v1alpha7_Bastion_To_v1alpha6_Bastion(in *v1alpha7.Bastion, out *Bas
 
 func autoConvert_v1alpha6_ExternalRouterIPParam_To_v1alpha7_ExternalRouterIPParam(in *ExternalRouterIPParam, out *v1alpha7.ExternalRouterIPParam, s conversion.Scope) error {
 	out.FixedIP = in.FixedIP
-	if err := Convert_v1alpha6_SubnetParam_To_v1alpha7_SubnetParam(&in.Subnet, &out.Subnet, s); err != nil {
+	if err := Convert_v1alpha6_SubnetParam_To_v1alpha7_SubnetFilter(&in.Subnet, &out.Subnet, s); err != nil {
 		return err
 	}
 	return nil
@@ -523,7 +523,7 @@ func Convert_v1alpha6_ExternalRouterIPParam_To_v1alpha7_ExternalRouterIPParam(in
 
 func autoConvert_v1alpha7_ExternalRouterIPParam_To_v1alpha6_ExternalRouterIPParam(in *v1alpha7.ExternalRouterIPParam, out *ExternalRouterIPParam, s conversion.Scope) error {
 	out.FixedIP = in.FixedIP
-	if err := Convert_v1alpha7_SubnetParam_To_v1alpha6_SubnetParam(&in.Subnet, &out.Subnet, s); err != nil {
+	if err := Convert_v1alpha7_SubnetFilter_To_v1alpha6_SubnetParam(&in.Subnet, &out.Subnet, s); err != nil {
 		return err
 	}
 	return nil
@@ -730,7 +730,17 @@ func autoConvert_v1alpha6_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(
 		return err
 	}
 	out.DNSNameservers = *(*[]string)(unsafe.Pointer(&in.DNSNameservers))
-	out.ExternalRouterIPs = *(*[]v1alpha7.ExternalRouterIPParam)(unsafe.Pointer(&in.ExternalRouterIPs))
+	if in.ExternalRouterIPs != nil {
+		in, out := &in.ExternalRouterIPs, &out.ExternalRouterIPs
+		*out = make([]v1alpha7.ExternalRouterIPParam, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha6_ExternalRouterIPParam_To_v1alpha7_ExternalRouterIPParam(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.ExternalRouterIPs = nil
+	}
 	out.ExternalNetworkID = in.ExternalNetworkID
 	if err := Convert_v1alpha6_APIServerLoadBalancer_To_v1alpha7_APIServerLoadBalancer(&in.APIServerLoadBalancer, &out.APIServerLoadBalancer, s); err != nil {
 		return err
@@ -775,7 +785,17 @@ func autoConvert_v1alpha7_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(
 		return err
 	}
 	out.DNSNameservers = *(*[]string)(unsafe.Pointer(&in.DNSNameservers))
-	out.ExternalRouterIPs = *(*[]ExternalRouterIPParam)(unsafe.Pointer(&in.ExternalRouterIPs))
+	if in.ExternalRouterIPs != nil {
+		in, out := &in.ExternalRouterIPs, &out.ExternalRouterIPs
+		*out = make([]ExternalRouterIPParam, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha7_ExternalRouterIPParam_To_v1alpha6_ExternalRouterIPParam(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.ExternalRouterIPs = nil
+	}
 	out.ExternalNetworkID = in.ExternalNetworkID
 	if err := Convert_v1alpha7_APIServerLoadBalancer_To_v1alpha6_APIServerLoadBalancer(&in.APIServerLoadBalancer, &out.APIServerLoadBalancer, s); err != nil {
 		return err
@@ -1625,32 +1645,6 @@ func autoConvert_v1alpha7_SubnetFilter_To_v1alpha6_SubnetFilter(in *v1alpha7.Sub
 // Convert_v1alpha7_SubnetFilter_To_v1alpha6_SubnetFilter is an autogenerated conversion function.
 func Convert_v1alpha7_SubnetFilter_To_v1alpha6_SubnetFilter(in *v1alpha7.SubnetFilter, out *SubnetFilter, s conversion.Scope) error {
 	return autoConvert_v1alpha7_SubnetFilter_To_v1alpha6_SubnetFilter(in, out, s)
-}
-
-func autoConvert_v1alpha6_SubnetParam_To_v1alpha7_SubnetParam(in *SubnetParam, out *v1alpha7.SubnetParam, s conversion.Scope) error {
-	out.UUID = in.UUID
-	if err := Convert_v1alpha6_SubnetFilter_To_v1alpha7_SubnetFilter(&in.Filter, &out.Filter, s); err != nil {
-		return err
-	}
-	return nil
-}
-
-// Convert_v1alpha6_SubnetParam_To_v1alpha7_SubnetParam is an autogenerated conversion function.
-func Convert_v1alpha6_SubnetParam_To_v1alpha7_SubnetParam(in *SubnetParam, out *v1alpha7.SubnetParam, s conversion.Scope) error {
-	return autoConvert_v1alpha6_SubnetParam_To_v1alpha7_SubnetParam(in, out, s)
-}
-
-func autoConvert_v1alpha7_SubnetParam_To_v1alpha6_SubnetParam(in *v1alpha7.SubnetParam, out *SubnetParam, s conversion.Scope) error {
-	out.UUID = in.UUID
-	if err := Convert_v1alpha7_SubnetFilter_To_v1alpha6_SubnetFilter(&in.Filter, &out.Filter, s); err != nil {
-		return err
-	}
-	return nil
-}
-
-// Convert_v1alpha7_SubnetParam_To_v1alpha6_SubnetParam is an autogenerated conversion function.
-func Convert_v1alpha7_SubnetParam_To_v1alpha6_SubnetParam(in *v1alpha7.SubnetParam, out *SubnetParam, s conversion.Scope) error {
-	return autoConvert_v1alpha7_SubnetParam_To_v1alpha6_SubnetParam(in, out, s)
 }
 
 func autoConvert_v1alpha6_ValueSpec_To_v1alpha7_ValueSpec(in *ValueSpec, out *v1alpha7.ValueSpec, s conversion.Scope) error {
