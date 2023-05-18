@@ -65,7 +65,7 @@ func Test_GetOrCreateFloatingIP(t *testing.T) {
 		},
 	}
 	openStackCluster := &infrav1.OpenStackCluster{Status: infrav1.OpenStackClusterStatus{
-		ExternalNetwork: &infrav1.Network{
+		ExternalNetwork: &infrav1.NetworkStatus{
 			ID: "",
 		},
 	}}

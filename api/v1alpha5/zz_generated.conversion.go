@@ -374,6 +374,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddConversionFunc((*Network)(nil), (*v1alpha7.NetworkStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha5_Network_To_v1alpha7_NetworkStatus(a.(*Network), b.(*v1alpha7.NetworkStatus), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddConversionFunc((*OpenStackMachineSpec)(nil), (*v1alpha7.OpenStackMachineSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha5_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(a.(*OpenStackMachineSpec), b.(*v1alpha7.OpenStackMachineSpec), scope)
 	}); err != nil {
@@ -396,6 +401,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddConversionFunc((*v1alpha7.LoadBalancer)(nil), (*LoadBalancer)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha7_LoadBalancer_To_v1alpha5_LoadBalancer(a.(*v1alpha7.LoadBalancer), b.(*LoadBalancer), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1alpha7.NetworkStatus)(nil), (*Network)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha7_NetworkStatus_To_v1alpha5_Network(a.(*v1alpha7.NetworkStatus), b.(*Network), scope)
 	}); err != nil {
 		return err
 	}
@@ -800,8 +810,8 @@ func autoConvert_v1alpha5_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterSta
 	}
 	if in.ExternalNetwork != nil {
 		in, out := &in.ExternalNetwork, &out.ExternalNetwork
-		*out = new(v1alpha7.Network)
-		if err := Convert_v1alpha5_Network_To_v1alpha7_Network(*in, *out, s); err != nil {
+		*out = new(v1alpha7.NetworkStatus)
+		if err := Convert_v1alpha5_Network_To_v1alpha7_NetworkStatus(*in, *out, s); err != nil {
 			return err
 		}
 	} else {
@@ -844,7 +854,7 @@ func autoConvert_v1alpha7_OpenStackClusterStatus_To_v1alpha5_OpenStackClusterSta
 	if in.ExternalNetwork != nil {
 		in, out := &in.ExternalNetwork, &out.ExternalNetwork
 		*out = new(Network)
-		if err := Convert_v1alpha7_Network_To_v1alpha5_Network(*in, *out, s); err != nil {
+		if err := Convert_v1alpha7_NetworkStatus_To_v1alpha5_Network(*in, *out, s); err != nil {
 			return err
 		}
 	} else {

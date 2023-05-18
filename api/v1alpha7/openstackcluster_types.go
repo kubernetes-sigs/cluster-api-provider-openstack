@@ -159,8 +159,8 @@ type OpenStackClusterStatus struct {
 	// It includes Subnets and Router.
 	Network *Network `json:"network,omitempty"`
 
-	// External Network contains information about the created OpenStack external network.
-	ExternalNetwork *Network `json:"externalNetwork,omitempty"`
+	// externalNetwork contains information about the external network used for default ingress and egress traffic.
+	ExternalNetwork *NetworkStatus `json:"externalNetwork,omitempty"`
 
 	// FailureDomains represent OpenStack availability zones
 	FailureDomains clusterv1.FailureDomains `json:"failureDomains,omitempty"`

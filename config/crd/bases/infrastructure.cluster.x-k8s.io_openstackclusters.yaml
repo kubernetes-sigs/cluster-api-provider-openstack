@@ -4469,78 +4469,13 @@ spec:
                 - rules
                 type: object
               externalNetwork:
-                description: External Network contains information about the created
-                  OpenStack external network.
+                description: externalNetwork contains information about the external
+                  network used for default ingress and egress traffic.
                 properties:
-                  apiServerLoadBalancer:
-                    description: Be careful when using APIServerLoadBalancer, because
-                      this field is optional and therefore not set in all cases
-                    properties:
-                      allowedCIDRs:
-                        items:
-                          type: string
-                        type: array
-                      id:
-                        type: string
-                      internalIP:
-                        type: string
-                      ip:
-                        type: string
-                      name:
-                        type: string
-                      tags:
-                        items:
-                          type: string
-                        type: array
-                    required:
-                    - id
-                    - internalIP
-                    - ip
-                    - name
-                    type: object
                   id:
                     type: string
                   name:
                     type: string
-                  router:
-                    description: Router represents basic information about the associated
-                      OpenStack Neutron Router.
-                    properties:
-                      id:
-                        type: string
-                      ips:
-                        items:
-                          type: string
-                        type: array
-                      name:
-                        type: string
-                      tags:
-                        items:
-                          type: string
-                        type: array
-                    required:
-                    - id
-                    - name
-                    type: object
-                  subnet:
-                    description: Subnet represents basic information about the associated
-                      OpenStack Neutron Subnet.
-                    properties:
-                      cidr:
-                        type: string
-                      id:
-                        type: string
-                      name:
-                        type: string
-                      tags:
-                        items:
-                          type: string
-                        type: array
-                    required:
-                    - cidr
-                    - id
-                    - name
-                    type: object
                   tags:
                     items:
                       type: string
