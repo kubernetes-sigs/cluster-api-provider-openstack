@@ -418,6 +418,14 @@ func TestPortOptsConvertTo(t *testing.T) {
 		{ID: uuids[0]},
 		{ID: uuids[1]},
 	}
+	legacyPortProfile := map[string]string{
+		"capabilities": "[\"switchdev\"]",
+		"trusted":      "true",
+	}
+	convertedPortProfile := infrav1.BindingProfile{
+		OVSHWOffload: true,
+		TrustedVF:    true,
+	}
 
 	tests := []struct {
 		name string
@@ -430,19 +438,23 @@ func TestPortOptsConvertTo(t *testing.T) {
 			// The list of security group UUIDs should be translated to proper SecurityGroupParams
 			name: "SecurityGroups to SecurityGroupFilters",
 			spokePortOpts: []PortOpts{{
+				Profile:        legacyPortProfile,
 				SecurityGroups: uuids,
 			}},
 			hubPortOpts: []infrav1.PortOpts{{
+				Profile:              convertedPortProfile,
 				SecurityGroupFilters: securityGroupsUuids,
 			}},
 		},
 		{
 			name: "Merge SecurityGroups and SecurityGroupFilters",
 			spokePortOpts: []PortOpts{{
+				Profile:              legacyPortProfile,
 				SecurityGroups:       uuids,
 				SecurityGroupFilters: securityGroupFilter,
 			}},
 			hubPortOpts: []infrav1.PortOpts{{
+				Profile:              convertedPortProfile,
 				SecurityGroupFilters: securityGroupFilterMerged,
 			}},
 		},

@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha5
 
 import (
+	"strings"
+
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
 	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
@@ -25,6 +27,8 @@ import (
 )
 
 var _ ctrlconversion.Convertible = &OpenStackCluster{}
+
+const trueString = "true"
 
 func (r *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackCluster)
@@ -193,7 +197,19 @@ func Convert_v1alpha7_LoadBalancer_To_v1alpha5_LoadBalancer(in *infrav1.LoadBala
 
 func Convert_v1alpha7_PortOpts_To_v1alpha5_PortOpts(in *infrav1.PortOpts, out *PortOpts, s conversion.Scope) error {
 	// value specs and propagate uplink status have been added in v1alpha7 but have no equivalent in v1alpha5
-	return autoConvert_v1alpha7_PortOpts_To_v1alpha5_PortOpts(in, out, s)
+	err := autoConvert_v1alpha7_PortOpts_To_v1alpha5_PortOpts(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	out.Profile = make(map[string]string)
+	if in.Profile.OVSHWOffload {
+		(out.Profile)["capabilities"] = "[\"switchdev\"]"
+	}
+	if in.Profile.TrustedVF {
+		(out.Profile)["trusted"] = trueString
+	}
+	return nil
 }
 
 func Convert_Slice_v1alpha5_Network_To_Slice_v1alpha7_Network(in *[]Network, out *[]infrav1.Network, s conversion.Scope) error {
@@ -227,7 +243,19 @@ func Convert_v1alpha7_APIServerLoadBalancer_To_v1alpha5_APIServerLoadBalancer(in
 
 func Convert_v1alpha5_PortOpts_To_v1alpha7_PortOpts(in *PortOpts, out *infrav1.PortOpts, s conversion.Scope) error {
 	// SecurityGroups have been removed in v1alpha7.
-	return autoConvert_v1alpha5_PortOpts_To_v1alpha7_PortOpts(in, out, s)
+	err := autoConvert_v1alpha5_PortOpts_To_v1alpha7_PortOpts(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	// Profile is now a struct in v1alpha7.
+	if strings.Contains(in.Profile["capabilities"], "switchdev") {
+		out.Profile.OVSHWOffload = true
+	}
+	if in.Profile["trusted"] == trueString {
+		out.Profile.TrustedVF = true
+	}
+	return nil
 }
 
 func Convert_v1alpha5_Instance_To_v1alpha7_BastionStatus(in *Instance, out *infrav1.BastionStatus, _ conversion.Scope) error {
@@ -331,5 +359,29 @@ func Convert_v1alpha7_SubnetFilter_To_v1alpha5_SubnetParam(in *infrav1.SubnetFil
 	out.Filter = SubnetFilter(*in)
 	out.UUID = in.ID
 
+	return nil
+}
+
+func Convert_Map_string_To_Interface_To_v1alpha7_BindingProfile(in map[string]string, out *infrav1.BindingProfile, _ conversion.Scope) error {
+	for k, v := range in {
+		if k == "capabilities" {
+			if strings.Contains(v, "switchdev") {
+				out.OVSHWOffload = true
+			}
+		}
+		if k == "trusted" && v == trueString {
+			out.TrustedVF = true
+		}
+	}
+	return nil
+}
+
+func Convert_v1alpha7_BindingProfile_To_Map_string_To_Interface(in *infrav1.BindingProfile, out map[string]string, _ conversion.Scope) error {
+	if in.OVSHWOffload {
+		(out)["capabilities"] = "[\"switchdev\"]"
+	}
+	if in.TrustedVF {
+		(out)["trusted"] = trueString
+	}
 	return nil
 }

@@ -1375,7 +1375,7 @@ func autoConvert_v1alpha5_PortOpts_To_v1alpha7_PortOpts(in *PortOpts, out *v1alp
 	out.Trunk = (*bool)(unsafe.Pointer(in.Trunk))
 	out.HostID = in.HostID
 	out.VNICType = in.VNICType
-	out.Profile = *(*map[string]string)(unsafe.Pointer(&in.Profile))
+	// WARNING: in.Profile requires manual conversion: inconvertible types (map[string]string vs sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.BindingProfile)
 	out.DisablePortSecurity = (*bool)(unsafe.Pointer(in.DisablePortSecurity))
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	return nil
@@ -1404,7 +1404,7 @@ func autoConvert_v1alpha7_PortOpts_To_v1alpha5_PortOpts(in *v1alpha7.PortOpts, o
 	out.Trunk = (*bool)(unsafe.Pointer(in.Trunk))
 	out.HostID = in.HostID
 	out.VNICType = in.VNICType
-	out.Profile = *(*map[string]string)(unsafe.Pointer(&in.Profile))
+	// WARNING: in.Profile requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.BindingProfile vs map[string]string)
 	out.DisablePortSecurity = (*bool)(unsafe.Pointer(in.DisablePortSecurity))
 	// WARNING: in.PropagateUplinkStatus requires manual conversion: does not exist in peer-type
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))

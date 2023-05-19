@@ -217,11 +217,18 @@ func (s *Service) getSubnetIDForFixedIP(subnet *infrav1.SubnetFilter, networkID 
 	}
 }
 
-func getPortProfile(p map[string]string) map[string]interface{} {
+func getPortProfile(p infrav1.BindingProfile) map[string]interface{} {
 	portProfile := make(map[string]interface{})
-	for k, v := range p {
-		portProfile[k] = v
+
+	// if p.OVSHWOffload is true, we need to set the profile
+	// to enable hardware offload for the port
+	if p.OVSHWOffload {
+		portProfile["capabilities"] = []string{"switchdev"}
 	}
+	if p.TrustedVF {
+		portProfile["trusted"] = true
+	}
+
 	// We need return nil if there is no profiles
 	// to have backward compatible defaults.
 	// To set profiles, your tenant needs this permission:

@@ -3928,12 +3928,21 @@ spec:
                                   type: string
                               type: object
                             profile:
-                              additionalProperties:
-                                type: string
-                              description: A dictionary that enables the application
-                                running on the specified host to pass and receive
-                                virtual network interface (VIF) port-specific information
-                                to the plug-in.
+                              description: Profile is a set of key-value pairs that
+                                are used for binding details. We intentionally don't
+                                expose this as a map[string]string because we only
+                                want to enable the users to set the values of the
+                                keys that are known to work in OpenStack Networking
+                                API. See https://docs.openstack.org/api-ref/network/v2/index.html?expanded=create-port-detail#create-port
+                              properties:
+                                ovsHWOffload:
+                                  description: OVSHWOffload enables or disables the
+                                    OVS hardware offload feature.
+                                  type: boolean
+                                trustedVF:
+                                  description: TrustedVF enables or disables the “trusted
+                                    mode” for the VF.
+                                  type: boolean
                               type: object
                             projectId:
                               type: string
