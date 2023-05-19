@@ -29,15 +29,6 @@ type ExternalRouterIPParam struct {
 	Subnet SubnetParam `json:"subnet"`
 }
 
-type SecurityGroupParam struct {
-	// Security Group UID
-	UUID string `json:"uuid,omitempty"`
-	// Security Group name
-	Name string `json:"name,omitempty"`
-	// Filters used to query security groups in openstack
-	Filter SecurityGroupFilter `json:"filter,omitempty"`
-}
-
 type SecurityGroupFilter struct {
 	ID          string `json:"id,omitempty"`
 	Name        string `json:"name,omitempty"`
@@ -116,8 +107,8 @@ type PortOpts struct {
 	TenantID  string    `json:"tenantId,omitempty"`
 	ProjectID string    `json:"projectId,omitempty"`
 	// The names, uuids, filters or any combination these of the security groups to assign to the instance
-	SecurityGroupFilters []SecurityGroupParam `json:"securityGroupFilters,omitempty"`
-	AllowedAddressPairs  []AddressPair        `json:"allowedAddressPairs,omitempty"`
+	SecurityGroupFilters []SecurityGroupFilter `json:"securityGroupFilters,omitempty"`
+	AllowedAddressPairs  []AddressPair         `json:"allowedAddressPairs,omitempty"`
 	// Enables and disables trunk at port level. If not provided, openStackMachine.Spec.Trunk is inherited.
 	Trunk *bool `json:"trunk,omitempty"`
 

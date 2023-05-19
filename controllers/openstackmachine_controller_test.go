@@ -144,7 +144,7 @@ func Test_machineToInstanceSpec(t *testing.T) {
 			openStackMachine: getDefaultOpenStackMachine,
 			wantInstanceSpec: func() *compute.InstanceSpec {
 				i := getDefaultInstanceSpec()
-				i.SecurityGroups = []infrav1.SecurityGroupParam{{UUID: controlPlaneSecurityGroupUUID}}
+				i.SecurityGroups = []infrav1.SecurityGroupFilter{{ID: controlPlaneSecurityGroupUUID}}
 				return i
 			},
 		},
@@ -159,7 +159,7 @@ func Test_machineToInstanceSpec(t *testing.T) {
 			openStackMachine: getDefaultOpenStackMachine,
 			wantInstanceSpec: func() *compute.InstanceSpec {
 				i := getDefaultInstanceSpec()
-				i.SecurityGroups = []infrav1.SecurityGroupParam{{UUID: workerSecurityGroupUUID}}
+				i.SecurityGroups = []infrav1.SecurityGroupFilter{{ID: workerSecurityGroupUUID}}
 				return i
 			},
 		},
@@ -173,14 +173,14 @@ func Test_machineToInstanceSpec(t *testing.T) {
 			machine: getDefaultMachine,
 			openStackMachine: func() *infrav1.OpenStackMachine {
 				m := getDefaultOpenStackMachine()
-				m.Spec.SecurityGroups = []infrav1.SecurityGroupParam{{UUID: extraSecurityGroupUUID}}
+				m.Spec.SecurityGroups = []infrav1.SecurityGroupFilter{{ID: extraSecurityGroupUUID}}
 				return m
 			},
 			wantInstanceSpec: func() *compute.InstanceSpec {
 				i := getDefaultInstanceSpec()
-				i.SecurityGroups = []infrav1.SecurityGroupParam{
-					{UUID: extraSecurityGroupUUID},
-					{UUID: workerSecurityGroupUUID},
+				i.SecurityGroups = []infrav1.SecurityGroupFilter{
+					{ID: extraSecurityGroupUUID},
+					{ID: workerSecurityGroupUUID},
 				}
 				return i
 			},

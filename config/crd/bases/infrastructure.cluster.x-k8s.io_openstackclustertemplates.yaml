@@ -1785,42 +1785,31 @@ spec:
                                         assign to the instance
                                       items:
                                         properties:
-                                          filter:
-                                            description: Filters used to query security
-                                              groups in openstack
-                                            properties:
-                                              description:
-                                                type: string
-                                              id:
-                                                type: string
-                                              limit:
-                                                type: integer
-                                              marker:
-                                                type: string
-                                              name:
-                                                type: string
-                                              notTags:
-                                                type: string
-                                              notTagsAny:
-                                                type: string
-                                              projectId:
-                                                type: string
-                                              sortDir:
-                                                type: string
-                                              sortKey:
-                                                type: string
-                                              tags:
-                                                type: string
-                                              tagsAny:
-                                                type: string
-                                              tenantId:
-                                                type: string
-                                            type: object
-                                          name:
-                                            description: Security Group name
+                                          description:
                                             type: string
-                                          uuid:
-                                            description: Security Group UID
+                                          id:
+                                            type: string
+                                          limit:
+                                            type: integer
+                                          marker:
+                                            type: string
+                                          name:
+                                            type: string
+                                          notTags:
+                                            type: string
+                                          notTagsAny:
+                                            type: string
+                                          projectId:
+                                            type: string
+                                          sortDir:
+                                            type: string
+                                          sortKey:
+                                            type: string
+                                          tags:
+                                            type: string
+                                          tagsAny:
+                                            type: string
+                                          tenantId:
                                             type: string
                                         type: object
                                       type: array
@@ -1898,42 +1887,31 @@ spec:
                                   to the instance
                                 items:
                                   properties:
-                                    filter:
-                                      description: Filters used to query security
-                                        groups in openstack
-                                      properties:
-                                        description:
-                                          type: string
-                                        id:
-                                          type: string
-                                        limit:
-                                          type: integer
-                                        marker:
-                                          type: string
-                                        name:
-                                          type: string
-                                        notTags:
-                                          type: string
-                                        notTagsAny:
-                                          type: string
-                                        projectId:
-                                          type: string
-                                        sortDir:
-                                          type: string
-                                        sortKey:
-                                          type: string
-                                        tags:
-                                          type: string
-                                        tagsAny:
-                                          type: string
-                                        tenantId:
-                                          type: string
-                                      type: object
-                                    name:
-                                      description: Security Group name
+                                    description:
                                       type: string
-                                    uuid:
-                                      description: Security Group UID
+                                    id:
+                                      type: string
+                                    limit:
+                                      type: integer
+                                    marker:
+                                      type: string
+                                    name:
+                                      type: string
+                                    notTags:
+                                      type: string
+                                    notTagsAny:
+                                      type: string
+                                    projectId:
+                                      type: string
+                                    sortDir:
+                                      type: string
+                                    sortKey:
+                                      type: string
+                                    tags:
+                                      type: string
+                                    tagsAny:
+                                      type: string
+                                    tenantId:
                                       type: string
                                   type: object
                                 type: array

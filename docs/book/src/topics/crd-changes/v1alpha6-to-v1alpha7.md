@@ -5,9 +5,12 @@
 - [v1alpha6 compared to v1alpha7](#v1alpha6-compared-to-v1alpha7)
   - [Migration](#migration)
   - [API Changes](#api-changes)
-    - [`OpenStackCluster`](#openstackcluster)
     - [`OpenStackMachine`](#openstackmachine)
+      - [⚠️ Removal of Networks](#-removal-of-networks)
       - [Removal of Subnet](#removal-of-subnet)
+      - [Change to securityGroups](#change-to-securitygroups)
+      - [Change to ports.securityGroupFilters](#change-to-portssecuritygroupfilters)
+      - [Removal of Port SecurityGroups](#removal-of-port-securitygroups)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -112,6 +115,43 @@ to set the `accessIPv4` field on Nova servers. This feature was not widely
 used, difficult to use, and could not be extended to support IPv6. It is
 removed without replacement.
 
+#### Change to securityGroups
+
+`securityGroups` has been simplified by the removal of a separate filter parameter. It was previously:
+```yaml
+securityGroups:
+  uuid: ...
+  name: ...
+  filter:
+    description: ...
+    tags: ...
+    ...
+```
+It becomes:
+```yaml
+securityGroups:
+  id: ...
+  name: ...
+  description: ...
+  tags: ...
+  ...
+```
+
+Note that in this change, the `uuid` field has become `id`. So:
+```yaml
+securityGroups:
+- uuid: 4ea83db6-2760-41a9-b25a-e625a1161ed0
+```
+becomes:
+```yaml
+securityGroups:
+- id: 4ea83db6-2760-41a9-b25a-e625a1161ed0
+```
+
+#### Change to ports.securityGroupFilters
+
+The same change is made to `securityGroupFilters` in `ports` as is [made to `securityGroups` in the machine spec](#change-to-securitygroups).
+
 #### Removal of Port SecurityGroups
 
 The Port field of the OpenStackMachine spec previously contained both `securityGroups` and `securityGroupFilters`.
@@ -128,7 +168,7 @@ securityGroups:
 - 4a131d3e-9939-4a6b-adea-788a2e89fcd8
 # securityGroupFilters are available in both v1alpha6 and v1alpha7
 securityGroupFilters:
-- uuid: 60ed83f1-8886-41c6-a1c7-fcfbdf3f04c2
-- uuid: 0ddd14d9-5c33-4734-b7d0-ac4fdf35c2d9
-- uuid: 4a131d3e-9939-4a6b-adea-788a2e89fcd8
+- id: 60ed83f1-8886-41c6-a1c7-fcfbdf3f04c2
+- id: 0ddd14d9-5c33-4734-b7d0-ac4fdf35c2d9
+- id: 4a131d3e-9939-4a6b-adea-788a2e89fcd8
 ```

@@ -272,3 +272,27 @@ func Convert_v1alpha7_NetworkStatus_To_v1alpha5_Network(in *infrav1.NetworkStatu
 
 	return nil
 }
+
+func Convert_v1alpha5_SecurityGroupParam_To_v1alpha7_SecurityGroupFilter(in *SecurityGroupParam, out *infrav1.SecurityGroupFilter, _ conversion.Scope) error {
+	// SecurityGroupParam is replaced by its contained SecurityGroupFilter in v1alpha7
+	*out = infrav1.SecurityGroupFilter(in.Filter)
+	if in.UUID != "" {
+		out.ID = in.UUID
+	}
+	if in.Name != "" {
+		out.Name = in.Name
+	}
+	return nil
+}
+
+func Convert_v1alpha7_SecurityGroupFilter_To_v1alpha5_SecurityGroupParam(in *infrav1.SecurityGroupFilter, out *SecurityGroupParam, _ conversion.Scope) error {
+	// SecurityGroupParam is replaced by its contained SecurityGroupFilter in v1alpha7
+	out.Filter = SecurityGroupFilter(*in)
+	if in.ID != "" {
+		out.UUID = in.ID
+	}
+	if in.Name != "" {
+		out.Name = in.Name
+	}
+	return nil
+}
