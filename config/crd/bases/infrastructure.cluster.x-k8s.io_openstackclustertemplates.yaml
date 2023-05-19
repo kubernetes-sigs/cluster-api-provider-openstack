@@ -2022,41 +2022,31 @@ spec:
                               description: The subnet in which the FixedIP is used
                                 for the Gateway of this router
                               properties:
-                                filter:
-                                  description: Filters for optional subnet query
-                                  properties:
-                                    cidr:
-                                      type: string
-                                    description:
-                                      type: string
-                                    gateway_ip:
-                                      type: string
-                                    id:
-                                      type: string
-                                    ipVersion:
-                                      type: integer
-                                    ipv6AddressMode:
-                                      type: string
-                                    ipv6RaMode:
-                                      type: string
-                                    name:
-                                      type: string
-                                    notTags:
-                                      type: string
-                                    notTagsAny:
-                                      type: string
-                                    projectId:
-                                      type: string
-                                    tags:
-                                      type: string
-                                    tagsAny:
-                                      type: string
-                                  type: object
-                                uuid:
-                                  description: Optional UUID of the subnet. If specified
-                                    this will not be validated prior to server creation.
-                                    If specified, the enclosing `NetworkParam` must
-                                    also be specified by UUID.
+                                cidr:
+                                  type: string
+                                description:
+                                  type: string
+                                gateway_ip:
+                                  type: string
+                                id:
+                                  type: string
+                                ipVersion:
+                                  type: integer
+                                ipv6AddressMode:
+                                  type: string
+                                ipv6RaMode:
+                                  type: string
+                                name:
+                                  type: string
+                                notTags:
+                                  type: string
+                                notTagsAny:
+                                  type: string
+                                projectId:
+                                  type: string
+                                tags:
+                                  type: string
+                                tagsAny:
                                   type: string
                               type: object
                           required:

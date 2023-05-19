@@ -26,7 +26,7 @@ type ExternalRouterIPParam struct {
 	// The FixedIP in the corresponding subnet
 	FixedIP string `json:"fixedIP,omitempty"`
 	// The subnet in which the FixedIP is used for the Gateway of this router
-	Subnet SubnetParam `json:"subnet"`
+	Subnet SubnetFilter `json:"subnet"`
 }
 
 type SecurityGroupFilter struct {
@@ -54,16 +54,6 @@ type NetworkFilter struct {
 	TagsAny     string `json:"tagsAny,omitempty"`
 	NotTags     string `json:"notTags,omitempty"`
 	NotTagsAny  string `json:"notTagsAny,omitempty"`
-}
-
-type SubnetParam struct {
-	// Optional UUID of the subnet.
-	// If specified this will not be validated prior to server creation.
-	// If specified, the enclosing `NetworkParam` must also be specified by UUID.
-	UUID string `json:"uuid,omitempty"`
-
-	// Filters for optional subnet query
-	Filter SubnetFilter `json:"filter,omitempty"`
 }
 
 type SubnetFilter struct {

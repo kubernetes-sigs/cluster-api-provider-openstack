@@ -296,3 +296,18 @@ func Convert_v1alpha7_SecurityGroupFilter_To_v1alpha5_SecurityGroupParam(in *inf
 	}
 	return nil
 }
+
+func Convert_v1alpha5_SubnetParam_To_v1alpha7_SubnetFilter(in *SubnetParam, out *infrav1.SubnetFilter, _ conversion.Scope) error {
+	*out = infrav1.SubnetFilter(in.Filter)
+	if in.UUID != "" {
+		out.ID = in.UUID
+	}
+	return nil
+}
+
+func Convert_v1alpha7_SubnetFilter_To_v1alpha5_SubnetParam(in *infrav1.SubnetFilter, out *SubnetParam, _ conversion.Scope) error {
+	out.Filter = SubnetFilter(*in)
+	out.UUID = in.ID
+
+	return nil
+}

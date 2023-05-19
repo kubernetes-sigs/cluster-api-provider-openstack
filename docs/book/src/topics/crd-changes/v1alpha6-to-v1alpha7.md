@@ -11,6 +11,8 @@
       - [Change to securityGroups](#change-to-securitygroups)
       - [Change to ports.securityGroupFilters](#change-to-portssecuritygroupfilters)
       - [Removal of Port SecurityGroups](#removal-of-port-securitygroups)
+    - [`OpenStackCluster`](#openstackcluster)
+      - [Change to externalRouterIPs.subnet](#change-to-externalrouteripssubnet)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -171,4 +173,27 @@ securityGroupFilters:
 - id: 60ed83f1-8886-41c6-a1c7-fcfbdf3f04c2
 - id: 0ddd14d9-5c33-4734-b7d0-ac4fdf35c2d9
 - id: 4a131d3e-9939-4a6b-adea-788a2e89fcd8
+```
+
+### `OpenStackCluster`
+
+#### Change to externalRouterIPs.subnet
+
+The `uuid` field is renamed to `id`, and all fields from `filter` are moved directly into the `subnet`.
+
+```yaml
+externalRouterIPs:
+- subnet:
+    uuid: f23bf9c1-8c66-4383-b474-ada1d1960149
+- subnet:
+    filter:
+      name: my-subnet
+```
+becomes:
+```yaml
+externalRouterIPs:
+- subnet:
+    id: f23bf9c1-8c66-4383-b474-ada1d1960149
+- subnet:
+    name: my-subnet
 ```
