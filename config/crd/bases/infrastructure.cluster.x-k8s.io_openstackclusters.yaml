@@ -49,10 +49,14 @@ spec:
       jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
+    deprecated: true
+    deprecationWarning: The v1alpha5 version of OpenStackCluster has been deprecated
+      and will be removed in a future release of the API. Please upgrade.
     name: v1alpha5
     schema:
       openAPIV3Schema:
-        description: OpenStackCluster is the Schema for the openstackclusters API.
+        description: "OpenStackCluster is the Schema for the openstackclusters API.
+          \n Deprecated: This type will be removed in one of the next releases."
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation

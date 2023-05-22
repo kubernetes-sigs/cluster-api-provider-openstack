@@ -19,11 +19,14 @@ spec:
     singular: openstackmachinetemplate
   scope: Namespaced
   versions:
-  - name: v1alpha5
+  - deprecated: true
+    deprecationWarning: The v1alpha5 version of OpenStackMachineTemplate has been
+      deprecated and will be removed in a future release of the API. Please upgrade.
+    name: v1alpha5
     schema:
       openAPIV3Schema:
-        description: OpenStackMachineTemplate is the Schema for the openstackmachinetemplates
-          API.
+        description: "OpenStackMachineTemplate is the Schema for the openstackmachinetemplates
+          API. \n Deprecated: This type will be removed in one of the next releases."
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
