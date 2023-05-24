@@ -273,9 +273,27 @@ func Convert_v1alpha7_NetworkStatus_To_v1alpha5_Network(in *infrav1.NetworkStatu
 	return nil
 }
 
-func Convert_v1alpha5_SecurityGroupParam_To_v1alpha7_SecurityGroupFilter(in *SecurityGroupParam, out *infrav1.SecurityGroupFilter, _ conversion.Scope) error {
+func Convert_v1alpha5_SecurityGroupFilter_To_v1alpha7_SecurityGroupFilter(in *SecurityGroupFilter, out *infrav1.SecurityGroupFilter, s conversion.Scope) error {
+	err := autoConvert_v1alpha5_SecurityGroupFilter_To_v1alpha7_SecurityGroupFilter(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	// TenantID has been removed in v1alpha7. Write it to ProjectID if ProjectID is not already set.
+	if out.ProjectID == "" {
+		out.ProjectID = in.TenantID
+	}
+
+	return nil
+}
+
+func Convert_v1alpha5_SecurityGroupParam_To_v1alpha7_SecurityGroupFilter(in *SecurityGroupParam, out *infrav1.SecurityGroupFilter, s conversion.Scope) error {
 	// SecurityGroupParam is replaced by its contained SecurityGroupFilter in v1alpha7
-	*out = infrav1.SecurityGroupFilter(in.Filter)
+	err := Convert_v1alpha5_SecurityGroupFilter_To_v1alpha7_SecurityGroupFilter(&in.Filter, out, s)
+	if err != nil {
+		return err
+	}
+
 	if in.UUID != "" {
 		out.ID = in.UUID
 	}
@@ -285,9 +303,13 @@ func Convert_v1alpha5_SecurityGroupParam_To_v1alpha7_SecurityGroupFilter(in *Sec
 	return nil
 }
 
-func Convert_v1alpha7_SecurityGroupFilter_To_v1alpha5_SecurityGroupParam(in *infrav1.SecurityGroupFilter, out *SecurityGroupParam, _ conversion.Scope) error {
+func Convert_v1alpha7_SecurityGroupFilter_To_v1alpha5_SecurityGroupParam(in *infrav1.SecurityGroupFilter, out *SecurityGroupParam, s conversion.Scope) error {
 	// SecurityGroupParam is replaced by its contained SecurityGroupFilter in v1alpha7
-	out.Filter = SecurityGroupFilter(*in)
+	err := Convert_v1alpha7_SecurityGroupFilter_To_v1alpha5_SecurityGroupFilter(in, &out.Filter, s)
+	if err != nil {
+		return err
+	}
+
 	if in.ID != "" {
 		out.UUID = in.ID
 	}

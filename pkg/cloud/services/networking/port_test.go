@@ -43,7 +43,6 @@ func Test_GetOrCreatePort(t *testing.T) {
 	portID1 := "50214c48-c09e-4a54-914f-97b40fd22802"
 	portID2 := "4c096384-f0a5-466d-9534-06a7ed281a79"
 	hostID := "825c1b11-3dca-4bfe-a2d8-a3cc1964c8d5"
-	tenantID := "62b523a7-f838-45fd-904f-d2db2bb58e04"
 	projectID := "063171b1-0595-4882-98cd-3ee79676ff87"
 	trunkID := "eb7541fa-5e2a-4cca-b2c3-dfa409b917ce"
 	portSecurityGroupID := "f51d1206-fc5a-4f7a-a5c0-2e03e44e4dc0"
@@ -172,7 +171,6 @@ func Test_GetOrCreatePort(t *testing.T) {
 					},
 					IPAddress: "192.168.0.50",
 				}, {IPAddress: "192.168.1.50"}},
-				TenantID:             tenantID,
 				ProjectID:            projectID,
 				SecurityGroupFilters: portSecurityGroupFilters,
 				AllowedAddressPairs: []infrav1.AddressPair{{
@@ -202,7 +200,6 @@ func Test_GetOrCreatePort(t *testing.T) {
 							IPAddress: "192.168.1.50",
 						},
 					},
-					TenantID:       tenantID,
 					ProjectID:      projectID,
 					SecurityGroups: &securityGroupUUIDs,
 					AllowedAddressPairs: []ports.AddressPair{{

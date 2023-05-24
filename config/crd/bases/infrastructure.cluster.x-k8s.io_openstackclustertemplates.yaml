@@ -1792,10 +1792,6 @@ spec:
                                             type: string
                                           id:
                                             type: string
-                                          limit:
-                                            type: integer
-                                          marker:
-                                            type: string
                                           name:
                                             type: string
                                           notTags:
@@ -1804,15 +1800,9 @@ spec:
                                             type: string
                                           projectId:
                                             type: string
-                                          sortDir:
-                                            type: string
-                                          sortKey:
-                                            type: string
                                           tags:
                                             type: string
                                           tagsAny:
-                                            type: string
-                                          tenantId:
                                             type: string
                                         type: object
                                       type: array
@@ -1825,8 +1815,6 @@ spec:
                                         type: string
                                       type: array
                                       x-kubernetes-list-type: set
-                                    tenantId:
-                                      type: string
                                     trunk:
                                       description: Enables and disables trunk at port
                                         level. If not provided, openStackMachine.Spec.Trunk
@@ -1894,10 +1882,6 @@ spec:
                                       type: string
                                     id:
                                       type: string
-                                    limit:
-                                      type: integer
-                                    marker:
-                                      type: string
                                     name:
                                       type: string
                                     notTags:
@@ -1906,15 +1890,9 @@ spec:
                                       type: string
                                     projectId:
                                       type: string
-                                    sortDir:
-                                      type: string
-                                    sortKey:
-                                      type: string
                                     tags:
                                       type: string
                                     tagsAny:
-                                      type: string
-                                    tenantId:
                                       type: string
                                   type: object
                                 type: array

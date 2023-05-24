@@ -137,7 +137,6 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 		Description:           description,
 		AdminStateUp:          portOpts.AdminStateUp,
 		MACAddress:            portOpts.MACAddress,
-		TenantID:              portOpts.TenantID,
 		ProjectID:             portOpts.ProjectID,
 		SecurityGroups:        securityGroupsPtr,
 		AllowedAddressPairs:   addressPairs,

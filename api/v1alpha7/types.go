@@ -33,12 +33,7 @@ type SecurityGroupFilter struct {
 	ID          string `json:"id,omitempty"`
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
-	TenantID    string `json:"tenantId,omitempty"`
 	ProjectID   string `json:"projectId,omitempty"`
-	Limit       int    `json:"limit,omitempty"`
-	Marker      string `json:"marker,omitempty"`
-	SortKey     string `json:"sortKey,omitempty"`
-	SortDir     string `json:"sortDir,omitempty"`
 	Tags        string `json:"tags,omitempty"`
 	TagsAny     string `json:"tagsAny,omitempty"`
 	NotTags     string `json:"notTags,omitempty"`
@@ -94,7 +89,6 @@ type PortOpts struct {
 	MACAddress   string `json:"macAddress,omitempty"`
 	// Specify pairs of subnet and/or IP address. These should be subnets of the network with the given NetworkID.
 	FixedIPs  []FixedIP `json:"fixedIPs,omitempty"`
-	TenantID  string    `json:"tenantId,omitempty"`
 	ProjectID string    `json:"projectId,omitempty"`
 	// The names, uuids, filters or any combination these of the security groups to assign to the instance
 	SecurityGroupFilters []SecurityGroupFilter `json:"securityGroupFilters,omitempty"`

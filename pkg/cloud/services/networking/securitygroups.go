@@ -177,7 +177,7 @@ func (s *Service) GetSecurityGroups(securityGroupParams []infrav1.SecurityGroupF
 			continue
 		}
 
-		listOpts := groups.ListOpts(sg)
+		listOpts := sg.ToListOpt()
 		if listOpts.ProjectID == "" {
 			listOpts.ProjectID = s.scope.ProjectID()
 		}
