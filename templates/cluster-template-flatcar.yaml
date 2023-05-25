@@ -39,9 +39,11 @@ spec:
         nodeRegistration:
           kubeletExtraArgs:
             cloud-provider: external
+            provider-id: openstack:///$${COREOS_OPENSTACK_INSTANCE_UUID}
           name: $${COREOS_OPENSTACK_HOSTNAME}
       preKubeadmCommands:
       - export COREOS_OPENSTACK_HOSTNAME=$${COREOS_OPENSTACK_HOSTNAME%.*}
+      - export COREOS_OPENSTACK_INSTANCE_UUID=$${COREOS_OPENSTACK_INSTANCE_UUID%.*}
       - envsubst < /etc/kubeadm.yml > /etc/kubeadm.yml.tmp
       - mv /etc/kubeadm.yml.tmp /etc/kubeadm.yml
 ---
@@ -125,14 +127,17 @@ spec:
       nodeRegistration:
         kubeletExtraArgs:
           cloud-provider: external
+          provider-id: openstack:///$${COREOS_OPENSTACK_INSTANCE_UUID}
         name: $${COREOS_OPENSTACK_HOSTNAME}
     joinConfiguration:
       nodeRegistration:
         kubeletExtraArgs:
           cloud-provider: external
+          provider-id: openstack:///$${COREOS_OPENSTACK_INSTANCE_UUID}
         name: $${COREOS_OPENSTACK_HOSTNAME}
     preKubeadmCommands:
     - export COREOS_OPENSTACK_HOSTNAME=$${COREOS_OPENSTACK_HOSTNAME%.*}
+    - export COREOS_OPENSTACK_INSTANCE_ID=$${COREOS_OPENSTACK_INSTANCE_ID%.*}
     - envsubst < /etc/kubeadm.yml > /etc/kubeadm.yml.tmp
     - mv /etc/kubeadm.yml.tmp /etc/kubeadm.yml
   machineTemplate:
