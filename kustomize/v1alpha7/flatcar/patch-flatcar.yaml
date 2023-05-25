@@ -18,15 +18,12 @@ spec:
       nodeRegistration:
         name: $${COREOS_OPENSTACK_HOSTNAME}
         kubeletExtraArgs:
-          provider-id: null
+          provider-id: openstack:///$${COREOS_OPENSTACK_INSTANCE_UUID}
     initConfiguration:
       nodeRegistration:
         name: $${COREOS_OPENSTACK_HOSTNAME}
         kubeletExtraArgs:
-          # Fixme(lentzi90): This is here just to override the value set in the default
-          # kustomization. It will be replaced with a value that works for flatcar in
-          # https://github.com/kubernetes-sigs/cluster-api-provider-openstack/pull/1564
-          provider-id: null
+          provider-id: openstack:///$${COREOS_OPENSTACK_INSTANCE_UUID}
     format: ignition
     ignition:
       containerLinuxConfig:
@@ -48,6 +45,7 @@ spec:
                   EnvironmentFile=/run/metadata/flatcar
     preKubeadmCommands:
       - export COREOS_OPENSTACK_HOSTNAME=$${COREOS_OPENSTACK_HOSTNAME%.*}
+      - export COREOS_OPENSTACK_INSTANCE_UUID=$${COREOS_OPENSTACK_INSTANCE_UUID}
       - envsubst < /etc/kubeadm.yml > /etc/kubeadm.yml.tmp
       - mv /etc/kubeadm.yml.tmp /etc/kubeadm.yml
 ---
@@ -62,12 +60,10 @@ spec:
         nodeRegistration:
           name: $${COREOS_OPENSTACK_HOSTNAME}
           kubeletExtraArgs:
-            # Fixme(lentzi90): This is here just to override the value set in the default
-            # kustomization. It will be replaced with a value that works for flatcar in
-            # https://github.com/kubernetes-sigs/cluster-api-provider-openstack/pull/1564
-            provider-id: null
+            provider-id: openstack:///$${COREOS_OPENSTACK_INSTANCE_UUID}
       preKubeadmCommands:
         - export COREOS_OPENSTACK_HOSTNAME=$${COREOS_OPENSTACK_HOSTNAME%.*}
+        - export COREOS_OPENSTACK_INSTANCE_UUID=$${COREOS_OPENSTACK_INSTANCE_UUID}
         - envsubst < /etc/kubeadm.yml > /etc/kubeadm.yml.tmp
         - mv /etc/kubeadm.yml.tmp /etc/kubeadm.yml
       format: ignition
