@@ -6,11 +6,13 @@
   - [Migration](#migration)
   - [API Changes](#api-changes)
     - [`OpenStackMachine`](#openstackmachine)
-      - [⚠️ Removal of Networks](#-removal-of-networks)
-      - [Removal of Subnet](#removal-of-subnet)
+      - [⚠️ Removal of networks](#-removal-of-networks)
+      - [Removal of subnet](#removal-of-subnet)
       - [Change to securityGroups](#change-to-securitygroups)
-      - [Change to ports.securityGroupFilters](#change-to-portssecuritygroupfilters)
-      - [Removal of Port SecurityGroups](#removal-of-port-securitygroups)
+      - [Changes to ports](#changes-to-ports)
+        - [Change to securityGroupFilters](#change-to-securitygroupfilters)
+        - [Removal of securityGroups](#removal-of-securitygroups)
+        - [Removal of tenantId](#removal-of-tenantid)
     - [`OpenStackCluster`](#openstackcluster)
       - [Change to externalRouterIPs.subnet](#change-to-externalrouteripssubnet)
 
@@ -30,7 +32,7 @@ This only documents backwards incompatible changes. Fields that were added to v1
 
 ### `OpenStackMachine`
 
-#### ⚠️ Removal of Networks
+#### ⚠️ Removal of networks
 
 This is a major breaking change between v1alpha6 and v1alpha7 which in certain circumstances **may require manual action before upgrading to v0.8**.
 
@@ -110,7 +112,7 @@ This will be safely converted to use ports when upgrading to version 0.8.
 
 To reiterate: it is not sufficient to leave your templates at v1alpha6 in this case, as it will still result in failure to reconcile in the machine controller. This change must be made prior to updating to version 0.8.
 
-#### Removal of Subnet
+#### Removal of subnet
 
 The OpenStackMachine spec previously contained a `subnet` field which could used
 to set the `accessIPv4` field on Nova servers. This feature was not widely
@@ -150,11 +152,17 @@ securityGroups:
 - id: 4ea83db6-2760-41a9-b25a-e625a1161ed0
 ```
 
-#### Change to ports.securityGroupFilters
+The `limit`, `marker`, `sortKey`, `sortDir`, fields have been removed without replacement. They did not serve any purpose in this context.
+
+The `tenantId` parameter has been removed. Use `projectId` instead.
+
+#### Changes to ports
+
+##### Change to securityGroupFilters
 
 The same change is made to `securityGroupFilters` in `ports` as is [made to `securityGroups` in the machine spec](#change-to-securitygroups).
 
-#### Removal of Port SecurityGroups
+##### Removal of securityGroups
 
 The Port field of the OpenStackMachine spec previously contained both `securityGroups` and `securityGroupFilters`.
 As `securityGroups` can easily be replaced with `securityGroupFilters`, that can express the same and more, `securityGroups` has now been removed.
@@ -174,6 +182,10 @@ securityGroupFilters:
 - id: 0ddd14d9-5c33-4734-b7d0-ac4fdf35c2d9
 - id: 4a131d3e-9939-4a6b-adea-788a2e89fcd8
 ```
+
+##### Removal of tenantId
+
+Use projectId instead.
 
 ### `OpenStackCluster`
 
