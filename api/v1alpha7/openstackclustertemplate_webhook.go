@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 const openStackClusterTemplateImmutableMsg = "OpenStackClusterTemplate spec.template.spec field is immutable. Please create new resource instead."
@@ -51,22 +52,24 @@ func (r *OpenStackClusterTemplate) Default() {
 }
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type.
-func (r *OpenStackClusterTemplate) ValidateCreate() error {
+func (r *OpenStackClusterTemplate) ValidateCreate() (admission.Warnings, error) {
+	var warnings admission.Warnings
 	var allErrs field.ErrorList
 
 	if r.Spec.Template.Spec.IdentityRef != nil && r.Spec.Template.Spec.IdentityRef.Kind != defaultIdentityRefKind {
 		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "template", "spec", "identityRef", "kind"), "must be a Secret"))
 	}
 
-	return aggregateObjErrors(r.GroupVersionKind().GroupKind(), r.Name, allErrs)
+	return warnings, aggregateObjErrors(r.GroupVersionKind().GroupKind(), r.Name, allErrs)
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type.
-func (r *OpenStackClusterTemplate) ValidateUpdate(oldRaw runtime.Object) error {
+func (r *OpenStackClusterTemplate) ValidateUpdate(oldRaw runtime.Object) (admission.Warnings, error) {
+	var warnings admission.Warnings
 	var allErrs field.ErrorList
 	old, ok := oldRaw.(*OpenStackClusterTemplate)
 	if !ok {
-		return apierrors.NewBadRequest(fmt.Sprintf("expected an OpenStackClusterTemplate but got a %T", oldRaw))
+		return warnings, apierrors.NewBadRequest(fmt.Sprintf("expected an OpenStackClusterTemplate but got a %T", oldRaw))
 	}
 
 	if !reflect.DeepEqual(r.Spec.Template.Spec, old.Spec.Template.Spec) {
@@ -75,10 +78,11 @@ func (r *OpenStackClusterTemplate) ValidateUpdate(oldRaw runtime.Object) error {
 		)
 	}
 
-	return aggregateObjErrors(r.GroupVersionKind().GroupKind(), r.Name, allErrs)
+	return warnings, aggregateObjErrors(r.GroupVersionKind().GroupKind(), r.Name, allErrs)
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type.
-func (r *OpenStackClusterTemplate) ValidateDelete() error {
-	return nil
+func (r *OpenStackClusterTemplate) ValidateDelete() (admission.Warnings, error) {
+	var warnings admission.Warnings
+	return warnings, nil
 }

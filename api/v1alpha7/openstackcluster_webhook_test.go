@@ -237,7 +237,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.newTemplate.ValidateUpdate(tt.oldTemplate)
+			_, err := tt.newTemplate.ValidateUpdate(tt.oldTemplate)
 			if tt.wantErr {
 				g.Expect(err).To(HaveOccurred())
 			} else {
@@ -284,7 +284,7 @@ func TestOpenStackCluster_ValidateCreate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.template.ValidateCreate()
+			_, err := tt.template.ValidateCreate()
 			if tt.wantErr {
 				g.Expect(err).To(HaveOccurred())
 			} else {
