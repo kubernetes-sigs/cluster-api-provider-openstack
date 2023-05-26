@@ -18,9 +18,23 @@ package v1alpha7
 
 import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
+	securitygroups "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 )
+
+func (securityGroupFilter SecurityGroupFilter) ToListOpt() securitygroups.ListOpts {
+	return securitygroups.ListOpts{
+		ID:          securityGroupFilter.ID,
+		Name:        securityGroupFilter.Name,
+		Description: securityGroupFilter.Description,
+		ProjectID:   securityGroupFilter.ProjectID,
+		Tags:        securityGroupFilter.Tags,
+		TagsAny:     securityGroupFilter.TagsAny,
+		NotTags:     securityGroupFilter.NotTags,
+		NotTagsAny:  securityGroupFilter.NotTagsAny,
+	}
+}
 
 func (subnetFilter SubnetFilter) ToListOpt() subnets.ListOpts {
 	return subnets.ListOpts{
