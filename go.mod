@@ -21,11 +21,11 @@ require (
 	gopkg.in/ini.v1 v1.67.0
 	k8s.io/api v0.27.2
 	k8s.io/apiextensions-apiserver v0.27.2
-	k8s.io/apimachinery v0.27.2
+	k8s.io/apimachinery v0.28.0-alpha.0.0.20230524221503-b43878988803
 	k8s.io/client-go v0.27.2
 	k8s.io/component-base v0.27.2
-	k8s.io/klog/v2 v2.90.1
-	k8s.io/utils v0.0.0-20230313181309-38a27ef9d749
+	k8s.io/klog/v2 v2.100.1
+	k8s.io/utils v0.0.0-20230406110748-d93618cff8a2
 	sigs.k8s.io/cluster-api v1.4.0-beta.2.0.20230526073652-9b1ead8d49ee
 	sigs.k8s.io/cluster-api/test v1.4.0-beta.2.0.20230526073652-9b1ead8d49ee
 	sigs.k8s.io/controller-runtime v0.15.0
@@ -127,7 +127,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/apiserver v0.27.2 // indirect
 	k8s.io/cluster-bootstrap v0.27.2 // indirect
-	k8s.io/kube-openapi v0.0.0-20230501164219-8b0f38b5fd1f // indirect
+	k8s.io/kube-openapi v0.0.0-20230524182850-78281498afbb // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/kind v0.19.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
