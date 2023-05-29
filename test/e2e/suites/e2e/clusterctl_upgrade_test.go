@@ -28,11 +28,6 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
 )
 
-// Note: There isn't really anything fixing this to the v0.6 release. The test will
-// simply pick the latest release with the correct contract from the E2EConfig, as seen here
-// https://github.com/kubernetes-sigs/cluster-api/blob/3abb9089485f51d46054096c17ccb8b59f0f7331/test/e2e/clusterctl_upgrade.go#L265
-// When new minor releases are added (with the same contract) we will need to work on this
-// if we want to continue testing v0.6.
 var _ = Describe("When testing clusterctl upgrades (v0.6=>current) [clusterctl-upgrade]", func() {
 	ctx := context.TODO()
 	shared.SetEnvVar("USE_CI_ARTIFACTS", "true", false)
@@ -68,7 +63,7 @@ var _ = Describe("When testing clusterctl upgrades (v0.7=>current) [clusterctl-u
 			SkipCleanup:                     false,
 			InitWithBinary:                  "https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.3.1/clusterctl-{OS}-{ARCH}",
 			InitWithProvidersContract:       "v1beta1",
-			InitWithInfrastructureProviders: []string{"openstack:v0.7.1"},
+			InitWithInfrastructureProviders: []string{"openstack:v0.7.2"},
 			MgmtFlavor:                      shared.FlavorDefault,
 			WorkloadFlavor:                  shared.FlavorV1alpha6,
 		}

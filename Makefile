@@ -192,12 +192,12 @@ e2e-image: docker-build
 
 # Pull all the images references in test/e2e/data/e2e_conf.yaml
 test-e2e-image-prerequisites:
-	docker pull gcr.io/k8s-staging-cluster-api/cluster-api-controller:v1.3.0
-	docker pull gcr.io/k8s-staging-cluster-api/kubeadm-bootstrap-controller:v1.3.0
-	docker pull gcr.io/k8s-staging-cluster-api/kubeadm-control-plane-controller:v1.3.0
-	docker pull quay.io/jetstack/cert-manager-cainjector:v1.8.2
-	docker pull quay.io/jetstack/cert-manager-webhook:v1.8.2
-	docker pull quay.io/jetstack/cert-manager-controller:v1.8.2
+	docker pull gcr.io/k8s-staging-cluster-api/cluster-api-controller:v1.4.1
+	docker pull gcr.io/k8s-staging-cluster-api/kubeadm-bootstrap-controller:v1.4.1
+	docker pull gcr.io/k8s-staging-cluster-api/kubeadm-control-plane-controller:v1.4.1
+	docker pull quay.io/jetstack/cert-manager-cainjector:v1.12.1
+	docker pull quay.io/jetstack/cert-manager-webhook:v1.12.1
+	docker pull quay.io/jetstack/cert-manager-controller:v1.12.1
 
 CONFORMANCE_E2E_ARGS ?= -kubetest.config-file=$(KUBETEST_CONF_PATH)
 CONFORMANCE_E2E_ARGS += $(E2E_ARGS)
