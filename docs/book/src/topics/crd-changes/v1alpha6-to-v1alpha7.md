@@ -13,6 +13,7 @@
         - [Change to securityGroupFilters](#change-to-securitygroupfilters)
         - [Removal of securityGroups](#removal-of-securitygroups)
         - [Removal of tenantId](#removal-of-tenantid)
+        - [Change to profile](#change-to-profile)
     - [`OpenStackCluster`](#openstackcluster)
       - [Change to externalRouterIPs.subnet](#change-to-externalrouteripssubnet)
 
@@ -186,6 +187,31 @@ securityGroupFilters:
 ##### Removal of tenantId
 
 Use projectId instead.
+
+##### Change to profile
+
+We previously allowed to use the Neutron `binding:profile` via `ports.profile` but this API is not declared as stable from the [Neutron API description](https://docs.openstack.org/api-ref/network/v2/index.html?expanded=create-port-detail#create-port).
+
+Instead, we now explicitly support two use cases:
+* OVS Hardware Offload
+* Trusted Virtual Functions (VF)
+
+Note that the conversion is lossy, we only support the two use cases above so if anyone was relying on anything other than
+the supported behaviour, it will be lost.
+
+Here is an example on how to use `ports.profile` for enabling OVS Hardware Offload:
+
+```yaml
+profile:
+  OVSHWOffload: true
+```
+
+Here is an example on how to use `ports.bindingProfile` for enabling "trusted-mode" to the VF:
+
+```yaml
+profile:
+  TrustedVF: true
+```
 
 ### `OpenStackCluster`
 

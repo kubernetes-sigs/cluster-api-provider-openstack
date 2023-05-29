@@ -102,10 +102,11 @@ type PortOpts struct {
 	// The virtual network interface card (vNIC) type that is bound to the neutron port.
 	VNICType string `json:"vnicType,omitempty"`
 
-	// A dictionary that enables the application running on the specified
-	// host to pass and receive virtual network interface (VIF) port-specific
-	// information to the plug-in.
-	Profile map[string]string `json:"profile,omitempty"`
+	// Profile is a set of key-value pairs that are used for binding details.
+	// We intentionally don't expose this as a map[string]string because we only want to enable
+	// the users to set the values of the keys that are known to work in OpenStack Networking API.
+	// See https://docs.openstack.org/api-ref/network/v2/index.html?expanded=create-port-detail#create-port
+	Profile BindingProfile `json:"profile,omitempty"`
 
 	// DisablePortSecurity enables or disables the port security when set.
 	// When not set, it takes the value of the corresponding field at the network level.
@@ -126,6 +127,14 @@ type PortOpts struct {
 	// +listType=map
 	// +listMapKey=name
 	ValueSpecs []ValueSpec `json:"valueSpecs,omitempty"`
+}
+
+type BindingProfile struct {
+	// OVSHWOffload enables or disables the OVS hardware offload feature.
+	OVSHWOffload bool `json:"ovsHWOffload,omitempty"`
+
+	// TrustedVF enables or disables the “trusted mode” for the VF.
+	TrustedVF bool `json:"trustedVF,omitempty"`
 }
 
 type FixedIP struct {

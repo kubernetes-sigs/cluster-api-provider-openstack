@@ -177,9 +177,12 @@ func Test_GetOrCreatePort(t *testing.T) {
 					IPAddress:  "10.10.10.10",
 					MACAddress: "f1:f1:f1:f1:f1:f1",
 				}},
-				HostID:              hostID,
-				VNICType:            "direct",
-				Profile:             map[string]string{"interface_name": "eno1"},
+				HostID:   hostID,
+				VNICType: "direct",
+				Profile: infrav1.BindingProfile{
+					OVSHWOffload: true,
+					TrustedVF:    true,
+				},
 				DisablePortSecurity: pointerToFalse,
 				Tags:                []string{"my-port-tag"},
 			},
@@ -217,7 +220,10 @@ func Test_GetOrCreatePort(t *testing.T) {
 					CreateOptsBuilder: portsecurityCreateOptsExt,
 					HostID:            hostID,
 					VNICType:          "direct",
-					Profile:           map[string]interface{}{"interface_name": "eno1"},
+					Profile: map[string]interface{}{
+						"capabilities": []string{"switchdev"},
+						"trusted":      true,
+					},
 				}
 				m.
 					ListPort(ports.ListOpts{
