@@ -40,6 +40,7 @@ import (
 	orcv1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
@@ -380,7 +381,8 @@ func TestService_ReconcileInstance(t *testing.T) {
 	}
 
 	// Expected calls and custom match function for creating a server
-	expectCreateServer := func(g Gomega, computeRecorder *mock.MockComputeClientMockRecorder, expectedCreateOpts servers.CreateOptsBuilder, expectedSchedulerHintOpts servers.SchedulerHintOptsBuilder, wantError bool) {
+	expectCreateServer := func(g Gomega, computeRecorder *mock.MockComputeClientMockRecorder, expectedCreateOpts servers.CreateOptsBuilder, expectedSchedulerHintOpts servers.SchedulerHintOptsBuilder, computeClient clients.ComputeClient, wantError bool) {
+		computeRecorder.WithMicroversion(clients.NovaTagging).Return(computeClient, nil)
 		computeRecorder.CreateServer(gomock.Any(), gomock.Any()).DoAndReturn(func(createOpts servers.CreateOptsBuilder, schedulerHintOpts servers.SchedulerHintOptsBuilder) (*servers.Server, error) {
 			createOptsMap, _ := createOpts.ToServerCreateMap()
 			expectedCreateOptsMap, _ := expectedCreateOpts.ToServerCreateMap()
@@ -395,6 +397,10 @@ func TestService_ReconcileInstance(t *testing.T) {
 			}
 			return returnedServer("BUILDING"), nil
 		})
+	}
+
+	expectUnsupportedMicroversion := func(computeRecorder *mock.MockComputeClientMockRecorder) {
+		computeRecorder.WithMicroversion(clients.NovaTagging).Return(nil, errors.New("unsupported microversion"))
 	}
 
 	returnedVolume := func(uuid string, status string) *volumes.Volume {
@@ -415,6 +421,12 @@ func TestService_ReconcileInstance(t *testing.T) {
 		expectVolumePoll(volumeRecorder, uuid, []string{"available"})
 	}
 
+	expectVolumeRequiresMultiattachCheck := func(volumeRecorder *mock.MockVolumeClientMockRecorder, uuid string, requiresMultiattach bool) {
+		vol := returnedVolume(uuid, "available")
+		vol.Multiattach = requiresMultiattach
+		volumeRecorder.GetVolume(uuid).Return(returnedVolume(uuid, "available"), nil)
+	}
+
 	// *******************
 	// START OF TEST CASES
 	// *******************
@@ -429,14 +441,14 @@ func TestService_ReconcileInstance(t *testing.T) {
 	tests := []struct {
 		name            string
 		getInstanceSpec func() *InstanceSpec
-		expect          func(g Gomega, r *recorders)
+		expect          func(g Gomega, r *recorders, factory *scope.MockScopeFactory)
 		wantErr         bool
 	}{
 		{
 			name:            "Defaults",
 			getInstanceSpec: getDefaultInstanceSpec,
-			expect: func(g Gomega, r *recorders) {
-				expectCreateServer(g, r.compute, withSSHKey(getDefaultServerCreateOpts()), getDefaultSchedulerHintOpts(), false)
+			expect: func(g Gomega, r *recorders, factory *scope.MockScopeFactory) {
+				expectCreateServer(g, r.compute, withSSHKey(getDefaultServerCreateOpts()), getDefaultSchedulerHintOpts(), factory.ComputeClient, false)
 			},
 			wantErr: false,
 		},
@@ -449,7 +461,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				}
 				return s
 			},
-			expect: func(g Gomega, r *recorders) {
+			expect: func(g Gomega, r *recorders, factory *scope.MockScopeFactory) {
 				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
 				r.volume.CreateVolume(volumes.CreateOpts{
@@ -459,6 +471,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 					ImageID:     imageUUID,
 				}).Return(&volumes.Volume{ID: rootVolumeUUID}, nil)
 				expectVolumePollSuccess(r.volume, rootVolumeUUID)
+				expectVolumeRequiresMultiattachCheck(r.volume, rootVolumeUUID, false)
 
 				createOpts := getDefaultServerCreateOpts()
 				createOpts.ImageRef = ""
@@ -471,7 +484,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 						DestinationType:     "volume",
 					},
 				}
-				expectCreateServer(g, r.compute, withSSHKey(createOpts), getDefaultSchedulerHintOpts(), false)
+				expectCreateServer(g, r.compute, withSSHKey(createOpts), getDefaultSchedulerHintOpts(), factory.ComputeClient, false)
 
 				// Don't delete ports because the server is created: DeleteInstance will do it
 			},
@@ -491,7 +504,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				s.RootVolume.Type = "test-volume-type"
 				return s
 			},
-			expect: func(g Gomega, r *recorders) {
+			expect: func(g Gomega, r *recorders, factory *scope.MockScopeFactory) {
 				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
 				r.volume.CreateVolume(volumes.CreateOpts{
@@ -503,6 +516,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 					ImageID:          imageUUID,
 				}).Return(&volumes.Volume{ID: rootVolumeUUID}, nil)
 				expectVolumePollSuccess(r.volume, rootVolumeUUID)
+				expectVolumeRequiresMultiattachCheck(r.volume, rootVolumeUUID, false)
 
 				createOpts := getDefaultServerCreateOpts()
 				createOpts.ImageRef = ""
@@ -515,7 +529,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 						DestinationType:     "volume",
 					},
 				}
-				expectCreateServer(g, r.compute, withSSHKey(createOpts), getDefaultSchedulerHintOpts(), false)
+				expectCreateServer(g, r.compute, withSSHKey(createOpts), getDefaultSchedulerHintOpts(), factory.ComputeClient, false)
 
 				// Don't delete ports because the server is created: DeleteInstance will do it
 			},
@@ -534,7 +548,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				s.RootVolume.Type = "test-volume-type"
 				return s
 			},
-			expect: func(g Gomega, r *recorders) {
+			expect: func(g Gomega, r *recorders, factory *scope.MockScopeFactory) {
 				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
 				r.volume.CreateVolume(volumes.CreateOpts{
@@ -546,6 +560,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 					ImageID:          imageUUID,
 				}).Return(&volumes.Volume{ID: rootVolumeUUID}, nil)
 				expectVolumePollSuccess(r.volume, rootVolumeUUID)
+				expectVolumeRequiresMultiattachCheck(r.volume, rootVolumeUUID, false)
 
 				createOpts := getDefaultServerCreateOpts()
 				createOpts.ImageRef = ""
@@ -558,7 +573,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 						DestinationType:     "volume",
 					},
 				}
-				expectCreateServer(g, r.compute, withSSHKey(createOpts), getDefaultSchedulerHintOpts(), false)
+				expectCreateServer(g, r.compute, withSSHKey(createOpts), getDefaultSchedulerHintOpts(), factory.ComputeClient, false)
 
 				// Don't delete ports because the server is created: DeleteInstance will do it
 			},
@@ -573,7 +588,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				}
 				return s
 			},
-			expect: func(_ Gomega, r *recorders) {
+			expect: func(_ Gomega, r *recorders, _ *scope.MockScopeFactory) {
 				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
 				r.volume.CreateVolume(volumes.CreateOpts{
@@ -614,7 +629,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				}
 				return s
 			},
-			expect: func(g Gomega, r *recorders) {
+			expect: func(g Gomega, r *recorders, factory *scope.MockScopeFactory) {
 				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
 				r.volume.CreateVolume(volumes.CreateOpts{
@@ -634,6 +649,9 @@ func TestService_ReconcileInstance(t *testing.T) {
 					VolumeType:  "test-volume-type",
 				}).Return(&volumes.Volume{ID: additionalBlockDeviceVolumeUUID}, nil)
 				expectVolumePollSuccess(r.volume, additionalBlockDeviceVolumeUUID)
+
+				expectVolumeRequiresMultiattachCheck(r.volume, rootVolumeUUID, false)
+				expectVolumeRequiresMultiattachCheck(r.volume, additionalBlockDeviceVolumeUUID, false)
 
 				createOpts := getDefaultServerCreateOpts()
 				createOpts.ImageRef = ""
@@ -662,7 +680,77 @@ func TestService_ReconcileInstance(t *testing.T) {
 						Tag:                 "local-device",
 					},
 				}
-				expectCreateServer(g, r.compute, withSSHKey(createOpts), getDefaultSchedulerHintOpts(), false)
+				expectCreateServer(g, r.compute, withSSHKey(createOpts), getDefaultSchedulerHintOpts(), factory.ComputeClient, false)
+
+				// Don't delete ports because the server is created: DeleteInstance will do it
+			},
+			wantErr: false,
+		},
+		{
+			name: "Volume that is multiattach",
+			getInstanceSpec: func() *InstanceSpec {
+				s := getDefaultInstanceSpec()
+				s.RootVolume = &infrav1.RootVolume{
+					SizeGiB: 50,
+				}
+				s.AdditionalBlockDevices = []infrav1.AdditionalBlockDevice{
+					{
+						Name:    "data",
+						SizeGiB: 50,
+						Storage: infrav1.BlockDeviceStorage{
+							Type: "Volume",
+							Volume: &infrav1.BlockDeviceVolume{
+								Type: "multiattach-volume-type",
+							},
+						},
+					},
+				}
+				return s
+			},
+			expect: func(g Gomega, r *recorders, factory *scope.MockScopeFactory) {
+				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
+					Return([]volumes.Volume{}, nil)
+				r.volume.CreateVolume(volumes.CreateOpts{
+					Size:        50,
+					Description: fmt.Sprintf("Root volume for %s", openStackMachineName),
+					Name:        fmt.Sprintf("%s-root", openStackMachineName),
+					ImageID:     imageUUID,
+				}).Return(&volumes.Volume{ID: rootVolumeUUID}, nil)
+				expectVolumePollSuccess(r.volume, rootVolumeUUID)
+
+				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-data", openStackMachineName)}).
+					Return([]volumes.Volume{}, nil)
+				r.volume.CreateVolume(volumes.CreateOpts{
+					Size:        50,
+					Description: fmt.Sprintf("Additional block device for %s", openStackMachineName),
+					Name:        fmt.Sprintf("%s-data", openStackMachineName),
+					VolumeType:  "multiattach-volume-type",
+				}).Return(&volumes.Volume{ID: additionalBlockDeviceVolumeUUID, Multiattach: true}, nil)
+				expectVolumePollSuccess(r.volume, additionalBlockDeviceVolumeUUID)
+
+				expectVolumeRequiresMultiattachCheck(r.volume, rootVolumeUUID, false)
+				expectVolumeRequiresMultiattachCheck(r.volume, additionalBlockDeviceVolumeUUID, true)
+
+				createOpts := getDefaultServerCreateOpts()
+				createOpts.ImageRef = ""
+				createOpts.BlockDevice = []servers.BlockDevice{
+					{
+						SourceType:          "volume",
+						UUID:                rootVolumeUUID,
+						BootIndex:           0,
+						DeleteOnTermination: true,
+						DestinationType:     "volume",
+					},
+					{
+						SourceType:          "volume",
+						UUID:                additionalBlockDeviceVolumeUUID,
+						BootIndex:           -1,
+						DeleteOnTermination: true,
+						DestinationType:     "volume",
+						Tag:                 "data",
+					},
+				}
+				expectCreateServer(g, r.compute, withSSHKey(createOpts), getDefaultSchedulerHintOpts(), factory.ComputeClient, false)
 
 				// Don't delete ports because the server is created: DeleteInstance will do it
 			},
@@ -693,7 +781,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				}
 				return s
 			},
-			expect: func(g Gomega, r *recorders) {
+			expect: func(g Gomega, r *recorders, factory *scope.MockScopeFactory) {
 				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-etcd", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
 				r.volume.CreateVolume(volumes.CreateOpts{
@@ -703,6 +791,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 					VolumeType:  "test-volume-type",
 				}).Return(&volumes.Volume{ID: additionalBlockDeviceVolumeUUID}, nil)
 				expectVolumePollSuccess(r.volume, additionalBlockDeviceVolumeUUID)
+				expectVolumeRequiresMultiattachCheck(r.volume, additionalBlockDeviceVolumeUUID, false)
 
 				createOpts := getDefaultServerCreateOpts()
 				createOpts.BlockDevice = []servers.BlockDevice{
@@ -730,7 +819,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 						Tag:                 "data",
 					},
 				}
-				expectCreateServer(g, r.compute, withSSHKey(createOpts), getDefaultSchedulerHintOpts(), false)
+				expectCreateServer(g, r.compute, withSSHKey(createOpts), getDefaultSchedulerHintOpts(), factory.ComputeClient, false)
 
 				// Don't delete ports because the server is created: DeleteInstance will do it
 			},
@@ -758,7 +847,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				}
 				return s
 			},
-			expect: func(g Gomega, r *recorders) {
+			expect: func(g Gomega, r *recorders, factory *scope.MockScopeFactory) {
 				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-etcd", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
 				r.volume.CreateVolume(volumes.CreateOpts{
@@ -769,6 +858,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 					VolumeType:       "test-volume-type",
 				}).Return(&volumes.Volume{ID: additionalBlockDeviceVolumeUUID}, nil)
 				expectVolumePollSuccess(r.volume, additionalBlockDeviceVolumeUUID)
+				expectVolumeRequiresMultiattachCheck(r.volume, additionalBlockDeviceVolumeUUID, false)
 
 				createOpts := getDefaultServerCreateOpts()
 				createOpts.BlockDevice = []servers.BlockDevice{
@@ -788,7 +878,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 						Tag:                 "etcd",
 					},
 				}
-				expectCreateServer(g, r.compute, withSSHKey(createOpts), getDefaultSchedulerHintOpts(), false)
+				expectCreateServer(g, r.compute, withSSHKey(createOpts), getDefaultSchedulerHintOpts(), factory.ComputeClient, false)
 
 				// Don't delete ports because the server is created: DeleteInstance will do it
 			},
@@ -809,7 +899,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				}
 				return s
 			},
-			expect: func(_ Gomega, _ *recorders) {
+			expect: func(_ Gomega, _ *recorders, _ *scope.MockScopeFactory) {
 			},
 			wantErr: true,
 		},
@@ -828,7 +918,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				}
 				return s
 			},
-			expect: func(g Gomega, r *recorders) {
+			expect: func(g Gomega, r *recorders, factory *scope.MockScopeFactory) {
 				createOpts := getDefaultServerCreateOpts()
 				schedulerHintOpts := servers.SchedulerHintOpts{
 					Group: serverGroupUUID,
@@ -836,7 +926,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 						"custom_hint": true,
 					},
 				}
-				expectCreateServer(g, r.compute, withSSHKey(createOpts), schedulerHintOpts, false)
+				expectCreateServer(g, r.compute, withSSHKey(createOpts), schedulerHintOpts, factory.ComputeClient, false)
 			},
 			wantErr: false,
 		},
@@ -855,7 +945,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				}
 				return s
 			},
-			expect: func(g Gomega, r *recorders) {
+			expect: func(g Gomega, r *recorders, factory *scope.MockScopeFactory) {
 				createOpts := getDefaultServerCreateOpts()
 				schedulerHintOpts := servers.SchedulerHintOpts{
 					Group: serverGroupUUID,
@@ -863,7 +953,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 						"custom_hint": 1,
 					},
 				}
-				expectCreateServer(g, r.compute, withSSHKey(createOpts), schedulerHintOpts, false)
+				expectCreateServer(g, r.compute, withSSHKey(createOpts), schedulerHintOpts, factory.ComputeClient, false)
 			},
 			wantErr: false,
 		},
@@ -882,7 +972,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				}
 				return s
 			},
-			expect: func(g Gomega, r *recorders) {
+			expect: func(g Gomega, r *recorders, factory *scope.MockScopeFactory) {
 				createOpts := getDefaultServerCreateOpts()
 				schedulerHintOpts := servers.SchedulerHintOpts{
 					Group: serverGroupUUID,
@@ -890,9 +980,17 @@ func TestService_ReconcileInstance(t *testing.T) {
 						"custom_hint": "custom hint",
 					},
 				}
-				expectCreateServer(g, r.compute, withSSHKey(createOpts), schedulerHintOpts, false)
+				expectCreateServer(g, r.compute, withSSHKey(createOpts), schedulerHintOpts, factory.ComputeClient, false)
 			},
 			wantErr: false,
+		},
+		{
+			name:            "Unsupported Nova microversion",
+			getInstanceSpec: getDefaultInstanceSpec,
+			expect: func(_ Gomega, r *recorders, _ *scope.MockScopeFactory) {
+				expectUnsupportedMicroversion(r.compute)
+			},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -907,7 +1005,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 			networkRecorder := mockScopeFactory.NetworkClient.EXPECT()
 			volumeRecorder := mockScopeFactory.VolumeClient.EXPECT()
 
-			tt.expect(g, &recorders{computeRecorder, imageRecorder, networkRecorder, volumeRecorder})
+			tt.expect(g, &recorders{computeRecorder, imageRecorder, networkRecorder, volumeRecorder}, mockScopeFactory)
 
 			s, err := NewService(scope.NewWithLogger(mockScopeFactory, log))
 			if err != nil {
