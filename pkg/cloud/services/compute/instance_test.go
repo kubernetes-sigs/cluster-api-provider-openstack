@@ -18,6 +18,7 @@ package compute
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -385,7 +386,9 @@ func TestService_ReconcileInstance(t *testing.T) {
 	}
 
 	// Expected calls and custom match function for creating a server
-	expectCreateServer := func(computeRecorder *mock.MockComputeClientMockRecorder, expectedCreateOpts map[string]interface{}, wantError bool) {
+	expectCreateServer := func(computeRecorder *mock.MockComputeClientMockRecorder, expectedCreateOpts map[string]interface{}, wantError bool, computeClient clients.ComputeClient) {
+		computeRecorder.WithMicroversion(clients.NovaTagging).Return(computeClient, nil)
+
 		// This nonsense is because ConfigDrive is a bool pointer, so we
 		// can't assert its exact contents with gomock.
 		// Instead we call ToServerCreateMap() on it to obtain a
@@ -403,6 +406,10 @@ func TestService_ReconcileInstance(t *testing.T) {
 			}
 			return returnedServer("BUILDING"), nil
 		})
+	}
+
+	expectUnsupportedMicroversion := func(computeRecorder *mock.MockComputeClientMockRecorder) {
+		computeRecorder.WithMicroversion(clients.NovaTagging).Return(nil, errors.New("unsupported microversion"))
 	}
 
 	returnedVolume := func(uuid string, status string) *volumes.Volume {
@@ -437,28 +444,28 @@ func TestService_ReconcileInstance(t *testing.T) {
 	tests := []struct {
 		name            string
 		getInstanceSpec func() *InstanceSpec
-		expect          func(r *recorders)
+		expect          func(r *recorders, factory *scope.MockScopeFactory)
 		wantErr         bool
 	}{
 		{
 			name:            "Defaults",
 			getInstanceSpec: getDefaultInstanceSpec,
-			expect: func(r *recorders) {
+			expect: func(r *recorders, factory *scope.MockScopeFactory) {
 				expectUseExistingDefaultPort(r.network)
 				expectDefaultFlavor(r.compute)
 
-				expectCreateServer(r.compute, getDefaultServerMap(), false)
+				expectCreateServer(r.compute, getDefaultServerMap(), false, factory.ComputeClient)
 			},
 			wantErr: false,
 		},
 		{
 			name:            "Delete ports on server create error",
 			getInstanceSpec: getDefaultInstanceSpec,
-			expect: func(r *recorders) {
+			expect: func(r *recorders, factory *scope.MockScopeFactory) {
 				expectUseExistingDefaultPort(r.network)
 				expectDefaultFlavor(r.compute)
 
-				expectCreateServer(r.compute, getDefaultServerMap(), true)
+				expectCreateServer(r.compute, getDefaultServerMap(), true, factory.ComputeClient)
 
 				// Make sure we delete ports
 				expectCleanupDefaultPort(r.network)
@@ -475,7 +482,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				}
 				return s
 			},
-			expect: func(r *recorders) {
+			expect: func(r *recorders, factory *scope.MockScopeFactory) {
 				expectDefaultFlavor(r.compute)
 				expectUseExistingDefaultPort(r.network)
 
@@ -499,7 +506,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				}
 				return s
 			},
-			expect: func(r *recorders) {
+			expect: func(r *recorders, factory *scope.MockScopeFactory) {
 				expectUseExistingDefaultPort(r.network)
 				expectDefaultFlavor(r.compute)
 
@@ -527,7 +534,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 						"boot_index":            float64(0),
 					},
 				}
-				expectCreateServer(r.compute, createMap, false)
+				expectCreateServer(r.compute, createMap, false, factory.ComputeClient)
 
 				// Don't delete ports because the server is created: DeleteInstance will do it
 			},
@@ -544,7 +551,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				}
 				return s
 			},
-			expect: func(r *recorders) {
+			expect: func(r *recorders, factory *scope.MockScopeFactory) {
 				expectUseExistingDefaultPort(r.network)
 				expectDefaultFlavor(r.compute)
 
@@ -573,7 +580,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 						"boot_index":            float64(0),
 					},
 				}
-				expectCreateServer(r.compute, createMap, false)
+				expectCreateServer(r.compute, createMap, false, factory.ComputeClient)
 
 				// Don't delete ports because the server is created: DeleteInstance will do it
 			},
@@ -588,7 +595,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				}
 				return s
 			},
-			expect: func(r *recorders) {
+			expect: func(r *recorders, factory *scope.MockScopeFactory) {
 				expectUseExistingDefaultPort(r.network)
 				expectDefaultFlavor(r.compute)
 
@@ -636,7 +643,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				}
 				return s
 			},
-			expect: func(r *recorders) {
+			expect: func(r *recorders, factory *scope.MockScopeFactory) {
 				expectUseExistingDefaultPort(r.network)
 				expectDefaultFlavor(r.compute)
 
@@ -692,7 +699,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 						"tag":                   "local-device",
 					},
 				}
-				expectCreateServer(r.compute, createMap, false)
+				expectCreateServer(r.compute, createMap, false, factory.ComputeClient)
 
 				// Don't delete ports because the server is created: DeleteInstance will do it
 			},
@@ -723,7 +730,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				}
 				return s
 			},
-			expect: func(r *recorders) {
+			expect: func(r *recorders, factory *scope.MockScopeFactory) {
 				expectUseExistingDefaultPort(r.network)
 				expectDefaultFlavor(r.compute)
 
@@ -766,7 +773,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 						"tag":                   "data",
 					},
 				}
-				expectCreateServer(r.compute, createMap, false)
+				expectCreateServer(r.compute, createMap, false, factory.ComputeClient)
 
 				// Don't delete ports because the server is created: DeleteInstance will do it
 			},
@@ -791,7 +798,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				}
 				return s
 			},
-			expect: func(r *recorders) {
+			expect: func(r *recorders, factory *scope.MockScopeFactory) {
 				expectUseExistingDefaultPort(r.network)
 				expectDefaultFlavor(r.compute)
 
@@ -826,7 +833,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 						"tag":                   "etcd",
 					},
 				}
-				expectCreateServer(r.compute, createMap, false)
+				expectCreateServer(r.compute, createMap, false, factory.ComputeClient)
 
 				// Don't delete ports because the server is created: DeleteInstance will do it
 			},
@@ -847,7 +854,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				}
 				return s
 			},
-			expect: func(r *recorders) {
+			expect: func(r *recorders, factory *scope.MockScopeFactory) {
 				expectUseExistingDefaultPort(r.network)
 				expectDefaultFlavor(r.compute)
 
@@ -866,7 +873,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				}
 				return s
 			},
-			expect: func(r *recorders) {
+			expect: func(r *recorders, factory *scope.MockScopeFactory) {
 				expectDefaultFlavor(r.compute)
 				extensions := []extensions.Extension{
 					{Extension: common.Extension{Alias: "trunk"}},
@@ -913,6 +920,18 @@ func TestService_ReconcileInstance(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name:            "Unsupported Nova microversion",
+			getInstanceSpec: getDefaultInstanceSpec,
+			expect: func(r *recorders, factory *scope.MockScopeFactory) {
+				expectUseExistingDefaultPort(r.network)
+				expectDefaultFlavor(r.compute)
+
+				expectUnsupportedMicroversion(r.compute)
+				expectCleanupDefaultPort(r.network)
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -924,7 +943,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 			networkRecorder := mockScopeFactory.NetworkClient.EXPECT()
 			volumeRecorder := mockScopeFactory.VolumeClient.EXPECT()
 
-			tt.expect(&recorders{computeRecorder, imageRecorder, networkRecorder, volumeRecorder})
+			tt.expect(&recorders{computeRecorder, imageRecorder, networkRecorder, volumeRecorder}, mockScopeFactory)
 
 			s, err := NewService(mockScopeFactory)
 			if err != nil {

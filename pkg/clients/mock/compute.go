@@ -187,3 +187,18 @@ func (mr *MockComputeClientMockRecorder) ListServers(arg0 interface{}) *gomock.C
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListServers", reflect.TypeOf((*MockComputeClient)(nil).ListServers), arg0)
 }
+
+// WithMicroversion mocks base method.
+func (m *MockComputeClient) WithMicroversion(arg0 string) (clients.ComputeClient, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WithMicroversion", arg0)
+	ret0, _ := ret[0].(clients.ComputeClient)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// WithMicroversion indicates an expected call of WithMicroversion.
+func (mr *MockComputeClientMockRecorder) WithMicroversion(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithMicroversion", reflect.TypeOf((*MockComputeClient)(nil).WithMicroversion), arg0)
+}

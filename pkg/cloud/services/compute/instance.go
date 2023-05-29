@@ -319,7 +319,16 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 
 	serverCreateOpts = applyServerGroupID(serverCreateOpts, instanceSpec.ServerGroupID)
 
-	server, err = s.getComputeClient().CreateServer(keypairs.CreateOptsExt{
+	compute := s.getComputeClient()
+	if requiresTagging(instanceSpec) {
+		s.scope.Logger().V(4).Info("Tagging support is required for creating this Openstack instance")
+		computeWithTags, err := compute.WithMicroversion(clients.NovaTagging)
+		if err != nil {
+			return nil, fmt.Errorf("tagging is not supported by the server: %w", err)
+		}
+		compute = computeWithTags
+	}
+	server, err = compute.CreateServer(keypairs.CreateOptsExt{
 		CreateOptsBuilder: serverCreateOpts,
 		KeyName:           instanceSpec.SSHKeyName,
 	})
@@ -831,4 +840,14 @@ func HashInstanceSpec(computeInstance *InstanceSpec) (string, error) {
 		return "", err
 	}
 	return strconv.Itoa(int(instanceHash)), nil
+}
+
+// requiresTagging checks if the instanceSpec requires tagging,
+// i.e. if it is using tags in some way.
+func requiresTagging(instanceSpec *InstanceSpec) bool {
+	// All AdditionalBlockDevices are always tagged.
+	if len(instanceSpec.Tags) > 0 || len(instanceSpec.AdditionalBlockDevices) > 0 {
+		return true
+	}
+	return false
 }
