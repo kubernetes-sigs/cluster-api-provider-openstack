@@ -24,6 +24,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -205,6 +207,63 @@ var _ = Describe("OpenStackCluster controller", func() {
 		networkClientRecorder.ListSecGroup(gomock.Any()).Return([]groups.SecGroup{}, nil)
 
 		err = deleteBastion(scope, capiCluster, testCluster)
+		Expect(err).To(BeNil())
+	})
+	It("should implicitly filter cluster subnets by cluster network", func() {
+		const externalNetworkID = "a42211a2-4d2c-426f-9413-830e4b4abbbc"
+		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
+		const clusterSubnetID = "cad5a91a-36de-4388-823b-b0cc82cadfdc"
+
+		testCluster.SetName("subnet-filtering")
+		testCluster.Spec = infrav1.OpenStackClusterSpec{
+			DisableAPIServerFloatingIP: true,
+			APIServerFixedIP:           "10.0.0.1",
+			ExternalNetworkID:          externalNetworkID,
+			Network: infrav1.NetworkFilter{
+				ID: clusterNetworkID,
+			},
+		}
+		err := k8sClient.Create(ctx, testCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, capiCluster)
+		Expect(err).To(BeNil())
+		scope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, logr.Discard())
+		Expect(err).To(BeNil())
+
+		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
+
+		// Fetch external network
+		networkClientRecorder.ListNetwork(networks.ListOpts{
+			ID: externalNetworkID,
+		}).Return([]networks.Network{
+			{
+				ID:   externalNetworkID,
+				Name: "external-network",
+			},
+		}, nil)
+
+		// Fetch cluster network
+		networkClientRecorder.ListNetwork(&networks.ListOpts{
+			ID: clusterNetworkID,
+		}).Return([]networks.Network{
+			{
+				ID:   clusterNetworkID,
+				Name: "cluster-network",
+			},
+		}, nil)
+
+		// Fetching cluster subnets should be filtered by cluster network id
+		networkClientRecorder.ListSubnet(subnets.ListOpts{
+			NetworkID: clusterNetworkID,
+		}).Return([]subnets.Subnet{
+			{
+				ID:   clusterSubnetID,
+				Name: "cluster-subnet",
+				CIDR: "192.168.0.0/24",
+			},
+		}, nil)
+
+		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
 		Expect(err).To(BeNil())
 	})
 })

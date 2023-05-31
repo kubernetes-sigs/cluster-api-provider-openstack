@@ -445,7 +445,7 @@ func reconcileNetworkComponents(scope scope.Scope, cluster *clusterv1.Cluster, o
 		openStackCluster.Status.Network.Name = networkList[0].Name
 		openStackCluster.Status.Network.Tags = networkList[0].Tags
 
-		subnet, err := networkingService.GetSubnetByFilter(&openStackCluster.Spec.Subnet)
+		subnet, err := networkingService.GetNetworkSubnetByFilter(openStackCluster.Status.Network.ID, &openStackCluster.Spec.Subnet)
 		if err != nil {
 			err = fmt.Errorf("failed to find subnet: %w", err)
 
