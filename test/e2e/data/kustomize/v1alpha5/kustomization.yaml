@@ -1,7 +1,8 @@
 ---
 resources:
-- ../../../../../kustomize/v1alpha5/default
+- ../../../../../kustomize/v1alpha5/external-cloud-provider
 
 components:
 - ../common-patches/cni
 - ../common-patches/containerd
+- ../common-patches/ccm

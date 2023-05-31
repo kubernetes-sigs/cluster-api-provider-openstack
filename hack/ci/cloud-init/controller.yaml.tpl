@@ -138,7 +138,7 @@
     # https://docs.openstack.org/glance/latest/admin/quotas.html
     /opt/stack/devstack/tools/upload_image.sh https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/cirros/2022-12-05/cirros-0.6.1-x86_64-disk.img
     /opt/stack/devstack/tools/upload_image.sh https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/ubuntu/2023-01-14/focal-server-cloudimg-amd64.img
-    /opt/stack/devstack/tools/upload_image.sh https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/flatcar/flatcar-stable-3510.2.0-kube-v1.25.8.img
+    /opt/stack/devstack/tools/upload_image.sh https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/flatcar/flatcar-stable-3510.2.1-kube-v1.26.5.img
 
     # Add the controller to its own host aggregate and availability zone
     aggregateid=$(openstack aggregate create --zone "${PRIMARY_AZ}" "${PRIMARY_AZ}" -f value -c id)
