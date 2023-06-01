@@ -12,7 +12,7 @@
       - [Changes to ports](#changes-to-ports)
         - [Change to securityGroupFilters](#change-to-securitygroupfilters)
         - [Removal of securityGroups](#removal-of-securitygroups)
-        - [Removal of tenantId](#removal-of-tenantid)
+        - [Removal of tenantId and projectId](#removal-of-tenantid-and-projectid)
         - [Change to profile](#change-to-profile)
     - [`OpenStackCluster`](#openstackcluster)
       - [Change to externalRouterIPs.subnet](#change-to-externalrouteripssubnet)
@@ -184,9 +184,9 @@ securityGroupFilters:
 - id: 4a131d3e-9939-4a6b-adea-788a2e89fcd8
 ```
 
-##### Removal of tenantId
+##### Removal of tenantId and projectId
 
-Use projectId instead.
+These are removed without replacement. They required admin permission to set, which CAPO does not have by default, and served no purpose.
 
 ##### Change to profile
 

@@ -88,8 +88,7 @@ type PortOpts struct {
 	AdminStateUp *bool  `json:"adminStateUp,omitempty"`
 	MACAddress   string `json:"macAddress,omitempty"`
 	// Specify pairs of subnet and/or IP address. These should be subnets of the network with the given NetworkID.
-	FixedIPs  []FixedIP `json:"fixedIPs,omitempty"`
-	ProjectID string    `json:"projectId,omitempty"`
+	FixedIPs []FixedIP `json:"fixedIPs,omitempty"`
 	// The names, uuids, filters or any combination these of the security groups to assign to the instance
 	SecurityGroupFilters []SecurityGroupFilter `json:"securityGroupFilters,omitempty"`
 	AllowedAddressPairs  []AddressPair         `json:"allowedAddressPairs,omitempty"`
