@@ -351,16 +351,31 @@ func (s *Service) GetSubnetsByFilter(opts subnets.ListOptsBuilder) ([]subnets.Su
 // GetSubnetByFilter gets a single subnet specified by the given SubnetFilter.
 // It returns an ErrFilterMatch if no or multiple subnets are found.
 func (s *Service) GetSubnetByFilter(filter *infrav1.SubnetFilter) (*subnets.Subnet, error) {
+	return s.getSubnetByFilter(filter.ToListOpt())
+}
+
+// GetNetworkSubnetByFilter gets a single subnet of the given network, specified by the given SubnetFilter.
+// It returns an ErrFilterMatch if no or multiple subnets are found.
+func (s *Service) GetNetworkSubnetByFilter(networkID string, filter *infrav1.SubnetFilter) (*subnets.Subnet, error) {
+	listOpt := filter.ToListOpt()
+	listOpt.NetworkID = networkID
+
+	return s.getSubnetByFilter(listOpt)
+}
+
+// getSubnetByFilter gets a single subnet specified by the given gophercloud ListOpts.
+// It returns an ErrFilterMatch if no or multiple subnets are found.
+func (s *Service) getSubnetByFilter(listOpts subnets.ListOpts) (*subnets.Subnet, error) {
 	// If the ID is set, we can just get the subnet by ID.
-	if filter.ID != "" {
-		subnet, err := s.client.GetSubnet(filter.ID)
+	if listOpts.ID != "" {
+		subnet, err := s.client.GetSubnet(listOpts.ID)
 		if capoerrors.IsNotFound(err) {
 			return nil, ErrNoMatches
 		}
 		return subnet, err
 	}
 
-	subnets, err := s.GetSubnetsByFilter(filter.ToListOpt())
+	subnets, err := s.GetSubnetsByFilter(listOpts)
 	if err != nil {
 		return nil, err
 	}
