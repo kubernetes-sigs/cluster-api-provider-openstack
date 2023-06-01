@@ -156,7 +156,7 @@ type OpenStackClusterStatus struct {
 	Ready bool `json:"ready"`
 
 	// Network contains information about the created OpenStack Network.
-	Network *Network `json:"network,omitempty"`
+	Network *NetworkStatusWithSubnets `json:"network,omitempty"`
 
 	// externalNetwork contains information about the external network used for default ingress and egress traffic.
 	ExternalNetwork *NetworkStatus `json:"externalNetwork,omitempty"`

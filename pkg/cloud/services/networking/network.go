@@ -127,11 +127,10 @@ func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, c
 
 	if res.ID != "" {
 		// Network exists
-		openStackCluster.Status.Network = &infrav1.Network{
-			ID:   res.ID,
-			Name: res.Name,
-			Tags: res.Tags,
-		}
+		openStackCluster.Status.Network = &infrav1.NetworkStatusWithSubnets{}
+		openStackCluster.Status.Network.ID = res.ID
+		openStackCluster.Status.Network.Name = res.Name
+		openStackCluster.Status.Network.Tags = res.Tags
 		sInfo := fmt.Sprintf("Reuse Existing Network %s with id %s", res.Name, res.ID)
 		s.scope.Logger().V(6).Info(sInfo)
 		return nil
@@ -167,11 +166,10 @@ func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, c
 		}
 	}
 
-	openStackCluster.Status.Network = &infrav1.Network{
-		ID:   network.ID,
-		Name: network.Name,
-		Tags: openStackCluster.Spec.Tags,
-	}
+	openStackCluster.Status.Network = &infrav1.NetworkStatusWithSubnets{}
+	openStackCluster.Status.Network.ID = network.ID
+	openStackCluster.Status.Network.Name = network.Name
+	openStackCluster.Status.Network.Tags = openStackCluster.Spec.Tags
 	return nil
 }
 

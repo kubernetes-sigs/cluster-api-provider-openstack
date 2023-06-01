@@ -427,26 +427,6 @@ func Convert_v1alpha6_PortOpts_To_v1alpha7_PortOpts(in *PortOpts, out *infrav1.P
 	return nil
 }
 
-func Convert_Slice_v1alpha6_Network_To_Slice_v1alpha7_Network(in *[]Network, out *[]infrav1.Network, s conversion.Scope) error {
-	*out = make([]infrav1.Network, len(*in))
-	for i := range *in {
-		if err := Convert_v1alpha6_Network_To_v1alpha7_Network(&(*in)[i], &(*out)[i], s); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func Convert_Slice_v1alpha7_Network_To_Slice_v1alpha6_Network(in *[]infrav1.Network, out *[]Network, s conversion.Scope) error {
-	*out = make([]Network, len(*in))
-	for i := range *in {
-		if err := Convert_v1alpha7_Network_To_v1alpha6_Network(&(*in)[i], &(*out)[i], s); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func Convert_v1alpha7_PortOpts_To_v1alpha6_PortOpts(in *infrav1.PortOpts, out *PortOpts, s conversion.Scope) error {
 	// value specs and propagate uplink status have been added in v1alpha7 but have no equivalent in v1alpha5
 	err := autoConvert_v1alpha7_PortOpts_To_v1alpha6_PortOpts(in, out, s)
@@ -486,9 +466,26 @@ func Convert_v1alpha7_BastionStatus_To_v1alpha6_Instance(in *infrav1.BastionStat
 	return nil
 }
 
-func Convert_v1alpha6_Network_To_v1alpha7_Network(in *Network, out *infrav1.Network, s conversion.Scope) error {
+func Convert_v1alpha6_Network_To_v1alpha7_NetworkStatusWithSubnets(in *Network, out *infrav1.NetworkStatusWithSubnets, s conversion.Scope) error {
 	// PortOpts has been removed in v1alpha7
-	return autoConvert_v1alpha6_Network_To_v1alpha7_Network(in, out, s)
+	err := Convert_v1alpha6_Network_To_v1alpha7_NetworkStatus(in, &out.NetworkStatus, s)
+	if err != nil {
+		return err
+	}
+
+	out.Subnet = (*infrav1.Subnet)(in.Subnet)
+	return nil
+}
+
+func Convert_v1alpha7_NetworkStatusWithSubnets_To_v1alpha6_Network(in *infrav1.NetworkStatusWithSubnets, out *Network, s conversion.Scope) error {
+	// PortOpts has been removed in v1alpha7
+	err := Convert_v1alpha7_NetworkStatus_To_v1alpha6_Network(&in.NetworkStatus, out, s)
+	if err != nil {
+		return err
+	}
+
+	out.Subnet = (*Subnet)(in.Subnet)
+	return nil
 }
 
 func Convert_v1alpha6_Network_To_v1alpha7_NetworkStatus(in *Network, out *infrav1.NetworkStatus, _ conversion.Scope) error {

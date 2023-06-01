@@ -455,7 +455,7 @@ func reconcileNetworkComponents(scope scope.Scope, cluster *clusterv1.Cluster, o
 			return fmt.Errorf("found multiple networks (result: %v)", networkList)
 		}
 		if openStackCluster.Status.Network == nil {
-			openStackCluster.Status.Network = &infrav1.Network{}
+			openStackCluster.Status.Network = &infrav1.NetworkStatusWithSubnets{}
 		}
 		openStackCluster.Status.Network.ID = networkList[0].ID
 		openStackCluster.Status.Network.Name = networkList[0].Name

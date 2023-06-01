@@ -242,8 +242,10 @@ func getDefaultOpenStackCluster() *infrav1.OpenStackCluster {
 	return &infrav1.OpenStackCluster{
 		Spec: infrav1.OpenStackClusterSpec{},
 		Status: infrav1.OpenStackClusterStatus{
-			Network: &infrav1.Network{
-				ID: networkUUID,
+			Network: &infrav1.NetworkStatusWithSubnets{
+				NetworkStatus: infrav1.NetworkStatus{
+					ID: networkUUID,
+				},
 				Subnet: &infrav1.Subnet{
 					ID: subnetUUID,
 				},
@@ -838,8 +840,10 @@ func TestService_normalizePorts(t *testing.T) {
 
 	openStackCluster := &infrav1.OpenStackCluster{
 		Status: infrav1.OpenStackClusterStatus{
-			Network: &infrav1.Network{
-				ID: defaultNetworkID,
+			Network: &infrav1.NetworkStatusWithSubnets{
+				NetworkStatus: infrav1.NetworkStatus{
+					ID: defaultNetworkID,
+				},
 				Subnet: &infrav1.Subnet{
 					ID: defaultSubnetID,
 				},
