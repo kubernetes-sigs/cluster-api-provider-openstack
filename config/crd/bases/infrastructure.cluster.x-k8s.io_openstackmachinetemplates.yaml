@@ -1128,8 +1128,6 @@ spec:
                                     mode” for the VF.
                                   type: boolean
                               type: object
-                            projectId:
-                              type: string
                             propagateUplinkStatus:
                               description: PropageteUplinkStatus enables or disables
                                 the propagate uplink status on the port.

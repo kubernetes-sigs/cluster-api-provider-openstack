@@ -1358,7 +1358,7 @@ func autoConvert_v1alpha5_PortOpts_To_v1alpha7_PortOpts(in *PortOpts, out *v1alp
 	out.MACAddress = in.MACAddress
 	out.FixedIPs = *(*[]v1alpha7.FixedIP)(unsafe.Pointer(&in.FixedIPs))
 	// WARNING: in.TenantID requires manual conversion: does not exist in peer-type
-	out.ProjectID = in.ProjectID
+	// WARNING: in.ProjectID requires manual conversion: does not exist in peer-type
 	// WARNING: in.SecurityGroups requires manual conversion: does not exist in peer-type
 	if in.SecurityGroupFilters != nil {
 		in, out := &in.SecurityGroupFilters, &out.SecurityGroupFilters
@@ -1388,7 +1388,6 @@ func autoConvert_v1alpha7_PortOpts_To_v1alpha5_PortOpts(in *v1alpha7.PortOpts, o
 	out.AdminStateUp = (*bool)(unsafe.Pointer(in.AdminStateUp))
 	out.MACAddress = in.MACAddress
 	out.FixedIPs = *(*[]FixedIP)(unsafe.Pointer(&in.FixedIPs))
-	out.ProjectID = in.ProjectID
 	if in.SecurityGroupFilters != nil {
 		in, out := &in.SecurityGroupFilters, &out.SecurityGroupFilters
 		*out = make([]SecurityGroupParam, len(*in))
