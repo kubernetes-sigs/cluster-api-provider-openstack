@@ -176,7 +176,8 @@ type NetworkStatus struct {
 type NetworkStatusWithSubnets struct {
 	NetworkStatus `json:",inline"`
 
-	Subnet *Subnet `json:"subnet,omitempty"`
+	// Subnets is a list of subnets associated with the default cluster network. Machines which use the default cluster network will get an address from all of these subnets.
+	Subnets []Subnet `json:"subnets,omitempty"`
 }
 
 // Subnet represents basic information about the associated OpenStack Neutron Subnet.

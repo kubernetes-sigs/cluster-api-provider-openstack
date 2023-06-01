@@ -35,7 +35,7 @@ func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, cl
 		s.scope.Logger().V(3).Info("No need to reconcile router since no network exists.")
 		return nil
 	}
-	if openStackCluster.Status.Network.Subnet == nil || openStackCluster.Status.Network.Subnet.ID == "" {
+	if len(openStackCluster.Status.Network.Subnets) == 0 {
 		s.scope.Logger().V(4).Info("No need to reconcile router since no subnet exists.")
 		return nil
 	}
@@ -96,28 +96,30 @@ func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, cl
 		return err
 	}
 
-	createInterface := true
-	// check all router interfaces for an existing port in our subnet.
-INTERFACE_LOOP:
-	for _, iface := range routerInterfaces {
-		for _, ip := range iface.FixedIPs {
-			if ip.SubnetID == openStackCluster.Status.Network.Subnet.ID {
-				createInterface = false
-				break INTERFACE_LOOP
+	// check all router interfaces for an existing port in a cluster subnet.
+	for _, subnet := range openStackCluster.Status.Network.Subnets {
+		createInterface := true
+	INTERFACE_LOOP:
+		for _, iface := range routerInterfaces {
+			for _, ip := range iface.FixedIPs {
+				if ip.SubnetID == subnet.ID {
+					createInterface = false
+					break INTERFACE_LOOP
+				}
 			}
 		}
-	}
 
-	// ... and create a router interface for our subnet.
-	if createInterface {
-		s.scope.Logger().V(4).Info("Creating RouterInterface", "routerID", router.ID, "subnetID", openStackCluster.Status.Network.Subnet.ID)
-		routerInterface, err := s.client.AddRouterInterface(router.ID, routers.AddInterfaceOpts{
-			SubnetID: openStackCluster.Status.Network.Subnet.ID,
-		})
-		if err != nil {
-			return fmt.Errorf("unable to create router interface: %v", err)
+		// ... and create a router interface for our subnet.
+		if createInterface {
+			s.scope.Logger().V(4).Info("Creating RouterInterface", "routerID", router.ID, "subnetID", subnet.ID)
+			routerInterface, err := s.client.AddRouterInterface(router.ID, routers.AddInterfaceOpts{
+				SubnetID: subnet.ID,
+			})
+			if err != nil {
+				return fmt.Errorf("unable to create router interface: %v", err)
+			}
+			s.scope.Logger().V(4).Info("Created RouterInterface", "id", routerInterface.ID)
 		}
-		s.scope.Logger().V(4).Info("Created RouterInterface", "id", routerInterface.ID)
 	}
 	return nil
 }

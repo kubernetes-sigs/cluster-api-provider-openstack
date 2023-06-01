@@ -4526,25 +4526,30 @@ spec:
                     type: string
                   name:
                     type: string
-                  subnet:
-                    description: Subnet represents basic information about the associated
-                      OpenStack Neutron Subnet.
-                    properties:
-                      cidr:
-                        type: string
-                      id:
-                        type: string
-                      name:
-                        type: string
-                      tags:
-                        items:
+                  subnets:
+                    description: Subnets is a list of subnets associated with the
+                      default cluster network. Machines which use the default cluster
+                      network will get an address from all of these subnets.
+                    items:
+                      description: Subnet represents basic information about the associated
+                        OpenStack Neutron Subnet.
+                      properties:
+                        cidr:
                           type: string
-                        type: array
-                    required:
-                    - cidr
-                    - id
-                    - name
-                    type: object
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        tags:
+                          items:
+                            type: string
+                          type: array
+                      required:
+                      - cidr
+                      - id
+                      - name
+                      type: object
+                    type: array
                   tags:
                     items:
                       type: string

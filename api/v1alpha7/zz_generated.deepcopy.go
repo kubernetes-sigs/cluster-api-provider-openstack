@@ -214,10 +214,12 @@ func (in *NetworkStatus) DeepCopy() *NetworkStatus {
 func (in *NetworkStatusWithSubnets) DeepCopyInto(out *NetworkStatusWithSubnets) {
 	*out = *in
 	in.NetworkStatus.DeepCopyInto(&out.NetworkStatus)
-	if in.Subnet != nil {
-		in, out := &in.Subnet, &out.Subnet
-		*out = new(Subnet)
-		(*in).DeepCopyInto(*out)
+	if in.Subnets != nil {
+		in, out := &in.Subnets, &out.Subnets
+		*out = make([]Subnet, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
 	}
 }
 

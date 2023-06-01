@@ -47,8 +47,8 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 				ID: "aaaaaaaa-bbbb-cccc-dddd-111111111111",
 			},
 			Network: &infrav1.NetworkStatusWithSubnets{
-				Subnet: &infrav1.Subnet{
-					ID: "aaaaaaaa-bbbb-cccc-dddd-222222222222",
+				Subnets: []infrav1.Subnet{
+					{ID: "aaaaaaaa-bbbb-cccc-dddd-222222222222"},
 				},
 			},
 		},

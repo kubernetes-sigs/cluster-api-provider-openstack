@@ -226,11 +226,13 @@ func (s *Service) ReconcileSubnet(openStackCluster *infrav1.OpenStackCluster, cl
 		s.scope.Logger().V(6).Info(fmt.Sprintf("Reuse existing subnet %s with id %s", subnetName, subnet.ID))
 	}
 
-	openStackCluster.Status.Network.Subnet = &infrav1.Subnet{
-		ID:   subnet.ID,
-		Name: subnet.Name,
-		CIDR: subnet.CIDR,
-		Tags: subnet.Tags,
+	openStackCluster.Status.Network.Subnets = []infrav1.Subnet{
+		{
+			ID:   subnet.ID,
+			Name: subnet.Name,
+			CIDR: subnet.CIDR,
+			Tags: subnet.Tags,
+		},
 	}
 	return nil
 }

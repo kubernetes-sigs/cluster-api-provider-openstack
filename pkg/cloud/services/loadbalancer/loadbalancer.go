@@ -78,7 +78,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 		}
 	}
 
-	lb, err := s.getOrCreateLoadBalancer(openStackCluster, loadBalancerName, openStackCluster.Status.Network.Subnet.ID, clusterName, fixedIPAddress, lbProvider)
+	lb, err := s.getOrCreateLoadBalancer(openStackCluster, loadBalancerName, openStackCluster.Status.Network.Subnets[0].ID, clusterName, fixedIPAddress, lbProvider)
 	if err != nil {
 		return false, err
 	}
@@ -247,8 +247,10 @@ func (s *Service) getOrUpdateAllowedCIDRS(openStackCluster *infrav1.OpenStackClu
 		}
 
 		if openStackCluster.Status.Network != nil {
-			if openStackCluster.Status.Network.Subnet.CIDR != "" {
-				allowedCIDRs = append(allowedCIDRs, openStackCluster.Status.Network.Subnet.CIDR)
+			for _, subnet := range openStackCluster.Status.Network.Subnets {
+				if subnet.CIDR != "" {
+					allowedCIDRs = append(allowedCIDRs, subnet.CIDR)
+				}
 			}
 
 			if len(openStackCluster.Status.Router.IPs) > 0 {
@@ -390,8 +392,8 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 	if openStackCluster.Status.Network == nil {
 		return errors.New("network is not yet available in openStackCluster.Status")
 	}
-	if openStackCluster.Status.Network.Subnet == nil {
-		return errors.New("network.Subnet is not yet available in openStackCluster.Status")
+	if len(openStackCluster.Status.Network.Subnets) == 0 {
+		return errors.New("network.Subnets are not yet available in openStackCluster.Status")
 	}
 	if openStackCluster.Status.APIServerLoadBalancer == nil {
 		return errors.New("network.APIServerLoadBalancer is not yet available in openStackCluster.Status")

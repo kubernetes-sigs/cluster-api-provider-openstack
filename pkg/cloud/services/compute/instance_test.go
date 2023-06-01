@@ -246,8 +246,8 @@ func getDefaultOpenStackCluster() *infrav1.OpenStackCluster {
 				NetworkStatus: infrav1.NetworkStatus{
 					ID: networkUUID,
 				},
-				Subnet: &infrav1.Subnet{
-					ID: subnetUUID,
+				Subnets: []infrav1.Subnet{
+					{ID: subnetUUID},
 				},
 			},
 			ControlPlaneSecurityGroup: &infrav1.SecurityGroup{ID: controlPlaneSecurityGroupUUID},
@@ -844,8 +844,8 @@ func TestService_normalizePorts(t *testing.T) {
 				NetworkStatus: infrav1.NetworkStatus{
 					ID: defaultNetworkID,
 				},
-				Subnet: &infrav1.Subnet{
-					ID: defaultSubnetID,
+				Subnets: []infrav1.Subnet{
+					{ID: defaultSubnetID},
 				},
 			},
 		},

@@ -473,11 +473,13 @@ func reconcileNetworkComponents(scope scope.Scope, cluster *clusterv1.Cluster, o
 			return err
 		}
 
-		openStackCluster.Status.Network.Subnet = &infrav1.Subnet{
-			ID:   subnet.ID,
-			Name: subnet.Name,
-			CIDR: subnet.CIDR,
-			Tags: subnet.Tags,
+		openStackCluster.Status.Network.Subnets = []infrav1.Subnet{
+			{
+				ID:   subnet.ID,
+				Name: subnet.Name,
+				CIDR: subnet.CIDR,
+				Tags: subnet.Tags,
+			},
 		}
 	} else {
 		err := networkingService.ReconcileNetwork(openStackCluster, clusterName)

@@ -473,7 +473,9 @@ func Convert_v1alpha6_Network_To_v1alpha7_NetworkStatusWithSubnets(in *Network, 
 		return err
 	}
 
-	out.Subnet = (*infrav1.Subnet)(in.Subnet)
+	if in.Subnet != nil {
+		out.Subnets = []infrav1.Subnet{infrav1.Subnet(*in.Subnet)}
+	}
 	return nil
 }
 
@@ -484,7 +486,10 @@ func Convert_v1alpha7_NetworkStatusWithSubnets_To_v1alpha6_Network(in *infrav1.N
 		return err
 	}
 
-	out.Subnet = (*Subnet)(in.Subnet)
+	// Can only down-convert a single subnet
+	if len(in.Subnets) > 0 {
+		out.Subnet = (*Subnet)(&in.Subnets[0])
+	}
 	return nil
 }
 
