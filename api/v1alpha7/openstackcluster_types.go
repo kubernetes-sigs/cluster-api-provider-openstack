@@ -155,12 +155,17 @@ type OpenStackClusterSpec struct {
 type OpenStackClusterStatus struct {
 	Ready bool `json:"ready"`
 
-	// Network contains all information about the created OpenStack Network.
-	// It includes Subnets and Router.
+	// Network contains information about the created OpenStack Network.
 	Network *Network `json:"network,omitempty"`
 
 	// externalNetwork contains information about the external network used for default ingress and egress traffic.
 	ExternalNetwork *NetworkStatus `json:"externalNetwork,omitempty"`
+
+	// Router describes the default cluster router
+	Router *Router `json:"router,omitempty"`
+
+	// APIServerLoadBalancer describes the api server load balancer if one exists
+	APIServerLoadBalancer *LoadBalancer `json:"apiServerLoadBalancer,omitempty"`
 
 	// FailureDomains represent OpenStack availability zones
 	FailureDomains clusterv1.FailureDomains `json:"failureDomains,omitempty"`

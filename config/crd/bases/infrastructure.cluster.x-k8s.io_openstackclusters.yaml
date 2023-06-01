@@ -4304,6 +4304,32 @@ spec:
           status:
             description: OpenStackClusterStatus defines the observed state of OpenStackCluster.
             properties:
+              apiServerLoadBalancer:
+                description: APIServerLoadBalancer describes the api server load balancer
+                  if one exists
+                properties:
+                  allowedCIDRs:
+                    items:
+                      type: string
+                    type: array
+                  id:
+                    type: string
+                  internalIP:
+                    type: string
+                  ip:
+                    type: string
+                  name:
+                    type: string
+                  tags:
+                    items:
+                      type: string
+                    type: array
+                required:
+                - id
+                - internalIP
+                - ip
+                - name
+                type: object
               bastion:
                 properties:
                   floatingIP:
@@ -4493,59 +4519,13 @@ spec:
                   output."
                 type: string
               network:
-                description: Network contains all information about the created OpenStack
-                  Network. It includes Subnets and Router.
+                description: Network contains information about the created OpenStack
+                  Network.
                 properties:
-                  apiServerLoadBalancer:
-                    description: Be careful when using APIServerLoadBalancer, because
-                      this field is optional and therefore not set in all cases
-                    properties:
-                      allowedCIDRs:
-                        items:
-                          type: string
-                        type: array
-                      id:
-                        type: string
-                      internalIP:
-                        type: string
-                      ip:
-                        type: string
-                      name:
-                        type: string
-                      tags:
-                        items:
-                          type: string
-                        type: array
-                    required:
-                    - id
-                    - internalIP
-                    - ip
-                    - name
-                    type: object
                   id:
                     type: string
                   name:
                     type: string
-                  router:
-                    description: Router represents basic information about the associated
-                      OpenStack Neutron Router.
-                    properties:
-                      id:
-                        type: string
-                      ips:
-                        items:
-                          type: string
-                        type: array
-                      name:
-                        type: string
-                      tags:
-                        items:
-                          type: string
-                        type: array
-                    required:
-                    - id
-                    - name
-                    type: object
                   subnet:
                     description: Subnet represents basic information about the associated
                       OpenStack Neutron Subnet.
@@ -4575,6 +4555,25 @@ spec:
                 type: object
               ready:
                 type: boolean
+              router:
+                description: Router describes the default cluster router
+                properties:
+                  id:
+                    type: string
+                  ips:
+                    items:
+                      type: string
+                    type: array
+                  name:
+                    type: string
+                  tags:
+                    items:
+                      type: string
+                    type: array
+                required:
+                - id
+                - name
+                type: object
               workerSecurityGroup:
                 description: WorkerSecurityGroup contains all the information about
                   the OpenStack Security Group that needs to be applied to worker

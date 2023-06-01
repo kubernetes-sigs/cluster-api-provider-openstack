@@ -172,11 +172,6 @@ type Network struct {
 	Tags []string `json:"tags,omitempty"`
 
 	Subnet *Subnet `json:"subnet,omitempty"`
-	Router *Router `json:"router,omitempty"`
-
-	// Be careful when using APIServerLoadBalancer, because this field is optional and therefore not
-	// set in all cases
-	APIServerLoadBalancer *LoadBalancer `json:"apiServerLoadBalancer,omitempty"`
 }
 
 // NetworkStatus contains basic information about an existing neutron network.

@@ -148,7 +148,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 		}
 	}
 
-	openStackCluster.Status.Network.APIServerLoadBalancer = &infrav1.LoadBalancer{
+	openStackCluster.Status.APIServerLoadBalancer = &infrav1.LoadBalancer{
 		Name:         lb.Name,
 		ID:           lb.ID,
 		InternalIP:   lb.VipAddress,
@@ -251,8 +251,8 @@ func (s *Service) getOrUpdateAllowedCIDRS(openStackCluster *infrav1.OpenStackClu
 				allowedCIDRs = append(allowedCIDRs, openStackCluster.Status.Network.Subnet.CIDR)
 			}
 
-			if len(openStackCluster.Status.Network.Router.IPs) > 0 {
-				allowedCIDRs = append(allowedCIDRs, openStackCluster.Status.Network.Router.IPs...)
+			if len(openStackCluster.Status.Router.IPs) > 0 {
+				allowedCIDRs = append(allowedCIDRs, openStackCluster.Status.Router.IPs...)
 			}
 		}
 	}
@@ -393,14 +393,14 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 	if openStackCluster.Status.Network.Subnet == nil {
 		return errors.New("network.Subnet is not yet available in openStackCluster.Status")
 	}
-	if openStackCluster.Status.Network.APIServerLoadBalancer == nil {
+	if openStackCluster.Status.APIServerLoadBalancer == nil {
 		return errors.New("network.APIServerLoadBalancer is not yet available in openStackCluster.Status")
 	}
 
 	loadBalancerName := getLoadBalancerName(clusterName)
 	s.scope.Logger().Info("Reconciling load balancer member", "name", loadBalancerName)
 
-	lbID := openStackCluster.Status.Network.APIServerLoadBalancer.ID
+	lbID := openStackCluster.Status.APIServerLoadBalancer.ID
 	portList := []int{int(openStackCluster.Spec.ControlPlaneEndpoint.Port)}
 	portList = append(portList, openStackCluster.Spec.APIServerLoadBalancer.AdditionalPorts...)
 	for _, port := range portList {

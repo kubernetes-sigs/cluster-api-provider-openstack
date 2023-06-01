@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha6
 
 import (
+	"reflect"
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -130,6 +131,15 @@ func restorev1alpha7ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *inf
 	}
 }
 
+func restorev1alpha7ClusterStatus(previous *infrav1.OpenStackClusterStatus, dst *infrav1.OpenStackClusterStatus) {
+	// It's (theoretically) possible in v1alpha7 to have Network nil but
+	// Router or APIServerLoadBalancer not nil. In hub-spoke-hub conversion this will
+	// result in Network being a pointer to an empty object.
+	if previous.Network == nil && dst.Network != nil && reflect.ValueOf(*dst.Network).IsZero() {
+		dst.Network = nil
+	}
+}
+
 func restorev1alpha6ClusterSpec(previous *OpenStackClusterSpec, dst *OpenStackClusterSpec) {
 	for i := range previous.ExternalRouterIPs {
 		dstIP := &dst.ExternalRouterIPs[i]
@@ -158,6 +168,7 @@ func (r *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {
 
 	if restored {
 		restorev1alpha7ClusterSpec(&previous.Spec, &dst.Spec)
+		restorev1alpha7ClusterStatus(&previous.Status, &dst.Status)
 	}
 
 	return nil
@@ -578,5 +589,39 @@ func Convert_v1alpha7_BindingProfile_To_Map_string_To_Interface(in *infrav1.Bind
 	if in.TrustedVF {
 		(out)["trusted"] = trueString
 	}
+	return nil
+}
+
+func Convert_v1alpha7_OpenStackClusterStatus_To_v1alpha6_OpenStackClusterStatus(in *infrav1.OpenStackClusterStatus, out *OpenStackClusterStatus, s conversion.Scope) error {
+	err := autoConvert_v1alpha7_OpenStackClusterStatus_To_v1alpha6_OpenStackClusterStatus(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	// Router and APIServerLoadBalancer have been moved out of Network in v1alpha7
+	if in.Router != nil || in.APIServerLoadBalancer != nil {
+		if out.Network == nil {
+			out.Network = &Network{}
+		}
+
+		out.Network.Router = (*Router)(in.Router)
+		out.Network.APIServerLoadBalancer = (*LoadBalancer)(in.APIServerLoadBalancer)
+	}
+
+	return nil
+}
+
+func Convert_v1alpha6_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(in *OpenStackClusterStatus, out *infrav1.OpenStackClusterStatus, s conversion.Scope) error {
+	err := autoConvert_v1alpha6_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	// Router and APIServerLoadBalancer have been moved out of Network in v1alpha7
+	if in.Network != nil {
+		out.Router = (*infrav1.Router)(in.Network.Router)
+		out.APIServerLoadBalancer = (*infrav1.LoadBalancer)(in.Network.APIServerLoadBalancer)
+	}
+
 	return nil
 }

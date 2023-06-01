@@ -535,10 +535,10 @@ func reconcileNetworkComponents(scope scope.Scope, cluster *clusterv1.Cluster, o
 		// If there is a load balancer use the floating IP for it if set, falling back to the internal IP
 		switch {
 		case openStackCluster.Spec.APIServerLoadBalancer.Enabled:
-			if openStackCluster.Status.Network.APIServerLoadBalancer.IP != "" {
-				host = openStackCluster.Status.Network.APIServerLoadBalancer.IP
+			if openStackCluster.Status.APIServerLoadBalancer.IP != "" {
+				host = openStackCluster.Status.APIServerLoadBalancer.IP
 			} else {
-				host = openStackCluster.Status.Network.APIServerLoadBalancer.InternalIP
+				host = openStackCluster.Status.APIServerLoadBalancer.InternalIP
 			}
 		case !openStackCluster.Spec.DisableAPIServerFloatingIP:
 			// If floating IPs are not disabled, get one to use as the VIP for the control plane

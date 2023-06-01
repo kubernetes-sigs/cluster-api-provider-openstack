@@ -78,7 +78,7 @@ func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, cl
 		routerIPs = append(routerIPs, ip.IPAddress)
 	}
 
-	openStackCluster.Status.Network.Router = &infrav1.Router{
+	openStackCluster.Status.Router = &infrav1.Router{
 		Name: router.Name,
 		ID:   router.ID,
 		Tags: router.Tags,

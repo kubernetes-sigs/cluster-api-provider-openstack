@@ -385,3 +385,49 @@ func Convert_v1alpha7_BindingProfile_To_Map_string_To_Interface(in *infrav1.Bind
 	}
 	return nil
 }
+
+func Convert_v1alpha7_OpenStackClusterStatus_To_v1alpha5_OpenStackClusterStatus(in *infrav1.OpenStackClusterStatus, out *OpenStackClusterStatus, s conversion.Scope) error {
+	err := autoConvert_v1alpha7_OpenStackClusterStatus_To_v1alpha5_OpenStackClusterStatus(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	// Router and APIServerLoadBalancer have been moved out of Network in v1alpha7
+	if in.Router != nil || in.APIServerLoadBalancer != nil {
+		if out.Network == nil {
+			out.Network = &Network{}
+		}
+
+		out.Network.Router = (*Router)(in.Router)
+		if in.APIServerLoadBalancer != nil {
+			out.Network.APIServerLoadBalancer = &LoadBalancer{}
+			err = Convert_v1alpha7_LoadBalancer_To_v1alpha5_LoadBalancer(in.APIServerLoadBalancer, out.Network.APIServerLoadBalancer, s)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func Convert_v1alpha5_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(in *OpenStackClusterStatus, out *infrav1.OpenStackClusterStatus, s conversion.Scope) error {
+	err := autoConvert_v1alpha5_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	// Router and APIServerLoadBalancer have been moved out of Network in v1alpha7
+	if in.Network != nil {
+		out.Router = (*infrav1.Router)(in.Network.Router)
+		if in.Network.APIServerLoadBalancer != nil {
+			out.APIServerLoadBalancer = &infrav1.LoadBalancer{}
+			err = Convert_v1alpha5_LoadBalancer_To_v1alpha7_LoadBalancer(in.Network.APIServerLoadBalancer, out.APIServerLoadBalancer, s)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
