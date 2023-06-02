@@ -236,8 +236,6 @@ enable_plugin octavia-tempest-plugin $GIT_BASE/openstack/octavia-tempest-plugin
 enable_service octavia o-api o-cw o-hm o-hk o-da
 # Cinder
 enable_service c-api c-vol c-sch
-# Tempest
-enable_service tempest
 EOF
 $ ./stack.sh
 ```
