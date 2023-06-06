@@ -1,7 +1,6 @@
 ---
 resources:
 - ../../../../../kustomize/v1alpha7/default
-- ccm.yaml
 
 components:
 - ../common-patches/cni

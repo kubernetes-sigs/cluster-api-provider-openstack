@@ -1,7 +1,6 @@
 ---
 resources:
 - ../../../../../kustomize/v1alpha7/flatcar
-- ccm.yaml
 
 components:
 - ../common-patches/cni

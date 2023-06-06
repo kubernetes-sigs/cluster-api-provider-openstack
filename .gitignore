@@ -176,3 +176,6 @@ docs/book/book/
 
 # venv
 .venv
+
+# Development container files (https://containers.dev/)
+.devcontainer
