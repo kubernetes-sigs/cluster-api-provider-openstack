@@ -86,7 +86,7 @@ fi
 
 # Upload image for e2e clusterctl upgrade tests
 source "${REPO_ROOT}/hack/ci/${RESOURCE_TYPE}.sh"
-CONTAINER_ARCHIVE="${ARTIFACTS}/capo-e2e-image.tar"
+CONTAINER_ARCHIVE="/tmp/capo-e2e-image.tar"
 SSH_KEY="$(get_ssh_private_key_file)"
 SSH_ARGS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -o PasswordAuthentication=no"
 CONTROLLER_IP=${CONTROLLER_IP:-"10.0.3.15"}

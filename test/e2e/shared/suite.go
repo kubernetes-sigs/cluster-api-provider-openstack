@@ -182,7 +182,8 @@ func AllNodesBeforeSuite(e2eCtx *E2EContext, data []byte) {
 	e2eCtx.Settings.ArtifactFolder = conf.ArtifactFolder
 	e2eCtx.Settings.ConfigPath = conf.ConfigPath
 	e2eCtx.Environment.ClusterctlConfigPath = conf.ClusterctlConfigPath
-	e2eCtx.Environment.BootstrapClusterProxy = framework.NewClusterProxy("bootstrap", conf.KubeconfigPath, e2eCtx.Environment.Scheme)
+	withLogCollector := framework.WithMachineLogCollector(OpenStackLogCollector{E2EContext: *e2eCtx})
+	e2eCtx.Environment.BootstrapClusterProxy = framework.NewClusterProxy("bootstrap", conf.KubeconfigPath, e2eCtx.Environment.Scheme, withLogCollector)
 	e2eCtx.E2EConfig = &conf.E2EConfig
 	e2eCtx.Settings.KubetestConfigFilePath = conf.KubetestConfigFilePath
 	e2eCtx.Settings.UseCIArtifacts = conf.UseCIArtifacts

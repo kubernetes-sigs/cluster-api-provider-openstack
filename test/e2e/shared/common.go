@@ -31,7 +31,10 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	expv1 "sigs.k8s.io/cluster-api/exp/api/v1beta1"
 	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/cluster-api/test/framework/clusterctl"
 	"sigs.k8s.io/cluster-api/util"
@@ -199,15 +202,15 @@ func dumpMachine(ctx context.Context, e2eCtx *E2EContext, machine infrav1.OpenSt
 			},
 			{
 				title: "containerd-info",
-				cmd:   "crictl info",
+				cmd:   "crictl --runtime-endpoint unix:///run/containerd/containerd.sock info",
 			},
 			{
 				title: "containerd-containers",
-				cmd:   "crictl ps",
+				cmd:   "crictl --runtime-endpoint unix:///run/containerd/containerd.sock ps",
 			},
 			{
 				title: "containerd-pods",
-				cmd:   "crictl pods",
+				cmd:   "crictl --runtime-endpoint unix:///run/containerd/containerd.sock pods",
 			},
 			{
 				title: "cloud-final",
@@ -261,4 +264,126 @@ func SetEnvVar(key, value string, private bool) {
 
 	Logf("Setting environment variable: key=%s, value=%s", key, printableValue)
 	_ = os.Setenv(key, value)
+}
+
+// getOpenStackClusterFromMachine gets the OpenStackCluster that is related to the given machine.
+func getOpenStackClusterFromMachine(ctx context.Context, client client.Client, machine *clusterv1.Machine) (*infrav1.OpenStackCluster, error) {
+	key := types.NamespacedName{
+		Namespace: machine.Namespace,
+		Name:      machine.Spec.ClusterName,
+	}
+	cluster := &clusterv1.Cluster{}
+	err := client.Get(ctx, key, cluster)
+	if err != nil {
+		return nil, err
+	}
+
+	key = types.NamespacedName{
+		Namespace: cluster.Spec.InfrastructureRef.Namespace,
+		Name:      cluster.Spec.InfrastructureRef.Name,
+	}
+	openStackCluster := &infrav1.OpenStackCluster{}
+	err = client.Get(ctx, key, openStackCluster)
+	return openStackCluster, err
+}
+
+type OpenStackLogCollector struct {
+	E2EContext E2EContext
+}
+
+// CollectMachineLog gets logs for the OpenStack resources related to the given machine.
+func (o OpenStackLogCollector) CollectMachineLog(ctx context.Context, managementClusterClient client.Client, m *clusterv1.Machine, outputPath string) error {
+	machineLogBase := path.Join(outputPath, "instances", m.Namespace, m.Name)
+	metaLog := path.Join(machineLogBase, "instance.log")
+
+	if err := os.MkdirAll(filepath.Dir(metaLog), 0o750); err != nil {
+		_, _ = fmt.Fprintf(GinkgoWriter, "couldn't create directory %q for file: %s\n", metaLog, err)
+	}
+
+	f, err := os.OpenFile(metaLog, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	if err != nil {
+		_, _ = fmt.Fprintf(GinkgoWriter, "couldn't open file %q: %s\n", metaLog, err)
+		return nil
+	}
+	defer f.Close()
+
+	openStackCluster, err := getOpenStackClusterFromMachine(ctx, managementClusterClient, m)
+	if err != nil {
+		return fmt.Errorf("error getting OpenStackCluster for Machine: %s", err)
+	}
+
+	if len(m.Status.Addresses) < 1 {
+		return fmt.Errorf("unable to get logs for machine since it has no address")
+	}
+	ip := m.Status.Addresses[0].Address
+
+	srvs, err := GetOpenStackServers(&o.E2EContext, openStackCluster, sets.New(m.Spec.InfrastructureRef.Name))
+	if err != nil {
+		return fmt.Errorf("cannot dump machines, could not get servers from OpenStack: %v", err)
+	}
+	if len(srvs) != 1 {
+		return fmt.Errorf("expected exactly 1 server but got %d", len(srvs))
+	}
+	srv := srvs[m.Spec.InfrastructureRef.Name]
+
+	serverJSON, err := json.MarshalIndent(srv, "", "    ")
+	if err != nil {
+		return fmt.Errorf("error marshalling server %v: %s", srv, err)
+	}
+	if err := os.WriteFile(path.Join(machineLogBase, "server.txt"), serverJSON, 0o600); err != nil {
+		return fmt.Errorf("error writing server JSON %s: %s", serverJSON, err)
+	}
+	_, _ = fmt.Fprintf(f, "instance found: %q\n", srv.ID)
+
+	srvUser := o.E2EContext.E2EConfig.GetVariable(SSHUserMachine)
+	executeCommands(
+		ctx,
+		o.E2EContext.Settings.ArtifactFolder,
+		o.E2EContext.Settings.Debug,
+		filepath.Dir(f.Name()),
+		ip,
+		openStackCluster.Status.Bastion.FloatingIP,
+		srvUser,
+		[]command{
+			// don't do this for now, it just takes to long
+			// {
+			//	title: "systemd",
+			//	cmd:   "journalctl --no-pager --output=short-precise | grep -v  'audit:\\|audit\\['",
+			// },
+			{
+				title: "kern",
+				cmd:   "journalctl --no-pager --output=short-precise -k",
+			},
+			{
+				title: "containerd-info",
+				cmd:   "crictl --runtime-endpoint unix:///run/containerd/containerd.sock info",
+			},
+			{
+				title: "containerd-containers",
+				cmd:   "crictl --runtime-endpoint unix:///run/containerd/containerd.sock ps",
+			},
+			{
+				title: "containerd-pods",
+				cmd:   "crictl --runtime-endpoint unix:///run/containerd/containerd.sock pods",
+			},
+			{
+				title: "cloud-final",
+				cmd:   "journalctl --no-pager -u cloud-final",
+			},
+			{
+				title: "kubelet",
+				cmd:   "journalctl --no-pager -u kubelet.service",
+			},
+			{
+				title: "containerd",
+				cmd:   "journalctl --no-pager -u containerd.service",
+			},
+		},
+	)
+	return nil
+}
+
+// CollectMachinePoolLog is not yet implemented for the OpenStack provider.
+func (o OpenStackLogCollector) CollectMachinePoolLog(_ context.Context, _ client.Client, _ *expv1.MachinePool, _ string) error {
+	return fmt.Errorf("not implemented")
 }
