@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -30,6 +31,7 @@ import (
 	capierrors "sigs.k8s.io/cluster-api/errors"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/annotations"
+	"sigs.k8s.io/cluster-api/util/collections"
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/cluster-api/util/predicates"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -119,15 +121,29 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	// Handle deleted clusters
 	if !openStackCluster.DeletionTimestamp.IsZero() {
-		return reconcileDelete(scope, cluster, openStackCluster)
+		return r.reconcileDelete(ctx, scope, cluster, openStackCluster)
 	}
 
 	// Handle non-deleted clusters
 	return reconcileNormal(scope, cluster, openStackCluster)
 }
 
-func reconcileDelete(scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
+func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
 	scope.Logger().Info("Reconciling Cluster delete")
+
+	// Wait for machines to be deleted before removing the finalizer as they
+	// depend on this resource to deprovision.  Additionally it appears that
+	// allowing the Kubernetes API to vanish too quickly will upset the capi
+	// kubeadm control plane controller.
+	machines, err := collections.GetFilteredMachinesForCluster(ctx, r.Client, cluster)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	if len(machines) != 0 {
+		scope.Logger().Info("Waiting for machines to be deleted", "remaining", len(machines))
+		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+	}
 
 	if err := deleteBastion(scope, cluster, openStackCluster); err != nil {
 		return reconcile.Result{}, err
