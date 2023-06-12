@@ -447,12 +447,12 @@ func reconcileNetworkComponents(scope scope.Scope, cluster *clusterv1.Cluster, o
 			return fmt.Errorf("failed to find network: %w", err)
 		}
 		if len(networkList) == 0 {
-			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find any network: %w", err))
-			return fmt.Errorf("failed to find any network: %w", err)
+			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find any network"))
+			return fmt.Errorf("failed to find any network")
 		}
 		if len(networkList) > 1 {
-			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find only one network (result: %v): %w", networkList, err))
-			return fmt.Errorf("failed to find only one network (result: %v): %w", networkList, err)
+			handleUpdateOSCError(openStackCluster, fmt.Errorf("found multiple networks (result: %v)", networkList))
+			return fmt.Errorf("found multiple networks (result: %v)", networkList)
 		}
 		if openStackCluster.Status.Network == nil {
 			openStackCluster.Status.Network = &infrav1.Network{}
