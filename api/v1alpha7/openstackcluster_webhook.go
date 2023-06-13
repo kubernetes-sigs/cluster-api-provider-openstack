@@ -105,6 +105,11 @@ func (r *OpenStackCluster) ValidateUpdate(oldRaw runtime.Object) error {
 		r.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{}
 	}
 
+	// Allow change only for the first time.
+	if old.Spec.DisableAPIServerFloatingIP && old.Spec.APIServerFixedIP == "" {
+		r.Spec.APIServerFixedIP = ""
+	}
+
 	// Allow changes to the bastion spec.
 	old.Spec.Bastion = &Bastion{}
 	r.Spec.Bastion = &Bastion{}
