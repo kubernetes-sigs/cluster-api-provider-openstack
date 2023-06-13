@@ -17,9 +17,9 @@ limitations under the License.
 package v1alpha7
 
 import (
+	"fmt"
 	"reflect"
 
-	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -69,13 +69,13 @@ func (r *OpenStackMachine) ValidateUpdate(old runtime.Object) error {
 	newOpenStackMachine, err := runtime.DefaultUnstructuredConverter.ToUnstructured(r)
 	if err != nil {
 		return apierrors.NewInvalid(GroupVersion.WithKind("OpenStackMachine").GroupKind(), r.Name, field.ErrorList{
-			field.InternalError(nil, errors.Wrap(err, "failed to convert new OpenStackMachine to unstructured object")),
+			field.InternalError(nil, fmt.Errorf("failed to convert new OpenStackMachine to unstructured object: %w", err)),
 		})
 	}
 	oldOpenStackMachine, err := runtime.DefaultUnstructuredConverter.ToUnstructured(old)
 	if err != nil {
 		return apierrors.NewInvalid(GroupVersion.WithKind("OpenStackMachine").GroupKind(), r.Name, field.ErrorList{
-			field.InternalError(nil, errors.Wrap(err, "failed to convert old OpenStackMachine to unstructured object")),
+			field.InternalError(nil, fmt.Errorf("failed to convert old OpenStackMachine to unstructured object: %w", err)),
 		})
 	}
 
