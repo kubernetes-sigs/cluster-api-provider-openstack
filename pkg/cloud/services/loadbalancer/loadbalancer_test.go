@@ -132,7 +132,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 
 			tt.expectNetwork(mockScopeFactory.NetworkClient.EXPECT())
 			tt.expectLoadBalancer(mockScopeFactory.LbClient.EXPECT())
-			err = lbs.ReconcileLoadBalancer(openStackCluster, "AAAAA", 0)
+			_, err = lbs.ReconcileLoadBalancer(openStackCluster, "AAAAA", 0)
 			if tt.wantError != nil {
 				g.Expect(err).To(MatchError(tt.wantError))
 			} else {

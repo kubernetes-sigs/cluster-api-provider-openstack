@@ -520,9 +520,12 @@ func reconcileNetworkComponents(scope scope.Scope, cluster *clusterv1.Cluster, o
 			return err
 		}
 
-		err = loadBalancerService.ReconcileLoadBalancer(openStackCluster, clusterName, apiServerPort)
+		terminalFailure, err := loadBalancerService.ReconcileLoadBalancer(openStackCluster, clusterName, apiServerPort)
 		if err != nil {
-			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile load balancer: %w", err))
+			// if it's terminalFailure (not Transient), set the Failure reason and message
+			if terminalFailure {
+				handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile load balancer: %w", err))
+			}
 			return fmt.Errorf("failed to reconcile load balancer: %w", err)
 		}
 	}
