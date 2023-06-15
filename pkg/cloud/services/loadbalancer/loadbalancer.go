@@ -46,7 +46,7 @@ const (
 
 const loadBalancerProvisioningStatusActive = "ACTIVE"
 
-func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterName string, apiServerPort int) error {
+func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterName string, apiServerPort int) (bool, error) {
 	loadBalancerName := getLoadBalancerName(clusterName)
 	s.scope.Logger().Info("Reconciling load balancer", "name", loadBalancerName)
 
@@ -60,7 +60,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 
 	providers, err := s.loadbalancerClient.ListLoadBalancerProviders()
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	// Choose the selected provider if it is set in cluster spec, if not, omit the field and Octavia will use the default provider.
@@ -80,10 +80,10 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 
 	lb, err := s.getOrCreateLoadBalancer(openStackCluster, loadBalancerName, openStackCluster.Status.Network.Subnet.ID, clusterName, fixedIPAddress, lbProvider)
 	if err != nil {
-		return err
+		return false, err
 	}
 	if err := s.waitForLoadBalancerActive(lb.ID); err != nil {
-		return fmt.Errorf("load balancer %q with id %s is not active after timeout: %v", loadBalancerName, lb.ID, err)
+		return false, fmt.Errorf("load balancer %q with id %s is not active after timeout: %v", loadBalancerName, lb.ID, err)
 	}
 
 	var lbFloatingIP string
@@ -97,10 +97,10 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 		}
 		fp, err := s.networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterName, floatingIPAddress)
 		if err != nil {
-			return err
+			return false, err
 		}
 		if err = s.networkingService.AssociateFloatingIP(openStackCluster, fp, lb.VipPortID); err != nil {
-			return err
+			return false, err
 		}
 		lbFloatingIP = fp.FloatingIP
 	}
@@ -110,7 +110,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 	allowedCIDRsSupported := false
 	octaviaVersions, err := s.loadbalancerClient.ListOctaviaVersions()
 	if err != nil {
-		return err
+		return false, err
 	}
 	// The current version is always the last one in the list.
 	octaviaVersion := octaviaVersions[len(octaviaVersions)-1].ID
@@ -125,23 +125,23 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 
 		listener, err := s.getOrCreateListener(openStackCluster, lbPortObjectsName, lb.ID, port)
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		pool, err := s.getOrCreatePool(openStackCluster, lbPortObjectsName, listener.ID, lb.ID, lb.Provider)
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		if err := s.getOrCreateMonitor(openStackCluster, lbPortObjectsName, pool.ID, lb.ID); err != nil {
-			return err
+			return false, err
 		}
 
 		if allowedCIDRsSupported {
 			// Skip reconciliation if network status is nil (e.g. during clusterctl move)
 			if openStackCluster.Status.Network != nil {
 				if err := s.getOrUpdateAllowedCIDRS(openStackCluster, listener); err != nil {
-					return err
+					return false, err
 				}
 				allowedCIDRs = listener.AllowedCIDRs
 			}
@@ -156,7 +156,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 		AllowedCIDRs: allowedCIDRs,
 		Tags:         lb.Tags,
 	}
-	return nil
+	return false, nil
 }
 
 func (s *Service) getOrCreateLoadBalancer(openStackCluster *infrav1.OpenStackCluster, loadBalancerName, subnetID, clusterName, vipAddress, provider string) (*loadbalancers.LoadBalancer, error) {
