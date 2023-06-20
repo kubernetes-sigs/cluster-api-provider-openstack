@@ -110,6 +110,11 @@ func (r *OpenStackCluster) ValidateUpdate(oldRaw runtime.Object) error {
 		r.Spec.APIServerFixedIP = ""
 	}
 
+	// If API Server floating IP is disabled, allow the change of the API Server port only for the first time.
+	if old.Spec.DisableAPIServerFloatingIP && old.Spec.APIServerPort == 0 && r.Spec.APIServerPort > 0 {
+		r.Spec.APIServerPort = 0
+	}
+
 	// Allow changes to the bastion spec.
 	old.Spec.Bastion = &Bastion{}
 	r.Spec.Bastion = &Bastion{}
