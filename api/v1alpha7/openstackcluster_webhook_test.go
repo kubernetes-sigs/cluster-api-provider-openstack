@@ -234,6 +234,67 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "Changing OpenStackCluster.Spec.APIServerFixedIP is allowed when API Server Floating IP is disabled",
+			oldTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					DisableAPIServerFloatingIP: true,
+				},
+			},
+			newTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					DisableAPIServerFloatingIP: true,
+					APIServerFixedIP:           "20.1.56.1",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Changing OpenStackCluster.Spec.APIServerFixedIP is not allowed",
+			oldTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					DisableAPIServerFloatingIP: false,
+				},
+			},
+			newTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					DisableAPIServerFloatingIP: false,
+					APIServerFixedIP:           "20.1.56.1",
+				},
+			},
+			wantErr: true,
+		},
+
+		{
+			name: "Changing OpenStackCluster.Spec.APIServerPort is allowed when API Server Floating IP is disabled",
+			oldTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					DisableAPIServerFloatingIP: true,
+				},
+			},
+			newTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					DisableAPIServerFloatingIP: true,
+					APIServerPort:              8443,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Changing OpenStackCluster.Spec.APIServerPort is not allowed",
+			oldTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					DisableAPIServerFloatingIP: false,
+				},
+			},
+			newTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					DisableAPIServerFloatingIP: false,
+					APIServerPort:              8443,
+				},
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
