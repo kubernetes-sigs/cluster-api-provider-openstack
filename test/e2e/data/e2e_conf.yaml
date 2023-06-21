@@ -128,9 +128,9 @@ providers:
 variables:
   # used to ensure we deploy to the correct management cluster
   KUBE_CONTEXT: "kind-capo-e2e"
-  KUBERNETES_VERSION: "v1.26.5"
-  KUBERNETES_VERSION_UPGRADE_FROM: "v1.25.10"
-  KUBERNETES_VERSION_UPGRADE_TO: "v1.26.5"
+  KUBERNETES_VERSION: "v1.27.2"
+  KUBERNETES_VERSION_UPGRADE_FROM: "v1.26.5"
+  KUBERNETES_VERSION_UPGRADE_TO: "v1.27.2"
   ETCD_VERSION_UPGRADE_TO: "3.5.6-0"
   COREDNS_VERSION_UPGRADE_TO: "v1.9.3"
   CNI: "../../data/cni/calico.yaml"
@@ -153,12 +153,12 @@ variables:
   OPENSTACK_VOLUME_TYPE_ALT: "test-volume-type"
   CONFORMANCE_WORKER_MACHINE_COUNT: "5"
   CONFORMANCE_CONTROL_PLANE_MACHINE_COUNT: "1"
-  INIT_WITH_KUBERNETES_VERSION: "v1.26.5"
+  INIT_WITH_KUBERNETES_VERSION: "v1.27.2"
   E2E_IMAGE_URL: "http://10.0.3.15/capo-e2e-image.tar"
   # The default user for SSH connections from bastion to machines
   SSH_USER_MACHINE: "ubuntu"
   EXP_KUBEADM_BOOTSTRAP_FORMAT_IGNITION: "true"
-  OPENSTACK_FLATCAR_IMAGE_NAME: "flatcar-stable-3510.2.1-kube-v1.26.5"
+  OPENSTACK_FLATCAR_IMAGE_NAME: "flatcar-stable-3510.2.3-kube-v1.27.2"
 
 intervals:
   conformance/wait-control-plane: ["30m", "10s"]
