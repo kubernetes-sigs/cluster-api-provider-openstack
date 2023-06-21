@@ -65,8 +65,9 @@ const specName = "e2e"
 
 var _ = Describe("e2e tests [PR-Blocking]", func() {
 	var (
-		namespace *corev1.Namespace
-		ctx       context.Context
+		namespace        *corev1.Namespace
+		clusterResources *clusterctl.ApplyClusterTemplateAndWaitResult
+		ctx              context.Context
 
 		// Cleanup functions which cannot run until after the cluster has been deleted
 		postClusterCleanup []func()
@@ -77,6 +78,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 		ctx = context.TODO()
 		// Setup a Namespace where to host objects for this spec and create a watcher for the namespace events.
 		namespace = shared.SetupSpecNamespace(ctx, specName, e2eCtx)
+		clusterResources = new(clusterctl.ApplyClusterTemplateAndWaitResult)
 		Expect(e2eCtx.E2EConfig).ToNot(BeNil(), "Invalid argument. e2eConfig can't be nil when calling %s spec", specName)
 		Expect(e2eCtx.E2EConfig.Variables).To(HaveKey(shared.KubernetesVersion))
 		shared.SetEnvVar("USE_CI_ARTIFACTS", "true", false)
@@ -91,7 +93,8 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			configCluster.ControlPlaneMachineCount = pointer.Int64(3)
 			configCluster.WorkerMachineCount = pointer.Int64(1)
 			configCluster.Flavor = shared.FlavorDefault
-			md := createCluster(ctx, configCluster)
+			createCluster(ctx, configCluster, clusterResources)
+			md := clusterResources.MachineDeployments
 
 			workerMachines := framework.GetMachinesByMachineDeployments(ctx, framework.GetMachinesByMachineDeploymentsInput{
 				Lister:            e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
@@ -169,7 +172,8 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			configCluster.ControlPlaneMachineCount = pointer.Int64(3)
 			configCluster.WorkerMachineCount = pointer.Int64(1)
 			configCluster.Flavor = shared.FlavorFlatcar
-			md := createCluster(ctx, configCluster)
+			createCluster(ctx, configCluster, clusterResources)
+			md := clusterResources.MachineDeployments
 
 			workerMachines := framework.GetMachinesByMachineDeployments(ctx, framework.GetMachinesByMachineDeploymentsInput{
 				Lister:            e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
@@ -210,7 +214,8 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			configCluster.ControlPlaneMachineCount = pointer.Int64(1)
 			configCluster.WorkerMachineCount = pointer.Int64(1)
 			configCluster.Flavor = shared.FlavorWithoutLB
-			md := createCluster(ctx, configCluster)
+			createCluster(ctx, configCluster, clusterResources)
+			md := clusterResources.MachineDeployments
 
 			workerMachines := framework.GetMachinesByMachineDeployments(ctx, framework.GetMachinesByMachineDeploymentsInput{
 				Lister:            e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
@@ -343,7 +348,8 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			configCluster.ControlPlaneMachineCount = pointer.Int64(1)
 			configCluster.WorkerMachineCount = pointer.Int64(1)
 			configCluster.Flavor = shared.FlavorMultiNetwork
-			md = createCluster(ctx, configCluster)
+			createCluster(ctx, configCluster, clusterResources)
+			md = clusterResources.MachineDeployments
 		})
 
 		It("should attach all machines to multiple networks", func() {
@@ -421,7 +427,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			configCluster.ControlPlaneMachineCount = pointer.Int64(1)
 			configCluster.WorkerMachineCount = pointer.Int64(0)
 			configCluster.Flavor = shared.FlavorWithoutLB
-			_ = createCluster(ctx, configCluster)
+			createCluster(ctx, configCluster, clusterResources)
 
 			shared.Logf("Creating Machine Deployment in an invalid Availability Zone")
 			mdInvalidAZName := clusterName + "-md-invalid-az"
@@ -474,7 +480,8 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			configCluster.ControlPlaneMachineCount = pointer.Int64(3)
 			configCluster.WorkerMachineCount = pointer.Int64(2)
 			configCluster.Flavor = shared.FlavorMultiAZ
-			md = createCluster(ctx, configCluster)
+			createCluster(ctx, configCluster, clusterResources)
+			md = clusterResources.MachineDeployments
 
 			var err error
 			cluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
@@ -595,6 +602,8 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 
 	AfterEach(func() {
 		shared.SetEnvVar("USE_CI_ARTIFACTS", "false", false)
+		shared.Logf("Attempting to collect logs for cluster %q in namespace %q", clusterResources.Cluster.Name, namespace.Name)
+		e2eCtx.Environment.BootstrapClusterProxy.CollectWorkloadClusterLogs(ctx, namespace.Name, clusterResources.Cluster.Name, filepath.Join(e2eCtx.Settings.ArtifactFolder, "clusters", e2eCtx.Environment.BootstrapClusterProxy.GetName(), namespace.Name))
 		// Dumps all the resources in the spec namespace, then cleanups the cluster object and the spec namespace itself.
 		shared.DumpSpecResourcesAndCleanup(ctx, specName, namespace, e2eCtx)
 
@@ -605,8 +614,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 	})
 })
 
-func createCluster(ctx context.Context, configCluster clusterctl.ConfigClusterInput) []*clusterv1.MachineDeployment {
-	result := &clusterctl.ApplyClusterTemplateAndWaitResult{}
+func createCluster(ctx context.Context, configCluster clusterctl.ConfigClusterInput, result *clusterctl.ApplyClusterTemplateAndWaitResult) {
 	clusterctl.ApplyClusterTemplateAndWait(ctx, clusterctl.ApplyClusterTemplateAndWaitInput{
 		ClusterProxy:                 e2eCtx.Environment.BootstrapClusterProxy,
 		ConfigCluster:                configCluster,
@@ -614,8 +622,6 @@ func createCluster(ctx context.Context, configCluster clusterctl.ConfigClusterIn
 		WaitForControlPlaneIntervals: e2eCtx.E2EConfig.GetIntervals(specName, "wait-control-plane"),
 		WaitForMachineDeployments:    e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes"),
 	}, result)
-
-	return result.MachineDeployments
 }
 
 func defaultConfigCluster(clusterName, namespace string) clusterctl.ConfigClusterInput {

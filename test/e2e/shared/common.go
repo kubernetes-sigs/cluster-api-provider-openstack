@@ -26,13 +26,13 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/sets"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	expv1 "sigs.k8s.io/cluster-api/exp/api/v1beta1"
 	"sigs.k8s.io/cluster-api/test/framework"
@@ -57,6 +57,9 @@ func SetupSpecNamespace(ctx context.Context, specName string, e2eCtx *E2EContext
 	return namespace
 }
 
+// DumpSpecResourcesAndCleanup dumps all the resources in the spec namespace.
+// This includes OpenStack resources and all the CAPI/CAPO resources in Kubernetes.
+// It also then cleanups the cluster object and the spec namespace itself.
 func DumpSpecResourcesAndCleanup(ctx context.Context, specName string, namespace *corev1.Namespace, e2eCtx *E2EContext) {
 	Logf("Running DumpSpecResourcesAndCleanup for namespace %q", namespace.Name)
 	// Dump all Cluster API related resources to artifacts before deleting them.
@@ -65,9 +68,6 @@ func DumpSpecResourcesAndCleanup(ctx context.Context, specName string, namespace
 	dumpAllResources := func(directory ...string) {
 		dumpSpecResources(ctx, e2eCtx, namespace, directory...)
 		dumpOpenStack(ctx, e2eCtx, e2eCtx.Environment.BootstrapClusterProxy.GetName(), directory...)
-
-		Logf("Dumping all OpenStack server instances in the %q namespace", namespace.Name)
-		dumpMachines(ctx, e2eCtx, namespace, directory...)
 	}
 
 	dumpAllResources()
@@ -100,40 +100,8 @@ func DumpSpecResourcesAndCleanup(ctx context.Context, specName string, namespace
 	delete(e2eCtx.Environment.Namespaces, namespace)
 }
 
-func dumpMachines(ctx context.Context, e2eCtx *E2EContext, namespace *corev1.Namespace, directory ...string) {
-	cluster, err := ClusterForSpec(ctx, e2eCtx, namespace)
-	if err != nil {
-		_, _ = fmt.Fprintf(GinkgoWriter, "cannot dump machines, couldn't get cluster in namespace %s: %v\n", namespace.Name, err)
-		return
-	}
-	if cluster.Status.Bastion == nil || cluster.Status.Bastion.FloatingIP == "" {
-		_, _ = fmt.Fprintln(GinkgoWriter, "cannot dump machines, cluster doesn't has a bastion host (yet) with a floating ip")
-		return
-	}
-	machines, err := machinesForSpec(ctx, e2eCtx.Environment.BootstrapClusterProxy, namespace)
-	if err != nil {
-		_, _ = fmt.Fprintf(GinkgoWriter, "cannot dump machines, could not get machines: %v\n", err)
-		return
-	}
-
-	machineNames := sets.New[string]()
-	for _, machine := range machines.Items {
-		machineNames.Insert(machine.Name)
-	}
-	srvs, err := GetOpenStackServers(e2eCtx, cluster, machineNames)
-	if err != nil {
-		_, _ = fmt.Fprintf(GinkgoWriter, "cannot dump machines, could not get servers from OpenStack: %v\n", err)
-		return
-	}
-	for _, m := range machines.Items {
-		srv, ok := srvs[m.Name]
-		if !ok {
-			continue
-		}
-		dumpMachine(ctx, e2eCtx, m, srv, cluster.Status.Bastion.FloatingIP, directory...)
-	}
-}
-
+// ClusterForSpec returns the OpenStackCluster in the given namespace.
+// It is considered an error if more than 1 OpenStackCluster is found.
 func ClusterForSpec(ctx context.Context, e2eCtx *E2EContext, namespace *corev1.Namespace) (*infrav1.OpenStackCluster, error) {
 	lister := e2eCtx.Environment.BootstrapClusterProxy.GetClient()
 	list := new(infrav1.OpenStackClusterList)
@@ -146,88 +114,7 @@ func ClusterForSpec(ctx context.Context, e2eCtx *E2EContext, namespace *corev1.N
 	return &list.Items[0], nil
 }
 
-func machinesForSpec(ctx context.Context, clusterProxy framework.ClusterProxy, namespace *corev1.Namespace) (*infrav1.OpenStackMachineList, error) {
-	list := new(infrav1.OpenStackMachineList)
-	if err := clusterProxy.GetClient().List(ctx, list, client.InNamespace(namespace.GetName())); err != nil {
-		return nil, fmt.Errorf("error listing machines: %v", err)
-	}
-	return list, nil
-}
-
-func dumpMachine(ctx context.Context, e2eCtx *E2EContext, machine infrav1.OpenStackMachine, srv ServerExtWithIP, bastionIP string, directory ...string) {
-	paths := append([]string{e2eCtx.Settings.ArtifactFolder, "clusters", e2eCtx.Environment.BootstrapClusterProxy.GetName()}, directory...)
-	logPath := filepath.Join(paths...)
-	machineLogBase := path.Join(logPath, "instances", machine.Namespace, machine.Name)
-	metaLog := path.Join(machineLogBase, "instance.log")
-
-	if err := os.MkdirAll(filepath.Dir(metaLog), 0o750); err != nil {
-		_, _ = fmt.Fprintf(GinkgoWriter, "couldn't create directory %q for file: %s\n", metaLog, err)
-	}
-
-	f, err := os.OpenFile(metaLog, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
-	if err != nil {
-		_, _ = fmt.Fprintf(GinkgoWriter, "couldn't open file %q: %s\n", metaLog, err)
-		return
-	}
-	defer f.Close()
-
-	serverJSON, err := json.MarshalIndent(srv, "", "    ")
-	if err != nil {
-		_, _ = fmt.Fprintf(GinkgoWriter, "error marshalling server %v: %s", srv, err)
-	}
-	if err := os.WriteFile(path.Join(machineLogBase, "server.txt"), serverJSON, 0o600); err != nil {
-		_, _ = fmt.Fprintf(GinkgoWriter, "error writing server JSON %s: %s", serverJSON, err)
-	}
-
-	srvUser := e2eCtx.E2EConfig.GetVariable(SSHUserMachine)
-
-	_, _ = fmt.Fprintf(f, "instance found: %q\n", srv.ID)
-	executeCommands(
-		ctx,
-		e2eCtx.Settings.ArtifactFolder,
-		e2eCtx.Settings.Debug,
-		filepath.Dir(f.Name()),
-		srv.ip,
-		bastionIP,
-		srvUser,
-		[]command{
-			// don't do this for now, it just takes to long
-			// {
-			//	title: "systemd",
-			//	cmd:   "journalctl --no-pager --output=short-precise | grep -v  'audit:\\|audit\\['",
-			// },
-			{
-				title: "kern",
-				cmd:   "journalctl --no-pager --output=short-precise -k",
-			},
-			{
-				title: "containerd-info",
-				cmd:   "crictl --runtime-endpoint unix:///run/containerd/containerd.sock info",
-			},
-			{
-				title: "containerd-containers",
-				cmd:   "crictl --runtime-endpoint unix:///run/containerd/containerd.sock ps",
-			},
-			{
-				title: "containerd-pods",
-				cmd:   "crictl --runtime-endpoint unix:///run/containerd/containerd.sock pods",
-			},
-			{
-				title: "cloud-final",
-				cmd:   "journalctl --no-pager -u cloud-final",
-			},
-			{
-				title: "kubelet",
-				cmd:   "journalctl --no-pager -u kubelet.service",
-			},
-			{
-				title: "containerd",
-				cmd:   "journalctl --no-pager -u containerd.service",
-			},
-		},
-	)
-}
-
+// dumpSpecResources dumps all CAPI/CAPO resources to yaml.
 func dumpSpecResources(ctx context.Context, e2eCtx *E2EContext, namespace *corev1.Namespace, directory ...string) {
 	paths := append([]string{e2eCtx.Settings.ArtifactFolder, "clusters", e2eCtx.Environment.BootstrapClusterProxy.GetName(), "resources"}, directory...)
 	framework.DumpAllResources(ctx, framework.DumpAllResourcesInput{
@@ -287,25 +174,22 @@ func getOpenStackClusterFromMachine(ctx context.Context, client client.Client, m
 	return openStackCluster, err
 }
 
+// getIDFromProviderID returns the server ID part of a provider ID string.
+func getIDFromProviderID(providerID string) string {
+	return strings.TrimPrefix(providerID, "openstack:///")
+}
+
 type OpenStackLogCollector struct {
-	E2EContext E2EContext
+	E2EContext *E2EContext
 }
 
 // CollectMachineLog gets logs for the OpenStack resources related to the given machine.
 func (o OpenStackLogCollector) CollectMachineLog(ctx context.Context, managementClusterClient client.Client, m *clusterv1.Machine, outputPath string) error {
-	machineLogBase := path.Join(outputPath, "instances", m.Namespace, m.Name)
-	metaLog := path.Join(machineLogBase, "instance.log")
+	Logf("Collecting logs for machine %q and storing them in %q", m.ObjectMeta.Name, outputPath)
 
-	if err := os.MkdirAll(filepath.Dir(metaLog), 0o750); err != nil {
-		_, _ = fmt.Fprintf(GinkgoWriter, "couldn't create directory %q for file: %s\n", metaLog, err)
+	if err := os.MkdirAll(outputPath, 0o750); err != nil {
+		return fmt.Errorf("couldn't create directory %q for logs: %s", outputPath, err)
 	}
-
-	f, err := os.OpenFile(metaLog, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
-	if err != nil {
-		_, _ = fmt.Fprintf(GinkgoWriter, "couldn't open file %q: %s\n", metaLog, err)
-		return nil
-	}
-	defer f.Close()
 
 	openStackCluster, err := getOpenStackClusterFromMachine(ctx, managementClusterClient, m)
 	if err != nil {
@@ -317,30 +201,25 @@ func (o OpenStackLogCollector) CollectMachineLog(ctx context.Context, management
 	}
 	ip := m.Status.Addresses[0].Address
 
-	srvs, err := GetOpenStackServers(&o.E2EContext, openStackCluster, sets.New(m.Spec.InfrastructureRef.Name))
+	srv, err := GetOpenStackServerWithIP(o.E2EContext, getIDFromProviderID(*m.Spec.ProviderID), openStackCluster)
 	if err != nil {
-		return fmt.Errorf("cannot dump machines, could not get servers from OpenStack: %v", err)
+		return fmt.Errorf("error getting OpenStack server: %w", err)
 	}
-	if len(srvs) != 1 {
-		return fmt.Errorf("expected exactly 1 server but got %d", len(srvs))
-	}
-	srv := srvs[m.Spec.InfrastructureRef.Name]
 
 	serverJSON, err := json.MarshalIndent(srv, "", "    ")
 	if err != nil {
 		return fmt.Errorf("error marshalling server %v: %s", srv, err)
 	}
-	if err := os.WriteFile(path.Join(machineLogBase, "server.txt"), serverJSON, 0o600); err != nil {
+	if err := os.WriteFile(path.Join(outputPath, "server.txt"), serverJSON, 0o600); err != nil {
 		return fmt.Errorf("error writing server JSON %s: %s", serverJSON, err)
 	}
-	_, _ = fmt.Fprintf(f, "instance found: %q\n", srv.ID)
 
 	srvUser := o.E2EContext.E2EConfig.GetVariable(SSHUserMachine)
 	executeCommands(
 		ctx,
 		o.E2EContext.Settings.ArtifactFolder,
 		o.E2EContext.Settings.Debug,
-		filepath.Dir(f.Name()),
+		outputPath,
 		ip,
 		openStackCluster.Status.Bastion.FloatingIP,
 		srvUser,

@@ -485,6 +485,41 @@ func GetOpenStackServers(e2eCtx *E2EContext, openStackCluster *infrav1.OpenStack
 	return srvs, nil
 }
 
+// GetOpenStackServer returns the server with the given ID along with the first
+// IP address it has in the OpenStackCluster network.
+func GetOpenStackServerWithIP(e2eCtx *E2EContext, id string, openStackCluster *infrav1.OpenStackCluster) (ServerExtWithIP, error) {
+	srvExtWithIP := ServerExtWithIP{}
+	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
+	if err != nil {
+		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
+		return srvExtWithIP, nil
+	}
+
+	computeClient, err := clients.NewComputeClient(providerClient, clientOpts)
+	if err != nil {
+		return srvExtWithIP, fmt.Errorf("unable to create compute client: %w", err)
+	}
+	srvExt, err := computeClient.GetServer(id)
+	if err != nil {
+		return srvExtWithIP, fmt.Errorf("unable to get server: %w", err)
+	}
+	srvExtWithIP.ServerExt = *srvExt
+
+	instanceStatus := compute.NewInstanceStatusFromServer(srvExt, logr.Discard())
+	instanceNS, err := instanceStatus.NetworkStatus()
+	if err != nil {
+		return srvExtWithIP, fmt.Errorf("error getting network status for server %s: %v", srvExt.Name, err)
+	}
+
+	ip := instanceNS.IP(openStackCluster.Status.Network.Name)
+	if ip == "" {
+		return srvExtWithIP, fmt.Errorf("error getting internal ip for server %s: internal ip doesn't exist (yet)", srvExt.Name)
+	}
+	srvExtWithIP.ip = ip
+
+	return srvExtWithIP, nil
+}
+
 func GetTenantProviderClient(e2eCtx *E2EContext) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, *string, error) {
 	openstackCloud := e2eCtx.E2EConfig.GetVariable(OpenStackCloud)
 	return getProviderClient(e2eCtx, openstackCloud)
