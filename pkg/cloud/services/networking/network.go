@@ -127,11 +127,10 @@ func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, c
 
 	if res.ID != "" {
 		// Network exists
-		openStackCluster.Status.Network = &infrav1.Network{
-			ID:   res.ID,
-			Name: res.Name,
-			Tags: res.Tags,
-		}
+		openStackCluster.Status.Network = &infrav1.NetworkStatusWithSubnets{}
+		openStackCluster.Status.Network.ID = res.ID
+		openStackCluster.Status.Network.Name = res.Name
+		openStackCluster.Status.Network.Tags = res.Tags
 		sInfo := fmt.Sprintf("Reuse Existing Network %s with id %s", res.Name, res.ID)
 		s.scope.Logger().V(6).Info(sInfo)
 		return nil
@@ -167,11 +166,10 @@ func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, c
 		}
 	}
 
-	openStackCluster.Status.Network = &infrav1.Network{
-		ID:   network.ID,
-		Name: network.Name,
-		Tags: openStackCluster.Spec.Tags,
-	}
+	openStackCluster.Status.Network = &infrav1.NetworkStatusWithSubnets{}
+	openStackCluster.Status.Network.ID = network.ID
+	openStackCluster.Status.Network.Name = network.Name
+	openStackCluster.Status.Network.Tags = openStackCluster.Spec.Tags
 	return nil
 }
 
@@ -228,11 +226,13 @@ func (s *Service) ReconcileSubnet(openStackCluster *infrav1.OpenStackCluster, cl
 		s.scope.Logger().V(6).Info(fmt.Sprintf("Reuse existing subnet %s with id %s", subnetName, subnet.ID))
 	}
 
-	openStackCluster.Status.Network.Subnet = &infrav1.Subnet{
-		ID:   subnet.ID,
-		Name: subnet.Name,
-		CIDR: subnet.CIDR,
-		Tags: subnet.Tags,
+	openStackCluster.Status.Network.Subnets = []infrav1.Subnet{
+		{
+			ID:   subnet.ID,
+			Name: subnet.Name,
+			CIDR: subnet.CIDR,
+			Tags: subnet.Tags,
+		},
 	}
 	return nil
 }

@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha6
 
 import (
+	"reflect"
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -130,6 +131,15 @@ func restorev1alpha7ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *inf
 	}
 }
 
+func restorev1alpha7ClusterStatus(previous *infrav1.OpenStackClusterStatus, dst *infrav1.OpenStackClusterStatus) {
+	// It's (theoretically) possible in v1alpha7 to have Network nil but
+	// Router or APIServerLoadBalancer not nil. In hub-spoke-hub conversion this will
+	// result in Network being a pointer to an empty object.
+	if previous.Network == nil && dst.Network != nil && reflect.ValueOf(*dst.Network).IsZero() {
+		dst.Network = nil
+	}
+}
+
 func restorev1alpha6ClusterSpec(previous *OpenStackClusterSpec, dst *OpenStackClusterSpec) {
 	for i := range previous.ExternalRouterIPs {
 		dstIP := &dst.ExternalRouterIPs[i]
@@ -158,6 +168,7 @@ func (r *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {
 
 	if restored {
 		restorev1alpha7ClusterSpec(&previous.Spec, &dst.Spec)
+		restorev1alpha7ClusterStatus(&previous.Status, &dst.Status)
 	}
 
 	return nil
@@ -416,26 +427,6 @@ func Convert_v1alpha6_PortOpts_To_v1alpha7_PortOpts(in *PortOpts, out *infrav1.P
 	return nil
 }
 
-func Convert_Slice_v1alpha6_Network_To_Slice_v1alpha7_Network(in *[]Network, out *[]infrav1.Network, s conversion.Scope) error {
-	*out = make([]infrav1.Network, len(*in))
-	for i := range *in {
-		if err := Convert_v1alpha6_Network_To_v1alpha7_Network(&(*in)[i], &(*out)[i], s); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func Convert_Slice_v1alpha7_Network_To_Slice_v1alpha6_Network(in *[]infrav1.Network, out *[]Network, s conversion.Scope) error {
-	*out = make([]Network, len(*in))
-	for i := range *in {
-		if err := Convert_v1alpha7_Network_To_v1alpha6_Network(&(*in)[i], &(*out)[i], s); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func Convert_v1alpha7_PortOpts_To_v1alpha6_PortOpts(in *infrav1.PortOpts, out *PortOpts, s conversion.Scope) error {
 	// value specs and propagate uplink status have been added in v1alpha7 but have no equivalent in v1alpha5
 	err := autoConvert_v1alpha7_PortOpts_To_v1alpha6_PortOpts(in, out, s)
@@ -475,9 +466,31 @@ func Convert_v1alpha7_BastionStatus_To_v1alpha6_Instance(in *infrav1.BastionStat
 	return nil
 }
 
-func Convert_v1alpha6_Network_To_v1alpha7_Network(in *Network, out *infrav1.Network, s conversion.Scope) error {
+func Convert_v1alpha6_Network_To_v1alpha7_NetworkStatusWithSubnets(in *Network, out *infrav1.NetworkStatusWithSubnets, s conversion.Scope) error {
 	// PortOpts has been removed in v1alpha7
-	return autoConvert_v1alpha6_Network_To_v1alpha7_Network(in, out, s)
+	err := Convert_v1alpha6_Network_To_v1alpha7_NetworkStatus(in, &out.NetworkStatus, s)
+	if err != nil {
+		return err
+	}
+
+	if in.Subnet != nil {
+		out.Subnets = []infrav1.Subnet{infrav1.Subnet(*in.Subnet)}
+	}
+	return nil
+}
+
+func Convert_v1alpha7_NetworkStatusWithSubnets_To_v1alpha6_Network(in *infrav1.NetworkStatusWithSubnets, out *Network, s conversion.Scope) error {
+	// PortOpts has been removed in v1alpha7
+	err := Convert_v1alpha7_NetworkStatus_To_v1alpha6_Network(&in.NetworkStatus, out, s)
+	if err != nil {
+		return err
+	}
+
+	// Can only down-convert a single subnet
+	if len(in.Subnets) > 0 {
+		out.Subnet = (*Subnet)(&in.Subnets[0])
+	}
+	return nil
 }
 
 func Convert_v1alpha6_Network_To_v1alpha7_NetworkStatus(in *Network, out *infrav1.NetworkStatus, _ conversion.Scope) error {
@@ -578,5 +591,39 @@ func Convert_v1alpha7_BindingProfile_To_Map_string_To_Interface(in *infrav1.Bind
 	if in.TrustedVF {
 		(out)["trusted"] = trueString
 	}
+	return nil
+}
+
+func Convert_v1alpha7_OpenStackClusterStatus_To_v1alpha6_OpenStackClusterStatus(in *infrav1.OpenStackClusterStatus, out *OpenStackClusterStatus, s conversion.Scope) error {
+	err := autoConvert_v1alpha7_OpenStackClusterStatus_To_v1alpha6_OpenStackClusterStatus(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	// Router and APIServerLoadBalancer have been moved out of Network in v1alpha7
+	if in.Router != nil || in.APIServerLoadBalancer != nil {
+		if out.Network == nil {
+			out.Network = &Network{}
+		}
+
+		out.Network.Router = (*Router)(in.Router)
+		out.Network.APIServerLoadBalancer = (*LoadBalancer)(in.APIServerLoadBalancer)
+	}
+
+	return nil
+}
+
+func Convert_v1alpha6_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(in *OpenStackClusterStatus, out *infrav1.OpenStackClusterStatus, s conversion.Scope) error {
+	err := autoConvert_v1alpha6_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	// Router and APIServerLoadBalancer have been moved out of Network in v1alpha7
+	if in.Network != nil {
+		out.Router = (*infrav1.Router)(in.Network.Router)
+		out.APIServerLoadBalancer = (*infrav1.LoadBalancer)(in.Network.APIServerLoadBalancer)
+	}
+
 	return nil
 }

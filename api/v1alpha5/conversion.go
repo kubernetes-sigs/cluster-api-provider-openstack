@@ -212,26 +212,6 @@ func Convert_v1alpha7_PortOpts_To_v1alpha5_PortOpts(in *infrav1.PortOpts, out *P
 	return nil
 }
 
-func Convert_Slice_v1alpha5_Network_To_Slice_v1alpha7_Network(in *[]Network, out *[]infrav1.Network, s conversion.Scope) error {
-	*out = make([]infrav1.Network, len(*in))
-	for i := range *in {
-		if err := Convert_v1alpha5_Network_To_v1alpha7_Network(&(*in)[i], &(*out)[i], s); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func Convert_Slice_v1alpha7_Network_To_Slice_v1alpha5_Network(in *[]infrav1.Network, out *[]Network, s conversion.Scope) error {
-	*out = make([]Network, len(*in))
-	for i := range *in {
-		if err := Convert_v1alpha7_Network_To_v1alpha5_Network(&(*in)[i], &(*out)[i], s); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func Convert_v1alpha5_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in *OpenStackMachineSpec, out *infrav1.OpenStackMachineSpec, s conversion.Scope) error {
 	return autoConvert_v1alpha5_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in, out, s)
 }
@@ -280,9 +260,31 @@ func Convert_v1alpha7_BastionStatus_To_v1alpha5_Instance(in *infrav1.BastionStat
 	return nil
 }
 
-func Convert_v1alpha5_Network_To_v1alpha7_Network(in *Network, out *infrav1.Network, s conversion.Scope) error {
+func Convert_v1alpha5_Network_To_v1alpha7_NetworkStatusWithSubnets(in *Network, out *infrav1.NetworkStatusWithSubnets, s conversion.Scope) error {
 	// PortOpts has been removed in v1alpha7
-	return autoConvert_v1alpha5_Network_To_v1alpha7_Network(in, out, s)
+	err := Convert_v1alpha5_Network_To_v1alpha7_NetworkStatus(in, &out.NetworkStatus, s)
+	if err != nil {
+		return err
+	}
+
+	if in.Subnet != nil {
+		out.Subnets = []infrav1.Subnet{infrav1.Subnet(*in.Subnet)}
+	}
+	return nil
+}
+
+func Convert_v1alpha7_NetworkStatusWithSubnets_To_v1alpha5_Network(in *infrav1.NetworkStatusWithSubnets, out *Network, s conversion.Scope) error {
+	// PortOpts has been removed in v1alpha7
+	err := Convert_v1alpha7_NetworkStatus_To_v1alpha5_Network(&in.NetworkStatus, out, s)
+	if err != nil {
+		return err
+	}
+
+	// Can only down-convert a single subnet
+	if len(in.Subnets) > 0 {
+		out.Subnet = (*Subnet)(&in.Subnets[0])
+	}
+	return nil
 }
 
 func Convert_v1alpha5_Network_To_v1alpha7_NetworkStatus(in *Network, out *infrav1.NetworkStatus, _ conversion.Scope) error {
@@ -383,5 +385,51 @@ func Convert_v1alpha7_BindingProfile_To_Map_string_To_Interface(in *infrav1.Bind
 	if in.TrustedVF {
 		(out)["trusted"] = trueString
 	}
+	return nil
+}
+
+func Convert_v1alpha7_OpenStackClusterStatus_To_v1alpha5_OpenStackClusterStatus(in *infrav1.OpenStackClusterStatus, out *OpenStackClusterStatus, s conversion.Scope) error {
+	err := autoConvert_v1alpha7_OpenStackClusterStatus_To_v1alpha5_OpenStackClusterStatus(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	// Router and APIServerLoadBalancer have been moved out of Network in v1alpha7
+	if in.Router != nil || in.APIServerLoadBalancer != nil {
+		if out.Network == nil {
+			out.Network = &Network{}
+		}
+
+		out.Network.Router = (*Router)(in.Router)
+		if in.APIServerLoadBalancer != nil {
+			out.Network.APIServerLoadBalancer = &LoadBalancer{}
+			err = Convert_v1alpha7_LoadBalancer_To_v1alpha5_LoadBalancer(in.APIServerLoadBalancer, out.Network.APIServerLoadBalancer, s)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func Convert_v1alpha5_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(in *OpenStackClusterStatus, out *infrav1.OpenStackClusterStatus, s conversion.Scope) error {
+	err := autoConvert_v1alpha5_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	// Router and APIServerLoadBalancer have been moved out of Network in v1alpha7
+	if in.Network != nil {
+		out.Router = (*infrav1.Router)(in.Network.Router)
+		if in.Network.APIServerLoadBalancer != nil {
+			out.APIServerLoadBalancer = &infrav1.LoadBalancer{}
+			err = Convert_v1alpha5_LoadBalancer_To_v1alpha7_LoadBalancer(in.Network.APIServerLoadBalancer, out.APIServerLoadBalancer, s)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }

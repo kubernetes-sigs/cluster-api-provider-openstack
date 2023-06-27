@@ -163,22 +163,6 @@ type RootVolume struct {
 	AvailabilityZone string `json:"availabilityZone,omitempty"`
 }
 
-// Network represents basic information about an OpenStack Neutron Network associated with an instance's port.
-type Network struct {
-	Name string `json:"name"`
-	ID   string `json:"id"`
-
-	//+optional
-	Tags []string `json:"tags,omitempty"`
-
-	Subnet *Subnet `json:"subnet,omitempty"`
-	Router *Router `json:"router,omitempty"`
-
-	// Be careful when using APIServerLoadBalancer, because this field is optional and therefore not
-	// set in all cases
-	APIServerLoadBalancer *LoadBalancer `json:"apiServerLoadBalancer,omitempty"`
-}
-
 // NetworkStatus contains basic information about an existing neutron network.
 type NetworkStatus struct {
 	Name string `json:"name"`
@@ -186,6 +170,14 @@ type NetworkStatus struct {
 
 	//+optional
 	Tags []string `json:"tags,omitempty"`
+}
+
+// NetworkStatusWithSubnets represents basic information about an existing neutron network and an associated set of subnets.
+type NetworkStatusWithSubnets struct {
+	NetworkStatus `json:",inline"`
+
+	// Subnets is a list of subnets associated with the default cluster network. Machines which use the default cluster network will get an address from all of these subnets.
+	Subnets []Subnet `json:"subnets,omitempty"`
 }
 
 // Subnet represents basic information about the associated OpenStack Neutron Subnet.

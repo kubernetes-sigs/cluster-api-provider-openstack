@@ -455,7 +455,7 @@ func reconcileNetworkComponents(scope scope.Scope, cluster *clusterv1.Cluster, o
 			return fmt.Errorf("found multiple networks (result: %v)", networkList)
 		}
 		if openStackCluster.Status.Network == nil {
-			openStackCluster.Status.Network = &infrav1.Network{}
+			openStackCluster.Status.Network = &infrav1.NetworkStatusWithSubnets{}
 		}
 		openStackCluster.Status.Network.ID = networkList[0].ID
 		openStackCluster.Status.Network.Name = networkList[0].Name
@@ -473,11 +473,13 @@ func reconcileNetworkComponents(scope scope.Scope, cluster *clusterv1.Cluster, o
 			return err
 		}
 
-		openStackCluster.Status.Network.Subnet = &infrav1.Subnet{
-			ID:   subnet.ID,
-			Name: subnet.Name,
-			CIDR: subnet.CIDR,
-			Tags: subnet.Tags,
+		openStackCluster.Status.Network.Subnets = []infrav1.Subnet{
+			{
+				ID:   subnet.ID,
+				Name: subnet.Name,
+				CIDR: subnet.CIDR,
+				Tags: subnet.Tags,
+			},
 		}
 	} else {
 		err := networkingService.ReconcileNetwork(openStackCluster, clusterName)
@@ -535,10 +537,10 @@ func reconcileNetworkComponents(scope scope.Scope, cluster *clusterv1.Cluster, o
 		// If there is a load balancer use the floating IP for it if set, falling back to the internal IP
 		switch {
 		case openStackCluster.Spec.APIServerLoadBalancer.Enabled:
-			if openStackCluster.Status.Network.APIServerLoadBalancer.IP != "" {
-				host = openStackCluster.Status.Network.APIServerLoadBalancer.IP
+			if openStackCluster.Status.APIServerLoadBalancer.IP != "" {
+				host = openStackCluster.Status.APIServerLoadBalancer.IP
 			} else {
-				host = openStackCluster.Status.Network.APIServerLoadBalancer.InternalIP
+				host = openStackCluster.Status.APIServerLoadBalancer.InternalIP
 			}
 		case !openStackCluster.Spec.DisableAPIServerFloatingIP:
 			// If floating IPs are not disabled, get one to use as the VIP for the control plane

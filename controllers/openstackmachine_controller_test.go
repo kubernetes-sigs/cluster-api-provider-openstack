@@ -48,10 +48,12 @@ func getDefaultOpenStackCluster() *infrav1.OpenStackCluster {
 	return &infrav1.OpenStackCluster{
 		Spec: infrav1.OpenStackClusterSpec{},
 		Status: infrav1.OpenStackClusterStatus{
-			Network: &infrav1.Network{
-				ID: networkUUID,
-				Subnet: &infrav1.Subnet{
-					ID: subnetUUID,
+			Network: &infrav1.NetworkStatusWithSubnets{
+				NetworkStatus: infrav1.NetworkStatus{
+					ID: networkUUID,
+				},
+				Subnets: []infrav1.Subnet{
+					{ID: subnetUUID},
 				},
 			},
 			ControlPlaneSecurityGroup: &infrav1.SecurityGroup{ID: controlPlaneSecurityGroupUUID},

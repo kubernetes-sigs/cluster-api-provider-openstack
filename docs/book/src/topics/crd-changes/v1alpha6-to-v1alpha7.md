@@ -235,3 +235,62 @@ externalRouterIPs:
 - subnet:
     name: my-subnet
 ```
+
+#### status.router and status.apiServerLoadBalancer moved out of status.network
+
+```yaml
+status:
+  network:
+    id: 756f59c0-2a9b-495e-9bb1-951762523d2d
+    name: my-cluster-network
+    ...
+    router:
+      id: dd0b23a7-e785-4061-93c5-464843e8cc39
+      name: my-cluster-router
+      ...
+    apiServerLoadBalancer:
+      id: 660d628e-cbcb-4c10-9910-e2e6493643c7
+      name: my-api-server-loadbalancer
+      ...
+```
+becomes:
+```yaml
+status:
+  network:
+    id: 756f59c0-2a9b-495e-9bb1-951762523d2d
+    name: my-cluster-network
+    ...
+  router:
+    id: dd0b23a7-e785-4061-93c5-464843e8cc39
+    name: my-cluster-router
+    ...
+  apiServerLoadBalancer:
+    id: 660d628e-cbcb-4c10-9910-e2e6493643c7
+    name: my-api-server-loadbalancer
+    ...
+```
+
+#### status.network.subnet becomes status.network.subnets
+
+```yaml
+status:
+  network:
+    id: 756f59c0-2a9b-495e-9bb1-951762523d2d
+    name: my-cluster-network
+    subnet:
+      id: 0e0c3d69-040a-4b51-a3f5-0f5d010b36f4
+      name: my-cluster-subnet
+      cidr: 192.168.100.0/24
+```
+becomes
+```yaml
+  network:
+    id: 756f59c0-2a9b-495e-9bb1-951762523d2d
+    name: my-cluster-network
+    subnets:
+    - id: 0e0c3d69-040a-4b51-a3f5-0f5d010b36f4
+      name: my-cluster-subnet
+      cidr: 192.168.100.0/24
+```
+
+Nothing will currently create more than a single subnet, but there may be multiple subnets in the future. Similarly, code should no longer assume that the CIDR is an IPv4 CIDR, although nothing will currently create anything other than an IPv4 CIDR.

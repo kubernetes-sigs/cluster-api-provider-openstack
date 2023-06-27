@@ -58,12 +58,12 @@ func (s *Service) normalizePortTarget(port *infrav1.PortOpts, openStackCluster *
 		port.Network = &infrav1.NetworkFilter{
 			ID: openStackCluster.Status.Network.ID,
 		}
-		port.FixedIPs = []infrav1.FixedIP{
-			{
+		for _, subnet := range openStackCluster.Status.Network.Subnets {
+			port.FixedIPs = append(port.FixedIPs, infrav1.FixedIP{
 				Subnet: &infrav1.SubnetFilter{
-					ID: openStackCluster.Status.Network.Subnet.ID,
+					ID: subnet.ID,
 				},
-			},
+			})
 		}
 
 		return nil
@@ -182,17 +182,20 @@ func (s *Service) constructPorts(openStackCluster *infrav1.OpenStackCluster, ins
 
 	// no networks or ports found in the spec, so create a port on the cluster network
 	if len(ports) == 0 {
-		ports = []infrav1.PortOpts{{
+		port := infrav1.PortOpts{
 			Network: &infrav1.NetworkFilter{
 				ID: openStackCluster.Status.Network.ID,
 			},
-			FixedIPs: []infrav1.FixedIP{{
-				Subnet: &infrav1.SubnetFilter{
-					ID: openStackCluster.Status.Network.Subnet.ID,
-				},
-			}},
 			Trunk: &instanceSpec.Trunk,
-		}}
+		}
+		for _, subnet := range openStackCluster.Status.Network.Subnets {
+			port.FixedIPs = append(port.FixedIPs, infrav1.FixedIP{
+				Subnet: &infrav1.SubnetFilter{
+					ID: subnet.ID,
+				},
+			})
+		}
+		ports = []infrav1.PortOpts{port}
 	}
 
 	// trunk support is required if any port has trunk enabled
