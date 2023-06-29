@@ -431,10 +431,12 @@ func reconcileNetworkComponents(scope scope.Scope, cluster *clusterv1.Cluster, o
 
 	scope.Logger().Info("Reconciling network components")
 
-	err = networkingService.ReconcileExternalNetwork(openStackCluster)
-	if err != nil {
-		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile external network: %w", err))
-		return fmt.Errorf("failed to reconcile external network: %w", err)
+	if !openStackCluster.Spec.DisableAPIServerFloatingIP || openStackCluster.Spec.NodeCIDR != "" {
+		err = networkingService.ReconcileExternalNetwork(openStackCluster)
+		if err != nil {
+			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile external network: %v", err))
+			return fmt.Errorf("failed to reconcile external network: %v", err)
+		}
 	}
 
 	if openStackCluster.Spec.NodeCIDR == "" {

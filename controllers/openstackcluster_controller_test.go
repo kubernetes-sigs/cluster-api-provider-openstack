@@ -233,14 +233,14 @@ var _ = Describe("OpenStackCluster controller", func() {
 		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
 
 		// Fetch external network
-		networkClientRecorder.ListNetwork(networks.ListOpts{
+		/*networkClientRecorder.ListNetwork(networks.ListOpts{
 			ID: externalNetworkID,
 		}).Return([]networks.Network{
 			{
 				ID:   externalNetworkID,
 				Name: "external-network",
 			},
-		}, nil)
+		}, nil)*/
 
 		// Fetch cluster network
 		networkClientRecorder.ListNetwork(&networks.ListOpts{
