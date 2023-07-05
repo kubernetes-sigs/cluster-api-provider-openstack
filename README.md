@@ -6,6 +6,8 @@
 
 Kubernetes-native declarative infrastructure for OpenStack.
 
+For documentation, see the [Cluster API Provider OpenStack book](https://cluster-api-openstack.sigs.k8s.io/).
+
 ## What is the Cluster API Provider OpenStack
 
 The [Cluster API][cluster_api] brings
