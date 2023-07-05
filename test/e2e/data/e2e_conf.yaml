@@ -103,7 +103,7 @@ providers:
       new: "--v=4"
     - old: "--leader-elect"
       new: "--leader-elect=false\n        - --sync-period=1m"
-  - name: v0.7.99
+  - name: v0.8.99
     value: ../../../config/default
     # This is the upcoming version.
     # Specify no contract so that upgrade tests that start from a specific contract won't pick it up.
