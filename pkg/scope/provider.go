@@ -153,13 +153,13 @@ func NewProviderClient(cloud clientconfig.Cloud, caCert []byte, logger logr.Logg
 	}
 
 	config := &tls.Config{
-		RootCAs:    x509.NewCertPool(),
 		MinVersion: tls.VersionTLS12,
 	}
 	if cloud.Verify != nil {
 		config.InsecureSkipVerify = !*cloud.Verify
 	}
 	if caCert != nil {
+		config.RootCAs = x509.NewCertPool()
 		config.RootCAs.AppendCertsFromPEM(caCert)
 	}
 
