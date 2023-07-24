@@ -40,7 +40,7 @@ func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, cl
 		return nil
 	}
 	if openStackCluster.Status.ExternalNetwork == nil || openStackCluster.Status.ExternalNetwork.ID == "" {
-		s.scope.Logger().V(3).Info("No need to create router, due to missing ExternalNetworkID")
+		s.scope.Logger().V(3).Info("No need to reconcile router since no external network exists")
 		return nil
 	}
 
@@ -70,7 +70,7 @@ func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, cl
 		}
 		router = *createdRouter
 	} else {
-		s.scope.Logger().V(6).Info("Reuse existing Router", "name", router.Name, "id", router.ID)
+		s.scope.Logger().V(6).Info("Reusing existing router", "name", router.Name, "id", router.ID)
 	}
 
 	routerIPs := []string{}
@@ -222,9 +222,9 @@ func (s *Service) DeleteRouter(openStackCluster *infrav1.OpenStackCluster, clust
 			if !capoerrors.IsNotFound(err) {
 				return fmt.Errorf("unable to remove router interface: %v", err)
 			}
-			s.scope.Logger().V(4).Info("Router Interface already removed, nothing to do", "id", router.ID)
+			s.scope.Logger().V(4).Info("RouterInterface already removed, nothing to do", "id", router.ID)
 		} else {
-			s.scope.Logger().V(4).Info("Removed RouterInterface of Router", "id", router.ID)
+			s.scope.Logger().V(4).Info("Removed RouterInterface of router", "id", router.ID)
 		}
 	}
 
