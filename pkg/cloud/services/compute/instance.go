@@ -72,7 +72,7 @@ func (s *Service) normalizePortTarget(port *infrav1.PortOpts, openStackCluster *
 	// No network, but fixed IPs are defined(we handled the no fixed
 	// IPs case above): try to infer network from a subnet
 	if noNetwork {
-		s.scope.Logger().V(4).Info("No network defined for port, attempting to infer from subnet", "portIndex", portIdx)
+		s.scope.Logger().V(4).Info("No network defined for port, attempting to infer from subnet", "port", portIdx)
 
 		// Look for a unique subnet defined in FixedIPs.  If we find one
 		// we can use it to infer the network ID. We don't need to worry
@@ -94,7 +94,7 @@ func (s *Service) normalizePortTarget(port *infrav1.PortOpts, openStackCluster *
 				if err != nil {
 					// Multiple matches might be ok later when we restrict matches to a single network
 					if errors.Is(err, networking.ErrMultipleMatches) {
-						s.scope.Logger().V(4).Info("Couldn't infer network from subnet","IPIndex", i, "err", err)
+						s.scope.Logger().V(4).Info("Couldn't infer network from subnet","subnet", i, "err", err)
 						continue
 					}
 
@@ -432,7 +432,7 @@ func (s *Service) getOrCreateRootVolume(eventObject runtime.Object, instanceSpec
 			return nil, fmt.Errorf("exected to find volume %s with size %d; found size %d", name, size, volume.Size)
 		}
 
-		s.scope.Logger().Info("Using existing root volume", "rootVolumeName", name)
+		s.scope.Logger().Info("Using existing root volume", "name", name)
 		return volume, nil
 	}
 
@@ -579,7 +579,7 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instanceStatus *Ins
 				return nil
 			}
 
-			s.scope.Logger().Info("Deleting dangling root volume", "volumeName", volume.Name, "volumeID", volume.ID)
+			s.scope.Logger().Info("Deleting dangling root volume", "name", volume.Name, "ID", volume.ID)
 			return s.getVolumeClient().DeleteVolume(volume.ID, volumes.DeleteOpts{})
 		}
 
