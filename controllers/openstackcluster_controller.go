@@ -96,7 +96,7 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	log = log.WithValues("cluster", cluster.Name)
 
 	if annotations.IsPaused(cluster, openStackCluster) {
-		log.Info("OpenStackCluster or linked Cluster was marked as paused. Would not reconcile")
+		log.Info("OpenStackCluster or linked Cluster was marked as paused. Not reconciling")
 		return reconcile.Result{}, nil
 	}
 
@@ -193,7 +193,7 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope 
 
 	// Cluster is deleted so remove the finalizer.
 	controllerutil.RemoveFinalizer(openStackCluster, infrav1.ClusterFinalizer)
-	scope.Logger().Info("Reconciled Cluster delete successfully")
+	scope.Logger().Info("Reconciled Cluster deleted successfully")
 	return ctrl.Result{}, nil
 }
 
@@ -259,7 +259,7 @@ func deleteBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackClust
 }
 
 func reconcileNormal(scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
-	scope.Logger().Info("Reconciled Cluster")
+	scope.Logger().Info("Reconciling Cluster")
 
 	// If the OpenStackCluster doesn't have our finalizer, add it.
 	if controllerutil.AddFinalizer(openStackCluster, infrav1.ClusterFinalizer) {
@@ -304,12 +304,12 @@ func reconcileNormal(scope scope.Scope, cluster *clusterv1.Cluster, openStackClu
 	openStackCluster.Status.Ready = true
 	openStackCluster.Status.FailureMessage = nil
 	openStackCluster.Status.FailureReason = nil
-	scope.Logger().Info("Reconciled Cluster create successfully")
+	scope.Logger().Info("Reconciled Cluster created successfully")
 	return reconcile.Result{}, nil
 }
 
 func reconcileBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
-	scope.Logger().Info("Reconciled Bastion")
+	scope.Logger().Info("Reconciling Bastion")
 
 	if openStackCluster.Spec.Bastion == nil || !openStackCluster.Spec.Bastion.Enabled {
 		return deleteBastion(scope, cluster, openStackCluster)
@@ -429,7 +429,7 @@ func reconcileNetworkComponents(scope scope.Scope, cluster *clusterv1.Cluster, o
 		return err
 	}
 
-	scope.Logger().Info("Reconciled network components")
+	scope.Logger().Info("Reconciling network components")
 
 	err = networkingService.ReconcileExternalNetwork(openStackCluster)
 	if err != nil {
@@ -438,7 +438,7 @@ func reconcileNetworkComponents(scope scope.Scope, cluster *clusterv1.Cluster, o
 	}
 
 	if openStackCluster.Spec.NodeCIDR == "" {
-		scope.Logger().V(4).Info("No need to reconcile network, searched network and subnet instead")
+		scope.Logger().V(4).Info("No need to reconcile network, searching network and subnet instead")
 
 		netOpts := openStackCluster.Spec.Network.ToListOpt()
 		networkList, err := networkingService.GetNetworksByFilter(&netOpts)
@@ -610,7 +610,7 @@ func (r *OpenStackClusterReconciler) SetupWithManager(ctx context.Context, mgr c
 				}
 
 				if annotations.IsExternallyManaged(c) {
-					log.V(4).Info("OpenStackCluster was externally managed, skipped mapping")
+					log.V(4).Info("OpenStackCluster is externally managed, skipping mapping")
 					return nil
 				}
 				return requests
