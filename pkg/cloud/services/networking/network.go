@@ -110,7 +110,7 @@ func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCl
 			Name: networkList[0].Name,
 			Tags: networkList[0].Tags,
 		}
-		s.scope.Logger().Info("External network found", "network id", networkList[0].ID)
+		s.scope.Logger().Info("External network found", "id", networkList[0].ID)
 		return nil
 	}
 	return fmt.Errorf("found %d external networks, which should not happen", len(networkList))
@@ -131,8 +131,7 @@ func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, c
 		openStackCluster.Status.Network.ID = res.ID
 		openStackCluster.Status.Network.Name = res.Name
 		openStackCluster.Status.Network.Tags = res.Tags
-		sInfo := fmt.Sprintf("Reuse Existing Network %s with id %s", res.Name, res.ID)
-		s.scope.Logger().V(6).Info(sInfo)
+		s.scope.Logger().V(6).Info("Reusing existing network", "name", res.Name, "id", res.ID)
 		return nil
 	}
 
@@ -195,7 +194,7 @@ func (s *Service) DeleteNetwork(openStackCluster *infrav1.OpenStackCluster, clus
 
 func (s *Service) ReconcileSubnet(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
 	if openStackCluster.Status.Network == nil || openStackCluster.Status.Network.ID == "" {
-		s.scope.Logger().V(4).Info("No need to reconcile network components since no network exists.")
+		s.scope.Logger().V(4).Info("No need to reconcile network components since no network exists")
 		return nil
 	}
 
@@ -223,7 +222,7 @@ func (s *Service) ReconcileSubnet(openStackCluster *infrav1.OpenStackCluster, cl
 		}
 	} else if len(subnetList) == 1 {
 		subnet = &subnetList[0]
-		s.scope.Logger().V(6).Info(fmt.Sprintf("Reuse existing subnet %s with id %s", subnetName, subnet.ID))
+		s.scope.Logger().V(6).Info("Reusing existing subnet", "name", subnet.Name, "id", subnet.ID)
 	}
 
 	openStackCluster.Status.Network.Subnets = []infrav1.Subnet{
