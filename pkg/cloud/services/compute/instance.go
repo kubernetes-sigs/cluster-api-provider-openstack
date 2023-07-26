@@ -94,7 +94,7 @@ func (s *Service) normalizePortTarget(port *infrav1.PortOpts, openStackCluster *
 				if err != nil {
 					// Multiple matches might be ok later when we restrict matches to a single network
 					if errors.Is(err, networking.ErrMultipleMatches) {
-						s.scope.Logger().V(4).Info("Couldn't infer network from subnet", "subnet", i, "err", err)
+						s.scope.Logger().V(4).Info("Couldn't infer network from subnet","subnet", i, "err", err)
 						continue
 					}
 
