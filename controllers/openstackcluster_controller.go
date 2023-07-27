@@ -96,7 +96,7 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	log = log.WithValues("cluster", cluster.Name)
 
 	if annotations.IsPaused(cluster, openStackCluster) {
-		log.Info("OpenStackCluster or linked Cluster was marked as paused. Not reconciling")
+		log.Info("OpenStackCluster or linked Cluster is marked as paused. Not reconciling")
 		return reconcile.Result{}, nil
 	}
 
