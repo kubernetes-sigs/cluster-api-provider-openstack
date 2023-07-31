@@ -125,22 +125,14 @@ func (in *Instance) DeepCopyInto(out *Instance) {
 	*out = *in
 	if in.SecurityGroups != nil {
 		in, out := &in.SecurityGroups, &out.SecurityGroups
-		*out = new([]string)
-		if **in != nil {
-			in, out := *in, *out
-			*out = make([]string, len(*in))
-			copy(*out, *in)
-		}
+		*out = make([]string, len(*in))
+		copy(*out, *in)
 	}
 	if in.Networks != nil {
 		in, out := &in.Networks, &out.Networks
-		*out = new([]Network)
-		if **in != nil {
-			in, out := *in, *out
-			*out = make([]Network, len(*in))
-			for i := range *in {
-				(*in)[i].DeepCopyInto(&(*out)[i])
-			}
+		*out = make([]Network, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 	if in.Tags != nil {
