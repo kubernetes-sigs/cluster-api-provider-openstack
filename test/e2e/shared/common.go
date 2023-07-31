@@ -266,3 +266,8 @@ func (o OpenStackLogCollector) CollectMachineLog(ctx context.Context, management
 func (o OpenStackLogCollector) CollectMachinePoolLog(_ context.Context, _ client.Client, _ *expv1.MachinePool, _ string) error {
 	return fmt.Errorf("not implemented")
 }
+
+// CollectInfrastructureLogs is not yet implemented for the OpenStack provider.
+func (o OpenStackLogCollector) CollectInfrastructureLogs(_ context.Context, _ client.Client, _ *clusterv1.Cluster, _ string) error {
+	return fmt.Errorf("not implemented")
+}

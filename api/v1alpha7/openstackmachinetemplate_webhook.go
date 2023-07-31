@@ -49,10 +49,10 @@ func (r *OpenStackMachineTemplateWebhook) SetupWebhookWithManager(mgr manager.Ma
 var _ webhook.CustomValidator = &OpenStackMachineTemplateWebhook{}
 
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type.
-func (r *OpenStackMachineTemplateWebhook) ValidateCreate(_ context.Context, obj runtime.Object) error {
+func (r *OpenStackMachineTemplateWebhook) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
 	openStackMachineTemplate, ok := obj.(*OpenStackMachineTemplate)
 	if !ok {
-		return apierrors.NewBadRequest(fmt.Sprintf("expected an OpenStackMachineTemplate but got a %T", obj))
+		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected an OpenStackMachineTemplate but got a %T", obj))
 	}
 
 	var allErrs field.ErrorList
@@ -65,21 +65,21 @@ func (r *OpenStackMachineTemplateWebhook) ValidateCreate(_ context.Context, obj 
 }
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type.
-func (r *OpenStackMachineTemplateWebhook) ValidateUpdate(ctx context.Context, oldRaw runtime.Object, newRaw runtime.Object) error {
+func (r *OpenStackMachineTemplateWebhook) ValidateUpdate(ctx context.Context, oldRaw runtime.Object, newRaw runtime.Object) (admission.Warnings, error) {
 	var allErrs field.ErrorList
 	old, ok := oldRaw.(*OpenStackMachineTemplate)
 	if !ok {
-		return apierrors.NewBadRequest(fmt.Sprintf("expected an OpenStackMachineTemplate but got a %T", oldRaw))
+		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected an OpenStackMachineTemplate but got a %T", oldRaw))
 	}
 
 	newObj, ok := newRaw.(*OpenStackMachineTemplate)
 	if !ok {
-		return apierrors.NewBadRequest(fmt.Sprintf("expected an OpenStackMachineTemplate but got a %T", oldRaw))
+		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected an OpenStackMachineTemplate but got a %T", oldRaw))
 	}
 
 	req, err := admission.RequestFromContext(ctx)
 	if err != nil {
-		return apierrors.NewBadRequest(fmt.Sprintf("expected a admission.Request inside context: %v", err))
+		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected a admission.Request inside context: %v", err))
 	}
 
 	if !topology.ShouldSkipImmutabilityChecks(req, newObj) &&
@@ -93,6 +93,6 @@ func (r *OpenStackMachineTemplateWebhook) ValidateUpdate(ctx context.Context, ol
 }
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type.
-func (r *OpenStackMachineTemplateWebhook) ValidateDelete(_ context.Context, _ runtime.Object) error {
-	return nil
+func (r *OpenStackMachineTemplateWebhook) ValidateDelete(_ context.Context, _ runtime.Object) (admission.Warnings, error) {
+	return nil, nil
 }
