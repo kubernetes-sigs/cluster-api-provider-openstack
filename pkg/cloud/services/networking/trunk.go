@@ -17,12 +17,13 @@ limitations under the License.
 package networking
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/trunks"
 	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/cluster-api/util"
+	"k8s.io/apimachinery/pkg/util/wait"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
@@ -89,7 +90,7 @@ func (s *Service) DeleteTrunk(eventObject runtime.Object, portID string) error {
 		return nil
 	}
 
-	err = util.PollImmediate(retryIntervalTrunkDelete, timeoutTrunkDelete, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.TODO(), retryIntervalTrunkDelete, timeoutTrunkDelete, true, func(_ context.Context) (bool, error) {
 		if err := s.client.DeleteTrunk(trunkInfo[0].ID); err != nil {
 			if capoerrors.IsNotFound(err) {
 				record.Eventf(eventObject, "SuccessfulDeleteTrunk", "Trunk %s with id %s did not exist", trunkInfo[0].Name, trunkInfo[0].ID)

@@ -17,6 +17,7 @@ limitations under the License.
 package compute
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -32,7 +33,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/cluster-api/util"
+	"k8s.io/apimachinery/pkg/util/wait"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
@@ -303,7 +304,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 
 	// Wait for volume to become available
 	if volume != nil {
-		err = util.PollImmediate(retryIntervalInstanceStatus, instanceCreateTimeout, func() (bool, error) {
+		err = wait.PollUntilContextTimeout(context.TODO(), retryIntervalInstanceStatus, instanceCreateTimeout, true, func(_ context.Context) (bool, error) {
 			createdVolume, err := s.getVolumeClient().GetVolume(volume.ID)
 			if err != nil {
 				if capoerrors.IsRetryable(err) {
@@ -357,7 +358,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 	}
 
 	var createdInstance *InstanceStatus
-	err = util.PollImmediate(retryInterval, instanceCreateTimeout, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.TODO(), retryInterval, instanceCreateTimeout, true, func(_ context.Context) (bool, error) {
 		createdInstance, err = s.GetInstanceStatus(server.ID)
 		if err != nil {
 			if capoerrors.IsRetryable(err) {
@@ -682,7 +683,7 @@ func (s *Service) deleteInstance(eventObject runtime.Object, instance *InstanceI
 		return err
 	}
 
-	err = util.PollImmediate(retryIntervalInstanceStatus, timeoutInstanceDelete, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.TODO(), retryIntervalInstanceStatus, timeoutInstanceDelete, true, func(_ context.Context) (bool, error) {
 		i, err := s.GetInstanceStatus(instance.ID)
 		if err != nil {
 			return false, err

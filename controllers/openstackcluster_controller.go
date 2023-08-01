@@ -43,7 +43,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute"
@@ -596,9 +595,9 @@ func (r *OpenStackClusterReconciler) SetupWithManager(ctx context.Context, mgr c
 			),
 		).
 		Watches(
-			&source.Kind{Type: &clusterv1.Cluster{}},
-			handler.EnqueueRequestsFromMapFunc(func(o client.Object) []reconcile.Request {
-				requests := clusterToInfraFn(o)
+			&clusterv1.Cluster{},
+			handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, o client.Object) []reconcile.Request {
+				requests := clusterToInfraFn(ctx, o)
 				if len(requests) < 1 {
 					return nil
 				}

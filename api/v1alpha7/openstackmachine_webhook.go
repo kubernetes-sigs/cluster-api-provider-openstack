@@ -27,6 +27,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 // log is for logging in this package.
@@ -54,7 +55,7 @@ func (r *OpenStackMachine) Default() {
 }
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type.
-func (r *OpenStackMachine) ValidateCreate() error {
+func (r *OpenStackMachine) ValidateCreate() (admission.Warnings, error) {
 	var allErrs field.ErrorList
 
 	if r.Spec.IdentityRef != nil && r.Spec.IdentityRef.Kind != defaultIdentityRefKind {
@@ -65,16 +66,16 @@ func (r *OpenStackMachine) ValidateCreate() error {
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type.
-func (r *OpenStackMachine) ValidateUpdate(old runtime.Object) error {
+func (r *OpenStackMachine) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	newOpenStackMachine, err := runtime.DefaultUnstructuredConverter.ToUnstructured(r)
 	if err != nil {
-		return apierrors.NewInvalid(GroupVersion.WithKind("OpenStackMachine").GroupKind(), r.Name, field.ErrorList{
+		return nil, apierrors.NewInvalid(GroupVersion.WithKind("OpenStackMachine").GroupKind(), r.Name, field.ErrorList{
 			field.InternalError(nil, fmt.Errorf("failed to convert new OpenStackMachine to unstructured object: %w", err)),
 		})
 	}
 	oldOpenStackMachine, err := runtime.DefaultUnstructuredConverter.ToUnstructured(old)
 	if err != nil {
-		return apierrors.NewInvalid(GroupVersion.WithKind("OpenStackMachine").GroupKind(), r.Name, field.ErrorList{
+		return nil, apierrors.NewInvalid(GroupVersion.WithKind("OpenStackMachine").GroupKind(), r.Name, field.ErrorList{
 			field.InternalError(nil, fmt.Errorf("failed to convert old OpenStackMachine to unstructured object: %w", err)),
 		})
 	}
@@ -108,6 +109,6 @@ func (r *OpenStackMachine) ValidateUpdate(old runtime.Object) error {
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type.
-func (r *OpenStackMachine) ValidateDelete() error {
-	return nil
+func (r *OpenStackMachine) ValidateDelete() (admission.Warnings, error) {
+	return nil, nil
 }

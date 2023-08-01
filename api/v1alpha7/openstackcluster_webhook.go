@@ -28,6 +28,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 // log is for logging in this package.
@@ -55,7 +56,7 @@ func (r *OpenStackCluster) Default() {
 }
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type.
-func (r *OpenStackCluster) ValidateCreate() error {
+func (r *OpenStackCluster) ValidateCreate() (admission.Warnings, error) {
 	var allErrs field.ErrorList
 
 	if r.Spec.IdentityRef != nil && r.Spec.IdentityRef.Kind != defaultIdentityRefKind {
@@ -66,11 +67,11 @@ func (r *OpenStackCluster) ValidateCreate() error {
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type.
-func (r *OpenStackCluster) ValidateUpdate(oldRaw runtime.Object) error {
+func (r *OpenStackCluster) ValidateUpdate(oldRaw runtime.Object) (admission.Warnings, error) {
 	var allErrs field.ErrorList
 	old, ok := oldRaw.(*OpenStackCluster)
 	if !ok {
-		return apierrors.NewBadRequest(fmt.Sprintf("expected an OpenStackCluster but got a %T", oldRaw))
+		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected an OpenStackCluster but got a %T", oldRaw))
 	}
 
 	if r.Spec.IdentityRef != nil && r.Spec.IdentityRef.Kind != defaultIdentityRefKind {
@@ -137,6 +138,6 @@ func (r *OpenStackCluster) ValidateUpdate(oldRaw runtime.Object) error {
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type.
-func (r *OpenStackCluster) ValidateDelete() error {
-	return nil
+func (r *OpenStackCluster) ValidateDelete() (admission.Warnings, error) {
+	return nil, nil
 }

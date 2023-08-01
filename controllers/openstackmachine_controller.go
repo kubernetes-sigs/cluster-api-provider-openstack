@@ -47,7 +47,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute"
@@ -203,16 +202,16 @@ func (r *OpenStackMachineReconciler) SetupWithManager(ctx context.Context, mgr c
 			),
 		).
 		Watches(
-			&source.Kind{Type: &clusterv1.Machine{}},
+			&clusterv1.Machine{},
 			handler.EnqueueRequestsFromMapFunc(util.MachineToInfrastructureMapFunc(infrav1.GroupVersion.WithKind("OpenStackMachine"))),
 		).
 		Watches(
-			&source.Kind{Type: &infrav1.OpenStackCluster{}},
+			&infrav1.OpenStackCluster{},
 			handler.EnqueueRequestsFromMapFunc(r.OpenStackClusterToOpenStackMachines(ctx)),
 		).
 		WithEventFilter(predicates.ResourceNotPausedAndHasFilterLabel(ctrl.LoggerFrom(ctx), r.WatchFilterValue)).
 		Watches(
-			&source.Kind{Type: &clusterv1.Cluster{}},
+			&clusterv1.Cluster{},
 			handler.EnqueueRequestsFromMapFunc(r.requeueOpenStackMachinesForUnpausedCluster(ctx)),
 			builder.WithPredicates(predicates.ClusterUnpausedAndInfrastructureReady(ctrl.LoggerFrom(ctx))),
 		).
@@ -521,7 +520,7 @@ func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(scope scope.Sco
 // of OpenStackMachines.
 func (r *OpenStackMachineReconciler) OpenStackClusterToOpenStackMachines(ctx context.Context) handler.MapFunc {
 	log := ctrl.LoggerFrom(ctx)
-	return func(o client.Object) []ctrl.Request {
+	return func(ctx context.Context, o client.Object) []ctrl.Request {
 		c, ok := o.(*infrav1.OpenStackCluster)
 		if !ok {
 			panic(fmt.Sprintf("Expected a OpenStackCluster but got a %T", o))
@@ -570,7 +569,7 @@ func (r *OpenStackMachineReconciler) getBootstrapData(ctx context.Context, machi
 
 func (r *OpenStackMachineReconciler) requeueOpenStackMachinesForUnpausedCluster(ctx context.Context) handler.MapFunc {
 	log := ctrl.LoggerFrom(ctx)
-	return func(o client.Object) []ctrl.Request {
+	return func(ctx context.Context, o client.Object) []ctrl.Request {
 		c, ok := o.(*clusterv1.Cluster)
 		if !ok {
 			panic(fmt.Sprintf("Expected a Cluster but got a %T", o))
