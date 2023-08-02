@@ -37,9 +37,9 @@ const (
 
 // ReconcileSecurityGroups reconcile the security groups.
 func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
-	s.scope.Logger().Info("Reconciling security groups", "cluster", clusterName)
+	s.scope.Logger().Info("Reconciling security groups")
 	if !openStackCluster.Spec.ManagedSecurityGroups {
-		s.scope.Logger().V(4).Info("No need to reconcile security groups", "cluster", clusterName)
+		s.scope.Logger().V(4).Info("No need to reconcile security groups")
 		return nil
 	}
 
@@ -290,7 +290,7 @@ func (s *Service) reconcileGroupRules(desired, observed infrav1.SecurityGroup) (
 
 	s.scope.Logger().V(4).Info("Deleting rules not needed anymore for group", "name", observed.Name, "amount", len(rulesToDelete))
 	for _, rule := range rulesToDelete {
-		s.scope.Logger().V(6).Info("Deleting rule", "ruleID", rule.ID, "groupName", observed.Name)
+		s.scope.Logger().V(6).Info("Deleting rule", "ID", rule.ID, "name", observed.Name)
 		err := s.client.DeleteSecGroupRule(rule.ID)
 		if err != nil {
 			return infrav1.SecurityGroup{}, err
@@ -321,7 +321,7 @@ func (s *Service) createSecurityGroupIfNotExists(openStackCluster *infrav1.OpenS
 		return err
 	}
 	if secGroup == nil || secGroup.ID == "" {
-		s.scope.Logger().V(6).Info("Group doesn't exist, creating it.", "name", groupName)
+		s.scope.Logger().V(6).Info("Group doesn't exist, creating it", "name", groupName)
 
 		createOpts := groups.CreateOpts{
 			Name:        groupName,
@@ -391,7 +391,7 @@ func (s *Service) createRule(r infrav1.SecurityGroupRule) (infrav1.SecurityGroup
 		RemoteIPPrefix: r.RemoteIPPrefix,
 		SecGroupID:     r.SecurityGroupID,
 	}
-	s.scope.Logger().V(6).Info("Creating rule", "Description", r.Description, "Direction", dir, "PortRangeMin", r.PortRangeMin, "PortRangeMax", r.PortRangeMax, "Proto", proto, "etherType", etherType, "RemoteGroupID", r.RemoteGroupID, "RemoteIPPrefix", r.RemoteIPPrefix, "SecurityGroupID", r.SecurityGroupID)
+	s.scope.Logger().V(6).Info("Creating rule", "description", r.Description, "direction", dir, "portRangeMin", r.PortRangeMin, "portRangeMax", r.PortRangeMax, "proto", proto, "etherType", etherType, "remoteGroupID", r.RemoteGroupID, "remoteIPPrefix", r.RemoteIPPrefix, "securityGroupID", r.SecurityGroupID)
 	rule, err := s.client.CreateSecGroupRule(createOpts)
 	if err != nil {
 		return infrav1.SecurityGroupRule{}, err
