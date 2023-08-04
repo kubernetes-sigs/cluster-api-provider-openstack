@@ -150,15 +150,9 @@ func (is *InstanceStatus) NetworkStatus() (*InstanceNetworkStatus, error) {
 			return nil, fmt.Errorf("error unmarshalling addresses for instance %s: %w", is.ID(), err)
 		}
 
-		var addresses []corev1.NodeAddress
+		var IPv4addresses, IPv6addresses []corev1.NodeAddress
 		for i := range interfaceList {
 			address := &interfaceList[i]
-
-			// Only consider IPv4
-			if address.Version != 4 {
-				is.logger.V(6).Info("Ignoring IP address: only IPv4 is supported", "version", address.Version, "address", address.Address)
-				continue
-			}
 
 			var addressType corev1.NodeAddressType
 			switch address.Type {
@@ -170,14 +164,20 @@ func (is *InstanceStatus) NetworkStatus() (*InstanceNetworkStatus, error) {
 				is.logger.V(6).Info("Ignoring address with unknown type", "address", address.Address, "type", address.Type)
 				continue
 			}
-
-			addresses = append(addresses, corev1.NodeAddress{
-				Type:    addressType,
-				Address: address.Address,
-			})
+			if address.Version == 4 {
+				IPv4addresses = append(IPv4addresses, corev1.NodeAddress{
+					Type:    addressType,
+					Address: address.Address,
+				})
+			} else {
+				IPv6addresses = append(IPv6addresses, corev1.NodeAddress{
+					Type:    addressType,
+					Address: address.Address,
+				})
+			}
 		}
-
-		addressesByNetwork[networkName] = addresses
+		// Maintain IPv4 addresses being first ones on Machine's status given there are operations, e.g. reconcile load-balancer member, that use the first address by network type
+		addressesByNetwork[networkName] = append(IPv4addresses, IPv6addresses...)
 	}
 
 	return &InstanceNetworkStatus{addressesByNetwork}, nil
