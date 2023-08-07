@@ -37,6 +37,7 @@ import (
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
+	"sigs.k8s.io/cluster-api-provider-openstack/version"
 )
 
 const (
@@ -151,6 +152,10 @@ func NewProviderClient(cloud clientconfig.Cloud, caCert []byte, logger logr.Logg
 	if err != nil {
 		return nil, nil, "", fmt.Errorf("create providerClient err: %v", err)
 	}
+
+	ua := gophercloud.UserAgent{}
+	ua.Prepend(fmt.Sprintf("cluster-api-provider-openstack/%s", version.Get().String()))
+	provider.UserAgent = ua
 
 	config := &tls.Config{
 		MinVersion: tls.VersionTLS12,

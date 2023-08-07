@@ -17,6 +17,7 @@ limitations under the License.
 package networking
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -25,7 +26,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/portsecurity"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/cluster-api/util"
+	"k8s.io/apimachinery/pkg/util/wait"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
@@ -240,7 +241,7 @@ func getPortProfile(p infrav1.BindingProfile) map[string]interface{} {
 
 func (s *Service) DeletePort(eventObject runtime.Object, portID string) error {
 	var err error
-	err = util.PollImmediate(retryIntervalPortDelete, timeoutPortDelete, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.TODO(), retryIntervalPortDelete, timeoutPortDelete, true, func(_ context.Context) (bool, error) {
 		err = s.client.DeletePort(portID)
 		if err != nil {
 			if capoerrors.IsNotFound(err) {
