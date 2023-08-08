@@ -169,7 +169,7 @@ func (s *Service) getOrCreateLoadBalancer(openStackCluster *infrav1.OpenStackClu
 		return lb, nil
 	}
 
-	s.scope.Logger().Info(fmt.Sprintf("Creating load balancer in subnet: %q", subnetID), "name", loadBalancerName)
+	s.scope.Logger().Info("Creating load balancer in subnet", "subnetID", subnetID, "name", loadBalancerName)
 
 	lbCreateOpts := loadbalancers.CreateOpts{
 		Name:        loadBalancerName,
@@ -199,7 +199,7 @@ func (s *Service) getOrCreateListener(openStackCluster *infrav1.OpenStackCluster
 		return listener, nil
 	}
 
-	s.scope.Logger().Info("Creating load balancer listener", "name", listenerName, "lb-id", lbID)
+	s.scope.Logger().Info("Creating load balancer listener", "name", listenerName, "loadBalancerID", lbID)
 
 	listenerCreateOpts := listeners.CreateOpts{
 		Name:           listenerName,
@@ -267,7 +267,7 @@ func (s *Service) getOrUpdateAllowedCIDRS(openStackCluster *infrav1.OpenStackClu
 	listener.AllowedCIDRs = capostrings.Unique(listener.AllowedCIDRs)
 
 	if !reflect.DeepEqual(allowedCIDRs, listener.AllowedCIDRs) {
-		s.scope.Logger().Info("CIDRs do not match, start to update listener", "expected CIDRs", allowedCIDRs, "load balancer existing CIDR", listener.AllowedCIDRs)
+		s.scope.Logger().Info("CIDRs do not match, updating listener", "expectedCIDRs", allowedCIDRs, "currentCIDRs", listener.AllowedCIDRs)
 		listenerUpdateOpts := listeners.UpdateOpts{
 			AllowedCIDRs: &allowedCIDRs,
 		}
@@ -316,7 +316,7 @@ func (s *Service) getOrCreatePool(openStackCluster *infrav1.OpenStackCluster, po
 		return pool, nil
 	}
 
-	s.scope.Logger().Info(fmt.Sprintf("Creating load balancer pool for listener %q", listenerID), "name", poolName, "lb-id", lbID)
+	s.scope.Logger().Info("Creating load balancer pool for listener", "loadBalancerID", lbID, "listenerID", listenerID, "name", poolName)
 
 	method := pools.LBMethodRoundRobin
 
@@ -356,7 +356,7 @@ func (s *Service) getOrCreateMonitor(openStackCluster *infrav1.OpenStackCluster,
 		return nil
 	}
 
-	s.scope.Logger().Info(fmt.Sprintf("Creating load balancer monitor for pool %q", poolID), "name", monitorName, "lb-id", lbID)
+	s.scope.Logger().Info("Creating load balancer monitor for pool", "loadBalancerID", lbID, "name", monitorName, "poolID", poolID)
 
 	monitorCreateOpts := monitors.CreateOpts{
 		Name:           monitorName,
@@ -400,7 +400,7 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 	}
 
 	loadBalancerName := getLoadBalancerName(clusterName)
-	s.scope.Logger().Info("Reconciling load balancer member", "name", loadBalancerName)
+	s.scope.Logger().Info("Reconciling load balancer member", "loadBalancerName", loadBalancerName)
 
 	lbID := openStackCluster.Status.APIServerLoadBalancer.ID
 	portList := []int{int(openStackCluster.Spec.ControlPlaneEndpoint.Port)}
@@ -429,7 +429,7 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 				continue
 			}
 
-			s.scope.Logger().Info("Deleting load balancer member (because the IP of the machine changed)", "name", name)
+			s.scope.Logger().Info("Deleting load balancer member because the IP of the machine changed", "name", name)
 
 			// lb member changed so let's delete it so we can create it again with the correct IP
 			err = s.waitForLoadBalancerActive(lbID)
