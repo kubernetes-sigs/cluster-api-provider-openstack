@@ -118,14 +118,24 @@ func restorev1alpha7MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *inf
 	// PropagateUplinkStatus has been added in v1alpha7.
 	// We restore the whole Ports since they are anyway immutable.
 	dst.Ports = previous.Ports
+
+	// EphemeralDisk has been added in v1alpha7.
+	dst.EphemeralDisk = previous.EphemeralDisk
 }
 
 func restorev1alpha7ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infrav1.OpenStackClusterSpec) {
 	dst.Router = previous.Router
-	// PropagateUplinkStatus has been added in v1alpha7.
-	// We restore the whole Ports since they are anyway immutable.
-	if previous.Bastion != nil && previous.Bastion.Instance.Ports != nil {
-		dst.Bastion.Instance.Ports = previous.Bastion.Instance.Ports
+	if previous.Bastion != nil {
+		// PropagateUplinkStatus has been added in v1alpha7.
+		// We restore the whole Ports since they are anyway immutable.
+		if previous.Bastion.Instance.Ports != nil {
+			dst.Bastion.Instance.Ports = previous.Bastion.Instance.Ports
+		}
+
+		// EphemeralDisk has been added in v1alpha7.
+		if previous.Bastion.Instance.EphemeralDisk != nil {
+			dst.Bastion.Instance.EphemeralDisk = previous.Bastion.Instance.EphemeralDisk
+		}
 	}
 }
 
@@ -336,6 +346,10 @@ func Convert_v1alpha6_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in *
 		out.Ports = append(ports, out.Ports...)
 	}
 	return nil
+}
+
+func Convert_v1alpha7_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(in *infrav1.OpenStackMachineSpec, out *OpenStackMachineSpec, s conversion.Scope) error {
+	return autoConvert_v1alpha7_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(in, out, s)
 }
 
 func convertNetworksToPorts(networks []NetworkParam) []infrav1.PortOpts {

@@ -966,6 +966,14 @@ spec:
                       configDrive:
                         description: Config Drive support
                         type: boolean
+                      ephemeralDisk:
+                        description: The ephemeral disk to attach to the instance
+                        properties:
+                          format:
+                            type: string
+                          size:
+                            type: integer
+                        type: object
                       flavor:
                         description: The flavor reference for the flavor for your
                           server instance.

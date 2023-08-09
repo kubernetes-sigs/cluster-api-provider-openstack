@@ -84,6 +84,9 @@ type OpenStackMachineSpec struct {
 	// The volume metadata to boot from
 	RootVolume *RootVolume `json:"rootVolume,omitempty"`
 
+	// The ephemeral disk to attach to the instance
+	EphemeralDisk *EphemeralDisk `json:"ephemeralDisk,omitempty"`
+
 	// The server group to assign the machine to
 	ServerGroupID string `json:"serverGroupID,omitempty"`
 

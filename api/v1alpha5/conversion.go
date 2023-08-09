@@ -216,6 +216,10 @@ func Convert_v1alpha5_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in *
 	return autoConvert_v1alpha5_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in, out, s)
 }
 
+func Convert_v1alpha7_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(in *infrav1.OpenStackMachineSpec, out *OpenStackMachineSpec, s conversion.Scope) error {
+	return autoConvert_v1alpha7_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(in, out, s)
+}
+
 func Convert_v1alpha7_APIServerLoadBalancer_To_v1alpha5_APIServerLoadBalancer(in *infrav1.APIServerLoadBalancer, out *APIServerLoadBalancer, s conversion.Scope) error {
 	// Provider was originally added in v1alpha7, but was backported to v1alpha6, but has no equivalent in v1alpha5
 	return autoConvert_v1alpha7_APIServerLoadBalancer_To_v1alpha5_APIServerLoadBalancer(in, out, s)

@@ -163,6 +163,14 @@ type RootVolume struct {
 	AvailabilityZone string `json:"availabilityZone,omitempty"`
 }
 
+// EphemeralDisk represents an ephemeral disk to be attached to an instance.
+// This is a local disk that is created and attached to the instance when it is created,
+// and is deleted when the instance is deleted. This disk is not used for booting.
+type EphemeralDisk struct {
+	Format string `json:"format,omitempty"`
+	Size   int    `json:"size,omitempty"`
+}
+
 // NetworkStatus contains basic information about an existing neutron network.
 type NetworkStatus struct {
 	Name string `json:"name"`

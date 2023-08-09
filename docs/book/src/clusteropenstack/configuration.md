@@ -571,6 +571,27 @@ If `volumeType` is not specified, cinder will use the default volume type.
 
 If `availabilityZone` is not specified, the volume will be created in the cinder availability zone specified in the MachineSpec's `failureDomain`. This same value is also used as the nova availability zone when creating the server. Note that this will fail if cinder and nova do not have matching availability zones. In this case, cinder `availabilityZone` **must** be specified explicitly on `rootVolume`.
 
+## Additional ephemeral disk
+
+An additional block device can be attached to the instance. It won't be bootable and only optional.
+It can be added aside of a `RootVolume` or not.
+
+   ```yaml
+   apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
+   kind: OpenStackMachineTemplate
+   metadata:
+     name: <cluster-name>-controlplane
+     namespace: <cluster-name>
+   spec:
+   ...
+     ephemeralDisk:
+        format: "ext4"
+        size: 10
+   ...
+   ```
+
+The local disk will be deleted when the instance is removed.
+
 ## Timeout settings
 
 The default timeout for instance creation is 5 minutes. If creating servers in your OpenStack takes a long time, you can increase the timeout. You can set a new value, in minutes, via the environment variable `CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT` in your Cluster API Provider OpenStack controller deployment.

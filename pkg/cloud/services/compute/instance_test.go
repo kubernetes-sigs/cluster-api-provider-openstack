@@ -639,6 +639,95 @@ func TestService_ReconcileInstance(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name: "Ephemeral disk success",
+			getInstanceSpec: func() *InstanceSpec {
+				s := getDefaultInstanceSpec()
+				s.EphemeralDisk = &infrav1.EphemeralDisk{
+					Format: "ext4",
+					Size:   10,
+				}
+				return s
+			},
+			expect: func(r *recorders) {
+				expectUseExistingDefaultPort(r.network)
+				expectDefaultImageAndFlavor(r.compute, r.image)
+
+				createMap := getDefaultServerMap()
+				serverMap := createMap["server"].(map[string]interface{})
+				serverMap["block_device_mapping_v2"] = []map[string]interface{}{
+					{
+						"boot_index":            float64(-1),
+						"delete_on_termination": true,
+						"destination_type":      "local",
+						"guest_format":          "ext4",
+						"source_type":           "blank",
+						"volume_size":           float64(10),
+					},
+				}
+				expectCreateServer(r.compute, createMap, false)
+				expectServerPollSuccess(r.compute)
+
+				// Don't delete ports because the server is created: DeleteInstance will do it
+			},
+			wantErr: false,
+		},
+		{
+			name: "Boot from volume and ephemeral disk success",
+			getInstanceSpec: func() *InstanceSpec {
+				s := getDefaultInstanceSpec()
+				s.EphemeralDisk = &infrav1.EphemeralDisk{
+					Format: "ext4",
+					Size:   10,
+				}
+				s.RootVolume = &infrav1.RootVolume{
+					Size: 50,
+				}
+				return s
+			},
+			expect: func(r *recorders) {
+				expectUseExistingDefaultPort(r.network)
+				expectDefaultImageAndFlavor(r.compute, r.image)
+
+				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
+					Return([]volumes.Volume{}, nil)
+				r.volume.CreateVolume(volumes.CreateOpts{
+					Size:             50,
+					AvailabilityZone: failureDomain,
+					Description:      fmt.Sprintf("Root volume for %s", openStackMachineName),
+					Name:             fmt.Sprintf("%s-root", openStackMachineName),
+					ImageID:          imageUUID,
+					Multiattach:      false,
+				}).Return(&volumes.Volume{ID: volumeUUID}, nil)
+				expectVolumePollSuccess(r.volume)
+
+				createMap := getDefaultServerMap()
+				serverMap := createMap["server"].(map[string]interface{})
+				serverMap["imageRef"] = ""
+				serverMap["block_device_mapping_v2"] = []map[string]interface{}{
+					{
+						"delete_on_termination": true,
+						"destination_type":      "volume",
+						"source_type":           "volume",
+						"uuid":                  volumeUUID,
+						"boot_index":            float64(0),
+					},
+					{
+						"boot_index":            float64(-1),
+						"delete_on_termination": true,
+						"destination_type":      "local",
+						"guest_format":          "ext4",
+						"source_type":           "blank",
+						"volume_size":           float64(10),
+					},
+				}
+				expectCreateServer(r.compute, createMap, false)
+				expectServerPollSuccess(r.compute)
+
+				// Don't delete ports because the server is created: DeleteInstance will do it
+			},
+			wantErr: false,
+		},
+		{
 			name: "Delete trunks on port creation error",
 			getInstanceSpec: func() *InstanceSpec {
 				s := getDefaultInstanceSpec()

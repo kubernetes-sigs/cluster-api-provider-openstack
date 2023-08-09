@@ -345,7 +345,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 		ConfigDrive:      &instanceSpec.ConfigDrive,
 	}
 
-	serverCreateOpts = applyRootVolume(serverCreateOpts, volume)
+	serverCreateOpts = applyBlockDeviceMapping(serverCreateOpts, volume, instanceSpec.EphemeralDisk)
 
 	serverCreateOpts = applyServerGroupID(serverCreateOpts, instanceSpec.ServerGroupID)
 
@@ -460,22 +460,47 @@ func (s *Service) getOrCreateRootVolume(eventObject runtime.Object, instanceSpec
 	return volume, err
 }
 
-// applyRootVolume sets a root volume if the root volume Size is not 0.
-func applyRootVolume(opts servers.CreateOptsBuilder, volume *volumes.Volume) servers.CreateOptsBuilder {
-	if volume == nil {
-		return opts
-	}
-
-	block := bootfromvolume.BlockDevice{
-		SourceType:          bootfromvolume.SourceVolume,
+// getRootVolumeBlockDevice returns a block device for a root volume if the root volume Size is not 0.
+func getRootVolumeBlockDevice(volume *volumes.Volume) bootfromvolume.BlockDevice {
+	return bootfromvolume.BlockDevice{
 		BootIndex:           0,
-		UUID:                volume.ID,
 		DeleteOnTermination: true,
 		DestinationType:     bootfromvolume.DestinationVolume,
+		SourceType:          bootfromvolume.SourceVolume,
+		UUID:                volume.ID,
 	}
+}
+
+// getEphemeralDiskDevice returns a block device for an ephemeral disk if the ephemeral disk Size is not 0.
+func getEphemeralDiskBlockDevice(disk *infrav1.EphemeralDisk) bootfromvolume.BlockDevice {
+	return bootfromvolume.BlockDevice{
+		BootIndex:           -1, // -1 means that the device is not used for booting
+		DeleteOnTermination: true,
+		DestinationType:     bootfromvolume.DestinationLocal,
+		GuestFormat:         disk.Format,
+		SourceType:          bootfromvolume.SourceBlank,
+		VolumeSize:          disk.Size,
+	}
+}
+
+// applyBlockDeviceMapping returns server options with block devices applied.
+func applyBlockDeviceMapping(opts servers.CreateOptsBuilder, volume *volumes.Volume, disk *infrav1.EphemeralDisk) servers.CreateOptsBuilder {
+	if volume == nil && disk == nil {
+		return opts
+	}
+	devices := []bootfromvolume.BlockDevice{}
+
+	if volume != nil {
+		devices = append(devices, getRootVolumeBlockDevice(volume))
+	}
+
+	if disk != nil && disk.Size > 0 {
+		devices = append(devices, getEphemeralDiskBlockDevice(disk))
+	}
+
 	return bootfromvolume.CreateOptsExt{
 		CreateOptsBuilder: opts,
-		BlockDevice:       []bootfromvolume.BlockDevice{block},
+		BlockDevice:       devices,
 	}
 }
 
