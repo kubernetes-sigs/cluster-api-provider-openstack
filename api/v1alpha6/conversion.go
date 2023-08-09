@@ -466,30 +466,32 @@ func Convert_v1alpha7_BastionStatus_To_v1alpha6_Instance(in *infrav1.BastionStat
 	return nil
 }
 
-func Convert_v1alpha6_Network_To_v1alpha7_NetworkStatusWithSubnets(in *Network, out *infrav1.NetworkStatusWithSubnets, s conversion.Scope) error {
-	// PortOpts has been removed in v1alpha7
-	err := Convert_v1alpha6_Network_To_v1alpha7_NetworkStatus(in, &out.NetworkStatus, s)
-	if err != nil {
-		return err
-	}
+func Convert_v1alpha6_Network_To_v1alpha7_NetworkStatusWithSubnets(in *Network, out *infrav1.NetworkStatusWithSubnets, _ conversion.Scope) error {
+	// v1alpha7 removes PortOpts, Router, and APIServerLoadBalancer
+
+	out.Name = in.Name
+	out.ID = in.ID
+	out.Tags = in.Tags
 
 	if in.Subnet != nil {
 		out.Subnets = []infrav1.Subnet{infrav1.Subnet(*in.Subnet)}
 	}
+
 	return nil
 }
 
-func Convert_v1alpha7_NetworkStatusWithSubnets_To_v1alpha6_Network(in *infrav1.NetworkStatusWithSubnets, out *Network, s conversion.Scope) error {
-	// PortOpts has been removed in v1alpha7
-	err := Convert_v1alpha7_NetworkStatus_To_v1alpha6_Network(&in.NetworkStatus, out, s)
-	if err != nil {
-		return err
-	}
+func Convert_v1alpha7_NetworkStatusWithSubnets_To_v1alpha6_Network(in *infrav1.NetworkStatusWithSubnets, out *Network, _ conversion.Scope) error {
+	// v1alpha7 removes PortOpts, Router, and APIServerLoadBalancer
+
+	out.Name = in.Name
+	out.ID = in.ID
+	out.Tags = in.Tags
 
 	// Can only down-convert a single subnet
 	if len(in.Subnets) > 0 {
 		out.Subnet = (*Subnet)(&in.Subnets[0])
 	}
+
 	return nil
 }
 

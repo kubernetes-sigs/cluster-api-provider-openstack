@@ -174,7 +174,15 @@ type NetworkStatus struct {
 
 // NetworkStatusWithSubnets represents basic information about an existing neutron network and an associated set of subnets.
 type NetworkStatusWithSubnets struct {
-	NetworkStatus `json:",inline"`
+	// NOTE(mdbooth): Ideally we would embed NetworkStatus here, but
+	// Semantic.DeepEqual doesn't handle embedded structs well and it's not
+	// worth the trouble.
+
+	Name string `json:"name"`
+	ID   string `json:"id"`
+
+	//+optional
+	Tags []string `json:"tags,omitempty"`
 
 	// Subnets is a list of subnets associated with the default cluster network. Machines which use the default cluster network will get an address from all of these subnets.
 	Subnets []Subnet `json:"subnets,omitempty"`
