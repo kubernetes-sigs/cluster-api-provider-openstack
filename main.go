@@ -70,6 +70,7 @@ var (
 	healthAddr                  string
 	lbProvider                  string
 	caCertsPath                 string
+	showVersion                 bool
 	logOptions                  = logs.NewOptions()
 )
 
@@ -135,6 +136,8 @@ func InitFlags(fs *pflag.FlagSet) {
 		"The name of the load balancer provider (amphora or ovn) to use (defaults to amphora).")
 
 	fs.StringVar(&caCertsPath, "ca-certs", "", "The path to a PEM-encoded CA Certificate file to supply as default for each request.")
+
+	fs.BoolVar(&showVersion, "version", false, "Show current version and exit.")
 }
 
 func main() {
@@ -142,6 +145,11 @@ func main() {
 	pflag.CommandLine.SetNormalizeFunc(cliflag.WordSepNormalizeFunc)
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 	pflag.Parse()
+
+	if showVersion {
+		fmt.Println(version.Get().String()) //nolint:forbidigo
+		os.Exit(0)
+	}
 
 	if err := logsv1.ValidateAndApply(logOptions, nil); err != nil {
 		setupLog.Error(err, "unable to start manager")
