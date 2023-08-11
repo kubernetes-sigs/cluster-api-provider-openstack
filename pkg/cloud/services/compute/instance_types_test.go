@@ -107,7 +107,7 @@ func TestNetworkStatus_Addresses(t *testing.T) {
 			},
 		},
 		{
-			name: "Ignore IPv6",
+			name: "Multiple Fixed IP and Floating IP",
 			addresses: map[string][]networkAddress{
 				"primary": {
 					{
@@ -132,6 +132,14 @@ func TestNetworkStatus_Addresses(t *testing.T) {
 				{
 					Type:    corev1.NodeInternalIP,
 					Address: "192.168.0.1",
+				},
+				{
+					Type:    corev1.NodeInternalIP,
+					Address: "fe80::f816:3eff:fe56:3174",
+				},
+				{
+					Type:    corev1.NodeExternalIP,
+					Address: "fe80::f816:3eff:fe56:3175",
 				},
 			},
 		},
@@ -248,7 +256,7 @@ func TestInstanceNetworkStatus(t *testing.T) {
 			wantFloatingIP: "10.0.0.1",
 		},
 		{
-			name: "Ignore IPv6",
+			name: "Multiple Fixed IP and Floating IP",
 			addresses: map[string][]networkAddress{
 				"primary": {
 					{
