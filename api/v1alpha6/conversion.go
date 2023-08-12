@@ -121,8 +121,6 @@ func restorev1alpha7MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *inf
 }
 
 func restorev1alpha7ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infrav1.OpenStackClusterSpec) {
-	// APIServerLoadBalancer.Provider is new in v1alpha7
-	dst.APIServerLoadBalancer.Provider = previous.APIServerLoadBalancer.Provider
 	dst.Router = previous.Router
 	// PropagateUplinkStatus has been added in v1alpha7.
 	// We restore the whole Ports since they are anyway immutable.
