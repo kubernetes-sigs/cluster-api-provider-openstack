@@ -627,3 +627,17 @@ func Convert_v1alpha6_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(
 
 	return nil
 }
+
+func Convert_v1alpha6_APIServerLoadBalancer_To_v1alpha7_APIServerLoadBalancer(in *APIServerLoadBalancer, out *infrav1.APIServerLoadBalancer, _ conversion.Scope) error {
+	out.Enabled = in.Enabled
+	out.AdditionalPorts = in.AdditionalPorts
+	out.AllowedCIDRs = in.AllowedCIDRs
+	out.Provider = in.Provider
+	out.DisabledHealthMonitor = false
+
+	return nil
+}
+
+func Convert_v1alpha7_APIServerLoadBalancer_To_v1alpha6_APIServerLoadBalancer(in *infrav1.APIServerLoadBalancer, out *APIServerLoadBalancer, s conversion.Scope) error {
+	return autoConvert_v1alpha7_APIServerLoadBalancer_To_v1alpha6_APIServerLoadBalancer(in, out, s)
+}

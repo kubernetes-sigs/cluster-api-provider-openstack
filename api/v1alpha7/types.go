@@ -292,6 +292,8 @@ type APIServerLoadBalancer struct {
 	AllowedCIDRs []string `json:"allowedCidrs,omitempty"`
 	// Octavia Provider Used to create load balancer
 	Provider string `json:"provider,omitempty"`
+	// Enabled defines whether health monitors should be created for the load balancer.
+	DisabledHealthMonitor bool `json:"disabledHealthMonitor,omitempty"`
 }
 
 // ValueSpec represents a single value_spec key-value pair.
