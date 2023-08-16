@@ -358,12 +358,12 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 
 	switch instanceStatus.State() {
 	case infrav1.InstanceStateActive:
-		scope.Logger().Info("Machine instance state is ACTIVE", "instance-id", instanceStatus.ID())
+		scope.Logger().Info("Machine instance state is ACTIVE", "id", instanceStatus.ID())
 		conditions.MarkTrue(openStackMachine, infrav1.InstanceReadyCondition)
 		openStackMachine.Status.Ready = true
 	case infrav1.InstanceStateError:
 		// Error is unexpected, thus we report error and never retry
-		scope.Logger().Info("Machine instance state is ERROR", "instance-id", instanceStatus.ID())
+		scope.Logger().Info("Machine instance state is ERROR", "id", instanceStatus.ID())
 		err = fmt.Errorf("instance state %q is unexpected", instanceStatus.State())
 		openStackMachine.SetFailure(capierrors.UpdateMachineError, err)
 		conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceStateErrorReason, clusterv1.ConditionSeverityError, "")
@@ -376,7 +376,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	default:
 		// The other state is normal (for example, migrating, shutoff) but we don't want to proceed until it's ACTIVE
 		// due to potential conflict or unexpected actions
-		scope.Logger().Info("Waiting for instance to become ACTIVE", "instance-id", instanceStatus.ID(), "status", instanceStatus.State())
+		scope.Logger().Info("Waiting for instance to become ACTIVE", "id", instanceStatus.ID(), "status", instanceStatus.State())
 		conditions.MarkUnknown(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceNotReadyReason, "Instance state is not handled: %s", instanceStatus.State())
 		return ctrl.Result{RequeueAfter: waitForInstanceBecomeActiveToReconcile}, nil
 	}
@@ -409,7 +409,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		}
 
 		if fp.PortID != "" {
-			scope.Logger().Info("Floating IP already associated to a port:", "id", fp.ID, "fixed ip", fp.FixedIP, "portID", port.ID)
+			scope.Logger().Info("Floating IP already associated to a port", "id", fp.ID, "fixedIP", fp.FixedIP, "portID", port.ID)
 		} else {
 			err = networkingService.AssociateFloatingIP(openStackMachine, fp, port.ID)
 			if err != nil {
@@ -432,7 +432,7 @@ func (r *OpenStackMachineReconciler) getOrCreate(logger logr.Logger, cluster *cl
 
 	if instanceStatus == nil {
 		instanceSpec := machineToInstanceSpec(openStackCluster, machine, openStackMachine, userData)
-		logger.Info("Machine not exist, Creating Machine", "Machine", openStackMachine.Name)
+		logger.Info("Machine does not exist, creating Machine", "name", openStackMachine.Name)
 		instanceStatus, err = computeService.CreateInstance(openStackMachine, openStackCluster, instanceSpec, cluster.Name, false)
 		if err != nil {
 			conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceCreateFailedReason, clusterv1.ConditionSeverityError, err.Error())
