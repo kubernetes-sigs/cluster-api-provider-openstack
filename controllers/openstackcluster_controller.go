@@ -95,7 +95,7 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	log = log.WithValues("cluster", cluster.Name)
 
 	if annotations.IsPaused(cluster, openStackCluster) {
-		log.Info("OpenStackCluster or linked Cluster is marked as paused. Won't reconcile")
+		log.Info("OpenStackCluster or linked Cluster is marked as paused. Not reconciling")
 		return reconcile.Result{}, nil
 	}
 
@@ -192,7 +192,7 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope 
 
 	// Cluster is deleted so remove the finalizer.
 	controllerutil.RemoveFinalizer(openStackCluster, infrav1.ClusterFinalizer)
-	scope.Logger().Info("Reconciled Cluster delete successfully")
+	scope.Logger().Info("Reconciled Cluster deleted successfully")
 	return ctrl.Result{}, nil
 }
 
@@ -303,7 +303,7 @@ func reconcileNormal(scope scope.Scope, cluster *clusterv1.Cluster, openStackClu
 	openStackCluster.Status.Ready = true
 	openStackCluster.Status.FailureMessage = nil
 	openStackCluster.Status.FailureReason = nil
-	scope.Logger().Info("Reconciled Cluster create successfully")
+	scope.Logger().Info("Reconciled Cluster created successfully")
 	return reconcile.Result{}, nil
 }
 
@@ -609,7 +609,7 @@ func (r *OpenStackClusterReconciler) SetupWithManager(ctx context.Context, mgr c
 				}
 
 				if annotations.IsExternallyManaged(c) {
-					log.V(4).Info("OpenStackCluster is externally managed, skipping mapping.")
+					log.V(4).Info("OpenStackCluster is externally managed, skipping mapping")
 					return nil
 				}
 				return requests
