@@ -48,6 +48,7 @@ import (
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
@@ -110,7 +111,7 @@ func Test_getPortName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getPortName(tt.args.instanceName, tt.args.opts, tt.args.netIndex); got != tt.want {
+			if got := networking.GetPortName(tt.args.instanceName, tt.args.opts, tt.args.netIndex); got != tt.want {
 				t.Errorf("getPortName() = %v, want %v", got, tt.want)
 			}
 		})
@@ -819,7 +820,13 @@ func TestService_DeleteInstance(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Failed to create service: %v", err)
 			}
-			if err := s.DeleteInstance(tt.eventObject, tt.instanceStatus(), openStackMachineName, tt.rootVolume); (err != nil) != tt.wantErr {
+
+			instanceSpec := &InstanceSpec{
+				Name:       openStackMachineName,
+				RootVolume: tt.rootVolume,
+			}
+
+			if err := s.DeleteInstance(&infrav1.OpenStackCluster{}, tt.eventObject, tt.instanceStatus(), instanceSpec); (err != nil) != tt.wantErr {
 				t.Errorf("Service.DeleteInstance() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

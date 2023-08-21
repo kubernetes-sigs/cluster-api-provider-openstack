@@ -289,18 +289,38 @@ func (s *Service) DeletePorts(openStackCluster *infrav1.OpenStackCluster) error 
 	return nil
 }
 
-func (s *Service) GarbageCollectErrorInstancesPort(eventObject runtime.Object, instanceName string) error {
-	portList, err := s.client.ListPort(ports.ListOpts{
-		Name: instanceName,
-	})
-	if err != nil {
-		return err
-	}
-	for _, p := range portList {
-		if err := s.DeletePort(eventObject, p.ID); err != nil {
+func (s *Service) GarbageCollectErrorInstancesPort(eventObject runtime.Object, instanceName string, portOpts []infrav1.PortOpts) error {
+	for i := range portOpts {
+		portOpt := &portOpts[i]
+
+		portName := GetPortName(instanceName, portOpt, i)
+
+		// TODO: whould be nice if gophercloud could be persuaded to accept multiple
+		// names as is allowed by the API in order to reduce API traffic.
+		portList, err := s.client.ListPort(ports.ListOpts{Name: portName})
+		if err != nil {
+			return err
+		}
+
+		// NOTE: https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/1476
+		// It is up to the end user to specify a UNIQUE cluster name when provisioning in the
+		// same project, otherwise things will alias and we could delete more than we should.
+		if len(portList) > 1 {
+			return fmt.Errorf("garbage collection of port %s failed, found %d ports with the same name", portName, len(portList))
+		}
+
+		if err := s.DeletePort(eventObject, portList[0].ID); err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+// GetPortName appends a suffix to an instance name in order to try and get a unique name per port.
+func GetPortName(instanceName string, opts *infrav1.PortOpts, netIndex int) string {
+	if opts != nil && opts.NameSuffix != "" {
+		return fmt.Sprintf("%s-%s", instanceName, opts.NameSuffix)
+	}
+	return fmt.Sprintf("%s-%d", instanceName, netIndex)
 }

@@ -237,8 +237,9 @@ func deleteBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackClust
 			}
 		}
 
-		rootVolume := openStackCluster.Spec.Bastion.Instance.RootVolume
-		if err = computeService.DeleteInstance(openStackCluster, instanceStatus, instanceName, rootVolume); err != nil {
+		instanceSpec := bastionToInstanceSpec(openStackCluster, cluster.Name)
+
+		if err = computeService.DeleteInstance(openStackCluster, openStackCluster, instanceStatus, instanceSpec); err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete bastion: %w", err))
 			return fmt.Errorf("failed to delete bastion: %w", err)
 		}
