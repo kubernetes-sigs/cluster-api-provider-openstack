@@ -40,6 +40,8 @@ const (
 	InstanceNotReadyReason = "InstanceNotReady"
 	// InstanceDeleteFailedReason used when deleting the instance failed.
 	InstanceDeleteFailedReason = "InstanceDeleteFailed"
+	// OpenstackErrorReason used when there is an error communicating with OpenStack.
+	OpenStackErrorReason = "OpenStackError"
 )
 
 const (
