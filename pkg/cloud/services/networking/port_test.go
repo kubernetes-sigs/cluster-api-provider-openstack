@@ -535,6 +535,85 @@ func Test_GetOrCreatePort(t *testing.T) {
 	}
 }
 
+func Test_GarbageCollectErrorInstancesPort(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	instanceName := "foo"
+	portID1 := "dc6e0ae3-dad6-4240-a9cb-e541916f20d3"
+	portID2 := "a38ab1cb-c2cc-4c1b-9d1d-696ec73356d2"
+	portName1 := GetPortName(instanceName, nil, 0)
+	portName2 := GetPortName(instanceName, nil, 1)
+
+	tests := []struct {
+		// man is the name of the test.
+		name string
+		// expect allows definition of any expected calls to the mock.
+		expect func(m *mock.MockNetworkClientMockRecorder)
+		// portOpts defines the instance ports as defined in the OSM spec.
+		portOpts []infrav1.PortOpts
+		// wantErr defines whether the test is supposed to fail.
+		wantErr bool
+	}{
+		{
+			name: "garbage collects all ports for an instance",
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				o1 := ports.ListOpts{
+					Name: portName1,
+				}
+				p1 := []ports.Port{
+					{
+						ID:   portID1,
+						Name: portName1,
+					},
+				}
+				m.ListPort(o1).Return(p1, nil)
+				m.DeletePort(portID1)
+				o2 := ports.ListOpts{
+					Name: portName2,
+				}
+				p2 := []ports.Port{
+					{
+						ID:   portID2,
+						Name: portName2,
+					},
+				}
+
+				m.ListPort(o2).Return(p2, nil)
+				m.DeletePort(portID2)
+			},
+			portOpts: []infrav1.PortOpts{
+				{},
+				{},
+			},
+			wantErr: false,
+		},
+	}
+
+	eventObject := &infrav1.OpenStackMachine{}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewWithT(t)
+			mockClient := mock.NewMockNetworkClient(mockCtrl)
+			tt.expect(mockClient.EXPECT())
+			s := Service{
+				client: mockClient,
+			}
+			err := s.GarbageCollectErrorInstancesPort(
+				eventObject,
+				instanceName,
+				tt.portOpts,
+			)
+			if tt.wantErr {
+				g.Expect(err).To(HaveOccurred())
+			} else {
+				g.Expect(err).NotTo(HaveOccurred())
+			}
+		})
+	}
+}
+
 func pointerTo(b bool) *bool {
 	return &b
 }

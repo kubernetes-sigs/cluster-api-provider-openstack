@@ -283,7 +283,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 		if len(instanceSpec.Tags) > 0 {
 			iTags = instanceSpec.Tags
 		}
-		portName := getPortName(instanceSpec.Name, portOpts, i)
+		portName := networking.GetPortName(instanceSpec.Name, portOpts, i)
 		port, err := networkingService.GetOrCreatePort(eventObject, clusterName, portName, portOpts, securityGroups, iTags)
 		if err != nil {
 			return nil, err
@@ -378,14 +378,6 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 
 	record.Eventf(eventObject, "SuccessfulCreateServer", "Created server %s with id %s", createdInstance.Name(), createdInstance.ID())
 	return createdInstance, nil
-}
-
-// getPortName appends a suffix to an instance name in order to try and get a unique name per port.
-func getPortName(instanceName string, opts *infrav1.PortOpts, netIndex int) string {
-	if opts != nil && opts.NameSuffix != "" {
-		return fmt.Sprintf("%s-%s", instanceName, opts.NameSuffix)
-	}
-	return fmt.Sprintf("%s-%d", instanceName, netIndex)
 }
 
 func rootVolumeName(instanceName string) string {
@@ -550,7 +542,7 @@ func (s *Service) GetManagementPort(openStackCluster *infrav1.OpenStackCluster, 
 	return &allPorts[0], nil
 }
 
-func (s *Service) DeleteInstance(eventObject runtime.Object, instanceStatus *InstanceStatus, instanceName string, rootVolume *infrav1.RootVolume) error {
+func (s *Service) DeleteInstance(openStackCluster *infrav1.OpenStackCluster, eventObject runtime.Object, instanceStatus *InstanceStatus, instanceSpec *InstanceSpec) error {
 	if instanceStatus == nil {
 		/*
 			We create a boot-from-volume instance in 2 steps:
@@ -570,8 +562,8 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instanceStatus *Ins
 			Note that we don't need to separately delete the root volume when deleting the instance because
 			DeleteOnTermination will ensure it is deleted in that case.
 		*/
-		if hasRootVolume(rootVolume) {
-			name := rootVolumeName(instanceName)
+		if hasRootVolume(instanceSpec.RootVolume) {
+			name := rootVolumeName(instanceSpec.Name)
 			volume, err := s.getVolumeByName(name)
 			if err != nil {
 				return err
@@ -620,7 +612,12 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instanceStatus *Ins
 
 	// delete port of error instance
 	if instanceStatus.State() == infrav1.InstanceStateError {
-		if err := networkingService.GarbageCollectErrorInstancesPort(eventObject, instanceStatus.Name()); err != nil {
+		portOpts, err := s.constructPorts(openStackCluster, instanceSpec)
+		if err != nil {
+			return err
+		}
+
+		if err := networkingService.GarbageCollectErrorInstancesPort(eventObject, instanceSpec.Name, portOpts); err != nil {
 			return err
 		}
 	}
