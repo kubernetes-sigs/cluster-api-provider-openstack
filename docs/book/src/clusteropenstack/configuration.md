@@ -176,7 +176,7 @@ Note: If your openstack cluster does not already have a public network, you shou
 You can use a pre-existing router instead of creating a new one. When deleting a cluster a pre-existing router will not be deleted.
 
  ```yaml
- apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+ apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
  kind: OpenStackCluster
  metadata:
    name: <cluster-name>
