@@ -218,7 +218,7 @@ func (r *OpenStackMachineReconciler) SetupWithManager(ctx context.Context, mgr c
 		Complete(r)
 }
 
-func (r *OpenStackMachineReconciler) reconcileDelete(scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (ctrl.Result, error) {
+func (r *OpenStackMachineReconciler) reconcileDelete(scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (ctrl.Result, error) { //nolint:unparam
 	scope.Logger().Info("Reconciling Machine delete")
 
 	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)

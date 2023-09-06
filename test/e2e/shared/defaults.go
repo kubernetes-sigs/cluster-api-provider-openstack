@@ -38,7 +38,7 @@ const (
 	OpenStackCloudYAMLFile     = "OPENSTACK_CLOUD_YAML_FILE"
 	OpenStackCloud             = "OPENSTACK_CLOUD"
 	OpenStackCloudAdmin        = "OPENSTACK_CLOUD_ADMIN"
-	OpenStackFailureDomain     = "OPENSTACK_FAILURE_DOMAIN"
+	OpenStackFailureDomain     = "OPENSTACK_FAILURE_DOMAIN" //nolint:gosec
 	OpenStackFailureDomainAlt  = "OPENSTACK_FAILURE_DOMAIN_ALT"
 	OpenStackVolumeTypeAlt     = "OPENSTACK_VOLUME_TYPE_ALT"
 	OpenStackImageName         = "OPENSTACK_IMAGE_NAME"

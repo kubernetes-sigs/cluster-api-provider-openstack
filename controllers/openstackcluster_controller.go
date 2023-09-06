@@ -258,7 +258,7 @@ func deleteBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackClust
 	return nil
 }
 
-func reconcileNormal(scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
+func reconcileNormal(scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) { //nolint:unparam
 	scope.Logger().Info("Reconciling Cluster")
 
 	// If the OpenStackCluster doesn't have our finalizer, add it.
