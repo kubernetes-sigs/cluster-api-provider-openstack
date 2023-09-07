@@ -509,7 +509,8 @@ func Test_GetOrCreatePort(t *testing.T) {
 	}
 
 	eventObject := &infrav1.OpenStackMachine{}
-	for _, tt := range tests {
+	for i := range tests {
+		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewWithT(t)
 			mockClient := mock.NewMockNetworkClient(mockCtrl)

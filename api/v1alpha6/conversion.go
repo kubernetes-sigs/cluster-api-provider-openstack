@@ -341,7 +341,9 @@ func Convert_v1alpha6_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in *
 func convertNetworksToPorts(networks []NetworkParam) []infrav1.PortOpts {
 	var ports []infrav1.PortOpts
 
-	for _, network := range networks {
+	for i := range networks {
+		network := networks[i]
+
 		// This will remain null if the network is not specified in NetworkParam
 		var networkFilter *infrav1.NetworkFilter
 
@@ -378,7 +380,8 @@ func convertNetworksToPorts(networks []NetworkParam) []infrav1.PortOpts {
 			ports = append(ports, infrav1.PortOpts{Network: networkFilter})
 		} else {
 			// If the network has explicit subnets then we create a separate port for each subnet.
-			for _, subnet := range network.Subnets {
+			for i := range network.Subnets {
+				subnet := network.Subnets[i]
 				if subnet.UUID != "" {
 					ports = append(ports, infrav1.PortOpts{
 						Network: networkFilter,

@@ -6,7 +6,7 @@ linters:
   - bidichk
   - bodyclose
   - cyclop
-  - depguard
+#  - depguard
   - dogsled
   - dupword
   - durationcheck

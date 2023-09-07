@@ -165,7 +165,8 @@ func (s *Service) setRouterExternalIPs(openStackCluster *infrav1.OpenStackCluste
 		},
 	}
 
-	for _, externalRouterIP := range openStackCluster.Spec.ExternalRouterIPs {
+	for i := range openStackCluster.Spec.ExternalRouterIPs {
+		externalRouterIP := openStackCluster.Spec.ExternalRouterIPs[i]
 		subnetID := externalRouterIP.Subnet.ID
 		if subnetID == "" {
 			subnet, err := s.GetSubnetByFilter(&externalRouterIP.Subnet)
