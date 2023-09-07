@@ -70,7 +70,6 @@ func (s *Service) getOrCreateTrunk(eventObject runtime.Object, clusterName, trun
 
 	trunk, err := s.client.CreateTrunk(trunkCreateOpts)
 	if err != nil {
-		record.Warnf(eventObject, "FailedCreateTrunk", "Failed to create trunk %s: %v", trunkName, err)
 		return nil, err
 	}
 
