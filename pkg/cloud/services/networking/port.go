@@ -264,7 +264,12 @@ func (s *Service) DeletePort(eventObject runtime.Object, portID string) error {
 }
 
 func (s *Service) DeletePorts(openStackCluster *infrav1.OpenStackCluster) error {
-	networkID := openStackCluster.Spec.Network.ID
+	// If the network is not ready, do nothing
+	if openStackCluster.Status.Network == nil || openStackCluster.Status.Network.ID == "" {
+		return nil
+	}
+	networkID := openStackCluster.Status.Network.ID
+
 	portList, err := s.client.ListPort(ports.ListOpts{
 		NetworkID:   networkID,
 		DeviceOwner: "",
