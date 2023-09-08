@@ -72,6 +72,20 @@ func TestFuzzyConversion(t *testing.T) {
 					status.ExternalNetwork.APIServerLoadBalancer = nil
 				}
 			},
+
+			func(cluster *infrav1.OpenStackCluster, c fuzz.Continue) {
+				c.FuzzNoCustom(cluster)
+
+				// None of the following fields exist in v1alpha6
+				cluster.Spec.APIServerLoadBalancer.DisabledHealthMonitor = false
+			},
+
+			func(template *infrav1.OpenStackClusterTemplate, c fuzz.Continue) {
+				c.FuzzNoCustom(template)
+
+				// None of the following fields exist in v1alpha6
+				template.Spec.Template.Spec.APIServerLoadBalancer.DisabledHealthMonitor = false
+			},
 		}
 	}
 
@@ -86,6 +100,7 @@ func TestFuzzyConversion(t *testing.T) {
 		Hub:              &infrav1.OpenStackClusterTemplate{},
 		Spoke:            &OpenStackClusterTemplate{},
 		HubAfterMutation: ignoreDataAnnotation,
+		FuzzerFuncs:      []fuzzer.FuzzerFuncs{fuzzerFuncs},
 	}))
 
 	t.Run("for OpenStackMachine", utilconversion.FuzzTestFunc(utilconversion.FuzzTestFuncInput{

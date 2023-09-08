@@ -1586,6 +1586,10 @@ spec:
                             items:
                               type: string
                             type: array
+                          disabledHealthMonitor:
+                            description: Enabled defines whether health monitors should
+                              be created for the load balancer.
+                            type: boolean
                           enabled:
                             description: Enabled defines whether a load balancer should
                               be created.

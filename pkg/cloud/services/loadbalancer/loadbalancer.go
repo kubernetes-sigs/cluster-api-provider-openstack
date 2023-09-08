@@ -133,8 +133,10 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 			return false, err
 		}
 
-		if err := s.getOrCreateMonitor(openStackCluster, lbPortObjectsName, pool.ID, lb.ID); err != nil {
-			return false, err
+		if !openStackCluster.Spec.APIServerLoadBalancer.DisabledHealthMonitor {
+			if err := s.getOrCreateMonitor(openStackCluster, lbPortObjectsName, pool.ID, lb.ID); err != nil {
+				return false, err
+			}
 		}
 
 		if allowedCIDRsSupported {
