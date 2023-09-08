@@ -246,6 +246,8 @@ func (s *Service) DeletePort(eventObject runtime.Object, portID string) error {
 		if err != nil {
 			if capoerrors.IsNotFound(err) {
 				record.Eventf(eventObject, "SuccessfulDeletePort", "Port with id %d did not exist", portID)
+				// this is success so we return without another try
+				return true, nil
 			}
 			if capoerrors.IsRetryable(err) {
 				return false, nil
@@ -284,10 +286,9 @@ func (s *Service) DeletePorts(openStackCluster *infrav1.OpenStackCluster) error 
 	for _, port := range portList {
 		if strings.HasPrefix(port.Name, openStackCluster.Name) {
 			err := s.DeletePort(openStackCluster, port.ID)
-			if capoerrors.IsNotFound(err) {
-				continue
+			if err != nil {
+				return fmt.Errorf("delete port %s of network %q failed : %v", port.ID, networkID, err)
 			}
-			return fmt.Errorf("delete port %s of network %q failed : %v", port.ID, networkID, err)
 		}
 	}
 
