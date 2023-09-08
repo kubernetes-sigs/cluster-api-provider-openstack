@@ -492,9 +492,9 @@ func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *
 	instanceSpec.SecurityGroups = openStackMachine.Spec.SecurityGroups
 	if openStackCluster.Spec.ManagedSecurityGroups {
 		var managedSecurityGroup string
-		if util.IsControlPlaneMachine(machine) {
+		if util.IsControlPlaneMachine(machine) && openStackCluster.Status.ControlPlaneSecurityGroup != nil {
 			managedSecurityGroup = openStackCluster.Status.ControlPlaneSecurityGroup.ID
-		} else {
+		} else if openStackCluster.Status.WorkerSecurityGroup != nil {
 			managedSecurityGroup = openStackCluster.Status.WorkerSecurityGroup.ID
 		}
 
