@@ -43,7 +43,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute"
@@ -96,7 +95,7 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	log = log.WithValues("cluster", cluster.Name)
 
 	if annotations.IsPaused(cluster, openStackCluster) {
-		log.Info("OpenStackCluster or linked Cluster is marked as paused. Won't reconcile")
+		log.Info("OpenStackCluster or linked Cluster is marked as paused. Not reconciling")
 		return reconcile.Result{}, nil
 	}
 
@@ -193,7 +192,7 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope 
 
 	// Cluster is deleted so remove the finalizer.
 	controllerutil.RemoveFinalizer(openStackCluster, infrav1.ClusterFinalizer)
-	scope.Logger().Info("Reconciled Cluster delete successfully")
+	scope.Logger().Info("Reconciled Cluster deleted successfully")
 	return ctrl.Result{}, nil
 }
 
@@ -238,8 +237,9 @@ func deleteBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackClust
 			}
 		}
 
-		rootVolume := openStackCluster.Spec.Bastion.Instance.RootVolume
-		if err = computeService.DeleteInstance(openStackCluster, instanceStatus, instanceName, rootVolume); err != nil {
+		instanceSpec := bastionToInstanceSpec(openStackCluster, cluster.Name)
+
+		if err = computeService.DeleteInstance(openStackCluster, openStackCluster, instanceStatus, instanceSpec); err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete bastion: %w", err))
 			return fmt.Errorf("failed to delete bastion: %w", err)
 		}
@@ -258,7 +258,7 @@ func deleteBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackClust
 	return nil
 }
 
-func reconcileNormal(scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
+func reconcileNormal(scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) { //nolint:unparam
 	scope.Logger().Info("Reconciling Cluster")
 
 	// If the OpenStackCluster doesn't have our finalizer, add it.
@@ -304,7 +304,7 @@ func reconcileNormal(scope scope.Scope, cluster *clusterv1.Cluster, openStackClu
 	openStackCluster.Status.Ready = true
 	openStackCluster.Status.FailureMessage = nil
 	openStackCluster.Status.FailureReason = nil
-	scope.Logger().Info("Reconciled Cluster create successfully")
+	scope.Logger().Info("Reconciled Cluster created successfully")
 	return reconcile.Result{}, nil
 }
 
@@ -596,9 +596,9 @@ func (r *OpenStackClusterReconciler) SetupWithManager(ctx context.Context, mgr c
 			),
 		).
 		Watches(
-			&source.Kind{Type: &clusterv1.Cluster{}},
-			handler.EnqueueRequestsFromMapFunc(func(o client.Object) []reconcile.Request {
-				requests := clusterToInfraFn(o)
+			&clusterv1.Cluster{},
+			handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, o client.Object) []reconcile.Request {
+				requests := clusterToInfraFn(ctx, o)
 				if len(requests) < 1 {
 					return nil
 				}
@@ -610,7 +610,7 @@ func (r *OpenStackClusterReconciler) SetupWithManager(ctx context.Context, mgr c
 				}
 
 				if annotations.IsExternallyManaged(c) {
-					log.V(4).Info("OpenStackCluster is externally managed, skipping mapping.")
+					log.V(4).Info("OpenStackCluster is externally managed, skipping mapping")
 					return nil
 				}
 				return requests

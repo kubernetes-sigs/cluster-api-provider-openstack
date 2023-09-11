@@ -58,7 +58,7 @@ func NewService(scope scope.Scope) (*Service, error) {
 // the value of resourceType must match one of the allowed constants: trunkResource or portResource.
 func (s *Service) replaceAllAttributesTags(eventObject runtime.Object, resourceType string, resourceID string, tags []string) error {
 	if len(tags) == 0 {
-		s.scope.Logger().Info("no tags provided to ReplaceAllAttributesTags", "resourceType", resourceType, "resourceID", resourceID)
+		s.scope.Logger().Info("No tags provided to replaceAllAttributesTags", "resource", resourceType, "ID", resourceID)
 		return nil
 	}
 	if resourceType != trunkResource && resourceType != portResource {

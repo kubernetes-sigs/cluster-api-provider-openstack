@@ -47,7 +47,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute"
@@ -203,23 +202,23 @@ func (r *OpenStackMachineReconciler) SetupWithManager(ctx context.Context, mgr c
 			),
 		).
 		Watches(
-			&source.Kind{Type: &clusterv1.Machine{}},
+			&clusterv1.Machine{},
 			handler.EnqueueRequestsFromMapFunc(util.MachineToInfrastructureMapFunc(infrav1.GroupVersion.WithKind("OpenStackMachine"))),
 		).
 		Watches(
-			&source.Kind{Type: &infrav1.OpenStackCluster{}},
+			&infrav1.OpenStackCluster{},
 			handler.EnqueueRequestsFromMapFunc(r.OpenStackClusterToOpenStackMachines(ctx)),
 		).
 		WithEventFilter(predicates.ResourceNotPausedAndHasFilterLabel(ctrl.LoggerFrom(ctx), r.WatchFilterValue)).
 		Watches(
-			&source.Kind{Type: &clusterv1.Cluster{}},
+			&clusterv1.Cluster{},
 			handler.EnqueueRequestsFromMapFunc(r.requeueOpenStackMachinesForUnpausedCluster(ctx)),
 			builder.WithPredicates(predicates.ClusterUnpausedAndInfrastructureReady(ctrl.LoggerFrom(ctx))),
 		).
 		Complete(r)
 }
 
-func (r *OpenStackMachineReconciler) reconcileDelete(scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (ctrl.Result, error) {
+func (r *OpenStackMachineReconciler) reconcileDelete(scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (ctrl.Result, error) { //nolint:unparam
 	scope.Logger().Info("Reconciling Machine delete")
 
 	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
@@ -274,7 +273,9 @@ func (r *OpenStackMachineReconciler) reconcileDelete(scope scope.Scope, cluster 
 		}
 	}
 
-	if err := computeService.DeleteInstance(openStackMachine, instanceStatus, openStackMachine.Name, openStackMachine.Spec.RootVolume); err != nil {
+	instanceSpec := machineToInstanceSpec(openStackCluster, machine, openStackMachine, "")
+
+	if err := computeService.DeleteInstance(openStackCluster, openStackMachine, instanceStatus, instanceSpec); err != nil {
 		conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceDeleteFailedReason, clusterv1.ConditionSeverityError, "Deleting instance failed: %v", err)
 		return ctrl.Result{}, fmt.Errorf("delete instance: %w", err)
 	}
@@ -359,12 +360,12 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 
 	switch instanceStatus.State() {
 	case infrav1.InstanceStateActive:
-		scope.Logger().Info("Machine instance state is ACTIVE", "instance-id", instanceStatus.ID())
+		scope.Logger().Info("Machine instance state is ACTIVE", "id", instanceStatus.ID())
 		conditions.MarkTrue(openStackMachine, infrav1.InstanceReadyCondition)
 		openStackMachine.Status.Ready = true
 	case infrav1.InstanceStateError:
 		// Error is unexpected, thus we report error and never retry
-		scope.Logger().Info("Machine instance state is ERROR", "instance-id", instanceStatus.ID())
+		scope.Logger().Info("Machine instance state is ERROR", "id", instanceStatus.ID())
 		err = fmt.Errorf("instance state %q is unexpected", instanceStatus.State())
 		openStackMachine.SetFailure(capierrors.UpdateMachineError, err)
 		conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceStateErrorReason, clusterv1.ConditionSeverityError, "")
@@ -377,7 +378,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	default:
 		// The other state is normal (for example, migrating, shutoff) but we don't want to proceed until it's ACTIVE
 		// due to potential conflict or unexpected actions
-		scope.Logger().Info("Waiting for instance to become ACTIVE", "instance-id", instanceStatus.ID(), "status", instanceStatus.State())
+		scope.Logger().Info("Waiting for instance to become ACTIVE", "id", instanceStatus.ID(), "status", instanceStatus.State())
 		conditions.MarkUnknown(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceNotReadyReason, "Instance state is not handled: %s", instanceStatus.State())
 		return ctrl.Result{RequeueAfter: waitForInstanceBecomeActiveToReconcile}, nil
 	}
@@ -410,7 +411,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		}
 
 		if fp.PortID != "" {
-			scope.Logger().Info("Floating IP already associated to a port:", "id", fp.ID, "fixed ip", fp.FixedIP, "portID", port.ID)
+			scope.Logger().Info("Floating IP already associated to a port", "id", fp.ID, "fixedIP", fp.FixedIP, "portID", port.ID)
 		} else {
 			err = networkingService.AssociateFloatingIP(openStackMachine, fp, port.ID)
 			if err != nil {
@@ -433,7 +434,7 @@ func (r *OpenStackMachineReconciler) getOrCreate(logger logr.Logger, cluster *cl
 
 	if instanceStatus == nil {
 		instanceSpec := machineToInstanceSpec(openStackCluster, machine, openStackMachine, userData)
-		logger.Info("Machine not exist, Creating Machine", "Machine", openStackMachine.Name)
+		logger.Info("Machine does not exist, creating Machine", "name", openStackMachine.Name)
 		instanceStatus, err = computeService.CreateInstance(openStackMachine, openStackCluster, instanceSpec, cluster.Name, false)
 		if err != nil {
 			conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceCreateFailedReason, clusterv1.ConditionSeverityError, err.Error())
@@ -491,9 +492,9 @@ func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *
 	instanceSpec.SecurityGroups = openStackMachine.Spec.SecurityGroups
 	if openStackCluster.Spec.ManagedSecurityGroups {
 		var managedSecurityGroup string
-		if util.IsControlPlaneMachine(machine) {
+		if util.IsControlPlaneMachine(machine) && openStackCluster.Status.ControlPlaneSecurityGroup != nil {
 			managedSecurityGroup = openStackCluster.Status.ControlPlaneSecurityGroup.ID
-		} else {
+		} else if openStackCluster.Status.WorkerSecurityGroup != nil {
 			managedSecurityGroup = openStackCluster.Status.WorkerSecurityGroup.ID
 		}
 
@@ -521,7 +522,7 @@ func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(scope scope.Sco
 // of OpenStackMachines.
 func (r *OpenStackMachineReconciler) OpenStackClusterToOpenStackMachines(ctx context.Context) handler.MapFunc {
 	log := ctrl.LoggerFrom(ctx)
-	return func(o client.Object) []ctrl.Request {
+	return func(ctx context.Context, o client.Object) []ctrl.Request {
 		c, ok := o.(*infrav1.OpenStackCluster)
 		if !ok {
 			panic(fmt.Sprintf("Expected a OpenStackCluster but got a %T", o))
@@ -570,7 +571,7 @@ func (r *OpenStackMachineReconciler) getBootstrapData(ctx context.Context, machi
 
 func (r *OpenStackMachineReconciler) requeueOpenStackMachinesForUnpausedCluster(ctx context.Context) handler.MapFunc {
 	log := ctrl.LoggerFrom(ctx)
-	return func(o client.Object) []ctrl.Request {
+	return func(ctx context.Context, o client.Object) []ctrl.Request {
 		c, ok := o.(*clusterv1.Cluster)
 		if !ok {
 			panic(fmt.Sprintf("Expected a Cluster but got a %T", o))

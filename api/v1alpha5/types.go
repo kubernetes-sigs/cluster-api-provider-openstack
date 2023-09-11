@@ -162,8 +162,8 @@ type Instance struct {
 	Name           string            `json:"name,omitempty"`
 	Trunk          bool              `json:"trunk,omitempty"`
 	FailureDomain  string            `json:"failureDomain,omitempty"`
-	SecurityGroups *[]string         `json:"securigyGroups,omitempty"`
-	Networks       *[]Network        `json:"networks,omitempty"`
+	SecurityGroups []string          `json:"securigyGroups,omitempty"`
+	Networks       []Network         `json:"networks,omitempty"`
 	Subnet         string            `json:"subnet,omitempty"`
 	Tags           []string          `json:"tags,omitempty"`
 	Image          string            `json:"image,omitempty"`

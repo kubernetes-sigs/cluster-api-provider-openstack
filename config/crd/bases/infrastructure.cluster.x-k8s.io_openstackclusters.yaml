@@ -3674,10 +3674,6 @@ spec:
       jsonPath: .status.network.id
       name: Network
       type: string
-    - description: Subnet the cluster is using
-      jsonPath: .status.network.subnet.id
-      name: Subnet
-      type: string
     - description: API Endpoint
       jsonPath: .spec.controlPlaneEndpoint.host
       name: Endpoint

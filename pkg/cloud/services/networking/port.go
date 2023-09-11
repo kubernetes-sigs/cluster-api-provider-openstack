@@ -17,6 +17,7 @@ limitations under the License.
 package networking
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -25,7 +26,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/portsecurity"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/cluster-api/util"
+	"k8s.io/apimachinery/pkg/util/wait"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
@@ -240,11 +241,13 @@ func getPortProfile(p infrav1.BindingProfile) map[string]interface{} {
 
 func (s *Service) DeletePort(eventObject runtime.Object, portID string) error {
 	var err error
-	err = util.PollImmediate(retryIntervalPortDelete, timeoutPortDelete, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.TODO(), retryIntervalPortDelete, timeoutPortDelete, true, func(_ context.Context) (bool, error) {
 		err = s.client.DeletePort(portID)
 		if err != nil {
 			if capoerrors.IsNotFound(err) {
 				record.Eventf(eventObject, "SuccessfulDeletePort", "Port with id %d did not exist", portID)
+				// this is success so we return without another try
+				return true, nil
 			}
 			if capoerrors.IsRetryable(err) {
 				return false, nil
@@ -263,7 +266,12 @@ func (s *Service) DeletePort(eventObject runtime.Object, portID string) error {
 }
 
 func (s *Service) DeletePorts(openStackCluster *infrav1.OpenStackCluster) error {
-	networkID := openStackCluster.Spec.Network.ID
+	// If the network is not ready, do nothing
+	if openStackCluster.Status.Network == nil || openStackCluster.Status.Network.ID == "" {
+		return nil
+	}
+	networkID := openStackCluster.Status.Network.ID
+
 	portList, err := s.client.ListPort(ports.ListOpts{
 		NetworkID:   networkID,
 		DeviceOwner: "",
@@ -278,28 +286,47 @@ func (s *Service) DeletePorts(openStackCluster *infrav1.OpenStackCluster) error 
 	for _, port := range portList {
 		if strings.HasPrefix(port.Name, openStackCluster.Name) {
 			err := s.DeletePort(openStackCluster, port.ID)
-			if capoerrors.IsNotFound(err) {
-				continue
+			if err != nil {
+				return fmt.Errorf("delete port %s of network %q failed : %v", port.ID, networkID, err)
 			}
-			return fmt.Errorf("delete port %s of network %q failed : %v", port.ID, networkID, err)
 		}
 	}
 
 	return nil
 }
 
-func (s *Service) GarbageCollectErrorInstancesPort(eventObject runtime.Object, instanceName string) error {
-	portList, err := s.client.ListPort(ports.ListOpts{
-		Name: instanceName,
-	})
-	if err != nil {
-		return err
-	}
-	for _, p := range portList {
-		if err := s.DeletePort(eventObject, p.ID); err != nil {
+func (s *Service) GarbageCollectErrorInstancesPort(eventObject runtime.Object, instanceName string, portOpts []infrav1.PortOpts) error {
+	for i := range portOpts {
+		portOpt := &portOpts[i]
+
+		portName := GetPortName(instanceName, portOpt, i)
+
+		// TODO: whould be nice if gophercloud could be persuaded to accept multiple
+		// names as is allowed by the API in order to reduce API traffic.
+		portList, err := s.client.ListPort(ports.ListOpts{Name: portName})
+		if err != nil {
+			return err
+		}
+
+		// NOTE: https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/1476
+		// It is up to the end user to specify a UNIQUE cluster name when provisioning in the
+		// same project, otherwise things will alias and we could delete more than we should.
+		if len(portList) > 1 {
+			return fmt.Errorf("garbage collection of port %s failed, found %d ports with the same name", portName, len(portList))
+		}
+
+		if err := s.DeletePort(eventObject, portList[0].ID); err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+// GetPortName appends a suffix to an instance name in order to try and get a unique name per port.
+func GetPortName(instanceName string, opts *infrav1.PortOpts, netIndex int) string {
+	if opts != nil && opts.NameSuffix != "" {
+		return fmt.Sprintf("%s-%s", instanceName, opts.NameSuffix)
+	}
+	return fmt.Sprintf("%s-%d", instanceName, netIndex)
 }

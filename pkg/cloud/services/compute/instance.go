@@ -17,6 +17,7 @@ limitations under the License.
 package compute
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -32,7 +33,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/cluster-api/util"
+	"k8s.io/apimachinery/pkg/util/wait"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
@@ -72,7 +73,7 @@ func (s *Service) normalizePortTarget(port *infrav1.PortOpts, openStackCluster *
 	// No network, but fixed IPs are defined(we handled the no fixed
 	// IPs case above): try to infer network from a subnet
 	if noNetwork {
-		s.scope.Logger().V(4).Info("No network defined for port %d, attempting to infer from subnet", portIdx)
+		s.scope.Logger().V(4).Info("No network defined for port, attempting to infer from subnet", "port", portIdx)
 
 		// Look for a unique subnet defined in FixedIPs.  If we find one
 		// we can use it to infer the network ID. We don't need to worry
@@ -94,7 +95,7 @@ func (s *Service) normalizePortTarget(port *infrav1.PortOpts, openStackCluster *
 				if err != nil {
 					// Multiple matches might be ok later when we restrict matches to a single network
 					if errors.Is(err, networking.ErrMultipleMatches) {
-						s.scope.Logger().V(4).Info("Can't infer network from subnet %d: %s", i, err)
+						s.scope.Logger().V(4).Info("Couldn't infer network from subnet", "subnetIndex", i, "err", err)
 						continue
 					}
 
@@ -282,7 +283,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 		if len(instanceSpec.Tags) > 0 {
 			iTags = instanceSpec.Tags
 		}
-		portName := getPortName(instanceSpec.Name, portOpts, i)
+		portName := networking.GetPortName(instanceSpec.Name, portOpts, i)
 		port, err := networkingService.GetOrCreatePort(eventObject, clusterName, portName, portOpts, securityGroups, iTags)
 		if err != nil {
 			return nil, err
@@ -303,7 +304,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 
 	// Wait for volume to become available
 	if volume != nil {
-		err = util.PollImmediate(retryIntervalInstanceStatus, instanceCreateTimeout, func() (bool, error) {
+		err = wait.PollUntilContextTimeout(context.TODO(), retryIntervalInstanceStatus, instanceCreateTimeout, true, func(_ context.Context) (bool, error) {
 			createdVolume, err := s.getVolumeClient().GetVolume(volume.ID)
 			if err != nil {
 				if capoerrors.IsRetryable(err) {
@@ -357,7 +358,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 	}
 
 	var createdInstance *InstanceStatus
-	err = util.PollImmediate(retryInterval, instanceCreateTimeout, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.TODO(), retryInterval, instanceCreateTimeout, true, func(_ context.Context) (bool, error) {
 		createdInstance, err = s.GetInstanceStatus(server.ID)
 		if err != nil {
 			if capoerrors.IsRetryable(err) {
@@ -377,14 +378,6 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 
 	record.Eventf(eventObject, "SuccessfulCreateServer", "Created server %s with id %s", createdInstance.Name(), createdInstance.ID())
 	return createdInstance, nil
-}
-
-// getPortName appends a suffix to an instance name in order to try and get a unique name per port.
-func getPortName(instanceName string, opts *infrav1.PortOpts, netIndex int) string {
-	if opts != nil && opts.NameSuffix != "" {
-		return fmt.Sprintf("%s-%s", instanceName, opts.NameSuffix)
-	}
-	return fmt.Sprintf("%s-%d", instanceName, netIndex)
 }
 
 func rootVolumeName(instanceName string) string {
@@ -432,7 +425,7 @@ func (s *Service) getOrCreateRootVolume(eventObject runtime.Object, instanceSpec
 			return nil, fmt.Errorf("exected to find volume %s with size %d; found size %d", name, size, volume.Size)
 		}
 
-		s.scope.Logger().Info("using existing root volume %s", name)
+		s.scope.Logger().V(3).Info("Using existing root volume", "name", name)
 		return volume, nil
 	}
 
@@ -549,7 +542,7 @@ func (s *Service) GetManagementPort(openStackCluster *infrav1.OpenStackCluster, 
 	return &allPorts[0], nil
 }
 
-func (s *Service) DeleteInstance(eventObject runtime.Object, instanceStatus *InstanceStatus, instanceName string, rootVolume *infrav1.RootVolume) error {
+func (s *Service) DeleteInstance(openStackCluster *infrav1.OpenStackCluster, eventObject runtime.Object, instanceStatus *InstanceStatus, instanceSpec *InstanceSpec) error {
 	if instanceStatus == nil {
 		/*
 			We create a boot-from-volume instance in 2 steps:
@@ -569,8 +562,8 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instanceStatus *Ins
 			Note that we don't need to separately delete the root volume when deleting the instance because
 			DeleteOnTermination will ensure it is deleted in that case.
 		*/
-		if hasRootVolume(rootVolume) {
-			name := rootVolumeName(instanceName)
+		if hasRootVolume(instanceSpec.RootVolume) {
+			name := rootVolumeName(instanceSpec.Name)
 			volume, err := s.getVolumeByName(name)
 			if err != nil {
 				return err
@@ -579,7 +572,7 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instanceStatus *Ins
 				return nil
 			}
 
-			s.scope.Logger().Info("deleting dangling root volume %s(%s)", volume.Name, volume.ID)
+			s.scope.Logger().V(2).Info("Deleting dangling root volume", "name", volume.Name, "ID", volume.ID)
 			return s.getVolumeClient().DeleteVolume(volume.ID, volumes.DeleteOpts{})
 		}
 
@@ -619,7 +612,12 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instanceStatus *Ins
 
 	// delete port of error instance
 	if instanceStatus.State() == infrav1.InstanceStateError {
-		if err := networkingService.GarbageCollectErrorInstancesPort(eventObject, instanceStatus.Name()); err != nil {
+		portOpts, err := s.constructPorts(openStackCluster, instanceSpec)
+		if err != nil {
+			return err
+		}
+
+		if err := networkingService.GarbageCollectErrorInstancesPort(eventObject, instanceSpec.Name, portOpts); err != nil {
 			return err
 		}
 	}
@@ -682,7 +680,7 @@ func (s *Service) deleteInstance(eventObject runtime.Object, instance *InstanceI
 		return err
 	}
 
-	err = util.PollImmediate(retryIntervalInstanceStatus, timeoutInstanceDelete, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.TODO(), retryIntervalInstanceStatus, timeoutInstanceDelete, true, func(_ context.Context) (bool, error) {
 		i, err := s.GetInstanceStatus(instance.ID)
 		if err != nil {
 			return false, err

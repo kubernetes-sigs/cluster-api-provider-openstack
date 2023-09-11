@@ -157,12 +157,14 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 			webhook := &OpenStackMachineTemplateWebhook{}
 			ctx := admission.NewContextWithRequest(context.Background(), *tt.req)
 
-			err := webhook.ValidateUpdate(ctx, tt.oldTemplate, tt.newTemplate)
+			warn, err := webhook.ValidateUpdate(ctx, tt.oldTemplate, tt.newTemplate)
 			if tt.wantErr {
 				g.Expect(err).To(HaveOccurred())
 			} else {
 				g.Expect(err).NotTo(HaveOccurred())
 			}
+			// Nothing emits warnings yet
+			g.Expect(warn).To(BeEmpty())
 		})
 	}
 }

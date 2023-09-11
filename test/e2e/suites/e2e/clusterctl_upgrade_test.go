@@ -28,6 +28,8 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
 )
 
+const OldCAPIVersion = "v1.4.6"
+
 var _ = Describe("When testing clusterctl upgrades (v0.6=>current) [clusterctl-upgrade]", func() {
 	ctx := context.TODO()
 	shared.SetEnvVar("USE_CI_ARTIFACTS", "true", false)
@@ -40,9 +42,12 @@ var _ = Describe("When testing clusterctl upgrades (v0.6=>current) [clusterctl-u
 			BootstrapClusterProxy:           e2eCtx.Environment.BootstrapClusterProxy,
 			ArtifactFolder:                  e2eCtx.Settings.ArtifactFolder,
 			SkipCleanup:                     false,
-			InitWithBinary:                  "https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.4.1/clusterctl-{OS}-{ARCH}",
+			InitWithBinary:                  "https://github.com/kubernetes-sigs/cluster-api/releases/download/" + OldCAPIVersion + "/clusterctl-{OS}-{ARCH}",
 			InitWithProvidersContract:       "v1beta1",
 			InitWithInfrastructureProviders: []string{"openstack:v0.6.4"},
+			InitWithCoreProvider:            "cluster-api:" + OldCAPIVersion,
+			InitWithBootstrapProviders:      []string{"kubeadm:" + OldCAPIVersion},
+			InitWithControlPlaneProviders:   []string{"kubeadm:" + OldCAPIVersion},
 			MgmtFlavor:                      shared.FlavorDefault,
 			WorkloadFlavor:                  shared.FlavorV1alpha5,
 		}
@@ -61,9 +66,12 @@ var _ = Describe("When testing clusterctl upgrades (v0.7=>current) [clusterctl-u
 			BootstrapClusterProxy:           e2eCtx.Environment.BootstrapClusterProxy,
 			ArtifactFolder:                  e2eCtx.Settings.ArtifactFolder,
 			SkipCleanup:                     false,
-			InitWithBinary:                  "https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.3.1/clusterctl-{OS}-{ARCH}",
+			InitWithBinary:                  "https://github.com/kubernetes-sigs/cluster-api/releases/download/" + OldCAPIVersion + "/clusterctl-{OS}-{ARCH}",
 			InitWithProvidersContract:       "v1beta1",
 			InitWithInfrastructureProviders: []string{"openstack:v0.7.2"},
+			InitWithCoreProvider:            "cluster-api:" + OldCAPIVersion,
+			InitWithBootstrapProviders:      []string{"kubeadm:" + OldCAPIVersion},
+			InitWithControlPlaneProviders:   []string{"kubeadm:" + OldCAPIVersion},
 			MgmtFlavor:                      shared.FlavorDefault,
 			WorkloadFlavor:                  shared.FlavorV1alpha6,
 		}

@@ -25,16 +25,32 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	runtimeserializer "k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/utils/pointer"
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
-	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
+	"sigs.k8s.io/controller-runtime/pkg/conversion"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
+	testhelpers "sigs.k8s.io/cluster-api-provider-openstack/test/helpers"
 )
+
+// Setting this to false to avoid running tests in parallel. Only for use in development.
+const parallel = true
+
+func runParallel(f func(t *testing.T)) func(t *testing.T) {
+	if parallel {
+		return func(t *testing.T) {
+			t.Helper()
+			t.Parallel()
+			f(t)
+		}
+	}
+	return f
+}
 
 func TestFuzzyConversion(t *testing.T) {
 	// The test already ignores the data annotation added on up-conversion.
 	// Also ignore the data annotation added on down-conversion.
-	ignoreDataAnnotation := func(hub ctrlconversion.Hub) {
+	ignoreDataAnnotation := func(hub conversion.Hub) {
 		obj := hub.(metav1.Object)
 		delete(obj.GetAnnotations(), utilconversion.DataAnnotation)
 	}
@@ -44,7 +60,7 @@ func TestFuzzyConversion(t *testing.T) {
 			func(instance *Instance, c fuzz.Continue) {
 				c.FuzzNoCustom(instance)
 
-				// None of the following fields have ever been set in v1alpha6
+				// None of the following status fields have ever been set in v1alpha6
 				instance.Trunk = false
 				instance.FailureDomain = ""
 				instance.SecurityGroups = nil
@@ -64,7 +80,7 @@ func TestFuzzyConversion(t *testing.T) {
 			func(status *OpenStackClusterStatus, c fuzz.Continue) {
 				c.FuzzNoCustom(status)
 
-				// None of the following fields have ever been set in v1alpha6
+				// None of the following status fields have ever been set in v1alpha6
 				if status.ExternalNetwork != nil {
 					status.ExternalNetwork.Subnet = nil
 					status.ExternalNetwork.PortOpts = nil
@@ -75,85 +91,64 @@ func TestFuzzyConversion(t *testing.T) {
 		}
 	}
 
-	t.Run("for OpenStackCluster", utilconversion.FuzzTestFunc(utilconversion.FuzzTestFuncInput{
+	t.Run("for OpenStackCluster", runParallel(utilconversion.FuzzTestFunc(utilconversion.FuzzTestFuncInput{
 		Hub:              &infrav1.OpenStackCluster{},
 		Spoke:            &OpenStackCluster{},
 		HubAfterMutation: ignoreDataAnnotation,
 		FuzzerFuncs:      []fuzzer.FuzzerFuncs{fuzzerFuncs},
-	}))
+	})))
 
-	t.Run("for OpenStackClusterTemplate", utilconversion.FuzzTestFunc(utilconversion.FuzzTestFuncInput{
+	t.Run("for OpenStackCluster with mutate", runParallel(testhelpers.FuzzMutateTestFunc(testhelpers.FuzzMutateTestFuncInput{
+		FuzzTestFuncInput: utilconversion.FuzzTestFuncInput{
+			Hub:              &infrav1.OpenStackCluster{},
+			Spoke:            &OpenStackCluster{},
+			HubAfterMutation: ignoreDataAnnotation,
+			FuzzerFuncs:      []fuzzer.FuzzerFuncs{fuzzerFuncs},
+		},
+		MutateFuzzerFuncs: []fuzzer.FuzzerFuncs{fuzzerFuncs},
+	})))
+
+	t.Run("for OpenStackClusterTemplate", runParallel(utilconversion.FuzzTestFunc(utilconversion.FuzzTestFuncInput{
 		Hub:              &infrav1.OpenStackClusterTemplate{},
 		Spoke:            &OpenStackClusterTemplate{},
 		HubAfterMutation: ignoreDataAnnotation,
-	}))
+	})))
 
-	t.Run("for OpenStackMachine", utilconversion.FuzzTestFunc(utilconversion.FuzzTestFuncInput{
+	t.Run("for OpenStackClusterTemplate with mutate", runParallel(testhelpers.FuzzMutateTestFunc(testhelpers.FuzzMutateTestFuncInput{
+		FuzzTestFuncInput: utilconversion.FuzzTestFuncInput{
+			Hub:              &infrav1.OpenStackClusterTemplate{},
+			Spoke:            &OpenStackClusterTemplate{},
+			HubAfterMutation: ignoreDataAnnotation,
+		},
+	})))
+
+	t.Run("for OpenStackMachine", runParallel(utilconversion.FuzzTestFunc(utilconversion.FuzzTestFuncInput{
 		Hub:              &infrav1.OpenStackMachine{},
 		Spoke:            &OpenStackMachine{},
 		HubAfterMutation: ignoreDataAnnotation,
-	}))
+	})))
 
-	t.Run("for OpenStackMachineTemplate", utilconversion.FuzzTestFunc(utilconversion.FuzzTestFuncInput{
+	t.Run("for OpenStackMachine with mutate", runParallel(testhelpers.FuzzMutateTestFunc(testhelpers.FuzzMutateTestFuncInput{
+		FuzzTestFuncInput: utilconversion.FuzzTestFuncInput{
+			Hub:              &infrav1.OpenStackMachine{},
+			Spoke:            &OpenStackMachine{},
+			HubAfterMutation: ignoreDataAnnotation,
+		},
+	})))
+
+	t.Run("for OpenStackMachineTemplate", runParallel(utilconversion.FuzzTestFunc(utilconversion.FuzzTestFuncInput{
 		Hub:              &infrav1.OpenStackMachineTemplate{},
 		Spoke:            &OpenStackMachineTemplate{},
 		HubAfterMutation: ignoreDataAnnotation,
-	}))
-}
+	})))
 
-// Test that mutation of a converted object survives a subsequent conversion.
-func TestMutation(t *testing.T) {
-	g := gomega.NewWithT(t)
-
-	t.Run("mutation during up-conversion", func(t *testing.T) {
-		// Initialise an object with 2 values set
-		before := OpenStackCluster{
-			Spec: OpenStackClusterSpec{
-				CloudName:                  "cloud",
-				DisableAPIServerFloatingIP: false,
-			},
-		}
-
-		// Up-convert the object
-		var up infrav1.OpenStackCluster
-		g.Expect(before.ConvertTo(&up)).To(gomega.Succeed())
-
-		// Modify one of the values
-		up.Spec.DisableAPIServerFloatingIP = true
-
-		// Down-convert the object
-		var after OpenStackCluster
-		g.Expect(after.ConvertFrom(&up)).To(gomega.Succeed())
-
-		// Ensure that the down-converted values are as expected
-		g.Expect(after.Spec.CloudName).To(gomega.Equal("cloud"))
-		g.Expect(after.Spec.DisableAPIServerFloatingIP).To(gomega.Equal(true))
-	})
-
-	t.Run("mutation during down-conversion", func(t *testing.T) {
-		// Initialise an object with 2 values set
-		before := infrav1.OpenStackCluster{
-			Spec: infrav1.OpenStackClusterSpec{
-				CloudName:                  "cloud",
-				DisableAPIServerFloatingIP: false,
-			},
-		}
-
-		// Down-convert the object
-		var down OpenStackCluster
-		g.Expect(down.ConvertFrom(&before)).To(gomega.Succeed())
-
-		// Modify one of the values
-		down.Spec.DisableAPIServerFloatingIP = true
-
-		// Up-convert the object
-		var after infrav1.OpenStackCluster
-		g.Expect(down.ConvertTo(&after)).To(gomega.Succeed())
-
-		// Ensure that the up-converted values are as expected
-		g.Expect(after.Spec.CloudName).To(gomega.Equal("cloud"))
-		g.Expect(after.Spec.DisableAPIServerFloatingIP).To(gomega.Equal(true))
-	})
+	t.Run("for OpenStackMachineTemplate with mutate", runParallel(testhelpers.FuzzMutateTestFunc(testhelpers.FuzzMutateTestFuncInput{
+		FuzzTestFuncInput: utilconversion.FuzzTestFuncInput{
+			Hub:              &infrav1.OpenStackMachineTemplate{},
+			Spoke:            &OpenStackMachineTemplate{},
+			HubAfterMutation: ignoreDataAnnotation,
+		},
+	})))
 }
 
 func TestNetworksToPorts(t *testing.T) {
@@ -488,6 +483,111 @@ func TestPortOptsConvertTo(t *testing.T) {
 			g.Expect(err).NotTo(gomega.HaveOccurred())
 			// Comparing spec only here since the conversion will also add annotations that we don't care about for the test
 			g.Expect(convertedHub.Spec).To(gomega.Equal(hubMachineTemplate.Spec))
+		})
+	}
+}
+
+func TestMachineConversionControllerSpecFields(t *testing.T) {
+	// This tests that we still do field restoration when the controller modifies ProviderID and InstanceID in the spec
+
+	g := gomega.NewWithT(t)
+	scheme := runtime.NewScheme()
+	g.Expect(AddToScheme(scheme)).To(gomega.Succeed())
+	g.Expect(infrav1.AddToScheme(scheme)).To(gomega.Succeed())
+
+	// This test machine contains a network definition. If we restore it on
+	// down-conversion it will still have a network definition. If we don't,
+	// the network definition will have become a port definition.
+	testMachine := func() *OpenStackMachine {
+		return &OpenStackMachine{
+			Spec: OpenStackMachineSpec{
+				Networks: []NetworkParam{
+					{
+						UUID: "network-uuid",
+					},
+				},
+			},
+		}
+	}
+
+	tests := []struct {
+		name              string
+		modifyUp          func(*infrav1.OpenStackMachine)
+		testAfter         func(*OpenStackMachine)
+		expectNetworkDiff bool
+	}{
+		{
+			name: "No change",
+		},
+		{
+			name: "Non-ignored change",
+			modifyUp: func(up *infrav1.OpenStackMachine) {
+				up.Spec.Flavor = "new-flavor"
+			},
+			testAfter: func(after *OpenStackMachine) {
+				g.Expect(after.Spec.Flavor).To(gomega.Equal("new-flavor"))
+			},
+			expectNetworkDiff: true,
+		},
+		{
+			name: "Set ProviderID",
+			modifyUp: func(up *infrav1.OpenStackMachine) {
+				up.Spec.ProviderID = pointer.String("new-provider-id")
+			},
+			testAfter: func(after *OpenStackMachine) {
+				g.Expect(after.Spec.ProviderID).To(gomega.Equal(pointer.String("new-provider-id")))
+			},
+			expectNetworkDiff: false,
+		},
+		{
+			name: "Set InstanceID",
+			modifyUp: func(up *infrav1.OpenStackMachine) {
+				up.Spec.InstanceID = pointer.String("new-instance-id")
+			},
+			testAfter: func(after *OpenStackMachine) {
+				g.Expect(after.Spec.InstanceID).To(gomega.Equal(pointer.String("new-instance-id")))
+			},
+			expectNetworkDiff: false,
+		},
+		{
+			name: "Set ProviderID and non-ignored change",
+			modifyUp: func(up *infrav1.OpenStackMachine) {
+				up.Spec.ProviderID = pointer.String("new-provider-id")
+				up.Spec.Flavor = "new-flavor"
+			},
+			testAfter: func(after *OpenStackMachine) {
+				g.Expect(after.Spec.ProviderID).To(gomega.Equal(pointer.String("new-provider-id")))
+				g.Expect(after.Spec.Flavor).To(gomega.Equal("new-flavor"))
+			},
+			expectNetworkDiff: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			before := testMachine()
+
+			up := infrav1.OpenStackMachine{}
+			g.Expect(before.ConvertTo(&up)).To(gomega.Succeed())
+
+			if tt.modifyUp != nil {
+				tt.modifyUp(&up)
+			}
+
+			after := OpenStackMachine{}
+			g.Expect(after.ConvertFrom(&up)).To(gomega.Succeed())
+
+			if tt.testAfter != nil {
+				tt.testAfter(&after)
+			}
+
+			if !tt.expectNetworkDiff {
+				g.Expect(after.Spec.Networks).To(gomega.HaveLen(1))
+				g.Expect(after.Spec.Ports).To(gomega.HaveLen(0))
+			} else {
+				g.Expect(after.Spec.Networks).To(gomega.HaveLen(0))
+				g.Expect(after.Spec.Ports).To(gomega.HaveLen(1))
+			}
 		})
 	}
 }

@@ -121,10 +121,10 @@ var backoff = wait.Backoff{
 }
 
 func (s *Service) AssociateFloatingIP(eventObject runtime.Object, fp *floatingips.FloatingIP, portID string) error {
-	s.scope.Logger().Info("Associating floating IP", "id", fp.ID, "ip", fp.FloatingIP)
+	s.scope.Logger().Info("Associating floating IP", "ID", fp.ID, "IP", fp.FloatingIP)
 
 	if fp.PortID == portID {
-		s.scope.Logger().Info("Floating IP already associated:", "id", fp.ID, "ip", fp.FloatingIP)
+		s.scope.Logger().Info("Floating IP already associated:", "ID", fp.ID, "IP", fp.FloatingIP)
 		return nil
 	}
 
@@ -153,11 +153,11 @@ func (s *Service) DisassociateFloatingIP(eventObject runtime.Object, ip string) 
 		return err
 	}
 	if fip == nil || fip.FloatingIP == "" {
-		s.scope.Logger().Info("Floating IP not associated", "ip", ip)
+		s.scope.Logger().Info("Floating IP not associated", "IP", ip)
 		return nil
 	}
 
-	s.scope.Logger().Info("Disassociating floating IP", "id", fip.ID, "ip", fip.FloatingIP)
+	s.scope.Logger().Info("Disassociating floating IP", "ID", fip.ID, "IP", fip.FloatingIP)
 
 	fpUpdateOpts := &floatingips.UpdateOpts{
 		PortID: nil,
@@ -179,7 +179,7 @@ func (s *Service) DisassociateFloatingIP(eventObject runtime.Object, ip string) 
 }
 
 func (s *Service) waitForFloatingIP(id, target string) error {
-	s.scope.Logger().Info("Waiting for floating IP", "id", id, "targetStatus", target)
+	s.scope.Logger().Info("Waiting for floating IP", "ID", id, "status", target)
 	return wait.ExponentialBackoff(backoff, func() (bool, error) {
 		fip, err := s.client.GetFloatingIP(id)
 		if err != nil {
