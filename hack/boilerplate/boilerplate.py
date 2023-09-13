@@ -107,6 +107,10 @@ def file_passes(filename, refs, regexs):
 
     data = data.splitlines()
 
+    # trim leading blank lines
+    while len(data) > 0 and data[0] == "":
+        data = data[1:]
+
     # if our test file is smaller than the reference it surely fails!
     if len(ref) > len(data):
         print('File %s smaller than reference (%d < %d)' %
