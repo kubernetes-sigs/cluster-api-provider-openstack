@@ -105,7 +105,7 @@ $(GOLANGCI_LINT): Makefile ensure-golangci-lint.sh | $(BIN_DIR)
 
 KUSTOMIZE := $(BIN_DIR)/kustomize
 $(KUSTOMIZE): go.mod go.sum | $(BIN_DIR) # Build kustomize from tools folder.
-	CGO_ENABLED=0 go build -tags=tools -o $@ sigs.k8s.io/kustomize/kustomize/v4
+	CGO_ENABLED=0 go build -tags=tools -o $@ sigs.k8s.io/kustomize/kustomize/v5
 
 MDBOOK_SHARE := $(SHARE_DIR)/mdbook$(MDBOOK_ARCHIVE_EXT)
 $(MDBOOK_SHARE): ../../versions.mk $(SHARE_DIR)
