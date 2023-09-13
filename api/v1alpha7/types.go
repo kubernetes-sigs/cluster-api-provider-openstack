@@ -163,6 +163,24 @@ type RootVolume struct {
 	AvailabilityZone string `json:"availabilityZone,omitempty"`
 }
 
+type AdditionalBlockDevice struct {
+	// NameSuffix is the suffix to be added to volume names.
+	// It will be combined with the machine name to make the volume name.
+	NameSuffix string `json:"nameSuffix"`
+	// Size is the size in GB of the volume.
+	Size int `json:"diskSize"`
+	// VolumeType is the volume type of the volume.
+	// If omitted, the default type will be used.
+	VolumeType string `json:"volumeType,omitempty"`
+	// AvailabilityZone is the volume availability zone to create the volume in.
+	// If omitted, the availability zone of the server will be used.
+	AvailabilityZone string `json:"availabilityZone,omitempty"`
+	// Tag is a tag to add to the volume attachment.
+	// This is then available in the instance metadata, allowing devices to be
+	// identified by tag inside the server.
+	Tag string `json:"tag,omitempty"`
+}
+
 // NetworkStatus contains basic information about an existing neutron network.
 type NetworkStatus struct {
 	Name string `json:"name"`
