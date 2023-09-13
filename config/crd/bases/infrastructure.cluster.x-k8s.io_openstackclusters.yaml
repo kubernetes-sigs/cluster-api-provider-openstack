@@ -3770,6 +3770,36 @@ spec:
                   instance:
                     description: Instance for the bastion itself
                     properties:
+                      additionalBlockDevices:
+                        description: AdditionalBlockDevices is a list of specifications
+                          for additional block devices to attach to the server instance
+                        items:
+                          properties:
+                            availabilityZone:
+                              description: AvailabilityZone is the volume availability
+                                zone to create the volume in. If omitted, the availability
+                                zone of the server will be used.
+                              type: string
+                            diskSize:
+                              description: Size is the size in GB of the volume.
+                              type: integer
+                            name:
+                              description: Name of the Cinder volume in the context
+                                of a machine. It will be combined with the machine
+                                name to make the actual volume name.
+                              type: string
+                            volumeType:
+                              description: VolumeType is the volume type of the volume.
+                                If omitted, the default type will be used.
+                              type: string
+                          required:
+                          - diskSize
+                          - name
+                          type: object
+                        type: array
+                        x-kubernetes-list-map-keys:
+                        - name
+                        x-kubernetes-list-type: map
                       cloudName:
                         description: The name of the cloud to use from the clouds
                           secret

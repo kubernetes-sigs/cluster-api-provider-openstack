@@ -554,7 +554,8 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 				allServerNames = append(allServerNames, name)
 			}
 
-			bootVolumes := make(map[string]*volumes.Volume)
+			rootVolumes := make(map[string]*volumes.Volume)
+			additionalVolumes := make(map[string]*volumes.Volume)
 
 			for _, machine := range allMachines {
 				// The output of a HaveKey() failure against
@@ -569,33 +570,61 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 					Equal(*machine.Spec.FailureDomain),
 					fmt.Sprintf("Server %s was not scheduled in the correct AZ", machine.Name))
 
-				// Check that all machines have the expected boot volume
+				// Check that all machines have the expected volumes:
+				// - 1 root volume
+				// - 1 additional volume
 				volumes := server.AttachedVolumes
-				Expect(volumes).To(HaveLen(1))
+				Expect(volumes).To(HaveLen(2))
 
-				bootVolume, err := shared.GetOpenStackVolume(e2eCtx, volumes[0].ID)
+				// nova.objects.BlockDeviceMappingList.bdms_by_instance_uuid does not guarantee order of the volumes
+				// so we need to find the boot volume by checking the "bootable" flag for now.
+				firstVolumeFound, err := shared.GetOpenStackVolume(e2eCtx, volumes[0].ID)
 				Expect(err).NotTo(HaveOccurred(), "failed to get OpenStack volume %s for machine %s", volumes[0].ID, machine.Name)
-				bootVolumes[machine.Name] = bootVolume
+				secondVolumeFound, err := shared.GetOpenStackVolume(e2eCtx, volumes[1].ID)
+				Expect(err).NotTo(HaveOccurred(), "failed to get OpenStack volume %s for machine %s", volumes[1].ID, machine.Name)
 
-				Expect(*bootVolume).To(MatchFields(IgnoreExtras, Fields{
+				rootVolume := firstVolumeFound
+				additionalVolume := secondVolumeFound
+				// The boot volume is the one with the "bootable" flag set.
+				if firstVolumeFound.Bootable != "true" { // This is genuinely a string, not a bool
+					rootVolume = secondVolumeFound
+					additionalVolume = firstVolumeFound
+				}
+
+				rootVolumes[machine.Name] = rootVolume
+				Expect(*rootVolume).To(MatchFields(IgnoreExtras, Fields{
 					"Name":     Equal(fmt.Sprintf("%s-root", server.Name)),
 					"Size":     Equal(15),
 					"Bootable": Equal("true"), // This is genuinely a string, not a bool
-				}), "Boot volume %s for machine %s not as expected", bootVolume.ID, machine.Name)
+				}), "Boot volume %s for machine %s not as expected", rootVolume.ID, machine.Name)
+
+				additionalVolumes[machine.Name] = additionalVolume
+				Expect(*additionalVolume).To(MatchFields(IgnoreExtras, Fields{
+					"Name": Equal(fmt.Sprintf("%s-extravol", server.Name)),
+					"Size": Equal(1),
+				}), "Additional block device %s for machine %s not as expected", additionalVolume.ID, machine.Name)
 			}
 
-			// Expect all control plane machines to have a root volume in the same AZ as the machine, and the default volume type
+			// Expect all control plane machines to have volumes in the same AZ as the machine, and the default volume type
 			for _, machine := range controlPlaneMachines {
-				bootVolume := bootVolumes[machine.Name]
-				Expect(bootVolume.AvailabilityZone).To(Equal(*machine.Spec.FailureDomain))
-				Expect(bootVolume.VolumeType).NotTo(Equal(volumeTypeAlt))
+				rootVolume := rootVolumes[machine.Name]
+				Expect(rootVolume.AvailabilityZone).To(Equal(*machine.Spec.FailureDomain))
+				Expect(rootVolume.VolumeType).NotTo(Equal(volumeTypeAlt))
+
+				additionalVolume := additionalVolumes[machine.Name]
+				Expect(additionalVolume.AvailabilityZone).To(Equal(*machine.Spec.FailureDomain))
+				Expect(additionalVolume.VolumeType).NotTo(Equal(volumeTypeAlt))
 			}
 
-			// Expect all worker machines to have a root volume in the primary AZ, and the test volume type
+			// Expect all worker machines to have volumes in the primary AZ, and the test volume type
 			for _, machine := range workerMachines {
-				bootVolume := bootVolumes[machine.Name]
-				Expect(bootVolume.AvailabilityZone).To(Equal(failureDomain))
-				Expect(bootVolume.VolumeType).To(Equal(volumeTypeAlt))
+				rootVolume := rootVolumes[machine.Name]
+				Expect(rootVolume.AvailabilityZone).To(Equal(failureDomain))
+				Expect(rootVolume.VolumeType).To(Equal(volumeTypeAlt))
+
+				additionalVolume := additionalVolumes[machine.Name]
+				Expect(additionalVolume.AvailabilityZone).To(Equal(failureDomain))
+				Expect(additionalVolume.VolumeType).To(Equal(volumeTypeAlt))
 			}
 		})
 	})

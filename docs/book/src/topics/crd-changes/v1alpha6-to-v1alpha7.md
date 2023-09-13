@@ -14,6 +14,7 @@
         - [Removal of securityGroups](#removal-of-securitygroups)
         - [Removal of tenantId and projectId](#removal-of-tenantid-and-projectid)
         - [Change to profile](#change-to-profile)
+      - [Creation of additionalBlockDevices](#creation-of-additionalblockdevices)
     - [`OpenStackCluster`](#openstackcluster)
       - [Change to externalRouterIPs.subnet](#change-to-externalrouteripssubnet)
 
@@ -211,6 +212,21 @@ Here is an example on how to use `ports.bindingProfile` for enabling "trusted-mo
 ```yaml
 profile:
   TrustedVF: true
+```
+
+#### Creation of additionalBlockDevices
+
+We now have the ability for a machine to have additional block devices to be attached.
+
+Here is an example on how to use `additionalBlockDevices` for adding additional Cinder volumes attached
+to the server instance:
+
+```yaml
+additionalBlockDevices:
+- name: database
+  size: 50
+  volumeType: my-volume-type
+  availabilityZone: az0
 ```
 
 ### `OpenStackCluster`

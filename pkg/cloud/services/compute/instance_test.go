@@ -219,17 +219,18 @@ func TestService_getImageID(t *testing.T) {
 }
 
 const (
-	networkUUID                   = "d412171b-9fd7-41c1-95a6-c24e5953974d"
-	subnetUUID                    = "d2d8d98d-b234-477e-a547-868b7cb5d6a5"
-	portUUID                      = "e7b7f3d1-0a81-40b1-bfa6-a22a31b17816"
-	trunkUUID                     = "2cf74a9f-3e89-4546-9779-20f2503c4ae8"
-	imageUUID                     = "652b5a05-27fa-41d4-ac82-3e63cf6f7ab7"
-	flavorUUID                    = "6dc820db-f912-454e-a1e3-1081f3b8cc72"
-	instanceUUID                  = "383a8ec1-b6ea-4493-99dd-fc790da04ba9"
-	controlPlaneSecurityGroupUUID = "c9817a91-4821-42db-8367-2301002ab659"
-	workerSecurityGroupUUID       = "9c6c0d28-03c9-436c-815d-58440ac2c1c8"
-	serverGroupUUID               = "7b940d62-68ef-4e42-a76a-1a62e290509c"
-	volumeUUID                    = "d84fe775-e25d-4f80-9888-f701e996c689"
+	networkUUID                     = "d412171b-9fd7-41c1-95a6-c24e5953974d"
+	subnetUUID                      = "d2d8d98d-b234-477e-a547-868b7cb5d6a5"
+	portUUID                        = "e7b7f3d1-0a81-40b1-bfa6-a22a31b17816"
+	trunkUUID                       = "2cf74a9f-3e89-4546-9779-20f2503c4ae8"
+	imageUUID                       = "652b5a05-27fa-41d4-ac82-3e63cf6f7ab7"
+	flavorUUID                      = "6dc820db-f912-454e-a1e3-1081f3b8cc72"
+	instanceUUID                    = "383a8ec1-b6ea-4493-99dd-fc790da04ba9"
+	controlPlaneSecurityGroupUUID   = "c9817a91-4821-42db-8367-2301002ab659"
+	workerSecurityGroupUUID         = "9c6c0d28-03c9-436c-815d-58440ac2c1c8"
+	serverGroupUUID                 = "7b940d62-68ef-4e42-a76a-1a62e290509c"
+	rootVolumeUUID                  = "d84fe775-e25d-4f80-9888-f701e996c689"
+	additionalBlockDeviceVolumeUUID = "1d1d5a56-c433-41dd-8446-cba2077e96e9"
 
 	openStackMachineName = "test-openstack-machine"
 	portName             = "test-openstack-machine-0"
@@ -298,6 +299,15 @@ func TestService_ReconcileInstance(t *testing.T) {
 					"test-metadata": "test-value",
 				},
 				"user_data": &userData,
+				"block_device_mapping_v2": []map[string]interface{}{
+					{
+						"delete_on_termination": true,
+						"destination_type":      "local",
+						"source_type":           "image",
+						"uuid":                  imageUUID,
+						"boot_index":            float64(0),
+					},
+				},
 			},
 			"os:scheduler_hints": map[string]interface{}{
 				"group": serverGroupUUID,
@@ -407,22 +417,22 @@ func TestService_ReconcileInstance(t *testing.T) {
 		expectServerPoll(computeRecorder, []string{"ACTIVE"})
 	}
 
-	returnedVolume := func(status string) *volumes.Volume {
+	returnedVolume := func(uuid string, status string) *volumes.Volume {
 		return &volumes.Volume{
-			ID:     volumeUUID,
+			ID:     uuid,
 			Status: status,
 		}
 	}
 
 	// Expected calls when polling for server creation
-	expectVolumePoll := func(volumeRecorder *mock.MockVolumeClientMockRecorder, states []string) {
+	expectVolumePoll := func(volumeRecorder *mock.MockVolumeClientMockRecorder, uuid string, states []string) {
 		for _, state := range states {
-			volumeRecorder.GetVolume(volumeUUID).Return(returnedVolume(state), nil)
+			volumeRecorder.GetVolume(uuid).Return(returnedVolume(uuid, state), nil)
 		}
 	}
 
-	expectVolumePollSuccess := func(volumeRecorder *mock.MockVolumeClientMockRecorder) {
-		expectVolumePoll(volumeRecorder, []string{"available"})
+	expectVolumePollSuccess := func(volumeRecorder *mock.MockVolumeClientMockRecorder, uuid string) {
+		expectVolumePoll(volumeRecorder, uuid, []string{"available"})
 	}
 
 	// *******************
@@ -541,8 +551,8 @@ func TestService_ReconcileInstance(t *testing.T) {
 					Name:             fmt.Sprintf("%s-root", openStackMachineName),
 					ImageID:          imageUUID,
 					Multiattach:      false,
-				}).Return(&volumes.Volume{ID: volumeUUID}, nil)
-				expectVolumePollSuccess(r.volume)
+				}).Return(&volumes.Volume{ID: rootVolumeUUID}, nil)
+				expectVolumePollSuccess(r.volume, rootVolumeUUID)
 
 				createMap := getDefaultServerMap()
 				serverMap := createMap["server"].(map[string]interface{})
@@ -552,7 +562,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 						"delete_on_termination": true,
 						"destination_type":      "volume",
 						"source_type":           "volume",
-						"uuid":                  volumeUUID,
+						"uuid":                  rootVolumeUUID,
 						"boot_index":            float64(0),
 					},
 				}
@@ -588,8 +598,8 @@ func TestService_ReconcileInstance(t *testing.T) {
 					Name:             fmt.Sprintf("%s-root", openStackMachineName),
 					ImageID:          imageUUID,
 					Multiattach:      false,
-				}).Return(&volumes.Volume{ID: volumeUUID}, nil)
-				expectVolumePollSuccess(r.volume)
+				}).Return(&volumes.Volume{ID: rootVolumeUUID}, nil)
+				expectVolumePollSuccess(r.volume, rootVolumeUUID)
 
 				createMap := getDefaultServerMap()
 				serverMap := createMap["server"].(map[string]interface{})
@@ -599,7 +609,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 						"delete_on_termination": true,
 						"destination_type":      "volume",
 						"source_type":           "volume",
-						"uuid":                  volumeUUID,
+						"uuid":                  rootVolumeUUID,
 						"boot_index":            float64(0),
 					},
 				}
@@ -632,12 +642,194 @@ func TestService_ReconcileInstance(t *testing.T) {
 					Name:             fmt.Sprintf("%s-root", openStackMachineName),
 					ImageID:          imageUUID,
 					Multiattach:      false,
-				}).Return(&volumes.Volume{ID: volumeUUID}, nil)
-				expectVolumePoll(r.volume, []string{"creating", "error"})
+				}).Return(&volumes.Volume{ID: rootVolumeUUID}, nil)
+				expectVolumePoll(r.volume, rootVolumeUUID, []string{"creating", "error"})
 
 				expectCleanupDefaultPort(r.network)
 			},
 			wantErr: true,
+		},
+		{
+			name: "Root volume with additional block device success",
+			getInstanceSpec: func() *InstanceSpec {
+				s := getDefaultInstanceSpec()
+				s.RootVolume = &infrav1.RootVolume{
+					Size: 50,
+				}
+				s.AdditionalBlockDevices = []infrav1.AdditionalBlockDevice{
+					{
+						Name:       "etcd",
+						Size:       50,
+						VolumeType: "test-volume-type",
+					},
+				}
+				return s
+			},
+			expect: func(r *recorders) {
+				expectUseExistingDefaultPort(r.network)
+				expectDefaultImageAndFlavor(r.compute, r.image)
+
+				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
+					Return([]volumes.Volume{}, nil)
+				r.volume.CreateVolume(volumes.CreateOpts{
+					Size:             50,
+					AvailabilityZone: failureDomain,
+					Description:      fmt.Sprintf("Root volume for %s", openStackMachineName),
+					Name:             fmt.Sprintf("%s-root", openStackMachineName),
+					ImageID:          imageUUID,
+					Multiattach:      false,
+				}).Return(&volumes.Volume{ID: rootVolumeUUID}, nil)
+				expectVolumePollSuccess(r.volume, rootVolumeUUID)
+
+				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-etcd", openStackMachineName)}).
+					Return([]volumes.Volume{}, nil)
+				r.volume.CreateVolume(volumes.CreateOpts{
+					Size:             50,
+					AvailabilityZone: failureDomain,
+					Description:      fmt.Sprintf("Additional block device for %s", openStackMachineName),
+					Name:             fmt.Sprintf("%s-etcd", openStackMachineName),
+					Multiattach:      false,
+					VolumeType:       "test-volume-type",
+				}).Return(&volumes.Volume{ID: additionalBlockDeviceVolumeUUID}, nil)
+				expectVolumePollSuccess(r.volume, additionalBlockDeviceVolumeUUID)
+
+				createMap := getDefaultServerMap()
+				serverMap := createMap["server"].(map[string]interface{})
+				serverMap["imageRef"] = ""
+				serverMap["block_device_mapping_v2"] = []map[string]interface{}{
+					{
+						"source_type":           "volume",
+						"uuid":                  rootVolumeUUID,
+						"boot_index":            float64(0),
+						"delete_on_termination": true,
+						"destination_type":      "volume",
+					},
+					{
+						"source_type":           "volume",
+						"uuid":                  additionalBlockDeviceVolumeUUID,
+						"boot_index":            float64(-1),
+						"delete_on_termination": true,
+						"destination_type":      "volume",
+						"tag":                   "etcd",
+					},
+				}
+				expectCreateServer(r.compute, createMap, false)
+				expectServerPollSuccess(r.compute)
+
+				// Don't delete ports because the server is created: DeleteInstance will do it
+			},
+			wantErr: false,
+		},
+		{
+			name: "Additional block device success",
+			getInstanceSpec: func() *InstanceSpec {
+				s := getDefaultInstanceSpec()
+				s.AdditionalBlockDevices = []infrav1.AdditionalBlockDevice{
+					{
+						Name:       "etcd",
+						Size:       50,
+						VolumeType: "test-volume-type",
+					},
+				}
+				return s
+			},
+			expect: func(r *recorders) {
+				expectUseExistingDefaultPort(r.network)
+				expectDefaultImageAndFlavor(r.compute, r.image)
+
+				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-etcd", openStackMachineName)}).
+					Return([]volumes.Volume{}, nil)
+				r.volume.CreateVolume(volumes.CreateOpts{
+					Size:             50,
+					AvailabilityZone: failureDomain,
+					Description:      fmt.Sprintf("Additional block device for %s", openStackMachineName),
+					Name:             fmt.Sprintf("%s-etcd", openStackMachineName),
+					Multiattach:      false,
+					VolumeType:       "test-volume-type",
+				}).Return(&volumes.Volume{ID: additionalBlockDeviceVolumeUUID}, nil)
+				expectVolumePollSuccess(r.volume, additionalBlockDeviceVolumeUUID)
+
+				createMap := getDefaultServerMap()
+				serverMap := createMap["server"].(map[string]interface{})
+				serverMap["block_device_mapping_v2"] = []map[string]interface{}{
+					{
+						"source_type":           "image",
+						"uuid":                  imageUUID,
+						"boot_index":            float64(0),
+						"delete_on_termination": true,
+						"destination_type":      "local",
+					},
+					{
+						"source_type":           "volume",
+						"uuid":                  additionalBlockDeviceVolumeUUID,
+						"boot_index":            float64(-1),
+						"delete_on_termination": true,
+						"destination_type":      "volume",
+						"tag":                   "etcd",
+					},
+				}
+				expectCreateServer(r.compute, createMap, false)
+				expectServerPollSuccess(r.compute)
+
+				// Don't delete ports because the server is created: DeleteInstance will do it
+			},
+			wantErr: false,
+		},
+		{
+			name: "Additional block device success with explicit AZ",
+			getInstanceSpec: func() *InstanceSpec {
+				s := getDefaultInstanceSpec()
+				s.AdditionalBlockDevices = []infrav1.AdditionalBlockDevice{
+					{
+						Name:             "etcd",
+						Size:             50,
+						VolumeType:       "test-volume-type",
+						AvailabilityZone: "test-alternate-az",
+					},
+				}
+				return s
+			},
+			expect: func(r *recorders) {
+				expectUseExistingDefaultPort(r.network)
+				expectDefaultImageAndFlavor(r.compute, r.image)
+
+				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-etcd", openStackMachineName)}).
+					Return([]volumes.Volume{}, nil)
+				r.volume.CreateVolume(volumes.CreateOpts{
+					Size:             50,
+					AvailabilityZone: "test-alternate-az",
+					Description:      fmt.Sprintf("Additional block device for %s", openStackMachineName),
+					Name:             fmt.Sprintf("%s-etcd", openStackMachineName),
+					Multiattach:      false,
+					VolumeType:       "test-volume-type",
+				}).Return(&volumes.Volume{ID: additionalBlockDeviceVolumeUUID}, nil)
+				expectVolumePollSuccess(r.volume, additionalBlockDeviceVolumeUUID)
+
+				createMap := getDefaultServerMap()
+				serverMap := createMap["server"].(map[string]interface{})
+				serverMap["block_device_mapping_v2"] = []map[string]interface{}{
+					{
+						"source_type":           "image",
+						"uuid":                  imageUUID,
+						"boot_index":            float64(0),
+						"delete_on_termination": true,
+						"destination_type":      "local",
+					},
+					{
+						"source_type":           "volume",
+						"uuid":                  additionalBlockDeviceVolumeUUID,
+						"boot_index":            float64(-1),
+						"delete_on_termination": true,
+						"destination_type":      "volume",
+						"tag":                   "etcd",
+					},
+				}
+				expectCreateServer(r.compute, createMap, false)
+				expectServerPollSuccess(r.compute)
+
+				// Don't delete ports because the server is created: DeleteInstance will do it
+			},
+			wantErr: false,
 		},
 		{
 			name: "Delete trunks on port creation error",
@@ -795,12 +987,12 @@ func TestService_DeleteInstance(t *testing.T) {
 					Name:       volumeName,
 					TenantID:   "",
 				}).Return([]volumes.Volume{{
-					ID:   volumeUUID,
+					ID:   rootVolumeUUID,
 					Name: volumeName,
 				}}, nil)
 
 				// Delete volume
-				r.volume.DeleteVolume(volumeUUID, volumes.DeleteOpts{}).Return(nil)
+				r.volume.DeleteVolume(rootVolumeUUID, volumes.DeleteOpts{}).Return(nil)
 			},
 			wantErr: false,
 		},

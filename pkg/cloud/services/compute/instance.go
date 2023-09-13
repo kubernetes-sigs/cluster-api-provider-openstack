@@ -294,42 +294,12 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 		})
 	}
 
-	volume, err := s.getOrCreateRootVolume(eventObject, instanceSpec, imageID)
-	if err != nil {
-		return nil, fmt.Errorf("error in get or create root volume: %w", err)
-	}
-
 	instanceCreateTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT", timeoutInstanceCreate)
 	instanceCreateTimeout *= time.Minute
 
-	// Wait for volume to become available
-	if volume != nil {
-		err = wait.PollUntilContextTimeout(context.TODO(), retryIntervalInstanceStatus, instanceCreateTimeout, true, func(_ context.Context) (bool, error) {
-			createdVolume, err := s.getVolumeClient().GetVolume(volume.ID)
-			if err != nil {
-				if capoerrors.IsRetryable(err) {
-					return false, nil
-				}
-				return false, err
-			}
-
-			switch createdVolume.Status {
-			case "available":
-				return true, nil
-			case "error":
-				return false, fmt.Errorf("volume %s is in error state", volume.ID)
-			default:
-				return false, nil
-			}
-		})
-		if err != nil {
-			return nil, fmt.Errorf("volume %s did not become available: %w", volume.ID, err)
-		}
-	}
-
 	// Don't set ImageRef on the server if we're booting from volume
 	var serverImageRef string
-	if volume == nil {
+	if !hasRootVolume(instanceSpec) {
 		serverImageRef = imageID
 	}
 
@@ -345,7 +315,16 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 		ConfigDrive:      &instanceSpec.ConfigDrive,
 	}
 
-	serverCreateOpts = applyRootVolume(serverCreateOpts, volume)
+	blockDevices, err := s.getBlockDevices(eventObject, instanceSpec, imageID, instanceCreateTimeout, retryInterval)
+	if err != nil {
+		return nil, err
+	}
+	if len(blockDevices) > 0 {
+		serverCreateOpts = bootfromvolume.CreateOptsExt{
+			CreateOptsBuilder: serverCreateOpts,
+			BlockDevice:       blockDevices,
+		}
+	}
 
 	serverCreateOpts = applyServerGroupID(serverCreateOpts, instanceSpec.ServerGroupID)
 
@@ -380,12 +359,12 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 	return createdInstance, nil
 }
 
-func rootVolumeName(instanceName string) string {
-	return fmt.Sprintf("%s-root", instanceName)
+func volumeName(instanceName string, nameSuffix string) string {
+	return fmt.Sprintf("%s-%s", instanceName, nameSuffix)
 }
 
-func hasRootVolume(rootVolume *infrav1.RootVolume) bool {
-	return rootVolume != nil && rootVolume.Size > 0
+func hasRootVolume(instanceSpec *InstanceSpec) bool {
+	return instanceSpec.RootVolume != nil && instanceSpec.RootVolume.Size > 0
 }
 
 func (s *Service) getVolumeByName(name string) (*volumes.Volume, error) {
@@ -407,68 +386,136 @@ func (s *Service) getVolumeByName(name string) (*volumes.Volume, error) {
 	return &volumeList[0], nil
 }
 
-func (s *Service) getOrCreateRootVolume(eventObject runtime.Object, instanceSpec *InstanceSpec, imageID string) (*volumes.Volume, error) {
-	rootVolume := instanceSpec.RootVolume
-	if !hasRootVolume(rootVolume) {
-		return nil, nil
-	}
-
-	name := rootVolumeName(instanceSpec.Name)
-	size := rootVolume.Size
-
-	volume, err := s.getVolumeByName(name)
+// getOrCreateVolume gets or creates a volume with the given options. It returns the volume that already exists or the
+// newly created one. It returns an error if the volume creation failed or if the expected volume size is different from
+// the one that already exists.
+func (s *Service) getOrCreateVolume(eventObject runtime.Object, opts volumes.CreateOpts) (*volumes.Volume, error) {
+	existingVolume, err := s.getVolumeByName(opts.Name)
 	if err != nil {
 		return nil, err
 	}
-	if volume != nil {
-		if volume.Size != size {
-			return nil, fmt.Errorf("exected to find volume %s with size %d; found size %d", name, size, volume.Size)
+	if existingVolume != nil {
+		// TODO(emilien): Improve the checks here, there is an ongoing discussion in the community about how to do this
+		// which would involve adding metadata to the volume.
+		if existingVolume.Size != opts.Size {
+			return nil, fmt.Errorf("expected to find volume %s with size %d; found size %d", opts.Name, opts.Size, existingVolume.Size)
 		}
 
-		s.scope.Logger().V(3).Info("Using existing root volume", "name", name)
-		return volume, nil
+		s.scope.Logger().V(3).Info("Using existing volume", "name", opts.Name, "id", existingVolume.ID)
+		return existingVolume, nil
 	}
 
+	createdVolume, err := s.getVolumeClient().CreateVolume(opts)
+	if err != nil {
+		record.Eventf(eventObject, "FailedCreateVolume", "Failed to create volume; name=%s size=%d err=%v", opts.Name, opts.Size, err)
+		return nil, err
+	}
+	record.Eventf(eventObject, "SuccessfulCreateVolume", "Created volume; id=%s", createdVolume.ID)
+	return createdVolume, err
+}
+
+func (s *Service) waitForVolume(volumeID string, timeout time.Duration, retryInterval time.Duration) error {
+	return wait.PollUntilContextTimeout(context.TODO(), retryInterval, timeout, true, func(_ context.Context) (bool, error) {
+		volume, err := s.getVolumeClient().GetVolume(volumeID)
+		if err != nil {
+			if capoerrors.IsRetryable(err) {
+				return false, nil
+			}
+			return false, err
+		}
+
+		switch volume.Status {
+		case "available":
+			return true, nil
+		case "error":
+			return false, fmt.Errorf("volume %s is in error state", volumeID)
+		default:
+			return false, nil
+		}
+	})
+}
+
+// getOrCreateVolumeBuilder gets or creates a volume with the given options. It returns the volume that already exists or the newly created one.
+// It returns an error if the volume creation failed or if the expected volume is different from the one that already exists.
+func (s *Service) getOrCreateVolumeBuilder(eventObject runtime.Object, instanceSpec *InstanceSpec, blockDevice infrav1.AdditionalBlockDevice, imageID string, description string) (*volumes.Volume, error) {
 	availabilityZone := instanceSpec.FailureDomain
-	if rootVolume.AvailabilityZone != "" {
-		availabilityZone = rootVolume.AvailabilityZone
+	if blockDevice.AvailabilityZone != "" {
+		availabilityZone = blockDevice.AvailabilityZone
 	}
 
 	createOpts := volumes.CreateOpts{
-		Size:             rootVolume.Size,
-		Description:      fmt.Sprintf("Root volume for %s", instanceSpec.Name),
-		Name:             rootVolumeName(instanceSpec.Name),
+		Name:             volumeName(instanceSpec.Name, blockDevice.Name),
+		Description:      description,
+		Size:             blockDevice.Size,
 		ImageID:          imageID,
 		Multiattach:      false,
 		AvailabilityZone: availabilityZone,
-		VolumeType:       rootVolume.VolumeType,
+		VolumeType:       blockDevice.VolumeType,
 	}
-	volume, err = s.getVolumeClient().CreateVolume(createOpts)
-	if err != nil {
-		record.Eventf(eventObject, "FailedCreateVolume", "Failed to create root volume; size=%d imageID=%s err=%v", size, imageID, err)
-		return nil, err
-	}
-	record.Eventf(eventObject, "SuccessfulCreateVolume", "Created root volume; id=%s", volume.ID)
-	return volume, err
+
+	return s.getOrCreateVolume(eventObject, createOpts)
 }
 
-// applyRootVolume sets a root volume if the root volume Size is not 0.
-func applyRootVolume(opts servers.CreateOptsBuilder, volume *volumes.Volume) servers.CreateOptsBuilder {
-	if volume == nil {
-		return opts
+// getBlockDevices returns a list of block devices that were created and attached to the instance. It returns an error
+// if the root volume or any of the additional block devices could not be created.
+func (s *Service) getBlockDevices(eventObject runtime.Object, instanceSpec *InstanceSpec, imageID string, timeout time.Duration, retryInterval time.Duration) ([]bootfromvolume.BlockDevice, error) {
+	blockDevices := []bootfromvolume.BlockDevice{}
+
+	if hasRootVolume(instanceSpec) {
+		rootVolumeToBlockDevice := infrav1.AdditionalBlockDevice{
+			Name:             "root",
+			AvailabilityZone: instanceSpec.RootVolume.AvailabilityZone,
+			Size:             instanceSpec.RootVolume.Size,
+			VolumeType:       instanceSpec.RootVolume.VolumeType,
+		}
+		rootVolume, err := s.getOrCreateVolumeBuilder(eventObject, instanceSpec, rootVolumeToBlockDevice, imageID, fmt.Sprintf("Root volume for %s", instanceSpec.Name))
+		if err != nil {
+			return []bootfromvolume.BlockDevice{}, err
+		}
+		blockDevices = append(blockDevices, bootfromvolume.BlockDevice{
+			SourceType:          bootfromvolume.SourceVolume,
+			DestinationType:     bootfromvolume.DestinationVolume,
+			UUID:                rootVolume.ID,
+			BootIndex:           0,
+			DeleteOnTermination: true,
+		})
+	} else {
+		blockDevices = append(blockDevices, bootfromvolume.BlockDevice{
+			SourceType:          bootfromvolume.SourceImage,
+			DestinationType:     bootfromvolume.DestinationLocal,
+			UUID:                imageID,
+			BootIndex:           0,
+			DeleteOnTermination: true,
+		})
 	}
 
-	block := bootfromvolume.BlockDevice{
-		SourceType:          bootfromvolume.SourceVolume,
-		BootIndex:           0,
-		UUID:                volume.ID,
-		DeleteOnTermination: true,
-		DestinationType:     bootfromvolume.DestinationVolume,
+	for _, blockDeviceSpec := range instanceSpec.AdditionalBlockDevices {
+		blockDevice, err := s.getOrCreateVolumeBuilder(eventObject, instanceSpec, blockDeviceSpec, "", fmt.Sprintf("Additional block device for %s", instanceSpec.Name))
+		if err != nil {
+			return []bootfromvolume.BlockDevice{}, err
+		}
+		blockDevices = append(blockDevices, bootfromvolume.BlockDevice{
+			SourceType:          bootfromvolume.SourceVolume,
+			DestinationType:     bootfromvolume.DestinationVolume,
+			UUID:                blockDevice.ID,
+			BootIndex:           -1,
+			DeleteOnTermination: true,
+			Tag:                 blockDeviceSpec.Name,
+		})
 	}
-	return bootfromvolume.CreateOptsExt{
-		CreateOptsBuilder: opts,
-		BlockDevice:       []bootfromvolume.BlockDevice{block},
+
+	// Wait for any volumes in the block devices to become available
+	if len(blockDevices) > 0 {
+		for _, bd := range blockDevices {
+			if bd.SourceType == bootfromvolume.SourceVolume {
+				if err := s.waitForVolume(bd.UUID, timeout, retryInterval); err != nil {
+					return []bootfromvolume.BlockDevice{}, fmt.Errorf("volume %s did not become available: %w", bd.UUID, err)
+				}
+			}
+		}
 	}
+
+	return blockDevices, nil
 }
 
 // applyServerGroupID adds a scheduler hint to the CreateOptsBuilder, if the
@@ -545,38 +592,24 @@ func (s *Service) GetManagementPort(openStackCluster *infrav1.OpenStackCluster, 
 func (s *Service) DeleteInstance(openStackCluster *infrav1.OpenStackCluster, eventObject runtime.Object, instanceStatus *InstanceStatus, instanceSpec *InstanceSpec) error {
 	if instanceStatus == nil {
 		/*
-			We create a boot-from-volume instance in 2 steps:
-			1. Create the volume
-			2. Create the instance with the created root volume and set DeleteOnTermination
+			Attaching volumes to an instance is a two-step process:
 
-			This introduces a new failure mode which has implications for safely deleting instances: we
-			might create the volume, but the instance create fails. This would leave us with a dangling
-			volume with no instance.
+			  1. Create the volume
+			  2. Create the instance with the created volumes in RootVolume and AdditionalBlockDevices fields with DeleteOnTermination=true
+
+			This has a possible failure mode where creating the volume succeeds but creating the instance
+			fails. In this case, we want to make sure that the dangling volumes are cleaned up.
 
 			To handle this safely, we ensure that we never remove a machine finalizer until all resources
-			associated with the instance, including a root volume, have been deleted. To achieve this:
-			* We always call DeleteInstance when reconciling a delete, regardless of
-			  whether the instance exists or not.
-			* If the instance was already deleted we check that the volume is also gone.
+			associated with the instance, including volumes, have been deleted. To achieve this:
 
-			Note that we don't need to separately delete the root volume when deleting the instance because
+			  * We always call DeleteInstance when reconciling a delete, even if the instance does not exist
+			  * If the instance was already deleted we check that the volumes are also gone
+
+			Note that we don't need to separately delete the volumes when deleting the instance because
 			DeleteOnTermination will ensure it is deleted in that case.
 		*/
-		if hasRootVolume(instanceSpec.RootVolume) {
-			name := rootVolumeName(instanceSpec.Name)
-			volume, err := s.getVolumeByName(name)
-			if err != nil {
-				return err
-			}
-			if volume == nil {
-				return nil
-			}
-
-			s.scope.Logger().V(2).Info("Deleting dangling root volume", "name", volume.Name, "ID", volume.ID)
-			return s.getVolumeClient().DeleteVolume(volume.ID, volumes.DeleteOpts{})
-		}
-
-		return nil
+		return s.deleteVolumes(instanceSpec)
 	}
 
 	instanceInterfaces, err := s.getComputeClient().ListAttachedInterfaces(instanceStatus.ID())
@@ -623,6 +656,34 @@ func (s *Service) DeleteInstance(openStackCluster *infrav1.OpenStackCluster, eve
 	}
 
 	return s.deleteInstance(eventObject, instanceStatus.InstanceIdentifier())
+}
+
+func (s *Service) deleteVolumes(instanceSpec *InstanceSpec) error {
+	if hasRootVolume(instanceSpec) {
+		if err := s.deleteVolume(instanceSpec.Name, "root"); err != nil {
+			return err
+		}
+	}
+	for _, volumeSpec := range instanceSpec.AdditionalBlockDevices {
+		if err := s.deleteVolume(instanceSpec.Name, volumeSpec.Name); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *Service) deleteVolume(instanceName string, nameSuffix string) error {
+	volumeName := volumeName(instanceName, nameSuffix)
+	volume, err := s.getVolumeByName(volumeName)
+	if err != nil {
+		return err
+	}
+	if volume == nil {
+		return nil
+	}
+
+	s.scope.Logger().V(2).Info("Deleting dangling volume", "name", volume.Name, "ID", volume.ID)
+	return s.getVolumeClient().DeleteVolume(volume.ID, volumes.DeleteOpts{})
 }
 
 func (s *Service) deletePorts(eventObject runtime.Object, nets []servers.Network) error {

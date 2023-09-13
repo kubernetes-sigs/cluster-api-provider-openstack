@@ -445,17 +445,18 @@ func (r *OpenStackMachineReconciler) getOrCreate(logger logr.Logger, cluster *cl
 
 func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, userData string) *compute.InstanceSpec {
 	instanceSpec := compute.InstanceSpec{
-		Name:          openStackMachine.Name,
-		Image:         openStackMachine.Spec.Image,
-		ImageUUID:     openStackMachine.Spec.ImageUUID,
-		Flavor:        openStackMachine.Spec.Flavor,
-		SSHKeyName:    openStackMachine.Spec.SSHKeyName,
-		UserData:      userData,
-		Metadata:      openStackMachine.Spec.ServerMetadata,
-		ConfigDrive:   openStackMachine.Spec.ConfigDrive != nil && *openStackMachine.Spec.ConfigDrive,
-		RootVolume:    openStackMachine.Spec.RootVolume,
-		ServerGroupID: openStackMachine.Spec.ServerGroupID,
-		Trunk:         openStackMachine.Spec.Trunk,
+		Name:                   openStackMachine.Name,
+		Image:                  openStackMachine.Spec.Image,
+		ImageUUID:              openStackMachine.Spec.ImageUUID,
+		Flavor:                 openStackMachine.Spec.Flavor,
+		SSHKeyName:             openStackMachine.Spec.SSHKeyName,
+		UserData:               userData,
+		Metadata:               openStackMachine.Spec.ServerMetadata,
+		ConfigDrive:            openStackMachine.Spec.ConfigDrive != nil && *openStackMachine.Spec.ConfigDrive,
+		RootVolume:             openStackMachine.Spec.RootVolume,
+		AdditionalBlockDevices: openStackMachine.Spec.AdditionalBlockDevices,
+		ServerGroupID:          openStackMachine.Spec.ServerGroupID,
+		Trunk:                  openStackMachine.Spec.Trunk,
 	}
 
 	// Add the failure domain only if specified
