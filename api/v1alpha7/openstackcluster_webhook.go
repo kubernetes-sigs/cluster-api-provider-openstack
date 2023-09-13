@@ -130,6 +130,10 @@ func (r *OpenStackCluster) ValidateUpdate(oldRaw runtime.Object) (admission.Warn
 	old.Spec.ControlPlaneAvailabilityZones = []string{}
 	r.Spec.ControlPlaneAvailabilityZones = []string{}
 
+	// Allow change to the allowAllInClusterTraffic.
+	old.Spec.AllowAllInClusterTraffic = false
+	r.Spec.AllowAllInClusterTraffic = false
+
 	if !reflect.DeepEqual(old.Spec, r.Spec) {
 		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec"), "cannot be modified"))
 	}
