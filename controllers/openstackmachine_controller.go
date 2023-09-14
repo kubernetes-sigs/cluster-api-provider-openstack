@@ -334,14 +334,6 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		return ctrl.Result{}, err
 	}
 
-	// Set an error message if we couldn't find the instance.
-	if instanceStatus == nil {
-		err = errors.New("OpenStack instance not found")
-		openStackMachine.SetFailure(capierrors.UpdateMachineError, err)
-		conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceNotFoundReason, clusterv1.ConditionSeverityError, "")
-		return ctrl.Result{}, nil
-	}
-
 	// TODO(sbueringer) From CAPA: TODO(ncdc): move this validation logic into a validating webhook (for us: create validation logic in webhook)
 
 	openStackMachine.Spec.ProviderID = pointer.String(fmt.Sprintf("openstack:///%s", instanceStatus.ID()))
@@ -364,10 +356,14 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		conditions.MarkTrue(openStackMachine, infrav1.InstanceReadyCondition)
 		openStackMachine.Status.Ready = true
 	case infrav1.InstanceStateError:
-		// Error is unexpected, thus we report error and never retry
+		// If the machine has a NodeRef then it must have been working at some point,
+		// so the error could be something temporary.
+		// If not, it is more likely a configuration error so we set failure and never retry.
 		scope.Logger().Info("Machine instance state is ERROR", "id", instanceStatus.ID())
-		err = fmt.Errorf("instance state %q is unexpected", instanceStatus.State())
-		openStackMachine.SetFailure(capierrors.UpdateMachineError, err)
+		if machine.Status.NodeRef == nil {
+			err = fmt.Errorf("instance state %q is unexpected", instanceStatus.State())
+			openStackMachine.SetFailure(capierrors.UpdateMachineError, err)
+		}
 		conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceStateErrorReason, clusterv1.ConditionSeverityError, "")
 		return ctrl.Result{}, nil
 	case infrav1.InstanceStateDeleted:
@@ -429,6 +425,8 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 func (r *OpenStackMachineReconciler) getOrCreate(logger logr.Logger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, computeService *compute.Service, userData string) (*compute.InstanceStatus, error) {
 	instanceStatus, err := computeService.GetInstanceStatusByName(openStackMachine, openStackMachine.Name)
 	if err != nil {
+		logger.Info("Unable to get OpenStack instance", "name", openStackMachine.Name)
+		conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.OpenStackErrorReason, clusterv1.ConditionSeverityError, err.Error())
 		return nil, err
 	}
 
