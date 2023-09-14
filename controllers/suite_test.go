@@ -18,9 +18,12 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"path/filepath"
 	"testing"
 
+	"github.com/go-logr/logr"
+	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
@@ -29,11 +32,14 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 	"sigs.k8s.io/cluster-api-provider-openstack/test/helpers/external"
 )
 
@@ -90,7 +96,7 @@ var _ = AfterSuite(func() {
 })
 
 var _ = Describe("EnvTest sanity check", func() {
-	ctx := context.TODO()
+	ctx = context.TODO()
 	It("should be able to create a namespace", func() {
 		testNamespace := "capo-test"
 		namespacedName := types.NamespacedName{
@@ -115,5 +121,46 @@ var _ = Describe("EnvTest sanity check", func() {
 		Expect(err).To(BeNil())
 		// Note: Since the controller-manager is not part of envtest the namespace
 		// will actually stay in "Terminating" state and never be completely gone.
+	})
+})
+
+var _ = Describe("When calling getOrCreate", func() {
+	var (
+		logger           logr.Logger
+		reconsiler       OpenStackMachineReconciler
+		mockCtrl         *gomock.Controller
+		mockScopeFactory *scope.MockScopeFactory
+		computeService   *compute.Service
+		err              error
+	)
+
+	BeforeEach(func() {
+		ctx = context.Background()
+		logger = logr.Discard()
+		reconsiler = OpenStackMachineReconciler{}
+		mockCtrl = gomock.NewController(GinkgoT())
+		mockScopeFactory = scope.NewMockScopeFactory(mockCtrl, "1234", logger)
+		computeService, err = compute.NewService(mockScopeFactory)
+		Expect(err).NotTo(HaveOccurred())
+	})
+
+	It("should return an error if unable to get instance", func() {
+		cluster := &clusterv1.Cluster{}
+		openStackCluster := &infrav1.OpenStackCluster{}
+		machine := &clusterv1.Machine{}
+		openStackMachine := &infrav1.OpenStackMachine{}
+
+		mockScopeFactory.ComputeClient.EXPECT().ListServers(gomock.Any()).Return(nil, errors.New("Test error when listing servers"))
+		instanceStatus, err := reconsiler.getOrCreate(logger, cluster, openStackCluster, machine, openStackMachine, computeService, "")
+		Expect(err).To(HaveOccurred())
+		Expect(instanceStatus).To(BeNil())
+		conditions := openStackMachine.GetConditions()
+		Expect(len(conditions) > 0).To(BeTrue())
+		for i := range conditions {
+			if conditions[i].Type == infrav1.InstanceReadyCondition {
+				Expect(conditions[i].Reason).To(Equal(infrav1.OpenStackErrorReason))
+				break
+			}
+		}
 	})
 })
