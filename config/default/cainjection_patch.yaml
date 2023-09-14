@@ -1,0 +1,3 @@
+- op: add
+  path: "/metadata/annotations/cert-manager.io~1inject-ca-from"
+  value: $(CERTIFICATE_NAMESPACE)/$(CERTIFICATE_NAME)
