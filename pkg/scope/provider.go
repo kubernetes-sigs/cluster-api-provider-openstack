@@ -22,6 +22,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/gophercloud/gophercloud"
@@ -31,12 +32,14 @@ import (
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/cache"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/hash"
 	"sigs.k8s.io/cluster-api-provider-openstack/version"
 )
 
@@ -45,9 +48,11 @@ const (
 	caSecretKey     = "cacert"
 )
 
-type providerScopeFactory struct{}
+type providerScopeFactory struct {
+	clientCache *cache.LRUExpireCache
+}
 
-func (providerScopeFactory) NewClientScopeFromMachine(ctx context.Context, ctrlClient client.Client, openStackMachine *infrav1.OpenStackMachine, defaultCACert []byte, logger logr.Logger) (Scope, error) {
+func (f *providerScopeFactory) NewClientScopeFromMachine(ctx context.Context, ctrlClient client.Client, openStackMachine *infrav1.OpenStackMachine, defaultCACert []byte, logger logr.Logger) (Scope, error) {
 	var cloud clientconfig.Cloud
 	var caCert []byte
 
@@ -63,10 +68,14 @@ func (providerScopeFactory) NewClientScopeFromMachine(ctx context.Context, ctrlC
 		caCert = defaultCACert
 	}
 
-	return NewProviderScope(cloud, caCert, logger)
+	if f.clientCache == nil {
+		return NewProviderScope(cloud, caCert, logger)
+	}
+
+	return NewCachedProviderScope(f.clientCache, cloud, caCert, logger)
 }
 
-func (providerScopeFactory) NewClientScopeFromCluster(ctx context.Context, ctrlClient client.Client, openStackCluster *infrav1.OpenStackCluster, defaultCACert []byte, logger logr.Logger) (Scope, error) {
+func (f *providerScopeFactory) NewClientScopeFromCluster(ctx context.Context, ctrlClient client.Client, openStackCluster *infrav1.OpenStackCluster, defaultCACert []byte, logger logr.Logger) (Scope, error) {
 	var cloud clientconfig.Cloud
 	var caCert []byte
 
@@ -82,7 +91,20 @@ func (providerScopeFactory) NewClientScopeFromCluster(ctx context.Context, ctrlC
 		caCert = defaultCACert
 	}
 
-	return NewProviderScope(cloud, caCert, logger)
+	if f.clientCache == nil {
+		return NewProviderScope(cloud, caCert, logger)
+	}
+
+	return NewCachedProviderScope(f.clientCache, cloud, caCert, logger)
+}
+
+func getScopeCacheKey(cloud clientconfig.Cloud) (string, error) {
+	key, err := hash.ComputeSpewHash(cloud)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%d", key), nil
 }
 
 type providerScope struct {
@@ -104,6 +126,34 @@ func NewProviderScope(cloud clientconfig.Cloud, caCert []byte, logger logr.Logge
 		projectID:          projectID,
 		logger:             logger,
 	}, nil
+}
+
+func NewCachedProviderScope(cache *cache.LRUExpireCache, cloud clientconfig.Cloud, caCert []byte, logger logr.Logger) (Scope, error) {
+	key, err := getScopeCacheKey(cloud)
+	if err != nil {
+		return nil, fmt.Errorf("compute cloud config cache key: %w", err)
+	}
+
+	if scope, found := cache.Get(key); found {
+		logger.V(6).Info("Using scope from cache")
+		return scope.(Scope), nil
+	}
+
+	scope, err := NewProviderScope(cloud, caCert, logger)
+	if err != nil {
+		return nil, err
+	}
+
+	token, err := scope.ExtractToken()
+	if err != nil {
+		return nil, err
+	}
+
+	// compute the token expiration time
+	expiry := time.Until(token.ExpiresAt) / 2
+
+	cache.Add(key, scope, expiry)
+	return scope, nil
 }
 
 func (s *providerScope) Logger() logr.Logger {
@@ -132,6 +182,14 @@ func (s *providerScope) NewImageClient() (clients.ImageClient, error) {
 
 func (s *providerScope) NewLbClient() (clients.LbClient, error) {
 	return clients.NewLbClient(s.providerClient, s.providerClientOpts)
+}
+
+func (s *providerScope) ExtractToken() (*tokens.Token, error) {
+	client, err := openstack.NewIdentityV3(s.providerClient, gophercloud.EndpointOpts{})
+	if err != nil {
+		return nil, fmt.Errorf("create new identity service client: %w", err)
+	}
+	return tokens.Get(client, s.providerClient.Token()).ExtractToken()
 }
 
 func NewProviderClient(cloud clientconfig.Cloud, caCert []byte, logger logr.Logger) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, string, error) {

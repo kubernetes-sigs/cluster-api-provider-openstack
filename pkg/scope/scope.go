@@ -20,14 +20,24 @@ import (
 	"context"
 
 	"github.com/go-logr/logr"
+	"github.com/gophercloud/gophercloud/openstack/identity/v3/tokens"
+	"k8s.io/apimachinery/pkg/util/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 )
 
-// ScopeFactory is the default scope factory. It generates service clients which make OpenStack API calls against a running cloud.
-var ScopeFactory Factory = providerScopeFactory{}
+// NewFactory creates the default scope factory. It generates service clients which make OpenStack API calls against a running cloud.
+func NewFactory(maxCacheSize int) Factory {
+	var c *cache.LRUExpireCache
+	if maxCacheSize > 0 {
+		c = cache.NewLRUExpireCache(maxCacheSize)
+	}
+	return &providerScopeFactory{
+		clientCache: c,
+	}
+}
 
 // Factory instantiates a new Scope using credentials from either a cluster or a machine.
 type Factory interface {
@@ -44,4 +54,5 @@ type Scope interface {
 	NewLbClient() (clients.LbClient, error)
 	Logger() logr.Logger
 	ProjectID() string
+	ExtractToken() (*tokens.Token, error)
 }
