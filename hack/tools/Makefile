@@ -69,10 +69,6 @@ CONVERSION_GEN := $(BIN_DIR)/conversion-gen
 $(CONVERSION_GEN): go.mod go.sum | $(BIN_DIR)
 	go build -tags=tools -o $@ k8s.io/code-generator/cmd/conversion-gen
 
-DEFAULTER_GEN := $(BIN_DIR)/defaulter-gen
-$(DEFAULTER_GEN): go.mod go.sum | $(BIN_DIR)
-	go build -tags=tools -o $@ k8s.io/code-generator/cmd/defaulter-gen
-
 ENVSUBST := $(BIN_DIR)/envsubst
 $(ENVSUBST): go.mod go.sum | $(BIN_DIR) # Build envsubst from tools folder.
 	go build -tags=tools -o $@ github.com/a8m/envsubst/cmd/envsubst
