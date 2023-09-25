@@ -27,6 +27,15 @@ to version 1.2.3 would be called `v1.2.3-rc.0`.
 
 It is recommended to create at least one release candidate when bumping `X` or `Y`.
 
+## Release notes
+
+Release notes are user visible information providing details of all relevant changes between releases.
+
+The content of the release notes differs depending on the type of release, specifically:
+
+- Stable releases contain a *full* changelog from the last stable release.
+- Pre-releases contain a changelog from the previous pre-release, or the last stable release if there isn't one.
+
 ## Process
 
 1. Make sure your repo is clean by git's standards. It is recommended to use a fresh checkout.
@@ -60,10 +69,12 @@ It is recommended to create at least one release candidate when bumping `X` or `
    It is good practise to get somebody else to review this PR. It is safe to perform the following steps while waiting
    for review and the promotion of the image.
 1. Run `make release` to build artifacts to be attached to the GitHub release.
-1. Generate and finalize the release notes and save them for the next step:
-    - Run `make release-notes` to gather changes since the last revision. If you need to specify a specific tag to look for changes
-      since, use `make release-notes RELEASE_NOTES_ARGS="--from <tag>"`.
-    - Pay close attention to the `## :question: Sort these by hand` section, as it contains items that need to be manually sorted.
+1. Generate and finalize the release notes and save them for the next step.
+   - Run `make release-notes RELEASE_NOTES_ARGS="--from <tag>"`.
+     - Depending on the type of release, substitute `<tag>` with the following:
+       - Stable releases: tag of the last stable release
+       - Pre-releases*: tag of the latest pre-release (or last stable release if there isn't one)
+   - Pay close attention to the `## :question: Sort these by hand` section, as it contains items that need to be manually sorted.
 1. Create a draft release in GitHub based on the tag created above
     - Name the release `Release [VERSION]` where VERSION is the full version string.
     - For a pre-release, ensure you check `This is a pre-release` in GitHub when creating the release.
