@@ -19,19 +19,6 @@ patches:
 - path: manager_pull_policy.yaml
   # Enable webhook.
 - path: manager_webhook_patch.yaml
-  # Inject certificate in the webhook definition.
-- target:
-    group: admissionregistration.k8s.io
-    version: v1
-    kind: MutatingWebhookConfiguration
-    name: mutating-webhook-configuration
-  path: cainjection_patch.yaml
-- target:
-    group: admissionregistration.k8s.io
-    version: v1
-    kind: ValidatingWebhookConfiguration
-    name: validating-webhook-configuration
-  path: cainjection_patch.yaml
 
 vars:
   - name: CERTIFICATE_NAMESPACE # namespace of the certificate CR

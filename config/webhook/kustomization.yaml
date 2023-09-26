@@ -4,3 +4,11 @@ resources:
 
 configurations:
 - kustomizeconfig.yaml
+
+patches:
+# Inject certificate in the webhook definition.
+- target:
+    group: admissionregistration.k8s.io
+    version: v1
+    name: mutating-webhook-configuration|validating-webhook-configuration
+  path: cainjection_patch.yaml
