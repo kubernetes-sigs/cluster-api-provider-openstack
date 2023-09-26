@@ -155,11 +155,6 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope 
 
 	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
 
-	if err = networkingService.DeletePorts(openStackCluster); err != nil {
-		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete ports: %w", err))
-		return reconcile.Result{}, fmt.Errorf("failed to delete ports: %w", err)
-	}
-
 	if openStackCluster.Spec.APIServerLoadBalancer.Enabled {
 		loadBalancerService, err := loadbalancer.NewService(scope)
 		if err != nil {
@@ -182,6 +177,11 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope 
 		if err = networkingService.DeleteRouter(openStackCluster, clusterName); err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete router: %w", err))
 			return ctrl.Result{}, fmt.Errorf("failed to delete router: %w", err)
+		}
+
+		if err = networkingService.DeletePorts(openStackCluster); err != nil {
+			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete ports: %w", err))
+			return reconcile.Result{}, fmt.Errorf("failed to delete ports: %w", err)
 		}
 
 		if err = networkingService.DeleteNetwork(openStackCluster, clusterName); err != nil {
