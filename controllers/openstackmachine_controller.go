@@ -22,6 +22,8 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -348,6 +350,19 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	}
 
 	addresses := instanceNS.Addresses()
+
+	// Append the server's hostname to the list of addresses
+	// This must be the same value returned to the server by the metadata
+	// service. From Nova microversion 2.90 onwards this is available in the
+	// `OS-EXT-SRV-ATTR:hostname` attribute. However, the value is generated
+	// from the server name by a relatively simple mangling funcion. To
+	// avoid the microversion bump we instead reproduce the mangling
+	// function in sanitizeHostname() below.
+	addresses = append(addresses, corev1.NodeAddress{
+		Type:    corev1.NodeInternalDNS,
+		Address: sanitizeHostname(instanceStatus.Name()),
+	})
+
 	openStackMachine.Status.Addresses = addresses
 
 	switch instanceStatus.State() {
@@ -504,6 +519,36 @@ func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *
 	instanceSpec.Ports = openStackMachine.Spec.Ports
 
 	return &instanceSpec
+}
+
+var (
+	spaceDotUnderscore = regexp.MustCompile(`[ _\.]`)
+	notWordDotDash     = regexp.MustCompile(`[^\w.-]+`)
+)
+
+// sanitizeHostname mangles a server's name into a hostname. It is required to be functionally identical to the version in nova:
+//
+//	https://github.com/openstack/nova/blob/87d4807848bb9546c1fca972da2eb2eda13eb08d/nova/utils.py#L356-L389
+//
+// Do not change the behaviour of this function except to match the behaviour in nova.
+func sanitizeHostname(name string) string {
+	// Remove all non-latin-1 characters
+	hostname := strings.Map(func(r rune) rune {
+		if r > 0xFF {
+			return -1
+		}
+		return r
+	}, name)
+
+	if len(hostname) > 63 {
+		hostname = hostname[:63]
+	}
+	hostname = spaceDotUnderscore.ReplaceAllString(hostname, "-")
+	hostname = notWordDotDash.ReplaceAllString(hostname, "")
+	hostname = strings.ToLower(hostname)
+	hostname = strings.Trim(hostname, ".-")
+
+	return hostname
 }
 
 func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(scope scope.Scope, openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, instanceNS *compute.InstanceNetworkStatus, clusterName string) error {

@@ -17,6 +17,7 @@ limitations under the License.
 package controllers
 
 import (
+	"strings"
 	"testing"
 
 	. "github.com/onsi/gomega"
@@ -211,6 +212,34 @@ func Test_machineToInstanceSpec(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := machineToInstanceSpec(tt.openStackCluster(), tt.machine(), tt.openStackMachine(), "user-data")
 			Expect(got).To(Equal(tt.wantInstanceSpec()))
+		})
+	}
+}
+
+func Test_sanitizeHostname(t *testing.T) {
+	RegisterTestingT(t)
+
+	// These tests are the same as the Nova function's tests:
+	//   https://github.com/openstack/nova/blob/87d4807848bb9546c1fca972da2eb2eda13eb08d/nova/tests/unit/test_utils.py#L74-L141
+	// Tests of `defaultname` are not reproduced here as the parameter is not used in Nova or here
+	tests := []struct {
+		name     string
+		hostname string
+	}{
+		{"\u7684myamazinghostname", "myamazinghostname"},
+		{"....test.example.com...", "test-example-com"},
+		{"----my-amazing-hostname---", "my-amazing-hostname"},
+		{"(#@&$!(@*--#&91)(__=+--test-host.example!!.com-0+", "91----test-host-example-com-0"},
+		{"<}\x1fh\x10e\x08l\x02l\x05o\x12!{>", "hello"},
+		{"\u7684", ""},
+		{"---...", ""},
+		{" a b c ", "a-b-c"},
+		{strings.Repeat("a", 64), strings.Repeat("a", 63)},
+		{strings.Repeat("a", 62) + "-" + "a", strings.Repeat("a", 62)},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			Expect(sanitizeHostname(tt.name)).To(Equal(tt.hostname))
 		})
 	}
 }
