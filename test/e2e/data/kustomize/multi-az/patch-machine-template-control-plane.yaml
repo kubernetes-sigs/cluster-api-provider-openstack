@@ -6,5 +6,11 @@
 - op: add
   path: /spec/template/spec/additionalBlockDevices
   value:
-  - diskSize: 1
-    name: extravol
+  - name: extravol
+    sizeGiB: 1
+    storage:
+      type: Volume
+  - name: etcd
+    sizeGiB: 1
+    storage:
+      type: Local

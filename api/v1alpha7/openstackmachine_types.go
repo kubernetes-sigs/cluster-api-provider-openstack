@@ -85,8 +85,14 @@ type OpenStackMachineSpec struct {
 	RootVolume *RootVolume `json:"rootVolume,omitempty"`
 
 	// AdditionalBlockDevices is a list of specifications for additional block devices to attach to the server instance
+	//
+	// + ---
+	// + While it's possible to have unlimited number of block devices attached to a server instance, the number is
+	// + limited to 255 to avoid rule cost exceeded error in CRD validation.
+	// +kubebuilder:validation:MaxItems=255
 	// +listType=map
 	// +listMapKey=name
+	// +optional
 	AdditionalBlockDevices []AdditionalBlockDevice `json:"additionalBlockDevices,omitempty"`
 
 	// The server group to assign the machine to

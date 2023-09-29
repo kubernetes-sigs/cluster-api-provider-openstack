@@ -163,19 +163,82 @@ type RootVolume struct {
 	AvailabilityZone string `json:"availabilityZone,omitempty"`
 }
 
-type AdditionalBlockDevice struct {
-	// Name of the Cinder volume in the context of a machine.
-	// It will be combined with the machine name to make the actual volume name.
-	Name string `json:"name"`
-	// Size is the size in GB of the volume.
-	Size int `json:"diskSize"`
-	// VolumeType is the volume type of the volume.
-	// If omitted, the default type will be used.
-	VolumeType string `json:"volumeType,omitempty"`
+// BlockDeviceStorage is the storage type of a block device to create and
+// contains additional storage options.
+// +kubebuilder:validation:XValidation:rule="self.type == 'Volume' || !has(self.volume)",message="volume is forbidden when type is not Volume"
+// +union
+//
+//nolint:godot
+type BlockDeviceStorage struct {
+	// Type is the type of block device to create.
+	// This can be either "Volume" or "Local".
+	// +kubebuilder:validation:Enum="Volume";"Local"
+	// +kubebuilder:validation:Required
+	// +unionDiscriminator
+	Type BlockDeviceType `json:"type"`
+
+	// Volume contains additional storage options for a volume block device.
+	// +optional
+	// +unionMember,optional
+	Volume *BlockDeviceVolume `json:"volume,omitempty"`
+}
+
+// BlockDeviceVolume contains additional storage options for a volume block device.
+type BlockDeviceVolume struct {
+	// Type is the Cinder volume type of the volume.
+	// If omitted, the default Cinder volume type that is configured in the OpenStack cloud
+	// will be used.
+	// The maximum length of a volume type name is 255 characters, as per the OpenStack limit.
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=255
+	// +optional
+	Type string `json:"type,omitempty"`
+
 	// AvailabilityZone is the volume availability zone to create the volume in.
 	// If omitted, the availability zone of the server will be used.
+	// The availability zone must NOT contain spaces otherwise it will lead to volume that belongs
+	// to this availability zone register failure, see kubernetes/cloud-provider-openstack#1379 for
+	// further information.
+	// The maximum length of availability zone name is 63 as per labels limits.
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=63
+	// +kubebuilder:validation:XValidation:rule="!self.contains(' ')",message="availabilityZone may not contain spaces"
+	// +optional
 	AvailabilityZone string `json:"availabilityZone,omitempty"`
 }
+
+// AdditionalBlockDevice is a block device to attach to the server.
+type AdditionalBlockDevice struct {
+	// Name of the block device in the context of a machine.
+	// If the block device is a volume, the Cinder volume will be named
+	// as a combination of the machine name and this name.
+	// Also, this name will be used for tagging the block device.
+	// Information about the block device tag can be obtained from the OpenStack
+	// metadata API or the config drive.
+	// +kubebuilder:validation:Required
+	Name string `json:"name"`
+
+	// SizeGiB is the size of the block device in gibibytes (GiB).
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Required
+	SizeGiB int `json:"sizeGiB"`
+
+	// Storage specifies the storage type of the block device and
+	// additional storage options.
+	// +kubebuilder:validation:Required
+	Storage BlockDeviceStorage `json:"storage"`
+}
+
+// BlockDeviceType defines the type of block device to create.
+type BlockDeviceType string
+
+const (
+	// LocalBlockDevice is an ephemeral block device attached to the server.
+	LocalBlockDevice BlockDeviceType = "Local"
+
+	// VolumeBlockDevice is a volume block device attached to the server.
+	VolumeBlockDevice BlockDeviceType = "Volume"
+)
 
 // NetworkStatus contains basic information about an existing neutron network.
 type NetworkStatus struct {
