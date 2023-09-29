@@ -356,6 +356,20 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 	}
 
 	record.Eventf(eventObject, "SuccessfulCreateServer", "Created server %s with id %s", createdInstance.Name(), createdInstance.ID())
+
+	// iterate over blockDevices and update the metadata
+	opts := volumes.UpdateOpts{
+		Metadata: map[string]string{
+			// add openstack.infrastructure.cluster.x-k8s.io/cluster-uuid
+			"openstack.infrastructure.cluster.x-k8s.io/machine-uuid": createdInstance.ID(),
+		},
+	}
+	for _, bd := range blockDevices {
+		if _, err := s.getVolumeClient().UpdateVolume(bd.UUID, opts); err != nil {
+			return nil, fmt.Errorf("error updating metadata for volume ID %s: %v", bd.UUID, err)
+		}
+	}
+
 	return createdInstance, nil
 }
 

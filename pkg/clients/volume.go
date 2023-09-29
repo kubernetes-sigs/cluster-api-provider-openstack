@@ -30,6 +30,7 @@ import (
 type VolumeClient interface {
 	ListVolumes(opts volumes.ListOptsBuilder) ([]volumes.Volume, error)
 	CreateVolume(opts volumes.CreateOptsBuilder) (*volumes.Volume, error)
+	UpdateVolume(volumeID string, opts volumes.UpdateOptsBuilder) (*volumes.Volume, error)
 	DeleteVolume(volumeID string, opts volumes.DeleteOptsBuilder) error
 	GetVolume(volumeID string) (*volumes.Volume, error)
 }
@@ -63,6 +64,12 @@ func (c volumeClient) CreateVolume(opts volumes.CreateOptsBuilder) (*volumes.Vol
 	return volume, mc.ObserveRequest(err)
 }
 
+func (c volumeClient) UpdateVolume(volumeID string, opts volumes.UpdateOptsBuilder) (*volumes.Volume, error) {
+	mc := metrics.NewMetricPrometheusContext("volume", "update")
+	volume, err := volumes.Update(c.client, volumeID, opts).Extract()
+	return volume, mc.ObserveRequestIgnoreNotFound(err)
+}
+
 func (c volumeClient) DeleteVolume(volumeID string, opts volumes.DeleteOptsBuilder) error {
 	mc := metrics.NewMetricPrometheusContext("volume", "delete")
 	err := volumes.Delete(c.client, volumeID, opts).ExtractErr()
@@ -87,6 +94,10 @@ func (e volumeErrorClient) ListVolumes(_ volumes.ListOptsBuilder) ([]volumes.Vol
 }
 
 func (e volumeErrorClient) CreateVolume(_ volumes.CreateOptsBuilder) (*volumes.Volume, error) {
+	return nil, e.error
+}
+
+func (e volumeErrorClient) UpdateVolume(_ string, _ volumes.UpdateOptsBuilder) (*volumes.Volume, error) {
 	return nil, e.error
 }
 
