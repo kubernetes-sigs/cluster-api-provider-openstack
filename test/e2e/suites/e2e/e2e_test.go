@@ -81,7 +81,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 		clusterResources = new(clusterctl.ApplyClusterTemplateAndWaitResult)
 		Expect(e2eCtx.E2EConfig).ToNot(BeNil(), "Invalid argument. e2eConfig can't be nil when calling %s spec", specName)
 		Expect(e2eCtx.E2EConfig.Variables).To(HaveKey(shared.KubernetesVersion))
-		shared.SetEnvVar("USE_CI_ARTIFACTS", "true", false)
+		shared.SetEnvVar("USE_CI_ARTIFACTS", "false", false)
 		postClusterCleanup = nil
 	})
 
@@ -600,7 +600,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 				rootVolumes[machine.Name] = rootVolume
 				Expect(*rootVolume).To(MatchFields(IgnoreExtras, Fields{
 					"Name":     Equal(fmt.Sprintf("%s-root", server.Name)),
-					"Size":     Equal(15),
+					"Size":     Equal(25),
 					"Bootable": Equal("true"), // This is genuinely a string, not a bool
 				}), "Boot volume %s for machine %s not as expected", rootVolume.ID, machine.Name)
 

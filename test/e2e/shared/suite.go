@@ -58,6 +58,8 @@ func Node1BeforeSuite(e2eCtx *E2EContext) []byte {
 	flag.Parse()
 	Expect(e2eCtx.Settings.ConfigPath).To(BeAnExistingFile(), "Invalid test suite argument. configPath should be an existing file.")
 	Expect(os.MkdirAll(e2eCtx.Settings.ArtifactFolder, 0o750)).To(Succeed(), "Invalid test suite argument. Can't create artifacts-folder %q", e2eCtx.Settings.ArtifactFolder)
+	templatesDir := path.Join(e2eCtx.Settings.ArtifactFolder, "templates")
+	Expect(os.MkdirAll(templatesDir, 0o750)).To(Succeed(), "Can't create templates folder %q", templatesDir)
 	Logf("Loading the e2e test configuration from %q", e2eCtx.Settings.ConfigPath)
 	e2eCtx.E2EConfig = LoadE2EConfig(e2eCtx.Settings.ConfigPath)
 
@@ -66,7 +68,8 @@ func Node1BeforeSuite(e2eCtx *E2EContext) []byte {
 
 	templates := []clusterctl.Files{}
 
-	// TODO(sbuerin): we always need ci artifacts, because we don't have images for every Kubernetes version
+	// Cluster templates in this folder will get ci artifacts injected. It makes it possible to use generic cloud images
+	// without kubernetes pre-installed.
 	err := filepath.WalkDir(path.Join(e2eCtx.Settings.DataFolder, "infrastructure-openstack"), func(f string, d fs.DirEntry, _ error) error {
 		filename := filepath.Base(f)
 		fileExtension := filepath.Ext(filename)
@@ -90,7 +93,7 @@ func Node1BeforeSuite(e2eCtx *E2EContext) []byte {
 		Expect(err).NotTo(HaveOccurred())
 
 		targetName := fmt.Sprintf("%s-ci-artifacts.yaml", strings.TrimSuffix(filename, fileExtension))
-		targetTemplate := path.Join(e2eCtx.Settings.ArtifactFolder, "templates", targetName)
+		targetTemplate := path.Join(templatesDir, targetName)
 
 		// We have to copy the file from ciTemplate to targetTemplate. Otherwise it would be overwritten because
 		// ciTemplate is the same for all templates
@@ -120,7 +123,7 @@ func Node1BeforeSuite(e2eCtx *E2EContext) []byte {
 		t, err := os.ReadFile(f)
 		Expect(err).NotTo(HaveOccurred())
 
-		targetTemplate := path.Join(e2eCtx.Settings.ArtifactFolder, "templates", filename)
+		targetTemplate := path.Join(templatesDir, filename)
 
 		err = os.WriteFile(targetTemplate, t, 0o600)
 		Expect(err).NotTo(HaveOccurred())

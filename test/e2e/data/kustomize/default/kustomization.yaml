@@ -4,6 +4,5 @@ resources:
 
 components:
 - ../common-patches/cni
-- ../common-patches/containerd
 - ../upgrade-patches
 - ../common-patches/ccm

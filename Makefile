@@ -156,7 +156,7 @@ E2E_NO_ARTIFACT_TEMPLATES_DIR=test/e2e/data/infrastructure-openstack-no-artifact
 
 .PHONY: e2e-templates
 e2e-templates: ## Generate cluster templates for e2e tests
-e2e-templates: $(addprefix $(E2E_TEMPLATES_DIR)/, \
+e2e-templates: $(addprefix $(E2E_NO_ARTIFACT_TEMPLATES_DIR)/, \
 		 cluster-template-v1alpha5.yaml \
 		 cluster-template-v1alpha6.yaml \
 		 cluster-template-md-remediation.yaml \
@@ -164,14 +164,12 @@ e2e-templates: $(addprefix $(E2E_TEMPLATES_DIR)/, \
 		 cluster-template-multi-az.yaml \
 		 cluster-template-multi-network.yaml \
 		 cluster-template-without-lb.yaml \
-		 cluster-template.yaml) \
-		 $(addprefix $(E2E_NO_ARTIFACT_TEMPLATES_DIR)/, \
+		 cluster-template.yaml \
 		 cluster-template-flatcar.yaml)
+# Currently no templates that require CI artifacts
+# $(addprefix $(E2E_TEMPLATES_DIR)/, add-templates-here.yaml) \
 
-$(E2E_TEMPLATES_DIR)/cluster-template.yaml: $(E2E_KUSTOMIZE_DIR)/with-tags $(KUSTOMIZE) FORCE
-	$(KUSTOMIZE) build "$<" > "$@"
-
-$(E2E_TEMPLATES_DIR)/cluster-template-%.yaml: $(E2E_KUSTOMIZE_DIR)/% $(KUSTOMIZE) FORCE
+$(E2E_NO_ARTIFACT_TEMPLATES_DIR)/cluster-template.yaml: $(E2E_KUSTOMIZE_DIR)/with-tags $(KUSTOMIZE) FORCE
 	$(KUSTOMIZE) build "$<" > "$@"
 
 $(E2E_NO_ARTIFACT_TEMPLATES_DIR)/cluster-template-%.yaml: $(E2E_KUSTOMIZE_DIR)/% $(KUSTOMIZE) FORCE
