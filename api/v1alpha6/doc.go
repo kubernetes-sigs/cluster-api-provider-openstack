@@ -12,7 +12,10 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
+Package v1alpha6 contains API Schema definitions for the v1alpha6 API group
++kubebuilder:object:generate=true
++groupName=infrastructure.cluster.x-k8s.io
 */
 
-// +k8s:conversion-gen=sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7
 package v1alpha6

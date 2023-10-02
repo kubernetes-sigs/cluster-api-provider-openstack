@@ -38,8 +38,11 @@ verify: generate ## Verify that dependent artifacts are up to date
 	fi
 
 .PHONY: build
-build: $(BOOK_SRCS) $(MDBOOK) $(MDBOOK_EMBED) $(MDBOOK_RELEASELINK) $(MDBOOK_TABULATE) ## Build the book
+build:  $(BOOK_SRCS) $(MDBOOK) $(MDBOOK_EMBED) $(MDBOOK_RELEASELINK) $(MDBOOK_TABULATE)
+	../../hack/generate-api-docs.sh
 	$(MDBOOK) build
+	rm -rf src/api src/SUMMARY.md
+	mv src/SUMMARY_ORIGINAL.md src/SUMMARY.md
 
 .PHONY: serve
 serve: $(MDBOOK) $(MDBOOK_EMBED) $(MDBOOK_RELEASELINK) $(MDBOOK_TABULATE) ## Run a local webserver with the compiled book
