@@ -52,6 +52,7 @@ KUSTOMIZE := $(TOOLS_BIN_DIR)/kustomize
 MOCKGEN := $(TOOLS_BIN_DIR)/mockgen
 RELEASE_NOTES := $(TOOLS_BIN_DIR)/release-notes
 SETUP_ENVTEST := $(TOOLS_BIN_DIR)/setup-envtest
+GEN_CRD_API_REFERENCE_DOCS := $(TOOLS_BIN_DIR)/gen-crd-api-reference-docs
 
 # Kubebuilder
 export KUBEBUILDER_ENVTEST_KUBERNETES_VERSION ?= 1.28.0
@@ -245,7 +246,7 @@ modules: ## Runs go mod to ensure proper vendoring.
 	cd $(TOOLS_DIR); go mod tidy
 
 .PHONY: generate
-generate: generate-controller-gen generate-conversion-gen generate-go generate-manifests ## Generate all generated code
+generate: generate-controller-gen generate-conversion-gen generate-go generate-manifests generate-api-docs ## Generate all generated code
 
 .PHONY: generate-go
 generate-go: $(MOCKGEN)
@@ -281,6 +282,24 @@ generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
 		paths=./controllers/... \
 		output:rbac:dir=$(RBAC_ROOT) \
 		rbac:roleName=manager-role
+
+.PHONY: generate-api-docs
+generate-api-docs: $(GEN_CRD_API_REFERENCE_DOCS) ## Generate api documentation
+	$(GEN_CRD_API_REFERENCE_DOCS) \
+		-api-dir=./api/v1beta1 \
+		-config=./docs/book/gen-crd-api-reference-docs/config.json \
+		-template-dir=./docs/book/gen-crd-api-reference-docs/template \
+		-out-file=./docs/book/src/api/v1beta1/api.md
+	$(GEN_CRD_API_REFERENCE_DOCS) \
+		-api-dir=./api/v1alpha7 \
+		-config=./docs/book/gen-crd-api-reference-docs/config.json \
+		-template-dir=./docs/book/gen-crd-api-reference-docs/template \
+		-out-file=./docs/book/src/api/v1alpha7/api.md
+	$(GEN_CRD_API_REFERENCE_DOCS) \
+		-api-dir=./api/v1alpha6 \
+		-config=./docs/book/gen-crd-api-reference-docs/config.json \
+		-template-dir=./docs/book/gen-crd-api-reference-docs/template \
+		-out-file=./docs/book/src/api/v1alpha6/api.md
 
 ## --------------------------------------
 ##@ Docker

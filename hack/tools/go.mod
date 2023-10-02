@@ -4,6 +4,7 @@ go 1.22
 
 require (
 	github.com/a8m/envsubst v1.2.0
+	github.com/ahmetb/gen-crd-api-reference-docs v0.3.1-0.20220420215017-3f29e6853552
 	github.com/golang/mock v1.6.0
 	github.com/itchyny/gojq v0.12.2
 	github.com/onsi/ginkgo/v2 v2.13.0
@@ -47,6 +48,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/spf13/afero v1.9.2 // indirect
 	github.com/spf13/cobra v1.8.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
@@ -70,6 +72,7 @@ require (
 	k8s.io/apiextensions-apiserver v0.29.0 // indirect
 	k8s.io/apimachinery v0.29.0 // indirect
 	k8s.io/gengo v0.0.0-20230829151522-9cce18d56c01 // indirect
+	k8s.io/klog v0.2.0 // indirect
 	k8s.io/klog/v2 v2.110.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20231010175941-2dd684a91f00 // indirect
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b // indirect

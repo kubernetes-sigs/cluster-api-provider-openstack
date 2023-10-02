@@ -22,6 +22,7 @@ package tools
 
 import (
 	_ "github.com/a8m/envsubst"
+	_ "github.com/ahmetb/gen-crd-api-reference-docs"
 	_ "github.com/golang/mock/mockgen"
 	_ "github.com/itchyny/gojq/cmd/gojq"
 	_ "github.com/onsi/ginkgo/v2/ginkgo"

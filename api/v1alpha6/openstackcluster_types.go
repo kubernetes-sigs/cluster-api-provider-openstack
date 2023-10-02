@@ -212,6 +212,8 @@ type OpenStackClusterStatus struct {
 	FailureMessage *string `json:"failureMessage,omitempty"`
 }
 
+// +genclient
+// +genclient:Namespaced
 // +kubebuilder:object:root=true
 // +kubebuilder:deprecatedversion:warning="The v1alpha6 version of OpenStackCluster has been deprecated and will be removed in a future release of the API. Please upgrade."
 // +kubebuilder:resource:path=openstackclusters,scope=Namespaced,categories=cluster-api,shortName=osc

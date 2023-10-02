@@ -25,6 +25,8 @@ type OpenStackMachineTemplateSpec struct {
 	Template OpenStackMachineTemplateResource `json:"template"`
 }
 
+// +genclient
+// +genclient:Namespaced
 // +kubebuilder:object:root=true
 // +kubebuilder:storageversion
 // +kubebuilder:resource:path=openstackmachinetemplates,scope=Namespaced,categories=cluster-api,shortName=osmt

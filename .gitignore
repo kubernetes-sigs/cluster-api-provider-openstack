@@ -173,6 +173,7 @@ sshuttle.pid
 
 # Book
 docs/book/book/
+!docs/book/gen-crd-api-reference-docs/config.json
 
 # venv
 .venv

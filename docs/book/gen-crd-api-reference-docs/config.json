@@ -1,0 +1,36 @@
+{
+    "hideMemberFields": [
+      "TypeMeta"
+    ],
+    "hideTypePatterns": [
+      "ParseError$",
+      "List$"
+    ],
+    "externalPackages": [
+      {
+        "typeMatchPrefix": "^k8s\\.io/apimachinery/pkg/apis/meta/v1\\.Duration$",
+        "docsURLTemplate": "https://pkg.go.dev/k8s.io/apimachinery/pkg/apis/meta/v1#Duration"
+      },
+      {
+        "typeMatchPrefix": "^k8s\\.io/apimachinery/pkg/apis/meta/v1\\.Condition$",
+        "docsURLTemplate": "https://pkg.go.dev/k8s.io/apimachinery/pkg/apis/meta/v1#Condition"
+      },
+      {
+        "typeMatchPrefix": "^sigs\\.k8s\\.io/cluster-api/api/v1beta1",
+        "docsURLTemplate": "https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.5.1"
+      },
+      {
+        "typeMatchPrefix": "^sigs\\.k8s\\.io/cluster-api/api/v1beta1",
+        "docsURLTemplate": "https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.5.1"
+      },
+      {
+        "typeMatchPrefix": "^sigs\\.k8s\\.io/cluster-api/errors",
+        "docsURLTemplate": "https://pkg.go.dev/sigs.k8s.io/cluster-api@v1.5.1/errors#{{.TypeIdentifier}}"
+      }
+    ],
+    "typeDisplayNamePrefixOverrides": {
+      "k8s.io/api/": "Kubernetes ",
+      "k8s.io/apimachinery/pkg/apis/": "Kubernetes "
+    },
+    "markdownDisabled": false
+  }
