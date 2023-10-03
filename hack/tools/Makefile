@@ -73,6 +73,10 @@ ENVSUBST := $(BIN_DIR)/envsubst
 $(ENVSUBST): go.mod go.sum | $(BIN_DIR) # Build envsubst from tools folder.
 	go build -tags=tools -o $@ github.com/a8m/envsubst/cmd/envsubst
 
+SETUP_ENVTEST := $(BIN_DIR)/setup-envtest
+$(SETUP_ENVTEST): go.mod go.sum | $(BIN_DIR)
+	go build -tags=tools -o $@ sigs.k8s.io/controller-runtime/tools/setup-envtest
+
 GH_SHARE := $(SHARE_DIR)/gh
 
 $(GH_SHARE): $(SHARE_DIR)

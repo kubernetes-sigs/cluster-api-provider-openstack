@@ -51,12 +51,7 @@ GOLANGCI_LINT := $(TOOLS_BIN_DIR)/golangci-lint
 KUSTOMIZE := $(TOOLS_BIN_DIR)/kustomize
 MOCKGEN := $(TOOLS_BIN_DIR)/mockgen
 RELEASE_NOTES := $(TOOLS_BIN_DIR)/release-notes
-
-# Setup-envtest
-SETUP_ENVTEST_VER := v0.0.0-20221201045826-d9912251cd81
-SETUP_ENVTEST_BIN := setup-envtest
-SETUP_ENVTEST := $(abspath $(TOOLS_BIN_DIR)/$(SETUP_ENVTEST_BIN)-$(SETUP_ENVTEST_VER))
-SETUP_ENVTEST_PKG := sigs.k8s.io/controller-runtime/tools/setup-envtest
+SETUP_ENVTEST := $(TOOLS_BIN_DIR)/setup-envtest
 
 # Kubebuilder
 export KUBEBUILDER_ENVTEST_KUBERNETES_VERSION ?= 1.25.0
@@ -223,12 +218,6 @@ managers:
 .PHONY: manager-openstack-infrastructure
 manager-openstack-infrastructure: ## Build manager binary.
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS} -extldflags '-static'" -o $(BIN_DIR)/manager .
-
-$(SETUP_ENVTEST): # Build setup-envtest from tools folder.
-	GOBIN=$(abspath $(TOOLS_BIN_DIR)) $(GO_INSTALL) $(SETUP_ENVTEST_PKG) $(SETUP_ENVTEST_BIN) $(SETUP_ENVTEST_VER)
-
-.PHONY: $(SETUP_ENVTEST_BIN)
-	$(SETUP_ENVTEST_BIN): $(SETUP_ENVTEST) ## Build a local copy of setup-envtest.
 
 ## --------------------------------------
 ##@ Linting
