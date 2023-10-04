@@ -28,6 +28,8 @@ const (
 	// MachineFinalizer allows ReconcileOpenStackMachine to clean up OpenStack resources associated with OpenStackMachine before
 	// removing it from the apiserver.
 	MachineFinalizer = "openstackmachine.infrastructure.cluster.x-k8s.io"
+
+	PortsReadyCondition clusterv1.ConditionType = "PortsReady"
 )
 
 // OpenStackMachineSpec defines the desired state of OpenStackMachine.
@@ -132,6 +134,9 @@ type OpenStackMachineStatus struct {
 	FailureMessage *string `json:"failureMessage,omitempty"`
 
 	Conditions clusterv1.Conditions `json:"conditions,omitempty"`
+
+	// Ports is a list of the ids of ports created for this server
+	Ports []string `json:"ports,omitempty"`
 }
 
 // +kubebuilder:object:root=true
