@@ -3,3 +3,8 @@
   path: /spec/template/spec/rootVolume
   value:
     diskSize: 15
+- op: add
+  path: /spec/template/spec/additionalBlockDevices
+  value:
+  - diskSize: 1
+    name: extravol

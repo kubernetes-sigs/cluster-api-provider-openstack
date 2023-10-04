@@ -163,6 +163,20 @@ type RootVolume struct {
 	AvailabilityZone string `json:"availabilityZone,omitempty"`
 }
 
+type AdditionalBlockDevice struct {
+	// Name of the Cinder volume in the context of a machine.
+	// It will be combined with the machine name to make the actual volume name.
+	Name string `json:"name"`
+	// Size is the size in GB of the volume.
+	Size int `json:"diskSize"`
+	// VolumeType is the volume type of the volume.
+	// If omitted, the default type will be used.
+	VolumeType string `json:"volumeType,omitempty"`
+	// AvailabilityZone is the volume availability zone to create the volume in.
+	// If omitted, the availability zone of the server will be used.
+	AvailabilityZone string `json:"availabilityZone,omitempty"`
+}
+
 // NetworkStatus contains basic information about an existing neutron network.
 type NetworkStatus struct {
 	Name string `json:"name"`

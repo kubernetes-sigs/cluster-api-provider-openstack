@@ -60,13 +60,12 @@ func restorev1alpha7MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *inf
 	// PropagateUplinkStatus has been added in v1alpha7.
 	// We restore the whole Ports since they are anyway immutable.
 	dst.Ports = previous.Ports
+	dst.AdditionalBlockDevices = previous.AdditionalBlockDevices
 }
 
 func restorev1alpha7Bastion(previous **infrav1.Bastion, dst **infrav1.Bastion) {
-	// PropagateUplinkStatus has been added in v1alpha7.
-	// We restore the whole Ports since they are anyway immutable.
-	if *previous != nil && (*previous).Instance.Ports != nil && *dst != nil && (*dst).Instance.Ports != nil {
-		(*dst).Instance.Ports = (*previous).Instance.Ports
+	if *previous != nil && *dst != nil {
+		restorev1alpha7MachineSpec(&(*previous).Instance, &(*dst).Instance)
 	}
 }
 
@@ -645,4 +644,8 @@ func Convert_v1alpha6_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(
 	}
 
 	return nil
+}
+
+func Convert_v1alpha7_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(in *infrav1.OpenStackMachineSpec, out *OpenStackMachineSpec, s apiconversion.Scope) error {
+	return autoConvert_v1alpha7_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(in, out, s)
 }
