@@ -129,15 +129,25 @@ endif
 $(ARTIFACTS):
 	mkdir -p $@
 
-ifeq ($(shell go env GOOS),darwin) # Use the darwin/amd64 binary until an arm64 version is available
-  KUBEBUILDER_ASSETS ?= $(shell $(SETUP_ENVTEST) use --use-env -p path --arch amd64 $(KUBEBUILDER_ENVTEST_KUBERNETES_VERSION))
-else
-  KUBEBUILDER_ASSETS ?= $(shell $(SETUP_ENVTEST) use --use-env -p path $(KUBEBUILDER_ENVTEST_KUBERNETES_VERSION))
+setup_envtest_extra_args=
+# Use the darwin/amd64 binary until an arm64 version is available
+ifeq ($(shell go env GOOS),darwin)
+	setup_envtest_extra_args += --arch amd64
+endif
+
+# By default setup-envtest will write to $XDG_DATA_HOME, or $HOME/.local/share
+# if that is not defined. Set KUBEBUILDER_ASSETS_DIR to override.
+ifdef KUBEBUILDER_ASSETS_DIR
+	setup_envtest_extra_args += --bin-dir $(KUBEBUILDER_ASSETS_DIR)
 endif
 
 .PHONY: test
 test: $(SETUP_ENVTEST) ## Run tests
-	KUBEBUILDER_ASSETS="$(KUBEBUILDER_ASSETS)" go test -v ./... $(TEST_ARGS)
+	set -xeuf -o pipefail; \
+	if [ -z "$(KUBEBUILDER_ASSETS)" ]; then \
+		KUBEBUILDER_ASSETS=`$(SETUP_ENVTEST) use --use-env -p path $(setup_envtest_extra_args) $(KUBEBUILDER_ENVTEST_KUBERNETES_VERSION)`; \
+	fi; \
+	KUBEBUILDER_ASSETS="$$KUBEBUILDER_ASSETS" go test -v ./... $(TEST_ARGS)
 
 E2E_TEMPLATES_DIR=test/e2e/data/infrastructure-openstack
 E2E_KUSTOMIZE_DIR=test/e2e/data/kustomize
