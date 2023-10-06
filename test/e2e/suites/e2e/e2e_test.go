@@ -415,6 +415,12 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 
 				// All IP addresses on all ports should be reported in Addresses
 				Expect(machine.Status.Addresses).To(ContainElements(seenAddresses))
+
+				// Expect an InternalDNS entry matching the name of the OpenStack server
+				Expect(machine.Status.Addresses).To(ContainElement(clusterv1.MachineAddress{
+					Type:    clusterv1.MachineInternalDNS,
+					Address: machine.Spec.InfrastructureRef.Name,
+				}))
 			}
 		})
 	})
