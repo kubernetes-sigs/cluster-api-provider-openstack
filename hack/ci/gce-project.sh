@@ -94,7 +94,7 @@ function create_vm {
     # Check if image was already created.
     # Images are not zone specific, but the disk is.
     if ! gcloud compute images describe "$imagename" --project "$GCP_PROJECT" >/dev/null; then
-      # Create the base disk image based on the public Ubuntu 20.04 LTS cloud image
+      # Create the base disk image based on the public Ubuntu 22.04 LTS cloud image
       # Note that this has also been verified to work with CentOS 8 as of
       # 2021-01-12, but this is not tested regularly.
       # To use CentOS 8:
@@ -102,7 +102,7 @@ function create_vm {
       if ! gcloud compute disks describe "$diskname" --project "$GCP_PROJECT" --zone "$GCP_ZONE" >/dev/null; then
         gcloud compute disks create "$diskname" \
           --project "$GCP_PROJECT" \
-          --image-project ubuntu-os-cloud --image-family ubuntu-2004-lts \
+          --image-project ubuntu-os-cloud --image-family ubuntu-2204-lts \
           --zone "$GCP_ZONE"
       fi
       gcloud compute images create "$imagename" \
