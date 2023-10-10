@@ -2124,6 +2124,15 @@ spec:
                           tagsAny:
                             type: string
                         type: object
+                      networkMtu:
+                        description: NetworkMTU sets the maximum transmission unit
+                          (MTU) value to address fragmentation for the private network
+                          ID. This value will be used only if the Cluster actuator
+                          creates the network. If leaved empty, the network will have
+                          the default MTU defined in Openstack network service. To
+                          use this field, the Openstack installation requires the
+                          net-mtu neutron API extension.
+                        type: integer
                       nodeCidr:
                         description: NodeCIDR is the OpenStack Subnet to be created.
                           Cluster actuator will create a network, a subnet with NodeCIDR,

@@ -725,6 +725,7 @@ func autoConvert_v1alpha7_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(
 	if err := Convert_v1alpha7_SubnetFilter_To_v1alpha5_SubnetFilter(&in.Subnet, &out.Subnet, s); err != nil {
 		return err
 	}
+	// WARNING: in.NetworkMTU requires manual conversion: does not exist in peer-type
 	out.DNSNameservers = *(*[]string)(unsafe.Pointer(&in.DNSNameservers))
 	if in.ExternalRouterIPs != nil {
 		in, out := &in.ExternalRouterIPs, &out.ExternalRouterIPs

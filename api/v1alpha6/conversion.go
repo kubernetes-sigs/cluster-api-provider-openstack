@@ -123,6 +123,11 @@ var v1alpha7OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStack
 			return &c.Spec.Router
 		},
 	},
+	"networkMtu": conversion.UnconditionalFieldRestorer[*infrav1.OpenStackCluster, int]{
+		GetField: func(c *infrav1.OpenStackCluster) *int {
+			return &c.Spec.NetworkMTU
+		},
+	},
 	"bastion": conversion.HashedFieldRestorer[*infrav1.OpenStackCluster, *infrav1.Bastion]{
 		GetField: func(c *infrav1.OpenStackCluster) **infrav1.Bastion {
 			return &c.Spec.Bastion
@@ -188,6 +193,11 @@ var v1alpha7OpenStackClusterTemplateRestorer = conversion.RestorerFor[*infrav1.O
 	"router": conversion.UnconditionalFieldRestorer[*infrav1.OpenStackClusterTemplate, *infrav1.RouterFilter]{
 		GetField: func(c *infrav1.OpenStackClusterTemplate) **infrav1.RouterFilter {
 			return &c.Spec.Template.Spec.Router
+		},
+	},
+	"networkMtu": conversion.UnconditionalFieldRestorer[*infrav1.OpenStackClusterTemplate, int]{
+		GetField: func(c *infrav1.OpenStackClusterTemplate) *int {
+			return &c.Spec.Template.Spec.NetworkMTU
 		},
 	},
 	"bastion": conversion.HashedFieldRestorer[*infrav1.OpenStackClusterTemplate, *infrav1.Bastion]{

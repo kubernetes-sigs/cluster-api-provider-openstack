@@ -63,6 +63,7 @@ type createOpts struct {
 	AdminStateUp        *bool  `json:"admin_state_up,omitempty"`
 	Name                string `json:"name,omitempty"`
 	PortSecurityEnabled *bool  `json:"port_security_enabled,omitempty"`
+	MTU                 *int   `json:"mtu,omitempty"`
 }
 
 func (c createOpts) ToNetworkCreateMap() (map[string]interface{}, error) {
@@ -135,18 +136,17 @@ func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, c
 		return nil
 	}
 
-	var opts createOpts
+	opts := createOpts{
+		AdminStateUp: gophercloud.Enabled,
+		Name:         networkName,
+	}
+
 	if openStackCluster.Spec.DisablePortSecurity {
-		opts = createOpts{
-			AdminStateUp:        gophercloud.Enabled,
-			Name:                networkName,
-			PortSecurityEnabled: gophercloud.Disabled,
-		}
-	} else {
-		opts = createOpts{
-			AdminStateUp: gophercloud.Enabled,
-			Name:         networkName,
-		}
+		opts.PortSecurityEnabled = gophercloud.Disabled
+	}
+
+	if openStackCluster.Spec.NetworkMTU > 0 {
+		opts.MTU = &openStackCluster.Spec.NetworkMTU
 	}
 
 	network, err := s.client.CreateNetwork(opts)
