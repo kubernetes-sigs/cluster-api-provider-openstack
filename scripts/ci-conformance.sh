@@ -47,7 +47,8 @@ trap cleanup EXIT
 
 apt-get update -y
 # Install requests module explicitly for HTTP calls.
-apt-get install -y python3-requests
+# libffi required for pip install cffi (yoga dependency)
+apt-get install -y python3-requests libffi-dev
 rm -rf /var/lib/apt/lists/*
 
 # If BOSKOS_HOST is set then acquire a resource of type ${RESOURCE_TYPE} from Boskos.
