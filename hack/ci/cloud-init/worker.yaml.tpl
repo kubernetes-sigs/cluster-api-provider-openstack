@@ -25,12 +25,17 @@
     DATABASE_TYPE=mysql
     DATABASE_HOST=$SERVICE_HOST
 
+    # Nova
+    ENABLED_SERVICES=n-cpu,placement-client,c-vol
+    VOLUME_BACKING_FILE_SIZE=100G
+
     # Neutron
     enable_plugin neutron https://github.com/openstack/neutron stable/${OPENSTACK_RELEASE}
+    enable_service ovn-controller
+    enable_service q-ovn-metadata-agent
+    enable_service ovs-vswitchd
 
-    # Nova
-    ENABLED_SERVICES=n-cpu,placement-client,c-vol,neutron-agent
-    VOLUME_BACKING_FILE_SIZE=100G
+    OVN_SB_REMOTE=tcp:$SERVICE_HOST:6642
 
     # Additional services
     ENABLED_SERVICES+=${OPENSTACK_ADDITIONAL_SERVICES}

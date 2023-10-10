@@ -31,7 +31,7 @@ source "${scriptdir}/${RESOURCE_TYPE}.sh"
 
 CLUSTER_NAME=${CLUSTER_NAME:-"capo-e2e"}
 
-OPENSTACK_RELEASE=${OPENSTACK_RELEASE:-"yoga"}
+OPENSTACK_RELEASE=${OPENSTACK_RELEASE:-"2023.2"}
 OPENSTACK_ENABLE_HORIZON=${OPENSTACK_ENABLE_HORIZON:-"false"}
 
 # Devstack will create a provider network using this range
@@ -85,11 +85,6 @@ function ensure_openstack_client {
 
         # We explicitly pin to the stable branch version of openstackclient.
         curl -L https://releases.openstack.org/constraints/upper/${OPENSTACK_RELEASE} -o /tmp/openstack-constraints
-
-        # Hack for yoga only: wrapt <1.14 doesn't support python 3.11
-        [ "${OPENSTACK_RELEASE}" == "yoga" ] || exit 1 # Delete this hack
-        sed -i "s/^wrapt===1\.13.*/wrapt===1.14.1/" /tmp/openstack-constraints
-
         pip install -c /tmp/openstack-constraints \
                 python-openstackclient python-cinderclient \
                 python-glanceclient python-keystoneclient \
