@@ -85,37 +85,17 @@ function create_vm {
   local machine_type="GCP_MACHINE_TYPE_${name}"
   machine_type=${!machine_type}
   local servername="${CLUSTER_NAME}-${name}"
-  local diskname="${CLUSTER_NAME}-disk"
-  local imagename="${servername}-image"
 
   # Loop over all zones in the GCP region to ignore a full zone.
   # We are not able to use 'gcloud compute zones list' as the gcloud.compute.zones.list permission is missing.
   for GCP_ZONE in "${GCP_REGION}-a" "${GCP_REGION}-b" "${GCP_REGION}-c"; do
-    # Check if image was already created.
-    # Images are not zone specific, but the disk is.
-    if ! gcloud compute images describe "$imagename" --project "$GCP_PROJECT" >/dev/null; then
-      # Create the base disk image based on the public Ubuntu 22.04 LTS cloud image
-      # Note that this has also been verified to work with CentOS 8 as of
-      # 2021-01-12, but this is not tested regularly.
-      # To use CentOS 8:
-      #   --image-project centos-cloud --image-family centos-stream-8
-      if ! gcloud compute disks describe "$diskname" --project "$GCP_PROJECT" --zone "$GCP_ZONE" >/dev/null; then
-        gcloud compute disks create "$diskname" \
-          --project "$GCP_PROJECT" \
-          --image-project ubuntu-os-cloud --image-family ubuntu-2204-lts \
-          --zone "$GCP_ZONE"
-      fi
-      gcloud compute images create "$imagename" \
-        --project "$GCP_PROJECT" \
-        --source-disk "$diskname" --source-disk-zone "$GCP_ZONE" \
-        --licenses "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
-    fi
-
     if ! gcloud compute instances describe "$servername" --project "$GCP_PROJECT" --zone "$GCP_ZONE" >/dev/null; then
       if gcloud compute instances create "$servername" \
         --project "$GCP_PROJECT" \
         --zone "$GCP_ZONE" \
-        --image "$imagename" \
+        --enable-nested-virtualization \
+        --image-project ubuntu-os-cloud \
+        --image-family ubuntu-2004-lts \
         --boot-disk-size 200G \
         --boot-disk-type pd-ssd \
         --can-ip-forward \
