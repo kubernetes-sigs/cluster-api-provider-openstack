@@ -77,32 +77,26 @@ function retry {
 function ensure_openstack_client {
     if ! command -v openstack;
     then
-        # We are running in a Debian Buster image with python 3.7. Python 3.7
-        # is starting to show its age in upstream support. Ideally we would
-        # move to a newer image with a newer python version.
-        #
-        # Until then, this script tries to carefully navigate around current
-        # issues running openstack client on python 3.7.
-        #
-        # We explicitly pin the yoga version of openstackclient. This is the
-        # last version of openstackclient which will support python 3.7.
-
         # Install virtualenv to install the openstack client and curl to fetch
         # the build constraints.
         apt-get install -y python3-virtualenv curl
         python3 -m virtualenv -p $(which python3) /tmp/openstack-venv
         VIRTUAL_ENV_DISABLE_PROMPT=1 source /tmp/openstack-venv/bin/activate
 
-        # openstackclient has never actually supported python 3.7, only 3.6 and
-        # 3.8. Here we download the yoga constraints file and modify all the
-        # 3.8 constraints to be 3.7 constraints.
-        curl -L https://releases.openstack.org/constraints/upper/yoga -o /tmp/yoga-constraints
-        sed -i "s/python_version=='3.8'/python_version=='3.7'/" /tmp/yoga-constraints
+        # We explicitly pin to the stable branch version of openstackclient.
+        curl -L https://releases.openstack.org/constraints/upper/${OPENSTACK_RELEASE} -o /tmp/openstack-constraints
 
-        pip install -c /tmp/yoga-constraints \
+        # Hack for yoga only: wrapt <1.14 doesn't support python 3.11
+        [ "${OPENSTACK_RELEASE}" == "yoga" ] || exit 1 # Delete this hack
+        sed -i "s/^wrapt===1\.13.*/wrapt===1.14.1/" /tmp/openstack-constraints
+
+        pip install -c /tmp/openstack-constraints \
                 python-openstackclient python-cinderclient \
                 python-glanceclient python-keystoneclient \
                 python-neutronclient python-novaclient python-octaviaclient
+
+        # Ensure openstack cli can load fully including all plugins
+        openstack help >/dev/null
     fi
 }
 
