@@ -158,7 +158,8 @@ e2e-templates: $(addprefix $(E2E_NO_ARTIFACT_TEMPLATES_DIR)/, \
 		 cluster-template-without-lb.yaml \
 		 cluster-template.yaml \
 		 cluster-template-flatcar.yaml \
-		 cluster-template-k8s-upgrade.yaml)
+                 cluster-template-k8s-upgrade.yaml \
+		 cluster-template-flatcar-sysext.yaml)
 # Currently no templates that require CI artifacts
 # $(addprefix $(E2E_TEMPLATES_DIR)/, add-templates-here.yaml) \
 
@@ -406,7 +407,8 @@ release-notes: $(RELEASE_NOTES) ## Generate release notes
 templates: ## Generate cluster templates
 templates: templates/cluster-template.yaml \
 	templates/cluster-template-without-lb.yaml \
-	templates/cluster-template-flatcar.yaml
+	templates/cluster-template-flatcar.yaml \
+	templates/cluster-template-flatcar-sysext.yaml
 
 templates/cluster-template.yaml: kustomize/v1alpha8/default $(KUSTOMIZE) FORCE
 	$(KUSTOMIZE) build "$<" > "$@"
