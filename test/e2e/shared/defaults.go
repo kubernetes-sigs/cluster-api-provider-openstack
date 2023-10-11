@@ -55,6 +55,7 @@ const (
 	FlavorKCPRemediation       = "kcp-remediation"
 	FlavorFlatcar              = "flatcar"
 	FlavorKubernetesUpgrade    = "k8s-upgrade"
+	FlavorFlatcarSysext        = "flatcar-sysext"
 )
 
 // DefaultScheme returns the default scheme to use for testing.
