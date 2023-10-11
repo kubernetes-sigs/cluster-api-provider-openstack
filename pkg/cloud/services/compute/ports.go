@@ -33,6 +33,29 @@ package compute
  *
  * After adoption check:
  * - If a port does not exist in status is HAS NOT been created in OpenStack.
+ *
+ *
+ * STATUS
+ *
+ * Blocked because we have nowhere to store port status for the bastion.
+ * We're updating CreateInstance to take a list of pre-created ports, and
+ * DeleteInstance to assume that it can rely on ports status. However, this
+ * breaks the bastion so we can't do it yet.
+ *
+ * Options:
+ * - Define an interface which can be implemented by both OpenStackCluster and OpenStackMachine which stores ports status.
+ * - Reimplement the bastion to create an OpenStackMachine object and rely on the machine controller instead.
+ *
+ * Matt's preference is the latter.
+ *
+ * VOLUMES
+ *
+ * We were mistaken that we can lookup volumes by metadata, but we should still
+ * add it. We should calculate tags for volumes in the same way we do for other
+ * resources: cluster tags + machine tags. We should also add an additional tag
+ * containing the uid of the kubernetes openstackmachine object. We can add all
+ * of these as server metadata. This will allow us to distinguish in the case
+ * where we find 2 volumes with the same name.
  */
 
 /*
@@ -83,29 +106,69 @@ package compute
 import (
 	"fmt"
 
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/cluster-api/util/conditions"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
+	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 )
 
-func (s *Service) adoptPorts() error {
+func (s *Service) adoptPorts(eventObject runtime.Object, clusterName string, openStackMachine *infrav1.OpenStackMachine, instanceSpec *InstanceSpec, desiredPorts []infrav1.PortOpts) error {
+	portsReady := conditions.Get(openStackMachine, infrav1.PortsReadyCondition)
+	if portsReady != nil && portsReady.Status == corev1.ConditionTrue {
+		return nil
+	}
+
+	statusPorts := openStackMachine.Status.Ports
+
+	networkingClient, err := s.getNetworkingClient()
+	if err != nil {
+		return err
+	}
+
+	for i, port := range desiredPorts {
+		// check if the port is in status first and if it is, skip it
+		if i < len(statusPorts) {
+			continue
+		}
+
+		portOpts := &desiredPorts[i]
+		portName := networking.GetPortName(openStackMachine.Name, portOpts, i)
+		// List ports by name and tags
+		ports, err := networkingClient.ListPort(ports.ListOpts{
+			Name:      portName,
+			NetworkID: port.Network.ID,
+		})
+		if err != nil {
+			return err
+		}
+		if len(ports) == 0 {
+			return nil
+		}
+		if len(ports) > 1 {
+			return fmt.Errorf("found multiple ports with name %s", portName)
+		}
+
+		openStackMachine.Status.Ports = append(openStackMachine.Status.Ports, ports[0].ID)
+	}
+
+	return nil
 }
 
 /* TODO:
  * Remove clusterName params by populating port (and trunk?) descriptions in normalisePorts()
- * Where do we initialise security groups?
+ * Use CreatePort instead of GetOrCreatePort because we already called AdoptPorts and we know the ports don't exist.
+ * If this function returns an error, we should set that error into the PortsReady condition.
  */
-
 func (s *Service) reconcilePorts(eventObject runtime.Object, clusterName string, openStackMachine *infrav1.OpenStackMachine, instanceSpec *InstanceSpec, desiredPorts []infrav1.PortOpts) error {
 	portsReady := conditions.Get(openStackMachine, infrav1.PortsReadyCondition)
 	if portsReady != nil && portsReady.Status == corev1.ConditionTrue {
 		return nil
 	}
 
-	// Get the ports from Status
 	statusPorts := openStackMachine.Status.Ports
 
 	networkingService, err := s.getNetworkingService()
@@ -130,16 +193,34 @@ func (s *Service) reconcilePorts(eventObject runtime.Object, clusterName string,
 			iTags = openStackMachine.Spec.Tags
 		}
 		portName := networking.GetPortName(openStackMachine.Name, portOpts, i)
-		// XXX FIXME: PASS SECURITY GROUPS IN HERE!!!
 		port, err := networkingService.GetOrCreatePort(eventObject, clusterName, portName, portOpts, securityGroups, iTags)
 		if err != nil {
 			return err
 		}
-
+		openStackMachine.Status.Ports = append(openStackMachine.Status.Ports, port.ID)
 	}
 
+	// XXX TODO: After creating *all* ports and add them to status, check that they have all reached `DOWN` state.
+	// * If they have, set PortsReady to true.
+
+	// Sets PortsReady to true anyway for now
+	conditions.MarkTrue(openStackMachine, infrav1.PortsReadyCondition)
+
+	return nil
 }
 
-func (s *Service) reconcilePortsDelete() error {
+func (s *Service) reconcilePortsDelete(eventObject runtime.Object, openStackMachine *infrav1.OpenStackMachine) error {
+	// Delete all of the ports in status
+	networkingClient, err := s.getNetworkingClient()
+	if err != nil {
+		return err
+	}
 
+	for _, portID := range openStackMachine.Status.Ports {
+		if err := networkingClient.DeletePort(portID); err != nil && !capoerrors.IsNotFound(err) {
+			return err
+		}
+	}
+
+	return nil
 }

@@ -145,6 +145,9 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return reconcile.Result{}, err
 	}
 
+	// desiredPorts := constructPorts(openStackCluster, openStackMachine.Spec.Ports, openStackMachine.Spec.Trunk)
+	// adopt ports
+
 	// Handle deleted machines
 	if !openStackMachine.DeletionTimestamp.IsZero() {
 		return r.reconcileDelete(scope, cluster, infraCluster, machine, openStackMachine)
@@ -280,6 +283,8 @@ func (r *OpenStackMachineReconciler) reconcileDelete(scope scope.Scope, cluster 
 		return ctrl.Result{}, fmt.Errorf("delete instance: %w", err)
 	}
 
+	// XXX TODO: delete ports
+
 	controllerutil.RemoveFinalizer(openStackMachine, infrav1.MachineFinalizer)
 	scope.Logger().Info("Reconciled Machine delete successfully")
 	return ctrl.Result{}, nil
@@ -303,6 +308,9 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.WaitingForClusterInfrastructureReason, clusterv1.ConditionSeverityInfo, "")
 		return ctrl.Result{RequeueAfter: waitForClusterInfrastructureReadyDuration}, nil
 	}
+
+	// XXX TODO: reconcile ports
+	// If !PortsReady... exit with reschedule
 
 	// Make sure bootstrap data is available and populated.
 	if machine.Spec.Bootstrap.DataSecretName == nil {

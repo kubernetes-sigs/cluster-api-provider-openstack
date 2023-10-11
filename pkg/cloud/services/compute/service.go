@@ -29,6 +29,7 @@ type Service struct {
 	_computeClient     clients.ComputeClient
 	_volumeClient      clients.VolumeClient
 	_imageClient       clients.ImageClient
+	_networkingClient  clients.NetworkClient
 	_networkingService *networking.Service
 }
 
@@ -89,4 +90,17 @@ func (s Service) getNetworkingService() (*networking.Service, error) {
 	}
 
 	return s._networkingService, nil
+}
+
+func (s Service) getNetworkingClient() (clients.NetworkClient, error) {
+	if s._networkingClient == nil {
+		networkingClient, err := s.scope.NewNetworkClient()
+		if err != nil {
+			return nil, fmt.Errorf("failed to create networking client: %v", err)
+		}
+
+		s._networkingClient = networkingClient
+	}
+
+	return s._networkingClient, nil
 }

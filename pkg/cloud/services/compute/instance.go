@@ -172,9 +172,9 @@ func (s *Service) normalizePorts(ports []infrav1.PortOpts, openStackCluster *inf
 	return normalizedPorts, nil
 }
 
-// constructPorts builds an array of ports from the instance spec.
+// ConstructPorts builds an array of ports from the instance spec.
 // If no ports are in the spec, returns a single port for a network connection to the default cluster network.
-func (s *Service) constructPorts(openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec) ([]infrav1.PortOpts, error) {
+func (s *Service) ConstructPorts(openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec) ([]infrav1.PortOpts, error) {
 	// Ensure user-specified ports have all required fields
 	ports, err := s.normalizePorts(instanceSpec.Ports, openStackCluster, instanceSpec)
 	if err != nil {
@@ -221,8 +221,8 @@ func (s *Service) constructPorts(openStackCluster *infrav1.OpenStackCluster, ins
 	return ports, nil
 }
 
-func (s *Service) CreateInstance(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec, clusterName string, isBastion bool) (*InstanceStatus, error) {
-	return s.createInstanceImpl(eventObject, openStackCluster, instanceSpec, clusterName, isBastion, retryIntervalInstanceStatus)
+func (s *Service) CreateInstance(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec, ports []string, clusterName string, isBastion bool) (*InstanceStatus, error) {
+	return s.createInstanceImpl(eventObject, openStackCluster, instanceSpec, ports, clusterName, isBastion, retryIntervalInstanceStatus)
 }
 
 func (s *Service) getAndValidateFlavor(flavorName string, isBastion bool) (*flavors.Flavor, error) {
@@ -237,9 +237,15 @@ func (s *Service) getAndValidateFlavor(flavorName string, isBastion bool) (*flav
 	return f, nil
 }
 
-func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec, clusterName string, isBastion bool, retryInterval time.Duration) (*InstanceStatus, error) {
+func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec, ports []string, clusterName string, isBastion bool, retryInterval time.Duration) (*InstanceStatus, error) {
 	var server *clients.ServerExt
-	portList := []servers.Network{}
+
+	portList := make([]servers.Network, len(ports))
+	for i, port := range ports {
+		portList[i] = servers.Network{
+			Port: port,
+		}
+	}
 
 	imageID, err := s.getImageID(instanceSpec.ImageUUID, instanceSpec.Image)
 	if err != nil {
@@ -249,49 +255,6 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 	flavor, err := s.getAndValidateFlavor(instanceSpec.Flavor, isBastion)
 	if err != nil {
 		return nil, err
-	}
-
-	// Ensure we delete the ports we created if we haven't created the server.
-	defer func() {
-		if server != nil {
-			return
-		}
-
-		if err := s.deletePorts(eventObject, portList); err != nil {
-			s.scope.Logger().V(4).Error(err, "Failed to clean up ports after failure")
-		}
-	}()
-
-	ports, err := s.constructPorts(openStackCluster, instanceSpec)
-	if err != nil {
-		return nil, err
-	}
-
-	networkingService, err := s.getNetworkingService()
-	if err != nil {
-		return nil, err
-	}
-
-	securityGroups, err := networkingService.GetSecurityGroups(instanceSpec.SecurityGroups)
-	if err != nil {
-		return nil, fmt.Errorf("error getting security groups: %v", err)
-	}
-
-	for i := range ports {
-		portOpts := &ports[i]
-		iTags := []string{}
-		if len(instanceSpec.Tags) > 0 {
-			iTags = instanceSpec.Tags
-		}
-		portName := networking.GetPortName(instanceSpec.Name, portOpts, i)
-		port, err := networkingService.GetOrCreatePort(eventObject, clusterName, portName, portOpts, securityGroups, iTags)
-		if err != nil {
-			return nil, err
-		}
-
-		portList = append(portList, servers.Network{
-			Port: port.ID,
-		})
 	}
 
 	instanceCreateTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT", timeoutInstanceCreate)
@@ -612,49 +575,6 @@ func (s *Service) DeleteInstance(openStackCluster *infrav1.OpenStackCluster, eve
 		return s.deleteVolumes(instanceSpec)
 	}
 
-	instanceInterfaces, err := s.getComputeClient().ListAttachedInterfaces(instanceStatus.ID())
-	if err != nil {
-		return err
-	}
-
-	trunkSupported, err := s.isTrunkExtSupported()
-	if err != nil {
-		return fmt.Errorf("obtaining network extensions: %v", err)
-	}
-
-	networkingService, err := s.getNetworkingService()
-	if err != nil {
-		return err
-	}
-
-	// get and delete trunks
-	for _, port := range instanceInterfaces {
-		if err = s.deleteAttachInterface(eventObject, instanceStatus.InstanceIdentifier(), port.PortID); err != nil {
-			return err
-		}
-
-		if trunkSupported {
-			if err = networkingService.DeleteTrunk(eventObject, port.PortID); err != nil {
-				return err
-			}
-		}
-		if err = networkingService.DeletePort(eventObject, port.PortID); err != nil {
-			return err
-		}
-	}
-
-	// delete port of error instance
-	if instanceStatus.State() == infrav1.InstanceStateError {
-		portOpts, err := s.constructPorts(openStackCluster, instanceSpec)
-		if err != nil {
-			return err
-		}
-
-		if err := networkingService.GarbageCollectErrorInstancesPort(eventObject, instanceSpec.Name, portOpts); err != nil {
-			return err
-		}
-	}
-
 	return s.deleteInstance(eventObject, instanceStatus.InstanceIdentifier())
 }
 
@@ -707,26 +627,6 @@ func (s *Service) deletePorts(eventObject runtime.Object, nets []servers.Network
 			return err
 		}
 	}
-	return nil
-}
-
-func (s *Service) deleteAttachInterface(eventObject runtime.Object, instance *InstanceIdentifier, portID string) error {
-	err := s.getComputeClient().DeleteAttachedInterface(instance.ID, portID)
-	if err != nil {
-		if capoerrors.IsNotFound(err) {
-			record.Eventf(eventObject, "SuccessfulDeleteAttachInterface", "Attach interface did not exist: instance %s, port %s", instance.ID, portID)
-			return nil
-		}
-		if capoerrors.IsConflict(err) {
-			// we don't want to block deletion because of Conflict
-			// due to instance must be paused/active/shutoff in order to detach interface
-			return nil
-		}
-		record.Warnf(eventObject, "FailedDeleteAttachInterface", "Failed to delete attach interface: instance %s, port %s: %v", instance.ID, portID, err)
-		return err
-	}
-
-	record.Eventf(eventObject, "SuccessfulDeleteAttachInterface", "Deleted attach interface: instance %s, port %s", instance.ID, portID)
 	return nil
 }
 
