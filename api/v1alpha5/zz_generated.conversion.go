@@ -742,6 +742,7 @@ func autoConvert_v1alpha7_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(
 	if err := Convert_v1alpha7_APIServerLoadBalancer_To_v1alpha5_APIServerLoadBalancer(&in.APIServerLoadBalancer, &out.APIServerLoadBalancer, s); err != nil {
 		return err
 	}
+	// WARNING: in.EnableWorkersFloatingIP requires manual conversion: does not exist in peer-type
 	out.DisableAPIServerFloatingIP = in.DisableAPIServerFloatingIP
 	out.APIServerFloatingIP = in.APIServerFloatingIP
 	out.APIServerFixedIP = in.APIServerFixedIP
