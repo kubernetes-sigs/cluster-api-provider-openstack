@@ -295,6 +295,54 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "Changing OpenStackCluster.Spec.APIServerFloatingIP is allowed when it matches the current api server loadbalancer IP",
+			oldTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					APIServerFloatingIP: "",
+				},
+				Status: OpenStackClusterStatus{
+					APIServerLoadBalancer: &LoadBalancer{
+						IP: "1.2.3.4",
+					},
+				},
+			},
+			newTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					APIServerFloatingIP: "1.2.3.4",
+				},
+				Status: OpenStackClusterStatus{
+					APIServerLoadBalancer: &LoadBalancer{
+						IP: "1.2.3.4",
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Changing OpenStackCluster.Spec.APIServerFloatingIP is not allowed when it doesn't matches the current api server loadbalancer IP",
+			oldTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					APIServerFloatingIP: "",
+				},
+				Status: OpenStackClusterStatus{
+					APIServerLoadBalancer: &LoadBalancer{
+						IP: "1.2.3.4",
+					},
+				},
+			},
+			newTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					APIServerFloatingIP: "5.6.7.8",
+				},
+				Status: OpenStackClusterStatus{
+					APIServerLoadBalancer: &LoadBalancer{
+						IP: "1.2.3.4",
+					},
+				},
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
