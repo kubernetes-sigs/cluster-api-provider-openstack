@@ -20,4 +20,5 @@ spec:
       - name: cert
         secret:
           defaultMode: 420
-          secretName: $(SERVICE_NAME)-cert
+          # kustomize will populate this from the Certificate secretName
+          secretName: CERT_SECRET_NAME
