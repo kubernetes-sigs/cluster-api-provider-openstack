@@ -434,7 +434,8 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	}
 	conditions.MarkTrue(openStackMachine, infrav1.APIServerIngressReadyCondition)
 
-	if openStackCluster.Spec.WorkerFloatingIPConfig.Enabled {
+	// Apply floating ip on worker if enabled in openStackCluster spec
+	if !util.IsControlPlaneMachine(machine) && openStackCluster.Spec.WorkerFloatingIPConfig.Enabled {
 		scope.Logger().Info("Processing worker floating IPs")
 		for _, floatingIP := range openStackCluster.Spec.WorkerFloatingIPConfig.IPAddresses {
 			fp, err := networkingService.GetOrCreateFloatingIP(openStackMachine, openStackCluster, clusterName, floatingIP)
