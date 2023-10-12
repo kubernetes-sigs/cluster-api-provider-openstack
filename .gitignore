@@ -182,3 +182,7 @@ docs/book/book/
 
 # CAPO doesn't use vendorings
 vendor/
+
+# Ignore go workspaces
+go.work
+go.work.sum
