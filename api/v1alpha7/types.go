@@ -29,6 +29,11 @@ type ExternalRouterIPParam struct {
 	Subnet SubnetFilter `json:"subnet"`
 }
 
+type WorkerFloatingIPConfig struct {
+	Enabled     bool     `json:"enabled,omitempty"`
+	IPAddresses []string `json:"ipAddresses,omitempty"`
+}
+
 type SecurityGroupFilter struct {
 	ID          string `json:"id,omitempty"`
 	Name        string `json:"name,omitempty"`

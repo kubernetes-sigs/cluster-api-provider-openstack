@@ -273,6 +273,14 @@ func (r *OpenStackMachineReconciler) reconcileDelete(scope scope.Scope, cluster 
 		}
 	}
 
+	// If this is a worker node and it has a floating IP attached, disassociate it.
+	if !util.IsControlPlaneMachine(machine) && openStackMachine.Spec.FloatingIP != "" {
+		if err = networkingService.DisassociateFloatingIP(machine, openStackMachine.Spec.FloatingIP); err != nil {
+			conditions.MarkFalse(openStackMachine, infrav1.APIServerIngressReadyCondition, infrav1.FloatingIPErrorReason, clusterv1.ConditionSeverityError, "Disassociating floating IP failed: %v", err)
+			return ctrl.Result{}, fmt.Errorf("disassociate floating IP: %w", err)
+		}
+	}
+
 	instanceSpec := machineToInstanceSpec(openStackCluster, machine, openStackMachine, "")
 
 	if err := computeService.DeleteInstance(openStackCluster, openStackMachine, instanceStatus, instanceSpec); err != nil {
@@ -387,12 +395,12 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		return ctrl.Result{RequeueAfter: waitForInstanceBecomeActiveToReconcile}, nil
 	}
 
-	if !util.IsControlPlaneMachine(machine) {
+	if !util.IsControlPlaneMachine(machine) && !openStackCluster.Spec.WorkerFloatingIPConfig.Enabled {
 		scope.Logger().Info("Not a Control plane machine, no floating ip reconcile needed, Reconciled Machine create successfully")
 		return ctrl.Result{}, nil
 	}
 
-	if openStackCluster.Spec.APIServerLoadBalancer.Enabled {
+	if util.IsControlPlaneMachine(machine) && openStackCluster.Spec.APIServerLoadBalancer.Enabled {
 		err = r.reconcileLoadBalancerMember(scope, openStackCluster, openStackMachine, instanceNS, clusterName)
 		if err != nil {
 			conditions.MarkFalse(openStackMachine, infrav1.APIServerIngressReadyCondition, infrav1.LoadBalancerMemberErrorReason, clusterv1.ConditionSeverityError, "Reconciling load balancer member failed: %v", err)
@@ -425,6 +433,35 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		}
 	}
 	conditions.MarkTrue(openStackMachine, infrav1.APIServerIngressReadyCondition)
+
+	if openStackCluster.Spec.WorkerFloatingIPConfig.Enabled {
+		scope.Logger().Info("Processing worker floating IPs")
+		for _, floatingIP := range openStackCluster.Spec.WorkerFloatingIPConfig.IPAddresses {
+			fp, err := networkingService.GetOrCreateFloatingIP(openStackMachine, openStackCluster, clusterName, floatingIP)
+			if err != nil {
+				conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.FloatingIPErrorReason, clusterv1.ConditionSeverityError, "Floating IP cannot be obtained or created: %v", err)
+				return ctrl.Result{}, fmt.Errorf("get or create floating IP %q: %w", floatingIP, err)
+			}
+
+			port, err := computeService.GetManagementPort(openStackCluster, instanceStatus)
+			if err != nil {
+				conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.FloatingIPErrorReason, clusterv1.ConditionSeverityError, "Obtaining management port for worker machine failed: %v", err)
+				return ctrl.Result{}, fmt.Errorf("get management port for worker machine: %w", err)
+			}
+
+			if fp.PortID != "" {
+				scope.Logger().Info("Floating IP already associated to a port", "id", fp.ID, "fixedIP", fp.FixedIP, "portID", port.ID)
+			} else {
+				err = networkingService.AssociateFloatingIP(openStackMachine, fp, port.ID)
+				if err != nil {
+					conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.FloatingIPErrorReason, clusterv1.ConditionSeverityError, "Associating floating IP failed: %v", err)
+					return ctrl.Result{}, fmt.Errorf("associate floating IP %q to worker node with port %q: %w", fp.FloatingIP, port.ID, err)
+				}
+			}
+		}
+	} else {
+		scope.Logger().Info("Not processing worker floating IPs")
+	}
 
 	scope.Logger().Info("Reconciled Machine create successfully")
 	return ctrl.Result{}, nil

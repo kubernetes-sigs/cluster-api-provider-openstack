@@ -4166,12 +4166,6 @@ spec:
                   type: string
                 type: array
                 x-kubernetes-list-type: set
-              enableWorkersFloatingIP:
-                description: 'EnableWorkersFloatingIP determines whether or not to
-                  attempt to attach a floating IP to the worker nodes. This allows
-                  for the user to white list worker requests in external external
-                  services. It must be activated by setting `enabled: true`.'
-                type: boolean
               externalNetworkId:
                 description: ExternalNetworkID is the ID of an external OpenStack
                   Network. This is necessary to get public internet to the VMs.
@@ -4339,6 +4333,16 @@ spec:
                   type: string
                 type: array
                 x-kubernetes-list-type: set
+              workerFloatingIPConfig:
+                description: Configure floating IP for the worker nodes
+                properties:
+                  enabled:
+                    type: boolean
+                  ipAddresses:
+                    items:
+                      type: string
+                    type: array
+                type: object
             type: object
           status:
             description: OpenStackClusterStatus defines the observed state of OpenStackCluster.
