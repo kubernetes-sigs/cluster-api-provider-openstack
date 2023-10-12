@@ -131,6 +131,27 @@ func dumpOpenStack(_ context.Context, e2eCtx *E2EContext, bootstrapClusterProxyN
 	if err := dumpOpenStackSubnets(e2eCtx, logPath); err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "error dumping OpenStack subnets: %s\n", err)
 	}
+
+	if err := dumpOpenStackVolumes(e2eCtx, logPath); err != nil {
+		_, _ = fmt.Fprintf(GinkgoWriter, "error dumping OpenStack volumes: %s\n", err)
+	}
+}
+
+// dumpOpenStackVolumes returns all OpenStack volumes to a file in the artifact folder.
+func dumpOpenStackVolumes(e2eCtx *E2EContext, logPath string) error {
+	volumesList, err := DumpOpenStackVolumes(e2eCtx, volumes.ListOpts{})
+	if err != nil {
+		return err
+	}
+	volumesJSON, err := json.MarshalIndent(volumesList, "", "    ")
+	if err != nil {
+		return fmt.Errorf("error marshalling volumes %v: %s", volumesList, err)
+	}
+	if err := os.WriteFile(path.Join(logPath, "volumes.json"), volumesJSON, 0o600); err != nil {
+		return fmt.Errorf("error writing volumes.json %s: %s", volumesJSON, err)
+	}
+
+	return nil
 }
 
 func dumpOpenStackImages(providerClient *gophercloud.ProviderClient, clientOpts *clientconfig.ClientOpts, logPath string) error {
@@ -347,6 +368,31 @@ func DumpOpenStackSecurityGroups(e2eCtx *E2EContext, filter groups.ListOpts) ([]
 		return nil, fmt.Errorf("error extracting security groups: %s", err)
 	}
 	return groupsList, nil
+}
+
+// DumpOpenStackVolumes returns all OpenStack volumes to a file in the artifact folder.
+func DumpOpenStackVolumes(e2eCtx *E2EContext, filter volumes.ListOpts) ([]volumes.Volume, error) {
+	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
+	if err != nil {
+		return nil, err
+	}
+
+	blockStorageClient, err := openstack.NewBlockStorageV3(providerClient, gophercloud.EndpointOpts{
+		Region: clientOpts.RegionName,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error creating block storage client: %s", err)
+	}
+
+	allPages, err := volumes.List(blockStorageClient, filter).AllPages()
+	if err != nil {
+		return nil, fmt.Errorf("error listing volumes: %s", err)
+	}
+	volumesList, err := volumes.ExtractVolumes(allPages)
+	if err != nil {
+		return nil, fmt.Errorf("error extracting volumes: %s", err)
+	}
+	return volumesList, nil
 }
 
 func DumpOpenStackPorts(e2eCtx *E2EContext, filter ports.ListOpts) ([]ports.Port, error) {
