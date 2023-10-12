@@ -32,7 +32,6 @@ const OldCAPIVersion = "v1.4.6"
 
 var _ = Describe("When testing clusterctl upgrades (v0.6=>current) [clusterctl-upgrade]", func() {
 	ctx := context.TODO()
-	shared.SetEnvVar("USE_CI_ARTIFACTS", "true", false)
 	shared.SetEnvVar("DOWNLOAD_E2E_IMAGE", "true", false)
 
 	capi_e2e.ClusterctlUpgradeSpec(ctx, func() capi_e2e.ClusterctlUpgradeSpecInput {
@@ -56,7 +55,6 @@ var _ = Describe("When testing clusterctl upgrades (v0.6=>current) [clusterctl-u
 
 var _ = Describe("When testing clusterctl upgrades (v0.7=>current) [clusterctl-upgrade]", func() {
 	ctx := context.TODO()
-	shared.SetEnvVar("USE_CI_ARTIFACTS", "true", false)
 	shared.SetEnvVar("DOWNLOAD_E2E_IMAGE", "true", false)
 
 	capi_e2e.ClusterctlUpgradeSpec(ctx, func() capi_e2e.ClusterctlUpgradeSpecInput {

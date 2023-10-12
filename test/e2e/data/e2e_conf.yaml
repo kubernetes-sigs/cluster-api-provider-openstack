@@ -164,7 +164,7 @@ providers:
 variables:
   # used to ensure we deploy to the correct management cluster
   KUBE_CONTEXT: "kind-capo-e2e"
-  KUBERNETES_VERSION: "v1.27.2"
+  KUBERNETES_VERSION: "v1.28.2"
   CNI: "../../data/cni/calico.yaml"
   CCM: "../../data/ccm/cloud-controller-manager.yaml"
   EXP_CLUSTER_RESOURCE_SET: "true"
@@ -178,19 +178,19 @@ variables:
   OPENSTACK_DNS_NAMESERVERS: "8.8.8.8"
   OPENSTACK_FAILURE_DOMAIN: "testaz1"
   OPENSTACK_FAILURE_DOMAIN_ALT: "testaz2"
-  OPENSTACK_IMAGE_NAME: "ubuntu-2204-kube-v1.27.2"
+  OPENSTACK_IMAGE_NAME: "ubuntu-2204-kube-v1.28.2"
   OPENSTACK_NODE_MACHINE_FLAVOR: "m1.small"
   OPENSTACK_SSH_KEY_NAME: "cluster-api-provider-openstack-sigs-k8s-io"
   OPENSTACK_EXTERNAL_NETWORK_ID: ""
   OPENSTACK_VOLUME_TYPE_ALT: "test-volume-type"
   CONFORMANCE_WORKER_MACHINE_COUNT: "5"
   CONFORMANCE_CONTROL_PLANE_MACHINE_COUNT: "1"
-  INIT_WITH_KUBERNETES_VERSION: "v1.27.2"
+  INIT_WITH_KUBERNETES_VERSION: "v1.28.2"
   E2E_IMAGE_URL: "http://10.0.3.15/capo-e2e-image.tar"
   # The default user for SSH connections from bastion to machines
   SSH_USER_MACHINE: "ubuntu"
   EXP_KUBEADM_BOOTSTRAP_FORMAT_IGNITION: "true"
-  OPENSTACK_FLATCAR_IMAGE_NAME: "flatcar-stable-3602.2.0-kube-v1.27.2"
+  OPENSTACK_FLATCAR_IMAGE_NAME: "flatcar-stable-3602.2.0-kube-v1.28.2"
 
 intervals:
   conformance/wait-control-plane: ["30m", "10s"]

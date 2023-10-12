@@ -32,7 +32,6 @@ import (
 var _ = Describe("When testing unhealthy machines remediation", func() {
 	Describe("When testing MachineDeployment remediation", func() {
 		ctx := context.TODO()
-		shared.SetEnvVar("USE_CI_ARTIFACTS", "true", false)
 		capi_e2e.MachineDeploymentRemediationSpec(ctx, func() capi_e2e.MachineDeploymentRemediationSpecInput {
 			return capi_e2e.MachineDeploymentRemediationSpecInput{
 				E2EConfig:             e2eCtx.E2EConfig,

@@ -53,7 +53,6 @@ var _ = Describe("conformance tests", func() {
 	})
 	Measure(specName, func(b Benchmarker) {
 		name := fmt.Sprintf("cluster-%s", namespace.Name)
-		shared.SetEnvVar("USE_CI_ARTIFACTS", "true", false)
 		kubernetesVersion := e2eCtx.E2EConfig.GetVariable(shared.KubernetesVersion)
 
 		flavor := shared.FlavorDefault
@@ -106,7 +105,6 @@ var _ = Describe("conformance tests", func() {
 	}, 1)
 
 	AfterEach(func() {
-		shared.SetEnvVar("USE_CI_ARTIFACTS", "false", false)
 		// Dumps all the resources in the spec namespace, then cleanups the cluster object and the spec namespace itself.
 		shared.DumpSpecResourcesAndCleanup(ctx, specName, namespace, e2eCtx)
 	})
