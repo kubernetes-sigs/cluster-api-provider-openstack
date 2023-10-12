@@ -2,7 +2,7 @@
 - op: add
   path: /spec/template/spec/rootVolume
   value:
-    diskSize: 15
+    diskSize: 25
     volumeType: ${OPENSTACK_VOLUME_TYPE_ALT}
     availabilityZone: ${OPENSTACK_FAILURE_DOMAIN}
 - op: add

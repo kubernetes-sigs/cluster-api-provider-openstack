@@ -2,7 +2,7 @@
 - op: add
   path: /spec/template/spec/rootVolume
   value:
-    diskSize: 15
+    diskSize: 25
 - op: add
   path: /spec/template/spec/additionalBlockDevices
   value:

@@ -117,7 +117,7 @@ providers:
     contract: v1beta1
     files:
     - sourcePath: "../data/shared/v1beta1_provider/metadata.yaml"
-    - sourcePath: "./infrastructure-openstack/cluster-template.yaml"
+    - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template.yaml"
     replacements:
     - old: "imagePullPolicy: Always"
       new: "imagePullPolicy: IfNotPresent"
@@ -131,7 +131,7 @@ providers:
     contract: v1beta1
     files:
     - sourcePath: "../data/shared/v1beta1_provider/metadata.yaml"
-    - sourcePath: "./infrastructure-openstack/cluster-template.yaml"
+    - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template.yaml"
     replacements:
     - old: "imagePullPolicy: Always"
       new: "imagePullPolicy: IfNotPresent"
@@ -146,8 +146,8 @@ providers:
     # contract: v1beta1
     files:
     - sourcePath: "../data/shared/v1beta1_provider/metadata.yaml"
-    - sourcePath: "./infrastructure-openstack/cluster-template.yaml"
-    - sourcePath: "./infrastructure-openstack/cluster-template-without-lb.yaml"
+    - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template.yaml"
+    - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template-without-lb.yaml"
     replacements:
     - old: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:dev
       new: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e
@@ -165,10 +165,6 @@ variables:
   # used to ensure we deploy to the correct management cluster
   KUBE_CONTEXT: "kind-capo-e2e"
   KUBERNETES_VERSION: "v1.27.2"
-  KUBERNETES_VERSION_UPGRADE_FROM: "v1.26.5"
-  KUBERNETES_VERSION_UPGRADE_TO: "v1.27.2"
-  ETCD_VERSION_UPGRADE_TO: "3.5.6-0"
-  COREDNS_VERSION_UPGRADE_TO: "v1.9.3"
   CNI: "../../data/cni/calico.yaml"
   CCM: "../../data/ccm/cloud-controller-manager.yaml"
   EXP_CLUSTER_RESOURCE_SET: "true"
@@ -182,7 +178,7 @@ variables:
   OPENSTACK_DNS_NAMESERVERS: "8.8.8.8"
   OPENSTACK_FAILURE_DOMAIN: "testaz1"
   OPENSTACK_FAILURE_DOMAIN_ALT: "testaz2"
-  OPENSTACK_IMAGE_NAME: "focal-server-cloudimg-amd64"
+  OPENSTACK_IMAGE_NAME: "ubuntu-2204-kube-v1.27.2"
   OPENSTACK_NODE_MACHINE_FLAVOR: "m1.small"
   OPENSTACK_SSH_KEY_NAME: "cluster-api-provider-openstack-sigs-k8s-io"
   OPENSTACK_EXTERNAL_NETWORK_ID: ""

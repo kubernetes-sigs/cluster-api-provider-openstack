@@ -53,8 +53,17 @@
 
     # Don't download default images, just our test images
     DOWNLOAD_DEFAULT_IMAGES=False
+    # Increase the total image size limit
+    GLANCE_LIMIT_IMAGE_SIZE_TOTAL=20000
     # We upload the Amphora image so it doesn't have to be build
-    IMAGE_URLS="https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/amphora/2022-12-05/amphora-x64-haproxy.qcow2"
+    # Upload the images so we don't have to upload them from Prow
+    # NOTE: If you get issues when changing/adding images, check if the limits
+    # are sufficient and change the variable above if needed.
+    # https://docs.openstack.org/glance/latest/admin/quotas.html
+    IMAGE_URLS="https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/amphora/2022-12-05/amphora-x64-haproxy.qcow2,"
+    IMAGE_URLS+="https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/cirros/2022-12-05/cirros-0.6.1-x86_64-disk.img,"
+    IMAGE_URLS+="https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/ubuntu/2023-09-29/ubuntu-2204-kube-v1.27.2.img,"
+    IMAGE_URLS+="https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/flatcar/flatcar-stable-3602.2.0-kube-v1.27.2.img"
 
     [[post-config|$NOVA_CONF]]
     [DEFAULT]
@@ -132,13 +141,6 @@
     echo 'source /opt/stack/devstack/openrc admin admin' >> /opt/stack/.bashrc
 
     source /opt/stack/devstack/openrc admin admin
-
-    # Upload the images so we don't have to upload them from Prow
-    # Upload cirros image first in order to avoid reach limit of project
-    # https://docs.openstack.org/glance/latest/admin/quotas.html
-    /opt/stack/devstack/tools/upload_image.sh https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/cirros/2022-12-05/cirros-0.6.1-x86_64-disk.img
-    /opt/stack/devstack/tools/upload_image.sh https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/ubuntu/2023-01-14/focal-server-cloudimg-amd64.img
-    /opt/stack/devstack/tools/upload_image.sh https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/flatcar/flatcar-stable-3602.2.0-kube-v1.27.2.img
 
     # Add the controller to its own host aggregate and availability zone
     aggregateid=$(openstack aggregate create --zone "${PRIMARY_AZ}" "${PRIMARY_AZ}" -f value -c id)
