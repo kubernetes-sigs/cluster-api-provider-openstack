@@ -74,10 +74,33 @@ The image can be referenced by exposing it as an environment variable `OPENSTACK
 
 Some OS like [Fedora CoreOS](https://getfedora.org/en/coreos) or [Flatcar](https://www.flatcar.org/) do not use cloud-init but [Ignition](https://coreos.github.io/ignition/) to provision the instance. You need to enable the [Ignition experimental feature](https://cluster-api.sigs.k8s.io/tasks/experimental-features/ignition.html): `export EXP_KUBEADM_BOOTSTRAP_FORMAT_IGNITION=true`
 
-To use Flatcar image:
-* Build the image with the [image-builder](https://image-builder.sigs.k8s.io/capi/providers/openstack.html): `make OEM_ID=openstack build-qemu-flatcar`
-* Export the name of the uploaded image: `export OPENSTACK_FLATCAR_IMAGE_NAME=flatcar-stable-3374.2.5-kube-v1.25.6`
-* When generating the cluster configuration, use the following Cluster API [flavor](https://cluster-api.sigs.k8s.io/clusterctl/commands/generate-cluster.html?#flavors): `--flavor flatcar` (_NOTE_: Don't forget to refer to the [external-cloud-provider](https://cluster-api-openstack.sigs.k8s.io/topics/external-cloud-provider.html) section)
+Flatcar comes in two [flavor][flavor] variants:
+* `flatcar`
+
+  This variant relies on a Flatcar image built using the image-builder project: the Kubernetes version is bound to the Flatcar version and a rebuild of the image is required for each Kubernetes or Flatcar upgrade.
+
+  To build and use Flatcar image:
+    * Build the image with the [image-builder][image-builder]: `make OEM_ID=openstack build-qemu-flatcar`
+    * Upload the image
+    * Export the name of the uploaded image: `export OPENSTACK_FLATCAR_IMAGE_NAME=flatcar-stable-3374.2.5-kube-v1.25.6`
+    * When generating the cluster configuration, use the following Cluster API [flavor][flavor]: `--flavor flatcar` (_NOTE_: Don't forget to refer to the [external-cloud-provider][external-cloud-provider] section)
+
+* `flatcar-sysext`
+
+  This variant relies on a plain Flatcar image and it leverages [systemd-sysext][systemd-sysext] feature to install and update Kubernetes components: the Kubernetes version is not bound to the Flatcar version (i.e Flatcar can be independently upgraded from Kubernetes and vice versa).
+
+  The template comes with a [systemd-sysupdate][systemd-sysupdate] configuration file that will download each new patch version of Kubernetes (i.e if you start with Kubernetes 1.x.y, systemd-sysupdate will automatically pull 1.x.y+1 but not 1.x+1.y), please note that this behavior is disabled by default. To enable the Kubernetes auto-update you can:
+    * Update the template to enable the `systemd-sysupdate.timer`
+    * Or run the following command on the nodes: `sudo systemctl enable --now systemd-sysupdate.timer`
+
+  When the Kubernetes release reaches end-of-life it will not receive updates anymore. To switch to a new major version, do a `sudo rm /etc/sysupdate.kubernetes.d/kubernetes-*.conf` and download the new update config into the folder with `cd /etc/sysupdate.kubernetes.d && sudo wget https://github.com/flatcar/sysext-bakery/releases/download/latest/kubernetes-${KUBERNETES_VERSION%.*}.conf`.
+
+  To coordinate the node reboot, we recommend to use [Kured][kured]. Note that running `kubeadm upgrade apply` on the first controller and `kubeadm upgrade node` on all other nodes is not automated (yet), see the [docs](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/).
+
+  To use Flatcar image:
+    * Upload an image on OpenStack from the Flatcar release servers (e.g for Stable, you might use this image: https://stable.release.flatcar-linux.net/amd64-usr/current/flatcar_production_openstack_image.img)
+    * Export the name of the uploaded image: `export FLATCAR_IMAGE_NAME=flatcar_production_openstack_image`
+    * When generating the cluster configuration, use the following Cluster API [flavor][flavor]: `--flavor flatcar-sysext` (_NOTE_: Don't forget to refer to the [external-cloud-provider][external-cloud-provider] section)
 
 ## SSH key pair
 
@@ -640,3 +663,10 @@ $ kubectl get openstackcluster
 NAME    CLUSTER   READY   NETWORK                                SUBNET                                 BASTION
 nonha   nonha     true    2e2a2fad-28c0-4159-8898-c0a2241a86a7   53cb77ab-86a6-4f2c-8d87-24f8411f15de   10.0.0.213
 ```
+
+[external-cloud-provider]: https://cluster-api-openstack.sigs.k8s.io/topics/external-cloud-provider.html
+[flavor]: https://cluster-api.sigs.k8s.io/clusterctl/commands/generate-cluster.html?#flavors
+[image-builder]: https://image-builder.sigs.k8s.io/capi/providers/openstack.html
+[kured]: https://github.com/kubereboot/kured
+[systemd-sysext]: https://www.flatcar.org/docs/latest/provisioning/sysext/
+[systemd-sysupdate]: https://www.freedesktop.org/software/systemd/man/latest/sysupdate.d.html
