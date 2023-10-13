@@ -19,6 +19,7 @@ package loadbalancer
 import (
 	"errors"
 	"fmt"
+	"os"
 	"reflect"
 	"time"
 
@@ -40,8 +41,10 @@ import (
 )
 
 const (
-	networkPrefix   string = "k8s-clusterapi"
-	kubeapiLBSuffix string = "kubeapi"
+	networkPrefixEnvVar   string = "LB_NETWORK_PREFIX"
+	networkPrefix         string = "k8s-clusterapi"
+	kubeapiLBSuffixEnvVar string = "LB_KUBEAPI_SUFFIX"
+	kubeapiLBSuffix       string = "kubeapi"
 )
 
 const loadBalancerProvisioningStatusActive = "ACTIVE"
@@ -566,8 +569,21 @@ func (s *Service) DeleteLoadBalancerMember(openStackCluster *infrav1.OpenStackCl
 	return nil
 }
 
+func getLBPrefixAndSuffix() (string, string) {
+	suffix := kubeapiLBSuffix
+	if v := os.Getenv(kubeapiLBSuffixEnvVar); v != "" {
+		suffix = v
+	}
+	prefix := networkPrefix
+	if v := os.Getenv(networkPrefixEnvVar); v != "" {
+		prefix = v
+	}
+	return prefix, suffix
+}
+
 func getLoadBalancerName(clusterName string) string {
-	return fmt.Sprintf("%s-cluster-%s-%s", networkPrefix, clusterName, kubeapiLBSuffix)
+	prefix, suffix := getLBPrefixAndSuffix()
+	return fmt.Sprintf("%s-cluster-%s-%s", prefix, clusterName, suffix)
 }
 
 func (s *Service) checkIfLbExists(name string) (*loadbalancers.LoadBalancer, error) {
