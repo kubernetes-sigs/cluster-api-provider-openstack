@@ -273,14 +273,6 @@ func (r *OpenStackMachineReconciler) reconcileDelete(scope scope.Scope, cluster 
 		}
 	}
 
-	// If this is a worker node and it has a floating IP attached, disassociate it.
-	if !util.IsControlPlaneMachine(machine) && openStackMachine.Spec.FloatingIP != "" {
-		if err = networkingService.DisassociateFloatingIP(machine, openStackMachine.Spec.FloatingIP); err != nil {
-			conditions.MarkFalse(openStackMachine, infrav1.APIServerIngressReadyCondition, infrav1.FloatingIPErrorReason, clusterv1.ConditionSeverityError, "Disassociating floating IP failed: %v", err)
-			return ctrl.Result{}, fmt.Errorf("disassociate floating IP: %w", err)
-		}
-	}
-
 	instanceSpec := machineToInstanceSpec(openStackCluster, machine, openStackMachine, "")
 
 	if err := computeService.DeleteInstance(openStackCluster, openStackMachine, instanceStatus, instanceSpec); err != nil {
