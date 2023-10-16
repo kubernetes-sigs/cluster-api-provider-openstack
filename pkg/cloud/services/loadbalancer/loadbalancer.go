@@ -491,8 +491,14 @@ func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster,
 			if err = s.networkingService.DisassociateFloatingIP(openStackCluster, fip.FloatingIP); err != nil {
 				return err
 			}
-			if err = s.networkingService.DeleteFloatingIP(openStackCluster, fip.FloatingIP); err != nil {
-				return err
+
+			// If the floating is user-provider (BYO floating IP), don't delete it.
+			if openStackCluster.Spec.APIServerFloatingIP != fip.FloatingIP {
+				if err = s.networkingService.DeleteFloatingIP(openStackCluster, fip.FloatingIP); err != nil {
+					return err
+				}
+			} else {
+				s.scope.Logger().Info("Skipping load balancer floating IP deletion as it's a user-provided resource", "name", loadBalancerName, "fip", fip.FloatingIP)
 			}
 		}
 	}
