@@ -1,0 +1,9 @@
+---
+resources:
+- ../default
+- upgrade-from-template.yaml
+- upgrade-to-template.yaml
+
+patches:
+- path: kcp-patch.yaml
+- path: md-patch.yaml

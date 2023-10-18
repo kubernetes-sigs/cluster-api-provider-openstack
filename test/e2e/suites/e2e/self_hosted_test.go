@@ -30,23 +30,16 @@ import (
 
 var _ = Describe("When testing Cluster API provider Openstack working on [self-hosted] clusters", func() {
 	ctx := context.TODO()
-	shared.SetEnvVar("USE_CI_ARTIFACTS", "true", false)
 	shared.SetEnvVar("DOWNLOAD_E2E_IMAGE", "true", false)
-	// TODO(lentzi90): Since we currently rely on USE_CI_ARTIFACTS to get kubernetes set up,
-	// we are stuck with one version only and cannot do the k8s upgrade that is part of the
-	// SelfHostedSpec. The reason for this is that the script used to install kubernetes tools comes
-	// with the KubeadmControlPlane and that does not change when upgrading the k8s version
-	// (only the machineTemplate changes).
-	// Until we have a way to work around this, the k8s upgrade test is disabled.
 	capie2e.SelfHostedSpec(ctx, func() capie2e.SelfHostedSpecInput {
 		return capie2e.SelfHostedSpecInput{
 			E2EConfig:             e2eCtx.E2EConfig,
 			ClusterctlConfigPath:  e2eCtx.Environment.ClusterctlConfigPath,
 			BootstrapClusterProxy: e2eCtx.Environment.BootstrapClusterProxy,
 			ArtifactFolder:        e2eCtx.Settings.ArtifactFolder,
-			SkipUpgrade:           true,
+			SkipUpgrade:           false,
 			SkipCleanup:           false,
-			Flavor:                shared.FlavorDefault,
+			Flavor:                shared.FlavorKubernetesUpgrade,
 		}
 	})
 })
