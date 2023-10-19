@@ -81,7 +81,6 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 		clusterResources = new(clusterctl.ApplyClusterTemplateAndWaitResult)
 		Expect(e2eCtx.E2EConfig).ToNot(BeNil(), "Invalid argument. e2eConfig can't be nil when calling %s spec", specName)
 		Expect(e2eCtx.E2EConfig.Variables).To(HaveKey(shared.KubernetesVersion))
-		shared.SetEnvVar("USE_CI_ARTIFACTS", "false", false)
 		postClusterCleanup = nil
 	})
 
@@ -636,7 +635,6 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 	})
 
 	AfterEach(func() {
-		shared.SetEnvVar("USE_CI_ARTIFACTS", "false", false)
 		shared.Logf("Attempting to collect logs for cluster %q in namespace %q", clusterResources.Cluster.Name, namespace.Name)
 		e2eCtx.Environment.BootstrapClusterProxy.CollectWorkloadClusterLogs(ctx, namespace.Name, clusterResources.Cluster.Name, filepath.Join(e2eCtx.Settings.ArtifactFolder, "clusters", e2eCtx.Environment.BootstrapClusterProxy.GetName(), namespace.Name))
 		// Dumps all the resources in the spec namespace, then cleanups the cluster object and the spec namespace itself.
