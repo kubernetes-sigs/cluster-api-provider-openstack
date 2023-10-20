@@ -34,10 +34,13 @@ import (
 	_ "k8s.io/component-base/logs/json/register"
 	"k8s.io/klog/v2"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	"sigs.k8s.io/cluster-api/util/flags"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	cache "sigs.k8s.io/controller-runtime/pkg/cache"
+	client "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	infrav1alpha5 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha5"
 	infrav1alpha6 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
@@ -54,7 +57,7 @@ var (
 	setupLog = ctrl.Log.WithName("setup")
 
 	// flags.
-	metricsBindAddr             string
+	diagnosticsOptions          = flags.DiagnosticsOptions{}
 	enableLeaderElection        bool
 	leaderElectionLeaseDuration time.Duration
 	leaderElectionRenewDeadline time.Duration
@@ -91,8 +94,7 @@ func InitFlags(fs *pflag.FlagSet) {
 	logs.AddFlags(fs, logs.SkipLoggingConfigurationFlags())
 	logsv1.AddFlags(logOptions, fs)
 
-	fs.StringVar(&metricsBindAddr, "metrics-bind-addr", "localhost:8080",
-		"The address the metric endpoint binds to.")
+	flags.AddDiagnosticsOptions(fs, &diagnosticsOptions)
 
 	fs.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
@@ -143,6 +145,10 @@ func InitFlags(fs *pflag.FlagSet) {
 	fs.BoolVar(&showVersion, "version", false, "Show current version and exit.")
 }
 
+// Add RBAC for the authorized diagnostics endpoint.
+// +kubebuilder:rbac:groups=authentication.k8s.io,resources=tokenreviews,verbs=create
+// +kubebuilder:rbac:groups=authorization.k8s.io,resources=subjectaccessreviews,verbs=create
+
 func main() {
 	InitFlags(pflag.CommandLine)
 	pflag.CommandLine.SetNormalizeFunc(cliflag.WordSepNormalizeFunc)
@@ -183,22 +189,41 @@ func main() {
 		}
 	}
 
+	diagnosticsOpts := flags.GetDiagnosticsOptions(diagnosticsOptions)
+
+	var watchNamespaces map[string]cache.Config
+	if watchNamespace != "" {
+		watchNamespaces = map[string]cache.Config{
+			watchNamespace: {},
+		}
+	}
+
 	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
-		Scheme:             scheme,
-		MetricsBindAddress: metricsBindAddr,
-		LeaderElection:     enableLeaderElection,
-		LeaderElectionID:   "controller-leader-election-capo",
-		LeaseDuration:      &leaderElectionLeaseDuration,
-		RenewDeadline:      &leaderElectionRenewDeadline,
-		RetryPeriod:        &leaderElectionRetryPeriod,
-		Namespace:          watchNamespace,
-		SyncPeriod:         &syncPeriod,
-		ClientDisableCacheFor: []client.Object{
-			&corev1.ConfigMap{},
-			&corev1.Secret{},
+		Scheme:           scheme,
+		Metrics:          diagnosticsOpts,
+		LeaderElection:   enableLeaderElection,
+		LeaderElectionID: "controller-leader-election-capo",
+		LeaseDuration:    &leaderElectionLeaseDuration,
+		RenewDeadline:    &leaderElectionRenewDeadline,
+		RetryPeriod:      &leaderElectionRetryPeriod,
+		Cache: cache.Options{
+			DefaultNamespaces: watchNamespaces,
+			SyncPeriod:        &syncPeriod,
 		},
-		Port:                   webhookPort,
-		CertDir:                webhookCertDir,
+		Client: client.Options{
+			Cache: &client.CacheOptions{
+				DisableFor: []client.Object{
+					&corev1.ConfigMap{},
+					&corev1.Secret{},
+				},
+			},
+		},
+		WebhookServer: webhook.NewServer(
+			webhook.Options{
+				Port:    webhookPort,
+				CertDir: webhookCertDir,
+			},
+		),
 		HealthProbeBindAddress: healthAddr,
 	})
 	if err != nil {
