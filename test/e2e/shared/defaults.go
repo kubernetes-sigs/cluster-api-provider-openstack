@@ -53,6 +53,7 @@ const (
 	FlavorMDRemediation        = "md-remediation"
 	FlavorKCPRemediation       = "kcp-remediation"
 	FlavorFlatcar              = "flatcar"
+	FlavorKubernetesUpgrade    = "k8s-upgrade"
 )
 
 // DefaultScheme returns the default scheme to use for testing.

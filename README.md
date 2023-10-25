@@ -48,24 +48,27 @@ This provider's versions are compatible with the following versions of Cluster A
 
 This provider's versions are able to install and manage the following versions of Kubernetes:
 
-|                                    | v1.22 | v1.23 | v1.24 | v1.25 | v1.26 | v1.27 | v1.28 |
-|------------------------------------| ----- | ----- | ----- | ----- | ----- | ----- | ----- |
-| OpenStack Provider v1alpha5 (v0.6) | +     | ✓     | ✓     | ✓     | +     | +     | +     |
-| OpenStack Provider v1alpha6 (v0.7) | +     | ✓     | ✓     | ✓     | ✓     | ✓     | +     |
-| OpenStack Provider v1alpha7        | +     | +     | +     | +     | ✓     | ✓     | ✓     |
+|                                    | v1.25 | v1.26 | v1.27 | v1.28 |
+|------------------------------------| ----- | ----- | ----- | ----- |
+| OpenStack Provider v1alpha5 (v0.6) | ✓     | +     | +     | +     |
+| OpenStack Provider v1alpha6 (v0.7) | ✓     | ✓     | ✓     | +     |
+| OpenStack Provider v1alpha7        | +     | ✓     | ✓     | ★     |
 
 This provider's versions are able to install Kubernetes to the following versions of OpenStack:
 
 |                                    | Queens | Rocky | Stein | Train | Ussuri | Victoria | Wallaby | Xena | Yoga |
 |------------------------------------| ------ | ----- | ----- | ----- | ------ | -------- | ------- | ---- | ---- |
-| OpenStack Provider v1alpha5 (v0.6) | +      | +     | +     | +     | +      | ✓        | ✓       | ✓    | ✓    |
-| OpenStack Provider v1alpha6 (v0.7) | +      | +     | +     | +     | +      | ✓        | ✓       | ✓    | ✓    |
-| OpenStack Provider v1alpha7        |        | +     | +     | +     | +      | ✓        | ✓       | ✓    | ✓    |
+| OpenStack Provider v1alpha5 (v0.6) | +      | +     | +     | +     | +      | ✓        | ✓       | ✓    | ★    |
+| OpenStack Provider v1alpha6 (v0.7) | +      | +     | +     | +     | +      | ✓        | ✓       | ✓    | ★    |
+| OpenStack Provider v1alpha7        |        | +     | +     | +     | +      | ✓        | ✓       | ✓    | ★    |
 
 Test status:
 
-- `✓` tested
+- `★` currently testing
+- `✓` previously tested
 - `+` should work, but we weren't able to test it
+
+Older versions may also work but we have not verified.
 
 Each version of Cluster API for OpenStack will attempt to support two Kubernetes versions.
 

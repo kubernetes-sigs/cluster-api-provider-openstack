@@ -1,0 +1,43 @@
+# This is just a copy of the normal cluster template OSMTs.
+# It is needed because we need a static name that we can put in the e2e config.
+# The normal templates has the cluster name as part of the OSMT name.
+# See CONTROL_PLANE_MACHINE_TEMPLATE_UPGRADE_TO and WORKERS_MACHINE_TEMPLATE_UPGRADE_TO
+# in the e2e config.
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
+kind: OpenStackMachineTemplate
+metadata:
+  name: upgrade-to-control-plane
+  labels:
+    clusterctl.cluster.x-k8s.io/move: ""
+spec:
+  template:
+    spec:
+      cloudName: ${OPENSTACK_CLOUD}
+      flavor: ${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR}
+      identityRef:
+        kind: Secret
+        name: ${CLUSTER_NAME}-cloud-config
+      image: ${OPENSTACK_IMAGE_NAME}
+      sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
+      tags:
+      - control-plane
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
+kind: OpenStackMachineTemplate
+metadata:
+  name: upgrade-to-md-0
+  labels:
+    clusterctl.cluster.x-k8s.io/move: ""
+spec:
+  template:
+    spec:
+      cloudName: ${OPENSTACK_CLOUD}
+      flavor: ${OPENSTACK_NODE_MACHINE_FLAVOR}
+      identityRef:
+        kind: Secret
+        name: ${CLUSTER_NAME}-cloud-config
+      image: ${OPENSTACK_IMAGE_NAME}
+      sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
+      tags:
+      - machine
