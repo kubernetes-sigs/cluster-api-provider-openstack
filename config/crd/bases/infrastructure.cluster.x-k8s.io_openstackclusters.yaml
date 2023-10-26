@@ -3789,7 +3789,6 @@ spec:
                             sizeGiB:
                               description: SizeGiB is the size of the block device
                                 in gibibytes (GiB).
-                              minimum: 1
                               type: integer
                             storage:
                               description: Storage specifies the storage type of the
@@ -3798,9 +3797,6 @@ spec:
                                 type:
                                   description: Type is the type of block device to
                                     create. This can be either "Volume" or "Local".
-                                  enum:
-                                  - Volume
-                                  - Local
                                   type: string
                                 volume:
                                   description: Volume contains additional storage
@@ -3814,39 +3810,23 @@ spec:
                                         contain spaces otherwise it will lead to volume
                                         that belongs to this availability zone register
                                         failure, see kubernetes/cloud-provider-openstack#1379
-                                        for further information. The maximum length
-                                        of availability zone name is 63 as per labels
-                                        limits.
-                                      maxLength: 63
-                                      minLength: 1
+                                        for further information.
                                       type: string
-                                      x-kubernetes-validations:
-                                      - message: availabilityZone may not contain
-                                          spaces
-                                        rule: '!self.contains('' '')'
                                     type:
                                       description: Type is the Cinder volume type
                                         of the volume. If omitted, the default Cinder
                                         volume type that is configured in the OpenStack
-                                        cloud will be used. The maximum length of
-                                        a volume type name is 255 characters, as per
-                                        the OpenStack limit.
-                                      maxLength: 255
-                                      minLength: 1
+                                        cloud will be used.
                                       type: string
                                   type: object
                               required:
                               - type
                               type: object
-                              x-kubernetes-validations:
-                              - message: volume is forbidden when type is not Volume
-                                rule: self.type == 'Volume' || !has(self.volume)
                           required:
                           - name
                           - sizeGiB
                           - storage
                           type: object
-                        maxItems: 255
                         type: array
                         x-kubernetes-list-map-keys:
                         - name

@@ -165,15 +165,12 @@ type RootVolume struct {
 
 // BlockDeviceStorage is the storage type of a block device to create and
 // contains additional storage options.
-// +kubebuilder:validation:XValidation:rule="self.type == 'Volume' || !has(self.volume)",message="volume is forbidden when type is not Volume"
 // +union
 //
 //nolint:godot
 type BlockDeviceStorage struct {
 	// Type is the type of block device to create.
 	// This can be either "Volume" or "Local".
-	// +kubebuilder:validation:Enum="Volume";"Local"
-	// +kubebuilder:validation:Required
 	// +unionDiscriminator
 	Type BlockDeviceType `json:"type"`
 
@@ -188,9 +185,6 @@ type BlockDeviceVolume struct {
 	// Type is the Cinder volume type of the volume.
 	// If omitted, the default Cinder volume type that is configured in the OpenStack cloud
 	// will be used.
-	// The maximum length of a volume type name is 255 characters, as per the OpenStack limit.
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:MaxLength=255
 	// +optional
 	Type string `json:"type,omitempty"`
 
@@ -199,10 +193,6 @@ type BlockDeviceVolume struct {
 	// The availability zone must NOT contain spaces otherwise it will lead to volume that belongs
 	// to this availability zone register failure, see kubernetes/cloud-provider-openstack#1379 for
 	// further information.
-	// The maximum length of availability zone name is 63 as per labels limits.
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:MaxLength=63
-	// +kubebuilder:validation:XValidation:rule="!self.contains(' ')",message="availabilityZone may not contain spaces"
 	// +optional
 	AvailabilityZone string `json:"availabilityZone,omitempty"`
 }
@@ -215,17 +205,13 @@ type AdditionalBlockDevice struct {
 	// Also, this name will be used for tagging the block device.
 	// Information about the block device tag can be obtained from the OpenStack
 	// metadata API or the config drive.
-	// +kubebuilder:validation:Required
 	Name string `json:"name"`
 
 	// SizeGiB is the size of the block device in gibibytes (GiB).
-	// +kubebuilder:validation:Minimum=1
-	// +kubebuilder:validation:Required
 	SizeGiB int `json:"sizeGiB"`
 
 	// Storage specifies the storage type of the block device and
 	// additional storage options.
-	// +kubebuilder:validation:Required
 	Storage BlockDeviceStorage `json:"storage"`
 }
 
