@@ -18,9 +18,11 @@ package scope
 
 import (
 	"context"
+	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/golang/mock/gomock"
+	"github.com/gophercloud/gophercloud/openstack/identity/v3/tokens"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
@@ -104,4 +106,8 @@ func (f *MockScopeFactory) Logger() logr.Logger {
 
 func (f *MockScopeFactory) ProjectID() string {
 	return f.projectID
+}
+
+func (f *MockScopeFactory) ExtractToken() (*tokens.Token, error) {
+	return &tokens.Token{ExpiresAt: time.Now().Add(24 * time.Hour)}, nil
 }

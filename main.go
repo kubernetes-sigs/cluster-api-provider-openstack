@@ -71,6 +71,7 @@ var (
 	lbProvider                  string
 	caCertsPath                 string
 	showVersion                 bool
+	scopeCacheMaxSize           int
 	logOptions                  = logs.NewOptions()
 )
 
@@ -136,6 +137,8 @@ func InitFlags(fs *pflag.FlagSet) {
 		"The name of the load balancer provider (amphora or ovn) to use (defaults to amphora).")
 
 	fs.StringVar(&caCertsPath, "ca-certs", "", "The path to a PEM-encoded CA Certificate file to supply as default for each request.")
+
+	fs.IntVar(&scopeCacheMaxSize, "scope-cache-max-size", 10, "The maximum credentials count the operator should keep in cache. Setting this value to 0 means no cache.")
 
 	fs.BoolVar(&showVersion, "version", false, "Show current version and exit.")
 }
@@ -209,8 +212,10 @@ func main() {
 	// Initialize event recorder.
 	record.InitFromRecorder(mgr.GetEventRecorderFor("openstack-controller"))
 
+	scopeFactory := scope.NewFactory(scopeCacheMaxSize)
+
 	setupChecks(mgr)
-	setupReconcilers(ctx, mgr, caCerts)
+	setupReconcilers(ctx, mgr, caCerts, scopeFactory)
 	setupWebhooks(mgr)
 
 	// +kubebuilder:scaffold:builder
@@ -233,12 +238,12 @@ func setupChecks(mgr ctrl.Manager) {
 	}
 }
 
-func setupReconcilers(ctx context.Context, mgr ctrl.Manager, caCerts []byte) {
+func setupReconcilers(ctx context.Context, mgr ctrl.Manager, caCerts []byte, scopeFactory scope.Factory) {
 	if err := (&controllers.OpenStackClusterReconciler{
 		Client:           mgr.GetClient(),
 		Recorder:         mgr.GetEventRecorderFor("openstackcluster-controller"),
 		WatchFilterValue: watchFilterValue,
-		ScopeFactory:     scope.ScopeFactory,
+		ScopeFactory:     scopeFactory,
 		CaCertificates:   caCerts,
 	}).SetupWithManager(ctx, mgr, concurrency(openStackClusterConcurrency)); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "OpenStackCluster")
@@ -248,7 +253,7 @@ func setupReconcilers(ctx context.Context, mgr ctrl.Manager, caCerts []byte) {
 		Client:           mgr.GetClient(),
 		Recorder:         mgr.GetEventRecorderFor("openstackmachine-controller"),
 		WatchFilterValue: watchFilterValue,
-		ScopeFactory:     scope.ScopeFactory,
+		ScopeFactory:     scopeFactory,
 		CaCertificates:   caCerts,
 	}).SetupWithManager(ctx, mgr, concurrency(openStackMachineConcurrency)); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "OpenStackMachine")
