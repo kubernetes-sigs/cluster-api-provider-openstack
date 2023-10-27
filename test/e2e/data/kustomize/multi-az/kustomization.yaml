@@ -1,21 +1,22 @@
----
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
 resources:
 - ../default
 
 patches:
-- target:
+- path: patch-control-plane.yaml
+  target:
     kind: OpenStackCluster
     name: \${CLUSTER_NAME}
-  path: patch-control-plane.yaml
-- target:
+- path: patch-machine-deployment.yaml
+  target:
     kind: MachineDeployment
     name: \${CLUSTER_NAME}-md-0
-  path: patch-machine-deployment.yaml
-- target:
+- path: patch-machine-template-control-plane.yaml
+  target:
     kind: OpenStackMachineTemplate
     name: \${CLUSTER_NAME}-control-plane
-  path: patch-machine-template-control-plane.yaml
-- target:
+- path: patch-machine-template-worker.yaml
+  target:
     kind: OpenStackMachineTemplate
     name: \${CLUSTER_NAME}-md-0
-  path: patch-machine-template-worker.yaml

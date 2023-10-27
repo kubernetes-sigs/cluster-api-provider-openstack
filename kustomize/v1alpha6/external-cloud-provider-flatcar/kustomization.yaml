@@ -1,6 +1,7 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
 resources:
 - ../default
-
-patchesStrategicMerge:
-- patch-ccm.yaml
-- patch-flatcar.yaml
+patches:
+- path: patch-ccm.yaml
+- path: patch-flatcar.yaml
