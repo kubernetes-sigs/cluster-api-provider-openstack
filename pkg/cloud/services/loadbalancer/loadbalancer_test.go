@@ -17,6 +17,8 @@ limitations under the License.
 package loadbalancer
 
 import (
+	"errors"
+	"net"
 	"testing"
 
 	"github.com/go-logr/logr"
@@ -28,6 +30,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/pools"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/providers"
 	. "github.com/onsi/gomega"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha8"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
@@ -38,9 +41,24 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
+	// Stub the call to net.LookupHost
+	lookupHost = func(host string) (addrs string, err error) {
+		if net.ParseIP(host) != nil {
+			return host, nil
+		} else if host == "api.test-cluster.test" {
+			ips := []string{"192.168.100.10"}
+			return ips[0], nil
+		}
+		return "", errors.New("Unknown Host " + host)
+	}
+
 	openStackCluster := &infrav1.OpenStackCluster{
 		Spec: infrav1.OpenStackClusterSpec{
 			DisableAPIServerFloatingIP: true,
+			ControlPlaneEndpoint: clusterv1.APIEndpoint{
+				Host: "api.test-cluster.test",
+				Port: 6443,
+			},
 		},
 		Status: infrav1.OpenStackClusterStatus{
 			ExternalNetwork: &infrav1.NetworkStatus{

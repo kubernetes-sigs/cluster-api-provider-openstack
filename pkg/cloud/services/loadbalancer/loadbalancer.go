@@ -17,8 +17,10 @@ limitations under the License.
 package loadbalancer
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"net"
 	"slices"
 	"time"
 
@@ -27,7 +29,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/monitors"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/pools"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/utils/net"
+	utilsnet "k8s.io/utils/net"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util"
 
@@ -42,10 +44,28 @@ import (
 const (
 	networkPrefix   string = "k8s-clusterapi"
 	kubeapiLBSuffix string = "kubeapi"
+	resolvedMsg     string = "ControlPlaneEndpoint.Host is not an IP address, using the first resolved IP address"
 )
 
 const loadBalancerProvisioningStatusActive = "ACTIVE"
 
+// We wrap the LookupHost function in a variable to allow overriding it in unit tests.
+//
+//nolint:gocritic
+var lookupHost = func(host string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
+	defer cancel()
+	ips, err := net.DefaultResolver.LookupHost(ctx, host)
+	if err != nil {
+		return "", err
+	}
+	if ip := net.ParseIP(ips[0]); ip == nil {
+		return "", fmt.Errorf("failed to resolve IP address for host %s", host)
+	}
+	return ips[0], nil
+}
+
+// ReconcileLoadBalancer reconciles the load balancer for the given cluster.
 func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterName string, apiServerPort int) (bool, error) {
 	loadBalancerName := getLoadBalancerName(clusterName)
 	s.scope.Logger().Info("Reconciling load balancer", "name", loadBalancerName)
@@ -57,13 +77,18 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 	}
 
 	var fixedIPAddress string
+	var err error
+
 	switch {
 	case lbStatus.InternalIP != "":
 		fixedIPAddress = lbStatus.InternalIP
 	case openStackCluster.Spec.APIServerFixedIP != "":
 		fixedIPAddress = openStackCluster.Spec.APIServerFixedIP
 	case openStackCluster.Spec.DisableAPIServerFloatingIP && openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
-		fixedIPAddress = openStackCluster.Spec.ControlPlaneEndpoint.Host
+		fixedIPAddress, err = lookupHost(openStackCluster.Spec.ControlPlaneEndpoint.Host)
+		if err != nil {
+			return false, fmt.Errorf("lookup host: %w", err)
+		}
 	}
 
 	providers, err := s.loadbalancerClient.ListLoadBalancerProviders()
@@ -108,7 +133,10 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 		case openStackCluster.Spec.APIServerFloatingIP != "":
 			floatingIPAddress = openStackCluster.Spec.APIServerFloatingIP
 		case openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
-			floatingIPAddress = openStackCluster.Spec.ControlPlaneEndpoint.Host
+			floatingIPAddress, err = lookupHost(openStackCluster.Spec.ControlPlaneEndpoint.Host)
+			if err != nil {
+				return false, fmt.Errorf("lookup host: %w", err)
+			}
 		}
 		fp, err := s.networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterName, floatingIPAddress)
 		if err != nil {
@@ -308,9 +336,9 @@ func validateIPs(openStackCluster *infrav1.OpenStackCluster, definedCIDRs []stri
 
 	for _, v := range definedCIDRs {
 		switch {
-		case net.IsIPv4String(v):
+		case utilsnet.IsIPv4String(v):
 			marshaledCIDRs = append(marshaledCIDRs, v+"/32")
-		case net.IsIPv4CIDRString(v):
+		case utilsnet.IsIPv4CIDRString(v):
 			marshaledCIDRs = append(marshaledCIDRs, v)
 		default:
 			record.Warnf(openStackCluster, "FailedIPAddressValidation", "%s is not a valid IPv4 nor CIDR address and will not get applied to allowed_cidrs", v)
