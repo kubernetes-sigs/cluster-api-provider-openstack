@@ -126,6 +126,9 @@ linters-settings:
       - pkg: sigs.k8s.io/cluster-api/controlplane/kubeadm/api/v1beta1
         alias: controlplanev1
 
+  nolintlint:
+    # https://github.com/golangci/golangci-lint/issues/3228
+    allow-unused: true
   staticcheck:
     go: "1.17"
   stylecheck:

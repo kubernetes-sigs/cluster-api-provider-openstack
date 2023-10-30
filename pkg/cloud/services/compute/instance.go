@@ -438,19 +438,24 @@ func (s *Service) waitForVolume(volumeID string, timeout time.Duration, retryInt
 // getOrCreateVolumeBuilder gets or creates a volume with the given options. It returns the volume that already exists or the newly created one.
 // It returns an error if the volume creation failed or if the expected volume is different from the one that already exists.
 func (s *Service) getOrCreateVolumeBuilder(eventObject runtime.Object, instanceSpec *InstanceSpec, blockDevice infrav1.AdditionalBlockDevice, imageID string, description string) (*volumes.Volume, error) {
+	var volumeType string
 	availabilityZone := instanceSpec.FailureDomain
-	if blockDevice.AvailabilityZone != "" {
-		availabilityZone = blockDevice.AvailabilityZone
+
+	if blockDevice.Storage.Volume != nil {
+		if blockDevice.Storage.Volume.AvailabilityZone != "" {
+			availabilityZone = blockDevice.Storage.Volume.AvailabilityZone
+		}
+		volumeType = blockDevice.Storage.Volume.Type
 	}
 
 	createOpts := volumes.CreateOpts{
 		Name:             volumeName(instanceSpec.Name, blockDevice.Name),
 		Description:      description,
-		Size:             blockDevice.Size,
+		Size:             blockDevice.SizeGiB,
 		ImageID:          imageID,
 		Multiattach:      false,
 		AvailabilityZone: availabilityZone,
-		VolumeType:       blockDevice.VolumeType,
+		VolumeType:       volumeType,
 	}
 
 	return s.getOrCreateVolume(eventObject, createOpts)
@@ -463,10 +468,15 @@ func (s *Service) getBlockDevices(eventObject runtime.Object, instanceSpec *Inst
 
 	if hasRootVolume(instanceSpec) {
 		rootVolumeToBlockDevice := infrav1.AdditionalBlockDevice{
-			Name:             "root",
-			AvailabilityZone: instanceSpec.RootVolume.AvailabilityZone,
-			Size:             instanceSpec.RootVolume.Size,
-			VolumeType:       instanceSpec.RootVolume.VolumeType,
+			Name:    "root",
+			SizeGiB: instanceSpec.RootVolume.Size,
+			Storage: infrav1.BlockDeviceStorage{
+				Type: infrav1.VolumeBlockDevice,
+				Volume: &infrav1.BlockDeviceVolume{
+					AvailabilityZone: instanceSpec.RootVolume.AvailabilityZone,
+					Type:             instanceSpec.RootVolume.VolumeType,
+				},
+			},
 		}
 		rootVolume, err := s.getOrCreateVolumeBuilder(eventObject, instanceSpec, rootVolumeToBlockDevice, imageID, fmt.Sprintf("Root volume for %s", instanceSpec.Name))
 		if err != nil {
@@ -490,16 +500,39 @@ func (s *Service) getBlockDevices(eventObject runtime.Object, instanceSpec *Inst
 	}
 
 	for _, blockDeviceSpec := range instanceSpec.AdditionalBlockDevices {
-		blockDevice, err := s.getOrCreateVolumeBuilder(eventObject, instanceSpec, blockDeviceSpec, "", fmt.Sprintf("Additional block device for %s", instanceSpec.Name))
-		if err != nil {
-			return []bootfromvolume.BlockDevice{}, err
+		var bdUUID string
+		var localDiskSizeGiB int
+		var sourceType bootfromvolume.SourceType
+		var destinationType bootfromvolume.DestinationType
+
+		// There is also a validation in the openstackmachine webhook.
+		if blockDeviceSpec.Name == "root" {
+			return []bootfromvolume.BlockDevice{}, fmt.Errorf("block device name 'root' is reserved")
 		}
+
+		if blockDeviceSpec.Storage.Type == infrav1.VolumeBlockDevice {
+			blockDevice, err := s.getOrCreateVolumeBuilder(eventObject, instanceSpec, blockDeviceSpec, "", fmt.Sprintf("Additional block device for %s", instanceSpec.Name))
+			if err != nil {
+				return []bootfromvolume.BlockDevice{}, err
+			}
+			bdUUID = blockDevice.ID
+			sourceType = bootfromvolume.SourceVolume
+			destinationType = bootfromvolume.DestinationVolume
+		} else if blockDeviceSpec.Storage.Type == infrav1.LocalBlockDevice {
+			sourceType = bootfromvolume.SourceBlank
+			destinationType = bootfromvolume.DestinationLocal
+			localDiskSizeGiB = blockDeviceSpec.SizeGiB
+		} else {
+			return []bootfromvolume.BlockDevice{}, fmt.Errorf("invalid block device type %s", blockDeviceSpec.Storage.Type)
+		}
+
 		blockDevices = append(blockDevices, bootfromvolume.BlockDevice{
-			SourceType:          bootfromvolume.SourceVolume,
-			DestinationType:     bootfromvolume.DestinationVolume,
-			UUID:                blockDevice.ID,
+			SourceType:          sourceType,
+			DestinationType:     destinationType,
+			UUID:                bdUUID,
 			BootIndex:           -1,
 			DeleteOnTermination: true,
+			VolumeSize:          localDiskSizeGiB,
 			Tag:                 blockDeviceSpec.Name,
 		})
 	}
