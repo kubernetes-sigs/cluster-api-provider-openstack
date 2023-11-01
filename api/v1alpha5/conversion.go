@@ -504,3 +504,21 @@ func Convert_v1alpha8_OpenStackMachineStatus_To_v1alpha5_OpenStackMachineStatus(
 	// ReferencedResources have no equivalent in v1alpha5
 	return autoConvert_v1alpha8_OpenStackMachineStatus_To_v1alpha5_OpenStackMachineStatus(in, out, s)
 }
+
+func Convert_v1alpha8_Bastion_To_v1alpha5_Bastion(in *infrav1.Bastion, out *Bastion, s conversion.Scope) error {
+	err := autoConvert_v1alpha8_Bastion_To_v1alpha5_Bastion(in, out, s)
+	if err != nil {
+		return err
+	}
+	in.FloatingIP = out.Instance.FloatingIP
+	return nil
+}
+
+func Convert_v1alpha5_Bastion_To_v1alpha8_Bastion(in *Bastion, out *infrav1.Bastion, s conversion.Scope) error {
+	err := autoConvert_v1alpha5_Bastion_To_v1alpha8_Bastion(in, out, s)
+	if err != nil {
+		return err
+	}
+	in.Instance.FloatingIP = out.FloatingIP
+	return nil
+}

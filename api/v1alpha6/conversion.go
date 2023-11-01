@@ -40,6 +40,10 @@ func restorev1alpha6MachineSpec(previous *OpenStackMachineSpec, dst *OpenStackMa
 	dst.Networks = previous.Networks
 	dst.Ports = previous.Ports
 	dst.SecurityGroups = previous.SecurityGroups
+
+	// FloatingIP is removed from v1alpha7 with no replacement, so can't be
+	// losslessly converted. Restore the previously stored value on down-conversion.
+	dst.FloatingIP = previous.FloatingIP
 }
 
 func restorev1alpha6ClusterStatus(previous *OpenStackClusterStatus, dst *OpenStackClusterStatus) {
@@ -759,6 +763,7 @@ func Convert_v1alpha6_Bastion_To_v1alpha8_Bastion(in *Bastion, out *infrav1.Bast
 		out.Instance.ServerGroup = nil
 	}
 
+	out.FloatingIP = in.Instance.FloatingIP
 	return nil
 }
 
@@ -772,5 +777,6 @@ func Convert_v1alpha8_Bastion_To_v1alpha6_Bastion(in *infrav1.Bastion, out *Bast
 		out.Instance.ServerGroupID = in.Instance.ServerGroup.ID
 	}
 
+	out.Instance.FloatingIP = in.FloatingIP
 	return nil
 }

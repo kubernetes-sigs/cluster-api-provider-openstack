@@ -543,6 +543,7 @@ func autoConvert_v1alpha8_Bastion_To_v1alpha7_Bastion(in *v1alpha8.Bastion, out 
 		return err
 	}
 	out.AvailabilityZone = in.AvailabilityZone
+	// WARNING: in.FloatingIP requires manual conversion: does not exist in peer-type
 	return nil
 }
 
@@ -1236,7 +1237,7 @@ func autoConvert_v1alpha7_OpenStackMachineSpec_To_v1alpha8_OpenStackMachineSpec(
 	// WARNING: in.ImageUUID requires manual conversion: does not exist in peer-type
 	out.SSHKeyName = in.SSHKeyName
 	out.Ports = *(*[]v1alpha8.PortOpts)(unsafe.Pointer(&in.Ports))
-	out.FloatingIP = in.FloatingIP
+	// WARNING: in.FloatingIP requires manual conversion: does not exist in peer-type
 	out.SecurityGroups = *(*[]v1alpha8.SecurityGroupFilter)(unsafe.Pointer(&in.SecurityGroups))
 	out.Trunk = in.Trunk
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
@@ -1257,7 +1258,6 @@ func autoConvert_v1alpha8_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(
 	// WARNING: in.Image requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha8.ImageFilter vs string)
 	out.SSHKeyName = in.SSHKeyName
 	out.Ports = *(*[]PortOpts)(unsafe.Pointer(&in.Ports))
-	out.FloatingIP = in.FloatingIP
 	out.SecurityGroups = *(*[]SecurityGroupFilter)(unsafe.Pointer(&in.SecurityGroups))
 	out.Trunk = in.Trunk
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))

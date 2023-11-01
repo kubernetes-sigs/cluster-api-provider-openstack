@@ -65,6 +65,10 @@ var v1alpha8OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStack
 	),
 }
 
+func restorev1alpha7MachineSpec(previous *OpenStackMachineSpec, dst *OpenStackMachineSpec) {
+	dst.FloatingIP = previous.FloatingIP
+}
+
 func restorev1alpha8MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *infrav1.OpenStackMachineSpec) {
 	dst.ServerGroup = previous.ServerGroup
 	dst.Image = previous.Image
@@ -169,7 +173,14 @@ func (r *OpenStackClusterTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) error 
 
 var _ ctrlconversion.Convertible = &OpenStackMachine{}
 
-var v1alpha7OpenStackMachineRestorer = conversion.RestorerFor[*OpenStackMachine]{}
+var v1alpha7OpenStackMachineRestorer = conversion.RestorerFor[*OpenStackMachine]{
+	"spec": conversion.HashedFieldRestorer(
+		func(c *OpenStackMachine) *OpenStackMachineSpec {
+			return &c.Spec
+		},
+		restorev1alpha7MachineSpec,
+	),
+}
 
 var v1alpha8OpenStackMachineRestorer = conversion.RestorerFor[*infrav1.OpenStackMachine]{
 	"spec": conversion.HashedFieldRestorer(
@@ -221,7 +232,18 @@ func (r *OpenStackMachineList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 
 var _ ctrlconversion.Convertible = &OpenStackMachineTemplate{}
 
-var v1alpha7OpenStackMachineTemplateRestorer = conversion.RestorerFor[*OpenStackMachineTemplate]{}
+func restorev1alpha7MachineTemplateSpec(previous *OpenStackMachineTemplateSpec, dst *OpenStackMachineTemplateSpec) {
+	restorev1alpha7MachineSpec(&previous.Template.Spec, &dst.Template.Spec)
+}
+
+var v1alpha7OpenStackMachineTemplateRestorer = conversion.RestorerFor[*OpenStackMachineTemplate]{
+	"spec": conversion.HashedFieldRestorer(
+		func(c *OpenStackMachineTemplate) *OpenStackMachineTemplateSpec {
+			return &c.Spec
+		},
+		restorev1alpha7MachineTemplateSpec,
+	),
+}
 
 var v1alpha8OpenStackMachineTemplateRestorer = conversion.RestorerFor[*infrav1.OpenStackMachineTemplate]{
 	"spec": conversion.HashedFieldRestorer(
@@ -331,6 +353,7 @@ func Convert_v1alpha7_Bastion_To_v1alpha8_Bastion(in *Bastion, out *infrav1.Bast
 		out.Instance.ServerGroup = nil
 	}
 
+	out.FloatingIP = in.Instance.FloatingIP
 	return nil
 }
 
@@ -344,6 +367,7 @@ func Convert_v1alpha8_Bastion_To_v1alpha7_Bastion(in *infrav1.Bastion, out *Bast
 		out.Instance.ServerGroupID = in.Instance.ServerGroup.ID
 	}
 
+	out.Instance.FloatingIP = in.FloatingIP
 	return nil
 }
 
