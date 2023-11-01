@@ -8,6 +8,7 @@
     - [`OpenStackMachine`](#openstackmachine)
       - [⚠️ Removal of networks](#-removal-of-networks)
       - [Removal of subnet](#removal-of-subnet)
+      - [Change to floatingIP](#change-to-floatingip)
       - [Change to securityGroups](#change-to-securitygroups)
       - [Changes to ports](#changes-to-ports)
         - [Change to securityGroupFilters](#change-to-securitygroupfilters)
@@ -120,6 +121,38 @@ The OpenStackMachine spec previously contained a `subnet` field which could used
 to set the `accessIPv4` field on Nova servers. This feature was not widely
 used, difficult to use, and could not be extended to support IPv6. It is
 removed without replacement.
+
+#### Change to floatingIP
+
+The `OpenStackMachineSpec.FloatingIP` field has moved to `OpenStackClusterSpec.Bastion.FloatingIP`.
+For example, if you had the following `OpenStackMachineTemplate`:
+
+```yaml
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+kind: OpenStackMachineTemplate
+metadata:
+  name: ${CLUSTER_NAME}-md-0
+spec:
+  template:
+    spec:
+      ..
+      floatingIP: "1.2.3.4"
+```
+
+This will safely converted to use `Bastion.FloatingIP` when upgrading to version 0.8.
+
+To use the new `Bastion.FloatingIP` field, here is an example:
+
+```yaml
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
+kind: OpenStackCluster
+metadata:
+  name: ${CLUSTER_NAME}
+spec:
+  ..
+  bastion:
+    floatingIP: "1.2.3.4"
+```
 
 #### Change to securityGroups
 

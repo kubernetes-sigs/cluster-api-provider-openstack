@@ -344,6 +344,11 @@ type Bastion struct {
 
 	//+optional
 	AvailabilityZone string `json:"availabilityZone,omitempty"`
+
+	// FloatingIP which will be associated to the bastion machine.
+	// The floating IP should already exist and should not be associated with a port.
+	//+optional
+	FloatingIP string `json:"floatingIP,omitempty"`
 }
 
 type APIServerLoadBalancer struct {

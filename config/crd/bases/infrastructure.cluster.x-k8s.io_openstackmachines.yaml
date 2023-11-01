@@ -1226,11 +1226,6 @@ spec:
               flavor:
                 description: The flavor reference for the flavor for your server instance.
                 type: string
-              floatingIP:
-                description: The floatingIP which will be associated to the machine,
-                  only used for master. The floatingIP should have been created and
-                  haven't been associated.
-                type: string
               identityRef:
                 description: IdentityRef is a reference to a identity to be used when
                   reconciling this cluster
