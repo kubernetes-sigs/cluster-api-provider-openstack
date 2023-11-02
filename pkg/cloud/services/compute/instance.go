@@ -439,12 +439,15 @@ func (s *Service) waitForVolume(volumeID string, timeout time.Duration, retryInt
 // It returns an error if the volume creation failed or if the expected volume is different from the one that already exists.
 func (s *Service) getOrCreateVolumeBuilder(eventObject runtime.Object, instanceSpec *InstanceSpec, blockDevice infrav1.AdditionalBlockDevice, imageID string, description string) (*volumes.Volume, error) {
 	var volumeType string
-	availabilityZone := instanceSpec.FailureDomain
+	var availabilityZone string
 
 	if blockDevice.Storage.Volume != nil {
 		if blockDevice.Storage.Volume.AvailabilityZone != "" {
 			availabilityZone = blockDevice.Storage.Volume.AvailabilityZone
+		} else if blockDevice.Storage.Volume.UseMachineAZ {
+			availabilityZone = instanceSpec.FailureDomain
 		}
+
 		volumeType = blockDevice.Storage.Volume.Type
 	}
 
@@ -475,6 +478,7 @@ func (s *Service) getBlockDevices(eventObject runtime.Object, instanceSpec *Inst
 				Volume: &infrav1.BlockDeviceVolume{
 					AvailabilityZone: instanceSpec.RootVolume.AvailabilityZone,
 					Type:             instanceSpec.RootVolume.VolumeType,
+					UseMachineAZ:     instanceSpec.RootVolume.UseMachineAZ,
 				},
 			},
 		}

@@ -61,6 +61,11 @@ func restorev1alpha7MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *inf
 	// We restore the whole Ports since they are anyway immutable.
 	dst.Ports = previous.Ports
 	dst.AdditionalBlockDevices = previous.AdditionalBlockDevices
+
+	if previous.RootVolume != nil && dst.RootVolume != nil {
+		// UseMachineAZ = false cannot be represented in v1alpha6
+		dst.RootVolume.UseMachineAZ = previous.RootVolume.UseMachineAZ
+	}
 }
 
 func restorev1alpha7Bastion(previous **infrav1.Bastion, dst **infrav1.Bastion) {
@@ -658,4 +663,22 @@ func Convert_v1alpha6_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(
 
 func Convert_v1alpha7_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(in *infrav1.OpenStackMachineSpec, out *OpenStackMachineSpec, s apiconversion.Scope) error {
 	return autoConvert_v1alpha7_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(in, out, s)
+}
+
+func Convert_v1alpha7_RootVolume_To_v1alpha6_RootVolume(in *infrav1.RootVolume, out *RootVolume, s apiconversion.Scope) error {
+	// UseMachineAZ = false cannot be represented in v1alpha6
+	return autoConvert_v1alpha7_RootVolume_To_v1alpha6_RootVolume(in, out, s)
+}
+
+func Convert_v1alpha6_RootVolume_To_v1alpha7_RootVolume(in *RootVolume, out *infrav1.RootVolume, s apiconversion.Scope) error {
+	if err := autoConvert_v1alpha6_RootVolume_To_v1alpha7_RootVolume(in, out, s); err != nil {
+		return err
+	}
+
+	// UseMachineAZ was the default behaviour in v1alpha6 when AvailabilityZone was not specified, but in v1alpha7 the default is to use no AZ.
+	if in.AvailabilityZone == "" {
+		out.UseMachineAZ = true
+	}
+
+	return nil
 }

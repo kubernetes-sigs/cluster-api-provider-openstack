@@ -437,3 +437,21 @@ func Convert_v1alpha5_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(
 func Convert_v1alpha7_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(in *infrav1.OpenStackMachineSpec, out *OpenStackMachineSpec, s conversion.Scope) error {
 	return autoConvert_v1alpha7_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(in, out, s)
 }
+
+func Convert_v1alpha7_RootVolume_To_v1alpha5_RootVolume(in *infrav1.RootVolume, out *RootVolume, s conversion.Scope) error {
+	// UseMachineAZ = false cannot be represented in v1alpha5
+	return autoConvert_v1alpha7_RootVolume_To_v1alpha5_RootVolume(in, out, s)
+}
+
+func Convert_v1alpha5_RootVolume_To_v1alpha7_RootVolume(in *RootVolume, out *infrav1.RootVolume, s conversion.Scope) error {
+	if err := autoConvert_v1alpha5_RootVolume_To_v1alpha7_RootVolume(in, out, s); err != nil {
+		return err
+	}
+
+	// UseMachineAZ was the default behaviour in v1alpha5 when AvailabilityZone was not specified, but in v1alpha7 the default is to use no AZ.
+	if in.AvailabilityZone == "" {
+		out.UseMachineAZ = true
+	}
+
+	return nil
+}
