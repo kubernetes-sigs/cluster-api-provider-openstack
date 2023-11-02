@@ -214,7 +214,9 @@ profile:
   TrustedVF: true
 ```
 
-#### Creation of additionalBlockDevices
+#### Changes to volumes
+
+##### Creation of additionalBlockDevices
 
 We now have the ability for a machine to have additional block devices to be attached.
 
@@ -255,6 +257,20 @@ additionalBlockDevices
 
 Adding more than one ephemeral disk to an instance is possible but you should use it at your own risks, it has been
 known to cause some issues in some environments.
+
+##### Changes to volume availability zone defaults
+
+We previously defaulted to using the AZ of the underlying server instance in the absence of a specified volume AZ.
+This behaviour has now changed and the volume AZ will remain unset if a volume AZ is not specified.
+You can opt-in to the previous behavior by setting `useMachineAZ` for any volumes that you wish to default to the server instance's AZ for.
+
+Here is an example of a root volume configured to use the server instance's AZ:
+
+```yaml
+rootVolume:
+  diskSize: 10
+  useMachineAZ: true
+```
 
 ### `OpenStackCluster`
 
