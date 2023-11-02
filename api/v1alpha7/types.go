@@ -158,8 +158,15 @@ type BastionStatus struct {
 }
 
 type RootVolume struct {
-	Size             int    `json:"diskSize,omitempty"`
-	VolumeType       string `json:"volumeType,omitempty"`
+	// Size specifies the root volume size in GB.
+	// +required
+	Size int `json:"diskSize,omitempty"`
+
+	// VolumeType specifies the Cinder Volume Type to use for the root volume
+	VolumeType string `json:"volumeType,omitempty"`
+
+	// AvailabilityZone specifies the Cinder Availability Zone to use for the root volume.
+	// Leave empty to allow Cinder to schedule the volume without an availability zone.
 	AvailabilityZone string `json:"availabilityZone,omitempty"`
 }
 

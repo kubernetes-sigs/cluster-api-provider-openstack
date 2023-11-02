@@ -1460,10 +1460,16 @@ spec:
                 description: The volume metadata to boot from
                 properties:
                   availabilityZone:
+                    description: AvailabilityZone specifies the Cinder Availability
+                      Zone to use for the root volume. Leave empty to allow Cinder
+                      to schedule the volume without an availability zone.
                     type: string
                   diskSize:
+                    description: Size specifies the root volume size in GB.
                     type: integer
                   volumeType:
+                    description: VolumeType specifies the Cinder Volume Type to use
+                      for the root volume
                     type: string
                 type: object
               securityGroups:
