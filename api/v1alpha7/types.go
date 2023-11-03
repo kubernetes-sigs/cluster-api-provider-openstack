@@ -158,9 +158,22 @@ type BastionStatus struct {
 }
 
 type RootVolume struct {
-	Size             int    `json:"diskSize,omitempty"`
-	VolumeType       string `json:"volumeType,omitempty"`
+	// Size specifies the root volume size in GB.
+	// +required
+	Size int `json:"diskSize,omitempty"`
+
+	// VolumeType specifies the Cinder Volume Type to use for the root volume
+	VolumeType string `json:"volumeType,omitempty"`
+
+	// AvailabilityZone specifies the Cinder Availability Zone to use for the root volume.
+	// Leave empty to allow Cinder to schedule the volume without an availability zone.
 	AvailabilityZone string `json:"availabilityZone,omitempty"`
+
+	// UseMachineAZ specifies that the root volume should be created in a cinder
+	// availability zone with the same name as the nova availability zone of the server,
+	// if any.
+	// It is an error to specify both AvailabilityZone and UseMachineAZ.
+	UseMachineAZ bool `json:"useMachineAZ,omitempty"`
 }
 
 // BlockDeviceStorage is the storage type of a block device to create and
@@ -195,6 +208,13 @@ type BlockDeviceVolume struct {
 	// further information.
 	// +optional
 	AvailabilityZone string `json:"availabilityZone,omitempty"`
+
+	// UseMachineAZ specifies that the root volume should be created in a cinder
+	// availability zone with the same name as the nova availability zone of the server,
+	// if any.
+	// It is an error to specify both AvailabilityZone and UseMachineAZ.
+	// +optional
+	UseMachineAZ bool `json:"useMachineAZ,omitempty"`
 }
 
 // AdditionalBlockDevice is a block device to attach to the server.

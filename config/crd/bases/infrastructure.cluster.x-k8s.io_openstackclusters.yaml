@@ -3818,6 +3818,14 @@ spec:
                                         volume type that is configured in the OpenStack
                                         cloud will be used.
                                       type: string
+                                    useMachineAZ:
+                                      description: UseMachineAZ specifies that the
+                                        root volume should be created in a cinder
+                                        availability zone with the same name as the
+                                        nova availability zone of the server, if any.
+                                        It is an error to specify both AvailabilityZone
+                                        and UseMachineAZ.
+                                      type: boolean
                                   type: object
                               required:
                               - type
@@ -4084,10 +4092,24 @@ spec:
                         description: The volume metadata to boot from
                         properties:
                           availabilityZone:
+                            description: AvailabilityZone specifies the Cinder Availability
+                              Zone to use for the root volume. Leave empty to allow
+                              Cinder to schedule the volume without an availability
+                              zone.
                             type: string
                           diskSize:
+                            description: Size specifies the root volume size in GB.
                             type: integer
+                          useMachineAZ:
+                            description: UseMachineAZ specifies that the root volume
+                              should be created in a cinder availability zone with
+                              the same name as the nova availability zone of the server,
+                              if any. It is an error to specify both AvailabilityZone
+                              and UseMachineAZ.
+                            type: boolean
                           volumeType:
+                            description: VolumeType specifies the Cinder Volume Type
+                              to use for the root volume
                             type: string
                         type: object
                       securityGroups:
