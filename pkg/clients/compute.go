@@ -67,7 +67,8 @@ type computeClient struct{ client *gophercloud.ServiceClient }
 // NewComputeClient returns a new compute client.
 func NewComputeClient(providerClient *gophercloud.ProviderClient, providerClientOpts *clientconfig.ClientOpts) (ComputeClient, error) {
 	compute, err := openstack.NewComputeV2(providerClient, gophercloud.EndpointOpts{
-		Region: providerClientOpts.RegionName,
+		Region:       providerClientOpts.RegionName,
+		Availability: clientconfig.GetEndpointType(providerClientOpts.EndpointType),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create compute service client: %v", err)
