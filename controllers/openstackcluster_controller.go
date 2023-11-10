@@ -349,7 +349,7 @@ func reconcileBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackCl
 		}
 	}
 
-	instanceStatus, err = computeService.CreateInstance(openStackCluster, openStackCluster, instanceSpec, cluster.Name, true)
+	instanceStatus, err = computeService.CreateInstance(openStackCluster, openStackCluster, instanceSpec, cluster.Name)
 	if err != nil {
 		return fmt.Errorf("failed to reconcile bastion: %w", err)
 	}
