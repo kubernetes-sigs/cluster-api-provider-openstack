@@ -238,6 +238,16 @@ func Convert_v1alpha5_PortOpts_To_v1alpha7_PortOpts(in *PortOpts, out *infrav1.P
 	return nil
 }
 
+func Convert_v1alpha5_OpenStackMachineSpec_To_v1alpha7_Bastion(in *OpenStackMachineSpec, out *infrav1.Bastion, _ conversion.Scope) error {
+	out.FloatingIP = in.FloatingIP
+	return nil
+}
+
+func Convert_v1alpha7_Bastion_To_v1alpha5_OpenStackMachineSpec(in *infrav1.Bastion, out *OpenStackMachineSpec, _ conversion.Scope) error {
+	out.FloatingIP = in.FloatingIP
+	return nil
+}
+
 func Convert_v1alpha5_Instance_To_v1alpha7_BastionStatus(in *Instance, out *infrav1.BastionStatus, _ conversion.Scope) error {
 	// BastionStatus is the same as Instance with unused fields removed
 	out.ID = in.ID
@@ -436,4 +446,13 @@ func Convert_v1alpha5_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(
 
 func Convert_v1alpha7_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(in *infrav1.OpenStackMachineSpec, out *OpenStackMachineSpec, s conversion.Scope) error {
 	return autoConvert_v1alpha7_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(in, out, s)
+}
+
+func Convert_v1alpha7_Bastion_To_v1alpha5_Bastion(in *infrav1.Bastion, out *Bastion, s conversion.Scope) error {
+	err := autoConvert_v1alpha7_Bastion_To_v1alpha5_Bastion(in, out, s)
+	if err != nil {
+		return err
+	}
+	in.FloatingIP = out.Instance.FloatingIP
+	return nil
 }

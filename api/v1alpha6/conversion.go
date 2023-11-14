@@ -40,6 +40,10 @@ func restorev1alpha6MachineSpec(previous *OpenStackMachineSpec, dst *OpenStackMa
 	dst.Networks = previous.Networks
 	dst.Ports = previous.Ports
 	dst.SecurityGroups = previous.SecurityGroups
+
+	// FloatingIP is removed from v1alpha7 with no replacement, so can't be
+	// losslessly converted. Restore the previously stored value on down-conversion.
+	dst.FloatingIP = previous.FloatingIP
 }
 
 func restorev1alpha6ClusterStatus(previous *OpenStackClusterStatus, dst *OpenStackClusterStatus) {
@@ -472,6 +476,16 @@ func Convert_v1alpha7_PortOpts_To_v1alpha6_PortOpts(in *infrav1.PortOpts, out *P
 	return nil
 }
 
+func Convert_v1alpha6_OpenStackMachineSpec_To_v1alpha7_Bastion(in *OpenStackMachineSpec, out *infrav1.Bastion, _ apiconversion.Scope) error {
+	out.FloatingIP = in.FloatingIP
+	return nil
+}
+
+func Convert_v1alpha7_Bastion_To_v1alpha6_OpenStackMachineSpec(in *infrav1.Bastion, out *OpenStackMachineSpec, _ apiconversion.Scope) error {
+	out.FloatingIP = in.FloatingIP
+	return nil
+}
+
 func Convert_v1alpha6_Instance_To_v1alpha7_BastionStatus(in *Instance, out *infrav1.BastionStatus, _ apiconversion.Scope) error {
 	// BastionStatus is the same as Instance with unused fields removed
 	out.ID = in.ID
@@ -658,4 +672,13 @@ func Convert_v1alpha6_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(
 
 func Convert_v1alpha7_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(in *infrav1.OpenStackMachineSpec, out *OpenStackMachineSpec, s apiconversion.Scope) error {
 	return autoConvert_v1alpha7_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(in, out, s)
+}
+
+func Convert_v1alpha7_Bastion_To_v1alpha6_Bastion(in *infrav1.Bastion, out *Bastion, s apiconversion.Scope) error {
+	err := autoConvert_v1alpha7_Bastion_To_v1alpha6_Bastion(in, out, s)
+	if err != nil {
+		return err
+	}
+	in.FloatingIP = out.Instance.FloatingIP
+	return nil
 }
