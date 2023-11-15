@@ -198,6 +198,7 @@ func NewProviderClient(cloud clientconfig.Cloud, caCert []byte, logger logr.Logg
 		clientOpts.AuthInfo = cloud.AuthInfo
 		clientOpts.AuthType = cloud.AuthType
 		clientOpts.RegionName = cloud.RegionName
+		clientOpts.EndpointType = cloud.EndpointType
 	}
 
 	opts, err := clientconfig.AuthOptions(clientOpts)
