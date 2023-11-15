@@ -153,6 +153,8 @@ The DNS servers must be exposed as an environment variable `OPENSTACK_DNS_NAMESE
 
 The flavors for control plane and worker node machines must be exposed as environment variables `OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR` and `OPENSTACK_NODE_MACHINE_FLAVOR` respectively.
 
+The recommmend minimum value of control plane flavor's vCPU is 2 and minimum value of worker node flavor's vCPU is 1.
+
 # Optional Configuration
 
 ## Log level

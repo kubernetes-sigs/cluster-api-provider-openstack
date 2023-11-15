@@ -976,7 +976,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 			}
 
 			// Call CreateInstance with a reduced retry interval to speed up the test
-			_, err = s.createInstanceImpl(&infrav1.OpenStackMachine{}, getDefaultOpenStackCluster(), tt.getInstanceSpec(), "cluster-name", false, time.Nanosecond)
+			_, err = s.createInstanceImpl(&infrav1.OpenStackMachine{}, getDefaultOpenStackCluster(), tt.getInstanceSpec(), "cluster-name", time.Nanosecond)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Service.CreateInstance() error = %v, wantErr %v", err, tt.wantErr)
 				return

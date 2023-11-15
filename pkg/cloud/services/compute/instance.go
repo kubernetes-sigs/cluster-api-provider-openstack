@@ -221,23 +221,20 @@ func (s *Service) constructPorts(openStackCluster *infrav1.OpenStackCluster, ins
 	return ports, nil
 }
 
-func (s *Service) CreateInstance(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec, clusterName string, isBastion bool) (*InstanceStatus, error) {
-	return s.createInstanceImpl(eventObject, openStackCluster, instanceSpec, clusterName, isBastion, retryIntervalInstanceStatus)
+func (s *Service) CreateInstance(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec, clusterName string) (*InstanceStatus, error) {
+	return s.createInstanceImpl(eventObject, openStackCluster, instanceSpec, clusterName, retryIntervalInstanceStatus)
 }
 
-func (s *Service) getAndValidateFlavor(flavorName string, isBastion bool) (*flavors.Flavor, error) {
+func (s *Service) getAndValidateFlavor(flavorName string) (*flavors.Flavor, error) {
 	f, err := s.getComputeClient().GetFlavorFromName(flavorName)
 	if err != nil {
 		return nil, fmt.Errorf("error getting flavor from flavor name %s: %v", flavorName, err)
-	}
-	if !isBastion && f.VCPUs <= 1 {
-		return nil, fmt.Errorf("kubeadm requires a minimum of 2 vCPUs, pick a flavor with at least 2 vCPUs")
 	}
 
 	return f, nil
 }
 
-func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec, clusterName string, isBastion bool, retryInterval time.Duration) (*InstanceStatus, error) {
+func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec, clusterName string, retryInterval time.Duration) (*InstanceStatus, error) {
 	var server *clients.ServerExt
 	portList := []servers.Network{}
 
@@ -246,7 +243,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 		return nil, fmt.Errorf("error getting image ID: %v", err)
 	}
 
-	flavor, err := s.getAndValidateFlavor(instanceSpec.Flavor, isBastion)
+	flavor, err := s.getAndValidateFlavor(instanceSpec.Flavor)
 	if err != nil {
 		return nil, err
 	}
