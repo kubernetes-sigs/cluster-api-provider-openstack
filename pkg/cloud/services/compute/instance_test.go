@@ -406,17 +406,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 		})
 	}
 
-	// Expected calls when polling for server creation
-	expectServerPoll := func(computeRecorder *mock.MockComputeClientMockRecorder, states []string) {
-		for _, state := range states {
-			computeRecorder.GetServer(instanceUUID).Return(returnedServer(state), nil)
-		}
-	}
-
-	expectServerPollSuccess := func(computeRecorder *mock.MockComputeClientMockRecorder) {
-		expectServerPoll(computeRecorder, []string{"ACTIVE"})
-	}
-
 	returnedVolume := func(uuid string, status string) *volumes.Volume {
 		return &volumes.Volume{
 			ID:     uuid,
@@ -460,7 +449,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 				expectDefaultImageAndFlavor(r.compute, r.image)
 
 				expectCreateServer(r.compute, getDefaultServerMap(), false)
-				expectServerPollSuccess(r.compute)
 			},
 			wantErr: false,
 		},
@@ -504,32 +492,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:            "Poll until server is created",
-			getInstanceSpec: getDefaultInstanceSpec,
-			expect: func(r *recorders) {
-				expectUseExistingDefaultPort(r.network)
-				expectDefaultImageAndFlavor(r.compute, r.image)
-
-				expectCreateServer(r.compute, getDefaultServerMap(), false)
-				expectServerPoll(r.compute, []string{"BUILDING", "ACTIVE"})
-			},
-			wantErr: false,
-		},
-		{
-			name:            "Server errors during creation",
-			getInstanceSpec: getDefaultInstanceSpec,
-			expect: func(r *recorders) {
-				expectUseExistingDefaultPort(r.network)
-				expectDefaultImageAndFlavor(r.compute, r.image)
-
-				expectCreateServer(r.compute, getDefaultServerMap(), false)
-				expectServerPoll(r.compute, []string{"BUILDING", "ERROR"})
-
-				// Don't delete ports because the server is created: DeleteInstance will do it
-			},
-			wantErr: true,
-		},
-		{
 			name: "Boot from volume success",
 			getInstanceSpec: func() *InstanceSpec {
 				s := getDefaultInstanceSpec()
@@ -567,7 +529,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 					},
 				}
 				expectCreateServer(r.compute, createMap, false)
-				expectServerPollSuccess(r.compute)
 
 				// Don't delete ports because the server is created: DeleteInstance will do it
 			},
@@ -614,7 +575,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 					},
 				}
 				expectCreateServer(r.compute, createMap, false)
-				expectServerPollSuccess(r.compute)
 
 				// Don't delete ports because the server is created: DeleteInstance will do it
 			},
@@ -734,7 +694,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 					},
 				}
 				expectCreateServer(r.compute, createMap, false)
-				expectServerPollSuccess(r.compute)
 
 				// Don't delete ports because the server is created: DeleteInstance will do it
 			},
@@ -809,7 +768,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 					},
 				}
 				expectCreateServer(r.compute, createMap, false)
-				expectServerPollSuccess(r.compute)
 
 				// Don't delete ports because the server is created: DeleteInstance will do it
 			},
@@ -870,7 +828,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 					},
 				}
 				expectCreateServer(r.compute, createMap, false)
-				expectServerPollSuccess(r.compute)
 
 				// Don't delete ports because the server is created: DeleteInstance will do it
 			},

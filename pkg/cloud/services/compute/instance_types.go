@@ -100,25 +100,25 @@ func (is *InstanceStatus) AvailabilityZone() string {
 	return is.server.AvailabilityZone
 }
 
-// BastionStatus returns an infrav1.BastionStatus for use in the cluster status.
-func (is *InstanceStatus) BastionStatus(openStackCluster *infrav1.OpenStackCluster) (*infrav1.BastionStatus, error) {
-	i := infrav1.BastionStatus{
-		ID:         is.ID(),
-		Name:       is.Name(),
-		SSHKeyName: is.SSHKeyName(),
-		State:      is.State(),
+// BastionStatus updates BastionStatus in openStackCluster.
+func (is *InstanceStatus) UpdateBastionStatus(openStackCluster *infrav1.OpenStackCluster) {
+	if openStackCluster.Status.Bastion == nil {
+		openStackCluster.Status.Bastion = &infrav1.BastionStatus{}
 	}
+
+	openStackCluster.Status.Bastion.ID = is.ID()
+	openStackCluster.Status.Bastion.Name = is.Name()
+	openStackCluster.Status.Bastion.SSHKeyName = is.SSHKeyName()
+	openStackCluster.Status.Bastion.State = is.State()
 
 	ns, err := is.NetworkStatus()
 	if err != nil {
-		return nil, err
+		// Bastion IP won't be saved in status, error is not critical
+		return
 	}
 
 	clusterNetwork := openStackCluster.Status.Network.Name
-	i.IP = ns.IP(clusterNetwork)
-	i.FloatingIP = ns.FloatingIP(clusterNetwork)
-
-	return &i, nil
+	openStackCluster.Status.Bastion.IP = ns.IP(clusterNetwork)
 }
 
 // InstanceIdentifier returns an InstanceIdentifier object for an InstanceStatus.

@@ -67,6 +67,7 @@ type OpenStackMachineReconciler struct {
 const (
 	waitForClusterInfrastructureReadyDuration = 15 * time.Second
 	waitForInstanceBecomeActiveToReconcile    = 60 * time.Second
+	waitForBuildingInstanceToReconcile        = 10 * time.Second
 )
 
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackmachines,verbs=get;list;watch;create;update;patch;delete
@@ -252,8 +253,13 @@ func (r *OpenStackMachineReconciler) reconcileDelete(scope scope.Scope, cluster 
 		}
 	}
 
-	instanceStatus, err := computeService.GetInstanceStatusByName(openStackMachine, openStackMachine.Name)
-	if err != nil {
+	var instanceStatus *compute.InstanceStatus
+	if openStackMachine.Spec.InstanceID != nil {
+		instanceStatus, err = computeService.GetInstanceStatus(*openStackMachine.Spec.InstanceID)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+	} else if instanceStatus, err = computeService.GetInstanceStatusByName(openStackMachine, openStackMachine.Name); err != nil {
 		return ctrl.Result{}, err
 	}
 	if !openStackCluster.Spec.APIServerLoadBalancer.Enabled && util.IsControlPlaneMachine(machine) && openStackCluster.Spec.APIServerFloatingIP == "" {
@@ -385,6 +391,9 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		scope.Logger().Info("Machine instance state is DELETED, no actions")
 		conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceDeletedReason, clusterv1.ConditionSeverityError, "")
 		return ctrl.Result{}, nil
+	case infrav1.InstanceStateBuild, infrav1.InstanceStateUndefined:
+		scope.Logger().Info("Waiting for instance to become ACTIVE", "id", instanceStatus.ID(), "status", instanceStatus.State())
+		return ctrl.Result{RequeueAfter: waitForBuildingInstanceToReconcile}, nil
 	default:
 		// The other state is normal (for example, migrating, shutoff) but we don't want to proceed until it's ACTIVE
 		// due to potential conflict or unexpected actions
@@ -437,19 +446,28 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 }
 
 func (r *OpenStackMachineReconciler) getOrCreate(logger logr.Logger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, computeService *compute.Service, userData string) (*compute.InstanceStatus, error) {
-	instanceStatus, err := computeService.GetInstanceStatusByName(openStackMachine, openStackMachine.Name)
-	if err != nil {
-		logger.Info("Unable to get OpenStack instance", "name", openStackMachine.Name)
-		conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.OpenStackErrorReason, clusterv1.ConditionSeverityError, err.Error())
-		return nil, err
+	var instanceStatus *compute.InstanceStatus
+	var err error
+	if openStackMachine.Spec.InstanceID != nil {
+		instanceStatus, err = computeService.GetInstanceStatus(*openStackMachine.Spec.InstanceID)
+		if err != nil {
+			logger.Info("Unable to get OpenStack instance", "name", openStackMachine.Name)
+			conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.OpenStackErrorReason, clusterv1.ConditionSeverityError, err.Error())
+			return nil, err
+		}
 	}
-
 	if instanceStatus == nil {
-		if openStackMachine.Spec.InstanceID != nil {
-			logger.Info("Not reconciling machine in failed state. The previously existing OpenStack instance is no longer available")
-			conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceNotFoundReason, clusterv1.ConditionSeverityError, "virtual machine no longer exists")
-			openStackMachine.SetFailure(capierrors.UpdateMachineError, errors.New("virtual machine no longer exists"))
-			return nil, nil
+		// Check if there is an existing instance with machine name, in case where instance ID would not have been stored in machine status
+		if instanceStatus, err = computeService.GetInstanceStatusByName(openStackMachine, openStackMachine.Name); err == nil {
+			if instanceStatus != nil {
+				return instanceStatus, nil
+			}
+			if openStackMachine.Spec.InstanceID != nil {
+				logger.Info("Not reconciling machine in failed state. The previously existing OpenStack instance is no longer available")
+				conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceNotFoundReason, clusterv1.ConditionSeverityError, "virtual machine no longer exists")
+				openStackMachine.SetFailure(capierrors.UpdateMachineError, errors.New("virtual machine no longer exists"))
+				return nil, nil
+			}
 		}
 		instanceSpec := machineToInstanceSpec(openStackCluster, machine, openStackMachine, userData)
 		logger.Info("Machine does not exist, creating Machine", "name", openStackMachine.Name)
@@ -459,7 +477,6 @@ func (r *OpenStackMachineReconciler) getOrCreate(logger logr.Logger, cluster *cl
 			return nil, fmt.Errorf("create OpenStack instance: %w", err)
 		}
 	}
-
 	return instanceStatus, nil
 }
 
