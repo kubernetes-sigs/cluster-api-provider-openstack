@@ -509,6 +509,18 @@ func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *
 			ID: managedSecurityGroup,
 		})
 	}
+	if openStackCluster.Spec.SecurityGroups != nil {
+		var managedSecurityGroup string
+		if openStackCluster.Spec.SecurityGroups.ControlPlaneSecurityGroupRules != nil && util.IsControlPlaneMachine(machine) && openStackCluster.Status.ControlPlaneSecurityGroup != nil {
+			managedSecurityGroup = openStackCluster.Status.ControlPlaneSecurityGroup.ID
+		} else if openStackCluster.Spec.SecurityGroups.WorkerSecurityGroupRules != nil && openStackCluster.Status.WorkerSecurityGroup != nil {
+			managedSecurityGroup = openStackCluster.Status.WorkerSecurityGroup.ID
+		}
+
+		instanceSpec.SecurityGroups = append(instanceSpec.SecurityGroups, infrav1.SecurityGroupFilter{
+			ID: managedSecurityGroup,
+		})
+	}
 
 	instanceSpec.Ports = openStackMachine.Spec.Ports
 

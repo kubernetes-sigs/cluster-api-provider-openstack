@@ -155,7 +155,103 @@ spec:
   identityRef:
     kind: Secret
     name: ${CLUSTER_NAME}-cloud-config
-  managedSecurityGroups: true
+  securityGroups:
+    controlPlaneSecurityGroupRules:
+    - direction: egress
+      description: Allow all egress traffic for IPv4
+      etherType: IPv4
+      portRangeMin: 0
+      portRangeMax: 0
+      protocol: ""
+      remoteIpPrefix: ""
+    - direction: ingress
+      description: Allow all in-cluster ingress traffic for IPv4
+      etherType: IPv4
+      portRangeMin: 0
+      portRangeMax: 0
+      protocol: ""
+      remoteIpPrefix: self
+    - direction: ingress
+      description: Allow all in-cluster ingress traffic for IPv4
+      etherType: IPv4
+      portRangeMin: 0
+      portRangeMax: 0
+      protocol: ""
+      remoteIpPrefix: k8s-cluster-${CLUSTER_NAME}-secgroup-worker
+    - direction: ingress
+      description: Allow etcd traffic
+      portRangeMin: 2379
+      portRangeMax: 2380
+      protocol: tcp
+      remoteGroupID: self
+    - direction: ingress
+      description: Allow Kubelet API traffic
+      portRangeMin: 10250
+      portRangeMax: 10250
+      protocol: tcp
+      remoteGroupID: self
+    - direction: ingress
+      description: Allow Kubelet API traffic
+      portRangeMin: 10250
+      portRangeMax: 10250
+      protocol: tcp
+      remoteGroupID: k8s-cluster-${CLUSTER_NAME}-secgroup-controlplane
+    - direction: ingress
+      description: Allow SSH traffic
+      portRangeMin: 22
+      portRangeMax: 22
+      protocol: tcp
+    - direction: ingress
+      description: Allow Kubernetes API traffic
+      EtherType: IPv4
+      portRangeMin: 6443
+      portRangeMax: 6443
+      protocol: tcp
+    workerSecurityGroupRules:
+    - direction: egress
+      description: Allow all egress traffic for IPv4
+      etherType: IPv4
+      portRangeMin: 0
+      portRangeMax: 0
+      protocol: ""
+      remoteIpPrefix: ""
+    - direction: ingress
+      description: Allow node port services traffic for IPv4 tcp
+      etherType: IPv4
+      portRangeMin: 30000
+      portRangeMax: 32767
+      protocol: tcp
+    - direction: ingress
+      description: Allow node port services traffic for IPv4 udp
+      etherType: IPv4
+      portRangeMin: 30000
+      portRangeMax: 32767
+      protocol: udp
+    - direction: ingress
+      description: Allow all in-cluster ingress traffic for IPv4
+      etherType: IPv4
+      portRangeMin: 0
+      portRangeMax: 0
+      protocol: ""
+      remoteIpPrefix: self
+    - direction: ingress
+      description: Allow all in-cluster ingress traffic for IPv4
+      etherType: IPv4
+      portRangeMin: 0
+      portRangeMax: 0
+      protocol: ""
+      remoteIpPrefix: k8s-cluster-${CLUSTER_NAME}-secgroup-controlplane
+    - direction: ingress
+      description: Allow Kubelet API traffic
+      portRangeMin: 10250
+      portRangeMax: 10250
+      protocol: tcp
+      remoteGroupID: self
+    - direction: ingress
+      description: Allow SSH traffic
+      portRangeMin: 22
+      portRangeMax: 22
+      protocol: tcp
   nodeCidr: 10.6.0.0/24
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7

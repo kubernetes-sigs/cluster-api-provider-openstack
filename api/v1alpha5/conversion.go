@@ -187,8 +187,25 @@ func (r *OpenStackMachineTemplateList) ConvertFrom(srcRaw ctrlconversion.Hub) er
 }
 
 func Convert_v1alpha7_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(in *infrav1.OpenStackClusterSpec, out *OpenStackClusterSpec, s conversion.Scope) error {
-	// Our new flag has no equivalent in v1alpha5
+	if in.ManagedSecurityGroups != nil && in.ManagedSecurityGroups.Enabled {
+		out.ManagedSecurityGroups = true
+	}
 	return autoConvert_v1alpha7_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(in, out, s)
+}
+
+func Convert_v1alpha5_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in *OpenStackClusterSpec, out *infrav1.OpenStackClusterSpec, s conversion.Scope) error {
+	err := autoConvert_v1alpha5_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	if in.ManagedSecurityGroups {
+		out.ManagedSecurityGroups = &infrav1.SecurityGroupsSpec{
+			Enabled: true,
+		}
+	}
+
+	return nil
 }
 
 func Convert_v1alpha7_LoadBalancer_To_v1alpha5_LoadBalancer(in *infrav1.LoadBalancer, out *LoadBalancer, s conversion.Scope) error {
@@ -420,6 +437,26 @@ func Convert_v1alpha7_OpenStackClusterStatus_To_v1alpha5_OpenStackClusterStatus(
 		}
 	}
 
+	if in.SecurityGroups != nil {
+		// TODO(emilien) Is it the right way? I wanted to do something like this but this didn't work:
+		// out.BastionSecurityGroup = (*SecurityGroup)(in.SecurityGroups.BastionSecurityGroup)
+		if in.SecurityGroups.BastionSecurityGroup != nil {
+			out.BastionSecurityGroup.ID = in.SecurityGroups.BastionSecurityGroup.ID
+			out.BastionSecurityGroup.Name = in.SecurityGroups.BastionSecurityGroup.Name
+			out.BastionSecurityGroup.Rules = make([]SecurityGroupRule, len(in.SecurityGroups.BastionSecurityGroup.Rules))
+		}
+		if in.SecurityGroups.ControlPlaneSecurityGroup != nil {
+			out.BastionSecurityGroup.ID = in.SecurityGroups.ControlPlaneSecurityGroup.ID
+			out.BastionSecurityGroup.Name = in.SecurityGroups.ControlPlaneSecurityGroup.Name
+			out.BastionSecurityGroup.Rules = make([]SecurityGroupRule, len(in.SecurityGroups.ControlPlaneSecurityGroup.Rules))
+		}
+		if in.SecurityGroups.WorkerSecurityGroup != nil {
+			out.BastionSecurityGroup.ID = in.SecurityGroups.WorkerSecurityGroup.ID
+			out.BastionSecurityGroup.Name = in.SecurityGroups.WorkerSecurityGroup.Name
+			out.BastionSecurityGroup.Rules = make([]SecurityGroupRule, len(in.SecurityGroups.WorkerSecurityGroup.Rules))
+		}
+	}
+
 	return nil
 }
 
@@ -438,6 +475,33 @@ func Convert_v1alpha5_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(
 			if err != nil {
 				return err
 			}
+		}
+	}
+
+	if in.BastionSecurityGroup != nil || in.ControlPlaneSecurityGroup != nil || in.WorkerSecurityGroup != nil {
+		if out.SecurityGroups == nil {
+			out.SecurityGroups = &infrav1.SecurityGroupsStatus{}
+		}
+
+		if in.BastionSecurityGroup != nil {
+			out.SecurityGroups.BastionSecurityGroup = &infrav1.SecurityGroup{}
+			out.SecurityGroups.BastionSecurityGroup.ID = in.BastionSecurityGroup.ID
+			out.SecurityGroups.BastionSecurityGroup.Name = in.BastionSecurityGroup.Name
+			out.SecurityGroups.BastionSecurityGroup.Rules = make([]infrav1.SecurityGroupRule, len(in.BastionSecurityGroup.Rules))
+		}
+
+		if in.ControlPlaneSecurityGroup != nil {
+			out.SecurityGroups.ControlPlaneSecurityGroup = &infrav1.SecurityGroup{}
+			out.SecurityGroups.ControlPlaneSecurityGroup.ID = in.ControlPlaneSecurityGroup.ID
+			out.SecurityGroups.ControlPlaneSecurityGroup.Name = in.ControlPlaneSecurityGroup.Name
+			out.SecurityGroups.ControlPlaneSecurityGroup.Rules = make([]infrav1.SecurityGroupRule, len(in.ControlPlaneSecurityGroup.Rules))
+		}
+
+		if in.WorkerSecurityGroup != nil {
+			out.SecurityGroups.WorkerSecurityGroup = &infrav1.SecurityGroup{}
+			out.SecurityGroups.WorkerSecurityGroup.ID = in.WorkerSecurityGroup.ID
+			out.SecurityGroups.WorkerSecurityGroup.Name = in.WorkerSecurityGroup.Name
+			out.SecurityGroups.WorkerSecurityGroup.Rules = make([]infrav1.SecurityGroupRule, len(in.WorkerSecurityGroup.Rules))
 		}
 	}
 

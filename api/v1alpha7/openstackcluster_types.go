@@ -115,8 +115,9 @@ type OpenStackClusterSpec struct {
 	// be specified as part of the configuration.
 	// By default, the managed security groups have rules that allow the Kubelet, etcd, the
 	// Kubernetes API server and the Calico CNI plugin to function correctly.
+	// It's possible to add additional rules to the managed security groups.
 	// +optional
-	ManagedSecurityGroups bool `json:"managedSecurityGroups"`
+	ManagedSecurityGroups *SecurityGroupsSpec `json:"managedSecurityGroups,omitempty"`
 
 	// AllowAllInClusterTraffic is only used when managed security groups are in use.
 	// If set to true, the rules for the managed security groups are configured so that all
@@ -177,16 +178,9 @@ type OpenStackClusterStatus struct {
 	// FailureDomains represent OpenStack availability zones
 	FailureDomains clusterv1.FailureDomains `json:"failureDomains,omitempty"`
 
-	// ControlPlaneSecurityGroups contains all the information about the OpenStack
-	// Security Group that needs to be applied to control plane nodes.
-	// TODO: Maybe instead of two properties, we add a property to the group?
-	ControlPlaneSecurityGroup *SecurityGroup `json:"controlPlaneSecurityGroup,omitempty"`
-
-	// WorkerSecurityGroup contains all the information about the OpenStack Security
-	// Group that needs to be applied to worker nodes.
-	WorkerSecurityGroup *SecurityGroup `json:"workerSecurityGroup,omitempty"`
-
-	BastionSecurityGroup *SecurityGroup `json:"bastionSecurityGroup,omitempty"`
+	// SecurityGroups contains all the information about the OpenStack Security
+	// Groups that needs to be applied to nodes.
+	SecurityGroups *SecurityGroupsStatus `json:"securityGroups,omitempty"`
 
 	Bastion *BastionStatus `json:"bastion,omitempty"`
 

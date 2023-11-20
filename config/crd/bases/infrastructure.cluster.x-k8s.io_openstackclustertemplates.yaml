@@ -2134,8 +2134,231 @@ spec:
                           specified as part of the configuration. By default, the
                           managed security groups have rules that allow the Kubelet,
                           etcd, the Kubernetes API server and the Calico CNI plugin
-                          to function correctly.
-                        type: boolean
+                          to function correctly. It's possible to add additional rules
+                          to the managed security groups.
+                        properties:
+                          additionalBastionSecurityGroupRules:
+                            description: AdditionalBastionSecurityGroupRules contains
+                              additional security group rules for the bastion node.
+                            items:
+                              description: SecurityGroupRule represent the basic information
+                                of the associated OpenStack Security Group Role.
+                              properties:
+                                description:
+                                  type: string
+                                direction:
+                                  type: string
+                                etherType:
+                                  type: string
+                                name:
+                                  type: string
+                                portRangeMax:
+                                  type: integer
+                                portRangeMin:
+                                  type: integer
+                                protocol:
+                                  type: string
+                                remoteGroupID:
+                                  type: string
+                                remoteIPPrefix:
+                                  type: string
+                                securityGroupID:
+                                  type: string
+                              required:
+                              - description
+                              - direction
+                              - etherType
+                              - name
+                              - portRangeMax
+                              - portRangeMin
+                              - protocol
+                              - remoteGroupID
+                              - remoteIPPrefix
+                              - securityGroupID
+                              type: object
+                            type: array
+                          additionalControlPlaneSecurityGroupRules:
+                            description: AdditionalControlPlaneSecurityGroupRules
+                              contains additional security group rules for the control
+                              plane nodes.
+                            items:
+                              description: SecurityGroupRule represent the basic information
+                                of the associated OpenStack Security Group Role.
+                              properties:
+                                description:
+                                  type: string
+                                direction:
+                                  type: string
+                                etherType:
+                                  type: string
+                                name:
+                                  type: string
+                                portRangeMax:
+                                  type: integer
+                                portRangeMin:
+                                  type: integer
+                                protocol:
+                                  type: string
+                                remoteGroupID:
+                                  type: string
+                                remoteIPPrefix:
+                                  type: string
+                                securityGroupID:
+                                  type: string
+                              required:
+                              - description
+                              - direction
+                              - etherType
+                              - name
+                              - portRangeMax
+                              - portRangeMin
+                              - protocol
+                              - remoteGroupID
+                              - remoteIPPrefix
+                              - securityGroupID
+                              type: object
+                            type: array
+                          additionalSecurityGroups:
+                            description: AdditionalSecurityGroups contains additional
+                              security groups that can be used in `OpenStackMachineSpec.SecurityGroups`.
+                            items:
+                              description: SecurityGroup represents the basic information
+                                of the associated OpenStack Neutron Security Group.
+                              properties:
+                                id:
+                                  type: string
+                                name:
+                                  type: string
+                                rules:
+                                  items:
+                                    description: SecurityGroupRule represent the basic
+                                      information of the associated OpenStack Security
+                                      Group Role.
+                                    properties:
+                                      description:
+                                        type: string
+                                      direction:
+                                        type: string
+                                      etherType:
+                                        type: string
+                                      name:
+                                        type: string
+                                      portRangeMax:
+                                        type: integer
+                                      portRangeMin:
+                                        type: integer
+                                      protocol:
+                                        type: string
+                                      remoteGroupID:
+                                        type: string
+                                      remoteIPPrefix:
+                                        type: string
+                                      securityGroupID:
+                                        type: string
+                                    required:
+                                    - description
+                                    - direction
+                                    - etherType
+                                    - name
+                                    - portRangeMax
+                                    - portRangeMin
+                                    - protocol
+                                    - remoteGroupID
+                                    - remoteIPPrefix
+                                    - securityGroupID
+                                    type: object
+                                  type: array
+                              required:
+                              - id
+                              - name
+                              - rules
+                              type: object
+                            type: array
+                          additionalWorkerSecurityGroupRules:
+                            description: AdditionalWorkerSecurityGroupRules contains
+                              additional security group rules for the worker nodes.
+                            items:
+                              description: SecurityGroupRule represent the basic information
+                                of the associated OpenStack Security Group Role.
+                              properties:
+                                description:
+                                  type: string
+                                direction:
+                                  type: string
+                                etherType:
+                                  type: string
+                                name:
+                                  type: string
+                                portRangeMax:
+                                  type: integer
+                                portRangeMin:
+                                  type: integer
+                                protocol:
+                                  type: string
+                                remoteGroupID:
+                                  type: string
+                                remoteIPPrefix:
+                                  type: string
+                                securityGroupID:
+                                  type: string
+                              required:
+                              - description
+                              - direction
+                              - etherType
+                              - name
+                              - portRangeMax
+                              - portRangeMin
+                              - protocol
+                              - remoteGroupID
+                              - remoteIPPrefix
+                              - securityGroupID
+                              type: object
+                            type: array
+                          cniSecurityGroupRules:
+                            description: CNISecurityGroupRules contains security group
+                              rules for the CNI that will be applied to the all nodes.
+                            items:
+                              description: SecurityGroupRule represent the basic information
+                                of the associated OpenStack Security Group Role.
+                              properties:
+                                description:
+                                  type: string
+                                direction:
+                                  type: string
+                                etherType:
+                                  type: string
+                                name:
+                                  type: string
+                                portRangeMax:
+                                  type: integer
+                                portRangeMin:
+                                  type: integer
+                                protocol:
+                                  type: string
+                                remoteGroupID:
+                                  type: string
+                                remoteIPPrefix:
+                                  type: string
+                                securityGroupID:
+                                  type: string
+                              required:
+                              - description
+                              - direction
+                              - etherType
+                              - name
+                              - portRangeMax
+                              - portRangeMin
+                              - protocol
+                              - remoteGroupID
+                              - remoteIPPrefix
+                              - securityGroupID
+                              type: object
+                            type: array
+                          enabled:
+                            description: Enabled defines whether security groups should
+                              be created.
+                            type: boolean
+                        type: object
                       network:
                         description: If NodeCIDR cannot be set this can be used to
                           detect an existing network.

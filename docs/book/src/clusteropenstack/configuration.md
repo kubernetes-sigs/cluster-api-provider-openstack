@@ -465,11 +465,23 @@ spec:
 
 Security groups are used to determine which ports of the cluster nodes are accessible from where.
 
-If `spec.managedSecurityGroups` of `OpenStackCluster` is set to `true`, two security groups named
-`k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-controlplane` and
-`k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-worker` will be created and added to the control
-plane and worker nodes respectively.
+There are two ways to configure security groups:
 
+- Legacy managed security groups
+- Custom security groups (recommended) per node type (control plane, worker, bastion)
+
+They can't be used together.
+
+If one of these 2 methods is enabled, two security groups named
+`k8s-cluster-${CLUSTER_NAME}-secgroup-controlplane` and
+`k8s-cluster-${CLUSTER_NAME}-secgroup-worker` will be created and added to the control
+plane and worker nodes respectively. An additional security group named
+`k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-bastion` will be created and added to the bastion node
+if the bastion host is enabled.
+
+### Legacy managed security groups
+
+To enable this feature, set `spec.managedSecurityGroups` of `OpenStackCluster` to `true`.
 By default, these groups have rules that allow the following traffic:
 
 - Control plane nodes
@@ -482,7 +494,67 @@ By default, these groups have rules that allow the following traffic:
   - Kubelet traffic from other cluster nodes
   - Calico CNI traffic from other cluster nodes
 
-To use a CNI other than Calico, the flag `OpenStackCluster.spec.allowAllInClusterTraffic` can be
+### Custom security groups
+
+If `spec.SecurityGroups` of `OpenStackCluster` is set, the security groups specified will be created and added
+to the control plane, worker, and bastion nodes.
+
+There are no default rules for these groups, so you must add rules to allow the traffic you need.
+
+You have the ability to specify security groups in the `OpenStackCluster` spec. Here is an example how to configure security groups:
+
+```yaml
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
+kind: OpenStackCluster
+metadata:
+  name: <cluster-name>
+  namespace: <cluster-name>
+spec:
+  bastion:
+    enabled: true
+    instance:
+      flavor: <Flavor name>
+      image:  <Image name>
+      sshKeyName: <Key pair name>
+  securityGroups:
+    controlPlaneSecurityGroupRules:
+    - direction: ingress
+      ethertype: IPv4
+      portRangeMin: 6443
+      portRangeMax: 6443
+      protocol: tcp
+    - direction: ingress
+      ethertype: IPv4
+      portRangeMin: 22
+      portRangeMax: 22
+      protocol: tcp
+      remoteGroupID: k8s-cluster-${CLUSTER_NAME}-secgroup-bastion
+    (...)
+    workerSecurityGroupRules:
+    - direction: ingress
+      ethertype: IPv4
+      portRangeMin: 30000
+      portRangeMax: 32767
+      protocol: tcp
+    - direction: ingress
+      ethertype: IPv4
+      portRangeMin: 22
+      portRangeMax: 22
+      protocol: tcp
+      remoteGroupID: k8s-cluster-${CLUSTER_NAME}-secgroup-bastion
+    (...)
+    bastionSecurityGroupRules:
+    - direction: ingress
+      ethertype: IPv4
+      portRangeMin: 22
+      portRangeMax: 22
+      protocol: tcp
+    (...)
+```
+
+### Allowing all traffic between cluster nodes
+
+The flag `OpenStackCluster.spec.allowAllInClusterTraffic` can be
 set to `true`. With this flag set, the rules for the managed security groups permit all traffic
 between cluster nodes on all ports and protocols (API server and node port traffic is still
 permitted from anywhere, as with the default rules).

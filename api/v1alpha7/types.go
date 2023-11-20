@@ -362,6 +362,60 @@ type APIServerLoadBalancer struct {
 	Provider string `json:"provider,omitempty"`
 }
 
+// SecurityGroupsSpec defines the desired state of security groups and rules for the cluster.
+type SecurityGroupsSpec struct {
+	// Enabled defines whether security groups should be created.
+	Enabled bool `json:"enabled,omitempty"`
+
+	// AdditionalBastionSecurityGroupRules contains additional security group rules for the bastion node.
+	// +optional
+	AdditionalBastionSecurityGroupRules []SecurityGroupRule `json:"additionalBastionSecurityGroupRules,omitempty"`
+
+	// AdditionalControlPlaneSecurityGroupRules contains additional security group rules for the control plane nodes.
+	// +optional
+	AdditionalControlPlaneSecurityGroupRules []SecurityGroupRule `json:"additionalControlPlaneSecurityGroupRules,omitempty"`
+
+	// AdditionalWorkerSecurityGroupRules contains additional security group rules for the worker nodes.
+	// +optional
+	AdditionalWorkerSecurityGroupRules []SecurityGroupRule `json:"additionalWorkerSecurityGroupRules,omitempty"`
+
+	// CNISecurityGroupRules contains security group rules for the CNI that will be applied to the all nodes.
+	// +optional
+	CNISecurityGroupRules []SecurityGroupRule `json:"cniSecurityGroupRules,omitempty"`
+
+	// AdditionalSecurityGroups contains additional security groups that can be used in `OpenStackMachineSpec.SecurityGroups`.
+	// +optional
+	AdditionalSecurityGroups []SecurityGroup `json:"additionalSecurityGroups,omitempty"`
+}
+
+// SecurityGroupsStatus represents the observed state of security groups and rules for the cluster.
+type SecurityGroupsStatus struct {
+	// BastionSecurityGroup contains all the information about the OpenStack
+	// Security Group that needs to be applied to bastion nodes.
+	// +optional
+	BastionSecurityGroup SecurityGroup `json:"bastionSecurityGroup,omitempty"`
+
+	// ControlPlaneSecurityGroups contains all the information about the OpenStack
+	// Security Group that needs to be applied to control plane nodes.
+	// +optional
+	ControlPlaneSecurityGroup SecurityGroup `json:"controlPlaneSecurityGroup,omitempty"`
+
+	// WorkerSecurityGroups contains all the information about the OpenStack
+	// Security Group that needs to be applied to worker nodes.
+	// +optional
+	WorkerSecurityGroup SecurityGroup `json:"workerSecurityGroup,omitempty"`
+
+	// CNISecurityGroup contains all the information about the OpenStack
+	// Security Group that needs to be applied to all nodes.
+	// +optional
+	CNISecurityGroup SecurityGroup `json:"cniSecurityGroup,omitempty"`
+
+	// AdditionalSecurityGroups contains all the information about the OpenStack
+	// Security Groups that can be used in `OpenStackMachineSpec.SecurityGroups`.
+	// +optional
+	AdditionalSecurityGroups []SecurityGroup `json:"additionalSecurityGroups,omitempty"`
+}
+
 // ValueSpec represents a single value_spec key-value pair.
 type ValueSpec struct {
 	// Name is the name of the key-value pair.

@@ -5,6 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
+
 	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
@@ -435,8 +436,32 @@ func convertNetworksToPorts(networks []NetworkParam) []infrav1.PortOpts {
 	return ports
 }
 
+func Convert_v1alpha6_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in *OpenStackClusterSpec, out *infrav1.OpenStackClusterSpec, s apiconversion.Scope) error {
+	err := autoConvert_v1alpha6_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	if in.ManagedSecurityGroups {
+		out.ManagedSecurityGroups = &infrav1.SecurityGroupsSpec{
+			Enabled: true,
+		}
+	}
+
+	return nil
+}
+
 func Convert_v1alpha7_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in *infrav1.OpenStackClusterSpec, out *OpenStackClusterSpec, s apiconversion.Scope) error {
-	return autoConvert_v1alpha7_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in, out, s)
+	err := autoConvert_v1alpha7_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	if in.ManagedSecurityGroups != nil && in.ManagedSecurityGroups.Enabled {
+		out.ManagedSecurityGroups = true
+	}
+
+	return nil
 }
 
 func Convert_v1alpha6_PortOpts_To_v1alpha7_PortOpts(in *PortOpts, out *infrav1.PortOpts, s apiconversion.Scope) error {
@@ -652,6 +677,56 @@ func Convert_v1alpha7_OpenStackClusterStatus_To_v1alpha6_OpenStackClusterStatus(
 		out.Network.APIServerLoadBalancer = (*LoadBalancer)(in.APIServerLoadBalancer)
 	}
 
+	if in.SecurityGroups != nil {
+		if in.SecurityGroups.BastionSecurityGroup.ID != "" || in.SecurityGroups.BastionSecurityGroup.Name != "" || len(in.SecurityGroups.BastionSecurityGroup.Rules) > 0 {
+			out.BastionSecurityGroup = &SecurityGroup{}
+			out.BastionSecurityGroup.ID = in.SecurityGroups.BastionSecurityGroup.ID
+			out.BastionSecurityGroup.Name = in.SecurityGroups.BastionSecurityGroup.Name
+			if len(in.SecurityGroups.BastionSecurityGroup.Rules) > 0 {
+				out.BastionSecurityGroup.Rules = make([]SecurityGroupRule, len(in.SecurityGroups.BastionSecurityGroup.Rules))
+				for i := range in.SecurityGroups.BastionSecurityGroup.Rules {
+					out.BastionSecurityGroup.Rules[i] = SecurityGroupRule(in.SecurityGroups.BastionSecurityGroup.Rules[i])
+				}
+			} else {
+				out.BastionSecurityGroup.Rules = []SecurityGroupRule{}
+			}
+		} else {
+			out.BastionSecurityGroup = nil
+		}
+
+		if in.SecurityGroups.ControlPlaneSecurityGroup.ID != "" || in.SecurityGroups.ControlPlaneSecurityGroup.Name != "" || len(in.SecurityGroups.ControlPlaneSecurityGroup.Rules) > 0 {
+			out.ControlPlaneSecurityGroup = &SecurityGroup{}
+			out.ControlPlaneSecurityGroup.ID = in.SecurityGroups.ControlPlaneSecurityGroup.ID
+			out.ControlPlaneSecurityGroup.Name = in.SecurityGroups.ControlPlaneSecurityGroup.Name
+			if len(in.SecurityGroups.ControlPlaneSecurityGroup.Rules) > 0 {
+				out.ControlPlaneSecurityGroup.Rules = make([]SecurityGroupRule, len(in.SecurityGroups.ControlPlaneSecurityGroup.Rules))
+				for i := range in.SecurityGroups.ControlPlaneSecurityGroup.Rules {
+					out.ControlPlaneSecurityGroup.Rules[i] = SecurityGroupRule(in.SecurityGroups.ControlPlaneSecurityGroup.Rules[i])
+				}
+			} else {
+				out.ControlPlaneSecurityGroup.Rules = []SecurityGroupRule{}
+			}
+		} else {
+			out.ControlPlaneSecurityGroup = nil
+		}
+
+		if in.SecurityGroups.WorkerSecurityGroup.ID != "" || in.SecurityGroups.WorkerSecurityGroup.Name != "" || len(in.SecurityGroups.WorkerSecurityGroup.Rules) > 0 {
+			out.WorkerSecurityGroup = &SecurityGroup{}
+			out.WorkerSecurityGroup.ID = in.SecurityGroups.WorkerSecurityGroup.ID
+			out.WorkerSecurityGroup.Name = in.SecurityGroups.WorkerSecurityGroup.Name
+			if len(in.SecurityGroups.WorkerSecurityGroup.Rules) > 0 {
+				out.WorkerSecurityGroup.Rules = make([]SecurityGroupRule, len(in.SecurityGroups.WorkerSecurityGroup.Rules))
+				for i := range in.SecurityGroups.WorkerSecurityGroup.Rules {
+					out.WorkerSecurityGroup.Rules[i] = SecurityGroupRule(in.SecurityGroups.WorkerSecurityGroup.Rules[i])
+				}
+			} else {
+				out.WorkerSecurityGroup.Rules = []SecurityGroupRule{}
+			}
+		} else {
+			out.WorkerSecurityGroup = nil
+		}
+	}
+
 	return nil
 }
 
@@ -665,6 +740,60 @@ func Convert_v1alpha6_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(
 	if in.Network != nil {
 		out.Router = (*infrav1.Router)(in.Network.Router)
 		out.APIServerLoadBalancer = (*infrav1.LoadBalancer)(in.Network.APIServerLoadBalancer)
+	}
+
+	if in.BastionSecurityGroup != nil || in.ControlPlaneSecurityGroup != nil || in.WorkerSecurityGroup != nil {
+		if out.SecurityGroups == nil {
+			out.SecurityGroups = &infrav1.SecurityGroupsStatus{}
+		}
+
+		if in.BastionSecurityGroup != nil {
+			out.SecurityGroups.BastionSecurityGroup = infrav1.SecurityGroup{}
+			out.SecurityGroups.BastionSecurityGroup.ID = in.BastionSecurityGroup.ID
+			out.SecurityGroups.BastionSecurityGroup.Name = in.BastionSecurityGroup.Name
+			out.SecurityGroups.BastionSecurityGroup.Rules = make([]infrav1.SecurityGroupRule, len(in.BastionSecurityGroup.Rules))
+			if len(in.BastionSecurityGroup.Rules) > 0 {
+				for i := range in.BastionSecurityGroup.Rules {
+					out.SecurityGroups.BastionSecurityGroup.Rules[i] = infrav1.SecurityGroupRule(in.BastionSecurityGroup.Rules[i])
+				}
+			} else {
+				out.SecurityGroups.BastionSecurityGroup.Rules = []infrav1.SecurityGroupRule{}
+			}
+		} else {
+			out.SecurityGroups.BastionSecurityGroup = infrav1.SecurityGroup{}
+		}
+
+		if in.ControlPlaneSecurityGroup != nil {
+			out.SecurityGroups.ControlPlaneSecurityGroup = infrav1.SecurityGroup{}
+			out.SecurityGroups.ControlPlaneSecurityGroup.ID = in.ControlPlaneSecurityGroup.ID
+			out.SecurityGroups.ControlPlaneSecurityGroup.Name = in.ControlPlaneSecurityGroup.Name
+			out.SecurityGroups.ControlPlaneSecurityGroup.Rules = make([]infrav1.SecurityGroupRule, len(in.ControlPlaneSecurityGroup.Rules))
+			if len(in.ControlPlaneSecurityGroup.Rules) > 0 {
+				for i := range in.ControlPlaneSecurityGroup.Rules {
+					out.SecurityGroups.ControlPlaneSecurityGroup.Rules[i] = infrav1.SecurityGroupRule(in.ControlPlaneSecurityGroup.Rules[i])
+				}
+			} else {
+				out.SecurityGroups.ControlPlaneSecurityGroup.Rules = []infrav1.SecurityGroupRule{}
+			}
+		} else {
+			out.SecurityGroups.ControlPlaneSecurityGroup = infrav1.SecurityGroup{}
+		}
+
+		if in.WorkerSecurityGroup != nil {
+			out.SecurityGroups.WorkerSecurityGroup = infrav1.SecurityGroup{}
+			out.SecurityGroups.WorkerSecurityGroup.ID = in.WorkerSecurityGroup.ID
+			out.SecurityGroups.WorkerSecurityGroup.Name = in.WorkerSecurityGroup.Name
+			out.SecurityGroups.WorkerSecurityGroup.Rules = make([]infrav1.SecurityGroupRule, len(in.WorkerSecurityGroup.Rules))
+			if len(in.WorkerSecurityGroup.Rules) > 0 {
+				for i := range in.WorkerSecurityGroup.Rules {
+					out.SecurityGroups.WorkerSecurityGroup.Rules[i] = infrav1.SecurityGroupRule(in.WorkerSecurityGroup.Rules[i])
+				}
+			} else {
+				out.SecurityGroups.WorkerSecurityGroup.Rules = []infrav1.SecurityGroupRule{}
+			}
+		} else {
+			out.SecurityGroups.WorkerSecurityGroup = infrav1.SecurityGroup{}
+		}
 	}
 
 	return nil
