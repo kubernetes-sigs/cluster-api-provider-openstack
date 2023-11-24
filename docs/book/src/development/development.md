@@ -15,6 +15,8 @@
       - [Create E2E test environment](#create-e2e-test-environment)
         - [OpenStack](#openstack)
         - [DevStack](#devstack)
+          - [Server side](#server-side)
+          - [CAPO side](#capo-side)
   - [Running E2E tests using rootless podman](#running-e2e-tests-using-rootless-podman)
     - [Host configuration](#host-configuration)
     - [Running podman system service to emulate docker daemon](#running-podman-system-service-to-emulate-docker-daemon)

@@ -27,6 +27,9 @@
   - [Multiple Networks](#multiple-networks)
   - [Subnet Filters](#subnet-filters)
   - [Ports](#ports)
+    - [Port network and IP addresses](#port-network-and-ip-addresses)
+      - [Examples](#examples)
+    - [Port Security](#port-security)
   - [Security groups](#security-groups)
   - [Tagging](#tagging)
   - [Metadata](#metadata)
@@ -190,6 +193,8 @@ You can use a pre-existing router instead of creating a new one. When deleting a
  ```
 
 ## API server floating IP
+
+For a higher level discussion of control plane endpoint configuration, see [Exposing the control plane endpoint](../topics/control-plane-endpoint.md)
 
 Unless explicitly disabled, a floating IP is automatically created and associated with the load balancer
 or controller node. If required, you can specify the floating IP explicitly by `spec.apiServerFloatingIP`

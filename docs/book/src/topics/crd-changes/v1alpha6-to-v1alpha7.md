@@ -18,6 +18,8 @@
       - [Creation of additionalBlockDevices](#creation-of-additionalblockdevices)
     - [`OpenStackCluster`](#openstackcluster)
       - [Change to externalRouterIPs.subnet](#change-to-externalrouteripssubnet)
+      - [status.router and status.apiServerLoadBalancer moved out of status.network](#statusrouter-and-statusapiserverloadbalancer-moved-out-of-statusnetwork)
+      - [status.network.subnet becomes status.network.subnets](#statusnetworksubnet-becomes-statusnetworksubnets)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
