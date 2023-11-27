@@ -299,7 +299,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	}
 
 	if !cluster.Status.InfrastructureReady {
-		scope.Logger().Info("Cluster infrastructure is not ready yet, requeuing machine")
+		scope.Logger().Info("Cluster infrastructure is not ready yet, re-queuing machine")
 		conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.WaitingForClusterInfrastructureReason, clusterv1.ConditionSeverityInfo, "")
 		return ctrl.Result{RequeueAfter: waitForClusterInfrastructureReadyDuration}, nil
 	}
