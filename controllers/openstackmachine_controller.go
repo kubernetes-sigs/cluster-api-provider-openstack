@@ -525,7 +525,7 @@ func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(scope scope.Sco
 	return loadbalancerService.ReconcileLoadBalancerMember(openStackCluster, openStackMachine, clusterName, ip)
 }
 
-// OpenStackClusterToOpenStackMachines is a handler.ToRequestsFunc to be used to enqeue requests for reconciliation
+// OpenStackClusterToOpenStackMachines is a handler.ToRequestsFunc to be used to enqueue requests for reconciliation
 // of OpenStackMachines.
 func (r *OpenStackMachineReconciler) OpenStackClusterToOpenStackMachines(ctx context.Context) handler.MapFunc {
 	log := ctrl.LoggerFrom(ctx)
