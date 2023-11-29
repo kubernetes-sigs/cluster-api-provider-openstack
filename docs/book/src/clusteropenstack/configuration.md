@@ -303,9 +303,11 @@ metadata:
   name: <cluster-name>-controlplane
   namespace: <cluster-name>
 spec:
-  networks:
-  - filter:
-      name: <network-name>
+  template:
+    spec:
+      networks:
+      - filter:
+          name: <network-name>
 ```
 
 ## Multiple Networks
@@ -319,12 +321,14 @@ metadata:
   name: <cluster-name>-controlplane
   namespace: <cluster-name>
 spec:
-  networks:
-  - filter:
-      name: myNetwork
-      tags: myTag
-  - uuid: your_network_id
-  - subnet_id: your_subnet_id
+  template:
+    spec:
+      networks:
+      - filter:
+          name: myNetwork
+          tags: myTag
+      - uuid: your_network_id
+      - subnet_id: your_subnet_id
 ```
 
 ## Subnet Filters
@@ -338,12 +342,14 @@ metadata:
   name: <cluster-name>-controlplane
   namespace: <cluster-name>
 spec:
-  networks:
-  - filter:
-      name: <network-name>
-    subnets:
-    - filter:
-       name: <subnet-name>
+  template:
+    spec:
+      networks:
+      - filter:
+          name: <network-name>
+        subnets:
+        - filter:
+           name: <subnet-name>
 ```
 
 ## Ports
@@ -357,26 +363,28 @@ metadata:
   name: <cluster-name>-controlplane
   namespace: <cluster-name>
 spec:
-  ports:
-  - network:
-      id: <your-network-id>
-    fixedIPs:
-    - subnet:
-        id: <your-subnet-id>
-      ipAddress: <your-fixed-ip>
-    - subnet:
-        name: <your-subnet-name>
-        tags:
-          - tag1
-          - tag2
-    nameSuffix: <your-port-name>
-    description: <your-custom-port-description>
-    vnicType: normal
-    securityGroups:
-    - <your-security-group-id>
-    profile:
-      capabilities:
-        - <capability>
+  template:
+    spec:
+      ports:
+      - network:
+          id: <your-network-id>
+        fixedIPs:
+        - subnet:
+            id: <your-subnet-id>
+          ipAddress: <your-fixed-ip>
+        - subnet:
+            name: <your-subnet-name>
+            tags:
+              - tag1
+              - tag2
+        nameSuffix: <your-port-name>
+        description: <your-custom-port-description>
+        vnicType: normal
+        securityGroups:
+        - <your-security-group-id>
+        profile:
+          capabilities:
+            - <capability>
 ```
 
 Any such ports are created in addition to ports used for connections to networks or subnets.
@@ -453,12 +461,14 @@ metadata:
   name: <cluster-name>-controlplane
   namespace: <cluster-name>
 spec:
-  ports:
-  - network:
-      id: <your-network-id>
-    ...
-    disablePortSecurity: true
-    ...
+  template:
+    spec:
+      ports:
+      - network:
+          id: <your-network-id>
+        ...
+        disablePortSecurity: true
+        ...
 ```
 
 ## Security groups
@@ -554,20 +564,22 @@ spec:
 
 For example in `OpenStackMachineTemplate` set `spec.rootVolume.diskSize` to something greater than `0` means boot from volume.
 
-   ```yaml
-   apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
-   kind: OpenStackMachineTemplate
-   metadata:
-     name: <cluster-name>-controlplane
-     namespace: <cluster-name>
-   spec:
-   ...
-     rootVolume:
-       diskSize: <image size>
-       volumeType: <a cinder volume type (*optional)>
-       availabilityZone: <the cinder availability zone for the root volume (*optional)>
-   ...
-   ```
+```yaml
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
+kind: OpenStackMachineTemplate
+metadata:
+  name: <cluster-name>-controlplane
+  namespace: <cluster-name>
+spec:
+  template:
+    spec:
+      ...
+        rootVolume:
+          diskSize: <image size>
+          volumeType: <a cinder volume type (*optional)>
+          availabilityZone: <the cinder availability zone for the root volume (*optional)>
+      ...
+```
 
 If `volumeType` is not specified, cinder will use the default volume type.
 
