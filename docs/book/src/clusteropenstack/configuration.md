@@ -305,9 +305,9 @@ metadata:
 spec:
   template:
     spec:
-      networks:
-      - filter:
-          name: <network-name>
+      ports:
+        - network:
+            name: <network-name>
 ```
 
 ## Multiple Networks
@@ -323,12 +323,15 @@ metadata:
 spec:
   template:
     spec:
-      networks:
-      - filter:
-          name: myNetwork
-          tags: myTag
-      - uuid: your_network_id
-      - subnet_id: your_subnet_id
+      ports:
+        - network:
+            name: myNetwork
+            tags: myTag
+        - network:
+            id: your_network_id
+        - fixedIPs:
+            - subnet:
+                id: your_subnet_id
 ```
 
 ## Subnet Filters
@@ -344,12 +347,12 @@ metadata:
 spec:
   template:
     spec:
-      networks:
-      - filter:
-          name: <network-name>
-        subnets:
-        - filter:
-           name: <subnet-name>
+      ports:
+        - network:
+            name: <network-name>
+          fixedIPs:
+            - subnet:
+              name: <subnet-name>
 ```
 
 ## Ports
@@ -366,25 +369,25 @@ spec:
   template:
     spec:
       ports:
-      - network:
-          id: <your-network-id>
-        fixedIPs:
-        - subnet:
-            id: <your-subnet-id>
-          ipAddress: <your-fixed-ip>
-        - subnet:
-            name: <your-subnet-name>
-            tags:
-              - tag1
-              - tag2
-        nameSuffix: <your-port-name>
-        description: <your-custom-port-description>
-        vnicType: normal
-        securityGroups:
-        - <your-security-group-id>
-        profile:
-          capabilities:
-            - <capability>
+        - network:
+            id: <your-network-id>
+          fixedIPs:
+            - subnet:
+                id: <your-subnet-id>
+              ipAddress: <your-fixed-ip>
+            - subnet:
+                name: <your-subnet-name>
+                tags:
+                  - tag1
+                  - tag2
+          nameSuffix: <your-port-name>
+          description: <your-custom-port-description>
+          vnicType: normal
+          securityGroups:
+            - <your-security-group-id>
+          profile:
+            capabilities:
+              - <capability>
 ```
 
 Any such ports are created in addition to ports used for connections to networks or subnets.
