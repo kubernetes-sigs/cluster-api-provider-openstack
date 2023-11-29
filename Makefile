@@ -60,15 +60,6 @@ export KUBEBUILDER_CONTROLPLANE_STOP_TIMEOUT ?= 60s
 
 PATH := $(abspath $(TOOLS_BIN_DIR)):$(PATH)
 export PATH
-export DOCKER_CLI_EXPERIMENTAL=enabled
-export DOCKER_BUILDKIT=1
-
-PODMAN ?= 0
-ifeq ($(PODMAN), 1)
-	CONTAINERFILE ?= Containerfile
-else
-	CONTAINERFILE ?= Dockerfile
-endif
 
 # Release variables
 
@@ -289,18 +280,12 @@ generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
 ## --------------------------------------
 
 .PHONY: docker-build
-docker-build: docker-pull-prerequisites ## Build the docker image for controller-manager
-	docker build -f $(CONTAINERFILE) --build-arg goproxy=$(GOPROXY) --build-arg ARCH=$(ARCH) --build-arg LDFLAGS="$(LDFLAGS)" . -t $(CONTROLLER_IMG_TAG)
+docker-build: ## Build the docker image for controller-manager
+	docker build -f Dockerfile --build-arg goproxy=$(GOPROXY) --build-arg ARCH=$(ARCH) --build-arg LDFLAGS="$(LDFLAGS)" . -t $(CONTROLLER_IMG_TAG)
 
 .PHONY: docker-push
 docker-push: ## Push the docker image
 	docker push $(CONTROLLER_IMG_TAG)
-
-.PHONY: docker-pull-prerequisites
-docker-pull-prerequisites:
-	[ "$(PODMAN)" -eq 0 ] && docker pull docker.io/docker/dockerfile:1.1-experimental
-	docker pull docker.io/library/golang:$(GOLANG_VERSION)
-	docker pull gcr.io/distroless/static:latest
 
 ## --------------------------------------
 ##@ Docker — All ARCH
