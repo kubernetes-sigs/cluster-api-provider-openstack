@@ -721,6 +721,11 @@ func (in *OpenStackMachineStatus) DeepCopyInto(out *OpenStackMachineStatus) {
 		*out = new(errors.MachineStatusError)
 		**out = **in
 	}
+	if in.SecurityGroups != nil {
+		in, out := &in.SecurityGroups, &out.SecurityGroups
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.FailureMessage != nil {
 		in, out := &in.FailureMessage, &out.FailureMessage
 		*out = new(string)

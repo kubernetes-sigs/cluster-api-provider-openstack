@@ -225,6 +225,44 @@ func (s *Service) CreateInstance(eventObject runtime.Object, openStackCluster *i
 	return s.createInstanceImpl(eventObject, openStackCluster, instanceSpec, clusterName, retryIntervalInstanceStatus)
 }
 
+func contains(arr []string, target string) bool {
+	for _, a := range arr {
+		if a == target {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Service) AddSecurityGroupToInstance(instanceID string, securityGroup string) error {
+	attachedPorts, err := s.getComputeClient().ListAttachedInterfaces(instanceID)
+	if err != nil {
+		return fmt.Errorf("error getting ports for server %s: %v", instanceID, err)
+	}
+
+	if err != nil {
+		return err
+	}
+	for _, port := range attachedPorts {
+		portSpecs, err := s._networkingService.GetPort(port.PortID)
+		if err != nil {
+			return err
+		}
+		portSecurityGroups := portSpecs.SecurityGroups
+		if !contains(portSecurityGroups, securityGroup) {
+			portSecurityGroups = append(portSecurityGroups, securityGroup)
+		}
+		portUpdateOpts := ports.UpdateOpts{
+			SecurityGroups: &portSecurityGroups,
+		}
+		if _, err := s._networkingService.UpdatePort(port.PortID, portUpdateOpts); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (s *Service) getAndValidateFlavor(flavorName string) (*flavors.Flavor, error) {
 	f, err := s.getComputeClient().GetFlavorFromName(flavorName)
 	if err != nil {

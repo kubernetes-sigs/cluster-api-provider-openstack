@@ -546,6 +546,12 @@ spec:
               ready:
                 description: Ready is true when the provider resource is ready.
                 type: boolean
+              securityGroups:
+                description: SecurityGroups is the list of security groups IDs associated
+                  with this machine.
+                items:
+                  type: string
+                type: array
             type: object
         type: object
     served: true
@@ -1108,6 +1114,12 @@ spec:
               ready:
                 description: Ready is true when the provider resource is ready.
                 type: boolean
+              securityGroups:
+                description: SecurityGroups is the list of security groups IDs associated
+                  with this machine.
+                items:
+                  type: string
+                type: array
             type: object
         type: object
     served: true
@@ -1601,6 +1613,12 @@ spec:
               ready:
                 description: Ready is true when the provider resource is ready.
                 type: boolean
+              securityGroups:
+                description: SecurityGroups is the list of security groups IDs associated
+                  with this machine.
+                items:
+                  type: string
+                type: array
             type: object
         type: object
     served: true

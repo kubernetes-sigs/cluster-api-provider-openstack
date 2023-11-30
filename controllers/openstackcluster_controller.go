@@ -124,7 +124,7 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	// Handle non-deleted clusters
-	return reconcileNormal(scope, cluster, openStackCluster)
+	return r.reconcileNormal(ctx, scope, cluster, openStackCluster)
 }
 
 func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
@@ -258,7 +258,111 @@ func deleteBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackClust
 	return nil
 }
 
-func reconcileNormal(scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) { //nolint:unparam
+func getDesiredSecurityGroupsFromMachineLabels(machine *clusterv1.Machine, openStackCluster *infrav1.OpenStackCluster) []string {
+	desiredSecurityGroups := []string{}
+	if openStackCluster.Spec.ManagedSecurityGroups {
+		// For now we only support the control plane & workers
+		if util.IsControlPlaneMachine(machine) {
+			desiredSecurityGroups = append(desiredSecurityGroups, openStackCluster.Status.ControlPlaneSecurityGroup.ID)
+		} else {
+			desiredSecurityGroups = append(desiredSecurityGroups, openStackCluster.Status.WorkerSecurityGroup.ID)
+		}
+	}
+
+	return desiredSecurityGroups
+}
+
+func getAppliedSecurityGroups(openStackMachine *infrav1.OpenStackMachine) []string {
+	appliedSecurityGroups := []string{}
+	appliedSecurityGroups = append(appliedSecurityGroups, openStackMachine.Status.SecurityGroups...)
+
+	return appliedSecurityGroups
+}
+
+func getMachineFromOpenStackMachine(openStackMachine infrav1.OpenStackMachine, machineList *clusterv1.MachineList) *clusterv1.Machine {
+	for i := range machineList.Items {
+		machine := &machineList.Items[i]
+		if machine.Name == openStackMachine.Name {
+			return machine
+		}
+	}
+	return nil
+}
+
+func setMissingSecurityGroups(openStackMachine *infrav1.OpenStackMachine, securityGroups []string, computeService *compute.Service) error {
+	for _, securityGroup := range securityGroups {
+		err := computeService.AddSecurityGroupToInstance(*openStackMachine.Spec.InstanceID, securityGroup)
+		if err != nil {
+			return fmt.Errorf("failed to add security group %s to instance %s: %w", securityGroup, *openStackMachine.Spec.InstanceID, err)
+		}
+		statusSecurityGroups := openStackMachine.Status.SecurityGroups
+		if !contains(statusSecurityGroups, securityGroup) {
+			statusSecurityGroups = append(statusSecurityGroups, securityGroup)
+			openStackMachine.Status.SecurityGroups = statusSecurityGroups
+		}
+	}
+	return nil
+}
+
+func (r *OpenStackClusterReconciler) reconcileManagedSecurityGroups(ctx context.Context, scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
+	if openStackCluster.Spec.DisablePortSecurity {
+		scope.Logger().Info("Skipping managed security groups because port security is disabled")
+		return nil
+	}
+
+	networkingService, err := networking.NewService(scope)
+	if err != nil {
+		return err
+	}
+	computeService, err := compute.NewService(scope)
+	if err != nil {
+		return err
+	}
+	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
+	err = networkingService.ReconcileSecurityGroups(openStackCluster, clusterName)
+	if err != nil {
+		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile security groups: %w", err))
+		return fmt.Errorf("failed to reconcile security groups: %w", err)
+	}
+
+	labels := map[string]string{
+		clusterv1.ClusterNameLabel: cluster.Name,
+	}
+	machineList := &clusterv1.MachineList{}
+	if err := r.Client.List(ctx, machineList, client.InNamespace(cluster.Namespace), client.MatchingLabels(labels)); err != nil {
+		return fmt.Errorf("failed to list machines: %w", err)
+	}
+
+	openStackMachines := &infrav1.OpenStackMachineList{}
+	err = r.Client.List(ctx, openStackMachines, client.InNamespace(cluster.Namespace), client.MatchingLabels(labels))
+	if err != nil {
+		return fmt.Errorf("failed to list openstack machines: %w", err)
+	}
+
+	for _, openStackMachine := range openStackMachines.Items {
+		machine := getMachineFromOpenStackMachine(openStackMachine, machineList)
+		if machine == nil {
+			return fmt.Errorf("failed to find machine for openstack machine %s", openStackMachine.Name)
+		}
+
+		desiredSecurityGroups := getDesiredSecurityGroupsFromMachineLabels(machine, openStackCluster)
+		observedSecurityGroups := getAppliedSecurityGroups(&openStackMachine)
+		missingSecurityGroups := []string{}
+		for _, desiredSecurityGroup := range desiredSecurityGroups {
+			if !contains(observedSecurityGroups, desiredSecurityGroup) {
+				missingSecurityGroups = append(missingSecurityGroups, desiredSecurityGroup)
+			}
+		}
+		err := setMissingSecurityGroups(&openStackMachine, missingSecurityGroups, computeService)
+		if err != nil {
+			return fmt.Errorf("failed to set missing security groups: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
 	scope.Logger().Info("Reconciling Cluster")
 
 	// If the OpenStackCluster doesn't have our finalizer, add it.
@@ -273,6 +377,11 @@ func reconcileNormal(scope scope.Scope, cluster *clusterv1.Cluster, openStackClu
 	}
 
 	err = reconcileNetworkComponents(scope, cluster, openStackCluster)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = r.reconcileManagedSecurityGroups(ctx, scope, cluster, openStackCluster)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -497,12 +606,6 @@ func reconcileNetworkComponents(scope scope.Scope, cluster *clusterv1.Cluster, o
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile router: %w", err))
 			return fmt.Errorf("failed to reconcile router: %w", err)
 		}
-	}
-
-	err = networkingService.ReconcileSecurityGroups(openStackCluster, clusterName)
-	if err != nil {
-		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile security groups: %w", err))
-		return fmt.Errorf("failed to reconcile security groups: %w", err)
 	}
 
 	// Calculate the port that we will use for the API server

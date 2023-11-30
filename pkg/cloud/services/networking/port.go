@@ -53,6 +53,13 @@ func (s *Service) GetPortFromInstanceIP(instanceID string, ip string) ([]ports.P
 	}
 	return s.client.ListPort(portOpts)
 }
+func (s *Service) GetPort(id string) (*ports.Port, error) {
+	return s.client.GetPort(id)
+}
+
+func (s *Service) UpdatePort(id string, opts ports.UpdateOpts) (*ports.Port, error) {
+	return s.client.UpdatePort(id, opts)
+}
 
 func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string, portName string, portOpts *infrav1.PortOpts, instanceSecurityGroups []string, instanceTags []string) (*ports.Port, error) {
 	networkID := portOpts.Network.ID
@@ -189,6 +196,19 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 	}
 
 	return port, nil
+}
+
+func (s *Service) UpdatePortSecurityGroups(eventObject runtime.Object, portID string, securityGroupIDs []string) error {
+	_, err := s.client.UpdatePort(portID, ports.UpdateOpts{
+		SecurityGroups: &securityGroupIDs,
+	})
+	if err != nil {
+		record.Warnf(eventObject, "FailedUpdatePortSecurityGroups", "Failed to update port %s: %v", portID, err)
+		return err
+	}
+
+	record.Eventf(eventObject, "SuccessfulUpdatePortSecurityGroups", "Updated port %s", portID)
+	return nil
 }
 
 func (s *Service) getSubnetIDForFixedIP(subnet *infrav1.SubnetFilter, networkID string) (string, error) {

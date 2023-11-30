@@ -682,6 +682,11 @@ func (in *OpenStackMachineStatus) DeepCopyInto(out *OpenStackMachineStatus) {
 		*out = new(InstanceState)
 		**out = **in
 	}
+	if in.SecurityGroups != nil {
+		in, out := &in.SecurityGroups, &out.SecurityGroups
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.FailureReason != nil {
 		in, out := &in.FailureReason, &out.FailureReason
 		*out = new(errors.MachineStatusError)
