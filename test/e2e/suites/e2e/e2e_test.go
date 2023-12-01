@@ -28,10 +28,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
-	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumetypes"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
@@ -57,7 +54,6 @@ import (
 	crclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha8"
-	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 	"sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
 )
 
@@ -889,25 +885,4 @@ func isCloudProviderInitialized(taints []corev1.Taint) bool {
 		}
 	}
 	return true
-}
-
-func createTestVolumeType(e2eCtx *shared.E2EContext) {
-	providerClient, clientOpts, _, err := shared.GetAdminProviderClient(e2eCtx)
-	Expect(err).NotTo(HaveOccurred())
-
-	volumeClient, err := openstack.NewBlockStorageV3(providerClient, gophercloud.EndpointOpts{Region: clientOpts.RegionName})
-	Expect(err).NotTo(HaveOccurred())
-
-	shared.Logf("Creating test volume type")
-	_, err = volumetypes.Create(volumeClient, &volumetypes.CreateOpts{
-		Name:        e2eCtx.E2EConfig.GetVariable(shared.OpenStackVolumeTypeAlt),
-		Description: "Test volume type",
-		IsPublic:    pointer.Bool(true),
-		ExtraSpecs:  map[string]string{},
-	}).Extract()
-	if capoerrors.IsConflict(err) {
-		shared.Logf("Volume type already exists. This may happen in development environments, but it is not expected in CI.")
-		return
-	}
-	Expect(err).NotTo(HaveOccurred())
 }

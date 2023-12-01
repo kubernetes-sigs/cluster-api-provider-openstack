@@ -150,6 +150,14 @@
         openstack aggregate add host "$aggregateid" "$host"
     done
 
+    # Create the volume type
+    VOLUME_TYPE_NAME="test-volume-type"
+    if openstack volume type create --description "Test volume type" --public "${VOLUME_TYPE_NAME}" &> /dev/null; then
+        echo "Volume type '${VOLUME_TYPE_NAME}' created successfully."
+    else
+        echo "Error: Failed to create volume type '${VOLUME_TYPE_NAME}'."
+    fi
+
     # the flavors are created in a way that we can execute at least 2 e2e tests in parallel (overall we have 32 vCPUs)
     openstack flavor delete m1.tiny
     openstack flavor create --ram 512 --disk 1 --ephemeral 1 --vcpus 1 --public --id 1 m1.tiny --property hw_rng:allowed='True'

@@ -52,7 +52,6 @@ func TestE2E(t *testing.T) {
 
 var _ = SynchronizedBeforeSuite(func() []byte {
 	data := shared.Node1BeforeSuite(e2eCtx)
-	createTestVolumeType(e2eCtx)
 	return data
 }, func(data []byte) {
 	shared.AllNodesBeforeSuite(e2eCtx, data)
