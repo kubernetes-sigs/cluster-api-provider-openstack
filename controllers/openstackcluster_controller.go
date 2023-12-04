@@ -266,6 +266,11 @@ func reconcileNormal(scope scope.Scope, cluster *clusterv1.Cluster, openStackClu
 		return reconcile.Result{}, err
 	}
 
+	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled && openStackCluster.Spec.ManagedSecurityGroups && openStackCluster.Status.BastionSecurityGroup == nil {
+		scope.Logger().Info("OpenStackCluster bastion security group is not ready yet")
+		return reconcile.Result{}, nil
+	}
+
 	if err = reconcileBastion(scope, cluster, openStackCluster); err != nil {
 		return reconcile.Result{}, err
 	}
@@ -302,6 +307,10 @@ func reconcileBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackCl
 
 	if openStackCluster.Spec.Bastion == nil || !openStackCluster.Spec.Bastion.Enabled {
 		return deleteBastion(scope, cluster, openStackCluster)
+	}
+
+	if openStackCluster.Spec.ManagedSecurityGroups && openStackCluster.Spec.Bastion != nil && openStackCluster.Status.BastionSecurityGroup == nil {
+		return fmt.Errorf("managed security groups are enabled but no bastion security group was found")
 	}
 
 	computeService, err := compute.NewService(scope)

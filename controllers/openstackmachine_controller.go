@@ -125,6 +125,17 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, nil
 	}
 
+	if infraCluster.Spec.ManagedSecurityGroups {
+		if infraCluster.Status.ControlPlaneSecurityGroup == nil {
+			log.Info("OpenStackCluster control plane security group is not ready yet")
+			return ctrl.Result{}, nil
+		}
+		if infraCluster.Status.WorkerSecurityGroup == nil {
+			log.Info("OpenStackCluster worker security group is not ready yet")
+			return ctrl.Result{}, nil
+		}
+	}
+
 	log = log.WithValues("openStackCluster", infraCluster.Name)
 
 	// Initialize the patch helper
