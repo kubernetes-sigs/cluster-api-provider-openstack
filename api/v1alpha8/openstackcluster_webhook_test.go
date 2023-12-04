@@ -235,6 +235,21 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "Modifying OpenstackCluster.Spec.ControlPlaneOmitAvailabilityZone is allowed",
+			oldTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					CloudName: "foobar",
+				},
+			},
+			newTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					CloudName:                        "foobar",
+					ControlPlaneOmitAvailabilityZone: true,
+				},
+			},
+			wantErr: false,
+		},
+		{
 			name: "Changing OpenStackCluster.Spec.APIServerFixedIP is allowed when API Server Floating IP is disabled",
 			oldTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{

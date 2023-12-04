@@ -130,6 +130,11 @@ func (r *OpenStackCluster) ValidateUpdate(oldRaw runtime.Object) (admission.Warn
 	old.Spec.ControlPlaneAvailabilityZones = []string{}
 	r.Spec.ControlPlaneAvailabilityZones = []string{}
 
+	// Allow the scheduling to be changed from CAPI managed to Nova and
+	// vice versa.
+	old.Spec.ControlPlaneOmitAvailabilityZone = false
+	r.Spec.ControlPlaneOmitAvailabilityZone = false
+
 	// Allow change to the allowAllInClusterTraffic.
 	old.Spec.AllowAllInClusterTraffic = false
 	r.Spec.AllowAllInClusterTraffic = false
