@@ -205,18 +205,14 @@ func (s *Service) GetSecurityGroups(securityGroupParams []infrav1.SecurityGroupF
 	return sgIDs, nil
 }
 
-func (s *Service) DeleteSecurityGroups(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
-	secGroupNames := []string{
-		getSecControlPlaneGroupName(clusterName),
-		getSecWorkerGroupName(clusterName),
-	}
-	for _, secGroupName := range secGroupNames {
-		if err := s.deleteSecurityGroup(openStackCluster, secGroupName); err != nil {
-			return err
-		}
-	}
+func (s *Service) DeleteControlPlaneSecurityGroup(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
+	secControlPlaneGroupName := getSecControlPlaneGroupName(clusterName)
+	return s.deleteSecurityGroup(openStackCluster, secControlPlaneGroupName)
+}
 
-	return nil
+func (s *Service) DeleteWorkerSecurityGroup(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
+	secWorkerGroupName := getSecWorkerGroupName(clusterName)
+	return s.deleteSecurityGroup(openStackCluster, secWorkerGroupName)
 }
 
 func (s *Service) DeleteBastionSecurityGroup(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {

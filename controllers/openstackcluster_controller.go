@@ -167,11 +167,6 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope 
 		}
 	}
 
-	if err = networkingService.DeleteSecurityGroups(openStackCluster, clusterName); err != nil {
-		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete security groups: %w", err))
-		return reconcile.Result{}, fmt.Errorf("failed to delete security groups: %w", err)
-	}
-
 	// if NodeCIDR was not set, no network was created.
 	if openStackCluster.Spec.NodeCIDR != "" {
 		if err = networkingService.DeleteRouter(openStackCluster, clusterName); err != nil {
@@ -246,12 +241,6 @@ func deleteBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackClust
 	}
 
 	openStackCluster.Status.Bastion = nil
-
-	if err = networkingService.DeleteBastionSecurityGroup(openStackCluster, fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)); err != nil {
-		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete bastion security group: %w", err))
-		return fmt.Errorf("failed to delete bastion security group: %w", err)
-	}
-	openStackCluster.Status.BastionSecurityGroup = nil
 
 	delete(openStackCluster.ObjectMeta.Annotations, BastionInstanceHashAnnotation)
 
@@ -497,12 +486,6 @@ func reconcileNetworkComponents(scope scope.Scope, cluster *clusterv1.Cluster, o
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile router: %w", err))
 			return fmt.Errorf("failed to reconcile router: %w", err)
 		}
-	}
-
-	err = networkingService.ReconcileSecurityGroups(openStackCluster, clusterName)
-	if err != nil {
-		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile security groups: %w", err))
-		return fmt.Errorf("failed to reconcile security groups: %w", err)
 	}
 
 	// Calculate the port that we will use for the API server

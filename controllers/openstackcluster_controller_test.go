@@ -23,7 +23,6 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/golang/mock/gomock"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	. "github.com/onsi/ginkgo/v2"
@@ -202,9 +201,6 @@ var _ = Describe("OpenStackCluster controller", func() {
 		computeClientRecorder.ListServers(servers.ListOpts{
 			Name: "^capi-cluster-bastion$",
 		}).Return([]clients.ServerExt{}, nil)
-
-		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
-		networkClientRecorder.ListSecGroup(gomock.Any()).Return([]groups.SecGroup{}, nil)
 
 		err = deleteBastion(scope, capiCluster, testCluster)
 		Expect(err).To(BeNil())
