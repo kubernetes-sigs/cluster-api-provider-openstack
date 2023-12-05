@@ -19,9 +19,12 @@ package networking
 import (
 	"fmt"
 
+	"github.com/go-logr/logr"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/rules"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
@@ -70,7 +73,7 @@ func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackClu
 	observedSecGroups := make(map[string]*infrav1.SecurityGroup)
 	for k, desiredSecGroup := range desiredSecGroups {
 		var err error
-		observedSecGroups[k], err = s.getSecurityGroupByName(desiredSecGroup.Name)
+		observedSecGroups[k], err = s.GetSecurityGroupByName(desiredSecGroup.Name)
 
 		if err != nil {
 			return err
@@ -100,7 +103,7 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 	var secWorkerGroupID string
 	var secBastionGroupID string
 	for i, v := range secGroupNames {
-		secGroup, err := s.getSecurityGroupByName(v)
+		secGroup, err := s.GetSecurityGroupByName(v)
 		if err != nil {
 			return desiredSecGroups, err
 		}
@@ -225,7 +228,7 @@ func (s *Service) DeleteBastionSecurityGroup(openStackCluster *infrav1.OpenStack
 }
 
 func (s *Service) deleteSecurityGroup(openStackCluster *infrav1.OpenStackCluster, name string) error {
-	group, err := s.getSecurityGroupByName(name)
+	group, err := s.GetSecurityGroupByName(name)
 	if err != nil {
 		return err
 	}
@@ -316,7 +319,7 @@ func (s *Service) reconcileGroupRules(desired, observed infrav1.SecurityGroup) (
 }
 
 func (s *Service) createSecurityGroupIfNotExists(openStackCluster *infrav1.OpenStackCluster, groupName string) error {
-	secGroup, err := s.getSecurityGroupByName(groupName)
+	secGroup, err := s.GetSecurityGroupByName(groupName)
 	if err != nil {
 		return err
 	}
@@ -354,7 +357,7 @@ func (s *Service) createSecurityGroupIfNotExists(openStackCluster *infrav1.OpenS
 	return nil
 }
 
-func (s *Service) getSecurityGroupByName(name string) (*infrav1.SecurityGroup, error) {
+func (s *Service) GetSecurityGroupByName(name string) (*infrav1.SecurityGroup, error) {
 	opts := groups.ListOpts{
 		Name: name,
 	}
@@ -397,6 +400,67 @@ func (s *Service) createRule(r infrav1.SecurityGroupRule) (infrav1.SecurityGroup
 		return infrav1.SecurityGroupRule{}, err
 	}
 	return convertOSSecGroupRuleToConfigSecGroupRule(*rule), nil
+}
+
+func contains(list []string, element string) bool {
+	for _, e := range list {
+		if e == element {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Service) ReconcileSecurityGroupsToInstanceAttachedInterfaces(logger logr.Logger, openStackMachine *infrav1.OpenStackMachine, attachedInterfaces []attachinterfaces.Interface, desiredSecurityGroupIDs []string) error {
+	for _, iface := range attachedInterfaces {
+		portUpdateNeeded := false
+		portID := iface.PortID
+		port, err := s.client.GetPort(portID)
+		if err != nil {
+			return fmt.Errorf("error getting port %s: %v", portID, err)
+		}
+
+		// check if port already has desired security groups
+		for _, securityGroupID := range desiredSecurityGroupIDs {
+			if !contains(port.SecurityGroups, securityGroupID) {
+				logger.Info("Port doesn't have desired security group", "portID", portID, "securityGroupID", securityGroupID)
+				portUpdateNeeded = true
+				break
+			}
+		}
+		// check if port has security groups that are not desired
+		for _, securityGroupID := range port.SecurityGroups {
+			if !contains(desiredSecurityGroupIDs, securityGroupID) {
+				logger.Info("Port has security group that is not desired", "portID", portID, "securityGroupID", securityGroupID)
+				portUpdateNeeded = true
+				break
+			}
+		}
+
+		if portUpdateNeeded {
+			logger.Info("Updating port", "portID", portID, "securityGroups", desiredSecurityGroupIDs)
+			portOpts := ports.UpdateOpts{
+				SecurityGroups: &desiredSecurityGroupIDs,
+			}
+			_, err := s.client.UpdatePort(portID, portOpts)
+			if err != nil {
+				return fmt.Errorf("error updating port %s: %v", portID, err)
+			}
+		}
+	}
+
+	appliedSecurityGroups := make([]infrav1.SecurityGroup, len(desiredSecurityGroupIDs))
+	for i, securityGroupID := range desiredSecurityGroupIDs {
+		securityGroup, err := s.client.GetSecGroup(securityGroupID)
+		if err != nil {
+			return fmt.Errorf("error getting security group %s: %v", securityGroupID, err)
+		}
+		appliedSecurityGroups[i] = *convertOSSecGroupToConfigSecGroup(*securityGroup)
+	}
+	logger.Info("Updating openStackMachine.Status.SecurityGroups", "securityGroups", appliedSecurityGroups)
+	openStackMachine.Status.SecurityGroups = appliedSecurityGroups
+
+	return nil
 }
 
 func getSecControlPlaneGroupName(clusterName string) string {

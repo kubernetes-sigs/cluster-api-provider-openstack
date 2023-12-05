@@ -19,6 +19,7 @@ package controllers
 import (
 	"testing"
 
+	"github.com/go-logr/logr"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
@@ -26,15 +27,14 @@ import (
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 )
 
 const (
-	networkUUID                   = "d412171b-9fd7-41c1-95a6-c24e5953974d"
-	subnetUUID                    = "d2d8d98d-b234-477e-a547-868b7cb5d6a5"
-	extraSecurityGroupUUID        = "514bb2d8-3390-4a3b-86a7-7864ba57b329"
-	controlPlaneSecurityGroupUUID = "c9817a91-4821-42db-8367-2301002ab659"
-	workerSecurityGroupUUID       = "9c6c0d28-03c9-436c-815d-58440ac2c1c8"
-	serverGroupUUID               = "7b940d62-68ef-4e42-a76a-1a62e290509c"
+	networkUUID            = "d412171b-9fd7-41c1-95a6-c24e5953974d"
+	subnetUUID             = "d2d8d98d-b234-477e-a547-868b7cb5d6a5"
+	extraSecurityGroupUUID = "514bb2d8-3390-4a3b-86a7-7864ba57b329"
+	serverGroupUUID        = "7b940d62-68ef-4e42-a76a-1a62e290509c"
 
 	openStackMachineName = "test-openstack-machine"
 	namespace            = "test-namespace"
@@ -56,8 +56,6 @@ func getDefaultOpenStackCluster() *infrav1.OpenStackCluster {
 					{ID: subnetUUID},
 				},
 			},
-			ControlPlaneSecurityGroup: &infrav1.SecurityGroup{ID: controlPlaneSecurityGroupUUID},
-			WorkerSecurityGroup:       &infrav1.SecurityGroup{ID: workerSecurityGroupUUID},
 		},
 	}
 }
@@ -130,64 +128,6 @@ func Test_machineToInstanceSpec(t *testing.T) {
 			wantInstanceSpec: getDefaultInstanceSpec,
 		},
 		{
-			name: "Control plane security group",
-			openStackCluster: func() *infrav1.OpenStackCluster {
-				c := getDefaultOpenStackCluster()
-				c.Spec.ManagedSecurityGroups = true
-				return c
-			},
-			machine: func() *clusterv1.Machine {
-				m := getDefaultMachine()
-				m.Labels = map[string]string{
-					clusterv1.MachineControlPlaneLabel: "true",
-				}
-				return m
-			},
-			openStackMachine: getDefaultOpenStackMachine,
-			wantInstanceSpec: func() *compute.InstanceSpec {
-				i := getDefaultInstanceSpec()
-				i.SecurityGroups = []infrav1.SecurityGroupFilter{{ID: controlPlaneSecurityGroupUUID}}
-				return i
-			},
-		},
-		{
-			name: "Worker security group",
-			openStackCluster: func() *infrav1.OpenStackCluster {
-				c := getDefaultOpenStackCluster()
-				c.Spec.ManagedSecurityGroups = true
-				return c
-			},
-			machine:          getDefaultMachine,
-			openStackMachine: getDefaultOpenStackMachine,
-			wantInstanceSpec: func() *compute.InstanceSpec {
-				i := getDefaultInstanceSpec()
-				i.SecurityGroups = []infrav1.SecurityGroupFilter{{ID: workerSecurityGroupUUID}}
-				return i
-			},
-		},
-		{
-			name: "Extra security group",
-			openStackCluster: func() *infrav1.OpenStackCluster {
-				c := getDefaultOpenStackCluster()
-				c.Spec.ManagedSecurityGroups = true
-				return c
-			},
-			machine: getDefaultMachine,
-			openStackMachine: func() *infrav1.OpenStackMachine {
-				m := getDefaultOpenStackMachine()
-				m.Spec.SecurityGroups = []infrav1.SecurityGroupFilter{{ID: extraSecurityGroupUUID}}
-				return m
-			},
-			wantInstanceSpec: func() *compute.InstanceSpec {
-				i := getDefaultInstanceSpec()
-				i.SecurityGroups = []infrav1.SecurityGroupFilter{
-					{ID: extraSecurityGroupUUID},
-					{ID: workerSecurityGroupUUID},
-				}
-				return i
-			},
-		},
-		{
 			name: "Tags",
 			openStackCluster: func() *infrav1.OpenStackCluster {
 				c := getDefaultOpenStackCluster()
@@ -211,6 +151,47 @@ func Test_machineToInstanceSpec(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := machineToInstanceSpec(tt.openStackCluster(), tt.machine(), tt.openStackMachine(), "user-data")
 			Expect(got).To(Equal(tt.wantInstanceSpec()))
+		})
+	}
+}
+
+func Test_reconcileSecurityGroupsToInstance(t *testing.T) {
+	RegisterTestingT(t)
+
+	openStackCluster := getDefaultOpenStackCluster()
+	machine := getDefaultMachine()
+	openStackMachine := getDefaultOpenStackMachine()
+	instanceStatus := &compute.InstanceStatus{}
+	logger := logr.Logger{}
+
+	computeService := &compute.Service{}
+	networkingService := &networking.Service{}
+
+	tests := []struct {
+		name                   string
+		openStackMachine       *infrav1.OpenStackMachine
+		expectedError          bool
+		expectedSecurityGroups []infrav1.SecurityGroup
+	}{
+		{
+			name:                   "NoSecurityGroups",
+			openStackMachine:       openStackMachine,
+			expectedError:          false,
+			expectedSecurityGroups: nil,
+		},
+	}
+	// TODO(emilien) Add more tests
+
+	for _, tt := range tests {
+		r := &OpenStackMachineReconciler{}
+		t.Run(tt.name, func(t *testing.T) {
+			err := r.reconcileSecurityGroupsToInstance(logger, openStackCluster, machine, tt.openStackMachine, instanceStatus, computeService, networkingService)
+			if tt.expectedError {
+				Expect(err).To(HaveOccurred())
+			} else {
+				Expect(err).NotTo(HaveOccurred())
+			}
+			Expect(tt.openStackMachine.Status.SecurityGroups).To(Equal(tt.expectedSecurityGroups))
 		})
 	}
 }

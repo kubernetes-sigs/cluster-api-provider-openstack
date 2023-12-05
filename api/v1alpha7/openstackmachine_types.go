@@ -111,6 +111,11 @@ type OpenStackMachineStatus struct {
 	// +optional
 	InstanceState *InstanceState `json:"instanceState,omitempty"`
 
+	// SecurityGroups is the list of security groups that were applied to the ports
+	// attached to the instance.
+	// +optional
+	SecurityGroups []SecurityGroup `json:"securityGroups,omitempty"`
+
 	FailureReason *errors.MachineStatusError `json:"failureReason,omitempty"`
 
 	// FailureMessage will be set in the event that there is a terminal problem

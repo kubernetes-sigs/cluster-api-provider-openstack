@@ -334,6 +334,12 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		return ctrl.Result{}, err
 	}
 
+	err = r.reconcileSecurityGroupsToInstance(scope.Logger(), openStackCluster, machine, openStackMachine, instanceStatus, computeService, networkingService)
+	if err != nil {
+		conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.SecurityGroupApplyFailedReason, clusterv1.ConditionSeverityError, "Applying security groups failed: %v", err)
+		return ctrl.Result{}, fmt.Errorf("add security groups to instance: %w", err)
+	}
+
 	// TODO(sbueringer) From CAPA: TODO(ncdc): move this validation logic into a validating webhook (for us: create validation logic in webhook)
 
 	openStackMachine.Spec.ProviderID = pointer.String(fmt.Sprintf("openstack:///%s", instanceStatus.ID()))
@@ -430,6 +436,56 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	return ctrl.Result{}, nil
 }
 
+func (r *OpenStackMachineReconciler) reconcileSecurityGroupsToInstance(logger logr.Logger, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, instanceStatus *compute.InstanceStatus, computeService *compute.Service, networkingService *networking.Service) error {
+	logger.Info("Reconciling security groups to instance")
+
+	desiredSecurityGroups := []*infrav1.SecurityGroup{}
+
+	// These security groups are currently not managed by CAPO and provided by the user
+	// Later we'll have an API to manage them.
+	for _, sg := range openStackMachine.Spec.SecurityGroups {
+		if sg.ID == "" {
+			// lookup security group by name
+			securityGroup, err := networkingService.GetSecurityGroupByName(sg.Name)
+			if err != nil {
+				return fmt.Errorf("get security group %q: %w", sg.Name, err)
+			}
+			sg.ID = securityGroup.ID
+		}
+		desiredSecurityGroups = append(desiredSecurityGroups, &infrav1.SecurityGroup{
+			ID: sg.ID,
+		})
+	}
+
+	if openStackCluster.Spec.ManagedSecurityGroups {
+		if util.IsControlPlaneMachine(machine) && openStackCluster.Status.ControlPlaneSecurityGroup != nil {
+			desiredSecurityGroups = append(desiredSecurityGroups, openStackCluster.Status.ControlPlaneSecurityGroup)
+		} else if openStackCluster.Status.WorkerSecurityGroup != nil {
+			desiredSecurityGroups = append(desiredSecurityGroups, openStackCluster.Status.WorkerSecurityGroup)
+		}
+	}
+
+	if len(desiredSecurityGroups) > 0 {
+		instanceID := instanceStatus.ID()
+		desiredSecurityGroupsIDs := make([]string, len(desiredSecurityGroups))
+		for i, sg := range desiredSecurityGroups {
+			desiredSecurityGroupsIDs[i] = sg.ID
+		}
+		// Security Groups are attached to ports, not instances so we need to get the ports first
+		attachedInterfaces, err := computeService.GetAttachedInterfaces(instanceID)
+		if err != nil {
+			return fmt.Errorf("get attached interfaces for instance %q: %w", instanceStatus.Name(), err)
+		}
+		err = networkingService.ReconcileSecurityGroupsToInstanceAttachedInterfaces(logger, openStackMachine, attachedInterfaces, desiredSecurityGroupsIDs)
+		if err != nil {
+			return fmt.Errorf("reconcile security groups %q to instance %q: %w", desiredSecurityGroupsIDs, instanceStatus.Name(), err)
+		}
+	}
+
+	logger.Info("Reconciled security groups to instance successfully")
+	return nil
+}
+
 func (r *OpenStackMachineReconciler) getOrCreate(logger logr.Logger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, computeService *compute.Service, userData string) (*compute.InstanceStatus, error) {
 	instanceStatus, err := computeService.GetInstanceStatusByName(openStackMachine, openStackMachine.Name)
 	if err != nil {
@@ -495,20 +551,6 @@ func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *
 	machineTags = deduplicate(machineTags)
 
 	instanceSpec.Tags = machineTags
-
-	instanceSpec.SecurityGroups = openStackMachine.Spec.SecurityGroups
-	if openStackCluster.Spec.ManagedSecurityGroups {
-		var managedSecurityGroup string
-		if util.IsControlPlaneMachine(machine) && openStackCluster.Status.ControlPlaneSecurityGroup != nil {
-			managedSecurityGroup = openStackCluster.Status.ControlPlaneSecurityGroup.ID
-		} else if openStackCluster.Status.WorkerSecurityGroup != nil {
-			managedSecurityGroup = openStackCluster.Status.WorkerSecurityGroup.ID
-		}
-
-		instanceSpec.SecurityGroups = append(instanceSpec.SecurityGroups, infrav1.SecurityGroupFilter{
-			ID: managedSecurityGroup,
-		})
-	}
 
 	instanceSpec.Ports = openStackMachine.Spec.Ports
 

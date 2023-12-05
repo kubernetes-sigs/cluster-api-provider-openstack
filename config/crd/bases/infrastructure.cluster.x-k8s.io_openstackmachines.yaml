@@ -1606,6 +1606,61 @@ spec:
               ready:
                 description: Ready is true when the provider resource is ready.
                 type: boolean
+              securityGroups:
+                description: SecurityGroups is the list of security groups that were
+                  applied to the ports attached to the instance.
+                items:
+                  description: SecurityGroup represents the basic information of the
+                    associated OpenStack Neutron Security Group.
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+                    rules:
+                      items:
+                        description: SecurityGroupRule represent the basic information
+                          of the associated OpenStack Security Group Role.
+                        properties:
+                          description:
+                            type: string
+                          direction:
+                            type: string
+                          etherType:
+                            type: string
+                          name:
+                            type: string
+                          portRangeMax:
+                            type: integer
+                          portRangeMin:
+                            type: integer
+                          protocol:
+                            type: string
+                          remoteGroupID:
+                            type: string
+                          remoteIPPrefix:
+                            type: string
+                          securityGroupID:
+                            type: string
+                        required:
+                        - description
+                        - direction
+                        - etherType
+                        - name
+                        - portRangeMax
+                        - portRangeMin
+                        - protocol
+                        - remoteGroupID
+                        - remoteIPPrefix
+                        - securityGroupID
+                        type: object
+                      type: array
+                  required:
+                  - id
+                  - name
+                  - rules
+                  type: object
+                type: array
             type: object
         type: object
     served: true

@@ -659,3 +659,14 @@ func Convert_v1alpha6_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(
 func Convert_v1alpha7_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(in *infrav1.OpenStackMachineSpec, out *OpenStackMachineSpec, s apiconversion.Scope) error {
 	return autoConvert_v1alpha7_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(in, out, s)
 }
+
+func Convert_v1alpha7_OpenStackMachineStatus_To_v1alpha6_OpenStackMachineStatus(in *infrav1.OpenStackMachineStatus, out *OpenStackMachineStatus, s apiconversion.Scope) error {
+	err := autoConvert_v1alpha7_OpenStackMachineStatus_To_v1alpha6_OpenStackMachineStatus(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	in.SecurityGroups = nil
+
+	return nil
+}

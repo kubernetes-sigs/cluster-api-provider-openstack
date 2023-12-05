@@ -716,6 +716,13 @@ func (in *OpenStackMachineStatus) DeepCopyInto(out *OpenStackMachineStatus) {
 		*out = new(InstanceState)
 		**out = **in
 	}
+	if in.SecurityGroups != nil {
+		in, out := &in.SecurityGroups, &out.SecurityGroups
+		*out = make([]SecurityGroup, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	if in.FailureReason != nil {
 		in, out := &in.FailureReason, &out.FailureReason
 		*out = new(errors.MachineStatusError)
