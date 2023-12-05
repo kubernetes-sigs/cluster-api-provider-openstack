@@ -224,7 +224,11 @@ func NewProviderClient(cloud clientconfig.Cloud, caCert []byte, logger logr.Logg
 	}
 	if caCert != nil {
 		config.RootCAs = x509.NewCertPool()
-		config.RootCAs.AppendCertsFromPEM(caCert)
+		ok := config.RootCAs.AppendCertsFromPEM(caCert)
+		if !ok {
+			// If no certificates were successfully parsed, set RootCAs to nil to use the host's root CA
+			config.RootCAs = nil
+		}
 	}
 
 	provider.HTTPClient.Transport = &http.Transport{Proxy: http.ProxyFromEnvironment, TLSClientConfig: config}
