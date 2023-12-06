@@ -111,10 +111,14 @@ type OpenStackMachineStatus struct {
 	// +optional
 	InstanceState *InstanceState `json:"instanceState,omitempty"`
 
-	// SecurityGroups is the list of security groups that were applied to the ports
-	// attached to the instance.
+	// AppliedSecurityGroupIDs is a list of the security group IDs applied to the instance.
 	// +optional
-	SecurityGroups []SecurityGroup `json:"securityGroups,omitempty"`
+	AppliedSecurityGroupIDs []string `json:"appliedSecurityGroupIDs,omitempty"`
+
+	// MachineSecurityGroupIDs is a list of IDs of the security groups that have been
+	// defined in the OpenStackMachine.Spec.SecurityGroups field.
+	// +optional
+	MachineSecurityGroupIDs []string `json:"machineSecurityGroupIDs,omitempty"`
 
 	FailureReason *errors.MachineStatusError `json:"failureReason,omitempty"`
 

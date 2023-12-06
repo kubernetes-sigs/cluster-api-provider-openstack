@@ -328,6 +328,14 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		return ctrl.Result{}, err
 	}
 
+	if len(openStackMachine.Spec.SecurityGroups) != len(openStackMachine.Status.MachineSecurityGroupIDs) {
+		machineSecurityGroups, err := networkingService.GetSecurityGroups(openStackMachine.Spec.SecurityGroups)
+		if err != nil {
+			return ctrl.Result{}, fmt.Errorf("get security groups %q: %w", openStackMachine.Spec.SecurityGroups, err)
+		}
+		openStackMachine.Status.MachineSecurityGroupIDs = machineSecurityGroups
+	}
+
 	instanceStatus, err := r.getOrCreate(scope.Logger(), cluster, openStackCluster, machine, openStackMachine, computeService, userData)
 	if err != nil {
 		// Conditions set in getOrCreate
@@ -436,50 +444,46 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	return ctrl.Result{}, nil
 }
 
+func normalize(set []string) []string {
+	seen := make(map[string]struct{}, len(set))
+	normalized := make([]string, 0, len(set))
+	for _, s := range set {
+		if _, ok := seen[s]; !ok {
+			seen[s] = struct{}{}
+			normalized = append(normalized, s)
+		}
+	}
+	return normalized
+}
+
 func (r *OpenStackMachineReconciler) reconcileSecurityGroupsToInstance(logger logr.Logger, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, instanceStatus *compute.InstanceStatus, computeService *compute.Service, networkingService *networking.Service) error {
 	logger.Info("Reconciling security groups to instance")
 
-	desiredSecurityGroups := []*infrav1.SecurityGroup{}
+	desiredSecurityGroupIDs := []string{}
 
-	// These security groups are currently not managed by CAPO and provided by the user
-	// Later we'll have an API to manage them.
-	for _, sg := range openStackMachine.Spec.SecurityGroups {
-		if sg.ID == "" {
-			// lookup security group by name
-			securityGroup, err := networkingService.GetSecurityGroupByName(sg.Name)
-			if err != nil {
-				return fmt.Errorf("get security group %q: %w", sg.Name, err)
-			}
-			sg.ID = securityGroup.ID
-		}
-		desiredSecurityGroups = append(desiredSecurityGroups, &infrav1.SecurityGroup{
-			ID: sg.ID,
-		})
+	desiredSecurityGroupIDs = append(desiredSecurityGroupIDs, openStackMachine.Status.MachineSecurityGroupIDs...)
+
+	if util.IsControlPlaneMachine(machine) && openStackCluster.Status.ControlPlaneSecurityGroup != nil {
+		desiredSecurityGroupIDs = append(desiredSecurityGroupIDs, openStackCluster.Status.ControlPlaneSecurityGroup.ID)
+	} else if openStackCluster.Status.WorkerSecurityGroup != nil {
+		desiredSecurityGroupIDs = append(desiredSecurityGroupIDs, openStackCluster.Status.WorkerSecurityGroup.ID)
 	}
 
-	if openStackCluster.Spec.ManagedSecurityGroups {
-		if util.IsControlPlaneMachine(machine) && openStackCluster.Status.ControlPlaneSecurityGroup != nil {
-			desiredSecurityGroups = append(desiredSecurityGroups, openStackCluster.Status.ControlPlaneSecurityGroup)
-		} else if openStackCluster.Status.WorkerSecurityGroup != nil {
-			desiredSecurityGroups = append(desiredSecurityGroups, openStackCluster.Status.WorkerSecurityGroup)
-		}
-	}
-
-	if len(desiredSecurityGroups) > 0 {
+	desiredSecurityGroupIDs = normalize(desiredSecurityGroupIDs)
+	appliedSecurityGroupIDs := normalize(openStackMachine.Status.AppliedSecurityGroupIDs)
+	if !reflect.DeepEqual(desiredSecurityGroupIDs, appliedSecurityGroupIDs) {
 		instanceID := instanceStatus.ID()
-		desiredSecurityGroupsIDs := make([]string, len(desiredSecurityGroups))
-		for i, sg := range desiredSecurityGroups {
-			desiredSecurityGroupsIDs[i] = sg.ID
-		}
-		// Security Groups are attached to ports, not instances so we need to get the ports first
 		attachedInterfaces, err := computeService.GetAttachedInterfaces(instanceID)
 		if err != nil {
 			return fmt.Errorf("get attached interfaces for instance %q: %w", instanceStatus.Name(), err)
 		}
-		err = networkingService.ReconcileSecurityGroupsToInstanceAttachedInterfaces(logger, openStackMachine, attachedInterfaces, desiredSecurityGroupsIDs)
+		err = networkingService.ReconcileSecurityGroupsToInstanceAttachedInterfaces(logger, openStackMachine, attachedInterfaces, desiredSecurityGroupIDs)
 		if err != nil {
-			return fmt.Errorf("reconcile security groups %q to instance %q: %w", desiredSecurityGroupsIDs, instanceStatus.Name(), err)
+			return fmt.Errorf("reconcile security groups %q to instance %q: %w", desiredSecurityGroupIDs, instanceStatus.Name(), err)
 		}
+	} else {
+		logger.Info("No security groups to instance to reconcile")
+		return nil
 	}
 
 	logger.Info("Reconciled security groups to instance successfully")

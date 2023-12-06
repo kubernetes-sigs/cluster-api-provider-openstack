@@ -444,7 +444,8 @@ func Convert_v1alpha7_OpenStackMachineStatus_To_v1alpha5_OpenStackMachineStatus(
 		return err
 	}
 
-	in.SecurityGroups = nil
+	in.AppliedSecurityGroupIDs = nil
+	in.MachineSecurityGroupIDs = nil
 
 	return nil
 }

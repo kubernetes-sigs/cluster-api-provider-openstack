@@ -425,7 +425,6 @@ func (s *Service) ReconcileSecurityGroupsToInstanceAttachedInterfaces(logger log
 			if !contains(port.SecurityGroups, securityGroupID) {
 				logger.Info("Port doesn't have desired security group", "portID", portID, "securityGroupID", securityGroupID)
 				portUpdateNeeded = true
-				break
 			}
 		}
 		// check if port has security groups that are not desired
@@ -433,7 +432,6 @@ func (s *Service) ReconcileSecurityGroupsToInstanceAttachedInterfaces(logger log
 			if !contains(desiredSecurityGroupIDs, securityGroupID) {
 				logger.Info("Port has security group that is not desired", "portID", portID, "securityGroupID", securityGroupID)
 				portUpdateNeeded = true
-				break
 			}
 		}
 
@@ -449,16 +447,7 @@ func (s *Service) ReconcileSecurityGroupsToInstanceAttachedInterfaces(logger log
 		}
 	}
 
-	appliedSecurityGroups := make([]infrav1.SecurityGroup, len(desiredSecurityGroupIDs))
-	for i, securityGroupID := range desiredSecurityGroupIDs {
-		securityGroup, err := s.client.GetSecGroup(securityGroupID)
-		if err != nil {
-			return fmt.Errorf("error getting security group %s: %v", securityGroupID, err)
-		}
-		appliedSecurityGroups[i] = *convertOSSecGroupToConfigSecGroup(*securityGroup)
-	}
-	logger.Info("Updating openStackMachine.Status.SecurityGroups", "securityGroups", appliedSecurityGroups)
-	openStackMachine.Status.SecurityGroups = appliedSecurityGroups
+	openStackMachine.Status.AppliedSecurityGroupIDs = desiredSecurityGroupIDs
 
 	return nil
 }

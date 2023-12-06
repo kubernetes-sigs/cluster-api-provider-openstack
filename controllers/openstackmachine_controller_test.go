@@ -17,6 +17,7 @@ limitations under the License.
 package controllers
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/go-logr/logr"
@@ -171,7 +172,7 @@ func Test_reconcileSecurityGroupsToInstance(t *testing.T) {
 		name                   string
 		openStackMachine       *infrav1.OpenStackMachine
 		expectedError          bool
-		expectedSecurityGroups []infrav1.SecurityGroup
+		expectedSecurityGroups []string
 	}{
 		{
 			name:                   "NoSecurityGroups",
@@ -191,7 +192,40 @@ func Test_reconcileSecurityGroupsToInstance(t *testing.T) {
 			} else {
 				Expect(err).NotTo(HaveOccurred())
 			}
-			Expect(tt.openStackMachine.Status.SecurityGroups).To(Equal(tt.expectedSecurityGroups))
+			Expect(tt.openStackMachine.Status.AppliedSecurityGroupIDs).To(Equal(tt.expectedSecurityGroups))
+		})
+	}
+}
+
+func Test_normalize(t *testing.T) {
+	tests := []struct {
+		name     string
+		set      []string
+		expected []string
+	}{
+		{
+			name:     "EmptySet",
+			set:      []string{},
+			expected: []string{},
+		},
+		{
+			name:     "NoDuplicates",
+			set:      []string{"a", "b", "c"},
+			expected: []string{"a", "b", "c"},
+		},
+		{
+			name:     "WithDuplicates",
+			set:      []string{"a", "b", "a", "c", "b"},
+			expected: []string{"a", "b", "c"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := normalize(tt.set)
+			if !reflect.DeepEqual(got, tt.expected) {
+				t.Errorf("normalize() = %v, want %v", got, tt.expected)
+			}
 		})
 	}
 }
