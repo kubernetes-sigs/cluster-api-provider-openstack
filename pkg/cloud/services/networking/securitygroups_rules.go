@@ -20,7 +20,7 @@ import (
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 )
 
-var defaultRules = []infrav1.SecurityGroupRule{
+var egressOpenRules = []infrav1.SecurityGroupRule{
 	{
 		Direction:      "egress",
 		Description:    "Full open",
@@ -203,6 +203,20 @@ func GetSGWorkerSSH(secBastionGroupID string) []infrav1.SecurityGroupRule {
 			PortRangeMax:  22,
 			Protocol:      "tcp",
 			RemoteGroupID: secBastionGroupID,
+		},
+	}
+}
+
+// Permit traffic for ssh bastion.
+func GetSGBastionSSH() []infrav1.SecurityGroupRule {
+	return []infrav1.SecurityGroupRule{
+		{
+			Description:  "SSH",
+			Direction:    "ingress",
+			EtherType:    "IPv4",
+			PortRangeMin: 22,
+			PortRangeMax: 22,
+			Protocol:     "tcp",
 		},
 	}
 }

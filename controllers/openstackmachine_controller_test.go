@@ -130,7 +130,7 @@ func Test_machineToInstanceSpec(t *testing.T) {
 			wantInstanceSpec: getDefaultInstanceSpec,
 		},
 		{
-			name: "Control plane security group",
+			name: "Legacy managed Control plane security group",
 			openStackCluster: func() *infrav1.OpenStackCluster {
 				c := getDefaultOpenStackCluster()
 				c.Spec.ManagedSecurityGroups = true
@@ -151,10 +151,66 @@ func Test_machineToInstanceSpec(t *testing.T) {
 			},
 		},
 		{
-			name: "Worker security group",
+			name: "Legacy managed Worker security group",
 			openStackCluster: func() *infrav1.OpenStackCluster {
 				c := getDefaultOpenStackCluster()
 				c.Spec.ManagedSecurityGroups = true
+				return c
+			},
+			machine:          getDefaultMachine,
+			openStackMachine: getDefaultOpenStackMachine,
+			wantInstanceSpec: func() *compute.InstanceSpec {
+				i := getDefaultInstanceSpec()
+				i.SecurityGroups = []infrav1.SecurityGroupFilter{{ID: workerSecurityGroupUUID}}
+				return i
+			},
+		},
+		{
+			name: "Managed Control plane security group",
+			openStackCluster: func() *infrav1.OpenStackCluster {
+				c := getDefaultOpenStackCluster()
+				c.Spec.SecurityGroups = &infrav1.SecurityGroupsSpec{
+					AdditionalControlPlaneSecurityGroupRules: []infrav1.SecurityGroupRule{
+						{
+							Description:  "test-rule",
+							Direction:    "ingress",
+							PortRangeMin: 80,
+							PortRangeMax: 80,
+							Protocol:     "tcp",
+						},
+					},
+				}
+				return c
+			},
+			machine: func() *clusterv1.Machine {
+				m := getDefaultMachine()
+				m.Labels = map[string]string{
+					clusterv1.MachineControlPlaneLabel: "true",
+				}
+				return m
+			},
+			openStackMachine: getDefaultOpenStackMachine,
+			wantInstanceSpec: func() *compute.InstanceSpec {
+				i := getDefaultInstanceSpec()
+				i.SecurityGroups = []infrav1.SecurityGroupFilter{{ID: controlPlaneSecurityGroupUUID}}
+				return i
+			},
+		},
+		{
+			name: "Managed Worker security group",
+			openStackCluster: func() *infrav1.OpenStackCluster {
+				c := getDefaultOpenStackCluster()
+				c.Spec.SecurityGroups = &infrav1.SecurityGroupsSpec{
+					AdditionalWorkerSecurityGroupRules: []infrav1.SecurityGroupRule{
+						{
+							Description:  "test-rule",
+							Direction:    "ingress",
+							PortRangeMin: 80,
+							PortRangeMax: 80,
+							Protocol:     "tcp",
+						},
+					},
+				}
 				return c
 			},
 			machine:          getDefaultMachine,

@@ -38,16 +38,34 @@ const (
 // ReconcileSecurityGroups reconcile the security groups.
 func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
 	s.scope.Logger().Info("Reconciling security groups")
-	if !openStackCluster.Spec.ManagedSecurityGroups {
+
+	if !openStackCluster.Spec.ManagedSecurityGroups && openStackCluster.Spec.SecurityGroups == nil {
 		s.scope.Logger().V(4).Info("No need to reconcile security groups")
 		return nil
 	}
 
+	if openStackCluster.Spec.ManagedSecurityGroups && openStackCluster.Spec.SecurityGroups != nil {
+		return fmt.Errorf("cannot use both ManagedSecurityGroups and SecurityGroups")
+	}
+
 	secControlPlaneGroupName := getSecControlPlaneGroupName(clusterName)
 	secWorkerGroupName := getSecWorkerGroupName(clusterName)
-	secGroupNames := map[string]string{
-		controlPlaneSuffix: secControlPlaneGroupName,
-		workerSuffix:       secWorkerGroupName,
+	secGroupNames := map[string]string{}
+
+	if openStackCluster.Spec.ManagedSecurityGroups {
+		secGroupNames = map[string]string{
+			controlPlaneSuffix: secControlPlaneGroupName,
+			workerSuffix:       secWorkerGroupName,
+		}
+	}
+
+	if openStackCluster.Spec.SecurityGroups != nil {
+		if openStackCluster.Spec.SecurityGroups.ControlPlaneSecurityGroupRules != nil {
+			secGroupNames[controlPlaneSuffix] = secControlPlaneGroupName
+		}
+		if openStackCluster.Spec.SecurityGroups.WorkerSecurityGroupRules != nil {
+			secGroupNames[workerSuffix] = secWorkerGroupName
+		}
 	}
 
 	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
@@ -96,6 +114,10 @@ func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackClu
 func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCluster, secGroupNames map[string]string) (map[string]infrav1.SecurityGroup, error) {
 	desiredSecGroups := make(map[string]infrav1.SecurityGroup)
 
+	controlPlaneRules := make([]infrav1.SecurityGroupRule, 0)
+	workerRules := make([]infrav1.SecurityGroupRule, 0)
+	bastionRules := make([]infrav1.SecurityGroupRule, 0)
+
 	var secControlPlaneGroupID string
 	var secWorkerGroupID string
 	var secBastionGroupID string
@@ -114,12 +136,25 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 		}
 	}
 
-	// Start with the default rules
-	controlPlaneRules := append([]infrav1.SecurityGroupRule{}, defaultRules...)
-	workerRules := append([]infrav1.SecurityGroupRule{}, defaultRules...)
+	if openStackCluster.Spec.ManagedSecurityGroups {
+		controlPlaneRules = append([]infrav1.SecurityGroupRule{}, egressOpenRules...)
+		workerRules = append([]infrav1.SecurityGroupRule{}, egressOpenRules...)
 
-	controlPlaneRules = append(controlPlaneRules, GetSGControlPlaneHTTPS()...)
-	workerRules = append(workerRules, GetSGWorkerNodePort()...)
+		controlPlaneRules = append(controlPlaneRules, GetSGControlPlaneHTTPS()...)
+		workerRules = append(workerRules, GetSGWorkerNodePort()...)
+	}
+
+	if openStackCluster.Spec.SecurityGroups != nil {
+		if openStackCluster.Spec.SecurityGroups.ControlPlaneSecurityGroupRules != nil {
+			controlPlaneRules = append(controlPlaneRules, openStackCluster.Spec.SecurityGroups.ControlPlaneSecurityGroupRules...)
+		}
+		if openStackCluster.Spec.SecurityGroups.WorkerSecurityGroupRules != nil {
+			workerRules = append(workerRules, openStackCluster.Spec.SecurityGroups.WorkerSecurityGroupRules...)
+		}
+		if openStackCluster.Spec.SecurityGroups.BastionSecurityGroupRules != nil {
+			bastionRules = append(bastionRules, openStackCluster.Spec.SecurityGroups.BastionSecurityGroupRules...)
+		}
+	}
 
 	// If we set additional ports to LB, we need create secgroup rules those ports, this apply to controlPlaneRules only
 	if openStackCluster.Spec.APIServerLoadBalancer.Enabled {
@@ -131,29 +166,24 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 		controlPlaneRules = append(controlPlaneRules, GetSGControlPlaneAllowAll(remoteGroupIDSelf, secWorkerGroupID)...)
 		workerRules = append(workerRules, GetSGWorkerAllowAll(remoteGroupIDSelf, secControlPlaneGroupID)...)
 	} else {
-		controlPlaneRules = append(controlPlaneRules, GetSGControlPlaneGeneral(remoteGroupIDSelf, secWorkerGroupID)...)
-		workerRules = append(workerRules, GetSGWorkerGeneral(remoteGroupIDSelf, secControlPlaneGroupID)...)
+		// Get the legacy managed security group rules
+		if openStackCluster.Spec.ManagedSecurityGroups {
+			controlPlaneRules = append(controlPlaneRules, GetSGControlPlaneGeneral(remoteGroupIDSelf, secWorkerGroupID)...)
+			workerRules = append(workerRules, GetSGWorkerGeneral(remoteGroupIDSelf, secControlPlaneGroupID)...)
+		}
 	}
 
 	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
-		controlPlaneRules = append(controlPlaneRules, GetSGControlPlaneSSH(secBastionGroupID)...)
-		workerRules = append(workerRules, GetSGWorkerSSH(secBastionGroupID)...)
+		if openStackCluster.Spec.ManagedSecurityGroups {
+			controlPlaneRules = append(controlPlaneRules, GetSGControlPlaneSSH(secBastionGroupID)...)
+			workerRules = append(workerRules, GetSGWorkerSSH(secBastionGroupID)...)
+			bastionRules = append(bastionRules, GetSGBastionSSH()...)
+			bastionRules = append(bastionRules, egressOpenRules...)
+		}
 
 		desiredSecGroups[bastionSuffix] = infrav1.SecurityGroup{
-			Name: secGroupNames[bastionSuffix],
-			Rules: append(
-				[]infrav1.SecurityGroupRule{
-					{
-						Description:  "SSH",
-						Direction:    "ingress",
-						EtherType:    "IPv4",
-						PortRangeMin: 22,
-						PortRangeMax: 22,
-						Protocol:     "tcp",
-					},
-				},
-				defaultRules...,
-			),
+			Name:  secGroupNames[bastionSuffix],
+			Rules: bastionRules,
 		}
 	}
 
