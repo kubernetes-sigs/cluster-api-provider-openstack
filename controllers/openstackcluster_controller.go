@@ -359,7 +359,7 @@ func reconcileBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackCl
 		return err
 	}
 	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
-	fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterName, openStackCluster.Spec.Bastion.FloatingIP)
+	fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterName, openStackCluster.Spec.Bastion.Instance.FloatingIP)
 	if err != nil {
 		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to get or create floating IP for bastion: %w", err))
 		return fmt.Errorf("failed to get or create floating IP for bastion: %w", err)
