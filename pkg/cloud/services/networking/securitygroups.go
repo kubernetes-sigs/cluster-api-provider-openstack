@@ -18,9 +18,8 @@ package networking
 
 import (
 	"fmt"
+	"slices"
 
-	"github.com/go-logr/logr"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/rules"
@@ -402,41 +401,23 @@ func (s *Service) createRule(r infrav1.SecurityGroupRule) (infrav1.SecurityGroup
 	return convertOSSecGroupRuleToConfigSecGroupRule(*rule), nil
 }
 
-func contains(list []string, element string) bool {
-	for _, e := range list {
-		if e == element {
-			return true
-		}
-	}
-	return false
-}
-
-func (s *Service) ReconcileSecurityGroupsToInstanceAttachedInterfaces(logger logr.Logger, openStackMachine *infrav1.OpenStackMachine, attachedInterfaces []attachinterfaces.Interface, desiredSecurityGroupIDs []string) error {
-	for _, iface := range attachedInterfaces {
+func (s *Service) ReconcileSecurityGroupsToInstanceAttachedPorts(openStackMachine *infrav1.OpenStackMachine, attachedPorts []string, desiredSecurityGroupIDs []string) error {
+	for _, portID := range attachedPorts {
 		portUpdateNeeded := false
-		portID := iface.PortID
 		port, err := s.client.GetPort(portID)
 		if err != nil {
 			return fmt.Errorf("error getting port %s: %v", portID, err)
 		}
 
-		// check if port already has desired security groups
-		for _, securityGroupID := range desiredSecurityGroupIDs {
-			if !contains(port.SecurityGroups, securityGroupID) {
-				logger.Info("Port doesn't have desired security group", "portID", portID, "securityGroupID", securityGroupID)
-				portUpdateNeeded = true
-			}
-		}
-		// check if port has security groups that are not desired
-		for _, securityGroupID := range port.SecurityGroups {
-			if !contains(desiredSecurityGroupIDs, securityGroupID) {
-				logger.Info("Port has security group that is not desired", "portID", portID, "securityGroupID", securityGroupID)
-				portUpdateNeeded = true
-			}
+		portSecurityGroupIDs := port.SecurityGroups
+		slices.Sort(portSecurityGroupIDs)
+		if !slices.Equal(portSecurityGroupIDs, desiredSecurityGroupIDs) {
+			s.scope.Logger().V(5).Info("Port has different security groups than desired", "portID", portID, "securityGroups", portSecurityGroupIDs)
+			portUpdateNeeded = true
 		}
 
 		if portUpdateNeeded {
-			logger.Info("Updating port", "portID", portID, "securityGroups", desiredSecurityGroupIDs)
+			s.scope.Logger().V(3).Info("Updating port", "portID", portID, "securityGroups", desiredSecurityGroupIDs)
 			portOpts := ports.UpdateOpts{
 				SecurityGroups: &desiredSecurityGroupIDs,
 			}

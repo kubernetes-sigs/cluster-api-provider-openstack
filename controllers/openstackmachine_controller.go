@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"slices"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -342,7 +343,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		return ctrl.Result{}, err
 	}
 
-	err = r.reconcileSecurityGroupsToInstance(scope.Logger(), openStackCluster, machine, openStackMachine, instanceStatus, computeService, networkingService)
+	err = r.reconcileSecurityGroupsToInstance(scope.Logger(), openStackCluster, machine, openStackMachine, instanceStatus, networkingService)
 	if err != nil {
 		conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.SecurityGroupApplyFailedReason, clusterv1.ConditionSeverityError, "Applying security groups failed: %v", err)
 		return ctrl.Result{}, fmt.Errorf("add security groups to instance: %w", err)
@@ -444,6 +445,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	return ctrl.Result{}, nil
 }
 
+// normalize returns a new sorted slice with the unique values of the given slice.
 func normalize(set []string) []string {
 	seen := make(map[string]struct{}, len(set))
 	normalized := make([]string, 0, len(set))
@@ -453,10 +455,11 @@ func normalize(set []string) []string {
 			normalized = append(normalized, s)
 		}
 	}
+	slices.Sort(normalized)
 	return normalized
 }
 
-func (r *OpenStackMachineReconciler) reconcileSecurityGroupsToInstance(logger logr.Logger, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, instanceStatus *compute.InstanceStatus, computeService *compute.Service, networkingService *networking.Service) error {
+func (r *OpenStackMachineReconciler) reconcileSecurityGroupsToInstance(logger logr.Logger, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, instanceStatus *compute.InstanceStatus, networkingService *networking.Service) error {
 	logger.Info("Reconciling security groups to instance")
 
 	desiredSecurityGroupIDs := []string{}
@@ -471,13 +474,13 @@ func (r *OpenStackMachineReconciler) reconcileSecurityGroupsToInstance(logger lo
 
 	desiredSecurityGroupIDs = normalize(desiredSecurityGroupIDs)
 	appliedSecurityGroupIDs := normalize(openStackMachine.Status.AppliedSecurityGroupIDs)
-	if !reflect.DeepEqual(desiredSecurityGroupIDs, appliedSecurityGroupIDs) {
+	if !slices.Equal(desiredSecurityGroupIDs, appliedSecurityGroupIDs) {
 		instanceID := instanceStatus.ID()
-		attachedInterfaces, err := computeService.GetAttachedInterfaces(instanceID)
+		attachedPorts, err := networkingService.GetPortIDsFromInstanceID(instanceID)
 		if err != nil {
-			return fmt.Errorf("get attached interfaces for instance %q: %w", instanceStatus.Name(), err)
+			return fmt.Errorf("get ports for instance %q: %w", instanceID, err)
 		}
-		err = networkingService.ReconcileSecurityGroupsToInstanceAttachedInterfaces(logger, openStackMachine, attachedInterfaces, desiredSecurityGroupIDs)
+		err = networkingService.ReconcileSecurityGroupsToInstanceAttachedPorts(openStackMachine, attachedPorts, desiredSecurityGroupIDs)
 		if err != nil {
 			return fmt.Errorf("reconcile security groups %q to instance %q: %w", desiredSecurityGroupIDs, instanceStatus.Name(), err)
 		}

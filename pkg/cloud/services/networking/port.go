@@ -330,3 +330,19 @@ func GetPortName(instanceName string, opts *infrav1.PortOpts, netIndex int) stri
 	}
 	return fmt.Sprintf("%s-%d", instanceName, netIndex)
 }
+
+func (s *Service) GetPortIDsFromInstanceID(instanceID string) ([]string, error) {
+	portList, err := s.client.ListPort(ports.ListOpts{
+		DeviceID: instanceID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	portIDs := make([]string, len(portList))
+	for i, port := range portList {
+		portIDs[i] = port.ID
+	}
+
+	return portIDs, nil
+}

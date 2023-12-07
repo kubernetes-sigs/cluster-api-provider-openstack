@@ -618,3 +618,38 @@ func Test_GarbageCollectErrorInstancesPort(t *testing.T) {
 func pointerTo(b bool) *bool {
 	return &b
 }
+func Test_GetPortIDsFromInstanceID(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	instanceID := "12345"
+	expectedPortIDs := []string{"port1", "port2", "port3"}
+
+	mockClient := mock.NewMockNetworkClient(mockCtrl)
+	mockClient.EXPECT().ListPort(ports.ListOpts{
+		DeviceID: instanceID,
+	}).Return([]ports.Port{
+		{ID: "port1"},
+		{ID: "port2"},
+		{ID: "port3"},
+	}, nil)
+
+	service := &Service{
+		client: mockClient,
+	}
+
+	portIDs, err := service.GetPortIDsFromInstanceID(instanceID)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(portIDs) != len(expectedPortIDs) {
+		t.Fatalf("unexpected number of port IDs, got: %d, want: %d", len(portIDs), len(expectedPortIDs))
+	}
+
+	for i, portID := range portIDs {
+		if portID != expectedPortIDs[i] {
+			t.Errorf("unexpected port ID at index %d, got: %s, want: %s", i, portID, expectedPortIDs[i])
+		}
+	}
+}

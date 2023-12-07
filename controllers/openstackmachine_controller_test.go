@@ -165,7 +165,6 @@ func Test_reconcileSecurityGroupsToInstance(t *testing.T) {
 	instanceStatus := &compute.InstanceStatus{}
 	logger := logr.Logger{}
 
-	computeService := &compute.Service{}
 	networkingService := &networking.Service{}
 
 	tests := []struct {
@@ -186,7 +185,7 @@ func Test_reconcileSecurityGroupsToInstance(t *testing.T) {
 	for _, tt := range tests {
 		r := &OpenStackMachineReconciler{}
 		t.Run(tt.name, func(t *testing.T) {
-			err := r.reconcileSecurityGroupsToInstance(logger, openStackCluster, machine, tt.openStackMachine, instanceStatus, computeService, networkingService)
+			err := r.reconcileSecurityGroupsToInstance(logger, openStackCluster, machine, tt.openStackMachine, instanceStatus, networkingService)
 			if tt.expectedError {
 				Expect(err).To(HaveOccurred())
 			} else {
