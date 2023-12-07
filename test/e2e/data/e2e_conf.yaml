@@ -139,6 +139,20 @@ providers:
       new: "--v=4"
     - old: "--leader-elect"
       new: "--leader-elect=false\n        - --sync-period=1m"
+  - name: v0.8.0
+    value: "https://github.com/kubernetes-sigs/cluster-api-provider-openstack/releases/download/v0.8.0/infrastructure-components.yaml"
+    type: url
+    contract: v1beta1
+    files:
+    - sourcePath: "../data/shared/v1beta1_provider/metadata.yaml"
+    - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template.yaml"
+    replacements:
+    - old: "imagePullPolicy: Always"
+      new: "imagePullPolicy: IfNotPresent"
+    - old: "--v=2"
+      new: "--v=4"
+    - old: "--leader-elect"
+      new: "--leader-elect=false\n        - --sync-period=1m"
   - name: v0.9.99
     value: ../../../config/default
     # This is the upcoming version.

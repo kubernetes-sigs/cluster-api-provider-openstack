@@ -5,6 +5,6 @@ metadata:
 spec:
   machineTemplate:
     infrastructureRef:
-      apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
+      apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
       kind: OpenStackMachineTemplate
       name: ${CLUSTER_NAME}-upgrade-from-control-plane

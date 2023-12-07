@@ -26,7 +26,7 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/cluster-api/test/framework"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha8"
 )
 
 const (
@@ -50,6 +50,7 @@ const (
 	FlavorMultiAZ              = "multi-az"
 	FlavorV1alpha5             = "v1alpha5"
 	FlavorV1alpha6             = "v1alpha6"
+	FlavorV1alpha7             = "v1alpha7"
 	FlavorMDRemediation        = "md-remediation"
 	FlavorKCPRemediation       = "kcp-remediation"
 	FlavorFlatcar              = "flatcar"
