@@ -186,9 +186,9 @@ e2e-image: docker-build
 
 # Pull all the images references in test/e2e/data/e2e_conf.yaml
 test-e2e-image-prerequisites:
-	docker pull gcr.io/k8s-staging-cluster-api/cluster-api-controller:v1.4.1
-	docker pull gcr.io/k8s-staging-cluster-api/kubeadm-bootstrap-controller:v1.4.1
-	docker pull gcr.io/k8s-staging-cluster-api/kubeadm-control-plane-controller:v1.4.1
+	docker pull gcr.io/k8s-staging-cluster-api/cluster-api-controller:v1.6.0
+	docker pull gcr.io/k8s-staging-cluster-api/kubeadm-bootstrap-controller:v1.6.0
+	docker pull gcr.io/k8s-staging-cluster-api/kubeadm-control-plane-controller:v1.6.0
 	docker pull quay.io/jetstack/cert-manager-cainjector:v1.12.1
 	docker pull quay.io/jetstack/cert-manager-webhook:v1.12.1
 	docker pull quay.io/jetstack/cert-manager-controller:v1.12.1
@@ -271,6 +271,7 @@ generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
 		output:webhook:dir=$(WEBHOOK_ROOT) \
 		webhook
 	$(CONTROLLER_GEN) \
+		paths=./ \
 		paths=./controllers/... \
 		output:rbac:dir=$(RBAC_ROOT) \
 		rbac:roleName=manager-role
