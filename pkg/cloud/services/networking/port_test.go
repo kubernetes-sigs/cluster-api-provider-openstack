@@ -47,8 +47,6 @@ func Test_GetOrCreatePort(t *testing.T) {
 	portSecurityGroupID := "f51d1206-fc5a-4f7a-a5c0-2e03e44e4dc0"
 
 	// Other arbitrary variables passed in to the tests
-	instanceSecurityGroups := []string{"instance-secgroup"}
-	securityGroupUUIDs := []string{portSecurityGroupID}
 	portSecurityGroupFilters := []infrav1.SecurityGroupFilter{{ID: portSecurityGroupID, Name: "port-secgroup"}}
 	valueSpecs := map[string]string{"key": "value"}
 
@@ -56,12 +54,11 @@ func Test_GetOrCreatePort(t *testing.T) {
 	pointerToFalse := pointerTo(false)
 
 	tests := []struct {
-		name                   string
-		portName               string
-		port                   infrav1.PortOpts
-		instanceSecurityGroups []string
-		tags                   []string
-		expect                 func(m *mock.MockNetworkClientMockRecorder)
+		name     string
+		portName string
+		port     infrav1.PortOpts
+		tags     []string
+		expect   func(m *mock.MockNetworkClientMockRecorder)
 		// Note the 'wanted' port isn't so important, since it will be whatever we tell ListPort or CreatePort to return.
 		// Mostly in this test suite, we're checking that ListPort/CreatePort is called with the expected port opts.
 		want    *ports.Port
@@ -75,7 +72,6 @@ func Test_GetOrCreatePort(t *testing.T) {
 					ID: netID,
 				},
 			},
-			nil,
 			[]string{},
 			func(m *mock.MockNetworkClientMockRecorder) {
 				m.
@@ -99,7 +95,6 @@ func Test_GetOrCreatePort(t *testing.T) {
 					ID: netID,
 				},
 			},
-			nil,
 			[]string{},
 			func(m *mock.MockNetworkClientMockRecorder) {
 				m.
@@ -123,14 +118,13 @@ func Test_GetOrCreatePort(t *testing.T) {
 			true,
 		},
 		{
-			"creates port with defaults (description and secgroups) if not specified in portOpts",
+			"creates port with defaults (description) if not specified in portOpts",
 			"foo-port-1",
 			infrav1.PortOpts{
 				Network: &infrav1.NetworkFilter{
 					ID: netID,
 				},
 			},
-			instanceSecurityGroups,
 			[]string{},
 			func(m *mock.MockNetworkClientMockRecorder) {
 				// No ports found
@@ -144,7 +138,6 @@ func Test_GetOrCreatePort(t *testing.T) {
 						CreateOptsBuilder: ports.CreateOpts{
 							Name:                "foo-port-1",
 							Description:         "Created by cluster-api-provider-openstack cluster test-cluster",
-							SecurityGroups:      &instanceSecurityGroups,
 							NetworkID:           netID,
 							AllowedAddressPairs: []ports.AddressPair{},
 						},
@@ -170,7 +163,6 @@ func Test_GetOrCreatePort(t *testing.T) {
 					},
 					IPAddress: "192.168.0.50",
 				}, {IPAddress: "192.168.1.50"}},
-				SecurityGroupFilters: portSecurityGroupFilters,
 				AllowedAddressPairs: []infrav1.AddressPair{{
 					IPAddress:  "10.10.10.10",
 					MACAddress: "f1:f1:f1:f1:f1:f1",
@@ -184,7 +176,6 @@ func Test_GetOrCreatePort(t *testing.T) {
 				DisablePortSecurity: pointerToFalse,
 				Tags:                []string{"my-port-tag"},
 			},
-			nil,
 			nil,
 			func(m *mock.MockNetworkClientMockRecorder) {
 				portCreateOpts := ports.CreateOpts{
@@ -201,7 +192,6 @@ func Test_GetOrCreatePort(t *testing.T) {
 							IPAddress: "192.168.1.50",
 						},
 					},
-					SecurityGroups: &securityGroupUUIDs,
 					AllowedAddressPairs: []ports.AddressPair{{
 						IPAddress:  "10.10.10.10",
 						MACAddress: "f1:f1:f1:f1:f1:f1",
@@ -267,7 +257,6 @@ func Test_GetOrCreatePort(t *testing.T) {
 				}},
 			},
 			nil,
-			nil,
 			func(m *mock.MockNetworkClientMockRecorder) {
 				m.
 					ListPort(ports.ListOpts{
@@ -295,7 +284,7 @@ func Test_GetOrCreatePort(t *testing.T) {
 			true,
 		},
 		{
-			"overrides default (instance) security groups if port security groups are specified",
+			"fails to create port with specified portOpts if security group filters are specified",
 			"foo-port-1",
 			infrav1.PortOpts{
 				Network: &infrav1.NetworkFilter{
@@ -303,29 +292,16 @@ func Test_GetOrCreatePort(t *testing.T) {
 				},
 				SecurityGroupFilters: portSecurityGroupFilters,
 			},
-			instanceSecurityGroups,
 			[]string{},
 			func(m *mock.MockNetworkClientMockRecorder) {
-				// No ports found
 				m.
 					ListPort(ports.ListOpts{
 						Name:      "foo-port-1",
 						NetworkID: netID,
 					}).Return([]ports.Port{}, nil)
-				m.
-					CreatePort(portsbinding.CreateOptsExt{
-						CreateOptsBuilder: ports.CreateOpts{
-							Name:                "foo-port-1",
-							Description:         "Created by cluster-api-provider-openstack cluster test-cluster",
-							SecurityGroups:      &securityGroupUUIDs,
-							NetworkID:           netID,
-							AllowedAddressPairs: []ports.AddressPair{},
-						},
-					},
-					).Return(&ports.Port{ID: portID1}, nil)
 			},
-			&ports.Port{ID: portID1},
-			false,
+			nil,
+			true,
 		},
 		{
 			"creates port with instance tags when port tags aren't specified",
@@ -335,7 +311,6 @@ func Test_GetOrCreatePort(t *testing.T) {
 					ID: netID,
 				},
 			},
-			nil,
 			[]string{"my-instance-tag"},
 			func(m *mock.MockNetworkClientMockRecorder) {
 				// No ports found
@@ -366,7 +341,6 @@ func Test_GetOrCreatePort(t *testing.T) {
 				},
 				Tags: []string{"my-port-tag"},
 			},
-			nil,
 			[]string{"my-instance-tag"},
 			func(m *mock.MockNetworkClientMockRecorder) {
 				// No ports found
@@ -399,7 +373,6 @@ func Test_GetOrCreatePort(t *testing.T) {
 				},
 				Trunk: pointerToTrue,
 			},
-			nil,
 			[]string{"my-tag"},
 			func(m *mock.MockNetworkClientMockRecorder) {
 				// No ports found
@@ -451,7 +424,6 @@ func Test_GetOrCreatePort(t *testing.T) {
 				},
 			},
 			nil,
-			nil,
 			func(m *mock.MockNetworkClientMockRecorder) {
 				// No ports found
 				m.
@@ -482,7 +454,6 @@ func Test_GetOrCreatePort(t *testing.T) {
 				},
 				PropagateUplinkStatus: pointerToTrue,
 			},
-			instanceSecurityGroups,
 			[]string{},
 			func(m *mock.MockNetworkClientMockRecorder) {
 				// No ports found
@@ -496,7 +467,6 @@ func Test_GetOrCreatePort(t *testing.T) {
 						CreateOptsBuilder: ports.CreateOpts{
 							Name:                  "foo-port-1",
 							Description:           "Created by cluster-api-provider-openstack cluster test-cluster",
-							SecurityGroups:        &instanceSecurityGroups,
 							NetworkID:             netID,
 							AllowedAddressPairs:   []ports.AddressPair{},
 							PropagateUplinkStatus: pointerToTrue,
@@ -523,7 +493,6 @@ func Test_GetOrCreatePort(t *testing.T) {
 				"test-cluster",
 				tt.portName,
 				&tt.port,
-				tt.instanceSecurityGroups,
 				tt.tags,
 			)
 			if tt.wantErr {
@@ -618,6 +587,7 @@ func Test_GarbageCollectErrorInstancesPort(t *testing.T) {
 func pointerTo(b bool) *bool {
 	return &b
 }
+
 func Test_GetPortIDsFromInstanceID(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
