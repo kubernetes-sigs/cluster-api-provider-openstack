@@ -60,6 +60,10 @@ type OpenStackMachineSpec struct {
 	// If not specified a default port will be added for the default cluster network.
 	Ports []PortOpts `json:"ports,omitempty"`
 
+	// The floatingIP which will be associated to the machine, only used for master.
+	// The floatingIP should have been created and haven't been associated.
+	FloatingIP string `json:"floatingIP,omitempty"`
+
 	// The names of the security groups to assign to the instance
 	SecurityGroups []SecurityGroupFilter `json:"securityGroups,omitempty"`
 
