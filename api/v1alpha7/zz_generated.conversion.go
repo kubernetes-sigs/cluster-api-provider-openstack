@@ -69,23 +69,8 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*Bastion)(nil), (*v1alpha8.Bastion)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha7_Bastion_To_v1alpha8_Bastion(a.(*Bastion), b.(*v1alpha8.Bastion), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha8.Bastion)(nil), (*Bastion)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha8_Bastion_To_v1alpha7_Bastion(a.(*v1alpha8.Bastion), b.(*Bastion), scope)
-	}); err != nil {
-		return err
-	}
 	if err := s.AddGeneratedConversionFunc((*BastionStatus)(nil), (*v1alpha8.BastionStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha7_BastionStatus_To_v1alpha8_BastionStatus(a.(*BastionStatus), b.(*v1alpha8.BastionStatus), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha8.BastionStatus)(nil), (*BastionStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha8_BastionStatus_To_v1alpha7_BastionStatus(a.(*v1alpha8.BastionStatus), b.(*BastionStatus), scope)
 	}); err != nil {
 		return err
 	}
@@ -289,23 +274,8 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*OpenStackMachineSpec)(nil), (*v1alpha8.OpenStackMachineSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha7_OpenStackMachineSpec_To_v1alpha8_OpenStackMachineSpec(a.(*OpenStackMachineSpec), b.(*v1alpha8.OpenStackMachineSpec), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha8.OpenStackMachineSpec)(nil), (*OpenStackMachineSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha8_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(a.(*v1alpha8.OpenStackMachineSpec), b.(*OpenStackMachineSpec), scope)
-	}); err != nil {
-		return err
-	}
 	if err := s.AddGeneratedConversionFunc((*OpenStackMachineStatus)(nil), (*v1alpha8.OpenStackMachineStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha7_OpenStackMachineStatus_To_v1alpha8_OpenStackMachineStatus(a.(*OpenStackMachineStatus), b.(*v1alpha8.OpenStackMachineStatus), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha8.OpenStackMachineStatus)(nil), (*OpenStackMachineStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha8_OpenStackMachineStatus_To_v1alpha7_OpenStackMachineStatus(a.(*v1alpha8.OpenStackMachineStatus), b.(*OpenStackMachineStatus), scope)
 	}); err != nil {
 		return err
 	}
@@ -449,6 +419,36 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddConversionFunc((*Bastion)(nil), (*v1alpha8.Bastion)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha7_Bastion_To_v1alpha8_Bastion(a.(*Bastion), b.(*v1alpha8.Bastion), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*OpenStackMachineSpec)(nil), (*v1alpha8.OpenStackMachineSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha7_OpenStackMachineSpec_To_v1alpha8_OpenStackMachineSpec(a.(*OpenStackMachineSpec), b.(*v1alpha8.OpenStackMachineSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1alpha8.BastionStatus)(nil), (*BastionStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha8_BastionStatus_To_v1alpha7_BastionStatus(a.(*v1alpha8.BastionStatus), b.(*BastionStatus), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1alpha8.Bastion)(nil), (*Bastion)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha8_Bastion_To_v1alpha7_Bastion(a.(*v1alpha8.Bastion), b.(*Bastion), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1alpha8.OpenStackMachineSpec)(nil), (*OpenStackMachineSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha8_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(a.(*v1alpha8.OpenStackMachineSpec), b.(*OpenStackMachineSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1alpha8.OpenStackMachineStatus)(nil), (*OpenStackMachineStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha8_OpenStackMachineStatus_To_v1alpha7_OpenStackMachineStatus(a.(*v1alpha8.OpenStackMachineStatus), b.(*OpenStackMachineStatus), scope)
+	}); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -537,11 +537,6 @@ func autoConvert_v1alpha7_Bastion_To_v1alpha8_Bastion(in *Bastion, out *v1alpha8
 	return nil
 }
 
-// Convert_v1alpha7_Bastion_To_v1alpha8_Bastion is an autogenerated conversion function.
-func Convert_v1alpha7_Bastion_To_v1alpha8_Bastion(in *Bastion, out *v1alpha8.Bastion, s conversion.Scope) error {
-	return autoConvert_v1alpha7_Bastion_To_v1alpha8_Bastion(in, out, s)
-}
-
 func autoConvert_v1alpha8_Bastion_To_v1alpha7_Bastion(in *v1alpha8.Bastion, out *Bastion, s conversion.Scope) error {
 	out.Enabled = in.Enabled
 	if err := Convert_v1alpha8_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(&in.Instance, &out.Instance, s); err != nil {
@@ -549,11 +544,6 @@ func autoConvert_v1alpha8_Bastion_To_v1alpha7_Bastion(in *v1alpha8.Bastion, out 
 	}
 	out.AvailabilityZone = in.AvailabilityZone
 	return nil
-}
-
-// Convert_v1alpha8_Bastion_To_v1alpha7_Bastion is an autogenerated conversion function.
-func Convert_v1alpha8_Bastion_To_v1alpha7_Bastion(in *v1alpha8.Bastion, out *Bastion, s conversion.Scope) error {
-	return autoConvert_v1alpha8_Bastion_To_v1alpha7_Bastion(in, out, s)
 }
 
 func autoConvert_v1alpha7_BastionStatus_To_v1alpha8_BastionStatus(in *BastionStatus, out *v1alpha8.BastionStatus, s conversion.Scope) error {
@@ -578,12 +568,8 @@ func autoConvert_v1alpha8_BastionStatus_To_v1alpha7_BastionStatus(in *v1alpha8.B
 	out.State = InstanceState(in.State)
 	out.IP = in.IP
 	out.FloatingIP = in.FloatingIP
+	// WARNING: in.ReferencedResources requires manual conversion: does not exist in peer-type
 	return nil
-}
-
-// Convert_v1alpha8_BastionStatus_To_v1alpha7_BastionStatus is an autogenerated conversion function.
-func Convert_v1alpha8_BastionStatus_To_v1alpha7_BastionStatus(in *v1alpha8.BastionStatus, out *BastionStatus, s conversion.Scope) error {
-	return autoConvert_v1alpha8_BastionStatus_To_v1alpha7_BastionStatus(in, out, s)
 }
 
 func autoConvert_v1alpha7_BindingProfile_To_v1alpha8_BindingProfile(in *BindingProfile, out *v1alpha8.BindingProfile, s conversion.Scope) error {
@@ -848,7 +834,17 @@ func Convert_v1alpha8_OpenStackCluster_To_v1alpha7_OpenStackCluster(in *v1alpha8
 
 func autoConvert_v1alpha7_OpenStackClusterList_To_v1alpha8_OpenStackClusterList(in *OpenStackClusterList, out *v1alpha8.OpenStackClusterList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
-	out.Items = *(*[]v1alpha8.OpenStackCluster)(unsafe.Pointer(&in.Items))
+	if in.Items != nil {
+		in, out := &in.Items, &out.Items
+		*out = make([]v1alpha8.OpenStackCluster, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha7_OpenStackCluster_To_v1alpha8_OpenStackCluster(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Items = nil
+	}
 	return nil
 }
 
@@ -859,7 +855,17 @@ func Convert_v1alpha7_OpenStackClusterList_To_v1alpha8_OpenStackClusterList(in *
 
 func autoConvert_v1alpha8_OpenStackClusterList_To_v1alpha7_OpenStackClusterList(in *v1alpha8.OpenStackClusterList, out *OpenStackClusterList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
-	out.Items = *(*[]OpenStackCluster)(unsafe.Pointer(&in.Items))
+	if in.Items != nil {
+		in, out := &in.Items, &out.Items
+		*out = make([]OpenStackCluster, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha8_OpenStackCluster_To_v1alpha7_OpenStackCluster(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Items = nil
+	}
 	return nil
 }
 
@@ -896,7 +902,15 @@ func autoConvert_v1alpha7_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(
 	out.ControlPlaneEndpoint = in.ControlPlaneEndpoint
 	out.ControlPlaneAvailabilityZones = *(*[]string)(unsafe.Pointer(&in.ControlPlaneAvailabilityZones))
 	out.ControlPlaneOmitAvailabilityZone = in.ControlPlaneOmitAvailabilityZone
-	out.Bastion = (*v1alpha8.Bastion)(unsafe.Pointer(in.Bastion))
+	if in.Bastion != nil {
+		in, out := &in.Bastion, &out.Bastion
+		*out = new(v1alpha8.Bastion)
+		if err := Convert_v1alpha7_Bastion_To_v1alpha8_Bastion(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Bastion = nil
+	}
 	out.IdentityRef = (*v1alpha8.OpenStackIdentityReference)(unsafe.Pointer(in.IdentityRef))
 	return nil
 }
@@ -934,7 +948,15 @@ func autoConvert_v1alpha8_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(
 	out.ControlPlaneEndpoint = in.ControlPlaneEndpoint
 	out.ControlPlaneAvailabilityZones = *(*[]string)(unsafe.Pointer(&in.ControlPlaneAvailabilityZones))
 	out.ControlPlaneOmitAvailabilityZone = in.ControlPlaneOmitAvailabilityZone
-	out.Bastion = (*Bastion)(unsafe.Pointer(in.Bastion))
+	if in.Bastion != nil {
+		in, out := &in.Bastion, &out.Bastion
+		*out = new(Bastion)
+		if err := Convert_v1alpha8_Bastion_To_v1alpha7_Bastion(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Bastion = nil
+	}
 	out.IdentityRef = (*OpenStackIdentityReference)(unsafe.Pointer(in.IdentityRef))
 	return nil
 }
@@ -954,7 +976,15 @@ func autoConvert_v1alpha7_OpenStackClusterStatus_To_v1alpha8_OpenStackClusterSta
 	out.ControlPlaneSecurityGroup = (*v1alpha8.SecurityGroup)(unsafe.Pointer(in.ControlPlaneSecurityGroup))
 	out.WorkerSecurityGroup = (*v1alpha8.SecurityGroup)(unsafe.Pointer(in.WorkerSecurityGroup))
 	out.BastionSecurityGroup = (*v1alpha8.SecurityGroup)(unsafe.Pointer(in.BastionSecurityGroup))
-	out.Bastion = (*v1alpha8.BastionStatus)(unsafe.Pointer(in.Bastion))
+	if in.Bastion != nil {
+		in, out := &in.Bastion, &out.Bastion
+		*out = new(v1alpha8.BastionStatus)
+		if err := Convert_v1alpha7_BastionStatus_To_v1alpha8_BastionStatus(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Bastion = nil
+	}
 	out.FailureReason = (*errors.ClusterStatusError)(unsafe.Pointer(in.FailureReason))
 	out.FailureMessage = (*string)(unsafe.Pointer(in.FailureMessage))
 	return nil
@@ -975,7 +1005,15 @@ func autoConvert_v1alpha8_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterSta
 	out.ControlPlaneSecurityGroup = (*SecurityGroup)(unsafe.Pointer(in.ControlPlaneSecurityGroup))
 	out.WorkerSecurityGroup = (*SecurityGroup)(unsafe.Pointer(in.WorkerSecurityGroup))
 	out.BastionSecurityGroup = (*SecurityGroup)(unsafe.Pointer(in.BastionSecurityGroup))
-	out.Bastion = (*BastionStatus)(unsafe.Pointer(in.Bastion))
+	if in.Bastion != nil {
+		in, out := &in.Bastion, &out.Bastion
+		*out = new(BastionStatus)
+		if err := Convert_v1alpha8_BastionStatus_To_v1alpha7_BastionStatus(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Bastion = nil
+	}
 	out.FailureReason = (*errors.ClusterStatusError)(unsafe.Pointer(in.FailureReason))
 	out.FailureMessage = (*string)(unsafe.Pointer(in.FailureMessage))
 	return nil
@@ -1014,7 +1052,17 @@ func Convert_v1alpha8_OpenStackClusterTemplate_To_v1alpha7_OpenStackClusterTempl
 
 func autoConvert_v1alpha7_OpenStackClusterTemplateList_To_v1alpha8_OpenStackClusterTemplateList(in *OpenStackClusterTemplateList, out *v1alpha8.OpenStackClusterTemplateList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
-	out.Items = *(*[]v1alpha8.OpenStackClusterTemplate)(unsafe.Pointer(&in.Items))
+	if in.Items != nil {
+		in, out := &in.Items, &out.Items
+		*out = make([]v1alpha8.OpenStackClusterTemplate, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha7_OpenStackClusterTemplate_To_v1alpha8_OpenStackClusterTemplate(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Items = nil
+	}
 	return nil
 }
 
@@ -1025,7 +1073,17 @@ func Convert_v1alpha7_OpenStackClusterTemplateList_To_v1alpha8_OpenStackClusterT
 
 func autoConvert_v1alpha8_OpenStackClusterTemplateList_To_v1alpha7_OpenStackClusterTemplateList(in *v1alpha8.OpenStackClusterTemplateList, out *OpenStackClusterTemplateList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
-	out.Items = *(*[]OpenStackClusterTemplate)(unsafe.Pointer(&in.Items))
+	if in.Items != nil {
+		in, out := &in.Items, &out.Items
+		*out = make([]OpenStackClusterTemplate, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha8_OpenStackClusterTemplate_To_v1alpha7_OpenStackClusterTemplate(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Items = nil
+	}
 	return nil
 }
 
@@ -1138,7 +1196,17 @@ func Convert_v1alpha8_OpenStackMachine_To_v1alpha7_OpenStackMachine(in *v1alpha8
 
 func autoConvert_v1alpha7_OpenStackMachineList_To_v1alpha8_OpenStackMachineList(in *OpenStackMachineList, out *v1alpha8.OpenStackMachineList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
-	out.Items = *(*[]v1alpha8.OpenStackMachine)(unsafe.Pointer(&in.Items))
+	if in.Items != nil {
+		in, out := &in.Items, &out.Items
+		*out = make([]v1alpha8.OpenStackMachine, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha7_OpenStackMachine_To_v1alpha8_OpenStackMachine(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Items = nil
+	}
 	return nil
 }
 
@@ -1149,7 +1217,17 @@ func Convert_v1alpha7_OpenStackMachineList_To_v1alpha8_OpenStackMachineList(in *
 
 func autoConvert_v1alpha8_OpenStackMachineList_To_v1alpha7_OpenStackMachineList(in *v1alpha8.OpenStackMachineList, out *OpenStackMachineList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
-	out.Items = *(*[]OpenStackMachine)(unsafe.Pointer(&in.Items))
+	if in.Items != nil {
+		in, out := &in.Items, &out.Items
+		*out = make([]OpenStackMachine, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha8_OpenStackMachine_To_v1alpha7_OpenStackMachine(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Items = nil
+	}
 	return nil
 }
 
@@ -1175,14 +1253,9 @@ func autoConvert_v1alpha7_OpenStackMachineSpec_To_v1alpha8_OpenStackMachineSpec(
 	out.ConfigDrive = (*bool)(unsafe.Pointer(in.ConfigDrive))
 	out.RootVolume = (*v1alpha8.RootVolume)(unsafe.Pointer(in.RootVolume))
 	out.AdditionalBlockDevices = *(*[]v1alpha8.AdditionalBlockDevice)(unsafe.Pointer(&in.AdditionalBlockDevices))
-	out.ServerGroupID = in.ServerGroupID
+	// WARNING: in.ServerGroupID requires manual conversion: does not exist in peer-type
 	out.IdentityRef = (*v1alpha8.OpenStackIdentityReference)(unsafe.Pointer(in.IdentityRef))
 	return nil
-}
-
-// Convert_v1alpha7_OpenStackMachineSpec_To_v1alpha8_OpenStackMachineSpec is an autogenerated conversion function.
-func Convert_v1alpha7_OpenStackMachineSpec_To_v1alpha8_OpenStackMachineSpec(in *OpenStackMachineSpec, out *v1alpha8.OpenStackMachineSpec, s conversion.Scope) error {
-	return autoConvert_v1alpha7_OpenStackMachineSpec_To_v1alpha8_OpenStackMachineSpec(in, out, s)
 }
 
 func autoConvert_v1alpha8_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in *v1alpha8.OpenStackMachineSpec, out *OpenStackMachineSpec, s conversion.Scope) error {
@@ -1202,14 +1275,9 @@ func autoConvert_v1alpha8_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(
 	out.ConfigDrive = (*bool)(unsafe.Pointer(in.ConfigDrive))
 	out.RootVolume = (*RootVolume)(unsafe.Pointer(in.RootVolume))
 	out.AdditionalBlockDevices = *(*[]AdditionalBlockDevice)(unsafe.Pointer(&in.AdditionalBlockDevices))
-	out.ServerGroupID = in.ServerGroupID
+	// WARNING: in.ServerGroup requires manual conversion: does not exist in peer-type
 	out.IdentityRef = (*OpenStackIdentityReference)(unsafe.Pointer(in.IdentityRef))
 	return nil
-}
-
-// Convert_v1alpha8_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec is an autogenerated conversion function.
-func Convert_v1alpha8_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in *v1alpha8.OpenStackMachineSpec, out *OpenStackMachineSpec, s conversion.Scope) error {
-	return autoConvert_v1alpha8_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in, out, s)
 }
 
 func autoConvert_v1alpha7_OpenStackMachineStatus_To_v1alpha8_OpenStackMachineStatus(in *OpenStackMachineStatus, out *v1alpha8.OpenStackMachineStatus, s conversion.Scope) error {
@@ -1231,15 +1299,11 @@ func autoConvert_v1alpha8_OpenStackMachineStatus_To_v1alpha7_OpenStackMachineSta
 	out.Ready = in.Ready
 	out.Addresses = *(*[]v1.NodeAddress)(unsafe.Pointer(&in.Addresses))
 	out.InstanceState = (*InstanceState)(unsafe.Pointer(in.InstanceState))
+	// WARNING: in.ReferencedResources requires manual conversion: does not exist in peer-type
 	out.FailureReason = (*errors.MachineStatusError)(unsafe.Pointer(in.FailureReason))
 	out.FailureMessage = (*string)(unsafe.Pointer(in.FailureMessage))
 	out.Conditions = *(*v1beta1.Conditions)(unsafe.Pointer(&in.Conditions))
 	return nil
-}
-
-// Convert_v1alpha8_OpenStackMachineStatus_To_v1alpha7_OpenStackMachineStatus is an autogenerated conversion function.
-func Convert_v1alpha8_OpenStackMachineStatus_To_v1alpha7_OpenStackMachineStatus(in *v1alpha8.OpenStackMachineStatus, out *OpenStackMachineStatus, s conversion.Scope) error {
-	return autoConvert_v1alpha8_OpenStackMachineStatus_To_v1alpha7_OpenStackMachineStatus(in, out, s)
 }
 
 func autoConvert_v1alpha7_OpenStackMachineTemplate_To_v1alpha8_OpenStackMachineTemplate(in *OpenStackMachineTemplate, out *v1alpha8.OpenStackMachineTemplate, s conversion.Scope) error {
@@ -1270,7 +1334,17 @@ func Convert_v1alpha8_OpenStackMachineTemplate_To_v1alpha7_OpenStackMachineTempl
 
 func autoConvert_v1alpha7_OpenStackMachineTemplateList_To_v1alpha8_OpenStackMachineTemplateList(in *OpenStackMachineTemplateList, out *v1alpha8.OpenStackMachineTemplateList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
-	out.Items = *(*[]v1alpha8.OpenStackMachineTemplate)(unsafe.Pointer(&in.Items))
+	if in.Items != nil {
+		in, out := &in.Items, &out.Items
+		*out = make([]v1alpha8.OpenStackMachineTemplate, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha7_OpenStackMachineTemplate_To_v1alpha8_OpenStackMachineTemplate(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Items = nil
+	}
 	return nil
 }
 
@@ -1281,7 +1355,17 @@ func Convert_v1alpha7_OpenStackMachineTemplateList_To_v1alpha8_OpenStackMachineT
 
 func autoConvert_v1alpha8_OpenStackMachineTemplateList_To_v1alpha7_OpenStackMachineTemplateList(in *v1alpha8.OpenStackMachineTemplateList, out *OpenStackMachineTemplateList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
-	out.Items = *(*[]OpenStackMachineTemplate)(unsafe.Pointer(&in.Items))
+	if in.Items != nil {
+		in, out := &in.Items, &out.Items
+		*out = make([]OpenStackMachineTemplate, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha8_OpenStackMachineTemplate_To_v1alpha7_OpenStackMachineTemplate(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Items = nil
+	}
 	return nil
 }
 

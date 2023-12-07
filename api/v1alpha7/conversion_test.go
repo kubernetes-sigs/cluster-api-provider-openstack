@@ -19,12 +19,9 @@ package v1alpha7
 import (
 	"testing"
 
-	fuzz "github.com/google/gofuzz"
 	"github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/api/apitesting/fuzzer"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
-	runtimeserializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/utils/pointer"
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
 	"sigs.k8s.io/controller-runtime/pkg/conversion"
@@ -55,19 +52,10 @@ func TestFuzzyConversion(t *testing.T) {
 		delete(obj.GetAnnotations(), utilconversion.DataAnnotation)
 	}
 
-	fuzzerFuncs := func(_ runtimeserializer.CodecFactory) []interface{} {
-		return []interface{}{
-			func(status *OpenStackClusterStatus, c fuzz.Continue) {
-				c.FuzzNoCustom(status)
-			},
-		}
-	}
-
 	t.Run("for OpenStackCluster", runParallel(utilconversion.FuzzTestFunc(utilconversion.FuzzTestFuncInput{
 		Hub:              &infrav1.OpenStackCluster{},
 		Spoke:            &OpenStackCluster{},
 		HubAfterMutation: ignoreDataAnnotation,
-		FuzzerFuncs:      []fuzzer.FuzzerFuncs{fuzzerFuncs},
 	})))
 
 	t.Run("for OpenStackCluster with mutate", runParallel(testhelpers.FuzzMutateTestFunc(testhelpers.FuzzMutateTestFuncInput{
@@ -75,9 +63,7 @@ func TestFuzzyConversion(t *testing.T) {
 			Hub:              &infrav1.OpenStackCluster{},
 			Spoke:            &OpenStackCluster{},
 			HubAfterMutation: ignoreDataAnnotation,
-			FuzzerFuncs:      []fuzzer.FuzzerFuncs{fuzzerFuncs},
 		},
-		MutateFuzzerFuncs: []fuzzer.FuzzerFuncs{fuzzerFuncs},
 	})))
 
 	t.Run("for OpenStackClusterTemplate", runParallel(utilconversion.FuzzTestFunc(utilconversion.FuzzTestFuncInput{

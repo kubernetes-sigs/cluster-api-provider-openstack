@@ -1986,9 +1986,14 @@ spec:
                       type: string
                   type: object
                 type: array
-              serverGroupID:
-                description: The server group to assign the machine to
-                type: string
+              serverGroup:
+                description: The server group to assign the machine to.
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                type: object
               serverMetadata:
                 additionalProperties:
                   type: string
@@ -2104,6 +2109,15 @@ spec:
               ready:
                 description: Ready is true when the provider resource is ready.
                 type: boolean
+              referencedResources:
+                description: ReferencedResources contains resolved references to resources
+                  that the machine depends on.
+                properties:
+                  serverGroupID:
+                    description: ServerGroupID is the ID of the server group the machine
+                      should be added to and is calculated based on ServerGroupFilter.
+                    type: string
+                type: object
             type: object
         type: object
     served: true

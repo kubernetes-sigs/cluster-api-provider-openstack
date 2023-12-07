@@ -1708,9 +1708,14 @@ spec:
                               type: string
                           type: object
                         type: array
-                      serverGroupID:
-                        description: The server group to assign the machine to
-                        type: string
+                      serverGroup:
+                        description: The server group to assign the machine to.
+                        properties:
+                          id:
+                            type: string
+                          name:
+                            type: string
+                        type: object
                       serverMetadata:
                         additionalProperties:
                           type: string

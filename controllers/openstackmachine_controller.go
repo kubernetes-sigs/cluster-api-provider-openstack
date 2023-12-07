@@ -145,6 +145,12 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return reconcile.Result{}, err
 	}
 
+	// Resolve and store referenced resources
+	err = compute.ResolveReferencedMachineResources(scope, &openStackMachine.Spec, &openStackMachine.Status.ReferencedResources)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	// Handle deleted machines
 	if !openStackMachine.DeletionTimestamp.IsZero() {
 		return r.reconcileDelete(scope, cluster, infraCluster, machine, openStackMachine)
@@ -463,7 +469,7 @@ func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *
 		ConfigDrive:            openStackMachine.Spec.ConfigDrive != nil && *openStackMachine.Spec.ConfigDrive,
 		RootVolume:             openStackMachine.Spec.RootVolume,
 		AdditionalBlockDevices: openStackMachine.Spec.AdditionalBlockDevices,
-		ServerGroupID:          openStackMachine.Spec.ServerGroupID,
+		ServerGroupID:          openStackMachine.Status.ReferencedResources.ServerGroupID,
 		Trunk:                  openStackMachine.Spec.Trunk,
 	}
 

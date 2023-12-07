@@ -341,3 +341,13 @@ $ sudo ln -s /run/user/$(id -u)/podman/podman.sock /var/run/docker.sock
 [hack-ci-create-devstack]: https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/hack/ci/create_devstack.sh
 [hack-ci-gce-project]: https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/hack/ci/gce-project.sh
 [hack-ci-openstack]: https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/hack/ci/openstack.sh
+
+## API concepts
+
+This sections goal is to gather various insights into the API design that can serve as a reference to explain various choices made without need to analyze discussions in individual PRs.
+
+### `referencedResources`
+
+Starting from v1alpha8 both `OpenStackMachineStatus` and `BastionsStatus` feature a field named `referencedResources` which aims to include fields that list individual IDs of the resources associated with the machine or bastion. These IDs are calculated on machine or bastion creation and are not intended to be changed during the object lifecycle.
+
+Having all the IDs of related resources saved in the statuses allows CAPO to make easy decisions about deleting the related resources when deleting the VM corresponding to the machine or bastion.

@@ -91,7 +91,12 @@ func getDefaultOpenStackMachine() *infrav1.OpenStackMachine {
 			},
 			ConfigDrive:    pointer.Bool(true),
 			SecurityGroups: []infrav1.SecurityGroupFilter{},
-			ServerGroupID:  serverGroupUUID,
+			ServerGroup:    &infrav1.ServerGroupFilter{ID: serverGroupUUID},
+		},
+		Status: infrav1.OpenStackMachineStatus{
+			ReferencedResources: infrav1.ReferencedMachineResources{
+				ServerGroupID: serverGroupUUID,
+			},
 		},
 	}
 }

@@ -2698,10 +2698,15 @@ spec:
                                       type: string
                                   type: object
                                 type: array
-                              serverGroupID:
+                              serverGroup:
                                 description: The server group to assign the machine
-                                  to
-                                type: string
+                                  to.
+                                properties:
+                                  id:
+                                    type: string
+                                  name:
+                                    type: string
+                                type: object
                               serverMetadata:
                                 additionalProperties:
                                   type: string

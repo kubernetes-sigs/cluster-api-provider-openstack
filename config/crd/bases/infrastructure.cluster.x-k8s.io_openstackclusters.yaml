@@ -5156,9 +5156,14 @@ spec:
                               type: string
                           type: object
                         type: array
-                      serverGroupID:
-                        description: The server group to assign the machine to
-                        type: string
+                      serverGroup:
+                        description: The server group to assign the machine to.
+                        properties:
+                          id:
+                            type: string
+                          name:
+                            type: string
+                        type: object
                       serverMetadata:
                         additionalProperties:
                           type: string
@@ -5447,6 +5452,15 @@ spec:
                     type: string
                   name:
                     type: string
+                  referencedResources:
+                    description: ReferencedMachineResources contains resolved references
+                      to resources required by the machine.
+                    properties:
+                      serverGroupID:
+                        description: ServerGroupID is the ID of the server group the
+                          machine should be added to and is calculated based on ServerGroupFilter.
+                        type: string
+                    type: object
                   sshKeyName:
                     type: string
                   state:
