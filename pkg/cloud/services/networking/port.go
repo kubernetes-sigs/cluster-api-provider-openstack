@@ -54,7 +54,7 @@ func (s *Service) GetPortFromInstanceIP(instanceID string, ip string) ([]ports.P
 	return s.client.ListPort(portOpts)
 }
 
-func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string, portName string, portOpts *infrav1.PortOpts, instanceSecurityGroups []string, instanceTags []string) (*ports.Port, error) {
+func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string, portName string, portOpts *infrav1.PortOpts, instanceTags []string) (*ports.Port, error) {
 	networkID := portOpts.Network.ID
 
 	existingPorts, err := s.client.ListPort(ports.ListOpts{
@@ -88,14 +88,7 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 			})
 		}
 		if portOpts.SecurityGroupFilters != nil {
-			securityGroups, err = s.GetSecurityGroups(portOpts.SecurityGroupFilters)
-			if err != nil {
-				return nil, fmt.Errorf("error getting security groups: %v", err)
-			}
-		}
-		// inherit port security groups from the instance if not explicitly specified
-		if len(securityGroups) == 0 {
-			securityGroups = instanceSecurityGroups
+			return nil, fmt.Errorf("security group filters are not supported for port creation, use OpenStackMachine.Spec.SecurityGroups instead")
 		}
 	}
 
@@ -329,4 +322,20 @@ func GetPortName(instanceName string, opts *infrav1.PortOpts, netIndex int) stri
 		return fmt.Sprintf("%s-%s", instanceName, opts.NameSuffix)
 	}
 	return fmt.Sprintf("%s-%d", instanceName, netIndex)
+}
+
+func (s *Service) GetPortIDsFromInstanceID(instanceID string) ([]string, error) {
+	portList, err := s.client.ListPort(ports.ListOpts{
+		DeviceID: instanceID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	portIDs := make([]string, len(portList))
+	for i, port := range portList {
+		portIDs[i] = port.ID
+	}
+
+	return portIDs, nil
 }

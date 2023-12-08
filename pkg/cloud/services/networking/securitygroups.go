@@ -18,10 +18,12 @@ package networking
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/rules"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
@@ -70,7 +72,7 @@ func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackClu
 	observedSecGroups := make(map[string]*infrav1.SecurityGroup)
 	for k, desiredSecGroup := range desiredSecGroups {
 		var err error
-		observedSecGroups[k], err = s.getSecurityGroupByName(desiredSecGroup.Name)
+		observedSecGroups[k], err = s.GetSecurityGroupByName(desiredSecGroup.Name)
 
 		if err != nil {
 			return err
@@ -100,7 +102,7 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 	var secWorkerGroupID string
 	var secBastionGroupID string
 	for i, v := range secGroupNames {
-		secGroup, err := s.getSecurityGroupByName(v)
+		secGroup, err := s.GetSecurityGroupByName(v)
 		if err != nil {
 			return desiredSecGroups, err
 		}
@@ -225,7 +227,7 @@ func (s *Service) DeleteBastionSecurityGroup(openStackCluster *infrav1.OpenStack
 }
 
 func (s *Service) deleteSecurityGroup(openStackCluster *infrav1.OpenStackCluster, name string) error {
-	group, err := s.getSecurityGroupByName(name)
+	group, err := s.GetSecurityGroupByName(name)
 	if err != nil {
 		return err
 	}
@@ -316,7 +318,7 @@ func (s *Service) reconcileGroupRules(desired, observed infrav1.SecurityGroup) (
 }
 
 func (s *Service) createSecurityGroupIfNotExists(openStackCluster *infrav1.OpenStackCluster, groupName string) error {
-	secGroup, err := s.getSecurityGroupByName(groupName)
+	secGroup, err := s.GetSecurityGroupByName(groupName)
 	if err != nil {
 		return err
 	}
@@ -354,7 +356,7 @@ func (s *Service) createSecurityGroupIfNotExists(openStackCluster *infrav1.OpenS
 	return nil
 }
 
-func (s *Service) getSecurityGroupByName(name string) (*infrav1.SecurityGroup, error) {
+func (s *Service) GetSecurityGroupByName(name string) (*infrav1.SecurityGroup, error) {
 	opts := groups.ListOpts{
 		Name: name,
 	}
@@ -397,6 +399,38 @@ func (s *Service) createRule(r infrav1.SecurityGroupRule) (infrav1.SecurityGroup
 		return infrav1.SecurityGroupRule{}, err
 	}
 	return convertOSSecGroupRuleToConfigSecGroupRule(*rule), nil
+}
+
+func (s *Service) ReconcileSecurityGroupsToInstanceAttachedPorts(openStackMachine *infrav1.OpenStackMachine, attachedPorts []string, desiredSecurityGroupIDs []string) error {
+	for _, portID := range attachedPorts {
+		portUpdateNeeded := false
+		port, err := s.client.GetPort(portID)
+		if err != nil {
+			return fmt.Errorf("error getting port %s: %v", portID, err)
+		}
+
+		portSecurityGroupIDs := port.SecurityGroups
+		slices.Sort(portSecurityGroupIDs)
+		if !slices.Equal(portSecurityGroupIDs, desiredSecurityGroupIDs) {
+			s.scope.Logger().V(5).Info("Port has different security groups than desired", "portID", portID, "securityGroups", portSecurityGroupIDs)
+			portUpdateNeeded = true
+		}
+
+		if portUpdateNeeded {
+			s.scope.Logger().V(3).Info("Updating port", "portID", portID, "securityGroups", desiredSecurityGroupIDs)
+			portOpts := ports.UpdateOpts{
+				SecurityGroups: &desiredSecurityGroupIDs,
+			}
+			_, err := s.client.UpdatePort(portID, portOpts)
+			if err != nil {
+				return fmt.Errorf("error updating port %s: %v", portID, err)
+			}
+		}
+	}
+
+	openStackMachine.Status.AppliedSecurityGroupIDs = desiredSecurityGroupIDs
+
+	return nil
 }
 
 func getSecControlPlaneGroupName(clusterName string) string {

@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/bootfromvolume"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/schedulerhints"
@@ -269,11 +270,6 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 		return nil, err
 	}
 
-	securityGroups, err := networkingService.GetSecurityGroups(instanceSpec.SecurityGroups)
-	if err != nil {
-		return nil, fmt.Errorf("error getting security groups: %v", err)
-	}
-
 	for i := range ports {
 		portOpts := &ports[i]
 		iTags := []string{}
@@ -281,7 +277,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 			iTags = instanceSpec.Tags
 		}
 		portName := networking.GetPortName(instanceSpec.Name, portOpts, i)
-		port, err := networkingService.GetOrCreatePort(eventObject, clusterName, portName, portOpts, securityGroups, iTags)
+		port, err := networkingService.GetOrCreatePort(eventObject, clusterName, portName, portOpts, iTags)
 		if err != nil {
 			return nil, err
 		}
@@ -642,7 +638,7 @@ func (s *Service) DeleteInstance(openStackCluster *infrav1.OpenStackCluster, eve
 		return s.deleteVolumes(instanceSpec)
 	}
 
-	instanceInterfaces, err := s.getComputeClient().ListAttachedInterfaces(instanceStatus.ID())
+	instanceInterfaces, err := s.GetAttachedInterfaces(instanceStatus.ID())
 	if err != nil {
 		return err
 	}
@@ -686,6 +682,10 @@ func (s *Service) DeleteInstance(openStackCluster *infrav1.OpenStackCluster, eve
 	}
 
 	return s.deleteInstance(eventObject, instanceStatus.InstanceIdentifier())
+}
+
+func (s *Service) GetAttachedInterfaces(instanceID string) ([]attachinterfaces.Interface, error) {
+	return s.getComputeClient().ListAttachedInterfaces(instanceID)
 }
 
 func (s *Service) deleteVolumes(instanceSpec *InstanceSpec) error {

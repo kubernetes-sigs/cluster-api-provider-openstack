@@ -42,6 +42,8 @@ const (
 	InstanceDeleteFailedReason = "InstanceDeleteFailed"
 	// OpenstackErrorReason used when there is an error communicating with OpenStack.
 	OpenStackErrorReason = "OpenStackError"
+	// SecurityGroupAppliedFailedCondition used when the security group could not be applied.
+	SecurityGroupApplyFailedReason = "SecurityGroupAppliedFailed"
 )
 
 const (

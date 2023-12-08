@@ -111,6 +111,15 @@ type OpenStackMachineStatus struct {
 	// +optional
 	InstanceState *InstanceState `json:"instanceState,omitempty"`
 
+	// AppliedSecurityGroupIDs is a list of the security group IDs applied to the instance.
+	// +optional
+	AppliedSecurityGroupIDs []string `json:"appliedSecurityGroupIDs,omitempty"`
+
+	// MachineSecurityGroupIDs is a list of IDs of the security groups that have been
+	// defined in the OpenStackMachine.Spec.SecurityGroups field.
+	// +optional
+	MachineSecurityGroupIDs []string `json:"machineSecurityGroupIDs,omitempty"`
+
 	FailureReason *errors.MachineStatusError `json:"failureReason,omitempty"`
 
 	// FailureMessage will be set in the event that there is a terminal problem

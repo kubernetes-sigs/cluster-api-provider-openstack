@@ -1534,6 +1534,12 @@ spec:
                   - type
                   type: object
                 type: array
+              appliedSecurityGroupIDs:
+                description: AppliedSecurityGroupIDs is a list of the security group
+                  IDs applied to the instance.
+                items:
+                  type: string
+                type: array
               conditions:
                 description: Conditions provide observations of the operational state
                   of a Cluster API resource.
@@ -1603,6 +1609,13 @@ spec:
                 description: InstanceState is the state of the OpenStack instance
                   for this machine.
                 type: string
+              machineSecurityGroupIDs:
+                description: MachineSecurityGroupIDs is a list of IDs of the security
+                  groups that have been defined in the OpenStackMachine.Spec.SecurityGroups
+                  field.
+                items:
+                  type: string
+                type: array
               ready:
                 description: Ready is true when the provider resource is ready.
                 type: boolean
