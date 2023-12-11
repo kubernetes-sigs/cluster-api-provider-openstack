@@ -148,9 +148,23 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	// Resolve and store referenced resources
-	err = compute.ResolveReferencedMachineResources(scope, &openStackMachine.Spec, &openStackMachine.Status.ReferencedResources)
+	changed, err := compute.ResolveReferencedMachineResources(scope, infraCluster, &openStackMachine.Spec, &openStackMachine.Status.ReferencedResources)
 	if err != nil {
 		return reconcile.Result{}, err
+	}
+	if changed {
+		// If the referenced resources have changed, we need to update the OpenStackMachine status now.
+		return reconcile.Result{}, nil
+	}
+
+	// Resolve and store dependent resources
+	changed, err = compute.ResolveDependentMachineResources(scope, openStackMachine)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if changed {
+		// If the dependent resources have changed, we need to update the OpenStackMachine status now.
+		return reconcile.Result{}, nil
 	}
 
 	// Handle deleted machines
@@ -288,9 +302,21 @@ func (r *OpenStackMachineReconciler) reconcileDelete(scope scope.Scope, cluster 
 
 	instanceSpec := machineToInstanceSpec(openStackCluster, machine, openStackMachine, "")
 
-	if err := computeService.DeleteInstance(openStackCluster, openStackMachine, instanceStatus, instanceSpec); err != nil {
+	if err := computeService.DeleteInstance(openStackMachine, instanceStatus, instanceSpec); err != nil {
 		conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceDeleteFailedReason, clusterv1.ConditionSeverityError, "Deleting instance failed: %v", err)
 		return ctrl.Result{}, fmt.Errorf("delete instance: %w", err)
+	}
+
+	trunkSupported, err := networkingService.IsTrunkExtSupported()
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	portsStatus := openStackMachine.Status.DependentResources.PortsStatus
+	for _, port := range portsStatus {
+		if err := networkingService.DeleteInstanceTrunkAndPort(openStackMachine, port, trunkSupported); err != nil {
+			return ctrl.Result{}, fmt.Errorf("failed to delete port %q: %w", port.ID, err)
+		}
 	}
 
 	controllerutil.RemoveFinalizer(openStackMachine, infrav1.MachineFinalizer)
@@ -298,7 +324,18 @@ func (r *OpenStackMachineReconciler) reconcileDelete(scope scope.Scope, cluster 
 	return ctrl.Result{}, nil
 }
 
+// GetPortIDs returns a list of port IDs from a list of PortStatus.
+func GetPortIDs(ports []infrav1.PortStatus) []string {
+	portIDs := make([]string, len(ports))
+	for i, port := range ports {
+		portIDs[i] = port.ID
+	}
+	return portIDs
+}
+
 func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (_ ctrl.Result, reterr error) {
+	var err error
+
 	// If the OpenStackMachine is in an error state, return early.
 	if openStackMachine.Status.FailureReason != nil || openStackMachine.Status.FailureMessage != nil {
 		scope.Logger().Info("Not reconciling machine in failed state. See openStackMachine.status.failureReason, openStackMachine.status.failureMessage, or previously logged error for details")
@@ -341,9 +378,15 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		return ctrl.Result{}, err
 	}
 
-	instanceStatus, err := r.getOrCreate(scope.Logger(), cluster, openStackCluster, machine, openStackMachine, computeService, userData)
+	err = getOrCreateMachinePorts(scope, openStackCluster, machine, openStackMachine, networkingService, clusterName)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+	portIDs := GetPortIDs(openStackMachine.Status.DependentResources.PortsStatus)
+
+	instanceStatus, err := r.getOrCreateInstance(scope.Logger(), openStackCluster, machine, openStackMachine, computeService, userData, portIDs)
 	if err != nil || instanceStatus == nil {
-		// Conditions set in getOrCreate
+		// Conditions set in getOrCreateInstance
 		return ctrl.Result{}, err
 	}
 
@@ -446,7 +489,38 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	return ctrl.Result{}, nil
 }
 
-func (r *OpenStackMachineReconciler) getOrCreate(logger logr.Logger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, computeService *compute.Service, userData string) (*compute.InstanceStatus, error) {
+func getOrCreateMachinePorts(scope scope.Scope, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, networkingService *networking.Service, clusterName string) error {
+	scope.Logger().Info("Reconciling ports for machine", "machine", machine.Name)
+	var machinePortsStatus []infrav1.PortStatus
+	var err error
+
+	desiredPorts := openStackMachine.Status.ReferencedResources.PortsOpts
+	portsToCreate := networking.MissingPorts(openStackMachine.Status.DependentResources.PortsStatus, desiredPorts)
+
+	// Sanity check that the number of desired ports is equal to the addition of ports to create and ports that already exist.
+	if len(desiredPorts) != len(portsToCreate)+len(openStackMachine.Status.DependentResources.PortsStatus) {
+		return fmt.Errorf("length of desired ports (%d) is not equal to the length of ports to create (%d) + the length of ports that already exist (%d)", len(desiredPorts), len(portsToCreate), len(openStackMachine.Status.DependentResources.PortsStatus))
+	}
+
+	if len(portsToCreate) > 0 {
+		instanceTags := getInstanceTags(openStackMachine, openStackCluster)
+		managedSecurityGroups := getManagedSecurityGroups(openStackCluster, machine, openStackMachine)
+		machinePortsStatus, err = networkingService.CreatePorts(openStackMachine, clusterName, portsToCreate, managedSecurityGroups, instanceTags, openStackMachine.Name)
+		if err != nil {
+			return fmt.Errorf("create ports: %w", err)
+		}
+		openStackMachine.Status.DependentResources.PortsStatus = append(openStackMachine.Status.DependentResources.PortsStatus, machinePortsStatus...)
+	}
+
+	// Sanity check that the number of ports that have been put into PortsStatus is equal to the number of desired ports now that we have created them all.
+	if len(openStackMachine.Status.DependentResources.PortsStatus) != len(desiredPorts) {
+		return fmt.Errorf("length of ports that already exist (%d) is not equal to the length of desired ports (%d)", len(openStackMachine.Status.DependentResources.PortsStatus), len(desiredPorts))
+	}
+
+	return nil
+}
+
+func (r *OpenStackMachineReconciler) getOrCreateInstance(logger logr.Logger, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, computeService *compute.Service, userData string, portIDs []string) (*compute.InstanceStatus, error) {
 	var instanceStatus *compute.InstanceStatus
 	var err error
 	if openStackMachine.Spec.InstanceID != nil {
@@ -472,7 +546,7 @@ func (r *OpenStackMachineReconciler) getOrCreate(logger logr.Logger, cluster *cl
 		}
 		instanceSpec := machineToInstanceSpec(openStackCluster, machine, openStackMachine, userData)
 		logger.Info("Machine does not exist, creating Machine", "name", openStackMachine.Name)
-		instanceStatus, err = computeService.CreateInstance(openStackMachine, openStackCluster, instanceSpec, cluster.Name)
+		instanceStatus, err = computeService.CreateInstance(openStackMachine, instanceSpec, portIDs)
 		if err != nil {
 			conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceCreateFailedReason, clusterv1.ConditionSeverityError, err.Error())
 			return nil, fmt.Errorf("create OpenStack instance: %w", err)
@@ -508,6 +582,17 @@ func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *
 		instanceSpec.FailureDomain = *machine.Spec.FailureDomain
 	}
 
+	instanceSpec.Tags = getInstanceTags(openStackMachine, openStackCluster)
+	instanceSpec.SecurityGroups = getManagedSecurityGroups(openStackCluster, machine, openStackMachine)
+	instanceSpec.Ports = openStackMachine.Spec.Ports
+
+	return &instanceSpec
+}
+
+// getInstanceTags returns the tags that should be applied to the instance.
+// The tags are a combination of the tags specified on the OpenStackMachine and
+// the ones specified on the OpenStackCluster.
+func getInstanceTags(openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster) []string {
 	machineTags := []string{}
 
 	// Append machine specific tags
@@ -530,31 +615,36 @@ func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *
 	}
 	machineTags = deduplicate(machineTags)
 
-	instanceSpec.Tags = machineTags
+	return machineTags
+}
 
-	instanceSpec.SecurityGroups = openStackMachine.Spec.SecurityGroups
-	if openStackCluster.Spec.ManagedSecurityGroups != nil {
-		var managedSecurityGroup string
-		if util.IsControlPlaneMachine(machine) {
-			if openStackCluster.Status.ControlPlaneSecurityGroup != nil {
-				managedSecurityGroup = openStackCluster.Status.ControlPlaneSecurityGroup.ID
-			}
-		} else {
-			if openStackCluster.Status.WorkerSecurityGroup != nil {
-				managedSecurityGroup = openStackCluster.Status.WorkerSecurityGroup.ID
-			}
+// getManagedSecurityGroups returns a combination of OpenStackMachine.Spec.SecurityGroups
+// and the security group managed by the OpenStackCluster whether it's a control plane or a worker machine.
+func getManagedSecurityGroups(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) []infrav1.SecurityGroupFilter {
+	machineSpecSecurityGroups := openStackMachine.Spec.SecurityGroups
+
+	if openStackCluster.Spec.ManagedSecurityGroups == nil {
+		return machineSpecSecurityGroups
+	}
+
+	var managedSecurityGroup string
+	if util.IsControlPlaneMachine(machine) {
+		if openStackCluster.Status.ControlPlaneSecurityGroup != nil {
+			managedSecurityGroup = openStackCluster.Status.ControlPlaneSecurityGroup.ID
 		}
-
-		if managedSecurityGroup != "" {
-			instanceSpec.SecurityGroups = append(instanceSpec.SecurityGroups, infrav1.SecurityGroupFilter{
-				ID: managedSecurityGroup,
-			})
+	} else {
+		if openStackCluster.Status.WorkerSecurityGroup != nil {
+			managedSecurityGroup = openStackCluster.Status.WorkerSecurityGroup.ID
 		}
 	}
 
-	instanceSpec.Ports = openStackMachine.Spec.Ports
+	if managedSecurityGroup != "" {
+		machineSpecSecurityGroups = append(machineSpecSecurityGroups, infrav1.SecurityGroupFilter{
+			ID: managedSecurityGroup,
+		})
+	}
 
-	return &instanceSpec
+	return machineSpecSecurityGroups
 }
 
 func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(scope scope.Scope, openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, instanceNS *compute.InstanceNetworkStatus, clusterName string) error {

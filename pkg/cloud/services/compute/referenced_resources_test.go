@@ -24,6 +24,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/servergroups"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions"
 	. "github.com/onsi/gomega"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha8"
@@ -32,6 +33,7 @@ import (
 )
 
 func Test_ResolveReferencedMachineResources(t *testing.T) {
+	constFalse := false
 	const serverGroupID1 = "ce96e584-7ebc-46d6-9e55-987d72e3806c"
 	const imageID1 = "de96e584-7ebc-46d6-9e55-987d72e3806c"
 
@@ -43,8 +45,11 @@ func Test_ResolveReferencedMachineResources(t *testing.T) {
 		testName          string
 		serverGroupFilter *infrav1.ServerGroupFilter
 		imageFilter       *infrav1.ImageFilter
+		portsOpts         *[]infrav1.PortOpts
+		clusterStatus     *infrav1.OpenStackClusterStatus
 		expectComputeMock func(m *mock.MockComputeClientMockRecorder)
 		expectImageMock   func(m *mock.MockImageClientMockRecorder)
+		expectNetworkMock func(m *mock.MockNetworkClientMockRecorder)
 		want              *infrav1.ReferencedMachineResources
 		wantErr           bool
 	}{
@@ -54,6 +59,7 @@ func Test_ResolveReferencedMachineResources(t *testing.T) {
 			imageFilter:       &infrav1.ImageFilter{ID: imageID1},
 			expectComputeMock: func(m *mock.MockComputeClientMockRecorder) {},
 			expectImageMock:   func(m *mock.MockImageClientMockRecorder) {},
+			expectNetworkMock: func(m *mock.MockNetworkClientMockRecorder) {},
 			want:              &infrav1.ReferencedMachineResources{ImageID: imageID1, ServerGroupID: serverGroupID1},
 			wantErr:           false,
 		},
@@ -62,6 +68,7 @@ func Test_ResolveReferencedMachineResources(t *testing.T) {
 			serverGroupFilter: nil,
 			expectComputeMock: func(m *mock.MockComputeClientMockRecorder) {},
 			expectImageMock:   func(m *mock.MockImageClientMockRecorder) {},
+			expectNetworkMock: func(m *mock.MockNetworkClientMockRecorder) {},
 			want:              minimumReferences,
 			wantErr:           false,
 		},
@@ -70,6 +77,7 @@ func Test_ResolveReferencedMachineResources(t *testing.T) {
 			serverGroupFilter: &infrav1.ServerGroupFilter{},
 			expectComputeMock: func(m *mock.MockComputeClientMockRecorder) {},
 			expectImageMock:   func(m *mock.MockImageClientMockRecorder) {},
+			expectNetworkMock: func(m *mock.MockNetworkClientMockRecorder) {},
 			want:              minimumReferences,
 			wantErr:           false,
 		},
@@ -81,9 +89,10 @@ func Test_ResolveReferencedMachineResources(t *testing.T) {
 					[]servergroups.ServerGroup{},
 					nil)
 			},
-			expectImageMock: func(m *mock.MockImageClientMockRecorder) {},
-			want:            &infrav1.ReferencedMachineResources{},
-			wantErr:         true,
+			expectImageMock:   func(m *mock.MockImageClientMockRecorder) {},
+			expectNetworkMock: func(m *mock.MockNetworkClientMockRecorder) {},
+			want:              &infrav1.ReferencedMachineResources{},
+			wantErr:           true,
 		},
 		{
 			testName:          "Image by Name not found",
@@ -94,8 +103,46 @@ func Test_ResolveReferencedMachineResources(t *testing.T) {
 					[]images.Image{},
 					nil)
 			},
-			want:    &infrav1.ReferencedMachineResources{},
-			wantErr: true,
+			expectNetworkMock: func(m *mock.MockNetworkClientMockRecorder) {},
+			want:              &infrav1.ReferencedMachineResources{},
+			wantErr:           true,
+		},
+		{
+			testName: "PortsOpts set",
+			clusterStatus: &infrav1.OpenStackClusterStatus{
+				Network: &infrav1.NetworkStatusWithSubnets{
+					Subnets: []infrav1.Subnet{
+						{
+							ID: "test-subnet-id",
+						},
+					},
+				},
+			},
+			portsOpts: &[]infrav1.PortOpts{
+				{
+					Network: &infrav1.NetworkFilter{
+						ID: "test-network-id",
+					},
+					Trunk: &constFalse,
+				},
+			},
+			expectComputeMock: func(m *mock.MockComputeClientMockRecorder) {},
+			expectImageMock:   func(m *mock.MockImageClientMockRecorder) {},
+			expectNetworkMock: func(m *mock.MockNetworkClientMockRecorder) {
+				m.ListExtensions().Return([]extensions.Extension{}, nil)
+			},
+			want: &infrav1.ReferencedMachineResources{
+				ImageID: imageID1,
+				PortsOpts: []infrav1.PortOpts{
+					{
+						Network: &infrav1.NetworkFilter{
+							ID: "test-network-id",
+						},
+						Trunk: &constFalse,
+					},
+				},
+			},
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
@@ -106,21 +153,32 @@ func Test_ResolveReferencedMachineResources(t *testing.T) {
 
 			tt.expectComputeMock(mockScopeFactory.ComputeClient.EXPECT())
 			tt.expectImageMock(mockScopeFactory.ImageClient.EXPECT())
+			tt.expectNetworkMock(mockScopeFactory.NetworkClient.EXPECT())
 
 			// Set defaults for required fields
 			imageFilter := &infrav1.ImageFilter{ID: imageID1}
 			if tt.imageFilter != nil {
 				imageFilter = tt.imageFilter
 			}
+			portsOpts := &[]infrav1.PortOpts{}
+			if tt.portsOpts != nil {
+				portsOpts = tt.portsOpts
+			}
+
+			openStackCluster := &infrav1.OpenStackCluster{}
+			if tt.clusterStatus != nil {
+				openStackCluster.Status = *tt.clusterStatus
+			}
 
 			machineSpec := &infrav1.OpenStackMachineSpec{
 				ServerGroup: tt.serverGroupFilter,
 				Image:       *imageFilter,
+				Ports:       *portsOpts,
 			}
 
 			resources := &infrav1.ReferencedMachineResources{}
 
-			err := ResolveReferencedMachineResources(mockScopeFactory, machineSpec, resources)
+			_, err := ResolveReferencedMachineResources(mockScopeFactory, openStackCluster, machineSpec, resources)
 			if tt.wantErr {
 				g.Expect(err).Error()
 				return

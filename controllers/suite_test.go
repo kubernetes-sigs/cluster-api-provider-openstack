@@ -147,7 +147,6 @@ var _ = Describe("When calling getOrCreate", func() {
 	})
 
 	It("should return an error if unable to get instance", func() {
-		cluster := &clusterv1.Cluster{}
 		openStackCluster := &infrav1.OpenStackCluster{}
 		machine := &clusterv1.Machine{}
 		openStackMachine := &infrav1.OpenStackMachine{
@@ -157,7 +156,7 @@ var _ = Describe("When calling getOrCreate", func() {
 		}
 
 		mockScopeFactory.ComputeClient.EXPECT().GetServer(gomock.Any()).Return(nil, errors.New("Test error when getting server"))
-		instanceStatus, err := reconsiler.getOrCreate(logger, cluster, openStackCluster, machine, openStackMachine, computeService, "")
+		instanceStatus, err := reconsiler.getOrCreateInstance(logger, openStackCluster, machine, openStackMachine, computeService, "", []string{})
 		Expect(err).To(HaveOccurred())
 		Expect(instanceStatus).To(BeNil())
 		conditions := openStackMachine.GetConditions()
@@ -171,7 +170,6 @@ var _ = Describe("When calling getOrCreate", func() {
 	})
 
 	It("should retrieve instance by name if no ID is stored", func() {
-		cluster := &clusterv1.Cluster{}
 		openStackCluster := &infrav1.OpenStackCluster{}
 		machine := &clusterv1.Machine{}
 		openStackMachine := &infrav1.OpenStackMachine{}
@@ -179,7 +177,7 @@ var _ = Describe("When calling getOrCreate", func() {
 		servers[0].ID = "machine-uuid"
 
 		mockScopeFactory.ComputeClient.EXPECT().ListServers(gomock.Any()).Return(servers, nil)
-		instanceStatus, err := reconsiler.getOrCreate(logger, cluster, openStackCluster, machine, openStackMachine, computeService, "")
+		instanceStatus, err := reconsiler.getOrCreateInstance(logger, openStackCluster, machine, openStackMachine, computeService, "", []string{})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(instanceStatus).ToNot(BeNil())
 		Expect(instanceStatus.ID()).To(Equal("machine-uuid"))

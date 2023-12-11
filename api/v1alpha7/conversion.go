@@ -121,8 +121,12 @@ func restorev1alpha8ClusterStatus(previous *infrav1.OpenStackClusterStatus, dst 
 	restorev1alpha8SecurityGroupStatus(previous.BastionSecurityGroup, dst.BastionSecurityGroup)
 
 	// ReferencedResources have no equivalent in v1alpha7
-	if dst.Bastion != nil {
+	if previous.Bastion != nil {
 		dst.Bastion.ReferencedResources = previous.Bastion.ReferencedResources
+	}
+
+	if previous.Bastion != nil && previous.Bastion.DependentResources.PortsStatus != nil {
+		dst.Bastion.DependentResources.PortsStatus = previous.Bastion.DependentResources.PortsStatus
 	}
 }
 
@@ -348,6 +352,11 @@ var v1alpha8OpenStackMachineRestorer = conversion.RestorerFor[*infrav1.OpenStack
 			return &c.Spec
 		},
 		restorev1alpha8MachineSpec,
+	),
+	"depresources": conversion.UnconditionalFieldRestorer(
+		func(c *infrav1.OpenStackMachine) *infrav1.DependentMachineResources {
+			return &c.Status.DependentResources
+		},
 	),
 
 	// No equivalent in v1alpha7
@@ -687,4 +696,8 @@ func Convert_v1alpha7_SecurityGroup_To_v1alpha8_SecurityGroupStatus(in *Security
 
 func Convert_v1alpha7_OpenStackIdentityReference_To_v1alpha8_OpenStackIdentityReference(in *OpenStackIdentityReference, out *infrav1.OpenStackIdentityReference, s apiconversion.Scope) error {
 	return autoConvert_v1alpha7_OpenStackIdentityReference_To_v1alpha8_OpenStackIdentityReference(in, out, s)
+}
+
+func Convert_v1alpha8_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(in *infrav1.OpenStackClusterStatus, out *OpenStackClusterStatus, s apiconversion.Scope) error {
+	return autoConvert_v1alpha8_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(in, out, s)
 }

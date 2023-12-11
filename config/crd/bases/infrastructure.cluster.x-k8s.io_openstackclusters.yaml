@@ -5681,6 +5681,21 @@ spec:
                 type: object
               bastion:
                 properties:
+                  dependentResources:
+                    properties:
+                      portsStatus:
+                        description: PortsStatus is the status of the ports created
+                          for the machine.
+                        items:
+                          properties:
+                            id:
+                              description: ID is the unique identifier of the port.
+                              type: string
+                          required:
+                          - id
+                          type: object
+                        type: array
+                    type: object
                   floatingIP:
                     type: string
                   id:
@@ -5697,6 +5712,196 @@ spec:
                         description: ImageID is the ID of the image to use for the
                           machine and is calculated based on ImageFilter.
                         type: string
+                      portsOpts:
+                        description: portsOpts is the list of ports options to create
+                          for the machine.
+                        items:
+                          properties:
+                            adminStateUp:
+                              type: boolean
+                            allowedAddressPairs:
+                              items:
+                                properties:
+                                  ipAddress:
+                                    type: string
+                                  macAddress:
+                                    type: string
+                                type: object
+                              type: array
+                            description:
+                              type: string
+                            disablePortSecurity:
+                              description: |-
+                                DisablePortSecurity enables or disables the port security when set.
+                                When not set, it takes the value of the corresponding field at the network level.
+                              type: boolean
+                            fixedIPs:
+                              description: Specify pairs of subnet and/or IP address.
+                                These should be subnets of the network with the given
+                                NetworkID.
+                              items:
+                                properties:
+                                  ipAddress:
+                                    type: string
+                                  subnet:
+                                    description: |-
+                                      Subnet is an openstack subnet query that will return the id of a subnet to create
+                                      the fixed IP of a port in. This query must not return more than one subnet.
+                                    properties:
+                                      cidr:
+                                        type: string
+                                      description:
+                                        type: string
+                                      gateway_ip:
+                                        type: string
+                                      id:
+                                        type: string
+                                      ipVersion:
+                                        type: integer
+                                      ipv6AddressMode:
+                                        type: string
+                                      ipv6RaMode:
+                                        type: string
+                                      name:
+                                        type: string
+                                      notTags:
+                                        type: string
+                                      notTagsAny:
+                                        type: string
+                                      projectId:
+                                        type: string
+                                      tags:
+                                        type: string
+                                      tagsAny:
+                                        type: string
+                                    type: object
+                                required:
+                                - subnet
+                                type: object
+                              type: array
+                            hostId:
+                              description: The ID of the host where the port is allocated
+                              type: string
+                            macAddress:
+                              type: string
+                            nameSuffix:
+                              description: Used to make the name of the port unique.
+                                If unspecified, instead the 0-based index of the port
+                                in the list is used.
+                              type: string
+                            network:
+                              description: |-
+                                Network is a query for an openstack network that the port will be created or discovered on.
+                                This will fail if the query returns more than one network.
+                              properties:
+                                description:
+                                  type: string
+                                id:
+                                  type: string
+                                name:
+                                  type: string
+                                notTags:
+                                  type: string
+                                notTagsAny:
+                                  type: string
+                                projectId:
+                                  type: string
+                                tags:
+                                  type: string
+                                tagsAny:
+                                  type: string
+                              type: object
+                            profile:
+                              description: |-
+                                Profile is a set of key-value pairs that are used for binding details.
+                                We intentionally don't expose this as a map[string]string because we only want to enable
+                                the users to set the values of the keys that are known to work in OpenStack Networking API.
+                                See https://docs.openstack.org/api-ref/network/v2/index.html?expanded=create-port-detail#create-port
+                              properties:
+                                ovsHWOffload:
+                                  description: OVSHWOffload enables or disables the
+                                    OVS hardware offload feature.
+                                  type: boolean
+                                trustedVF:
+                                  description: TrustedVF enables or disables the “trusted
+                                    mode” for the VF.
+                                  type: boolean
+                              type: object
+                            propagateUplinkStatus:
+                              description: PropageteUplinkStatus enables or disables
+                                the propagate uplink status on the port.
+                              type: boolean
+                            securityGroupFilters:
+                              description: The names, uuids, filters or any combination
+                                these of the security groups to assign to the instance
+                              items:
+                                properties:
+                                  description:
+                                    type: string
+                                  id:
+                                    type: string
+                                  name:
+                                    type: string
+                                  notTags:
+                                    type: string
+                                  notTagsAny:
+                                    type: string
+                                  projectId:
+                                    type: string
+                                  tags:
+                                    type: string
+                                  tagsAny:
+                                    type: string
+                                type: object
+                              type: array
+                            tags:
+                              description: |-
+                                Tags applied to the port (and corresponding trunk, if a trunk is configured.)
+                                These tags are applied in addition to the instance's tags, which will also be applied to the port.
+                              items:
+                                type: string
+                              type: array
+                              x-kubernetes-list-type: set
+                            trunk:
+                              description: Enables and disables trunk at port level.
+                                If not provided, openStackMachine.Spec.Trunk is inherited.
+                              type: boolean
+                            valueSpecs:
+                              description: |-
+                                Value specs are extra parameters to include in the API request with OpenStack.
+                                This is an extension point for the API, so what they do and if they are supported,
+                                depends on the specific OpenStack implementation.
+                              items:
+                                description: ValueSpec represents a single value_spec
+                                  key-value pair.
+                                properties:
+                                  key:
+                                    description: Key is the key in the key-value pair.
+                                    type: string
+                                  name:
+                                    description: |-
+                                      Name is the name of the key-value pair.
+                                      This is just for identifying the pair and will not be sent to the OpenStack API.
+                                    type: string
+                                  value:
+                                    description: Value is the value in the key-value
+                                      pair.
+                                    type: string
+                                required:
+                                - key
+                                - name
+                                - value
+                                type: object
+                              type: array
+                              x-kubernetes-list-map-keys:
+                              - name
+                              x-kubernetes-list-type: map
+                            vnicType:
+                              description: The virtual network interface card (vNIC)
+                                type that is bound to the neutron port.
+                              type: string
+                          type: object
+                        type: array
                       serverGroupID:
                         description: ServerGroupID is the ID of the server group the
                           machine should be added to and is calculated based on ServerGroupFilter.

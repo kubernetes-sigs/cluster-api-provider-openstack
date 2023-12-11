@@ -18,7 +18,6 @@ package compute
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -36,7 +35,6 @@ import (
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha8"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/hash"
@@ -48,180 +46,8 @@ const (
 	timeoutInstanceDelete       = 5 * time.Minute
 )
 
-// normalizePortTarget ensures that the port has a network ID.
-func (s *Service) normalizePortTarget(port *infrav1.PortOpts, openStackCluster *infrav1.OpenStackCluster, portIdx int) error {
-	// Treat no Network and empty Network the same
-	noNetwork := port.Network == nil || (*port.Network == infrav1.NetworkFilter{})
-
-	// No network or subnets defined: use cluster defaults
-	if noNetwork && len(port.FixedIPs) == 0 {
-		port.Network = &infrav1.NetworkFilter{
-			ID: openStackCluster.Status.Network.ID,
-		}
-		for _, subnet := range openStackCluster.Status.Network.Subnets {
-			port.FixedIPs = append(port.FixedIPs, infrav1.FixedIP{
-				Subnet: &infrav1.SubnetFilter{
-					ID: subnet.ID,
-				},
-			})
-		}
-
-		return nil
-	}
-
-	// No network, but fixed IPs are defined(we handled the no fixed
-	// IPs case above): try to infer network from a subnet
-	if noNetwork {
-		s.scope.Logger().V(4).Info("No network defined for port, attempting to infer from subnet", "port", portIdx)
-
-		// Look for a unique subnet defined in FixedIPs.  If we find one
-		// we can use it to infer the network ID. We don't need to worry
-		// here about the case where different FixedIPs have different
-		// networks because that will cause an error later when we try
-		// to create the port.
-		networkID, err := func() (string, error) {
-			networkingService, err := s.getNetworkingService()
-			if err != nil {
-				return "", err
-			}
-
-			for i, fixedIP := range port.FixedIPs {
-				if fixedIP.Subnet == nil {
-					continue
-				}
-
-				subnet, err := networkingService.GetSubnetByFilter(fixedIP.Subnet)
-				if err != nil {
-					// Multiple matches might be ok later when we restrict matches to a single network
-					if errors.Is(err, networking.ErrMultipleMatches) {
-						s.scope.Logger().V(4).Info("Couldn't infer network from subnet", "subnetIndex", i, "err", err)
-						continue
-					}
-
-					return "", err
-				}
-
-				// Cache the subnet ID in the FixedIP
-				fixedIP.Subnet.ID = subnet.ID
-				return subnet.NetworkID, nil
-			}
-
-			// TODO: This is a spec error: it should set the machine to failed
-			return "", fmt.Errorf("port %d has no network and unable to infer from fixed IPs", portIdx)
-		}()
-		if err != nil {
-			return err
-		}
-
-		port.Network = &infrav1.NetworkFilter{
-			ID: networkID,
-		}
-
-		return nil
-	}
-
-	// Nothing to do if network ID is already set
-	if port.Network.ID != "" {
-		return nil
-	}
-
-	// Network is defined by Filter
-	networkingService, err := s.getNetworkingService()
-	if err != nil {
-		return err
-	}
-
-	netIDs, err := networkingService.GetNetworkIDsByFilter(port.Network.ToListOpt())
-	if err != nil {
-		return err
-	}
-
-	// TODO: These are spec errors: they should set the machine to failed
-	if len(netIDs) > 1 {
-		return fmt.Errorf("network filter for port %d returns more than one result", portIdx)
-	} else if len(netIDs) == 0 {
-		return fmt.Errorf("network filter for port %d returns no networks", portIdx)
-	}
-
-	port.Network.ID = netIDs[0]
-
-	return nil
-}
-
-// normalizePorts ensures that a user-specified PortOpts has all required fields set. Specifically it:
-// - sets the Trunk field to the instance spec default if not specified
-// - sets the Network ID field if not specified.
-func (s *Service) normalizePorts(ports []infrav1.PortOpts, openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec) ([]infrav1.PortOpts, error) {
-	normalizedPorts := make([]infrav1.PortOpts, 0, len(ports))
-	for i := range ports {
-		// Deep copy the port to avoid mutating the original
-		port := ports[i].DeepCopy()
-
-		// No Trunk field specified for the port, inherit the machine default
-		if port.Trunk == nil {
-			port.Trunk = &instanceSpec.Trunk
-		}
-
-		if err := s.normalizePortTarget(port, openStackCluster, i); err != nil {
-			return nil, err
-		}
-
-		normalizedPorts = append(normalizedPorts, *port)
-	}
-	return normalizedPorts, nil
-}
-
-// constructPorts builds an array of ports from the instance spec.
-// If no ports are in the spec, returns a single port for a network connection to the default cluster network.
-func (s *Service) constructPorts(openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec) ([]infrav1.PortOpts, error) {
-	// Ensure user-specified ports have all required fields
-	ports, err := s.normalizePorts(instanceSpec.Ports, openStackCluster, instanceSpec)
-	if err != nil {
-		return nil, err
-	}
-
-	// no networks or ports found in the spec, so create a port on the cluster network
-	if len(ports) == 0 {
-		port := infrav1.PortOpts{
-			Network: &infrav1.NetworkFilter{
-				ID: openStackCluster.Status.Network.ID,
-			},
-			Trunk: &instanceSpec.Trunk,
-		}
-		for _, subnet := range openStackCluster.Status.Network.Subnets {
-			port.FixedIPs = append(port.FixedIPs, infrav1.FixedIP{
-				Subnet: &infrav1.SubnetFilter{
-					ID: subnet.ID,
-				},
-			})
-		}
-		ports = []infrav1.PortOpts{port}
-	}
-
-	// trunk support is required if any port has trunk enabled
-	portUsesTrunk := func() bool {
-		for _, port := range ports {
-			if port.Trunk != nil && *port.Trunk {
-				return true
-			}
-		}
-		return false
-	}
-	if portUsesTrunk() {
-		trunkSupported, err := s.isTrunkExtSupported()
-		if err != nil {
-			return nil, err
-		}
-		if !trunkSupported {
-			return nil, fmt.Errorf("there is no trunk support. please ensure that the trunk extension is enabled in your OpenStack deployment")
-		}
-	}
-
-	return ports, nil
-}
-
-func (s *Service) CreateInstance(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec, clusterName string) (*InstanceStatus, error) {
-	return s.createInstanceImpl(eventObject, openStackCluster, instanceSpec, clusterName, retryIntervalInstanceStatus)
+func (s *Service) CreateInstance(eventObject runtime.Object, instanceSpec *InstanceSpec, portIDs []string) (*InstanceStatus, error) {
+	return s.createInstanceImpl(eventObject, instanceSpec, retryIntervalInstanceStatus, portIDs)
 }
 
 func (s *Service) getAndValidateFlavor(flavorName string) (*flavors.Flavor, error) {
@@ -233,7 +59,7 @@ func (s *Service) getAndValidateFlavor(flavorName string) (*flavors.Flavor, erro
 	return f, nil
 }
 
-func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, instanceSpec *InstanceSpec, clusterName string, retryInterval time.Duration) (*InstanceStatus, error) {
+func (s *Service) createInstanceImpl(eventObject runtime.Object, instanceSpec *InstanceSpec, retryInterval time.Duration, portIDs []string) (*InstanceStatus, error) {
 	var server *clients.ServerExt
 	portList := []servers.Network{}
 
@@ -242,46 +68,13 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 		return nil, err
 	}
 
-	// Ensure we delete the ports we created if we haven't created the server.
-	defer func() {
-		if server != nil {
-			return
-		}
-
-		if err := s.deletePorts(eventObject, portList); err != nil {
-			s.scope.Logger().V(4).Error(err, "Failed to clean up ports after failure")
-		}
-	}()
-
-	ports, err := s.constructPorts(openStackCluster, instanceSpec)
-	if err != nil {
-		return nil, err
+	if len(portIDs) == 0 {
+		return nil, fmt.Errorf("portIDs cannot be empty")
 	}
 
-	networkingService, err := s.getNetworkingService()
-	if err != nil {
-		return nil, err
-	}
-
-	securityGroups, err := networkingService.GetSecurityGroups(instanceSpec.SecurityGroups)
-	if err != nil {
-		return nil, fmt.Errorf("error getting security groups: %v", err)
-	}
-
-	for i := range ports {
-		portOpts := &ports[i]
-		iTags := []string{}
-		if len(instanceSpec.Tags) > 0 {
-			iTags = instanceSpec.Tags
-		}
-		portName := networking.GetPortName(instanceSpec.Name, portOpts, i)
-		port, err := networkingService.GetOrCreatePort(eventObject, clusterName, portName, portOpts, securityGroups, iTags)
-		if err != nil {
-			return nil, err
-		}
-
+	for _, portID := range portIDs {
 		portList = append(portList, servers.Network{
-			Port: port.ID,
+			Port: portID,
 		})
 	}
 
@@ -582,7 +375,7 @@ func (s *Service) GetManagementPort(openStackCluster *infrav1.OpenStackCluster, 
 	return &allPorts[0], nil
 }
 
-func (s *Service) DeleteInstance(openStackCluster *infrav1.OpenStackCluster, eventObject runtime.Object, instanceStatus *InstanceStatus, instanceSpec *InstanceSpec) error {
+func (s *Service) DeleteInstance(eventObject runtime.Object, instanceStatus *InstanceStatus, instanceSpec *InstanceSpec) error {
 	if instanceStatus == nil {
 		/*
 			Attaching volumes to an instance is a two-step process:
@@ -603,49 +396,6 @@ func (s *Service) DeleteInstance(openStackCluster *infrav1.OpenStackCluster, eve
 			DeleteOnTermination will ensure it is deleted in that case.
 		*/
 		return s.deleteVolumes(instanceSpec)
-	}
-
-	instanceInterfaces, err := s.getComputeClient().ListAttachedInterfaces(instanceStatus.ID())
-	if err != nil {
-		return err
-	}
-
-	trunkSupported, err := s.isTrunkExtSupported()
-	if err != nil {
-		return fmt.Errorf("obtaining network extensions: %v", err)
-	}
-
-	networkingService, err := s.getNetworkingService()
-	if err != nil {
-		return err
-	}
-
-	// get and delete trunks
-	for _, port := range instanceInterfaces {
-		if err = s.deleteAttachInterface(eventObject, instanceStatus.InstanceIdentifier(), port.PortID); err != nil {
-			return err
-		}
-
-		if trunkSupported {
-			if err = networkingService.DeleteTrunk(eventObject, port.PortID); err != nil {
-				return err
-			}
-		}
-		if err = networkingService.DeletePort(eventObject, port.PortID); err != nil {
-			return err
-		}
-	}
-
-	// delete port of error instance
-	if instanceStatus.State() == infrav1.InstanceStateError {
-		portOpts, err := s.constructPorts(openStackCluster, instanceSpec)
-		if err != nil {
-			return err
-		}
-
-		if err := networkingService.GarbageCollectErrorInstancesPort(eventObject, instanceSpec.Name, portOpts); err != nil {
-			return err
-		}
 	}
 
 	return s.deleteInstance(eventObject, instanceStatus.InstanceIdentifier())
@@ -677,50 +427,6 @@ func (s *Service) deleteVolume(instanceName string, nameSuffix string) error {
 
 	s.scope.Logger().V(2).Info("Deleting dangling volume", "name", volume.Name, "ID", volume.ID)
 	return s.getVolumeClient().DeleteVolume(volume.ID, volumes.DeleteOpts{})
-}
-
-func (s *Service) deletePorts(eventObject runtime.Object, nets []servers.Network) error {
-	trunkSupported, err := s.isTrunkExtSupported()
-	if err != nil {
-		return err
-	}
-
-	for _, n := range nets {
-		networkingService, err := s.getNetworkingService()
-		if err != nil {
-			return err
-		}
-
-		if trunkSupported {
-			if err = networkingService.DeleteTrunk(eventObject, n.Port); err != nil {
-				return err
-			}
-		}
-		if err := networkingService.DeletePort(eventObject, n.Port); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (s *Service) deleteAttachInterface(eventObject runtime.Object, instance *InstanceIdentifier, portID string) error {
-	err := s.getComputeClient().DeleteAttachedInterface(instance.ID, portID)
-	if err != nil {
-		if capoerrors.IsNotFound(err) {
-			record.Eventf(eventObject, "SuccessfulDeleteAttachInterface", "Attach interface did not exist: instance %s, port %s", instance.ID, portID)
-			return nil
-		}
-		if capoerrors.IsConflict(err) {
-			// we don't want to block deletion because of Conflict
-			// due to instance must be paused/active/shutoff in order to detach interface
-			return nil
-		}
-		record.Warnf(eventObject, "FailedDeleteAttachInterface", "Failed to delete attach interface: instance %s, port %s: %v", instance.ID, portID, err)
-		return err
-	}
-
-	record.Eventf(eventObject, "SuccessfulDeleteAttachInterface", "Deleted attach interface: instance %s, port %s", instance.ID, portID)
-	return nil
 }
 
 func (s *Service) deleteInstance(eventObject runtime.Object, instance *InstanceIdentifier) error {
@@ -806,23 +512,6 @@ func getTimeout(name string, timeout int) time.Duration {
 		}
 	}
 	return time.Duration(timeout)
-}
-
-// isTrunkExtSupported verifies trunk setup on the OpenStack deployment.
-func (s *Service) isTrunkExtSupported() (trunknSupported bool, err error) {
-	networkingService, err := s.getNetworkingService()
-	if err != nil {
-		return false, err
-	}
-
-	trunkSupport, err := networkingService.GetTrunkSupport()
-	if err != nil {
-		return false, fmt.Errorf("there was an issue verifying whether trunk support is available, Please try again later: %v", err)
-	}
-	if !trunkSupport {
-		return false, nil
-	}
-	return true, nil
 }
 
 func HashInstanceSpec(computeInstance *InstanceSpec) (string, error) {

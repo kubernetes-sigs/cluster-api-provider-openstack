@@ -147,6 +147,12 @@ type PortOpts struct {
 	ValueSpecs []ValueSpec `json:"valueSpecs,omitempty"`
 }
 
+type PortStatus struct {
+	// ID is the unique identifier of the port.
+	// +required
+	ID string `json:"id"`
+}
+
 type BindingProfile struct {
 	// OVSHWOffload enables or disables the OVS hardware offload feature.
 	OVSHWOffload bool `json:"ovsHWOffload,omitempty"`
@@ -175,6 +181,7 @@ type BastionStatus struct {
 	IP                  string                     `json:"ip,omitempty"`
 	FloatingIP          string                     `json:"floatingIP,omitempty"`
 	ReferencedResources ReferencedMachineResources `json:"referencedResources,omitempty"`
+	DependentResources  DependentMachineResources  `json:"dependentResources,omitempty"`
 }
 
 type RootVolume struct {
@@ -496,6 +503,16 @@ type ReferencedMachineResources struct {
 	// ImageID is the ID of the image to use for the machine and is calculated based on ImageFilter.
 	// +optional
 	ImageID string `json:"imageID,omitempty"`
+
+	// portsOpts is the list of ports options to create for the machine.
+	// +optional
+	PortsOpts []PortOpts `json:"portsOpts,omitempty"`
+}
+
+type DependentMachineResources struct {
+	// PortsStatus is the status of the ports created for the machine.
+	// +optional
+	PortsStatus []PortStatus `json:"portsStatus,omitempty"`
 }
 
 // ValueSpec represents a single value_spec key-value pair.
