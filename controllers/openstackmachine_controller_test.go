@@ -89,8 +89,9 @@ func getDefaultOpenStackMachine() *infrav1.OpenStackMachine {
 			ServerMetadata: map[string]string{
 				"test-metadata": "test-value",
 			},
-			ConfigDrive:   pointer.Bool(true),
-			ServerGroupID: serverGroupUUID,
+			ConfigDrive:    pointer.Bool(true),
+			SecurityGroups: []infrav1.SecurityGroupFilter{},
+			ServerGroupID:  serverGroupUUID,
 		},
 	}
 }
@@ -105,10 +106,11 @@ func getDefaultInstanceSpec() *compute.InstanceSpec {
 		Metadata: map[string]string{
 			"test-metadata": "test-value",
 		},
-		ConfigDrive:   *pointer.Bool(true),
-		FailureDomain: *pointer.String(failureDomain),
-		ServerGroupID: serverGroupUUID,
-		Tags:          []string{"test-tag"},
+		ConfigDrive:    *pointer.Bool(true),
+		FailureDomain:  *pointer.String(failureDomain),
+		ServerGroupID:  serverGroupUUID,
+		SecurityGroups: []infrav1.SecurityGroupFilter{},
+		Tags:           []string{"test-tag"},
 	}
 }
 
@@ -162,6 +164,44 @@ func Test_machineToInstanceSpec(t *testing.T) {
 			wantInstanceSpec: func() *compute.InstanceSpec {
 				i := getDefaultInstanceSpec()
 				i.SecurityGroups = []infrav1.SecurityGroupFilter{{ID: workerSecurityGroupUUID}}
+				return i
+			},
+		},
+		{
+			name: "Control plane security group not applied to worker",
+			openStackCluster: func() *infrav1.OpenStackCluster {
+				c := getDefaultOpenStackCluster()
+				c.Spec.ManagedSecurityGroups = true
+				c.Status.WorkerSecurityGroup = nil
+				return c
+			},
+			machine:          getDefaultMachine,
+			openStackMachine: getDefaultOpenStackMachine,
+			wantInstanceSpec: func() *compute.InstanceSpec {
+				i := getDefaultInstanceSpec()
+				i.SecurityGroups = []infrav1.SecurityGroupFilter{}
+				return i
+			},
+		},
+		{
+			name: "Worker security group not applied to control plane",
+			openStackCluster: func() *infrav1.OpenStackCluster {
+				c := getDefaultOpenStackCluster()
+				c.Spec.ManagedSecurityGroups = true
+				c.Status.ControlPlaneSecurityGroup = nil
+				return c
+			},
+			machine: func() *clusterv1.Machine {
+				m := getDefaultMachine()
+				m.Labels = map[string]string{
+					clusterv1.MachineControlPlaneLabel: "true",
+				}
+				return m
+			},
+			openStackMachine: getDefaultOpenStackMachine,
+			wantInstanceSpec: func() *compute.InstanceSpec {
+				i := getDefaultInstanceSpec()
+				i.SecurityGroups = []infrav1.SecurityGroupFilter{}
 				return i
 			},
 		},
