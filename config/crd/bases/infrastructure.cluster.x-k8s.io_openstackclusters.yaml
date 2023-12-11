@@ -3767,11 +3767,6 @@ spec:
                     type: string
                   enabled:
                     type: boolean
-                  floatingIP:
-                    description: FloatingIP which will be associated to the bastion
-                      machine. The floating IP should already exist and should not
-                      be associated with a port.
-                    type: string
                   instance:
                     description: Instance for the bastion itself
                     properties:
@@ -3846,6 +3841,11 @@ spec:
                       flavor:
                         description: The flavor reference for the flavor for your
                           server instance.
+                        type: string
+                      floatingIP:
+                        description: The floatingIP which will be associated to the
+                          machine, only used for master. The floatingIP should have
+                          been created and haven't been associated.
                         type: string
                       identityRef:
                         description: IdentityRef is a reference to a identity to be
