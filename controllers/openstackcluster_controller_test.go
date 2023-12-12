@@ -450,6 +450,74 @@ var _ = Describe("OpenStackCluster controller", func() {
 		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
 		Expect(err).To(BeNil())
 	})
+
+	It("should allow two subnets for the cluster network", func() {
+		const externalNetworkID = "a42211a2-4d2c-426f-9413-830e4b4abbbc"
+		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
+		clusterSubnets := []string{"cad5a91a-36de-4388-823b-b0cc82cadfdc", "e2407c18-c4e7-4d3d-befa-8eec5d8756f2"}
+
+		testCluster.SetName("subnet-filtering")
+		testCluster.Spec = infrav1.OpenStackClusterSpec{
+			DisableAPIServerFloatingIP: true,
+			APIServerFixedIP:           "10.0.0.1",
+			ExternalNetwork: infrav1.NetworkFilter{
+				ID: externalNetworkID,
+			},
+			Network: infrav1.NetworkFilter{
+				ID: clusterNetworkID,
+			},
+			Subnets: []infrav1.SubnetFilter{
+				{ID: clusterSubnets[0]},
+				{ID: clusterSubnets[1]},
+			},
+		}
+		err := k8sClient.Create(ctx, testCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, capiCluster)
+		Expect(err).To(BeNil())
+		scope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, logr.Discard())
+		Expect(err).To(BeNil())
+
+		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
+
+		// Fetch external network
+		networkClientRecorder.ListNetwork(external.ListOptsExt{
+			ListOptsBuilder: networks.ListOpts{
+				ID: externalNetworkID,
+			},
+		}).Return([]networks.Network{
+			{
+				ID:   externalNetworkID,
+				Name: "external-network",
+			},
+		}, nil)
+
+		// Fetch cluster network
+		networkClientRecorder.ListNetwork(&networks.ListOpts{
+			ID: clusterNetworkID,
+		}).Return([]networks.Network{
+			{
+				ID:   clusterNetworkID,
+				Name: "cluster-network",
+			},
+		}, nil)
+
+		networkClientRecorder.GetSubnet(clusterSubnets[0]).Return(&subnets.Subnet{
+			ID:   clusterSubnets[0],
+			Name: "cluster-subnet",
+			CIDR: "192.168.0.0/24",
+		}, nil)
+
+		networkClientRecorder.GetSubnet(clusterSubnets[1]).Return(&subnets.Subnet{
+			ID:   clusterSubnets[1],
+			Name: "cluster-subnet-v6",
+			CIDR: "2001:db8:2222:5555::/64",
+		}, nil)
+
+		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
+		Expect(err).To(BeNil())
+		Expect(len(testCluster.Status.Network.Subnets)).To(Equal(2))
+	})
 })
 
 func createRequestFromOSCluster(openStackCluster *infrav1.OpenStackCluster) reconcile.Request {

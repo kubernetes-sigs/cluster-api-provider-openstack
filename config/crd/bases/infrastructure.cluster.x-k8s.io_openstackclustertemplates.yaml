@@ -2942,37 +2942,40 @@ spec:
                           tagsAny:
                             type: string
                         type: object
-                      subnet:
+                      subnets:
                         description: If NodeCIDR cannot be set this can be used to
-                          detect an existing subnet.
-                        properties:
-                          cidr:
-                            type: string
-                          description:
-                            type: string
-                          gateway_ip:
-                            type: string
-                          id:
-                            type: string
-                          ipVersion:
-                            type: integer
-                          ipv6AddressMode:
-                            type: string
-                          ipv6RaMode:
-                            type: string
-                          name:
-                            type: string
-                          notTags:
-                            type: string
-                          notTagsAny:
-                            type: string
-                          projectId:
-                            type: string
-                          tags:
-                            type: string
-                          tagsAny:
-                            type: string
-                        type: object
+                          detect existing IPv4 and/or IPv6 subnets.
+                        items:
+                          properties:
+                            cidr:
+                              type: string
+                            description:
+                              type: string
+                            gateway_ip:
+                              type: string
+                            id:
+                              type: string
+                            ipVersion:
+                              type: integer
+                            ipv6AddressMode:
+                              type: string
+                            ipv6RaMode:
+                              type: string
+                            name:
+                              type: string
+                            notTags:
+                              type: string
+                            notTagsAny:
+                              type: string
+                            projectId:
+                              type: string
+                            tags:
+                              type: string
+                            tagsAny:
+                              type: string
+                          type: object
+                        maxItems: 2
+                        type: array
                       tags:
                         description: Tags for all resources in cluster
                         items:

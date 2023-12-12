@@ -47,8 +47,9 @@ type OpenStackClusterSpec struct {
 	// If NodeCIDR cannot be set this can be used to detect an existing network.
 	Network NetworkFilter `json:"network,omitempty"`
 
-	// If NodeCIDR cannot be set this can be used to detect an existing subnet.
-	Subnet SubnetFilter `json:"subnet,omitempty"`
+	// If NodeCIDR cannot be set this can be used to detect existing IPv4 and/or IPv6 subnets.
+	// +kubebuilder:validation:MaxItems=2
+	Subnets []SubnetFilter `json:"subnets,omitempty"`
 
 	// NetworkMTU sets the maximum transmission unit (MTU) value to address fragmentation for the private network ID.
 	// This value will be used only if the Cluster actuator creates the network.

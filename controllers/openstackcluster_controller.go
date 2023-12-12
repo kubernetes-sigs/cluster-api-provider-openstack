@@ -49,6 +49,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/loadbalancer"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
+	utils "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/controllers"
 )
 
 const (
@@ -516,26 +517,15 @@ func reconcileNetworkComponents(scope scope.Scope, cluster *clusterv1.Cluster, o
 		openStackCluster.Status.Network.Name = networkList[0].Name
 		openStackCluster.Status.Network.Tags = networkList[0].Tags
 
-		subnet, err := networkingService.GetNetworkSubnetByFilter(openStackCluster.Status.Network.ID, &openStackCluster.Spec.Subnet)
+		subnets, err := filterSubnets(networkingService, openStackCluster)
 		if err != nil {
-			err = fmt.Errorf("failed to find subnet: %w", err)
-
-			// Set the cluster to failed if subnet filter is invalid
-			if errors.Is(err, networking.ErrFilterMatch) {
-				handleUpdateOSCError(openStackCluster, err)
-			}
-
 			return err
 		}
 
-		openStackCluster.Status.Network.Subnets = []infrav1.Subnet{
-			{
-				ID:   subnet.ID,
-				Name: subnet.Name,
-				CIDR: subnet.CIDR,
-				Tags: subnet.Tags,
-			},
+		if err := utils.ValidateSubnets(subnets); err != nil {
+			return err
 		}
+		openStackCluster.Status.Network.Subnets = subnets
 	} else {
 		err := networkingService.ReconcileNetwork(openStackCluster, clusterName)
 		if err != nil {
@@ -681,4 +671,46 @@ func handleUpdateOSCError(openstackCluster *infrav1.OpenStackCluster, message er
 	err := capierrors.UpdateClusterError
 	openstackCluster.Status.FailureReason = &err
 	openstackCluster.Status.FailureMessage = pointer.String(message.Error())
+}
+
+// filterSubnets retrieves the subnets based on the Subnet filters specified on OpenstackCluster.
+func filterSubnets(networkingService *networking.Service, openStackCluster *infrav1.OpenStackCluster) ([]infrav1.Subnet, error) {
+	var subnets []infrav1.Subnet
+	openStackClusterSubnets := openStackCluster.Spec.Subnets
+	if openStackCluster.Status.Network == nil {
+		return nil, nil
+	}
+	networkID := openStackCluster.Status.Network.ID
+	if len(openStackClusterSubnets) == 0 {
+		empty := &infrav1.SubnetFilter{}
+		listOpt := empty.ToListOpt()
+		listOpt.NetworkID = networkID
+		filteredSubnets, err := networkingService.GetSubnetsByFilter(listOpt)
+		if err != nil {
+			err = fmt.Errorf("failed to find subnets: %w", err)
+			if errors.Is(err, networking.ErrFilterMatch) {
+				handleUpdateOSCError(openStackCluster, err)
+			}
+			return nil, err
+		}
+		if len(filteredSubnets) > 2 {
+			return nil, fmt.Errorf("more than two subnets found in the Network. Specify the subnets in the OpenStackCluster.Spec instead")
+		}
+		for subnet := range filteredSubnets {
+			subnets = networkingService.ConvertOpenStackSubnetToCAPOSubnet(subnets, &filteredSubnets[subnet])
+		}
+	} else {
+		for subnet := range openStackClusterSubnets {
+			filteredSubnet, err := networkingService.GetNetworkSubnetByFilter(networkID, &openStackClusterSubnets[subnet])
+			if err != nil {
+				err = fmt.Errorf("failed to find subnet: %w", err)
+				if errors.Is(err, networking.ErrFilterMatch) {
+					handleUpdateOSCError(openStackCluster, err)
+				}
+				return nil, err
+			}
+			subnets = networkingService.ConvertOpenStackSubnetToCAPOSubnet(subnets, filteredSubnet)
+		}
+	}
+	return subnets, nil
 }
