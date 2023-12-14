@@ -17,7 +17,7 @@ limitations under the License.
 package networking
 
 import (
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha8"
 )
 
 var defaultRules = []infrav1.SecurityGroupRule{
