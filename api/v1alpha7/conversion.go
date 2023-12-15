@@ -40,6 +40,18 @@ var v1alpha8OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStack
 			return &c.Spec
 		},
 		restorev1alpha8ClusterSpec,
+
+		// Filter out Bastion, which is restored separately
+		conversion.HashedFilterField[*infrav1.OpenStackCluster, infrav1.OpenStackClusterSpec](
+			func(s *infrav1.OpenStackClusterSpec) *infrav1.OpenStackClusterSpec {
+				if s.Bastion != nil {
+					f := *s
+					f.Bastion = nil
+					return &f
+				}
+				return s
+			},
+		),
 	),
 
 	// No equivalent in v1alpha7
@@ -69,6 +81,17 @@ func restorev1alpha8ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *inf
 	if prevBastion != nil && dstBastion != nil {
 		restorev1alpha8MachineSpec(&prevBastion.Instance, &dstBastion.Instance)
 	}
+
+	// Restore all fields except ID, which should have been copied over in conversion
+	dst.ExternalNetwork.Name = previous.ExternalNetwork.Name
+	dst.ExternalNetwork.Description = previous.ExternalNetwork.Description
+	dst.ExternalNetwork.ProjectID = previous.ExternalNetwork.ProjectID
+	dst.ExternalNetwork.Tags = previous.ExternalNetwork.Tags
+	dst.ExternalNetwork.TagsAny = previous.ExternalNetwork.TagsAny
+	dst.ExternalNetwork.NotTags = previous.ExternalNetwork.NotTags
+	dst.ExternalNetwork.NotTagsAny = previous.ExternalNetwork.NotTagsAny
+
+	dst.DisableExternalNetwork = previous.DisableExternalNetwork
 }
 
 func (r *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {
@@ -107,14 +130,19 @@ func (r *OpenStackClusterList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 
 var _ ctrlconversion.Convertible = &OpenStackClusterTemplate{}
 
+func restorev1alpha8ClusterTemplateSpec(previous *infrav1.OpenStackClusterTemplateSpec, dst *infrav1.OpenStackClusterTemplateSpec) {
+	restorev1alpha8Bastion(&previous.Template.Spec.Bastion, &dst.Template.Spec.Bastion)
+	restorev1alpha8ClusterSpec(&previous.Template.Spec, &dst.Template.Spec)
+}
+
 var v1alpha7OpenStackClusterTemplateRestorer = conversion.RestorerFor[*OpenStackClusterTemplate]{}
 
 var v1alpha8OpenStackClusterTemplateRestorer = conversion.RestorerFor[*infrav1.OpenStackClusterTemplate]{
-	"bastion": conversion.HashedFieldRestorer(
-		func(c *infrav1.OpenStackClusterTemplate) **infrav1.Bastion {
-			return &c.Spec.Template.Spec.Bastion
+	"spec": conversion.HashedFieldRestorer(
+		func(c *infrav1.OpenStackClusterTemplate) *infrav1.OpenStackClusterTemplateSpec {
+			return &c.Spec
 		},
-		restorev1alpha8Bastion,
+		restorev1alpha8ClusterTemplateSpec,
 	),
 }
 
@@ -296,6 +324,34 @@ func Convert_v1alpha8_Bastion_To_v1alpha7_Bastion(in *infrav1.Bastion, out *Bast
 
 	if in.Instance.ServerGroup != nil && in.Instance.ServerGroup.ID != "" {
 		out.Instance.ServerGroupID = in.Instance.ServerGroup.ID
+	}
+
+	return nil
+}
+
+func Convert_v1alpha7_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(in *OpenStackClusterSpec, out *infrav1.OpenStackClusterSpec, s apiconversion.Scope) error {
+	err := autoConvert_v1alpha7_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	if in.ExternalNetworkID != "" {
+		out.ExternalNetwork = infrav1.NetworkFilter{
+			ID: in.ExternalNetworkID,
+		}
+	}
+
+	return nil
+}
+
+func Convert_v1alpha8_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in *infrav1.OpenStackClusterSpec, out *OpenStackClusterSpec, s apiconversion.Scope) error {
+	err := autoConvert_v1alpha8_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	if in.ExternalNetwork.ID != "" {
+		out.ExternalNetworkID = in.ExternalNetwork.ID
 	}
 
 	return nil

@@ -129,7 +129,12 @@ func (r hashedFieldRestorer[T, F]) getHash(obj T) []byte {
 
 //nolint:unused
 func (r hashedFieldRestorer[T, F]) marshalState(src, compare T) (json.RawMessage, error) {
-	b, err := json.Marshal(r.getField(src))
+	f := r.getField(src)
+	if r.filterField != nil {
+		f = r.filterField(f)
+	}
+
+	b, err := json.Marshal(f)
 	if err != nil {
 		return nil, err
 	}

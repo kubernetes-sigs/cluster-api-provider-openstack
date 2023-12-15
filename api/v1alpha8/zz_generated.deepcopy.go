@@ -363,6 +363,7 @@ func (in *OpenStackClusterSpec) DeepCopyInto(out *OpenStackClusterSpec) {
 		*out = make([]ExternalRouterIPParam, len(*in))
 		copy(*out, *in)
 	}
+	out.ExternalNetwork = in.ExternalNetwork
 	in.APIServerLoadBalancer.DeepCopyInto(&out.APIServerLoadBalancer)
 	if in.Tags != nil {
 		in, out := &in.Tags, &out.Tags

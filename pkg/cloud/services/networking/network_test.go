@@ -22,6 +22,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/golang/mock/gomock"
 	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/external"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	. "github.com/onsi/gomega"
 	"k8s.io/utils/pointer"
@@ -191,6 +192,231 @@ func Test_ReconcileNetwork(t *testing.T) {
 			}
 			err := s.ReconcileNetwork(tt.openStackCluster, clusterName)
 			g.Expect(err).ShouldNot(HaveOccurred())
+		})
+	}
+}
+
+func Test_ReconcileExternalNetwork(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	fakeNetworkID := "d08803fc-2fa5-4179-b9f7-8c43d0af2fe6"
+	fakeNetworkname := "external-network"
+	isAutodetecting := true
+
+	tests := []struct {
+		name             string
+		openStackCluster *infrav1.OpenStackCluster
+		expect           func(m *mock.MockNetworkClientMockRecorder)
+		want             *infrav1.OpenStackCluster
+		wantErr          bool
+	}{
+		{
+			name: "reconcile external network by ID",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					ExternalNetwork: infrav1.NetworkFilter{
+						ID: fakeNetworkID,
+					},
+				},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				m.
+					ListNetwork(external.ListOptsExt{
+						ListOptsBuilder: networks.ListOpts{ID: fakeNetworkID},
+					}).
+					Return([]networks.Network{
+						{
+							ID:   fakeNetworkID,
+							Name: fakeNetworkname,
+						},
+					}, nil)
+			},
+			want: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					ExternalNetwork: infrav1.NetworkFilter{
+						ID: fakeNetworkID,
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					ExternalNetwork: &infrav1.NetworkStatus{
+						ID:   fakeNetworkID,
+						Name: fakeNetworkname,
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "reconcile external network by name",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					ExternalNetwork: infrav1.NetworkFilter{
+						Name: fakeNetworkname,
+					},
+				},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				m.
+					ListNetwork(external.ListOptsExt{
+						ListOptsBuilder: networks.ListOpts{Name: fakeNetworkname},
+					}).
+					Return([]networks.Network{
+						{
+							ID:   fakeNetworkID,
+							Name: fakeNetworkname,
+						},
+					}, nil)
+			},
+			want: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					ExternalNetwork: infrav1.NetworkFilter{
+						Name: fakeNetworkname,
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					ExternalNetwork: &infrav1.NetworkStatus{
+						ID:   fakeNetworkID,
+						Name: fakeNetworkname,
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "reconcile external network by ID when no external network found",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					ExternalNetwork: infrav1.NetworkFilter{
+						ID: fakeNetworkID,
+					},
+				},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				m.
+					ListNetwork(external.ListOptsExt{
+						ListOptsBuilder: networks.ListOpts{ID: fakeNetworkID},
+					}).
+					Return([]networks.Network{}, nil)
+			},
+			want: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					ExternalNetwork: infrav1.NetworkFilter{
+						ID: fakeNetworkID,
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "not reconcile external network when external network disabled",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					DisableExternalNetwork: true,
+				},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {},
+			want: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					DisableExternalNetwork: true,
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					ExternalNetwork: nil,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "reconcile external network with no filter when zero external network found",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				m.
+					ListNetwork(external.ListOptsExt{
+						ListOptsBuilder: networks.ListOpts{},
+						External:        &isAutodetecting,
+					}).
+					Return([]networks.Network{}, nil)
+			},
+			want: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{},
+				Status: infrav1.OpenStackClusterStatus{
+					ExternalNetwork: nil,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "reconcile external network with no filter when one external network found",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				m.
+					ListNetwork(external.ListOptsExt{
+						ListOptsBuilder: networks.ListOpts{},
+						External:        &isAutodetecting,
+					}).
+					Return([]networks.Network{
+						{
+							ID:   fakeNetworkID,
+							Name: fakeNetworkname,
+						},
+					}, nil)
+			},
+			want: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{},
+				Status: infrav1.OpenStackClusterStatus{
+					ExternalNetwork: &infrav1.NetworkStatus{
+						ID:   fakeNetworkID,
+						Name: fakeNetworkname,
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "reconcile external network with no filter when more than one external network found",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				m.
+					ListNetwork(external.ListOptsExt{
+						ListOptsBuilder: networks.ListOpts{},
+						External:        &isAutodetecting,
+					}).
+					Return([]networks.Network{
+						{
+							ID:   fakeNetworkID,
+							Name: fakeNetworkname,
+						},
+						{
+							ID:   "d08803fc-2fa5-4179-b9f7-8c43d0af2fe7",
+							Name: "external-network-2",
+						},
+					}, nil)
+			},
+			want:    &infrav1.OpenStackCluster{},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewWithT(t)
+			mockClient := mock.NewMockNetworkClient(mockCtrl)
+			tt.expect(mockClient.EXPECT())
+			s := Service{
+				client: mockClient,
+				scope:  scope.NewMockScopeFactory(mockCtrl, "", logr.Discard()),
+			}
+			err := s.ReconcileExternalNetwork(tt.openStackCluster)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ReconcileExternalNetwork() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			g.Expect(tt.openStackCluster).To(Equal(tt.want))
 		})
 	}
 }

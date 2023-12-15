@@ -23,6 +23,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/golang/mock/gomock"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/external"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
@@ -218,7 +219,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 		testCluster.Spec = infrav1.OpenStackClusterSpec{
 			DisableAPIServerFloatingIP: true,
 			APIServerFixedIP:           "10.0.0.1",
-			ExternalNetworkID:          externalNetworkID,
+			ExternalNetwork: infrav1.NetworkFilter{
+				ID: externalNetworkID,
+			},
 			Network: infrav1.NetworkFilter{
 				ID: clusterNetworkID,
 			},
@@ -233,8 +236,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
 
 		// Fetch external network
-		networkClientRecorder.ListNetwork(networks.ListOpts{
-			ID: externalNetworkID,
+		networkClientRecorder.ListNetwork(external.ListOptsExt{
+			ListOptsBuilder: networks.ListOpts{
+				ID: externalNetworkID,
+			},
 		}).Return([]networks.Network{
 			{
 				ID:   externalNetworkID,

@@ -227,7 +227,8 @@ spec:
   cloudName: ${OPENSTACK_CLOUD}
   dnsNameservers:
   - ${OPENSTACK_DNS_NAMESERVERS}
-  externalNetworkId: ${OPENSTACK_EXTERNAL_NETWORK_ID}
+  externalNetwork:
+    id: ${OPENSTACK_EXTERNAL_NETWORK_ID}
   identityRef:
     kind: Secret
     name: ${CLUSTER_NAME}-cloud-config

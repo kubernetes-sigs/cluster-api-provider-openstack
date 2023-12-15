@@ -2778,6 +2778,13 @@ spec:
                           configuration to manage the VIP on the control plane machines,
                           which falls outside of the scope of this controller.
                         type: boolean
+                      disableExternalNetwork:
+                        description: DisableExternalNetwork determines whether or
+                          not to attempt to connect the cluster to an external network.
+                          This allows for the creation of clusters when connecting
+                          to an external network is not possible or desirable, e.g.
+                          if using a provider network.
+                        type: boolean
                       disablePortSecurity:
                         description: DisablePortSecurity disables the port security
                           of the network created for the Kubernetes cluster, which
@@ -2792,11 +2799,27 @@ spec:
                           type: string
                         type: array
                         x-kubernetes-list-type: set
-                      externalNetworkId:
-                        description: ExternalNetworkID is the ID of an external OpenStack
-                          Network. This is necessary to get public internet to the
-                          VMs.
-                        type: string
+                      externalNetwork:
+                        description: ExternalNetwork is the OpenStack Network to be
+                          used to get public internet to the VMs.
+                        properties:
+                          description:
+                            type: string
+                          id:
+                            type: string
+                          name:
+                            type: string
+                          notTags:
+                            type: string
+                          notTagsAny:
+                            type: string
+                          projectId:
+                            type: string
+                          tags:
+                            type: string
+                          tagsAny:
+                            type: string
+                        type: object
                       externalRouterIPs:
                         description: ExternalRouterIPs is an array of externalIPs
                           on the respective subnets. This is necessary if the router

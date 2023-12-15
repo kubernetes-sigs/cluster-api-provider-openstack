@@ -123,6 +123,16 @@ var v1alpha6OpenStackClusterRestorer = conversion.RestorerFor[*OpenStackCluster]
 }
 
 var v1alpha8OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStackCluster]{
+	"externalNetwork": conversion.UnconditionalFieldRestorer(
+		func(c *infrav1.OpenStackCluster) *infrav1.NetworkFilter {
+			return &c.Spec.ExternalNetwork
+		},
+	),
+	"disableExternalNetwork": conversion.UnconditionalFieldRestorer(
+		func(c *infrav1.OpenStackCluster) *bool {
+			return &c.Spec.DisableExternalNetwork
+		},
+	),
 	"router": conversion.UnconditionalFieldRestorer(
 		func(c *infrav1.OpenStackCluster) **infrav1.RouterFilter {
 			return &c.Spec.Router
@@ -193,6 +203,16 @@ var v1alpha6OpenStackClusterTemplateRestorer = conversion.RestorerFor[*OpenStack
 }
 
 var v1alpha8OpenStackClusterTemplateRestorer = conversion.RestorerFor[*infrav1.OpenStackClusterTemplate]{
+	"externalNetwork": conversion.UnconditionalFieldRestorer(
+		func(c *infrav1.OpenStackClusterTemplate) *infrav1.NetworkFilter {
+			return &c.Spec.Template.Spec.ExternalNetwork
+		},
+	),
+	"disableExternalNetwork": conversion.UnconditionalFieldRestorer(
+		func(c *infrav1.OpenStackClusterTemplate) *bool {
+			return &c.Spec.Template.Spec.DisableExternalNetwork
+		},
+	),
 	"router": conversion.UnconditionalFieldRestorer(
 		func(c *infrav1.OpenStackClusterTemplate) **infrav1.RouterFilter {
 			return &c.Spec.Template.Spec.Router
@@ -443,7 +463,31 @@ func convertNetworksToPorts(networks []NetworkParam) []infrav1.PortOpts {
 }
 
 func Convert_v1alpha8_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in *infrav1.OpenStackClusterSpec, out *OpenStackClusterSpec, s apiconversion.Scope) error {
-	return autoConvert_v1alpha8_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in, out, s)
+	err := autoConvert_v1alpha8_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	if in.ExternalNetwork.ID != "" {
+		out.ExternalNetworkID = in.ExternalNetwork.ID
+	}
+
+	return nil
+}
+
+func Convert_v1alpha6_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(in *OpenStackClusterSpec, out *infrav1.OpenStackClusterSpec, s apiconversion.Scope) error {
+	err := autoConvert_v1alpha6_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	if in.ExternalNetworkID != "" {
+		out.ExternalNetwork = infrav1.NetworkFilter{
+			ID: in.ExternalNetworkID,
+		}
+	}
+
+	return nil
 }
 
 func Convert_v1alpha6_PortOpts_To_v1alpha8_PortOpts(in *PortOpts, out *infrav1.PortOpts, s apiconversion.Scope) error {
