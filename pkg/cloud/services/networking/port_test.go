@@ -588,6 +588,19 @@ func Test_GarbageCollectErrorInstancesPort(t *testing.T) {
 				{},
 			},
 			wantErr: false,
+		}, {
+			name: "garbage collects no ports in an instance",
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				o1 := ports.ListOpts{
+					Name: portName1,
+				}
+				p1 := []ports.Port{}
+				m.ListPort(o1).Return(p1, nil)
+			},
+			portOpts: []infrav1.PortOpts{
+				{},
+			},
+			wantErr: false,
 		},
 	}
 
