@@ -1232,8 +1232,8 @@ func autoConvert_v1alpha7_OpenStackMachineSpec_To_v1alpha8_OpenStackMachineSpec(
 	out.InstanceID = (*string)(unsafe.Pointer(in.InstanceID))
 	out.CloudName = in.CloudName
 	out.Flavor = in.Flavor
-	out.Image = in.Image
-	out.ImageUUID = in.ImageUUID
+	// WARNING: in.Image requires manual conversion: inconvertible types (string vs sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha8.ImageFilter)
+	// WARNING: in.ImageUUID requires manual conversion: does not exist in peer-type
 	out.SSHKeyName = in.SSHKeyName
 	out.Ports = *(*[]v1alpha8.PortOpts)(unsafe.Pointer(&in.Ports))
 	out.FloatingIP = in.FloatingIP
@@ -1254,8 +1254,7 @@ func autoConvert_v1alpha8_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(
 	out.InstanceID = (*string)(unsafe.Pointer(in.InstanceID))
 	out.CloudName = in.CloudName
 	out.Flavor = in.Flavor
-	out.Image = in.Image
-	out.ImageUUID = in.ImageUUID
+	// WARNING: in.Image requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha8.ImageFilter vs string)
 	out.SSHKeyName = in.SSHKeyName
 	out.Ports = *(*[]PortOpts)(unsafe.Pointer(&in.Ports))
 	out.FloatingIP = in.FloatingIP

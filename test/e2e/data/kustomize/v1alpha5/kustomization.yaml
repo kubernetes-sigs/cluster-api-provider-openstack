@@ -6,3 +6,9 @@ resources:
 components:
 - ../common-patches/cni
 - ../common-patches/ccm
+
+patches:
+- path: bastion.yaml
+  target:
+    kind: OpenStackCluster
+    name: \${CLUSTER_NAME}

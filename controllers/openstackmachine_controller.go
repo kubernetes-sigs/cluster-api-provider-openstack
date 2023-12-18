@@ -483,8 +483,7 @@ func (r *OpenStackMachineReconciler) getOrCreate(logger logr.Logger, cluster *cl
 func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, userData string) *compute.InstanceSpec {
 	instanceSpec := compute.InstanceSpec{
 		Name:                   openStackMachine.Name,
-		Image:                  openStackMachine.Spec.Image,
-		ImageUUID:              openStackMachine.Spec.ImageUUID,
+		ImageID:                openStackMachine.Status.ReferencedResources.ImageID,
 		Flavor:                 openStackMachine.Spec.Flavor,
 		SSHKeyName:             openStackMachine.Spec.SSHKeyName,
 		UserData:               userData,

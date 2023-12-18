@@ -34,8 +34,7 @@ import (
 // all of them can be set on a new instance.
 type InstanceSpec struct {
 	Name                   string
-	Image                  string
-	ImageUUID              string
+	ImageID                string
 	Flavor                 string
 	SSHKeyName             string
 	UserData               string

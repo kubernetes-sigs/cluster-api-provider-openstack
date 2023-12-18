@@ -30,7 +30,6 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/schedulerhints"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
-	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -238,11 +237,6 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 	var server *clients.ServerExt
 	portList := []servers.Network{}
 
-	imageID, err := s.getImageID(instanceSpec.ImageUUID, instanceSpec.Image)
-	if err != nil {
-		return nil, fmt.Errorf("error getting image ID: %v", err)
-	}
-
 	flavor, err := s.getAndValidateFlavor(instanceSpec.Flavor)
 	if err != nil {
 		return nil, err
@@ -297,7 +291,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 	// Don't set ImageRef on the server if we're booting from volume
 	var serverImageRef string
 	if !hasRootVolume(instanceSpec) {
-		serverImageRef = imageID
+		serverImageRef = instanceSpec.ImageID
 	}
 
 	var serverCreateOpts servers.CreateOptsBuilder = servers.CreateOpts{
@@ -312,7 +306,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 		ConfigDrive:      &instanceSpec.ConfigDrive,
 	}
 
-	blockDevices, err := s.getBlockDevices(eventObject, instanceSpec, imageID, instanceCreateTimeout, retryInterval)
+	blockDevices, err := s.getBlockDevices(eventObject, instanceSpec, instanceSpec.ImageID, instanceCreateTimeout, retryInterval)
 	if err != nil {
 		return nil, err
 	}
@@ -543,38 +537,26 @@ func applyServerGroupID(opts servers.CreateOptsBuilder, serverGroupID string) se
 	return opts
 }
 
-// Helper function for getting image id from name.
-func (s *Service) getImageIDFromName(imageName string) (string, error) {
-	var opts images.ListOpts
+// Helper function for getting image ID from name, ID, or tags.
+func (s *Service) GetImageID(image infrav1.ImageFilter) (string, error) {
+	if image.ID != "" {
+		return image.ID, nil
+	}
 
-	opts.Name = imageName
-
-	allImages, err := s.getImageClient().ListImages(opts)
+	allImages, err := s.getImageClient().ListImages(image.ToListOpt())
 	if err != nil {
 		return "", err
 	}
 
 	switch len(allImages) {
 	case 0:
-		return "", fmt.Errorf("no image with the Name %s could be found", imageName)
+		return "", fmt.Errorf("no images were found with the given image filter: %v", image)
 	case 1:
 		return allImages[0].ID, nil
 	default:
 		// this should never happen
-		return "", fmt.Errorf("too many images with the name, %s, were found", imageName)
+		return "", fmt.Errorf("too many images were found with the given image filter: %v", image)
 	}
-}
-
-// Helper function for getting image ID from name or ID.
-func (s *Service) getImageID(imageUUID, imageName string) (string, error) {
-	if imageUUID != "" {
-		// we return imageUUID without check
-		return imageUUID, nil
-	} else if imageName != "" {
-		return s.getImageIDFromName(imageName)
-	}
-
-	return "", nil
 }
 
 // GetManagementPort returns the port which is used for management and external

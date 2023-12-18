@@ -247,6 +247,15 @@ func Convert_v1alpha5_OpenStackMachineSpec_To_v1alpha8_OpenStackMachineSpec(in *
 		out.ServerGroup = &infrav1.ServerGroupFilter{}
 	}
 
+	imageFilter := infrav1.ImageFilter{}
+	if in.Image != "" {
+		imageFilter.Name = in.Image
+	}
+	if in.ImageUUID != "" {
+		imageFilter.ID = in.ImageUUID
+	}
+	out.Image = imageFilter
+
 	return nil
 }
 
@@ -478,6 +487,14 @@ func Convert_v1alpha8_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(in *
 
 	if in.ServerGroup != nil {
 		out.ServerGroupID = in.ServerGroup.ID
+	}
+
+	if in.Image.Name != "" {
+		out.Image = in.Image.Name
+	}
+
+	if in.Image.ID != "" {
+		out.ImageUUID = in.Image.ID
 	}
 
 	return nil

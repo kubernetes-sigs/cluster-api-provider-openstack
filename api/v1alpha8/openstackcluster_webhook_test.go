@@ -119,7 +119,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					Bastion: &Bastion{
 						Instance: OpenStackMachineSpec{
 							CloudName: "foobar",
-							Image:     "foobar",
+							Image:     ImageFilter{Name: "foobar"},
 							Flavor:    "minimal",
 						},
 						Enabled: true,
@@ -137,7 +137,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					Bastion: &Bastion{
 						Instance: OpenStackMachineSpec{
 							CloudName: "foobarbaz",
-							Image:     "foobarbaz",
+							Image:     ImageFilter{Name: "foobarbaz"},
 							Flavor:    "medium",
 						},
 						Enabled: true,

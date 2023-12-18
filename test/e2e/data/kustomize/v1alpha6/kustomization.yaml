@@ -20,3 +20,7 @@ patches:
           - {}
   target:
     kind: OpenStackMachineTemplate
+- path: bastion.yaml
+  target:
+    kind: OpenStackCluster
+    name: \${CLUSTER_NAME}

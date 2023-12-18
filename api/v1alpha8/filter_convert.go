@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha8
 
 import (
+	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
 	securitygroups "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
@@ -77,5 +78,13 @@ func (routerFilter RouterFilter) ToListOpt() routers.ListOpts {
 		TagsAny:     routerFilter.TagsAny,
 		NotTags:     routerFilter.NotTags,
 		NotTagsAny:  routerFilter.NotTagsAny,
+	}
+}
+
+func (imageFilter ImageFilter) ToListOpt() images.ListOpts {
+	return images.ListOpts{
+		ID:   imageFilter.ID,
+		Name: imageFilter.Name,
+		Tags: imageFilter.Tags,
 	}
 }
