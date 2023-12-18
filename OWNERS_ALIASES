@@ -23,6 +23,5 @@ aliases:
     - lentzi90
     - mdbooth
     - seanschneeweiss
-    - tobiasgiese
   cluster-api-openstack-reviewers:
     - dulek
