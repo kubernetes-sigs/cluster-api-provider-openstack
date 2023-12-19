@@ -52,5 +52,5 @@ type OpenStackClusterTemplateList struct {
 }
 
 func init() {
-	SchemeBuilder.Register(&OpenStackClusterTemplate{}, &OpenStackClusterTemplateList{})
+	objectTypes = append(objectTypes, &OpenStackClusterTemplate{}, &OpenStackClusterTemplateList{})
 }
