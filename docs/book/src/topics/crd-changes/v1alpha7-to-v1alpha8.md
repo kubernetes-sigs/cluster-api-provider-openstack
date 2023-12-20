@@ -12,6 +12,7 @@
       - [Changes to image](#change-to-image)
       - [Removal of imageUUID](#removal-of-imageuuid)
       - [Change to floatingIP](#change-to-floatingip)
+      - [Change to subnet](#change-to-subnet)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -156,3 +157,23 @@ spec:
   bastion:
     floatingIP: "1.2.3.4"
 ```
+
+#### ⚠️ Change to subnet
+
+In v1alpha8, `Subnet` of `OpenStackCluster` is modified to `Subnets` to allow specification of two existent subnets for the dual-stack scenario.
+
+```yaml
+  subnet:
+    id: a532beb0-c73a-4b5d-af66-3ad05b73d063
+```
+
+In v1alpha8, this will be automatically converted to:
+
+```yaml
+  subnets:
+    - id: a532beb0-c73a-4b5d-af66-3ad05b73d063
+```
+
+`Subnets` allows specifications of maximum two `SubnetFilter` one being IPv4 and the other IPv6. Both subnets must be on the same network. Any filtered subnets will be added to `OpenStackCluster.Status.Network.Subnets`.
+
+When subnets are not specified on `OpenStackCluster` and only the network is, the network is used to identify the subnets to use. If more than two subnets exist in the network, the user must specify which ones to use by defining the `OpenStackCluster.Spec.Subnets` field.
