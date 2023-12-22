@@ -31,12 +31,15 @@ source "${scriptdir}/${RESOURCE_TYPE}.sh"
 
 CLUSTER_NAME=${CLUSTER_NAME:-"capo-e2e"}
 
-OPENSTACK_RELEASE=${OPENSTACK_RELEASE:-"yoga"}
+OPENSTACK_RELEASE=${OPENSTACK_RELEASE:-"2023.2"}
 OPENSTACK_ENABLE_HORIZON=${OPENSTACK_ENABLE_HORIZON:-"false"}
 
 # Devstack will create a provider network using this range
 # We create a route to it with sshuttle
 FLOATING_RANGE=${FLOATING_RANGE:-"172.24.4.0/24"}
+
+# That will be the default DNS server for the Neutron subnets
+OPENSTACK_DNS_NAMESERVERS=${OPENSTACK_DNS_NAMESERVERS:-"8.8.8.8"}
 
 # Servers will be directly attached to the private network
 # We create a route to it with sshuttle
@@ -85,10 +88,6 @@ function ensure_openstack_client {
 
         # We explicitly pin to the stable branch version of openstackclient.
         curl -L https://releases.openstack.org/constraints/upper/${OPENSTACK_RELEASE} -o /tmp/openstack-constraints
-
-        # Hack for yoga only: wrapt <1.14 doesn't support python 3.11
-        [ "${OPENSTACK_RELEASE}" == "yoga" ] || exit 1 # Delete this hack
-        sed -i "s/^wrapt===1\.13.*/wrapt===1.14.1/" /tmp/openstack-constraints
 
         pip install -c /tmp/openstack-constraints \
                 python-openstackclient python-cinderclient \
@@ -213,10 +212,11 @@ function create_devstack {
         HOST_IP="$ip" \
         CONTROLLER_IP="$CONTROLLER_IP" \
         FLOATING_RANGE="$FLOATING_RANGE" \
+	OPENSTACK_DNS_NAMESERVERS="$OPENSTACK_DNS_NAMESERVERS" \
         MTU="$(get_mtu)" \
         PRIMARY_AZ="$PRIMARY_AZ" SECONDARY_AZ="$SECONDARY_AZ" \
             envsubst '${SSH_PUBLIC_KEY} ${OPENSTACK_ADDITIONAL_SERVICES}
-                    ${OPENSTACK_RELEASE} ${HOST_IP} ${FLOATING_RANGE}
+                    ${OPENSTACK_RELEASE} ${HOST_IP} ${FLOATING_RANGE} ${OPENSTACK_DNS_NAMESERVERS}
                     ${CONTROLLER_IP} ${MTU} ${PRIMARY_AZ} ${SECONDARY_AZ}' \
                 < "./hack/ci/cloud-init/${tpl}.yaml.tpl" >> "$cloud_init"
     done
