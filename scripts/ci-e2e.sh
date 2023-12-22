@@ -48,7 +48,7 @@ trap cleanup EXIT
 
 apt-get update -y
 # Install requests module explicitly for HTTP calls.
-# libffi required for pip install cffi (yoga dependency)
+# libffi required for pip install cffi (bobcat dependency)
 apt-get install -y python3-requests libffi-dev
 rm -rf /var/lib/apt/lists/*
 
