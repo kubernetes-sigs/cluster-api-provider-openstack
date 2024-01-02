@@ -211,7 +211,10 @@ variables:
   # The default user for SSH connections from bastion to machines
   SSH_USER_MACHINE: "ubuntu"
   EXP_KUBEADM_BOOTSTRAP_FORMAT_IGNITION: "true"
+  # The Flatcar image produced by the image-builder
   OPENSTACK_FLATCAR_IMAGE_NAME: "flatcar-stable-3602.2.0-kube-v1.28.2"
+  # A plain Flatcar from the Flatcar releases server
+  FLATCAR_IMAGE_NAME: "flatcar_production_openstack_image"
 
 intervals:
   conformance/wait-control-plane: ["30m", "10s"]

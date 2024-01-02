@@ -1,0 +1,7 @@
+---
+resources:
+- ../../../../../kustomize/v1alpha7/flatcar-sysext
+
+components:
+- ../common-patches/cni
+- ../common-patches/ccm
