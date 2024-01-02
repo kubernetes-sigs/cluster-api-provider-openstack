@@ -329,7 +329,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	}
 
 	instanceStatus, err := r.getOrCreate(scope.Logger(), cluster, openStackCluster, machine, openStackMachine, computeService, userData)
-	if err != nil {
+	if err != nil || instanceStatus == nil {
 		// Conditions set in getOrCreate
 		return ctrl.Result{}, err
 	}
@@ -439,6 +439,12 @@ func (r *OpenStackMachineReconciler) getOrCreate(logger logr.Logger, cluster *cl
 	}
 
 	if instanceStatus == nil {
+		if openStackMachine.Spec.InstanceID != nil {
+			logger.Info("Not reconciling machine in failed state. The previously existing OpenStack instance is no longer available")
+			conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceNotFoundReason, clusterv1.ConditionSeverityError, "virtual machine no longer exists")
+			openStackMachine.SetFailure(capierrors.UpdateMachineError, errors.New("virtual machine no longer exists"))
+			return nil, nil
+		}
 		instanceSpec := machineToInstanceSpec(openStackCluster, machine, openStackMachine, userData)
 		logger.Info("Machine does not exist, creating Machine", "name", openStackMachine.Name)
 		instanceStatus, err = computeService.CreateInstance(openStackMachine, openStackCluster, instanceSpec, cluster.Name)
