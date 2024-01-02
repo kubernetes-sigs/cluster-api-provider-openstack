@@ -348,7 +348,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 		return createdInstance.State() == infrav1.InstanceStateActive, nil
 	})
 	if err != nil {
-		record.Warnf(eventObject, "FailedCreateServer", "Failed to create server %s: %v", createdInstance.Name(), err)
+		record.Warnf(eventObject, "FailedCreateServer", "Failed to create server %s: %v", instanceSpec.Name, err)
 		return nil, err
 	}
 
