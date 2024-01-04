@@ -46,13 +46,11 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# Ensure that python3-pip is installed.
 apt-get update -y
-apt-get install -y python3-pip
+# Install requests module explicitly for HTTP calls.
+# libffi required for pip install cffi (yoga dependency)
+apt-get install -y python3-requests libffi-dev
 rm -rf /var/lib/apt/lists/*
-
-# Install/upgrade pip and requests module explicitly for HTTP calls.
-python3 -m pip install --upgrade pip requests
 
 # If BOSKOS_HOST is set then acquire a resource of type ${RESOURCE_TYPE} from Boskos.
 if [ -n "${BOSKOS_HOST:-}" ]; then
