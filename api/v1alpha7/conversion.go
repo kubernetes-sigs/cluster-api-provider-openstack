@@ -32,9 +32,8 @@ var v1alpha8OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStack
 func (r *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackCluster)
 
-	compare := &OpenStackCluster{}
 	return conversion.ConvertAndRestore(
-		r, dst, compare,
+		r, dst,
 		Convert_v1alpha7_OpenStackCluster_To_v1alpha8_OpenStackCluster, Convert_v1alpha8_OpenStackCluster_To_v1alpha7_OpenStackCluster,
 		v1alpha7OpenStackClusterRestorer, v1alpha8OpenStackClusterRestorer,
 	)
@@ -43,9 +42,8 @@ func (r *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {
 func (r *OpenStackCluster) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	src := srcRaw.(*infrav1.OpenStackCluster)
 
-	compare := &infrav1.OpenStackCluster{}
 	return conversion.ConvertAndRestore(
-		src, r, compare,
+		src, r,
 		Convert_v1alpha8_OpenStackCluster_To_v1alpha7_OpenStackCluster, Convert_v1alpha7_OpenStackCluster_To_v1alpha8_OpenStackCluster,
 		v1alpha8OpenStackClusterRestorer, v1alpha7OpenStackClusterRestorer,
 	)
@@ -74,9 +72,8 @@ var v1alpha8OpenStackClusterTemplateRestorer = conversion.RestorerFor[*infrav1.O
 func (r *OpenStackClusterTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackClusterTemplate)
 
-	compare := &OpenStackClusterTemplate{}
 	return conversion.ConvertAndRestore(
-		r, dst, compare,
+		r, dst,
 		Convert_v1alpha7_OpenStackClusterTemplate_To_v1alpha8_OpenStackClusterTemplate, Convert_v1alpha8_OpenStackClusterTemplate_To_v1alpha7_OpenStackClusterTemplate,
 		v1alpha7OpenStackClusterTemplateRestorer, v1alpha8OpenStackClusterTemplateRestorer,
 	)
@@ -85,9 +82,8 @@ func (r *OpenStackClusterTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error {
 func (r *OpenStackClusterTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	src := srcRaw.(*infrav1.OpenStackClusterTemplate)
 
-	compare := &infrav1.OpenStackClusterTemplate{}
 	return conversion.ConvertAndRestore(
-		src, r, compare,
+		src, r,
 		Convert_v1alpha8_OpenStackClusterTemplate_To_v1alpha7_OpenStackClusterTemplate, Convert_v1alpha7_OpenStackClusterTemplate_To_v1alpha8_OpenStackClusterTemplate,
 		v1alpha8OpenStackClusterTemplateRestorer, v1alpha7OpenStackClusterTemplateRestorer,
 	)
@@ -102,9 +98,8 @@ var v1alpha8OpenStackMachineRestorer = conversion.RestorerFor[*infrav1.OpenStack
 func (r *OpenStackMachine) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackMachine)
 
-	compare := &OpenStackMachine{}
 	return conversion.ConvertAndRestore(
-		r, dst, compare,
+		r, dst,
 		Convert_v1alpha7_OpenStackMachine_To_v1alpha8_OpenStackMachine, Convert_v1alpha8_OpenStackMachine_To_v1alpha7_OpenStackMachine,
 		v1alpha7OpenStackMachineRestorer, v1alpha8OpenStackMachineRestorer,
 	)
@@ -113,9 +108,8 @@ func (r *OpenStackMachine) ConvertTo(dstRaw ctrlconversion.Hub) error {
 func (r *OpenStackMachine) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	src := srcRaw.(*infrav1.OpenStackMachine)
 
-	compare := &infrav1.OpenStackMachine{}
 	return conversion.ConvertAndRestore(
-		src, r, compare,
+		src, r,
 		Convert_v1alpha8_OpenStackMachine_To_v1alpha7_OpenStackMachine, Convert_v1alpha7_OpenStackMachine_To_v1alpha8_OpenStackMachine,
 		v1alpha8OpenStackMachineRestorer, v1alpha7OpenStackMachineRestorer,
 	)
@@ -142,9 +136,8 @@ var v1alpha8OpenStackMachineTemplateRestorer = conversion.RestorerFor[*infrav1.O
 func (r *OpenStackMachineTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackMachineTemplate)
 
-	compare := &OpenStackMachineTemplate{}
 	return conversion.ConvertAndRestore(
-		r, dst, compare,
+		r, dst,
 		Convert_v1alpha7_OpenStackMachineTemplate_To_v1alpha8_OpenStackMachineTemplate, Convert_v1alpha8_OpenStackMachineTemplate_To_v1alpha7_OpenStackMachineTemplate,
 		v1alpha7OpenStackMachineTemplateRestorer, v1alpha8OpenStackMachineTemplateRestorer,
 	)
@@ -153,9 +146,8 @@ func (r *OpenStackMachineTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error {
 func (r *OpenStackMachineTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	src := srcRaw.(*infrav1.OpenStackMachineTemplate)
 
-	compare := &infrav1.OpenStackMachineTemplate{}
 	return conversion.ConvertAndRestore(
-		src, r, compare,
+		src, r,
 		Convert_v1alpha8_OpenStackMachineTemplate_To_v1alpha7_OpenStackMachineTemplate, Convert_v1alpha7_OpenStackMachineTemplate_To_v1alpha8_OpenStackMachineTemplate,
 		v1alpha8OpenStackMachineTemplateRestorer, v1alpha7OpenStackMachineTemplateRestorer,
 	)
