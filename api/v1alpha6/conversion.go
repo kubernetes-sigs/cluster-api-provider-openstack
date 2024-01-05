@@ -103,51 +103,50 @@ func restorev1alpha6ClusterSpec(previous *OpenStackClusterSpec, dst *OpenStackCl
 var _ ctrlconversion.Convertible = &OpenStackCluster{}
 
 var v1alpha6OpenStackClusterRestorer = conversion.RestorerFor[*OpenStackCluster]{
-	"spec": conversion.HashedFieldRestorer[*OpenStackCluster, OpenStackClusterSpec]{
-		GetField: func(c *OpenStackCluster) *OpenStackClusterSpec {
+	"spec": conversion.HashedFieldRestorer(
+		func(c *OpenStackCluster) *OpenStackClusterSpec {
 			return &c.Spec
 		},
-		RestoreField: restorev1alpha6ClusterSpec,
-	},
-	"status": conversion.HashedFieldRestorer[*OpenStackCluster, OpenStackClusterStatus]{
-		GetField: func(c *OpenStackCluster) *OpenStackClusterStatus {
+		restorev1alpha6ClusterSpec,
+	),
+	"status": conversion.HashedFieldRestorer(
+		func(c *OpenStackCluster) *OpenStackClusterStatus {
 			return &c.Status
 		},
-		RestoreField: restorev1alpha6ClusterStatus,
-	},
+		restorev1alpha6ClusterStatus,
+	),
 }
 
 var v1alpha8OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStackCluster]{
-	"router": conversion.UnconditionalFieldRestorer[*infrav1.OpenStackCluster, *infrav1.RouterFilter]{
-		GetField: func(c *infrav1.OpenStackCluster) **infrav1.RouterFilter {
+	"router": conversion.UnconditionalFieldRestorer(
+		func(c *infrav1.OpenStackCluster) **infrav1.RouterFilter {
 			return &c.Spec.Router
 		},
-	},
-	"networkMtu": conversion.UnconditionalFieldRestorer[*infrav1.OpenStackCluster, int]{
-		GetField: func(c *infrav1.OpenStackCluster) *int {
+	),
+	"networkMtu": conversion.UnconditionalFieldRestorer(
+		func(c *infrav1.OpenStackCluster) *int {
 			return &c.Spec.NetworkMTU
 		},
-	},
-	"bastion": conversion.HashedFieldRestorer[*infrav1.OpenStackCluster, *infrav1.Bastion]{
-		GetField: func(c *infrav1.OpenStackCluster) **infrav1.Bastion {
+	),
+	"bastion": conversion.HashedFieldRestorer(
+		func(c *infrav1.OpenStackCluster) **infrav1.Bastion {
 			return &c.Spec.Bastion
 		},
-		RestoreField: restorev1alpha8Bastion,
-	},
-	"status": conversion.HashedFieldRestorer[*infrav1.OpenStackCluster, infrav1.OpenStackClusterStatus]{
-		GetField: func(c *infrav1.OpenStackCluster) *infrav1.OpenStackClusterStatus {
+		restorev1alpha8Bastion,
+	),
+	"status": conversion.HashedFieldRestorer(
+		func(c *infrav1.OpenStackCluster) *infrav1.OpenStackClusterStatus {
 			return &c.Status
 		},
-		RestoreField: restorev1alpha8ClusterStatus,
-	},
+		restorev1alpha8ClusterStatus,
+	),
 }
 
 func (r *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackCluster)
 
-	compare := &OpenStackCluster{}
 	return conversion.ConvertAndRestore(
-		r, dst, compare,
+		r, dst,
 		Convert_v1alpha6_OpenStackCluster_To_v1alpha8_OpenStackCluster, Convert_v1alpha8_OpenStackCluster_To_v1alpha6_OpenStackCluster,
 		v1alpha6OpenStackClusterRestorer, v1alpha8OpenStackClusterRestorer,
 	)
@@ -156,9 +155,8 @@ func (r *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {
 func (r *OpenStackCluster) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	src := srcRaw.(*infrav1.OpenStackCluster)
 
-	compare := &infrav1.OpenStackCluster{}
 	return conversion.ConvertAndRestore(
-		src, r, compare,
+		src, r,
 		Convert_v1alpha8_OpenStackCluster_To_v1alpha6_OpenStackCluster, Convert_v1alpha6_OpenStackCluster_To_v1alpha8_OpenStackCluster,
 		v1alpha8OpenStackClusterRestorer, v1alpha6OpenStackClusterRestorer,
 	)
@@ -181,39 +179,38 @@ func (r *OpenStackClusterList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 var _ ctrlconversion.Convertible = &OpenStackClusterTemplate{}
 
 var v1alpha6OpenStackClusterTemplateRestorer = conversion.RestorerFor[*OpenStackClusterTemplate]{
-	"spec": conversion.HashedFieldRestorer[*OpenStackClusterTemplate, OpenStackClusterSpec]{
-		GetField: func(c *OpenStackClusterTemplate) *OpenStackClusterSpec {
+	"spec": conversion.HashedFieldRestorer(
+		func(c *OpenStackClusterTemplate) *OpenStackClusterSpec {
 			return &c.Spec.Template.Spec
 		},
-		RestoreField: restorev1alpha6ClusterSpec,
-	},
+		restorev1alpha6ClusterSpec,
+	),
 }
 
 var v1alpha8OpenStackClusterTemplateRestorer = conversion.RestorerFor[*infrav1.OpenStackClusterTemplate]{
-	"router": conversion.UnconditionalFieldRestorer[*infrav1.OpenStackClusterTemplate, *infrav1.RouterFilter]{
-		GetField: func(c *infrav1.OpenStackClusterTemplate) **infrav1.RouterFilter {
+	"router": conversion.UnconditionalFieldRestorer(
+		func(c *infrav1.OpenStackClusterTemplate) **infrav1.RouterFilter {
 			return &c.Spec.Template.Spec.Router
 		},
-	},
-	"networkMtu": conversion.UnconditionalFieldRestorer[*infrav1.OpenStackClusterTemplate, int]{
-		GetField: func(c *infrav1.OpenStackClusterTemplate) *int {
+	),
+	"networkMtu": conversion.UnconditionalFieldRestorer(
+		func(c *infrav1.OpenStackClusterTemplate) *int {
 			return &c.Spec.Template.Spec.NetworkMTU
 		},
-	},
-	"bastion": conversion.HashedFieldRestorer[*infrav1.OpenStackClusterTemplate, *infrav1.Bastion]{
-		GetField: func(c *infrav1.OpenStackClusterTemplate) **infrav1.Bastion {
+	),
+	"bastion": conversion.HashedFieldRestorer(
+		func(c *infrav1.OpenStackClusterTemplate) **infrav1.Bastion {
 			return &c.Spec.Template.Spec.Bastion
 		},
-		RestoreField: restorev1alpha8Bastion,
-	},
+		restorev1alpha8Bastion,
+	),
 }
 
 func (r *OpenStackClusterTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackClusterTemplate)
 
-	compare := &OpenStackClusterTemplate{}
 	return conversion.ConvertAndRestore(
-		r, dst, compare,
+		r, dst,
 		Convert_v1alpha6_OpenStackClusterTemplate_To_v1alpha8_OpenStackClusterTemplate, Convert_v1alpha8_OpenStackClusterTemplate_To_v1alpha6_OpenStackClusterTemplate,
 		v1alpha6OpenStackClusterTemplateRestorer, v1alpha8OpenStackClusterTemplateRestorer,
 	)
@@ -222,9 +219,8 @@ func (r *OpenStackClusterTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error {
 func (r *OpenStackClusterTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	src := srcRaw.(*infrav1.OpenStackClusterTemplate)
 
-	compare := &infrav1.OpenStackClusterTemplate{}
 	return conversion.ConvertAndRestore(
-		src, r, compare,
+		src, r,
 		Convert_v1alpha8_OpenStackClusterTemplate_To_v1alpha6_OpenStackClusterTemplate, Convert_v1alpha6_OpenStackClusterTemplate_To_v1alpha8_OpenStackClusterTemplate,
 		v1alpha8OpenStackClusterTemplateRestorer, v1alpha6OpenStackClusterTemplateRestorer,
 	)
@@ -233,11 +229,12 @@ func (r *OpenStackClusterTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) error 
 var _ ctrlconversion.Convertible = &OpenStackMachine{}
 
 var v1alpha6OpenStackMachineRestorer = conversion.RestorerFor[*OpenStackMachine]{
-	"spec": conversion.HashedFieldRestorer[*OpenStackMachine, OpenStackMachineSpec]{
-		GetField: func(c *OpenStackMachine) *OpenStackMachineSpec {
+	"spec": conversion.HashedFieldRestorer(
+		func(c *OpenStackMachine) *OpenStackMachineSpec {
 			return &c.Spec
 		},
-		FilterField: func(s *OpenStackMachineSpec) *OpenStackMachineSpec {
+		restorev1alpha6MachineSpec,
+		conversion.HashedFilterField[*OpenStackMachine, OpenStackMachineSpec](func(s *OpenStackMachineSpec) *OpenStackMachineSpec {
 			// Despite being spec fields, ProviderID and InstanceID
 			// are both set by the machine controller. If these are
 			// the only changes to the spec, we still want to
@@ -249,26 +246,24 @@ var v1alpha6OpenStackMachineRestorer = conversion.RestorerFor[*OpenStackMachine]
 				return &f
 			}
 			return s
-		},
-		RestoreField: restorev1alpha6MachineSpec,
-	},
+		}),
+	),
 }
 
 var v1alpha8OpenStackMachineRestorer = conversion.RestorerFor[*infrav1.OpenStackMachine]{
-	"spec": conversion.HashedFieldRestorer[*infrav1.OpenStackMachine, infrav1.OpenStackMachineSpec]{
-		GetField: func(c *infrav1.OpenStackMachine) *infrav1.OpenStackMachineSpec {
+	"spec": conversion.HashedFieldRestorer(
+		func(c *infrav1.OpenStackMachine) *infrav1.OpenStackMachineSpec {
 			return &c.Spec
 		},
-		RestoreField: restorev1alpha8MachineSpec,
-	},
+		restorev1alpha8MachineSpec,
+	),
 }
 
 func (r *OpenStackMachine) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackMachine)
 
-	compare := &OpenStackMachine{}
 	return conversion.ConvertAndRestore(
-		r, dst, compare,
+		r, dst,
 		Convert_v1alpha6_OpenStackMachine_To_v1alpha8_OpenStackMachine, Convert_v1alpha8_OpenStackMachine_To_v1alpha6_OpenStackMachine,
 		v1alpha6OpenStackMachineRestorer, v1alpha8OpenStackMachineRestorer,
 	)
@@ -277,9 +272,8 @@ func (r *OpenStackMachine) ConvertTo(dstRaw ctrlconversion.Hub) error {
 func (r *OpenStackMachine) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	src := srcRaw.(*infrav1.OpenStackMachine)
 
-	compare := &infrav1.OpenStackMachine{}
 	return conversion.ConvertAndRestore(
-		src, r, compare,
+		src, r,
 		Convert_v1alpha8_OpenStackMachine_To_v1alpha6_OpenStackMachine, Convert_v1alpha6_OpenStackMachine_To_v1alpha8_OpenStackMachine,
 		v1alpha8OpenStackMachineRestorer, v1alpha6OpenStackMachineRestorer,
 	)
@@ -300,29 +294,28 @@ func (r *OpenStackMachineList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 var _ ctrlconversion.Convertible = &OpenStackMachineTemplate{}
 
 var v1alpha6OpenStackMachineTemplateRestorer = conversion.RestorerFor[*OpenStackMachineTemplate]{
-	"spec": conversion.HashedFieldRestorer[*OpenStackMachineTemplate, OpenStackMachineSpec]{
-		GetField: func(c *OpenStackMachineTemplate) *OpenStackMachineSpec {
+	"spec": conversion.HashedFieldRestorer(
+		func(c *OpenStackMachineTemplate) *OpenStackMachineSpec {
 			return &c.Spec.Template.Spec
 		},
-		RestoreField: restorev1alpha6MachineSpec,
-	},
+		restorev1alpha6MachineSpec,
+	),
 }
 
 var v1alpha8OpenStackMachineTemplateRestorer = conversion.RestorerFor[*infrav1.OpenStackMachineTemplate]{
-	"spec": conversion.HashedFieldRestorer[*infrav1.OpenStackMachineTemplate, infrav1.OpenStackMachineSpec]{
-		GetField: func(c *infrav1.OpenStackMachineTemplate) *infrav1.OpenStackMachineSpec {
+	"spec": conversion.HashedFieldRestorer(
+		func(c *infrav1.OpenStackMachineTemplate) *infrav1.OpenStackMachineSpec {
 			return &c.Spec.Template.Spec
 		},
-		RestoreField: restorev1alpha8MachineSpec,
-	},
+		restorev1alpha8MachineSpec,
+	),
 }
 
 func (r *OpenStackMachineTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackMachineTemplate)
 
-	compare := &OpenStackMachineTemplate{}
 	return conversion.ConvertAndRestore(
-		r, dst, compare,
+		r, dst,
 		Convert_v1alpha6_OpenStackMachineTemplate_To_v1alpha8_OpenStackMachineTemplate, Convert_v1alpha8_OpenStackMachineTemplate_To_v1alpha6_OpenStackMachineTemplate,
 		v1alpha6OpenStackMachineTemplateRestorer, v1alpha8OpenStackMachineTemplateRestorer,
 	)
@@ -331,9 +324,8 @@ func (r *OpenStackMachineTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error {
 func (r *OpenStackMachineTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	src := srcRaw.(*infrav1.OpenStackMachineTemplate)
 
-	compare := &infrav1.OpenStackMachineTemplate{}
 	return conversion.ConvertAndRestore(
-		src, r, compare,
+		src, r,
 		Convert_v1alpha8_OpenStackMachineTemplate_To_v1alpha6_OpenStackMachineTemplate, Convert_v1alpha6_OpenStackMachineTemplate_To_v1alpha8_OpenStackMachineTemplate,
 		v1alpha8OpenStackMachineTemplateRestorer, v1alpha6OpenStackMachineTemplateRestorer,
 	)
