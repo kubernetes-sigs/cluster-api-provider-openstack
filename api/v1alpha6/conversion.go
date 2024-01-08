@@ -61,6 +61,7 @@ func restorev1alpha8MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *inf
 	// We restore the whole Ports since they are anyway immutable.
 	dst.Ports = previous.Ports
 	dst.AdditionalBlockDevices = previous.AdditionalBlockDevices
+	dst.ServerGroup = previous.ServerGroup
 }
 
 func restorev1alpha8Bastion(previous **infrav1.Bastion, dst **infrav1.Bastion) {
@@ -75,6 +76,10 @@ func restorev1alpha8ClusterStatus(previous *infrav1.OpenStackClusterStatus, dst 
 	// result in Network being a pointer to an empty object.
 	if previous.Network == nil && dst.Network != nil && reflect.ValueOf(*dst.Network).IsZero() {
 		dst.Network = nil
+	}
+
+	if previous.Bastion != nil {
+		dst.Bastion.ReferencedResources = previous.Bastion.ReferencedResources
 	}
 }
 
@@ -257,6 +262,13 @@ var v1alpha8OpenStackMachineRestorer = conversion.RestorerFor[*infrav1.OpenStack
 		},
 		restorev1alpha8MachineSpec,
 	),
+
+	// No equivalent in v1alpha6
+	"refresources": conversion.UnconditionalFieldRestorer(
+		func(c *infrav1.OpenStackMachine) *infrav1.ReferencedMachineResources {
+			return &c.Status.ReferencedResources
+		},
+	),
 }
 
 func (r *OpenStackMachine) ConvertTo(dstRaw ctrlconversion.Hub) error {
@@ -354,6 +366,13 @@ func Convert_v1alpha6_OpenStackMachineSpec_To_v1alpha8_OpenStackMachineSpec(in *
 		// Networks were previously created first, so need to come before ports
 		out.Ports = append(ports, out.Ports...)
 	}
+
+	if in.ServerGroupID != "" {
+		out.ServerGroup = &infrav1.ServerGroupFilter{ID: in.ServerGroupID}
+	} else {
+		out.ServerGroup = nil
+	}
+
 	return nil
 }
 
@@ -649,5 +668,47 @@ func Convert_v1alpha6_OpenStackClusterStatus_To_v1alpha8_OpenStackClusterStatus(
 }
 
 func Convert_v1alpha8_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(in *infrav1.OpenStackMachineSpec, out *OpenStackMachineSpec, s apiconversion.Scope) error {
-	return autoConvert_v1alpha8_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(in, out, s)
+	err := autoConvert_v1alpha8_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	if in.ServerGroup != nil {
+		out.ServerGroupID = in.ServerGroup.ID
+	}
+
+	return nil
+}
+
+func Convert_v1alpha8_OpenStackMachineStatus_To_v1alpha6_OpenStackMachineStatus(in *infrav1.OpenStackMachineStatus, out *OpenStackMachineStatus, s apiconversion.Scope) error {
+	// ReferencedResources have no equivalent in v1alpha6
+	return autoConvert_v1alpha8_OpenStackMachineStatus_To_v1alpha6_OpenStackMachineStatus(in, out, s)
+}
+
+func Convert_v1alpha6_Bastion_To_v1alpha8_Bastion(in *Bastion, out *infrav1.Bastion, s apiconversion.Scope) error {
+	err := autoConvert_v1alpha6_Bastion_To_v1alpha8_Bastion(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	if in.Instance.ServerGroupID != "" {
+		out.Instance.ServerGroup = &infrav1.ServerGroupFilter{ID: in.Instance.ServerGroupID}
+	} else {
+		out.Instance.ServerGroup = nil
+	}
+
+	return nil
+}
+
+func Convert_v1alpha8_Bastion_To_v1alpha6_Bastion(in *infrav1.Bastion, out *Bastion, s apiconversion.Scope) error {
+	err := autoConvert_v1alpha8_Bastion_To_v1alpha6_Bastion(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	if in.Instance.ServerGroup != nil && in.Instance.ServerGroup.ID != "" {
+		out.Instance.ServerGroupID = in.Instance.ServerGroup.ID
+	}
+
+	return nil
 }

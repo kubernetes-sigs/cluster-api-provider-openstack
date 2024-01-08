@@ -149,12 +149,13 @@ type AddressPair struct {
 }
 
 type BastionStatus struct {
-	ID         string        `json:"id,omitempty"`
-	Name       string        `json:"name,omitempty"`
-	SSHKeyName string        `json:"sshKeyName,omitempty"`
-	State      InstanceState `json:"state,omitempty"`
-	IP         string        `json:"ip,omitempty"`
-	FloatingIP string        `json:"floatingIP,omitempty"`
+	ID                  string                     `json:"id,omitempty"`
+	Name                string                     `json:"name,omitempty"`
+	SSHKeyName          string                     `json:"sshKeyName,omitempty"`
+	State               InstanceState              `json:"state,omitempty"`
+	IP                  string                     `json:"ip,omitempty"`
+	FloatingIP          string                     `json:"floatingIP,omitempty"`
+	ReferencedResources ReferencedMachineResources `json:"referencedResources,omitempty"`
 }
 
 type RootVolume struct {
@@ -213,6 +214,11 @@ type AdditionalBlockDevice struct {
 	// Storage specifies the storage type of the block device and
 	// additional storage options.
 	Storage BlockDeviceStorage `json:"storage"`
+}
+
+type ServerGroupFilter struct {
+	ID   string `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
 }
 
 // BlockDeviceType defines the type of block device to create.
@@ -355,6 +361,13 @@ type APIServerLoadBalancer struct {
 	AllowedCIDRs []string `json:"allowedCidrs,omitempty"`
 	// Octavia Provider Used to create load balancer
 	Provider string `json:"provider,omitempty"`
+}
+
+// ReferencedMachineResources contains resolved references to resources required by the machine.
+type ReferencedMachineResources struct {
+	// ServerGroupID is the ID of the server group the machine should be added to and is calculated based on ServerGroupFilter.
+	// +optional
+	ServerGroupID string `json:"serverGroupID,omitempty"`
 }
 
 // ValueSpec represents a single value_spec key-value pair.

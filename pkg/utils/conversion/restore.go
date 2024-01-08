@@ -186,7 +186,7 @@ func (r unconditionalFieldRestorer[T, F]) marshalState(src, _ T) (json.RawMessag
 	f := r.getField(src)
 
 	// We could do this with a comparable constraint on F, but that's too restrictive for an arbitrary struct.
-	if reflect.ValueOf(f).Elem().IsZero() {
+	if f == nil || reflect.ValueOf(f).Elem().IsZero() {
 		return nil, nil
 	}
 

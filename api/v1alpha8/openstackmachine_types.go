@@ -90,8 +90,9 @@ type OpenStackMachineSpec struct {
 	// +optional
 	AdditionalBlockDevices []AdditionalBlockDevice `json:"additionalBlockDevices,omitempty"`
 
-	// The server group to assign the machine to
-	ServerGroupID string `json:"serverGroupID,omitempty"`
+	// The server group to assign the machine to.
+	// +optional
+	ServerGroup *ServerGroupFilter `json:"serverGroup,omitempty"`
 
 	// IdentityRef is a reference to a identity to be used when reconciling this cluster
 	// +optional
@@ -110,6 +111,9 @@ type OpenStackMachineStatus struct {
 	// InstanceState is the state of the OpenStack instance for this machine.
 	// +optional
 	InstanceState *InstanceState `json:"instanceState,omitempty"`
+
+	// ReferencedResources contains resolved references to resources that the machine depends on.
+	ReferencedResources ReferencedMachineResources `json:"referencedResources,omitempty"`
 
 	FailureReason *errors.MachineStatusError `json:"failureReason,omitempty"`
 

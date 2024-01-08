@@ -213,7 +213,18 @@ func Convert_v1alpha8_PortOpts_To_v1alpha5_PortOpts(in *infrav1.PortOpts, out *P
 }
 
 func Convert_v1alpha5_OpenStackMachineSpec_To_v1alpha8_OpenStackMachineSpec(in *OpenStackMachineSpec, out *infrav1.OpenStackMachineSpec, s conversion.Scope) error {
-	return autoConvert_v1alpha5_OpenStackMachineSpec_To_v1alpha8_OpenStackMachineSpec(in, out, s)
+	err := autoConvert_v1alpha5_OpenStackMachineSpec_To_v1alpha8_OpenStackMachineSpec(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	if in.ServerGroupID != "" {
+		out.ServerGroup = &infrav1.ServerGroupFilter{ID: in.ServerGroupID}
+	} else {
+		out.ServerGroup = &infrav1.ServerGroupFilter{}
+	}
+
+	return nil
 }
 
 func Convert_v1alpha8_APIServerLoadBalancer_To_v1alpha5_APIServerLoadBalancer(in *infrav1.APIServerLoadBalancer, out *APIServerLoadBalancer, s conversion.Scope) error {
@@ -246,6 +257,7 @@ func Convert_v1alpha5_Instance_To_v1alpha8_BastionStatus(in *Instance, out *infr
 	out.State = infrav1.InstanceState(in.State)
 	out.IP = in.IP
 	out.FloatingIP = in.FloatingIP
+	out.ReferencedResources.ServerGroupID = in.ServerGroupID
 	return nil
 }
 
@@ -257,6 +269,7 @@ func Convert_v1alpha8_BastionStatus_To_v1alpha5_Instance(in *infrav1.BastionStat
 	out.State = InstanceState(in.State)
 	out.IP = in.IP
 	out.FloatingIP = in.FloatingIP
+	out.ServerGroupID = in.ReferencedResources.ServerGroupID
 	return nil
 }
 
@@ -435,5 +448,19 @@ func Convert_v1alpha5_OpenStackClusterStatus_To_v1alpha8_OpenStackClusterStatus(
 }
 
 func Convert_v1alpha8_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(in *infrav1.OpenStackMachineSpec, out *OpenStackMachineSpec, s conversion.Scope) error {
-	return autoConvert_v1alpha8_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(in, out, s)
+	err := autoConvert_v1alpha8_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	if in.ServerGroup != nil {
+		out.ServerGroupID = in.ServerGroup.ID
+	}
+
+	return nil
+}
+
+func Convert_v1alpha8_OpenStackMachineStatus_To_v1alpha5_OpenStackMachineStatus(in *infrav1.OpenStackMachineStatus, out *OpenStackMachineStatus, s conversion.Scope) error {
+	// ReferencedResources have no equivalent in v1alpha5
+	return autoConvert_v1alpha8_OpenStackMachineStatus_To_v1alpha5_OpenStackMachineStatus(in, out, s)
 }
