@@ -65,10 +65,16 @@ type OpenStackClusterSpec struct {
 	// ExternalRouterIPs is an array of externalIPs on the respective subnets.
 	// This is necessary if the router needs a fixed ip in a specific subnet.
 	ExternalRouterIPs []ExternalRouterIPParam `json:"externalRouterIPs,omitempty"`
-	// ExternalNetworkID is the ID of an external OpenStack Network. This is necessary
-	// to get public internet to the VMs.
+
+	// ExternalNetwork is the OpenStack Network to be used to get public internet to the VMs.
 	// +optional
-	ExternalNetworkID string `json:"externalNetworkId,omitempty"`
+	ExternalNetwork NetworkFilter `json:"externalNetwork,omitempty"`
+
+	// DisableExternalNetwork determines whether or not to attempt to connect the cluster
+	// to an external network. This allows for the creation of clusters when connecting
+	// to an external network is not possible or desirable, e.g. if using a provider network.
+	// +optional
+	DisableExternalNetwork bool `json:"disableExternalNetwork"`
 
 	// APIServerLoadBalancer configures the optional LoadBalancer for the APIServer.
 	// It must be activated by setting `enabled: true`.

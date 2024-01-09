@@ -187,8 +187,31 @@ func (r *OpenStackMachineTemplateList) ConvertFrom(srcRaw ctrlconversion.Hub) er
 }
 
 func Convert_v1alpha8_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(in *infrav1.OpenStackClusterSpec, out *OpenStackClusterSpec, s conversion.Scope) error {
-	// Our new flag has no equivalent in v1alpha5
-	return autoConvert_v1alpha8_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(in, out, s)
+	err := autoConvert_v1alpha8_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	if in.ExternalNetwork.ID != "" {
+		out.ExternalNetworkID = in.ExternalNetwork.ID
+	}
+
+	return nil
+}
+
+func Convert_v1alpha5_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(in *OpenStackClusterSpec, out *infrav1.OpenStackClusterSpec, s conversion.Scope) error {
+	err := autoConvert_v1alpha5_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	if in.ExternalNetworkID != "" {
+		out.ExternalNetwork = infrav1.NetworkFilter{
+			ID: in.ExternalNetworkID,
+		}
+	}
+
+	return nil
 }
 
 func Convert_v1alpha8_LoadBalancer_To_v1alpha5_LoadBalancer(in *infrav1.LoadBalancer, out *LoadBalancer, s conversion.Scope) error {

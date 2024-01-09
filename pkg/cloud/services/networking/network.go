@@ -70,28 +70,33 @@ func (c createOpts) ToNetworkCreateMap() (map[string]interface{}, error) {
 	return gophercloud.BuildRequestBody(c, "network")
 }
 
+// ReconcileExternalNetwork will try to find an external network and set it in the cluster status.
+// The external network can be specified in the cluster spec or will be searched for if not specified.
+// OpenStackCluster.Status.ExternalNetwork will be set to nil if one of these conditions are met:
+// - no external network was given in the cluster spec and no external network was found
+// - the user has set OpenStackCluster.Spec.DisableExternalNetwork to true.
 func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCluster) error {
-	if openStackCluster.Spec.ExternalNetworkID != "" {
-		externalNetwork, err := s.getNetworkByID(openStackCluster.Spec.ExternalNetworkID)
-		if err != nil {
-			return err
-		}
-		if externalNetwork.ID != "" {
-			openStackCluster.Status.ExternalNetwork = &infrav1.NetworkStatus{
-				ID:   externalNetwork.ID,
-				Name: externalNetwork.Name,
-				Tags: externalNetwork.Tags,
-			}
-			return nil
-		}
+	var listOpts external.ListOptsExt
+	var emptyExternalnetwork infrav1.NetworkFilter
+	var isAutoDetecting bool
+
+	if openStackCluster.Spec.DisableExternalNetwork {
+		s.scope.Logger().Info("External network is disabled - proceeding with internal network only")
+		openStackCluster.Status.ExternalNetwork = nil
+		return nil
 	}
 
-	// ExternalNetworkID is not given
-	iTrue := true
-	networkListOpts := networks.ListOpts{}
-	listOpts := external.ListOptsExt{
-		ListOptsBuilder: networkListOpts,
-		External:        &iTrue,
+	if openStackCluster.Spec.ExternalNetwork != emptyExternalnetwork {
+		listOpts = external.ListOptsExt{
+			ListOptsBuilder: openStackCluster.Spec.ExternalNetwork.ToListOpt(),
+		}
+	} else {
+		// ExternalNetwork is not given so we'll list all networks and filter for external networks
+		isAutoDetecting = true
+		listOpts = external.ListOptsExt{
+			ListOptsBuilder: networks.ListOpts{},
+			External:        &isAutoDetecting,
+		}
 	}
 
 	networkList, err := s.client.ListNetwork(listOpts)
@@ -101,10 +106,13 @@ func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCl
 
 	switch len(networkList) {
 	case 0:
-		// Not finding an external network is fine
-		openStackCluster.Status.ExternalNetwork = &infrav1.NetworkStatus{}
-		s.scope.Logger().Info("No external network found - proceeding with internal network only")
-		return nil
+		if isAutoDetecting {
+			// Not finding an external network is fine if ExternalNetwork is not set
+			openStackCluster.Status.ExternalNetwork = nil
+			s.scope.Logger().Info("No external network found - proceeding with internal network only")
+			return nil
+		}
+		return fmt.Errorf("no external network found")
 	case 1:
 		openStackCluster.Status.ExternalNetwork = &infrav1.NetworkStatus{
 			ID:   networkList[0].ID,
@@ -264,25 +272,6 @@ func (s *Service) createSubnet(openStackCluster *infrav1.OpenStackCluster, clust
 	}
 
 	return subnet, nil
-}
-
-func (s *Service) getNetworkByID(networkID string) (networks.Network, error) {
-	opts := networks.ListOpts{
-		ID: networkID,
-	}
-
-	networkList, err := s.client.ListNetwork(opts)
-	if err != nil {
-		return networks.Network{}, err
-	}
-
-	switch len(networkList) {
-	case 0:
-		return networks.Network{}, nil
-	case 1:
-		return networkList[0], nil
-	}
-	return networks.Network{}, fmt.Errorf("found %d networks with id %s, which should not happen", len(networkList), networkID)
 }
 
 func (s *Service) getNetworkByName(networkName string) (networks.Network, error) {
