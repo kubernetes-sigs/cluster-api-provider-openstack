@@ -66,7 +66,7 @@ func (f *MockScopeFactory) SetClientScopeCreateError(err error) {
 	f.clientScopeCreateError = err
 }
 
-func (f *MockScopeFactory) NewClientScopeFromMachine(_ context.Context, _ client.Client, _ *infrav1.OpenStackMachine, _ []byte, _ logr.Logger) (Scope, error) {
+func (f *MockScopeFactory) NewClientScopeFromMachine(_ context.Context, _ client.Client, _ *infrav1.OpenStackMachine, _ *infrav1.OpenStackCluster, _ []byte, _ logr.Logger) (Scope, error) {
 	if f.clientScopeCreateError != nil {
 		return nil, f.clientScopeCreateError
 	}
