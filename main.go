@@ -68,6 +68,8 @@ var (
 	openStackClusterConcurrency int
 	openStackMachineConcurrency int
 	syncPeriod                  time.Duration
+	restConfigQPS               float32
+	restConfigBurst             int
 	webhookPort                 int
 	webhookCertDir              string
 	healthAddr                  string
@@ -126,6 +128,12 @@ func InitFlags(fs *pflag.FlagSet) {
 	fs.DurationVar(&syncPeriod, "sync-period", 10*time.Minute,
 		"The minimum interval at which watched resources are reconciled (e.g. 15m)")
 
+	fs.Float32Var(&restConfigQPS, "kube-api-qps", 20,
+		"Maximum queries per second from the controller client to the Kubernetes API server. Defaults to 20")
+
+	fs.IntVar(&restConfigBurst, "kube-api-burst", 30,
+		"Maximum number of queries that should be allowed in one burst from the controller client to the Kubernetes API server. Defaults to 30")
+
 	fs.IntVar(&webhookPort, "webhook-port", 9443,
 		"Webhook Server port")
 
@@ -179,6 +187,8 @@ func main() {
 	if err != nil {
 		setupLog.Error(err, "unable to get kubeconfig")
 	}
+	cfg.QPS = restConfigQPS
+	cfg.Burst = restConfigBurst
 
 	var caCerts []byte
 	if caCertsPath != "" {
