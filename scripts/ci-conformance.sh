@@ -83,7 +83,7 @@ fi
 
 export OPENSTACK_CLOUD_YAML_FILE
 OPENSTACK_CLOUD_YAML_FILE="$(pwd)/clouds.yaml"
-make test-conformance-fast
+make test-conformance
 test_status="${?}"
 
 # If Boskos is being used then release the resource back to Boskos.
