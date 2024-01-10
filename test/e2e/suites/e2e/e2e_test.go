@@ -81,7 +81,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 	})
 
 	Describe("Workload cluster (default)", func() {
-		It("It should be creatable and deletable", func() {
+		It("should be creatable and deletable", func() {
 			shared.Logf("Creating a cluster")
 			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
@@ -247,7 +247,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 	})
 
 	Describe("Workload cluster (without lb)", func() {
-		It("Should create port(s) with custom options", func() {
+		It("should create port(s) with custom options", func() {
 			shared.Logf("Creating a cluster")
 			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
@@ -466,7 +466,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 	})
 
 	Describe("MachineDeployment misconfigurations", func() {
-		It("Should fail to create MachineDeployment with invalid subnet or invalid availability zone", func() {
+		It("should fail to create MachineDeployment with invalid subnet or invalid availability zone", func() {
 			shared.Logf("Creating a cluster")
 			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
@@ -534,7 +534,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("It should be creatable and deletable", func() {
+		It("should be creatable and deletable", func() {
 			workerMachines := framework.GetMachinesByMachineDeployments(ctx, framework.GetMachinesByMachineDeploymentsInput{
 				Lister:            e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
 				ClusterName:       clusterName,
