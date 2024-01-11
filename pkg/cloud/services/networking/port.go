@@ -315,6 +315,10 @@ func (s *Service) GarbageCollectErrorInstancesPort(eventObject runtime.Object, i
 			return fmt.Errorf("garbage collection of port %s failed, found %d ports with the same name", portName, len(portList))
 		}
 
+		if len(portList) == 0 {
+			continue
+		}
+
 		if err := s.DeletePort(eventObject, portList[0].ID); err != nil {
 			return err
 		}
