@@ -34,12 +34,12 @@ function cloud_init {
   # Generate local ssh configuration
   # NOTE(mdbooth): This command successfully populates ssh config and then
   # fails for some reason I don't understand. We ignore the failure.
-  gcloud compute config-ssh || true
+  gcloud compute config-ssh >/dev/null 2>&1 || true
 }
 
 function init_infrastructure() {
   if [[ ${GCP_NETWORK_NAME} != "default" ]]; then
-    if ! gcloud compute networks describe "$GCP_NETWORK_NAME" --project "$GCP_PROJECT" >/dev/null; then
+    if ! gcloud compute networks describe "$GCP_NETWORK_NAME" --project "$GCP_PROJECT" >/dev/null 2>&1; then
       gcloud compute networks create --project "$GCP_PROJECT" "$GCP_NETWORK_NAME" --subnet-mode custom
       gcloud compute networks subnets create "$GCP_NETWORK_NAME" --project "$GCP_PROJECT" \
         --network="$GCP_NETWORK_NAME" --range="$PRIVATE_NETWORK_CIDR" --region "$GCP_REGION"
@@ -64,12 +64,12 @@ function init_infrastructure() {
   gcloud compute networks list --project="$GCP_PROJECT"
   gcloud compute networks describe "$GCP_NETWORK_NAME" --project="$GCP_PROJECT"
 
-  if ! gcloud compute routers describe "${CLUSTER_NAME}-myrouter" --project="$GCP_PROJECT" --region="$GCP_REGION" >/dev/null; then
+  if ! gcloud compute routers describe "${CLUSTER_NAME}-myrouter" --project="$GCP_PROJECT" --region="$GCP_REGION" >/dev/null 2>&1; then
     gcloud compute routers create "${CLUSTER_NAME}-myrouter" --project="$GCP_PROJECT" \
       --region="$GCP_REGION" --network="$GCP_NETWORK_NAME"
   fi
   if ! gcloud compute routers nats describe --router="$CLUSTER_NAME-myrouter" "$CLUSTER_NAME-mynat" \
-    --project="$GCP_PROJECT" --region="${GCP_REGION}" >/dev/null; then
+    --project="$GCP_PROJECT" --region="${GCP_REGION}" >/dev/null 2>&1; then
     gcloud compute routers nats create "${CLUSTER_NAME}-mynat" --project="$GCP_PROJECT" \
       --router-region="$GCP_REGION" --router="${CLUSTER_NAME}-myrouter" \
       --nat-all-subnet-ip-ranges --auto-allocate-nat-external-ips
@@ -89,7 +89,7 @@ function create_vm {
   # Loop over all zones in the GCP region to ignore a full zone.
   # We are not able to use 'gcloud compute zones list' as the gcloud.compute.zones.list permission is missing.
   for GCP_ZONE in "${GCP_REGION}-a" "${GCP_REGION}-b" "${GCP_REGION}-c"; do
-    if ! gcloud compute instances describe "$servername" --project "$GCP_PROJECT" --zone "$GCP_ZONE" >/dev/null; then
+    if ! gcloud compute instances describe "$servername" --project "$GCP_PROJECT" --zone "$GCP_ZONE" >/dev/null 2>&1; then
       if gcloud compute instances create "$servername" \
         --project "$GCP_PROJECT" \
         --zone "$GCP_ZONE" \
