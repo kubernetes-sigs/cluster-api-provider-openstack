@@ -185,5 +185,5 @@ func (r *OpenStackMachine) SetFailure(failureReason errors.MachineStatusError, f
 }
 
 func init() {
-	SchemeBuilder.Register(&OpenStackMachine{}, &OpenStackMachineList{})
+	objectTypes = append(objectTypes, &OpenStackMachine{}, &OpenStackMachineList{})
 }

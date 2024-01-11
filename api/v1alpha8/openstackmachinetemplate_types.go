@@ -47,5 +47,5 @@ type OpenStackMachineTemplateList struct {
 }
 
 func init() {
-	SchemeBuilder.Register(&OpenStackMachineTemplate{}, &OpenStackMachineTemplateList{})
+	objectTypes = append(objectTypes, &OpenStackMachineTemplate{}, &OpenStackMachineTemplateList{})
 }
