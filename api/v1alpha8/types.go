@@ -22,6 +22,15 @@ type OpenStackMachineTemplateResource struct {
 	Spec OpenStackMachineSpec `json:"spec"`
 }
 
+type ImageFilter struct {
+	// The ID of the desired image. If this is provided, the other filters will be ignored.
+	ID string `json:"id,omitempty"`
+	// The name of the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
+	Name string `json:"name,omitempty"`
+	// The tags associated with the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
+	Tags []string `json:"tags,omitempty"`
+}
+
 type ExternalRouterIPParam struct {
 	// The FixedIP in the corresponding subnet
 	FixedIP string `json:"fixedIP,omitempty"`
@@ -371,6 +380,10 @@ type ReferencedMachineResources struct {
 	// ServerGroupID is the ID of the server group the machine should be added to and is calculated based on ServerGroupFilter.
 	// +optional
 	ServerGroupID string `json:"serverGroupID,omitempty"`
+
+	// ImageID is the ID of the image to use for the machine and is calculated based on ImageFilter.
+	// +optional
+	ImageID string `json:"imageID,omitempty"`
 }
 
 // ValueSpec represents a single value_spec key-value pair.

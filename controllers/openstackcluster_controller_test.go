@@ -25,6 +25,7 @@ import (
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
+	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/external"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
@@ -249,6 +250,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 		server.ID = "adopted-bastion-uuid"
 		server.Status = "ACTIVE"
 
+		imageClientRecorder := mockScopeFactory.ImageClient.EXPECT()
+		imageClientRecorder.ListImages(gomock.Any()).Return([]images.Image{{ID: "imageID"}}, nil)
+
 		computeClientRecorder := mockScopeFactory.ComputeClient.EXPECT()
 		computeClientRecorder.ListServers(servers.ListOpts{
 			Name: "^capi-cluster-bastion$",
@@ -294,6 +298,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 		server.ID = "adopted-fip-bastion-uuid"
 		server.Status = "ACTIVE"
 
+		imageClientRecorder := mockScopeFactory.ImageClient.EXPECT()
+		imageClientRecorder.ListImages(gomock.Any()).Return([]images.Image{{ID: "imageID"}}, nil)
+
 		computeClientRecorder := mockScopeFactory.ComputeClient.EXPECT()
 		computeClientRecorder.GetServer("adopted-fip-bastion-uuid").Return(&server, nil)
 
@@ -337,6 +344,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 		server.ID = "requeue-bastion-uuid"
 		server.Status = "BUILD"
 
+		imageClientRecorder := mockScopeFactory.ImageClient.EXPECT()
+		imageClientRecorder.ListImages(gomock.Any()).Return([]images.Image{{ID: "imageID"}}, nil)
+
 		computeClientRecorder := mockScopeFactory.ComputeClient.EXPECT()
 		computeClientRecorder.GetServer("requeue-bastion-uuid").Return(&server, nil)
 
@@ -360,6 +370,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 
 		server := clients.ServerExt{}
 		server.ID = "delete-bastion-uuid"
+
+		imageClientRecorder := mockScopeFactory.ImageClient.EXPECT()
+		imageClientRecorder.ListImages(gomock.Any()).Return([]images.Image{{ID: "imageID"}}, nil)
 
 		computeClientRecorder := mockScopeFactory.ComputeClient.EXPECT()
 		computeClientRecorder.ListServers(servers.ListOpts{

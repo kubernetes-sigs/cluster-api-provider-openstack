@@ -2445,15 +2445,29 @@ spec:
                                 - name
                                 type: object
                               image:
-                                description: The name of the image to use for your
-                                  server instance. If the RootVolume is specified,
-                                  this will be ignored and use rootVolume directly.
-                                type: string
-                              imageUUID:
-                                description: The uuid of the image to use for your
-                                  server instance. if it's empty, Image name will
-                                  be used
-                                type: string
+                                description: The image to use for your server instance.
+                                  If the rootVolume is specified, this will be used
+                                  when creating the root volume.
+                                properties:
+                                  id:
+                                    description: The ID of the desired image. If this
+                                      is provided, the other filters will be ignored.
+                                    type: string
+                                  name:
+                                    description: The name of the desired image. If
+                                      specified, the combination of name and tags
+                                      must return a single matching image or an error
+                                      will be raised.
+                                    type: string
+                                  tags:
+                                    description: The tags associated with the desired
+                                      image. If specified, the combination of name
+                                      and tags must return a single matching image
+                                      or an error will be raised.
+                                    items:
+                                      type: string
+                                    type: array
+                                type: object
                               instanceID:
                                 description: InstanceID is the OpenStack instance
                                   ID for this machine.

@@ -45,13 +45,9 @@ type OpenStackMachineSpec struct {
 	// The flavor reference for the flavor for your server instance.
 	Flavor string `json:"flavor"`
 
-	// The name of the image to use for your server instance.
-	// If the RootVolume is specified, this will be ignored and use rootVolume directly.
-	Image string `json:"image,omitempty"`
-
-	// The uuid of the image to use for your server instance.
-	// if it's empty, Image name will be used
-	ImageUUID string `json:"imageUUID,omitempty"`
+	// The image to use for your server instance.
+	// If the rootVolume is specified, this will be used when creating the root volume.
+	Image ImageFilter `json:"image,omitempty"`
 
 	// The ssh key to inject in the instance
 	SSHKeyName string `json:"sshKeyName,omitempty"`

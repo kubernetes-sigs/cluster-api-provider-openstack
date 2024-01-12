@@ -67,6 +67,7 @@ var v1alpha8OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStack
 
 func restorev1alpha8MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *infrav1.OpenStackMachineSpec) {
 	dst.ServerGroup = previous.ServerGroup
+	dst.Image = previous.Image
 }
 
 func restorev1alpha8Bastion(previous **infrav1.Bastion, dst **infrav1.Bastion) {
@@ -273,6 +274,14 @@ func Convert_v1alpha8_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in *
 		out.ServerGroupID = in.ServerGroup.ID
 	}
 
+	if in.Image.Name != "" {
+		out.Image = in.Image.Name
+	}
+
+	if in.Image.ID != "" {
+		out.ImageUUID = in.Image.ID
+	}
+
 	return nil
 }
 
@@ -287,6 +296,15 @@ func Convert_v1alpha7_OpenStackMachineSpec_To_v1alpha8_OpenStackMachineSpec(in *
 	} else {
 		out.ServerGroup = nil
 	}
+
+	imageFilter := infrav1.ImageFilter{}
+	if in.Image != "" {
+		imageFilter.Name = in.Image
+	}
+	if in.ImageUUID != "" {
+		imageFilter.ID = in.ImageUUID
+	}
+	out.Image = imageFilter
 
 	return nil
 }

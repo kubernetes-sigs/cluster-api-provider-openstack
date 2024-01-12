@@ -45,7 +45,7 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: OpenStackMachineTemplateResource{
 						Spec: OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  "bar",
+							Image:  ImageFilter{Name: "bar"},
 						},
 					},
 				},
@@ -55,7 +55,7 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: OpenStackMachineTemplateResource{
 						Spec: OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  "NewImage",
+							Image:  ImageFilter{Name: "NewImage"},
 						},
 					},
 				},
@@ -70,7 +70,7 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: OpenStackMachineTemplateResource{
 						Spec: OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  "bar",
+							Image:  ImageFilter{Name: "bar"},
 						},
 					},
 				},
@@ -83,7 +83,7 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: OpenStackMachineTemplateResource{
 						Spec: OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  "bar",
+							Image:  ImageFilter{Name: "bar"},
 						},
 					},
 				},
@@ -100,7 +100,7 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: OpenStackMachineTemplateResource{
 						Spec: OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  "bar",
+							Image:  ImageFilter{Name: "bar"},
 						},
 					},
 				},
@@ -110,7 +110,7 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: OpenStackMachineTemplateResource{
 						Spec: OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  "NewImage",
+							Image:  ImageFilter{Name: "NewImage"},
 						},
 					},
 				},
@@ -125,7 +125,7 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: OpenStackMachineTemplateResource{
 						Spec: OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  "bar",
+							Image:  ImageFilter{Name: "bar"},
 						},
 					},
 				},
@@ -140,7 +140,7 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: OpenStackMachineTemplateResource{
 						Spec: OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  "NewImage",
+							Image:  ImageFilter{Name: "NewImage"},
 						},
 					},
 				},

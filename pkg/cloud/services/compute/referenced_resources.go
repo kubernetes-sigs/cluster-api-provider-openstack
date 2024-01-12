@@ -30,12 +30,22 @@ func ResolveReferencedMachineResources(scope scope.Scope, spec *infrav1.OpenStac
 		return err
 	}
 
+	// ServerGroup is optional, so we only need to resolve it if it's set in the spec and not in ReferencedMachineResources yet.
 	if spec.ServerGroup != nil && resources.ServerGroupID == "" {
 		serverGroupID, err := compute.GetServerGroupID(spec.ServerGroup)
 		if err != nil {
 			return err
 		}
 		resources.ServerGroupID = serverGroupID
+	}
+
+	// Image is required, so we need to resolve it if it's not set in ReferencedMachineResources yet.
+	if resources.ImageID == "" {
+		imageID, err := compute.GetImageID(spec.Image)
+		if err != nil {
+			return err
+		}
+		resources.ImageID = imageID
 	}
 
 	return nil

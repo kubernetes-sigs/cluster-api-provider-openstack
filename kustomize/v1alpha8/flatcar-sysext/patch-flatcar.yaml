@@ -173,7 +173,8 @@ metadata:
 spec:
   template:
     spec:
-      image: ${FLATCAR_IMAGE_NAME}
+      image:
+        name: ${FLATCAR_IMAGE_NAME}
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
 kind: OpenStackMachineTemplate
@@ -182,4 +183,5 @@ metadata:
 spec:
   template:
     spec:
-      image: ${FLATCAR_IMAGE_NAME}
+      image:
+        name: ${FLATCAR_IMAGE_NAME}

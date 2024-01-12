@@ -35,10 +35,10 @@ const (
 	controlPlaneSecurityGroupUUID = "c9817a91-4821-42db-8367-2301002ab659"
 	workerSecurityGroupUUID       = "9c6c0d28-03c9-436c-815d-58440ac2c1c8"
 	serverGroupUUID               = "7b940d62-68ef-4e42-a76a-1a62e290509c"
+	imageUUID                     = "ce96e584-7ebc-46d6-9e55-987d72e3806c"
 
 	openStackMachineName = "test-openstack-machine"
 	namespace            = "test-namespace"
-	imageName            = "test-image"
 	flavorName           = "test-flavor"
 	sshKeyName           = "test-ssh-key"
 	failureDomain        = "test-failure-domain"
@@ -83,7 +83,7 @@ func getDefaultOpenStackMachine() *infrav1.OpenStackMachine {
 			// TODO: Test Networks, Ports, Subnet, and Trunk separately
 			CloudName:  "test-cloud",
 			Flavor:     flavorName,
-			Image:      imageName,
+			Image:      infrav1.ImageFilter{ID: imageUUID},
 			SSHKeyName: sshKeyName,
 			Tags:       []string{"test-tag"},
 			ServerMetadata: map[string]string{
@@ -95,6 +95,7 @@ func getDefaultOpenStackMachine() *infrav1.OpenStackMachine {
 		},
 		Status: infrav1.OpenStackMachineStatus{
 			ReferencedResources: infrav1.ReferencedMachineResources{
+				ImageID:       imageUUID,
 				ServerGroupID: serverGroupUUID,
 			},
 		},
@@ -104,7 +105,7 @@ func getDefaultOpenStackMachine() *infrav1.OpenStackMachine {
 func getDefaultInstanceSpec() *compute.InstanceSpec {
 	return &compute.InstanceSpec{
 		Name:       openStackMachineName,
-		Image:      imageName,
+		ImageID:    imageUUID,
 		Flavor:     flavorName,
 		SSHKeyName: sshKeyName,
 		UserData:   "user-data",

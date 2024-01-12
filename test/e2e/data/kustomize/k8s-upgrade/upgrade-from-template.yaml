@@ -11,7 +11,8 @@ spec:
       identityRef:
         kind: Secret
         name: ${CLUSTER_NAME}-cloud-config
-      image: ${OPENSTACK_IMAGE_NAME_UPGRADE_FROM}
+      image:
+        name: ${OPENSTACK_IMAGE_NAME_UPGRADE_FROM}
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
       tags:
       - control-plane
@@ -28,7 +29,8 @@ spec:
       identityRef:
         kind: Secret
         name: ${CLUSTER_NAME}-cloud-config
-      image: ${OPENSTACK_IMAGE_NAME_UPGRADE_FROM}
+      image:
+        name: ${OPENSTACK_IMAGE_NAME_UPGRADE_FROM}
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
       tags:
       - machine

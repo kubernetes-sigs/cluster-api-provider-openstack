@@ -128,7 +128,8 @@ spec:
       identityRef:
         kind: Secret
         name: ${CLUSTER_NAME}-cloud-config
-      image: ${OPENSTACK_IMAGE_NAME}
+      image:
+        name: ${OPENSTACK_IMAGE_NAME}
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
@@ -143,5 +144,6 @@ spec:
       identityRef:
         kind: Secret
         name: ${CLUSTER_NAME}-cloud-config
-      image: ${OPENSTACK_IMAGE_NAME}
+      image:
+        name: ${OPENSTACK_IMAGE_NAME}
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}

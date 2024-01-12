@@ -9,6 +9,8 @@
       - [Change to `serverGroupID`](#change-to-servergroupid)
     - [`OpenStackCluster`](#openstackcluster)
       - [Change to externalNetworkID](#change-to-externalnetworkid)
+      - [Changes to image](#change-to-image)
+      - [Removal of imageUUID](#removal-of-imageuuid)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -87,4 +89,37 @@ It is now possible for a user to specify that no external network should be used
 
 ```yaml
 disableExternalNetwork: true
+```
+
+#### ⚠️ Change to image
+
+The field `image` is now an `ImageFilter` object rather than a string name.
+The `ImageFilter` object allows selection of an image by name, by ID or by tags.
+
+```yaml
+image: "test-image"
+```
+
+becomes
+
+```yaml
+image:
+  name: "test-image"
+```
+
+The image ID will be added to `OpenStackMachine.Status.ReferencedResources.ImageID`. If the image can't be found or filter matches multiple images, an error will be returned.
+
+#### ⚠️ Removal of imageUUID
+
+The fild `imageUUID` has been removed in favor of the `image` field.
+
+```yaml
+imageUUID: "72a6a1e6-3e0a-4a8b-9b4c-2d6f9e3e5f0a"
+```
+
+becomes
+
+```yaml
+image:
+  id: "72a6a1e6-3e0a-4a8b-9b4c-2d6f9e3e5f0a"
 ```
