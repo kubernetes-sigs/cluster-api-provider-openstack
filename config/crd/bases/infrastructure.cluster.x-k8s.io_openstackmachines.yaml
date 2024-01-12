@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.13.0
+    controller-gen.kubebuilder.io/version: v0.14.0
   name: openstackmachines.infrastructure.cluster.x-k8s.io
 spec:
   group: infrastructure.cluster.x-k8s.io
@@ -49,18 +49,26 @@ spec:
     name: v1alpha5
     schema:
       openAPIV3Schema:
-        description: "OpenStackMachine is the Schema for the openstackmachines API.
-          \n Deprecated: This type will be removed in one of the next releases."
+        description: |-
+          OpenStackMachine is the Schema for the openstackmachines API.
+
+
+          Deprecated: This type will be removed in one of the next releases.
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -77,45 +85,47 @@ spec:
                 description: The flavor reference for the flavor for your server instance.
                 type: string
               floatingIP:
-                description: The floatingIP which will be associated to the machine,
-                  only used for master. The floatingIP should have been created and
-                  haven't been associated.
+                description: |-
+                  The floatingIP which will be associated to the machine, only used for master.
+                  The floatingIP should have been created and haven't been associated.
                 type: string
               identityRef:
                 description: IdentityRef is a reference to a identity to be used when
                   reconciling this cluster
                 properties:
                   kind:
-                    description: Kind of the identity. Must be supported by the infrastructure
+                    description: |-
+                      Kind of the identity. Must be supported by the infrastructure
                       provider and may be either cluster or namespace-scoped.
                     minLength: 1
                     type: string
                   name:
-                    description: Name of the infrastructure identity to be used. Must
-                      be either a cluster-scoped resource, or namespaced-scoped resource
-                      the same namespace as the resource(s) being provisioned.
+                    description: |-
+                      Name of the infrastructure identity to be used.
+                      Must be either a cluster-scoped resource, or namespaced-scoped
+                      resource the same namespace as the resource(s) being provisioned.
                     type: string
                 required:
                 - kind
                 - name
                 type: object
               image:
-                description: The name of the image to use for your server instance.
-                  If the RootVolume is specified, this will be ignored and use rootVolume
-                  directly.
+                description: |-
+                  The name of the image to use for your server instance.
+                  If the RootVolume is specified, this will be ignored and use rootVolume directly.
                 type: string
               imageUUID:
-                description: The uuid of the image to use for your server instance.
+                description: |-
+                  The uuid of the image to use for your server instance.
                   if it's empty, Image name will be used
                 type: string
               instanceID:
                 description: InstanceID is the OpenStack instance ID for this machine.
                 type: string
               networks:
-                description: A networks object. Required parameter when there are
-                  multiple networks defined for the tenant. When you do not specify
-                  both networks and ports parameters, the server attaches to the only
-                  network created for the current tenant.
+                description: |-
+                  A networks object. Required parameter when there are multiple networks defined for the tenant.
+                  When you do not specify both networks and ports parameters, the server attaches to the only network created for the current tenant.
                 items:
                   properties:
                     filter:
@@ -176,25 +186,25 @@ spec:
                                 type: string
                             type: object
                           uuid:
-                            description: Optional UUID of the subnet. If specified
-                              this will not be validated prior to server creation.
-                              If specified, the enclosing `NetworkParam` must also
-                              be specified by UUID.
+                            description: |-
+                              Optional UUID of the subnet.
+                              If specified this will not be validated prior to server creation.
+                              If specified, the enclosing `NetworkParam` must also be specified by UUID.
                             type: string
                         type: object
                       type: array
                     uuid:
-                      description: Optional UUID of the network. If specified this
-                        will not be validated prior to server creation. Required if
-                        `Subnets` specifies a subnet by UUID.
+                      description: |-
+                        Optional UUID of the network.
+                        If specified this will not be validated prior to server creation.
+                        Required if `Subnets` specifies a subnet by UUID.
                       type: string
                   type: object
                 type: array
               ports:
-                description: Ports to be attached to the server instance. They are
-                  created if a port with the given name does not already exist. When
-                  you do not specify both networks and ports parameters, the server
-                  attaches to the only network created for the current tenant.
+                description: |-
+                  Ports to be attached to the server instance. They are created if a port with the given name does not already exist.
+                  When you do not specify both networks and ports parameters, the server attaches to the only network created for the current tenant.
                 items:
                   properties:
                     adminStateUp:
@@ -211,9 +221,9 @@ spec:
                     description:
                       type: string
                     disablePortSecurity:
-                      description: DisablePortSecurity enables or disables the port
-                        security when set. When not set, it takes the value of the
-                        corresponding field at the network level.
+                      description: |-
+                        DisablePortSecurity enables or disables the port security when set.
+                        When not set, it takes the value of the corresponding field at the network level.
                       type: boolean
                     fixedIPs:
                       description: Specify pairs of subnet and/or IP address. These
@@ -223,10 +233,9 @@ spec:
                           ipAddress:
                             type: string
                           subnet:
-                            description: Subnet is an openstack subnet query that
-                              will return the id of a subnet to create the fixed IP
-                              of a port in. This query must not return more than one
-                              subnet.
+                            description: |-
+                              Subnet is an openstack subnet query that will return the id of a subnet to create
+                              the fixed IP of a port in. This query must not return more than one subnet.
                             properties:
                               cidr:
                                 type: string
@@ -269,9 +278,9 @@ spec:
                         instead the 0-based index of the port in the list is used.
                       type: string
                     network:
-                      description: Network is a query for an openstack network that
-                        the port will be created or discovered on. This will fail
-                        if the query returns more than one network.
+                      description: |-
+                        Network is a query for an openstack network that the port will be created or discovered on.
+                        This will fail if the query returns more than one network.
                       properties:
                         description:
                           type: string
@@ -293,9 +302,10 @@ spec:
                     profile:
                       additionalProperties:
                         type: string
-                      description: A dictionary that enables the application running
-                        on the specified host to pass and receive virtual network
-                        interface (VIF) port-specific information to the plug-in.
+                      description: |-
+                        A dictionary that enables the application running on the specified
+                        host to pass and receive virtual network interface (VIF) port-specific
+                        information to the plug-in.
                       type: object
                     projectId:
                       type: string
@@ -350,10 +360,9 @@ spec:
                         type: string
                       type: array
                     tags:
-                      description: Tags applied to the port (and corresponding trunk,
-                        if a trunk is configured.) These tags are applied in addition
-                        to the instance's tags, which will also be applied to the
-                        port.
+                      description: |-
+                        Tags applied to the port (and corresponding trunk, if a trunk is configured.)
+                        These tags are applied in addition to the instance's tags, which will also be applied to the port.
                       items:
                         type: string
                       type: array
@@ -442,7 +451,9 @@ spec:
                   as AccessIPv4 on the created compute instance
                 type: string
               tags:
-                description: Machine tags Requires Nova api 2.52 minimum!
+                description: |-
+                  Machine tags
+                  Requires Nova api 2.52 minimum!
                 items:
                   type: string
                 type: array
@@ -482,37 +493,37 @@ spec:
                     operational state.
                   properties:
                     lastTransitionTime:
-                      description: Last time the condition transitioned from one status
-                        to another. This should be when the underlying condition changed.
-                        If that is not known, then using the time when the API field
-                        changed is acceptable.
+                      description: |-
+                        Last time the condition transitioned from one status to another.
+                        This should be when the underlying condition changed. If that is not known, then using the time when
+                        the API field changed is acceptable.
                       format: date-time
                       type: string
                     message:
-                      description: A human readable message indicating details about
-                        the transition. This field may be empty.
+                      description: |-
+                        A human readable message indicating details about the transition.
+                        This field may be empty.
                       type: string
                     reason:
-                      description: The reason for the condition's last transition
-                        in CamelCase. The specific API may choose whether or not this
-                        field is considered a guaranteed API. This field may not be
-                        empty.
+                      description: |-
+                        The reason for the condition's last transition in CamelCase.
+                        The specific API may choose whether or not this field is considered a guaranteed API.
+                        This field may not be empty.
                       type: string
                     severity:
-                      description: Severity provides an explicit classification of
-                        Reason code, so the users or machines can immediately understand
-                        the current situation and act accordingly. The Severity field
-                        MUST be set only when Status=False.
+                      description: |-
+                        Severity provides an explicit classification of Reason code, so the users or machines can immediately
+                        understand the current situation and act accordingly.
+                        The Severity field MUST be set only when Status=False.
                       type: string
                     status:
                       description: Status of the condition, one of True, False, Unknown.
                       type: string
                     type:
-                      description: Type of condition in CamelCase or in foo.example.com/CamelCase.
-                        Many .condition.type values are consistent across resources
-                        like Available, but because arbitrary conditions can be useful
-                        (see .node.status.conditions), the ability to deconflict is
-                        important.
+                      description: |-
+                        Type of condition in CamelCase or in foo.example.com/CamelCase.
+                        Many .condition.type values are consistent across resources like Available, but because arbitrary conditions
+                        can be useful (see .node.status.conditions), the ability to deconflict is important.
                       type: string
                   required:
                   - lastTransitionTime
@@ -521,19 +532,25 @@ spec:
                   type: object
                 type: array
               failureMessage:
-                description: "FailureMessage will be set in the event that there is
-                  a terminal problem reconciling the Machine and will contain a more
-                  verbose string suitable for logging and human consumption. \n This
-                  field should not be set for transitive errors that a controller
-                  faces that are expected to be fixed automatically over time (like
-                  service outages), but instead indicate that something is fundamentally
-                  wrong with the Machine's spec or the configuration of the controller,
-                  and that manual intervention is required. Examples of terminal errors
-                  would be invalid combinations of settings in the spec, values that
-                  are unsupported by the controller, or the responsible controller
-                  itself being critically misconfigured. \n Any transient errors that
-                  occur during the reconciliation of Machines can be added as events
-                  to the Machine object and/or logged in the controller's output."
+                description: |-
+                  FailureMessage will be set in the event that there is a terminal problem
+                  reconciling the Machine and will contain a more verbose string suitable
+                  for logging and human consumption.
+
+
+                  This field should not be set for transitive errors that a controller
+                  faces that are expected to be fixed automatically over
+                  time (like service outages), but instead indicate that something is
+                  fundamentally wrong with the Machine's spec or the configuration of
+                  the controller, and that manual intervention is required. Examples
+                  of terminal errors would be invalid combinations of settings in the
+                  spec, values that are unsupported by the controller, or the
+                  responsible controller itself being critically misconfigured.
+
+
+                  Any transient errors that occur during the reconciliation of Machines
+                  can be added as events to the Machine object and/or logged in the
+                  controller's output.
                 type: string
               failureReason:
                 description: MachineStatusError defines errors states for Machine
@@ -583,14 +600,19 @@ spec:
         description: OpenStackMachine is the Schema for the openstackmachines API.
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -607,45 +629,47 @@ spec:
                 description: The flavor reference for the flavor for your server instance.
                 type: string
               floatingIP:
-                description: The floatingIP which will be associated to the machine,
-                  only used for master. The floatingIP should have been created and
-                  haven't been associated.
+                description: |-
+                  The floatingIP which will be associated to the machine, only used for master.
+                  The floatingIP should have been created and haven't been associated.
                 type: string
               identityRef:
                 description: IdentityRef is a reference to a identity to be used when
                   reconciling this cluster
                 properties:
                   kind:
-                    description: Kind of the identity. Must be supported by the infrastructure
+                    description: |-
+                      Kind of the identity. Must be supported by the infrastructure
                       provider and may be either cluster or namespace-scoped.
                     minLength: 1
                     type: string
                   name:
-                    description: Name of the infrastructure identity to be used. Must
-                      be either a cluster-scoped resource, or namespaced-scoped resource
-                      the same namespace as the resource(s) being provisioned.
+                    description: |-
+                      Name of the infrastructure identity to be used.
+                      Must be either a cluster-scoped resource, or namespaced-scoped
+                      resource the same namespace as the resource(s) being provisioned.
                     type: string
                 required:
                 - kind
                 - name
                 type: object
               image:
-                description: The name of the image to use for your server instance.
-                  If the RootVolume is specified, this will be ignored and use rootVolume
-                  directly.
+                description: |-
+                  The name of the image to use for your server instance.
+                  If the RootVolume is specified, this will be ignored and use rootVolume directly.
                 type: string
               imageUUID:
-                description: The uuid of the image to use for your server instance.
+                description: |-
+                  The uuid of the image to use for your server instance.
                   if it's empty, Image name will be used
                 type: string
               instanceID:
                 description: InstanceID is the OpenStack instance ID for this machine.
                 type: string
               networks:
-                description: A networks object. Required parameter when there are
-                  multiple networks defined for the tenant. When you do not specify
-                  both networks and ports parameters, the server attaches to the only
-                  network created for the current tenant.
+                description: |-
+                  A networks object. Required parameter when there are multiple networks defined for the tenant.
+                  When you do not specify both networks and ports parameters, the server attaches to the only network created for the current tenant.
                 items:
                   properties:
                     filter:
@@ -706,25 +730,25 @@ spec:
                                 type: string
                             type: object
                           uuid:
-                            description: Optional UUID of the subnet. If specified
-                              this will not be validated prior to server creation.
-                              If specified, the enclosing `NetworkParam` must also
-                              be specified by UUID.
+                            description: |-
+                              Optional UUID of the subnet.
+                              If specified this will not be validated prior to server creation.
+                              If specified, the enclosing `NetworkParam` must also be specified by UUID.
                             type: string
                         type: object
                       type: array
                     uuid:
-                      description: Optional UUID of the network. If specified this
-                        will not be validated prior to server creation. Required if
-                        `Subnets` specifies a subnet by UUID.
+                      description: |-
+                        Optional UUID of the network.
+                        If specified this will not be validated prior to server creation.
+                        Required if `Subnets` specifies a subnet by UUID.
                       type: string
                   type: object
                 type: array
               ports:
-                description: Ports to be attached to the server instance. They are
-                  created if a port with the given name does not already exist. When
-                  you do not specify both networks and ports parameters, the server
-                  attaches to the only network created for the current tenant.
+                description: |-
+                  Ports to be attached to the server instance. They are created if a port with the given name does not already exist.
+                  When you do not specify both networks and ports parameters, the server attaches to the only network created for the current tenant.
                 items:
                   properties:
                     adminStateUp:
@@ -741,9 +765,9 @@ spec:
                     description:
                       type: string
                     disablePortSecurity:
-                      description: DisablePortSecurity enables or disables the port
-                        security when set. When not set, it takes the value of the
-                        corresponding field at the network level.
+                      description: |-
+                        DisablePortSecurity enables or disables the port security when set.
+                        When not set, it takes the value of the corresponding field at the network level.
                       type: boolean
                     fixedIPs:
                       description: Specify pairs of subnet and/or IP address. These
@@ -753,10 +777,9 @@ spec:
                           ipAddress:
                             type: string
                           subnet:
-                            description: Subnet is an openstack subnet query that
-                              will return the id of a subnet to create the fixed IP
-                              of a port in. This query must not return more than one
-                              subnet.
+                            description: |-
+                              Subnet is an openstack subnet query that will return the id of a subnet to create
+                              the fixed IP of a port in. This query must not return more than one subnet.
                             properties:
                               cidr:
                                 type: string
@@ -799,9 +822,9 @@ spec:
                         instead the 0-based index of the port in the list is used.
                       type: string
                     network:
-                      description: Network is a query for an openstack network that
-                        the port will be created or discovered on. This will fail
-                        if the query returns more than one network.
+                      description: |-
+                        Network is a query for an openstack network that the port will be created or discovered on.
+                        This will fail if the query returns more than one network.
                       properties:
                         description:
                           type: string
@@ -823,9 +846,10 @@ spec:
                     profile:
                       additionalProperties:
                         type: string
-                      description: A dictionary that enables the application running
-                        on the specified host to pass and receive virtual network
-                        interface (VIF) port-specific information to the plug-in.
+                      description: |-
+                        A dictionary that enables the application running on the specified
+                        host to pass and receive virtual network interface (VIF) port-specific
+                        information to the plug-in.
                       type: object
                     projectId:
                       type: string
@@ -881,10 +905,9 @@ spec:
                       type: array
                       x-kubernetes-list-type: set
                     tags:
-                      description: Tags applied to the port (and corresponding trunk,
-                        if a trunk is configured.) These tags are applied in addition
-                        to the instance's tags, which will also be applied to the
-                        port.
+                      description: |-
+                        Tags applied to the port (and corresponding trunk, if a trunk is configured.)
+                        These tags are applied in addition to the instance's tags, which will also be applied to the port.
                       items:
                         type: string
                       type: array
@@ -896,10 +919,10 @@ spec:
                         provided, openStackMachine.Spec.Trunk is inherited.
                       type: boolean
                     valueSpecs:
-                      description: Value specs are extra parameters to include in
-                        the API request with OpenStack. This is an extension point
-                        for the API, so what they do and if they are supported, depends
-                        on the specific OpenStack implementation.
+                      description: |-
+                        Value specs are extra parameters to include in the API request with OpenStack.
+                        This is an extension point for the API, so what they do and if they are supported,
+                        depends on the specific OpenStack implementation.
                       items:
                         description: ValueSpec represents a single value_spec key-value
                           pair.
@@ -908,9 +931,9 @@ spec:
                             description: Key is the key in the key-value pair.
                             type: string
                           name:
-                            description: Name is the name of the key-value pair. This
-                              is just for identifying the pair and will not be sent
-                              to the OpenStack API.
+                            description: |-
+                              Name is the name of the key-value pair.
+                              This is just for identifying the pair and will not be sent to the OpenStack API.
                             type: string
                           value:
                             description: Value is the value in the key-value pair.
@@ -1003,7 +1026,9 @@ spec:
                   as AccessIPv4 on the created compute instance
                 type: string
               tags:
-                description: Machine tags Requires Nova api 2.52 minimum!
+                description: |-
+                  Machine tags
+                  Requires Nova api 2.52 minimum!
                 items:
                   type: string
                 type: array
@@ -1044,37 +1069,37 @@ spec:
                     operational state.
                   properties:
                     lastTransitionTime:
-                      description: Last time the condition transitioned from one status
-                        to another. This should be when the underlying condition changed.
-                        If that is not known, then using the time when the API field
-                        changed is acceptable.
+                      description: |-
+                        Last time the condition transitioned from one status to another.
+                        This should be when the underlying condition changed. If that is not known, then using the time when
+                        the API field changed is acceptable.
                       format: date-time
                       type: string
                     message:
-                      description: A human readable message indicating details about
-                        the transition. This field may be empty.
+                      description: |-
+                        A human readable message indicating details about the transition.
+                        This field may be empty.
                       type: string
                     reason:
-                      description: The reason for the condition's last transition
-                        in CamelCase. The specific API may choose whether or not this
-                        field is considered a guaranteed API. This field may not be
-                        empty.
+                      description: |-
+                        The reason for the condition's last transition in CamelCase.
+                        The specific API may choose whether or not this field is considered a guaranteed API.
+                        This field may not be empty.
                       type: string
                     severity:
-                      description: Severity provides an explicit classification of
-                        Reason code, so the users or machines can immediately understand
-                        the current situation and act accordingly. The Severity field
-                        MUST be set only when Status=False.
+                      description: |-
+                        Severity provides an explicit classification of Reason code, so the users or machines can immediately
+                        understand the current situation and act accordingly.
+                        The Severity field MUST be set only when Status=False.
                       type: string
                     status:
                       description: Status of the condition, one of True, False, Unknown.
                       type: string
                     type:
-                      description: Type of condition in CamelCase or in foo.example.com/CamelCase.
-                        Many .condition.type values are consistent across resources
-                        like Available, but because arbitrary conditions can be useful
-                        (see .node.status.conditions), the ability to deconflict is
-                        important.
+                      description: |-
+                        Type of condition in CamelCase or in foo.example.com/CamelCase.
+                        Many .condition.type values are consistent across resources like Available, but because arbitrary conditions
+                        can be useful (see .node.status.conditions), the ability to deconflict is important.
                       type: string
                   required:
                   - lastTransitionTime
@@ -1083,19 +1108,25 @@ spec:
                   type: object
                 type: array
               failureMessage:
-                description: "FailureMessage will be set in the event that there is
-                  a terminal problem reconciling the Machine and will contain a more
-                  verbose string suitable for logging and human consumption. \n This
-                  field should not be set for transitive errors that a controller
-                  faces that are expected to be fixed automatically over time (like
-                  service outages), but instead indicate that something is fundamentally
-                  wrong with the Machine's spec or the configuration of the controller,
-                  and that manual intervention is required. Examples of terminal errors
-                  would be invalid combinations of settings in the spec, values that
-                  are unsupported by the controller, or the responsible controller
-                  itself being critically misconfigured. \n Any transient errors that
-                  occur during the reconciliation of Machines can be added as events
-                  to the Machine object and/or logged in the controller's output."
+                description: |-
+                  FailureMessage will be set in the event that there is a terminal problem
+                  reconciling the Machine and will contain a more verbose string suitable
+                  for logging and human consumption.
+
+
+                  This field should not be set for transitive errors that a controller
+                  faces that are expected to be fixed automatically over
+                  time (like service outages), but instead indicate that something is
+                  fundamentally wrong with the Machine's spec or the configuration of
+                  the controller, and that manual intervention is required. Examples
+                  of terminal errors would be invalid combinations of settings in the
+                  spec, values that are unsupported by the controller, or the
+                  responsible controller itself being critically misconfigured.
+
+
+                  Any transient errors that occur during the reconciliation of Machines
+                  can be added as events to the Machine object and/or logged in the
+                  controller's output.
                 type: string
               failureReason:
                 description: MachineStatusError defines errors states for Machine
@@ -1145,14 +1176,19 @@ spec:
         description: OpenStackMachine is the Schema for the openstackmachines API.
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -1167,23 +1203,26 @@ spec:
                     the server.
                   properties:
                     name:
-                      description: Name of the block device in the context of a machine.
-                        If the block device is a volume, the Cinder volume will be
-                        named as a combination of the machine name and this name.
+                      description: |-
+                        Name of the block device in the context of a machine.
+                        If the block device is a volume, the Cinder volume will be named
+                        as a combination of the machine name and this name.
                         Also, this name will be used for tagging the block device.
-                        Information about the block device tag can be obtained from
-                        the OpenStack metadata API or the config drive.
+                        Information about the block device tag can be obtained from the OpenStack
+                        metadata API or the config drive.
                       type: string
                     sizeGiB:
                       description: SizeGiB is the size of the block device in gibibytes
                         (GiB).
                       type: integer
                     storage:
-                      description: Storage specifies the storage type of the block
-                        device and additional storage options.
+                      description: |-
+                        Storage specifies the storage type of the block device and
+                        additional storage options.
                       properties:
                         type:
-                          description: Type is the type of block device to create.
+                          description: |-
+                            Type is the type of block device to create.
                             This can be either "Volume" or "Local".
                           type: string
                         volume:
@@ -1191,18 +1230,18 @@ spec:
                             for a volume block device.
                           properties:
                             availabilityZone:
-                              description: AvailabilityZone is the volume availability
-                                zone to create the volume in. If omitted, the availability
-                                zone of the server will be used. The availability
-                                zone must NOT contain spaces otherwise it will lead
-                                to volume that belongs to this availability zone register
-                                failure, see kubernetes/cloud-provider-openstack#1379
-                                for further information.
+                              description: |-
+                                AvailabilityZone is the volume availability zone to create the volume in.
+                                If omitted, the availability zone of the server will be used.
+                                The availability zone must NOT contain spaces otherwise it will lead to volume that belongs
+                                to this availability zone register failure, see kubernetes/cloud-provider-openstack#1379 for
+                                further information.
                               type: string
                             type:
-                              description: Type is the Cinder volume type of the volume.
-                                If omitted, the default Cinder volume type that is
-                                configured in the OpenStack cloud will be used.
+                              description: |-
+                                Type is the Cinder volume type of the volume.
+                                If omitted, the default Cinder volume type that is configured in the OpenStack cloud
+                                will be used.
                               type: string
                           type: object
                       required:
@@ -1227,46 +1266,48 @@ spec:
                 description: The flavor reference for the flavor for your server instance.
                 type: string
               floatingIP:
-                description: The floatingIP which will be associated to the machine,
-                  only used for master. The floatingIP should have been created and
-                  haven't been associated.
+                description: |-
+                  The floatingIP which will be associated to the machine, only used for master.
+                  The floatingIP should have been created and haven't been associated.
                 type: string
               identityRef:
-                description: IdentityRef is a reference to a identity to be used when
-                  reconciling this cluster. If not specified, the identity ref of
-                  the cluster will be used instead.
+                description: |-
+                  IdentityRef is a reference to a identity to be used when reconciling this cluster.
+                  If not specified, the identity ref of the cluster will be used instead.
                 properties:
                   kind:
-                    description: Kind of the identity. Must be supported by the infrastructure
+                    description: |-
+                      Kind of the identity. Must be supported by the infrastructure
                       provider and may be either cluster or namespace-scoped.
                     minLength: 1
                     type: string
                   name:
-                    description: Name of the infrastructure identity to be used. Must
-                      be either a cluster-scoped resource, or namespaced-scoped resource
-                      the same namespace as the resource(s) being provisioned.
+                    description: |-
+                      Name of the infrastructure identity to be used.
+                      Must be either a cluster-scoped resource, or namespaced-scoped
+                      resource the same namespace as the resource(s) being provisioned.
                     type: string
                 required:
                 - kind
                 - name
                 type: object
               image:
-                description: The name of the image to use for your server instance.
-                  If the RootVolume is specified, this will be ignored and use rootVolume
-                  directly.
+                description: |-
+                  The name of the image to use for your server instance.
+                  If the RootVolume is specified, this will be ignored and use rootVolume directly.
                 type: string
               imageUUID:
-                description: The uuid of the image to use for your server instance.
+                description: |-
+                  The uuid of the image to use for your server instance.
                   if it's empty, Image name will be used
                 type: string
               instanceID:
                 description: InstanceID is the OpenStack instance ID for this machine.
                 type: string
               ports:
-                description: Ports to be attached to the server instance. They are
-                  created if a port with the given name does not already exist. If
-                  not specified a default port will be added for the default cluster
-                  network.
+                description: |-
+                  Ports to be attached to the server instance. They are created if a port with the given name does not already exist.
+                  If not specified a default port will be added for the default cluster network.
                 items:
                   properties:
                     adminStateUp:
@@ -1283,9 +1324,9 @@ spec:
                     description:
                       type: string
                     disablePortSecurity:
-                      description: DisablePortSecurity enables or disables the port
-                        security when set. When not set, it takes the value of the
-                        corresponding field at the network level.
+                      description: |-
+                        DisablePortSecurity enables or disables the port security when set.
+                        When not set, it takes the value of the corresponding field at the network level.
                       type: boolean
                     fixedIPs:
                       description: Specify pairs of subnet and/or IP address. These
@@ -1295,10 +1336,9 @@ spec:
                           ipAddress:
                             type: string
                           subnet:
-                            description: Subnet is an openstack subnet query that
-                              will return the id of a subnet to create the fixed IP
-                              of a port in. This query must not return more than one
-                              subnet.
+                            description: |-
+                              Subnet is an openstack subnet query that will return the id of a subnet to create
+                              the fixed IP of a port in. This query must not return more than one subnet.
                             properties:
                               cidr:
                                 type: string
@@ -1341,9 +1381,9 @@ spec:
                         instead the 0-based index of the port in the list is used.
                       type: string
                     network:
-                      description: Network is a query for an openstack network that
-                        the port will be created or discovered on. This will fail
-                        if the query returns more than one network.
+                      description: |-
+                        Network is a query for an openstack network that the port will be created or discovered on.
+                        This will fail if the query returns more than one network.
                       properties:
                         description:
                           type: string
@@ -1363,11 +1403,11 @@ spec:
                           type: string
                       type: object
                     profile:
-                      description: Profile is a set of key-value pairs that are used
-                        for binding details. We intentionally don't expose this as
-                        a map[string]string because we only want to enable the users
-                        to set the values of the keys that are known to work in OpenStack
-                        Networking API. See https://docs.openstack.org/api-ref/network/v2/index.html?expanded=create-port-detail#create-port
+                      description: |-
+                        Profile is a set of key-value pairs that are used for binding details.
+                        We intentionally don't expose this as a map[string]string because we only want to enable
+                        the users to set the values of the keys that are known to work in OpenStack Networking API.
+                        See https://docs.openstack.org/api-ref/network/v2/index.html?expanded=create-port-detail#create-port
                       properties:
                         ovsHWOffload:
                           description: OVSHWOffload enables or disables the OVS hardware
@@ -1406,10 +1446,9 @@ spec:
                         type: object
                       type: array
                     tags:
-                      description: Tags applied to the port (and corresponding trunk,
-                        if a trunk is configured.) These tags are applied in addition
-                        to the instance's tags, which will also be applied to the
-                        port.
+                      description: |-
+                        Tags applied to the port (and corresponding trunk, if a trunk is configured.)
+                        These tags are applied in addition to the instance's tags, which will also be applied to the port.
                       items:
                         type: string
                       type: array
@@ -1419,10 +1458,10 @@ spec:
                         provided, openStackMachine.Spec.Trunk is inherited.
                       type: boolean
                     valueSpecs:
-                      description: Value specs are extra parameters to include in
-                        the API request with OpenStack. This is an extension point
-                        for the API, so what they do and if they are supported, depends
-                        on the specific OpenStack implementation.
+                      description: |-
+                        Value specs are extra parameters to include in the API request with OpenStack.
+                        This is an extension point for the API, so what they do and if they are supported,
+                        depends on the specific OpenStack implementation.
                       items:
                         description: ValueSpec represents a single value_spec key-value
                           pair.
@@ -1431,9 +1470,9 @@ spec:
                             description: Key is the key in the key-value pair.
                             type: string
                           name:
-                            description: Name is the name of the key-value pair. This
-                              is just for identifying the pair and will not be sent
-                              to the OpenStack API.
+                            description: |-
+                              Name is the name of the key-value pair.
+                              This is just for identifying the pair and will not be sent to the OpenStack API.
                             type: string
                           value:
                             description: Value is the value in the key-value pair.
@@ -1502,7 +1541,9 @@ spec:
                 description: The ssh key to inject in the instance
                 type: string
               tags:
-                description: Machine tags Requires Nova api 2.52 minimum!
+                description: |-
+                  Machine tags
+                  Requires Nova api 2.52 minimum!
                 items:
                   type: string
                 type: array
@@ -1543,37 +1584,37 @@ spec:
                     operational state.
                   properties:
                     lastTransitionTime:
-                      description: Last time the condition transitioned from one status
-                        to another. This should be when the underlying condition changed.
-                        If that is not known, then using the time when the API field
-                        changed is acceptable.
+                      description: |-
+                        Last time the condition transitioned from one status to another.
+                        This should be when the underlying condition changed. If that is not known, then using the time when
+                        the API field changed is acceptable.
                       format: date-time
                       type: string
                     message:
-                      description: A human readable message indicating details about
-                        the transition. This field may be empty.
+                      description: |-
+                        A human readable message indicating details about the transition.
+                        This field may be empty.
                       type: string
                     reason:
-                      description: The reason for the condition's last transition
-                        in CamelCase. The specific API may choose whether or not this
-                        field is considered a guaranteed API. This field may not be
-                        empty.
+                      description: |-
+                        The reason for the condition's last transition in CamelCase.
+                        The specific API may choose whether or not this field is considered a guaranteed API.
+                        This field may not be empty.
                       type: string
                     severity:
-                      description: Severity provides an explicit classification of
-                        Reason code, so the users or machines can immediately understand
-                        the current situation and act accordingly. The Severity field
-                        MUST be set only when Status=False.
+                      description: |-
+                        Severity provides an explicit classification of Reason code, so the users or machines can immediately
+                        understand the current situation and act accordingly.
+                        The Severity field MUST be set only when Status=False.
                       type: string
                     status:
                       description: Status of the condition, one of True, False, Unknown.
                       type: string
                     type:
-                      description: Type of condition in CamelCase or in foo.example.com/CamelCase.
-                        Many .condition.type values are consistent across resources
-                        like Available, but because arbitrary conditions can be useful
-                        (see .node.status.conditions), the ability to deconflict is
-                        important.
+                      description: |-
+                        Type of condition in CamelCase or in foo.example.com/CamelCase.
+                        Many .condition.type values are consistent across resources like Available, but because arbitrary conditions
+                        can be useful (see .node.status.conditions), the ability to deconflict is important.
                       type: string
                   required:
                   - lastTransitionTime
@@ -1582,19 +1623,25 @@ spec:
                   type: object
                 type: array
               failureMessage:
-                description: "FailureMessage will be set in the event that there is
-                  a terminal problem reconciling the Machine and will contain a more
-                  verbose string suitable for logging and human consumption. \n This
-                  field should not be set for transitive errors that a controller
-                  faces that are expected to be fixed automatically over time (like
-                  service outages), but instead indicate that something is fundamentally
-                  wrong with the Machine's spec or the configuration of the controller,
-                  and that manual intervention is required. Examples of terminal errors
-                  would be invalid combinations of settings in the spec, values that
-                  are unsupported by the controller, or the responsible controller
-                  itself being critically misconfigured. \n Any transient errors that
-                  occur during the reconciliation of Machines can be added as events
-                  to the Machine object and/or logged in the controller's output."
+                description: |-
+                  FailureMessage will be set in the event that there is a terminal problem
+                  reconciling the Machine and will contain a more verbose string suitable
+                  for logging and human consumption.
+
+
+                  This field should not be set for transitive errors that a controller
+                  faces that are expected to be fixed automatically over
+                  time (like service outages), but instead indicate that something is
+                  fundamentally wrong with the Machine's spec or the configuration of
+                  the controller, and that manual intervention is required. Examples
+                  of terminal errors would be invalid combinations of settings in the
+                  spec, values that are unsupported by the controller, or the
+                  responsible controller itself being critically misconfigured.
+
+
+                  Any transient errors that occur during the reconciliation of Machines
+                  can be added as events to the Machine object and/or logged in the
+                  controller's output.
                 type: string
               failureReason:
                 description: MachineStatusError defines errors states for Machine
@@ -1644,14 +1691,19 @@ spec:
         description: OpenStackMachine is the Schema for the openstackmachines API.
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -1666,23 +1718,26 @@ spec:
                     the server.
                   properties:
                     name:
-                      description: Name of the block device in the context of a machine.
-                        If the block device is a volume, the Cinder volume will be
-                        named as a combination of the machine name and this name.
+                      description: |-
+                        Name of the block device in the context of a machine.
+                        If the block device is a volume, the Cinder volume will be named
+                        as a combination of the machine name and this name.
                         Also, this name will be used for tagging the block device.
-                        Information about the block device tag can be obtained from
-                        the OpenStack metadata API or the config drive.
+                        Information about the block device tag can be obtained from the OpenStack
+                        metadata API or the config drive.
                       type: string
                     sizeGiB:
                       description: SizeGiB is the size of the block device in gibibytes
                         (GiB).
                       type: integer
                     storage:
-                      description: Storage specifies the storage type of the block
-                        device and additional storage options.
+                      description: |-
+                        Storage specifies the storage type of the block device and
+                        additional storage options.
                       properties:
                         type:
-                          description: Type is the type of block device to create.
+                          description: |-
+                            Type is the type of block device to create.
                             This can be either "Volume" or "Local".
                           type: string
                         volume:
@@ -1690,18 +1745,18 @@ spec:
                             for a volume block device.
                           properties:
                             availabilityZone:
-                              description: AvailabilityZone is the volume availability
-                                zone to create the volume in. If omitted, the availability
-                                zone of the server will be used. The availability
-                                zone must NOT contain spaces otherwise it will lead
-                                to volume that belongs to this availability zone register
-                                failure, see kubernetes/cloud-provider-openstack#1379
-                                for further information.
+                              description: |-
+                                AvailabilityZone is the volume availability zone to create the volume in.
+                                If omitted, the availability zone of the server will be used.
+                                The availability zone must NOT contain spaces otherwise it will lead to volume that belongs
+                                to this availability zone register failure, see kubernetes/cloud-provider-openstack#1379 for
+                                further information.
                               type: string
                             type:
-                              description: Type is the Cinder volume type of the volume.
-                                If omitted, the default Cinder volume type that is
-                                configured in the OpenStack cloud will be used.
+                              description: |-
+                                Type is the Cinder volume type of the volume.
+                                If omitted, the default Cinder volume type that is configured in the OpenStack cloud
+                                will be used.
                               type: string
                           type: object
                       required:
@@ -1726,31 +1781,34 @@ spec:
                 description: The flavor reference for the flavor for your server instance.
                 type: string
               floatingIP:
-                description: The floatingIP which will be associated to the machine,
-                  only used for master. The floatingIP should have been created and
-                  haven't been associated.
+                description: |-
+                  The floatingIP which will be associated to the machine, only used for master.
+                  The floatingIP should have been created and haven't been associated.
                 type: string
               identityRef:
                 description: IdentityRef is a reference to a identity to be used when
                   reconciling this cluster
                 properties:
                   kind:
-                    description: Kind of the identity. Must be supported by the infrastructure
+                    description: |-
+                      Kind of the identity. Must be supported by the infrastructure
                       provider and may be either cluster or namespace-scoped.
                     minLength: 1
                     type: string
                   name:
-                    description: Name of the infrastructure identity to be used. Must
-                      be either a cluster-scoped resource, or namespaced-scoped resource
-                      the same namespace as the resource(s) being provisioned.
+                    description: |-
+                      Name of the infrastructure identity to be used.
+                      Must be either a cluster-scoped resource, or namespaced-scoped
+                      resource the same namespace as the resource(s) being provisioned.
                     type: string
                 required:
                 - kind
                 - name
                 type: object
               image:
-                description: The image to use for your server instance. If the rootVolume
-                  is specified, this will be used when creating the root volume.
+                description: |-
+                  The image to use for your server instance.
+                  If the rootVolume is specified, this will be used when creating the root volume.
                 properties:
                   id:
                     description: The ID of the desired image. If this is provided,
@@ -1773,10 +1831,9 @@ spec:
                 description: InstanceID is the OpenStack instance ID for this machine.
                 type: string
               ports:
-                description: Ports to be attached to the server instance. They are
-                  created if a port with the given name does not already exist. If
-                  not specified a default port will be added for the default cluster
-                  network.
+                description: |-
+                  Ports to be attached to the server instance. They are created if a port with the given name does not already exist.
+                  If not specified a default port will be added for the default cluster network.
                 items:
                   properties:
                     adminStateUp:
@@ -1793,9 +1850,9 @@ spec:
                     description:
                       type: string
                     disablePortSecurity:
-                      description: DisablePortSecurity enables or disables the port
-                        security when set. When not set, it takes the value of the
-                        corresponding field at the network level.
+                      description: |-
+                        DisablePortSecurity enables or disables the port security when set.
+                        When not set, it takes the value of the corresponding field at the network level.
                       type: boolean
                     fixedIPs:
                       description: Specify pairs of subnet and/or IP address. These
@@ -1805,10 +1862,9 @@ spec:
                           ipAddress:
                             type: string
                           subnet:
-                            description: Subnet is an openstack subnet query that
-                              will return the id of a subnet to create the fixed IP
-                              of a port in. This query must not return more than one
-                              subnet.
+                            description: |-
+                              Subnet is an openstack subnet query that will return the id of a subnet to create
+                              the fixed IP of a port in. This query must not return more than one subnet.
                             properties:
                               cidr:
                                 type: string
@@ -1851,9 +1907,9 @@ spec:
                         instead the 0-based index of the port in the list is used.
                       type: string
                     network:
-                      description: Network is a query for an openstack network that
-                        the port will be created or discovered on. This will fail
-                        if the query returns more than one network.
+                      description: |-
+                        Network is a query for an openstack network that the port will be created or discovered on.
+                        This will fail if the query returns more than one network.
                       properties:
                         description:
                           type: string
@@ -1873,11 +1929,11 @@ spec:
                           type: string
                       type: object
                     profile:
-                      description: Profile is a set of key-value pairs that are used
-                        for binding details. We intentionally don't expose this as
-                        a map[string]string because we only want to enable the users
-                        to set the values of the keys that are known to work in OpenStack
-                        Networking API. See https://docs.openstack.org/api-ref/network/v2/index.html?expanded=create-port-detail#create-port
+                      description: |-
+                        Profile is a set of key-value pairs that are used for binding details.
+                        We intentionally don't expose this as a map[string]string because we only want to enable
+                        the users to set the values of the keys that are known to work in OpenStack Networking API.
+                        See https://docs.openstack.org/api-ref/network/v2/index.html?expanded=create-port-detail#create-port
                       properties:
                         ovsHWOffload:
                           description: OVSHWOffload enables or disables the OVS hardware
@@ -1916,10 +1972,9 @@ spec:
                         type: object
                       type: array
                     tags:
-                      description: Tags applied to the port (and corresponding trunk,
-                        if a trunk is configured.) These tags are applied in addition
-                        to the instance's tags, which will also be applied to the
-                        port.
+                      description: |-
+                        Tags applied to the port (and corresponding trunk, if a trunk is configured.)
+                        These tags are applied in addition to the instance's tags, which will also be applied to the port.
                       items:
                         type: string
                       type: array
@@ -1929,10 +1984,10 @@ spec:
                         provided, openStackMachine.Spec.Trunk is inherited.
                       type: boolean
                     valueSpecs:
-                      description: Value specs are extra parameters to include in
-                        the API request with OpenStack. This is an extension point
-                        for the API, so what they do and if they are supported, depends
-                        on the specific OpenStack implementation.
+                      description: |-
+                        Value specs are extra parameters to include in the API request with OpenStack.
+                        This is an extension point for the API, so what they do and if they are supported,
+                        depends on the specific OpenStack implementation.
                       items:
                         description: ValueSpec represents a single value_spec key-value
                           pair.
@@ -1941,9 +1996,9 @@ spec:
                             description: Key is the key in the key-value pair.
                             type: string
                           name:
-                            description: Name is the name of the key-value pair. This
-                              is just for identifying the pair and will not be sent
-                              to the OpenStack API.
+                            description: |-
+                              Name is the name of the key-value pair.
+                              This is just for identifying the pair and will not be sent to the OpenStack API.
                             type: string
                           value:
                             description: Value is the value in the key-value pair.
@@ -2017,7 +2072,9 @@ spec:
                 description: The ssh key to inject in the instance
                 type: string
               tags:
-                description: Machine tags Requires Nova api 2.52 minimum!
+                description: |-
+                  Machine tags
+                  Requires Nova api 2.52 minimum!
                 items:
                   type: string
                 type: array
@@ -2058,37 +2115,37 @@ spec:
                     operational state.
                   properties:
                     lastTransitionTime:
-                      description: Last time the condition transitioned from one status
-                        to another. This should be when the underlying condition changed.
-                        If that is not known, then using the time when the API field
-                        changed is acceptable.
+                      description: |-
+                        Last time the condition transitioned from one status to another.
+                        This should be when the underlying condition changed. If that is not known, then using the time when
+                        the API field changed is acceptable.
                       format: date-time
                       type: string
                     message:
-                      description: A human readable message indicating details about
-                        the transition. This field may be empty.
+                      description: |-
+                        A human readable message indicating details about the transition.
+                        This field may be empty.
                       type: string
                     reason:
-                      description: The reason for the condition's last transition
-                        in CamelCase. The specific API may choose whether or not this
-                        field is considered a guaranteed API. This field may not be
-                        empty.
+                      description: |-
+                        The reason for the condition's last transition in CamelCase.
+                        The specific API may choose whether or not this field is considered a guaranteed API.
+                        This field may not be empty.
                       type: string
                     severity:
-                      description: Severity provides an explicit classification of
-                        Reason code, so the users or machines can immediately understand
-                        the current situation and act accordingly. The Severity field
-                        MUST be set only when Status=False.
+                      description: |-
+                        Severity provides an explicit classification of Reason code, so the users or machines can immediately
+                        understand the current situation and act accordingly.
+                        The Severity field MUST be set only when Status=False.
                       type: string
                     status:
                       description: Status of the condition, one of True, False, Unknown.
                       type: string
                     type:
-                      description: Type of condition in CamelCase or in foo.example.com/CamelCase.
-                        Many .condition.type values are consistent across resources
-                        like Available, but because arbitrary conditions can be useful
-                        (see .node.status.conditions), the ability to deconflict is
-                        important.
+                      description: |-
+                        Type of condition in CamelCase or in foo.example.com/CamelCase.
+                        Many .condition.type values are consistent across resources like Available, but because arbitrary conditions
+                        can be useful (see .node.status.conditions), the ability to deconflict is important.
                       type: string
                   required:
                   - lastTransitionTime
@@ -2097,19 +2154,25 @@ spec:
                   type: object
                 type: array
               failureMessage:
-                description: "FailureMessage will be set in the event that there is
-                  a terminal problem reconciling the Machine and will contain a more
-                  verbose string suitable for logging and human consumption. \n This
-                  field should not be set for transitive errors that a controller
-                  faces that are expected to be fixed automatically over time (like
-                  service outages), but instead indicate that something is fundamentally
-                  wrong with the Machine's spec or the configuration of the controller,
-                  and that manual intervention is required. Examples of terminal errors
-                  would be invalid combinations of settings in the spec, values that
-                  are unsupported by the controller, or the responsible controller
-                  itself being critically misconfigured. \n Any transient errors that
-                  occur during the reconciliation of Machines can be added as events
-                  to the Machine object and/or logged in the controller's output."
+                description: |-
+                  FailureMessage will be set in the event that there is a terminal problem
+                  reconciling the Machine and will contain a more verbose string suitable
+                  for logging and human consumption.
+
+
+                  This field should not be set for transitive errors that a controller
+                  faces that are expected to be fixed automatically over
+                  time (like service outages), but instead indicate that something is
+                  fundamentally wrong with the Machine's spec or the configuration of
+                  the controller, and that manual intervention is required. Examples
+                  of terminal errors would be invalid combinations of settings in the
+                  spec, values that are unsupported by the controller, or the
+                  responsible controller itself being critically misconfigured.
+
+
+                  Any transient errors that occur during the reconciliation of Machines
+                  can be added as events to the Machine object and/or logged in the
+                  controller's output.
                 type: string
               failureReason:
                 description: MachineStatusError defines errors states for Machine
