@@ -333,27 +333,8 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 		return nil, fmt.Errorf("error creating Openstack instance: %v", err)
 	}
 
-	var createdInstance *InstanceStatus
-	err = wait.PollUntilContextTimeout(context.TODO(), retryInterval, instanceCreateTimeout, true, func(_ context.Context) (bool, error) {
-		createdInstance, err = s.GetInstanceStatus(server.ID)
-		if err != nil {
-			if capoerrors.IsRetryable(err) {
-				return false, nil
-			}
-			return false, err
-		}
-		if createdInstance.State() == infrav1.InstanceStateError {
-			return false, fmt.Errorf("error creating OpenStack instance %s, status changed to error", createdInstance.ID())
-		}
-		return createdInstance.State() == infrav1.InstanceStateActive, nil
-	})
-	if err != nil {
-		record.Warnf(eventObject, "FailedCreateServer", "Failed to create server %s: %v", instanceSpec.Name, err)
-		return nil, err
-	}
-
-	record.Eventf(eventObject, "SuccessfulCreateServer", "Created server %s with id %s", createdInstance.Name(), createdInstance.ID())
-	return createdInstance, nil
+	record.Eventf(eventObject, "SuccessfulCreateServer", "Created server %s with id %s", server.Name, server.ID)
+	return &InstanceStatus{server, s.scope.Logger()}, nil
 }
 
 func volumeName(instanceName string, nameSuffix string) string {

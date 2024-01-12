@@ -215,10 +215,24 @@ func deleteBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackClust
 		return err
 	}
 
-	instanceName := fmt.Sprintf("%s-bastion", cluster.Name)
-	instanceStatus, err := computeService.GetInstanceStatusByName(openStackCluster, instanceName)
-	if err != nil {
-		return err
+	if openStackCluster.Status.Bastion != nil && openStackCluster.Status.Bastion.FloatingIP != "" {
+		if err = networkingService.DeleteFloatingIP(openStackCluster, openStackCluster.Status.Bastion.FloatingIP); err != nil {
+			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete floating IP: %w", err))
+			return fmt.Errorf("failed to delete floating IP: %w", err)
+		}
+	}
+
+	var instanceStatus *compute.InstanceStatus
+	if openStackCluster.Status.Bastion != nil && openStackCluster.Status.Bastion.ID != "" {
+		instanceStatus, err = computeService.GetInstanceStatus(openStackCluster.Status.Bastion.ID)
+		if err != nil {
+			return err
+		}
+	} else {
+		instanceStatus, err = computeService.GetInstanceStatusByName(openStackCluster, bastionName(cluster.Name))
+		if err != nil {
+			return err
+		}
 	}
 
 	if instanceStatus != nil {
@@ -230,6 +244,7 @@ func deleteBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackClust
 
 		for _, address := range addresses {
 			if address.Type == corev1.NodeExternalIP {
+				// Floating IP may not have properly saved in bastion status (thus not deleted above), delete any remaining floating IP
 				if err = networkingService.DeleteFloatingIP(openStackCluster, address.Address); err != nil {
 					handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete floating IP: %w", err))
 					return fmt.Errorf("failed to delete floating IP: %w", err)
@@ -277,8 +292,9 @@ func reconcileNormal(scope scope.Scope, cluster *clusterv1.Cluster, openStackClu
 		return reconcile.Result{}, err
 	}
 
-	if err = reconcileBastion(scope, cluster, openStackCluster); err != nil {
-		return reconcile.Result{}, err
+	result, err := reconcileBastion(scope, cluster, openStackCluster)
+	if err != nil || !reflect.DeepEqual(result, reconcile.Result{}) {
+		return result, err
 	}
 
 	availabilityZones, err := computeService.GetAvailabilityZones()
@@ -308,88 +324,112 @@ func reconcileNormal(scope scope.Scope, cluster *clusterv1.Cluster, openStackClu
 	return reconcile.Result{}, nil
 }
 
-func reconcileBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
+func reconcileBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
 	scope.Logger().Info("Reconciling Bastion")
 
 	if openStackCluster.Spec.Bastion == nil || !openStackCluster.Spec.Bastion.Enabled {
-		return deleteBastion(scope, cluster, openStackCluster)
+		return reconcile.Result{}, deleteBastion(scope, cluster, openStackCluster)
 	}
 
 	computeService, err := compute.NewService(scope)
 	if err != nil {
-		return err
+		return reconcile.Result{}, err
 	}
 
 	instanceSpec := bastionToInstanceSpec(openStackCluster, cluster.Name)
 	bastionHash, err := compute.HashInstanceSpec(instanceSpec)
 	if err != nil {
-		return fmt.Errorf("failed computing bastion hash from instance spec: %w", err)
+		return reconcile.Result{}, fmt.Errorf("failed computing bastion hash from instance spec: %w", err)
 	}
-
-	instanceStatus, err := computeService.GetInstanceStatusByName(openStackCluster, fmt.Sprintf("%s-bastion", cluster.Name))
-	if err != nil {
-		return err
-	}
-	if instanceStatus != nil {
-		if !bastionHashHasChanged(bastionHash, openStackCluster.ObjectMeta.Annotations) {
-			bastion, err := instanceStatus.BastionStatus(openStackCluster)
-			if err != nil {
-				return err
-			}
-			// Add the current hash if no annotation is set.
-			if _, ok := openStackCluster.ObjectMeta.Annotations[BastionInstanceHashAnnotation]; !ok {
-				annotations.AddAnnotations(openStackCluster, map[string]string{BastionInstanceHashAnnotation: bastionHash})
-			}
-			openStackCluster.Status.Bastion = bastion
-			return nil
-		}
-
+	if bastionHashHasChanged(bastionHash, openStackCluster.ObjectMeta.Annotations) {
 		if err := deleteBastion(scope, cluster, openStackCluster); err != nil {
-			return err
+			return ctrl.Result{}, err
 		}
 	}
 
-	instanceStatus, err = computeService.CreateInstance(openStackCluster, openStackCluster, instanceSpec, cluster.Name)
-	if err != nil {
-		return fmt.Errorf("failed to reconcile bastion: %w", err)
+	var instanceStatus *compute.InstanceStatus
+	if openStackCluster.Status.Bastion != nil && openStackCluster.Status.Bastion.ID != "" {
+		if instanceStatus, err = computeService.GetInstanceStatus(openStackCluster.Status.Bastion.ID); err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+	if instanceStatus == nil {
+		// Check if there is an existing instance with bastion name, in case where bastion ID would not have been properly stored in cluster status
+		if instanceStatus, err = computeService.GetInstanceStatusByName(openStackCluster, instanceSpec.Name); err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+	if instanceStatus == nil {
+		instanceStatus, err = computeService.CreateInstance(openStackCluster, openStackCluster, instanceSpec, cluster.Name)
+		if err != nil {
+			return reconcile.Result{}, fmt.Errorf("failed to create bastion: %w", err)
+		}
+	}
+
+	// Save hash & status as soon as we know we have an instance
+	instanceStatus.UpdateBastionStatus(openStackCluster)
+	annotations.AddAnnotations(openStackCluster, map[string]string{BastionInstanceHashAnnotation: bastionHash})
+
+	// Make sure that bastion instance has a valid state
+	switch instanceStatus.State() {
+	case infrav1.InstanceStateError:
+		return ctrl.Result{}, fmt.Errorf("failed to reconcile bastion, instance state is ERROR")
+	case infrav1.InstanceStateBuild, infrav1.InstanceStateUndefined:
+		scope.Logger().Info("Waiting for bastion instance to become ACTIVE", "id", instanceStatus.ID(), "status", instanceStatus.State())
+		return ctrl.Result{RequeueAfter: waitForBuildingInstanceToReconcile}, nil
+	case infrav1.InstanceStateDeleted:
+		// This should normally be handled by deleteBastion
+		openStackCluster.Status.Bastion = nil
+		return ctrl.Result{}, nil
 	}
 
 	networkingService, err := networking.NewService(scope)
 	if err != nil {
-		return err
-	}
-	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
-	fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterName, openStackCluster.Spec.Bastion.Instance.FloatingIP)
-	if err != nil {
-		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to get or create floating IP for bastion: %w", err))
-		return fmt.Errorf("failed to get or create floating IP for bastion: %w", err)
+		return ctrl.Result{}, err
 	}
 	port, err := computeService.GetManagementPort(openStackCluster, instanceStatus)
 	if err != nil {
 		err = fmt.Errorf("getting management port for bastion: %w", err)
 		handleUpdateOSCError(openStackCluster, err)
-		return err
+		return ctrl.Result{}, err
 	}
+	fp, err := networkingService.GetFloatingIPByPortID(port.ID)
+	if err != nil {
+		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to get or create floating IP for bastion: %w", err))
+		return ctrl.Result{}, fmt.Errorf("failed to get floating IP for bastion port: %w", err)
+	}
+	if fp != nil {
+		// Floating IP is already attached to bastion, no need to proceed
+		openStackCluster.Status.Bastion.FloatingIP = fp.FloatingIP
+		return ctrl.Result{}, nil
+	}
+
+	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
+	floatingIP := openStackCluster.Spec.Bastion.Instance.FloatingIP
+	if openStackCluster.Status.Bastion.FloatingIP != "" {
+		// Some floating IP has already been created for this bastion, make sure we re-use it
+		floatingIP = openStackCluster.Status.Bastion.FloatingIP
+	}
+	// Check if there is an existing floating IP attached to bastion, in case where FloatingIP would not yet have been stored in cluster status
+	fp, err = networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterName, floatingIP)
+	if err != nil {
+		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to get or create floating IP for bastion: %w", err))
+		return ctrl.Result{}, fmt.Errorf("failed to get or create floating IP for bastion: %w", err)
+	}
+	openStackCluster.Status.Bastion.FloatingIP = fp.FloatingIP
+
 	err = networkingService.AssociateFloatingIP(openStackCluster, fp, port.ID)
 	if err != nil {
 		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to associate floating IP with bastion: %w", err))
-		return fmt.Errorf("failed to associate floating IP with bastion: %w", err)
+		return ctrl.Result{}, fmt.Errorf("failed to associate floating IP with bastion: %w", err)
 	}
 
-	bastion, err := instanceStatus.BastionStatus(openStackCluster)
-	if err != nil {
-		return err
-	}
-	bastion.FloatingIP = fp.FloatingIP
-	openStackCluster.Status.Bastion = bastion
-	annotations.AddAnnotations(openStackCluster, map[string]string{BastionInstanceHashAnnotation: bastionHash})
-	return nil
+	return ctrl.Result{}, nil
 }
 
 func bastionToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, clusterName string) *compute.InstanceSpec {
-	name := fmt.Sprintf("%s-bastion", clusterName)
 	instanceSpec := &compute.InstanceSpec{
-		Name:          name,
+		Name:          bastionName(clusterName),
 		Flavor:        openStackCluster.Spec.Bastion.Instance.Flavor,
 		SSHKeyName:    openStackCluster.Spec.Bastion.Instance.SSHKeyName,
 		Image:         openStackCluster.Spec.Bastion.Instance.Image,
@@ -410,6 +450,10 @@ func bastionToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, clusterNa
 	instanceSpec.Ports = openStackCluster.Spec.Bastion.Instance.Ports
 
 	return instanceSpec
+}
+
+func bastionName(clusterName string) string {
+	return fmt.Sprintf("%s-bastion", clusterName)
 }
 
 // bastionHashHasChanged returns a boolean whether if the latest bastion hash, built from the instance spec, has changed or not.

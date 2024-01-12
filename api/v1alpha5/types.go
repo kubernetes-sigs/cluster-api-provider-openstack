@@ -273,8 +273,8 @@ func (r SecurityGroupRule) Equal(x SecurityGroupRule) bool {
 type InstanceState string
 
 var (
-	// InstanceStateBuilding is the string representing an instance in a building state.
-	InstanceStateBuilding = InstanceState("BUILDING")
+	// InstanceStateBuild is the string representing an instance in a build state.
+	InstanceStateBuild = InstanceState("BUILD")
 
 	// InstanceStateActive is the string representing an instance in an active state.
 	InstanceStateActive = InstanceState("ACTIVE")
@@ -290,6 +290,9 @@ var (
 
 	// InstanceStateDeleted is the string representing an instance in a deleted state.
 	InstanceStateDeleted = InstanceState("DELETED")
+
+	// InstanceStateUndefined is the string representing an undefined instance state.
+	InstanceStateUndefined = InstanceState("")
 )
 
 // Bastion represents basic information about the bastion node.
