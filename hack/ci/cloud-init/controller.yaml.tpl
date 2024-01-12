@@ -63,8 +63,8 @@
     IMAGE_URLS="https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/amphora/2022-12-05/amphora-x64-haproxy.qcow2,"
     IMAGE_URLS+="https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/cirros/2022-12-05/cirros-0.6.1-x86_64-disk.img,"
     IMAGE_URLS+="https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/ubuntu/2023-09-29/ubuntu-2204-kube-v1.27.2.img,"
-    IMAGE_URLS+="https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/ubuntu/2023-09-29/ubuntu-2204-kube-v1.28.2.img,"
-    IMAGE_URLS+="https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/flatcar/flatcar-stable-3602.2.0-kube-v1.28.2.img,"
+    IMAGE_URLS+="https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/ubuntu/2024-01-10/ubuntu-2204-kube-v1.28.5.img,"
+    IMAGE_URLS+="https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/flatcar/flatcar-stable-3602.2.3-kube-v1.28.5.img,"
     IMAGE_URLS+="https://stable.release.flatcar-linux.net/amd64-usr/current/flatcar_production_openstack_image.img"
 
     [[post-config|$NOVA_CONF]]
