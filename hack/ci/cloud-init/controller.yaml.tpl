@@ -176,7 +176,7 @@
     openstack flavor delete m1.small
     openstack flavor create --ram 4192 --disk 20 --ephemeral 5 --vcpus 2 --public --id 2 m1.small --property hw_rng:allowed='True'
     openstack flavor delete m1.medium
-    openstack flavor create --ram 6144 --disk 20 --ephemeral 5 --vcpus 4 --public --id 3 m1.medium --property hw_rng:allowed='True'
+    openstack flavor create --ram 6144 --disk 20 --ephemeral 5 --vcpus 2 --public --id 3 m1.medium --property hw_rng:allowed='True'
 
     # Adjust the CPU quota
     openstack quota set --cores 32 demo
