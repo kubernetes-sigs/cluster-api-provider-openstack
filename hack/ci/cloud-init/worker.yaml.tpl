@@ -25,15 +25,23 @@
     DATABASE_TYPE=mysql
     DATABASE_HOST=$SERVICE_HOST
 
+    # Nova
+    ENABLED_SERVICES=n-cpu,placement-client,c-vol
+    VOLUME_BACKING_FILE_SIZE=100G
+
     # Neutron
     enable_plugin neutron https://github.com/openstack/neutron stable/${OPENSTACK_RELEASE}
-
-    # Nova
-    ENABLED_SERVICES=n-cpu,placement-client,c-vol,neutron-agent
-    VOLUME_BACKING_FILE_SIZE=100G
+    ENABLED_SERVICES+=,ovn-controller,ovs-vswitchd,ovsdb-server,q-fake,q-ovn-metadata-agent
+    DISABLED_SERVICES=q-svc,horizon,ovn-northd,q-agt,q-dhcp,q-l3,q-meta,q-metering,q-vpn
+    PUBLIC_BRIDGE_MTU=${MTU}
+    ENABLE_CHASSIS_AS_GW="False"
+    OVN_DBS_LOG_LEVEL="dbg"
+    Q_ML2_PLUGIN_MECHANISM_DRIVERS="ovn,logger"
+    Q_AGENT="ovn"
 
     # Additional services
     ENABLED_SERVICES+=${OPENSTACK_ADDITIONAL_SERVICES}
+    DISABLED_SERVICES+=${OPENSTACK_DISABLED_SERVICES}
 
     [[post-config|$NOVA_CONF]]
     [DEFAULT]
@@ -43,9 +51,9 @@
     [DEFAULT]
     storage_availability_zone = ${SECONDARY_AZ}
 
-    [[post-config|/$NEUTRON_CORE_PLUGIN_CONF]]
-    [ml2]
-    path_mtu = ${MTU}
+    [[post-config|$NEUTRON_CONF]]
+    [DEFAULT]
+    global_physnet_mtu = ${MTU}
 - path: /root/devstack.sh
   permissions: "0755"
   content: |

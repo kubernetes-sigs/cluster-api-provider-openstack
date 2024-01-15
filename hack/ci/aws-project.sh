@@ -23,8 +23,8 @@ function cloud_init {
   AWS_ZONE=${AWS_ZONE:-"eu-central-1a"}
   # AMIs:
   # * capa-ami-ubuntu-20.04-1.20.4-00-1613898574 id: ami-0120656d38c206057
-  # * ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-20210223 id: ami-0767046d1677be5a0
-  AWS_AMI=${AWS_AMI:-"ami-0767046d1677be5a0"}
+  # * ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-arm64-server-20231207 id: ami-05d47d29a4c2d19e1
+  AWS_AMI=${AWS_AMI:-"ami-05d47d29a4c2d19e1"}
   # Choose via: https://eu-central-1.console.aws.amazon.com/ec2/v2/home?region=eu-central-1#InstanceTypes:
   AWS_MACHINE_TYPE=${AWS_MACHINE_TYPE:-"c5.metal"}
   AWS_NETWORK_NAME=${AWS_NETWORK_NAME:-"${CLUSTER_NAME}-mynetwork"}
