@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	conversion "k8s.io/apimachinery/pkg/conversion"
+	"k8s.io/utils/pointer"
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
 	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
 
@@ -209,6 +210,10 @@ func Convert_v1alpha8_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(in *
 		}
 	}
 
+	if in.ManagedSecurityGroups != nil {
+		out.ManagedSecurityGroups = true
+	}
+
 	return nil
 }
 
@@ -242,6 +247,13 @@ func Convert_v1alpha5_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(in *
 		}
 	}
 	// We're dropping DNSNameservers even if these were set as without NodeCIDR it doesn't make sense.
+
+	if in.ManagedSecurityGroups {
+		out.ManagedSecurityGroups = &infrav1.ManagedSecurityGroups{}
+		if !in.AllowAllInClusterTraffic {
+			out.ManagedSecurityGroups.AllNodesSecurityGroupRules = infrav1.LegacyCalicoSecurityGroupRules()
+		}
+	}
 
 	return nil
 }
@@ -552,5 +564,60 @@ func Convert_v1alpha5_Bastion_To_v1alpha8_Bastion(in *Bastion, out *infrav1.Bast
 		return err
 	}
 	in.Instance.FloatingIP = out.FloatingIP
+	return nil
+}
+
+func Convert_v1alpha8_SecurityGroupStatus_To_v1alpha5_SecurityGroup(in *infrav1.SecurityGroupStatus, out *SecurityGroup, s conversion.Scope) error { //nolint:revive
+	out.ID = in.ID
+	out.Name = in.Name
+	out.Rules = make([]SecurityGroupRule, len(in.Rules))
+	for i, rule := range in.Rules {
+		out.Rules[i] = SecurityGroupRule{
+			ID:        rule.ID,
+			Direction: rule.Direction,
+		}
+		if rule.Description != nil {
+			out.Rules[i].Description = *rule.Description
+		}
+		if rule.EtherType != nil {
+			out.Rules[i].EtherType = *rule.EtherType
+		}
+		if rule.PortRangeMin != nil {
+			out.Rules[i].PortRangeMin = *rule.PortRangeMin
+		}
+		if rule.PortRangeMax != nil {
+			out.Rules[i].PortRangeMax = *rule.PortRangeMax
+		}
+		if rule.Protocol != nil {
+			out.Rules[i].Protocol = *rule.Protocol
+		}
+		if rule.RemoteGroupID != nil {
+			out.Rules[i].RemoteGroupID = *rule.RemoteGroupID
+		}
+		if rule.RemoteIPPrefix != nil {
+			out.Rules[i].RemoteIPPrefix = *rule.RemoteIPPrefix
+		}
+	}
+	return nil
+}
+
+func Convert_v1alpha5_SecurityGroup_To_v1alpha8_SecurityGroupStatus(in *SecurityGroup, out *infrav1.SecurityGroupStatus, s conversion.Scope) error { //nolint:revive
+	out.ID = in.ID
+	out.Name = in.Name
+	out.Rules = make([]infrav1.SecurityGroupRuleStatus, len(in.Rules))
+	for i, rule := range in.Rules {
+		out.Rules[i] = infrav1.SecurityGroupRuleStatus{
+			ID:             rule.ID,
+			Description:    pointer.String(rule.Description),
+			Direction:      rule.Direction,
+			EtherType:      pointer.String(rule.EtherType),
+			PortRangeMin:   pointer.Int(rule.PortRangeMin),
+			PortRangeMax:   pointer.Int(rule.PortRangeMax),
+			Protocol:       pointer.String(rule.Protocol),
+			RemoteGroupID:  pointer.String(rule.RemoteGroupID),
+			RemoteIPPrefix: pointer.String(rule.RemoteIPPrefix),
+		}
+	}
+
 	return nil
 }

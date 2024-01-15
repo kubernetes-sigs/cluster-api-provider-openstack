@@ -13,6 +13,9 @@
       - [Removal of imageUUID](#removal-of-imageuuid)
       - [Change to floatingIP](#change-to-floatingip)
       - [Change to subnet](#change-to-subnet)
+      - [Change to nodeCidr and dnsNameservers](#change-to-nodecidr-and-dnsnameservers)
+      - [Change to managedSecurityGroups](#change-to-managedsecuritygroups)
+      - [Calico CNI](#calico-cni)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -196,3 +199,47 @@ In v1alpha8, this will be automatically converted to:
 ```
 
 Please note that currently `managedSubnets` can only hold one element.
+
+#### ⚠️ Change to managedSecurityGroups
+
+The field `managedSecurityGroups` is now a pointer to a `ManagedSecurityGroups` object rather than a boolean.
+
+Also, we can now add security group rules that authorize traffic from all nodes via `allNodesSecurityGroupRules`.
+It takes a list of security groups rules that should be applied to selected nodes.
+The following rule fields are mutually exclusive: `remoteManagedGroups`, `remoteGroupID` and `remoteIPPrefix`.
+Valid values for `remoteManagedGroups` are `controlplane`, `worker` and `bastion`.
+
+```yaml
+managedSecurityGroups: true
+```
+
+becomes
+
+```yaml
+managedSecurityGroups: {}
+```
+
+To apply a security group rule that will allow BGP between the control plane and workers, you can follow this example:
+
+```yaml
+managedSecurityGroups:
+  allNodesSecurityGroupRules:
+  - remoteManagedGroups:
+    - controlplane
+    - worker
+    direction: ingress
+    etherType: IPv4
+    name: BGP (Calico)
+    portRangeMin: 179
+    portRangeMax: 179
+    protocol: tcp
+    description: "Allow BGP between control plane and workers"
+```
+
+#### ⚠️ Calico CNI
+
+Historically we used to create the necessary security group rules for Calico CNI to work. This is no longer the case.
+Now the user needs to request creation of the security group rules by using the `managedSecurityGroups.allNodesSecurityGroupRules` feature.
+
+Note that when upgrading from a previous version, the Calico CNI security group rules will be added automatically to
+allow backwards compatibility if `allowAllInClusterTraffic` is set to false.

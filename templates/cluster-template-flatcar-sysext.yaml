@@ -230,7 +230,26 @@ spec:
   identityRef:
     kind: Secret
     name: ${CLUSTER_NAME}-cloud-config
-  managedSecurityGroups: true
+  managedSecurityGroups:
+    allNodesSecurityGroupRules:
+    - description: Created by cluster-api-provider-openstack - BGP (calico)
+      direction: ingress
+      etherType: IPv4
+      name: BGP (Calico)
+      portRangeMax: 179
+      portRangeMin: 179
+      protocol: tcp
+      remoteManagedGroups:
+      - controlplane
+      - worker
+    - description: Created by cluster-api-provider-openstack - IP-in-IP (calico)
+      direction: ingress
+      etherType: IPv4
+      name: IP-in-IP (calico)
+      protocol: "4"
+      remoteManagedGroups:
+      - controlplane
+      - worker
   managedSubnets:
   - cidr: 10.6.0.0/24
     dnsNameservers:

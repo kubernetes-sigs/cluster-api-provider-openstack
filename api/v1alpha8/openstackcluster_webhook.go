@@ -63,6 +63,20 @@ func (r *OpenStackCluster) ValidateCreate() (admission.Warnings, error) {
 		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "identityRef", "kind"), "must be a Secret"))
 	}
 
+	if r.Spec.ManagedSecurityGroups != nil {
+		for _, rule := range r.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules {
+			if rule.RemoteManagedGroups != nil && (rule.RemoteGroupID != nil || rule.RemoteIPPrefix != nil) {
+				allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "managedSecurityGroups", "allNodesSecurityGroupRules"), "remoteManagedGroups cannot be used with remoteGroupID or remoteIPPrefix"))
+			}
+			if rule.RemoteGroupID != nil && (rule.RemoteManagedGroups != nil || rule.RemoteIPPrefix != nil) {
+				allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "managedSecurityGroups", "allNodesSecurityGroupRules"), "remoteGroupID cannot be used with remoteManagedGroups or remoteIPPrefix"))
+			}
+			if rule.RemoteIPPrefix != nil && (rule.RemoteManagedGroups != nil || rule.RemoteGroupID != nil) {
+				allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "managedSecurityGroups", "allNodesSecurityGroupRules"), "remoteIPPrefix cannot be used with remoteManagedGroups or remoteGroupID"))
+			}
+		}
+	}
+
 	return aggregateObjErrors(r.GroupVersionKind().GroupKind(), r.Name, allErrs)
 }
 
@@ -126,6 +140,12 @@ func (r *OpenStackCluster) ValidateUpdate(oldRaw runtime.Object) (admission.Warn
 	// Allow changes to the bastion spec.
 	old.Spec.Bastion = &Bastion{}
 	r.Spec.Bastion = &Bastion{}
+
+	// Allow changes to the managed allNodesSecurityGroupRules.
+	if r.Spec.ManagedSecurityGroups != nil {
+		old.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules = []SecurityGroupRuleSpec{}
+		r.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules = []SecurityGroupRuleSpec{}
+	}
 
 	// Allow changes on AllowedCIDRs
 	if r.Spec.APIServerLoadBalancer.Enabled {

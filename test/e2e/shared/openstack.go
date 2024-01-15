@@ -40,6 +40,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/rules"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/trunks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
@@ -368,6 +369,58 @@ func DumpOpenStackSecurityGroups(e2eCtx *E2EContext, filter groups.ListOpts) ([]
 		return nil, fmt.Errorf("error extracting security groups: %s", err)
 	}
 	return groupsList, nil
+}
+
+// DumpCalicoSecurityGroupRules returns the number of Calico security group rules.
+func DumpCalicoSecurityGroupRules(e2eCtx *E2EContext, openStackCluster *infrav1.OpenStackCluster) (int, error) {
+	var count int
+
+	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
+	if err != nil {
+		return 0, fmt.Errorf("error creating provider client: %s", err)
+	}
+
+	networkClient, err := openstack.NewNetworkV2(providerClient, gophercloud.EndpointOpts{
+		Region: clientOpts.RegionName,
+	})
+	if err != nil {
+		return 0, fmt.Errorf("error creating network client: %s", err)
+	}
+
+	controlPlaneSGID := openStackCluster.Status.ControlPlaneSecurityGroup.ID
+	controlPlaneSGRules, err := rules.List(networkClient, rules.ListOpts{SecGroupID: controlPlaneSGID}).AllPages()
+	if err != nil {
+		return 0, fmt.Errorf("error listing control plane security group rules: %s", err)
+	}
+	controlPlaneRulesList, err := rules.ExtractRules(controlPlaneSGRules)
+	if err != nil {
+		return 0, fmt.Errorf("error extracting control plane security group rules: %s", err)
+	}
+
+	workerSGID := openStackCluster.Status.WorkerSecurityGroup.ID
+	workerSGRules, err := rules.List(networkClient, rules.ListOpts{SecGroupID: workerSGID}).AllPages()
+	if err != nil {
+		return 0, fmt.Errorf("error listing worker security group rules: %s", err)
+	}
+	workerRulesList, err := rules.ExtractRules(workerSGRules)
+	if err != nil {
+		return 0, fmt.Errorf("error extracting worker security group rules: %s", err)
+	}
+	allRules := append(controlPlaneRulesList, workerRulesList...)
+	count += checkCalicoSecurityGroupRules(allRules)
+
+	return count, nil
+}
+
+// checkCalicoSecurityGroupRules returns the number of Calico security group rules.
+func checkCalicoSecurityGroupRules(rules []rules.SecGroupRule) int {
+	var count int
+	for _, rule := range rules {
+		if strings.Contains(rule.Description, "calico") {
+			count++
+		}
+	}
+	return count
 }
 
 // DumpOpenStackVolumes returns all OpenStack volumes to a file in the artifact folder.

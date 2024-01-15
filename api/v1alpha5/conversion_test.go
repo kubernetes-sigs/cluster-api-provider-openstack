@@ -49,7 +49,7 @@ func TestConvertFrom(t *testing.T) {
 				Spec: OpenStackClusterSpec{},
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
-						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"allowAllInClusterTraffic\":false,\"apiServerLoadBalancer\":{},\"cloudName\":\"\",\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"disableExternalNetwork\":false,\"externalNetwork\":{},\"managedSecurityGroups\":false,\"network\":{}},\"status\":{\"ready\":false}}",
+						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"allowAllInClusterTraffic\":false,\"apiServerLoadBalancer\":{},\"cloudName\":\"\",\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"disableExternalNetwork\":false,\"externalNetwork\":{},\"managedSecurityGroups\":null,\"network\":{}},\"status\":{\"ready\":false}}",
 					},
 				},
 			},
@@ -64,7 +64,7 @@ func TestConvertFrom(t *testing.T) {
 				Spec: OpenStackClusterTemplateSpec{},
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
-						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"template\":{\"spec\":{\"allowAllInClusterTraffic\":false,\"apiServerLoadBalancer\":{},\"cloudName\":\"\",\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"disableExternalNetwork\":false,\"externalNetwork\":{},\"managedSecurityGroups\":false,\"network\":{}}}}}",
+						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"template\":{\"spec\":{\"allowAllInClusterTraffic\":false,\"apiServerLoadBalancer\":{},\"cloudName\":\"\",\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"disableExternalNetwork\":false,\"externalNetwork\":{},\"managedSecurityGroups\":null,\"network\":{}}}}}",
 					},
 				},
 			},
@@ -106,6 +106,53 @@ func TestConvertFrom(t *testing.T) {
 			err := tt.spoke.ConvertFrom(tt.hub)
 			g.Expect(err).NotTo(gomega.HaveOccurred())
 			g.Expect(tt.spoke).To(gomega.Equal(tt.want))
+		})
+	}
+}
+
+func TestConvert_v1alpha5_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(t *testing.T) {
+	tests := []struct {
+		name        string
+		in          *OpenStackClusterSpec
+		expectedOut *infrav1.OpenStackClusterSpec
+	}{
+		{
+			name:        "empty",
+			in:          &OpenStackClusterSpec{},
+			expectedOut: &infrav1.OpenStackClusterSpec{},
+		},
+		{
+			name: "with managed security groups and not allow all in cluster traffic",
+			in: &OpenStackClusterSpec{
+				ManagedSecurityGroups:    true,
+				AllowAllInClusterTraffic: false,
+			},
+			expectedOut: &infrav1.OpenStackClusterSpec{
+				ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{
+					AllNodesSecurityGroupRules: infrav1.LegacyCalicoSecurityGroupRules(),
+				},
+			},
+		},
+		{
+			name: "with managed security groups and allow all in cluster traffic",
+			in: &OpenStackClusterSpec{
+				ManagedSecurityGroups:    true,
+				AllowAllInClusterTraffic: true,
+			},
+			expectedOut: &infrav1.OpenStackClusterSpec{
+				ManagedSecurityGroups:    &infrav1.ManagedSecurityGroups{},
+				AllowAllInClusterTraffic: true,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := gomega.NewWithT(t)
+			out := &infrav1.OpenStackClusterSpec{}
+			err := Convert_v1alpha5_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(tt.in, out, nil)
+			g.Expect(err).NotTo(gomega.HaveOccurred())
+			g.Expect(out).To(gomega.Equal(tt.expectedOut))
 		})
 	}
 }

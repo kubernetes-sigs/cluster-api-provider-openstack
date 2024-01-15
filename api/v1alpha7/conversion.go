@@ -18,6 +18,7 @@ package v1alpha7
 
 import (
 	apiconversion "k8s.io/apimachinery/pkg/conversion"
+	"k8s.io/utils/pointer"
 	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha8"
@@ -57,6 +58,72 @@ var v1alpha7OpenStackClusterRestorer = conversion.RestorerFor[*OpenStackCluster]
 			},
 		),
 	),
+	"status": conversion.HashedFieldRestorer(
+		func(c *OpenStackCluster) *OpenStackClusterStatus {
+			return &c.Status
+		},
+		restorev1alpha7ClusterStatus,
+	),
+}
+
+func restorev1alpha7SecurityGroup(previous *SecurityGroup, dst *SecurityGroup) {
+	if previous == nil || dst == nil {
+		return
+	}
+
+	for i, rule := range previous.Rules {
+		dst.Rules[i].SecurityGroupID = rule.SecurityGroupID
+	}
+}
+
+func restorev1alpha7ClusterStatus(previous *OpenStackClusterStatus, dst *OpenStackClusterStatus) {
+	restorev1alpha7SecurityGroup(previous.ControlPlaneSecurityGroup, dst.ControlPlaneSecurityGroup)
+	restorev1alpha7SecurityGroup(previous.WorkerSecurityGroup, dst.WorkerSecurityGroup)
+	restorev1alpha7SecurityGroup(previous.BastionSecurityGroup, dst.BastionSecurityGroup)
+}
+
+func restorev1alpha8SecurityGroupStatus(previous *infrav1.SecurityGroupStatus, dst *infrav1.SecurityGroupStatus) {
+	if previous == nil || dst == nil {
+		return
+	}
+
+	for i := range dst.Rules {
+		dstRule := &dst.Rules[i]
+
+		// Conversion from scalar to *scalar is lossy for zero values. We need to restore only nil values.
+		if dstRule.Description != nil && *dstRule.Description == "" {
+			dstRule.Description = previous.Rules[i].Description
+		}
+		if dstRule.EtherType != nil && *dstRule.EtherType == "" {
+			dstRule.EtherType = previous.Rules[i].EtherType
+		}
+		if dstRule.PortRangeMin != nil && *dstRule.PortRangeMin == 0 {
+			dstRule.PortRangeMin = previous.Rules[i].PortRangeMin
+		}
+		if dstRule.PortRangeMax != nil && *dstRule.PortRangeMax == 0 {
+			dstRule.PortRangeMax = previous.Rules[i].PortRangeMax
+		}
+		if dstRule.Protocol != nil && *dstRule.Protocol == "" {
+			dstRule.Protocol = previous.Rules[i].Protocol
+		}
+		if dstRule.RemoteGroupID != nil && *dstRule.RemoteGroupID == "" {
+			dstRule.RemoteGroupID = previous.Rules[i].RemoteGroupID
+		}
+		if dstRule.RemoteIPPrefix != nil && *dstRule.RemoteIPPrefix == "" {
+			dstRule.RemoteIPPrefix = previous.Rules[i].RemoteIPPrefix
+		}
+	}
+}
+
+func restorev1alpha8ClusterStatus(previous *infrav1.OpenStackClusterStatus, dst *infrav1.OpenStackClusterStatus) {
+	restorev1alpha8SecurityGroupStatus(previous.ControlPlaneSecurityGroup, dst.ControlPlaneSecurityGroup)
+	restorev1alpha8SecurityGroupStatus(previous.WorkerSecurityGroup, dst.WorkerSecurityGroup)
+	restorev1alpha8SecurityGroupStatus(previous.BastionSecurityGroup, dst.BastionSecurityGroup)
+
+	// ReferencedResources have no equivalent in v1alpha7
+	if dst.Bastion != nil {
+		dst.Bastion.ReferencedResources = previous.Bastion.ReferencedResources
+	}
 }
 
 var v1alpha8OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStackCluster]{
@@ -85,14 +152,11 @@ var v1alpha8OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStack
 		),
 	),
 
-	// No equivalent in v1alpha7
-	"bastionrefresources": conversion.UnconditionalFieldRestorer(
-		func(c *infrav1.OpenStackCluster) *infrav1.ReferencedMachineResources {
-			if c.Status.Bastion == nil {
-				return nil
-			}
-			return &c.Status.Bastion.ReferencedResources
+	"status": conversion.HashedFieldRestorer(
+		func(c *infrav1.OpenStackCluster) *infrav1.OpenStackClusterStatus {
+			return &c.Status
 		},
+		restorev1alpha8ClusterStatus,
 	),
 }
 
@@ -165,6 +229,10 @@ func restorev1alpha8ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *inf
 	}
 
 	dst.ManagedSubnets = previous.ManagedSubnets
+
+	if previous.ManagedSecurityGroups != nil {
+		dst.ManagedSecurityGroups.AllNodesSecurityGroupRules = previous.ManagedSecurityGroups.AllNodesSecurityGroupRules
+	}
 }
 
 func (r *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {
@@ -509,6 +577,13 @@ func Convert_v1alpha7_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(in *
 		}
 	}
 
+	if in.ManagedSecurityGroups {
+		out.ManagedSecurityGroups = &infrav1.ManagedSecurityGroups{}
+		if !in.AllowAllInClusterTraffic {
+			out.ManagedSecurityGroups.AllNodesSecurityGroupRules = infrav1.LegacyCalicoSecurityGroupRules()
+		}
+	}
+
 	return nil
 }
 
@@ -531,6 +606,65 @@ func Convert_v1alpha8_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in *
 	if len(in.ManagedSubnets) > 0 {
 		out.NodeCIDR = in.ManagedSubnets[0].CIDR
 		out.DNSNameservers = in.ManagedSubnets[0].DNSNameservers
+	}
+
+	if in.ManagedSecurityGroups != nil {
+		out.ManagedSecurityGroups = true
+	}
+
+	return nil
+}
+
+func Convert_v1alpha8_SecurityGroupStatus_To_v1alpha7_SecurityGroup(in *infrav1.SecurityGroupStatus, out *SecurityGroup, s apiconversion.Scope) error { //nolint:revive
+	out.ID = in.ID
+	out.Name = in.Name
+	out.Rules = make([]SecurityGroupRule, len(in.Rules))
+	for i, rule := range in.Rules {
+		out.Rules[i] = SecurityGroupRule{
+			ID:        rule.ID,
+			Direction: rule.Direction,
+		}
+		if rule.Description != nil {
+			out.Rules[i].Description = *rule.Description
+		}
+		if rule.EtherType != nil {
+			out.Rules[i].EtherType = *rule.EtherType
+		}
+		if rule.PortRangeMin != nil {
+			out.Rules[i].PortRangeMin = *rule.PortRangeMin
+		}
+		if rule.PortRangeMax != nil {
+			out.Rules[i].PortRangeMax = *rule.PortRangeMax
+		}
+		if rule.Protocol != nil {
+			out.Rules[i].Protocol = *rule.Protocol
+		}
+		if rule.RemoteGroupID != nil {
+			out.Rules[i].RemoteGroupID = *rule.RemoteGroupID
+		}
+		if rule.RemoteIPPrefix != nil {
+			out.Rules[i].RemoteIPPrefix = *rule.RemoteIPPrefix
+		}
+	}
+	return nil
+}
+
+func Convert_v1alpha7_SecurityGroup_To_v1alpha8_SecurityGroupStatus(in *SecurityGroup, out *infrav1.SecurityGroupStatus, s apiconversion.Scope) error { //nolint:revive
+	out.ID = in.ID
+	out.Name = in.Name
+	out.Rules = make([]infrav1.SecurityGroupRuleStatus, len(in.Rules))
+	for i, rule := range in.Rules {
+		out.Rules[i] = infrav1.SecurityGroupRuleStatus{
+			ID:             rule.ID,
+			Description:    pointer.String(rule.Description),
+			Direction:      rule.Direction,
+			EtherType:      pointer.String(rule.EtherType),
+			PortRangeMin:   pointer.Int(rule.PortRangeMin),
+			PortRangeMax:   pointer.Int(rule.PortRangeMax),
+			Protocol:       pointer.String(rule.Protocol),
+			RemoteGroupID:  pointer.String(rule.RemoteGroupID),
+			RemoteIPPrefix: pointer.String(rule.RemoteIPPrefix),
+		}
 	}
 
 	return nil

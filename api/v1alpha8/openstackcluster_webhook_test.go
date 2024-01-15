@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	. "github.com/onsi/gomega"
+	"k8s.io/utils/pointer"
 )
 
 func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
@@ -141,6 +142,44 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 							Flavor:    "medium",
 						},
 						Enabled: true,
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Changing security group rules on the OpenStackCluster.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules is allowed",
+			oldTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					CloudName: "foobar",
+					ManagedSecurityGroups: &ManagedSecurityGroups{
+						AllNodesSecurityGroupRules: []SecurityGroupRuleSpec{
+							{
+								Name:                "foobar",
+								Description:         pointer.String("foobar"),
+								PortRangeMin:        pointer.Int(80),
+								PortRangeMax:        pointer.Int(80),
+								Protocol:            pointer.String("tcp"),
+								RemoteManagedGroups: []ManagedSecurityGroupName{"controlplane"},
+							},
+						},
+					},
+				},
+			},
+			newTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					CloudName: "foobar",
+					ManagedSecurityGroups: &ManagedSecurityGroups{
+						AllNodesSecurityGroupRules: []SecurityGroupRuleSpec{
+							{
+								Name:                "foobar",
+								Description:         pointer.String("foobar"),
+								PortRangeMin:        pointer.Int(80),
+								PortRangeMax:        pointer.Int(80),
+								Protocol:            pointer.String("tcp"),
+								RemoteManagedGroups: []ManagedSecurityGroupName{"controlplane", "worker"},
+							},
+						},
 					},
 				},
 			},
@@ -438,6 +477,48 @@ func TestOpenStackCluster_ValidateCreate(t *testing.T) {
 					IdentityRef: &OpenStackIdentityReference{
 						Kind: "foobar",
 						Name: "foobar",
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "OpenStackCluster.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules with correct spec on create",
+			template: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					CloudName: "foobar",
+					ManagedSecurityGroups: &ManagedSecurityGroups{
+						AllNodesSecurityGroupRules: []SecurityGroupRuleSpec{
+							{
+								Name:         "foobar",
+								Description:  pointer.String("foobar"),
+								PortRangeMin: pointer.Int(80),
+								PortRangeMax: pointer.Int(80),
+								Protocol:     pointer.String("tcp"),
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "OpenStackCluster.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules with mutually exclusive fields on create",
+			template: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					CloudName: "foobar",
+					ManagedSecurityGroups: &ManagedSecurityGroups{
+						AllNodesSecurityGroupRules: []SecurityGroupRuleSpec{
+							{
+								Name:                "foobar",
+								Description:         pointer.String("foobar"),
+								PortRangeMin:        pointer.Int(80),
+								PortRangeMax:        pointer.Int(80),
+								Protocol:            pointer.String("tcp"),
+								RemoteManagedGroups: []ManagedSecurityGroupName{"controlplane"},
+								RemoteGroupID:       pointer.String("foobar"),
+							},
+						},
 					},
 				},
 			},
