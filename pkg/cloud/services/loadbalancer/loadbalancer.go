@@ -50,8 +50,16 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 	loadBalancerName := getLoadBalancerName(clusterName)
 	s.scope.Logger().Info("Reconciling load balancer", "name", loadBalancerName)
 
+	lbStatus := openStackCluster.Status.APIServerLoadBalancer
+	if lbStatus == nil {
+		lbStatus = &infrav1.LoadBalancer{}
+		openStackCluster.Status.APIServerLoadBalancer = lbStatus
+	}
+
 	var fixedIPAddress string
 	switch {
+	case lbStatus.InternalIP != "":
+		fixedIPAddress = lbStatus.InternalIP
 	case openStackCluster.Spec.APIServerFixedIP != "":
 		fixedIPAddress = openStackCluster.Spec.APIServerFixedIP
 	case openStackCluster.Spec.DisableAPIServerFloatingIP && openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
@@ -82,14 +90,21 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 	if err != nil {
 		return false, err
 	}
+
+	lbStatus.Name = lb.Name
+	lbStatus.ID = lb.ID
+	lbStatus.InternalIP = lb.VipAddress
+	lbStatus.Tags = lb.Tags
+
 	if err := s.waitForLoadBalancerActive(lb.ID); err != nil {
 		return false, fmt.Errorf("load balancer %q with id %s is not active after timeout: %v", loadBalancerName, lb.ID, err)
 	}
 
-	var lbFloatingIP string
 	if !openStackCluster.Spec.DisableAPIServerFloatingIP {
 		var floatingIPAddress string
 		switch {
+		case lbStatus.IP != "":
+			floatingIPAddress = lbStatus.IP
 		case openStackCluster.Spec.APIServerFloatingIP != "":
 			floatingIPAddress = openStackCluster.Spec.APIServerFloatingIP
 		case openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
@@ -99,10 +114,15 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 		if err != nil {
 			return false, err
 		}
+
+		// Write the floating IP to the status immediately so we won't
+		// create a new floating IP on the next reconcile if something
+		// fails below.
+		lbStatus.IP = fp.FloatingIP
+
 		if err = s.networkingService.AssociateFloatingIP(openStackCluster, fp, lb.VipPortID); err != nil {
 			return false, err
 		}
-		lbFloatingIP = fp.FloatingIP
 	}
 
 	allowedCIDRs := []string{}
@@ -147,15 +167,8 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 			}
 		}
 	}
+	lbStatus.AllowedCIDRs = allowedCIDRs
 
-	openStackCluster.Status.APIServerLoadBalancer = &infrav1.LoadBalancer{
-		Name:         lb.Name,
-		ID:           lb.ID,
-		InternalIP:   lb.VipAddress,
-		IP:           lbFloatingIP,
-		AllowedCIDRs: allowedCIDRs,
-		Tags:         lb.Tags,
-	}
 	return false, nil
 }
 
