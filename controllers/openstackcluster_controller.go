@@ -412,7 +412,7 @@ func reconcileBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackCl
 	}
 
 	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
-	floatingIP := openStackCluster.Spec.Bastion.Instance.FloatingIP
+	floatingIP := openStackCluster.Spec.Bastion.FloatingIP
 	if openStackCluster.Status.Bastion.FloatingIP != "" {
 		// Some floating IP has already been created for this bastion, make sure we re-use it
 		floatingIP = openStackCluster.Status.Bastion.FloatingIP

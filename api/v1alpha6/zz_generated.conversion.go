@@ -485,6 +485,7 @@ func autoConvert_v1alpha8_Bastion_To_v1alpha6_Bastion(in *v1alpha8.Bastion, out 
 		return err
 	}
 	out.AvailabilityZone = in.AvailabilityZone
+	// WARNING: in.FloatingIP requires manual conversion: does not exist in peer-type
 	return nil
 }
 
@@ -1086,7 +1087,7 @@ func autoConvert_v1alpha6_OpenStackMachineSpec_To_v1alpha8_OpenStackMachineSpec(
 		out.Ports = nil
 	}
 	// WARNING: in.Subnet requires manual conversion: does not exist in peer-type
-	out.FloatingIP = in.FloatingIP
+	// WARNING: in.FloatingIP requires manual conversion: does not exist in peer-type
 	if in.SecurityGroups != nil {
 		in, out := &in.SecurityGroups, &out.SecurityGroups
 		*out = make([]v1alpha8.SecurityGroupFilter, len(*in))
@@ -1126,7 +1127,6 @@ func autoConvert_v1alpha8_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(
 	} else {
 		out.Ports = nil
 	}
-	out.FloatingIP = in.FloatingIP
 	if in.SecurityGroups != nil {
 		in, out := &in.SecurityGroups, &out.SecurityGroups
 		*out = make([]SecurityGroupParam, len(*in))

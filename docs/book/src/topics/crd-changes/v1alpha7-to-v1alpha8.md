@@ -6,11 +6,12 @@
   - [Migration](#migration)
   - [API Changes](#api-changes)
     - [`OpenStackMachine`](#openstackmachine)
-      - [Change to `serverGroupID`](#change-to-servergroupid)
+      - [⚠️ Change to `serverGroupID`](#️-change-to-servergroupid)
     - [`OpenStackCluster`](#openstackcluster)
       - [Change to externalNetworkID](#change-to-externalnetworkid)
       - [Changes to image](#change-to-image)
       - [Removal of imageUUID](#removal-of-imageuuid)
+      - [Change to floatingIP](#change-to-floatingip)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -122,4 +123,36 @@ becomes
 ```yaml
 image:
   id: "72a6a1e6-3e0a-4a8b-9b4c-2d6f9e3e5f0a"
+```
+
+#### Change to floatingIP
+
+The `OpenStackMachineSpec.FloatingIP` field has moved to `OpenStackClusterSpec.Bastion.FloatingIP`.
+For example, if you had the following `OpenStackMachineTemplate`:
+
+```yaml
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+kind: OpenStackMachineTemplate
+metadata:
+  name: ${CLUSTER_NAME}-md-0
+spec:
+  template:
+    spec:
+      ..
+      floatingIP: "1.2.3.4"
+```
+
+This will safely converted to use `Bastion.FloatingIP` when upgrading to version 0.8.
+
+To use the new `Bastion.FloatingIP` field, here is an example:
+
+```yaml
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
+kind: OpenStackCluster
+metadata:
+  name: ${CLUSTER_NAME}
+spec:
+  ..
+  bastion:
+    floatingIP: "1.2.3.4"
 ```
