@@ -1738,11 +1738,28 @@ spec:
                             type: string
                         type: object
                       serverMetadata:
-                        additionalProperties:
-                          type: string
                         description: Metadata mapping. Allows you to create a map
                           of key value pairs to add to the server instance.
-                        type: object
+                        items:
+                          properties:
+                            key:
+                              description: |-
+                                Key is the server metadata key
+                                kubebuilder:validation:MaxLength:=255
+                              type: string
+                            value:
+                              description: |-
+                                Value is the server metadata value
+                                kubebuilder:validation:MaxLength:=255
+                              type: string
+                          required:
+                          - key
+                          - value
+                          type: object
+                        type: array
+                        x-kubernetes-list-map-keys:
+                        - key
+                        x-kubernetes-list-type: map
                       sshKeyName:
                         description: The ssh key to inject in the instance
                         type: string

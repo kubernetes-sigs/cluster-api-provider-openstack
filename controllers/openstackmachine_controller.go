@@ -482,13 +482,20 @@ func (r *OpenStackMachineReconciler) getOrCreate(logger logr.Logger, cluster *cl
 }
 
 func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, userData string) *compute.InstanceSpec {
+	serverMetadata := make(map[string]string, len(openStackMachine.Spec.ServerMetadata))
+	for i := range openStackMachine.Spec.ServerMetadata {
+		key := openStackMachine.Spec.ServerMetadata[i].Key
+		value := openStackMachine.Spec.ServerMetadata[i].Value
+		serverMetadata[key] = value
+	}
+
 	instanceSpec := compute.InstanceSpec{
 		Name:                   openStackMachine.Name,
 		ImageID:                openStackMachine.Status.ReferencedResources.ImageID,
 		Flavor:                 openStackMachine.Spec.Flavor,
 		SSHKeyName:             openStackMachine.Spec.SSHKeyName,
 		UserData:               userData,
-		Metadata:               openStackMachine.Spec.ServerMetadata,
+		Metadata:               serverMetadata,
 		ConfigDrive:            openStackMachine.Spec.ConfigDrive != nil && *openStackMachine.Spec.ConfigDrive,
 		RootVolume:             openStackMachine.Spec.RootVolume,
 		AdditionalBlockDevices: openStackMachine.Spec.AdditionalBlockDevices,

@@ -1237,7 +1237,7 @@ func autoConvert_v1alpha7_OpenStackMachineSpec_To_v1alpha8_OpenStackMachineSpec(
 	out.SecurityGroups = *(*[]v1alpha8.SecurityGroupFilter)(unsafe.Pointer(&in.SecurityGroups))
 	out.Trunk = in.Trunk
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
-	out.ServerMetadata = *(*map[string]string)(unsafe.Pointer(&in.ServerMetadata))
+	// WARNING: in.ServerMetadata requires manual conversion: inconvertible types (map[string]string vs []sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha8.ServerMetadata)
 	out.ConfigDrive = (*bool)(unsafe.Pointer(in.ConfigDrive))
 	out.RootVolume = (*v1alpha8.RootVolume)(unsafe.Pointer(in.RootVolume))
 	out.AdditionalBlockDevices = *(*[]v1alpha8.AdditionalBlockDevice)(unsafe.Pointer(&in.AdditionalBlockDevices))
@@ -1257,7 +1257,7 @@ func autoConvert_v1alpha8_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(
 	out.SecurityGroups = *(*[]SecurityGroupFilter)(unsafe.Pointer(&in.SecurityGroups))
 	out.Trunk = in.Trunk
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
-	out.ServerMetadata = *(*map[string]string)(unsafe.Pointer(&in.ServerMetadata))
+	// WARNING: in.ServerMetadata requires manual conversion: inconvertible types ([]sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha8.ServerMetadata vs map[string]string)
 	out.ConfigDrive = (*bool)(unsafe.Pointer(in.ConfigDrive))
 	out.RootVolume = (*RootVolume)(unsafe.Pointer(in.RootVolume))
 	out.AdditionalBlockDevices = *(*[]AdditionalBlockDevice)(unsafe.Pointer(&in.AdditionalBlockDevices))

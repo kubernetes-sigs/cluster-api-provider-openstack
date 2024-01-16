@@ -86,8 +86,8 @@ func getDefaultOpenStackMachine() *infrav1.OpenStackMachine {
 			Image:      infrav1.ImageFilter{ID: imageUUID},
 			SSHKeyName: sshKeyName,
 			Tags:       []string{"test-tag"},
-			ServerMetadata: map[string]string{
-				"test-metadata": "test-value",
+			ServerMetadata: []infrav1.ServerMetadata{
+				{Key: "test-metadata", Value: "test-value"},
 			},
 			ConfigDrive:    pointer.Bool(true),
 			SecurityGroups: []infrav1.SecurityGroupFilter{},
