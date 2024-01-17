@@ -97,6 +97,10 @@ func restorev1alpha8ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *inf
 	dst.ExternalNetwork.NotTagsAny = previous.ExternalNetwork.NotTagsAny
 
 	dst.DisableExternalNetwork = previous.DisableExternalNetwork
+
+	if len(previous.Subnets) > 1 {
+		dst.Subnets = append(dst.Subnets, previous.Subnets[1:]...)
+	}
 }
 
 func (r *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {

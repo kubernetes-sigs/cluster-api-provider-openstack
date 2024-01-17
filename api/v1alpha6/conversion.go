@@ -75,6 +75,12 @@ func restorev1alpha8Bastion(previous **infrav1.Bastion, dst **infrav1.Bastion) {
 	}
 }
 
+func restorev1alpha8Subnets(previous *[]infrav1.SubnetFilter, dst *[]infrav1.SubnetFilter) {
+	if len(*previous) > 1 {
+		*dst = append(*dst, (*previous)[1:]...)
+	}
+}
+
 func restorev1alpha8ClusterStatus(previous *infrav1.OpenStackClusterStatus, dst *infrav1.OpenStackClusterStatus) {
 	// It's (theoretically) possible in v1alpha8 to have Network nil but
 	// Router or APIServerLoadBalancer not nil. In hub-spoke-hub conversion this will
@@ -153,6 +159,12 @@ var v1alpha8OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStack
 			return &c.Spec.Bastion
 		},
 		restorev1alpha8Bastion,
+	),
+	"subnets": conversion.HashedFieldRestorer(
+		func(c *infrav1.OpenStackCluster) *[]infrav1.SubnetFilter {
+			return &c.Spec.Subnets
+		},
+		restorev1alpha8Subnets,
 	),
 	"status": conversion.HashedFieldRestorer(
 		func(c *infrav1.OpenStackCluster) *infrav1.OpenStackClusterStatus {
@@ -233,6 +245,12 @@ var v1alpha8OpenStackClusterTemplateRestorer = conversion.RestorerFor[*infrav1.O
 			return &c.Spec.Template.Spec.Bastion
 		},
 		restorev1alpha8Bastion,
+	),
+	"subnets": conversion.HashedFieldRestorer(
+		func(c *infrav1.OpenStackClusterTemplate) *[]infrav1.SubnetFilter {
+			return &c.Spec.Template.Spec.Subnets
+		},
+		restorev1alpha8Subnets,
 	),
 }
 

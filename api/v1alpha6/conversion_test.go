@@ -88,6 +88,19 @@ func TestFuzzyConversion(t *testing.T) {
 					status.ExternalNetwork.APIServerLoadBalancer = nil
 				}
 			},
+
+			func(spec *infrav1.OpenStackClusterSpec, c fuzz.Continue) {
+				c.FuzzNoCustom(spec)
+
+				// The fuzzer only seems to generate Subnets of
+				// length 1, but we need to also test length 2.
+				// Ensure it is occasionally generated.
+				if len(spec.Subnets) == 1 && c.RandBool() {
+					subnet := infrav1.SubnetFilter{}
+					c.FuzzNoCustom(&subnet)
+					spec.Subnets = append(spec.Subnets, subnet)
+				}
+			},
 		}
 	}
 
@@ -119,13 +132,16 @@ func TestFuzzyConversion(t *testing.T) {
 			Hub:              &infrav1.OpenStackClusterTemplate{},
 			Spoke:            &OpenStackClusterTemplate{},
 			HubAfterMutation: ignoreDataAnnotation,
+			FuzzerFuncs:      []fuzzer.FuzzerFuncs{fuzzerFuncs},
 		},
+		MutateFuzzerFuncs: []fuzzer.FuzzerFuncs{fuzzerFuncs},
 	})))
 
 	t.Run("for OpenStackMachine", runParallel(utilconversion.FuzzTestFunc(utilconversion.FuzzTestFuncInput{
 		Hub:              &infrav1.OpenStackMachine{},
 		Spoke:            &OpenStackMachine{},
 		HubAfterMutation: ignoreDataAnnotation,
+		FuzzerFuncs:      []fuzzer.FuzzerFuncs{fuzzerFuncs},
 	})))
 
 	t.Run("for OpenStackMachine with mutate", runParallel(testhelpers.FuzzMutateTestFunc(testhelpers.FuzzMutateTestFuncInput{
@@ -133,13 +149,16 @@ func TestFuzzyConversion(t *testing.T) {
 			Hub:              &infrav1.OpenStackMachine{},
 			Spoke:            &OpenStackMachine{},
 			HubAfterMutation: ignoreDataAnnotation,
+			FuzzerFuncs:      []fuzzer.FuzzerFuncs{fuzzerFuncs},
 		},
+		MutateFuzzerFuncs: []fuzzer.FuzzerFuncs{fuzzerFuncs},
 	})))
 
 	t.Run("for OpenStackMachineTemplate", runParallel(utilconversion.FuzzTestFunc(utilconversion.FuzzTestFuncInput{
 		Hub:              &infrav1.OpenStackMachineTemplate{},
 		Spoke:            &OpenStackMachineTemplate{},
 		HubAfterMutation: ignoreDataAnnotation,
+		FuzzerFuncs:      []fuzzer.FuzzerFuncs{fuzzerFuncs},
 	})))
 
 	t.Run("for OpenStackMachineTemplate with mutate", runParallel(testhelpers.FuzzMutateTestFunc(testhelpers.FuzzMutateTestFuncInput{
@@ -147,7 +166,9 @@ func TestFuzzyConversion(t *testing.T) {
 			Hub:              &infrav1.OpenStackMachineTemplate{},
 			Spoke:            &OpenStackMachineTemplate{},
 			HubAfterMutation: ignoreDataAnnotation,
+			FuzzerFuncs:      []fuzzer.FuzzerFuncs{fuzzerFuncs},
 		},
+		MutateFuzzerFuncs: []fuzzer.FuzzerFuncs{fuzzerFuncs},
 	})))
 }
 
