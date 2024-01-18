@@ -372,7 +372,11 @@ func (in *OpenStackClusterSpec) DeepCopyInto(out *OpenStackClusterSpec) {
 		**out = **in
 	}
 	out.Network = in.Network
-	out.Subnet = in.Subnet
+	if in.Subnets != nil {
+		in, out := &in.Subnets, &out.Subnets
+		*out = make([]SubnetFilter, len(*in))
+		copy(*out, *in)
+	}
 	if in.DNSNameservers != nil {
 		in, out := &in.DNSNameservers, &out.DNSNameservers
 		*out = make([]string, len(*in))

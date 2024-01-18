@@ -19,9 +19,12 @@ package v1alpha7
 import (
 	"testing"
 
+	fuzz "github.com/google/gofuzz"
 	"github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/api/apitesting/fuzzer"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
+	runtimeserializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/utils/pointer"
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
 	"sigs.k8s.io/controller-runtime/pkg/conversion"
@@ -52,10 +55,28 @@ func TestFuzzyConversion(t *testing.T) {
 		delete(obj.GetAnnotations(), utilconversion.DataAnnotation)
 	}
 
+	fuzzerFuncs := func(_ runtimeserializer.CodecFactory) []interface{} {
+		return []interface{}{
+			func(spec *infrav1.OpenStackClusterSpec, c fuzz.Continue) {
+				c.FuzzNoCustom(spec)
+
+				// The fuzzer only seems to generate Subnets of
+				// length 1, but we need to also test length 2.
+				// Ensure it is occasionally generated.
+				if len(spec.Subnets) == 1 && c.RandBool() {
+					subnet := infrav1.SubnetFilter{}
+					c.FuzzNoCustom(&subnet)
+					spec.Subnets = append(spec.Subnets, subnet)
+				}
+			},
+		}
+	}
+
 	t.Run("for OpenStackCluster", runParallel(utilconversion.FuzzTestFunc(utilconversion.FuzzTestFuncInput{
 		Hub:              &infrav1.OpenStackCluster{},
 		Spoke:            &OpenStackCluster{},
 		HubAfterMutation: ignoreDataAnnotation,
+		FuzzerFuncs:      []fuzzer.FuzzerFuncs{fuzzerFuncs},
 	})))
 
 	t.Run("for OpenStackCluster with mutate", runParallel(testhelpers.FuzzMutateTestFunc(testhelpers.FuzzMutateTestFuncInput{
@@ -63,13 +84,16 @@ func TestFuzzyConversion(t *testing.T) {
 			Hub:              &infrav1.OpenStackCluster{},
 			Spoke:            &OpenStackCluster{},
 			HubAfterMutation: ignoreDataAnnotation,
+			FuzzerFuncs:      []fuzzer.FuzzerFuncs{fuzzerFuncs},
 		},
+		MutateFuzzerFuncs: []fuzzer.FuzzerFuncs{fuzzerFuncs},
 	})))
 
 	t.Run("for OpenStackClusterTemplate", runParallel(utilconversion.FuzzTestFunc(utilconversion.FuzzTestFuncInput{
 		Hub:              &infrav1.OpenStackClusterTemplate{},
 		Spoke:            &OpenStackClusterTemplate{},
 		HubAfterMutation: ignoreDataAnnotation,
+		FuzzerFuncs:      []fuzzer.FuzzerFuncs{fuzzerFuncs},
 	})))
 
 	t.Run("for OpenStackClusterTemplate with mutate", runParallel(testhelpers.FuzzMutateTestFunc(testhelpers.FuzzMutateTestFuncInput{
@@ -77,13 +101,16 @@ func TestFuzzyConversion(t *testing.T) {
 			Hub:              &infrav1.OpenStackClusterTemplate{},
 			Spoke:            &OpenStackClusterTemplate{},
 			HubAfterMutation: ignoreDataAnnotation,
+			FuzzerFuncs:      []fuzzer.FuzzerFuncs{fuzzerFuncs},
 		},
+		MutateFuzzerFuncs: []fuzzer.FuzzerFuncs{fuzzerFuncs},
 	})))
 
 	t.Run("for OpenStackMachine", runParallel(utilconversion.FuzzTestFunc(utilconversion.FuzzTestFuncInput{
 		Hub:              &infrav1.OpenStackMachine{},
 		Spoke:            &OpenStackMachine{},
 		HubAfterMutation: ignoreDataAnnotation,
+		FuzzerFuncs:      []fuzzer.FuzzerFuncs{fuzzerFuncs},
 	})))
 
 	t.Run("for OpenStackMachine with mutate", runParallel(testhelpers.FuzzMutateTestFunc(testhelpers.FuzzMutateTestFuncInput{
@@ -91,13 +118,16 @@ func TestFuzzyConversion(t *testing.T) {
 			Hub:              &infrav1.OpenStackMachine{},
 			Spoke:            &OpenStackMachine{},
 			HubAfterMutation: ignoreDataAnnotation,
+			FuzzerFuncs:      []fuzzer.FuzzerFuncs{fuzzerFuncs},
 		},
+		MutateFuzzerFuncs: []fuzzer.FuzzerFuncs{fuzzerFuncs},
 	})))
 
 	t.Run("for OpenStackMachineTemplate", runParallel(utilconversion.FuzzTestFunc(utilconversion.FuzzTestFuncInput{
 		Hub:              &infrav1.OpenStackMachineTemplate{},
 		Spoke:            &OpenStackMachineTemplate{},
 		HubAfterMutation: ignoreDataAnnotation,
+		FuzzerFuncs:      []fuzzer.FuzzerFuncs{fuzzerFuncs},
 	})))
 
 	t.Run("for OpenStackMachineTemplate with mutate", runParallel(testhelpers.FuzzMutateTestFunc(testhelpers.FuzzMutateTestFuncInput{
@@ -105,7 +135,9 @@ func TestFuzzyConversion(t *testing.T) {
 			Hub:              &infrav1.OpenStackMachineTemplate{},
 			Spoke:            &OpenStackMachineTemplate{},
 			HubAfterMutation: ignoreDataAnnotation,
+			FuzzerFuncs:      []fuzzer.FuzzerFuncs{fuzzerFuncs},
 		},
+		MutateFuzzerFuncs: []fuzzer.FuzzerFuncs{fuzzerFuncs},
 	})))
 }
 

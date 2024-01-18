@@ -383,3 +383,15 @@ func getSubnetName(clusterName string) string {
 func getNetworkName(clusterName string) string {
 	return fmt.Sprintf("%s-cluster-%s", networkPrefix, clusterName)
 }
+
+// ConvertOpenStackSubnetToCAPOSubnet converts an OpenStack subnet to a capo subnet and adds to a slice.
+// It returns the slice with the converted subnet.
+func (s *Service) ConvertOpenStackSubnetToCAPOSubnet(subnets []infrav1.Subnet, filteredSubnet *subnets.Subnet) []infrav1.Subnet {
+	subnets = append(subnets, infrav1.Subnet{
+		ID:   filteredSubnet.ID,
+		Name: filteredSubnet.Name,
+		CIDR: filteredSubnet.CIDR,
+		Tags: filteredSubnet.Tags,
+	})
+	return subnets
+}

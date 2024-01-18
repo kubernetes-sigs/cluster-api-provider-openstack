@@ -882,9 +882,7 @@ func autoConvert_v1alpha7_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(
 	if err := Convert_v1alpha7_NetworkFilter_To_v1alpha8_NetworkFilter(&in.Network, &out.Network, s); err != nil {
 		return err
 	}
-	if err := Convert_v1alpha7_SubnetFilter_To_v1alpha8_SubnetFilter(&in.Subnet, &out.Subnet, s); err != nil {
-		return err
-	}
+	// WARNING: in.Subnet requires manual conversion: does not exist in peer-type
 	out.NetworkMTU = in.NetworkMTU
 	out.DNSNameservers = *(*[]string)(unsafe.Pointer(&in.DNSNameservers))
 	out.ExternalRouterIPs = *(*[]v1alpha8.ExternalRouterIPParam)(unsafe.Pointer(&in.ExternalRouterIPs))
@@ -923,9 +921,7 @@ func autoConvert_v1alpha8_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(
 	if err := Convert_v1alpha8_NetworkFilter_To_v1alpha7_NetworkFilter(&in.Network, &out.Network, s); err != nil {
 		return err
 	}
-	if err := Convert_v1alpha8_SubnetFilter_To_v1alpha7_SubnetFilter(&in.Subnet, &out.Subnet, s); err != nil {
-		return err
-	}
+	// WARNING: in.Subnets requires manual conversion: does not exist in peer-type
 	out.NetworkMTU = in.NetworkMTU
 	out.DNSNameservers = *(*[]string)(unsafe.Pointer(&in.DNSNameservers))
 	out.ExternalRouterIPs = *(*[]ExternalRouterIPParam)(unsafe.Pointer(&in.ExternalRouterIPs))
