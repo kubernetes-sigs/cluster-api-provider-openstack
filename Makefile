@@ -257,6 +257,7 @@ generate-go: $(MOCKGEN)
 		paths=./api/... \
 		object:headerFile=./hack/boilerplate/boilerplate.generatego.txt
 	$(CONVERSION_GEN) \
+		--input-dirs=./api/v1alpha1 \
 		--input-dirs=./api/v1alpha5 \
 		--input-dirs=./api/v1alpha6 \
 		--input-dirs=./api/v1alpha7 \

@@ -37,6 +37,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 
+	"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha8"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/hash"
@@ -88,6 +89,29 @@ func (f *providerScopeFactory) NewClientScopeFromCluster(ctx context.Context, ct
 	if openStackCluster.Spec.IdentityRef != nil {
 		var err error
 		cloud, caCert, err = getCloudFromSecret(ctx, ctrlClient, openStackCluster.Namespace, openStackCluster.Spec.IdentityRef.Name, openStackCluster.Spec.CloudName)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if caCert == nil {
+		caCert = defaultCACert
+	}
+
+	if f.clientCache == nil {
+		return NewProviderScope(cloud, caCert, logger)
+	}
+
+	return NewCachedProviderScope(f.clientCache, cloud, caCert, logger)
+}
+
+func (f *providerScopeFactory) NewClientScopeFromFloatingIPPool(ctx context.Context, ctrlClient client.Client, openstackFloatingIPPool *v1alpha1.OpenStackFloatingIPPool, defaultCACert []byte, logger logr.Logger) (Scope, error) {
+	var cloud clientconfig.Cloud
+	var caCert []byte
+
+	if openstackFloatingIPPool.Spec.IdentityRef != nil {
+		var err error
+		cloud, caCert, err = getCloudFromSecret(ctx, ctrlClient, openstackFloatingIPPool.Namespace, openstackFloatingIPPool.Spec.IdentityRef.Name, openstackFloatingIPPool.Spec.CloudName)
 		if err != nil {
 			return nil, err
 		}

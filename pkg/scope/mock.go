@@ -25,6 +25,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/identity/v3/tokens"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha8"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
@@ -74,6 +75,13 @@ func (f *MockScopeFactory) NewClientScopeFromMachine(_ context.Context, _ client
 }
 
 func (f *MockScopeFactory) NewClientScopeFromCluster(_ context.Context, _ client.Client, _ *infrav1.OpenStackCluster, _ []byte, _ logr.Logger) (Scope, error) {
+	if f.clientScopeCreateError != nil {
+		return nil, f.clientScopeCreateError
+	}
+	return f, nil
+}
+
+func (f *MockScopeFactory) NewClientScopeFromFloatingIPPool(_ context.Context, _ client.Client, _ *v1alpha1.OpenStackFloatingIPPool, _ []byte, _ logr.Logger) (Scope, error) {
 	if f.clientScopeCreateError != nil {
 		return nil, f.clientScopeCreateError
 	}
