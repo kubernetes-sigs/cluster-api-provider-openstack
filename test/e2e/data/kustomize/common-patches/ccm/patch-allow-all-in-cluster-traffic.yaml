@@ -1,4 +1,0 @@
----
-- op: add
-  path: /spec/allowAllInClusterTraffic
-  value: true
