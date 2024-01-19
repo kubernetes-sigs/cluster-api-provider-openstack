@@ -19,6 +19,8 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"testing"
 
 	"github.com/go-logr/logr"
 	"github.com/golang/mock/gomock"
@@ -544,6 +546,45 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 		Expect(len(testCluster.Status.Network.Subnets)).To(Equal(2))
 	})
+
+	It("should allow fetch network by subnet", func() {
+		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
+		const clusterSubnetID = "cad5a91a-36de-4388-823b-b0cc82cadfdc"
+
+		testCluster.SetName("subnet-filtering")
+		testCluster.Spec = infrav1.OpenStackClusterSpec{
+			DisableAPIServerFloatingIP: true,
+			APIServerFixedIP:           "10.0.0.1",
+			DisableExternalNetwork:     true,
+			Subnets: []infrav1.SubnetFilter{
+				{ID: clusterSubnetID},
+			},
+		}
+		err := k8sClient.Create(ctx, testCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, capiCluster)
+		Expect(err).To(BeNil())
+		scope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, logr.Discard())
+		Expect(err).To(BeNil())
+
+		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
+
+		// Fetching cluster subnets should be filtered by cluster network id
+		networkClientRecorder.GetSubnet(clusterSubnetID).Return(&subnets.Subnet{
+			ID:        clusterSubnetID,
+			CIDR:      "192.168.0.0/24",
+			NetworkID: clusterNetworkID,
+		}, nil)
+
+		// Fetch cluster network using the NetworkID from the filtered Subnets
+		networkClientRecorder.GetNetwork(clusterNetworkID).Return(&networks.Network{
+			ID: clusterNetworkID,
+		}, nil)
+
+		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
+		Expect(err).To(BeNil())
+		Expect(testCluster.Status.Network.ID).To(Equal(clusterNetworkID))
+	})
 })
 
 func createRequestFromOSCluster(openStackCluster *infrav1.OpenStackCluster) reconcile.Request {
@@ -552,5 +593,27 @@ func createRequestFromOSCluster(openStackCluster *infrav1.OpenStackCluster) reco
 			Name:      openStackCluster.GetName(),
 			Namespace: openStackCluster.GetNamespace(),
 		},
+	}
+}
+
+func Test_ConvertOpenStackNetworkToCAPONetwork(t *testing.T) {
+	openStackCluster := &infrav1.OpenStackCluster{}
+	openStackCluster.Status.Network = &infrav1.NetworkStatusWithSubnets{}
+
+	filterednetwork := &networks.Network{
+		ID:   "network1",
+		Name: "network1",
+		Tags: []string{"tag1", "tag2"},
+	}
+
+	convertOpenStackNetworkToCAPONetwork(openStackCluster, filterednetwork)
+	expected := infrav1.NetworkStatus{
+		ID:   "network1",
+		Name: "network1",
+		Tags: []string{"tag1", "tag2"},
+	}
+
+	if !reflect.DeepEqual(openStackCluster.Status.Network.NetworkStatus, expected) {
+		t.Errorf("ConvertOpenStackNetworkToCAPONetwork() = %v, want %v", openStackCluster.Status.Network.NetworkStatus, expected)
 	}
 }

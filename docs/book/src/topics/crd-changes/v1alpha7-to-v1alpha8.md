@@ -243,3 +243,7 @@ Now the user needs to request creation of the security group rules by using the 
 
 Note that when upgrading from a previous version, the Calico CNI security group rules will be added automatically to
 allow backwards compatibility if `allowAllInClusterTraffic` is set to false.
+
+#### ⚠️ Change to network
+
+In v1alpha8, when the `OpenStackCluster.Spec.Network` is not defined, the `Subnets` are now used to identify the `Network`.
