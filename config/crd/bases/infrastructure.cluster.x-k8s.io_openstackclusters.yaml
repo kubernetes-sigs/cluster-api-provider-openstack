@@ -5905,8 +5905,6 @@ spec:
                 - name
                 - rules
                 type: object
-            required:
-            - ready
             type: object
         type: object
     served: true

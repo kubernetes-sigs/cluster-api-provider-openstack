@@ -125,7 +125,12 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	// Handle non-deleted clusters
-	return reconcileNormal(scope, cluster, openStackCluster)
+	result, err := reconcileNormal(scope, cluster, openStackCluster)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	return result, nil
 }
 
 func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
@@ -279,7 +284,7 @@ func deleteBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackClust
 
 func reconcileNormal(scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) { //nolint:unparam
 	scope.Logger().Info("Reconciling Cluster")
-
+	scope.Logger().Info("Cluster in reconcileNormal first thing", "cluster", openStackCluster)
 	// If the OpenStackCluster doesn't have our finalizer, add it.
 	if controllerutil.AddFinalizer(openStackCluster, infrav1.ClusterFinalizer) {
 		// Register the finalizer immediately to avoid orphaning OpenStack resources on delete
@@ -290,16 +295,22 @@ func reconcileNormal(scope scope.Scope, cluster *clusterv1.Cluster, openStackClu
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-
+	scope.Logger().Info("Cluster in reconcileNormal before networks", "cluster", openStackCluster)
 	err = reconcileNetworkComponents(scope, cluster, openStackCluster)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-
+	scope.Logger().Info("Cluster in reconcileNormal before bastion", "cluster", openStackCluster)
 	result, err := reconcileBastion(scope, cluster, openStackCluster)
-	if err != nil || !reflect.DeepEqual(result, reconcile.Result{}) {
-		return result, err
+	if err != nil {
+		return reconcile.Result{}, err
 	}
+	if !reflect.DeepEqual(result, reconcile.Result{}) {
+		scope.Logger().Info("Cluster in reconcileNormal after bastion when if is met", "cluster", openStackCluster)
+		return result, nil
+	}
+
+	scope.Logger().Info("Cluster in reconcileNormal after bastion", "cluster", openStackCluster)
 
 	availabilityZones, err := computeService.GetAvailabilityZones()
 	if err != nil {
