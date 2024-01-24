@@ -153,6 +153,8 @@ type OpenStackClusterSpec struct {
 
 // OpenStackClusterStatus defines the observed state of OpenStackCluster.
 type OpenStackClusterStatus struct {
+	// Ready is true when the cluster infrastructure is ready.
+	// +kubebuilder:default=false
 	Ready bool `json:"ready"`
 
 	// Network contains information about the created OpenStack Network.

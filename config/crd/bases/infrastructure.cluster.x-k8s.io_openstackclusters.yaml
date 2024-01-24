@@ -4554,6 +4554,8 @@ spec:
                 - name
                 type: object
               ready:
+                default: false
+                description: Ready is true when the cluster infrastructure is ready.
                 type: boolean
               router:
                 description: Router describes the default cluster router
