@@ -58,6 +58,57 @@ func (s *Service) GetPortFromInstanceIP(instanceID string, ip string) ([]ports.P
 	return s.client.ListPort(portOpts)
 }
 
+func (s *Service) GetPortForExternalNetwork(instanceID string, externalNetworkID string) (*ports.Port, error) {
+	instancePortsOpts := ports.ListOpts{
+		DeviceID: instanceID,
+	}
+	instancePorts, err := s.client.ListPort(instancePortsOpts)
+	if err != nil {
+		return nil, fmt.Errorf("lookup ports for server %s: %w", instanceID, err)
+	}
+
+	for _, instancePort := range instancePorts {
+		networkPortsOpts := ports.ListOpts{
+			NetworkID:   instancePort.NetworkID,
+			DeviceOwner: "network:router_interface",
+		}
+
+		networkPorts, err := s.client.ListPort(networkPortsOpts)
+		if err != nil {
+			return nil, fmt.Errorf("lookup ports for network %s: %w", instancePort.NetworkID, err)
+		}
+
+		for _, networkPort := range networkPorts {
+			// Check if the instance port and the network port share a subnet
+			matchingSubnet := false
+			for _, fixedIP := range instancePort.FixedIPs {
+				for _, networkFixedIP := range networkPort.FixedIPs {
+					if fixedIP.SubnetID == networkFixedIP.SubnetID {
+						matchingSubnet = true
+						break
+					}
+				}
+				if matchingSubnet {
+					break
+				}
+			}
+			if !matchingSubnet {
+				continue
+			}
+
+			router, err := s.client.GetRouter(networkPort.DeviceID)
+			if err != nil {
+				return nil, fmt.Errorf("lookup router %s: %w", networkPort.DeviceID, err)
+			}
+
+			if router.GatewayInfo.NetworkID == externalNetworkID {
+				return &instancePort, nil
+			}
+		}
+	}
+	return nil, nil
+}
+
 func (s *Service) CreatePort(eventObject runtime.Object, clusterName string, portName string, portOpts *infrav1.PortOpts, instanceSecurityGroups []string, instanceTags []string) (*ports.Port, error) {
 	var err error
 	networkID := portOpts.Network.ID

@@ -14,6 +14,7 @@
       - [Change to image](#change-to-image)
       - [Removal of imageUUID](#removal-of-imageuuid)
       - [Changes to ports](#changes-to-ports)
+      - [Additon of floatingIPPoolRef](#additon-of-floatingippoolref)
     - [`OpenStackCluster`](#openstackcluster)
       - [Removal of cloudName](#removal-of-cloudname-1)
       - [identityRef is now required](#identityref-is-now-required)
@@ -137,6 +138,23 @@ The following fields in `PortOpts` are renamed in order to keep them consistent 
 
 * `hostId` becomes `hostID`
 * `allowedCidrs` becomes `allowedCIDRs`
+
+#### Addition of floatingIPPoolRef
+
+A new field, FloatingIPPoolRef, has been introduced. It is important to note that this feature requires the existence of an IPPool to operate seamlessly. This new field references an IPPool whice will be used for floating IP allocation.
+In additon to this field an IPPool resource called `OpenStackFloatingIPPool` has been added. Please note that this resource is new and still in alpha meaning its more likely to contain bugs and change in the future.
+
+When creating an OpenStackFloatingIPPool resource named MyOpenStackFloatingIPPool, you can reference it within your OpenStackMachine configuration YAML as follows:
+
+```yaml
+spec:
+  template:
+    spec:
+      floatingIPPoolRef:
+        apiGroup: "infrastructure.cluster.x-k8s.io"
+        kind: "OpenStackFloatingIPPool"
+        name: "MyOpenStackFloatingIPPool"
+```
 
 ### `OpenStackCluster`
 

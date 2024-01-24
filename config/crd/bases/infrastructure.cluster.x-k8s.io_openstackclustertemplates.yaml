@@ -2421,6 +2421,31 @@ spec:
                                 description: The flavor reference for the flavor for
                                   your server instance.
                                 type: string
+                              floatingIPPoolRef:
+                                description: |-
+                                  floatingIPPoolRef is a reference to a IPPool that will be assigned
+                                  to an IPAddressClaim. Once the IPAddressClaim is fulfilled, the FloatingIP
+                                  will be assigned to the OpenStackMachine.
+                                properties:
+                                  apiGroup:
+                                    description: |-
+                                      APIGroup is the group for the resource being referenced.
+                                      If APIGroup is not specified, the specified Kind must be in the core API group.
+                                      For any other third-party types, APIGroup is required.
+                                    type: string
+                                  kind:
+                                    description: Kind is the type of resource being
+                                      referenced
+                                    type: string
+                                  name:
+                                    description: Name is the name of resource being
+                                      referenced
+                                    type: string
+                                required:
+                                - kind
+                                - name
+                                type: object
+                                x-kubernetes-map-type: atomic
                               identityRef:
                                 description: |-
                                   IdentityRef is a reference to a secret holding OpenStack credentials

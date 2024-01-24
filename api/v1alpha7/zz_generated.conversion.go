@@ -1424,6 +1424,7 @@ func autoConvert_v1beta1_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(i
 	} else {
 		out.IdentityRef = nil
 	}
+	// WARNING: in.FloatingIPPoolRef requires manual conversion: does not exist in peer-type
 	return nil
 }
 
