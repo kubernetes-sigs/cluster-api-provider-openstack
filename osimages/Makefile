@@ -67,7 +67,7 @@ osimage-%: FORCE
 .PHONY: FORCE
 FORCE:
 
-.PHONY: osimage-upload:
+.PHONY: osimage-upload
 osimage-upload:
 	ls $(OSIMAGE_DIR)
 	gsutil cp $(OSIMAGE_DIR)/* gs://$(STAGING_BUCKET)/test

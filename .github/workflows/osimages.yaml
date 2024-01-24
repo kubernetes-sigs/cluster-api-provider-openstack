@@ -1,0 +1,48 @@
+name: E2E node images
+
+on:
+  pull_request:
+    branches: [main]
+    paths-ignore:
+    - '**/*.md'
+    - 'docs/**'
+    - '.gitignore'
+    - 'hack/*.sh'
+    - 'LICENSE'
+    - 'SECURITY_CONTACTS'
+    - 'OWNERS'
+
+permissions: {}
+
+jobs:
+  build:
+    name: Build and upload node images
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      with:
+        repository: kubernetes-sigs/image-builder
+        path: image-builder
+        ref: v0.1.22
+
+    - name: Patch image-builder Dockerfile with root user
+      run: git apply "../osimages/image-builder.patch"
+      working-directory: "./image-builder"
+
+    - name: Build image-builder image with root user
+      run: make docker-build
+      working-directory: "./image-builder/images/capi"
+
+    - name: Build images
+      env:
+        OSIMAGE_BUILDER: gcr.io/scl-image-builder/cluster-node-image-builder-amd64:dev
+      run: make -C osimages -j2 ACCELERATOR=kvm osimage-flatcar-1.27.2 osimage-flatcar-1.28.2 osimage-ubuntu-2204-1.28.2 osimage-ubuntu-2204-1.27.2
+
+    - name: Upload images
+      run: make -C osimages osimage-upload
