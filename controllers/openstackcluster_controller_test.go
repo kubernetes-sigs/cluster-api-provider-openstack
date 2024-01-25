@@ -25,7 +25,6 @@ import (
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
-	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/external"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
@@ -234,6 +233,11 @@ var _ = Describe("OpenStackCluster controller", func() {
 		err = k8sClient.Create(ctx, capiCluster)
 		Expect(err).To(BeNil())
 		testCluster.Status = infrav1.OpenStackClusterStatus{
+			Bastion: &infrav1.BastionStatus{
+				ReferencedResources: infrav1.ReferencedMachineResources{
+					ImageID: "imageID",
+				},
+			},
 			Network: &infrav1.NetworkStatusWithSubnets{
 				NetworkStatus: infrav1.NetworkStatus{
 					Name: "network-name",
@@ -250,9 +254,6 @@ var _ = Describe("OpenStackCluster controller", func() {
 		server.ID = "adopted-bastion-uuid"
 		server.Status = "ACTIVE"
 
-		imageClientRecorder := mockScopeFactory.ImageClient.EXPECT()
-		imageClientRecorder.ListImages(gomock.Any()).Return([]images.Image{{ID: "imageID"}}, nil)
-
 		computeClientRecorder := mockScopeFactory.ComputeClient.EXPECT()
 		computeClientRecorder.ListServers(servers.ListOpts{
 			Name: "^capi-cluster-bastion$",
@@ -263,7 +264,13 @@ var _ = Describe("OpenStackCluster controller", func() {
 		networkClientRecorder.ListFloatingIP(floatingips.ListOpts{PortID: "portID"}).Return(make([]floatingips.FloatingIP, 1), nil)
 
 		res, err := reconcileBastion(scope, capiCluster, testCluster)
-		Expect(testCluster.Status.Bastion).To(Equal(&infrav1.BastionStatus{ID: "adopted-bastion-uuid", State: "ACTIVE"}))
+		Expect(testCluster.Status.Bastion).To(Equal(&infrav1.BastionStatus{
+			ID:    "adopted-bastion-uuid",
+			State: "ACTIVE",
+			ReferencedResources: infrav1.ReferencedMachineResources{
+				ImageID: "imageID",
+			},
+		}))
 		Expect(err).To(BeNil())
 		Expect(res).To(Equal(reconcile.Result{}))
 	})
@@ -286,6 +293,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 			},
 			Bastion: &infrav1.BastionStatus{
 				ID: "adopted-fip-bastion-uuid",
+				ReferencedResources: infrav1.ReferencedMachineResources{
+					ImageID: "imageID",
+				},
 			},
 		}
 		err = k8sClient.Status().Update(ctx, testCluster)
@@ -298,9 +308,6 @@ var _ = Describe("OpenStackCluster controller", func() {
 		server.ID = "adopted-fip-bastion-uuid"
 		server.Status = "ACTIVE"
 
-		imageClientRecorder := mockScopeFactory.ImageClient.EXPECT()
-		imageClientRecorder.ListImages(gomock.Any()).Return([]images.Image{{ID: "imageID"}}, nil)
-
 		computeClientRecorder := mockScopeFactory.ComputeClient.EXPECT()
 		computeClientRecorder.GetServer("adopted-fip-bastion-uuid").Return(&server, nil)
 
@@ -309,7 +316,14 @@ var _ = Describe("OpenStackCluster controller", func() {
 		networkClientRecorder.ListFloatingIP(floatingips.ListOpts{PortID: "portID"}).Return([]floatingips.FloatingIP{{FloatingIP: "1.2.3.4"}}, nil)
 
 		res, err := reconcileBastion(scope, capiCluster, testCluster)
-		Expect(testCluster.Status.Bastion).To(Equal(&infrav1.BastionStatus{ID: "adopted-fip-bastion-uuid", State: "ACTIVE", FloatingIP: "1.2.3.4"}))
+		Expect(testCluster.Status.Bastion).To(Equal(&infrav1.BastionStatus{
+			ID:         "adopted-fip-bastion-uuid",
+			FloatingIP: "1.2.3.4",
+			State:      "ACTIVE",
+			ReferencedResources: infrav1.ReferencedMachineResources{
+				ImageID: "imageID",
+			},
+		}))
 		Expect(err).To(BeNil())
 		Expect(res).To(Equal(reconcile.Result{}))
 	})
@@ -332,6 +346,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 			},
 			Bastion: &infrav1.BastionStatus{
 				ID: "requeue-bastion-uuid",
+				ReferencedResources: infrav1.ReferencedMachineResources{
+					ImageID: "imageID",
+				},
 			},
 		}
 		err = k8sClient.Status().Update(ctx, testCluster)
@@ -344,14 +361,17 @@ var _ = Describe("OpenStackCluster controller", func() {
 		server.ID = "requeue-bastion-uuid"
 		server.Status = "BUILD"
 
-		imageClientRecorder := mockScopeFactory.ImageClient.EXPECT()
-		imageClientRecorder.ListImages(gomock.Any()).Return([]images.Image{{ID: "imageID"}}, nil)
-
 		computeClientRecorder := mockScopeFactory.ComputeClient.EXPECT()
 		computeClientRecorder.GetServer("requeue-bastion-uuid").Return(&server, nil)
 
 		res, err := reconcileBastion(scope, capiCluster, testCluster)
-		Expect(testCluster.Status.Bastion).To(Equal(&infrav1.BastionStatus{ID: "requeue-bastion-uuid", State: "BUILD"}))
+		Expect(testCluster.Status.Bastion).To(Equal(&infrav1.BastionStatus{
+			ID:    "requeue-bastion-uuid",
+			State: "BUILD",
+			ReferencedResources: infrav1.ReferencedMachineResources{
+				ImageID: "imageID",
+			},
+		}))
 		Expect(err).To(BeNil())
 		Expect(res).To(Equal(reconcile.Result{RequeueAfter: waitForBuildingInstanceToReconcile}))
 	})
@@ -364,15 +384,21 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 		err = k8sClient.Create(ctx, capiCluster)
 		Expect(err).To(BeNil())
+		testCluster.Status = infrav1.OpenStackClusterStatus{
+			Bastion: &infrav1.BastionStatus{
+				ReferencedResources: infrav1.ReferencedMachineResources{
+					ImageID: "imageID",
+				},
+			},
+		}
+		err = k8sClient.Status().Update(ctx, testCluster)
+		Expect(err).To(BeNil())
 
 		scope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, logr.Discard())
 		Expect(err).To(BeNil())
 
 		server := clients.ServerExt{}
 		server.ID = "delete-bastion-uuid"
-
-		imageClientRecorder := mockScopeFactory.ImageClient.EXPECT()
-		imageClientRecorder.ListImages(gomock.Any()).Return([]images.Image{{ID: "imageID"}}, nil)
 
 		computeClientRecorder := mockScopeFactory.ComputeClient.EXPECT()
 		computeClientRecorder.ListServers(servers.ListOpts{
