@@ -105,7 +105,7 @@ LDFLAGS := $(shell source ./hack/version.sh; version::ldflags)
 ## --------------------------------------
 
 # The number of ginkgo tests to run concurrently
-E2E_GINKGO_PARALLEL ?= 2
+E2E_GINKGO_PARALLEL ?= 1
 
 E2E_ARGS ?=
 
