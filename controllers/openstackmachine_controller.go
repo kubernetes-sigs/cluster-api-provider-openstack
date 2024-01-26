@@ -76,7 +76,7 @@ const (
 // +kubebuilder:rbac:groups="",resources=secrets;,verbs=get;list;watch
 // +kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;update;patch
 
-func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.Result, reterr error) {
+func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ctrl.Result, reterr error) {
 	log := ctrl.LoggerFrom(ctx)
 
 	// Fetch the OpenStackMachine instance.
@@ -137,6 +137,7 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	// Always patch the openStackMachine when exiting this function so we can persist any OpenStackMachine changes.
 	defer func() {
 		if err := patchMachine(ctx, patchHelper, openStackMachine, machine); err != nil {
+			result = ctrl.Result{}
 			reterr = kerrors.NewAggregate([]error{reterr, err})
 		}
 	}()
