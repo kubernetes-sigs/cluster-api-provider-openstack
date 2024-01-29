@@ -47,7 +47,6 @@ osimage: | $(OSIMAGE_DIR)
 	docker run --rm $(privileged) \
 		--network=host \
 		-v "$(OSIMAGE_DIR):/output" \
-		-e PACKER_LOG=1 \
 		-e PACKER_FLAGS=" \
 		    --var 'boot_wait=300s' \
 		    --var 'accelerator=$(ACCELERATOR)' \
