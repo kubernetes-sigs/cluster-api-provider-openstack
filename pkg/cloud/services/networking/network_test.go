@@ -24,12 +24,14 @@ import (
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/external"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	. "github.com/onsi/gomega"
 	"k8s.io/utils/pointer"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha8"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
 func Test_ReconcileNetwork(t *testing.T) {
@@ -417,6 +419,264 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 				t.Errorf("ReconcileExternalNetwork() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			g.Expect(tt.openStackCluster).To(Equal(tt.want))
+		})
+	}
+}
+
+func Test_ReconcileSubnet(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	clusterName := "test-cluster"
+	expectedSubnetName := getSubnetName(clusterName)
+	expectedSubnetDesc := names.GetDescription(clusterName)
+	fakeSubnetID := "d08803fc-2fa5-4179-b9d7-8c43d0af2fe6"
+	fakeCIDR := "10.0.0.0/24"
+	fakeNetworkID := "d08803fc-2fa5-4279-b9f7-8c45d0ff2fe6"
+	fakeDNS := "10.0.10.200"
+
+	tests := []struct {
+		name             string
+		openStackCluster *infrav1.OpenStackCluster
+		expect           func(m *mock.MockNetworkClientMockRecorder)
+		want             *infrav1.OpenStackClusterStatus
+	}{
+		{
+			name: "ensures status set when reconciling an existing subnet",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					ManagedSubnets: []infrav1.SubnetSpec{
+						{
+							CIDR: fakeCIDR,
+						},
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID: fakeNetworkID,
+						},
+					},
+				},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				m.
+					ListSubnet(subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
+					Return([]subnets.Subnet{
+						{
+							ID:   fakeSubnetID,
+							Name: expectedSubnetName,
+							CIDR: fakeCIDR,
+						},
+					}, nil)
+			},
+			want: &infrav1.OpenStackClusterStatus{
+				Network: &infrav1.NetworkStatusWithSubnets{
+					NetworkStatus: infrav1.NetworkStatus{
+						ID: fakeNetworkID,
+					},
+					Subnets: []infrav1.Subnet{
+						{
+							Name: expectedSubnetName,
+							ID:   fakeSubnetID,
+							CIDR: fakeCIDR,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "creation without any parameter",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					ManagedSubnets: []infrav1.SubnetSpec{
+						{
+							CIDR: fakeCIDR,
+						},
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID: fakeNetworkID,
+						},
+					},
+				},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				m.
+					ListSubnet(subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
+					Return([]subnets.Subnet{}, nil)
+
+				m.
+					CreateSubnet(subnets.CreateOpts{
+						NetworkID:   fakeNetworkID,
+						Name:        expectedSubnetName,
+						IPVersion:   4,
+						CIDR:        fakeCIDR,
+						Description: expectedSubnetDesc,
+					}).
+					Return(&subnets.Subnet{
+						ID:   fakeSubnetID,
+						Name: expectedSubnetName,
+						CIDR: fakeCIDR,
+					}, nil)
+			},
+			want: &infrav1.OpenStackClusterStatus{
+				Network: &infrav1.NetworkStatusWithSubnets{
+					NetworkStatus: infrav1.NetworkStatus{
+						ID: fakeNetworkID,
+					},
+					Subnets: []infrav1.Subnet{
+						{
+							Name: expectedSubnetName,
+							ID:   fakeSubnetID,
+							CIDR: fakeCIDR,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "creation with DNSNameservers",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					ManagedSubnets: []infrav1.SubnetSpec{
+						{
+							CIDR:           fakeCIDR,
+							DNSNameservers: []string{fakeDNS},
+						},
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID: fakeNetworkID,
+						},
+					},
+				},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				m.
+					ListSubnet(subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
+					Return([]subnets.Subnet{}, nil)
+
+				m.
+					CreateSubnet(subnets.CreateOpts{
+						NetworkID:      fakeNetworkID,
+						Name:           expectedSubnetName,
+						IPVersion:      4,
+						CIDR:           fakeCIDR,
+						Description:    expectedSubnetDesc,
+						DNSNameservers: []string{fakeDNS},
+					}).
+					Return(&subnets.Subnet{
+						ID:   fakeSubnetID,
+						Name: expectedSubnetName,
+						CIDR: fakeCIDR,
+					}, nil)
+			},
+			want: &infrav1.OpenStackClusterStatus{
+				Network: &infrav1.NetworkStatusWithSubnets{
+					NetworkStatus: infrav1.NetworkStatus{
+						ID: fakeNetworkID,
+					},
+					Subnets: []infrav1.Subnet{
+						{
+							Name: expectedSubnetName,
+							ID:   fakeSubnetID,
+							CIDR: fakeCIDR,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "creation with allocationPools",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					ManagedSubnets: []infrav1.SubnetSpec{
+						{
+							CIDR: fakeCIDR,
+							AllocationPools: []infrav1.AllocationPool{
+								{
+									Start: "10.0.0.1",
+									End:   "10.0.0.10",
+								},
+								{
+									Start: "10.0.0.20",
+									End:   "10.0.0.254",
+								},
+							},
+						},
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID: fakeNetworkID,
+						},
+					},
+				},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				m.
+					ListSubnet(subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
+					Return([]subnets.Subnet{}, nil)
+
+				m.
+					CreateSubnet(subnets.CreateOpts{
+						NetworkID:   fakeNetworkID,
+						Name:        expectedSubnetName,
+						IPVersion:   4,
+						CIDR:        fakeCIDR,
+						Description: expectedSubnetDesc,
+						AllocationPools: []subnets.AllocationPool{
+							{
+								Start: "10.0.0.1",
+								End:   "10.0.0.10",
+							},
+							{
+								Start: "10.0.0.20",
+								End:   "10.0.0.254",
+							},
+						},
+					}).
+					Return(&subnets.Subnet{
+						ID:   fakeSubnetID,
+						Name: expectedSubnetName,
+						CIDR: fakeCIDR,
+					}, nil)
+			},
+			want: &infrav1.OpenStackClusterStatus{
+				Network: &infrav1.NetworkStatusWithSubnets{
+					NetworkStatus: infrav1.NetworkStatus{
+						ID: fakeNetworkID,
+					},
+					Subnets: []infrav1.Subnet{
+						{
+							Name: expectedSubnetName,
+							ID:   fakeSubnetID,
+							CIDR: fakeCIDR,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewWithT(t)
+			mockClient := mock.NewMockNetworkClient(mockCtrl)
+			tt.expect(mockClient.EXPECT())
+			s := Service{
+				client: mockClient,
+				scope:  scope.NewMockScopeFactory(mockCtrl, "", logr.Discard()),
+			}
+			err := s.ReconcileSubnet(tt.openStackCluster, clusterName)
+			g.Expect(err).ShouldNot(HaveOccurred())
+			g.Expect(tt.openStackCluster.Status).To(Equal(*tt.want))
 		})
 	}
 }

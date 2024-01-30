@@ -232,6 +232,11 @@ var v1alpha8OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStack
 		},
 		restorev1alpha8ClusterStatus,
 	),
+	"managedSubnets": conversion.UnconditionalFieldRestorer(
+		func(c *infrav1.OpenStackCluster) *[]infrav1.SubnetSpec {
+			return &c.Spec.ManagedSubnets
+		},
+	),
 }
 
 func (r *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {
@@ -321,6 +326,11 @@ var v1alpha8OpenStackClusterTemplateRestorer = conversion.RestorerFor[*infrav1.O
 			return c.Spec.Template.Spec.ManagedSecurityGroups
 		},
 		restorev1alpha8ManagedSecurityGroups,
+	),
+	"managedSubnets": conversion.UnconditionalFieldRestorer(
+		func(c *infrav1.OpenStackClusterTemplate) *[]infrav1.SubnetSpec {
+			return &c.Spec.Template.Spec.ManagedSubnets
+		},
 	),
 }
 

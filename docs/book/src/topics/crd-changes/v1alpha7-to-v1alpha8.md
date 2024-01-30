@@ -210,6 +210,10 @@ In v1alpha8, this will be automatically converted to:
 
 Please note that currently `managedSubnets` can only hold one element.
 
+#### Addition of allocationPools
+
+In v1alpha8, an `AllocationPools` property is introduced to `OpenStackCluster.Spec.ManagedSubnets`. When specified, OpenStack subnet created by CAPO will have the given values set as the `allocation_pools` property. This allows users to make sure OpenStack will not allocate some IP ranges in the subnet automatically. If the subnet is precreated and configured, CAPO will ignore `AllocationPools` property.
+
 #### Change to managedSecurityGroups
 
 The field `managedSecurityGroups` is now a pointer to a `ManagedSecurityGroups` object rather than a boolean.

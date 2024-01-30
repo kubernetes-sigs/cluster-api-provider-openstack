@@ -2972,6 +2972,27 @@ spec:
                           subnet is supported. If you leave this empty, no network will be created.
                         items:
                           properties:
+                            allocationPools:
+                              description: |-
+                                AllocationPools is an array of AllocationPool objects that will be applied to OpenStack Subnet being created.
+                                If set, OpenStack will only allocate these IPs for Machines. It will still be possible to create ports from
+                                outside of these ranges manually.
+                              items:
+                                properties:
+                                  end:
+                                    description: End represents the end of the AlloctionPool,
+                                      that is the highest IP of the pool.
+                                    type: string
+                                  start:
+                                    description: Start represents the start of the
+                                      AllocationPool, that is the lowest IP of the
+                                      pool.
+                                    type: string
+                                required:
+                                - end
+                                - start
+                                type: object
+                              type: array
                             cidr:
                               description: |-
                                 CIDR is representing the IP address range used to create the subnet, e.g. 10.0.0.0/24.

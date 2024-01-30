@@ -256,6 +256,10 @@ func (s *Service) createSubnet(openStackCluster *infrav1.OpenStackCluster, clust
 		Description:    names.GetDescription(clusterName),
 	}
 
+	for _, pool := range openStackCluster.Spec.ManagedSubnets[0].AllocationPools {
+		opts.AllocationPools = append(opts.AllocationPools, subnets.AllocationPool{Start: pool.Start, End: pool.End})
+	}
+
 	subnet, err := s.client.CreateSubnet(opts)
 	if err != nil {
 		record.Warnf(openStackCluster, "FailedCreateSubnet", "Failed to create subnet %s: %v", name, err)
