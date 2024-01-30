@@ -1,0 +1,128 @@
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: ClusterClass
+metadata:
+  name: dev-test
+spec:
+  controlPlane:
+    ref:
+      apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+      kind: KubeadmControlPlaneTemplate
+      name: ${CLUSTER_NAME}-control-plane-template
+    machineInfrastructure:
+      ref:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+        kind: OpenStackMachineTemplate
+        name: ${CLUSTER_NAME}-control-plane-machine-template
+  infrastructure:
+    ref:
+      apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+      kind: OpenStackClusterTemplate
+      name: ${CLUSTER_NAME}-openstackcluster-template
+  workers:
+    machineDeployments:
+      - class: default-worker
+        template:
+          bootstrap:
+            ref:
+              apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+              kind: KubeadmConfigTemplate
+              name: ${CLUSTER_NAME}-default-worker-bootstraptemplate
+          infrastructure:
+            ref:
+              apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+              kind: OpenStackMachineTemplate
+              name: ${CLUSTER_NAME}-default-worker-machine-template
+---
+apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+kind: KubeadmConfigTemplate
+metadata:
+  name: ${CLUSTER_NAME}-default-worker-bootstraptemplate
+spec:
+  template:
+    spec:
+      files: []
+      joinConfiguration:
+        nodeRegistration:
+          kubeletExtraArgs:
+            cloud-provider: external
+            provider-id: openstack:///'{{ instance_id }}'
+          name: '{{ local_hostname }}'
+---
+apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+kind: KubeadmControlPlaneTemplate
+metadata:
+  name: ${CLUSTER_NAME}-control-plane-template
+spec:
+  template:
+    spec:
+      kubeadmConfigSpec:
+        clusterConfiguration:
+          apiServer:
+            extraArgs:
+              cloud-provider: external
+          controllerManager:
+            extraArgs:
+              cloud-provider: external
+        files: []
+        initConfiguration:
+          nodeRegistration:
+            kubeletExtraArgs:
+              cloud-provider: external
+              provider-id: openstack:///'{{ instance_id }}'
+            name: '{{ local_hostname }}'
+        joinConfiguration:
+          nodeRegistration:
+            kubeletExtraArgs:
+              cloud-provider: external
+              provider-id: openstack:///'{{ instance_id }}'
+            name: '{{ local_hostname }}'
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+kind: OpenStackClusterTemplate
+metadata:
+  name: ${CLUSTER_NAME}-openstackcluster-template
+spec:
+  template:
+    spec:
+      apiServerLoadBalancer:
+        enabled: true
+      cloudName: ${OPENSTACK_CLOUD:=capo-e2e}
+      dnsNameservers:
+      - 8.8.8.8
+      identityRef:
+        kind: Secret
+        name: ${CLUSTER_NAME}-cloud-config
+      managedSecurityGroups: true
+      nodeCidr: 10.6.0.0/24
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+kind: OpenStackMachineTemplate
+metadata:
+  name: ${CLUSTER_NAME}-control-plane-machine-template
+spec:
+  template:
+    spec:
+      cloudName: ${OPENSTACK_CLOUD:=capo-e2e}
+      flavor: ${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR:=m1.medium}
+      identityRef:
+        kind: Secret
+        name: ${CLUSTER_NAME}-cloud-config
+      image:
+        name: ubuntu-2204-kube-${KUBERNETES_VERSION}
+      sshKeyName: ${OPENSTACK_SSH_KEY_NAME:=""}
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+kind: OpenStackMachineTemplate
+metadata:
+  name: ${CLUSTER_NAME}-default-worker-machine-template
+spec:
+  template:
+    spec:
+      cloudName: ${OPENSTACK_CLOUD:=capo-e2e}
+      flavor: ${OPENSTACK_NODE_MACHINE_FLAVOR:=m1.small}
+      identityRef:
+        kind: Secret
+        name: ${CLUSTER_NAME}-cloud-config
+      image:
+        name: ubuntu-2204-kube-${KUBERNETES_VERSION}
+      sshKeyName: ${OPENSTACK_SSH_KEY_NAME:=""}

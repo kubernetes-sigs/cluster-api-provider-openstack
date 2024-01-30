@@ -50,9 +50,104 @@ make docker-build docker-push
 
 After generating `infrastructure-components.yaml`, replace the `us.gcr.io/k8s-artifacts-prod/capi-openstack/capi-openstack-controller:v0.3.4` with your image.
 
+## Testing Cluster Creation using the 'dev-test' ClusterClass with Tilt
+
+This guide demonstrates how to create a Kubernetes cluster using ClusterClass, specifically designed for a development environment. It includes initializing a Kind cluster, configuring secrets, and applying ClusterClass to deploy your cluster with Tilt.
+
+### Creating a Kind Cluster
+
+Create a Kind cluster. This process involves the initialization of Cluster API providers for OpenStack.
+
+```bash
+kind create cluster
+export CLUSTER_TOPOLOGY=true
+clusterctl init --infrastructure openstack
+```
+
+### Secret Configuration
+
+CAPO needs a clouds.yaml file in order to manage the OpenStack resources needed for the Cluster. This should be supplied as a secret named `${CLUSTER_NAME}-cloud-config`. You can create this secret for example with:
+
+```bash
+kubectl create secret generic ${CLUSTER_NAME}-cloud-config --from-file=clouds.yaml
+```
+
+You can also make Tilt create it for you when you run `tilt up`, more on that in the next section.
+
 ## Developing with Tilt
 
-We have support for using [Tilt](https://tilt.dev/) for rapid iterative development. Please visit the [Cluster API documentation on Tilt](https://cluster-api.sigs.k8s.io/developer/tilt.html) for information on how to set up your development environment. 
+We have support for using [Tilt](https://tilt.dev/) for rapid iterative development. Please visit the [Cluster API documentation on Tilt](https://cluster-api.sigs.k8s.io/developer/tilt.html) for information on how to set up your development environment.
+
+Default values align with the devstack setup, as documented below. When specifying the `KUBERNETES_VERSION`, ensure an image named `ubuntu-2204-kube-{{ KUBERNETES_VERSION }}` is available in your environment, corresponding to that Kubernetes version.
+For using Tilt with ClusterClass, update your `tilt-settings.yaml` file as described:
+
+```yaml
+kustomize_substitutions:
+  CLUSTER_TOPOLOGY: "true"
+  # Define the name of your cluster (e.g., "dev-test")
+  CLUSTER_NAME: "<cluster_name>"
+  # Desired Kubernetes Version for Your Cluster (e.g., "v1.28.5")
+  KUBERNETES_VERSION: "<kubernetes_version>"
+  # [Optional] SSH Keypair Name for Instances in OpenStack (Default: "")
+  OPENSTACK_SSH_KEY_NAME: "<openstack_keypair_name>"
+  # [Optional] Control Plane Machine Flavor (Default: m1.medium)
+  OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR: "<openstack_control_plane_machine_flavor>"
+  # [Optional] Node Machine Flavor (Default: m1.small)
+  OPENSTACK_NODE_MACHINE_FLAVOR: "<openstack_node_machine_flavor>"
+  # [Optional] OpenStack Cloud Environment (Default: capo-e2e)
+  OPENSTACK_CLOUD: "<openstack_cloud>"
+
+additional_kustomizations:
+  secret_kustomization: /path/to/kustomize/secret/configuration
+```
+
+Ensure the specified path (`/path/to/kustomize/secret/configuration`) contains both the `clouds.yaml` file and a `kustomization.yaml` file. The `kustomization.yaml` should define the necessary resources, such as a Kubernetes secret, using the `clouds.yaml` file.
+
+For example, if you want to automatically create a secret named `dev-test-cloud-config` with the content of your `clouds.yaml` every time you do `tilt up`, you could do the following.
+
+Create a folder to hold the kustomization.
+We will use `/tmp/capo-dev` as example here.
+
+Add the `clouds.yaml` file that you want to use to the folder.
+It could look something like this:
+
+```yaml
+clouds:
+  capo-e2e:
+    auth:
+      username: demo
+      password: secretadmin
+      # If using application credentials you would have something like this instead:
+      # auth_type: v3applicationcredential
+      # application_credential_id: abc123
+      # application_credential_secret: 456def
+      user_domain_id: default
+      auth_url: https://example.com/identity
+      domain_id: default
+      project_name: demo
+    verify: false
+    region_name: RegionOne
+```
+
+Create a kustomization file named `kustomization.yaml` in the same folder:
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# Do not add random hash to the end of the secret name
+generatorOptions:
+  disableNameSuffixHash: true
+secretGenerator:
+- files:
+  - clouds.yaml
+  name: dev-test-cloud-config
+  type: Opaque
+```
+
+If you now add `/tmp/capo-dev` to the `additional_kustomizations`, tilt will automatically apply 
+the secret when you do `tilt up`.
+
+To check that the kustomization produces the desired output, do `kustomize build /tmp/capo-dev`.
 
 ## Running E2E tests locally
 
