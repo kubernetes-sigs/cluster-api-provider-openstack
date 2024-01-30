@@ -119,6 +119,16 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return reconcile.Result{}, err
 	}
 
+	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
+		if openStackCluster.Status.Bastion == nil {
+			openStackCluster.Status.Bastion = &infrav1.BastionStatus{}
+		}
+		err = compute.ResolveReferencedMachineResources(scope, &openStackCluster.Spec.Bastion.Instance, &openStackCluster.Status.Bastion.ReferencedResources)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+
 	// Handle deleted clusters
 	if !openStackCluster.DeletionTimestamp.IsZero() {
 		return r.reconcileDelete(ctx, scope, cluster, openStackCluster)
@@ -253,11 +263,7 @@ func deleteBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackClust
 			}
 		}
 
-		instanceSpec, err := bastionToInstanceSpec(openStackCluster, cluster.Name, computeService)
-		if err != nil {
-			return fmt.Errorf("failed to create bastion InstanceSpec: %w", err)
-		}
-
+		instanceSpec := bastionToInstanceSpec(openStackCluster, cluster.Name)
 		if err = computeService.DeleteInstance(openStackCluster, openStackCluster, instanceStatus, instanceSpec); err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete bastion: %w", err))
 			return fmt.Errorf("failed to delete bastion: %w", err)
@@ -340,11 +346,7 @@ func reconcileBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackCl
 		return reconcile.Result{}, err
 	}
 
-	instanceSpec, err := bastionToInstanceSpec(openStackCluster, cluster.Name, computeService)
-	if err != nil {
-		return reconcile.Result{}, fmt.Errorf("failed to create bastion InstanceSpec: %w", err)
-	}
-
+	instanceSpec := bastionToInstanceSpec(openStackCluster, cluster.Name)
 	bastionHash, err := compute.HashInstanceSpec(instanceSpec)
 	if err != nil {
 		return reconcile.Result{}, fmt.Errorf("failed computing bastion hash from instance spec: %w", err)
@@ -435,17 +437,12 @@ func reconcileBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackCl
 	return ctrl.Result{}, nil
 }
 
-func bastionToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, clusterName string, computeService *compute.Service) (*compute.InstanceSpec, error) {
-	imageID, err := computeService.GetImageID(openStackCluster.Spec.Bastion.Instance.Image)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get image ID for bastion: %w", err)
-	}
-
+func bastionToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, clusterName string) *compute.InstanceSpec {
 	instanceSpec := &compute.InstanceSpec{
 		Name:          bastionName(clusterName),
 		Flavor:        openStackCluster.Spec.Bastion.Instance.Flavor,
 		SSHKeyName:    openStackCluster.Spec.Bastion.Instance.SSHKeyName,
-		ImageID:       imageID,
+		ImageID:       openStackCluster.Status.Bastion.ReferencedResources.ImageID,
 		FailureDomain: openStackCluster.Spec.Bastion.AvailabilityZone,
 		RootVolume:    openStackCluster.Spec.Bastion.Instance.RootVolume,
 	}
@@ -461,7 +458,7 @@ func bastionToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, clusterNa
 
 	instanceSpec.Ports = openStackCluster.Spec.Bastion.Instance.Ports
 
-	return instanceSpec, nil
+	return instanceSpec
 }
 
 func bastionName(clusterName string) string {
