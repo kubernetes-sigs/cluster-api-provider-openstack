@@ -6,7 +6,14 @@
   - [Using your own capi-openstack controller image for testing cluster creation or deletion](#using-your-own-capi-openstack-controller-image-for-testing-cluster-creation-or-deletion)
     - [Building and upload your own capi-openstack controller image](#building-and-upload-your-own-capi-openstack-controller-image)
     - [Using your own capi-openstack controller image](#using-your-own-capi-openstack-controller-image)
-  - [Developing with Tilt](#developing-with-tilt)
+  - [Testing Cluster Creation using the 'dev-test' ClusterClass with Tilt](#testing-cluster-creation-using-the-dev-test-clusterclass-with-tilt)
+    - [Developing with Tilt](#developing-with-tilt)
+    - [Apply ClusterClass and create Cluster](#apply-clusterclass-and-create-cluster)
+    - [Automatically applying kustomizations with Tilt](#automatically-applying-kustomizations-with-tilt)
+  - [Using the 'dev-test' ClusterClass without Tilt](#using-the-dev-test-clusterclass-without-tilt)
+    - [Creating a Kind Cluster](#creating-a-kind-cluster)
+    - [Secret Configuration](#secret-configuration)
+    - [Apply the ClusterClass and create Clusters](#apply-the-clusterclass-and-create-clusters)
   - [Running E2E tests locally](#running-e2e-tests-locally)
     - [Support for clouds using SSL](#support-for-clouds-using-ssl)
     - [Support for clouds with multiple external networks](#support-for-clouds-with-multiple-external-networks)
@@ -15,9 +22,13 @@
       - [Create E2E test environment](#create-e2e-test-environment)
         - [OpenStack](#openstack)
         - [DevStack](#devstack)
+          - [Server side](#server-side)
+          - [CAPO side](#capo-side)
   - [Running E2E tests using rootless podman](#running-e2e-tests-using-rootless-podman)
     - [Host configuration](#host-configuration)
     - [Running podman system service to emulate docker daemon](#running-podman-system-service-to-emulate-docker-daemon)
+  - [API concepts](#api-concepts)
+    - [`referencedResources`](#referencedresources)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -52,42 +63,28 @@ After generating `infrastructure-components.yaml`, replace the `us.gcr.io/k8s-ar
 
 ## Testing Cluster Creation using the 'dev-test' ClusterClass with Tilt
 
-This guide demonstrates how to create a Kubernetes cluster using ClusterClass, specifically designed for a development environment. It includes initializing a Kind cluster, configuring secrets, and applying ClusterClass to deploy your cluster with Tilt.
+This guide demonstrates how to create a Kubernetes cluster using a ClusterClass, specifically designed for a development environment. It includes configuring secrets, applying the ClusterClass, and creating a cluster with Tilt.
 
-### Creating a Kind Cluster
+The `dev-test` ClusterClass is designed for development.
+This means that it is using the latest (potentially unstable) API version.
+The defaults are also aligned with the devstack setup (documented below) to make it as easy as possible to use in a development flow.
+However, this also means that it may *not* be well suited for general usage.
 
-Create a Kind cluster. This process involves the initialization of Cluster API providers for OpenStack.
-
-```bash
-kind create cluster
-export CLUSTER_TOPOLOGY=true
-clusterctl init --infrastructure openstack
-```
-
-### Secret Configuration
-
-CAPO needs a clouds.yaml file in order to manage the OpenStack resources needed for the Cluster. This should be supplied as a secret named `${CLUSTER_NAME}-cloud-config`. You can create this secret for example with:
-
-```bash
-kubectl create secret generic ${CLUSTER_NAME}-cloud-config --from-file=clouds.yaml
-```
-
-You can also make Tilt create it for you when you run `tilt up`, more on that in the next section.
-
-## Developing with Tilt
+### Developing with Tilt
 
 We have support for using [Tilt](https://tilt.dev/) for rapid iterative development. Please visit the [Cluster API documentation on Tilt](https://cluster-api.sigs.k8s.io/developer/tilt.html) for information on how to set up your development environment.
 
-Default values align with the devstack setup, as documented below. When specifying the `KUBERNETES_VERSION`, ensure an image named `ubuntu-2204-kube-{{ KUBERNETES_VERSION }}` is available in your environment, corresponding to that Kubernetes version.
-For using Tilt with ClusterClass, update your `tilt-settings.yaml` file as described:
+The `Tiltfile` in the Cluster API repository can be used as is with CAPO, but we need to add some configuration.
+For using Tilt with ClusterClass, update your `tilt-settings.yaml` file (located in the root of the CAPI repository) as described:
 
 ```yaml
+template_dirs:
+  openstack:
+  # Make Tilt aware of the CAPO templates
+  - ../cluster-api-provider-openstack/templates
+
 kustomize_substitutions:
   CLUSTER_TOPOLOGY: "true"
-  # Define the name of your cluster (e.g., "dev-test")
-  CLUSTER_NAME: "<cluster_name>"
-  # Desired Kubernetes Version for Your Cluster (e.g., "v1.28.5")
-  KUBERNETES_VERSION: "<kubernetes_version>"
   # [Optional] SSH Keypair Name for Instances in OpenStack (Default: "")
   OPENSTACK_SSH_KEY_NAME: "<openstack_keypair_name>"
   # [Optional] Control Plane Machine Flavor (Default: m1.medium)
@@ -97,9 +94,29 @@ kustomize_substitutions:
   # [Optional] OpenStack Cloud Environment (Default: capo-e2e)
   OPENSTACK_CLOUD: "<openstack_cloud>"
 
+# [Optional] Automatically apply a kustomization, e.g. for adding the clouds.yaml secret
 additional_kustomizations:
   secret_kustomization: /path/to/kustomize/secret/configuration
 ```
+
+### Apply ClusterClass and create Cluster
+
+When you are happy with the configuration, start the environment as explained in the CAPI documentation.
+Open the Tilt dashboard in your browser.
+After a while, you should be able to find resources called `CAPO.clusterclasses` and `CAPO.templates`.
+These shoud correspond to what exists in the `templates` folder and you should see widgets for applying and deleting them.
+
+**Note:** When you apply a cluster template, there will be a `KUBERNETES_VERSION` variable.
+This variable is used to pick the image used!
+Ensure that an image named `ubuntu-2204-kube-{{ KUBERNETES_VERSION }}` is available in your environment, corresponding to that Kubernetes version.
+
+**Note:** All clusters created from the dev-test ClusterClass will require a secret named `dev-test-cloud-config` with the `clouds.yaml` to be used by CAPO for interacting with OpenStack.
+You can create it manually or see below how to make Tilt automate it.
+
+### Automatically applying kustomizations with Tilt
+
+This explains how to automatically create the secret containing `clouds.yaml`.
+The same procedure can be used for any other things you want to create in the cluster.
 
 Ensure the specified path (`/path/to/kustomize/secret/configuration`) contains both the `clouds.yaml` file and a `kustomization.yaml` file. The `kustomization.yaml` should define the necessary resources, such as a Kubernetes secret, using the `clouds.yaml` file.
 
@@ -144,10 +161,50 @@ secretGenerator:
   type: Opaque
 ```
 
-If you now add `/tmp/capo-dev` to the `additional_kustomizations`, tilt will automatically apply 
-the secret when you do `tilt up`.
+If you now add `/tmp/capo-dev` to the `additional_kustomizations`, tilt will automatically apply
+the secret.
 
 To check that the kustomization produces the desired output, do `kustomize build /tmp/capo-dev`.
+
+## Using the 'dev-test' ClusterClass without Tilt
+
+If you want to use the ClusterClass without Tilt, you will need to follow these steps instead of the above.
+
+### Creating a Kind Cluster
+
+Create a Kind cluster and deploy CAPO.
+
+**Note:** As the dev-test ClusterClass is made for development, it may be using a newer API version than what is in the latest release.
+You *will need* to [use local artifacts](https://cluster-api.sigs.k8s.io/clusterctl/developers#use-local-artifacts) for this to work in most cases!
+
+```bash
+kind create cluster
+export CLUSTER_TOPOLOGY=true
+clusterctl init --infrastructure openstack
+```
+
+### Secret Configuration
+
+CAPO needs a clouds.yaml file in order to manage the OpenStack resources needed for the Cluster. This should be supplied as a secret named `dev-test-cloud-config`. You can create this secret for example with:
+
+```bash
+kubectl create secret generic dev-test-cloud-config --from-file=clouds.yaml
+```
+
+### Apply the ClusterClass and create Clusters
+
+You can use `clusterctl` to render the ClusterClass:
+
+```bash
+clusterctl generate yaml  --from templates/clusterclass-dev-test.yaml
+```
+
+Create a cluster using the development template, that makes use of the ClusterClass:
+
+```bash
+clusterctl generate cluster my-cluster --kubernetes-version=v1.29.0 --from templates/cluster-template-development.yaml > my-cluster.yaml
+kubectl apply -f my-cluster.yaml
+```
 
 ## Running E2E tests locally
 
