@@ -7,17 +7,17 @@ spec:
     ref:
       apiVersion: controlplane.cluster.x-k8s.io/v1beta1
       kind: KubeadmControlPlaneTemplate
-      name: ${CLUSTER_NAME}-control-plane-template
+      name: dev-test-control-plane
     machineInfrastructure:
       ref:
         apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
         kind: OpenStackMachineTemplate
-        name: ${CLUSTER_NAME}-control-plane-machine-template
+        name: dev-test-control-plane-machine
   infrastructure:
     ref:
       apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
       kind: OpenStackClusterTemplate
-      name: ${CLUSTER_NAME}-openstackcluster-template
+      name: dev-test-openstackcluster
   workers:
     machineDeployments:
       - class: default-worker
@@ -26,17 +26,48 @@ spec:
             ref:
               apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
               kind: KubeadmConfigTemplate
-              name: ${CLUSTER_NAME}-default-worker-bootstraptemplate
+              name: dev-test-default-worker-bootstraptemplate
           infrastructure:
             ref:
               apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
               kind: OpenStackMachineTemplate
-              name: ${CLUSTER_NAME}-default-worker-machine-template
+              name: dev-test-default-worker-machine
+  patches:
+  - name: controlPlaneImage
+    description: "Sets the OpenStack image that is used for creating the servers."
+    definitions:
+    - selector:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+        kind: OpenStackMachineTemplate
+        matchResources:
+          controlPlane: true
+      jsonPatches:
+      - op: add
+        path: /spec/template/spec/image/name
+        valueFrom:
+          template: |
+            ubuntu-2204-kube-{{ .builtin.controlPlane.version }}
+  - name: workerImage
+    description: "Sets the OpenStack image that is used for creating the servers."
+    definitions:
+    - selector:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+        kind: OpenStackMachineTemplate
+        matchResources:
+          machineDeploymentClass:
+            names:
+            - default-worker
+      jsonPatches:
+      - op: add
+        path: /spec/template/spec/image/name
+        valueFrom:
+          template: |
+            ubuntu-2204-kube-{{ .builtin.machineDeployment.version }}
 ---
 apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
 kind: KubeadmConfigTemplate
 metadata:
-  name: ${CLUSTER_NAME}-default-worker-bootstraptemplate
+  name: dev-test-default-worker-bootstraptemplate
 spec:
   template:
     spec:
@@ -51,7 +82,7 @@ spec:
 apiVersion: controlplane.cluster.x-k8s.io/v1beta1
 kind: KubeadmControlPlaneTemplate
 metadata:
-  name: ${CLUSTER_NAME}-control-plane-template
+  name: dev-test-control-plane
 spec:
   template:
     spec:
@@ -80,7 +111,7 @@ spec:
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
 kind: OpenStackClusterTemplate
 metadata:
-  name: ${CLUSTER_NAME}-openstackcluster-template
+  name: dev-test-openstackcluster
 spec:
   template:
     spec:
@@ -91,14 +122,14 @@ spec:
       - 8.8.8.8
       identityRef:
         kind: Secret
-        name: ${CLUSTER_NAME}-cloud-config
+        name: dev-test-cloud-config
       managedSecurityGroups: true
       nodeCidr: 10.6.0.0/24
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
 kind: OpenStackMachineTemplate
 metadata:
-  name: ${CLUSTER_NAME}-control-plane-machine-template
+  name: dev-test-control-plane-machine
 spec:
   template:
     spec:
@@ -106,15 +137,15 @@ spec:
       flavor: ${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR:=m1.medium}
       identityRef:
         kind: Secret
-        name: ${CLUSTER_NAME}-cloud-config
+        name: dev-test-cloud-config
       image:
-        name: ubuntu-2204-kube-${KUBERNETES_VERSION}
+        name: overridden-by-patch
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME:=""}
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
 kind: OpenStackMachineTemplate
 metadata:
-  name: ${CLUSTER_NAME}-default-worker-machine-template
+  name: dev-test-default-worker-machine
 spec:
   template:
     spec:
@@ -122,7 +153,7 @@ spec:
       flavor: ${OPENSTACK_NODE_MACHINE_FLAVOR:=m1.small}
       identityRef:
         kind: Secret
-        name: ${CLUSTER_NAME}-cloud-config
+        name: dev-test-cloud-config
       image:
-        name: ubuntu-2204-kube-${KUBERNETES_VERSION}
+        name: overridden-by-patch
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME:=""}
