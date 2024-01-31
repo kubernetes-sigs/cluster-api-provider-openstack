@@ -48,7 +48,7 @@ osimage: | $(OSIMAGE_DIR)
 		--network=host \
 		-v "$(OSIMAGE_DIR):/output" \
 		-e PACKER_FLAGS=" \
-		    --var 'boot_wait=300s' \
+		    --var 'boot_wait=20s' \
 		    --var 'accelerator=$(ACCELERATOR)' \
 		    --var 'kubernetes_semver=$(KUBERNETES_VERSION)' \
 		    --var 'kubernetes_series=$(KUBERNETES_SERIES)' \
