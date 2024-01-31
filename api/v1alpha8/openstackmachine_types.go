@@ -68,7 +68,9 @@ type OpenStackMachineSpec struct {
 	Tags []string `json:"tags,omitempty"`
 
 	// Metadata mapping. Allows you to create a map of key value pairs to add to the server instance.
-	ServerMetadata map[string]string `json:"serverMetadata,omitempty"`
+	// +listType=map
+	// +listMapKey=key
+	ServerMetadata []ServerMetadata `json:"serverMetadata,omitempty"`
 
 	// Config Drive support
 	ConfigDrive *bool `json:"configDrive,omitempty"`
@@ -89,6 +91,16 @@ type OpenStackMachineSpec struct {
 	// IdentityRef is a reference to a identity to be used when reconciling this cluster
 	// +optional
 	IdentityRef *OpenStackIdentityReference `json:"identityRef,omitempty"`
+}
+
+type ServerMetadata struct {
+	// Key is the server metadata key
+	// kubebuilder:validation:MaxLength:=255
+	Key string `json:"key"`
+
+	// Value is the server metadata value
+	// kubebuilder:validation:MaxLength:=255
+	Value string `json:"value"`
 }
 
 // OpenStackMachineStatus defines the observed state of OpenStackMachine.

@@ -69,6 +69,37 @@ func TestFuzzyConversion(t *testing.T) {
 					spec.Subnets = append(spec.Subnets, subnet)
 				}
 			},
+
+			func(spec *OpenStackMachineSpec, c fuzz.Continue) {
+				c.FuzzNoCustom(spec)
+
+				// RandString() generates strings up to 20
+				// characters long. To exercise truncation of
+				// long server metadata keys and values we need
+				// the possibility of strings > 255 chars.
+				genLongString := func() string {
+					var ret string
+					for len(ret) < 255 {
+						ret += c.RandString()
+					}
+					return ret
+				}
+
+				// Existing server metadata keys will be short. Add a random number of long ones.
+				for c.RandBool() {
+					if spec.ServerMetadata == nil {
+						spec.ServerMetadata = map[string]string{}
+					}
+					spec.ServerMetadata[genLongString()] = c.RandString()
+				}
+
+				// Randomly make some server metadata values long.
+				for k := range spec.ServerMetadata {
+					if c.RandBool() {
+						spec.ServerMetadata[k] = genLongString()
+					}
+				}
+			},
 		}
 	}
 

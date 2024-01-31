@@ -26,7 +26,20 @@ import (
 
 var _ ctrlconversion.Convertible = &OpenStackCluster{}
 
-var v1alpha7OpenStackClusterRestorer = conversion.RestorerFor[*OpenStackCluster]{}
+func restorev1alpha7Bastion(previous **Bastion, dst **Bastion) {
+	if *previous != nil && *dst != nil {
+		restorev1alpha7MachineSpec(&(*previous).Instance, &(*dst).Instance)
+	}
+}
+
+var v1alpha7OpenStackClusterRestorer = conversion.RestorerFor[*OpenStackCluster]{
+	"bastion": conversion.HashedFieldRestorer(
+		func(c *OpenStackCluster) **Bastion {
+			return &c.Spec.Bastion
+		},
+		restorev1alpha7Bastion,
+	),
+}
 
 var v1alpha8OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStackCluster]{
 	"bastion": conversion.HashedFieldRestorer(
@@ -67,6 +80,24 @@ var v1alpha8OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStack
 
 func restorev1alpha7MachineSpec(previous *OpenStackMachineSpec, dst *OpenStackMachineSpec) {
 	dst.FloatingIP = previous.FloatingIP
+
+	// Conversion to v1alpha8 truncates keys and values to 255 characters
+	for k, v := range previous.ServerMetadata {
+		kd := k
+		if len(k) > 255 {
+			kd = k[:255]
+		}
+
+		vd := v
+		if len(v) > 255 {
+			vd = v[:255]
+		}
+
+		if kd != k || vd != v {
+			delete(dst.ServerMetadata, kd)
+			dst.ServerMetadata[k] = v
+		}
+	}
 }
 
 func restorev1alpha8MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *infrav1.OpenStackMachineSpec) {
@@ -139,12 +170,23 @@ func (r *OpenStackClusterList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 
 var _ ctrlconversion.Convertible = &OpenStackClusterTemplate{}
 
+func restorev1alpha7ClusterTemplateSpec(previous *OpenStackClusterTemplateSpec, dst *OpenStackClusterTemplateSpec) {
+	restorev1alpha7Bastion(&previous.Template.Spec.Bastion, &dst.Template.Spec.Bastion)
+}
+
 func restorev1alpha8ClusterTemplateSpec(previous *infrav1.OpenStackClusterTemplateSpec, dst *infrav1.OpenStackClusterTemplateSpec) {
 	restorev1alpha8Bastion(&previous.Template.Spec.Bastion, &dst.Template.Spec.Bastion)
 	restorev1alpha8ClusterSpec(&previous.Template.Spec, &dst.Template.Spec)
 }
 
-var v1alpha7OpenStackClusterTemplateRestorer = conversion.RestorerFor[*OpenStackClusterTemplate]{}
+var v1alpha7OpenStackClusterTemplateRestorer = conversion.RestorerFor[*OpenStackClusterTemplate]{
+	"spec": conversion.HashedFieldRestorer(
+		func(c *OpenStackClusterTemplate) *OpenStackClusterTemplateSpec {
+			return &c.Spec
+		},
+		restorev1alpha7ClusterTemplateSpec,
+	),
+}
 
 var v1alpha8OpenStackClusterTemplateRestorer = conversion.RestorerFor[*infrav1.OpenStackClusterTemplate]{
 	"spec": conversion.HashedFieldRestorer(
@@ -308,6 +350,16 @@ func Convert_v1alpha8_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in *
 		out.ImageUUID = in.Image.ID
 	}
 
+	if len(in.ServerMetadata) > 0 {
+		serverMetadata := make(map[string]string, len(in.ServerMetadata))
+		for i := range in.ServerMetadata {
+			key := in.ServerMetadata[i].Key
+			value := in.ServerMetadata[i].Value
+			serverMetadata[key] = value
+		}
+		out.ServerMetadata = serverMetadata
+	}
+
 	return nil
 }
 
@@ -331,6 +383,23 @@ func Convert_v1alpha7_OpenStackMachineSpec_To_v1alpha8_OpenStackMachineSpec(in *
 		imageFilter.ID = in.ImageUUID
 	}
 	out.Image = imageFilter
+
+	if len(in.ServerMetadata) > 0 {
+		serverMetadata := make([]infrav1.ServerMetadata, 0, len(in.ServerMetadata))
+		for k, v := range in.ServerMetadata {
+			// Truncate key and value to 255 characters if required, as this
+			// was not validated prior to v1alpha8
+			if len(k) > 255 {
+				k = k[:255]
+			}
+			if len(v) > 255 {
+				v = v[:255]
+			}
+
+			serverMetadata = append(serverMetadata, infrav1.ServerMetadata{Key: k, Value: v})
+		}
+		out.ServerMetadata = serverMetadata
+	}
 
 	return nil
 }

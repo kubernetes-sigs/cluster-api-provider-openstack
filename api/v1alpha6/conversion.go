@@ -44,6 +44,24 @@ func restorev1alpha6MachineSpec(previous *OpenStackMachineSpec, dst *OpenStackMa
 	// FloatingIP is removed from v1alpha7 with no replacement, so can't be
 	// losslessly converted. Restore the previously stored value on down-conversion.
 	dst.FloatingIP = previous.FloatingIP
+
+	// Conversion to v1alpha8 truncates keys and values to 255 characters
+	for k, v := range previous.ServerMetadata {
+		kd := k
+		if len(k) > 255 {
+			kd = k[:255]
+		}
+
+		vd := v
+		if len(v) > 255 {
+			vd = v[:255]
+		}
+
+		if kd != k || vd != v {
+			delete(dst.ServerMetadata, kd)
+			dst.ServerMetadata[k] = v
+		}
+	}
 }
 
 func restorev1alpha6ClusterStatus(previous *OpenStackClusterStatus, dst *OpenStackClusterStatus) {
@@ -425,6 +443,23 @@ func Convert_v1alpha6_OpenStackMachineSpec_To_v1alpha8_OpenStackMachineSpec(in *
 	}
 	out.Image = imageFilter
 
+	if len(in.ServerMetadata) > 0 {
+		serverMetadata := make([]infrav1.ServerMetadata, 0, len(in.ServerMetadata))
+		for k, v := range in.ServerMetadata {
+			// Truncate key and value to 255 characters if required, as this
+			// was not validated prior to v1alpha8
+			if len(k) > 255 {
+				k = k[:255]
+			}
+			if len(v) > 255 {
+				v = v[:255]
+			}
+
+			serverMetadata = append(serverMetadata, infrav1.ServerMetadata{Key: k, Value: v})
+		}
+		out.ServerMetadata = serverMetadata
+	}
+
 	return nil
 }
 
@@ -774,6 +809,16 @@ func Convert_v1alpha8_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(in *
 
 	if in.Image.ID != "" {
 		out.ImageUUID = in.Image.ID
+	}
+
+	if len(in.ServerMetadata) > 0 {
+		serverMetadata := make(map[string]string, len(in.ServerMetadata))
+		for i := range in.ServerMetadata {
+			key := in.ServerMetadata[i].Key
+			value := in.ServerMetadata[i].Value
+			serverMetadata[key] = value
+		}
+		out.ServerMetadata = serverMetadata
 	}
 
 	return nil
