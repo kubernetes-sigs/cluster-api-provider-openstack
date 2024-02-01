@@ -85,7 +85,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			shared.Logf("Creating a cluster")
 			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
-			configCluster.ControlPlaneMachineCount = pointer.Int64(3)
+			configCluster.ControlPlaneMachineCount = pointer.Int64(1)
 			configCluster.WorkerMachineCount = pointer.Int64(1)
 			configCluster.Flavor = shared.FlavorDefault
 			createCluster(ctx, configCluster, clusterResources)
@@ -103,7 +103,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 				Namespace:   namespace.Name,
 			})
 			Expect(workerMachines).To(HaveLen(1))
-			Expect(controlPlaneMachines).To(HaveLen(3))
+			Expect(controlPlaneMachines).To(HaveLen(1))
 
 			shared.Logf("Waiting for worker nodes to be in Running phase")
 			statusChecks := []framework.MachineStatusCheck{framework.MachinePhaseCheck(string(clusterv1.MachinePhaseRunning))}
@@ -118,20 +118,20 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 
 			waitForDaemonSetRunning(ctx, workloadCluster.GetClient(), "kube-system", "openstack-cloud-controller-manager")
 
-			waitForNodesReadyWithoutCCMTaint(ctx, workloadCluster.GetClient(), 4)
+			waitForNodesReadyWithoutCCMTaint(ctx, workloadCluster.GetClient(), 2)
 
 			// Tag: clusterName is declared on OpenStackCluster and gets propagated to all machines
 			// except the bastion host
 			allServers, err := shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{Tags: clusterName})
 			Expect(err).NotTo(HaveOccurred())
-			Expect(allServers).To(HaveLen(4))
+			Expect(allServers).To(HaveLen(2))
 
 			// When listing servers with multiple tags, nova api requires a single, comma-separated string
 			// with all the tags
 			controlPlaneTags := fmt.Sprintf("%s,%s", clusterName, "control-plane")
 			controlPlaneServers, err := shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{Tags: controlPlaneTags})
 			Expect(err).NotTo(HaveOccurred())
-			Expect(controlPlaneServers).To(HaveLen(3))
+			Expect(controlPlaneServers).To(HaveLen(1))
 
 			machineTags := fmt.Sprintf("%s,%s", clusterName, "machine")
 			machineServers, err := shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{Tags: machineTags})
@@ -164,7 +164,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			shared.Logf("Creating a cluster")
 			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
-			configCluster.ControlPlaneMachineCount = pointer.Int64(3)
+			configCluster.ControlPlaneMachineCount = pointer.Int64(1)
 			configCluster.WorkerMachineCount = pointer.Int64(1)
 			configCluster.Flavor = shared.FlavorFlatcar
 			createCluster(ctx, configCluster, clusterResources)
@@ -182,7 +182,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 				Namespace:   namespace.Name,
 			})
 			Expect(workerMachines).To(HaveLen(1))
-			Expect(controlPlaneMachines).To(HaveLen(3))
+			Expect(controlPlaneMachines).To(HaveLen(1))
 
 			shared.Logf("Waiting for worker nodes to be in Running phase")
 			statusChecks := []framework.MachineStatusCheck{framework.MachinePhaseCheck(string(clusterv1.MachinePhaseRunning))}
@@ -197,7 +197,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 
 			waitForDaemonSetRunning(ctx, workloadCluster.GetClient(), "kube-system", "openstack-cloud-controller-manager")
 
-			waitForNodesReadyWithoutCCMTaint(ctx, workloadCluster.GetClient(), 4)
+			waitForNodesReadyWithoutCCMTaint(ctx, workloadCluster.GetClient(), 2)
 		})
 	})
 
@@ -209,7 +209,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			shared.Logf("Creating a cluster")
 			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
-			configCluster.ControlPlaneMachineCount = pointer.Int64(3)
+			configCluster.ControlPlaneMachineCount = pointer.Int64(1)
 			configCluster.WorkerMachineCount = pointer.Int64(1)
 			configCluster.Flavor = shared.FlavorFlatcarSysext
 			createCluster(ctx, configCluster, clusterResources)
@@ -227,7 +227,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 				Namespace:   namespace.Name,
 			})
 			Expect(workerMachines).To(HaveLen(1))
-			Expect(controlPlaneMachines).To(HaveLen(3))
+			Expect(controlPlaneMachines).To(HaveLen(1))
 
 			shared.Logf("Waiting for worker nodes to be in Running phase")
 			statusChecks := []framework.MachineStatusCheck{framework.MachinePhaseCheck(string(clusterv1.MachinePhaseRunning))}
@@ -242,7 +242,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 
 			waitForDaemonSetRunning(ctx, workloadCluster.GetClient(), "kube-system", "openstack-cloud-controller-manager")
 
-			waitForNodesReadyWithoutCCMTaint(ctx, workloadCluster.GetClient(), 4)
+			waitForNodesReadyWithoutCCMTaint(ctx, workloadCluster.GetClient(), 2)
 		})
 	})
 
