@@ -44,24 +44,43 @@ osimage: KUBERNETES_VERSION ?= v1.28.2
 # KUBERNETES_SERIES default to vX.Y from KUBERNETES_VERSION
 osimage: KUBERNETES_SERIES ?= $(shell echo $(KUBERNETES_VERSION) | sed 's/\(v[0-9]\+\.[0-9]\+\).[0-9]\+/\1/;tx;q1;:x')
 osimage: | $(OSIMAGE_DIR)
+	$(MAKE) osimage-$(DISTRO) KUBERNETES_VERSION=$(KUBERNETES_VERSION) KUBERNETES_SERIES=$(KUBERNETES_SERIES)
+
+osimage-flatcar: | $(OSIMAGE_DIR)
 	docker run --rm $(privileged) \
 		--network=host \
 		-v "$(OSIMAGE_DIR):/output" \
 		-e PACKER_FLAGS=" \
-		    --var 'boot_wait=20s' \
 		    --var 'accelerator=$(ACCELERATOR)' \
 		    --var 'kubernetes_semver=$(KUBERNETES_VERSION)' \
 		    --var 'kubernetes_series=$(KUBERNETES_SERIES)' \
 		" \
 		-e OEM_ID=openstack \
-		$(OSIMAGE_BUILDER) build-qemu-$(DISTRO)
+		$(OSIMAGE_BUILDER) build-qemu-flatcar
+
+osimage-ubuntu: | $(OSIMAGE_DIR)
+	docker run --rm $(privileged) \
+		--network=host \
+		-v "$(OSIMAGE_DIR):/output" \
+		-e PACKER_FLAGS=" \
+				--var 'iso_checksum=a4acfda10b18da50e2ec50ccaf860d7f20b389df8765611142305c0e911d16fd' \
+				--var 'iso_checksum_type=sha256' \
+				--var 'iso_url=https://releases.ubuntu.com/jammy/ubuntu-22.04.3-live-server-amd64.iso' \
+		    --var 'accelerator=$(ACCELERATOR)' \
+		    --var 'kubernetes_semver=$(KUBERNETES_VERSION)' \
+		    --var 'kubernetes_series=$(KUBERNETES_SERIES)' \
+		" \
+		-e OEM_ID=openstack \
+		$(OSIMAGE_BUILDER) build-qemu-ubuntu-2204
 
 # Build a specific image, determined by the name of the target
 # e.g. osimage-flatcar-1.26.2 -> DISTRO=flatcar, KUBERNETES_VERSION=v1.26.2
 osimage-%: DISTRO=$(shell echo $@ | sed 's/osimage-\(.*\)-\([^-]*\)/\1/')
 osimage-%: KUBERNETES_VERSION=v$(shell echo $@ | sed 's/osimage-\(.*\)-\([^-]*\)/\2/')
+# KUBERNETES_SERIES default to vX.Y from KUBERNETES_VERSION
+osimage-%: KUBERNETES_SERIES ?= $(shell echo $(KUBERNETES_VERSION) | sed 's/\(v[0-9]\+\.[0-9]\+\).[0-9]\+/\1/;tx;q1;:x')
 osimage-%: FORCE
-	$(MAKE) osimage DISTRO=$(DISTRO) KUBERNETES_VERSION=$(KUBERNETES_VERSION)
+	$(MAKE) osimage-$(DISTRO) KUBERNETES_VERSION=$(KUBERNETES_VERSION) KUBERNETES_SERIES=$(KUBERNETES_SERIES)
 
 .PHONY: FORCE
 FORCE:
