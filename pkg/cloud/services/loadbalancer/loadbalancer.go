@@ -19,7 +19,7 @@ package loadbalancer
 import (
 	"errors"
 	"fmt"
-	"reflect"
+	"slices"
 	"time"
 
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/listeners"
@@ -275,11 +275,11 @@ func (s *Service) getOrUpdateAllowedCIDRS(openStackCluster *infrav1.OpenStackClu
 	// Validate CIDRs and convert any given IP into a CIDR.
 	allowedCIDRs = validateIPs(openStackCluster, allowedCIDRs)
 
-	// Remove duplicates.
-	allowedCIDRs = capostrings.Unique(allowedCIDRs)
-	listener.AllowedCIDRs = capostrings.Unique(listener.AllowedCIDRs)
+	// Sort and remove duplicates
+	allowedCIDRs = capostrings.Canonicalize(allowedCIDRs)
+	listener.AllowedCIDRs = capostrings.Canonicalize(listener.AllowedCIDRs)
 
-	if !reflect.DeepEqual(allowedCIDRs, listener.AllowedCIDRs) {
+	if !slices.Equal(allowedCIDRs, listener.AllowedCIDRs) {
 		s.scope.Logger().Info("CIDRs do not match, updating listener", "expectedCIDRs", allowedCIDRs, "currentCIDRs", listener.AllowedCIDRs)
 		listenerUpdateOpts := listeners.UpdateOpts{
 			AllowedCIDRs: &allowedCIDRs,
