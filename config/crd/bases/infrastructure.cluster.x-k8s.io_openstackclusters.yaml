@@ -5808,6 +5808,8 @@ spec:
                   OpenStackClusters can be added as events to the OpenStackCluster object
                   and/or logged in the controller's output.
                 type: string
+              foo:
+                type: string
               network:
                 description: Network contains information about the created OpenStack
                   Network.

@@ -847,6 +847,7 @@ func autoConvert_v1alpha8_OpenStackClusterStatus_To_v1alpha6_OpenStackClusterSta
 	}
 	out.FailureReason = (*errors.ClusterStatusError)(unsafe.Pointer(in.FailureReason))
 	out.FailureMessage = (*string)(unsafe.Pointer(in.FailureMessage))
+	// WARNING: in.Foo requires manual conversion: does not exist in peer-type
 	return nil
 }
 

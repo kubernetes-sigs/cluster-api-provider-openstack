@@ -76,6 +76,16 @@ var v1alpha8OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStack
 			return &c.Status.Bastion.ReferencedResources
 		},
 	),
+	"foo": conversion.UnconditionalFieldRestorer(
+		func(c *infrav1.OpenStackCluster) *string {
+			return &c.Status.Foo
+		},
+	),
+}
+
+func Convert_v1alpha8_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(in *infrav1.OpenStackClusterStatus, out *OpenStackClusterStatus, s apiconversion.Scope) error {
+	// ReferencedResources have no equivalent in v1alpha7
+	return autoConvert_v1alpha8_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(in, out, s)
 }
 
 func restorev1alpha7MachineSpec(previous *OpenStackMachineSpec, dst *OpenStackMachineSpec) {

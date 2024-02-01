@@ -110,6 +110,8 @@ func restorev1alpha8ClusterStatus(previous *infrav1.OpenStackClusterStatus, dst 
 	if previous.Bastion != nil {
 		dst.Bastion.ReferencedResources = previous.Bastion.ReferencedResources
 	}
+
+	dst.Foo = previous.Foo
 }
 
 func restorev1alpha6ClusterSpec(previous *OpenStackClusterSpec, dst *OpenStackClusterSpec) {

@@ -108,10 +108,12 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	// Always patch the openStackCluster when exiting this function so we can persist any OpenStackCluster changes.
 	defer func() {
+		log.Info("openStackCluster.Status.Foo in reconcile during defer before patching", "status", openStackCluster.Status.Foo)
 		if err := patchHelper.Patch(ctx, openStackCluster); err != nil {
 			result = ctrl.Result{}
 			reterr = kerrors.NewAggregate([]error{reterr, fmt.Errorf("error patching OpenStackCluster %s/%s: %w", openStackCluster.Namespace, openStackCluster.Name, err)})
 		}
+		log.Info("openStackCluster.Status.Foo in reconcile during defer after patching", "status", openStackCluster.Status.Foo)
 	}()
 
 	scope, err := r.ScopeFactory.NewClientScopeFromCluster(ctx, r.Client, openStackCluster, r.CaCertificates, log)
@@ -128,6 +130,8 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			return reconcile.Result{}, err
 		}
 	}
+
+	log.Info("openStackCluster.Status.Foo in reconcile before reconcileNormal", "status", openStackCluster.Status.Foo)
 
 	// Handle deleted clusters
 	if !openStackCluster.DeletionTimestamp.IsZero() {
@@ -300,6 +304,11 @@ func reconcileNormal(scope scope.Scope, cluster *clusterv1.Cluster, openStackClu
 	err = reconcileNetworkComponents(scope, cluster, openStackCluster)
 	if err != nil {
 		return reconcile.Result{}, err
+	}
+
+	if openStackCluster.Status.Foo == "" {
+		scope.Logger().Info("openStackCluster.Status.Foo is empty")
+		openStackCluster.Status.Foo = "bar"
 	}
 
 	result, err := reconcileBastion(scope, cluster, openStackCluster)

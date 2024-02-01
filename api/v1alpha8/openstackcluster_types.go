@@ -234,6 +234,8 @@ type OpenStackClusterStatus struct {
 	// and/or logged in the controller's output.
 	// +optional
 	FailureMessage *string `json:"failureMessage,omitempty"`
+
+	Foo string `json:"foo,omitempty"`
 }
 
 // +kubebuilder:object:root=true
