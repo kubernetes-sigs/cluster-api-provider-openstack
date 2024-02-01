@@ -285,9 +285,10 @@ func (s *Service) getOrUpdateAllowedCIDRS(openStackCluster *infrav1.OpenStackClu
 			AllowedCIDRs: &allowedCIDRs,
 		}
 
+		listenerID := listener.ID
 		listener, err := s.loadbalancerClient.UpdateListener(listener.ID, listenerUpdateOpts)
 		if err != nil {
-			record.Warnf(openStackCluster, "FailedUpdateListener", "Failed to update listener %s: %v", listener.Name, err)
+			record.Warnf(openStackCluster, "FailedUpdateListener", "Failed to update listener %s: %v", listenerID, err)
 			return err
 		}
 
