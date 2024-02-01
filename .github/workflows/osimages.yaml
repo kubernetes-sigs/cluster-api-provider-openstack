@@ -42,7 +42,7 @@ jobs:
     - name: Build images
       env:
         OSIMAGE_BUILDER: gcr.io/scl-image-builder/cluster-node-image-builder-amd64:dev
-      run: make -C osimages -j2 ACCELERATOR=kvm osimage-flatcar-1.27.2 osimage-flatcar-1.28.2 osimage-ubuntu-2204-1.28.2 osimage-ubuntu-2204-1.27.2
+      run: make -C osimages -j2 ACCELERATOR=kvm osimage-ubuntu-2204-1.28.2
 
     - name: Upload images
       run: make -C osimages osimage-upload
