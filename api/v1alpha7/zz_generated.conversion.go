@@ -877,14 +877,14 @@ func Convert_v1alpha8_OpenStackClusterList_To_v1alpha7_OpenStackClusterList(in *
 
 func autoConvert_v1alpha7_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(in *OpenStackClusterSpec, out *v1alpha8.OpenStackClusterSpec, s conversion.Scope) error {
 	out.CloudName = in.CloudName
-	out.NodeCIDR = in.NodeCIDR
+	// WARNING: in.NodeCIDR requires manual conversion: does not exist in peer-type
 	out.Router = (*v1alpha8.RouterFilter)(unsafe.Pointer(in.Router))
 	if err := Convert_v1alpha7_NetworkFilter_To_v1alpha8_NetworkFilter(&in.Network, &out.Network, s); err != nil {
 		return err
 	}
 	// WARNING: in.Subnet requires manual conversion: does not exist in peer-type
 	out.NetworkMTU = in.NetworkMTU
-	out.DNSNameservers = *(*[]string)(unsafe.Pointer(&in.DNSNameservers))
+	// WARNING: in.DNSNameservers requires manual conversion: does not exist in peer-type
 	out.ExternalRouterIPs = *(*[]v1alpha8.ExternalRouterIPParam)(unsafe.Pointer(&in.ExternalRouterIPs))
 	// WARNING: in.ExternalNetworkID requires manual conversion: does not exist in peer-type
 	if err := Convert_v1alpha7_APIServerLoadBalancer_To_v1alpha8_APIServerLoadBalancer(&in.APIServerLoadBalancer, &out.APIServerLoadBalancer, s); err != nil {
@@ -916,14 +916,13 @@ func autoConvert_v1alpha7_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(
 
 func autoConvert_v1alpha8_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in *v1alpha8.OpenStackClusterSpec, out *OpenStackClusterSpec, s conversion.Scope) error {
 	out.CloudName = in.CloudName
-	out.NodeCIDR = in.NodeCIDR
+	// WARNING: in.ManagedSubnets requires manual conversion: does not exist in peer-type
 	out.Router = (*RouterFilter)(unsafe.Pointer(in.Router))
 	if err := Convert_v1alpha8_NetworkFilter_To_v1alpha7_NetworkFilter(&in.Network, &out.Network, s); err != nil {
 		return err
 	}
 	// WARNING: in.Subnets requires manual conversion: does not exist in peer-type
 	out.NetworkMTU = in.NetworkMTU
-	out.DNSNameservers = *(*[]string)(unsafe.Pointer(&in.DNSNameservers))
 	out.ExternalRouterIPs = *(*[]ExternalRouterIPParam)(unsafe.Pointer(&in.ExternalRouterIPs))
 	// WARNING: in.ExternalNetwork requires manual conversion: does not exist in peer-type
 	// WARNING: in.DisableExternalNetwork requires manual conversion: does not exist in peer-type

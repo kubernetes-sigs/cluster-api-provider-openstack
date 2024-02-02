@@ -677,12 +677,12 @@ func Convert_v1alpha8_OpenStackClusterList_To_v1alpha6_OpenStackClusterList(in *
 
 func autoConvert_v1alpha6_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(in *OpenStackClusterSpec, out *v1alpha8.OpenStackClusterSpec, s conversion.Scope) error {
 	out.CloudName = in.CloudName
-	out.NodeCIDR = in.NodeCIDR
+	// WARNING: in.NodeCIDR requires manual conversion: does not exist in peer-type
 	if err := Convert_v1alpha6_NetworkFilter_To_v1alpha8_NetworkFilter(&in.Network, &out.Network, s); err != nil {
 		return err
 	}
 	// WARNING: in.Subnet requires manual conversion: does not exist in peer-type
-	out.DNSNameservers = *(*[]string)(unsafe.Pointer(&in.DNSNameservers))
+	// WARNING: in.DNSNameservers requires manual conversion: does not exist in peer-type
 	if in.ExternalRouterIPs != nil {
 		in, out := &in.ExternalRouterIPs, &out.ExternalRouterIPs
 		*out = make([]v1alpha8.ExternalRouterIPParam, len(*in))
@@ -724,14 +724,13 @@ func autoConvert_v1alpha6_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(
 
 func autoConvert_v1alpha8_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in *v1alpha8.OpenStackClusterSpec, out *OpenStackClusterSpec, s conversion.Scope) error {
 	out.CloudName = in.CloudName
-	out.NodeCIDR = in.NodeCIDR
+	// WARNING: in.ManagedSubnets requires manual conversion: does not exist in peer-type
 	// WARNING: in.Router requires manual conversion: does not exist in peer-type
 	if err := Convert_v1alpha8_NetworkFilter_To_v1alpha6_NetworkFilter(&in.Network, &out.Network, s); err != nil {
 		return err
 	}
 	// WARNING: in.Subnets requires manual conversion: does not exist in peer-type
 	// WARNING: in.NetworkMTU requires manual conversion: does not exist in peer-type
-	out.DNSNameservers = *(*[]string)(unsafe.Pointer(&in.DNSNameservers))
 	if in.ExternalRouterIPs != nil {
 		in, out := &in.ExternalRouterIPs, &out.ExternalRouterIPs
 		*out = make([]ExternalRouterIPParam, len(*in))

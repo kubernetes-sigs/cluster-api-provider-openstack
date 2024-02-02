@@ -196,6 +196,11 @@ func Convert_v1alpha8_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(in *
 		out.ExternalNetworkID = in.ExternalNetwork.ID
 	}
 
+	if len(in.ManagedSubnets) > 0 {
+		out.NodeCIDR = in.ManagedSubnets[0].CIDR
+		out.DNSNameservers = in.ManagedSubnets[0].DNSNameservers
+	}
+
 	if in.Subnets != nil {
 		if len(in.Subnets) >= 1 {
 			if err := Convert_v1alpha8_SubnetFilter_To_v1alpha5_SubnetFilter(&in.Subnets[0], &out.Subnet, s); err != nil {
@@ -227,6 +232,16 @@ func Convert_v1alpha5_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(in *
 		}
 		out.Subnets = []infrav1.SubnetFilter{subnet}
 	}
+
+	if len(in.NodeCIDR) > 0 {
+		out.ManagedSubnets = []infrav1.SubnetSpec{
+			{
+				CIDR:           in.NodeCIDR,
+				DNSNameservers: in.DNSNameservers,
+			},
+		}
+	}
+	// We're dropping DNSNameservers even if these were set as without NodeCIDR it doesn't make sense.
 
 	return nil
 }

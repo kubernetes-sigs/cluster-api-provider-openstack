@@ -247,7 +247,7 @@ prevent a floating IP from being allocated.
 > This can be a project-specific network, if the management cluster lives in the same project
 > as the workload cluster, or a network that is shared across multiple projects.
 >
-> In particular, this means that the cluster **cannot** use `OpenStackCluster.spec.nodeCidr`
+> In particular, this means that the cluster **cannot** use `OpenStackCluster.spec.managedSubnets`
 > to provision a new network for the cluster. Instead, use `OpenStackCluster.spec.network`
 > to explicitly specify the same network as the management cluster is on.
 

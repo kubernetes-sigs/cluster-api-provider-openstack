@@ -177,3 +177,22 @@ In v1alpha8, this will be automatically converted to:
 `Subnets` allows specifications of maximum two `SubnetFilter` one being IPv4 and the other IPv6. Both subnets must be on the same network. Any filtered subnets will be added to `OpenStackCluster.Status.Network.Subnets`.
 
 When subnets are not specified on `OpenStackCluster` and only the network is, the network is used to identify the subnets to use. If more than two subnets exist in the network, the user must specify which ones to use by defining the `OpenStackCluster.Spec.Subnets` field.
+
+#### ⚠️ Change to nodeCidr and dnsNameservers
+
+In v1alpha8, `OpenStackCluster.Spec.ManagedSubnets` array field is introduced. The `NodeCIDR` and `DNSNameservers` fields of `OpenStackCluster.Spec` are moved into that structure (renaming `NodeCIDR` to `CIDR`). For example:
+
+```yaml
+  nodeCidr: "10.0.0.0/24"
+  dnsNameservers: "10.0.0.123"
+```
+
+In v1alpha8, this will be automatically converted to:
+
+```yaml
+  managedSubnets:
+  - cidr: "10.0.0.0/24"
+    dnsNameservers: "10.0.0.123"
+```
+
+Please note that currently `managedSubnets` can only hold one element.
