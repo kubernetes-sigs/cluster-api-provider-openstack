@@ -212,7 +212,7 @@ variables:
   SSH_USER_MACHINE: "ubuntu"
   EXP_KUBEADM_BOOTSTRAP_FORMAT_IGNITION: "true"
   # The Flatcar image produced by the image-builder
-  OPENSTACK_FLATCAR_IMAGE_NAME: "flatcar-stable-3602.2.3-kube-v1.28.5"
+  OPENSTACK_FLATCAR_IMAGE_NAME: "flatcar-stable-3760.2.0-kube-v1.28.5"
   # A plain Flatcar from the Flatcar releases server
   FLATCAR_IMAGE_NAME: "flatcar_production_openstack_image"
 
