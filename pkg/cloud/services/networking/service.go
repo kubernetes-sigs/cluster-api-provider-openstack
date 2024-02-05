@@ -17,11 +17,13 @@ limitations under the License.
 package networking
 
 import (
+	"context"
 	"fmt"
 	"sort"
 
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"k8s.io/apimachinery/pkg/runtime"
+	ctrl "sigs.k8s.io/controller-runtime"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
@@ -39,10 +41,11 @@ const (
 type Service struct {
 	scope  scope.Scope
 	client clients.NetworkClient
+	ctx    context.Context
 }
 
 // NewService returns an instance of the networking service.
-func NewService(scope scope.Scope) (*Service, error) {
+func NewService(ctx context.Context, scope scope.Scope) (*Service, error) {
 	networkClient, err := scope.NewNetworkClient()
 	if err != nil {
 		return nil, err
@@ -51,14 +54,17 @@ func NewService(scope scope.Scope) (*Service, error) {
 	return &Service{
 		scope:  scope,
 		client: networkClient,
+		ctx:    ctx,
 	}, nil
 }
 
 // replaceAllAttributesTags replaces all tags on a neworking resource.
 // the value of resourceType must match one of the allowed constants: trunkResource or portResource.
 func (s *Service) replaceAllAttributesTags(eventObject runtime.Object, resourceType string, resourceID string, tags []string) error {
+	log := ctrl.LoggerFrom(s.ctx)
+
 	if len(tags) == 0 {
-		s.scope.Logger().Info("No tags provided to replaceAllAttributesTags", "resource", resourceType, "ID", resourceID)
+		log.Info("No tags provided to replaceAllAttributesTags", "resource", resourceType, "ID", resourceID)
 		return nil
 	}
 	if resourceType != trunkResource && resourceType != portResource {

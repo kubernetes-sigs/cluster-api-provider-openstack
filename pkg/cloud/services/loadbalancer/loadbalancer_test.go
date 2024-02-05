@@ -17,6 +17,7 @@ limitations under the License.
 package loadbalancer
 
 import (
+	"context"
 	"testing"
 
 	"github.com/go-logr/logr"
@@ -33,6 +34,8 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
+
+var ctx context.Context
 
 func Test_ReconcileLoadBalancer(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
@@ -127,7 +130,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 			g := NewWithT(t)
 
 			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "", logr.Discard())
-			lbs, err := NewService(mockScopeFactory)
+			lbs, err := NewService(ctx, mockScopeFactory)
 			g.Expect(err).NotTo(HaveOccurred())
 
 			tt.expectNetwork(mockScopeFactory.NetworkClient.EXPECT())

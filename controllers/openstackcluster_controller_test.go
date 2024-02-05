@@ -217,7 +217,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
 		networkClientRecorder.ListSecGroup(gomock.Any()).Return([]groups.SecGroup{}, nil)
 
-		err = deleteBastion(scope, capiCluster, testCluster)
+		err = deleteBastion(ctx, scope, capiCluster, testCluster)
 		Expect(testCluster.Status.Bastion).To(BeNil())
 		Expect(err).To(BeNil())
 	})
@@ -263,7 +263,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		networkClientRecorder.ListPort(gomock.Any()).Return([]ports.Port{{ID: "portID"}}, nil)
 		networkClientRecorder.ListFloatingIP(floatingips.ListOpts{PortID: "portID"}).Return(make([]floatingips.FloatingIP, 1), nil)
 
-		res, err := reconcileBastion(scope, capiCluster, testCluster)
+		res, err := reconcileBastion(ctx, scope, capiCluster, testCluster)
 		Expect(testCluster.Status.Bastion).To(Equal(&infrav1.BastionStatus{
 			ID:    "adopted-bastion-uuid",
 			State: "ACTIVE",
@@ -315,7 +315,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		networkClientRecorder.ListPort(gomock.Any()).Return([]ports.Port{{ID: "portID"}}, nil)
 		networkClientRecorder.ListFloatingIP(floatingips.ListOpts{PortID: "portID"}).Return([]floatingips.FloatingIP{{FloatingIP: "1.2.3.4"}}, nil)
 
-		res, err := reconcileBastion(scope, capiCluster, testCluster)
+		res, err := reconcileBastion(ctx, scope, capiCluster, testCluster)
 		Expect(testCluster.Status.Bastion).To(Equal(&infrav1.BastionStatus{
 			ID:         "adopted-fip-bastion-uuid",
 			FloatingIP: "1.2.3.4",
@@ -364,7 +364,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		computeClientRecorder := mockScopeFactory.ComputeClient.EXPECT()
 		computeClientRecorder.GetServer("requeue-bastion-uuid").Return(&server, nil)
 
-		res, err := reconcileBastion(scope, capiCluster, testCluster)
+		res, err := reconcileBastion(ctx, scope, capiCluster, testCluster)
 		Expect(testCluster.Status.Bastion).To(Equal(&infrav1.BastionStatus{
 			ID:    "requeue-bastion-uuid",
 			State: "BUILD",
@@ -412,7 +412,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		networkClientRecorder.ListExtensions().Return([]extensions.Extension{}, nil)
 		networkClientRecorder.ListSecGroup(gomock.Any()).Return([]groups.SecGroup{}, nil)
 
-		err = deleteBastion(scope, capiCluster, testCluster)
+		err = deleteBastion(ctx, scope, capiCluster, testCluster)
 		Expect(err).To(BeNil())
 	})
 	It("should implicitly filter cluster subnets by cluster network", func() {
@@ -473,7 +473,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			},
 		}, nil)
 
-		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
+		err = reconcileNetworkComponents(ctx, scope, capiCluster, testCluster)
 		Expect(err).To(BeNil())
 	})
 
@@ -540,7 +540,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			CIDR: "2001:db8:2222:5555::/64",
 		}, nil)
 
-		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
+		err = reconcileNetworkComponents(ctx, scope, capiCluster, testCluster)
 		Expect(err).To(BeNil())
 		Expect(len(testCluster.Status.Network.Subnets)).To(Equal(2))
 	})

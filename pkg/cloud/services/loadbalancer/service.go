@@ -17,6 +17,7 @@ limitations under the License.
 package loadbalancer
 
 import (
+	"context"
 	"fmt"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
@@ -29,16 +30,17 @@ type Service struct {
 	scope              scope.Scope
 	loadbalancerClient clients.LbClient
 	networkingService  *networking.Service
+	ctx                context.Context
 }
 
 // NewService returns an instance of the loadbalancer service.
-func NewService(scope scope.Scope) (*Service, error) {
+func NewService(ctx context.Context, scope scope.Scope) (*Service, error) {
 	loadbalancerClient, err := scope.NewLbClient()
 	if err != nil {
 		return nil, err
 	}
 
-	networkingService, err := networking.NewService(scope)
+	networkingService, err := networking.NewService(ctx, scope)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create networking service: %v", err)
 	}
@@ -47,5 +49,6 @@ func NewService(scope scope.Scope) (*Service, error) {
 		scope:              scope,
 		loadbalancerClient: loadbalancerClient,
 		networkingService:  networkingService,
+		ctx:                ctx,
 	}, nil
 }

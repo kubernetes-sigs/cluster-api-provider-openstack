@@ -17,6 +17,7 @@ limitations under the License.
 package compute
 
 import (
+	"context"
 	"fmt"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
@@ -26,6 +27,7 @@ import (
 
 type Service struct {
 	scope              scope.Scope
+	ctx                context.Context
 	_computeClient     clients.ComputeClient
 	_volumeClient      clients.VolumeClient
 	_imageClient       clients.ImageClient
@@ -80,7 +82,7 @@ func (s Service) getImageClient() clients.ImageClient {
 
 func (s Service) getNetworkingService() (*networking.Service, error) {
 	if s._networkingService == nil {
-		networkingService, err := networking.NewService(s.scope)
+		networkingService, err := networking.NewService(s.ctx, s.scope)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create networking service: %v", err)
 		}
