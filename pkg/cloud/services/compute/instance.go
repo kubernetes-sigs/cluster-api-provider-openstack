@@ -425,7 +425,6 @@ func (s *Service) getOrCreateVolumeBuilder(eventObject runtime.Object, instanceS
 		Description:      description,
 		Size:             blockDevice.SizeGiB,
 		ImageID:          imageID,
-		Multiattach:      false,
 		AvailabilityZone: availabilityZone,
 		VolumeType:       volumeType,
 	}

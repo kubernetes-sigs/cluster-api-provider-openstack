@@ -511,7 +511,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 					Description:      fmt.Sprintf("Root volume for %s", openStackMachineName),
 					Name:             fmt.Sprintf("%s-root", openStackMachineName),
 					ImageID:          imageUUID,
-					Multiattach:      false,
 				}).Return(&volumes.Volume{ID: rootVolumeUUID}, nil)
 				expectVolumePollSuccess(r.volume, rootVolumeUUID)
 
@@ -557,7 +556,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 					Description:      fmt.Sprintf("Root volume for %s", openStackMachineName),
 					Name:             fmt.Sprintf("%s-root", openStackMachineName),
 					ImageID:          imageUUID,
-					Multiattach:      false,
 				}).Return(&volumes.Volume{ID: rootVolumeUUID}, nil)
 				expectVolumePollSuccess(r.volume, rootVolumeUUID)
 
@@ -600,7 +598,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 					Description:      fmt.Sprintf("Root volume for %s", openStackMachineName),
 					Name:             fmt.Sprintf("%s-root", openStackMachineName),
 					ImageID:          imageUUID,
-					Multiattach:      false,
 				}).Return(&volumes.Volume{ID: rootVolumeUUID}, nil)
 				expectVolumePoll(r.volume, rootVolumeUUID, []string{"creating", "error"})
 
@@ -648,7 +645,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 					Description:      fmt.Sprintf("Root volume for %s", openStackMachineName),
 					Name:             fmt.Sprintf("%s-root", openStackMachineName),
 					ImageID:          imageUUID,
-					Multiattach:      false,
 				}).Return(&volumes.Volume{ID: rootVolumeUUID}, nil)
 				expectVolumePollSuccess(r.volume, rootVolumeUUID)
 
@@ -659,7 +655,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 					AvailabilityZone: failureDomain,
 					Description:      fmt.Sprintf("Additional block device for %s", openStackMachineName),
 					Name:             fmt.Sprintf("%s-etcd", openStackMachineName),
-					Multiattach:      false,
 					VolumeType:       "test-volume-type",
 				}).Return(&volumes.Volume{ID: additionalBlockDeviceVolumeUUID}, nil)
 				expectVolumePollSuccess(r.volume, additionalBlockDeviceVolumeUUID)
@@ -734,7 +729,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 					AvailabilityZone: failureDomain,
 					Description:      fmt.Sprintf("Additional block device for %s", openStackMachineName),
 					Name:             fmt.Sprintf("%s-etcd", openStackMachineName),
-					Multiattach:      false,
 					VolumeType:       "test-volume-type",
 				}).Return(&volumes.Volume{ID: additionalBlockDeviceVolumeUUID}, nil)
 				expectVolumePollSuccess(r.volume, additionalBlockDeviceVolumeUUID)
@@ -802,7 +796,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 					AvailabilityZone: "test-alternate-az",
 					Description:      fmt.Sprintf("Additional block device for %s", openStackMachineName),
 					Name:             fmt.Sprintf("%s-etcd", openStackMachineName),
-					Multiattach:      false,
 					VolumeType:       "test-volume-type",
 				}).Return(&volumes.Volume{ID: additionalBlockDeviceVolumeUUID}, nil)
 				expectVolumePollSuccess(r.volume, additionalBlockDeviceVolumeUUID)

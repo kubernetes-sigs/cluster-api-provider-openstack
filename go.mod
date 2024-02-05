@@ -1,6 +1,6 @@
 module sigs.k8s.io/cluster-api-provider-openstack
 
-go 1.21
+go 1.21.6
 
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
@@ -15,7 +15,7 @@ require (
 	github.com/onsi/gomega v1.30.0
 	github.com/prometheus/client_golang v1.17.0
 	github.com/spf13/pflag v1.0.5
-	golang.org/x/crypto v0.15.0
+	golang.org/x/crypto v0.18.0
 	golang.org/x/text v0.14.0
 	gopkg.in/ini.v1 v1.67.0
 	k8s.io/api v0.28.4
@@ -139,8 +139,8 @@ require (
 	golang.org/x/net v0.18.0 // indirect
 	golang.org/x/oauth2 v0.14.0 // indirect
 	golang.org/x/sync v0.4.0 // indirect
-	golang.org/x/sys v0.14.0 // indirect
-	golang.org/x/term v0.14.0 // indirect
+	golang.org/x/sys v0.16.0 // indirect
+	golang.org/x/term v0.16.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.14.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
@@ -163,3 +163,5 @@ require (
 	sigs.k8s.io/kind v0.20.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 )
+
+replace github.com/gophercloud/gophercloud => github.com/gophercloud/gophercloud v1.5.1-0.20240205151153-9f2975448617
