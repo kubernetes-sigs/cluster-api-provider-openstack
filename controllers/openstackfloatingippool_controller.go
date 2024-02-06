@@ -456,6 +456,9 @@ func (r *OpenStackFloatingIPPoolReconciler) SetupWithManager(ctx context.Context
 
 	if err := mgr.GetFieldIndexer().IndexField(ctx, &ipamv1.IPAddress{}, infrav1alpha1.OpenStackFloatingIPPoolNameIndex, func(rawObj client.Object) []string {
 		ip := rawObj.(*ipamv1.IPAddress)
+		if ip.Spec.PoolRef.Kind != openStackFloatingIPPool {
+			return nil
+		}
 		return []string{ip.Spec.PoolRef.Name}
 	}); err != nil {
 		return err
