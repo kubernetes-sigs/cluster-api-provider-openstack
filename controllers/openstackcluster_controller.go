@@ -263,7 +263,10 @@ func deleteBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackClust
 			}
 		}
 
-		instanceSpec := bastionToInstanceSpec(openStackCluster, cluster.Name)
+		instanceSpec, err := bastionToInstanceSpec(openStackCluster, cluster.Name)
+		if err != nil {
+			return err
+		}
 		if err = computeService.DeleteInstance(openStackCluster, openStackCluster, instanceStatus, instanceSpec); err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete bastion: %w", err))
 			return fmt.Errorf("failed to delete bastion: %w", err)
@@ -346,7 +349,10 @@ func reconcileBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackCl
 		return reconcile.Result{}, err
 	}
 
-	instanceSpec := bastionToInstanceSpec(openStackCluster, cluster.Name)
+	instanceSpec, err := bastionToInstanceSpec(openStackCluster, cluster.Name)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
 	bastionHash, err := compute.HashInstanceSpec(instanceSpec)
 	if err != nil {
 		return reconcile.Result{}, fmt.Errorf("failed computing bastion hash from instance spec: %w", err)
@@ -437,7 +443,15 @@ func reconcileBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackCl
 	return ctrl.Result{}, nil
 }
 
-func bastionToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, clusterName string) *compute.InstanceSpec {
+func bastionToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, clusterName string) (*compute.InstanceSpec, error) {
+	if openStackCluster.Spec.Bastion == nil {
+		return nil, fmt.Errorf("bastion spec is nil")
+	}
+
+	if openStackCluster.Status.Bastion == nil {
+		return nil, fmt.Errorf("bastion status is nil")
+	}
+
 	instanceSpec := &compute.InstanceSpec{
 		Name:          bastionName(clusterName),
 		Flavor:        openStackCluster.Spec.Bastion.Instance.Flavor,
@@ -458,7 +472,7 @@ func bastionToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, clusterNa
 
 	instanceSpec.Ports = openStackCluster.Spec.Bastion.Instance.Ports
 
-	return instanceSpec
+	return instanceSpec, nil
 }
 
 func bastionName(clusterName string) string {

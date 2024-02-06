@@ -35,6 +35,8 @@
   - [Custom pod network CIDR](#custom-pod-network-cidr)
   - [Accessing nodes through the bastion host via SSH](#accessing-nodes-through-the-bastion-host-via-ssh)
     - [Enabling the bastion host](#enabling-the-bastion-host)
+    - [Making changes to the bastion host](#making-changes-to-the-bastion-host)
+    - [Disabling the bastion](#disabling-the-bastion)
     - [Obtain floating IP address of the bastion node](#obtain-floating-ip-address-of-the-bastion-node)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -653,6 +655,19 @@ spec:
 ```
 
 If `managedSecurityGroups: true`, security group rule opening 22/tcp is added to security groups for bastion, controller, and worker nodes respectively. Otherwise, you have to add `securityGroups` to the `bastion` in `OpenStackCluster` spec and `OpenStackMachineTemplate` spec template respectively.
+
+### Making changes to the bastion host
+
+Changes can be made to the bastion instance, like for example changing the flavor.
+First, you have to disable the bastion host by setting `enabled: false` in the `OpenStackCluster.Spec.Bastion` field.
+The bastion will be deleted, you can check the status of the bastion host by running `kubectl get openstackcluster` and looking at the `Bastion` field in status.
+Once it's gone, you can re-enable the bastion host by setting `enabled: true` and then making changes to the bastion instance spec by modifying the `OpenStackCluster.Spec.Bastion.Instance` field.
+The bastion host will be re-created with the new instance spec.
+
+### Disabling the bastion
+
+To disable the bastion host, set `enabled: false` in the `OpenStackCluster.Spec.Bastion` field. The bastion host will be deleted, you can check the status of the bastion host by running `kubectl get openstackcluster` and looking at the `Bastion` field in status.
+Once it's gone, you can now remove the `OpenStackCluster.Spec.Bastion` field from the `OpenStackCluster` spec.
 
 ### Obtain floating IP address of the bastion node
 

@@ -358,6 +358,42 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "Removing OpenStackCluster.Spec.Bastion when it is enabled is not allowed",
+			oldTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					Bastion: &Bastion{
+						Enabled: true,
+						Instance: OpenStackMachineSpec{
+							Flavor: "m1.small",
+							Image:  ImageFilter{Name: "ubuntu"},
+						},
+					},
+				},
+			},
+			newTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Removing OpenStackCluster.Spec.Bastion when it is disabled is allowed",
+			oldTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					Bastion: &Bastion{
+						Enabled: false,
+						Instance: OpenStackMachineSpec{
+							Flavor: "m1.small",
+							Image:  ImageFilter{Name: "ubuntu"},
+						},
+					},
+				},
+			},
+			newTemplate: &OpenStackCluster{
+				Spec: OpenStackClusterSpec{},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
