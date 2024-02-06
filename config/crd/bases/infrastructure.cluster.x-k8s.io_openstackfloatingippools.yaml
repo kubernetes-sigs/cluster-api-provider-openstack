@@ -86,6 +86,11 @@ spec:
                 - kind
                 - name
                 type: object
+              maxIPs:
+                description: |-
+                  MaxIPs is the maximum number of floating ips that can be allocated from this pool, if nil there is no limit.
+                  If set, the pool will stop allocating floating ips when it reaches this number of ClaimedIPs.
+                type: integer
               preAllocatedFloatingIPs:
                 description: |-
                   PreAllocatedFloatingIPs is a list of floating IPs precreated in OpenStack that should be used by this pool.

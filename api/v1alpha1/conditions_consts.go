@@ -19,4 +19,7 @@ package v1alpha1
 const (
 	// OpenstackFloatingIPPoolReadyCondition reports on the current status of the floating ip pool. Ready indicates that the pool is ready to be used.
 	OpenstackFloatingIPPoolReadyCondition = "OpenstackFloatingIPPoolReadyCondition"
+
+	// MaxIPsReachedReason is set when the maximum number of floating IPs has been reached.
+	MaxIPsReachedReason = "MaxIPsReached"
 )
