@@ -296,8 +296,8 @@ func (r *OpenStackFloatingIPPoolReconciler) reconcileIPAddresses(ctx context.Con
 			return err
 		}
 	}
-	unclaimedPreAllocatedIPs := diff(pool.Spec.PreAllocatedFloatingIPs, pool.Status.ClaimedIPs)
-	unclaimedIPs := union(pool.Status.AvailableIPs, unclaimedPreAllocatedIPs)
+	allIPs := union(pool.Status.AvailableIPs, pool.Spec.PreAllocatedFloatingIPs)
+	unclaimedIPs := diff(allIPs, pool.Status.ClaimedIPs)
 	pool.Status.AvailableIPs = diff(unclaimedIPs, pool.Status.FailedIPs)
 	return nil
 }
@@ -313,7 +313,7 @@ func (r *OpenStackFloatingIPPoolReconciler) getIP(ctx context.Context, scope sco
 	}
 
 	// Get tagged floating IPs and add them to the available IPs if they are not present in either the available IPs or the claimed IPs
-	// This is done to prevent leaking floating IPs if to prevent leaking floating IPs if the floating IP was created but the IPAddress object was not
+	// This is done to prevent leaking floating IPs if the floating IP was created but the IPAddress object was not
 	if len(pool.Status.AvailableIPs) == 0 {
 		taggedIPs, err := networkingService.GetFloatingIPsByTag(pool.GetFloatingIPTag())
 		if err != nil {
@@ -332,6 +332,7 @@ func (r *OpenStackFloatingIPPoolReconciler) getIP(ctx context.Context, scope sco
 	if len(pool.Status.AvailableIPs) > 0 {
 		ip = pool.Status.AvailableIPs[0]
 		pool.Status.AvailableIPs = pool.Status.AvailableIPs[1:]
+		pool.Status.ClaimedIPs = append(pool.Status.ClaimedIPs, ip)
 	}
 
 	if ip != "" {
@@ -342,15 +343,13 @@ func (r *OpenStackFloatingIPPoolReconciler) getIP(ctx context.Context, scope sco
 		if fp != nil {
 			return fp.FloatingIP, nil
 		}
+		pool.Status.FailedIPs = append(pool.Status.FailedIPs, ip)
 	}
 
 	fp, err := networkingService.CreateFloatingIPForPool(pool)
 	if err != nil {
 		scope.Logger().Error(err, "Failed to create floating IP", "pool", pool.Name)
 		conditions.MarkFalse(pool, infrav1alpha1.OpenstackFloatingIPPoolReadyCondition, infrav1.OpenStackErrorReason, clusterv1.ConditionSeverityError, "Failed to create floating IP: %v", err)
-		if ip != "" {
-			pool.Status.FailedIPs = append(pool.Status.FailedIPs, ip)
-		}
 		return "", err
 	}
 	defer func() {
