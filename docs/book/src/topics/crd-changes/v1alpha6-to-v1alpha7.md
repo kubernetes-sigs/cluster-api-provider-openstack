@@ -226,7 +226,7 @@ additionalBlockDevices:
 - name: database
   sizeGiB: 50
   storage:
-    type: volume
+    type: Volume
 ```
 
 Here is an example on how to use `additionalBlockDevices` for adding an additional Cinder volume attached
@@ -237,7 +237,7 @@ additionalBlockDevices:
 - name: database
   sizeGiB: 50
   storage:
-    type: volume
+    type: Volume
     volume:
       type: my-volume-type
       availabilityZone: az0
