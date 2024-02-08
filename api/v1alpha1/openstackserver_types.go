@@ -83,6 +83,10 @@ type OpenStackServerSpec struct {
 	// +optional
 	ServerGroup *infrav1.ServerGroupParam `json:"serverGroup,omitempty"`
 
+	// The server group ref to assign the server instance to.
+	// +optional
+	ServerGroupRef *infrav1.ServerGroupRef `json:"serverGroupRef,omitempty"`
+
 	// ServerMetadata is a map of key value pairs to add to the server instance.
 	// +listType=map
 	// +listMapKey=key

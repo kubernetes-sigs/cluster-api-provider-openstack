@@ -613,6 +613,12 @@ func (f *ServerGroupFilter) IsZero() bool {
 	return f.Name == nil
 }
 
+type ServerGroupRef struct {
+	// Name of the OpenStackServerGroup resource to be used.
+	// Must be in the same namespace as the resource(s) being provisioned.
+	Name string `json:"name"`
+}
+
 // BlockDeviceType defines the type of block device to create.
 type BlockDeviceType string
 
@@ -881,7 +887,7 @@ func (s *APIServerLoadBalancer) IsEnabled() bool {
 
 // ResolvedMachineSpec contains resolved references to resources required by the machine.
 type ResolvedMachineSpec struct {
-	// ServerGroupID is the ID of the server group the machine should be added to and is calculated based on ServerGroupFilter.
+	// ServerGroupID is the ID of the server group the machine should be added to and is calculated based on ServerGroupFilter and ServerGroupRef.
 	// +optional
 	ServerGroupID string `json:"serverGroupID,omitempty"`
 

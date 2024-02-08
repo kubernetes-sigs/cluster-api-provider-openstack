@@ -269,6 +269,11 @@ func (in *OpenStackServerSpec) DeepCopyInto(out *OpenStackServerSpec) {
 		*out = new(v1beta1.ServerGroupParam)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.ServerGroupRef != nil {
+		in, out := &in.ServerGroupRef, &out.ServerGroupRef
+		*out = new(v1beta1.ServerGroupRef)
+		**out = **in
+	}
 	if in.ServerMetadata != nil {
 		in, out := &in.ServerMetadata, &out.ServerMetadata
 		*out = make([]v1beta1.ServerMetadata, len(*in))

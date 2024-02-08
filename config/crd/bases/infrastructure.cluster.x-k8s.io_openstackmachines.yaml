@@ -1899,6 +1899,17 @@ spec:
                     format: uuid
                     type: string
                 type: object
+              serverGroupRef:
+                description: The server group ref to assign the machine to.
+                properties:
+                  name:
+                    description: |-
+                      Name of the OpenStackServerGroup resource to be used.
+                      Must be in the same namespace as the resource(s) being provisioned.
+                    type: string
+                required:
+                - name
+                type: object
               serverMetadata:
                 description: Metadata mapping. Allows you to create a map of key value
                   pairs to add to the server instance.
@@ -2225,7 +2236,8 @@ spec:
                     type: array
                   serverGroupID:
                     description: ServerGroupID is the ID of the server group the machine
-                      should be added to and is calculated based on ServerGroupFilter.
+                      should be added to and is calculated based on ServerGroupFilter
+                      and ServerGroupRef.
                     type: string
                 type: object
               resources:

@@ -38,6 +38,7 @@ type OpenStackMachineSpecApplyConfiguration struct {
 	RootVolume             *RootVolumeApplyConfiguration                 `json:"rootVolume,omitempty"`
 	AdditionalBlockDevices []AdditionalBlockDeviceApplyConfiguration     `json:"additionalBlockDevices,omitempty"`
 	ServerGroup            *ServerGroupParamApplyConfiguration           `json:"serverGroup,omitempty"`
+	ServerGroupRef         *ServerGroupRefApplyConfiguration             `json:"serverGroupRef,omitempty"`
 	IdentityRef            *OpenStackIdentityReferenceApplyConfiguration `json:"identityRef,omitempty"`
 	FloatingIPPoolRef      *v1.TypedLocalObjectReference                 `json:"floatingIPPoolRef,omitempty"`
 }
@@ -171,6 +172,14 @@ func (b *OpenStackMachineSpecApplyConfiguration) WithAdditionalBlockDevices(valu
 // If called multiple times, the ServerGroup field is set to the value of the last call.
 func (b *OpenStackMachineSpecApplyConfiguration) WithServerGroup(value *ServerGroupParamApplyConfiguration) *OpenStackMachineSpecApplyConfiguration {
 	b.ServerGroup = value
+	return b
+}
+
+// WithServerGroupRef sets the ServerGroupRef field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ServerGroupRef field is set to the value of the last call.
+func (b *OpenStackMachineSpecApplyConfiguration) WithServerGroupRef(value *ServerGroupRefApplyConfiguration) *OpenStackMachineSpecApplyConfiguration {
+	b.ServerGroupRef = value
 	return b
 }
 

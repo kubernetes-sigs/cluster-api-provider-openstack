@@ -219,7 +219,7 @@ func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, scope *
 
 	scope.Logger().Info("Reconciling Server create")
 
-	changed, err := resolveServerResources(scope, openStackServer)
+	changed, err := resolveServerResources(ctx, r.Client, scope, openStackServer)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -318,7 +318,7 @@ func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, scope *
 }
 
 // resolveServerResources resolves and stores the OpenStack resources for the server.
-func resolveServerResources(scope *scope.WithLogger, openStackServer *infrav1alpha1.OpenStackServer) (bool, error) {
+func resolveServerResources(ctx context.Context, ctrlClient client.Client, scope *scope.WithLogger, openStackServer *infrav1alpha1.OpenStackServer) (bool, error) {
 	if openStackServer.Status.Resources == nil {
 		openStackServer.Status.Resources = &infrav1alpha1.ServerResources{}
 	}
@@ -327,19 +327,43 @@ func resolveServerResources(scope *scope.WithLogger, openStackServer *infrav1alp
 		resolved = &infrav1alpha1.ResolvedServerSpec{}
 		openStackServer.Status.Resolved = resolved
 	}
-	return compute.ResolveServerSpec(scope, openStackServer)
+
+	// Resolve resources from OpenStack
+	changed, err := compute.ResolveServerSpec(scope, openStackServer)
+	if err != nil {
+		return changed, err
+	}
+
+	// Resolve the OpenStackServerGroup Reference using K8sClient (with a lower priority than OpenStackServer.Spec.ServerGroup)
+	if resolved.ServerGroupID == "" && openStackServer.Spec.ServerGroupRef != nil && openStackServer.Spec.ServerGroupRef.Name != "" {
+		servergroup := &infrav1.OpenStackServerGroup{}
+
+		// Get OpenStackServerGroup resource from K8s
+		err := ctrlClient.Get(ctx, client.ObjectKey{
+			Namespace: openStackServer.Namespace,
+			Name:      openStackServer.Spec.ServerGroupRef.Name,
+		}, servergroup)
+		if err != nil {
+			return changed, err
+		}
+
+		// Store the resolved UUID, once it's ready and set.
+		if servergroup.Status.Ready && servergroup.Status.ID != "" {
+			resolved.ServerGroupID = servergroup.Status.ID
+			changed = true
+		}
+	}
+	return changed, err
 }
 
 // adoptServerResources adopts the OpenStack resources for the server.
 func adoptServerResources(scope *scope.WithLogger, openStackServer *infrav1alpha1.OpenStackServer) error {
-	resources := openStackServer.Status.Resources
-	if resources == nil {
-		resources = &infrav1alpha1.ServerResources{}
-		openStackServer.Status.Resources = resources
+	if openStackServer.Status.Resources == nil {
+		openStackServer.Status.Resources = &infrav1alpha1.ServerResources{}
 	}
 
 	// Adopt any existing resources
-	return compute.AdoptServerResources(scope, openStackServer.Status.Resolved, resources)
+	return compute.AdoptServerResources(scope, openStackServer.Status.Resolved, openStackServer.Status.Resources)
 }
 
 func getOrCreateServerPorts(openStackServer *infrav1alpha1.OpenStackServer, networkingService *networking.Service) error {

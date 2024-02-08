@@ -247,6 +247,7 @@ API rule violation: names_match,sigs.k8s.io/cluster-api-provider-openstack/api/v
 API rule violation: names_match,sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7,SubnetFilter,IPv6AddressMode
 API rule violation: names_match,sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7,SubnetFilter,IPv6RAMode
 API rule violation: names_match,sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7,SubnetFilter,ProjectID
+API rule violation: names_match,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1,OpenStackServerGroupStatus,ID
 API rule violation: names_match,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1,ResolvedFixedIP,SubnetID
 API rule violation: names_match,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1,Router,IPs
 API rule violation: names_match,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1,SubnetFilter,IPv6AddressMode

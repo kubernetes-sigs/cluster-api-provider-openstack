@@ -444,7 +444,7 @@ func (r *OpenStackMachineReconciler) reconcileMachineState(scope *scope.WithLogg
 		scope.Logger().Info("Waiting for instance to become ACTIVE", "id", openStackServer.Status.InstanceID, "status", openStackServer.Status.InstanceState)
 		return &ctrl.Result{RequeueAfter: waitForBuildingInstanceToReconcile}
 	default:
-		// The other state is normal (for example, migrating, shutoff) but we don't want to proceed until it's ACTIVE
+		// The other state is normal (for example; migrating, shutoff) but we don't want to proceed until it's ACTIVE
 		// due to potential conflict or unexpected actions
 		scope.Logger().Info("Waiting for instance to become ACTIVE", "id", openStackServer.Status.InstanceID, "status", openStackServer.Status.InstanceState)
 		conditions.MarkUnknown(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceNotReadyReason, "Instance state is not handled: %v", openStackServer.Status.InstanceState)

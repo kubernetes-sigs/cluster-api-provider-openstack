@@ -216,6 +216,20 @@ sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupParam
 </tr>
 <tr>
 <td>
+<code>serverGroupRef</code><br/>
+<em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta1/api#infrastructure.cluster.x-k8s.io/v1beta1.ServerGroupRef">
+sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupRef
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The server group ref to assign the server instance to.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>serverMetadata</code><br/>
 <em>
 <a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta1/api#infrastructure.cluster.x-k8s.io/v1beta1.ServerMetadata">
@@ -735,6 +749,20 @@ sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupParam
 <td>
 <em>(Optional)</em>
 <p>ServerGroup is the server group to which the server instance belongs.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serverGroupRef</code><br/>
+<em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta1/api#infrastructure.cluster.x-k8s.io/v1beta1.ServerGroupRef">
+sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupRef
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The server group ref to assign the server instance to.</p>
 </td>
 </tr>
 <tr>
