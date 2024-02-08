@@ -22,8 +22,8 @@ import (
 )
 
 // ResolveReferencedMachineResources is responsible for populating ReferencedMachineResources with IDs of
-// the resources referenced in the OpenStackMachineSpec by querying the OpenStack APIs. It'll return error
-// if resources cannot be found or their filters are ambiguous.
+// the resources referenced in the OpenStackMachineSpec by querying the OpenStack APIs and K8s resources.
+// It'll return an error if resources cannot be found or their filters are ambiguous.
 func ResolveReferencedMachineResources(scope scope.Scope, spec *infrav1.OpenStackMachineSpec, resources *infrav1.ReferencedMachineResources) error {
 	compute, err := NewService(scope)
 	if err != nil {

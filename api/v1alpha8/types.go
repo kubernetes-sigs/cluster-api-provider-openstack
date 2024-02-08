@@ -240,6 +240,12 @@ type ServerGroupFilter struct {
 	Name string `json:"name,omitempty"`
 }
 
+type ServerGroupRef struct {
+	// Name of the OpenStackServerGroup resource to be used.
+	// Must be in the same namespace as the resource(s) being provisioned.
+	Name string `json:"name"`
+}
+
 // BlockDeviceType defines the type of block device to create.
 type BlockDeviceType string
 
@@ -489,7 +495,7 @@ type APIServerLoadBalancer struct {
 
 // ReferencedMachineResources contains resolved references to resources required by the machine.
 type ReferencedMachineResources struct {
-	// ServerGroupID is the ID of the server group the machine should be added to and is calculated based on ServerGroupFilter.
+	// ServerGroupID is the ID of the server group the machine should be added to and is calculated based on ServerGroupFilter or ServerGroupRef.
 	// +optional
 	ServerGroupID string `json:"serverGroupID,omitempty"`
 

@@ -147,8 +147,14 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return reconcile.Result{}, err
 	}
 
-	// Resolve and store referenced resources
+	// Resolve and store referenced OpenStack resources
 	err = compute.ResolveReferencedMachineResources(scope, &openStackMachine.Spec, &openStackMachine.Status.ReferencedResources)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// Resolve referenced resources CAPO resources, using the K8s client
+	err = resolveReferencedClientResources(ctx, r.Client, openStackMachine)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -160,6 +166,33 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	// Handle non-deleted clusters
 	return r.reconcileNormal(ctx, scope, cluster, infraCluster, machine, openStackMachine)
+}
+
+func resolveReferencedClientResources(ctx context.Context, ctrlClient client.Client, openStackMachine *infrav1.OpenStackMachine) error {
+	var spec *infrav1.OpenStackMachineSpec = &openStackMachine.Spec
+	var resources *infrav1.ReferencedMachineResources = &openStackMachine.Status.ReferencedResources
+	var namespace string = openStackMachine.ObjectMeta.Namespace
+
+	// Resolve ServerGroupRef if it's not resolved already
+	if spec.ServerGroupRef != nil && resources.ServerGroupID == "" {
+		servergroup := &infrav1.OpenStackServerGroup{}
+
+		// Get OpenStackServerGroup resource from K8s
+		err := ctrlClient.Get(ctx, client.ObjectKey{
+			Namespace: namespace,
+			Name:      spec.ServerGroupRef.Name}, servergroup)
+		if err != nil {
+			return err
+		}
+
+		// Requeue Reconcile, unless it's in Ready state.
+		if !servergroup.Status.Ready {
+			return errors.New("referenced OpenStackServerGroup is not ready yet")
+		}
+
+		resources.ServerGroupID = servergroup.Status.ID
+	}
+	return nil
 }
 
 func patchMachine(ctx context.Context, patchHelper *patch.Helper, openStackMachine *infrav1.OpenStackMachine, machine *clusterv1.Machine, options ...patch.Option) error {
@@ -396,7 +429,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		scope.Logger().Info("Waiting for instance to become ACTIVE", "id", instanceStatus.ID(), "status", instanceStatus.State())
 		return ctrl.Result{RequeueAfter: waitForBuildingInstanceToReconcile}, nil
 	default:
-		// The other state is normal (for example, migrating, shutoff) but we don't want to proceed until it's ACTIVE
+		// The other state is normal (for example; migrating, shutoff, shelved) but we don't want to proceed until it's ACTIVE
 		// due to potential conflict or unexpected actions
 		scope.Logger().Info("Waiting for instance to become ACTIVE", "id", instanceStatus.ID(), "status", instanceStatus.State())
 		conditions.MarkUnknown(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceNotReadyReason, "Instance state is not handled: %s", instanceStatus.State())

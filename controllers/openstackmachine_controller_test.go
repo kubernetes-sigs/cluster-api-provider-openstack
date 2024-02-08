@@ -260,3 +260,80 @@ func Test_machineToInstanceSpec(t *testing.T) {
 		})
 	}
 }
+
+/*
+func Test_resolveReferencedClientResources(t *testing.T) {
+	RegisterTestingT(t)
+
+	tests := []struct {
+		name             string
+		ctx              *context.Context
+		mockCtrl         *gomock.Controller
+		openStackMachine func() *infrav1.OpenStackMachine
+		wantInstanceSpec func() *compute.InstanceSpec
+	}{
+		{
+			name:             "Defaults",
+			ctx:              context.TODO(),
+			mockCtrl:         gomock.NewController(GinkgoT()),
+			openStackMachine: getDefaultOpenStackMachine,
+			wantInstanceSpec: getDefaultInstanceSpec,
+		},
+		{
+			name: "Control plane security group",
+			openStackCluster: func() *infrav1.OpenStackCluster {
+				c := getDefaultOpenStackCluster()
+				c.Spec.ManagedSecurityGroups = true
+				return c
+			},
+			machine: func() *clusterv1.Machine {
+				m := getDefaultMachine()
+				m.Labels = map[string]string{
+					clusterv1.MachineControlPlaneLabel: "true",
+				}
+				return m
+			},
+			openStackMachine: getDefaultOpenStackMachine,
+			wantInstanceSpec: func() *compute.InstanceSpec {
+				i := getDefaultInstanceSpec()
+				i.SecurityGroups = []infrav1.SecurityGroupFilter{{ID: controlPlaneSecurityGroupUUID}}
+				return i
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			//ctx context.Context, ctrlClient client.Client, openStackMachine *infrav1.OpenStackMachine
+			got := resolveReferencedClientResources(tt.openStackCluster(), tt.machine(), tt.openStackMachine(), "user-data")
+			Expect(got).To(Equal(tt.wantInstanceSpec()))
+		})
+	}
+}
+*/
+
+/*
+
+These are tests for resolveReferencedClientResources
+	{
+		testName:          "ServerGroupRef should be used",
+		serverGroupRef:    &infrav1.ServerGroupRef{Name: "openstack-server-group-name"},
+		expectComputeMock: func(m *mock.MockComputeClientMockRecorder) {},
+		expectImageMock:   func(m *mock.MockImageClientMockRecorder) {},
+		expectClientMock:  func()
+		want:              &infrav1.ReferencedMachineResources{ImageID: imageID1, ServerGroupID: serverGroupID2},
+		wantErr:           false,
+	},
+	{
+		testName: "ServerGroupRef not ready",
+		serverGroupRef:
+		want:              &infrav1.ReferencedMachineResources{ImageID: imageID1, ServerGroupID: serverGroupID2},
+		wantErr:           false,
+	},
+	{
+		testName: "ServerGroupID has higher priority than ServerGroupRef"
+		serverGroupFilter: ,
+		serverGroupRef:
+		want:              &infrav1.ReferencedMachineResources{ImageID: imageID1, ServerGroupID: serverGroupID1},
+		wantErr:           false,
+	},
+*/

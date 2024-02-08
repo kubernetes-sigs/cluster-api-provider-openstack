@@ -88,6 +88,10 @@ type OpenStackMachineSpec struct {
 	// +optional
 	ServerGroup *ServerGroupFilter `json:"serverGroup,omitempty"`
 
+	// The server group ref to assign the machine to.
+	// +optional
+	ServerGroupRef *ServerGroupRef `json:"serverGroupRef,omitempty"`
+
 	// IdentityRef is a reference to a identity to be used when reconciling this cluster
 	// +optional
 	IdentityRef *OpenStackIdentityReference `json:"identityRef,omitempty"`

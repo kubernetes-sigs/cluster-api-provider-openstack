@@ -1154,6 +1154,7 @@ func autoConvert_v1alpha8_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(
 	out.RootVolume = (*RootVolume)(unsafe.Pointer(in.RootVolume))
 	// WARNING: in.AdditionalBlockDevices requires manual conversion: does not exist in peer-type
 	// WARNING: in.ServerGroup requires manual conversion: does not exist in peer-type
+	// WARNING: in.ServerGroupRef requires manual conversion: does not exist in peer-type
 	out.IdentityRef = (*OpenStackIdentityReference)(unsafe.Pointer(in.IdentityRef))
 	return nil
 }

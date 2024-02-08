@@ -27,6 +27,8 @@ import (
 // GetServerGroupID looks up a server group using the passed filter and returns
 // its ID. It'll return an error when server group is not found or there are multiple.
 func (s *Service) GetServerGroupID(serverGroupFilter *infrav1.ServerGroupFilter) (string, error) {
+	// NOTE(dalees): This is an early exit if ID is set, and never hits the Nova API with the passed ID. This is not what the function description says it does.
+	//               but it's probably okay; creating a server using the ID will surface the error.
 	if serverGroupFilter.ID != "" {
 		return serverGroupFilter.ID, nil
 	}
@@ -37,7 +39,7 @@ func (s *Service) GetServerGroupID(serverGroupFilter *infrav1.ServerGroupFilter)
 	}
 
 	// otherwise fallback to looking up by name, which is slower
-	serverGroup, err := s.getServerGroupByName(serverGroupFilter.Name)
+	serverGroup, err := s.GetServerGroupByName(serverGroupFilter.Name, false)
 	if err != nil {
 		return "", err
 	}
@@ -45,7 +47,8 @@ func (s *Service) GetServerGroupID(serverGroupFilter *infrav1.ServerGroupFilter)
 	return serverGroup.ID, nil
 }
 
-func (s *Service) getServerGroupByName(serverGroupName string) (*servergroups.ServerGroup, error) {
+// TODO(dalees): This second parameter is messy. It would be better to differentiate 404, 'too many' and 'actual failure' in the caller.
+func (s *Service) GetServerGroupByName(serverGroupName string, ignoreNotFound bool) (*servergroups.ServerGroup, error) {
 	allServerGroups, err := s.getComputeClient().ListServerGroups()
 	if err != nil {
 		return nil, err
@@ -61,11 +64,22 @@ func (s *Service) getServerGroupByName(serverGroupName string) (*servergroups.Se
 
 	switch len(serverGroups) {
 	case 0:
+		if ignoreNotFound {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("no server group with name %s could be found", serverGroupName)
 	case 1:
 		return &serverGroups[0], nil
 	default:
 		// this will never happen due to duplicate IDs, only duplicate names, so our error message is worded accordingly
-		return nil, fmt.Errorf("too many server groups with name %s were found", serverGroupName)
+		return &serverGroups[0], fmt.Errorf("too many server groups with name %s were found", serverGroupName)
 	}
+}
+
+func (s *Service) CreateServerGroup(serverGroupName string, policy string) (*servergroups.ServerGroup, error) {
+	return s.getComputeClient().CreateServerGroup(serverGroupName, policy)
+}
+
+func (s *Service) DeleteServerGroup(id string) error {
+	return s.getComputeClient().DeleteServerGroup(id)
 }
