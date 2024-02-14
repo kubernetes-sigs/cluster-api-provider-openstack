@@ -211,14 +211,16 @@ func (s *Service) ReconcileSubnet(openStackCluster *infrav1.OpenStackCluster, cl
 
 	subnetList, err := s.client.ListSubnet(subnets.ListOpts{
 		NetworkID: openStackCluster.Status.Network.ID,
-		CIDR:      openStackCluster.Spec.NodeCIDR,
+		// Currently we only support 1 SubnetSpec.
+		CIDR: openStackCluster.Spec.ManagedSubnets[0].CIDR,
 	})
 	if err != nil {
 		return err
 	}
 
 	if len(subnetList) > 1 {
-		return fmt.Errorf("found %d subnets with the name %s, which should not happen", len(subnetList), subnetName)
+		return fmt.Errorf("found %d subnets with the CIDR %s and network %s, which should not happen",
+			len(subnetList), openStackCluster.Spec.ManagedSubnets[0], openStackCluster.Status.Network.ID)
 	}
 
 	var subnet *subnets.Subnet
@@ -249,8 +251,8 @@ func (s *Service) createSubnet(openStackCluster *infrav1.OpenStackCluster, clust
 		NetworkID:      openStackCluster.Status.Network.ID,
 		Name:           name,
 		IPVersion:      4,
-		CIDR:           openStackCluster.Spec.NodeCIDR,
-		DNSNameservers: openStackCluster.Spec.DNSNameservers,
+		CIDR:           openStackCluster.Spec.ManagedSubnets[0].CIDR,
+		DNSNameservers: openStackCluster.Spec.ManagedSubnets[0].DNSNameservers,
 		Description:    names.GetDescription(clusterName),
 	}
 

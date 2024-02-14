@@ -34,10 +34,11 @@ type OpenStackClusterSpec struct {
 	// +optional
 	CloudName string `json:"cloudName"`
 
-	// NodeCIDR is the OpenStack Subnet to be created. Cluster actuator will create a
-	// network, a subnet with NodeCIDR, and a router connected to this subnet.
-	// If you leave this empty, no network will be created.
-	NodeCIDR string `json:"nodeCidr,omitempty"`
+	// ManagedSubnets describe OpenStack Subnets to be created. Cluster actuator will create a network,
+	// subnets with the defined CIDR, and a router connected to these subnets. Currently only one IPv4
+	// subnet is supported. If you leave this empty, no network will be created.
+	// +kubebuilder:validation:MaxItems=1
+	ManagedSubnets []SubnetSpec `json:"managedSubnets,omitempty"`
 
 	// If NodeCIDR is set this option can be used to detect an existing router.
 	// If specified, no new router will be created.
@@ -58,11 +59,6 @@ type OpenStackClusterSpec struct {
 	// +optional
 	NetworkMTU int `json:"networkMtu,omitempty"`
 
-	// DNSNameservers is the list of nameservers for OpenStack Subnet being created.
-	// Set this value when you need create a new network/subnet while the access
-	// through DNS is required.
-	// +listType=set
-	DNSNameservers []string `json:"dnsNameservers,omitempty"`
 	// ExternalRouterIPs is an array of externalIPs on the respective subnets.
 	// This is necessary if the router needs a fixed ip in a specific subnet.
 	ExternalRouterIPs []ExternalRouterIPParam `json:"externalRouterIPs,omitempty"`

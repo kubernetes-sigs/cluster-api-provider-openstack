@@ -29,9 +29,10 @@ spec:
   apiServerLoadBalancer:
     enabled: true
   managedSecurityGroups: true
-  nodeCidr: 10.6.0.0/24
-  dnsNameservers:
-  - ${OPENSTACK_DNS_NAMESERVERS}
+  managedSubnets:
+  - cidr: 10.6.0.0/24
+    dnsNameservers:
+    - ${OPENSTACK_DNS_NAMESERVERS}
   externalNetwork:
     id: ${OPENSTACK_EXTERNAL_NETWORK_ID}
 ---

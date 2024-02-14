@@ -100,6 +100,16 @@ func TestFuzzyConversion(t *testing.T) {
 					}
 				}
 			},
+
+			func(spec *infrav1.SubnetSpec, c fuzz.Continue) {
+				c.FuzzNoCustom(spec)
+
+				// CIDR is required and API validates that it's present, so
+				// we force it to always be set.
+				for spec.CIDR == "" {
+					spec.CIDR = c.RandString()
+				}
+			},
 		}
 	}
 

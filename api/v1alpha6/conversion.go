@@ -127,6 +127,11 @@ func restorev1alpha6ClusterSpec(previous *OpenStackClusterSpec, dst *OpenStackCl
 		}
 	}
 
+	// We only restore DNSNameservers when these were lossly converted when NodeCIDR is empty.
+	if len(previous.DNSNameservers) > 0 && dst.NodeCIDR == "" {
+		dst.DNSNameservers = previous.DNSNameservers
+	}
+
 	prevBastion := previous.Bastion
 	dstBastion := dst.Bastion
 	if prevBastion != nil && dstBastion != nil {
@@ -545,6 +550,11 @@ func Convert_v1alpha8_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in *
 		}
 	}
 
+	if len(in.ManagedSubnets) > 0 {
+		out.NodeCIDR = in.ManagedSubnets[0].CIDR
+		out.DNSNameservers = in.ManagedSubnets[0].DNSNameservers
+	}
+
 	return nil
 }
 
@@ -567,6 +577,16 @@ func Convert_v1alpha6_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(in *
 			return err
 		}
 		out.Subnets = []infrav1.SubnetFilter{subnet}
+	}
+
+	// DNSNameservers without NodeCIDR doesn't make sense, so we drop that.
+	if len(in.NodeCIDR) > 0 {
+		out.ManagedSubnets = []infrav1.SubnetSpec{
+			{
+				CIDR:           in.NodeCIDR,
+				DNSNameservers: in.DNSNameservers,
+			},
+		}
 	}
 
 	return nil

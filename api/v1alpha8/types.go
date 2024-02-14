@@ -87,6 +87,16 @@ type RouterFilter struct {
 	NotTagsAny  string `json:"notTagsAny,omitempty"`
 }
 
+type SubnetSpec struct {
+	// CIDR is representing the IP address range used to create the subnet, e.g. 10.0.0.0/24.
+	// This field is required when defining a subnet.
+	// +required
+	CIDR string `json:"cidr"`
+	// DNSNameservers holds a list of DNS server addresses that will be provided when creating
+	// the subnet. These addresses need to have the same IP version as CIDR.
+	DNSNameservers []string `json:"dnsNameservers,omitempty"`
+}
+
 type PortOpts struct {
 	// Network is a query for an openstack network that the port will be created or discovered on.
 	// This will fail if the query returns more than one network.

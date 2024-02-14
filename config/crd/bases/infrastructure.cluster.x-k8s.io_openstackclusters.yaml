@@ -5366,15 +5366,6 @@ spec:
                   DisablePortSecurity disables the port security of the network created for the
                   Kubernetes cluster, which also disables SecurityGroups
                 type: boolean
-              dnsNameservers:
-                description: |-
-                  DNSNameservers is the list of nameservers for OpenStack Subnet being created.
-                  Set this value when you need create a new network/subnet while the access
-                  through DNS is required.
-                items:
-                  type: string
-                type: array
-                x-kubernetes-list-type: set
               externalNetwork:
                 description: ExternalNetwork is the OpenStack Network to be used to
                   get public internet to the VMs.
@@ -5468,6 +5459,30 @@ spec:
                   By default, the managed security groups have rules that allow the Kubelet, etcd, the
                   Kubernetes API server and the Calico CNI plugin to function correctly.
                 type: boolean
+              managedSubnets:
+                description: |-
+                  ManagedSubnets describe OpenStack Subnets to be created. Cluster actuator will create a network,
+                  subnets with the defined CIDR, and a router connected to these subnets. Currently only one IPv4
+                  subnet is supported. If you leave this empty, no network will be created.
+                items:
+                  properties:
+                    cidr:
+                      description: |-
+                        CIDR is representing the IP address range used to create the subnet, e.g. 10.0.0.0/24.
+                        This field is required when defining a subnet.
+                      type: string
+                    dnsNameservers:
+                      description: |-
+                        DNSNameservers holds a list of DNS server addresses that will be provided when creating
+                        the subnet. These addresses need to have the same IP version as CIDR.
+                      items:
+                        type: string
+                      type: array
+                  required:
+                  - cidr
+                  type: object
+                maxItems: 1
+                type: array
               network:
                 description: If NodeCIDR cannot be set this can be used to detect
                   an existing network.
@@ -5496,12 +5511,6 @@ spec:
                   If leaved empty, the network will have the default MTU defined in Openstack network service.
                   To use this field, the Openstack installation requires the net-mtu neutron API extension.
                 type: integer
-              nodeCidr:
-                description: |-
-                  NodeCIDR is the OpenStack Subnet to be created. Cluster actuator will create a
-                  network, a subnet with NodeCIDR, and a router connected to this subnet.
-                  If you leave this empty, no network will be created.
-                type: string
               router:
                 description: |-
                   If NodeCIDR is set this option can be used to detect an existing router.

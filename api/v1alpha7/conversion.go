@@ -39,6 +39,24 @@ var v1alpha7OpenStackClusterRestorer = conversion.RestorerFor[*OpenStackCluster]
 		},
 		restorev1alpha7Bastion,
 	),
+	"spec": conversion.HashedFieldRestorer(
+		func(c *OpenStackCluster) *OpenStackClusterSpec {
+			return &c.Spec
+		},
+		restorev1alpha7ClusterSpec,
+
+		// Filter out Bastion, which is restored separately
+		conversion.HashedFilterField[*OpenStackCluster, OpenStackClusterSpec](
+			func(s *OpenStackClusterSpec) *OpenStackClusterSpec {
+				if s.Bastion != nil {
+					f := *s
+					f.Bastion = nil
+					return &f
+				}
+				return s
+			},
+		),
+	),
 }
 
 var v1alpha8OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStackCluster]{
@@ -111,6 +129,19 @@ func restorev1alpha8Bastion(previous **infrav1.Bastion, dst **infrav1.Bastion) {
 	}
 }
 
+func restorev1alpha7ClusterSpec(previous *OpenStackClusterSpec, dst *OpenStackClusterSpec) {
+	prevBastion := previous.Bastion
+	dstBastion := dst.Bastion
+	if prevBastion != nil && dstBastion != nil {
+		restorev1alpha7MachineSpec(&prevBastion.Instance, &dstBastion.Instance)
+	}
+
+	// We only restore DNSNameservers when these were lossly converted when NodeCIDR is empty.
+	if len(previous.DNSNameservers) > 0 && dst.NodeCIDR == "" {
+		dst.DNSNameservers = previous.DNSNameservers
+	}
+}
+
 func restorev1alpha8ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infrav1.OpenStackClusterSpec) {
 	prevBastion := previous.Bastion
 	dstBastion := dst.Bastion
@@ -132,6 +163,8 @@ func restorev1alpha8ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *inf
 	if len(previous.Subnets) > 1 {
 		dst.Subnets = append(dst.Subnets, previous.Subnets[1:]...)
 	}
+
+	dst.ManagedSubnets = previous.ManagedSubnets
 }
 
 func (r *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {
@@ -171,6 +204,7 @@ func (r *OpenStackClusterList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 var _ ctrlconversion.Convertible = &OpenStackClusterTemplate{}
 
 func restorev1alpha7ClusterTemplateSpec(previous *OpenStackClusterTemplateSpec, dst *OpenStackClusterTemplateSpec) {
+	restorev1alpha7ClusterSpec(&previous.Template.Spec, &dst.Template.Spec)
 	restorev1alpha7Bastion(&previous.Template.Spec.Bastion, &dst.Template.Spec.Bastion)
 }
 
@@ -465,6 +499,16 @@ func Convert_v1alpha7_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(in *
 		out.Subnets = []infrav1.SubnetFilter{subnet}
 	}
 
+	// DNSNameservers without NodeCIDR doesn't make sense, so we drop that.
+	if len(in.NodeCIDR) > 0 {
+		out.ManagedSubnets = []infrav1.SubnetSpec{
+			{
+				CIDR:           in.NodeCIDR,
+				DNSNameservers: in.DNSNameservers,
+			},
+		}
+	}
+
 	return nil
 }
 
@@ -482,6 +526,11 @@ func Convert_v1alpha8_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in *
 		if err := Convert_v1alpha8_SubnetFilter_To_v1alpha7_SubnetFilter(&in.Subnets[0], &out.Subnet, s); err != nil {
 			return err
 		}
+	}
+
+	if len(in.ManagedSubnets) > 0 {
+		out.NodeCIDR = in.ManagedSubnets[0].CIDR
+		out.DNSNameservers = in.ManagedSubnets[0].DNSNameservers
 	}
 
 	return nil
