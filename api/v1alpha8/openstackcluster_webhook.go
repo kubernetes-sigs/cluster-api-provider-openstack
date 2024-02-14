@@ -116,6 +116,13 @@ func (r *OpenStackCluster) ValidateUpdate(oldRaw runtime.Object) (admission.Warn
 		r.Spec.APIServerPort = 0
 	}
 
+	// Allow to remove the bastion spec only if it was disabled before.
+	if r.Spec.Bastion == nil {
+		if old.Spec.Bastion != nil && old.Spec.Bastion.Enabled {
+			allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "bastion"), "cannot be removed before disabling it"))
+		}
+	}
+
 	// Allow changes to the bastion spec.
 	old.Spec.Bastion = &Bastion{}
 	r.Spec.Bastion = &Bastion{}

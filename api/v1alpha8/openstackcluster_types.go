@@ -155,8 +155,8 @@ type OpenStackClusterSpec struct {
 	// Bastion is the OpenStack instance to login the nodes
 	//
 	// As a rolling update is not ideal during a bastion host session, we
-	// prevent changes to a running bastion configuration. Set `enabled: false` to
-	// make changes.
+	// prevent changes to a running bastion configuration. To make changes, it's required
+	// to first set `enabled: false` which will remove the bastion and then changes can be made.
 	//+optional
 	Bastion *Bastion `json:"bastion,omitempty"`
 
