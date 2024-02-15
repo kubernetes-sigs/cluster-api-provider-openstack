@@ -184,7 +184,7 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope 
 	}
 
 	// if ManagedSubnets was not set, no network was created.
-	if len(openStackCluster.Spec.ManagedSubnets) == 0 {
+	if len(openStackCluster.Spec.ManagedSubnets) > 0 {
 		if err = networkingService.DeleteRouter(openStackCluster, clusterName); err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete router: %w", err))
 			return ctrl.Result{}, fmt.Errorf("failed to delete router: %w", err)
