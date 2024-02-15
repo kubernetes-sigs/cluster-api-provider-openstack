@@ -224,6 +224,12 @@ func (s *providerScope) ExtractToken() (*tokens.Token, error) {
 
 func NewProviderClient(cloud clientconfig.Cloud, caCert []byte, logger logr.Logger) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, string, error) {
 	clientOpts := new(clientconfig.ClientOpts)
+
+	// We explicitly disable reading auth data from env variables by setting an invalid EnvPrefix.
+	// By doing this, we make sure that the data from clouds.yaml is enough to authenticate.
+	// For more information: https://github.com/gophercloud/utils/blob/8677e053dcf1f05d0fa0a616094aace04690eb94/openstack/clientconfig/requests.go#L508
+	clientOpts.EnvPrefix = "NO_ENV_VARIABLES_"
+
 	if cloud.AuthInfo != nil {
 		clientOpts.AuthInfo = cloud.AuthInfo
 		clientOpts.AuthType = cloud.AuthType
