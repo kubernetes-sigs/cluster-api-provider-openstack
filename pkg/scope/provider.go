@@ -59,9 +59,14 @@ func (f *providerScopeFactory) NewClientScopeFromMachine(ctx context.Context, ct
 
 	if openStackMachine.Spec.IdentityRef != nil {
 		var err error
-		cloud, caCert, err = getCloudFromSecret(ctx, ctrlClient, openStackMachine.Namespace, openStackMachine.Spec.IdentityRef.Name, openStackMachine.Spec.CloudName)
-		if err != nil {
-			return nil, err
+		switch openStackMachine.Spec.IdentityRef.Kind {
+		case "Secret", "":
+			cloud, caCert, err = getCloudFromSecret(ctx, ctrlClient, openStackMachine.Namespace, openStackMachine.Spec.IdentityRef.Name, openStackMachine.Spec.CloudName)
+			if err != nil {
+				return nil, err
+			}
+		default:
+			return nil, fmt.Errorf("unsupported type for identityRef: %s", openStackMachine.Spec.IdentityRef.Kind)
 		}
 	} else if openStackCluster.Spec.IdentityRef != nil {
 		var err error
@@ -88,9 +93,14 @@ func (f *providerScopeFactory) NewClientScopeFromCluster(ctx context.Context, ct
 
 	if openStackCluster.Spec.IdentityRef != nil {
 		var err error
-		cloud, caCert, err = getCloudFromSecret(ctx, ctrlClient, openStackCluster.Namespace, openStackCluster.Spec.IdentityRef.Name, openStackCluster.Spec.CloudName)
-		if err != nil {
-			return nil, err
+		switch openStackCluster.Spec.IdentityRef.Kind {
+		case "Secret", "":
+			cloud, caCert, err = getCloudFromSecret(ctx, ctrlClient, openStackCluster.Namespace, openStackCluster.Spec.IdentityRef.Name, openStackCluster.Spec.CloudName)
+			if err != nil {
+				return nil, err
+			}
+		default:
+			return nil, fmt.Errorf("unsupported type for identityRef: %s", openStackCluster.Spec.IdentityRef.Kind)
 		}
 	}
 
