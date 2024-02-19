@@ -492,7 +492,11 @@ func (in *OpenStackClusterSpec) DeepCopyInto(out *OpenStackClusterSpec) {
 		*out = new(RouterFilter)
 		(*in).DeepCopyInto(*out)
 	}
-	in.Network.DeepCopyInto(&out.Network)
+	if in.Network != nil {
+		in, out := &in.Network, &out.Network
+		*out = new(NetworkFilter)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Subnets != nil {
 		in, out := &in.Subnets, &out.Subnets
 		*out = make([]SubnetFilter, len(*in))
