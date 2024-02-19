@@ -26,6 +26,7 @@ import (
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/conversion"
+	optional "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
 )
 
 const trueString = "true"
@@ -279,7 +280,7 @@ var v1beta1OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStackC
 		},
 	),
 	"networkMtu": conversion.UnconditionalFieldRestorer(
-		func(c *infrav1.OpenStackCluster) *int {
+		func(c *infrav1.OpenStackCluster) *optional.Int {
 			return &c.Spec.NetworkMTU
 		},
 	),
@@ -380,7 +381,7 @@ var v1beta1OpenStackClusterTemplateRestorer = conversion.RestorerFor[*infrav1.Op
 		},
 	),
 	"networkMtu": conversion.UnconditionalFieldRestorer(
-		func(c *infrav1.OpenStackClusterTemplate) *int {
+		func(c *infrav1.OpenStackClusterTemplate) *optional.Int {
 			return &c.Spec.Template.Spec.NetworkMTU
 		},
 	),

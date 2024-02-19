@@ -153,8 +153,8 @@ func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, c
 		opts.PortSecurityEnabled = gophercloud.Disabled
 	}
 
-	if openStackCluster.Spec.NetworkMTU > 0 {
-		opts.MTU = &openStackCluster.Spec.NetworkMTU
+	if openStackCluster.Spec.NetworkMTU != nil {
+		opts.MTU = openStackCluster.Spec.NetworkMTU
 	}
 
 	network, err := s.client.CreateNetwork(opts)

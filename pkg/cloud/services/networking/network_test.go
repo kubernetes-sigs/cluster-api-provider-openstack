@@ -149,7 +149,7 @@ func Test_ReconcileNetwork(t *testing.T) {
 			name: "creation with mtu set",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					NetworkMTU: 1500,
+					NetworkMTU: pointer.Int(1500),
 				},
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {

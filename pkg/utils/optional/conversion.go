@@ -41,3 +41,21 @@ func Convert_optional_String_To_string(in *String, out *string, _ conversion.Sco
 	}
 	return nil
 }
+
+func Convert_int_To_optional_Int(in *int, out *Int, _ conversion.Scope) error {
+	if *in == 0 {
+		*out = nil
+	} else {
+		*out = in
+	}
+	return nil
+}
+
+func Convert_optional_Int_To_int(in *Int, out *int, _ conversion.Scope) error {
+	if *in == nil {
+		*out = 0
+	} else {
+		*out = **in
+	}
+	return nil
+}

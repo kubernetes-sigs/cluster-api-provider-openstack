@@ -20,6 +20,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	capierrors "sigs.k8s.io/cluster-api/errors"
+
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
 )
 
 const (
@@ -60,7 +62,7 @@ type OpenStackClusterSpec struct {
 	// If left empty, the network will have the default MTU defined in Openstack network service.
 	// To use this field, the Openstack installation requires the net-mtu neutron API extension.
 	// +optional
-	NetworkMTU int `json:"networkMtu,omitempty"`
+	NetworkMTU optional.Int `json:"networkMtu,omitempty"`
 
 	// ExternalRouterIPs is an array of externalIPs on the respective subnets.
 	// This is necessary if the router needs a fixed ip in a specific subnet.

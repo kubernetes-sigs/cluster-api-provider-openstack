@@ -20,3 +20,8 @@ package optional
 // optional.String during API conversion will be converted to nil if the value
 // was previously the empty string.
 type String *string
+
+// Int is an int that can be unspecified. ints which are converted to
+// optional.Int during API conversion will be converted to nil if the value
+// was previously 0.
+type Int *int

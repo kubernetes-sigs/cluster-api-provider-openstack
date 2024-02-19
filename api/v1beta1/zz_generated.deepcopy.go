@@ -504,6 +504,11 @@ func (in *OpenStackClusterSpec) DeepCopyInto(out *OpenStackClusterSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.NetworkMTU != nil {
+		in, out := &in.NetworkMTU, &out.NetworkMTU
+		*out = new(int)
+		**out = **in
+	}
 	if in.ExternalRouterIPs != nil {
 		in, out := &in.ExternalRouterIPs, &out.ExternalRouterIPs
 		*out = make([]ExternalRouterIPParam, len(*in))

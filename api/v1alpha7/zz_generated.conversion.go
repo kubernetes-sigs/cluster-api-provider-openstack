@@ -901,7 +901,9 @@ func autoConvert_v1alpha7_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(i
 	}
 	// WARNING: in.Network requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkFilter vs *sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkFilter)
 	// WARNING: in.Subnet requires manual conversion: does not exist in peer-type
-	out.NetworkMTU = in.NetworkMTU
+	if err := optional.Convert_int_To_optional_Int(&in.NetworkMTU, &out.NetworkMTU, s); err != nil {
+		return err
+	}
 	// WARNING: in.DNSNameservers requires manual conversion: does not exist in peer-type
 	if in.ExternalRouterIPs != nil {
 		in, out := &in.ExternalRouterIPs, &out.ExternalRouterIPs
@@ -955,7 +957,9 @@ func autoConvert_v1beta1_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(i
 	}
 	// WARNING: in.Network requires manual conversion: inconvertible types (*sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkFilter vs sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkFilter)
 	// WARNING: in.Subnets requires manual conversion: does not exist in peer-type
-	out.NetworkMTU = in.NetworkMTU
+	if err := optional.Convert_optional_Int_To_int(&in.NetworkMTU, &out.NetworkMTU, s); err != nil {
+		return err
+	}
 	if in.ExternalRouterIPs != nil {
 		in, out := &in.ExternalRouterIPs, &out.ExternalRouterIPs
 		*out = make([]ExternalRouterIPParam, len(*in))
