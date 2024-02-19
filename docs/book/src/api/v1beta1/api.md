@@ -172,7 +172,15 @@ NetworkFilter
 </td>
 <td>
 <em>(Optional)</em>
-<p>ExternalNetwork is the OpenStack Network to be used to get public internet to the VMs.</p>
+<p>ExternalNetwork is the OpenStack Network to be used to get public internet to the VMs.
+This option is ignored if DisableExternalNetwork is set to true.</p>
+<p>If ExternalNetwork is defined it must refer to exactly one external network.</p>
+<p>If ExternalNetwork is not defined or is empty the controller will use any
+existing external network as long as there is only one. It is an
+error if ExternalNetwork is not defined and there are multiple
+external networks unless DisableExternalNetwork is also set.</p>
+<p>If ExternalNetwork is not defined and there are no external networks
+the controller will proceed as though DisableExternalNetwork was set.</p>
 </td>
 </tr>
 <tr>
@@ -184,7 +192,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>DisableExternalNetwork determines whether or not to attempt to connect the cluster
+<p>DisableExternalNetwork specifies whether or not to attempt to connect the cluster
 to an external network. This allows for the creation of clusters when connecting
 to an external network is not possible or desirable, e.g. if using a provider network.</p>
 </td>
@@ -2051,7 +2059,15 @@ NetworkFilter
 </td>
 <td>
 <em>(Optional)</em>
-<p>ExternalNetwork is the OpenStack Network to be used to get public internet to the VMs.</p>
+<p>ExternalNetwork is the OpenStack Network to be used to get public internet to the VMs.
+This option is ignored if DisableExternalNetwork is set to true.</p>
+<p>If ExternalNetwork is defined it must refer to exactly one external network.</p>
+<p>If ExternalNetwork is not defined or is empty the controller will use any
+existing external network as long as there is only one. It is an
+error if ExternalNetwork is not defined and there are multiple
+external networks unless DisableExternalNetwork is also set.</p>
+<p>If ExternalNetwork is not defined and there are no external networks
+the controller will proceed as though DisableExternalNetwork was set.</p>
 </td>
 </tr>
 <tr>
@@ -2063,7 +2079,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>DisableExternalNetwork determines whether or not to attempt to connect the cluster
+<p>DisableExternalNetwork specifies whether or not to attempt to connect the cluster
 to an external network. This allows for the creation of clusters when connecting
 to an external network is not possible or desirable, e.g. if using a provider network.</p>
 </td>
@@ -2609,7 +2625,15 @@ NetworkFilter
 </td>
 <td>
 <em>(Optional)</em>
-<p>ExternalNetwork is the OpenStack Network to be used to get public internet to the VMs.</p>
+<p>ExternalNetwork is the OpenStack Network to be used to get public internet to the VMs.
+This option is ignored if DisableExternalNetwork is set to true.</p>
+<p>If ExternalNetwork is defined it must refer to exactly one external network.</p>
+<p>If ExternalNetwork is not defined or is empty the controller will use any
+existing external network as long as there is only one. It is an
+error if ExternalNetwork is not defined and there are multiple
+external networks unless DisableExternalNetwork is also set.</p>
+<p>If ExternalNetwork is not defined and there are no external networks
+the controller will proceed as though DisableExternalNetwork was set.</p>
 </td>
 </tr>
 <tr>
@@ -2621,7 +2645,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>DisableExternalNetwork determines whether or not to attempt to connect the cluster
+<p>DisableExternalNetwork specifies whether or not to attempt to connect the cluster
 to an external network. This allows for the creation of clusters when connecting
 to an external network is not possible or desirable, e.g. if using a provider network.</p>
 </td>

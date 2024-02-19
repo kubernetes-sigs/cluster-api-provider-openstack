@@ -634,7 +634,7 @@ func reconcilePreExistingNetworkComponents(scope *scope.WithLogger, networkingSe
 	}
 
 	if !openStackCluster.Spec.Network.IsEmpty() {
-		netOpts := filterconvert.NetworkFilterToListOpts(&openStackCluster.Spec.Network)
+		netOpts := filterconvert.NetworkFilterToListOpts(openStackCluster.Spec.Network)
 		networkList, err := networkingService.GetNetworksByFilter(&netOpts)
 		if err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find network: %w", err))

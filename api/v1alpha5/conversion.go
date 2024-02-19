@@ -205,7 +205,7 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(in *i
 		return err
 	}
 
-	if in.ExternalNetwork.ID != "" {
+	if in.ExternalNetwork != nil && in.ExternalNetwork.ID != "" {
 		out.ExternalNetworkID = in.ExternalNetwork.ID
 	}
 
@@ -240,7 +240,7 @@ func Convert_v1alpha5_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 	}
 
 	if in.ExternalNetworkID != "" {
-		out.ExternalNetwork = infrav1.NetworkFilter{
+		out.ExternalNetwork = &infrav1.NetworkFilter{
 			ID: in.ExternalNetworkID,
 		}
 	}

@@ -167,13 +167,19 @@ func restorev1beta1ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infr
 	}
 
 	// Restore all fields except ID, which should have been copied over in conversion
-	dst.ExternalNetwork.Name = previous.ExternalNetwork.Name
-	dst.ExternalNetwork.Description = previous.ExternalNetwork.Description
-	dst.ExternalNetwork.ProjectID = previous.ExternalNetwork.ProjectID
-	dst.ExternalNetwork.Tags = previous.ExternalNetwork.Tags
-	dst.ExternalNetwork.TagsAny = previous.ExternalNetwork.TagsAny
-	dst.ExternalNetwork.NotTags = previous.ExternalNetwork.NotTags
-	dst.ExternalNetwork.NotTagsAny = previous.ExternalNetwork.NotTagsAny
+	if previous.ExternalNetwork != nil {
+		if dst.ExternalNetwork == nil {
+			dst.ExternalNetwork = &infrav1.NetworkFilter{}
+		}
+
+		dst.ExternalNetwork.Name = previous.ExternalNetwork.Name
+		dst.ExternalNetwork.Description = previous.ExternalNetwork.Description
+		dst.ExternalNetwork.ProjectID = previous.ExternalNetwork.ProjectID
+		dst.ExternalNetwork.Tags = previous.ExternalNetwork.Tags
+		dst.ExternalNetwork.TagsAny = previous.ExternalNetwork.TagsAny
+		dst.ExternalNetwork.NotTags = previous.ExternalNetwork.NotTags
+		dst.ExternalNetwork.NotTagsAny = previous.ExternalNetwork.NotTagsAny
+	}
 
 	// Restore fields not present in v1alpha6
 	dst.Router = previous.Router
@@ -205,7 +211,7 @@ func Convert_v1alpha6_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 	}
 
 	if in.ExternalNetworkID != "" {
-		out.ExternalNetwork = infrav1.NetworkFilter{
+		out.ExternalNetwork = &infrav1.NetworkFilter{
 			ID: in.ExternalNetworkID,
 		}
 	}
@@ -258,7 +264,7 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in *i
 		}
 	}
 
-	if in.ExternalNetwork.ID != "" {
+	if in.ExternalNetwork != nil && in.ExternalNetwork.ID != "" {
 		out.ExternalNetworkID = in.ExternalNetwork.ID
 	}
 

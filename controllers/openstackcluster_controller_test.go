@@ -34,6 +34,7 @@ import (
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/pointer"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/cluster-api/util/annotations"
@@ -521,7 +522,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			},
 			DisableAPIServerFloatingIP: true,
 			APIServerFixedIP:           "10.0.0.1",
-			ExternalNetwork: infrav1.NetworkFilter{
+			ExternalNetwork: &infrav1.NetworkFilter{
 				ID: externalNetworkID,
 			},
 			Network: &infrav1.NetworkFilter{
@@ -556,6 +557,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			ListOptsBuilder: networks.ListOpts{
 				ID: externalNetworkID,
 			},
+			External: pointer.Bool(true),
 		}).Return([]networks.Network{
 			{
 				ID:   externalNetworkID,
@@ -600,7 +602,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			},
 			DisableAPIServerFloatingIP: true,
 			APIServerFixedIP:           "10.0.0.1",
-			ExternalNetwork: infrav1.NetworkFilter{
+			ExternalNetwork: &infrav1.NetworkFilter{
 				ID: externalNetworkID,
 			},
 			Network: &infrav1.NetworkFilter{
@@ -639,6 +641,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			ListOptsBuilder: networks.ListOpts{
 				ID: externalNetworkID,
 			},
+			External: pointer.Bool(true),
 		}).Return([]networks.Network{
 			{
 				ID:   externalNetworkID,
