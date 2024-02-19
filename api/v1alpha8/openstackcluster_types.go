@@ -40,21 +40,27 @@ type OpenStackClusterSpec struct {
 	// +kubebuilder:validation:MaxItems=1
 	ManagedSubnets []SubnetSpec `json:"managedSubnets,omitempty"`
 
-	// If NodeCIDR is set this option can be used to detect an existing router.
-	// If specified, no new router will be created.
+	// Router specifies an existing router to be used if ManagedSubnets are
+	// specified. If specified, no new router will be created.
 	// +optional
 	Router *RouterFilter `json:"router,omitempty"`
 
-	// If NodeCIDR cannot be set this can be used to detect an existing network.
+	// Network specifies an existing network to use if no ManagedSubnets
+	// are specified.
 	Network NetworkFilter `json:"network,omitempty"`
 
-	// If NodeCIDR cannot be set this can be used to detect existing IPv4 and/or IPv6 subnets.
+	// Subnets specifies existing subnets to use if not ManagedSubnets are
+	// specified. All subnets must be in the network specified by Network.
+	// There can be zero, one, or two subnets. If no subnets are specified,
+	// all subnets in Network will be used. If 2 subnets are specified, one
+	// must be IPv4 and the other IPv6.
 	// +kubebuilder:validation:MaxItems=2
+	// +optional
 	Subnets []SubnetFilter `json:"subnets,omitempty"`
 
 	// NetworkMTU sets the maximum transmission unit (MTU) value to address fragmentation for the private network ID.
 	// This value will be used only if the Cluster actuator creates the network.
-	// If leaved empty, the network will have the default MTU defined in Openstack network service.
+	// If left empty, the network will have the default MTU defined in Openstack network service.
 	// To use this field, the Openstack installation requires the net-mtu neutron API extension.
 	// +optional
 	NetworkMTU int `json:"networkMtu,omitempty"`
