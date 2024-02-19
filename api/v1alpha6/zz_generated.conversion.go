@@ -685,9 +685,7 @@ func Convert_v1beta1_OpenStackClusterList_To_v1alpha6_OpenStackClusterList(in *v
 func autoConvert_v1alpha6_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *OpenStackClusterSpec, out *v1beta1.OpenStackClusterSpec, s conversion.Scope) error {
 	// WARNING: in.CloudName requires manual conversion: does not exist in peer-type
 	// WARNING: in.NodeCIDR requires manual conversion: does not exist in peer-type
-	if err := Convert_v1alpha6_NetworkFilter_To_v1beta1_NetworkFilter(&in.Network, &out.Network, s); err != nil {
-		return err
-	}
+	// WARNING: in.Network requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.NetworkFilter vs *sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkFilter)
 	// WARNING: in.Subnet requires manual conversion: does not exist in peer-type
 	// WARNING: in.DNSNameservers requires manual conversion: does not exist in peer-type
 	if in.ExternalRouterIPs != nil {
@@ -732,9 +730,7 @@ func autoConvert_v1alpha6_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(i
 func autoConvert_v1beta1_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in *v1beta1.OpenStackClusterSpec, out *OpenStackClusterSpec, s conversion.Scope) error {
 	// WARNING: in.ManagedSubnets requires manual conversion: does not exist in peer-type
 	// WARNING: in.Router requires manual conversion: does not exist in peer-type
-	if err := Convert_v1beta1_NetworkFilter_To_v1alpha6_NetworkFilter(&in.Network, &out.Network, s); err != nil {
-		return err
-	}
+	// WARNING: in.Network requires manual conversion: inconvertible types (*sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkFilter vs sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.NetworkFilter)
 	// WARNING: in.Subnets requires manual conversion: does not exist in peer-type
 	// WARNING: in.NetworkMTU requires manual conversion: does not exist in peer-type
 	if in.ExternalRouterIPs != nil {

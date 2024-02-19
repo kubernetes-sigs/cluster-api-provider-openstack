@@ -108,6 +108,7 @@ NetworkFilter
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Network specifies an existing network to use if no ManagedSubnets
 are specified.</p>
 </td>
@@ -1986,6 +1987,7 @@ NetworkFilter
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Network specifies an existing network to use if no ManagedSubnets
 are specified.</p>
 </td>
@@ -2543,6 +2545,7 @@ NetworkFilter
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Network specifies an existing network to use if no ManagedSubnets
 are specified.</p>
 </td>

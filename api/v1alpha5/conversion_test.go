@@ -40,7 +40,7 @@ func TestConvertFrom(t *testing.T) {
 		want  ctrlconversion.Convertible
 	}{
 		{
-			name:  "conversion must have conversion-data annotation",
+			name:  "cluster conversion must have conversion-data annotation",
 			spoke: &OpenStackCluster{},
 			hub: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{},
@@ -51,13 +51,13 @@ func TestConvertFrom(t *testing.T) {
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
-						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"apiServerLoadBalancer\":{},\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"disableExternalNetwork\":false,\"externalNetwork\":{},\"identityRef\":{\"cloudName\":\"\",\"name\":\"\"},\"network\":{}},\"status\":{\"ready\":false}}",
+						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"apiServerLoadBalancer\":{},\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"disableExternalNetwork\":false,\"externalNetwork\":{},\"identityRef\":{\"cloudName\":\"\",\"name\":\"\"}},\"status\":{\"ready\":false}}",
 					},
 				},
 			},
 		},
 		{
-			name:  "conversion must have conversion-data annotation",
+			name:  "cluster template conversion must have conversion-data annotation",
 			spoke: &OpenStackClusterTemplate{},
 			hub: &infrav1.OpenStackClusterTemplate{
 				Spec: infrav1.OpenStackClusterTemplateSpec{},
@@ -72,13 +72,13 @@ func TestConvertFrom(t *testing.T) {
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
-						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"template\":{\"spec\":{\"apiServerLoadBalancer\":{},\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"disableExternalNetwork\":false,\"externalNetwork\":{},\"identityRef\":{\"cloudName\":\"\",\"name\":\"\"},\"network\":{}}}}}",
+						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"template\":{\"spec\":{\"apiServerLoadBalancer\":{},\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"disableExternalNetwork\":false,\"externalNetwork\":{},\"identityRef\":{\"cloudName\":\"\",\"name\":\"\"}}}}}",
 					},
 				},
 			},
 		},
 		{
-			name:  "conversion must have conversion-data annotation",
+			name:  "machine conversion must have conversion-data annotation",
 			spoke: &OpenStackMachine{},
 			hub: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{},
@@ -93,7 +93,7 @@ func TestConvertFrom(t *testing.T) {
 			},
 		},
 		{
-			name:  "conversion must have conversion-data annotation",
+			name:  "machine template conversion must have conversion-data annotation",
 			spoke: &OpenStackMachineTemplate{},
 			hub: &infrav1.OpenStackMachineTemplate{
 				Spec: infrav1.OpenStackMachineTemplateSpec{},

@@ -45,7 +45,8 @@ type OpenStackClusterSpec struct {
 
 	// Network specifies an existing network to use if no ManagedSubnets
 	// are specified.
-	Network NetworkFilter `json:"network,omitempty"`
+	// +optional
+	Network *NetworkFilter `json:"network,omitempty"`
 
 	// Subnets specifies existing subnets to use if not ManagedSubnets are
 	// specified. All subnets must be in the network specified by Network.

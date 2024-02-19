@@ -199,6 +199,13 @@ func Convert_v1alpha7_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 		return err
 	}
 
+	if in.Network != (NetworkFilter{}) {
+		out.Network = &infrav1.NetworkFilter{}
+		if err := Convert_v1alpha7_NetworkFilter_To_v1beta1_NetworkFilter(&in.Network, out.Network, s); err != nil {
+			return err
+		}
+	}
+
 	if in.ExternalNetworkID != "" {
 		out.ExternalNetwork = infrav1.NetworkFilter{
 			ID: in.ExternalNetworkID,
@@ -245,6 +252,12 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in *i
 	err := autoConvert_v1beta1_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in, out, s)
 	if err != nil {
 		return err
+	}
+
+	if in.Network != nil {
+		if err := Convert_v1beta1_NetworkFilter_To_v1alpha7_NetworkFilter(in.Network, &out.Network, s); err != nil {
+			return err
+		}
 	}
 
 	if in.ExternalNetwork.ID != "" {

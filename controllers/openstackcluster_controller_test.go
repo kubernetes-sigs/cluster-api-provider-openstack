@@ -524,7 +524,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			ExternalNetwork: infrav1.NetworkFilter{
 				ID: externalNetworkID,
 			},
-			Network: infrav1.NetworkFilter{
+			Network: &infrav1.NetworkFilter{
 				ID: clusterNetworkID,
 			},
 		}
@@ -603,7 +603,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			ExternalNetwork: infrav1.NetworkFilter{
 				ID: externalNetworkID,
 			},
-			Network: infrav1.NetworkFilter{
+			Network: &infrav1.NetworkFilter{
 				ID: clusterNetworkID,
 			},
 			Subnets: []infrav1.SubnetFilter{
