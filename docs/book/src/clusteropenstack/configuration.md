@@ -193,7 +193,6 @@ Depending on the CNI that will be deployed on the cluster, you may need to add s
    namespace: <cluster-namespace>
  spec:
     ...
-    allowAllInClusterTraffic: false
     managedSecurityGroups: 
       allNodesSecurityGroupRules:
       - remoteManagedGroups:
@@ -214,6 +213,7 @@ Depending on the CNI that will be deployed on the cluster, you may need to add s
         name: IP-in-IP (Calico)
         protocol: 4
         description: "Allow IP-in-IP between control plane and workers"
+      allowAllInClusterTraffic: false
  ```
 
 # Optional Configuration
@@ -312,7 +312,6 @@ metadata:
   name: <cluster-name>
   namespace: <cluster-namespace>
 spec:
-  allowAllInClusterTraffic: true
   apiServerLoadBalancer:
     allowedCidrs:
     - 192.168.10/24
@@ -558,7 +557,7 @@ managedSecurityGroups: {}
   - Node port traffic from anywhere
   - Kubelet traffic from other cluster nodes
 
-When the flag `OpenStackCluster.spec.allowAllInClusterTraffic` is
+When the flag `OpenStackCluster.spec.managedSecurityGroups.allowAllInClusterTraffic` is
 set to `true`, the rules for the managed security groups permit all traffic
 between cluster nodes on all ports and protocols (API server and node port traffic is still
 permitted from anywhere, as with the default rules).

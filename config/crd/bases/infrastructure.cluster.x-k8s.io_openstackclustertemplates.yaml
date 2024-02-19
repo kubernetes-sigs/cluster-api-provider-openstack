@@ -2263,13 +2263,6 @@ spec:
                     description: OpenStackClusterSpec defines the desired state of
                       OpenStackCluster.
                     properties:
-                      allowAllInClusterTraffic:
-                        description: |-
-                          AllowAllInClusterTraffic is only used when managed security groups are in use.
-                          If set to true, the rules for the managed security groups are configured so that all
-                          ingress and egress between cluster nodes is permitted, allowing CNIs other than
-                          Calico to be used.
-                        type: boolean
                       apiServerFixedIP:
                         description: |-
                           APIServerFixedIP is the fixed IP which will be associated with the API server.
@@ -2971,6 +2964,14 @@ spec:
                             x-kubernetes-list-map-keys:
                             - name
                             x-kubernetes-list-type: map
+                          allowAllInClusterTraffic:
+                            default: false
+                            description: AllowAllInClusterTraffic allows all ingress
+                              and egress traffic between cluster nodes when set to
+                              true.
+                            type: boolean
+                        required:
+                        - allowAllInClusterTraffic
                         type: object
                       managedSubnets:
                         description: |-

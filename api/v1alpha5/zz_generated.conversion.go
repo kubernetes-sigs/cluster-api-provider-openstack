@@ -671,7 +671,7 @@ func autoConvert_v1alpha5_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(
 	out.APIServerFixedIP = in.APIServerFixedIP
 	out.APIServerPort = in.APIServerPort
 	// WARNING: in.ManagedSecurityGroups requires manual conversion: inconvertible types (bool vs *sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha8.ManagedSecurityGroups)
-	out.AllowAllInClusterTraffic = in.AllowAllInClusterTraffic
+	// WARNING: in.AllowAllInClusterTraffic requires manual conversion: does not exist in peer-type
 	out.DisablePortSecurity = in.DisablePortSecurity
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.ControlPlaneEndpoint = in.ControlPlaneEndpoint
@@ -719,7 +719,6 @@ func autoConvert_v1alpha8_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(
 	out.APIServerFixedIP = in.APIServerFixedIP
 	out.APIServerPort = in.APIServerPort
 	// WARNING: in.ManagedSecurityGroups requires manual conversion: inconvertible types (*sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha8.ManagedSecurityGroups vs bool)
-	out.AllowAllInClusterTraffic = in.AllowAllInClusterTraffic
 	out.DisablePortSecurity = in.DisablePortSecurity
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.ControlPlaneEndpoint = in.ControlPlaneEndpoint

@@ -685,8 +685,9 @@ func TestConvert_v1alpha6_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(
 				AllowAllInClusterTraffic: true,
 			},
 			expectedOut: &infrav1.OpenStackClusterSpec{
-				ManagedSecurityGroups:    &infrav1.ManagedSecurityGroups{},
-				AllowAllInClusterTraffic: true,
+				ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{
+					AllowAllInClusterTraffic: true,
+				},
 			},
 		},
 	}
