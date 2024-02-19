@@ -66,6 +66,7 @@ type OpenStackClusterSpec struct {
 
 	// ExternalRouterIPs is an array of externalIPs on the respective subnets.
 	// This is necessary if the router needs a fixed ip in a specific subnet.
+	// +optional
 	ExternalRouterIPs []ExternalRouterIPParam `json:"externalRouterIPs,omitempty"`
 
 	// ExternalNetwork is the OpenStack Network to be used to get public internet to the VMs.
