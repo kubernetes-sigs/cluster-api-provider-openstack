@@ -180,6 +180,13 @@ func restorev1beta1Subnets(previous *[]infrav1.SubnetFilter, dst *[]infrav1.Subn
 	}
 }
 
+func restorev1beta1APIServerLoadBalancer(previous **infrav1.APIServerLoadBalancer, dst **infrav1.APIServerLoadBalancer) {
+	// Ensure empty and zero values are restored identically
+	if *previous == nil || (*previous).IsZero() {
+		*dst = *previous
+	}
+}
+
 func restorev1beta1ClusterStatus(previous *infrav1.OpenStackClusterStatus, dst *infrav1.OpenStackClusterStatus) {
 	// It's (theoretically) possible in v1beta1 to have Network nil but
 	// Router or APIServerLoadBalancer not nil. In hub-spoke-hub conversion this will
@@ -264,6 +271,12 @@ var v1alpha6OpenStackClusterRestorer = conversion.RestorerFor[*OpenStackCluster]
 }
 
 var v1beta1OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStackCluster]{
+	"apiServerLoadBalancer": conversion.HashedFieldRestorer(
+		func(c *infrav1.OpenStackCluster) **infrav1.APIServerLoadBalancer {
+			return &c.Spec.APIServerLoadBalancer
+		},
+		restorev1beta1APIServerLoadBalancer,
+	),
 	"externalNetwork": conversion.UnconditionalFieldRestorer(
 		func(c *infrav1.OpenStackCluster) **infrav1.NetworkFilter {
 			return &c.Spec.ExternalNetwork
@@ -365,6 +378,12 @@ func restorev1beta1ManagedSecurityGroups(previous *infrav1.ManagedSecurityGroups
 }
 
 var v1beta1OpenStackClusterTemplateRestorer = conversion.RestorerFor[*infrav1.OpenStackClusterTemplate]{
+	"apiServerLoadBalancer": conversion.HashedFieldRestorer(
+		func(c *infrav1.OpenStackClusterTemplate) **infrav1.APIServerLoadBalancer {
+			return &c.Spec.Template.Spec.APIServerLoadBalancer
+		},
+		restorev1beta1APIServerLoadBalancer,
+	),
 	"externalNetwork": conversion.UnconditionalFieldRestorer(
 		func(c *infrav1.OpenStackClusterTemplate) **infrav1.NetworkFilter {
 			return &c.Spec.Template.Spec.ExternalNetwork
@@ -723,6 +742,12 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in *i
 		out.AllowAllInClusterTraffic = in.ManagedSecurityGroups.AllowAllInClusterTraffic
 	}
 
+	if in.APIServerLoadBalancer != nil {
+		if err := Convert_v1beta1_APIServerLoadBalancer_To_v1alpha6_APIServerLoadBalancer(in.APIServerLoadBalancer, &out.APIServerLoadBalancer, s); err != nil {
+			return err
+		}
+	}
+
 	out.CloudName = in.IdentityRef.CloudName
 	out.IdentityRef = &OpenStackIdentityReference{Name: in.IdentityRef.Name}
 
@@ -781,6 +806,13 @@ func Convert_v1alpha6_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 		out.IdentityRef.Name = in.IdentityRef.Name
 	}
 
+	apiServerLoadBalancer := &infrav1.APIServerLoadBalancer{}
+	if err := Convert_v1alpha6_APIServerLoadBalancer_To_v1beta1_APIServerLoadBalancer(&in.APIServerLoadBalancer, apiServerLoadBalancer, s); err != nil {
+		return err
+	}
+	if !apiServerLoadBalancer.IsZero() {
+		out.APIServerLoadBalancer = apiServerLoadBalancer
+	}
 	return nil
 }
 

@@ -82,7 +82,7 @@ type OpenStackClusterSpec struct {
 	// APIServerLoadBalancer configures the optional LoadBalancer for the APIServer.
 	// It must be activated by setting `enabled: true`.
 	// +optional
-	APIServerLoadBalancer APIServerLoadBalancer `json:"apiServerLoadBalancer,omitempty"`
+	APIServerLoadBalancer *APIServerLoadBalancer `json:"apiServerLoadBalancer,omitempty"`
 
 	// DisableAPIServerFloatingIP determines whether or not to attempt to attach a floating
 	// IP to the API server. This allows for the creation of clusters when attaching a floating

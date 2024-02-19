@@ -917,9 +917,7 @@ func autoConvert_v1alpha7_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(i
 		out.ExternalRouterIPs = nil
 	}
 	// WARNING: in.ExternalNetworkID requires manual conversion: does not exist in peer-type
-	if err := Convert_v1alpha7_APIServerLoadBalancer_To_v1beta1_APIServerLoadBalancer(&in.APIServerLoadBalancer, &out.APIServerLoadBalancer, s); err != nil {
-		return err
-	}
+	// WARNING: in.APIServerLoadBalancer requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.APIServerLoadBalancer vs *sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.APIServerLoadBalancer)
 	out.DisableAPIServerFloatingIP = in.DisableAPIServerFloatingIP
 	out.APIServerFloatingIP = in.APIServerFloatingIP
 	out.APIServerFixedIP = in.APIServerFixedIP
@@ -973,9 +971,7 @@ func autoConvert_v1beta1_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(i
 	}
 	// WARNING: in.ExternalNetwork requires manual conversion: does not exist in peer-type
 	// WARNING: in.DisableExternalNetwork requires manual conversion: does not exist in peer-type
-	if err := Convert_v1beta1_APIServerLoadBalancer_To_v1alpha7_APIServerLoadBalancer(&in.APIServerLoadBalancer, &out.APIServerLoadBalancer, s); err != nil {
-		return err
-	}
+	// WARNING: in.APIServerLoadBalancer requires manual conversion: inconvertible types (*sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.APIServerLoadBalancer vs sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.APIServerLoadBalancer)
 	out.DisableAPIServerFloatingIP = in.DisableAPIServerFloatingIP
 	out.APIServerFloatingIP = in.APIServerFloatingIP
 	out.APIServerFixedIP = in.APIServerFixedIP

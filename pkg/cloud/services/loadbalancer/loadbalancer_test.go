@@ -57,6 +57,9 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 
 	openStackCluster := &infrav1.OpenStackCluster{
 		Spec: infrav1.OpenStackClusterSpec{
+			APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
+				Enabled: true,
+			},
 			DisableAPIServerFloatingIP: true,
 			ControlPlaneEndpoint: clusterv1.APIEndpoint{
 				Host: apiHostname,
@@ -346,7 +349,7 @@ func Test_getCanonicalAllowedCIDRs(t *testing.T) {
 			name: "allowed CIDRs are set",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerLoadBalancer: infrav1.APIServerLoadBalancer{
+					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
 						AllowedCIDRs: []string{"1.2.3.4/32"},
 					},
 				},
@@ -357,7 +360,7 @@ func Test_getCanonicalAllowedCIDRs(t *testing.T) {
 			name: "allowed CIDRs are set with bastion",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerLoadBalancer: infrav1.APIServerLoadBalancer{
+					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
 						AllowedCIDRs: []string{"1.2.3.4/32"},
 					},
 				},
@@ -374,7 +377,7 @@ func Test_getCanonicalAllowedCIDRs(t *testing.T) {
 			name: "allowed CIDRs are set with network status",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerLoadBalancer: infrav1.APIServerLoadBalancer{
+					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
 						AllowedCIDRs: []string{"1.2.3.4/32"},
 					},
 				},
@@ -394,7 +397,7 @@ func Test_getCanonicalAllowedCIDRs(t *testing.T) {
 			name: "allowed CIDRs are set with network status and router IP",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerLoadBalancer: infrav1.APIServerLoadBalancer{
+					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
 						AllowedCIDRs: []string{"1.2.3.4/32"},
 					},
 				},

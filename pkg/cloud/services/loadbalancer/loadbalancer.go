@@ -67,6 +67,11 @@ var lookupHost = func(host string) (string, error) {
 
 // ReconcileLoadBalancer reconciles the load balancer for the given cluster.
 func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterName string, apiServerPort int) (bool, error) {
+	lbSpec := openStackCluster.Spec.APIServerLoadBalancer
+	if lbSpec == nil || !lbSpec.Enabled {
+		return false, nil
+	}
+
 	loadBalancerName := getLoadBalancerName(clusterName)
 	s.scope.Logger().Info("Reconciling load balancer", "name", loadBalancerName)
 
@@ -128,7 +133,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 	}
 
 	portList := []int{apiServerPort}
-	portList = append(portList, openStackCluster.Spec.APIServerLoadBalancer.AdditionalPorts...)
+	portList = append(portList, lbSpec.AdditionalPorts...)
 	for _, port := range portList {
 		if err := s.reconcileAPILoadBalancerListener(lb, openStackCluster, clusterName, port); err != nil {
 			return false, err
@@ -192,7 +197,7 @@ func getAPIServerFloatingIP(openStackCluster *infrav1.OpenStackCluster) (string,
 func getCanonicalAllowedCIDRs(openStackCluster *infrav1.OpenStackCluster) []string {
 	allowedCIDRs := []string{}
 
-	if len(openStackCluster.Spec.APIServerLoadBalancer.AllowedCIDRs) > 0 {
+	if openStackCluster.Spec.APIServerLoadBalancer != nil && len(openStackCluster.Spec.APIServerLoadBalancer.AllowedCIDRs) > 0 {
 		allowedCIDRs = append(allowedCIDRs, openStackCluster.Spec.APIServerLoadBalancer.AllowedCIDRs...)
 
 		// In the first reconciliation loop, only the Ready field is set in openStackCluster.Status
@@ -515,7 +520,9 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 
 	lbID := openStackCluster.Status.APIServerLoadBalancer.ID
 	portList := []int{int(openStackCluster.Spec.ControlPlaneEndpoint.Port)}
-	portList = append(portList, openStackCluster.Spec.APIServerLoadBalancer.AdditionalPorts...)
+	if openStackCluster.Spec.APIServerLoadBalancer != nil {
+		portList = append(portList, openStackCluster.Spec.APIServerLoadBalancer.AdditionalPorts...)
+	}
 	for _, port := range portList {
 		lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)
 		name := lbPortObjectsName + "-" + openStackMachine.Name
@@ -646,7 +653,9 @@ func (s *Service) DeleteLoadBalancerMember(openStackCluster *infrav1.OpenStackCl
 	lbID := lb.ID
 
 	portList := []int{int(openStackCluster.Spec.ControlPlaneEndpoint.Port)}
-	portList = append(portList, openStackCluster.Spec.APIServerLoadBalancer.AdditionalPorts...)
+	if openStackCluster.Spec.APIServerLoadBalancer != nil {
+		portList = append(portList, openStackCluster.Spec.APIServerLoadBalancer.AdditionalPorts...)
+	}
 	for _, port := range portList {
 		lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)
 		name := lbPortObjectsName + "-" + openStackMachine.Name

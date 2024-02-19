@@ -123,7 +123,7 @@ func (r *OpenStackCluster) ValidateUpdate(oldRaw runtime.Object) (admission.Warn
 	}
 
 	// Allow changes on AllowedCIDRs
-	if r.Spec.APIServerLoadBalancer.Enabled {
+	if r.Spec.APIServerLoadBalancer != nil && old.Spec.APIServerLoadBalancer != nil {
 		old.Spec.APIServerLoadBalancer.AllowedCIDRs = []string{}
 		r.Spec.APIServerLoadBalancer.AllowedCIDRs = []string{}
 	}

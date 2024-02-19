@@ -164,7 +164,7 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 	workerRules = append(workerRules, getSGWorkerNodePort()...)
 
 	// If we set additional ports to LB, we need create secgroup rules those ports, this apply to controlPlaneRules only
-	if openStackCluster.Spec.APIServerLoadBalancer.Enabled {
+	if openStackCluster.Spec.APIServerLoadBalancer != nil && openStackCluster.Spec.APIServerLoadBalancer.Enabled {
 		controlPlaneRules = append(controlPlaneRules, getSGControlPlaneAdditionalPorts(openStackCluster.Spec.APIServerLoadBalancer.AdditionalPorts)...)
 	}
 
