@@ -81,24 +81,9 @@ func (r *OpenStackCluster) ValidateUpdate(oldRaw runtime.Object) (admission.Warn
 		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected an OpenStackCluster but got a %T", oldRaw))
 	}
 
-	// Allow changes to Spec.IdentityRef.Name.
-	if old.Spec.IdentityRef != nil && r.Spec.IdentityRef != nil {
-		old.Spec.IdentityRef.Name = ""
-		r.Spec.IdentityRef.Name = ""
-	}
-
-	// Allow changes to Spec.IdentityRef if it was unset.
-	if old.Spec.IdentityRef == nil && r.Spec.IdentityRef != nil {
-		old.Spec.IdentityRef = &OpenStackIdentityReference{}
-		r.Spec.IdentityRef = &OpenStackIdentityReference{}
-	}
-
-	if old.Spec.IdentityRef != nil && r.Spec.IdentityRef == nil {
-		allErrs = append(allErrs,
-			field.Invalid(field.NewPath("spec", "identityRef"),
-				r.Spec.IdentityRef, "field cannot be set to nil"),
-		)
-	}
+	// Allow changes to Spec.IdentityRef
+	old.Spec.IdentityRef = OpenStackIdentityReference{}
+	r.Spec.IdentityRef = OpenStackIdentityReference{}
 
 	// Allow change only for the first time.
 	if old.Spec.ControlPlaneEndpoint.Host == "" {

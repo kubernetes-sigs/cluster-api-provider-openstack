@@ -550,6 +550,10 @@ func Convert_v1beta1_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in *i
 		out.ServerMetadata = serverMetadata
 	}
 
+	if in.IdentityRef != nil {
+		out.CloudName = in.IdentityRef.CloudName
+	}
+
 	return nil
 }
 
@@ -589,6 +593,13 @@ func Convert_v1alpha7_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in *O
 			serverMetadata = append(serverMetadata, infrav1.ServerMetadata{Key: k, Value: v})
 		}
 		out.ServerMetadata = serverMetadata
+	}
+
+	if in.CloudName != "" {
+		if out.IdentityRef == nil {
+			out.IdentityRef = &infrav1.OpenStackIdentityReference{}
+		}
+		out.IdentityRef.CloudName = in.CloudName
 	}
 
 	return nil
@@ -674,6 +685,11 @@ func Convert_v1alpha7_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 		}
 	}
 
+	out.IdentityRef.CloudName = in.CloudName
+	if in.IdentityRef != nil {
+		out.IdentityRef.Name = in.IdentityRef.Name
+	}
+
 	return nil
 }
 
@@ -702,6 +718,9 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in *i
 		out.ManagedSecurityGroups = true
 		out.AllowAllInClusterTraffic = in.ManagedSecurityGroups.AllowAllInClusterTraffic
 	}
+
+	out.CloudName = in.IdentityRef.CloudName
+	out.IdentityRef = &OpenStackIdentityReference{Name: in.IdentityRef.Name}
 
 	return nil
 }
@@ -813,5 +832,10 @@ func Convert_v1beta1_PortOpts_To_v1alpha7_PortOpts(in *infrav1.PortOpts, out *Po
 		}
 	}
 
+	return nil
+}
+
+func Convert_v1beta1_OpenStackIdentityReference_To_v1alpha7_OpenStackIdentityReference(in *infrav1.OpenStackIdentityReference, out *OpenStackIdentityReference, _ apiconversion.Scope) error {
+	out.Name = in.Name
 	return nil
 }

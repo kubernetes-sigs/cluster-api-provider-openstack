@@ -98,6 +98,10 @@ func (r *OpenStackMachine) ValidateUpdate(old runtime.Object) (admission.Warning
 		delete(newOpenStackMachineSpec, "instanceID")
 	}
 
+	// allow changes to identifyRef
+	delete(oldOpenStackMachineSpec, "identityRef")
+	delete(newOpenStackMachineSpec, "identityRef")
+
 	if !reflect.DeepEqual(oldOpenStackMachineSpec, newOpenStackMachineSpec) {
 		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec"), "cannot be modified"))
 	}

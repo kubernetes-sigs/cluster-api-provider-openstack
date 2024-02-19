@@ -38,10 +38,6 @@ type OpenStackMachineSpec struct {
 	// InstanceID is the OpenStack instance ID for this machine.
 	InstanceID *string `json:"instanceID,omitempty"`
 
-	// The name of the cloud to use from the clouds secret
-	// +optional
-	CloudName string `json:"cloudName"`
-
 	// The flavor reference for the flavor for your server instance.
 	Flavor string `json:"flavor"`
 
@@ -88,7 +84,9 @@ type OpenStackMachineSpec struct {
 	// +optional
 	ServerGroup *ServerGroupFilter `json:"serverGroup,omitempty"`
 
-	// IdentityRef is a reference to a identity to be used when reconciling this cluster
+	// IdentityRef is a reference to a secret holding OpenStack credentials
+	// to be used when reconciling this machine. If not specified, the
+	// credentials specified in the cluster will be used.
 	// +optional
 	IdentityRef *OpenStackIdentityReference `json:"identityRef,omitempty"`
 }

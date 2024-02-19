@@ -69,18 +69,6 @@ OpenStackClusterSpec
 <table>
 <tr>
 <td>
-<code>cloudName</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The name of the cloud to use from the clouds secret</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>managedSubnets</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetSpec">
@@ -387,8 +375,9 @@ OpenStackIdentityReference
 </em>
 </td>
 <td>
-<em>(Optional)</em>
-<p>IdentityRef is a reference to a identity to be used when reconciling this cluster</p>
+<p>IdentityRef is a reference to a secret holding OpenStack credentials
+to be used when reconciling this cluster. It is also to reconcile
+machines unless overridden in the machine spec.</p>
 </td>
 </tr>
 </table>
@@ -559,18 +548,6 @@ string
 </tr>
 <tr>
 <td>
-<code>cloudName</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The name of the cloud to use from the clouds secret</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>flavor</code><br/>
 <em>
 string
@@ -731,7 +708,9 @@ OpenStackIdentityReference
 </td>
 <td>
 <em>(Optional)</em>
-<p>IdentityRef is a reference to a identity to be used when reconciling this cluster</p>
+<p>IdentityRef is a reference to a secret holding OpenStack credentials
+to be used when reconciling this machine. If not specified, the
+credentials specified in the cluster will be used.</p>
 </td>
 </tr>
 </table>
@@ -1897,18 +1876,6 @@ NetworkStatus
 <tbody>
 <tr>
 <td>
-<code>cloudName</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The name of the cloud to use from the clouds secret</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>managedSubnets</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetSpec">
@@ -2215,8 +2182,9 @@ OpenStackIdentityReference
 </em>
 </td>
 <td>
-<em>(Optional)</em>
-<p>IdentityRef is a reference to a identity to be used when reconciling this cluster</p>
+<p>IdentityRef is a reference to a secret holding OpenStack credentials
+to be used when reconciling this cluster. It is also to reconcile
+machines unless overridden in the machine spec.</p>
 </td>
 </tr>
 </tbody>
@@ -2453,18 +2421,6 @@ OpenStackClusterSpec
 <table>
 <tr>
 <td>
-<code>cloudName</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The name of the cloud to use from the clouds secret</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>managedSubnets</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetSpec">
@@ -2771,8 +2727,9 @@ OpenStackIdentityReference
 </em>
 </td>
 <td>
-<em>(Optional)</em>
-<p>IdentityRef is a reference to a identity to be used when reconciling this cluster</p>
+<p>IdentityRef is a reference to a secret holding OpenStack credentials
+to be used when reconciling this cluster. It is also to reconcile
+machines unless overridden in the machine spec.</p>
 </td>
 </tr>
 </table>
@@ -2838,9 +2795,20 @@ string
 </em>
 </td>
 <td>
-<p>Name of the infrastructure identity to be used.
-Must be either a cluster-scoped resource, or namespaced-scoped
-resource the same namespace as the resource(s) being provisioned.</p>
+<p>Name is the name of a secret in the same namespace as the resource being provisioned.
+The secret must contain a key named <code>clouds.yaml</code> which contains an OpenStack clouds.yaml file.
+The secret may optionally contain a key named <code>cacert</code> containing a PEM-encoded CA certificate.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>cloudName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>CloudName specifies the name of the entry in the clouds.yaml file to use.</p>
 </td>
 </tr>
 </tbody>
@@ -2884,18 +2852,6 @@ string
 </td>
 <td>
 <p>InstanceID is the OpenStack instance ID for this machine.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>cloudName</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The name of the cloud to use from the clouds secret</p>
 </td>
 </tr>
 <tr>
@@ -3060,7 +3016,9 @@ OpenStackIdentityReference
 </td>
 <td>
 <em>(Optional)</em>
-<p>IdentityRef is a reference to a identity to be used when reconciling this cluster</p>
+<p>IdentityRef is a reference to a secret holding OpenStack credentials
+to be used when reconciling this machine. If not specified, the
+credentials specified in the cluster will be used.</p>
 </td>
 </tr>
 </tbody>
@@ -3251,18 +3209,6 @@ string
 </tr>
 <tr>
 <td>
-<code>cloudName</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The name of the cloud to use from the clouds secret</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>flavor</code><br/>
 <em>
 string
@@ -3423,7 +3369,9 @@ OpenStackIdentityReference
 </td>
 <td>
 <em>(Optional)</em>
-<p>IdentityRef is a reference to a identity to be used when reconciling this cluster</p>
+<p>IdentityRef is a reference to a secret holding OpenStack credentials
+to be used when reconciling this machine. If not specified, the
+credentials specified in the cluster will be used.</p>
 </td>
 </tr>
 </table>

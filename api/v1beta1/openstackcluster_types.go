@@ -30,10 +30,6 @@ const (
 
 // OpenStackClusterSpec defines the desired state of OpenStackCluster.
 type OpenStackClusterSpec struct {
-	// The name of the cloud to use from the clouds secret
-	// +optional
-	CloudName string `json:"cloudName"`
-
 	// ManagedSubnets describe OpenStack Subnets to be created. Cluster actuator will create a network,
 	// subnets with the defined CIDR, and a router connected to these subnets. Currently only one IPv4
 	// subnet is supported. If you leave this empty, no network will be created.
@@ -157,9 +153,11 @@ type OpenStackClusterSpec struct {
 	//+optional
 	Bastion *Bastion `json:"bastion,omitempty"`
 
-	// IdentityRef is a reference to a identity to be used when reconciling this cluster
-	// +optional
-	IdentityRef *OpenStackIdentityReference `json:"identityRef,omitempty"`
+	// IdentityRef is a reference to a secret holding OpenStack credentials
+	// to be used when reconciling this cluster. It is also to reconcile
+	// machines unless overridden in the machine spec.
+	// +kubebuilder:validation:Required
+	IdentityRef OpenStackIdentityReference `json:"identityRef"`
 }
 
 // OpenStackClusterStatus defines the observed state of OpenStackCluster.

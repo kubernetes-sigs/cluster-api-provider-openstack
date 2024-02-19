@@ -22,9 +22,9 @@ kind: OpenStackCluster
 metadata:
   name: ${CLUSTER_NAME}
 spec:
-  cloudName: ${OPENSTACK_CLOUD}
   identityRef:
     name: ${CLUSTER_NAME}-cloud-config
+    cloudName: ${OPENSTACK_CLOUD}
   apiServerLoadBalancer:
     enabled: true
   managedSubnets:
@@ -99,9 +99,6 @@ spec:
       image:
         name: ${OPENSTACK_IMAGE_NAME}
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
-      cloudName: ${OPENSTACK_CLOUD}
-      identityRef:
-        name: ${CLUSTER_NAME}-cloud-config
 ---
 apiVersion: cluster.x-k8s.io/v1beta1
 kind: MachineDeployment
@@ -134,9 +131,6 @@ metadata:
 spec:
   template:
     spec:
-      cloudName: ${OPENSTACK_CLOUD}
-      identityRef:
-        name: ${CLUSTER_NAME}-cloud-config
       flavor: ${OPENSTACK_NODE_MACHINE_FLAVOR}
       image:
         name: ${OPENSTACK_IMAGE_NAME}

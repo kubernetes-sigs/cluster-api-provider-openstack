@@ -46,10 +46,12 @@ func TestConvertFrom(t *testing.T) {
 				Spec: infrav1.OpenStackClusterSpec{},
 			},
 			want: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{},
+				Spec: OpenStackClusterSpec{
+					IdentityRef: &OpenStackIdentityReference{},
+				},
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
-						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"apiServerLoadBalancer\":{},\"cloudName\":\"\",\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"disableExternalNetwork\":false,\"externalNetwork\":{},\"managedSecurityGroups\":null,\"network\":{}},\"status\":{\"ready\":false}}",
+						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"apiServerLoadBalancer\":{},\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"disableExternalNetwork\":false,\"externalNetwork\":{},\"identityRef\":{\"cloudName\":\"\",\"name\":\"\"},\"managedSecurityGroups\":null,\"network\":{}},\"status\":{\"ready\":false}}",
 					},
 				},
 			},
@@ -61,10 +63,16 @@ func TestConvertFrom(t *testing.T) {
 				Spec: infrav1.OpenStackClusterTemplateSpec{},
 			},
 			want: &OpenStackClusterTemplate{
-				Spec: OpenStackClusterTemplateSpec{},
+				Spec: OpenStackClusterTemplateSpec{
+					Template: OpenStackClusterTemplateResource{
+						Spec: OpenStackClusterSpec{
+							IdentityRef: &OpenStackIdentityReference{},
+						},
+					},
+				},
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
-						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"template\":{\"spec\":{\"apiServerLoadBalancer\":{},\"cloudName\":\"\",\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"disableExternalNetwork\":false,\"externalNetwork\":{},\"managedSecurityGroups\":null,\"network\":{}}}}}",
+						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"template\":{\"spec\":{\"apiServerLoadBalancer\":{},\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"disableExternalNetwork\":false,\"externalNetwork\":{},\"identityRef\":{\"cloudName\":\"\",\"name\":\"\"},\"managedSecurityGroups\":null,\"network\":{}}}}}",
 					},
 				},
 			},
@@ -79,7 +87,7 @@ func TestConvertFrom(t *testing.T) {
 				Spec: OpenStackMachineSpec{},
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
-						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"cloudName\":\"\",\"flavor\":\"\",\"image\":{}},\"status\":{\"dependentResources\":{},\"ready\":false,\"referencedResources\":{}}}",
+						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"flavor\":\"\",\"image\":{}},\"status\":{\"dependentResources\":{},\"ready\":false,\"referencedResources\":{}}}",
 					},
 				},
 			},
@@ -94,7 +102,7 @@ func TestConvertFrom(t *testing.T) {
 				Spec: OpenStackMachineTemplateSpec{},
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
-						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"template\":{\"spec\":{\"cloudName\":\"\",\"flavor\":\"\",\"image\":{}}}}}",
+						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"template\":{\"spec\":{\"flavor\":\"\",\"image\":{}}}}}",
 					},
 				},
 			},

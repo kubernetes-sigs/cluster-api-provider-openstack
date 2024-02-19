@@ -864,9 +864,9 @@ func makeOpenStackMachineTemplate(namespace, clusterName, name string) *infrav1.
 						Name: e2eCtx.E2EConfig.GetVariable(shared.OpenStackImageName),
 					},
 					SSHKeyName: shared.DefaultSSHKeyPairName,
-					CloudName:  e2eCtx.E2EConfig.GetVariable(shared.OpenStackCloud),
 					IdentityRef: &infrav1.OpenStackIdentityReference{
-						Name: fmt.Sprintf("%s-cloud-config", clusterName),
+						Name:      fmt.Sprintf("%s-cloud-config", clusterName),
+						CloudName: e2eCtx.E2EConfig.GetVariable(shared.OpenStackCloud),
 					},
 				},
 			},
@@ -888,9 +888,9 @@ func makeOpenStackMachineTemplateWithPortOptions(namespace, clusterName, name st
 						Name: e2eCtx.E2EConfig.GetVariable(shared.OpenStackImageName),
 					},
 					SSHKeyName: shared.DefaultSSHKeyPairName,
-					CloudName:  e2eCtx.E2EConfig.GetVariable(shared.OpenStackCloud),
 					IdentityRef: &infrav1.OpenStackIdentityReference{
-						Name: fmt.Sprintf("%s-cloud-config", clusterName),
+						Name:      fmt.Sprintf("%s-cloud-config", clusterName),
+						CloudName: e2eCtx.E2EConfig.GetVariable(shared.OpenStackCloud),
 					},
 					Ports: *portOpts,
 					Tags:  machineTags,
