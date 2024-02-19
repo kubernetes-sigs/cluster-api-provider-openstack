@@ -155,6 +155,7 @@ To use this field, the Openstack installation requires the net-mtu neutron API e
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ExternalRouterIPs is an array of externalIPs on the respective subnets.
 This is necessary if the router needs a fixed ip in a specific subnet.</p>
 </td>
@@ -2030,6 +2031,7 @@ To use this field, the Openstack installation requires the net-mtu neutron API e
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ExternalRouterIPs is an array of externalIPs on the respective subnets.
 This is necessary if the router needs a fixed ip in a specific subnet.</p>
 </td>
@@ -2576,6 +2578,7 @@ To use this field, the Openstack installation requires the net-mtu neutron API e
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ExternalRouterIPs is an array of externalIPs on the respective subnets.
 This is necessary if the router needs a fixed ip in a specific subnet.</p>
 </td>

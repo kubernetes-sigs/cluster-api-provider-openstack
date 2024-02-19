@@ -516,7 +516,11 @@ func (in *OpenStackClusterSpec) DeepCopyInto(out *OpenStackClusterSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
-	in.ExternalNetwork.DeepCopyInto(&out.ExternalNetwork)
+	if in.ExternalNetwork != nil {
+		in, out := &in.ExternalNetwork, &out.ExternalNetwork
+		*out = new(NetworkFilter)
+		(*in).DeepCopyInto(*out)
+	}
 	in.APIServerLoadBalancer.DeepCopyInto(&out.APIServerLoadBalancer)
 	if in.ManagedSecurityGroups != nil {
 		in, out := &in.ManagedSecurityGroups, &out.ManagedSecurityGroups

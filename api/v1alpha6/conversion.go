@@ -265,7 +265,7 @@ var v1alpha6OpenStackClusterRestorer = conversion.RestorerFor[*OpenStackCluster]
 
 var v1beta1OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStackCluster]{
 	"externalNetwork": conversion.UnconditionalFieldRestorer(
-		func(c *infrav1.OpenStackCluster) *infrav1.NetworkFilter {
+		func(c *infrav1.OpenStackCluster) **infrav1.NetworkFilter {
 			return &c.Spec.ExternalNetwork
 		},
 	),
@@ -366,7 +366,7 @@ func restorev1beta1ManagedSecurityGroups(previous *infrav1.ManagedSecurityGroups
 
 var v1beta1OpenStackClusterTemplateRestorer = conversion.RestorerFor[*infrav1.OpenStackClusterTemplate]{
 	"externalNetwork": conversion.UnconditionalFieldRestorer(
-		func(c *infrav1.OpenStackClusterTemplate) *infrav1.NetworkFilter {
+		func(c *infrav1.OpenStackClusterTemplate) **infrav1.NetworkFilter {
 			return &c.Spec.Template.Spec.ExternalNetwork
 		},
 	),
@@ -703,7 +703,7 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in *i
 		}
 	}
 
-	if in.ExternalNetwork.ID != "" {
+	if in.ExternalNetwork != nil && in.ExternalNetwork.ID != "" {
 		out.ExternalNetworkID = in.ExternalNetwork.ID
 	}
 
@@ -743,7 +743,7 @@ func Convert_v1alpha6_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 	}
 
 	if in.ExternalNetworkID != "" {
-		out.ExternalNetwork = infrav1.NetworkFilter{
+		out.ExternalNetwork = &infrav1.NetworkFilter{
 			ID: in.ExternalNetworkID,
 		}
 	}

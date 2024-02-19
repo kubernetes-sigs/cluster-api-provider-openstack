@@ -71,7 +71,7 @@ type OpenStackClusterSpec struct {
 
 	// ExternalNetwork is the OpenStack Network to be used to get public internet to the VMs.
 	// +optional
-	ExternalNetwork NetworkFilter `json:"externalNetwork,omitempty"`
+	ExternalNetwork *NetworkFilter `json:"externalNetwork,omitempty"`
 
 	// DisableExternalNetwork determines whether or not to attempt to connect the cluster
 	// to an external network. This allows for the creation of clusters when connecting

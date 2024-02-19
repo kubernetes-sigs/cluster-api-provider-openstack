@@ -521,7 +521,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			},
 			DisableAPIServerFloatingIP: true,
 			APIServerFixedIP:           "10.0.0.1",
-			ExternalNetwork: infrav1.NetworkFilter{
+			ExternalNetwork: &infrav1.NetworkFilter{
 				ID: externalNetworkID,
 			},
 			Network: &infrav1.NetworkFilter{
@@ -600,7 +600,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			},
 			DisableAPIServerFloatingIP: true,
 			APIServerFixedIP:           "10.0.0.1",
-			ExternalNetwork: infrav1.NetworkFilter{
+			ExternalNetwork: &infrav1.NetworkFilter{
 				ID: externalNetworkID,
 			},
 			Network: &infrav1.NetworkFilter{
