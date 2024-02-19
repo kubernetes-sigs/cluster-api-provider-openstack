@@ -126,7 +126,7 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 	}
 
 	// Allow changes on AllowedCIDRs
-	if newObj.Spec.APIServerLoadBalancer.Enabled {
+	if newObj.Spec.APIServerLoadBalancer != nil && oldObj.Spec.APIServerLoadBalancer != nil {
 		oldObj.Spec.APIServerLoadBalancer.AllowedCIDRs = []string{}
 		newObj.Spec.APIServerLoadBalancer.AllowedCIDRs = []string{}
 	}

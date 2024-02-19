@@ -184,7 +184,7 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope 
 
 	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
 
-	if openStackCluster.Spec.APIServerLoadBalancer.Enabled {
+	if openStackCluster.Spec.APIServerLoadBalancer != nil && openStackCluster.Spec.APIServerLoadBalancer.Enabled {
 		loadBalancerService, err := loadbalancer.NewService(scope)
 		if err != nil {
 			return reconcile.Result{}, err
@@ -718,7 +718,7 @@ func reconcileControlPlaneEndpoint(scope *scope.WithLogger, networkingService *n
 	// API server load balancer is enabled. Create an Octavia load balancer.
 	// Note that we reconcile the load balancer even if the control plane
 	// endpoint is already set.
-	case openStackCluster.Spec.APIServerLoadBalancer.Enabled:
+	case openStackCluster.Spec.APIServerLoadBalancer != nil && openStackCluster.Spec.APIServerLoadBalancer.Enabled:
 		loadBalancerService, err := loadbalancer.NewService(scope)
 		if err != nil {
 			return err

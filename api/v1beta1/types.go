@@ -615,6 +615,14 @@ type APIServerLoadBalancer struct {
 	Provider string `json:"provider,omitempty"`
 }
 
+func (s *APIServerLoadBalancer) IsZero() bool {
+	return s == nil || (!s.Enabled && len(s.AdditionalPorts) == 0 && len(s.AllowedCIDRs) == 0 && s.Provider == "")
+}
+
+func (s *APIServerLoadBalancer) IsEnabled() bool {
+	return s != nil && s.Enabled
+}
+
 // ReferencedMachineResources contains resolved references to resources required by the machine.
 type ReferencedMachineResources struct {
 	// ServerGroupID is the ID of the server group the machine should be added to and is calculated based on ServerGroupFilter.

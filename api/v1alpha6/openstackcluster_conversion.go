@@ -195,6 +195,10 @@ func restorev1beta1ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infr
 	if previous.ManagedSecurityGroups != nil {
 		dst.ManagedSecurityGroups.AllNodesSecurityGroupRules = previous.ManagedSecurityGroups.AllNodesSecurityGroupRules
 	}
+
+	if dst.APIServerLoadBalancer.IsZero() {
+		dst.APIServerLoadBalancer = previous.APIServerLoadBalancer
+	}
 }
 
 func Convert_v1alpha6_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *OpenStackClusterSpec, out *infrav1.OpenStackClusterSpec, s apiconversion.Scope) error {
@@ -249,6 +253,14 @@ func Convert_v1alpha6_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 		out.IdentityRef.Name = in.IdentityRef.Name
 	}
 
+	apiServerLoadBalancer := &infrav1.APIServerLoadBalancer{}
+	if err := Convert_v1alpha6_APIServerLoadBalancer_To_v1beta1_APIServerLoadBalancer(&in.APIServerLoadBalancer, apiServerLoadBalancer, s); err != nil {
+		return err
+	}
+	if !apiServerLoadBalancer.IsZero() {
+		out.APIServerLoadBalancer = apiServerLoadBalancer
+	}
+
 	return nil
 }
 
@@ -286,6 +298,12 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in *i
 
 	out.CloudName = in.IdentityRef.CloudName
 	out.IdentityRef = &OpenStackIdentityReference{Name: in.IdentityRef.Name}
+
+	if in.APIServerLoadBalancer != nil {
+		if err := Convert_v1beta1_APIServerLoadBalancer_To_v1alpha6_APIServerLoadBalancer(in.APIServerLoadBalancer, &out.APIServerLoadBalancer, s); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
