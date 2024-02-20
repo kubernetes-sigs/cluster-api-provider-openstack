@@ -116,7 +116,8 @@ type ServerMetadata struct {
 // OpenStackMachineStatus defines the observed state of OpenStackMachine.
 type OpenStackMachineStatus struct {
 	// Ready is true when the provider resource is ready.
-	// +optional
+	// +kubebuilder:default:=false
+	// +kubebuilder:validation:Required
 	Ready bool `json:"ready"`
 
 	// Addresses contains the OpenStack instance associated addresses.

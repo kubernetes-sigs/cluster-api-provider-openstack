@@ -2438,6 +2438,7 @@ spec:
                   for this machine.
                 type: string
               ready:
+                default: false
                 description: Ready is true when the provider resource is ready.
                 type: boolean
               referencedResources:
@@ -2818,6 +2819,8 @@ spec:
                       should be added to and is calculated based on ServerGroupFilter.
                     type: string
                 type: object
+            required:
+            - ready
             type: object
         type: object
     served: true
