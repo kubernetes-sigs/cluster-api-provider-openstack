@@ -575,7 +575,7 @@ var (
 
 // Bastion represents basic information about the bastion node.
 type Bastion struct {
-	//+optional
+	// +kubebuilder:default=true
 	Enabled bool `json:"enabled"`
 
 	// Instance for the bastion itself

@@ -2329,6 +2329,7 @@ spec:
                           availabilityZone:
                             type: string
                           enabled:
+                            default: true
                             type: boolean
                           floatingIP:
                             description: |-
@@ -2959,6 +2960,8 @@ spec:
                             required:
                             - flavor
                             type: object
+                        required:
+                        - enabled
                         type: object
                       controlPlaneAvailabilityZones:
                         description: ControlPlaneAvailabilityZones is the az to deploy
