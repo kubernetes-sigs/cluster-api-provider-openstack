@@ -33,9 +33,11 @@ const (
 // OpenStackMachineSpec defines the desired state of OpenStackMachine.
 type OpenStackMachineSpec struct {
 	// ProviderID is the unique identifier as specified by the cloud provider.
+	// +optional
 	ProviderID *string `json:"providerID,omitempty"`
 
 	// InstanceID is the OpenStack instance ID for this machine.
+	// +optional
 	InstanceID *string `json:"instanceID,omitempty"`
 
 	// The flavor reference for the flavor for your server instance.
@@ -50,9 +52,11 @@ type OpenStackMachineSpec struct {
 
 	// Ports to be attached to the server instance. They are created if a port with the given name does not already exist.
 	// If not specified a default port will be added for the default cluster network.
+	// +optional
 	Ports []PortOpts `json:"ports,omitempty"`
 
 	// The names of the security groups to assign to the instance
+	// +optional
 	SecurityGroups []SecurityGroupFilter `json:"securityGroups,omitempty"`
 
 	// Whether the server instance is created on a trunk port or not.
@@ -61,17 +65,21 @@ type OpenStackMachineSpec struct {
 	// Machine tags
 	// Requires Nova api 2.52 minimum!
 	// +listType=set
+	// +optional
 	Tags []string `json:"tags,omitempty"`
 
 	// Metadata mapping. Allows you to create a map of key value pairs to add to the server instance.
 	// +listType=map
 	// +listMapKey=key
+	// +optional
 	ServerMetadata []ServerMetadata `json:"serverMetadata,omitempty"`
 
 	// Config Drive support
+	// +optional
 	ConfigDrive *bool `json:"configDrive,omitempty"`
 
 	// The volume metadata to boot from
+	// +optional
 	RootVolume *RootVolume `json:"rootVolume,omitempty"`
 
 	// AdditionalBlockDevices is a list of specifications for additional block devices to attach to the server instance
@@ -108,6 +116,7 @@ type OpenStackMachineStatus struct {
 	Ready bool `json:"ready"`
 
 	// Addresses contains the OpenStack instance associated addresses.
+	// +optional
 	Addresses []corev1.NodeAddress `json:"addresses,omitempty"`
 
 	// InstanceState is the state of the OpenStack instance for this machine.
