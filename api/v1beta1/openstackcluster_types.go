@@ -176,15 +176,19 @@ type OpenStackClusterStatus struct {
 	Ready bool `json:"ready"`
 
 	// Network contains information about the created OpenStack Network.
+	// +optional
 	Network *NetworkStatusWithSubnets `json:"network,omitempty"`
 
 	// externalNetwork contains information about the external network used for default ingress and egress traffic.
+	// +optional
 	ExternalNetwork *NetworkStatus `json:"externalNetwork,omitempty"`
 
 	// Router describes the default cluster router
+	// +optional
 	Router *Router `json:"router,omitempty"`
 
 	// APIServerLoadBalancer describes the api server load balancer if one exists
+	// +optional
 	APIServerLoadBalancer *LoadBalancer `json:"apiServerLoadBalancer,omitempty"`
 
 	// FailureDomains represent OpenStack availability zones
@@ -193,14 +197,18 @@ type OpenStackClusterStatus struct {
 	// ControlPlaneSecurityGroups contains all the information about the OpenStack
 	// Security Group that needs to be applied to control plane nodes.
 	// TODO: Maybe instead of two properties, we add a property to the group?
+	// +optional
 	ControlPlaneSecurityGroup *SecurityGroupStatus `json:"controlPlaneSecurityGroup,omitempty"`
 
 	// WorkerSecurityGroup contains all the information about the OpenStack Security
 	// Group that needs to be applied to worker nodes.
+	// +optional
 	WorkerSecurityGroup *SecurityGroupStatus `json:"workerSecurityGroup,omitempty"`
 
+	// +optional
 	BastionSecurityGroup *SecurityGroupStatus `json:"bastionSecurityGroup,omitempty"`
 
+	// +optional
 	Bastion *BastionStatus `json:"bastion,omitempty"`
 
 	// FailureReason will be set in the event that there is a terminal problem
