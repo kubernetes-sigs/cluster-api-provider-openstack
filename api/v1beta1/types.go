@@ -579,7 +579,8 @@ type Bastion struct {
 	Enabled bool `json:"enabled"`
 
 	// Instance for the bastion itself
-	Instance OpenStackMachineSpec `json:"instance,omitempty"`
+	// +kubebuilder:validation:Required
+	Instance OpenStackMachineSpec `json:"instance"`
 
 	//+optional
 	AvailabilityZone string `json:"availabilityZone,omitempty"`

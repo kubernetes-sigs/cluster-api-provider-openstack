@@ -2962,6 +2962,7 @@ spec:
                             type: object
                         required:
                         - enabled
+                        - instance
                         type: object
                       controlPlaneAvailabilityZones:
                         description: ControlPlaneAvailabilityZones is the az to deploy
