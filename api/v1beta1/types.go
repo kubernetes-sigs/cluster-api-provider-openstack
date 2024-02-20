@@ -32,6 +32,7 @@ type ImageFilter struct {
 	// The name of the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
 	Name string `json:"name,omitempty"`
 	// The tags associated with the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
+	// +optional
 	Tags []string `json:"tags,omitempty"`
 }
 
@@ -124,6 +125,7 @@ type SubnetSpec struct {
 
 	// DNSNameservers holds a list of DNS server addresses that will be provided when creating
 	// the subnet. These addresses need to have the same IP version as CIDR.
+	// +optional
 	DNSNameservers []string `json:"dnsNameservers,omitempty"`
 
 	// AllocationPools is an array of AllocationPool objects that will be applied to OpenStack Subnet being created.
@@ -370,7 +372,7 @@ type NetworkStatus struct {
 	Name string `json:"name"`
 	ID   string `json:"id"`
 
-	//+optional
+	// +optional
 	Tags []string `json:"tags,omitempty"`
 }
 
@@ -379,6 +381,7 @@ type NetworkStatusWithSubnets struct {
 	NetworkStatus `json:",inline"`
 
 	// Subnets is a list of subnets associated with the default cluster network. Machines which use the default cluster network will get an address from all of these subnets.
+	// +optional
 	Subnets []Subnet `json:"subnets,omitempty"`
 }
 
@@ -389,7 +392,7 @@ type Subnet struct {
 
 	CIDR string `json:"cidr"`
 
-	//+optional
+	// +optional
 	Tags []string `json:"tags,omitempty"`
 }
 
@@ -397,9 +400,9 @@ type Subnet struct {
 type Router struct {
 	Name string `json:"name"`
 	ID   string `json:"id"`
-	//+optional
+	// +optional
 	Tags []string `json:"tags,omitempty"`
-	//+optional
+	// +optional
 	IPs []string `json:"ips,omitempty"`
 }
 
@@ -409,9 +412,9 @@ type LoadBalancer struct {
 	ID         string `json:"id"`
 	IP         string `json:"ip"`
 	InternalIP string `json:"internalIP"`
-	//+optional
+	// +optional
 	AllowedCIDRs []string `json:"allowedCIDRs,omitempty"`
-	//+optional
+	// +optional
 	Tags []string `json:"tags,omitempty"`
 }
 
@@ -582,12 +585,12 @@ type Bastion struct {
 	// +kubebuilder:validation:Required
 	Instance OpenStackMachineSpec `json:"instance"`
 
-	//+optional
+	// +optional
 	AvailabilityZone *string `json:"availabilityZone,omitempty"`
 
 	// FloatingIP which will be associated to the bastion machine.
 	// The floating IP should already exist and should not be associated with a port.
-	//+optional
+	// +optional
 	FloatingIP *string `json:"floatingIP,omitempty"`
 }
 
@@ -595,8 +598,10 @@ type APIServerLoadBalancer struct {
 	// Enabled defines whether a load balancer should be created.
 	Enabled bool `json:"enabled,omitempty"`
 	// AdditionalPorts adds additional tcp ports to the load balancer.
+	// +optional
 	AdditionalPorts []int `json:"additionalPorts,omitempty"`
 	// AllowedCIDRs restrict access to all API-Server listeners to the given address CIDRs.
+	// +optional
 	AllowedCIDRs []string `json:"allowedCidrs,omitempty"`
 	// Octavia Provider Used to create load balancer
 	Provider string `json:"provider,omitempty"`
