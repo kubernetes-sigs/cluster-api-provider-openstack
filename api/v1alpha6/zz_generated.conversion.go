@@ -475,7 +475,9 @@ func autoConvert_v1alpha6_Bastion_To_v1beta1_Bastion(in *Bastion, out *v1beta1.B
 	if err := Convert_v1alpha6_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(&in.Instance, &out.Instance, s); err != nil {
 		return err
 	}
-	out.AvailabilityZone = in.AvailabilityZone
+	if err := v1.Convert_string_To_Pointer_string(&in.AvailabilityZone, &out.AvailabilityZone, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -484,7 +486,9 @@ func autoConvert_v1beta1_Bastion_To_v1alpha6_Bastion(in *v1beta1.Bastion, out *B
 	if err := Convert_v1beta1_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(&in.Instance, &out.Instance, s); err != nil {
 		return err
 	}
-	out.AvailabilityZone = in.AvailabilityZone
+	if err := v1.Convert_Pointer_string_To_string(&in.AvailabilityZone, &out.AvailabilityZone, s); err != nil {
+		return err
+	}
 	// WARNING: in.FloatingIP requires manual conversion: does not exist in peer-type
 	return nil
 }

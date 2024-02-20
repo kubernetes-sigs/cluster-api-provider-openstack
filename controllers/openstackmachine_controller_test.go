@@ -113,7 +113,7 @@ func getDefaultInstanceSpec() *compute.InstanceSpec {
 			"test-metadata": "test-value",
 		},
 		ConfigDrive:    *pointer.Bool(true),
-		FailureDomain:  *pointer.String(failureDomain),
+		FailureDomain:  pointer.String(failureDomain),
 		ServerGroupID:  serverGroupUUID,
 		SecurityGroups: []infrav1.SecurityGroupFilter{},
 		Tags:           []string{"test-tag"},

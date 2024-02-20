@@ -333,8 +333,16 @@ func restorev1beta1Port(previous *infrav1.PortOpts, dst *infrav1.PortOpts) {
 }
 
 func restorev1beta1Bastion(previous **infrav1.Bastion, dst **infrav1.Bastion) {
-	if *previous != nil && *dst != nil {
-		restorev1beta1MachineSpec(&(*previous).Instance, &(*dst).Instance)
+	if *previous == nil && *dst == nil {
+		return
+	}
+
+	restorev1beta1MachineSpec(&(*previous).Instance, &(*dst).Instance)
+	if (*dst).AvailabilityZone == nil || *(*dst).AvailabilityZone == "" {
+		(*dst).AvailabilityZone = (*previous).AvailabilityZone
+	}
+	if (*dst).FloatingIP == nil || *(*dst).FloatingIP == "" {
+		(*dst).FloatingIP = (*previous).FloatingIP
 	}
 }
 
@@ -733,7 +741,9 @@ func Convert_v1alpha7_Bastion_To_v1beta1_Bastion(in *Bastion, out *infrav1.Basti
 		out.Instance.ServerGroup = nil
 	}
 
-	out.FloatingIP = in.Instance.FloatingIP
+	if in.Instance.FloatingIP != "" {
+		out.FloatingIP = pointer.String(in.Instance.FloatingIP)
+	}
 	return nil
 }
 
@@ -747,7 +757,9 @@ func Convert_v1beta1_Bastion_To_v1alpha7_Bastion(in *infrav1.Bastion, out *Basti
 		out.Instance.ServerGroupID = in.Instance.ServerGroup.ID
 	}
 
-	out.Instance.FloatingIP = in.FloatingIP
+	if in.FloatingIP != nil {
+		out.Instance.FloatingIP = *in.FloatingIP
+	}
 	return nil
 }
 

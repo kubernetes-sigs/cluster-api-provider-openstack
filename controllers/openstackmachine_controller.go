@@ -580,7 +580,7 @@ func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *
 
 	// Add the failure domain only if specified
 	if machine.Spec.FailureDomain != nil {
-		instanceSpec.FailureDomain = *machine.Spec.FailureDomain
+		instanceSpec.FailureDomain = machine.Spec.FailureDomain
 	}
 
 	instanceSpec.Tags = getInstanceTags(openStackMachine, openStackCluster)

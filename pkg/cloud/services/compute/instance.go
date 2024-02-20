@@ -87,33 +87,38 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, instanceSpec *I
 		serverImageRef = instanceSpec.ImageID
 	}
 
-	var serverCreateOpts servers.CreateOptsBuilder = servers.CreateOpts{
-		Name:             instanceSpec.Name,
-		ImageRef:         serverImageRef,
-		FlavorRef:        flavor.ID,
-		AvailabilityZone: instanceSpec.FailureDomain,
-		Networks:         portList,
-		UserData:         []byte(instanceSpec.UserData),
-		Tags:             instanceSpec.Tags,
-		Metadata:         instanceSpec.Metadata,
-		ConfigDrive:      &instanceSpec.ConfigDrive,
+	serverCreateOpts := servers.CreateOpts{
+		Name:        instanceSpec.Name,
+		ImageRef:    serverImageRef,
+		FlavorRef:   flavor.ID,
+		Networks:    portList,
+		UserData:    []byte(instanceSpec.UserData),
+		Tags:        instanceSpec.Tags,
+		Metadata:    instanceSpec.Metadata,
+		ConfigDrive: &instanceSpec.ConfigDrive,
 	}
+
+	if instanceSpec.FailureDomain != nil {
+		serverCreateOpts.AvailabilityZone = *instanceSpec.FailureDomain
+	}
+
+	serverBuilder := servers.CreateOptsBuilder(serverCreateOpts)
 
 	blockDevices, err := s.getBlockDevices(eventObject, instanceSpec, instanceSpec.ImageID, instanceCreateTimeout, retryInterval)
 	if err != nil {
 		return nil, err
 	}
 	if len(blockDevices) > 0 {
-		serverCreateOpts = bootfromvolume.CreateOptsExt{
-			CreateOptsBuilder: serverCreateOpts,
+		serverBuilder = bootfromvolume.CreateOptsExt{
+			CreateOptsBuilder: serverBuilder,
 			BlockDevice:       blockDevices,
 		}
 	}
 
-	serverCreateOpts = applyServerGroupID(serverCreateOpts, instanceSpec.ServerGroupID)
+	serverBuilder = applyServerGroupID(serverBuilder, instanceSpec.ServerGroupID)
 
 	server, err = s.getComputeClient().CreateServer(keypairs.CreateOptsExt{
-		CreateOptsBuilder: serverCreateOpts,
+		CreateOptsBuilder: serverBuilder,
 		KeyName:           instanceSpec.SSHKeyName,
 	})
 	if err != nil {
@@ -208,19 +213,22 @@ func (s *Service) getOrCreateVolumeBuilder(eventObject runtime.Object, instanceS
 
 	if blockDevice.Storage.Volume != nil {
 		if blockDevice.Storage.Volume.AvailabilityZone != "" {
-			availabilityZone = blockDevice.Storage.Volume.AvailabilityZone
+			availabilityZone = &blockDevice.Storage.Volume.AvailabilityZone
 		}
 		volumeType = blockDevice.Storage.Volume.Type
 	}
 
 	createOpts := volumes.CreateOpts{
-		Name:             volumeName(instanceSpec.Name, blockDevice.Name),
-		Description:      description,
-		Size:             blockDevice.SizeGiB,
-		ImageID:          imageID,
-		Multiattach:      false,
-		AvailabilityZone: availabilityZone,
-		VolumeType:       volumeType,
+		Name:        volumeName(instanceSpec.Name, blockDevice.Name),
+		Description: description,
+		Size:        blockDevice.SizeGiB,
+		ImageID:     imageID,
+		Multiattach: false,
+		VolumeType:  volumeType,
+	}
+
+	if availabilityZone != nil {
+		createOpts.AvailabilityZone = *availabilityZone
 	}
 
 	return s.getOrCreateVolume(eventObject, createOpts)

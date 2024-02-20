@@ -466,10 +466,10 @@ func reconcileBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openS
 	floatingIP := openStackCluster.Spec.Bastion.FloatingIP
 	if openStackCluster.Status.Bastion.FloatingIP != "" {
 		// Some floating IP has already been created for this bastion, make sure we re-use it
-		floatingIP = openStackCluster.Status.Bastion.FloatingIP
+		floatingIP = &openStackCluster.Status.Bastion.FloatingIP
 	}
 	// Check if there is an existing floating IP attached to bastion, in case where FloatingIP would not yet have been stored in cluster status
-	fp, err = networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterName, &floatingIP)
+	fp, err = networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterName, floatingIP)
 	if err != nil {
 		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to get or create floating IP for bastion: %w", err))
 		return ctrl.Result{}, fmt.Errorf("failed to get or create floating IP for bastion: %w", err)
