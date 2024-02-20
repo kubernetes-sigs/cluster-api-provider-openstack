@@ -147,6 +147,7 @@ type OpenStackClusterSpec struct {
 
 	// ControlPlaneAvailabilityZones is the az to deploy control plane to
 	// +listType=set
+	// +optional
 	ControlPlaneAvailabilityZones []string `json:"controlPlaneAvailabilityZones,omitempty"`
 
 	// Indicates whether to omit the az for control plane nodes, allowing the Nova scheduler
