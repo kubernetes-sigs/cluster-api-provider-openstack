@@ -129,7 +129,8 @@ type OpenStackMachineStatus struct {
 	InstanceState *InstanceState `json:"instanceState,omitempty"`
 
 	// ReferencedResources contains resolved references to resources that the machine depends on.
-	ReferencedResources ReferencedMachineResources `json:"referencedResources,omitempty"`
+	// +optional
+	ReferencedResources *ReferencedMachineResources `json:"referencedResources,omitempty"`
 
 	// DependentResources contains resolved dependent resources that were created by the machine.
 	DependentResources DependentMachineResources `json:"dependentResources,omitempty"`

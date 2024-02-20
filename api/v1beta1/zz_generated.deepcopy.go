@@ -921,7 +921,11 @@ func (in *OpenStackMachineStatus) DeepCopyInto(out *OpenStackMachineStatus) {
 		*out = new(InstanceState)
 		**out = **in
 	}
-	in.ReferencedResources.DeepCopyInto(&out.ReferencedResources)
+	if in.ReferencedResources != nil {
+		in, out := &in.ReferencedResources, &out.ReferencedResources
+		*out = new(ReferencedMachineResources)
+		(*in).DeepCopyInto(*out)
+	}
 	in.DependentResources.DeepCopyInto(&out.DependentResources)
 	if in.FailureReason != nil {
 		in, out := &in.FailureReason, &out.FailureReason

@@ -149,7 +149,10 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	scope := scope.NewWithLogger(clientScope, log)
 
 	// Resolve and store referenced resources
-	changed, err := compute.ResolveReferencedMachineResources(scope, infraCluster, &openStackMachine.Spec, &openStackMachine.Status.ReferencedResources)
+	if openStackMachine.Status.ReferencedResources == nil {
+		openStackMachine.Status.ReferencedResources = &infrav1.ReferencedMachineResources{}
+	}
+	changed, err := compute.ResolveReferencedMachineResources(scope, infraCluster, &openStackMachine.Spec, openStackMachine.Status.ReferencedResources)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
