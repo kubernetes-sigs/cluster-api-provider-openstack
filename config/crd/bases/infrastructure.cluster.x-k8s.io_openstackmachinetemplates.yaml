@@ -1483,18 +1483,19 @@ spec:
                           If the rootVolume is specified, this will be used when creating the root volume.
                         properties:
                           id:
-                            description: The ID of the desired image. If this is provided,
-                              the other filters will be ignored.
+                            description: ID is the ID of a glance image. If this is
+                              provided, the other filters will be ignored.
                             type: string
                           name:
-                            description: The name of the desired image. If specified,
+                            description: Name is the name of a glance image. If specified,
                               the combination of name and tags must return a single
                               matching image or an error will be raised.
                             type: string
                           tags:
-                            description: The tags associated with the desired image.
-                              If specified, the combination of name and tags must
-                              return a single matching image or an error will be raised.
+                            description: Tags is a list of tags associated with a
+                              glance image. If specified, the combination of name
+                              and tags must return a single matching image or an error
+                              will be raised.
                             items:
                               type: string
                             type: array

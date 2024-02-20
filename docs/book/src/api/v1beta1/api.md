@@ -313,6 +313,7 @@ Kubernetes cluster, which also disables SecurityGroups</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Tags for all resources in cluster</p>
 </td>
 </tr>
@@ -338,6 +339,7 @@ sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ControlPlaneAvailabilityZones is the az to deploy control plane to</p>
 </td>
 </tr>
@@ -842,6 +844,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>AdditionalPorts adds additional tcp ports to the load balancer.</p>
 </td>
 </tr>
@@ -853,6 +856,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>AllowedCIDRs restrict access to all API-Server listeners to the given address CIDRs.</p>
 </td>
 </tr>
@@ -1038,7 +1042,6 @@ bool
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 </td>
 </tr>
 <tr>
@@ -1576,7 +1579,8 @@ string
 </em>
 </td>
 <td>
-<p>The ID of the desired image. If this is provided, the other filters will be ignored.</p>
+<em>(Optional)</em>
+<p>ID is the ID of a glance image. If this is provided, the other filters will be ignored.</p>
 </td>
 </tr>
 <tr>
@@ -1587,7 +1591,8 @@ string
 </em>
 </td>
 <td>
-<p>The name of the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.</p>
+<em>(Optional)</em>
+<p>Name is the name of a glance image. If specified, the combination of name and tags must return a single matching image or an error will be raised.</p>
 </td>
 </tr>
 <tr>
@@ -1598,7 +1603,8 @@ string
 </em>
 </td>
 <td>
-<p>The tags associated with the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.</p>
+<em>(Optional)</em>
+<p>Tags is a list of tags associated with a glance image. If specified, the combination of name and tags must return a single matching image or an error will be raised.</p>
 </td>
 </tr>
 </tbody>
@@ -1913,6 +1919,7 @@ NetworkStatus
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Subnets is a list of subnets associated with the default cluster network. Machines which use the default cluster network will get an address from all of these subnets.</p>
 </td>
 </tr>
@@ -2192,6 +2199,7 @@ Kubernetes cluster, which also disables SecurityGroups</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Tags for all resources in cluster</p>
 </td>
 </tr>
@@ -2217,6 +2225,7 @@ sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ControlPlaneAvailabilityZones is the az to deploy control plane to</p>
 </td>
 </tr>
@@ -2304,6 +2313,7 @@ NetworkStatusWithSubnets
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Network contains information about the created OpenStack Network.</p>
 </td>
 </tr>
@@ -2317,6 +2327,7 @@ NetworkStatus
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>externalNetwork contains information about the external network used for default ingress and egress traffic.</p>
 </td>
 </tr>
@@ -2330,6 +2341,7 @@ Router
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Router describes the default cluster router</p>
 </td>
 </tr>
@@ -2343,6 +2355,7 @@ LoadBalancer
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>APIServerLoadBalancer describes the api server load balancer if one exists</p>
 </td>
 </tr>
@@ -2369,6 +2382,7 @@ SecurityGroupStatus
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ControlPlaneSecurityGroups contains all the information about the OpenStack
 Security Group that needs to be applied to control plane nodes.
 TODO: Maybe instead of two properties, we add a property to the group?</p>
@@ -2384,6 +2398,7 @@ SecurityGroupStatus
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>WorkerSecurityGroup contains all the information about the OpenStack Security
 Group that needs to be applied to worker nodes.</p>
 </td>
@@ -2398,6 +2413,7 @@ SecurityGroupStatus
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 </td>
 </tr>
 <tr>
@@ -2410,6 +2426,7 @@ BastionStatus
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 </td>
 </tr>
 <tr>
@@ -2742,6 +2759,7 @@ Kubernetes cluster, which also disables SecurityGroups</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Tags for all resources in cluster</p>
 </td>
 </tr>
@@ -2767,6 +2785,7 @@ sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ControlPlaneAvailabilityZones is the az to deploy control plane to</p>
 </td>
 </tr>
@@ -4730,6 +4749,7 @@ This field is required when defining a subnet.</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>DNSNameservers holds a list of DNS server addresses that will be provided when creating
 the subnet. These addresses need to have the same IP version as CIDR.</p>
 </td>

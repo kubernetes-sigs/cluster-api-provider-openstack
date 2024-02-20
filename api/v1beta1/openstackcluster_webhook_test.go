@@ -82,7 +82,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 					Bastion: &Bastion{
 						Instance: OpenStackMachineSpec{
-							Image:  ImageFilter{Name: "foobar"},
+							Image:  ImageFilter{Name: pointer.String("foobar")},
 							Flavor: "minimal",
 						},
 						Enabled: true,
@@ -102,7 +102,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 					Bastion: &Bastion{
 						Instance: OpenStackMachineSpec{
-							Image:  ImageFilter{Name: "foobarbaz"},
+							Image:  ImageFilter{Name: pointer.String("foobarbaz")},
 							Flavor: "medium",
 						},
 						Enabled: true,
@@ -451,7 +451,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Enabled: true,
 						Instance: OpenStackMachineSpec{
 							Flavor: "m1.small",
-							Image:  ImageFilter{Name: "ubuntu"},
+							Image:  ImageFilter{Name: pointer.String("ubuntu")},
 						},
 					},
 				},
@@ -478,7 +478,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Enabled: false,
 						Instance: OpenStackMachineSpec{
 							Flavor: "m1.small",
-							Image:  ImageFilter{Name: "ubuntu"},
+							Image:  ImageFilter{Name: pointer.String("ubuntu")},
 						},
 					},
 				},

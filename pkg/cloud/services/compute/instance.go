@@ -340,8 +340,8 @@ func applyServerGroupID(opts servers.CreateOptsBuilder, serverGroupID string) se
 
 // Helper function for getting image ID from name, ID, or tags.
 func (s *Service) GetImageID(image infrav1.ImageFilter) (string, error) {
-	if image.ID != "" {
-		return image.ID, nil
+	if image.ID != nil {
+		return *image.ID, nil
 	}
 
 	allImages, err := s.getImageClient().ListImages(image.ToListOpt())

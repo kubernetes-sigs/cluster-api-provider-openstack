@@ -27,11 +27,15 @@ type OpenStackMachineTemplateResource struct {
 }
 
 type ImageFilter struct {
-	// The ID of the desired image. If this is provided, the other filters will be ignored.
-	ID string `json:"id,omitempty"`
-	// The name of the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
-	Name string `json:"name,omitempty"`
-	// The tags associated with the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
+	// ID is the ID of a glance image. If this is provided, the other filters will be ignored.
+	// +optional
+	ID optional.String `json:"id,omitempty"`
+
+	// Name is the name of a glance image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
+	// +optional
+	Name optional.String `json:"name,omitempty"`
+
+	// Tags is a list of tags associated with a glance image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
 	// +optional
 	Tags []string `json:"tags,omitempty"`
 }

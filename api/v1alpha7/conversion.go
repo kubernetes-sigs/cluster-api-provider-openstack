@@ -646,12 +646,12 @@ func Convert_v1beta1_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in *i
 		out.ServerGroupID = in.ServerGroup.ID
 	}
 
-	if in.Image.Name != "" {
-		out.Image = in.Image.Name
+	if in.Image.Name != nil {
+		out.Image = *in.Image.Name
 	}
 
-	if in.Image.ID != "" {
-		out.ImageUUID = in.Image.ID
+	if in.Image.ID != nil {
+		out.ImageUUID = *in.Image.ID
 	}
 
 	if len(in.ServerMetadata) > 0 {
@@ -685,10 +685,10 @@ func Convert_v1alpha7_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in *O
 
 	imageFilter := infrav1.ImageFilter{}
 	if in.Image != "" {
-		imageFilter.Name = in.Image
+		imageFilter.Name = pointer.String(in.Image)
 	}
 	if in.ImageUUID != "" {
-		imageFilter.ID = in.ImageUUID
+		imageFilter.ID = pointer.String(in.ImageUUID)
 	}
 	out.Image = imageFilter
 
