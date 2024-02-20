@@ -148,7 +148,6 @@ E2E_NO_ARTIFACT_TEMPLATES_DIR=test/e2e/data/infrastructure-openstack-no-artifact
 .PHONY: e2e-templates
 e2e-templates: ## Generate cluster templates for e2e tests
 e2e-templates: $(addprefix $(E2E_NO_ARTIFACT_TEMPLATES_DIR)/, \
-		 cluster-template-v1alpha5.yaml \
 		 cluster-template-v1alpha6.yaml \
 		 cluster-template-v1alpha7.yaml \
 		 cluster-template-md-remediation.yaml \
