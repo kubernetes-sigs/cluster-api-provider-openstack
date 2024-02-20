@@ -2002,6 +2002,7 @@ spec:
                         type: boolean
                     required:
                     - flavor
+                    - image
                     type: object
                 required:
                 - spec

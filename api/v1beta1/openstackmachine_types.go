@@ -41,11 +41,13 @@ type OpenStackMachineSpec struct {
 	InstanceID *string `json:"instanceID,omitempty"`
 
 	// The flavor reference for the flavor for your server instance.
+	// +kubebuilder:validation:Required
 	Flavor string `json:"flavor"`
 
 	// The image to use for your server instance.
 	// If the rootVolume is specified, this will be used when creating the root volume.
-	Image ImageFilter `json:"image,omitempty"`
+	// +kubebuilder:validation:Required
+	Image ImageFilter `json:"image"`
 
 	// The ssh key to inject in the instance
 	SSHKeyName string `json:"sshKeyName,omitempty"`
