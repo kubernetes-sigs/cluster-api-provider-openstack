@@ -93,6 +93,11 @@ func (in *OpenStackFloatingIPPoolSpec) DeepCopyInto(out *OpenStackFloatingIPPool
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.MaxIPs != nil {
+		in, out := &in.MaxIPs, &out.MaxIPs
+		*out = new(int)
+		**out = **in
+	}
 	if in.IdentityRef != nil {
 		in, out := &in.IdentityRef, &out.IdentityRef
 		*out = new(v1alpha7.OpenStackIdentityReference)

@@ -56,6 +56,11 @@ type OpenStackFloatingIPPoolSpec struct {
 	// These are used before allocating new ones and are not deleted from OpenStack when the pool is deleted.
 	PreAllocatedFloatingIPs []string `json:"preAllocatedFloatingIPs,omitempty"`
 
+	// MaxIPs is the maximum number of floating ips that can be allocated from this pool, if nil there is no limit.
+	// If set, the pool will stop allocating floating ips when it reaches this number of ClaimedIPs.
+	// +optional
+	MaxIPs *int `json:"maxIPs,omitempty"`
+
 	// IdentityRef is a reference to a identity to be used when reconciling this pool.
 	// +optional
 	IdentityRef *infrav1alpha7.OpenStackIdentityReference `json:"identityRef,omitempty"`

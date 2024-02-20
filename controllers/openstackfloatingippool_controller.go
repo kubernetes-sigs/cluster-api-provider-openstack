@@ -51,6 +51,8 @@ const (
 	openStackFloatingIPPool = "OpenStackFloatingIPPool"
 )
 
+var errMaxIPsReached = errors.New("maximum number of IPs reached")
+
 var backoff = wait.Backoff{
 	Steps:    4,
 	Duration: 10 * time.Millisecond,
@@ -139,6 +141,10 @@ func (r *OpenStackFloatingIPPoolReconciler) Reconcile(ctx context.Context, req c
 			if apierrors.IsNotFound(err) {
 				ip, err := r.getIP(ctx, scope, pool)
 				if err != nil {
+					if errors.Is(err, errMaxIPsReached) {
+						log.Info("Maximum number of IPs reached, will not allocate more IPs.")
+						return ctrl.Result{}, nil
+					}
 					return ctrl.Result{}, err
 				}
 
@@ -193,6 +199,7 @@ func (r *OpenStackFloatingIPPoolReconciler) Reconcile(ctx context.Context, req c
 			scope.Logger().Info("Claimed IP", "ip", ipAddress.Spec.Address)
 		}
 	}
+	conditions.MarkTrue(pool, infrav1alpha1.OpenstackFloatingIPPoolReadyCondition)
 	return ctrl.Result{}, r.Client.Status().Update(ctx, pool)
 }
 
@@ -341,9 +348,17 @@ func (r *OpenStackFloatingIPPoolReconciler) getIP(ctx context.Context, scope sco
 			return "", fmt.Errorf("get floating IP: %w", err)
 		}
 		if fp != nil {
+			pool.Status.ClaimedIPs = append(pool.Status.ClaimedIPs, fp.FloatingIP)
 			return fp.FloatingIP, nil
 		}
 		pool.Status.FailedIPs = append(pool.Status.FailedIPs, ip)
+	}
+	maxIPs := pointer.IntDeref(pool.Spec.MaxIPs, -1)
+	// If we have reached the maximum number of IPs, we should not create more IPs
+	if maxIPs != -1 && len(pool.Status.ClaimedIPs) >= maxIPs {
+		scope.Logger().Info("MaxIPs reached", "pool", pool.Name)
+		conditions.MarkFalse(pool, infrav1alpha1.OpenstackFloatingIPPoolReadyCondition, infrav1alpha1.MaxIPsReachedReason, clusterv1.ConditionSeverityError, "Maximum number of IPs reached, we will not allocate more IPs for this pool")
+		return "", errMaxIPsReached
 	}
 
 	fp, err := networkingService.CreateFloatingIPForPool(pool)
@@ -368,7 +383,6 @@ func (r *OpenStackFloatingIPPoolReconciler) getIP(ctx context.Context, scope sco
 	}()
 
 	conditions.MarkTrue(pool, infrav1alpha1.OpenstackFloatingIPPoolReadyCondition)
-
 	ip = fp.FloatingIP
 	pool.Status.ClaimedIPs = append(pool.Status.ClaimedIPs, ip)
 	return ip, nil
