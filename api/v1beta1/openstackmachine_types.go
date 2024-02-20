@@ -103,11 +103,11 @@ type OpenStackMachineSpec struct {
 
 type ServerMetadata struct {
 	// Key is the server metadata key
-	// kubebuilder:validation:MaxLength:=255
+	// +kubebuilder:validation:MaxLength:=255
 	Key string `json:"key"`
 
 	// Value is the server metadata value
-	// kubebuilder:validation:MaxLength:=255
+	// +kubebuilder:validation:MaxLength:=255
 	Value string `json:"value"`
 }
 

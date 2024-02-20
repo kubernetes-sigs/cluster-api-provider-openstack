@@ -2926,14 +2926,12 @@ spec:
                                 items:
                                   properties:
                                     key:
-                                      description: |-
-                                        Key is the server metadata key
-                                        kubebuilder:validation:MaxLength:=255
+                                      description: Key is the server metadata key
+                                      maxLength: 255
                                       type: string
                                     value:
-                                      description: |-
-                                        Value is the server metadata value
-                                        kubebuilder:validation:MaxLength:=255
+                                      description: Value is the server metadata value
+                                      maxLength: 255
                                       type: string
                                   required:
                                   - key
