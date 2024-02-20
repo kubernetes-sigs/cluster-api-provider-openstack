@@ -138,6 +138,7 @@ type OpenStackClusterSpec struct {
 
 	// Tags for all resources in cluster
 	// +listType=set
+	// +optional
 	Tags []string `json:"tags,omitempty"`
 
 	// ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
