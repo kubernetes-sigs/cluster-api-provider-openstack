@@ -20,6 +20,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	capierrors "sigs.k8s.io/cluster-api/errors"
+
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
 )
 
 const (
@@ -116,7 +118,8 @@ type OpenStackClusterSpec struct {
 	// The floatingIP will be created if it does not already exist.
 	// If not specified, a new floatingIP is allocated.
 	// This field is not used if DisableAPIServerFloatingIP is set to true.
-	APIServerFloatingIP string `json:"apiServerFloatingIP,omitempty"`
+	// +optional
+	APIServerFloatingIP optional.String `json:"apiServerFloatingIP,omitempty"`
 
 	// APIServerFixedIP is the fixed IP which will be associated with the API server.
 	// In the case where the API server has a floating IP but not a managed load balancer,
@@ -126,11 +129,13 @@ type OpenStackClusterSpec struct {
 	// If a managed load balancer is not used AND the API server floating IP is disabled,
 	// this field MUST be specified and should correspond to a pre-allocated port that
 	// holds the fixed IP to be used as a VIP.
-	APIServerFixedIP string `json:"apiServerFixedIP,omitempty"`
+	// +optional
+	APIServerFixedIP optional.String `json:"apiServerFixedIP,omitempty"`
 
 	// APIServerPort is the port on which the listener on the APIServer
 	// will be created
-	APIServerPort int `json:"apiServerPort,omitempty"`
+	// +optional
+	APIServerPort optional.Int `json:"apiServerPort,omitempty"`
 
 	// ManagedSecurityGroups determines whether OpenStack security groups for the cluster
 	// will be managed by the OpenStack provider or whether pre-existing security groups will

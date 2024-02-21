@@ -917,9 +917,15 @@ func autoConvert_v1alpha7_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(i
 	// WARNING: in.ExternalNetworkID requires manual conversion: does not exist in peer-type
 	// WARNING: in.APIServerLoadBalancer requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.APIServerLoadBalancer vs *sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.APIServerLoadBalancer)
 	out.DisableAPIServerFloatingIP = in.DisableAPIServerFloatingIP
-	out.APIServerFloatingIP = in.APIServerFloatingIP
-	out.APIServerFixedIP = in.APIServerFixedIP
-	out.APIServerPort = in.APIServerPort
+	if err := optional.Convert_string_To_optional_String(&in.APIServerFloatingIP, &out.APIServerFloatingIP, s); err != nil {
+		return err
+	}
+	if err := optional.Convert_string_To_optional_String(&in.APIServerFixedIP, &out.APIServerFixedIP, s); err != nil {
+		return err
+	}
+	if err := optional.Convert_int_To_optional_Int(&in.APIServerPort, &out.APIServerPort, s); err != nil {
+		return err
+	}
 	// WARNING: in.ManagedSecurityGroups requires manual conversion: inconvertible types (bool vs *sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ManagedSecurityGroups)
 	// WARNING: in.AllowAllInClusterTraffic requires manual conversion: does not exist in peer-type
 	out.DisablePortSecurity = in.DisablePortSecurity
@@ -969,9 +975,15 @@ func autoConvert_v1beta1_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(i
 	// WARNING: in.DisableExternalNetwork requires manual conversion: does not exist in peer-type
 	// WARNING: in.APIServerLoadBalancer requires manual conversion: inconvertible types (*sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.APIServerLoadBalancer vs sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.APIServerLoadBalancer)
 	out.DisableAPIServerFloatingIP = in.DisableAPIServerFloatingIP
-	out.APIServerFloatingIP = in.APIServerFloatingIP
-	out.APIServerFixedIP = in.APIServerFixedIP
-	out.APIServerPort = in.APIServerPort
+	if err := optional.Convert_optional_String_To_string(&in.APIServerFloatingIP, &out.APIServerFloatingIP, s); err != nil {
+		return err
+	}
+	if err := optional.Convert_optional_String_To_string(&in.APIServerFixedIP, &out.APIServerFixedIP, s); err != nil {
+		return err
+	}
+	if err := optional.Convert_optional_Int_To_int(&in.APIServerPort, &out.APIServerPort, s); err != nil {
+		return err
+	}
 	// WARNING: in.ManagedSecurityGroups requires manual conversion: inconvertible types (*sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ManagedSecurityGroups vs bool)
 	out.DisablePortSecurity = in.DisablePortSecurity
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))

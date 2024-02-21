@@ -243,6 +243,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>APIServerFloatingIP is the floatingIP which will be associated with the API server.
 The floatingIP will be created if it does not already exist.
 If not specified, a new floatingIP is allocated.
@@ -257,6 +258,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>APIServerFixedIP is the fixed IP which will be associated with the API server.
 In the case where the API server has a floating IP but not a managed load balancer,
 this field is not used.
@@ -275,6 +277,7 @@ int
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>APIServerPort is the port on which the listener on the APIServer
 will be created</p>
 </td>
@@ -2130,6 +2133,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>APIServerFloatingIP is the floatingIP which will be associated with the API server.
 The floatingIP will be created if it does not already exist.
 If not specified, a new floatingIP is allocated.
@@ -2144,6 +2148,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>APIServerFixedIP is the fixed IP which will be associated with the API server.
 In the case where the API server has a floating IP but not a managed load balancer,
 this field is not used.
@@ -2162,6 +2167,7 @@ int
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>APIServerPort is the port on which the listener on the APIServer
 will be created</p>
 </td>
@@ -2696,6 +2702,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>APIServerFloatingIP is the floatingIP which will be associated with the API server.
 The floatingIP will be created if it does not already exist.
 If not specified, a new floatingIP is allocated.
@@ -2710,6 +2717,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>APIServerFixedIP is the fixed IP which will be associated with the API server.
 In the case where the API server has a floating IP but not a managed load balancer,
 this field is not used.
@@ -2728,6 +2736,7 @@ int
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>APIServerPort is the port on which the listener on the APIServer
 will be created</p>
 </td>

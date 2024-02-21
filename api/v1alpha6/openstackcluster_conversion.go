@@ -24,6 +24,7 @@ import (
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/conversion"
+	optional "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
 )
 
 var _ ctrlconversion.Convertible = &OpenStackCluster{}
@@ -199,6 +200,10 @@ func restorev1beta1ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infr
 	if dst.APIServerLoadBalancer.IsZero() {
 		dst.APIServerLoadBalancer = previous.APIServerLoadBalancer
 	}
+
+	optional.RestoreString(&previous.APIServerFloatingIP, &dst.APIServerFloatingIP)
+	optional.RestoreString(&previous.APIServerFixedIP, &dst.APIServerFixedIP)
+	optional.RestoreInt(&previous.APIServerPort, &dst.APIServerPort)
 }
 
 func Convert_v1alpha6_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *OpenStackClusterSpec, out *infrav1.OpenStackClusterSpec, s apiconversion.Scope) error {

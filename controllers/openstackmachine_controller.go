@@ -278,7 +278,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(scope *scope.WithLogger, cl
 	} else if instanceStatus, err = computeService.GetInstanceStatusByName(openStackMachine, openStackMachine.Name); err != nil {
 		return ctrl.Result{}, err
 	}
-	if !openStackCluster.Spec.APIServerLoadBalancer.IsEnabled() && util.IsControlPlaneMachine(machine) && openStackCluster.Spec.APIServerFloatingIP == "" {
+	if !openStackCluster.Spec.APIServerLoadBalancer.IsEnabled() && util.IsControlPlaneMachine(machine) && openStackCluster.Spec.APIServerFloatingIP == nil {
 		if instanceStatus != nil {
 			instanceNS, err := instanceStatus.NetworkStatus()
 			if err != nil {
@@ -459,14 +459,17 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 			return ctrl.Result{}, fmt.Errorf("reconcile load balancer member: %w", err)
 		}
 	} else if !openStackCluster.Spec.DisableAPIServerFloatingIP {
-		floatingIPAddress := openStackCluster.Spec.ControlPlaneEndpoint.Host
-		if openStackCluster.Spec.APIServerFloatingIP != "" {
+		var floatingIPAddress *string
+		switch {
+		case openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
+			floatingIPAddress = &openStackCluster.Spec.ControlPlaneEndpoint.Host
+		case openStackCluster.Spec.APIServerFloatingIP != nil:
 			floatingIPAddress = openStackCluster.Spec.APIServerFloatingIP
 		}
 		fp, err := networkingService.GetOrCreateFloatingIP(openStackMachine, openStackCluster, clusterName, floatingIPAddress)
 		if err != nil {
 			conditions.MarkFalse(openStackMachine, infrav1.APIServerIngressReadyCondition, infrav1.FloatingIPErrorReason, clusterv1.ConditionSeverityError, "Floating IP cannot be obtained or created: %v", err)
-			return ctrl.Result{}, fmt.Errorf("get or create floating IP %q: %w", floatingIPAddress, err)
+			return ctrl.Result{}, fmt.Errorf("get or create floating IP %v: %w", floatingIPAddress, err)
 		}
 		port, err := computeService.GetManagementPort(openStackCluster, instanceStatus)
 		if err != nil {
