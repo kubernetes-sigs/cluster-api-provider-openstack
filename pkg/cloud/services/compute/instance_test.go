@@ -252,8 +252,8 @@ func getDefaultOpenStackCluster() *infrav1.OpenStackCluster {
 					{ID: subnetUUID},
 				},
 			},
-			ControlPlaneSecurityGroup: &infrav1.SecurityGroup{ID: controlPlaneSecurityGroupUUID},
-			WorkerSecurityGroup:       &infrav1.SecurityGroup{ID: workerSecurityGroupUUID},
+			ControlPlaneSecurityGroup: &infrav1.SecurityGroupStatus{ID: controlPlaneSecurityGroupUUID},
+			WorkerSecurityGroup:       &infrav1.SecurityGroupStatus{ID: workerSecurityGroupUUID},
 		},
 	}
 }

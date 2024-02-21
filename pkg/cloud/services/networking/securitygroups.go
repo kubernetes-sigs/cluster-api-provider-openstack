@@ -32,13 +32,14 @@ const (
 	controlPlaneSuffix string = "controlplane"
 	workerSuffix       string = "worker"
 	bastionSuffix      string = "bastion"
+	allNodesSuffix     string = "allNodes"
 	remoteGroupIDSelf  string = "self"
 )
 
 // ReconcileSecurityGroups reconcile the security groups.
 func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
 	s.scope.Logger().Info("Reconciling security groups")
-	if !openStackCluster.Spec.ManagedSecurityGroups {
+	if openStackCluster.Spec.ManagedSecurityGroups == nil {
 		s.scope.Logger().V(4).Info("No need to reconcile security groups")
 		return nil
 	}
@@ -67,7 +68,7 @@ func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackClu
 		return err
 	}
 
-	observedSecGroups := make(map[string]*infrav1.SecurityGroup)
+	observedSecGroups := make(map[string]*infrav1.SecurityGroupStatus)
 	for k, desiredSecGroup := range desiredSecGroups {
 		var err error
 		observedSecGroups[k], err = s.getSecurityGroupByName(desiredSecGroup.Name)
@@ -93,12 +94,50 @@ func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackClu
 	return nil
 }
 
-func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCluster, secGroupNames map[string]string) (map[string]infrav1.SecurityGroup, error) {
-	desiredSecGroups := make(map[string]infrav1.SecurityGroup)
+type securityGroupSpec struct {
+	Name  string
+	Rules []resolvedSecurityGroupRuleSpec
+}
+
+type resolvedSecurityGroupRuleSpec struct {
+	Description    string `json:"description,omitempty"`
+	Direction      string `json:"direction,omitempty"`
+	EtherType      string `json:"etherType,omitempty"`
+	PortRangeMin   int    `json:"portRangeMin,omitempty"`
+	PortRangeMax   int    `json:"portRangeMax,omitempty"`
+	Protocol       string `json:"protocol,omitempty"`
+	RemoteGroupID  string `json:"remoteGroupID,omitempty"`
+	RemoteIPPrefix string `json:"remoteIPPrefix,omitempty"`
+}
+
+func (r resolvedSecurityGroupRuleSpec) Matches(other infrav1.SecurityGroupRuleStatus) bool {
+	return r.Description == *other.Description &&
+		r.Direction == other.Direction &&
+		r.EtherType == *other.EtherType &&
+		r.PortRangeMin == *other.PortRangeMin &&
+		r.PortRangeMax == *other.PortRangeMax &&
+		r.Protocol == *other.Protocol &&
+		r.RemoteGroupID == *other.RemoteGroupID &&
+		r.RemoteIPPrefix == *other.RemoteIPPrefix
+}
+
+func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCluster, secGroupNames map[string]string) (map[string]securityGroupSpec, error) {
+	if openStackCluster.Spec.ManagedSecurityGroups == nil {
+		return nil, nil
+	}
+
+	desiredSecGroups := make(map[string]securityGroupSpec)
 
 	var secControlPlaneGroupID string
 	var secWorkerGroupID string
 	var secBastionGroupID string
+
+	// remoteManagedGroups is a map of suffix to security group ID.
+	// It will be used to fill in the RemoteGroupID field of the security group rules
+	// that reference a managed security group.
+	// For now, we only reference the control plane and worker security groups.
+	remoteManagedGroups := make(map[string]string)
+
 	for i, v := range secGroupNames {
 		secGroup, err := s.getSecurityGroupByName(v)
 		if err != nil {
@@ -107,42 +146,54 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 		switch i {
 		case controlPlaneSuffix:
 			secControlPlaneGroupID = secGroup.ID
+			remoteManagedGroups[controlPlaneSuffix] = secControlPlaneGroupID
 		case workerSuffix:
 			secWorkerGroupID = secGroup.ID
+			remoteManagedGroups[workerSuffix] = secWorkerGroupID
 		case bastionSuffix:
 			secBastionGroupID = secGroup.ID
+			remoteManagedGroups[bastionSuffix] = secBastionGroupID
 		}
 	}
 
 	// Start with the default rules
-	controlPlaneRules := append([]infrav1.SecurityGroupRule{}, defaultRules...)
-	workerRules := append([]infrav1.SecurityGroupRule{}, defaultRules...)
+	controlPlaneRules := append([]resolvedSecurityGroupRuleSpec{}, defaultRules...)
+	workerRules := append([]resolvedSecurityGroupRuleSpec{}, defaultRules...)
 
-	controlPlaneRules = append(controlPlaneRules, GetSGControlPlaneHTTPS()...)
-	workerRules = append(workerRules, GetSGWorkerNodePort()...)
+	controlPlaneRules = append(controlPlaneRules, getSGControlPlaneHTTPS()...)
+	workerRules = append(workerRules, getSGWorkerNodePort()...)
 
 	// If we set additional ports to LB, we need create secgroup rules those ports, this apply to controlPlaneRules only
 	if openStackCluster.Spec.APIServerLoadBalancer.Enabled {
-		controlPlaneRules = append(controlPlaneRules, GetSGControlPlaneAdditionalPorts(openStackCluster.Spec.APIServerLoadBalancer.AdditionalPorts)...)
+		controlPlaneRules = append(controlPlaneRules, getSGControlPlaneAdditionalPorts(openStackCluster.Spec.APIServerLoadBalancer.AdditionalPorts)...)
 	}
 
 	if openStackCluster.Spec.AllowAllInClusterTraffic {
 		// Permit all ingress from the cluster security groups
-		controlPlaneRules = append(controlPlaneRules, GetSGControlPlaneAllowAll(remoteGroupIDSelf, secWorkerGroupID)...)
-		workerRules = append(workerRules, GetSGWorkerAllowAll(remoteGroupIDSelf, secControlPlaneGroupID)...)
+		controlPlaneRules = append(controlPlaneRules, getSGControlPlaneAllowAll(remoteGroupIDSelf, secWorkerGroupID)...)
+		workerRules = append(workerRules, getSGWorkerAllowAll(remoteGroupIDSelf, secControlPlaneGroupID)...)
 	} else {
-		controlPlaneRules = append(controlPlaneRules, GetSGControlPlaneGeneral(remoteGroupIDSelf, secWorkerGroupID)...)
-		workerRules = append(workerRules, GetSGWorkerGeneral(remoteGroupIDSelf, secControlPlaneGroupID)...)
+		controlPlaneRules = append(controlPlaneRules, getSGControlPlaneGeneral(remoteGroupIDSelf, secWorkerGroupID)...)
+		workerRules = append(workerRules, getSGWorkerGeneral(remoteGroupIDSelf, secControlPlaneGroupID)...)
 	}
 
-	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
-		controlPlaneRules = append(controlPlaneRules, GetSGControlPlaneSSH(secBastionGroupID)...)
-		workerRules = append(workerRules, GetSGWorkerSSH(secBastionGroupID)...)
+	// For now, we do not create a separate security group for allNodes.
+	// Instead, we append the rules for allNodes to the control plane and worker security groups.
+	allNodesRules, err := getAllNodesRules(remoteManagedGroups, openStackCluster.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules)
+	if err != nil {
+		return desiredSecGroups, err
+	}
+	controlPlaneRules = append(controlPlaneRules, allNodesRules...)
+	workerRules = append(workerRules, allNodesRules...)
 
-		desiredSecGroups[bastionSuffix] = infrav1.SecurityGroup{
+	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
+		controlPlaneRules = append(controlPlaneRules, getSGControlPlaneSSH(secBastionGroupID)...)
+		workerRules = append(workerRules, getSGWorkerSSH(secBastionGroupID)...)
+
+		desiredSecGroups[bastionSuffix] = securityGroupSpec{
 			Name: secGroupNames[bastionSuffix],
 			Rules: append(
-				[]infrav1.SecurityGroupRule{
+				[]resolvedSecurityGroupRuleSpec{
 					{
 						Description:  "SSH",
 						Direction:    "ingress",
@@ -157,17 +208,79 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 		}
 	}
 
-	desiredSecGroups[controlPlaneSuffix] = infrav1.SecurityGroup{
+	desiredSecGroups[controlPlaneSuffix] = securityGroupSpec{
 		Name:  secGroupNames[controlPlaneSuffix],
 		Rules: controlPlaneRules,
 	}
 
-	desiredSecGroups[workerSuffix] = infrav1.SecurityGroup{
+	desiredSecGroups[workerSuffix] = securityGroupSpec{
 		Name:  secGroupNames[workerSuffix],
 		Rules: workerRules,
 	}
-
 	return desiredSecGroups, nil
+}
+
+// getAllNodesRules returns the rules for the allNodes security group that should be created.
+func getAllNodesRules(remoteManagedGroups map[string]string, allNodesSecurityGroupRules []infrav1.SecurityGroupRuleSpec) ([]resolvedSecurityGroupRuleSpec, error) {
+	rules := make([]resolvedSecurityGroupRuleSpec, 0, len(allNodesSecurityGroupRules))
+	for _, rule := range allNodesSecurityGroupRules {
+		if err := validateRemoteManagedGroups(remoteManagedGroups, rule.RemoteManagedGroups); err != nil {
+			return nil, err
+		}
+		r := resolvedSecurityGroupRuleSpec{
+			Direction: rule.Direction,
+		}
+		if rule.Description != nil {
+			r.Description = *rule.Description
+		}
+		if rule.EtherType != nil {
+			r.EtherType = *rule.EtherType
+		}
+		if rule.PortRangeMin != nil {
+			r.PortRangeMin = *rule.PortRangeMin
+		}
+		if rule.PortRangeMax != nil {
+			r.PortRangeMax = *rule.PortRangeMax
+		}
+		if rule.Protocol != nil {
+			r.Protocol = *rule.Protocol
+		}
+		if rule.RemoteGroupID != nil {
+			r.RemoteGroupID = *rule.RemoteGroupID
+		}
+		if rule.RemoteIPPrefix != nil {
+			r.RemoteIPPrefix = *rule.RemoteIPPrefix
+		}
+
+		if len(rule.RemoteManagedGroups) > 0 {
+			if rule.RemoteGroupID != nil {
+				return nil, fmt.Errorf("remoteGroupID must not be set when remoteManagedGroups is set")
+			}
+
+			for _, rg := range rule.RemoteManagedGroups {
+				rc := r
+				rc.RemoteGroupID = remoteManagedGroups[rg.String()]
+				rules = append(rules, rc)
+			}
+		} else {
+			rules = append(rules, r)
+		}
+	}
+	return rules, nil
+}
+
+// validateRemoteManagedGroups validates that the remoteManagedGroups target existing managed security groups.
+func validateRemoteManagedGroups(remoteManagedGroups map[string]string, ruleRemoteManagedGroups []infrav1.ManagedSecurityGroupName) error {
+	if len(ruleRemoteManagedGroups) == 0 {
+		return fmt.Errorf("remoteManagedGroups is required")
+	}
+
+	for _, group := range ruleRemoteManagedGroups {
+		if _, ok := remoteManagedGroups[group.String()]; !ok {
+			return fmt.Errorf("remoteManagedGroups: %s is not a valid remote managed security group", group)
+		}
+	}
+	return nil
 }
 
 func (s *Service) GetSecurityGroups(securityGroupParams []infrav1.SecurityGroupFilter) ([]string, error) {
@@ -245,8 +358,8 @@ func (s *Service) deleteSecurityGroup(openStackCluster *infrav1.OpenStackCluster
 
 // reconcileGroupRules reconciles an already existing observed group by deleting rules not needed anymore and
 // creating rules that are missing.
-func (s *Service) reconcileGroupRules(desired, observed infrav1.SecurityGroup) (infrav1.SecurityGroup, error) {
-	rulesToDelete := []infrav1.SecurityGroupRule{}
+func (s *Service) reconcileGroupRules(desired securityGroupSpec, observed infrav1.SecurityGroupStatus) (infrav1.SecurityGroupStatus, error) {
+	var rulesToDelete []string
 	// fills rulesToDelete by calculating observed - desired
 	for _, observedRule := range observed.Rules {
 		deleteRule := true
@@ -255,20 +368,20 @@ func (s *Service) reconcileGroupRules(desired, observed infrav1.SecurityGroup) (
 			if r.RemoteGroupID == remoteGroupIDSelf {
 				r.RemoteGroupID = observed.ID
 			}
-			if r.Equal(observedRule) {
+			if r.Matches(observedRule) {
 				deleteRule = false
 				break
 			}
 		}
 		if deleteRule {
-			rulesToDelete = append(rulesToDelete, observedRule)
+			rulesToDelete = append(rulesToDelete, observedRule.ID)
 		}
 	}
 
-	rulesToCreate := []infrav1.SecurityGroupRule{}
-	reconciledRules := make([]infrav1.SecurityGroupRule, 0, len(desired.Rules))
+	rulesToCreate := []resolvedSecurityGroupRuleSpec{}
+	reconciledRules := make([]infrav1.SecurityGroupRuleStatus, 0, len(desired.Rules))
 	// fills rulesToCreate by calculating desired - observed
-	// also adds rules which are in observed and desired to reconciledRules.
+	// also adds rules which are in observed and desired to reconcileGroupRules.
 	for _, desiredRule := range desired.Rules {
 		r := desiredRule
 		if r.RemoteGroupID == remoteGroupIDSelf {
@@ -276,7 +389,7 @@ func (s *Service) reconcileGroupRules(desired, observed infrav1.SecurityGroup) (
 		}
 		createRule := true
 		for _, observedRule := range observed.Rules {
-			if r.Equal(observedRule) {
+			if r.Matches(observedRule) {
 				// add already existing rules to reconciledRules because we won't touch them anymore
 				reconciledRules = append(reconciledRules, observedRule)
 				createRule = false
@@ -290,27 +403,30 @@ func (s *Service) reconcileGroupRules(desired, observed infrav1.SecurityGroup) (
 
 	s.scope.Logger().V(4).Info("Deleting rules not needed anymore for group", "name", observed.Name, "amount", len(rulesToDelete))
 	for _, rule := range rulesToDelete {
-		s.scope.Logger().V(6).Info("Deleting rule", "ID", rule.ID, "name", observed.Name)
-		err := s.client.DeleteSecGroupRule(rule.ID)
+		s.scope.Logger().V(6).Info("Deleting rule", "ID", rule, "name", observed.Name)
+		err := s.client.DeleteSecGroupRule(rule)
 		if err != nil {
-			return infrav1.SecurityGroup{}, err
+			return infrav1.SecurityGroupStatus{}, err
 		}
 	}
 
 	s.scope.Logger().V(4).Info("Creating new rules needed for group", "name", observed.Name, "amount", len(rulesToCreate))
 	for _, rule := range rulesToCreate {
 		r := rule
-		r.SecurityGroupID = observed.ID
 		if r.RemoteGroupID == remoteGroupIDSelf {
 			r.RemoteGroupID = observed.ID
 		}
-		newRule, err := s.createRule(r)
+		newRule, err := s.createRule(observed.ID, r)
 		if err != nil {
-			return infrav1.SecurityGroup{}, err
+			return infrav1.SecurityGroupStatus{}, err
 		}
 		reconciledRules = append(reconciledRules, newRule)
 	}
 	observed.Rules = reconciledRules
+
+	if len(reconciledRules) == 0 {
+		return infrav1.SecurityGroupStatus{}, nil
+	}
 
 	return observed, nil
 }
@@ -354,7 +470,7 @@ func (s *Service) createSecurityGroupIfNotExists(openStackCluster *infrav1.OpenS
 	return nil
 }
 
-func (s *Service) getSecurityGroupByName(name string) (*infrav1.SecurityGroup, error) {
+func (s *Service) getSecurityGroupByName(name string) (*infrav1.SecurityGroupStatus, error) {
 	opts := groups.ListOpts{
 		Name: name,
 	}
@@ -362,20 +478,20 @@ func (s *Service) getSecurityGroupByName(name string) (*infrav1.SecurityGroup, e
 	s.scope.Logger().V(6).Info("Attempting to fetch security group with", "name", name)
 	allGroups, err := s.client.ListSecGroup(opts)
 	if err != nil {
-		return &infrav1.SecurityGroup{}, err
+		return &infrav1.SecurityGroupStatus{}, err
 	}
 
 	switch len(allGroups) {
 	case 0:
-		return &infrav1.SecurityGroup{}, nil
+		return &infrav1.SecurityGroupStatus{}, nil
 	case 1:
 		return convertOSSecGroupToConfigSecGroup(allGroups[0]), nil
 	}
 
-	return &infrav1.SecurityGroup{}, fmt.Errorf("more than one security group found named: %s", name)
+	return &infrav1.SecurityGroupStatus{}, fmt.Errorf("more than one security group found named: %s", name)
 }
 
-func (s *Service) createRule(r infrav1.SecurityGroupRule) (infrav1.SecurityGroupRule, error) {
+func (s *Service) createRule(securityGroupID string, r resolvedSecurityGroupRuleSpec) (infrav1.SecurityGroupRuleStatus, error) {
 	dir := rules.RuleDirection(r.Direction)
 	proto := rules.RuleProtocol(r.Protocol)
 	etherType := rules.RuleEtherType(r.EtherType)
@@ -389,12 +505,12 @@ func (s *Service) createRule(r infrav1.SecurityGroupRule) (infrav1.SecurityGroup
 		EtherType:      etherType,
 		RemoteGroupID:  r.RemoteGroupID,
 		RemoteIPPrefix: r.RemoteIPPrefix,
-		SecGroupID:     r.SecurityGroupID,
+		SecGroupID:     securityGroupID,
 	}
-	s.scope.Logger().V(6).Info("Creating rule", "description", r.Description, "direction", dir, "portRangeMin", r.PortRangeMin, "portRangeMax", r.PortRangeMax, "proto", proto, "etherType", etherType, "remoteGroupID", r.RemoteGroupID, "remoteIPPrefix", r.RemoteIPPrefix, "securityGroupID", r.SecurityGroupID)
+	s.scope.Logger().V(6).Info("Creating rule", "description", r.Description, "direction", dir, "portRangeMin", r.PortRangeMin, "portRangeMax", r.PortRangeMax, "proto", proto, "etherType", etherType, "remoteGroupID", r.RemoteGroupID, "remoteIPPrefix", r.RemoteIPPrefix, "securityGroupID", securityGroupID)
 	rule, err := s.client.CreateSecGroupRule(createOpts)
 	if err != nil {
-		return infrav1.SecurityGroupRule{}, err
+		return infrav1.SecurityGroupRuleStatus{}, err
 	}
 	return convertOSSecGroupRuleToConfigSecGroupRule(*rule), nil
 }
@@ -411,30 +527,29 @@ func getSecBastionGroupName(clusterName string) string {
 	return fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, bastionSuffix)
 }
 
-func convertOSSecGroupToConfigSecGroup(osSecGroup groups.SecGroup) *infrav1.SecurityGroup {
-	securityGroupRules := make([]infrav1.SecurityGroupRule, len(osSecGroup.Rules))
+func convertOSSecGroupToConfigSecGroup(osSecGroup groups.SecGroup) *infrav1.SecurityGroupStatus {
+	securityGroupRules := make([]infrav1.SecurityGroupRuleStatus, len(osSecGroup.Rules))
 	for i, rule := range osSecGroup.Rules {
 		securityGroupRules[i] = convertOSSecGroupRuleToConfigSecGroupRule(rule)
 	}
-	return &infrav1.SecurityGroup{
+	return &infrav1.SecurityGroupStatus{
 		ID:    osSecGroup.ID,
 		Name:  osSecGroup.Name,
 		Rules: securityGroupRules,
 	}
 }
 
-func convertOSSecGroupRuleToConfigSecGroupRule(osSecGroupRule rules.SecGroupRule) infrav1.SecurityGroupRule {
-	return infrav1.SecurityGroupRule{
-		ID:              osSecGroupRule.ID,
-		Direction:       osSecGroupRule.Direction,
-		Description:     osSecGroupRule.Description,
-		EtherType:       osSecGroupRule.EtherType,
-		SecurityGroupID: osSecGroupRule.SecGroupID,
-		PortRangeMin:    osSecGroupRule.PortRangeMin,
-		PortRangeMax:    osSecGroupRule.PortRangeMax,
-		Protocol:        osSecGroupRule.Protocol,
-		RemoteGroupID:   osSecGroupRule.RemoteGroupID,
-		RemoteIPPrefix:  osSecGroupRule.RemoteIPPrefix,
+func convertOSSecGroupRuleToConfigSecGroupRule(osSecGroupRule rules.SecGroupRule) infrav1.SecurityGroupRuleStatus {
+	return infrav1.SecurityGroupRuleStatus{
+		ID:             osSecGroupRule.ID,
+		Direction:      osSecGroupRule.Direction,
+		Description:    &osSecGroupRule.Description,
+		EtherType:      &osSecGroupRule.EtherType,
+		PortRangeMin:   &osSecGroupRule.PortRangeMin,
+		PortRangeMax:   &osSecGroupRule.PortRangeMax,
+		Protocol:       &osSecGroupRule.Protocol,
+		RemoteGroupID:  &osSecGroupRule.RemoteGroupID,
+		RemoteIPPrefix: &osSecGroupRule.RemoteIPPrefix,
 	}
 }
 

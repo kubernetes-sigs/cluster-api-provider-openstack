@@ -120,6 +120,9 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 
 			waitForNodesReadyWithoutCCMTaint(ctx, workloadCluster.GetClient(), 2)
 
+			openStackCluster, err := shared.ClusterForSpec(ctx, e2eCtx, namespace)
+			Expect(err).NotTo(HaveOccurred())
+
 			// Tag: clusterName is declared on OpenStackCluster and gets propagated to all machines
 			// except the bastion host
 			allServers, err := shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{Tags: clusterName})
@@ -153,6 +156,12 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			securityGroupsList, err := shared.DumpOpenStackSecurityGroups(e2eCtx, groups.ListOpts{Tags: clusterName})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(securityGroupsList).To(HaveLen(3))
+
+			calicoSGRules, err := shared.DumpCalicoSecurityGroupRules(e2eCtx, openStackCluster)
+			Expect(err).NotTo(HaveOccurred())
+			// We expect 4 security group rules that allow Calico traffic on the control plane
+			// from both the control plane and worker machines and vice versa, that makes 8 rules.
+			Expect(calicoSGRules).To(Equal(8))
 		})
 	})
 

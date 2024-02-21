@@ -122,10 +122,12 @@ type OpenStackClusterSpec struct {
 	// ManagedSecurityGroups determines whether OpenStack security groups for the cluster
 	// will be managed by the OpenStack provider or whether pre-existing security groups will
 	// be specified as part of the configuration.
-	// By default, the managed security groups have rules that allow the Kubelet, etcd, the
-	// Kubernetes API server and the Calico CNI plugin to function correctly.
+	// By default, the managed security groups have rules that allow the Kubelet, etcd, and the
+	// Kubernetes API server to function correctly.
+	// It's possible to add additional rules to the managed security groups.
+	// When defined to an empty struct, the managed security groups will be created with the default rules.
 	// +optional
-	ManagedSecurityGroups bool `json:"managedSecurityGroups"`
+	ManagedSecurityGroups *ManagedSecurityGroups `json:"managedSecurityGroups"`
 
 	// AllowAllInClusterTraffic is only used when managed security groups are in use.
 	// If set to true, the rules for the managed security groups are configured so that all
@@ -191,13 +193,13 @@ type OpenStackClusterStatus struct {
 	// ControlPlaneSecurityGroups contains all the information about the OpenStack
 	// Security Group that needs to be applied to control plane nodes.
 	// TODO: Maybe instead of two properties, we add a property to the group?
-	ControlPlaneSecurityGroup *SecurityGroup `json:"controlPlaneSecurityGroup,omitempty"`
+	ControlPlaneSecurityGroup *SecurityGroupStatus `json:"controlPlaneSecurityGroup,omitempty"`
 
 	// WorkerSecurityGroup contains all the information about the OpenStack Security
 	// Group that needs to be applied to worker nodes.
-	WorkerSecurityGroup *SecurityGroup `json:"workerSecurityGroup,omitempty"`
+	WorkerSecurityGroup *SecurityGroupStatus `json:"workerSecurityGroup,omitempty"`
 
-	BastionSecurityGroup *SecurityGroup `json:"bastionSecurityGroup,omitempty"`
+	BastionSecurityGroup *SecurityGroupStatus `json:"bastionSecurityGroup,omitempty"`
 
 	Bastion *BastionStatus `json:"bastion,omitempty"`
 
@@ -267,6 +269,17 @@ type OpenStackClusterList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []OpenStackCluster `json:"items"`
+}
+
+// ManagedSecurityGroups defines the desired state of security groups and rules for the cluster.
+type ManagedSecurityGroups struct {
+	// allNodesSecurityGroupRules defines the rules that should be applied to all nodes.
+	// +patchMergeKey=name
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=name
+	// +optional
+	AllNodesSecurityGroupRules []SecurityGroupRuleSpec `json:"allNodesSecurityGroupRules" patchStrategy:"merge" patchMergeKey:"name"`
 }
 
 func init() {

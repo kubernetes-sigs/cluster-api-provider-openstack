@@ -56,8 +56,8 @@ func getDefaultOpenStackCluster() *infrav1.OpenStackCluster {
 					{ID: subnetUUID},
 				},
 			},
-			ControlPlaneSecurityGroup: &infrav1.SecurityGroup{ID: controlPlaneSecurityGroupUUID},
-			WorkerSecurityGroup:       &infrav1.SecurityGroup{ID: workerSecurityGroupUUID},
+			ControlPlaneSecurityGroup: &infrav1.SecurityGroupStatus{ID: controlPlaneSecurityGroupUUID},
+			WorkerSecurityGroup:       &infrav1.SecurityGroupStatus{ID: workerSecurityGroupUUID},
 		},
 	}
 }
@@ -141,7 +141,7 @@ func Test_machineToInstanceSpec(t *testing.T) {
 			name: "Control plane security group",
 			openStackCluster: func() *infrav1.OpenStackCluster {
 				c := getDefaultOpenStackCluster()
-				c.Spec.ManagedSecurityGroups = true
+				c.Spec.ManagedSecurityGroups = &infrav1.ManagedSecurityGroups{}
 				return c
 			},
 			machine: func() *clusterv1.Machine {
@@ -162,7 +162,7 @@ func Test_machineToInstanceSpec(t *testing.T) {
 			name: "Worker security group",
 			openStackCluster: func() *infrav1.OpenStackCluster {
 				c := getDefaultOpenStackCluster()
-				c.Spec.ManagedSecurityGroups = true
+				c.Spec.ManagedSecurityGroups = &infrav1.ManagedSecurityGroups{}
 				return c
 			},
 			machine:          getDefaultMachine,
@@ -177,7 +177,7 @@ func Test_machineToInstanceSpec(t *testing.T) {
 			name: "Control plane security group not applied to worker",
 			openStackCluster: func() *infrav1.OpenStackCluster {
 				c := getDefaultOpenStackCluster()
-				c.Spec.ManagedSecurityGroups = true
+				c.Spec.ManagedSecurityGroups = &infrav1.ManagedSecurityGroups{}
 				c.Status.WorkerSecurityGroup = nil
 				return c
 			},
@@ -193,7 +193,7 @@ func Test_machineToInstanceSpec(t *testing.T) {
 			name: "Worker security group not applied to control plane",
 			openStackCluster: func() *infrav1.OpenStackCluster {
 				c := getDefaultOpenStackCluster()
-				c.Spec.ManagedSecurityGroups = true
+				c.Spec.ManagedSecurityGroups = &infrav1.ManagedSecurityGroups{}
 				c.Status.ControlPlaneSecurityGroup = nil
 				return c
 			},
@@ -215,7 +215,7 @@ func Test_machineToInstanceSpec(t *testing.T) {
 			name: "Extra security group",
 			openStackCluster: func() *infrav1.OpenStackCluster {
 				c := getDefaultOpenStackCluster()
-				c.Spec.ManagedSecurityGroups = true
+				c.Spec.ManagedSecurityGroups = &infrav1.ManagedSecurityGroups{}
 				return c
 			},
 			machine: getDefaultMachine,

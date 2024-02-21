@@ -462,7 +462,7 @@ func bastionToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, clusterNa
 	}
 
 	instanceSpec.SecurityGroups = openStackCluster.Spec.Bastion.Instance.SecurityGroups
-	if openStackCluster.Spec.ManagedSecurityGroups {
+	if openStackCluster.Spec.ManagedSecurityGroups != nil {
 		if openStackCluster.Status.BastionSecurityGroup != nil {
 			instanceSpec.SecurityGroups = append(instanceSpec.SecurityGroups, infrav1.SecurityGroupFilter{
 				ID: openStackCluster.Status.BastionSecurityGroup.ID,

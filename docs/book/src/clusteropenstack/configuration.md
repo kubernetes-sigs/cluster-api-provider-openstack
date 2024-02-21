@@ -16,6 +16,7 @@
   - [Availability zone](#availability-zone)
   - [DNS server](#dns-server)
   - [Machine flavor](#machine-flavor)
+  - [CNI security group rules](#cni-security-group-rules)
 - [Optional Configuration](#optional-configuration)
   - [Log level](#log-level)
   - [External network](#external-network)
@@ -179,6 +180,41 @@ The DNS servers must be exposed as an environment variable `OPENSTACK_DNS_NAMESE
 The flavors for control plane and worker node machines must be exposed as environment variables `OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR` and `OPENSTACK_NODE_MACHINE_FLAVOR` respectively.
 
 The recommmend minimum value of control plane flavor's vCPU is 2 and minimum value of worker node flavor's vCPU is 1.
+
+## CNI security group rules
+
+Depending on the CNI that will be deployed on the cluster, you may need to add specific security group rules to the control plane and worker nodes. For example, if you are using Calico with BGP, you will need to add the following security group rules to the control plane and worker nodes:
+
+ ```yaml
+ apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+ kind: OpenStackCluster
+ metadata:
+   name: <cluster-name>
+   namespace: <cluster-namespace>
+ spec:
+    ...
+    allowAllInClusterTraffic: false
+    managedSecurityGroups: 
+      allNodesSecurityGroupRules:
+      - remoteManagedGroups:
+        - controlplane
+        - worker
+        direction: ingress
+        etherType: IPv4
+        name: BGP (Calico)
+        portRangeMin: 179
+        portRangeMax: 179
+        protocol: tcp
+        description: "Allow BGP between control plane and workers"
+      - remoteManagedGroups:
+        - controlplane
+        - worker
+        direction: ingress
+        etherType: IPv4
+        name: IP-in-IP (Calico)
+        protocol: 4
+        description: "Allow IP-in-IP between control plane and workers"
+ ```
 
 # Optional Configuration
 
@@ -503,27 +539,52 @@ spec:
 
 Security groups are used to determine which ports of the cluster nodes are accessible from where.
 
-If `spec.managedSecurityGroups` of `OpenStackCluster` is set to `true`, two security groups named
+If `spec.managedSecurityGroups` of `OpenStackCluster` is set to a non-nil value (e.g. `{}`), two security groups named
 `k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-controlplane` and
 `k8s-cluster-${NAMESPACE}-${CLUSTER_NAME}-secgroup-worker` will be created and added to the control
 plane and worker nodes respectively.
 
-By default, these groups have rules that allow the following traffic:
+Example of `spec.managedSecurityGroups` in `OpenStackCluster` spec when we want to enable the managed security groups:
+
+```yaml
+managedSecurityGroups: {}
+```
 
 - Control plane nodes
   - API server traffic from anywhere
   - Etcd traffic from other control plane nodes
   - Kubelet traffic from other cluster nodes
-  - Calico CNI traffic from other cluster nodes
 - Worker nodes
   - Node port traffic from anywhere
   - Kubelet traffic from other cluster nodes
-  - Calico CNI traffic from other cluster nodes
 
-To use a CNI other than Calico, the flag `OpenStackCluster.spec.allowAllInClusterTraffic` can be
-set to `true`. With this flag set, the rules for the managed security groups permit all traffic
+When the flag `OpenStackCluster.spec.allowAllInClusterTraffic` is
+set to `true`, the rules for the managed security groups permit all traffic
 between cluster nodes on all ports and protocols (API server and node port traffic is still
 permitted from anywhere, as with the default rules).
+
+We can add security group rules that authorize traffic from all nodes via `allNodesSecurityGroupRules`.
+It takes a list of security groups rules that should be applied to selected nodes.
+The following rule fields are mutually exclusive: `remoteManagedGroups`, `remoteGroupID` and `remoteIPPrefix`.
+
+Valid values for `remoteManagedGroups` are `controlplane`, `worker` and `bastion`.
+
+To apply a security group rule that will allow BGP between the control plane and workers, you can follow this example:
+
+```yaml
+managedSecurityGroups:
+  allNodesSecurityGroupRules:
+  - remoteManagedGroups:
+    - controlplane
+    - worker
+    direction: ingress
+    etherType: IPv4
+    name: BGP (Calico)
+    portRangeMin: 179
+    portRangeMax: 179
+    protocol: tcp
+    description: "Allow BGP between control plane and workers"
+  ```
 
 If this is not flexible enough, pre-existing security groups can be added to the
 spec of an `OpenStackMachineTemplate`, e.g.:
@@ -654,7 +715,7 @@ spec:
     floatingIP: <Floating IP address>
 ```
 
-If `managedSecurityGroups: true`, security group rule opening 22/tcp is added to security groups for bastion, controller, and worker nodes respectively. Otherwise, you have to add `securityGroups` to the `bastion` in `OpenStackCluster` spec and `OpenStackMachineTemplate` spec template respectively.
+If `managedSecurityGroups` is set to a non-nil value (e.g. `{}`), security group rule opening 22/tcp is added to security groups for bastion, controller, and worker nodes respectively. Otherwise, you have to add `securityGroups` to the `bastion` in `OpenStackCluster` spec and `OpenStackMachineTemplate` spec template respectively.
 
 ### Making changes to the bastion host
 

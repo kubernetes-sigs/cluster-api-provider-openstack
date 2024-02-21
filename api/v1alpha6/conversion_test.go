@@ -654,3 +654,50 @@ func TestMachineConversionControllerSpecFields(t *testing.T) {
 		})
 	}
 }
+
+func TestConvert_v1alpha6_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(t *testing.T) {
+	tests := []struct {
+		name        string
+		in          *OpenStackClusterSpec
+		expectedOut *infrav1.OpenStackClusterSpec
+	}{
+		{
+			name:        "empty",
+			in:          &OpenStackClusterSpec{},
+			expectedOut: &infrav1.OpenStackClusterSpec{},
+		},
+		{
+			name: "with managed security groups and not allow all in cluster traffic",
+			in: &OpenStackClusterSpec{
+				ManagedSecurityGroups:    true,
+				AllowAllInClusterTraffic: false,
+			},
+			expectedOut: &infrav1.OpenStackClusterSpec{
+				ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{
+					AllNodesSecurityGroupRules: infrav1.LegacyCalicoSecurityGroupRules(),
+				},
+			},
+		},
+		{
+			name: "with managed security groups and allow all in cluster traffic",
+			in: &OpenStackClusterSpec{
+				ManagedSecurityGroups:    true,
+				AllowAllInClusterTraffic: true,
+			},
+			expectedOut: &infrav1.OpenStackClusterSpec{
+				ManagedSecurityGroups:    &infrav1.ManagedSecurityGroups{},
+				AllowAllInClusterTraffic: true,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := gomega.NewWithT(t)
+			out := &infrav1.OpenStackClusterSpec{}
+			err := Convert_v1alpha6_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(tt.in, out, nil)
+			g.Expect(err).NotTo(gomega.HaveOccurred())
+			g.Expect(out).To(gomega.Equal(tt.expectedOut))
+		})
+	}
+}

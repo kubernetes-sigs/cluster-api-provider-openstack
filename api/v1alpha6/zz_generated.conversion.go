@@ -254,28 +254,8 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*SecurityGroup)(nil), (*v1alpha8.SecurityGroup)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha6_SecurityGroup_To_v1alpha8_SecurityGroup(a.(*SecurityGroup), b.(*v1alpha8.SecurityGroup), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha8.SecurityGroup)(nil), (*SecurityGroup)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha8_SecurityGroup_To_v1alpha6_SecurityGroup(a.(*v1alpha8.SecurityGroup), b.(*SecurityGroup), scope)
-	}); err != nil {
-		return err
-	}
 	if err := s.AddGeneratedConversionFunc((*v1alpha8.SecurityGroupFilter)(nil), (*SecurityGroupFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha8_SecurityGroupFilter_To_v1alpha6_SecurityGroupFilter(a.(*v1alpha8.SecurityGroupFilter), b.(*SecurityGroupFilter), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*SecurityGroupRule)(nil), (*v1alpha8.SecurityGroupRule)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha6_SecurityGroupRule_To_v1alpha8_SecurityGroupRule(a.(*SecurityGroupRule), b.(*v1alpha8.SecurityGroupRule), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha8.SecurityGroupRule)(nil), (*SecurityGroupRule)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha8_SecurityGroupRule_To_v1alpha6_SecurityGroupRule(a.(*v1alpha8.SecurityGroupRule), b.(*SecurityGroupRule), scope)
 	}); err != nil {
 		return err
 	}
@@ -359,6 +339,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddConversionFunc((*SecurityGroup)(nil), (*v1alpha8.SecurityGroupStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_SecurityGroup_To_v1alpha8_SecurityGroupStatus(a.(*SecurityGroup), b.(*v1alpha8.SecurityGroupStatus), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddConversionFunc((*SubnetParam)(nil), (*v1alpha8.SubnetFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha6_SubnetParam_To_v1alpha8_SubnetFilter(a.(*SubnetParam), b.(*v1alpha8.SubnetFilter), scope)
 	}); err != nil {
@@ -411,6 +396,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddConversionFunc((*v1alpha8.SecurityGroupFilter)(nil), (*SecurityGroupParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha8_SecurityGroupFilter_To_v1alpha6_SecurityGroupParam(a.(*v1alpha8.SecurityGroupFilter), b.(*SecurityGroupParam), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1alpha8.SecurityGroupStatus)(nil), (*SecurityGroup)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha8_SecurityGroupStatus_To_v1alpha6_SecurityGroup(a.(*v1alpha8.SecurityGroupStatus), b.(*SecurityGroup), scope)
 	}); err != nil {
 		return err
 	}
@@ -702,7 +692,7 @@ func autoConvert_v1alpha6_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(
 	out.APIServerFloatingIP = in.APIServerFloatingIP
 	out.APIServerFixedIP = in.APIServerFixedIP
 	out.APIServerPort = in.APIServerPort
-	out.ManagedSecurityGroups = in.ManagedSecurityGroups
+	// WARNING: in.ManagedSecurityGroups requires manual conversion: inconvertible types (bool vs *sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha8.ManagedSecurityGroups)
 	out.AllowAllInClusterTraffic = in.AllowAllInClusterTraffic
 	out.DisablePortSecurity = in.DisablePortSecurity
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
@@ -751,7 +741,7 @@ func autoConvert_v1alpha8_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(
 	out.APIServerFloatingIP = in.APIServerFloatingIP
 	out.APIServerFixedIP = in.APIServerFixedIP
 	out.APIServerPort = in.APIServerPort
-	out.ManagedSecurityGroups = in.ManagedSecurityGroups
+	// WARNING: in.ManagedSecurityGroups requires manual conversion: inconvertible types (*sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha8.ManagedSecurityGroups vs bool)
 	out.AllowAllInClusterTraffic = in.AllowAllInClusterTraffic
 	out.DisablePortSecurity = in.DisablePortSecurity
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
@@ -792,9 +782,33 @@ func autoConvert_v1alpha6_OpenStackClusterStatus_To_v1alpha8_OpenStackClusterSta
 		out.ExternalNetwork = nil
 	}
 	out.FailureDomains = *(*v1beta1.FailureDomains)(unsafe.Pointer(&in.FailureDomains))
-	out.ControlPlaneSecurityGroup = (*v1alpha8.SecurityGroup)(unsafe.Pointer(in.ControlPlaneSecurityGroup))
-	out.WorkerSecurityGroup = (*v1alpha8.SecurityGroup)(unsafe.Pointer(in.WorkerSecurityGroup))
-	out.BastionSecurityGroup = (*v1alpha8.SecurityGroup)(unsafe.Pointer(in.BastionSecurityGroup))
+	if in.ControlPlaneSecurityGroup != nil {
+		in, out := &in.ControlPlaneSecurityGroup, &out.ControlPlaneSecurityGroup
+		*out = new(v1alpha8.SecurityGroupStatus)
+		if err := Convert_v1alpha6_SecurityGroup_To_v1alpha8_SecurityGroupStatus(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.ControlPlaneSecurityGroup = nil
+	}
+	if in.WorkerSecurityGroup != nil {
+		in, out := &in.WorkerSecurityGroup, &out.WorkerSecurityGroup
+		*out = new(v1alpha8.SecurityGroupStatus)
+		if err := Convert_v1alpha6_SecurityGroup_To_v1alpha8_SecurityGroupStatus(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.WorkerSecurityGroup = nil
+	}
+	if in.BastionSecurityGroup != nil {
+		in, out := &in.BastionSecurityGroup, &out.BastionSecurityGroup
+		*out = new(v1alpha8.SecurityGroupStatus)
+		if err := Convert_v1alpha6_SecurityGroup_To_v1alpha8_SecurityGroupStatus(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.BastionSecurityGroup = nil
+	}
 	if in.Bastion != nil {
 		in, out := &in.Bastion, &out.Bastion
 		*out = new(v1alpha8.BastionStatus)
@@ -832,9 +846,33 @@ func autoConvert_v1alpha8_OpenStackClusterStatus_To_v1alpha6_OpenStackClusterSta
 	// WARNING: in.Router requires manual conversion: does not exist in peer-type
 	// WARNING: in.APIServerLoadBalancer requires manual conversion: does not exist in peer-type
 	out.FailureDomains = *(*v1beta1.FailureDomains)(unsafe.Pointer(&in.FailureDomains))
-	out.ControlPlaneSecurityGroup = (*SecurityGroup)(unsafe.Pointer(in.ControlPlaneSecurityGroup))
-	out.WorkerSecurityGroup = (*SecurityGroup)(unsafe.Pointer(in.WorkerSecurityGroup))
-	out.BastionSecurityGroup = (*SecurityGroup)(unsafe.Pointer(in.BastionSecurityGroup))
+	if in.ControlPlaneSecurityGroup != nil {
+		in, out := &in.ControlPlaneSecurityGroup, &out.ControlPlaneSecurityGroup
+		*out = new(SecurityGroup)
+		if err := Convert_v1alpha8_SecurityGroupStatus_To_v1alpha6_SecurityGroup(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.ControlPlaneSecurityGroup = nil
+	}
+	if in.WorkerSecurityGroup != nil {
+		in, out := &in.WorkerSecurityGroup, &out.WorkerSecurityGroup
+		*out = new(SecurityGroup)
+		if err := Convert_v1alpha8_SecurityGroupStatus_To_v1alpha6_SecurityGroup(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.WorkerSecurityGroup = nil
+	}
+	if in.BastionSecurityGroup != nil {
+		in, out := &in.BastionSecurityGroup, &out.BastionSecurityGroup
+		*out = new(SecurityGroup)
+		if err := Convert_v1alpha8_SecurityGroupStatus_To_v1alpha6_SecurityGroup(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.BastionSecurityGroup = nil
+	}
 	if in.Bastion != nil {
 		in, out := &in.Bastion, &out.Bastion
 		*out = new(Instance)
@@ -1398,30 +1436,6 @@ func Convert_v1alpha8_Router_To_v1alpha6_Router(in *v1alpha8.Router, out *Router
 	return autoConvert_v1alpha8_Router_To_v1alpha6_Router(in, out, s)
 }
 
-func autoConvert_v1alpha6_SecurityGroup_To_v1alpha8_SecurityGroup(in *SecurityGroup, out *v1alpha8.SecurityGroup, s conversion.Scope) error {
-	out.Name = in.Name
-	out.ID = in.ID
-	out.Rules = *(*[]v1alpha8.SecurityGroupRule)(unsafe.Pointer(&in.Rules))
-	return nil
-}
-
-// Convert_v1alpha6_SecurityGroup_To_v1alpha8_SecurityGroup is an autogenerated conversion function.
-func Convert_v1alpha6_SecurityGroup_To_v1alpha8_SecurityGroup(in *SecurityGroup, out *v1alpha8.SecurityGroup, s conversion.Scope) error {
-	return autoConvert_v1alpha6_SecurityGroup_To_v1alpha8_SecurityGroup(in, out, s)
-}
-
-func autoConvert_v1alpha8_SecurityGroup_To_v1alpha6_SecurityGroup(in *v1alpha8.SecurityGroup, out *SecurityGroup, s conversion.Scope) error {
-	out.Name = in.Name
-	out.ID = in.ID
-	out.Rules = *(*[]SecurityGroupRule)(unsafe.Pointer(&in.Rules))
-	return nil
-}
-
-// Convert_v1alpha8_SecurityGroup_To_v1alpha6_SecurityGroup is an autogenerated conversion function.
-func Convert_v1alpha8_SecurityGroup_To_v1alpha6_SecurityGroup(in *v1alpha8.SecurityGroup, out *SecurityGroup, s conversion.Scope) error {
-	return autoConvert_v1alpha8_SecurityGroup_To_v1alpha6_SecurityGroup(in, out, s)
-}
-
 func autoConvert_v1alpha6_SecurityGroupFilter_To_v1alpha8_SecurityGroupFilter(in *SecurityGroupFilter, out *v1alpha8.SecurityGroupFilter, s conversion.Scope) error {
 	out.ID = in.ID
 	out.Name = in.Name
@@ -1454,44 +1468,6 @@ func autoConvert_v1alpha8_SecurityGroupFilter_To_v1alpha6_SecurityGroupFilter(in
 // Convert_v1alpha8_SecurityGroupFilter_To_v1alpha6_SecurityGroupFilter is an autogenerated conversion function.
 func Convert_v1alpha8_SecurityGroupFilter_To_v1alpha6_SecurityGroupFilter(in *v1alpha8.SecurityGroupFilter, out *SecurityGroupFilter, s conversion.Scope) error {
 	return autoConvert_v1alpha8_SecurityGroupFilter_To_v1alpha6_SecurityGroupFilter(in, out, s)
-}
-
-func autoConvert_v1alpha6_SecurityGroupRule_To_v1alpha8_SecurityGroupRule(in *SecurityGroupRule, out *v1alpha8.SecurityGroupRule, s conversion.Scope) error {
-	out.Description = in.Description
-	out.ID = in.ID
-	out.Direction = in.Direction
-	out.EtherType = in.EtherType
-	out.SecurityGroupID = in.SecurityGroupID
-	out.PortRangeMin = in.PortRangeMin
-	out.PortRangeMax = in.PortRangeMax
-	out.Protocol = in.Protocol
-	out.RemoteGroupID = in.RemoteGroupID
-	out.RemoteIPPrefix = in.RemoteIPPrefix
-	return nil
-}
-
-// Convert_v1alpha6_SecurityGroupRule_To_v1alpha8_SecurityGroupRule is an autogenerated conversion function.
-func Convert_v1alpha6_SecurityGroupRule_To_v1alpha8_SecurityGroupRule(in *SecurityGroupRule, out *v1alpha8.SecurityGroupRule, s conversion.Scope) error {
-	return autoConvert_v1alpha6_SecurityGroupRule_To_v1alpha8_SecurityGroupRule(in, out, s)
-}
-
-func autoConvert_v1alpha8_SecurityGroupRule_To_v1alpha6_SecurityGroupRule(in *v1alpha8.SecurityGroupRule, out *SecurityGroupRule, s conversion.Scope) error {
-	out.Description = in.Description
-	out.ID = in.ID
-	out.Direction = in.Direction
-	out.EtherType = in.EtherType
-	out.SecurityGroupID = in.SecurityGroupID
-	out.PortRangeMin = in.PortRangeMin
-	out.PortRangeMax = in.PortRangeMax
-	out.Protocol = in.Protocol
-	out.RemoteGroupID = in.RemoteGroupID
-	out.RemoteIPPrefix = in.RemoteIPPrefix
-	return nil
-}
-
-// Convert_v1alpha8_SecurityGroupRule_To_v1alpha6_SecurityGroupRule is an autogenerated conversion function.
-func Convert_v1alpha8_SecurityGroupRule_To_v1alpha6_SecurityGroupRule(in *v1alpha8.SecurityGroupRule, out *SecurityGroupRule, s conversion.Scope) error {
-	return autoConvert_v1alpha8_SecurityGroupRule_To_v1alpha6_SecurityGroupRule(in, out, s)
 }
 
 func autoConvert_v1alpha6_Subnet_To_v1alpha8_Subnet(in *Subnet, out *v1alpha8.Subnet, s conversion.Scope) error {
