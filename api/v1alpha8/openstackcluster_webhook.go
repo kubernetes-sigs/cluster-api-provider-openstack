@@ -50,18 +50,11 @@ var (
 
 // Default satisfies the defaulting webhook interface.
 func (r *OpenStackCluster) Default() {
-	if r.Spec.IdentityRef != nil && r.Spec.IdentityRef.Kind == "" {
-		r.Spec.IdentityRef.Kind = defaultIdentityRefKind
-	}
 }
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type.
 func (r *OpenStackCluster) ValidateCreate() (admission.Warnings, error) {
 	var allErrs field.ErrorList
-
-	if r.Spec.IdentityRef != nil && r.Spec.IdentityRef.Kind != defaultIdentityRefKind {
-		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "identityRef", "kind"), "must be a Secret"))
-	}
 
 	if r.Spec.ManagedSecurityGroups != nil {
 		for _, rule := range r.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules {
@@ -86,13 +79,6 @@ func (r *OpenStackCluster) ValidateUpdate(oldRaw runtime.Object) (admission.Warn
 	old, ok := oldRaw.(*OpenStackCluster)
 	if !ok {
 		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected an OpenStackCluster but got a %T", oldRaw))
-	}
-
-	if r.Spec.IdentityRef != nil && r.Spec.IdentityRef.Kind != defaultIdentityRefKind {
-		allErrs = append(allErrs,
-			field.Invalid(field.NewPath("spec", "identityRef", "kind"),
-				r.Spec.IdentityRef, "must be a Secret"),
-		)
 	}
 
 	// Allow changes to Spec.IdentityRef.Name.

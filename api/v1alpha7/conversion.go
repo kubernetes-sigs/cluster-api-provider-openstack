@@ -180,6 +180,9 @@ func restorev1alpha7MachineSpec(previous *OpenStackMachineSpec, dst *OpenStackMa
 			dst.ServerMetadata[k] = v
 		}
 	}
+
+	// Conversion to v1alpha8 removes the Kind field
+	dst.IdentityRef = previous.IdentityRef
 }
 
 func restorev1alpha8MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *infrav1.OpenStackMachineSpec) {
@@ -210,6 +213,9 @@ func restorev1alpha7ClusterSpec(previous *OpenStackClusterSpec, dst *OpenStackCl
 	if previous.AllowAllInClusterTraffic && !previous.ManagedSecurityGroups {
 		dst.AllowAllInClusterTraffic = true
 	}
+
+	// Conversion to v1alpha8 removes the Kind field
+	dst.IdentityRef = previous.IdentityRef
 }
 
 func restorev1alpha8ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infrav1.OpenStackClusterSpec) {
@@ -677,4 +683,8 @@ func Convert_v1alpha7_SecurityGroup_To_v1alpha8_SecurityGroupStatus(in *Security
 	}
 
 	return nil
+}
+
+func Convert_v1alpha7_OpenStackIdentityReference_To_v1alpha8_OpenStackIdentityReference(in *OpenStackIdentityReference, out *infrav1.OpenStackIdentityReference, s apiconversion.Scope) error {
+	return autoConvert_v1alpha7_OpenStackIdentityReference_To_v1alpha8_OpenStackIdentityReference(in, out, s)
 }

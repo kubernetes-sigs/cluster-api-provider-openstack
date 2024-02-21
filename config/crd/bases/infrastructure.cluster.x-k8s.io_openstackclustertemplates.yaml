@@ -2415,12 +2415,6 @@ spec:
                                 description: IdentityRef is a reference to a identity
                                   to be used when reconciling this cluster
                                 properties:
-                                  kind:
-                                    description: |-
-                                      Kind of the identity. Must be supported by the infrastructure
-                                      provider and may be either cluster or namespace-scoped.
-                                    minLength: 1
-                                    type: string
                                   name:
                                     description: |-
                                       Name of the infrastructure identity to be used.
@@ -2428,7 +2422,6 @@ spec:
                                       resource the same namespace as the resource(s) being provisioned.
                                     type: string
                                 required:
-                                - kind
                                 - name
                                 type: object
                               image:
@@ -2869,12 +2862,6 @@ spec:
                         description: IdentityRef is a reference to a identity to be
                           used when reconciling this cluster
                         properties:
-                          kind:
-                            description: |-
-                              Kind of the identity. Must be supported by the infrastructure
-                              provider and may be either cluster or namespace-scoped.
-                            minLength: 1
-                            type: string
                           name:
                             description: |-
                               Name of the infrastructure identity to be used.
@@ -2882,7 +2869,6 @@ spec:
                               resource the same namespace as the resource(s) being provisioned.
                             type: string
                         required:
-                        - kind
                         - name
                         type: object
                       managedSecurityGroups:

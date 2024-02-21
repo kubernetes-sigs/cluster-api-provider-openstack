@@ -25,7 +25,6 @@ spec:
   cloudName: ${OPENSTACK_CLOUD}
   identityRef:
     name: ${CLUSTER_NAME}-cloud-config
-    kind: Secret
   apiServerLoadBalancer:
     enabled: true
   managedSubnets:
@@ -103,7 +102,6 @@ spec:
       cloudName: ${OPENSTACK_CLOUD}
       identityRef:
         name: ${CLUSTER_NAME}-cloud-config
-        kind: Secret
 ---
 apiVersion: cluster.x-k8s.io/v1beta1
 kind: MachineDeployment
@@ -139,7 +137,6 @@ spec:
       cloudName: ${OPENSTACK_CLOUD}
       identityRef:
         name: ${CLUSTER_NAME}-cloud-config
-        kind: Secret
       flavor: ${OPENSTACK_NODE_MACHINE_FLAVOR}
       image:
         name: ${OPENSTACK_IMAGE_NAME}

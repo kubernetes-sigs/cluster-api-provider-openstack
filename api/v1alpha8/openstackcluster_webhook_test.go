@@ -33,34 +33,11 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 		wantErr     bool
 	}{
 		{
-			name: "OpenStackCluster.Spec.IdentityRef.Kind must always be Secret",
-			oldTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
-					IdentityRef: &OpenStackIdentityReference{
-						Kind: "Secret",
-						Name: "foobar",
-					},
-				},
-			},
-			newTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
-					IdentityRef: &OpenStackIdentityReference{
-						Kind: "foobar",
-						Name: "foobar",
-					},
-				},
-			},
-			wantErr: true,
-		},
-		{
 			name: "Changing OpenStackCluster.Spec.IdentityRef.Name is allowed",
 			oldTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
 					CloudName: "foobar",
 					IdentityRef: &OpenStackIdentityReference{
-						Kind: "Secret",
 						Name: "foobar",
 					},
 				},
@@ -69,7 +46,6 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 				Spec: OpenStackClusterSpec{
 					CloudName: "foobar",
 					IdentityRef: &OpenStackIdentityReference{
-						Kind: "Secret",
 						Name: "foobarbaz",
 					},
 				},
@@ -87,7 +63,6 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 				Spec: OpenStackClusterSpec{
 					CloudName: "foobar",
 					IdentityRef: &OpenStackIdentityReference{
-						Kind: "Secret",
 						Name: "foobar",
 					},
 				},
@@ -100,7 +75,6 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 				Spec: OpenStackClusterSpec{
 					CloudName: "foobar",
 					IdentityRef: &OpenStackIdentityReference{
-						Kind: "Secret",
 						Name: "foobar",
 					},
 				},
@@ -462,25 +436,11 @@ func TestOpenStackCluster_ValidateCreate(t *testing.T) {
 				Spec: OpenStackClusterSpec{
 					CloudName: "foobar",
 					IdentityRef: &OpenStackIdentityReference{
-						Kind: "Secret",
 						Name: "foobar",
 					},
 				},
 			},
 			wantErr: false,
-		},
-		{
-			name: "OpenStackCluster.Spec.IdentityRef with faulty spec on create",
-			template: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
-					IdentityRef: &OpenStackIdentityReference{
-						Kind: "foobar",
-						Name: "foobar",
-					},
-				},
-			},
-			wantErr: true,
 		},
 		{
 			name: "OpenStackCluster.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules with correct spec on create",
