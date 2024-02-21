@@ -92,13 +92,13 @@ func (r *OpenStackCluster) ValidateUpdate(oldRaw runtime.Object) (admission.Warn
 	}
 
 	// Allow change only for the first time.
-	if old.Spec.DisableAPIServerFloatingIP && old.Spec.APIServerFixedIP == "" {
-		r.Spec.APIServerFixedIP = ""
+	if old.Spec.DisableAPIServerFloatingIP && old.Spec.APIServerFixedIP == nil {
+		r.Spec.APIServerFixedIP = nil
 	}
 
 	// If API Server floating IP is disabled, allow the change of the API Server port only for the first time.
-	if old.Spec.DisableAPIServerFloatingIP && old.Spec.APIServerPort == 0 && r.Spec.APIServerPort > 0 {
-		r.Spec.APIServerPort = 0
+	if old.Spec.DisableAPIServerFloatingIP && old.Spec.APIServerPort == nil && r.Spec.APIServerPort != nil {
+		r.Spec.APIServerPort = nil
 	}
 
 	// Allow to remove the bastion spec only if it was disabled before.
@@ -138,9 +138,15 @@ func (r *OpenStackCluster) ValidateUpdate(oldRaw runtime.Object) (admission.Warn
 	r.Spec.ControlPlaneOmitAvailabilityZone = false
 
 	// Allow change on the spec.APIServerFloatingIP only if it matches the current api server loadbalancer IP.
-	if old.Status.APIServerLoadBalancer != nil && r.Spec.APIServerFloatingIP == old.Status.APIServerLoadBalancer.IP {
-		r.Spec.APIServerFloatingIP = ""
-		old.Spec.APIServerFloatingIP = ""
+	if r.Spec.APIServerFloatingIP != nil {
+		// APIServerFloatingIP is set and does not match the old value
+		if old.Spec.APIServerFloatingIP == nil || *r.Spec.APIServerFloatingIP != *old.Spec.APIServerFloatingIP {
+			// Allow if the new value matches api server loadbalancer IP
+			if *r.Spec.APIServerFloatingIP == old.Status.APIServerLoadBalancer.IP {
+				r.Spec.APIServerFloatingIP = nil
+				old.Spec.APIServerFloatingIP = nil
+			}
+		}
 	}
 
 	if !reflect.DeepEqual(old.Spec, r.Spec) {

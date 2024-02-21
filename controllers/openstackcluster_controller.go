@@ -469,7 +469,7 @@ func reconcileBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openS
 		floatingIP = openStackCluster.Status.Bastion.FloatingIP
 	}
 	// Check if there is an existing floating IP attached to bastion, in case where FloatingIP would not yet have been stored in cluster status
-	fp, err = networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterName, floatingIP)
+	fp, err = networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterName, &floatingIP)
 	if err != nil {
 		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to get or create floating IP for bastion: %w", err))
 		return ctrl.Result{}, fmt.Errorf("failed to get or create floating IP for bastion: %w", err)
@@ -759,8 +759,8 @@ func reconcileControlPlaneEndpoint(scope *scope.WithLogger, networkingService *n
 	// plane floating IP. In this case we configure APIServerFixedIP as the
 	// control plane endpoint and leave it to the user to configure load
 	// balancing.
-	case openStackCluster.Spec.APIServerFixedIP != "":
-		host = openStackCluster.Spec.APIServerFixedIP
+	case openStackCluster.Spec.APIServerFixedIP != nil:
+		host = *openStackCluster.Spec.APIServerFixedIP
 
 	// Control plane endpoint is not set, and none can be created
 	default:
@@ -782,8 +782,8 @@ func getAPIServerPort(openStackCluster *infrav1.OpenStackCluster) int {
 	switch {
 	case openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
 		return int(openStackCluster.Spec.ControlPlaneEndpoint.Port)
-	case openStackCluster.Spec.APIServerPort != 0:
-		return openStackCluster.Spec.APIServerPort
+	case openStackCluster.Spec.APIServerPort != nil:
+		return *openStackCluster.Spec.APIServerPort
 	}
 	return 6443
 }

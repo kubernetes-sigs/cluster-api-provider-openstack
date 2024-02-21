@@ -411,6 +411,17 @@ func restorev1beta1ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infr
 	if previous.APIServerLoadBalancer == nil || previous.APIServerLoadBalancer.IsZero() {
 		dst.APIServerLoadBalancer = previous.APIServerLoadBalancer
 	}
+
+	if dst.APIServerFloatingIP == nil || *dst.APIServerFloatingIP == "" {
+		dst.APIServerFloatingIP = previous.APIServerFloatingIP
+	}
+	if dst.APIServerFixedIP == nil || *dst.APIServerFixedIP == "" {
+		dst.APIServerFixedIP = previous.APIServerFixedIP
+	}
+
+	if previous.APIServerPort != nil && *previous.APIServerPort == 0 {
+		dst.APIServerPort = pointer.Int(0)
+	}
 }
 
 func (r *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {
@@ -800,6 +811,18 @@ func Convert_v1alpha7_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 		out.IdentityRef.Name = in.IdentityRef.Name
 	}
 
+	// The generated conversion function converts "" to &"" which is not what we want
+	if in.APIServerFloatingIP == "" {
+		out.APIServerFloatingIP = nil
+	}
+	if in.APIServerFixedIP == "" {
+		out.APIServerFixedIP = nil
+	}
+
+	if in.APIServerPort != 0 {
+		out.APIServerPort = pointer.Int(in.APIServerPort)
+	}
+
 	return nil
 }
 
@@ -843,6 +866,10 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in *i
 
 	out.CloudName = in.IdentityRef.CloudName
 	out.IdentityRef = &OpenStackIdentityReference{Name: in.IdentityRef.Name}
+
+	if in.APIServerPort != nil {
+		out.APIServerPort = *in.APIServerPort
+	}
 
 	return nil
 }

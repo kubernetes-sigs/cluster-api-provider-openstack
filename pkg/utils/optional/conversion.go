@@ -20,6 +20,18 @@ import (
 	"k8s.io/apimachinery/pkg/conversion"
 )
 
+func RestoreString(previous, dst *String) {
+	if *dst == nil || **dst == "" {
+		*dst = *previous
+	}
+}
+
+func RestoreInt(previous, dst *Int) {
+	if *dst == nil || **dst == 0 {
+		*dst = *previous
+	}
+}
+
 func Convert_string_To_optional_String(in *string, out *String, _ conversion.Scope) error {
 	// NOTE: This function has the opposite defaulting behaviour to
 	// Convert_string_to_Pointer_string defined in apimachinery: it converts

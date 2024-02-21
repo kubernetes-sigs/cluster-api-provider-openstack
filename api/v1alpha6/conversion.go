@@ -253,6 +253,13 @@ func restorev1alpha6ClusterSpec(previous *OpenStackClusterSpec, dst *OpenStackCl
 	restorev1alpha6NetworkFilter(&previous.Network, &dst.Network)
 }
 
+// Ensure nil and &0 are restored to whichever they were previously.
+func restoreIntPointer(previous **int, dst **int) {
+	if *previous == nil || **previous == 0 {
+		*dst = *previous
+	}
+}
+
 var _ ctrlconversion.Convertible = &OpenStackCluster{}
 
 var v1alpha6OpenStackClusterRestorer = conversion.RestorerFor[*OpenStackCluster]{
@@ -276,6 +283,24 @@ var v1beta1OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStackC
 			return &c.Spec.APIServerLoadBalancer
 		},
 		restorev1beta1APIServerLoadBalancer,
+	),
+	"apiServerFloatingIP": conversion.HashedFieldRestorer(
+		func(c *infrav1.OpenStackCluster) *optional.String {
+			return &c.Spec.APIServerFloatingIP
+		},
+		optional.RestoreString,
+	),
+	"apiServerFixedIP": conversion.HashedFieldRestorer(
+		func(c *infrav1.OpenStackCluster) *optional.String {
+			return &c.Spec.APIServerFixedIP
+		},
+		optional.RestoreString,
+	),
+	"apiServerPort": conversion.HashedFieldRestorer(
+		func(c *infrav1.OpenStackCluster) *optional.Int {
+			return &c.Spec.APIServerPort
+		},
+		optional.RestoreInt,
 	),
 	"externalNetwork": conversion.UnconditionalFieldRestorer(
 		func(c *infrav1.OpenStackCluster) **infrav1.NetworkFilter {
@@ -383,6 +408,24 @@ var v1beta1OpenStackClusterTemplateRestorer = conversion.RestorerFor[*infrav1.Op
 			return &c.Spec.Template.Spec.APIServerLoadBalancer
 		},
 		restorev1beta1APIServerLoadBalancer,
+	),
+	"apiServerFloatingIP": conversion.HashedFieldRestorer(
+		func(c *infrav1.OpenStackClusterTemplate) *optional.String {
+			return &c.Spec.Template.Spec.APIServerFloatingIP
+		},
+		optional.RestoreString,
+	),
+	"apiServerFixedIP": conversion.HashedFieldRestorer(
+		func(c *infrav1.OpenStackClusterTemplate) *optional.String {
+			return &c.Spec.Template.Spec.APIServerFixedIP
+		},
+		optional.RestoreString,
+	),
+	"apiServerPort": conversion.HashedFieldRestorer(
+		func(c *infrav1.OpenStackClusterTemplate) *optional.Int {
+			return &c.Spec.Template.Spec.APIServerPort
+		},
+		optional.RestoreInt,
 	),
 	"externalNetwork": conversion.UnconditionalFieldRestorer(
 		func(c *infrav1.OpenStackClusterTemplate) **infrav1.NetworkFilter {
@@ -751,6 +794,10 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in *i
 	out.CloudName = in.IdentityRef.CloudName
 	out.IdentityRef = &OpenStackIdentityReference{Name: in.IdentityRef.Name}
 
+	if in.APIServerPort != nil {
+		out.APIServerPort = *in.APIServerPort
+	}
+
 	return nil
 }
 
@@ -813,6 +860,19 @@ func Convert_v1alpha6_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 	if !apiServerLoadBalancer.IsZero() {
 		out.APIServerLoadBalancer = apiServerLoadBalancer
 	}
+
+	// The generated conversion function converts "" to &"" which is not what we want
+	if in.APIServerFloatingIP == "" {
+		out.APIServerFloatingIP = nil
+	}
+	if in.APIServerFixedIP == "" {
+		out.APIServerFixedIP = nil
+	}
+
+	if in.APIServerPort != 0 {
+		out.APIServerPort = pointer.Int(in.APIServerPort)
+	}
+
 	return nil
 }
 

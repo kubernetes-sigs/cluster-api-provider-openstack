@@ -306,7 +306,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						CloudName: "foobar",
 					},
 					DisableAPIServerFloatingIP: true,
-					APIServerFixedIP:           "20.1.56.1",
+					APIServerFixedIP:           pointer.String("20.1.56.1"),
 				},
 			},
 			wantErr: false,
@@ -329,7 +329,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						CloudName: "foobar",
 					},
 					DisableAPIServerFloatingIP: false,
-					APIServerFixedIP:           "20.1.56.1",
+					APIServerFixedIP:           pointer.String("20.1.56.1"),
 				},
 			},
 			wantErr: true,
@@ -349,7 +349,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			newTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
 					DisableAPIServerFloatingIP: true,
-					APIServerPort:              8443,
+					APIServerPort:              pointer.Int(8443),
 				},
 			},
 			wantErr: false,
@@ -372,7 +372,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						CloudName: "foobar",
 					},
 					DisableAPIServerFloatingIP: false,
-					APIServerPort:              8443,
+					APIServerPort:              pointer.Int(8443),
 				},
 			},
 			wantErr: true,
@@ -385,7 +385,6 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					APIServerFloatingIP: "",
 				},
 				Status: OpenStackClusterStatus{
 					APIServerLoadBalancer: &LoadBalancer{
@@ -399,7 +398,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					APIServerFloatingIP: "1.2.3.4",
+					APIServerFloatingIP: pointer.String("1.2.3.4"),
 				},
 				Status: OpenStackClusterStatus{
 					APIServerLoadBalancer: &LoadBalancer{
@@ -417,7 +416,6 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					APIServerFloatingIP: "",
 				},
 				Status: OpenStackClusterStatus{
 					APIServerLoadBalancer: &LoadBalancer{
@@ -431,7 +429,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					APIServerFloatingIP: "5.6.7.8",
+					APIServerFloatingIP: pointer.String("5.6.7.8"),
 				},
 				Status: OpenStackClusterStatus{
 					APIServerLoadBalancer: &LoadBalancer{

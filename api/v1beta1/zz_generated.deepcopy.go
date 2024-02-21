@@ -526,6 +526,21 @@ func (in *OpenStackClusterSpec) DeepCopyInto(out *OpenStackClusterSpec) {
 		*out = new(APIServerLoadBalancer)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.APIServerFloatingIP != nil {
+		in, out := &in.APIServerFloatingIP, &out.APIServerFloatingIP
+		*out = new(string)
+		**out = **in
+	}
+	if in.APIServerFixedIP != nil {
+		in, out := &in.APIServerFixedIP, &out.APIServerFixedIP
+		*out = new(string)
+		**out = **in
+	}
+	if in.APIServerPort != nil {
+		in, out := &in.APIServerPort, &out.APIServerPort
+		*out = new(int)
+		**out = **in
+	}
 	if in.ManagedSecurityGroups != nil {
 		in, out := &in.ManagedSecurityGroups, &out.ManagedSecurityGroups
 		*out = new(ManagedSecurityGroups)

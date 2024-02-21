@@ -52,17 +52,17 @@ const loadBalancerProvisioningStatusActive = "ACTIVE"
 // We wrap the LookupHost function in a variable to allow overriding it in unit tests.
 //
 //nolint:gocritic
-var lookupHost = func(host string) (string, error) {
+var lookupHost = func(host string) (*string, error) {
 	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
 	defer cancel()
 	ips, err := net.DefaultResolver.LookupHost(ctx, host)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if ip := net.ParseIP(ips[0]); ip == nil {
-		return "", fmt.Errorf("failed to resolve IP address for host %s", host)
+		return nil, fmt.Errorf("failed to resolve IP address for host %s", host)
 	}
-	return ips[0], nil
+	return &ips[0], nil
 }
 
 // ReconcileLoadBalancer reconciles the load balancer for the given cluster.
@@ -145,50 +145,50 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 
 // getAPIServerVIPAddress gets the VIP address for the API server from wherever it is specified.
 // Returns an empty string if the VIP address is not specified and it should be allocated automatically.
-func getAPIServerVIPAddress(openStackCluster *infrav1.OpenStackCluster) (string, error) {
+func getAPIServerVIPAddress(openStackCluster *infrav1.OpenStackCluster) (*string, error) {
 	switch {
 	// We only use call this function when creating the loadbalancer, so this case should never be used
 	case openStackCluster.Status.APIServerLoadBalancer != nil && openStackCluster.Status.APIServerLoadBalancer.InternalIP != "":
-		return openStackCluster.Status.APIServerLoadBalancer.InternalIP, nil
+		return &openStackCluster.Status.APIServerLoadBalancer.InternalIP, nil
 
 	// Explicit fixed IP in the cluster spec
-	case openStackCluster.Spec.APIServerFixedIP != "":
+	case openStackCluster.Spec.APIServerFixedIP != nil:
 		return openStackCluster.Spec.APIServerFixedIP, nil
 
 	// If we are using the VIP as the control plane endpoint, use any value explicitly set on the control plane endpoint
 	case openStackCluster.Spec.DisableAPIServerFloatingIP && openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
 		fixedIPAddress, err := lookupHost(openStackCluster.Spec.ControlPlaneEndpoint.Host)
 		if err != nil {
-			return "", fmt.Errorf("lookup host: %w", err)
+			return nil, fmt.Errorf("lookup host: %w", err)
 		}
 		return fixedIPAddress, nil
 	}
 
-	return "", nil
+	return nil, nil
 }
 
 // getAPIServerFloatingIP gets the floating IP from wherever it is specified.
 // Returns an empty string if the floating IP is not specified and it should be allocated automatically.
-func getAPIServerFloatingIP(openStackCluster *infrav1.OpenStackCluster) (string, error) {
+func getAPIServerFloatingIP(openStackCluster *infrav1.OpenStackCluster) (*string, error) {
 	switch {
 	// The floating IP was created previously
 	case openStackCluster.Status.APIServerLoadBalancer != nil && openStackCluster.Status.APIServerLoadBalancer.IP != "":
-		return openStackCluster.Status.APIServerLoadBalancer.IP, nil
+		return &openStackCluster.Status.APIServerLoadBalancer.IP, nil
 
 	// Explicit floating IP in the cluster spec
-	case openStackCluster.Spec.APIServerFloatingIP != "":
+	case openStackCluster.Spec.APIServerFloatingIP != nil:
 		return openStackCluster.Spec.APIServerFloatingIP, nil
 
 	// An IP address is specified explicitly in the control plane endpoint
 	case openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
 		floatingIPAddress, err := lookupHost(openStackCluster.Spec.ControlPlaneEndpoint.Host)
 		if err != nil {
-			return "", fmt.Errorf("lookup host: %w", err)
+			return nil, fmt.Errorf("lookup host: %w", err)
 		}
 		return floatingIPAddress, nil
 	}
 
-	return "", nil
+	return nil, nil
 }
 
 // getCanonicalAllowedCIDRs gets a filtered list of CIDRs which should be allowed to access the API server loadbalancer.
@@ -301,11 +301,14 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 	lbCreateOpts := loadbalancers.CreateOpts{
 		Name:        loadBalancerName,
 		VipSubnetID: subnetID,
-		VipAddress:  vipAddress,
 		Description: names.GetDescription(clusterName),
 		Provider:    lbProvider,
 		Tags:        openStackCluster.Spec.Tags,
 	}
+	if vipAddress != nil {
+		lbCreateOpts.VipAddress = *vipAddress
+	}
+
 	lb, err = s.loadbalancerClient.CreateLoadBalancer(lbCreateOpts)
 	if err != nil {
 		record.Warnf(openStackCluster, "FailedCreateLoadBalancer", "Failed to create load balancer %s: %v", loadBalancerName, err)
@@ -611,7 +614,7 @@ func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster,
 			}
 
 			// If the floating is user-provider (BYO floating IP), don't delete it.
-			if openStackCluster.Spec.APIServerFloatingIP != fip.FloatingIP {
+			if openStackCluster.Spec.APIServerFloatingIP == nil || *openStackCluster.Spec.APIServerFloatingIP != fip.FloatingIP {
 				if err = s.networkingService.DeleteFloatingIP(openStackCluster, fip.FloatingIP); err != nil {
 					return err
 				}
