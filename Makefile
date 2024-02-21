@@ -260,7 +260,7 @@ generate-go: $(MOCKGEN)
 		--input-dirs=./api/v1alpha5 \
 		--input-dirs=./api/v1alpha6 \
 		--input-dirs=./api/v1alpha7 \
-		--input-dirs=./api/v1alpha8 \
+		--input-dirs=./api/v1beta1 \
 		--output-file-base=zz_generated.conversion \
 		--go-header-file=./hack/boilerplate/boilerplate.generatego.txt
 	go generate ./...
@@ -410,10 +410,10 @@ templates: templates/cluster-template.yaml \
 	templates/cluster-template-flatcar.yaml \
 	templates/cluster-template-flatcar-sysext.yaml
 
-templates/cluster-template.yaml: kustomize/v1alpha8/default $(KUSTOMIZE) FORCE
+templates/cluster-template.yaml: kustomize/v1beta1/default $(KUSTOMIZE) FORCE
 	$(KUSTOMIZE) build "$<" > "$@"
 
-templates/cluster-template-%.yaml: kustomize/v1alpha8/% $(KUSTOMIZE) FORCE
+templates/cluster-template-%.yaml: kustomize/v1beta1/% $(KUSTOMIZE) FORCE
 	$(KUSTOMIZE) build "$<" > "$@"
 
 .PHONY: release-templates

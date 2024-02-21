@@ -29,7 +29,7 @@ import (
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
 	"sigs.k8s.io/controller-runtime/pkg/conversion"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha8"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	testhelpers "sigs.k8s.io/cluster-api-provider-openstack/test/helpers"
 )
 
@@ -668,7 +668,7 @@ func TestMachineConversionControllerSpecFields(t *testing.T) {
 	}
 }
 
-func TestConvert_v1alpha6_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(t *testing.T) {
+func TestConvert_v1alpha6_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(t *testing.T) {
 	tests := []struct {
 		name        string
 		in          *OpenStackClusterSpec
@@ -709,7 +709,7 @@ func TestConvert_v1alpha6_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(
 		t.Run(tt.name, func(t *testing.T) {
 			g := gomega.NewWithT(t)
 			out := &infrav1.OpenStackClusterSpec{}
-			err := Convert_v1alpha6_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(tt.in, out, nil)
+			err := Convert_v1alpha6_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(tt.in, out, nil)
 			g.Expect(err).NotTo(gomega.HaveOccurred())
 			g.Expect(out).To(gomega.Equal(tt.expectedOut))
 		})

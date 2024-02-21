@@ -24,7 +24,7 @@ import (
 	"k8s.io/utils/pointer"
 	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha8"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/conversion"
 )
 
@@ -41,7 +41,7 @@ func restorev1alpha6SecurityGroup(previous *SecurityGroup, dst *SecurityGroup) {
 }
 
 func restorev1alpha6MachineSpec(previous *OpenStackMachineSpec, dst *OpenStackMachineSpec) {
-	// Subnet is removed from v1alpha8 with no replacement, so can't be
+	// Subnet is removed from v1beta1 with no replacement, so can't be
 	// losslessly converted. Restore the previously stored value on down-conversion.
 	dst.Subnet = previous.Subnet
 
@@ -56,7 +56,7 @@ func restorev1alpha6MachineSpec(previous *OpenStackMachineSpec, dst *OpenStackMa
 	// losslessly converted. Restore the previously stored value on down-conversion.
 	dst.FloatingIP = previous.FloatingIP
 
-	// Conversion to v1alpha8 truncates keys and values to 255 characters
+	// Conversion to v1beta1 truncates keys and values to 255 characters
 	for k, v := range previous.ServerMetadata {
 		kd := k
 		if len(k) > 255 {
@@ -74,12 +74,12 @@ func restorev1alpha6MachineSpec(previous *OpenStackMachineSpec, dst *OpenStackMa
 		}
 	}
 
-	// Conversion to v1alpha8 removes the Kind fild
+	// Conversion to v1beta1 removes the Kind fild
 	dst.IdentityRef = previous.IdentityRef
 }
 
 func restorev1alpha6ClusterStatus(previous *OpenStackClusterStatus, dst *OpenStackClusterStatus) {
-	// PortOpts.SecurityGroups have been removed in v1alpha8
+	// PortOpts.SecurityGroups have been removed in v1beta1
 	// We restore the whole PortOpts/Networks since they are anyway immutable.
 	if previous.ExternalNetwork != nil {
 		dst.ExternalNetwork.PortOpts = previous.ExternalNetwork.PortOpts
@@ -96,8 +96,8 @@ func restorev1alpha6ClusterStatus(previous *OpenStackClusterStatus, dst *OpenSta
 	restorev1alpha6SecurityGroup(previous.BastionSecurityGroup, dst.BastionSecurityGroup)
 }
 
-func restorev1alpha8MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *infrav1.OpenStackMachineSpec) {
-	// PropagateUplinkStatus has been added in v1alpha8.
+func restorev1beta1MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *infrav1.OpenStackMachineSpec) {
+	// PropagateUplinkStatus has been added in v1beta1.
 	// We restore the whole Ports since they are anyway immutable.
 	dst.Ports = previous.Ports
 	dst.AdditionalBlockDevices = previous.AdditionalBlockDevices
@@ -105,20 +105,20 @@ func restorev1alpha8MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *inf
 	dst.Image = previous.Image
 }
 
-func restorev1alpha8Bastion(previous **infrav1.Bastion, dst **infrav1.Bastion) {
+func restorev1beta1Bastion(previous **infrav1.Bastion, dst **infrav1.Bastion) {
 	if *previous != nil && *dst != nil {
-		restorev1alpha8MachineSpec(&(*previous).Instance, &(*dst).Instance)
+		restorev1beta1MachineSpec(&(*previous).Instance, &(*dst).Instance)
 	}
 }
 
-func restorev1alpha8Subnets(previous *[]infrav1.SubnetFilter, dst *[]infrav1.SubnetFilter) {
+func restorev1beta1Subnets(previous *[]infrav1.SubnetFilter, dst *[]infrav1.SubnetFilter) {
 	if len(*previous) > 1 {
 		*dst = append(*dst, (*previous)[1:]...)
 	}
 }
 
-func restorev1alpha8ClusterStatus(previous *infrav1.OpenStackClusterStatus, dst *infrav1.OpenStackClusterStatus) {
-	// It's (theoretically) possible in v1alpha8 to have Network nil but
+func restorev1beta1ClusterStatus(previous *infrav1.OpenStackClusterStatus, dst *infrav1.OpenStackClusterStatus) {
+	// It's (theoretically) possible in v1beta1 to have Network nil but
 	// Router or APIServerLoadBalancer not nil. In hub-spoke-hub conversion this will
 	// result in Network being a pointer to an empty object.
 	if previous.Network == nil && dst.Network != nil && reflect.ValueOf(*dst.Network).IsZero() {
@@ -169,7 +169,7 @@ func restorev1alpha6ClusterSpec(previous *OpenStackClusterSpec, dst *OpenStackCl
 		dst.AllowAllInClusterTraffic = true
 	}
 
-	// Conversion to v1alpha8 removes the Kind field
+	// Conversion to v1beta1 removes the Kind field
 	dst.IdentityRef = previous.IdentityRef
 }
 
@@ -190,7 +190,7 @@ var v1alpha6OpenStackClusterRestorer = conversion.RestorerFor[*OpenStackCluster]
 	),
 }
 
-var v1alpha8OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStackCluster]{
+var v1beta1OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStackCluster]{
 	"externalNetwork": conversion.UnconditionalFieldRestorer(
 		func(c *infrav1.OpenStackCluster) *infrav1.NetworkFilter {
 			return &c.Spec.ExternalNetwork
@@ -215,25 +215,25 @@ var v1alpha8OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStack
 		func(c *infrav1.OpenStackCluster) **infrav1.Bastion {
 			return &c.Spec.Bastion
 		},
-		restorev1alpha8Bastion,
+		restorev1beta1Bastion,
 	),
 	"subnets": conversion.HashedFieldRestorer(
 		func(c *infrav1.OpenStackCluster) *[]infrav1.SubnetFilter {
 			return &c.Spec.Subnets
 		},
-		restorev1alpha8Subnets,
+		restorev1beta1Subnets,
 	),
 	"allNodesSecurityGroupRules": conversion.HashedFieldRestorer(
 		func(c *infrav1.OpenStackCluster) *infrav1.ManagedSecurityGroups {
 			return c.Spec.ManagedSecurityGroups
 		},
-		restorev1alpha8ManagedSecurityGroups,
+		restorev1beta1ManagedSecurityGroups,
 	),
 	"status": conversion.HashedFieldRestorer(
 		func(c *infrav1.OpenStackCluster) *infrav1.OpenStackClusterStatus {
 			return &c.Status
 		},
-		restorev1alpha8ClusterStatus,
+		restorev1beta1ClusterStatus,
 	),
 	"managedSubnets": conversion.UnconditionalFieldRestorer(
 		func(c *infrav1.OpenStackCluster) *[]infrav1.SubnetSpec {
@@ -247,8 +247,8 @@ func (r *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {
 
 	return conversion.ConvertAndRestore(
 		r, dst,
-		Convert_v1alpha6_OpenStackCluster_To_v1alpha8_OpenStackCluster, Convert_v1alpha8_OpenStackCluster_To_v1alpha6_OpenStackCluster,
-		v1alpha6OpenStackClusterRestorer, v1alpha8OpenStackClusterRestorer,
+		Convert_v1alpha6_OpenStackCluster_To_v1beta1_OpenStackCluster, Convert_v1beta1_OpenStackCluster_To_v1alpha6_OpenStackCluster,
+		v1alpha6OpenStackClusterRestorer, v1beta1OpenStackClusterRestorer,
 	)
 }
 
@@ -257,8 +257,8 @@ func (r *OpenStackCluster) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 
 	return conversion.ConvertAndRestore(
 		src, r,
-		Convert_v1alpha8_OpenStackCluster_To_v1alpha6_OpenStackCluster, Convert_v1alpha6_OpenStackCluster_To_v1alpha8_OpenStackCluster,
-		v1alpha8OpenStackClusterRestorer, v1alpha6OpenStackClusterRestorer,
+		Convert_v1beta1_OpenStackCluster_To_v1alpha6_OpenStackCluster, Convert_v1alpha6_OpenStackCluster_To_v1beta1_OpenStackCluster,
+		v1beta1OpenStackClusterRestorer, v1alpha6OpenStackClusterRestorer,
 	)
 }
 
@@ -267,13 +267,13 @@ var _ ctrlconversion.Convertible = &OpenStackClusterList{}
 func (r *OpenStackClusterList) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackClusterList)
 
-	return Convert_v1alpha6_OpenStackClusterList_To_v1alpha8_OpenStackClusterList(r, dst, nil)
+	return Convert_v1alpha6_OpenStackClusterList_To_v1beta1_OpenStackClusterList(r, dst, nil)
 }
 
 func (r *OpenStackClusterList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	src := srcRaw.(*infrav1.OpenStackClusterList)
 
-	return Convert_v1alpha8_OpenStackClusterList_To_v1alpha6_OpenStackClusterList(src, r, nil)
+	return Convert_v1beta1_OpenStackClusterList_To_v1alpha6_OpenStackClusterList(src, r, nil)
 }
 
 var _ ctrlconversion.Convertible = &OpenStackClusterTemplate{}
@@ -287,11 +287,11 @@ var v1alpha6OpenStackClusterTemplateRestorer = conversion.RestorerFor[*OpenStack
 	),
 }
 
-func restorev1alpha8ManagedSecurityGroups(previous *infrav1.ManagedSecurityGroups, dst *infrav1.ManagedSecurityGroups) {
+func restorev1beta1ManagedSecurityGroups(previous *infrav1.ManagedSecurityGroups, dst *infrav1.ManagedSecurityGroups) {
 	dst.AllNodesSecurityGroupRules = previous.AllNodesSecurityGroupRules
 }
 
-var v1alpha8OpenStackClusterTemplateRestorer = conversion.RestorerFor[*infrav1.OpenStackClusterTemplate]{
+var v1beta1OpenStackClusterTemplateRestorer = conversion.RestorerFor[*infrav1.OpenStackClusterTemplate]{
 	"externalNetwork": conversion.UnconditionalFieldRestorer(
 		func(c *infrav1.OpenStackClusterTemplate) *infrav1.NetworkFilter {
 			return &c.Spec.Template.Spec.ExternalNetwork
@@ -316,19 +316,19 @@ var v1alpha8OpenStackClusterTemplateRestorer = conversion.RestorerFor[*infrav1.O
 		func(c *infrav1.OpenStackClusterTemplate) **infrav1.Bastion {
 			return &c.Spec.Template.Spec.Bastion
 		},
-		restorev1alpha8Bastion,
+		restorev1beta1Bastion,
 	),
 	"subnets": conversion.HashedFieldRestorer(
 		func(c *infrav1.OpenStackClusterTemplate) *[]infrav1.SubnetFilter {
 			return &c.Spec.Template.Spec.Subnets
 		},
-		restorev1alpha8Subnets,
+		restorev1beta1Subnets,
 	),
 	"allNodesSecurityGroupRules": conversion.HashedFieldRestorer(
 		func(c *infrav1.OpenStackClusterTemplate) *infrav1.ManagedSecurityGroups {
 			return c.Spec.Template.Spec.ManagedSecurityGroups
 		},
-		restorev1alpha8ManagedSecurityGroups,
+		restorev1beta1ManagedSecurityGroups,
 	),
 	"managedSubnets": conversion.UnconditionalFieldRestorer(
 		func(c *infrav1.OpenStackClusterTemplate) *[]infrav1.SubnetSpec {
@@ -342,8 +342,8 @@ func (r *OpenStackClusterTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error {
 
 	return conversion.ConvertAndRestore(
 		r, dst,
-		Convert_v1alpha6_OpenStackClusterTemplate_To_v1alpha8_OpenStackClusterTemplate, Convert_v1alpha8_OpenStackClusterTemplate_To_v1alpha6_OpenStackClusterTemplate,
-		v1alpha6OpenStackClusterTemplateRestorer, v1alpha8OpenStackClusterTemplateRestorer,
+		Convert_v1alpha6_OpenStackClusterTemplate_To_v1beta1_OpenStackClusterTemplate, Convert_v1beta1_OpenStackClusterTemplate_To_v1alpha6_OpenStackClusterTemplate,
+		v1alpha6OpenStackClusterTemplateRestorer, v1beta1OpenStackClusterTemplateRestorer,
 	)
 }
 
@@ -352,8 +352,8 @@ func (r *OpenStackClusterTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) error 
 
 	return conversion.ConvertAndRestore(
 		src, r,
-		Convert_v1alpha8_OpenStackClusterTemplate_To_v1alpha6_OpenStackClusterTemplate, Convert_v1alpha6_OpenStackClusterTemplate_To_v1alpha8_OpenStackClusterTemplate,
-		v1alpha8OpenStackClusterTemplateRestorer, v1alpha6OpenStackClusterTemplateRestorer,
+		Convert_v1beta1_OpenStackClusterTemplate_To_v1alpha6_OpenStackClusterTemplate, Convert_v1alpha6_OpenStackClusterTemplate_To_v1beta1_OpenStackClusterTemplate,
+		v1beta1OpenStackClusterTemplateRestorer, v1alpha6OpenStackClusterTemplateRestorer,
 	)
 }
 
@@ -381,12 +381,12 @@ var v1alpha6OpenStackMachineRestorer = conversion.RestorerFor[*OpenStackMachine]
 	),
 }
 
-var v1alpha8OpenStackMachineRestorer = conversion.RestorerFor[*infrav1.OpenStackMachine]{
+var v1beta1OpenStackMachineRestorer = conversion.RestorerFor[*infrav1.OpenStackMachine]{
 	"spec": conversion.HashedFieldRestorer(
 		func(c *infrav1.OpenStackMachine) *infrav1.OpenStackMachineSpec {
 			return &c.Spec
 		},
-		restorev1alpha8MachineSpec,
+		restorev1beta1MachineSpec,
 	),
 	"depresources": conversion.UnconditionalFieldRestorer(
 		func(c *infrav1.OpenStackMachine) *infrav1.DependentMachineResources {
@@ -406,8 +406,8 @@ func (r *OpenStackMachine) ConvertTo(dstRaw ctrlconversion.Hub) error {
 
 	return conversion.ConvertAndRestore(
 		r, dst,
-		Convert_v1alpha6_OpenStackMachine_To_v1alpha8_OpenStackMachine, Convert_v1alpha8_OpenStackMachine_To_v1alpha6_OpenStackMachine,
-		v1alpha6OpenStackMachineRestorer, v1alpha8OpenStackMachineRestorer,
+		Convert_v1alpha6_OpenStackMachine_To_v1beta1_OpenStackMachine, Convert_v1beta1_OpenStackMachine_To_v1alpha6_OpenStackMachine,
+		v1alpha6OpenStackMachineRestorer, v1beta1OpenStackMachineRestorer,
 	)
 }
 
@@ -416,8 +416,8 @@ func (r *OpenStackMachine) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 
 	return conversion.ConvertAndRestore(
 		src, r,
-		Convert_v1alpha8_OpenStackMachine_To_v1alpha6_OpenStackMachine, Convert_v1alpha6_OpenStackMachine_To_v1alpha8_OpenStackMachine,
-		v1alpha8OpenStackMachineRestorer, v1alpha6OpenStackMachineRestorer,
+		Convert_v1beta1_OpenStackMachine_To_v1alpha6_OpenStackMachine, Convert_v1alpha6_OpenStackMachine_To_v1beta1_OpenStackMachine,
+		v1beta1OpenStackMachineRestorer, v1alpha6OpenStackMachineRestorer,
 	)
 }
 
@@ -425,12 +425,12 @@ var _ ctrlconversion.Convertible = &OpenStackMachineList{}
 
 func (r *OpenStackMachineList) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackMachineList)
-	return Convert_v1alpha6_OpenStackMachineList_To_v1alpha8_OpenStackMachineList(r, dst, nil)
+	return Convert_v1alpha6_OpenStackMachineList_To_v1beta1_OpenStackMachineList(r, dst, nil)
 }
 
 func (r *OpenStackMachineList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	src := srcRaw.(*infrav1.OpenStackMachineList)
-	return Convert_v1alpha8_OpenStackMachineList_To_v1alpha6_OpenStackMachineList(src, r, nil)
+	return Convert_v1beta1_OpenStackMachineList_To_v1alpha6_OpenStackMachineList(src, r, nil)
 }
 
 var _ ctrlconversion.Convertible = &OpenStackMachineTemplate{}
@@ -444,12 +444,12 @@ var v1alpha6OpenStackMachineTemplateRestorer = conversion.RestorerFor[*OpenStack
 	),
 }
 
-var v1alpha8OpenStackMachineTemplateRestorer = conversion.RestorerFor[*infrav1.OpenStackMachineTemplate]{
+var v1beta1OpenStackMachineTemplateRestorer = conversion.RestorerFor[*infrav1.OpenStackMachineTemplate]{
 	"spec": conversion.HashedFieldRestorer(
 		func(c *infrav1.OpenStackMachineTemplate) *infrav1.OpenStackMachineSpec {
 			return &c.Spec.Template.Spec
 		},
-		restorev1alpha8MachineSpec,
+		restorev1beta1MachineSpec,
 	),
 }
 
@@ -458,8 +458,8 @@ func (r *OpenStackMachineTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error {
 
 	return conversion.ConvertAndRestore(
 		r, dst,
-		Convert_v1alpha6_OpenStackMachineTemplate_To_v1alpha8_OpenStackMachineTemplate, Convert_v1alpha8_OpenStackMachineTemplate_To_v1alpha6_OpenStackMachineTemplate,
-		v1alpha6OpenStackMachineTemplateRestorer, v1alpha8OpenStackMachineTemplateRestorer,
+		Convert_v1alpha6_OpenStackMachineTemplate_To_v1beta1_OpenStackMachineTemplate, Convert_v1beta1_OpenStackMachineTemplate_To_v1alpha6_OpenStackMachineTemplate,
+		v1alpha6OpenStackMachineTemplateRestorer, v1beta1OpenStackMachineTemplateRestorer,
 	)
 }
 
@@ -468,8 +468,8 @@ func (r *OpenStackMachineTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) error 
 
 	return conversion.ConvertAndRestore(
 		src, r,
-		Convert_v1alpha8_OpenStackMachineTemplate_To_v1alpha6_OpenStackMachineTemplate, Convert_v1alpha6_OpenStackMachineTemplate_To_v1alpha8_OpenStackMachineTemplate,
-		v1alpha8OpenStackMachineTemplateRestorer, v1alpha6OpenStackMachineTemplateRestorer,
+		Convert_v1beta1_OpenStackMachineTemplate_To_v1alpha6_OpenStackMachineTemplate, Convert_v1alpha6_OpenStackMachineTemplate_To_v1beta1_OpenStackMachineTemplate,
+		v1beta1OpenStackMachineTemplateRestorer, v1alpha6OpenStackMachineTemplateRestorer,
 	)
 }
 
@@ -477,16 +477,16 @@ var _ ctrlconversion.Convertible = &OpenStackMachineTemplateList{}
 
 func (r *OpenStackMachineTemplateList) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackMachineTemplateList)
-	return Convert_v1alpha6_OpenStackMachineTemplateList_To_v1alpha8_OpenStackMachineTemplateList(r, dst, nil)
+	return Convert_v1alpha6_OpenStackMachineTemplateList_To_v1beta1_OpenStackMachineTemplateList(r, dst, nil)
 }
 
 func (r *OpenStackMachineTemplateList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	src := srcRaw.(*infrav1.OpenStackMachineTemplateList)
-	return Convert_v1alpha8_OpenStackMachineTemplateList_To_v1alpha6_OpenStackMachineTemplateList(src, r, nil)
+	return Convert_v1beta1_OpenStackMachineTemplateList_To_v1alpha6_OpenStackMachineTemplateList(src, r, nil)
 }
 
-func Convert_v1alpha6_OpenStackMachineSpec_To_v1alpha8_OpenStackMachineSpec(in *OpenStackMachineSpec, out *infrav1.OpenStackMachineSpec, s apiconversion.Scope) error {
-	err := autoConvert_v1alpha6_OpenStackMachineSpec_To_v1alpha8_OpenStackMachineSpec(in, out, s)
+func Convert_v1alpha6_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in *OpenStackMachineSpec, out *infrav1.OpenStackMachineSpec, s apiconversion.Scope) error {
+	err := autoConvert_v1alpha6_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in, out, s)
 	if err != nil {
 		return err
 	}
@@ -516,7 +516,7 @@ func Convert_v1alpha6_OpenStackMachineSpec_To_v1alpha8_OpenStackMachineSpec(in *
 		serverMetadata := make([]infrav1.ServerMetadata, 0, len(in.ServerMetadata))
 		for k, v := range in.ServerMetadata {
 			// Truncate key and value to 255 characters if required, as this
-			// was not validated prior to v1alpha8
+			// was not validated prior to v1beta1
 			if len(k) > 255 {
 				k = k[:255]
 			}
@@ -598,8 +598,8 @@ func convertNetworksToPorts(networks []NetworkParam) []infrav1.PortOpts {
 	return ports
 }
 
-func Convert_v1alpha8_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in *infrav1.OpenStackClusterSpec, out *OpenStackClusterSpec, s apiconversion.Scope) error {
-	err := autoConvert_v1alpha8_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in, out, s)
+func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in *infrav1.OpenStackClusterSpec, out *OpenStackClusterSpec, s apiconversion.Scope) error {
+	err := autoConvert_v1beta1_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in, out, s)
 	if err != nil {
 		return err
 	}
@@ -609,7 +609,7 @@ func Convert_v1alpha8_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in *
 	}
 
 	if len(in.Subnets) >= 1 {
-		if err := Convert_v1alpha8_SubnetFilter_To_v1alpha6_SubnetFilter(&in.Subnets[0], &out.Subnet, s); err != nil {
+		if err := Convert_v1beta1_SubnetFilter_To_v1alpha6_SubnetFilter(&in.Subnets[0], &out.Subnet, s); err != nil {
 			return err
 		}
 	}
@@ -627,8 +627,8 @@ func Convert_v1alpha8_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in *
 	return nil
 }
 
-func Convert_v1alpha6_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(in *OpenStackClusterSpec, out *infrav1.OpenStackClusterSpec, s apiconversion.Scope) error {
-	err := autoConvert_v1alpha6_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(in, out, s)
+func Convert_v1alpha6_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *OpenStackClusterSpec, out *infrav1.OpenStackClusterSpec, s apiconversion.Scope) error {
+	err := autoConvert_v1alpha6_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in, out, s)
 	if err != nil {
 		return err
 	}
@@ -642,7 +642,7 @@ func Convert_v1alpha6_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(in *
 	emptySubnet := SubnetFilter{}
 	if in.Subnet != emptySubnet {
 		subnet := infrav1.SubnetFilter{}
-		if err := Convert_v1alpha6_SubnetFilter_To_v1alpha8_SubnetFilter(&in.Subnet, &subnet, s); err != nil {
+		if err := Convert_v1alpha6_SubnetFilter_To_v1beta1_SubnetFilter(&in.Subnet, &subnet, s); err != nil {
 			return err
 		}
 		out.Subnets = []infrav1.SubnetFilter{subnet}
@@ -670,17 +670,17 @@ func Convert_v1alpha6_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(in *
 	return nil
 }
 
-func Convert_v1alpha6_PortOpts_To_v1alpha8_PortOpts(in *PortOpts, out *infrav1.PortOpts, s apiconversion.Scope) error {
-	err := autoConvert_v1alpha6_PortOpts_To_v1alpha8_PortOpts(in, out, s)
+func Convert_v1alpha6_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *infrav1.PortOpts, s apiconversion.Scope) error {
+	err := autoConvert_v1alpha6_PortOpts_To_v1beta1_PortOpts(in, out, s)
 	if err != nil {
 		return err
 	}
-	// SecurityGroups are removed in v1alpha8 without replacement. SecurityGroupFilters can be used instead.
+	// SecurityGroups are removed in v1beta1 without replacement. SecurityGroupFilters can be used instead.
 	for i := range in.SecurityGroups {
 		out.SecurityGroupFilters = append(out.SecurityGroupFilters, infrav1.SecurityGroupFilter{ID: in.SecurityGroups[i]})
 	}
 
-	// Profile is now a struct in v1alpha8.
+	// Profile is now a struct in v1beta1.
 	if strings.Contains(in.Profile["capabilities"], "switchdev") {
 		out.Profile.OVSHWOffload = true
 	}
@@ -690,9 +690,9 @@ func Convert_v1alpha6_PortOpts_To_v1alpha8_PortOpts(in *PortOpts, out *infrav1.P
 	return nil
 }
 
-func Convert_v1alpha8_PortOpts_To_v1alpha6_PortOpts(in *infrav1.PortOpts, out *PortOpts, s apiconversion.Scope) error {
-	// value specs and propagate uplink status have been added in v1alpha8 but have no equivalent in v1alpha5
-	err := autoConvert_v1alpha8_PortOpts_To_v1alpha6_PortOpts(in, out, s)
+func Convert_v1beta1_PortOpts_To_v1alpha6_PortOpts(in *infrav1.PortOpts, out *PortOpts, s apiconversion.Scope) error {
+	// value specs and propagate uplink status have been added in v1beta1 but have no equivalent in v1alpha5
+	err := autoConvert_v1beta1_PortOpts_To_v1alpha6_PortOpts(in, out, s)
 	if err != nil {
 		return err
 	}
@@ -707,7 +707,7 @@ func Convert_v1alpha8_PortOpts_To_v1alpha6_PortOpts(in *infrav1.PortOpts, out *P
 	return nil
 }
 
-func Convert_v1alpha6_Instance_To_v1alpha8_BastionStatus(in *Instance, out *infrav1.BastionStatus, _ apiconversion.Scope) error {
+func Convert_v1alpha6_Instance_To_v1beta1_BastionStatus(in *Instance, out *infrav1.BastionStatus, _ apiconversion.Scope) error {
 	// BastionStatus is the same as Instance with unused fields removed
 	out.ID = in.ID
 	out.Name = in.Name
@@ -718,7 +718,7 @@ func Convert_v1alpha6_Instance_To_v1alpha8_BastionStatus(in *Instance, out *infr
 	return nil
 }
 
-func Convert_v1alpha8_BastionStatus_To_v1alpha6_Instance(in *infrav1.BastionStatus, out *Instance, _ apiconversion.Scope) error {
+func Convert_v1beta1_BastionStatus_To_v1alpha6_Instance(in *infrav1.BastionStatus, out *Instance, _ apiconversion.Scope) error {
 	// BastionStatus is the same as Instance with unused fields removed
 	out.ID = in.ID
 	out.Name = in.Name
@@ -729,9 +729,9 @@ func Convert_v1alpha8_BastionStatus_To_v1alpha6_Instance(in *infrav1.BastionStat
 	return nil
 }
 
-func Convert_v1alpha6_Network_To_v1alpha8_NetworkStatusWithSubnets(in *Network, out *infrav1.NetworkStatusWithSubnets, s apiconversion.Scope) error {
-	// PortOpts has been removed in v1alpha8
-	err := Convert_v1alpha6_Network_To_v1alpha8_NetworkStatus(in, &out.NetworkStatus, s)
+func Convert_v1alpha6_Network_To_v1beta1_NetworkStatusWithSubnets(in *Network, out *infrav1.NetworkStatusWithSubnets, s apiconversion.Scope) error {
+	// PortOpts has been removed in v1beta1
+	err := Convert_v1alpha6_Network_To_v1beta1_NetworkStatus(in, &out.NetworkStatus, s)
 	if err != nil {
 		return err
 	}
@@ -742,9 +742,9 @@ func Convert_v1alpha6_Network_To_v1alpha8_NetworkStatusWithSubnets(in *Network, 
 	return nil
 }
 
-func Convert_v1alpha8_NetworkStatusWithSubnets_To_v1alpha6_Network(in *infrav1.NetworkStatusWithSubnets, out *Network, s apiconversion.Scope) error {
-	// PortOpts has been removed in v1alpha8
-	err := Convert_v1alpha8_NetworkStatus_To_v1alpha6_Network(&in.NetworkStatus, out, s)
+func Convert_v1beta1_NetworkStatusWithSubnets_To_v1alpha6_Network(in *infrav1.NetworkStatusWithSubnets, out *Network, s apiconversion.Scope) error {
+	// PortOpts has been removed in v1beta1
+	err := Convert_v1beta1_NetworkStatus_To_v1alpha6_Network(&in.NetworkStatus, out, s)
 	if err != nil {
 		return err
 	}
@@ -756,7 +756,7 @@ func Convert_v1alpha8_NetworkStatusWithSubnets_To_v1alpha6_Network(in *infrav1.N
 	return nil
 }
 
-func Convert_v1alpha6_Network_To_v1alpha8_NetworkStatus(in *Network, out *infrav1.NetworkStatus, _ apiconversion.Scope) error {
+func Convert_v1alpha6_Network_To_v1beta1_NetworkStatus(in *Network, out *infrav1.NetworkStatus, _ apiconversion.Scope) error {
 	out.ID = in.ID
 	out.Name = in.Name
 	out.Tags = in.Tags
@@ -764,7 +764,7 @@ func Convert_v1alpha6_Network_To_v1alpha8_NetworkStatus(in *Network, out *infrav
 	return nil
 }
 
-func Convert_v1alpha8_NetworkStatus_To_v1alpha6_Network(in *infrav1.NetworkStatus, out *Network, _ apiconversion.Scope) error {
+func Convert_v1beta1_NetworkStatus_To_v1alpha6_Network(in *infrav1.NetworkStatus, out *Network, _ apiconversion.Scope) error {
 	out.ID = in.ID
 	out.Name = in.Name
 	out.Tags = in.Tags
@@ -772,13 +772,13 @@ func Convert_v1alpha8_NetworkStatus_To_v1alpha6_Network(in *infrav1.NetworkStatu
 	return nil
 }
 
-func Convert_v1alpha6_SecurityGroupFilter_To_v1alpha8_SecurityGroupFilter(in *SecurityGroupFilter, out *infrav1.SecurityGroupFilter, s apiconversion.Scope) error {
-	err := autoConvert_v1alpha6_SecurityGroupFilter_To_v1alpha8_SecurityGroupFilter(in, out, s)
+func Convert_v1alpha6_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(in *SecurityGroupFilter, out *infrav1.SecurityGroupFilter, s apiconversion.Scope) error {
+	err := autoConvert_v1alpha6_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(in, out, s)
 	if err != nil {
 		return err
 	}
 
-	// TenantID has been removed in v1alpha8. Write it to ProjectID if ProjectID is not already set.
+	// TenantID has been removed in v1beta1. Write it to ProjectID if ProjectID is not already set.
 	if out.ProjectID == "" {
 		out.ProjectID = in.TenantID
 	}
@@ -786,9 +786,9 @@ func Convert_v1alpha6_SecurityGroupFilter_To_v1alpha8_SecurityGroupFilter(in *Se
 	return nil
 }
 
-func Convert_v1alpha6_SecurityGroupParam_To_v1alpha8_SecurityGroupFilter(in *SecurityGroupParam, out *infrav1.SecurityGroupFilter, s apiconversion.Scope) error {
-	// SecurityGroupParam is replaced by its contained SecurityGroupFilter in v1alpha8
-	err := Convert_v1alpha6_SecurityGroupFilter_To_v1alpha8_SecurityGroupFilter(&in.Filter, out, s)
+func Convert_v1alpha6_SecurityGroupParam_To_v1beta1_SecurityGroupFilter(in *SecurityGroupParam, out *infrav1.SecurityGroupFilter, s apiconversion.Scope) error {
+	// SecurityGroupParam is replaced by its contained SecurityGroupFilter in v1beta1
+	err := Convert_v1alpha6_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(&in.Filter, out, s)
 	if err != nil {
 		return err
 	}
@@ -802,9 +802,9 @@ func Convert_v1alpha6_SecurityGroupParam_To_v1alpha8_SecurityGroupFilter(in *Sec
 	return nil
 }
 
-func Convert_v1alpha8_SecurityGroupFilter_To_v1alpha6_SecurityGroupParam(in *infrav1.SecurityGroupFilter, out *SecurityGroupParam, s apiconversion.Scope) error {
-	// SecurityGroupParam is replaced by its contained SecurityGroupFilter in v1alpha8
-	err := Convert_v1alpha8_SecurityGroupFilter_To_v1alpha6_SecurityGroupFilter(in, &out.Filter, s)
+func Convert_v1beta1_SecurityGroupFilter_To_v1alpha6_SecurityGroupParam(in *infrav1.SecurityGroupFilter, out *SecurityGroupParam, s apiconversion.Scope) error {
+	// SecurityGroupParam is replaced by its contained SecurityGroupFilter in v1beta1
+	err := Convert_v1beta1_SecurityGroupFilter_To_v1alpha6_SecurityGroupFilter(in, &out.Filter, s)
 	if err != nil {
 		return err
 	}
@@ -818,7 +818,7 @@ func Convert_v1alpha8_SecurityGroupFilter_To_v1alpha6_SecurityGroupParam(in *inf
 	return nil
 }
 
-func Convert_v1alpha6_SubnetParam_To_v1alpha8_SubnetFilter(in *SubnetParam, out *infrav1.SubnetFilter, _ apiconversion.Scope) error {
+func Convert_v1alpha6_SubnetParam_To_v1beta1_SubnetFilter(in *SubnetParam, out *infrav1.SubnetFilter, _ apiconversion.Scope) error {
 	*out = infrav1.SubnetFilter(in.Filter)
 	if in.UUID != "" {
 		out.ID = in.UUID
@@ -826,14 +826,14 @@ func Convert_v1alpha6_SubnetParam_To_v1alpha8_SubnetFilter(in *SubnetParam, out 
 	return nil
 }
 
-func Convert_v1alpha8_SubnetFilter_To_v1alpha6_SubnetParam(in *infrav1.SubnetFilter, out *SubnetParam, _ apiconversion.Scope) error {
+func Convert_v1beta1_SubnetFilter_To_v1alpha6_SubnetParam(in *infrav1.SubnetFilter, out *SubnetParam, _ apiconversion.Scope) error {
 	out.Filter = SubnetFilter(*in)
 	out.UUID = in.ID
 
 	return nil
 }
 
-func Convert_Map_string_To_Interface_To_v1alpha8_BindingProfile(in map[string]string, out *infrav1.BindingProfile, _ apiconversion.Scope) error {
+func Convert_Map_string_To_Interface_To_v1beta1_BindingProfile(in map[string]string, out *infrav1.BindingProfile, _ apiconversion.Scope) error {
 	for k, v := range in {
 		if k == "capabilities" {
 			if strings.Contains(v, "switchdev") {
@@ -847,7 +847,7 @@ func Convert_Map_string_To_Interface_To_v1alpha8_BindingProfile(in map[string]st
 	return nil
 }
 
-func Convert_v1alpha8_BindingProfile_To_Map_string_To_Interface(in *infrav1.BindingProfile, out map[string]string, _ apiconversion.Scope) error {
+func Convert_v1beta1_BindingProfile_To_Map_string_To_Interface(in *infrav1.BindingProfile, out map[string]string, _ apiconversion.Scope) error {
 	if in.OVSHWOffload {
 		(out)["capabilities"] = "[\"switchdev\"]"
 	}
@@ -857,13 +857,13 @@ func Convert_v1alpha8_BindingProfile_To_Map_string_To_Interface(in *infrav1.Bind
 	return nil
 }
 
-func Convert_v1alpha8_OpenStackClusterStatus_To_v1alpha6_OpenStackClusterStatus(in *infrav1.OpenStackClusterStatus, out *OpenStackClusterStatus, s apiconversion.Scope) error {
-	err := autoConvert_v1alpha8_OpenStackClusterStatus_To_v1alpha6_OpenStackClusterStatus(in, out, s)
+func Convert_v1beta1_OpenStackClusterStatus_To_v1alpha6_OpenStackClusterStatus(in *infrav1.OpenStackClusterStatus, out *OpenStackClusterStatus, s apiconversion.Scope) error {
+	err := autoConvert_v1beta1_OpenStackClusterStatus_To_v1alpha6_OpenStackClusterStatus(in, out, s)
 	if err != nil {
 		return err
 	}
 
-	// Router and APIServerLoadBalancer have been moved out of Network in v1alpha8
+	// Router and APIServerLoadBalancer have been moved out of Network in v1beta1
 	if in.Router != nil || in.APIServerLoadBalancer != nil {
 		if out.Network == nil {
 			out.Network = &Network{}
@@ -876,13 +876,13 @@ func Convert_v1alpha8_OpenStackClusterStatus_To_v1alpha6_OpenStackClusterStatus(
 	return nil
 }
 
-func Convert_v1alpha6_OpenStackClusterStatus_To_v1alpha8_OpenStackClusterStatus(in *OpenStackClusterStatus, out *infrav1.OpenStackClusterStatus, s apiconversion.Scope) error {
-	err := autoConvert_v1alpha6_OpenStackClusterStatus_To_v1alpha8_OpenStackClusterStatus(in, out, s)
+func Convert_v1alpha6_OpenStackClusterStatus_To_v1beta1_OpenStackClusterStatus(in *OpenStackClusterStatus, out *infrav1.OpenStackClusterStatus, s apiconversion.Scope) error {
+	err := autoConvert_v1alpha6_OpenStackClusterStatus_To_v1beta1_OpenStackClusterStatus(in, out, s)
 	if err != nil {
 		return err
 	}
 
-	// Router and APIServerLoadBalancer have been moved out of Network in v1alpha8
+	// Router and APIServerLoadBalancer have been moved out of Network in v1beta1
 	if in.Network != nil {
 		out.Router = (*infrav1.Router)(in.Network.Router)
 		out.APIServerLoadBalancer = (*infrav1.LoadBalancer)(in.Network.APIServerLoadBalancer)
@@ -891,8 +891,8 @@ func Convert_v1alpha6_OpenStackClusterStatus_To_v1alpha8_OpenStackClusterStatus(
 	return nil
 }
 
-func Convert_v1alpha8_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(in *infrav1.OpenStackMachineSpec, out *OpenStackMachineSpec, s apiconversion.Scope) error {
-	err := autoConvert_v1alpha8_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(in, out, s)
+func Convert_v1beta1_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(in *infrav1.OpenStackMachineSpec, out *OpenStackMachineSpec, s apiconversion.Scope) error {
+	err := autoConvert_v1beta1_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(in, out, s)
 	if err != nil {
 		return err
 	}
@@ -922,13 +922,13 @@ func Convert_v1alpha8_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(in *
 	return nil
 }
 
-func Convert_v1alpha8_OpenStackMachineStatus_To_v1alpha6_OpenStackMachineStatus(in *infrav1.OpenStackMachineStatus, out *OpenStackMachineStatus, s apiconversion.Scope) error {
+func Convert_v1beta1_OpenStackMachineStatus_To_v1alpha6_OpenStackMachineStatus(in *infrav1.OpenStackMachineStatus, out *OpenStackMachineStatus, s apiconversion.Scope) error {
 	// ReferencedResources have no equivalent in v1alpha6
-	return autoConvert_v1alpha8_OpenStackMachineStatus_To_v1alpha6_OpenStackMachineStatus(in, out, s)
+	return autoConvert_v1beta1_OpenStackMachineStatus_To_v1alpha6_OpenStackMachineStatus(in, out, s)
 }
 
-func Convert_v1alpha6_Bastion_To_v1alpha8_Bastion(in *Bastion, out *infrav1.Bastion, s apiconversion.Scope) error {
-	err := autoConvert_v1alpha6_Bastion_To_v1alpha8_Bastion(in, out, s)
+func Convert_v1alpha6_Bastion_To_v1beta1_Bastion(in *Bastion, out *infrav1.Bastion, s apiconversion.Scope) error {
+	err := autoConvert_v1alpha6_Bastion_To_v1beta1_Bastion(in, out, s)
 	if err != nil {
 		return err
 	}
@@ -943,8 +943,8 @@ func Convert_v1alpha6_Bastion_To_v1alpha8_Bastion(in *Bastion, out *infrav1.Bast
 	return nil
 }
 
-func Convert_v1alpha8_Bastion_To_v1alpha6_Bastion(in *infrav1.Bastion, out *Bastion, s apiconversion.Scope) error {
-	err := autoConvert_v1alpha8_Bastion_To_v1alpha6_Bastion(in, out, s)
+func Convert_v1beta1_Bastion_To_v1alpha6_Bastion(in *infrav1.Bastion, out *Bastion, s apiconversion.Scope) error {
+	err := autoConvert_v1beta1_Bastion_To_v1alpha6_Bastion(in, out, s)
 	if err != nil {
 		return err
 	}
@@ -957,7 +957,7 @@ func Convert_v1alpha8_Bastion_To_v1alpha6_Bastion(in *infrav1.Bastion, out *Bast
 	return nil
 }
 
-func Convert_v1alpha8_SecurityGroupStatus_To_v1alpha6_SecurityGroup(in *infrav1.SecurityGroupStatus, out *SecurityGroup, s apiconversion.Scope) error { //nolint:revive
+func Convert_v1beta1_SecurityGroupStatus_To_v1alpha6_SecurityGroup(in *infrav1.SecurityGroupStatus, out *SecurityGroup, s apiconversion.Scope) error { //nolint:revive
 	out.ID = in.ID
 	out.Name = in.Name
 	out.Rules = make([]SecurityGroupRule, len(in.Rules))
@@ -991,7 +991,7 @@ func Convert_v1alpha8_SecurityGroupStatus_To_v1alpha6_SecurityGroup(in *infrav1.
 	return nil
 }
 
-func Convert_v1alpha6_SecurityGroup_To_v1alpha8_SecurityGroupStatus(in *SecurityGroup, out *infrav1.SecurityGroupStatus, s apiconversion.Scope) error { //nolint:revive
+func Convert_v1alpha6_SecurityGroup_To_v1beta1_SecurityGroupStatus(in *SecurityGroup, out *infrav1.SecurityGroupStatus, s apiconversion.Scope) error { //nolint:revive
 	out.ID = in.ID
 	out.Name = in.Name
 	out.Rules = make([]infrav1.SecurityGroupRuleStatus, len(in.Rules))
@@ -1012,6 +1012,6 @@ func Convert_v1alpha6_SecurityGroup_To_v1alpha8_SecurityGroupStatus(in *Security
 	return nil
 }
 
-func Convert_v1alpha6_OpenStackIdentityReference_To_v1alpha8_OpenStackIdentityReference(in *OpenStackIdentityReference, out *infrav1.OpenStackIdentityReference, s apiconversion.Scope) error {
-	return autoConvert_v1alpha6_OpenStackIdentityReference_To_v1alpha8_OpenStackIdentityReference(in, out, s)
+func Convert_v1alpha6_OpenStackIdentityReference_To_v1beta1_OpenStackIdentityReference(in *OpenStackIdentityReference, out *infrav1.OpenStackIdentityReference, s apiconversion.Scope) error {
+	return autoConvert_v1alpha6_OpenStackIdentityReference_To_v1beta1_OpenStackIdentityReference(in, out, s)
 }

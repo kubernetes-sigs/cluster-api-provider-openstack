@@ -500,6 +500,6 @@ This sections goal is to gather various insights into the API design that can se
 
 ### `referencedResources`
 
-Starting from v1alpha8 both `OpenStackMachineStatus` and `BastionsStatus` feature a field named `referencedResources` which aims to include fields that list individual IDs of the resources associated with the machine or bastion. These IDs are calculated on machine or bastion creation and are not intended to be changed during the object lifecycle.
+Starting from v1beta1 both `OpenStackMachineStatus` and `BastionsStatus` feature a field named `referencedResources` which aims to include fields that list individual IDs of the resources associated with the machine or bastion. These IDs are calculated on machine or bastion creation and are not intended to be changed during the object lifecycle.
 
 Having all the IDs of related resources saved in the statuses allows CAPO to make easy decisions about deleting the related resources when deleting the VM corresponding to the machine or bastion.

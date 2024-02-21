@@ -6,6 +6,6 @@ spec:
   template:
     spec:
       infrastructureRef:
-        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
         kind: OpenStackMachineTemplate
         name: ${CLUSTER_NAME}-upgrade-from-md-0

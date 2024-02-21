@@ -186,7 +186,7 @@ The recommmend minimum value of control plane flavor's vCPU is 2 and minimum val
 Depending on the CNI that will be deployed on the cluster, you may need to add specific security group rules to the control plane and worker nodes. For example, if you are using Calico with BGP, you will need to add the following security group rules to the control plane and worker nodes:
 
  ```yaml
- apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+ apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
  kind: OpenStackCluster
  metadata:
    name: <cluster-name>
@@ -239,7 +239,7 @@ Note: If your openstack cluster does not already have a public network, you shou
 You can use a pre-existing router instead of creating a new one. When deleting a cluster a pre-existing router will not be deleted.
 
  ```yaml
- apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+ apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
  kind: OpenStackCluster
  metadata:
    name: <cluster-name>
@@ -306,7 +306,7 @@ It is possible to restrict access to the Kubernetes API server on a network leve
 the allowed CIDRs by `spec.APIServerLoadBalancer.AllowedCIDRs` of `OpenStackCluster`.
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: OpenStackCluster
 metadata:
   name: <cluster-name>
@@ -324,7 +324,7 @@ All known IPs of the target cluster will be discovered dynamically (e.g. you don
 All applied CIDRs (user defined + dynamically discovered) are written back into `status.network.apiServerLoadBalancer.allowedCIDRs`
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: OpenStackCluster
 metadata:
   name: <cluster-name>
@@ -357,7 +357,7 @@ If you have a complex query that you want to use to lookup a network, then you c
 By using filters to look up a network, please note that it is possible to get multiple networks as a result. This should not be a problem, however please test your filters with `openstack network list` to be certain that it returns the networks you want. Please refer to the following usage example:
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: OpenStackMachineTemplate
 metadata:
   name: <cluster-name>-controlplane
@@ -375,7 +375,7 @@ spec:
 You can specify multiple networks (or subnets) to connect your server to. To do this, simply add another entry in the networks array. The following example connects the server to 3 different networks:
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: OpenStackMachineTemplate
 metadata:
   name: <cluster-name>-controlplane
@@ -399,7 +399,7 @@ spec:
 Rather than just using a network, you have the option of specifying a specific subnet to connect your server to. The following is an example of how to specify a specific subnet of a network to use for your server.
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: OpenStackMachineTemplate
 metadata:
   name: <cluster-name>-controlplane
@@ -420,7 +420,7 @@ spec:
 A server can also be connected to networks by describing what ports to create. Describing a server's connection with `ports` allows for finer and more advanced configuration. For example, you can specify per-port security groups, fixed IPs, VNIC type or profile.
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: OpenStackMachineTemplate
 metadata:
   name: <cluster-name>-controlplane
@@ -518,7 +518,7 @@ ports:
 `port security` can be applied to specific port to enable/disable the `port security` on that port; When not set, it takes the value of the corresponding field at the network level.
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: OpenStackMachineTemplate
 metadata:
   name: <cluster-name>-controlplane
@@ -589,7 +589,7 @@ If this is not flexible enough, pre-existing security groups can be added to the
 spec of an `OpenStackMachineTemplate`, e.g.:
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: OpenStackMachineTemplate
 metadata:
   name: ${CLUSTER_NAME}-control-plane
@@ -605,7 +605,7 @@ spec:
 You have the ability to tag all resources created by the cluster in the `OpenStackCluster` spec. Here is an example how to configure tagging:
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: OpenStackCluster
 metadata:
   name: <cluster-name>
@@ -618,7 +618,7 @@ spec:
 To tag resources specific to a machine, add a value to the tags field in the `OpenStackMachineTemplate` spec like this:
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: OpenStackMachineTemplate
 metadata:
   name: <cluster-name>-controlplane
@@ -635,7 +635,7 @@ spec:
 You also have the option to add metadata to instances. Here is a usage example:
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: OpenStackMachineTemplate
 metadata:
   name: <cluster-name>-controlplane
@@ -653,7 +653,7 @@ spec:
 For example in `OpenStackMachineTemplate` set `spec.rootVolume.diskSize` to something greater than `0` means boot from volume.
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: OpenStackMachineTemplate
 metadata:
   name: <cluster-name>-controlplane

@@ -44,7 +44,7 @@ This provider's versions are compatible with the following versions of Cluster A
 | OpenStack Provider v1alpha5 (v0.6) | ✓              |
 | OpenStack Provider v1alpha6 (v0.7) | ✓              |
 | OpenStack Provider v1alpha7 (v0.9) | ✓              |
-| OpenStack Provider v1alpha8        | ✓              |
+| OpenStack Provider v1beta1         | ✓              |
 
 
 This provider's versions are able to install and manage the following versions of Kubernetes:
@@ -54,7 +54,7 @@ This provider's versions are able to install and manage the following versions o
 | OpenStack Provider v1alpha5 (v0.6) | ✓     | +     | +     | +     |
 | OpenStack Provider v1alpha6 (v0.7) | ✓     | ✓     | ✓     | +     |
 | OpenStack Provider v1alpha7 (v0.9) | +     | ✓     | ✓     | ★     |
-| OpenStack Provider v1alpha8        | +     | ✓     | ✓     | ★     |
+| OpenStack Provider v1beta1         | +     | ✓     | ✓     | ★     |
 
 This provider's versions are able to install Kubernetes to the following versions of OpenStack:
 
@@ -63,7 +63,7 @@ This provider's versions are able to install Kubernetes to the following version
 | OpenStack Provider v1alpha5 (v0.6) | +      | +     | +     | +     | +      | ✓        | ✓       | ✓    | ✓    | ★      |
 | OpenStack Provider v1alpha6 (v0.7) | +      | +     | +     | +     | +      | ✓        | ✓       | ✓    | ✓    | ★      |
 | OpenStack Provider v1alpha7 (v0.9) |        | +     | +     | +     | +      | ✓        | ✓       | ✓    | ✓    | ★      |
-| OpenStack Provider v1alpha8        |        | +     | +     | +     | +      | ✓        | ✓       | ✓    | ✓    | ★      |
+| OpenStack Provider v1beta1         |        | +     | +     | +     | +      | ✓        | ✓       | ✓    | ✓    | ★      |
 
 Test status:
 

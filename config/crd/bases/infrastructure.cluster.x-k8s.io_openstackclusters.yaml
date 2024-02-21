@@ -4820,7 +4820,7 @@ spec:
       jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
-    name: v1alpha8
+    name: v1beta1
     schema:
       openAPIV3Schema:
         description: OpenStackCluster is the Schema for the openstackclusters API.

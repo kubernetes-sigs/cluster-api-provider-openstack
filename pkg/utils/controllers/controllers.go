@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"net"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha8"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
 // ValidateSubnets validates if the amount of IPv4 and IPv6 subnets is allowed by OpenStackCluster.

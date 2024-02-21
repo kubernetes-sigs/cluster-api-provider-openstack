@@ -10,12 +10,12 @@ spec:
       name: dev-test-control-plane
     machineInfrastructure:
       ref:
-        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
         kind: OpenStackMachineTemplate
         name: dev-test-control-plane-machine
   infrastructure:
     ref:
-      apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+      apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
       kind: OpenStackClusterTemplate
       name: dev-test-openstackcluster
   workers:
@@ -29,7 +29,7 @@ spec:
               name: dev-test-default-worker-bootstraptemplate
           infrastructure:
             ref:
-              apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+              apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
               kind: OpenStackMachineTemplate
               name: dev-test-default-worker-machine
   patches:
@@ -37,7 +37,7 @@ spec:
     description: "Sets the OpenStack image that is used for creating the servers."
     definitions:
     - selector:
-        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
         kind: OpenStackMachineTemplate
         matchResources:
           controlPlane: true
@@ -51,7 +51,7 @@ spec:
     description: "Sets the OpenStack image that is used for creating the servers."
     definitions:
     - selector:
-        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
         kind: OpenStackMachineTemplate
         matchResources:
           machineDeploymentClass:
@@ -108,7 +108,7 @@ spec:
               provider-id: openstack:///'{{ instance_id }}'
             name: '{{ local_hostname }}'
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: OpenStackClusterTemplate
 metadata:
   name: dev-test-openstackcluster
@@ -145,7 +145,7 @@ spec:
         dnsNameservers:
         - 8.8.8.8
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: OpenStackMachineTemplate
 metadata:
   name: dev-test-control-plane-machine
@@ -160,7 +160,7 @@ spec:
         name: overridden-by-patch
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME:=""}
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: OpenStackMachineTemplate
 metadata:
   name: dev-test-default-worker-machine
