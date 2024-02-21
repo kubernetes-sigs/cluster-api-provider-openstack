@@ -17,7 +17,6 @@ limitations under the License.
 package networking
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/go-logr/logr"
@@ -25,7 +24,6 @@ import (
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/external"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	. "github.com/onsi/gomega"
 	"k8s.io/utils/pointer"
 
@@ -420,45 +418,5 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			}
 			g.Expect(tt.openStackCluster).To(Equal(tt.want))
 		})
-	}
-}
-
-func Test_ConvertOpenStackSubnetToCAPOSubnet(t *testing.T) {
-	caposubnets := []infrav1.Subnet{
-		{
-			ID:   "subnet1",
-			Name: "subnet1",
-			CIDR: "10.0.0.0/24",
-			Tags: []string{"tag1", "tag2"},
-		},
-	}
-
-	filteredSubnet := &subnets.Subnet{
-		ID:   "subnet2",
-		Name: "subnet2",
-		CIDR: "192.168.0.0/24",
-		Tags: []string{"tag3", "tag4"},
-	}
-
-	s := Service{}
-	result := s.ConvertOpenStackSubnetToCAPOSubnet(caposubnets, filteredSubnet)
-
-	expected := []infrav1.Subnet{
-		{
-			ID:   "subnet1",
-			Name: "subnet1",
-			CIDR: "10.0.0.0/24",
-			Tags: []string{"tag1", "tag2"},
-		},
-		{
-			ID:   "subnet2",
-			Name: "subnet2",
-			CIDR: "192.168.0.0/24",
-			Tags: []string{"tag3", "tag4"},
-		},
-	}
-
-	if !reflect.DeepEqual(result, expected) {
-		t.Errorf("ConvertOpenStackSubnetToCAPOSubnet() = %v, want %v", result, expected)
 	}
 }

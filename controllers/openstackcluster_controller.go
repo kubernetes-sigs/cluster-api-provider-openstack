@@ -23,6 +23,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
@@ -507,36 +509,41 @@ func reconcileNetworkComponents(scope scope.Scope, cluster *clusterv1.Cluster, o
 	if len(openStackCluster.Spec.ManagedSubnets) == 0 {
 		scope.Logger().V(4).Info("No need to reconcile network, searching network and subnet instead")
 
-		netOpts := openStackCluster.Spec.Network.ToListOpt()
-		networkList, err := networkingService.GetNetworksByFilter(&netOpts)
-		if err != nil {
-			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find network: %w", err))
-			return fmt.Errorf("failed to find network: %w", err)
-		}
-		if len(networkList) == 0 {
-			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find any network"))
-			return fmt.Errorf("failed to find any network")
-		}
-		if len(networkList) > 1 {
-			handleUpdateOSCError(openStackCluster, fmt.Errorf("found multiple networks (result: %v)", networkList))
-			return fmt.Errorf("found multiple networks (result: %v)", networkList)
-		}
 		if openStackCluster.Status.Network == nil {
 			openStackCluster.Status.Network = &infrav1.NetworkStatusWithSubnets{}
 		}
-		openStackCluster.Status.Network.ID = networkList[0].ID
-		openStackCluster.Status.Network.Name = networkList[0].Name
-		openStackCluster.Status.Network.Tags = networkList[0].Tags
 
-		subnets, err := filterSubnets(networkingService, openStackCluster)
+		err := getCAPONetwork(openStackCluster, networkingService)
 		if err != nil {
 			return err
+		}
+
+		filteredSubnets, err := filterSubnets(networkingService, openStackCluster)
+		if err != nil {
+			return err
+		}
+
+		var subnets []infrav1.Subnet
+		for subnet := range filteredSubnets {
+			filterSubnet := &filteredSubnets[subnet]
+			subnets = append(subnets, infrav1.Subnet{
+				ID:   filterSubnet.ID,
+				Name: filterSubnet.Name,
+				CIDR: filterSubnet.CIDR,
+				Tags: filterSubnet.Tags,
+			})
 		}
 
 		if err := utils.ValidateSubnets(subnets); err != nil {
 			return err
 		}
 		openStackCluster.Status.Network.Subnets = subnets
+
+		// If network is not yet populated on the Status, use networkID defined in the filtered subnets to get the Network.
+		err = populateCAPONetworkFromSubnet(networkingService, filteredSubnets, openStackCluster)
+		if err != nil {
+			return err
+		}
 	} else if len(openStackCluster.Spec.ManagedSubnets) == 1 {
 		err := networkingService.ReconcileNetwork(openStackCluster, clusterName)
 		if err != nil {
@@ -687,18 +694,23 @@ func handleUpdateOSCError(openstackCluster *infrav1.OpenStackCluster, message er
 }
 
 // filterSubnets retrieves the subnets based on the Subnet filters specified on OpenstackCluster.
-func filterSubnets(networkingService *networking.Service, openStackCluster *infrav1.OpenStackCluster) ([]infrav1.Subnet, error) {
-	var subnets []infrav1.Subnet
+func filterSubnets(networkingService *networking.Service, openStackCluster *infrav1.OpenStackCluster) ([]subnets.Subnet, error) {
+	var filteredSubnets []subnets.Subnet
+	var err error
 	openStackClusterSubnets := openStackCluster.Spec.Subnets
-	if openStackCluster.Status.Network == nil {
-		return nil, nil
+	networkID := ""
+	if openStackCluster.Status.Network != nil {
+		networkID = openStackCluster.Status.Network.ID
 	}
-	networkID := openStackCluster.Status.Network.ID
+
 	if len(openStackClusterSubnets) == 0 {
+		if networkID == "" {
+			return nil, nil
+		}
 		empty := &infrav1.SubnetFilter{}
 		listOpt := empty.ToListOpt()
 		listOpt.NetworkID = networkID
-		filteredSubnets, err := networkingService.GetSubnetsByFilter(listOpt)
+		filteredSubnets, err = networkingService.GetSubnetsByFilter(listOpt)
 		if err != nil {
 			err = fmt.Errorf("failed to find subnets: %w", err)
 			if errors.Is(err, networking.ErrFilterMatch) {
@@ -708,9 +720,6 @@ func filterSubnets(networkingService *networking.Service, openStackCluster *infr
 		}
 		if len(filteredSubnets) > 2 {
 			return nil, fmt.Errorf("more than two subnets found in the Network. Specify the subnets in the OpenStackCluster.Spec instead")
-		}
-		for subnet := range filteredSubnets {
-			subnets = networkingService.ConvertOpenStackSubnetToCAPOSubnet(subnets, &filteredSubnets[subnet])
 		}
 	} else {
 		for subnet := range openStackClusterSubnets {
@@ -722,8 +731,55 @@ func filterSubnets(networkingService *networking.Service, openStackCluster *infr
 				}
 				return nil, err
 			}
-			subnets = networkingService.ConvertOpenStackSubnetToCAPOSubnet(subnets, filteredSubnet)
+			filteredSubnets = append(filteredSubnets, *filteredSubnet)
 		}
 	}
-	return subnets, nil
+	return filteredSubnets, nil
+}
+
+// convertOpenStackNetworkToCAPONetwork converts an OpenStack network to a capo network.
+// It returns the converted subnet.
+func convertOpenStackNetworkToCAPONetwork(openStackCluster *infrav1.OpenStackCluster, network *networks.Network) {
+	openStackCluster.Status.Network.ID = network.ID
+	openStackCluster.Status.Network.Name = network.Name
+	openStackCluster.Status.Network.Tags = network.Tags
+}
+
+// populateCAPONetworkFromSubnet gets a network based on the networkID of the subnets and converts it to the CAPO format.
+// It returns an error in case it failed to retrieve the network.
+func populateCAPONetworkFromSubnet(networkingService *networking.Service, subnets []subnets.Subnet, openStackCluster *infrav1.OpenStackCluster) error {
+	if openStackCluster.Status.Network.ID == "" && len(subnets) > 0 {
+		if len(subnets) > 1 && subnets[0].NetworkID != subnets[1].NetworkID {
+			return fmt.Errorf("unable to identify the network to use. NetworkID %s from subnet %s does not match NetworkID %s from subnet %s", subnets[0].NetworkID, subnets[0].ID, subnets[1].NetworkID, subnets[1].ID)
+		}
+
+		network, err := networkingService.GetNetworkByID(subnets[0].NetworkID)
+		if err != nil {
+			return err
+		}
+		convertOpenStackNetworkToCAPONetwork(openStackCluster, network)
+	}
+	return nil
+}
+
+// getCAPONetwork gets a network based on a filter, if defined, and convert the network to the CAPO format.
+// It returns an error in case it failed to retrieve the network.
+func getCAPONetwork(openStackCluster *infrav1.OpenStackCluster, networkingService *networking.Service) error {
+	emptyNetwork := infrav1.NetworkFilter{}
+	if openStackCluster.Spec.Network != emptyNetwork {
+		netOpts := openStackCluster.Spec.Network.ToListOpt()
+		networkList, err := networkingService.GetNetworksByFilter(&netOpts)
+		if err != nil {
+			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find network: %w", err))
+			return fmt.Errorf("failed to find network: %w", err)
+		}
+		if len(networkList) == 0 {
+			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find any network"))
+			return fmt.Errorf("failed to find any network")
+		}
+		if len(networkList) == 1 {
+			convertOpenStackNetworkToCAPONetwork(openStackCluster, &networkList[0])
+		}
+	}
+	return nil
 }
