@@ -23,4 +23,5 @@ aliases:
     - lentzi90
     - mdbooth
   cluster-api-openstack-reviewers:
+    - emilienm
     - dulek
