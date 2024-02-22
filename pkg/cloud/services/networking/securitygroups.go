@@ -168,7 +168,7 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 		controlPlaneRules = append(controlPlaneRules, getSGControlPlaneAdditionalPorts(openStackCluster.Spec.APIServerLoadBalancer.AdditionalPorts)...)
 	}
 
-	if openStackCluster.Spec.AllowAllInClusterTraffic {
+	if openStackCluster.Spec.ManagedSecurityGroups != nil && openStackCluster.Spec.ManagedSecurityGroups.AllowAllInClusterTraffic {
 		// Permit all ingress from the cluster security groups
 		controlPlaneRules = append(controlPlaneRules, getSGControlPlaneAllowAll(remoteGroupIDSelf, secWorkerGroupID)...)
 		workerRules = append(workerRules, getSGWorkerAllowAll(remoteGroupIDSelf, secControlPlaneGroupID)...)

@@ -212,6 +212,7 @@ func Convert_v1alpha8_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(in *
 
 	if in.ManagedSecurityGroups != nil {
 		out.ManagedSecurityGroups = true
+		out.AllowAllInClusterTraffic = in.ManagedSecurityGroups.AllowAllInClusterTraffic
 	}
 
 	return nil
@@ -252,6 +253,8 @@ func Convert_v1alpha5_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(in *
 		out.ManagedSecurityGroups = &infrav1.ManagedSecurityGroups{}
 		if !in.AllowAllInClusterTraffic {
 			out.ManagedSecurityGroups.AllNodesSecurityGroupRules = infrav1.LegacyCalicoSecurityGroupRules()
+		} else {
+			out.ManagedSecurityGroups.AllowAllInClusterTraffic = true
 		}
 	}
 

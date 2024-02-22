@@ -129,13 +129,6 @@ type OpenStackClusterSpec struct {
 	// +optional
 	ManagedSecurityGroups *ManagedSecurityGroups `json:"managedSecurityGroups"`
 
-	// AllowAllInClusterTraffic is only used when managed security groups are in use.
-	// If set to true, the rules for the managed security groups are configured so that all
-	// ingress and egress between cluster nodes is permitted, allowing CNIs other than
-	// Calico to be used.
-	// +optional
-	AllowAllInClusterTraffic bool `json:"allowAllInClusterTraffic"`
-
 	// DisablePortSecurity disables the port security of the network created for the
 	// Kubernetes cluster, which also disables SecurityGroups
 	DisablePortSecurity bool `json:"disablePortSecurity,omitempty"`
@@ -280,6 +273,11 @@ type ManagedSecurityGroups struct {
 	// +listMapKey=name
 	// +optional
 	AllNodesSecurityGroupRules []SecurityGroupRuleSpec `json:"allNodesSecurityGroupRules" patchStrategy:"merge" patchMergeKey:"name"`
+
+	// AllowAllInClusterTraffic allows all ingress and egress traffic between cluster nodes when set to true.
+	// +kubebuilder:default=false
+	// +kubebuilder:validation:Required
+	AllowAllInClusterTraffic bool `json:"allowAllInClusterTraffic"`
 }
 
 func init() {

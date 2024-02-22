@@ -49,7 +49,7 @@ func TestConvertFrom(t *testing.T) {
 				Spec: OpenStackClusterSpec{},
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
-						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"allowAllInClusterTraffic\":false,\"apiServerLoadBalancer\":{},\"cloudName\":\"\",\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"disableExternalNetwork\":false,\"externalNetwork\":{},\"managedSecurityGroups\":null,\"network\":{}},\"status\":{\"ready\":false}}",
+						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"apiServerLoadBalancer\":{},\"cloudName\":\"\",\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"disableExternalNetwork\":false,\"externalNetwork\":{},\"managedSecurityGroups\":null,\"network\":{}},\"status\":{\"ready\":false}}",
 					},
 				},
 			},
@@ -64,7 +64,7 @@ func TestConvertFrom(t *testing.T) {
 				Spec: OpenStackClusterTemplateSpec{},
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
-						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"template\":{\"spec\":{\"allowAllInClusterTraffic\":false,\"apiServerLoadBalancer\":{},\"cloudName\":\"\",\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"disableExternalNetwork\":false,\"externalNetwork\":{},\"managedSecurityGroups\":null,\"network\":{}}}}}",
+						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"template\":{\"spec\":{\"apiServerLoadBalancer\":{},\"cloudName\":\"\",\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"disableExternalNetwork\":false,\"externalNetwork\":{},\"managedSecurityGroups\":null,\"network\":{}}}}}",
 					},
 				},
 			},
@@ -140,8 +140,9 @@ func TestConvert_v1alpha5_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(
 				AllowAllInClusterTraffic: true,
 			},
 			expectedOut: &infrav1.OpenStackClusterSpec{
-				ManagedSecurityGroups:    &infrav1.ManagedSecurityGroups{},
-				AllowAllInClusterTraffic: true,
+				ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{
+					AllowAllInClusterTraffic: true,
+				},
 			},
 		},
 	}

@@ -204,6 +204,12 @@ func restorev1alpha7ClusterSpec(previous *OpenStackClusterSpec, dst *OpenStackCl
 	if len(previous.DNSNameservers) > 0 && dst.NodeCIDR == "" {
 		dst.DNSNameservers = previous.DNSNameservers
 	}
+
+	// To avoid lossy conversion, we need to restore AllowAllInClusterTraffic
+	// even if ManagedSecurityGroups is set to false
+	if previous.AllowAllInClusterTraffic && !previous.ManagedSecurityGroups {
+		dst.AllowAllInClusterTraffic = true
+	}
 }
 
 func restorev1alpha8ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infrav1.OpenStackClusterSpec) {
@@ -581,6 +587,8 @@ func Convert_v1alpha7_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(in *
 		out.ManagedSecurityGroups = &infrav1.ManagedSecurityGroups{}
 		if !in.AllowAllInClusterTraffic {
 			out.ManagedSecurityGroups.AllNodesSecurityGroupRules = infrav1.LegacyCalicoSecurityGroupRules()
+		} else {
+			out.ManagedSecurityGroups.AllowAllInClusterTraffic = true
 		}
 	}
 
@@ -610,6 +618,7 @@ func Convert_v1alpha8_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in *
 
 	if in.ManagedSecurityGroups != nil {
 		out.ManagedSecurityGroups = true
+		out.AllowAllInClusterTraffic = in.ManagedSecurityGroups.AllowAllInClusterTraffic
 	}
 
 	return nil

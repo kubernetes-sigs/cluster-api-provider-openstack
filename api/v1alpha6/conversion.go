@@ -156,6 +156,12 @@ func restorev1alpha6ClusterSpec(previous *OpenStackClusterSpec, dst *OpenStackCl
 	if prevBastion != nil && dstBastion != nil {
 		restorev1alpha6MachineSpec(&prevBastion.Instance, &dstBastion.Instance)
 	}
+
+	// To avoid lossy conversion, we need to restore AllowAllInClusterTraffic
+	// even if ManagedSecurityGroups is set to false
+	if previous.AllowAllInClusterTraffic && !previous.ManagedSecurityGroups {
+		dst.AllowAllInClusterTraffic = true
+	}
 }
 
 var _ ctrlconversion.Convertible = &OpenStackCluster{}
@@ -592,6 +598,7 @@ func Convert_v1alpha8_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in *
 
 	if in.ManagedSecurityGroups != nil {
 		out.ManagedSecurityGroups = true
+		out.AllowAllInClusterTraffic = in.ManagedSecurityGroups.AllowAllInClusterTraffic
 	}
 
 	return nil
@@ -632,6 +639,8 @@ func Convert_v1alpha6_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(in *
 		out.ManagedSecurityGroups = &infrav1.ManagedSecurityGroups{}
 		if !in.AllowAllInClusterTraffic {
 			out.ManagedSecurityGroups.AllNodesSecurityGroupRules = infrav1.LegacyCalicoSecurityGroupRules()
+		} else {
+			out.ManagedSecurityGroups.AllowAllInClusterTraffic = true
 		}
 	}
 

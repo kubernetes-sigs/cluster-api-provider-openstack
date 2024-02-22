@@ -145,6 +145,10 @@ func (r *OpenStackCluster) ValidateUpdate(oldRaw runtime.Object) (admission.Warn
 	if r.Spec.ManagedSecurityGroups != nil {
 		old.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules = []SecurityGroupRuleSpec{}
 		r.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules = []SecurityGroupRuleSpec{}
+
+		// Allow change to the allowAllInClusterTraffic.
+		old.Spec.ManagedSecurityGroups.AllowAllInClusterTraffic = false
+		r.Spec.ManagedSecurityGroups.AllowAllInClusterTraffic = false
 	}
 
 	// Allow changes on AllowedCIDRs
@@ -161,10 +165,6 @@ func (r *OpenStackCluster) ValidateUpdate(oldRaw runtime.Object) (admission.Warn
 	// vice versa.
 	old.Spec.ControlPlaneOmitAvailabilityZone = false
 	r.Spec.ControlPlaneOmitAvailabilityZone = false
-
-	// Allow change to the allowAllInClusterTraffic.
-	old.Spec.AllowAllInClusterTraffic = false
-	r.Spec.AllowAllInClusterTraffic = false
 
 	// Allow change on the spec.APIServerFloatingIP only if it matches the current api server loadbalancer IP.
 	if old.Status.APIServerLoadBalancer != nil && r.Spec.APIServerFloatingIP == old.Status.APIServerLoadBalancer.IP {

@@ -209,6 +209,8 @@ It takes a list of security groups rules that should be applied to selected node
 The following rule fields are mutually exclusive: `remoteManagedGroups`, `remoteGroupID` and `remoteIPPrefix`.
 Valid values for `remoteManagedGroups` are `controlplane`, `worker` and `bastion`.
 
+Also, `OpenStackCluster.Spec.AllowAllInClusterTraffic` moved under `ManagedSecurityGroups`.
+
 ```yaml
 managedSecurityGroups: true
 ```
@@ -217,6 +219,20 @@ becomes
 
 ```yaml
 managedSecurityGroups: {}
+```
+
+and
+
+```yaml
+allowAllInClusterTraffic: true
+managedSecurityGroups: true
+```
+
+becomes
+
+```yaml
+managedSecurityGroups:
+  allowAllInClusterTraffic: true
 ```
 
 To apply a security group rule that will allow BGP between the control plane and workers, you can follow this example:
