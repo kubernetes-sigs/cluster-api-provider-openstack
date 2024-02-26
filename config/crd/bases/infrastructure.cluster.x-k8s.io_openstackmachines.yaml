@@ -2407,6 +2407,7 @@ spec:
                       - id
                       type: object
                     type: array
+                    x-kubernetes-list-type: set
                 type: object
               failureMessage:
                 description: |-
@@ -2814,10 +2815,13 @@ spec:
                           type: string
                       type: object
                     type: array
+                    x-kubernetes-list-type: set
                   serverGroupID:
                     description: ServerGroupID is the ID of the server group the machine
                       should be added to and is calculated based on ServerGroupFilter.
                     type: string
+                required:
+                - imageID
                 type: object
             required:
             - ready

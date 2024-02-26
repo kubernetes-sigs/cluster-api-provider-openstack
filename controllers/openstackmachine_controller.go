@@ -577,8 +577,10 @@ func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *
 		ConfigDrive:            openStackMachine.Spec.ConfigDrive != nil && *openStackMachine.Spec.ConfigDrive,
 		RootVolume:             openStackMachine.Spec.RootVolume,
 		AdditionalBlockDevices: openStackMachine.Spec.AdditionalBlockDevices,
-		ServerGroupID:          openStackMachine.Status.ReferencedResources.ServerGroupID,
 		Trunk:                  openStackMachine.Spec.Trunk,
+	}
+	if openStackMachine.Status.ReferencedResources.ServerGroupID != nil {
+		instanceSpec.ServerGroupID = *openStackMachine.Status.ReferencedResources.ServerGroupID
 	}
 
 	// Add the failure domain only if specified

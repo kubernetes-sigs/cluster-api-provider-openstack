@@ -23,6 +23,7 @@ import (
 	"github.com/go-logr/logr/testr"
 	"github.com/golang/mock/gomock"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/servergroups"
+	"k8s.io/utils/pointer"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
@@ -37,7 +38,7 @@ func TestService_GetServerGroupID(t *testing.T) {
 		testName          string
 		serverGroupFilter *infrav1.ServerGroupFilter
 		expect            func(m *mock.MockComputeClientMockRecorder)
-		want              string
+		want              *string
 		wantErr           bool
 	}{
 		{
@@ -45,7 +46,7 @@ func TestService_GetServerGroupID(t *testing.T) {
 			serverGroupFilter: &infrav1.ServerGroupFilter{ID: serverGroupID1},
 			expect: func(m *mock.MockComputeClientMockRecorder) {
 			},
-			want:    serverGroupID1,
+			want:    pointer.String(serverGroupID1),
 			wantErr: false,
 		},
 		{
@@ -53,7 +54,7 @@ func TestService_GetServerGroupID(t *testing.T) {
 			serverGroupFilter: &infrav1.ServerGroupFilter{},
 			expect: func(m *mock.MockComputeClientMockRecorder) {
 			},
-			want:    "",
+			want:    nil,
 			wantErr: false,
 		},
 		{
@@ -64,7 +65,7 @@ func TestService_GetServerGroupID(t *testing.T) {
 					[]servergroups.ServerGroup{{ID: serverGroupID1, Name: "test-server-group"}},
 					nil)
 			},
-			want:    serverGroupID1,
+			want:    pointer.String(serverGroupID1),
 			wantErr: false,
 		},
 		{
@@ -75,7 +76,7 @@ func TestService_GetServerGroupID(t *testing.T) {
 					[]servergroups.ServerGroup{},
 					nil)
 			},
-			want:    "",
+			want:    nil,
 			wantErr: true,
 		},
 		{
@@ -89,7 +90,7 @@ func TestService_GetServerGroupID(t *testing.T) {
 					},
 					nil)
 			},
-			want:    "",
+			want:    nil,
 			wantErr: true,
 		},
 		{
@@ -100,7 +101,7 @@ func TestService_GetServerGroupID(t *testing.T) {
 					nil,
 					fmt.Errorf("test error"))
 			},
-			want:    "",
+			want:    nil,
 			wantErr: true,
 		},
 	}
@@ -121,7 +122,7 @@ func TestService_GetServerGroupID(t *testing.T) {
 				t.Errorf("Service.getServerGroupID() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if got != tt.want {
+			if !pointer.StringEqual(got, tt.want) {
 				t.Errorf("Service.getServerGroupID() = %v, want %v", got, tt.want)
 			}
 		})

@@ -61,7 +61,7 @@ func Test_ResolveReferencedMachineResources(t *testing.T) {
 			expectComputeMock: func(m *mock.MockComputeClientMockRecorder) {},
 			expectImageMock:   func(m *mock.MockImageClientMockRecorder) {},
 			expectNetworkMock: func(m *mock.MockNetworkClientMockRecorder) {},
-			want:              &infrav1.ReferencedMachineResources{ImageID: imageID1, ServerGroupID: serverGroupID1},
+			want:              &infrav1.ReferencedMachineResources{ImageID: imageID1, ServerGroupID: pointer.String(serverGroupID1)},
 			wantErr:           false,
 		},
 		{

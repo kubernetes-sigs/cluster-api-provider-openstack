@@ -620,20 +620,22 @@ func (s *APIServerLoadBalancer) IsZero() bool {
 type ReferencedMachineResources struct {
 	// ServerGroupID is the ID of the server group the machine should be added to and is calculated based on ServerGroupFilter.
 	// +optional
-	ServerGroupID string `json:"serverGroupID,omitempty"`
+	ServerGroupID *string `json:"serverGroupID,omitempty"`
 
 	// ImageID is the ID of the image to use for the machine and is calculated based on ImageFilter.
-	// +optional
-	ImageID string `json:"imageID,omitempty"`
+	// +kubebuilder:validation:Required
+	ImageID string `json:"imageID"`
 
 	// portsOpts is the list of ports options to create for the machine.
 	// +optional
+	// +listType=set
 	PortsOpts []PortOpts `json:"portsOpts,omitempty"`
 }
 
 type DependentMachineResources struct {
 	// PortsStatus is the status of the ports created for the machine.
 	// +optional
+	// +listType=set
 	PortsStatus []PortStatus `json:"portsStatus,omitempty"`
 }
 

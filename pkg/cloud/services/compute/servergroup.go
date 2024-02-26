@@ -26,23 +26,23 @@ import (
 
 // GetServerGroupID looks up a server group using the passed filter and returns
 // its ID. It'll return an error when server group is not found or there are multiple.
-func (s *Service) GetServerGroupID(serverGroupFilter *infrav1.ServerGroupFilter) (string, error) {
+func (s *Service) GetServerGroupID(serverGroupFilter *infrav1.ServerGroupFilter) (*string, error) {
 	if serverGroupFilter.ID != "" {
-		return serverGroupFilter.ID, nil
+		return &serverGroupFilter.ID, nil
 	}
 
 	if serverGroupFilter.Name == "" {
 		// empty filter produced no server group, but also no error
-		return "", nil
+		return nil, nil
 	}
 
 	// otherwise fallback to looking up by name, which is slower
 	serverGroup, err := s.getServerGroupByName(serverGroupFilter.Name)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return serverGroup.ID, nil
+	return &serverGroup.ID, nil
 }
 
 func (s *Service) getServerGroupByName(serverGroupName string) (*servergroups.ServerGroup, error) {

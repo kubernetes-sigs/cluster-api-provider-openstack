@@ -42,7 +42,7 @@ func ResolveReferencedMachineResources(scope *scope.WithLogger, openStackCluster
 	}
 
 	// ServerGroup is optional, so we only need to resolve it if it's set in the spec and not in ReferencedMachineResources yet.
-	if spec.ServerGroup != nil && resources.ServerGroupID == "" {
+	if spec.ServerGroup != nil && resources.ServerGroupID == nil {
 		serverGroupID, err := computeService.GetServerGroupID(spec.ServerGroup)
 		if err != nil {
 			return changed, err

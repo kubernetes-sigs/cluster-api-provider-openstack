@@ -96,7 +96,7 @@ func getDefaultOpenStackMachine() *infrav1.OpenStackMachine {
 		Status: infrav1.OpenStackMachineStatus{
 			ReferencedResources: &infrav1.ReferencedMachineResources{
 				ImageID:       imageUUID,
-				ServerGroupID: serverGroupUUID,
+				ServerGroupID: pointer.String(serverGroupUUID),
 			},
 		},
 	}
