@@ -245,16 +245,20 @@ modules: ## Runs go mod to ensure proper vendoring.
 	cd $(TOOLS_DIR); go mod tidy
 
 .PHONY: generate
-generate: ## Generate code
-	$(MAKE) generate-go
-	$(MAKE) generate-manifests
+generate: generate-controller-gen generate-conversion-gen generate-go generate-manifests ## Generate all generated code
 
 .PHONY: generate-go
 generate-go: $(MOCKGEN)
-	$(MAKE) -B $(CONTROLLER_GEN) $(CONVERSION_GEN)
+	go generate ./...
+
+.PHONY: generate-controller-gen
+generate-controller-gen: $(CONTROLLER_GEN)
 	$(CONTROLLER_GEN) \
 		paths=./api/... \
 		object:headerFile=./hack/boilerplate/boilerplate.generatego.txt
+
+.PHONY: generate-conversion-gen
+generate-conversion-gen: $(CONVERSION_GEN)
 	$(CONVERSION_GEN) \
 		--input-dirs=./api/v1alpha1 \
 		--input-dirs=./api/v1alpha5 \
@@ -263,7 +267,6 @@ generate-go: $(MOCKGEN)
 		--input-dirs=./api/v1beta1 \
 		--output-file-base=zz_generated.conversion \
 		--go-header-file=./hack/boilerplate/boilerplate.generatego.txt
-	go generate ./...
 
 .PHONY: generate-manifests
 generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
