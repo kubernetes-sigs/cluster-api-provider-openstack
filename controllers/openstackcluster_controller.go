@@ -602,58 +602,12 @@ func reconcileNetworkComponents(scope *scope.WithLogger, cluster *clusterv1.Clus
 	}
 
 	if len(openStackCluster.Spec.ManagedSubnets) == 0 {
-		scope.Logger().V(4).Info("No need to reconcile network, searching network and subnet instead")
-
-		if openStackCluster.Status.Network == nil {
-			openStackCluster.Status.Network = &infrav1.NetworkStatusWithSubnets{}
-		}
-
-		err := getCAPONetwork(openStackCluster, networkingService)
-		if err != nil {
-			return err
-		}
-
-		filteredSubnets, err := filterSubnets(networkingService, openStackCluster)
-		if err != nil {
-			return err
-		}
-
-		var subnets []infrav1.Subnet
-		for subnet := range filteredSubnets {
-			filterSubnet := &filteredSubnets[subnet]
-			subnets = append(subnets, infrav1.Subnet{
-				ID:   filterSubnet.ID,
-				Name: filterSubnet.Name,
-				CIDR: filterSubnet.CIDR,
-				Tags: filterSubnet.Tags,
-			})
-		}
-
-		if err := utils.ValidateSubnets(subnets); err != nil {
-			return err
-		}
-		openStackCluster.Status.Network.Subnets = subnets
-
-		// If network is not yet populated on the Status, use networkID defined in the filtered subnets to get the Network.
-		err = populateCAPONetworkFromSubnet(networkingService, filteredSubnets, openStackCluster)
-		if err != nil {
+		if err := reconcilePreExistingNetworkComponents(scope, networkingService, openStackCluster); err != nil {
 			return err
 		}
 	} else if len(openStackCluster.Spec.ManagedSubnets) == 1 {
-		err := networkingService.ReconcileNetwork(openStackCluster, clusterName)
-		if err != nil {
-			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile network: %w", err))
-			return fmt.Errorf("failed to reconcile network: %w", err)
-		}
-		err = networkingService.ReconcileSubnet(openStackCluster, clusterName)
-		if err != nil {
-			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile subnets: %w", err))
-			return fmt.Errorf("failed to reconcile subnets: %w", err)
-		}
-		err = networkingService.ReconcileRouter(openStackCluster, clusterName)
-		if err != nil {
-			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile router: %w", err))
-			return fmt.Errorf("failed to reconcile router: %w", err)
+		if err := reconcileProvisionedNetworkComponents(networkingService, openStackCluster, clusterName); err != nil {
+			return err
 		}
 	} else {
 		return fmt.Errorf("failed to reconcile network: ManagedSubnets only supports one element, %d provided", len(openStackCluster.Spec.ManagedSubnets))
@@ -665,18 +619,106 @@ func reconcileNetworkComponents(scope *scope.WithLogger, cluster *clusterv1.Clus
 		return fmt.Errorf("failed to reconcile security groups: %w", err)
 	}
 
-	// Calculate the port that we will use for the API server
-	var apiServerPort int
-	switch {
-	case openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
-		apiServerPort = int(openStackCluster.Spec.ControlPlaneEndpoint.Port)
-	case openStackCluster.Spec.APIServerPort != 0:
-		apiServerPort = openStackCluster.Spec.APIServerPort
-	default:
-		apiServerPort = 6443
+	return reconcileControlPlaneEndpoint(scope, networkingService, openStackCluster, clusterName)
+}
+
+// reconcilePreExistingNetworkComponents reconciles the cluster network status when the cluster is
+// using pre-existing networks and subnets which are not provisioned by the
+// cluster controller.
+func reconcilePreExistingNetworkComponents(scope *scope.WithLogger, networkingService *networking.Service, openStackCluster *infrav1.OpenStackCluster) error {
+	scope.Logger().V(4).Info("No need to reconcile network, searching network and subnet instead")
+
+	if openStackCluster.Status.Network == nil {
+		openStackCluster.Status.Network = &infrav1.NetworkStatusWithSubnets{}
 	}
 
-	if openStackCluster.Spec.APIServerLoadBalancer.Enabled {
+	emptyNetwork := infrav1.NetworkFilter{}
+	if openStackCluster.Spec.Network != emptyNetwork {
+		netOpts := openStackCluster.Spec.Network.ToListOpt()
+		networkList, err := networkingService.GetNetworksByFilter(&netOpts)
+		if err != nil {
+			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find network: %w", err))
+			return fmt.Errorf("error fetching networks: %w", err)
+		}
+		if len(networkList) == 0 {
+			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find any network"))
+			return fmt.Errorf("failed to find any network")
+		}
+		if len(networkList) == 1 {
+			setClusterNetwork(openStackCluster, &networkList[0])
+		}
+	}
+
+	subnets, err := getClusterSubnets(networkingService, openStackCluster)
+	if err != nil {
+		return err
+	}
+
+	// Populate the cluster status with the cluster subnets
+	capoSubnets := make([]infrav1.Subnet, len(subnets))
+	for i := range subnets {
+		subnet := &subnets[i]
+		capoSubnets[i] = infrav1.Subnet{
+			ID:   subnet.ID,
+			Name: subnet.Name,
+			CIDR: subnet.CIDR,
+			Tags: subnet.Tags,
+		}
+	}
+	if err := utils.ValidateSubnets(capoSubnets); err != nil {
+		return err
+	}
+	openStackCluster.Status.Network.Subnets = capoSubnets
+
+	// If network is not yet populated, use networkID defined on the first
+	// cluster subnet to get the Network. Cluster subnets are constrained to
+	// be in the same network.
+	if openStackCluster.Status.Network.ID == "" && len(subnets) > 0 {
+		network, err := networkingService.GetNetworkByID(subnets[0].NetworkID)
+		if err != nil {
+			return err
+		}
+		setClusterNetwork(openStackCluster, network)
+	}
+
+	return nil
+}
+
+func reconcileProvisionedNetworkComponents(networkingService *networking.Service, openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
+	err := networkingService.ReconcileNetwork(openStackCluster, clusterName)
+	if err != nil {
+		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile network: %w", err))
+		return fmt.Errorf("failed to reconcile network: %w", err)
+	}
+	err = networkingService.ReconcileSubnet(openStackCluster, clusterName)
+	if err != nil {
+		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile subnets: %w", err))
+		return fmt.Errorf("failed to reconcile subnets: %w", err)
+	}
+	err = networkingService.ReconcileRouter(openStackCluster, clusterName)
+	if err != nil {
+		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile router: %w", err))
+		return fmt.Errorf("failed to reconcile router: %w", err)
+	}
+
+	return nil
+}
+
+// reconcileControlPlaneEndpoint configures the control plane endpoint for the
+// cluster, creating it if necessary, and updates ControlPlaneEndpoint in the
+// cluster spec.
+func reconcileControlPlaneEndpoint(scope *scope.WithLogger, networkingService *networking.Service, openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
+	// Calculate the port that we will use for the API server
+	apiServerPort := getAPIServerPort(openStackCluster)
+
+	// host must be set by a matching control plane endpoint provider below
+	var host string
+
+	switch {
+	// API server load balancer is enabled. Create an Octavia load balancer.
+	// Note that we reconcile the load balancer even if the control plane
+	// endpoint is already set.
+	case openStackCluster.Spec.APIServerLoadBalancer.Enabled:
 		loadBalancerService, err := loadbalancer.NewService(scope)
 		if err != nil {
 			return err
@@ -690,47 +732,61 @@ func reconcileNetworkComponents(scope *scope.WithLogger, cluster *clusterv1.Clus
 			}
 			return fmt.Errorf("failed to reconcile load balancer: %w", err)
 		}
+
+		// Control plane endpoint is the floating IP if one was defined, otherwise the VIP address
+		if openStackCluster.Status.APIServerLoadBalancer.IP != "" {
+			host = openStackCluster.Status.APIServerLoadBalancer.IP
+		} else {
+			host = openStackCluster.Status.APIServerLoadBalancer.InternalIP
+		}
+
+	// Control plane endpoint is already set
+	// Note that checking this here means that we don't re-execute any of
+	// the branches below if the control plane endpoint is already set.
+	case openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
+		host = openStackCluster.Spec.ControlPlaneEndpoint.Host
+
+	// API server load balancer is disabled, but floating IP is not. Create
+	// a floating IP to be attached directly to a control plane host.
+	case !openStackCluster.Spec.DisableAPIServerFloatingIP:
+		fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterName, openStackCluster.Spec.APIServerFloatingIP)
+		if err != nil {
+			handleUpdateOSCError(openStackCluster, fmt.Errorf("floating IP cannot be got or created: %w", err))
+			return fmt.Errorf("floating IP cannot be got or created: %w", err)
+		}
+		host = fp.FloatingIP
+
+	// API server load balancer is disabled and we aren't using a control
+	// plane floating IP. In this case we configure APIServerFixedIP as the
+	// control plane endpoint and leave it to the user to configure load
+	// balancing.
+	case openStackCluster.Spec.APIServerFixedIP != "":
+		host = openStackCluster.Spec.APIServerFixedIP
+
+	// Control plane endpoint is not set, and none can be created
+	default:
+		err := fmt.Errorf("unable to determine control plane endpoint")
+		handleUpdateOSCError(openStackCluster, err)
+		return err
 	}
 
-	if !openStackCluster.Spec.ControlPlaneEndpoint.IsValid() {
-		var host string
-		// If there is a load balancer use the floating IP for it if set, falling back to the internal IP
-		switch {
-		case openStackCluster.Spec.APIServerLoadBalancer.Enabled:
-			if openStackCluster.Status.APIServerLoadBalancer.IP != "" {
-				host = openStackCluster.Status.APIServerLoadBalancer.IP
-			} else {
-				host = openStackCluster.Status.APIServerLoadBalancer.InternalIP
-			}
-		case !openStackCluster.Spec.DisableAPIServerFloatingIP:
-			// If floating IPs are not disabled, get one to use as the VIP for the control plane
-			fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterName, openStackCluster.Spec.APIServerFloatingIP)
-			if err != nil {
-				handleUpdateOSCError(openStackCluster, fmt.Errorf("floating IP cannot be got or created: %w", err))
-				return fmt.Errorf("floating IP cannot be got or created: %w", err)
-			}
-			host = fp.FloatingIP
-		case openStackCluster.Spec.APIServerFixedIP != "":
-			// If a fixed IP was specified, assume that the user is providing the extra configuration
-			// to use that IP as the VIP for the API server, e.g. using keepalived or kube-vip
-			host = openStackCluster.Spec.APIServerFixedIP
-		default:
-			// For now, we do not provide a managed VIP without either a load balancer or a floating IP
-			// In the future, we could manage a VIP port on the cluster network and set allowedAddressPairs
-			// accordingly when creating control plane machines
-			// However this would require us to deploy software on the control plane hosts to manage the
-			// VIP (e.g. keepalived/kube-vip)
-			return fmt.Errorf("unable to determine VIP for API server")
-		}
-
-		// Set APIEndpoints so the Cluster API Cluster Controller can pull them
-		openStackCluster.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{
-			Host: host,
-			Port: int32(apiServerPort),
-		}
+	openStackCluster.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{
+		Host: host,
+		Port: int32(apiServerPort),
 	}
 
 	return nil
+}
+
+// getAPIServerPort returns the port to use for the API server based on the cluster spec.
+func getAPIServerPort(openStackCluster *infrav1.OpenStackCluster) int {
+	switch {
+	case openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
+		return int(openStackCluster.Spec.ControlPlaneEndpoint.Port)
+	case openStackCluster.Spec.APIServerPort != 0:
+		return openStackCluster.Spec.APIServerPort
+	}
+	return 6443
 }
 
 func (r *OpenStackClusterReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager, options controller.Options) error {
@@ -788,9 +844,9 @@ func handleUpdateOSCError(openstackCluster *infrav1.OpenStackCluster, message er
 	openstackCluster.Status.FailureMessage = pointer.String(message.Error())
 }
 
-// filterSubnets retrieves the subnets based on the Subnet filters specified on OpenstackCluster.
-func filterSubnets(networkingService *networking.Service, openStackCluster *infrav1.OpenStackCluster) ([]subnets.Subnet, error) {
-	var filteredSubnets []subnets.Subnet
+// getClusterSubnets retrieves the subnets based on the Subnet filters specified on OpenstackCluster.
+func getClusterSubnets(networkingService *networking.Service, openStackCluster *infrav1.OpenStackCluster) ([]subnets.Subnet, error) {
+	var clusterSubnets []subnets.Subnet
 	var err error
 	openStackClusterSubnets := openStackCluster.Spec.Subnets
 	networkID := ""
@@ -800,12 +856,14 @@ func filterSubnets(networkingService *networking.Service, openStackCluster *infr
 
 	if len(openStackClusterSubnets) == 0 {
 		if networkID == "" {
-			return nil, nil
+			// This should be a validation error
+			return nil, fmt.Errorf("no network or subnets specified in OpenStackCluster spec")
 		}
+
 		empty := &infrav1.SubnetFilter{}
 		listOpt := empty.ToListOpt()
 		listOpt.NetworkID = networkID
-		filteredSubnets, err = networkingService.GetSubnetsByFilter(listOpt)
+		clusterSubnets, err = networkingService.GetSubnetsByFilter(listOpt)
 		if err != nil {
 			err = fmt.Errorf("failed to find subnets: %w", err)
 			if errors.Is(err, networking.ErrFilterMatch) {
@@ -813,7 +871,7 @@ func filterSubnets(networkingService *networking.Service, openStackCluster *infr
 			}
 			return nil, err
 		}
-		if len(filteredSubnets) > 2 {
+		if len(clusterSubnets) > 2 {
 			return nil, fmt.Errorf("more than two subnets found in the Network. Specify the subnets in the OpenStackCluster.Spec instead")
 		}
 	} else {
@@ -826,55 +884,18 @@ func filterSubnets(networkingService *networking.Service, openStackCluster *infr
 				}
 				return nil, err
 			}
-			filteredSubnets = append(filteredSubnets, *filteredSubnet)
+			clusterSubnets = append(clusterSubnets, *filteredSubnet)
+
+			// Constrain the next search to the network of the first subnet
+			networkID = filteredSubnet.NetworkID
 		}
 	}
-	return filteredSubnets, nil
+	return clusterSubnets, nil
 }
 
-// convertOpenStackNetworkToCAPONetwork converts an OpenStack network to a capo network.
-// It returns the converted subnet.
-func convertOpenStackNetworkToCAPONetwork(openStackCluster *infrav1.OpenStackCluster, network *networks.Network) {
+// setClusterNetwork sets network information in the cluster status from an OpenStack network.
+func setClusterNetwork(openStackCluster *infrav1.OpenStackCluster, network *networks.Network) {
 	openStackCluster.Status.Network.ID = network.ID
 	openStackCluster.Status.Network.Name = network.Name
 	openStackCluster.Status.Network.Tags = network.Tags
-}
-
-// populateCAPONetworkFromSubnet gets a network based on the networkID of the subnets and converts it to the CAPO format.
-// It returns an error in case it failed to retrieve the network.
-func populateCAPONetworkFromSubnet(networkingService *networking.Service, subnets []subnets.Subnet, openStackCluster *infrav1.OpenStackCluster) error {
-	if openStackCluster.Status.Network.ID == "" && len(subnets) > 0 {
-		if len(subnets) > 1 && subnets[0].NetworkID != subnets[1].NetworkID {
-			return fmt.Errorf("unable to identify the network to use. NetworkID %s from subnet %s does not match NetworkID %s from subnet %s", subnets[0].NetworkID, subnets[0].ID, subnets[1].NetworkID, subnets[1].ID)
-		}
-
-		network, err := networkingService.GetNetworkByID(subnets[0].NetworkID)
-		if err != nil {
-			return err
-		}
-		convertOpenStackNetworkToCAPONetwork(openStackCluster, network)
-	}
-	return nil
-}
-
-// getCAPONetwork gets a network based on a filter, if defined, and convert the network to the CAPO format.
-// It returns an error in case it failed to retrieve the network.
-func getCAPONetwork(openStackCluster *infrav1.OpenStackCluster, networkingService *networking.Service) error {
-	emptyNetwork := infrav1.NetworkFilter{}
-	if openStackCluster.Spec.Network != emptyNetwork {
-		netOpts := openStackCluster.Spec.Network.ToListOpt()
-		networkList, err := networkingService.GetNetworksByFilter(&netOpts)
-		if err != nil {
-			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find network: %w", err))
-			return fmt.Errorf("failed to find network: %w", err)
-		}
-		if len(networkList) == 0 {
-			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find any network"))
-			return fmt.Errorf("failed to find any network")
-		}
-		if len(networkList) == 1 {
-			convertOpenStackNetworkToCAPONetwork(openStackCluster, &networkList[0])
-		}
-	}
-	return nil
 }
