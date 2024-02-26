@@ -632,8 +632,7 @@ func reconcilePreExistingNetworkComponents(scope *scope.WithLogger, networkingSe
 		openStackCluster.Status.Network = &infrav1.NetworkStatusWithSubnets{}
 	}
 
-	emptyNetwork := infrav1.NetworkFilter{}
-	if openStackCluster.Spec.Network != emptyNetwork {
+	if !openStackCluster.Spec.Network.IsEmpty() {
 		netOpts := openStackCluster.Spec.Network.ToListOpt()
 		networkList, err := networkingService.GetNetworksByFilter(&netOpts)
 		if err != nil {

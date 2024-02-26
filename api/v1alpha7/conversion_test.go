@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha7
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -54,6 +55,17 @@ func TestFuzzyConversion(t *testing.T) {
 	ignoreDataAnnotation := func(hub conversion.Hub) {
 		obj := hub.(metav1.Object)
 		delete(obj.GetAnnotations(), utilconversion.DataAnnotation)
+	}
+
+	filterInvalidTags := func(tags []infrav1.NeutronTag) []infrav1.NeutronTag {
+		var ret []infrav1.NeutronTag
+		for i := range tags {
+			s := string(tags[i])
+			if len(s) > 0 && !strings.Contains(s, ",") {
+				ret = append(ret, tags[i])
+			}
+		}
+		return ret
 	}
 
 	fuzzerFuncs := func(_ runtimeserializer.CodecFactory) []interface{} {
@@ -123,6 +135,64 @@ func TestFuzzyConversion(t *testing.T) {
 				for pool.End == "" {
 					pool.End = c.RandString()
 				}
+			},
+
+			// v1beta1 filter tags cannot contain commas and can't be empty.
+
+			func(filter *infrav1.SubnetFilter, c fuzz.Continue) {
+				c.FuzzNoCustom(filter)
+
+				// Sometimes add an additional tag to ensure we get test coverage of multiple tags
+				if c.RandBool() {
+					filter.Tags = append(filter.Tags, infrav1.NeutronTag(c.RandString()))
+				}
+
+				filter.Tags = filterInvalidTags(filter.Tags)
+				filter.TagsAny = filterInvalidTags(filter.TagsAny)
+				filter.NotTags = filterInvalidTags(filter.NotTags)
+				filter.NotTagsAny = filterInvalidTags(filter.NotTagsAny)
+			},
+
+			func(filter *infrav1.NetworkFilter, c fuzz.Continue) {
+				c.FuzzNoCustom(filter)
+
+				// Sometimes add an additional tag to ensure we get test coverage of multiple tags
+				if c.RandBool() {
+					filter.Tags = append(filter.Tags, infrav1.NeutronTag(c.RandString()))
+				}
+
+				filter.Tags = filterInvalidTags(filter.Tags)
+				filter.TagsAny = filterInvalidTags(filter.TagsAny)
+				filter.NotTags = filterInvalidTags(filter.NotTags)
+				filter.NotTagsAny = filterInvalidTags(filter.NotTagsAny)
+			},
+
+			func(filter *infrav1.RouterFilter, c fuzz.Continue) {
+				c.FuzzNoCustom(filter)
+
+				// Sometimes add an additional tag to ensure we get test coverage of multiple tags
+				if c.RandBool() {
+					filter.Tags = append(filter.Tags, infrav1.NeutronTag(c.RandString()))
+				}
+
+				filter.Tags = filterInvalidTags(filter.Tags)
+				filter.TagsAny = filterInvalidTags(filter.TagsAny)
+				filter.NotTags = filterInvalidTags(filter.NotTags)
+				filter.NotTagsAny = filterInvalidTags(filter.NotTagsAny)
+			},
+
+			func(filter *infrav1.SecurityGroupFilter, c fuzz.Continue) {
+				c.FuzzNoCustom(filter)
+
+				// Sometimes add an additional tag to ensure we get test coverage of multiple tags
+				if c.RandBool() {
+					filter.Tags = append(filter.Tags, infrav1.NeutronTag(c.RandString()))
+				}
+
+				filter.Tags = filterInvalidTags(filter.Tags)
+				filter.TagsAny = filterInvalidTags(filter.TagsAny)
+				filter.NotTags = filterInvalidTags(filter.NotTags)
+				filter.NotTagsAny = filterInvalidTags(filter.NotTagsAny)
 			},
 		}
 	}

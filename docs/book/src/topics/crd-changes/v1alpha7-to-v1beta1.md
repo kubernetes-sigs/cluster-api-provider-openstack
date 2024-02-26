@@ -25,6 +25,7 @@
       - [Change to managedSecurityGroups](#change-to-managedsecuritygroups)
       - [Calico CNI](#calico-cni)
       - [Change to network](#change-to-network)
+    - [Changes to filter tags](#changes-to-filter-tags)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -312,3 +313,33 @@ allow backwards compatibility if `allowAllInClusterTraffic` is set to false.
 #### Change to network
 
 In v1beta1, when the `OpenStackCluster.Spec.Network` is not defined, the `Subnets` are now used to identify the `Network`.
+
+### Changes to filter tags
+
+We currently define filters on 4 different Neutron resources which are used throughout the API:
+* Networks
+* Subnets
+* Security Groups
+* Routers
+
+Each of these filters provide the following fields which filter by tag:
+* tags
+* tagsAny
+* notTags
+* notTagsAny
+
+We previously passed this value to Neutron without change, which treated it as a comma-separated list. In v1beta1 each of the tags fields becomes a list of tags. e.g.:
+
+```yaml
+subnet:
+  tags: "foo,bar"
+```
+becomes
+```yaml
+subnet:
+  tags:
+  - foo
+  - bar
+```
+
+Due to the limitations of the encoding of tag queries in Neutron, tags must be non-empty and may not contain commas. Tags will be automatically converted to a list of tags during conversion.

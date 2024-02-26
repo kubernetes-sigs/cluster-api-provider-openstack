@@ -200,7 +200,9 @@ func Test_CreatePort(t *testing.T) {
 				Description: pointer.String("this is a test port"),
 				FixedIPs: []infrav1.FixedIP{{
 					Subnet: &infrav1.SubnetFilter{
-						Tags: "Foo",
+						FilterByNeutronTags: infrav1.FilterByNeutronTags{
+							Tags: []infrav1.NeutronTag{"Foo"},
+						},
 					},
 					IPAddress: pointer.String("192.168.0.50"),
 				}},

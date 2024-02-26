@@ -164,6 +164,65 @@ var v1beta1OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStackC
 	),
 }
 
+func restorev1alpha7SubnetFilter(previous *SubnetFilter, dst *SubnetFilter) {
+	// The edge cases with multiple commas are too tricky in this direction,
+	// so we just restore the whole thing.
+	dst.Tags = previous.Tags
+	dst.TagsAny = previous.TagsAny
+	dst.NotTags = previous.NotTags
+	dst.NotTagsAny = previous.NotTagsAny
+}
+
+func restorev1alpha7SecurityGroupFilter(previous *SecurityGroupFilter, dst *SecurityGroupFilter) {
+	// The edge cases with multiple commas are too tricky in this direction,
+	// so we just restore the whole thing.
+	dst.Tags = previous.Tags
+	dst.TagsAny = previous.TagsAny
+	dst.NotTags = previous.NotTags
+	dst.NotTagsAny = previous.NotTagsAny
+}
+
+func restorev1alpha7NetworkFilter(previous *NetworkFilter, dst *NetworkFilter) {
+	// The edge cases with multiple commas are too tricky in this direction,
+	// so we just restore the whole thing.
+	dst.Tags = previous.Tags
+	dst.TagsAny = previous.TagsAny
+	dst.NotTags = previous.NotTags
+	dst.NotTagsAny = previous.NotTagsAny
+}
+
+func restorev1alpha7RouterFilter(previous *RouterFilter, dst *RouterFilter) {
+	// The edge cases with multiple commas are too tricky in this direction,
+	// so we just restore the whole thing.
+	dst.Tags = previous.Tags
+	dst.TagsAny = previous.TagsAny
+	dst.NotTags = previous.NotTags
+	dst.NotTagsAny = previous.NotTagsAny
+}
+
+func restorev1alpha7Port(previous *PortOpts, dst *PortOpts) {
+	if len(dst.SecurityGroupFilters) == len(previous.SecurityGroupFilters) {
+		for i := range dst.SecurityGroupFilters {
+			restorev1alpha7SecurityGroupFilter(&previous.SecurityGroupFilters[i], &dst.SecurityGroupFilters[i])
+		}
+	}
+
+	if dst.Network != nil && previous.Network != nil {
+		restorev1alpha7NetworkFilter(previous.Network, dst.Network)
+	}
+
+	if len(dst.FixedIPs) == len(previous.FixedIPs) {
+		for i := range dst.FixedIPs {
+			prevFixedIP := &previous.FixedIPs[i]
+			dstFixedIP := &dst.FixedIPs[i]
+
+			if dstFixedIP.Subnet != nil && prevFixedIP.Subnet != nil {
+				restorev1alpha7SubnetFilter(prevFixedIP.Subnet, dstFixedIP.Subnet)
+			}
+		}
+	}
+}
+
 func restorev1alpha7MachineSpec(previous *OpenStackMachineSpec, dst *OpenStackMachineSpec) {
 	dst.FloatingIP = previous.FloatingIP
 
@@ -187,6 +246,18 @@ func restorev1alpha7MachineSpec(previous *OpenStackMachineSpec, dst *OpenStackMa
 
 	// Conversion to v1beta1 removes the Kind field
 	dst.IdentityRef = previous.IdentityRef
+
+	if len(dst.Ports) == len(previous.Ports) {
+		for i := range dst.Ports {
+			restorev1alpha7Port(&previous.Ports[i], &dst.Ports[i])
+		}
+	}
+
+	if len(dst.SecurityGroups) == len(previous.SecurityGroups) {
+		for i := range dst.SecurityGroups {
+			restorev1alpha7SecurityGroupFilter(&previous.SecurityGroups[i], &dst.SecurityGroups[i])
+		}
+	}
 }
 
 func restorev1beta1MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *infrav1.OpenStackMachineSpec) {
@@ -287,6 +358,20 @@ func restorev1alpha7ClusterSpec(previous *OpenStackClusterSpec, dst *OpenStackCl
 
 	// Conversion to v1beta1 removes the Kind field
 	dst.IdentityRef = previous.IdentityRef
+
+	if len(dst.ExternalRouterIPs) == len(previous.ExternalRouterIPs) {
+		for i := range dst.ExternalRouterIPs {
+			restorev1alpha7SubnetFilter(&previous.ExternalRouterIPs[i].Subnet, &dst.ExternalRouterIPs[i].Subnet)
+		}
+	}
+
+	restorev1alpha7SubnetFilter(&previous.Subnet, &dst.Subnet)
+
+	if dst.Router != nil && previous.Router != nil {
+		restorev1alpha7RouterFilter(previous.Router, dst.Router)
+	}
+
+	restorev1alpha7NetworkFilter(&previous.Network, &dst.Network)
 }
 
 func restorev1beta1ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infrav1.OpenStackClusterSpec) {
@@ -796,7 +881,7 @@ func Convert_v1alpha7_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *infrav1.Po
 	if len(in.SecurityGroupFilters) > 0 {
 		out.SecurityGroups = make([]infrav1.SecurityGroupFilter, len(in.SecurityGroupFilters))
 		for i := range in.SecurityGroupFilters {
-			if err := autoConvert_v1alpha7_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(&in.SecurityGroupFilters[i], &out.SecurityGroups[i], s); err != nil {
+			if err := Convert_v1alpha7_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(&in.SecurityGroupFilters[i], &out.SecurityGroups[i], s); err != nil {
 				return err
 			}
 		}
@@ -804,7 +889,7 @@ func Convert_v1alpha7_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *infrav1.Po
 
 	if in.Profile != (BindingProfile{}) {
 		out.Profile = &infrav1.BindingProfile{}
-		if err := autoConvert_v1alpha7_BindingProfile_To_v1beta1_BindingProfile(&in.Profile, out.Profile, s); err != nil {
+		if err := Convert_v1alpha7_BindingProfile_To_v1beta1_BindingProfile(&in.Profile, out.Profile, s); err != nil {
 			return err
 		}
 	}
@@ -820,14 +905,14 @@ func Convert_v1beta1_PortOpts_To_v1alpha7_PortOpts(in *infrav1.PortOpts, out *Po
 	if len(in.SecurityGroups) > 0 {
 		out.SecurityGroupFilters = make([]SecurityGroupFilter, len(in.SecurityGroups))
 		for i := range in.SecurityGroups {
-			if err := autoConvert_v1beta1_SecurityGroupFilter_To_v1alpha7_SecurityGroupFilter(&in.SecurityGroups[i], &out.SecurityGroupFilters[i], s); err != nil {
+			if err := Convert_v1beta1_SecurityGroupFilter_To_v1alpha7_SecurityGroupFilter(&in.SecurityGroups[i], &out.SecurityGroupFilters[i], s); err != nil {
 				return err
 			}
 		}
 	}
 
 	if in.Profile != nil {
-		if err := autoConvert_v1beta1_BindingProfile_To_v1alpha7_BindingProfile(in.Profile, &out.Profile, s); err != nil {
+		if err := Convert_v1beta1_BindingProfile_To_v1alpha7_BindingProfile(in.Profile, &out.Profile, s); err != nil {
 			return err
 		}
 	}
@@ -837,5 +922,69 @@ func Convert_v1beta1_PortOpts_To_v1alpha7_PortOpts(in *infrav1.PortOpts, out *Po
 
 func Convert_v1beta1_OpenStackIdentityReference_To_v1alpha7_OpenStackIdentityReference(in *infrav1.OpenStackIdentityReference, out *OpenStackIdentityReference, _ apiconversion.Scope) error {
 	out.Name = in.Name
+	return nil
+}
+
+func Convert_v1alpha7_SubnetFilter_To_v1beta1_SubnetFilter(in *SubnetFilter, out *infrav1.SubnetFilter, s apiconversion.Scope) error {
+	if err := autoConvert_v1alpha7_SubnetFilter_To_v1beta1_SubnetFilter(in, out, s); err != nil {
+		return err
+	}
+	infrav1.ConvertAllTagsTo(in.Tags, in.TagsAny, in.NotTags, in.NotTagsAny, &out.FilterByNeutronTags)
+	return nil
+}
+
+func Convert_v1beta1_SubnetFilter_To_v1alpha7_SubnetFilter(in *infrav1.SubnetFilter, out *SubnetFilter, s apiconversion.Scope) error {
+	if err := autoConvert_v1beta1_SubnetFilter_To_v1alpha7_SubnetFilter(in, out, s); err != nil {
+		return err
+	}
+	infrav1.ConvertAllTagsFrom(&in.FilterByNeutronTags, &out.Tags, &out.TagsAny, &out.NotTags, &out.NotTagsAny)
+	return nil
+}
+
+func Convert_v1alpha7_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(in *SecurityGroupFilter, out *infrav1.SecurityGroupFilter, s apiconversion.Scope) error {
+	if err := autoConvert_v1alpha7_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(in, out, s); err != nil {
+		return err
+	}
+	infrav1.ConvertAllTagsTo(in.Tags, in.TagsAny, in.NotTags, in.NotTagsAny, &out.FilterByNeutronTags)
+	return nil
+}
+
+func Convert_v1beta1_SecurityGroupFilter_To_v1alpha7_SecurityGroupFilter(in *infrav1.SecurityGroupFilter, out *SecurityGroupFilter, s apiconversion.Scope) error {
+	if err := autoConvert_v1beta1_SecurityGroupFilter_To_v1alpha7_SecurityGroupFilter(in, out, s); err != nil {
+		return err
+	}
+	infrav1.ConvertAllTagsFrom(&in.FilterByNeutronTags, &out.Tags, &out.TagsAny, &out.NotTags, &out.NotTagsAny)
+	return nil
+}
+
+func Convert_v1alpha7_RouterFilter_To_v1beta1_RouterFilter(in *RouterFilter, out *infrav1.RouterFilter, s apiconversion.Scope) error {
+	if err := autoConvert_v1alpha7_RouterFilter_To_v1beta1_RouterFilter(in, out, s); err != nil {
+		return err
+	}
+	infrav1.ConvertAllTagsTo(in.Tags, in.TagsAny, in.NotTags, in.NotTagsAny, &out.FilterByNeutronTags)
+	return nil
+}
+
+func Convert_v1beta1_RouterFilter_To_v1alpha7_RouterFilter(in *infrav1.RouterFilter, out *RouterFilter, s apiconversion.Scope) error {
+	if err := autoConvert_v1beta1_RouterFilter_To_v1alpha7_RouterFilter(in, out, s); err != nil {
+		return err
+	}
+	infrav1.ConvertAllTagsFrom(&in.FilterByNeutronTags, &out.Tags, &out.TagsAny, &out.NotTags, &out.NotTagsAny)
+	return nil
+}
+
+func Convert_v1alpha7_NetworkFilter_To_v1beta1_NetworkFilter(in *NetworkFilter, out *infrav1.NetworkFilter, s apiconversion.Scope) error {
+	if err := autoConvert_v1alpha7_NetworkFilter_To_v1beta1_NetworkFilter(in, out, s); err != nil {
+		return err
+	}
+	infrav1.ConvertAllTagsTo(in.Tags, in.TagsAny, in.NotTags, in.NotTagsAny, &out.FilterByNeutronTags)
+	return nil
+}
+
+func Convert_v1beta1_NetworkFilter_To_v1alpha7_NetworkFilter(in *infrav1.NetworkFilter, out *NetworkFilter, s apiconversion.Scope) error {
+	if err := autoConvert_v1beta1_NetworkFilter_To_v1alpha7_NetworkFilter(in, out, s); err != nil {
+		return err
+	}
+	infrav1.ConvertAllTagsFrom(&in.FilterByNeutronTags, &out.Tags, &out.TagsAny, &out.NotTags, &out.NotTagsAny)
 	return nil
 }

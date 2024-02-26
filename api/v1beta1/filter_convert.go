@@ -17,6 +17,8 @@ limitations under the License.
 package v1beta1
 
 import (
+	"strings"
+
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
 	securitygroups "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
@@ -24,20 +26,20 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 )
 
-func (securityGroupFilter SecurityGroupFilter) ToListOpt() securitygroups.ListOpts {
+func (securityGroupFilter *SecurityGroupFilter) ToListOpt() securitygroups.ListOpts {
 	return securitygroups.ListOpts{
 		ID:          securityGroupFilter.ID,
 		Name:        securityGroupFilter.Name,
 		Description: securityGroupFilter.Description,
 		ProjectID:   securityGroupFilter.ProjectID,
-		Tags:        securityGroupFilter.Tags,
-		TagsAny:     securityGroupFilter.TagsAny,
-		NotTags:     securityGroupFilter.NotTags,
-		NotTagsAny:  securityGroupFilter.NotTagsAny,
+		Tags:        joinTags(securityGroupFilter.Tags),
+		TagsAny:     joinTags(securityGroupFilter.TagsAny),
+		NotTags:     joinTags(securityGroupFilter.NotTags),
+		NotTagsAny:  joinTags(securityGroupFilter.NotTagsAny),
 	}
 }
 
-func (subnetFilter SubnetFilter) ToListOpt() subnets.ListOpts {
+func (subnetFilter *SubnetFilter) ToListOpt() subnets.ListOpts {
 	return subnets.ListOpts{
 		Name:            subnetFilter.Name,
 		Description:     subnetFilter.Description,
@@ -48,43 +50,98 @@ func (subnetFilter SubnetFilter) ToListOpt() subnets.ListOpts {
 		IPv6AddressMode: subnetFilter.IPv6AddressMode,
 		IPv6RAMode:      subnetFilter.IPv6RAMode,
 		ID:              subnetFilter.ID,
-		Tags:            subnetFilter.Tags,
-		TagsAny:         subnetFilter.TagsAny,
-		NotTags:         subnetFilter.NotTags,
-		NotTagsAny:      subnetFilter.NotTagsAny,
+		Tags:            joinTags(subnetFilter.Tags),
+		TagsAny:         joinTags(subnetFilter.TagsAny),
+		NotTags:         joinTags(subnetFilter.NotTags),
+		NotTagsAny:      joinTags(subnetFilter.NotTagsAny),
 	}
 }
 
-func (networkFilter NetworkFilter) ToListOpt() networks.ListOpts {
+func (networkFilter *NetworkFilter) ToListOpt() networks.ListOpts {
 	return networks.ListOpts{
 		Name:        networkFilter.Name,
 		Description: networkFilter.Description,
 		ProjectID:   networkFilter.ProjectID,
 		ID:          networkFilter.ID,
-		Tags:        networkFilter.Tags,
-		TagsAny:     networkFilter.TagsAny,
-		NotTags:     networkFilter.NotTags,
-		NotTagsAny:  networkFilter.NotTagsAny,
+		Tags:        joinTags(networkFilter.Tags),
+		TagsAny:     joinTags(networkFilter.TagsAny),
+		NotTags:     joinTags(networkFilter.NotTags),
+		NotTagsAny:  joinTags(networkFilter.NotTagsAny),
 	}
 }
 
-func (routerFilter RouterFilter) ToListOpt() routers.ListOpts {
+func (networkFilter *NetworkFilter) IsEmpty() bool {
+	return networkFilter.Name == "" &&
+		networkFilter.Description == "" &&
+		networkFilter.ProjectID == "" &&
+		networkFilter.ID == "" &&
+		len(networkFilter.Tags) == 0 &&
+		len(networkFilter.TagsAny) == 0 &&
+		len(networkFilter.NotTags) == 0 &&
+		len(networkFilter.NotTagsAny) == 0
+}
+
+func (routerFilter *RouterFilter) ToListOpt() routers.ListOpts {
 	return routers.ListOpts{
 		ID:          routerFilter.ID,
 		Name:        routerFilter.Name,
 		Description: routerFilter.Description,
 		ProjectID:   routerFilter.ProjectID,
-		Tags:        routerFilter.Tags,
-		TagsAny:     routerFilter.TagsAny,
-		NotTags:     routerFilter.NotTags,
-		NotTagsAny:  routerFilter.NotTagsAny,
+		Tags:        joinTags(routerFilter.Tags),
+		TagsAny:     joinTags(routerFilter.TagsAny),
+		NotTags:     joinTags(routerFilter.NotTags),
+		NotTagsAny:  joinTags(routerFilter.NotTagsAny),
 	}
 }
 
-func (imageFilter ImageFilter) ToListOpt() images.ListOpts {
+func (imageFilter *ImageFilter) ToListOpt() images.ListOpts {
 	return images.ListOpts{
 		ID:   imageFilter.ID,
 		Name: imageFilter.Name,
 		Tags: imageFilter.Tags,
 	}
+}
+
+// splitTags splits a comma separated list of tags into a slice of tags.
+// If the input is an empty string, it returns nil representing no list rather
+// than an empty list.
+func splitTags(tags string) []NeutronTag {
+	if tags == "" {
+		return nil
+	}
+
+	var ret []NeutronTag
+	for _, tag := range strings.Split(tags, ",") {
+		if tag != "" {
+			ret = append(ret, NeutronTag(tag))
+		}
+	}
+
+	return ret
+}
+
+// joinTags joins a slice of tags into a comma separated list of tags.
+func joinTags(tags []NeutronTag) string {
+	var b strings.Builder
+	for i := range tags {
+		if i > 0 {
+			b.WriteString(",")
+		}
+		b.WriteString(string(tags[i]))
+	}
+	return b.String()
+}
+
+func ConvertAllTagsTo(tags, tagsAny, notTags, notTagsAny string, neutronTags *FilterByNeutronTags) {
+	neutronTags.Tags = splitTags(tags)
+	neutronTags.TagsAny = splitTags(tagsAny)
+	neutronTags.NotTags = splitTags(notTags)
+	neutronTags.NotTagsAny = splitTags(notTagsAny)
+}
+
+func ConvertAllTagsFrom(neutronTags *FilterByNeutronTags, tags, tagsAny, notTags, notTagsAny *string) {
+	*tags = joinTags(neutronTags.Tags)
+	*tagsAny = joinTags(neutronTags.TagsAny)
+	*notTags = joinTags(neutronTags.NotTags)
+	*notTagsAny = joinTags(neutronTags.NotTagsAny)
 }

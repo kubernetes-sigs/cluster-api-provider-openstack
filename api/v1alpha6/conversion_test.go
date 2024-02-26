@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha6
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -54,6 +55,17 @@ func TestFuzzyConversion(t *testing.T) {
 	ignoreDataAnnotation := func(hub conversion.Hub) {
 		obj := hub.(metav1.Object)
 		delete(obj.GetAnnotations(), utilconversion.DataAnnotation)
+	}
+
+	filterInvalidTags := func(tags []infrav1.NeutronTag) []infrav1.NeutronTag {
+		var ret []infrav1.NeutronTag
+		for i := range tags {
+			s := string(tags[i])
+			if len(s) > 0 && !strings.Contains(s, ",") {
+				ret = append(ret, tags[i])
+			}
+		}
+		return ret
 	}
 
 	fuzzerFuncs := func(_ runtimeserializer.CodecFactory) []interface{} {
@@ -155,6 +167,44 @@ func TestFuzzyConversion(t *testing.T) {
 				for pool.End == "" {
 					pool.End = c.RandString()
 				}
+			},
+
+			// v1beta1 filter tags cannot contain commas and can't be empty.
+
+			func(filter *infrav1.SubnetFilter, c fuzz.Continue) {
+				c.FuzzNoCustom(filter)
+
+				filter.Tags = filterInvalidTags(filter.Tags)
+				filter.TagsAny = filterInvalidTags(filter.TagsAny)
+				filter.NotTags = filterInvalidTags(filter.NotTags)
+				filter.NotTagsAny = filterInvalidTags(filter.NotTagsAny)
+			},
+
+			func(filter *infrav1.NetworkFilter, c fuzz.Continue) {
+				c.FuzzNoCustom(filter)
+
+				filter.Tags = filterInvalidTags(filter.Tags)
+				filter.TagsAny = filterInvalidTags(filter.TagsAny)
+				filter.NotTags = filterInvalidTags(filter.NotTags)
+				filter.NotTagsAny = filterInvalidTags(filter.NotTagsAny)
+			},
+
+			func(filter *infrav1.RouterFilter, c fuzz.Continue) {
+				c.FuzzNoCustom(filter)
+
+				filter.Tags = filterInvalidTags(filter.Tags)
+				filter.TagsAny = filterInvalidTags(filter.TagsAny)
+				filter.NotTags = filterInvalidTags(filter.NotTags)
+				filter.NotTagsAny = filterInvalidTags(filter.NotTagsAny)
+			},
+
+			func(filter *infrav1.SecurityGroupFilter, c fuzz.Continue) {
+				c.FuzzNoCustom(filter)
+
+				filter.Tags = filterInvalidTags(filter.Tags)
+				filter.TagsAny = filterInvalidTags(filter.TagsAny)
+				filter.NotTags = filterInvalidTags(filter.NotTags)
+				filter.NotTagsAny = filterInvalidTags(filter.NotTagsAny)
 			},
 		}
 	}
@@ -284,10 +334,12 @@ func TestNetworksToPorts(t *testing.T) {
 							Name:        "network-name",
 							Description: "network-description",
 							ProjectID:   "project-id",
-							Tags:        "tags",
-							TagsAny:     "tags-any",
-							NotTags:     "not-tags",
-							NotTagsAny:  "not-tags-any",
+							FilterByNeutronTags: infrav1.FilterByNeutronTags{
+								Tags:       []infrav1.NeutronTag{"tags"},
+								TagsAny:    []infrav1.NeutronTag{"tags-any"},
+								NotTags:    []infrav1.NeutronTag{"not-tags"},
+								NotTagsAny: []infrav1.NeutronTag{"not-tags-any"},
+							},
 						},
 					},
 				},
@@ -368,10 +420,12 @@ func TestNetworksToPorts(t *testing.T) {
 									CIDR:            "y.y.y.y",
 									IPv6AddressMode: "address-mode",
 									IPv6RAMode:      "ra-mode",
-									Tags:            "tags",
-									TagsAny:         "tags-any",
-									NotTags:         "not-tags",
-									NotTagsAny:      "not-tags-any",
+									FilterByNeutronTags: infrav1.FilterByNeutronTags{
+										Tags:       []infrav1.NeutronTag{"tags"},
+										TagsAny:    []infrav1.NeutronTag{"tags-any"},
+										NotTags:    []infrav1.NeutronTag{"not-tags"},
+										NotTagsAny: []infrav1.NeutronTag{"not-tags-any"},
+									},
 								},
 							},
 						},
@@ -438,10 +492,12 @@ func TestNetworksToPorts(t *testing.T) {
 									CIDR:            "y.y.y.y",
 									IPv6AddressMode: "address-mode",
 									IPv6RAMode:      "ra-mode",
-									Tags:            "tags",
-									TagsAny:         "tags-any",
-									NotTags:         "not-tags",
-									NotTagsAny:      "not-tags-any",
+									FilterByNeutronTags: infrav1.FilterByNeutronTags{
+										Tags:       []infrav1.NeutronTag{"tags"},
+										TagsAny:    []infrav1.NeutronTag{"tags-any"},
+										NotTags:    []infrav1.NeutronTag{"not-tags"},
+										NotTagsAny: []infrav1.NeutronTag{"not-tags-any"},
+									},
 								},
 							},
 						},
@@ -459,7 +515,7 @@ func TestNetworksToPorts(t *testing.T) {
 			after := infrav1.OpenStackMachine{}
 
 			g.Expect(before.ConvertTo(&after)).To(gomega.Succeed())
-			g.Expect(after.Spec).To(gomega.Equal(tt.afterMachineSpec))
+			g.Expect(after.Spec).To(gomega.Equal(tt.afterMachineSpec), cmp.Diff(after.Spec, tt.afterMachineSpec))
 		})
 	}
 }
