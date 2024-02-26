@@ -152,7 +152,6 @@ spec:
   externalNetwork:
     id: ${OPENSTACK_EXTERNAL_NETWORK_ID}
   identityRef:
-    kind: Secret
     name: ${CLUSTER_NAME}-cloud-config
   managedSecurityGroups:
     allNodesSecurityGroupRules:
@@ -189,7 +188,6 @@ spec:
       cloudName: ${OPENSTACK_CLOUD}
       flavor: ${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR}
       identityRef:
-        kind: Secret
         name: ${CLUSTER_NAME}-cloud-config
       image:
         name: ${OPENSTACK_FLATCAR_IMAGE_NAME}
@@ -205,7 +203,6 @@ spec:
       cloudName: ${OPENSTACK_CLOUD}
       flavor: ${OPENSTACK_NODE_MACHINE_FLAVOR}
       identityRef:
-        kind: Secret
         name: ${CLUSTER_NAME}-cloud-config
       image:
         name: ${OPENSTACK_FLATCAR_IMAGE_NAME}

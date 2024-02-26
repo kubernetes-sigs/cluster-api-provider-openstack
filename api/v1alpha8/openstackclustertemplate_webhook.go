@@ -46,18 +46,11 @@ var (
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type.
 func (r *OpenStackClusterTemplate) Default() {
-	if r.Spec.Template.Spec.IdentityRef != nil && r.Spec.Template.Spec.IdentityRef.Kind == "" {
-		r.Spec.Template.Spec.IdentityRef.Kind = defaultIdentityRefKind
-	}
 }
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type.
 func (r *OpenStackClusterTemplate) ValidateCreate() (admission.Warnings, error) {
 	var allErrs field.ErrorList
-
-	if r.Spec.Template.Spec.IdentityRef != nil && r.Spec.Template.Spec.IdentityRef.Kind != defaultIdentityRefKind {
-		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "template", "spec", "identityRef", "kind"), "must be a Secret"))
-	}
 
 	return aggregateObjErrors(r.GroupVersionKind().GroupKind(), r.Name, allErrs)
 }

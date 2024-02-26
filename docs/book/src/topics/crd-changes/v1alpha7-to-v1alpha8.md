@@ -6,8 +6,10 @@
   - [Migration](#migration)
   - [API Changes](#api-changes)
     - [`OpenStackMachine`](#openstackmachine)
-      - [⚠️ Change to `serverGroupID`](#️-change-to-servergroupid)
+      - [Removal of machine identityRef.kind](#removal-of-machine-identityrefkind)
+      - [Change to serverGroupID](#change-to-servergroupid)
     - [`OpenStackCluster`](#openstackcluster)
+      - [Removal of cluster identityRef.kind](#removal-of-cluster-identityrefkind)
       - [Change to externalNetworkID](#change-to-externalnetworkid)
       - [Changes to image](#change-to-image)
       - [Removal of imageUUID](#removal-of-imageuuid)
@@ -22,6 +24,7 @@
 # v1alpha7 compared to v1alpha8
 
 > ⚠️ v1alpha8 has not been released yet.
+
 ## Migration
 
 All users are encouraged to migrate their usage of the CAPO CRDs from older versions to `v1alpha8`. This includes yaml files and source code. As CAPO implements automatic conversions between the CRD versions, this migration can happen after installing the new CAPO release.
@@ -32,7 +35,11 @@ This only documents backwards incompatible changes. Fields that were added to v1
 
 ### `OpenStackMachine`
 
-#### ⚠️ Change to `serverGroupID`
+#### Removal of machine identityRef.kind
+
+The `identityRef.Kind` field has been removed. It was used to specify the kind of the identity provider to use but was actually ignored.
+
+#### Change to serverGroupID
 
 The field `serverGroupID` has been renamed to `serverGroup` and is now a `ServerGroupFilter` object rather than a string ID.
 
@@ -61,8 +68,11 @@ If empty object or null is provided, Machine will not be added to any server gro
 
 ### `OpenStackCluster`
 
-#### Change to externalNetworkID
+#### Removal of cluster identityRef.kind
 
+The `identityRef.Kind` field has been removed. It was used to specify the kind of the identity provider to use but was actually ignored.
+
+#### Change to externalNetworkID
 
 The field `externalNetworkID` has been renamed to `externalNetwork` and is now a `NetworkFilter` object rather than a string ID.
 The `NetworkFilter` object allows selection of a network by name, by ID or by tags.
@@ -96,7 +106,7 @@ It is now possible for a user to specify that no external network should be used
 disableExternalNetwork: true
 ```
 
-#### ⚠️ Change to image
+#### Change to image
 
 The field `image` is now an `ImageFilter` object rather than a string name.
 The `ImageFilter` object allows selection of an image by name, by ID or by tags.
@@ -114,7 +124,7 @@ image:
 
 The image ID will be added to `OpenStackMachine.Status.ReferencedResources.ImageID`. If the image can't be found or filter matches multiple images, an error will be returned.
 
-#### ⚠️ Removal of imageUUID
+#### Removal of imageUUID
 
 The fild `imageUUID` has been removed in favor of the `image` field.
 
@@ -161,7 +171,7 @@ spec:
     floatingIP: "1.2.3.4"
 ```
 
-#### ⚠️ Change to subnet
+#### Change to subnet
 
 In v1alpha8, `Subnet` of `OpenStackCluster` is modified to `Subnets` to allow specification of two existent subnets for the dual-stack scenario.
 
@@ -181,7 +191,7 @@ In v1alpha8, this will be automatically converted to:
 
 When subnets are not specified on `OpenStackCluster` and only the network is, the network is used to identify the subnets to use. If more than two subnets exist in the network, the user must specify which ones to use by defining the `OpenStackCluster.Spec.Subnets` field.
 
-#### ⚠️ Change to nodeCidr and dnsNameservers
+#### Change to nodeCidr and dnsNameservers
 
 In v1alpha8, `OpenStackCluster.Spec.ManagedSubnets` array field is introduced. The `NodeCIDR` and `DNSNameservers` fields of `OpenStackCluster.Spec` are moved into that structure (renaming `NodeCIDR` to `CIDR`). For example:
 
@@ -200,7 +210,7 @@ In v1alpha8, this will be automatically converted to:
 
 Please note that currently `managedSubnets` can only hold one element.
 
-#### ⚠️ Change to managedSecurityGroups
+#### Change to managedSecurityGroups
 
 The field `managedSecurityGroups` is now a pointer to a `ManagedSecurityGroups` object rather than a boolean.
 
@@ -252,7 +262,7 @@ managedSecurityGroups:
     description: "Allow BGP between control plane and workers"
 ```
 
-#### ⚠️ Calico CNI
+#### Calico CNI
 
 Historically we used to create the necessary security group rules for Calico CNI to work. This is no longer the case.
 Now the user needs to request creation of the security group rules by using the `managedSecurityGroups.allNodesSecurityGroupRules` feature.
@@ -260,6 +270,6 @@ Now the user needs to request creation of the security group rules by using the 
 Note that when upgrading from a previous version, the Calico CNI security group rules will be added automatically to
 allow backwards compatibility if `allowAllInClusterTraffic` is set to false.
 
-#### ⚠️ Change to network
+#### Change to network
 
 In v1alpha8, when the `OpenStackCluster.Spec.Network` is not defined, the `Subnets` are now used to identify the `Network`.

@@ -16,16 +16,9 @@ limitations under the License.
 
 package v1alpha8
 
-const defaultIdentityRefKind = "Secret"
-
 // OpenStackIdentityReference is a reference to an infrastructure
 // provider identity to be used to provision cluster resources.
 type OpenStackIdentityReference struct {
-	// Kind of the identity. Must be supported by the infrastructure
-	// provider and may be either cluster or namespace-scoped.
-	// +kubebuilder:validation:MinLength=1
-	Kind string `json:"kind"`
-
 	// Name of the infrastructure identity to be used.
 	// Must be either a cluster-scoped resource, or namespaced-scoped
 	// resource the same namespace as the resource(s) being provisioned.

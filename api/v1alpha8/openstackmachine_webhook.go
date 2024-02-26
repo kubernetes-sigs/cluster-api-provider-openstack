@@ -49,18 +49,11 @@ var (
 
 // Default satisfies the defaulting webhook interface.
 func (r *OpenStackMachine) Default() {
-	if r.Spec.IdentityRef != nil && r.Spec.IdentityRef.Kind == "" {
-		r.Spec.IdentityRef.Kind = defaultIdentityRefKind
-	}
 }
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type.
 func (r *OpenStackMachine) ValidateCreate() (admission.Warnings, error) {
 	var allErrs field.ErrorList
-
-	if r.Spec.IdentityRef != nil && r.Spec.IdentityRef.Kind != defaultIdentityRefKind {
-		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "identityRef", "kind"), "must be a Secret"))
-	}
 
 	if r.Spec.RootVolume != nil && r.Spec.AdditionalBlockDevices != nil {
 		for _, device := range r.Spec.AdditionalBlockDevices {
@@ -89,10 +82,6 @@ func (r *OpenStackMachine) ValidateUpdate(old runtime.Object) (admission.Warning
 	}
 
 	var allErrs field.ErrorList
-
-	if r.Spec.IdentityRef != nil && r.Spec.IdentityRef.Kind != defaultIdentityRefKind {
-		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "identityRef", "kind"), "must be a Secret"))
-	}
 
 	newOpenStackMachineSpec := newOpenStackMachine["spec"].(map[string]interface{})
 	oldOpenStackMachineSpec := oldOpenStackMachine["spec"].(map[string]interface{})

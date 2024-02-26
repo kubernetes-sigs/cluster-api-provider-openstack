@@ -16,7 +16,6 @@ spec:
       cloudName: ${OPENSTACK_CLOUD}
       flavor: ${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR}
       identityRef:
-        kind: Secret
         name: ${CLUSTER_NAME}-cloud-config
       image:
         name: ${OPENSTACK_IMAGE_NAME}
@@ -36,7 +35,6 @@ spec:
       cloudName: ${OPENSTACK_CLOUD}
       flavor: ${OPENSTACK_NODE_MACHINE_FLAVOR}
       identityRef:
-        kind: Secret
         name: ${CLUSTER_NAME}-cloud-config
       image:
         name: ${OPENSTACK_IMAGE_NAME}

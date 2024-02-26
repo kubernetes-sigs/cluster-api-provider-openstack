@@ -624,3 +624,7 @@ func Convert_v1alpha5_SecurityGroup_To_v1alpha8_SecurityGroupStatus(in *Security
 
 	return nil
 }
+
+func Convert_v1alpha5_OpenStackIdentityReference_To_v1alpha8_OpenStackIdentityReference(in *OpenStackIdentityReference, out *infrav1.OpenStackIdentityReference, s conversion.Scope) error {
+	return autoConvert_v1alpha5_OpenStackIdentityReference_To_v1alpha8_OpenStackIdentityReference(in, out, s)
+}

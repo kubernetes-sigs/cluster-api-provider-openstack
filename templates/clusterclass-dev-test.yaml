@@ -119,7 +119,6 @@ spec:
         enabled: true
       cloudName: ${OPENSTACK_CLOUD:=capo-e2e}
       identityRef:
-        kind: Secret
         name: dev-test-cloud-config
       managedSecurityGroups:
         allNodesSecurityGroupRules:
@@ -156,7 +155,6 @@ spec:
       cloudName: ${OPENSTACK_CLOUD:=capo-e2e}
       flavor: ${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR:=m1.medium}
       identityRef:
-        kind: Secret
         name: dev-test-cloud-config
       image:
         name: overridden-by-patch
@@ -172,7 +170,6 @@ spec:
       cloudName: ${OPENSTACK_CLOUD:=capo-e2e}
       flavor: ${OPENSTACK_NODE_MACHINE_FLAVOR:=m1.small}
       identityRef:
-        kind: Secret
         name: dev-test-cloud-config
       image:
         name: overridden-by-patch
