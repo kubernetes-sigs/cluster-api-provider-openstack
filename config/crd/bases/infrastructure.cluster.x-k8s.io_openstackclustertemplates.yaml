@@ -3169,6 +3169,7 @@ spec:
                                   x-kubernetes-list-type: set
                               type: object
                           required:
+                          - fixedIP
                           - subnet
                           type: object
                         type: array

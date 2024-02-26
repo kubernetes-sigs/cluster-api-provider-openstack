@@ -42,8 +42,10 @@ type ImageFilter struct {
 
 type ExternalRouterIPParam struct {
 	// The FixedIP in the corresponding subnet
-	FixedIP string `json:"fixedIP,omitempty"`
+	// +kube:validation:Required
+	FixedIP string `json:"fixedIP"`
 	// The subnet in which the FixedIP is used for the Gateway of this router
+	// +kube:validation:Required
 	Subnet SubnetFilter `json:"subnet"`
 }
 
