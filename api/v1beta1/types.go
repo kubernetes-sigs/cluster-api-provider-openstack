@@ -126,7 +126,7 @@ type RouterFilter struct {
 type SubnetSpec struct {
 	// CIDR is representing the IP address range used to create the subnet, e.g. 10.0.0.0/24.
 	// This field is required when defining a subnet.
-	// +required
+	// +kubebuilder:validation:Required
 	CIDR string `json:"cidr"`
 
 	// DNSNameservers holds a list of DNS server addresses that will be provided when creating
