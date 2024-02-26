@@ -190,6 +190,7 @@ variables:
   EXP_CLUSTER_RESOURCE_SET: "true"
   OPENSTACK_BASTION_IMAGE_NAME: "cirros-0.6.1-x86_64-disk"
   OPENSTACK_BASTION_MACHINE_FLAVOR: "m1.tiny"
+  OPENSTACK_BASTION_MACHINE_FLAVOR_ALT: "m1.tiny.alt"
   OPENSTACK_CLOUD: "capo-e2e"
   OPENSTACK_CLOUD_ADMIN: "capo-e2e-admin"
   OPENSTACK_CLOUD_CACERT_B64: "Cg=="
@@ -220,6 +221,7 @@ intervals:
   conformance/wait-control-plane: ["30m", "10s"]
   conformance/wait-worker-nodes: ["30m", "10s"]
   default/wait-controllers: ["3m", "10s"]
+  default/wait-bastion: ["5m", "10s"]
   default/wait-cluster: ["20m", "10s"]
   default/wait-control-plane: ["30m", "10s"]
   default/wait-worker-nodes: ["30m", "10s"]

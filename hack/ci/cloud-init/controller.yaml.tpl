@@ -177,6 +177,8 @@
     openstack flavor create --ram 4192 --disk 20 --ephemeral 5 --vcpus 2 --public --id 2 m1.small --property hw_rng:allowed='True'
     openstack flavor delete m1.medium
     openstack flavor create --ram 6144 --disk 20 --ephemeral 5 --vcpus 2 --public --id 3 m1.medium --property hw_rng:allowed='True'
+    # Create an additional flavor for the e2e tests that will be used by the e2e bastion tests
+    openstack flavor create --ram 512 --disk 1 --ephemeral 1 --vcpus 1 --public --id 10 m1.tiny.alt --property hw_rng:allowed='True'
 
     # Adjust the CPU quota
     openstack quota set --cores 32 demo

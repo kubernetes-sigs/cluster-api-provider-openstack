@@ -36,6 +36,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/availabilityzones"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
@@ -46,6 +47,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/gophercloud/utils/openstack/clientconfig"
+	uflavors "github.com/gophercloud/utils/openstack/compute/v2/flavors"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"gopkg.in/ini.v1"
@@ -846,4 +848,20 @@ func GetOpenStackVolume(e2eCtx *E2EContext, name string) (*volumes.Volume, error
 	}
 
 	return volume, nil
+}
+
+func GetFlavorFromName(e2eCtx *E2EContext, name string) (*flavors.Flavor, error) {
+	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
+	if err != nil {
+		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
+		return nil, err
+	}
+
+	computeClient, err := openstack.NewComputeV2(providerClient, gophercloud.EndpointOpts{Region: clientOpts.RegionName})
+	Expect(err).NotTo(HaveOccurred())
+
+	flavorID, err := uflavors.IDFromName(computeClient, name)
+	Expect(err).NotTo(HaveOccurred())
+
+	return flavors.Get(computeClient, flavorID).Extract()
 }

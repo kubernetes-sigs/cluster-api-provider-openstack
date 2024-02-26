@@ -162,6 +162,87 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			// We expect 4 security group rules that allow Calico traffic on the control plane
 			// from both the control plane and worker machines and vice versa, that makes 8 rules.
 			Expect(calicoSGRules).To(Equal(8))
+
+			shared.Logf("Check the bastion")
+			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
+			Expect(err).NotTo(HaveOccurred())
+			bastionSpec := openStackCluster.Spec.Bastion
+			Expect(openStackCluster.Status.Bastion).NotTo(BeNil(), "OpenStackCluster.Status.Bastion has not been populated")
+			bastionServerName := openStackCluster.Status.Bastion.Name
+			bastionServer, err := shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{Name: bastionServerName})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(bastionServer).To(HaveLen(1), "Did not find the bastion in OpenStack")
+
+			shared.Logf("Disable the bastion")
+			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
+			Expect(err).NotTo(HaveOccurred())
+			openStackClusterDisabledBastion := openStackCluster.DeepCopy()
+			openStackClusterDisabledBastion.Spec.Bastion.Enabled = false
+			Expect(e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackClusterDisabledBastion)).To(Succeed())
+			Eventually(
+				func() (bool, error) {
+					bastionServer, err := shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{Name: bastionServerName})
+					Expect(err).NotTo(HaveOccurred())
+					if len(bastionServer) == 0 {
+						return true, nil
+					}
+					return false, errors.New("Bastion was not deleted in OpenStack")
+				}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-bastion")...,
+			).Should(BeTrue())
+			Eventually(
+				func() (bool, error) {
+					openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
+					Expect(err).NotTo(HaveOccurred())
+					if openStackCluster.Status.Bastion == nil {
+						return true, nil
+					}
+					return false, errors.New("Bastion was not removed in OpenStackCluster.Status")
+				}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-bastion")...,
+			).Should(BeTrue())
+
+			shared.Logf("Delete the bastion")
+			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
+			Expect(err).NotTo(HaveOccurred())
+			openStackClusterWithoutBastion := openStackCluster.DeepCopy()
+			openStackClusterWithoutBastion.Spec.Bastion = nil
+			Expect(e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackClusterWithoutBastion)).To(Succeed())
+			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(
+				func() (bool, error) {
+					openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
+					Expect(err).NotTo(HaveOccurred())
+					if openStackCluster.Spec.Bastion == nil {
+						return true, nil
+					}
+					return false, errors.New("Bastion was not removed in OpenStackCluster.Spec")
+				}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-bastion")...,
+			).Should(BeTrue())
+
+			shared.Logf("Create the bastion with a new flavor")
+			bastionNewFlavorName := e2eCtx.E2EConfig.GetVariable(shared.OpenStackBastionFlavorAlt)
+			bastionNewFlavor, err := shared.GetFlavorFromName(e2eCtx, bastionNewFlavorName)
+			Expect(err).NotTo(HaveOccurred())
+			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
+			Expect(err).NotTo(HaveOccurred())
+			openStackClusterWithNewBastionFlavor := openStackCluster.DeepCopy()
+			openStackClusterWithNewBastionFlavor.Spec.Bastion = bastionSpec
+			openStackClusterWithNewBastionFlavor.Spec.Bastion.Instance.Flavor = bastionNewFlavorName
+			Expect(e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackClusterWithNewBastionFlavor)).To(Succeed())
+			Eventually(
+				func() (bool, error) {
+					bastionServer, err := shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{Name: bastionServerName, Flavor: bastionNewFlavor.ID})
+					Expect(err).NotTo(HaveOccurred())
+					if len(bastionServer) == 1 {
+						return true, nil
+					}
+					return false, errors.New("Bastion with new flavor was not created in OpenStack")
+				}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-bastion")...,
+			).Should(BeTrue())
+			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(openStackCluster.Spec.Bastion).To(Equal(openStackClusterWithNewBastionFlavor.Spec.Bastion))
+			Expect(openStackCluster.Status.Bastion).NotTo(BeNil(), "OpenStackCluster.Status.Bastion with new flavor has not been populated")
 		})
 	})
 

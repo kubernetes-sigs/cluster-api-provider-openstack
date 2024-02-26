@@ -35,6 +35,7 @@ const (
 	KubernetesVersion          = "KUBERNETES_VERSION"
 	CCMPath                    = "CCM"
 	CCMResources               = "CCM_RESOURCES"
+	OpenStackBastionFlavorAlt  = "OPENSTACK_BASTION_MACHINE_FLAVOR_ALT"
 	OpenStackCloudYAMLFile     = "OPENSTACK_CLOUD_YAML_FILE"
 	OpenStackCloud             = "OPENSTACK_CLOUD"
 	OpenStackCloudAdmin        = "OPENSTACK_CLOUD_ADMIN"
