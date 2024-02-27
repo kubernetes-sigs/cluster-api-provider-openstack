@@ -1,6 +1,6 @@
 ---
 resources:
-- ../../../../../kustomize/v1alpha8/flatcar-sysext
+- ../../../../../kustomize/v1beta1/flatcar-sysext
 
 components:
 - ../common-patches/cni

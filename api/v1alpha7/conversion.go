@@ -21,7 +21,7 @@ import (
 	"k8s.io/utils/pointer"
 	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha8"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/conversion"
 )
 
@@ -82,7 +82,7 @@ func restorev1alpha7ClusterStatus(previous *OpenStackClusterStatus, dst *OpenSta
 	restorev1alpha7SecurityGroup(previous.BastionSecurityGroup, dst.BastionSecurityGroup)
 }
 
-func restorev1alpha8SecurityGroupStatus(previous *infrav1.SecurityGroupStatus, dst *infrav1.SecurityGroupStatus) {
+func restorev1beta1SecurityGroupStatus(previous *infrav1.SecurityGroupStatus, dst *infrav1.SecurityGroupStatus) {
 	if previous == nil || dst == nil {
 		return
 	}
@@ -115,10 +115,10 @@ func restorev1alpha8SecurityGroupStatus(previous *infrav1.SecurityGroupStatus, d
 	}
 }
 
-func restorev1alpha8ClusterStatus(previous *infrav1.OpenStackClusterStatus, dst *infrav1.OpenStackClusterStatus) {
-	restorev1alpha8SecurityGroupStatus(previous.ControlPlaneSecurityGroup, dst.ControlPlaneSecurityGroup)
-	restorev1alpha8SecurityGroupStatus(previous.WorkerSecurityGroup, dst.WorkerSecurityGroup)
-	restorev1alpha8SecurityGroupStatus(previous.BastionSecurityGroup, dst.BastionSecurityGroup)
+func restorev1beta1ClusterStatus(previous *infrav1.OpenStackClusterStatus, dst *infrav1.OpenStackClusterStatus) {
+	restorev1beta1SecurityGroupStatus(previous.ControlPlaneSecurityGroup, dst.ControlPlaneSecurityGroup)
+	restorev1beta1SecurityGroupStatus(previous.WorkerSecurityGroup, dst.WorkerSecurityGroup)
+	restorev1beta1SecurityGroupStatus(previous.BastionSecurityGroup, dst.BastionSecurityGroup)
 
 	// ReferencedResources have no equivalent in v1alpha7
 	if previous.Bastion != nil {
@@ -130,18 +130,18 @@ func restorev1alpha8ClusterStatus(previous *infrav1.OpenStackClusterStatus, dst 
 	}
 }
 
-var v1alpha8OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStackCluster]{
+var v1beta1OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStackCluster]{
 	"bastion": conversion.HashedFieldRestorer(
 		func(c *infrav1.OpenStackCluster) **infrav1.Bastion {
 			return &c.Spec.Bastion
 		},
-		restorev1alpha8Bastion,
+		restorev1beta1Bastion,
 	),
 	"spec": conversion.HashedFieldRestorer(
 		func(c *infrav1.OpenStackCluster) *infrav1.OpenStackClusterSpec {
 			return &c.Spec
 		},
-		restorev1alpha8ClusterSpec,
+		restorev1beta1ClusterSpec,
 
 		// Filter out Bastion, which is restored separately
 		conversion.HashedFilterField[*infrav1.OpenStackCluster, infrav1.OpenStackClusterSpec](
@@ -160,14 +160,14 @@ var v1alpha8OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStack
 		func(c *infrav1.OpenStackCluster) *infrav1.OpenStackClusterStatus {
 			return &c.Status
 		},
-		restorev1alpha8ClusterStatus,
+		restorev1beta1ClusterStatus,
 	),
 }
 
 func restorev1alpha7MachineSpec(previous *OpenStackMachineSpec, dst *OpenStackMachineSpec) {
 	dst.FloatingIP = previous.FloatingIP
 
-	// Conversion to v1alpha8 truncates keys and values to 255 characters
+	// Conversion to v1beta1 truncates keys and values to 255 characters
 	for k, v := range previous.ServerMetadata {
 		kd := k
 		if len(k) > 255 {
@@ -185,18 +185,18 @@ func restorev1alpha7MachineSpec(previous *OpenStackMachineSpec, dst *OpenStackMa
 		}
 	}
 
-	// Conversion to v1alpha8 removes the Kind field
+	// Conversion to v1beta1 removes the Kind field
 	dst.IdentityRef = previous.IdentityRef
 }
 
-func restorev1alpha8MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *infrav1.OpenStackMachineSpec) {
+func restorev1beta1MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *infrav1.OpenStackMachineSpec) {
 	dst.ServerGroup = previous.ServerGroup
 	dst.Image = previous.Image
 }
 
-func restorev1alpha8Bastion(previous **infrav1.Bastion, dst **infrav1.Bastion) {
+func restorev1beta1Bastion(previous **infrav1.Bastion, dst **infrav1.Bastion) {
 	if *previous != nil && *dst != nil {
-		restorev1alpha8MachineSpec(&(*previous).Instance, &(*dst).Instance)
+		restorev1beta1MachineSpec(&(*previous).Instance, &(*dst).Instance)
 	}
 }
 
@@ -218,15 +218,15 @@ func restorev1alpha7ClusterSpec(previous *OpenStackClusterSpec, dst *OpenStackCl
 		dst.AllowAllInClusterTraffic = true
 	}
 
-	// Conversion to v1alpha8 removes the Kind field
+	// Conversion to v1beta1 removes the Kind field
 	dst.IdentityRef = previous.IdentityRef
 }
 
-func restorev1alpha8ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infrav1.OpenStackClusterSpec) {
+func restorev1beta1ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infrav1.OpenStackClusterSpec) {
 	prevBastion := previous.Bastion
 	dstBastion := dst.Bastion
 	if prevBastion != nil && dstBastion != nil {
-		restorev1alpha8MachineSpec(&prevBastion.Instance, &dstBastion.Instance)
+		restorev1beta1MachineSpec(&prevBastion.Instance, &dstBastion.Instance)
 	}
 
 	// Restore all fields except ID, which should have been copied over in conversion
@@ -256,8 +256,8 @@ func (r *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {
 
 	return conversion.ConvertAndRestore(
 		r, dst,
-		Convert_v1alpha7_OpenStackCluster_To_v1alpha8_OpenStackCluster, Convert_v1alpha8_OpenStackCluster_To_v1alpha7_OpenStackCluster,
-		v1alpha7OpenStackClusterRestorer, v1alpha8OpenStackClusterRestorer,
+		Convert_v1alpha7_OpenStackCluster_To_v1beta1_OpenStackCluster, Convert_v1beta1_OpenStackCluster_To_v1alpha7_OpenStackCluster,
+		v1alpha7OpenStackClusterRestorer, v1beta1OpenStackClusterRestorer,
 	)
 }
 
@@ -266,8 +266,8 @@ func (r *OpenStackCluster) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 
 	return conversion.ConvertAndRestore(
 		src, r,
-		Convert_v1alpha8_OpenStackCluster_To_v1alpha7_OpenStackCluster, Convert_v1alpha7_OpenStackCluster_To_v1alpha8_OpenStackCluster,
-		v1alpha8OpenStackClusterRestorer, v1alpha7OpenStackClusterRestorer,
+		Convert_v1beta1_OpenStackCluster_To_v1alpha7_OpenStackCluster, Convert_v1alpha7_OpenStackCluster_To_v1beta1_OpenStackCluster,
+		v1beta1OpenStackClusterRestorer, v1alpha7OpenStackClusterRestorer,
 	)
 }
 
@@ -276,13 +276,13 @@ var _ ctrlconversion.Convertible = &OpenStackClusterList{}
 func (r *OpenStackClusterList) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackClusterList)
 
-	return Convert_v1alpha7_OpenStackClusterList_To_v1alpha8_OpenStackClusterList(r, dst, nil)
+	return Convert_v1alpha7_OpenStackClusterList_To_v1beta1_OpenStackClusterList(r, dst, nil)
 }
 
 func (r *OpenStackClusterList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	src := srcRaw.(*infrav1.OpenStackClusterList)
 
-	return Convert_v1alpha8_OpenStackClusterList_To_v1alpha7_OpenStackClusterList(src, r, nil)
+	return Convert_v1beta1_OpenStackClusterList_To_v1alpha7_OpenStackClusterList(src, r, nil)
 }
 
 var _ ctrlconversion.Convertible = &OpenStackClusterTemplate{}
@@ -292,9 +292,9 @@ func restorev1alpha7ClusterTemplateSpec(previous *OpenStackClusterTemplateSpec, 
 	restorev1alpha7Bastion(&previous.Template.Spec.Bastion, &dst.Template.Spec.Bastion)
 }
 
-func restorev1alpha8ClusterTemplateSpec(previous *infrav1.OpenStackClusterTemplateSpec, dst *infrav1.OpenStackClusterTemplateSpec) {
-	restorev1alpha8Bastion(&previous.Template.Spec.Bastion, &dst.Template.Spec.Bastion)
-	restorev1alpha8ClusterSpec(&previous.Template.Spec, &dst.Template.Spec)
+func restorev1beta1ClusterTemplateSpec(previous *infrav1.OpenStackClusterTemplateSpec, dst *infrav1.OpenStackClusterTemplateSpec) {
+	restorev1beta1Bastion(&previous.Template.Spec.Bastion, &dst.Template.Spec.Bastion)
+	restorev1beta1ClusterSpec(&previous.Template.Spec, &dst.Template.Spec)
 }
 
 var v1alpha7OpenStackClusterTemplateRestorer = conversion.RestorerFor[*OpenStackClusterTemplate]{
@@ -306,12 +306,12 @@ var v1alpha7OpenStackClusterTemplateRestorer = conversion.RestorerFor[*OpenStack
 	),
 }
 
-var v1alpha8OpenStackClusterTemplateRestorer = conversion.RestorerFor[*infrav1.OpenStackClusterTemplate]{
+var v1beta1OpenStackClusterTemplateRestorer = conversion.RestorerFor[*infrav1.OpenStackClusterTemplate]{
 	"spec": conversion.HashedFieldRestorer(
 		func(c *infrav1.OpenStackClusterTemplate) *infrav1.OpenStackClusterTemplateSpec {
 			return &c.Spec
 		},
-		restorev1alpha8ClusterTemplateSpec,
+		restorev1beta1ClusterTemplateSpec,
 	),
 }
 
@@ -320,8 +320,8 @@ func (r *OpenStackClusterTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error {
 
 	return conversion.ConvertAndRestore(
 		r, dst,
-		Convert_v1alpha7_OpenStackClusterTemplate_To_v1alpha8_OpenStackClusterTemplate, Convert_v1alpha8_OpenStackClusterTemplate_To_v1alpha7_OpenStackClusterTemplate,
-		v1alpha7OpenStackClusterTemplateRestorer, v1alpha8OpenStackClusterTemplateRestorer,
+		Convert_v1alpha7_OpenStackClusterTemplate_To_v1beta1_OpenStackClusterTemplate, Convert_v1beta1_OpenStackClusterTemplate_To_v1alpha7_OpenStackClusterTemplate,
+		v1alpha7OpenStackClusterTemplateRestorer, v1beta1OpenStackClusterTemplateRestorer,
 	)
 }
 
@@ -330,8 +330,8 @@ func (r *OpenStackClusterTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) error 
 
 	return conversion.ConvertAndRestore(
 		src, r,
-		Convert_v1alpha8_OpenStackClusterTemplate_To_v1alpha7_OpenStackClusterTemplate, Convert_v1alpha7_OpenStackClusterTemplate_To_v1alpha8_OpenStackClusterTemplate,
-		v1alpha8OpenStackClusterTemplateRestorer, v1alpha7OpenStackClusterTemplateRestorer,
+		Convert_v1beta1_OpenStackClusterTemplate_To_v1alpha7_OpenStackClusterTemplate, Convert_v1alpha7_OpenStackClusterTemplate_To_v1beta1_OpenStackClusterTemplate,
+		v1beta1OpenStackClusterTemplateRestorer, v1alpha7OpenStackClusterTemplateRestorer,
 	)
 }
 
@@ -346,12 +346,12 @@ var v1alpha7OpenStackMachineRestorer = conversion.RestorerFor[*OpenStackMachine]
 	),
 }
 
-var v1alpha8OpenStackMachineRestorer = conversion.RestorerFor[*infrav1.OpenStackMachine]{
+var v1beta1OpenStackMachineRestorer = conversion.RestorerFor[*infrav1.OpenStackMachine]{
 	"spec": conversion.HashedFieldRestorer(
 		func(c *infrav1.OpenStackMachine) *infrav1.OpenStackMachineSpec {
 			return &c.Spec
 		},
-		restorev1alpha8MachineSpec,
+		restorev1beta1MachineSpec,
 	),
 	"depresources": conversion.UnconditionalFieldRestorer(
 		func(c *infrav1.OpenStackMachine) *infrav1.DependentMachineResources {
@@ -372,8 +372,8 @@ func (r *OpenStackMachine) ConvertTo(dstRaw ctrlconversion.Hub) error {
 
 	return conversion.ConvertAndRestore(
 		r, dst,
-		Convert_v1alpha7_OpenStackMachine_To_v1alpha8_OpenStackMachine, Convert_v1alpha8_OpenStackMachine_To_v1alpha7_OpenStackMachine,
-		v1alpha7OpenStackMachineRestorer, v1alpha8OpenStackMachineRestorer,
+		Convert_v1alpha7_OpenStackMachine_To_v1beta1_OpenStackMachine, Convert_v1beta1_OpenStackMachine_To_v1alpha7_OpenStackMachine,
+		v1alpha7OpenStackMachineRestorer, v1beta1OpenStackMachineRestorer,
 	)
 }
 
@@ -382,8 +382,8 @@ func (r *OpenStackMachine) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 
 	return conversion.ConvertAndRestore(
 		src, r,
-		Convert_v1alpha8_OpenStackMachine_To_v1alpha7_OpenStackMachine, Convert_v1alpha7_OpenStackMachine_To_v1alpha8_OpenStackMachine,
-		v1alpha8OpenStackMachineRestorer, v1alpha7OpenStackMachineRestorer,
+		Convert_v1beta1_OpenStackMachine_To_v1alpha7_OpenStackMachine, Convert_v1alpha7_OpenStackMachine_To_v1beta1_OpenStackMachine,
+		v1beta1OpenStackMachineRestorer, v1alpha7OpenStackMachineRestorer,
 	)
 }
 
@@ -391,12 +391,12 @@ var _ ctrlconversion.Convertible = &OpenStackMachineList{}
 
 func (r *OpenStackMachineList) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackMachineList)
-	return Convert_v1alpha7_OpenStackMachineList_To_v1alpha8_OpenStackMachineList(r, dst, nil)
+	return Convert_v1alpha7_OpenStackMachineList_To_v1beta1_OpenStackMachineList(r, dst, nil)
 }
 
 func (r *OpenStackMachineList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	src := srcRaw.(*infrav1.OpenStackMachineList)
-	return Convert_v1alpha8_OpenStackMachineList_To_v1alpha7_OpenStackMachineList(src, r, nil)
+	return Convert_v1beta1_OpenStackMachineList_To_v1alpha7_OpenStackMachineList(src, r, nil)
 }
 
 var _ ctrlconversion.Convertible = &OpenStackMachineTemplate{}
@@ -414,12 +414,12 @@ var v1alpha7OpenStackMachineTemplateRestorer = conversion.RestorerFor[*OpenStack
 	),
 }
 
-var v1alpha8OpenStackMachineTemplateRestorer = conversion.RestorerFor[*infrav1.OpenStackMachineTemplate]{
+var v1beta1OpenStackMachineTemplateRestorer = conversion.RestorerFor[*infrav1.OpenStackMachineTemplate]{
 	"spec": conversion.HashedFieldRestorer(
 		func(c *infrav1.OpenStackMachineTemplate) *infrav1.OpenStackMachineSpec {
 			return &c.Spec.Template.Spec
 		},
-		restorev1alpha8MachineSpec,
+		restorev1beta1MachineSpec,
 	),
 }
 
@@ -428,8 +428,8 @@ func (r *OpenStackMachineTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error {
 
 	return conversion.ConvertAndRestore(
 		r, dst,
-		Convert_v1alpha7_OpenStackMachineTemplate_To_v1alpha8_OpenStackMachineTemplate, Convert_v1alpha8_OpenStackMachineTemplate_To_v1alpha7_OpenStackMachineTemplate,
-		v1alpha7OpenStackMachineTemplateRestorer, v1alpha8OpenStackMachineTemplateRestorer,
+		Convert_v1alpha7_OpenStackMachineTemplate_To_v1beta1_OpenStackMachineTemplate, Convert_v1beta1_OpenStackMachineTemplate_To_v1alpha7_OpenStackMachineTemplate,
+		v1alpha7OpenStackMachineTemplateRestorer, v1beta1OpenStackMachineTemplateRestorer,
 	)
 }
 
@@ -438,8 +438,8 @@ func (r *OpenStackMachineTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) error 
 
 	return conversion.ConvertAndRestore(
 		src, r,
-		Convert_v1alpha8_OpenStackMachineTemplate_To_v1alpha7_OpenStackMachineTemplate, Convert_v1alpha7_OpenStackMachineTemplate_To_v1alpha8_OpenStackMachineTemplate,
-		v1alpha8OpenStackMachineTemplateRestorer, v1alpha7OpenStackMachineTemplateRestorer,
+		Convert_v1beta1_OpenStackMachineTemplate_To_v1alpha7_OpenStackMachineTemplate, Convert_v1alpha7_OpenStackMachineTemplate_To_v1beta1_OpenStackMachineTemplate,
+		v1beta1OpenStackMachineTemplateRestorer, v1alpha7OpenStackMachineTemplateRestorer,
 	)
 }
 
@@ -447,16 +447,16 @@ var _ ctrlconversion.Convertible = &OpenStackMachineTemplateList{}
 
 func (r *OpenStackMachineTemplateList) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackMachineTemplateList)
-	return Convert_v1alpha7_OpenStackMachineTemplateList_To_v1alpha8_OpenStackMachineTemplateList(r, dst, nil)
+	return Convert_v1alpha7_OpenStackMachineTemplateList_To_v1beta1_OpenStackMachineTemplateList(r, dst, nil)
 }
 
 func (r *OpenStackMachineTemplateList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	src := srcRaw.(*infrav1.OpenStackMachineTemplateList)
-	return Convert_v1alpha8_OpenStackMachineTemplateList_To_v1alpha7_OpenStackMachineTemplateList(src, r, nil)
+	return Convert_v1beta1_OpenStackMachineTemplateList_To_v1alpha7_OpenStackMachineTemplateList(src, r, nil)
 }
 
-func Convert_v1alpha8_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in *infrav1.OpenStackMachineSpec, out *OpenStackMachineSpec, s apiconversion.Scope) error {
-	err := autoConvert_v1alpha8_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in, out, s)
+func Convert_v1beta1_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in *infrav1.OpenStackMachineSpec, out *OpenStackMachineSpec, s apiconversion.Scope) error {
+	err := autoConvert_v1beta1_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in, out, s)
 	if err != nil {
 		return err
 	}
@@ -486,8 +486,8 @@ func Convert_v1alpha8_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in *
 	return nil
 }
 
-func Convert_v1alpha7_OpenStackMachineSpec_To_v1alpha8_OpenStackMachineSpec(in *OpenStackMachineSpec, out *infrav1.OpenStackMachineSpec, s apiconversion.Scope) error {
-	err := autoConvert_v1alpha7_OpenStackMachineSpec_To_v1alpha8_OpenStackMachineSpec(in, out, s)
+func Convert_v1alpha7_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in *OpenStackMachineSpec, out *infrav1.OpenStackMachineSpec, s apiconversion.Scope) error {
+	err := autoConvert_v1alpha7_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in, out, s)
 	if err != nil {
 		return err
 	}
@@ -511,7 +511,7 @@ func Convert_v1alpha7_OpenStackMachineSpec_To_v1alpha8_OpenStackMachineSpec(in *
 		serverMetadata := make([]infrav1.ServerMetadata, 0, len(in.ServerMetadata))
 		for k, v := range in.ServerMetadata {
 			// Truncate key and value to 255 characters if required, as this
-			// was not validated prior to v1alpha8
+			// was not validated prior to v1beta1
 			if len(k) > 255 {
 				k = k[:255]
 			}
@@ -527,18 +527,18 @@ func Convert_v1alpha7_OpenStackMachineSpec_To_v1alpha8_OpenStackMachineSpec(in *
 	return nil
 }
 
-func Convert_v1alpha8_OpenStackMachineStatus_To_v1alpha7_OpenStackMachineStatus(in *infrav1.OpenStackMachineStatus, out *OpenStackMachineStatus, s apiconversion.Scope) error {
+func Convert_v1beta1_OpenStackMachineStatus_To_v1alpha7_OpenStackMachineStatus(in *infrav1.OpenStackMachineStatus, out *OpenStackMachineStatus, s apiconversion.Scope) error {
 	// ReferencedResources have no equivalent in v1alpha7
-	return autoConvert_v1alpha8_OpenStackMachineStatus_To_v1alpha7_OpenStackMachineStatus(in, out, s)
+	return autoConvert_v1beta1_OpenStackMachineStatus_To_v1alpha7_OpenStackMachineStatus(in, out, s)
 }
 
-func Convert_v1alpha8_BastionStatus_To_v1alpha7_BastionStatus(in *infrav1.BastionStatus, out *BastionStatus, s apiconversion.Scope) error {
+func Convert_v1beta1_BastionStatus_To_v1alpha7_BastionStatus(in *infrav1.BastionStatus, out *BastionStatus, s apiconversion.Scope) error {
 	// ReferencedResources have no equivalent in v1alpha7
-	return autoConvert_v1alpha8_BastionStatus_To_v1alpha7_BastionStatus(in, out, s)
+	return autoConvert_v1beta1_BastionStatus_To_v1alpha7_BastionStatus(in, out, s)
 }
 
-func Convert_v1alpha7_Bastion_To_v1alpha8_Bastion(in *Bastion, out *infrav1.Bastion, s apiconversion.Scope) error {
-	err := autoConvert_v1alpha7_Bastion_To_v1alpha8_Bastion(in, out, s)
+func Convert_v1alpha7_Bastion_To_v1beta1_Bastion(in *Bastion, out *infrav1.Bastion, s apiconversion.Scope) error {
+	err := autoConvert_v1alpha7_Bastion_To_v1beta1_Bastion(in, out, s)
 	if err != nil {
 		return err
 	}
@@ -553,8 +553,8 @@ func Convert_v1alpha7_Bastion_To_v1alpha8_Bastion(in *Bastion, out *infrav1.Bast
 	return nil
 }
 
-func Convert_v1alpha8_Bastion_To_v1alpha7_Bastion(in *infrav1.Bastion, out *Bastion, s apiconversion.Scope) error {
-	err := autoConvert_v1alpha8_Bastion_To_v1alpha7_Bastion(in, out, s)
+func Convert_v1beta1_Bastion_To_v1alpha7_Bastion(in *infrav1.Bastion, out *Bastion, s apiconversion.Scope) error {
+	err := autoConvert_v1beta1_Bastion_To_v1alpha7_Bastion(in, out, s)
 	if err != nil {
 		return err
 	}
@@ -567,8 +567,8 @@ func Convert_v1alpha8_Bastion_To_v1alpha7_Bastion(in *infrav1.Bastion, out *Bast
 	return nil
 }
 
-func Convert_v1alpha7_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(in *OpenStackClusterSpec, out *infrav1.OpenStackClusterSpec, s apiconversion.Scope) error {
-	err := autoConvert_v1alpha7_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(in, out, s)
+func Convert_v1alpha7_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *OpenStackClusterSpec, out *infrav1.OpenStackClusterSpec, s apiconversion.Scope) error {
+	err := autoConvert_v1alpha7_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in, out, s)
 	if err != nil {
 		return err
 	}
@@ -582,7 +582,7 @@ func Convert_v1alpha7_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(in *
 	emptySubnet := SubnetFilter{}
 	if in.Subnet != emptySubnet {
 		subnet := infrav1.SubnetFilter{}
-		if err := Convert_v1alpha7_SubnetFilter_To_v1alpha8_SubnetFilter(&in.Subnet, &subnet, s); err != nil {
+		if err := Convert_v1alpha7_SubnetFilter_To_v1beta1_SubnetFilter(&in.Subnet, &subnet, s); err != nil {
 			return err
 		}
 		out.Subnets = []infrav1.SubnetFilter{subnet}
@@ -610,8 +610,8 @@ func Convert_v1alpha7_OpenStackClusterSpec_To_v1alpha8_OpenStackClusterSpec(in *
 	return nil
 }
 
-func Convert_v1alpha8_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in *infrav1.OpenStackClusterSpec, out *OpenStackClusterSpec, s apiconversion.Scope) error {
-	err := autoConvert_v1alpha8_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in, out, s)
+func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in *infrav1.OpenStackClusterSpec, out *OpenStackClusterSpec, s apiconversion.Scope) error {
+	err := autoConvert_v1beta1_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in, out, s)
 	if err != nil {
 		return err
 	}
@@ -621,7 +621,7 @@ func Convert_v1alpha8_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in *
 	}
 
 	if len(in.Subnets) >= 1 {
-		if err := Convert_v1alpha8_SubnetFilter_To_v1alpha7_SubnetFilter(&in.Subnets[0], &out.Subnet, s); err != nil {
+		if err := Convert_v1beta1_SubnetFilter_To_v1alpha7_SubnetFilter(&in.Subnets[0], &out.Subnet, s); err != nil {
 			return err
 		}
 	}
@@ -639,7 +639,7 @@ func Convert_v1alpha8_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in *
 	return nil
 }
 
-func Convert_v1alpha8_SecurityGroupStatus_To_v1alpha7_SecurityGroup(in *infrav1.SecurityGroupStatus, out *SecurityGroup, s apiconversion.Scope) error { //nolint:revive
+func Convert_v1beta1_SecurityGroupStatus_To_v1alpha7_SecurityGroup(in *infrav1.SecurityGroupStatus, out *SecurityGroup, s apiconversion.Scope) error { //nolint:revive
 	out.ID = in.ID
 	out.Name = in.Name
 	out.Rules = make([]SecurityGroupRule, len(in.Rules))
@@ -673,7 +673,7 @@ func Convert_v1alpha8_SecurityGroupStatus_To_v1alpha7_SecurityGroup(in *infrav1.
 	return nil
 }
 
-func Convert_v1alpha7_SecurityGroup_To_v1alpha8_SecurityGroupStatus(in *SecurityGroup, out *infrav1.SecurityGroupStatus, s apiconversion.Scope) error { //nolint:revive
+func Convert_v1alpha7_SecurityGroup_To_v1beta1_SecurityGroupStatus(in *SecurityGroup, out *infrav1.SecurityGroupStatus, s apiconversion.Scope) error { //nolint:revive
 	out.ID = in.ID
 	out.Name = in.Name
 	out.Rules = make([]infrav1.SecurityGroupRuleStatus, len(in.Rules))
@@ -694,10 +694,10 @@ func Convert_v1alpha7_SecurityGroup_To_v1alpha8_SecurityGroupStatus(in *Security
 	return nil
 }
 
-func Convert_v1alpha7_OpenStackIdentityReference_To_v1alpha8_OpenStackIdentityReference(in *OpenStackIdentityReference, out *infrav1.OpenStackIdentityReference, s apiconversion.Scope) error {
-	return autoConvert_v1alpha7_OpenStackIdentityReference_To_v1alpha8_OpenStackIdentityReference(in, out, s)
+func Convert_v1alpha7_OpenStackIdentityReference_To_v1beta1_OpenStackIdentityReference(in *OpenStackIdentityReference, out *infrav1.OpenStackIdentityReference, s apiconversion.Scope) error {
+	return autoConvert_v1alpha7_OpenStackIdentityReference_To_v1beta1_OpenStackIdentityReference(in, out, s)
 }
 
-func Convert_v1alpha8_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(in *infrav1.OpenStackClusterStatus, out *OpenStackClusterStatus, s apiconversion.Scope) error {
-	return autoConvert_v1alpha8_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(in, out, s)
+func Convert_v1beta1_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(in *infrav1.OpenStackClusterStatus, out *OpenStackClusterStatus, s apiconversion.Scope) error {
+	return autoConvert_v1beta1_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(in, out, s)
 }

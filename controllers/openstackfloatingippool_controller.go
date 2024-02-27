@@ -42,7 +42,7 @@ import (
 
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha8"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )

@@ -60,7 +60,7 @@ spec:
     kind: KubeadmControlPlane
     name: ${CLUSTER_NAME}-control-plane
   infrastructureRef:
-    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+    apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
     kind: OpenStackCluster
     name: ${CLUSTER_NAME}
 ---
@@ -83,7 +83,7 @@ spec:
       clusterName: ${CLUSTER_NAME}
       failureDomain: ${OPENSTACK_FAILURE_DOMAIN}
       infrastructureRef:
-        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
         kind: OpenStackMachineTemplate
         name: ${CLUSTER_NAME}-md-0
       version: ${KUBERNETES_VERSION}
@@ -137,13 +137,13 @@ spec:
     - mv /etc/kubeadm.yml.tmp /etc/kubeadm.yml
   machineTemplate:
     infrastructureRef:
-      apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+      apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
       kind: OpenStackMachineTemplate
       name: ${CLUSTER_NAME}-control-plane
   replicas: ${CONTROL_PLANE_MACHINE_COUNT}
   version: ${KUBERNETES_VERSION}
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: OpenStackCluster
 metadata:
   name: ${CLUSTER_NAME}
@@ -178,7 +178,7 @@ spec:
     dnsNameservers:
     - ${OPENSTACK_DNS_NAMESERVERS}
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: OpenStackMachineTemplate
 metadata:
   name: ${CLUSTER_NAME}-control-plane
@@ -193,7 +193,7 @@ spec:
         name: ${OPENSTACK_FLATCAR_IMAGE_NAME}
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1alpha8
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: OpenStackMachineTemplate
 metadata:
   name: ${CLUSTER_NAME}-md-0

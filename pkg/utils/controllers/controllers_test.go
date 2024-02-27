@@ -19,7 +19,7 @@ package controllers
 import (
 	"testing"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha8"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
 func Test_validateSubnets(t *testing.T) {

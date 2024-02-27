@@ -10,7 +10,7 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-infrastructure-cluster-x-k8s-io-v1alpha8-openstackcluster
+      path: /mutate-infrastructure-cluster-x-k8s-io-v1beta1-openstackcluster
   failurePolicy: Fail
   matchPolicy: Equivalent
   name: default.openstackcluster.infrastructure.cluster.x-k8s.io
@@ -18,7 +18,7 @@ webhooks:
   - apiGroups:
     - infrastructure.cluster.x-k8s.io
     apiVersions:
-    - v1alpha8
+    - v1beta1
     operations:
     - CREATE
     - UPDATE
@@ -31,7 +31,7 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-infrastructure-cluster-x-k8s-io-v1alpha8-openstackclustertemplate
+      path: /mutate-infrastructure-cluster-x-k8s-io-v1beta1-openstackclustertemplate
   failurePolicy: Fail
   matchPolicy: Equivalent
   name: default.openstackclustertemplate.infrastructure.cluster.x-k8s.io
@@ -39,7 +39,7 @@ webhooks:
   - apiGroups:
     - infrastructure.cluster.x-k8s.io
     apiVersions:
-    - v1alpha8
+    - v1beta1
     operations:
     - CREATE
     - UPDATE
@@ -52,7 +52,7 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-infrastructure-cluster-x-k8s-io-v1alpha8-openstackmachine
+      path: /mutate-infrastructure-cluster-x-k8s-io-v1beta1-openstackmachine
   failurePolicy: Fail
   matchPolicy: Equivalent
   name: default.openstackmachine.infrastructure.cluster.x-k8s.io
@@ -60,7 +60,7 @@ webhooks:
   - apiGroups:
     - infrastructure.cluster.x-k8s.io
     apiVersions:
-    - v1alpha8
+    - v1beta1
     operations:
     - CREATE
     - UPDATE
@@ -79,7 +79,7 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-infrastructure-cluster-x-k8s-io-v1alpha8-openstackcluster
+      path: /validate-infrastructure-cluster-x-k8s-io-v1beta1-openstackcluster
   failurePolicy: Fail
   matchPolicy: Equivalent
   name: validation.openstackcluster.infrastructure.cluster.x-k8s.io
@@ -87,7 +87,7 @@ webhooks:
   - apiGroups:
     - infrastructure.cluster.x-k8s.io
     apiVersions:
-    - v1alpha8
+    - v1beta1
     operations:
     - CREATE
     - UPDATE
@@ -100,7 +100,7 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-infrastructure-cluster-x-k8s-io-v1alpha8-openstackclustertemplate
+      path: /validate-infrastructure-cluster-x-k8s-io-v1beta1-openstackclustertemplate
   failurePolicy: Fail
   matchPolicy: Equivalent
   name: validation.openstackclustertemplate.infrastructure.cluster.x-k8s.io
@@ -108,7 +108,7 @@ webhooks:
   - apiGroups:
     - infrastructure.cluster.x-k8s.io
     apiVersions:
-    - v1alpha8
+    - v1beta1
     operations:
     - CREATE
     - UPDATE
@@ -121,7 +121,7 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-infrastructure-cluster-x-k8s-io-v1alpha8-openstackmachine
+      path: /validate-infrastructure-cluster-x-k8s-io-v1beta1-openstackmachine
   failurePolicy: Fail
   matchPolicy: Equivalent
   name: validation.openstackmachine.infrastructure.cluster.x-k8s.io
@@ -129,7 +129,7 @@ webhooks:
   - apiGroups:
     - infrastructure.cluster.x-k8s.io
     apiVersions:
-    - v1alpha8
+    - v1beta1
     operations:
     - CREATE
     - UPDATE
@@ -142,7 +142,7 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-infrastructure-cluster-x-k8s-io-v1alpha8-openstackmachinetemplate
+      path: /validate-infrastructure-cluster-x-k8s-io-v1beta1-openstackmachinetemplate
   failurePolicy: Fail
   matchPolicy: Equivalent
   name: validation.openstackmachinetemplate.infrastructure.cluster.x-k8s.io
@@ -150,7 +150,7 @@ webhooks:
   - apiGroups:
     - infrastructure.cluster.x-k8s.io
     apiVersions:
-    - v1alpha8
+    - v1beta1
     operations:
     - CREATE
     - UPDATE
