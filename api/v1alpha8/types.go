@@ -92,9 +92,25 @@ type SubnetSpec struct {
 	// This field is required when defining a subnet.
 	// +required
 	CIDR string `json:"cidr"`
+
 	// DNSNameservers holds a list of DNS server addresses that will be provided when creating
 	// the subnet. These addresses need to have the same IP version as CIDR.
 	DNSNameservers []string `json:"dnsNameservers,omitempty"`
+
+	// AllocationPools is an array of AllocationPool objects that will be applied to OpenStack Subnet being created.
+	// If set, OpenStack will only allocate these IPs for Machines. It will still be possible to create ports from
+	// outside of these ranges manually.
+	AllocationPools []AllocationPool `json:"allocationPools,omitempty"`
+}
+
+type AllocationPool struct {
+	// Start represents the start of the AllocationPool, that is the lowest IP of the pool.
+	// +required
+	Start string `json:"start"`
+
+	// End represents the end of the AlloctionPool, that is the highest IP of the pool.
+	// +required
+	End string `json:"end"`
 }
 
 type PortOpts struct {

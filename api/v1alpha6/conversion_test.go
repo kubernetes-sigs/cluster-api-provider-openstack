@@ -142,6 +142,19 @@ func TestFuzzyConversion(t *testing.T) {
 					spec.CIDR = c.RandString()
 				}
 			},
+
+			func(pool *infrav1.AllocationPool, c fuzz.Continue) {
+				c.FuzzNoCustom(pool)
+
+				// Start and End are required properties, let's make sure both are set
+				for pool.Start == "" {
+					pool.Start = c.RandString()
+				}
+
+				for pool.End == "" {
+					pool.End = c.RandString()
+				}
+			},
 		}
 	}
 
