@@ -544,8 +544,6 @@ func getBastionSecurityGroups(openStackCluster *infrav1.OpenStackCluster) []infr
 }
 
 func getOrCreateBastionPorts(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, networkingService *networking.Service, clusterName string) error {
-	scope.Logger().Info("Reconciling ports for bastion", "bastion", bastionName(openStackCluster.Name))
-
 	if openStackCluster.Status.Bastion == nil {
 		openStackCluster.Status.Bastion = &infrav1.BastionStatus{}
 	}

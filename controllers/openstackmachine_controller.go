@@ -491,7 +491,6 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 }
 
 func getOrCreateMachinePorts(scope *scope.WithLogger, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, networkingService *networking.Service, clusterName string) error {
-	scope.Logger().Info("Reconciling ports for machine", "machine", machine.Name)
 	var machinePortsStatus []infrav1.PortStatus
 	var err error
 
