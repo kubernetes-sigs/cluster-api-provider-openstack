@@ -258,14 +258,14 @@ generate-controller-gen: $(CONTROLLER_GEN)
 		object:headerFile=./hack/boilerplate/boilerplate.generatego.txt
 
 .PHONY: generate-conversion-gen
+capo_module := sigs.k8s.io/cluster-api-provider-openstack
 generate-conversion-gen: $(CONVERSION_GEN)
 	$(CONVERSION_GEN) \
-		--input-dirs=./api/v1alpha1 \
-		--input-dirs=./api/v1alpha5 \
-		--input-dirs=./api/v1alpha6 \
-		--input-dirs=./api/v1alpha7 \
-		--input-dirs=./api/v1beta1 \
+		--input-dirs=$(capo_module)/api/v1alpha5 \
+		--input-dirs=$(capo_module)/api/v1alpha6 \
+		--input-dirs=$(capo_module)/api/v1alpha7 \
 		--output-file-base=zz_generated.conversion \
+		--trim-path-prefix=$(capo_module)/ \
 		--go-header-file=./hack/boilerplate/boilerplate.generatego.txt
 
 .PHONY: generate-manifests
