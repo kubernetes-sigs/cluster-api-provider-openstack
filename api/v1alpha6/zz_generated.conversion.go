@@ -1227,6 +1227,7 @@ func autoConvert_v1alpha8_OpenStackMachineStatus_To_v1alpha6_OpenStackMachineSta
 	out.Addresses = *(*[]v1.NodeAddress)(unsafe.Pointer(&in.Addresses))
 	out.InstanceState = (*InstanceState)(unsafe.Pointer(in.InstanceState))
 	// WARNING: in.ReferencedResources requires manual conversion: does not exist in peer-type
+	// WARNING: in.DependentResources requires manual conversion: does not exist in peer-type
 	out.FailureReason = (*errors.MachineStatusError)(unsafe.Pointer(in.FailureReason))
 	out.FailureMessage = (*string)(unsafe.Pointer(in.FailureMessage))
 	out.Conditions = *(*v1beta1.Conditions)(unsafe.Pointer(&in.Conditions))

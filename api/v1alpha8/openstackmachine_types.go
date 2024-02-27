@@ -119,6 +119,9 @@ type OpenStackMachineStatus struct {
 	// ReferencedResources contains resolved references to resources that the machine depends on.
 	ReferencedResources ReferencedMachineResources `json:"referencedResources,omitempty"`
 
+	// DependentResources contains resolved dependent resources that were created by the machine.
+	DependentResources DependentMachineResources `json:"dependentResources,omitempty"`
+
 	FailureReason *errors.MachineStatusError `json:"failureReason,omitempty"`
 
 	// FailureMessage will be set in the event that there is a terminal problem

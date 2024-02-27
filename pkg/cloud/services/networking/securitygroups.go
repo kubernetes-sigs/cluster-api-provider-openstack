@@ -323,6 +323,11 @@ func (s *Service) DeleteSecurityGroups(openStackCluster *infrav1.OpenStackCluste
 		getSecControlPlaneGroupName(clusterName),
 		getSecWorkerGroupName(clusterName),
 	}
+
+	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
+		secGroupNames = append(secGroupNames, getSecBastionGroupName(clusterName))
+	}
+
 	for _, secGroupName := range secGroupNames {
 		if err := s.deleteSecurityGroup(openStackCluster, secGroupName); err != nil {
 			return err
@@ -330,11 +335,6 @@ func (s *Service) DeleteSecurityGroups(openStackCluster *infrav1.OpenStackCluste
 	}
 
 	return nil
-}
-
-func (s *Service) DeleteBastionSecurityGroup(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
-	secBastionGroupName := getSecBastionGroupName(clusterName)
-	return s.deleteSecurityGroup(openStackCluster, secBastionGroupName)
 }
 
 func (s *Service) deleteSecurityGroup(openStackCluster *infrav1.OpenStackCluster, name string) error {

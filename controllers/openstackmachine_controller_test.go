@@ -17,6 +17,7 @@ limitations under the License.
 package controllers
 
 import (
+	"reflect"
 	"testing"
 
 	. "github.com/onsi/gomega"
@@ -257,6 +258,257 @@ func Test_machineToInstanceSpec(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := machineToInstanceSpec(tt.openStackCluster(), tt.machine(), tt.openStackMachine(), "user-data")
 			Expect(got).To(Equal(tt.wantInstanceSpec()))
+		})
+	}
+}
+
+func Test_getInstanceTags(t *testing.T) {
+	tests := []struct {
+		name             string
+		openStackMachine func() *infrav1.OpenStackMachine
+		openStackCluster func() *infrav1.OpenStackCluster
+		wantMachineTags  []string
+	}{
+		{
+			name: "No tags",
+			openStackMachine: func() *infrav1.OpenStackMachine {
+				return &infrav1.OpenStackMachine{
+					Spec: infrav1.OpenStackMachineSpec{},
+				}
+			},
+			openStackCluster: func() *infrav1.OpenStackCluster {
+				return &infrav1.OpenStackCluster{
+					Spec: infrav1.OpenStackClusterSpec{},
+				}
+			},
+			wantMachineTags: []string{},
+		},
+		{
+			name: "Machine tags only",
+			openStackMachine: func() *infrav1.OpenStackMachine {
+				return &infrav1.OpenStackMachine{
+					Spec: infrav1.OpenStackMachineSpec{
+						Tags: []string{"machine-tag1", "machine-tag2"},
+					},
+				}
+			},
+			openStackCluster: func() *infrav1.OpenStackCluster {
+				return &infrav1.OpenStackCluster{
+					Spec: infrav1.OpenStackClusterSpec{},
+				}
+			},
+			wantMachineTags: []string{"machine-tag1", "machine-tag2"},
+		},
+		{
+			name: "Cluster tags only",
+			openStackMachine: func() *infrav1.OpenStackMachine {
+				return &infrav1.OpenStackMachine{
+					Spec: infrav1.OpenStackMachineSpec{},
+				}
+			},
+			openStackCluster: func() *infrav1.OpenStackCluster {
+				return &infrav1.OpenStackCluster{
+					Spec: infrav1.OpenStackClusterSpec{
+						Tags: []string{"cluster-tag1", "cluster-tag2"},
+					},
+				}
+			},
+			wantMachineTags: []string{"cluster-tag1", "cluster-tag2"},
+		},
+		{
+			name: "Machine and cluster tags",
+			openStackMachine: func() *infrav1.OpenStackMachine {
+				return &infrav1.OpenStackMachine{
+					Spec: infrav1.OpenStackMachineSpec{
+						Tags: []string{"machine-tag1", "machine-tag2"},
+					},
+				}
+			},
+			openStackCluster: func() *infrav1.OpenStackCluster {
+				return &infrav1.OpenStackCluster{
+					Spec: infrav1.OpenStackClusterSpec{
+						Tags: []string{"cluster-tag1", "cluster-tag2"},
+					},
+				}
+			},
+			wantMachineTags: []string{"machine-tag1", "machine-tag2", "cluster-tag1", "cluster-tag2"},
+		},
+		{
+			name: "Duplicate tags",
+			openStackMachine: func() *infrav1.OpenStackMachine {
+				return &infrav1.OpenStackMachine{
+					Spec: infrav1.OpenStackMachineSpec{
+						Tags: []string{"tag1", "tag2", "tag1"},
+					},
+				}
+			},
+			openStackCluster: func() *infrav1.OpenStackCluster {
+				return &infrav1.OpenStackCluster{
+					Spec: infrav1.OpenStackClusterSpec{
+						Tags: []string{"tag2", "tag3", "tag3"},
+					},
+				}
+			},
+			wantMachineTags: []string{"tag1", "tag2", "tag3"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotMachineTags := getInstanceTags(tt.openStackMachine(), tt.openStackCluster())
+			if !reflect.DeepEqual(gotMachineTags, tt.wantMachineTags) {
+				t.Errorf("getInstanceTags() = %v, want %v", gotMachineTags, tt.wantMachineTags)
+			}
+		})
+	}
+}
+
+func Test_getManagedSecurityGroups(t *testing.T) {
+	tests := []struct {
+		name               string
+		openStackCluster   func() *infrav1.OpenStackCluster
+		machine            func() *clusterv1.Machine
+		openStackMachine   func() *infrav1.OpenStackMachine
+		wantSecurityGroups []infrav1.SecurityGroupFilter
+	}{
+		{
+			name:               "Defaults",
+			openStackCluster:   getDefaultOpenStackCluster,
+			machine:            getDefaultMachine,
+			openStackMachine:   getDefaultOpenStackMachine,
+			wantSecurityGroups: []infrav1.SecurityGroupFilter{},
+		},
+		{
+			name: "Control plane machine with control plane security group",
+			openStackCluster: func() *infrav1.OpenStackCluster {
+				c := getDefaultOpenStackCluster()
+				c.Spec.ManagedSecurityGroups = &infrav1.ManagedSecurityGroups{}
+				c.Status.ControlPlaneSecurityGroup = &infrav1.SecurityGroupStatus{ID: controlPlaneSecurityGroupUUID}
+				return c
+			},
+			machine: func() *clusterv1.Machine {
+				m := getDefaultMachine()
+				m.Labels = map[string]string{
+					clusterv1.MachineControlPlaneLabel: "true",
+				}
+				return m
+			},
+			openStackMachine: getDefaultOpenStackMachine,
+			wantSecurityGroups: []infrav1.SecurityGroupFilter{
+				{ID: controlPlaneSecurityGroupUUID},
+			},
+		},
+		{
+			name: "Worker machine with worker security group",
+			openStackCluster: func() *infrav1.OpenStackCluster {
+				c := getDefaultOpenStackCluster()
+				c.Spec.ManagedSecurityGroups = &infrav1.ManagedSecurityGroups{}
+				c.Status.WorkerSecurityGroup = &infrav1.SecurityGroupStatus{ID: workerSecurityGroupUUID}
+				return c
+			},
+			machine:          getDefaultMachine,
+			openStackMachine: getDefaultOpenStackMachine,
+			wantSecurityGroups: []infrav1.SecurityGroupFilter{
+				{ID: workerSecurityGroupUUID},
+			},
+		},
+		{
+			name: "Control plane machine without control plane security group",
+			openStackCluster: func() *infrav1.OpenStackCluster {
+				c := getDefaultOpenStackCluster()
+				c.Spec.ManagedSecurityGroups = &infrav1.ManagedSecurityGroups{}
+				c.Status.ControlPlaneSecurityGroup = nil
+				return c
+			},
+			machine: func() *clusterv1.Machine {
+				m := getDefaultMachine()
+				m.Labels = map[string]string{
+					clusterv1.MachineControlPlaneLabel: "true",
+				}
+				return m
+			},
+			openStackMachine:   getDefaultOpenStackMachine,
+			wantSecurityGroups: []infrav1.SecurityGroupFilter{},
+		},
+		{
+			name: "Worker machine without worker security group",
+			openStackCluster: func() *infrav1.OpenStackCluster {
+				c := getDefaultOpenStackCluster()
+				c.Spec.ManagedSecurityGroups = &infrav1.ManagedSecurityGroups{}
+				c.Status.WorkerSecurityGroup = nil
+				return c
+			},
+			machine:            getDefaultMachine,
+			openStackMachine:   getDefaultOpenStackMachine,
+			wantSecurityGroups: []infrav1.SecurityGroupFilter{},
+		},
+		{
+			name: "Machine with additional security groups",
+			openStackCluster: func() *infrav1.OpenStackCluster {
+				c := getDefaultOpenStackCluster()
+				c.Spec.ManagedSecurityGroups = &infrav1.ManagedSecurityGroups{}
+				c.Status.ControlPlaneSecurityGroup = &infrav1.SecurityGroupStatus{ID: controlPlaneSecurityGroupUUID}
+				c.Status.WorkerSecurityGroup = &infrav1.SecurityGroupStatus{ID: workerSecurityGroupUUID}
+				return c
+			},
+			machine: getDefaultMachine,
+			openStackMachine: func() *infrav1.OpenStackMachine {
+				m := getDefaultOpenStackMachine()
+				m.Spec.SecurityGroups = []infrav1.SecurityGroupFilter{{ID: extraSecurityGroupUUID}}
+				return m
+			},
+			wantSecurityGroups: []infrav1.SecurityGroupFilter{
+				{ID: extraSecurityGroupUUID},
+				{ID: workerSecurityGroupUUID},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotMachineSecurity := getManagedSecurityGroups(tt.openStackCluster(), tt.machine(), tt.openStackMachine())
+			if !reflect.DeepEqual(gotMachineSecurity, tt.wantSecurityGroups) {
+				t.Errorf("getManagedSecurityGroups() = %v, want %v", gotMachineSecurity, tt.wantSecurityGroups)
+			}
+		})
+	}
+}
+
+func TestGetPortIDs(t *testing.T) {
+	tests := []struct {
+		name  string
+		ports []infrav1.PortStatus
+		want  []string
+	}{
+		{
+			name:  "Empty ports",
+			ports: []infrav1.PortStatus{},
+			want:  []string{},
+		},
+		{
+			name: "Single port",
+			ports: []infrav1.PortStatus{
+				{ID: "port1"},
+			},
+			want: []string{"port1"},
+		},
+		{
+			name: "Multiple ports",
+			ports: []infrav1.PortStatus{
+				{ID: "port1"},
+				{ID: "port2"},
+				{ID: "port3"},
+			},
+			want: []string{"port1", "port2", "port3"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := GetPortIDs(tt.ports)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetPortIDs() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }

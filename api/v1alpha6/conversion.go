@@ -125,13 +125,16 @@ func restorev1alpha8ClusterStatus(previous *infrav1.OpenStackClusterStatus, dst 
 		dst.Network = nil
 	}
 
-	if previous.Bastion != nil {
-		dst.Bastion.ReferencedResources = previous.Bastion.ReferencedResources
-	}
-
 	dst.ControlPlaneSecurityGroup = previous.ControlPlaneSecurityGroup
 	dst.WorkerSecurityGroup = previous.WorkerSecurityGroup
 	dst.BastionSecurityGroup = previous.BastionSecurityGroup
+
+	if previous.Bastion != nil {
+		dst.Bastion.ReferencedResources = previous.Bastion.ReferencedResources
+	}
+	if previous.Bastion != nil && previous.Bastion.DependentResources.PortsStatus != nil {
+		dst.Bastion.DependentResources.PortsStatus = previous.Bastion.DependentResources.PortsStatus
+	}
 }
 
 func restorev1alpha6ClusterSpec(previous *OpenStackClusterSpec, dst *OpenStackClusterSpec) {
@@ -375,7 +378,11 @@ var v1alpha8OpenStackMachineRestorer = conversion.RestorerFor[*infrav1.OpenStack
 		},
 		restorev1alpha8MachineSpec,
 	),
-
+	"depresources": conversion.UnconditionalFieldRestorer(
+		func(c *infrav1.OpenStackMachine) *infrav1.DependentMachineResources {
+			return &c.Status.DependentResources
+		},
+	),
 	// No equivalent in v1alpha6
 	"refresources": conversion.UnconditionalFieldRestorer(
 		func(c *infrav1.OpenStackMachine) *infrav1.ReferencedMachineResources {
