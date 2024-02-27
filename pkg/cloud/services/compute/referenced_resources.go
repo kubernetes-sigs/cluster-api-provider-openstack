@@ -28,7 +28,7 @@ import (
 // Note that we only set the fields in ReferencedMachineResources that are not set yet. This is ok because:
 // - OpenStackMachine is immutable, so we can't change the spec after the machine is created.
 // - the bastion is mutable, but we delete the bastion when the spec changes, so the bastion status will be empty.
-func ResolveReferencedMachineResources(scope scope.Scope, openStackCluster *infrav1.OpenStackCluster, spec *infrav1.OpenStackMachineSpec, resources *infrav1.ReferencedMachineResources) (changed bool, err error) {
+func ResolveReferencedMachineResources(scope *scope.WithLogger, openStackCluster *infrav1.OpenStackCluster, spec *infrav1.OpenStackMachineSpec, resources *infrav1.ReferencedMachineResources) (changed bool, err error) {
 	changed = false
 
 	computeService, err := NewService(scope)

@@ -22,7 +22,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-logr/logr"
+	"github.com/go-logr/logr/testr"
 	"github.com/golang/mock/gomock"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
@@ -120,9 +120,10 @@ func TestService_getImageID(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
 			mockCtrl := gomock.NewController(t)
-			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "", logr.Discard())
+			log := testr.New(t)
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
 
-			s, err := NewService(mockScopeFactory)
+			s, err := NewService(scope.NewWithLogger(mockScopeFactory, log))
 			if err != nil {
 				t.Fatalf("Failed to create service: %v", err)
 			}
@@ -666,7 +667,8 @@ func TestService_ReconcileInstance(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockCtrl := gomock.NewController(t)
-			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "", logr.Discard())
+			log := testr.New(t)
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
 
 			computeRecorder := mockScopeFactory.ComputeClient.EXPECT()
 			imageRecorder := mockScopeFactory.ImageClient.EXPECT()
@@ -675,7 +677,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 
 			tt.expect(&recorders{computeRecorder, imageRecorder, networkRecorder, volumeRecorder})
 
-			s, err := NewService(mockScopeFactory)
+			s, err := NewService(scope.NewWithLogger(mockScopeFactory, log))
 			if err != nil {
 				t.Fatalf("Failed to create service: %v", err)
 			}
@@ -759,7 +761,8 @@ func TestService_DeleteInstance(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockCtrl := gomock.NewController(t)
-			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "", logr.Discard())
+			log := testr.New(t)
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
 
 			computeRecorder := mockScopeFactory.ComputeClient.EXPECT()
 			networkRecorder := mockScopeFactory.NetworkClient.EXPECT()
@@ -767,7 +770,7 @@ func TestService_DeleteInstance(t *testing.T) {
 
 			tt.expect(&recorders{computeRecorder, networkRecorder, volumeRecorder})
 
-			s, err := NewService(mockScopeFactory)
+			s, err := NewService(scope.NewWithLogger(mockScopeFactory, log))
 			if err != nil {
 				t.Fatalf("Failed to create service: %v", err)
 			}

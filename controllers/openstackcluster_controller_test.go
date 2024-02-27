@@ -22,7 +22,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/go-logr/logr"
 	"github.com/golang/mock/gomock"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
@@ -105,7 +104,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		framework.CreateNamespace(ctx, input)
 
 		mockCtrl = gomock.NewController(GinkgoT())
-		mockScopeFactory = scope.NewMockScopeFactory(mockCtrl, "", logr.Discard())
+		mockScopeFactory = scope.NewMockScopeFactory(mockCtrl, "")
 		reconciler = func() *OpenStackClusterReconciler {
 			return &OpenStackClusterReconciler{
 				Client:       k8sClient,
@@ -207,8 +206,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 		}
 		err = k8sClient.Status().Update(ctx, testCluster)
 		Expect(err).To(BeNil())
-		scope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, logr.Discard())
+		log := GinkgoLogr
+		clientScope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, log)
 		Expect(err).To(BeNil())
+		scope := scope.NewWithLogger(clientScope, log)
 
 		computeClientRecorder := mockScopeFactory.ComputeClient.EXPECT()
 		computeClientRecorder.GetServer("bastion-uuid").Return(nil, gophercloud.ErrResourceNotFound{})
@@ -258,8 +259,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 		err = k8sClient.Status().Update(ctx, testCluster)
 		Expect(err).To(BeNil())
 
-		scope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, logr.Discard())
+		log := GinkgoLogr
+		clientScope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, log)
 		Expect(err).To(BeNil())
+		scope := scope.NewWithLogger(clientScope, log)
 
 		server := clients.ServerExt{}
 		server.ID = "adopted-bastion-uuid"
@@ -342,8 +345,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 		err = k8sClient.Status().Update(ctx, testCluster)
 		Expect(err).To(BeNil())
 
-		scope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, logr.Discard())
+		log := GinkgoLogr
+		clientScope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, log)
 		Expect(err).To(BeNil())
+		scope := scope.NewWithLogger(clientScope, log)
 
 		server := clients.ServerExt{}
 		server.ID = "adopted-fip-bastion-uuid"
@@ -425,8 +430,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 		err = k8sClient.Status().Update(ctx, testCluster)
 		Expect(err).To(BeNil())
 
-		scope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, logr.Discard())
+		log := GinkgoLogr
+		clientScope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, log)
 		Expect(err).To(BeNil())
+		scope := scope.NewWithLogger(clientScope, log)
 
 		server := clients.ServerExt{}
 		server.ID = "requeue-bastion-uuid"
@@ -484,8 +491,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 		err = k8sClient.Status().Update(ctx, testCluster)
 		Expect(err).To(BeNil())
 
-		scope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, logr.Discard())
+		log := GinkgoLogr
+		clientScope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, log)
 		Expect(err).To(BeNil())
+		scope := scope.NewWithLogger(clientScope, log)
 
 		server := clients.ServerExt{}
 		server.ID = "delete-bastion-uuid"
@@ -534,8 +543,11 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 		err = k8sClient.Create(ctx, capiCluster)
 		Expect(err).To(BeNil())
-		scope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, logr.Discard())
+
+		log := GinkgoLogr
+		clientScope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, log)
 		Expect(err).To(BeNil())
+		scope := scope.NewWithLogger(clientScope, log)
 
 		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
 
@@ -614,8 +626,11 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 		err = k8sClient.Create(ctx, capiCluster)
 		Expect(err).To(BeNil())
-		scope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, logr.Discard())
+
+		log := GinkgoLogr
+		clientScope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, log)
 		Expect(err).To(BeNil())
+		scope := scope.NewWithLogger(clientScope, log)
 
 		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
 
@@ -675,8 +690,11 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 		err = k8sClient.Create(ctx, capiCluster)
 		Expect(err).To(BeNil())
-		scope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, logr.Discard())
+
+		log := GinkgoLogr
+		clientScope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, log)
 		Expect(err).To(BeNil())
+		scope := scope.NewWithLogger(clientScope, log)
 
 		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
 

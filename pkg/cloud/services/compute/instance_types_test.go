@@ -19,7 +19,7 @@ package compute
 import (
 	"testing"
 
-	"github.com/go-logr/logr"
+	"github.com/go-logr/logr/testr"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 
@@ -196,10 +196,11 @@ func TestNetworkStatus_Addresses(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewWithT(t)
+			log := testr.New(t)
 
 			is := &InstanceStatus{
 				server: serverWithAddresses(tt.addresses),
-				logger: logr.Discard(),
+				logger: log,
 			}
 			instanceNS, err := is.NetworkStatus()
 			g.Expect(err).NotTo(HaveOccurred())
@@ -411,10 +412,11 @@ func TestInstanceNetworkStatus(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewWithT(t)
+			log := testr.New(t)
 
 			is := &InstanceStatus{
 				server: serverWithAddresses(tt.addresses),
-				logger: logr.Discard(),
+				logger: log,
 			}
 			ns, err := is.NetworkStatus()
 			g.Expect(err).NotTo(HaveOccurred())

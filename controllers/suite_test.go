@@ -22,7 +22,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/go-logr/logr"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -127,8 +126,9 @@ var _ = Describe("EnvTest sanity check", func() {
 })
 
 var _ = Describe("When calling getOrCreate", func() {
+	logger := GinkgoLogr
+
 	var (
-		logger           logr.Logger
 		reconsiler       OpenStackMachineReconciler
 		mockCtrl         *gomock.Controller
 		mockScopeFactory *scope.MockScopeFactory
@@ -138,11 +138,10 @@ var _ = Describe("When calling getOrCreate", func() {
 
 	BeforeEach(func() {
 		ctx = context.Background()
-		logger = logr.Discard()
 		reconsiler = OpenStackMachineReconciler{}
 		mockCtrl = gomock.NewController(GinkgoT())
-		mockScopeFactory = scope.NewMockScopeFactory(mockCtrl, "1234", logger)
-		computeService, err = compute.NewService(mockScopeFactory)
+		mockScopeFactory = scope.NewMockScopeFactory(mockCtrl, "1234")
+		computeService, err = compute.NewService(scope.NewWithLogger(mockScopeFactory, logger))
 		Expect(err).NotTo(HaveOccurred())
 	})
 

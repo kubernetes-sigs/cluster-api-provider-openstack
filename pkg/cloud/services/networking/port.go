@@ -518,7 +518,7 @@ func (s *Service) IsTrunkExtSupported() (trunknSupported bool, err error) {
 // by checking if they exist and if they do, it'll add them to the OpenStackMachine status.
 // A port is searched by name and network ID and has to be unique.
 // If the port is not found, it'll be ignored because it'll be created after the adoption.
-func (s *Service) AdoptMachinePorts(scope scope.Scope, openStackMachine *infrav1.OpenStackMachine, desiredPorts []infrav1.PortOpts) (changed bool, err error) {
+func (s *Service) AdoptMachinePorts(scope *scope.WithLogger, openStackMachine *infrav1.OpenStackMachine, desiredPorts []infrav1.PortOpts) (changed bool, err error) {
 	changed = false
 
 	// We can skip adoption if the instance is ready because OpenStackMachine is immutable once ready
@@ -572,7 +572,7 @@ func (s *Service) AdoptMachinePorts(scope scope.Scope, openStackMachine *infrav1
 // it'll add them to the OpenStackCluster status.
 // A port is searched by name and network ID and has to be unique.
 // If the port is not found, it'll be ignored because it'll be created after the adoption.
-func (s *Service) AdoptBastionPorts(scope scope.Scope, openStackCluster *infrav1.OpenStackCluster, bastionName string) (changed bool, err error) {
+func (s *Service) AdoptBastionPorts(scope *scope.WithLogger, openStackCluster *infrav1.OpenStackCluster, bastionName string) (changed bool, err error) {
 	changed = false
 
 	if openStackCluster.Status.Network == nil {

@@ -19,7 +19,7 @@ package networking
 import (
 	"testing"
 
-	"github.com/go-logr/logr"
+	"github.com/go-logr/logr/testr"
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
@@ -774,14 +774,16 @@ func TestService_normalizePorts(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewWithT(t)
+			log := testr.New(t)
 
 			mockClient := mock.NewMockNetworkClient(mockCtrl)
 			if tt.expectNetwork != nil {
 				tt.expectNetwork(mockClient.EXPECT())
 			}
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
 			s := Service{
 				client: mockClient,
-				scope:  scope.NewMockScopeFactory(mockCtrl, "", logr.Discard()),
+				scope:  scope.NewWithLogger(mockScopeFactory, log),
 			}
 
 			got, err := s.normalizePorts(tt.ports, openStackCluster, tt.instanceTrunk)

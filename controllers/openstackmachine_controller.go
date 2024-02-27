@@ -142,10 +142,11 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}()
 
-	scope, err := r.ScopeFactory.NewClientScopeFromMachine(ctx, r.Client, openStackMachine, infraCluster, r.CaCertificates, log)
+	clientScope, err := r.ScopeFactory.NewClientScopeFromMachine(ctx, r.Client, openStackMachine, infraCluster, r.CaCertificates, log)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
+	scope := scope.NewWithLogger(clientScope, log)
 
 	// Resolve and store referenced resources
 	changed, err := compute.ResolveReferencedMachineResources(scope, infraCluster, &openStackMachine.Spec, &openStackMachine.Status.ReferencedResources)
@@ -240,7 +241,7 @@ func (r *OpenStackMachineReconciler) SetupWithManager(ctx context.Context, mgr c
 		Complete(r)
 }
 
-func (r *OpenStackMachineReconciler) reconcileDelete(scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (ctrl.Result, error) { //nolint:unparam
+func (r *OpenStackMachineReconciler) reconcileDelete(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (ctrl.Result, error) { //nolint:unparam
 	scope.Logger().Info("Reconciling Machine delete")
 
 	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
@@ -333,7 +334,7 @@ func GetPortIDs(ports []infrav1.PortStatus) []string {
 	return portIDs
 }
 
-func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (_ ctrl.Result, reterr error) {
+func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope *scope.WithLogger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (_ ctrl.Result, reterr error) {
 	var err error
 
 	// If the OpenStackMachine is in an error state, return early.
@@ -489,7 +490,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	return ctrl.Result{}, nil
 }
 
-func getOrCreateMachinePorts(scope scope.Scope, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, networkingService *networking.Service, clusterName string) error {
+func getOrCreateMachinePorts(scope *scope.WithLogger, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, networkingService *networking.Service, clusterName string) error {
 	scope.Logger().Info("Reconciling ports for machine", "machine", machine.Name)
 	var machinePortsStatus []infrav1.PortStatus
 	var err error
@@ -647,7 +648,7 @@ func getManagedSecurityGroups(openStackCluster *infrav1.OpenStackCluster, machin
 	return machineSpecSecurityGroups
 }
 
-func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(scope scope.Scope, openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, instanceNS *compute.InstanceNetworkStatus, clusterName string) error {
+func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(scope *scope.WithLogger, openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, instanceNS *compute.InstanceNetworkStatus, clusterName string) error {
 	ip := instanceNS.IP(openStackCluster.Status.Network.Name)
 	loadbalancerService, err := loadbalancer.NewService(scope)
 	if err != nil {

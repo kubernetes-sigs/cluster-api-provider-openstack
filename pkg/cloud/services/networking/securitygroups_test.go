@@ -19,7 +19,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/go-logr/logr"
+	"github.com/go-logr/logr/testr"
 	"github.com/golang/mock/gomock"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/rules"
@@ -342,9 +342,10 @@ func TestGenerateDesiredSecGroups(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewWithT(t)
-			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "", logr.Discard())
+			log := testr.New(t)
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
 
-			s, err := NewService(mockScopeFactory)
+			s, err := NewService(scope.NewWithLogger(mockScopeFactory, log))
 			if err != nil {
 				t.Fatalf("Failed to create service: %v", err)
 			}
@@ -515,9 +516,10 @@ func TestReconcileGroupRules(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewWithT(t)
-			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "", logr.Discard())
+			log := testr.New(t)
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
 
-			s, err := NewService(mockScopeFactory)
+			s, err := NewService(scope.NewWithLogger(mockScopeFactory, log))
 			if err != nil {
 				t.Fatalf("Failed to create service: %v", err)
 			}
