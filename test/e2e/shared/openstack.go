@@ -259,7 +259,12 @@ func DumpOpenStackServers(e2eCtx *E2EContext, filter servers.ListOpts) ([]server
 		return nil, fmt.Errorf("error creating compute client: %v", err)
 	}
 
-	computeClient.Microversion = clients.NovaMinimumMicroversion
+	// TODO: We have a ServieClient here (not ComputeClient), which means we do not have access to `RequireMicroversion`.
+	// Maybe we can fix it by implementing `RequireMicroversion` in gophercloud?
+	if filter.Tags != "" || filter.TagsAny != "" || filter.NotTags != "" || filter.NotTagsAny != "" {
+		computeClient.Microversion = clients.NovaTagging
+	}
+
 	allPages, err := servers.List(computeClient, filter).AllPages()
 	if err != nil {
 		return nil, fmt.Errorf("error listing servers: %v", err)
