@@ -272,11 +272,29 @@ func Convert_v1beta1_PortOpts_To_v1alpha5_PortOpts(in *infrav1.PortOpts, out *Po
 		return err
 	}
 
+	// The auto-generated function converts v1beta1 SecurityGroup to
+	// v1alpha6 SecurityGroup, but v1alpha6 SecurityGroupFilter is more
+	// appropriate. Unset them and convert to SecurityGroupFilter instead.
+	out.SecurityGroups = nil
+	if len(in.SecurityGroups) > 0 {
+		out.SecurityGroupFilters = make([]SecurityGroupParam, len(in.SecurityGroups))
+		for i := range in.SecurityGroups {
+			securityGroupParam := &out.SecurityGroupFilters[i]
+			if in.SecurityGroups[i].ID != "" {
+				securityGroupParam.UUID = in.SecurityGroups[i].ID
+			} else {
+				if err := Convert_v1beta1_SecurityGroupFilter_To_v1alpha5_SecurityGroupFilter(&in.SecurityGroups[i], &securityGroupParam.Filter, s); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	out.Profile = make(map[string]string)
-	if in.Profile.OVSHWOffload {
+	if pointer.BoolDeref(in.Profile.OVSHWOffload, false) {
 		(out.Profile)["capabilities"] = "[\"switchdev\"]"
 	}
-	if in.Profile.TrustedVF {
+	if pointer.BoolDeref(in.Profile.TrustedVF, false) {
 		(out.Profile)["trusted"] = trueString
 	}
 	return nil
@@ -318,12 +336,56 @@ func Convert_v1alpha5_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *infrav1.Po
 		return err
 	}
 
+	if len(in.SecurityGroups) > 0 || len(in.SecurityGroupFilters) > 0 {
+		out.SecurityGroups = make([]infrav1.SecurityGroupFilter, 0, len(in.SecurityGroups)+len(in.SecurityGroupFilters))
+		for i := range in.SecurityGroupFilters {
+			sgParam := &in.SecurityGroupFilters[i]
+			switch {
+			case sgParam.UUID != "":
+				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{ID: sgParam.UUID})
+			case sgParam.Name != "":
+				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{Name: sgParam.Name})
+			case sgParam.Filter != (SecurityGroupFilter{}):
+				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{})
+				outSG := &out.SecurityGroups[len(out.SecurityGroups)-1]
+				if err := Convert_v1alpha5_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(&sgParam.Filter, outSG, s); err != nil {
+					return err
+				}
+			}
+		}
+		for _, id := range in.SecurityGroups {
+			out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{ID: id})
+		}
+	}
+
+	if len(in.SecurityGroups) > 0 || len(in.SecurityGroupFilters) > 0 {
+		out.SecurityGroups = make([]infrav1.SecurityGroupFilter, 0, len(in.SecurityGroups)+len(in.SecurityGroupFilters))
+		for i := range in.SecurityGroupFilters {
+			sgParam := &in.SecurityGroupFilters[i]
+			switch {
+			case sgParam.UUID != "":
+				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{ID: sgParam.UUID})
+			case sgParam.Name != "":
+				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{Name: sgParam.Name})
+			case sgParam.Filter != (SecurityGroupFilter{}):
+				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{})
+				outSG := &out.SecurityGroups[len(out.SecurityGroups)-1]
+				if err := Convert_v1alpha5_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(&sgParam.Filter, outSG, s); err != nil {
+					return err
+				}
+			}
+		}
+		for _, id := range in.SecurityGroups {
+			out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{ID: id})
+		}
+	}
+
 	// Profile is now a struct in v1beta1.
 	if strings.Contains(in.Profile["capabilities"], "switchdev") {
-		out.Profile.OVSHWOffload = true
+		out.Profile.OVSHWOffload = pointer.Bool(true)
 	}
 	if in.Profile["trusted"] == trueString {
-		out.Profile.TrustedVF = true
+		out.Profile.TrustedVF = pointer.Bool(true)
 	}
 	return nil
 }
@@ -460,21 +522,21 @@ func Convert_Map_string_To_Interface_To_v1beta1_BindingProfile(in map[string]str
 	for k, v := range in {
 		if k == "capabilities" {
 			if strings.Contains(v, "switchdev") {
-				out.OVSHWOffload = true
+				out.OVSHWOffload = pointer.Bool(true)
 			}
 		}
 		if k == "trusted" && v == trueString {
-			out.TrustedVF = true
+			out.TrustedVF = pointer.Bool(true)
 		}
 	}
 	return nil
 }
 
 func Convert_v1beta1_BindingProfile_To_Map_string_To_Interface(in *infrav1.BindingProfile, out map[string]string, _ conversion.Scope) error {
-	if in.OVSHWOffload {
+	if pointer.BoolDeref(in.OVSHWOffload, false) {
 		(out)["capabilities"] = "[\"switchdev\"]"
 	}
-	if in.TrustedVF {
+	if pointer.BoolDeref(in.TrustedVF, false) {
 		(out)["trusted"] = trueString
 	}
 	return nil

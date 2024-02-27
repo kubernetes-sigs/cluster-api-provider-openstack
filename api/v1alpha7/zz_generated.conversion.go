@@ -24,10 +24,12 @@ package v1alpha7
 import (
 	unsafe "unsafe"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	optional "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
 	apiv1beta1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	errors "sigs.k8s.io/cluster-api/errors"
 )
@@ -299,16 +301,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*PortOpts)(nil), (*v1beta1.PortOpts)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha7_PortOpts_To_v1beta1_PortOpts(a.(*PortOpts), b.(*v1beta1.PortOpts), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*v1beta1.PortOpts)(nil), (*PortOpts)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1beta1_PortOpts_To_v1alpha7_PortOpts(a.(*v1beta1.PortOpts), b.(*PortOpts), scope)
-	}); err != nil {
-		return err
-	}
 	if err := s.AddGeneratedConversionFunc((*RootVolume)(nil), (*v1beta1.RootVolume)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha7_RootVolume_To_v1beta1_RootVolume(a.(*RootVolume), b.(*v1beta1.RootVolume), scope)
 	}); err != nil {
@@ -399,6 +391,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddConversionFunc((*PortOpts)(nil), (*v1beta1.PortOpts)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha7_PortOpts_To_v1beta1_PortOpts(a.(*PortOpts), b.(*v1beta1.PortOpts), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddConversionFunc((*SecurityGroup)(nil), (*v1beta1.SecurityGroupStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha7_SecurityGroup_To_v1beta1_SecurityGroupStatus(a.(*SecurityGroup), b.(*v1beta1.SecurityGroupStatus), scope)
 	}); err != nil {
@@ -431,6 +428,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddConversionFunc((*v1beta1.OpenStackMachineStatus)(nil), (*OpenStackMachineStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1beta1_OpenStackMachineStatus_To_v1alpha7_OpenStackMachineStatus(a.(*v1beta1.OpenStackMachineStatus), b.(*OpenStackMachineStatus), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1beta1.PortOpts)(nil), (*PortOpts)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1beta1_PortOpts_To_v1alpha7_PortOpts(a.(*v1beta1.PortOpts), b.(*PortOpts), scope)
 	}); err != nil {
 		return err
 	}
@@ -498,7 +500,9 @@ func Convert_v1beta1_AdditionalBlockDevice_To_v1alpha7_AdditionalBlockDevice(in 
 
 func autoConvert_v1alpha7_AddressPair_To_v1beta1_AddressPair(in *AddressPair, out *v1beta1.AddressPair, s conversion.Scope) error {
 	out.IPAddress = in.IPAddress
-	out.MACAddress = in.MACAddress
+	if err := optional.Convert_string_To_optional_String(&in.MACAddress, &out.MACAddress, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -509,7 +513,9 @@ func Convert_v1alpha7_AddressPair_To_v1beta1_AddressPair(in *AddressPair, out *v
 
 func autoConvert_v1beta1_AddressPair_To_v1alpha7_AddressPair(in *v1beta1.AddressPair, out *AddressPair, s conversion.Scope) error {
 	out.IPAddress = in.IPAddress
-	out.MACAddress = in.MACAddress
+	if err := optional.Convert_optional_String_To_string(&in.MACAddress, &out.MACAddress, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -565,8 +571,12 @@ func autoConvert_v1beta1_BastionStatus_To_v1alpha7_BastionStatus(in *v1beta1.Bas
 }
 
 func autoConvert_v1alpha7_BindingProfile_To_v1beta1_BindingProfile(in *BindingProfile, out *v1beta1.BindingProfile, s conversion.Scope) error {
-	out.OVSHWOffload = in.OVSHWOffload
-	out.TrustedVF = in.TrustedVF
+	if err := v1.Convert_bool_To_Pointer_bool(&in.OVSHWOffload, &out.OVSHWOffload, s); err != nil {
+		return err
+	}
+	if err := v1.Convert_bool_To_Pointer_bool(&in.TrustedVF, &out.TrustedVF, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -576,8 +586,12 @@ func Convert_v1alpha7_BindingProfile_To_v1beta1_BindingProfile(in *BindingProfil
 }
 
 func autoConvert_v1beta1_BindingProfile_To_v1alpha7_BindingProfile(in *v1beta1.BindingProfile, out *BindingProfile, s conversion.Scope) error {
-	out.OVSHWOffload = in.OVSHWOffload
-	out.TrustedVF = in.TrustedVF
+	if err := v1.Convert_Pointer_bool_To_bool(&in.OVSHWOffload, &out.OVSHWOffload, s); err != nil {
+		return err
+	}
+	if err := v1.Convert_Pointer_bool_To_bool(&in.TrustedVF, &out.TrustedVF, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -658,7 +672,9 @@ func Convert_v1beta1_ExternalRouterIPParam_To_v1alpha7_ExternalRouterIPParam(in 
 
 func autoConvert_v1alpha7_FixedIP_To_v1beta1_FixedIP(in *FixedIP, out *v1beta1.FixedIP, s conversion.Scope) error {
 	out.Subnet = (*v1beta1.SubnetFilter)(unsafe.Pointer(in.Subnet))
-	out.IPAddress = in.IPAddress
+	if err := optional.Convert_string_To_optional_String(&in.IPAddress, &out.IPAddress, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -669,7 +685,9 @@ func Convert_v1alpha7_FixedIP_To_v1beta1_FixedIP(in *FixedIP, out *v1beta1.Fixed
 
 func autoConvert_v1beta1_FixedIP_To_v1alpha7_FixedIP(in *v1beta1.FixedIP, out *FixedIP, s conversion.Scope) error {
 	out.Subnet = (*SubnetFilter)(unsafe.Pointer(in.Subnet))
-	out.IPAddress = in.IPAddress
+	if err := optional.Convert_optional_String_To_string(&in.IPAddress, &out.IPAddress, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -1274,7 +1292,17 @@ func autoConvert_v1alpha7_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(i
 	// WARNING: in.Image requires manual conversion: inconvertible types (string vs sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageFilter)
 	// WARNING: in.ImageUUID requires manual conversion: does not exist in peer-type
 	out.SSHKeyName = in.SSHKeyName
-	out.Ports = *(*[]v1beta1.PortOpts)(unsafe.Pointer(&in.Ports))
+	if in.Ports != nil {
+		in, out := &in.Ports, &out.Ports
+		*out = make([]v1beta1.PortOpts, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha7_PortOpts_To_v1beta1_PortOpts(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Ports = nil
+	}
 	// WARNING: in.FloatingIP requires manual conversion: does not exist in peer-type
 	out.SecurityGroups = *(*[]v1beta1.SecurityGroupFilter)(unsafe.Pointer(&in.SecurityGroups))
 	out.Trunk = in.Trunk
@@ -1303,7 +1331,17 @@ func autoConvert_v1beta1_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(i
 	out.Flavor = in.Flavor
 	// WARNING: in.Image requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageFilter vs string)
 	out.SSHKeyName = in.SSHKeyName
-	out.Ports = *(*[]PortOpts)(unsafe.Pointer(&in.Ports))
+	if in.Ports != nil {
+		in, out := &in.Ports, &out.Ports
+		*out = make([]PortOpts, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta1_PortOpts_To_v1alpha7_PortOpts(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Ports = nil
+	}
 	out.SecurityGroups = *(*[]SecurityGroupFilter)(unsafe.Pointer(&in.SecurityGroups))
 	out.Trunk = in.Trunk
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
@@ -1326,7 +1364,7 @@ func autoConvert_v1beta1_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(i
 
 func autoConvert_v1alpha7_OpenStackMachineStatus_To_v1beta1_OpenStackMachineStatus(in *OpenStackMachineStatus, out *v1beta1.OpenStackMachineStatus, s conversion.Scope) error {
 	out.Ready = in.Ready
-	out.Addresses = *(*[]v1.NodeAddress)(unsafe.Pointer(&in.Addresses))
+	out.Addresses = *(*[]corev1.NodeAddress)(unsafe.Pointer(&in.Addresses))
 	out.InstanceState = (*v1beta1.InstanceState)(unsafe.Pointer(in.InstanceState))
 	out.FailureReason = (*errors.MachineStatusError)(unsafe.Pointer(in.FailureReason))
 	out.FailureMessage = (*string)(unsafe.Pointer(in.FailureMessage))
@@ -1341,7 +1379,7 @@ func Convert_v1alpha7_OpenStackMachineStatus_To_v1beta1_OpenStackMachineStatus(i
 
 func autoConvert_v1beta1_OpenStackMachineStatus_To_v1alpha7_OpenStackMachineStatus(in *v1beta1.OpenStackMachineStatus, out *OpenStackMachineStatus, s conversion.Scope) error {
 	out.Ready = in.Ready
-	out.Addresses = *(*[]v1.NodeAddress)(unsafe.Pointer(&in.Addresses))
+	out.Addresses = *(*[]corev1.NodeAddress)(unsafe.Pointer(&in.Addresses))
 	out.InstanceState = (*InstanceState)(unsafe.Pointer(in.InstanceState))
 	// WARNING: in.ReferencedResources requires manual conversion: does not exist in peer-type
 	// WARNING: in.DependentResources requires manual conversion: does not exist in peer-type
@@ -1469,19 +1507,47 @@ func Convert_v1beta1_OpenStackMachineTemplateSpec_To_v1alpha7_OpenStackMachineTe
 
 func autoConvert_v1alpha7_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *v1beta1.PortOpts, s conversion.Scope) error {
 	out.Network = (*v1beta1.NetworkFilter)(unsafe.Pointer(in.Network))
-	out.NameSuffix = in.NameSuffix
-	out.Description = in.Description
-	out.AdminStateUp = (*bool)(unsafe.Pointer(in.AdminStateUp))
-	out.MACAddress = in.MACAddress
-	out.FixedIPs = *(*[]v1beta1.FixedIP)(unsafe.Pointer(&in.FixedIPs))
-	out.SecurityGroupFilters = *(*[]v1beta1.SecurityGroupFilter)(unsafe.Pointer(&in.SecurityGroupFilters))
-	out.AllowedAddressPairs = *(*[]v1beta1.AddressPair)(unsafe.Pointer(&in.AllowedAddressPairs))
-	out.Trunk = (*bool)(unsafe.Pointer(in.Trunk))
-	out.HostID = in.HostID
-	out.VNICType = in.VNICType
-	if err := Convert_v1alpha7_BindingProfile_To_v1beta1_BindingProfile(&in.Profile, &out.Profile, s); err != nil {
+	if err := optional.Convert_string_To_optional_String(&in.NameSuffix, &out.NameSuffix, s); err != nil {
 		return err
 	}
+	if err := optional.Convert_string_To_optional_String(&in.Description, &out.Description, s); err != nil {
+		return err
+	}
+	out.AdminStateUp = (*bool)(unsafe.Pointer(in.AdminStateUp))
+	if err := optional.Convert_string_To_optional_String(&in.MACAddress, &out.MACAddress, s); err != nil {
+		return err
+	}
+	if in.FixedIPs != nil {
+		in, out := &in.FixedIPs, &out.FixedIPs
+		*out = make([]v1beta1.FixedIP, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha7_FixedIP_To_v1beta1_FixedIP(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.FixedIPs = nil
+	}
+	// WARNING: in.SecurityGroupFilters requires manual conversion: does not exist in peer-type
+	if in.AllowedAddressPairs != nil {
+		in, out := &in.AllowedAddressPairs, &out.AllowedAddressPairs
+		*out = make([]v1beta1.AddressPair, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha7_AddressPair_To_v1beta1_AddressPair(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.AllowedAddressPairs = nil
+	}
+	out.Trunk = (*bool)(unsafe.Pointer(in.Trunk))
+	if err := optional.Convert_string_To_optional_String(&in.HostID, &out.HostID, s); err != nil {
+		return err
+	}
+	if err := optional.Convert_string_To_optional_String(&in.VNICType, &out.VNICType, s); err != nil {
+		return err
+	}
+	// WARNING: in.Profile requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.BindingProfile vs *sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile)
 	out.DisablePortSecurity = (*bool)(unsafe.Pointer(in.DisablePortSecurity))
 	out.PropagateUplinkStatus = (*bool)(unsafe.Pointer(in.PropagateUplinkStatus))
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
@@ -1489,36 +1555,54 @@ func autoConvert_v1alpha7_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *v1beta
 	return nil
 }
 
-// Convert_v1alpha7_PortOpts_To_v1beta1_PortOpts is an autogenerated conversion function.
-func Convert_v1alpha7_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *v1beta1.PortOpts, s conversion.Scope) error {
-	return autoConvert_v1alpha7_PortOpts_To_v1beta1_PortOpts(in, out, s)
-}
-
 func autoConvert_v1beta1_PortOpts_To_v1alpha7_PortOpts(in *v1beta1.PortOpts, out *PortOpts, s conversion.Scope) error {
 	out.Network = (*NetworkFilter)(unsafe.Pointer(in.Network))
-	out.NameSuffix = in.NameSuffix
-	out.Description = in.Description
-	out.AdminStateUp = (*bool)(unsafe.Pointer(in.AdminStateUp))
-	out.MACAddress = in.MACAddress
-	out.FixedIPs = *(*[]FixedIP)(unsafe.Pointer(&in.FixedIPs))
-	out.SecurityGroupFilters = *(*[]SecurityGroupFilter)(unsafe.Pointer(&in.SecurityGroupFilters))
-	out.AllowedAddressPairs = *(*[]AddressPair)(unsafe.Pointer(&in.AllowedAddressPairs))
-	out.Trunk = (*bool)(unsafe.Pointer(in.Trunk))
-	out.HostID = in.HostID
-	out.VNICType = in.VNICType
-	if err := Convert_v1beta1_BindingProfile_To_v1alpha7_BindingProfile(&in.Profile, &out.Profile, s); err != nil {
+	if err := optional.Convert_optional_String_To_string(&in.NameSuffix, &out.NameSuffix, s); err != nil {
 		return err
 	}
+	if err := optional.Convert_optional_String_To_string(&in.Description, &out.Description, s); err != nil {
+		return err
+	}
+	out.AdminStateUp = (*bool)(unsafe.Pointer(in.AdminStateUp))
+	if err := optional.Convert_optional_String_To_string(&in.MACAddress, &out.MACAddress, s); err != nil {
+		return err
+	}
+	if in.FixedIPs != nil {
+		in, out := &in.FixedIPs, &out.FixedIPs
+		*out = make([]FixedIP, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta1_FixedIP_To_v1alpha7_FixedIP(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.FixedIPs = nil
+	}
+	// WARNING: in.SecurityGroups requires manual conversion: does not exist in peer-type
+	if in.AllowedAddressPairs != nil {
+		in, out := &in.AllowedAddressPairs, &out.AllowedAddressPairs
+		*out = make([]AddressPair, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta1_AddressPair_To_v1alpha7_AddressPair(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.AllowedAddressPairs = nil
+	}
+	out.Trunk = (*bool)(unsafe.Pointer(in.Trunk))
+	if err := optional.Convert_optional_String_To_string(&in.HostID, &out.HostID, s); err != nil {
+		return err
+	}
+	if err := optional.Convert_optional_String_To_string(&in.VNICType, &out.VNICType, s); err != nil {
+		return err
+	}
+	// WARNING: in.Profile requires manual conversion: inconvertible types (*sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile vs sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.BindingProfile)
 	out.DisablePortSecurity = (*bool)(unsafe.Pointer(in.DisablePortSecurity))
 	out.PropagateUplinkStatus = (*bool)(unsafe.Pointer(in.PropagateUplinkStatus))
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.ValueSpecs = *(*[]ValueSpec)(unsafe.Pointer(&in.ValueSpecs))
 	return nil
-}
-
-// Convert_v1beta1_PortOpts_To_v1alpha7_PortOpts is an autogenerated conversion function.
-func Convert_v1beta1_PortOpts_To_v1alpha7_PortOpts(in *v1beta1.PortOpts, out *PortOpts, s conversion.Scope) error {
-	return autoConvert_v1beta1_PortOpts_To_v1alpha7_PortOpts(in, out, s)
 }
 
 func autoConvert_v1alpha7_RootVolume_To_v1beta1_RootVolume(in *RootVolume, out *v1beta1.RootVolume, s conversion.Scope) error {

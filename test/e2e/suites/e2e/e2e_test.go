@@ -373,14 +373,14 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 
 			customPortOptions := &[]infrav1.PortOpts{
 				{
-					Description: "primary",
+					Description: pointer.String("primary"),
 				},
 				{
-					Description: "trunked",
+					Description: pointer.String("trunked"),
 					Trunk:       pointer.Bool(true),
 				},
 				{
-					SecurityGroupFilters: []infrav1.SecurityGroupFilter{{Name: testSecurityGroupName}},
+					SecurityGroups: []infrav1.SecurityGroupFilter{{Name: testSecurityGroupName}},
 				},
 			}
 

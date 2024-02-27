@@ -28,6 +28,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/utils/pointer"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
@@ -60,8 +61,10 @@ func (s *Service) CreatePort(eventObject runtime.Object, clusterName string, por
 	var err error
 	networkID := portOpts.Network.ID
 
-	description := portOpts.Description
-	if description == "" {
+	var description string
+	if portOpts.Description != nil {
+		description = *portOpts.Description
+	} else {
 		description = names.GetDescription(clusterName)
 	}
 
@@ -71,11 +74,11 @@ func (s *Service) CreatePort(eventObject runtime.Object, clusterName string, por
 		for _, ap := range portOpts.AllowedAddressPairs {
 			addressPairs = append(addressPairs, ports.AddressPair{
 				IPAddress:  ap.IPAddress,
-				MACAddress: ap.MACAddress,
+				MACAddress: pointer.StringDeref(ap.MACAddress, ""),
 			})
 		}
-		if portOpts.SecurityGroupFilters != nil {
-			securityGroups, err = s.GetSecurityGroups(portOpts.SecurityGroupFilters)
+		if portOpts.SecurityGroups != nil {
+			securityGroups, err = s.GetSecurityGroups(portOpts.SecurityGroups)
 			if err != nil {
 				return nil, fmt.Errorf("error getting security groups: %v", err)
 			}
@@ -96,7 +99,7 @@ func (s *Service) CreatePort(eventObject runtime.Object, clusterName string, por
 			}
 			fips = append(fips, ports.IP{
 				SubnetID:  subnetID,
-				IPAddress: fixedIP.IPAddress,
+				IPAddress: pointer.StringDeref(fixedIP.IPAddress, ""),
 			})
 		}
 		fixedIPs = fips
@@ -124,7 +127,7 @@ func (s *Service) CreatePort(eventObject runtime.Object, clusterName string, por
 		NetworkID:             networkID,
 		Description:           description,
 		AdminStateUp:          portOpts.AdminStateUp,
-		MACAddress:            portOpts.MACAddress,
+		MACAddress:            pointer.StringDeref(portOpts.MACAddress, ""),
 		SecurityGroups:        securityGroupsPtr,
 		AllowedAddressPairs:   addressPairs,
 		FixedIPs:              fixedIPs,
@@ -142,8 +145,8 @@ func (s *Service) CreatePort(eventObject runtime.Object, clusterName string, por
 
 	createOpts = portsbinding.CreateOptsExt{
 		CreateOptsBuilder: createOpts,
-		HostID:            portOpts.HostID,
-		VNICType:          portOpts.VNICType,
+		HostID:            pointer.StringDeref(portOpts.HostID, ""),
+		VNICType:          pointer.StringDeref(portOpts.VNICType, ""),
 		Profile:           getPortProfile(portOpts.Profile),
 	}
 
@@ -204,15 +207,19 @@ func (s *Service) getSubnetIDForFixedIP(subnet *infrav1.SubnetFilter, networkID 
 	}
 }
 
-func getPortProfile(p infrav1.BindingProfile) map[string]interface{} {
+func getPortProfile(p *infrav1.BindingProfile) map[string]interface{} {
+	if p == nil {
+		return nil
+	}
+
 	portProfile := make(map[string]interface{})
 
 	// if p.OVSHWOffload is true, we need to set the profile
 	// to enable hardware offload for the port
-	if p.OVSHWOffload {
+	if pointer.BoolDeref(p.OVSHWOffload, false) {
 		portProfile["capabilities"] = []string{"switchdev"}
 	}
-	if p.TrustedVF {
+	if pointer.BoolDeref(p.TrustedVF, false) {
 		portProfile["trusted"] = true
 	}
 
@@ -300,8 +307,8 @@ func (s *Service) DeleteClusterPorts(openStackCluster *infrav1.OpenStackCluster)
 
 // GetPortName appends a suffix to an instance name in order to try and get a unique name per port.
 func GetPortName(instanceName string, opts *infrav1.PortOpts, netIndex int) string {
-	if opts != nil && opts.NameSuffix != "" {
-		return fmt.Sprintf("%s-%s", instanceName, opts.NameSuffix)
+	if opts != nil && opts.NameSuffix != nil {
+		return fmt.Sprintf("%s-%s", instanceName, *opts.NameSuffix)
 	}
 	return fmt.Sprintf("%s-%d", instanceName, netIndex)
 }

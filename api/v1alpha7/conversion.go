@@ -192,6 +192,73 @@ func restorev1alpha7MachineSpec(previous *OpenStackMachineSpec, dst *OpenStackMa
 func restorev1beta1MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *infrav1.OpenStackMachineSpec) {
 	dst.ServerGroup = previous.ServerGroup
 	dst.Image = previous.Image
+
+	if len(dst.Ports) == len(previous.Ports) {
+		for i := range dst.Ports {
+			restorev1beta1Port(&previous.Ports[i], &dst.Ports[i])
+		}
+	}
+}
+
+func restorev1beta1Port(previous *infrav1.PortOpts, dst *infrav1.PortOpts) {
+	if dst.NameSuffix == nil || *dst.NameSuffix == "" {
+		dst.NameSuffix = previous.NameSuffix
+	}
+
+	if dst.Description == nil || *dst.Description == "" {
+		dst.Description = previous.Description
+	}
+
+	if dst.MACAddress == nil || *dst.MACAddress == "" {
+		dst.MACAddress = previous.MACAddress
+	}
+
+	if len(dst.FixedIPs) == len(previous.FixedIPs) {
+		for j := range dst.FixedIPs {
+			prevFixedIP := &previous.FixedIPs[j]
+			dstFixedIP := &dst.FixedIPs[j]
+
+			if dstFixedIP.IPAddress == nil || *dstFixedIP.IPAddress == "" {
+				dstFixedIP.IPAddress = prevFixedIP.IPAddress
+			}
+		}
+	}
+
+	if len(dst.AllowedAddressPairs) == len(previous.AllowedAddressPairs) {
+		for j := range dst.AllowedAddressPairs {
+			prevAAP := &previous.AllowedAddressPairs[j]
+			dstAAP := &dst.AllowedAddressPairs[j]
+
+			if dstAAP.MACAddress == nil || *dstAAP.MACAddress == "" {
+				dstAAP.MACAddress = prevAAP.MACAddress
+			}
+		}
+	}
+
+	if dst.HostID == nil || *dst.HostID == "" {
+		dst.HostID = previous.HostID
+	}
+
+	if dst.VNICType == nil || *dst.VNICType == "" {
+		dst.VNICType = previous.VNICType
+	}
+
+	if dst.Profile == nil && previous.Profile != nil {
+		dst.Profile = &infrav1.BindingProfile{}
+	}
+
+	if dst.Profile != nil && previous.Profile != nil {
+		dstProfile := dst.Profile
+		prevProfile := previous.Profile
+
+		if dstProfile.OVSHWOffload == nil || !*dstProfile.OVSHWOffload {
+			dstProfile.OVSHWOffload = prevProfile.OVSHWOffload
+		}
+
+		if dstProfile.TrustedVF == nil || !*dstProfile.TrustedVF {
+			dstProfile.TrustedVF = prevProfile.TrustedVF
+		}
+	}
 }
 
 func restorev1beta1Bastion(previous **infrav1.Bastion, dst **infrav1.Bastion) {
@@ -700,4 +767,51 @@ func Convert_v1alpha7_OpenStackIdentityReference_To_v1beta1_OpenStackIdentityRef
 
 func Convert_v1beta1_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(in *infrav1.OpenStackClusterStatus, out *OpenStackClusterStatus, s apiconversion.Scope) error {
 	return autoConvert_v1beta1_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(in, out, s)
+}
+
+func Convert_v1alpha7_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *infrav1.PortOpts, s apiconversion.Scope) error {
+	if err := autoConvert_v1alpha7_PortOpts_To_v1beta1_PortOpts(in, out, s); err != nil {
+		return err
+	}
+
+	if len(in.SecurityGroupFilters) > 0 {
+		out.SecurityGroups = make([]infrav1.SecurityGroupFilter, len(in.SecurityGroupFilters))
+		for i := range in.SecurityGroupFilters {
+			if err := autoConvert_v1alpha7_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(&in.SecurityGroupFilters[i], &out.SecurityGroups[i], s); err != nil {
+				return err
+			}
+		}
+	}
+
+	if in.Profile != (BindingProfile{}) {
+		out.Profile = &infrav1.BindingProfile{}
+		if err := autoConvert_v1alpha7_BindingProfile_To_v1beta1_BindingProfile(&in.Profile, out.Profile, s); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func Convert_v1beta1_PortOpts_To_v1alpha7_PortOpts(in *infrav1.PortOpts, out *PortOpts, s apiconversion.Scope) error {
+	if err := autoConvert_v1beta1_PortOpts_To_v1alpha7_PortOpts(in, out, s); err != nil {
+		return err
+	}
+
+	if len(in.SecurityGroups) > 0 {
+		out.SecurityGroupFilters = make([]SecurityGroupFilter, len(in.SecurityGroups))
+		for i := range in.SecurityGroups {
+			if err := autoConvert_v1beta1_SecurityGroupFilter_To_v1alpha7_SecurityGroupFilter(&in.SecurityGroups[i], &out.SecurityGroupFilters[i], s); err != nil {
+				return err
+			}
+		}
+	}
+
+	if in.Profile != nil {
+		if err := autoConvert_v1beta1_BindingProfile_To_v1alpha7_BindingProfile(in.Profile, &out.Profile, s); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

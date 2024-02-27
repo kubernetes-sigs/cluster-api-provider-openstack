@@ -118,8 +118,10 @@ type PortOpts struct {
 	TenantID  string    `json:"tenantId,omitempty"`
 	ProjectID string    `json:"projectId,omitempty"`
 	// The uuids of the security groups to assign to the instance
+	// +k8s:conversion-gen=false
 	SecurityGroups []string `json:"securityGroups,omitempty"`
 	// The names, uuids, filters or any combination these of the security groups to assign to the instance
+	// +k8s:conversion-gen=false
 	SecurityGroupFilters []SecurityGroupParam `json:"securityGroupFilters,omitempty"`
 	AllowedAddressPairs  []AddressPair        `json:"allowedAddressPairs,omitempty"`
 	// Enables and disables trunk at port level. If not provided, openStackMachine.Spec.Trunk is inherited.

@@ -27,7 +27,9 @@ import (
 	v1 "k8s.io/api/core/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
+	v1alpha6 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
 	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	optional "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
 	apiv1beta1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	errors "sigs.k8s.io/cluster-api/errors"
 )
@@ -424,7 +426,9 @@ func autoConvert_v1beta1_APIServerLoadBalancer_To_v1alpha5_APIServerLoadBalancer
 
 func autoConvert_v1alpha5_AddressPair_To_v1beta1_AddressPair(in *AddressPair, out *v1beta1.AddressPair, s conversion.Scope) error {
 	out.IPAddress = in.IPAddress
-	out.MACAddress = in.MACAddress
+	if err := optional.Convert_string_To_optional_String(&in.MACAddress, &out.MACAddress, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -435,7 +439,9 @@ func Convert_v1alpha5_AddressPair_To_v1beta1_AddressPair(in *AddressPair, out *v
 
 func autoConvert_v1beta1_AddressPair_To_v1alpha5_AddressPair(in *v1beta1.AddressPair, out *AddressPair, s conversion.Scope) error {
 	out.IPAddress = in.IPAddress
-	out.MACAddress = in.MACAddress
+	if err := optional.Convert_optional_String_To_string(&in.MACAddress, &out.MACAddress, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -491,7 +497,9 @@ func Convert_v1beta1_ExternalRouterIPParam_To_v1alpha5_ExternalRouterIPParam(in 
 
 func autoConvert_v1alpha5_FixedIP_To_v1beta1_FixedIP(in *FixedIP, out *v1beta1.FixedIP, s conversion.Scope) error {
 	out.Subnet = (*v1beta1.SubnetFilter)(unsafe.Pointer(in.Subnet))
-	out.IPAddress = in.IPAddress
+	if err := optional.Convert_string_To_optional_String(&in.IPAddress, &out.IPAddress, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -502,7 +510,9 @@ func Convert_v1alpha5_FixedIP_To_v1beta1_FixedIP(in *FixedIP, out *v1beta1.Fixed
 
 func autoConvert_v1beta1_FixedIP_To_v1alpha5_FixedIP(in *v1beta1.FixedIP, out *FixedIP, s conversion.Scope) error {
 	out.Subnet = (*SubnetFilter)(unsafe.Pointer(in.Subnet))
-	out.IPAddress = in.IPAddress
+	if err := optional.Convert_optional_String_To_string(&in.IPAddress, &out.IPAddress, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -1329,30 +1339,50 @@ func Convert_v1beta1_OpenStackMachineTemplateSpec_To_v1alpha5_OpenStackMachineTe
 
 func autoConvert_v1alpha5_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *v1beta1.PortOpts, s conversion.Scope) error {
 	out.Network = (*v1beta1.NetworkFilter)(unsafe.Pointer(in.Network))
-	out.NameSuffix = in.NameSuffix
-	out.Description = in.Description
+	if err := optional.Convert_string_To_optional_String(&in.NameSuffix, &out.NameSuffix, s); err != nil {
+		return err
+	}
+	if err := optional.Convert_string_To_optional_String(&in.Description, &out.Description, s); err != nil {
+		return err
+	}
 	out.AdminStateUp = (*bool)(unsafe.Pointer(in.AdminStateUp))
-	out.MACAddress = in.MACAddress
-	out.FixedIPs = *(*[]v1beta1.FixedIP)(unsafe.Pointer(&in.FixedIPs))
-	// WARNING: in.TenantID requires manual conversion: does not exist in peer-type
-	// WARNING: in.ProjectID requires manual conversion: does not exist in peer-type
-	// WARNING: in.SecurityGroups requires manual conversion: does not exist in peer-type
-	if in.SecurityGroupFilters != nil {
-		in, out := &in.SecurityGroupFilters, &out.SecurityGroupFilters
-		*out = make([]v1beta1.SecurityGroupFilter, len(*in))
+	if err := optional.Convert_string_To_optional_String(&in.MACAddress, &out.MACAddress, s); err != nil {
+		return err
+	}
+	if in.FixedIPs != nil {
+		in, out := &in.FixedIPs, &out.FixedIPs
+		*out = make([]v1beta1.FixedIP, len(*in))
 		for i := range *in {
-			if err := Convert_v1alpha5_SecurityGroupParam_To_v1beta1_SecurityGroupFilter(&(*in)[i], &(*out)[i], s); err != nil {
+			if err := Convert_v1alpha5_FixedIP_To_v1beta1_FixedIP(&(*in)[i], &(*out)[i], s); err != nil {
 				return err
 			}
 		}
 	} else {
-		out.SecurityGroupFilters = nil
+		out.FixedIPs = nil
 	}
-	out.AllowedAddressPairs = *(*[]v1beta1.AddressPair)(unsafe.Pointer(&in.AllowedAddressPairs))
+	// WARNING: in.TenantID requires manual conversion: does not exist in peer-type
+	// WARNING: in.ProjectID requires manual conversion: does not exist in peer-type
+	// INFO: in.SecurityGroups opted out of conversion generation
+	// INFO: in.SecurityGroupFilters opted out of conversion generation
+	if in.AllowedAddressPairs != nil {
+		in, out := &in.AllowedAddressPairs, &out.AllowedAddressPairs
+		*out = make([]v1beta1.AddressPair, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha5_AddressPair_To_v1beta1_AddressPair(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.AllowedAddressPairs = nil
+	}
 	out.Trunk = (*bool)(unsafe.Pointer(in.Trunk))
-	out.HostID = in.HostID
-	out.VNICType = in.VNICType
-	// WARNING: in.Profile requires manual conversion: inconvertible types (map[string]string vs sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile)
+	if err := optional.Convert_string_To_optional_String(&in.HostID, &out.HostID, s); err != nil {
+		return err
+	}
+	if err := optional.Convert_string_To_optional_String(&in.VNICType, &out.VNICType, s); err != nil {
+		return err
+	}
+	// WARNING: in.Profile requires manual conversion: inconvertible types (map[string]string vs *sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile)
 	out.DisablePortSecurity = (*bool)(unsafe.Pointer(in.DisablePortSecurity))
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	return nil
@@ -1360,27 +1390,57 @@ func autoConvert_v1alpha5_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *v1beta
 
 func autoConvert_v1beta1_PortOpts_To_v1alpha5_PortOpts(in *v1beta1.PortOpts, out *PortOpts, s conversion.Scope) error {
 	out.Network = (*NetworkFilter)(unsafe.Pointer(in.Network))
-	out.NameSuffix = in.NameSuffix
-	out.Description = in.Description
+	if err := optional.Convert_optional_String_To_string(&in.NameSuffix, &out.NameSuffix, s); err != nil {
+		return err
+	}
+	if err := optional.Convert_optional_String_To_string(&in.Description, &out.Description, s); err != nil {
+		return err
+	}
 	out.AdminStateUp = (*bool)(unsafe.Pointer(in.AdminStateUp))
-	out.MACAddress = in.MACAddress
-	out.FixedIPs = *(*[]FixedIP)(unsafe.Pointer(&in.FixedIPs))
-	if in.SecurityGroupFilters != nil {
-		in, out := &in.SecurityGroupFilters, &out.SecurityGroupFilters
-		*out = make([]SecurityGroupParam, len(*in))
+	if err := optional.Convert_optional_String_To_string(&in.MACAddress, &out.MACAddress, s); err != nil {
+		return err
+	}
+	if in.FixedIPs != nil {
+		in, out := &in.FixedIPs, &out.FixedIPs
+		*out = make([]FixedIP, len(*in))
 		for i := range *in {
-			if err := Convert_v1beta1_SecurityGroupFilter_To_v1alpha5_SecurityGroupParam(&(*in)[i], &(*out)[i], s); err != nil {
+			if err := Convert_v1beta1_FixedIP_To_v1alpha5_FixedIP(&(*in)[i], &(*out)[i], s); err != nil {
 				return err
 			}
 		}
 	} else {
-		out.SecurityGroupFilters = nil
+		out.FixedIPs = nil
 	}
-	out.AllowedAddressPairs = *(*[]AddressPair)(unsafe.Pointer(&in.AllowedAddressPairs))
+	if in.SecurityGroups != nil {
+		in, out := &in.SecurityGroups, &out.SecurityGroups
+		*out = make([]string, len(*in))
+		for i := range *in {
+			if err := v1alpha6.Convert_v1beta1_SecurityGroupFilter_To_string(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.SecurityGroups = nil
+	}
+	if in.AllowedAddressPairs != nil {
+		in, out := &in.AllowedAddressPairs, &out.AllowedAddressPairs
+		*out = make([]AddressPair, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta1_AddressPair_To_v1alpha5_AddressPair(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.AllowedAddressPairs = nil
+	}
 	out.Trunk = (*bool)(unsafe.Pointer(in.Trunk))
-	out.HostID = in.HostID
-	out.VNICType = in.VNICType
-	// WARNING: in.Profile requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile vs map[string]string)
+	if err := optional.Convert_optional_String_To_string(&in.HostID, &out.HostID, s); err != nil {
+		return err
+	}
+	if err := optional.Convert_optional_String_To_string(&in.VNICType, &out.VNICType, s); err != nil {
+		return err
+	}
+	// WARNING: in.Profile requires manual conversion: inconvertible types (*sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile vs map[string]string)
 	out.DisablePortSecurity = (*bool)(unsafe.Pointer(in.DisablePortSecurity))
 	// WARNING: in.PropagateUplinkStatus requires manual conversion: does not exist in peer-type
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))

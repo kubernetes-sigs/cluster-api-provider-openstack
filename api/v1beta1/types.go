@@ -16,6 +16,10 @@ limitations under the License.
 
 package v1beta1
 
+import (
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
+)
+
 // OpenStackMachineTemplateResource describes the data needed to create a OpenStackMachine from a template.
 type OpenStackMachineTemplateResource struct {
 	// Spec is the specification of the desired behavior of the machine.
@@ -116,42 +120,87 @@ type AllocationPool struct {
 type PortOpts struct {
 	// Network is a query for an openstack network that the port will be created or discovered on.
 	// This will fail if the query returns more than one network.
+	// +optional
 	Network *NetworkFilter `json:"network,omitempty"`
-	// Used to make the name of the port unique. If unspecified, instead the 0-based index of the port in the list is used.
-	NameSuffix   string `json:"nameSuffix,omitempty"`
-	Description  string `json:"description,omitempty"`
-	AdminStateUp *bool  `json:"adminStateUp,omitempty"`
-	MACAddress   string `json:"macAddress,omitempty"`
-	// Specify pairs of subnet and/or IP address. These should be subnets of the network with the given NetworkID.
+
+	// NameSuffix will be appended to the name of the port if specified. If unspecified, instead the 0-based index of the port in the list is used.
+	// +optional
+	NameSuffix optional.String `json:"nameSuffix,omitempty"`
+
+	// Description is a human-readable description for the port.
+	// +optional
+	Description optional.String `json:"description,omitempty"`
+
+	// AdminStateUp specifies whether the port should be created in the up (true) or down (false) state. The default is up.
+	// +optional
+	AdminStateUp *bool `json:"adminStateUp,omitempty"`
+
+	// MACAddress specifies the MAC address of the port. If not specified, the MAC address will be generated.
+	// +optional
+	MACAddress optional.String `json:"macAddress,omitempty"`
+
+	// FixedIPs is a list of pairs of subnet and/or IP address to assign to the port. If specified, these must be subnets of the port's network.
+	// +optional
+	// +listType=atomic
 	FixedIPs []FixedIP `json:"fixedIPs,omitempty"`
-	// The names, uuids, filters or any combination these of the security groups to assign to the instance
-	SecurityGroupFilters []SecurityGroupFilter `json:"securityGroupFilters,omitempty"`
-	AllowedAddressPairs  []AddressPair         `json:"allowedAddressPairs,omitempty"`
-	// Enables and disables trunk at port level. If not provided, openStackMachine.Spec.Trunk is inherited.
+
+	// SecurityGroups is a list of the names, uuids, filters or any combination these of the security groups to assign to the instance.
+	// +optional
+	// +listType=atomic
+	SecurityGroups []SecurityGroupFilter `json:"securityGroups,omitempty"`
+
+	// AllowedAddressPairs is a list of address pairs which Neutron will
+	// allow the port to send traffic from in addition to the port's
+	// addresses. If not specified, the MAC Address will be the MAC Address
+	// of the port. Depending on the configuration of Neutron, it may be
+	// supported to specify a CIDR instead of a specific IP address.
+	// +optional
+	AllowedAddressPairs []AddressPair `json:"allowedAddressPairs,omitempty"`
+
+	// Trunk specifies whether trunking is enabled at the port level. If not
+	// provided the value is inherited from the machine, or false for a
+	// bastion host.
+	// +optional
 	Trunk *bool `json:"trunk,omitempty"`
 
-	// The ID of the host where the port is allocated
-	HostID string `json:"hostId,omitempty"`
+	// HostID specifies the ID of the host where the port resides.
+	// +optional
+	HostID optional.String `json:"hostId,omitempty"`
 
-	// The virtual network interface card (vNIC) type that is bound to the neutron port.
-	VNICType string `json:"vnicType,omitempty"`
+	// VNICType specifies the type of vNIC which this port should be
+	// attached to. This is used to determine which mechanism driver(s) to
+	// be used to bind the port. The valid values are normal, macvtap,
+	// direct, baremetal, direct-physical, virtio-forwarder, smart-nic and
+	// remote-managed, although these values will not be validated in this
+	// API to ensure compatibility with future neutron changes or custom
+	// implementations. What type of vNIC is actually available depends on
+	// deployments. If not specified, the Neutron default value is used.
+	// +optional
+	VNICType optional.String `json:"vnicType,omitempty"`
 
-	// Profile is a set of key-value pairs that are used for binding details.
-	// We intentionally don't expose this as a map[string]string because we only want to enable
-	// the users to set the values of the keys that are known to work in OpenStack Networking API.
-	// See https://docs.openstack.org/api-ref/network/v2/index.html?expanded=create-port-detail#create-port
-	Profile BindingProfile `json:"profile,omitempty"`
+	// Profile is a set of key-value pairs that are used for binding
+	// details. We intentionally don't expose this as a map[string]string
+	// because we only want to enable the users to set the values of the
+	// keys that are known to work in OpenStack Networking API.  See
+	// https://docs.openstack.org/api-ref/network/v2/index.html?expanded=create-port-detail#create-port
+	// To set profiles, your tenant needs permissions rule:create_port, and
+	// rule:create_port:binding:profile
+	// +optional
+	Profile *BindingProfile `json:"profile,omitempty"`
 
 	// DisablePortSecurity enables or disables the port security when set.
 	// When not set, it takes the value of the corresponding field at the network level.
+	// +optional
 	DisablePortSecurity *bool `json:"disablePortSecurity,omitempty"`
 
 	// PropageteUplinkStatus enables or disables the propagate uplink status on the port.
+	// +optional
 	PropagateUplinkStatus *bool `json:"propagateUplinkStatus,omitempty"`
 
 	// Tags applied to the port (and corresponding trunk, if a trunk is configured.)
 	// These tags are applied in addition to the instance's tags, which will also be applied to the port.
 	// +listType=set
+	// +optional
 	Tags []string `json:"tags,omitempty"`
 
 	// Value specs are extra parameters to include in the API request with OpenStack.
@@ -171,22 +220,39 @@ type PortStatus struct {
 
 type BindingProfile struct {
 	// OVSHWOffload enables or disables the OVS hardware offload feature.
-	OVSHWOffload bool `json:"ovsHWOffload,omitempty"`
+	// +optional
+	OVSHWOffload *bool `json:"ovsHWOffload,omitempty"`
 
 	// TrustedVF enables or disables the “trusted mode” for the VF.
-	TrustedVF bool `json:"trustedVF,omitempty"`
+	// +optional
+	TrustedVF *bool `json:"trustedVF,omitempty"`
 }
 
 type FixedIP struct {
 	// Subnet is an openstack subnet query that will return the id of a subnet to create
 	// the fixed IP of a port in. This query must not return more than one subnet.
-	Subnet    *SubnetFilter `json:"subnet"`
-	IPAddress string        `json:"ipAddress,omitempty"`
+	// +optional
+	Subnet *SubnetFilter `json:"subnet,omitempty"`
+
+	// IPAddress is a specific IP address to assign to the port. If Subnet
+	// is also specified, IPAddress must be a valid IP address in the
+	// subnet. If Subnet is not specified, IPAddress must be a valid IP
+	// address in any subnet of the port's network.
+	// +optional
+	IPAddress optional.String `json:"ipAddress,omitempty"`
 }
 
 type AddressPair struct {
-	IPAddress  string `json:"ipAddress,omitempty"`
-	MACAddress string `json:"macAddress,omitempty"`
+	// IPAddress is the IP address of the allowed address pair. Depending on
+	// the configuration of Neutron, it may be supported to specify a CIDR
+	// instead of a specific IP address.
+	// +kubebuilder:validation:Required
+	IPAddress string `json:"ipAddress"`
+
+	// MACAddress is the MAC address of the allowed address pair. If not
+	// specified, the MAC address will be the MAC address of the port.
+	// +optional
+	MACAddress optional.String `json:"macAddress,omitempty"`
 }
 
 type BastionStatus struct {
