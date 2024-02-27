@@ -123,24 +123,28 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	scope := scope.NewWithLogger(clientScope, log)
 
 	// Resolve and store referenced & dependent resources for the bastion
-	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
+	// Note: the bastion won't be created before networking is done, which is why we only adopt resources once we have a network in status.
+	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled && openStackCluster.Status.Network != nil {
 		if openStackCluster.Status.Bastion == nil {
 			openStackCluster.Status.Bastion = &infrav1.BastionStatus{}
 		}
-		changed, err := compute.ResolveReferencedMachineResources(scope, openStackCluster, &openStackCluster.Spec.Bastion.Instance, &openStackCluster.Status.Bastion.ReferencedResources)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		if changed {
+		if openStackCluster.Status.Bastion.ReferencedResources == nil {
+			openStackCluster.Status.Bastion.ReferencedResources = &infrav1.ReferencedMachineResources{}
+			referencedResources, err := compute.ResolveReferencedMachineResources(scope, openStackCluster, &openStackCluster.Spec.Bastion.Instance, openStackCluster.Status.Bastion.ReferencedResources)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+			openStackCluster.Status.Bastion.ReferencedResources = referencedResources
 			// If the referenced resources have changed, we need to update the OpenStackCluster status now.
 			return reconcile.Result{}, nil
 		}
 
-		changed, err = compute.ResolveDependentBastionResources(scope, openStackCluster, bastionName(cluster.Name))
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		if changed {
+		if openStackCluster.Status.Bastion.DependentResources == nil {
+			openStackCluster.Status.Bastion.DependentResources = &infrav1.DependentMachineResources{}
+			err = compute.ResolveDependentBastionResources(scope, openStackCluster, bastionName(cluster.Name))
+			if err != nil {
+				return reconcile.Result{}, err
+			}
 			// If the dependent resources have changed, we need to update the OpenStackCluster status now.
 			return reconcile.Result{}, nil
 		}
@@ -292,7 +296,7 @@ func deleteBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStac
 		}
 	}
 
-	if openStackCluster.Status.Bastion != nil && len(openStackCluster.Status.Bastion.DependentResources.PortsStatus) > 0 {
+	if openStackCluster.Status.Bastion != nil && openStackCluster.Status.Bastion.DependentResources != nil && len(openStackCluster.Status.Bastion.DependentResources.PortsStatus) > 0 {
 		trunkSupported, err := networkingService.IsTrunkExtSupported()
 		if err != nil {
 			return err
@@ -331,6 +335,11 @@ func reconcileNormal(scope *scope.WithLogger, cluster *clusterv1.Cluster, openSt
 	err = reconcileNetworkComponents(scope, cluster, openStackCluster)
 	if err != nil {
 		return reconcile.Result{}, err
+	}
+
+	// If the network is not yet written in status, we should requeue.
+	if openStackCluster.Status.Network == nil {
+		return reconcile.Result{}, nil
 	}
 
 	result, err := reconcileBastion(scope, cluster, openStackCluster)
@@ -374,7 +383,7 @@ func reconcileBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openS
 
 	// If ports options aren't in the status, we'll re-trigger the reconcile to get them
 	// via adopting the referenced resources.
-	if len(openStackCluster.Status.Bastion.ReferencedResources.PortsOpts) == 0 {
+	if openStackCluster.Status.Bastion == nil || openStackCluster.Status.Bastion.ReferencedResources == nil || len(openStackCluster.Status.Bastion.ReferencedResources.PortsOpts) == 0 {
 		return reconcile.Result{}, nil
 	}
 
@@ -403,7 +412,7 @@ func reconcileBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openS
 		}
 	}
 
-	err = getOrCreateBastionPorts(scope, cluster, openStackCluster, networkingService, cluster.Name)
+	err = getOrCreateBastionPorts(cluster, openStackCluster, networkingService, cluster.Name)
 	if err != nil {
 		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to get or create ports for bastion: %w", err))
 		return ctrl.Result{}, fmt.Errorf("failed to get or create ports for bastion: %w", err)
@@ -543,7 +552,7 @@ func getBastionSecurityGroups(openStackCluster *infrav1.OpenStackCluster) []infr
 	return instanceSpecSecurityGroups
 }
 
-func getOrCreateBastionPorts(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, networkingService *networking.Service, clusterName string) error {
+func getOrCreateBastionPorts(cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, networkingService *networking.Service, clusterName string) error {
 	if openStackCluster.Status.Bastion == nil {
 		openStackCluster.Status.Bastion = &infrav1.BastionStatus{}
 	}

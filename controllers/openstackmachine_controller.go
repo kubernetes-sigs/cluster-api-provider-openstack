@@ -148,22 +148,23 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 	scope := scope.NewWithLogger(clientScope, log)
 
-	// Resolve and store referenced resources
-	changed, err := compute.ResolveReferencedMachineResources(scope, infraCluster, &openStackMachine.Spec, &openStackMachine.Status.ReferencedResources)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	if changed {
+	if openStackMachine.Status.ReferencedResources == nil {
+		openStackMachine.Status.ReferencedResources = &infrav1.ReferencedMachineResources{}
+		referencedResources, err := compute.ResolveReferencedMachineResources(scope, infraCluster, &openStackMachine.Spec, openStackMachine.Status.ReferencedResources)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		openStackMachine.Status.ReferencedResources = referencedResources
 		// If the referenced resources have changed, we need to update the OpenStackMachine status now.
 		return reconcile.Result{}, nil
 	}
 
-	// Resolve and store dependent resources
-	changed, err = compute.ResolveDependentMachineResources(scope, openStackMachine)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	if changed {
+	if openStackMachine.Status.DependentResources == nil {
+		openStackMachine.Status.DependentResources = &infrav1.DependentMachineResources{}
+		err = compute.ResolveDependentMachineResources(scope, openStackMachine)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
 		// If the dependent resources have changed, we need to update the OpenStackMachine status now.
 		return reconcile.Result{}, nil
 	}
@@ -313,10 +314,12 @@ func (r *OpenStackMachineReconciler) reconcileDelete(scope *scope.WithLogger, cl
 		return ctrl.Result{}, err
 	}
 
-	portsStatus := openStackMachine.Status.DependentResources.PortsStatus
-	for _, port := range portsStatus {
-		if err := networkingService.DeleteInstanceTrunkAndPort(openStackMachine, port, trunkSupported); err != nil {
-			return ctrl.Result{}, fmt.Errorf("failed to delete port %q: %w", port.ID, err)
+	if openStackMachine.Status.DependentResources != nil {
+		portsStatus := openStackMachine.Status.DependentResources.PortsStatus
+		for _, port := range portsStatus {
+			if err := networkingService.DeleteInstanceTrunkAndPort(openStackMachine, port, trunkSupported); err != nil {
+				return ctrl.Result{}, fmt.Errorf("failed to delete port %q: %w", port.ID, err)
+			}
 		}
 	}
 
@@ -379,7 +382,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		return ctrl.Result{}, err
 	}
 
-	err = getOrCreateMachinePorts(scope, openStackCluster, machine, openStackMachine, networkingService, clusterName)
+	err = getOrCreateMachinePorts(openStackCluster, machine, openStackMachine, networkingService, clusterName)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -490,7 +493,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	return ctrl.Result{}, nil
 }
 
-func getOrCreateMachinePorts(scope *scope.WithLogger, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, networkingService *networking.Service, clusterName string) error {
+func getOrCreateMachinePorts(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, networkingService *networking.Service, clusterName string) error {
 	var machinePortsStatus []infrav1.PortStatus
 	var err error
 

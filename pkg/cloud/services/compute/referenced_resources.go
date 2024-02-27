@@ -28,37 +28,33 @@ import (
 // Note that we only set the fields in ReferencedMachineResources that are not set yet. This is ok because:
 // - OpenStackMachine is immutable, so we can't change the spec after the machine is created.
 // - the bastion is mutable, but we delete the bastion when the spec changes, so the bastion status will be empty.
-func ResolveReferencedMachineResources(scope *scope.WithLogger, openStackCluster *infrav1.OpenStackCluster, spec *infrav1.OpenStackMachineSpec, resources *infrav1.ReferencedMachineResources) (changed bool, err error) {
-	changed = false
-
+func ResolveReferencedMachineResources(scope *scope.WithLogger, openStackCluster *infrav1.OpenStackCluster, spec *infrav1.OpenStackMachineSpec, resources *infrav1.ReferencedMachineResources) (*infrav1.ReferencedMachineResources, error) {
 	computeService, err := NewService(scope)
 	if err != nil {
-		return changed, err
+		return resources, err
 	}
 
 	networkingService, err := networking.NewService(scope)
 	if err != nil {
-		return changed, err
+		return resources, err
 	}
 
 	// ServerGroup is optional, so we only need to resolve it if it's set in the spec and not in ReferencedMachineResources yet.
 	if spec.ServerGroup != nil && resources.ServerGroupID == "" {
 		serverGroupID, err := computeService.GetServerGroupID(spec.ServerGroup)
 		if err != nil {
-			return changed, err
+			return resources, err
 		}
 		resources.ServerGroupID = serverGroupID
-		changed = true
 	}
 
 	// Image is required, so we need to resolve it if it's not set in ReferencedMachineResources yet.
 	if resources.ImageID == "" {
 		imageID, err := computeService.GetImageID(spec.Image)
 		if err != nil {
-			return changed, err
+			return resources, err
 		}
 		resources.ImageID = imageID
-		changed = true
 	}
 
 	// Network resources are required in order to get ports options.
@@ -67,15 +63,14 @@ func ResolveReferencedMachineResources(scope *scope.WithLogger, openStackCluster
 		// support at any time, so we should probably check this on every reconcile.
 		trunkSupported, err := networkingService.IsTrunkExtSupported()
 		if err != nil {
-			return changed, err
+			return resources, err
 		}
 		portsOpts, err := networkingService.ConstructPorts(openStackCluster, spec.Ports, spec.Trunk, trunkSupported)
 		if err != nil {
-			return changed, err
+			return resources, err
 		}
 		resources.PortsOpts = portsOpts
-		changed = true
 	}
 
-	return changed, nil
+	return resources, nil
 }

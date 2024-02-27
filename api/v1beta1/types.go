@@ -190,14 +190,14 @@ type AddressPair struct {
 }
 
 type BastionStatus struct {
-	ID                  string                     `json:"id,omitempty"`
-	Name                string                     `json:"name,omitempty"`
-	SSHKeyName          string                     `json:"sshKeyName,omitempty"`
-	State               InstanceState              `json:"state,omitempty"`
-	IP                  string                     `json:"ip,omitempty"`
-	FloatingIP          string                     `json:"floatingIP,omitempty"`
-	ReferencedResources ReferencedMachineResources `json:"referencedResources,omitempty"`
-	DependentResources  DependentMachineResources  `json:"dependentResources,omitempty"`
+	ID                  string                      `json:"id,omitempty"`
+	Name                string                      `json:"name,omitempty"`
+	SSHKeyName          string                      `json:"sshKeyName,omitempty"`
+	State               InstanceState               `json:"state,omitempty"`
+	IP                  string                      `json:"ip,omitempty"`
+	FloatingIP          string                      `json:"floatingIP,omitempty"`
+	ReferencedResources *ReferencedMachineResources `json:"referencedResources,omitempty"`
+	DependentResources  *DependentMachineResources  `json:"dependentResources,omitempty"`
 }
 
 type RootVolume struct {

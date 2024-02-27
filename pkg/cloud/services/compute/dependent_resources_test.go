@@ -41,10 +41,16 @@ func Test_ResolveDependentMachineResources(t *testing.T) {
 		wantErr                bool
 	}{
 		{
-			testName:         "no Network ID yet and no ports in status",
-			openStackCluster: &infrav1.OpenStackCluster{},
-			want:             &infrav1.DependentMachineResources{},
-			wantErr:          false,
+			testName: "no Network ID yet and no ports in status",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Status: infrav1.OpenStackClusterStatus{
+					Bastion: &infrav1.BastionStatus{
+						DependentResources: &infrav1.DependentMachineResources{},
+					},
+				},
+			},
+			want:    nil,
+			wantErr: false,
 		},
 		{
 			testName: "Network ID set but no ports in status",
@@ -57,7 +63,7 @@ func Test_ResolveDependentMachineResources(t *testing.T) {
 					},
 				},
 			},
-			want:    &infrav1.DependentMachineResources{},
+			want:    nil,
 			wantErr: false,
 		},
 		{
@@ -72,7 +78,7 @@ func Test_ResolveDependentMachineResources(t *testing.T) {
 				},
 			},
 			openStackMachineStatus: infrav1.OpenStackMachineStatus{
-				DependentResources: infrav1.DependentMachineResources{
+				DependentResources: &infrav1.DependentMachineResources{
 					PortsStatus: []infrav1.PortStatus{
 						{
 							ID: portID,
@@ -104,13 +110,13 @@ func Test_ResolveDependentMachineResources(t *testing.T) {
 				Status: tt.openStackMachineStatus,
 			}
 
-			_, err := ResolveDependentMachineResources(scope.NewWithLogger(mockScopeFactory, log), defaultOpenStackMachine)
+			err := ResolveDependentMachineResources(scope.NewWithLogger(mockScopeFactory, log), defaultOpenStackMachine)
 			if tt.wantErr {
 				g.Expect(err).Error()
 				return
 			}
 
-			g.Expect(&defaultOpenStackMachine.Status.DependentResources).To(Equal(tt.want), cmp.Diff(&defaultOpenStackMachine.Status.DependentResources, tt.want))
+			g.Expect(defaultOpenStackMachine.Status.DependentResources).To(Equal(tt.want), cmp.Diff(defaultOpenStackMachine.Status.DependentResources, tt.want))
 		})
 	}
 }
@@ -134,6 +140,11 @@ func TestResolveDependentBastionResources(t *testing.T) {
 						Enabled: true,
 					},
 				},
+				Status: infrav1.OpenStackClusterStatus{
+					Bastion: &infrav1.BastionStatus{
+						DependentResources: &infrav1.DependentMachineResources{},
+					},
+				},
 			},
 			want:    &infrav1.DependentMachineResources{},
 			wantErr: false,
@@ -152,6 +163,9 @@ func TestResolveDependentBastionResources(t *testing.T) {
 							ID: networkID,
 						},
 					},
+					Bastion: &infrav1.BastionStatus{
+						DependentResources: &infrav1.DependentMachineResources{},
+					},
 				},
 			},
 			want: &infrav1.DependentMachineResources{},
@@ -166,7 +180,7 @@ func TestResolveDependentBastionResources(t *testing.T) {
 				},
 				Status: infrav1.OpenStackClusterStatus{
 					Bastion: &infrav1.BastionStatus{
-						DependentResources: infrav1.DependentMachineResources{
+						DependentResources: &infrav1.DependentMachineResources{
 							PortsStatus: []infrav1.PortStatus{
 								{
 									ID: portID,
@@ -197,7 +211,7 @@ func TestResolveDependentBastionResources(t *testing.T) {
 			mockCtrl := gomock.NewController(t)
 			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
 
-			_, err := ResolveDependentBastionResources(scope.NewWithLogger(mockScopeFactory, log), tt.openStackCluster, bastionName)
+			err := ResolveDependentBastionResources(scope.NewWithLogger(mockScopeFactory, log), tt.openStackCluster, bastionName)
 			if tt.wantErr {
 				g.Expect(err).Error()
 				return
@@ -212,7 +226,7 @@ func TestResolveDependentBastionResources(t *testing.T) {
 			}
 
 			if tt.openStackCluster.Status.Bastion != nil {
-				g.Expect(&defaultOpenStackCluster.Status.Bastion.DependentResources).To(Equal(tt.want), cmp.Diff(&defaultOpenStackCluster.Status.Bastion.DependentResources, tt.want))
+				g.Expect(defaultOpenStackCluster.Status.Bastion.DependentResources).To(Equal(tt.want), cmp.Diff(defaultOpenStackCluster.Status.Bastion.DependentResources, tt.want))
 			}
 		})
 	}
