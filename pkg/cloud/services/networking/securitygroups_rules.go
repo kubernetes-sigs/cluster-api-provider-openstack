@@ -222,12 +222,6 @@ func getSGControlPlaneAdditionalPorts(ports []int) []resolvedSecurityGroupRuleSp
 			EtherType:   "IPv4",
 			Protocol:    "tcp",
 		},
-		{
-			Description: "Additional ports",
-			Direction:   "ingress",
-			EtherType:   "IPv4",
-			Protocol:    "udp",
-		},
 	}
 	for _, p := range ports {
 		r[0].PortRangeMin = p
