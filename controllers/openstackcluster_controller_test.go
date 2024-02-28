@@ -725,7 +725,7 @@ func createRequestFromOSCluster(openStackCluster *infrav1.OpenStackCluster) reco
 	}
 }
 
-func Test_ConvertOpenStackNetworkToCAPONetwork(t *testing.T) {
+func Test_setClusterNetwork(t *testing.T) {
 	openStackCluster := &infrav1.OpenStackCluster{}
 	openStackCluster.Status.Network = &infrav1.NetworkStatusWithSubnets{}
 
@@ -735,7 +735,7 @@ func Test_ConvertOpenStackNetworkToCAPONetwork(t *testing.T) {
 		Tags: []string{"tag1", "tag2"},
 	}
 
-	convertOpenStackNetworkToCAPONetwork(openStackCluster, filterednetwork)
+	setClusterNetwork(openStackCluster, filterednetwork)
 	expected := infrav1.NetworkStatus{
 		ID:   "network1",
 		Name: "network1",
@@ -743,7 +743,49 @@ func Test_ConvertOpenStackNetworkToCAPONetwork(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(openStackCluster.Status.Network.NetworkStatus, expected) {
-		t.Errorf("ConvertOpenStackNetworkToCAPONetwork() = %v, want %v", openStackCluster.Status.Network.NetworkStatus, expected)
+		t.Errorf("setClusterNetwork() = %v, want %v", openStackCluster.Status.Network.NetworkStatus, expected)
+	}
+}
+
+func Test_getAPIServerPort(t *testing.T) {
+	tests := []struct {
+		name             string
+		openStackCluster *infrav1.OpenStackCluster
+		want             int
+	}{
+		{
+			name:             "default",
+			openStackCluster: &infrav1.OpenStackCluster{},
+			want:             6443,
+		},
+		{
+			name: "with a control plane endpoint",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					ControlPlaneEndpoint: clusterv1.APIEndpoint{
+						Host: "192.168.0.1",
+						Port: 6444,
+					},
+				},
+			},
+			want: 6444,
+		},
+		{
+			name: "with API server port",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					APIServerPort: 6445,
+				},
+			},
+			want: 6445,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getAPIServerPort(tt.openStackCluster); got != tt.want {
+				t.Errorf("getAPIServerPort() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
 
