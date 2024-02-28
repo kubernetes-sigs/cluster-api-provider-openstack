@@ -116,10 +116,11 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}()
 
-	scope, err := r.ScopeFactory.NewClientScopeFromCluster(ctx, r.Client, openStackCluster, r.CaCertificates, log)
+	clientScope, err := r.ScopeFactory.NewClientScopeFromCluster(ctx, r.Client, openStackCluster, r.CaCertificates, log)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
+	scope := scope.NewWithLogger(clientScope, log)
 
 	// Resolve and store referenced & dependent resources for the bastion
 	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
@@ -154,7 +155,7 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	return reconcileNormal(scope, cluster, openStackCluster)
 }
 
-func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
+func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope *scope.WithLogger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
 	scope.Logger().Info("Reconciling Cluster delete")
 
 	// Wait for machines to be deleted before removing the finalizer as they
@@ -232,7 +233,7 @@ func contains(arr []string, target string) bool {
 	return false
 }
 
-func deleteBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
+func deleteBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
 	scope.Logger().Info("Deleting Bastion")
 
 	computeService, err := compute.NewService(scope)
@@ -313,7 +314,7 @@ func deleteBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackClust
 	return nil
 }
 
-func reconcileNormal(scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) { //nolint:unparam
+func reconcileNormal(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) { //nolint:unparam
 	scope.Logger().Info("Reconciling Cluster")
 
 	// If the OpenStackCluster doesn't have our finalizer, add it.
@@ -364,7 +365,7 @@ func reconcileNormal(scope scope.Scope, cluster *clusterv1.Cluster, openStackClu
 	return reconcile.Result{}, nil
 }
 
-func reconcileBastion(scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
+func reconcileBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
 	scope.Logger().Info("Reconciling Bastion")
 
 	if openStackCluster.Spec.Bastion == nil || !openStackCluster.Spec.Bastion.Enabled {
@@ -542,7 +543,7 @@ func getBastionSecurityGroups(openStackCluster *infrav1.OpenStackCluster) []infr
 	return instanceSpecSecurityGroups
 }
 
-func getOrCreateBastionPorts(scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, networkingService *networking.Service, clusterName string) error {
+func getOrCreateBastionPorts(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, networkingService *networking.Service, clusterName string) error {
 	scope.Logger().Info("Reconciling ports for bastion", "bastion", bastionName(openStackCluster.Name))
 
 	if openStackCluster.Status.Bastion == nil {
@@ -584,7 +585,7 @@ func bastionHashHasChanged(computeHash string, clusterAnnotations map[string]str
 	return latestHash != computeHash
 }
 
-func reconcileNetworkComponents(scope scope.Scope, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
+func reconcileNetworkComponents(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
 	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
 
 	networkingService, err := networking.NewService(scope)

@@ -141,7 +141,6 @@ type providerScope struct {
 	providerClient     *gophercloud.ProviderClient
 	providerClientOpts *clientconfig.ClientOpts
 	projectID          string
-	logger             logr.Logger
 }
 
 func NewProviderScope(cloud clientconfig.Cloud, caCert []byte, logger logr.Logger) (Scope, error) {
@@ -154,7 +153,6 @@ func NewProviderScope(cloud clientconfig.Cloud, caCert []byte, logger logr.Logge
 		providerClient:     providerClient,
 		providerClientOpts: clientOpts,
 		projectID:          projectID,
-		logger:             logger,
 	}, nil
 }
 
@@ -184,10 +182,6 @@ func NewCachedProviderScope(cache *cache.LRUExpireCache, cloud clientconfig.Clou
 
 	cache.Add(key, scope, expiry)
 	return scope, nil
-}
-
-func (s *providerScope) Logger() logr.Logger {
-	return s.logger
 }
 
 func (s *providerScope) ProjectID() string {

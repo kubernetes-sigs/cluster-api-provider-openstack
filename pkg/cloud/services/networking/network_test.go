@@ -19,7 +19,7 @@ package networking
 import (
 	"testing"
 
-	"github.com/go-logr/logr"
+	"github.com/go-logr/logr/testr"
 	"github.com/golang/mock/gomock"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/external"
@@ -188,9 +188,12 @@ func Test_ReconcileNetwork(t *testing.T) {
 			g := NewWithT(t)
 			mockClient := mock.NewMockNetworkClient(mockCtrl)
 			tt.expect(mockClient.EXPECT())
+
+			scopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
+			log := testr.New(t)
 			s := Service{
 				client: mockClient,
-				scope:  scope.NewMockScopeFactory(mockCtrl, "", logr.Discard()),
+				scope:  scope.NewWithLogger(scopeFactory, log),
 			}
 			err := s.ReconcileNetwork(tt.openStackCluster, clusterName)
 			g.Expect(err).ShouldNot(HaveOccurred())
@@ -410,9 +413,12 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			g := NewWithT(t)
 			mockClient := mock.NewMockNetworkClient(mockCtrl)
 			tt.expect(mockClient.EXPECT())
+
+			scopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
+			log := testr.New(t)
 			s := Service{
 				client: mockClient,
-				scope:  scope.NewMockScopeFactory(mockCtrl, "", logr.Discard()),
+				scope:  scope.NewWithLogger(scopeFactory, log),
 			}
 			err := s.ReconcileExternalNetwork(tt.openStackCluster)
 			if (err != nil) != tt.wantErr {
@@ -668,11 +674,13 @@ func Test_ReconcileSubnet(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewWithT(t)
+			log := testr.New(t)
 			mockClient := mock.NewMockNetworkClient(mockCtrl)
 			tt.expect(mockClient.EXPECT())
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
 			s := Service{
 				client: mockClient,
-				scope:  scope.NewMockScopeFactory(mockCtrl, "", logr.Discard()),
+				scope:  scope.NewWithLogger(mockScopeFactory, log),
 			}
 			err := s.ReconcileSubnet(tt.openStackCluster, clusterName)
 			g.Expect(err).ShouldNot(HaveOccurred())

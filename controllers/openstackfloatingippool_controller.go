@@ -83,10 +83,11 @@ func (r *OpenStackFloatingIPPoolReconciler) Reconcile(ctx context.Context, req c
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	scope, err := r.ScopeFactory.NewClientScopeFromFloatingIPPool(ctx, r.Client, pool, r.CaCertificates, log)
+	clientScope, err := r.ScopeFactory.NewClientScopeFromFloatingIPPool(ctx, r.Client, pool, r.CaCertificates, log)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
+	scope := scope.NewWithLogger(clientScope, log)
 
 	// This is done before deleting the pool, because we want to handle deleted IPs before we delete the pool
 	if err := r.reconcileIPAddresses(ctx, scope, pool); err != nil {
@@ -203,7 +204,7 @@ func (r *OpenStackFloatingIPPoolReconciler) Reconcile(ctx context.Context, req c
 	return ctrl.Result{}, r.Client.Status().Update(ctx, pool)
 }
 
-func (r *OpenStackFloatingIPPoolReconciler) reconcileDelete(ctx context.Context, scope scope.Scope, pool *infrav1alpha1.OpenStackFloatingIPPool) error {
+func (r *OpenStackFloatingIPPoolReconciler) reconcileDelete(ctx context.Context, scope *scope.WithLogger, pool *infrav1alpha1.OpenStackFloatingIPPool) error {
 	log := ctrl.LoggerFrom(ctx)
 	ipAddresses := &ipamv1.IPAddressList{}
 	if err := r.Client.List(ctx, ipAddresses, client.InNamespace(pool.Namespace), client.MatchingFields{infrav1alpha1.OpenStackFloatingIPPoolNameIndex: pool.Name}); err != nil {
@@ -267,7 +268,7 @@ func diff(a []string, b []string) []string {
 	return result
 }
 
-func (r *OpenStackFloatingIPPoolReconciler) reconcileIPAddresses(ctx context.Context, scope scope.Scope, pool *infrav1alpha1.OpenStackFloatingIPPool) error {
+func (r *OpenStackFloatingIPPoolReconciler) reconcileIPAddresses(ctx context.Context, scope *scope.WithLogger, pool *infrav1alpha1.OpenStackFloatingIPPool) error {
 	ipAddresses := &ipamv1.IPAddressList{}
 	if err := r.Client.List(ctx, ipAddresses, client.InNamespace(pool.Namespace), client.MatchingFields{infrav1alpha1.OpenStackFloatingIPPoolNameIndex: pool.Name}); err != nil {
 		return err
@@ -309,7 +310,7 @@ func (r *OpenStackFloatingIPPoolReconciler) reconcileIPAddresses(ctx context.Con
 	return nil
 }
 
-func (r *OpenStackFloatingIPPoolReconciler) getIP(ctx context.Context, scope scope.Scope, pool *infrav1alpha1.OpenStackFloatingIPPool) (string, error) {
+func (r *OpenStackFloatingIPPoolReconciler) getIP(ctx context.Context, scope *scope.WithLogger, pool *infrav1alpha1.OpenStackFloatingIPPool) (string, error) {
 	// There's a potential leak of IPs here, if the reconcile loop fails after we claim an IP but before we create the IPAddress object.
 	var ip string
 
@@ -388,7 +389,7 @@ func (r *OpenStackFloatingIPPoolReconciler) getIP(ctx context.Context, scope sco
 	return ip, nil
 }
 
-func (r *OpenStackFloatingIPPoolReconciler) reconcileFloatingIPNetwork(scope scope.Scope, pool *infrav1alpha1.OpenStackFloatingIPPool) error {
+func (r *OpenStackFloatingIPPoolReconciler) reconcileFloatingIPNetwork(scope *scope.WithLogger, pool *infrav1alpha1.OpenStackFloatingIPPool) error {
 	// If the pool already has a network, we don't need to do anything
 	if pool.Status.FloatingIPNetwork != nil {
 		return nil

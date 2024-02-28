@@ -19,7 +19,7 @@ package compute
 import (
 	"testing"
 
-	"github.com/go-logr/logr"
+	"github.com/go-logr/logr/testr"
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
 	. "github.com/onsi/gomega"
@@ -93,8 +93,9 @@ func Test_ResolveDependentMachineResources(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
 			g := NewWithT(t)
+			log := testr.New(t)
 			mockCtrl := gomock.NewController(t)
-			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "", logr.Discard())
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
 
 			defaultOpenStackMachine := &infrav1.OpenStackMachine{
 				ObjectMeta: metav1.ObjectMeta{
@@ -103,7 +104,7 @@ func Test_ResolveDependentMachineResources(t *testing.T) {
 				Status: tt.openStackMachineStatus,
 			}
 
-			_, err := ResolveDependentMachineResources(mockScopeFactory, defaultOpenStackMachine)
+			_, err := ResolveDependentMachineResources(scope.NewWithLogger(mockScopeFactory, log), defaultOpenStackMachine)
 			if tt.wantErr {
 				g.Expect(err).Error()
 				return
@@ -192,10 +193,11 @@ func TestResolveDependentBastionResources(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
 			g := NewWithT(t)
+			log := testr.New(t)
 			mockCtrl := gomock.NewController(t)
-			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "", logr.Discard())
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
 
-			_, err := ResolveDependentBastionResources(mockScopeFactory, tt.openStackCluster, bastionName)
+			_, err := ResolveDependentBastionResources(scope.NewWithLogger(mockScopeFactory, log), tt.openStackCluster, bastionName)
 			if tt.wantErr {
 				g.Expect(err).Error()
 				return

@@ -22,7 +22,7 @@ import (
 	"net"
 	"testing"
 
-	"github.com/go-logr/logr"
+	"github.com/go-logr/logr/testr"
 	"github.com/golang/mock/gomock"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/apiversions"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/listeners"
@@ -139,9 +139,10 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 	for _, tt := range lbtests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewWithT(t)
+			log := testr.New(t)
 
-			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "", logr.Discard())
-			lbs, err := NewService(mockScopeFactory)
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
+			lbs, err := NewService(scope.NewWithLogger(mockScopeFactory, log))
 			g.Expect(err).NotTo(HaveOccurred())
 
 			tt.expectNetwork(mockScopeFactory.NetworkClient.EXPECT())
@@ -485,9 +486,10 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 	for _, tt := range lbtests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewWithT(t)
+			log := testr.New(t)
 
-			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "", logr.Discard())
-			lbs, err := NewService(mockScopeFactory)
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
+			lbs, err := NewService(scope.NewWithLogger(mockScopeFactory, log))
 			g.Expect(err).NotTo(HaveOccurred())
 
 			tt.expectLoadBalancer(mockScopeFactory.LbClient.EXPECT())

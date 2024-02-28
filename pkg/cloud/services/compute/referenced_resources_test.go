@@ -19,7 +19,7 @@ package compute
 import (
 	"testing"
 
-	"github.com/go-logr/logr"
+	"github.com/go-logr/logr/testr"
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/servergroups"
@@ -148,8 +148,9 @@ func Test_ResolveReferencedMachineResources(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
 			g := NewWithT(t)
+			log := testr.New(t)
 			mockCtrl := gomock.NewController(t)
-			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "", logr.Discard())
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
 
 			tt.expectComputeMock(mockScopeFactory.ComputeClient.EXPECT())
 			tt.expectImageMock(mockScopeFactory.ImageClient.EXPECT())
@@ -178,7 +179,8 @@ func Test_ResolveReferencedMachineResources(t *testing.T) {
 
 			resources := &infrav1.ReferencedMachineResources{}
 
-			_, err := ResolveReferencedMachineResources(mockScopeFactory, openStackCluster, machineSpec, resources)
+			scope := scope.NewWithLogger(mockScopeFactory, log)
+			_, err := ResolveReferencedMachineResources(scope, openStackCluster, machineSpec, resources)
 			if tt.wantErr {
 				g.Expect(err).Error()
 				return
