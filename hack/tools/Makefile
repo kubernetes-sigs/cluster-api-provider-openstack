@@ -142,6 +142,10 @@ $(PLANTUML): plantuml.Dockerfile ../../versions.mk | $(BIN_DIR)
 	docker build --build-arg PLANTUML_VERSION=$(PLANTUML_VERSION)  . -f plantuml.Dockerfile -t "plantuml-builder"
 	touch $@
 
+GEN_CRD_API_REFERENCE_DOCS := $(BIN_DIR)/gen-crd-api-reference-docs
+$(GEN_CRD_API_REFERENCE_DOCS): 
+	go build -tags tools -o $@ github.com/ahmetb/gen-crd-api-reference-docs
+
 .PHONY: clean
 clean: ## Remove all tools
 	rm -rf $(BIN_DIR)

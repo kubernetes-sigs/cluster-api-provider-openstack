@@ -136,6 +136,8 @@ type OpenStackMachineStatus struct {
 	Conditions clusterv1.Conditions `json:"conditions,omitempty"`
 }
 
+// +genclient
+// +genclient:Namespaced
 // +kubebuilder:object:root=true
 // +kubebuilder:deprecatedversion:warning="The v1alpha6 version of OpenStackMachine has been deprecated and will be removed in a future release of the API. Please upgrade."
 // +kubebuilder:resource:path=openstackmachines,scope=Namespaced,categories=cluster-api,shortName=osm
