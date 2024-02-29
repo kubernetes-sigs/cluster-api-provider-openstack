@@ -8,16 +8,19 @@
     - [`OpenStackMachine`](#openstackmachine)
       - [Removal of machine identityRef.kind](#removal-of-machine-identityrefkind)
       - [Change to serverGroupID](#change-to-servergroupid)
+      - [Changes to ports](#changes-to-ports)
     - [`OpenStackCluster`](#openstackcluster)
       - [Removal of cluster identityRef.kind](#removal-of-cluster-identityrefkind)
       - [Change to externalNetworkID](#change-to-externalnetworkid)
-      - [Changes to image](#change-to-image)
+      - [Change to image](#change-to-image)
       - [Removal of imageUUID](#removal-of-imageuuid)
       - [Change to floatingIP](#change-to-floatingip)
       - [Change to subnet](#change-to-subnet)
       - [Change to nodeCidr and dnsNameservers](#change-to-nodecidr-and-dnsnameservers)
+      - [Addition of allocationPools](#addition-of-allocationpools)
       - [Change to managedSecurityGroups](#change-to-managedsecuritygroups)
       - [Calico CNI](#calico-cni)
+      - [Change to network](#change-to-network)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -65,6 +68,18 @@ serverGroup:
 
 If a server group is provided and found, it'll be added to `OpenStackMachine.Status.ReferencedResources.ServerGroupID`. If the server group can't be found or filter matches multiple server groups, an error will be returned.
 If empty object or null is provided, Machine will not be added to any server group and `OpenStackMachine.Status.ReferencedResources.ServerGroupID` will be empty.
+
+#### Changes to ports
+
+These changes apply to ports specified in both OpenStackMachines and the Bastion.
+
+The `securityGroupFilters` field is renamed to `securityGroups` to be consistent with other similar fields throughout the API.
+
+When specifying `allowedAddressPairs`, `ipAddress` is now required. Neutron has already required this parameter, so while the API previously allowed it to be unset it would not have resulted in a working VM.
+
+Setting either of the following fields explicitly to the empty string would previously have caused the default behaviour to be used. In v1beta1 it will result in an empty string being used instead. To retain the default behaviour in v1beta1, do not set the value at all. When objects are upgraded automatically by the controller, empty values will become unset values by default, so this applies only to newly created objects.
+* nameSuffix
+* description
 
 ### `OpenStackCluster`
 

@@ -19,6 +19,7 @@ package v1alpha7
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	fuzz "github.com/google/gofuzz"
 	"github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/apitesting/fuzzer"
@@ -324,9 +325,68 @@ func TestConvert_v1alpha7_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(t
 		t.Run(tt.name, func(t *testing.T) {
 			g := gomega.NewWithT(t)
 			out := &infrav1.OpenStackClusterSpec{}
-			err := Convert_v1alpha7_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(tt.in, out, nil)
+			err := Convert_v1alpha7_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(tt.in.DeepCopy(), out, nil)
 			g.Expect(err).NotTo(gomega.HaveOccurred())
-			g.Expect(out).To(gomega.Equal(tt.expectedOut))
+			g.Expect(out).To(gomega.Equal(tt.expectedOut), cmp.Diff(out, tt.expectedOut))
+		})
+
+		t.Run("template_"+tt.name, func(t *testing.T) {
+			g := gomega.NewWithT(t)
+			in := &OpenStackClusterTemplateSpec{
+				Template: OpenStackClusterTemplateResource{
+					Spec: *(tt.in.DeepCopy()),
+				},
+			}
+			out := &infrav1.OpenStackClusterTemplateSpec{}
+			err := Convert_v1alpha7_OpenStackClusterTemplateSpec_To_v1beta1_OpenStackClusterTemplateSpec(in, out, nil)
+			g.Expect(err).NotTo(gomega.HaveOccurred())
+			g.Expect(&out.Template.Spec).To(gomega.Equal(tt.expectedOut), cmp.Diff(&out.Template.Spec, tt.expectedOut))
+		})
+	}
+}
+
+func TestConvert_v1alpha7_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(t *testing.T) {
+	tests := []struct {
+		name        string
+		in          *OpenStackMachineSpec
+		expectedOut *infrav1.OpenStackMachineSpec
+	}{
+		{
+			name:        "empty",
+			in:          &OpenStackMachineSpec{},
+			expectedOut: &infrav1.OpenStackMachineSpec{},
+		},
+		{
+			name: "empty port",
+			in: &OpenStackMachineSpec{
+				Ports: []PortOpts{{}},
+			},
+			expectedOut: &infrav1.OpenStackMachineSpec{
+				Ports: []infrav1.PortOpts{{}},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := gomega.NewWithT(t)
+			out := &infrav1.OpenStackMachineSpec{}
+			err := Convert_v1alpha7_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(tt.in.DeepCopy(), out, nil)
+			g.Expect(err).NotTo(gomega.HaveOccurred())
+			g.Expect(out).To(gomega.Equal(tt.expectedOut), cmp.Diff(out, tt.expectedOut))
+		})
+
+		t.Run("template_"+tt.name, func(t *testing.T) {
+			g := gomega.NewWithT(t)
+			in := &OpenStackMachineTemplateSpec{
+				Template: OpenStackMachineTemplateResource{
+					Spec: *(tt.in.DeepCopy()),
+				},
+			}
+			out := &infrav1.OpenStackMachineTemplateSpec{}
+			err := Convert_v1alpha7_OpenStackMachineTemplateSpec_To_v1beta1_OpenStackMachineTemplateSpec(in, out, nil)
+			g.Expect(err).NotTo(gomega.HaveOccurred())
+			g.Expect(&out.Template.Spec).To(gomega.Equal(tt.expectedOut), cmp.Diff(&out.Template.Spec, tt.expectedOut))
 		})
 	}
 }

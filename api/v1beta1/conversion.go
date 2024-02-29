@@ -16,7 +16,9 @@ limitations under the License.
 
 package v1beta1
 
-import "k8s.io/utils/pointer"
+import (
+	"k8s.io/utils/pointer"
+)
 
 // Hub marks OpenStackCluster as a conversion hub.
 func (*OpenStackCluster) Hub() {}

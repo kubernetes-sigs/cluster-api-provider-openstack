@@ -265,6 +265,7 @@ generate-conversion-gen: $(CONVERSION_GEN)
 		--input-dirs=$(capo_module)/api/v1alpha5 \
 		--input-dirs=$(capo_module)/api/v1alpha6 \
 		--input-dirs=$(capo_module)/api/v1alpha7 \
+		--extra-dirs=$(capo_module)/pkg/utils/optional \
 		--output-file-base=zz_generated.conversion \
 		--trim-path-prefix=$(capo_module)/ \
 		--go-header-file=./hack/boilerplate/boilerplate.generatego.txt

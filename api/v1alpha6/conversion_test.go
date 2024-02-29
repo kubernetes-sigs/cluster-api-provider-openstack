@@ -19,6 +19,7 @@ package v1alpha6
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	fuzz "github.com/google/gofuzz"
 	"github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/apitesting/fuzzer"
@@ -494,8 +495,8 @@ func TestPortOptsConvertTo(t *testing.T) {
 		"trusted":      "true",
 	}
 	convertedPortProfile := infrav1.BindingProfile{
-		OVSHWOffload: true,
-		TrustedVF:    true,
+		OVSHWOffload: pointer.Bool(true),
+		TrustedVF:    pointer.Bool(true),
 	}
 
 	tests := []struct {
@@ -513,8 +514,8 @@ func TestPortOptsConvertTo(t *testing.T) {
 				SecurityGroups: uuids,
 			}},
 			hubPortOpts: []infrav1.PortOpts{{
-				Profile:              convertedPortProfile,
-				SecurityGroupFilters: securityGroupsUuids,
+				Profile:        &convertedPortProfile,
+				SecurityGroups: securityGroupsUuids,
 			}},
 		},
 		{
@@ -525,9 +526,14 @@ func TestPortOptsConvertTo(t *testing.T) {
 				SecurityGroupFilters: securityGroupFilter,
 			}},
 			hubPortOpts: []infrav1.PortOpts{{
-				Profile:              convertedPortProfile,
-				SecurityGroupFilters: securityGroupFilterMerged,
+				Profile:        &convertedPortProfile,
+				SecurityGroups: securityGroupFilterMerged,
 			}},
+		},
+		{
+			name:          "Empty port",
+			spokePortOpts: []PortOpts{{}},
+			hubPortOpts:   []infrav1.PortOpts{{}},
 		},
 	}
 
@@ -558,7 +564,7 @@ func TestPortOptsConvertTo(t *testing.T) {
 			err := spokeMachineTemplate.ConvertTo(&convertedHub)
 			g.Expect(err).NotTo(gomega.HaveOccurred())
 			// Comparing spec only here since the conversion will also add annotations that we don't care about for the test
-			g.Expect(convertedHub.Spec).To(gomega.Equal(hubMachineTemplate.Spec))
+			g.Expect(convertedHub.Spec).To(gomega.Equal(hubMachineTemplate.Spec), cmp.Diff(convertedHub.Spec, hubMachineTemplate.Spec))
 		})
 	}
 }
@@ -709,9 +715,68 @@ func TestConvert_v1alpha6_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(t
 		t.Run(tt.name, func(t *testing.T) {
 			g := gomega.NewWithT(t)
 			out := &infrav1.OpenStackClusterSpec{}
-			err := Convert_v1alpha6_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(tt.in, out, nil)
+			err := Convert_v1alpha6_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(tt.in.DeepCopy(), out, nil)
 			g.Expect(err).NotTo(gomega.HaveOccurred())
-			g.Expect(out).To(gomega.Equal(tt.expectedOut))
+			g.Expect(out).To(gomega.Equal(tt.expectedOut), cmp.Diff(out, tt.expectedOut))
+		})
+
+		t.Run("template_"+tt.name, func(t *testing.T) {
+			g := gomega.NewWithT(t)
+			in := &OpenStackClusterTemplateSpec{
+				Template: OpenStackClusterTemplateResource{
+					Spec: *(tt.in.DeepCopy()),
+				},
+			}
+			out := &infrav1.OpenStackClusterTemplateSpec{}
+			err := Convert_v1alpha6_OpenStackClusterTemplateSpec_To_v1beta1_OpenStackClusterTemplateSpec(in, out, nil)
+			g.Expect(err).NotTo(gomega.HaveOccurred())
+			g.Expect(&out.Template.Spec).To(gomega.Equal(tt.expectedOut), cmp.Diff(&out.Template.Spec, tt.expectedOut))
+		})
+	}
+}
+
+func TestConvert_v1alpha6_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(t *testing.T) {
+	tests := []struct {
+		name        string
+		in          *OpenStackMachineSpec
+		expectedOut *infrav1.OpenStackMachineSpec
+	}{
+		{
+			name:        "empty",
+			in:          &OpenStackMachineSpec{},
+			expectedOut: &infrav1.OpenStackMachineSpec{},
+		},
+		{
+			name: "empty port",
+			in: &OpenStackMachineSpec{
+				Ports: []PortOpts{{}},
+			},
+			expectedOut: &infrav1.OpenStackMachineSpec{
+				Ports: []infrav1.PortOpts{{}},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := gomega.NewWithT(t)
+			out := &infrav1.OpenStackMachineSpec{}
+			err := Convert_v1alpha6_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(tt.in.DeepCopy(), out, nil)
+			g.Expect(err).NotTo(gomega.HaveOccurred())
+			g.Expect(out).To(gomega.Equal(tt.expectedOut), cmp.Diff(out, tt.expectedOut))
+		})
+
+		t.Run("template_"+tt.name, func(t *testing.T) {
+			g := gomega.NewWithT(t)
+			in := &OpenStackMachineTemplateSpec{
+				Template: OpenStackMachineTemplateResource{
+					Spec: *(tt.in.DeepCopy()),
+				},
+			}
+			out := &infrav1.OpenStackMachineTemplateSpec{}
+			err := Convert_v1alpha6_OpenStackMachineTemplateSpec_To_v1beta1_OpenStackMachineTemplateSpec(in, out, nil)
+			g.Expect(err).NotTo(gomega.HaveOccurred())
+			g.Expect(&out.Template.Spec).To(gomega.Equal(tt.expectedOut), cmp.Diff(&out.Template.Spec, tt.expectedOut))
 		})
 	}
 }

@@ -56,9 +56,6 @@ func Test_CreatePort(t *testing.T) {
 	portSecurityGroupFilters := []infrav1.SecurityGroupFilter{{ID: portSecurityGroupID, Name: "port-secgroup"}}
 	valueSpecs := map[string]string{"key": "value"}
 
-	pointerToTrue := pointerTo(true)
-	pointerToFalse := pointerTo(false)
-
 	tests := []struct {
 		name                   string
 		portName               string
@@ -103,28 +100,32 @@ func Test_CreatePort(t *testing.T) {
 				Network: &infrav1.NetworkFilter{
 					ID: netID,
 				},
-				NameSuffix:   "bar",
-				Description:  "this is a test port",
-				MACAddress:   "fe:fe:fe:fe:fe:fe",
-				AdminStateUp: pointerToTrue,
-				FixedIPs: []infrav1.FixedIP{{
-					Subnet: &infrav1.SubnetFilter{
-						Name: "subnetFoo",
+				NameSuffix:   pointer.String("bar"),
+				Description:  pointer.String("this is a test port"),
+				MACAddress:   pointer.String("fe:fe:fe:fe:fe:fe"),
+				AdminStateUp: pointer.Bool(true),
+				FixedIPs: []infrav1.FixedIP{
+					{
+						Subnet: &infrav1.SubnetFilter{
+							Name: "subnetFoo",
+						},
+						IPAddress: pointer.String("192.168.0.50"),
+					}, {
+						IPAddress: pointer.String("192.168.1.50"),
 					},
-					IPAddress: "192.168.0.50",
-				}, {IPAddress: "192.168.1.50"}},
-				SecurityGroupFilters: portSecurityGroupFilters,
+				},
+				SecurityGroups: portSecurityGroupFilters,
 				AllowedAddressPairs: []infrav1.AddressPair{{
 					IPAddress:  "10.10.10.10",
-					MACAddress: "f1:f1:f1:f1:f1:f1",
+					MACAddress: pointer.String("f1:f1:f1:f1:f1:f1"),
 				}},
-				HostID:   hostID,
-				VNICType: "direct",
-				Profile: infrav1.BindingProfile{
-					OVSHWOffload: true,
-					TrustedVF:    true,
+				HostID:   pointer.String(hostID),
+				VNICType: pointer.String("direct"),
+				Profile: &infrav1.BindingProfile{
+					OVSHWOffload: pointer.Bool(true),
+					TrustedVF:    pointer.Bool(true),
 				},
-				DisablePortSecurity: pointerToFalse,
+				DisablePortSecurity: pointer.Bool(false),
 				Tags:                []string{"my-port-tag"},
 			},
 			nil,
@@ -134,7 +135,7 @@ func Test_CreatePort(t *testing.T) {
 					NetworkID:    netID,
 					Name:         "foo-port-bar",
 					Description:  "this is a test port",
-					AdminStateUp: pointerToTrue,
+					AdminStateUp: pointer.Bool(true),
 					MACAddress:   "fe:fe:fe:fe:fe:fe",
 					FixedIPs: []ports.IP{
 						{
@@ -152,7 +153,7 @@ func Test_CreatePort(t *testing.T) {
 				}
 				portsecurityCreateOptsExt := portsecurity.PortCreateOptsExt{
 					CreateOptsBuilder:   portCreateOpts,
-					PortSecurityEnabled: pointerToTrue,
+					PortSecurityEnabled: pointer.Bool(true),
 				}
 				portbindingCreateOptsExt := portsbinding.CreateOptsExt{
 					// Note for the test matching, the order in which the builders are composed
@@ -195,13 +196,13 @@ func Test_CreatePort(t *testing.T) {
 				Network: &infrav1.NetworkFilter{
 					ID: netID,
 				},
-				NameSuffix:  "foo-port-bar",
-				Description: "this is a test port",
+				NameSuffix:  pointer.String("foo-port-bar"),
+				Description: pointer.String("this is a test port"),
 				FixedIPs: []infrav1.FixedIP{{
 					Subnet: &infrav1.SubnetFilter{
 						Tags: "Foo",
 					},
-					IPAddress: "192.168.0.50",
+					IPAddress: pointer.String("192.168.0.50"),
 				}},
 			},
 			nil,
@@ -234,7 +235,7 @@ func Test_CreatePort(t *testing.T) {
 				Network: &infrav1.NetworkFilter{
 					ID: netID,
 				},
-				SecurityGroupFilters: portSecurityGroupFilters,
+				SecurityGroups: portSecurityGroupFilters,
 			},
 			instanceSecurityGroups,
 			[]string{},
@@ -312,7 +313,7 @@ func Test_CreatePort(t *testing.T) {
 				Network: &infrav1.NetworkFilter{
 					ID: netID,
 				},
-				Trunk: pointerToTrue,
+				Trunk: pointer.Bool(true),
 			},
 			nil,
 			[]string{"my-tag"},
@@ -383,7 +384,7 @@ func Test_CreatePort(t *testing.T) {
 				Network: &infrav1.NetworkFilter{
 					ID: netID,
 				},
-				PropagateUplinkStatus: pointerToTrue,
+				PropagateUplinkStatus: pointer.Bool(true),
 			},
 			instanceSecurityGroups,
 			[]string{},
@@ -396,11 +397,11 @@ func Test_CreatePort(t *testing.T) {
 							SecurityGroups:        &instanceSecurityGroups,
 							NetworkID:             netID,
 							AllowedAddressPairs:   []ports.AddressPair{},
-							PropagateUplinkStatus: pointerToTrue,
+							PropagateUplinkStatus: pointer.Bool(true),
 						},
-					}).Return(&ports.Port{ID: portID1, PropagateUplinkStatus: *pointerToTrue}, nil)
+					}).Return(&ports.Port{ID: portID1, PropagateUplinkStatus: true}, nil)
 			},
-			&ports.Port{ID: portID1, PropagateUplinkStatus: *pointerToTrue},
+			&ports.Port{ID: portID1, PropagateUplinkStatus: true},
 			false,
 		},
 	}
@@ -431,10 +432,6 @@ func Test_CreatePort(t *testing.T) {
 			g.Expect(got).To(Equal(tt.want))
 		})
 	}
-}
-
-func pointerTo(b bool) *bool {
-	return &b
 }
 
 func TestService_normalizePorts(t *testing.T) {
@@ -816,7 +813,7 @@ func Test_getPortName(t *testing.T) {
 		},
 		{
 			name: "with PortOpts name suffix",
-			args: args{"test-1-instance", &infrav1.PortOpts{NameSuffix: "foo"}, 4},
+			args: args{"test-1-instance", &infrav1.PortOpts{NameSuffix: pointer.String("foo")}, 4},
 			want: "test-1-instance-foo",
 		},
 		{
@@ -826,7 +823,7 @@ func Test_getPortName(t *testing.T) {
 		},
 		{
 			name: "with PortOpts name suffix",
-			args: args{"test-1-instance", &infrav1.PortOpts{NameSuffix: "foo2", Network: &infrav1.NetworkFilter{ID: "bar"}, DisablePortSecurity: pointer.Bool(true)}, 4},
+			args: args{"test-1-instance", &infrav1.PortOpts{NameSuffix: pointer.String("foo2"), Network: &infrav1.NetworkFilter{ID: "bar"}, DisablePortSecurity: pointer.Bool(true)}, 4},
 			want: "test-1-instance-foo2",
 		},
 	}
