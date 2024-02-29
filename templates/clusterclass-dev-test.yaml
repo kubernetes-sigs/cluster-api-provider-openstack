@@ -117,9 +117,9 @@ spec:
     spec:
       apiServerLoadBalancer:
         enabled: true
-      cloudName: ${OPENSTACK_CLOUD:=capo-e2e}
       identityRef:
         name: dev-test-cloud-config
+        cloudName: ${OPENSTACK_CLOUD:=capo-e2e}
       managedSecurityGroups:
         allNodesSecurityGroupRules:
         - description: Created by cluster-api-provider-openstack - BGP (calico)
@@ -152,10 +152,7 @@ metadata:
 spec:
   template:
     spec:
-      cloudName: ${OPENSTACK_CLOUD:=capo-e2e}
       flavor: ${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR:=m1.medium}
-      identityRef:
-        name: dev-test-cloud-config
       image:
         name: overridden-by-patch
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME:=""}
@@ -167,10 +164,7 @@ metadata:
 spec:
   template:
     spec:
-      cloudName: ${OPENSTACK_CLOUD:=capo-e2e}
       flavor: ${OPENSTACK_NODE_MACHINE_FLAVOR:=m1.small}
-      identityRef:
-        name: dev-test-cloud-config
       image:
         name: overridden-by-patch
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME:=""}

@@ -36,66 +36,54 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			name: "Changing OpenStackCluster.Spec.IdentityRef.Name is allowed",
 			oldTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
-					IdentityRef: &OpenStackIdentityReference{
-						Name: "foobar",
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
 					},
 				},
 			},
 			newTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
-					IdentityRef: &OpenStackIdentityReference{
-						Name: "foobarbaz",
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobarbaz",
+						CloudName: "foobar",
 					},
 				},
 			},
 			wantErr: false,
 		},
 		{
-			name: "OpenStackCluster.Spec.IdentityRef can be changed if it was unset",
+			name: "Changing OpenStackCluster.Spec.IdentityRef.CloudName is allowed",
 			oldTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 				},
 			},
 			newTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
-					IdentityRef: &OpenStackIdentityReference{
-						Name: "foobar",
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobarbaz",
 					},
 				},
 			},
 			wantErr: false,
-		},
-		{
-			name: "OpenStackCluster.Spec.IdentityRef must not be removed",
-			oldTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
-					IdentityRef: &OpenStackIdentityReference{
-						Name: "foobar",
-					},
-				},
-			},
-			newTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
-				},
-			},
-			wantErr: true,
 		},
 		{
 			name: "Changing OpenStackCluster.Spec.Bastion is allowed",
 			oldTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 					Bastion: &Bastion{
 						Instance: OpenStackMachineSpec{
-							CloudName: "foobar",
-							Image:     ImageFilter{Name: "foobar"},
-							Flavor:    "minimal",
+							Image:  ImageFilter{Name: "foobar"},
+							Flavor: "minimal",
 						},
 						Enabled: true,
 					},
@@ -108,12 +96,14 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			},
 			newTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 					Bastion: &Bastion{
 						Instance: OpenStackMachineSpec{
-							CloudName: "foobarbaz",
-							Image:     ImageFilter{Name: "foobarbaz"},
-							Flavor:    "medium",
+							Image:  ImageFilter{Name: "foobarbaz"},
+							Flavor: "medium",
 						},
 						Enabled: true,
 					},
@@ -125,7 +115,10 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			name: "Changing security group rules on the OpenStackCluster.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules is allowed",
 			oldTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 					ManagedSecurityGroups: &ManagedSecurityGroups{
 						AllNodesSecurityGroupRules: []SecurityGroupRuleSpec{
 							{
@@ -142,7 +135,10 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			},
 			newTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 					ManagedSecurityGroups: &ManagedSecurityGroups{
 						AllNodesSecurityGroupRules: []SecurityGroupRuleSpec{
 							{
@@ -163,7 +159,10 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			name: "Changing CIDRs on the OpenStackCluster.Spec.APIServerLoadBalancer.AllowedCIDRs is allowed",
 			oldTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 					APIServerLoadBalancer: APIServerLoadBalancer{
 						Enabled: true,
 						AllowedCIDRs: []string{
@@ -175,7 +174,10 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			},
 			newTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 					APIServerLoadBalancer: APIServerLoadBalancer{
 						Enabled: true,
 						AllowedCIDRs: []string{
@@ -192,12 +194,18 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			name: "Adding OpenStackCluster.Spec.ControlPlaneAvailabilityZones is allowed",
 			oldTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 				},
 			},
 			newTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 					ControlPlaneAvailabilityZones: []string{
 						"alice",
 						"bob",
@@ -210,7 +218,10 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			name: "Modifying OpenStackCluster.Spec.ControlPlaneAvailabilityZones is allowed",
 			oldTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 					ControlPlaneAvailabilityZones: []string{
 						"alice",
 						"bob",
@@ -219,7 +230,10 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			},
 			newTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 					ControlPlaneAvailabilityZones: []string{
 						"alice",
 						"bob",
@@ -233,7 +247,10 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			name: "Removing OpenStackCluster.Spec.ControlPlaneAvailabilityZones is allowed",
 			oldTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 					ControlPlaneAvailabilityZones: []string{
 						"alice",
 						"bob",
@@ -242,7 +259,10 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			},
 			newTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 				},
 			},
 			wantErr: false,
@@ -251,12 +271,18 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			name: "Modifying OpenstackCluster.Spec.ControlPlaneOmitAvailabilityZone is allowed",
 			oldTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 				},
 			},
 			newTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
-					CloudName:                        "foobar",
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 					ControlPlaneOmitAvailabilityZone: true,
 				},
 			},
@@ -266,11 +292,19 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			name: "Changing OpenStackCluster.Spec.APIServerFixedIP is allowed when API Server Floating IP is disabled",
 			oldTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 					DisableAPIServerFloatingIP: true,
 				},
 			},
 			newTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 					DisableAPIServerFloatingIP: true,
 					APIServerFixedIP:           "20.1.56.1",
 				},
@@ -281,11 +315,19 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			name: "Changing OpenStackCluster.Spec.APIServerFixedIP is not allowed",
 			oldTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 					DisableAPIServerFloatingIP: false,
 				},
 			},
 			newTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 					DisableAPIServerFloatingIP: false,
 					APIServerFixedIP:           "20.1.56.1",
 				},
@@ -297,6 +339,10 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			name: "Changing OpenStackCluster.Spec.APIServerPort is allowed when API Server Floating IP is disabled",
 			oldTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 					DisableAPIServerFloatingIP: true,
 				},
 			},
@@ -312,11 +358,19 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			name: "Changing OpenStackCluster.Spec.APIServerPort is not allowed",
 			oldTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 					DisableAPIServerFloatingIP: false,
 				},
 			},
 			newTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 					DisableAPIServerFloatingIP: false,
 					APIServerPort:              8443,
 				},
@@ -327,6 +381,10 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			name: "Changing OpenStackCluster.Spec.APIServerFloatingIP is allowed when it matches the current api server loadbalancer IP",
 			oldTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 					APIServerFloatingIP: "",
 				},
 				Status: OpenStackClusterStatus{
@@ -337,6 +395,10 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			},
 			newTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 					APIServerFloatingIP: "1.2.3.4",
 				},
 				Status: OpenStackClusterStatus{
@@ -351,6 +413,10 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			name: "Changing OpenStackCluster.Spec.APIServerFloatingIP is not allowed when it doesn't matches the current api server loadbalancer IP",
 			oldTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 					APIServerFloatingIP: "",
 				},
 				Status: OpenStackClusterStatus{
@@ -361,6 +427,10 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			},
 			newTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 					APIServerFloatingIP: "5.6.7.8",
 				},
 				Status: OpenStackClusterStatus{
@@ -375,6 +445,10 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			name: "Removing OpenStackCluster.Spec.Bastion when it is enabled is not allowed",
 			oldTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 					Bastion: &Bastion{
 						Enabled: true,
 						Instance: OpenStackMachineSpec{
@@ -385,7 +459,12 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 				},
 			},
 			newTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{},
+				Spec: OpenStackClusterSpec{
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+				},
 			},
 			wantErr: true,
 		},
@@ -393,6 +472,10 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			name: "Removing OpenStackCluster.Spec.Bastion when it is disabled is allowed",
 			oldTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 					Bastion: &Bastion{
 						Enabled: false,
 						Instance: OpenStackMachineSpec{
@@ -403,7 +486,12 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 				},
 			},
 			newTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{},
+				Spec: OpenStackClusterSpec{
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+				},
 			},
 			wantErr: false,
 		},
@@ -434,9 +522,9 @@ func TestOpenStackCluster_ValidateCreate(t *testing.T) {
 			name: "OpenStackCluster.Spec.IdentityRef with correct spec on create",
 			template: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
-					IdentityRef: &OpenStackIdentityReference{
-						Name: "foobar",
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
 					},
 				},
 			},
@@ -446,7 +534,10 @@ func TestOpenStackCluster_ValidateCreate(t *testing.T) {
 			name: "OpenStackCluster.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules with correct spec on create",
 			template: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 					ManagedSecurityGroups: &ManagedSecurityGroups{
 						AllNodesSecurityGroupRules: []SecurityGroupRuleSpec{
 							{
@@ -466,7 +557,10 @@ func TestOpenStackCluster_ValidateCreate(t *testing.T) {
 			name: "OpenStackCluster.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules with mutually exclusive fields on create",
 			template: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
-					CloudName: "foobar",
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
 					ManagedSecurityGroups: &ManagedSecurityGroups{
 						AllNodesSecurityGroupRules: []SecurityGroupRuleSpec{
 							{

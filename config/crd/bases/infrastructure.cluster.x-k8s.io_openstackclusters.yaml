@@ -4975,10 +4975,6 @@ spec:
                         x-kubernetes-list-map-keys:
                         - name
                         x-kubernetes-list-type: map
-                      cloudName:
-                        description: The name of the cloud to use from the clouds
-                          secret
-                        type: string
                       configDrive:
                         description: Config Drive support
                         type: boolean
@@ -4987,16 +4983,23 @@ spec:
                           server instance.
                         type: string
                       identityRef:
-                        description: IdentityRef is a reference to a identity to be
-                          used when reconciling this cluster
+                        description: |-
+                          IdentityRef is a reference to a secret holding OpenStack credentials
+                          to be used when reconciling this machine. If not specified, the
+                          credentials specified in the cluster will be used.
                         properties:
+                          cloudName:
+                            description: CloudName specifies the name of the entry
+                              in the clouds.yaml file to use.
+                            type: string
                           name:
                             description: |-
-                              Name of the infrastructure identity to be used.
-                              Must be either a cluster-scoped resource, or namespaced-scoped
-                              resource the same namespace as the resource(s) being provisioned.
+                              Name is the name of a secret in the same namespace as the resource being provisioned.
+                              The secret must contain a key named `clouds.yaml` which contains an OpenStack clouds.yaml file.
+                              The secret may optionally contain a key named `cacert` containing a PEM-encoded CA certificate.
                             type: string
                         required:
+                        - cloudName
                         - name
                         type: object
                       image:
@@ -5345,9 +5348,6 @@ spec:
                     - flavor
                     type: object
                 type: object
-              cloudName:
-                description: The name of the cloud to use from the clouds secret
-                type: string
               controlPlaneAvailabilityZones:
                 description: ControlPlaneAvailabilityZones is the az to deploy control
                   plane to
@@ -5467,16 +5467,23 @@ spec:
                   type: object
                 type: array
               identityRef:
-                description: IdentityRef is a reference to a identity to be used when
-                  reconciling this cluster
+                description: |-
+                  IdentityRef is a reference to a secret holding OpenStack credentials
+                  to be used when reconciling this cluster. It is also to reconcile
+                  machines unless overridden in the machine spec.
                 properties:
+                  cloudName:
+                    description: CloudName specifies the name of the entry in the
+                      clouds.yaml file to use.
+                    type: string
                   name:
                     description: |-
-                      Name of the infrastructure identity to be used.
-                      Must be either a cluster-scoped resource, or namespaced-scoped
-                      resource the same namespace as the resource(s) being provisioned.
+                      Name is the name of a secret in the same namespace as the resource being provisioned.
+                      The secret must contain a key named `clouds.yaml` which contains an OpenStack clouds.yaml file.
+                      The secret may optionally contain a key named `cacert` containing a PEM-encoded CA certificate.
                     type: string
                 required:
+                - cloudName
                 - name
                 type: object
               managedSecurityGroups:
@@ -5711,6 +5718,8 @@ spec:
                   type: string
                 type: array
                 x-kubernetes-list-type: set
+            required:
+            - identityRef
             type: object
           status:
             description: OpenStackClusterStatus defines the observed state of OpenStackCluster.

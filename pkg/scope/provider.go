@@ -57,18 +57,20 @@ func (f *providerScopeFactory) NewClientScopeFromMachine(ctx context.Context, ct
 	var cloud clientconfig.Cloud
 	var caCert []byte
 
+	var identityRef *infrav1.OpenStackIdentityReference
+	var namespace string
 	if openStackMachine.Spec.IdentityRef != nil {
-		var err error
-		cloud, caCert, err = getCloudFromSecret(ctx, ctrlClient, openStackMachine.Namespace, openStackMachine.Spec.IdentityRef.Name, openStackMachine.Spec.CloudName)
-		if err != nil {
-			return nil, err
-		}
-	} else if openStackCluster.Spec.IdentityRef != nil {
-		var err error
-		cloud, caCert, err = getCloudFromSecret(ctx, ctrlClient, openStackCluster.Namespace, openStackCluster.Spec.IdentityRef.Name, openStackCluster.Spec.CloudName)
-		if err != nil {
-			return nil, err
-		}
+		identityRef = openStackMachine.Spec.IdentityRef
+		namespace = openStackMachine.Namespace
+	} else {
+		identityRef = &openStackCluster.Spec.IdentityRef
+		namespace = openStackCluster.Namespace
+	}
+
+	var err error
+	cloud, caCert, err = getCloudFromSecret(ctx, ctrlClient, namespace, identityRef.Name, identityRef.CloudName)
+	if err != nil {
+		return nil, err
 	}
 
 	if caCert == nil {
@@ -86,12 +88,10 @@ func (f *providerScopeFactory) NewClientScopeFromCluster(ctx context.Context, ct
 	var cloud clientconfig.Cloud
 	var caCert []byte
 
-	if openStackCluster.Spec.IdentityRef != nil {
-		var err error
-		cloud, caCert, err = getCloudFromSecret(ctx, ctrlClient, openStackCluster.Namespace, openStackCluster.Spec.IdentityRef.Name, openStackCluster.Spec.CloudName)
-		if err != nil {
-			return nil, err
-		}
+	var err error
+	cloud, caCert, err = getCloudFromSecret(ctx, ctrlClient, openStackCluster.Namespace, openStackCluster.Spec.IdentityRef.Name, openStackCluster.Spec.IdentityRef.CloudName)
+	if err != nil {
+		return nil, err
 	}
 
 	if caCert == nil {

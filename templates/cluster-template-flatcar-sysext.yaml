@@ -224,10 +224,10 @@ kind: OpenStackCluster
 metadata:
   name: ${CLUSTER_NAME}
 spec:
-  cloudName: ${OPENSTACK_CLOUD}
   externalNetwork:
     id: ${OPENSTACK_EXTERNAL_NETWORK_ID}
   identityRef:
+    cloudName: ${OPENSTACK_CLOUD}
     name: ${CLUSTER_NAME}-cloud-config
   managedSecurityGroups:
     allNodesSecurityGroupRules:
@@ -261,10 +261,7 @@ metadata:
 spec:
   template:
     spec:
-      cloudName: ${OPENSTACK_CLOUD}
       flavor: ${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR}
-      identityRef:
-        name: ${CLUSTER_NAME}-cloud-config
       image:
         name: ${FLATCAR_IMAGE_NAME}
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
@@ -276,10 +273,7 @@ metadata:
 spec:
   template:
     spec:
-      cloudName: ${OPENSTACK_CLOUD}
       flavor: ${OPENSTACK_NODE_MACHINE_FLAVOR}
-      identityRef:
-        name: ${CLUSTER_NAME}-cloud-config
       image:
         name: ${FLATCAR_IMAGE_NAME}
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}

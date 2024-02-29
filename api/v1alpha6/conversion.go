@@ -529,6 +529,16 @@ func Convert_v1alpha6_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in *O
 		out.ServerMetadata = serverMetadata
 	}
 
+	if in.IdentityRef != nil {
+		out.IdentityRef = &infrav1.OpenStackIdentityReference{Name: in.IdentityRef.Name}
+	}
+	if in.CloudName != "" {
+		if out.IdentityRef == nil {
+			out.IdentityRef = &infrav1.OpenStackIdentityReference{}
+		}
+		out.IdentityRef.CloudName = in.CloudName
+	}
+
 	return nil
 }
 
@@ -624,6 +634,9 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in *i
 		out.AllowAllInClusterTraffic = in.ManagedSecurityGroups.AllowAllInClusterTraffic
 	}
 
+	out.CloudName = in.IdentityRef.CloudName
+	out.IdentityRef = &OpenStackIdentityReference{Name: in.IdentityRef.Name}
+
 	return nil
 }
 
@@ -665,6 +678,11 @@ func Convert_v1alpha6_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 		} else {
 			out.ManagedSecurityGroups.AllowAllInClusterTraffic = true
 		}
+	}
+
+	out.IdentityRef.CloudName = in.CloudName
+	if in.IdentityRef != nil {
+		out.IdentityRef.Name = in.IdentityRef.Name
 	}
 
 	return nil
@@ -973,6 +991,11 @@ func Convert_v1beta1_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(in *i
 		out.ServerMetadata = serverMetadata
 	}
 
+	if in.IdentityRef != nil {
+		out.IdentityRef = &OpenStackIdentityReference{Name: in.IdentityRef.Name}
+		out.CloudName = in.IdentityRef.CloudName
+	}
+
 	return nil
 }
 
@@ -1068,4 +1091,9 @@ func Convert_v1alpha6_SecurityGroup_To_v1beta1_SecurityGroupStatus(in *SecurityG
 
 func Convert_v1alpha6_OpenStackIdentityReference_To_v1beta1_OpenStackIdentityReference(in *OpenStackIdentityReference, out *infrav1.OpenStackIdentityReference, s apiconversion.Scope) error {
 	return autoConvert_v1alpha6_OpenStackIdentityReference_To_v1beta1_OpenStackIdentityReference(in, out, s)
+}
+
+func Convert_v1beta1_OpenStackIdentityReference_To_v1alpha6_OpenStackIdentityReference(in *infrav1.OpenStackIdentityReference, out *OpenStackIdentityReference, _ apiconversion.Scope) error {
+	out.Name = in.Name
+	return nil
 }

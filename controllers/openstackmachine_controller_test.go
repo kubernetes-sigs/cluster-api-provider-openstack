@@ -82,7 +82,6 @@ func getDefaultOpenStackMachine() *infrav1.OpenStackMachine {
 			// InstanceID is set by the controller
 			// FloatingIP is only used by the cluster controller for the Bastion
 			// TODO: Test Networks, Ports, Subnet, and Trunk separately
-			CloudName:  "test-cloud",
 			Flavor:     flavorName,
 			Image:      infrav1.ImageFilter{ID: imageUUID},
 			SSHKeyName: sshKeyName,

@@ -5,12 +5,16 @@
 - [v1alpha7 compared to v1beta1](#v1alpha7-compared-to-v1beta1)
   - [Migration](#migration)
   - [API Changes](#api-changes)
-    - [`OpenStackMachine`](#openstackmachine)
+    - [Changes to `identityRef` in both `OpenStackMachine` and `OpenStackCluster`](#changes-to-identityref-in-both-openstackmachine-and-openstackcluster)
       - [Removal of machine identityRef.kind](#removal-of-machine-identityrefkind)
+      - [Addition of cloudName](#addition-of-cloudname)
+    - [`OpenStackMachine`](#openstackmachine)
+      - [Removal of cloudName](#removal-of-cloudname)
       - [Change to serverGroupID](#change-to-servergroupid)
       - [Changes to ports](#changes-to-ports)
     - [`OpenStackCluster`](#openstackcluster)
-      - [Removal of cluster identityRef.kind](#removal-of-cluster-identityrefkind)
+      - [Removal of cloudName](#removal-of-cloudname-1)
+      - [identityRef is now required](#identityref-is-now-required)
       - [Change to externalNetworkID](#change-to-externalnetworkid)
       - [Change to image](#change-to-image)
       - [Removal of imageUUID](#removal-of-imageuuid)
@@ -36,11 +40,21 @@ All users are encouraged to migrate their usage of the CAPO CRDs from older vers
 
 This only documents backwards incompatible changes. Fields that were added to v1beta1 are not listed here.
 
-### `OpenStackMachine`
+### Changes to `identityRef` in both `OpenStackMachine` and `OpenStackCluster`
 
 #### Removal of machine identityRef.kind
 
-The `identityRef.Kind` field has been removed. It was used to specify the kind of the identity provider to use but was actually ignored.
+The `identityRef.Kind` field has been removed. It was used to specify the kind of the identity provider to use but was actually ignored. The referenced resource must always be a Secret.
+
+#### Addition of cloudName
+
+The `cloudName` field has been removed from both `OpenStackMachine` and `OpenStackCluster` and added to `identityRef`. It is now a required field when `identityRef` is specified.
+
+### `OpenStackMachine`
+
+#### Removal of cloudName
+
+This has moved to `identityRef.cloudName`.
 
 #### Change to serverGroupID
 
@@ -83,9 +97,15 @@ Setting either of the following fields explicitly to the empty string would prev
 
 ### `OpenStackCluster`
 
-#### Removal of cluster identityRef.kind
+#### Removal of cloudName
 
-The `identityRef.Kind` field has been removed. It was used to specify the kind of the identity provider to use but was actually ignored.
+This has moved to `identityRef.cloudName`.
+
+#### identityRef is now required
+
+The API server would previously accept an `OpenStackCluster` without an `identityRef`, although the controller would generate an error. In v1beta1 the API server will no longer accept an `OpenStackCluster` without an `identityRef`.
+
+Note that this is in contrast `identityRef` in `OpenStackMachine`, which remains optional: `OpenStackMachine` will default to the credentials in `OpenStackCluster` if not specified.
 
 #### Change to externalNetworkID
 
