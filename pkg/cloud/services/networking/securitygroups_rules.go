@@ -223,11 +223,9 @@ func getSGControlPlaneAdditionalPorts(ports []int) []resolvedSecurityGroupRuleSp
 			Protocol:    "tcp",
 		},
 	}
-	for _, p := range ports {
-		r[0].PortRangeMin = p
-		r[0].PortRangeMax = p
-		r[1].PortRangeMin = p
-		r[1].PortRangeMax = p
+	for i, p := range ports {
+		r[i].PortRangeMin = p
+		r[i].PortRangeMax = p
 		controlPlaneRules = append(controlPlaneRules, r...)
 	}
 	return controlPlaneRules
