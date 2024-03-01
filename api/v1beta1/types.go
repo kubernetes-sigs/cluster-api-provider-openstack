@@ -93,6 +93,17 @@ type NetworkFilter struct {
 	FilterByNeutronTags `json:",inline"`
 }
 
+func (networkFilter *NetworkFilter) IsEmpty() bool {
+	return networkFilter.Name == "" &&
+		networkFilter.Description == "" &&
+		networkFilter.ProjectID == "" &&
+		networkFilter.ID == "" &&
+		len(networkFilter.Tags) == 0 &&
+		len(networkFilter.TagsAny) == 0 &&
+		len(networkFilter.NotTags) == 0 &&
+		len(networkFilter.NotTagsAny) == 0
+}
+
 type SubnetFilter struct {
 	Name            string `json:"name,omitempty"`
 	Description     string `json:"description,omitempty"`

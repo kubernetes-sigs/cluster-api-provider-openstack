@@ -25,6 +25,7 @@ import (
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/filterconvert"
 )
 
 const (
@@ -285,7 +286,9 @@ func validateRemoteManagedGroups(remoteManagedGroups map[string]string, ruleRemo
 
 func (s *Service) GetSecurityGroups(securityGroupParams []infrav1.SecurityGroupFilter) ([]string, error) {
 	var sgIDs []string
-	for _, sg := range securityGroupParams {
+	for i := range securityGroupParams {
+		sg := &securityGroupParams[i]
+
 		// Don't validate an explicit UUID if we were given one
 		if sg.ID != "" {
 			if isDuplicate(sgIDs, sg.ID) {
@@ -295,7 +298,7 @@ func (s *Service) GetSecurityGroups(securityGroupParams []infrav1.SecurityGroupF
 			continue
 		}
 
-		listOpts := sg.ToListOpt()
+		listOpts := filterconvert.SecurityGroupFilterToListOpts(sg)
 		if listOpts.ProjectID == "" {
 			listOpts.ProjectID = s.scope.ProjectID()
 		}

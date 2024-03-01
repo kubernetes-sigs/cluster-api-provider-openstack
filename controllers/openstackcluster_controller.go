@@ -53,6 +53,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 	utils "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/controllers"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/filterconvert"
 )
 
 const (
@@ -633,7 +634,7 @@ func reconcilePreExistingNetworkComponents(scope *scope.WithLogger, networkingSe
 	}
 
 	if !openStackCluster.Spec.Network.IsEmpty() {
-		netOpts := openStackCluster.Spec.Network.ToListOpt()
+		netOpts := filterconvert.NetworkFilterToListOpts(&openStackCluster.Spec.Network)
 		networkList, err := networkingService.GetNetworksByFilter(&netOpts)
 		if err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find network: %w", err))
@@ -859,10 +860,10 @@ func getClusterSubnets(networkingService *networking.Service, openStackCluster *
 			return nil, fmt.Errorf("no network or subnets specified in OpenStackCluster spec")
 		}
 
-		empty := &infrav1.SubnetFilter{}
-		listOpt := empty.ToListOpt()
-		listOpt.NetworkID = networkID
-		clusterSubnets, err = networkingService.GetSubnetsByFilter(listOpt)
+		listOpts := subnets.ListOpts{
+			NetworkID: networkID,
+		}
+		clusterSubnets, err = networkingService.GetSubnetsByFilter(listOpts)
 		if err != nil {
 			err = fmt.Errorf("failed to find subnets: %w", err)
 			if errors.Is(err, networking.ErrFilterMatch) {

@@ -1,5 +1,5 @@
 /*
-Copyright 2022 The Kubernetes Authors.
+Copyright 2024 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,32 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha6
+package convert
 
 import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
+
+	infrav1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 )
 
-func (subnetFilter SubnetFilter) ToListOpt() subnets.ListOpts {
-	return subnets.ListOpts{
-		Name:            subnetFilter.Name,
-		Description:     subnetFilter.Description,
-		ProjectID:       subnetFilter.ProjectID,
-		IPVersion:       subnetFilter.IPVersion,
-		GatewayIP:       subnetFilter.GatewayIP,
-		CIDR:            subnetFilter.CIDR,
-		IPv6AddressMode: subnetFilter.IPv6AddressMode,
-		IPv6RAMode:      subnetFilter.IPv6RAMode,
-		ID:              subnetFilter.ID,
-		Tags:            subnetFilter.Tags,
-		TagsAny:         subnetFilter.TagsAny,
-		NotTags:         subnetFilter.NotTags,
-		NotTagsAny:      subnetFilter.NotTagsAny,
-	}
-}
-
-func (networkFilter NetworkFilter) ToListOpt() networks.ListOpts {
+// NetworkFilterToListOpt converts a v1alpha7.NetworkFilter to a networks.ListOpts
+// Still used by the Floating IP IPAM controller until we bump it to v1beta1.
+func NetworkFilterToListOpt(networkFilter *infrav1alpha7.NetworkFilter) networks.ListOpts {
 	return networks.ListOpts{
 		Name:        networkFilter.Name,
 		Description: networkFilter.Description,

@@ -34,6 +34,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/filterconvert"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
@@ -190,7 +191,7 @@ func (s *Service) getSubnetIDForFixedIP(subnet *infrav1.SubnetFilter, networkID 
 		return subnet.ID, nil
 	}
 
-	opts := subnet.ToListOpt()
+	opts := filterconvert.SubnetFilterToListOpts(subnet)
 	opts.NetworkID = networkID
 	subnets, err := s.client.ListSubnet(opts)
 	if err != nil {
@@ -492,7 +493,8 @@ func (s *Service) normalizePortTarget(port *infrav1.PortOpts, openStackCluster *
 	}
 
 	// Network is defined by Filter
-	netIDs, err := s.GetNetworkIDsByFilter(port.Network.ToListOpt())
+	networkListOpts := filterconvert.NetworkFilterToListOpts(port.Network)
+	netIDs, err := s.GetNetworkIDsByFilter(networkListOpts)
 	if err != nil {
 		return err
 	}

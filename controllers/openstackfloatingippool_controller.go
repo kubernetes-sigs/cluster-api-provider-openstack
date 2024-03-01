@@ -45,6 +45,7 @@ import (
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
+	filterconvert "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/filterconvert/v1alpha7"
 )
 
 const (
@@ -401,7 +402,7 @@ func (r *OpenStackFloatingIPPoolReconciler) reconcileFloatingIPNetwork(scope *sc
 	}
 
 	netListOpts := external.ListOptsExt{
-		ListOptsBuilder: pool.Spec.FloatingIPNetwork.ToListOpt(),
+		ListOptsBuilder: filterconvert.NetworkFilterToListOpt(&pool.Spec.FloatingIPNetwork),
 		External:        pointer.Bool(true),
 	}
 
