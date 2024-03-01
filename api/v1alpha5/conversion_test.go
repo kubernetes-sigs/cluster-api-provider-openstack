@@ -51,7 +51,7 @@ func TestConvertFrom(t *testing.T) {
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
-						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"apiServerLoadBalancer\":{},\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"disableExternalNetwork\":false,\"externalNetwork\":{},\"identityRef\":{\"cloudName\":\"\",\"name\":\"\"},\"managedSecurityGroups\":null,\"network\":{}},\"status\":{\"ready\":false}}",
+						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"apiServerLoadBalancer\":{},\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"disableExternalNetwork\":false,\"externalNetwork\":{},\"identityRef\":{\"cloudName\":\"\",\"name\":\"\"},\"network\":{}},\"status\":{\"ready\":false}}",
 					},
 				},
 			},
@@ -72,7 +72,7 @@ func TestConvertFrom(t *testing.T) {
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
-						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"template\":{\"spec\":{\"apiServerLoadBalancer\":{},\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"disableExternalNetwork\":false,\"externalNetwork\":{},\"identityRef\":{\"cloudName\":\"\",\"name\":\"\"},\"managedSecurityGroups\":null,\"network\":{}}}}}",
+						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"template\":{\"spec\":{\"apiServerLoadBalancer\":{},\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"disableAPIServerFloatingIP\":false,\"disableExternalNetwork\":false,\"externalNetwork\":{},\"identityRef\":{\"cloudName\":\"\",\"name\":\"\"},\"network\":{}}}}}",
 					},
 				},
 			},
