@@ -42,15 +42,46 @@ type ExternalRouterIPParam struct {
 	Subnet SubnetFilter `json:"subnet"`
 }
 
+// NeutronTag represents a tag on a Neutron resource.
+// It may not be empty and may not contain commas.
+// +kubebuilder:validation:Pattern:="^[^,]+$"
+// +kubebuilder:validation:MinLength:=1
+type NeutronTag string
+
+type FilterByNeutronTags struct {
+	// Tags is a list of tags to filter by. If specified, the resource must
+	// have all of the tags specified to be included in the result.
+	// +listType=set
+	// +optional
+	Tags []NeutronTag `json:"tags,omitempty"`
+
+	// TagsAny is a list of tags to filter by. If specified, the resource
+	// must have at least one of the tags specified to be included in the
+	// result.
+	// +listType=set
+	// +optional
+	TagsAny []NeutronTag `json:"tagsAny,omitempty"`
+
+	// NotTags is a list of tags to filter by. If specified, resources which
+	// contain all of the given tags will be excluded from the result.
+	// +listType=set
+	// +optional
+	NotTags []NeutronTag `json:"notTags,omitempty"`
+
+	// NotTagsAny is a list of tags to filter by. If specified, resources
+	// which contain any of the given tags will be excluded from the result.
+	// +listType=set
+	// +optional
+	NotTagsAny []NeutronTag `json:"notTagsAny,omitempty"`
+}
+
 type SecurityGroupFilter struct {
 	ID          string `json:"id,omitempty"`
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
 	ProjectID   string `json:"projectId,omitempty"`
-	Tags        string `json:"tags,omitempty"`
-	TagsAny     string `json:"tagsAny,omitempty"`
-	NotTags     string `json:"notTags,omitempty"`
-	NotTagsAny  string `json:"notTagsAny,omitempty"`
+
+	FilterByNeutronTags `json:",inline"`
 }
 
 type NetworkFilter struct {
@@ -58,10 +89,8 @@ type NetworkFilter struct {
 	Description string `json:"description,omitempty"`
 	ProjectID   string `json:"projectId,omitempty"`
 	ID          string `json:"id,omitempty"`
-	Tags        string `json:"tags,omitempty"`
-	TagsAny     string `json:"tagsAny,omitempty"`
-	NotTags     string `json:"notTags,omitempty"`
-	NotTagsAny  string `json:"notTagsAny,omitempty"`
+
+	FilterByNeutronTags `json:",inline"`
 }
 
 type SubnetFilter struct {
@@ -74,10 +103,8 @@ type SubnetFilter struct {
 	IPv6AddressMode string `json:"ipv6AddressMode,omitempty"`
 	IPv6RAMode      string `json:"ipv6RaMode,omitempty"`
 	ID              string `json:"id,omitempty"`
-	Tags            string `json:"tags,omitempty"`
-	TagsAny         string `json:"tagsAny,omitempty"`
-	NotTags         string `json:"notTags,omitempty"`
-	NotTagsAny      string `json:"notTagsAny,omitempty"`
+
+	FilterByNeutronTags `json:",inline"`
 }
 
 type RouterFilter struct {
@@ -85,10 +112,8 @@ type RouterFilter struct {
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
 	ProjectID   string `json:"projectId,omitempty"`
-	Tags        string `json:"tags,omitempty"`
-	TagsAny     string `json:"tagsAny,omitempty"`
-	NotTags     string `json:"notTags,omitempty"`
-	NotTagsAny  string `json:"notTagsAny,omitempty"`
+
+	FilterByNeutronTags `json:",inline"`
 }
 
 type SubnetSpec struct {

@@ -86,7 +86,7 @@ func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCl
 		return nil
 	}
 
-	if openStackCluster.Spec.ExternalNetwork != emptyExternalnetwork {
+	if openStackCluster.Spec.ExternalNetwork.ToListOpt() != emptyExternalnetwork.ToListOpt() {
 		listOpts = external.ListOptsExt{
 			ListOptsBuilder: openStackCluster.Spec.ExternalNetwork.ToListOpt(),
 		}

@@ -1417,6 +1417,88 @@ SubnetFilter
 </tr>
 </tbody>
 </table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.FilterByNeutronTags">FilterByNeutronTags
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkFilter">NetworkFilter</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.RouterFilter">RouterFilter</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupFilter">SecurityGroupFilter</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetFilter">SubnetFilter</a>)
+</p>
+<p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>tags</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NeutronTag">
+[]NeutronTag
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Tags is a list of tags to filter by. If specified, the resource must
+have all of the tags specified to be included in the result.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tagsAny</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NeutronTag">
+[]NeutronTag
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TagsAny is a list of tags to filter by. If specified, the resource
+must have at least one of the tags specified to be included in the
+result.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>notTags</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NeutronTag">
+[]NeutronTag
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>NotTags is a list of tags to filter by. If specified, resources which
+contain all of the given tags will be excluded from the result.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>notTagsAny</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NeutronTag">
+[]NeutronTag
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>NotTagsAny is a list of tags to filter by. If specified, resources
+which contain any of the given tags will be excluded from the result.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.FixedIP">FixedIP
 </h3>
 <p>
@@ -1718,42 +1800,17 @@ string
 </tr>
 <tr>
 <td>
-<code>tags</code><br/>
+<code>FilterByNeutronTags</code><br/>
 <em>
-string
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.FilterByNeutronTags">
+FilterByNeutronTags
+</a>
 </em>
 </td>
 <td>
-</td>
-</tr>
-<tr>
-<td>
-<code>tagsAny</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>notTags</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>notTagsAny</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
+<p>
+(Members of <code>FilterByNeutronTags</code> are embedded into this type.)
+</p>
 </td>
 </tr>
 </tbody>
@@ -1856,6 +1913,16 @@ NetworkStatus
 </tr>
 </tbody>
 </table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.NeutronTag">NeutronTag
+(<code>string</code> alias)</p></h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.FilterByNeutronTags">FilterByNeutronTags</a>)
+</p>
+<p>
+<p>NeutronTag represents a tag on a Neutron resource.
+It may not be empty and may not contain commas.</p>
+</p>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.OpenStackClusterSpec">OpenStackClusterSpec
 </h3>
 <p>
@@ -3915,42 +3982,17 @@ string
 </tr>
 <tr>
 <td>
-<code>tags</code><br/>
+<code>FilterByNeutronTags</code><br/>
 <em>
-string
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.FilterByNeutronTags">
+FilterByNeutronTags
+</a>
 </em>
 </td>
 <td>
-</td>
-</tr>
-<tr>
-<td>
-<code>tagsAny</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>notTags</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>notTagsAny</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
+<p>
+(Members of <code>FilterByNeutronTags</code> are embedded into this type.)
+</p>
 </td>
 </tr>
 </tbody>
@@ -4014,42 +4056,17 @@ string
 </tr>
 <tr>
 <td>
-<code>tags</code><br/>
+<code>FilterByNeutronTags</code><br/>
 <em>
-string
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.FilterByNeutronTags">
+FilterByNeutronTags
+</a>
 </em>
 </td>
 <td>
-</td>
-</tr>
-<tr>
-<td>
-<code>tagsAny</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>notTags</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>notTagsAny</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
+<p>
+(Members of <code>FilterByNeutronTags</code> are embedded into this type.)
+</p>
 </td>
 </tr>
 </tbody>
@@ -4647,42 +4664,17 @@ string
 </tr>
 <tr>
 <td>
-<code>tags</code><br/>
+<code>FilterByNeutronTags</code><br/>
 <em>
-string
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.FilterByNeutronTags">
+FilterByNeutronTags
+</a>
 </em>
 </td>
 <td>
-</td>
-</tr>
-<tr>
-<td>
-<code>tagsAny</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>notTags</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>notTagsAny</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
+<p>
+(Members of <code>FilterByNeutronTags</code> are embedded into this type.)
+</p>
 </td>
 </tr>
 </tbody>

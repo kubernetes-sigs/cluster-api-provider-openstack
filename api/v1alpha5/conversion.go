@@ -475,20 +475,6 @@ func Convert_v1beta1_NetworkStatus_To_v1alpha5_Network(in *infrav1.NetworkStatus
 	return nil
 }
 
-func Convert_v1alpha5_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(in *SecurityGroupFilter, out *infrav1.SecurityGroupFilter, s conversion.Scope) error {
-	err := autoConvert_v1alpha5_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(in, out, s)
-	if err != nil {
-		return err
-	}
-
-	// TenantID has been removed in v1beta1. Write it to ProjectID if ProjectID is not already set.
-	if out.ProjectID == "" {
-		out.ProjectID = in.TenantID
-	}
-
-	return nil
-}
-
 func Convert_v1alpha5_SecurityGroupParam_To_v1beta1_SecurityGroupFilter(in *SecurityGroupParam, out *infrav1.SecurityGroupFilter, s conversion.Scope) error {
 	// SecurityGroupParam is replaced by its contained SecurityGroupFilter in v1beta1
 	err := Convert_v1alpha5_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(&in.Filter, out, s)
@@ -521,16 +507,20 @@ func Convert_v1beta1_SecurityGroupFilter_To_v1alpha5_SecurityGroupParam(in *infr
 	return nil
 }
 
-func Convert_v1alpha5_SubnetParam_To_v1beta1_SubnetFilter(in *SubnetParam, out *infrav1.SubnetFilter, _ conversion.Scope) error {
-	*out = infrav1.SubnetFilter(in.Filter)
+func Convert_v1alpha5_SubnetParam_To_v1beta1_SubnetFilter(in *SubnetParam, out *infrav1.SubnetFilter, s conversion.Scope) error {
+	if err := Convert_v1alpha5_SubnetFilter_To_v1beta1_SubnetFilter(&in.Filter, out, s); err != nil {
+		return err
+	}
 	if in.UUID != "" {
 		out.ID = in.UUID
 	}
 	return nil
 }
 
-func Convert_v1beta1_SubnetFilter_To_v1alpha5_SubnetParam(in *infrav1.SubnetFilter, out *SubnetParam, _ conversion.Scope) error {
-	out.Filter = SubnetFilter(*in)
+func Convert_v1beta1_SubnetFilter_To_v1alpha5_SubnetParam(in *infrav1.SubnetFilter, out *SubnetParam, s conversion.Scope) error {
+	if err := Convert_v1beta1_SubnetFilter_To_v1alpha5_SubnetFilter(in, &out.Filter, s); err != nil {
+		return err
+	}
 	out.UUID = in.ID
 
 	return nil
@@ -716,5 +706,58 @@ func Convert_v1alpha5_OpenStackIdentityReference_To_v1beta1_OpenStackIdentityRef
 
 func Convert_v1beta1_OpenStackIdentityReference_To_v1alpha5_OpenStackIdentityReference(in *infrav1.OpenStackIdentityReference, out *OpenStackIdentityReference, _ conversion.Scope) error {
 	out.Name = in.Name
+	return nil
+}
+
+func Convert_v1alpha5_SubnetFilter_To_v1beta1_SubnetFilter(in *SubnetFilter, out *infrav1.SubnetFilter, s conversion.Scope) error {
+	if err := autoConvert_v1alpha5_SubnetFilter_To_v1beta1_SubnetFilter(in, out, s); err != nil {
+		return err
+	}
+	infrav1.ConvertAllTagsTo(in.Tags, in.TagsAny, in.NotTags, in.NotTagsAny, &out.FilterByNeutronTags)
+	return nil
+}
+
+func Convert_v1beta1_SubnetFilter_To_v1alpha5_SubnetFilter(in *infrav1.SubnetFilter, out *SubnetFilter, s conversion.Scope) error {
+	if err := autoConvert_v1beta1_SubnetFilter_To_v1alpha5_SubnetFilter(in, out, s); err != nil {
+		return err
+	}
+	infrav1.ConvertAllTagsFrom(&in.FilterByNeutronTags, &out.Tags, &out.TagsAny, &out.NotTags, &out.NotTagsAny)
+	return nil
+}
+
+func Convert_v1alpha5_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(in *SecurityGroupFilter, out *infrav1.SecurityGroupFilter, s conversion.Scope) error {
+	if err := autoConvert_v1alpha5_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(in, out, s); err != nil {
+		return err
+	}
+	infrav1.ConvertAllTagsTo(in.Tags, in.TagsAny, in.NotTags, in.NotTagsAny, &out.FilterByNeutronTags)
+
+	// TenantID has been removed in v1beta1. Write it to ProjectID if ProjectID is not already set.
+	if out.ProjectID == "" {
+		out.ProjectID = in.TenantID
+	}
+	return nil
+}
+
+func Convert_v1beta1_SecurityGroupFilter_To_v1alpha5_SecurityGroupFilter(in *infrav1.SecurityGroupFilter, out *SecurityGroupFilter, s conversion.Scope) error {
+	if err := autoConvert_v1beta1_SecurityGroupFilter_To_v1alpha5_SecurityGroupFilter(in, out, s); err != nil {
+		return err
+	}
+	infrav1.ConvertAllTagsFrom(&in.FilterByNeutronTags, &out.Tags, &out.TagsAny, &out.NotTags, &out.NotTagsAny)
+	return nil
+}
+
+func Convert_v1alpha5_NetworkFilter_To_v1beta1_NetworkFilter(in *NetworkFilter, out *infrav1.NetworkFilter, s conversion.Scope) error {
+	if err := autoConvert_v1alpha5_NetworkFilter_To_v1beta1_NetworkFilter(in, out, s); err != nil {
+		return err
+	}
+	infrav1.ConvertAllTagsTo(in.Tags, in.TagsAny, in.NotTags, in.NotTagsAny, &out.FilterByNeutronTags)
+	return nil
+}
+
+func Convert_v1beta1_NetworkFilter_To_v1alpha5_NetworkFilter(in *infrav1.NetworkFilter, out *NetworkFilter, s conversion.Scope) error {
+	if err := autoConvert_v1beta1_NetworkFilter_To_v1alpha5_NetworkFilter(in, out, s); err != nil {
+		return err
+	}
+	infrav1.ConvertAllTagsFrom(&in.FilterByNeutronTags, &out.Tags, &out.TagsAny, &out.NotTags, &out.NotTagsAny)
 	return nil
 }
