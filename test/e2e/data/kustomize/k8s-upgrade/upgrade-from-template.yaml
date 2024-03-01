@@ -6,10 +6,7 @@ metadata:
 spec:
   template:
     spec:
-      cloudName: ${OPENSTACK_CLOUD}
       flavor: ${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR}
-      identityRef:
-        name: ${CLUSTER_NAME}-cloud-config
       image:
         name: ${OPENSTACK_IMAGE_NAME_UPGRADE_FROM}
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
@@ -23,10 +20,7 @@ metadata:
 spec:
   template:
     spec:
-      cloudName: ${OPENSTACK_CLOUD}
       flavor: ${OPENSTACK_NODE_MACHINE_FLAVOR}
-      identityRef:
-        name: ${CLUSTER_NAME}-cloud-config
       image:
         name: ${OPENSTACK_IMAGE_NAME_UPGRADE_FROM}
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
