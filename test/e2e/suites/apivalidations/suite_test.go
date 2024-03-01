@@ -39,6 +39,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/webhooks"
 )
 
 var (
@@ -119,14 +120,7 @@ var _ = BeforeSuite(func() {
 		}),
 	})
 	Expect(err).ToNot(HaveOccurred(), "Manager setup should succeed")
-
-	Expect((&infrav1.OpenStackMachineTemplateWebhook{}).SetupWebhookWithManager(mgr)).To(Succeed(), "OpenStackMachineTemplate webhook should be registered with manager")
-	Expect((&infrav1.OpenStackMachineTemplateList{}).SetupWebhookWithManager(mgr)).To(Succeed(), "OpenStackMachineTemplateList webhook should be registered with manager")
-	Expect((&infrav1.OpenStackCluster{}).SetupWebhookWithManager(mgr)).To(Succeed(), "OpenStackCluster webhook should be registered with manager")
-	Expect((&infrav1.OpenStackClusterTemplate{}).SetupWebhookWithManager(mgr)).To(Succeed(), "OpenStackClusterTemplate webhook should be registered with manager")
-	Expect((&infrav1.OpenStackMachine{}).SetupWebhookWithManager(mgr)).To(Succeed(), "OpenStackMachine webhook should be registered with manager")
-	Expect((&infrav1.OpenStackMachineList{}).SetupWebhookWithManager(mgr)).To(Succeed(), "OpenStackMachineList webhook should be registered with manager")
-	Expect((&infrav1.OpenStackClusterList{}).SetupWebhookWithManager(mgr)).To(Succeed(), "OpenStackClusterList webhook should be registered with manager")
+	Expect(webhooks.RegisterAllWithManager(mgr)).To(BeEmpty(), "Failed to register webhooks")
 
 	By("Starting manager")
 	var mgrCtx context.Context
