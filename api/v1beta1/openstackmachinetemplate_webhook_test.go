@@ -45,7 +45,7 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: OpenStackMachineTemplateResource{
 						Spec: OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  ImageFilter{Name: "bar"},
+							Image:  ImageFilter{Name: pointer.String("bar")},
 						},
 					},
 				},
@@ -55,7 +55,7 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: OpenStackMachineTemplateResource{
 						Spec: OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  ImageFilter{Name: "NewImage"},
+							Image:  ImageFilter{Name: pointer.String("NewImage")},
 						},
 					},
 				},
@@ -70,7 +70,7 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: OpenStackMachineTemplateResource{
 						Spec: OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  ImageFilter{Name: "bar"},
+							Image:  ImageFilter{Name: pointer.String("bar")},
 						},
 					},
 				},
@@ -83,7 +83,7 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: OpenStackMachineTemplateResource{
 						Spec: OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  ImageFilter{Name: "bar"},
+							Image:  ImageFilter{Name: pointer.String("bar")},
 						},
 					},
 				},
@@ -100,7 +100,7 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: OpenStackMachineTemplateResource{
 						Spec: OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  ImageFilter{Name: "bar"},
+							Image:  ImageFilter{Name: pointer.String("bar")},
 						},
 					},
 				},
@@ -110,7 +110,7 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: OpenStackMachineTemplateResource{
 						Spec: OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  ImageFilter{Name: "NewImage"},
+							Image:  ImageFilter{Name: pointer.String("NewImage")},
 						},
 					},
 				},
@@ -125,7 +125,7 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: OpenStackMachineTemplateResource{
 						Spec: OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  ImageFilter{Name: "bar"},
+							Image:  ImageFilter{Name: pointer.String("bar")},
 						},
 					},
 				},
@@ -140,7 +140,7 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: OpenStackMachineTemplateResource{
 						Spec: OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  ImageFilter{Name: "NewImage"},
+							Image:  ImageFilter{Name: pointer.String("NewImage")},
 						},
 					},
 				},

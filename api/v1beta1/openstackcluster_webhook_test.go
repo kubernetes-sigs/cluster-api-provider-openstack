@@ -82,7 +82,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 					Bastion: &Bastion{
 						Instance: OpenStackMachineSpec{
-							Image:  ImageFilter{Name: "foobar"},
+							Image:  ImageFilter{Name: pointer.String("foobar")},
 							Flavor: "minimal",
 						},
 						Enabled: true,
@@ -102,7 +102,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 					Bastion: &Bastion{
 						Instance: OpenStackMachineSpec{
-							Image:  ImageFilter{Name: "foobarbaz"},
+							Image:  ImageFilter{Name: pointer.String("foobarbaz")},
 							Flavor: "medium",
 						},
 						Enabled: true,
@@ -163,7 +163,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					APIServerLoadBalancer: APIServerLoadBalancer{
+					APIServerLoadBalancer: &APIServerLoadBalancer{
 						Enabled: true,
 						AllowedCIDRs: []string{
 							"0.0.0.0/0",
@@ -178,7 +178,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					APIServerLoadBalancer: APIServerLoadBalancer{
+					APIServerLoadBalancer: &APIServerLoadBalancer{
 						Enabled: true,
 						AllowedCIDRs: []string{
 							"0.0.0.0/0",
@@ -306,7 +306,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						CloudName: "foobar",
 					},
 					DisableAPIServerFloatingIP: true,
-					APIServerFixedIP:           "20.1.56.1",
+					APIServerFixedIP:           pointer.String("20.1.56.1"),
 				},
 			},
 			wantErr: false,
@@ -329,7 +329,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						CloudName: "foobar",
 					},
 					DisableAPIServerFloatingIP: false,
-					APIServerFixedIP:           "20.1.56.1",
+					APIServerFixedIP:           pointer.String("20.1.56.1"),
 				},
 			},
 			wantErr: true,
@@ -349,7 +349,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			newTemplate: &OpenStackCluster{
 				Spec: OpenStackClusterSpec{
 					DisableAPIServerFloatingIP: true,
-					APIServerPort:              8443,
+					APIServerPort:              pointer.Int(8443),
 				},
 			},
 			wantErr: false,
@@ -372,7 +372,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						CloudName: "foobar",
 					},
 					DisableAPIServerFloatingIP: false,
-					APIServerPort:              8443,
+					APIServerPort:              pointer.Int(8443),
 				},
 			},
 			wantErr: true,
@@ -385,7 +385,6 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					APIServerFloatingIP: "",
 				},
 				Status: OpenStackClusterStatus{
 					APIServerLoadBalancer: &LoadBalancer{
@@ -399,7 +398,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					APIServerFloatingIP: "1.2.3.4",
+					APIServerFloatingIP: pointer.String("1.2.3.4"),
 				},
 				Status: OpenStackClusterStatus{
 					APIServerLoadBalancer: &LoadBalancer{
@@ -417,7 +416,6 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					APIServerFloatingIP: "",
 				},
 				Status: OpenStackClusterStatus{
 					APIServerLoadBalancer: &LoadBalancer{
@@ -431,7 +429,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					APIServerFloatingIP: "5.6.7.8",
+					APIServerFloatingIP: pointer.String("5.6.7.8"),
 				},
 				Status: OpenStackClusterStatus{
 					APIServerLoadBalancer: &LoadBalancer{
@@ -453,7 +451,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Enabled: true,
 						Instance: OpenStackMachineSpec{
 							Flavor: "m1.small",
-							Image:  ImageFilter{Name: "ubuntu"},
+							Image:  ImageFilter{Name: pointer.String("ubuntu")},
 						},
 					},
 				},
@@ -480,7 +478,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Enabled: false,
 						Instance: OpenStackMachineSpec{
 							Flavor: "m1.small",
-							Image:  ImageFilter{Name: "ubuntu"},
+							Image:  ImageFilter{Name: pointer.String("ubuntu")},
 						},
 					},
 				},

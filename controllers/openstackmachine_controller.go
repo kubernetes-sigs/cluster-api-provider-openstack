@@ -149,7 +149,10 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	scope := scope.NewWithLogger(clientScope, log)
 
 	// Resolve and store referenced resources
-	changed, err := compute.ResolveReferencedMachineResources(scope, infraCluster, &openStackMachine.Spec, &openStackMachine.Status.ReferencedResources)
+	if openStackMachine.Status.ReferencedResources == nil {
+		openStackMachine.Status.ReferencedResources = &infrav1.ReferencedMachineResources{}
+	}
+	changed, err := compute.ResolveReferencedMachineResources(scope, infraCluster, &openStackMachine.Spec, openStackMachine.Status.ReferencedResources)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -256,7 +259,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(scope *scope.WithLogger, cl
 		return ctrl.Result{}, err
 	}
 
-	if openStackCluster.Spec.APIServerLoadBalancer.Enabled {
+	if openStackCluster.Spec.APIServerLoadBalancer != nil && openStackCluster.Spec.APIServerLoadBalancer.Enabled {
 		loadBalancerService, err := loadbalancer.NewService(scope)
 		if err != nil {
 			return ctrl.Result{}, err
@@ -278,7 +281,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(scope *scope.WithLogger, cl
 	} else if instanceStatus, err = computeService.GetInstanceStatusByName(openStackMachine, openStackMachine.Name); err != nil {
 		return ctrl.Result{}, err
 	}
-	if !openStackCluster.Spec.APIServerLoadBalancer.Enabled && util.IsControlPlaneMachine(machine) && openStackCluster.Spec.APIServerFloatingIP == "" {
+	if (openStackCluster.Spec.APIServerLoadBalancer == nil || !openStackCluster.Spec.APIServerLoadBalancer.Enabled) && util.IsControlPlaneMachine(machine) && openStackCluster.Spec.APIServerFloatingIP == nil {
 		if instanceStatus != nil {
 			instanceNS, err := instanceStatus.NetworkStatus()
 			if err != nil {
@@ -452,7 +455,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		return ctrl.Result{}, nil
 	}
 
-	if openStackCluster.Spec.APIServerLoadBalancer.Enabled {
+	if openStackCluster.Spec.APIServerLoadBalancer != nil && openStackCluster.Spec.APIServerLoadBalancer.Enabled {
 		err = r.reconcileLoadBalancerMember(scope, openStackCluster, openStackMachine, instanceNS, clusterName)
 		if err != nil {
 			conditions.MarkFalse(openStackMachine, infrav1.APIServerIngressReadyCondition, infrav1.LoadBalancerMemberErrorReason, clusterv1.ConditionSeverityError, "Reconciling load balancer member failed: %v", err)
@@ -460,10 +463,10 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		}
 	} else if !openStackCluster.Spec.DisableAPIServerFloatingIP {
 		floatingIPAddress := openStackCluster.Spec.ControlPlaneEndpoint.Host
-		if openStackCluster.Spec.APIServerFloatingIP != "" {
-			floatingIPAddress = openStackCluster.Spec.APIServerFloatingIP
+		if openStackCluster.Spec.APIServerFloatingIP != nil {
+			floatingIPAddress = *openStackCluster.Spec.APIServerFloatingIP
 		}
-		fp, err := networkingService.GetOrCreateFloatingIP(openStackMachine, openStackCluster, clusterName, floatingIPAddress)
+		fp, err := networkingService.GetOrCreateFloatingIP(openStackMachine, openStackCluster, clusterName, &floatingIPAddress)
 		if err != nil {
 			conditions.MarkFalse(openStackMachine, infrav1.APIServerIngressReadyCondition, infrav1.FloatingIPErrorReason, clusterv1.ConditionSeverityError, "Floating IP cannot be obtained or created: %v", err)
 			return ctrl.Result{}, fmt.Errorf("get or create floating IP %q: %w", floatingIPAddress, err)
@@ -574,13 +577,15 @@ func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *
 		ConfigDrive:            openStackMachine.Spec.ConfigDrive != nil && *openStackMachine.Spec.ConfigDrive,
 		RootVolume:             openStackMachine.Spec.RootVolume,
 		AdditionalBlockDevices: openStackMachine.Spec.AdditionalBlockDevices,
-		ServerGroupID:          openStackMachine.Status.ReferencedResources.ServerGroupID,
 		Trunk:                  openStackMachine.Spec.Trunk,
+	}
+	if openStackMachine.Status.ReferencedResources.ServerGroupID != nil {
+		instanceSpec.ServerGroupID = *openStackMachine.Status.ReferencedResources.ServerGroupID
 	}
 
 	// Add the failure domain only if specified
 	if machine.Spec.FailureDomain != nil {
-		instanceSpec.FailureDomain = *machine.Spec.FailureDomain
+		instanceSpec.FailureDomain = machine.Spec.FailureDomain
 	}
 
 	instanceSpec.Tags = getInstanceTags(openStackMachine, openStackCluster)

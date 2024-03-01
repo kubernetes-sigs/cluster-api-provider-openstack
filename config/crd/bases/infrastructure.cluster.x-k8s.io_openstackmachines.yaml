@@ -1810,18 +1810,18 @@ spec:
                   If the rootVolume is specified, this will be used when creating the root volume.
                 properties:
                   id:
-                    description: The ID of the desired image. If this is provided,
+                    description: ID is the ID of a glance image. If this is provided,
                       the other filters will be ignored.
                     type: string
                   name:
-                    description: The name of the desired image. If specified, the
-                      combination of name and tags must return a single matching image
-                      or an error will be raised.
-                    type: string
-                  tags:
-                    description: The tags associated with the desired image. If specified,
+                    description: Name is the name of a glance image. If specified,
                       the combination of name and tags must return a single matching
                       image or an error will be raised.
+                    type: string
+                  tags:
+                    description: Tags is a list of tags associated with a glance image.
+                      If specified, the combination of name and tags must return a
+                      single matching image or an error will be raised.
                     items:
                       type: string
                     type: array
@@ -2290,14 +2290,12 @@ spec:
                 items:
                   properties:
                     key:
-                      description: |-
-                        Key is the server metadata key
-                        kubebuilder:validation:MaxLength:=255
+                      description: Key is the server metadata key
+                      maxLength: 255
                       type: string
                     value:
-                      description: |-
-                        Value is the server metadata value
-                        kubebuilder:validation:MaxLength:=255
+                      description: Value is the server metadata value
+                      maxLength: 255
                       type: string
                   required:
                   - key
@@ -2324,6 +2322,7 @@ spec:
                 type: boolean
             required:
             - flavor
+            - image
             type: object
           status:
             description: OpenStackMachineStatus defines the observed state of OpenStackMachine.
@@ -2408,6 +2407,7 @@ spec:
                       - id
                       type: object
                     type: array
+                    x-kubernetes-list-type: set
                 type: object
               failureMessage:
                 description: |-
@@ -2439,6 +2439,7 @@ spec:
                   for this machine.
                 type: string
               ready:
+                default: false
                 description: Ready is true when the provider resource is ready.
                 type: boolean
               referencedResources:
@@ -2814,11 +2815,16 @@ spec:
                           type: string
                       type: object
                     type: array
+                    x-kubernetes-list-type: set
                   serverGroupID:
                     description: ServerGroupID is the ID of the server group the machine
                       should be added to and is calculated based on ServerGroupFilter.
                     type: string
+                required:
+                - imageID
                 type: object
+            required:
+            - ready
             type: object
         type: object
     served: true

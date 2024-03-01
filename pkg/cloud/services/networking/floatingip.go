@@ -32,13 +32,13 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
-func (s *Service) GetOrCreateFloatingIP(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, clusterName, ip string) (*floatingips.FloatingIP, error) {
+func (s *Service) GetOrCreateFloatingIP(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, clusterName string, ip *string) (*floatingips.FloatingIP, error) {
 	var fp *floatingips.FloatingIP
 	var err error
 	var fpCreateOpts floatingips.CreateOpts
 
-	if ip != "" {
-		fp, err = s.GetFloatingIP(ip)
+	if ip != nil {
+		fp, err = s.GetFloatingIP(*ip)
 		if err != nil {
 			return nil, err
 		}
@@ -46,7 +46,7 @@ func (s *Service) GetOrCreateFloatingIP(eventObject runtime.Object, openStackClu
 			return fp, nil
 		}
 		// only admin can add ip address
-		fpCreateOpts.FloatingIP = ip
+		fpCreateOpts.FloatingIP = *ip
 	}
 
 	fpCreateOpts.FloatingNetworkID = openStackCluster.Status.ExternalNetwork.ID

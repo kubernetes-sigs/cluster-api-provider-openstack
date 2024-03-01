@@ -26,6 +26,7 @@ import (
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/conversion"
+	optional "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
 )
 
 const trueString = "true"
@@ -168,14 +169,29 @@ func restorev1beta1MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *infr
 }
 
 func restorev1beta1Bastion(previous **infrav1.Bastion, dst **infrav1.Bastion) {
-	if *previous != nil && *dst != nil {
-		restorev1beta1MachineSpec(&(*previous).Instance, &(*dst).Instance)
+	if *previous == nil && *dst == nil {
+		return
+	}
+
+	restorev1beta1MachineSpec(&(*previous).Instance, &(*dst).Instance)
+	if (*dst).AvailabilityZone == nil || *(*dst).AvailabilityZone == "" {
+		(*dst).AvailabilityZone = (*previous).AvailabilityZone
+	}
+	if (*dst).FloatingIP == nil || *(*dst).FloatingIP == "" {
+		(*dst).FloatingIP = (*previous).FloatingIP
 	}
 }
 
 func restorev1beta1Subnets(previous *[]infrav1.SubnetFilter, dst *[]infrav1.SubnetFilter) {
 	if len(*previous) > 1 {
 		*dst = append(*dst, (*previous)[1:]...)
+	}
+}
+
+func restorev1beta1APIServerLoadBalancer(previous **infrav1.APIServerLoadBalancer, dst **infrav1.APIServerLoadBalancer) {
+	// Ensure empty and zero values are restored identically
+	if *previous == nil || (*previous).IsZero() {
+		*dst = *previous
 	}
 }
 
@@ -245,6 +261,13 @@ func restorev1alpha6ClusterSpec(previous *OpenStackClusterSpec, dst *OpenStackCl
 	restorev1alpha6NetworkFilter(&previous.Network, &dst.Network)
 }
 
+// Ensure nil and &0 are restored to whichever they were previously.
+func restoreIntPointer(previous **int, dst **int) {
+	if *previous == nil || **previous == 0 {
+		*dst = *previous
+	}
+}
+
 var _ ctrlconversion.Convertible = &OpenStackCluster{}
 
 var v1alpha6OpenStackClusterRestorer = conversion.RestorerFor[*OpenStackCluster]{
@@ -263,8 +286,32 @@ var v1alpha6OpenStackClusterRestorer = conversion.RestorerFor[*OpenStackCluster]
 }
 
 var v1beta1OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStackCluster]{
+	"apiServerLoadBalancer": conversion.HashedFieldRestorer(
+		func(c *infrav1.OpenStackCluster) **infrav1.APIServerLoadBalancer {
+			return &c.Spec.APIServerLoadBalancer
+		},
+		restorev1beta1APIServerLoadBalancer,
+	),
+	"apiServerFloatingIP": conversion.HashedFieldRestorer(
+		func(c *infrav1.OpenStackCluster) *optional.String {
+			return &c.Spec.APIServerFloatingIP
+		},
+		optional.RestoreString,
+	),
+	"apiServerFixedIP": conversion.HashedFieldRestorer(
+		func(c *infrav1.OpenStackCluster) *optional.String {
+			return &c.Spec.APIServerFixedIP
+		},
+		optional.RestoreString,
+	),
+	"apiServerPort": conversion.HashedFieldRestorer(
+		func(c *infrav1.OpenStackCluster) *optional.Int {
+			return &c.Spec.APIServerPort
+		},
+		optional.RestoreInt,
+	),
 	"externalNetwork": conversion.UnconditionalFieldRestorer(
-		func(c *infrav1.OpenStackCluster) *infrav1.NetworkFilter {
+		func(c *infrav1.OpenStackCluster) **infrav1.NetworkFilter {
 			return &c.Spec.ExternalNetwork
 		},
 	),
@@ -279,7 +326,7 @@ var v1beta1OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStackC
 		},
 	),
 	"networkMtu": conversion.UnconditionalFieldRestorer(
-		func(c *infrav1.OpenStackCluster) *int {
+		func(c *infrav1.OpenStackCluster) *optional.Int {
 			return &c.Spec.NetworkMTU
 		},
 	),
@@ -364,8 +411,32 @@ func restorev1beta1ManagedSecurityGroups(previous *infrav1.ManagedSecurityGroups
 }
 
 var v1beta1OpenStackClusterTemplateRestorer = conversion.RestorerFor[*infrav1.OpenStackClusterTemplate]{
+	"apiServerLoadBalancer": conversion.HashedFieldRestorer(
+		func(c *infrav1.OpenStackClusterTemplate) **infrav1.APIServerLoadBalancer {
+			return &c.Spec.Template.Spec.APIServerLoadBalancer
+		},
+		restorev1beta1APIServerLoadBalancer,
+	),
+	"apiServerFloatingIP": conversion.HashedFieldRestorer(
+		func(c *infrav1.OpenStackClusterTemplate) *optional.String {
+			return &c.Spec.Template.Spec.APIServerFloatingIP
+		},
+		optional.RestoreString,
+	),
+	"apiServerFixedIP": conversion.HashedFieldRestorer(
+		func(c *infrav1.OpenStackClusterTemplate) *optional.String {
+			return &c.Spec.Template.Spec.APIServerFixedIP
+		},
+		optional.RestoreString,
+	),
+	"apiServerPort": conversion.HashedFieldRestorer(
+		func(c *infrav1.OpenStackClusterTemplate) *optional.Int {
+			return &c.Spec.Template.Spec.APIServerPort
+		},
+		optional.RestoreInt,
+	),
 	"externalNetwork": conversion.UnconditionalFieldRestorer(
-		func(c *infrav1.OpenStackClusterTemplate) *infrav1.NetworkFilter {
+		func(c *infrav1.OpenStackClusterTemplate) **infrav1.NetworkFilter {
 			return &c.Spec.Template.Spec.ExternalNetwork
 		},
 	),
@@ -380,7 +451,7 @@ var v1beta1OpenStackClusterTemplateRestorer = conversion.RestorerFor[*infrav1.Op
 		},
 	),
 	"networkMtu": conversion.UnconditionalFieldRestorer(
-		func(c *infrav1.OpenStackClusterTemplate) *int {
+		func(c *infrav1.OpenStackClusterTemplate) *optional.Int {
 			return &c.Spec.Template.Spec.NetworkMTU
 		},
 	),
@@ -467,7 +538,7 @@ var v1beta1OpenStackMachineRestorer = conversion.RestorerFor[*infrav1.OpenStackM
 	),
 	// No equivalent in v1alpha6
 	"refresources": conversion.UnconditionalFieldRestorer(
-		func(c *infrav1.OpenStackMachine) *infrav1.ReferencedMachineResources {
+		func(c *infrav1.OpenStackMachine) **infrav1.ReferencedMachineResources {
 			return &c.Status.ReferencedResources
 		},
 	),
@@ -580,10 +651,10 @@ func Convert_v1alpha6_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in *O
 
 	imageFilter := infrav1.ImageFilter{}
 	if in.Image != "" {
-		imageFilter.Name = in.Image
+		imageFilter.Name = pointer.String(in.Image)
 	}
 	if in.ImageUUID != "" {
-		imageFilter.ID = in.ImageUUID
+		imageFilter.ID = pointer.String(in.ImageUUID)
 	}
 	out.Image = imageFilter
 
@@ -696,7 +767,13 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in *i
 		return err
 	}
 
-	if in.ExternalNetwork.ID != "" {
+	if in.Network != nil {
+		if err := Convert_v1beta1_NetworkFilter_To_v1alpha6_NetworkFilter(in.Network, &out.Network, s); err != nil {
+			return err
+		}
+	}
+
+	if in.ExternalNetwork != nil && in.ExternalNetwork.ID != "" {
 		out.ExternalNetworkID = in.ExternalNetwork.ID
 	}
 
@@ -716,8 +793,18 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in *i
 		out.AllowAllInClusterTraffic = in.ManagedSecurityGroups.AllowAllInClusterTraffic
 	}
 
+	if in.APIServerLoadBalancer != nil {
+		if err := Convert_v1beta1_APIServerLoadBalancer_To_v1alpha6_APIServerLoadBalancer(in.APIServerLoadBalancer, &out.APIServerLoadBalancer, s); err != nil {
+			return err
+		}
+	}
+
 	out.CloudName = in.IdentityRef.CloudName
 	out.IdentityRef = &OpenStackIdentityReference{Name: in.IdentityRef.Name}
+
+	if in.APIServerPort != nil {
+		out.APIServerPort = *in.APIServerPort
+	}
 
 	return nil
 }
@@ -728,8 +815,15 @@ func Convert_v1alpha6_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 		return err
 	}
 
+	if in.Network != (NetworkFilter{}) {
+		out.Network = &infrav1.NetworkFilter{}
+		if err := Convert_v1alpha6_NetworkFilter_To_v1beta1_NetworkFilter(&in.Network, out.Network, s); err != nil {
+			return err
+		}
+	}
+
 	if in.ExternalNetworkID != "" {
-		out.ExternalNetwork = infrav1.NetworkFilter{
+		out.ExternalNetwork = &infrav1.NetworkFilter{
 			ID: in.ExternalNetworkID,
 		}
 	}
@@ -765,6 +859,26 @@ func Convert_v1alpha6_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 	out.IdentityRef.CloudName = in.CloudName
 	if in.IdentityRef != nil {
 		out.IdentityRef.Name = in.IdentityRef.Name
+	}
+
+	apiServerLoadBalancer := &infrav1.APIServerLoadBalancer{}
+	if err := Convert_v1alpha6_APIServerLoadBalancer_To_v1beta1_APIServerLoadBalancer(&in.APIServerLoadBalancer, apiServerLoadBalancer, s); err != nil {
+		return err
+	}
+	if !apiServerLoadBalancer.IsZero() {
+		out.APIServerLoadBalancer = apiServerLoadBalancer
+	}
+
+	// The generated conversion function converts "" to &"" which is not what we want
+	if in.APIServerFloatingIP == "" {
+		out.APIServerFloatingIP = nil
+	}
+	if in.APIServerFixedIP == "" {
+		out.APIServerFixedIP = nil
+	}
+
+	if in.APIServerPort != 0 {
+		out.APIServerPort = pointer.Int(in.APIServerPort)
 	}
 
 	return nil
@@ -1045,12 +1159,12 @@ func Convert_v1beta1_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(in *i
 		out.ServerGroupID = in.ServerGroup.ID
 	}
 
-	if in.Image.Name != "" {
-		out.Image = in.Image.Name
+	if in.Image.Name != nil {
+		out.Image = *in.Image.Name
 	}
 
-	if in.Image.ID != "" {
-		out.ImageUUID = in.Image.ID
+	if in.Image.ID != nil {
+		out.ImageUUID = *in.Image.ID
 	}
 
 	if len(in.ServerMetadata) > 0 {
@@ -1088,7 +1202,9 @@ func Convert_v1alpha6_Bastion_To_v1beta1_Bastion(in *Bastion, out *infrav1.Basti
 		out.Instance.ServerGroup = nil
 	}
 
-	out.FloatingIP = in.Instance.FloatingIP
+	if in.Instance.FloatingIP != "" {
+		out.FloatingIP = pointer.String(in.Instance.FloatingIP)
+	}
 	return nil
 }
 
@@ -1102,7 +1218,9 @@ func Convert_v1beta1_Bastion_To_v1alpha6_Bastion(in *infrav1.Bastion, out *Basti
 		out.Instance.ServerGroupID = in.Instance.ServerGroup.ID
 	}
 
-	out.Instance.FloatingIP = in.FloatingIP
+	if in.FloatingIP != nil {
+		out.Instance.FloatingIP = *in.FloatingIP
+	}
 	return nil
 }
 

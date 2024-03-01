@@ -77,7 +77,6 @@ func (c createOpts) ToNetworkCreateMap() (map[string]interface{}, error) {
 // - the user has set OpenStackCluster.Spec.DisableExternalNetwork to true.
 func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCluster) error {
 	var listOpts external.ListOptsExt
-	var emptyExternalnetwork infrav1.NetworkFilter
 	var isAutoDetecting bool
 
 	if openStackCluster.Spec.DisableExternalNetwork {
@@ -86,7 +85,7 @@ func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCl
 		return nil
 	}
 
-	if openStackCluster.Spec.ExternalNetwork.ToListOpt() != emptyExternalnetwork.ToListOpt() {
+	if openStackCluster.Spec.ExternalNetwork != nil {
 		listOpts = external.ListOptsExt{
 			ListOptsBuilder: openStackCluster.Spec.ExternalNetwork.ToListOpt(),
 		}
@@ -153,8 +152,8 @@ func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, c
 		opts.PortSecurityEnabled = gophercloud.Disabled
 	}
 
-	if openStackCluster.Spec.NetworkMTU > 0 {
-		opts.MTU = &openStackCluster.Spec.NetworkMTU
+	if openStackCluster.Spec.NetworkMTU != nil {
+		opts.MTU = openStackCluster.Spec.NetworkMTU
 	}
 
 	network, err := s.client.CreateNetwork(opts)

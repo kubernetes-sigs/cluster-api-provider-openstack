@@ -2329,6 +2329,7 @@ spec:
                           availabilityZone:
                             type: string
                           enabled:
+                            default: true
                             type: boolean
                           floatingIP:
                             description: |-
@@ -2433,20 +2434,21 @@ spec:
                                   If the rootVolume is specified, this will be used when creating the root volume.
                                 properties:
                                   id:
-                                    description: The ID of the desired image. If this
-                                      is provided, the other filters will be ignored.
+                                    description: ID is the ID of a glance image. If
+                                      this is provided, the other filters will be
+                                      ignored.
                                     type: string
                                   name:
-                                    description: The name of the desired image. If
-                                      specified, the combination of name and tags
+                                    description: Name is the name of a glance image.
+                                      If specified, the combination of name and tags
                                       must return a single matching image or an error
                                       will be raised.
                                     type: string
                                   tags:
-                                    description: The tags associated with the desired
-                                      image. If specified, the combination of name
-                                      and tags must return a single matching image
-                                      or an error will be raised.
+                                    description: Tags is a list of tags associated
+                                      with a glance image. If specified, the combination
+                                      of name and tags must return a single matching
+                                      image or an error will be raised.
                                     items:
                                       type: string
                                     type: array
@@ -2924,14 +2926,12 @@ spec:
                                 items:
                                   properties:
                                     key:
-                                      description: |-
-                                        Key is the server metadata key
-                                        kubebuilder:validation:MaxLength:=255
+                                      description: Key is the server metadata key
+                                      maxLength: 255
                                       type: string
                                     value:
-                                      description: |-
-                                        Value is the server metadata value
-                                        kubebuilder:validation:MaxLength:=255
+                                      description: Value is the server metadata value
+                                      maxLength: 255
                                       type: string
                                   required:
                                   - key
@@ -2958,7 +2958,11 @@ spec:
                                 type: boolean
                             required:
                             - flavor
+                            - image
                             type: object
+                        required:
+                        - enabled
+                        - instance
                         type: object
                       controlPlaneAvailabilityZones:
                         description: ControlPlaneAvailabilityZones is the az to deploy
@@ -3165,6 +3169,7 @@ spec:
                                   x-kubernetes-list-type: set
                               type: object
                           required:
+                          - fixedIP
                           - subnet
                           type: object
                         type: array

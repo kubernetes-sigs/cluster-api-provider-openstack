@@ -95,11 +95,16 @@ func (routerFilter *RouterFilter) ToListOpt() routers.ListOpts {
 }
 
 func (imageFilter *ImageFilter) ToListOpt() images.ListOpts {
-	return images.ListOpts{
-		ID:   imageFilter.ID,
-		Name: imageFilter.Name,
+	listOpts := images.ListOpts{
 		Tags: imageFilter.Tags,
 	}
+	if imageFilter.ID != nil {
+		listOpts.ID = *imageFilter.ID
+	}
+	if imageFilter.Name != nil {
+		listOpts.Name = *imageFilter.Name
+	}
+	return listOpts
 }
 
 // splitTags splits a comma separated list of tags into a slice of tags.

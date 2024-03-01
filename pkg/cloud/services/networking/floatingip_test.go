@@ -22,6 +22,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
 	. "github.com/onsi/gomega"
+	"k8s.io/utils/pointer"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
@@ -78,7 +79,7 @@ func Test_GetOrCreateFloatingIP(t *testing.T) {
 				client: mockClient,
 			}
 			eventObject := infrav1.OpenStackMachine{}
-			got, err := s.GetOrCreateFloatingIP(&eventObject, openStackCluster, "test-cluster", tt.ip)
+			got, err := s.GetOrCreateFloatingIP(&eventObject, openStackCluster, "test-cluster", pointer.String(tt.ip))
 			g.Expect(err).ShouldNot(HaveOccurred())
 			g.Expect(got).To(Equal(tt.want))
 		})

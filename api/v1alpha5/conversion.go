@@ -193,7 +193,7 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(in *i
 		return err
 	}
 
-	if in.ExternalNetwork.ID != "" {
+	if in.ExternalNetwork != nil && in.ExternalNetwork.ID != "" {
 		out.ExternalNetworkID = in.ExternalNetwork.ID
 	}
 
@@ -215,6 +215,12 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(in *i
 		out.AllowAllInClusterTraffic = in.ManagedSecurityGroups.AllowAllInClusterTraffic
 	}
 
+	if in.APIServerLoadBalancer != nil {
+		if err := Convert_v1beta1_APIServerLoadBalancer_To_v1alpha5_APIServerLoadBalancer(in.APIServerLoadBalancer, &out.APIServerLoadBalancer, s); err != nil {
+			return err
+		}
+	}
+
 	out.CloudName = in.IdentityRef.CloudName
 	out.IdentityRef = &OpenStackIdentityReference{Name: in.IdentityRef.Name}
 
@@ -228,7 +234,7 @@ func Convert_v1alpha5_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 	}
 
 	if in.ExternalNetworkID != "" {
-		out.ExternalNetwork = infrav1.NetworkFilter{
+		out.ExternalNetwork = &infrav1.NetworkFilter{
 			ID: in.ExternalNetworkID,
 		}
 	}
@@ -261,9 +267,28 @@ func Convert_v1alpha5_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 		}
 	}
 
+	if in.APIServerLoadBalancer.Enabled {
+		out.APIServerLoadBalancer = &infrav1.APIServerLoadBalancer{}
+		if err := Convert_v1alpha5_APIServerLoadBalancer_To_v1beta1_APIServerLoadBalancer(&in.APIServerLoadBalancer, out.APIServerLoadBalancer, s); err != nil {
+			return err
+		}
+	}
+
 	out.IdentityRef.CloudName = in.CloudName
 	if in.IdentityRef != nil {
 		out.IdentityRef.Name = in.IdentityRef.Name
+	}
+
+	// The generated conversion function converts "" to &"" which is not what we want
+	if in.APIServerFloatingIP == "" {
+		out.APIServerFloatingIP = nil
+	}
+	if in.APIServerFixedIP == "" {
+		out.APIServerFixedIP = nil
+	}
+
+	if in.APIServerPort != 0 {
+		out.APIServerPort = pointer.Int(in.APIServerPort)
 	}
 
 	return nil
@@ -322,10 +347,10 @@ func Convert_v1alpha5_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in *O
 
 	imageFilter := infrav1.ImageFilter{}
 	if in.Image != "" {
-		imageFilter.Name = in.Image
+		imageFilter.Name = pointer.String(in.Image)
 	}
 	if in.ImageUUID != "" {
-		imageFilter.ID = in.ImageUUID
+		imageFilter.ID = pointer.String(in.ImageUUID)
 	}
 	out.Image = imageFilter
 
@@ -416,7 +441,7 @@ func Convert_v1alpha5_Instance_To_v1beta1_BastionStatus(in *Instance, out *infra
 	out.State = infrav1.InstanceState(in.State)
 	out.IP = in.IP
 	out.FloatingIP = in.FloatingIP
-	out.ReferencedResources.ServerGroupID = in.ServerGroupID
+	out.ReferencedResources.ServerGroupID = &in.ServerGroupID
 	return nil
 }
 
@@ -428,7 +453,9 @@ func Convert_v1beta1_BastionStatus_To_v1alpha5_Instance(in *infrav1.BastionStatu
 	out.State = InstanceState(in.State)
 	out.IP = in.IP
 	out.FloatingIP = in.FloatingIP
-	out.ServerGroupID = in.ReferencedResources.ServerGroupID
+	if in.ReferencedResources.ServerGroupID != nil {
+		out.ServerGroupID = *in.ReferencedResources.ServerGroupID
+	}
 	return nil
 }
 
@@ -606,12 +633,12 @@ func Convert_v1beta1_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(in *i
 		out.ServerGroupID = in.ServerGroup.ID
 	}
 
-	if in.Image.Name != "" {
-		out.Image = in.Image.Name
+	if in.Image.Name != nil {
+		out.Image = *in.Image.Name
 	}
 
-	if in.Image.ID != "" {
-		out.ImageUUID = in.Image.ID
+	if in.Image.ID != nil {
+		out.ImageUUID = *in.Image.ID
 	}
 
 	if in.IdentityRef != nil {
@@ -632,7 +659,10 @@ func Convert_v1beta1_Bastion_To_v1alpha5_Bastion(in *infrav1.Bastion, out *Basti
 	if err != nil {
 		return err
 	}
-	in.FloatingIP = out.Instance.FloatingIP
+
+	if in.FloatingIP != nil {
+		out.Instance.FloatingIP = *in.FloatingIP
+	}
 	return nil
 }
 
@@ -641,7 +671,10 @@ func Convert_v1alpha5_Bastion_To_v1beta1_Bastion(in *Bastion, out *infrav1.Basti
 	if err != nil {
 		return err
 	}
-	in.Instance.FloatingIP = out.FloatingIP
+
+	if in.Instance.FloatingIP != "" {
+		out.FloatingIP = pointer.String(in.Instance.FloatingIP)
+	}
 	return nil
 }
 

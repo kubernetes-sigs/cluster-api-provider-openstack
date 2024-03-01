@@ -83,7 +83,7 @@ func getDefaultOpenStackMachine() *infrav1.OpenStackMachine {
 			// FloatingIP is only used by the cluster controller for the Bastion
 			// TODO: Test Networks, Ports, Subnet, and Trunk separately
 			Flavor:     flavorName,
-			Image:      infrav1.ImageFilter{ID: imageUUID},
+			Image:      infrav1.ImageFilter{ID: pointer.String(imageUUID)},
 			SSHKeyName: sshKeyName,
 			Tags:       []string{"test-tag"},
 			ServerMetadata: []infrav1.ServerMetadata{
@@ -94,9 +94,9 @@ func getDefaultOpenStackMachine() *infrav1.OpenStackMachine {
 			ServerGroup:    &infrav1.ServerGroupFilter{ID: serverGroupUUID},
 		},
 		Status: infrav1.OpenStackMachineStatus{
-			ReferencedResources: infrav1.ReferencedMachineResources{
+			ReferencedResources: &infrav1.ReferencedMachineResources{
 				ImageID:       imageUUID,
-				ServerGroupID: serverGroupUUID,
+				ServerGroupID: pointer.String(serverGroupUUID),
 			},
 		},
 	}
@@ -113,7 +113,7 @@ func getDefaultInstanceSpec() *compute.InstanceSpec {
 			"test-metadata": "test-value",
 		},
 		ConfigDrive:    *pointer.Bool(true),
-		FailureDomain:  *pointer.String(failureDomain),
+		FailureDomain:  pointer.String(failureDomain),
 		ServerGroupID:  serverGroupUUID,
 		SecurityGroups: []infrav1.SecurityGroupFilter{},
 		Tags:           []string{"test-tag"},

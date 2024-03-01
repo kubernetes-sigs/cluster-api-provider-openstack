@@ -20,6 +20,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	capierrors "sigs.k8s.io/cluster-api/errors"
+
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
 )
 
 const (
@@ -43,7 +45,8 @@ type OpenStackClusterSpec struct {
 
 	// Network specifies an existing network to use if no ManagedSubnets
 	// are specified.
-	Network NetworkFilter `json:"network,omitempty"`
+	// +optional
+	Network *NetworkFilter `json:"network,omitempty"`
 
 	// Subnets specifies existing subnets to use if not ManagedSubnets are
 	// specified. All subnets must be in the network specified by Network.
@@ -59,15 +62,16 @@ type OpenStackClusterSpec struct {
 	// If left empty, the network will have the default MTU defined in Openstack network service.
 	// To use this field, the Openstack installation requires the net-mtu neutron API extension.
 	// +optional
-	NetworkMTU int `json:"networkMtu,omitempty"`
+	NetworkMTU optional.Int `json:"networkMtu,omitempty"`
 
 	// ExternalRouterIPs is an array of externalIPs on the respective subnets.
 	// This is necessary if the router needs a fixed ip in a specific subnet.
+	// +optional
 	ExternalRouterIPs []ExternalRouterIPParam `json:"externalRouterIPs,omitempty"`
 
 	// ExternalNetwork is the OpenStack Network to be used to get public internet to the VMs.
 	// +optional
-	ExternalNetwork NetworkFilter `json:"externalNetwork,omitempty"`
+	ExternalNetwork *NetworkFilter `json:"externalNetwork,omitempty"`
 
 	// DisableExternalNetwork determines whether or not to attempt to connect the cluster
 	// to an external network. This allows for the creation of clusters when connecting
@@ -78,7 +82,7 @@ type OpenStackClusterSpec struct {
 	// APIServerLoadBalancer configures the optional LoadBalancer for the APIServer.
 	// It must be activated by setting `enabled: true`.
 	// +optional
-	APIServerLoadBalancer APIServerLoadBalancer `json:"apiServerLoadBalancer,omitempty"`
+	APIServerLoadBalancer *APIServerLoadBalancer `json:"apiServerLoadBalancer,omitempty"`
 
 	// DisableAPIServerFloatingIP determines whether or not to attempt to attach a floating
 	// IP to the API server. This allows for the creation of clusters when attaching a floating
@@ -99,7 +103,8 @@ type OpenStackClusterSpec struct {
 	// The floatingIP will be created if it does not already exist.
 	// If not specified, a new floatingIP is allocated.
 	// This field is not used if DisableAPIServerFloatingIP is set to true.
-	APIServerFloatingIP string `json:"apiServerFloatingIP,omitempty"`
+	// +optional
+	APIServerFloatingIP optional.String `json:"apiServerFloatingIP,omitempty"`
 
 	// APIServerFixedIP is the fixed IP which will be associated with the API server.
 	// In the case where the API server has a floating IP but not a managed load balancer,
@@ -109,11 +114,13 @@ type OpenStackClusterSpec struct {
 	// If a managed load balancer is not used AND the API server floating IP is disabled,
 	// this field MUST be specified and should correspond to a pre-allocated port that
 	// holds the fixed IP to be used as a VIP.
-	APIServerFixedIP string `json:"apiServerFixedIP,omitempty"`
+	// +optional
+	APIServerFixedIP optional.String `json:"apiServerFixedIP,omitempty"`
 
 	// APIServerPort is the port on which the listener on the APIServer
 	// will be created
-	APIServerPort int `json:"apiServerPort,omitempty"`
+	// +optional
+	APIServerPort optional.Int `json:"apiServerPort,omitempty"`
 
 	// ManagedSecurityGroups determines whether OpenStack security groups for the cluster
 	// will be managed by the OpenStack provider or whether pre-existing security groups will
@@ -131,6 +138,7 @@ type OpenStackClusterSpec struct {
 
 	// Tags for all resources in cluster
 	// +listType=set
+	// +optional
 	Tags []string `json:"tags,omitempty"`
 
 	// ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
@@ -139,6 +147,7 @@ type OpenStackClusterSpec struct {
 
 	// ControlPlaneAvailabilityZones is the az to deploy control plane to
 	// +listType=set
+	// +optional
 	ControlPlaneAvailabilityZones []string `json:"controlPlaneAvailabilityZones,omitempty"`
 
 	// Indicates whether to omit the az for control plane nodes, allowing the Nova scheduler
@@ -167,15 +176,19 @@ type OpenStackClusterStatus struct {
 	Ready bool `json:"ready"`
 
 	// Network contains information about the created OpenStack Network.
+	// +optional
 	Network *NetworkStatusWithSubnets `json:"network,omitempty"`
 
 	// externalNetwork contains information about the external network used for default ingress and egress traffic.
+	// +optional
 	ExternalNetwork *NetworkStatus `json:"externalNetwork,omitempty"`
 
 	// Router describes the default cluster router
+	// +optional
 	Router *Router `json:"router,omitempty"`
 
 	// APIServerLoadBalancer describes the api server load balancer if one exists
+	// +optional
 	APIServerLoadBalancer *LoadBalancer `json:"apiServerLoadBalancer,omitempty"`
 
 	// FailureDomains represent OpenStack availability zones
@@ -184,14 +197,18 @@ type OpenStackClusterStatus struct {
 	// ControlPlaneSecurityGroups contains all the information about the OpenStack
 	// Security Group that needs to be applied to control plane nodes.
 	// TODO: Maybe instead of two properties, we add a property to the group?
+	// +optional
 	ControlPlaneSecurityGroup *SecurityGroupStatus `json:"controlPlaneSecurityGroup,omitempty"`
 
 	// WorkerSecurityGroup contains all the information about the OpenStack Security
 	// Group that needs to be applied to worker nodes.
+	// +optional
 	WorkerSecurityGroup *SecurityGroupStatus `json:"workerSecurityGroup,omitempty"`
 
+	// +optional
 	BastionSecurityGroup *SecurityGroupStatus `json:"bastionSecurityGroup,omitempty"`
 
+	// +optional
 	Bastion *BastionStatus `json:"bastion,omitempty"`
 
 	// FailureReason will be set in the event that there is a terminal problem

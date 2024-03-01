@@ -54,14 +54,14 @@ func TestService_getImageID(t *testing.T) {
 	}{
 		{
 			testName: "Return image ID when ID given",
-			image:    infrav1.ImageFilter{ID: imageID},
+			image:    infrav1.ImageFilter{ID: pointer.String(imageID)},
 			want:     imageID,
 			expect:   func(m *mock.MockImageClientMockRecorder) {},
 			wantErr:  false,
 		},
 		{
 			testName: "Return image ID when name given",
-			image:    infrav1.ImageFilter{Name: imageName},
+			image:    infrav1.ImageFilter{Name: pointer.String(imageName)},
 			want:     imageID,
 			expect: func(m *mock.MockImageClientMockRecorder) {
 				m.ListImages(images.ListOpts{Name: imageName}).Return(
@@ -83,7 +83,7 @@ func TestService_getImageID(t *testing.T) {
 		},
 		{
 			testName: "Return no results",
-			image:    infrav1.ImageFilter{Name: imageName},
+			image:    infrav1.ImageFilter{Name: pointer.String(imageName)},
 			expect: func(m *mock.MockImageClientMockRecorder) {
 				m.ListImages(images.ListOpts{Name: imageName}).Return(
 					[]images.Image{},
@@ -94,7 +94,7 @@ func TestService_getImageID(t *testing.T) {
 		},
 		{
 			testName: "Return multiple results",
-			image:    infrav1.ImageFilter{Name: imageName},
+			image:    infrav1.ImageFilter{Name: pointer.String(imageName)},
 			expect: func(m *mock.MockImageClientMockRecorder) {
 				m.ListImages(images.ListOpts{Name: "test-image"}).Return(
 					[]images.Image{
@@ -107,7 +107,7 @@ func TestService_getImageID(t *testing.T) {
 		},
 		{
 			testName: "OpenStack returns error",
-			image:    infrav1.ImageFilter{Name: imageName},
+			image:    infrav1.ImageFilter{Name: pointer.String(imageName)},
 			expect: func(m *mock.MockImageClientMockRecorder) {
 				m.ListImages(images.ListOpts{Name: "test-image"}).Return(
 					nil,
@@ -176,7 +176,7 @@ func getDefaultInstanceSpec() *InstanceSpec {
 			"test-metadata": "test-value",
 		},
 		ConfigDrive:    *pointer.Bool(true),
-		FailureDomain:  *pointer.String(failureDomain),
+		FailureDomain:  pointer.String(failureDomain),
 		ServerGroupID:  serverGroupUUID,
 		Tags:           []string{"test-tag"},
 		SecurityGroups: []infrav1.SecurityGroupFilter{{ID: workerSecurityGroupUUID}},

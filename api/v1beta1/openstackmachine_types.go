@@ -33,26 +33,32 @@ const (
 // OpenStackMachineSpec defines the desired state of OpenStackMachine.
 type OpenStackMachineSpec struct {
 	// ProviderID is the unique identifier as specified by the cloud provider.
+	// +optional
 	ProviderID *string `json:"providerID,omitempty"`
 
 	// InstanceID is the OpenStack instance ID for this machine.
+	// +optional
 	InstanceID *string `json:"instanceID,omitempty"`
 
 	// The flavor reference for the flavor for your server instance.
+	// +kubebuilder:validation:Required
 	Flavor string `json:"flavor"`
 
 	// The image to use for your server instance.
 	// If the rootVolume is specified, this will be used when creating the root volume.
-	Image ImageFilter `json:"image,omitempty"`
+	// +kubebuilder:validation:Required
+	Image ImageFilter `json:"image"`
 
 	// The ssh key to inject in the instance
 	SSHKeyName string `json:"sshKeyName,omitempty"`
 
 	// Ports to be attached to the server instance. They are created if a port with the given name does not already exist.
 	// If not specified a default port will be added for the default cluster network.
+	// +optional
 	Ports []PortOpts `json:"ports,omitempty"`
 
 	// The names of the security groups to assign to the instance
+	// +optional
 	SecurityGroups []SecurityGroupFilter `json:"securityGroups,omitempty"`
 
 	// Whether the server instance is created on a trunk port or not.
@@ -61,17 +67,21 @@ type OpenStackMachineSpec struct {
 	// Machine tags
 	// Requires Nova api 2.52 minimum!
 	// +listType=set
+	// +optional
 	Tags []string `json:"tags,omitempty"`
 
 	// Metadata mapping. Allows you to create a map of key value pairs to add to the server instance.
 	// +listType=map
 	// +listMapKey=key
+	// +optional
 	ServerMetadata []ServerMetadata `json:"serverMetadata,omitempty"`
 
 	// Config Drive support
+	// +optional
 	ConfigDrive *bool `json:"configDrive,omitempty"`
 
 	// The volume metadata to boot from
+	// +optional
 	RootVolume *RootVolume `json:"rootVolume,omitempty"`
 
 	// AdditionalBlockDevices is a list of specifications for additional block devices to attach to the server instance
@@ -93,21 +103,25 @@ type OpenStackMachineSpec struct {
 
 type ServerMetadata struct {
 	// Key is the server metadata key
-	// kubebuilder:validation:MaxLength:=255
+	// +kubebuilder:validation:MaxLength:=255
+	// +kubebuilder:validation:Required
 	Key string `json:"key"`
 
 	// Value is the server metadata value
-	// kubebuilder:validation:MaxLength:=255
+	// +kubebuilder:validation:MaxLength:=255
+	// +kubebuilder:validation:Required
 	Value string `json:"value"`
 }
 
 // OpenStackMachineStatus defines the observed state of OpenStackMachine.
 type OpenStackMachineStatus struct {
 	// Ready is true when the provider resource is ready.
-	// +optional
+	// +kubebuilder:default:=false
+	// +kubebuilder:validation:Required
 	Ready bool `json:"ready"`
 
 	// Addresses contains the OpenStack instance associated addresses.
+	// +optional
 	Addresses []corev1.NodeAddress `json:"addresses,omitempty"`
 
 	// InstanceState is the state of the OpenStack instance for this machine.
@@ -115,7 +129,8 @@ type OpenStackMachineStatus struct {
 	InstanceState *InstanceState `json:"instanceState,omitempty"`
 
 	// ReferencedResources contains resolved references to resources that the machine depends on.
-	ReferencedResources ReferencedMachineResources `json:"referencedResources,omitempty"`
+	// +optional
+	ReferencedResources *ReferencedMachineResources `json:"referencedResources,omitempty"`
 
 	// DependentResources contains resolved dependent resources that were created by the machine.
 	DependentResources DependentMachineResources `json:"dependentResources,omitempty"`

@@ -333,8 +333,16 @@ func restorev1beta1Port(previous *infrav1.PortOpts, dst *infrav1.PortOpts) {
 }
 
 func restorev1beta1Bastion(previous **infrav1.Bastion, dst **infrav1.Bastion) {
-	if *previous != nil && *dst != nil {
-		restorev1beta1MachineSpec(&(*previous).Instance, &(*dst).Instance)
+	if *previous == nil && *dst == nil {
+		return
+	}
+
+	restorev1beta1MachineSpec(&(*previous).Instance, &(*dst).Instance)
+	if (*dst).AvailabilityZone == nil || *(*dst).AvailabilityZone == "" {
+		(*dst).AvailabilityZone = (*previous).AvailabilityZone
+	}
+	if (*dst).FloatingIP == nil || *(*dst).FloatingIP == "" {
+		(*dst).FloatingIP = (*previous).FloatingIP
 	}
 }
 
@@ -382,13 +390,19 @@ func restorev1beta1ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infr
 	}
 
 	// Restore all fields except ID, which should have been copied over in conversion
-	dst.ExternalNetwork.Name = previous.ExternalNetwork.Name
-	dst.ExternalNetwork.Description = previous.ExternalNetwork.Description
-	dst.ExternalNetwork.ProjectID = previous.ExternalNetwork.ProjectID
-	dst.ExternalNetwork.Tags = previous.ExternalNetwork.Tags
-	dst.ExternalNetwork.TagsAny = previous.ExternalNetwork.TagsAny
-	dst.ExternalNetwork.NotTags = previous.ExternalNetwork.NotTags
-	dst.ExternalNetwork.NotTagsAny = previous.ExternalNetwork.NotTagsAny
+	if previous.ExternalNetwork != nil {
+		if dst.ExternalNetwork == nil {
+			dst.ExternalNetwork = &infrav1.NetworkFilter{}
+		}
+
+		dst.ExternalNetwork.Name = previous.ExternalNetwork.Name
+		dst.ExternalNetwork.Description = previous.ExternalNetwork.Description
+		dst.ExternalNetwork.ProjectID = previous.ExternalNetwork.ProjectID
+		dst.ExternalNetwork.Tags = previous.ExternalNetwork.Tags
+		dst.ExternalNetwork.TagsAny = previous.ExternalNetwork.TagsAny
+		dst.ExternalNetwork.NotTags = previous.ExternalNetwork.NotTags
+		dst.ExternalNetwork.NotTagsAny = previous.ExternalNetwork.NotTagsAny
+	}
 
 	dst.DisableExternalNetwork = previous.DisableExternalNetwork
 
@@ -400,6 +414,21 @@ func restorev1beta1ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infr
 
 	if previous.ManagedSecurityGroups != nil {
 		dst.ManagedSecurityGroups.AllNodesSecurityGroupRules = previous.ManagedSecurityGroups.AllNodesSecurityGroupRules
+	}
+
+	if previous.APIServerLoadBalancer == nil || previous.APIServerLoadBalancer.IsZero() {
+		dst.APIServerLoadBalancer = previous.APIServerLoadBalancer
+	}
+
+	if dst.APIServerFloatingIP == nil || *dst.APIServerFloatingIP == "" {
+		dst.APIServerFloatingIP = previous.APIServerFloatingIP
+	}
+	if dst.APIServerFixedIP == nil || *dst.APIServerFixedIP == "" {
+		dst.APIServerFixedIP = previous.APIServerFixedIP
+	}
+
+	if previous.APIServerPort != nil && *previous.APIServerPort == 0 {
+		dst.APIServerPort = pointer.Int(0)
 	}
 }
 
@@ -513,7 +542,7 @@ var v1beta1OpenStackMachineRestorer = conversion.RestorerFor[*infrav1.OpenStackM
 
 	// No equivalent in v1alpha7
 	"refresources": conversion.UnconditionalFieldRestorer(
-		func(c *infrav1.OpenStackMachine) *infrav1.ReferencedMachineResources {
+		func(c *infrav1.OpenStackMachine) **infrav1.ReferencedMachineResources {
 			return &c.Status.ReferencedResources
 		},
 	),
@@ -617,12 +646,12 @@ func Convert_v1beta1_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in *i
 		out.ServerGroupID = in.ServerGroup.ID
 	}
 
-	if in.Image.Name != "" {
-		out.Image = in.Image.Name
+	if in.Image.Name != nil {
+		out.Image = *in.Image.Name
 	}
 
-	if in.Image.ID != "" {
-		out.ImageUUID = in.Image.ID
+	if in.Image.ID != nil {
+		out.ImageUUID = *in.Image.ID
 	}
 
 	if len(in.ServerMetadata) > 0 {
@@ -656,10 +685,10 @@ func Convert_v1alpha7_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in *O
 
 	imageFilter := infrav1.ImageFilter{}
 	if in.Image != "" {
-		imageFilter.Name = in.Image
+		imageFilter.Name = pointer.String(in.Image)
 	}
 	if in.ImageUUID != "" {
-		imageFilter.ID = in.ImageUUID
+		imageFilter.ID = pointer.String(in.ImageUUID)
 	}
 	out.Image = imageFilter
 
@@ -712,7 +741,9 @@ func Convert_v1alpha7_Bastion_To_v1beta1_Bastion(in *Bastion, out *infrav1.Basti
 		out.Instance.ServerGroup = nil
 	}
 
-	out.FloatingIP = in.Instance.FloatingIP
+	if in.Instance.FloatingIP != "" {
+		out.FloatingIP = pointer.String(in.Instance.FloatingIP)
+	}
 	return nil
 }
 
@@ -726,7 +757,9 @@ func Convert_v1beta1_Bastion_To_v1alpha7_Bastion(in *infrav1.Bastion, out *Basti
 		out.Instance.ServerGroupID = in.Instance.ServerGroup.ID
 	}
 
-	out.Instance.FloatingIP = in.FloatingIP
+	if in.FloatingIP != nil {
+		out.Instance.FloatingIP = *in.FloatingIP
+	}
 	return nil
 }
 
@@ -736,8 +769,15 @@ func Convert_v1alpha7_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 		return err
 	}
 
+	if in.Network != (NetworkFilter{}) {
+		out.Network = &infrav1.NetworkFilter{}
+		if err := Convert_v1alpha7_NetworkFilter_To_v1beta1_NetworkFilter(&in.Network, out.Network, s); err != nil {
+			return err
+		}
+	}
+
 	if in.ExternalNetworkID != "" {
-		out.ExternalNetwork = infrav1.NetworkFilter{
+		out.ExternalNetwork = &infrav1.NetworkFilter{
 			ID: in.ExternalNetworkID,
 		}
 	}
@@ -770,9 +810,29 @@ func Convert_v1alpha7_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 		}
 	}
 
+	apiServerLoadBalancer := &infrav1.APIServerLoadBalancer{}
+	if err := Convert_v1alpha7_APIServerLoadBalancer_To_v1beta1_APIServerLoadBalancer(&in.APIServerLoadBalancer, apiServerLoadBalancer, s); err != nil {
+		return err
+	}
+	if !apiServerLoadBalancer.IsZero() {
+		out.APIServerLoadBalancer = apiServerLoadBalancer
+	}
+
 	out.IdentityRef.CloudName = in.CloudName
 	if in.IdentityRef != nil {
 		out.IdentityRef.Name = in.IdentityRef.Name
+	}
+
+	// The generated conversion function converts "" to &"" which is not what we want
+	if in.APIServerFloatingIP == "" {
+		out.APIServerFloatingIP = nil
+	}
+	if in.APIServerFixedIP == "" {
+		out.APIServerFixedIP = nil
+	}
+
+	if in.APIServerPort != 0 {
+		out.APIServerPort = pointer.Int(in.APIServerPort)
 	}
 
 	return nil
@@ -784,7 +844,13 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in *i
 		return err
 	}
 
-	if in.ExternalNetwork.ID != "" {
+	if in.Network != nil {
+		if err := Convert_v1beta1_NetworkFilter_To_v1alpha7_NetworkFilter(in.Network, &out.Network, s); err != nil {
+			return err
+		}
+	}
+
+	if in.ExternalNetwork != nil && in.ExternalNetwork.ID != "" {
 		out.ExternalNetworkID = in.ExternalNetwork.ID
 	}
 
@@ -804,8 +870,18 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in *i
 		out.AllowAllInClusterTraffic = in.ManagedSecurityGroups.AllowAllInClusterTraffic
 	}
 
+	if in.APIServerLoadBalancer != nil {
+		if err := Convert_v1beta1_APIServerLoadBalancer_To_v1alpha7_APIServerLoadBalancer(in.APIServerLoadBalancer, &out.APIServerLoadBalancer, s); err != nil {
+			return err
+		}
+	}
+
 	out.CloudName = in.IdentityRef.CloudName
 	out.IdentityRef = &OpenStackIdentityReference{Name: in.IdentityRef.Name}
+
+	if in.APIServerPort != nil {
+		out.APIServerPort = *in.APIServerPort
+	}
 
 	return nil
 }

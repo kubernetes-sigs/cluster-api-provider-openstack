@@ -31,6 +31,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/pools"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/providers"
 	. "github.com/onsi/gomega"
+	"k8s.io/utils/pointer"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -45,18 +46,21 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	// Stub the call to net.LookupHost
-	lookupHost = func(host string) (addrs string, err error) {
+	lookupHost = func(host string) (addrs *string, err error) {
 		if net.ParseIP(host) != nil {
-			return host, nil
+			return &host, nil
 		} else if host == apiHostname {
 			ips := []string{"192.168.100.10"}
-			return ips[0], nil
+			return &ips[0], nil
 		}
-		return "", errors.New("Unknown Host " + host)
+		return nil, errors.New("Unknown Host " + host)
 	}
 
 	openStackCluster := &infrav1.OpenStackCluster{
 		Spec: infrav1.OpenStackClusterSpec{
+			APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
+				Enabled: true,
+			},
 			DisableAPIServerFloatingIP: true,
 			ControlPlaneEndpoint: clusterv1.APIEndpoint{
 				Host: apiHostname,
@@ -159,14 +163,14 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 
 func Test_getAPIServerVIPAddress(t *testing.T) {
 	// Stub the call to net.LookupHost
-	lookupHost = func(host string) (addrs string, err error) {
+	lookupHost = func(host string) (addrs *string, err error) {
 		if net.ParseIP(host) != nil {
-			return host, nil
+			return &host, nil
 		} else if host == apiHostname {
 			ips := []string{"192.168.100.10"}
-			return ips[0], nil
+			return &ips[0], nil
 		}
-		return "", errors.New("Unknown Host " + host)
+		return nil, errors.New("Unknown Host " + host)
 	}
 	tests := []struct {
 		name             string
@@ -196,7 +200,7 @@ func Test_getAPIServerVIPAddress(t *testing.T) {
 			name: "API server VIP is API Server Fixed IP",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerFixedIP: "1.2.3.4",
+					APIServerFixedIP: pointer.String("1.2.3.4"),
 				},
 			},
 			want:      "1.2.3.4",
@@ -247,14 +251,14 @@ func Test_getAPIServerVIPAddress(t *testing.T) {
 
 func Test_getAPIServerFloatingIP(t *testing.T) {
 	// Stub the call to net.LookupHost
-	lookupHost = func(host string) (addrs string, err error) {
+	lookupHost = func(host string) (addrs *string, err error) {
 		if net.ParseIP(host) != nil {
-			return host, nil
+			return &host, nil
 		} else if host == apiHostname {
 			ips := []string{"192.168.100.10"}
-			return ips[0], nil
+			return &ips[0], nil
 		}
-		return "", errors.New("Unknown Host " + host)
+		return nil, errors.New("Unknown Host " + host)
 	}
 	tests := []struct {
 		name             string
@@ -284,7 +288,7 @@ func Test_getAPIServerFloatingIP(t *testing.T) {
 			name: "API server FIP is API Server Floating IP",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerFloatingIP: "1.2.3.4",
+					APIServerFloatingIP: pointer.String("1.2.3.4"),
 				},
 			},
 			want:      "1.2.3.4",
@@ -346,7 +350,7 @@ func Test_getCanonicalAllowedCIDRs(t *testing.T) {
 			name: "allowed CIDRs are set",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerLoadBalancer: infrav1.APIServerLoadBalancer{
+					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
 						AllowedCIDRs: []string{"1.2.3.4/32"},
 					},
 				},
@@ -357,7 +361,7 @@ func Test_getCanonicalAllowedCIDRs(t *testing.T) {
 			name: "allowed CIDRs are set with bastion",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerLoadBalancer: infrav1.APIServerLoadBalancer{
+					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
 						AllowedCIDRs: []string{"1.2.3.4/32"},
 					},
 				},
@@ -374,7 +378,7 @@ func Test_getCanonicalAllowedCIDRs(t *testing.T) {
 			name: "allowed CIDRs are set with network status",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerLoadBalancer: infrav1.APIServerLoadBalancer{
+					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
 						AllowedCIDRs: []string{"1.2.3.4/32"},
 					},
 				},
@@ -394,7 +398,7 @@ func Test_getCanonicalAllowedCIDRs(t *testing.T) {
 			name: "allowed CIDRs are set with network status and router IP",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerLoadBalancer: infrav1.APIServerLoadBalancer{
+					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
 						AllowedCIDRs: []string{"1.2.3.4/32"},
 					},
 				},

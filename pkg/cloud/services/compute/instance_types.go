@@ -40,7 +40,7 @@ type InstanceSpec struct {
 	UserData               string
 	Metadata               map[string]string
 	ConfigDrive            bool
-	FailureDomain          string
+	FailureDomain          *string
 	RootVolume             *infrav1.RootVolume
 	AdditionalBlockDevices []infrav1.AdditionalBlockDevice
 	ServerGroupID          string

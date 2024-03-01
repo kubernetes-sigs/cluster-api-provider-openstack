@@ -27,18 +27,25 @@ type OpenStackMachineTemplateResource struct {
 }
 
 type ImageFilter struct {
-	// The ID of the desired image. If this is provided, the other filters will be ignored.
-	ID string `json:"id,omitempty"`
-	// The name of the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
-	Name string `json:"name,omitempty"`
-	// The tags associated with the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
+	// ID is the ID of a glance image. If this is provided, the other filters will be ignored.
+	// +optional
+	ID optional.String `json:"id,omitempty"`
+
+	// Name is the name of a glance image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
+	// +optional
+	Name optional.String `json:"name,omitempty"`
+
+	// Tags is a list of tags associated with a glance image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
+	// +optional
 	Tags []string `json:"tags,omitempty"`
 }
 
 type ExternalRouterIPParam struct {
 	// The FixedIP in the corresponding subnet
-	FixedIP string `json:"fixedIP,omitempty"`
+	// +kube:validation:Required
+	FixedIP string `json:"fixedIP"`
 	// The subnet in which the FixedIP is used for the Gateway of this router
+	// +kube:validation:Required
 	Subnet SubnetFilter `json:"subnet"`
 }
 
@@ -119,11 +126,12 @@ type RouterFilter struct {
 type SubnetSpec struct {
 	// CIDR is representing the IP address range used to create the subnet, e.g. 10.0.0.0/24.
 	// This field is required when defining a subnet.
-	// +required
+	// +kubebuilder:validation:Required
 	CIDR string `json:"cidr"`
 
 	// DNSNameservers holds a list of DNS server addresses that will be provided when creating
 	// the subnet. These addresses need to have the same IP version as CIDR.
+	// +optional
 	DNSNameservers []string `json:"dnsNameservers,omitempty"`
 
 	// AllocationPools is an array of AllocationPool objects that will be applied to OpenStack Subnet being created.
@@ -370,7 +378,7 @@ type NetworkStatus struct {
 	Name string `json:"name"`
 	ID   string `json:"id"`
 
-	//+optional
+	// +optional
 	Tags []string `json:"tags,omitempty"`
 }
 
@@ -379,6 +387,7 @@ type NetworkStatusWithSubnets struct {
 	NetworkStatus `json:",inline"`
 
 	// Subnets is a list of subnets associated with the default cluster network. Machines which use the default cluster network will get an address from all of these subnets.
+	// +optional
 	Subnets []Subnet `json:"subnets,omitempty"`
 }
 
@@ -389,7 +398,7 @@ type Subnet struct {
 
 	CIDR string `json:"cidr"`
 
-	//+optional
+	// +optional
 	Tags []string `json:"tags,omitempty"`
 }
 
@@ -397,9 +406,9 @@ type Subnet struct {
 type Router struct {
 	Name string `json:"name"`
 	ID   string `json:"id"`
-	//+optional
+	// +optional
 	Tags []string `json:"tags,omitempty"`
-	//+optional
+	// +optional
 	IPs []string `json:"ips,omitempty"`
 }
 
@@ -409,9 +418,9 @@ type LoadBalancer struct {
 	ID         string `json:"id"`
 	IP         string `json:"ip"`
 	InternalIP string `json:"internalIP"`
-	//+optional
+	// +optional
 	AllowedCIDRs []string `json:"allowedCIDRs,omitempty"`
-	//+optional
+	// +optional
 	Tags []string `json:"tags,omitempty"`
 }
 
@@ -575,50 +584,60 @@ var (
 
 // Bastion represents basic information about the bastion node.
 type Bastion struct {
-	//+optional
+	// +kubebuilder:default=true
 	Enabled bool `json:"enabled"`
 
 	// Instance for the bastion itself
-	Instance OpenStackMachineSpec `json:"instance,omitempty"`
+	// +kubebuilder:validation:Required
+	Instance OpenStackMachineSpec `json:"instance"`
 
-	//+optional
-	AvailabilityZone string `json:"availabilityZone,omitempty"`
+	// +optional
+	AvailabilityZone *string `json:"availabilityZone,omitempty"`
 
 	// FloatingIP which will be associated to the bastion machine.
 	// The floating IP should already exist and should not be associated with a port.
-	//+optional
-	FloatingIP string `json:"floatingIP,omitempty"`
+	// +optional
+	FloatingIP *string `json:"floatingIP,omitempty"`
 }
 
 type APIServerLoadBalancer struct {
 	// Enabled defines whether a load balancer should be created.
 	Enabled bool `json:"enabled,omitempty"`
 	// AdditionalPorts adds additional tcp ports to the load balancer.
+	// +optional
 	AdditionalPorts []int `json:"additionalPorts,omitempty"`
 	// AllowedCIDRs restrict access to all API-Server listeners to the given address CIDRs.
+	// +optional
 	AllowedCIDRs []string `json:"allowedCidrs,omitempty"`
 	// Octavia Provider Used to create load balancer
 	Provider string `json:"provider,omitempty"`
+}
+
+func (s *APIServerLoadBalancer) IsZero() bool {
+	// N.B. We deliberately do nil checks rather than length checks on the slices so we preserve explicitly empty lists.
+	return !s.Enabled && s.AdditionalPorts == nil && s.AllowedCIDRs == nil && s.Provider == ""
 }
 
 // ReferencedMachineResources contains resolved references to resources required by the machine.
 type ReferencedMachineResources struct {
 	// ServerGroupID is the ID of the server group the machine should be added to and is calculated based on ServerGroupFilter.
 	// +optional
-	ServerGroupID string `json:"serverGroupID,omitempty"`
+	ServerGroupID *string `json:"serverGroupID,omitempty"`
 
 	// ImageID is the ID of the image to use for the machine and is calculated based on ImageFilter.
-	// +optional
-	ImageID string `json:"imageID,omitempty"`
+	// +kubebuilder:validation:Required
+	ImageID string `json:"imageID"`
 
 	// portsOpts is the list of ports options to create for the machine.
 	// +optional
+	// +listType=set
 	PortsOpts []PortOpts `json:"portsOpts,omitempty"`
 }
 
 type DependentMachineResources struct {
 	// PortsStatus is the status of the ports created for the machine.
 	// +optional
+	// +listType=set
 	PortsStatus []PortStatus `json:"portsStatus,omitempty"`
 }
 
