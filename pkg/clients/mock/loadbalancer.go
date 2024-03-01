@@ -24,12 +24,12 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	apiversions "github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/apiversions"
-	listeners "github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/listeners"
-	loadbalancers "github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/loadbalancers"
-	monitors "github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/monitors"
-	pools "github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/pools"
-	providers "github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/providers"
+	apiversions "github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/apiversions"
+	listeners "github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/listeners"
+	loadbalancers "github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/loadbalancers"
+	monitors "github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/monitors"
+	pools "github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/pools"
+	providers "github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/providers"
 )
 
 // MockLbClient is a mock of LbClient interface.

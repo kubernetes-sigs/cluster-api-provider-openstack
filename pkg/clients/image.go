@@ -17,12 +17,13 @@ limitations under the License.
 package clients
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack"
-	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
-	"github.com/gophercloud/utils/openstack/clientconfig"
+	"github.com/gophercloud/gophercloud/v2"
+	"github.com/gophercloud/gophercloud/v2/openstack"
+	"github.com/gophercloud/gophercloud/v2/openstack/imageservice/v2/images"
+	"github.com/gophercloud/utils/v2/openstack/clientconfig"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
 )
@@ -48,7 +49,7 @@ func NewImageClient(providerClient *gophercloud.ProviderClient, providerClientOp
 
 func (c imageClient) ListImages(listOpts images.ListOptsBuilder) ([]images.Image, error) {
 	mc := metrics.NewMetricPrometheusContext("image", "list")
-	pages, err := images.List(c.client, listOpts).AllPages()
+	pages, err := images.List(c.client, listOpts).AllPages(context.TODO())
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}

@@ -22,9 +22,9 @@ import (
 	"github.com/go-logr/logr/testr"
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/servergroups"
-	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/extensions/servergroups"
+	"github.com/gophercloud/gophercloud/v2/openstack/imageservice/v2/images"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions"
 	. "github.com/onsi/gomega"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"

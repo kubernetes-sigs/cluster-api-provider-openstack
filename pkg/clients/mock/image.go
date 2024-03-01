@@ -24,7 +24,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	images "github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
+	images "github.com/gophercloud/gophercloud/v2/openstack/imageservice/v2/images"
 )
 
 // MockImageClient is a mock of ImageClient interface.

@@ -25,11 +25,11 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack"
-	"github.com/gophercloud/gophercloud/openstack/identity/v3/tokens"
-	osclient "github.com/gophercloud/utils/client"
-	"github.com/gophercloud/utils/openstack/clientconfig"
+	"github.com/gophercloud/gophercloud/v2"
+	"github.com/gophercloud/gophercloud/v2/openstack"
+	"github.com/gophercloud/gophercloud/v2/openstack/identity/v3/tokens"
+	osclient "github.com/gophercloud/utils/v2/client"
+	"github.com/gophercloud/utils/v2/openstack/clientconfig"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/cache"
@@ -213,7 +213,7 @@ func (s *providerScope) ExtractToken() (*tokens.Token, error) {
 	if err != nil {
 		return nil, fmt.Errorf("create new identity service client: %w", err)
 	}
-	return tokens.Get(client, s.providerClient.Token()).ExtractToken()
+	return tokens.Get(context.TODO(), client, s.providerClient.Token()).ExtractToken()
 }
 
 func NewProviderClient(cloud clientconfig.Cloud, caCert []byte, logger logr.Logger) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, string, error) {
@@ -268,7 +268,7 @@ func NewProviderClient(cloud clientconfig.Cloud, caCert []byte, logger logr.Logg
 			Logger: &gophercloudLogger{logger},
 		}
 	}
-	err = openstack.Authenticate(provider, *opts)
+	err = openstack.Authenticate(context.TODO(), provider, *opts)
 	if err != nil {
 		return nil, nil, "", fmt.Errorf("providerClient authentication err: %v", err)
 	}

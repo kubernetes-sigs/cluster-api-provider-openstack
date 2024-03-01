@@ -23,13 +23,13 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/bootfromvolume"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/schedulerhints"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
+	"github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v3/volumes"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/extensions/bootfromvolume"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/extensions/keypairs"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/extensions/schedulerhints"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/flavors"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/ports"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 
@@ -218,7 +218,6 @@ func (s *Service) getOrCreateVolumeBuilder(eventObject runtime.Object, instanceS
 		Description:      description,
 		Size:             blockDevice.SizeGiB,
 		ImageID:          imageID,
-		Multiattach:      false,
 		AvailabilityZone: availabilityZone,
 		VolumeType:       volumeType,
 	}

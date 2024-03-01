@@ -17,17 +17,18 @@ limitations under the License.
 package clients
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/availabilityzones"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/servergroups"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
-	"github.com/gophercloud/utils/openstack/clientconfig"
-	uflavors "github.com/gophercloud/utils/openstack/compute/v2/flavors"
+	"github.com/gophercloud/gophercloud/v2"
+	"github.com/gophercloud/gophercloud/v2/openstack"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/extensions/attachinterfaces"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/extensions/availabilityzones"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/extensions/servergroups"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/flavors"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
+	"github.com/gophercloud/utils/v2/openstack/clientconfig"
+	uflavors "github.com/gophercloud/utils/v2/openstack/compute/v2/flavors"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
 )
@@ -83,7 +84,7 @@ func NewComputeClient(providerClient *gophercloud.ProviderClient, providerClient
 
 func (c computeClient) ListAvailabilityZones() ([]availabilityzones.AvailabilityZone, error) {
 	mc := metrics.NewMetricPrometheusContext("availability_zone", "list")
-	allPages, err := availabilityzones.List(c.client).AllPages()
+	allPages, err := availabilityzones.List(c.client).AllPages(context.TODO())
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
@@ -92,18 +93,18 @@ func (c computeClient) ListAvailabilityZones() ([]availabilityzones.Availability
 
 func (c computeClient) GetFlavorFromName(flavor string) (*flavors.Flavor, error) {
 	mc := metrics.NewMetricPrometheusContext("flavor", "get")
-	flavorID, err := uflavors.IDFromName(c.client, flavor)
+	flavorID, err := uflavors.IDFromName(context.TODO(), c.client, flavor)
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
-	f, err := flavors.Get(c.client, flavorID).Extract()
+	f, err := flavors.Get(context.TODO(), c.client, flavorID).Extract()
 	return f, mc.ObserveRequest(err)
 }
 
 func (c computeClient) CreateServer(createOpts servers.CreateOptsBuilder) (*ServerExt, error) {
 	var server ServerExt
 	mc := metrics.NewMetricPrometheusContext("server", "create")
-	err := servers.Create(c.client, createOpts).ExtractInto(&server)
+	err := servers.Create(context.TODO(), c.client, createOpts).ExtractInto(&server)
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
@@ -112,14 +113,14 @@ func (c computeClient) CreateServer(createOpts servers.CreateOptsBuilder) (*Serv
 
 func (c computeClient) DeleteServer(serverID string) error {
 	mc := metrics.NewMetricPrometheusContext("server", "delete")
-	err := servers.Delete(c.client, serverID).ExtractErr()
+	err := servers.Delete(context.TODO(), c.client, serverID).ExtractErr()
 	return mc.ObserveRequestIgnoreNotFound(err)
 }
 
 func (c computeClient) GetServer(serverID string) (*ServerExt, error) {
 	var server ServerExt
 	mc := metrics.NewMetricPrometheusContext("server", "get")
-	err := servers.Get(c.client, serverID).ExtractInto(&server)
+	err := servers.Get(context.TODO(), c.client, serverID).ExtractInto(&server)
 	if mc.ObserveRequestIgnoreNotFound(err) != nil {
 		return nil, err
 	}
@@ -129,7 +130,7 @@ func (c computeClient) GetServer(serverID string) (*ServerExt, error) {
 func (c computeClient) ListServers(listOpts servers.ListOptsBuilder) ([]ServerExt, error) {
 	var serverList []ServerExt
 	mc := metrics.NewMetricPrometheusContext("server", "list")
-	allPages, err := servers.List(c.client, listOpts).AllPages()
+	allPages, err := servers.List(c.client, listOpts).AllPages(context.TODO())
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
@@ -139,7 +140,7 @@ func (c computeClient) ListServers(listOpts servers.ListOptsBuilder) ([]ServerEx
 
 func (c computeClient) ListAttachedInterfaces(serverID string) ([]attachinterfaces.Interface, error) {
 	mc := metrics.NewMetricPrometheusContext("server_os_interface", "list")
-	interfaces, err := attachinterfaces.List(c.client, serverID).AllPages()
+	interfaces, err := attachinterfaces.List(c.client, serverID).AllPages(context.TODO())
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
@@ -148,14 +149,14 @@ func (c computeClient) ListAttachedInterfaces(serverID string) ([]attachinterfac
 
 func (c computeClient) DeleteAttachedInterface(serverID, portID string) error {
 	mc := metrics.NewMetricPrometheusContext("server_os_interface", "delete")
-	err := attachinterfaces.Delete(c.client, serverID, portID).ExtractErr()
+	err := attachinterfaces.Delete(context.TODO(), c.client, serverID, portID).ExtractErr()
 	return mc.ObserveRequestIgnoreNotFoundorConflict(err)
 }
 
 func (c computeClient) ListServerGroups() ([]servergroups.ServerGroup, error) {
 	mc := metrics.NewMetricPrometheusContext("server_group", "list")
 	opts := servergroups.ListOpts{}
-	allPages, err := servergroups.List(c.client, opts).AllPages()
+	allPages, err := servergroups.List(c.client, opts).AllPages(context.TODO())
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}

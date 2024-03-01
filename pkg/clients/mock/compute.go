@@ -24,11 +24,11 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	attachinterfaces "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
-	availabilityzones "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/availabilityzones"
-	servergroups "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/servergroups"
-	flavors "github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
-	servers "github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
+	attachinterfaces "github.com/gophercloud/gophercloud/v2/openstack/compute/v2/extensions/attachinterfaces"
+	availabilityzones "github.com/gophercloud/gophercloud/v2/openstack/compute/v2/extensions/availabilityzones"
+	servergroups "github.com/gophercloud/gophercloud/v2/openstack/compute/v2/extensions/servergroups"
+	flavors "github.com/gophercloud/gophercloud/v2/openstack/compute/v2/flavors"
+	servers "github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
 	clients "sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 )
 
