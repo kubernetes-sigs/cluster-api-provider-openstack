@@ -31,23 +31,23 @@ import (
 	"strings"
 
 	"github.com/go-logr/logr"
-	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack"
-	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/availabilityzones"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
-	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/rules"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/trunks"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
-	"github.com/gophercloud/utils/openstack/clientconfig"
-	uflavors "github.com/gophercloud/utils/openstack/compute/v2/flavors"
+	"github.com/gophercloud/gophercloud/v2"
+	"github.com/gophercloud/gophercloud/v2/openstack"
+	"github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v3/volumes"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/extensions/availabilityzones"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/extensions/keypairs"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/flavors"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
+	"github.com/gophercloud/gophercloud/v2/openstack/imageservice/v2/images"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/routers"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/groups"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/rules"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/trunks"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/ports"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
+	"github.com/gophercloud/utils/v2/openstack/clientconfig"
+	uflavors "github.com/gophercloud/utils/v2/openstack/compute/v2/flavors"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"gopkg.in/ini.v1"
@@ -78,7 +78,7 @@ func ensureSSHKeyPair(e2eCtx *E2EContext) {
 	keyPairCreateOpts := &keypairs.CreateOpts{
 		Name: DefaultSSHKeyPairName,
 	}
-	keypair, err := keypairs.Create(computeClient, keyPairCreateOpts).Extract()
+	keypair, err := keypairs.Create(context.TODO(), computeClient, keyPairCreateOpts).Extract()
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			return
@@ -165,7 +165,7 @@ func dumpOpenStackImages(providerClient *gophercloud.ProviderClient, clientOpts 
 		return fmt.Errorf("error creating compute client: %s", err)
 	}
 
-	allPages, err := images.List(imageClient, images.ListOpts{}).AllPages()
+	allPages, err := images.List(imageClient, images.ListOpts{}).AllPages(context.TODO())
 	if err != nil {
 		return fmt.Errorf("error getting images: %s", err)
 	}
@@ -260,7 +260,7 @@ func DumpOpenStackServers(e2eCtx *E2EContext, filter servers.ListOpts) ([]server
 	}
 
 	computeClient.Microversion = clients.NovaMinimumMicroversion
-	allPages, err := servers.List(computeClient, filter).AllPages()
+	allPages, err := servers.List(computeClient, filter).AllPages(context.TODO())
 	if err != nil {
 		return nil, fmt.Errorf("error listing servers: %v", err)
 	}
@@ -287,7 +287,7 @@ func DumpOpenStackNetworks(e2eCtx *E2EContext, filter networks.ListOpts) ([]netw
 		return nil, fmt.Errorf("error creating network client: %s", err)
 	}
 
-	allPages, err := networks.List(networkClient, filter).AllPages()
+	allPages, err := networks.List(networkClient, filter).AllPages(context.TODO())
 	if err != nil {
 		return nil, fmt.Errorf("error listing networks: %s", err)
 	}
@@ -312,7 +312,7 @@ func DumpOpenStackSubnets(e2eCtx *E2EContext, filter subnets.ListOpts) ([]subnet
 		return nil, fmt.Errorf("error creating network client: %s", err)
 	}
 
-	allPages, err := subnets.List(networkClient, filter).AllPages()
+	allPages, err := subnets.List(networkClient, filter).AllPages(context.TODO())
 	if err != nil {
 		return nil, fmt.Errorf("error listing subnets: %s", err)
 	}
@@ -337,7 +337,7 @@ func DumpOpenStackRouters(e2eCtx *E2EContext, filter routers.ListOpts) ([]router
 		return nil, fmt.Errorf("error creating network client: %s", err)
 	}
 
-	allPages, err := routers.List(networkClient, filter).AllPages()
+	allPages, err := routers.List(networkClient, filter).AllPages(context.TODO())
 	if err != nil {
 		return nil, fmt.Errorf("error listing routers: %s", err)
 	}
@@ -362,7 +362,7 @@ func DumpOpenStackSecurityGroups(e2eCtx *E2EContext, filter groups.ListOpts) ([]
 		return nil, fmt.Errorf("error creating network client: %s", err)
 	}
 
-	allPages, err := groups.List(networkClient, filter).AllPages()
+	allPages, err := groups.List(networkClient, filter).AllPages(context.TODO())
 	if err != nil {
 		return nil, fmt.Errorf("error listing security groups: %s", err)
 	}
@@ -390,7 +390,7 @@ func DumpCalicoSecurityGroupRules(e2eCtx *E2EContext, openStackCluster *infrav1.
 	}
 
 	controlPlaneSGID := openStackCluster.Status.ControlPlaneSecurityGroup.ID
-	controlPlaneSGRules, err := rules.List(networkClient, rules.ListOpts{SecGroupID: controlPlaneSGID}).AllPages()
+	controlPlaneSGRules, err := rules.List(networkClient, rules.ListOpts{SecGroupID: controlPlaneSGID}).AllPages(context.TODO())
 	if err != nil {
 		return 0, fmt.Errorf("error listing control plane security group rules: %s", err)
 	}
@@ -400,7 +400,7 @@ func DumpCalicoSecurityGroupRules(e2eCtx *E2EContext, openStackCluster *infrav1.
 	}
 
 	workerSGID := openStackCluster.Status.WorkerSecurityGroup.ID
-	workerSGRules, err := rules.List(networkClient, rules.ListOpts{SecGroupID: workerSGID}).AllPages()
+	workerSGRules, err := rules.List(networkClient, rules.ListOpts{SecGroupID: workerSGID}).AllPages(context.TODO())
 	if err != nil {
 		return 0, fmt.Errorf("error listing worker security group rules: %s", err)
 	}
@@ -439,7 +439,7 @@ func DumpOpenStackVolumes(e2eCtx *E2EContext, filter volumes.ListOpts) ([]volume
 		return nil, fmt.Errorf("error creating block storage client: %s", err)
 	}
 
-	allPages, err := volumes.List(blockStorageClient, filter).AllPages()
+	allPages, err := volumes.List(blockStorageClient, filter).AllPages(context.TODO())
 	if err != nil {
 		return nil, fmt.Errorf("error listing volumes: %s", err)
 	}
@@ -464,7 +464,7 @@ func DumpOpenStackPorts(e2eCtx *E2EContext, filter ports.ListOpts) ([]ports.Port
 		return nil, fmt.Errorf("error creating network client: %s", err)
 	}
 
-	allPages, err := ports.List(networkClient, filter).AllPages()
+	allPages, err := ports.List(networkClient, filter).AllPages(context.TODO())
 	if err != nil {
 		return nil, fmt.Errorf("error getting ports: %s", err)
 	}
@@ -494,7 +494,7 @@ func CreateOpenStackSecurityGroup(e2eCtx *E2EContext, securityGroupName, descrip
 		Description: description,
 	}
 
-	_, err = groups.Create(networkClient, createOpts).Extract()
+	_, err = groups.Create(context.TODO(), networkClient, createOpts).Extract()
 	if err != nil {
 		return err
 	}
@@ -517,7 +517,7 @@ func DumpOpenStackTrunks(e2eCtx *E2EContext, portID string) (*trunks.Trunk, erro
 
 	allPages, err := trunks.List(networkClient, trunks.ListOpts{
 		PortID: portID,
-	}).AllPages()
+	}).AllPages(context.TODO())
 	if err != nil {
 		return nil, fmt.Errorf("error getting trunks: %s", err)
 	}
@@ -546,7 +546,7 @@ func GetOpenStackServers(e2eCtx *E2EContext, openStackCluster *infrav1.OpenStack
 	}
 
 	serverListOpts := &servers.ListOpts{}
-	allPages, err := servers.List(computeClient, serverListOpts).AllPages()
+	allPages, err := servers.List(computeClient, serverListOpts).AllPages(context.TODO())
 	if err != nil {
 		return nil, fmt.Errorf("error listing server: %v", err)
 	}
@@ -759,7 +759,7 @@ func GetComputeAvailabilityZones(e2eCtx *E2EContext) []string {
 	computeClient, err := openstack.NewComputeV2(providerClient, gophercloud.EndpointOpts{Region: clientOpts.RegionName})
 	Expect(err).NotTo(HaveOccurred())
 
-	allPages, err := availabilityzones.List(computeClient).AllPages()
+	allPages, err := availabilityzones.List(computeClient).AllPages(context.TODO())
 	Expect(err).NotTo(HaveOccurred())
 	availabilityZoneList, err := availabilityzones.ExtractAvailabilityZones(allPages)
 	Expect(err).NotTo(HaveOccurred())
@@ -792,7 +792,7 @@ func CreateOpenStackNetwork(e2eCtx *E2EContext, name, cidr string) (*networks.Ne
 		Name:         name,
 		AdminStateUp: gophercloud.Enabled,
 	}
-	net, err := networks.Create(networkClient, netCreateOpts).Extract()
+	net, err := networks.Create(context.TODO(), networkClient, netCreateOpts).Extract()
 	if err != nil {
 		return net, err
 	}
@@ -803,9 +803,9 @@ func CreateOpenStackNetwork(e2eCtx *E2EContext, name, cidr string) (*networks.Ne
 		IPVersion: 4,
 		CIDR:      cidr,
 	}
-	_, err = subnets.Create(networkClient, subnetCreateOpts).Extract()
+	_, err = subnets.Create(context.TODO(), networkClient, subnetCreateOpts).Extract()
 	if err != nil {
-		networks.Delete(networkClient, net.ID)
+		networks.Delete(context.TODO(), networkClient, net.ID)
 		return nil, err
 	}
 	return net, nil
@@ -825,7 +825,7 @@ func DeleteOpenStackNetwork(e2eCtx *E2EContext, id string) error {
 		return fmt.Errorf("error creating network client: %s", err)
 	}
 
-	return networks.Delete(networkClient, id).ExtractErr()
+	return networks.Delete(context.TODO(), networkClient, id).ExtractErr()
 }
 
 func GetOpenStackVolume(e2eCtx *E2EContext, name string) (*volumes.Volume, error) {
@@ -842,7 +842,7 @@ func GetOpenStackVolume(e2eCtx *E2EContext, name string) (*volumes.Volume, error
 		return nil, fmt.Errorf("error creating volume client: %s", err)
 	}
 
-	volume, err := volumes.Get(volumeClient, name).Extract()
+	volume, err := volumes.Get(context.TODO(), volumeClient, name).Extract()
 	if err != nil {
 		return volume, err
 	}
@@ -860,8 +860,8 @@ func GetFlavorFromName(e2eCtx *E2EContext, name string) (*flavors.Flavor, error)
 	computeClient, err := openstack.NewComputeV2(providerClient, gophercloud.EndpointOpts{Region: clientOpts.RegionName})
 	Expect(err).NotTo(HaveOccurred())
 
-	flavorID, err := uflavors.IDFromName(computeClient, name)
+	flavorID, err := uflavors.IDFromName(context.TODO(), computeClient, name)
 	Expect(err).NotTo(HaveOccurred())
 
-	return flavors.Get(computeClient, flavorID).Extract()
+	return flavors.Get(context.TODO(), computeClient, flavorID).Extract()
 }

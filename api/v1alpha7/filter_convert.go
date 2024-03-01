@@ -17,10 +17,10 @@ limitations under the License.
 package v1alpha7
 
 import (
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
-	securitygroups "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/routers"
+	securitygroups "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/groups"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
 )
 
 func (securityGroupFilter SecurityGroupFilter) ToListOpt() securitygroups.ListOpts {

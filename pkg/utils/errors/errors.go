@@ -20,7 +20,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/v2"
 )
 
 func IsRetryable(err error) bool {
