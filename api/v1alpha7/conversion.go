@@ -487,6 +487,18 @@ func (r *OpenStackClusterTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) error 
 	)
 }
 
+var _ ctrlconversion.Convertible = &OpenStackClusterTemplateList{}
+
+func (r *OpenStackClusterTemplateList) ConvertTo(dstRaw ctrlconversion.Hub) error {
+	dst := dstRaw.(*infrav1.OpenStackClusterTemplateList)
+	return Convert_v1alpha7_OpenStackClusterTemplateList_To_v1beta1_OpenStackClusterTemplateList(r, dst, nil)
+}
+
+func (r *OpenStackClusterTemplateList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
+	src := srcRaw.(*infrav1.OpenStackClusterTemplateList)
+	return Convert_v1beta1_OpenStackClusterTemplateList_To_v1alpha7_OpenStackClusterTemplateList(src, r, nil)
+}
+
 var _ ctrlconversion.Convertible = &OpenStackMachine{}
 
 var v1alpha7OpenStackMachineRestorer = conversion.RestorerFor[*OpenStackMachine]{
