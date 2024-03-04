@@ -123,7 +123,7 @@ type OpenStackClusterSpec struct {
 	// It's possible to add additional rules to the managed security groups.
 	// When defined to an empty struct, the managed security groups will be created with the default rules.
 	// +optional
-	ManagedSecurityGroups *ManagedSecurityGroups `json:"managedSecurityGroups"`
+	ManagedSecurityGroups *ManagedSecurityGroups `json:"managedSecurityGroups,omitempty"`
 
 	// DisablePortSecurity disables the port security of the network created for the
 	// Kubernetes cluster, which also disables SecurityGroups
@@ -272,7 +272,7 @@ type ManagedSecurityGroups struct {
 	// +listType=map
 	// +listMapKey=name
 	// +optional
-	AllNodesSecurityGroupRules []SecurityGroupRuleSpec `json:"allNodesSecurityGroupRules" patchStrategy:"merge" patchMergeKey:"name"`
+	AllNodesSecurityGroupRules []SecurityGroupRuleSpec `json:"allNodesSecurityGroupRules,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
 
 	// AllowAllInClusterTraffic allows all ingress and egress traffic between cluster nodes when set to true.
 	// +kubebuilder:default=false

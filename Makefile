@@ -134,12 +134,13 @@ ifdef KUBEBUILDER_ASSETS_DIR
 endif
 
 .PHONY: test
+TEST_PATHS ?= ./...
 test: $(SETUP_ENVTEST) ## Run tests
 	set -xeuf -o pipefail; \
 	if [ -z "$(KUBEBUILDER_ASSETS)" ]; then \
 		KUBEBUILDER_ASSETS=`$(SETUP_ENVTEST) use --use-env -p path $(setup_envtest_extra_args) $(KUBEBUILDER_ENVTEST_KUBERNETES_VERSION)`; \
 	fi; \
-	KUBEBUILDER_ASSETS="$$KUBEBUILDER_ASSETS" go test -v ./... $(TEST_ARGS)
+	KUBEBUILDER_ASSETS="$$KUBEBUILDER_ASSETS" go test -v $(TEST_PATHS) $(TEST_ARGS)
 
 E2E_TEMPLATES_DIR=test/e2e/data/infrastructure-openstack
 E2E_KUSTOMIZE_DIR=test/e2e/data/kustomize
