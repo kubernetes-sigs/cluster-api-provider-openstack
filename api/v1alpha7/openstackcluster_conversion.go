@@ -205,6 +205,14 @@ func restorev1beta1ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infr
 			dst.APIServerLoadBalancer.Enabled = previous.APIServerLoadBalancer.Enabled
 		}
 		optional.RestoreString(&previous.APIServerLoadBalancer.Provider, &dst.APIServerLoadBalancer.Provider)
+
+		if previous.APIServerLoadBalancer.Network != nil {
+			dst.APIServerLoadBalancer.Network = previous.APIServerLoadBalancer.Network
+		}
+
+		if previous.APIServerLoadBalancer.Subnets != nil {
+			dst.APIServerLoadBalancer.Subnets = previous.APIServerLoadBalancer.Subnets
+		}
 	}
 	if dst.APIServerLoadBalancer.IsZero() {
 		dst.APIServerLoadBalancer = previous.APIServerLoadBalancer
@@ -289,6 +297,21 @@ func Convert_v1alpha7_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 	return nil
 }
 
+func Convert_v1beta1_LoadBalancer_To_v1alpha7_LoadBalancer(in *infrav1.LoadBalancer, out *LoadBalancer, s apiconversion.Scope) error {
+	return autoConvert_v1beta1_LoadBalancer_To_v1alpha7_LoadBalancer(in, out, s)
+}
+
+func Convert_v1beta1_APIServerLoadBalancer_To_v1alpha7_APIServerLoadBalancer(in *infrav1.APIServerLoadBalancer, out *APIServerLoadBalancer, s apiconversion.Scope) error {
+	return autoConvert_v1beta1_APIServerLoadBalancer_To_v1alpha7_APIServerLoadBalancer(in, out, s)
+}
+
+func Convert_v1alpha7_APIServerLoadBalancer_To_v1beta1_APIServerLoadBalancer(in *APIServerLoadBalancer, out *infrav1.APIServerLoadBalancer, s apiconversion.Scope) error {
+	err := autoConvert_v1alpha7_APIServerLoadBalancer_To_v1beta1_APIServerLoadBalancer(in, out, s)
+	out.Subnets = nil
+	out.Network = nil
+	return err
+}
+
 func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in *infrav1.OpenStackClusterSpec, out *OpenStackClusterSpec, s apiconversion.Scope) error {
 	err := autoConvert_v1beta1_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in, out, s)
 	if err != nil {
@@ -357,6 +380,10 @@ func restorev1beta1ClusterStatus(previous *infrav1.OpenStackClusterStatus, dst *
 
 	if previous.Bastion != nil && previous.Bastion.DependentResources.Ports != nil {
 		dst.Bastion.DependentResources.Ports = previous.Bastion.DependentResources.Ports
+	}
+
+	if previous.APIServerLoadBalancer != nil && previous.APIServerLoadBalancer.LoadBalancerNetwork != nil {
+		dst.APIServerLoadBalancer.LoadBalancerNetwork = previous.APIServerLoadBalancer.LoadBalancerNetwork
 	}
 }
 
