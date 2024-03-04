@@ -456,6 +456,8 @@ func autoConvert_v1beta1_APIServerLoadBalancer_To_v1alpha5_APIServerLoadBalancer
 	out.AdditionalPorts = *(*[]int)(unsafe.Pointer(&in.AdditionalPorts))
 	out.AllowedCIDRs = *(*[]string)(unsafe.Pointer(&in.AllowedCIDRs))
 	// WARNING: in.Provider requires manual conversion: does not exist in peer-type
+	// WARNING: in.Network requires manual conversion: does not exist in peer-type
+	// WARNING: in.Subnets requires manual conversion: does not exist in peer-type
 	return nil
 }
 
@@ -597,6 +599,7 @@ func autoConvert_v1beta1_LoadBalancer_To_v1alpha5_LoadBalancer(in *v1beta1.LoadB
 	out.InternalIP = in.InternalIP
 	out.AllowedCIDRs = *(*[]string)(unsafe.Pointer(&in.AllowedCIDRs))
 	// WARNING: in.Tags requires manual conversion: does not exist in peer-type
+	// WARNING: in.LoadBalancerNetwork requires manual conversion: does not exist in peer-type
 	return nil
 }
 

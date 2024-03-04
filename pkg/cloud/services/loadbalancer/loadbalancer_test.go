@@ -475,17 +475,63 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 							{ID: "aaaaaaaa-bbbb-cccc-dddd-333333333333"},
 						},
 					},
+					APIServerLoadBalancer: &infrav1.LoadBalancer{
+						LoadBalancerNetwork: nil,
+					},
 				},
 			},
 			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
 				m.ListLoadBalancers(gomock.Any()).Return([]loadbalancers.LoadBalancer{}, nil)
 				m.ListLoadBalancerProviders().Return(octaviaProviders, nil)
 				m.CreateLoadBalancer(gomock.Any()).Return(&loadbalancers.LoadBalancer{
-					ID: "AAAAA",
+					ID:          "AAAAA",
+					VipSubnetID: "aaaaaaaa-bbbb-cccc-dddd-222222222222",
 				}, nil)
 			},
 			want: &loadbalancers.LoadBalancer{
-				ID: "AAAAA",
+				ID:          "AAAAA",
+				VipSubnetID: "aaaaaaaa-bbbb-cccc-dddd-222222222222",
+			},
+		},
+		{
+			name: "loadbalancer on a specific network created",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						Subnets: []infrav1.Subnet{
+							{ID: "aaaaaaaa-bbbb-cccc-dddd-222222222222"},
+						},
+					},
+					APIServerLoadBalancer: &infrav1.LoadBalancer{
+						LoadBalancerNetwork: &infrav1.NetworkStatusWithSubnets{
+							NetworkStatus: infrav1.NetworkStatus{
+								Name: "VIPNET",
+								ID:   "VIPNET",
+							},
+							Subnets: []infrav1.Subnet{
+								{
+									Name: "vip-subnet",
+									CIDR: "10.0.0.0/24",
+									ID:   "VIPSUBNET",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
+				m.ListLoadBalancers(gomock.Any()).Return([]loadbalancers.LoadBalancer{}, nil)
+				m.ListLoadBalancerProviders().Return(octaviaProviders, nil)
+				m.CreateLoadBalancer(gomock.Any()).Return(&loadbalancers.LoadBalancer{
+					ID:           "AAAAA",
+					VipSubnetID:  "VIPSUBNET",
+					VipNetworkID: "VIPNET",
+				}, nil)
+			},
+			want: &loadbalancers.LoadBalancer{
+				ID:           "AAAAA",
+				VipSubnetID:  "VIPSUBNET",
+				VipNetworkID: "VIPNET",
 			},
 		},
 	}
