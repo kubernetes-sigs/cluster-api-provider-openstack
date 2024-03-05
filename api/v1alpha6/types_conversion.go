@@ -137,12 +137,6 @@ func restorev1alpha6SubnetFilter(previous *SubnetFilter, dst *SubnetFilter) {
 	dst.NotTagsAny = previous.NotTagsAny
 }
 
-func restorev1beta1Subnets(previous *[]infrav1.SubnetFilter, dst *[]infrav1.SubnetFilter) {
-	if len(*previous) > 1 {
-		*dst = append(*dst, (*previous)[1:]...)
-	}
-}
-
 func Convert_v1alpha6_SubnetParam_To_v1beta1_SubnetFilter(in *SubnetParam, out *infrav1.SubnetFilter, s apiconversion.Scope) error {
 	if err := Convert_v1alpha6_SubnetFilter_To_v1beta1_SubnetFilter(&in.Filter, out, s); err != nil {
 		return err
