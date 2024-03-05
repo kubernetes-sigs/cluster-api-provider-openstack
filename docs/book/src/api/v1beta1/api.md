@@ -3477,10 +3477,6 @@ OpenStackMachineTemplateResource
 </tr>
 </tbody>
 </table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineTemplateWebhook">OpenStackMachineTemplateWebhook
-</h3>
-<p>
-</p>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">PortOpts
 </h3>
 <p>
