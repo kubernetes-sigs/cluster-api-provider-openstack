@@ -1695,7 +1695,9 @@ spec:
                                 type: string
                               identityRef:
                                 description: IdentityRef is a reference to a identity
-                                  to be used when reconciling this cluster
+                                  to be used when reconciling this cluster. If not
+                                  specified, the identity ref of the cluster will
+                                  be used instead.
                                 properties:
                                   kind:
                                     description: Kind of the identity. Must be supported

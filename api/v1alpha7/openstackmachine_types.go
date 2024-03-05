@@ -93,7 +93,8 @@ type OpenStackMachineSpec struct {
 	// The server group to assign the machine to
 	ServerGroupID string `json:"serverGroupID,omitempty"`
 
-	// IdentityRef is a reference to a identity to be used when reconciling this cluster
+	// IdentityRef is a reference to a identity to be used when reconciling this cluster.
+	// If not specified, the identity ref of the cluster will be used instead.
 	// +optional
 	IdentityRef *OpenStackIdentityReference `json:"identityRef,omitempty"`
 }
