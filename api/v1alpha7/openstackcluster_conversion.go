@@ -74,7 +74,6 @@ var v1alpha7OpenStackClusterRestorer = conversion.RestorerFor[*OpenStackCluster]
 			return &c.Spec
 		},
 		restorev1alpha7ClusterSpec,
-
 		// Filter out Bastion, which is restored separately
 		conversion.HashedFilterField[*OpenStackCluster, OpenStackClusterSpec](
 			func(s *OpenStackClusterSpec) *OpenStackClusterSpec {
@@ -107,7 +106,6 @@ var v1beta1OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStackC
 			return &c.Spec
 		},
 		restorev1beta1ClusterSpec,
-
 		// Filter out Bastion, which is restored separately
 		conversion.HashedFilterField[*infrav1.OpenStackCluster, infrav1.OpenStackClusterSpec](
 			func(s *infrav1.OpenStackClusterSpec) *infrav1.OpenStackClusterSpec {
@@ -167,11 +165,7 @@ func restorev1alpha7ClusterSpec(previous *OpenStackClusterSpec, dst *OpenStackCl
 }
 
 func restorev1beta1ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infrav1.OpenStackClusterSpec) {
-	prevBastion := previous.Bastion
-	dstBastion := dst.Bastion
-	if prevBastion != nil && dstBastion != nil {
-		restorev1beta1MachineSpec(&prevBastion.Instance, &dstBastion.Instance)
-	}
+	// Bastion is restored separately
 
 	// Restore all fields except ID, which should have been copied over in conversion
 	dst.ExternalNetwork.Name = previous.ExternalNetwork.Name
