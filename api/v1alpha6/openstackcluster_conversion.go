@@ -80,54 +80,34 @@ var v1alpha6OpenStackClusterRestorer = conversion.RestorerFor[*OpenStackCluster]
 }
 
 var v1beta1OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStackCluster]{
-	"externalNetwork": conversion.UnconditionalFieldRestorer(
-		func(c *infrav1.OpenStackCluster) *infrav1.NetworkFilter {
-			return &c.Spec.ExternalNetwork
-		},
-	),
-	"disableExternalNetwork": conversion.UnconditionalFieldRestorer(
-		func(c *infrav1.OpenStackCluster) *bool {
-			return &c.Spec.DisableExternalNetwork
-		},
-	),
-	"router": conversion.UnconditionalFieldRestorer(
-		func(c *infrav1.OpenStackCluster) **infrav1.RouterFilter {
-			return &c.Spec.Router
-		},
-	),
-	"networkMtu": conversion.UnconditionalFieldRestorer(
-		func(c *infrav1.OpenStackCluster) *int {
-			return &c.Spec.NetworkMTU
-		},
-	),
 	"bastion": conversion.HashedFieldRestorer(
 		func(c *infrav1.OpenStackCluster) **infrav1.Bastion {
 			return &c.Spec.Bastion
 		},
 		restorev1beta1Bastion,
 	),
-	"subnets": conversion.HashedFieldRestorer(
-		func(c *infrav1.OpenStackCluster) *[]infrav1.SubnetFilter {
-			return &c.Spec.Subnets
+	"spec": conversion.HashedFieldRestorer(
+		func(c *infrav1.OpenStackCluster) *infrav1.OpenStackClusterSpec {
+			return &c.Spec
 		},
-		restorev1beta1Subnets,
-	),
-	"allNodesSecurityGroupRules": conversion.HashedFieldRestorer(
-		func(c *infrav1.OpenStackCluster) *infrav1.ManagedSecurityGroups {
-			return c.Spec.ManagedSecurityGroups
-		},
-		restorev1beta1ManagedSecurityGroups,
+		restorev1beta1ClusterSpec,
+		// Filter out Bastion, which is restored separately
+		conversion.HashedFilterField[*infrav1.OpenStackCluster, infrav1.OpenStackClusterSpec](
+			func(s *infrav1.OpenStackClusterSpec) *infrav1.OpenStackClusterSpec {
+				if s.Bastion != nil {
+					f := *s
+					f.Bastion = nil
+					return &f
+				}
+				return s
+			},
+		),
 	),
 	"status": conversion.HashedFieldRestorer(
 		func(c *infrav1.OpenStackCluster) *infrav1.OpenStackClusterStatus {
 			return &c.Status
 		},
 		restorev1beta1ClusterStatus,
-	),
-	"managedSubnets": conversion.UnconditionalFieldRestorer(
-		func(c *infrav1.OpenStackCluster) *[]infrav1.SubnetSpec {
-			return &c.Spec.ManagedSubnets
-		},
 	),
 }
 
@@ -177,6 +157,34 @@ func restorev1alpha6ClusterSpec(previous *OpenStackClusterSpec, dst *OpenStackCl
 	restorev1alpha6SubnetFilter(&previous.Subnet, &dst.Subnet)
 
 	restorev1alpha6NetworkFilter(&previous.Network, &dst.Network)
+}
+
+func restorev1beta1ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infrav1.OpenStackClusterSpec) {
+	// Bastion is restored separately
+
+	// Restore all fields except ID, which should have been copied over in conversion
+	dst.ExternalNetwork.Name = previous.ExternalNetwork.Name
+	dst.ExternalNetwork.Description = previous.ExternalNetwork.Description
+	dst.ExternalNetwork.ProjectID = previous.ExternalNetwork.ProjectID
+	dst.ExternalNetwork.Tags = previous.ExternalNetwork.Tags
+	dst.ExternalNetwork.TagsAny = previous.ExternalNetwork.TagsAny
+	dst.ExternalNetwork.NotTags = previous.ExternalNetwork.NotTags
+	dst.ExternalNetwork.NotTagsAny = previous.ExternalNetwork.NotTagsAny
+
+	// Restore fields not present in v1alpha6
+	dst.Router = previous.Router
+	dst.NetworkMTU = previous.NetworkMTU
+	dst.DisableExternalNetwork = previous.DisableExternalNetwork
+
+	if len(previous.Subnets) > 1 {
+		dst.Subnets = append(dst.Subnets, previous.Subnets[1:]...)
+	}
+
+	dst.ManagedSubnets = previous.ManagedSubnets
+
+	if previous.ManagedSecurityGroups != nil {
+		dst.ManagedSecurityGroups.AllNodesSecurityGroupRules = previous.ManagedSecurityGroups.AllNodesSecurityGroupRules
+	}
 }
 
 func Convert_v1alpha6_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *OpenStackClusterSpec, out *infrav1.OpenStackClusterSpec, s apiconversion.Scope) error {
@@ -391,10 +399,4 @@ func Convert_v1beta1_Bastion_To_v1alpha6_Bastion(in *infrav1.Bastion, out *Basti
 
 	out.Instance.FloatingIP = in.FloatingIP
 	return nil
-}
-
-/* ManagedSecurityGroups */
-
-func restorev1beta1ManagedSecurityGroups(previous *infrav1.ManagedSecurityGroups, dst *infrav1.ManagedSecurityGroups) {
-	dst.AllNodesSecurityGroupRules = previous.AllNodesSecurityGroupRules
 }

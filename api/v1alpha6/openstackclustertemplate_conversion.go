@@ -69,47 +69,15 @@ var v1alpha6OpenStackClusterTemplateRestorer = conversion.RestorerFor[*OpenStack
 }
 
 var v1beta1OpenStackClusterTemplateRestorer = conversion.RestorerFor[*infrav1.OpenStackClusterTemplate]{
-	"externalNetwork": conversion.UnconditionalFieldRestorer(
-		func(c *infrav1.OpenStackClusterTemplate) *infrav1.NetworkFilter {
-			return &c.Spec.Template.Spec.ExternalNetwork
+	"spec": conversion.HashedFieldRestorer(
+		func(c *infrav1.OpenStackClusterTemplate) *infrav1.OpenStackClusterTemplateSpec {
+			return &c.Spec
 		},
+		restorev1beta1ClusterTemplateSpec,
 	),
-	"disableExternalNetwork": conversion.UnconditionalFieldRestorer(
-		func(c *infrav1.OpenStackClusterTemplate) *bool {
-			return &c.Spec.Template.Spec.DisableExternalNetwork
-		},
-	),
-	"router": conversion.UnconditionalFieldRestorer(
-		func(c *infrav1.OpenStackClusterTemplate) **infrav1.RouterFilter {
-			return &c.Spec.Template.Spec.Router
-		},
-	),
-	"networkMtu": conversion.UnconditionalFieldRestorer(
-		func(c *infrav1.OpenStackClusterTemplate) *int {
-			return &c.Spec.Template.Spec.NetworkMTU
-		},
-	),
-	"bastion": conversion.HashedFieldRestorer(
-		func(c *infrav1.OpenStackClusterTemplate) **infrav1.Bastion {
-			return &c.Spec.Template.Spec.Bastion
-		},
-		restorev1beta1Bastion,
-	),
-	"subnets": conversion.HashedFieldRestorer(
-		func(c *infrav1.OpenStackClusterTemplate) *[]infrav1.SubnetFilter {
-			return &c.Spec.Template.Spec.Subnets
-		},
-		restorev1beta1Subnets,
-	),
-	"allNodesSecurityGroupRules": conversion.HashedFieldRestorer(
-		func(c *infrav1.OpenStackClusterTemplate) *infrav1.ManagedSecurityGroups {
-			return c.Spec.Template.Spec.ManagedSecurityGroups
-		},
-		restorev1beta1ManagedSecurityGroups,
-	),
-	"managedSubnets": conversion.UnconditionalFieldRestorer(
-		func(c *infrav1.OpenStackClusterTemplate) *[]infrav1.SubnetSpec {
-			return &c.Spec.Template.Spec.ManagedSubnets
-		},
-	),
+}
+
+func restorev1beta1ClusterTemplateSpec(previous *infrav1.OpenStackClusterTemplateSpec, dst *infrav1.OpenStackClusterTemplateSpec) {
+	restorev1beta1Bastion(&previous.Template.Spec.Bastion, &dst.Template.Spec.Bastion)
+	restorev1beta1ClusterSpec(&previous.Template.Spec, &dst.Template.Spec)
 }
