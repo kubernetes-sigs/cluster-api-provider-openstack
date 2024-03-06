@@ -461,7 +461,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	} else if !pointer.BoolDeref(openStackCluster.Spec.DisableAPIServerFloatingIP, false) {
 		var floatingIPAddress *string
 		switch {
-		case openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
+		case openStackCluster.Spec.ControlPlaneEndpoint != nil && openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
 			floatingIPAddress = &openStackCluster.Spec.ControlPlaneEndpoint.Host
 		case openStackCluster.Spec.APIServerFloatingIP != nil:
 			floatingIPAddress = openStackCluster.Spec.APIServerFloatingIP

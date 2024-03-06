@@ -51,7 +51,7 @@ func TestConvertFrom(t *testing.T) {
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
-						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"identityRef\":{\"cloudName\":\"\",\"name\":\"\"}},\"status\":{\"ready\":false}}",
+						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"identityRef\":{\"cloudName\":\"\",\"name\":\"\"}},\"status\":{\"ready\":false}}",
 					},
 				},
 			},
@@ -72,7 +72,7 @@ func TestConvertFrom(t *testing.T) {
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
-						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"template\":{\"spec\":{\"controlPlaneEndpoint\":{\"host\":\"\",\"port\":0},\"identityRef\":{\"cloudName\":\"\",\"name\":\"\"}}}}}",
+						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"template\":{\"spec\":{\"identityRef\":{\"cloudName\":\"\",\"name\":\"\"}}}}}",
 					},
 				},
 			},

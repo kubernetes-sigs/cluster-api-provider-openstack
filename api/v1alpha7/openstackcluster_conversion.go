@@ -18,6 +18,7 @@ package v1alpha7
 
 import (
 	apiconversion "k8s.io/apimachinery/pkg/conversion"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -203,6 +204,10 @@ func restorev1beta1ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infr
 		dst.APIServerLoadBalancer = previous.APIServerLoadBalancer
 	}
 
+	if dst.ControlPlaneEndpoint == nil || *dst.ControlPlaneEndpoint == (clusterv1.APIEndpoint{}) {
+		dst.ControlPlaneEndpoint = previous.ControlPlaneEndpoint
+	}
+
 	optional.RestoreString(&previous.APIServerFloatingIP, &dst.APIServerFloatingIP)
 	optional.RestoreString(&previous.APIServerFixedIP, &dst.APIServerFixedIP)
 	optional.RestoreInt(&previous.APIServerPort, &dst.APIServerPort)
@@ -258,6 +263,10 @@ func Convert_v1alpha7_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 		}
 	}
 
+	if in.ControlPlaneEndpoint != (clusterv1.APIEndpoint{}) {
+		out.ControlPlaneEndpoint = &in.ControlPlaneEndpoint
+	}
+
 	out.IdentityRef.CloudName = in.CloudName
 	if in.IdentityRef != nil {
 		out.IdentityRef.Name = in.IdentityRef.Name
@@ -304,6 +313,10 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in *i
 	if in.ManagedSecurityGroups != nil {
 		out.ManagedSecurityGroups = true
 		out.AllowAllInClusterTraffic = in.ManagedSecurityGroups.AllowAllInClusterTraffic
+	}
+
+	if in.ControlPlaneEndpoint != nil {
+		out.ControlPlaneEndpoint = *in.ControlPlaneEndpoint
 	}
 
 	out.CloudName = in.IdentityRef.CloudName

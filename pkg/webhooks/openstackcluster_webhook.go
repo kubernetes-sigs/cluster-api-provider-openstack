@@ -24,7 +24,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/pointer"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -89,10 +88,13 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 	oldObj.Spec.IdentityRef = infrav1.OpenStackIdentityReference{}
 	newObj.Spec.IdentityRef = infrav1.OpenStackIdentityReference{}
 
-	// Allow change only for the first time.
-	if oldObj.Spec.ControlPlaneEndpoint.Host == "" {
-		oldObj.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{}
-		newObj.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{}
+	// Allow changes to ControlPlaneEndpoint fields only if it was not
+	// previously set, or did not previously have a host.
+	if oldObj.Spec.ControlPlaneEndpoint == nil {
+		newObj.Spec.ControlPlaneEndpoint = nil
+	} else if oldObj.Spec.ControlPlaneEndpoint.Host == "" {
+		oldObj.Spec.ControlPlaneEndpoint = nil
+		newObj.Spec.ControlPlaneEndpoint = nil
 	}
 
 	// Allow change only for the first time.

@@ -719,7 +719,7 @@ func autoConvert_v1alpha6_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(i
 		return err
 	}
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
-	out.ControlPlaneEndpoint = in.ControlPlaneEndpoint
+	// WARNING: in.ControlPlaneEndpoint requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint vs *sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint)
 	out.ControlPlaneAvailabilityZones = *(*[]string)(unsafe.Pointer(&in.ControlPlaneAvailabilityZones))
 	if err := optional.Convert_bool_To_optional_Bool(&in.ControlPlaneOmitAvailabilityZone, &out.ControlPlaneOmitAvailabilityZone, s); err != nil {
 		return err
@@ -774,7 +774,7 @@ func autoConvert_v1beta1_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(i
 		return err
 	}
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
-	out.ControlPlaneEndpoint = in.ControlPlaneEndpoint
+	// WARNING: in.ControlPlaneEndpoint requires manual conversion: inconvertible types (*sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint vs sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint)
 	out.ControlPlaneAvailabilityZones = *(*[]string)(unsafe.Pointer(&in.ControlPlaneAvailabilityZones))
 	if err := optional.Convert_optional_Bool_To_bool(&in.ControlPlaneOmitAvailabilityZone, &out.ControlPlaneOmitAvailabilityZone, s); err != nil {
 		return err

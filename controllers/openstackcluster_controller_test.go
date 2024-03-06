@@ -765,7 +765,7 @@ func Test_getAPIServerPort(t *testing.T) {
 			name: "with a control plane endpoint",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					ControlPlaneEndpoint: clusterv1.APIEndpoint{
+					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
 						Host: "192.168.0.1",
 						Port: 6444,
 					},

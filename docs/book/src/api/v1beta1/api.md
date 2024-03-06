@@ -338,7 +338,12 @@ sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 </td>
 <td>
 <em>(Optional)</em>
-<p>ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.</p>
+<p>ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
+It is normally populated automatically by the OpenStackCluster
+controller during cluster provisioning. If it is set on creation the
+control plane endpoint will use the values set here in preference to
+values set elsewhere.
+ControlPlaneEndpoint cannot be modified after ControlPlaneEndpoint.Host has been set.</p>
 </td>
 </tr>
 <tr>
@@ -2232,7 +2237,12 @@ sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 </td>
 <td>
 <em>(Optional)</em>
-<p>ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.</p>
+<p>ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
+It is normally populated automatically by the OpenStackCluster
+controller during cluster provisioning. If it is set on creation the
+control plane endpoint will use the values set here in preference to
+values set elsewhere.
+ControlPlaneEndpoint cannot be modified after ControlPlaneEndpoint.Host has been set.</p>
 </td>
 </tr>
 <tr>
@@ -2805,7 +2815,12 @@ sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 </td>
 <td>
 <em>(Optional)</em>
-<p>ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.</p>
+<p>ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
+It is normally populated automatically by the OpenStackCluster
+controller during cluster provisioning. If it is set on creation the
+control plane endpoint will use the values set here in preference to
+values set elsewhere.
+ControlPlaneEndpoint cannot be modified after ControlPlaneEndpoint.Host has been set.</p>
 </td>
 </tr>
 <tr>

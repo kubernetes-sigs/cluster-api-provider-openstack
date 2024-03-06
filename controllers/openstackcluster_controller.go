@@ -747,7 +747,7 @@ func reconcileControlPlaneEndpoint(scope *scope.WithLogger, networkingService *n
 	// Control plane endpoint is already set
 	// Note that checking this here means that we don't re-execute any of
 	// the branches below if the control plane endpoint is already set.
-	case openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
+	case openStackCluster.Spec.ControlPlaneEndpoint != nil && openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
 		host = openStackCluster.Spec.ControlPlaneEndpoint.Host
 
 	// API server load balancer is disabled, but floating IP is not. Create
@@ -774,7 +774,7 @@ func reconcileControlPlaneEndpoint(scope *scope.WithLogger, networkingService *n
 		return err
 	}
 
-	openStackCluster.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{
+	openStackCluster.Spec.ControlPlaneEndpoint = &clusterv1.APIEndpoint{
 		Host: host,
 		Port: int32(apiServerPort),
 	}
@@ -785,7 +785,7 @@ func reconcileControlPlaneEndpoint(scope *scope.WithLogger, networkingService *n
 // getAPIServerPort returns the port to use for the API server based on the cluster spec.
 func getAPIServerPort(openStackCluster *infrav1.OpenStackCluster) int {
 	switch {
-	case openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
+	case openStackCluster.Spec.ControlPlaneEndpoint != nil && openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
 		return int(openStackCluster.Spec.ControlPlaneEndpoint.Port)
 	case openStackCluster.Spec.APIServerPort != nil:
 		return *openStackCluster.Spec.APIServerPort

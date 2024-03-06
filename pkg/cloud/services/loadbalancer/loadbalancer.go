@@ -157,7 +157,7 @@ func getAPIServerVIPAddress(openStackCluster *infrav1.OpenStackCluster) (*string
 		return openStackCluster.Spec.APIServerFixedIP, nil
 
 	// If we are using the VIP as the control plane endpoint, use any value explicitly set on the control plane endpoint
-	case pointer.BoolDeref(openStackCluster.Spec.DisableAPIServerFloatingIP, false) && openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
+	case pointer.BoolDeref(openStackCluster.Spec.DisableAPIServerFloatingIP, false) && openStackCluster.Spec.ControlPlaneEndpoint != nil && openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
 		fixedIPAddress, err := lookupHost(openStackCluster.Spec.ControlPlaneEndpoint.Host)
 		if err != nil {
 			return nil, fmt.Errorf("lookup host: %w", err)
@@ -181,7 +181,7 @@ func getAPIServerFloatingIP(openStackCluster *infrav1.OpenStackCluster) (*string
 		return openStackCluster.Spec.APIServerFloatingIP, nil
 
 	// An IP address is specified explicitly in the control plane endpoint
-	case openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
+	case openStackCluster.Spec.ControlPlaneEndpoint != nil && openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
 		floatingIPAddress, err := lookupHost(openStackCluster.Spec.ControlPlaneEndpoint.Host)
 		if err != nil {
 			return nil, fmt.Errorf("lookup host: %w", err)
@@ -518,12 +518,18 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 	if openStackCluster.Status.APIServerLoadBalancer == nil {
 		return errors.New("network.APIServerLoadBalancer is not yet available in openStackCluster.Status")
 	}
+	if openStackCluster.Spec.ControlPlaneEndpoint == nil || !openStackCluster.Spec.ControlPlaneEndpoint.IsValid() {
+		return errors.New("ControlPlaneEndpoint is not yet set in openStackCluster.Spec")
+	}
 
 	loadBalancerName := getLoadBalancerName(clusterName)
 	s.scope.Logger().Info("Reconciling load balancer member", "loadBalancerName", loadBalancerName)
 
 	lbID := openStackCluster.Status.APIServerLoadBalancer.ID
-	portList := []int{int(openStackCluster.Spec.ControlPlaneEndpoint.Port)}
+	var portList []int
+	if openStackCluster.Spec.ControlPlaneEndpoint != nil {
+		portList = append(portList, int(openStackCluster.Spec.ControlPlaneEndpoint.Port))
+	}
 	if openStackCluster.Spec.APIServerLoadBalancer != nil {
 		portList = append(portList, openStackCluster.Spec.APIServerLoadBalancer.AdditionalPorts...)
 	}
@@ -656,7 +662,10 @@ func (s *Service) DeleteLoadBalancerMember(openStackCluster *infrav1.OpenStackCl
 
 	lbID := lb.ID
 
-	portList := []int{int(openStackCluster.Spec.ControlPlaneEndpoint.Port)}
+	var portList []int
+	if openStackCluster.Spec.ControlPlaneEndpoint != nil {
+		portList = append(portList, int(openStackCluster.Spec.ControlPlaneEndpoint.Port))
+	}
 	if openStackCluster.Spec.APIServerLoadBalancer != nil {
 		portList = append(portList, openStackCluster.Spec.APIServerLoadBalancer.AdditionalPorts...)
 	}

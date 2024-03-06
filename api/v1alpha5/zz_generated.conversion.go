@@ -693,7 +693,7 @@ func autoConvert_v1alpha5_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(i
 		return err
 	}
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
-	out.ControlPlaneEndpoint = in.ControlPlaneEndpoint
+	// WARNING: in.ControlPlaneEndpoint requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint vs *sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint)
 	out.ControlPlaneAvailabilityZones = *(*[]string)(unsafe.Pointer(&in.ControlPlaneAvailabilityZones))
 	if in.Bastion != nil {
 		in, out := &in.Bastion, &out.Bastion
@@ -745,7 +745,7 @@ func autoConvert_v1beta1_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(i
 		return err
 	}
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
-	out.ControlPlaneEndpoint = in.ControlPlaneEndpoint
+	// WARNING: in.ControlPlaneEndpoint requires manual conversion: inconvertible types (*sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint vs sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint)
 	out.ControlPlaneAvailabilityZones = *(*[]string)(unsafe.Pointer(&in.ControlPlaneAvailabilityZones))
 	// WARNING: in.ControlPlaneOmitAvailabilityZone requires manual conversion: does not exist in peer-type
 	if in.Bastion != nil {

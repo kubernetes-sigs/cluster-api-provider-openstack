@@ -566,7 +566,11 @@ func (in *OpenStackClusterSpec) DeepCopyInto(out *OpenStackClusterSpec) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
-	out.ControlPlaneEndpoint = in.ControlPlaneEndpoint
+	if in.ControlPlaneEndpoint != nil {
+		in, out := &in.ControlPlaneEndpoint, &out.ControlPlaneEndpoint
+		*out = new(apiv1beta1.APIEndpoint)
+		**out = **in
+	}
 	if in.ControlPlaneAvailabilityZones != nil {
 		in, out := &in.ControlPlaneAvailabilityZones, &out.ControlPlaneAvailabilityZones
 		*out = make([]string, len(*in))

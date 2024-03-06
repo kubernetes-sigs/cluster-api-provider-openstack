@@ -158,8 +158,13 @@ type OpenStackClusterSpec struct {
 	Tags []string `json:"tags,omitempty"`
 
 	// ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
+	// It is normally populated automatically by the OpenStackCluster
+	// controller during cluster provisioning. If it is set on creation the
+	// control plane endpoint will use the values set here in preference to
+	// values set elsewhere.
+	// ControlPlaneEndpoint cannot be modified after ControlPlaneEndpoint.Host has been set.
 	// +optional
-	ControlPlaneEndpoint clusterv1.APIEndpoint `json:"controlPlaneEndpoint"`
+	ControlPlaneEndpoint *clusterv1.APIEndpoint `json:"controlPlaneEndpoint,omitempty"`
 
 	// ControlPlaneAvailabilityZones is the az to deploy control plane to
 	// +listType=set

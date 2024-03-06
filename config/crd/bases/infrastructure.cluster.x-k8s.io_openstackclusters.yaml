@@ -5536,8 +5536,13 @@ spec:
                 type: array
                 x-kubernetes-list-type: set
               controlPlaneEndpoint:
-                description: ControlPlaneEndpoint represents the endpoint used to
-                  communicate with the control plane.
+                description: |-
+                  ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
+                  It is normally populated automatically by the OpenStackCluster
+                  controller during cluster provisioning. If it is set on creation the
+                  control plane endpoint will use the values set here in preference to
+                  values set elsewhere.
+                  ControlPlaneEndpoint cannot be modified after ControlPlaneEndpoint.Host has been set.
                 properties:
                   host:
                     description: The hostname on which the API server is serving.
