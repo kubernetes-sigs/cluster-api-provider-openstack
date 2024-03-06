@@ -324,7 +324,7 @@ Kubernetes cluster, which also disables SecurityGroups</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Tags for all resources in cluster</p>
+<p>Tags to set on all resources in cluster which support tags</p>
 </td>
 </tr>
 <tr>
@@ -355,7 +355,8 @@ ControlPlaneEndpoint cannot be modified after ControlPlaneEndpoint.Host has been
 </td>
 <td>
 <em>(Optional)</em>
-<p>ControlPlaneAvailabilityZones is the az to deploy control plane to</p>
+<p>ControlPlaneAvailabilityZones is the set of availability zones which
+control plane machines may be deployed to.</p>
 </td>
 </tr>
 <tr>
@@ -2223,7 +2224,7 @@ Kubernetes cluster, which also disables SecurityGroups</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Tags for all resources in cluster</p>
+<p>Tags to set on all resources in cluster which support tags</p>
 </td>
 </tr>
 <tr>
@@ -2254,7 +2255,8 @@ ControlPlaneEndpoint cannot be modified after ControlPlaneEndpoint.Host has been
 </td>
 <td>
 <em>(Optional)</em>
-<p>ControlPlaneAvailabilityZones is the az to deploy control plane to</p>
+<p>ControlPlaneAvailabilityZones is the set of availability zones which
+control plane machines may be deployed to.</p>
 </td>
 </tr>
 <tr>
@@ -2359,7 +2361,7 @@ NetworkStatus
 </td>
 <td>
 <em>(Optional)</em>
-<p>externalNetwork contains information about the external network used for default ingress and egress traffic.</p>
+<p>ExternalNetwork contains information about the external network used for default ingress and egress traffic.</p>
 </td>
 </tr>
 <tr>
@@ -2414,9 +2416,9 @@ SecurityGroupStatus
 </td>
 <td>
 <em>(Optional)</em>
-<p>ControlPlaneSecurityGroups contains all the information about the OpenStack
-Security Group that needs to be applied to control plane nodes.
-TODO: Maybe instead of two properties, we add a property to the group?</p>
+<p>ControlPlaneSecurityGroup contains the information about the
+OpenStack Security Group that needs to be applied to control plane
+nodes.</p>
 </td>
 </tr>
 <tr>
@@ -2430,8 +2432,8 @@ SecurityGroupStatus
 </td>
 <td>
 <em>(Optional)</em>
-<p>WorkerSecurityGroup contains all the information about the OpenStack Security
-Group that needs to be applied to worker nodes.</p>
+<p>WorkerSecurityGroup contains the information about the OpenStack
+Security Group that needs to be applied to worker nodes.</p>
 </td>
 </tr>
 <tr>
@@ -2445,6 +2447,8 @@ SecurityGroupStatus
 </td>
 <td>
 <em>(Optional)</em>
+<p>BastionSecurityGroup contains the information about the OpenStack
+Security Group that needs to be applied to worker nodes.</p>
 </td>
 </tr>
 <tr>
@@ -2458,6 +2462,7 @@ BastionStatus
 </td>
 <td>
 <em>(Optional)</em>
+<p>Bastion contains the information about the deployed bastion host</p>
 </td>
 </tr>
 <tr>
@@ -2801,7 +2806,7 @@ Kubernetes cluster, which also disables SecurityGroups</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Tags for all resources in cluster</p>
+<p>Tags to set on all resources in cluster which support tags</p>
 </td>
 </tr>
 <tr>
@@ -2832,7 +2837,8 @@ ControlPlaneEndpoint cannot be modified after ControlPlaneEndpoint.Host has been
 </td>
 <td>
 <em>(Optional)</em>
-<p>ControlPlaneAvailabilityZones is the az to deploy control plane to</p>
+<p>ControlPlaneAvailabilityZones is the set of availability zones which
+control plane machines may be deployed to.</p>
 </td>
 </tr>
 <tr>

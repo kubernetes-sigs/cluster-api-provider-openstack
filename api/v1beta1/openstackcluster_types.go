@@ -152,7 +152,7 @@ type OpenStackClusterSpec struct {
 	// +optional
 	DisablePortSecurity optional.Bool `json:"disablePortSecurity,omitempty"`
 
-	// Tags for all resources in cluster
+	// Tags to set on all resources in cluster which support tags
 	// +listType=set
 	// +optional
 	Tags []string `json:"tags,omitempty"`
@@ -166,7 +166,8 @@ type OpenStackClusterSpec struct {
 	// +optional
 	ControlPlaneEndpoint *clusterv1.APIEndpoint `json:"controlPlaneEndpoint,omitempty"`
 
-	// ControlPlaneAvailabilityZones is the az to deploy control plane to
+	// ControlPlaneAvailabilityZones is the set of availability zones which
+	// control plane machines may be deployed to.
 	// +listType=set
 	// +optional
 	ControlPlaneAvailabilityZones []string `json:"controlPlaneAvailabilityZones,omitempty"`
@@ -203,7 +204,7 @@ type OpenStackClusterStatus struct {
 	// +optional
 	Network *NetworkStatusWithSubnets `json:"network,omitempty"`
 
-	// externalNetwork contains information about the external network used for default ingress and egress traffic.
+	// ExternalNetwork contains information about the external network used for default ingress and egress traffic.
 	// +optional
 	ExternalNetwork *NetworkStatus `json:"externalNetwork,omitempty"`
 
@@ -218,20 +219,23 @@ type OpenStackClusterStatus struct {
 	// FailureDomains represent OpenStack availability zones
 	FailureDomains clusterv1.FailureDomains `json:"failureDomains,omitempty"`
 
-	// ControlPlaneSecurityGroups contains all the information about the OpenStack
-	// Security Group that needs to be applied to control plane nodes.
-	// TODO: Maybe instead of two properties, we add a property to the group?
+	// ControlPlaneSecurityGroup contains the information about the
+	// OpenStack Security Group that needs to be applied to control plane
+	// nodes.
 	// +optional
 	ControlPlaneSecurityGroup *SecurityGroupStatus `json:"controlPlaneSecurityGroup,omitempty"`
 
-	// WorkerSecurityGroup contains all the information about the OpenStack Security
-	// Group that needs to be applied to worker nodes.
+	// WorkerSecurityGroup contains the information about the OpenStack
+	// Security Group that needs to be applied to worker nodes.
 	// +optional
 	WorkerSecurityGroup *SecurityGroupStatus `json:"workerSecurityGroup,omitempty"`
 
+	// BastionSecurityGroup contains the information about the OpenStack
+	// Security Group that needs to be applied to worker nodes.
 	// +optional
 	BastionSecurityGroup *SecurityGroupStatus `json:"bastionSecurityGroup,omitempty"`
 
+	// Bastion contains the information about the deployed bastion host
 	// +optional
 	Bastion *BastionStatus `json:"bastion,omitempty"`
 
