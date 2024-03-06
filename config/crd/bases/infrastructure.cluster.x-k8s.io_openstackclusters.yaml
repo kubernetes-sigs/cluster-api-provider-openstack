@@ -5552,8 +5552,10 @@ spec:
                 type: object
               controlPlaneOmitAvailabilityZone:
                 description: |-
-                  Indicates whether to omit the az for control plane nodes, allowing the Nova scheduler
-                  to make a decision on which az to use based on other scheduling constraints
+                  ControlPlaneOmitAvailabilityZone causes availability zone to be
+                  omitted when creating control plane nodes, allowing the Nova
+                  scheduler to make a decision on which availability zone to use based
+                  on other scheduling constraints
                 type: boolean
               disableAPIServerFloatingIP:
                 description: |-

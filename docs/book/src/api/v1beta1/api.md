@@ -310,6 +310,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>DisablePortSecurity disables the port security of the network created for the
 Kubernetes cluster, which also disables SecurityGroups</p>
 </td>
@@ -360,8 +361,11 @@ bool
 </em>
 </td>
 <td>
-<p>Indicates whether to omit the az for control plane nodes, allowing the Nova scheduler
-to make a decision on which az to use based on other scheduling constraints</p>
+<em>(Optional)</em>
+<p>ControlPlaneOmitAvailabilityZone causes availability zone to be
+omitted when creating control plane nodes, allowing the Nova
+scheduler to make a decision on which availability zone to use based
+on other scheduling constraints</p>
 </td>
 </tr>
 <tr>
@@ -2200,6 +2204,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>DisablePortSecurity disables the port security of the network created for the
 Kubernetes cluster, which also disables SecurityGroups</p>
 </td>
@@ -2250,8 +2255,11 @@ bool
 </em>
 </td>
 <td>
-<p>Indicates whether to omit the az for control plane nodes, allowing the Nova scheduler
-to make a decision on which az to use based on other scheduling constraints</p>
+<em>(Optional)</em>
+<p>ControlPlaneOmitAvailabilityZone causes availability zone to be
+omitted when creating control plane nodes, allowing the Nova
+scheduler to make a decision on which availability zone to use based
+on other scheduling constraints</p>
 </td>
 </tr>
 <tr>
@@ -2769,6 +2777,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>DisablePortSecurity disables the port security of the network created for the
 Kubernetes cluster, which also disables SecurityGroups</p>
 </td>
@@ -2819,8 +2828,11 @@ bool
 </em>
 </td>
 <td>
-<p>Indicates whether to omit the az for control plane nodes, allowing the Nova scheduler
-to make a decision on which az to use based on other scheduling constraints</p>
+<em>(Optional)</em>
+<p>ControlPlaneOmitAvailabilityZone causes availability zone to be
+omitted when creating control plane nodes, allowing the Nova
+scheduler to make a decision on which availability zone to use based
+on other scheduling constraints</p>
 </td>
 </tr>
 <tr>

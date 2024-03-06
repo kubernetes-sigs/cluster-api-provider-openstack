@@ -458,7 +458,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 			conditions.MarkFalse(openStackMachine, infrav1.APIServerIngressReadyCondition, infrav1.LoadBalancerMemberErrorReason, clusterv1.ConditionSeverityError, "Reconciling load balancer member failed: %v", err)
 			return ctrl.Result{}, fmt.Errorf("reconcile load balancer member: %w", err)
 		}
-	} else if !openStackCluster.Spec.DisableAPIServerFloatingIP {
+	} else if !pointer.BoolDeref(openStackCluster.Spec.DisableAPIServerFloatingIP, false) {
 		var floatingIPAddress *string
 		switch {
 		case openStackCluster.Spec.ControlPlaneEndpoint.IsValid():

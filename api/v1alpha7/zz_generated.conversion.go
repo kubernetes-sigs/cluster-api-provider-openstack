@@ -901,7 +901,9 @@ func autoConvert_v1alpha7_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(i
 	}
 	// WARNING: in.Network requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkFilter vs *sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkFilter)
 	// WARNING: in.Subnet requires manual conversion: does not exist in peer-type
-	out.NetworkMTU = in.NetworkMTU
+	if err := optional.Convert_int_To_optional_Int(&in.NetworkMTU, &out.NetworkMTU, s); err != nil {
+		return err
+	}
 	// WARNING: in.DNSNameservers requires manual conversion: does not exist in peer-type
 	if in.ExternalRouterIPs != nil {
 		in, out := &in.ExternalRouterIPs, &out.ExternalRouterIPs
@@ -916,7 +918,9 @@ func autoConvert_v1alpha7_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(i
 	}
 	// WARNING: in.ExternalNetworkID requires manual conversion: does not exist in peer-type
 	// WARNING: in.APIServerLoadBalancer requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.APIServerLoadBalancer vs *sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.APIServerLoadBalancer)
-	out.DisableAPIServerFloatingIP = in.DisableAPIServerFloatingIP
+	if err := optional.Convert_bool_To_optional_Bool(&in.DisableAPIServerFloatingIP, &out.DisableAPIServerFloatingIP, s); err != nil {
+		return err
+	}
 	if err := optional.Convert_string_To_optional_String(&in.APIServerFloatingIP, &out.APIServerFloatingIP, s); err != nil {
 		return err
 	}
@@ -928,11 +932,15 @@ func autoConvert_v1alpha7_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(i
 	}
 	// WARNING: in.ManagedSecurityGroups requires manual conversion: inconvertible types (bool vs *sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ManagedSecurityGroups)
 	// WARNING: in.AllowAllInClusterTraffic requires manual conversion: does not exist in peer-type
-	out.DisablePortSecurity = in.DisablePortSecurity
+	if err := optional.Convert_bool_To_optional_Bool(&in.DisablePortSecurity, &out.DisablePortSecurity, s); err != nil {
+		return err
+	}
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.ControlPlaneEndpoint = in.ControlPlaneEndpoint
 	out.ControlPlaneAvailabilityZones = *(*[]string)(unsafe.Pointer(&in.ControlPlaneAvailabilityZones))
-	out.ControlPlaneOmitAvailabilityZone = in.ControlPlaneOmitAvailabilityZone
+	if err := optional.Convert_bool_To_optional_Bool(&in.ControlPlaneOmitAvailabilityZone, &out.ControlPlaneOmitAvailabilityZone, s); err != nil {
+		return err
+	}
 	if in.Bastion != nil {
 		in, out := &in.Bastion, &out.Bastion
 		*out = new(v1beta1.Bastion)
@@ -959,7 +967,9 @@ func autoConvert_v1beta1_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(i
 	}
 	// WARNING: in.Network requires manual conversion: inconvertible types (*sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkFilter vs sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkFilter)
 	// WARNING: in.Subnets requires manual conversion: does not exist in peer-type
-	out.NetworkMTU = in.NetworkMTU
+	if err := optional.Convert_optional_Int_To_int(&in.NetworkMTU, &out.NetworkMTU, s); err != nil {
+		return err
+	}
 	if in.ExternalRouterIPs != nil {
 		in, out := &in.ExternalRouterIPs, &out.ExternalRouterIPs
 		*out = make([]ExternalRouterIPParam, len(*in))
@@ -974,7 +984,9 @@ func autoConvert_v1beta1_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(i
 	// WARNING: in.ExternalNetwork requires manual conversion: does not exist in peer-type
 	// WARNING: in.DisableExternalNetwork requires manual conversion: does not exist in peer-type
 	// WARNING: in.APIServerLoadBalancer requires manual conversion: inconvertible types (*sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.APIServerLoadBalancer vs sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.APIServerLoadBalancer)
-	out.DisableAPIServerFloatingIP = in.DisableAPIServerFloatingIP
+	if err := optional.Convert_optional_Bool_To_bool(&in.DisableAPIServerFloatingIP, &out.DisableAPIServerFloatingIP, s); err != nil {
+		return err
+	}
 	if err := optional.Convert_optional_String_To_string(&in.APIServerFloatingIP, &out.APIServerFloatingIP, s); err != nil {
 		return err
 	}
@@ -985,11 +997,15 @@ func autoConvert_v1beta1_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(i
 		return err
 	}
 	// WARNING: in.ManagedSecurityGroups requires manual conversion: inconvertible types (*sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ManagedSecurityGroups vs bool)
-	out.DisablePortSecurity = in.DisablePortSecurity
+	if err := optional.Convert_optional_Bool_To_bool(&in.DisablePortSecurity, &out.DisablePortSecurity, s); err != nil {
+		return err
+	}
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.ControlPlaneEndpoint = in.ControlPlaneEndpoint
 	out.ControlPlaneAvailabilityZones = *(*[]string)(unsafe.Pointer(&in.ControlPlaneAvailabilityZones))
-	out.ControlPlaneOmitAvailabilityZone = in.ControlPlaneOmitAvailabilityZone
+	if err := optional.Convert_optional_Bool_To_bool(&in.ControlPlaneOmitAvailabilityZone, &out.ControlPlaneOmitAvailabilityZone, s); err != nil {
+		return err
+	}
 	if in.Bastion != nil {
 		in, out := &in.Bastion, &out.Bastion
 		*out = new(Bastion)

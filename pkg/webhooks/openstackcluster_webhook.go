@@ -96,13 +96,13 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 	}
 
 	// Allow change only for the first time.
-	if oldObj.Spec.DisableAPIServerFloatingIP && pointer.StringDeref(oldObj.Spec.APIServerFixedIP, "") == "" {
+	if pointer.BoolDeref(oldObj.Spec.DisableAPIServerFloatingIP, false) && pointer.StringDeref(oldObj.Spec.APIServerFixedIP, "") == "" {
 		oldObj.Spec.APIServerFixedIP = nil
 		newObj.Spec.APIServerFixedIP = nil
 	}
 
 	// If API Server floating IP is disabled, allow the change of the API Server port only for the first time.
-	if oldObj.Spec.DisableAPIServerFloatingIP && oldObj.Spec.APIServerPort == nil && newObj.Spec.APIServerPort != nil {
+	if pointer.BoolDeref(oldObj.Spec.DisableAPIServerFloatingIP, false) && oldObj.Spec.APIServerPort == nil && newObj.Spec.APIServerPort != nil {
 		newObj.Spec.APIServerPort = nil
 	}
 
@@ -139,8 +139,8 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 
 	// Allow the scheduling to be changed from CAPI managed to Nova and
 	// vice versa.
-	oldObj.Spec.ControlPlaneOmitAvailabilityZone = false
-	newObj.Spec.ControlPlaneOmitAvailabilityZone = false
+	oldObj.Spec.ControlPlaneOmitAvailabilityZone = nil
+	newObj.Spec.ControlPlaneOmitAvailabilityZone = nil
 
 	// Allow change on the spec.APIServerFloatingIP only if it matches the current api server loadbalancer IP.
 	if oldObj.Status.APIServerLoadBalancer != nil && pointer.StringDeref(newObj.Spec.APIServerFloatingIP, "") == oldObj.Status.APIServerLoadBalancer.IP {

@@ -206,6 +206,9 @@ func restorev1beta1ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infr
 	optional.RestoreString(&previous.APIServerFloatingIP, &dst.APIServerFloatingIP)
 	optional.RestoreString(&previous.APIServerFixedIP, &dst.APIServerFixedIP)
 	optional.RestoreInt(&previous.APIServerPort, &dst.APIServerPort)
+	optional.RestoreBool(&previous.DisableAPIServerFloatingIP, &dst.DisableAPIServerFloatingIP)
+	optional.RestoreBool(&previous.ControlPlaneOmitAvailabilityZone, &dst.ControlPlaneOmitAvailabilityZone)
+	optional.RestoreBool(&previous.DisablePortSecurity, &dst.DisablePortSecurity)
 }
 
 func Convert_v1alpha7_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *OpenStackClusterSpec, out *infrav1.OpenStackClusterSpec, s apiconversion.Scope) error {

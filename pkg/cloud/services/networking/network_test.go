@@ -113,7 +113,7 @@ func Test_ReconcileNetwork(t *testing.T) {
 			name: "creation with disabled port security",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					DisablePortSecurity: true,
+					DisablePortSecurity: pointer.Bool(true),
 				},
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
@@ -149,7 +149,7 @@ func Test_ReconcileNetwork(t *testing.T) {
 			name: "creation with mtu set",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					NetworkMTU: 1500,
+					NetworkMTU: pointer.Int(1500),
 				},
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
@@ -319,13 +319,13 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			name: "not reconcile external network when external network disabled",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					DisableExternalNetwork: true,
+					DisableExternalNetwork: pointer.Bool(true),
 				},
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {},
 			want: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					DisableExternalNetwork: true,
+					DisableExternalNetwork: pointer.Bool(true),
 				},
 				Status: infrav1.OpenStackClusterStatus{
 					ExternalNetwork: nil,

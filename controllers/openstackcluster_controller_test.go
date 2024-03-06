@@ -520,7 +520,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			Bastion: &infrav1.Bastion{
 				Enabled: true,
 			},
-			DisableAPIServerFloatingIP: true,
+			DisableAPIServerFloatingIP: pointer.Bool(true),
 			APIServerFixedIP:           pointer.String("10.0.0.1"),
 			ExternalNetwork: &infrav1.NetworkFilter{
 				ID: externalNetworkID,
@@ -600,7 +600,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			Bastion: &infrav1.Bastion{
 				Enabled: true,
 			},
-			DisableAPIServerFloatingIP: true,
+			DisableAPIServerFloatingIP: pointer.Bool(true),
 			APIServerFixedIP:           pointer.String("10.0.0.1"),
 			ExternalNetwork: &infrav1.NetworkFilter{
 				ID: externalNetworkID,
@@ -682,9 +682,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 
 		testCluster.SetName("subnet-filtering")
 		testCluster.Spec = infrav1.OpenStackClusterSpec{
-			DisableAPIServerFloatingIP: true,
+			DisableAPIServerFloatingIP: pointer.Bool(true),
 			APIServerFixedIP:           pointer.String("10.0.0.1"),
-			DisableExternalNetwork:     true,
+			DisableExternalNetwork:     pointer.Bool(true),
 			Subnets: []infrav1.SubnetFilter{
 				{ID: clusterSubnetID},
 			},

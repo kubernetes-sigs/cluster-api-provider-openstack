@@ -61,7 +61,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 			APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
 				Enabled: true,
 			},
-			DisableAPIServerFloatingIP: true,
+			DisableAPIServerFloatingIP: pointer.Bool(true),
 			ControlPlaneEndpoint: clusterv1.APIEndpoint{
 				Host: apiHostname,
 				Port: 6443,
@@ -210,7 +210,7 @@ func Test_getAPIServerVIPAddress(t *testing.T) {
 			name: "API server VIP with valid control plane endpoint",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					DisableAPIServerFloatingIP: true,
+					DisableAPIServerFloatingIP: pointer.Bool(true),
 					ControlPlaneEndpoint: clusterv1.APIEndpoint{
 						Host: apiHostname,
 						Port: 6443,
@@ -224,7 +224,7 @@ func Test_getAPIServerVIPAddress(t *testing.T) {
 			name: "API server VIP with invalid control plane endpoint",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					DisableAPIServerFloatingIP: true,
+					DisableAPIServerFloatingIP: pointer.Bool(true),
 					ControlPlaneEndpoint: clusterv1.APIEndpoint{
 						Host: "invalid-api.test-cluster.test",
 						Port: 6443,

@@ -504,6 +504,11 @@ func (in *OpenStackClusterSpec) DeepCopyInto(out *OpenStackClusterSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.NetworkMTU != nil {
+		in, out := &in.NetworkMTU, &out.NetworkMTU
+		*out = new(int)
+		**out = **in
+	}
 	if in.ExternalRouterIPs != nil {
 		in, out := &in.ExternalRouterIPs, &out.ExternalRouterIPs
 		*out = make([]ExternalRouterIPParam, len(*in))
@@ -516,10 +521,20 @@ func (in *OpenStackClusterSpec) DeepCopyInto(out *OpenStackClusterSpec) {
 		*out = new(NetworkFilter)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.DisableExternalNetwork != nil {
+		in, out := &in.DisableExternalNetwork, &out.DisableExternalNetwork
+		*out = new(bool)
+		**out = **in
+	}
 	if in.APIServerLoadBalancer != nil {
 		in, out := &in.APIServerLoadBalancer, &out.APIServerLoadBalancer
 		*out = new(APIServerLoadBalancer)
 		(*in).DeepCopyInto(*out)
+	}
+	if in.DisableAPIServerFloatingIP != nil {
+		in, out := &in.DisableAPIServerFloatingIP, &out.DisableAPIServerFloatingIP
+		*out = new(bool)
+		**out = **in
 	}
 	if in.APIServerFloatingIP != nil {
 		in, out := &in.APIServerFloatingIP, &out.APIServerFloatingIP
@@ -541,6 +556,11 @@ func (in *OpenStackClusterSpec) DeepCopyInto(out *OpenStackClusterSpec) {
 		*out = new(ManagedSecurityGroups)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.DisablePortSecurity != nil {
+		in, out := &in.DisablePortSecurity, &out.DisablePortSecurity
+		*out = new(bool)
+		**out = **in
+	}
 	if in.Tags != nil {
 		in, out := &in.Tags, &out.Tags
 		*out = make([]string, len(*in))
@@ -551,6 +571,11 @@ func (in *OpenStackClusterSpec) DeepCopyInto(out *OpenStackClusterSpec) {
 		in, out := &in.ControlPlaneAvailabilityZones, &out.ControlPlaneAvailabilityZones
 		*out = make([]string, len(*in))
 		copy(*out, *in)
+	}
+	if in.ControlPlaneOmitAvailabilityZone != nil {
+		in, out := &in.ControlPlaneOmitAvailabilityZone, &out.ControlPlaneOmitAvailabilityZone
+		*out = new(bool)
+		**out = **in
 	}
 	if in.Bastion != nil {
 		in, out := &in.Bastion, &out.Bastion

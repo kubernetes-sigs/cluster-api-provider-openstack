@@ -65,7 +65,7 @@ type OpenStackClusterSpec struct {
 	// If left empty, the network will have the default MTU defined in Openstack network service.
 	// To use this field, the Openstack installation requires the net-mtu neutron API extension.
 	// +optional
-	NetworkMTU int `json:"networkMTU,omitempty"`
+	NetworkMTU optional.Int `json:"networkMTU,omitempty"`
 
 	// ExternalRouterIPs is an array of externalIPs on the respective subnets.
 	// This is necessary if the router needs a fixed ip in a specific subnet.
@@ -92,7 +92,7 @@ type OpenStackClusterSpec struct {
 	// to an external network. This allows for the creation of clusters when connecting
 	// to an external network is not possible or desirable, e.g. if using a provider network.
 	// +optional
-	DisableExternalNetwork bool `json:"disableExternalNetwork"`
+	DisableExternalNetwork optional.Bool `json:"disableExternalNetwork,omitempty"`
 
 	// APIServerLoadBalancer configures the optional LoadBalancer for the APIServer.
 	// It must be activated by setting `enabled: true`.
@@ -112,7 +112,7 @@ type OpenStackClusterSpec struct {
 	// configuration to manage the VIP on the control plane machines, which falls outside of
 	// the scope of this controller.
 	// +optional
-	DisableAPIServerFloatingIP bool `json:"disableAPIServerFloatingIP"`
+	DisableAPIServerFloatingIP optional.Bool `json:"disableAPIServerFloatingIP,omitempty"`
 
 	// APIServerFloatingIP is the floatingIP which will be associated with the API server.
 	// The floatingIP will be created if it does not already exist.
@@ -149,7 +149,8 @@ type OpenStackClusterSpec struct {
 
 	// DisablePortSecurity disables the port security of the network created for the
 	// Kubernetes cluster, which also disables SecurityGroups
-	DisablePortSecurity bool `json:"disablePortSecurity,omitempty"`
+	// +optional
+	DisablePortSecurity optional.Bool `json:"disablePortSecurity,omitempty"`
 
 	// Tags for all resources in cluster
 	// +listType=set
@@ -165,9 +166,12 @@ type OpenStackClusterSpec struct {
 	// +optional
 	ControlPlaneAvailabilityZones []string `json:"controlPlaneAvailabilityZones,omitempty"`
 
-	// Indicates whether to omit the az for control plane nodes, allowing the Nova scheduler
-	// to make a decision on which az to use based on other scheduling constraints
-	ControlPlaneOmitAvailabilityZone bool `json:"controlPlaneOmitAvailabilityZone,omitempty"`
+	// ControlPlaneOmitAvailabilityZone causes availability zone to be
+	// omitted when creating control plane nodes, allowing the Nova
+	// scheduler to make a decision on which availability zone to use based
+	// on other scheduling constraints
+	// +optional
+	ControlPlaneOmitAvailabilityZone optional.Bool `json:"controlPlaneOmitAvailabilityZone,omitempty"`
 
 	// Bastion is the OpenStack instance to login the nodes
 	//
