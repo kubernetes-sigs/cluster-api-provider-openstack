@@ -77,6 +77,7 @@ OpenStackClusterSpec
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ManagedSubnets describe OpenStack Subnets to be created. Cluster actuator will create a network,
 subnets with the defined CIDR, and a router connected to these subnets. Currently only one IPv4
 subnet is supported. If you leave this empty, no network will be created.</p>
@@ -154,6 +155,7 @@ To use this field, the Openstack installation requires the net-mtu neutron API e
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ExternalRouterIPs is an array of externalIPs on the respective subnets.
 This is necessary if the router needs a fixed ip in a specific subnet.</p>
 </td>
@@ -308,6 +310,7 @@ Kubernetes cluster, which also disables SecurityGroups</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Tags for all resources in cluster</p>
 </td>
 </tr>
@@ -333,6 +336,7 @@ sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ControlPlaneAvailabilityZones is the az to deploy control plane to</p>
 </td>
 </tr>
@@ -1951,6 +1955,7 @@ It may not be empty and may not contain commas.</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ManagedSubnets describe OpenStack Subnets to be created. Cluster actuator will create a network,
 subnets with the defined CIDR, and a router connected to these subnets. Currently only one IPv4
 subnet is supported. If you leave this empty, no network will be created.</p>
@@ -2028,6 +2033,7 @@ To use this field, the Openstack installation requires the net-mtu neutron API e
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ExternalRouterIPs is an array of externalIPs on the respective subnets.
 This is necessary if the router needs a fixed ip in a specific subnet.</p>
 </td>
@@ -2182,6 +2188,7 @@ Kubernetes cluster, which also disables SecurityGroups</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Tags for all resources in cluster</p>
 </td>
 </tr>
@@ -2207,6 +2214,7 @@ sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ControlPlaneAvailabilityZones is the az to deploy control plane to</p>
 </td>
 </tr>
@@ -2294,6 +2302,7 @@ NetworkStatusWithSubnets
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Network contains information about the created OpenStack Network.</p>
 </td>
 </tr>
@@ -2307,6 +2316,7 @@ NetworkStatus
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>externalNetwork contains information about the external network used for default ingress and egress traffic.</p>
 </td>
 </tr>
@@ -2320,6 +2330,7 @@ Router
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Router describes the default cluster router</p>
 </td>
 </tr>
@@ -2333,6 +2344,7 @@ LoadBalancer
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>APIServerLoadBalancer describes the api server load balancer if one exists</p>
 </td>
 </tr>
@@ -2359,6 +2371,7 @@ SecurityGroupStatus
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ControlPlaneSecurityGroups contains all the information about the OpenStack
 Security Group that needs to be applied to control plane nodes.
 TODO: Maybe instead of two properties, we add a property to the group?</p>
@@ -2374,6 +2387,7 @@ SecurityGroupStatus
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>WorkerSecurityGroup contains all the information about the OpenStack Security
 Group that needs to be applied to worker nodes.</p>
 </td>
@@ -2388,6 +2402,7 @@ SecurityGroupStatus
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 </td>
 </tr>
 <tr>
@@ -2400,6 +2415,7 @@ BastionStatus
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 </td>
 </tr>
 <tr>
@@ -2496,6 +2512,7 @@ OpenStackClusterSpec
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ManagedSubnets describe OpenStack Subnets to be created. Cluster actuator will create a network,
 subnets with the defined CIDR, and a router connected to these subnets. Currently only one IPv4
 subnet is supported. If you leave this empty, no network will be created.</p>
@@ -2573,6 +2590,7 @@ To use this field, the Openstack installation requires the net-mtu neutron API e
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ExternalRouterIPs is an array of externalIPs on the respective subnets.
 This is necessary if the router needs a fixed ip in a specific subnet.</p>
 </td>
@@ -2727,6 +2745,7 @@ Kubernetes cluster, which also disables SecurityGroups</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Tags for all resources in cluster</p>
 </td>
 </tr>
@@ -2752,6 +2771,7 @@ sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ControlPlaneAvailabilityZones is the az to deploy control plane to</p>
 </td>
 </tr>

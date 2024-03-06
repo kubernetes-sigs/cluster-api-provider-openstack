@@ -34,6 +34,7 @@ type OpenStackClusterSpec struct {
 	// subnets with the defined CIDR, and a router connected to these subnets. Currently only one IPv4
 	// subnet is supported. If you leave this empty, no network will be created.
 	// +kubebuilder:validation:MaxItems=1
+	// +optional
 	ManagedSubnets []SubnetSpec `json:"managedSubnets,omitempty"`
 
 	// Router specifies an existing router to be used if ManagedSubnets are
@@ -63,6 +64,7 @@ type OpenStackClusterSpec struct {
 
 	// ExternalRouterIPs is an array of externalIPs on the respective subnets.
 	// This is necessary if the router needs a fixed ip in a specific subnet.
+	// +optional
 	ExternalRouterIPs []ExternalRouterIPParam `json:"externalRouterIPs,omitempty"`
 
 	// ExternalNetwork is the OpenStack Network to be used to get public internet to the VMs.
@@ -131,6 +133,7 @@ type OpenStackClusterSpec struct {
 
 	// Tags for all resources in cluster
 	// +listType=set
+	// +optional
 	Tags []string `json:"tags,omitempty"`
 
 	// ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
@@ -139,6 +142,7 @@ type OpenStackClusterSpec struct {
 
 	// ControlPlaneAvailabilityZones is the az to deploy control plane to
 	// +listType=set
+	// +optional
 	ControlPlaneAvailabilityZones []string `json:"controlPlaneAvailabilityZones,omitempty"`
 
 	// Indicates whether to omit the az for control plane nodes, allowing the Nova scheduler
@@ -167,15 +171,19 @@ type OpenStackClusterStatus struct {
 	Ready bool `json:"ready"`
 
 	// Network contains information about the created OpenStack Network.
+	// +optional
 	Network *NetworkStatusWithSubnets `json:"network,omitempty"`
 
 	// externalNetwork contains information about the external network used for default ingress and egress traffic.
+	// +optional
 	ExternalNetwork *NetworkStatus `json:"externalNetwork,omitempty"`
 
 	// Router describes the default cluster router
+	// +optional
 	Router *Router `json:"router,omitempty"`
 
 	// APIServerLoadBalancer describes the api server load balancer if one exists
+	// +optional
 	APIServerLoadBalancer *LoadBalancer `json:"apiServerLoadBalancer,omitempty"`
 
 	// FailureDomains represent OpenStack availability zones
@@ -184,14 +192,18 @@ type OpenStackClusterStatus struct {
 	// ControlPlaneSecurityGroups contains all the information about the OpenStack
 	// Security Group that needs to be applied to control plane nodes.
 	// TODO: Maybe instead of two properties, we add a property to the group?
+	// +optional
 	ControlPlaneSecurityGroup *SecurityGroupStatus `json:"controlPlaneSecurityGroup,omitempty"`
 
 	// WorkerSecurityGroup contains all the information about the OpenStack Security
 	// Group that needs to be applied to worker nodes.
+	// +optional
 	WorkerSecurityGroup *SecurityGroupStatus `json:"workerSecurityGroup,omitempty"`
 
+	// +optional
 	BastionSecurityGroup *SecurityGroupStatus `json:"bastionSecurityGroup,omitempty"`
 
+	// +optional
 	Bastion *BastionStatus `json:"bastion,omitempty"`
 
 	// FailureReason will be set in the event that there is a terminal problem
