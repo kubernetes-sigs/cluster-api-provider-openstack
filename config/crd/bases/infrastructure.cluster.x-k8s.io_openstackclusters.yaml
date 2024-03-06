@@ -5736,6 +5736,7 @@ spec:
                   - subnet
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               identityRef:
                 description: |-
                   IdentityRef is a reference to a secret holding OpenStack credentials
@@ -5893,6 +5894,7 @@ spec:
                   type: object
                 maxItems: 1
                 type: array
+                x-kubernetes-list-type: atomic
               network:
                 description: |-
                   Network specifies an existing network to use if no ManagedSubnets
@@ -6117,6 +6119,7 @@ spec:
                   type: object
                 maxItems: 2
                 type: array
+                x-kubernetes-list-type: atomic
               tags:
                 description: Tags for all resources in cluster
                 items:

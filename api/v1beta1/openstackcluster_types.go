@@ -34,6 +34,7 @@ type OpenStackClusterSpec struct {
 	// subnets with the defined CIDR, and a router connected to these subnets. Currently only one IPv4
 	// subnet is supported. If you leave this empty, no network will be created.
 	// +kubebuilder:validation:MaxItems=1
+	// +listType=atomic
 	// +optional
 	ManagedSubnets []SubnetSpec `json:"managedSubnets,omitempty"`
 
@@ -52,6 +53,7 @@ type OpenStackClusterSpec struct {
 	// all subnets in Network will be used. If 2 subnets are specified, one
 	// must be IPv4 and the other IPv6.
 	// +kubebuilder:validation:MaxItems=2
+	// +listType=atomic
 	// +optional
 	Subnets []SubnetFilter `json:"subnets,omitempty"`
 
@@ -64,6 +66,7 @@ type OpenStackClusterSpec struct {
 
 	// ExternalRouterIPs is an array of externalIPs on the respective subnets.
 	// This is necessary if the router needs a fixed ip in a specific subnet.
+	// +listType=atomic
 	// +optional
 	ExternalRouterIPs []ExternalRouterIPParam `json:"externalRouterIPs,omitempty"`
 
