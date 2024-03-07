@@ -79,7 +79,7 @@ type SecurityGroupFilter struct {
 	ID          string `json:"id,omitempty"`
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
-	ProjectID   string `json:"projectId,omitempty"`
+	ProjectID   string `json:"projectID,omitempty"`
 
 	FilterByNeutronTags `json:",inline"`
 }
@@ -87,7 +87,7 @@ type SecurityGroupFilter struct {
 type NetworkFilter struct {
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
-	ProjectID   string `json:"projectId,omitempty"`
+	ProjectID   string `json:"projectID,omitempty"`
 	ID          string `json:"id,omitempty"`
 
 	FilterByNeutronTags `json:",inline"`
@@ -96,12 +96,12 @@ type NetworkFilter struct {
 type SubnetFilter struct {
 	Name            string `json:"name,omitempty"`
 	Description     string `json:"description,omitempty"`
-	ProjectID       string `json:"projectId,omitempty"`
+	ProjectID       string `json:"projectID,omitempty"`
 	IPVersion       int    `json:"ipVersion,omitempty"`
-	GatewayIP       string `json:"gateway_ip,omitempty"`
+	GatewayIP       string `json:"gatewayIP,omitempty"`
 	CIDR            string `json:"cidr,omitempty"`
 	IPv6AddressMode string `json:"ipv6AddressMode,omitempty"`
-	IPv6RAMode      string `json:"ipv6RaMode,omitempty"`
+	IPv6RAMode      string `json:"ipv6RAMode,omitempty"`
 	ID              string `json:"id,omitempty"`
 
 	FilterByNeutronTags `json:",inline"`
@@ -111,7 +111,7 @@ type RouterFilter struct {
 	ID          string `json:"id,omitempty"`
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
-	ProjectID   string `json:"projectId,omitempty"`
+	ProjectID   string `json:"projectID,omitempty"`
 
 	FilterByNeutronTags `json:",inline"`
 }
@@ -190,7 +190,7 @@ type PortOpts struct {
 
 	// HostID specifies the ID of the host where the port resides.
 	// +optional
-	HostID optional.String `json:"hostId,omitempty"`
+	HostID optional.String `json:"hostID,omitempty"`
 
 	// VNICType specifies the type of vNIC which this port should be
 	// attached to. This is used to determine which mechanism driver(s) to
@@ -596,7 +596,7 @@ type APIServerLoadBalancer struct {
 	// AdditionalPorts adds additional tcp ports to the load balancer.
 	AdditionalPorts []int `json:"additionalPorts,omitempty"`
 	// AllowedCIDRs restrict access to all API-Server listeners to the given address CIDRs.
-	AllowedCIDRs []string `json:"allowedCidrs,omitempty"`
+	AllowedCIDRs []string `json:"allowedCIDRs,omitempty"`
 	// Octavia Provider Used to create load balancer
 	Provider string `json:"provider,omitempty"`
 }

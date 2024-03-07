@@ -4874,7 +4874,7 @@ spec:
                     items:
                       type: integer
                     type: array
-                  allowedCidrs:
+                  allowedCIDRs:
                     description: AllowedCIDRs restrict access to all API-Server listeners
                       to the given address CIDRs.
                     items:
@@ -5094,7 +5094,7 @@ spec:
                                         type: string
                                       description:
                                         type: string
-                                      gateway_ip:
+                                      gatewayIP:
                                         type: string
                                       id:
                                         type: string
@@ -5102,7 +5102,7 @@ spec:
                                         type: integer
                                       ipv6AddressMode:
                                         type: string
-                                      ipv6RaMode:
+                                      ipv6RAMode:
                                         type: string
                                       name:
                                         type: string
@@ -5132,7 +5132,7 @@ spec:
                                           type: string
                                         type: array
                                         x-kubernetes-list-type: set
-                                      projectId:
+                                      projectID:
                                         type: string
                                       tags:
                                         description: |-
@@ -5165,7 +5165,7 @@ spec:
                                 type: object
                               type: array
                               x-kubernetes-list-type: atomic
-                            hostId:
+                            hostID:
                               description: HostID specifies the ID of the host where
                                 the port resides.
                               type: string
@@ -5216,7 +5216,7 @@ spec:
                                     type: string
                                   type: array
                                   x-kubernetes-list-type: set
-                                projectId:
+                                projectID:
                                   type: string
                                 tags:
                                   description: |-
@@ -5307,7 +5307,7 @@ spec:
                                       type: string
                                     type: array
                                     x-kubernetes-list-type: set
-                                  projectId:
+                                  projectID:
                                     type: string
                                   tags:
                                     description: |-
@@ -5447,7 +5447,7 @@ spec:
                                 type: string
                               type: array
                               x-kubernetes-list-type: set
-                            projectId:
+                            projectID:
                               type: string
                             tags:
                               description: |-
@@ -5617,7 +5617,7 @@ spec:
                       type: string
                     type: array
                     x-kubernetes-list-type: set
-                  projectId:
+                  projectID:
                     type: string
                   tags:
                     description: |-
@@ -5664,7 +5664,7 @@ spec:
                           type: string
                         description:
                           type: string
-                        gateway_ip:
+                        gatewayIP:
                           type: string
                         id:
                           type: string
@@ -5672,7 +5672,7 @@ spec:
                           type: integer
                         ipv6AddressMode:
                           type: string
-                        ipv6RaMode:
+                        ipv6RAMode:
                           type: string
                         name:
                           type: string
@@ -5702,7 +5702,7 @@ spec:
                             type: string
                           type: array
                           x-kubernetes-list-type: set
-                        projectId:
+                        projectID:
                           type: string
                         tags:
                           description: |-
@@ -5930,7 +5930,7 @@ spec:
                       type: string
                     type: array
                     x-kubernetes-list-type: set
-                  projectId:
+                  projectID:
                     type: string
                   tags:
                     description: |-
@@ -5960,7 +5960,7 @@ spec:
                     type: array
                     x-kubernetes-list-type: set
                 type: object
-              networkMtu:
+              networkMTU:
                 description: |-
                   NetworkMTU sets the maximum transmission unit (MTU) value to address fragmentation for the private network ID.
                   This value will be used only if the Cluster actuator creates the network.
@@ -6004,7 +6004,7 @@ spec:
                       type: string
                     type: array
                     x-kubernetes-list-type: set
-                  projectId:
+                  projectID:
                     type: string
                   tags:
                     description: |-
@@ -6047,7 +6047,7 @@ spec:
                       type: string
                     description:
                       type: string
-                    gateway_ip:
+                    gatewayIP:
                       type: string
                     id:
                       type: string
@@ -6055,7 +6055,7 @@ spec:
                       type: integer
                     ipv6AddressMode:
                       type: string
-                    ipv6RaMode:
+                    ipv6RAMode:
                       type: string
                     name:
                       type: string
@@ -6085,7 +6085,7 @@ spec:
                         type: string
                       type: array
                       x-kubernetes-list-type: set
-                    projectId:
+                    projectID:
                       type: string
                     tags:
                       description: |-
@@ -6253,7 +6253,7 @@ spec:
                                         type: string
                                       description:
                                         type: string
-                                      gateway_ip:
+                                      gatewayIP:
                                         type: string
                                       id:
                                         type: string
@@ -6261,7 +6261,7 @@ spec:
                                         type: integer
                                       ipv6AddressMode:
                                         type: string
-                                      ipv6RaMode:
+                                      ipv6RAMode:
                                         type: string
                                       name:
                                         type: string
@@ -6291,7 +6291,7 @@ spec:
                                           type: string
                                         type: array
                                         x-kubernetes-list-type: set
-                                      projectId:
+                                      projectID:
                                         type: string
                                       tags:
                                         description: |-
@@ -6324,7 +6324,7 @@ spec:
                                 type: object
                               type: array
                               x-kubernetes-list-type: atomic
-                            hostId:
+                            hostID:
                               description: HostID specifies the ID of the host where
                                 the port resides.
                               type: string
@@ -6375,7 +6375,7 @@ spec:
                                     type: string
                                   type: array
                                   x-kubernetes-list-type: set
-                                projectId:
+                                projectID:
                                   type: string
                                 tags:
                                   description: |-
@@ -6466,7 +6466,7 @@ spec:
                                       type: string
                                     type: array
                                     x-kubernetes-list-type: set
-                                  projectId:
+                                  projectID:
                                     type: string
                                   tags:
                                     description: |-

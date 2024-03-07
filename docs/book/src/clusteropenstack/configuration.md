@@ -313,7 +313,7 @@ metadata:
   namespace: <cluster-namespace>
 spec:
   apiServerLoadBalancer:
-    allowedCidrs:
+    allowedCIDRs:
     - 192.168.10/24
     - 10.10.0.0/16
 ```

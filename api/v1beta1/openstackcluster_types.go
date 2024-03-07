@@ -59,7 +59,7 @@ type OpenStackClusterSpec struct {
 	// If left empty, the network will have the default MTU defined in Openstack network service.
 	// To use this field, the Openstack installation requires the net-mtu neutron API extension.
 	// +optional
-	NetworkMTU int `json:"networkMtu,omitempty"`
+	NetworkMTU int `json:"networkMTU,omitempty"`
 
 	// ExternalRouterIPs is an array of externalIPs on the respective subnets.
 	// This is necessary if the router needs a fixed ip in a specific subnet.
