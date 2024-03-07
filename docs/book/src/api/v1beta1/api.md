@@ -131,7 +131,7 @@ must be IPv4 and the other IPv6.</p>
 </tr>
 <tr>
 <td>
-<code>networkMtu</code><br/>
+<code>networkMTU</code><br/>
 <em>
 int
 </em>
@@ -842,7 +842,7 @@ bool
 </tr>
 <tr>
 <td>
-<code>allowedCidrs</code><br/>
+<code>allowedCIDRs</code><br/>
 <em>
 []string
 </em>
@@ -1780,7 +1780,7 @@ string
 </tr>
 <tr>
 <td>
-<code>projectId</code><br/>
+<code>projectID</code><br/>
 <em>
 string
 </em>
@@ -2005,7 +2005,7 @@ must be IPv4 and the other IPv6.</p>
 </tr>
 <tr>
 <td>
-<code>networkMtu</code><br/>
+<code>networkMTU</code><br/>
 <em>
 int
 </em>
@@ -2550,7 +2550,7 @@ must be IPv4 and the other IPv6.</p>
 </tr>
 <tr>
 <td>
-<code>networkMtu</code><br/>
+<code>networkMTU</code><br/>
 <em>
 int
 </em>
@@ -3619,7 +3619,7 @@ bastion host.</p>
 </tr>
 <tr>
 <td>
-<code>hostId</code><br/>
+<code>hostID</code><br/>
 <em>
 string
 </em>
@@ -3968,7 +3968,7 @@ string
 </tr>
 <tr>
 <td>
-<code>projectId</code><br/>
+<code>projectID</code><br/>
 <em>
 string
 </em>
@@ -4042,7 +4042,7 @@ string
 </tr>
 <tr>
 <td>
-<code>projectId</code><br/>
+<code>projectID</code><br/>
 <em>
 string
 </em>
@@ -4590,7 +4590,7 @@ string
 </tr>
 <tr>
 <td>
-<code>projectId</code><br/>
+<code>projectID</code><br/>
 <em>
 string
 </em>
@@ -4610,7 +4610,7 @@ int
 </tr>
 <tr>
 <td>
-<code>gateway_ip</code><br/>
+<code>gatewayIP</code><br/>
 <em>
 string
 </em>
@@ -4640,7 +4640,7 @@ string
 </tr>
 <tr>
 <td>
-<code>ipv6RaMode</code><br/>
+<code>ipv6RAMode</code><br/>
 <em>
 string
 </em>

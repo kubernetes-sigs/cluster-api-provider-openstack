@@ -25,7 +25,10 @@
       - [Change to managedSecurityGroups](#change-to-managedsecuritygroups)
       - [Calico CNI](#calico-cni)
       - [Change to network](#change-to-network)
-    - [Changes to filter tags](#changes-to-filter-tags)
+      - [Change to networkMtu](#change-to-networkmtu)
+    - [Changes to filters](#changes-to-filters)
+      - [Changes to filter tags](#changes-to-filter-tags)
+      - [Field capitalization consistency](#field-capitalization-consistency)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -95,6 +98,11 @@ When specifying `allowedAddressPairs`, `ipAddress` is now required. Neutron has 
 Setting either of the following fields explicitly to the empty string would previously have caused the default behaviour to be used. In v1beta1 it will result in an empty string being used instead. To retain the default behaviour in v1beta1, do not set the value at all. When objects are upgraded automatically by the controller, empty values will become unset values by default, so this applies only to newly created objects.
 * nameSuffix
 * description
+
+The following fields in `PortOpts` are renamed in order to keep them consistent with K8s API conventions:
+
+* `hostId` becomes `hostID`
+* `allowedCidrs` becomes `allowedCIDRs`
 
 ### `OpenStackCluster`
 
@@ -314,7 +322,13 @@ allow backwards compatibility if `allowAllInClusterTraffic` is set to false.
 
 In v1beta1, when the `OpenStackCluster.Spec.Network` is not defined, the `Subnets` are now used to identify the `Network`.
 
-### Changes to filter tags
+#### Change to networkMtu
+
+In v1beta1, `OpenStackCluster.spec.NetworkMtu` becomes `OpenStackCluster.spec.NetworkMTU` in order to keep the name consistent with K8s API conventions.
+
+### Changes to filters
+
+#### Changes to filter tags
 
 We currently define filters on 4 different Neutron resources which are used throughout the API:
 * Networks
@@ -343,3 +357,18 @@ subnet:
 ```
 
 Due to the limitations of the encoding of tag queries in Neutron, tags must be non-empty and may not contain commas. Tags will be automatically converted to a list of tags during conversion.
+
+#### Field capitalization consistency
+
+In order to keep field names consistent with K8s API conventions, various fields in the `Filters` are renamed. This includes:
+
+* `SecurityGroupFilter`
+  * `projectId` becomes `projectID`
+* `NetworkFilter`
+  * `projectId` becomes `projectID`
+* `SubnetFilter`
+  * `projectId` becomes `projectID`
+  * `gateway_ip` becomes `gatewayIP`
+  * `ipv6RaMode` becomes `ipv6RAMode`
+* `RouterFilter`
+  * `projectId` becomes `projectID`

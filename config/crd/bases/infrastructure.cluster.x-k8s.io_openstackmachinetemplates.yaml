@@ -1569,7 +1569,7 @@ spec:
                                         type: string
                                       description:
                                         type: string
-                                      gateway_ip:
+                                      gatewayIP:
                                         type: string
                                       id:
                                         type: string
@@ -1577,7 +1577,7 @@ spec:
                                         type: integer
                                       ipv6AddressMode:
                                         type: string
-                                      ipv6RaMode:
+                                      ipv6RAMode:
                                         type: string
                                       name:
                                         type: string
@@ -1607,7 +1607,7 @@ spec:
                                           type: string
                                         type: array
                                         x-kubernetes-list-type: set
-                                      projectId:
+                                      projectID:
                                         type: string
                                       tags:
                                         description: |-
@@ -1640,7 +1640,7 @@ spec:
                                 type: object
                               type: array
                               x-kubernetes-list-type: atomic
-                            hostId:
+                            hostID:
                               description: HostID specifies the ID of the host where
                                 the port resides.
                               type: string
@@ -1691,7 +1691,7 @@ spec:
                                     type: string
                                   type: array
                                   x-kubernetes-list-type: set
-                                projectId:
+                                projectID:
                                   type: string
                                 tags:
                                   description: |-
@@ -1782,7 +1782,7 @@ spec:
                                       type: string
                                     type: array
                                     x-kubernetes-list-type: set
-                                  projectId:
+                                  projectID:
                                     type: string
                                   tags:
                                     description: |-
@@ -1922,7 +1922,7 @@ spec:
                                 type: string
                               type: array
                               x-kubernetes-list-type: set
-                            projectId:
+                            projectID:
                               type: string
                             tags:
                               description: |-
