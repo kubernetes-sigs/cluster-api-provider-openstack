@@ -162,6 +162,10 @@ func restorev1alpha6ClusterSpec(previous *OpenStackClusterSpec, dst *OpenStackCl
 func restorev1beta1ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infrav1.OpenStackClusterSpec) {
 	// Bastion is restored separately
 
+	if dst.Network.IsEmpty() {
+		dst.Network = previous.Network
+	}
+
 	// Restore all fields except ID, which should have been copied over in conversion
 	dst.ExternalNetwork.Name = previous.ExternalNetwork.Name
 	dst.ExternalNetwork.Description = previous.ExternalNetwork.Description

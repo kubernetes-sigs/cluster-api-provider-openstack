@@ -94,6 +94,9 @@ type NetworkFilter struct {
 }
 
 func (networkFilter *NetworkFilter) IsEmpty() bool {
+	if networkFilter == nil {
+		return true
+	}
 	return networkFilter.Name == "" &&
 		networkFilter.Description == "" &&
 		networkFilter.ProjectID == "" &&
