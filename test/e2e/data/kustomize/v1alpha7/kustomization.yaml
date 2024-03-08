@@ -24,3 +24,8 @@ patches:
   target:
     kind: OpenStackCluster
     name: \${CLUSTER_NAME}
+- patch: |-
+    - op: "remove"
+      path: "/spec/externalNetworkId"
+  target:
+    kind: OpenStackCluster

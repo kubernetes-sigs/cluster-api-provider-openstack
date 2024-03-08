@@ -203,7 +203,8 @@ variables:
   OPENSTACK_IMAGE_NAME_UPGRADE_FROM: "ubuntu-2204-kube-v1.27.2"
   OPENSTACK_NODE_MACHINE_FLAVOR: "m1.small"
   OPENSTACK_SSH_KEY_NAME: "cluster-api-provider-openstack-sigs-k8s-io"
-  OPENSTACK_EXTERNAL_NETWORK_ID: ""
+  # The default external network created by devstack
+  OPENSTACK_EXTERNAL_NETWORK_NAME: "public"
   OPENSTACK_VOLUME_TYPE_ALT: "test-volume-type"
   CONFORMANCE_WORKER_MACHINE_COUNT: "5"
   CONFORMANCE_CONTROL_PLANE_MACHINE_COUNT: "1"

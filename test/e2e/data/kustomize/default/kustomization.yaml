@@ -6,3 +6,4 @@ components:
 - ../common-patches/cni
 - ../upgrade-patches
 - ../common-patches/ccm
+- ../common-patches/externalNetworkByName
