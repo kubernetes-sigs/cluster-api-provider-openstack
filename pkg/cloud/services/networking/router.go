@@ -27,6 +27,7 @@ import (
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/filterconvert"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
@@ -49,7 +50,7 @@ func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, cl
 	routerListOpts := routers.ListOpts{Name: routerName}
 	existingRouter := false
 	if openStackCluster.Spec.Router != nil {
-		routerListOpts = openStackCluster.Spec.Router.ToListOpt()
+		routerListOpts = filterconvert.RouterFilterToListOpts(openStackCluster.Spec.Router)
 		existingRouter = true
 	}
 
@@ -196,7 +197,7 @@ func (s *Service) DeleteRouter(openStackCluster *infrav1.OpenStackCluster, clust
 	listOpts := routers.ListOpts{Name: routerName}
 	existingRouter := false
 	if openStackCluster.Spec.Router != nil {
-		listOpts = openStackCluster.Spec.Router.ToListOpt()
+		listOpts = filterconvert.RouterFilterToListOpts(openStackCluster.Spec.Router)
 		existingRouter = true
 	}
 

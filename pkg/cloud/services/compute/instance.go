@@ -37,6 +37,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/filterconvert"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/hash"
 )
 
@@ -336,7 +337,8 @@ func (s *Service) GetImageID(image infrav1.ImageFilter) (string, error) {
 		return image.ID, nil
 	}
 
-	allImages, err := s.getImageClient().ListImages(image.ToListOpt())
+	listOpts := filterconvert.ImageFilterToListOpts(&image)
+	allImages, err := s.getImageClient().ListImages(listOpts)
 	if err != nil {
 		return "", err
 	}

@@ -1,5 +1,5 @@
 /*
-Copyright 2023 The Kubernetes Authors.
+Copyright 2024 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,29 +14,32 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha7
+package filterconvert
 
 import (
+	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
 	securitygroups "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
+
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
-func (securityGroupFilter SecurityGroupFilter) ToListOpt() securitygroups.ListOpts {
+func SecurityGroupFilterToListOpts(securityGroupFilter *infrav1.SecurityGroupFilter) securitygroups.ListOpts {
 	return securitygroups.ListOpts{
 		ID:          securityGroupFilter.ID,
 		Name:        securityGroupFilter.Name,
 		Description: securityGroupFilter.Description,
 		ProjectID:   securityGroupFilter.ProjectID,
-		Tags:        securityGroupFilter.Tags,
-		TagsAny:     securityGroupFilter.TagsAny,
-		NotTags:     securityGroupFilter.NotTags,
-		NotTagsAny:  securityGroupFilter.NotTagsAny,
+		Tags:        infrav1.JoinTags(securityGroupFilter.Tags),
+		TagsAny:     infrav1.JoinTags(securityGroupFilter.TagsAny),
+		NotTags:     infrav1.JoinTags(securityGroupFilter.NotTags),
+		NotTagsAny:  infrav1.JoinTags(securityGroupFilter.NotTagsAny),
 	}
 }
 
-func (subnetFilter SubnetFilter) ToListOpt() subnets.ListOpts {
+func SubnetFilterToListOpts(subnetFilter *infrav1.SubnetFilter) subnets.ListOpts {
 	return subnets.ListOpts{
 		Name:            subnetFilter.Name,
 		Description:     subnetFilter.Description,
@@ -47,35 +50,43 @@ func (subnetFilter SubnetFilter) ToListOpt() subnets.ListOpts {
 		IPv6AddressMode: subnetFilter.IPv6AddressMode,
 		IPv6RAMode:      subnetFilter.IPv6RAMode,
 		ID:              subnetFilter.ID,
-		Tags:            subnetFilter.Tags,
-		TagsAny:         subnetFilter.TagsAny,
-		NotTags:         subnetFilter.NotTags,
-		NotTagsAny:      subnetFilter.NotTagsAny,
+		Tags:            infrav1.JoinTags(subnetFilter.Tags),
+		TagsAny:         infrav1.JoinTags(subnetFilter.TagsAny),
+		NotTags:         infrav1.JoinTags(subnetFilter.NotTags),
+		NotTagsAny:      infrav1.JoinTags(subnetFilter.NotTagsAny),
 	}
 }
 
-func (networkFilter NetworkFilter) ToListOpt() networks.ListOpts {
+func NetworkFilterToListOpts(networkFilter *infrav1.NetworkFilter) networks.ListOpts {
 	return networks.ListOpts{
 		Name:        networkFilter.Name,
 		Description: networkFilter.Description,
 		ProjectID:   networkFilter.ProjectID,
 		ID:          networkFilter.ID,
-		Tags:        networkFilter.Tags,
-		TagsAny:     networkFilter.TagsAny,
-		NotTags:     networkFilter.NotTags,
-		NotTagsAny:  networkFilter.NotTagsAny,
+		Tags:        infrav1.JoinTags(networkFilter.Tags),
+		TagsAny:     infrav1.JoinTags(networkFilter.TagsAny),
+		NotTags:     infrav1.JoinTags(networkFilter.NotTags),
+		NotTagsAny:  infrav1.JoinTags(networkFilter.NotTagsAny),
 	}
 }
 
-func (routerFilter RouterFilter) ToListOpt() routers.ListOpts {
+func RouterFilterToListOpts(routerFilter *infrav1.RouterFilter) routers.ListOpts {
 	return routers.ListOpts{
 		ID:          routerFilter.ID,
 		Name:        routerFilter.Name,
 		Description: routerFilter.Description,
 		ProjectID:   routerFilter.ProjectID,
-		Tags:        routerFilter.Tags,
-		TagsAny:     routerFilter.TagsAny,
-		NotTags:     routerFilter.NotTags,
-		NotTagsAny:  routerFilter.NotTagsAny,
+		Tags:        infrav1.JoinTags(routerFilter.Tags),
+		TagsAny:     infrav1.JoinTags(routerFilter.TagsAny),
+		NotTags:     infrav1.JoinTags(routerFilter.NotTags),
+		NotTagsAny:  infrav1.JoinTags(routerFilter.NotTagsAny),
+	}
+}
+
+func ImageFilterToListOpts(imageFilter *infrav1.ImageFilter) images.ListOpts {
+	return images.ListOpts{
+		ID:   imageFilter.ID,
+		Name: imageFilter.Name,
+		Tags: imageFilter.Tags,
 	}
 }

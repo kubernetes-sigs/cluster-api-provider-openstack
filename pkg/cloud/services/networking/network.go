@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/filterconvert"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
@@ -77,7 +78,6 @@ func (c createOpts) ToNetworkCreateMap() (map[string]interface{}, error) {
 // - the user has set OpenStackCluster.Spec.DisableExternalNetwork to true.
 func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCluster) error {
 	var listOpts external.ListOptsExt
-	var emptyExternalnetwork infrav1.NetworkFilter
 	var isAutoDetecting bool
 
 	if openStackCluster.Spec.DisableExternalNetwork {
@@ -86,9 +86,10 @@ func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCl
 		return nil
 	}
 
-	if openStackCluster.Spec.ExternalNetwork.ToListOpt() != emptyExternalnetwork.ToListOpt() {
+	externalNetworkListOpts := filterconvert.NetworkFilterToListOpts(&openStackCluster.Spec.ExternalNetwork)
+	if externalNetworkListOpts != (networks.ListOpts{}) {
 		listOpts = external.ListOptsExt{
-			ListOptsBuilder: openStackCluster.Spec.ExternalNetwork.ToListOpt(),
+			ListOptsBuilder: externalNetworkListOpts,
 		}
 	} else {
 		// ExternalNetwork is not given so we'll list all networks and filter for external networks
@@ -345,16 +346,17 @@ func (s *Service) GetSubnetsByFilter(opts subnets.ListOptsBuilder) ([]subnets.Su
 // GetSubnetByFilter gets a single subnet specified by the given SubnetFilter.
 // It returns an ErrFilterMatch if no or multiple subnets are found.
 func (s *Service) GetSubnetByFilter(filter *infrav1.SubnetFilter) (*subnets.Subnet, error) {
-	return s.getSubnetByFilter(filter.ToListOpt())
+	listOpts := filterconvert.SubnetFilterToListOpts(filter)
+	return s.getSubnetByFilter(listOpts)
 }
 
 // GetNetworkSubnetByFilter gets a single subnet of the given network, specified by the given SubnetFilter.
 // It returns an ErrFilterMatch if no or multiple subnets are found.
 func (s *Service) GetNetworkSubnetByFilter(networkID string, filter *infrav1.SubnetFilter) (*subnets.Subnet, error) {
-	listOpt := filter.ToListOpt()
-	listOpt.NetworkID = networkID
+	listOpts := filterconvert.SubnetFilterToListOpts(filter)
+	listOpts.NetworkID = networkID
 
-	return s.getSubnetByFilter(listOpt)
+	return s.getSubnetByFilter(listOpts)
 }
 
 // getSubnetByFilter gets a single subnet specified by the given gophercloud ListOpts.

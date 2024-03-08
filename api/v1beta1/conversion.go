@@ -17,6 +17,8 @@ limitations under the License.
 package v1beta1
 
 import (
+	"strings"
+
 	"k8s.io/utils/pointer"
 )
 
@@ -68,4 +70,48 @@ func LegacyCalicoSecurityGroupRules() []SecurityGroupRuleSpec {
 			RemoteManagedGroups: []ManagedSecurityGroupName{"controlplane", "worker"},
 		},
 	}
+}
+
+// splitTags splits a comma separated list of tags into a slice of tags.
+// If the input is an empty string, it returns nil representing no list rather
+// than an empty list.
+func splitTags(tags string) []NeutronTag {
+	if tags == "" {
+		return nil
+	}
+
+	var ret []NeutronTag
+	for _, tag := range strings.Split(tags, ",") {
+		if tag != "" {
+			ret = append(ret, NeutronTag(tag))
+		}
+	}
+
+	return ret
+}
+
+// JoinTags joins a slice of tags into a comma separated list of tags.
+func JoinTags(tags []NeutronTag) string {
+	var b strings.Builder
+	for i := range tags {
+		if i > 0 {
+			b.WriteString(",")
+		}
+		b.WriteString(string(tags[i]))
+	}
+	return b.String()
+}
+
+func ConvertAllTagsTo(tags, tagsAny, notTags, notTagsAny string, neutronTags *FilterByNeutronTags) {
+	neutronTags.Tags = splitTags(tags)
+	neutronTags.TagsAny = splitTags(tagsAny)
+	neutronTags.NotTags = splitTags(notTags)
+	neutronTags.NotTagsAny = splitTags(notTagsAny)
+}
+
+func ConvertAllTagsFrom(neutronTags *FilterByNeutronTags, tags, tagsAny, notTags, notTagsAny *string) {
+	*tags = JoinTags(neutronTags.Tags)
+	*tagsAny = JoinTags(neutronTags.TagsAny)
+	*notTags = JoinTags(neutronTags.NotTags)
+	*notTagsAny = JoinTags(neutronTags.NotTagsAny)
 }
