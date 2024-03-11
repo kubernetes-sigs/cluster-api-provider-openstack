@@ -59,7 +59,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 	openStackCluster := &infrav1.OpenStackCluster{
 		Spec: infrav1.OpenStackClusterSpec{
 			APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
-				Enabled: true,
+				Enabled: pointer.Bool(true),
 			},
 			DisableAPIServerFloatingIP: pointer.Bool(true),
 			ControlPlaneEndpoint: &clusterv1.APIEndpoint{

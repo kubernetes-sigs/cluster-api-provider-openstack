@@ -209,7 +209,7 @@ APIServerLoadBalancer
 <td>
 <em>(Optional)</em>
 <p>APIServerLoadBalancer configures the optional LoadBalancer for the APIServer.
-It must be activated by setting <code>enabled: true</code>.</p>
+If not specified, no load balancer will be created for the API server.</p>
 </td>
 </tr>
 <tr>
@@ -852,7 +852,11 @@ bool
 </em>
 </td>
 <td>
-<p>Enabled defines whether a load balancer should be created.</p>
+<p>Enabled defines whether a load balancer should be created. This value
+defaults to true if an APIServerLoadBalancer is given.</p>
+<p>There is no reason to set this to false. To disable creation of the
+API server loadbalancer, omit the APIServerLoadBalancer field in the
+cluster spec instead.</p>
 </td>
 </tr>
 <tr>
@@ -863,6 +867,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>AdditionalPorts adds additional tcp ports to the load balancer.</p>
 </td>
 </tr>
@@ -874,6 +879,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>AllowedCIDRs restrict access to all API-Server listeners to the given address CIDRs.</p>
 </td>
 </tr>
@@ -885,7 +891,10 @@ string
 </em>
 </td>
 <td>
-<p>Octavia Provider Used to create load balancer</p>
+<em>(Optional)</em>
+<p>Provider specifies name of a specific Octavia provider to use for the
+API load balancer. The Octavia default will be used if it is not
+specified.</p>
 </td>
 </tr>
 </tbody>
@@ -2109,7 +2118,7 @@ APIServerLoadBalancer
 <td>
 <em>(Optional)</em>
 <p>APIServerLoadBalancer configures the optional LoadBalancer for the APIServer.
-It must be activated by setting <code>enabled: true</code>.</p>
+If not specified, no load balancer will be created for the API server.</p>
 </td>
 </tr>
 <tr>
@@ -2691,7 +2700,7 @@ APIServerLoadBalancer
 <td>
 <em>(Optional)</em>
 <p>APIServerLoadBalancer configures the optional LoadBalancer for the APIServer.
-It must be activated by setting <code>enabled: true</code>.</p>
+If not specified, no load balancer will be created for the API server.</p>
 </td>
 </tr>
 <tr>

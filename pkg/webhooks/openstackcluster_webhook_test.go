@@ -167,7 +167,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						CloudName: "foobar",
 					},
 					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
-						Enabled: true,
+						Enabled: pointer.Bool(true),
 						AllowedCIDRs: []string{
 							"0.0.0.0/0",
 							"192.168.10.0/24",
@@ -182,7 +182,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						CloudName: "foobar",
 					},
 					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
-						Enabled: true,
+						Enabled: pointer.Bool(true),
 						AllowedCIDRs: []string{
 							"0.0.0.0/0",
 							"192.168.10.0/24",

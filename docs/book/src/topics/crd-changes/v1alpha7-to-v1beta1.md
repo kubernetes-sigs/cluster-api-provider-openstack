@@ -26,6 +26,7 @@
       - [Calico CNI](#calico-cni)
       - [Change to network](#change-to-network)
       - [Change to networkMtu](#change-to-networkmtu)
+      - [Changes to apiServerLoadBalancer](#changes-to-apiserverloadbalancer)
     - [Changes to filters](#changes-to-filters)
       - [Changes to filter tags](#changes-to-filter-tags)
       - [Field capitalization consistency](#field-capitalization-consistency)
@@ -325,6 +326,23 @@ In v1beta1, when the `OpenStackCluster.Spec.Network` is not defined, the `Subnet
 #### Change to networkMtu
 
 In v1beta1, `OpenStackCluster.spec.NetworkMtu` becomes `OpenStackCluster.spec.NetworkMTU` in order to keep the name consistent with K8s API conventions.
+
+#### Changes to apiServerLoadBalancer
+
+In v1beta1, `OpenStackCluster.spec.apiServerLoadBalancer` becomes optional and can be entirely omitted. Therefore `enabled` can be assumed by the presence of the field. Consequently `enabled` now defaults to `true` if `apiServerLoadBalancer` is specified. The following are now equivalent:
+
+```yaml
+spec:
+    ...
+    apiServerLoadBalancer:
+      enabled: true
+```
+
+```yaml
+spec:
+    ...
+    apiServerLoadBalancer: {}
+```
 
 ### Changes to filters
 
