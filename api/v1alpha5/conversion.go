@@ -205,7 +205,7 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(in *i
 		return err
 	}
 
-	if in.ExternalNetwork.ID != "" {
+	if in.ExternalNetwork != nil && in.ExternalNetwork.ID != "" {
 		out.ExternalNetworkID = in.ExternalNetwork.ID
 	}
 
@@ -227,6 +227,12 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(in *i
 		out.AllowAllInClusterTraffic = in.ManagedSecurityGroups.AllowAllInClusterTraffic
 	}
 
+	if in.APIServerLoadBalancer != nil {
+		if err := Convert_v1beta1_APIServerLoadBalancer_To_v1alpha5_APIServerLoadBalancer(in.APIServerLoadBalancer, &out.APIServerLoadBalancer, s); err != nil {
+			return err
+		}
+	}
+
 	out.CloudName = in.IdentityRef.CloudName
 	out.IdentityRef = &OpenStackIdentityReference{Name: in.IdentityRef.Name}
 
@@ -240,7 +246,7 @@ func Convert_v1alpha5_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 	}
 
 	if in.ExternalNetworkID != "" {
-		out.ExternalNetwork = infrav1.NetworkFilter{
+		out.ExternalNetwork = &infrav1.NetworkFilter{
 			ID: in.ExternalNetworkID,
 		}
 	}
@@ -273,9 +279,28 @@ func Convert_v1alpha5_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 		}
 	}
 
+	if in.APIServerLoadBalancer.Enabled {
+		out.APIServerLoadBalancer = &infrav1.APIServerLoadBalancer{}
+		if err := Convert_v1alpha5_APIServerLoadBalancer_To_v1beta1_APIServerLoadBalancer(&in.APIServerLoadBalancer, out.APIServerLoadBalancer, s); err != nil {
+			return err
+		}
+	}
+
 	out.IdentityRef.CloudName = in.CloudName
 	if in.IdentityRef != nil {
 		out.IdentityRef.Name = in.IdentityRef.Name
+	}
+
+	// The generated conversion function converts "" to &"" which is not what we want
+	if in.APIServerFloatingIP == "" {
+		out.APIServerFloatingIP = nil
+	}
+	if in.APIServerFixedIP == "" {
+		out.APIServerFixedIP = nil
+	}
+
+	if in.APIServerPort != 0 {
+		out.APIServerPort = pointer.Int(in.APIServerPort)
 	}
 
 	return nil

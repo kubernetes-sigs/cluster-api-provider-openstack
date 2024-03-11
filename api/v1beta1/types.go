@@ -94,6 +94,9 @@ type NetworkFilter struct {
 }
 
 func (networkFilter *NetworkFilter) IsEmpty() bool {
+	if networkFilter == nil {
+		return true
+	}
 	return networkFilter.Name == "" &&
 		networkFilter.Description == "" &&
 		networkFilter.ProjectID == "" &&
@@ -610,6 +613,14 @@ type APIServerLoadBalancer struct {
 	AllowedCIDRs []string `json:"allowedCIDRs,omitempty"`
 	// Octavia Provider Used to create load balancer
 	Provider string `json:"provider,omitempty"`
+}
+
+func (s *APIServerLoadBalancer) IsZero() bool {
+	return s == nil || (!s.Enabled && len(s.AdditionalPorts) == 0 && len(s.AllowedCIDRs) == 0 && s.Provider == "")
+}
+
+func (s *APIServerLoadBalancer) IsEnabled() bool {
+	return s != nil && s.Enabled
 }
 
 // ReferencedMachineResources contains resolved references to resources required by the machine.

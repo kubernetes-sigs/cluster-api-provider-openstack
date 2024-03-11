@@ -21,6 +21,7 @@ import (
 	"k8s.io/utils/pointer"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
 )
 
 /* SecurityGroupFilter */
@@ -200,17 +201,9 @@ func restorev1alpha7Port(previous *PortOpts, dst *PortOpts) {
 }
 
 func restorev1beta1Port(previous *infrav1.PortOpts, dst *infrav1.PortOpts) {
-	if dst.NameSuffix == nil || *dst.NameSuffix == "" {
-		dst.NameSuffix = previous.NameSuffix
-	}
-
-	if dst.Description == nil || *dst.Description == "" {
-		dst.Description = previous.Description
-	}
-
-	if dst.MACAddress == nil || *dst.MACAddress == "" {
-		dst.MACAddress = previous.MACAddress
-	}
+	optional.RestoreString(&previous.NameSuffix, &dst.NameSuffix)
+	optional.RestoreString(&previous.Description, &dst.Description)
+	optional.RestoreString(&previous.MACAddress, &dst.MACAddress)
 
 	if len(dst.FixedIPs) == len(previous.FixedIPs) {
 		for j := range dst.FixedIPs {
@@ -234,13 +227,8 @@ func restorev1beta1Port(previous *infrav1.PortOpts, dst *infrav1.PortOpts) {
 		}
 	}
 
-	if dst.HostID == nil || *dst.HostID == "" {
-		dst.HostID = previous.HostID
-	}
-
-	if dst.VNICType == nil || *dst.VNICType == "" {
-		dst.VNICType = previous.VNICType
-	}
+	optional.RestoreString(&previous.HostID, &dst.HostID)
+	optional.RestoreString(&previous.VNICType, &dst.VNICType)
 
 	if dst.Profile == nil && previous.Profile != nil {
 		dst.Profile = &infrav1.BindingProfile{}

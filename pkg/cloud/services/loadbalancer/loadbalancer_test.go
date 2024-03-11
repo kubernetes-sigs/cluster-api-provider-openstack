@@ -31,6 +31,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/pools"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/providers"
 	. "github.com/onsi/gomega"
+	"k8s.io/utils/pointer"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -45,20 +46,23 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	// Stub the call to net.LookupHost
-	lookupHost = func(host string) (addrs string, err error) {
+	lookupHost = func(host string) (addrs *string, err error) {
 		if net.ParseIP(host) != nil {
-			return host, nil
+			return &host, nil
 		} else if host == apiHostname {
 			ips := []string{"192.168.100.10"}
-			return ips[0], nil
+			return &ips[0], nil
 		}
-		return "", errors.New("Unknown Host " + host)
+		return nil, errors.New("Unknown Host " + host)
 	}
 
 	openStackCluster := &infrav1.OpenStackCluster{
 		Spec: infrav1.OpenStackClusterSpec{
-			DisableAPIServerFloatingIP: true,
-			ControlPlaneEndpoint: clusterv1.APIEndpoint{
+			APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
+				Enabled: true,
+			},
+			DisableAPIServerFloatingIP: pointer.Bool(true),
+			ControlPlaneEndpoint: &clusterv1.APIEndpoint{
 				Host: apiHostname,
 				Port: 6443,
 			},
@@ -159,25 +163,25 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 
 func Test_getAPIServerVIPAddress(t *testing.T) {
 	// Stub the call to net.LookupHost
-	lookupHost = func(host string) (addrs string, err error) {
+	lookupHost = func(host string) (addrs *string, err error) {
 		if net.ParseIP(host) != nil {
-			return host, nil
+			return &host, nil
 		} else if host == apiHostname {
 			ips := []string{"192.168.100.10"}
-			return ips[0], nil
+			return &ips[0], nil
 		}
-		return "", errors.New("Unknown Host " + host)
+		return nil, errors.New("Unknown Host " + host)
 	}
 	tests := []struct {
 		name             string
 		openStackCluster *infrav1.OpenStackCluster
-		want             string
+		want             *string
 		wantError        bool
 	}{
 		{
 			name:             "empty cluster returns empty VIP",
 			openStackCluster: &infrav1.OpenStackCluster{},
-			want:             "",
+			want:             nil,
 			wantError:        false,
 		},
 		{
@@ -189,39 +193,39 @@ func Test_getAPIServerVIPAddress(t *testing.T) {
 					},
 				},
 			},
-			want:      "1.2.3.4",
+			want:      pointer.String("1.2.3.4"),
 			wantError: false,
 		},
 		{
 			name: "API server VIP is API Server Fixed IP",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerFixedIP: "1.2.3.4",
+					APIServerFixedIP: pointer.String("1.2.3.4"),
 				},
 			},
-			want:      "1.2.3.4",
+			want:      pointer.String("1.2.3.4"),
 			wantError: false,
 		},
 		{
 			name: "API server VIP with valid control plane endpoint",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					DisableAPIServerFloatingIP: true,
-					ControlPlaneEndpoint: clusterv1.APIEndpoint{
+					DisableAPIServerFloatingIP: pointer.Bool(true),
+					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
 						Host: apiHostname,
 						Port: 6443,
 					},
 				},
 			},
-			want:      "192.168.100.10",
+			want:      pointer.String("192.168.100.10"),
 			wantError: false,
 		},
 		{
 			name: "API server VIP with invalid control plane endpoint",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					DisableAPIServerFloatingIP: true,
-					ControlPlaneEndpoint: clusterv1.APIEndpoint{
+					DisableAPIServerFloatingIP: pointer.Bool(true),
+					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
 						Host: "invalid-api.test-cluster.test",
 						Port: 6443,
 					},
@@ -237,6 +241,7 @@ func Test_getAPIServerVIPAddress(t *testing.T) {
 			got, err := getAPIServerVIPAddress(tt.openStackCluster)
 			if tt.wantError {
 				g.Expect(err).To(HaveOccurred())
+				g.Expect(got).To(BeNil())
 			} else {
 				g.Expect(err).NotTo(HaveOccurred())
 				g.Expect(got).To(Equal(tt.want))
@@ -247,25 +252,25 @@ func Test_getAPIServerVIPAddress(t *testing.T) {
 
 func Test_getAPIServerFloatingIP(t *testing.T) {
 	// Stub the call to net.LookupHost
-	lookupHost = func(host string) (addrs string, err error) {
+	lookupHost = func(host string) (addrs *string, err error) {
 		if net.ParseIP(host) != nil {
-			return host, nil
+			return &host, nil
 		} else if host == apiHostname {
 			ips := []string{"192.168.100.10"}
-			return ips[0], nil
+			return &ips[0], nil
 		}
-		return "", errors.New("Unknown Host " + host)
+		return nil, errors.New("Unknown Host " + host)
 	}
 	tests := []struct {
 		name             string
 		openStackCluster *infrav1.OpenStackCluster
-		want             string
+		want             *string
 		wantError        bool
 	}{
 		{
 			name:             "empty cluster returns empty FIP",
 			openStackCluster: &infrav1.OpenStackCluster{},
-			want:             "",
+			want:             nil,
 			wantError:        false,
 		},
 		{
@@ -277,37 +282,37 @@ func Test_getAPIServerFloatingIP(t *testing.T) {
 					},
 				},
 			},
-			want:      "1.2.3.4",
+			want:      pointer.String("1.2.3.4"),
 			wantError: false,
 		},
 		{
 			name: "API server FIP is API Server Floating IP",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerFloatingIP: "1.2.3.4",
+					APIServerFloatingIP: pointer.String("1.2.3.4"),
 				},
 			},
-			want:      "1.2.3.4",
+			want:      pointer.String("1.2.3.4"),
 			wantError: false,
 		},
 		{
 			name: "API server FIP with valid control plane endpoint",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					ControlPlaneEndpoint: clusterv1.APIEndpoint{
+					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
 						Host: apiHostname,
 						Port: 6443,
 					},
 				},
 			},
-			want:      "192.168.100.10",
+			want:      pointer.String("192.168.100.10"),
 			wantError: false,
 		},
 		{
 			name: "API server FIP with invalid control plane endpoint",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					ControlPlaneEndpoint: clusterv1.APIEndpoint{
+					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
 						Host: "invalid-api.test-cluster.test",
 						Port: 6443,
 					},
@@ -323,6 +328,7 @@ func Test_getAPIServerFloatingIP(t *testing.T) {
 			got, err := getAPIServerFloatingIP(tt.openStackCluster)
 			if tt.wantError {
 				g.Expect(err).To(HaveOccurred())
+				g.Expect(got).To(BeNil())
 			} else {
 				g.Expect(err).NotTo(HaveOccurred())
 				g.Expect(got).To(Equal(tt.want))
@@ -346,7 +352,7 @@ func Test_getCanonicalAllowedCIDRs(t *testing.T) {
 			name: "allowed CIDRs are set",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerLoadBalancer: infrav1.APIServerLoadBalancer{
+					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
 						AllowedCIDRs: []string{"1.2.3.4/32"},
 					},
 				},
@@ -357,7 +363,7 @@ func Test_getCanonicalAllowedCIDRs(t *testing.T) {
 			name: "allowed CIDRs are set with bastion",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerLoadBalancer: infrav1.APIServerLoadBalancer{
+					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
 						AllowedCIDRs: []string{"1.2.3.4/32"},
 					},
 				},
@@ -374,7 +380,7 @@ func Test_getCanonicalAllowedCIDRs(t *testing.T) {
 			name: "allowed CIDRs are set with network status",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerLoadBalancer: infrav1.APIServerLoadBalancer{
+					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
 						AllowedCIDRs: []string{"1.2.3.4/32"},
 					},
 				},
@@ -394,7 +400,7 @@ func Test_getCanonicalAllowedCIDRs(t *testing.T) {
 			name: "allowed CIDRs are set with network status and router IP",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerLoadBalancer: infrav1.APIServerLoadBalancer{
+					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
 						AllowedCIDRs: []string{"1.2.3.4/32"},
 					},
 				},

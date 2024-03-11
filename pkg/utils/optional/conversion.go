@@ -20,6 +20,24 @@ import (
 	"k8s.io/apimachinery/pkg/conversion"
 )
 
+func RestoreString(previous, dst *String) {
+	if *dst == nil || **dst == "" {
+		*dst = *previous
+	}
+}
+
+func RestoreInt(previous, dst *Int) {
+	if *dst == nil || **dst == 0 {
+		*dst = *previous
+	}
+}
+
+func RestoreBool(previous, dst *Bool) {
+	if *dst == nil || !**dst {
+		*dst = *previous
+	}
+}
+
 func Convert_string_To_optional_String(in *string, out *String, _ conversion.Scope) error {
 	// NOTE: This function has the opposite defaulting behaviour to
 	// Convert_string_to_Pointer_string defined in apimachinery: it converts
@@ -36,6 +54,42 @@ func Convert_string_To_optional_String(in *string, out *String, _ conversion.Sco
 func Convert_optional_String_To_string(in *String, out *string, _ conversion.Scope) error {
 	if *in == nil {
 		*out = ""
+	} else {
+		*out = **in
+	}
+	return nil
+}
+
+func Convert_int_To_optional_Int(in *int, out *Int, _ conversion.Scope) error {
+	if *in == 0 {
+		*out = nil
+	} else {
+		*out = in
+	}
+	return nil
+}
+
+func Convert_optional_Int_To_int(in *Int, out *int, _ conversion.Scope) error {
+	if *in == nil {
+		*out = 0
+	} else {
+		*out = **in
+	}
+	return nil
+}
+
+func Convert_bool_To_optional_Bool(in *bool, out *Bool, _ conversion.Scope) error {
+	if !*in {
+		*out = nil
+	} else {
+		*out = in
+	}
+	return nil
+}
+
+func Convert_optional_Bool_To_bool(in *Bool, out *bool, _ conversion.Scope) error {
+	if *in == nil {
+		*out = false
 	} else {
 		*out = **in
 	}

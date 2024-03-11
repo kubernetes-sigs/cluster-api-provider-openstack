@@ -27,6 +27,9 @@ import (
 )
 
 func SecurityGroupFilterToListOpts(securityGroupFilter *infrav1.SecurityGroupFilter) securitygroups.ListOpts {
+	if securityGroupFilter == nil {
+		return securitygroups.ListOpts{}
+	}
 	return securitygroups.ListOpts{
 		ID:          securityGroupFilter.ID,
 		Name:        securityGroupFilter.Name,
@@ -40,6 +43,9 @@ func SecurityGroupFilterToListOpts(securityGroupFilter *infrav1.SecurityGroupFil
 }
 
 func SubnetFilterToListOpts(subnetFilter *infrav1.SubnetFilter) subnets.ListOpts {
+	if subnetFilter == nil {
+		return subnets.ListOpts{}
+	}
 	return subnets.ListOpts{
 		Name:            subnetFilter.Name,
 		Description:     subnetFilter.Description,
@@ -58,6 +64,9 @@ func SubnetFilterToListOpts(subnetFilter *infrav1.SubnetFilter) subnets.ListOpts
 }
 
 func NetworkFilterToListOpts(networkFilter *infrav1.NetworkFilter) networks.ListOpts {
+	if networkFilter == nil {
+		return networks.ListOpts{}
+	}
 	return networks.ListOpts{
 		Name:        networkFilter.Name,
 		Description: networkFilter.Description,
@@ -71,6 +80,9 @@ func NetworkFilterToListOpts(networkFilter *infrav1.NetworkFilter) networks.List
 }
 
 func RouterFilterToListOpts(routerFilter *infrav1.RouterFilter) routers.ListOpts {
+	if routerFilter == nil {
+		return routers.ListOpts{}
+	}
 	return routers.ListOpts{
 		ID:          routerFilter.ID,
 		Name:        routerFilter.Name,
@@ -84,6 +96,9 @@ func RouterFilterToListOpts(routerFilter *infrav1.RouterFilter) routers.ListOpts
 }
 
 func ImageFilterToListOpts(imageFilter *infrav1.ImageFilter) images.ListOpts {
+	if imageFilter == nil {
+		return images.ListOpts{}
+	}
 	return images.ListOpts{
 		ID:   imageFilter.ID,
 		Name: imageFilter.Name,

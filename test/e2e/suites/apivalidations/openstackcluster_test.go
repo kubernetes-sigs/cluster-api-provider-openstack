@@ -20,6 +20,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
@@ -46,8 +47,10 @@ var _ = Describe("OpenStackCluster API validations", func() {
 		Expect(k8sClient.Create(ctx, cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
 
 		By("Setting the control plane endpoint")
-		cluster.Spec.ControlPlaneEndpoint.Host = "foo"
-		cluster.Spec.ControlPlaneEndpoint.Port = 1234
+		cluster.Spec.ControlPlaneEndpoint = &clusterv1.APIEndpoint{
+			Host: "foo",
+			Port: 1234,
+		}
 		Expect(k8sClient.Update(ctx, cluster)).To(Succeed(), "Setting control plane endpoint should succeed")
 
 		By("Modifying the control plane endpoint")

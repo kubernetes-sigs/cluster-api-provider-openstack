@@ -73,8 +73,8 @@ var _ = Describe("Neutron filter API validations", func() {
 		}
 		cluster.Spec.Subnets = subnets
 		if len(tags) > 0 {
-			cluster.Spec.Network = infrav1.NetworkFilter{FilterByNeutronTags: tags[0]}
-			cluster.Spec.ExternalNetwork = infrav1.NetworkFilter{FilterByNeutronTags: tags[0]}
+			cluster.Spec.Network = &infrav1.NetworkFilter{FilterByNeutronTags: tags[0]}
+			cluster.Spec.ExternalNetwork = &infrav1.NetworkFilter{FilterByNeutronTags: tags[0]}
 			cluster.Spec.Router = &infrav1.RouterFilter{FilterByNeutronTags: tags[0]}
 		}
 		Expect(k8sClient.Create(ctx, cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
@@ -137,13 +137,13 @@ var _ = Describe("Neutron filter API validations", func() {
 
 			{
 				cluster := cluster.DeepCopy()
-				cluster.Spec.Network = infrav1.NetworkFilter{FilterByNeutronTags: tag}
+				cluster.Spec.Network = &infrav1.NetworkFilter{FilterByNeutronTags: tag}
 				Expect(k8sClient.Create(ctx, cluster)).NotTo(Succeed(), "OpenStackCluster creation should fail with invalid network neutron tags")
 			}
 
 			{
 				cluster := cluster.DeepCopy()
-				cluster.Spec.ExternalNetwork = infrav1.NetworkFilter{FilterByNeutronTags: tag}
+				cluster.Spec.ExternalNetwork = &infrav1.NetworkFilter{FilterByNeutronTags: tag}
 				Expect(k8sClient.Create(ctx, cluster)).NotTo(Succeed(), "OpenStackCluster creation should fail with invalid external network neutron tags")
 			}
 

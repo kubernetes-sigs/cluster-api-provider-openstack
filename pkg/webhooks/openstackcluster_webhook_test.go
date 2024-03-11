@@ -166,7 +166,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					APIServerLoadBalancer: infrav1.APIServerLoadBalancer{
+					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
 						Enabled: true,
 						AllowedCIDRs: []string{
 							"0.0.0.0/0",
@@ -181,7 +181,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					APIServerLoadBalancer: infrav1.APIServerLoadBalancer{
+					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
 						Enabled: true,
 						AllowedCIDRs: []string{
 							"0.0.0.0/0",
@@ -286,7 +286,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					ControlPlaneOmitAvailabilityZone: true,
+					ControlPlaneOmitAvailabilityZone: pointer.Bool(true),
 				},
 			},
 			wantErr: false,
@@ -299,7 +299,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					DisableAPIServerFloatingIP: true,
+					DisableAPIServerFloatingIP: pointer.Bool(true),
 				},
 			},
 			newTemplate: &infrav1.OpenStackCluster{
@@ -308,8 +308,8 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					DisableAPIServerFloatingIP: true,
-					APIServerFixedIP:           "20.1.56.1",
+					DisableAPIServerFloatingIP: pointer.Bool(true),
+					APIServerFixedIP:           pointer.String("20.1.56.1"),
 				},
 			},
 			wantErr: false,
@@ -322,7 +322,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					DisableAPIServerFloatingIP: false,
+					DisableAPIServerFloatingIP: pointer.Bool(false),
 				},
 			},
 			newTemplate: &infrav1.OpenStackCluster{
@@ -331,8 +331,8 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					DisableAPIServerFloatingIP: false,
-					APIServerFixedIP:           "20.1.56.1",
+					DisableAPIServerFloatingIP: pointer.Bool(false),
+					APIServerFixedIP:           pointer.String("20.1.56.1"),
 				},
 			},
 			wantErr: true,
@@ -346,13 +346,13 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					DisableAPIServerFloatingIP: true,
+					DisableAPIServerFloatingIP: pointer.Bool(true),
 				},
 			},
 			newTemplate: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					DisableAPIServerFloatingIP: true,
-					APIServerPort:              8443,
+					DisableAPIServerFloatingIP: pointer.Bool(true),
+					APIServerPort:              pointer.Int(8443),
 				},
 			},
 			wantErr: false,
@@ -365,7 +365,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					DisableAPIServerFloatingIP: false,
+					DisableAPIServerFloatingIP: pointer.Bool(false),
 				},
 			},
 			newTemplate: &infrav1.OpenStackCluster{
@@ -374,8 +374,8 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					DisableAPIServerFloatingIP: false,
-					APIServerPort:              8443,
+					DisableAPIServerFloatingIP: pointer.Bool(false),
+					APIServerPort:              pointer.Int(8443),
 				},
 			},
 			wantErr: true,
@@ -388,7 +388,6 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					APIServerFloatingIP: "",
 				},
 				Status: infrav1.OpenStackClusterStatus{
 					APIServerLoadBalancer: &infrav1.LoadBalancer{
@@ -402,7 +401,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					APIServerFloatingIP: "1.2.3.4",
+					APIServerFloatingIP: pointer.String("1.2.3.4"),
 				},
 				Status: infrav1.OpenStackClusterStatus{
 					APIServerLoadBalancer: &infrav1.LoadBalancer{
@@ -420,7 +419,6 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					APIServerFloatingIP: "",
 				},
 				Status: infrav1.OpenStackClusterStatus{
 					APIServerLoadBalancer: &infrav1.LoadBalancer{
@@ -434,7 +432,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					APIServerFloatingIP: "5.6.7.8",
+					APIServerFloatingIP: pointer.String("5.6.7.8"),
 				},
 				Status: infrav1.OpenStackClusterStatus{
 					APIServerLoadBalancer: &infrav1.LoadBalancer{

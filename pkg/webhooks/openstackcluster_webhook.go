@@ -23,7 +23,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -88,20 +88,24 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 	oldObj.Spec.IdentityRef = infrav1.OpenStackIdentityReference{}
 	newObj.Spec.IdentityRef = infrav1.OpenStackIdentityReference{}
 
-	// Allow change only for the first time.
-	if oldObj.Spec.ControlPlaneEndpoint.Host == "" {
-		oldObj.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{}
-		newObj.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{}
+	// Allow changes to ControlPlaneEndpoint fields only if it was not
+	// previously set, or did not previously have a host.
+	if oldObj.Spec.ControlPlaneEndpoint == nil {
+		newObj.Spec.ControlPlaneEndpoint = nil
+	} else if oldObj.Spec.ControlPlaneEndpoint.Host == "" {
+		oldObj.Spec.ControlPlaneEndpoint = nil
+		newObj.Spec.ControlPlaneEndpoint = nil
 	}
 
 	// Allow change only for the first time.
-	if oldObj.Spec.DisableAPIServerFloatingIP && oldObj.Spec.APIServerFixedIP == "" {
-		newObj.Spec.APIServerFixedIP = ""
+	if pointer.BoolDeref(oldObj.Spec.DisableAPIServerFloatingIP, false) && pointer.StringDeref(oldObj.Spec.APIServerFixedIP, "") == "" {
+		oldObj.Spec.APIServerFixedIP = nil
+		newObj.Spec.APIServerFixedIP = nil
 	}
 
 	// If API Server floating IP is disabled, allow the change of the API Server port only for the first time.
-	if oldObj.Spec.DisableAPIServerFloatingIP && oldObj.Spec.APIServerPort == 0 && newObj.Spec.APIServerPort > 0 {
-		newObj.Spec.APIServerPort = 0
+	if pointer.BoolDeref(oldObj.Spec.DisableAPIServerFloatingIP, false) && oldObj.Spec.APIServerPort == nil && newObj.Spec.APIServerPort != nil {
+		newObj.Spec.APIServerPort = nil
 	}
 
 	// Allow to remove the bastion spec only if it was disabled before.
@@ -126,7 +130,7 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 	}
 
 	// Allow changes on AllowedCIDRs
-	if newObj.Spec.APIServerLoadBalancer.Enabled {
+	if newObj.Spec.APIServerLoadBalancer != nil && oldObj.Spec.APIServerLoadBalancer != nil {
 		oldObj.Spec.APIServerLoadBalancer.AllowedCIDRs = []string{}
 		newObj.Spec.APIServerLoadBalancer.AllowedCIDRs = []string{}
 	}
@@ -137,13 +141,13 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 
 	// Allow the scheduling to be changed from CAPI managed to Nova and
 	// vice versa.
-	oldObj.Spec.ControlPlaneOmitAvailabilityZone = false
-	newObj.Spec.ControlPlaneOmitAvailabilityZone = false
+	oldObj.Spec.ControlPlaneOmitAvailabilityZone = nil
+	newObj.Spec.ControlPlaneOmitAvailabilityZone = nil
 
 	// Allow change on the spec.APIServerFloatingIP only if it matches the current api server loadbalancer IP.
-	if oldObj.Status.APIServerLoadBalancer != nil && newObj.Spec.APIServerFloatingIP == oldObj.Status.APIServerLoadBalancer.IP {
-		newObj.Spec.APIServerFloatingIP = ""
-		oldObj.Spec.APIServerFloatingIP = ""
+	if oldObj.Status.APIServerLoadBalancer != nil && pointer.StringDeref(newObj.Spec.APIServerFloatingIP, "") == oldObj.Status.APIServerLoadBalancer.IP {
+		newObj.Spec.APIServerFloatingIP = nil
+		oldObj.Spec.APIServerFloatingIP = nil
 	}
 
 	if !reflect.DeepEqual(oldObj.Spec, newObj.Spec) {

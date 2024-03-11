@@ -77,6 +77,7 @@ OpenStackClusterSpec
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ManagedSubnets describe OpenStack Subnets to be created. Cluster actuator will create a network,
 subnets with the defined CIDR, and a router connected to these subnets. Currently only one IPv4
 subnet is supported. If you leave this empty, no network will be created.</p>
@@ -107,6 +108,7 @@ NetworkFilter
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Network specifies an existing network to use if no ManagedSubnets
 are specified.</p>
 </td>
@@ -154,6 +156,7 @@ To use this field, the Openstack installation requires the net-mtu neutron API e
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ExternalRouterIPs is an array of externalIPs on the respective subnets.
 This is necessary if the router needs a fixed ip in a specific subnet.</p>
 </td>
@@ -169,7 +172,15 @@ NetworkFilter
 </td>
 <td>
 <em>(Optional)</em>
-<p>ExternalNetwork is the OpenStack Network to be used to get public internet to the VMs.</p>
+<p>ExternalNetwork is the OpenStack Network to be used to get public internet to the VMs.
+This option is ignored if DisableExternalNetwork is set to true.</p>
+<p>If ExternalNetwork is defined it must refer to exactly one external network.</p>
+<p>If ExternalNetwork is not defined or is empty the controller will use any
+existing external network as long as there is only one. It is an
+error if ExternalNetwork is not defined and there are multiple
+external networks unless DisableExternalNetwork is also set.</p>
+<p>If ExternalNetwork is not defined and there are no external networks
+the controller will proceed as though DisableExternalNetwork was set.</p>
 </td>
 </tr>
 <tr>
@@ -181,7 +192,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>DisableExternalNetwork determines whether or not to attempt to connect the cluster
+<p>DisableExternalNetwork specifies whether or not to attempt to connect the cluster
 to an external network. This allows for the creation of clusters when connecting
 to an external network is not possible or desirable, e.g. if using a provider network.</p>
 </td>
@@ -232,6 +243,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>APIServerFloatingIP is the floatingIP which will be associated with the API server.
 The floatingIP will be created if it does not already exist.
 If not specified, a new floatingIP is allocated.
@@ -246,6 +258,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>APIServerFixedIP is the fixed IP which will be associated with the API server.
 In the case where the API server has a floating IP but not a managed load balancer,
 this field is not used.
@@ -264,6 +277,7 @@ int
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>APIServerPort is the port on which the listener on the APIServer
 will be created</p>
 </td>
@@ -296,6 +310,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>DisablePortSecurity disables the port security of the network created for the
 Kubernetes cluster, which also disables SecurityGroups</p>
 </td>
@@ -308,7 +323,8 @@ Kubernetes cluster, which also disables SecurityGroups</p>
 </em>
 </td>
 <td>
-<p>Tags for all resources in cluster</p>
+<em>(Optional)</em>
+<p>Tags to set on all resources in cluster which support tags</p>
 </td>
 </tr>
 <tr>
@@ -322,7 +338,12 @@ sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 </td>
 <td>
 <em>(Optional)</em>
-<p>ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.</p>
+<p>ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
+It is normally populated automatically by the OpenStackCluster
+controller during cluster provisioning. If it is set on creation the
+control plane endpoint will use the values set here in preference to
+values set elsewhere.
+ControlPlaneEndpoint cannot be modified after ControlPlaneEndpoint.Host has been set.</p>
 </td>
 </tr>
 <tr>
@@ -333,7 +354,9 @@ sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 </em>
 </td>
 <td>
-<p>ControlPlaneAvailabilityZones is the az to deploy control plane to</p>
+<em>(Optional)</em>
+<p>ControlPlaneAvailabilityZones is the set of availability zones which
+control plane machines may be deployed to.</p>
 </td>
 </tr>
 <tr>
@@ -344,8 +367,11 @@ bool
 </em>
 </td>
 <td>
-<p>Indicates whether to omit the az for control plane nodes, allowing the Nova scheduler
-to make a decision on which az to use based on other scheduling constraints</p>
+<em>(Optional)</em>
+<p>ControlPlaneOmitAvailabilityZone causes availability zone to be
+omitted when creating control plane nodes, allowing the Nova
+scheduler to make a decision on which availability zone to use based
+on other scheduling constraints</p>
 </td>
 </tr>
 <tr>
@@ -1951,6 +1977,7 @@ It may not be empty and may not contain commas.</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ManagedSubnets describe OpenStack Subnets to be created. Cluster actuator will create a network,
 subnets with the defined CIDR, and a router connected to these subnets. Currently only one IPv4
 subnet is supported. If you leave this empty, no network will be created.</p>
@@ -1981,6 +2008,7 @@ NetworkFilter
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Network specifies an existing network to use if no ManagedSubnets
 are specified.</p>
 </td>
@@ -2028,6 +2056,7 @@ To use this field, the Openstack installation requires the net-mtu neutron API e
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ExternalRouterIPs is an array of externalIPs on the respective subnets.
 This is necessary if the router needs a fixed ip in a specific subnet.</p>
 </td>
@@ -2043,7 +2072,15 @@ NetworkFilter
 </td>
 <td>
 <em>(Optional)</em>
-<p>ExternalNetwork is the OpenStack Network to be used to get public internet to the VMs.</p>
+<p>ExternalNetwork is the OpenStack Network to be used to get public internet to the VMs.
+This option is ignored if DisableExternalNetwork is set to true.</p>
+<p>If ExternalNetwork is defined it must refer to exactly one external network.</p>
+<p>If ExternalNetwork is not defined or is empty the controller will use any
+existing external network as long as there is only one. It is an
+error if ExternalNetwork is not defined and there are multiple
+external networks unless DisableExternalNetwork is also set.</p>
+<p>If ExternalNetwork is not defined and there are no external networks
+the controller will proceed as though DisableExternalNetwork was set.</p>
 </td>
 </tr>
 <tr>
@@ -2055,7 +2092,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>DisableExternalNetwork determines whether or not to attempt to connect the cluster
+<p>DisableExternalNetwork specifies whether or not to attempt to connect the cluster
 to an external network. This allows for the creation of clusters when connecting
 to an external network is not possible or desirable, e.g. if using a provider network.</p>
 </td>
@@ -2106,6 +2143,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>APIServerFloatingIP is the floatingIP which will be associated with the API server.
 The floatingIP will be created if it does not already exist.
 If not specified, a new floatingIP is allocated.
@@ -2120,6 +2158,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>APIServerFixedIP is the fixed IP which will be associated with the API server.
 In the case where the API server has a floating IP but not a managed load balancer,
 this field is not used.
@@ -2138,6 +2177,7 @@ int
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>APIServerPort is the port on which the listener on the APIServer
 will be created</p>
 </td>
@@ -2170,6 +2210,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>DisablePortSecurity disables the port security of the network created for the
 Kubernetes cluster, which also disables SecurityGroups</p>
 </td>
@@ -2182,7 +2223,8 @@ Kubernetes cluster, which also disables SecurityGroups</p>
 </em>
 </td>
 <td>
-<p>Tags for all resources in cluster</p>
+<em>(Optional)</em>
+<p>Tags to set on all resources in cluster which support tags</p>
 </td>
 </tr>
 <tr>
@@ -2196,7 +2238,12 @@ sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 </td>
 <td>
 <em>(Optional)</em>
-<p>ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.</p>
+<p>ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
+It is normally populated automatically by the OpenStackCluster
+controller during cluster provisioning. If it is set on creation the
+control plane endpoint will use the values set here in preference to
+values set elsewhere.
+ControlPlaneEndpoint cannot be modified after ControlPlaneEndpoint.Host has been set.</p>
 </td>
 </tr>
 <tr>
@@ -2207,7 +2254,9 @@ sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 </em>
 </td>
 <td>
-<p>ControlPlaneAvailabilityZones is the az to deploy control plane to</p>
+<em>(Optional)</em>
+<p>ControlPlaneAvailabilityZones is the set of availability zones which
+control plane machines may be deployed to.</p>
 </td>
 </tr>
 <tr>
@@ -2218,8 +2267,11 @@ bool
 </em>
 </td>
 <td>
-<p>Indicates whether to omit the az for control plane nodes, allowing the Nova scheduler
-to make a decision on which az to use based on other scheduling constraints</p>
+<em>(Optional)</em>
+<p>ControlPlaneOmitAvailabilityZone causes availability zone to be
+omitted when creating control plane nodes, allowing the Nova
+scheduler to make a decision on which availability zone to use based
+on other scheduling constraints</p>
 </td>
 </tr>
 <tr>
@@ -2294,6 +2346,7 @@ NetworkStatusWithSubnets
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Network contains information about the created OpenStack Network.</p>
 </td>
 </tr>
@@ -2307,7 +2360,8 @@ NetworkStatus
 </em>
 </td>
 <td>
-<p>externalNetwork contains information about the external network used for default ingress and egress traffic.</p>
+<em>(Optional)</em>
+<p>ExternalNetwork contains information about the external network used for default ingress and egress traffic.</p>
 </td>
 </tr>
 <tr>
@@ -2320,6 +2374,7 @@ Router
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Router describes the default cluster router</p>
 </td>
 </tr>
@@ -2333,6 +2388,7 @@ LoadBalancer
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>APIServerLoadBalancer describes the api server load balancer if one exists</p>
 </td>
 </tr>
@@ -2359,9 +2415,10 @@ SecurityGroupStatus
 </em>
 </td>
 <td>
-<p>ControlPlaneSecurityGroups contains all the information about the OpenStack
-Security Group that needs to be applied to control plane nodes.
-TODO: Maybe instead of two properties, we add a property to the group?</p>
+<em>(Optional)</em>
+<p>ControlPlaneSecurityGroup contains the information about the
+OpenStack Security Group that needs to be applied to control plane
+nodes.</p>
 </td>
 </tr>
 <tr>
@@ -2374,8 +2431,9 @@ SecurityGroupStatus
 </em>
 </td>
 <td>
-<p>WorkerSecurityGroup contains all the information about the OpenStack Security
-Group that needs to be applied to worker nodes.</p>
+<em>(Optional)</em>
+<p>WorkerSecurityGroup contains the information about the OpenStack
+Security Group that needs to be applied to worker nodes.</p>
 </td>
 </tr>
 <tr>
@@ -2388,6 +2446,9 @@ SecurityGroupStatus
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>BastionSecurityGroup contains the information about the OpenStack
+Security Group that needs to be applied to worker nodes.</p>
 </td>
 </tr>
 <tr>
@@ -2400,6 +2461,8 @@ BastionStatus
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>Bastion contains the information about the deployed bastion host</p>
 </td>
 </tr>
 <tr>
@@ -2496,6 +2559,7 @@ OpenStackClusterSpec
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ManagedSubnets describe OpenStack Subnets to be created. Cluster actuator will create a network,
 subnets with the defined CIDR, and a router connected to these subnets. Currently only one IPv4
 subnet is supported. If you leave this empty, no network will be created.</p>
@@ -2526,6 +2590,7 @@ NetworkFilter
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Network specifies an existing network to use if no ManagedSubnets
 are specified.</p>
 </td>
@@ -2573,6 +2638,7 @@ To use this field, the Openstack installation requires the net-mtu neutron API e
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ExternalRouterIPs is an array of externalIPs on the respective subnets.
 This is necessary if the router needs a fixed ip in a specific subnet.</p>
 </td>
@@ -2588,7 +2654,15 @@ NetworkFilter
 </td>
 <td>
 <em>(Optional)</em>
-<p>ExternalNetwork is the OpenStack Network to be used to get public internet to the VMs.</p>
+<p>ExternalNetwork is the OpenStack Network to be used to get public internet to the VMs.
+This option is ignored if DisableExternalNetwork is set to true.</p>
+<p>If ExternalNetwork is defined it must refer to exactly one external network.</p>
+<p>If ExternalNetwork is not defined or is empty the controller will use any
+existing external network as long as there is only one. It is an
+error if ExternalNetwork is not defined and there are multiple
+external networks unless DisableExternalNetwork is also set.</p>
+<p>If ExternalNetwork is not defined and there are no external networks
+the controller will proceed as though DisableExternalNetwork was set.</p>
 </td>
 </tr>
 <tr>
@@ -2600,7 +2674,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>DisableExternalNetwork determines whether or not to attempt to connect the cluster
+<p>DisableExternalNetwork specifies whether or not to attempt to connect the cluster
 to an external network. This allows for the creation of clusters when connecting
 to an external network is not possible or desirable, e.g. if using a provider network.</p>
 </td>
@@ -2651,6 +2725,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>APIServerFloatingIP is the floatingIP which will be associated with the API server.
 The floatingIP will be created if it does not already exist.
 If not specified, a new floatingIP is allocated.
@@ -2665,6 +2740,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>APIServerFixedIP is the fixed IP which will be associated with the API server.
 In the case where the API server has a floating IP but not a managed load balancer,
 this field is not used.
@@ -2683,6 +2759,7 @@ int
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>APIServerPort is the port on which the listener on the APIServer
 will be created</p>
 </td>
@@ -2715,6 +2792,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>DisablePortSecurity disables the port security of the network created for the
 Kubernetes cluster, which also disables SecurityGroups</p>
 </td>
@@ -2727,7 +2805,8 @@ Kubernetes cluster, which also disables SecurityGroups</p>
 </em>
 </td>
 <td>
-<p>Tags for all resources in cluster</p>
+<em>(Optional)</em>
+<p>Tags to set on all resources in cluster which support tags</p>
 </td>
 </tr>
 <tr>
@@ -2741,7 +2820,12 @@ sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 </td>
 <td>
 <em>(Optional)</em>
-<p>ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.</p>
+<p>ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
+It is normally populated automatically by the OpenStackCluster
+controller during cluster provisioning. If it is set on creation the
+control plane endpoint will use the values set here in preference to
+values set elsewhere.
+ControlPlaneEndpoint cannot be modified after ControlPlaneEndpoint.Host has been set.</p>
 </td>
 </tr>
 <tr>
@@ -2752,7 +2836,9 @@ sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 </em>
 </td>
 <td>
-<p>ControlPlaneAvailabilityZones is the az to deploy control plane to</p>
+<em>(Optional)</em>
+<p>ControlPlaneAvailabilityZones is the set of availability zones which
+control plane machines may be deployed to.</p>
 </td>
 </tr>
 <tr>
@@ -2763,8 +2849,11 @@ bool
 </em>
 </td>
 <td>
-<p>Indicates whether to omit the az for control plane nodes, allowing the Nova scheduler
-to make a decision on which az to use based on other scheduling constraints</p>
+<em>(Optional)</em>
+<p>ControlPlaneOmitAvailabilityZone causes availability zone to be
+omitted when creating control plane nodes, allowing the Nova
+scheduler to make a decision on which availability zone to use based
+on other scheduling constraints</p>
 </td>
 </tr>
 <tr>

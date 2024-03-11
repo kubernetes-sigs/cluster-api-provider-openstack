@@ -423,7 +423,7 @@ func (s *Service) normalizePorts(ports []infrav1.PortOpts, openStackCluster *inf
 // normalizePortTarget ensures that the port has a network ID.
 func (s *Service) normalizePortTarget(port *infrav1.PortOpts, openStackCluster *infrav1.OpenStackCluster, portIdx int) error {
 	// Treat no Network and empty Network the same
-	noNetwork := port.Network == nil || port.Network.IsEmpty()
+	noNetwork := port.Network.IsEmpty()
 
 	// No network or subnets defined: use cluster defaults
 	if noNetwork && len(port.FixedIPs) == 0 {

@@ -19,4 +19,16 @@ package optional
 // String is a string that can be unspecified. strings which are converted to
 // optional.String during API conversion will be converted to nil if the value
 // was previously the empty string.
+// +optional.
 type String *string
+
+// Int is an int that can be unspecified. ints which are converted to
+// optional.Int during API conversion will be converted to nil if the value
+// was previously 0.
+// +optional.
+type Int *int
+
+// Bool is a bool that can be unspecified. bools which are converted to
+// optional.Bool during API conversion will be converted to nil if the value
+// was previously false.
+type Bool *bool

@@ -34,6 +34,7 @@ import (
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/pointer"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/cluster-api/util/annotations"
@@ -519,12 +520,12 @@ var _ = Describe("OpenStackCluster controller", func() {
 			Bastion: &infrav1.Bastion{
 				Enabled: true,
 			},
-			DisableAPIServerFloatingIP: true,
-			APIServerFixedIP:           "10.0.0.1",
-			ExternalNetwork: infrav1.NetworkFilter{
+			DisableAPIServerFloatingIP: pointer.Bool(true),
+			APIServerFixedIP:           pointer.String("10.0.0.1"),
+			ExternalNetwork: &infrav1.NetworkFilter{
 				ID: externalNetworkID,
 			},
-			Network: infrav1.NetworkFilter{
+			Network: &infrav1.NetworkFilter{
 				ID: clusterNetworkID,
 			},
 		}
@@ -556,6 +557,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			ListOptsBuilder: networks.ListOpts{
 				ID: externalNetworkID,
 			},
+			External: pointer.Bool(true),
 		}).Return([]networks.Network{
 			{
 				ID:   externalNetworkID,
@@ -598,12 +600,12 @@ var _ = Describe("OpenStackCluster controller", func() {
 			Bastion: &infrav1.Bastion{
 				Enabled: true,
 			},
-			DisableAPIServerFloatingIP: true,
-			APIServerFixedIP:           "10.0.0.1",
-			ExternalNetwork: infrav1.NetworkFilter{
+			DisableAPIServerFloatingIP: pointer.Bool(true),
+			APIServerFixedIP:           pointer.String("10.0.0.1"),
+			ExternalNetwork: &infrav1.NetworkFilter{
 				ID: externalNetworkID,
 			},
-			Network: infrav1.NetworkFilter{
+			Network: &infrav1.NetworkFilter{
 				ID: clusterNetworkID,
 			},
 			Subnets: []infrav1.SubnetFilter{
@@ -639,6 +641,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			ListOptsBuilder: networks.ListOpts{
 				ID: externalNetworkID,
 			},
+			External: pointer.Bool(true),
 		}).Return([]networks.Network{
 			{
 				ID:   externalNetworkID,
@@ -679,9 +682,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 
 		testCluster.SetName("subnet-filtering")
 		testCluster.Spec = infrav1.OpenStackClusterSpec{
-			DisableAPIServerFloatingIP: true,
-			APIServerFixedIP:           "10.0.0.1",
-			DisableExternalNetwork:     true,
+			DisableAPIServerFloatingIP: pointer.Bool(true),
+			APIServerFixedIP:           pointer.String("10.0.0.1"),
+			DisableExternalNetwork:     pointer.Bool(true),
 			Subnets: []infrav1.SubnetFilter{
 				{ID: clusterSubnetID},
 			},
@@ -762,7 +765,7 @@ func Test_getAPIServerPort(t *testing.T) {
 			name: "with a control plane endpoint",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					ControlPlaneEndpoint: clusterv1.APIEndpoint{
+					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
 						Host: "192.168.0.1",
 						Port: 6444,
 					},
@@ -774,7 +777,7 @@ func Test_getAPIServerPort(t *testing.T) {
 			name: "with API server port",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerPort: 6445,
+					APIServerPort: pointer.Int(6445),
 				},
 			},
 			want: 6445,

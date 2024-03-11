@@ -24,6 +24,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/utils/pointer"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -32,13 +33,13 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
-func (s *Service) GetOrCreateFloatingIP(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, clusterName, ip string) (*floatingips.FloatingIP, error) {
+func (s *Service) GetOrCreateFloatingIP(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, clusterName string, ip *string) (*floatingips.FloatingIP, error) {
 	var fp *floatingips.FloatingIP
 	var err error
 	var fpCreateOpts floatingips.CreateOpts
 
-	if ip != "" {
-		fp, err = s.GetFloatingIP(ip)
+	if pointer.StringDeref(ip, "") != "" {
+		fp, err = s.GetFloatingIP(*ip)
 		if err != nil {
 			return nil, err
 		}
@@ -46,15 +47,17 @@ func (s *Service) GetOrCreateFloatingIP(eventObject runtime.Object, openStackClu
 			return fp, nil
 		}
 		// only admin can add ip address
-		fpCreateOpts.FloatingIP = ip
+		fpCreateOpts.FloatingIP = *ip
 	}
 
 	fpCreateOpts.FloatingNetworkID = openStackCluster.Status.ExternalNetwork.ID
 	fpCreateOpts.Description = names.GetDescription(clusterName)
 
+	s.scope.Logger().Info("Creating floating IP", "ip", fpCreateOpts.FloatingIP, "floatingNetworkID", openStackCluster.Status.ExternalNetwork.ID, "description", fpCreateOpts.Description)
+
 	fp, err = s.client.CreateFloatingIP(fpCreateOpts)
 	if err != nil {
-		record.Warnf(eventObject, "FailedCreateFloatingIP", "Failed to create floating IP %s: %v", ip, err)
+		record.Warnf(eventObject, "FailedCreateFloatingIP", "Failed to create floating IP %s: %v", fpCreateOpts.FloatingIP, err)
 		return nil, err
 	}
 

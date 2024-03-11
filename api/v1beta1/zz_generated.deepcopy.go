@@ -492,13 +492,22 @@ func (in *OpenStackClusterSpec) DeepCopyInto(out *OpenStackClusterSpec) {
 		*out = new(RouterFilter)
 		(*in).DeepCopyInto(*out)
 	}
-	in.Network.DeepCopyInto(&out.Network)
+	if in.Network != nil {
+		in, out := &in.Network, &out.Network
+		*out = new(NetworkFilter)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Subnets != nil {
 		in, out := &in.Subnets, &out.Subnets
 		*out = make([]SubnetFilter, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
+	}
+	if in.NetworkMTU != nil {
+		in, out := &in.NetworkMTU, &out.NetworkMTU
+		*out = new(int)
+		**out = **in
 	}
 	if in.ExternalRouterIPs != nil {
 		in, out := &in.ExternalRouterIPs, &out.ExternalRouterIPs
@@ -507,23 +516,70 @@ func (in *OpenStackClusterSpec) DeepCopyInto(out *OpenStackClusterSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
-	in.ExternalNetwork.DeepCopyInto(&out.ExternalNetwork)
-	in.APIServerLoadBalancer.DeepCopyInto(&out.APIServerLoadBalancer)
+	if in.ExternalNetwork != nil {
+		in, out := &in.ExternalNetwork, &out.ExternalNetwork
+		*out = new(NetworkFilter)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.DisableExternalNetwork != nil {
+		in, out := &in.DisableExternalNetwork, &out.DisableExternalNetwork
+		*out = new(bool)
+		**out = **in
+	}
+	if in.APIServerLoadBalancer != nil {
+		in, out := &in.APIServerLoadBalancer, &out.APIServerLoadBalancer
+		*out = new(APIServerLoadBalancer)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.DisableAPIServerFloatingIP != nil {
+		in, out := &in.DisableAPIServerFloatingIP, &out.DisableAPIServerFloatingIP
+		*out = new(bool)
+		**out = **in
+	}
+	if in.APIServerFloatingIP != nil {
+		in, out := &in.APIServerFloatingIP, &out.APIServerFloatingIP
+		*out = new(string)
+		**out = **in
+	}
+	if in.APIServerFixedIP != nil {
+		in, out := &in.APIServerFixedIP, &out.APIServerFixedIP
+		*out = new(string)
+		**out = **in
+	}
+	if in.APIServerPort != nil {
+		in, out := &in.APIServerPort, &out.APIServerPort
+		*out = new(int)
+		**out = **in
+	}
 	if in.ManagedSecurityGroups != nil {
 		in, out := &in.ManagedSecurityGroups, &out.ManagedSecurityGroups
 		*out = new(ManagedSecurityGroups)
 		(*in).DeepCopyInto(*out)
+	}
+	if in.DisablePortSecurity != nil {
+		in, out := &in.DisablePortSecurity, &out.DisablePortSecurity
+		*out = new(bool)
+		**out = **in
 	}
 	if in.Tags != nil {
 		in, out := &in.Tags, &out.Tags
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
-	out.ControlPlaneEndpoint = in.ControlPlaneEndpoint
+	if in.ControlPlaneEndpoint != nil {
+		in, out := &in.ControlPlaneEndpoint, &out.ControlPlaneEndpoint
+		*out = new(apiv1beta1.APIEndpoint)
+		**out = **in
+	}
 	if in.ControlPlaneAvailabilityZones != nil {
 		in, out := &in.ControlPlaneAvailabilityZones, &out.ControlPlaneAvailabilityZones
 		*out = make([]string, len(*in))
 		copy(*out, *in)
+	}
+	if in.ControlPlaneOmitAvailabilityZone != nil {
+		in, out := &in.ControlPlaneOmitAvailabilityZone, &out.ControlPlaneOmitAvailabilityZone
+		*out = new(bool)
+		**out = **in
 	}
 	if in.Bastion != nil {
 		in, out := &in.Bastion, &out.Bastion

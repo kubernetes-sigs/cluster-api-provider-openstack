@@ -24,6 +24,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/external"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
+	"k8s.io/utils/pointer"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
@@ -78,28 +79,17 @@ func (c createOpts) ToNetworkCreateMap() (map[string]interface{}, error) {
 // - the user has set OpenStackCluster.Spec.DisableExternalNetwork to true.
 func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCluster) error {
 	var listOpts external.ListOptsExt
-	var isAutoDetecting bool
 
-	if openStackCluster.Spec.DisableExternalNetwork {
+	if pointer.BoolDeref(openStackCluster.Spec.DisableExternalNetwork, false) {
 		s.scope.Logger().Info("External network is disabled - proceeding with internal network only")
 		openStackCluster.Status.ExternalNetwork = nil
 		return nil
 	}
 
-	externalNetworkListOpts := filterconvert.NetworkFilterToListOpts(&openStackCluster.Spec.ExternalNetwork)
-	if externalNetworkListOpts != (networks.ListOpts{}) {
-		listOpts = external.ListOptsExt{
-			ListOptsBuilder: externalNetworkListOpts,
-		}
-	} else {
-		// ExternalNetwork is not given so we'll list all networks and filter for external networks
-		isAutoDetecting = true
-		listOpts = external.ListOptsExt{
-			ListOptsBuilder: networks.ListOpts{},
-			External:        &isAutoDetecting,
-		}
+	listOpts = external.ListOptsExt{
+		ListOptsBuilder: filterconvert.NetworkFilterToListOpts(openStackCluster.Spec.ExternalNetwork),
+		External:        pointer.Bool(true),
 	}
-
 	networkList, err := s.client.ListNetwork(listOpts)
 	if err != nil {
 		return err
@@ -107,7 +97,7 @@ func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCl
 
 	switch len(networkList) {
 	case 0:
-		if isAutoDetecting {
+		if openStackCluster.Spec.ExternalNetwork == nil {
 			// Not finding an external network is fine if ExternalNetwork is not set
 			openStackCluster.Status.ExternalNetwork = nil
 			s.scope.Logger().Info("No external network found - proceeding with internal network only")
@@ -150,12 +140,12 @@ func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, c
 		Name:         networkName,
 	}
 
-	if openStackCluster.Spec.DisablePortSecurity {
+	if pointer.BoolDeref(openStackCluster.Spec.DisablePortSecurity, false) {
 		opts.PortSecurityEnabled = gophercloud.Disabled
 	}
 
-	if openStackCluster.Spec.NetworkMTU > 0 {
-		opts.MTU = &openStackCluster.Spec.NetworkMTU
+	if openStackCluster.Spec.NetworkMTU != nil {
+		opts.MTU = openStackCluster.Spec.NetworkMTU
 	}
 
 	network, err := s.client.CreateNetwork(opts)

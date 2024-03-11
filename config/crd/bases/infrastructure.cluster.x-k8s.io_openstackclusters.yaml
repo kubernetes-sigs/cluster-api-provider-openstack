@@ -5529,15 +5529,21 @@ spec:
                     type: object
                 type: object
               controlPlaneAvailabilityZones:
-                description: ControlPlaneAvailabilityZones is the az to deploy control
-                  plane to
+                description: |-
+                  ControlPlaneAvailabilityZones is the set of availability zones which
+                  control plane machines may be deployed to.
                 items:
                   type: string
                 type: array
                 x-kubernetes-list-type: set
               controlPlaneEndpoint:
-                description: ControlPlaneEndpoint represents the endpoint used to
-                  communicate with the control plane.
+                description: |-
+                  ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
+                  It is normally populated automatically by the OpenStackCluster
+                  controller during cluster provisioning. If it is set on creation the
+                  control plane endpoint will use the values set here in preference to
+                  values set elsewhere.
+                  ControlPlaneEndpoint cannot be modified after ControlPlaneEndpoint.Host has been set.
                 properties:
                   host:
                     description: The hostname on which the API server is serving.
@@ -5552,8 +5558,10 @@ spec:
                 type: object
               controlPlaneOmitAvailabilityZone:
                 description: |-
-                  Indicates whether to omit the az for control plane nodes, allowing the Nova scheduler
-                  to make a decision on which az to use based on other scheduling constraints
+                  ControlPlaneOmitAvailabilityZone causes availability zone to be
+                  omitted when creating control plane nodes, allowing the Nova
+                  scheduler to make a decision on which availability zone to use based
+                  on other scheduling constraints
                 type: boolean
               disableAPIServerFloatingIP:
                 description: |-
@@ -5572,7 +5580,7 @@ spec:
                 type: boolean
               disableExternalNetwork:
                 description: |-
-                  DisableExternalNetwork determines whether or not to attempt to connect the cluster
+                  DisableExternalNetwork specifies whether or not to attempt to connect the cluster
                   to an external network. This allows for the creation of clusters when connecting
                   to an external network is not possible or desirable, e.g. if using a provider network.
                 type: boolean
@@ -5582,8 +5590,22 @@ spec:
                   Kubernetes cluster, which also disables SecurityGroups
                 type: boolean
               externalNetwork:
-                description: ExternalNetwork is the OpenStack Network to be used to
-                  get public internet to the VMs.
+                description: |-
+                  ExternalNetwork is the OpenStack Network to be used to get public internet to the VMs.
+                  This option is ignored if DisableExternalNetwork is set to true.
+
+
+                  If ExternalNetwork is defined it must refer to exactly one external network.
+
+
+                  If ExternalNetwork is not defined or is empty the controller will use any
+                  existing external network as long as there is only one. It is an
+                  error if ExternalNetwork is not defined and there are multiple
+                  external networks unless DisableExternalNetwork is also set.
+
+
+                  If ExternalNetwork is not defined and there are no external networks
+                  the controller will proceed as though DisableExternalNetwork was set.
                 properties:
                   description:
                     type: string
@@ -5736,6 +5758,7 @@ spec:
                   - subnet
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               identityRef:
                 description: |-
                   IdentityRef is a reference to a secret holding OpenStack credentials
@@ -5893,6 +5916,7 @@ spec:
                   type: object
                 maxItems: 1
                 type: array
+                x-kubernetes-list-type: atomic
               network:
                 description: |-
                   Network specifies an existing network to use if no ManagedSubnets
@@ -6117,8 +6141,10 @@ spec:
                   type: object
                 maxItems: 2
                 type: array
+                x-kubernetes-list-type: atomic
               tags:
-                description: Tags for all resources in cluster
+                description: Tags to set on all resources in cluster which support
+                  tags
                 items:
                   type: string
                 type: array
@@ -6156,6 +6182,8 @@ spec:
                 - name
                 type: object
               bastion:
+                description: Bastion contains the information about the deployed bastion
+                  host
                 properties:
                   dependentResources:
                     properties:
@@ -6569,8 +6597,8 @@ spec:
                 type: object
               bastionSecurityGroup:
                 description: |-
-                  SecurityGroupStatus represents the basic information of the associated
-                  OpenStack Neutron Security Group.
+                  BastionSecurityGroup contains the information about the OpenStack
+                  Security Group that needs to be applied to worker nodes.
                 properties:
                   id:
                     description: id of the security group
@@ -6636,9 +6664,9 @@ spec:
                 type: object
               controlPlaneSecurityGroup:
                 description: |-
-                  ControlPlaneSecurityGroups contains all the information about the OpenStack
-                  Security Group that needs to be applied to control plane nodes.
-                  TODO: Maybe instead of two properties, we add a property to the group?
+                  ControlPlaneSecurityGroup contains the information about the
+                  OpenStack Security Group that needs to be applied to control plane
+                  nodes.
                 properties:
                   id:
                     description: id of the security group
@@ -6703,7 +6731,7 @@ spec:
                 - name
                 type: object
               externalNetwork:
-                description: externalNetwork contains information about the external
+                description: ExternalNetwork contains information about the external
                   network used for default ingress and egress traffic.
                 properties:
                   id:
@@ -6844,8 +6872,8 @@ spec:
                 type: object
               workerSecurityGroup:
                 description: |-
-                  WorkerSecurityGroup contains all the information about the OpenStack Security
-                  Group that needs to be applied to worker nodes.
+                  WorkerSecurityGroup contains the information about the OpenStack
+                  Security Group that needs to be applied to worker nodes.
                 properties:
                   id:
                     description: id of the security group
