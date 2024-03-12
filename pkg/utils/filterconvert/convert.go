@@ -95,13 +95,17 @@ func RouterFilterToListOpts(routerFilter *infrav1.RouterFilter) routers.ListOpts
 	}
 }
 
-func ImageFilterToListOpts(imageFilter *infrav1.ImageFilter) images.ListOpts {
+func ImageFilterToListOpts(imageFilter *infrav1.ImageFilter) (listOpts images.ListOpts) {
 	if imageFilter == nil {
-		return images.ListOpts{}
+		return
 	}
-	return images.ListOpts{
-		ID:   imageFilter.ID,
-		Name: imageFilter.Name,
-		Tags: imageFilter.Tags,
+
+	if imageFilter.Name != nil && *imageFilter.Name != "" {
+		listOpts.Name = *imageFilter.Name
 	}
+
+	if len(imageFilter.Tags) > 0 {
+		listOpts.Tags = imageFilter.Tags
+	}
+	return
 }

@@ -1589,6 +1589,7 @@ address in any subnet of the port&rsquo;s network.</p>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>)
 </p>
 <p>
+<p>ImageFilter describes the data needed to identify which image to use. If ID is provided it is required that all other fields are unset.</p>
 </p>
 <table>
 <thead>
@@ -1606,7 +1607,8 @@ string
 </em>
 </td>
 <td>
-<p>The ID of the desired image. If this is provided, the other filters will be ignored.</p>
+<em>(Optional)</em>
+<p>The ID of the desired image. If ID is provided, the other filters cannot be provided. Must be in UUID format.</p>
 </td>
 </tr>
 <tr>
@@ -1617,6 +1619,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>The name of the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.</p>
 </td>
 </tr>
@@ -1628,6 +1631,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>The tags associated with the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.</p>
 </td>
 </tr>

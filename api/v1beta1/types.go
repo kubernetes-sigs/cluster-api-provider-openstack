@@ -28,12 +28,19 @@ type OpenStackMachineTemplateResource struct {
 	Spec OpenStackMachineSpec `json:"spec"`
 }
 
+// ImageFilter describes the data needed to identify which image to use. If ID is provided it is required that all other fields are unset.
+// +kubebuilder:validation:XValidation:rule="(has(self.id) && !has(self.name) && !has(self.tags)) || !has(self.id)",message="when ID is set you cannot set other options"
 type ImageFilter struct {
-	// The ID of the desired image. If this is provided, the other filters will be ignored.
-	ID string `json:"id,omitempty"`
+	// The ID of the desired image. If ID is provided, the other filters cannot be provided. Must be in UUID format.
+	// +kubebuilder:validation:Format:=uuid
+	// +optional
+	ID optional.String `json:"id,omitempty"`
 	// The name of the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
-	Name string `json:"name,omitempty"`
+	// +optional
+	Name optional.String `json:"name,omitempty"`
 	// The tags associated with the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
+	// +listType=set
+	// +optional
 	Tags []string `json:"tags,omitempty"`
 }
 
