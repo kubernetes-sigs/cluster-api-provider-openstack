@@ -1396,7 +1396,7 @@ further information.</p>
 <tbody>
 <tr>
 <td>
-<code>portsStatus</code><br/>
+<code>ports</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortStatus">
 []PortStatus
@@ -1405,7 +1405,7 @@ further information.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>PortsStatus is the status of the ports created for the machine.</p>
+<p>Ports is the status of the ports created for the machine.</p>
 </td>
 </tr>
 </tbody>
@@ -3895,7 +3895,7 @@ string
 </tr>
 <tr>
 <td>
-<code>portsOpts</code><br/>
+<code>ports</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">
 []PortOpts
@@ -3904,7 +3904,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>portsOpts is the list of ports options to create for the machine.</p>
+<p>Ports is the fully resolved list of ports to create for the machine.</p>
 </td>
 </tr>
 </tbody>

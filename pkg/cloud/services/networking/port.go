@@ -532,7 +532,7 @@ func (s *Service) AdoptMachinePorts(scope *scope.WithLogger, openStackMachine *i
 
 	// We can skip adoption if the instance is ready because OpenStackMachine is immutable once ready
 	// or if the ports are already in the status
-	if openStackMachine.Status.Ready && len(openStackMachine.Status.DependentResources.PortsStatus) == len(desiredPorts) {
+	if openStackMachine.Status.Ready && len(openStackMachine.Status.DependentResources.Ports) == len(desiredPorts) {
 		scope.Logger().V(5).Info("OpenStackMachine is ready, skipping the adoption of ports")
 		return changed, nil
 	}
@@ -544,7 +544,7 @@ func (s *Service) AdoptMachinePorts(scope *scope.WithLogger, openStackMachine *i
 	// We can therefore stop searching for ports once we find one that doesn't exist.
 	for i, port := range desiredPorts {
 		// check if the port is in status first and if it is, skip it
-		if i < len(openStackMachine.Status.DependentResources.PortsStatus) {
+		if i < len(openStackMachine.Status.DependentResources.Ports) {
 			scope.Logger().V(5).Info("Port already in status, skipping it", "port index", i)
 			continue
 		}
@@ -570,7 +570,7 @@ func (s *Service) AdoptMachinePorts(scope *scope.WithLogger, openStackMachine *i
 
 		// The desired port was found, so we add it to the status
 		scope.Logger().V(5).Info("Port found, adding it to the status", "port index", i)
-		openStackMachine.Status.DependentResources.PortsStatus = append(openStackMachine.Status.DependentResources.PortsStatus, infrav1.PortStatus{ID: ports[0].ID})
+		openStackMachine.Status.DependentResources.Ports = append(openStackMachine.Status.DependentResources.Ports, infrav1.PortStatus{ID: ports[0].ID})
 		changed = true
 	}
 
@@ -594,10 +594,10 @@ func (s *Service) AdoptBastionPorts(scope *scope.WithLogger, openStackCluster *i
 		openStackCluster.Status.Bastion = &infrav1.BastionStatus{}
 	}
 
-	desiredPorts := openStackCluster.Status.Bastion.ReferencedResources.PortsOpts
+	desiredPorts := openStackCluster.Status.Bastion.ReferencedResources.Ports
 
 	// We can skip adoption if the ports are already in the status
-	if len(desiredPorts) == len(openStackCluster.Status.Bastion.DependentResources.PortsStatus) {
+	if len(desiredPorts) == len(openStackCluster.Status.Bastion.DependentResources.Ports) {
 		return changed, nil
 	}
 
@@ -608,7 +608,7 @@ func (s *Service) AdoptBastionPorts(scope *scope.WithLogger, openStackCluster *i
 	// We can therefore stop searching for ports once we find one that doesn't exist.
 	for i, port := range desiredPorts {
 		// check if the port is in status first and if it is, skip it
-		if i < len(openStackCluster.Status.Bastion.DependentResources.PortsStatus) {
+		if i < len(openStackCluster.Status.Bastion.DependentResources.Ports) {
 			scope.Logger().V(5).Info("Port already in status, skipping it", "port index", i)
 			continue
 		}
@@ -634,7 +634,7 @@ func (s *Service) AdoptBastionPorts(scope *scope.WithLogger, openStackCluster *i
 
 		// The desired port was found, so we add it to the status
 		scope.Logger().V(5).Info("Port found, adding it to the status", "port index", i)
-		openStackCluster.Status.Bastion.DependentResources.PortsStatus = append(openStackCluster.Status.Bastion.DependentResources.PortsStatus, infrav1.PortStatus{ID: ports[0].ID})
+		openStackCluster.Status.Bastion.DependentResources.Ports = append(openStackCluster.Status.Bastion.DependentResources.Ports, infrav1.PortStatus{ID: ports[0].ID})
 		changed = true
 	}
 

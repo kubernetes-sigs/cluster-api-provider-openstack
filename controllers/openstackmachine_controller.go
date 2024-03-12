@@ -313,7 +313,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(scope *scope.WithLogger, cl
 		return ctrl.Result{}, err
 	}
 
-	portsStatus := openStackMachine.Status.DependentResources.PortsStatus
+	portsStatus := openStackMachine.Status.DependentResources.Ports
 	for _, port := range portsStatus {
 		if err := networkingService.DeleteInstanceTrunkAndPort(openStackMachine, port, trunkSupported); err != nil {
 			return ctrl.Result{}, fmt.Errorf("failed to delete port %q: %w", port.ID, err)
@@ -383,7 +383,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	portIDs := GetPortIDs(openStackMachine.Status.DependentResources.PortsStatus)
+	portIDs := GetPortIDs(openStackMachine.Status.DependentResources.Ports)
 
 	instanceStatus, err := r.getOrCreateInstance(scope.Logger(), openStackCluster, machine, openStackMachine, computeService, userData, portIDs)
 	if err != nil || instanceStatus == nil {
@@ -498,12 +498,12 @@ func getOrCreateMachinePorts(scope *scope.WithLogger, openStackCluster *infrav1.
 	var machinePortsStatus []infrav1.PortStatus
 	var err error
 
-	desiredPorts := openStackMachine.Status.ReferencedResources.PortsOpts
-	portsToCreate := networking.MissingPorts(openStackMachine.Status.DependentResources.PortsStatus, desiredPorts)
+	desiredPorts := openStackMachine.Status.ReferencedResources.Ports
+	portsToCreate := networking.MissingPorts(openStackMachine.Status.DependentResources.Ports, desiredPorts)
 
 	// Sanity check that the number of desired ports is equal to the addition of ports to create and ports that already exist.
-	if len(desiredPorts) != len(portsToCreate)+len(openStackMachine.Status.DependentResources.PortsStatus) {
-		return fmt.Errorf("length of desired ports (%d) is not equal to the length of ports to create (%d) + the length of ports that already exist (%d)", len(desiredPorts), len(portsToCreate), len(openStackMachine.Status.DependentResources.PortsStatus))
+	if len(desiredPorts) != len(portsToCreate)+len(openStackMachine.Status.DependentResources.Ports) {
+		return fmt.Errorf("length of desired ports (%d) is not equal to the length of ports to create (%d) + the length of ports that already exist (%d)", len(desiredPorts), len(portsToCreate), len(openStackMachine.Status.DependentResources.Ports))
 	}
 
 	if len(portsToCreate) > 0 {
@@ -513,12 +513,12 @@ func getOrCreateMachinePorts(scope *scope.WithLogger, openStackCluster *infrav1.
 		if err != nil {
 			return fmt.Errorf("create ports: %w", err)
 		}
-		openStackMachine.Status.DependentResources.PortsStatus = append(openStackMachine.Status.DependentResources.PortsStatus, machinePortsStatus...)
+		openStackMachine.Status.DependentResources.Ports = append(openStackMachine.Status.DependentResources.Ports, machinePortsStatus...)
 	}
 
 	// Sanity check that the number of ports that have been put into PortsStatus is equal to the number of desired ports now that we have created them all.
-	if len(openStackMachine.Status.DependentResources.PortsStatus) != len(desiredPorts) {
-		return fmt.Errorf("length of ports that already exist (%d) is not equal to the length of desired ports (%d)", len(openStackMachine.Status.DependentResources.PortsStatus), len(desiredPorts))
+	if len(openStackMachine.Status.DependentResources.Ports) != len(desiredPorts) {
+		return fmt.Errorf("length of ports that already exist (%d) is not equal to the length of desired ports (%d)", len(openStackMachine.Status.DependentResources.Ports), len(desiredPorts))
 	}
 
 	return nil

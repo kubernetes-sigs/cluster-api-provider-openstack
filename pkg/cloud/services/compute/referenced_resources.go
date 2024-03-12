@@ -62,7 +62,7 @@ func ResolveReferencedMachineResources(scope *scope.WithLogger, openStackCluster
 	}
 
 	// Network resources are required in order to get ports options.
-	if len(resources.PortsOpts) == 0 && openStackCluster.Status.Network != nil {
+	if len(resources.Ports) == 0 && openStackCluster.Status.Network != nil {
 		// For now we put this here but realistically an OpenStack administrator could enable/disable trunk
 		// support at any time, so we should probably check this on every reconcile.
 		trunkSupported, err := networkingService.IsTrunkExtSupported()
@@ -73,7 +73,7 @@ func ResolveReferencedMachineResources(scope *scope.WithLogger, openStackCluster
 		if err != nil {
 			return changed, err
 		}
-		resources.PortsOpts = portsOpts
+		resources.Ports = portsOpts
 		changed = true
 	}
 
