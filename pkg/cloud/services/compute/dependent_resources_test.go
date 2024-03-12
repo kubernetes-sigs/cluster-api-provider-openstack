@@ -73,7 +73,7 @@ func Test_ResolveDependentMachineResources(t *testing.T) {
 			},
 			openStackMachineStatus: infrav1.OpenStackMachineStatus{
 				DependentResources: infrav1.DependentMachineResources{
-					PortsStatus: []infrav1.PortStatus{
+					Ports: []infrav1.PortStatus{
 						{
 							ID: portID,
 						},
@@ -81,7 +81,7 @@ func Test_ResolveDependentMachineResources(t *testing.T) {
 				},
 			},
 			want: &infrav1.DependentMachineResources{
-				PortsStatus: []infrav1.PortStatus{
+				Ports: []infrav1.PortStatus{
 					{
 						ID: portID,
 					},
@@ -167,7 +167,7 @@ func TestResolveDependentBastionResources(t *testing.T) {
 				Status: infrav1.OpenStackClusterStatus{
 					Bastion: &infrav1.BastionStatus{
 						DependentResources: infrav1.DependentMachineResources{
-							PortsStatus: []infrav1.PortStatus{
+							Ports: []infrav1.PortStatus{
 								{
 									ID: portID,
 								},
@@ -182,7 +182,7 @@ func TestResolveDependentBastionResources(t *testing.T) {
 				},
 			},
 			want: &infrav1.DependentMachineResources{
-				PortsStatus: []infrav1.PortStatus{
+				Ports: []infrav1.PortStatus{
 					{
 						ID: portID,
 					},

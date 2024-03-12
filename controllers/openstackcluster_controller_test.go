@@ -234,7 +234,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			Bastion: &infrav1.BastionStatus{
 				ReferencedResources: infrav1.ReferencedMachineResources{
 					ImageID: "imageID",
-					PortsOpts: []infrav1.PortOpts{
+					Ports: []infrav1.PortOpts{
 						{
 							Network: &infrav1.NetworkFilter{
 								ID: "network-id",
@@ -243,7 +243,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 					},
 				},
 				DependentResources: infrav1.DependentMachineResources{
-					PortsStatus: []infrav1.PortStatus{
+					Ports: []infrav1.PortStatus{
 						{
 							ID: "portID1",
 						},
@@ -285,7 +285,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			State: "ACTIVE",
 			ReferencedResources: infrav1.ReferencedMachineResources{
 				ImageID: "imageID",
-				PortsOpts: []infrav1.PortOpts{
+				Ports: []infrav1.PortOpts{
 					{
 						Network: &infrav1.NetworkFilter{
 							ID: "network-id",
@@ -294,7 +294,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 				},
 			},
 			DependentResources: infrav1.DependentMachineResources{
-				PortsStatus: []infrav1.PortStatus{
+				Ports: []infrav1.PortStatus{
 					{
 						ID: "portID1",
 					},
@@ -326,7 +326,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 				ID: "adopted-fip-bastion-uuid",
 				ReferencedResources: infrav1.ReferencedMachineResources{
 					ImageID: "imageID",
-					PortsOpts: []infrav1.PortOpts{
+					Ports: []infrav1.PortOpts{
 						{
 							Network: &infrav1.NetworkFilter{
 								ID: "network-id",
@@ -335,7 +335,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 					},
 				},
 				DependentResources: infrav1.DependentMachineResources{
-					PortsStatus: []infrav1.PortStatus{
+					Ports: []infrav1.PortStatus{
 						{
 							ID: "portID1",
 						},
@@ -370,7 +370,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			State:      "ACTIVE",
 			ReferencedResources: infrav1.ReferencedMachineResources{
 				ImageID: "imageID",
-				PortsOpts: []infrav1.PortOpts{
+				Ports: []infrav1.PortOpts{
 					{
 						Network: &infrav1.NetworkFilter{
 							ID: "network-id",
@@ -379,7 +379,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 				},
 			},
 			DependentResources: infrav1.DependentMachineResources{
-				PortsStatus: []infrav1.PortStatus{
+				Ports: []infrav1.PortStatus{
 					{
 						ID: "portID1",
 					},
@@ -411,7 +411,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 				ID: "requeue-bastion-uuid",
 				ReferencedResources: infrav1.ReferencedMachineResources{
 					ImageID: "imageID",
-					PortsOpts: []infrav1.PortOpts{
+					Ports: []infrav1.PortOpts{
 						{
 							Network: &infrav1.NetworkFilter{
 								ID: "network-id",
@@ -420,7 +420,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 					},
 				},
 				DependentResources: infrav1.DependentMachineResources{
-					PortsStatus: []infrav1.PortStatus{
+					Ports: []infrav1.PortStatus{
 						{
 							ID: "portID1",
 						},
@@ -449,7 +449,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			State: "BUILD",
 			ReferencedResources: infrav1.ReferencedMachineResources{
 				ImageID: "imageID",
-				PortsOpts: []infrav1.PortOpts{
+				Ports: []infrav1.PortOpts{
 					{
 						Network: &infrav1.NetworkFilter{
 							ID: "network-id",
@@ -458,7 +458,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 				},
 			},
 			DependentResources: infrav1.DependentMachineResources{
-				PortsStatus: []infrav1.PortStatus{
+				Ports: []infrav1.PortStatus{
 					{
 						ID: "portID1",
 					},
@@ -532,7 +532,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		testCluster.Status = infrav1.OpenStackClusterStatus{
 			Bastion: &infrav1.BastionStatus{
 				DependentResources: infrav1.DependentMachineResources{
-					PortsStatus: []infrav1.PortStatus{
+					Ports: []infrav1.PortStatus{
 						{
 							ID: "port-id",
 						},
@@ -616,7 +616,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		testCluster.Status = infrav1.OpenStackClusterStatus{
 			Bastion: &infrav1.BastionStatus{
 				DependentResources: infrav1.DependentMachineResources{
-					PortsStatus: []infrav1.PortStatus{
+					Ports: []infrav1.PortStatus{
 						{
 							ID: "port-id",
 						},

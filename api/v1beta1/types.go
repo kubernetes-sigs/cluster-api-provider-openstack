@@ -654,15 +654,15 @@ type ReferencedMachineResources struct {
 	// +optional
 	ImageID string `json:"imageID,omitempty"`
 
-	// portsOpts is the list of ports options to create for the machine.
+	// Ports is the fully resolved list of ports to create for the machine.
 	// +optional
-	PortsOpts []PortOpts `json:"portsOpts,omitempty"`
+	Ports []PortOpts `json:"ports,omitempty"`
 }
 
 type DependentMachineResources struct {
-	// PortsStatus is the status of the ports created for the machine.
+	// Ports is the status of the ports created for the machine.
 	// +optional
-	PortsStatus []PortStatus `json:"portsStatus,omitempty"`
+	Ports []PortStatus `json:"ports,omitempty"`
 }
 
 // ValueSpec represents a single value_spec key-value pair.

@@ -2396,9 +2396,9 @@ spec:
                 description: DependentResources contains resolved dependent resources
                   that were created by the machine.
                 properties:
-                  portsStatus:
-                    description: PortsStatus is the status of the ports created for
-                      the machine.
+                  ports:
+                    description: Ports is the status of the ports created for the
+                      machine.
                     items:
                       properties:
                         id:
@@ -2449,8 +2449,8 @@ spec:
                     description: ImageID is the ID of the image to use for the machine
                       and is calculated based on ImageFilter.
                     type: string
-                  portsOpts:
-                    description: portsOpts is the list of ports options to create
+                  ports:
+                    description: Ports is the fully resolved list of ports to create
                       for the machine.
                     items:
                       properties:

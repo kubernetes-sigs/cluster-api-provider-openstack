@@ -293,18 +293,18 @@ func deleteBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStac
 		}
 	}
 
-	if openStackCluster.Status.Bastion != nil && len(openStackCluster.Status.Bastion.DependentResources.PortsStatus) > 0 {
+	if openStackCluster.Status.Bastion != nil && len(openStackCluster.Status.Bastion.DependentResources.Ports) > 0 {
 		trunkSupported, err := networkingService.IsTrunkExtSupported()
 		if err != nil {
 			return err
 		}
-		for _, port := range openStackCluster.Status.Bastion.DependentResources.PortsStatus {
+		for _, port := range openStackCluster.Status.Bastion.DependentResources.Ports {
 			if err := networkingService.DeleteInstanceTrunkAndPort(openStackCluster, port, trunkSupported); err != nil {
 				handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete port: %w", err))
 				return fmt.Errorf("failed to delete port: %w", err)
 			}
 		}
-		openStackCluster.Status.Bastion.DependentResources.PortsStatus = nil
+		openStackCluster.Status.Bastion.DependentResources.Ports = nil
 	}
 
 	scope.Logger().Info("Deleted Bastion for cluster %s", cluster.Name)
@@ -375,7 +375,7 @@ func reconcileBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openS
 
 	// If ports options aren't in the status, we'll re-trigger the reconcile to get them
 	// via adopting the referenced resources.
-	if len(openStackCluster.Status.Bastion.ReferencedResources.PortsOpts) == 0 {
+	if len(openStackCluster.Status.Bastion.ReferencedResources.Ports) == 0 {
 		return reconcile.Result{}, nil
 	}
 
@@ -409,7 +409,7 @@ func reconcileBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openS
 		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to get or create ports for bastion: %w", err))
 		return ctrl.Result{}, fmt.Errorf("failed to get or create ports for bastion: %w", err)
 	}
-	bastionPortIDs := GetPortIDs(openStackCluster.Status.Bastion.DependentResources.PortsStatus)
+	bastionPortIDs := GetPortIDs(openStackCluster.Status.Bastion.DependentResources.Ports)
 
 	var instanceStatus *compute.InstanceStatus
 	if openStackCluster.Status.Bastion != nil && openStackCluster.Status.Bastion.ID != "" {
@@ -555,12 +555,12 @@ func getOrCreateBastionPorts(scope *scope.WithLogger, cluster *clusterv1.Cluster
 		openStackCluster.Status.Bastion = &infrav1.BastionStatus{}
 	}
 
-	desiredPorts := openStackCluster.Status.Bastion.ReferencedResources.PortsOpts
-	portsToCreate := networking.MissingPorts(openStackCluster.Status.Bastion.DependentResources.PortsStatus, desiredPorts)
+	desiredPorts := openStackCluster.Status.Bastion.ReferencedResources.Ports
+	portsToCreate := networking.MissingPorts(openStackCluster.Status.Bastion.DependentResources.Ports, desiredPorts)
 
 	// Sanity check that the number of desired ports is equal to the addition of ports to create and ports that already exist.
-	if len(desiredPorts) != len(portsToCreate)+len(openStackCluster.Status.Bastion.DependentResources.PortsStatus) {
-		return fmt.Errorf("length of desired ports (%d) is not equal to the length of ports to create (%d) + the length of ports that already exist (%d)", len(desiredPorts), len(portsToCreate), len(openStackCluster.Status.Bastion.DependentResources.PortsStatus))
+	if len(desiredPorts) != len(portsToCreate)+len(openStackCluster.Status.Bastion.DependentResources.Ports) {
+		return fmt.Errorf("length of desired ports (%d) is not equal to the length of ports to create (%d) + the length of ports that already exist (%d)", len(desiredPorts), len(portsToCreate), len(openStackCluster.Status.Bastion.DependentResources.Ports))
 	}
 
 	if len(portsToCreate) > 0 {
@@ -570,12 +570,12 @@ func getOrCreateBastionPorts(scope *scope.WithLogger, cluster *clusterv1.Cluster
 			return fmt.Errorf("failed to create ports for bastion %s: %w", bastionName(openStackCluster.Name), err)
 		}
 
-		openStackCluster.Status.Bastion.DependentResources.PortsStatus = append(openStackCluster.Status.Bastion.DependentResources.PortsStatus, bastionPortsStatus...)
+		openStackCluster.Status.Bastion.DependentResources.Ports = append(openStackCluster.Status.Bastion.DependentResources.Ports, bastionPortsStatus...)
 	}
 
 	// Sanity check that the number of ports that have been put into PortsStatus is equal to the number of desired ports now that we have created them all.
-	if len(openStackCluster.Status.Bastion.DependentResources.PortsStatus) != len(desiredPorts) {
-		return fmt.Errorf("length of ports that already exist (%d) is not equal to the length of desired ports (%d)", len(openStackCluster.Status.Bastion.DependentResources.PortsStatus), len(desiredPorts))
+	if len(openStackCluster.Status.Bastion.DependentResources.Ports) != len(desiredPorts) {
+		return fmt.Errorf("length of ports that already exist (%d) is not equal to the length of desired ports (%d)", len(openStackCluster.Status.Bastion.DependentResources.Ports), len(desiredPorts))
 	}
 
 	return nil

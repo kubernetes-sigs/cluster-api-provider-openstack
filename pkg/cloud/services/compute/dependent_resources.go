@@ -30,7 +30,7 @@ func ResolveDependentMachineResources(scope *scope.WithLogger, openStackMachine 
 		return changed, err
 	}
 
-	return networkingService.AdoptMachinePorts(scope, openStackMachine, openStackMachine.Status.ReferencedResources.PortsOpts)
+	return networkingService.AdoptMachinePorts(scope, openStackMachine, openStackMachine.Status.ReferencedResources.Ports)
 }
 
 func ResolveDependentBastionResources(scope *scope.WithLogger, openStackCluster *infrav1.OpenStackCluster, bastionName string) (changed bool, err error) {

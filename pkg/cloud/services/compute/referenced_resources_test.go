@@ -133,7 +133,7 @@ func Test_ResolveReferencedMachineResources(t *testing.T) {
 			},
 			want: &infrav1.ReferencedMachineResources{
 				ImageID: imageID1,
-				PortsOpts: []infrav1.PortOpts{
+				Ports: []infrav1.PortOpts{
 					{
 						Network: &infrav1.NetworkFilter{
 							ID: "test-network-id",
