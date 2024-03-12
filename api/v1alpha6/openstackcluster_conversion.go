@@ -198,6 +198,12 @@ func restorev1beta1ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infr
 		dst.ManagedSecurityGroups.AllNodesSecurityGroupRules = previous.ManagedSecurityGroups.AllNodesSecurityGroupRules
 	}
 
+	if dst.APIServerLoadBalancer != nil && previous.APIServerLoadBalancer != nil {
+		if dst.APIServerLoadBalancer.Enabled == nil || !*dst.APIServerLoadBalancer.Enabled {
+			dst.APIServerLoadBalancer.Enabled = previous.APIServerLoadBalancer.Enabled
+		}
+		optional.RestoreString(&previous.APIServerLoadBalancer.Provider, &dst.APIServerLoadBalancer.Provider)
+	}
 	if dst.APIServerLoadBalancer.IsZero() {
 		dst.APIServerLoadBalancer = previous.APIServerLoadBalancer
 	}

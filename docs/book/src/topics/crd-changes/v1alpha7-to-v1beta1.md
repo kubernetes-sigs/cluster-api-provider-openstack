@@ -11,13 +11,13 @@
     - [`OpenStackMachine`](#openstackmachine)
       - [Removal of cloudName](#removal-of-cloudname)
       - [Change to serverGroupID](#change-to-servergroupid)
+      - [Change to image](#change-to-image)
+      - [Removal of imageUUID](#removal-of-imageuuid)
       - [Changes to ports](#changes-to-ports)
     - [`OpenStackCluster`](#openstackcluster)
       - [Removal of cloudName](#removal-of-cloudname-1)
       - [identityRef is now required](#identityref-is-now-required)
       - [Change to externalNetworkID](#change-to-externalnetworkid)
-      - [Change to image](#change-to-image)
-      - [Removal of imageUUID](#removal-of-imageuuid)
       - [Change to floatingIP](#change-to-floatingip)
       - [Change to subnet](#change-to-subnet)
       - [Change to nodeCidr and dnsNameservers](#change-to-nodecidr-and-dnsnameservers)
@@ -26,6 +26,7 @@
       - [Calico CNI](#calico-cni)
       - [Change to network](#change-to-network)
       - [Change to networkMtu](#change-to-networkmtu)
+      - [Changes to apiServerLoadBalancer](#changes-to-apiserverloadbalancer)
     - [Changes to filters](#changes-to-filters)
       - [Changes to filter tags](#changes-to-filter-tags)
       - [Field capitalization consistency](#field-capitalization-consistency)
@@ -86,6 +87,39 @@ serverGroup:
 
 If a server group is provided and found, it'll be added to `OpenStackMachine.Status.ReferencedResources.ServerGroupID`. If the server group can't be found or filter matches multiple server groups, an error will be returned.
 If empty object or null is provided, Machine will not be added to any server group and `OpenStackMachine.Status.ReferencedResources.ServerGroupID` will be empty.
+
+#### Change to image
+
+The field `image` is now an `ImageFilter` object rather than a string name.
+The `ImageFilter` object allows selection of an image by name, by ID or by tags.
+
+```yaml
+image: "test-image"
+```
+
+becomes
+
+```yaml
+image:
+  name: "test-image"
+```
+
+The image ID will be added to `OpenStackMachine.Status.ReferencedResources.ImageID`. If the image can't be found or filter matches multiple images, an error will be returned.
+
+#### Removal of imageUUID
+
+The fild `imageUUID` has been removed in favor of the `image` field.
+
+```yaml
+imageUUID: "72a6a1e6-3e0a-4a8b-9b4c-2d6f9e3e5f0a"
+```
+
+becomes
+
+```yaml
+image:
+  id: "72a6a1e6-3e0a-4a8b-9b4c-2d6f9e3e5f0a"
+```
 
 #### Changes to ports
 
@@ -148,39 +182,6 @@ It is now possible for a user to specify that no external network should be used
 
 ```yaml
 disableExternalNetwork: true
-```
-
-#### Change to image
-
-The field `image` is now an `ImageFilter` object rather than a string name.
-The `ImageFilter` object allows selection of an image by name, by ID or by tags.
-
-```yaml
-image: "test-image"
-```
-
-becomes
-
-```yaml
-image:
-  name: "test-image"
-```
-
-The image ID will be added to `OpenStackMachine.Status.ReferencedResources.ImageID`. If the image can't be found or filter matches multiple images, an error will be returned.
-
-#### Removal of imageUUID
-
-The fild `imageUUID` has been removed in favor of the `image` field.
-
-```yaml
-imageUUID: "72a6a1e6-3e0a-4a8b-9b4c-2d6f9e3e5f0a"
-```
-
-becomes
-
-```yaml
-image:
-  id: "72a6a1e6-3e0a-4a8b-9b4c-2d6f9e3e5f0a"
 ```
 
 #### Change to floatingIP
@@ -325,6 +326,23 @@ In v1beta1, when the `OpenStackCluster.Spec.Network` is not defined, the `Subnet
 #### Change to networkMtu
 
 In v1beta1, `OpenStackCluster.spec.NetworkMtu` becomes `OpenStackCluster.spec.NetworkMTU` in order to keep the name consistent with K8s API conventions.
+
+#### Changes to apiServerLoadBalancer
+
+In v1beta1, `OpenStackCluster.spec.apiServerLoadBalancer` becomes optional and can be entirely omitted. Therefore `enabled` can be assumed by the presence of the field. Consequently `enabled` now defaults to `true` if `apiServerLoadBalancer` is specified. The following are now equivalent:
+
+```yaml
+spec:
+    ...
+    apiServerLoadBalancer:
+      enabled: true
+```
+
+```yaml
+spec:
+    ...
+    apiServerLoadBalancer: {}
+```
 
 ### Changes to filters
 

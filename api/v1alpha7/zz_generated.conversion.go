@@ -445,10 +445,14 @@ func RegisterConversions(s *runtime.Scheme) error {
 }
 
 func autoConvert_v1alpha7_APIServerLoadBalancer_To_v1beta1_APIServerLoadBalancer(in *APIServerLoadBalancer, out *v1beta1.APIServerLoadBalancer, s conversion.Scope) error {
-	out.Enabled = in.Enabled
+	if err := v1.Convert_bool_To_Pointer_bool(&in.Enabled, &out.Enabled, s); err != nil {
+		return err
+	}
 	out.AdditionalPorts = *(*[]int)(unsafe.Pointer(&in.AdditionalPorts))
 	out.AllowedCIDRs = *(*[]string)(unsafe.Pointer(&in.AllowedCIDRs))
-	out.Provider = in.Provider
+	if err := optional.Convert_string_To_optional_String(&in.Provider, &out.Provider, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -458,10 +462,14 @@ func Convert_v1alpha7_APIServerLoadBalancer_To_v1beta1_APIServerLoadBalancer(in 
 }
 
 func autoConvert_v1beta1_APIServerLoadBalancer_To_v1alpha7_APIServerLoadBalancer(in *v1beta1.APIServerLoadBalancer, out *APIServerLoadBalancer, s conversion.Scope) error {
-	out.Enabled = in.Enabled
+	if err := v1.Convert_Pointer_bool_To_bool(&in.Enabled, &out.Enabled, s); err != nil {
+		return err
+	}
 	out.AdditionalPorts = *(*[]int)(unsafe.Pointer(&in.AdditionalPorts))
 	out.AllowedCIDRs = *(*[]string)(unsafe.Pointer(&in.AllowedCIDRs))
-	out.Provider = in.Provider
+	if err := optional.Convert_optional_String_To_string(&in.Provider, &out.Provider, s); err != nil {
+		return err
+	}
 	return nil
 }
 

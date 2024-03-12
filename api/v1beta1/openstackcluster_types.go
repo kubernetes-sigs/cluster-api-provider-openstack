@@ -95,7 +95,7 @@ type OpenStackClusterSpec struct {
 	DisableExternalNetwork optional.Bool `json:"disableExternalNetwork,omitempty"`
 
 	// APIServerLoadBalancer configures the optional LoadBalancer for the APIServer.
-	// It must be activated by setting `enabled: true`.
+	// If not specified, no load balancer will be created for the API server.
 	// +optional
 	APIServerLoadBalancer *APIServerLoadBalancer `json:"apiServerLoadBalancer,omitempty"`
 

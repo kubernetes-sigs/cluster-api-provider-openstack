@@ -17,6 +17,8 @@ limitations under the License.
 package v1beta1
 
 import (
+	"k8s.io/utils/pointer"
+
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
 )
 
@@ -605,22 +607,41 @@ type Bastion struct {
 }
 
 type APIServerLoadBalancer struct {
-	// Enabled defines whether a load balancer should be created.
-	Enabled bool `json:"enabled,omitempty"`
+	// Enabled defines whether a load balancer should be created. This value
+	// defaults to true if an APIServerLoadBalancer is given.
+	//
+	// There is no reason to set this to false. To disable creation of the
+	// API server loadbalancer, omit the APIServerLoadBalancer field in the
+	// cluster spec instead.
+	//
+	// +kubebuilder:validation:Required
+	// +kubebuilder:default:=true
+	Enabled *bool `json:"enabled"`
+
 	// AdditionalPorts adds additional tcp ports to the load balancer.
+	// +optional
+	// +listType=set
 	AdditionalPorts []int `json:"additionalPorts,omitempty"`
+
 	// AllowedCIDRs restrict access to all API-Server listeners to the given address CIDRs.
+	// +optional
+	// +listType=set
 	AllowedCIDRs []string `json:"allowedCIDRs,omitempty"`
-	// Octavia Provider Used to create load balancer
-	Provider string `json:"provider,omitempty"`
+
+	// Provider specifies name of a specific Octavia provider to use for the
+	// API load balancer. The Octavia default will be used if it is not
+	// specified.
+	// +optional
+	Provider optional.String `json:"provider,omitempty"`
 }
 
 func (s *APIServerLoadBalancer) IsZero() bool {
-	return s == nil || (!s.Enabled && len(s.AdditionalPorts) == 0 && len(s.AllowedCIDRs) == 0 && s.Provider == "")
+	return s == nil || ((s.Enabled == nil || !*s.Enabled) && len(s.AdditionalPorts) == 0 && len(s.AllowedCIDRs) == 0 && pointer.StringDeref(s.Provider, "") == "")
 }
 
 func (s *APIServerLoadBalancer) IsEnabled() bool {
-	return s != nil && s.Enabled
+	// The CRD default value for Enabled is true, so if the field is nil, it should be considered as true.
+	return s != nil && (s.Enabled == nil || *s.Enabled)
 }
 
 // ReferencedMachineResources contains resolved references to resources required by the machine.

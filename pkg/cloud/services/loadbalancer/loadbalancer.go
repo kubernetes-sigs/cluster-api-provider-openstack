@@ -281,9 +281,9 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 
 	// Choose the selected provider if it is set in cluster spec, if not, omit the field and Octavia will use the default provider.
 	lbProvider := ""
-	if openStackCluster.Spec.APIServerLoadBalancer != nil && openStackCluster.Spec.APIServerLoadBalancer.Provider != "" {
+	if openStackCluster.Spec.APIServerLoadBalancer != nil && openStackCluster.Spec.APIServerLoadBalancer.Provider != nil {
 		for _, v := range providers {
-			if v.Name == openStackCluster.Spec.APIServerLoadBalancer.Provider {
+			if v.Name == *openStackCluster.Spec.APIServerLoadBalancer.Provider {
 				lbProvider = v.Name
 				break
 			}

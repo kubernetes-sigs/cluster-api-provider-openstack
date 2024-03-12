@@ -20,6 +20,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -61,5 +62,28 @@ var _ = Describe("OpenStackCluster API validations", func() {
 	It("should allow an empty managed security groups definition", func() {
 		cluster.Spec.ManagedSecurityGroups = &infrav1.ManagedSecurityGroups{}
 		Expect(k8sClient.Create(ctx, cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
+	})
+
+	It("should default enabled to true if APIServerLoadBalancer is specified without enabled=true", func() {
+		cluster.Spec.APIServerLoadBalancer = &infrav1.APIServerLoadBalancer{}
+		Expect(k8sClient.Create(ctx, cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
+
+		// Fetch the cluster and check the defaulting
+		fetchedCluster := &infrav1.OpenStackCluster{}
+		Expect(k8sClient.Get(ctx, types.NamespacedName{Name: cluster.Name, Namespace: cluster.Namespace}, fetchedCluster)).To(Succeed(), "OpenStackCluster fetch should succeed")
+
+		Expect(fetchedCluster.Spec.APIServerLoadBalancer.Enabled).ToNot(BeNil(), "APIServerLoadBalancer.Enabled should have been defaulted")
+		Expect(*fetchedCluster.Spec.APIServerLoadBalancer.Enabled).To(BeTrue(), "APIServerLoadBalancer.Enabled should default to true")
+	})
+
+	It("should not default APIServerLoadBalancer if it is not specifid", func() {
+		Expect(k8sClient.Create(ctx, cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
+
+		// Fetch the cluster and check the defaulting
+		fetchedCluster := &infrav1.OpenStackCluster{}
+		Expect(k8sClient.Get(ctx, types.NamespacedName{Name: cluster.Name, Namespace: cluster.Namespace}, fetchedCluster)).To(Succeed(), "OpenStackCluster fetch should succeed")
+
+		Expect(fetchedCluster.Spec.APIServerLoadBalancer).To(BeNil(), "APIServerLoadBalancer should not have been defaulted")
+		Expect(fetchedCluster.Spec.APIServerLoadBalancer.IsEnabled()).To(BeFalse(), "APIServerLoadBalancer.Enabled should not have been defaulted")
 	})
 })

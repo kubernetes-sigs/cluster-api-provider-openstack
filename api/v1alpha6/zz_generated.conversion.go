@@ -24,7 +24,8 @@ package v1alpha6
 import (
 	unsafe "unsafe"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -419,10 +420,14 @@ func RegisterConversions(s *runtime.Scheme) error {
 }
 
 func autoConvert_v1alpha6_APIServerLoadBalancer_To_v1beta1_APIServerLoadBalancer(in *APIServerLoadBalancer, out *v1beta1.APIServerLoadBalancer, s conversion.Scope) error {
-	out.Enabled = in.Enabled
+	if err := v1.Convert_bool_To_Pointer_bool(&in.Enabled, &out.Enabled, s); err != nil {
+		return err
+	}
 	out.AdditionalPorts = *(*[]int)(unsafe.Pointer(&in.AdditionalPorts))
 	out.AllowedCIDRs = *(*[]string)(unsafe.Pointer(&in.AllowedCIDRs))
-	out.Provider = in.Provider
+	if err := optional.Convert_string_To_optional_String(&in.Provider, &out.Provider, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -432,10 +437,14 @@ func Convert_v1alpha6_APIServerLoadBalancer_To_v1beta1_APIServerLoadBalancer(in 
 }
 
 func autoConvert_v1beta1_APIServerLoadBalancer_To_v1alpha6_APIServerLoadBalancer(in *v1beta1.APIServerLoadBalancer, out *APIServerLoadBalancer, s conversion.Scope) error {
-	out.Enabled = in.Enabled
+	if err := v1.Convert_Pointer_bool_To_bool(&in.Enabled, &out.Enabled, s); err != nil {
+		return err
+	}
 	out.AdditionalPorts = *(*[]int)(unsafe.Pointer(&in.AdditionalPorts))
 	out.AllowedCIDRs = *(*[]string)(unsafe.Pointer(&in.AllowedCIDRs))
-	out.Provider = in.Provider
+	if err := optional.Convert_optional_String_To_string(&in.Provider, &out.Provider, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -1220,7 +1229,7 @@ func autoConvert_v1beta1_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(i
 
 func autoConvert_v1alpha6_OpenStackMachineStatus_To_v1beta1_OpenStackMachineStatus(in *OpenStackMachineStatus, out *v1beta1.OpenStackMachineStatus, s conversion.Scope) error {
 	out.Ready = in.Ready
-	out.Addresses = *(*[]v1.NodeAddress)(unsafe.Pointer(&in.Addresses))
+	out.Addresses = *(*[]corev1.NodeAddress)(unsafe.Pointer(&in.Addresses))
 	out.InstanceState = (*v1beta1.InstanceState)(unsafe.Pointer(in.InstanceState))
 	out.FailureReason = (*errors.MachineStatusError)(unsafe.Pointer(in.FailureReason))
 	out.FailureMessage = (*string)(unsafe.Pointer(in.FailureMessage))
@@ -1235,7 +1244,7 @@ func Convert_v1alpha6_OpenStackMachineStatus_To_v1beta1_OpenStackMachineStatus(i
 
 func autoConvert_v1beta1_OpenStackMachineStatus_To_v1alpha6_OpenStackMachineStatus(in *v1beta1.OpenStackMachineStatus, out *OpenStackMachineStatus, s conversion.Scope) error {
 	out.Ready = in.Ready
-	out.Addresses = *(*[]v1.NodeAddress)(unsafe.Pointer(&in.Addresses))
+	out.Addresses = *(*[]corev1.NodeAddress)(unsafe.Pointer(&in.Addresses))
 	out.InstanceState = (*InstanceState)(unsafe.Pointer(in.InstanceState))
 	// WARNING: in.ReferencedResources requires manual conversion: does not exist in peer-type
 	// WARNING: in.DependentResources requires manual conversion: does not exist in peer-type
