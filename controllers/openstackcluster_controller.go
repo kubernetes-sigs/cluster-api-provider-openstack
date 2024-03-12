@@ -404,7 +404,7 @@ func reconcileBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openS
 		}
 	}
 
-	err = getOrCreateBastionPorts(scope, cluster, openStackCluster, networkingService, cluster.Name)
+	err = getOrCreateBastionPorts(openStackCluster, networkingService, cluster.Name)
 	if err != nil {
 		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to get or create ports for bastion: %w", err))
 		return ctrl.Result{}, fmt.Errorf("failed to get or create ports for bastion: %w", err)
@@ -548,34 +548,19 @@ func getBastionSecurityGroups(openStackCluster *infrav1.OpenStackCluster) []infr
 	return instanceSpecSecurityGroups
 }
 
-func getOrCreateBastionPorts(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, networkingService *networking.Service, clusterName string) error {
-	scope.Logger().Info("Reconciling ports for bastion", "bastion", bastionName(openStackCluster.Name))
-
-	if openStackCluster.Status.Bastion == nil {
-		openStackCluster.Status.Bastion = &infrav1.BastionStatus{}
-	}
-
+func getOrCreateBastionPorts(openStackCluster *infrav1.OpenStackCluster, networkingService *networking.Service, clusterName string) error {
 	desiredPorts := openStackCluster.Status.Bastion.ReferencedResources.Ports
-	portsToCreate := networking.MissingPorts(openStackCluster.Status.Bastion.DependentResources.Ports, desiredPorts)
+	dependentResources := &openStackCluster.Status.Bastion.DependentResources
 
-	// Sanity check that the number of desired ports is equal to the addition of ports to create and ports that already exist.
-	if len(desiredPorts) != len(portsToCreate)+len(openStackCluster.Status.Bastion.DependentResources.Ports) {
-		return fmt.Errorf("length of desired ports (%d) is not equal to the length of ports to create (%d) + the length of ports that already exist (%d)", len(desiredPorts), len(portsToCreate), len(openStackCluster.Status.Bastion.DependentResources.Ports))
+	if len(desiredPorts) == len(dependentResources.Ports) {
+		return nil
 	}
 
-	if len(portsToCreate) > 0 {
-		securityGroups := getBastionSecurityGroups(openStackCluster)
-		bastionPortsStatus, err := networkingService.CreatePorts(openStackCluster, clusterName, portsToCreate, securityGroups, []string{}, bastionName(cluster.Name))
-		if err != nil {
-			return fmt.Errorf("failed to create ports for bastion %s: %w", bastionName(openStackCluster.Name), err)
-		}
-
-		openStackCluster.Status.Bastion.DependentResources.Ports = append(openStackCluster.Status.Bastion.DependentResources.Ports, bastionPortsStatus...)
-	}
-
-	// Sanity check that the number of ports that have been put into PortsStatus is equal to the number of desired ports now that we have created them all.
-	if len(openStackCluster.Status.Bastion.DependentResources.Ports) != len(desiredPorts) {
-		return fmt.Errorf("length of ports that already exist (%d) is not equal to the length of desired ports (%d)", len(openStackCluster.Status.Bastion.DependentResources.Ports), len(desiredPorts))
+	securityGroups := getBastionSecurityGroups(openStackCluster)
+	bastionTags := []string{}
+	err := networkingService.CreatePorts(openStackCluster, clusterName, bastionName(clusterName), securityGroups, bastionTags, desiredPorts, dependentResources)
+	if err != nil {
+		return fmt.Errorf("failed to create ports for bastion %s: %w", bastionName(openStackCluster.Name), err)
 	}
 
 	return nil

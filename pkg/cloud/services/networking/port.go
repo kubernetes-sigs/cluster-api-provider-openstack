@@ -109,7 +109,7 @@ func (s *Service) GetPortForExternalNetwork(instanceID string, externalNetworkID
 	return nil, nil
 }
 
-func (s *Service) CreatePort(eventObject runtime.Object, clusterName string, portName string, portOpts *infrav1.PortOpts, instanceSecurityGroups []string, instanceTags []string) (*ports.Port, error) {
+func (s *Service) CreatePort(eventObject runtime.Object, clusterName string, portName string, portOpts *infrav1.PortOpts, defaultSecurityGroups []string, baseTags []string) (*ports.Port, error) {
 	var err error
 	networkID := portOpts.Network.ID
 
@@ -137,7 +137,7 @@ func (s *Service) CreatePort(eventObject runtime.Object, clusterName string, por
 		}
 		// inherit port security groups from the instance if not explicitly specified
 		if len(securityGroups) == 0 {
-			securityGroups = instanceSecurityGroups
+			securityGroups = defaultSecurityGroups
 		}
 	}
 
@@ -209,7 +209,7 @@ func (s *Service) CreatePort(eventObject runtime.Object, clusterName string, por
 	}
 
 	var tags []string
-	tags = append(tags, instanceTags...)
+	tags = append(tags, baseTags...)
 	tags = append(tags, portOpts.Tags...)
 	if len(tags) > 0 {
 		if err = s.replaceAllAttributesTags(eventObject, portResource, port.ID, tags); err != nil {
@@ -365,37 +365,32 @@ func GetPortName(instanceName string, opts *infrav1.PortOpts, netIndex int) stri
 	return fmt.Sprintf("%s-%d", instanceName, netIndex)
 }
 
-func (s *Service) CreatePorts(eventObject runtime.Object, clusterName string, ports []infrav1.PortOpts, securityGroups []infrav1.SecurityGroupFilter, instanceTags []string, instanceName string) ([]infrav1.PortStatus, error) {
-	return s.createPortsImpl(eventObject, clusterName, ports, securityGroups, instanceTags, instanceName)
-}
-
-func (s *Service) createPortsImpl(eventObject runtime.Object, clusterName string, ports []infrav1.PortOpts, securityGroups []infrav1.SecurityGroupFilter, instanceTags []string, instanceName string) ([]infrav1.PortStatus, error) {
-	instanceSecurityGroups, err := s.GetSecurityGroups(securityGroups)
+func (s *Service) CreatePorts(eventObject runtime.Object, clusterName, baseName string, securityGroups []infrav1.SecurityGroupFilter, baseTags []string, desiredPorts []infrav1.PortOpts, dependentResources *infrav1.DependentMachineResources) error {
+	defaultSecurityGroups, err := s.GetSecurityGroups(securityGroups)
 	if err != nil {
-		return nil, fmt.Errorf("error getting security groups: %v", err)
+		return fmt.Errorf("error getting security groups: %v", err)
 	}
 
-	portsStatus := make([]infrav1.PortStatus, 0, len(ports))
-
-	for i := range ports {
-		portOpts := &ports[i]
-		iTags := []string{}
-		if len(instanceTags) > 0 {
-			iTags = instanceTags
+	for i := range desiredPorts {
+		// Skip creation of ports which already exist
+		if i < len(dependentResources.Ports) {
+			continue
 		}
-		portName := GetPortName(instanceName, portOpts, i)
+
+		portOpts := &desiredPorts[i]
+		portName := GetPortName(baseName, portOpts, i)
 		// Events are recorded in CreatePort
-		port, err := s.CreatePort(eventObject, clusterName, portName, portOpts, instanceSecurityGroups, iTags)
+		port, err := s.CreatePort(eventObject, clusterName, portName, portOpts, defaultSecurityGroups, baseTags)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		portsStatus = append(portsStatus, infrav1.PortStatus{
+		dependentResources.Ports = append(dependentResources.Ports, infrav1.PortStatus{
 			ID: port.ID,
 		})
 	}
 
-	return portsStatus, nil
+	return nil
 }
 
 // ConstructPorts builds an array of ports from the instance spec.
@@ -690,17 +685,4 @@ func (s *Service) AdoptBastionPorts(scope *scope.WithLogger, openStackCluster *i
 	}
 
 	return changed, nil
-}
-
-// MissingPorts returns the ports that are not in the ports status but are desired ports which should be created.
-func MissingPorts(portsStatus []infrav1.PortStatus, desiredPorts []infrav1.PortOpts) []infrav1.PortOpts {
-	// missingPorts is equal to the ports status minus its length
-	missingPortsLength := len(desiredPorts) - len(portsStatus)
-
-	// rebuild desiredPorts to only contain the ports that were not adopted
-	missingPorts := make([]infrav1.PortOpts, missingPortsLength)
-	for i := 0; i < missingPortsLength; i++ {
-		missingPorts[i] = desiredPorts[i+len(portsStatus)]
-	}
-	return missingPorts
 }
