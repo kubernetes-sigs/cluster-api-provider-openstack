@@ -38,9 +38,6 @@ import (
 )
 
 func Test_CreatePort(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
 	// Arbitrary GUIDs used in the tests
 	netID := "7fd24ceb-788a-441f-ad0a-d8e2f5d31a1d"
 	subnetID1 := "d9c88a6d-0b8c-48ff-8f0e-8d85a078c194"
@@ -412,6 +409,9 @@ func Test_CreatePort(t *testing.T) {
 	for i := range tests {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+
 			g := NewWithT(t)
 			mockClient := mock.NewMockNetworkClient(mockCtrl)
 			tt.expect(mockClient.EXPECT())
@@ -437,9 +437,6 @@ func Test_CreatePort(t *testing.T) {
 }
 
 func TestService_normalizePorts(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
 	const (
 		defaultNetworkID = "3c66f3ca-2d26-4d9d-ae3b-568f54129773"
 		defaultSubnetID  = "d8dbba89-8c39-4192-a571-e702fca35bac"
@@ -775,6 +772,8 @@ func TestService_normalizePorts(t *testing.T) {
 			g := NewWithT(t)
 			log := testr.New(t)
 
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
 			mockClient := mock.NewMockNetworkClient(mockCtrl)
 			if tt.expectNetwork != nil {
 				tt.expectNetwork(mockClient.EXPECT())
@@ -834,6 +833,153 @@ func Test_getPortName(t *testing.T) {
 			if got := GetPortName(tt.args.instanceName, tt.args.opts, tt.args.netIndex); got != tt.want {
 				t.Errorf("getPortName() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func Test_AdoptPorts(t *testing.T) {
+	const (
+		networkID1 = "5e8e0d3b-7f3d-4f3e-8b3f-3e3e3e3e3e3e"
+		networkID2 = "0a4ff38e-1e03-4b4e-994c-c8ae38a2915e"
+		networkID3 = "bd22ea65-53de-4585-bb6f-b0a84d0085d1"
+		portID1    = "78e0d3b-7f3d-4f3e-8b3f-3e3e3e3e3e3e"
+		portID2    = "a838209b-389a-47a0-9161-3d6919891074"
+	)
+
+	tests := []struct {
+		testName           string
+		desiredPorts       []infrav1.PortOpts
+		dependentResources infrav1.DependentMachineResources
+		expect             func(*mock.MockNetworkClientMockRecorder)
+		want               infrav1.DependentMachineResources
+		wantErr            bool
+	}{
+		{
+			testName: "No desired ports",
+		},
+		{
+			testName: "desired port already in status: no-op",
+			desiredPorts: []infrav1.PortOpts{
+				{Network: &infrav1.NetworkFilter{ID: networkID1}},
+			},
+			dependentResources: infrav1.DependentMachineResources{
+				Ports: []infrav1.PortStatus{
+					{
+						ID: portID1,
+					},
+				},
+			},
+			want: infrav1.DependentMachineResources{
+				Ports: []infrav1.PortStatus{
+					{
+						ID: portID1,
+					},
+				},
+			},
+		},
+		{
+			testName: "desired port not in status, exists: adopt",
+			desiredPorts: []infrav1.PortOpts{
+				{Network: &infrav1.NetworkFilter{ID: networkID1}},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				m.ListPort(ports.ListOpts{Name: "test-machine-0", NetworkID: networkID1}).
+					Return([]ports.Port{{ID: portID1}}, nil)
+			},
+			want: infrav1.DependentMachineResources{
+				Ports: []infrav1.PortStatus{
+					{
+						ID: portID1,
+					},
+				},
+			},
+		},
+		{
+			testName: "desired port not in status, does not exist: ignore",
+			desiredPorts: []infrav1.PortOpts{
+				{Network: &infrav1.NetworkFilter{ID: networkID1}},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				m.ListPort(ports.ListOpts{Name: "test-machine-0", NetworkID: networkID1}).
+					Return(nil, nil)
+			},
+			want: infrav1.DependentMachineResources{},
+		},
+		{
+			testName: "2 desired ports, first in status, second exists: adopt second",
+			desiredPorts: []infrav1.PortOpts{
+				{Network: &infrav1.NetworkFilter{ID: networkID1}},
+				{Network: &infrav1.NetworkFilter{ID: networkID2}},
+			},
+			dependentResources: infrav1.DependentMachineResources{
+				Ports: []infrav1.PortStatus{
+					{
+						ID: portID1,
+					},
+				},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				m.ListPort(ports.ListOpts{Name: "test-machine-1", NetworkID: networkID2}).
+					Return([]ports.Port{{ID: portID2}}, nil)
+			},
+			want: infrav1.DependentMachineResources{
+				Ports: []infrav1.PortStatus{
+					{ID: portID1},
+					{ID: portID2},
+				},
+			},
+		},
+		{
+			testName: "3 desired ports, first in status, second does not exist: ignore, do no look for third",
+			desiredPorts: []infrav1.PortOpts{
+				{Network: &infrav1.NetworkFilter{ID: networkID1}},
+				{Network: &infrav1.NetworkFilter{ID: networkID2}},
+				{Network: &infrav1.NetworkFilter{ID: networkID3}},
+			},
+			dependentResources: infrav1.DependentMachineResources{
+				Ports: []infrav1.PortStatus{
+					{
+						ID: portID1,
+					},
+				},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				m.ListPort(ports.ListOpts{Name: "test-machine-1", NetworkID: networkID2}).
+					Return(nil, nil)
+			},
+			want: infrav1.DependentMachineResources{
+				Ports: []infrav1.PortStatus{
+					{ID: portID1},
+				},
+			},
+		},
+	}
+	for i := range tests {
+		tt := &tests[i]
+		t.Run(tt.testName, func(t *testing.T) {
+			g := NewWithT(t)
+			log := testr.New(t)
+
+			mockCtrl := gomock.NewController(t)
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
+			mockClient := mock.NewMockNetworkClient(mockCtrl)
+			if tt.expect != nil {
+				tt.expect(mockClient.EXPECT())
+			}
+
+			s := Service{
+				client: mockClient,
+			}
+
+			_, err := s.AdoptPorts(scope.NewWithLogger(mockScopeFactory, log),
+				"test-machine",
+				tt.desiredPorts, &tt.dependentResources)
+			if tt.wantErr {
+				g.Expect(err).Error()
+				return
+			}
+
+			g.Expect(tt.dependentResources).To(Equal(tt.want), cmp.Diff(&tt.dependentResources, tt.want))
 		})
 	}
 }

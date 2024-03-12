@@ -160,8 +160,8 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return reconcile.Result{}, nil
 	}
 
-	// Resolve and store dependent resources
-	changed, err = compute.ResolveDependentMachineResources(scope, openStackMachine)
+	// Adopt any existing dependent resources
+	changed, err = compute.AdoptDependentMachineResources(scope, openStackMachine.Name, &openStackMachine.Status.ReferencedResources, &openStackMachine.Status.DependentResources)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

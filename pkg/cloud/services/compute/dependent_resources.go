@@ -22,24 +22,11 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
-func ResolveDependentMachineResources(scope *scope.WithLogger, openStackMachine *infrav1.OpenStackMachine) (changed bool, err error) {
-	changed = false
-
+func AdoptDependentMachineResources(scope *scope.WithLogger, baseName string, referencedResources *infrav1.ReferencedMachineResources, dependentResources *infrav1.DependentMachineResources) (bool, error) {
 	networkingService, err := networking.NewService(scope)
 	if err != nil {
-		return changed, err
+		return false, err
 	}
 
-	return networkingService.AdoptMachinePorts(scope, openStackMachine, openStackMachine.Status.ReferencedResources.Ports)
-}
-
-func ResolveDependentBastionResources(scope *scope.WithLogger, openStackCluster *infrav1.OpenStackCluster, bastionName string) (changed bool, err error) {
-	changed = false
-
-	networkingService, err := networking.NewService(scope)
-	if err != nil {
-		return changed, err
-	}
-
-	return networkingService.AdoptBastionPorts(scope, openStackCluster, bastionName)
+	return networkingService.AdoptPorts(scope, baseName, referencedResources.Ports, dependentResources)
 }
