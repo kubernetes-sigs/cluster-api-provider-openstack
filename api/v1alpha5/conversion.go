@@ -335,13 +335,16 @@ func Convert_v1beta1_PortOpts_To_v1alpha5_PortOpts(in *infrav1.PortOpts, out *Po
 		}
 	}
 
-	out.Profile = make(map[string]string)
-	if pointer.BoolDeref(in.Profile.OVSHWOffload, false) {
-		(out.Profile)["capabilities"] = "[\"switchdev\"]"
+	if in.Profile != nil {
+		out.Profile = make(map[string]string)
+		if pointer.BoolDeref(in.Profile.OVSHWOffload, false) {
+			(out.Profile)["capabilities"] = "[\"switchdev\"]"
+		}
+		if pointer.BoolDeref(in.Profile.TrustedVF, false) {
+			(out.Profile)["trusted"] = trueString
+		}
 	}
-	if pointer.BoolDeref(in.Profile.TrustedVF, false) {
-		(out.Profile)["trusted"] = trueString
-	}
+
 	return nil
 }
 
