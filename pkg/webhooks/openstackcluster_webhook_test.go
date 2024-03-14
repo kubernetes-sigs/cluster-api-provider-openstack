@@ -84,7 +84,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						CloudName: "foobar",
 					},
 					Bastion: &infrav1.Bastion{
-						Instance: infrav1.OpenStackMachineSpec{
+						Instance: &infrav1.OpenStackMachineSpec{
 							Image:  infrav1.ImageFilter{Name: pointer.String("foobar")},
 							Flavor: "minimal",
 						},
@@ -104,7 +104,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						CloudName: "foobar",
 					},
 					Bastion: &infrav1.Bastion{
-						Instance: infrav1.OpenStackMachineSpec{
+						Instance: &infrav1.OpenStackMachineSpec{
 							Image:  infrav1.ImageFilter{Name: pointer.String("foobarbaz")},
 							Flavor: "medium",
 						},
@@ -452,7 +452,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 					Bastion: &infrav1.Bastion{
 						Enabled: true,
-						Instance: infrav1.OpenStackMachineSpec{
+						Instance: &infrav1.OpenStackMachineSpec{
 							Flavor: "m1.small",
 							Image:  infrav1.ImageFilter{Name: pointer.String("ubuntu")},
 						},
@@ -479,7 +479,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 					Bastion: &infrav1.Bastion{
 						Enabled: false,
-						Instance: infrav1.OpenStackMachineSpec{
+						Instance: &infrav1.OpenStackMachineSpec{
 							Flavor: "m1.small",
 							Image:  infrav1.ImageFilter{Name: pointer.String("ubuntu")},
 						},

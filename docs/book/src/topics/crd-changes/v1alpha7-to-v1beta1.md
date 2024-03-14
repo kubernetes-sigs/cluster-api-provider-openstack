@@ -234,6 +234,8 @@ spec:
     floatingIP: "1.2.3.4"
 ```
 
+The new field has IPv4 validation added.
+
 #### Change to subnet
 
 In v1beta1, `Subnet` of `OpenStackCluster` is modified to `Subnets` to allow specification of two existent subnets for the dual-stack scenario.

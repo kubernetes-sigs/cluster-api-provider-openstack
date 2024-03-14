@@ -222,7 +222,10 @@ func resolveBastionResources(scope *scope.WithLogger, openStackCluster *infrav1.
 		if openStackCluster.Status.Bastion == nil {
 			openStackCluster.Status.Bastion = &infrav1.BastionStatus{}
 		}
-		changed, err := compute.ResolveReferencedMachineResources(scope, openStackCluster, &openStackCluster.Spec.Bastion.Instance, &openStackCluster.Status.Bastion.ReferencedResources)
+		if openStackCluster.Spec.Bastion.Instance == nil {
+			return false, fmt.Errorf("bastion spec is nil when bastion is enabled, this shouldn't happen")
+		}
+		changed, err := compute.ResolveReferencedMachineResources(scope, openStackCluster, openStackCluster.Spec.Bastion.Instance, &openStackCluster.Status.Bastion.ReferencedResources)
 		if err != nil {
 			return false, err
 		}
@@ -504,9 +507,9 @@ func bastionAddFloatingIP(openStackCluster *infrav1.OpenStackCluster, clusterNam
 	case openStackCluster.Status.Bastion.FloatingIP != "":
 		// Some floating IP has already been created for this bastion, make sure we re-use it
 		floatingIP = &openStackCluster.Status.Bastion.FloatingIP
-	case openStackCluster.Spec.Bastion.FloatingIP != "":
+	case openStackCluster.Spec.Bastion.FloatingIP != nil:
 		// Use floating IP from the spec
-		floatingIP = &openStackCluster.Spec.Bastion.FloatingIP
+		floatingIP = openStackCluster.Spec.Bastion.FloatingIP
 	}
 	// Check if there is an existing floating IP attached to bastion, in case where FloatingIP would not yet have been stored in cluster status
 	fp, err = networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterName, floatingIP)
@@ -529,17 +532,24 @@ func bastionToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, cluster *
 	if openStackCluster.Spec.Bastion == nil {
 		return nil, fmt.Errorf("bastion spec is nil")
 	}
+	if openStackCluster.Spec.Bastion.Instance == nil {
+		// For the case when Bastion is deleted but we don't have spec, let's use an empty one.
+		// v1beta1 API validations prevent this from happening in normal circumstances.
+		openStackCluster.Spec.Bastion.Instance = &infrav1.OpenStackMachineSpec{}
+	}
 
 	if openStackCluster.Status.Bastion == nil {
 		return nil, fmt.Errorf("bastion status is nil")
 	}
 	instanceSpec := &compute.InstanceSpec{
-		Name:          bastionName(cluster.Name),
-		Flavor:        openStackCluster.Spec.Bastion.Instance.Flavor,
-		SSHKeyName:    openStackCluster.Spec.Bastion.Instance.SSHKeyName,
-		ImageID:       openStackCluster.Status.Bastion.ReferencedResources.ImageID,
-		FailureDomain: openStackCluster.Spec.Bastion.AvailabilityZone,
-		RootVolume:    openStackCluster.Spec.Bastion.Instance.RootVolume,
+		Name:       bastionName(cluster.Name),
+		Flavor:     openStackCluster.Spec.Bastion.Instance.Flavor,
+		SSHKeyName: openStackCluster.Spec.Bastion.Instance.SSHKeyName,
+		ImageID:    openStackCluster.Status.Bastion.ReferencedResources.ImageID,
+		RootVolume: openStackCluster.Spec.Bastion.Instance.RootVolume,
+	}
+	if openStackCluster.Spec.Bastion.AvailabilityZone != nil {
+		instanceSpec.FailureDomain = *openStackCluster.Spec.Bastion.AvailabilityZone
 	}
 
 	instanceSpec.SecurityGroups = openStackCluster.Spec.Bastion.Instance.SecurityGroups

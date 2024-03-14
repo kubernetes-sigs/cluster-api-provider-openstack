@@ -596,21 +596,27 @@ var (
 	InstanceStateUndefined = InstanceState("")
 )
 
-// Bastion represents basic information about the bastion node.
+// Bastion represents basic information about the bastion node. If you enable bastion, the spec has to be specified.
+// +kubebuilder:validation:XValidation:rule="!self.enabled || has(self.instance)",message="you need to specify the instance if bastion is enabled"
 type Bastion struct {
-	//+optional
+	// Enabled means that bastion is enabled. Defaults to false.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:default:=false
 	Enabled bool `json:"enabled"`
 
 	// Instance for the bastion itself
-	Instance OpenStackMachineSpec `json:"instance,omitempty"`
+	Instance *OpenStackMachineSpec `json:"instance,omitempty"`
 
+	// AvailabilityZone is the failure domain that will be used to create the Bastion Instance.
 	//+optional
-	AvailabilityZone string `json:"availabilityZone,omitempty"`
+	AvailabilityZone optional.String `json:"availabilityZone,omitempty"`
 
-	// FloatingIP which will be associated to the bastion machine.
-	// The floating IP should already exist and should not be associated with a port.
+	// FloatingIP which will be associated to the bastion machine. It's the IP address, not UUID.
+	// The floating IP should already exist and should not be associated with a port. If FIP of this address does not
+	// exist, CAPO will try to create it, but by default only OpenStack administrators have privileges to do so.
 	//+optional
-	FloatingIP string `json:"floatingIP,omitempty"`
+	//+kubebuilder:validation:Format:=ipv4
+	FloatingIP optional.String `json:"floatingIP,omitempty"`
 }
 
 type APIServerLoadBalancer struct {
