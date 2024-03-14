@@ -4917,13 +4917,20 @@ spec:
                   to first set `enabled: false` which will remove the bastion and then changes can be made.
                 properties:
                   availabilityZone:
+                    description: AvailabilityZone is the failure domain that will
+                      be used to create the Bastion Instance.
                     type: string
                   enabled:
+                    default: false
+                    description: Enabled means that bastion is enabled. Defaults to
+                      false.
                     type: boolean
                   floatingIP:
                     description: |-
-                      FloatingIP which will be associated to the bastion machine.
-                      The floating IP should already exist and should not be associated with a port.
+                      FloatingIP which will be associated to the bastion machine. It's the IP address, not UUID.
+                      The floating IP should already exist and should not be associated with a port. If FIP of this address does not
+                      exist, CAPO will try to create it, but by default only OpenStack administrators have privileges to do so.
+                    format: ipv4
                     type: string
                   instance:
                     description: Instance for the bastion itself
@@ -5570,7 +5577,12 @@ spec:
                     - flavor
                     - image
                     type: object
+                required:
+                - enabled
                 type: object
+                x-kubernetes-validations:
+                - message: you need to specify the instance if bastion is enabled
+                  rule: '!self.enabled || has(self.instance)'
               controlPlaneAvailabilityZones:
                 description: |-
                   ControlPlaneAvailabilityZones is the set of availability zones which

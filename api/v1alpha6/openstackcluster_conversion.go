@@ -412,8 +412,13 @@ func Convert_v1alpha6_OpenStackClusterStatus_To_v1beta1_OpenStackClusterStatus(i
 /* Bastion */
 
 func restorev1beta1Bastion(previous **infrav1.Bastion, dst **infrav1.Bastion) {
-	if *previous != nil && *dst != nil {
-		restorev1beta1MachineSpec(&(*previous).Instance, &(*dst).Instance)
+	if *previous != nil {
+		if *dst != nil && (*previous).Instance != nil && (*dst).Instance != nil {
+			restorev1beta1MachineSpec((*previous).Instance, (*dst).Instance)
+		}
+
+		optional.RestoreString(&(*previous).FloatingIP, &(*dst).FloatingIP)
+		optional.RestoreString(&(*previous).AvailabilityZone, &(*dst).AvailabilityZone)
 	}
 }
 
@@ -445,13 +450,30 @@ func Convert_v1alpha6_Bastion_To_v1beta1_Bastion(in *Bastion, out *infrav1.Basti
 		return err
 	}
 
-	if in.Instance.ServerGroupID != "" {
-		out.Instance.ServerGroup = &infrav1.ServerGroupFilter{ID: in.Instance.ServerGroupID}
-	} else {
-		out.Instance.ServerGroup = nil
+	if !reflect.ValueOf(in.Instance).IsZero() {
+		out.Instance = &infrav1.OpenStackMachineSpec{}
+
+		err = Convert_v1alpha6_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(&in.Instance, out.Instance, s)
+		if err != nil {
+			return err
+		}
+
+		if in.Instance.ServerGroupID != "" {
+			out.Instance.ServerGroup = &infrav1.ServerGroupFilter{ID: in.Instance.ServerGroupID}
+		} else {
+			out.Instance.ServerGroup = nil
+		}
+
+		err = optional.Convert_string_To_optional_String(&in.Instance.FloatingIP, &out.FloatingIP, s)
+		if err != nil {
+			return err
+		}
 	}
 
-	out.FloatingIP = in.Instance.FloatingIP
+	// nil the Instance if it's basically an empty object.
+	if out.Instance != nil && reflect.ValueOf(*out.Instance).IsZero() {
+		out.Instance = nil
+	}
 	return nil
 }
 
@@ -461,10 +483,16 @@ func Convert_v1beta1_Bastion_To_v1alpha6_Bastion(in *infrav1.Bastion, out *Basti
 		return err
 	}
 
-	if in.Instance.ServerGroup != nil && in.Instance.ServerGroup.ID != "" {
-		out.Instance.ServerGroupID = in.Instance.ServerGroup.ID
+	if in.Instance != nil {
+		err = Convert_v1beta1_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(in.Instance, &out.Instance, s)
+		if err != nil {
+			return err
+		}
+
+		if in.Instance.ServerGroup != nil && in.Instance.ServerGroup.ID != "" {
+			out.Instance.ServerGroupID = in.Instance.ServerGroup.ID
+		}
 	}
 
-	out.Instance.FloatingIP = in.FloatingIP
-	return nil
+	return optional.Convert_optional_String_To_string(&in.FloatingIP, &out.Instance.FloatingIP, s)
 }

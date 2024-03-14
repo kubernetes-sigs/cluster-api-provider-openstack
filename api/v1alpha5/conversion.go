@@ -671,7 +671,9 @@ func Convert_v1beta1_Bastion_To_v1alpha5_Bastion(in *infrav1.Bastion, out *Basti
 	if err != nil {
 		return err
 	}
-	in.FloatingIP = out.Instance.FloatingIP
+	if in.FloatingIP != nil {
+		out.Instance.FloatingIP = *in.FloatingIP
+	}
 	return nil
 }
 
@@ -680,7 +682,9 @@ func Convert_v1alpha5_Bastion_To_v1beta1_Bastion(in *Bastion, out *infrav1.Basti
 	if err != nil {
 		return err
 	}
-	in.Instance.FloatingIP = out.FloatingIP
+	if in.Instance.FloatingIP != "" {
+		out.FloatingIP = &in.Instance.FloatingIP
+	}
 	return nil
 }
 

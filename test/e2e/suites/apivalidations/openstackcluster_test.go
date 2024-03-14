@@ -21,6 +21,7 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/pointer"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -85,5 +86,55 @@ var _ = Describe("OpenStackCluster API validations", func() {
 
 		Expect(fetchedCluster.Spec.APIServerLoadBalancer).To(BeNil(), "APIServerLoadBalancer should not have been defaulted")
 		Expect(fetchedCluster.Spec.APIServerLoadBalancer.IsEnabled()).To(BeFalse(), "APIServerLoadBalancer.Enabled should not have been defaulted")
+	})
+
+	It("should allow bastion.enabled=true with an instance", func() {
+		cluster.Spec.Bastion = &infrav1.Bastion{
+			Enabled: true,
+			Instance: &infrav1.OpenStackMachineSpec{
+				Image: infrav1.ImageFilter{Name: pointer.String("fake-image")},
+			},
+		}
+		Expect(k8sClient.Create(ctx, cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
+	})
+
+	It("should not allow bastion.enabled=true without an instance", func() {
+		cluster.Spec.Bastion = &infrav1.Bastion{
+			Enabled: true,
+		}
+		Expect(k8sClient.Create(ctx, cluster)).NotTo(Succeed(), "OpenStackCluster creation should not succeed")
+	})
+
+	It("should default bastion.enabled=false", func() {
+		cluster.Spec.Bastion = &infrav1.Bastion{}
+		Expect(k8sClient.Create(ctx, cluster)).To(Succeed(), "OpenStackCluster creation should not succeed")
+
+		// Fetch the cluster and check the defaulting
+		fetchedCluster := &infrav1.OpenStackCluster{}
+		Expect(k8sClient.Get(ctx, types.NamespacedName{Name: cluster.Name, Namespace: cluster.Namespace}, fetchedCluster)).To(Succeed(), "OpenStackCluster fetch should succeed")
+
+		Expect(fetchedCluster.Spec.Bastion.Enabled).To(BeFalse(), "Bastion.Enabled should default to false")
+	})
+
+	It("should allow IPv4 as bastion floatingIP", func() {
+		cluster.Spec.Bastion = &infrav1.Bastion{
+			Enabled: true,
+			Instance: &infrav1.OpenStackMachineSpec{
+				Image: infrav1.ImageFilter{Name: pointer.String("fake-image")},
+			},
+			FloatingIP: pointer.String("10.0.0.0"),
+		}
+		Expect(k8sClient.Create(ctx, cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
+	})
+
+	It("should not allow non-IPv4 as bastion floating IP", func() {
+		cluster.Spec.Bastion = &infrav1.Bastion{
+			Enabled: true,
+			Instance: &infrav1.OpenStackMachineSpec{
+				Image: infrav1.ImageFilter{Name: pointer.String("fake-image")},
+			},
+			FloatingIP: pointer.String("foobar"),
+		}
+		Expect(k8sClient.Create(ctx, cluster)).NotTo(Succeed(), "OpenStackCluster creation should not succeed")
 	})
 })
