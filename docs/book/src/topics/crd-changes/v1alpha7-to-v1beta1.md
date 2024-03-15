@@ -91,7 +91,7 @@ If empty object or null is provided, Machine will not be added to any server gro
 #### Change to image
 
 The field `image` is now an `ImageFilter` object rather than a string name.
-The `ImageFilter` object allows selection of an image by name, by ID or by tags.
+The `ImageFilter` object allows selection of an image by ID or by name and tags. If ID is set, no other fields can be set in the object.
 
 ```yaml
 image: "test-image"

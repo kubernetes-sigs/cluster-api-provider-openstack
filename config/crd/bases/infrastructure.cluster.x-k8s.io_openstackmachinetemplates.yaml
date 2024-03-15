@@ -1483,8 +1483,10 @@ spec:
                           If the rootVolume is specified, this will be used when creating the root volume.
                         properties:
                           id:
-                            description: The ID of the desired image. If this is provided,
-                              the other filters will be ignored.
+                            description: The ID of the desired image. If ID is provided,
+                              the other filters cannot be provided. Must be in UUID
+                              format.
+                            format: uuid
                             type: string
                           name:
                             description: The name of the desired image. If specified,
@@ -1498,7 +1500,12 @@ spec:
                             items:
                               type: string
                             type: array
+                            x-kubernetes-list-type: set
                         type: object
+                        x-kubernetes-validations:
+                        - message: when ID is set you cannot set other options
+                          rule: (has(self.id) && !has(self.name) && !has(self.tags))
+                            || !has(self.id)
                       instanceID:
                         description: InstanceID is the OpenStack instance ID for this
                           machine.
@@ -2001,6 +2008,7 @@ spec:
                         type: boolean
                     required:
                     - flavor
+                    - image
                     type: object
                 required:
                 - spec

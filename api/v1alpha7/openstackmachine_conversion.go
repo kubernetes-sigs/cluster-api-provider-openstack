@@ -126,6 +126,11 @@ func restorev1alpha7MachineSpec(previous *OpenStackMachineSpec, dst *OpenStackMa
 			restorev1alpha7SecurityGroupFilter(&previous.SecurityGroups[i], &dst.SecurityGroups[i])
 		}
 	}
+
+	// Conversion to v1beta1 removes Image when ImageUUID is set
+	if dst.Image == "" && previous.Image != "" {
+		dst.Image = previous.Image
+	}
 }
 
 func restorev1beta1MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *infrav1.OpenStackMachineSpec) {
@@ -152,11 +157,10 @@ func Convert_v1alpha7_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in *O
 	}
 
 	imageFilter := infrav1.ImageFilter{}
-	if in.Image != "" {
-		imageFilter.Name = in.Image
-	}
 	if in.ImageUUID != "" {
-		imageFilter.ID = in.ImageUUID
+		imageFilter.ID = &in.ImageUUID
+	} else if in.Image != "" { // Only add name when ID is not set, in v1beta1 it's not possible to set both.
+		imageFilter.Name = &in.Image
 	}
 	out.Image = imageFilter
 
@@ -197,12 +201,12 @@ func Convert_v1beta1_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in *i
 		out.ServerGroupID = in.ServerGroup.ID
 	}
 
-	if in.Image.Name != "" {
-		out.Image = in.Image.Name
+	if in.Image.Name != nil && *in.Image.Name != "" {
+		out.Image = *in.Image.Name
 	}
 
-	if in.Image.ID != "" {
-		out.ImageUUID = in.Image.ID
+	if in.Image.ID != nil && *in.Image.ID != "" {
+		out.ImageUUID = *in.Image.ID
 	}
 
 	if len(in.ServerMetadata) > 0 {

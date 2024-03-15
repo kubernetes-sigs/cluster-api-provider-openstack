@@ -43,7 +43,8 @@ type OpenStackMachineSpec struct {
 
 	// The image to use for your server instance.
 	// If the rootVolume is specified, this will be used when creating the root volume.
-	Image ImageFilter `json:"image,omitempty"`
+	// +required
+	Image ImageFilter `json:"image"`
 
 	// The ssh key to inject in the instance
 	SSHKeyName string `json:"sshKeyName,omitempty"`

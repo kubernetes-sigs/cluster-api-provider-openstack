@@ -20,11 +20,12 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/utils/pointer"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
-var _ = Describe("Neutron filter API validations", func() {
+var _ = Describe("Filter API validations", func() {
 	var (
 		namespace *corev1.Namespace
 		cluster   *infrav1.OpenStackCluster
@@ -173,4 +174,49 @@ var _ = Describe("Neutron filter API validations", func() {
 			{Tags: []infrav1.NeutronTag{"foo", ""}},
 		}),
 	)
+
+	const imageUUID = "5a78f794-cdc3-48d2-8d9f-0fd472fdd743"
+
+	It("should not allow both ID and Name of ImageFilter to be set", func() {
+		By("Creating a machine")
+		machine.Spec.Image = infrav1.ImageFilter{
+			ID:   pointer.String(imageUUID),
+			Name: pointer.String("bar"),
+		}
+		Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
+	})
+
+	It("should not allow both ID and Tags of ImageFilter to be set", func() {
+		By("Creating a machine")
+		machine.Spec.Image = infrav1.ImageFilter{
+			ID:   pointer.String(imageUUID),
+			Tags: []string{"bar", "baz"},
+		}
+		Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
+	})
+
+	It("should allow UUID ID of ImageFilter to be set", func() {
+		By("Creating a machine")
+		machine.Spec.Image = infrav1.ImageFilter{
+			ID: pointer.String(imageUUID),
+		}
+		Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
+	})
+
+	It("should not allow non-UUID ID of ImageFilter to be set", func() {
+		By("Creating a machine")
+		machine.Spec.Image = infrav1.ImageFilter{
+			ID: pointer.String("foo"),
+		}
+		Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
+	})
+
+	It("should allow Name and Tags of ImageFilter to be set", func() {
+		By("Creating a machine")
+		machine.Spec.Image = infrav1.ImageFilter{
+			Name: pointer.String("bar"),
+			Tags: []string{"bar", "baz"},
+		}
+		Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
+	})
 })
