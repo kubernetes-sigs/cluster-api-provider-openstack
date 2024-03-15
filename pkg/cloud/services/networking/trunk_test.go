@@ -21,6 +21,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/trunks"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	. "github.com/onsi/gomega"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -31,54 +32,63 @@ func Test_GetOrCreateTrunk(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
+	const portID = "021e5dbe-a27b-4824-839e-239d5a027c7f"
+
 	tests := []struct {
-		name      string
-		trunkName string
-		portID    string
-		expect    func(m *mock.MockNetworkClientMockRecorder)
+		name   string
+		port   *ports.Port
+		expect func(m *mock.MockNetworkClientMockRecorder)
 		// Note the 'wanted' port isn't so important, since it will be whatever we tell ListPort or CreatePort to return.
 		// Mostly in this test suite, we're checking that ListPort/CreatePort is called with the expected port opts.
 		want    *trunks.Trunk
 		wantErr bool
 	}{
 		{
-			"return trunk if found",
-			"trunk-1",
-			"port-1",
-			func(m *mock.MockNetworkClientMockRecorder) {
+			name: "return trunk if found",
+			port: &ports.Port{
+				ID:   portID,
+				Name: "trunk-1",
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
 				m.
 					ListTrunk(trunks.ListOpts{
 						Name:   "trunk-1",
-						PortID: "port-1",
+						PortID: portID,
 					}).Return([]trunks.Trunk{{
 					Name: "trunk-1",
-					ID:   "port-1",
+					ID:   portID,
 				}}, nil)
 			},
-			&trunks.Trunk{Name: "trunk-1", ID: "port-1"},
-			false,
+			want: &trunks.Trunk{
+				Name: "trunk-1",
+				ID:   portID,
+			},
+			wantErr: false,
 		},
 		{
-			"creates trunk if not found",
-			"trunk-1",
-			"port-1",
-			func(m *mock.MockNetworkClientMockRecorder) {
+			name: "creates trunk if not found",
+			port: &ports.Port{
+				ID:          portID,
+				Name:        "trunk-1",
+				Description: "Created by cluster-api-provider-openstack cluster test-cluster",
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
 				// No ports found
 				m.
 					ListTrunk(trunks.ListOpts{
 						Name:   "trunk-1",
-						PortID: "port-1",
+						PortID: portID,
 					}).Return([]trunks.Trunk{}, nil)
 				m.
 					CreateTrunk(trunks.CreateOpts{
 						Name:        "trunk-1",
-						PortID:      "port-1",
+						PortID:      portID,
 						Description: "Created by cluster-api-provider-openstack cluster test-cluster",
 					},
 					).Return(&trunks.Trunk{Name: "trunk-1", ID: "port-1"}, nil)
 			},
-			&trunks.Trunk{Name: "trunk-1", ID: "port-1"},
-			false,
+			want:    &trunks.Trunk{Name: "trunk-1", ID: "port-1"},
+			wantErr: false,
 		},
 	}
 
@@ -91,12 +101,7 @@ func Test_GetOrCreateTrunk(t *testing.T) {
 			s := Service{
 				client: mockClient,
 			}
-			got, err := s.getOrCreateTrunk(
-				eventObject,
-				"test-cluster",
-				tt.trunkName,
-				tt.portID,
-			)
+			got, err := s.getOrCreateTrunkForPort(eventObject, tt.port)
 			if tt.wantErr {
 				g.Expect(err).To(HaveOccurred())
 			} else {

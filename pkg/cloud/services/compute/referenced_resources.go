@@ -18,6 +18,7 @@ package compute
 
 import (
 	"fmt"
+	"slices"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
@@ -30,7 +31,7 @@ import (
 // Note that we only set the fields in ReferencedMachineResources that are not set yet. This is ok because:
 // - OpenStackMachine is immutable, so we can't change the spec after the machine is created.
 // - the bastion is mutable, but we delete the bastion when the spec changes, so the bastion status will be empty.
-func ResolveReferencedMachineResources(scope *scope.WithLogger, openStackCluster *infrav1.OpenStackCluster, spec *infrav1.OpenStackMachineSpec, resources *infrav1.ReferencedMachineResources) (changed bool, err error) {
+func ResolveReferencedMachineResources(scope *scope.WithLogger, spec *infrav1.OpenStackMachineSpec, resources *infrav1.ReferencedMachineResources, clusterName, baseName string, openStackCluster *infrav1.OpenStackCluster, managedSecurityGroup *string) (changed bool, err error) {
 	changed = false
 
 	computeService, err := NewService(scope)
@@ -72,13 +73,8 @@ func ResolveReferencedMachineResources(scope *scope.WithLogger, openStackCluster
 
 	// Network resources are required in order to get ports options.
 	if len(resources.Ports) == 0 {
-		// For now we put this here but realistically an OpenStack administrator could enable/disable trunk
-		// support at any time, so we should probably check this on every reconcile.
-		trunkSupported, err := networkingService.IsTrunkExtSupported()
-		if err != nil {
-			return changed, err
-		}
-		portsOpts, err := networkingService.ConstructPorts(openStackCluster, spec.Ports, spec.Trunk, trunkSupported)
+		defaultNetwork := openStackCluster.Status.Network
+		portsOpts, err := networkingService.ConstructPorts(spec, clusterName, baseName, defaultNetwork, managedSecurityGroup, InstanceTags(spec, openStackCluster))
 		if err != nil {
 			return changed, err
 		}
@@ -87,4 +83,21 @@ func ResolveReferencedMachineResources(scope *scope.WithLogger, openStackCluster
 	}
 
 	return changed, nil
+}
+
+// InstanceTags returns the tags that should be applied to an instance.
+// The tags are a deduplicated combination of the tags specified in the
+// OpenStackMachineSpec and the ones specified on the OpenStackCluster.
+func InstanceTags(spec *infrav1.OpenStackMachineSpec, openStackCluster *infrav1.OpenStackCluster) []string {
+	machineTags := slices.Concat(spec.Tags, openStackCluster.Spec.Tags)
+
+	seen := make(map[string]struct{}, len(machineTags))
+	unique := make([]string, 0, len(machineTags))
+	for _, tag := range machineTags {
+		if _, ok := seen[tag]; !ok {
+			seen[tag] = struct{}{}
+			unique = append(unique, tag)
+		}
+	}
+	return slices.Clip(unique)
 }

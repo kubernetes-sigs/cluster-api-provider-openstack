@@ -2997,7 +2997,9 @@ spec:
                                 type: string
                               tags:
                                 description: |-
-                                  Machine tags
+                                  Tags which will be added to the machine and all dependent resources
+                                  which support them. These are in addition to Tags defined on the
+                                  cluster.
                                   Requires Nova api 2.52 minimum!
                                 items:
                                   type: string

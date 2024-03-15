@@ -19,6 +19,8 @@ package names
 import (
 	"fmt"
 	"strings"
+
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
 const (
@@ -35,4 +37,8 @@ func GetFloatingAddressClaimName(openStackMachineName string) string {
 
 func GetOpenStackMachineNameFromClaimName(claimName string) string {
 	return strings.TrimSuffix(claimName, fmt.Sprintf("-%s", FloatingAddressIPClaimNameSuffix))
+}
+
+func ClusterName(cluster *clusterv1.Cluster) string {
+	return fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
 }

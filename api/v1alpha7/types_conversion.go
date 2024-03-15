@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha7
 
 import (
+	"errors"
+
 	apiconversion "k8s.io/apimachinery/pkg/conversion"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -217,6 +219,38 @@ func Convert_v1alpha7_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *infrav1.Po
 		return err
 	}
 
+	// Copy members of ResolvedPortSpecFields
+	var allowedAddressPairs []infrav1.AddressPair
+	if len(in.AllowedAddressPairs) > 0 {
+		allowedAddressPairs = make([]infrav1.AddressPair, len(in.AllowedAddressPairs))
+		for i := range in.AllowedAddressPairs {
+			aap := &in.AllowedAddressPairs[i]
+			allowedAddressPairs[i] = infrav1.AddressPair{
+				MACAddress: &aap.MACAddress,
+				IPAddress:  aap.IPAddress,
+			}
+		}
+	}
+	var valueSpecs []infrav1.ValueSpec
+	if len(in.ValueSpecs) > 0 {
+		valueSpecs = make([]infrav1.ValueSpec, len(in.ValueSpecs))
+		for i, vs := range in.ValueSpecs {
+			valueSpecs[i] = infrav1.ValueSpec(vs)
+		}
+	}
+	out.AdminStateUp = in.AdminStateUp
+	out.AllowedAddressPairs = allowedAddressPairs
+	out.DisablePortSecurity = in.DisablePortSecurity
+	out.PropagateUplinkStatus = in.PropagateUplinkStatus
+	out.ValueSpecs = valueSpecs
+	if err := errors.Join(
+		optional.Convert_string_To_optional_String(&in.MACAddress, &out.MACAddress, s),
+		optional.Convert_string_To_optional_String(&in.HostID, &out.HostID, s),
+		optional.Convert_string_To_optional_String(&in.VNICType, &out.VNICType, s),
+	); err != nil {
+		return err
+	}
+
 	if len(in.SecurityGroupFilters) > 0 {
 		out.SecurityGroups = make([]infrav1.SecurityGroupFilter, len(in.SecurityGroupFilters))
 		for i := range in.SecurityGroupFilters {
@@ -238,6 +272,39 @@ func Convert_v1alpha7_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *infrav1.Po
 
 func Convert_v1beta1_PortOpts_To_v1alpha7_PortOpts(in *infrav1.PortOpts, out *PortOpts, s apiconversion.Scope) error {
 	if err := autoConvert_v1beta1_PortOpts_To_v1alpha7_PortOpts(in, out, s); err != nil {
+		return err
+	}
+
+	// Copy members of ResolvedPortSpecFields
+	var allowedAddressPairs []AddressPair
+	if len(in.AllowedAddressPairs) > 0 {
+		allowedAddressPairs = make([]AddressPair, len(in.AllowedAddressPairs))
+		for i := range in.AllowedAddressPairs {
+			inAAP := &in.AllowedAddressPairs[i]
+			outAAP := &allowedAddressPairs[i]
+			if err := optional.Convert_optional_String_To_string(&inAAP.MACAddress, &outAAP.MACAddress, s); err != nil {
+				return err
+			}
+			outAAP.IPAddress = inAAP.IPAddress
+		}
+	}
+	var valueSpecs []ValueSpec
+	if len(in.ValueSpecs) > 0 {
+		valueSpecs = make([]ValueSpec, len(in.ValueSpecs))
+		for i, vs := range in.ValueSpecs {
+			valueSpecs[i] = ValueSpec(vs)
+		}
+	}
+	out.AdminStateUp = in.AdminStateUp
+	out.AllowedAddressPairs = allowedAddressPairs
+	out.DisablePortSecurity = in.DisablePortSecurity
+	out.PropagateUplinkStatus = in.PropagateUplinkStatus
+	out.ValueSpecs = valueSpecs
+	if err := errors.Join(
+		optional.Convert_optional_String_To_string(&in.MACAddress, &out.MACAddress, s),
+		optional.Convert_optional_String_To_string(&in.HostID, &out.HostID, s),
+		optional.Convert_optional_String_To_string(&in.VNICType, &out.VNICType, s),
+	); err != nil {
 		return err
 	}
 

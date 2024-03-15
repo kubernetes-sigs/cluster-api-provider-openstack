@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/google/go-cmp/cmp"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/external"
@@ -238,11 +239,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 			Bastion: &infrav1.BastionStatus{
 				ReferencedResources: infrav1.ReferencedMachineResources{
 					ImageID: "imageID",
-					Ports: []infrav1.PortOpts{
+					Ports: []infrav1.ResolvedPortSpec{
 						{
-							Network: &infrav1.NetworkFilter{
-								ID: "network-id",
-							},
+							NetworkID: "network-id",
 						},
 					},
 				},
@@ -284,16 +283,14 @@ var _ = Describe("OpenStackCluster controller", func() {
 		networkClientRecorder.ListFloatingIP(floatingips.ListOpts{PortID: "portID1"}).Return(make([]floatingips.FloatingIP, 1), nil)
 
 		res, err := reconcileBastion(scope, capiCluster, testCluster)
-		Expect(testCluster.Status.Bastion).To(Equal(&infrav1.BastionStatus{
+		expectedStatus := &infrav1.BastionStatus{
 			ID:    "adopted-bastion-uuid",
 			State: "ACTIVE",
 			ReferencedResources: infrav1.ReferencedMachineResources{
 				ImageID: "imageID",
-				Ports: []infrav1.PortOpts{
+				Ports: []infrav1.ResolvedPortSpec{
 					{
-						Network: &infrav1.NetworkFilter{
-							ID: "network-id",
-						},
+						NetworkID: "network-id",
 					},
 				},
 			},
@@ -304,7 +301,8 @@ var _ = Describe("OpenStackCluster controller", func() {
 					},
 				},
 			},
-		}))
+		}
+		Expect(testCluster.Status.Bastion).To(Equal(expectedStatus), cmp.Diff(testCluster.Status.Bastion, expectedStatus))
 		Expect(err).To(BeNil())
 		Expect(res).To(BeNil())
 	})
@@ -331,11 +329,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 				ID: "adopted-fip-bastion-uuid",
 				ReferencedResources: infrav1.ReferencedMachineResources{
 					ImageID: "imageID",
-					Ports: []infrav1.PortOpts{
+					Ports: []infrav1.ResolvedPortSpec{
 						{
-							Network: &infrav1.NetworkFilter{
-								ID: "network-id",
-							},
+							NetworkID: "network-id",
 						},
 					},
 				},
@@ -375,11 +371,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 			State:      "ACTIVE",
 			ReferencedResources: infrav1.ReferencedMachineResources{
 				ImageID: "imageID",
-				Ports: []infrav1.PortOpts{
+				Ports: []infrav1.ResolvedPortSpec{
 					{
-						Network: &infrav1.NetworkFilter{
-							ID: "network-id",
-						},
+						NetworkID: "network-id",
 					},
 				},
 			},
@@ -417,11 +411,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 				ID: "requeue-bastion-uuid",
 				ReferencedResources: infrav1.ReferencedMachineResources{
 					ImageID: "imageID",
-					Ports: []infrav1.PortOpts{
+					Ports: []infrav1.ResolvedPortSpec{
 						{
-							Network: &infrav1.NetworkFilter{
-								ID: "network-id",
-							},
+							NetworkID: "network-id",
 						},
 					},
 				},
@@ -455,11 +447,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 			State: "BUILD",
 			ReferencedResources: infrav1.ReferencedMachineResources{
 				ImageID: "imageID",
-				Ports: []infrav1.PortOpts{
+				Ports: []infrav1.ResolvedPortSpec{
 					{
-						Network: &infrav1.NetworkFilter{
-							ID: "network-id",
-						},
+						NetworkID: "network-id",
 					},
 				},
 			},
@@ -797,42 +787,5 @@ func Test_getAPIServerPort(t *testing.T) {
 				t.Errorf("getAPIServerPort() = %v, want %v", got, tt.want)
 			}
 		})
-	}
-}
-
-func TestGetBastionSecurityGroups(t *testing.T) {
-	openStackCluster := &infrav1.OpenStackCluster{
-		Spec: infrav1.OpenStackClusterSpec{
-			Bastion: &infrav1.Bastion{
-				Spec: &infrav1.OpenStackMachineSpec{
-					SecurityGroups: []infrav1.SecurityGroupFilter{
-						{
-							ID: "sg-123",
-						},
-					},
-				},
-			},
-			ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{},
-		},
-		Status: infrav1.OpenStackClusterStatus{
-			BastionSecurityGroup: &infrav1.SecurityGroupStatus{
-				ID: "sg-456",
-			},
-		},
-	}
-
-	expectedSecurityGroups := []infrav1.SecurityGroupFilter{
-		{
-			ID: "sg-123",
-		},
-		{
-			ID: "sg-456",
-		},
-	}
-
-	securityGroups := getBastionSecurityGroups(openStackCluster)
-
-	if !reflect.DeepEqual(securityGroups, expectedSecurityGroups) {
-		t.Errorf("Expected security groups %v, but got %v", expectedSecurityGroups, securityGroups)
 	}
 }
