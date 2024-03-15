@@ -34,11 +34,14 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
+const (
+	clusterName = "test-cluster"
+)
+
 func Test_ReconcileNetwork(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	clusterName := "test-cluster"
 	expectedNetworkName := getNetworkName(clusterName)
 	fakeNetworkID := "d08803fc-2fa5-4179-b9f7-8c43d0af2fe6"
 
@@ -435,7 +438,6 @@ func Test_ReconcileSubnet(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	clusterName := "test-cluster"
 	expectedSubnetName := getSubnetName(clusterName)
 	expectedSubnetDesc := names.GetDescription(clusterName)
 	fakeSubnetID := "d08803fc-2fa5-4179-b9d7-8c43d0af2fe6"

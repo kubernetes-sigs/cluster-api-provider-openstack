@@ -60,7 +60,9 @@ type OpenStackMachineSpec struct {
 	// Whether the server instance is created on a trunk port or not.
 	Trunk bool `json:"trunk,omitempty"`
 
-	// Machine tags
+	// Tags which will be added to the machine and all dependent resources
+	// which support them. These are in addition to Tags defined on the
+	// cluster.
 	// Requires Nova api 2.52 minimum!
 	// +listType=set
 	Tags []string `json:"tags,omitempty"`

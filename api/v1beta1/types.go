@@ -171,21 +171,13 @@ type PortOpts struct {
 	// +optional
 	Network *NetworkFilter `json:"network,omitempty"`
 
-	// NameSuffix will be appended to the name of the port if specified. If unspecified, instead the 0-based index of the port in the list is used.
-	// +optional
-	NameSuffix optional.String `json:"nameSuffix,omitempty"`
-
 	// Description is a human-readable description for the port.
 	// +optional
 	Description optional.String `json:"description,omitempty"`
 
-	// AdminStateUp specifies whether the port should be created in the up (true) or down (false) state. The default is up.
+	// NameSuffix will be appended to the name of the port if specified. If unspecified, instead the 0-based index of the port in the list is used.
 	// +optional
-	AdminStateUp *bool `json:"adminStateUp,omitempty"`
-
-	// MACAddress specifies the MAC address of the port. If not specified, the MAC address will be generated.
-	// +optional
-	MACAddress optional.String `json:"macAddress,omitempty"`
+	NameSuffix optional.String `json:"nameSuffix,omitempty"`
 
 	// FixedIPs is a list of pairs of subnet and/or IP address to assign to the port. If specified, these must be subnets of the port's network.
 	// +optional
@@ -197,6 +189,33 @@ type PortOpts struct {
 	// +listType=atomic
 	SecurityGroups []SecurityGroupFilter `json:"securityGroups,omitempty"`
 
+	// Tags applied to the port (and corresponding trunk, if a trunk is configured.)
+	// These tags are applied in addition to the instance's tags, which will also be applied to the port.
+	// +listType=set
+	// +optional
+	Tags []string `json:"tags,omitempty"`
+
+	// Trunk specifies whether trunking is enabled at the port level. If not
+	// provided the value is inherited from the machine, or false for a
+	// bastion host.
+	// +optional
+	Trunk *bool `json:"trunk,omitempty"`
+
+	ResolvedPortSpecFields `json:",inline"`
+}
+
+// ResolvePortSpecFields is a convenience struct containing all fields of a
+// PortOpts which don't contain references which need to be resolved, and can
+// therefore be shared with ResolvedPortSpec.
+type ResolvedPortSpecFields struct {
+	// AdminStateUp specifies whether the port should be created in the up (true) or down (false) state. The default is up.
+	// +optional
+	AdminStateUp *bool `json:"adminStateUp,omitempty"`
+
+	// MACAddress specifies the MAC address of the port. If not specified, the MAC address will be generated.
+	// +optional
+	MACAddress optional.String `json:"macAddress,omitempty"`
+
 	// AllowedAddressPairs is a list of address pairs which Neutron will
 	// allow the port to send traffic from in addition to the port's
 	// addresses. If not specified, the MAC Address will be the MAC Address
@@ -204,12 +223,6 @@ type PortOpts struct {
 	// supported to specify a CIDR instead of a specific IP address.
 	// +optional
 	AllowedAddressPairs []AddressPair `json:"allowedAddressPairs,omitempty"`
-
-	// Trunk specifies whether trunking is enabled at the port level. If not
-	// provided the value is inherited from the machine, or false for a
-	// bastion host.
-	// +optional
-	Trunk *bool `json:"trunk,omitempty"`
 
 	// HostID specifies the ID of the host where the port resides.
 	// +optional
@@ -245,12 +258,6 @@ type PortOpts struct {
 	// +optional
 	PropagateUplinkStatus *bool `json:"propagateUplinkStatus,omitempty"`
 
-	// Tags applied to the port (and corresponding trunk, if a trunk is configured.)
-	// These tags are applied in addition to the instance's tags, which will also be applied to the port.
-	// +listType=set
-	// +optional
-	Tags []string `json:"tags,omitempty"`
-
 	// Value specs are extra parameters to include in the API request with OpenStack.
 	// This is an extension point for the API, so what they do and if they are supported,
 	// depends on the specific OpenStack implementation.
@@ -258,6 +265,39 @@ type PortOpts struct {
 	// +listType=map
 	// +listMapKey=name
 	ValueSpecs []ValueSpec `json:"valueSpecs,omitempty"`
+}
+
+// ResolvedPortSpec is a PortOpts with all contained references fully resolved.
+type ResolvedPortSpec struct {
+	// Name is the name of the port.
+	Name string `json:"name"`
+
+	// Description is a human-readable description for the port.
+	Description string `json:"description"`
+
+	// NetworkID is the ID of the network the port will be created in.
+	NetworkID string `json:"networkID"`
+
+	// Tags applied to the port (and corresponding trunk, if a trunk is configured.)
+	// +listType=set
+	// +optional
+	Tags []string `json:"tags,omitempty"`
+
+	// Trunk specifies whether trunking is enabled at the port level.
+	// +optional
+	Trunk optional.Bool `json:"trunk,omitempty"`
+
+	// FixedIPs is a list of pairs of subnet and/or IP address to assign to the port. If specified, these must be subnets of the port's network.
+	// +optional
+	// +listType=atomic
+	FixedIPs []ResolvedFixedIP `json:"fixedIPs,omitempty"`
+
+	// SecurityGroups is a list of security group IDs to assign to the port.
+	// +optional
+	// +listType=atomic
+	SecurityGroups []string `json:"securityGroups,omitempty"`
+
+	ResolvedPortSpecFields `json:",inline"`
 }
 
 type PortStatus struct {
@@ -283,6 +323,20 @@ type FixedIP struct {
 	Subnet *SubnetFilter `json:"subnet,omitempty"`
 
 	// IPAddress is a specific IP address to assign to the port. If Subnet
+	// is also specified, IPAddress must be a valid IP address in the
+	// subnet. If Subnet is not specified, IPAddress must be a valid IP
+	// address in any subnet of the port's network.
+	// +optional
+	IPAddress optional.String `json:"ipAddress,omitempty"`
+}
+
+// ResolvedFixedIP is a FixedIP with the Subnet resolved to an ID.
+type ResolvedFixedIP struct {
+	// SubnetID is the id of a subnet to create the fixed IP of a port in.
+	// +optional
+	SubnetID optional.String `json:"subnet,omitempty"`
+
+	// IPAddress is a specific IP address to assign to the port. If SubnetID
 	// is also specified, IPAddress must be a valid IP address in the
 	// subnet. If Subnet is not specified, IPAddress must be a valid IP
 	// address in any subnet of the port's network.
@@ -616,7 +670,7 @@ type ReferencedMachineResources struct {
 
 	// Ports is the fully resolved list of ports to create for the machine.
 	// +optional
-	Ports []PortOpts `json:"ports,omitempty"`
+	Ports []ResolvedPortSpec `json:"ports,omitempty"`
 }
 
 type DependentMachineResources struct {
