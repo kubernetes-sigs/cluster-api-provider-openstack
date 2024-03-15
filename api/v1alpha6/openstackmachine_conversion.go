@@ -166,6 +166,7 @@ func restorev1beta1MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *infr
 	dst.AdditionalBlockDevices = previous.AdditionalBlockDevices
 	dst.ServerGroup = previous.ServerGroup
 	dst.Image = previous.Image
+	dst.FloatingIPPoolRef = previous.FloatingIPPoolRef
 }
 
 func convertNetworksToPorts(networks []NetworkParam, s apiconversion.Scope) ([]infrav1.PortOpts, error) {

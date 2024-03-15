@@ -27,7 +27,8 @@ import (
 const (
 	// MachineFinalizer allows ReconcileOpenStackMachine to clean up OpenStack resources associated with OpenStackMachine before
 	// removing it from the apiserver.
-	MachineFinalizer = "openstackmachine.infrastructure.cluster.x-k8s.io"
+	MachineFinalizer        = "openstackmachine.infrastructure.cluster.x-k8s.io"
+	IPClaimMachineFinalizer = "openstackmachine.infrastructure.cluster.x-k8s.io/ip-claim"
 )
 
 // OpenStackMachineSpec defines the desired state of OpenStackMachine.
@@ -90,6 +91,12 @@ type OpenStackMachineSpec struct {
 	// credentials specified in the cluster will be used.
 	// +optional
 	IdentityRef *OpenStackIdentityReference `json:"identityRef,omitempty"`
+
+	// floatingIPPoolRef is a reference to a IPPool that will be assigned
+	// to an IPAddressClaim. Once the IPAddressClaim is fulfilled, the FloatingIP
+	// will be assigned to the OpenStackMachine.
+	// +optional
+	FloatingIPPoolRef *corev1.TypedLocalObjectReference `json:"floatingIPPoolRef,omitempty"`
 }
 
 type ServerMetadata struct {

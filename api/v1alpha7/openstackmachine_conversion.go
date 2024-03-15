@@ -142,6 +142,7 @@ func restorev1beta1MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *infr
 			restorev1beta1Port(&previous.Ports[i], &dst.Ports[i])
 		}
 	}
+	dst.FloatingIPPoolRef = previous.FloatingIPPoolRef
 }
 
 func Convert_v1alpha7_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in *OpenStackMachineSpec, out *infrav1.OpenStackMachineSpec, s apiconversion.Scope) error {

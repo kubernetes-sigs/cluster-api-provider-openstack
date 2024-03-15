@@ -18,8 +18,21 @@ package names
 
 import (
 	"fmt"
+	"strings"
+)
+
+const (
+	FloatingAddressIPClaimNameSuffix = "floating-ip-address"
 )
 
 func GetDescription(clusterName string) string {
 	return fmt.Sprintf("Created by cluster-api-provider-openstack cluster %s", clusterName)
+}
+
+func GetFloatingAddressClaimName(openStackMachineName string) string {
+	return fmt.Sprintf("%s-%s", openStackMachineName, FloatingAddressIPClaimNameSuffix)
+}
+
+func GetOpenStackMachineNameFromClaimName(claimName string) string {
+	return strings.TrimSuffix(claimName, fmt.Sprintf("-%s", FloatingAddressIPClaimNameSuffix))
 }

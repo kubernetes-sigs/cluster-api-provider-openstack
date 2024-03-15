@@ -739,6 +739,20 @@ to be used when reconciling this machine. If not specified, the
 credentials specified in the cluster will be used.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>floatingIPPoolRef</code><br/>
+<em>
+Kubernetes core/v1.TypedLocalObjectReference
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>floatingIPPoolRef is a reference to a IPPool that will be assigned
+to an IPAddressClaim. Once the IPAddressClaim is fulfilled, the FloatingIP
+will be assigned to the OpenStackMachine.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -3190,6 +3204,20 @@ to be used when reconciling this machine. If not specified, the
 credentials specified in the cluster will be used.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>floatingIPPoolRef</code><br/>
+<em>
+Kubernetes core/v1.TypedLocalObjectReference
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>floatingIPPoolRef is a reference to a IPPool that will be assigned
+to an IPAddressClaim. Once the IPAddressClaim is fulfilled, the FloatingIP
+will be assigned to the OpenStackMachine.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineStatus">OpenStackMachineStatus
@@ -3541,6 +3569,20 @@ OpenStackIdentityReference
 <p>IdentityRef is a reference to a secret holding OpenStack credentials
 to be used when reconciling this machine. If not specified, the
 credentials specified in the cluster will be used.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>floatingIPPoolRef</code><br/>
+<em>
+Kubernetes core/v1.TypedLocalObjectReference
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>floatingIPPoolRef is a reference to a IPPool that will be assigned
+to an IPAddressClaim. Once the IPAddressClaim is fulfilled, the FloatingIP
+will be assigned to the OpenStackMachine.</p>
 </td>
 </tr>
 </table>
