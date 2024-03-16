@@ -302,7 +302,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			},
 		}))
 		Expect(err).To(BeNil())
-		Expect(res).To(Equal(reconcile.Result{}))
+		Expect(res).To(BeNil())
 	})
 	It("should adopt an existing bastion Floating IP if even if its uuid is not stored in status", func() {
 		testCluster.SetName("requeue-bastion")
@@ -387,7 +387,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			},
 		}))
 		Expect(err).To(BeNil())
-		Expect(res).To(Equal(reconcile.Result{}))
+		Expect(res).To(BeNil())
 	})
 	It("should requeue until bastion becomes active", func() {
 		testCluster.SetName("requeue-bastion")
@@ -466,7 +466,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			},
 		}))
 		Expect(err).To(BeNil())
-		Expect(res).To(Equal(reconcile.Result{RequeueAfter: waitForBuildingInstanceToReconcile}))
+		Expect(res).To(Equal(&reconcile.Result{RequeueAfter: waitForBuildingInstanceToReconcile}))
 	})
 	It("should delete an existing bastion even if its uuid is not stored in status", func() {
 		testCluster.SetName("delete-existing-bastion")

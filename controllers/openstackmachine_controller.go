@@ -527,7 +527,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		return ctrl.Result{}, err
 	}
 
-	err = getOrCreateMachinePorts(scope, openStackCluster, machine, openStackMachine, networkingService, clusterName)
+	err = getOrCreateMachinePorts(openStackCluster, machine, openStackMachine, networkingService, clusterName)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -669,32 +669,18 @@ func (r *OpenStackMachineReconciler) reconcileAPIServerLoadBalancer(scope *scope
 	return nil
 }
 
-func getOrCreateMachinePorts(scope *scope.WithLogger, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, networkingService *networking.Service, clusterName string) error {
-	scope.Logger().Info("Reconciling ports for machine", "machine", machine.Name)
-	var machinePortsStatus []infrav1.PortStatus
-	var err error
-
+func getOrCreateMachinePorts(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, networkingService *networking.Service, clusterName string) error {
 	desiredPorts := openStackMachine.Status.ReferencedResources.Ports
-	portsToCreate := networking.MissingPorts(openStackMachine.Status.DependentResources.Ports, desiredPorts)
+	dependentResources := &openStackMachine.Status.DependentResources
 
-	// Sanity check that the number of desired ports is equal to the addition of ports to create and ports that already exist.
-	if len(desiredPorts) != len(portsToCreate)+len(openStackMachine.Status.DependentResources.Ports) {
-		return fmt.Errorf("length of desired ports (%d) is not equal to the length of ports to create (%d) + the length of ports that already exist (%d)", len(desiredPorts), len(portsToCreate), len(openStackMachine.Status.DependentResources.Ports))
+	if len(desiredPorts) == len(dependentResources.Ports) {
+		return nil
 	}
 
-	if len(portsToCreate) > 0 {
-		instanceTags := getInstanceTags(openStackMachine, openStackCluster)
-		managedSecurityGroups := getManagedSecurityGroups(openStackCluster, machine, openStackMachine)
-		machinePortsStatus, err = networkingService.CreatePorts(openStackMachine, clusterName, portsToCreate, managedSecurityGroups, instanceTags, openStackMachine.Name)
-		if err != nil {
-			return fmt.Errorf("create ports: %w", err)
-		}
-		openStackMachine.Status.DependentResources.Ports = append(openStackMachine.Status.DependentResources.Ports, machinePortsStatus...)
-	}
-
-	// Sanity check that the number of ports that have been put into PortsStatus is equal to the number of desired ports now that we have created them all.
-	if len(openStackMachine.Status.DependentResources.Ports) != len(desiredPorts) {
-		return fmt.Errorf("length of ports that already exist (%d) is not equal to the length of desired ports (%d)", len(openStackMachine.Status.DependentResources.Ports), len(desiredPorts))
+	instanceTags := getInstanceTags(openStackMachine, openStackCluster)
+	managedSecurityGroups := getManagedSecurityGroups(openStackCluster, machine, openStackMachine)
+	if err := networkingService.CreatePorts(openStackMachine, clusterName, openStackMachine.Name, managedSecurityGroups, instanceTags, desiredPorts, dependentResources); err != nil {
+		return fmt.Errorf("creating ports: %w", err)
 	}
 
 	return nil
