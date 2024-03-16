@@ -571,12 +571,10 @@ func (s *Service) IsTrunkExtSupported() (trunknSupported bool, err error) {
 
 // AdoptPorts looks for ports in desiredPorts which were previously created, and adds them to dependentResources.Ports.
 // A port matches if it has the same name and network ID as the desired port.
-func (s *Service) AdoptPorts(scope *scope.WithLogger, baseName string, desiredPorts []infrav1.PortOpts, dependentResources *infrav1.DependentMachineResources) (changed bool, err error) {
-	changed = false
-
+func (s *Service) AdoptPorts(scope *scope.WithLogger, baseName string, desiredPorts []infrav1.PortOpts, dependentResources *infrav1.DependentMachineResources) error {
 	// We can skip adoption if the ports are already in the status
 	if len(desiredPorts) == len(dependentResources.Ports) {
-		return changed, nil
+		return nil
 	}
 
 	scope.Logger().V(5).Info("Adopting ports")
@@ -598,24 +596,23 @@ func (s *Service) AdoptPorts(scope *scope.WithLogger, baseName string, desiredPo
 			NetworkID: port.Network.ID,
 		})
 		if err != nil {
-			return changed, fmt.Errorf("searching for existing port %s in network %s: %v", portName, port.Network.ID, err)
+			return fmt.Errorf("searching for existing port %s in network %s: %v", portName, port.Network.ID, err)
 		}
 		// if the port is not found, we stop the adoption of ports since the rest of the ports will not be found either
 		// and will be created after the adoption
 		if len(ports) == 0 {
 			scope.Logger().V(5).Info("Port not found, stopping the adoption of ports", "port index", i)
-			return changed, nil
+			return nil
 		}
 		if len(ports) > 1 {
-			return changed, fmt.Errorf("found multiple ports with name %s", portName)
+			return fmt.Errorf("found multiple ports with name %s", portName)
 		}
 
 		// The desired port was found, so we add it to the status
 		portID := ports[0].ID
 		scope.Logger().Info("Adopted previously created port which was not in status", "port index", i, "portID", portID)
 		dependentResources.Ports = append(dependentResources.Ports, infrav1.PortStatus{ID: portID})
-		changed = true
 	}
 
-	return changed, nil
+	return nil
 }

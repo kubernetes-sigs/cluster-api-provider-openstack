@@ -971,7 +971,7 @@ func Test_AdoptPorts(t *testing.T) {
 				client: mockClient,
 			}
 
-			_, err := s.AdoptPorts(scope.NewWithLogger(mockScopeFactory, log),
+			err := s.AdoptPorts(scope.NewWithLogger(mockScopeFactory, log),
 				"test-machine",
 				tt.desiredPorts, &tt.dependentResources)
 			if tt.wantErr {

@@ -231,16 +231,12 @@ func resolveBastionResources(scope *scope.WithLogger, openStackCluster *infrav1.
 			return true, nil
 		}
 
-		changed, err = compute.AdoptDependentMachineResources(scope,
+		err = compute.AdoptDependentMachineResources(scope,
 			bastionName(openStackCluster.Name),
 			&openStackCluster.Status.Bastion.ReferencedResources,
 			&openStackCluster.Status.Bastion.DependentResources)
 		if err != nil {
 			return false, err
-		}
-		if changed {
-			// If the dependent resources have changed, we need to update the OpenStackCluster status now.
-			return true, nil
 		}
 	}
 	return false, nil

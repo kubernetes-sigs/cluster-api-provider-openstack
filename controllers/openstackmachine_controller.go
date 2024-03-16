@@ -161,13 +161,9 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	// Adopt any existing dependent resources
-	changed, err = compute.AdoptDependentMachineResources(scope, openStackMachine.Name, &openStackMachine.Status.ReferencedResources, &openStackMachine.Status.DependentResources)
+	err = compute.AdoptDependentMachineResources(scope, openStackMachine.Name, &openStackMachine.Status.ReferencedResources, &openStackMachine.Status.DependentResources)
 	if err != nil {
 		return reconcile.Result{}, err
-	}
-	if changed {
-		// If the dependent resources have changed, we need to update the OpenStackMachine status now.
-		return reconcile.Result{}, nil
 	}
 
 	// Handle deleted machines
