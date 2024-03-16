@@ -150,29 +150,32 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 	scope := scope.NewWithLogger(clientScope, log)
 
-	// Resolve and store referenced resources
-	changed, err := compute.ResolveReferencedMachineResources(scope, infraCluster, &openStackMachine.Spec, &openStackMachine.Status.ReferencedResources)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	if changed {
-		// If the referenced resources have changed, we need to update the OpenStackMachine status now.
-		return reconcile.Result{}, nil
-	}
-
-	// Adopt any existing dependent resources
-	err = compute.AdoptDependentMachineResources(scope, openStackMachine.Name, &openStackMachine.Status.ReferencedResources, &openStackMachine.Status.DependentResources)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
+	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
 
 	// Handle deleted machines
 	if !openStackMachine.DeletionTimestamp.IsZero() {
-		return r.reconcileDelete(scope, cluster, infraCluster, machine, openStackMachine)
+		return r.reconcileDelete(scope, clusterName, infraCluster, machine, openStackMachine)
 	}
 
 	// Handle non-deleted clusters
-	return r.reconcileNormal(ctx, scope, cluster, infraCluster, machine, openStackMachine)
+	return r.reconcileNormal(ctx, scope, clusterName, infraCluster, machine, openStackMachine)
+}
+
+func resolveMachineResources(scope *scope.WithLogger, openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine) (bool, error) {
+	// Resolve and store referenced resources
+	changed, err := compute.ResolveReferencedMachineResources(scope,
+		openStackCluster,
+		&openStackMachine.Spec, &openStackMachine.Status.ReferencedResources)
+	if err != nil {
+		return false, err
+	}
+	if changed {
+		// If the referenced resources have changed, we need to update the OpenStackMachine status now.
+		return true, nil
+	}
+
+	// Adopt any existing dependent resources
+	return false, compute.AdoptDependentMachineResources(scope, openStackMachine.Name, &openStackMachine.Status.ReferencedResources, &openStackMachine.Status.DependentResources)
 }
 
 func patchMachine(ctx context.Context, patchHelper *patch.Helper, openStackMachine *infrav1.OpenStackMachine, machine *clusterv1.Machine, options ...patch.Option) error {
@@ -227,10 +230,8 @@ func (r *OpenStackMachineReconciler) SetupWithManager(ctx context.Context, mgr c
 		Complete(r)
 }
 
-func (r *OpenStackMachineReconciler) reconcileDelete(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (ctrl.Result, error) { //nolint:unparam
+func (r *OpenStackMachineReconciler) reconcileDelete(scope *scope.WithLogger, clusterName string, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (ctrl.Result, error) { //nolint:unparam
 	scope.Logger().Info("Reconciling Machine delete")
-
-	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
 
 	computeService, err := compute.NewService(scope)
 	if err != nil {
@@ -240,6 +241,13 @@ func (r *OpenStackMachineReconciler) reconcileDelete(scope *scope.WithLogger, cl
 	networkingService, err := networking.NewService(scope)
 	if err != nil {
 		return ctrl.Result{}, err
+	}
+
+	// We may have resources to adopt if the cluster is ready
+	if openStackCluster.Status.Ready && openStackCluster.Status.Network != nil {
+		if _, err := resolveMachineResources(scope, openStackCluster, openStackMachine); err != nil {
+			return ctrl.Result{}, err
+		}
 	}
 
 	if openStackCluster.Spec.APIServerLoadBalancer.IsEnabled() {
@@ -454,7 +462,7 @@ func (r *OpenStackMachineReconciler) reconcileDeleteFloatingAddressFromPool(scop
 	return r.Client.Update(context.Background(), claim)
 }
 
-func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope *scope.WithLogger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (_ ctrl.Result, reterr error) {
+func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope *scope.WithLogger, clusterName string, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (_ ctrl.Result, reterr error) {
 	var err error
 
 	// If the OpenStackMachine is in an error state, return early.
@@ -469,10 +477,14 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		return ctrl.Result{}, nil
 	}
 
-	if !cluster.Status.InfrastructureReady {
+	if !openStackCluster.Status.Ready {
 		scope.Logger().Info("Cluster infrastructure is not ready yet, re-queuing machine")
 		conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.WaitingForClusterInfrastructureReason, clusterv1.ConditionSeverityInfo, "")
 		return ctrl.Result{RequeueAfter: waitForClusterInfrastructureReadyDuration}, nil
+	}
+
+	if changed, err := resolveMachineResources(scope, openStackCluster, openStackMachine); changed || err != nil {
+		return ctrl.Result{}, err
 	}
 
 	// Make sure bootstrap data is available and populated.
@@ -486,8 +498,6 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		return ctrl.Result{}, err
 	}
 	scope.Logger().Info("Reconciling Machine")
-
-	clusterName := fmt.Sprintf("%s-%s", cluster.ObjectMeta.Namespace, cluster.Name)
 
 	computeService, err := compute.NewService(scope)
 	if err != nil {
