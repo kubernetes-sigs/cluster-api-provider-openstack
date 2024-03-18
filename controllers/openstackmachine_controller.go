@@ -21,7 +21,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"reflect"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -45,9 +44,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -212,23 +209,7 @@ func patchMachine(ctx context.Context, patchHelper *patch.Helper, openStackMachi
 func (r *OpenStackMachineReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager, options controller.Options) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		WithOptions(options).
-		For(
-			&infrav1.OpenStackMachine{},
-			builder.WithPredicates(
-				predicate.Funcs{
-					// Avoid reconciling if the event triggering the reconciliation is related to incremental status updates
-					UpdateFunc: func(e event.UpdateEvent) bool {
-						oldMachine := e.ObjectOld.(*infrav1.OpenStackMachine).DeepCopy()
-						newMachine := e.ObjectNew.(*infrav1.OpenStackMachine).DeepCopy()
-						oldMachine.Status = infrav1.OpenStackMachineStatus{}
-						newMachine.Status = infrav1.OpenStackMachineStatus{}
-						oldMachine.ObjectMeta.ResourceVersion = ""
-						newMachine.ObjectMeta.ResourceVersion = ""
-						return !reflect.DeepEqual(oldMachine, newMachine)
-					},
-				},
-			),
-		).
+		For(&infrav1.OpenStackMachine{}).
 		Watches(
 			&clusterv1.Machine{},
 			handler.EnqueueRequestsFromMapFunc(util.MachineToInfrastructureMapFunc(infrav1.GroupVersion.WithKind("OpenStackMachine"))),
