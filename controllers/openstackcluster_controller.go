@@ -20,7 +20,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
 	"time"
 
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
@@ -43,9 +42,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -823,22 +820,7 @@ func (r *OpenStackClusterReconciler) SetupWithManager(ctx context.Context, mgr c
 
 	return ctrl.NewControllerManagedBy(mgr).
 		WithOptions(options).
-		For(&infrav1.OpenStackCluster{},
-			builder.WithPredicates(
-				predicate.Funcs{
-					// Avoid reconciling if the event triggering the reconciliation is related to incremental status updates
-					UpdateFunc: func(e event.UpdateEvent) bool {
-						oldCluster := e.ObjectOld.(*infrav1.OpenStackCluster).DeepCopy()
-						newCluster := e.ObjectNew.(*infrav1.OpenStackCluster).DeepCopy()
-						oldCluster.Status = infrav1.OpenStackClusterStatus{}
-						newCluster.Status = infrav1.OpenStackClusterStatus{}
-						oldCluster.ObjectMeta.ResourceVersion = ""
-						newCluster.ObjectMeta.ResourceVersion = ""
-						return !reflect.DeepEqual(oldCluster, newCluster)
-					},
-				},
-			),
-		).
+		For(&infrav1.OpenStackCluster{}).
 		Watches(
 			&clusterv1.Cluster{},
 			handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, o client.Object) []reconcile.Request {
