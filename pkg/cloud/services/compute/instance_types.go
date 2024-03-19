@@ -29,9 +29,6 @@ import (
 )
 
 // InstanceSpec defines the fields which can be set on a new OpenStack instance.
-//
-// InstanceSpec does not contain all of the fields of infrav1.Instance, as not
-// all of them can be set on a new instance.
 type InstanceSpec struct {
 	Name                   string
 	ImageID                string

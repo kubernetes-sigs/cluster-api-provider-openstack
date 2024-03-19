@@ -544,17 +544,17 @@ var (
 )
 
 // Bastion represents basic information about the bastion node. If you enable bastion, the spec has to be specified.
-// +kubebuilder:validation:XValidation:rule="!self.enabled || has(self.instance)",message="you need to specify the instance if bastion is enabled"
+// +kubebuilder:validation:XValidation:rule="!self.enabled || has(self.spec)",message="you need to specify the spec if bastion is enabled"
 type Bastion struct {
 	// Enabled means that bastion is enabled. Defaults to false.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default:=false
 	Enabled bool `json:"enabled"`
 
-	// Instance for the bastion itself
-	Instance *OpenStackMachineSpec `json:"instance,omitempty"`
+	// Spec for the bastion itself
+	Spec *OpenStackMachineSpec `json:"spec,omitempty"`
 
-	// AvailabilityZone is the failure domain that will be used to create the Bastion Instance.
+	// AvailabilityZone is the failure domain that will be used to create the Bastion Spec.
 	//+optional
 	AvailabilityZone optional.String `json:"availabilityZone,omitempty"`
 

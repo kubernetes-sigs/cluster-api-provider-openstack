@@ -28,6 +28,7 @@
       - [Change to network](#change-to-network)
       - [Change to networkMtu](#change-to-networkmtu)
       - [Changes to apiServerLoadBalancer](#changes-to-apiserverloadbalancer)
+      - [Changes to bastion](#changes-to-bastion)
     - [Changes to filters](#changes-to-filters)
       - [Changes to filter tags](#changes-to-filter-tags)
       - [Field capitalization consistency](#field-capitalization-consistency)
@@ -362,6 +363,30 @@ spec:
 spec:
     ...
     apiServerLoadBalancer: {}
+```
+
+#### Changes to bastion
+
+In v1beta1, `OpenStackCluster.spec.bastion.instance` becomes `OpenStackCluster.spec.bastion.spec`.
+
+```yaml
+spec:
+    ...
+    bastion:
+      instance:
+        image:
+          name: foobar
+```
+
+becomes
+
+```yaml
+spec:
+    ...
+    bastion:
+      spec:
+        image:
+          name: foobar
 ```
 
 ### Changes to filters

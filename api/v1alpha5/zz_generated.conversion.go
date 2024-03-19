@@ -457,7 +457,7 @@ func Convert_v1beta1_AddressPair_To_v1alpha5_AddressPair(in *v1beta1.AddressPair
 
 func autoConvert_v1alpha5_Bastion_To_v1beta1_Bastion(in *Bastion, out *v1beta1.Bastion, s conversion.Scope) error {
 	out.Enabled = in.Enabled
-	// WARNING: in.Instance requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha5.OpenStackMachineSpec vs *sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineSpec)
+	// WARNING: in.Instance requires manual conversion: does not exist in peer-type
 	if err := optional.Convert_string_To_optional_String(&in.AvailabilityZone, &out.AvailabilityZone, s); err != nil {
 		return err
 	}
@@ -466,7 +466,7 @@ func autoConvert_v1alpha5_Bastion_To_v1beta1_Bastion(in *Bastion, out *v1beta1.B
 
 func autoConvert_v1beta1_Bastion_To_v1alpha5_Bastion(in *v1beta1.Bastion, out *Bastion, s conversion.Scope) error {
 	out.Enabled = in.Enabled
-	// WARNING: in.Instance requires manual conversion: inconvertible types (*sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineSpec vs sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha5.OpenStackMachineSpec)
+	// WARNING: in.Spec requires manual conversion: does not exist in peer-type
 	if err := optional.Convert_optional_String_To_string(&in.AvailabilityZone, &out.AvailabilityZone, s); err != nil {
 		return err
 	}

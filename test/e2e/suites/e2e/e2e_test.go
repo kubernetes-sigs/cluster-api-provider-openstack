@@ -227,7 +227,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			Expect(err).NotTo(HaveOccurred())
 			openStackClusterWithNewBastionFlavor := openStackCluster.DeepCopy()
 			openStackClusterWithNewBastionFlavor.Spec.Bastion = bastionSpec
-			openStackClusterWithNewBastionFlavor.Spec.Bastion.Instance.Flavor = bastionNewFlavorName
+			openStackClusterWithNewBastionFlavor.Spec.Bastion.Spec.Flavor = bastionNewFlavorName
 			Expect(e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackClusterWithNewBastionFlavor)).To(Succeed())
 			Eventually(
 				func() (bool, error) {

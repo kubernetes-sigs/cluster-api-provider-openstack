@@ -3,7 +3,7 @@
   path: /spec/bastion
   value:
     enabled: true
-    instance:
+    spec:
       flavor: ${OPENSTACK_BASTION_MACHINE_FLAVOR}
       image: ${OPENSTACK_BASTION_IMAGE_NAME}
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}

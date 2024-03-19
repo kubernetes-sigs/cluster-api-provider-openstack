@@ -61,7 +61,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 	capiClusterName := "capi-cluster"
 	testClusterName := "test-cluster"
 	testNum := 0
-	instance := infrav1.OpenStackMachineSpec{
+	bastionSpec := infrav1.OpenStackMachineSpec{
 		Image: infrav1.ImageFilter{
 			Name: pointer.String("fake-name"),
 		},
@@ -226,8 +226,8 @@ var _ = Describe("OpenStackCluster controller", func() {
 		testCluster.SetName("adopt-existing-bastion")
 		testCluster.Spec = infrav1.OpenStackClusterSpec{
 			Bastion: &infrav1.Bastion{
-				Enabled:  true,
-				Instance: &instance,
+				Enabled: true,
+				Spec:    &bastionSpec,
 			},
 		}
 		err := k8sClient.Create(ctx, testCluster)
@@ -312,8 +312,8 @@ var _ = Describe("OpenStackCluster controller", func() {
 		testCluster.SetName("requeue-bastion")
 		testCluster.Spec = infrav1.OpenStackClusterSpec{
 			Bastion: &infrav1.Bastion{
-				Enabled:  true,
-				Instance: &instance,
+				Enabled: true,
+				Spec:    &bastionSpec,
 			},
 		}
 		err := k8sClient.Create(ctx, testCluster)
@@ -398,8 +398,8 @@ var _ = Describe("OpenStackCluster controller", func() {
 		testCluster.SetName("requeue-bastion")
 		testCluster.Spec = infrav1.OpenStackClusterSpec{
 			Bastion: &infrav1.Bastion{
-				Enabled:  true,
-				Instance: &instance,
+				Enabled: true,
+				Spec:    &bastionSpec,
 			},
 		}
 		err := k8sClient.Create(ctx, testCluster)
@@ -524,8 +524,8 @@ var _ = Describe("OpenStackCluster controller", func() {
 		testCluster.SetName("subnet-filtering")
 		testCluster.Spec = infrav1.OpenStackClusterSpec{
 			Bastion: &infrav1.Bastion{
-				Enabled:  true,
-				Instance: &instance,
+				Enabled: true,
+				Spec:    &bastionSpec,
 			},
 			DisableAPIServerFloatingIP: pointer.Bool(true),
 			APIServerFixedIP:           pointer.String("10.0.0.1"),
@@ -605,8 +605,8 @@ var _ = Describe("OpenStackCluster controller", func() {
 		testCluster.SetName("subnet-filtering")
 		testCluster.Spec = infrav1.OpenStackClusterSpec{
 			Bastion: &infrav1.Bastion{
-				Enabled:  true,
-				Instance: &instance,
+				Enabled: true,
+				Spec:    &bastionSpec,
 			},
 			DisableAPIServerFloatingIP: pointer.Bool(true),
 			APIServerFixedIP:           pointer.String("10.0.0.1"),
@@ -804,7 +804,7 @@ func TestGetBastionSecurityGroups(t *testing.T) {
 	openStackCluster := &infrav1.OpenStackCluster{
 		Spec: infrav1.OpenStackClusterSpec{
 			Bastion: &infrav1.Bastion{
-				Instance: &infrav1.OpenStackMachineSpec{
+				Spec: &infrav1.OpenStackMachineSpec{
 					SecurityGroups: []infrav1.SecurityGroupFilter{
 						{
 							ID: "sg-123",
