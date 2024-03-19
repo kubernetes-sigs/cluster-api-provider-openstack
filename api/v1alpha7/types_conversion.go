@@ -18,7 +18,6 @@ package v1alpha7
 
 import (
 	apiconversion "k8s.io/apimachinery/pkg/conversion"
-	"k8s.io/utils/pointer"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
@@ -40,9 +39,7 @@ func restorev1alpha7SecurityGroup(previous *SecurityGroup, dst *SecurityGroup) {
 		return
 	}
 
-	for i, rule := range previous.Rules {
-		dst.Rules[i].SecurityGroupID = rule.SecurityGroupID
-	}
+	dst.Rules = previous.Rules
 }
 
 func Convert_v1alpha7_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(in *SecurityGroupFilter, out *infrav1.SecurityGroupFilter, s apiconversion.Scope) error {
@@ -140,39 +137,6 @@ func Convert_v1beta1_RouterFilter_To_v1alpha7_RouterFilter(in *infrav1.RouterFil
 	}
 	infrav1.ConvertAllTagsFrom(&in.FilterByNeutronTags, &out.Tags, &out.TagsAny, &out.NotTags, &out.NotTagsAny)
 	return nil
-}
-
-func restorev1beta1SecurityGroupStatus(previous *infrav1.SecurityGroupStatus, dst *infrav1.SecurityGroupStatus) {
-	if previous == nil || dst == nil {
-		return
-	}
-
-	for i := range dst.Rules {
-		dstRule := &dst.Rules[i]
-
-		// Conversion from scalar to *scalar is lossy for zero values. We need to restore only nil values.
-		if dstRule.Description != nil && *dstRule.Description == "" {
-			dstRule.Description = previous.Rules[i].Description
-		}
-		if dstRule.EtherType != nil && *dstRule.EtherType == "" {
-			dstRule.EtherType = previous.Rules[i].EtherType
-		}
-		if dstRule.PortRangeMin != nil && *dstRule.PortRangeMin == 0 {
-			dstRule.PortRangeMin = previous.Rules[i].PortRangeMin
-		}
-		if dstRule.PortRangeMax != nil && *dstRule.PortRangeMax == 0 {
-			dstRule.PortRangeMax = previous.Rules[i].PortRangeMax
-		}
-		if dstRule.Protocol != nil && *dstRule.Protocol == "" {
-			dstRule.Protocol = previous.Rules[i].Protocol
-		}
-		if dstRule.RemoteGroupID != nil && *dstRule.RemoteGroupID == "" {
-			dstRule.RemoteGroupID = previous.Rules[i].RemoteGroupID
-		}
-		if dstRule.RemoteIPPrefix != nil && *dstRule.RemoteIPPrefix == "" {
-			dstRule.RemoteIPPrefix = previous.Rules[i].RemoteIPPrefix
-		}
-	}
 }
 
 /* PortOpts */
@@ -300,20 +264,6 @@ func Convert_v1beta1_PortOpts_To_v1alpha7_PortOpts(in *infrav1.PortOpts, out *Po
 func Convert_v1alpha7_SecurityGroup_To_v1beta1_SecurityGroupStatus(in *SecurityGroup, out *infrav1.SecurityGroupStatus, _ apiconversion.Scope) error {
 	out.ID = in.ID
 	out.Name = in.Name
-	out.Rules = make([]infrav1.SecurityGroupRuleStatus, len(in.Rules))
-	for i, rule := range in.Rules {
-		out.Rules[i] = infrav1.SecurityGroupRuleStatus{
-			ID:             rule.ID,
-			Description:    pointer.String(rule.Description),
-			Direction:      rule.Direction,
-			EtherType:      pointer.String(rule.EtherType),
-			PortRangeMin:   pointer.Int(rule.PortRangeMin),
-			PortRangeMax:   pointer.Int(rule.PortRangeMax),
-			Protocol:       pointer.String(rule.Protocol),
-			RemoteGroupID:  pointer.String(rule.RemoteGroupID),
-			RemoteIPPrefix: pointer.String(rule.RemoteIPPrefix),
-		}
-	}
 
 	return nil
 }
@@ -321,34 +271,6 @@ func Convert_v1alpha7_SecurityGroup_To_v1beta1_SecurityGroupStatus(in *SecurityG
 func Convert_v1beta1_SecurityGroupStatus_To_v1alpha7_SecurityGroup(in *infrav1.SecurityGroupStatus, out *SecurityGroup, _ apiconversion.Scope) error {
 	out.ID = in.ID
 	out.Name = in.Name
-	out.Rules = make([]SecurityGroupRule, len(in.Rules))
-	for i, rule := range in.Rules {
-		out.Rules[i] = SecurityGroupRule{
-			ID:        rule.ID,
-			Direction: rule.Direction,
-		}
-		if rule.Description != nil {
-			out.Rules[i].Description = *rule.Description
-		}
-		if rule.EtherType != nil {
-			out.Rules[i].EtherType = *rule.EtherType
-		}
-		if rule.PortRangeMin != nil {
-			out.Rules[i].PortRangeMin = *rule.PortRangeMin
-		}
-		if rule.PortRangeMax != nil {
-			out.Rules[i].PortRangeMax = *rule.PortRangeMax
-		}
-		if rule.Protocol != nil {
-			out.Rules[i].Protocol = *rule.Protocol
-		}
-		if rule.RemoteGroupID != nil {
-			out.Rules[i].RemoteGroupID = *rule.RemoteGroupID
-		}
-		if rule.RemoteIPPrefix != nil {
-			out.Rules[i].RemoteIPPrefix = *rule.RemoteIPPrefix
-		}
-	}
 	return nil
 }
 
