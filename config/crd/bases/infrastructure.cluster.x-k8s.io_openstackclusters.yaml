@@ -4918,7 +4918,7 @@ spec:
                 properties:
                   availabilityZone:
                     description: AvailabilityZone is the failure domain that will
-                      be used to create the Bastion Instance.
+                      be used to create the Bastion Spec.
                     type: string
                   enabled:
                     default: false
@@ -4932,8 +4932,8 @@ spec:
                       exist, CAPO will try to create it, but by default only OpenStack administrators have privileges to do so.
                     format: ipv4
                     type: string
-                  instance:
-                    description: Instance for the bastion itself
+                  spec:
+                    description: Spec for the bastion itself
                     properties:
                       additionalBlockDevices:
                         description: AdditionalBlockDevices is a list of specifications
@@ -5583,8 +5583,8 @@ spec:
                 - enabled
                 type: object
                 x-kubernetes-validations:
-                - message: you need to specify the instance if bastion is enabled
-                  rule: '!self.enabled || has(self.instance)'
+                - message: you need to specify the spec if bastion is enabled
+                  rule: '!self.enabled || has(self.spec)'
               controlPlaneAvailabilityZones:
                 description: |-
                   ControlPlaneAvailabilityZones is the set of availability zones which

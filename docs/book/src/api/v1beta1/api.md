@@ -1087,7 +1087,7 @@ bool
 </tr>
 <tr>
 <td>
-<code>instance</code><br/>
+<code>spec</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">
 OpenStackMachineSpec
@@ -1095,7 +1095,11 @@ OpenStackMachineSpec
 </em>
 </td>
 <td>
-<p>Instance for the bastion itself</p>
+<p>Spec for the bastion itself</p>
+<br/>
+<br/>
+<table>
+</table>
 </td>
 </tr>
 <tr>
@@ -1107,7 +1111,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>AvailabilityZone is the failure domain that will be used to create the Bastion Instance.</p>
+<p>AvailabilityZone is the failure domain that will be used to create the Bastion Spec.</p>
 </td>
 </tr>
 <tr>

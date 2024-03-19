@@ -448,7 +448,7 @@ func Convert_v1alpha5_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *infrav1.Po
 }
 
 func Convert_v1alpha5_Instance_To_v1beta1_BastionStatus(in *Instance, out *infrav1.BastionStatus, _ conversion.Scope) error {
-	// BastionStatus is the same as Instance with unused fields removed
+	// BastionStatus is the same as Spec with unused fields removed
 	out.ID = in.ID
 	out.Name = in.Name
 	out.SSHKeyName = in.SSHKeyName
@@ -460,7 +460,7 @@ func Convert_v1alpha5_Instance_To_v1beta1_BastionStatus(in *Instance, out *infra
 }
 
 func Convert_v1beta1_BastionStatus_To_v1alpha5_Instance(in *infrav1.BastionStatus, out *Instance, _ conversion.Scope) error {
-	// BastionStatus is the same as Instance with unused fields removed
+	// BastionStatus is the same as Spec with unused fields removed
 	out.ID = in.ID
 	out.Name = in.Name
 	out.SSHKeyName = in.SSHKeyName
