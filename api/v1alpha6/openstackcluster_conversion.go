@@ -203,6 +203,13 @@ func restorev1beta1ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infr
 			dst.APIServerLoadBalancer.Enabled = previous.APIServerLoadBalancer.Enabled
 		}
 		optional.RestoreString(&previous.APIServerLoadBalancer.Provider, &dst.APIServerLoadBalancer.Provider)
+
+		if previous.APIServerLoadBalancer.Network != nil {
+			dst.APIServerLoadBalancer.Network = previous.APIServerLoadBalancer.Network
+		}
+		if previous.APIServerLoadBalancer.Subnets != nil {
+			dst.APIServerLoadBalancer.Subnets = previous.APIServerLoadBalancer.Subnets
+		}
 	}
 	if dst.APIServerLoadBalancer.IsZero() {
 		dst.APIServerLoadBalancer = previous.APIServerLoadBalancer
@@ -285,6 +292,21 @@ func Convert_v1alpha6_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 	}
 
 	return nil
+}
+
+func Convert_v1beta1_APIServerLoadBalancer_To_v1alpha6_APIServerLoadBalancer(in *infrav1.APIServerLoadBalancer, out *APIServerLoadBalancer, s apiconversion.Scope) error {
+	return autoConvert_v1beta1_APIServerLoadBalancer_To_v1alpha6_APIServerLoadBalancer(in, out, s)
+}
+
+func Convert_v1beta1_LoadBalancer_To_v1alpha6_LoadBalancer(in *infrav1.LoadBalancer, out *LoadBalancer, s apiconversion.Scope) error {
+	return autoConvert_v1beta1_LoadBalancer_To_v1alpha6_LoadBalancer(in, out, s)
+}
+
+func Convert_v1alpha6_APIServerLoadBalancer_To_v1beta1_APIServerLoadBalancer(in *APIServerLoadBalancer, out *infrav1.APIServerLoadBalancer, s apiconversion.Scope) error {
+	err := autoConvert_v1alpha6_APIServerLoadBalancer_To_v1beta1_APIServerLoadBalancer(in, out, s)
+	out.Subnets = nil
+	out.Network = nil
+	return err
 }
 
 func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in *infrav1.OpenStackClusterSpec, out *OpenStackClusterSpec, s apiconversion.Scope) error {
@@ -373,6 +395,9 @@ func restorev1beta1ClusterStatus(previous *infrav1.OpenStackClusterStatus, dst *
 	if previous.Bastion != nil && previous.Bastion.DependentResources.Ports != nil {
 		dst.Bastion.DependentResources.Ports = previous.Bastion.DependentResources.Ports
 	}
+	if previous.APIServerLoadBalancer != nil && previous.APIServerLoadBalancer.LoadBalancerNetwork != nil {
+		dst.APIServerLoadBalancer.LoadBalancerNetwork = previous.APIServerLoadBalancer.LoadBalancerNetwork
+	}
 }
 
 func Convert_v1beta1_OpenStackClusterStatus_To_v1alpha6_OpenStackClusterStatus(in *infrav1.OpenStackClusterStatus, out *OpenStackClusterStatus, s apiconversion.Scope) error {
@@ -388,7 +413,16 @@ func Convert_v1beta1_OpenStackClusterStatus_To_v1alpha6_OpenStackClusterStatus(i
 		}
 
 		out.Network.Router = (*Router)(in.Router)
-		out.Network.APIServerLoadBalancer = (*LoadBalancer)(in.APIServerLoadBalancer)
+		if in.APIServerLoadBalancer != nil {
+			out.Network.APIServerLoadBalancer = &LoadBalancer{
+				Name:         in.APIServerLoadBalancer.Name,
+				ID:           in.APIServerLoadBalancer.ID,
+				IP:           in.APIServerLoadBalancer.IP,
+				InternalIP:   in.APIServerLoadBalancer.InternalIP,
+				AllowedCIDRs: in.APIServerLoadBalancer.AllowedCIDRs,
+				Tags:         in.APIServerLoadBalancer.Tags,
+			}
+		}
 	}
 
 	return nil
@@ -403,7 +437,16 @@ func Convert_v1alpha6_OpenStackClusterStatus_To_v1beta1_OpenStackClusterStatus(i
 	// Router and APIServerLoadBalancer have been moved out of Network in v1beta1
 	if in.Network != nil {
 		out.Router = (*infrav1.Router)(in.Network.Router)
-		out.APIServerLoadBalancer = (*infrav1.LoadBalancer)(in.Network.APIServerLoadBalancer)
+		if in.Network.APIServerLoadBalancer != nil {
+			out.APIServerLoadBalancer = &infrav1.LoadBalancer{
+				Name:         in.Network.APIServerLoadBalancer.Name,
+				ID:           in.Network.APIServerLoadBalancer.ID,
+				IP:           in.Network.APIServerLoadBalancer.IP,
+				InternalIP:   in.Network.APIServerLoadBalancer.InternalIP,
+				AllowedCIDRs: in.Network.APIServerLoadBalancer.AllowedCIDRs,
+				Tags:         in.Network.APIServerLoadBalancer.Tags,
+			}
+		}
 	}
 
 	return nil

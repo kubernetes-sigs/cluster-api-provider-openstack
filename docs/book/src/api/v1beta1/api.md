@@ -911,6 +911,36 @@ API load balancer. The Octavia default will be used if it is not
 specified.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>network</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkFilter">
+NetworkFilter
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Network defines which network should the load balancer be allocated on.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>subnets</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetFilter">
+[]SubnetFilter
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Subnets define which subnets should the load balancer be allocated on.
+It is expected that subnets are located on the network specified in this resource.
+kubebuilder:validation:MaxLength:=2</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.AdditionalBlockDevice">AdditionalBlockDevice
@@ -1740,6 +1770,23 @@ string
 <em>(Optional)</em>
 </td>
 </tr>
+<tr>
+<td>
+<code>loadBalancerNetwork</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkStatusWithSubnets">
+NetworkStatusWithSubnets
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>LoadBalancerNetwork contains information about network and/or subnets which the
+loadbalancer is allocated on.
+If subnets are specified within the LoadBalancerNetwork currently only the first
+subnet in the list is taken into account.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.ManagedSecurityGroupName">ManagedSecurityGroupName
@@ -1798,6 +1845,7 @@ bool
 </h3>
 <p>
 (<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.APIServerLoadBalancer">APIServerLoadBalancer</a>, 
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackClusterSpec">OpenStackClusterSpec</a>, 
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">PortOpts</a>)
 </p>
@@ -1923,6 +1971,7 @@ string
 </h3>
 <p>
 (<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.LoadBalancer">LoadBalancer</a>, 
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackClusterStatus">OpenStackClusterStatus</a>)
 </p>
 <p>
@@ -4698,6 +4747,7 @@ string
 </h3>
 <p>
 (<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.APIServerLoadBalancer">APIServerLoadBalancer</a>, 
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.ExternalRouterIPParam">ExternalRouterIPParam</a>, 
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.FixedIP">FixedIP</a>, 
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackClusterSpec">OpenStackClusterSpec</a>)

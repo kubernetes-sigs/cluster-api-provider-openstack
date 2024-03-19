@@ -610,6 +610,60 @@ func bastionHashHasChanged(computeHash string, clusterAnnotations map[string]str
 	return latestHash != computeHash
 }
 
+func reconcileLoadBalancerNetwork(openStackCluster *infrav1.OpenStackCluster, networkingService *networking.Service) error {
+	if openStackCluster.Spec.APIServerLoadBalancer != nil && openStackCluster.Spec.APIServerLoadBalancer.Network != nil {
+		lbNetOpts := filterconvert.NetworkFilterToListOpts(openStackCluster.Spec.APIServerLoadBalancer.Network)
+		lbNetList, err := networkingService.GetNetworksByFilter(&lbNetOpts)
+		if err != nil {
+			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find loadbalancer network: %w", err))
+			return fmt.Errorf("failed to find network: %w", err)
+		}
+		if len(lbNetList) == 0 {
+			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find loadbalancer network"))
+			return fmt.Errorf("failed to find any network")
+		}
+		if len(lbNetList) > 1 {
+			handleUpdateOSCError(openStackCluster, fmt.Errorf("found multiple loadbalancer networks (result: %v)", lbNetList))
+			return fmt.Errorf("found multiple loadbalancer networks (result: %v)", lbNetList)
+		}
+
+		// Filter out only relevant subnets specified by the spec
+		if openStackCluster.Status.APIServerLoadBalancer == nil {
+			openStackCluster.Status.APIServerLoadBalancer = &infrav1.LoadBalancer{
+				LoadBalancerNetwork: &infrav1.NetworkStatusWithSubnets{
+					NetworkStatus: infrav1.NetworkStatus{
+						Name: lbNetList[0].Name,
+						ID:   lbNetList[0].ID,
+						Tags: lbNetList[0].Tags,
+					},
+				},
+			}
+		}
+
+		openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork.Subnets = []infrav1.Subnet{}
+		for _, s := range openStackCluster.Spec.APIServerLoadBalancer.Subnets {
+			matchFound := false
+			for _, subnetID := range lbNetList[0].Subnets {
+				if subnetID == s.ID {
+					matchFound = true
+					openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork.Subnets = append(
+						openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork.Subnets, infrav1.Subnet{
+							ID:   s.ID,
+							Name: s.Name,
+							CIDR: s.CIDR,
+						})
+				}
+			}
+			if !matchFound {
+				handleUpdateOSCError(openStackCluster, fmt.Errorf("no subnet match was found in the specified network (specified subnet: %v, available subnets: %v)", s, lbNetList[0].Subnets))
+				return fmt.Errorf("no subnet match was found in the specified network (specified subnet: %v, available subnets: %v)", s, lbNetList[0].Subnets)
+			}
+		}
+	}
+
+	return nil
+}
+
 func reconcileNetworkComponents(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
 	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
 
@@ -636,6 +690,12 @@ func reconcileNetworkComponents(scope *scope.WithLogger, cluster *clusterv1.Clus
 		}
 	} else {
 		return fmt.Errorf("failed to reconcile network: ManagedSubnets only supports one element, %d provided", len(openStackCluster.Spec.ManagedSubnets))
+	}
+
+	err = reconcileLoadBalancerNetwork(openStackCluster, networkingService)
+	if err != nil {
+		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile loadbalancer network: %w", err))
+		return fmt.Errorf("failed to reconcile loadbalancer network: %w", err)
 	}
 
 	err = networkingService.ReconcileSecurityGroups(openStackCluster, clusterName)
