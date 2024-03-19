@@ -17,6 +17,8 @@ limitations under the License.
 package compute
 
 import (
+	"fmt"
+
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
@@ -61,8 +63,15 @@ func ResolveReferencedMachineResources(scope *scope.WithLogger, openStackCluster
 		changed = true
 	}
 
+	// ConstructPorts requires the cluster network to have been set. We only
+	// call this from places where we know it should have been set, but the
+	// cluster status is externally-provided data so we check it anyway.
+	if openStackCluster.Status.Network == nil {
+		return changed, fmt.Errorf("called ResolveReferencedMachineResources with nil OpenStackCluster.Status.Network")
+	}
+
 	// Network resources are required in order to get ports options.
-	if len(resources.Ports) == 0 && openStackCluster.Status.Network != nil {
+	if len(resources.Ports) == 0 {
 		// For now we put this here but realistically an OpenStack administrator could enable/disable trunk
 		// support at any time, so we should probably check this on every reconcile.
 		trunkSupported, err := networkingService.IsTrunkExtSupported()
