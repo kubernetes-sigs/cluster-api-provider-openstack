@@ -346,10 +346,6 @@ func restorev1alpha7ClusterStatus(previous *OpenStackClusterStatus, dst *OpenSta
 }
 
 func restorev1beta1ClusterStatus(previous *infrav1.OpenStackClusterStatus, dst *infrav1.OpenStackClusterStatus) {
-	restorev1beta1SecurityGroupStatus(previous.ControlPlaneSecurityGroup, dst.ControlPlaneSecurityGroup)
-	restorev1beta1SecurityGroupStatus(previous.WorkerSecurityGroup, dst.WorkerSecurityGroup)
-	restorev1beta1SecurityGroupStatus(previous.BastionSecurityGroup, dst.BastionSecurityGroup)
-
 	// ReferencedResources have no equivalent in v1alpha7
 	if previous.Bastion != nil {
 		dst.Bastion.ReferencedResources = previous.Bastion.ReferencedResources
