@@ -276,6 +276,8 @@ type OpenStackClusterStatus struct {
 	// and/or logged in the controller's output.
 	// +optional
 	FailureMessage *string `json:"failureMessage,omitempty"`
+
+	Conditions clusterv1.Conditions `json:"conditions,omitempty"`
 }
 
 // +genclient
@@ -327,4 +329,14 @@ type ManagedSecurityGroups struct {
 
 func init() {
 	objectTypes = append(objectTypes, &OpenStackCluster{}, &OpenStackClusterList{})
+}
+
+// GetConditions returns the observations of the operational state of the OpenStackMachine resource.
+func (r *OpenStackCluster) GetConditions() clusterv1.Conditions {
+	return r.Status.Conditions
+}
+
+// SetConditions sets the underlying service state of the OpenStackMachine to the predescribed clusterv1.Conditions.
+func (r *OpenStackCluster) SetConditions(conditions clusterv1.Conditions) {
+	r.Status.Conditions = conditions
 }

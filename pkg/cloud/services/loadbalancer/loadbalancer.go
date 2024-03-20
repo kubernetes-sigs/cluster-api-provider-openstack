@@ -48,6 +48,10 @@ const (
 	resolvedMsg     string = "ControlPlaneEndpoint.Host is not an IP address, using the first resolved IP address"
 )
 
+var (
+	ErrLoadBalancerNoPoint = "failed to create load balancer service client: No suitable endpoint could be found in the service catalog."
+)
+
 const loadBalancerProvisioningStatusActive = "ACTIVE"
 
 // We wrap the LookupHost function in a variable to allow overriding it in unit tests.
