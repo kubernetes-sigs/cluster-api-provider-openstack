@@ -139,6 +139,7 @@ func restorev1alpha6ClusterSpec(previous *OpenStackClusterSpec, dst *OpenStackCl
 	dstBastion := dst.Bastion
 	if prevBastion != nil && dstBastion != nil {
 		restorev1alpha6MachineSpec(&prevBastion.Instance, &dstBastion.Instance)
+		dstBastion.Instance.InstanceID = prevBastion.Instance.InstanceID
 	}
 
 	// To avoid lossy conversion, we need to restore AllowAllInClusterTraffic

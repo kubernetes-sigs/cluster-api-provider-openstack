@@ -1672,17 +1672,17 @@ spec:
       jsonPath: .metadata.labels.cluster\.x-k8s\.io/cluster-name
       name: Cluster
       type: string
+    - description: OpenStack instance ID
+      jsonPath: .status.dependentResources.server.id
+      name: ServerID
+      type: string
     - description: OpenStack instance state
-      jsonPath: .status.instanceState
+      jsonPath: .status.dependentResources.server.state
       name: InstanceState
       type: string
     - description: Machine ready status
       jsonPath: .status.ready
       name: Ready
-      type: string
-    - description: OpenStack instance ID
-      jsonPath: .spec.providerID
-      name: ProviderID
       type: string
     - description: Machine object which owns with this OpenStackMachine
       jsonPath: .metadata.ownerReferences[?(@.kind=="Machine")].name
@@ -1854,9 +1854,6 @@ spec:
                 x-kubernetes-validations:
                 - message: when ID is set you cannot set other options
                   rule: (has(self.id) && !has(self.name) && !has(self.tags)) || !has(self.id)
-              instanceID:
-                description: InstanceID is the OpenStack instance ID for this machine.
-                type: string
               ports:
                 description: |-
                   Ports to be attached to the server instance. They are created if a port with the given name does not already exist.
@@ -2224,8 +2221,9 @@ spec:
                   type: object
                 type: array
               providerID:
-                description: ProviderID is the unique identifier as specified by the
-                  cloud provider.
+                description: |-
+                  ProviderID is a unique identifier for this machine of the form `openstack://<server_id>`.
+                  Note that it is set by the OpenStackMachine controller, and should not be set by the user.
                 type: string
               rootVolume:
                 description: The volume metadata to boot from
@@ -2446,10 +2444,6 @@ spec:
                 description: MachineStatusError defines errors states for Machine
                   objects.
                 type: string
-              instanceState:
-                description: InstanceState is the state of the OpenStack instance
-                  for this machine.
-                type: string
               ready:
                 description: Ready is true when the provider resource is ready.
                 type: boolean
@@ -2652,6 +2646,22 @@ spec:
                       - id
                       type: object
                     type: array
+                  server:
+                    description: Server describes the OpenStack server created for
+                      the machine
+                    properties:
+                      id:
+                        description: ID is the uuid of the server
+                        type: string
+                      state:
+                        description: |-
+                          State is a previously observed state of the server
+                          Do not rely on this field to be up to date
+                        type: string
+                    required:
+                    - id
+                    - state
+                    type: object
                 type: object
             type: object
         type: object

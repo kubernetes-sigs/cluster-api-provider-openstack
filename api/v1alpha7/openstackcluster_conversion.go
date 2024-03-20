@@ -362,20 +362,21 @@ func Convert_v1beta1_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(i
 /* Bastion */
 
 func restorev1alpha7Bastion(previous **Bastion, dst **Bastion) {
-	if *previous != nil && *dst != nil {
-		restorev1alpha7MachineSpec(&(*previous).Instance, &(*dst).Instance)
+	if *previous == nil || *dst == nil {
+		return
 	}
+	restorev1alpha7MachineSpec(&(*previous).Instance, &(*dst).Instance)
+	(*dst).Instance.InstanceID = (*previous).Instance.InstanceID
 }
 
 func restorev1beta1Bastion(previous **infrav1.Bastion, dst **infrav1.Bastion) {
-	if *previous != nil {
-		if *dst != nil && (*previous).Spec != nil && (*dst).Spec != nil {
-			restorev1beta1MachineSpec((*previous).Spec, (*dst).Spec)
-		}
-
-		optional.RestoreString(&(*previous).FloatingIP, &(*dst).FloatingIP)
-		optional.RestoreString(&(*previous).AvailabilityZone, &(*dst).AvailabilityZone)
+	if previous == nil || dst == nil || *previous == nil || *dst == nil {
+		return
 	}
+	restorev1beta1MachineSpec((*previous).Spec, (*dst).Spec)
+
+	optional.RestoreString(&(*previous).FloatingIP, &(*dst).FloatingIP)
+	optional.RestoreString(&(*previous).AvailabilityZone, &(*dst).AvailabilityZone)
 }
 
 func Convert_v1alpha7_Bastion_To_v1beta1_Bastion(in *Bastion, out *infrav1.Bastion, s apiconversion.Scope) error {

@@ -5075,10 +5075,6 @@ spec:
                         - message: when ID is set you cannot set other options
                           rule: (has(self.id) && !has(self.name) && !has(self.tags))
                             || !has(self.id)
-                      instanceID:
-                        description: InstanceID is the OpenStack instance ID for this
-                          machine.
-                        type: string
                       ports:
                         description: |-
                           Ports to be attached to the server instance. They are created if a port with the given name does not already exist.
@@ -5448,8 +5444,9 @@ spec:
                           type: object
                         type: array
                       providerID:
-                        description: ProviderID is the unique identifier as specified
-                          by the cloud provider.
+                        description: |-
+                          ProviderID is a unique identifier for this machine of the form `openstack://<server_id>`.
+                          Note that it is set by the OpenStackMachine controller, and should not be set by the user.
                         type: string
                       rootVolume:
                         description: The volume metadata to boot from
@@ -6451,6 +6448,22 @@ spec:
                           - id
                           type: object
                         type: array
+                      server:
+                        description: Server describes the OpenStack server created
+                          for the machine
+                        properties:
+                          id:
+                            description: ID is the uuid of the server
+                            type: string
+                          state:
+                            description: |-
+                              State is a previously observed state of the server
+                              Do not rely on this field to be up to date
+                            type: string
+                        required:
+                        - id
+                        - state
+                        type: object
                     type: object
                   sshKeyName:
                     type: string

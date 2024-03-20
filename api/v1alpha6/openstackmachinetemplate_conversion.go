@@ -64,7 +64,7 @@ var v1alpha6OpenStackMachineTemplateRestorer = conversion.RestorerFor[*OpenStack
 		func(c *OpenStackMachineTemplate) *OpenStackMachineSpec {
 			return &c.Spec.Template.Spec
 		},
-		restorev1alpha6MachineSpec,
+		restorev1alpha6MachineSpecFromTemplate,
 	),
 }
 
@@ -75,4 +75,10 @@ var v1beta1OpenStackMachineTemplateRestorer = conversion.RestorerFor[*infrav1.Op
 		},
 		restorev1beta1MachineSpec,
 	),
+}
+
+func restorev1alpha6MachineSpecFromTemplate(previous *OpenStackMachineSpec, dst *OpenStackMachineSpec) {
+	restorev1alpha6MachineSpec(previous, dst)
+
+	dst.InstanceID = previous.InstanceID
 }

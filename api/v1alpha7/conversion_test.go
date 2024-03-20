@@ -312,7 +312,12 @@ func TestMachineConversionControllerSpecFields(t *testing.T) {
 		{
 			name: "Set InstanceID",
 			modifyUp: func(up *infrav1.OpenStackMachine) {
-				up.Spec.InstanceID = pointer.String("new-instance-id")
+				up.Status.Resources = &infrav1.MachineResources{
+					Server: &infrav1.ServerStatus{
+						ID:    "new-instance-id",
+						State: "ACTIVE",
+					},
+				}
 			},
 			testAfter: func(after *OpenStackMachine) {
 				g.Expect(after.Spec.InstanceID).To(gomega.Equal(pointer.String("new-instance-id")))

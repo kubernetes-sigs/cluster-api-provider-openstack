@@ -684,6 +684,21 @@ type MachineResources struct {
 	// Ports is the status of the ports created for the machine.
 	// +optional
 	Ports []PortStatus `json:"ports,omitempty"`
+
+	// Server describes the OpenStack server created for the machine
+	// +optional
+	Server *ServerStatus `json:"server,omitempty"`
+}
+
+type ServerStatus struct {
+	// ID is the uuid of the server
+	// +kubebuilder:validation:Required
+	ID string `json:"id"`
+
+	// State is a previously observed state of the server
+	// Do not rely on this field to be up to date
+	// +kubebuilder:validation:Required
+	State InstanceState `json:"state"`
 }
 
 // ValueSpec represents a single value_spec key-value pair.

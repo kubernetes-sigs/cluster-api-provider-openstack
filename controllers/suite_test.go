@@ -31,7 +31,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
-	"k8s.io/utils/pointer"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -149,8 +148,13 @@ var _ = Describe("When calling getOrCreate", func() {
 		openStackCluster := &infrav1.OpenStackCluster{}
 		machine := &clusterv1.Machine{}
 		openStackMachine := &infrav1.OpenStackMachine{
-			Spec: infrav1.OpenStackMachineSpec{
-				InstanceID: pointer.String("machine-uuid"),
+			Status: infrav1.OpenStackMachineStatus{
+				Resources: &infrav1.MachineResources{
+					Server: &infrav1.ServerStatus{
+						ID:    "machine-uuid",
+						State: "ACTIVE",
+					},
+				},
 			},
 		}
 

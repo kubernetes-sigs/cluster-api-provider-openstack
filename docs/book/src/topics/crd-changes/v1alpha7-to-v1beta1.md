@@ -14,7 +14,8 @@
       - [Change to image](#change-to-image)
       - [Removal of imageUUID](#removal-of-imageuuid)
       - [Changes to ports](#changes-to-ports)
-      - [Additon of floatingIPPoolRef](#additon-of-floatingippoolref)
+      - [Addition of floatingIPPoolRef](#addition-of-floatingippoolref)
+      - [Removal of instanceID from spec](#removal-of-instanceid-from-spec)
     - [`OpenStackCluster`](#openstackcluster)
       - [Removal of cloudName](#removal-of-cloudname-1)
       - [identityRef is now required](#identityref-is-now-required)
@@ -156,6 +157,10 @@ spec:
         kind: "OpenStackFloatingIPPool"
         name: "MyOpenStackFloatingIPPool"
 ```
+
+#### Removal of instanceID from spec
+
+The OpenStackMachine controller previously set `instanceID` in the machine spec, in addition to `providerID`. `providerID` remains unchanged as it is required by Cluster API, but `instanceID` is no longer set. If still required, it is now available in the status in `dependentResources`.
 
 ### `OpenStackCluster`
 

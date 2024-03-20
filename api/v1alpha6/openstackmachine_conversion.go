@@ -80,6 +80,12 @@ var v1alpha6OpenStackMachineRestorer = conversion.RestorerFor[*OpenStackMachine]
 			return s
 		}),
 	),
+	"status": conversion.HashedFieldRestorer(
+		func(c *OpenStackMachine) *OpenStackMachineStatus {
+			return &c.Status
+		},
+		restorev1alpha6MachineStatus,
+	),
 }
 
 var v1beta1OpenStackMachineRestorer = conversion.RestorerFor[*infrav1.OpenStackMachine]{
@@ -100,6 +106,42 @@ var v1beta1OpenStackMachineRestorer = conversion.RestorerFor[*infrav1.OpenStackM
 			return &c.Status.Resolved
 		},
 	),
+}
+
+/* OpenStackMachine */
+
+func Convert_v1alpha6_OpenStackMachine_To_v1beta1_OpenStackMachine(in *OpenStackMachine, out *infrav1.OpenStackMachine, s apiconversion.Scope) error {
+	if err := autoConvert_v1alpha6_OpenStackMachine_To_v1beta1_OpenStackMachine(in, out, s); err != nil {
+		return err
+	}
+
+	if in.Spec.InstanceID != nil {
+		serverStatus := &infrav1.ServerStatus{
+			ID: *in.Spec.InstanceID,
+		}
+		if in.Status.InstanceState != nil {
+			serverStatus.State = (infrav1.InstanceState)(*in.Status.InstanceState)
+		}
+		if out.Status.Resources == nil {
+			out.Status.Resources = &infrav1.MachineResources{}
+		}
+		out.Status.Resources.Server = serverStatus
+	}
+	return nil
+}
+
+func Convert_v1beta1_OpenStackMachine_To_v1alpha6_OpenStackMachine(in *infrav1.OpenStackMachine, out *OpenStackMachine, s apiconversion.Scope) error {
+	if err := autoConvert_v1beta1_OpenStackMachine_To_v1alpha6_OpenStackMachine(in, out, s); err != nil {
+		return err
+	}
+
+	if in.Status.Resources != nil && in.Status.Resources.Server != nil {
+		out.Spec.InstanceID = &in.Status.Resources.Server.ID
+		state := InstanceState(in.Status.Resources.Server.State)
+		out.Status.InstanceState = &state
+	}
+
+	return nil
 }
 
 /* OpenStackMachineSpec */
@@ -163,6 +205,10 @@ func restorev1alpha6MachineSpec(previous *OpenStackMachineSpec, dst *OpenStackMa
 }
 
 func restorev1beta1MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *infrav1.OpenStackMachineSpec) {
+	if previous == nil || dst == nil {
+		return
+	}
+
 	// PropagateUplinkStatus has been added in v1beta1.
 	// We restore the whole Ports since they are anyway immutable.
 	dst.Ports = previous.Ports
@@ -342,7 +388,16 @@ func Convert_v1beta1_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(in *i
 
 /* OpenStackMachineStatus */
 
+func restorev1alpha6MachineStatus(previous *OpenStackMachineStatus, dst *OpenStackMachineStatus) {
+	if dst.InstanceState == nil || *dst.InstanceState == "" {
+		dst.InstanceState = previous.InstanceState
+	}
+}
+
+func Convert_v1alpha6_OpenStackMachineStatus_To_v1beta1_OpenStackMachineStatus(in *OpenStackMachineStatus, out *infrav1.OpenStackMachineStatus, s apiconversion.Scope) error {
+	return autoConvert_v1alpha6_OpenStackMachineStatus_To_v1beta1_OpenStackMachineStatus(in, out, s)
+}
+
 func Convert_v1beta1_OpenStackMachineStatus_To_v1alpha6_OpenStackMachineStatus(in *infrav1.OpenStackMachineStatus, out *OpenStackMachineStatus, s apiconversion.Scope) error {
-	// ReferencedResources have no equivalent in v1alpha6
 	return autoConvert_v1beta1_OpenStackMachineStatus_To_v1alpha6_OpenStackMachineStatus(in, out, s)
 }

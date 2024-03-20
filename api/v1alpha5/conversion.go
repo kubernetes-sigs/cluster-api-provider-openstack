@@ -661,6 +661,10 @@ func Convert_v1beta1_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(in *i
 	return nil
 }
 
+func Convert_v1alpha5_OpenStackMachineStatus_To_v1beta1_OpenStackMachineStatus(in *OpenStackMachineStatus, out *infrav1.OpenStackMachineStatus, s conversion.Scope) error {
+	return autoConvert_v1alpha5_OpenStackMachineStatus_To_v1beta1_OpenStackMachineStatus(in, out, s)
+}
+
 func Convert_v1beta1_OpenStackMachineStatus_To_v1alpha5_OpenStackMachineStatus(in *infrav1.OpenStackMachineStatus, out *OpenStackMachineStatus, s conversion.Scope) error {
 	// ReferencedResources have no equivalent in v1alpha5
 	return autoConvert_v1beta1_OpenStackMachineStatus_To_v1alpha5_OpenStackMachineStatus(in, out, s)
