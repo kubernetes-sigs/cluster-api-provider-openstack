@@ -17,6 +17,8 @@ limitations under the License.
 package apivalidations
 
 import (
+	"strings"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
@@ -53,5 +55,34 @@ var _ = Describe("OpenStackMachine API validations", func() {
 		By("Modifying the providerID")
 		machine.Spec.ProviderID = pointer.String("bar")
 		Expect(k8sClient.Update(ctx, machine)).NotTo(Succeed(), "Updating providerID should fail")
+	})
+
+	It("should not allow server metadata to exceed 255 characters", func() {
+		By("Creating a machine with a metadata key that is too long")
+		machine.Spec.ServerMetadata = []infrav1.ServerMetadata{
+			{
+				Key:   strings.Repeat("a", 256),
+				Value: "value",
+			},
+		}
+		Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with a long metadata key should fail")
+
+		By("Creating a machine with a metadata value that is too long")
+		machine.Spec.ServerMetadata = []infrav1.ServerMetadata{
+			{
+				Key:   "key",
+				Value: strings.Repeat("a", 256),
+			},
+		}
+		Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with a long metadata value should fail")
+
+		By("Creating a machine with a metadata key and value of 255 characters should succeed")
+		machine.Spec.ServerMetadata = []infrav1.ServerMetadata{
+			{
+				Key:   strings.Repeat("a", 255),
+				Value: strings.Repeat("b", 255),
+			},
+		}
+		Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "Creating a machine with max metadata key and value should succeed")
 	})
 })
