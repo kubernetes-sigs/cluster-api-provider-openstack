@@ -106,15 +106,9 @@ func (f *providerScopeFactory) NewClientScopeFromCluster(ctx context.Context, ct
 }
 
 func (f *providerScopeFactory) NewClientScopeFromFloatingIPPool(ctx context.Context, ctrlClient client.Client, openstackFloatingIPPool *v1alpha1.OpenStackFloatingIPPool, defaultCACert []byte, logger logr.Logger) (Scope, error) {
-	var cloud clientconfig.Cloud
-	var caCert []byte
-
-	if openstackFloatingIPPool.Spec.IdentityRef != nil {
-		var err error
-		cloud, caCert, err = getCloudFromSecret(ctx, ctrlClient, openstackFloatingIPPool.Namespace, openstackFloatingIPPool.Spec.IdentityRef.Name, openstackFloatingIPPool.Spec.CloudName)
-		if err != nil {
-			return nil, err
-		}
+	cloud, caCert, err := getCloudFromSecret(ctx, ctrlClient, openstackFloatingIPPool.Namespace, openstackFloatingIPPool.Spec.IdentityRef.Name, openstackFloatingIPPool.Spec.IdentityRef.CloudName)
+	if err != nil {
+		return nil, err
 	}
 
 	if caCert == nil {
