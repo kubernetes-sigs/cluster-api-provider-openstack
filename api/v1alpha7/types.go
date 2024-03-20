@@ -358,6 +358,8 @@ type APIServerLoadBalancer struct {
 	AllowedCIDRs []string `json:"allowedCidrs,omitempty"`
 	// Octavia Provider Used to create load balancer
 	Provider string `json:"provider,omitempty"`
+	// lb flavor
+	FlavorIDL string `json:"flavorIDL,omitempty"`
 }
 
 // ValueSpec represents a single value_spec key-value pair.
