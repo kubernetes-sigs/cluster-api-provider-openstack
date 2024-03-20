@@ -448,10 +448,6 @@ type SecurityGroupStatus struct {
 	// id of the security group
 	// +kubebuilder:validation:Required
 	ID string `json:"id"`
-
-	// list of security group rules
-	// +optional
-	Rules []SecurityGroupRuleStatus `json:"rules,omitempty"`
 }
 
 // SecurityGroupRuleSpec represent the basic information of the associated OpenStack
@@ -512,55 +508,6 @@ type SecurityGroupRuleSpec struct {
 	// You can specify either remoteGroupID or remoteIPPrefix or remoteManagedGroups.
 	// +optional
 	RemoteManagedGroups []ManagedSecurityGroupName `json:"remoteManagedGroups,omitempty"`
-}
-
-type SecurityGroupRuleStatus struct {
-	// id of the security group rule
-	// +kubebuilder:validation:Required
-	ID string `json:"id"`
-
-	// description of the security group rule.
-	// +optional
-	Description *string `json:"description,omitempty"`
-
-	// direction in which the security group rule is applied. The only values
-	// allowed are "ingress" or "egress". For a compute instance, an ingress
-	// security group rule is applied to incoming (ingress) traffic for that
-	// instance. An egress rule is applied to traffic leaving the instance.
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:enum=ingress;egress
-	Direction string `json:"direction"`
-
-	// etherType must be IPv4 or IPv6, and addresses represented in CIDR must match the
-	// ingress or egress rules.
-	// +kubebuilder:validation:enum=IPv4;IPv6
-	// +optional
-	EtherType *string `json:"etherType,omitempty"`
-
-	// portRangeMin is a number in the range that is matched by the security group
-	// rule. If the protocol is TCP or UDP, this value must be less than or equal
-	// to the value of the portRangeMax attribute.
-	// +optional
-	PortRangeMin *int `json:"portRangeMin,omitempty"`
-
-	// portRangeMax is a number in the range that is matched by the security group
-	// rule. The portRangeMin attribute constrains the portRangeMax attribute.
-	// +optional
-	PortRangeMax *int `json:"portRangeMax,omitempty"`
-
-	// protocol is the protocol that is matched by the security group rule.
-	// +optional
-	Protocol *string `json:"protocol,omitempty"`
-
-	// remoteGroupID is the remote group ID to be associated with this security group rule.
-	// You can specify either remoteGroupID or remoteIPPrefix or remoteManagedGroups.
-	// +optional
-	RemoteGroupID *string `json:"remoteGroupID,omitempty"`
-
-	// remoteIPPrefix is the remote IP prefix to be associated with this security group rule.
-	// You can specify either remoteGroupID or remoteIPPrefix or remoteManagedGroups.
-	// +optional
-	RemoteIPPrefix *string `json:"remoteIPPrefix,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=bastion;controlplane;worker
