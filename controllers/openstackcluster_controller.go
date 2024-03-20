@@ -222,7 +222,10 @@ func resolveBastionResources(scope *scope.WithLogger, openStackCluster *infrav1.
 		if openStackCluster.Status.Bastion == nil {
 			openStackCluster.Status.Bastion = &infrav1.BastionStatus{}
 		}
-		changed, err := compute.ResolveReferencedMachineResources(scope, openStackCluster, &openStackCluster.Spec.Bastion.Instance, &openStackCluster.Status.Bastion.ReferencedResources)
+		if openStackCluster.Spec.Bastion.Spec == nil {
+			return false, fmt.Errorf("bastion spec is nil when bastion is enabled, this shouldn't happen")
+		}
+		changed, err := compute.ResolveReferencedMachineResources(scope, openStackCluster, openStackCluster.Spec.Bastion.Spec, &openStackCluster.Status.Bastion.ReferencedResources)
 		if err != nil {
 			return false, err
 		}
@@ -504,9 +507,9 @@ func bastionAddFloatingIP(openStackCluster *infrav1.OpenStackCluster, clusterNam
 	case openStackCluster.Status.Bastion.FloatingIP != "":
 		// Some floating IP has already been created for this bastion, make sure we re-use it
 		floatingIP = &openStackCluster.Status.Bastion.FloatingIP
-	case openStackCluster.Spec.Bastion.FloatingIP != "":
+	case openStackCluster.Spec.Bastion.FloatingIP != nil:
 		// Use floating IP from the spec
-		floatingIP = &openStackCluster.Spec.Bastion.FloatingIP
+		floatingIP = openStackCluster.Spec.Bastion.FloatingIP
 	}
 	// Check if there is an existing floating IP attached to bastion, in case where FloatingIP would not yet have been stored in cluster status
 	fp, err = networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterName, floatingIP)
@@ -529,20 +532,27 @@ func bastionToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, cluster *
 	if openStackCluster.Spec.Bastion == nil {
 		return nil, fmt.Errorf("bastion spec is nil")
 	}
+	if openStackCluster.Spec.Bastion.Spec == nil {
+		// For the case when Bastion is deleted but we don't have spec, let's use an empty one.
+		// v1beta1 API validations prevent this from happening in normal circumstances.
+		openStackCluster.Spec.Bastion.Spec = &infrav1.OpenStackMachineSpec{}
+	}
 
 	if openStackCluster.Status.Bastion == nil {
 		return nil, fmt.Errorf("bastion status is nil")
 	}
 	instanceSpec := &compute.InstanceSpec{
-		Name:          bastionName(cluster.Name),
-		Flavor:        openStackCluster.Spec.Bastion.Instance.Flavor,
-		SSHKeyName:    openStackCluster.Spec.Bastion.Instance.SSHKeyName,
-		ImageID:       openStackCluster.Status.Bastion.ReferencedResources.ImageID,
-		FailureDomain: openStackCluster.Spec.Bastion.AvailabilityZone,
-		RootVolume:    openStackCluster.Spec.Bastion.Instance.RootVolume,
+		Name:       bastionName(cluster.Name),
+		Flavor:     openStackCluster.Spec.Bastion.Spec.Flavor,
+		SSHKeyName: openStackCluster.Spec.Bastion.Spec.SSHKeyName,
+		ImageID:    openStackCluster.Status.Bastion.ReferencedResources.ImageID,
+		RootVolume: openStackCluster.Spec.Bastion.Spec.RootVolume,
+	}
+	if openStackCluster.Spec.Bastion.AvailabilityZone != nil {
+		instanceSpec.FailureDomain = *openStackCluster.Spec.Bastion.AvailabilityZone
 	}
 
-	instanceSpec.SecurityGroups = openStackCluster.Spec.Bastion.Instance.SecurityGroups
+	instanceSpec.SecurityGroups = openStackCluster.Spec.Bastion.Spec.SecurityGroups
 	if openStackCluster.Spec.ManagedSecurityGroups != nil {
 		if openStackCluster.Status.BastionSecurityGroup != nil {
 			instanceSpec.SecurityGroups = append(instanceSpec.SecurityGroups, infrav1.SecurityGroupFilter{
@@ -552,7 +562,7 @@ func bastionToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, cluster *
 	}
 	instanceSpec.SecurityGroups = getBastionSecurityGroups(openStackCluster)
 
-	instanceSpec.Ports = openStackCluster.Spec.Bastion.Instance.Ports
+	instanceSpec.Ports = openStackCluster.Spec.Bastion.Spec.Ports
 
 	return instanceSpec, nil
 }
@@ -561,10 +571,10 @@ func bastionName(clusterName string) string {
 	return fmt.Sprintf("%s-bastion", clusterName)
 }
 
-// getBastionSecurityGroups returns a combination of openStackCluster.Spec.Bastion.Instance.SecurityGroups
+// getBastionSecurityGroups returns a combination of openStackCluster.Spec.Bastion.Spec.SecurityGroups
 // and the security group managed by the OpenStackCluster.
 func getBastionSecurityGroups(openStackCluster *infrav1.OpenStackCluster) []infrav1.SecurityGroupFilter {
-	instanceSpecSecurityGroups := openStackCluster.Spec.Bastion.Instance.SecurityGroups
+	instanceSpecSecurityGroups := openStackCluster.Spec.Bastion.Spec.SecurityGroups
 
 	if openStackCluster.Spec.ManagedSecurityGroups == nil {
 		return instanceSpecSecurityGroups

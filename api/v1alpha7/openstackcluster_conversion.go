@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha7
 
 import (
+	"reflect"
+
 	apiconversion "k8s.io/apimachinery/pkg/conversion"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
@@ -369,8 +371,13 @@ func restorev1alpha7Bastion(previous **Bastion, dst **Bastion) {
 }
 
 func restorev1beta1Bastion(previous **infrav1.Bastion, dst **infrav1.Bastion) {
-	if *previous != nil && *dst != nil {
-		restorev1beta1MachineSpec(&(*previous).Instance, &(*dst).Instance)
+	if *previous != nil {
+		if *dst != nil && (*previous).Spec != nil && (*dst).Spec != nil {
+			restorev1beta1MachineSpec((*previous).Spec, (*dst).Spec)
+		}
+
+		optional.RestoreString(&(*previous).FloatingIP, &(*dst).FloatingIP)
+		optional.RestoreString(&(*previous).AvailabilityZone, &(*dst).AvailabilityZone)
 	}
 }
 
@@ -380,13 +387,30 @@ func Convert_v1alpha7_Bastion_To_v1beta1_Bastion(in *Bastion, out *infrav1.Basti
 		return err
 	}
 
-	if in.Instance.ServerGroupID != "" {
-		out.Instance.ServerGroup = &infrav1.ServerGroupFilter{ID: in.Instance.ServerGroupID}
-	} else {
-		out.Instance.ServerGroup = nil
+	if !reflect.ValueOf(in.Instance).IsZero() {
+		out.Spec = &infrav1.OpenStackMachineSpec{}
+
+		err = Convert_v1alpha7_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(&in.Instance, out.Spec, s)
+		if err != nil {
+			return err
+		}
+
+		if in.Instance.ServerGroupID != "" {
+			out.Spec.ServerGroup = &infrav1.ServerGroupFilter{ID: in.Instance.ServerGroupID}
+		} else {
+			out.Spec.ServerGroup = nil
+		}
+
+		err = optional.Convert_string_To_optional_String(&in.Instance.FloatingIP, &out.FloatingIP, s)
+		if err != nil {
+			return err
+		}
 	}
 
-	out.FloatingIP = in.Instance.FloatingIP
+	// nil the Spec if it's basically an empty object.
+	if out.Spec != nil && reflect.ValueOf(*out.Spec).IsZero() {
+		out.Spec = nil
+	}
 	return nil
 }
 
@@ -396,12 +420,18 @@ func Convert_v1beta1_Bastion_To_v1alpha7_Bastion(in *infrav1.Bastion, out *Basti
 		return err
 	}
 
-	if in.Instance.ServerGroup != nil && in.Instance.ServerGroup.ID != "" {
-		out.Instance.ServerGroupID = in.Instance.ServerGroup.ID
+	if in.Spec != nil {
+		err = Convert_v1beta1_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in.Spec, &out.Instance, s)
+		if err != nil {
+			return err
+		}
+
+		if in.Spec.ServerGroup != nil && in.Spec.ServerGroup.ID != "" {
+			out.Instance.ServerGroupID = in.Spec.ServerGroup.ID
+		}
 	}
 
-	out.Instance.FloatingIP = in.FloatingIP
-	return nil
+	return optional.Convert_optional_String_To_string(&in.FloatingIP, &out.Instance.FloatingIP, s)
 }
 
 func Convert_v1beta1_BastionStatus_To_v1alpha7_BastionStatus(in *infrav1.BastionStatus, out *BastionStatus, s apiconversion.Scope) error {

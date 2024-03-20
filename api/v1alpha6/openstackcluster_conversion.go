@@ -412,13 +412,18 @@ func Convert_v1alpha6_OpenStackClusterStatus_To_v1beta1_OpenStackClusterStatus(i
 /* Bastion */
 
 func restorev1beta1Bastion(previous **infrav1.Bastion, dst **infrav1.Bastion) {
-	if *previous != nil && *dst != nil {
-		restorev1beta1MachineSpec(&(*previous).Instance, &(*dst).Instance)
+	if *previous != nil {
+		if *dst != nil && (*previous).Spec != nil && (*dst).Spec != nil {
+			restorev1beta1MachineSpec((*previous).Spec, (*dst).Spec)
+		}
+
+		optional.RestoreString(&(*previous).FloatingIP, &(*dst).FloatingIP)
+		optional.RestoreString(&(*previous).AvailabilityZone, &(*dst).AvailabilityZone)
 	}
 }
 
 func Convert_v1alpha6_Instance_To_v1beta1_BastionStatus(in *Instance, out *infrav1.BastionStatus, _ apiconversion.Scope) error {
-	// BastionStatus is the same as Instance with unused fields removed
+	// BastionStatus is the same as Spec with unused fields removed
 	out.ID = in.ID
 	out.Name = in.Name
 	out.SSHKeyName = in.SSHKeyName
@@ -429,7 +434,7 @@ func Convert_v1alpha6_Instance_To_v1beta1_BastionStatus(in *Instance, out *infra
 }
 
 func Convert_v1beta1_BastionStatus_To_v1alpha6_Instance(in *infrav1.BastionStatus, out *Instance, _ apiconversion.Scope) error {
-	// BastionStatus is the same as Instance with unused fields removed
+	// BastionStatus is the same as Spec with unused fields removed
 	out.ID = in.ID
 	out.Name = in.Name
 	out.SSHKeyName = in.SSHKeyName
@@ -445,13 +450,30 @@ func Convert_v1alpha6_Bastion_To_v1beta1_Bastion(in *Bastion, out *infrav1.Basti
 		return err
 	}
 
-	if in.Instance.ServerGroupID != "" {
-		out.Instance.ServerGroup = &infrav1.ServerGroupFilter{ID: in.Instance.ServerGroupID}
-	} else {
-		out.Instance.ServerGroup = nil
+	if !reflect.ValueOf(in.Instance).IsZero() {
+		out.Spec = &infrav1.OpenStackMachineSpec{}
+
+		err = Convert_v1alpha6_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(&in.Instance, out.Spec, s)
+		if err != nil {
+			return err
+		}
+
+		if in.Instance.ServerGroupID != "" {
+			out.Spec.ServerGroup = &infrav1.ServerGroupFilter{ID: in.Instance.ServerGroupID}
+		} else {
+			out.Spec.ServerGroup = nil
+		}
+
+		err = optional.Convert_string_To_optional_String(&in.Instance.FloatingIP, &out.FloatingIP, s)
+		if err != nil {
+			return err
+		}
 	}
 
-	out.FloatingIP = in.Instance.FloatingIP
+	// nil the Spec if it's basically an empty object.
+	if out.Spec != nil && reflect.ValueOf(*out.Spec).IsZero() {
+		out.Spec = nil
+	}
 	return nil
 }
 
@@ -461,10 +483,16 @@ func Convert_v1beta1_Bastion_To_v1alpha6_Bastion(in *infrav1.Bastion, out *Basti
 		return err
 	}
 
-	if in.Instance.ServerGroup != nil && in.Instance.ServerGroup.ID != "" {
-		out.Instance.ServerGroupID = in.Instance.ServerGroup.ID
+	if in.Spec != nil {
+		err = Convert_v1beta1_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(in.Spec, &out.Instance, s)
+		if err != nil {
+			return err
+		}
+
+		if in.Spec.ServerGroup != nil && in.Spec.ServerGroup.ID != "" {
+			out.Instance.ServerGroupID = in.Spec.ServerGroup.ID
+		}
 	}
 
-	out.Instance.FloatingIP = in.FloatingIP
-	return nil
+	return optional.Convert_optional_String_To_string(&in.FloatingIP, &out.Instance.FloatingIP, s)
 }

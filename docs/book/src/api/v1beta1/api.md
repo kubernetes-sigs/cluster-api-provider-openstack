@@ -1064,7 +1064,7 @@ string
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackClusterSpec">OpenStackClusterSpec</a>)
 </p>
 <p>
-<p>Bastion represents basic information about the bastion node.</p>
+<p>Bastion represents basic information about the bastion node. If you enable bastion, the spec has to be specified.</p>
 </p>
 <table>
 <thead>
@@ -1082,12 +1082,12 @@ bool
 </em>
 </td>
 <td>
-<em>(Optional)</em>
+<p>Enabled means that bastion is enabled. Defaults to false.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>instance</code><br/>
+<code>spec</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">
 OpenStackMachineSpec
@@ -1095,7 +1095,11 @@ OpenStackMachineSpec
 </em>
 </td>
 <td>
-<p>Instance for the bastion itself</p>
+<p>Spec for the bastion itself</p>
+<br/>
+<br/>
+<table>
+</table>
 </td>
 </tr>
 <tr>
@@ -1107,6 +1111,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
+<p>AvailabilityZone is the failure domain that will be used to create the Bastion Spec.</p>
 </td>
 </tr>
 <tr>
@@ -1118,8 +1123,9 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>FloatingIP which will be associated to the bastion machine.
-The floating IP should already exist and should not be associated with a port.</p>
+<p>FloatingIP which will be associated to the bastion machine. It&rsquo;s the IP address, not UUID.
+The floating IP should already exist and should not be associated with a port. If FIP of this address does not
+exist, CAPO will try to create it, but by default only OpenStack administrators have privileges to do so.</p>
 </td>
 </tr>
 </tbody>

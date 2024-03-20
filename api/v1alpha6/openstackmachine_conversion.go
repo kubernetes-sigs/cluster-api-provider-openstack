@@ -133,6 +133,9 @@ func restorev1alpha6MachineSpec(previous *OpenStackMachineSpec, dst *OpenStackMa
 		}
 
 		if kd != k || vd != v {
+			if dst.ServerMetadata == nil {
+				dst.ServerMetadata = make(map[string]string)
+			}
 			delete(dst.ServerMetadata, kd)
 			dst.ServerMetadata[k] = v
 		}

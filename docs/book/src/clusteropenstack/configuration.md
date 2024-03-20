@@ -693,7 +693,7 @@ spec:
   ...
   bastion:
     enabled: true
-    instance:
+    spec:
       flavor: <Flavor name>
       image:  <Image name>
       sshKeyName: <Key pair name>

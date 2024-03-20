@@ -457,19 +457,19 @@ func Convert_v1beta1_AddressPair_To_v1alpha5_AddressPair(in *v1beta1.AddressPair
 
 func autoConvert_v1alpha5_Bastion_To_v1beta1_Bastion(in *Bastion, out *v1beta1.Bastion, s conversion.Scope) error {
 	out.Enabled = in.Enabled
-	if err := Convert_v1alpha5_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(&in.Instance, &out.Instance, s); err != nil {
+	// WARNING: in.Instance requires manual conversion: does not exist in peer-type
+	if err := optional.Convert_string_To_optional_String(&in.AvailabilityZone, &out.AvailabilityZone, s); err != nil {
 		return err
 	}
-	out.AvailabilityZone = in.AvailabilityZone
 	return nil
 }
 
 func autoConvert_v1beta1_Bastion_To_v1alpha5_Bastion(in *v1beta1.Bastion, out *Bastion, s conversion.Scope) error {
 	out.Enabled = in.Enabled
-	if err := Convert_v1beta1_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(&in.Instance, &out.Instance, s); err != nil {
+	// WARNING: in.Spec requires manual conversion: does not exist in peer-type
+	if err := optional.Convert_optional_String_To_string(&in.AvailabilityZone, &out.AvailabilityZone, s); err != nil {
 		return err
 	}
-	out.AvailabilityZone = in.AvailabilityZone
 	// WARNING: in.FloatingIP requires manual conversion: does not exist in peer-type
 	return nil
 }
