@@ -4469,8 +4469,7 @@ string
 </em>
 </td>
 <td>
-<p>Key is the server metadata key
-kubebuilder:validation:MaxLength:=255</p>
+<p>Key is the server metadata key</p>
 </td>
 </tr>
 <tr>
@@ -4481,8 +4480,7 @@ string
 </em>
 </td>
 <td>
-<p>Value is the server metadata value
-kubebuilder:validation:MaxLength:=255</p>
+<p>Value is the server metadata value</p>
 </td>
 </tr>
 </tbody>
