@@ -22,11 +22,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 
-	// We use v1alpha7 here rather than anything newer because as of writing
-	// it is the newest API version we should no longer be making breaking
-	// changes to. If we bump this we need to look carefully for resulting
-	// CRD changes in v1alpha1 to ensure they are compatible.
-	infrav1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
 const (
@@ -62,16 +58,12 @@ type OpenStackFloatingIPPoolSpec struct {
 	MaxIPs *int `json:"maxIPs,omitempty"`
 
 	// IdentityRef is a reference to a identity to be used when reconciling this pool.
-	// +optional
-	IdentityRef *infrav1alpha7.OpenStackIdentityReference `json:"identityRef,omitempty"`
+	// +kubebuilder:validation:Required
+	IdentityRef infrav1.OpenStackIdentityReference `json:"identityRef"`
 
 	// FloatingIPNetwork is the external network to use for floating ips, if there's only one external network it will be used by default
 	// +optional
-	FloatingIPNetwork infrav1alpha7.NetworkFilter `json:"floatingIPNetwork"`
-
-	// The name of the cloud to use from the clouds secret
-	// +optional
-	CloudName string `json:"cloudName"`
+	FloatingIPNetwork infrav1.NetworkFilter `json:"floatingIPNetwork"`
 
 	// The stratergy to use for reclaiming floating ips when they are released from a machine
 	// +kubebuilder:validation:Optional
@@ -95,7 +87,7 @@ type OpenStackFloatingIPPoolStatus struct {
 
 	// floatingIPNetwork contains information about the network used for floating ips
 	// +optional
-	FloatingIPNetwork *infrav1alpha7.NetworkStatus `json:"floatingIPNetwork,omitempty"`
+	FloatingIPNetwork *infrav1.NetworkStatus `json:"floatingIPNetwork,omitempty"`
 
 	Conditions clusterv1.Conditions `json:"conditions,omitempty"`
 }
