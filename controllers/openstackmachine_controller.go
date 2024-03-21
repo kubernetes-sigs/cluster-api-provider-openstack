@@ -175,8 +175,8 @@ func resolveMachineResources(scope *scope.WithLogger, clusterResourceName string
 		return true, nil
 	}
 
-	// Adopt any existing dependent resources
-	return false, compute.AdoptDependentMachineResources(scope, &openStackMachine.Status.ReferencedResources, &openStackMachine.Status.DependentResources)
+	// Adopt any existing resources
+	return false, compute.AdoptMachineResources(scope, &openStackMachine.Status.ReferencedResources, &openStackMachine.Status.Resources)
 }
 
 func patchMachine(ctx context.Context, patchHelper *patch.Helper, openStackMachine *infrav1.OpenStackMachine, machine *clusterv1.Machine, options ...patch.Option) error {
@@ -308,7 +308,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(scope *scope.WithLogger, cl
 		return ctrl.Result{}, err
 	}
 
-	portsStatus := openStackMachine.Status.DependentResources.Ports
+	portsStatus := openStackMachine.Status.Resources.Ports
 	for _, port := range portsStatus {
 		if err := networkingService.DeleteInstanceTrunkAndPort(openStackMachine, port, trunkSupported); err != nil {
 			return ctrl.Result{}, fmt.Errorf("failed to delete port %q: %w", port.ID, err)
@@ -519,7 +519,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	portIDs := GetPortIDs(openStackMachine.Status.DependentResources.Ports)
+	portIDs := GetPortIDs(openStackMachine.Status.Resources.Ports)
 
 	instanceStatus, err := r.getOrCreateInstance(scope.Logger(), openStackCluster, machine, openStackMachine, computeService, userData, portIDs)
 	if err != nil || instanceStatus == nil {
@@ -659,13 +659,13 @@ func (r *OpenStackMachineReconciler) reconcileAPIServerLoadBalancer(scope *scope
 
 func getOrCreateMachinePorts(openStackMachine *infrav1.OpenStackMachine, networkingService *networking.Service) error {
 	desiredPorts := openStackMachine.Status.ReferencedResources.Ports
-	dependentResources := &openStackMachine.Status.DependentResources
+	resources := &openStackMachine.Status.Resources
 
-	if len(desiredPorts) == len(dependentResources.Ports) {
+	if len(desiredPorts) == len(resources.Ports) {
 		return nil
 	}
 
-	if err := networkingService.CreatePorts(openStackMachine, desiredPorts, dependentResources); err != nil {
+	if err := networkingService.CreatePorts(openStackMachine, desiredPorts, resources); err != nil {
 		return fmt.Errorf("creating ports: %w", err)
 	}
 

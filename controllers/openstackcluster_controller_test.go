@@ -245,7 +245,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 						},
 					},
 				},
-				DependentResources: infrav1.DependentMachineResources{
+				Resources: infrav1.MachineResources{
 					Ports: []infrav1.PortStatus{
 						{
 							ID: "portID1",
@@ -294,7 +294,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 					},
 				},
 			},
-			DependentResources: infrav1.DependentMachineResources{
+			Resources: infrav1.MachineResources{
 				Ports: []infrav1.PortStatus{
 					{
 						ID: "portID1",
@@ -335,7 +335,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 						},
 					},
 				},
-				DependentResources: infrav1.DependentMachineResources{
+				Resources: infrav1.MachineResources{
 					Ports: []infrav1.PortStatus{
 						{
 							ID: "portID1",
@@ -377,7 +377,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 					},
 				},
 			},
-			DependentResources: infrav1.DependentMachineResources{
+			Resources: infrav1.MachineResources{
 				Ports: []infrav1.PortStatus{
 					{
 						ID: "portID1",
@@ -417,7 +417,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 						},
 					},
 				},
-				DependentResources: infrav1.DependentMachineResources{
+				Resources: infrav1.MachineResources{
 					Ports: []infrav1.PortStatus{
 						{
 							ID: "portID1",
@@ -453,7 +453,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 					},
 				},
 			},
-			DependentResources: infrav1.DependentMachineResources{
+			Resources: infrav1.MachineResources{
 				Ports: []infrav1.PortStatus{
 					{
 						ID: "portID1",
@@ -528,7 +528,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		}
 		testCluster.Status = infrav1.OpenStackClusterStatus{
 			Bastion: &infrav1.BastionStatus{
-				DependentResources: infrav1.DependentMachineResources{
+				Resources: infrav1.MachineResources{
 					Ports: []infrav1.PortStatus{
 						{
 							ID: "port-id",
@@ -613,7 +613,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		}
 		testCluster.Status = infrav1.OpenStackClusterStatus{
 			Bastion: &infrav1.BastionStatus{
-				DependentResources: infrav1.DependentMachineResources{
+				Resources: infrav1.MachineResources{
 					Ports: []infrav1.PortStatus{
 						{
 							ID: "port-id",
