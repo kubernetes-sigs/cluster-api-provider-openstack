@@ -358,12 +358,9 @@ type AddressPair struct {
 }
 
 type BastionStatus struct {
-	ID         string        `json:"id,omitempty"`
-	Name       string        `json:"name,omitempty"`
-	SSHKeyName string        `json:"sshKeyName,omitempty"`
-	State      InstanceState `json:"state,omitempty"`
-	IP         string        `json:"ip,omitempty"`
-	FloatingIP string        `json:"floatingIP,omitempty"`
+	Name       string `json:"name,omitempty"`
+	IP         string `json:"ip,omitempty"`
+	FloatingIP string `json:"floatingIP,omitempty"`
 
 	// Resolved contains parts of the bastion's machine spec with all
 	// external references fully resolved.
@@ -688,6 +685,13 @@ type MachineResources struct {
 	// Server describes the OpenStack server created for the machine
 	// +optional
 	Server *ServerStatus `json:"server,omitempty"`
+}
+
+func (r *MachineResources) GetServerID() *string {
+	if r == nil || r.Server == nil {
+		return nil
+	}
+	return &r.Server.ID
 }
 
 type ServerStatus struct {

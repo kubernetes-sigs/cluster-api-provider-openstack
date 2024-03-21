@@ -206,7 +206,12 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 		testCluster.Status = infrav1.OpenStackClusterStatus{
 			Bastion: &infrav1.BastionStatus{
-				ID: "bastion-uuid",
+				Resources: &infrav1.MachineResources{
+					Server: &infrav1.ServerStatus{
+						ID:    "bastion-uuid",
+						State: "ACTIVE",
+					},
+				},
 			},
 		}
 		err = k8sClient.Status().Update(ctx, testCluster)
@@ -284,8 +289,6 @@ var _ = Describe("OpenStackCluster controller", func() {
 
 		res, err := reconcileBastion(scope, capiCluster, testCluster)
 		expectedStatus := &infrav1.BastionStatus{
-			ID:    "adopted-bastion-uuid",
-			State: "ACTIVE",
 			Resolved: &infrav1.ResolvedMachineSpec{
 				ImageID: "imageID",
 				Ports: []infrav1.ResolvedPortSpec{
@@ -299,6 +302,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 					{
 						ID: "portID1",
 					},
+				},
+				Server: &infrav1.ServerStatus{
+					ID:    "adopted-bastion-uuid",
+					State: "ACTIVE",
 				},
 			},
 		}
@@ -326,7 +333,6 @@ var _ = Describe("OpenStackCluster controller", func() {
 				},
 			},
 			Bastion: &infrav1.BastionStatus{
-				ID: "adopted-fip-bastion-uuid",
 				Resolved: &infrav1.ResolvedMachineSpec{
 					ImageID: "imageID",
 					Ports: []infrav1.ResolvedPortSpec{
@@ -340,6 +346,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 						{
 							ID: "portID1",
 						},
+					},
+					Server: &infrav1.ServerStatus{
+						ID: "adopted-fip-bastion-uuid",
 					},
 				},
 			},
@@ -366,9 +375,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 
 		res, err := reconcileBastion(scope, capiCluster, testCluster)
 		Expect(testCluster.Status.Bastion).To(Equal(&infrav1.BastionStatus{
-			ID:         "adopted-fip-bastion-uuid",
 			FloatingIP: "1.2.3.4",
-			State:      "ACTIVE",
 			Resolved: &infrav1.ResolvedMachineSpec{
 				ImageID: "imageID",
 				Ports: []infrav1.ResolvedPortSpec{
@@ -382,6 +389,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 					{
 						ID: "portID1",
 					},
+				},
+				Server: &infrav1.ServerStatus{
+					ID:    "adopted-fip-bastion-uuid",
+					State: "ACTIVE",
 				},
 			},
 		}))
@@ -408,7 +419,6 @@ var _ = Describe("OpenStackCluster controller", func() {
 				},
 			},
 			Bastion: &infrav1.BastionStatus{
-				ID: "requeue-bastion-uuid",
 				Resolved: &infrav1.ResolvedMachineSpec{
 					ImageID: "imageID",
 					Ports: []infrav1.ResolvedPortSpec{
@@ -422,6 +432,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 						{
 							ID: "portID1",
 						},
+					},
+					Server: &infrav1.ServerStatus{
+						ID: "requeue-bastion-uuid",
 					},
 				},
 			},
@@ -443,8 +456,6 @@ var _ = Describe("OpenStackCluster controller", func() {
 
 		res, err := reconcileBastion(scope, capiCluster, testCluster)
 		Expect(testCluster.Status.Bastion).To(Equal(&infrav1.BastionStatus{
-			ID:    "requeue-bastion-uuid",
-			State: "BUILD",
 			Resolved: &infrav1.ResolvedMachineSpec{
 				ImageID: "imageID",
 				Ports: []infrav1.ResolvedPortSpec{
@@ -458,6 +469,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 					{
 						ID: "portID1",
 					},
+				},
+				Server: &infrav1.ServerStatus{
+					ID:    "requeue-bastion-uuid",
+					State: "BUILD",
 				},
 			},
 		}))

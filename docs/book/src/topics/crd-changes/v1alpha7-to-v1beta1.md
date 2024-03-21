@@ -29,7 +29,8 @@
       - [Change to network](#change-to-network)
       - [Change to networkMtu](#change-to-networkmtu)
       - [Changes to apiServerLoadBalancer](#changes-to-apiserverloadbalancer)
-      - [Changes to bastion](#changes-to-bastion)
+      - [Changes to bastion in spec](#changes-to-bastion-in-spec)
+      - [Changes to bastion in status](#changes-to-bastion-in-status)
     - [Changes to filters](#changes-to-filters)
       - [Changes to filter tags](#changes-to-filter-tags)
       - [Field capitalization consistency](#field-capitalization-consistency)
@@ -370,7 +371,7 @@ spec:
     apiServerLoadBalancer: {}
 ```
 
-#### Changes to bastion
+#### Changes to bastion in spec
 
 In v1beta1, `OpenStackCluster.spec.bastion.instance` becomes `OpenStackCluster.spec.bastion.spec`.
 
@@ -393,6 +394,10 @@ spec:
         image:
           name: foobar
 ```
+
+#### Changes to bastion in status
+
+`id`, `sshKeyName`, and `state` are removed from the bastion status. `id` and `state` are now available in `bastion.resources.server` if required. `sshKeyName` has no replacement in status, but remains available in the spec.
 
 ### Changes to filters
 

@@ -86,24 +86,13 @@ func (is *InstanceStatus) State() infrav1.InstanceState {
 	return infrav1.InstanceState(is.server.Status)
 }
 
-func (is *InstanceStatus) SSHKeyName() string {
-	return is.server.KeyName
-}
-
-func (is *InstanceStatus) AvailabilityZone() string {
-	return is.server.AvailabilityZone
-}
-
 // BastionStatus updates BastionStatus in openStackCluster.
 func (is *InstanceStatus) UpdateBastionStatus(openStackCluster *infrav1.OpenStackCluster) {
 	if openStackCluster.Status.Bastion == nil {
 		openStackCluster.Status.Bastion = &infrav1.BastionStatus{}
 	}
 
-	openStackCluster.Status.Bastion.ID = is.ID()
 	openStackCluster.Status.Bastion.Name = is.Name()
-	openStackCluster.Status.Bastion.SSHKeyName = is.SSHKeyName()
-	openStackCluster.Status.Bastion.State = is.State()
 
 	ns, err := is.NetworkStatus()
 	if err != nil {

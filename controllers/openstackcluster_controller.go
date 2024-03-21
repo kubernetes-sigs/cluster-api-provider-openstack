@@ -269,18 +269,18 @@ func deleteBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStac
 		return err
 	}
 
-	if openStackCluster.Status.Bastion != nil && openStackCluster.Status.Bastion.FloatingIP != "" {
+	bastionStatus := openStackCluster.Status.Bastion
+	if bastionStatus != nil && bastionStatus.FloatingIP != "" {
 		if err = networkingService.DeleteFloatingIP(openStackCluster, openStackCluster.Status.Bastion.FloatingIP); err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete floating IP: %w", err))
 			return fmt.Errorf("failed to delete floating IP: %w", err)
 		}
 	}
 
-	bastionStatus := openStackCluster.Status.Bastion
-
 	var instanceStatus *compute.InstanceStatus
-	if bastionStatus != nil && bastionStatus.ID != "" {
-		instanceStatus, err = computeService.GetInstanceStatus(openStackCluster.Status.Bastion.ID)
+	serverID := bastionStatus.Resources.GetServerID()
+	if bastionStatus != nil && serverID != nil {
+		instanceStatus, err = computeService.GetInstanceStatus(*serverID)
 		if err != nil {
 			return err
 		}
@@ -318,7 +318,7 @@ func deleteBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStac
 		}
 	}
 
-	if bastionStatus != nil && bastionStatus.Resources != nil {
+	if bastionStatus != nil && bastionStatus.Resources != nil && len(bastionStatus.Resources.Ports) > 1 {
 		trunkSupported, err := networkingService.IsTrunkExtSupported()
 		if err != nil {
 			return err
@@ -458,9 +458,12 @@ func reconcileBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openS
 	bastionPortIDs := GetPortIDs(openStackCluster.Status.Bastion.Resources.Ports)
 
 	var instanceStatus *compute.InstanceStatus
-	if openStackCluster.Status.Bastion != nil && openStackCluster.Status.Bastion.ID != "" {
-		if instanceStatus, err = computeService.GetInstanceStatus(openStackCluster.Status.Bastion.ID); err != nil {
-			return nil, err
+	bastionStatus := openStackCluster.Status.Bastion
+	if bastionStatus != nil {
+		if serverID := bastionStatus.Resources.GetServerID(); serverID != nil {
+			if instanceStatus, err = computeService.GetInstanceStatus(*serverID); err != nil {
+				return nil, err
+			}
 		}
 	}
 	if instanceStatus == nil {
@@ -477,6 +480,10 @@ func reconcileBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openS
 	}
 
 	// Save hash & status as soon as we know we have an instance
+	openStackCluster.Status.Bastion.Resources.Server = &infrav1.ServerStatus{
+		ID:    instanceStatus.ID(),
+		State: instanceStatus.State(),
+	}
 	instanceStatus.UpdateBastionStatus(openStackCluster)
 
 	// Make sure that bastion instance has a valid state
