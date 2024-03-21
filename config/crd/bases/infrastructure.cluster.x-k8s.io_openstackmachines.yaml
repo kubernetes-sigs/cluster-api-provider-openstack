@@ -2421,23 +2421,6 @@ spec:
                   - type
                   type: object
                 type: array
-              dependentResources:
-                description: DependentResources contains resolved dependent resources
-                  that were created by the machine.
-                properties:
-                  ports:
-                    description: Ports is the status of the ports created for the
-                      machine.
-                    items:
-                      properties:
-                        id:
-                          description: ID is the unique identifier of the port.
-                          type: string
-                      required:
-                      - id
-                      type: object
-                    type: array
-                type: object
               failureMessage:
                 description: |-
                   FailureMessage will be set in the event that there is a terminal problem
@@ -2651,6 +2634,23 @@ spec:
                     description: ServerGroupID is the ID of the server group the machine
                       should be added to and is calculated based on ServerGroupFilter.
                     type: string
+                type: object
+              resources:
+                description: Resources contains references to OpenStack resources
+                  created for the machine.
+                properties:
+                  ports:
+                    description: Ports is the status of the ports created for the
+                      machine.
+                    items:
+                      properties:
+                        id:
+                          description: ID is the unique identifier of the port.
+                          type: string
+                      required:
+                      - id
+                      type: object
+                    type: array
                 type: object
             type: object
         type: object

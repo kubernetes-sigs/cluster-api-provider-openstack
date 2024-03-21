@@ -370,8 +370,8 @@ func restorev1beta1ClusterStatus(previous *infrav1.OpenStackClusterStatus, dst *
 	if previous.Bastion != nil {
 		dst.Bastion.ReferencedResources = previous.Bastion.ReferencedResources
 	}
-	if previous.Bastion != nil && previous.Bastion.DependentResources.Ports != nil {
-		dst.Bastion.DependentResources.Ports = previous.Bastion.DependentResources.Ports
+	if previous.Bastion != nil && previous.Bastion.Resources.Ports != nil {
+		dst.Bastion.Resources.Ports = previous.Bastion.Resources.Ports
 	}
 }
 

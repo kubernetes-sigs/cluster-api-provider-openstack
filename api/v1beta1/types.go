@@ -365,7 +365,7 @@ type BastionStatus struct {
 	IP                  string                     `json:"ip,omitempty"`
 	FloatingIP          string                     `json:"floatingIP,omitempty"`
 	ReferencedResources ReferencedMachineResources `json:"referencedResources,omitempty"`
-	DependentResources  DependentMachineResources  `json:"dependentResources,omitempty"`
+	Resources           MachineResources           `json:"resources,omitempty"`
 }
 
 type RootVolume struct {
@@ -673,7 +673,7 @@ type ReferencedMachineResources struct {
 	Ports []ResolvedPortSpec `json:"ports,omitempty"`
 }
 
-type DependentMachineResources struct {
+type MachineResources struct {
 	// Ports is the status of the ports created for the machine.
 	// +optional
 	Ports []PortStatus `json:"ports,omitempty"`
