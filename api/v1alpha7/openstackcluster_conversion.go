@@ -342,9 +342,15 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in *i
 /* OpenStackClusterStatus */
 
 func restorev1alpha7ClusterStatus(previous *OpenStackClusterStatus, dst *OpenStackClusterStatus) {
+	if previous == nil || dst == nil {
+		return
+	}
+
 	restorev1alpha7SecurityGroup(previous.ControlPlaneSecurityGroup, dst.ControlPlaneSecurityGroup)
 	restorev1alpha7SecurityGroup(previous.WorkerSecurityGroup, dst.WorkerSecurityGroup)
 	restorev1alpha7SecurityGroup(previous.BastionSecurityGroup, dst.BastionSecurityGroup)
+
+	restorev1alpha7BastionStatus(previous.Bastion, dst.Bastion)
 }
 
 func restorev1beta1ClusterStatus(previous *infrav1.OpenStackClusterStatus, dst *infrav1.OpenStackClusterStatus) {
@@ -442,6 +448,22 @@ func restorev1beta1BastionStatus(previous *infrav1.BastionStatus, dst *infrav1.B
 	// Resolved and resources have no equivalents
 	dst.Resolved = previous.Resolved
 	dst.Resources = previous.Resources
+}
+
+/* Bastion status */
+
+func restorev1alpha7BastionStatus(previous *BastionStatus, dst *BastionStatus) {
+	if previous == nil || dst == nil {
+		return
+	}
+
+	dst.ID = previous.ID
+	dst.SSHKeyName = previous.SSHKeyName
+	dst.State = previous.State
+}
+
+func Convert_v1alpha7_BastionStatus_To_v1beta1_BastionStatus(in *BastionStatus, out *infrav1.BastionStatus, s apiconversion.Scope) error {
+	return autoConvert_v1alpha7_BastionStatus_To_v1beta1_BastionStatus(in, out, s)
 }
 
 func Convert_v1beta1_BastionStatus_To_v1alpha7_BastionStatus(in *infrav1.BastionStatus, out *BastionStatus, s apiconversion.Scope) error {

@@ -1141,41 +1141,9 @@ exist, CAPO will try to create it, but by default only OpenStack administrators 
 <tbody>
 <tr>
 <td>
-<code>id</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
 <code>name</code><br/>
 <em>
 string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>sshKeyName</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>state</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.InstanceState">
-InstanceState
-</a>
 </em>
 </td>
 <td>
@@ -1626,7 +1594,6 @@ string
 (<code>string</code> alias)</p></h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.BastionStatus">BastionStatus</a>, 
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerStatus">ServerStatus</a>)
 </p>
 <p>

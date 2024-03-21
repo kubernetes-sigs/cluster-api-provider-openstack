@@ -6241,8 +6241,6 @@ spec:
                 properties:
                   floatingIP:
                     type: string
-                  id:
-                    type: string
                   ip:
                     type: string
                   name:
@@ -6465,12 +6463,6 @@ spec:
                         - state
                         type: object
                     type: object
-                  sshKeyName:
-                    type: string
-                  state:
-                    description: InstanceState describes the state of an OpenStack
-                      instance.
-                    type: string
                 type: object
               bastionSecurityGroup:
                 description: |-
