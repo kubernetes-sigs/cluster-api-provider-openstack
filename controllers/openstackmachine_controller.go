@@ -92,6 +92,7 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	log = log.WithValues("openStackMachine", openStackMachine.Name)
+	log.V(4).Info("Reconciling OpenStackMachine")
 
 	// Fetch the Machine.
 	machine, err := util.GetOwnerMachine(ctx, r.Client, openStackMachine.ObjectMeta)
@@ -162,9 +163,14 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 }
 
 func resolveMachineResources(scope *scope.WithLogger, clusterResourceName string, openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, machine *clusterv1.Machine) (bool, error) {
+	resolved := openStackMachine.Status.Resolved
+	if resolved == nil {
+		resolved = &infrav1.ResolvedMachineSpec{}
+		openStackMachine.Status.Resolved = resolved
+	}
 	// Resolve and store resources
 	changed, err := compute.ResolveMachineSpec(scope,
-		&openStackMachine.Spec, &openStackMachine.Status.Resolved,
+		&openStackMachine.Spec, resolved,
 		clusterResourceName, openStackMachine.Name,
 		openStackCluster, getManagedSecurityGroup(openStackCluster, machine))
 	if err != nil {
@@ -175,8 +181,14 @@ func resolveMachineResources(scope *scope.WithLogger, clusterResourceName string
 		return true, nil
 	}
 
+	resources := openStackMachine.Status.Resources
+	if resources == nil {
+		resources = &infrav1.MachineResources{}
+		openStackMachine.Status.Resources = resources
+	}
+
 	// Adopt any existing resources
-	return false, compute.AdoptMachineResources(scope, &openStackMachine.Status.Resolved, &openStackMachine.Status.Resources)
+	return false, compute.AdoptMachineResources(scope, resolved, resources)
 }
 
 func patchMachine(ctx context.Context, patchHelper *patch.Helper, openStackMachine *infrav1.OpenStackMachine, machine *clusterv1.Machine, options ...patch.Option) error {
@@ -296,7 +308,10 @@ func (r *OpenStackMachineReconciler) reconcileDelete(scope *scope.WithLogger, cl
 		}
 	}
 
-	instanceSpec := machineToInstanceSpec(openStackCluster, machine, openStackMachine, "")
+	instanceSpec, err := machineToInstanceSpec(openStackCluster, machine, openStackMachine, "")
+	if err != nil {
+		return ctrl.Result{}, err
+	}
 
 	if err := computeService.DeleteInstance(openStackMachine, instanceStatus, instanceSpec); err != nil {
 		conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceDeleteFailedReason, clusterv1.ConditionSeverityError, "Deleting instance failed: %v", err)
@@ -308,10 +323,12 @@ func (r *OpenStackMachineReconciler) reconcileDelete(scope *scope.WithLogger, cl
 		return ctrl.Result{}, err
 	}
 
-	portsStatus := openStackMachine.Status.Resources.Ports
-	for _, port := range portsStatus {
-		if err := networkingService.DeleteInstanceTrunkAndPort(openStackMachine, port, trunkSupported); err != nil {
-			return ctrl.Result{}, fmt.Errorf("failed to delete port %q: %w", port.ID, err)
+	if openStackMachine.Status.Resources != nil {
+		portsStatus := openStackMachine.Status.Resources.Ports
+		for _, port := range portsStatus {
+			if err := networkingService.DeleteInstanceTrunkAndPort(openStackMachine, port, trunkSupported); err != nil {
+				return ctrl.Result{}, fmt.Errorf("failed to delete port %q: %w", port.ID, err)
+			}
 		}
 	}
 
@@ -485,6 +502,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	}
 
 	if changed, err := resolveMachineResources(scope, clusterResourceName, openStackCluster, openStackMachine, machine); changed || err != nil {
+		scope.Logger().V(6).Info("Machine resources updated, requeuing")
 		return ctrl.Result{}, err
 	}
 
@@ -658,8 +676,15 @@ func (r *OpenStackMachineReconciler) reconcileAPIServerLoadBalancer(scope *scope
 }
 
 func getOrCreateMachinePorts(openStackMachine *infrav1.OpenStackMachine, networkingService *networking.Service) error {
-	desiredPorts := openStackMachine.Status.Resolved.Ports
-	resources := &openStackMachine.Status.Resources
+	resolved := openStackMachine.Status.Resolved
+	if resolved == nil {
+		return errors.New("machine resolved is nil")
+	}
+	resources := openStackMachine.Status.Resources
+	if resources == nil {
+		return errors.New("machine resources is nil")
+	}
+	desiredPorts := resolved.Ports
 
 	if len(desiredPorts) == len(resources.Ports) {
 		return nil
@@ -696,7 +721,11 @@ func (r *OpenStackMachineReconciler) getOrCreateInstance(logger logr.Logger, ope
 				return nil, nil
 			}
 		}
-		instanceSpec := machineToInstanceSpec(openStackCluster, machine, openStackMachine, userData)
+		instanceSpec, err := machineToInstanceSpec(openStackCluster, machine, openStackMachine, userData)
+		if err != nil {
+			return nil, err
+		}
+
 		logger.Info("Machine does not exist, creating Machine", "name", openStackMachine.Name)
 		instanceStatus, err = computeService.CreateInstance(openStackMachine, instanceSpec, portIDs)
 		if err != nil {
@@ -707,7 +736,12 @@ func (r *OpenStackMachineReconciler) getOrCreateInstance(logger logr.Logger, ope
 	return instanceStatus, nil
 }
 
-func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, userData string) *compute.InstanceSpec {
+func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, userData string) (*compute.InstanceSpec, error) {
+	resolved := openStackMachine.Status.Resolved
+	if resolved == nil {
+		return nil, errors.New("machine resolved is nil")
+	}
+
 	serverMetadata := make(map[string]string, len(openStackMachine.Spec.ServerMetadata))
 	for i := range openStackMachine.Spec.ServerMetadata {
 		key := openStackMachine.Spec.ServerMetadata[i].Key
@@ -717,7 +751,7 @@ func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *
 
 	instanceSpec := compute.InstanceSpec{
 		Name:                   openStackMachine.Name,
-		ImageID:                openStackMachine.Status.Resolved.ImageID,
+		ImageID:                resolved.ImageID,
 		Flavor:                 openStackMachine.Spec.Flavor,
 		SSHKeyName:             openStackMachine.Spec.SSHKeyName,
 		UserData:               userData,
@@ -725,7 +759,7 @@ func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *
 		ConfigDrive:            openStackMachine.Spec.ConfigDrive != nil && *openStackMachine.Spec.ConfigDrive,
 		RootVolume:             openStackMachine.Spec.RootVolume,
 		AdditionalBlockDevices: openStackMachine.Spec.AdditionalBlockDevices,
-		ServerGroupID:          openStackMachine.Status.Resolved.ServerGroupID,
+		ServerGroupID:          resolved.ServerGroupID,
 		Trunk:                  openStackMachine.Spec.Trunk,
 	}
 
@@ -736,7 +770,7 @@ func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *
 
 	instanceSpec.Tags = compute.InstanceTags(&openStackMachine.Spec, openStackCluster)
 
-	return &instanceSpec
+	return &instanceSpec, nil
 }
 
 // getManagedSecurityGroup returns the ID of the security group managed by the

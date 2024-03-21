@@ -33,7 +33,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
-func Test_ResolveReferencedMachineResources(t *testing.T) {
+func Test_ResolveMachineSpec(t *testing.T) {
 	const (
 		serverGroupID1 = "ce96e584-7ebc-46d6-9e55-987d72e3806c"
 		imageID1       = "de96e584-7ebc-46d6-9e55-987d72e3806c"

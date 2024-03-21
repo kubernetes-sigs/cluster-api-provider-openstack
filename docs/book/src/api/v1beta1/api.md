@@ -1220,6 +1220,9 @@ ResolvedMachineSpec
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>Resolved contains parts of the bastion&rsquo;s machine spec with all
+external references fully resolved.</p>
 </td>
 </tr>
 <tr>
@@ -1232,6 +1235,8 @@ MachineResources
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>Resources contains references to OpenStack resources created for the bastion.</p>
 </td>
 </tr>
 </tbody>
@@ -3294,6 +3299,7 @@ ResolvedMachineSpec
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Resolved contains parts of the machine spec with all external
 references fully resolved.</p>
 </td>
@@ -3308,6 +3314,7 @@ MachineResources
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Resources contains references to OpenStack resources created for the machine.</p>
 </td>
 </tr>

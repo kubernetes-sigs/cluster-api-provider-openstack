@@ -95,7 +95,7 @@ func getDefaultOpenStackMachine() *infrav1.OpenStackMachine {
 			ServerGroup:    &infrav1.ServerGroupFilter{ID: serverGroupUUID},
 		},
 		Status: infrav1.OpenStackMachineStatus{
-			Resolved: infrav1.ResolvedMachineSpec{
+			Resolved: &infrav1.ResolvedMachineSpec{
 				ImageID:       imageUUID,
 				ServerGroupID: serverGroupUUID,
 			},
@@ -160,7 +160,7 @@ func Test_machineToInstanceSpec(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewWithT(t)
-			got := machineToInstanceSpec(tt.openStackCluster(), tt.machine(), tt.openStackMachine(), "user-data")
+			got, _ := machineToInstanceSpec(tt.openStackCluster(), tt.machine(), tt.openStackMachine(), "user-data")
 			wanted := tt.wantInstanceSpec()
 
 			g.Expect(got).To(Equal(wanted), cmp.Diff(got, wanted))

@@ -6251,8 +6251,9 @@ spec:
                   name:
                     type: string
                   resolved:
-                    description: ResolvedMachineSpec contains resolved references
-                      to resources required by the machine.
+                    description: |-
+                      Resolved contains parts of the bastion's machine spec with all
+                      external references fully resolved.
                     properties:
                       imageID:
                         description: ImageID is the ID of the image to use for the
@@ -6435,6 +6436,8 @@ spec:
                         type: string
                     type: object
                   resources:
+                    description: Resources contains references to OpenStack resources
+                      created for the bastion.
                     properties:
                       ports:
                         description: Ports is the status of the ports created for

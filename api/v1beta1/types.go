@@ -358,14 +358,21 @@ type AddressPair struct {
 }
 
 type BastionStatus struct {
-	ID         string              `json:"id,omitempty"`
-	Name       string              `json:"name,omitempty"`
-	SSHKeyName string              `json:"sshKeyName,omitempty"`
-	State      InstanceState       `json:"state,omitempty"`
-	IP         string              `json:"ip,omitempty"`
-	FloatingIP string              `json:"floatingIP,omitempty"`
-	Resolved   ResolvedMachineSpec `json:"resolved,omitempty"`
-	Resources  MachineResources    `json:"resources,omitempty"`
+	ID         string        `json:"id,omitempty"`
+	Name       string        `json:"name,omitempty"`
+	SSHKeyName string        `json:"sshKeyName,omitempty"`
+	State      InstanceState `json:"state,omitempty"`
+	IP         string        `json:"ip,omitempty"`
+	FloatingIP string        `json:"floatingIP,omitempty"`
+
+	// Resolved contains parts of the bastion's machine spec with all
+	// external references fully resolved.
+	// +optional
+	Resolved *ResolvedMachineSpec `json:"resolved,omitempty"`
+
+	// Resources contains references to OpenStack resources created for the bastion.
+	// +optional
+	Resources *MachineResources `json:"resources,omitempty"`
 }
 
 type RootVolume struct {
