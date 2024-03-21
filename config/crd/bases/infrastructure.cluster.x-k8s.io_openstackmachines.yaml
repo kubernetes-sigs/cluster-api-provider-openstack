@@ -2453,9 +2453,10 @@ spec:
               ready:
                 description: Ready is true when the provider resource is ready.
                 type: boolean
-              referencedResources:
-                description: ReferencedResources contains resolved references to resources
-                  that the machine depends on.
+              resolved:
+                description: |-
+                  Resolved contains parts of the machine spec with all external
+                  references fully resolved.
                 properties:
                   imageID:
                     description: ImageID is the ID of the image to use for the machine

@@ -95,7 +95,7 @@ func getDefaultOpenStackMachine() *infrav1.OpenStackMachine {
 			ServerGroup:    &infrav1.ServerGroupFilter{ID: serverGroupUUID},
 		},
 		Status: infrav1.OpenStackMachineStatus{
-			ReferencedResources: infrav1.ReferencedMachineResources{
+			Resolved: infrav1.ResolvedMachineSpec{
 				ImageID:       imageUUID,
 				ServerGroupID: serverGroupUUID,
 			},

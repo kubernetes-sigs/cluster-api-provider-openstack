@@ -22,7 +22,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
-func AdoptMachineResources(scope *scope.WithLogger, referencedResources *infrav1.ReferencedMachineResources, resources *infrav1.MachineResources) error {
+func AdoptMachineResources(scope *scope.WithLogger, referencedResources *infrav1.ResolvedMachineSpec, resources *infrav1.MachineResources) error {
 	networkingService, err := networking.NewService(scope)
 	if err != nil {
 		return err
