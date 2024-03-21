@@ -1212,10 +1212,10 @@ string
 </tr>
 <tr>
 <td>
-<code>referencedResources</code><br/>
+<code>resolved</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ReferencedMachineResources">
-ReferencedMachineResources
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedMachineSpec">
+ResolvedMachineSpec
 </a>
 </em>
 </td>
@@ -3286,15 +3286,16 @@ InstanceState
 </tr>
 <tr>
 <td>
-<code>referencedResources</code><br/>
+<code>resolved</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ReferencedMachineResources">
-ReferencedMachineResources
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedMachineSpec">
+ResolvedMachineSpec
 </a>
 </em>
 </td>
 <td>
-<p>ReferencedResources contains resolved references to resources that the machine depends on.</p>
+<p>Resolved contains parts of the machine spec with all external
+references fully resolved.</p>
 </td>
 </tr>
 <tr>
@@ -3789,7 +3790,53 @@ string
 </tr>
 </tbody>
 </table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.ReferencedMachineResources">ReferencedMachineResources
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.ResolvedFixedIP">ResolvedFixedIP
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedPortSpec">ResolvedPortSpec</a>)
+</p>
+<p>
+<p>ResolvedFixedIP is a FixedIP with the Subnet resolved to an ID.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>subnet</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SubnetID is the id of a subnet to create the fixed IP of a port in.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ipAddress</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>IPAddress is a specific IP address to assign to the port. If SubnetID
+is also specified, IPAddress must be a valid IP address in the
+subnet. If Subnet is not specified, IPAddress must be a valid IP
+address in any subnet of the port&rsquo;s network.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.ResolvedMachineSpec">ResolvedMachineSpec
 </h3>
 <p>
 (<em>Appears on:</em>
@@ -3797,7 +3844,7 @@ string
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineStatus">OpenStackMachineStatus</a>)
 </p>
 <p>
-<p>ReferencedMachineResources contains resolved references to resources required by the machine.</p>
+<p>ResolvedMachineSpec contains resolved references to resources required by the machine.</p>
 </p>
 <table>
 <thead>
@@ -3847,57 +3894,11 @@ string
 </tr>
 </tbody>
 </table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.ResolvedFixedIP">ResolvedFixedIP
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedPortSpec">ResolvedPortSpec</a>)
-</p>
-<p>
-<p>ResolvedFixedIP is a FixedIP with the Subnet resolved to an ID.</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>subnet</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>SubnetID is the id of a subnet to create the fixed IP of a port in.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>ipAddress</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>IPAddress is a specific IP address to assign to the port. If SubnetID
-is also specified, IPAddress must be a valid IP address in the
-subnet. If Subnet is not specified, IPAddress must be a valid IP
-address in any subnet of the port&rsquo;s network.</p>
-</td>
-</tr>
-</tbody>
-</table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.ResolvedPortSpec">ResolvedPortSpec
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ReferencedMachineResources">ReferencedMachineResources</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedMachineSpec">ResolvedMachineSpec</a>)
 </p>
 <p>
 <p>ResolvedPortSpec is a PortOpts with all contained references fully resolved.</p>

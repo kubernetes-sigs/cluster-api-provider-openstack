@@ -358,14 +358,14 @@ type AddressPair struct {
 }
 
 type BastionStatus struct {
-	ID                  string                     `json:"id,omitempty"`
-	Name                string                     `json:"name,omitempty"`
-	SSHKeyName          string                     `json:"sshKeyName,omitempty"`
-	State               InstanceState              `json:"state,omitempty"`
-	IP                  string                     `json:"ip,omitempty"`
-	FloatingIP          string                     `json:"floatingIP,omitempty"`
-	ReferencedResources ReferencedMachineResources `json:"referencedResources,omitempty"`
-	Resources           MachineResources           `json:"resources,omitempty"`
+	ID         string              `json:"id,omitempty"`
+	Name       string              `json:"name,omitempty"`
+	SSHKeyName string              `json:"sshKeyName,omitempty"`
+	State      InstanceState       `json:"state,omitempty"`
+	IP         string              `json:"ip,omitempty"`
+	FloatingIP string              `json:"floatingIP,omitempty"`
+	Resolved   ResolvedMachineSpec `json:"resolved,omitempty"`
+	Resources  MachineResources    `json:"resources,omitempty"`
 }
 
 type RootVolume struct {
@@ -658,8 +658,8 @@ func (s *APIServerLoadBalancer) IsEnabled() bool {
 	return s != nil && (s.Enabled == nil || *s.Enabled)
 }
 
-// ReferencedMachineResources contains resolved references to resources required by the machine.
-type ReferencedMachineResources struct {
+// ResolvedMachineSpec contains resolved references to resources required by the machine.
+type ResolvedMachineSpec struct {
 	// ServerGroupID is the ID of the server group the machine should be added to and is calculated based on ServerGroupFilter.
 	// +optional
 	ServerGroupID string `json:"serverGroupID,omitempty"`

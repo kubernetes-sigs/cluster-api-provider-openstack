@@ -6250,8 +6250,8 @@ spec:
                     type: string
                   name:
                     type: string
-                  referencedResources:
-                    description: ReferencedMachineResources contains resolved references
+                  resolved:
+                    description: ResolvedMachineSpec contains resolved references
                       to resources required by the machine.
                     properties:
                       imageID:
