@@ -686,7 +686,7 @@ func TestService_ConstructPorts(t *testing.T) {
 			name: "machine spec security groups added to defaults",
 			spec: infrav1.OpenStackMachineSpec{
 				SecurityGroups: []infrav1.SecurityGroupFilter{
-					{Name: "test-security-group"},
+					{Name: pointer.String("test-security-group")},
 				},
 			},
 			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
@@ -711,10 +711,10 @@ func TestService_ConstructPorts(t *testing.T) {
 			name: "port security groups override machine spec security groups",
 			spec: infrav1.OpenStackMachineSpec{
 				SecurityGroups: []infrav1.SecurityGroupFilter{
-					{Name: "machine-security-group"},
+					{Name: pointer.String("machine-security-group")},
 				},
 				Ports: []infrav1.PortOpts{
-					{SecurityGroups: []infrav1.SecurityGroupFilter{{Name: "port-security-group"}}},
+					{SecurityGroups: []infrav1.SecurityGroupFilter{{Name: pointer.String("port-security-group")}}},
 				},
 			},
 			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
@@ -758,7 +758,7 @@ func TestService_ConstructPorts(t *testing.T) {
 		{
 			name: "managed security group and machine security groups added to port",
 			spec: infrav1.OpenStackMachineSpec{
-				SecurityGroups: []infrav1.SecurityGroupFilter{{Name: "machine-security-group"}},
+				SecurityGroups: []infrav1.SecurityGroupFilter{{Name: pointer.String("machine-security-group")}},
 			},
 			managedSecurityGroup: pointer.String(securityGroupID1),
 			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {

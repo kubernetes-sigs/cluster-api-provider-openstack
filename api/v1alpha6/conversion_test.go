@@ -533,18 +533,18 @@ func TestPortOptsConvertTo(t *testing.T) {
 	// Variables used in the tests
 	uuids := []string{"abc123", "123abc"}
 	securityGroupsUuids := []infrav1.SecurityGroupFilter{
-		{ID: uuids[0]},
-		{ID: uuids[1]},
+		{ID: &uuids[0]},
+		{ID: &uuids[1]},
 	}
 	securityGroupFilter := []SecurityGroupParam{
 		{Name: "one"},
 		{UUID: "654cba"},
 	}
 	securityGroupFilterMerged := []infrav1.SecurityGroupFilter{
-		{Name: "one"},
-		{ID: "654cba"},
-		{ID: uuids[0]},
-		{ID: uuids[1]},
+		{Name: pointer.String("one")},
+		{ID: pointer.String("654cba")},
+		{ID: &uuids[0]},
+		{ID: &uuids[1]},
 	}
 	legacyPortProfile := map[string]string{
 		"capabilities": "[\"switchdev\"]",

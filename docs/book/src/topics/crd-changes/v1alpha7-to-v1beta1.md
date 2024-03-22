@@ -435,3 +435,7 @@ In order to keep field names consistent with K8s API conventions, various fields
   * `ipv6RaMode` becomes `ipv6RAMode`
 * `RouterFilter`
   * `projectId` becomes `projectID`
+
+#### Filter validation
+
+In v1beta1 adds validations to ImageFilter and SecurityGroupFilter that prevent setting other options if `.ID` is set.

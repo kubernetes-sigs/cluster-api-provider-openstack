@@ -325,8 +325,8 @@ func Convert_v1beta1_PortOpts_To_v1alpha5_PortOpts(in *infrav1.PortOpts, out *Po
 		out.SecurityGroupFilters = make([]SecurityGroupParam, len(in.SecurityGroups))
 		for i := range in.SecurityGroups {
 			securityGroupParam := &out.SecurityGroupFilters[i]
-			if in.SecurityGroups[i].ID != "" {
-				securityGroupParam.UUID = in.SecurityGroups[i].ID
+			if in.SecurityGroups[i].ID != nil && *in.SecurityGroups[i].ID != "" {
+				securityGroupParam.UUID = *in.SecurityGroups[i].ID
 			} else {
 				if err := Convert_v1beta1_SecurityGroupFilter_To_v1alpha5_SecurityGroupFilter(&in.SecurityGroups[i], &securityGroupParam.Filter, s); err != nil {
 					return err
@@ -399,9 +399,9 @@ func Convert_v1alpha5_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *infrav1.Po
 			sgParam := &in.SecurityGroupFilters[i]
 			switch {
 			case sgParam.UUID != "":
-				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{ID: sgParam.UUID})
+				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{ID: &sgParam.UUID})
 			case sgParam.Name != "":
-				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{Name: sgParam.Name})
+				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{Name: &sgParam.Name})
 			case sgParam.Filter != (SecurityGroupFilter{}):
 				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{})
 				outSG := &out.SecurityGroups[len(out.SecurityGroups)-1]
@@ -411,7 +411,7 @@ func Convert_v1alpha5_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *infrav1.Po
 			}
 		}
 		for _, id := range in.SecurityGroups {
-			out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{ID: id})
+			out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{ID: pointer.String(id)})
 		}
 	}
 
@@ -421,9 +421,9 @@ func Convert_v1alpha5_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *infrav1.Po
 			sgParam := &in.SecurityGroupFilters[i]
 			switch {
 			case sgParam.UUID != "":
-				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{ID: sgParam.UUID})
+				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{ID: &sgParam.UUID})
 			case sgParam.Name != "":
-				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{Name: sgParam.Name})
+				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{Name: &sgParam.Name})
 			case sgParam.Filter != (SecurityGroupFilter{}):
 				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{})
 				outSG := &out.SecurityGroups[len(out.SecurityGroups)-1]
@@ -433,7 +433,7 @@ func Convert_v1alpha5_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *infrav1.Po
 			}
 		}
 		for _, id := range in.SecurityGroups {
-			out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{ID: id})
+			out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{ID: pointer.String(id)})
 		}
 	}
 
@@ -522,10 +522,9 @@ func Convert_v1alpha5_SecurityGroupParam_To_v1beta1_SecurityGroupFilter(in *Secu
 	}
 
 	if in.UUID != "" {
-		out.ID = in.UUID
-	}
-	if in.Name != "" {
-		out.Name = in.Name
+		out.ID = &in.UUID
+	} else if in.Name != "" { // v1beta1 won't allow Name if ID is set.
+		out.Name = &in.Name
 	}
 	return nil
 }
@@ -537,11 +536,11 @@ func Convert_v1beta1_SecurityGroupFilter_To_v1alpha5_SecurityGroupParam(in *infr
 		return err
 	}
 
-	if in.ID != "" {
-		out.UUID = in.ID
+	if in.ID != nil && *in.ID != "" {
+		out.UUID = *in.ID
 	}
-	if in.Name != "" {
-		out.Name = in.Name
+	if in.Name != nil && *in.Name != "" {
+		out.Name = *in.Name
 	}
 	return nil
 }
@@ -732,8 +731,8 @@ func Convert_v1alpha5_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(in *Sec
 	infrav1.ConvertAllTagsTo(in.Tags, in.TagsAny, in.NotTags, in.NotTagsAny, &out.FilterByNeutronTags)
 
 	// TenantID has been removed in v1beta1. Write it to ProjectID if ProjectID is not already set.
-	if out.ProjectID == "" {
-		out.ProjectID = in.TenantID
+	if out.ProjectID == nil || *out.ProjectID == "" {
+		out.ProjectID = &in.TenantID
 	}
 	return nil
 }

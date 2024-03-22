@@ -146,6 +146,12 @@ func restorev1beta1MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *infr
 		}
 	}
 	dst.FloatingIPPoolRef = previous.FloatingIPPoolRef
+
+	if len(dst.SecurityGroups) == len(previous.SecurityGroups) {
+		for i := range dst.SecurityGroups {
+			restorev1beta1SecurityGroupFilter(&previous.SecurityGroups[i], &dst.SecurityGroups[i])
+		}
+	}
 }
 
 func Convert_v1alpha7_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in *OpenStackMachineSpec, out *infrav1.OpenStackMachineSpec, s apiconversion.Scope) error {

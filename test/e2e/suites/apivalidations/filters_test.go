@@ -219,4 +219,79 @@ var _ = Describe("Filter API validations", func() {
 		}
 		Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
 	})
+
+	It("should not allow both ID and Name of SecurityGroupFilter to be set", func() {
+		By("Creating a machine")
+		machine.Spec.SecurityGroups = []infrav1.SecurityGroupFilter{
+			{
+				ID:   pointer.String(imageUUID),
+				Name: pointer.String("bar"),
+			},
+		}
+		Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
+	})
+
+	It("should not allow both ID and Description of SecurityGroupFilter to be set", func() {
+		By("Creating a machine")
+		machine.Spec.SecurityGroups = []infrav1.SecurityGroupFilter{
+			{
+				ID:          pointer.String(imageUUID),
+				Description: pointer.String("bar"),
+			},
+		}
+		Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
+	})
+
+	It("should not allow both ID and ProjectID of SecurityGroupFilter to be set", func() {
+		By("Creating a machine")
+		machine.Spec.SecurityGroups = []infrav1.SecurityGroupFilter{
+			{
+				ID:        pointer.String(imageUUID),
+				ProjectID: pointer.String("bar"),
+			},
+		}
+		Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
+	})
+
+	It("should allow ID of SecurityGroupFilter to be set", func() {
+		By("Creating a machine")
+		machine.Spec.SecurityGroups = []infrav1.SecurityGroupFilter{
+			{
+				ID: pointer.String(imageUUID),
+			},
+		}
+		Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
+	})
+
+	It("should not allow non-UUID ID of SecurityGroupFilter to be set", func() {
+		By("Creating a machine")
+		machine.Spec.SecurityGroups = []infrav1.SecurityGroupFilter{
+			{
+				ID: pointer.String("foo"),
+			},
+		}
+		Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should not succeed")
+	})
+
+	It("should allow non-ID of SecurityGroupFilter to be set", func() {
+		By("Creating a machine")
+		machine.Spec.SecurityGroups = []infrav1.SecurityGroupFilter{
+			{
+				Name:        pointer.String("foo"),
+				Description: pointer.String("bar"),
+				ProjectID:   pointer.String("51b3422713314f38bc8c14b13c95f865"),
+			},
+		}
+		Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
+	})
+
+	It("should not allow non-UUID ProjectID of SecurityGroupFilter to be set", func() {
+		By("Creating a machine")
+		machine.Spec.SecurityGroups = []infrav1.SecurityGroupFilter{
+			{
+				ProjectID: pointer.String("baz"),
+			},
+		}
+		Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
+	})
 })

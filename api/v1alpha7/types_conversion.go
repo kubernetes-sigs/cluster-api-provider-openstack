@@ -34,6 +34,20 @@ func restorev1alpha7SecurityGroupFilter(previous *SecurityGroupFilter, dst *Secu
 	dst.TagsAny = previous.TagsAny
 	dst.NotTags = previous.NotTags
 	dst.NotTagsAny = previous.NotTagsAny
+
+	if dst.ID != "" {
+		// v1beta1 will drop all other fields if ID is set, need to restore them.
+		dst.Name = previous.Name
+		dst.Description = previous.Description
+		dst.ProjectID = previous.ProjectID
+	}
+}
+
+func restorev1beta1SecurityGroupFilter(previous *infrav1.SecurityGroupFilter, dst *infrav1.SecurityGroupFilter) {
+	optional.RestoreString(&previous.ID, &dst.ID)
+	optional.RestoreString(&previous.Name, &dst.Name)
+	optional.RestoreString(&previous.Description, &dst.Description)
+	optional.RestoreString(&previous.ProjectID, &dst.ProjectID)
 }
 
 func restorev1alpha7SecurityGroup(previous *SecurityGroup, dst *SecurityGroup) {
@@ -47,6 +61,11 @@ func restorev1alpha7SecurityGroup(previous *SecurityGroup, dst *SecurityGroup) {
 func Convert_v1alpha7_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(in *SecurityGroupFilter, out *infrav1.SecurityGroupFilter, s apiconversion.Scope) error {
 	if err := autoConvert_v1alpha7_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(in, out, s); err != nil {
 		return err
+	}
+	if out.ID != nil && *out.ID != "" { // v1beta1 doesn't allow anything if ID is set.
+		out.Name = nil
+		out.Description = nil
+		out.ProjectID = nil
 	}
 	infrav1.ConvertAllTagsTo(in.Tags, in.TagsAny, in.NotTags, in.NotTagsAny, &out.FilterByNeutronTags)
 	return nil
@@ -167,6 +186,12 @@ func restorev1alpha7Port(previous *PortOpts, dst *PortOpts) {
 }
 
 func restorev1beta1Port(previous *infrav1.PortOpts, dst *infrav1.PortOpts) {
+	if len(dst.SecurityGroups) == len(previous.SecurityGroups) {
+		for i := range dst.SecurityGroups {
+			restorev1beta1SecurityGroupFilter(&previous.SecurityGroups[i], &dst.SecurityGroups[i])
+		}
+	}
+
 	optional.RestoreString(&previous.NameSuffix, &dst.NameSuffix)
 	optional.RestoreString(&previous.Description, &dst.Description)
 	optional.RestoreString(&previous.MACAddress, &dst.MACAddress)

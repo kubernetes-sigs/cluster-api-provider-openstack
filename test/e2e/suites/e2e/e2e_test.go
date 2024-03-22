@@ -379,7 +379,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 					Trunk:       pointer.Bool(true),
 				},
 				{
-					SecurityGroups: []infrav1.SecurityGroupFilter{{Name: testSecurityGroupName}},
+					SecurityGroups: []infrav1.SecurityGroupFilter{{Name: pointer.String(testSecurityGroupName)}},
 				},
 			}
 

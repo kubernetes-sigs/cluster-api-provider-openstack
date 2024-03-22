@@ -1474,11 +1474,19 @@ func Convert_v1beta1_Router_To_v1alpha5_Router(in *v1beta1.Router, out *Router, 
 }
 
 func autoConvert_v1alpha5_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(in *SecurityGroupFilter, out *v1beta1.SecurityGroupFilter, s conversion.Scope) error {
-	out.ID = in.ID
-	out.Name = in.Name
-	out.Description = in.Description
+	if err := optional.Convert_string_To_optional_String(&in.ID, &out.ID, s); err != nil {
+		return err
+	}
+	if err := optional.Convert_string_To_optional_String(&in.Name, &out.Name, s); err != nil {
+		return err
+	}
+	if err := optional.Convert_string_To_optional_String(&in.Description, &out.Description, s); err != nil {
+		return err
+	}
 	// WARNING: in.TenantID requires manual conversion: does not exist in peer-type
-	out.ProjectID = in.ProjectID
+	if err := optional.Convert_string_To_optional_String(&in.ProjectID, &out.ProjectID, s); err != nil {
+		return err
+	}
 	// WARNING: in.Limit requires manual conversion: does not exist in peer-type
 	// WARNING: in.Marker requires manual conversion: does not exist in peer-type
 	// WARNING: in.SortKey requires manual conversion: does not exist in peer-type
@@ -1491,10 +1499,18 @@ func autoConvert_v1alpha5_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(in 
 }
 
 func autoConvert_v1beta1_SecurityGroupFilter_To_v1alpha5_SecurityGroupFilter(in *v1beta1.SecurityGroupFilter, out *SecurityGroupFilter, s conversion.Scope) error {
-	out.ID = in.ID
-	out.Name = in.Name
-	out.Description = in.Description
-	out.ProjectID = in.ProjectID
+	if err := optional.Convert_optional_String_To_string(&in.ID, &out.ID, s); err != nil {
+		return err
+	}
+	if err := optional.Convert_optional_String_To_string(&in.Name, &out.Name, s); err != nil {
+		return err
+	}
+	if err := optional.Convert_optional_String_To_string(&in.Description, &out.Description, s); err != nil {
+		return err
+	}
+	if err := optional.Convert_optional_String_To_string(&in.ProjectID, &out.ProjectID, s); err != nil {
+		return err
+	}
 	// WARNING: in.FilterByNeutronTags requires manual conversion: does not exist in peer-type
 	return nil
 }
