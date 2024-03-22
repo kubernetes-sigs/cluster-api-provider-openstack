@@ -35,14 +35,14 @@ import (
 )
 
 const (
-	clusterName = "test-cluster"
+	clusterResourceName = "test-cluster"
 )
 
 func Test_ReconcileNetwork(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	expectedNetworkName := getNetworkName(clusterName)
+	expectedNetworkName := getNetworkName(clusterResourceName)
 	fakeNetworkID := "d08803fc-2fa5-4179-b9f7-8c43d0af2fe6"
 
 	tests := []struct {
@@ -198,7 +198,7 @@ func Test_ReconcileNetwork(t *testing.T) {
 				client: mockClient,
 				scope:  scope.NewWithLogger(scopeFactory, log),
 			}
-			err := s.ReconcileNetwork(tt.openStackCluster, clusterName)
+			err := s.ReconcileNetwork(tt.openStackCluster, clusterResourceName)
 			g.Expect(err).ShouldNot(HaveOccurred())
 		})
 	}
@@ -438,8 +438,8 @@ func Test_ReconcileSubnet(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	expectedSubnetName := getSubnetName(clusterName)
-	expectedSubnetDesc := names.GetDescription(clusterName)
+	expectedSubnetName := getSubnetName(clusterResourceName)
+	expectedSubnetDesc := names.GetDescription(clusterResourceName)
 	fakeSubnetID := "d08803fc-2fa5-4179-b9d7-8c43d0af2fe6"
 	fakeCIDR := "10.0.0.0/24"
 	fakeNetworkID := "d08803fc-2fa5-4279-b9f7-8c45d0ff2fe6"
@@ -686,7 +686,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 				client: mockClient,
 				scope:  scope.NewWithLogger(mockScopeFactory, log),
 			}
-			err := s.ReconcileSubnet(tt.openStackCluster, clusterName)
+			err := s.ReconcileSubnet(tt.openStackCluster, clusterResourceName)
 			g.Expect(err).ShouldNot(HaveOccurred())
 			g.Expect(tt.openStackCluster.Status).To(Equal(*tt.want))
 		})

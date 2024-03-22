@@ -183,11 +183,11 @@ func Test_ResolveReferencedMachineResources(t *testing.T) {
 			if resources == nil {
 				resources = &infrav1.ReferencedMachineResources{}
 			}
-			clusterName := "test-cluster"
+			clusterResourceName := "test-cluster"
 			baseName := "test-instance"
 
 			scope := scope.NewWithLogger(mockScopeFactory, log)
-			_, err := ResolveReferencedMachineResources(scope, &tt.spec, resources, clusterName, baseName, openStackCluster, tt.managedSecurityGroup)
+			_, err := ResolveReferencedMachineResources(scope, &tt.spec, resources, clusterResourceName, baseName, openStackCluster, tt.managedSecurityGroup)
 			if tt.wantErr {
 				g.Expect(err).Error()
 				return
