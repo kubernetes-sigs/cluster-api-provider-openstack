@@ -467,6 +467,5 @@ func Convert_v1alpha7_BastionStatus_To_v1beta1_BastionStatus(in *BastionStatus, 
 }
 
 func Convert_v1beta1_BastionStatus_To_v1alpha7_BastionStatus(in *infrav1.BastionStatus, out *BastionStatus, s apiconversion.Scope) error {
-	// ReferencedResources have no equivalent in v1alpha7
 	return autoConvert_v1beta1_BastionStatus_To_v1alpha7_BastionStatus(in, out, s)
 }

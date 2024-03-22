@@ -1673,11 +1673,11 @@ spec:
       name: Cluster
       type: string
     - description: OpenStack instance ID
-      jsonPath: .status.dependentResources.server.id
+      jsonPath: .status.resources.server.id
       name: ServerID
       type: string
     - description: OpenStack instance state
-      jsonPath: .status.dependentResources.server.state
+      jsonPath: .status.resources.server.state
       name: InstanceState
       type: string
     - description: Machine ready status

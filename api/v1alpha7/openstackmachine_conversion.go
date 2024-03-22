@@ -285,11 +285,9 @@ func restorev1alpha7MachineStatus(previous *OpenStackMachineStatus, dst *OpenSta
 }
 
 func Convert_v1alpha7_OpenStackMachineStatus_To_v1beta1_OpenStackMachineStatus(in *OpenStackMachineStatus, out *infrav1.OpenStackMachineStatus, s apiconversion.Scope) error {
-	// ReferencedResources have no equivalent in v1beta1
 	return autoConvert_v1alpha7_OpenStackMachineStatus_To_v1beta1_OpenStackMachineStatus(in, out, s)
 }
 
 func Convert_v1beta1_OpenStackMachineStatus_To_v1alpha7_OpenStackMachineStatus(in *infrav1.OpenStackMachineStatus, out *OpenStackMachineStatus, s apiconversion.Scope) error {
-	// ReferencedResources have no equivalent in v1alpha7
 	return autoConvert_v1beta1_OpenStackMachineStatus_To_v1alpha7_OpenStackMachineStatus(in, out, s)
 }
