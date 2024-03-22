@@ -161,8 +161,8 @@ type OpenStackMachineStatus struct {
 // +kubebuilder:resource:path=openstackmachines,scope=Namespaced,categories=cluster-api,shortName=osm
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Cluster",type="string",JSONPath=".metadata.labels.cluster\\.x-k8s\\.io/cluster-name",description="Cluster to which this OpenStackMachine belongs"
-// +kubebuilder:printcolumn:name="ServerID",type="string",JSONPath=".status.dependentResources.server.id",description="OpenStack instance ID"
-// +kubebuilder:printcolumn:name="InstanceState",type="string",JSONPath=".status.dependentResources.server.state",description="OpenStack instance state"
+// +kubebuilder:printcolumn:name="ServerID",type="string",JSONPath=".status.resources.server.id",description="OpenStack instance ID"
+// +kubebuilder:printcolumn:name="InstanceState",type="string",JSONPath=".status.resources.server.state",description="OpenStack instance state"
 // +kubebuilder:printcolumn:name="Ready",type="string",JSONPath=".status.ready",description="Machine ready status"
 // +kubebuilder:printcolumn:name="Machine",type="string",JSONPath=".metadata.ownerReferences[?(@.kind==\"Machine\")].name",description="Machine object which owns with this OpenStackMachine"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp",description="Time duration since creation of OpenStackMachine"

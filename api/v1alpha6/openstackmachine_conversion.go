@@ -389,6 +389,9 @@ func Convert_v1beta1_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(in *i
 /* OpenStackMachineStatus */
 
 func restorev1alpha6MachineStatus(previous *OpenStackMachineStatus, dst *OpenStackMachineStatus) {
+	if previous == nil || dst == nil {
+		return
+	}
 	if dst.InstanceState == nil || *dst.InstanceState == "" {
 		dst.InstanceState = previous.InstanceState
 	}

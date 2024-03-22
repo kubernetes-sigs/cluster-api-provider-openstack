@@ -89,8 +89,8 @@ serverGroup:
   name: "workers"
 ```
 
-If a server group is provided and found, it'll be added to `OpenStackMachine.Status.ReferencedResources.ServerGroupID`. If the server group can't be found or filter matches multiple server groups, an error will be returned.
-If empty object or null is provided, Machine will not be added to any server group and `OpenStackMachine.Status.ReferencedResources.ServerGroupID` will be empty.
+If a server group is provided and found, it'll be added to `OpenStackMachine.Status.Resources.ServerGroupID`. If the server group can't be found or filter matches multiple server groups, an error will be returned.
+If empty object or null is provided, Machine will not be added to any server group and `OpenStackMachine.Status.Resources.ServerGroupID` will be empty.
 
 #### Change to image
 
@@ -108,7 +108,7 @@ image:
   name: "test-image"
 ```
 
-The image ID will be added to `OpenStackMachine.Status.ReferencedResources.ImageID`. If the image can't be found or filter matches multiple images, an error will be returned.
+The image ID will be added to `OpenStackMachine.Status.Resources.ImageID`. If the image can't be found or filter matches multiple images, an error will be returned.
 
 #### Removal of imageUUID
 
@@ -161,7 +161,7 @@ spec:
 
 #### Removal of instanceID from spec
 
-The OpenStackMachine controller previously set `instanceID` in the machine spec, in addition to `providerID`. `providerID` remains unchanged as it is required by Cluster API, but `instanceID` is no longer set. If still required, it is now available in the status in `dependentResources`.
+The OpenStackMachine controller previously set `instanceID` in the machine spec, in addition to `providerID`. `providerID` remains unchanged as it is required by Cluster API, but `instanceID` is no longer set. If still required, it is now available in the status in `resources`.
 
 ### `OpenStackCluster`
 

@@ -28,7 +28,7 @@
     - [Host configuration](#host-configuration)
     - [Running podman system service to emulate docker daemon](#running-podman-system-service-to-emulate-docker-daemon)
   - [API concepts](#api-concepts)
-    - [`referencedResources`](#referencedresources)
+    - [`resolved`](#resolved)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -498,8 +498,11 @@ $ sudo ln -s /run/user/$(id -u)/podman/podman.sock /var/run/docker.sock
 
 This sections goal is to gather various insights into the API design that can serve as a reference to explain various choices made without need to analyze discussions in individual PRs.
 
-### `referencedResources`
+### `resolved`
 
-Starting from v1beta1 both `OpenStackMachineStatus` and `BastionsStatus` feature a field named `referencedResources` which aims to include fields that list individual IDs of the resources associated with the machine or bastion. These IDs are calculated on machine or bastion creation and are not intended to be changed during the object lifecycle.
+Starting from v1beta1 both `OpenStackMachineStatus` and `BastionsStatus` feature a field named `resolved` which aims to include fields that list fully 'resolved' versions of portions of the machine spec which require further processing before they can be used. Currently this is
+- serverGroupID: the result of executing the server group filter
+- imageID: the result of executing the image filter
+- ports: the result of executing ConstructPorts, which amongst other things resolves network, subnet, and security group queries to resource IDs, and adds any default options.
 
-Having all the IDs of related resources saved in the statuses allows CAPO to make easy decisions about deleting the related resources when deleting the VM corresponding to the machine or bastion.
+`resolved` is guaranteed to be executed before any resources are created. It allows CAPO to make easy decisions about which resources need to be created or deleted.
