@@ -39,7 +39,7 @@ const (
 )
 
 // ReconcileSecurityGroups reconcile the security groups.
-func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
+func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
 	s.scope.Logger().Info("Reconciling security groups")
 	if openStackCluster.Spec.ManagedSecurityGroups == nil {
 		s.scope.Logger().V(4).Info("No need to reconcile security groups")
@@ -48,15 +48,15 @@ func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackClu
 
 	bastionEnabled := openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled
 
-	secControlPlaneGroupName := getSecControlPlaneGroupName(clusterName)
-	secWorkerGroupName := getSecWorkerGroupName(clusterName)
+	secControlPlaneGroupName := getSecControlPlaneGroupName(clusterResourceName)
+	secWorkerGroupName := getSecWorkerGroupName(clusterResourceName)
 	suffixToNameMap := map[string]string{
 		controlPlaneSuffix: secControlPlaneGroupName,
 		workerSuffix:       secWorkerGroupName,
 	}
 
 	if bastionEnabled {
-		secBastionGroupName := getSecBastionGroupName(clusterName)
+		secBastionGroupName := getSecBastionGroupName(clusterResourceName)
 		suffixToNameMap[bastionSuffix] = secBastionGroupName
 	}
 
@@ -345,14 +345,14 @@ func (s *Service) GetSecurityGroups(securityGroupParams []infrav1.SecurityGroupF
 	return sgIDs, nil
 }
 
-func (s *Service) DeleteSecurityGroups(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
+func (s *Service) DeleteSecurityGroups(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
 	secGroupNames := []string{
-		getSecControlPlaneGroupName(clusterName),
-		getSecWorkerGroupName(clusterName),
+		getSecControlPlaneGroupName(clusterResourceName),
+		getSecWorkerGroupName(clusterResourceName),
 	}
 
 	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
-		secGroupNames = append(secGroupNames, getSecBastionGroupName(clusterName))
+		secGroupNames = append(secGroupNames, getSecBastionGroupName(clusterResourceName))
 	}
 
 	for _, secGroupName := range secGroupNames {
@@ -523,16 +523,16 @@ func (s *Service) createRule(securityGroupID string, r resolvedSecurityGroupRule
 	return nil
 }
 
-func getSecControlPlaneGroupName(clusterName string) string {
-	return fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, controlPlaneSuffix)
+func getSecControlPlaneGroupName(clusterResourceName string) string {
+	return fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterResourceName, controlPlaneSuffix)
 }
 
-func getSecWorkerGroupName(clusterName string) string {
-	return fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, workerSuffix)
+func getSecWorkerGroupName(clusterResourceName string) string {
+	return fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterResourceName, workerSuffix)
 }
 
-func getSecBastionGroupName(clusterName string) string {
-	return fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, bastionSuffix)
+func getSecBastionGroupName(clusterResourceName string) string {
+	return fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterResourceName, bastionSuffix)
 }
 
 func convertOSSecGroupToConfigSecGroup(osSecGroup *groups.SecGroup) *infrav1.SecurityGroupStatus {

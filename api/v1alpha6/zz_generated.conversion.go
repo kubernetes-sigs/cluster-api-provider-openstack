@@ -1387,10 +1387,8 @@ func autoConvert_v1alpha6_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *v1beta
 	if err := optional.Convert_string_To_optional_String(&in.Description, &out.Description, s); err != nil {
 		return err
 	}
-	out.AdminStateUp = (*bool)(unsafe.Pointer(in.AdminStateUp))
-	if err := optional.Convert_string_To_optional_String(&in.MACAddress, &out.MACAddress, s); err != nil {
-		return err
-	}
+	// WARNING: in.AdminStateUp requires manual conversion: does not exist in peer-type
+	// WARNING: in.MACAddress requires manual conversion: does not exist in peer-type
 	if in.FixedIPs != nil {
 		in, out := &in.FixedIPs, &out.FixedIPs
 		*out = make([]v1beta1.FixedIP, len(*in))
@@ -1406,28 +1404,14 @@ func autoConvert_v1alpha6_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *v1beta
 	// WARNING: in.ProjectID requires manual conversion: does not exist in peer-type
 	// INFO: in.SecurityGroups opted out of conversion generation
 	// INFO: in.SecurityGroupFilters opted out of conversion generation
-	if in.AllowedAddressPairs != nil {
-		in, out := &in.AllowedAddressPairs, &out.AllowedAddressPairs
-		*out = make([]v1beta1.AddressPair, len(*in))
-		for i := range *in {
-			if err := Convert_v1alpha6_AddressPair_To_v1beta1_AddressPair(&(*in)[i], &(*out)[i], s); err != nil {
-				return err
-			}
-		}
-	} else {
-		out.AllowedAddressPairs = nil
-	}
+	// WARNING: in.AllowedAddressPairs requires manual conversion: does not exist in peer-type
 	out.Trunk = (*bool)(unsafe.Pointer(in.Trunk))
-	if err := optional.Convert_string_To_optional_String(&in.HostID, &out.HostID, s); err != nil {
-		return err
-	}
-	if err := optional.Convert_string_To_optional_String(&in.VNICType, &out.VNICType, s); err != nil {
-		return err
-	}
-	// WARNING: in.Profile requires manual conversion: inconvertible types (map[string]string vs *sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile)
-	out.DisablePortSecurity = (*bool)(unsafe.Pointer(in.DisablePortSecurity))
+	// WARNING: in.HostID requires manual conversion: does not exist in peer-type
+	// WARNING: in.VNICType requires manual conversion: does not exist in peer-type
+	// WARNING: in.Profile requires manual conversion: does not exist in peer-type
+	// WARNING: in.DisablePortSecurity requires manual conversion: does not exist in peer-type
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
-	out.ValueSpecs = *(*[]v1beta1.ValueSpec)(unsafe.Pointer(&in.ValueSpecs))
+	// WARNING: in.ValueSpecs requires manual conversion: does not exist in peer-type
 	return nil
 }
 
@@ -1441,14 +1425,10 @@ func autoConvert_v1beta1_PortOpts_To_v1alpha6_PortOpts(in *v1beta1.PortOpts, out
 	} else {
 		out.Network = nil
 	}
-	if err := optional.Convert_optional_String_To_string(&in.NameSuffix, &out.NameSuffix, s); err != nil {
-		return err
-	}
 	if err := optional.Convert_optional_String_To_string(&in.Description, &out.Description, s); err != nil {
 		return err
 	}
-	out.AdminStateUp = (*bool)(unsafe.Pointer(in.AdminStateUp))
-	if err := optional.Convert_optional_String_To_string(&in.MACAddress, &out.MACAddress, s); err != nil {
+	if err := optional.Convert_optional_String_To_string(&in.NameSuffix, &out.NameSuffix, s); err != nil {
 		return err
 	}
 	if in.FixedIPs != nil {
@@ -1473,29 +1453,9 @@ func autoConvert_v1beta1_PortOpts_To_v1alpha6_PortOpts(in *v1beta1.PortOpts, out
 	} else {
 		out.SecurityGroups = nil
 	}
-	if in.AllowedAddressPairs != nil {
-		in, out := &in.AllowedAddressPairs, &out.AllowedAddressPairs
-		*out = make([]AddressPair, len(*in))
-		for i := range *in {
-			if err := Convert_v1beta1_AddressPair_To_v1alpha6_AddressPair(&(*in)[i], &(*out)[i], s); err != nil {
-				return err
-			}
-		}
-	} else {
-		out.AllowedAddressPairs = nil
-	}
-	out.Trunk = (*bool)(unsafe.Pointer(in.Trunk))
-	if err := optional.Convert_optional_String_To_string(&in.HostID, &out.HostID, s); err != nil {
-		return err
-	}
-	if err := optional.Convert_optional_String_To_string(&in.VNICType, &out.VNICType, s); err != nil {
-		return err
-	}
-	// WARNING: in.Profile requires manual conversion: inconvertible types (*sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile vs map[string]string)
-	out.DisablePortSecurity = (*bool)(unsafe.Pointer(in.DisablePortSecurity))
-	// WARNING: in.PropagateUplinkStatus requires manual conversion: does not exist in peer-type
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
-	out.ValueSpecs = *(*[]ValueSpec)(unsafe.Pointer(&in.ValueSpecs))
+	out.Trunk = (*bool)(unsafe.Pointer(in.Trunk))
+	// WARNING: in.ResolvedPortSpecFields requires manual conversion: does not exist in peer-type
 	return nil
 }
 

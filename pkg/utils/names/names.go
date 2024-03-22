@@ -19,14 +19,16 @@ package names
 import (
 	"fmt"
 	"strings"
+
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
 const (
 	FloatingAddressIPClaimNameSuffix = "floating-ip-address"
 )
 
-func GetDescription(clusterName string) string {
-	return fmt.Sprintf("Created by cluster-api-provider-openstack cluster %s", clusterName)
+func GetDescription(clusterResourceName string) string {
+	return fmt.Sprintf("Created by cluster-api-provider-openstack cluster %s", clusterResourceName)
 }
 
 func GetFloatingAddressClaimName(openStackMachineName string) string {
@@ -35,4 +37,10 @@ func GetFloatingAddressClaimName(openStackMachineName string) string {
 
 func GetOpenStackMachineNameFromClaimName(claimName string) string {
 	return strings.TrimSuffix(claimName, fmt.Sprintf("-%s", FloatingAddressIPClaimNameSuffix))
+}
+
+// ClusterResourceName returns a string which is used as the base of all
+// OpenStack resources created for the cluster.
+func ClusterResourceName(cluster *clusterv1.Cluster) string {
+	return fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
 }

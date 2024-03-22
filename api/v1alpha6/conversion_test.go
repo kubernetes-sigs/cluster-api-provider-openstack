@@ -570,7 +570,9 @@ func TestPortOptsConvertTo(t *testing.T) {
 				SecurityGroups: uuids,
 			}},
 			hubPortOpts: []infrav1.PortOpts{{
-				Profile:        &convertedPortProfile,
+				ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
+					Profile: &convertedPortProfile,
+				},
 				SecurityGroups: securityGroupsUuids,
 			}},
 		},
@@ -582,7 +584,9 @@ func TestPortOptsConvertTo(t *testing.T) {
 				SecurityGroupFilters: securityGroupFilter,
 			}},
 			hubPortOpts: []infrav1.PortOpts{{
-				Profile:        &convertedPortProfile,
+				ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
+					Profile: &convertedPortProfile,
+				},
 				SecurityGroups: securityGroupFilterMerged,
 			}},
 		},

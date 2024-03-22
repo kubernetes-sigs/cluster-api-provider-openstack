@@ -17,6 +17,7 @@ limitations under the License.
 package compute
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/go-logr/logr/testr"
@@ -24,7 +25,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/servergroups"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions"
 	. "github.com/onsi/gomega"
 	"k8s.io/utils/pointer"
 
@@ -34,160 +34,257 @@ import (
 )
 
 func Test_ResolveReferencedMachineResources(t *testing.T) {
-	constFalse := false
-	const serverGroupID1 = "ce96e584-7ebc-46d6-9e55-987d72e3806c"
-	imageID1 := "de96e584-7ebc-46d6-9e55-987d72e3806c"
+	const (
+		serverGroupID1 = "ce96e584-7ebc-46d6-9e55-987d72e3806c"
+		imageID1       = "de96e584-7ebc-46d6-9e55-987d72e3806c"
+		networkID1     = "23ab8b71-89d4-425f-ac81-4eb83b35125a"
+		networkID2     = "cc8f75ce-6ce4-4b8a-836e-e5dac91cc9c8"
+		subnetID       = "32dc0e7f-34b6-4544-a69b-248955618736"
+	)
 
-	minimumReferences := &infrav1.ReferencedMachineResources{
-		ImageID: imageID1,
+	defaultPorts := []infrav1.ResolvedPortSpec{
+		{
+			Name:        "test-instance-0",
+			Description: "Created by cluster-api-provider-openstack cluster test-cluster",
+			NetworkID:   networkID1,
+			FixedIPs: []infrav1.ResolvedFixedIP{
+				{SubnetID: pointer.String(subnetID)},
+			},
+		},
 	}
 
 	tests := []struct {
-		testName          string
-		serverGroupFilter *infrav1.ServerGroupFilter
-		imageFilter       *infrav1.ImageFilter
-		portsOpts         *[]infrav1.PortOpts
-		clusterStatus     *infrav1.OpenStackClusterStatus
-		expectComputeMock func(m *mock.MockComputeClientMockRecorder)
-		expectImageMock   func(m *mock.MockImageClientMockRecorder)
-		expectNetworkMock func(m *mock.MockNetworkClientMockRecorder)
-		want              *infrav1.ReferencedMachineResources
-		wantErr           bool
+		testName             string
+		spec                 infrav1.OpenStackMachineSpec
+		managedSecurityGroup *string
+		expectComputeMock    func(m *mock.MockComputeClientMockRecorder)
+		expectImageMock      func(m *mock.MockImageClientMockRecorder)
+		expectNetworkMock    func(m *mock.MockNetworkClientMockRecorder)
+		before               *infrav1.ReferencedMachineResources
+		want                 *infrav1.ReferencedMachineResources
+		wantErr              bool
 	}{
 		{
-			testName:          "Resources ID passed",
-			serverGroupFilter: &infrav1.ServerGroupFilter{ID: serverGroupID1},
-			imageFilter:       &infrav1.ImageFilter{ID: &imageID1},
-			expectComputeMock: func(m *mock.MockComputeClientMockRecorder) {},
-			expectImageMock:   func(m *mock.MockImageClientMockRecorder) {},
-			expectNetworkMock: func(m *mock.MockNetworkClientMockRecorder) {},
-			want:              &infrav1.ReferencedMachineResources{ImageID: imageID1, ServerGroupID: serverGroupID1},
-			wantErr:           false,
+			testName: "Resources ID passed",
+			spec: infrav1.OpenStackMachineSpec{
+				ServerGroup: &infrav1.ServerGroupFilter{ID: serverGroupID1},
+				Image:       infrav1.ImageFilter{ID: pointer.String(imageID1)},
+			},
+			want: &infrav1.ReferencedMachineResources{
+				ImageID:       imageID1,
+				ServerGroupID: serverGroupID1,
+				Ports:         defaultPorts,
+			},
 		},
 		{
-			testName:          "Server group filter nil",
-			serverGroupFilter: nil,
-			expectComputeMock: func(m *mock.MockComputeClientMockRecorder) {},
-			expectImageMock:   func(m *mock.MockImageClientMockRecorder) {},
-			expectNetworkMock: func(m *mock.MockNetworkClientMockRecorder) {},
-			want:              minimumReferences,
-			wantErr:           false,
+			testName: "Only image ID passed: want image id and default ports",
+			spec: infrav1.OpenStackMachineSpec{
+				Image: infrav1.ImageFilter{ID: pointer.String(imageID1)},
+			},
+			want: &infrav1.ReferencedMachineResources{
+				ImageID: imageID1,
+				Ports:   defaultPorts,
+			},
 		},
 		{
-			testName:          "Server group ID empty",
-			serverGroupFilter: &infrav1.ServerGroupFilter{},
-			expectComputeMock: func(m *mock.MockComputeClientMockRecorder) {},
-			expectImageMock:   func(m *mock.MockImageClientMockRecorder) {},
-			expectNetworkMock: func(m *mock.MockNetworkClientMockRecorder) {},
-			want:              minimumReferences,
-			wantErr:           false,
+			testName: "Server group empty",
+			spec: infrav1.OpenStackMachineSpec{
+				Image:       infrav1.ImageFilter{ID: pointer.String(imageID1)},
+				ServerGroup: &infrav1.ServerGroupFilter{},
+			},
+			want: &infrav1.ReferencedMachineResources{
+				ImageID: imageID1,
+				Ports:   defaultPorts,
+			},
 		},
 		{
-			testName:          "Server group by Name not found",
-			serverGroupFilter: &infrav1.ServerGroupFilter{Name: "test-server-group"},
+			testName: "Server group by Name not found",
+			spec: infrav1.OpenStackMachineSpec{
+				Image:       infrav1.ImageFilter{ID: pointer.String(imageID1)},
+				ServerGroup: &infrav1.ServerGroupFilter{Name: "test-server-group"},
+			},
 			expectComputeMock: func(m *mock.MockComputeClientMockRecorder) {
 				m.ListServerGroups().Return(
 					[]servergroups.ServerGroup{},
 					nil)
 			},
-			expectImageMock:   func(m *mock.MockImageClientMockRecorder) {},
-			expectNetworkMock: func(m *mock.MockNetworkClientMockRecorder) {},
-			want:              &infrav1.ReferencedMachineResources{},
-			wantErr:           true,
+			want:    &infrav1.ReferencedMachineResources{},
+			wantErr: true,
 		},
 		{
-			testName:          "Image by Name not found",
-			imageFilter:       &infrav1.ImageFilter{Name: pointer.String("test-image")},
-			expectComputeMock: func(m *mock.MockComputeClientMockRecorder) {},
+			testName: "Image by Name not found",
+			spec: infrav1.OpenStackMachineSpec{
+				Image: infrav1.ImageFilter{Name: pointer.String("test-image")},
+			},
 			expectImageMock: func(m *mock.MockImageClientMockRecorder) {
-				m.ListImages(images.ListOpts{Name: "test-image"}).Return(
-					[]images.Image{},
-					nil)
+				m.ListImages(images.ListOpts{Name: "test-image"}).Return([]images.Image{}, nil)
 			},
-			expectNetworkMock: func(m *mock.MockNetworkClientMockRecorder) {},
-			want:              &infrav1.ReferencedMachineResources{},
-			wantErr:           true,
+			want:    &infrav1.ReferencedMachineResources{},
+			wantErr: true,
 		},
 		{
-			testName: "PortsOpts set",
-			clusterStatus: &infrav1.OpenStackClusterStatus{
-				Network: &infrav1.NetworkStatusWithSubnets{
-					Subnets: []infrav1.Subnet{
-						{
-							ID: "test-subnet-id",
-						},
-					},
-				},
-			},
-			portsOpts: &[]infrav1.PortOpts{
-				{
-					Network: &infrav1.NetworkFilter{
-						ID: "test-network-id",
-					},
-					Trunk: &constFalse,
-				},
-			},
-			expectComputeMock: func(m *mock.MockComputeClientMockRecorder) {},
-			expectImageMock:   func(m *mock.MockImageClientMockRecorder) {},
-			expectNetworkMock: func(m *mock.MockNetworkClientMockRecorder) {
-				m.ListExtensions().Return([]extensions.Extension{}, nil)
-			},
-			want: &infrav1.ReferencedMachineResources{
-				ImageID: imageID1,
+			testName: "Ports set",
+			spec: infrav1.OpenStackMachineSpec{
+				Image: infrav1.ImageFilter{ID: pointer.String(imageID1)},
 				Ports: []infrav1.PortOpts{
 					{
 						Network: &infrav1.NetworkFilter{
-							ID: "test-network-id",
+							ID: networkID2,
 						},
-						Trunk: &constFalse,
 					},
 				},
 			},
-			wantErr: false,
+			want: &infrav1.ReferencedMachineResources{
+				ImageID: imageID1,
+				Ports: []infrav1.ResolvedPortSpec{
+					{
+						Name:        "test-instance-0",
+						Description: "Created by cluster-api-provider-openstack cluster test-cluster",
+						NetworkID:   networkID2,
+					},
+				},
+			},
 		},
 	}
-	for _, tt := range tests {
+	for i, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
+			tt := &tests[i]
 			g := NewWithT(t)
 			log := testr.New(t)
 			mockCtrl := gomock.NewController(t)
 			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
 
-			tt.expectComputeMock(mockScopeFactory.ComputeClient.EXPECT())
-			tt.expectImageMock(mockScopeFactory.ImageClient.EXPECT())
-			tt.expectNetworkMock(mockScopeFactory.NetworkClient.EXPECT())
-
-			// Set defaults for required fields
-			imageFilter := &infrav1.ImageFilter{ID: pointer.String(imageID1)}
-			if tt.imageFilter != nil {
-				imageFilter = tt.imageFilter
+			if tt.expectComputeMock != nil {
+				tt.expectComputeMock(mockScopeFactory.ComputeClient.EXPECT())
 			}
-			portsOpts := &[]infrav1.PortOpts{}
-			if tt.portsOpts != nil {
-				portsOpts = tt.portsOpts
+			if tt.expectImageMock != nil {
+				tt.expectImageMock(mockScopeFactory.ImageClient.EXPECT())
+			}
+			if tt.expectNetworkMock != nil {
+				tt.expectNetworkMock(mockScopeFactory.NetworkClient.EXPECT())
 			}
 
-			openStackCluster := &infrav1.OpenStackCluster{}
-			if tt.clusterStatus != nil {
-				openStackCluster.Status = *tt.clusterStatus
+			openStackCluster := &infrav1.OpenStackCluster{
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID: networkID1,
+						},
+						Subnets: []infrav1.Subnet{
+							{
+								ID: subnetID,
+							},
+						},
+					},
+				},
 			}
 
-			machineSpec := &infrav1.OpenStackMachineSpec{
-				ServerGroup: tt.serverGroupFilter,
-				Image:       *imageFilter,
-				Ports:       *portsOpts,
+			resources := tt.before
+			if resources == nil {
+				resources = &infrav1.ReferencedMachineResources{}
 			}
-
-			resources := &infrav1.ReferencedMachineResources{}
+			clusterResourceName := "test-cluster"
+			baseName := "test-instance"
 
 			scope := scope.NewWithLogger(mockScopeFactory, log)
-			_, err := ResolveReferencedMachineResources(scope, openStackCluster, machineSpec, resources)
+			_, err := ResolveReferencedMachineResources(scope, &tt.spec, resources, clusterResourceName, baseName, openStackCluster, tt.managedSecurityGroup)
 			if tt.wantErr {
 				g.Expect(err).Error()
 				return
 			}
 
 			g.Expect(resources).To(Equal(tt.want), cmp.Diff(resources, tt.want))
+		})
+	}
+}
+
+func Test_getInstanceTags(t *testing.T) {
+	tests := []struct {
+		name             string
+		spec             func() *infrav1.OpenStackMachineSpec
+		openStackCluster func() *infrav1.OpenStackCluster
+		wantMachineTags  []string
+	}{
+		{
+			name: "No tags",
+			spec: func() *infrav1.OpenStackMachineSpec {
+				return &infrav1.OpenStackMachineSpec{}
+			},
+			openStackCluster: func() *infrav1.OpenStackCluster {
+				return &infrav1.OpenStackCluster{
+					Spec: infrav1.OpenStackClusterSpec{},
+				}
+			},
+			wantMachineTags: []string{},
+		},
+		{
+			name: "Machine tags only",
+			spec: func() *infrav1.OpenStackMachineSpec {
+				return &infrav1.OpenStackMachineSpec{
+					Tags: []string{"machine-tag1", "machine-tag2"},
+				}
+			},
+			openStackCluster: func() *infrav1.OpenStackCluster {
+				return &infrav1.OpenStackCluster{
+					Spec: infrav1.OpenStackClusterSpec{},
+				}
+			},
+			wantMachineTags: []string{"machine-tag1", "machine-tag2"},
+		},
+		{
+			name: "Cluster tags only",
+			spec: func() *infrav1.OpenStackMachineSpec {
+				return &infrav1.OpenStackMachineSpec{}
+			},
+			openStackCluster: func() *infrav1.OpenStackCluster {
+				return &infrav1.OpenStackCluster{
+					Spec: infrav1.OpenStackClusterSpec{
+						Tags: []string{"cluster-tag1", "cluster-tag2"},
+					},
+				}
+			},
+			wantMachineTags: []string{"cluster-tag1", "cluster-tag2"},
+		},
+		{
+			name: "Machine and cluster tags",
+			spec: func() *infrav1.OpenStackMachineSpec {
+				return &infrav1.OpenStackMachineSpec{
+					Tags: []string{"machine-tag1", "machine-tag2"},
+				}
+			},
+			openStackCluster: func() *infrav1.OpenStackCluster {
+				return &infrav1.OpenStackCluster{
+					Spec: infrav1.OpenStackClusterSpec{
+						Tags: []string{"cluster-tag1", "cluster-tag2"},
+					},
+				}
+			},
+			wantMachineTags: []string{"machine-tag1", "machine-tag2", "cluster-tag1", "cluster-tag2"},
+		},
+		{
+			name: "Duplicate tags",
+			spec: func() *infrav1.OpenStackMachineSpec {
+				return &infrav1.OpenStackMachineSpec{
+					Tags: []string{"tag1", "tag2", "tag1"},
+				}
+			},
+			openStackCluster: func() *infrav1.OpenStackCluster {
+				return &infrav1.OpenStackCluster{
+					Spec: infrav1.OpenStackClusterSpec{
+						Tags: []string{"tag2", "tag3", "tag3"},
+					},
+				}
+			},
+			wantMachineTags: []string{"tag1", "tag2", "tag3"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotMachineTags := InstanceTags(tt.spec(), tt.openStackCluster())
+			if !reflect.DeepEqual(gotMachineTags, tt.wantMachineTags) {
+				t.Errorf("getInstanceTags() = %v, want %v", gotMachineTags, tt.wantMachineTags)
+			}
 		})
 	}
 }

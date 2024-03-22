@@ -480,7 +480,7 @@ func TestReconcileGroupRules(t *testing.T) {
 
 func TestService_ReconcileSecurityGroups(t *testing.T) {
 	const (
-		clusterName = "test-cluster"
+		clusterResourceName = "test-cluster"
 
 		controlPlaneSGName = "k8s-cluster-test-cluster-secgroup-controlplane"
 		workerSGName       = "k8s-cluster-test-cluster-secgroup-worker"
@@ -590,7 +590,7 @@ func TestService_ReconcileSecurityGroups(t *testing.T) {
 			openStackCluster := &infrav1.OpenStackCluster{
 				Spec: tt.openStackClusterSpec,
 			}
-			err := s.ReconcileSecurityGroups(openStackCluster, clusterName)
+			err := s.ReconcileSecurityGroups(openStackCluster, clusterResourceName)
 			if tt.wantErr {
 				g.Expect(err).ToNot(BeNil(), "ReconcileSecurityGroups")
 			} else {

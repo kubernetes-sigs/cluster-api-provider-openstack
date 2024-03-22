@@ -67,13 +67,13 @@ var lookupHost = func(host string) (*string, error) {
 }
 
 // ReconcileLoadBalancer reconciles the load balancer for the given cluster.
-func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterName string, apiServerPort int) (bool, error) {
+func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string, apiServerPort int) (bool, error) {
 	lbSpec := openStackCluster.Spec.APIServerLoadBalancer
 	if !lbSpec.IsEnabled() {
 		return false, nil
 	}
 
-	loadBalancerName := getLoadBalancerName(clusterName)
+	loadBalancerName := getLoadBalancerName(clusterResourceName)
 	s.scope.Logger().Info("Reconciling load balancer", "name", loadBalancerName)
 
 	lbStatus := openStackCluster.Status.APIServerLoadBalancer
@@ -82,7 +82,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 		openStackCluster.Status.APIServerLoadBalancer = lbStatus
 	}
 
-	lb, err := s.getOrCreateAPILoadBalancer(openStackCluster, clusterName)
+	lb, err := s.getOrCreateAPILoadBalancer(openStackCluster, clusterResourceName)
 	if err != nil {
 		return false, err
 	}
@@ -106,7 +106,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 			return false, err
 		}
 
-		fp, err := s.networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterName, floatingIPAddress)
+		fp, err := s.networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterResourceName, floatingIPAddress)
 		if err != nil {
 			return false, err
 		}
@@ -136,7 +136,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 	portList := []int{apiServerPort}
 	portList = append(portList, lbSpec.AdditionalPorts...)
 	for _, port := range portList {
-		if err := s.reconcileAPILoadBalancerListener(lb, openStackCluster, clusterName, port); err != nil {
+		if err := s.reconcileAPILoadBalancerListener(lb, openStackCluster, clusterResourceName, port); err != nil {
 			return false, err
 		}
 	}
@@ -256,8 +256,8 @@ func (s *Service) isAllowsCIDRSSupported(lb *loadbalancers.LoadBalancer) (bool, 
 }
 
 // getOrCreateAPILoadBalancer returns an existing API loadbalancer if it already exists, or creates a new one if it does not.
-func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterName string) (*loadbalancers.LoadBalancer, error) {
-	loadBalancerName := getLoadBalancerName(clusterName)
+func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) (*loadbalancers.LoadBalancer, error) {
+	loadBalancerName := getLoadBalancerName(clusterResourceName)
 	lb, err := s.checkIfLbExists(loadBalancerName)
 	if err != nil {
 		return nil, err
@@ -302,7 +302,7 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 	lbCreateOpts := loadbalancers.CreateOpts{
 		Name:        loadBalancerName,
 		VipSubnetID: subnetID,
-		Description: names.GetDescription(clusterName),
+		Description: names.GetDescription(clusterResourceName),
 		Provider:    lbProvider,
 		Tags:        openStackCluster.Spec.Tags,
 	}
@@ -321,8 +321,8 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 }
 
 // reconcileAPILoadBalancerListener ensures that the listener on the given port exists and is configured correctly.
-func (s *Service) reconcileAPILoadBalancerListener(lb *loadbalancers.LoadBalancer, openStackCluster *infrav1.OpenStackCluster, clusterName string, port int) error {
-	loadBalancerName := getLoadBalancerName(clusterName)
+func (s *Service) reconcileAPILoadBalancerListener(lb *loadbalancers.LoadBalancer, openStackCluster *infrav1.OpenStackCluster, clusterResourceName string, port int) error {
+	loadBalancerName := getLoadBalancerName(clusterResourceName)
 	lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)
 
 	if openStackCluster.Status.APIServerLoadBalancer == nil {
@@ -508,7 +508,7 @@ func (s *Service) getOrCreateMonitor(openStackCluster *infrav1.OpenStackCluster,
 	return nil
 }
 
-func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, clusterName, ip string) error {
+func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, clusterResourceName, ip string) error {
 	if openStackCluster.Status.Network == nil {
 		return errors.New("network is not yet available in openStackCluster.Status")
 	}
@@ -522,7 +522,7 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 		return errors.New("ControlPlaneEndpoint is not yet set in openStackCluster.Spec")
 	}
 
-	loadBalancerName := getLoadBalancerName(clusterName)
+	loadBalancerName := getLoadBalancerName(clusterResourceName)
 	s.scope.Logger().Info("Reconciling load balancer member", "loadBalancerName", loadBalancerName)
 
 	lbID := openStackCluster.Status.APIServerLoadBalancer.ID
@@ -598,8 +598,8 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 	return nil
 }
 
-func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
-	loadBalancerName := getLoadBalancerName(clusterName)
+func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
+	loadBalancerName := getLoadBalancerName(clusterResourceName)
 	lb, err := s.checkIfLbExists(loadBalancerName)
 	if err != nil {
 		return err
@@ -645,12 +645,12 @@ func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster,
 	return nil
 }
 
-func (s *Service) DeleteLoadBalancerMember(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, clusterName string) error {
+func (s *Service) DeleteLoadBalancerMember(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, clusterResourceName string) error {
 	if openStackMachine == nil || !util.IsControlPlaneMachine(machine) {
 		return nil
 	}
 
-	loadBalancerName := getLoadBalancerName(clusterName)
+	loadBalancerName := getLoadBalancerName(clusterResourceName)
 	lb, err := s.checkIfLbExists(loadBalancerName)
 	if err != nil {
 		return err
@@ -705,8 +705,8 @@ func (s *Service) DeleteLoadBalancerMember(openStackCluster *infrav1.OpenStackCl
 	return nil
 }
 
-func getLoadBalancerName(clusterName string) string {
-	return fmt.Sprintf("%s-cluster-%s-%s", networkPrefix, clusterName, kubeapiLBSuffix)
+func getLoadBalancerName(clusterResourceName string) string {
+	return fmt.Sprintf("%s-cluster-%s-%s", networkPrefix, clusterResourceName, kubeapiLBSuffix)
 }
 
 func (s *Service) checkIfLbExists(name string) (*loadbalancers.LoadBalancer, error) {
