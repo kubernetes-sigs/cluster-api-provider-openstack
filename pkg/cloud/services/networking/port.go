@@ -335,7 +335,7 @@ func (s *Service) CreatePorts(eventObject runtime.Object, desiredPorts []infrav1
 
 // ConstructPorts builds an array of ports from the machine spec.
 // If no ports are in the spec, returns a single port for a network connection to the default cluster network.
-func (s *Service) ConstructPorts(spec *infrav1.OpenStackMachineSpec, clusterName, baseName string, defaultNetwork *infrav1.NetworkStatusWithSubnets, managedSecurityGroup *string, baseTags []string) ([]infrav1.ResolvedPortSpec, error) {
+func (s *Service) ConstructPorts(spec *infrav1.OpenStackMachineSpec, clusterResourceName, baseName string, defaultNetwork *infrav1.NetworkStatusWithSubnets, managedSecurityGroup *string, baseTags []string) ([]infrav1.ResolvedPortSpec, error) {
 	ports := spec.Ports
 
 	defaultSecurityGroupIDs, err := s.GetSecurityGroups(spec.SecurityGroups)
@@ -347,7 +347,7 @@ func (s *Service) ConstructPorts(spec *infrav1.OpenStackMachineSpec, clusterName
 	}
 
 	// Ensure user-specified ports have all required fields
-	resolvedPorts, err := s.normalizePorts(ports, clusterName, baseName, spec.Trunk, defaultSecurityGroupIDs, defaultNetwork, baseTags)
+	resolvedPorts, err := s.normalizePorts(ports, clusterResourceName, baseName, spec.Trunk, defaultSecurityGroupIDs, defaultNetwork, baseTags)
 	if err != nil {
 		return nil, err
 	}
@@ -357,7 +357,7 @@ func (s *Service) ConstructPorts(spec *infrav1.OpenStackMachineSpec, clusterName
 		resolvedPorts = make([]infrav1.ResolvedPortSpec, 1)
 		resolvedPort := &resolvedPorts[0]
 		resolvedPort.Name = getPortName(baseName, nil, 0)
-		resolvedPort.Description = names.GetDescription(clusterName)
+		resolvedPort.Description = names.GetDescription(clusterResourceName)
 		if len(baseTags) > 0 {
 			resolvedPort.Tags = baseTags
 		}
@@ -394,7 +394,7 @@ func (s *Service) ConstructPorts(spec *infrav1.OpenStackMachineSpec, clusterName
 // normalizePorts ensures that a user-specified PortOpts has all required fields set. Specifically it:
 // - sets the Trunk field to the instance spec default if not specified
 // - sets the Network ID field if not specified.
-func (s *Service) normalizePorts(ports []infrav1.PortOpts, clusterName, baseName string, trunkEnabled bool, defaultSecurityGroupIDs []string, defaultNetwork *infrav1.NetworkStatusWithSubnets, baseTags []string) ([]infrav1.ResolvedPortSpec, error) {
+func (s *Service) normalizePorts(ports []infrav1.PortOpts, clusterResourceName, baseName string, trunkEnabled bool, defaultSecurityGroupIDs []string, defaultNetwork *infrav1.NetworkStatusWithSubnets, baseTags []string) ([]infrav1.ResolvedPortSpec, error) {
 	normalizedPorts := make([]infrav1.ResolvedPortSpec, len(ports))
 	for i := range ports {
 		port := &ports[i]
@@ -410,7 +410,7 @@ func (s *Service) normalizePorts(ports []infrav1.PortOpts, clusterName, baseName
 		if port.Description != nil {
 			normalizedPort.Description = *port.Description
 		} else {
-			normalizedPort.Description = names.GetDescription(clusterName)
+			normalizedPort.Description = names.GetDescription(clusterResourceName)
 		}
 
 		// Tags are inherited base tags plus any port-specific tags

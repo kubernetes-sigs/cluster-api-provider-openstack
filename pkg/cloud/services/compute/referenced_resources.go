@@ -31,7 +31,7 @@ import (
 // Note that we only set the fields in ReferencedMachineResources that are not set yet. This is ok because:
 // - OpenStackMachine is immutable, so we can't change the spec after the machine is created.
 // - the bastion is mutable, but we delete the bastion when the spec changes, so the bastion status will be empty.
-func ResolveReferencedMachineResources(scope *scope.WithLogger, spec *infrav1.OpenStackMachineSpec, resources *infrav1.ReferencedMachineResources, clusterName, baseName string, openStackCluster *infrav1.OpenStackCluster, managedSecurityGroup *string) (changed bool, err error) {
+func ResolveReferencedMachineResources(scope *scope.WithLogger, spec *infrav1.OpenStackMachineSpec, resources *infrav1.ReferencedMachineResources, clusterResourceName, baseName string, openStackCluster *infrav1.OpenStackCluster, managedSecurityGroup *string) (changed bool, err error) {
 	changed = false
 
 	computeService, err := NewService(scope)
@@ -74,7 +74,7 @@ func ResolveReferencedMachineResources(scope *scope.WithLogger, spec *infrav1.Op
 	// Network resources are required in order to get ports options.
 	if len(resources.Ports) == 0 {
 		defaultNetwork := openStackCluster.Status.Network
-		portsOpts, err := networkingService.ConstructPorts(spec, clusterName, baseName, defaultNetwork, managedSecurityGroup, InstanceTags(spec, openStackCluster))
+		portsOpts, err := networkingService.ConstructPorts(spec, clusterResourceName, baseName, defaultNetwork, managedSecurityGroup, InstanceTags(spec, openStackCluster))
 		if err != nil {
 			return changed, err
 		}
