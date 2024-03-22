@@ -6242,21 +6242,6 @@ spec:
                 description: Bastion contains the information about the deployed bastion
                   host
                 properties:
-                  dependentResources:
-                    properties:
-                      ports:
-                        description: Ports is the status of the ports created for
-                          the machine.
-                        items:
-                          properties:
-                            id:
-                              description: ID is the unique identifier of the port.
-                              type: string
-                          required:
-                          - id
-                          type: object
-                        type: array
-                    type: object
                   floatingIP:
                     type: string
                   id:
@@ -6265,8 +6250,8 @@ spec:
                     type: string
                   name:
                     type: string
-                  referencedResources:
-                    description: ReferencedMachineResources contains resolved references
+                  resolved:
+                    description: ResolvedMachineSpec contains resolved references
                       to resources required by the machine.
                     properties:
                       imageID:
@@ -6448,6 +6433,21 @@ spec:
                         description: ServerGroupID is the ID of the server group the
                           machine should be added to and is calculated based on ServerGroupFilter.
                         type: string
+                    type: object
+                  resources:
+                    properties:
+                      ports:
+                        description: Ports is the status of the ports created for
+                          the machine.
+                        items:
+                          properties:
+                            id:
+                              description: ID is the unique identifier of the port.
+                              type: string
+                          required:
+                          - id
+                          type: object
+                        type: array
                     type: object
                   sshKeyName:
                     type: string

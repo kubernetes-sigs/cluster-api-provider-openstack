@@ -162,21 +162,21 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 }
 
 func resolveMachineResources(scope *scope.WithLogger, clusterResourceName string, openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, machine *clusterv1.Machine) (bool, error) {
-	// Resolve and store referenced resources
-	changed, err := compute.ResolveReferencedMachineResources(scope,
-		&openStackMachine.Spec, &openStackMachine.Status.ReferencedResources,
+	// Resolve and store resources
+	changed, err := compute.ResolveMachineSpec(scope,
+		&openStackMachine.Spec, &openStackMachine.Status.Resolved,
 		clusterResourceName, openStackMachine.Name,
 		openStackCluster, getManagedSecurityGroup(openStackCluster, machine))
 	if err != nil {
 		return false, err
 	}
 	if changed {
-		// If the referenced resources have changed, we need to update the OpenStackMachine status now.
+		// If the resolved machine spec changed we need to start the reconcile again to prevent inconsistency between reconciles.
 		return true, nil
 	}
 
-	// Adopt any existing dependent resources
-	return false, compute.AdoptDependentMachineResources(scope, &openStackMachine.Status.ReferencedResources, &openStackMachine.Status.DependentResources)
+	// Adopt any existing resources
+	return false, compute.AdoptMachineResources(scope, &openStackMachine.Status.Resolved, &openStackMachine.Status.Resources)
 }
 
 func patchMachine(ctx context.Context, patchHelper *patch.Helper, openStackMachine *infrav1.OpenStackMachine, machine *clusterv1.Machine, options ...patch.Option) error {
@@ -308,7 +308,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(scope *scope.WithLogger, cl
 		return ctrl.Result{}, err
 	}
 
-	portsStatus := openStackMachine.Status.DependentResources.Ports
+	portsStatus := openStackMachine.Status.Resources.Ports
 	for _, port := range portsStatus {
 		if err := networkingService.DeleteInstanceTrunkAndPort(openStackMachine, port, trunkSupported); err != nil {
 			return ctrl.Result{}, fmt.Errorf("failed to delete port %q: %w", port.ID, err)
@@ -519,7 +519,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	portIDs := GetPortIDs(openStackMachine.Status.DependentResources.Ports)
+	portIDs := GetPortIDs(openStackMachine.Status.Resources.Ports)
 
 	instanceStatus, err := r.getOrCreateInstance(scope.Logger(), openStackCluster, machine, openStackMachine, computeService, userData, portIDs)
 	if err != nil || instanceStatus == nil {
@@ -658,14 +658,14 @@ func (r *OpenStackMachineReconciler) reconcileAPIServerLoadBalancer(scope *scope
 }
 
 func getOrCreateMachinePorts(openStackMachine *infrav1.OpenStackMachine, networkingService *networking.Service) error {
-	desiredPorts := openStackMachine.Status.ReferencedResources.Ports
-	dependentResources := &openStackMachine.Status.DependentResources
+	desiredPorts := openStackMachine.Status.Resolved.Ports
+	resources := &openStackMachine.Status.Resources
 
-	if len(desiredPorts) == len(dependentResources.Ports) {
+	if len(desiredPorts) == len(resources.Ports) {
 		return nil
 	}
 
-	if err := networkingService.CreatePorts(openStackMachine, desiredPorts, dependentResources); err != nil {
+	if err := networkingService.CreatePorts(openStackMachine, desiredPorts, resources); err != nil {
 		return fmt.Errorf("creating ports: %w", err)
 	}
 
@@ -717,7 +717,7 @@ func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *
 
 	instanceSpec := compute.InstanceSpec{
 		Name:                   openStackMachine.Name,
-		ImageID:                openStackMachine.Status.ReferencedResources.ImageID,
+		ImageID:                openStackMachine.Status.Resolved.ImageID,
 		Flavor:                 openStackMachine.Spec.Flavor,
 		SSHKeyName:             openStackMachine.Spec.SSHKeyName,
 		UserData:               userData,
@@ -725,7 +725,7 @@ func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *
 		ConfigDrive:            openStackMachine.Spec.ConfigDrive != nil && *openStackMachine.Spec.ConfigDrive,
 		RootVolume:             openStackMachine.Spec.RootVolume,
 		AdditionalBlockDevices: openStackMachine.Spec.AdditionalBlockDevices,
-		ServerGroupID:          openStackMachine.Status.ReferencedResources.ServerGroupID,
+		ServerGroupID:          openStackMachine.Status.Resolved.ServerGroupID,
 		Trunk:                  openStackMachine.Spec.Trunk,
 	}
 

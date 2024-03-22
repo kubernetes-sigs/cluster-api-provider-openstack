@@ -1212,10 +1212,10 @@ string
 </tr>
 <tr>
 <td>
-<code>referencedResources</code><br/>
+<code>resolved</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ReferencedMachineResources">
-ReferencedMachineResources
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedMachineSpec">
+ResolvedMachineSpec
 </a>
 </em>
 </td>
@@ -1224,10 +1224,10 @@ ReferencedMachineResources
 </tr>
 <tr>
 <td>
-<code>dependentResources</code><br/>
+<code>resources</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.DependentMachineResources">
-DependentMachineResources
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.MachineResources">
+MachineResources
 </a>
 </em>
 </td>
@@ -1395,39 +1395,6 @@ If omitted, the availability zone of the server will be used.
 The availability zone must NOT contain spaces otherwise it will lead to volume that belongs
 to this availability zone register failure, see kubernetes/cloud-provider-openstack#1379 for
 further information.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.DependentMachineResources">DependentMachineResources
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.BastionStatus">BastionStatus</a>, 
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineStatus">OpenStackMachineStatus</a>)
-</p>
-<p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>ports</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortStatus">
-[]PortStatus
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Ports is the status of the ports created for the machine.</p>
 </td>
 </tr>
 </tbody>
@@ -1746,6 +1713,39 @@ string
 </td>
 <td>
 <em>(Optional)</em>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.MachineResources">MachineResources
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.BastionStatus">BastionStatus</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineStatus">OpenStackMachineStatus</a>)
+</p>
+<p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>ports</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortStatus">
+[]PortStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Ports is the status of the ports created for the machine.</p>
 </td>
 </tr>
 </tbody>
@@ -3286,28 +3286,29 @@ InstanceState
 </tr>
 <tr>
 <td>
-<code>referencedResources</code><br/>
+<code>resolved</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ReferencedMachineResources">
-ReferencedMachineResources
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedMachineSpec">
+ResolvedMachineSpec
 </a>
 </em>
 </td>
 <td>
-<p>ReferencedResources contains resolved references to resources that the machine depends on.</p>
+<p>Resolved contains parts of the machine spec with all external
+references fully resolved.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>dependentResources</code><br/>
+<code>resources</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.DependentMachineResources">
-DependentMachineResources
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.MachineResources">
+MachineResources
 </a>
 </em>
 </td>
 <td>
-<p>DependentResources contains resolved dependent resources that were created by the machine.</p>
+<p>Resources contains references to OpenStack resources created for the machine.</p>
 </td>
 </tr>
 <tr>
@@ -3764,7 +3765,7 @@ ResolvedPortSpecFields
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.DependentMachineResources">DependentMachineResources</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.MachineResources">MachineResources</a>)
 </p>
 <p>
 </p>
@@ -3785,64 +3786,6 @@ string
 </td>
 <td>
 <p>ID is the unique identifier of the port.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.ReferencedMachineResources">ReferencedMachineResources
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.BastionStatus">BastionStatus</a>, 
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineStatus">OpenStackMachineStatus</a>)
-</p>
-<p>
-<p>ReferencedMachineResources contains resolved references to resources required by the machine.</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>serverGroupID</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>ServerGroupID is the ID of the server group the machine should be added to and is calculated based on ServerGroupFilter.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>imageID</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>ImageID is the ID of the image to use for the machine and is calculated based on ImageFilter.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>ports</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedPortSpec">
-[]ResolvedPortSpec
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Ports is the fully resolved list of ports to create for the machine.</p>
 </td>
 </tr>
 </tbody>
@@ -3893,11 +3836,69 @@ address in any subnet of the port&rsquo;s network.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.ResolvedMachineSpec">ResolvedMachineSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.BastionStatus">BastionStatus</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineStatus">OpenStackMachineStatus</a>)
+</p>
+<p>
+<p>ResolvedMachineSpec contains resolved references to resources required by the machine.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>serverGroupID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ServerGroupID is the ID of the server group the machine should be added to and is calculated based on ServerGroupFilter.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>imageID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ImageID is the ID of the image to use for the machine and is calculated based on ImageFilter.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ports</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedPortSpec">
+[]ResolvedPortSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Ports is the fully resolved list of ports to create for the machine.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.ResolvedPortSpec">ResolvedPortSpec
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ReferencedMachineResources">ReferencedMachineResources</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedMachineSpec">ResolvedMachineSpec</a>)
 </p>
 <p>
 <p>ResolvedPortSpec is a PortOpts with all contained references fully resolved.</p>

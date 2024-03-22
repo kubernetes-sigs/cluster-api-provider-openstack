@@ -60,8 +60,8 @@ func Test_ResolveReferencedMachineResources(t *testing.T) {
 		expectComputeMock    func(m *mock.MockComputeClientMockRecorder)
 		expectImageMock      func(m *mock.MockImageClientMockRecorder)
 		expectNetworkMock    func(m *mock.MockNetworkClientMockRecorder)
-		before               *infrav1.ReferencedMachineResources
-		want                 *infrav1.ReferencedMachineResources
+		before               *infrav1.ResolvedMachineSpec
+		want                 *infrav1.ResolvedMachineSpec
 		wantErr              bool
 	}{
 		{
@@ -70,7 +70,7 @@ func Test_ResolveReferencedMachineResources(t *testing.T) {
 				ServerGroup: &infrav1.ServerGroupFilter{ID: serverGroupID1},
 				Image:       infrav1.ImageFilter{ID: pointer.String(imageID1)},
 			},
-			want: &infrav1.ReferencedMachineResources{
+			want: &infrav1.ResolvedMachineSpec{
 				ImageID:       imageID1,
 				ServerGroupID: serverGroupID1,
 				Ports:         defaultPorts,
@@ -81,7 +81,7 @@ func Test_ResolveReferencedMachineResources(t *testing.T) {
 			spec: infrav1.OpenStackMachineSpec{
 				Image: infrav1.ImageFilter{ID: pointer.String(imageID1)},
 			},
-			want: &infrav1.ReferencedMachineResources{
+			want: &infrav1.ResolvedMachineSpec{
 				ImageID: imageID1,
 				Ports:   defaultPorts,
 			},
@@ -92,7 +92,7 @@ func Test_ResolveReferencedMachineResources(t *testing.T) {
 				Image:       infrav1.ImageFilter{ID: pointer.String(imageID1)},
 				ServerGroup: &infrav1.ServerGroupFilter{},
 			},
-			want: &infrav1.ReferencedMachineResources{
+			want: &infrav1.ResolvedMachineSpec{
 				ImageID: imageID1,
 				Ports:   defaultPorts,
 			},
@@ -108,7 +108,7 @@ func Test_ResolveReferencedMachineResources(t *testing.T) {
 					[]servergroups.ServerGroup{},
 					nil)
 			},
-			want:    &infrav1.ReferencedMachineResources{},
+			want:    &infrav1.ResolvedMachineSpec{},
 			wantErr: true,
 		},
 		{
@@ -119,7 +119,7 @@ func Test_ResolveReferencedMachineResources(t *testing.T) {
 			expectImageMock: func(m *mock.MockImageClientMockRecorder) {
 				m.ListImages(images.ListOpts{Name: "test-image"}).Return([]images.Image{}, nil)
 			},
-			want:    &infrav1.ReferencedMachineResources{},
+			want:    &infrav1.ResolvedMachineSpec{},
 			wantErr: true,
 		},
 		{
@@ -134,7 +134,7 @@ func Test_ResolveReferencedMachineResources(t *testing.T) {
 					},
 				},
 			},
-			want: &infrav1.ReferencedMachineResources{
+			want: &infrav1.ResolvedMachineSpec{
 				ImageID: imageID1,
 				Ports: []infrav1.ResolvedPortSpec{
 					{
@@ -181,13 +181,13 @@ func Test_ResolveReferencedMachineResources(t *testing.T) {
 
 			resources := tt.before
 			if resources == nil {
-				resources = &infrav1.ReferencedMachineResources{}
+				resources = &infrav1.ResolvedMachineSpec{}
 			}
 			clusterResourceName := "test-cluster"
 			baseName := "test-instance"
 
 			scope := scope.NewWithLogger(mockScopeFactory, log)
-			_, err := ResolveReferencedMachineResources(scope, &tt.spec, resources, clusterResourceName, baseName, openStackCluster, tt.managedSecurityGroup)
+			_, err := ResolveMachineSpec(scope, &tt.spec, resources, clusterResourceName, baseName, openStackCluster, tt.managedSecurityGroup)
 			if tt.wantErr {
 				g.Expect(err).Error()
 				return

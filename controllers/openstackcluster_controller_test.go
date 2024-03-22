@@ -237,7 +237,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 		testCluster.Status = infrav1.OpenStackClusterStatus{
 			Bastion: &infrav1.BastionStatus{
-				ReferencedResources: infrav1.ReferencedMachineResources{
+				Resolved: infrav1.ResolvedMachineSpec{
 					ImageID: "imageID",
 					Ports: []infrav1.ResolvedPortSpec{
 						{
@@ -245,7 +245,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 						},
 					},
 				},
-				DependentResources: infrav1.DependentMachineResources{
+				Resources: infrav1.MachineResources{
 					Ports: []infrav1.PortStatus{
 						{
 							ID: "portID1",
@@ -286,7 +286,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		expectedStatus := &infrav1.BastionStatus{
 			ID:    "adopted-bastion-uuid",
 			State: "ACTIVE",
-			ReferencedResources: infrav1.ReferencedMachineResources{
+			Resolved: infrav1.ResolvedMachineSpec{
 				ImageID: "imageID",
 				Ports: []infrav1.ResolvedPortSpec{
 					{
@@ -294,7 +294,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 					},
 				},
 			},
-			DependentResources: infrav1.DependentMachineResources{
+			Resources: infrav1.MachineResources{
 				Ports: []infrav1.PortStatus{
 					{
 						ID: "portID1",
@@ -327,7 +327,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			},
 			Bastion: &infrav1.BastionStatus{
 				ID: "adopted-fip-bastion-uuid",
-				ReferencedResources: infrav1.ReferencedMachineResources{
+				Resolved: infrav1.ResolvedMachineSpec{
 					ImageID: "imageID",
 					Ports: []infrav1.ResolvedPortSpec{
 						{
@@ -335,7 +335,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 						},
 					},
 				},
-				DependentResources: infrav1.DependentMachineResources{
+				Resources: infrav1.MachineResources{
 					Ports: []infrav1.PortStatus{
 						{
 							ID: "portID1",
@@ -369,7 +369,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			ID:         "adopted-fip-bastion-uuid",
 			FloatingIP: "1.2.3.4",
 			State:      "ACTIVE",
-			ReferencedResources: infrav1.ReferencedMachineResources{
+			Resolved: infrav1.ResolvedMachineSpec{
 				ImageID: "imageID",
 				Ports: []infrav1.ResolvedPortSpec{
 					{
@@ -377,7 +377,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 					},
 				},
 			},
-			DependentResources: infrav1.DependentMachineResources{
+			Resources: infrav1.MachineResources{
 				Ports: []infrav1.PortStatus{
 					{
 						ID: "portID1",
@@ -409,7 +409,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			},
 			Bastion: &infrav1.BastionStatus{
 				ID: "requeue-bastion-uuid",
-				ReferencedResources: infrav1.ReferencedMachineResources{
+				Resolved: infrav1.ResolvedMachineSpec{
 					ImageID: "imageID",
 					Ports: []infrav1.ResolvedPortSpec{
 						{
@@ -417,7 +417,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 						},
 					},
 				},
-				DependentResources: infrav1.DependentMachineResources{
+				Resources: infrav1.MachineResources{
 					Ports: []infrav1.PortStatus{
 						{
 							ID: "portID1",
@@ -445,7 +445,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(testCluster.Status.Bastion).To(Equal(&infrav1.BastionStatus{
 			ID:    "requeue-bastion-uuid",
 			State: "BUILD",
-			ReferencedResources: infrav1.ReferencedMachineResources{
+			Resolved: infrav1.ResolvedMachineSpec{
 				ImageID: "imageID",
 				Ports: []infrav1.ResolvedPortSpec{
 					{
@@ -453,7 +453,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 					},
 				},
 			},
-			DependentResources: infrav1.DependentMachineResources{
+			Resources: infrav1.MachineResources{
 				Ports: []infrav1.PortStatus{
 					{
 						ID: "portID1",
@@ -475,7 +475,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 		testCluster.Status = infrav1.OpenStackClusterStatus{
 			Bastion: &infrav1.BastionStatus{
-				ReferencedResources: infrav1.ReferencedMachineResources{
+				Resolved: infrav1.ResolvedMachineSpec{
 					ImageID: "imageID",
 				},
 			},
@@ -528,7 +528,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		}
 		testCluster.Status = infrav1.OpenStackClusterStatus{
 			Bastion: &infrav1.BastionStatus{
-				DependentResources: infrav1.DependentMachineResources{
+				Resources: infrav1.MachineResources{
 					Ports: []infrav1.PortStatus{
 						{
 							ID: "port-id",
@@ -613,7 +613,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		}
 		testCluster.Status = infrav1.OpenStackClusterStatus{
 			Bastion: &infrav1.BastionStatus{
-				DependentResources: infrav1.DependentMachineResources{
+				Resources: infrav1.MachineResources{
 					Ports: []infrav1.PortStatus{
 						{
 							ID: "port-id",

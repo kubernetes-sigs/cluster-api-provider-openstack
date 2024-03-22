@@ -886,12 +886,12 @@ func Test_AdoptPorts(t *testing.T) {
 	)
 
 	tests := []struct {
-		testName           string
-		desiredPorts       []infrav1.ResolvedPortSpec
-		dependentResources infrav1.DependentMachineResources
-		expect             func(*mock.MockNetworkClientMockRecorder)
-		want               infrav1.DependentMachineResources
-		wantErr            bool
+		testName     string
+		desiredPorts []infrav1.ResolvedPortSpec
+		resources    infrav1.MachineResources
+		expect       func(*mock.MockNetworkClientMockRecorder)
+		want         infrav1.MachineResources
+		wantErr      bool
 	}{
 		{
 			testName: "No desired ports",
@@ -901,14 +901,14 @@ func Test_AdoptPorts(t *testing.T) {
 			desiredPorts: []infrav1.ResolvedPortSpec{
 				{NetworkID: networkID1},
 			},
-			dependentResources: infrav1.DependentMachineResources{
+			resources: infrav1.MachineResources{
 				Ports: []infrav1.PortStatus{
 					{
 						ID: portID1,
 					},
 				},
 			},
-			want: infrav1.DependentMachineResources{
+			want: infrav1.MachineResources{
 				Ports: []infrav1.PortStatus{
 					{
 						ID: portID1,
@@ -925,7 +925,7 @@ func Test_AdoptPorts(t *testing.T) {
 				m.ListPort(ports.ListOpts{Name: "test-machine-0", NetworkID: networkID1}).
 					Return([]ports.Port{{ID: portID1}}, nil)
 			},
-			want: infrav1.DependentMachineResources{
+			want: infrav1.MachineResources{
 				Ports: []infrav1.PortStatus{
 					{
 						ID: portID1,
@@ -942,7 +942,7 @@ func Test_AdoptPorts(t *testing.T) {
 				m.ListPort(ports.ListOpts{Name: "test-machine-0", NetworkID: networkID1}).
 					Return(nil, nil)
 			},
-			want: infrav1.DependentMachineResources{},
+			want: infrav1.MachineResources{},
 		},
 		{
 			testName: "2 desired ports, first in status, second exists: adopt second",
@@ -950,7 +950,7 @@ func Test_AdoptPorts(t *testing.T) {
 				{Name: "test-machine-0", NetworkID: networkID1},
 				{Name: "test-machine-1", NetworkID: networkID2},
 			},
-			dependentResources: infrav1.DependentMachineResources{
+			resources: infrav1.MachineResources{
 				Ports: []infrav1.PortStatus{
 					{
 						ID: portID1,
@@ -961,7 +961,7 @@ func Test_AdoptPorts(t *testing.T) {
 				m.ListPort(ports.ListOpts{Name: "test-machine-1", NetworkID: networkID2}).
 					Return([]ports.Port{{ID: portID2}}, nil)
 			},
-			want: infrav1.DependentMachineResources{
+			want: infrav1.MachineResources{
 				Ports: []infrav1.PortStatus{
 					{ID: portID1},
 					{ID: portID2},
@@ -975,7 +975,7 @@ func Test_AdoptPorts(t *testing.T) {
 				{Name: "test-machine-1", NetworkID: networkID2},
 				{Name: "test-machine-2", NetworkID: networkID3},
 			},
-			dependentResources: infrav1.DependentMachineResources{
+			resources: infrav1.MachineResources{
 				Ports: []infrav1.PortStatus{
 					{
 						ID: portID1,
@@ -986,7 +986,7 @@ func Test_AdoptPorts(t *testing.T) {
 				m.ListPort(ports.ListOpts{Name: "test-machine-1", NetworkID: networkID2}).
 					Return(nil, nil)
 			},
-			want: infrav1.DependentMachineResources{
+			want: infrav1.MachineResources{
 				Ports: []infrav1.PortStatus{
 					{ID: portID1},
 				},
@@ -999,7 +999,7 @@ func Test_AdoptPorts(t *testing.T) {
 				{Name: "test-machine-bar", NetworkID: networkID2},
 				{Name: "test-machine-baz", NetworkID: networkID3},
 			},
-			dependentResources: infrav1.DependentMachineResources{
+			resources: infrav1.MachineResources{
 				Ports: []infrav1.PortStatus{
 					{
 						ID: portID1,
@@ -1010,7 +1010,7 @@ func Test_AdoptPorts(t *testing.T) {
 				m.ListPort(ports.ListOpts{Name: "test-machine-bar", NetworkID: networkID2}).
 					Return(nil, nil)
 			},
-			want: infrav1.DependentMachineResources{
+			want: infrav1.MachineResources{
 				Ports: []infrav1.PortStatus{
 					{ID: portID1},
 				},
@@ -1035,13 +1035,13 @@ func Test_AdoptPorts(t *testing.T) {
 			}
 
 			err := s.AdoptPorts(scope.NewWithLogger(mockScopeFactory, log),
-				tt.desiredPorts, &tt.dependentResources)
+				tt.desiredPorts, &tt.resources)
 			if tt.wantErr {
 				g.Expect(err).Error()
 				return
 			}
 
-			g.Expect(tt.dependentResources).To(Equal(tt.want), cmp.Diff(&tt.dependentResources, tt.want))
+			g.Expect(tt.resources).To(Equal(tt.want), cmp.Diff(&tt.resources, tt.want))
 		})
 	}
 }
