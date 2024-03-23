@@ -330,11 +330,11 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in *i
 	out.CloudName = in.IdentityRef.CloudName
 	out.IdentityRef = &OpenStackIdentityReference{Name: in.IdentityRef.Name}
 
-	if in.APIServerLoadBalancer != nil {
-		if err := Convert_v1beta1_APIServerLoadBalancer_To_v1alpha7_APIServerLoadBalancer(in.APIServerLoadBalancer, &out.APIServerLoadBalancer, s); err != nil {
-			return err
-		}
-	}
+//	if in.APIServerLoadBalancer != nil {
+//		if err := Convert_v1beta1_APIServerLoadBalancer_To_v1alpha7_APIServerLoadBalancer(in.APIServerLoadBalancer, &out.APIServerLoadBalancer, s); err != nil {
+//			return err
+//		}
+//	}
 
 	return nil
 }

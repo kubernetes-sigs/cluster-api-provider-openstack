@@ -915,7 +915,7 @@ specified.</p>
 </tr>
 <tr>
 <td>
-<code>apiSeverLoadBalancerAZ</code><br/>
+<code>availabilityZone</code><br/>
 <em>
 string
 </em>

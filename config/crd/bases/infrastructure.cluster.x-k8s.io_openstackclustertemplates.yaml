@@ -101,9 +101,6 @@ spec:
                             items:
                               type: string
                             type: array
-                          apiSeverLoadBalancerAZ:
-                            description: API Server LoadBalancer AvailabilityZone
-                            type: string
                           enabled:
                             description: Enabled defines whether a load balancer should
                               be created.
@@ -829,9 +826,6 @@ spec:
                             items:
                               type: string
                             type: array
-                          apiSeverLoadBalancerAZ:
-                            description: API Server LoadBalancer AvailabilityZone
-                            type: string
                           enabled:
                             description: Enabled defines whether a load balancer should
                               be created.
@@ -1596,9 +1590,6 @@ spec:
                             items:
                               type: string
                             type: array
-                          apiSeverLoadBalancerAZ:
-                            description: API Server LoadBalancer AvailabilityZone
-                            type: string
                           enabled:
                             description: Enabled defines whether a load balancer should
                               be created.
@@ -2315,7 +2306,7 @@ spec:
                               type: string
                             type: array
                             x-kubernetes-list-type: set
-                          apiSeverLoadBalancerAZ:
+                          availabilityZone:
                             description: API Server LoadBalancer AvailabilityZone
                             type: string
                           enabled:

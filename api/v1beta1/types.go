@@ -650,7 +650,7 @@ type APIServerLoadBalancer struct {
 
 	// API Server LoadBalancer AvailabilityZone
 	// +optional
-	APIServerLoadBalancerAZ string `json:"apiSeverLoadBalancerAZ,omitempty"`
+	AvailabilityZone optional.String `json:"availabilityZone,omitempty"`
 }
 
 func (s *APIServerLoadBalancer) IsZero() bool {
