@@ -316,4 +316,6 @@ type APIServerLoadBalancer struct {
 	AdditionalPorts []int `json:"additionalPorts,omitempty"`
 	// AllowedCIDRs restrict access to all API-Server listeners to the given address CIDRs.
 	AllowedCIDRs []string `json:"allowedCidrs,omitempty"`
+	// API Server LoadBalancer AvailabilityZone
+	APIServerLoadBalancerAZ string `json:"apiSeverLoadBalancerAZ,omitempty"`
 }

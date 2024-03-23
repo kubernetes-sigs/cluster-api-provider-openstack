@@ -913,6 +913,18 @@ API load balancer. The Octavia default will be used if it is not
 specified.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>apiSeverLoadBalancerAZ</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>API Server LoadBalancer AvailabilityZone</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.AdditionalBlockDevice">AdditionalBlockDevice

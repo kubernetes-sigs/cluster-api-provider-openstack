@@ -305,6 +305,7 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 		Description: names.GetDescription(clusterResourceName),
 		Provider:    lbProvider,
 		Tags:        openStackCluster.Spec.Tags,
+		APIServerLoadBalancerAZ: openStackCluster.spec.apiSeverLoadBalancerAZ
 	}
 	if vipAddress != nil {
 		lbCreateOpts.VipAddress = *vipAddress

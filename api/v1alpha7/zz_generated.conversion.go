@@ -453,6 +453,7 @@ func autoConvert_v1alpha7_APIServerLoadBalancer_To_v1beta1_APIServerLoadBalancer
 	if err := optional.Convert_string_To_optional_String(&in.Provider, &out.Provider, s); err != nil {
 		return err
 	}
+	out.APIServerLoadBalancerAZ = in.APIServerLoadBalancerAZ
 	return nil
 }
 
@@ -470,6 +471,7 @@ func autoConvert_v1beta1_APIServerLoadBalancer_To_v1alpha7_APIServerLoadBalancer
 	if err := optional.Convert_optional_String_To_string(&in.Provider, &out.Provider, s); err != nil {
 		return err
 	}
+	out.APIServerLoadBalancerAZ = in.APIServerLoadBalancerAZ
 	return nil
 }
 

@@ -886,6 +886,17 @@ string
 <p>Octavia Provider Used to create load balancer</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>apiSeverLoadBalancerAZ</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>API Server LoadBalancer AvailabilityZone</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1alpha6.AddressPair">AddressPair
