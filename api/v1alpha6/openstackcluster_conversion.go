@@ -500,6 +500,7 @@ func restorev1beta1BastionStatus(previous *infrav1.BastionStatus, dst *infrav1.B
 	// Resolved and resources have no equivalents
 	dst.Resolved = previous.Resolved
 	dst.Resources = previous.Resources
+	dst.Server = previous.Server
 }
 
 func Convert_v1alpha6_Instance_To_v1beta1_BastionStatus(in *Instance, out *infrav1.BastionStatus, _ apiconversion.Scope) error {

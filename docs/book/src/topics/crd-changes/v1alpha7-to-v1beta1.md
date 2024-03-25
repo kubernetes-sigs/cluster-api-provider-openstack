@@ -161,7 +161,7 @@ spec:
 
 #### Removal of instanceID from spec
 
-The OpenStackMachine controller previously set `instanceID` in the machine spec, in addition to `providerID`. `providerID` remains unchanged as it is required by Cluster API, but `instanceID` is no longer set. If still required, it is now available in the status in `resources`.
+The OpenStackMachine controller previously set `instanceID` in the machine spec, in addition to `providerID`. `providerID` remains unchanged as it is required by Cluster API, but `instanceID` is no longer set. If still required, it is now available in the status in `.status.server`.
 
 ### `OpenStackCluster`
 
@@ -397,7 +397,7 @@ spec:
 
 #### Changes to bastion in status
 
-`id`, `sshKeyName`, and `state` are removed from the bastion status. `id` and `state` are now available in `bastion.resources.server` if required. `sshKeyName` has no replacement in status, but remains available in the spec.
+`id`, `sshKeyName`, and `state` are removed from the bastion status. `id` and `state` are now available in `bastion.server` if required. `sshKeyName` has no replacement in status, but remains available in the spec.
 
 ### Changes to filters
 

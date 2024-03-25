@@ -2646,22 +2646,22 @@ spec:
                       - id
                       type: object
                     type: array
-                  server:
-                    description: Server describes the OpenStack server created for
-                      the machine
-                    properties:
-                      id:
-                        description: ID is the uuid of the server
-                        type: string
-                      state:
-                        description: |-
-                          State is a previously observed state of the server
-                          Do not rely on this field to be up to date
-                        type: string
-                    required:
-                    - id
-                    - state
-                    type: object
+                type: object
+              server:
+                description: Server describes the OpenStack server created for the
+                  machine
+                properties:
+                  id:
+                    description: ID is the uuid of the server
+                    type: string
+                  state:
+                    description: |-
+                      State is a previously observed state of the server
+                      Do not rely on this field to be up to date
+                    type: string
+                required:
+                - id
+                - state
                 type: object
             type: object
         type: object

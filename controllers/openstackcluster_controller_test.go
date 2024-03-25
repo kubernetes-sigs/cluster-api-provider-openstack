@@ -206,11 +206,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 		testCluster.Status = infrav1.OpenStackClusterStatus{
 			Bastion: &infrav1.BastionStatus{
-				Resources: &infrav1.MachineResources{
-					Server: &infrav1.ServerStatus{
-						ID:    "bastion-uuid",
-						State: "ACTIVE",
-					},
+				Server: &infrav1.ServerStatus{
+					ID:    "bastion-uuid",
+					State: "ACTIVE",
 				},
 			},
 		}
@@ -303,10 +301,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 						ID: "portID1",
 					},
 				},
-				Server: &infrav1.ServerStatus{
-					ID:    "adopted-bastion-uuid",
-					State: "ACTIVE",
-				},
+			},
+			Server: &infrav1.ServerStatus{
+				ID:    "adopted-bastion-uuid",
+				State: "ACTIVE",
 			},
 		}
 		Expect(testCluster.Status.Bastion).To(Equal(expectedStatus), cmp.Diff(testCluster.Status.Bastion, expectedStatus))
@@ -347,9 +345,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 							ID: "portID1",
 						},
 					},
-					Server: &infrav1.ServerStatus{
-						ID: "adopted-fip-bastion-uuid",
-					},
+				},
+				Server: &infrav1.ServerStatus{
+					ID: "adopted-fip-bastion-uuid",
 				},
 			},
 		}
@@ -390,10 +388,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 						ID: "portID1",
 					},
 				},
-				Server: &infrav1.ServerStatus{
-					ID:    "adopted-fip-bastion-uuid",
-					State: "ACTIVE",
-				},
+			},
+			Server: &infrav1.ServerStatus{
+				ID:    "adopted-fip-bastion-uuid",
+				State: "ACTIVE",
 			},
 		}))
 		Expect(err).To(BeNil())
@@ -433,9 +431,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 							ID: "portID1",
 						},
 					},
-					Server: &infrav1.ServerStatus{
-						ID: "requeue-bastion-uuid",
-					},
+				},
+				Server: &infrav1.ServerStatus{
+					ID: "requeue-bastion-uuid",
 				},
 			},
 		}
@@ -470,10 +468,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 						ID: "portID1",
 					},
 				},
-				Server: &infrav1.ServerStatus{
-					ID:    "requeue-bastion-uuid",
-					State: "BUILD",
-				},
+			},
+			Server: &infrav1.ServerStatus{
+				ID:    "requeue-bastion-uuid",
+				State: "BUILD",
 			},
 		}))
 		Expect(err).To(BeNil())

@@ -1198,6 +1198,20 @@ MachineResources
 <p>Resources contains references to OpenStack resources created for the bastion.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>server</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerStatus">
+ServerStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Server describes the OpenStack server created for the bastion</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.BindingProfile">BindingProfile
@@ -1709,20 +1723,6 @@ string
 <td>
 <em>(Optional)</em>
 <p>Ports is the status of the ports created for the machine.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>server</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerStatus">
-ServerStatus
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Server describes the OpenStack server created for the machine</p>
 </td>
 </tr>
 </tbody>
@@ -3316,6 +3316,20 @@ sigs.k8s.io/cluster-api/api/v1beta1.Conditions
 <td>
 </td>
 </tr>
+<tr>
+<td>
+<code>server</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerStatus">
+ServerStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Server describes the OpenStack server created for the machine</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineTemplateResource">OpenStackMachineTemplateResource
@@ -4648,7 +4662,8 @@ string
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.MachineResources">MachineResources</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.BastionStatus">BastionStatus</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineStatus">OpenStackMachineStatus</a>)
 </p>
 <p>
 </p>

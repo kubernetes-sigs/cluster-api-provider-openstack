@@ -278,7 +278,7 @@ func deleteBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStac
 	}
 
 	var instanceStatus *compute.InstanceStatus
-	serverID := bastionStatus.Resources.GetServerID()
+	serverID := bastionStatus.GetServerID()
 	if bastionStatus != nil && serverID != nil {
 		instanceStatus, err = computeService.GetInstanceStatus(*serverID)
 		if err != nil {
@@ -460,7 +460,7 @@ func reconcileBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openS
 	var instanceStatus *compute.InstanceStatus
 	bastionStatus := openStackCluster.Status.Bastion
 	if bastionStatus != nil {
-		if serverID := bastionStatus.Resources.GetServerID(); serverID != nil {
+		if serverID := bastionStatus.GetServerID(); serverID != nil {
 			if instanceStatus, err = computeService.GetInstanceStatus(*serverID); err != nil {
 				return nil, err
 			}
@@ -480,7 +480,7 @@ func reconcileBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openS
 	}
 
 	// Save hash & status as soon as we know we have an instance
-	openStackCluster.Status.Bastion.Resources.Server = &infrav1.ServerStatus{
+	openStackCluster.Status.Bastion.Server = &infrav1.ServerStatus{
 		ID:    instanceStatus.ID(),
 		State: instanceStatus.State(),
 	}

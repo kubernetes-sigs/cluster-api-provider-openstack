@@ -684,11 +684,9 @@ func TestMachineConversionControllerSpecFields(t *testing.T) {
 		{
 			name: "Set InstanceID",
 			modifyUp: func(up *infrav1.OpenStackMachine) {
-				up.Status.Resources = &infrav1.MachineResources{
-					Server: &infrav1.ServerStatus{
-						ID:    "new-instance-id",
-						State: "ACTIVE",
-					},
+				up.Status.Server = &infrav1.ServerStatus{
+					ID:    "new-instance-id",
+					State: "ACTIVE",
 				}
 			},
 			testAfter: func(after *OpenStackMachine) {

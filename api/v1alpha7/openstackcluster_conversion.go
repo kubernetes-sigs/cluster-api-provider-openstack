@@ -448,6 +448,7 @@ func restorev1beta1BastionStatus(previous *infrav1.BastionStatus, dst *infrav1.B
 	// Resolved and resources have no equivalents
 	dst.Resolved = previous.Resolved
 	dst.Resources = previous.Resources
+	dst.Server = previous.Server
 }
 
 /* Bastion status */
