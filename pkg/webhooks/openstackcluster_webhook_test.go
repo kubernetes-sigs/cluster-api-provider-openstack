@@ -85,7 +85,11 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 					Bastion: &infrav1.Bastion{
 						Spec: &infrav1.OpenStackMachineSpec{
-							Image:  infrav1.ImageFilter{Name: pointer.String("foobar")},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
+									Name: pointer.String("foobar"),
+								},
+							},
 							Flavor: "minimal",
 						},
 						Enabled: true,
@@ -105,7 +109,11 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 					Bastion: &infrav1.Bastion{
 						Spec: &infrav1.OpenStackMachineSpec{
-							Image:  infrav1.ImageFilter{Name: pointer.String("foobarbaz")},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
+									Name: pointer.String("foobarbaz"),
+								},
+							},
 							Flavor: "medium",
 						},
 						Enabled: true,
@@ -454,7 +462,11 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Enabled: true,
 						Spec: &infrav1.OpenStackMachineSpec{
 							Flavor: "m1.small",
-							Image:  infrav1.ImageFilter{Name: pointer.String("ubuntu")},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
+									Name: pointer.String("ubuntu"),
+								},
+							},
 						},
 					},
 				},
@@ -481,7 +493,11 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Enabled: false,
 						Spec: &infrav1.OpenStackMachineSpec{
 							Flavor: "m1.small",
-							Image:  infrav1.ImageFilter{Name: pointer.String("ubuntu")},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
+									Name: pointer.String("ubuntu"),
+								},
+							},
 						},
 					},
 				},

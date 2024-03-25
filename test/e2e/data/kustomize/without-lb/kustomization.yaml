@@ -4,6 +4,7 @@ resources:
 - ../../../../../kustomize/v1beta1/without-lb
 
 components:
+- ../common-patches/cluster
 - ../common-patches/cni
 - ../common-patches/ccm
 - ../common-patches/externalNetworkByName

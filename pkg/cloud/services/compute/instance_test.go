@@ -47,22 +47,26 @@ func TestService_getImageID(t *testing.T) {
 
 	tests := []struct {
 		testName string
-		image    infrav1.ImageFilter
+		image    infrav1.ImageParam
 		expect   func(m *mock.MockImageClientMockRecorder)
 		want     string
 		wantErr  bool
 	}{
 		{
 			testName: "Return image ID when ID given",
-			image:    infrav1.ImageFilter{ID: &imageID},
+			image:    infrav1.ImageParam{ID: &imageID},
 			want:     imageID,
 			expect:   func(m *mock.MockImageClientMockRecorder) {},
 			wantErr:  false,
 		},
 		{
 			testName: "Return image ID when name given",
-			image:    infrav1.ImageFilter{Name: &imageName},
-			want:     imageID,
+			image: infrav1.ImageParam{
+				Filter: &infrav1.ImageFilter{
+					Name: &imageName,
+				},
+			},
+			want: imageID,
 			expect: func(m *mock.MockImageClientMockRecorder) {
 				m.ListImages(images.ListOpts{Name: imageName}).Return(
 					[]images.Image{{ID: imageID, Name: imageName}},
@@ -72,8 +76,12 @@ func TestService_getImageID(t *testing.T) {
 		},
 		{
 			testName: "Return image ID when tags given",
-			image:    infrav1.ImageFilter{Tags: imageTags},
-			want:     imageID,
+			image: infrav1.ImageParam{
+				Filter: &infrav1.ImageFilter{
+					Tags: imageTags,
+				},
+			},
+			want: imageID,
 			expect: func(m *mock.MockImageClientMockRecorder) {
 				m.ListImages(images.ListOpts{Tags: imageTags}).Return(
 					[]images.Image{{ID: imageID, Name: imageName, Tags: imageTags}},
@@ -83,7 +91,11 @@ func TestService_getImageID(t *testing.T) {
 		},
 		{
 			testName: "Return no results",
-			image:    infrav1.ImageFilter{Name: &imageName},
+			image: infrav1.ImageParam{
+				Filter: &infrav1.ImageFilter{
+					Name: &imageName,
+				},
+			},
 			expect: func(m *mock.MockImageClientMockRecorder) {
 				m.ListImages(images.ListOpts{Name: imageName}).Return(
 					[]images.Image{},
@@ -94,7 +106,11 @@ func TestService_getImageID(t *testing.T) {
 		},
 		{
 			testName: "Return multiple results",
-			image:    infrav1.ImageFilter{Name: &imageName},
+			image: infrav1.ImageParam{
+				Filter: &infrav1.ImageFilter{
+					Name: &imageName,
+				},
+			},
 			expect: func(m *mock.MockImageClientMockRecorder) {
 				m.ListImages(images.ListOpts{Name: "test-image"}).Return(
 					[]images.Image{
@@ -107,7 +123,11 @@ func TestService_getImageID(t *testing.T) {
 		},
 		{
 			testName: "OpenStack returns error",
-			image:    infrav1.ImageFilter{Name: &imageName},
+			image: infrav1.ImageParam{
+				Filter: &infrav1.ImageFilter{
+					Name: &imageName,
+				},
+			},
 			expect: func(m *mock.MockImageClientMockRecorder) {
 				m.ListImages(images.ListOpts{Name: "test-image"}).Return(
 					nil,
