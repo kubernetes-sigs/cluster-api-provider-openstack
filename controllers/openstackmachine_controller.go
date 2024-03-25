@@ -277,8 +277,8 @@ func (r *OpenStackMachineReconciler) reconcileDelete(scope *scope.WithLogger, cl
 	}
 
 	var instanceStatus *compute.InstanceStatus
-	if openStackMachine.Status.Resources.Server != nil {
-		instanceStatus, err = computeService.GetInstanceStatus(openStackMachine.Status.Resources.Server.ID)
+	if openStackMachine.Status.Server != nil {
+		instanceStatus, err = computeService.GetInstanceStatus(openStackMachine.Status.Server.ID)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
@@ -548,7 +548,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	// TODO(sbueringer) From CAPA: TODO(ncdc): move this validation logic into a validating webhook (for us: create validation logic in webhook)
 
 	openStackMachine.Spec.ProviderID = pointer.String(fmt.Sprintf("openstack:///%s", instanceStatus.ID()))
-	openStackMachine.Status.Resources.Server = &infrav1.ServerStatus{
+	openStackMachine.Status.Server = &infrav1.ServerStatus{
 		ID:    instanceStatus.ID(),
 		State: instanceStatus.State(),
 	}
@@ -700,8 +700,8 @@ func getOrCreateMachinePorts(openStackMachine *infrav1.OpenStackMachine, network
 func (r *OpenStackMachineReconciler) getOrCreateInstance(logger logr.Logger, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, computeService *compute.Service, userData string, portIDs []string) (*compute.InstanceStatus, error) {
 	var instanceStatus *compute.InstanceStatus
 	var err error
-	if openStackMachine.Status.Resources != nil && openStackMachine.Status.Resources.Server != nil {
-		serverID := openStackMachine.Status.Resources.Server.ID
+	if openStackMachine.Status.Server != nil {
+		serverID := openStackMachine.Status.Server.ID
 		instanceStatus, err = computeService.GetInstanceStatus(serverID)
 		if err != nil {
 			logger.Info("Unable to get OpenStack instance", "name", openStackMachine.Name, "id", serverID)
@@ -715,7 +715,7 @@ func (r *OpenStackMachineReconciler) getOrCreateInstance(logger logr.Logger, ope
 			if instanceStatus != nil {
 				return instanceStatus, nil
 			}
-			if openStackMachine.Status.Resources.Server != nil {
+			if openStackMachine.Status.Server != nil {
 				logger.Info("Not reconciling machine in failed state. The previously existing OpenStack instance is no longer available")
 				conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceNotFoundReason, clusterv1.ConditionSeverityError, "virtual machine no longer exists")
 				openStackMachine.SetFailure(capierrors.UpdateMachineError, errors.New("virtual machine no longer exists"))

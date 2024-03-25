@@ -1210,6 +1210,7 @@ func autoConvert_v1beta1_OpenStackMachineStatus_To_v1alpha5_OpenStackMachineStat
 	out.FailureReason = (*errors.MachineStatusError)(unsafe.Pointer(in.FailureReason))
 	out.FailureMessage = (*string)(unsafe.Pointer(in.FailureMessage))
 	out.Conditions = *(*apiv1beta1.Conditions)(unsafe.Pointer(&in.Conditions))
+	// WARNING: in.Server requires manual conversion: does not exist in peer-type
 	return nil
 }
 

@@ -149,11 +149,9 @@ var _ = Describe("When calling getOrCreate", func() {
 		machine := &clusterv1.Machine{}
 		openStackMachine := &infrav1.OpenStackMachine{
 			Status: infrav1.OpenStackMachineStatus{
-				Resources: &infrav1.MachineResources{
-					Server: &infrav1.ServerStatus{
-						ID:    "machine-uuid",
-						State: "ACTIVE",
-					},
+				Server: &infrav1.ServerStatus{
+					ID:    "machine-uuid",
+					State: "ACTIVE",
 				},
 			},
 		}

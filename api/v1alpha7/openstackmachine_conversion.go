@@ -109,10 +109,7 @@ func Convert_v1alpha7_OpenStackMachine_To_v1beta1_OpenStackMachine(in *OpenStack
 		if in.Status.InstanceState != nil {
 			serverStatus.State = (infrav1.InstanceState)(*in.Status.InstanceState)
 		}
-		if out.Status.Resources == nil {
-			out.Status.Resources = &infrav1.MachineResources{}
-		}
-		out.Status.Resources.Server = serverStatus
+		out.Status.Server = serverStatus
 	}
 	return nil
 }
@@ -122,9 +119,9 @@ func Convert_v1beta1_OpenStackMachine_To_v1alpha7_OpenStackMachine(in *infrav1.O
 		return err
 	}
 
-	if in.Status.Resources != nil && in.Status.Resources.Server != nil {
-		out.Spec.InstanceID = &in.Status.Resources.Server.ID
-		state := InstanceState(in.Status.Resources.Server.State)
+	if in.Status.Server != nil {
+		out.Spec.InstanceID = &in.Status.Server.ID
+		state := InstanceState(in.Status.Server.State)
 		out.Status.InstanceState = &state
 	}
 

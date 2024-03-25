@@ -370,6 +370,10 @@ type BastionStatus struct {
 	// Resources contains references to OpenStack resources created for the bastion.
 	// +optional
 	Resources *MachineResources `json:"resources,omitempty"`
+
+	// Server describes the OpenStack server created for the bastion
+	// +optional
+	Server *ServerStatus `json:"server,omitempty"`
 }
 
 type RootVolume struct {
@@ -681,13 +685,16 @@ type MachineResources struct {
 	// Ports is the status of the ports created for the machine.
 	// +optional
 	Ports []PortStatus `json:"ports,omitempty"`
-
-	// Server describes the OpenStack server created for the machine
-	// +optional
-	Server *ServerStatus `json:"server,omitempty"`
 }
 
-func (r *MachineResources) GetServerID() *string {
+func (r *OpenStackMachineStatus) GetServerID() *string {
+	if r == nil || r.Server == nil {
+		return nil
+	}
+	return &r.Server.ID
+}
+
+func (r *BastionStatus) GetServerID() *string {
 	if r == nil || r.Server == nil {
 		return nil
 	}

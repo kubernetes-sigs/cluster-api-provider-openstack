@@ -152,6 +152,10 @@ type OpenStackMachineStatus struct {
 	FailureMessage *string `json:"failureMessage,omitempty"`
 
 	Conditions clusterv1.Conditions `json:"conditions,omitempty"`
+
+	// Server describes the OpenStack server created for the machine
+	// +optional
+	Server *ServerStatus `json:"server,omitempty"`
 }
 
 // +genclient
