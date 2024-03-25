@@ -356,13 +356,13 @@ func Convert_v1alpha5_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in *O
 		out.ServerGroup = &infrav1.ServerGroupFilter{}
 	}
 
-	imageFilter := infrav1.ImageFilter{}
+	imageParam := infrav1.ImageParam{}
 	if in.ImageUUID != "" {
-		imageFilter.ID = &in.ImageUUID
+		imageParam.ID = &in.ImageUUID
 	} else if in.Image != "" { // Only add name when ID is not set, in v1beta1 it's not possible to set both.
-		imageFilter.Name = &in.Image
+		imageParam.Filter = &infrav1.ImageFilter{Name: &in.Image}
 	}
-	out.Image = imageFilter
+	out.Image = imageParam
 
 	if in.IdentityRef != nil {
 		out.IdentityRef = &infrav1.OpenStackIdentityReference{Name: in.IdentityRef.Name}
@@ -686,12 +686,10 @@ func Convert_v1beta1_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(in *i
 		out.ServerGroupID = in.ServerGroup.ID
 	}
 
-	if in.Image.Name != nil && *in.Image.Name != "" {
-		out.Image = *in.Image.Name
-	}
-
-	if in.Image.ID != nil && *in.Image.ID != "" {
+	if in.Image.ID != nil {
 		out.ImageUUID = *in.Image.ID
+	} else if in.Image.Filter != nil && in.Image.Filter.Name != nil {
+		out.Image = *in.Image.Filter.Name
 	}
 
 	if in.IdentityRef != nil {

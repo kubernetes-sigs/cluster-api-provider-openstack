@@ -587,8 +587,8 @@ string
 <td>
 <code>image</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ImageFilter">
-ImageFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ImageParam">
+ImageParam
 </a>
 </em>
 </td>
@@ -1580,10 +1580,10 @@ address in any subnet of the port&rsquo;s network.</p>
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ImageParam">ImageParam</a>)
 </p>
 <p>
-<p>ImageFilter describes the data needed to identify which image to use. If ID is provided it is required that all other fields are unset.</p>
+<p>ImageFilter describes a query for an image.</p>
 </p>
 <table>
 <thead>
@@ -1593,18 +1593,6 @@ address in any subnet of the port&rsquo;s network.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>
-<code>id</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The ID of the desired image. If ID is provided, the other filters cannot be provided. Must be in UUID format.</p>
-</td>
-</tr>
 <tr>
 <td>
 <code>name</code><br/>
@@ -1627,6 +1615,53 @@ string
 <td>
 <em>(Optional)</em>
 <p>The tags associated with the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.ImageParam">ImageParam
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>)
+</p>
+<p>
+<p>ImageParam describes a glance image. It can be specified by ID or filter.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>id</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ID is the uuid of the image. ID will not be validated before use.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>filter</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ImageFilter">
+ImageFilter
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Filter describes a query for an image. If specified, the combination
+of name and tags must return a single matching image or an error will
+be raised.</p>
 </td>
 </tr>
 </tbody>
@@ -3101,8 +3136,8 @@ string
 <td>
 <code>image</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ImageFilter">
-ImageFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ImageParam">
+ImageParam
 </a>
 </em>
 </td>
@@ -3473,8 +3508,8 @@ string
 <td>
 <code>image</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ImageFilter">
-ImageFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ImageParam">
+ImageParam
 </a>
 </em>
 </td>

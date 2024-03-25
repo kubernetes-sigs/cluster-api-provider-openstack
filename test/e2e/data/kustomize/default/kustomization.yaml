@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
 - ../../../../../kustomize/v1beta1/default
 components:
+- ../common-patches/cluster
 - ../common-patches/cni
 - ../upgrade-patches
 - ../common-patches/ccm

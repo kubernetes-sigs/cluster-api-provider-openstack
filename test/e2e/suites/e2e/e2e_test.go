@@ -859,8 +859,10 @@ func makeOpenStackMachineTemplate(namespace, clusterName, name string) *infrav1.
 			Template: infrav1.OpenStackMachineTemplateResource{
 				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: e2eCtx.E2EConfig.GetVariable(shared.OpenStackNodeMachineFlavor),
-					Image: infrav1.ImageFilter{
-						Name: pointer.String(e2eCtx.E2EConfig.GetVariable(shared.OpenStackImageName)),
+					Image: infrav1.ImageParam{
+						Filter: &infrav1.ImageFilter{
+							Name: pointer.String(e2eCtx.E2EConfig.GetVariable(shared.OpenStackImageName)),
+						},
 					},
 					SSHKeyName: shared.DefaultSSHKeyPairName,
 					IdentityRef: &infrav1.OpenStackIdentityReference{
@@ -883,8 +885,10 @@ func makeOpenStackMachineTemplateWithPortOptions(namespace, clusterName, name st
 			Template: infrav1.OpenStackMachineTemplateResource{
 				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: e2eCtx.E2EConfig.GetVariable(shared.OpenStackNodeMachineFlavor),
-					Image: infrav1.ImageFilter{
-						Name: pointer.String(e2eCtx.E2EConfig.GetVariable(shared.OpenStackImageName)),
+					Image: infrav1.ImageParam{
+						Filter: &infrav1.ImageFilter{
+							Name: pointer.String(e2eCtx.E2EConfig.GetVariable(shared.OpenStackImageName)),
+						},
 					},
 					SSHKeyName: shared.DefaultSSHKeyPairName,
 					IdentityRef: &infrav1.OpenStackIdentityReference{

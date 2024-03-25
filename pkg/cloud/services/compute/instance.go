@@ -18,6 +18,7 @@ package compute
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -332,12 +333,17 @@ func applyServerGroupID(opts servers.CreateOptsBuilder, serverGroupID string) se
 }
 
 // Helper function for getting image ID from name, ID, or tags.
-func (s *Service) GetImageID(image infrav1.ImageFilter) (string, error) {
+func (s *Service) GetImageID(image infrav1.ImageParam) (string, error) {
 	if image.ID != nil {
 		return *image.ID, nil
 	}
 
-	listOpts := filterconvert.ImageFilterToListOpts(&image)
+	if image.Filter == nil {
+		// Should have been caught by validation
+		return "", errors.New("image id and filter are both nil")
+	}
+
+	listOpts := filterconvert.ImageFilterToListOpts(image.Filter)
 	allImages, err := s.getImageClient().ListImages(listOpts)
 	if err != nil {
 		return "", err
