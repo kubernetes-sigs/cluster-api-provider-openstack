@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/external"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -44,7 +43,6 @@ import (
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/filterconvert"
 )
 
 const (
@@ -400,23 +398,15 @@ func (r *OpenStackFloatingIPPoolReconciler) reconcileFloatingIPNetwork(scope *sc
 		return err
 	}
 
-	netListOpts := external.ListOptsExt{
-		ListOptsBuilder: filterconvert.NetworkFilterToListOpts(&pool.Spec.FloatingIPNetwork),
-		External:        pointer.Bool(true),
-	}
-
-	networkList, err := networkingService.GetNetworksByFilter(&netListOpts)
+	network, err := networkingService.GetNetworkByParam(&pool.Spec.FloatingIPNetwork)
 	if err != nil {
 		return fmt.Errorf("failed to find network: %w", err)
 	}
-	if len(networkList) > 1 {
-		return fmt.Errorf("found multiple networks, expects filter to match one (result: %v)", networkList)
-	}
 
 	pool.Status.FloatingIPNetwork = &infrav1.NetworkStatus{
-		ID:   networkList[0].ID,
-		Name: networkList[0].Name,
-		Tags: networkList[0].Tags,
+		ID:   network.ID,
+		Name: network.Name,
+		Tags: network.Tags,
 	}
 	return nil
 }

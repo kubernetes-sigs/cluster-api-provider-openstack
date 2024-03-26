@@ -475,8 +475,8 @@ func TestService_ConstructPorts(t *testing.T) {
 			spec: infrav1.OpenStackMachineSpec{
 				Ports: []infrav1.PortOpts{
 					{
-						Network: &infrav1.NetworkFilter{
-							ID: networkID,
+						Network: &infrav1.NetworkParam{
+							ID: pointer.String(networkID),
 						},
 					},
 				},
@@ -497,8 +497,8 @@ func TestService_ConstructPorts(t *testing.T) {
 			spec: infrav1.OpenStackMachineSpec{
 				Ports: []infrav1.PortOpts{
 					{
-						Network: &infrav1.NetworkFilter{
-							Name: "test-network",
+						Network: &infrav1.NetworkParam{
+							Filter: &infrav1.NetworkFilter{Name: "test-network"},
 						},
 					},
 				},
@@ -858,7 +858,7 @@ func Test_getPortName(t *testing.T) {
 			instanceName: "test-1-instance",
 			spec: &infrav1.PortOpts{
 				NameSuffix: pointer.String("foo2"),
-				Network:    &infrav1.NetworkFilter{ID: "bar"},
+				Network:    &infrav1.NetworkParam{ID: pointer.String("bar")},
 				ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
 					DisablePortSecurity: pointer.Bool(true),
 				},

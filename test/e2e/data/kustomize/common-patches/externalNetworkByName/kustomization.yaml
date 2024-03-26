@@ -9,6 +9,7 @@ patches:
     - op: "add"
       path: "/spec/externalNetwork"
       value:
-        name: "${OPENSTACK_EXTERNAL_NETWORK_NAME}"
+        filter:
+          name: "${OPENSTACK_EXTERNAL_NETWORK_NAME}"
   target:
     kind: OpenStackCluster

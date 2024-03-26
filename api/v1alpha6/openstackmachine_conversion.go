@@ -179,7 +179,7 @@ func convertNetworksToPorts(networks []NetworkParam, s apiconversion.Scope) ([]i
 		network := networks[i]
 
 		// This will remain null if the network is not specified in NetworkParam
-		var networkFilter *infrav1.NetworkFilter
+		var networkFilter *infrav1.NetworkParam
 
 		// In v1alpha6, if network.Filter resolved to multiple networks
 		// then we would add multiple ports. It is not possible to
@@ -189,12 +189,12 @@ func convertNetworksToPorts(networks []NetworkParam, s apiconversion.Scope) ([]i
 		// create the port.
 		switch {
 		case network.UUID != "":
-			networkFilter = &infrav1.NetworkFilter{
-				ID: network.UUID,
+			networkFilter = &infrav1.NetworkParam{
+				ID: &network.UUID,
 			}
 		case network.Filter != (NetworkFilter{}):
-			networkFilter = &infrav1.NetworkFilter{}
-			if err := Convert_v1alpha6_NetworkFilter_To_v1beta1_NetworkFilter(&network.Filter, networkFilter, s); err != nil {
+			networkFilter = &infrav1.NetworkParam{}
+			if err := Convert_v1alpha6_NetworkFilter_To_v1beta1_NetworkParam(&network.Filter, networkFilter, s); err != nil {
 				return nil, err
 			}
 		}

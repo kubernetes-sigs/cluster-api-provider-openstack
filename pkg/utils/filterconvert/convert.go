@@ -71,7 +71,6 @@ func NetworkFilterToListOpts(networkFilter *infrav1.NetworkFilter) networks.List
 		Name:        networkFilter.Name,
 		Description: networkFilter.Description,
 		ProjectID:   networkFilter.ProjectID,
-		ID:          networkFilter.ID,
 		Tags:        infrav1.JoinTags(networkFilter.Tags),
 		TagsAny:     infrav1.JoinTags(networkFilter.TagsAny),
 		NotTags:     infrav1.JoinTags(networkFilter.NotTags),

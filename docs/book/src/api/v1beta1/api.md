@@ -102,8 +102,8 @@ specified. If specified, no new router will be created.</p>
 <td>
 <code>network</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkFilter">
-NetworkFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkParam">
+NetworkParam
 </a>
 </em>
 </td>
@@ -165,8 +165,8 @@ This is necessary if the router needs a fixed ip in a specific subnet.</p>
 <td>
 <code>externalNetwork</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkFilter">
-NetworkFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkParam">
+NetworkParam
 </a>
 </em>
 </td>
@@ -1811,10 +1811,10 @@ bool
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackClusterSpec">OpenStackClusterSpec</a>, 
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">PortOpts</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkParam">NetworkParam</a>)
 </p>
 <p>
+<p>NetworkFilter specifies a query to select an OpenStack network. At least one property must be set.</p>
 </p>
 <table>
 <thead>
@@ -1856,16 +1856,6 @@ string
 </tr>
 <tr>
 <td>
-<code>id</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
 <code>FilterByNeutronTags</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.FilterByNeutronTags">
@@ -1877,6 +1867,52 @@ FilterByNeutronTags
 <p>
 (Members of <code>FilterByNeutronTags</code> are embedded into this type.)
 </p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.NetworkParam">NetworkParam
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackClusterSpec">OpenStackClusterSpec</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">PortOpts</a>)
+</p>
+<p>
+<p>NetworkParam specifies an OpenStack network. It may be specified by either ID or Filter, but not both.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>id</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ID is the ID of the network to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>filter</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkFilter">
+NetworkFilter
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Filter specifies a filter to select an OpenStack network. If provided, cannot be empty.</p>
 </td>
 </tr>
 </tbody>
@@ -2042,8 +2078,8 @@ specified. If specified, no new router will be created.</p>
 <td>
 <code>network</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkFilter">
-NetworkFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkParam">
+NetworkParam
 </a>
 </em>
 </td>
@@ -2105,8 +2141,8 @@ This is necessary if the router needs a fixed ip in a specific subnet.</p>
 <td>
 <code>externalNetwork</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkFilter">
-NetworkFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkParam">
+NetworkParam
 </a>
 </em>
 </td>
@@ -2624,8 +2660,8 @@ specified. If specified, no new router will be created.</p>
 <td>
 <code>network</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkFilter">
-NetworkFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkParam">
+NetworkParam
 </a>
 </em>
 </td>
@@ -2687,8 +2723,8 @@ This is necessary if the router needs a fixed ip in a specific subnet.</p>
 <td>
 <code>externalNetwork</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkFilter">
-NetworkFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkParam">
+NetworkParam
 </a>
 </em>
 </td>
@@ -3661,8 +3697,8 @@ OpenStackMachineTemplateResource
 <td>
 <code>network</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkFilter">
-NetworkFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkParam">
+NetworkParam
 </a>
 </em>
 </td>
