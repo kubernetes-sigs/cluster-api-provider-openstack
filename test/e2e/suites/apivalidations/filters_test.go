@@ -61,16 +61,18 @@ var _ = Describe("Filter API validations", func() {
 		for i := range tags {
 			port := &ports[i]
 			port.Network = &infrav1.NetworkParam{Filter: &infrav1.NetworkFilter{FilterByNeutronTags: tags[i]}}
-			port.FixedIPs = []infrav1.FixedIP{{Subnet: &infrav1.SubnetFilter{FilterByNeutronTags: tags[i]}}}
+			port.FixedIPs = []infrav1.FixedIP{{Subnet: &infrav1.SubnetParam{
+				Filter: &infrav1.SubnetFilter{FilterByNeutronTags: tags[i]},
+			}}}
 			port.SecurityGroups = []infrav1.SecurityGroupFilter{{FilterByNeutronTags: tags[i]}}
 		}
 		Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
 
 		// Maximum of 2 subnets are supported
 		nSubnets := min(len(tags), 2)
-		subnets := make([]infrav1.SubnetFilter, nSubnets)
+		subnets := make([]infrav1.SubnetParam, nSubnets)
 		for i := 0; i < nSubnets; i++ {
-			subnets[i].FilterByNeutronTags = tags[i]
+			subnets[i].Filter = &infrav1.SubnetFilter{FilterByNeutronTags: tags[i]}
 		}
 		cluster.Spec.Subnets = subnets
 		if len(tags) > 0 {
@@ -114,7 +116,9 @@ var _ = Describe("Filter API validations", func() {
 			{
 				machine := machine.DeepCopy()
 				machine.Spec.Ports = []infrav1.PortOpts{
-					{FixedIPs: []infrav1.FixedIP{{Subnet: &infrav1.SubnetFilter{FilterByNeutronTags: tags[i]}}}},
+					{FixedIPs: []infrav1.FixedIP{{Subnet: &infrav1.SubnetParam{
+						Filter: &infrav1.SubnetFilter{FilterByNeutronTags: tags[i]},
+					}}}},
 				}
 				Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail with invalid port subnet neutron tags")
 			}
@@ -132,7 +136,7 @@ var _ = Describe("Filter API validations", func() {
 
 			{
 				cluster := cluster.DeepCopy()
-				cluster.Spec.Subnets = []infrav1.SubnetFilter{{FilterByNeutronTags: tag}}
+				cluster.Spec.Subnets = []infrav1.SubnetParam{{Filter: &infrav1.SubnetFilter{FilterByNeutronTags: tag}}}
 				Expect(k8sClient.Create(ctx, cluster)).NotTo(Succeed(), "OpenStackCluster creation should fail with invalid subnet neutron tags")
 			}
 
@@ -257,6 +261,48 @@ var _ = Describe("Filter API validations", func() {
 		It("should not allow setting both ID and Filter", func() {
 			cluster.Spec.Network = &infrav1.NetworkParam{
 				ID: pointer.String("06c32c52-f207-4f6a-a769-bbcbe5a43f5c"), Filter: &infrav1.NetworkFilter{Name: "foo"},
+			}
+			Expect(k8sClient.Create(ctx, cluster)).NotTo(Succeed(), "OpenStackCluster creation should fail")
+		})
+	})
+
+	Context("SubnetParam", func() {
+		It("should allow setting ID", func() {
+			cluster.Spec.Subnets = []infrav1.SubnetParam{
+				{ID: pointer.String("06c32c52-f207-4f6a-a769-bbcbe5a43f5c")},
+			}
+			Expect(k8sClient.Create(ctx, cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
+		})
+
+		It("should allow setting non-empty Filter", func() {
+			cluster.Spec.Subnets = []infrav1.SubnetParam{
+				{Filter: &infrav1.SubnetFilter{Name: "foo"}},
+			}
+			Expect(k8sClient.Create(ctx, cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
+		})
+
+		It("should not allow setting empty SubnetParam", func() {
+			cluster.Spec.Subnets = []infrav1.SubnetParam{{}}
+			Expect(k8sClient.Create(ctx, cluster)).NotTo(Succeed(), "OpenStackCluster creation should fail")
+		})
+
+		It("should not allow setting invalid id", func() {
+			cluster.Spec.Subnets = []infrav1.SubnetParam{
+				{ID: pointer.String("foo")},
+			}
+			Expect(k8sClient.Create(ctx, cluster)).NotTo(Succeed(), "OpenStackCluster creation should fail")
+		})
+
+		It("should not allow setting empty Filter", func() {
+			cluster.Spec.Subnets = []infrav1.SubnetParam{
+				{Filter: &infrav1.SubnetFilter{}},
+			}
+			Expect(k8sClient.Create(ctx, cluster)).NotTo(Succeed(), "OpenStackCluster creation should fail")
+		})
+
+		It("should not allow setting both ID and Filter", func() {
+			cluster.Spec.Subnets = []infrav1.SubnetParam{
+				{ID: pointer.String("06c32c52-f207-4f6a-a769-bbcbe5a43f5c"), Filter: &infrav1.SubnetFilter{Name: "foo"}},
 			}
 			Expect(k8sClient.Create(ctx, cluster)).NotTo(Succeed(), "OpenStackCluster creation should fail")
 		})

@@ -75,7 +75,7 @@ func InfraV1FuzzerFuncs() []interface{} {
 			// length 1, but we need to also test length 2.
 			// Ensure it is occasionally generated.
 			if len(spec.Subnets) == 1 && c.RandBool() {
-				subnet := infrav1.SubnetFilter{}
+				subnet := infrav1.SubnetParam{}
 				c.Fuzz(&subnet)
 				spec.Subnets = append(spec.Subnets, subnet)
 			}
@@ -129,8 +129,12 @@ func InfraV1FuzzerFuncs() []interface{} {
 			filter.NotTagsAny = filterInvalidTags(filter.NotTagsAny)
 		},
 
-		// v1beta1 network param contains exactly one of ID or filter
+		// v1beta1 filter params contain exactly one of ID or filter
 		func(param *infrav1.NetworkParam, c fuzz.Continue) {
+			fuzzFilterParam(&param.ID, &param.Filter, c)
+		},
+
+		func(param *infrav1.SubnetParam, c fuzz.Continue) {
 			fuzzFilterParam(&param.ID, &param.Filter, c)
 		},
 	}

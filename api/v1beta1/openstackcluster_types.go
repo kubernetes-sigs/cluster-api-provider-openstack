@@ -58,7 +58,7 @@ type OpenStackClusterSpec struct {
 	// +kubebuilder:validation:MaxItems=2
 	// +listType=atomic
 	// +optional
-	Subnets []SubnetFilter `json:"subnets,omitempty"`
+	Subnets []SubnetParam `json:"subnets,omitempty"`
 
 	// NetworkMTU sets the maximum transmission unit (MTU) value to address fragmentation for the private network ID.
 	// This value will be used only if the Cluster actuator creates the network.

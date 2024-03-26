@@ -595,9 +595,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 			Network: &infrav1.NetworkParam{
 				ID: pointer.String(clusterNetworkID),
 			},
-			Subnets: []infrav1.SubnetFilter{
-				{ID: clusterSubnets[0]},
-				{ID: clusterSubnets[1]},
+			Subnets: []infrav1.SubnetParam{
+				{ID: &clusterSubnets[0]},
+				{ID: &clusterSubnets[1]},
 			},
 		}
 		testCluster.Status = infrav1.OpenStackClusterStatus{
@@ -636,15 +636,17 @@ var _ = Describe("OpenStackCluster controller", func() {
 		}, nil)
 
 		networkClientRecorder.GetSubnet(clusterSubnets[0]).Return(&subnets.Subnet{
-			ID:   clusterSubnets[0],
-			Name: "cluster-subnet",
-			CIDR: "192.168.0.0/24",
+			ID:        clusterSubnets[0],
+			NetworkID: clusterNetworkID,
+			Name:      "cluster-subnet",
+			CIDR:      "192.168.0.0/24",
 		}, nil)
 
 		networkClientRecorder.GetSubnet(clusterSubnets[1]).Return(&subnets.Subnet{
-			ID:   clusterSubnets[1],
-			Name: "cluster-subnet-v6",
-			CIDR: "2001:db8:2222:5555::/64",
+			ID:        clusterSubnets[1],
+			NetworkID: clusterNetworkID,
+			Name:      "cluster-subnet-v6",
+			CIDR:      "2001:db8:2222:5555::/64",
 		}, nil)
 
 		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
@@ -661,8 +663,8 @@ var _ = Describe("OpenStackCluster controller", func() {
 			DisableAPIServerFloatingIP: pointer.Bool(true),
 			APIServerFixedIP:           pointer.String("10.0.0.1"),
 			DisableExternalNetwork:     pointer.Bool(true),
-			Subnets: []infrav1.SubnetFilter{
-				{ID: clusterSubnetID},
+			Subnets: []infrav1.SubnetParam{
+				{ID: pointer.String(clusterSubnetID)},
 			},
 		}
 		err := k8sClient.Create(ctx, testCluster)

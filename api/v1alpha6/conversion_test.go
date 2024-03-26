@@ -286,8 +286,8 @@ func TestNetworksToPorts(t *testing.T) {
 						},
 						FixedIPs: []infrav1.FixedIP{
 							{
-								Subnet: &infrav1.SubnetFilter{
-									ID: subnetuuid,
+								Subnet: &infrav1.SubnetParam{
+									ID: pointer.String(subnetuuid),
 								},
 							},
 						},
@@ -330,20 +330,22 @@ func TestNetworksToPorts(t *testing.T) {
 						},
 						FixedIPs: []infrav1.FixedIP{
 							{
-								Subnet: &infrav1.SubnetFilter{
-									Name:            "subnet-name",
-									Description:     "subnet-description",
-									ProjectID:       "project-id",
-									IPVersion:       6,
-									GatewayIP:       "x.x.x.x",
-									CIDR:            "y.y.y.y",
-									IPv6AddressMode: "address-mode",
-									IPv6RAMode:      "ra-mode",
-									FilterByNeutronTags: infrav1.FilterByNeutronTags{
-										Tags:       []infrav1.NeutronTag{"tags"},
-										TagsAny:    []infrav1.NeutronTag{"tags-any"},
-										NotTags:    []infrav1.NeutronTag{"not-tags"},
-										NotTagsAny: []infrav1.NeutronTag{"not-tags-any"},
+								Subnet: &infrav1.SubnetParam{
+									Filter: &infrav1.SubnetFilter{
+										Name:            "subnet-name",
+										Description:     "subnet-description",
+										ProjectID:       "project-id",
+										IPVersion:       6,
+										GatewayIP:       "x.x.x.x",
+										CIDR:            "y.y.y.y",
+										IPv6AddressMode: "address-mode",
+										IPv6RAMode:      "ra-mode",
+										FilterByNeutronTags: infrav1.FilterByNeutronTags{
+											Tags:       []infrav1.NeutronTag{"tags"},
+											TagsAny:    []infrav1.NeutronTag{"tags-any"},
+											NotTags:    []infrav1.NeutronTag{"not-tags"},
+											NotTagsAny: []infrav1.NeutronTag{"not-tags-any"},
+										},
 									},
 								},
 							},
@@ -390,8 +392,8 @@ func TestNetworksToPorts(t *testing.T) {
 						},
 						FixedIPs: []infrav1.FixedIP{
 							{
-								Subnet: &infrav1.SubnetFilter{
-									ID: subnetuuid,
+								Subnet: &infrav1.SubnetParam{
+									ID: pointer.String(subnetuuid),
 								},
 							},
 						},
@@ -402,20 +404,22 @@ func TestNetworksToPorts(t *testing.T) {
 						},
 						FixedIPs: []infrav1.FixedIP{
 							{
-								Subnet: &infrav1.SubnetFilter{
-									Name:            "subnet-name",
-									Description:     "subnet-description",
-									ProjectID:       "project-id",
-									IPVersion:       6,
-									GatewayIP:       "x.x.x.x",
-									CIDR:            "y.y.y.y",
-									IPv6AddressMode: "address-mode",
-									IPv6RAMode:      "ra-mode",
-									FilterByNeutronTags: infrav1.FilterByNeutronTags{
-										Tags:       []infrav1.NeutronTag{"tags"},
-										TagsAny:    []infrav1.NeutronTag{"tags-any"},
-										NotTags:    []infrav1.NeutronTag{"not-tags"},
-										NotTagsAny: []infrav1.NeutronTag{"not-tags-any"},
+								Subnet: &infrav1.SubnetParam{
+									Filter: &infrav1.SubnetFilter{
+										Name:            "subnet-name",
+										Description:     "subnet-description",
+										ProjectID:       "project-id",
+										IPVersion:       6,
+										GatewayIP:       "x.x.x.x",
+										CIDR:            "y.y.y.y",
+										IPv6AddressMode: "address-mode",
+										IPv6RAMode:      "ra-mode",
+										FilterByNeutronTags: infrav1.FilterByNeutronTags{
+											Tags:       []infrav1.NeutronTag{"tags"},
+											TagsAny:    []infrav1.NeutronTag{"tags-any"},
+											NotTags:    []infrav1.NeutronTag{"not-tags"},
+											NotTagsAny: []infrav1.NeutronTag{"not-tags-any"},
+										},
 									},
 								},
 							},

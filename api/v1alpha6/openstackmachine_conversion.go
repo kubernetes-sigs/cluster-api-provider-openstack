@@ -223,18 +223,18 @@ func convertNetworksToPorts(networks []NetworkParam, s apiconversion.Scope) ([]i
 					ports = append(ports, infrav1.PortOpts{
 						Network: networkFilter,
 						FixedIPs: []infrav1.FixedIP{
-							{Subnet: &infrav1.SubnetFilter{ID: subnet.UUID}},
+							{Subnet: &infrav1.SubnetParam{ID: &subnet.UUID}},
 						},
 					})
 				} else {
-					subnetFilter := &infrav1.SubnetFilter{}
-					if err := Convert_v1alpha6_SubnetFilter_To_v1beta1_SubnetFilter(&subnet.Filter, subnetFilter, s); err != nil {
+					subnetParam := &infrav1.SubnetParam{}
+					if err := Convert_v1alpha6_SubnetFilter_To_v1beta1_SubnetParam(&subnet.Filter, subnetParam, s); err != nil {
 						return nil, err
 					}
 					ports = append(ports, infrav1.PortOpts{
 						Network: networkFilter,
 						FixedIPs: []infrav1.FixedIP{
-							{Subnet: subnetFilter},
+							{Subnet: subnetParam},
 						},
 					})
 				}

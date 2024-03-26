@@ -55,7 +55,6 @@ func SubnetFilterToListOpts(subnetFilter *infrav1.SubnetFilter) subnets.ListOpts
 		CIDR:            subnetFilter.CIDR,
 		IPv6AddressMode: subnetFilter.IPv6AddressMode,
 		IPv6RAMode:      subnetFilter.IPv6RAMode,
-		ID:              subnetFilter.ID,
 		Tags:            infrav1.JoinTags(subnetFilter.Tags),
 		TagsAny:         infrav1.JoinTags(subnetFilter.TagsAny),
 		NotTags:         infrav1.JoinTags(subnetFilter.NotTags),

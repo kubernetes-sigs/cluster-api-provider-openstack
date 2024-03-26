@@ -885,9 +885,9 @@ func getClusterSubnets(networkingService *networking.Service, openStackCluster *
 		}
 	} else {
 		for subnet := range openStackClusterSubnets {
-			filteredSubnet, err := networkingService.GetNetworkSubnetByFilter(networkID, &openStackClusterSubnets[subnet])
+			filteredSubnet, err := networkingService.GetNetworkSubnetByParam(networkID, &openStackClusterSubnets[subnet])
 			if err != nil {
-				err = fmt.Errorf("failed to find subnet: %w", err)
+				err = fmt.Errorf("failed to find subnet %d in network %s: %w", subnet, networkID, err)
 				if errors.Is(err, networking.ErrFilterMatch) {
 					handleUpdateOSCError(openStackCluster, err)
 				}
