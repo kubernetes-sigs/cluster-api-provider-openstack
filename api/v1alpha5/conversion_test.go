@@ -87,7 +87,7 @@ func TestConvertFrom(t *testing.T) {
 				Spec: OpenStackMachineSpec{},
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
-						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"flavor\":\"\",\"image\":{}},\"status\":{\"ready\":false,\"resolved\":{},\"resources\":{}}}",
+						"cluster.x-k8s.io/conversion-data": "{\"spec\":{\"flavor\":\"\",\"image\":{}},\"status\":{\"ready\":false}}",
 					},
 				},
 			},

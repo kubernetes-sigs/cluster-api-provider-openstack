@@ -348,14 +348,11 @@ func restorev1alpha7ClusterStatus(previous *OpenStackClusterStatus, dst *OpenSta
 }
 
 func restorev1beta1ClusterStatus(previous *infrav1.OpenStackClusterStatus, dst *infrav1.OpenStackClusterStatus) {
-	// ReferencedResources have no equivalent in v1alpha7
-	if previous.Bastion != nil {
-		dst.Bastion.Resolved = previous.Bastion.Resolved
+	if previous == nil || dst == nil {
+		return
 	}
 
-	if previous.Bastion != nil && previous.Bastion.Resources.Ports != nil {
-		dst.Bastion.Resources.Ports = previous.Bastion.Resources.Ports
-	}
+	restorev1beta1BastionStatus(previous.Bastion, dst.Bastion)
 }
 
 func Convert_v1beta1_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(in *infrav1.OpenStackClusterStatus, out *OpenStackClusterStatus, s apiconversion.Scope) error {
@@ -432,6 +429,18 @@ func Convert_v1beta1_Bastion_To_v1alpha7_Bastion(in *infrav1.Bastion, out *Basti
 	}
 
 	return optional.Convert_optional_String_To_string(&in.FloatingIP, &out.Instance.FloatingIP, s)
+}
+
+/* Bastion status */
+
+func restorev1beta1BastionStatus(previous *infrav1.BastionStatus, dst *infrav1.BastionStatus) {
+	if previous == nil || dst == nil {
+		return
+	}
+
+	// Resolved and resources have no equivalents
+	dst.Resolved = previous.Resolved
+	dst.Resources = previous.Resources
 }
 
 func Convert_v1beta1_BastionStatus_To_v1alpha7_BastionStatus(in *infrav1.BastionStatus, out *BastionStatus, s apiconversion.Scope) error {

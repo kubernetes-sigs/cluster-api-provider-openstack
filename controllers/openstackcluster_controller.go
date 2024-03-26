@@ -227,8 +227,13 @@ func resolveBastionResources(scope *scope.WithLogger, clusterResourceName string
 		if openStackCluster.Spec.Bastion.Spec == nil {
 			return false, fmt.Errorf("bastion spec is nil when bastion is enabled, this shouldn't happen")
 		}
+		resolved := openStackCluster.Status.Bastion.Resolved
+		if resolved == nil {
+			resolved = &infrav1.ResolvedMachineSpec{}
+			openStackCluster.Status.Bastion.Resolved = resolved
+		}
 		changed, err := compute.ResolveMachineSpec(scope,
-			openStackCluster.Spec.Bastion.Spec, &openStackCluster.Status.Bastion.Resolved,
+			openStackCluster.Spec.Bastion.Spec, resolved,
 			clusterResourceName, bastionName(clusterResourceName),
 			openStackCluster, getBastionSecurityGroupID(openStackCluster))
 		if err != nil {
@@ -238,10 +243,13 @@ func resolveBastionResources(scope *scope.WithLogger, clusterResourceName string
 			// If the resolved machine spec changed we need to restart the reconcile to avoid inconsistencies between reconciles.
 			return true, nil
 		}
+		resources := openStackCluster.Status.Bastion.Resources
+		if resources == nil {
+			resources = &infrav1.MachineResources{}
+			openStackCluster.Status.Bastion.Resources = resources
+		}
 
-		err = compute.AdoptMachineResources(scope,
-			&openStackCluster.Status.Bastion.Resolved,
-			&openStackCluster.Status.Bastion.Resources)
+		err = compute.AdoptMachineResources(scope, resolved, resources)
 		if err != nil {
 			return false, err
 		}
@@ -268,8 +276,10 @@ func deleteBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStac
 		}
 	}
 
+	bastionStatus := openStackCluster.Status.Bastion
+
 	var instanceStatus *compute.InstanceStatus
-	if openStackCluster.Status.Bastion != nil && openStackCluster.Status.Bastion.ID != "" {
+	if bastionStatus != nil && bastionStatus.ID != "" {
 		instanceStatus, err = computeService.GetInstanceStatus(openStackCluster.Status.Bastion.ID)
 		if err != nil {
 			return err
@@ -308,18 +318,18 @@ func deleteBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStac
 		}
 	}
 
-	if openStackCluster.Status.Bastion != nil && len(openStackCluster.Status.Bastion.Resources.Ports) > 0 {
+	if bastionStatus != nil && bastionStatus.Resources != nil {
 		trunkSupported, err := networkingService.IsTrunkExtSupported()
 		if err != nil {
 			return err
 		}
-		for _, port := range openStackCluster.Status.Bastion.Resources.Ports {
+		for _, port := range bastionStatus.Resources.Ports {
 			if err := networkingService.DeleteInstanceTrunkAndPort(openStackCluster, port, trunkSupported); err != nil {
 				handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete port: %w", err))
 				return fmt.Errorf("failed to delete port: %w", err)
 			}
 		}
-		openStackCluster.Status.Bastion.Resources.Ports = nil
+		bastionStatus.Resources.Ports = nil
 	}
 
 	scope.Logger().Info("Deleted Bastion")
@@ -542,7 +552,10 @@ func bastionToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, cluster *
 		// v1beta1 API validations prevent this from happening in normal circumstances.
 		bastion.Spec = &infrav1.OpenStackMachineSpec{}
 	}
-	resolved := &openStackCluster.Status.Bastion.Resolved
+	resolved := openStackCluster.Status.Bastion.Resolved
+	if resolved == nil {
+		return nil, errors.New("bastion resolved is nil")
+	}
 
 	machineSpec := bastion.Spec
 	instanceSpec := &compute.InstanceSpec{
@@ -579,7 +592,10 @@ func getBastionSecurityGroupID(openStackCluster *infrav1.OpenStackCluster) *stri
 
 func getOrCreateBastionPorts(openStackCluster *infrav1.OpenStackCluster, networkingService *networking.Service) error {
 	desiredPorts := openStackCluster.Status.Bastion.Resolved.Ports
-	resources := &openStackCluster.Status.Bastion.Resources
+	resources := openStackCluster.Status.Bastion.Resources
+	if resources == nil {
+		return errors.New("bastion resources are nil")
+	}
 
 	if len(desiredPorts) == len(resources.Ports) {
 		return nil

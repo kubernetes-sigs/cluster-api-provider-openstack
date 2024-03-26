@@ -128,10 +128,12 @@ type OpenStackMachineStatus struct {
 
 	// Resolved contains parts of the machine spec with all external
 	// references fully resolved.
-	Resolved ResolvedMachineSpec `json:"resolved,omitempty"`
+	// +optional
+	Resolved *ResolvedMachineSpec `json:"resolved,omitempty"`
 
 	// Resources contains references to OpenStack resources created for the machine.
-	Resources MachineResources `json:"resources,omitempty"`
+	// +optional
+	Resources *MachineResources `json:"resources,omitempty"`
 
 	FailureReason *errors.MachineStatusError `json:"failureReason,omitempty"`
 
