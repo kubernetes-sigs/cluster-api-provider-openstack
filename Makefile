@@ -248,7 +248,7 @@ modules: ## Runs go mod to ensure proper vendoring.
 	cd $(TOOLS_DIR); go mod tidy
 
 .PHONY: generate
-generate: generate-controller-gen generate-conversion-gen generate-go generate-manifests generate-api-docs ## Generate all generated code
+generate: templates generate-controller-gen generate-conversion-gen generate-go generate-manifests generate-api-docs ## Generate all generated code
 
 .PHONY: generate-go
 generate-go: $(MOCKGEN)
