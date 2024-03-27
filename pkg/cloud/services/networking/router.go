@@ -17,6 +17,7 @@ limitations under the License.
 package networking
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
@@ -46,32 +47,23 @@ func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, cl
 	}
 
 	s.scope.Logger().Info("Reconciling router", "cluster", clusterResourceName)
-	routerName := getRouterName(clusterResourceName)
-	routerListOpts := routers.ListOpts{Name: routerName}
-	existingRouter := false
-	if openStackCluster.Spec.Router != nil {
-		routerListOpts = filterconvert.RouterFilterToListOpts(openStackCluster.Spec.Router)
-		existingRouter = true
-	}
 
-	router, err := s.getRouterByFilter(routerListOpts)
+	router, err := s.getExistingRouter(openStackCluster, clusterResourceName)
 	if err != nil {
-		return err
+		return fmt.Errorf("fetching router: %w", err)
 	}
 
-	if existingRouter && router.ID == "" {
-		return fmt.Errorf("router not found by routerFilter ")
-	}
+	if router == nil {
+		if openStackCluster.Spec.Router != nil {
+			// Should not happen: will have returned ErrNoMatches above
+			return fmt.Errorf("router not found")
+		}
 
-	if router.ID == "" {
 		var err error
-		createdRouter, err := s.createRouter(openStackCluster, clusterResourceName, routerName)
+		router, err = s.createRouter(openStackCluster, clusterResourceName, getRouterName(clusterResourceName))
 		if err != nil {
 			return err
 		}
-		router = *createdRouter
-	} else {
-		s.scope.Logger().V(6).Info("Reusing existing router", "name", router.Name, "id", router.ID)
 	}
 
 	routerIPs := []string{}
@@ -87,7 +79,7 @@ func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, cl
 	}
 
 	if len(openStackCluster.Spec.ExternalRouterIPs) > 0 {
-		if err := s.setRouterExternalIPs(openStackCluster, &router); err != nil {
+		if err := s.setRouterExternalIPs(openStackCluster, router); err != nil {
 			return err
 		}
 	}
@@ -123,6 +115,63 @@ func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, cl
 		}
 	}
 	return nil
+}
+
+func (s *Service) getExistingRouter(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) (*routers.Router, error) {
+	// For an externally-managed router we always expect it to exist. We will return an error if it doesn't.
+	if openStackCluster.Spec.Router != nil {
+		return s.getExternallyManagedRouter(openStackCluster)
+	}
+
+	// A managed router may not exist either because we haven't created it
+	// or because we deleted it. Swallow NotFound errors and return nil.
+
+	if openStackCluster.Status.Router != nil {
+		router, err := s.client.GetRouter(openStackCluster.Status.Router.ID)
+		if capoerrors.IsNotFound(err) {
+			return nil, nil
+		}
+		return router, err
+	}
+
+	routerName := getRouterName(clusterResourceName)
+	listOpts := routers.ListOpts{Name: routerName}
+	if openStackCluster.Spec.Router != nil {
+		listOpts = filterconvert.RouterFilterToListOpts(openStackCluster.Spec.Router.Filter)
+	}
+
+	router, err := s.getRouterByFilter(listOpts)
+	// It's ok if our managed router doesn't exist yet, just return nil
+	if errors.Is(err, ErrNoMatches) {
+		return nil, nil
+	}
+	return router, err
+}
+
+func (s *Service) getExternallyManagedRouter(openStackCluster *infrav1.OpenStackCluster) (*routers.Router, error) {
+	if openStackCluster.Spec.Router == nil {
+		return nil, fmt.Errorf("getExternallyManagedRouter called with no external router specified")
+	}
+
+	// Fetch by ID if we previously resolved it
+	if openStackCluster.Status.Router != nil {
+		return s.client.GetRouter(openStackCluster.Status.Router.ID)
+	}
+	return s.getRouterByParam(openStackCluster.Spec.Router)
+}
+
+func (s *Service) getRouterByParam(routerParam *infrav1.RouterParam) (*routers.Router, error) {
+	if routerParam.ID != nil {
+		return s.client.GetRouter(*routerParam.ID)
+	}
+
+	if routerParam.Filter == nil {
+		// Should have been caught by validation
+		return nil, errors.New("invalid router param, either ID or Filter must be set")
+	}
+
+	listOpts := filterconvert.RouterFilterToListOpts(routerParam.Filter)
+	return s.getRouterByFilter(listOpts)
 }
 
 func (s *Service) createRouter(openStackCluster *infrav1.OpenStackCluster, clusterResourceName, name string) (*routers.Router, error) {
@@ -189,27 +238,19 @@ func (s *Service) setRouterExternalIPs(openStackCluster *infrav1.OpenStackCluste
 }
 
 func (s *Service) DeleteRouter(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
-	routerName := getRouterName(clusterResourceName)
-	listOpts := routers.ListOpts{Name: routerName}
-	existingRouter := false
-	if openStackCluster.Spec.Router != nil {
-		listOpts = filterconvert.RouterFilterToListOpts(openStackCluster.Spec.Router)
-		existingRouter = true
-	}
-
-	router, err := s.getRouterByFilter(listOpts)
+	router, err := s.getExistingRouter(openStackCluster, clusterResourceName)
 	if err != nil {
 		return err
+	}
+
+	if router == nil {
+		return nil
 	}
 
 	subnetName := getSubnetName(clusterResourceName)
 	subnet, err := s.getSubnetByName(subnetName)
 	if err != nil {
 		return err
-	}
-
-	if router.ID == "" {
-		return nil
 	}
 
 	if subnet.ID != "" {
@@ -226,8 +267,8 @@ func (s *Service) DeleteRouter(openStackCluster *infrav1.OpenStackCluster, clust
 		}
 	}
 
-	if existingRouter {
-		s.scope.Logger().V(4).Info("No need to delete pre-existing router", "name", router.Name)
+	if openStackCluster.Spec.Router != nil {
+		s.scope.Logger().V(4).Info("Not deleting pre-existing router", "name", router.Name)
 		return nil
 	}
 
@@ -247,19 +288,19 @@ func (s *Service) getRouterInterfaces(routerID string) ([]ports.Port, error) {
 	})
 }
 
-func (s *Service) getRouterByFilter(opts routers.ListOpts) (routers.Router, error) {
+func (s *Service) getRouterByFilter(opts routers.ListOpts) (*routers.Router, error) {
 	routerList, err := s.client.ListRouter(opts)
 	if err != nil {
-		return routers.Router{}, err
+		return nil, err
 	}
 
 	switch len(routerList) {
 	case 0:
-		return routers.Router{}, nil
+		return nil, ErrNoMatches
 	case 1:
-		return routerList[0], nil
+		return &routerList[0], nil
 	}
-	return routers.Router{}, fmt.Errorf("found %d routers, which should not happen", len(routerList))
+	return nil, ErrMultipleMatches
 }
 
 func (s *Service) getSubnetByName(subnetName string) (subnets.Subnet, error) {

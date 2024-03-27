@@ -220,13 +220,37 @@ func (subnetFilter *SubnetFilter) IsZero() bool {
 		subnetFilter.FilterByNeutronTags.IsZero()
 }
 
+// RouterParam specifies an OpenStack router to use. It may be specified by either ID or filter, but not both.
+// +kubebuilder:validation:MaxProperties:=1
+// +kubebuilder:validation:MinProperties:=1
+type RouterParam struct {
+	// ID is the ID of the router to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.
+	// +kubebuilder:validation:Format:=uuid
+	// +optional
+	ID optional.String `json:"id,omitempty"`
+
+	// Filter specifies a filter to select an OpenStack router. If provided, cannot be empty.
+	Filter *RouterFilter `json:"filter,omitempty"`
+}
+
+// RouterFilter specifies a query to select an OpenStack router. At least one property must be set.
+// +kubebuilder:validation:MinProperties:=1
 type RouterFilter struct {
-	ID          string `json:"id,omitempty"`
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
 	ProjectID   string `json:"projectID,omitempty"`
 
 	FilterByNeutronTags `json:",inline"`
+}
+
+func (f *RouterFilter) IsZero() bool {
+	if f == nil {
+		return true
+	}
+	return f.Name == "" &&
+		f.Description == "" &&
+		f.ProjectID == "" &&
+		f.FilterByNeutronTags.IsZero()
 }
 
 type SubnetSpec struct {
