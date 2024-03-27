@@ -325,13 +325,8 @@ func Convert_v1beta1_PortOpts_To_v1alpha5_PortOpts(in *infrav1.PortOpts, out *Po
 	if len(in.SecurityGroups) > 0 {
 		out.SecurityGroupFilters = make([]SecurityGroupParam, len(in.SecurityGroups))
 		for i := range in.SecurityGroups {
-			securityGroupParam := &out.SecurityGroupFilters[i]
-			if in.SecurityGroups[i].ID != "" {
-				securityGroupParam.UUID = in.SecurityGroups[i].ID
-			} else {
-				if err := Convert_v1beta1_SecurityGroupFilter_To_v1alpha5_SecurityGroupFilter(&in.SecurityGroups[i], &securityGroupParam.Filter, s); err != nil {
-					return err
-				}
+			if err := Convert_v1beta1_SecurityGroupParam_To_v1alpha5_SecurityGroupParam(&in.SecurityGroups[i], &out.SecurityGroupFilters[i], s); err != nil {
+				return err
 			}
 		}
 	}
@@ -395,46 +390,48 @@ func Convert_v1alpha5_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *infrav1.Po
 	}
 
 	if len(in.SecurityGroups) > 0 || len(in.SecurityGroupFilters) > 0 {
-		out.SecurityGroups = make([]infrav1.SecurityGroupFilter, 0, len(in.SecurityGroups)+len(in.SecurityGroupFilters))
+		out.SecurityGroups = make([]infrav1.SecurityGroupParam, 0, len(in.SecurityGroups)+len(in.SecurityGroupFilters))
 		for i := range in.SecurityGroupFilters {
 			sgParam := &in.SecurityGroupFilters[i]
 			switch {
 			case sgParam.UUID != "":
-				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{ID: sgParam.UUID})
+				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupParam{ID: &sgParam.UUID})
 			case sgParam.Name != "":
-				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{Name: sgParam.Name})
+				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupParam{Filter: &infrav1.SecurityGroupFilter{Name: sgParam.Name}})
 			case sgParam.Filter != (SecurityGroupFilter{}):
-				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{})
+				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupParam{})
 				outSG := &out.SecurityGroups[len(out.SecurityGroups)-1]
-				if err := Convert_v1alpha5_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(&sgParam.Filter, outSG, s); err != nil {
+				outSG.Filter = &infrav1.SecurityGroupFilter{}
+				if err := Convert_v1alpha5_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(&sgParam.Filter, outSG.Filter, s); err != nil {
 					return err
 				}
 			}
 		}
-		for _, id := range in.SecurityGroups {
-			out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{ID: id})
+		for i := range in.SecurityGroups {
+			out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupParam{ID: &in.SecurityGroups[i]})
 		}
 	}
 
 	if len(in.SecurityGroups) > 0 || len(in.SecurityGroupFilters) > 0 {
-		out.SecurityGroups = make([]infrav1.SecurityGroupFilter, 0, len(in.SecurityGroups)+len(in.SecurityGroupFilters))
+		out.SecurityGroups = make([]infrav1.SecurityGroupParam, 0, len(in.SecurityGroups)+len(in.SecurityGroupFilters))
 		for i := range in.SecurityGroupFilters {
 			sgParam := &in.SecurityGroupFilters[i]
 			switch {
 			case sgParam.UUID != "":
-				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{ID: sgParam.UUID})
+				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupParam{ID: &sgParam.UUID})
 			case sgParam.Name != "":
-				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{Name: sgParam.Name})
+				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupParam{Filter: &infrav1.SecurityGroupFilter{Name: sgParam.Name}})
 			case sgParam.Filter != (SecurityGroupFilter{}):
-				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{})
+				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupParam{})
 				outSG := &out.SecurityGroups[len(out.SecurityGroups)-1]
-				if err := Convert_v1alpha5_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(&sgParam.Filter, outSG, s); err != nil {
+				outSG.Filter = &infrav1.SecurityGroupFilter{}
+				if err := Convert_v1alpha5_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(&sgParam.Filter, outSG.Filter, s); err != nil {
 					return err
 				}
 			}
 		}
-		for _, id := range in.SecurityGroups {
-			out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{ID: id})
+		for i := range in.SecurityGroups {
+			out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupParam{ID: &in.SecurityGroups[i]})
 		}
 	}
 
@@ -521,34 +518,40 @@ func Convert_v1beta1_NetworkStatus_To_v1alpha5_Network(in *infrav1.NetworkStatus
 	return nil
 }
 
-func Convert_v1alpha5_SecurityGroupParam_To_v1beta1_SecurityGroupFilter(in *SecurityGroupParam, out *infrav1.SecurityGroupFilter, s conversion.Scope) error {
-	// SecurityGroupParam is replaced by its contained SecurityGroupFilter in v1beta1
-	err := Convert_v1alpha5_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(&in.Filter, out, s)
-	if err != nil {
-		return err
+func Convert_v1alpha5_SecurityGroupParam_To_v1beta1_SecurityGroupParam(in *SecurityGroupParam, out *infrav1.SecurityGroupParam, s conversion.Scope) error {
+	if in.UUID != "" {
+		out.ID = &in.UUID
+		return nil
 	}
 
-	if in.UUID != "" {
-		out.ID = in.UUID
-	}
+	outFilter := &infrav1.SecurityGroupFilter{}
 	if in.Name != "" {
-		out.Name = in.Name
+		outFilter.Name = in.Name
+	} else {
+		// SecurityGroupParam is replaced by its contained SecurityGroupFilter in v1beta1
+		err := Convert_v1alpha5_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(&in.Filter, outFilter, s)
+		if err != nil {
+			return err
+		}
+	}
+
+	if !outFilter.IsZero() {
+		out.Filter = outFilter
 	}
 	return nil
 }
 
-func Convert_v1beta1_SecurityGroupFilter_To_v1alpha5_SecurityGroupParam(in *infrav1.SecurityGroupFilter, out *SecurityGroupParam, s conversion.Scope) error {
-	// SecurityGroupParam is replaced by its contained SecurityGroupFilter in v1beta1
-	err := Convert_v1beta1_SecurityGroupFilter_To_v1alpha5_SecurityGroupFilter(in, &out.Filter, s)
-	if err != nil {
-		return err
+func Convert_v1beta1_SecurityGroupParam_To_v1alpha5_SecurityGroupParam(in *infrav1.SecurityGroupParam, out *SecurityGroupParam, s conversion.Scope) error {
+	if in.ID != nil {
+		out.UUID = *in.ID
+		return nil
 	}
 
-	if in.ID != "" {
-		out.UUID = in.ID
-	}
-	if in.Name != "" {
-		out.Name = in.Name
+	if in.Filter != nil {
+		err := Convert_v1beta1_SecurityGroupFilter_To_v1alpha5_SecurityGroupFilter(in.Filter, &out.Filter, s)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

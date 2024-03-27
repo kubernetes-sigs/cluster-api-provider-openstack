@@ -41,55 +41,71 @@ func restorev1alpha6SecurityGroupFilter(previous *SecurityGroupFilter, dst *Secu
 	dst.NotTagsAny = previous.NotTagsAny
 }
 
-func Convert_v1beta1_SecurityGroupFilter_To_string(in *infrav1.SecurityGroupFilter, out *string, _ apiconversion.Scope) error {
-	if in.ID != "" {
-		*out = in.ID
+func restorev1beta1SecurityGroupParam(previous *infrav1.SecurityGroupParam, dst *infrav1.SecurityGroupParam) {
+	if previous == nil || dst == nil {
+		return
+	}
+
+	if dst.Filter != nil && previous.Filter != nil {
+		dst.Filter.Tags = previous.Filter.Tags
+		dst.Filter.TagsAny = previous.Filter.TagsAny
+		dst.Filter.NotTags = previous.Filter.NotTags
+		dst.Filter.NotTagsAny = previous.Filter.NotTagsAny
+	}
+}
+
+func Convert_v1beta1_SecurityGroupParam_To_string(in *infrav1.SecurityGroupParam, out *string, _ apiconversion.Scope) error {
+	if in.ID != nil {
+		*out = *in.ID
 	}
 	return nil
 }
 
-func Convert_v1alpha6_SecurityGroupParam_To_v1beta1_SecurityGroupFilter(in *SecurityGroupParam, out *infrav1.SecurityGroupFilter, s apiconversion.Scope) error {
-	// SecurityGroupParam is replaced by its contained SecurityGroupFilter in v1beta1
-	err := Convert_v1alpha6_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(&in.Filter, out, s)
-	if err != nil {
-		return err
-	}
-
+func Convert_v1alpha6_SecurityGroupParam_To_v1beta1_SecurityGroupParam(in *SecurityGroupParam, out *infrav1.SecurityGroupParam, s apiconversion.Scope) error {
 	if in.UUID != "" {
-		out.ID = in.UUID
+		out.ID = &in.UUID
+		return nil
 	}
+
+	outFilter := &infrav1.SecurityGroupFilter{}
+
 	if in.Name != "" {
-		out.Name = in.Name
+		outFilter.Name = in.Name
+	} else {
+		err := Convert_v1alpha6_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(&in.Filter, outFilter, s)
+		if err != nil {
+			return err
+		}
+	}
+
+	if !outFilter.IsZero() {
+		out.Filter = outFilter
 	}
 	return nil
 }
 
-func Convert_v1beta1_SecurityGroupFilter_To_v1alpha6_SecurityGroupParam(in *infrav1.SecurityGroupFilter, out *SecurityGroupParam, s apiconversion.Scope) error {
-	// SecurityGroupParam is replaced by its contained SecurityGroupFilter in v1beta1
-	err := Convert_v1beta1_SecurityGroupFilter_To_v1alpha6_SecurityGroupFilter(in, &out.Filter, s)
-	if err != nil {
-		return err
+func Convert_v1beta1_SecurityGroupParam_To_v1alpha6_SecurityGroupParam(in *infrav1.SecurityGroupParam, out *SecurityGroupParam, s apiconversion.Scope) error {
+	if in.ID != nil {
+		out.UUID = *in.ID
+		return nil
 	}
 
-	if in.ID != "" {
-		out.UUID = in.ID
+	if in.Filter != nil {
+		err := Convert_v1beta1_SecurityGroupFilter_To_v1alpha6_SecurityGroupFilter(in.Filter, &out.Filter, s)
+		if err != nil {
+			return err
+		}
 	}
-	if in.Name != "" {
-		out.Name = in.Name
-	}
+
 	return nil
 }
 
 func Convert_v1alpha6_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(in *SecurityGroupFilter, out *infrav1.SecurityGroupFilter, s apiconversion.Scope) error {
-	if err := autoConvert_v1alpha6_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(in, out, s); err != nil {
+	err := autoConvert_v1alpha6_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(in, out, s)
+	if err != nil {
 		return err
 	}
 	infrav1.ConvertAllTagsTo(in.Tags, in.TagsAny, in.NotTags, in.NotTagsAny, &out.FilterByNeutronTags)
-
-	// TenantID has been removed in v1beta1. Write it to ProjectID if ProjectID is not already set.
-	if out.ProjectID == "" {
-		out.ProjectID = in.TenantID
-	}
 	return nil
 }
 
@@ -319,24 +335,14 @@ func Convert_v1alpha6_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *infrav1.Po
 	}
 
 	if len(in.SecurityGroups) > 0 || len(in.SecurityGroupFilters) > 0 {
-		out.SecurityGroups = make([]infrav1.SecurityGroupFilter, 0, len(in.SecurityGroups)+len(in.SecurityGroupFilters))
+		out.SecurityGroups = make([]infrav1.SecurityGroupParam, len(in.SecurityGroups)+len(in.SecurityGroupFilters))
 		for i := range in.SecurityGroupFilters {
-			sgParam := &in.SecurityGroupFilters[i]
-			switch {
-			case sgParam.UUID != "":
-				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{ID: sgParam.UUID})
-			case sgParam.Name != "":
-				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{Name: sgParam.Name})
-			case sgParam.Filter != (SecurityGroupFilter{}):
-				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{})
-				outSG := &out.SecurityGroups[len(out.SecurityGroups)-1]
-				if err := Convert_v1alpha6_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(&sgParam.Filter, outSG, s); err != nil {
-					return err
-				}
+			if err := Convert_v1alpha6_SecurityGroupParam_To_v1beta1_SecurityGroupParam(&in.SecurityGroupFilters[i], &out.SecurityGroups[i], s); err != nil {
+				return err
 			}
 		}
-		for _, id := range in.SecurityGroups {
-			out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{ID: id})
+		for i := range in.SecurityGroups {
+			out.SecurityGroups[i+len(in.SecurityGroupFilters)] = infrav1.SecurityGroupParam{ID: &in.SecurityGroups[i]}
 		}
 	}
 
@@ -373,13 +379,8 @@ func Convert_v1beta1_PortOpts_To_v1alpha6_PortOpts(in *infrav1.PortOpts, out *Po
 	if len(in.SecurityGroups) > 0 {
 		out.SecurityGroupFilters = make([]SecurityGroupParam, len(in.SecurityGroups))
 		for i := range in.SecurityGroups {
-			securityGroupParam := &out.SecurityGroupFilters[i]
-			if in.SecurityGroups[i].ID != "" {
-				securityGroupParam.UUID = in.SecurityGroups[i].ID
-			} else {
-				if err := Convert_v1beta1_SecurityGroupFilter_To_v1alpha6_SecurityGroupFilter(&in.SecurityGroups[i], &securityGroupParam.Filter, s); err != nil {
-					return err
-				}
+			if err := Convert_v1beta1_SecurityGroupParam_To_v1alpha6_SecurityGroupParam(&in.SecurityGroups[i], &out.SecurityGroupFilters[i], s); err != nil {
+				return err
 			}
 		}
 	}
