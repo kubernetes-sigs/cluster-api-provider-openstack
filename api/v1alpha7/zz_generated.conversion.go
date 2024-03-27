@@ -366,6 +366,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddConversionFunc((*RouterFilter)(nil), (*v1beta1.RouterParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha7_RouterFilter_To_v1beta1_RouterParam(a.(*RouterFilter), b.(*v1beta1.RouterParam), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddConversionFunc((*SecurityGroupFilter)(nil), (*v1beta1.SecurityGroupFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha7_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(a.(*SecurityGroupFilter), b.(*v1beta1.SecurityGroupFilter), scope)
 	}); err != nil {
@@ -443,6 +448,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddConversionFunc((*v1beta1.RouterFilter)(nil), (*RouterFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1beta1_RouterFilter_To_v1alpha7_RouterFilter(a.(*v1beta1.RouterFilter), b.(*RouterFilter), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1beta1.RouterParam)(nil), (*RouterFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1beta1_RouterParam_To_v1alpha7_RouterFilter(a.(*v1beta1.RouterParam), b.(*RouterFilter), scope)
 	}); err != nil {
 		return err
 	}
@@ -929,8 +939,8 @@ func autoConvert_v1alpha7_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(i
 	// WARNING: in.NodeCIDR requires manual conversion: does not exist in peer-type
 	if in.Router != nil {
 		in, out := &in.Router, &out.Router
-		*out = new(v1beta1.RouterFilter)
-		if err := Convert_v1alpha7_RouterFilter_To_v1beta1_RouterFilter(*in, *out, s); err != nil {
+		*out = new(v1beta1.RouterParam)
+		if err := Convert_v1alpha7_RouterFilter_To_v1beta1_RouterParam(*in, *out, s); err != nil {
 			return err
 		}
 	} else {
@@ -996,7 +1006,7 @@ func autoConvert_v1beta1_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(i
 	if in.Router != nil {
 		in, out := &in.Router, &out.Router
 		*out = new(RouterFilter)
-		if err := Convert_v1beta1_RouterFilter_To_v1alpha7_RouterFilter(*in, *out, s); err != nil {
+		if err := Convert_v1beta1_RouterParam_To_v1alpha7_RouterFilter(*in, *out, s); err != nil {
 			return err
 		}
 	} else {
@@ -1727,7 +1737,7 @@ func Convert_v1beta1_Router_To_v1alpha7_Router(in *v1beta1.Router, out *Router, 
 }
 
 func autoConvert_v1alpha7_RouterFilter_To_v1beta1_RouterFilter(in *RouterFilter, out *v1beta1.RouterFilter, s conversion.Scope) error {
-	out.ID = in.ID
+	// WARNING: in.ID requires manual conversion: does not exist in peer-type
 	out.Name = in.Name
 	out.Description = in.Description
 	out.ProjectID = in.ProjectID
@@ -1739,7 +1749,6 @@ func autoConvert_v1alpha7_RouterFilter_To_v1beta1_RouterFilter(in *RouterFilter,
 }
 
 func autoConvert_v1beta1_RouterFilter_To_v1alpha7_RouterFilter(in *v1beta1.RouterFilter, out *RouterFilter, s conversion.Scope) error {
-	out.ID = in.ID
 	out.Name = in.Name
 	out.Description = in.Description
 	out.ProjectID = in.ProjectID
