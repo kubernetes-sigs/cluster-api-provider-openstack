@@ -265,10 +265,10 @@ func (s *Service) getOrUpdateAllowedCIDRS(openStackCluster *infrav1.OpenStackClu
 					allowedCIDRs = append(allowedCIDRs, subnet.CIDR)
 				}
 			}
+		}
 
-			if len(openStackCluster.Status.Router.IPs) > 0 {
-				allowedCIDRs = append(allowedCIDRs, openStackCluster.Status.Router.IPs...)
-			}
+		if openStackCluster.Status.Router != nil && len(openStackCluster.Status.Router.IPs) > 0 {
+			allowedCIDRs = append(allowedCIDRs, openStackCluster.Status.Router.IPs...)
 		}
 	}
 
