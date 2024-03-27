@@ -137,8 +137,18 @@ func restorev1alpha7MachineSpec(previous *OpenStackMachineSpec, dst *OpenStackMa
 }
 
 func restorev1beta1MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *infrav1.OpenStackMachineSpec) {
+	if previous == nil || dst == nil {
+		return
+	}
+
 	dst.ServerGroup = previous.ServerGroup
 	dst.Image = previous.Image
+
+	if len(dst.SecurityGroups) == len(previous.SecurityGroups) {
+		for i := range dst.SecurityGroups {
+			restorev1beta1SecurityGroupParam(&previous.SecurityGroups[i], &dst.SecurityGroups[i])
+		}
+	}
 
 	if len(dst.Ports) == len(previous.Ports) {
 		for i := range dst.Ports {

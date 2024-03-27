@@ -51,9 +51,9 @@ var _ = Describe("Filter API validations", func() {
 		// possible to specify them in, then create the
 		// resulting object. It should be valid.
 
-		securityGroups := make([]infrav1.SecurityGroupFilter, len(tags))
+		securityGroups := make([]infrav1.SecurityGroupParam, len(tags))
 		for i := range tags {
-			securityGroups[i].FilterByNeutronTags = tags[i]
+			securityGroups[i].Filter = &infrav1.SecurityGroupFilter{FilterByNeutronTags: tags[i]}
 		}
 		machine.Spec.SecurityGroups = securityGroups
 
@@ -64,7 +64,7 @@ var _ = Describe("Filter API validations", func() {
 			port.FixedIPs = []infrav1.FixedIP{{Subnet: &infrav1.SubnetParam{
 				Filter: &infrav1.SubnetFilter{FilterByNeutronTags: tags[i]},
 			}}}
-			port.SecurityGroups = []infrav1.SecurityGroupFilter{{FilterByNeutronTags: tags[i]}}
+			port.SecurityGroups = []infrav1.SecurityGroupParam{{Filter: &infrav1.SecurityGroupFilter{FilterByNeutronTags: tags[i]}}}
 		}
 		Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
 
@@ -97,9 +97,9 @@ var _ = Describe("Filter API validations", func() {
 	DescribeTable("Disallow invalid neutron filter tags", func(tags []infrav1.FilterByNeutronTags) {
 		{
 			machine := machine.DeepCopy()
-			securityGroups := make([]infrav1.SecurityGroupFilter, len(tags))
+			securityGroups := make([]infrav1.SecurityGroupParam, len(tags))
 			for i := range tags {
-				securityGroups[i].FilterByNeutronTags = tags[i]
+				securityGroups[i].Filter = &infrav1.SecurityGroupFilter{FilterByNeutronTags: tags[i]}
 			}
 			machine.Spec.SecurityGroups = securityGroups
 			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail with invalid security group neutron tags")
@@ -125,7 +125,7 @@ var _ = Describe("Filter API validations", func() {
 			{
 				machine := machine.DeepCopy()
 				machine.Spec.Ports = []infrav1.PortOpts{
-					{SecurityGroups: []infrav1.SecurityGroupFilter{{FilterByNeutronTags: tags[i]}}},
+					{SecurityGroups: []infrav1.SecurityGroupParam{{Filter: &infrav1.SecurityGroupFilter{FilterByNeutronTags: tags[i]}}}},
 				}
 				Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail with invalid port security group neutron tags")
 			}
@@ -305,6 +305,48 @@ var _ = Describe("Filter API validations", func() {
 				{ID: pointer.String("06c32c52-f207-4f6a-a769-bbcbe5a43f5c"), Filter: &infrav1.SubnetFilter{Name: "foo"}},
 			}
 			Expect(k8sClient.Create(ctx, cluster)).NotTo(Succeed(), "OpenStackCluster creation should fail")
+		})
+	})
+
+	Context("SecurityGroupParam", func() {
+		It("should allow setting ID", func() {
+			machine.Spec.SecurityGroups = []infrav1.SecurityGroupParam{
+				{ID: pointer.String("06c32c52-f207-4f6a-a769-bbcbe5a43f5c")},
+			}
+			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
+		})
+
+		It("should allow setting non-empty Filter", func() {
+			machine.Spec.SecurityGroups = []infrav1.SecurityGroupParam{
+				{Filter: &infrav1.SecurityGroupFilter{Name: "foo"}},
+			}
+			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
+		})
+
+		It("should not allow setting empty param", func() {
+			machine.Spec.SecurityGroups = []infrav1.SecurityGroupParam{{}}
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
+		})
+
+		It("should not allow setting invalid id", func() {
+			machine.Spec.SecurityGroups = []infrav1.SecurityGroupParam{
+				{ID: pointer.String("foo")},
+			}
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
+		})
+
+		It("should not allow setting empty Filter", func() {
+			machine.Spec.SecurityGroups = []infrav1.SecurityGroupParam{
+				{Filter: &infrav1.SecurityGroupFilter{}},
+			}
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
+		})
+
+		It("should not allow setting both ID and Filter", func() {
+			machine.Spec.SecurityGroups = []infrav1.SecurityGroupParam{
+				{ID: pointer.String("06c32c52-f207-4f6a-a769-bbcbe5a43f5c"), Filter: &infrav1.SecurityGroupFilter{Name: "foo"}},
+			}
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
 		})
 	})
 })

@@ -34,6 +34,13 @@ func restorev1alpha7SecurityGroupFilter(previous *SecurityGroupFilter, dst *Secu
 	dst.TagsAny = previous.TagsAny
 	dst.NotTags = previous.NotTags
 	dst.NotTagsAny = previous.NotTagsAny
+
+	// If ID was set we lost all other filter params
+	if dst.ID != "" {
+		dst.Name = previous.Name
+		dst.Description = previous.Description
+		dst.ProjectID = previous.ProjectID
+	}
 }
 
 func restorev1alpha7SecurityGroup(previous *SecurityGroup, dst *SecurityGroup) {
@@ -44,19 +51,48 @@ func restorev1alpha7SecurityGroup(previous *SecurityGroup, dst *SecurityGroup) {
 	dst.Rules = previous.Rules
 }
 
-func Convert_v1alpha7_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(in *SecurityGroupFilter, out *infrav1.SecurityGroupFilter, s apiconversion.Scope) error {
-	if err := autoConvert_v1alpha7_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(in, out, s); err != nil {
+func restorev1beta1SecurityGroupParam(previous *infrav1.SecurityGroupParam, dst *infrav1.SecurityGroupParam) {
+	if previous == nil || dst == nil {
+		return
+	}
+
+	if dst.Filter != nil && previous.Filter != nil {
+		dst.Filter.Tags = previous.Filter.Tags
+		dst.Filter.TagsAny = previous.Filter.TagsAny
+		dst.Filter.NotTags = previous.Filter.NotTags
+		dst.Filter.NotTagsAny = previous.Filter.NotTagsAny
+	}
+}
+
+func Convert_v1alpha7_SecurityGroupFilter_To_v1beta1_SecurityGroupParam(in *SecurityGroupFilter, out *infrav1.SecurityGroupParam, s apiconversion.Scope) error {
+	if in.ID != "" {
+		out.ID = &in.ID
+		return nil
+	}
+
+	filter := &infrav1.SecurityGroupFilter{}
+	if err := autoConvert_v1alpha7_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(in, filter, s); err != nil {
 		return err
 	}
-	infrav1.ConvertAllTagsTo(in.Tags, in.TagsAny, in.NotTags, in.NotTagsAny, &out.FilterByNeutronTags)
+	infrav1.ConvertAllTagsTo(in.Tags, in.TagsAny, in.NotTags, in.NotTagsAny, &filter.FilterByNeutronTags)
+	if !filter.IsZero() {
+		out.Filter = filter
+	}
 	return nil
 }
 
-func Convert_v1beta1_SecurityGroupFilter_To_v1alpha7_SecurityGroupFilter(in *infrav1.SecurityGroupFilter, out *SecurityGroupFilter, s apiconversion.Scope) error {
-	if err := autoConvert_v1beta1_SecurityGroupFilter_To_v1alpha7_SecurityGroupFilter(in, out, s); err != nil {
-		return err
+func Convert_v1beta1_SecurityGroupParam_To_v1alpha7_SecurityGroupFilter(in *infrav1.SecurityGroupParam, out *SecurityGroupFilter, s apiconversion.Scope) error {
+	if in.ID != nil {
+		out.ID = *in.ID
+		return nil
 	}
-	infrav1.ConvertAllTagsFrom(&in.FilterByNeutronTags, &out.Tags, &out.TagsAny, &out.NotTags, &out.NotTagsAny)
+
+	if in.Filter != nil {
+		if err := autoConvert_v1beta1_SecurityGroupFilter_To_v1alpha7_SecurityGroupFilter(in.Filter, out, s); err != nil {
+			return err
+		}
+		infrav1.ConvertAllTagsFrom(&in.Filter.FilterByNeutronTags, &out.Tags, &out.TagsAny, &out.NotTags, &out.NotTagsAny)
+	}
 	return nil
 }
 
@@ -294,6 +330,12 @@ func restorev1beta1Port(previous *infrav1.PortOpts, dst *infrav1.PortOpts) {
 			dstProfile.TrustedVF = prevProfile.TrustedVF
 		}
 	}
+
+	if len(dst.SecurityGroups) == len(previous.SecurityGroups) {
+		for j := range dst.SecurityGroups {
+			restorev1beta1SecurityGroupParam(&previous.SecurityGroups[j], &dst.SecurityGroups[j])
+		}
+	}
 }
 
 func Convert_v1alpha7_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *infrav1.PortOpts, s apiconversion.Scope) error {
@@ -334,9 +376,9 @@ func Convert_v1alpha7_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *infrav1.Po
 	}
 
 	if len(in.SecurityGroupFilters) > 0 {
-		out.SecurityGroups = make([]infrav1.SecurityGroupFilter, len(in.SecurityGroupFilters))
+		out.SecurityGroups = make([]infrav1.SecurityGroupParam, len(in.SecurityGroupFilters))
 		for i := range in.SecurityGroupFilters {
-			if err := Convert_v1alpha7_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(&in.SecurityGroupFilters[i], &out.SecurityGroups[i], s); err != nil {
+			if err := Convert_v1alpha7_SecurityGroupFilter_To_v1beta1_SecurityGroupParam(&in.SecurityGroupFilters[i], &out.SecurityGroups[i], s); err != nil {
 				return err
 			}
 		}
@@ -393,7 +435,7 @@ func Convert_v1beta1_PortOpts_To_v1alpha7_PortOpts(in *infrav1.PortOpts, out *Po
 	if len(in.SecurityGroups) > 0 {
 		out.SecurityGroupFilters = make([]SecurityGroupFilter, len(in.SecurityGroups))
 		for i := range in.SecurityGroups {
-			if err := Convert_v1beta1_SecurityGroupFilter_To_v1alpha7_SecurityGroupFilter(&in.SecurityGroups[i], &out.SecurityGroupFilters[i], s); err != nil {
+			if err := Convert_v1beta1_SecurityGroupParam_To_v1alpha7_SecurityGroupFilter(&in.SecurityGroups[i], &out.SecurityGroupFilters[i], s); err != nil {
 				return err
 			}
 		}
@@ -453,4 +495,12 @@ func Convert_v1alpha7_NetworkFilter_To_v1beta1_NetworkFilter(_ *NetworkFilter, _
 
 func Convert_v1beta1_NetworkFilter_To_v1alpha7_NetworkFilter(_ *infrav1.NetworkFilter, _ *NetworkFilter, _ apiconversion.Scope) error {
 	return errors.New("Convert_v1beta1_NetworkFilter_To_v1alpha6_NetworkFilter should not be called")
+}
+
+func Convert_v1alpha7_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(_ *SecurityGroupFilter, _ *infrav1.SecurityGroupFilter, _ apiconversion.Scope) error {
+	return errors.New("Convert_v1alpha7_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter should not be called")
+}
+
+func Convert_v1beta1_SecurityGroupFilter_To_v1alpha7_SecurityGroupFilter(_ *infrav1.SecurityGroupFilter, _ *SecurityGroupFilter, _ apiconversion.Scope) error {
+	return errors.New("Convert_v1beta1_SecurityGroupFilter_To_v1alpha7_SecurityGroupFilter should not be called")
 }

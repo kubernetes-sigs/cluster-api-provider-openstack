@@ -55,7 +55,7 @@ type OpenStackMachineSpec struct {
 	Ports []PortOpts `json:"ports,omitempty"`
 
 	// The names of the security groups to assign to the instance
-	SecurityGroups []SecurityGroupFilter `json:"securityGroups,omitempty"`
+	SecurityGroups []SecurityGroupParam `json:"securityGroups,omitempty"`
 
 	// Whether the server instance is created on a trunk port or not.
 	Trunk bool `json:"trunk,omitempty"`
