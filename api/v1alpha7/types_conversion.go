@@ -63,27 +63,63 @@ func Convert_v1beta1_SecurityGroupFilter_To_v1alpha7_SecurityGroupFilter(in *inf
 /* NetworkFilter */
 
 func restorev1alpha7NetworkFilter(previous *NetworkFilter, dst *NetworkFilter) {
+	if previous == nil || dst == nil {
+		return
+	}
+
 	// The edge cases with multiple commas are too tricky in this direction,
 	// so we just restore the whole thing.
 	dst.Tags = previous.Tags
 	dst.TagsAny = previous.TagsAny
 	dst.NotTags = previous.NotTags
 	dst.NotTagsAny = previous.NotTagsAny
+
+	// If ID was set we lost all over filter params
+	if dst.ID != "" {
+		dst.Name = previous.Name
+		dst.Description = previous.Description
+		dst.ProjectID = previous.ProjectID
+	}
 }
 
-func Convert_v1alpha7_NetworkFilter_To_v1beta1_NetworkFilter(in *NetworkFilter, out *infrav1.NetworkFilter, s apiconversion.Scope) error {
-	if err := autoConvert_v1alpha7_NetworkFilter_To_v1beta1_NetworkFilter(in, out, s); err != nil {
+func restorev1beta1NetworkParam(previous *infrav1.NetworkParam, dst *infrav1.NetworkParam) {
+	if previous == nil || dst == nil {
+		return
+	}
+
+	if dst.Filter != nil && previous.Filter != nil {
+		dst.Filter.FilterByNeutronTags = previous.Filter.FilterByNeutronTags
+	}
+}
+
+func Convert_v1alpha7_NetworkFilter_To_v1beta1_NetworkParam(in *NetworkFilter, out *infrav1.NetworkParam, s apiconversion.Scope) error {
+	if in.ID != "" {
+		out.ID = &in.ID
+		return nil
+	}
+	outFilter := &infrav1.NetworkFilter{}
+	if err := autoConvert_v1alpha7_NetworkFilter_To_v1beta1_NetworkFilter(in, outFilter, s); err != nil {
 		return err
 	}
-	infrav1.ConvertAllTagsTo(in.Tags, in.TagsAny, in.NotTags, in.NotTagsAny, &out.FilterByNeutronTags)
+	infrav1.ConvertAllTagsTo(in.Tags, in.TagsAny, in.NotTags, in.NotTagsAny, &outFilter.FilterByNeutronTags)
+	if !outFilter.IsZero() {
+		out.Filter = outFilter
+	}
 	return nil
 }
 
-func Convert_v1beta1_NetworkFilter_To_v1alpha7_NetworkFilter(in *infrav1.NetworkFilter, out *NetworkFilter, s apiconversion.Scope) error {
-	if err := autoConvert_v1beta1_NetworkFilter_To_v1alpha7_NetworkFilter(in, out, s); err != nil {
-		return err
+func Convert_v1beta1_NetworkParam_To_v1alpha7_NetworkFilter(in *infrav1.NetworkParam, out *NetworkFilter, s apiconversion.Scope) error {
+	if in.ID != nil {
+		out.ID = *in.ID
+		return nil
 	}
-	infrav1.ConvertAllTagsFrom(&in.FilterByNeutronTags, &out.Tags, &out.TagsAny, &out.NotTags, &out.NotTagsAny)
+
+	if in.Filter != nil {
+		if err := autoConvert_v1beta1_NetworkFilter_To_v1alpha7_NetworkFilter(in.Filter, out, s); err != nil {
+			return err
+		}
+		infrav1.ConvertAllTagsFrom(&in.Filter.FilterByNeutronTags, &out.Tags, &out.TagsAny, &out.NotTags, &out.NotTagsAny)
+	}
 	return nil
 }
 
@@ -167,6 +203,8 @@ func restorev1alpha7Port(previous *PortOpts, dst *PortOpts) {
 }
 
 func restorev1beta1Port(previous *infrav1.PortOpts, dst *infrav1.PortOpts) {
+	restorev1beta1NetworkParam(previous.Network, dst.Network)
+
 	optional.RestoreString(&previous.NameSuffix, &dst.NameSuffix)
 	optional.RestoreString(&previous.Description, &dst.Description)
 	optional.RestoreString(&previous.MACAddress, &dst.MACAddress)
@@ -350,4 +388,17 @@ func Convert_v1alpha7_OpenStackIdentityReference_To_v1beta1_OpenStackIdentityRef
 func Convert_v1beta1_OpenStackIdentityReference_To_v1alpha7_OpenStackIdentityReference(in *infrav1.OpenStackIdentityReference, out *OpenStackIdentityReference, _ apiconversion.Scope) error {
 	out.Name = in.Name
 	return nil
+}
+
+/* Placeholders */
+
+// conversion-gen registers these functions so we must provider stubs, but
+// nothing should ever call them
+
+func Convert_v1alpha7_NetworkFilter_To_v1beta1_NetworkFilter(_ *NetworkFilter, _ *infrav1.NetworkFilter, _ apiconversion.Scope) error {
+	return errors.New("Convert_v1alpha6_NetworkFilter_To_v1beta1_NetworkFilter should not be called")
+}
+
+func Convert_v1beta1_NetworkFilter_To_v1alpha7_NetworkFilter(_ *infrav1.NetworkFilter, _ *NetworkFilter, _ apiconversion.Scope) error {
+	return errors.New("Convert_v1beta1_NetworkFilter_To_v1alpha6_NetworkFilter should not be called")
 }

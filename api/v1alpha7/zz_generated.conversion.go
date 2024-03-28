@@ -336,6 +336,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddConversionFunc((*NetworkFilter)(nil), (*v1beta1.NetworkParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha7_NetworkFilter_To_v1beta1_NetworkParam(a.(*NetworkFilter), b.(*v1beta1.NetworkParam), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddConversionFunc((*OpenStackClusterSpec)(nil), (*v1beta1.OpenStackClusterSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha7_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(a.(*OpenStackClusterSpec), b.(*v1beta1.OpenStackClusterSpec), scope)
 	}); err != nil {
@@ -388,6 +393,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddConversionFunc((*v1beta1.NetworkFilter)(nil), (*NetworkFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1beta1_NetworkFilter_To_v1alpha7_NetworkFilter(a.(*v1beta1.NetworkFilter), b.(*NetworkFilter), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1beta1.NetworkParam)(nil), (*NetworkFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1beta1_NetworkParam_To_v1alpha7_NetworkFilter(a.(*v1beta1.NetworkParam), b.(*NetworkFilter), scope)
 	}); err != nil {
 		return err
 	}
@@ -754,7 +764,7 @@ func autoConvert_v1alpha7_NetworkFilter_To_v1beta1_NetworkFilter(in *NetworkFilt
 	out.Name = in.Name
 	out.Description = in.Description
 	out.ProjectID = in.ProjectID
-	out.ID = in.ID
+	// WARNING: in.ID requires manual conversion: does not exist in peer-type
 	// WARNING: in.Tags requires manual conversion: does not exist in peer-type
 	// WARNING: in.TagsAny requires manual conversion: does not exist in peer-type
 	// WARNING: in.NotTags requires manual conversion: does not exist in peer-type
@@ -766,7 +776,6 @@ func autoConvert_v1beta1_NetworkFilter_To_v1alpha7_NetworkFilter(in *v1beta1.Net
 	out.Name = in.Name
 	out.Description = in.Description
 	out.ProjectID = in.ProjectID
-	out.ID = in.ID
 	// WARNING: in.FilterByNeutronTags requires manual conversion: does not exist in peer-type
 	return nil
 }
@@ -907,7 +916,7 @@ func autoConvert_v1alpha7_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(i
 	} else {
 		out.Router = nil
 	}
-	// WARNING: in.Network requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkFilter vs *sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkFilter)
+	// WARNING: in.Network requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkFilter vs *sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkParam)
 	// WARNING: in.Subnet requires manual conversion: does not exist in peer-type
 	if err := optional.Convert_int_To_optional_Int(&in.NetworkMTU, &out.NetworkMTU, s); err != nil {
 		return err
@@ -973,7 +982,7 @@ func autoConvert_v1beta1_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(i
 	} else {
 		out.Router = nil
 	}
-	// WARNING: in.Network requires manual conversion: inconvertible types (*sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkFilter vs sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkFilter)
+	// WARNING: in.Network requires manual conversion: inconvertible types (*sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkParam vs sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkFilter)
 	// WARNING: in.Subnets requires manual conversion: does not exist in peer-type
 	if err := optional.Convert_optional_Int_To_int(&in.NetworkMTU, &out.NetworkMTU, s); err != nil {
 		return err
@@ -1574,8 +1583,8 @@ func Convert_v1beta1_OpenStackMachineTemplateSpec_To_v1alpha7_OpenStackMachineTe
 func autoConvert_v1alpha7_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *v1beta1.PortOpts, s conversion.Scope) error {
 	if in.Network != nil {
 		in, out := &in.Network, &out.Network
-		*out = new(v1beta1.NetworkFilter)
-		if err := Convert_v1alpha7_NetworkFilter_To_v1beta1_NetworkFilter(*in, *out, s); err != nil {
+		*out = new(v1beta1.NetworkParam)
+		if err := Convert_v1alpha7_NetworkFilter_To_v1beta1_NetworkParam(*in, *out, s); err != nil {
 			return err
 		}
 	} else {
@@ -1617,7 +1626,7 @@ func autoConvert_v1beta1_PortOpts_To_v1alpha7_PortOpts(in *v1beta1.PortOpts, out
 	if in.Network != nil {
 		in, out := &in.Network, &out.Network
 		*out = new(NetworkFilter)
-		if err := Convert_v1beta1_NetworkFilter_To_v1alpha7_NetworkFilter(*in, *out, s); err != nil {
+		if err := Convert_v1beta1_NetworkParam_To_v1alpha7_NetworkFilter(*in, *out, s); err != nil {
 			return err
 		}
 	} else {

@@ -20,8 +20,10 @@ import (
 	"strings"
 
 	fuzz "github.com/google/gofuzz"
+	"k8s.io/utils/pointer"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
 )
 
 func filterInvalidTags(tags []infrav1.NeutronTag) []infrav1.NeutronTag {
@@ -33,6 +35,32 @@ func filterInvalidTags(tags []infrav1.NeutronTag) []infrav1.NeutronTag {
 		}
 	}
 	return ret
+}
+
+func nonEmptyString(c fuzz.Continue) string {
+	for {
+		if s := c.RandString(); s != "" {
+			return s
+		}
+	}
+}
+
+type isZeroer[T any] interface {
+	IsZero() bool
+	*T
+}
+
+func fuzzFilterParam[Z isZeroer[T], T any](id *optional.String, filter *Z, c fuzz.Continue) {
+	if c.RandBool() {
+		*id = pointer.String(nonEmptyString(c))
+		*filter = nil
+	} else {
+		*filter = new(T)
+		for (*filter).IsZero() {
+			c.Fuzz(*filter)
+		}
+		*id = nil
+	}
 }
 
 // InfraV1FuzzerFuncs returns fuzzer funcs for v1beta1 OpenStack types which:
@@ -99,6 +127,11 @@ func InfraV1FuzzerFuncs() []interface{} {
 			filter.TagsAny = filterInvalidTags(filter.TagsAny)
 			filter.NotTags = filterInvalidTags(filter.NotTags)
 			filter.NotTagsAny = filterInvalidTags(filter.NotTagsAny)
+		},
+
+		// v1beta1 network param contains exactly one of ID or filter
+		func(param *infrav1.NetworkParam, c fuzz.Continue) {
+			fuzzFilterParam(&param.ID, &param.Filter, c)
 		},
 	}
 }

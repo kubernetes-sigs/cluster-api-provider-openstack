@@ -169,28 +169,27 @@ func restorev1alpha7ClusterSpec(previous *OpenStackClusterSpec, dst *OpenStackCl
 }
 
 func restorev1beta1ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infrav1.OpenStackClusterSpec) {
+	if previous == nil || dst == nil {
+		return
+	}
+
 	// Bastion is restored separately
 
-	if dst.Network.IsEmpty() {
+	if dst.Network == nil {
 		dst.Network = previous.Network
 	}
 
-	// Restore all fields except ID, which should have been copied over in conversion
+	// ExternalNetwork by filter will be been lost in down-conversion
 	if previous.ExternalNetwork != nil {
 		if dst.ExternalNetwork == nil {
-			dst.ExternalNetwork = &infrav1.NetworkFilter{}
+			dst.ExternalNetwork = &infrav1.NetworkParam{}
 		}
-
-		dst.ExternalNetwork.Name = previous.ExternalNetwork.Name
-		dst.ExternalNetwork.Description = previous.ExternalNetwork.Description
-		dst.ExternalNetwork.ProjectID = previous.ExternalNetwork.ProjectID
-		dst.ExternalNetwork.Tags = previous.ExternalNetwork.Tags
-		dst.ExternalNetwork.TagsAny = previous.ExternalNetwork.TagsAny
-		dst.ExternalNetwork.NotTags = previous.ExternalNetwork.NotTags
-		dst.ExternalNetwork.NotTagsAny = previous.ExternalNetwork.NotTagsAny
+		dst.ExternalNetwork.Filter = previous.ExternalNetwork.Filter
 	}
 
 	dst.DisableExternalNetwork = previous.DisableExternalNetwork
+
+	restorev1beta1NetworkParam(previous.Network, dst.Network)
 
 	if len(previous.Subnets) > 1 {
 		dst.Subnets = append(dst.Subnets, previous.Subnets[1:]...)
@@ -231,15 +230,15 @@ func Convert_v1alpha7_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 	}
 
 	if in.Network != (NetworkFilter{}) {
-		out.Network = &infrav1.NetworkFilter{}
-		if err := Convert_v1alpha7_NetworkFilter_To_v1beta1_NetworkFilter(&in.Network, out.Network, s); err != nil {
+		out.Network = &infrav1.NetworkParam{}
+		if err := Convert_v1alpha7_NetworkFilter_To_v1beta1_NetworkParam(&in.Network, out.Network, s); err != nil {
 			return err
 		}
 	}
 
 	if in.ExternalNetworkID != "" {
-		out.ExternalNetwork = &infrav1.NetworkFilter{
-			ID: in.ExternalNetworkID,
+		out.ExternalNetwork = &infrav1.NetworkParam{
+			ID: &in.ExternalNetworkID,
 		}
 	}
 
@@ -298,13 +297,13 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in *i
 	}
 
 	if in.Network != nil {
-		if err := Convert_v1beta1_NetworkFilter_To_v1alpha7_NetworkFilter(in.Network, &out.Network, s); err != nil {
+		if err := Convert_v1beta1_NetworkParam_To_v1alpha7_NetworkFilter(in.Network, &out.Network, s); err != nil {
 			return err
 		}
 	}
 
-	if in.ExternalNetwork != nil && in.ExternalNetwork.ID != "" {
-		out.ExternalNetworkID = in.ExternalNetwork.ID
+	if in.ExternalNetwork != nil && in.ExternalNetwork.ID != nil {
+		out.ExternalNetworkID = *in.ExternalNetwork.ID
 	}
 
 	if len(in.Subnets) >= 1 {

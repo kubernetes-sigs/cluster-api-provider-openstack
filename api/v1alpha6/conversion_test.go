@@ -220,8 +220,8 @@ func TestNetworksToPorts(t *testing.T) {
 			afterMachineSpec: infrav1.OpenStackMachineSpec{
 				Ports: []infrav1.PortOpts{
 					{
-						Network: &infrav1.NetworkFilter{
-							ID: networkuuid,
+						Network: &infrav1.NetworkParam{
+							ID: pointer.String(networkuuid),
 						},
 					},
 				},
@@ -247,15 +247,17 @@ func TestNetworksToPorts(t *testing.T) {
 			afterMachineSpec: infrav1.OpenStackMachineSpec{
 				Ports: []infrav1.PortOpts{
 					{
-						Network: &infrav1.NetworkFilter{
-							Name:        "network-name",
-							Description: "network-description",
-							ProjectID:   "project-id",
-							FilterByNeutronTags: infrav1.FilterByNeutronTags{
-								Tags:       []infrav1.NeutronTag{"tags"},
-								TagsAny:    []infrav1.NeutronTag{"tags-any"},
-								NotTags:    []infrav1.NeutronTag{"not-tags"},
-								NotTagsAny: []infrav1.NeutronTag{"not-tags-any"},
+						Network: &infrav1.NetworkParam{
+							Filter: &infrav1.NetworkFilter{
+								Name:        "network-name",
+								Description: "network-description",
+								ProjectID:   "project-id",
+								FilterByNeutronTags: infrav1.FilterByNeutronTags{
+									Tags:       []infrav1.NeutronTag{"tags"},
+									TagsAny:    []infrav1.NeutronTag{"tags-any"},
+									NotTags:    []infrav1.NeutronTag{"not-tags"},
+									NotTagsAny: []infrav1.NeutronTag{"not-tags-any"},
+								},
 							},
 						},
 					},
@@ -279,8 +281,8 @@ func TestNetworksToPorts(t *testing.T) {
 			afterMachineSpec: infrav1.OpenStackMachineSpec{
 				Ports: []infrav1.PortOpts{
 					{
-						Network: &infrav1.NetworkFilter{
-							ID: networkuuid,
+						Network: &infrav1.NetworkParam{
+							ID: pointer.String(networkuuid),
 						},
 						FixedIPs: []infrav1.FixedIP{
 							{
@@ -323,8 +325,8 @@ func TestNetworksToPorts(t *testing.T) {
 			afterMachineSpec: infrav1.OpenStackMachineSpec{
 				Ports: []infrav1.PortOpts{
 					{
-						Network: &infrav1.NetworkFilter{
-							ID: networkuuid,
+						Network: &infrav1.NetworkParam{
+							ID: pointer.String(networkuuid),
 						},
 						FixedIPs: []infrav1.FixedIP{
 							{
@@ -383,8 +385,8 @@ func TestNetworksToPorts(t *testing.T) {
 			afterMachineSpec: infrav1.OpenStackMachineSpec{
 				Ports: []infrav1.PortOpts{
 					{
-						Network: &infrav1.NetworkFilter{
-							ID: networkuuid,
+						Network: &infrav1.NetworkParam{
+							ID: pointer.String(networkuuid),
 						},
 						FixedIPs: []infrav1.FixedIP{
 							{
@@ -395,8 +397,8 @@ func TestNetworksToPorts(t *testing.T) {
 						},
 					},
 					{
-						Network: &infrav1.NetworkFilter{
-							ID: networkuuid,
+						Network: &infrav1.NetworkParam{
+							ID: pointer.String(networkuuid),
 						},
 						FixedIPs: []infrav1.FixedIP{
 							{

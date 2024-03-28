@@ -35,7 +35,6 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/filterconvert"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
@@ -469,8 +468,12 @@ func (s *Service) normalizePortTarget(port *infrav1.PortOpts, defaultNetwork *in
 	}
 
 	switch {
-	case port.Network != nil && port.Network.ID != "":
-		networkID = port.Network.ID
+	case port.Network != nil:
+		var err error
+		networkID, err = s.GetNetworkIDByParam(port.Network)
+		if err != nil {
+			return "", nil, err
+		}
 
 	// No network, but fixed IPs are defined(we handled the no fixed
 	// IPs case above): try to infer network from a subnet
@@ -513,21 +516,9 @@ func (s *Service) normalizePortTarget(port *infrav1.PortOpts, defaultNetwork *in
 			return "", nil, err
 		}
 
-	// Network is defined by filter
 	default:
-		networkListOpts := filterconvert.NetworkFilterToListOpts(port.Network)
-		netIDs, err := s.GetNetworkIDsByFilter(networkListOpts)
-		if err != nil {
-			return "", nil, err
-		}
-
-		// TODO: These are spec errors: they should set the machine to failed
-		if len(netIDs) > 1 {
-			return "", nil, fmt.Errorf("network filter for port %d returns more than one result", portIdx)
-		} else if len(netIDs) == 0 {
-			return "", nil, fmt.Errorf("network filter for port %d returns no networks", portIdx)
-		}
-		networkID = netIDs[0]
+		// TODO: This is a spec errors: it should set the machine to failed
+		return "", nil, fmt.Errorf("unable to determine network for port %d", portIdx)
 	}
 
 	// Network ID is now known. Resolve all FixedIPs

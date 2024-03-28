@@ -17,6 +17,7 @@ limitations under the License.
 package networking
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/gophercloud/gophercloud"
@@ -78,42 +79,45 @@ func (c createOpts) ToNetworkCreateMap() (map[string]interface{}, error) {
 // - no external network was given in the cluster spec and no external network was found
 // - the user has set OpenStackCluster.Spec.DisableExternalNetwork to true.
 func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCluster) error {
-	var listOpts external.ListOptsExt
-
 	if pointer.BoolDeref(openStackCluster.Spec.DisableExternalNetwork, false) {
 		s.scope.Logger().Info("External network is disabled - proceeding with internal network only")
 		openStackCluster.Status.ExternalNetwork = nil
 		return nil
 	}
 
-	listOpts = external.ListOptsExt{
-		ListOptsBuilder: filterconvert.NetworkFilterToListOpts(openStackCluster.Spec.ExternalNetwork),
-		External:        pointer.Bool(true),
-	}
-	networkList, err := s.client.ListNetwork(listOpts)
-	if err != nil {
-		return err
-	}
+	var network *networks.Network
+	if openStackCluster.Spec.ExternalNetwork == nil {
+		// No external network specified in the cluster spec. Default behaviour: query all external networks.
+		// * If there's only one, use that.
+		// * If there's none don't use an external network.
+		// * If there's more than one it's an error.
 
-	switch len(networkList) {
-	case 0:
-		if openStackCluster.Spec.ExternalNetwork == nil {
-			// Not finding an external network is fine if ExternalNetwork is not set
+		// Empty NetworkFilter will query all networks
+		var err error
+		network, err = s.getNetworkByFilter(&infrav1.NetworkFilter{}, ExternalNetworksOnly)
+		if errors.Is(err, ErrNoMatches) {
 			openStackCluster.Status.ExternalNetwork = nil
 			s.scope.Logger().Info("No external network found - proceeding with internal network only")
 			return nil
 		}
-		return fmt.Errorf("no external network found")
-	case 1:
-		openStackCluster.Status.ExternalNetwork = &infrav1.NetworkStatus{
-			ID:   networkList[0].ID,
-			Name: networkList[0].Name,
-			Tags: networkList[0].Tags,
+		if err != nil {
+			return fmt.Errorf("failed to get external network: %w", err)
 		}
-		s.scope.Logger().Info("External network found", "id", networkList[0].ID)
-		return nil
+	} else {
+		var err error
+		network, err = s.GetNetworkByParam(openStackCluster.Spec.ExternalNetwork, ExternalNetworksOnly)
+		if err != nil {
+			return fmt.Errorf("failed to get external network: %w", err)
+		}
 	}
-	return fmt.Errorf("found %d external networks, which should not happen", len(networkList))
+
+	openStackCluster.Status.ExternalNetwork = &infrav1.NetworkStatus{
+		ID:   network.ID,
+		Name: network.Name,
+		Tags: network.Tags,
+	}
+	s.scope.Logger().Info("External network found", "id", network.ID)
+	return nil
 }
 
 func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
@@ -290,32 +294,66 @@ func (s *Service) getNetworkByName(networkName string) (networks.Network, error)
 	return networks.Network{}, fmt.Errorf("found %d networks with the name %s, which should not happen", len(networkList), networkName)
 }
 
-// GetNetworksByFilter retrieves networks by querying openstack with filters.
-func (s *Service) GetNetworksByFilter(opts networks.ListOptsBuilder) ([]networks.Network, error) {
-	if opts == nil {
-		return nil, fmt.Errorf("no Filters were passed")
+type GetNetworkOpts func(networks.ListOptsBuilder) networks.ListOptsBuilder
+
+func ExternalNetworksOnly(opts networks.ListOptsBuilder) networks.ListOptsBuilder {
+	return &external.ListOptsExt{
+		ListOptsBuilder: opts,
+		External:        pointer.Bool(true),
 	}
-	networkList, err := s.client.ListNetwork(opts)
-	if err != nil {
-		return nil, err
-	}
-	if len(networkList) == 0 {
-		return nil, fmt.Errorf("no networks could be found with the filters provided")
-	}
-	return networkList, nil
 }
 
-// GetNetworkIDsByFilter retrieves network ids by querying openstack with filters.
-func (s *Service) GetNetworkIDsByFilter(opts networks.ListOptsBuilder) ([]string, error) {
-	nets, err := s.GetNetworksByFilter(opts)
+// getNetworksByFilter retrieves networks by querying openstack with filters.
+func (s *Service) getNetworkByFilter(filter *infrav1.NetworkFilter, opts ...GetNetworkOpts) (*networks.Network, error) {
+	var listOpts networks.ListOptsBuilder
+	listOpts = filterconvert.NetworkFilterToListOpts(filter)
+	for _, opt := range opts {
+		listOpts = opt(listOpts)
+	}
+
+	networks, err := s.client.ListNetwork(listOpts)
 	if err != nil {
 		return nil, err
 	}
-	ids := []string{}
-	for _, network := range nets {
-		ids = append(ids, network.ID)
+	if len(networks) == 0 {
+		return nil, ErrNoMatches
 	}
-	return ids, nil
+	if len(networks) > 1 {
+		return nil, ErrMultipleMatches
+	}
+	return &networks[0], nil
+}
+
+// GetNetworkByParam gets the network specified by the given NetworkParam.
+func (s *Service) GetNetworkByParam(param *infrav1.NetworkParam, opts ...GetNetworkOpts) (*networks.Network, error) {
+	if param.ID != nil {
+		return s.GetNetworkByID(*param.ID)
+	}
+
+	if param.Filter == nil {
+		return nil, errors.New("no filter or ID provided")
+	}
+
+	return s.getNetworkByFilter(param.Filter, opts...)
+}
+
+// GetNetworkIDByParam returns the ID of the network specified by the given
+// NetworkParam. It does not make an OpenStack call if the network is specified
+// by ID.
+func (s *Service) GetNetworkIDByParam(param *infrav1.NetworkParam, opts ...GetNetworkOpts) (string, error) {
+	if param.ID != nil {
+		return *param.ID, nil
+	}
+
+	if param.Filter == nil {
+		return "", errors.New("no filter or ID provided")
+	}
+
+	network, err := s.getNetworkByFilter(param.Filter, opts...)
+	if err != nil {
+		return "", err
+	}
+	return network.ID, nil
 }
 
 // GetSubnetsByFilter gets the id of a subnet by querying openstack with filters.

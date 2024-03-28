@@ -84,6 +84,10 @@ type FilterByNeutronTags struct {
 	NotTagsAny []NeutronTag `json:"notTagsAny,omitempty"`
 }
 
+func (f *FilterByNeutronTags) IsZero() bool {
+	return f == nil || len(f.Tags) == 0 && len(f.TagsAny) == 0 && len(f.NotTags) == 0 && len(f.NotTagsAny) == 0
+}
+
 type SecurityGroupFilter struct {
 	ID          string `json:"id,omitempty"`
 	Name        string `json:"name,omitempty"`
@@ -93,27 +97,38 @@ type SecurityGroupFilter struct {
 	FilterByNeutronTags `json:",inline"`
 }
 
+// NetworkParam specifies an OpenStack network. It may be specified by either ID or Filter, but not both.
+// +kubebuilder:validation:MaxProperties:=1
+// +kubebuilder:validation:MinProperties:=1
+type NetworkParam struct {
+	// ID is the ID of the network to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.
+	// +kubebuilder:validation:Format:=uuid
+	// +optional
+	ID optional.String `json:"id,omitempty"`
+
+	// Filter specifies a filter to select an OpenStack network. If provided, cannot be empty.
+	// +optional
+	Filter *NetworkFilter `json:"filter,omitempty"`
+}
+
+// NetworkFilter specifies a query to select an OpenStack network. At least one property must be set.
+// +kubebuilder:validation:MinProperties:=1
 type NetworkFilter struct {
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
 	ProjectID   string `json:"projectID,omitempty"`
-	ID          string `json:"id,omitempty"`
 
 	FilterByNeutronTags `json:",inline"`
 }
 
-func (networkFilter *NetworkFilter) IsEmpty() bool {
+func (networkFilter *NetworkFilter) IsZero() bool {
 	if networkFilter == nil {
 		return true
 	}
 	return networkFilter.Name == "" &&
 		networkFilter.Description == "" &&
 		networkFilter.ProjectID == "" &&
-		networkFilter.ID == "" &&
-		len(networkFilter.Tags) == 0 &&
-		len(networkFilter.TagsAny) == 0 &&
-		len(networkFilter.NotTags) == 0 &&
-		len(networkFilter.NotTagsAny) == 0
+		networkFilter.FilterByNeutronTags.IsZero()
 }
 
 type SubnetFilter struct {
@@ -169,7 +184,7 @@ type PortOpts struct {
 	// Network is a query for an openstack network that the port will be created or discovered on.
 	// This will fail if the query returns more than one network.
 	// +optional
-	Network *NetworkFilter `json:"network,omitempty"`
+	Network *NetworkParam `json:"network,omitempty"`
 
 	// Description is a human-readable description for the port.
 	// +optional

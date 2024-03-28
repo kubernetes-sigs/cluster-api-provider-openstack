@@ -26,7 +26,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/external"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
@@ -506,6 +505,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		err = deleteBastion(scope, capiCluster, testCluster)
 		Expect(err).To(BeNil())
 	})
+
 	It("should implicitly filter cluster subnets by cluster network", func() {
 		const externalNetworkID = "a42211a2-4d2c-426f-9413-830e4b4abbbc"
 		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
@@ -519,11 +519,11 @@ var _ = Describe("OpenStackCluster controller", func() {
 			},
 			DisableAPIServerFloatingIP: pointer.Bool(true),
 			APIServerFixedIP:           pointer.String("10.0.0.1"),
-			ExternalNetwork: &infrav1.NetworkFilter{
-				ID: externalNetworkID,
+			ExternalNetwork: &infrav1.NetworkParam{
+				ID: pointer.String(externalNetworkID),
 			},
-			Network: &infrav1.NetworkFilter{
-				ID: clusterNetworkID,
+			Network: &infrav1.NetworkParam{
+				ID: pointer.String(clusterNetworkID),
 			},
 		}
 		testCluster.Status = infrav1.OpenStackClusterStatus{
@@ -550,26 +550,15 @@ var _ = Describe("OpenStackCluster controller", func() {
 		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
 
 		// Fetch external network
-		networkClientRecorder.ListNetwork(external.ListOptsExt{
-			ListOptsBuilder: networks.ListOpts{
-				ID: externalNetworkID,
-			},
-			External: pointer.Bool(true),
-		}).Return([]networks.Network{
-			{
-				ID:   externalNetworkID,
-				Name: "external-network",
-			},
+		networkClientRecorder.GetNetwork(externalNetworkID).Return(&networks.Network{
+			ID:   externalNetworkID,
+			Name: "external-network",
 		}, nil)
 
 		// Fetch cluster network
-		networkClientRecorder.ListNetwork(&networks.ListOpts{
-			ID: clusterNetworkID,
-		}).Return([]networks.Network{
-			{
-				ID:   clusterNetworkID,
-				Name: "cluster-network",
-			},
+		networkClientRecorder.GetNetwork(clusterNetworkID).Return(&networks.Network{
+			ID:   clusterNetworkID,
+			Name: "cluster-network",
 		}, nil)
 
 		// Fetching cluster subnets should be filtered by cluster network id
@@ -600,11 +589,11 @@ var _ = Describe("OpenStackCluster controller", func() {
 			},
 			DisableAPIServerFloatingIP: pointer.Bool(true),
 			APIServerFixedIP:           pointer.String("10.0.0.1"),
-			ExternalNetwork: &infrav1.NetworkFilter{
-				ID: externalNetworkID,
+			ExternalNetwork: &infrav1.NetworkParam{
+				ID: pointer.String(externalNetworkID),
 			},
-			Network: &infrav1.NetworkFilter{
-				ID: clusterNetworkID,
+			Network: &infrav1.NetworkParam{
+				ID: pointer.String(clusterNetworkID),
 			},
 			Subnets: []infrav1.SubnetFilter{
 				{ID: clusterSubnets[0]},
@@ -635,26 +624,15 @@ var _ = Describe("OpenStackCluster controller", func() {
 		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
 
 		// Fetch external network
-		networkClientRecorder.ListNetwork(external.ListOptsExt{
-			ListOptsBuilder: networks.ListOpts{
-				ID: externalNetworkID,
-			},
-			External: pointer.Bool(true),
-		}).Return([]networks.Network{
-			{
-				ID:   externalNetworkID,
-				Name: "external-network",
-			},
+		networkClientRecorder.GetNetwork(externalNetworkID).Return(&networks.Network{
+			ID:   externalNetworkID,
+			Name: "external-network",
 		}, nil)
 
 		// Fetch cluster network
-		networkClientRecorder.ListNetwork(&networks.ListOpts{
-			ID: clusterNetworkID,
-		}).Return([]networks.Network{
-			{
-				ID:   clusterNetworkID,
-				Name: "cluster-network",
-			},
+		networkClientRecorder.GetNetwork(clusterNetworkID).Return(&networks.Network{
+			ID:   clusterNetworkID,
+			Name: "cluster-network",
 		}, nil)
 
 		networkClientRecorder.GetSubnet(clusterSubnets[0]).Return(&subnets.Subnet{

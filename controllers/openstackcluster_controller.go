@@ -51,7 +51,6 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 	utils "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/controllers"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/filterconvert"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
@@ -665,20 +664,13 @@ func reconcilePreExistingNetworkComponents(scope *scope.WithLogger, networkingSe
 		openStackCluster.Status.Network = &infrav1.NetworkStatusWithSubnets{}
 	}
 
-	if !openStackCluster.Spec.Network.IsEmpty() {
-		netOpts := filterconvert.NetworkFilterToListOpts(openStackCluster.Spec.Network)
-		networkList, err := networkingService.GetNetworksByFilter(&netOpts)
+	if openStackCluster.Spec.Network != nil {
+		network, err := networkingService.GetNetworkByParam(openStackCluster.Spec.Network)
 		if err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find network: %w", err))
-			return fmt.Errorf("error fetching networks: %w", err)
+			return fmt.Errorf("error fetching cluster network: %w", err)
 		}
-		if len(networkList) == 0 {
-			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find any network"))
-			return fmt.Errorf("failed to find any network")
-		}
-		if len(networkList) == 1 {
-			setClusterNetwork(openStackCluster, &networkList[0])
-		}
+		setClusterNetwork(openStackCluster, network)
 	}
 
 	subnets, err := getClusterSubnets(networkingService, openStackCluster)

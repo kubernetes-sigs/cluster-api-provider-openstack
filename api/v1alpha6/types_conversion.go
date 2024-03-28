@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha6
 
 import (
+	"errors"
 	"strings"
 
 	apiconversion "k8s.io/apimachinery/pkg/conversion"
@@ -102,27 +103,61 @@ func Convert_v1beta1_SecurityGroupFilter_To_v1alpha6_SecurityGroupFilter(in *inf
 /* NetworkParam, NetworkFilter */
 
 func restorev1alpha6NetworkFilter(previous *NetworkFilter, dst *NetworkFilter) {
+	if previous == nil || dst == nil {
+		return
+	}
+
 	// The edge cases with multiple commas are too tricky in this direction,
 	// so we just restore the whole thing.
 	dst.Tags = previous.Tags
 	dst.TagsAny = previous.TagsAny
 	dst.NotTags = previous.NotTags
 	dst.NotTagsAny = previous.NotTagsAny
+
+	if dst.ID != "" {
+		dst.Name = previous.Name
+		dst.Description = previous.Description
+		dst.ProjectID = previous.ProjectID
+	}
 }
 
-func Convert_v1alpha6_NetworkFilter_To_v1beta1_NetworkFilter(in *NetworkFilter, out *infrav1.NetworkFilter, s apiconversion.Scope) error {
-	if err := autoConvert_v1alpha6_NetworkFilter_To_v1beta1_NetworkFilter(in, out, s); err != nil {
+func restorev1beta1NetworkParam(previous *infrav1.NetworkParam, dst *infrav1.NetworkParam) {
+	if previous == nil || dst == nil {
+		return
+	}
+
+	if dst.Filter != nil && previous.Filter != nil {
+		dst.Filter.FilterByNeutronTags = previous.Filter.FilterByNeutronTags
+	}
+}
+
+func Convert_v1alpha6_NetworkFilter_To_v1beta1_NetworkParam(in *NetworkFilter, out *infrav1.NetworkParam, s apiconversion.Scope) error {
+	if in.ID != "" {
+		out.ID = &in.ID
+		return nil
+	}
+	outFilter := &infrav1.NetworkFilter{}
+	if err := autoConvert_v1alpha6_NetworkFilter_To_v1beta1_NetworkFilter(in, outFilter, s); err != nil {
 		return err
 	}
-	infrav1.ConvertAllTagsTo(in.Tags, in.TagsAny, in.NotTags, in.NotTagsAny, &out.FilterByNeutronTags)
+	infrav1.ConvertAllTagsTo(in.Tags, in.TagsAny, in.NotTags, in.NotTagsAny, &outFilter.FilterByNeutronTags)
+	if !outFilter.IsZero() {
+		out.Filter = outFilter
+	}
 	return nil
 }
 
-func Convert_v1beta1_NetworkFilter_To_v1alpha6_NetworkFilter(in *infrav1.NetworkFilter, out *NetworkFilter, s apiconversion.Scope) error {
-	if err := autoConvert_v1beta1_NetworkFilter_To_v1alpha6_NetworkFilter(in, out, s); err != nil {
-		return err
+func Convert_v1beta1_NetworkParam_To_v1alpha6_NetworkFilter(in *infrav1.NetworkParam, out *NetworkFilter, s apiconversion.Scope) error {
+	if in.ID != nil {
+		out.ID = *in.ID
+		return nil
 	}
-	infrav1.ConvertAllTagsFrom(&in.FilterByNeutronTags, &out.Tags, &out.TagsAny, &out.NotTags, &out.NotTagsAny)
+	if in.Filter != nil {
+		if err := autoConvert_v1beta1_NetworkFilter_To_v1alpha6_NetworkFilter(in.Filter, out, s); err != nil {
+			return err
+		}
+		infrav1.ConvertAllTagsFrom(&in.Filter.FilterByNeutronTags, &out.Tags, &out.TagsAny, &out.NotTags, &out.NotTagsAny)
+	}
 	return nil
 }
 
@@ -181,9 +216,7 @@ func restorev1alpha6Port(previous *PortOpts, dst *PortOpts) {
 		}
 	}
 
-	if dst.Network != nil && previous.Network != nil {
-		restorev1alpha6NetworkFilter(previous.Network, dst.Network)
-	}
+	restorev1alpha6NetworkFilter(previous.Network, dst.Network)
 
 	if len(dst.FixedIPs) == len(previous.FixedIPs) {
 		for i := range dst.FixedIPs {
@@ -391,4 +424,25 @@ func Convert_v1alpha6_OpenStackIdentityReference_To_v1beta1_OpenStackIdentityRef
 func Convert_v1beta1_OpenStackIdentityReference_To_v1alpha6_OpenStackIdentityReference(in *infrav1.OpenStackIdentityReference, out *OpenStackIdentityReference, _ apiconversion.Scope) error {
 	out.Name = in.Name
 	return nil
+}
+
+/* Placeholders */
+
+// conversion-gen registers these functions so we must provider stubs, but
+// nothing should ever call them
+
+func Convert_v1alpha6_NetworkFilter_To_v1beta1_NetworkFilter(_ *NetworkFilter, _ *infrav1.NetworkFilter, _ apiconversion.Scope) error {
+	return errors.New("Convert_v1alpha6_NetworkFilter_To_v1beta1_NetworkFilter should not be called")
+}
+
+func Convert_v1beta1_NetworkFilter_To_v1alpha6_NetworkFilter(_ *infrav1.NetworkFilter, _ *NetworkFilter, _ apiconversion.Scope) error {
+	return errors.New("Convert_v1beta1_NetworkFilter_To_v1alpha6_NetworkFilter should not be called")
+}
+
+func Convert_v1alpha6_NetworkParam_To_v1beta1_NetworkParam(_ *NetworkParam, _ *infrav1.NetworkParam, _ apiconversion.Scope) error {
+	return errors.New("Convert_v1alpha6_NetworkParam_To_v1beta1_NetworkParam should not be called")
+}
+
+func Convert_v1beta1_NetworkParam_To_v1alpha6_NetworkParam(_ *infrav1.NetworkParam, _ *NetworkParam, _ apiconversion.Scope) error {
+	return errors.New("Convert_v1beta1_NetworkParam_To_v1alpha6_NetworkParam should not be called")
 }

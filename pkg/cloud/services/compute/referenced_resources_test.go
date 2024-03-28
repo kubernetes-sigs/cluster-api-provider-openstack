@@ -128,8 +128,8 @@ func Test_ResolveMachineSpec(t *testing.T) {
 				Image: infrav1.ImageFilter{ID: pointer.String(imageID1)},
 				Ports: []infrav1.PortOpts{
 					{
-						Network: &infrav1.NetworkFilter{
-							ID: networkID2,
+						Network: &infrav1.NetworkParam{
+							ID: pointer.String(networkID2),
 						},
 					},
 				},

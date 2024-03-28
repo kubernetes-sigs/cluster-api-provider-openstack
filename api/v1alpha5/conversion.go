@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha5
 
 import (
+	"errors"
 	"strings"
 
 	conversion "k8s.io/apimachinery/pkg/conversion"
@@ -205,8 +206,8 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(in *i
 		return err
 	}
 
-	if in.ExternalNetwork != nil && in.ExternalNetwork.ID != "" {
-		out.ExternalNetworkID = in.ExternalNetwork.ID
+	if in.ExternalNetwork != nil && in.ExternalNetwork.ID != nil {
+		out.ExternalNetworkID = *in.ExternalNetwork.ID
 	}
 
 	if len(in.ManagedSubnets) > 0 {
@@ -246,8 +247,8 @@ func Convert_v1alpha5_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 	}
 
 	if in.ExternalNetworkID != "" {
-		out.ExternalNetwork = &infrav1.NetworkFilter{
-			ID: in.ExternalNetworkID,
+		out.ExternalNetwork = &infrav1.NetworkParam{
+			ID: &in.ExternalNetworkID,
 		}
 	}
 
@@ -746,18 +747,49 @@ func Convert_v1beta1_SecurityGroupFilter_To_v1alpha5_SecurityGroupFilter(in *inf
 	return nil
 }
 
-func Convert_v1alpha5_NetworkFilter_To_v1beta1_NetworkFilter(in *NetworkFilter, out *infrav1.NetworkFilter, s conversion.Scope) error {
-	if err := autoConvert_v1alpha5_NetworkFilter_To_v1beta1_NetworkFilter(in, out, s); err != nil {
+func Convert_v1alpha5_NetworkFilter_To_v1beta1_NetworkParam(in *NetworkFilter, out *infrav1.NetworkParam, s conversion.Scope) error {
+	if in.ID != "" {
+		out.ID = &in.ID
+		return nil
+	}
+	outFilter := &infrav1.NetworkFilter{}
+	if err := autoConvert_v1alpha5_NetworkFilter_To_v1beta1_NetworkFilter(in, outFilter, s); err != nil {
 		return err
 	}
-	infrav1.ConvertAllTagsTo(in.Tags, in.TagsAny, in.NotTags, in.NotTagsAny, &out.FilterByNeutronTags)
+	infrav1.ConvertAllTagsTo(in.Tags, in.TagsAny, in.NotTags, in.NotTagsAny, &outFilter.FilterByNeutronTags)
+	if !outFilter.IsZero() {
+		out.Filter = outFilter
+	}
 	return nil
 }
 
-func Convert_v1beta1_NetworkFilter_To_v1alpha5_NetworkFilter(in *infrav1.NetworkFilter, out *NetworkFilter, s conversion.Scope) error {
-	if err := autoConvert_v1beta1_NetworkFilter_To_v1alpha5_NetworkFilter(in, out, s); err != nil {
-		return err
+func Convert_v1beta1_NetworkParam_To_v1alpha5_NetworkFilter(in *infrav1.NetworkParam, out *NetworkFilter, s conversion.Scope) error {
+	if in.ID != nil {
+		out.ID = *in.ID
+		return nil
 	}
-	infrav1.ConvertAllTagsFrom(&in.FilterByNeutronTags, &out.Tags, &out.TagsAny, &out.NotTags, &out.NotTagsAny)
+	if in.Filter != nil {
+		if err := autoConvert_v1beta1_NetworkFilter_To_v1alpha5_NetworkFilter(in.Filter, out, s); err != nil {
+			return err
+		}
+		infrav1.ConvertAllTagsFrom(&in.Filter.FilterByNeutronTags, &out.Tags, &out.TagsAny, &out.NotTags, &out.NotTagsAny)
+	}
 	return nil
+}
+
+// conversion-gen registers the following functions so we have to define them, but nothing should ever call them.
+func Convert_v1alpha5_NetworkFilter_To_v1beta1_NetworkFilter(_ *NetworkFilter, _ *infrav1.NetworkFilter, _ conversion.Scope) error {
+	return errors.New("Convert_v1alpha6_NetworkFilter_To_v1beta1_NetworkFilter should not be called")
+}
+
+func Convert_v1beta1_NetworkFilter_To_v1alpha5_NetworkFilter(_ *infrav1.NetworkFilter, _ *NetworkFilter, _ conversion.Scope) error {
+	return errors.New("Convert_v1beta1_NetworkFilter_To_v1alpha6_NetworkFilter should not be called")
+}
+
+func Convert_v1alpha5_NetworkParam_To_v1beta1_NetworkParam(_ *NetworkParam, _ *infrav1.NetworkParam, _ conversion.Scope) error {
+	return errors.New("Convert_v1alpha6_NetworkParam_To_v1beta1_NetworkParam should not be called")
+}
+
+func Convert_v1beta1_NetworkParam_To_v1alpha5_NetworkParam(_ *infrav1.NetworkParam, _ *NetworkParam, _ conversion.Scope) error {
+	return errors.New("Convert_v1beta1_NetworkParam_To_v1alpha6_NetworkParam should not be called")
 }
