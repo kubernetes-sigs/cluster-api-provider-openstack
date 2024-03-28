@@ -298,6 +298,7 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 	if err != nil {
 		return nil, err
 	}
+	availabilityZone :=  openStackCluster.Spec.APIServerLoadBalancer.AvailabilityZone
 
 	lbCreateOpts := loadbalancers.CreateOpts{
 		Name:        loadBalancerName,
@@ -305,6 +306,9 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 		Description: names.GetDescription(clusterResourceName),
 		Provider:    lbProvider,
 		Tags:        openStackCluster.Spec.Tags,
+	}
+	if availabilityZone != nil {
+		lbCreateOpts.AvailabilityZone = *availabilityZone
 	}
 	if vipAddress != nil {
 		lbCreateOpts.VipAddress = *vipAddress
