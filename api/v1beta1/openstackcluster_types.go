@@ -331,12 +331,12 @@ func init() {
 	objectTypes = append(objectTypes, &OpenStackCluster{}, &OpenStackClusterList{})
 }
 
-// GetConditions returns the observations of the operational state of the OpenStackMachine resource.
+// GetConditions returns the observations of the operational state of the OpenStackCluster resource.
 func (r *OpenStackCluster) GetConditions() clusterv1.Conditions {
 	return r.Status.Conditions
 }
 
-// SetConditions sets the underlying service state of the OpenStackMachine to the predescribed clusterv1.Conditions.
+// SetConditions sets the underlying service state of the OpenStackCluster to the predescribed clusterv1.Conditions.
 func (r *OpenStackCluster) SetConditions(conditions clusterv1.Conditions) {
 	r.Status.Conditions = conditions
 }
