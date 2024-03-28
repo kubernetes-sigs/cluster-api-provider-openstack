@@ -84,11 +84,32 @@ type FilterByNeutronTags struct {
 	NotTagsAny []NeutronTag `json:"notTagsAny,omitempty"`
 }
 
+// SecurityGroupFilter describes the data needed to identify an SG to use. If ID is provided it is required that all other fields are unset.
+// +kubebuilder:validation:XValidation:rule="has(self.id) ? !has(self.name) : true",message="when ID is set you cannot set other options"
+// +kubebuilder:validation:XValidation:rule="has(self.id) ? !has(self.description) : true",message="when ID is set you cannot set other options"
+// +kubebuilder:validation:XValidation:rule="has(self.id) ? !has(self.projectID) : true",message="when ID is set you cannot set other options"
 type SecurityGroupFilter struct {
-	ID          string `json:"id,omitempty"`
-	Name        string `json:"name,omitempty"`
-	Description string `json:"description,omitempty"`
-	ProjectID   string `json:"projectID,omitempty"`
+	// The ID of the desired security group. If ID is provided, the other filters cannot be provided.
+	// Must be in UUID format.
+	// +kubebuilder:validation:Format:=uuid
+	// +optional
+	ID optional.String `json:"id,omitempty"`
+
+	// The name of the desired image. If specified, the combination of name and the rest of the filters must return
+	// a single matching SG or an error will be raised.
+	// +optional
+	Name optional.String `json:"name,omitempty"`
+
+	// The description of the desired image. If specified, the combination of description and the rest of the filters
+	// must return a single matching SG or an error will be raised.
+	// +optional
+	Description optional.String `json:"description,omitempty"`
+
+	// The project ID of the desired image. If specified, the combination of project ID and the rest of the filters
+	// must return a single matching SG or an error will be raised.
+	// +kubebuilder:validation:Format:=uuid
+	// +optional
+	ProjectID optional.String `json:"projectID,omitempty"`
 
 	FilterByNeutronTags `json:",inline"`
 }

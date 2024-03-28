@@ -26,20 +26,27 @@ import (
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
-func SecurityGroupFilterToListOpts(securityGroupFilter *infrav1.SecurityGroupFilter) securitygroups.ListOpts {
+func SecurityGroupFilterToListOpts(securityGroupFilter *infrav1.SecurityGroupFilter) (listOpts securitygroups.ListOpts) {
 	if securityGroupFilter == nil {
-		return securitygroups.ListOpts{}
+		return
 	}
-	return securitygroups.ListOpts{
-		ID:          securityGroupFilter.ID,
-		Name:        securityGroupFilter.Name,
-		Description: securityGroupFilter.Description,
-		ProjectID:   securityGroupFilter.ProjectID,
-		Tags:        infrav1.JoinTags(securityGroupFilter.Tags),
-		TagsAny:     infrav1.JoinTags(securityGroupFilter.TagsAny),
-		NotTags:     infrav1.JoinTags(securityGroupFilter.NotTags),
-		NotTagsAny:  infrav1.JoinTags(securityGroupFilter.NotTagsAny),
+
+	if securityGroupFilter.Name != nil {
+		listOpts.Name = *securityGroupFilter.Name
 	}
+	if securityGroupFilter.Description != nil {
+		listOpts.Description = *securityGroupFilter.Description
+	}
+	if securityGroupFilter.ProjectID != nil {
+		listOpts.ProjectID = *securityGroupFilter.ProjectID
+	}
+
+	listOpts.Tags = infrav1.JoinTags(securityGroupFilter.Tags)
+	listOpts.TagsAny = infrav1.JoinTags(securityGroupFilter.TagsAny)
+	listOpts.NotTags = infrav1.JoinTags(securityGroupFilter.NotTags)
+	listOpts.NotTagsAny = infrav1.JoinTags(securityGroupFilter.NotTagsAny)
+
+	return
 }
 
 func SubnetFilterToListOpts(subnetFilter *infrav1.SubnetFilter) subnets.ListOpts {

@@ -314,11 +314,11 @@ func (s *Service) GetSecurityGroups(securityGroupParams []infrav1.SecurityGroupF
 		sg := &securityGroupParams[i]
 
 		// Don't validate an explicit UUID if we were given one
-		if sg.ID != "" {
-			if isDuplicate(sgIDs, sg.ID) {
+		if sg.ID != nil {
+			if isDuplicate(sgIDs, *sg.ID) {
 				continue
 			}
-			sgIDs = append(sgIDs, sg.ID)
+			sgIDs = append(sgIDs, *sg.ID)
 			continue
 		}
 
@@ -332,7 +332,7 @@ func (s *Service) GetSecurityGroups(securityGroupParams []infrav1.SecurityGroupF
 		}
 
 		if len(SGList) == 0 {
-			return nil, fmt.Errorf("security group %s not found", sg.Name)
+			return nil, fmt.Errorf("security group %v not found", *sg)
 		}
 
 		for _, group := range SGList {

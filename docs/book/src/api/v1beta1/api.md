@@ -4364,6 +4364,7 @@ FilterByNeutronTags
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">PortOpts</a>)
 </p>
 <p>
+<p>SecurityGroupFilter describes the data needed to identify an SG to use. If ID is provided it is required that all other fields are unset.</p>
 </p>
 <table>
 <thead>
@@ -4381,6 +4382,9 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>The ID of the desired security group. If ID is provided, the other filters cannot be provided.
+Must be in UUID format.</p>
 </td>
 </tr>
 <tr>
@@ -4391,6 +4395,9 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>The name of the desired image. If specified, the combination of name and the rest of the filters must return
+a single matching SG or an error will be raised.</p>
 </td>
 </tr>
 <tr>
@@ -4401,6 +4408,9 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>The description of the desired image. If specified, the combination of description and the rest of the filters
+must return a single matching SG or an error will be raised.</p>
 </td>
 </tr>
 <tr>
@@ -4411,6 +4421,9 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>The project ID of the desired image. If specified, the combination of project ID and the rest of the filters
+must return a single matching SG or an error will be raised.</p>
 </td>
 </tr>
 <tr>

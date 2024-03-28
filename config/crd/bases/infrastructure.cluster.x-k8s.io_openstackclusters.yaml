@@ -5325,12 +5325,25 @@ spec:
                                 uuids, filters or any combination these of the security
                                 groups to assign to the instance.
                               items:
+                                description: SecurityGroupFilter describes the data
+                                  needed to identify an SG to use. If ID is provided
+                                  it is required that all other fields are unset.
                                 properties:
                                   description:
+                                    description: |-
+                                      The description of the desired image. If specified, the combination of description and the rest of the filters
+                                      must return a single matching SG or an error will be raised.
                                     type: string
                                   id:
+                                    description: |-
+                                      The ID of the desired security group. If ID is provided, the other filters cannot be provided.
+                                      Must be in UUID format.
+                                    format: uuid
                                     type: string
                                   name:
+                                    description: |-
+                                      The name of the desired image. If specified, the combination of name and the rest of the filters must return
+                                      a single matching SG or an error will be raised.
                                     type: string
                                   notTags:
                                     description: |-
@@ -5359,6 +5372,10 @@ spec:
                                     type: array
                                     x-kubernetes-list-type: set
                                   projectID:
+                                    description: |-
+                                      The project ID of the desired image. If specified, the combination of project ID and the rest of the filters
+                                      must return a single matching SG or an error will be raised.
+                                    format: uuid
                                     type: string
                                   tags:
                                     description: |-
@@ -5388,6 +5405,13 @@ spec:
                                     type: array
                                     x-kubernetes-list-type: set
                                 type: object
+                                x-kubernetes-validations:
+                                - message: when ID is set you cannot set other options
+                                  rule: 'has(self.id) ? !has(self.name) : true'
+                                - message: when ID is set you cannot set other options
+                                  rule: 'has(self.id) ? !has(self.description) : true'
+                                - message: when ID is set you cannot set other options
+                                  rule: 'has(self.id) ? !has(self.projectID) : true'
                               type: array
                               x-kubernetes-list-type: atomic
                             tags:
@@ -5465,12 +5489,25 @@ spec:
                         description: The names of the security groups to assign to
                           the instance
                         items:
+                          description: SecurityGroupFilter describes the data needed
+                            to identify an SG to use. If ID is provided it is required
+                            that all other fields are unset.
                           properties:
                             description:
+                              description: |-
+                                The description of the desired image. If specified, the combination of description and the rest of the filters
+                                must return a single matching SG or an error will be raised.
                               type: string
                             id:
+                              description: |-
+                                The ID of the desired security group. If ID is provided, the other filters cannot be provided.
+                                Must be in UUID format.
+                              format: uuid
                               type: string
                             name:
+                              description: |-
+                                The name of the desired image. If specified, the combination of name and the rest of the filters must return
+                                a single matching SG or an error will be raised.
                               type: string
                             notTags:
                               description: |-
@@ -5499,6 +5536,10 @@ spec:
                               type: array
                               x-kubernetes-list-type: set
                             projectID:
+                              description: |-
+                                The project ID of the desired image. If specified, the combination of project ID and the rest of the filters
+                                must return a single matching SG or an error will be raised.
+                              format: uuid
                               type: string
                             tags:
                               description: |-
@@ -5528,6 +5569,13 @@ spec:
                               type: array
                               x-kubernetes-list-type: set
                           type: object
+                          x-kubernetes-validations:
+                          - message: when ID is set you cannot set other options
+                            rule: 'has(self.id) ? !has(self.name) : true'
+                          - message: when ID is set you cannot set other options
+                            rule: 'has(self.id) ? !has(self.description) : true'
+                          - message: when ID is set you cannot set other options
+                            rule: 'has(self.id) ? !has(self.projectID) : true'
                         type: array
                       serverGroup:
                         description: The server group to assign the machine to.
