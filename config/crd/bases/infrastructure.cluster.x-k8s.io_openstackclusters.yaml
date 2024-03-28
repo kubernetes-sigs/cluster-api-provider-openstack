@@ -4873,6 +4873,10 @@ spec:
                       type: string
                     type: array
                     x-kubernetes-list-type: set
+                  availabilityZone:
+                    description: AvailabilityZone is the failure domain that will
+                      be used to create the APIServerLoadBalancer Spec.
+                    type: string
                   enabled:
                     default: true
                     description: |-

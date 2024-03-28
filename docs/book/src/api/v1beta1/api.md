@@ -933,6 +933,18 @@ Only the first element is taken into account.
 kubebuilder:validation:MaxLength:=2</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>availabilityZone</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AvailabilityZone is the failure domain that will be used to create the APIServerLoadBalancer Spec.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.AdditionalBlockDevice">AdditionalBlockDevice

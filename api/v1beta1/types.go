@@ -812,6 +812,7 @@ type APIServerLoadBalancer struct {
 	// Network defines which network should the load balancer be allocated on.
 	//+optional
 	Network *NetworkParam `json:"network,omitempty"`
+
 	// Subnets define which subnets should the load balancer be allocated on.
 	// It is expected that subnets are located on the network specified in this resource.
 	// Only the first element is taken into account.
@@ -819,6 +820,10 @@ type APIServerLoadBalancer struct {
 	// +listType=atomic
 	// kubebuilder:validation:MaxLength:=2
 	Subnets []SubnetParam `json:"subnets,omitempty"`
+
+	// AvailabilityZone is the failure domain that will be used to create the APIServerLoadBalancer Spec.
+	//+optional
+	AvailabilityZone optional.String `json:"availabilityZone,omitempty"`
 }
 
 func (s *APIServerLoadBalancer) IsZero() bool {
