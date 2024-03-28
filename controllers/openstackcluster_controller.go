@@ -54,6 +54,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 	utils "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/controllers"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/filterconvert"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
 const (
@@ -148,11 +149,13 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope 
 		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 	}
 
+	clusterResourceName := names.ClusterResourceName(cluster)
+
 	// A bastion may have been created if cluster initialisation previously reached populating the network status
 	// We attempt to delete it even if no status was written, just in case
 	if openStackCluster.Status.Network != nil {
 		// Attempt to resolve bastion resources before delete. We don't need to worry about starting if the resources have changed on update.
-		if _, err := resolveBastionResources(scope, openStackCluster); err != nil {
+		if _, err := resolveBastionResources(scope, clusterResourceName, openStackCluster); err != nil {
 			return reconcile.Result{}, err
 		}
 
@@ -191,7 +194,7 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope 
 
 	// if ManagedSubnets was not set, no network was created.
 	if len(openStackCluster.Spec.ManagedSubnets) > 0 {
-		if err = networkingService.DeleteRouter(openStackCluster, clusterName); err != nil {
+		if err = networkingService.DeleteRouter(openStackCluster, clusterResourceName); err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete router: %w", err))
 			return ctrl.Result{}, fmt.Errorf("failed to delete router: %w", err)
 		}
@@ -201,13 +204,13 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope 
 			return reconcile.Result{}, fmt.Errorf("failed to delete ports: %w", err)
 		}
 
-		if err = networkingService.DeleteNetwork(openStackCluster, clusterName); err != nil {
+		if err = networkingService.DeleteNetwork(openStackCluster, clusterResourceName); err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete network: %w", err))
 			return ctrl.Result{}, fmt.Errorf("failed to delete network: %w", err)
 		}
 	}
 
-	if err = networkingService.DeleteSecurityGroups(openStackCluster, clusterName); err != nil {
+	if err = networkingService.DeleteSecurityGroups(openStackCluster, clusterResourceName); err != nil {
 		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete security groups: %w", err))
 		return reconcile.Result{}, fmt.Errorf("failed to delete security groups: %w", err)
 	}
@@ -227,24 +230,38 @@ func contains(arr []string, target string) bool {
 	return false
 }
 
-func resolveBastionResources(scope *scope.WithLogger, openStackCluster *infrav1.OpenStackCluster) (bool, error) {
+func resolveBastionResources(scope *scope.WithLogger, clusterResourceName string, openStackCluster *infrav1.OpenStackCluster) (bool, error) {
+	// Resolve and store resources for the bastion
 	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
 		if openStackCluster.Status.Bastion == nil {
 			openStackCluster.Status.Bastion = &infrav1.BastionStatus{}
 		}
-		changed, err := compute.ResolveReferencedMachineResources(scope, openStackCluster, &openStackCluster.Spec.Bastion.Instance, &openStackCluster.Status.Bastion.ReferencedResources)
+		if openStackCluster.Spec.Bastion.Spec == nil {
+			return false, fmt.Errorf("bastion spec is nil when bastion is enabled, this shouldn't happen")
+		}
+		resolved := openStackCluster.Status.Bastion.Resolved
+		if resolved == nil {
+			resolved = &infrav1.ResolvedMachineSpec{}
+			openStackCluster.Status.Bastion.Resolved = resolved
+		}
+		changed, err := compute.ResolveMachineSpec(scope,
+			openStackCluster.Spec.Bastion.Spec, resolved,
+			clusterResourceName, bastionName(clusterResourceName),
+			openStackCluster, getBastionSecurityGroupID(openStackCluster))
 		if err != nil {
 			return false, err
 		}
 		if changed {
-			// If the referenced resources have changed, we need to update the OpenStackCluster status now.
+			// If the resolved machine spec changed we need to restart the reconcile to avoid inconsistencies between reconciles.
 			return true, nil
 		}
+		resources := openStackCluster.Status.Bastion.Resources
+		if resources == nil {
+			resources = &infrav1.MachineResources{}
+			openStackCluster.Status.Bastion.Resources = resources
+		}
 
-		err = compute.AdoptDependentMachineResources(scope,
-			bastionName(openStackCluster.Name),
-			&openStackCluster.Status.Bastion.ReferencedResources,
-			&openStackCluster.Status.Bastion.DependentResources)
+		err = compute.AdoptMachineResources(scope, resolved, resources)
 		if err != nil {
 			return false, err
 		}
@@ -271,8 +288,10 @@ func deleteBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStac
 		}
 	}
 
+	bastionStatus := openStackCluster.Status.Bastion
+
 	var instanceStatus *compute.InstanceStatus
-	if openStackCluster.Status.Bastion != nil && openStackCluster.Status.Bastion.ID != "" {
+	if bastionStatus != nil && bastionStatus.ID != "" {
 		instanceStatus, err = computeService.GetInstanceStatus(openStackCluster.Status.Bastion.ID)
 		if err != nil {
 			return err
@@ -311,18 +330,18 @@ func deleteBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStac
 		}
 	}
 
-	if openStackCluster.Status.Bastion != nil && len(openStackCluster.Status.Bastion.DependentResources.Ports) > 0 {
+	if bastionStatus != nil && bastionStatus.Resources != nil {
 		trunkSupported, err := networkingService.IsTrunkExtSupported()
 		if err != nil {
 			return err
 		}
-		for _, port := range openStackCluster.Status.Bastion.DependentResources.Ports {
+		for _, port := range bastionStatus.Resources.Ports {
 			if err := networkingService.DeleteInstanceTrunkAndPort(openStackCluster, port, trunkSupported); err != nil {
 				handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete port: %w", err))
 				return fmt.Errorf("failed to delete port: %w", err)
 			}
 		}
-		openStackCluster.Status.Bastion.DependentResources.Ports = nil
+		bastionStatus.Resources.Ports = nil
 	}
 
 	scope.Logger().Info("Deleted Bastion")
@@ -394,7 +413,8 @@ func reconcileNormal(scope *scope.WithLogger, cluster *clusterv1.Cluster, openSt
 func reconcileBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (*ctrl.Result, error) {
 	scope.Logger().V(4).Info("Reconciling Bastion")
 
-	changed, err := resolveBastionResources(scope, openStackCluster)
+	clusterResourceName := names.ClusterResourceName(cluster)
+	changed, err := resolveBastionResources(scope, clusterResourceName, openStackCluster)
 	if err != nil {
 		return nil, err
 	}
@@ -431,7 +451,6 @@ func reconcileBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openS
 	if err != nil {
 		return nil, err
 	}
-	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
 
 	bastionHash, err := compute.HashInstanceSpec(instanceSpec)
 	if err != nil {
@@ -447,12 +466,12 @@ func reconcileBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openS
 		return &reconcile.Result{}, nil
 	}
 
-	err = getOrCreateBastionPorts(openStackCluster, networkingService, cluster.Name)
+	err = getOrCreateBastionPorts(openStackCluster, networkingService)
 	if err != nil {
 		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to get or create ports for bastion: %w", err))
 		return nil, fmt.Errorf("failed to get or create ports for bastion: %w", err)
 	}
-	bastionPortIDs := GetPortIDs(openStackCluster.Status.Bastion.DependentResources.Ports)
+	bastionPortIDs := GetPortIDs(openStackCluster.Status.Bastion.Resources.Ports)
 
 	var instanceStatus *compute.InstanceStatus
 	if openStackCluster.Status.Bastion != nil && openStackCluster.Status.Bastion.ID != "" {
@@ -498,10 +517,10 @@ func reconcileBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openS
 		return nil, err
 	}
 
-	return bastionAddFloatingIP(openStackCluster, clusterName, port, networkingService)
+	return bastionAddFloatingIP(openStackCluster, clusterResourceName, port, networkingService)
 }
 
-func bastionAddFloatingIP(openStackCluster *infrav1.OpenStackCluster, clusterName string, port *ports.Port, networkingService *networking.Service) (*reconcile.Result, error) {
+func bastionAddFloatingIP(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string, port *ports.Port, networkingService *networking.Service) (*reconcile.Result, error) {
 	fp, err := networkingService.GetFloatingIPByPortID(port.ID)
 	if err != nil {
 		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to get or create floating IP for bastion: %w", err))
@@ -518,12 +537,12 @@ func bastionAddFloatingIP(openStackCluster *infrav1.OpenStackCluster, clusterNam
 	case openStackCluster.Status.Bastion.FloatingIP != "":
 		// Some floating IP has already been created for this bastion, make sure we re-use it
 		floatingIP = &openStackCluster.Status.Bastion.FloatingIP
-	case openStackCluster.Spec.Bastion.FloatingIP != "":
+	case openStackCluster.Spec.Bastion.FloatingIP != nil:
 		// Use floating IP from the spec
-		floatingIP = &openStackCluster.Spec.Bastion.FloatingIP
+		floatingIP = openStackCluster.Spec.Bastion.FloatingIP
 	}
 	// Check if there is an existing floating IP attached to bastion, in case where FloatingIP would not yet have been stored in cluster status
-	fp, err = networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterName, floatingIP)
+	fp, err = networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterResourceName, floatingIP)
 	if err != nil {
 		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to get or create floating IP for bastion: %w", err))
 		return nil, fmt.Errorf("failed to get or create floating IP for bastion: %w", err)
@@ -540,74 +559,65 @@ func bastionAddFloatingIP(openStackCluster *infrav1.OpenStackCluster, clusterNam
 }
 
 func bastionToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, cluster *clusterv1.Cluster) (*compute.InstanceSpec, error) {
-	if openStackCluster.Spec.Bastion == nil {
+	bastion := openStackCluster.Spec.Bastion
+	if bastion == nil {
 		return nil, fmt.Errorf("bastion spec is nil")
 	}
-
-	if openStackCluster.Status.Bastion == nil {
-		return nil, fmt.Errorf("bastion status is nil")
+	if bastion.Spec == nil {
+		// For the case when Bastion is deleted but we don't have spec, let's use an empty one.
+		// v1beta1 API validations prevent this from happening in normal circumstances.
+		bastion.Spec = &infrav1.OpenStackMachineSpec{}
 	}
+	resolved := openStackCluster.Status.Bastion.Resolved
+	if resolved == nil {
+		return nil, errors.New("bastion resolved is nil")
+	}
+
+	machineSpec := bastion.Spec
 	instanceSpec := &compute.InstanceSpec{
 		Name:          bastionName(cluster.Name),
-		Flavor:        openStackCluster.Spec.Bastion.Instance.Flavor,
-		SSHKeyName:    openStackCluster.Spec.Bastion.Instance.SSHKeyName,
-		ImageID:       openStackCluster.Status.Bastion.ReferencedResources.ImageID,
-		FailureDomain: openStackCluster.Spec.Bastion.AvailabilityZone,
-		RootVolume:    openStackCluster.Spec.Bastion.Instance.RootVolume,
+		Flavor:        machineSpec.Flavor,
+		SSHKeyName:    machineSpec.SSHKeyName,
+		ImageID:       resolved.ImageID,
+		RootVolume:    machineSpec.RootVolume,
+		ServerGroupID: resolved.ServerGroupID,
+		Tags:          compute.InstanceTags(machineSpec, openStackCluster),
 	}
-
-	instanceSpec.SecurityGroups = openStackCluster.Spec.Bastion.Instance.SecurityGroups
-	if openStackCluster.Spec.ManagedSecurityGroups != nil {
-		if openStackCluster.Status.BastionSecurityGroup != nil {
-			instanceSpec.SecurityGroups = append(instanceSpec.SecurityGroups, infrav1.SecurityGroupFilter{
-				ID: openStackCluster.Status.BastionSecurityGroup.ID,
-			})
-		}
+	if bastion.AvailabilityZone != nil {
+		instanceSpec.FailureDomain = *bastion.AvailabilityZone
 	}
-	instanceSpec.SecurityGroups = getBastionSecurityGroups(openStackCluster)
-
-	instanceSpec.Ports = openStackCluster.Spec.Bastion.Instance.Ports
-
 	return instanceSpec, nil
 }
 
-func bastionName(clusterName string) string {
-	return fmt.Sprintf("%s-bastion", clusterName)
+func bastionName(clusterResourceName string) string {
+	return fmt.Sprintf("%s-bastion", clusterResourceName)
 }
 
-// getBastionSecurityGroups returns a combination of openStackCluster.Spec.Bastion.Instance.SecurityGroups
-// and the security group managed by the OpenStackCluster.
-func getBastionSecurityGroups(openStackCluster *infrav1.OpenStackCluster) []infrav1.SecurityGroupFilter {
-	instanceSpecSecurityGroups := openStackCluster.Spec.Bastion.Instance.SecurityGroups
-
+// getBastionSecurityGroupID returns the ID of the bastion security group if
+// managed security groups is enabled.
+func getBastionSecurityGroupID(openStackCluster *infrav1.OpenStackCluster) *string {
 	if openStackCluster.Spec.ManagedSecurityGroups == nil {
-		return instanceSpecSecurityGroups
-	}
-
-	var managedSecurityGroup string
-	if openStackCluster.Status.BastionSecurityGroup != nil {
-		managedSecurityGroup = openStackCluster.Status.BastionSecurityGroup.ID
-	}
-
-	if managedSecurityGroup != "" {
-		instanceSpecSecurityGroups = append(instanceSpecSecurityGroups, infrav1.SecurityGroupFilter{
-			ID: managedSecurityGroup,
-		})
-	}
-	return instanceSpecSecurityGroups
-}
-
-func getOrCreateBastionPorts(openStackCluster *infrav1.OpenStackCluster, networkingService *networking.Service, clusterName string) error {
-	desiredPorts := openStackCluster.Status.Bastion.ReferencedResources.Ports
-	dependentResources := &openStackCluster.Status.Bastion.DependentResources
-
-	if len(desiredPorts) == len(dependentResources.Ports) {
 		return nil
 	}
 
-	securityGroups := getBastionSecurityGroups(openStackCluster)
-	bastionTags := []string{}
-	err := networkingService.CreatePorts(openStackCluster, clusterName, bastionName(clusterName), securityGroups, bastionTags, desiredPorts, dependentResources)
+	if openStackCluster.Status.BastionSecurityGroup != nil {
+		return &openStackCluster.Status.BastionSecurityGroup.ID
+	}
+	return nil
+}
+
+func getOrCreateBastionPorts(openStackCluster *infrav1.OpenStackCluster, networkingService *networking.Service) error {
+	desiredPorts := openStackCluster.Status.Bastion.Resolved.Ports
+	resources := openStackCluster.Status.Bastion.Resources
+	if resources == nil {
+		return errors.New("bastion resources are nil")
+	}
+
+	if len(desiredPorts) == len(resources.Ports) {
+		return nil
+	}
+
+	err := networkingService.CreatePorts(openStackCluster, desiredPorts, resources)
 	if err != nil {
 		return fmt.Errorf("failed to create ports for bastion %s: %w", bastionName(openStackCluster.Name), err)
 	}
@@ -625,7 +635,7 @@ func bastionHashHasChanged(computeHash string, clusterAnnotations map[string]str
 }
 
 func reconcileNetworkComponents(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
-	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
+	clusterResourceName := names.ClusterResourceName(cluster)
 
 	networkingService, err := networking.NewService(scope)
 	if err != nil {
@@ -645,20 +655,20 @@ func reconcileNetworkComponents(scope *scope.WithLogger, cluster *clusterv1.Clus
 			return err
 		}
 	} else if len(openStackCluster.Spec.ManagedSubnets) == 1 {
-		if err := reconcileProvisionedNetworkComponents(networkingService, openStackCluster, clusterName); err != nil {
+		if err := reconcileProvisionedNetworkComponents(networkingService, openStackCluster, clusterResourceName); err != nil {
 			return err
 		}
 	} else {
 		return fmt.Errorf("failed to reconcile network: ManagedSubnets only supports one element, %d provided", len(openStackCluster.Spec.ManagedSubnets))
 	}
 
-	err = networkingService.ReconcileSecurityGroups(openStackCluster, clusterName)
+	err = networkingService.ReconcileSecurityGroups(openStackCluster, clusterResourceName)
 	if err != nil {
 		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile security groups: %w", err))
 		return fmt.Errorf("failed to reconcile security groups: %w", err)
 	}
 
-	return reconcileControlPlaneEndpoint(scope, networkingService, openStackCluster, clusterName)
+	return reconcileControlPlaneEndpoint(scope, networkingService, openStackCluster, clusterResourceName)
 }
 
 // reconcilePreExistingNetworkComponents reconciles the cluster network status when the cluster is
@@ -722,18 +732,18 @@ func reconcilePreExistingNetworkComponents(scope *scope.WithLogger, networkingSe
 	return nil
 }
 
-func reconcileProvisionedNetworkComponents(networkingService *networking.Service, openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
-	err := networkingService.ReconcileNetwork(openStackCluster, clusterName)
+func reconcileProvisionedNetworkComponents(networkingService *networking.Service, openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
+	err := networkingService.ReconcileNetwork(openStackCluster, clusterResourceName)
 	if err != nil {
 		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile network: %w", err))
 		return fmt.Errorf("failed to reconcile network: %w", err)
 	}
-	err = networkingService.ReconcileSubnet(openStackCluster, clusterName)
+	err = networkingService.ReconcileSubnet(openStackCluster, clusterResourceName)
 	if err != nil {
 		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile subnets: %w", err))
 		return fmt.Errorf("failed to reconcile subnets: %w", err)
 	}
-	err = networkingService.ReconcileRouter(openStackCluster, clusterName)
+	err = networkingService.ReconcileRouter(openStackCluster, clusterResourceName)
 	if err != nil {
 		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile router: %w", err))
 		return fmt.Errorf("failed to reconcile router: %w", err)
@@ -745,7 +755,7 @@ func reconcileProvisionedNetworkComponents(networkingService *networking.Service
 // reconcileControlPlaneEndpoint configures the control plane endpoint for the
 // cluster, creating it if necessary, and updates ControlPlaneEndpoint in the
 // cluster spec.
-func reconcileControlPlaneEndpoint(scope *scope.WithLogger, networkingService *networking.Service, openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
+func reconcileControlPlaneEndpoint(scope *scope.WithLogger, networkingService *networking.Service, openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
 	// Calculate the port that we will use for the API server
 	apiServerPort := getAPIServerPort(openStackCluster)
 
@@ -766,7 +776,7 @@ func reconcileControlPlaneEndpoint(scope *scope.WithLogger, networkingService *n
 			return err
 		}
 
-		terminalFailure, err := loadBalancerService.ReconcileLoadBalancer(openStackCluster, clusterName, apiServerPort)
+		terminalFailure, err := loadBalancerService.ReconcileLoadBalancer(openStackCluster, clusterResourceName, apiServerPort)
 		if err != nil {
 			// if it's terminalFailure (not Transient), set the Failure reason and message
 			if terminalFailure {
@@ -791,7 +801,7 @@ func reconcileControlPlaneEndpoint(scope *scope.WithLogger, networkingService *n
 	// API server load balancer is disabled, but floating IP is not. Create
 	// a floating IP to be attached directly to a control plane host.
 	case !pointer.BoolDeref(openStackCluster.Spec.DisableAPIServerFloatingIP, false):
-		fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterName, openStackCluster.Spec.APIServerFloatingIP)
+		fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterResourceName, openStackCluster.Spec.APIServerFloatingIP)
 		if err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("floating IP cannot be got or created: %w", err))
 			return fmt.Errorf("floating IP cannot be got or created: %w", err)

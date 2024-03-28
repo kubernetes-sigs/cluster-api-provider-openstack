@@ -123,11 +123,10 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			openStackCluster, err := shared.ClusterForSpec(ctx, e2eCtx, namespace)
 			Expect(err).NotTo(HaveOccurred())
 
-			// Tag: clusterName is declared on OpenStackCluster and gets propagated to all machines
-			// except the bastion host
+			// Tag: clusterName is declared on OpenStackCluster and gets propagated to all machines, including the bastion.
 			allServers, err := shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{Tags: clusterName})
 			Expect(err).NotTo(HaveOccurred())
-			Expect(allServers).To(HaveLen(2))
+			Expect(allServers).To(HaveLen(3))
 
 			// When listing servers with multiple tags, nova api requires a single, comma-separated string
 			// with all the tags
@@ -227,7 +226,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			Expect(err).NotTo(HaveOccurred())
 			openStackClusterWithNewBastionFlavor := openStackCluster.DeepCopy()
 			openStackClusterWithNewBastionFlavor.Spec.Bastion = bastionSpec
-			openStackClusterWithNewBastionFlavor.Spec.Bastion.Instance.Flavor = bastionNewFlavorName
+			openStackClusterWithNewBastionFlavor.Spec.Bastion.Spec.Flavor = bastionNewFlavorName
 			Expect(e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackClusterWithNewBastionFlavor)).To(Succeed())
 			Eventually(
 				func() (bool, error) {

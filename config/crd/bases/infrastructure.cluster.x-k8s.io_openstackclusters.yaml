@@ -4917,16 +4917,23 @@ spec:
                   to first set `enabled: false` which will remove the bastion and then changes can be made.
                 properties:
                   availabilityZone:
+                    description: AvailabilityZone is the failure domain that will
+                      be used to create the Bastion Spec.
                     type: string
                   enabled:
+                    default: false
+                    description: Enabled means that bastion is enabled. Defaults to
+                      false.
                     type: boolean
                   floatingIP:
                     description: |-
-                      FloatingIP which will be associated to the bastion machine.
-                      The floating IP should already exist and should not be associated with a port.
+                      FloatingIP which will be associated to the bastion machine. It's the IP address, not UUID.
+                      The floating IP should already exist and should not be associated with a port. If FIP of this address does not
+                      exist, CAPO will try to create it, but by default only OpenStack administrators have privileges to do so.
+                    format: ipv4
                     type: string
-                  instance:
-                    description: Instance for the bastion itself
+                  spec:
+                    description: Spec for the bastion itself
                     properties:
                       additionalBlockDevices:
                         description: AdditionalBlockDevices is a list of specifications
@@ -5536,14 +5543,12 @@ spec:
                         items:
                           properties:
                             key:
-                              description: |-
-                                Key is the server metadata key
-                                kubebuilder:validation:MaxLength:=255
+                              description: Key is the server metadata key
+                              maxLength: 255
                               type: string
                             value:
-                              description: |-
-                                Value is the server metadata value
-                                kubebuilder:validation:MaxLength:=255
+                              description: Value is the server metadata value
+                              maxLength: 255
                               type: string
                           required:
                           - key
@@ -5558,7 +5563,9 @@ spec:
                         type: string
                       tags:
                         description: |-
-                          Machine tags
+                          Tags which will be added to the machine and all dependent resources
+                          which support them. These are in addition to Tags defined on the
+                          cluster.
                           Requires Nova api 2.52 minimum!
                         items:
                           type: string
@@ -5572,7 +5579,12 @@ spec:
                     - flavor
                     - image
                     type: object
+                required:
+                - enabled
                 type: object
+                x-kubernetes-validations:
+                - message: you need to specify the spec if bastion is enabled
+                  rule: '!self.enabled || has(self.spec)'
               controlPlaneAvailabilityZones:
                 description: |-
                   ControlPlaneAvailabilityZones is the set of availability zones which
@@ -6230,21 +6242,6 @@ spec:
                 description: Bastion contains the information about the deployed bastion
                   host
                 properties:
-                  dependentResources:
-                    properties:
-                      ports:
-                        description: Ports is the status of the ports created for
-                          the machine.
-                        items:
-                          properties:
-                            id:
-                              description: ID is the unique identifier of the port.
-                              type: string
-                          required:
-                          - id
-                          type: object
-                        type: array
-                    type: object
                   floatingIP:
                     type: string
                   id:
@@ -6253,9 +6250,10 @@ spec:
                     type: string
                   name:
                     type: string
-                  referencedResources:
-                    description: ReferencedMachineResources contains resolved references
-                      to resources required by the machine.
+                  resolved:
+                    description: |-
+                      Resolved contains parts of the bastion's machine spec with all
+                      external references fully resolved.
                     properties:
                       imageID:
                         description: ImageID is the ID of the image to use for the
@@ -6265,6 +6263,8 @@ spec:
                         description: Ports is the fully resolved list of ports to
                           create for the machine.
                         items:
+                          description: ResolvedPortSpec is a PortOpts with all contained
+                            references fully resolved.
                           properties:
                             adminStateUp:
                               description: AdminStateUp specifies whether the port
@@ -6309,91 +6309,20 @@ spec:
                                 IP address to assign to the port. If specified, these
                                 must be subnets of the port's network.
                               items:
+                                description: ResolvedFixedIP is a FixedIP with the
+                                  Subnet resolved to an ID.
                                 properties:
                                   ipAddress:
                                     description: |-
-                                      IPAddress is a specific IP address to assign to the port. If Subnet
+                                      IPAddress is a specific IP address to assign to the port. If SubnetID
                                       is also specified, IPAddress must be a valid IP address in the
                                       subnet. If Subnet is not specified, IPAddress must be a valid IP
                                       address in any subnet of the port's network.
                                     type: string
                                   subnet:
-                                    description: |-
-                                      Subnet is an openstack subnet query that will return the id of a subnet to create
-                                      the fixed IP of a port in. This query must not return more than one subnet.
-                                    properties:
-                                      cidr:
-                                        type: string
-                                      description:
-                                        type: string
-                                      gatewayIP:
-                                        type: string
-                                      id:
-                                        type: string
-                                      ipVersion:
-                                        type: integer
-                                      ipv6AddressMode:
-                                        type: string
-                                      ipv6RAMode:
-                                        type: string
-                                      name:
-                                        type: string
-                                      notTags:
-                                        description: |-
-                                          NotTags is a list of tags to filter by. If specified, resources which
-                                          contain all of the given tags will be excluded from the result.
-                                        items:
-                                          description: |-
-                                            NeutronTag represents a tag on a Neutron resource.
-                                            It may not be empty and may not contain commas.
-                                          minLength: 1
-                                          pattern: ^[^,]+$
-                                          type: string
-                                        type: array
-                                        x-kubernetes-list-type: set
-                                      notTagsAny:
-                                        description: |-
-                                          NotTagsAny is a list of tags to filter by. If specified, resources
-                                          which contain any of the given tags will be excluded from the result.
-                                        items:
-                                          description: |-
-                                            NeutronTag represents a tag on a Neutron resource.
-                                            It may not be empty and may not contain commas.
-                                          minLength: 1
-                                          pattern: ^[^,]+$
-                                          type: string
-                                        type: array
-                                        x-kubernetes-list-type: set
-                                      projectID:
-                                        type: string
-                                      tags:
-                                        description: |-
-                                          Tags is a list of tags to filter by. If specified, the resource must
-                                          have all of the tags specified to be included in the result.
-                                        items:
-                                          description: |-
-                                            NeutronTag represents a tag on a Neutron resource.
-                                            It may not be empty and may not contain commas.
-                                          minLength: 1
-                                          pattern: ^[^,]+$
-                                          type: string
-                                        type: array
-                                        x-kubernetes-list-type: set
-                                      tagsAny:
-                                        description: |-
-                                          TagsAny is a list of tags to filter by. If specified, the resource
-                                          must have at least one of the tags specified to be included in the
-                                          result.
-                                        items:
-                                          description: |-
-                                            NeutronTag represents a tag on a Neutron resource.
-                                            It may not be empty and may not contain commas.
-                                          minLength: 1
-                                          pattern: ^[^,]+$
-                                          type: string
-                                        type: array
-                                        x-kubernetes-list-type: set
-                                    type: object
+                                    description: SubnetID is the id of a subnet to
+                                      create the fixed IP of a port in.
+                                    type: string
                                 type: object
                               type: array
                               x-kubernetes-list-type: atomic
@@ -6406,78 +6335,13 @@ spec:
                                 the port. If not specified, the MAC address will be
                                 generated.
                               type: string
-                            nameSuffix:
-                              description: NameSuffix will be appended to the name
-                                of the port if specified. If unspecified, instead
-                                the 0-based index of the port in the list is used.
+                            name:
+                              description: Name is the name of the port.
                               type: string
-                            network:
-                              description: |-
-                                Network is a query for an openstack network that the port will be created or discovered on.
-                                This will fail if the query returns more than one network.
-                              properties:
-                                description:
-                                  type: string
-                                id:
-                                  type: string
-                                name:
-                                  type: string
-                                notTags:
-                                  description: |-
-                                    NotTags is a list of tags to filter by. If specified, resources which
-                                    contain all of the given tags will be excluded from the result.
-                                  items:
-                                    description: |-
-                                      NeutronTag represents a tag on a Neutron resource.
-                                      It may not be empty and may not contain commas.
-                                    minLength: 1
-                                    pattern: ^[^,]+$
-                                    type: string
-                                  type: array
-                                  x-kubernetes-list-type: set
-                                notTagsAny:
-                                  description: |-
-                                    NotTagsAny is a list of tags to filter by. If specified, resources
-                                    which contain any of the given tags will be excluded from the result.
-                                  items:
-                                    description: |-
-                                      NeutronTag represents a tag on a Neutron resource.
-                                      It may not be empty and may not contain commas.
-                                    minLength: 1
-                                    pattern: ^[^,]+$
-                                    type: string
-                                  type: array
-                                  x-kubernetes-list-type: set
-                                projectID:
-                                  type: string
-                                tags:
-                                  description: |-
-                                    Tags is a list of tags to filter by. If specified, the resource must
-                                    have all of the tags specified to be included in the result.
-                                  items:
-                                    description: |-
-                                      NeutronTag represents a tag on a Neutron resource.
-                                      It may not be empty and may not contain commas.
-                                    minLength: 1
-                                    pattern: ^[^,]+$
-                                    type: string
-                                  type: array
-                                  x-kubernetes-list-type: set
-                                tagsAny:
-                                  description: |-
-                                    TagsAny is a list of tags to filter by. If specified, the resource
-                                    must have at least one of the tags specified to be included in the
-                                    result.
-                                  items:
-                                    description: |-
-                                      NeutronTag represents a tag on a Neutron resource.
-                                      It may not be empty and may not contain commas.
-                                    minLength: 1
-                                    pattern: ^[^,]+$
-                                    type: string
-                                  type: array
-                                  x-kubernetes-list-type: set
-                              type: object
+                            networkID:
+                              description: NetworkID is the ID of the network the
+                                port will be created in.
+                              type: string
                             profile:
                               description: |-
                                 Profile is a set of key-value pairs that are used for binding
@@ -6502,88 +6366,22 @@ spec:
                                 the propagate uplink status on the port.
                               type: boolean
                             securityGroups:
-                              description: SecurityGroups is a list of the names,
-                                uuids, filters or any combination these of the security
-                                groups to assign to the instance.
+                              description: SecurityGroups is a list of security group
+                                IDs to assign to the port.
                               items:
-                                properties:
-                                  description:
-                                    type: string
-                                  id:
-                                    type: string
-                                  name:
-                                    type: string
-                                  notTags:
-                                    description: |-
-                                      NotTags is a list of tags to filter by. If specified, resources which
-                                      contain all of the given tags will be excluded from the result.
-                                    items:
-                                      description: |-
-                                        NeutronTag represents a tag on a Neutron resource.
-                                        It may not be empty and may not contain commas.
-                                      minLength: 1
-                                      pattern: ^[^,]+$
-                                      type: string
-                                    type: array
-                                    x-kubernetes-list-type: set
-                                  notTagsAny:
-                                    description: |-
-                                      NotTagsAny is a list of tags to filter by. If specified, resources
-                                      which contain any of the given tags will be excluded from the result.
-                                    items:
-                                      description: |-
-                                        NeutronTag represents a tag on a Neutron resource.
-                                        It may not be empty and may not contain commas.
-                                      minLength: 1
-                                      pattern: ^[^,]+$
-                                      type: string
-                                    type: array
-                                    x-kubernetes-list-type: set
-                                  projectID:
-                                    type: string
-                                  tags:
-                                    description: |-
-                                      Tags is a list of tags to filter by. If specified, the resource must
-                                      have all of the tags specified to be included in the result.
-                                    items:
-                                      description: |-
-                                        NeutronTag represents a tag on a Neutron resource.
-                                        It may not be empty and may not contain commas.
-                                      minLength: 1
-                                      pattern: ^[^,]+$
-                                      type: string
-                                    type: array
-                                    x-kubernetes-list-type: set
-                                  tagsAny:
-                                    description: |-
-                                      TagsAny is a list of tags to filter by. If specified, the resource
-                                      must have at least one of the tags specified to be included in the
-                                      result.
-                                    items:
-                                      description: |-
-                                        NeutronTag represents a tag on a Neutron resource.
-                                        It may not be empty and may not contain commas.
-                                      minLength: 1
-                                      pattern: ^[^,]+$
-                                      type: string
-                                    type: array
-                                    x-kubernetes-list-type: set
-                                type: object
+                                type: string
                               type: array
                               x-kubernetes-list-type: atomic
                             tags:
-                              description: |-
-                                Tags applied to the port (and corresponding trunk, if a trunk is configured.)
-                                These tags are applied in addition to the instance's tags, which will also be applied to the port.
+                              description: Tags applied to the port (and corresponding
+                                trunk, if a trunk is configured.)
                               items:
                                 type: string
                               type: array
                               x-kubernetes-list-type: set
                             trunk:
-                              description: |-
-                                Trunk specifies whether trunking is enabled at the port level. If not
-                                provided the value is inherited from the machine, or false for a
-                                bastion host.
+                              description: Trunk specifies whether trunking is enabled
+                                at the port level.
                               type: boolean
                             valueSpecs:
                               description: |-
@@ -6626,12 +6424,33 @@ spec:
                                 implementations. What type of vNIC is actually available depends on
                                 deployments. If not specified, the Neutron default value is used.
                               type: string
+                          required:
+                          - description
+                          - name
+                          - networkID
                           type: object
                         type: array
                       serverGroupID:
                         description: ServerGroupID is the ID of the server group the
                           machine should be added to and is calculated based on ServerGroupFilter.
                         type: string
+                    type: object
+                  resources:
+                    description: Resources contains references to OpenStack resources
+                      created for the bastion.
+                    properties:
+                      ports:
+                        description: Ports is the status of the ports created for
+                          the machine.
+                        items:
+                          properties:
+                            id:
+                              description: ID is the unique identifier of the port.
+                              type: string
+                          required:
+                          - id
+                          type: object
+                        type: array
                     type: object
                   sshKeyName:
                     type: string
@@ -6651,58 +6470,6 @@ spec:
                   name:
                     description: name of the security group
                     type: string
-                  rules:
-                    description: list of security group rules
-                    items:
-                      properties:
-                        description:
-                          description: description of the security group rule.
-                          type: string
-                        direction:
-                          description: |-
-                            direction in which the security group rule is applied. The only values
-                            allowed are "ingress" or "egress". For a compute instance, an ingress
-                            security group rule is applied to incoming (ingress) traffic for that
-                            instance. An egress rule is applied to traffic leaving the instance.
-                          type: string
-                        etherType:
-                          description: |-
-                            etherType must be IPv4 or IPv6, and addresses represented in CIDR must match the
-                            ingress or egress rules.
-                          type: string
-                        id:
-                          description: id of the security group rule
-                          type: string
-                        portRangeMax:
-                          description: |-
-                            portRangeMax is a number in the range that is matched by the security group
-                            rule. The portRangeMin attribute constrains the portRangeMax attribute.
-                          type: integer
-                        portRangeMin:
-                          description: |-
-                            portRangeMin is a number in the range that is matched by the security group
-                            rule. If the protocol is TCP or UDP, this value must be less than or equal
-                            to the value of the portRangeMax attribute.
-                          type: integer
-                        protocol:
-                          description: protocol is the protocol that is matched by
-                            the security group rule.
-                          type: string
-                        remoteGroupID:
-                          description: |-
-                            remoteGroupID is the remote group ID to be associated with this security group rule.
-                            You can specify either remoteGroupID or remoteIPPrefix or remoteManagedGroups.
-                          type: string
-                        remoteIPPrefix:
-                          description: |-
-                            remoteIPPrefix is the remote IP prefix to be associated with this security group rule.
-                            You can specify either remoteGroupID or remoteIPPrefix or remoteManagedGroups.
-                          type: string
-                      required:
-                      - direction
-                      - id
-                      type: object
-                    type: array
                 required:
                 - id
                 - name
@@ -6719,58 +6486,6 @@ spec:
                   name:
                     description: name of the security group
                     type: string
-                  rules:
-                    description: list of security group rules
-                    items:
-                      properties:
-                        description:
-                          description: description of the security group rule.
-                          type: string
-                        direction:
-                          description: |-
-                            direction in which the security group rule is applied. The only values
-                            allowed are "ingress" or "egress". For a compute instance, an ingress
-                            security group rule is applied to incoming (ingress) traffic for that
-                            instance. An egress rule is applied to traffic leaving the instance.
-                          type: string
-                        etherType:
-                          description: |-
-                            etherType must be IPv4 or IPv6, and addresses represented in CIDR must match the
-                            ingress or egress rules.
-                          type: string
-                        id:
-                          description: id of the security group rule
-                          type: string
-                        portRangeMax:
-                          description: |-
-                            portRangeMax is a number in the range that is matched by the security group
-                            rule. The portRangeMin attribute constrains the portRangeMax attribute.
-                          type: integer
-                        portRangeMin:
-                          description: |-
-                            portRangeMin is a number in the range that is matched by the security group
-                            rule. If the protocol is TCP or UDP, this value must be less than or equal
-                            to the value of the portRangeMax attribute.
-                          type: integer
-                        protocol:
-                          description: protocol is the protocol that is matched by
-                            the security group rule.
-                          type: string
-                        remoteGroupID:
-                          description: |-
-                            remoteGroupID is the remote group ID to be associated with this security group rule.
-                            You can specify either remoteGroupID or remoteIPPrefix or remoteManagedGroups.
-                          type: string
-                        remoteIPPrefix:
-                          description: |-
-                            remoteIPPrefix is the remote IP prefix to be associated with this security group rule.
-                            You can specify either remoteGroupID or remoteIPPrefix or remoteManagedGroups.
-                          type: string
-                      required:
-                      - direction
-                      - id
-                      type: object
-                    type: array
                 required:
                 - id
                 - name
@@ -6926,58 +6641,6 @@ spec:
                   name:
                     description: name of the security group
                     type: string
-                  rules:
-                    description: list of security group rules
-                    items:
-                      properties:
-                        description:
-                          description: description of the security group rule.
-                          type: string
-                        direction:
-                          description: |-
-                            direction in which the security group rule is applied. The only values
-                            allowed are "ingress" or "egress". For a compute instance, an ingress
-                            security group rule is applied to incoming (ingress) traffic for that
-                            instance. An egress rule is applied to traffic leaving the instance.
-                          type: string
-                        etherType:
-                          description: |-
-                            etherType must be IPv4 or IPv6, and addresses represented in CIDR must match the
-                            ingress or egress rules.
-                          type: string
-                        id:
-                          description: id of the security group rule
-                          type: string
-                        portRangeMax:
-                          description: |-
-                            portRangeMax is a number in the range that is matched by the security group
-                            rule. The portRangeMin attribute constrains the portRangeMax attribute.
-                          type: integer
-                        portRangeMin:
-                          description: |-
-                            portRangeMin is a number in the range that is matched by the security group
-                            rule. If the protocol is TCP or UDP, this value must be less than or equal
-                            to the value of the portRangeMax attribute.
-                          type: integer
-                        protocol:
-                          description: protocol is the protocol that is matched by
-                            the security group rule.
-                          type: string
-                        remoteGroupID:
-                          description: |-
-                            remoteGroupID is the remote group ID to be associated with this security group rule.
-                            You can specify either remoteGroupID or remoteIPPrefix or remoteManagedGroups.
-                          type: string
-                        remoteIPPrefix:
-                          description: |-
-                            remoteIPPrefix is the remote IP prefix to be associated with this security group rule.
-                            You can specify either remoteGroupID or remoteIPPrefix or remoteManagedGroups.
-                          type: string
-                      required:
-                      - direction
-                      - id
-                      type: object
-                    type: array
                 required:
                 - id
                 - name

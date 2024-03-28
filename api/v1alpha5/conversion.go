@@ -448,26 +448,26 @@ func Convert_v1alpha5_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *infrav1.Po
 }
 
 func Convert_v1alpha5_Instance_To_v1beta1_BastionStatus(in *Instance, out *infrav1.BastionStatus, _ conversion.Scope) error {
-	// BastionStatus is the same as Instance with unused fields removed
+	// BastionStatus is the same as Spec with unused fields removed
 	out.ID = in.ID
 	out.Name = in.Name
 	out.SSHKeyName = in.SSHKeyName
 	out.State = infrav1.InstanceState(in.State)
 	out.IP = in.IP
 	out.FloatingIP = in.FloatingIP
-	out.ReferencedResources.ServerGroupID = in.ServerGroupID
+	out.Resolved.ServerGroupID = in.ServerGroupID
 	return nil
 }
 
 func Convert_v1beta1_BastionStatus_To_v1alpha5_Instance(in *infrav1.BastionStatus, out *Instance, _ conversion.Scope) error {
-	// BastionStatus is the same as Instance with unused fields removed
+	// BastionStatus is the same as Spec with unused fields removed
 	out.ID = in.ID
 	out.Name = in.Name
 	out.SSHKeyName = in.SSHKeyName
 	out.State = InstanceState(in.State)
 	out.IP = in.IP
 	out.FloatingIP = in.FloatingIP
-	out.ServerGroupID = in.ReferencedResources.ServerGroupID
+	out.ServerGroupID = in.Resolved.ServerGroupID
 	return nil
 }
 
@@ -671,7 +671,9 @@ func Convert_v1beta1_Bastion_To_v1alpha5_Bastion(in *infrav1.Bastion, out *Basti
 	if err != nil {
 		return err
 	}
-	in.FloatingIP = out.Instance.FloatingIP
+	if in.FloatingIP != nil {
+		out.Instance.FloatingIP = *in.FloatingIP
+	}
 	return nil
 }
 
@@ -680,62 +682,21 @@ func Convert_v1alpha5_Bastion_To_v1beta1_Bastion(in *Bastion, out *infrav1.Basti
 	if err != nil {
 		return err
 	}
-	in.Instance.FloatingIP = out.FloatingIP
+	if in.Instance.FloatingIP != "" {
+		out.FloatingIP = &in.Instance.FloatingIP
+	}
 	return nil
 }
 
 func Convert_v1beta1_SecurityGroupStatus_To_v1alpha5_SecurityGroup(in *infrav1.SecurityGroupStatus, out *SecurityGroup, s conversion.Scope) error { //nolint:revive
 	out.ID = in.ID
 	out.Name = in.Name
-	out.Rules = make([]SecurityGroupRule, len(in.Rules))
-	for i, rule := range in.Rules {
-		out.Rules[i] = SecurityGroupRule{
-			ID:        rule.ID,
-			Direction: rule.Direction,
-		}
-		if rule.Description != nil {
-			out.Rules[i].Description = *rule.Description
-		}
-		if rule.EtherType != nil {
-			out.Rules[i].EtherType = *rule.EtherType
-		}
-		if rule.PortRangeMin != nil {
-			out.Rules[i].PortRangeMin = *rule.PortRangeMin
-		}
-		if rule.PortRangeMax != nil {
-			out.Rules[i].PortRangeMax = *rule.PortRangeMax
-		}
-		if rule.Protocol != nil {
-			out.Rules[i].Protocol = *rule.Protocol
-		}
-		if rule.RemoteGroupID != nil {
-			out.Rules[i].RemoteGroupID = *rule.RemoteGroupID
-		}
-		if rule.RemoteIPPrefix != nil {
-			out.Rules[i].RemoteIPPrefix = *rule.RemoteIPPrefix
-		}
-	}
 	return nil
 }
 
 func Convert_v1alpha5_SecurityGroup_To_v1beta1_SecurityGroupStatus(in *SecurityGroup, out *infrav1.SecurityGroupStatus, s conversion.Scope) error { //nolint:revive
 	out.ID = in.ID
 	out.Name = in.Name
-	out.Rules = make([]infrav1.SecurityGroupRuleStatus, len(in.Rules))
-	for i, rule := range in.Rules {
-		out.Rules[i] = infrav1.SecurityGroupRuleStatus{
-			ID:             rule.ID,
-			Description:    pointer.String(rule.Description),
-			Direction:      rule.Direction,
-			EtherType:      pointer.String(rule.EtherType),
-			PortRangeMin:   pointer.Int(rule.PortRangeMin),
-			PortRangeMax:   pointer.Int(rule.PortRangeMax),
-			Protocol:       pointer.String(rule.Protocol),
-			RemoteGroupID:  pointer.String(rule.RemoteGroupID),
-			RemoteIPPrefix: pointer.String(rule.RemoteIPPrefix),
-		}
-	}
-
 	return nil
 }
 

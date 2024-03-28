@@ -654,7 +654,9 @@ bool
 </em>
 </td>
 <td>
-<p>Machine tags
+<p>Tags which will be added to the machine and all dependent resources
+which support them. These are in addition to Tags defined on the
+cluster.
 Requires Nova api 2.52 minimum!</p>
 </td>
 </tr>
@@ -977,7 +979,7 @@ additional storage options.</p>
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">PortOpts</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedPortSpecFields">ResolvedPortSpecFields</a>)
 </p>
 <p>
 </p>
@@ -1064,7 +1066,7 @@ string
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackClusterSpec">OpenStackClusterSpec</a>)
 </p>
 <p>
-<p>Bastion represents basic information about the bastion node.</p>
+<p>Bastion represents basic information about the bastion node. If you enable bastion, the spec has to be specified.</p>
 </p>
 <table>
 <thead>
@@ -1082,12 +1084,12 @@ bool
 </em>
 </td>
 <td>
-<em>(Optional)</em>
+<p>Enabled means that bastion is enabled. Defaults to false.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>instance</code><br/>
+<code>spec</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">
 OpenStackMachineSpec
@@ -1095,7 +1097,11 @@ OpenStackMachineSpec
 </em>
 </td>
 <td>
-<p>Instance for the bastion itself</p>
+<p>Spec for the bastion itself</p>
+<br/>
+<br/>
+<table>
+</table>
 </td>
 </tr>
 <tr>
@@ -1107,6 +1113,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
+<p>AvailabilityZone is the failure domain that will be used to create the Bastion Spec.</p>
 </td>
 </tr>
 <tr>
@@ -1118,8 +1125,9 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>FloatingIP which will be associated to the bastion machine.
-The floating IP should already exist and should not be associated with a port.</p>
+<p>FloatingIP which will be associated to the bastion machine. It&rsquo;s the IP address, not UUID.
+The floating IP should already exist and should not be associated with a port. If FIP of this address does not
+exist, CAPO will try to create it, but by default only OpenStack administrators have privileges to do so.</p>
 </td>
 </tr>
 </tbody>
@@ -1204,26 +1212,31 @@ string
 </tr>
 <tr>
 <td>
-<code>referencedResources</code><br/>
+<code>resolved</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ReferencedMachineResources">
-ReferencedMachineResources
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedMachineSpec">
+ResolvedMachineSpec
 </a>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>Resolved contains parts of the bastion&rsquo;s machine spec with all
+external references fully resolved.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>dependentResources</code><br/>
+<code>resources</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.DependentMachineResources">
-DependentMachineResources
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.MachineResources">
+MachineResources
 </a>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>Resources contains references to OpenStack resources created for the bastion.</p>
 </td>
 </tr>
 </tbody>
@@ -1232,7 +1245,7 @@ DependentMachineResources
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">PortOpts</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedPortSpecFields">ResolvedPortSpecFields</a>)
 </p>
 <p>
 </p>
@@ -1387,39 +1400,6 @@ If omitted, the availability zone of the server will be used.
 The availability zone must NOT contain spaces otherwise it will lead to volume that belongs
 to this availability zone register failure, see kubernetes/cloud-provider-openstack#1379 for
 further information.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.DependentMachineResources">DependentMachineResources
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.BastionStatus">BastionStatus</a>, 
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineStatus">OpenStackMachineStatus</a>)
-</p>
-<p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>ports</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortStatus">
-[]PortStatus
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Ports is the status of the ports created for the machine.</p>
 </td>
 </tr>
 </tbody>
@@ -1738,6 +1718,39 @@ string
 </td>
 <td>
 <em>(Optional)</em>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.MachineResources">MachineResources
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.BastionStatus">BastionStatus</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineStatus">OpenStackMachineStatus</a>)
+</p>
+<p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>ports</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortStatus">
+[]PortStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Ports is the status of the ports created for the machine.</p>
 </td>
 </tr>
 </tbody>
@@ -3119,7 +3132,9 @@ bool
 </em>
 </td>
 <td>
-<p>Machine tags
+<p>Tags which will be added to the machine and all dependent resources
+which support them. These are in addition to Tags defined on the
+cluster.
 Requires Nova api 2.52 minimum!</p>
 </td>
 </tr>
@@ -3276,28 +3291,31 @@ InstanceState
 </tr>
 <tr>
 <td>
-<code>referencedResources</code><br/>
+<code>resolved</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ReferencedMachineResources">
-ReferencedMachineResources
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedMachineSpec">
+ResolvedMachineSpec
 </a>
 </em>
 </td>
 <td>
-<p>ReferencedResources contains resolved references to resources that the machine depends on.</p>
+<em>(Optional)</em>
+<p>Resolved contains parts of the machine spec with all external
+references fully resolved.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>dependentResources</code><br/>
+<code>resources</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.DependentMachineResources">
-DependentMachineResources
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.MachineResources">
+MachineResources
 </a>
 </em>
 </td>
 <td>
-<p>DependentResources contains resolved dependent resources that were created by the machine.</p>
+<em>(Optional)</em>
+<p>Resources contains references to OpenStack resources created for the machine.</p>
 </td>
 </tr>
 <tr>
@@ -3486,7 +3504,9 @@ bool
 </em>
 </td>
 <td>
-<p>Machine tags
+<p>Tags which will be added to the machine and all dependent resources
+which support them. These are in addition to Tags defined on the
+cluster.
 Requires Nova api 2.52 minimum!</p>
 </td>
 </tr>
@@ -3625,8 +3645,7 @@ OpenStackMachineTemplateResource
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>, 
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ReferencedMachineResources">ReferencedMachineResources</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>)
 </p>
 <p>
 </p>
@@ -3655,18 +3674,6 @@ This will fail if the query returns more than one network.</p>
 </tr>
 <tr>
 <td>
-<code>nameSuffix</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>NameSuffix will be appended to the name of the port if specified. If unspecified, instead the 0-based index of the port in the list is used.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>description</code><br/>
 <em>
 string
@@ -3679,26 +3686,14 @@ string
 </tr>
 <tr>
 <td>
-<code>adminStateUp</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>AdminStateUp specifies whether the port should be created in the up (true) or down (false) state. The default is up.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>macAddress</code><br/>
+<code>nameSuffix</code><br/>
 <em>
 string
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>MACAddress specifies the MAC address of the port. If not specified, the MAC address will be generated.</p>
+<p>NameSuffix will be appended to the name of the port if specified. If unspecified, instead the 0-based index of the port in the list is used.</p>
 </td>
 </tr>
 <tr>
@@ -3731,20 +3726,15 @@ string
 </tr>
 <tr>
 <td>
-<code>allowedAddressPairs</code><br/>
+<code>tags</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.AddressPair">
-[]AddressPair
-</a>
+[]string
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>AllowedAddressPairs is a list of address pairs which Neutron will
-allow the port to send traffic from in addition to the port&rsquo;s
-addresses. If not specified, the MAC Address will be the MAC Address
-of the port. Depending on the configuration of Neutron, it may be
-supported to specify a CIDR instead of a specific IP address.</p>
+<p>Tags applied to the port (and corresponding trunk, if a trunk is configured.)
+These tags are applied in addition to the instance&rsquo;s tags, which will also be applied to the port.</p>
 </td>
 </tr>
 <tr>
@@ -3759,6 +3749,335 @@ bool
 <p>Trunk specifies whether trunking is enabled at the port level. If not
 provided the value is inherited from the machine, or false for a
 bastion host.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ResolvedPortSpecFields</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedPortSpecFields">
+ResolvedPortSpecFields
+</a>
+</em>
+</td>
+<td>
+<p>
+(Members of <code>ResolvedPortSpecFields</code> are embedded into this type.)
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.PortStatus">PortStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.MachineResources">MachineResources</a>)
+</p>
+<p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>id</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>ID is the unique identifier of the port.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.ResolvedFixedIP">ResolvedFixedIP
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedPortSpec">ResolvedPortSpec</a>)
+</p>
+<p>
+<p>ResolvedFixedIP is a FixedIP with the Subnet resolved to an ID.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>subnet</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SubnetID is the id of a subnet to create the fixed IP of a port in.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ipAddress</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>IPAddress is a specific IP address to assign to the port. If SubnetID
+is also specified, IPAddress must be a valid IP address in the
+subnet. If Subnet is not specified, IPAddress must be a valid IP
+address in any subnet of the port&rsquo;s network.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.ResolvedMachineSpec">ResolvedMachineSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.BastionStatus">BastionStatus</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineStatus">OpenStackMachineStatus</a>)
+</p>
+<p>
+<p>ResolvedMachineSpec contains resolved references to resources required by the machine.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>serverGroupID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ServerGroupID is the ID of the server group the machine should be added to and is calculated based on ServerGroupFilter.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>imageID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ImageID is the ID of the image to use for the machine and is calculated based on ImageFilter.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ports</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedPortSpec">
+[]ResolvedPortSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Ports is the fully resolved list of ports to create for the machine.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.ResolvedPortSpec">ResolvedPortSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedMachineSpec">ResolvedMachineSpec</a>)
+</p>
+<p>
+<p>ResolvedPortSpec is a PortOpts with all contained references fully resolved.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name is the name of the port.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>description</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Description is a human-readable description for the port.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>networkID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>NetworkID is the ID of the network the port will be created in.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tags</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Tags applied to the port (and corresponding trunk, if a trunk is configured.)</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>trunk</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Trunk specifies whether trunking is enabled at the port level.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>fixedIPs</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedFixedIP">
+[]ResolvedFixedIP
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>FixedIPs is a list of pairs of subnet and/or IP address to assign to the port. If specified, these must be subnets of the port&rsquo;s network.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>securityGroups</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SecurityGroups is a list of security group IDs to assign to the port.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ResolvedPortSpecFields</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedPortSpecFields">
+ResolvedPortSpecFields
+</a>
+</em>
+</td>
+<td>
+<p>
+(Members of <code>ResolvedPortSpecFields</code> are embedded into this type.)
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.ResolvedPortSpecFields">ResolvedPortSpecFields
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">PortOpts</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedPortSpec">ResolvedPortSpec</a>)
+</p>
+<p>
+<p>ResolvePortSpecFields is a convenience struct containing all fields of a
+PortOpts which don&rsquo;t contain references which need to be resolved, and can
+therefore be shared with ResolvedPortSpec.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>adminStateUp</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AdminStateUp specifies whether the port should be created in the up (true) or down (false) state. The default is up.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>macAddress</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MACAddress specifies the MAC address of the port. If not specified, the MAC address will be generated.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>allowedAddressPairs</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.AddressPair">
+[]AddressPair
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AllowedAddressPairs is a list of address pairs which Neutron will
+allow the port to send traffic from in addition to the port&rsquo;s
+addresses. If not specified, the MAC Address will be the MAC Address
+of the port. Depending on the configuration of Neutron, it may be
+supported to specify a CIDR instead of a specific IP address.</p>
 </td>
 </tr>
 <tr>
@@ -3839,19 +4158,6 @@ bool
 </tr>
 <tr>
 <td>
-<code>tags</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Tags applied to the port (and corresponding trunk, if a trunk is configured.)
-These tags are applied in addition to the instance&rsquo;s tags, which will also be applied to the port.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>valueSpecs</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.ValueSpec">
@@ -3864,93 +4170,6 @@ These tags are applied in addition to the instance&rsquo;s tags, which will also
 <p>Value specs are extra parameters to include in the API request with OpenStack.
 This is an extension point for the API, so what they do and if they are supported,
 depends on the specific OpenStack implementation.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.PortStatus">PortStatus
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.DependentMachineResources">DependentMachineResources</a>)
-</p>
-<p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>id</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>ID is the unique identifier of the port.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.ReferencedMachineResources">ReferencedMachineResources
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.BastionStatus">BastionStatus</a>, 
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineStatus">OpenStackMachineStatus</a>)
-</p>
-<p>
-<p>ReferencedMachineResources contains resolved references to resources required by the machine.</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>serverGroupID</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>ServerGroupID is the ID of the server group the machine should be added to and is calculated based on ServerGroupFilter.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>imageID</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>ImageID is the ID of the image to use for the machine and is calculated based on ImageFilter.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>ports</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">
-[]PortOpts
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Ports is the fully resolved list of ports to create for the machine.</p>
 </td>
 </tr>
 </tbody>
@@ -4365,139 +4584,6 @@ You can specify either remoteGroupID or remoteIPPrefix or remoteManagedGroups.</
 </tr>
 </tbody>
 </table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupRuleStatus">SecurityGroupRuleStatus
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupStatus">SecurityGroupStatus</a>)
-</p>
-<p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>id</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>id of the security group rule</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>description</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>description of the security group rule.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>direction</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>direction in which the security group rule is applied. The only values
-allowed are &ldquo;ingress&rdquo; or &ldquo;egress&rdquo;. For a compute instance, an ingress
-security group rule is applied to incoming (ingress) traffic for that
-instance. An egress rule is applied to traffic leaving the instance.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>etherType</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>etherType must be IPv4 or IPv6, and addresses represented in CIDR must match the
-ingress or egress rules.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>portRangeMin</code><br/>
-<em>
-int
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>portRangeMin is a number in the range that is matched by the security group
-rule. If the protocol is TCP or UDP, this value must be less than or equal
-to the value of the portRangeMax attribute.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>portRangeMax</code><br/>
-<em>
-int
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>portRangeMax is a number in the range that is matched by the security group
-rule. The portRangeMin attribute constrains the portRangeMax attribute.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>protocol</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>protocol is the protocol that is matched by the security group rule.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>remoteGroupID</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>remoteGroupID is the remote group ID to be associated with this security group rule.
-You can specify either remoteGroupID or remoteIPPrefix or remoteManagedGroups.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>remoteIPPrefix</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>remoteIPPrefix is the remote IP prefix to be associated with this security group rule.
-You can specify either remoteGroupID or remoteIPPrefix or remoteManagedGroups.</p>
-</td>
-</tr>
-</tbody>
-</table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupStatus">SecurityGroupStatus
 </h3>
 <p>
@@ -4536,20 +4622,6 @@ string
 </td>
 <td>
 <p>id of the security group</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>rules</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupRuleStatus">
-[]SecurityGroupRuleStatus
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>list of security group rules</p>
 </td>
 </tr>
 </tbody>
@@ -4616,8 +4688,7 @@ string
 </em>
 </td>
 <td>
-<p>Key is the server metadata key
-kubebuilder:validation:MaxLength:=255</p>
+<p>Key is the server metadata key</p>
 </td>
 </tr>
 <tr>
@@ -4628,8 +4699,7 @@ string
 </em>
 </td>
 <td>
-<p>Value is the server metadata value
-kubebuilder:validation:MaxLength:=255</p>
+<p>Value is the server metadata value</p>
 </td>
 </tr>
 </tbody>
@@ -4880,7 +4950,7 @@ outside of these ranges manually.</p>
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">PortOpts</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedPortSpecFields">ResolvedPortSpecFields</a>)
 </p>
 <p>
 <p>ValueSpec represents a single value_spec key-value pair.</p>

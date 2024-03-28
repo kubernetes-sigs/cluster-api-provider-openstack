@@ -41,11 +41,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
-	infrav1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
-	filterconvert "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/filterconvert/v1alpha7"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/filterconvert"
 )
 
 const (
@@ -402,7 +401,7 @@ func (r *OpenStackFloatingIPPoolReconciler) reconcileFloatingIPNetwork(scope *sc
 	}
 
 	netListOpts := external.ListOptsExt{
-		ListOptsBuilder: filterconvert.NetworkFilterToListOpt(&pool.Spec.FloatingIPNetwork),
+		ListOptsBuilder: filterconvert.NetworkFilterToListOpts(&pool.Spec.FloatingIPNetwork),
 		External:        pointer.Bool(true),
 	}
 
@@ -414,7 +413,7 @@ func (r *OpenStackFloatingIPPoolReconciler) reconcileFloatingIPNetwork(scope *sc
 		return fmt.Errorf("found multiple networks, expects filter to match one (result: %v)", networkList)
 	}
 
-	pool.Status.FloatingIPNetwork = &infrav1alpha7.NetworkStatus{
+	pool.Status.FloatingIPNetwork = &infrav1.NetworkStatus{
 		ID:   networkList[0].ID,
 		Name: networkList[0].Name,
 		Tags: networkList[0].Tags,

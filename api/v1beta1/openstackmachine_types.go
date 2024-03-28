@@ -60,7 +60,9 @@ type OpenStackMachineSpec struct {
 	// Whether the server instance is created on a trunk port or not.
 	Trunk bool `json:"trunk,omitempty"`
 
-	// Machine tags
+	// Tags which will be added to the machine and all dependent resources
+	// which support them. These are in addition to Tags defined on the
+	// cluster.
 	// Requires Nova api 2.52 minimum!
 	// +listType=set
 	Tags []string `json:"tags,omitempty"`
@@ -101,11 +103,13 @@ type OpenStackMachineSpec struct {
 
 type ServerMetadata struct {
 	// Key is the server metadata key
-	// kubebuilder:validation:MaxLength:=255
+	// +kubebuilder:validation:MaxLength:=255
+	// +kubebuilder:validation:Required
 	Key string `json:"key"`
 
 	// Value is the server metadata value
-	// kubebuilder:validation:MaxLength:=255
+	// +kubebuilder:validation:MaxLength:=255
+	// +kubebuilder:validation:Required
 	Value string `json:"value"`
 }
 
@@ -122,11 +126,14 @@ type OpenStackMachineStatus struct {
 	// +optional
 	InstanceState *InstanceState `json:"instanceState,omitempty"`
 
-	// ReferencedResources contains resolved references to resources that the machine depends on.
-	ReferencedResources ReferencedMachineResources `json:"referencedResources,omitempty"`
+	// Resolved contains parts of the machine spec with all external
+	// references fully resolved.
+	// +optional
+	Resolved *ResolvedMachineSpec `json:"resolved,omitempty"`
 
-	// DependentResources contains resolved dependent resources that were created by the machine.
-	DependentResources DependentMachineResources `json:"dependentResources,omitempty"`
+	// Resources contains references to OpenStack resources created for the machine.
+	// +optional
+	Resources *MachineResources `json:"resources,omitempty"`
 
 	FailureReason *errors.MachineStatusError `json:"failureReason,omitempty"`
 

@@ -19,8 +19,11 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/go-logr/logr"
 	"github.com/go-logr/logr/testr"
 	"github.com/golang/mock/gomock"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/uuid"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/rules"
 	. "github.com/onsi/gomega"
@@ -224,18 +227,25 @@ func TestGetAllNodesRules(t *testing.T) {
 }
 
 func TestGenerateDesiredSecGroups(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
 	secGroupNames := map[string]string{
 		"controlplane": "k8s-cluster-mycluster-secgroup-controlplane",
 		"worker":       "k8s-cluster-mycluster-secgroup-worker",
 	}
 
+	observedSecGroupsBySuffix := map[string]*groups.SecGroup{
+		"controlplane": {
+			ID:   "0",
+			Name: "k8s-cluster-mycluster-secgroup-controlplane",
+		},
+		"worker": {
+			ID:   "1",
+			Name: "k8s-cluster-mycluster-secgroup-worker",
+		},
+	}
+
 	tests := []struct {
 		name             string
 		openStackCluster *infrav1.OpenStackCluster
-		mockExpect       func(m *mock.MockNetworkClientMockRecorder)
 		// We could also test the exact rules that are returned, but that'll be a lot data to write out.
 		// For now we just make sure that the number of rules is correct.
 		expectedNumberSecurityGroupRules int
@@ -244,7 +254,6 @@ func TestGenerateDesiredSecGroups(t *testing.T) {
 		{
 			name:                             "Valid openStackCluster with unmanaged securityGroups",
 			openStackCluster:                 &infrav1.OpenStackCluster{},
-			mockExpect:                       func(m *mock.MockNetworkClientMockRecorder) {},
 			expectedNumberSecurityGroupRules: 0,
 			wantErr:                          false,
 		},
@@ -254,20 +263,6 @@ func TestGenerateDesiredSecGroups(t *testing.T) {
 				Spec: infrav1.OpenStackClusterSpec{
 					ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{},
 				},
-			},
-			mockExpect: func(m *mock.MockNetworkClientMockRecorder) {
-				m.ListSecGroup(groups.ListOpts{Name: "k8s-cluster-mycluster-secgroup-controlplane"}).Return([]groups.SecGroup{
-					{
-						ID:   "0",
-						Name: "k8s-cluster-mycluster-secgroup-controlplane",
-					},
-				}, nil)
-				m.ListSecGroup(groups.ListOpts{Name: "k8s-cluster-mycluster-secgroup-worker"}).Return([]groups.SecGroup{
-					{
-						ID:   "1",
-						Name: "k8s-cluster-mycluster-secgroup-worker",
-					},
-				}, nil)
 			},
 			expectedNumberSecurityGroupRules: 12,
 			wantErr:                          false,
@@ -288,20 +283,6 @@ func TestGenerateDesiredSecGroups(t *testing.T) {
 					},
 				},
 			},
-			mockExpect: func(m *mock.MockNetworkClientMockRecorder) {
-				m.ListSecGroup(groups.ListOpts{Name: "k8s-cluster-mycluster-secgroup-controlplane"}).Return([]groups.SecGroup{
-					{
-						ID:   "0",
-						Name: "k8s-cluster-mycluster-secgroup-controlplane",
-					},
-				}, nil)
-				m.ListSecGroup(groups.ListOpts{Name: "k8s-cluster-mycluster-secgroup-worker"}).Return([]groups.SecGroup{
-					{
-						ID:   "1",
-						Name: "k8s-cluster-mycluster-secgroup-worker",
-					},
-				}, nil)
-			},
 			expectedNumberSecurityGroupRules: 16,
 			wantErr:                          false,
 		},
@@ -321,26 +302,15 @@ func TestGenerateDesiredSecGroups(t *testing.T) {
 					},
 				},
 			},
-			mockExpect: func(m *mock.MockNetworkClientMockRecorder) {
-				m.ListSecGroup(groups.ListOpts{Name: "k8s-cluster-mycluster-secgroup-controlplane"}).Return([]groups.SecGroup{
-					{
-						ID:   "0",
-						Name: "k8s-cluster-mycluster-secgroup-controlplane",
-					},
-				}, nil)
-				m.ListSecGroup(groups.ListOpts{Name: "k8s-cluster-mycluster-secgroup-worker"}).Return([]groups.SecGroup{
-					{
-						ID:   "1",
-						Name: "k8s-cluster-mycluster-secgroup-worker",
-					},
-				}, nil)
-			},
 			wantErr: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+
 			g := NewWithT(t)
 			log := testr.New(t)
 			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
@@ -349,9 +319,8 @@ func TestGenerateDesiredSecGroups(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Failed to create service: %v", err)
 			}
-			tt.mockExpect(mockScopeFactory.NetworkClient.EXPECT())
 
-			gotSecurityGroups, err := s.generateDesiredSecGroups(tt.openStackCluster, secGroupNames)
+			gotSecurityGroups, err := s.generateDesiredSecGroups(tt.openStackCluster, secGroupNames, observedSecGroupsBySuffix)
 			if tt.wantErr {
 				g.Expect(err).To(HaveOccurred())
 			} else {
@@ -367,27 +336,35 @@ func TestGenerateDesiredSecGroups(t *testing.T) {
 }
 
 func TestReconcileGroupRules(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
+	const (
+		sgID           = "6260e813-af79-4592-8d1a-0f42dd26cc42"
+		sgRuleID       = "52a532c4-2b44-4582-ba87-b64e62e19b1a"
+		sgLegacyRuleID = "a057dcc4-1535-469d-9d28-923cad9d4c56"
+		sgName         = "k8s-cluster-mycluster-secgroup-controlplane"
+	)
 
 	tests := []struct {
-		name             string
-		desiredSGSpecs   securityGroupSpec
-		observedSGStatus infrav1.SecurityGroupStatus
-		mockExpect       func(m *mock.MockNetworkClientMockRecorder)
-		wantSGStatus     infrav1.SecurityGroupStatus
+		name          string
+		desiredSGSpec securityGroupSpec
+		observedSG    groups.SecGroup
+		mockExpect    func(m *mock.MockNetworkClientMockRecorder)
+		wantSGStatus  infrav1.SecurityGroupStatus
 	}{
 		{
-			name:             "Empty desiredSGSpecs and observedSGStatus",
-			desiredSGSpecs:   securityGroupSpec{},
-			observedSGStatus: infrav1.SecurityGroupStatus{},
-			mockExpect:       func(m *mock.MockNetworkClientMockRecorder) {},
-			wantSGStatus:     infrav1.SecurityGroupStatus{},
+			name:          "Empty desiredSGSpec and observedSG",
+			desiredSGSpec: securityGroupSpec{},
+			observedSG: groups.SecGroup{
+				ID:    sgID,
+				Name:  sgName,
+				Rules: []rules.SecGroupRule{},
+			},
+			mockExpect:   func(m *mock.MockNetworkClientMockRecorder) {},
+			wantSGStatus: infrav1.SecurityGroupStatus{},
 		},
 		{
-			name: "Same desiredSGSpecs and observedSGStatus produces no changes",
-			desiredSGSpecs: securityGroupSpec{
-				Name: "k8s-cluster-mycluster-secgroup-controlplane",
+			name: "Same desiredSGSpec and observedSG produces no changes",
+			desiredSGSpec: securityGroupSpec{
+				Name: sgName,
 				Rules: []resolvedSecurityGroupRuleSpec{
 					{
 						Description:    "Allow SSH",
@@ -401,46 +378,29 @@ func TestReconcileGroupRules(t *testing.T) {
 					},
 				},
 			},
-			observedSGStatus: infrav1.SecurityGroupStatus{
-				ID:   "idSG",
-				Name: "k8s-cluster-mycluster-secgroup-controlplane",
-				Rules: []infrav1.SecurityGroupRuleStatus{
+			observedSG: groups.SecGroup{
+				ID:   sgID,
+				Name: sgName,
+				Rules: []rules.SecGroupRule{
 					{
-						Description:    pointer.String("Allow SSH"),
+						Description:    "Allow SSH",
 						Direction:      "ingress",
-						EtherType:      pointer.String("IPv4"),
+						EtherType:      "IPv4",
 						ID:             "idSGRule",
-						Protocol:       pointer.String("tcp"),
-						PortRangeMin:   pointer.Int(22),
-						PortRangeMax:   pointer.Int(22),
-						RemoteGroupID:  pointer.String("1"),
-						RemoteIPPrefix: pointer.String(""),
+						Protocol:       "tcp",
+						PortRangeMin:   22,
+						PortRangeMax:   22,
+						RemoteGroupID:  "1",
+						RemoteIPPrefix: "",
 					},
 				},
 			},
 			mockExpect: func(m *mock.MockNetworkClientMockRecorder) {},
-			wantSGStatus: infrav1.SecurityGroupStatus{
-				ID:   "idSG",
-				Name: "k8s-cluster-mycluster-secgroup-controlplane",
-				Rules: []infrav1.SecurityGroupRuleStatus{
-					{
-						Description:    pointer.String("Allow SSH"),
-						Direction:      "ingress",
-						EtherType:      pointer.String("IPv4"),
-						ID:             "idSGRule",
-						Protocol:       pointer.String("tcp"),
-						PortRangeMin:   pointer.Int(22),
-						PortRangeMax:   pointer.Int(22),
-						RemoteGroupID:  pointer.String("1"),
-						RemoteIPPrefix: pointer.String(""),
-					},
-				},
-			},
 		},
 		{
-			name: "Different desiredSGSpecs and observedSGStatus produces changes",
-			desiredSGSpecs: securityGroupSpec{
-				Name: "k8s-cluster-mycluster-secgroup-controlplane",
+			name: "Different desiredSGSpec and observedSG produces changes",
+			desiredSGSpec: securityGroupSpec{
+				Name: sgName,
 				Rules: []resolvedSecurityGroupRuleSpec{
 					{
 						Description:    "Allow SSH",
@@ -454,27 +414,27 @@ func TestReconcileGroupRules(t *testing.T) {
 					},
 				},
 			},
-			observedSGStatus: infrav1.SecurityGroupStatus{
-				ID:   "idSG",
-				Name: "k8s-cluster-mycluster-secgroup-controlplane",
-				Rules: []infrav1.SecurityGroupRuleStatus{
+			observedSG: groups.SecGroup{
+				ID:   sgID,
+				Name: sgName,
+				Rules: []rules.SecGroupRule{
 					{
-						Description:    pointer.String("Allow SSH legacy"),
+						ID:             sgLegacyRuleID,
+						Description:    "Allow SSH legacy",
 						Direction:      "ingress",
-						EtherType:      pointer.String("IPv4"),
-						ID:             "idSGRuleLegacy",
-						Protocol:       pointer.String("tcp"),
-						PortRangeMin:   pointer.Int(222),
-						PortRangeMax:   pointer.Int(222),
-						RemoteGroupID:  pointer.String("2"),
-						RemoteIPPrefix: pointer.String(""),
+						EtherType:      "IPv4",
+						Protocol:       "tcp",
+						PortRangeMin:   222,
+						PortRangeMax:   222,
+						RemoteGroupID:  "2",
+						RemoteIPPrefix: "",
 					},
 				},
 			},
 			mockExpect: func(m *mock.MockNetworkClientMockRecorder) {
-				m.DeleteSecGroupRule("idSGRuleLegacy").Return(nil)
+				m.DeleteSecGroupRule(sgLegacyRuleID).Return(nil)
 				m.CreateSecGroupRule(rules.CreateOpts{
-					SecGroupID:    "idSG",
+					SecGroupID:    sgID,
 					Description:   "Allow SSH",
 					Direction:     "ingress",
 					EtherType:     "IPv4",
@@ -483,7 +443,7 @@ func TestReconcileGroupRules(t *testing.T) {
 					PortRangeMax:  22,
 					RemoteGroupID: "1",
 				}).Return(&rules.SecGroupRule{
-					ID:            "idSGRule",
+					ID:            sgRuleID,
 					Description:   "Allow SSH",
 					Direction:     "ingress",
 					EtherType:     "IPv4",
@@ -493,28 +453,15 @@ func TestReconcileGroupRules(t *testing.T) {
 					RemoteGroupID: "1",
 				}, nil)
 			},
-			wantSGStatus: infrav1.SecurityGroupStatus{
-				ID:   "idSG",
-				Name: "k8s-cluster-mycluster-secgroup-controlplane",
-				Rules: []infrav1.SecurityGroupRuleStatus{
-					{
-						Description:    pointer.String("Allow SSH"),
-						Direction:      "ingress",
-						EtherType:      pointer.String("IPv4"),
-						ID:             "idSGRule",
-						Protocol:       pointer.String("tcp"),
-						PortRangeMin:   pointer.Int(22),
-						PortRangeMax:   pointer.Int(22),
-						RemoteGroupID:  pointer.String("1"),
-						RemoteIPPrefix: pointer.String(""),
-					},
-				},
-			},
 		},
 	}
 
-	for _, tt := range tests {
+	for i := range tests {
+		tt := &tests[i]
 		t.Run(tt.name, func(t *testing.T) {
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+
 			g := NewWithT(t)
 			log := testr.New(t)
 			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
@@ -525,9 +472,131 @@ func TestReconcileGroupRules(t *testing.T) {
 			}
 			tt.mockExpect(mockScopeFactory.NetworkClient.EXPECT())
 
-			sgStatus, err := s.reconcileGroupRules(tt.desiredSGSpecs, tt.observedSGStatus)
+			err = s.reconcileGroupRules(&tt.desiredSGSpec, &tt.observedSG)
 			g.Expect(err).To(BeNil())
-			g.Expect(sgStatus).To(Equal(tt.wantSGStatus))
+		})
+	}
+}
+
+func TestService_ReconcileSecurityGroups(t *testing.T) {
+	const (
+		clusterResourceName = "test-cluster"
+
+		controlPlaneSGName = "k8s-cluster-test-cluster-secgroup-controlplane"
+		workerSGName       = "k8s-cluster-test-cluster-secgroup-worker"
+		bastionSGName      = "k8s-cluster-test-cluster-secgroup-bastion"
+	)
+
+	tests := []struct {
+		name                  string
+		openStackClusterSpec  infrav1.OpenStackClusterSpec
+		expectedClusterStatus infrav1.OpenStackClusterStatus
+		expect                func(log logr.Logger, m *mock.MockNetworkClientMockRecorder)
+		wantErr               bool
+	}{
+		{
+			name:                  "Do nothing if ManagedSecurityGroups is not enabled",
+			openStackClusterSpec:  infrav1.OpenStackClusterSpec{},
+			expectedClusterStatus: infrav1.OpenStackClusterStatus{},
+		},
+		{
+			name: "Default control plane and worker security groups",
+			openStackClusterSpec: infrav1.OpenStackClusterSpec{
+				ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{},
+			},
+			expect: func(log logr.Logger, m *mock.MockNetworkClientMockRecorder) {
+				m.ListSecGroup(groups.ListOpts{Name: controlPlaneSGName}).
+					Return([]groups.SecGroup{{ID: "0", Name: controlPlaneSGName}}, nil)
+				m.ListSecGroup(groups.ListOpts{Name: workerSGName}).
+					Return([]groups.SecGroup{{ID: "1", Name: workerSGName}}, nil)
+
+				// We expect a total of 12 rules to be created.
+				// Nothing actually looks at the generated
+				// rules, but we give them unique IDs anyway
+				m.CreateSecGroupRule(gomock.Any()).DoAndReturn(func(opts rules.CreateOpts) (*rules.SecGroupRule, error) {
+					log.Info("Created rule", "securityGroup", opts.SecGroupID, "description", opts.Description)
+					return &rules.SecGroupRule{ID: uuid.NewString()}, nil
+				}).Times(12)
+			},
+			expectedClusterStatus: infrav1.OpenStackClusterStatus{
+				ControlPlaneSecurityGroup: &infrav1.SecurityGroupStatus{
+					ID:   "0",
+					Name: controlPlaneSGName,
+				},
+				WorkerSecurityGroup: &infrav1.SecurityGroupStatus{
+					ID:   "1",
+					Name: workerSGName,
+				},
+			},
+		},
+		{
+			name: "Default control plane, worker, and bastion security groups",
+			openStackClusterSpec: infrav1.OpenStackClusterSpec{
+				Bastion: &infrav1.Bastion{
+					Enabled: true,
+				},
+				ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{},
+			},
+			expect: func(log logr.Logger, m *mock.MockNetworkClientMockRecorder) {
+				m.ListSecGroup(groups.ListOpts{Name: controlPlaneSGName}).
+					Return([]groups.SecGroup{{ID: "0", Name: controlPlaneSGName}}, nil)
+				m.ListSecGroup(groups.ListOpts{Name: workerSGName}).
+					Return([]groups.SecGroup{{ID: "1", Name: workerSGName}}, nil)
+				m.ListSecGroup(groups.ListOpts{Name: bastionSGName}).
+					Return([]groups.SecGroup{{ID: "2", Name: bastionSGName}}, nil)
+
+				// We expect a total of 12 rules to be created.
+				// Nothing actually looks at the generated
+				// rules, but we give them unique IDs anyway
+				m.CreateSecGroupRule(gomock.Any()).DoAndReturn(func(opts rules.CreateOpts) (*rules.SecGroupRule, error) {
+					log.Info("Created rule", "securityGroup", opts.SecGroupID, "description", opts.Description)
+					return &rules.SecGroupRule{ID: uuid.NewString()}, nil
+				}).Times(17)
+			},
+			expectedClusterStatus: infrav1.OpenStackClusterStatus{
+				ControlPlaneSecurityGroup: &infrav1.SecurityGroupStatus{
+					ID:   "0",
+					Name: controlPlaneSGName,
+				},
+				WorkerSecurityGroup: &infrav1.SecurityGroupStatus{
+					ID:   "1",
+					Name: workerSGName,
+				},
+				BastionSecurityGroup: &infrav1.SecurityGroupStatus{
+					ID:   "2",
+					Name: bastionSGName,
+				},
+			},
+		},
+	}
+	for i := range tests {
+		tt := &tests[i]
+		t.Run(tt.name, func(t *testing.T) {
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+
+			g := NewWithT(t)
+			log := testr.New(t)
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
+			scope := scope.NewWithLogger(mockScopeFactory, log)
+
+			s := &Service{
+				scope:  scope,
+				client: mockScopeFactory.NetworkClient,
+			}
+			if tt.expect != nil {
+				tt.expect(log, mockScopeFactory.NetworkClient.EXPECT())
+			}
+			openStackCluster := &infrav1.OpenStackCluster{
+				Spec: tt.openStackClusterSpec,
+			}
+			err := s.ReconcileSecurityGroups(openStackCluster, clusterResourceName)
+			if tt.wantErr {
+				g.Expect(err).ToNot(BeNil(), "ReconcileSecurityGroups")
+			} else {
+				g.Expect(err).To(BeNil(), "ReconcileSecurityGroups")
+				g.Expect(openStackCluster.Status).To(Equal(tt.expectedClusterStatus), cmp.Diff(openStackCluster.Status, tt.expectedClusterStatus))
+			}
 		})
 	}
 }

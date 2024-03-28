@@ -18,6 +18,7 @@ package networking
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
@@ -38,59 +39,81 @@ const (
 )
 
 // ReconcileSecurityGroups reconcile the security groups.
-func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
+func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
 	s.scope.Logger().Info("Reconciling security groups")
 	if openStackCluster.Spec.ManagedSecurityGroups == nil {
 		s.scope.Logger().V(4).Info("No need to reconcile security groups")
 		return nil
 	}
 
-	secControlPlaneGroupName := getSecControlPlaneGroupName(clusterName)
-	secWorkerGroupName := getSecWorkerGroupName(clusterName)
-	secGroupNames := map[string]string{
+	bastionEnabled := openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled
+
+	secControlPlaneGroupName := getSecControlPlaneGroupName(clusterResourceName)
+	secWorkerGroupName := getSecWorkerGroupName(clusterResourceName)
+	suffixToNameMap := map[string]string{
 		controlPlaneSuffix: secControlPlaneGroupName,
 		workerSuffix:       secWorkerGroupName,
 	}
 
-	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
-		secBastionGroupName := getSecBastionGroupName(clusterName)
-		secGroupNames[bastionSuffix] = secBastionGroupName
+	if bastionEnabled {
+		secBastionGroupName := getSecBastionGroupName(clusterResourceName)
+		suffixToNameMap[bastionSuffix] = secBastionGroupName
 	}
 
 	// create security groups first, because desired rules use group ids.
-	for _, v := range secGroupNames {
-		if err := s.createSecurityGroupIfNotExists(openStackCluster, v); err != nil {
+	observedSecGroupBySuffix := make(map[string]*groups.SecGroup)
+	for suffix, secGroupName := range suffixToNameMap {
+		group, err := s.getOrCreateSecurityGroup(openStackCluster, secGroupName)
+		if err != nil {
 			return err
 		}
+		observedSecGroupBySuffix[suffix] = group
+
+		normaliseTags := func(tags []string) []string {
+			tags = slices.Clone(tags)
+			slices.Sort(tags)
+			return slices.Compact(tags)
+		}
+
+		if !slices.Equal(normaliseTags(openStackCluster.Spec.Tags), normaliseTags(group.Tags)) {
+			_, err = s.client.ReplaceAllAttributesTags("security-groups", group.ID, attributestags.ReplaceAllOpts{
+				Tags: openStackCluster.Spec.Tags,
+			})
+			if err != nil {
+				return err
+			}
+			s.scope.Logger().V(6).Info("Updated tags for security group", "name", group.Name, "id", group.ID)
+		}
 	}
+
 	// create desired security groups
-	desiredSecGroups, err := s.generateDesiredSecGroups(openStackCluster, secGroupNames)
+	desiredSecGroupsBySuffix, err := s.generateDesiredSecGroups(openStackCluster, suffixToNameMap, observedSecGroupBySuffix)
 	if err != nil {
 		return err
 	}
 
-	observedSecGroups := make(map[string]*infrav1.SecurityGroupStatus)
-	for k, desiredSecGroup := range desiredSecGroups {
-		var err error
-		observedSecGroups[k], err = s.getSecurityGroupByName(desiredSecGroup.Name)
+	for suffix := range desiredSecGroupsBySuffix {
+		desiredSecGroup := desiredSecGroupsBySuffix[suffix]
+		observedSecGroup, ok := observedSecGroupBySuffix[suffix]
+		if !ok {
+			// This should never happen
+			return fmt.Errorf("unable to reconcile security groups: security group %s not found", suffix)
+		}
 
+		err := s.reconcileGroupRules(&desiredSecGroup, observedSecGroup)
 		if err != nil {
 			return err
 		}
-
-		if observedSecGroups[k].ID != "" {
-			observedSecGroup, err := s.reconcileGroupRules(desiredSecGroup, *observedSecGroups[k])
-			if err != nil {
-				return err
-			}
-			observedSecGroups[k] = &observedSecGroup
-			continue
-		}
+		continue
 	}
 
-	openStackCluster.Status.ControlPlaneSecurityGroup = observedSecGroups[controlPlaneSuffix]
-	openStackCluster.Status.WorkerSecurityGroup = observedSecGroups[workerSuffix]
-	openStackCluster.Status.BastionSecurityGroup = observedSecGroups[bastionSuffix]
+	openStackCluster.Status.ControlPlaneSecurityGroup = convertOSSecGroupToConfigSecGroup(observedSecGroupBySuffix[controlPlaneSuffix])
+	openStackCluster.Status.WorkerSecurityGroup = convertOSSecGroupToConfigSecGroup(observedSecGroupBySuffix[workerSuffix])
+	if bastionEnabled {
+		openStackCluster.Status.BastionSecurityGroup = convertOSSecGroupToConfigSecGroup(observedSecGroupBySuffix[bastionSuffix])
+	} else {
+		openStackCluster.Status.BastionSecurityGroup = nil
+	}
 
 	return nil
 }
@@ -111,23 +134,21 @@ type resolvedSecurityGroupRuleSpec struct {
 	RemoteIPPrefix string `json:"remoteIPPrefix,omitempty"`
 }
 
-func (r resolvedSecurityGroupRuleSpec) Matches(other infrav1.SecurityGroupRuleStatus) bool {
-	return r.Description == *other.Description &&
+func (r resolvedSecurityGroupRuleSpec) Matches(other rules.SecGroupRule) bool {
+	return r.Description == other.Description &&
 		r.Direction == other.Direction &&
-		r.EtherType == *other.EtherType &&
-		r.PortRangeMin == *other.PortRangeMin &&
-		r.PortRangeMax == *other.PortRangeMax &&
-		r.Protocol == *other.Protocol &&
-		r.RemoteGroupID == *other.RemoteGroupID &&
-		r.RemoteIPPrefix == *other.RemoteIPPrefix
+		r.EtherType == other.EtherType &&
+		r.PortRangeMin == other.PortRangeMin &&
+		r.PortRangeMax == other.PortRangeMax &&
+		r.Protocol == other.Protocol &&
+		r.RemoteGroupID == other.RemoteGroupID &&
+		r.RemoteIPPrefix == other.RemoteIPPrefix
 }
 
-func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCluster, secGroupNames map[string]string) (map[string]securityGroupSpec, error) {
+func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCluster, suffixToNameMap map[string]string, observedSecGroupsBySuffix map[string]*groups.SecGroup) (map[string]securityGroupSpec, error) {
 	if openStackCluster.Spec.ManagedSecurityGroups == nil {
 		return nil, nil
 	}
-
-	desiredSecGroups := make(map[string]securityGroupSpec)
 
 	var secControlPlaneGroupID string
 	var secWorkerGroupID string
@@ -139,12 +160,13 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 	// For now, we only reference the control plane and worker security groups.
 	remoteManagedGroups := make(map[string]string)
 
-	for i, v := range secGroupNames {
-		secGroup, err := s.getSecurityGroupByName(v)
-		if err != nil {
-			return desiredSecGroups, err
+	for suffix := range suffixToNameMap {
+		secGroup, ok := observedSecGroupsBySuffix[suffix]
+		if !ok {
+			// This should never happen, as we should have created the security group earlier in this reconcile if it does not exist.
+			return nil, fmt.Errorf("unable to generate desired security group rules: security group for %s not found", suffix)
 		}
-		switch i {
+		switch suffix {
 		case controlPlaneSuffix:
 			secControlPlaneGroupID = secGroup.ID
 			remoteManagedGroups[controlPlaneSuffix] = secControlPlaneGroupID
@@ -182,17 +204,19 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 	// Instead, we append the rules for allNodes to the control plane and worker security groups.
 	allNodesRules, err := getAllNodesRules(remoteManagedGroups, openStackCluster.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules)
 	if err != nil {
-		return desiredSecGroups, err
+		return nil, err
 	}
 	controlPlaneRules = append(controlPlaneRules, allNodesRules...)
 	workerRules = append(workerRules, allNodesRules...)
+
+	desiredSecGroupsBySuffix := make(map[string]securityGroupSpec)
 
 	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
 		controlPlaneRules = append(controlPlaneRules, getSGControlPlaneSSH(secBastionGroupID)...)
 		workerRules = append(workerRules, getSGWorkerSSH(secBastionGroupID)...)
 
-		desiredSecGroups[bastionSuffix] = securityGroupSpec{
-			Name: secGroupNames[bastionSuffix],
+		desiredSecGroupsBySuffix[bastionSuffix] = securityGroupSpec{
+			Name: suffixToNameMap[bastionSuffix],
 			Rules: append(
 				[]resolvedSecurityGroupRuleSpec{
 					{
@@ -209,16 +233,16 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 		}
 	}
 
-	desiredSecGroups[controlPlaneSuffix] = securityGroupSpec{
-		Name:  secGroupNames[controlPlaneSuffix],
+	desiredSecGroupsBySuffix[controlPlaneSuffix] = securityGroupSpec{
+		Name:  suffixToNameMap[controlPlaneSuffix],
 		Rules: controlPlaneRules,
 	}
 
-	desiredSecGroups[workerSuffix] = securityGroupSpec{
-		Name:  secGroupNames[workerSuffix],
+	desiredSecGroupsBySuffix[workerSuffix] = securityGroupSpec{
+		Name:  suffixToNameMap[workerSuffix],
 		Rules: workerRules,
 	}
-	return desiredSecGroups, nil
+	return desiredSecGroupsBySuffix, nil
 }
 
 // getAllNodesRules returns the rules for the allNodes security group that should be created.
@@ -321,14 +345,14 @@ func (s *Service) GetSecurityGroups(securityGroupParams []infrav1.SecurityGroupF
 	return sgIDs, nil
 }
 
-func (s *Service) DeleteSecurityGroups(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
+func (s *Service) DeleteSecurityGroups(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
 	secGroupNames := []string{
-		getSecControlPlaneGroupName(clusterName),
-		getSecWorkerGroupName(clusterName),
+		getSecControlPlaneGroupName(clusterResourceName),
+		getSecWorkerGroupName(clusterResourceName),
 	}
 
 	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
-		secGroupNames = append(secGroupNames, getSecBastionGroupName(clusterName))
+		secGroupNames = append(secGroupNames, getSecBastionGroupName(clusterResourceName))
 	}
 
 	for _, secGroupName := range secGroupNames {
@@ -345,7 +369,7 @@ func (s *Service) deleteSecurityGroup(openStackCluster *infrav1.OpenStackCluster
 	if err != nil {
 		return err
 	}
-	if group.ID == "" {
+	if group == nil {
 		// nothing to do
 		return nil
 	}
@@ -361,7 +385,7 @@ func (s *Service) deleteSecurityGroup(openStackCluster *infrav1.OpenStackCluster
 
 // reconcileGroupRules reconciles an already existing observed group by deleting rules not needed anymore and
 // creating rules that are missing.
-func (s *Service) reconcileGroupRules(desired securityGroupSpec, observed infrav1.SecurityGroupStatus) (infrav1.SecurityGroupStatus, error) {
+func (s *Service) reconcileGroupRules(desired *securityGroupSpec, observed *groups.SecGroup) error {
 	var rulesToDelete []string
 	// fills rulesToDelete by calculating observed - desired
 	for _, observedRule := range observed.Rules {
@@ -382,7 +406,6 @@ func (s *Service) reconcileGroupRules(desired securityGroupSpec, observed infrav
 	}
 
 	rulesToCreate := []resolvedSecurityGroupRuleSpec{}
-	reconciledRules := make([]infrav1.SecurityGroupRuleStatus, 0, len(desired.Rules))
 	// fills rulesToCreate by calculating desired - observed
 	// also adds rules which are in observed and desired to reconcileGroupRules.
 	for _, desiredRule := range desired.Rules {
@@ -394,7 +417,6 @@ func (s *Service) reconcileGroupRules(desired securityGroupSpec, observed infrav
 		for _, observedRule := range observed.Rules {
 			if r.Matches(observedRule) {
 				// add already existing rules to reconciledRules because we won't touch them anymore
-				reconciledRules = append(reconciledRules, observedRule)
 				createRule = false
 				break
 			}
@@ -409,7 +431,7 @@ func (s *Service) reconcileGroupRules(desired securityGroupSpec, observed infrav
 		s.scope.Logger().V(6).Info("Deleting rule", "ID", rule, "name", observed.Name)
 		err := s.client.DeleteSecGroupRule(rule)
 		if err != nil {
-			return infrav1.SecurityGroupStatus{}, err
+			return err
 		}
 	}
 
@@ -419,61 +441,44 @@ func (s *Service) reconcileGroupRules(desired securityGroupSpec, observed infrav
 		if r.RemoteGroupID == remoteGroupIDSelf {
 			r.RemoteGroupID = observed.ID
 		}
-		newRule, err := s.createRule(observed.ID, r)
+		err := s.createRule(observed.ID, r)
 		if err != nil {
-			return infrav1.SecurityGroupStatus{}, err
-		}
-		reconciledRules = append(reconciledRules, newRule)
-	}
-	observed.Rules = reconciledRules
-
-	if len(reconciledRules) == 0 {
-		return infrav1.SecurityGroupStatus{}, nil
-	}
-
-	return observed, nil
-}
-
-func (s *Service) createSecurityGroupIfNotExists(openStackCluster *infrav1.OpenStackCluster, groupName string) error {
-	secGroup, err := s.getSecurityGroupByName(groupName)
-	if err != nil {
-		return err
-	}
-	if secGroup == nil || secGroup.ID == "" {
-		s.scope.Logger().V(6).Info("Group doesn't exist, creating it", "name", groupName)
-
-		createOpts := groups.CreateOpts{
-			Name:        groupName,
-			Description: "Cluster API managed group",
-		}
-		s.scope.Logger().V(6).Info("Creating group", "name", groupName)
-
-		group, err := s.client.CreateSecGroup(createOpts)
-		if err != nil {
-			record.Warnf(openStackCluster, "FailedCreateSecurityGroup", "Failed to create security group %s: %v", groupName, err)
 			return err
 		}
-
-		if len(openStackCluster.Spec.Tags) > 0 {
-			_, err = s.client.ReplaceAllAttributesTags("security-groups", group.ID, attributestags.ReplaceAllOpts{
-				Tags: openStackCluster.Spec.Tags,
-			})
-			if err != nil {
-				return err
-			}
-		}
-
-		record.Eventf(openStackCluster, "SuccessfulCreateSecurityGroup", "Created security group %s with id %s", groupName, group.ID)
-		return nil
 	}
-
-	sInfo := fmt.Sprintf("Reuse Existing SecurityGroup %s with %s", groupName, secGroup.ID)
-	s.scope.Logger().V(6).Info(sInfo)
 
 	return nil
 }
 
-func (s *Service) getSecurityGroupByName(name string) (*infrav1.SecurityGroupStatus, error) {
+func (s *Service) getOrCreateSecurityGroup(openStackCluster *infrav1.OpenStackCluster, groupName string) (*groups.SecGroup, error) {
+	secGroup, err := s.getSecurityGroupByName(groupName)
+	if err != nil {
+		return nil, err
+	}
+	if secGroup != nil {
+		s.scope.Logger().V(6).Info("Reusing existing SecurityGroup", "name", groupName, "id", secGroup.ID)
+		return secGroup, nil
+	}
+
+	s.scope.Logger().V(6).Info("Group doesn't exist, creating it", "name", groupName)
+
+	createOpts := groups.CreateOpts{
+		Name:        groupName,
+		Description: "Cluster API managed group",
+	}
+	s.scope.Logger().V(6).Info("Creating group", "name", groupName)
+
+	group, err := s.client.CreateSecGroup(createOpts)
+	if err != nil {
+		record.Warnf(openStackCluster, "FailedCreateSecurityGroup", "Failed to create security group %s: %v", groupName, err)
+		return nil, err
+	}
+
+	record.Eventf(openStackCluster, "SuccessfulCreateSecurityGroup", "Created security group %s with id %s", groupName, group.ID)
+	return group, nil
+}
+
+func (s *Service) getSecurityGroupByName(name string) (*groups.SecGroup, error) {
 	opts := groups.ListOpts{
 		Name: name,
 	}
@@ -481,20 +486,20 @@ func (s *Service) getSecurityGroupByName(name string) (*infrav1.SecurityGroupSta
 	s.scope.Logger().V(6).Info("Attempting to fetch security group with", "name", name)
 	allGroups, err := s.client.ListSecGroup(opts)
 	if err != nil {
-		return &infrav1.SecurityGroupStatus{}, err
+		return nil, err
 	}
 
 	switch len(allGroups) {
 	case 0:
-		return &infrav1.SecurityGroupStatus{}, nil
+		return nil, nil
 	case 1:
-		return convertOSSecGroupToConfigSecGroup(allGroups[0]), nil
+		return &allGroups[0], nil
 	}
 
-	return &infrav1.SecurityGroupStatus{}, fmt.Errorf("more than one security group found named: %s", name)
+	return nil, fmt.Errorf("more than one security group found named: %s", name)
 }
 
-func (s *Service) createRule(securityGroupID string, r resolvedSecurityGroupRuleSpec) (infrav1.SecurityGroupRuleStatus, error) {
+func (s *Service) createRule(securityGroupID string, r resolvedSecurityGroupRuleSpec) error {
 	dir := rules.RuleDirection(r.Direction)
 	proto := rules.RuleProtocol(r.Protocol)
 	etherType := rules.RuleEtherType(r.EtherType)
@@ -511,48 +516,29 @@ func (s *Service) createRule(securityGroupID string, r resolvedSecurityGroupRule
 		SecGroupID:     securityGroupID,
 	}
 	s.scope.Logger().V(6).Info("Creating rule", "description", r.Description, "direction", dir, "portRangeMin", r.PortRangeMin, "portRangeMax", r.PortRangeMax, "proto", proto, "etherType", etherType, "remoteGroupID", r.RemoteGroupID, "remoteIPPrefix", r.RemoteIPPrefix, "securityGroupID", securityGroupID)
-	rule, err := s.client.CreateSecGroupRule(createOpts)
+	_, err := s.client.CreateSecGroupRule(createOpts)
 	if err != nil {
-		return infrav1.SecurityGroupRuleStatus{}, err
+		return err
 	}
-	return convertOSSecGroupRuleToConfigSecGroupRule(*rule), nil
+	return nil
 }
 
-func getSecControlPlaneGroupName(clusterName string) string {
-	return fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, controlPlaneSuffix)
+func getSecControlPlaneGroupName(clusterResourceName string) string {
+	return fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterResourceName, controlPlaneSuffix)
 }
 
-func getSecWorkerGroupName(clusterName string) string {
-	return fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, workerSuffix)
+func getSecWorkerGroupName(clusterResourceName string) string {
+	return fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterResourceName, workerSuffix)
 }
 
-func getSecBastionGroupName(clusterName string) string {
-	return fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterName, bastionSuffix)
+func getSecBastionGroupName(clusterResourceName string) string {
+	return fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterResourceName, bastionSuffix)
 }
 
-func convertOSSecGroupToConfigSecGroup(osSecGroup groups.SecGroup) *infrav1.SecurityGroupStatus {
-	securityGroupRules := make([]infrav1.SecurityGroupRuleStatus, len(osSecGroup.Rules))
-	for i, rule := range osSecGroup.Rules {
-		securityGroupRules[i] = convertOSSecGroupRuleToConfigSecGroupRule(rule)
-	}
+func convertOSSecGroupToConfigSecGroup(osSecGroup *groups.SecGroup) *infrav1.SecurityGroupStatus {
 	return &infrav1.SecurityGroupStatus{
-		ID:    osSecGroup.ID,
-		Name:  osSecGroup.Name,
-		Rules: securityGroupRules,
-	}
-}
-
-func convertOSSecGroupRuleToConfigSecGroupRule(osSecGroupRule rules.SecGroupRule) infrav1.SecurityGroupRuleStatus {
-	return infrav1.SecurityGroupRuleStatus{
-		ID:             osSecGroupRule.ID,
-		Direction:      osSecGroupRule.Direction,
-		Description:    &osSecGroupRule.Description,
-		EtherType:      &osSecGroupRule.EtherType,
-		PortRangeMin:   &osSecGroupRule.PortRangeMin,
-		PortRangeMax:   &osSecGroupRule.PortRangeMax,
-		Protocol:       &osSecGroupRule.Protocol,
-		RemoteGroupID:  &osSecGroupRule.RemoteGroupID,
-		RemoteIPPrefix: &osSecGroupRule.RemoteIPPrefix,
+		ID:   osSecGroup.ID,
+		Name: osSecGroup.Name,
 	}
 }
 

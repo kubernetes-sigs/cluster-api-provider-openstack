@@ -171,21 +171,13 @@ type PortOpts struct {
 	// +optional
 	Network *NetworkFilter `json:"network,omitempty"`
 
-	// NameSuffix will be appended to the name of the port if specified. If unspecified, instead the 0-based index of the port in the list is used.
-	// +optional
-	NameSuffix optional.String `json:"nameSuffix,omitempty"`
-
 	// Description is a human-readable description for the port.
 	// +optional
 	Description optional.String `json:"description,omitempty"`
 
-	// AdminStateUp specifies whether the port should be created in the up (true) or down (false) state. The default is up.
+	// NameSuffix will be appended to the name of the port if specified. If unspecified, instead the 0-based index of the port in the list is used.
 	// +optional
-	AdminStateUp *bool `json:"adminStateUp,omitempty"`
-
-	// MACAddress specifies the MAC address of the port. If not specified, the MAC address will be generated.
-	// +optional
-	MACAddress optional.String `json:"macAddress,omitempty"`
+	NameSuffix optional.String `json:"nameSuffix,omitempty"`
 
 	// FixedIPs is a list of pairs of subnet and/or IP address to assign to the port. If specified, these must be subnets of the port's network.
 	// +optional
@@ -197,6 +189,33 @@ type PortOpts struct {
 	// +listType=atomic
 	SecurityGroups []SecurityGroupFilter `json:"securityGroups,omitempty"`
 
+	// Tags applied to the port (and corresponding trunk, if a trunk is configured.)
+	// These tags are applied in addition to the instance's tags, which will also be applied to the port.
+	// +listType=set
+	// +optional
+	Tags []string `json:"tags,omitempty"`
+
+	// Trunk specifies whether trunking is enabled at the port level. If not
+	// provided the value is inherited from the machine, or false for a
+	// bastion host.
+	// +optional
+	Trunk *bool `json:"trunk,omitempty"`
+
+	ResolvedPortSpecFields `json:",inline"`
+}
+
+// ResolvePortSpecFields is a convenience struct containing all fields of a
+// PortOpts which don't contain references which need to be resolved, and can
+// therefore be shared with ResolvedPortSpec.
+type ResolvedPortSpecFields struct {
+	// AdminStateUp specifies whether the port should be created in the up (true) or down (false) state. The default is up.
+	// +optional
+	AdminStateUp *bool `json:"adminStateUp,omitempty"`
+
+	// MACAddress specifies the MAC address of the port. If not specified, the MAC address will be generated.
+	// +optional
+	MACAddress optional.String `json:"macAddress,omitempty"`
+
 	// AllowedAddressPairs is a list of address pairs which Neutron will
 	// allow the port to send traffic from in addition to the port's
 	// addresses. If not specified, the MAC Address will be the MAC Address
@@ -204,12 +223,6 @@ type PortOpts struct {
 	// supported to specify a CIDR instead of a specific IP address.
 	// +optional
 	AllowedAddressPairs []AddressPair `json:"allowedAddressPairs,omitempty"`
-
-	// Trunk specifies whether trunking is enabled at the port level. If not
-	// provided the value is inherited from the machine, or false for a
-	// bastion host.
-	// +optional
-	Trunk *bool `json:"trunk,omitempty"`
 
 	// HostID specifies the ID of the host where the port resides.
 	// +optional
@@ -245,12 +258,6 @@ type PortOpts struct {
 	// +optional
 	PropagateUplinkStatus *bool `json:"propagateUplinkStatus,omitempty"`
 
-	// Tags applied to the port (and corresponding trunk, if a trunk is configured.)
-	// These tags are applied in addition to the instance's tags, which will also be applied to the port.
-	// +listType=set
-	// +optional
-	Tags []string `json:"tags,omitempty"`
-
 	// Value specs are extra parameters to include in the API request with OpenStack.
 	// This is an extension point for the API, so what they do and if they are supported,
 	// depends on the specific OpenStack implementation.
@@ -258,6 +265,39 @@ type PortOpts struct {
 	// +listType=map
 	// +listMapKey=name
 	ValueSpecs []ValueSpec `json:"valueSpecs,omitempty"`
+}
+
+// ResolvedPortSpec is a PortOpts with all contained references fully resolved.
+type ResolvedPortSpec struct {
+	// Name is the name of the port.
+	Name string `json:"name"`
+
+	// Description is a human-readable description for the port.
+	Description string `json:"description"`
+
+	// NetworkID is the ID of the network the port will be created in.
+	NetworkID string `json:"networkID"`
+
+	// Tags applied to the port (and corresponding trunk, if a trunk is configured.)
+	// +listType=set
+	// +optional
+	Tags []string `json:"tags,omitempty"`
+
+	// Trunk specifies whether trunking is enabled at the port level.
+	// +optional
+	Trunk optional.Bool `json:"trunk,omitempty"`
+
+	// FixedIPs is a list of pairs of subnet and/or IP address to assign to the port. If specified, these must be subnets of the port's network.
+	// +optional
+	// +listType=atomic
+	FixedIPs []ResolvedFixedIP `json:"fixedIPs,omitempty"`
+
+	// SecurityGroups is a list of security group IDs to assign to the port.
+	// +optional
+	// +listType=atomic
+	SecurityGroups []string `json:"securityGroups,omitempty"`
+
+	ResolvedPortSpecFields `json:",inline"`
 }
 
 type PortStatus struct {
@@ -290,6 +330,20 @@ type FixedIP struct {
 	IPAddress optional.String `json:"ipAddress,omitempty"`
 }
 
+// ResolvedFixedIP is a FixedIP with the Subnet resolved to an ID.
+type ResolvedFixedIP struct {
+	// SubnetID is the id of a subnet to create the fixed IP of a port in.
+	// +optional
+	SubnetID optional.String `json:"subnet,omitempty"`
+
+	// IPAddress is a specific IP address to assign to the port. If SubnetID
+	// is also specified, IPAddress must be a valid IP address in the
+	// subnet. If Subnet is not specified, IPAddress must be a valid IP
+	// address in any subnet of the port's network.
+	// +optional
+	IPAddress optional.String `json:"ipAddress,omitempty"`
+}
+
 type AddressPair struct {
 	// IPAddress is the IP address of the allowed address pair. Depending on
 	// the configuration of Neutron, it may be supported to specify a CIDR
@@ -304,14 +358,21 @@ type AddressPair struct {
 }
 
 type BastionStatus struct {
-	ID                  string                     `json:"id,omitempty"`
-	Name                string                     `json:"name,omitempty"`
-	SSHKeyName          string                     `json:"sshKeyName,omitempty"`
-	State               InstanceState              `json:"state,omitempty"`
-	IP                  string                     `json:"ip,omitempty"`
-	FloatingIP          string                     `json:"floatingIP,omitempty"`
-	ReferencedResources ReferencedMachineResources `json:"referencedResources,omitempty"`
-	DependentResources  DependentMachineResources  `json:"dependentResources,omitempty"`
+	ID         string        `json:"id,omitempty"`
+	Name       string        `json:"name,omitempty"`
+	SSHKeyName string        `json:"sshKeyName,omitempty"`
+	State      InstanceState `json:"state,omitempty"`
+	IP         string        `json:"ip,omitempty"`
+	FloatingIP string        `json:"floatingIP,omitempty"`
+
+	// Resolved contains parts of the bastion's machine spec with all
+	// external references fully resolved.
+	// +optional
+	Resolved *ResolvedMachineSpec `json:"resolved,omitempty"`
+
+	// Resources contains references to OpenStack resources created for the bastion.
+	// +optional
+	Resources *MachineResources `json:"resources,omitempty"`
 }
 
 type RootVolume struct {
@@ -448,10 +509,6 @@ type SecurityGroupStatus struct {
 	// id of the security group
 	// +kubebuilder:validation:Required
 	ID string `json:"id"`
-
-	// list of security group rules
-	// +optional
-	Rules []SecurityGroupRuleStatus `json:"rules,omitempty"`
 }
 
 // SecurityGroupRuleSpec represent the basic information of the associated OpenStack
@@ -514,55 +571,6 @@ type SecurityGroupRuleSpec struct {
 	RemoteManagedGroups []ManagedSecurityGroupName `json:"remoteManagedGroups,omitempty"`
 }
 
-type SecurityGroupRuleStatus struct {
-	// id of the security group rule
-	// +kubebuilder:validation:Required
-	ID string `json:"id"`
-
-	// description of the security group rule.
-	// +optional
-	Description *string `json:"description,omitempty"`
-
-	// direction in which the security group rule is applied. The only values
-	// allowed are "ingress" or "egress". For a compute instance, an ingress
-	// security group rule is applied to incoming (ingress) traffic for that
-	// instance. An egress rule is applied to traffic leaving the instance.
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:enum=ingress;egress
-	Direction string `json:"direction"`
-
-	// etherType must be IPv4 or IPv6, and addresses represented in CIDR must match the
-	// ingress or egress rules.
-	// +kubebuilder:validation:enum=IPv4;IPv6
-	// +optional
-	EtherType *string `json:"etherType,omitempty"`
-
-	// portRangeMin is a number in the range that is matched by the security group
-	// rule. If the protocol is TCP or UDP, this value must be less than or equal
-	// to the value of the portRangeMax attribute.
-	// +optional
-	PortRangeMin *int `json:"portRangeMin,omitempty"`
-
-	// portRangeMax is a number in the range that is matched by the security group
-	// rule. The portRangeMin attribute constrains the portRangeMax attribute.
-	// +optional
-	PortRangeMax *int `json:"portRangeMax,omitempty"`
-
-	// protocol is the protocol that is matched by the security group rule.
-	// +optional
-	Protocol *string `json:"protocol,omitempty"`
-
-	// remoteGroupID is the remote group ID to be associated with this security group rule.
-	// You can specify either remoteGroupID or remoteIPPrefix or remoteManagedGroups.
-	// +optional
-	RemoteGroupID *string `json:"remoteGroupID,omitempty"`
-
-	// remoteIPPrefix is the remote IP prefix to be associated with this security group rule.
-	// You can specify either remoteGroupID or remoteIPPrefix or remoteManagedGroups.
-	// +optional
-	RemoteIPPrefix *string `json:"remoteIPPrefix,omitempty"`
-}
-
 // +kubebuilder:validation:Enum=bastion;controlplane;worker
 type ManagedSecurityGroupName string
 
@@ -596,21 +604,27 @@ var (
 	InstanceStateUndefined = InstanceState("")
 )
 
-// Bastion represents basic information about the bastion node.
+// Bastion represents basic information about the bastion node. If you enable bastion, the spec has to be specified.
+// +kubebuilder:validation:XValidation:rule="!self.enabled || has(self.spec)",message="you need to specify the spec if bastion is enabled"
 type Bastion struct {
-	//+optional
+	// Enabled means that bastion is enabled. Defaults to false.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:default:=false
 	Enabled bool `json:"enabled"`
 
-	// Instance for the bastion itself
-	Instance OpenStackMachineSpec `json:"instance,omitempty"`
+	// Spec for the bastion itself
+	Spec *OpenStackMachineSpec `json:"spec,omitempty"`
 
+	// AvailabilityZone is the failure domain that will be used to create the Bastion Spec.
 	//+optional
-	AvailabilityZone string `json:"availabilityZone,omitempty"`
+	AvailabilityZone optional.String `json:"availabilityZone,omitempty"`
 
-	// FloatingIP which will be associated to the bastion machine.
-	// The floating IP should already exist and should not be associated with a port.
+	// FloatingIP which will be associated to the bastion machine. It's the IP address, not UUID.
+	// The floating IP should already exist and should not be associated with a port. If FIP of this address does not
+	// exist, CAPO will try to create it, but by default only OpenStack administrators have privileges to do so.
 	//+optional
-	FloatingIP string `json:"floatingIP,omitempty"`
+	//+kubebuilder:validation:Format:=ipv4
+	FloatingIP optional.String `json:"floatingIP,omitempty"`
 }
 
 type APIServerLoadBalancer struct {
@@ -651,8 +665,8 @@ func (s *APIServerLoadBalancer) IsEnabled() bool {
 	return s != nil && (s.Enabled == nil || *s.Enabled)
 }
 
-// ReferencedMachineResources contains resolved references to resources required by the machine.
-type ReferencedMachineResources struct {
+// ResolvedMachineSpec contains resolved references to resources required by the machine.
+type ResolvedMachineSpec struct {
 	// ServerGroupID is the ID of the server group the machine should be added to and is calculated based on ServerGroupFilter.
 	// +optional
 	ServerGroupID string `json:"serverGroupID,omitempty"`
@@ -663,10 +677,10 @@ type ReferencedMachineResources struct {
 
 	// Ports is the fully resolved list of ports to create for the machine.
 	// +optional
-	Ports []PortOpts `json:"ports,omitempty"`
+	Ports []ResolvedPortSpec `json:"ports,omitempty"`
 }
 
-type DependentMachineResources struct {
+type MachineResources struct {
 	// Ports is the status of the ports created for the machine.
 	// +optional
 	Ports []PortStatus `json:"ports,omitempty"`

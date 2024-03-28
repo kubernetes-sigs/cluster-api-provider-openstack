@@ -116,8 +116,8 @@ func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCl
 	return fmt.Errorf("found %d external networks, which should not happen", len(networkList))
 }
 
-func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
-	networkName := getNetworkName(clusterName)
+func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
+	networkName := getNetworkName(clusterResourceName)
 	s.scope.Logger().Info("Reconciling network", "name", networkName)
 
 	res, err := s.getNetworkByName(networkName)
@@ -171,8 +171,8 @@ func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, c
 	return nil
 }
 
-func (s *Service) DeleteNetwork(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
-	networkName := getNetworkName(clusterName)
+func (s *Service) DeleteNetwork(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
+	networkName := getNetworkName(clusterResourceName)
 	network, err := s.getNetworkByName(networkName)
 	if err != nil {
 		return err
@@ -191,13 +191,13 @@ func (s *Service) DeleteNetwork(openStackCluster *infrav1.OpenStackCluster, clus
 	return nil
 }
 
-func (s *Service) ReconcileSubnet(openStackCluster *infrav1.OpenStackCluster, clusterName string) error {
+func (s *Service) ReconcileSubnet(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
 	if openStackCluster.Status.Network == nil || openStackCluster.Status.Network.ID == "" {
 		s.scope.Logger().V(4).Info("No need to reconcile network components since no network exists")
 		return nil
 	}
 
-	subnetName := getSubnetName(clusterName)
+	subnetName := getSubnetName(clusterResourceName)
 	s.scope.Logger().Info("Reconciling subnet", "name", subnetName)
 
 	subnetList, err := s.client.ListSubnet(subnets.ListOpts{
@@ -217,7 +217,7 @@ func (s *Service) ReconcileSubnet(openStackCluster *infrav1.OpenStackCluster, cl
 	var subnet *subnets.Subnet
 	if len(subnetList) == 0 {
 		var err error
-		subnet, err = s.createSubnet(openStackCluster, clusterName, subnetName)
+		subnet, err = s.createSubnet(openStackCluster, clusterResourceName, subnetName)
 		if err != nil {
 			return err
 		}
@@ -237,14 +237,14 @@ func (s *Service) ReconcileSubnet(openStackCluster *infrav1.OpenStackCluster, cl
 	return nil
 }
 
-func (s *Service) createSubnet(openStackCluster *infrav1.OpenStackCluster, clusterName string, name string) (*subnets.Subnet, error) {
+func (s *Service) createSubnet(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string, name string) (*subnets.Subnet, error) {
 	opts := subnets.CreateOpts{
 		NetworkID:      openStackCluster.Status.Network.ID,
 		Name:           name,
 		IPVersion:      4,
 		CIDR:           openStackCluster.Spec.ManagedSubnets[0].CIDR,
 		DNSNameservers: openStackCluster.Spec.ManagedSubnets[0].DNSNameservers,
-		Description:    names.GetDescription(clusterName),
+		Description:    names.GetDescription(clusterResourceName),
 	}
 
 	for _, pool := range openStackCluster.Spec.ManagedSubnets[0].AllocationPools {
@@ -374,12 +374,12 @@ func (s *Service) getSubnetByFilter(listOpts subnets.ListOpts) (*subnets.Subnet,
 	return &subnets[0], nil
 }
 
-func getSubnetName(clusterName string) string {
-	return fmt.Sprintf("%s-cluster-%s", networkPrefix, clusterName)
+func getSubnetName(clusterResourceName string) string {
+	return fmt.Sprintf("%s-cluster-%s", networkPrefix, clusterResourceName)
 }
 
-func getNetworkName(clusterName string) string {
-	return fmt.Sprintf("%s-cluster-%s", networkPrefix, clusterName)
+func getNetworkName(clusterResourceName string) string {
+	return fmt.Sprintf("%s-cluster-%s", networkPrefix, clusterResourceName)
 }
 
 // GetNetworkByID retrieves network by the ID.

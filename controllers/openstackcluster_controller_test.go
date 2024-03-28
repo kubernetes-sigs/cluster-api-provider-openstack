@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/google/go-cmp/cmp"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/external"
@@ -61,6 +62,11 @@ var _ = Describe("OpenStackCluster controller", func() {
 	capiClusterName := "capi-cluster"
 	testClusterName := "test-cluster"
 	testNum := 0
+	bastionSpec := infrav1.OpenStackMachineSpec{
+		Image: infrav1.ImageFilter{
+			Name: pointer.String("fake-name"),
+		},
+	}
 
 	BeforeEach(func() {
 		ctx = context.TODO()
@@ -192,9 +198,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 	It("should be able to reconcile when bastion is disabled and does not exist", func() {
 		testCluster.SetName("no-bastion")
 		testCluster.Spec = infrav1.OpenStackClusterSpec{
-			Bastion: &infrav1.Bastion{
-				Enabled: false,
-			},
+			Bastion: &infrav1.Bastion{},
 		}
 		err := k8sClient.Create(ctx, testCluster)
 		Expect(err).To(BeNil())
@@ -224,6 +228,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		testCluster.Spec = infrav1.OpenStackClusterSpec{
 			Bastion: &infrav1.Bastion{
 				Enabled: true,
+				Spec:    &bastionSpec,
 			},
 		}
 		err := k8sClient.Create(ctx, testCluster)
@@ -232,17 +237,15 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 		testCluster.Status = infrav1.OpenStackClusterStatus{
 			Bastion: &infrav1.BastionStatus{
-				ReferencedResources: infrav1.ReferencedMachineResources{
+				Resolved: &infrav1.ResolvedMachineSpec{
 					ImageID: "imageID",
-					Ports: []infrav1.PortOpts{
+					Ports: []infrav1.ResolvedPortSpec{
 						{
-							Network: &infrav1.NetworkFilter{
-								ID: "network-id",
-							},
+							NetworkID: "network-id",
 						},
 					},
 				},
-				DependentResources: infrav1.DependentMachineResources{
+				Resources: &infrav1.MachineResources{
 					Ports: []infrav1.PortStatus{
 						{
 							ID: "portID1",
@@ -280,27 +283,26 @@ var _ = Describe("OpenStackCluster controller", func() {
 		networkClientRecorder.ListFloatingIP(floatingips.ListOpts{PortID: "portID1"}).Return(make([]floatingips.FloatingIP, 1), nil)
 
 		res, err := reconcileBastion(scope, capiCluster, testCluster)
-		Expect(testCluster.Status.Bastion).To(Equal(&infrav1.BastionStatus{
+		expectedStatus := &infrav1.BastionStatus{
 			ID:    "adopted-bastion-uuid",
 			State: "ACTIVE",
-			ReferencedResources: infrav1.ReferencedMachineResources{
+			Resolved: &infrav1.ResolvedMachineSpec{
 				ImageID: "imageID",
-				Ports: []infrav1.PortOpts{
+				Ports: []infrav1.ResolvedPortSpec{
 					{
-						Network: &infrav1.NetworkFilter{
-							ID: "network-id",
-						},
+						NetworkID: "network-id",
 					},
 				},
 			},
-			DependentResources: infrav1.DependentMachineResources{
+			Resources: &infrav1.MachineResources{
 				Ports: []infrav1.PortStatus{
 					{
 						ID: "portID1",
 					},
 				},
 			},
-		}))
+		}
+		Expect(testCluster.Status.Bastion).To(Equal(expectedStatus), cmp.Diff(testCluster.Status.Bastion, expectedStatus))
 		Expect(err).To(BeNil())
 		Expect(res).To(BeNil())
 	})
@@ -309,6 +311,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		testCluster.Spec = infrav1.OpenStackClusterSpec{
 			Bastion: &infrav1.Bastion{
 				Enabled: true,
+				Spec:    &bastionSpec,
 			},
 		}
 		err := k8sClient.Create(ctx, testCluster)
@@ -324,17 +327,15 @@ var _ = Describe("OpenStackCluster controller", func() {
 			},
 			Bastion: &infrav1.BastionStatus{
 				ID: "adopted-fip-bastion-uuid",
-				ReferencedResources: infrav1.ReferencedMachineResources{
+				Resolved: &infrav1.ResolvedMachineSpec{
 					ImageID: "imageID",
-					Ports: []infrav1.PortOpts{
+					Ports: []infrav1.ResolvedPortSpec{
 						{
-							Network: &infrav1.NetworkFilter{
-								ID: "network-id",
-							},
+							NetworkID: "network-id",
 						},
 					},
 				},
-				DependentResources: infrav1.DependentMachineResources{
+				Resources: &infrav1.MachineResources{
 					Ports: []infrav1.PortStatus{
 						{
 							ID: "portID1",
@@ -368,17 +369,15 @@ var _ = Describe("OpenStackCluster controller", func() {
 			ID:         "adopted-fip-bastion-uuid",
 			FloatingIP: "1.2.3.4",
 			State:      "ACTIVE",
-			ReferencedResources: infrav1.ReferencedMachineResources{
+			Resolved: &infrav1.ResolvedMachineSpec{
 				ImageID: "imageID",
-				Ports: []infrav1.PortOpts{
+				Ports: []infrav1.ResolvedPortSpec{
 					{
-						Network: &infrav1.NetworkFilter{
-							ID: "network-id",
-						},
+						NetworkID: "network-id",
 					},
 				},
 			},
-			DependentResources: infrav1.DependentMachineResources{
+			Resources: &infrav1.MachineResources{
 				Ports: []infrav1.PortStatus{
 					{
 						ID: "portID1",
@@ -394,6 +393,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		testCluster.Spec = infrav1.OpenStackClusterSpec{
 			Bastion: &infrav1.Bastion{
 				Enabled: true,
+				Spec:    &bastionSpec,
 			},
 		}
 		err := k8sClient.Create(ctx, testCluster)
@@ -409,17 +409,15 @@ var _ = Describe("OpenStackCluster controller", func() {
 			},
 			Bastion: &infrav1.BastionStatus{
 				ID: "requeue-bastion-uuid",
-				ReferencedResources: infrav1.ReferencedMachineResources{
+				Resolved: &infrav1.ResolvedMachineSpec{
 					ImageID: "imageID",
-					Ports: []infrav1.PortOpts{
+					Ports: []infrav1.ResolvedPortSpec{
 						{
-							Network: &infrav1.NetworkFilter{
-								ID: "network-id",
-							},
+							NetworkID: "network-id",
 						},
 					},
 				},
-				DependentResources: infrav1.DependentMachineResources{
+				Resources: &infrav1.MachineResources{
 					Ports: []infrav1.PortStatus{
 						{
 							ID: "portID1",
@@ -447,17 +445,15 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(testCluster.Status.Bastion).To(Equal(&infrav1.BastionStatus{
 			ID:    "requeue-bastion-uuid",
 			State: "BUILD",
-			ReferencedResources: infrav1.ReferencedMachineResources{
+			Resolved: &infrav1.ResolvedMachineSpec{
 				ImageID: "imageID",
-				Ports: []infrav1.PortOpts{
+				Ports: []infrav1.ResolvedPortSpec{
 					{
-						Network: &infrav1.NetworkFilter{
-							ID: "network-id",
-						},
+						NetworkID: "network-id",
 					},
 				},
 			},
-			DependentResources: infrav1.DependentMachineResources{
+			Resources: &infrav1.MachineResources{
 				Ports: []infrav1.PortStatus{
 					{
 						ID: "portID1",
@@ -479,7 +475,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 		testCluster.Status = infrav1.OpenStackClusterStatus{
 			Bastion: &infrav1.BastionStatus{
-				ReferencedResources: infrav1.ReferencedMachineResources{
+				Resolved: &infrav1.ResolvedMachineSpec{
 					ImageID: "imageID",
 				},
 			},
@@ -519,6 +515,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		testCluster.Spec = infrav1.OpenStackClusterSpec{
 			Bastion: &infrav1.Bastion{
 				Enabled: true,
+				Spec:    &bastionSpec,
 			},
 			DisableAPIServerFloatingIP: pointer.Bool(true),
 			APIServerFixedIP:           pointer.String("10.0.0.1"),
@@ -531,7 +528,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		}
 		testCluster.Status = infrav1.OpenStackClusterStatus{
 			Bastion: &infrav1.BastionStatus{
-				DependentResources: infrav1.DependentMachineResources{
+				Resources: &infrav1.MachineResources{
 					Ports: []infrav1.PortStatus{
 						{
 							ID: "port-id",
@@ -599,6 +596,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		testCluster.Spec = infrav1.OpenStackClusterSpec{
 			Bastion: &infrav1.Bastion{
 				Enabled: true,
+				Spec:    &bastionSpec,
 			},
 			DisableAPIServerFloatingIP: pointer.Bool(true),
 			APIServerFixedIP:           pointer.String("10.0.0.1"),
@@ -615,7 +613,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		}
 		testCluster.Status = infrav1.OpenStackClusterStatus{
 			Bastion: &infrav1.BastionStatus{
-				DependentResources: infrav1.DependentMachineResources{
+				Resources: &infrav1.MachineResources{
 					Ports: []infrav1.PortStatus{
 						{
 							ID: "port-id",
@@ -789,42 +787,5 @@ func Test_getAPIServerPort(t *testing.T) {
 				t.Errorf("getAPIServerPort() = %v, want %v", got, tt.want)
 			}
 		})
-	}
-}
-
-func TestGetBastionSecurityGroups(t *testing.T) {
-	openStackCluster := &infrav1.OpenStackCluster{
-		Spec: infrav1.OpenStackClusterSpec{
-			Bastion: &infrav1.Bastion{
-				Instance: infrav1.OpenStackMachineSpec{
-					SecurityGroups: []infrav1.SecurityGroupFilter{
-						{
-							ID: "sg-123",
-						},
-					},
-				},
-			},
-			ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{},
-		},
-		Status: infrav1.OpenStackClusterStatus{
-			BastionSecurityGroup: &infrav1.SecurityGroupStatus{
-				ID: "sg-456",
-			},
-		},
-	}
-
-	expectedSecurityGroups := []infrav1.SecurityGroupFilter{
-		{
-			ID: "sg-123",
-		},
-		{
-			ID: "sg-456",
-		},
-	}
-
-	securityGroups := getBastionSecurityGroups(openStackCluster)
-
-	if !reflect.DeepEqual(securityGroups, expectedSecurityGroups) {
-		t.Errorf("Expected security groups %v, but got %v", expectedSecurityGroups, securityGroups)
 	}
 }

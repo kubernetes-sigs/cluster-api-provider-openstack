@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha7
 
 import (
+	"reflect"
+
 	apiconversion "k8s.io/apimachinery/pkg/conversion"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
@@ -346,18 +348,11 @@ func restorev1alpha7ClusterStatus(previous *OpenStackClusterStatus, dst *OpenSta
 }
 
 func restorev1beta1ClusterStatus(previous *infrav1.OpenStackClusterStatus, dst *infrav1.OpenStackClusterStatus) {
-	restorev1beta1SecurityGroupStatus(previous.ControlPlaneSecurityGroup, dst.ControlPlaneSecurityGroup)
-	restorev1beta1SecurityGroupStatus(previous.WorkerSecurityGroup, dst.WorkerSecurityGroup)
-	restorev1beta1SecurityGroupStatus(previous.BastionSecurityGroup, dst.BastionSecurityGroup)
-
-	// ReferencedResources have no equivalent in v1alpha7
-	if previous.Bastion != nil {
-		dst.Bastion.ReferencedResources = previous.Bastion.ReferencedResources
+	if previous == nil || dst == nil {
+		return
 	}
 
-	if previous.Bastion != nil && previous.Bastion.DependentResources.Ports != nil {
-		dst.Bastion.DependentResources.Ports = previous.Bastion.DependentResources.Ports
-	}
+	restorev1beta1BastionStatus(previous.Bastion, dst.Bastion)
 }
 
 func Convert_v1beta1_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(in *infrav1.OpenStackClusterStatus, out *OpenStackClusterStatus, s apiconversion.Scope) error {
@@ -373,8 +368,13 @@ func restorev1alpha7Bastion(previous **Bastion, dst **Bastion) {
 }
 
 func restorev1beta1Bastion(previous **infrav1.Bastion, dst **infrav1.Bastion) {
-	if *previous != nil && *dst != nil {
-		restorev1beta1MachineSpec(&(*previous).Instance, &(*dst).Instance)
+	if *previous != nil {
+		if *dst != nil && (*previous).Spec != nil && (*dst).Spec != nil {
+			restorev1beta1MachineSpec((*previous).Spec, (*dst).Spec)
+		}
+
+		optional.RestoreString(&(*previous).FloatingIP, &(*dst).FloatingIP)
+		optional.RestoreString(&(*previous).AvailabilityZone, &(*dst).AvailabilityZone)
 	}
 }
 
@@ -384,13 +384,30 @@ func Convert_v1alpha7_Bastion_To_v1beta1_Bastion(in *Bastion, out *infrav1.Basti
 		return err
 	}
 
-	if in.Instance.ServerGroupID != "" {
-		out.Instance.ServerGroup = &infrav1.ServerGroupFilter{ID: in.Instance.ServerGroupID}
-	} else {
-		out.Instance.ServerGroup = nil
+	if !reflect.ValueOf(in.Instance).IsZero() {
+		out.Spec = &infrav1.OpenStackMachineSpec{}
+
+		err = Convert_v1alpha7_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(&in.Instance, out.Spec, s)
+		if err != nil {
+			return err
+		}
+
+		if in.Instance.ServerGroupID != "" {
+			out.Spec.ServerGroup = &infrav1.ServerGroupFilter{ID: in.Instance.ServerGroupID}
+		} else {
+			out.Spec.ServerGroup = nil
+		}
+
+		err = optional.Convert_string_To_optional_String(&in.Instance.FloatingIP, &out.FloatingIP, s)
+		if err != nil {
+			return err
+		}
 	}
 
-	out.FloatingIP = in.Instance.FloatingIP
+	// nil the Spec if it's basically an empty object.
+	if out.Spec != nil && reflect.ValueOf(*out.Spec).IsZero() {
+		out.Spec = nil
+	}
 	return nil
 }
 
@@ -400,12 +417,30 @@ func Convert_v1beta1_Bastion_To_v1alpha7_Bastion(in *infrav1.Bastion, out *Basti
 		return err
 	}
 
-	if in.Instance.ServerGroup != nil && in.Instance.ServerGroup.ID != "" {
-		out.Instance.ServerGroupID = in.Instance.ServerGroup.ID
+	if in.Spec != nil {
+		err = Convert_v1beta1_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in.Spec, &out.Instance, s)
+		if err != nil {
+			return err
+		}
+
+		if in.Spec.ServerGroup != nil && in.Spec.ServerGroup.ID != "" {
+			out.Instance.ServerGroupID = in.Spec.ServerGroup.ID
+		}
 	}
 
-	out.Instance.FloatingIP = in.FloatingIP
-	return nil
+	return optional.Convert_optional_String_To_string(&in.FloatingIP, &out.Instance.FloatingIP, s)
+}
+
+/* Bastion status */
+
+func restorev1beta1BastionStatus(previous *infrav1.BastionStatus, dst *infrav1.BastionStatus) {
+	if previous == nil || dst == nil {
+		return
+	}
+
+	// Resolved and resources have no equivalents
+	dst.Resolved = previous.Resolved
+	dst.Resources = previous.Resources
 }
 
 func Convert_v1beta1_BastionStatus_To_v1alpha7_BastionStatus(in *infrav1.BastionStatus, out *BastionStatus, s apiconversion.Scope) error {

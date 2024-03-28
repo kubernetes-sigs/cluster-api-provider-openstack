@@ -2341,16 +2341,23 @@ spec:
                           to first set `enabled: false` which will remove the bastion and then changes can be made.
                         properties:
                           availabilityZone:
+                            description: AvailabilityZone is the failure domain that
+                              will be used to create the Bastion Spec.
                             type: string
                           enabled:
+                            default: false
+                            description: Enabled means that bastion is enabled. Defaults
+                              to false.
                             type: boolean
                           floatingIP:
                             description: |-
-                              FloatingIP which will be associated to the bastion machine.
-                              The floating IP should already exist and should not be associated with a port.
+                              FloatingIP which will be associated to the bastion machine. It's the IP address, not UUID.
+                              The floating IP should already exist and should not be associated with a port. If FIP of this address does not
+                              exist, CAPO will try to create it, but by default only OpenStack administrators have privileges to do so.
+                            format: ipv4
                             type: string
-                          instance:
-                            description: Instance for the bastion itself
+                          spec:
+                            description: Spec for the bastion itself
                             properties:
                               additionalBlockDevices:
                                 description: AdditionalBlockDevices is a list of specifications
@@ -2970,14 +2977,12 @@ spec:
                                 items:
                                   properties:
                                     key:
-                                      description: |-
-                                        Key is the server metadata key
-                                        kubebuilder:validation:MaxLength:=255
+                                      description: Key is the server metadata key
+                                      maxLength: 255
                                       type: string
                                     value:
-                                      description: |-
-                                        Value is the server metadata value
-                                        kubebuilder:validation:MaxLength:=255
+                                      description: Value is the server metadata value
+                                      maxLength: 255
                                       type: string
                                   required:
                                   - key
@@ -2992,7 +2997,9 @@ spec:
                                 type: string
                               tags:
                                 description: |-
-                                  Machine tags
+                                  Tags which will be added to the machine and all dependent resources
+                                  which support them. These are in addition to Tags defined on the
+                                  cluster.
                                   Requires Nova api 2.52 minimum!
                                 items:
                                   type: string
@@ -3006,7 +3013,12 @@ spec:
                             - flavor
                             - image
                             type: object
+                        required:
+                        - enabled
                         type: object
+                        x-kubernetes-validations:
+                        - message: you need to specify the spec if bastion is enabled
+                          rule: '!self.enabled || has(self.spec)'
                       controlPlaneAvailabilityZones:
                         description: |-
                           ControlPlaneAvailabilityZones is the set of availability zones which
