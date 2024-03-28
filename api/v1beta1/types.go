@@ -403,12 +403,9 @@ type AddressPair struct {
 }
 
 type BastionStatus struct {
-	ID         string        `json:"id,omitempty"`
-	Name       string        `json:"name,omitempty"`
-	SSHKeyName string        `json:"sshKeyName,omitempty"`
-	State      InstanceState `json:"state,omitempty"`
-	IP         string        `json:"ip,omitempty"`
-	FloatingIP string        `json:"floatingIP,omitempty"`
+	Name       string `json:"name,omitempty"`
+	IP         string `json:"ip,omitempty"`
+	FloatingIP string `json:"floatingIP,omitempty"`
 
 	// Resolved contains parts of the bastion's machine spec with all
 	// external references fully resolved.
@@ -418,6 +415,10 @@ type BastionStatus struct {
 	// Resources contains references to OpenStack resources created for the bastion.
 	// +optional
 	Resources *MachineResources `json:"resources,omitempty"`
+
+	// Server describes the OpenStack server created for the bastion
+	// +optional
+	Server *ServerStatus `json:"server,omitempty"`
 }
 
 type RootVolume struct {
@@ -729,6 +730,31 @@ type MachineResources struct {
 	// Ports is the status of the ports created for the machine.
 	// +optional
 	Ports []PortStatus `json:"ports,omitempty"`
+}
+
+func (r *OpenStackMachineStatus) GetServerID() *string {
+	if r == nil || r.Server == nil {
+		return nil
+	}
+	return &r.Server.ID
+}
+
+func (r *BastionStatus) GetServerID() *string {
+	if r == nil || r.Server == nil {
+		return nil
+	}
+	return &r.Server.ID
+}
+
+type ServerStatus struct {
+	// ID is the uuid of the server
+	// +kubebuilder:validation:Required
+	ID string `json:"id"`
+
+	// State is a previously observed state of the server
+	// Do not rely on this field to be up to date
+	// +kubebuilder:validation:Required
+	State InstanceState `json:"state"`
 }
 
 // ValueSpec represents a single value_spec key-value pair.

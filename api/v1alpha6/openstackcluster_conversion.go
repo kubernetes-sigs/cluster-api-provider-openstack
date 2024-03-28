@@ -139,6 +139,7 @@ func restorev1alpha6ClusterSpec(previous *OpenStackClusterSpec, dst *OpenStackCl
 	dstBastion := dst.Bastion
 	if prevBastion != nil && dstBastion != nil {
 		restorev1alpha6MachineSpec(&prevBastion.Instance, &dstBastion.Instance)
+		dstBastion.Instance.InstanceID = prevBastion.Instance.InstanceID
 	}
 
 	// To avoid lossy conversion, we need to restore AllowAllInClusterTraffic
@@ -338,6 +339,10 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in *i
 /* OpenStackClusterStatus */
 
 func restorev1alpha6ClusterStatus(previous *OpenStackClusterStatus, dst *OpenStackClusterStatus) {
+	if previous == nil || dst == nil {
+		return
+	}
+
 	// PortOpts.SecurityGroups have been removed in v1beta1
 	// We restore the whole PortOpts/Networks since they are anyway immutable.
 	if previous.ExternalNetwork != nil {
@@ -353,6 +358,8 @@ func restorev1alpha6ClusterStatus(previous *OpenStackClusterStatus, dst *OpenSta
 	restorev1alpha6SecurityGroup(previous.ControlPlaneSecurityGroup, dst.ControlPlaneSecurityGroup)
 	restorev1alpha6SecurityGroup(previous.WorkerSecurityGroup, dst.WorkerSecurityGroup)
 	restorev1alpha6SecurityGroup(previous.BastionSecurityGroup, dst.BastionSecurityGroup)
+
+	restorev1alpha6BastionStatus(previous.Bastion, dst.Bastion)
 }
 
 func restorev1beta1ClusterStatus(previous *infrav1.OpenStackClusterStatus, dst *infrav1.OpenStackClusterStatus) {
@@ -418,6 +425,18 @@ func restorev1beta1Bastion(previous **infrav1.Bastion, dst **infrav1.Bastion) {
 	optional.RestoreString(&(*previous).AvailabilityZone, &(*dst).AvailabilityZone)
 }
 
+/* Bastion status */
+
+func restorev1alpha6BastionStatus(previous *Instance, dst *Instance) {
+	if previous == nil || dst == nil {
+		return
+	}
+
+	dst.ID = previous.ID
+	dst.SSHKeyName = previous.SSHKeyName
+	dst.State = previous.State
+}
+
 func Convert_v1alpha6_Bastion_To_v1beta1_Bastion(in *Bastion, out *infrav1.Bastion, s apiconversion.Scope) error {
 	err := autoConvert_v1alpha6_Bastion_To_v1beta1_Bastion(in, out, s)
 	if err != nil {
@@ -481,14 +500,12 @@ func restorev1beta1BastionStatus(previous *infrav1.BastionStatus, dst *infrav1.B
 	// Resolved and resources have no equivalents
 	dst.Resolved = previous.Resolved
 	dst.Resources = previous.Resources
+	dst.Server = previous.Server
 }
 
 func Convert_v1alpha6_Instance_To_v1beta1_BastionStatus(in *Instance, out *infrav1.BastionStatus, _ apiconversion.Scope) error {
 	// BastionStatus is the same as Spec with unused fields removed
-	out.ID = in.ID
 	out.Name = in.Name
-	out.SSHKeyName = in.SSHKeyName
-	out.State = infrav1.InstanceState(in.State)
 	out.IP = in.IP
 	out.FloatingIP = in.FloatingIP
 	return nil
@@ -496,10 +513,7 @@ func Convert_v1alpha6_Instance_To_v1beta1_BastionStatus(in *Instance, out *infra
 
 func Convert_v1beta1_BastionStatus_To_v1alpha6_Instance(in *infrav1.BastionStatus, out *Instance, _ apiconversion.Scope) error {
 	// BastionStatus is the same as Spec with unused fields removed
-	out.ID = in.ID
 	out.Name = in.Name
-	out.SSHKeyName = in.SSHKeyName
-	out.State = InstanceState(in.State)
 	out.IP = in.IP
 	out.FloatingIP = in.FloatingIP
 	return nil

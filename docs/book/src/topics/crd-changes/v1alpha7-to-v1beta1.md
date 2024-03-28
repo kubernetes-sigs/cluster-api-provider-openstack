@@ -14,7 +14,8 @@
       - [Change to image](#change-to-image)
       - [Removal of imageUUID](#removal-of-imageuuid)
       - [Changes to ports](#changes-to-ports)
-      - [Additon of floatingIPPoolRef](#additon-of-floatingippoolref)
+      - [Addition of floatingIPPoolRef](#addition-of-floatingippoolref)
+      - [Removal of instanceID from spec](#removal-of-instanceid-from-spec)
     - [`OpenStackCluster`](#openstackcluster)
       - [Removal of cloudName](#removal-of-cloudname-1)
       - [identityRef is now required](#identityref-is-now-required)
@@ -28,7 +29,8 @@
       - [Change to network](#change-to-network)
       - [Change to networkMtu](#change-to-networkmtu)
       - [Changes to apiServerLoadBalancer](#changes-to-apiserverloadbalancer)
-      - [Changes to bastion](#changes-to-bastion)
+      - [Changes to bastion in spec](#changes-to-bastion-in-spec)
+      - [Changes to bastion in status](#changes-to-bastion-in-status)
     - [Changes to filters](#changes-to-filters)
       - [Changes to filter tags](#changes-to-filter-tags)
       - [Field capitalization consistency](#field-capitalization-consistency)
@@ -87,8 +89,8 @@ serverGroup:
   name: "workers"
 ```
 
-If a server group is provided and found, it'll be added to `OpenStackMachine.Status.ReferencedResources.ServerGroupID`. If the server group can't be found or filter matches multiple server groups, an error will be returned.
-If empty object or null is provided, Machine will not be added to any server group and `OpenStackMachine.Status.ReferencedResources.ServerGroupID` will be empty.
+If a server group is provided and found, it'll be added to `OpenStackMachine.Status.Resources.ServerGroupID`. If the server group can't be found or filter matches multiple server groups, an error will be returned.
+If empty object or null is provided, Machine will not be added to any server group and `OpenStackMachine.Status.Resources.ServerGroupID` will be empty.
 
 #### Change to image
 
@@ -106,7 +108,7 @@ image:
   name: "test-image"
 ```
 
-The image ID will be added to `OpenStackMachine.Status.ReferencedResources.ImageID`. If the image can't be found or filter matches multiple images, an error will be returned.
+The image ID will be added to `OpenStackMachine.Status.Resources.ImageID`. If the image can't be found or filter matches multiple images, an error will be returned.
 
 #### Removal of imageUUID
 
@@ -156,6 +158,10 @@ spec:
         kind: "OpenStackFloatingIPPool"
         name: "MyOpenStackFloatingIPPool"
 ```
+
+#### Removal of instanceID from spec
+
+The OpenStackMachine controller previously set `instanceID` in the machine spec, in addition to `providerID`. `providerID` remains unchanged as it is required by Cluster API, but `instanceID` is no longer set. If still required, it is now available in the status in `.status.server`.
 
 ### `OpenStackCluster`
 
@@ -365,7 +371,7 @@ spec:
     apiServerLoadBalancer: {}
 ```
 
-#### Changes to bastion
+#### Changes to bastion in spec
 
 In v1beta1, `OpenStackCluster.spec.bastion.instance` becomes `OpenStackCluster.spec.bastion.spec`.
 
@@ -388,6 +394,10 @@ spec:
         image:
           name: foobar
 ```
+
+#### Changes to bastion in status
+
+`id`, `sshKeyName`, and `state` are removed from the bastion status. `id` and `state` are now available in `bastion.server` if required. `sshKeyName` has no replacement in status, but remains available in the spec.
 
 ### Changes to filters
 

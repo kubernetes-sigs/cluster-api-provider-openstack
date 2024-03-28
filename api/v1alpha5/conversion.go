@@ -449,11 +449,8 @@ func Convert_v1alpha5_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *infrav1.Po
 }
 
 func Convert_v1alpha5_Instance_To_v1beta1_BastionStatus(in *Instance, out *infrav1.BastionStatus, _ conversion.Scope) error {
-	// BastionStatus is the same as Spec with unused fields removed
-	out.ID = in.ID
+	// BastionStatus is the same as Instance with unused fields removed
 	out.Name = in.Name
-	out.SSHKeyName = in.SSHKeyName
-	out.State = infrav1.InstanceState(in.State)
 	out.IP = in.IP
 	out.FloatingIP = in.FloatingIP
 	out.Resolved.ServerGroupID = in.ServerGroupID
@@ -461,11 +458,8 @@ func Convert_v1alpha5_Instance_To_v1beta1_BastionStatus(in *Instance, out *infra
 }
 
 func Convert_v1beta1_BastionStatus_To_v1alpha5_Instance(in *infrav1.BastionStatus, out *Instance, _ conversion.Scope) error {
-	// BastionStatus is the same as Spec with unused fields removed
-	out.ID = in.ID
+	// BastionStatus is the same as Instance with unused fields removed
 	out.Name = in.Name
-	out.SSHKeyName = in.SSHKeyName
-	out.State = InstanceState(in.State)
 	out.IP = in.IP
 	out.FloatingIP = in.FloatingIP
 	out.ServerGroupID = in.Resolved.ServerGroupID
@@ -693,8 +687,11 @@ func Convert_v1beta1_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(in *i
 	return nil
 }
 
+func Convert_v1alpha5_OpenStackMachineStatus_To_v1beta1_OpenStackMachineStatus(in *OpenStackMachineStatus, out *infrav1.OpenStackMachineStatus, s conversion.Scope) error {
+	return autoConvert_v1alpha5_OpenStackMachineStatus_To_v1beta1_OpenStackMachineStatus(in, out, s)
+}
+
 func Convert_v1beta1_OpenStackMachineStatus_To_v1alpha5_OpenStackMachineStatus(in *infrav1.OpenStackMachineStatus, out *OpenStackMachineStatus, s conversion.Scope) error {
-	// ReferencedResources have no equivalent in v1alpha5
 	return autoConvert_v1beta1_OpenStackMachineStatus_To_v1alpha5_OpenStackMachineStatus(in, out, s)
 }
 

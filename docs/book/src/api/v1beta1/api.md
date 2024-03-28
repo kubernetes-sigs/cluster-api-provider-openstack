@@ -558,18 +558,9 @@ string
 </em>
 </td>
 <td>
-<p>ProviderID is the unique identifier as specified by the cloud provider.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>instanceID</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>InstanceID is the OpenStack instance ID for this machine.</p>
+<em>(Optional)</em>
+<p>ProviderID is a unique identifier for this machine of the form <code>openstack://&lt;server_id&gt;</code>.
+Note that it is set by the OpenStackMachine controller, and should not be set by the user.</p>
 </td>
 </tr>
 <tr>
@@ -1150,41 +1141,9 @@ exist, CAPO will try to create it, but by default only OpenStack administrators 
 <tbody>
 <tr>
 <td>
-<code>id</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
 <code>name</code><br/>
 <em>
 string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>sshKeyName</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>state</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.InstanceState">
-InstanceState
-</a>
 </em>
 </td>
 <td>
@@ -1237,6 +1196,20 @@ MachineResources
 <td>
 <em>(Optional)</em>
 <p>Resources contains references to OpenStack resources created for the bastion.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>server</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerStatus">
+ServerStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Server describes the OpenStack server created for the bastion</p>
 </td>
 </tr>
 </tbody>
@@ -1635,8 +1608,7 @@ string
 (<code>string</code> alias)</p></h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.BastionStatus">BastionStatus</a>, 
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineStatus">OpenStackMachineStatus</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerStatus">ServerStatus</a>)
 </p>
 <p>
 <p>InstanceState describes the state of an OpenStack instance.</p>
@@ -3072,18 +3044,9 @@ string
 </em>
 </td>
 <td>
-<p>ProviderID is the unique identifier as specified by the cloud provider.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>instanceID</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>InstanceID is the OpenStack instance ID for this machine.</p>
+<em>(Optional)</em>
+<p>ProviderID is a unique identifier for this machine of the form <code>openstack://&lt;server_id&gt;</code>.
+Note that it is set by the OpenStackMachine controller, and should not be set by the user.</p>
 </td>
 </tr>
 <tr>
@@ -3313,20 +3276,6 @@ bool
 </tr>
 <tr>
 <td>
-<code>instanceState</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.InstanceState">
-InstanceState
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>InstanceState is the state of the OpenStack instance for this machine.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>resolved</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedMachineSpec">
@@ -3403,6 +3352,20 @@ sigs.k8s.io/cluster-api/api/v1beta1.Conditions
 <td>
 </td>
 </tr>
+<tr>
+<td>
+<code>server</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerStatus">
+ServerStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Server describes the OpenStack server created for the machine</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineTemplateResource">OpenStackMachineTemplateResource
@@ -3444,18 +3407,9 @@ string
 </em>
 </td>
 <td>
-<p>ProviderID is the unique identifier as specified by the cloud provider.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>instanceID</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>InstanceID is the OpenStack instance ID for this machine.</p>
+<em>(Optional)</em>
+<p>ProviderID is a unique identifier for this machine of the form <code>openstack://&lt;server_id&gt;</code>.
+Note that it is set by the OpenStackMachine controller, and should not be set by the user.</p>
 </td>
 </tr>
 <tr>
@@ -4736,6 +4690,50 @@ string
 </td>
 <td>
 <p>Value is the server metadata value</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.ServerStatus">ServerStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.BastionStatus">BastionStatus</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineStatus">OpenStackMachineStatus</a>)
+</p>
+<p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>id</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>ID is the uuid of the server</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>state</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.InstanceState">
+InstanceState
+</a>
+</em>
+</td>
+<td>
+<p>State is a previously observed state of the server
+Do not rely on this field to be up to date</p>
 </td>
 </tr>
 </tbody>

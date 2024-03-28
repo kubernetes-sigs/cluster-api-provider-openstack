@@ -33,11 +33,10 @@ const (
 
 // OpenStackMachineSpec defines the desired state of OpenStackMachine.
 type OpenStackMachineSpec struct {
-	// ProviderID is the unique identifier as specified by the cloud provider.
+	// ProviderID is a unique identifier for this machine of the form `openstack://<server_id>`.
+	// Note that it is set by the OpenStackMachine controller, and should not be set by the user.
+	// +optional
 	ProviderID *string `json:"providerID,omitempty"`
-
-	// InstanceID is the OpenStack instance ID for this machine.
-	InstanceID *string `json:"instanceID,omitempty"`
 
 	// The flavor reference for the flavor for your server instance.
 	Flavor string `json:"flavor"`
@@ -122,10 +121,6 @@ type OpenStackMachineStatus struct {
 	// Addresses contains the OpenStack instance associated addresses.
 	Addresses []corev1.NodeAddress `json:"addresses,omitempty"`
 
-	// InstanceState is the state of the OpenStack instance for this machine.
-	// +optional
-	InstanceState *InstanceState `json:"instanceState,omitempty"`
-
 	// Resolved contains parts of the machine spec with all external
 	// references fully resolved.
 	// +optional
@@ -157,6 +152,10 @@ type OpenStackMachineStatus struct {
 	FailureMessage *string `json:"failureMessage,omitempty"`
 
 	Conditions clusterv1.Conditions `json:"conditions,omitempty"`
+
+	// Server describes the OpenStack server created for the machine
+	// +optional
+	Server *ServerStatus `json:"server,omitempty"`
 }
 
 // +genclient
@@ -166,9 +165,9 @@ type OpenStackMachineStatus struct {
 // +kubebuilder:resource:path=openstackmachines,scope=Namespaced,categories=cluster-api,shortName=osm
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Cluster",type="string",JSONPath=".metadata.labels.cluster\\.x-k8s\\.io/cluster-name",description="Cluster to which this OpenStackMachine belongs"
-// +kubebuilder:printcolumn:name="InstanceState",type="string",JSONPath=".status.instanceState",description="OpenStack instance state"
+// +kubebuilder:printcolumn:name="ServerID",type="string",JSONPath=".status.resources.server.id",description="OpenStack instance ID"
+// +kubebuilder:printcolumn:name="InstanceState",type="string",JSONPath=".status.resources.server.state",description="OpenStack instance state"
 // +kubebuilder:printcolumn:name="Ready",type="string",JSONPath=".status.ready",description="Machine ready status"
-// +kubebuilder:printcolumn:name="ProviderID",type="string",JSONPath=".spec.providerID",description="OpenStack instance ID"
 // +kubebuilder:printcolumn:name="Machine",type="string",JSONPath=".metadata.ownerReferences[?(@.kind==\"Machine\")].name",description="Machine object which owns with this OpenStackMachine"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp",description="Time duration since creation of OpenStackMachine"
 

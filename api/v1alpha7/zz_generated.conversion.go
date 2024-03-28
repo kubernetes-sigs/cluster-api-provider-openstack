@@ -71,11 +71,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*BastionStatus)(nil), (*v1beta1.BastionStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha7_BastionStatus_To_v1beta1_BastionStatus(a.(*BastionStatus), b.(*v1beta1.BastionStatus), scope)
-	}); err != nil {
-		return err
-	}
 	if err := s.AddGeneratedConversionFunc((*BindingProfile)(nil), (*v1beta1.BindingProfile)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha7_BindingProfile_To_v1beta1_BindingProfile(a.(*BindingProfile), b.(*v1beta1.BindingProfile), scope)
 	}); err != nil {
@@ -221,16 +216,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*OpenStackMachine)(nil), (*v1beta1.OpenStackMachine)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha7_OpenStackMachine_To_v1beta1_OpenStackMachine(a.(*OpenStackMachine), b.(*v1beta1.OpenStackMachine), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*v1beta1.OpenStackMachine)(nil), (*OpenStackMachine)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1beta1_OpenStackMachine_To_v1alpha7_OpenStackMachine(a.(*v1beta1.OpenStackMachine), b.(*OpenStackMachine), scope)
-	}); err != nil {
-		return err
-	}
 	if err := s.AddGeneratedConversionFunc((*OpenStackMachineList)(nil), (*v1beta1.OpenStackMachineList)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha7_OpenStackMachineList_To_v1beta1_OpenStackMachineList(a.(*OpenStackMachineList), b.(*v1beta1.OpenStackMachineList), scope)
 	}); err != nil {
@@ -238,11 +223,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddGeneratedConversionFunc((*v1beta1.OpenStackMachineList)(nil), (*OpenStackMachineList)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1beta1_OpenStackMachineList_To_v1alpha7_OpenStackMachineList(a.(*v1beta1.OpenStackMachineList), b.(*OpenStackMachineList), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*OpenStackMachineStatus)(nil), (*v1beta1.OpenStackMachineStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha7_OpenStackMachineStatus_To_v1beta1_OpenStackMachineStatus(a.(*OpenStackMachineStatus), b.(*v1beta1.OpenStackMachineStatus), scope)
 	}); err != nil {
 		return err
 	}
@@ -326,6 +306,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddConversionFunc((*BastionStatus)(nil), (*v1beta1.BastionStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha7_BastionStatus_To_v1beta1_BastionStatus(a.(*BastionStatus), b.(*v1beta1.BastionStatus), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddConversionFunc((*Bastion)(nil), (*v1beta1.Bastion)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha7_Bastion_To_v1beta1_Bastion(a.(*Bastion), b.(*v1beta1.Bastion), scope)
 	}); err != nil {
@@ -353,6 +338,16 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddConversionFunc((*OpenStackMachineSpec)(nil), (*v1beta1.OpenStackMachineSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha7_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(a.(*OpenStackMachineSpec), b.(*v1beta1.OpenStackMachineSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*OpenStackMachineStatus)(nil), (*v1beta1.OpenStackMachineStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha7_OpenStackMachineStatus_To_v1beta1_OpenStackMachineStatus(a.(*OpenStackMachineStatus), b.(*v1beta1.OpenStackMachineStatus), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*OpenStackMachine)(nil), (*v1beta1.OpenStackMachine)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha7_OpenStackMachine_To_v1beta1_OpenStackMachine(a.(*OpenStackMachine), b.(*v1beta1.OpenStackMachine), scope)
 	}); err != nil {
 		return err
 	}
@@ -428,6 +423,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddConversionFunc((*v1beta1.OpenStackMachineStatus)(nil), (*OpenStackMachineStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1beta1_OpenStackMachineStatus_To_v1alpha7_OpenStackMachineStatus(a.(*v1beta1.OpenStackMachineStatus), b.(*OpenStackMachineStatus), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1beta1.OpenStackMachine)(nil), (*OpenStackMachine)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1beta1_OpenStackMachine_To_v1alpha7_OpenStackMachine(a.(*v1beta1.OpenStackMachine), b.(*OpenStackMachine), scope)
 	}); err != nil {
 		return err
 	}
@@ -572,29 +572,22 @@ func autoConvert_v1beta1_Bastion_To_v1alpha7_Bastion(in *v1beta1.Bastion, out *B
 }
 
 func autoConvert_v1alpha7_BastionStatus_To_v1beta1_BastionStatus(in *BastionStatus, out *v1beta1.BastionStatus, s conversion.Scope) error {
-	out.ID = in.ID
+	// WARNING: in.ID requires manual conversion: does not exist in peer-type
 	out.Name = in.Name
-	out.SSHKeyName = in.SSHKeyName
-	out.State = v1beta1.InstanceState(in.State)
+	// WARNING: in.SSHKeyName requires manual conversion: does not exist in peer-type
+	// WARNING: in.State requires manual conversion: does not exist in peer-type
 	out.IP = in.IP
 	out.FloatingIP = in.FloatingIP
 	return nil
 }
 
-// Convert_v1alpha7_BastionStatus_To_v1beta1_BastionStatus is an autogenerated conversion function.
-func Convert_v1alpha7_BastionStatus_To_v1beta1_BastionStatus(in *BastionStatus, out *v1beta1.BastionStatus, s conversion.Scope) error {
-	return autoConvert_v1alpha7_BastionStatus_To_v1beta1_BastionStatus(in, out, s)
-}
-
 func autoConvert_v1beta1_BastionStatus_To_v1alpha7_BastionStatus(in *v1beta1.BastionStatus, out *BastionStatus, s conversion.Scope) error {
-	out.ID = in.ID
 	out.Name = in.Name
-	out.SSHKeyName = in.SSHKeyName
-	out.State = InstanceState(in.State)
 	out.IP = in.IP
 	out.FloatingIP = in.FloatingIP
 	// WARNING: in.Resolved requires manual conversion: does not exist in peer-type
 	// WARNING: in.Resources requires manual conversion: does not exist in peer-type
+	// WARNING: in.Server requires manual conversion: does not exist in peer-type
 	return nil
 }
 
@@ -1286,11 +1279,6 @@ func autoConvert_v1alpha7_OpenStackMachine_To_v1beta1_OpenStackMachine(in *OpenS
 	return nil
 }
 
-// Convert_v1alpha7_OpenStackMachine_To_v1beta1_OpenStackMachine is an autogenerated conversion function.
-func Convert_v1alpha7_OpenStackMachine_To_v1beta1_OpenStackMachine(in *OpenStackMachine, out *v1beta1.OpenStackMachine, s conversion.Scope) error {
-	return autoConvert_v1alpha7_OpenStackMachine_To_v1beta1_OpenStackMachine(in, out, s)
-}
-
 func autoConvert_v1beta1_OpenStackMachine_To_v1alpha7_OpenStackMachine(in *v1beta1.OpenStackMachine, out *OpenStackMachine, s conversion.Scope) error {
 	out.ObjectMeta = in.ObjectMeta
 	if err := Convert_v1beta1_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(&in.Spec, &out.Spec, s); err != nil {
@@ -1300,11 +1288,6 @@ func autoConvert_v1beta1_OpenStackMachine_To_v1alpha7_OpenStackMachine(in *v1bet
 		return err
 	}
 	return nil
-}
-
-// Convert_v1beta1_OpenStackMachine_To_v1alpha7_OpenStackMachine is an autogenerated conversion function.
-func Convert_v1beta1_OpenStackMachine_To_v1alpha7_OpenStackMachine(in *v1beta1.OpenStackMachine, out *OpenStackMachine, s conversion.Scope) error {
-	return autoConvert_v1beta1_OpenStackMachine_To_v1alpha7_OpenStackMachine(in, out, s)
 }
 
 func autoConvert_v1alpha7_OpenStackMachineList_To_v1beta1_OpenStackMachineList(in *OpenStackMachineList, out *v1beta1.OpenStackMachineList, s conversion.Scope) error {
@@ -1351,7 +1334,7 @@ func Convert_v1beta1_OpenStackMachineList_To_v1alpha7_OpenStackMachineList(in *v
 
 func autoConvert_v1alpha7_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in *OpenStackMachineSpec, out *v1beta1.OpenStackMachineSpec, s conversion.Scope) error {
 	out.ProviderID = (*string)(unsafe.Pointer(in.ProviderID))
-	out.InstanceID = (*string)(unsafe.Pointer(in.InstanceID))
+	// WARNING: in.InstanceID requires manual conversion: does not exist in peer-type
 	// WARNING: in.CloudName requires manual conversion: does not exist in peer-type
 	out.Flavor = in.Flavor
 	// WARNING: in.Image requires manual conversion: inconvertible types (string vs sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageFilter)
@@ -1401,7 +1384,6 @@ func autoConvert_v1alpha7_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(i
 
 func autoConvert_v1beta1_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in *v1beta1.OpenStackMachineSpec, out *OpenStackMachineSpec, s conversion.Scope) error {
 	out.ProviderID = (*string)(unsafe.Pointer(in.ProviderID))
-	out.InstanceID = (*string)(unsafe.Pointer(in.InstanceID))
 	out.Flavor = in.Flavor
 	// WARNING: in.Image requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageFilter vs string)
 	out.SSHKeyName = in.SSHKeyName
@@ -1450,27 +1432,22 @@ func autoConvert_v1beta1_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(i
 func autoConvert_v1alpha7_OpenStackMachineStatus_To_v1beta1_OpenStackMachineStatus(in *OpenStackMachineStatus, out *v1beta1.OpenStackMachineStatus, s conversion.Scope) error {
 	out.Ready = in.Ready
 	out.Addresses = *(*[]corev1.NodeAddress)(unsafe.Pointer(&in.Addresses))
-	out.InstanceState = (*v1beta1.InstanceState)(unsafe.Pointer(in.InstanceState))
+	// WARNING: in.InstanceState requires manual conversion: does not exist in peer-type
 	out.FailureReason = (*errors.MachineStatusError)(unsafe.Pointer(in.FailureReason))
 	out.FailureMessage = (*string)(unsafe.Pointer(in.FailureMessage))
 	out.Conditions = *(*apiv1beta1.Conditions)(unsafe.Pointer(&in.Conditions))
 	return nil
 }
 
-// Convert_v1alpha7_OpenStackMachineStatus_To_v1beta1_OpenStackMachineStatus is an autogenerated conversion function.
-func Convert_v1alpha7_OpenStackMachineStatus_To_v1beta1_OpenStackMachineStatus(in *OpenStackMachineStatus, out *v1beta1.OpenStackMachineStatus, s conversion.Scope) error {
-	return autoConvert_v1alpha7_OpenStackMachineStatus_To_v1beta1_OpenStackMachineStatus(in, out, s)
-}
-
 func autoConvert_v1beta1_OpenStackMachineStatus_To_v1alpha7_OpenStackMachineStatus(in *v1beta1.OpenStackMachineStatus, out *OpenStackMachineStatus, s conversion.Scope) error {
 	out.Ready = in.Ready
 	out.Addresses = *(*[]corev1.NodeAddress)(unsafe.Pointer(&in.Addresses))
-	out.InstanceState = (*InstanceState)(unsafe.Pointer(in.InstanceState))
 	// WARNING: in.Resolved requires manual conversion: does not exist in peer-type
 	// WARNING: in.Resources requires manual conversion: does not exist in peer-type
 	out.FailureReason = (*errors.MachineStatusError)(unsafe.Pointer(in.FailureReason))
 	out.FailureMessage = (*string)(unsafe.Pointer(in.FailureMessage))
 	out.Conditions = *(*apiv1beta1.Conditions)(unsafe.Pointer(&in.Conditions))
+	// WARNING: in.Server requires manual conversion: does not exist in peer-type
 	return nil
 }
 
