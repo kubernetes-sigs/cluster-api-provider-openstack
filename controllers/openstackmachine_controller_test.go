@@ -91,7 +91,7 @@ func getDefaultOpenStackMachine() *infrav1.OpenStackMachine {
 				{Key: "test-metadata", Value: "test-value"},
 			},
 			ConfigDrive:    pointer.Bool(true),
-			SecurityGroups: []infrav1.SecurityGroupFilter{},
+			SecurityGroups: []infrav1.SecurityGroupParam{},
 			ServerGroup:    &infrav1.ServerGroupFilter{ID: serverGroupUUID},
 		},
 		Status: infrav1.OpenStackMachineStatus{
