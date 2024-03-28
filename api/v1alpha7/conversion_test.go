@@ -17,7 +17,7 @@ limitations under the License.
 package v1alpha7
 
 import (
-	"strings"
+	"slices"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -57,32 +57,8 @@ func TestFuzzyConversion(t *testing.T) {
 		delete(obj.GetAnnotations(), utilconversion.DataAnnotation)
 	}
 
-	filterInvalidTags := func(tags []infrav1.NeutronTag) []infrav1.NeutronTag {
-		var ret []infrav1.NeutronTag
-		for i := range tags {
-			s := string(tags[i])
-			if len(s) > 0 && !strings.Contains(s, ",") {
-				ret = append(ret, tags[i])
-			}
-		}
-		return ret
-	}
-
 	fuzzerFuncs := func(_ runtimeserializer.CodecFactory) []interface{} {
-		return []interface{}{
-			func(spec *infrav1.OpenStackClusterSpec, c fuzz.Continue) {
-				c.FuzzNoCustom(spec)
-
-				// The fuzzer only seems to generate Subnets of
-				// length 1, but we need to also test length 2.
-				// Ensure it is occasionally generated.
-				if len(spec.Subnets) == 1 && c.RandBool() {
-					subnet := infrav1.SubnetFilter{}
-					c.FuzzNoCustom(&subnet)
-					spec.Subnets = append(spec.Subnets, subnet)
-				}
-			},
-
+		v1alpha7FuzzerFuncs := []interface{}{
 			func(spec *OpenStackMachineSpec, c fuzz.Continue) {
 				c.FuzzNoCustom(spec)
 
@@ -113,88 +89,9 @@ func TestFuzzyConversion(t *testing.T) {
 					}
 				}
 			},
-
-			func(spec *infrav1.SubnetSpec, c fuzz.Continue) {
-				c.FuzzNoCustom(spec)
-
-				// CIDR is required and API validates that it's present, so
-				// we force it to always be set.
-				for spec.CIDR == "" {
-					spec.CIDR = c.RandString()
-				}
-			},
-
-			func(pool *infrav1.AllocationPool, c fuzz.Continue) {
-				c.FuzzNoCustom(pool)
-
-				// Start and End are required properties, let's make sure both are set
-				for pool.Start == "" {
-					pool.Start = c.RandString()
-				}
-
-				for pool.End == "" {
-					pool.End = c.RandString()
-				}
-			},
-
-			// v1beta1 filter tags cannot contain commas and can't be empty.
-
-			func(filter *infrav1.SubnetFilter, c fuzz.Continue) {
-				c.FuzzNoCustom(filter)
-
-				// Sometimes add an additional tag to ensure we get test coverage of multiple tags
-				if c.RandBool() {
-					filter.Tags = append(filter.Tags, infrav1.NeutronTag(c.RandString()))
-				}
-
-				filter.Tags = filterInvalidTags(filter.Tags)
-				filter.TagsAny = filterInvalidTags(filter.TagsAny)
-				filter.NotTags = filterInvalidTags(filter.NotTags)
-				filter.NotTagsAny = filterInvalidTags(filter.NotTagsAny)
-			},
-
-			func(filter *infrav1.NetworkFilter, c fuzz.Continue) {
-				c.FuzzNoCustom(filter)
-
-				// Sometimes add an additional tag to ensure we get test coverage of multiple tags
-				if c.RandBool() {
-					filter.Tags = append(filter.Tags, infrav1.NeutronTag(c.RandString()))
-				}
-
-				filter.Tags = filterInvalidTags(filter.Tags)
-				filter.TagsAny = filterInvalidTags(filter.TagsAny)
-				filter.NotTags = filterInvalidTags(filter.NotTags)
-				filter.NotTagsAny = filterInvalidTags(filter.NotTagsAny)
-			},
-
-			func(filter *infrav1.RouterFilter, c fuzz.Continue) {
-				c.FuzzNoCustom(filter)
-
-				// Sometimes add an additional tag to ensure we get test coverage of multiple tags
-				if c.RandBool() {
-					filter.Tags = append(filter.Tags, infrav1.NeutronTag(c.RandString()))
-				}
-
-				filter.Tags = filterInvalidTags(filter.Tags)
-				filter.TagsAny = filterInvalidTags(filter.TagsAny)
-				filter.NotTags = filterInvalidTags(filter.NotTags)
-				filter.NotTagsAny = filterInvalidTags(filter.NotTagsAny)
-			},
-
-			func(filter *infrav1.SecurityGroupFilter, c fuzz.Continue) {
-				c.FuzzNoCustom(filter)
-
-				// Sometimes add an additional tag to ensure we get test coverage of multiple tags
-				if c.RandBool() {
-					filter.Tags = append(filter.Tags, infrav1.NeutronTag(c.RandString()))
-				}
-
-				filter.Tags = filterInvalidTags(filter.Tags)
-				filter.TagsAny = filterInvalidTags(filter.TagsAny)
-				filter.NotTags = filterInvalidTags(filter.NotTags)
-				filter.NotTagsAny = filterInvalidTags(filter.NotTagsAny)
-			},
 		}
+
+		return slices.Concat(v1alpha7FuzzerFuncs, testhelpers.InfraV1FuzzerFuncs())
 	}
 
 	t.Run("for OpenStackCluster", runParallel(utilconversion.FuzzTestFunc(utilconversion.FuzzTestFuncInput{
