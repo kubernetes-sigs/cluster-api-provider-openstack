@@ -351,3 +351,14 @@ func Convert_v1beta1_OpenStackIdentityReference_To_v1alpha7_OpenStackIdentityRef
 	out.Name = in.Name
 	return nil
 }
+
+/* APIServerLoadBalancer */
+
+func restorev1beta1APIServerLoadBalancer(previous *infrav1.APIServerLoadBalancer, dst *infrav1.APIServerLoadBalancer) {
+	if dst == nil || previous == nil {
+		return
+	}
+
+	// AZ doesn't exist in v1alpha6, so always restore.
+	dst.AvailabilityZone = previous.AvailabilityZone
+}

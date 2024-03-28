@@ -426,6 +426,7 @@ func autoConvert_v1beta1_APIServerLoadBalancer_To_v1alpha5_APIServerLoadBalancer
 	out.AdditionalPorts = *(*[]int)(unsafe.Pointer(&in.AdditionalPorts))
 	out.AllowedCIDRs = *(*[]string)(unsafe.Pointer(&in.AllowedCIDRs))
 	// WARNING: in.Provider requires manual conversion: does not exist in peer-type
+	// WARNING: in.AvailabilityZone requires manual conversion: does not exist in peer-type
 	return nil
 }
 

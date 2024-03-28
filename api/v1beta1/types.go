@@ -654,6 +654,10 @@ type APIServerLoadBalancer struct {
 	// specified.
 	// +optional
 	Provider optional.String `json:"provider,omitempty"`
+
+	// AvailabilityZone is the failure domain that will be used to create the APIServerLoadBalancer Spec.
+	//+optional
+	AvailabilityZone optional.String `json:"availabilityZone,omitempty"`
 }
 
 func (s *APIServerLoadBalancer) IsZero() bool {
