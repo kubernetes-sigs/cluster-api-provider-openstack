@@ -137,8 +137,18 @@ func restorev1alpha7MachineSpec(previous *OpenStackMachineSpec, dst *OpenStackMa
 }
 
 func restorev1beta1MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *infrav1.OpenStackMachineSpec) {
+	if previous == nil || dst == nil {
+		return
+	}
+
 	dst.ServerGroup = previous.ServerGroup
 	dst.Image = previous.Image
+
+	if len(dst.SecurityGroups) == len(previous.SecurityGroups) {
+		for i := range dst.SecurityGroups {
+			restorev1beta1SecurityGroupParam(&previous.SecurityGroups[i], &dst.SecurityGroups[i])
+		}
+	}
 
 	if len(dst.Ports) == len(previous.Ports) {
 		for i := range dst.Ports {
@@ -160,13 +170,13 @@ func Convert_v1alpha7_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in *O
 		out.ServerGroup = nil
 	}
 
-	imageFilter := infrav1.ImageFilter{}
+	imageParam := infrav1.ImageParam{}
 	if in.ImageUUID != "" {
-		imageFilter.ID = &in.ImageUUID
+		imageParam.ID = &in.ImageUUID
 	} else if in.Image != "" { // Only add name when ID is not set, in v1beta1 it's not possible to set both.
-		imageFilter.Name = &in.Image
+		imageParam.Filter = &infrav1.ImageFilter{Name: &in.Image}
 	}
-	out.Image = imageFilter
+	out.Image = imageParam
 
 	if len(in.ServerMetadata) > 0 {
 		serverMetadata := make([]infrav1.ServerMetadata, 0, len(in.ServerMetadata))
@@ -205,12 +215,10 @@ func Convert_v1beta1_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in *i
 		out.ServerGroupID = in.ServerGroup.ID
 	}
 
-	if in.Image.Name != nil && *in.Image.Name != "" {
-		out.Image = *in.Image.Name
-	}
-
-	if in.Image.ID != nil && *in.Image.ID != "" {
+	if in.Image.ID != nil {
 		out.ImageUUID = *in.Image.ID
+	} else if in.Image.Filter != nil && in.Image.Filter.Name != nil {
+		out.Image = *in.Image.Filter.Name
 	}
 
 	if len(in.ServerMetadata) > 0 {

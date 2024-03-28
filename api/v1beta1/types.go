@@ -28,20 +28,40 @@ type OpenStackMachineTemplateResource struct {
 	Spec OpenStackMachineSpec `json:"spec"`
 }
 
-// ImageFilter describes the data needed to identify which image to use. If ID is provided it is required that all other fields are unset.
-// +kubebuilder:validation:XValidation:rule="(has(self.id) && !has(self.name) && !has(self.tags)) || !has(self.id)",message="when ID is set you cannot set other options"
-type ImageFilter struct {
-	// The ID of the desired image. If ID is provided, the other filters cannot be provided. Must be in UUID format.
+// ImageParam describes a glance image. It can be specified by ID or filter.
+// +kubebuilder:validation:MaxProperties:=1
+// +kubebuilder:validation:MinProperties:=1
+type ImageParam struct {
+	// ID is the uuid of the image. ID will not be validated before use.
 	// +kubebuilder:validation:Format:=uuid
 	// +optional
 	ID optional.String `json:"id,omitempty"`
+
+	// Filter describes a query for an image. If specified, the combination
+	// of name and tags must return a single matching image or an error will
+	// be raised.
+	// +optional
+	Filter *ImageFilter `json:"filter,omitempty"`
+}
+
+// ImageFilter describes a query for an image.
+// +kubebuilder:validation:MinProperties:=1
+type ImageFilter struct {
 	// The name of the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
 	// +optional
 	Name optional.String `json:"name,omitempty"`
+
 	// The tags associated with the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
 	// +listType=set
 	// +optional
 	Tags []string `json:"tags,omitempty"`
+}
+
+func (f *ImageFilter) IsZero() bool {
+	if f == nil {
+		return true
+	}
+	return f.Name == nil && len(f.Tags) == 0
 }
 
 type ExternalRouterIPParam struct {
@@ -88,13 +108,38 @@ func (f *FilterByNeutronTags) IsZero() bool {
 	return f == nil || (len(f.Tags) == 0 && len(f.TagsAny) == 0 && len(f.NotTags) == 0 && len(f.NotTagsAny) == 0)
 }
 
+// SecurityGroupParam specifies an OpenStack security group. It may be specified by ID or filter, but not both.
+// +kubebuilder:validation:MaxProperties:=1
+// +kubebuilder:validation:MinProperties:=1
+type SecurityGroupParam struct {
+	// ID is the ID of the security group to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.
+	// +kubebuilder:validation:Format:=uuid
+	// +optional
+	ID optional.String `json:"id,omitempty"`
+
+	// Filter specifies a query to select an OpenStack security group. If provided, cannot be empty.
+	// +optional
+	Filter *SecurityGroupFilter `json:"filter,omitempty"`
+}
+
+// SecurityGroupFilter specifies a query to select an OpenStack security group. At least one property must be set.
+// +kubebuilder:validation:MinProperties:=1
 type SecurityGroupFilter struct {
-	ID          string `json:"id,omitempty"`
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
 	ProjectID   string `json:"projectID,omitempty"`
 
 	FilterByNeutronTags `json:",inline"`
+}
+
+func (f *SecurityGroupFilter) IsZero() bool {
+	if f == nil {
+		return true
+	}
+	return f.Name == "" &&
+		f.Description == "" &&
+		f.ProjectID == "" &&
+		f.FilterByNeutronTags.IsZero()
 }
 
 // NetworkParam specifies an OpenStack network. It may be specified by either ID or Filter, but not both.
@@ -232,7 +277,7 @@ type PortOpts struct {
 	// SecurityGroups is a list of the names, uuids, filters or any combination these of the security groups to assign to the instance.
 	// +optional
 	// +listType=atomic
-	SecurityGroups []SecurityGroupFilter `json:"securityGroups,omitempty"`
+	SecurityGroups []SecurityGroupParam `json:"securityGroups,omitempty"`
 
 	// Tags applied to the port (and corresponding trunk, if a trunk is configured.)
 	// These tags are applied in addition to the instance's tags, which will also be applied to the port.

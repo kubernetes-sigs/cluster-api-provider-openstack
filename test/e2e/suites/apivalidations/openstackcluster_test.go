@@ -92,7 +92,11 @@ var _ = Describe("OpenStackCluster API validations", func() {
 		cluster.Spec.Bastion = &infrav1.Bastion{
 			Enabled: true,
 			Spec: &infrav1.OpenStackMachineSpec{
-				Image: infrav1.ImageFilter{Name: pointer.String("fake-image")},
+				Image: infrav1.ImageParam{
+					Filter: &infrav1.ImageFilter{
+						Name: pointer.String("fake-image"),
+					},
+				},
 			},
 		}
 		Expect(k8sClient.Create(ctx, cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
@@ -120,7 +124,11 @@ var _ = Describe("OpenStackCluster API validations", func() {
 		cluster.Spec.Bastion = &infrav1.Bastion{
 			Enabled: true,
 			Spec: &infrav1.OpenStackMachineSpec{
-				Image: infrav1.ImageFilter{Name: pointer.String("fake-image")},
+				Image: infrav1.ImageParam{
+					Filter: &infrav1.ImageFilter{
+						Name: pointer.String("fake-image"),
+					},
+				},
 			},
 			FloatingIP: pointer.String("10.0.0.0"),
 		}
@@ -131,7 +139,11 @@ var _ = Describe("OpenStackCluster API validations", func() {
 		cluster.Spec.Bastion = &infrav1.Bastion{
 			Enabled: true,
 			Spec: &infrav1.OpenStackMachineSpec{
-				Image: infrav1.ImageFilter{Name: pointer.String("fake-image")},
+				Image: infrav1.ImageParam{
+					Filter: &infrav1.ImageFilter{
+						Name: pointer.String("fake-image"),
+					},
+				},
 			},
 			FloatingIP: pointer.String("foobar"),
 		}

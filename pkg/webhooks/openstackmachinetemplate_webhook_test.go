@@ -47,7 +47,11 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: infrav1.OpenStackMachineTemplateResource{
 						Spec: infrav1.OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  infrav1.ImageFilter{Name: pointer.String("bar")},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
+									Name: pointer.String("bar"),
+								},
+							},
 						},
 					},
 				},
@@ -57,7 +61,11 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: infrav1.OpenStackMachineTemplateResource{
 						Spec: infrav1.OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  infrav1.ImageFilter{Name: pointer.String("NewImage")},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
+									Name: pointer.String("NewImage"),
+								},
+							},
 						},
 					},
 				},
@@ -72,7 +80,11 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: infrav1.OpenStackMachineTemplateResource{
 						Spec: infrav1.OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  infrav1.ImageFilter{Name: pointer.String("bar")},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
+									Name: pointer.String("bar"),
+								},
+							},
 						},
 					},
 				},
@@ -85,7 +97,11 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: infrav1.OpenStackMachineTemplateResource{
 						Spec: infrav1.OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  infrav1.ImageFilter{Name: pointer.String("bar")},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
+									Name: pointer.String("bar"),
+								},
+							},
 						},
 					},
 				},
@@ -102,7 +118,11 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: infrav1.OpenStackMachineTemplateResource{
 						Spec: infrav1.OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  infrav1.ImageFilter{Name: pointer.String("bar")},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
+									Name: pointer.String("bar"),
+								},
+							},
 						},
 					},
 				},
@@ -112,7 +132,11 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: infrav1.OpenStackMachineTemplateResource{
 						Spec: infrav1.OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  infrav1.ImageFilter{Name: pointer.String("NewImage")},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
+									Name: pointer.String("NewImage"),
+								},
+							},
 						},
 					},
 				},
@@ -127,7 +151,11 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: infrav1.OpenStackMachineTemplateResource{
 						Spec: infrav1.OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  infrav1.ImageFilter{Name: pointer.String("bar")},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
+									Name: pointer.String("bar"),
+								},
+							},
 						},
 					},
 				},
@@ -142,7 +170,11 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: infrav1.OpenStackMachineTemplateResource{
 						Spec: infrav1.OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  infrav1.ImageFilter{Name: pointer.String("NewImage")},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
+									Name: pointer.String("NewImage"),
+								},
+							},
 						},
 					},
 				},
