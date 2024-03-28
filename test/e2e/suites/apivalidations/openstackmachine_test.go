@@ -35,7 +35,11 @@ var _ = Describe("OpenStackMachine API validations", func() {
 		namespace = createNamespace()
 
 		// Initialise a basic machine object in the correct namespace
-		machine = &infrav1.OpenStackMachine{}
+		machine = &infrav1.OpenStackMachine{
+			Spec: infrav1.OpenStackMachineSpec{
+				Image: infrav1.ImageParam{Filter: &infrav1.ImageFilter{Name: pointer.String("test-image")}},
+			},
+		}
 		machine.Namespace = namespace.Name
 		machine.GenerateName = "machine-"
 	})

@@ -45,7 +45,7 @@ type OpenStackMachineSpec struct {
 	// The image to use for your server instance.
 	// If the rootVolume is specified, this will be used when creating the root volume.
 	// +required
-	Image ImageFilter `json:"image"`
+	Image ImageParam `json:"image"`
 
 	// The ssh key to inject in the instance
 	SSHKeyName string `json:"sshKeyName,omitempty"`
@@ -55,7 +55,7 @@ type OpenStackMachineSpec struct {
 	Ports []PortOpts `json:"ports,omitempty"`
 
 	// The names of the security groups to assign to the instance
-	SecurityGroups []SecurityGroupFilter `json:"securityGroups,omitempty"`
+	SecurityGroups []SecurityGroupParam `json:"securityGroups,omitempty"`
 
 	// Whether the server instance is created on a trunk port or not.
 	Trunk bool `json:"trunk,omitempty"`

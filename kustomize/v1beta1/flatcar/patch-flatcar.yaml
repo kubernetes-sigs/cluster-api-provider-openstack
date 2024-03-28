@@ -94,7 +94,8 @@ spec:
   template:
     spec:
       image:
-        name: ${OPENSTACK_FLATCAR_IMAGE_NAME}
+        filter:
+          name: ${OPENSTACK_FLATCAR_IMAGE_NAME}
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: OpenStackMachineTemplate
@@ -104,4 +105,5 @@ spec:
   template:
     spec:
       image:
-        name: ${OPENSTACK_FLATCAR_IMAGE_NAME}
+        filter:
+          name: ${OPENSTACK_FLATCAR_IMAGE_NAME}

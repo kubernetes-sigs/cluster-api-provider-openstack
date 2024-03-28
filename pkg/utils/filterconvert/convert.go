@@ -31,7 +31,6 @@ func SecurityGroupFilterToListOpts(securityGroupFilter *infrav1.SecurityGroupFil
 		return securitygroups.ListOpts{}
 	}
 	return securitygroups.ListOpts{
-		ID:          securityGroupFilter.ID,
 		Name:        securityGroupFilter.Name,
 		Description: securityGroupFilter.Description,
 		ProjectID:   securityGroupFilter.ProjectID,
@@ -82,7 +81,6 @@ func RouterFilterToListOpts(routerFilter *infrav1.RouterFilter) routers.ListOpts
 		return routers.ListOpts{}
 	}
 	return routers.ListOpts{
-		ID:          routerFilter.ID,
 		Name:        routerFilter.Name,
 		Description: routerFilter.Description,
 		ProjectID:   routerFilter.ProjectID,

@@ -366,8 +366,18 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddConversionFunc((*RouterFilter)(nil), (*v1beta1.RouterParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha7_RouterFilter_To_v1beta1_RouterParam(a.(*RouterFilter), b.(*v1beta1.RouterParam), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddConversionFunc((*SecurityGroupFilter)(nil), (*v1beta1.SecurityGroupFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha7_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(a.(*SecurityGroupFilter), b.(*v1beta1.SecurityGroupFilter), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*SecurityGroupFilter)(nil), (*v1beta1.SecurityGroupParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha7_SecurityGroupFilter_To_v1beta1_SecurityGroupParam(a.(*SecurityGroupFilter), b.(*v1beta1.SecurityGroupParam), scope)
 	}); err != nil {
 		return err
 	}
@@ -441,8 +451,18 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddConversionFunc((*v1beta1.RouterParam)(nil), (*RouterFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1beta1_RouterParam_To_v1alpha7_RouterFilter(a.(*v1beta1.RouterParam), b.(*RouterFilter), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddConversionFunc((*v1beta1.SecurityGroupFilter)(nil), (*SecurityGroupFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1beta1_SecurityGroupFilter_To_v1alpha7_SecurityGroupFilter(a.(*v1beta1.SecurityGroupFilter), b.(*SecurityGroupFilter), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1beta1.SecurityGroupParam)(nil), (*SecurityGroupFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1beta1_SecurityGroupParam_To_v1alpha7_SecurityGroupFilter(a.(*v1beta1.SecurityGroupParam), b.(*SecurityGroupFilter), scope)
 	}); err != nil {
 		return err
 	}
@@ -919,8 +939,8 @@ func autoConvert_v1alpha7_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(i
 	// WARNING: in.NodeCIDR requires manual conversion: does not exist in peer-type
 	if in.Router != nil {
 		in, out := &in.Router, &out.Router
-		*out = new(v1beta1.RouterFilter)
-		if err := Convert_v1alpha7_RouterFilter_To_v1beta1_RouterFilter(*in, *out, s); err != nil {
+		*out = new(v1beta1.RouterParam)
+		if err := Convert_v1alpha7_RouterFilter_To_v1beta1_RouterParam(*in, *out, s); err != nil {
 			return err
 		}
 	} else {
@@ -986,7 +1006,7 @@ func autoConvert_v1beta1_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(i
 	if in.Router != nil {
 		in, out := &in.Router, &out.Router
 		*out = new(RouterFilter)
-		if err := Convert_v1beta1_RouterFilter_To_v1alpha7_RouterFilter(*in, *out, s); err != nil {
+		if err := Convert_v1beta1_RouterParam_To_v1alpha7_RouterFilter(*in, *out, s); err != nil {
 			return err
 		}
 	} else {
@@ -1354,7 +1374,7 @@ func autoConvert_v1alpha7_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(i
 	out.InstanceID = (*string)(unsafe.Pointer(in.InstanceID))
 	// WARNING: in.CloudName requires manual conversion: does not exist in peer-type
 	out.Flavor = in.Flavor
-	// WARNING: in.Image requires manual conversion: inconvertible types (string vs sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageFilter)
+	// WARNING: in.Image requires manual conversion: inconvertible types (string vs sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageParam)
 	// WARNING: in.ImageUUID requires manual conversion: does not exist in peer-type
 	out.SSHKeyName = in.SSHKeyName
 	if in.Ports != nil {
@@ -1371,9 +1391,9 @@ func autoConvert_v1alpha7_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(i
 	// WARNING: in.FloatingIP requires manual conversion: does not exist in peer-type
 	if in.SecurityGroups != nil {
 		in, out := &in.SecurityGroups, &out.SecurityGroups
-		*out = make([]v1beta1.SecurityGroupFilter, len(*in))
+		*out = make([]v1beta1.SecurityGroupParam, len(*in))
 		for i := range *in {
-			if err := Convert_v1alpha7_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(&(*in)[i], &(*out)[i], s); err != nil {
+			if err := Convert_v1alpha7_SecurityGroupFilter_To_v1beta1_SecurityGroupParam(&(*in)[i], &(*out)[i], s); err != nil {
 				return err
 			}
 		}
@@ -1403,7 +1423,7 @@ func autoConvert_v1beta1_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(i
 	out.ProviderID = (*string)(unsafe.Pointer(in.ProviderID))
 	out.InstanceID = (*string)(unsafe.Pointer(in.InstanceID))
 	out.Flavor = in.Flavor
-	// WARNING: in.Image requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageFilter vs string)
+	// WARNING: in.Image requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageParam vs string)
 	out.SSHKeyName = in.SSHKeyName
 	if in.Ports != nil {
 		in, out := &in.Ports, &out.Ports
@@ -1420,7 +1440,7 @@ func autoConvert_v1beta1_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(i
 		in, out := &in.SecurityGroups, &out.SecurityGroups
 		*out = make([]SecurityGroupFilter, len(*in))
 		for i := range *in {
-			if err := Convert_v1beta1_SecurityGroupFilter_To_v1alpha7_SecurityGroupFilter(&(*in)[i], &(*out)[i], s); err != nil {
+			if err := Convert_v1beta1_SecurityGroupParam_To_v1alpha7_SecurityGroupFilter(&(*in)[i], &(*out)[i], s); err != nil {
 				return err
 			}
 		}
@@ -1717,7 +1737,7 @@ func Convert_v1beta1_Router_To_v1alpha7_Router(in *v1beta1.Router, out *Router, 
 }
 
 func autoConvert_v1alpha7_RouterFilter_To_v1beta1_RouterFilter(in *RouterFilter, out *v1beta1.RouterFilter, s conversion.Scope) error {
-	out.ID = in.ID
+	// WARNING: in.ID requires manual conversion: does not exist in peer-type
 	out.Name = in.Name
 	out.Description = in.Description
 	out.ProjectID = in.ProjectID
@@ -1729,7 +1749,6 @@ func autoConvert_v1alpha7_RouterFilter_To_v1beta1_RouterFilter(in *RouterFilter,
 }
 
 func autoConvert_v1beta1_RouterFilter_To_v1alpha7_RouterFilter(in *v1beta1.RouterFilter, out *RouterFilter, s conversion.Scope) error {
-	out.ID = in.ID
 	out.Name = in.Name
 	out.Description = in.Description
 	out.ProjectID = in.ProjectID
@@ -1738,7 +1757,7 @@ func autoConvert_v1beta1_RouterFilter_To_v1alpha7_RouterFilter(in *v1beta1.Route
 }
 
 func autoConvert_v1alpha7_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(in *SecurityGroupFilter, out *v1beta1.SecurityGroupFilter, s conversion.Scope) error {
-	out.ID = in.ID
+	// WARNING: in.ID requires manual conversion: does not exist in peer-type
 	out.Name = in.Name
 	out.Description = in.Description
 	out.ProjectID = in.ProjectID
@@ -1750,7 +1769,6 @@ func autoConvert_v1alpha7_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(in 
 }
 
 func autoConvert_v1beta1_SecurityGroupFilter_To_v1alpha7_SecurityGroupFilter(in *v1beta1.SecurityGroupFilter, out *SecurityGroupFilter, s conversion.Scope) error {
-	out.ID = in.ID
 	out.Name = in.Name
 	out.Description = in.Description
 	out.ProjectID = in.ProjectID

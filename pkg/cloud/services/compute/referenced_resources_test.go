@@ -68,7 +68,7 @@ func Test_ResolveMachineSpec(t *testing.T) {
 			testName: "Resources ID passed",
 			spec: infrav1.OpenStackMachineSpec{
 				ServerGroup: &infrav1.ServerGroupFilter{ID: serverGroupID1},
-				Image:       infrav1.ImageFilter{ID: pointer.String(imageID1)},
+				Image:       infrav1.ImageParam{ID: pointer.String(imageID1)},
 			},
 			want: &infrav1.ResolvedMachineSpec{
 				ImageID:       imageID1,
@@ -79,7 +79,7 @@ func Test_ResolveMachineSpec(t *testing.T) {
 		{
 			testName: "Only image ID passed: want image id and default ports",
 			spec: infrav1.OpenStackMachineSpec{
-				Image: infrav1.ImageFilter{ID: pointer.String(imageID1)},
+				Image: infrav1.ImageParam{ID: pointer.String(imageID1)},
 			},
 			want: &infrav1.ResolvedMachineSpec{
 				ImageID: imageID1,
@@ -89,7 +89,7 @@ func Test_ResolveMachineSpec(t *testing.T) {
 		{
 			testName: "Server group empty",
 			spec: infrav1.OpenStackMachineSpec{
-				Image:       infrav1.ImageFilter{ID: pointer.String(imageID1)},
+				Image:       infrav1.ImageParam{ID: pointer.String(imageID1)},
 				ServerGroup: &infrav1.ServerGroupFilter{},
 			},
 			want: &infrav1.ResolvedMachineSpec{
@@ -100,7 +100,7 @@ func Test_ResolveMachineSpec(t *testing.T) {
 		{
 			testName: "Server group by Name not found",
 			spec: infrav1.OpenStackMachineSpec{
-				Image:       infrav1.ImageFilter{ID: pointer.String(imageID1)},
+				Image:       infrav1.ImageParam{ID: pointer.String(imageID1)},
 				ServerGroup: &infrav1.ServerGroupFilter{Name: "test-server-group"},
 			},
 			expectComputeMock: func(m *mock.MockComputeClientMockRecorder) {
@@ -114,7 +114,11 @@ func Test_ResolveMachineSpec(t *testing.T) {
 		{
 			testName: "Image by Name not found",
 			spec: infrav1.OpenStackMachineSpec{
-				Image: infrav1.ImageFilter{Name: pointer.String("test-image")},
+				Image: infrav1.ImageParam{
+					Filter: &infrav1.ImageFilter{
+						Name: pointer.String("test-image"),
+					},
+				},
 			},
 			expectImageMock: func(m *mock.MockImageClientMockRecorder) {
 				m.ListImages(images.ListOpts{Name: "test-image"}).Return([]images.Image{}, nil)
@@ -125,7 +129,7 @@ func Test_ResolveMachineSpec(t *testing.T) {
 		{
 			testName: "Ports set",
 			spec: infrav1.OpenStackMachineSpec{
-				Image: infrav1.ImageFilter{ID: pointer.String(imageID1)},
+				Image: infrav1.ImageParam{ID: pointer.String(imageID1)},
 				Ports: []infrav1.PortOpts{
 					{
 						Network: &infrav1.NetworkParam{

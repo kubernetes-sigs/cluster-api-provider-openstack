@@ -43,7 +43,7 @@ spec:
           controlPlane: true
       jsonPatches:
       - op: add
-        path: /spec/template/spec/image/name
+        path: /spec/template/spec/image/filter/name
         valueFrom:
           template: |
             ubuntu-2204-kube-{{ .builtin.controlPlane.version }}
@@ -59,7 +59,7 @@ spec:
             - default-worker
       jsonPatches:
       - op: add
-        path: /spec/template/spec/image/name
+        path: /spec/template/spec/image/filter/name
         valueFrom:
           template: |
             ubuntu-2204-kube-{{ .builtin.machineDeployment.version }}
