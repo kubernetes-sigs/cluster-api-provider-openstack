@@ -1,0 +1,21 @@
+# See https://cloud.google.com/cloud-build/docs/build-config
+timeout: 7200s
+options:
+  substitution_option: ALLOW_LOOSE
+  machineType: 'N1_HIGHCPU_32'
+steps:
+  - name: 'docker'
+    script: |
+      apk add --update bash git make
+      cd ./osimages
+      make -j2 ACCELERATOR=none \
+        osimage-flatcar-1.27.2 \
+        osimage-flatcar-1.28.2 \
+        osimage-ubuntu-2204-1.28.2 \
+        osimage-ubuntu-2204-1.27.2
+    id: 'make'
+  - name: 'gcr.io/k8s-staging-test-infra/gcb-docker-gcloud:latest'
+    waitFor: ['make']
+    script: |
+      cd ./osimages
+      make osimage-upload
