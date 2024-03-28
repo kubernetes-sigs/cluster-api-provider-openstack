@@ -126,27 +126,74 @@ func Convert_v1beta1_NetworkParam_To_v1alpha7_NetworkFilter(in *infrav1.NetworkP
 /* SubnetFilter */
 
 func restorev1alpha7SubnetFilter(previous *SubnetFilter, dst *SubnetFilter) {
+	if previous == nil || dst == nil {
+		return
+	}
+
 	// The edge cases with multiple commas are too tricky in this direction,
 	// so we just restore the whole thing.
 	dst.Tags = previous.Tags
 	dst.TagsAny = previous.TagsAny
 	dst.NotTags = previous.NotTags
 	dst.NotTagsAny = previous.NotTagsAny
+
+	// If ID was set we will have lost all other fields in up-conversion
+	if previous.ID != "" {
+		dst.Name = previous.Name
+		dst.Description = previous.Description
+		dst.ProjectID = previous.ProjectID
+		dst.IPVersion = previous.IPVersion
+		dst.GatewayIP = previous.GatewayIP
+		dst.CIDR = previous.CIDR
+		dst.IPv6AddressMode = previous.IPv6AddressMode
+		dst.IPv6RAMode = previous.IPv6RAMode
+	}
 }
 
-func Convert_v1alpha7_SubnetFilter_To_v1beta1_SubnetFilter(in *SubnetFilter, out *infrav1.SubnetFilter, s apiconversion.Scope) error {
-	if err := autoConvert_v1alpha7_SubnetFilter_To_v1beta1_SubnetFilter(in, out, s); err != nil {
+func restorev1beta1SubnetParam(previous *infrav1.SubnetParam, dst *infrav1.SubnetParam) {
+	if previous == nil || dst == nil {
+		return
+	}
+
+	optional.RestoreString(&previous.ID, &dst.ID)
+
+	if dst.Filter != nil {
+		dst.Filter.FilterByNeutronTags = previous.Filter.FilterByNeutronTags
+	}
+}
+
+func Convert_v1alpha7_SubnetFilter_To_v1beta1_SubnetParam(in *SubnetFilter, out *infrav1.SubnetParam, s apiconversion.Scope) error {
+	if in.ID != "" {
+		out.ID = &in.ID
+		return nil
+	}
+
+	filter := &infrav1.SubnetFilter{}
+	if err := autoConvert_v1alpha7_SubnetFilter_To_v1beta1_SubnetFilter(in, filter, s); err != nil {
 		return err
 	}
-	infrav1.ConvertAllTagsTo(in.Tags, in.TagsAny, in.NotTags, in.NotTagsAny, &out.FilterByNeutronTags)
+	infrav1.ConvertAllTagsTo(in.Tags, in.TagsAny, in.NotTags, in.NotTagsAny, &filter.FilterByNeutronTags)
+
+	if !filter.IsZero() {
+		out.Filter = filter
+	}
 	return nil
 }
 
-func Convert_v1beta1_SubnetFilter_To_v1alpha7_SubnetFilter(in *infrav1.SubnetFilter, out *SubnetFilter, s apiconversion.Scope) error {
-	if err := autoConvert_v1beta1_SubnetFilter_To_v1alpha7_SubnetFilter(in, out, s); err != nil {
+func Convert_v1beta1_SubnetParam_To_v1alpha7_SubnetFilter(in *infrav1.SubnetParam, out *SubnetFilter, s apiconversion.Scope) error {
+	if in.ID != nil {
+		out.ID = *in.ID
+		return nil
+	}
+
+	if in.Filter == nil {
+		return nil
+	}
+
+	if err := autoConvert_v1beta1_SubnetFilter_To_v1alpha7_SubnetFilter(in.Filter, out, s); err != nil {
 		return err
 	}
-	infrav1.ConvertAllTagsFrom(&in.FilterByNeutronTags, &out.Tags, &out.TagsAny, &out.NotTags, &out.NotTagsAny)
+	infrav1.ConvertAllTagsFrom(&in.Filter.FilterByNeutronTags, &out.Tags, &out.TagsAny, &out.NotTags, &out.NotTagsAny)
 	return nil
 }
 
@@ -214,9 +261,8 @@ func restorev1beta1Port(previous *infrav1.PortOpts, dst *infrav1.PortOpts) {
 			prevFixedIP := &previous.FixedIPs[j]
 			dstFixedIP := &dst.FixedIPs[j]
 
-			if dstFixedIP.IPAddress == nil || *dstFixedIP.IPAddress == "" {
-				dstFixedIP.IPAddress = prevFixedIP.IPAddress
-			}
+			optional.RestoreString(&prevFixedIP.IPAddress, &dstFixedIP.IPAddress)
+			restorev1beta1SubnetParam(prevFixedIP.Subnet, dstFixedIP.Subnet)
 		}
 	}
 
@@ -225,9 +271,7 @@ func restorev1beta1Port(previous *infrav1.PortOpts, dst *infrav1.PortOpts) {
 			prevAAP := &previous.AllowedAddressPairs[j]
 			dstAAP := &dst.AllowedAddressPairs[j]
 
-			if dstAAP.MACAddress == nil || *dstAAP.MACAddress == "" {
-				dstAAP.MACAddress = prevAAP.MACAddress
-			}
+			optional.RestoreString(&prevAAP.MACAddress, &dstAAP.MACAddress)
 		}
 	}
 
@@ -394,6 +438,14 @@ func Convert_v1beta1_OpenStackIdentityReference_To_v1alpha7_OpenStackIdentityRef
 
 // conversion-gen registers these functions so we must provider stubs, but
 // nothing should ever call them
+
+func Convert_v1alpha7_SubnetFilter_To_v1beta1_SubnetFilter(_ *SubnetFilter, _ *infrav1.SubnetFilter, _ apiconversion.Scope) error {
+	return errors.New("Convert_v1alpha7_SubnetFilter_To_v1beta1_SubnetFilter should not be called")
+}
+
+func Convert_v1beta1_SubnetFilter_To_v1alpha7_SubnetFilter(_ *infrav1.SubnetFilter, _ *SubnetFilter, _ apiconversion.Scope) error {
+	return errors.New("Convert_v1beta1_SubnetFilter_To_v1alpha7_SubnetFilter should not be called")
+}
 
 func Convert_v1alpha7_NetworkFilter_To_v1beta1_NetworkFilter(_ *NetworkFilter, _ *infrav1.NetworkFilter, _ apiconversion.Scope) error {
 	return errors.New("Convert_v1alpha6_NetworkFilter_To_v1beta1_NetworkFilter should not be called")

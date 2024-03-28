@@ -152,7 +152,7 @@ func restorev1alpha6ClusterSpec(previous *OpenStackClusterSpec, dst *OpenStackCl
 
 	if len(dst.ExternalRouterIPs) == len(previous.ExternalRouterIPs) {
 		for i := range dst.ExternalRouterIPs {
-			restorev1alpha6SubnetFilter(&previous.ExternalRouterIPs[i].Subnet.Filter, &dst.ExternalRouterIPs[i].Subnet.Filter)
+			restorev1alpha6SubnetParam(&previous.ExternalRouterIPs[i].Subnet, &dst.ExternalRouterIPs[i].Subnet)
 		}
 	}
 
@@ -179,8 +179,17 @@ func restorev1beta1ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infr
 	dst.NetworkMTU = previous.NetworkMTU
 	dst.DisableExternalNetwork = previous.DisableExternalNetwork
 
+	if len(previous.Subnets) > 0 && len(dst.Subnets) > 0 {
+		restorev1beta1SubnetParam(&previous.Subnets[0], &dst.Subnets[0])
+	}
 	if len(previous.Subnets) > 1 {
 		dst.Subnets = append(dst.Subnets, previous.Subnets[1:]...)
+	}
+
+	if len(previous.ExternalRouterIPs) == len(dst.ExternalRouterIPs) {
+		for i := range dst.ExternalRouterIPs {
+			restorev1beta1SubnetParam(&previous.ExternalRouterIPs[i].Subnet, &dst.ExternalRouterIPs[i].Subnet)
+		}
 	}
 
 	dst.ManagedSubnets = previous.ManagedSubnets
@@ -232,11 +241,11 @@ func Convert_v1alpha6_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 
 	emptySubnet := SubnetFilter{}
 	if in.Subnet != emptySubnet {
-		subnet := infrav1.SubnetFilter{}
-		if err := Convert_v1alpha6_SubnetFilter_To_v1beta1_SubnetFilter(&in.Subnet, &subnet, s); err != nil {
+		subnet := infrav1.SubnetParam{}
+		if err := Convert_v1alpha6_SubnetFilter_To_v1beta1_SubnetParam(&in.Subnet, &subnet, s); err != nil {
 			return err
 		}
-		out.Subnets = []infrav1.SubnetFilter{subnet}
+		out.Subnets = []infrav1.SubnetParam{subnet}
 	}
 
 	// DNSNameservers without NodeCIDR doesn't make sense, so we drop that.
@@ -295,7 +304,7 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in *i
 	}
 
 	if len(in.Subnets) >= 1 {
-		if err := Convert_v1beta1_SubnetFilter_To_v1alpha6_SubnetFilter(&in.Subnets[0], &out.Subnet, s); err != nil {
+		if err := Convert_v1beta1_SubnetParam_To_v1alpha6_SubnetFilter(&in.Subnets[0], &out.Subnet, s); err != nil {
 			return err
 		}
 	}

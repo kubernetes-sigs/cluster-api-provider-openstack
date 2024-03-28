@@ -48,7 +48,7 @@ type ExternalRouterIPParam struct {
 	// The FixedIP in the corresponding subnet
 	FixedIP string `json:"fixedIP,omitempty"`
 	// The subnet in which the FixedIP is used for the Gateway of this router
-	Subnet SubnetFilter `json:"subnet"`
+	Subnet SubnetParam `json:"subnet"`
 }
 
 // NeutronTag represents a tag on a Neutron resource.
@@ -85,7 +85,7 @@ type FilterByNeutronTags struct {
 }
 
 func (f *FilterByNeutronTags) IsZero() bool {
-	return f == nil || len(f.Tags) == 0 && len(f.TagsAny) == 0 && len(f.NotTags) == 0 && len(f.NotTagsAny) == 0
+	return f == nil || (len(f.Tags) == 0 && len(f.TagsAny) == 0 && len(f.NotTags) == 0 && len(f.NotTagsAny) == 0)
 }
 
 type SecurityGroupFilter struct {
@@ -131,6 +131,22 @@ func (networkFilter *NetworkFilter) IsZero() bool {
 		networkFilter.FilterByNeutronTags.IsZero()
 }
 
+// SubnetParam specifies an OpenStack subnet to use. It may be specified by either ID or filter, but not both.
+// +kubebuilder:validation:MaxProperties:=1
+// +kubebuilder:validation:MinProperties:=1
+type SubnetParam struct {
+	// ID is the uuid of the subnet. It will not be validated.
+	// +kubebuilder:validation:Format:=uuid
+	// +optional
+	ID optional.String `json:"id,omitempty"`
+
+	// Filter specifies a filter to select the subnet. It must match exactly one subnet.
+	// +optional
+	Filter *SubnetFilter `json:"filter,omitempty"`
+}
+
+// SubnetFilter specifies a filter to select a subnet. At least one parameter must be specified.
+// +kubebuilder:validation:MinProperties:=1
 type SubnetFilter struct {
 	Name            string `json:"name,omitempty"`
 	Description     string `json:"description,omitempty"`
@@ -140,9 +156,23 @@ type SubnetFilter struct {
 	CIDR            string `json:"cidr,omitempty"`
 	IPv6AddressMode string `json:"ipv6AddressMode,omitempty"`
 	IPv6RAMode      string `json:"ipv6RAMode,omitempty"`
-	ID              string `json:"id,omitempty"`
 
 	FilterByNeutronTags `json:",inline"`
+}
+
+func (subnetFilter *SubnetFilter) IsZero() bool {
+	if subnetFilter == nil {
+		return true
+	}
+	return subnetFilter.Name == "" &&
+		subnetFilter.Description == "" &&
+		subnetFilter.ProjectID == "" &&
+		subnetFilter.IPVersion == 0 &&
+		subnetFilter.GatewayIP == "" &&
+		subnetFilter.CIDR == "" &&
+		subnetFilter.IPv6AddressMode == "" &&
+		subnetFilter.IPv6RAMode == "" &&
+		subnetFilter.FilterByNeutronTags.IsZero()
 }
 
 type RouterFilter struct {
@@ -335,7 +365,7 @@ type FixedIP struct {
 	// Subnet is an openstack subnet query that will return the id of a subnet to create
 	// the fixed IP of a port in. This query must not return more than one subnet.
 	// +optional
-	Subnet *SubnetFilter `json:"subnet,omitempty"`
+	Subnet *SubnetParam `json:"subnet,omitempty"`
 
 	// IPAddress is a specific IP address to assign to the port. If Subnet
 	// is also specified, IPAddress must be a valid IP address in the

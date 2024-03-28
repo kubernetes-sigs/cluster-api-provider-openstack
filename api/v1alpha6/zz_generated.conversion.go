@@ -336,8 +336,13 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*SubnetParam)(nil), (*v1beta1.SubnetFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha6_SubnetParam_To_v1beta1_SubnetFilter(a.(*SubnetParam), b.(*v1beta1.SubnetFilter), scope)
+	if err := s.AddConversionFunc((*SubnetFilter)(nil), (*v1beta1.SubnetParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_SubnetFilter_To_v1beta1_SubnetParam(a.(*SubnetFilter), b.(*v1beta1.SubnetParam), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*SubnetParam)(nil), (*v1beta1.SubnetParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha6_SubnetParam_To_v1beta1_SubnetParam(a.(*SubnetParam), b.(*v1beta1.SubnetParam), scope)
 	}); err != nil {
 		return err
 	}
@@ -431,8 +436,13 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*v1beta1.SubnetFilter)(nil), (*SubnetParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1beta1_SubnetFilter_To_v1alpha6_SubnetParam(a.(*v1beta1.SubnetFilter), b.(*SubnetParam), scope)
+	if err := s.AddConversionFunc((*v1beta1.SubnetParam)(nil), (*SubnetFilter)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1beta1_SubnetParam_To_v1alpha6_SubnetFilter(a.(*v1beta1.SubnetParam), b.(*SubnetFilter), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1beta1.SubnetParam)(nil), (*SubnetParam)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1beta1_SubnetParam_To_v1alpha6_SubnetParam(a.(*v1beta1.SubnetParam), b.(*SubnetParam), scope)
 	}); err != nil {
 		return err
 	}
@@ -520,7 +530,7 @@ func autoConvert_v1beta1_Bastion_To_v1alpha6_Bastion(in *v1beta1.Bastion, out *B
 
 func autoConvert_v1alpha6_ExternalRouterIPParam_To_v1beta1_ExternalRouterIPParam(in *ExternalRouterIPParam, out *v1beta1.ExternalRouterIPParam, s conversion.Scope) error {
 	out.FixedIP = in.FixedIP
-	if err := Convert_v1alpha6_SubnetParam_To_v1beta1_SubnetFilter(&in.Subnet, &out.Subnet, s); err != nil {
+	if err := Convert_v1alpha6_SubnetParam_To_v1beta1_SubnetParam(&in.Subnet, &out.Subnet, s); err != nil {
 		return err
 	}
 	return nil
@@ -533,7 +543,7 @@ func Convert_v1alpha6_ExternalRouterIPParam_To_v1beta1_ExternalRouterIPParam(in 
 
 func autoConvert_v1beta1_ExternalRouterIPParam_To_v1alpha6_ExternalRouterIPParam(in *v1beta1.ExternalRouterIPParam, out *ExternalRouterIPParam, s conversion.Scope) error {
 	out.FixedIP = in.FixedIP
-	if err := Convert_v1beta1_SubnetFilter_To_v1alpha6_SubnetParam(&in.Subnet, &out.Subnet, s); err != nil {
+	if err := Convert_v1beta1_SubnetParam_To_v1alpha6_SubnetParam(&in.Subnet, &out.Subnet, s); err != nil {
 		return err
 	}
 	return nil
@@ -547,8 +557,8 @@ func Convert_v1beta1_ExternalRouterIPParam_To_v1alpha6_ExternalRouterIPParam(in 
 func autoConvert_v1alpha6_FixedIP_To_v1beta1_FixedIP(in *FixedIP, out *v1beta1.FixedIP, s conversion.Scope) error {
 	if in.Subnet != nil {
 		in, out := &in.Subnet, &out.Subnet
-		*out = new(v1beta1.SubnetFilter)
-		if err := Convert_v1alpha6_SubnetFilter_To_v1beta1_SubnetFilter(*in, *out, s); err != nil {
+		*out = new(v1beta1.SubnetParam)
+		if err := Convert_v1alpha6_SubnetFilter_To_v1beta1_SubnetParam(*in, *out, s); err != nil {
 			return err
 		}
 	} else {
@@ -569,7 +579,7 @@ func autoConvert_v1beta1_FixedIP_To_v1alpha6_FixedIP(in *v1beta1.FixedIP, out *F
 	if in.Subnet != nil {
 		in, out := &in.Subnet, &out.Subnet
 		*out = new(SubnetFilter)
-		if err := Convert_v1beta1_SubnetFilter_To_v1alpha6_SubnetFilter(*in, *out, s); err != nil {
+		if err := Convert_v1beta1_SubnetParam_To_v1alpha6_SubnetFilter(*in, *out, s); err != nil {
 			return err
 		}
 	} else {
@@ -1603,7 +1613,7 @@ func autoConvert_v1alpha6_SubnetFilter_To_v1beta1_SubnetFilter(in *SubnetFilter,
 	out.CIDR = in.CIDR
 	out.IPv6AddressMode = in.IPv6AddressMode
 	out.IPv6RAMode = in.IPv6RAMode
-	out.ID = in.ID
+	// WARNING: in.ID requires manual conversion: does not exist in peer-type
 	// WARNING: in.Tags requires manual conversion: does not exist in peer-type
 	// WARNING: in.TagsAny requires manual conversion: does not exist in peer-type
 	// WARNING: in.NotTags requires manual conversion: does not exist in peer-type
@@ -1620,8 +1630,19 @@ func autoConvert_v1beta1_SubnetFilter_To_v1alpha6_SubnetFilter(in *v1beta1.Subne
 	out.CIDR = in.CIDR
 	out.IPv6AddressMode = in.IPv6AddressMode
 	out.IPv6RAMode = in.IPv6RAMode
-	out.ID = in.ID
 	// WARNING: in.FilterByNeutronTags requires manual conversion: does not exist in peer-type
+	return nil
+}
+
+func autoConvert_v1alpha6_SubnetParam_To_v1beta1_SubnetParam(in *SubnetParam, out *v1beta1.SubnetParam, s conversion.Scope) error {
+	// WARNING: in.UUID requires manual conversion: does not exist in peer-type
+	// WARNING: in.Filter requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SubnetFilter vs *sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetFilter)
+	return nil
+}
+
+func autoConvert_v1beta1_SubnetParam_To_v1alpha6_SubnetParam(in *v1beta1.SubnetParam, out *SubnetParam, s conversion.Scope) error {
+	// WARNING: in.ID requires manual conversion: does not exist in peer-type
+	// WARNING: in.Filter requires manual conversion: inconvertible types (*sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetFilter vs sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SubnetFilter)
 	return nil
 }
 

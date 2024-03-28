@@ -168,13 +168,9 @@ func (s *Service) setRouterExternalIPs(openStackCluster *infrav1.OpenStackCluste
 
 	for i := range openStackCluster.Spec.ExternalRouterIPs {
 		externalRouterIP := openStackCluster.Spec.ExternalRouterIPs[i]
-		subnetID := externalRouterIP.Subnet.ID
-		if subnetID == "" {
-			subnet, err := s.GetSubnetByFilter(&externalRouterIP.Subnet)
-			if err != nil {
-				return fmt.Errorf("failed to get subnet for external router: %w", err)
-			}
-			subnetID = subnet.ID
+		subnetID, err := s.GetSubnetIDByParam(&externalRouterIP.Subnet)
+		if err != nil {
+			return fmt.Errorf("failed to get subnet for external router: %w", err)
 		}
 		updateOpts.GatewayInfo.ExternalFixedIPs = append(updateOpts.GatewayInfo.ExternalFixedIPs, routers.ExternalFixedIP{
 			IPAddress: externalRouterIP.FixedIP,

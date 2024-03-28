@@ -217,7 +217,7 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(in *i
 
 	if in.Subnets != nil {
 		if len(in.Subnets) >= 1 {
-			if err := Convert_v1beta1_SubnetFilter_To_v1alpha5_SubnetFilter(&in.Subnets[0], &out.Subnet, s); err != nil {
+			if err := Convert_v1beta1_SubnetParam_To_v1alpha5_SubnetFilter(&in.Subnets[0], &out.Subnet, s); err != nil {
 				return err
 			}
 		}
@@ -254,11 +254,11 @@ func Convert_v1alpha5_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 
 	emptySubnet := SubnetFilter{}
 	if in.Subnet != emptySubnet {
-		subnet := infrav1.SubnetFilter{}
-		if err := Convert_v1alpha5_SubnetFilter_To_v1beta1_SubnetFilter(&in.Subnet, &subnet, s); err != nil {
+		subnet := infrav1.SubnetParam{}
+		if err := Convert_v1alpha5_SubnetFilter_To_v1beta1_SubnetParam(&in.Subnet, &subnet, s); err != nil {
 			return err
 		}
-		out.Subnets = []infrav1.SubnetFilter{subnet}
+		out.Subnets = []infrav1.SubnetParam{subnet}
 	}
 
 	if len(in.NodeCIDR) > 0 {
@@ -547,22 +547,53 @@ func Convert_v1beta1_SecurityGroupFilter_To_v1alpha5_SecurityGroupParam(in *infr
 	return nil
 }
 
-func Convert_v1alpha5_SubnetParam_To_v1beta1_SubnetFilter(in *SubnetParam, out *infrav1.SubnetFilter, s conversion.Scope) error {
-	if err := Convert_v1alpha5_SubnetFilter_To_v1beta1_SubnetFilter(&in.Filter, out, s); err != nil {
+func Convert_v1alpha5_SubnetParam_To_v1beta1_SubnetParam(in *SubnetParam, out *infrav1.SubnetParam, s conversion.Scope) error {
+	if in.UUID != "" {
+		out.ID = &in.UUID
+		return nil
+	}
+	outFilter := &infrav1.SubnetFilter{}
+	if err := Convert_v1alpha5_SubnetFilter_To_v1beta1_SubnetFilter(&in.Filter, outFilter, s); err != nil {
 		return err
 	}
-	if in.UUID != "" {
-		out.ID = in.UUID
+	if !outFilter.IsZero() {
+		out.Filter = outFilter
 	}
 	return nil
 }
 
-func Convert_v1beta1_SubnetFilter_To_v1alpha5_SubnetParam(in *infrav1.SubnetFilter, out *SubnetParam, s conversion.Scope) error {
-	if err := Convert_v1beta1_SubnetFilter_To_v1alpha5_SubnetFilter(in, &out.Filter, s); err != nil {
-		return err
+func Convert_v1beta1_SubnetParam_To_v1alpha5_SubnetParam(in *infrav1.SubnetParam, out *SubnetParam, s conversion.Scope) error {
+	if in.ID != nil {
+		out.UUID = *in.ID
+		return nil
 	}
-	out.UUID = in.ID
 
+	if in.Filter != nil {
+		if err := Convert_v1beta1_SubnetFilter_To_v1alpha5_SubnetFilter(in.Filter, &out.Filter, s); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func Convert_v1alpha5_SubnetFilter_To_v1beta1_SubnetParam(in *SubnetFilter, out *infrav1.SubnetParam, s conversion.Scope) error {
+	if in.ID != "" {
+		out.ID = &in.ID
+		return nil
+	}
+	out.Filter = &infrav1.SubnetFilter{}
+	return Convert_v1alpha5_SubnetFilter_To_v1beta1_SubnetFilter(in, out.Filter, s)
+}
+
+func Convert_v1beta1_SubnetParam_To_v1alpha5_SubnetFilter(in *infrav1.SubnetParam, out *SubnetFilter, s conversion.Scope) error {
+	if in.ID != nil {
+		out.ID = *in.ID
+		return nil
+	}
+	if in.Filter != nil {
+		return Convert_v1beta1_SubnetFilter_To_v1alpha5_SubnetFilter(in.Filter, out, s)
+	}
 	return nil
 }
 

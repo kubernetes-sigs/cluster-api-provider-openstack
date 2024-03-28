@@ -371,32 +371,49 @@ func (s *Service) GetSubnetsByFilter(opts subnets.ListOptsBuilder) ([]subnets.Su
 	return subnetList, nil
 }
 
-// GetSubnetByFilter gets a single subnet specified by the given SubnetFilter.
-// It returns an ErrFilterMatch if no or multiple subnets are found.
-func (s *Service) GetSubnetByFilter(filter *infrav1.SubnetFilter) (*subnets.Subnet, error) {
-	listOpts := filterconvert.SubnetFilterToListOpts(filter)
-	return s.getSubnetByFilter(listOpts)
+// GetSubnetIDByParam gets the id of a subnet from the given SubnetParam. It
+// does not make any OpenStack API calls if the subnet is specified by ID.
+func (s *Service) GetSubnetIDByParam(param *infrav1.SubnetParam) (string, error) {
+	if param.ID != nil {
+		return *param.ID, nil
+	}
+	subnet, err := s.GetSubnetByParam(param)
+	if err != nil {
+		return "", err
+	}
+	return subnet.ID, nil
 }
 
-// GetNetworkSubnetByFilter gets a single subnet of the given network, specified by the given SubnetFilter.
+// GetSubnetByParam gets a single subnet specified by the given SubnetParam
 // It returns an ErrFilterMatch if no or multiple subnets are found.
-func (s *Service) GetNetworkSubnetByFilter(networkID string, filter *infrav1.SubnetFilter) (*subnets.Subnet, error) {
-	listOpts := filterconvert.SubnetFilterToListOpts(filter)
-	listOpts.NetworkID = networkID
-
-	return s.getSubnetByFilter(listOpts)
+func (s *Service) GetSubnetByParam(param *infrav1.SubnetParam) (*subnets.Subnet, error) {
+	return s.GetNetworkSubnetByParam("", param)
 }
 
-// getSubnetByFilter gets a single subnet specified by the given gophercloud ListOpts.
+// GetNetworkSubnetByParam gets a single subnet of the given network, specified by the given SubnetParam.
 // It returns an ErrFilterMatch if no or multiple subnets are found.
-func (s *Service) getSubnetByFilter(listOpts subnets.ListOpts) (*subnets.Subnet, error) {
-	// If the ID is set, we can just get the subnet by ID.
-	if listOpts.ID != "" {
-		subnet, err := s.client.GetSubnet(listOpts.ID)
+func (s *Service) GetNetworkSubnetByParam(networkID string, param *infrav1.SubnetParam) (*subnets.Subnet, error) {
+	if param.ID != nil {
+		subnet, err := s.client.GetSubnet(*param.ID)
 		if capoerrors.IsNotFound(err) {
 			return nil, ErrNoMatches
 		}
+
+		if networkID != "" && subnet.NetworkID != networkID {
+			s.scope.Logger().V(4).Info("Subnet specified by ID does not belong to the given network", "subnetID", subnet.ID, "networkID", networkID)
+			return nil, ErrNoMatches
+		}
 		return subnet, err
+	}
+
+	if param.Filter == nil {
+		// Should have been caught by validation
+		return nil, errors.New("subnet filter: both id and filter are nil")
+	}
+
+	listOpts := filterconvert.SubnetFilterToListOpts(param.Filter)
+	if networkID != "" {
+		listOpts.NetworkID = networkID
 	}
 
 	subnets, err := s.GetSubnetsByFilter(listOpts)

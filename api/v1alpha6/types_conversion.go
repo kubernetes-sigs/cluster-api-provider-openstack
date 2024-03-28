@@ -24,6 +24,7 @@ import (
 	"k8s.io/utils/pointer"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	optional "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
 )
 
 const trueString = "true"
@@ -164,29 +165,81 @@ func Convert_v1beta1_NetworkParam_To_v1alpha6_NetworkFilter(in *infrav1.NetworkP
 /* SubnetParam, SubnetFilter */
 
 func restorev1alpha6SubnetFilter(previous *SubnetFilter, dst *SubnetFilter) {
+	if previous == nil || dst == nil {
+		return
+	}
+
 	// The edge cases with multiple commas are too tricky in this direction,
 	// so we just restore the whole thing.
 	dst.Tags = previous.Tags
 	dst.TagsAny = previous.TagsAny
 	dst.NotTags = previous.NotTags
 	dst.NotTagsAny = previous.NotTagsAny
+
+	// We didn't convert other fields if ID was set
+	if previous.ID != "" {
+		dst.Name = previous.Name
+		dst.Description = previous.Description
+		dst.ProjectID = previous.ProjectID
+		dst.IPVersion = previous.IPVersion
+		dst.GatewayIP = previous.GatewayIP
+		dst.CIDR = previous.CIDR
+		dst.IPv6AddressMode = previous.IPv6AddressMode
+		dst.IPv6RAMode = previous.IPv6RAMode
+	}
 }
 
-func Convert_v1alpha6_SubnetParam_To_v1beta1_SubnetFilter(in *SubnetParam, out *infrav1.SubnetFilter, s apiconversion.Scope) error {
-	if err := Convert_v1alpha6_SubnetFilter_To_v1beta1_SubnetFilter(&in.Filter, out, s); err != nil {
+func restorev1alpha6SubnetParam(previous *SubnetParam, dst *SubnetParam) {
+	if previous == nil || dst == nil {
+		return
+	}
+
+	if previous.UUID != "" {
+		dst.Filter = previous.Filter
+	} else {
+		restorev1alpha6SubnetFilter(&previous.Filter, &dst.Filter)
+	}
+}
+
+func restorev1beta1SubnetParam(previous *infrav1.SubnetParam, dst *infrav1.SubnetParam) {
+	if previous == nil || dst == nil {
+		return
+	}
+
+	optional.RestoreString(&previous.ID, &dst.ID)
+
+	if dst.Filter != nil {
+		dst.Filter.FilterByNeutronTags = previous.Filter.FilterByNeutronTags
+	}
+}
+
+func Convert_v1alpha6_SubnetParam_To_v1beta1_SubnetParam(in *SubnetParam, out *infrav1.SubnetParam, s apiconversion.Scope) error {
+	if in.UUID != "" {
+		out.ID = &in.UUID
+		return nil
+	}
+
+	outFilter := &infrav1.SubnetFilter{}
+	if err := Convert_v1alpha6_SubnetFilter_To_v1beta1_SubnetFilter(&in.Filter, outFilter, s); err != nil {
 		return err
 	}
-	if in.UUID != "" {
-		out.ID = in.UUID
+	if !outFilter.IsZero() {
+		out.Filter = outFilter
 	}
 	return nil
 }
 
-func Convert_v1beta1_SubnetFilter_To_v1alpha6_SubnetParam(in *infrav1.SubnetFilter, out *SubnetParam, s apiconversion.Scope) error {
-	if err := Convert_v1beta1_SubnetFilter_To_v1alpha6_SubnetFilter(in, &out.Filter, s); err != nil {
-		return err
+func Convert_v1beta1_SubnetParam_To_v1alpha6_SubnetParam(in *infrav1.SubnetParam, out *SubnetParam, s apiconversion.Scope) error {
+	if in.ID != nil {
+		out.UUID = *in.ID
+		return nil
 	}
-	out.UUID = in.ID
+
+	if in.Filter != nil {
+		if err := Convert_v1beta1_SubnetFilter_To_v1alpha6_SubnetFilter(in.Filter, &out.Filter, s); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
@@ -204,6 +257,36 @@ func Convert_v1beta1_SubnetFilter_To_v1alpha6_SubnetFilter(in *infrav1.SubnetFil
 		return err
 	}
 	infrav1.ConvertAllTagsFrom(&in.FilterByNeutronTags, &out.Tags, &out.TagsAny, &out.NotTags, &out.NotTagsAny)
+	return nil
+}
+
+func Convert_v1alpha6_SubnetFilter_To_v1beta1_SubnetParam(in *SubnetFilter, out *infrav1.SubnetParam, s apiconversion.Scope) error {
+	if in.ID != "" {
+		out.ID = &in.ID
+		return nil
+	}
+
+	outFilter := &infrav1.SubnetFilter{}
+	if err := Convert_v1alpha6_SubnetFilter_To_v1beta1_SubnetFilter(in, outFilter, s); err != nil {
+		return err
+	}
+	if !outFilter.IsZero() {
+		out.Filter = outFilter
+	}
+	return nil
+}
+
+func Convert_v1beta1_SubnetParam_To_v1alpha6_SubnetFilter(in *infrav1.SubnetParam, out *SubnetFilter, s apiconversion.Scope) error {
+	if in.ID != nil {
+		out.ID = *in.ID
+		return nil
+	}
+
+	if in.Filter != nil {
+		if err := Convert_v1beta1_SubnetFilter_To_v1alpha6_SubnetFilter(in.Filter, out, s); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

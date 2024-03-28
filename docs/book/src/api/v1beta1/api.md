@@ -117,8 +117,8 @@ are specified.</p>
 <td>
 <code>subnets</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetFilter">
-[]SubnetFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetParam">
+[]SubnetParam
 </a>
 </em>
 </td>
@@ -1435,8 +1435,8 @@ string
 <td>
 <code>subnet</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetFilter">
-SubnetFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetParam">
+SubnetParam
 </a>
 </em>
 </td>
@@ -1548,8 +1548,8 @@ which contain any of the given tags will be excluded from the result.</p>
 <td>
 <code>subnet</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetFilter">
-SubnetFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetParam">
+SubnetParam
 </a>
 </em>
 </td>
@@ -2093,8 +2093,8 @@ are specified.</p>
 <td>
 <code>subnets</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetFilter">
-[]SubnetFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetParam">
+[]SubnetParam
 </a>
 </em>
 </td>
@@ -2675,8 +2675,8 @@ are specified.</p>
 <td>
 <code>subnets</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetFilter">
-[]SubnetFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetParam">
+[]SubnetParam
 </a>
 </em>
 </td>
@@ -4804,11 +4804,10 @@ string
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ExternalRouterIPParam">ExternalRouterIPParam</a>, 
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.FixedIP">FixedIP</a>, 
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackClusterSpec">OpenStackClusterSpec</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetParam">SubnetParam</a>)
 </p>
 <p>
+<p>SubnetFilter specifies a filter to select a subnet. At least one parameter must be specified.</p>
 </p>
 <table>
 <thead>
@@ -4900,16 +4899,6 @@ string
 </tr>
 <tr>
 <td>
-<code>id</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
 <code>FilterByNeutronTags</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.FilterByNeutronTags">
@@ -4921,6 +4910,53 @@ FilterByNeutronTags
 <p>
 (Members of <code>FilterByNeutronTags</code> are embedded into this type.)
 </p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.SubnetParam">SubnetParam
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ExternalRouterIPParam">ExternalRouterIPParam</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.FixedIP">FixedIP</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackClusterSpec">OpenStackClusterSpec</a>)
+</p>
+<p>
+<p>SubnetParam specifies an OpenStack subnet to use. It may be specified by either ID or filter, but not both.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>id</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ID is the uuid of the subnet. It will not be validated.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>filter</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetFilter">
+SubnetFilter
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Filter specifies a filter to select the subnet. It must match exactly one subnet.</p>
 </td>
 </tr>
 </tbody>

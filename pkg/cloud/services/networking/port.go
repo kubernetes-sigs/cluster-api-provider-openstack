@@ -493,7 +493,7 @@ func (s *Service) normalizePortTarget(port *infrav1.PortOpts, defaultNetwork *in
 					continue
 				}
 
-				subnet, err := s.GetSubnetByFilter(fixedIP.Subnet)
+				subnet, err := s.GetSubnetByParam(fixedIP.Subnet)
 				if err != nil {
 					// Multiple matches might be ok later when we restrict matches to a single network
 					if errors.Is(err, ErrMultipleMatches) {
@@ -526,7 +526,7 @@ func (s *Service) normalizePortTarget(port *infrav1.PortOpts, defaultNetwork *in
 		resolvedFixedIP := &resolvedFixedIPs[i]
 		resolvedFixedIP.IPAddress = fixedIP.IPAddress
 		if fixedIP.Subnet != nil && resolvedFixedIP.SubnetID == nil {
-			subnet, err := s.GetNetworkSubnetByFilter(networkID, fixedIP.Subnet)
+			subnet, err := s.GetNetworkSubnetByParam(networkID, fixedIP.Subnet)
 			if err != nil {
 				return "", nil, err
 			}

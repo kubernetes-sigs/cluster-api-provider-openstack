@@ -526,8 +526,8 @@ func TestService_ConstructPorts(t *testing.T) {
 					{
 						FixedIPs: []infrav1.FixedIP{
 							{
-								Subnet: &infrav1.SubnetFilter{
-									ID: subnetID1,
+								Subnet: &infrav1.SubnetParam{
+									ID: pointer.String(subnetID1),
 								},
 							},
 						},
@@ -558,8 +558,8 @@ func TestService_ConstructPorts(t *testing.T) {
 					{
 						FixedIPs: []infrav1.FixedIP{
 							{
-								Subnet: &infrav1.SubnetFilter{
-									Name: "test-subnet",
+								Subnet: &infrav1.SubnetParam{
+									Filter: &infrav1.SubnetFilter{Name: "test-subnet"},
 								},
 							},
 						},
@@ -594,8 +594,8 @@ func TestService_ConstructPorts(t *testing.T) {
 					{
 						FixedIPs: []infrav1.FixedIP{
 							{
-								Subnet: &infrav1.SubnetFilter{
-									Name: "test-subnet",
+								Subnet: &infrav1.SubnetParam{
+									Filter: &infrav1.SubnetFilter{Name: "test-subnet"},
 								},
 							},
 						},
@@ -614,8 +614,8 @@ func TestService_ConstructPorts(t *testing.T) {
 					{
 						FixedIPs: []infrav1.FixedIP{
 							{
-								Subnet: &infrav1.SubnetFilter{
-									Name: "test-subnet",
+								Subnet: &infrav1.SubnetParam{
+									Filter: &infrav1.SubnetFilter{Name: "test-subnet"},
 								},
 							},
 						},
@@ -637,13 +637,13 @@ func TestService_ConstructPorts(t *testing.T) {
 					{
 						FixedIPs: []infrav1.FixedIP{
 							{
-								Subnet: &infrav1.SubnetFilter{
-									Name: "test-subnet1",
+								Subnet: &infrav1.SubnetParam{
+									Filter: &infrav1.SubnetFilter{Name: "test-subnet1"},
 								},
 							},
 							{
-								Subnet: &infrav1.SubnetFilter{
-									Name: "test-subnet2",
+								Subnet: &infrav1.SubnetParam{
+									Filter: &infrav1.SubnetFilter{Name: "test-subnet2"},
 								},
 							},
 						},
