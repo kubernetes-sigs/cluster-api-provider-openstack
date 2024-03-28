@@ -944,5 +944,4 @@ func patchCluster(ctx context.Context, patchHelper *patch.Helper, openStackClust
 		return err
 	}
 	return nil
-
 }
