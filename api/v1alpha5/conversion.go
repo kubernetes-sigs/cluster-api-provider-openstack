@@ -456,6 +456,10 @@ func Convert_v1alpha5_Instance_To_v1beta1_BastionStatus(in *Instance, out *infra
 	out.State = infrav1.InstanceState(in.State)
 	out.IP = in.IP
 	out.FloatingIP = in.FloatingIP
+
+	if out.Resolved == nil {
+		out.Resolved = &infrav1.ResolvedMachineSpec{}
+	}
 	out.Resolved.ServerGroupID = in.ServerGroupID
 	return nil
 }
@@ -468,7 +472,9 @@ func Convert_v1beta1_BastionStatus_To_v1alpha5_Instance(in *infrav1.BastionStatu
 	out.State = InstanceState(in.State)
 	out.IP = in.IP
 	out.FloatingIP = in.FloatingIP
-	out.ServerGroupID = in.Resolved.ServerGroupID
+	if in.Resolved != nil {
+		out.ServerGroupID = in.Resolved.ServerGroupID
+	}
 	return nil
 }
 
