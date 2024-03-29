@@ -189,6 +189,7 @@ func restorev1beta1ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infr
 
 	dst.DisableExternalNetwork = previous.DisableExternalNetwork
 
+	restorev1beta1RouterParam(previous.Router, dst.Router)
 	restorev1beta1NetworkParam(previous.Network, dst.Network)
 
 	if len(previous.Subnets) > 0 && len(dst.Subnets) > 0 {

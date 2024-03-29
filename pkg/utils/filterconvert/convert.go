@@ -81,7 +81,6 @@ func RouterFilterToListOpts(routerFilter *infrav1.RouterFilter) routers.ListOpts
 		return routers.ListOpts{}
 	}
 	return routers.ListOpts{
-		ID:          routerFilter.ID,
 		Name:        routerFilter.Name,
 		Description: routerFilter.Description,
 		ProjectID:   routerFilter.ProjectID,

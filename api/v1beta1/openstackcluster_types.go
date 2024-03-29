@@ -43,7 +43,7 @@ type OpenStackClusterSpec struct {
 	// Router specifies an existing router to be used if ManagedSubnets are
 	// specified. If specified, no new router will be created.
 	// +optional
-	Router *RouterFilter `json:"router,omitempty"`
+	Router *RouterParam `json:"router,omitempty"`
 
 	// Network specifies an existing network to use if no ManagedSubnets
 	// are specified.
