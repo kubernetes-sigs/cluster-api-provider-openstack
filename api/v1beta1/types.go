@@ -88,13 +88,38 @@ func (f *FilterByNeutronTags) IsZero() bool {
 	return f == nil || (len(f.Tags) == 0 && len(f.TagsAny) == 0 && len(f.NotTags) == 0 && len(f.NotTagsAny) == 0)
 }
 
+// SecurityGroupParam specifies an OpenStack security group. It may be specified by ID or filter, but not both.
+// +kubebuilder:validation:MaxProperties:=1
+// +kubebuilder:validation:MinProperties:=1
+type SecurityGroupParam struct {
+	// ID is the ID of the security group to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.
+	// +kubebuilder:validation:Format:=uuid
+	// +optional
+	ID optional.String `json:"id,omitempty"`
+
+	// Filter specifies a query to select an OpenStack security group. If provided, cannot be empty.
+	// +optional
+	Filter *SecurityGroupFilter `json:"filter,omitempty"`
+}
+
+// SecurityGroupFilter specifies a query to select an OpenStack security group. At least one property must be set.
+// +kubebuilder:validation:MinProperties:=1
 type SecurityGroupFilter struct {
-	ID          string `json:"id,omitempty"`
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
 	ProjectID   string `json:"projectID,omitempty"`
 
 	FilterByNeutronTags `json:",inline"`
+}
+
+func (f *SecurityGroupFilter) IsZero() bool {
+	if f == nil {
+		return true
+	}
+	return f.Name == "" &&
+		f.Description == "" &&
+		f.ProjectID == "" &&
+		f.FilterByNeutronTags.IsZero()
 }
 
 // NetworkParam specifies an OpenStack network. It may be specified by either ID or Filter, but not both.
@@ -232,7 +257,7 @@ type PortOpts struct {
 	// SecurityGroups is a list of the names, uuids, filters or any combination these of the security groups to assign to the instance.
 	// +optional
 	// +listType=atomic
-	SecurityGroups []SecurityGroupFilter `json:"securityGroups,omitempty"`
+	SecurityGroups []SecurityGroupParam `json:"securityGroups,omitempty"`
 
 	// Tags applied to the port (and corresponding trunk, if a trunk is configured.)
 	// These tags are applied in addition to the instance's tags, which will also be applied to the port.

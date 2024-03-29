@@ -626,8 +626,8 @@ If not specified a default port will be added for the default cluster network.</
 <td>
 <code>securityGroups</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupFilter">
-[]SecurityGroupFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupParam">
+[]SecurityGroupParam
 </a>
 </em>
 </td>
@@ -3140,8 +3140,8 @@ If not specified a default port will be added for the default cluster network.</
 <td>
 <code>securityGroups</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupFilter">
-[]SecurityGroupFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupParam">
+[]SecurityGroupParam
 </a>
 </em>
 </td>
@@ -3512,8 +3512,8 @@ If not specified a default port will be added for the default cluster network.</
 <td>
 <code>securityGroups</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupFilter">
-[]SecurityGroupFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupParam">
+[]SecurityGroupParam
 </a>
 </em>
 </td>
@@ -3750,8 +3750,8 @@ string
 <td>
 <code>securityGroups</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupFilter">
-[]SecurityGroupFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupParam">
+[]SecurityGroupParam
 </a>
 </em>
 </td>
@@ -4396,10 +4396,10 @@ FilterByNeutronTags
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>, 
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">PortOpts</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupParam">SecurityGroupParam</a>)
 </p>
 <p>
+<p>SecurityGroupFilter specifies a query to select an OpenStack security group. At least one property must be set.</p>
 </p>
 <table>
 <thead>
@@ -4409,16 +4409,6 @@ FilterByNeutronTags
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>
-<code>id</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
 <tr>
 <td>
 <code>name</code><br/>
@@ -4462,6 +4452,52 @@ FilterByNeutronTags
 <p>
 (Members of <code>FilterByNeutronTags</code> are embedded into this type.)
 </p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupParam">SecurityGroupParam
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">PortOpts</a>)
+</p>
+<p>
+<p>SecurityGroupParam specifies an OpenStack security group. It may be specified by ID or filter, but not both.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>id</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ID is the ID of the security group to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>filter</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupFilter">
+SecurityGroupFilter
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Filter specifies a query to select an OpenStack security group. If provided, cannot be empty.</p>
 </td>
 </tr>
 </tbody>

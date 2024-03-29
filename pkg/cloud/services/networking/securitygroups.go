@@ -17,6 +17,7 @@ limitations under the License.
 package networking
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 
@@ -308,21 +309,26 @@ func validateRemoteManagedGroups(remoteManagedGroups map[string]string, ruleRemo
 	return nil
 }
 
-func (s *Service) GetSecurityGroups(securityGroupParams []infrav1.SecurityGroupFilter) ([]string, error) {
+func (s *Service) GetSecurityGroups(securityGroupParams []infrav1.SecurityGroupParam) ([]string, error) {
 	var sgIDs []string
 	for i := range securityGroupParams {
 		sg := &securityGroupParams[i]
 
 		// Don't validate an explicit UUID if we were given one
-		if sg.ID != "" {
-			if isDuplicate(sgIDs, sg.ID) {
+		if sg.ID != nil {
+			if isDuplicate(sgIDs, *sg.ID) {
 				continue
 			}
-			sgIDs = append(sgIDs, sg.ID)
+			sgIDs = append(sgIDs, *sg.ID)
 			continue
 		}
 
-		listOpts := filterconvert.SecurityGroupFilterToListOpts(sg)
+		if sg.Filter == nil {
+			// Should have been caught by validation
+			return nil, errors.New("security group param must have id or filter")
+		}
+
+		listOpts := filterconvert.SecurityGroupFilterToListOpts(sg.Filter)
 		if listOpts.ProjectID == "" {
 			listOpts.ProjectID = s.scope.ProjectID()
 		}
@@ -332,7 +338,7 @@ func (s *Service) GetSecurityGroups(securityGroupParams []infrav1.SecurityGroupF
 		}
 
 		if len(SGList) == 0 {
-			return nil, fmt.Errorf("security group %s not found", sg.Name)
+			return nil, fmt.Errorf("security group %d not found", i)
 		}
 
 		for _, group := range SGList {
