@@ -97,7 +97,8 @@ spec:
     spec:
       flavor: ${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR}
       image:
-        name: ${OPENSTACK_IMAGE_NAME}
+        filter:
+          name: ${OPENSTACK_IMAGE_NAME}
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
 ---
 apiVersion: cluster.x-k8s.io/v1beta1
@@ -133,7 +134,8 @@ spec:
     spec:
       flavor: ${OPENSTACK_NODE_MACHINE_FLAVOR}
       image:
-        name: ${OPENSTACK_IMAGE_NAME}
+        filter:
+          name: ${OPENSTACK_IMAGE_NAME}
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
 ---
 apiVersion: bootstrap.cluster.x-k8s.io/v1beta1

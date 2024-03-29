@@ -1142,7 +1142,7 @@ func autoConvert_v1alpha5_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(i
 	out.InstanceID = (*string)(unsafe.Pointer(in.InstanceID))
 	// WARNING: in.CloudName requires manual conversion: does not exist in peer-type
 	out.Flavor = in.Flavor
-	// WARNING: in.Image requires manual conversion: inconvertible types (string vs sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageFilter)
+	// WARNING: in.Image requires manual conversion: inconvertible types (string vs sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageParam)
 	// WARNING: in.ImageUUID requires manual conversion: does not exist in peer-type
 	out.SSHKeyName = in.SSHKeyName
 	// WARNING: in.Networks requires manual conversion: does not exist in peer-type
@@ -1192,7 +1192,7 @@ func autoConvert_v1beta1_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(i
 	out.ProviderID = (*string)(unsafe.Pointer(in.ProviderID))
 	out.InstanceID = (*string)(unsafe.Pointer(in.InstanceID))
 	out.Flavor = in.Flavor
-	// WARNING: in.Image requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageFilter vs string)
+	// WARNING: in.Image requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageParam vs string)
 	out.SSHKeyName = in.SSHKeyName
 	if in.Ports != nil {
 		in, out := &in.Ports, &out.Ports

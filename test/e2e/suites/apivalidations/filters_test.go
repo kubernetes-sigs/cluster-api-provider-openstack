@@ -36,7 +36,11 @@ var _ = Describe("Filter API validations", func() {
 		namespace = createNamespace()
 
 		// Initialise a basic machine object in the correct namespace
-		machine = &infrav1.OpenStackMachine{}
+		machine = &infrav1.OpenStackMachine{
+			Spec: infrav1.OpenStackMachineSpec{
+				Image: infrav1.ImageParam{Filter: &infrav1.ImageFilter{Name: pointer.String("test-image")}},
+			},
+		}
 		machine.Namespace = namespace.Name
 		machine.GenerateName = "machine-"
 
@@ -179,49 +183,59 @@ var _ = Describe("Filter API validations", func() {
 		}),
 	)
 
-	const imageUUID = "5a78f794-cdc3-48d2-8d9f-0fd472fdd743"
+	Context("ImageParam", func() {
+		const imageUUID = "5a78f794-cdc3-48d2-8d9f-0fd472fdd743"
 
-	It("should not allow both ID and Name of ImageFilter to be set", func() {
-		By("Creating a machine")
-		machine.Spec.Image = infrav1.ImageFilter{
-			ID:   pointer.String(imageUUID),
-			Name: pointer.String("bar"),
-		}
-		Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
-	})
+		It("should not allow both ID and Filter to be set", func() {
+			machine.Spec.Image = infrav1.ImageParam{
+				ID: pointer.String(imageUUID),
+				Filter: &infrav1.ImageFilter{
+					Name: pointer.String("bar"),
+				},
+			}
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
+		})
 
-	It("should not allow both ID and Tags of ImageFilter to be set", func() {
-		By("Creating a machine")
-		machine.Spec.Image = infrav1.ImageFilter{
-			ID:   pointer.String(imageUUID),
-			Tags: []string{"bar", "baz"},
-		}
-		Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
-	})
+		It("should not allow both ID and Tags of ImageFilter to be set", func() {
+			machine.Spec.Image = infrav1.ImageParam{
+				ID: pointer.String(imageUUID),
+				Filter: &infrav1.ImageFilter{
+					Tags: []string{"bar", "baz"},
+				},
+			}
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
+		})
 
-	It("should allow UUID ID of ImageFilter to be set", func() {
-		By("Creating a machine")
-		machine.Spec.Image = infrav1.ImageFilter{
-			ID: pointer.String(imageUUID),
-		}
-		Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
-	})
+		It("should allow UUID ID of ImageFilter to be set", func() {
+			machine.Spec.Image = infrav1.ImageParam{
+				ID: pointer.String(imageUUID),
+			}
+			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
+		})
 
-	It("should not allow non-UUID ID of ImageFilter to be set", func() {
-		By("Creating a machine")
-		machine.Spec.Image = infrav1.ImageFilter{
-			ID: pointer.String("foo"),
-		}
-		Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
-	})
+		It("should not allow non-UUID ID of ImageFilter to be set", func() {
+			machine.Spec.Image = infrav1.ImageParam{
+				ID: pointer.String("foo"),
+			}
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
+		})
 
-	It("should allow Name and Tags of ImageFilter to be set", func() {
-		By("Creating a machine")
-		machine.Spec.Image = infrav1.ImageFilter{
-			Name: pointer.String("bar"),
-			Tags: []string{"bar", "baz"},
-		}
-		Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
+		It("should allow Name and Tags of ImageFilter to be set", func() {
+			machine.Spec.Image = infrav1.ImageParam{
+				Filter: &infrav1.ImageFilter{
+					Name: pointer.String("bar"),
+					Tags: []string{"bar", "baz"},
+				},
+			}
+			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
+		})
+
+		It("should not allow a non-nil, empty image filter", func() {
+			machine.Spec.Image = infrav1.ImageParam{
+				Filter: &infrav1.ImageFilter{},
+			}
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
+		})
 	})
 
 	Context("NetworkParam", func() {

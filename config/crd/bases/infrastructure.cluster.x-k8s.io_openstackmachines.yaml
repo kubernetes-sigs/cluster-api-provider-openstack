@@ -1831,29 +1831,36 @@ spec:
                 description: |-
                   The image to use for your server instance.
                   If the rootVolume is specified, this will be used when creating the root volume.
+                maxProperties: 1
+                minProperties: 1
                 properties:
+                  filter:
+                    description: |-
+                      Filter describes a query for an image. If specified, the combination
+                      of name and tags must return a single matching image or an error will
+                      be raised.
+                    minProperties: 1
+                    properties:
+                      name:
+                        description: The name of the desired image. If specified,
+                          the combination of name and tags must return a single matching
+                          image or an error will be raised.
+                        type: string
+                      tags:
+                        description: The tags associated with the desired image. If
+                          specified, the combination of name and tags must return
+                          a single matching image or an error will be raised.
+                        items:
+                          type: string
+                        type: array
+                        x-kubernetes-list-type: set
+                    type: object
                   id:
-                    description: The ID of the desired image. If ID is provided, the
-                      other filters cannot be provided. Must be in UUID format.
+                    description: ID is the uuid of the image. ID will not be validated
+                      before use.
                     format: uuid
                     type: string
-                  name:
-                    description: The name of the desired image. If specified, the
-                      combination of name and tags must return a single matching image
-                      or an error will be raised.
-                    type: string
-                  tags:
-                    description: The tags associated with the desired image. If specified,
-                      the combination of name and tags must return a single matching
-                      image or an error will be raised.
-                    items:
-                      type: string
-                    type: array
-                    x-kubernetes-list-type: set
                 type: object
-                x-kubernetes-validations:
-                - message: when ID is set you cannot set other options
-                  rule: (has(self.id) && !has(self.name) && !has(self.tags)) || !has(self.id)
               instanceID:
                 description: InstanceID is the OpenStack instance ID for this machine.
                 type: string

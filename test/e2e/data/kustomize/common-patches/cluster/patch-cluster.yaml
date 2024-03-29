@@ -1,0 +1,15 @@
+---
+- op: add
+  path: /spec/bastion
+  value:
+    enabled: true
+    spec:
+      flavor: ${OPENSTACK_BASTION_MACHINE_FLAVOR}
+      image:
+        filter:
+          name: ${OPENSTACK_BASTION_IMAGE_NAME}
+      sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
+- op: add
+  path: /spec/controlPlaneAvailabilityZones
+  value:
+  - ${OPENSTACK_FAILURE_DOMAIN}

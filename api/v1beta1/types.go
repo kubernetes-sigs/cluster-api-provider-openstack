@@ -28,20 +28,40 @@ type OpenStackMachineTemplateResource struct {
 	Spec OpenStackMachineSpec `json:"spec"`
 }
 
-// ImageFilter describes the data needed to identify which image to use. If ID is provided it is required that all other fields are unset.
-// +kubebuilder:validation:XValidation:rule="(has(self.id) && !has(self.name) && !has(self.tags)) || !has(self.id)",message="when ID is set you cannot set other options"
-type ImageFilter struct {
-	// The ID of the desired image. If ID is provided, the other filters cannot be provided. Must be in UUID format.
+// ImageParam describes a glance image. It can be specified by ID or filter.
+// +kubebuilder:validation:MaxProperties:=1
+// +kubebuilder:validation:MinProperties:=1
+type ImageParam struct {
+	// ID is the uuid of the image. ID will not be validated before use.
 	// +kubebuilder:validation:Format:=uuid
 	// +optional
 	ID optional.String `json:"id,omitempty"`
+
+	// Filter describes a query for an image. If specified, the combination
+	// of name and tags must return a single matching image or an error will
+	// be raised.
+	// +optional
+	Filter *ImageFilter `json:"filter,omitempty"`
+}
+
+// ImageFilter describes a query for an image.
+// +kubebuilder:validation:MinProperties:=1
+type ImageFilter struct {
 	// The name of the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
 	// +optional
 	Name optional.String `json:"name,omitempty"`
+
 	// The tags associated with the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
 	// +listType=set
 	// +optional
 	Tags []string `json:"tags,omitempty"`
+}
+
+func (f *ImageFilter) IsZero() bool {
+	if f == nil {
+		return true
+	}
+	return f.Name == nil && len(f.Tags) == 0
 }
 
 type ExternalRouterIPParam struct {
