@@ -90,7 +90,7 @@ var _ = Describe("OpenStackCluster API validations", func() {
 
 	It("should allow bastion.enabled=true with a spec", func() {
 		cluster.Spec.Bastion = &infrav1.Bastion{
-			Enabled: true,
+			Enabled: pointer.Bool(true),
 			Spec: &infrav1.OpenStackMachineSpec{
 				Image: infrav1.ImageParam{
 					Filter: &infrav1.ImageFilter{
@@ -104,25 +104,38 @@ var _ = Describe("OpenStackCluster API validations", func() {
 
 	It("should not allow bastion.enabled=true without a spec", func() {
 		cluster.Spec.Bastion = &infrav1.Bastion{
-			Enabled: true,
+			Enabled: pointer.Bool(true),
 		}
 		Expect(k8sClient.Create(ctx, cluster)).NotTo(Succeed(), "OpenStackCluster creation should not succeed")
 	})
 
-	It("should default bastion.enabled=false", func() {
+	It("should not allow an empty Bastion", func() {
 		cluster.Spec.Bastion = &infrav1.Bastion{}
+		Expect(k8sClient.Create(ctx, cluster)).NotTo(Succeed(), "OpenStackCluster creation should not succeed")
+	})
+
+	It("should default bastion.enabled=true", func() {
+		cluster.Spec.Bastion = &infrav1.Bastion{
+			Spec: &infrav1.OpenStackMachineSpec{
+				Image: infrav1.ImageParam{
+					Filter: &infrav1.ImageFilter{
+						Name: pointer.String("fake-image"),
+					},
+				},
+			},
+		}
 		Expect(k8sClient.Create(ctx, cluster)).To(Succeed(), "OpenStackCluster creation should not succeed")
 
 		// Fetch the cluster and check the defaulting
 		fetchedCluster := &infrav1.OpenStackCluster{}
 		Expect(k8sClient.Get(ctx, types.NamespacedName{Name: cluster.Name, Namespace: cluster.Namespace}, fetchedCluster)).To(Succeed(), "OpenStackCluster fetch should succeed")
-
-		Expect(fetchedCluster.Spec.Bastion.Enabled).To(BeFalse(), "Bastion.Enabled should default to false")
+		Expect(fetchedCluster.Spec.Bastion.Enabled).ToNot(BeNil(), "Bastion.Enabled should have been defaulted")
+		Expect(*fetchedCluster.Spec.Bastion.Enabled).To(BeTrueBecause("Bastion.Enabled should default to true"))
 	})
 
 	It("should allow IPv4 as bastion floatingIP", func() {
 		cluster.Spec.Bastion = &infrav1.Bastion{
-			Enabled: true,
+			Enabled: pointer.Bool(true),
 			Spec: &infrav1.OpenStackMachineSpec{
 				Image: infrav1.ImageParam{
 					Filter: &infrav1.ImageFilter{
@@ -137,7 +150,6 @@ var _ = Describe("OpenStackCluster API validations", func() {
 
 	It("should not allow non-IPv4 as bastion floating IP", func() {
 		cluster.Spec.Bastion = &infrav1.Bastion{
-			Enabled: true,
 			Spec: &infrav1.OpenStackMachineSpec{
 				Image: infrav1.ImageParam{
 					Filter: &infrav1.ImageFilter{

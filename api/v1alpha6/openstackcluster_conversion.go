@@ -416,6 +416,7 @@ func restorev1beta1Bastion(previous **infrav1.Bastion, dst **infrav1.Bastion) {
 
 	optional.RestoreString(&(*previous).FloatingIP, &(*dst).FloatingIP)
 	optional.RestoreString(&(*previous).AvailabilityZone, &(*dst).AvailabilityZone)
+	optional.RestoreBool(&(*previous).Enabled, &(*dst).Enabled)
 }
 
 func Convert_v1alpha6_Bastion_To_v1beta1_Bastion(in *Bastion, out *infrav1.Bastion, s apiconversion.Scope) error {

@@ -533,7 +533,7 @@ func TestService_ReconcileSecurityGroups(t *testing.T) {
 			name: "Default control plane, worker, and bastion security groups",
 			openStackClusterSpec: infrav1.OpenStackClusterSpec{
 				Bastion: &infrav1.Bastion{
-					Enabled: true,
+					Enabled: pointer.Bool(true),
 				},
 				ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{},
 			},

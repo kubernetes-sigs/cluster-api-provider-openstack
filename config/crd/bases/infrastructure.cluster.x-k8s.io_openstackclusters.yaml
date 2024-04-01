@@ -4921,9 +4921,16 @@ spec:
                       be used to create the Bastion Spec.
                     type: string
                   enabled:
-                    default: false
-                    description: Enabled means that bastion is enabled. Defaults to
-                      false.
+                    default: true
+                    description: |-
+                      Enabled means that bastion is enabled. The bastion is enabled by
+                      default if this field is not specified. Set this field to false to disable the
+                      bastion.
+
+
+                      It is not currently possible to remove the bastion from the cluster
+                      spec without first disabling it by setting this field to false and
+                      waiting until the bastion has been deleted.
                     type: boolean
                   floatingIP:
                     description: |-
@@ -5639,11 +5646,9 @@ spec:
                     - flavor
                     - image
                     type: object
-                required:
-                - enabled
                 type: object
                 x-kubernetes-validations:
-                - message: you need to specify the spec if bastion is enabled
+                - message: spec is required if bastion is enabled
                   rule: '!self.enabled || has(self.spec)'
               controlPlaneAvailabilityZones:
                 description: |-

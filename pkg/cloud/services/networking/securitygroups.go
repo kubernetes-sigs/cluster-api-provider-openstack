@@ -47,7 +47,7 @@ func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackClu
 		return nil
 	}
 
-	bastionEnabled := openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled
+	bastionEnabled := openStackCluster.Spec.Bastion.IsEnabled()
 
 	secControlPlaneGroupName := getSecControlPlaneGroupName(clusterResourceName)
 	secWorkerGroupName := getSecWorkerGroupName(clusterResourceName)
@@ -212,7 +212,7 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 
 	desiredSecGroupsBySuffix := make(map[string]securityGroupSpec)
 
-	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
+	if openStackCluster.Spec.Bastion.IsEnabled() {
 		controlPlaneRules = append(controlPlaneRules, getSGControlPlaneSSH(secBastionGroupID)...)
 		workerRules = append(workerRules, getSGWorkerSSH(secBastionGroupID)...)
 
@@ -357,7 +357,7 @@ func (s *Service) DeleteSecurityGroups(openStackCluster *infrav1.OpenStackCluste
 		getSecWorkerGroupName(clusterResourceName),
 	}
 
-	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
+	if openStackCluster.Spec.Bastion.IsEnabled() {
 		secGroupNames = append(secGroupNames, getSecBastionGroupName(clusterResourceName))
 	}
 
