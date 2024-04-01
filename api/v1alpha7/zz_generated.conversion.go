@@ -1072,6 +1072,7 @@ func autoConvert_v1alpha7_OpenStackClusterStatus_To_v1beta1_OpenStackClusterStat
 	}
 	out.FailureReason = (*errors.ClusterStatusError)(unsafe.Pointer(in.FailureReason))
 	out.FailureMessage = (*string)(unsafe.Pointer(in.FailureMessage))
+	out.Conditions = *(*apiv1beta1.Conditions)(unsafe.Pointer(&in.Conditions))
 	return nil
 }
 
@@ -1125,7 +1126,7 @@ func autoConvert_v1beta1_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStat
 	}
 	out.FailureReason = (*errors.ClusterStatusError)(unsafe.Pointer(in.FailureReason))
 	out.FailureMessage = (*string)(unsafe.Pointer(in.FailureMessage))
-	// WARNING: in.Conditions requires manual conversion: does not exist in peer-type
+	out.Conditions = *(*apiv1beta1.Conditions)(unsafe.Pointer(&in.Conditions))
 	return nil
 }
 
