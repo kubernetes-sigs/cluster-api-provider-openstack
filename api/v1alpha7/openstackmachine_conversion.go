@@ -66,6 +66,19 @@ var v1alpha7OpenStackMachineRestorer = conversion.RestorerFor[*OpenStackMachine]
 			return &c.Spec
 		},
 		restorev1alpha7MachineSpec,
+		conversion.HashedFilterField[*OpenStackMachine, OpenStackMachineSpec](func(s *OpenStackMachineSpec) *OpenStackMachineSpec {
+			// Despite being spec fields, ProviderID and InstanceID
+			// are both set by the machine controller. If these are
+			// the only changes to the spec, we still want to
+			// restore the rest of the spec to its original state.
+			if s.ProviderID != nil || s.InstanceID != nil {
+				f := *s
+				f.ProviderID = nil
+				f.InstanceID = nil
+				return &f
+			}
+			return s
+		}),
 	),
 }
 
