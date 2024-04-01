@@ -763,3 +763,34 @@ func TestConvert_v1alpha6_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(t
 		})
 	}
 }
+
+func Test_FuzzRestorers(t *testing.T) {
+	/* Cluster */
+	testhelpers.FuzzRestorer(t, "restorev1alpha6ClusterSpec", restorev1alpha6ClusterSpec)
+	testhelpers.FuzzRestorer(t, "restorev1beta1ClusterSpec", restorev1beta1ClusterSpec)
+	testhelpers.FuzzRestorer(t, "restorev1alpha6ClusterStatus", restorev1alpha6ClusterStatus)
+	testhelpers.FuzzRestorer(t, "restorev1beta1ClusterStatus", restorev1beta1ClusterStatus)
+	testhelpers.FuzzRestorer(t, "restorev1beta1Bastion", restorev1beta1Bastion)
+	testhelpers.FuzzRestorer(t, "restorev1beta1BastionStatus", restorev1beta1BastionStatus)
+
+	/* ClusterTemplate */
+	testhelpers.FuzzRestorer(t, "restorev1beta1ClusterTemplateSpec", restorev1beta1ClusterTemplateSpec)
+
+	/* Machine */
+	testhelpers.FuzzRestorer(t, "restorev1alpha6MachineSpec", restorev1alpha6MachineSpec)
+	testhelpers.FuzzRestorer(t, "restorev1beta1MachineSpec", restorev1beta1MachineSpec)
+
+	/* MachineTemplate */
+	testhelpers.FuzzRestorer(t, "restorev1alpha6MachineTemplateMachineSpec", restorev1alpha6MachineTemplateMachineSpec)
+
+	/* Types */
+	testhelpers.FuzzRestorer(t, "restorev1alpha6SecurityGroupFilter", restorev1alpha6SecurityGroupFilter)
+	testhelpers.FuzzRestorer(t, "restorev1beta1SecurityGroupParam", restorev1beta1SecurityGroupParam)
+	testhelpers.FuzzRestorer(t, "restorev1alpha6NetworkFilter", restorev1alpha6NetworkFilter)
+	testhelpers.FuzzRestorer(t, "restorev1beta1NetworkParam", restorev1beta1NetworkParam)
+	testhelpers.FuzzRestorer(t, "restorev1alpha6SubnetFilter", restorev1alpha6SubnetFilter)
+	testhelpers.FuzzRestorer(t, "restorev1alpha6SubnetParam", restorev1alpha6SubnetParam)
+	testhelpers.FuzzRestorer(t, "restorev1beta1SubnetParam", restorev1beta1SubnetParam)
+	testhelpers.FuzzRestorer(t, "restorev1alpha6Port", restorev1alpha6Port)
+	testhelpers.FuzzRestorer(t, "restorev1alpha6SecurityGroup", restorev1alpha6SecurityGroup)
+}

@@ -120,17 +120,19 @@ func restorev1alpha6ClusterSpec(previous *OpenStackClusterSpec, dst *OpenStackCl
 		return
 	}
 
-	for i := range previous.ExternalRouterIPs {
-		dstIP := &dst.ExternalRouterIPs[i]
-		previousIP := &previous.ExternalRouterIPs[i]
+	if len(previous.ExternalRouterIPs) == len(dst.ExternalRouterIPs) {
+		for i := range previous.ExternalRouterIPs {
+			dstIP := &dst.ExternalRouterIPs[i]
+			previousIP := &previous.ExternalRouterIPs[i]
 
-		// Subnet.Filter.ID was overwritten in up-conversion by Subnet.UUID
-		dstIP.Subnet.Filter.ID = previousIP.Subnet.Filter.ID
+			// Subnet.Filter.ID was overwritten in up-conversion by Subnet.UUID
+			dstIP.Subnet.Filter.ID = previousIP.Subnet.Filter.ID
 
-		// If Subnet.UUID was previously unset, we overwrote it with the value of Subnet.Filter.ID
-		// Don't unset it again if it doesn't have the previous value of Subnet.Filter.ID, because that means it was genuinely changed
-		if previousIP.Subnet.UUID == "" && dstIP.Subnet.UUID == previousIP.Subnet.Filter.ID {
-			dstIP.Subnet.UUID = ""
+			// If Subnet.UUID was previously unset, we overwrote it with the value of Subnet.Filter.ID
+			// Don't unset it again if it doesn't have the previous value of Subnet.Filter.ID, because that means it was genuinely changed
+			if previousIP.Subnet.UUID == "" && dstIP.Subnet.UUID == previousIP.Subnet.Filter.ID {
+				dstIP.Subnet.UUID = ""
+			}
 		}
 	}
 
@@ -199,7 +201,7 @@ func restorev1beta1ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infr
 
 	dst.ManagedSubnets = previous.ManagedSubnets
 
-	if previous.ManagedSecurityGroups != nil {
+	if previous.ManagedSecurityGroups != nil && dst.ManagedSecurityGroups != nil {
 		dst.ManagedSecurityGroups.AllNodesSecurityGroupRules = previous.ManagedSecurityGroups.AllNodesSecurityGroupRules
 	}
 
@@ -345,13 +347,13 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in *i
 func restorev1alpha6ClusterStatus(previous *OpenStackClusterStatus, dst *OpenStackClusterStatus) {
 	// PortOpts.SecurityGroups have been removed in v1beta1
 	// We restore the whole PortOpts/Networks since they are anyway immutable.
-	if previous.ExternalNetwork != nil {
+	if previous.ExternalNetwork != nil && dst.ExternalNetwork != nil {
 		dst.ExternalNetwork.PortOpts = previous.ExternalNetwork.PortOpts
 	}
 	if previous.Network != nil {
 		dst.Network = previous.Network
 	}
-	if previous.Bastion != nil && previous.Bastion.Networks != nil {
+	if previous.Bastion != nil && previous.Bastion.Networks != nil && dst.Bastion != nil {
 		dst.Bastion.Networks = previous.Bastion.Networks
 	}
 
