@@ -166,22 +166,24 @@ func TestFuzzyConversion(t *testing.T) {
 func TestMachineConversionControllerSpecFields(t *testing.T) {
 	// This tests that we still do field restoration when the controller modifies ProviderID and InstanceID in the spec
 
-	g := gomega.NewWithT(t)
-	scheme := runtime.NewScheme()
-	g.Expect(AddToScheme(scheme)).To(gomega.Succeed())
-	g.Expect(infrav1.AddToScheme(scheme)).To(gomega.Succeed())
-
+	// Define an initial state which cannot be converted losslessly. We add
+	// an IdentityRef with a Kind, which has been removed in v1beta1.
 	testMachine := func() *OpenStackMachine {
 		return &OpenStackMachine{
-			Spec: OpenStackMachineSpec{},
+			Spec: OpenStackMachineSpec{
+				IdentityRef: &OpenStackIdentityReference{
+					Kind: "InvalidKind",
+					Name: "test-name",
+				},
+			},
 		}
 	}
 
 	tests := []struct {
-		name              string
-		modifyUp          func(*infrav1.OpenStackMachine)
-		testAfter         func(*OpenStackMachine)
-		expectNetworkDiff bool
+		name                  string
+		modifyUp              func(*infrav1.OpenStackMachine)
+		testAfter             func(gomega.Gomega, *OpenStackMachine)
+		expectIdentityRefDiff bool
 	}{
 		{
 			name: "No change",
@@ -191,30 +193,30 @@ func TestMachineConversionControllerSpecFields(t *testing.T) {
 			modifyUp: func(up *infrav1.OpenStackMachine) {
 				up.Spec.Flavor = "new-flavor"
 			},
-			testAfter: func(after *OpenStackMachine) {
+			testAfter: func(g gomega.Gomega, after *OpenStackMachine) {
 				g.Expect(after.Spec.Flavor).To(gomega.Equal("new-flavor"))
 			},
-			expectNetworkDiff: true,
+			expectIdentityRefDiff: true,
 		},
 		{
 			name: "Set ProviderID",
 			modifyUp: func(up *infrav1.OpenStackMachine) {
 				up.Spec.ProviderID = pointer.String("new-provider-id")
 			},
-			testAfter: func(after *OpenStackMachine) {
+			testAfter: func(g gomega.Gomega, after *OpenStackMachine) {
 				g.Expect(after.Spec.ProviderID).To(gomega.Equal(pointer.String("new-provider-id")))
 			},
-			expectNetworkDiff: false,
+			expectIdentityRefDiff: false,
 		},
 		{
 			name: "Set InstanceID",
 			modifyUp: func(up *infrav1.OpenStackMachine) {
 				up.Spec.InstanceID = pointer.String("new-instance-id")
 			},
-			testAfter: func(after *OpenStackMachine) {
+			testAfter: func(g gomega.Gomega, after *OpenStackMachine) {
 				g.Expect(after.Spec.InstanceID).To(gomega.Equal(pointer.String("new-instance-id")))
 			},
-			expectNetworkDiff: false,
+			expectIdentityRefDiff: false,
 		},
 		{
 			name: "Set ProviderID and non-ignored change",
@@ -222,16 +224,21 @@ func TestMachineConversionControllerSpecFields(t *testing.T) {
 				up.Spec.ProviderID = pointer.String("new-provider-id")
 				up.Spec.Flavor = "new-flavor"
 			},
-			testAfter: func(after *OpenStackMachine) {
+			testAfter: func(g gomega.Gomega, after *OpenStackMachine) {
 				g.Expect(after.Spec.ProviderID).To(gomega.Equal(pointer.String("new-provider-id")))
 				g.Expect(after.Spec.Flavor).To(gomega.Equal("new-flavor"))
 			},
-			expectNetworkDiff: true,
+			expectIdentityRefDiff: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			g := gomega.NewWithT(t)
+			scheme := runtime.NewScheme()
+			g.Expect(AddToScheme(scheme)).To(gomega.Succeed())
+			g.Expect(infrav1.AddToScheme(scheme)).To(gomega.Succeed())
+
 			before := testMachine()
 
 			up := infrav1.OpenStackMachine{}
@@ -245,7 +252,14 @@ func TestMachineConversionControllerSpecFields(t *testing.T) {
 			g.Expect(after.ConvertFrom(&up)).To(gomega.Succeed())
 
 			if tt.testAfter != nil {
-				tt.testAfter(&after)
+				tt.testAfter(g, &after)
+			}
+
+			g.Expect(after.Spec.IdentityRef).ToNot(gomega.BeNil())
+			if tt.expectIdentityRefDiff {
+				g.Expect(after.Spec.IdentityRef.Kind).ToNot(gomega.Equal("InvalidKind"))
+			} else {
+				g.Expect(after.Spec.IdentityRef.Kind).To(gomega.Equal("InvalidKind"))
 			}
 		})
 	}
