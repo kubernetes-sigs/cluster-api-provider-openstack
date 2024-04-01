@@ -1139,7 +1139,7 @@ func Convert_v1beta1_OpenStackMachineList_To_v1alpha5_OpenStackMachineList(in *v
 
 func autoConvert_v1alpha5_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in *OpenStackMachineSpec, out *v1beta1.OpenStackMachineSpec, s conversion.Scope) error {
 	out.ProviderID = (*string)(unsafe.Pointer(in.ProviderID))
-	out.InstanceID = (*string)(unsafe.Pointer(in.InstanceID))
+	// WARNING: in.InstanceID requires manual conversion: does not exist in peer-type
 	// WARNING: in.CloudName requires manual conversion: does not exist in peer-type
 	out.Flavor = in.Flavor
 	// WARNING: in.Image requires manual conversion: inconvertible types (string vs sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageParam)
@@ -1190,7 +1190,6 @@ func autoConvert_v1alpha5_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(i
 
 func autoConvert_v1beta1_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(in *v1beta1.OpenStackMachineSpec, out *OpenStackMachineSpec, s conversion.Scope) error {
 	out.ProviderID = (*string)(unsafe.Pointer(in.ProviderID))
-	out.InstanceID = (*string)(unsafe.Pointer(in.InstanceID))
 	out.Flavor = in.Flavor
 	// WARNING: in.Image requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageParam vs string)
 	out.SSHKeyName = in.SSHKeyName
@@ -1253,6 +1252,7 @@ func Convert_v1alpha5_OpenStackMachineStatus_To_v1beta1_OpenStackMachineStatus(i
 
 func autoConvert_v1beta1_OpenStackMachineStatus_To_v1alpha5_OpenStackMachineStatus(in *v1beta1.OpenStackMachineStatus, out *OpenStackMachineStatus, s conversion.Scope) error {
 	out.Ready = in.Ready
+	// WARNING: in.InstanceID requires manual conversion: does not exist in peer-type
 	out.Addresses = *(*[]corev1.NodeAddress)(unsafe.Pointer(&in.Addresses))
 	out.InstanceState = (*InstanceState)(unsafe.Pointer(in.InstanceState))
 	// WARNING: in.Resolved requires manual conversion: does not exist in peer-type

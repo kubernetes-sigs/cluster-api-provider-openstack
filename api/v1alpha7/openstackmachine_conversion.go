@@ -89,6 +89,28 @@ var v1beta1OpenStackMachineRestorer = conversion.RestorerFor[*infrav1.OpenStackM
 	),
 }
 
+/* OpenStackMachine */
+
+func Convert_v1alpha7_OpenStackMachine_To_v1beta1_OpenStackMachine(in *OpenStackMachine, out *infrav1.OpenStackMachine, s apiconversion.Scope) error {
+	err := autoConvert_v1alpha7_OpenStackMachine_To_v1beta1_OpenStackMachine(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	out.Status.InstanceID = in.Spec.InstanceID
+	return nil
+}
+
+func Convert_v1beta1_OpenStackMachine_To_v1alpha7_OpenStackMachine(in *infrav1.OpenStackMachine, out *OpenStackMachine, s apiconversion.Scope) error {
+	err := autoConvert_v1beta1_OpenStackMachine_To_v1alpha7_OpenStackMachine(in, out, s)
+	if err != nil {
+		return err
+	}
+
+	out.Spec.InstanceID = in.Status.InstanceID
+	return nil
+}
+
 /* OpenStackMachineSpec */
 
 func restorev1alpha7MachineSpec(previous *OpenStackMachineSpec, dst *OpenStackMachineSpec) {

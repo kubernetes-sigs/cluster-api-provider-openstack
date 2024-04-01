@@ -371,9 +371,14 @@ func Convert_v1beta1_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(i
 /* Bastion */
 
 func restorev1alpha7Bastion(previous **Bastion, dst **Bastion) {
-	if *previous != nil && *dst != nil {
-		restorev1alpha7MachineSpec(&(*previous).Instance, &(*dst).Instance)
+	if *previous == nil || *dst == nil {
+		return
 	}
+
+	prevMachineSpec := &(*previous).Instance
+	dstMachineSpec := &(*dst).Instance
+	restorev1alpha7MachineSpec(prevMachineSpec, dstMachineSpec)
+	dstMachineSpec.InstanceID = prevMachineSpec.InstanceID
 }
 
 func restorev1beta1Bastion(previous **infrav1.Bastion, dst **infrav1.Bastion) {

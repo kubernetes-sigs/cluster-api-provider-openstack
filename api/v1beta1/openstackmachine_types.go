@@ -22,6 +22,8 @@ import (
 	"k8s.io/utils/pointer"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/errors"
+
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
 )
 
 const (
@@ -35,9 +37,6 @@ const (
 type OpenStackMachineSpec struct {
 	// ProviderID is the unique identifier as specified by the cloud provider.
 	ProviderID *string `json:"providerID,omitempty"`
-
-	// InstanceID is the OpenStack instance ID for this machine.
-	InstanceID *string `json:"instanceID,omitempty"`
 
 	// The flavor reference for the flavor for your server instance.
 	Flavor string `json:"flavor"`
@@ -118,6 +117,10 @@ type OpenStackMachineStatus struct {
 	// Ready is true when the provider resource is ready.
 	// +optional
 	Ready bool `json:"ready"`
+
+	// InstanceID is the OpenStack instance ID for this machine.
+	// +optional
+	InstanceID optional.String `json:"instanceID,omitempty"`
 
 	// Addresses contains the OpenStack instance associated addresses.
 	Addresses []corev1.NodeAddress `json:"addresses,omitempty"`

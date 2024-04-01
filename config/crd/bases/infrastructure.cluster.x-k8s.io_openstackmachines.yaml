@@ -1861,9 +1861,6 @@ spec:
                     format: uuid
                     type: string
                 type: object
-              instanceID:
-                description: InstanceID is the OpenStack instance ID for this machine.
-                type: string
               ports:
                 description: |-
                   Ports to be attached to the server instance. They are created if a port with the given name does not already exist.
@@ -2503,6 +2500,9 @@ spec:
               failureReason:
                 description: MachineStatusError defines errors states for Machine
                   objects.
+                type: string
+              instanceID:
+                description: InstanceID is the OpenStack instance ID for this machine.
                 type: string
               instanceState:
                 description: InstanceState is the state of the OpenStack instance

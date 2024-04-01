@@ -563,17 +563,6 @@ string
 </tr>
 <tr>
 <td>
-<code>instanceID</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>InstanceID is the OpenStack instance ID for this machine.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>flavor</code><br/>
 <em>
 string
@@ -3112,17 +3101,6 @@ string
 </tr>
 <tr>
 <td>
-<code>instanceID</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>InstanceID is the OpenStack instance ID for this machine.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>flavor</code><br/>
 <em>
 string
@@ -3337,6 +3315,18 @@ bool
 </tr>
 <tr>
 <td>
+<code>instanceID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>InstanceID is the OpenStack instance ID for this machine.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>addresses</code><br/>
 <em>
 []Kubernetes core/v1.NodeAddress
@@ -3480,17 +3470,6 @@ string
 </td>
 <td>
 <p>ProviderID is the unique identifier as specified by the cloud provider.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>instanceID</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>InstanceID is the OpenStack instance ID for this machine.</p>
 </td>
 </tr>
 <tr>
