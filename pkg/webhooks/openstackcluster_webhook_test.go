@@ -92,7 +92,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 							},
 							Flavor: "minimal",
 						},
-						Enabled: true,
+						Enabled: pointer.Bool(true),
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
@@ -116,7 +116,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 							},
 							Flavor: "medium",
 						},
-						Enabled: true,
+						Enabled: pointer.Bool(true),
 					},
 				},
 			},
@@ -459,7 +459,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						CloudName: "foobar",
 					},
 					Bastion: &infrav1.Bastion{
-						Enabled: true,
+						Enabled: pointer.Bool(true),
 						Spec: &infrav1.OpenStackMachineSpec{
 							Flavor: "m1.small",
 							Image: infrav1.ImageParam{
@@ -490,7 +490,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						CloudName: "foobar",
 					},
 					Bastion: &infrav1.Bastion{
-						Enabled: false,
+						Enabled: pointer.Bool(false),
 						Spec: &infrav1.OpenStackMachineSpec{
 							Flavor: "m1.small",
 							Image: infrav1.ImageParam{

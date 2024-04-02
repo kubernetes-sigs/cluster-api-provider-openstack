@@ -196,10 +196,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(MatchError(clientCreateErr))
 		Expect(result).To(Equal(reconcile.Result{}))
 	})
-	It("should be able to reconcile when bastion is disabled and does not exist", func() {
-		testCluster.SetName("no-bastion")
+	It("should be able to reconcile when bastion is explicitly disabled and does not exist", func() {
+		testCluster.SetName("no-bastion-explicit")
 		testCluster.Spec = infrav1.OpenStackClusterSpec{
-			Bastion: &infrav1.Bastion{},
+			Bastion: &infrav1.Bastion{Enabled: pointer.Bool(false)},
 		}
 		err := k8sClient.Create(ctx, testCluster)
 		Expect(err).To(BeNil())
@@ -228,7 +228,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		testCluster.SetName("adopt-existing-bastion")
 		testCluster.Spec = infrav1.OpenStackClusterSpec{
 			Bastion: &infrav1.Bastion{
-				Enabled: true,
+				Enabled: pointer.Bool(true),
 				Spec:    &bastionSpec,
 			},
 		}
@@ -311,7 +311,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		testCluster.SetName("requeue-bastion")
 		testCluster.Spec = infrav1.OpenStackClusterSpec{
 			Bastion: &infrav1.Bastion{
-				Enabled: true,
+				Enabled: pointer.Bool(true),
 				Spec:    &bastionSpec,
 			},
 		}
@@ -393,7 +393,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		testCluster.SetName("requeue-bastion")
 		testCluster.Spec = infrav1.OpenStackClusterSpec{
 			Bastion: &infrav1.Bastion{
-				Enabled: true,
+				Enabled: pointer.Bool(true),
 				Spec:    &bastionSpec,
 			},
 		}
@@ -467,9 +467,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 	})
 	It("should delete an existing bastion even if its uuid is not stored in status", func() {
 		testCluster.SetName("delete-existing-bastion")
-		testCluster.Spec = infrav1.OpenStackClusterSpec{
-			Bastion: &infrav1.Bastion{},
-		}
+		testCluster.Spec = infrav1.OpenStackClusterSpec{}
 		err := k8sClient.Create(ctx, testCluster)
 		Expect(err).To(BeNil())
 		err = k8sClient.Create(ctx, capiCluster)
@@ -516,7 +514,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		testCluster.SetName("subnet-filtering")
 		testCluster.Spec = infrav1.OpenStackClusterSpec{
 			Bastion: &infrav1.Bastion{
-				Enabled: true,
+				Enabled: pointer.Bool(true),
 				Spec:    &bastionSpec,
 			},
 			DisableAPIServerFloatingIP: pointer.Bool(true),
@@ -586,7 +584,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		testCluster.SetName("subnet-filtering")
 		testCluster.Spec = infrav1.OpenStackClusterSpec{
 			Bastion: &infrav1.Bastion{
-				Enabled: true,
+				Enabled: pointer.Bool(true),
 				Spec:    &bastionSpec,
 			},
 			DisableAPIServerFloatingIP: pointer.Bool(true),

@@ -219,7 +219,7 @@ func contains(arr []string, target string) bool {
 
 func resolveBastionResources(scope *scope.WithLogger, clusterResourceName string, openStackCluster *infrav1.OpenStackCluster) (bool, error) {
 	// Resolve and store resources for the bastion
-	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.Enabled {
+	if openStackCluster.Spec.Bastion.IsEnabled() {
 		if openStackCluster.Status.Bastion == nil {
 			openStackCluster.Status.Bastion = &infrav1.BastionStatus{}
 		}
@@ -406,7 +406,7 @@ func reconcileBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openS
 	}
 
 	// No Bastion defined
-	if openStackCluster.Spec.Bastion == nil || !openStackCluster.Spec.Bastion.Enabled {
+	if !openStackCluster.Spec.Bastion.IsEnabled() {
 		// Delete any existing bastion
 		if openStackCluster.Status.Bastion != nil {
 			if err := deleteBastion(scope, cluster, openStackCluster); err != nil {
@@ -440,6 +440,8 @@ func reconcileBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openS
 		return nil, fmt.Errorf("failed computing bastion hash from instance spec: %w", err)
 	}
 	if bastionHashHasChanged(bastionHash, openStackCluster.ObjectMeta.Annotations) {
+		scope.Logger().Info("Bastion instance spec has changed, deleting existing bastion")
+
 		if err := deleteBastion(scope, cluster, openStackCluster); err != nil {
 			return nil, err
 		}
@@ -544,7 +546,7 @@ func bastionAddFloatingIP(openStackCluster *infrav1.OpenStackCluster, clusterRes
 func bastionToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, cluster *clusterv1.Cluster) (*compute.InstanceSpec, error) {
 	bastion := openStackCluster.Spec.Bastion
 	if bastion == nil {
-		return nil, fmt.Errorf("bastion spec is nil")
+		bastion = &infrav1.Bastion{}
 	}
 	if bastion.Spec == nil {
 		// For the case when Bastion is deleted but we don't have spec, let's use an empty one.

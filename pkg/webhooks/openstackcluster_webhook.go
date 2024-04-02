@@ -110,7 +110,7 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 
 	// Allow to remove the bastion spec only if it was disabled before.
 	if newObj.Spec.Bastion == nil {
-		if oldObj.Spec.Bastion != nil && oldObj.Spec.Bastion.Enabled {
+		if oldObj.Spec.Bastion.IsEnabled() {
 			allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "bastion"), "cannot be removed before disabling it"))
 		}
 	}

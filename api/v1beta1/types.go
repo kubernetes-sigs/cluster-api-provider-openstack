@@ -719,12 +719,18 @@ var (
 )
 
 // Bastion represents basic information about the bastion node. If you enable bastion, the spec has to be specified.
-// +kubebuilder:validation:XValidation:rule="!self.enabled || has(self.spec)",message="you need to specify the spec if bastion is enabled"
+// +kubebuilder:validation:XValidation:rule="!self.enabled || has(self.spec)",message="spec is required if bastion is enabled"
 type Bastion struct {
-	// Enabled means that bastion is enabled. Defaults to false.
-	// +kubebuilder:validation:Required
-	// +kubebuilder:default:=false
-	Enabled bool `json:"enabled"`
+	// Enabled means that bastion is enabled. The bastion is enabled by
+	// default if this field is not specified. Set this field to false to disable the
+	// bastion.
+	//
+	// It is not currently possible to remove the bastion from the cluster
+	// spec without first disabling it by setting this field to false and
+	// waiting until the bastion has been deleted.
+	// +kubebuilder:default:=true
+	// +optional
+	Enabled optional.Bool `json:"enabled,omitempty"`
 
 	// Spec for the bastion itself
 	Spec *OpenStackMachineSpec `json:"spec,omitempty"`
@@ -739,6 +745,13 @@ type Bastion struct {
 	//+optional
 	//+kubebuilder:validation:Format:=ipv4
 	FloatingIP optional.String `json:"floatingIP,omitempty"`
+}
+
+func (b *Bastion) IsEnabled() bool {
+	if b == nil {
+		return false
+	}
+	return b.Enabled == nil || *b.Enabled
 }
 
 type APIServerLoadBalancer struct {

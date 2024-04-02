@@ -176,7 +176,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
 			Expect(err).NotTo(HaveOccurred())
 			openStackClusterDisabledBastion := openStackCluster.DeepCopy()
-			openStackClusterDisabledBastion.Spec.Bastion.Enabled = false
+			openStackClusterDisabledBastion.Spec.Bastion.Enabled = pointer.Bool(false)
 			Expect(e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackClusterDisabledBastion)).To(Succeed())
 			Eventually(
 				func() (bool, error) {

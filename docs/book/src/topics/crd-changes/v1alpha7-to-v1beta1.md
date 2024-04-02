@@ -14,7 +14,7 @@
       - [Change to image](#change-to-image)
       - [Removal of imageUUID](#removal-of-imageuuid)
       - [Changes to ports](#changes-to-ports)
-      - [Additon of floatingIPPoolRef](#additon-of-floatingippoolref)
+      - [Addition of floatingIPPoolRef](#addition-of-floatingippoolref)
     - [`OpenStackCluster`](#openstackcluster)
       - [Removal of cloudName](#removal-of-cloudname-1)
       - [identityRef is now required](#identityref-is-now-required)
@@ -366,6 +366,8 @@ spec:
 ```
 
 #### Changes to bastion
+
+In v1beta1 the Bastion is enabled by default if a bastion is specified in `OpenStackCluster.spec.bastion` but `enabled` is not included. However, it is still required to set `enabled` explicitly to `false` before removing the bastion. We intend to remove this requirement in the future at which point the `enabled` field will be redundant.
 
 In v1beta1, `OpenStackCluster.spec.bastion.instance` becomes `OpenStackCluster.spec.bastion.spec`.
 

@@ -1084,7 +1084,13 @@ bool
 </em>
 </td>
 <td>
-<p>Enabled means that bastion is enabled. Defaults to false.</p>
+<em>(Optional)</em>
+<p>Enabled means that bastion is enabled. The bastion is enabled by
+default if this field is not specified. Set this field to false to disable the
+bastion.</p>
+<p>It is not currently possible to remove the bastion from the cluster
+spec without first disabling it by setting this field to false and
+waiting until the bastion has been deleted.</p>
 </td>
 </tr>
 <tr>
