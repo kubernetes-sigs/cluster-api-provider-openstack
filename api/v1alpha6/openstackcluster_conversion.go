@@ -434,7 +434,7 @@ func Convert_v1alpha6_Bastion_To_v1beta1_Bastion(in *Bastion, out *infrav1.Basti
 		}
 
 		if in.Instance.ServerGroupID != "" {
-			out.Spec.ServerGroup = &infrav1.ServerGroupFilter{ID: in.Instance.ServerGroupID}
+			out.Spec.ServerGroup = &infrav1.ServerGroupParam{ID: &in.Instance.ServerGroupID}
 		} else {
 			out.Spec.ServerGroup = nil
 		}
@@ -464,8 +464,8 @@ func Convert_v1beta1_Bastion_To_v1alpha6_Bastion(in *infrav1.Bastion, out *Basti
 			return err
 		}
 
-		if in.Spec.ServerGroup != nil && in.Spec.ServerGroup.ID != "" {
-			out.Instance.ServerGroupID = in.Spec.ServerGroup.ID
+		if in.Spec.ServerGroup != nil && in.Spec.ServerGroup.ID != nil {
+			out.Instance.ServerGroupID = *in.Spec.ServerGroup.ID
 		}
 	}
 

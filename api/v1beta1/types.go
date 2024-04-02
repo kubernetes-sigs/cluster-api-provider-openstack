@@ -547,9 +547,30 @@ type AdditionalBlockDevice struct {
 	Storage BlockDeviceStorage `json:"storage"`
 }
 
+// ServerGroupParam specifies an OpenStack server group. It may be specified by ID or filter, but not both.
+// +kubebuilder:validation:MaxProperties:=1
+// +kubebuilder:validation:MinProperties:=1
+type ServerGroupParam struct {
+	// ID is the ID of the server group to use.
+	// +kubebuilder:validation:Format:=uuid
+	ID optional.String `json:"id,omitempty"`
+
+	// Filter specifies a query to select an OpenStack server group. If provided, it cannot be empty.
+	Filter *ServerGroupFilter `json:"filter,omitempty"`
+}
+
+// ServerGroupFilter specifies a query to select an OpenStack server group. At least one property must be set.
+// +kubebuilder:validation:MinProperties:=1
 type ServerGroupFilter struct {
-	ID   string `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
+	// Name is the name of a server group to look for.
+	Name optional.String `json:"name,omitempty"`
+}
+
+func (f *ServerGroupFilter) IsZero() bool {
+	if f == nil {
+		return true
+	}
+	return f.Name == nil
 }
 
 // BlockDeviceType defines the type of block device to create.

@@ -715,8 +715,8 @@ RootVolume
 <td>
 <code>serverGroup</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerGroupFilter">
-ServerGroupFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerGroupParam">
+ServerGroupParam
 </a>
 </em>
 </td>
@@ -3270,8 +3270,8 @@ RootVolume
 <td>
 <code>serverGroup</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerGroupFilter">
-ServerGroupFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerGroupParam">
+ServerGroupParam
 </a>
 </em>
 </td>
@@ -3642,8 +3642,8 @@ RootVolume
 <td>
 <code>serverGroup</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerGroupFilter">
-ServerGroupFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerGroupParam">
+ServerGroupParam
 </a>
 </em>
 </td>
@@ -4778,9 +4778,40 @@ string
 </h3>
 <p>
 (<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerGroupParam">ServerGroupParam</a>)
+</p>
+<p>
+<p>ServerGroupFilter specifies a query to select an OpenStack server group. At least one property must be set.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name is the name of a server group to look for.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.ServerGroupParam">ServerGroupParam
+</h3>
+<p>
+(<em>Appears on:</em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>)
 </p>
 <p>
+<p>ServerGroupParam specifies an OpenStack server group. It may be specified by ID or filter, but not both.</p>
 </p>
 <table>
 <thead>
@@ -4798,16 +4829,20 @@ string
 </em>
 </td>
 <td>
+<p>ID is the ID of the server group to use.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>name</code><br/>
+<code>filter</code><br/>
 <em>
-string
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerGroupFilter">
+ServerGroupFilter
+</a>
 </em>
 </td>
 <td>
+<p>Filter specifies a query to select an OpenStack server group. If provided, it cannot be empty.</p>
 </td>
 </tr>
 </tbody>

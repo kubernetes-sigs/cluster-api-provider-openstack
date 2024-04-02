@@ -178,7 +178,7 @@ func Convert_v1alpha7_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in *O
 	}
 
 	if in.ServerGroupID != "" {
-		out.ServerGroup = &infrav1.ServerGroupFilter{ID: in.ServerGroupID}
+		out.ServerGroup = &infrav1.ServerGroupParam{ID: &in.ServerGroupID}
 	} else {
 		out.ServerGroup = nil
 	}
@@ -224,8 +224,8 @@ func Convert_v1beta1_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(in *i
 		return err
 	}
 
-	if in.ServerGroup != nil {
-		out.ServerGroupID = in.ServerGroup.ID
+	if in.ServerGroup != nil && in.ServerGroup.ID != nil {
+		out.ServerGroupID = *in.ServerGroup.ID
 	}
 
 	if in.Image.ID != nil {

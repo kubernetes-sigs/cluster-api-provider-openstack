@@ -2045,10 +2045,22 @@ spec:
                         type: array
                       serverGroup:
                         description: The server group to assign the machine to.
+                        maxProperties: 1
+                        minProperties: 1
                         properties:
+                          filter:
+                            description: Filter specifies a query to select an OpenStack
+                              server group. If provided, it cannot be empty.
+                            minProperties: 1
+                            properties:
+                              name:
+                                description: Name is the name of a server group to
+                                  look for.
+                                type: string
+                            type: object
                           id:
-                            type: string
-                          name:
+                            description: ID is the ID of the server group to use.
+                            format: uuid
                             type: string
                         type: object
                       serverMetadata:

@@ -86,7 +86,7 @@ type OpenStackMachineSpec struct {
 
 	// The server group to assign the machine to.
 	// +optional
-	ServerGroup *ServerGroupFilter `json:"serverGroup,omitempty"`
+	ServerGroup *ServerGroupParam `json:"serverGroup,omitempty"`
 
 	// IdentityRef is a reference to a secret holding OpenStack credentials
 	// to be used when reconciling this machine. If not specified, the
