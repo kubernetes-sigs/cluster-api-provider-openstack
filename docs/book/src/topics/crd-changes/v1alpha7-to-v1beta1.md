@@ -30,6 +30,7 @@
       - [Changes to apiServerLoadBalancer](#changes-to-apiserverloadbalancer)
       - [Changes to bastion](#changes-to-bastion)
     - [Changes to filters](#changes-to-filters)
+      - [Filters are replaced by params with separate id and filter](#filters-are-replaced-by-params-with-separate-id-and-filter)
       - [Changes to filter tags](#changes-to-filter-tags)
       - [Field capitalization consistency](#field-capitalization-consistency)
 
@@ -65,9 +66,9 @@ This has moved to `identityRef.cloudName`.
 
 #### Change to serverGroupID
 
-The field `serverGroupID` has been renamed to `serverGroup` and is now a `ServerGroupFilter` object rather than a string ID.
+The field `serverGroupID` has been renamed to `serverGroup` and is now a `ServerGroupParam` object rather than a string ID.
 
-The `ServerGroupFilter` object allows selection of a server group by name or by ID.
+The `ServerGroupParam` object allows selection of a server group by name or by ID.
 
 ```yaml
 serverGroupID: "e60f19e7-cb37-49f9-a2ee-0a1281f6e03e"
@@ -84,16 +85,18 @@ To select a server group by name instead of ID:
 
 ```yaml
 serverGroup:
-  name: "workers"
+  filter:
+    name: "workers"
 ```
 
-If a server group is provided and found, it'll be added to `OpenStackMachine.Status.ReferencedResources.ServerGroupID`. If the server group can't be found or filter matches multiple server groups, an error will be returned.
-If empty object or null is provided, Machine will not be added to any server group and `OpenStackMachine.Status.ReferencedResources.ServerGroupID` will be empty.
+If a server group is provided and found, it will be added to `OpenStackMachine.Status.ReferencedResources.ServerGroupID`. If the server group can't be found or filter matches multiple server groups, an error will be returned.
+If no serverGroup is provided, Machine will not be added to any server group and `OpenStackMachine.Status.ReferencedResources.ServerGroupID` will be empty.
+It is an error to provide an empty serverGroup.
 
 #### Change to image
 
-The field `image` is now an `ImageFilter` object rather than a string name.
-The `ImageFilter` object allows selection of an image by ID or by name and tags. If ID is set, no other fields can be set in the object.
+The field `image` is now an `ImageParam` object rather than a string name.
+The `ImageParam` object allows selection of an image by ID or by filter. Either ID or a filter may be set, but not both.
 
 ```yaml
 image: "test-image"
@@ -103,7 +106,8 @@ becomes
 
 ```yaml
 image:
-  name: "test-image"
+  filter:
+    name: "test-image"
 ```
 
 The image ID will be added to `OpenStackMachine.Status.ReferencedResources.ImageID`. If the image can't be found or filter matches multiple images, an error will be returned.
@@ -171,8 +175,8 @@ Note that this is in contrast `identityRef` in `OpenStackMachine`, which remains
 
 #### Change to externalNetworkID
 
-The field `externalNetworkID` has been renamed to `externalNetwork` and is now a `NetworkFilter` object rather than a string ID.
-The `NetworkFilter` object allows selection of a network by name, by ID or by tags.
+The field `externalNetworkID` has been renamed to `externalNetwork` and is now a `NetworkParam` object rather than a string ID.
+The `NetworkParam` object allows selection of a network by id or filter parameters.
 
 ```yaml
 externalNetworkID: "e60f19e7-cb37-49f9-a2ee-0a1281f6e03e"
@@ -185,14 +189,15 @@ externalNetwork:
   id: "e60f19e7-cb37-49f9-a2ee-0a1281f6e03e"
 ```
 
-It is now possible to specify a `NetworkFilter` object to select the external network to use for the cluster. The `NetworkFilter` object allows to select the network by name, by ID or by tags.
+It is now possible to specify a `NetworkParam` object to select the external network to use for the cluster. The `NetworkParam` object allows to select the network by id or by filter, which can select by name, ID or tags.
 
 ```yaml
 externalNetwork:
-  name: "public"
+  filter:
+    name: "public"
 ```
 
-If a network is provided, it'll be added to `OpenStackCluster.Status.ExternalNetwork`. If the network can't be found, an error will be returned.
+If a network is provided, it will be added to `OpenStackCluster.Status.ExternalNetwork`. If the network can't be found, an error will be returned.
 If no network is provided, CAPO will try to find network marked "External" and add it to `OpenStackCluster.Status.ExternalNetwork`. If it can't find a network marked "External",
 `OpenStackCluster.Status.ExternalNetwork` will be set to nil.
 If more than one network is found, an error will be returned.
@@ -239,7 +244,7 @@ The new field has IPv4 validation added.
 
 #### Change to subnet
 
-In v1beta1, `Subnet` of `OpenStackCluster` is modified to `Subnets` to allow specification of two existent subnets for the dual-stack scenario.
+In v1beta1, `Subnet` of `OpenStackCluster` is modified to `Subnets` to allow specification of two existing subnets for the dual-stack scenario.
 
 ```yaml
   subnet:
@@ -253,9 +258,11 @@ In v1beta1, this will be automatically converted to:
     - id: a532beb0-c73a-4b5d-af66-3ad05b73d063
 ```
 
-`Subnets` allows specifications of maximum two `SubnetFilter` one being IPv4 and the other IPv6. Both subnets must be on the same network. Any filtered subnets will be added to `OpenStackCluster.Status.Network.Subnets`.
+`Subnets` allows specifications of maximum two `SubnetParam`s one being IPv4 and the other IPv6. Both subnets must be on the same network. Any filtered subnets will be added to `OpenStackCluster.Status.Network.Subnets`.
 
 When subnets are not specified on `OpenStackCluster` and only the network is, the network is used to identify the subnets to use. If more than two subnets exist in the network, the user must specify which ones to use by defining the `OpenStackCluster.Spec.Subnets` field.
+
+See [Filters are replaced by params with separate id and filter](#filters-are-replaced-by-params-with-separate-id-and-filter) for changes to the `SubnetFilter`.
 
 #### Change to nodeCidr and dnsNameservers
 
@@ -388,10 +395,67 @@ spec:
     bastion:
       spec:
         image:
-          name: foobar
+          filter:
+            name: foobar
 ```
 
 ### Changes to filters
+
+#### Filters are replaced by params with separate id and filter
+
+We previously defined filters for specifying each of the following:
+* Images
+* Networks
+* Subnets
+* Security Groups
+* Routers
+
+In addition, ServerGroupParam is new in v1beta1, but works in the same way.
+
+Taking Images as an example, in `OpenStackMachineSpec` the `image` parameter accepted the following fields:
+* id
+* name
+* tags
+
+However, there were 2 different behaviours here depending on which fields were specified. If `id` was specified we both ignored all other fields, and made no attempt to validate the id because it cannot be known unless it exists. If `id` was not specified we performed an OpenStack query using the other parameters to determine the id. This behaviour is both difficult to describe and validate, so in v1beta1 we have separated the 2 different behaviours into different fields. The `id` field remains, but all other fields become part of a new `filter` parameter. It is required to specify either `id` or `filter`. Specifying both, neither, or an empty filter, will now result in an admission failure (the API server will reject the operation immediately).
+
+We have also added validation to the id field, which must now parse as a uuid. An id field which does not parse as a uuid will also result in an admission failure.
+
+Specifying a filter object by id remains unchanged.
+```yaml
+  image:
+    id: 02e31c38-d5ba-4c57-addb-00fc71eb5b19
+```
+
+Specifying a filter object by a filter parameter must now move filter parameters into the filter field:
+```yaml
+  image:
+    name: my-image
+    tags:
+    - my-tag
+```
+becomes:
+```yaml
+  image:
+    filter:
+      name: my-image
+      tags:
+      - my-tag
+```
+
+The same principle applies to all the filter types. For example:
+
+To specify `externalNetwork` by id in `OpenStackClusterSpec`:
+```yaml
+  externalNetwork:
+    id: 0a5d4e3d-0a2c-4bed-9172-72544db1f8da
+```
+or by name:
+```yaml
+  externalNetwork:
+    filter:
+      name: my-external-network
+```
 
 #### Changes to filter tags
 
