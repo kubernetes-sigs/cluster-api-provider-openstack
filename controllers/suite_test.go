@@ -149,7 +149,7 @@ var _ = Describe("When calling getOrCreate", func() {
 		openStackCluster := &infrav1.OpenStackCluster{}
 		machine := &clusterv1.Machine{}
 		openStackMachine := &infrav1.OpenStackMachine{
-			Spec: infrav1.OpenStackMachineSpec{
+			Status: infrav1.OpenStackMachineStatus{
 				InstanceID: pointer.String("machine-uuid"),
 			},
 		}

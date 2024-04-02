@@ -116,6 +116,10 @@ var v1beta1OpenStackClusterRestorer = conversion.RestorerFor[*infrav1.OpenStackC
 /* OpenStackClusterSpec */
 
 func restorev1alpha6ClusterSpec(previous *OpenStackClusterSpec, dst *OpenStackClusterSpec) {
+	if previous == nil || dst == nil {
+		return
+	}
+
 	for i := range previous.ExternalRouterIPs {
 		dstIP := &dst.ExternalRouterIPs[i]
 		previousIP := &previous.ExternalRouterIPs[i]
@@ -139,6 +143,7 @@ func restorev1alpha6ClusterSpec(previous *OpenStackClusterSpec, dst *OpenStackCl
 	dstBastion := dst.Bastion
 	if prevBastion != nil && dstBastion != nil {
 		restorev1alpha6MachineSpec(&prevBastion.Instance, &dstBastion.Instance)
+		dstBastion.Instance.InstanceID = prevBastion.Instance.InstanceID
 	}
 
 	// To avoid lossy conversion, we need to restore AllowAllInClusterTraffic

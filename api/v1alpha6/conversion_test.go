@@ -607,7 +607,7 @@ func TestMachineConversionControllerSpecFields(t *testing.T) {
 		{
 			name: "Set InstanceID",
 			modifyUp: func(up *infrav1.OpenStackMachine) {
-				up.Spec.InstanceID = pointer.String("new-instance-id")
+				up.Status.InstanceID = pointer.String("new-instance-id")
 			},
 			testAfter: func(after *OpenStackMachine) {
 				g.Expect(after.Spec.InstanceID).To(gomega.Equal(pointer.String("new-instance-id")))

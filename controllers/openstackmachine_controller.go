@@ -277,8 +277,8 @@ func (r *OpenStackMachineReconciler) reconcileDelete(scope *scope.WithLogger, cl
 	}
 
 	var instanceStatus *compute.InstanceStatus
-	if openStackMachine.Spec.InstanceID != nil {
-		instanceStatus, err = computeService.GetInstanceStatus(*openStackMachine.Spec.InstanceID)
+	if openStackMachine.Status.InstanceID != nil {
+		instanceStatus, err = computeService.GetInstanceStatus(*openStackMachine.Status.InstanceID)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
@@ -545,12 +545,8 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		return ctrl.Result{}, err
 	}
 
-	// TODO(sbueringer) From CAPA: TODO(ncdc): move this validation logic into a validating webhook (for us: create validation logic in webhook)
-
-	openStackMachine.Spec.ProviderID = pointer.String(fmt.Sprintf("openstack:///%s", instanceStatus.ID()))
-	openStackMachine.Spec.InstanceID = pointer.String(instanceStatus.ID())
-
 	state := instanceStatus.State()
+	openStackMachine.Status.InstanceID = pointer.String(instanceStatus.ID())
 	openStackMachine.Status.InstanceState = &state
 
 	instanceNS, err := instanceStatus.NetworkStatus()
@@ -581,6 +577,9 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	case infrav1.InstanceStateActive:
 		scope.Logger().Info("Machine instance state is ACTIVE", "id", instanceStatus.ID())
 		conditions.MarkTrue(openStackMachine, infrav1.InstanceReadyCondition)
+
+		// Set properties required by CAPI machine controller
+		openStackMachine.Spec.ProviderID = pointer.String(fmt.Sprintf("openstack:///%s", instanceStatus.ID()))
 		openStackMachine.Status.Ready = true
 	case infrav1.InstanceStateError:
 		// If the machine has a NodeRef then it must have been working at some point,
@@ -619,6 +618,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	if err != nil {
 		return ctrl.Result{}, err
 	}
+
 	conditions.MarkTrue(openStackMachine, infrav1.APIServerIngressReadyCondition)
 	scope.Logger().Info("Reconciled Machine create successfully")
 	return ctrl.Result{}, nil
@@ -700,8 +700,8 @@ func getOrCreateMachinePorts(openStackMachine *infrav1.OpenStackMachine, network
 func (r *OpenStackMachineReconciler) getOrCreateInstance(logger logr.Logger, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, computeService *compute.Service, userData string, portIDs []string) (*compute.InstanceStatus, error) {
 	var instanceStatus *compute.InstanceStatus
 	var err error
-	if openStackMachine.Spec.InstanceID != nil {
-		instanceStatus, err = computeService.GetInstanceStatus(*openStackMachine.Spec.InstanceID)
+	if openStackMachine.Status.InstanceID != nil {
+		instanceStatus, err = computeService.GetInstanceStatus(*openStackMachine.Status.InstanceID)
 		if err != nil {
 			logger.Info("Unable to get OpenStack instance", "name", openStackMachine.Name)
 			conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.OpenStackErrorReason, clusterv1.ConditionSeverityError, err.Error())
@@ -714,7 +714,7 @@ func (r *OpenStackMachineReconciler) getOrCreateInstance(logger logr.Logger, ope
 			if instanceStatus != nil {
 				return instanceStatus, nil
 			}
-			if openStackMachine.Spec.InstanceID != nil {
+			if openStackMachine.Status.InstanceID != nil {
 				logger.Info("Not reconciling machine in failed state. The previously existing OpenStack instance is no longer available")
 				conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceNotFoundReason, clusterv1.ConditionSeverityError, "virtual machine no longer exists")
 				openStackMachine.SetFailure(capierrors.UpdateMachineError, errors.New("virtual machine no longer exists"))
