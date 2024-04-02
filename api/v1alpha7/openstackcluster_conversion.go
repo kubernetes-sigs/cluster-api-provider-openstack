@@ -207,7 +207,7 @@ func restorev1beta1ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infr
 
 	dst.ManagedSubnets = previous.ManagedSubnets
 
-	if previous.ManagedSecurityGroups != nil {
+	if previous.ManagedSecurityGroups != nil && dst.ManagedSecurityGroups != nil {
 		dst.ManagedSecurityGroups.AllNodesSecurityGroupRules = previous.ManagedSecurityGroups.AllNodesSecurityGroupRules
 	}
 
@@ -371,10 +371,9 @@ func Convert_v1beta1_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(i
 /* Bastion */
 
 func restorev1alpha7Bastion(previous **Bastion, dst **Bastion) {
-	if *previous == nil || *dst == nil {
+	if previous == nil || dst == nil || *previous == nil || *dst == nil {
 		return
 	}
-
 	prevMachineSpec := &(*previous).Instance
 	dstMachineSpec := &(*dst).Instance
 	restorev1alpha7MachineSpec(prevMachineSpec, dstMachineSpec)
@@ -382,15 +381,14 @@ func restorev1alpha7Bastion(previous **Bastion, dst **Bastion) {
 }
 
 func restorev1beta1Bastion(previous **infrav1.Bastion, dst **infrav1.Bastion) {
-	if *previous != nil {
-		if *dst != nil && (*previous).Spec != nil && (*dst).Spec != nil {
-			restorev1beta1MachineSpec((*previous).Spec, (*dst).Spec)
-		}
-
-		optional.RestoreString(&(*previous).FloatingIP, &(*dst).FloatingIP)
-		optional.RestoreString(&(*previous).AvailabilityZone, &(*dst).AvailabilityZone)
-		optional.RestoreBool(&(*previous).Enabled, &(*dst).Enabled)
+	if previous == nil || dst == nil || *previous == nil || *dst == nil {
+		return
 	}
+
+	restorev1beta1MachineSpec((*previous).Spec, (*dst).Spec)
+	optional.RestoreString(&(*previous).FloatingIP, &(*dst).FloatingIP)
+	optional.RestoreString(&(*previous).AvailabilityZone, &(*dst).AvailabilityZone)
+	optional.RestoreBool(&(*previous).Enabled, &(*dst).Enabled)
 }
 
 func Convert_v1alpha7_Bastion_To_v1beta1_Bastion(in *Bastion, out *infrav1.Bastion, s apiconversion.Scope) error {

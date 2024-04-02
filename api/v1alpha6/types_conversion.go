@@ -224,7 +224,7 @@ func restorev1beta1SubnetParam(previous *infrav1.SubnetParam, dst *infrav1.Subne
 
 	optional.RestoreString(&previous.ID, &dst.ID)
 
-	if dst.Filter != nil {
+	if previous.Filter != nil && dst.Filter != nil {
 		dst.Filter.FilterByNeutronTags = previous.Filter.FilterByNeutronTags
 	}
 }

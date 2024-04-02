@@ -371,3 +371,38 @@ func TestConvert_v1alpha7_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(t
 		})
 	}
 }
+
+func Test_FuzzRestorers(t *testing.T) {
+	/* Cluster */
+	testhelpers.FuzzRestorer(t, "restorev1alpha7ClusterSpec", restorev1alpha7ClusterSpec)
+	testhelpers.FuzzRestorer(t, "restorev1beta1ClusterSpec", restorev1beta1ClusterSpec)
+	testhelpers.FuzzRestorer(t, "restorev1alpha7ClusterStatus", restorev1alpha7ClusterStatus)
+	testhelpers.FuzzRestorer(t, "restorev1beta1ClusterStatus", restorev1beta1ClusterStatus)
+	testhelpers.FuzzRestorer(t, "restorev1alpha7Bastion", restorev1alpha7Bastion)
+	testhelpers.FuzzRestorer(t, "restorev1beta1Bastion", restorev1beta1Bastion)
+	testhelpers.FuzzRestorer(t, "restorev1beta1BastionStatus", restorev1beta1BastionStatus)
+
+	/* ClusterTemplate */
+	testhelpers.FuzzRestorer(t, "restorev1alpha7ClusterTemplateSpec", restorev1alpha7ClusterTemplateSpec)
+	testhelpers.FuzzRestorer(t, "restorev1alpha7ClusterTemplateSpec", restorev1alpha7ClusterTemplateSpec)
+
+	/* Machine */
+	testhelpers.FuzzRestorer(t, "restorev1alpha7MachineSpec", restorev1alpha7MachineSpec)
+	testhelpers.FuzzRestorer(t, "restorev1beta1MachineSpec", restorev1beta1MachineSpec)
+
+	/* MachineTemplate */
+	testhelpers.FuzzRestorer(t, "restorev1alpha7MachineTemplateSpec", restorev1alpha7MachineTemplateSpec)
+
+	/* Types */
+	testhelpers.FuzzRestorer(t, "restorev1alpha7SecurityGroupFilter", restorev1alpha7SecurityGroupFilter)
+	testhelpers.FuzzRestorer(t, "restorev1alpha7SecurityGroup", restorev1alpha7SecurityGroup)
+	testhelpers.FuzzRestorer(t, "restorev1beta1SecurityGroupParam", restorev1beta1SecurityGroupParam)
+	testhelpers.FuzzRestorer(t, "restorev1alpha7NetworkFilter", restorev1alpha7NetworkFilter)
+	testhelpers.FuzzRestorer(t, "restorev1beta1NetworkParam", restorev1beta1NetworkParam)
+	testhelpers.FuzzRestorer(t, "restorev1alpha7SubnetFilter", restorev1alpha7SubnetFilter)
+	testhelpers.FuzzRestorer(t, "restorev1beta1SubnetParam", restorev1beta1SubnetParam)
+	testhelpers.FuzzRestorer(t, "restorev1alpha7RouterFilter", restorev1alpha7RouterFilter)
+	testhelpers.FuzzRestorer(t, "restorev1beta1RouterParam", restorev1beta1RouterParam)
+	testhelpers.FuzzRestorer(t, "restorev1alpha7Port", restorev1alpha7Port)
+	testhelpers.FuzzRestorer(t, "restorev1beta1Port", restorev1beta1Port)
+}
