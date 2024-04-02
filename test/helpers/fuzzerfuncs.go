@@ -149,5 +149,9 @@ func InfraV1FuzzerFuncs() []interface{} {
 		func(param *infrav1.RouterParam, c fuzz.Continue) {
 			fuzzFilterParam(&param.ID, &param.Filter, c)
 		},
+
+		func(param *infrav1.SecurityGroupParam, c fuzz.Continue) {
+			fuzzFilterParam(&param.ID, &param.Filter, c)
+		},
 	}
 }

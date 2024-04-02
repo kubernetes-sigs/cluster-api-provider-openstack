@@ -67,7 +67,7 @@ func Test_ResolveMachineSpec(t *testing.T) {
 		{
 			testName: "Resources ID passed",
 			spec: infrav1.OpenStackMachineSpec{
-				ServerGroup: &infrav1.ServerGroupFilter{ID: serverGroupID1},
+				ServerGroup: &infrav1.ServerGroupParam{ID: pointer.String(serverGroupID1)},
 				Image:       infrav1.ImageParam{ID: pointer.String(imageID1)},
 			},
 			want: &infrav1.ResolvedMachineSpec{
@@ -90,7 +90,7 @@ func Test_ResolveMachineSpec(t *testing.T) {
 			testName: "Server group empty",
 			spec: infrav1.OpenStackMachineSpec{
 				Image:       infrav1.ImageParam{ID: pointer.String(imageID1)},
-				ServerGroup: &infrav1.ServerGroupFilter{},
+				ServerGroup: nil,
 			},
 			want: &infrav1.ResolvedMachineSpec{
 				ImageID: imageID1,
@@ -101,7 +101,7 @@ func Test_ResolveMachineSpec(t *testing.T) {
 			testName: "Server group by Name not found",
 			spec: infrav1.OpenStackMachineSpec{
 				Image:       infrav1.ImageParam{ID: pointer.String(imageID1)},
-				ServerGroup: &infrav1.ServerGroupFilter{Name: "test-server-group"},
+				ServerGroup: &infrav1.ServerGroupParam{Filter: &infrav1.ServerGroupFilter{Name: pointer.String("test-server-group")}},
 			},
 			expectComputeMock: func(m *mock.MockComputeClientMockRecorder) {
 				m.ListServerGroups().Return(
@@ -197,6 +197,7 @@ func Test_ResolveMachineSpec(t *testing.T) {
 				return
 			}
 
+			g.Expect(err).To(BeNil())
 			g.Expect(resources).To(Equal(tt.want), cmp.Diff(resources, tt.want))
 		})
 	}

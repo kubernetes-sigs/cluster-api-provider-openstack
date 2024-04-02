@@ -406,4 +406,39 @@ var _ = Describe("Filter API validations", func() {
 			Expect(k8sClient.Create(ctx, cluster)).NotTo(Succeed(), "OpenStackCluster creation should fail")
 		})
 	})
+
+	Context("ServerGroupParam", func() {
+		It("should allow setting ID", func() {
+			machine.Spec.ServerGroup = &infrav1.ServerGroupParam{ID: pointer.String("06c32c52-f207-4f6a-a769-bbcbe5a43f5c")}
+			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
+		})
+
+		It("should allow setting non-empty Filter", func() {
+			machine.Spec.ServerGroup = &infrav1.ServerGroupParam{Filter: &infrav1.ServerGroupFilter{Name: pointer.String("foo")}}
+			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
+		})
+
+		It("should not allow setting empty param", func() {
+			machine.Spec.ServerGroup = &infrav1.ServerGroupParam{}
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
+		})
+
+		It("should not allow setting invalid id", func() {
+			machine.Spec.ServerGroup = &infrav1.ServerGroupParam{ID: pointer.String("foo")}
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
+		})
+
+		It("should not allow setting empty Filter", func() {
+			machine.Spec.ServerGroup = &infrav1.ServerGroupParam{Filter: &infrav1.ServerGroupFilter{}}
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
+		})
+
+		It("should not allow setting both ID and Filter", func() {
+			machine.Spec.ServerGroup = &infrav1.ServerGroupParam{
+				ID:     pointer.String("06c32c52-f207-4f6a-a769-bbcbe5a43f5c"),
+				Filter: &infrav1.ServerGroupFilter{Name: pointer.String("foo")},
+			}
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
+		})
+	})
 })

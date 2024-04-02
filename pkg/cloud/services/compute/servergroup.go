@@ -17,6 +17,7 @@ limitations under the License.
 package compute
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/servergroups"
@@ -26,18 +27,18 @@ import (
 
 // GetServerGroupID looks up a server group using the passed filter and returns
 // its ID. It'll return an error when server group is not found or there are multiple.
-func (s *Service) GetServerGroupID(serverGroupFilter *infrav1.ServerGroupFilter) (string, error) {
-	if serverGroupFilter.ID != "" {
-		return serverGroupFilter.ID, nil
+func (s *Service) GetServerGroupID(serverGroupParam *infrav1.ServerGroupParam) (string, error) {
+	if serverGroupParam.ID != nil {
+		return *serverGroupParam.ID, nil
 	}
 
-	if serverGroupFilter.Name == "" {
-		// empty filter produced no server group, but also no error
-		return "", nil
+	if serverGroupParam.Filter == nil || serverGroupParam.Filter.Name == nil {
+		// Should have been caught by validation
+		return "", errors.New("server group param is empty")
 	}
 
 	// otherwise fallback to looking up by name, which is slower
-	serverGroup, err := s.getServerGroupByName(serverGroupFilter.Name)
+	serverGroup, err := s.getServerGroupByName(*serverGroupParam.Filter.Name)
 	if err != nil {
 		return "", err
 	}
