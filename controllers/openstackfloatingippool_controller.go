@@ -398,8 +398,19 @@ func (r *OpenStackFloatingIPPoolReconciler) reconcileFloatingIPNetwork(scope *sc
 		return err
 	}
 
-	network, err := networkingService.GetNetworkByParam(&pool.Spec.FloatingIPNetwork)
+	// If the pool does not have a network, we default to a external network if there's only one
+	var networkParam *infrav1.NetworkParam
+	if pool.Spec.FloatingIPNetwork == nil {
+		networkParam = &infrav1.NetworkParam{
+			Filter: &infrav1.NetworkFilter{},
+		}
+	} else {
+		networkParam = pool.Spec.FloatingIPNetwork
+	}
+
+	network, err := networkingService.GetNetworkByParam(networkParam, networking.ExternalNetworksOnly)
 	if err != nil {
+		conditions.MarkFalse(pool, infrav1alpha1.OpenstackFloatingIPPoolReadyCondition, infrav1alpha1.UnableToFindNetwork, clusterv1.ConditionSeverityError, "Failed to find network: %v", err)
 		return fmt.Errorf("failed to find network: %w", err)
 	}
 

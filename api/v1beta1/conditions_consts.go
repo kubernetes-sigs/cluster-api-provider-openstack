@@ -61,4 +61,6 @@ const (
 	FloatingAddressFromPoolWaitingForIpamProviderReason = "WaitingForIPAMProvider"
 	// FloatingAddressFromPoolErrorReason is used when there is an error attaching an IP from the pool to an machine.
 	FloatingAddressFromPoolErrorReason = "FloatingIPError"
+	// UnableToFindFloatingIPNetworkReason is used when the floating ip network is not found.
+	UnableToFindFloatingIPNetworkReason = "UnableToFindFloatingIPNetwork"
 )
