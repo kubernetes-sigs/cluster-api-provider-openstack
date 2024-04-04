@@ -253,7 +253,7 @@ type LoadBalancer struct {
 type SecurityGroup struct {
 	Name  string              `json:"name"`
 	ID    string              `json:"id"`
-	Rules []SecurityGroupRule `json:"rules"`
+	Rules []SecurityGroupRule `json:"rules,omitempty"`
 }
 
 // SecurityGroupRule represent the basic information of the associated OpenStack

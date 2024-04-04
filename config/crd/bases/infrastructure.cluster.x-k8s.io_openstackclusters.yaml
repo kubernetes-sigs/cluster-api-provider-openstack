@@ -1112,7 +1112,6 @@ spec:
                 required:
                 - id
                 - name
-                - rules
                 type: object
               controlPlaneSecurityGroup:
                 description: |-
@@ -1166,7 +1165,6 @@ spec:
                 required:
                 - id
                 - name
-                - rules
                 type: object
               externalNetwork:
                 description: External Network contains information about the created
@@ -1785,7 +1783,6 @@ spec:
                 required:
                 - id
                 - name
-                - rules
                 type: object
             required:
             - ready
@@ -2969,7 +2966,6 @@ spec:
                 required:
                 - id
                 - name
-                - rules
                 type: object
               controlPlaneSecurityGroup:
                 description: |-
@@ -3023,7 +3019,6 @@ spec:
                 required:
                 - id
                 - name
-                - rules
                 type: object
               externalNetwork:
                 description: External Network contains information about the created
@@ -3712,7 +3707,6 @@ spec:
                 required:
                 - id
                 - name
-                - rules
                 type: object
             required:
             - ready
@@ -4539,7 +4533,6 @@ spec:
                 required:
                 - id
                 - name
-                - rules
                 type: object
               controlPlaneSecurityGroup:
                 description: |-
@@ -4593,7 +4586,6 @@ spec:
                 required:
                 - id
                 - name
-                - rules
                 type: object
               externalNetwork:
                 description: externalNetwork contains information about the external
@@ -4784,7 +4776,6 @@ spec:
                 required:
                 - id
                 - name
-                - rules
                 type: object
             required:
             - ready
