@@ -158,6 +158,7 @@ spec:
                 type: string
             required:
             - identityRef
+            - reclaimPolicy
             type: object
           status:
             description: OpenStackFloatingIPPoolStatus defines the observed state
