@@ -13,6 +13,7 @@
       - [Change to serverGroupID](#change-to-servergroupid)
       - [Change to image](#change-to-image)
       - [Removal of imageUUID](#removal-of-imageuuid)
+      - [Change to instanceID](#change-to-instanceid)
       - [Changes to ports](#changes-to-ports)
       - [Addition of floatingIPPoolRef](#addition-of-floatingippoolref)
     - [`OpenStackCluster`](#openstackcluster)
@@ -126,6 +127,10 @@ becomes
 image:
   id: "72a6a1e6-3e0a-4a8b-9b4c-2d6f9e3e5f0a"
 ```
+
+#### Change to instanceID
+
+In v1beta1, the field `instanceID` moves from `spec` to `status`.
 
 #### Changes to ports
 
