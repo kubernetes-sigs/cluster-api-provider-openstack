@@ -23,6 +23,11 @@ import (
 	"os"
 	"testing"
 
+	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
+	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/loadbalancers"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/klog/v2"
@@ -31,7 +36,15 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
 )
 
-var e2eCtx *shared.E2EContext
+var (
+	e2eCtx                *shared.E2EContext
+	initialServers        []servers.Server
+	initialNetworks       []networks.Network
+	initialSecurityGroups []groups.SecGroup
+	initialLoadBalancers  []loadbalancers.LoadBalancer
+	initialVolumes        []volumes.Volume
+	err                   error
+)
 
 func init() {
 	e2eCtx = shared.NewE2EContext()
@@ -54,6 +67,16 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	data := shared.Node1BeforeSuite(e2eCtx)
 	return data
 }, func(data []byte) {
+	initialServers, err = shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{})
+	Expect(err).NotTo(HaveOccurred())
+	initialNetworks, err = shared.DumpOpenStackNetworks(e2eCtx, networks.ListOpts{})
+	Expect(err).NotTo(HaveOccurred())
+	initialSecurityGroups, err = shared.DumpOpenStackSecurityGroups(e2eCtx, groups.ListOpts{})
+	Expect(err).NotTo(HaveOccurred())
+	initialLoadBalancers, err = shared.DumpOpenStackLoadBalancers(e2eCtx, loadbalancers.ListOpts{})
+	Expect(err).NotTo(HaveOccurred())
+	initialVolumes, err = shared.DumpOpenStackVolumes(e2eCtx, volumes.ListOpts{})
+	Expect(err).NotTo(HaveOccurred())
 	shared.AllNodesBeforeSuite(e2eCtx, data)
 })
 
@@ -61,4 +84,19 @@ var _ = SynchronizedAfterSuite(func() {
 	shared.AllNodesAfterSuite(e2eCtx)
 }, func() {
 	shared.Node1AfterSuite(e2eCtx)
+	endServers, err := shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{})
+	Expect(err).NotTo(HaveOccurred())
+	Expect(endServers).To(Equal(initialServers))
+	endNetworks, err := shared.DumpOpenStackNetworks(e2eCtx, networks.ListOpts{})
+	Expect(err).NotTo(HaveOccurred())
+	Expect(endNetworks).To(Equal(initialNetworks))
+	endSecurityGroups, err := shared.DumpOpenStackSecurityGroups(e2eCtx, groups.ListOpts{})
+	Expect(err).NotTo(HaveOccurred())
+	Expect(endSecurityGroups).To(Equal(initialSecurityGroups))
+	endLoadBalancers, err := shared.DumpOpenStackLoadBalancers(e2eCtx, loadbalancers.ListOpts{})
+	Expect(err).NotTo(HaveOccurred())
+	Expect(endLoadBalancers).To(Equal(initialLoadBalancers))
+	endVolumes, err := shared.DumpOpenStackVolumes(e2eCtx, volumes.ListOpts{})
+	Expect(err).NotTo(HaveOccurred())
+	Expect(endVolumes).To(Equal(initialVolumes))
 })
