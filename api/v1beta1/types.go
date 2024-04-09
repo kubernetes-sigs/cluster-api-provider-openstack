@@ -632,6 +632,12 @@ type LoadBalancer struct {
 	AllowedCIDRs []string `json:"allowedCIDRs,omitempty"`
 	//+optional
 	Tags []string `json:"tags,omitempty"`
+	// LoadBalancerNetwork contains information about network and/or subnets which the
+	// loadbalancer is allocated on.
+	// If subnets are specified within the LoadBalancerNetwork currently only the first
+	// subnet in the list is taken into account.
+	// +optional
+	LoadBalancerNetwork *NetworkStatusWithSubnets `json:"loadBalancerNetwork,omitempty"`
 }
 
 // SecurityGroupStatus represents the basic information of the associated
@@ -802,6 +808,17 @@ type APIServerLoadBalancer struct {
 	// specified.
 	// +optional
 	Provider optional.String `json:"provider,omitempty"`
+
+	// Network defines which network should the load balancer be allocated on.
+	//+optional
+	Network *NetworkParam `json:"network,omitempty"`
+	// Subnets define which subnets should the load balancer be allocated on.
+	// It is expected that subnets are located on the network specified in this resource.
+	// Only the first element is taken into account.
+	// +optional
+	// +listType=atomic
+	// kubebuilder:validation:MaxLength:=2
+	Subnets []SubnetParam `json:"subnets,omitempty"`
 }
 
 func (s *APIServerLoadBalancer) IsZero() bool {

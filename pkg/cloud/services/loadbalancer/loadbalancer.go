@@ -270,9 +270,34 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 		return nil, fmt.Errorf("network is not yet available in OpenStackCluster.Status")
 	}
 
-	// Create the VIP on the first cluster subnet
-	subnetID := openStackCluster.Status.Network.Subnets[0].ID
-	s.scope.Logger().Info("Creating load balancer in subnet", "subnetID", subnetID, "name", loadBalancerName)
+	if openStackCluster.Status.APIServerLoadBalancer == nil {
+		return nil, fmt.Errorf("apiserver loadbalancer network is not yet available in OpenStackCluster.Status")
+	}
+
+	lbNetwork := openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork
+	if lbNetwork == nil {
+		lbNetwork = &infrav1.NetworkStatusWithSubnets{}
+		openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork = lbNetwork
+	}
+
+	var vipNetworkID, vipSubnetID string
+	if lbNetwork.ID != "" {
+		vipNetworkID = lbNetwork.ID
+	}
+
+	if len(lbNetwork.Subnets) > 0 {
+		// Currently only the first subnet is taken into account.
+		// This can be fixed as soon as we switch over to gophercloud release that
+		// contains AdditionalVips field.
+		vipSubnetID = lbNetwork.Subnets[0].ID
+	}
+
+	if vipNetworkID == "" && vipSubnetID == "" {
+		// keep the default and create the VIP on the first cluster subnet
+		vipSubnetID = openStackCluster.Status.Network.Subnets[0].ID
+	}
+
+	s.scope.Logger().Info("Creating load balancer in subnet", "subnetID", vipSubnetID, "name", loadBalancerName)
 
 	providers, err := s.loadbalancerClient.ListLoadBalancerProviders()
 	if err != nil {
@@ -300,11 +325,12 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 	}
 
 	lbCreateOpts := loadbalancers.CreateOpts{
-		Name:        loadBalancerName,
-		VipSubnetID: subnetID,
-		Description: names.GetDescription(clusterResourceName),
-		Provider:    lbProvider,
-		Tags:        openStackCluster.Spec.Tags,
+		Name:         loadBalancerName,
+		VipSubnetID:  vipSubnetID,
+		VipNetworkID: vipNetworkID,
+		Description:  names.GetDescription(clusterResourceName),
+		Provider:     lbProvider,
+		Tags:         openStackCluster.Spec.Tags,
 	}
 	if vipAddress != nil {
 		lbCreateOpts.VipAddress = *vipAddress
