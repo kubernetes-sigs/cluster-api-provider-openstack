@@ -67,6 +67,8 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	data := shared.Node1BeforeSuite(e2eCtx)
 	return data
 }, func(data []byte) {
+	shared.AllNodesBeforeSuite(e2eCtx, data)
+
 	initialServers, err = shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{})
 	Expect(err).NotTo(HaveOccurred())
 	initialNetworks, err = shared.DumpOpenStackNetworks(e2eCtx, networks.ListOpts{})
@@ -77,13 +79,11 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	Expect(err).NotTo(HaveOccurred())
 	initialVolumes, err = shared.DumpOpenStackVolumes(e2eCtx, volumes.ListOpts{})
 	Expect(err).NotTo(HaveOccurred())
-	shared.AllNodesBeforeSuite(e2eCtx, data)
 })
 
 var _ = SynchronizedAfterSuite(func() {
 	shared.AllNodesAfterSuite(e2eCtx)
 }, func() {
-	shared.Node1AfterSuite(e2eCtx)
 	endServers, err := shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{})
 	Expect(err).NotTo(HaveOccurred())
 	Expect(endServers).To(Equal(initialServers))
@@ -99,4 +99,6 @@ var _ = SynchronizedAfterSuite(func() {
 	endVolumes, err := shared.DumpOpenStackVolumes(e2eCtx, volumes.ListOpts{})
 	Expect(err).NotTo(HaveOccurred())
 	Expect(endVolumes).To(Equal(initialVolumes))
+
+	shared.Node1AfterSuite(e2eCtx)
 })
