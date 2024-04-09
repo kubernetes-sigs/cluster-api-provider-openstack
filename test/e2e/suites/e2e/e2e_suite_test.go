@@ -31,6 +31,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/klog/v2"
+	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
@@ -81,24 +82,45 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	Expect(err).NotTo(HaveOccurred())
 })
 
+func CheckResourceCleanup[T any, L any](f func(*shared.E2EContext, L) ([]T, error), l L, initialResources []T) *string {
+	endResources, err := f(e2eCtx, l)
+
+	if err != nil {
+		return pointer.String(err.Error())
+	}
+
+	matcher := ConsistOfIDs(initialResources)
+	success, err := matcher.Match(endResources)
+	if err != nil {
+		return pointer.String(err.Error())
+	}
+	if !success {
+		return pointer.String(matcher.FailureMessage(endResources))
+	}
+
+	return nil
+}
+
 var _ = SynchronizedAfterSuite(func() {
 	shared.AllNodesAfterSuite(e2eCtx)
 }, func() {
-	endServers, err := shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{})
-	Expect(err).NotTo(HaveOccurred())
-	Expect(endServers).To(ConsistOfIDs(initialServers))
-	endNetworks, err := shared.DumpOpenStackNetworks(e2eCtx, networks.ListOpts{})
-	Expect(err).NotTo(HaveOccurred())
-	Expect(endNetworks).To(ConsistOfIDs(initialNetworks))
-	endSecurityGroups, err := shared.DumpOpenStackSecurityGroups(e2eCtx, groups.ListOpts{})
-	Expect(err).NotTo(HaveOccurred())
-	Expect(endSecurityGroups).To(ConsistOfIDs(initialSecurityGroups))
-	endLoadBalancers, err := shared.DumpOpenStackLoadBalancers(e2eCtx, loadbalancers.ListOpts{})
-	Expect(err).NotTo(HaveOccurred())
-	Expect(endLoadBalancers).To(ConsistOfIDs(initialLoadBalancers))
-	endVolumes, err := shared.DumpOpenStackVolumes(e2eCtx, volumes.ListOpts{})
-	Expect(err).NotTo(HaveOccurred())
-	Expect(endVolumes).To(ConsistOfIDs(initialVolumes))
+	failed := false
+	for _, error := range []*string{
+		CheckResourceCleanup(shared.DumpOpenStackServers, servers.ListOpts{}, initialServers),
+		CheckResourceCleanup(shared.DumpOpenStackNetworks, networks.ListOpts{}, initialNetworks),
+		CheckResourceCleanup(shared.DumpOpenStackSecurityGroups, groups.ListOpts{}, initialSecurityGroups),
+		CheckResourceCleanup(shared.DumpOpenStackLoadBalancers, loadbalancers.ListOpts{}, initialLoadBalancers),
+		CheckResourceCleanup(shared.DumpOpenStackVolumes, volumes.ListOpts{}, initialVolumes),
+	} {
+		if error != nil {
+			GinkgoWriter.Println(*error)
+			failed = true
+		}
+	}
 
 	shared.Node1AfterSuite(e2eCtx)
+
+	if failed {
+		Fail("Not all resources were cleaned up")
+	}
 })
