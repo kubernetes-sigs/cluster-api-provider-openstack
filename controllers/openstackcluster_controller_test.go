@@ -208,6 +208,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 		testCluster.Status = infrav1.OpenStackClusterStatus{
 			Bastion: &infrav1.BastionStatus{
 				ID: "bastion-uuid",
+				Resolved: &infrav1.ResolvedMachineSpec{
+					ImageID: "imageID",
+				},
 			},
 		}
 		err = k8sClient.Status().Update(ctx, testCluster)
@@ -221,8 +224,8 @@ var _ = Describe("OpenStackCluster controller", func() {
 		computeClientRecorder.GetServer("bastion-uuid").Return(nil, gophercloud.ErrResourceNotFound{})
 
 		err = deleteBastion(scope, capiCluster, testCluster)
-		Expect(testCluster.Status.Bastion).To(BeNil())
 		Expect(err).To(BeNil())
+		Expect(testCluster.Status.Bastion).To(BeNil())
 	})
 	It("should adopt an existing bastion even if its uuid is not stored in status", func() {
 		testCluster.SetName("adopt-existing-bastion")
