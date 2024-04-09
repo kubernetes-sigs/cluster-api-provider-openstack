@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/portsbinding"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/portsecurity"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
@@ -58,6 +59,19 @@ func (s *Service) GetPortFromInstanceIP(instanceID string, ip string) ([]ports.P
 	return s.client.ListPort(portOpts)
 }
 
+type PortListOpts struct {
+	DeviceOwner []string `q:"device_owner"`
+	NetworkID   string   `q:"network_id"`
+}
+
+func (p *PortListOpts) ToPortListQuery() (string, error) {
+	q, err := gophercloud.BuildQueryString(p)
+	if err != nil {
+		return "", err
+	}
+	return q.String(), nil
+}
+
 func (s *Service) GetPortForExternalNetwork(instanceID string, externalNetworkID string) (*ports.Port, error) {
 	instancePortsOpts := ports.ListOpts{
 		DeviceID: instanceID,
@@ -68,9 +82,9 @@ func (s *Service) GetPortForExternalNetwork(instanceID string, externalNetworkID
 	}
 
 	for _, instancePort := range instancePorts {
-		networkPortsOpts := ports.ListOpts{
+		networkPortsOpts := &PortListOpts{
 			NetworkID:   instancePort.NetworkID,
-			DeviceOwner: "network:router_interface",
+			DeviceOwner: []string{"network:router_interface", "network:router_interface_distributed", "network:ha_router_replicated_interface", "network:router_ha_interface"},
 		}
 
 		networkPorts, err := s.client.ListPort(networkPortsOpts)
