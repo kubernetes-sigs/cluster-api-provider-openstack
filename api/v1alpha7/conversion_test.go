@@ -406,4 +406,5 @@ func Test_FuzzRestorers(t *testing.T) {
 	testhelpers.FuzzRestorer(t, "restorev1alpha7Port", restorev1alpha7Port)
 	testhelpers.FuzzRestorer(t, "restorev1beta1Port", restorev1beta1Port)
 	testhelpers.FuzzRestorer(t, "restorev1beta1APIServerLoadBalancer", restorev1beta1APIServerLoadBalancer)
+	testhelpers.FuzzRestorer(t, "restorev1beta1BlockDeviceVolume", restorev1beta1BlockDeviceVolume)
 }

@@ -366,7 +366,7 @@ func Test_reconcileDelete(t *testing.T) {
 				Spec: infrav1.OpenStackMachineSpec{
 					Image: defaultImage,
 					RootVolume: &infrav1.RootVolume{
-						Size: 50,
+						SizeGiB: 50,
 					},
 				},
 				Status: infrav1.OpenStackMachineStatus{
@@ -393,7 +393,7 @@ func Test_reconcileDelete(t *testing.T) {
 				Spec: infrav1.OpenStackMachineSpec{
 					Image: defaultImage,
 					RootVolume: &infrav1.RootVolume{
-						Size: 50,
+						SizeGiB: 50,
 					},
 				},
 				Status: infrav1.OpenStackMachineStatus{

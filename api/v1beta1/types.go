@@ -490,9 +490,12 @@ type BastionStatus struct {
 }
 
 type RootVolume struct {
-	Size             int    `json:"diskSize,omitempty"`
-	VolumeType       string `json:"volumeType,omitempty"`
-	AvailabilityZone string `json:"availabilityZone,omitempty"`
+	// SizeGiB is the size of the block device in gibibytes (GiB).
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Minimum:=1
+	SizeGiB int `json:"sizeGiB"`
+
+	BlockDeviceVolume `json:",inline"`
 }
 
 // BlockDeviceStorage is the storage type of a block device to create and
@@ -520,13 +523,44 @@ type BlockDeviceVolume struct {
 	// +optional
 	Type string `json:"type,omitempty"`
 
-	// AvailabilityZone is the volume availability zone to create the volume in.
-	// If omitted, the availability zone of the server will be used.
-	// The availability zone must NOT contain spaces otherwise it will lead to volume that belongs
-	// to this availability zone register failure, see kubernetes/cloud-provider-openstack#1379 for
-	// further information.
+	// AvailabilityZone is the volume availability zone to create the volume
+	// in. If not specified, the volume will be created without an explicit
+	// availability zone.
 	// +optional
-	AvailabilityZone string `json:"availabilityZone,omitempty"`
+	AvailabilityZone *VolumeAvailabilityZone `json:"availabilityZone,omitempty"`
+}
+
+// VolumeAZSource specifies where to obtain the availability zone for a volume.
+// +kubebuilder:validation:Enum=Name;Machine
+type VolumeAZSource string
+
+const (
+	VolumeAZFromName    VolumeAZSource = "Name"
+	VolumeAZFromMachine VolumeAZSource = "Machine"
+)
+
+// VolumeAZName is the name of a volume availability zone. It may not contain spaces.
+// +kubebuilder:validation:Pattern:="^[^ ]+$"
+// +kubebuilder:validation:MinLength:=1
+type VolumeAZName string
+
+// VolumeAvailabilityZone specifies the availability zone for a volume.
+// +kubebuilder:validation:XValidation:rule="!has(self.from) || self.from == 'Name' ? has(self.name) : !has(self.name)",message="name is required when from is 'Name' or default"
+type VolumeAvailabilityZone struct {
+	// From specifies where we will obtain the availability zone for the
+	// volume. The options are "Name" and "Machine". If "Name" is specified
+	// then the Name field must also be specified. If "Machine" is specified
+	// the volume will use the value of FailureDomain, if any, from the
+	// associated Machine.
+	// +kubebuilder:default:=Name
+	// +optional
+	From VolumeAZSource `json:"from,omitempty"`
+
+	// Name is the name of a volume availability zone to use. It is required
+	// if From is "Name". The volume availability zone name may not contain
+	// spaces.
+	// +optional
+	Name *VolumeAZName `json:"name,omitempty"`
 }
 
 // AdditionalBlockDevice is a block device to attach to the server.
@@ -537,9 +571,13 @@ type AdditionalBlockDevice struct {
 	// Also, this name will be used for tagging the block device.
 	// Information about the block device tag can be obtained from the OpenStack
 	// metadata API or the config drive.
+	// Name cannot be 'root', which is reserved for the root volume.
+	// +kubebuilder:validation:Required
 	Name string `json:"name"`
 
 	// SizeGiB is the size of the block device in gibibytes (GiB).
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Minimum:=1
 	SizeGiB int `json:"sizeGiB"`
 
 	// Storage specifies the storage type of the block device and

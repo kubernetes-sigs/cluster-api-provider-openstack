@@ -977,7 +977,8 @@ If the block device is a volume, the Cinder volume will be named
 as a combination of the machine name and this name.
 Also, this name will be used for tagging the block device.
 Information about the block device tag can be obtained from the OpenStack
-metadata API or the config drive.</p>
+metadata API or the config drive.
+Name cannot be &lsquo;root&rsquo;, which is reserved for the root volume.</p>
 </td>
 </tr>
 <tr>
@@ -1397,7 +1398,8 @@ BlockDeviceVolume
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.BlockDeviceStorage">BlockDeviceStorage</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.BlockDeviceStorage">BlockDeviceStorage</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.RootVolume">RootVolume</a>)
 </p>
 <p>
 <p>BlockDeviceVolume contains additional storage options for a volume block device.</p>
@@ -1428,16 +1430,16 @@ will be used.</p>
 <td>
 <code>availabilityZone</code><br/>
 <em>
-string
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.VolumeAvailabilityZone">
+VolumeAvailabilityZone
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>AvailabilityZone is the volume availability zone to create the volume in.
-If omitted, the availability zone of the server will be used.
-The availability zone must NOT contain spaces otherwise it will lead to volume that belongs
-to this availability zone register failure, see kubernetes/cloud-provider-openstack#1379 for
-further information.</p>
+<p>AvailabilityZone is the volume availability zone to create the volume
+in. If not specified, the volume will be created without an explicit
+availability zone.</p>
 </td>
 </tr>
 </tbody>
@@ -4310,32 +4312,28 @@ depends on the specific OpenStack implementation.</p>
 <tbody>
 <tr>
 <td>
-<code>diskSize</code><br/>
+<code>sizeGiB</code><br/>
 <em>
 int
 </em>
 </td>
 <td>
+<p>SizeGiB is the size of the block device in gibibytes (GiB).</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>volumeType</code><br/>
+<code>BlockDeviceVolume</code><br/>
 <em>
-string
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.BlockDeviceVolume">
+BlockDeviceVolume
+</a>
 </em>
 </td>
 <td>
-</td>
-</tr>
-<tr>
-<td>
-<code>availabilityZone</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
+<p>
+(Members of <code>BlockDeviceVolume</code> are embedded into this type.)
+</p>
 </td>
 </tr>
 </tbody>
@@ -5256,6 +5254,90 @@ string
 </td>
 <td>
 <p>Value is the value in the key-value pair.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.VolumeAZName">VolumeAZName
+(<code>string</code> alias)</p></h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.VolumeAvailabilityZone">VolumeAvailabilityZone</a>)
+</p>
+<p>
+<p>VolumeAZName is the name of a volume availability zone. It may not contain spaces.</p>
+</p>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.VolumeAZSource">VolumeAZSource
+(<code>string</code> alias)</p></h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.VolumeAvailabilityZone">VolumeAvailabilityZone</a>)
+</p>
+<p>
+<p>VolumeAZSource specifies where to obtain the availability zone for a volume.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Machine&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Name&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.VolumeAvailabilityZone">VolumeAvailabilityZone
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.BlockDeviceVolume">BlockDeviceVolume</a>)
+</p>
+<p>
+<p>VolumeAvailabilityZone specifies the availability zone for a volume.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>from</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.VolumeAZSource">
+VolumeAZSource
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>From specifies where we will obtain the availability zone for the
+volume. The options are &ldquo;Name&rdquo; and &ldquo;Machine&rdquo;. If &ldquo;Name&rdquo; is specified
+then the Name field must also be specified. If &ldquo;Machine&rdquo; is specified
+the volume will use the value of FailureDomain, if any, from the
+associated Machine.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.VolumeAZName">
+VolumeAZName
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Name is the name of a volume availability zone to use. It is required
+if From is &ldquo;Name&rdquo;. The volume availability zone name may not contain
+spaces.</p>
 </td>
 </tr>
 </tbody>

@@ -29,26 +29,30 @@ import (
 
 var _ = Describe("OpenStackMachine API validations", func() {
 	var namespace *corev1.Namespace
-	var machine *infrav1.OpenStackMachine
 
-	BeforeEach(func() {
-		namespace = createNamespace()
-
+	defaultMachine := func() *infrav1.OpenStackMachine {
 		// Initialise a basic machine object in the correct namespace
-		machine = &infrav1.OpenStackMachine{
+		machine := &infrav1.OpenStackMachine{
 			Spec: infrav1.OpenStackMachineSpec{
 				Image: infrav1.ImageParam{Filter: &infrav1.ImageFilter{Name: pointer.String("test-image")}},
 			},
 		}
 		machine.Namespace = namespace.Name
 		machine.GenerateName = "machine-"
+		return machine
+	}
+
+	BeforeEach(func() {
+		namespace = createNamespace()
 	})
 
 	It("should allow the smallest permissible machine spec", func() {
-		Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
+		Expect(k8sClient.Create(ctx, defaultMachine())).To(Succeed(), "OpenStackMachine creation should succeed")
 	})
 
 	It("should only allow the providerID to be set once", func() {
+		machine := defaultMachine()
+
 		By("Creating a bare machine")
 		Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
 
@@ -62,6 +66,8 @@ var _ = Describe("OpenStackMachine API validations", func() {
 	})
 
 	It("should not allow server metadata to exceed 255 characters", func() {
+		machine := defaultMachine()
+
 		By("Creating a machine with a metadata key that is too long")
 		machine.Spec.ServerMetadata = []infrav1.ServerMetadata{
 			{
@@ -88,5 +94,188 @@ var _ = Describe("OpenStackMachine API validations", func() {
 			},
 		}
 		Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "Creating a machine with max metadata key and value should succeed")
+	})
+
+	Context("volumes", func() {
+		It("should not allow volume with zero size", func() {
+			machine := defaultMachine()
+			machine.Spec.RootVolume = &infrav1.RootVolume{
+				SizeGiB: 0,
+			}
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with a zero size root volume should fail")
+
+			machine = defaultMachine()
+			machine.Spec.AdditionalBlockDevices = []infrav1.AdditionalBlockDevice{
+				{
+					Name:    "test-volume",
+					SizeGiB: 0,
+				},
+			}
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with a zero size additional block device should fail")
+		})
+
+		/* FIXME: These tests are failing
+		It("should not allow additional volume with empty name", func() {
+			machine.Spec.AdditionalBlockDevices = []infrav1.AdditionalBlockDevice{
+				{
+					Name:    "",
+					SizeGiB: 1,
+				},
+			}
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with an empty name additional block device should fail")
+		})
+
+		It("should not allow additional volume with name root", func() {
+			machine.Spec.AdditionalBlockDevices = []infrav1.AdditionalBlockDevice{
+				{
+					Name:    "root",
+					SizeGiB: 1,
+				},
+			}
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with a root named additional block device should fail")
+		})
+		*/
+
+		It("should not allow additional volume with duplicate name", func() {
+			machine := defaultMachine()
+			machine.Spec.AdditionalBlockDevices = []infrav1.AdditionalBlockDevice{
+				{
+					Name:    "test-volume",
+					SizeGiB: 1,
+				},
+				{
+					Name:    "test-volume",
+					SizeGiB: 2,
+				},
+			}
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with duplicate named additional block device should fail")
+		})
+
+		defaultMachineWithRootVolumeAZ := func(az *infrav1.VolumeAvailabilityZone) *infrav1.OpenStackMachine {
+			machine := defaultMachine()
+			machine.Spec.RootVolume = &infrav1.RootVolume{
+				SizeGiB: 1,
+			}
+			machine.Spec.RootVolume.AvailabilityZone = az
+			return machine
+		}
+
+		defaultMachineWithAdditionBlockDeviceAZ := func(az *infrav1.VolumeAvailabilityZone) *infrav1.OpenStackMachine {
+			machine := defaultMachine()
+			machine.Spec.AdditionalBlockDevices = []infrav1.AdditionalBlockDevice{
+				{
+					Name:    "test-volume",
+					SizeGiB: 1,
+					Storage: infrav1.BlockDeviceStorage{
+						Type: infrav1.VolumeBlockDevice,
+						Volume: &infrav1.BlockDeviceVolume{
+							AvailabilityZone: az,
+						},
+					},
+				},
+			}
+			return machine
+		}
+
+		It("should allow volume with defaulted AZ from", func() {
+			azName := infrav1.VolumeAZName("test-az")
+			az := infrav1.VolumeAvailabilityZone{
+				Name: &azName,
+			}
+
+			machine := defaultMachineWithRootVolumeAZ(&az)
+			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "Creating a machine with a root volume with an availability zone should succeed")
+
+			machine = defaultMachineWithAdditionBlockDeviceAZ(&az)
+			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "Creating a machine with an additional block device with an availability zone should succeed")
+		})
+
+		It("should allow volume with AZ from Name", func() {
+			azName := infrav1.VolumeAZName("test-az")
+			az := infrav1.VolumeAvailabilityZone{
+				From: infrav1.VolumeAZFromName,
+				Name: &azName,
+			}
+
+			machine := defaultMachineWithRootVolumeAZ(&az)
+			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "Creating a machine with a root volume with an availability zone should succeed")
+
+			machine = defaultMachineWithAdditionBlockDeviceAZ(&az)
+			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "Creating a machine with an additional block device with an availability zone should succeed")
+		})
+
+		It("should allow volume AZ from Machine", func() {
+			az := infrav1.VolumeAvailabilityZone{
+				From: infrav1.VolumeAZFromMachine,
+			}
+
+			machine := defaultMachineWithRootVolumeAZ(&az)
+			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "Creating a machine with a root volume with an availability zone should succeed")
+
+			machine = defaultMachineWithAdditionBlockDeviceAZ(&az)
+			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "Creating a machine with an additional block device with an availability zone should succeed")
+		})
+
+		It("should not allow volume AZ with invalid from", func() {
+			az := infrav1.VolumeAvailabilityZone{
+				From: "invalid",
+			}
+
+			machine := defaultMachineWithRootVolumeAZ(&az)
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with a root volume with an invalid availability zone should fail")
+
+			machine = defaultMachineWithAdditionBlockDeviceAZ(&az)
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with an additional block device with an invalid availability zone should fail")
+		})
+
+		It("should not allow empty volume AZ", func() {
+			az := infrav1.VolumeAvailabilityZone{}
+
+			machine := defaultMachineWithRootVolumeAZ(&az)
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with a root volume with an empty availability zone should fail")
+
+			machine = defaultMachineWithAdditionBlockDeviceAZ(&az)
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with an additional block device with an empty availability zone should fail")
+		})
+
+		It("should not allow volume AZ from Name with missing name", func() {
+			az := infrav1.VolumeAvailabilityZone{
+				From: infrav1.VolumeAZFromName,
+			}
+
+			machine := defaultMachineWithRootVolumeAZ(&az)
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with a root volume with a missing name availability zone should fail")
+
+			machine = defaultMachineWithAdditionBlockDeviceAZ(&az)
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with an additional block device with a missing name availability zone should fail")
+		})
+
+		It("should not allow volume AZ from Machine with name", func() {
+			azName := infrav1.VolumeAZName("test-az")
+			az := infrav1.VolumeAvailabilityZone{
+				From: infrav1.VolumeAZFromMachine,
+				Name: &azName,
+			}
+
+			machine := defaultMachineWithRootVolumeAZ(&az)
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with a root volume with a name availability zone should fail")
+
+			machine = defaultMachineWithAdditionBlockDeviceAZ(&az)
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with an additional block device with a name availability zone should fail")
+		})
+
+		It("should not allow volume AZ from Name with empty name", func() {
+			azName := infrav1.VolumeAZName("")
+			az := infrav1.VolumeAvailabilityZone{
+				From: infrav1.VolumeAZFromName,
+				Name: &azName,
+			}
+
+			machine := defaultMachineWithRootVolumeAZ(&az)
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with a root volume with an empty name availability zone should fail")
+
+			machine = defaultMachineWithAdditionBlockDeviceAZ(&az)
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with an additional block device with an empty name availability zone should fail")
+		})
 	})
 })

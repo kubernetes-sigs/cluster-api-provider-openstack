@@ -331,7 +331,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 			getInstanceSpec: func() *InstanceSpec {
 				s := getDefaultInstanceSpec()
 				s.RootVolume = &infrav1.RootVolume{
-					Size: 50,
+					SizeGiB: 50,
 				}
 				return s
 			},
@@ -341,12 +341,11 @@ func TestService_ReconcileInstance(t *testing.T) {
 				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
 				r.volume.CreateVolume(volumes.CreateOpts{
-					Size:             50,
-					AvailabilityZone: failureDomain,
-					Description:      fmt.Sprintf("Root volume for %s", openStackMachineName),
-					Name:             fmt.Sprintf("%s-root", openStackMachineName),
-					ImageID:          imageUUID,
-					Multiattach:      false,
+					Size:        50,
+					Description: fmt.Sprintf("Root volume for %s", openStackMachineName),
+					Name:        fmt.Sprintf("%s-root", openStackMachineName),
+					ImageID:     imageUUID,
+					Multiattach: false,
 				}).Return(&volumes.Volume{ID: rootVolumeUUID}, nil)
 				expectVolumePollSuccess(r.volume, rootVolumeUUID)
 
@@ -373,10 +372,13 @@ func TestService_ReconcileInstance(t *testing.T) {
 			getInstanceSpec: func() *InstanceSpec {
 				s := getDefaultInstanceSpec()
 				s.RootVolume = &infrav1.RootVolume{
-					Size:             50,
-					AvailabilityZone: "test-alternate-az",
-					VolumeType:       "test-volume-type",
+					SizeGiB: 50,
 				}
+				azName := infrav1.VolumeAZName("test-alternate-az")
+				s.RootVolume.AvailabilityZone = &infrav1.VolumeAvailabilityZone{
+					Name: &azName,
+				}
+				s.RootVolume.Type = "test-volume-type"
 				return s
 			},
 			expect: func(r *recorders) {
@@ -387,6 +389,53 @@ func TestService_ReconcileInstance(t *testing.T) {
 				r.volume.CreateVolume(volumes.CreateOpts{
 					Size:             50,
 					AvailabilityZone: "test-alternate-az",
+					VolumeType:       "test-volume-type",
+					Description:      fmt.Sprintf("Root volume for %s", openStackMachineName),
+					Name:             fmt.Sprintf("%s-root", openStackMachineName),
+					ImageID:          imageUUID,
+					Multiattach:      false,
+				}).Return(&volumes.Volume{ID: rootVolumeUUID}, nil)
+				expectVolumePollSuccess(r.volume, rootVolumeUUID)
+
+				createMap := getDefaultServerMap()
+				serverMap := createMap["server"].(map[string]interface{})
+				serverMap["imageRef"] = ""
+				serverMap["block_device_mapping_v2"] = []map[string]interface{}{
+					{
+						"delete_on_termination": true,
+						"destination_type":      "volume",
+						"source_type":           "volume",
+						"uuid":                  rootVolumeUUID,
+						"boot_index":            float64(0),
+					},
+				}
+				expectCreateServer(r.compute, createMap, false)
+
+				// Don't delete ports because the server is created: DeleteInstance will do it
+			},
+			wantErr: false,
+		},
+		{
+			name: "Boot from volume with AZ from machine",
+			getInstanceSpec: func() *InstanceSpec {
+				s := getDefaultInstanceSpec()
+				s.RootVolume = &infrav1.RootVolume{
+					SizeGiB: 50,
+				}
+				s.RootVolume.AvailabilityZone = &infrav1.VolumeAvailabilityZone{
+					From: infrav1.VolumeAZFromMachine,
+				}
+				s.RootVolume.Type = "test-volume-type"
+				return s
+			},
+			expect: func(r *recorders) {
+				expectDefaultFlavor(r.compute)
+
+				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
+					Return([]volumes.Volume{}, nil)
+				r.volume.CreateVolume(volumes.CreateOpts{
+					Size:             50,
+					AvailabilityZone: failureDomain,
 					VolumeType:       "test-volume-type",
 					Description:      fmt.Sprintf("Root volume for %s", openStackMachineName),
 					Name:             fmt.Sprintf("%s-root", openStackMachineName),
@@ -418,7 +467,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 			getInstanceSpec: func() *InstanceSpec {
 				s := getDefaultInstanceSpec()
 				s.RootVolume = &infrav1.RootVolume{
-					Size: 50,
+					SizeGiB: 50,
 				}
 				return s
 			},
@@ -428,12 +477,11 @@ func TestService_ReconcileInstance(t *testing.T) {
 				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
 				r.volume.CreateVolume(volumes.CreateOpts{
-					Size:             50,
-					AvailabilityZone: failureDomain,
-					Description:      fmt.Sprintf("Root volume for %s", openStackMachineName),
-					Name:             fmt.Sprintf("%s-root", openStackMachineName),
-					ImageID:          imageUUID,
-					Multiattach:      false,
+					Size:        50,
+					Description: fmt.Sprintf("Root volume for %s", openStackMachineName),
+					Name:        fmt.Sprintf("%s-root", openStackMachineName),
+					ImageID:     imageUUID,
+					Multiattach: false,
 				}).Return(&volumes.Volume{ID: rootVolumeUUID}, nil)
 				expectVolumePoll(r.volume, rootVolumeUUID, []string{"creating", "error"})
 			},
@@ -444,7 +492,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 			getInstanceSpec: func() *InstanceSpec {
 				s := getDefaultInstanceSpec()
 				s.RootVolume = &infrav1.RootVolume{
-					Size: 50,
+					SizeGiB: 50,
 				}
 				s.AdditionalBlockDevices = []infrav1.AdditionalBlockDevice{
 					{
@@ -473,24 +521,22 @@ func TestService_ReconcileInstance(t *testing.T) {
 				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
 				r.volume.CreateVolume(volumes.CreateOpts{
-					Size:             50,
-					AvailabilityZone: failureDomain,
-					Description:      fmt.Sprintf("Root volume for %s", openStackMachineName),
-					Name:             fmt.Sprintf("%s-root", openStackMachineName),
-					ImageID:          imageUUID,
-					Multiattach:      false,
+					Size:        50,
+					Description: fmt.Sprintf("Root volume for %s", openStackMachineName),
+					Name:        fmt.Sprintf("%s-root", openStackMachineName),
+					ImageID:     imageUUID,
+					Multiattach: false,
 				}).Return(&volumes.Volume{ID: rootVolumeUUID}, nil)
 				expectVolumePollSuccess(r.volume, rootVolumeUUID)
 
 				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-etcd", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
 				r.volume.CreateVolume(volumes.CreateOpts{
-					Size:             50,
-					AvailabilityZone: failureDomain,
-					Description:      fmt.Sprintf("Additional block device for %s", openStackMachineName),
-					Name:             fmt.Sprintf("%s-etcd", openStackMachineName),
-					Multiattach:      false,
-					VolumeType:       "test-volume-type",
+					Size:        50,
+					Description: fmt.Sprintf("Additional block device for %s", openStackMachineName),
+					Name:        fmt.Sprintf("%s-etcd", openStackMachineName),
+					Multiattach: false,
+					VolumeType:  "test-volume-type",
 				}).Return(&volumes.Volume{ID: additionalBlockDeviceVolumeUUID}, nil)
 				expectVolumePollSuccess(r.volume, additionalBlockDeviceVolumeUUID)
 
@@ -559,12 +605,11 @@ func TestService_ReconcileInstance(t *testing.T) {
 				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-etcd", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
 				r.volume.CreateVolume(volumes.CreateOpts{
-					Size:             50,
-					AvailabilityZone: failureDomain,
-					Description:      fmt.Sprintf("Additional block device for %s", openStackMachineName),
-					Name:             fmt.Sprintf("%s-etcd", openStackMachineName),
-					Multiattach:      false,
-					VolumeType:       "test-volume-type",
+					Size:        50,
+					Description: fmt.Sprintf("Additional block device for %s", openStackMachineName),
+					Name:        fmt.Sprintf("%s-etcd", openStackMachineName),
+					Multiattach: false,
+					VolumeType:  "test-volume-type",
 				}).Return(&volumes.Volume{ID: additionalBlockDeviceVolumeUUID}, nil)
 				expectVolumePollSuccess(r.volume, additionalBlockDeviceVolumeUUID)
 
@@ -605,6 +650,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 			name: "Additional block device success with explicit AZ",
 			getInstanceSpec: func() *InstanceSpec {
 				s := getDefaultInstanceSpec()
+				azName := infrav1.VolumeAZName("test-alternate-az")
 				s.AdditionalBlockDevices = []infrav1.AdditionalBlockDevice{
 					{
 						Name:    "etcd",
@@ -612,8 +658,10 @@ func TestService_ReconcileInstance(t *testing.T) {
 						Storage: infrav1.BlockDeviceStorage{
 							Type: "Volume",
 							Volume: &infrav1.BlockDeviceVolume{
-								AvailabilityZone: "test-alternate-az",
-								Type:             "test-volume-type",
+								Type: "test-volume-type",
+								AvailabilityZone: &infrav1.VolumeAvailabilityZone{
+									Name: &azName,
+								},
 							},
 						},
 					},

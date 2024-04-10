@@ -2,7 +2,9 @@
 - op: add
   path: /spec/template/spec/rootVolume
   value:
-    diskSize: 25
+    sizeGiB: 25
+    availabilityZone:
+      from: Machine
 - op: add
   path: /spec/template/spec/additionalBlockDevices
   value:
@@ -10,6 +12,9 @@
     sizeGiB: 1
     storage:
       type: Volume
+      volume:
+        availabilityZone:
+          from: Machine
   - name: etcd
     sizeGiB: 1
     storage:
