@@ -494,10 +494,16 @@ func CreateOpenStackSecurityGroup(e2eCtx *E2EContext, securityGroupName, descrip
 		Description: description,
 	}
 
-	_, err = groups.Create(networkClient, createOpts).Extract()
+	group, err := groups.Create(networkClient, createOpts).Extract()
 	if err != nil {
 		return err
 	}
+	// Ensure the group is deleted after the test
+	DeferCleanup(func() error {
+		By(fmt.Sprintf("Deleting test security group %s(%s)", group.Name, group.ID))
+		return groups.Delete(networkClient, group.ID).ExtractErr()
+	})
+
 	return nil
 }
 
