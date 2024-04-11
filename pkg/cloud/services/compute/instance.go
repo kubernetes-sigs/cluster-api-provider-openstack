@@ -383,61 +383,9 @@ func (s *Service) GetManagementPort(openStackCluster *infrav1.OpenStackCluster, 
 	return &allPorts[0], nil
 }
 
-func (s *Service) DeleteInstance(eventObject runtime.Object, instanceStatus *InstanceStatus, instanceSpec *InstanceSpec) error {
-	if instanceStatus == nil {
-		/*
-			Attaching volumes to an instance is a two-step process:
+func (s *Service) DeleteInstance(eventObject runtime.Object, instanceStatus *InstanceStatus) error {
+	instance := instanceStatus.InstanceIdentifier()
 
-			  1. Create the volume
-			  2. Create the instance with the created volumes in RootVolume and AdditionalBlockDevices fields with DeleteOnTermination=true
-
-			This has a possible failure mode where creating the volume succeeds but creating the instance
-			fails. In this case, we want to make sure that the dangling volumes are cleaned up.
-
-			To handle this safely, we ensure that we never remove a machine finalizer until all resources
-			associated with the instance, including volumes, have been deleted. To achieve this:
-
-			  * We always call DeleteInstance when reconciling a delete, even if the instance does not exist
-			  * If the instance was already deleted we check that the volumes are also gone
-
-			Note that we don't need to separately delete the volumes when deleting the instance because
-			DeleteOnTermination will ensure it is deleted in that case.
-		*/
-		return s.deleteVolumes(instanceSpec)
-	}
-
-	return s.deleteInstance(eventObject, instanceStatus.InstanceIdentifier())
-}
-
-func (s *Service) deleteVolumes(instanceSpec *InstanceSpec) error {
-	if hasRootVolume(instanceSpec) {
-		if err := s.deleteVolume(instanceSpec.Name, "root"); err != nil {
-			return err
-		}
-	}
-	for _, volumeSpec := range instanceSpec.AdditionalBlockDevices {
-		if err := s.deleteVolume(instanceSpec.Name, volumeSpec.Name); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (s *Service) deleteVolume(instanceName string, nameSuffix string) error {
-	volumeName := volumeName(instanceName, nameSuffix)
-	volume, err := s.getVolumeByName(volumeName)
-	if err != nil {
-		return err
-	}
-	if volume == nil {
-		return nil
-	}
-
-	s.scope.Logger().V(2).Info("Deleting dangling volume", "name", volume.Name, "ID", volume.ID)
-	return s.getVolumeClient().DeleteVolume(volume.ID, volumes.DeleteOpts{})
-}
-
-func (s *Service) deleteInstance(eventObject runtime.Object, instance *InstanceIdentifier) error {
 	err := s.getComputeClient().DeleteServer(instance.ID)
 	if err != nil {
 		if capoerrors.IsNotFound(err) {
@@ -465,6 +413,58 @@ func (s *Service) deleteInstance(eventObject runtime.Object, instance *InstanceI
 
 	record.Eventf(eventObject, "SuccessfulDeleteServer", "Deleted server %s with id %s", instance.Name, instance.ID)
 	return nil
+}
+
+// DeleteVolumes deletes any cinder volumes which were created for the instance.
+// Note that this must only be called when the server was not successfully
+// created. If the server was created the volume will have been added with
+// DeleteOnTermination=true, and will be automatically cleaned up with the
+// server.
+func (s *Service) DeleteVolumes(instanceSpec *InstanceSpec) error {
+	/*
+		Attaching volumes to an instance is a two-step process:
+
+		  1. Create the volume
+		  2. Create the instance with the created volumes in RootVolume and AdditionalBlockDevices fields with DeleteOnTermination=true
+
+		This has a possible failure mode where creating the volume succeeds but creating the instance
+		fails. In this case, we want to make sure that the dangling volumes are cleaned up.
+
+		To handle this safely, we ensure that we never remove a machine finalizer until all resources
+		associated with the instance, including volumes, have been deleted. To achieve this:
+
+		  * We always call DeleteInstance when reconciling a delete, even if the instance does not exist
+		  * If the instance was already deleted we check that the volumes are also gone
+
+		Note that we don't need to separately delete the volumes when deleting the instance because
+		DeleteOnTermination will ensure it is deleted in that case.
+	*/
+
+	if hasRootVolume(instanceSpec) {
+		if err := s.deleteVolume(instanceSpec.Name, "root"); err != nil {
+			return err
+		}
+	}
+	for _, volumeSpec := range instanceSpec.AdditionalBlockDevices {
+		if err := s.deleteVolume(instanceSpec.Name, volumeSpec.Name); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *Service) deleteVolume(instanceName string, nameSuffix string) error {
+	volumeName := volumeName(instanceName, nameSuffix)
+	volume, err := s.getVolumeByName(volumeName)
+	if err != nil {
+		return err
+	}
+	if volume == nil {
+		return nil
+	}
+
+	s.scope.Logger().V(2).Info("Deleting dangling volume", "name", volume.Name, "ID", volume.ID)
+	return s.getVolumeClient().DeleteVolume(volume.ID, volumes.DeleteOpts{})
 }
 
 func (s *Service) GetInstanceStatus(resourceID string) (instance *InstanceStatus, err error) {

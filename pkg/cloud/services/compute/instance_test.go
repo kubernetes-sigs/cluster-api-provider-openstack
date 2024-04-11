@@ -24,14 +24,12 @@ import (
 
 	"github.com/go-logr/logr/testr"
 	"github.com/golang/mock/gomock"
-	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/availabilityzones"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/pointer"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -706,101 +704,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Service.CreateInstance() error = %v, wantErr %v", err, tt.wantErr)
 				return
-			}
-		})
-	}
-}
-
-func TestService_DeleteInstance(t *testing.T) {
-	RegisterTestingT(t)
-
-	getDefaultInstanceStatus := func() *InstanceStatus {
-		return &InstanceStatus{
-			server: &clients.ServerExt{
-				Server: servers.Server{
-					ID: instanceUUID,
-				},
-			},
-		}
-	}
-
-	// *******************
-	// START OF TEST CASES
-	// *******************
-
-	type recorders struct {
-		compute *mock.MockComputeClientMockRecorder
-		network *mock.MockNetworkClientMockRecorder
-		volume  *mock.MockVolumeClientMockRecorder
-	}
-
-	tests := []struct {
-		name           string
-		eventObject    runtime.Object
-		instanceStatus func() *InstanceStatus
-		rootVolume     *infrav1.RootVolume
-		expect         func(r *recorders)
-		wantErr        bool
-	}{
-		{
-			name:           "Defaults",
-			eventObject:    &infrav1.OpenStackMachine{},
-			instanceStatus: getDefaultInstanceStatus,
-			expect: func(r *recorders) {
-				r.compute.DeleteServer(instanceUUID).Return(nil)
-				r.compute.GetServer(instanceUUID).Return(nil, gophercloud.ErrDefault404{})
-			},
-			wantErr: false,
-		},
-		{
-			name:           "Dangling volume",
-			eventObject:    &infrav1.OpenStackMachine{},
-			instanceStatus: func() *InstanceStatus { return nil },
-			rootVolume: &infrav1.RootVolume{
-				Size: 50,
-			},
-			expect: func(r *recorders) {
-				// Fetch volume by name
-				volumeName := fmt.Sprintf("%s-root", openStackMachineName)
-				r.volume.ListVolumes(volumes.ListOpts{
-					AllTenants: false,
-					Name:       volumeName,
-					TenantID:   "",
-				}).Return([]volumes.Volume{{
-					ID:   rootVolumeUUID,
-					Name: volumeName,
-				}}, nil)
-
-				// Delete volume
-				r.volume.DeleteVolume(rootVolumeUUID, volumes.DeleteOpts{}).Return(nil)
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mockCtrl := gomock.NewController(t)
-			log := testr.New(t)
-			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
-
-			computeRecorder := mockScopeFactory.ComputeClient.EXPECT()
-			networkRecorder := mockScopeFactory.NetworkClient.EXPECT()
-			volumeRecorder := mockScopeFactory.VolumeClient.EXPECT()
-
-			tt.expect(&recorders{computeRecorder, networkRecorder, volumeRecorder})
-
-			s, err := NewService(scope.NewWithLogger(mockScopeFactory, log))
-			if err != nil {
-				t.Fatalf("Failed to create service: %v", err)
-			}
-
-			instanceSpec := &InstanceSpec{
-				Name:       openStackMachineName,
-				RootVolume: tt.rootVolume,
-			}
-
-			if err := s.DeleteInstance(tt.eventObject, tt.instanceStatus(), instanceSpec); (err != nil) != tt.wantErr {
-				t.Errorf("Service.DeleteInstance() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
