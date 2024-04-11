@@ -28,7 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	ipamv1 "sigs.k8s.io/cluster-api/exp/ipam/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util/conditions"
@@ -168,7 +168,7 @@ func (r *OpenStackFloatingIPPoolReconciler) Reconcile(ctx context.Context, req c
 							Name: claim.Name,
 						},
 						PoolRef: corev1.TypedLocalObjectReference{
-							APIGroup: pointer.String(infrav1alpha1.GroupVersion.Group),
+							APIGroup: ptr.To(infrav1alpha1.GroupVersion.Group),
 							Kind:     pool.Kind,
 							Name:     pool.Name,
 						},
@@ -352,7 +352,7 @@ func (r *OpenStackFloatingIPPoolReconciler) getIP(ctx context.Context, scope *sc
 		}
 		pool.Status.FailedIPs = append(pool.Status.FailedIPs, ip)
 	}
-	maxIPs := pointer.IntDeref(pool.Spec.MaxIPs, -1)
+	maxIPs := ptr.Deref(pool.Spec.MaxIPs, -1)
 	// If we have reached the maximum number of IPs, we should not create more IPs
 	if maxIPs != -1 && len(pool.Status.ClaimedIPs) >= maxIPs {
 		scope.Logger().Info("MaxIPs reached", "pool", pool.Name)

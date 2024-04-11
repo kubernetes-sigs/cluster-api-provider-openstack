@@ -27,7 +27,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	. "github.com/onsi/gomega"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
@@ -117,7 +117,7 @@ func Test_ReconcileNetwork(t *testing.T) {
 			name: "creation with disabled port security",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					DisablePortSecurity: pointer.Bool(true),
+					DisablePortSecurity: ptr.To(true),
 				},
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
@@ -153,7 +153,7 @@ func Test_ReconcileNetwork(t *testing.T) {
 			name: "creation with mtu set",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					NetworkMTU: pointer.Int(1500),
+					NetworkMTU: ptr.To(1500),
 				},
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
@@ -165,7 +165,7 @@ func Test_ReconcileNetwork(t *testing.T) {
 					CreateNetwork(createOpts{
 						AdminStateUp: gophercloud.Enabled,
 						Name:         expectedNetworkName,
-						MTU:          pointer.Int(1500),
+						MTU:          ptr.To(1500),
 					}).
 					Return(&networks.Network{
 						ID:   fakeNetworkID,
@@ -214,7 +214,7 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 		return func(opts networks.ListOptsBuilder) ([]networks.Network, error) {
 			expected := &external.ListOptsExt{
 				ListOptsBuilder: listOpts,
-				External:        pointer.Bool(true),
+				External:        ptr.To(true),
 			}
 			g.Expect(opts).To(Equal(expected), cmp.Diff(opts, expected))
 
@@ -234,7 +234,7 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
 					ExternalNetwork: &infrav1.NetworkParam{
-						ID: pointer.String(fakeNetworkID),
+						ID: ptr.To(fakeNetworkID),
 					},
 				},
 			},
@@ -247,7 +247,7 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			want: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
 					ExternalNetwork: &infrav1.NetworkParam{
-						ID: pointer.String(fakeNetworkID),
+						ID: ptr.To(fakeNetworkID),
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
@@ -297,7 +297,7 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
 					ExternalNetwork: &infrav1.NetworkParam{
-						ID: pointer.String(fakeNetworkID),
+						ID: ptr.To(fakeNetworkID),
 					},
 				},
 			},
@@ -307,7 +307,7 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			want: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
 					ExternalNetwork: &infrav1.NetworkParam{
-						ID: pointer.String(fakeNetworkID),
+						ID: ptr.To(fakeNetworkID),
 					},
 				},
 			},
@@ -339,13 +339,13 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			name: "not reconcile external network when external network disabled",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					DisableExternalNetwork: pointer.Bool(true),
+					DisableExternalNetwork: ptr.To(true),
 				},
 			},
 			expect: func(_ Gomega, m *mock.MockNetworkClientMockRecorder) {},
 			want: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					DisableExternalNetwork: pointer.Bool(true),
+					DisableExternalNetwork: ptr.To(true),
 				},
 				Status: infrav1.OpenStackClusterStatus{
 					ExternalNetwork: nil,
@@ -406,7 +406,7 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 					DoAndReturn(func(opts networks.ListOptsBuilder) ([]networks.Network, error) {
 						expected := &external.ListOptsExt{
 							ListOptsBuilder: networks.ListOpts{},
-							External:        pointer.Bool(true),
+							External:        ptr.To(true),
 						}
 						g.Expect(opts).To(Equal(expected), cmp.Diff(opts, expected))
 

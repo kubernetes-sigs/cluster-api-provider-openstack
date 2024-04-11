@@ -23,7 +23,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -98,13 +98,13 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 	}
 
 	// Allow change only for the first time.
-	if pointer.BoolDeref(oldObj.Spec.DisableAPIServerFloatingIP, false) && pointer.StringDeref(oldObj.Spec.APIServerFixedIP, "") == "" {
+	if ptr.Deref(oldObj.Spec.DisableAPIServerFloatingIP, false) && ptr.Deref(oldObj.Spec.APIServerFixedIP, "") == "" {
 		oldObj.Spec.APIServerFixedIP = nil
 		newObj.Spec.APIServerFixedIP = nil
 	}
 
 	// If API Server floating IP is disabled, allow the change of the API Server port only for the first time.
-	if pointer.BoolDeref(oldObj.Spec.DisableAPIServerFloatingIP, false) && oldObj.Spec.APIServerPort == nil && newObj.Spec.APIServerPort != nil {
+	if ptr.Deref(oldObj.Spec.DisableAPIServerFloatingIP, false) && oldObj.Spec.APIServerPort == nil && newObj.Spec.APIServerPort != nil {
 		newObj.Spec.APIServerPort = nil
 	}
 
@@ -145,7 +145,7 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 	newObj.Spec.ControlPlaneOmitAvailabilityZone = nil
 
 	// Allow change on the spec.APIServerFloatingIP only if it matches the current api server loadbalancer IP.
-	if oldObj.Status.APIServerLoadBalancer != nil && pointer.StringDeref(newObj.Spec.APIServerFloatingIP, "") == oldObj.Status.APIServerLoadBalancer.IP {
+	if oldObj.Status.APIServerLoadBalancer != nil && ptr.Deref(newObj.Spec.APIServerFloatingIP, "") == oldObj.Status.APIServerLoadBalancer.IP {
 		newObj.Spec.APIServerFloatingIP = nil
 		oldObj.Spec.APIServerFloatingIP = nil
 	}

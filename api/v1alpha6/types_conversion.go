@@ -21,7 +21,7 @@ import (
 	"strings"
 
 	apiconversion "k8s.io/apimachinery/pkg/conversion"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	optional "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
@@ -387,10 +387,10 @@ func Convert_v1beta1_PortOpts_To_v1alpha6_PortOpts(in *infrav1.PortOpts, out *Po
 
 	if in.Profile != nil {
 		out.Profile = make(map[string]string)
-		if pointer.BoolDeref(in.Profile.OVSHWOffload, false) {
+		if ptr.Deref(in.Profile.OVSHWOffload, false) {
 			(out.Profile)["capabilities"] = "[\"switchdev\"]"
 		}
-		if pointer.BoolDeref(in.Profile.TrustedVF, false) {
+		if ptr.Deref(in.Profile.TrustedVF, false) {
 			(out.Profile)["trusted"] = trueString
 		}
 	}
@@ -402,21 +402,21 @@ func Convert_Map_string_To_Interface_To_v1beta1_BindingProfile(in map[string]str
 	for k, v := range in {
 		if k == "capabilities" {
 			if strings.Contains(v, "switchdev") {
-				out.OVSHWOffload = pointer.Bool(true)
+				out.OVSHWOffload = ptr.To(true)
 			}
 		}
 		if k == "trusted" && v == trueString {
-			out.TrustedVF = pointer.Bool(true)
+			out.TrustedVF = ptr.To(true)
 		}
 	}
 	return nil
 }
 
 func Convert_v1beta1_BindingProfile_To_Map_string_To_Interface(in *infrav1.BindingProfile, out map[string]string, _ apiconversion.Scope) error {
-	if pointer.BoolDeref(in.OVSHWOffload, false) {
+	if ptr.Deref(in.OVSHWOffload, false) {
 		(out)["capabilities"] = "[\"switchdev\"]"
 	}
-	if pointer.BoolDeref(in.TrustedVF, false) {
+	if ptr.Deref(in.TrustedVF, false) {
 		(out)["trusted"] = trueString
 	}
 	return nil

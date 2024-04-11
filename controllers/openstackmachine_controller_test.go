@@ -33,7 +33,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -80,7 +80,7 @@ func getDefaultOpenStackCluster() *infrav1.OpenStackCluster {
 func getDefaultMachine() *clusterv1.Machine {
 	return &clusterv1.Machine{
 		Spec: clusterv1.MachineSpec{
-			FailureDomain: pointer.String(failureDomain),
+			FailureDomain: ptr.To(failureDomain),
 		},
 	}
 }
@@ -97,15 +97,15 @@ func getDefaultOpenStackMachine() *infrav1.OpenStackMachine {
 			// FloatingIP is only used by the cluster controller for the Bastion
 			// TODO: Test Networks, Ports, Subnet, and Trunk separately
 			Flavor:     flavorName,
-			Image:      infrav1.ImageParam{ID: pointer.String(imageUUID)},
+			Image:      infrav1.ImageParam{ID: ptr.To(imageUUID)},
 			SSHKeyName: sshKeyName,
 			Tags:       []string{"test-tag"},
 			ServerMetadata: []infrav1.ServerMetadata{
 				{Key: "test-metadata", Value: "test-value"},
 			},
-			ConfigDrive:    pointer.Bool(true),
+			ConfigDrive:    ptr.To(true),
 			SecurityGroups: []infrav1.SecurityGroupParam{},
-			ServerGroup:    &infrav1.ServerGroupParam{ID: pointer.String(serverGroupUUID)},
+			ServerGroup:    &infrav1.ServerGroupParam{ID: ptr.To(serverGroupUUID)},
 		},
 		Status: infrav1.OpenStackMachineStatus{
 			Resolved: &infrav1.ResolvedMachineSpec{
@@ -126,8 +126,8 @@ func getDefaultInstanceSpec() *compute.InstanceSpec {
 		Metadata: map[string]string{
 			"test-metadata": "test-value",
 		},
-		ConfigDrive:   *pointer.Bool(true),
-		FailureDomain: *pointer.String(failureDomain),
+		ConfigDrive:   *ptr.To(true),
+		FailureDomain: *ptr.To(failureDomain),
 		ServerGroupID: serverGroupUUID,
 		Tags:          []string{"test-tag"},
 	}
@@ -243,7 +243,7 @@ func Test_reconcileDelete(t *testing.T) {
 
 	defaultImage := infrav1.ImageParam{
 		Filter: &infrav1.ImageFilter{
-			Name: pointer.String(imageName),
+			Name: ptr.To(imageName),
 		},
 	}
 
@@ -344,7 +344,7 @@ func Test_reconcileDelete(t *testing.T) {
 					Image: defaultImage,
 				},
 				Status: infrav1.OpenStackMachineStatus{
-					InstanceID: pointer.String(instanceUUID),
+					InstanceID: ptr.To(instanceUUID),
 					Resolved: &infrav1.ResolvedMachineSpec{
 						ImageID: imageUUID,
 						Ports:   defaultResolvedPorts,
@@ -370,7 +370,7 @@ func Test_reconcileDelete(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackMachineStatus{
-					InstanceID: pointer.String(instanceUUID),
+					InstanceID: ptr.To(instanceUUID),
 					Resolved: &infrav1.ResolvedMachineSpec{
 						ImageID: imageUUID,
 						Ports:   defaultResolvedPorts,
@@ -426,7 +426,7 @@ func Test_reconcileDelete(t *testing.T) {
 					// Unlike resolved and resources,
 					// instanceID will have been converted
 					// from the previous API version.
-					InstanceID: pointer.String(instanceUUID),
+					InstanceID: ptr.To(instanceUUID),
 				},
 			},
 			expect: func(r *recorders) {

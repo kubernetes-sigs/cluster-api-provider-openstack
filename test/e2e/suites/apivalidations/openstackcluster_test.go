@@ -21,7 +21,7 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -105,11 +105,11 @@ var _ = Describe("OpenStackCluster API validations", func() {
 
 		It("should allow bastion.enabled=true with a spec", func() {
 			cluster.Spec.Bastion = &infrav1.Bastion{
-				Enabled: pointer.Bool(true),
+				Enabled: ptr.To(true),
 				Spec: &infrav1.OpenStackMachineSpec{
 					Image: infrav1.ImageParam{
 						Filter: &infrav1.ImageFilter{
-							Name: pointer.String("fake-image"),
+							Name: ptr.To("fake-image"),
 						},
 					},
 				},
@@ -119,7 +119,7 @@ var _ = Describe("OpenStackCluster API validations", func() {
 
 		It("should not allow bastion.enabled=true without a spec", func() {
 			cluster.Spec.Bastion = &infrav1.Bastion{
-				Enabled: pointer.Bool(true),
+				Enabled: ptr.To(true),
 			}
 			Expect(create(cluster)).NotTo(Succeed(), "OpenStackCluster creation should not succeed")
 		})
@@ -134,7 +134,7 @@ var _ = Describe("OpenStackCluster API validations", func() {
 				Spec: &infrav1.OpenStackMachineSpec{
 					Image: infrav1.ImageParam{
 						Filter: &infrav1.ImageFilter{
-							Name: pointer.String("fake-image"),
+							Name: ptr.To("fake-image"),
 						},
 					},
 				},
@@ -150,15 +150,15 @@ var _ = Describe("OpenStackCluster API validations", func() {
 
 		It("should allow IPv4 as bastion floatingIP", func() {
 			cluster.Spec.Bastion = &infrav1.Bastion{
-				Enabled: pointer.Bool(true),
+				Enabled: ptr.To(true),
 				Spec: &infrav1.OpenStackMachineSpec{
 					Image: infrav1.ImageParam{
 						Filter: &infrav1.ImageFilter{
-							Name: pointer.String("fake-image"),
+							Name: ptr.To("fake-image"),
 						},
 					},
 				},
-				FloatingIP: pointer.String("10.0.0.0"),
+				FloatingIP: ptr.To("10.0.0.0"),
 			}
 			Expect(create(cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
 		})
@@ -168,11 +168,11 @@ var _ = Describe("OpenStackCluster API validations", func() {
 				Spec: &infrav1.OpenStackMachineSpec{
 					Image: infrav1.ImageParam{
 						Filter: &infrav1.ImageFilter{
-							Name: pointer.String("fake-image"),
+							Name: ptr.To("fake-image"),
 						},
 					},
 				},
-				FloatingIP: pointer.String("foobar"),
+				FloatingIP: ptr.To("foobar"),
 			}
 			Expect(create(cluster)).NotTo(Succeed(), "OpenStackCluster creation should not succeed")
 		})

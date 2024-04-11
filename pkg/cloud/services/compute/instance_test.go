@@ -30,7 +30,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	. "github.com/onsi/gomega"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
@@ -193,8 +193,8 @@ func getDefaultInstanceSpec() *InstanceSpec {
 		Metadata: map[string]string{
 			"test-metadata": "test-value",
 		},
-		ConfigDrive:   *pointer.Bool(true),
-		FailureDomain: *pointer.String(failureDomain),
+		ConfigDrive:   *ptr.To(true),
+		FailureDomain: *ptr.To(failureDomain),
 		ServerGroupID: serverGroupUUID,
 		Tags:          []string{"test-tag"},
 	}

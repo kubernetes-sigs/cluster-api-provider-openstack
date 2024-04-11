@@ -26,7 +26,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/servergroups"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	. "github.com/onsi/gomega"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
@@ -48,7 +48,7 @@ func Test_ResolveMachineSpec(t *testing.T) {
 			Description: "Created by cluster-api-provider-openstack cluster test-cluster",
 			NetworkID:   networkID1,
 			FixedIPs: []infrav1.ResolvedFixedIP{
-				{SubnetID: pointer.String(subnetID)},
+				{SubnetID: ptr.To(subnetID)},
 			},
 		},
 	}
@@ -67,8 +67,8 @@ func Test_ResolveMachineSpec(t *testing.T) {
 		{
 			testName: "Resources ID passed",
 			spec: infrav1.OpenStackMachineSpec{
-				ServerGroup: &infrav1.ServerGroupParam{ID: pointer.String(serverGroupID1)},
-				Image:       infrav1.ImageParam{ID: pointer.String(imageID1)},
+				ServerGroup: &infrav1.ServerGroupParam{ID: ptr.To(serverGroupID1)},
+				Image:       infrav1.ImageParam{ID: ptr.To(imageID1)},
 			},
 			want: &infrav1.ResolvedMachineSpec{
 				ImageID:       imageID1,
@@ -79,7 +79,7 @@ func Test_ResolveMachineSpec(t *testing.T) {
 		{
 			testName: "Only image ID passed: want image id and default ports",
 			spec: infrav1.OpenStackMachineSpec{
-				Image: infrav1.ImageParam{ID: pointer.String(imageID1)},
+				Image: infrav1.ImageParam{ID: ptr.To(imageID1)},
 			},
 			want: &infrav1.ResolvedMachineSpec{
 				ImageID: imageID1,
@@ -89,7 +89,7 @@ func Test_ResolveMachineSpec(t *testing.T) {
 		{
 			testName: "Server group empty",
 			spec: infrav1.OpenStackMachineSpec{
-				Image:       infrav1.ImageParam{ID: pointer.String(imageID1)},
+				Image:       infrav1.ImageParam{ID: ptr.To(imageID1)},
 				ServerGroup: nil,
 			},
 			want: &infrav1.ResolvedMachineSpec{
@@ -100,8 +100,8 @@ func Test_ResolveMachineSpec(t *testing.T) {
 		{
 			testName: "Server group by Name not found",
 			spec: infrav1.OpenStackMachineSpec{
-				Image:       infrav1.ImageParam{ID: pointer.String(imageID1)},
-				ServerGroup: &infrav1.ServerGroupParam{Filter: &infrav1.ServerGroupFilter{Name: pointer.String("test-server-group")}},
+				Image:       infrav1.ImageParam{ID: ptr.To(imageID1)},
+				ServerGroup: &infrav1.ServerGroupParam{Filter: &infrav1.ServerGroupFilter{Name: ptr.To("test-server-group")}},
 			},
 			expectComputeMock: func(m *mock.MockComputeClientMockRecorder) {
 				m.ListServerGroups().Return(
@@ -116,7 +116,7 @@ func Test_ResolveMachineSpec(t *testing.T) {
 			spec: infrav1.OpenStackMachineSpec{
 				Image: infrav1.ImageParam{
 					Filter: &infrav1.ImageFilter{
-						Name: pointer.String("test-image"),
+						Name: ptr.To("test-image"),
 					},
 				},
 			},
@@ -129,11 +129,11 @@ func Test_ResolveMachineSpec(t *testing.T) {
 		{
 			testName: "Ports set",
 			spec: infrav1.OpenStackMachineSpec{
-				Image: infrav1.ImageParam{ID: pointer.String(imageID1)},
+				Image: infrav1.ImageParam{ID: ptr.To(imageID1)},
 				Ports: []infrav1.PortOpts{
 					{
 						Network: &infrav1.NetworkParam{
-							ID: pointer.String(networkID2),
+							ID: ptr.To(networkID2),
 						},
 					},
 				},

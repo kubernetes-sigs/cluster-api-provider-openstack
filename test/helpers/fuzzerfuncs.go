@@ -20,7 +20,7 @@ import (
 	"strings"
 
 	fuzz "github.com/google/gofuzz"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
@@ -52,7 +52,7 @@ type isZeroer[T any] interface {
 
 func fuzzFilterParam[Z isZeroer[T], T any](id *optional.String, filter *Z, c fuzz.Continue) {
 	if c.RandBool() {
-		*id = pointer.String(nonEmptyString(c))
+		*id = ptr.To(nonEmptyString(c))
 		*filter = nil
 	} else {
 		*filter = new(T)

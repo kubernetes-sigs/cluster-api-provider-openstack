@@ -20,7 +20,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
@@ -38,7 +38,7 @@ var _ = Describe("Filter API validations", func() {
 		// Initialise a basic machine object in the correct namespace
 		machine = &infrav1.OpenStackMachine{
 			Spec: infrav1.OpenStackMachineSpec{
-				Image: infrav1.ImageParam{Filter: &infrav1.ImageFilter{Name: pointer.String("test-image")}},
+				Image: infrav1.ImageParam{Filter: &infrav1.ImageFilter{Name: ptr.To("test-image")}},
 			},
 		}
 		machine.Namespace = namespace.Name
@@ -188,9 +188,9 @@ var _ = Describe("Filter API validations", func() {
 
 		It("should not allow both ID and Filter to be set", func() {
 			machine.Spec.Image = infrav1.ImageParam{
-				ID: pointer.String(imageUUID),
+				ID: ptr.To(imageUUID),
 				Filter: &infrav1.ImageFilter{
-					Name: pointer.String("bar"),
+					Name: ptr.To("bar"),
 				},
 			}
 			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
@@ -198,7 +198,7 @@ var _ = Describe("Filter API validations", func() {
 
 		It("should not allow both ID and Tags of ImageFilter to be set", func() {
 			machine.Spec.Image = infrav1.ImageParam{
-				ID: pointer.String(imageUUID),
+				ID: ptr.To(imageUUID),
 				Filter: &infrav1.ImageFilter{
 					Tags: []string{"bar", "baz"},
 				},
@@ -208,14 +208,14 @@ var _ = Describe("Filter API validations", func() {
 
 		It("should allow UUID ID of ImageFilter to be set", func() {
 			machine.Spec.Image = infrav1.ImageParam{
-				ID: pointer.String(imageUUID),
+				ID: ptr.To(imageUUID),
 			}
 			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
 		})
 
 		It("should not allow non-UUID ID of ImageFilter to be set", func() {
 			machine.Spec.Image = infrav1.ImageParam{
-				ID: pointer.String("foo"),
+				ID: ptr.To("foo"),
 			}
 			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
 		})
@@ -223,7 +223,7 @@ var _ = Describe("Filter API validations", func() {
 		It("should allow Name and Tags of ImageFilter to be set", func() {
 			machine.Spec.Image = infrav1.ImageParam{
 				Filter: &infrav1.ImageFilter{
-					Name: pointer.String("bar"),
+					Name: ptr.To("bar"),
 					Tags: []string{"bar", "baz"},
 				},
 			}
@@ -241,7 +241,7 @@ var _ = Describe("Filter API validations", func() {
 	Context("NetworkParam", func() {
 		It("should allow setting ID", func() {
 			cluster.Spec.Network = &infrav1.NetworkParam{
-				ID: pointer.String("06c32c52-f207-4f6a-a769-bbcbe5a43f5c"),
+				ID: ptr.To("06c32c52-f207-4f6a-a769-bbcbe5a43f5c"),
 			}
 			Expect(k8sClient.Create(ctx, cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
 		})
@@ -260,7 +260,7 @@ var _ = Describe("Filter API validations", func() {
 
 		It("should not allow setting invalid id", func() {
 			cluster.Spec.Network = &infrav1.NetworkParam{
-				ID: pointer.String("foo"),
+				ID: ptr.To("foo"),
 			}
 			Expect(k8sClient.Create(ctx, cluster)).NotTo(Succeed(), "OpenStackCluster creation should fail")
 		})
@@ -274,7 +274,7 @@ var _ = Describe("Filter API validations", func() {
 
 		It("should not allow setting both ID and Filter", func() {
 			cluster.Spec.Network = &infrav1.NetworkParam{
-				ID: pointer.String("06c32c52-f207-4f6a-a769-bbcbe5a43f5c"), Filter: &infrav1.NetworkFilter{Name: "foo"},
+				ID: ptr.To("06c32c52-f207-4f6a-a769-bbcbe5a43f5c"), Filter: &infrav1.NetworkFilter{Name: "foo"},
 			}
 			Expect(k8sClient.Create(ctx, cluster)).NotTo(Succeed(), "OpenStackCluster creation should fail")
 		})
@@ -283,7 +283,7 @@ var _ = Describe("Filter API validations", func() {
 	Context("SubnetParam", func() {
 		It("should allow setting ID", func() {
 			cluster.Spec.Subnets = []infrav1.SubnetParam{
-				{ID: pointer.String("06c32c52-f207-4f6a-a769-bbcbe5a43f5c")},
+				{ID: ptr.To("06c32c52-f207-4f6a-a769-bbcbe5a43f5c")},
 			}
 			Expect(k8sClient.Create(ctx, cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
 		})
@@ -302,7 +302,7 @@ var _ = Describe("Filter API validations", func() {
 
 		It("should not allow setting invalid id", func() {
 			cluster.Spec.Subnets = []infrav1.SubnetParam{
-				{ID: pointer.String("foo")},
+				{ID: ptr.To("foo")},
 			}
 			Expect(k8sClient.Create(ctx, cluster)).NotTo(Succeed(), "OpenStackCluster creation should fail")
 		})
@@ -316,7 +316,7 @@ var _ = Describe("Filter API validations", func() {
 
 		It("should not allow setting both ID and Filter", func() {
 			cluster.Spec.Subnets = []infrav1.SubnetParam{
-				{ID: pointer.String("06c32c52-f207-4f6a-a769-bbcbe5a43f5c"), Filter: &infrav1.SubnetFilter{Name: "foo"}},
+				{ID: ptr.To("06c32c52-f207-4f6a-a769-bbcbe5a43f5c"), Filter: &infrav1.SubnetFilter{Name: "foo"}},
 			}
 			Expect(k8sClient.Create(ctx, cluster)).NotTo(Succeed(), "OpenStackCluster creation should fail")
 		})
@@ -325,7 +325,7 @@ var _ = Describe("Filter API validations", func() {
 	Context("SecurityGroupParam", func() {
 		It("should allow setting ID", func() {
 			machine.Spec.SecurityGroups = []infrav1.SecurityGroupParam{
-				{ID: pointer.String("06c32c52-f207-4f6a-a769-bbcbe5a43f5c")},
+				{ID: ptr.To("06c32c52-f207-4f6a-a769-bbcbe5a43f5c")},
 			}
 			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
 		})
@@ -344,7 +344,7 @@ var _ = Describe("Filter API validations", func() {
 
 		It("should not allow setting invalid id", func() {
 			machine.Spec.SecurityGroups = []infrav1.SecurityGroupParam{
-				{ID: pointer.String("foo")},
+				{ID: ptr.To("foo")},
 			}
 			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
 		})
@@ -358,7 +358,7 @@ var _ = Describe("Filter API validations", func() {
 
 		It("should not allow setting both ID and Filter", func() {
 			machine.Spec.SecurityGroups = []infrav1.SecurityGroupParam{
-				{ID: pointer.String("06c32c52-f207-4f6a-a769-bbcbe5a43f5c"), Filter: &infrav1.SecurityGroupFilter{Name: "foo"}},
+				{ID: ptr.To("06c32c52-f207-4f6a-a769-bbcbe5a43f5c"), Filter: &infrav1.SecurityGroupFilter{Name: "foo"}},
 			}
 			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
 		})
@@ -367,7 +367,7 @@ var _ = Describe("Filter API validations", func() {
 	Context("RouterParam", func() {
 		It("should allow setting ID", func() {
 			cluster.Spec.Router = &infrav1.RouterParam{
-				ID: pointer.String("06c32c52-f207-4f6a-a769-bbcbe5a43f5c"),
+				ID: ptr.To("06c32c52-f207-4f6a-a769-bbcbe5a43f5c"),
 			}
 			Expect(k8sClient.Create(ctx, cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
 		})
@@ -386,7 +386,7 @@ var _ = Describe("Filter API validations", func() {
 
 		It("should not allow setting invalid id", func() {
 			cluster.Spec.Router = &infrav1.RouterParam{
-				ID: pointer.String("foo"),
+				ID: ptr.To("foo"),
 			}
 			Expect(k8sClient.Create(ctx, cluster)).NotTo(Succeed(), "OpenStackCluster creation should fail")
 		})
@@ -400,7 +400,7 @@ var _ = Describe("Filter API validations", func() {
 
 		It("should not allow setting both ID and Filter", func() {
 			cluster.Spec.Router = &infrav1.RouterParam{
-				ID:     pointer.String("06c32c52-f207-4f6a-a769-bbcbe5a43f5c"),
+				ID:     ptr.To("06c32c52-f207-4f6a-a769-bbcbe5a43f5c"),
 				Filter: &infrav1.RouterFilter{Name: "foo"},
 			}
 			Expect(k8sClient.Create(ctx, cluster)).NotTo(Succeed(), "OpenStackCluster creation should fail")
@@ -409,12 +409,12 @@ var _ = Describe("Filter API validations", func() {
 
 	Context("ServerGroupParam", func() {
 		It("should allow setting ID", func() {
-			machine.Spec.ServerGroup = &infrav1.ServerGroupParam{ID: pointer.String("06c32c52-f207-4f6a-a769-bbcbe5a43f5c")}
+			machine.Spec.ServerGroup = &infrav1.ServerGroupParam{ID: ptr.To("06c32c52-f207-4f6a-a769-bbcbe5a43f5c")}
 			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
 		})
 
 		It("should allow setting non-empty Filter", func() {
-			machine.Spec.ServerGroup = &infrav1.ServerGroupParam{Filter: &infrav1.ServerGroupFilter{Name: pointer.String("foo")}}
+			machine.Spec.ServerGroup = &infrav1.ServerGroupParam{Filter: &infrav1.ServerGroupFilter{Name: ptr.To("foo")}}
 			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
 		})
 
@@ -424,7 +424,7 @@ var _ = Describe("Filter API validations", func() {
 		})
 
 		It("should not allow setting invalid id", func() {
-			machine.Spec.ServerGroup = &infrav1.ServerGroupParam{ID: pointer.String("foo")}
+			machine.Spec.ServerGroup = &infrav1.ServerGroupParam{ID: ptr.To("foo")}
 			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
 		})
 
@@ -435,8 +435,8 @@ var _ = Describe("Filter API validations", func() {
 
 		It("should not allow setting both ID and Filter", func() {
 			machine.Spec.ServerGroup = &infrav1.ServerGroupParam{
-				ID:     pointer.String("06c32c52-f207-4f6a-a769-bbcbe5a43f5c"),
-				Filter: &infrav1.ServerGroupFilter{Name: pointer.String("foo")},
+				ID:     ptr.To("06c32c52-f207-4f6a-a769-bbcbe5a43f5c"),
+				Filter: &infrav1.ServerGroupFilter{Name: ptr.To("foo")},
 			}
 			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
 		})

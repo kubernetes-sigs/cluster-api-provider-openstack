@@ -19,7 +19,7 @@ package v1beta1
 import (
 	"strings"
 
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 // Hub marks OpenStackCluster as a conversion hub.
@@ -53,20 +53,20 @@ func LegacyCalicoSecurityGroupRules() []SecurityGroupRuleSpec {
 	return []SecurityGroupRuleSpec{
 		{
 			Name:                "BGP (calico)",
-			Description:         pointer.String("Created by cluster-api-provider-openstack API conversion - BGP (calico)"),
+			Description:         ptr.To("Created by cluster-api-provider-openstack API conversion - BGP (calico)"),
 			Direction:           "ingress",
-			EtherType:           pointer.String("IPv4"),
-			PortRangeMin:        pointer.Int(179),
-			PortRangeMax:        pointer.Int(179),
-			Protocol:            pointer.String("tcp"),
+			EtherType:           ptr.To("IPv4"),
+			PortRangeMin:        ptr.To(179),
+			PortRangeMax:        ptr.To(179),
+			Protocol:            ptr.To("tcp"),
 			RemoteManagedGroups: []ManagedSecurityGroupName{"controlplane", "worker"},
 		},
 		{
 			Name:                "IP-in-IP (calico)",
-			Description:         pointer.String("Created by cluster-api-provider-openstack API conversion - IP-in-IP (calico)"),
+			Description:         ptr.To("Created by cluster-api-provider-openstack API conversion - IP-in-IP (calico)"),
 			Direction:           "ingress",
-			EtherType:           pointer.String("IPv4"),
-			Protocol:            pointer.String("4"),
+			EtherType:           ptr.To("IPv4"),
+			Protocol:            ptr.To("4"),
 			RemoteManagedGroups: []ManagedSecurityGroupName{"controlplane", "worker"},
 		},
 	}

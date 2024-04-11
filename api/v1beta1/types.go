@@ -17,7 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
 )
@@ -822,7 +822,7 @@ type APIServerLoadBalancer struct {
 }
 
 func (s *APIServerLoadBalancer) IsZero() bool {
-	return s == nil || ((s.Enabled == nil || !*s.Enabled) && len(s.AdditionalPorts) == 0 && len(s.AllowedCIDRs) == 0 && pointer.StringDeref(s.Provider, "") == "")
+	return s == nil || ((s.Enabled == nil || !*s.Enabled) && len(s.AdditionalPorts) == 0 && len(s.AllowedCIDRs) == 0 && ptr.Deref(s.Provider, "") == "")
 }
 
 func (s *APIServerLoadBalancer) IsEnabled() bool {

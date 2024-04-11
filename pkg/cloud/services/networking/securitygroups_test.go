@@ -27,7 +27,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/rules"
 	. "github.com/onsi/gomega"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
@@ -51,9 +51,9 @@ func TestValidateRemoteManagedGroups(t *testing.T) {
 		{
 			name: "Valid rule with missing remoteManagedGroups",
 			rule: infrav1.SecurityGroupRuleSpec{
-				PortRangeMin: pointer.Int(22),
-				PortRangeMax: pointer.Int(22),
-				Protocol:     pointer.String("tcp"),
+				PortRangeMin: ptr.To(22),
+				PortRangeMax: ptr.To(22),
+				Protocol:     ptr.To("tcp"),
 			},
 			remoteManagedGroups: map[string]string{
 				"self":         "self",
@@ -123,9 +123,9 @@ func TestGetAllNodesRules(t *testing.T) {
 			},
 			allNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
 				{
-					Protocol:     pointer.String("tcp"),
-					PortRangeMin: pointer.Int(22),
-					PortRangeMax: pointer.Int(22),
+					Protocol:     ptr.To("tcp"),
+					PortRangeMin: ptr.To(22),
+					PortRangeMax: ptr.To(22),
 					RemoteManagedGroups: []infrav1.ManagedSecurityGroupName{
 						"controlplane",
 						"worker",
@@ -156,9 +156,9 @@ func TestGetAllNodesRules(t *testing.T) {
 			},
 			allNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
 				{
-					Protocol:            pointer.String("tcp"),
-					PortRangeMin:        pointer.Int(22),
-					PortRangeMax:        pointer.Int(22),
+					Protocol:            ptr.To("tcp"),
+					PortRangeMin:        ptr.To(22),
+					PortRangeMax:        ptr.To(22),
 					RemoteManagedGroups: []infrav1.ManagedSecurityGroupName{"controlplane"},
 				},
 			},
@@ -179,9 +179,9 @@ func TestGetAllNodesRules(t *testing.T) {
 			},
 			allNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
 				{
-					Protocol:     pointer.String("tcp"),
-					PortRangeMin: pointer.Int(22),
-					PortRangeMax: pointer.Int(22),
+					Protocol:     ptr.To("tcp"),
+					PortRangeMin: ptr.To(22),
+					PortRangeMax: ptr.To(22),
 					RemoteManagedGroups: []infrav1.ManagedSecurityGroupName{
 						"controlplanezzz",
 						"worker",
@@ -199,9 +199,9 @@ func TestGetAllNodesRules(t *testing.T) {
 			},
 			allNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
 				{
-					Protocol:     pointer.String("tcp"),
-					PortRangeMin: pointer.Int(22),
-					PortRangeMax: pointer.Int(22),
+					Protocol:     ptr.To("tcp"),
+					PortRangeMin: ptr.To(22),
+					PortRangeMax: ptr.To(22),
 					RemoteManagedGroups: []infrav1.ManagedSecurityGroupName{
 						"bastion",
 					},
@@ -274,9 +274,9 @@ func TestGenerateDesiredSecGroups(t *testing.T) {
 					ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{
 						AllNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
 							{
-								Protocol:            pointer.String("tcp"),
-								PortRangeMin:        pointer.Int(22),
-								PortRangeMax:        pointer.Int(22),
+								Protocol:            ptr.To("tcp"),
+								PortRangeMin:        ptr.To(22),
+								PortRangeMax:        ptr.To(22),
 								RemoteManagedGroups: []infrav1.ManagedSecurityGroupName{"controlplane", "worker"},
 							},
 						},
@@ -293,9 +293,9 @@ func TestGenerateDesiredSecGroups(t *testing.T) {
 					ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{
 						AllNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
 							{
-								Protocol:            pointer.String("tcp"),
-								PortRangeMin:        pointer.Int(22),
-								PortRangeMax:        pointer.Int(22),
+								Protocol:            ptr.To("tcp"),
+								PortRangeMin:        ptr.To(22),
+								PortRangeMax:        ptr.To(22),
 								RemoteManagedGroups: []infrav1.ManagedSecurityGroupName{"controlplane", "worker", "unknownGroup"},
 							},
 						},
@@ -533,7 +533,7 @@ func TestService_ReconcileSecurityGroups(t *testing.T) {
 			name: "Default control plane, worker, and bastion security groups",
 			openStackClusterSpec: infrav1.OpenStackClusterSpec{
 				Bastion: &infrav1.Bastion{
-					Enabled: pointer.Bool(true),
+					Enabled: ptr.To(true),
 				},
 				ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{},
 			},
