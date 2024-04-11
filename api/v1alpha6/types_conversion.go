@@ -497,7 +497,6 @@ func Convert_v1alpha6_SecurityGroup_To_v1beta1_SecurityGroupStatus(in *SecurityG
 }
 
 /* SecurityGroupRule */
-/* APIServerLoadBalancer */
 /* ValueSpec */
 /* OpenStackIdentityReference */
 
@@ -508,6 +507,17 @@ func Convert_v1alpha6_OpenStackIdentityReference_To_v1beta1_OpenStackIdentityRef
 func Convert_v1beta1_OpenStackIdentityReference_To_v1alpha6_OpenStackIdentityReference(in *infrav1.OpenStackIdentityReference, out *OpenStackIdentityReference, _ apiconversion.Scope) error {
 	out.Name = in.Name
 	return nil
+}
+
+/* APIServerLoadBalancer */
+
+func restorev1beta1APIServerLoadBalancer(previous *infrav1.APIServerLoadBalancer, dst *infrav1.APIServerLoadBalancer) {
+	if dst == nil || previous == nil {
+		return
+	}
+
+	// AZ doesn't exist in v1alpha6, so always restore.
+	dst.AvailabilityZone = previous.AvailabilityZone
 }
 
 /* Placeholders */
