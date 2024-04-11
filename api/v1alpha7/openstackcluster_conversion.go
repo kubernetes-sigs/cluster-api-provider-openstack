@@ -78,12 +78,14 @@ var v1alpha7OpenStackClusterRestorer = conversion.RestorerFor[*OpenStackCluster]
 			return &c.Spec
 		},
 		restorev1alpha7ClusterSpec,
-		// Filter out Bastion, which is restored separately
-		conversion.HashedFilterField[*OpenStackCluster, OpenStackClusterSpec](
+		// Filter out Bastion, which is restored separately, and
+		// ControlPlaneEndpoint, which is written by the cluster controller
+		conversion.HashedFilterField[*OpenStackCluster](
 			func(s *OpenStackClusterSpec) *OpenStackClusterSpec {
-				if s.Bastion != nil {
+				if s.Bastion != nil || s.ControlPlaneEndpoint != (clusterv1.APIEndpoint{}) {
 					f := *s
 					f.Bastion = nil
+					f.ControlPlaneEndpoint = clusterv1.APIEndpoint{}
 					return &f
 				}
 				return s

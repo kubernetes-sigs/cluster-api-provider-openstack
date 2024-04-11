@@ -25,6 +25,8 @@ import (
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	infrav1alpha6 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
+	infrav1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
@@ -52,7 +54,7 @@ var _ = Describe("OpenStackCluster API validations", func() {
 			// Initialise a basic cluster object in the correct namespace
 			cluster = &infrav1.OpenStackCluster{}
 			cluster.Namespace = namespace.Name
-			cluster.GenerateName = "cluster-"
+			cluster.GenerateName = clusterNamePrefix
 		})
 
 		It("should allow the smallest permissible cluster spec", func() {
@@ -175,6 +177,80 @@ var _ = Describe("OpenStackCluster API validations", func() {
 				FloatingIP: pointer.String("foobar"),
 			}
 			Expect(create(cluster)).NotTo(Succeed(), "OpenStackCluster creation should not succeed")
+		})
+	})
+
+	Context("v1alpha7", func() {
+		var cluster *infrav1alpha7.OpenStackCluster
+
+		BeforeEach(func() {
+			// Initialise a basic cluster object in the correct namespace
+			cluster = &infrav1alpha7.OpenStackCluster{}
+			cluster.Namespace = namespace.Name
+			cluster.GenerateName = clusterNamePrefix
+		})
+
+		It("should restore cluster spec idempotently after controller writes to controlPlaneEndpoint", func() {
+			// Set identityRef.Kind, as it will be lost if the restorer does not execute
+			cluster.Spec.IdentityRef = &infrav1alpha7.OpenStackIdentityReference{
+				Kind: "FakeKind",
+				Name: "identity-ref",
+			}
+			Expect(create(cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
+
+			// Fetch the infrav1 version of the cluster
+			infrav1Cluster := &infrav1.OpenStackCluster{}
+			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: cluster.Name, Namespace: cluster.Namespace}, infrav1Cluster)).To(Succeed(), "OpenStackCluster fetch should succeed")
+
+			// Update the infrav1 cluster to set the control plane endpoint
+			infrav1Cluster.Spec.ControlPlaneEndpoint = &clusterv1.APIEndpoint{
+				Host: "foo",
+				Port: 1234,
+			}
+			Expect(k8sClient.Update(ctx, infrav1Cluster)).To(Succeed(), "Setting control plane endpoint should succeed")
+
+			// Fetch the v1alpha7 version of the cluster and ensure that both the new control plane endpoint and the identityRef.Kind are present
+			cluster = &infrav1alpha7.OpenStackCluster{}
+			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: infrav1Cluster.Name, Namespace: infrav1Cluster.Namespace}, cluster)).To(Succeed(), "OpenStackCluster fetch should succeed")
+			Expect(cluster.Spec.ControlPlaneEndpoint).To(Equal(*infrav1Cluster.Spec.ControlPlaneEndpoint), "Control plane endpoint should be restored")
+			Expect(cluster.Spec.IdentityRef.Kind).To(Equal("FakeKind"), "IdentityRef.Kind should be restored")
+		})
+	})
+
+	Context("v1alpha6", func() {
+		var cluster *infrav1alpha6.OpenStackCluster //nolint:staticcheck
+
+		BeforeEach(func() {
+			// Initialise a basic cluster object in the correct namespace
+			cluster = &infrav1alpha6.OpenStackCluster{} //nolint:staticcheck
+			cluster.Namespace = namespace.Name
+			cluster.GenerateName = clusterNamePrefix
+		})
+
+		It("should restore cluster spec idempotently after controller writes to controlPlaneEndpoint", func() {
+			// Set identityRef.Kind, as it will be lost if the restorer does not execute
+			cluster.Spec.IdentityRef = &infrav1alpha6.OpenStackIdentityReference{
+				Kind: "FakeKind",
+				Name: "identity-ref",
+			}
+			Expect(create(cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
+
+			// Fetch the infrav1 version of the cluster
+			infrav1Cluster := &infrav1.OpenStackCluster{}
+			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: cluster.Name, Namespace: cluster.Namespace}, infrav1Cluster)).To(Succeed(), "OpenStackCluster fetch should succeed")
+
+			// Update the infrav1 cluster to set the control plane endpoint
+			infrav1Cluster.Spec.ControlPlaneEndpoint = &clusterv1.APIEndpoint{
+				Host: "foo",
+				Port: 1234,
+			}
+			Expect(k8sClient.Update(ctx, infrav1Cluster)).To(Succeed(), "Setting control plane endpoint should succeed")
+
+			// Fetch the v1alpha6 version of the cluster and ensure that both the new control plane endpoint and the identityRef.Kind are present
+			cluster = &infrav1alpha6.OpenStackCluster{} //nolint:staticcheck
+			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: infrav1Cluster.Name, Namespace: infrav1Cluster.Namespace}, cluster)).To(Succeed(), "OpenStackCluster fetch should succeed")
+			Expect(cluster.Spec.ControlPlaneEndpoint).To(Equal(*infrav1Cluster.Spec.ControlPlaneEndpoint), "Control plane endpoint should be restored")
+			Expect(cluster.Spec.IdentityRef.Kind).To(Equal("FakeKind"), "IdentityRef.Kind should be restored")
 		})
 	})
 })

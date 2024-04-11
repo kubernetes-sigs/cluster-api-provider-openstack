@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -54,6 +55,10 @@ var (
 	ctx        = context.Background()
 	mgrCancel  context.CancelFunc
 	mgrDone    chan struct{}
+)
+
+const (
+	clusterNamePrefix = "cluster-"
 )
 
 func TestAPIs(t *testing.T) {
@@ -144,7 +149,7 @@ var _ = BeforeSuite(func() {
 	DeferCleanup(func() {
 		By("Tearing down manager")
 		mgrCancel()
-		Eventually(mgrDone).Should(BeClosed(), "Manager should stop")
+		Eventually(mgrDone).WithTimeout(time.Second*5).Should(BeClosed(), "Manager should stop")
 	})
 })
 

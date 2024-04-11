@@ -72,6 +72,18 @@ var v1alpha6OpenStackClusterRestorer = conversion.RestorerFor[*OpenStackCluster]
 			return &c.Spec
 		},
 		restorev1alpha6ClusterSpec,
+		// Filter out ControlPlaneEndpoint, which is written by the
+		// cluster controller
+		conversion.HashedFilterField[*OpenStackCluster](
+			func(s *OpenStackClusterSpec) *OpenStackClusterSpec {
+				if s.ControlPlaneEndpoint != (clusterv1.APIEndpoint{}) {
+					f := *s
+					f.ControlPlaneEndpoint = clusterv1.APIEndpoint{}
+					return &f
+				}
+				return s
+			},
+		),
 	),
 	"status": conversion.HashedFieldRestorer(
 		func(c *OpenStackCluster) *OpenStackClusterStatus {

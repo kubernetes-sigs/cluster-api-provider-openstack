@@ -47,7 +47,7 @@ var _ = Describe("Filter API validations", func() {
 		// Initialise a basic cluster object in the correct namespace
 		cluster = &infrav1.OpenStackCluster{}
 		cluster.Namespace = namespace.Name
-		cluster.GenerateName = "cluster-"
+		cluster.GenerateName = clusterNamePrefix
 	})
 
 	DescribeTable("Allow valid neutron filter tags", func(tags []infrav1.FilterByNeutronTags) {
