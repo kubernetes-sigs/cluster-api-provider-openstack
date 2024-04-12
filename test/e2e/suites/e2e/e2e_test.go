@@ -245,6 +245,42 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 		})
 	})
 
+	Describe("Workload cluster (no bastion)", func() {
+		It("should be creatable and deletable", func() {
+			shared.Logf("Creating a cluster")
+			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
+			configCluster := defaultConfigCluster(clusterName, namespace.Name)
+			configCluster.ControlPlaneMachineCount = ptr.To(int64(1))
+			configCluster.WorkerMachineCount = ptr.To(int64(1))
+			configCluster.Flavor = shared.FlavorNoBastion
+			createCluster(ctx, configCluster, clusterResources)
+			md := clusterResources.MachineDeployments
+
+			workerMachines := framework.GetMachinesByMachineDeployments(ctx, framework.GetMachinesByMachineDeploymentsInput{
+				Lister:            e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
+				ClusterName:       clusterName,
+				Namespace:         namespace.Name,
+				MachineDeployment: *md[0],
+			})
+			controlPlaneMachines := framework.GetControlPlaneMachinesByCluster(ctx, framework.GetControlPlaneMachinesByClusterInput{
+				Lister:      e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
+				ClusterName: clusterName,
+				Namespace:   namespace.Name,
+			})
+			Expect(workerMachines).To(HaveLen(1))
+			Expect(controlPlaneMachines).To(HaveLen(1))
+
+			shared.Logf("Waiting for worker nodes to be in Running phase")
+			statusChecks := []framework.MachineStatusCheck{framework.MachinePhaseCheck(string(clusterv1.MachinePhaseRunning))}
+			machineStatusInput := framework.WaitForMachineStatusCheckInput{
+				Getter:       e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
+				Machine:      &workerMachines[0],
+				StatusChecks: statusChecks,
+			}
+			framework.WaitForMachineStatusCheck(ctx, machineStatusInput, e2eCtx.E2EConfig.GetIntervals(specName, "wait-machine-status")...)
+		})
+	})
+
 	Describe("Workload cluster (flatcar)", func() {
 		It("should be creatable and deletable", func() {
 			// Flatcar default user is "core"
