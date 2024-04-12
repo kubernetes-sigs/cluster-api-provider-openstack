@@ -24,6 +24,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/conversioncommon"
 	optional "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
 )
 
@@ -426,6 +427,33 @@ func Convert_v1beta1_BindingProfile_To_Map_string_To_Interface(in *infrav1.Bindi
 /* AddressPair */
 /* Instance */
 /* RootVolume */
+
+func restorev1beta1BlockDeviceVolume(previous *infrav1.BlockDeviceVolume, dst *infrav1.BlockDeviceVolume) {
+	if previous == nil || dst == nil {
+		return
+	}
+
+	dstAZ := dst.AvailabilityZone
+	previousAZ := previous.AvailabilityZone
+
+	// Empty From (the default) will be converted to the explicit "Name"
+	if dstAZ != nil && previousAZ != nil && dstAZ.From == "Name" {
+		dstAZ.From = previousAZ.From
+	}
+}
+
+func Convert_v1alpha6_RootVolume_To_v1beta1_RootVolume(in *RootVolume, out *infrav1.RootVolume, s apiconversion.Scope) error {
+	out.SizeGiB = in.Size
+	out.Type = in.VolumeType
+	return conversioncommon.Convert_string_To_Pointer_v1beta1_VolumeAvailabilityZone(&in.AvailabilityZone, &out.AvailabilityZone, s)
+}
+
+func Convert_v1beta1_RootVolume_To_v1alpha6_RootVolume(in *infrav1.RootVolume, out *RootVolume, s apiconversion.Scope) error {
+	out.Size = in.SizeGiB
+	out.VolumeType = in.Type
+	return conversioncommon.Convert_Pointer_v1beta1_VolumeAvailabilityZone_To_string(&in.AvailabilityZone, &out.AvailabilityZone, s)
+}
+
 /* Network */
 
 func Convert_v1alpha6_Network_To_v1beta1_NetworkStatusWithSubnets(in *Network, out *infrav1.NetworkStatusWithSubnets, s apiconversion.Scope) error {

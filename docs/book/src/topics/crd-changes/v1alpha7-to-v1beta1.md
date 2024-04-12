@@ -15,6 +15,8 @@
       - [Removal of imageUUID](#removal-of-imageuuid)
       - [Change to instanceID](#change-to-instanceid)
       - [Changes to ports](#changes-to-ports)
+      - [Change to `availabilityZone` for `additionalBlockDevices`](#change-to-availabilityzone-for-additionalblockdevices)
+      - [Changes to rootVolume](#changes-to-rootvolume)
       - [Addition of floatingIPPoolRef](#addition-of-floatingippoolref)
     - [`OpenStackCluster`](#openstackcluster)
       - [Removal of cloudName](#removal-of-cloudname-1)
@@ -148,6 +150,101 @@ The following fields in `PortOpts` are renamed in order to keep them consistent 
 
 * `hostId` becomes `hostID`
 * `allowedCidrs` becomes `allowedCIDRs`
+
+#### Change to `availabilityZone` for `additionalBlockDevices`
+
+Prior to v1beta1 it was not possible to specify a volume with no availability zone, allowing Cinder to allocate the volume according to its default policy. Previously, if no availability zone was given CAPO would use the value of `failureDomain` from the associated `Machine`.
+
+In v1beta1 this default changes. In v1beta1, if no `availabilityZone` is specified, CAPO will not specify an availability zone for the created volume.
+
+To support this whilst continuing to support the previous behaviour, `availabilityZone` becomes a struct with 2 fields:
+
+`from` specifies where we get the availability zone from. It can be either `Name`, or `Machine`. It can be omitted, and the default is `Name`, in which case the value of the `name` field will be used. Specifying `Machine` provides the previous default behaviour.
+
+`name` is a specific availability zone to use.
+
+For example, a volume with an explicit AZ in:
+* v1alpha7
+  ```yaml
+  - name: extra
+    sizeGiB: 1000
+    storage:
+      type: volume
+      volume:
+        type: ceph
+        availabilityZone: az1
+  ```
+* v1beta1
+  ```yaml
+  - name: extra
+    sizeGiB: 1000
+    storage:
+      type: volume
+      volume:
+        type: ceph
+        availabilityZone:
+          name: az1
+  ```
+
+A volume which uses the value of `failureDomain` from the `Machine`:
+* v1alpha7
+  ```yaml
+  - name: extra
+    sizeGiB: 1000
+    storage:
+      type: volume
+      volume:
+        type: ceph
+  ```
+* v1beta1
+  ```yaml
+  - name: extra
+    sizeGiB: 1000
+    storage:
+      type: volume
+      volume:
+        type: ceph
+        availabilityZone:
+          from: Machine
+  ```
+
+A volume which explicitly has no availability zone:
+* v1alpha7: Not possible
+* v1beta1
+  ```yaml
+  - name: extra
+    sizeGiB: 1000
+    storage:
+      type: volume
+      volume:
+        type: ceph
+  ```
+
+Volumes upgraded from prior versions will retain their current semantics, so volumes which previously specified no availabilityZone will have an availabilityZone with `from: Machine` added.
+
+#### Changes to rootVolume
+
+The `rootVolume` field has been updated to be consistent with the volume specification for `additionalBlockDevices`. Specifically:
+
+* `rootVolume.diskSize` becomes `rootVolume.sizeGiB`
+* `rootVolume.volumeType` becomes `rootVolume.Type`
+* `rootVolume.availabilityZone` becomes a struct with the same semantics as `availabilityZone` in `additionalBlockDevices`, described above.
+
+For example:
+* v1alpha7
+  ```yaml
+  rootVolume:
+    diskSize: 50
+    volumeType: ceph
+  ```
+* v1beta1
+  ```yaml
+  rootVolume:
+    sizeGiB: 50
+    type: ceph
+    availabilityZone:
+      from: Machine
+  ```
 
 #### Addition of floatingIPPoolRef
 

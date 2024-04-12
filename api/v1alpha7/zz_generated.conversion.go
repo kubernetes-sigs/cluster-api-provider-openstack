@@ -29,6 +29,7 @@ import (
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	conversioncommon "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/conversioncommon"
 	optional "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
 	apiv1beta1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	errors "sigs.k8s.io/cluster-api/errors"
@@ -261,16 +262,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*RootVolume)(nil), (*v1beta1.RootVolume)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha7_RootVolume_To_v1beta1_RootVolume(a.(*RootVolume), b.(*v1beta1.RootVolume), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*v1beta1.RootVolume)(nil), (*RootVolume)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1beta1_RootVolume_To_v1alpha7_RootVolume(a.(*v1beta1.RootVolume), b.(*RootVolume), scope)
-	}); err != nil {
-		return err
-	}
 	if err := s.AddGeneratedConversionFunc((*Router)(nil), (*v1beta1.Router)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha7_Router_To_v1beta1_Router(a.(*Router), b.(*v1beta1.Router), scope)
 	}); err != nil {
@@ -343,6 +334,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddConversionFunc((*PortOpts)(nil), (*v1beta1.PortOpts)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha7_PortOpts_To_v1beta1_PortOpts(a.(*PortOpts), b.(*v1beta1.PortOpts), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*RootVolume)(nil), (*v1beta1.RootVolume)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha7_RootVolume_To_v1beta1_RootVolume(a.(*RootVolume), b.(*v1beta1.RootVolume), scope)
 	}); err != nil {
 		return err
 	}
@@ -443,6 +439,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddConversionFunc((*v1beta1.PortOpts)(nil), (*PortOpts)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1beta1_PortOpts_To_v1alpha7_PortOpts(a.(*v1beta1.PortOpts), b.(*PortOpts), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1beta1.RootVolume)(nil), (*RootVolume)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1beta1_RootVolume_To_v1alpha7_RootVolume(a.(*v1beta1.RootVolume), b.(*RootVolume), scope)
 	}); err != nil {
 		return err
 	}
@@ -647,7 +648,15 @@ func Convert_v1beta1_BindingProfile_To_v1alpha7_BindingProfile(in *v1beta1.Bindi
 
 func autoConvert_v1alpha7_BlockDeviceStorage_To_v1beta1_BlockDeviceStorage(in *BlockDeviceStorage, out *v1beta1.BlockDeviceStorage, s conversion.Scope) error {
 	out.Type = v1beta1.BlockDeviceType(in.Type)
-	out.Volume = (*v1beta1.BlockDeviceVolume)(unsafe.Pointer(in.Volume))
+	if in.Volume != nil {
+		in, out := &in.Volume, &out.Volume
+		*out = new(v1beta1.BlockDeviceVolume)
+		if err := Convert_v1alpha7_BlockDeviceVolume_To_v1beta1_BlockDeviceVolume(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Volume = nil
+	}
 	return nil
 }
 
@@ -658,7 +667,15 @@ func Convert_v1alpha7_BlockDeviceStorage_To_v1beta1_BlockDeviceStorage(in *Block
 
 func autoConvert_v1beta1_BlockDeviceStorage_To_v1alpha7_BlockDeviceStorage(in *v1beta1.BlockDeviceStorage, out *BlockDeviceStorage, s conversion.Scope) error {
 	out.Type = BlockDeviceType(in.Type)
-	out.Volume = (*BlockDeviceVolume)(unsafe.Pointer(in.Volume))
+	if in.Volume != nil {
+		in, out := &in.Volume, &out.Volume
+		*out = new(BlockDeviceVolume)
+		if err := Convert_v1beta1_BlockDeviceVolume_To_v1alpha7_BlockDeviceVolume(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Volume = nil
+	}
 	return nil
 }
 
@@ -669,7 +686,9 @@ func Convert_v1beta1_BlockDeviceStorage_To_v1alpha7_BlockDeviceStorage(in *v1bet
 
 func autoConvert_v1alpha7_BlockDeviceVolume_To_v1beta1_BlockDeviceVolume(in *BlockDeviceVolume, out *v1beta1.BlockDeviceVolume, s conversion.Scope) error {
 	out.Type = in.Type
-	out.AvailabilityZone = in.AvailabilityZone
+	if err := conversioncommon.Convert_string_To_Pointer_v1beta1_VolumeAvailabilityZone(&in.AvailabilityZone, &out.AvailabilityZone, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -680,7 +699,9 @@ func Convert_v1alpha7_BlockDeviceVolume_To_v1beta1_BlockDeviceVolume(in *BlockDe
 
 func autoConvert_v1beta1_BlockDeviceVolume_To_v1alpha7_BlockDeviceVolume(in *v1beta1.BlockDeviceVolume, out *BlockDeviceVolume, s conversion.Scope) error {
 	out.Type = in.Type
-	out.AvailabilityZone = in.AvailabilityZone
+	if err := conversioncommon.Convert_Pointer_v1beta1_VolumeAvailabilityZone_To_string(&in.AvailabilityZone, &out.AvailabilityZone, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -1403,8 +1424,26 @@ func autoConvert_v1alpha7_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(i
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	// WARNING: in.ServerMetadata requires manual conversion: inconvertible types (map[string]string vs []sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerMetadata)
 	out.ConfigDrive = (*bool)(unsafe.Pointer(in.ConfigDrive))
-	out.RootVolume = (*v1beta1.RootVolume)(unsafe.Pointer(in.RootVolume))
-	out.AdditionalBlockDevices = *(*[]v1beta1.AdditionalBlockDevice)(unsafe.Pointer(&in.AdditionalBlockDevices))
+	if in.RootVolume != nil {
+		in, out := &in.RootVolume, &out.RootVolume
+		*out = new(v1beta1.RootVolume)
+		if err := Convert_v1alpha7_RootVolume_To_v1beta1_RootVolume(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.RootVolume = nil
+	}
+	if in.AdditionalBlockDevices != nil {
+		in, out := &in.AdditionalBlockDevices, &out.AdditionalBlockDevices
+		*out = make([]v1beta1.AdditionalBlockDevice, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha7_AdditionalBlockDevice_To_v1beta1_AdditionalBlockDevice(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.AdditionalBlockDevices = nil
+	}
 	// WARNING: in.ServerGroupID requires manual conversion: does not exist in peer-type
 	if in.IdentityRef != nil {
 		in, out := &in.IdentityRef, &out.IdentityRef
@@ -1449,8 +1488,26 @@ func autoConvert_v1beta1_OpenStackMachineSpec_To_v1alpha7_OpenStackMachineSpec(i
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	// WARNING: in.ServerMetadata requires manual conversion: inconvertible types ([]sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerMetadata vs map[string]string)
 	out.ConfigDrive = (*bool)(unsafe.Pointer(in.ConfigDrive))
-	out.RootVolume = (*RootVolume)(unsafe.Pointer(in.RootVolume))
-	out.AdditionalBlockDevices = *(*[]AdditionalBlockDevice)(unsafe.Pointer(&in.AdditionalBlockDevices))
+	if in.RootVolume != nil {
+		in, out := &in.RootVolume, &out.RootVolume
+		*out = new(RootVolume)
+		if err := Convert_v1beta1_RootVolume_To_v1alpha7_RootVolume(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.RootVolume = nil
+	}
+	if in.AdditionalBlockDevices != nil {
+		in, out := &in.AdditionalBlockDevices, &out.AdditionalBlockDevices
+		*out = make([]AdditionalBlockDevice, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta1_AdditionalBlockDevice_To_v1alpha7_AdditionalBlockDevice(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.AdditionalBlockDevices = nil
+	}
 	// WARNING: in.ServerGroup requires manual conversion: does not exist in peer-type
 	if in.IdentityRef != nil {
 		in, out := &in.IdentityRef, &out.IdentityRef
@@ -1686,27 +1743,16 @@ func autoConvert_v1beta1_PortOpts_To_v1alpha7_PortOpts(in *v1beta1.PortOpts, out
 }
 
 func autoConvert_v1alpha7_RootVolume_To_v1beta1_RootVolume(in *RootVolume, out *v1beta1.RootVolume, s conversion.Scope) error {
-	out.Size = in.Size
-	out.VolumeType = in.VolumeType
-	out.AvailabilityZone = in.AvailabilityZone
+	// WARNING: in.Size requires manual conversion: does not exist in peer-type
+	// WARNING: in.VolumeType requires manual conversion: does not exist in peer-type
+	// WARNING: in.AvailabilityZone requires manual conversion: does not exist in peer-type
 	return nil
-}
-
-// Convert_v1alpha7_RootVolume_To_v1beta1_RootVolume is an autogenerated conversion function.
-func Convert_v1alpha7_RootVolume_To_v1beta1_RootVolume(in *RootVolume, out *v1beta1.RootVolume, s conversion.Scope) error {
-	return autoConvert_v1alpha7_RootVolume_To_v1beta1_RootVolume(in, out, s)
 }
 
 func autoConvert_v1beta1_RootVolume_To_v1alpha7_RootVolume(in *v1beta1.RootVolume, out *RootVolume, s conversion.Scope) error {
-	out.Size = in.Size
-	out.VolumeType = in.VolumeType
-	out.AvailabilityZone = in.AvailabilityZone
+	// WARNING: in.SizeGiB requires manual conversion: does not exist in peer-type
+	// WARNING: in.BlockDeviceVolume requires manual conversion: does not exist in peer-type
 	return nil
-}
-
-// Convert_v1beta1_RootVolume_To_v1alpha7_RootVolume is an autogenerated conversion function.
-func Convert_v1beta1_RootVolume_To_v1alpha7_RootVolume(in *v1beta1.RootVolume, out *RootVolume, s conversion.Scope) error {
-	return autoConvert_v1beta1_RootVolume_To_v1alpha7_RootVolume(in, out, s)
 }
 
 func autoConvert_v1alpha7_Router_To_v1beta1_Router(in *Router, out *v1beta1.Router, s conversion.Scope) error {

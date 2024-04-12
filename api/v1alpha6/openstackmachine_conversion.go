@@ -196,6 +196,22 @@ func restorev1beta1MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *infr
 			restorev1beta1SecurityGroupParam(&previous.SecurityGroups[i], &dst.SecurityGroups[i])
 		}
 	}
+
+	if dst.RootVolume != nil && previous.RootVolume != nil {
+		restorev1beta1BlockDeviceVolume(
+			&previous.RootVolume.BlockDeviceVolume,
+			&dst.RootVolume.BlockDeviceVolume,
+		)
+	}
+
+	if len(dst.AdditionalBlockDevices) == len(previous.AdditionalBlockDevices) {
+		for i := range dst.AdditionalBlockDevices {
+			restorev1beta1BlockDeviceVolume(
+				previous.AdditionalBlockDevices[i].Storage.Volume,
+				dst.AdditionalBlockDevices[i].Storage.Volume,
+			)
+		}
+	}
 }
 
 func convertNetworksToPorts(networks []NetworkParam, s apiconversion.Scope) ([]infrav1.PortOpts, error) {

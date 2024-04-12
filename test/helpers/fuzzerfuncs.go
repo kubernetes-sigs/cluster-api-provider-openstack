@@ -153,5 +153,35 @@ func InfraV1FuzzerFuncs() []interface{} {
 		func(param *infrav1.SecurityGroupParam, c fuzz.Continue) {
 			fuzzFilterParam(&param.ID, &param.Filter, c)
 		},
+
+		// Ensure VolumeAZ type is valid
+		func(az *infrav1.VolumeAvailabilityZone, c fuzz.Continue) {
+			stringWithoutSpaces := func() string {
+				for {
+					s := c.RandString()
+					if !strings.Contains(s, " ") && len(s) > 0 {
+						return s
+					}
+				}
+			}
+
+			// From is defaulted
+			if c.RandBool() {
+				name := infrav1.VolumeAZName(stringWithoutSpaces())
+				az.Name = &name
+				return
+			}
+
+			// From is Name
+			if c.RandBool() {
+				az.From = infrav1.VolumeAZFromName
+				name := infrav1.VolumeAZName(stringWithoutSpaces())
+				az.Name = &name
+				return
+			}
+
+			// From is Machine
+			az.From = infrav1.VolumeAZFromMachine
+		},
 	}
 }

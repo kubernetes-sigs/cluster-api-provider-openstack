@@ -1732,10 +1732,12 @@ spec:
                         Also, this name will be used for tagging the block device.
                         Information about the block device tag can be obtained from the OpenStack
                         metadata API or the config drive.
+                        Name cannot be 'root', which is reserved for the root volume.
                       type: string
                     sizeGiB:
                       description: SizeGiB is the size of the block device in gibibytes
                         (GiB).
+                      minimum: 1
                       type: integer
                     storage:
                       description: |-
@@ -1753,12 +1755,35 @@ spec:
                           properties:
                             availabilityZone:
                               description: |-
-                                AvailabilityZone is the volume availability zone to create the volume in.
-                                If omitted, the availability zone of the server will be used.
-                                The availability zone must NOT contain spaces otherwise it will lead to volume that belongs
-                                to this availability zone register failure, see kubernetes/cloud-provider-openstack#1379 for
-                                further information.
-                              type: string
+                                AvailabilityZone is the volume availability zone to create the volume
+                                in. If not specified, the volume will be created without an explicit
+                                availability zone.
+                              properties:
+                                from:
+                                  default: Name
+                                  description: |-
+                                    From specifies where we will obtain the availability zone for the
+                                    volume. The options are "Name" and "Machine". If "Name" is specified
+                                    then the Name field must also be specified. If "Machine" is specified
+                                    the volume will use the value of FailureDomain, if any, from the
+                                    associated Machine.
+                                  enum:
+                                  - Name
+                                  - Machine
+                                  type: string
+                                name:
+                                  description: |-
+                                    Name is the name of a volume availability zone to use. It is required
+                                    if From is "Name". The volume availability zone name may not contain
+                                    spaces.
+                                  minLength: 1
+                                  pattern: ^[^ ]+$
+                                  type: string
+                              type: object
+                              x-kubernetes-validations:
+                              - message: name is required when from is 'Name' or default
+                                rule: '!has(self.from) || self.from == ''Name'' ?
+                                  has(self.name) : !has(self.name)'
                             type:
                               description: |-
                                 Type is the Cinder volume type of the volume.
@@ -2272,11 +2297,49 @@ spec:
                 description: The volume metadata to boot from
                 properties:
                   availabilityZone:
-                    type: string
-                  diskSize:
+                    description: |-
+                      AvailabilityZone is the volume availability zone to create the volume
+                      in. If not specified, the volume will be created without an explicit
+                      availability zone.
+                    properties:
+                      from:
+                        default: Name
+                        description: |-
+                          From specifies where we will obtain the availability zone for the
+                          volume. The options are "Name" and "Machine". If "Name" is specified
+                          then the Name field must also be specified. If "Machine" is specified
+                          the volume will use the value of FailureDomain, if any, from the
+                          associated Machine.
+                        enum:
+                        - Name
+                        - Machine
+                        type: string
+                      name:
+                        description: |-
+                          Name is the name of a volume availability zone to use. It is required
+                          if From is "Name". The volume availability zone name may not contain
+                          spaces.
+                        minLength: 1
+                        pattern: ^[^ ]+$
+                        type: string
+                    type: object
+                    x-kubernetes-validations:
+                    - message: name is required when from is 'Name' or default
+                      rule: '!has(self.from) || self.from == ''Name'' ? has(self.name)
+                        : !has(self.name)'
+                  sizeGiB:
+                    description: SizeGiB is the size of the block device in gibibytes
+                      (GiB).
+                    minimum: 1
                     type: integer
-                  volumeType:
+                  type:
+                    description: |-
+                      Type is the Cinder volume type of the volume.
+                      If omitted, the default Cinder volume type that is configured in the OpenStack cloud
+                      will be used.
                     type: string
+                required:
+                - sizeGiB
                 type: object
               securityGroups:
                 description: The names of the security groups to assign to the instance
