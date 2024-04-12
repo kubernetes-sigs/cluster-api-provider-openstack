@@ -431,11 +431,14 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instanceStatus *Ins
 }
 
 // DeleteVolumes deletes any cinder volumes which were created for the instance.
-// Note that this must only be called when the server was not successfully
+// Note that this need only be called when the server was not successfully
 // created. If the server was created the volume will have been added with
 // DeleteOnTermination=true, and will be automatically cleaned up with the
 // server.
-func (s *Service) DeleteVolumes(instanceSpec *InstanceSpec) error {
+// We don't pass InstanceSpec here because we only require instance name,
+// rootVolume, and additionalBlockDevices, and resolving the whole InstanceSpec
+// introduces unnecessary failure modes.
+func (s *Service) DeleteVolumes(instanceName string, rootVolume *infrav1.RootVolume, additionalBlockDevices []infrav1.AdditionalBlockDevice) error {
 	/*
 		Attaching volumes to an instance is a two-step process:
 
@@ -455,13 +458,13 @@ func (s *Service) DeleteVolumes(instanceSpec *InstanceSpec) error {
 		DeleteOnTermination will ensure it is deleted in that case.
 	*/
 
-	if hasRootVolume(instanceSpec) {
-		if err := s.deleteVolume(instanceSpec.Name, "root"); err != nil {
+	if rootVolume != nil && rootVolume.SizeGiB > 0 {
+		if err := s.deleteVolume(instanceName, "root"); err != nil {
 			return err
 		}
 	}
-	for _, volumeSpec := range instanceSpec.AdditionalBlockDevices {
-		if err := s.deleteVolume(instanceSpec.Name, volumeSpec.Name); err != nil {
+	for _, volumeSpec := range additionalBlockDevices {
+		if err := s.deleteVolume(instanceName, volumeSpec.Name); err != nil {
 			return err
 		}
 	}
