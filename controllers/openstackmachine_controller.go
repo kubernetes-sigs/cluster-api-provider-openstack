@@ -300,19 +300,12 @@ func (r *OpenStackMachineReconciler) reconcileDelete(scope *scope.WithLogger, cl
 	}
 
 	// If no instance was created we currently need to check for orphaned
-	// volumes. This requires resolving the instance spec.
-	// TODO: write volumes to status resources on creation so this is no longer required.
-	if instanceStatus == nil && openStackMachine.Status.Resolved != nil {
-		instanceSpec, err := machineToInstanceSpec(openStackCluster, machine, openStackMachine, "")
-		if err != nil {
-			return ctrl.Result{}, err
-		}
-		if err := computeService.DeleteVolumes(instanceSpec); err != nil {
+	// volumes.
+	if instanceStatus == nil {
+		if err := computeService.DeleteVolumes(openStackMachine.Name, openStackMachine.Spec.RootVolume, openStackMachine.Spec.AdditionalBlockDevices); err != nil {
 			return ctrl.Result{}, fmt.Errorf("delete volumes: %w", err)
 		}
-	}
-
-	if instanceStatus != nil {
+	} else {
 		if err := computeService.DeleteInstance(openStackMachine, instanceStatus); err != nil {
 			conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceDeleteFailedReason, clusterv1.ConditionSeverityError, "Deleting instance failed: %v", err)
 			return ctrl.Result{}, fmt.Errorf("delete instance: %w", err)

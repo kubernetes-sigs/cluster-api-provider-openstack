@@ -291,15 +291,13 @@ func deleteBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStac
 	}
 
 	// If no instance was created we currently need to check for orphaned
-	// volumes. This requires resolving the instance spec.
-	// TODO: write volumes to status resources on creation so this is no longer required.
+	// volumes.
 	if instanceStatus == nil {
-		instanceSpec, err := bastionToInstanceSpec(openStackCluster, cluster)
-		if err != nil {
-			return err
-		}
-		if err := computeService.DeleteVolumes(instanceSpec); err != nil {
-			return fmt.Errorf("delete volumes: %w", err)
+		bastion := openStackCluster.Spec.Bastion
+		if bastion != nil && bastion.Spec != nil {
+			if err := computeService.DeleteVolumes(bastionName(cluster.Name), bastion.Spec.RootVolume, bastion.Spec.AdditionalBlockDevices); err != nil {
+				return fmt.Errorf("delete volumes: %w", err)
+			}
 		}
 	} else {
 		instanceNS, err := instanceStatus.NetworkStatus()
