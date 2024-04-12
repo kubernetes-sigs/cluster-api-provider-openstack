@@ -22,6 +22,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/go-logr/logr"
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
 	"github.com/gophercloud/gophercloud"
@@ -70,7 +71,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 	}
 
 	BeforeEach(func() {
-		ctx = context.TODO()
+		ctx = logr.NewContext(context.TODO(), GinkgoLogr)
 		testNum++
 		testNamespace = fmt.Sprintf("test-%d", testNum)
 

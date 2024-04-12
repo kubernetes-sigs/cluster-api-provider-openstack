@@ -36,6 +36,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/envtest/komega"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
@@ -119,6 +120,12 @@ var _ = BeforeSuite(func() {
 
 	komega.SetClient(k8sClient)
 	komega.SetContext(ctx)
+
+	// NOTE(mdbooth): We're seeing a "log.SetLogger(...) was never called"
+	// warning with a stack trace through the webhook server. We're passing
+	// a logger to the manager. Is it not passing it to the webhook server?
+	// Observed with controller-runtime 0.16.3.
+	log.SetLogger(GinkgoLogr)
 
 	By("Setting up manager and webhooks")
 	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
