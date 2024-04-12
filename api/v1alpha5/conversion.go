@@ -21,7 +21,7 @@ import (
 	"strings"
 
 	conversion "k8s.io/apimachinery/pkg/conversion"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
 	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
 
@@ -301,7 +301,7 @@ func Convert_v1alpha5_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 	}
 
 	if in.APIServerPort != 0 {
-		out.APIServerPort = pointer.Int(in.APIServerPort)
+		out.APIServerPort = ptr.To(in.APIServerPort)
 	}
 
 	return nil
@@ -333,10 +333,10 @@ func Convert_v1beta1_PortOpts_To_v1alpha5_PortOpts(in *infrav1.PortOpts, out *Po
 
 	if in.Profile != nil {
 		out.Profile = make(map[string]string)
-		if pointer.BoolDeref(in.Profile.OVSHWOffload, false) {
+		if ptr.Deref(in.Profile.OVSHWOffload, false) {
 			(out.Profile)["capabilities"] = "[\"switchdev\"]"
 		}
-		if pointer.BoolDeref(in.Profile.TrustedVF, false) {
+		if ptr.Deref(in.Profile.TrustedVF, false) {
 			(out.Profile)["trusted"] = trueString
 		}
 	}
@@ -435,10 +435,10 @@ func Convert_v1alpha5_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *infrav1.Po
 
 	// Profile is now a struct in v1beta1.
 	if strings.Contains(in.Profile["capabilities"], "switchdev") {
-		out.Profile.OVSHWOffload = pointer.Bool(true)
+		out.Profile.OVSHWOffload = ptr.To(true)
 	}
 	if in.Profile["trusted"] == trueString {
-		out.Profile.TrustedVF = pointer.Bool(true)
+		out.Profile.TrustedVF = ptr.To(true)
 	}
 	return nil
 }
@@ -608,21 +608,21 @@ func Convert_Map_string_To_Interface_To_v1beta1_BindingProfile(in map[string]str
 	for k, v := range in {
 		if k == "capabilities" {
 			if strings.Contains(v, "switchdev") {
-				out.OVSHWOffload = pointer.Bool(true)
+				out.OVSHWOffload = ptr.To(true)
 			}
 		}
 		if k == "trusted" && v == trueString {
-			out.TrustedVF = pointer.Bool(true)
+			out.TrustedVF = ptr.To(true)
 		}
 	}
 	return nil
 }
 
 func Convert_v1beta1_BindingProfile_To_Map_string_To_Interface(in *infrav1.BindingProfile, out map[string]string, _ conversion.Scope) error {
-	if pointer.BoolDeref(in.OVSHWOffload, false) {
+	if ptr.Deref(in.OVSHWOffload, false) {
 		(out)["capabilities"] = "[\"switchdev\"]"
 	}
-	if pointer.BoolDeref(in.TrustedVF, false) {
+	if ptr.Deref(in.TrustedVF, false) {
 		(out)["trusted"] = trueString
 	}
 	return nil

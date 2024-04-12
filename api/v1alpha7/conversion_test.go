@@ -27,7 +27,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	runtimeserializer "k8s.io/apimachinery/pkg/runtime/serializer"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
 	"sigs.k8s.io/controller-runtime/pkg/conversion"
 
@@ -201,31 +201,31 @@ func TestMachineConversionControllerSpecFields(t *testing.T) {
 		{
 			name: "Set ProviderID",
 			modifyUp: func(up *infrav1.OpenStackMachine) {
-				up.Spec.ProviderID = pointer.String("new-provider-id")
+				up.Spec.ProviderID = ptr.To("new-provider-id")
 			},
 			testAfter: func(g gomega.Gomega, after *OpenStackMachine) {
-				g.Expect(after.Spec.ProviderID).To(gomega.Equal(pointer.String("new-provider-id")))
+				g.Expect(after.Spec.ProviderID).To(gomega.Equal(ptr.To("new-provider-id")))
 			},
 			expectIdentityRefDiff: false,
 		},
 		{
 			name: "Set InstanceID",
 			modifyUp: func(up *infrav1.OpenStackMachine) {
-				up.Status.InstanceID = pointer.String("new-instance-id")
+				up.Status.InstanceID = ptr.To("new-instance-id")
 			},
 			testAfter: func(g gomega.Gomega, after *OpenStackMachine) {
-				g.Expect(after.Spec.InstanceID).To(gomega.Equal(pointer.String("new-instance-id")))
+				g.Expect(after.Spec.InstanceID).To(gomega.Equal(ptr.To("new-instance-id")))
 			},
 			expectIdentityRefDiff: false,
 		},
 		{
 			name: "Set ProviderID and non-ignored change",
 			modifyUp: func(up *infrav1.OpenStackMachine) {
-				up.Spec.ProviderID = pointer.String("new-provider-id")
+				up.Spec.ProviderID = ptr.To("new-provider-id")
 				up.Spec.Flavor = "new-flavor"
 			},
 			testAfter: func(g gomega.Gomega, after *OpenStackMachine) {
-				g.Expect(after.Spec.ProviderID).To(gomega.Equal(pointer.String("new-provider-id")))
+				g.Expect(after.Spec.ProviderID).To(gomega.Equal(ptr.To("new-provider-id")))
 				g.Expect(after.Spec.Flavor).To(gomega.Equal("new-flavor"))
 			},
 			expectIdentityRefDiff: true,

@@ -29,7 +29,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	capierrors "sigs.k8s.io/cluster-api/errors"
 	"sigs.k8s.io/cluster-api/util"
@@ -382,7 +382,7 @@ func reconcileNormal(scope *scope.WithLogger, cluster *clusterv1.Cluster, openSt
 	openStackCluster.Status.FailureDomains = make(clusterv1.FailureDomains)
 	for _, az := range availabilityZones {
 		// By default, the AZ is used or not used for control plane nodes depending on the flag
-		found := !pointer.BoolDeref(openStackCluster.Spec.ControlPlaneOmitAvailabilityZone, false)
+		found := !ptr.Deref(openStackCluster.Spec.ControlPlaneOmitAvailabilityZone, false)
 		// If explicit AZs for control plane nodes are given, they override the value
 		if len(openStackCluster.Spec.ControlPlaneAvailabilityZones) > 0 {
 			found = contains(openStackCluster.Spec.ControlPlaneAvailabilityZones, az.ZoneName)
@@ -838,7 +838,7 @@ func reconcileControlPlaneEndpoint(scope *scope.WithLogger, networkingService *n
 
 	// API server load balancer is disabled, but floating IP is not. Create
 	// a floating IP to be attached directly to a control plane host.
-	case !pointer.BoolDeref(openStackCluster.Spec.DisableAPIServerFloatingIP, false):
+	case !ptr.Deref(openStackCluster.Spec.DisableAPIServerFloatingIP, false):
 		fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterResourceName, openStackCluster.Spec.APIServerFloatingIP)
 		if err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("floating IP cannot be got or created: %w", err))
@@ -916,7 +916,7 @@ func (r *OpenStackClusterReconciler) SetupWithManager(ctx context.Context, mgr c
 func handleUpdateOSCError(openstackCluster *infrav1.OpenStackCluster, message error) {
 	err := capierrors.UpdateClusterError
 	openstackCluster.Status.FailureReason = &err
-	openstackCluster.Status.FailureMessage = pointer.String(message.Error())
+	openstackCluster.Status.FailureMessage = ptr.To(message.Error())
 }
 
 // getClusterSubnets retrieves the subnets based on the Subnet filters specified on OpenstackCluster.

@@ -19,7 +19,7 @@ package v1alpha6
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/errors"
 )
@@ -184,7 +184,7 @@ func (r *OpenStackMachine) SetConditions(conditions clusterv1.Conditions) {
 // SetFailure sets the OpenStackMachine status failure reason and failure message.
 func (r *OpenStackMachine) SetFailure(failureReason errors.MachineStatusError, failureMessage error) {
 	r.Status.FailureReason = &failureReason
-	r.Status.FailureMessage = pointer.String(failureMessage.Error())
+	r.Status.FailureMessage = ptr.To(failureMessage.Error())
 }
 
 func init() {

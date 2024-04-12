@@ -31,7 +31,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/pools"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/providers"
 	. "github.com/onsi/gomega"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -59,9 +59,9 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 	openStackCluster := &infrav1.OpenStackCluster{
 		Spec: infrav1.OpenStackClusterSpec{
 			APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
-				Enabled: pointer.Bool(true),
+				Enabled: ptr.To(true),
 			},
-			DisableAPIServerFloatingIP: pointer.Bool(true),
+			DisableAPIServerFloatingIP: ptr.To(true),
 			ControlPlaneEndpoint: &clusterv1.APIEndpoint{
 				Host: apiHostname,
 				Port: 6443,
@@ -193,38 +193,38 @@ func Test_getAPIServerVIPAddress(t *testing.T) {
 					},
 				},
 			},
-			want:      pointer.String("1.2.3.4"),
+			want:      ptr.To("1.2.3.4"),
 			wantError: false,
 		},
 		{
 			name: "API server VIP is API Server Fixed IP",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerFixedIP: pointer.String("1.2.3.4"),
+					APIServerFixedIP: ptr.To("1.2.3.4"),
 				},
 			},
-			want:      pointer.String("1.2.3.4"),
+			want:      ptr.To("1.2.3.4"),
 			wantError: false,
 		},
 		{
 			name: "API server VIP with valid control plane endpoint",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					DisableAPIServerFloatingIP: pointer.Bool(true),
+					DisableAPIServerFloatingIP: ptr.To(true),
 					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
 						Host: apiHostname,
 						Port: 6443,
 					},
 				},
 			},
-			want:      pointer.String("192.168.100.10"),
+			want:      ptr.To("192.168.100.10"),
 			wantError: false,
 		},
 		{
 			name: "API server VIP with invalid control plane endpoint",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					DisableAPIServerFloatingIP: pointer.Bool(true),
+					DisableAPIServerFloatingIP: ptr.To(true),
 					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
 						Host: "invalid-api.test-cluster.test",
 						Port: 6443,
@@ -282,17 +282,17 @@ func Test_getAPIServerFloatingIP(t *testing.T) {
 					},
 				},
 			},
-			want:      pointer.String("1.2.3.4"),
+			want:      ptr.To("1.2.3.4"),
 			wantError: false,
 		},
 		{
 			name: "API server FIP is API Server Floating IP",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerFloatingIP: pointer.String("1.2.3.4"),
+					APIServerFloatingIP: ptr.To("1.2.3.4"),
 				},
 			},
-			want:      pointer.String("1.2.3.4"),
+			want:      ptr.To("1.2.3.4"),
 			wantError: false,
 		},
 		{
@@ -305,7 +305,7 @@ func Test_getAPIServerFloatingIP(t *testing.T) {
 					},
 				},
 			},
-			want:      pointer.String("192.168.100.10"),
+			want:      ptr.To("192.168.100.10"),
 			wantError: false,
 		},
 		{

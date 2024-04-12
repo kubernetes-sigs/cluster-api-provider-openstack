@@ -28,7 +28,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/cluster-api/test/framework/clusterctl"
 	"sigs.k8s.io/cluster-api/test/framework/kubernetesversions"
 	"sigs.k8s.io/cluster-api/test/framework/kubetest"
@@ -81,8 +81,8 @@ var _ = Describe("conformance tests", func() {
 					Namespace:                namespace.Name,
 					ClusterName:              name,
 					KubernetesVersion:        kubernetesVersion,
-					ControlPlaneMachineCount: pointer.Int64(controlPlaneMachineCount),
-					WorkerMachineCount:       pointer.Int64(workerMachineCount),
+					ControlPlaneMachineCount: ptr.To(controlPlaneMachineCount),
+					WorkerMachineCount:       ptr.To(workerMachineCount),
 				},
 				WaitForClusterIntervals:      e2eCtx.E2EConfig.GetIntervals(specName, "wait-cluster"),
 				WaitForControlPlaneIntervals: e2eCtx.E2EConfig.GetIntervals(specName, "wait-control-plane"),

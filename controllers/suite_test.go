@@ -31,7 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -150,7 +150,7 @@ var _ = Describe("When calling getOrCreate", func() {
 		machine := &clusterv1.Machine{}
 		openStackMachine := &infrav1.OpenStackMachine{
 			Status: infrav1.OpenStackMachineStatus{
-				InstanceID: pointer.String("machine-uuid"),
+				InstanceID: ptr.To("machine-uuid"),
 			},
 		}
 

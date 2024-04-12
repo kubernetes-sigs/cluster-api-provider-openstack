@@ -22,7 +22,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
@@ -37,7 +37,7 @@ var _ = Describe("OpenStackMachine API validations", func() {
 		// Initialise a basic machine object in the correct namespace
 		machine = &infrav1.OpenStackMachine{
 			Spec: infrav1.OpenStackMachineSpec{
-				Image: infrav1.ImageParam{Filter: &infrav1.ImageFilter{Name: pointer.String("test-image")}},
+				Image: infrav1.ImageParam{Filter: &infrav1.ImageFilter{Name: ptr.To("test-image")}},
 			},
 		}
 		machine.Namespace = namespace.Name
@@ -53,11 +53,11 @@ var _ = Describe("OpenStackMachine API validations", func() {
 		Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
 
 		By("Setting the providerID")
-		machine.Spec.ProviderID = pointer.String("foo")
+		machine.Spec.ProviderID = ptr.To("foo")
 		Expect(k8sClient.Update(ctx, machine)).To(Succeed(), "Setting providerID should succeed")
 
 		By("Modifying the providerID")
-		machine.Spec.ProviderID = pointer.String("bar")
+		machine.Spec.ProviderID = ptr.To("bar")
 		Expect(k8sClient.Update(ctx, machine)).NotTo(Succeed(), "Updating providerID should fail")
 	})
 

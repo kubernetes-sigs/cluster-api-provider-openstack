@@ -25,7 +25,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/external"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
@@ -79,7 +79,7 @@ func (c createOpts) ToNetworkCreateMap() (map[string]interface{}, error) {
 // - no external network was given in the cluster spec and no external network was found
 // - the user has set OpenStackCluster.Spec.DisableExternalNetwork to true.
 func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCluster) error {
-	if pointer.BoolDeref(openStackCluster.Spec.DisableExternalNetwork, false) {
+	if ptr.Deref(openStackCluster.Spec.DisableExternalNetwork, false) {
 		s.scope.Logger().Info("External network is disabled - proceeding with internal network only")
 		openStackCluster.Status.ExternalNetwork = nil
 		return nil
@@ -144,7 +144,7 @@ func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, c
 		Name:         networkName,
 	}
 
-	if pointer.BoolDeref(openStackCluster.Spec.DisablePortSecurity, false) {
+	if ptr.Deref(openStackCluster.Spec.DisablePortSecurity, false) {
 		opts.PortSecurityEnabled = gophercloud.Disabled
 	}
 
@@ -299,7 +299,7 @@ type GetNetworkOpts func(networks.ListOptsBuilder) networks.ListOptsBuilder
 func ExternalNetworksOnly(opts networks.ListOptsBuilder) networks.ListOptsBuilder {
 	return &external.ListOptsExt{
 		ListOptsBuilder: opts,
-		External:        pointer.Bool(true),
+		External:        ptr.To(true),
 	}
 }
 

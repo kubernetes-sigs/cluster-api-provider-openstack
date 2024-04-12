@@ -27,7 +27,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	runtimeserializer "k8s.io/apimachinery/pkg/runtime/serializer"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
 	"sigs.k8s.io/controller-runtime/pkg/conversion"
 
@@ -221,7 +221,7 @@ func TestNetworksToPorts(t *testing.T) {
 				Ports: []infrav1.PortOpts{
 					{
 						Network: &infrav1.NetworkParam{
-							ID: pointer.String(networkuuid),
+							ID: ptr.To(networkuuid),
 						},
 					},
 				},
@@ -282,12 +282,12 @@ func TestNetworksToPorts(t *testing.T) {
 				Ports: []infrav1.PortOpts{
 					{
 						Network: &infrav1.NetworkParam{
-							ID: pointer.String(networkuuid),
+							ID: ptr.To(networkuuid),
 						},
 						FixedIPs: []infrav1.FixedIP{
 							{
 								Subnet: &infrav1.SubnetParam{
-									ID: pointer.String(subnetuuid),
+									ID: ptr.To(subnetuuid),
 								},
 							},
 						},
@@ -326,7 +326,7 @@ func TestNetworksToPorts(t *testing.T) {
 				Ports: []infrav1.PortOpts{
 					{
 						Network: &infrav1.NetworkParam{
-							ID: pointer.String(networkuuid),
+							ID: ptr.To(networkuuid),
 						},
 						FixedIPs: []infrav1.FixedIP{
 							{
@@ -388,19 +388,19 @@ func TestNetworksToPorts(t *testing.T) {
 				Ports: []infrav1.PortOpts{
 					{
 						Network: &infrav1.NetworkParam{
-							ID: pointer.String(networkuuid),
+							ID: ptr.To(networkuuid),
 						},
 						FixedIPs: []infrav1.FixedIP{
 							{
 								Subnet: &infrav1.SubnetParam{
-									ID: pointer.String(subnetuuid),
+									ID: ptr.To(subnetuuid),
 								},
 							},
 						},
 					},
 					{
 						Network: &infrav1.NetworkParam{
-							ID: pointer.String(networkuuid),
+							ID: ptr.To(networkuuid),
 						},
 						FixedIPs: []infrav1.FixedIP{
 							{
@@ -465,7 +465,7 @@ func TestPortOptsConvertTo(t *testing.T) {
 	}
 	securityGroupFilterMerged := []infrav1.SecurityGroupParam{
 		{Filter: &infrav1.SecurityGroupFilter{Name: "one"}},
-		{ID: pointer.String("654cba")},
+		{ID: ptr.To("654cba")},
 		{ID: &uuids[0]},
 		{ID: &uuids[1]},
 	}
@@ -474,8 +474,8 @@ func TestPortOptsConvertTo(t *testing.T) {
 		"trusted":      "true",
 	}
 	convertedPortProfile := infrav1.BindingProfile{
-		OVSHWOffload: pointer.Bool(true),
-		TrustedVF:    pointer.Bool(true),
+		OVSHWOffload: ptr.To(true),
+		TrustedVF:    ptr.To(true),
 	}
 
 	tests := []struct {
@@ -597,31 +597,31 @@ func TestMachineConversionControllerSpecFields(t *testing.T) {
 		{
 			name: "Set ProviderID",
 			modifyUp: func(up *infrav1.OpenStackMachine) {
-				up.Spec.ProviderID = pointer.String("new-provider-id")
+				up.Spec.ProviderID = ptr.To("new-provider-id")
 			},
 			testAfter: func(after *OpenStackMachine) {
-				g.Expect(after.Spec.ProviderID).To(gomega.Equal(pointer.String("new-provider-id")))
+				g.Expect(after.Spec.ProviderID).To(gomega.Equal(ptr.To("new-provider-id")))
 			},
 			expectNetworkDiff: false,
 		},
 		{
 			name: "Set InstanceID",
 			modifyUp: func(up *infrav1.OpenStackMachine) {
-				up.Status.InstanceID = pointer.String("new-instance-id")
+				up.Status.InstanceID = ptr.To("new-instance-id")
 			},
 			testAfter: func(after *OpenStackMachine) {
-				g.Expect(after.Spec.InstanceID).To(gomega.Equal(pointer.String("new-instance-id")))
+				g.Expect(after.Spec.InstanceID).To(gomega.Equal(ptr.To("new-instance-id")))
 			},
 			expectNetworkDiff: false,
 		},
 		{
 			name: "Set ProviderID and non-ignored change",
 			modifyUp: func(up *infrav1.OpenStackMachine) {
-				up.Spec.ProviderID = pointer.String("new-provider-id")
+				up.Spec.ProviderID = ptr.To("new-provider-id")
 				up.Spec.Flavor = "new-flavor"
 			},
 			testAfter: func(after *OpenStackMachine) {
-				g.Expect(after.Spec.ProviderID).To(gomega.Equal(pointer.String("new-provider-id")))
+				g.Expect(after.Spec.ProviderID).To(gomega.Equal(ptr.To("new-provider-id")))
 				g.Expect(after.Spec.Flavor).To(gomega.Equal("new-flavor"))
 			},
 			expectNetworkDiff: true,

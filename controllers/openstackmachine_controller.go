@@ -30,7 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	capierrors "sigs.k8s.io/cluster-api/errors"
 	ipamv1 "sigs.k8s.io/cluster-api/exp/ipam/api/v1beta1"
@@ -619,7 +619,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	}
 
 	state := instanceStatus.State()
-	openStackMachine.Status.InstanceID = pointer.String(instanceStatus.ID())
+	openStackMachine.Status.InstanceID = ptr.To(instanceStatus.ID())
 	openStackMachine.Status.InstanceState = &state
 
 	instanceNS, err := instanceStatus.NetworkStatus()
@@ -652,7 +652,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		conditions.MarkTrue(openStackMachine, infrav1.InstanceReadyCondition)
 
 		// Set properties required by CAPI machine controller
-		openStackMachine.Spec.ProviderID = pointer.String(fmt.Sprintf("openstack:///%s", instanceStatus.ID()))
+		openStackMachine.Spec.ProviderID = ptr.To(fmt.Sprintf("openstack:///%s", instanceStatus.ID()))
 		openStackMachine.Status.Ready = true
 	case infrav1.InstanceStateError:
 		// If the machine has a NodeRef then it must have been working at some point,
@@ -715,7 +715,7 @@ func (r *OpenStackMachineReconciler) reconcileAPIServerLoadBalancer(scope *scope
 			conditions.MarkFalse(openStackMachine, infrav1.APIServerIngressReadyCondition, infrav1.LoadBalancerMemberErrorReason, clusterv1.ConditionSeverityError, "Reconciling load balancer member failed: %v", err)
 			return fmt.Errorf("reconcile load balancer member: %w", err)
 		}
-	} else if !pointer.BoolDeref(openStackCluster.Spec.DisableAPIServerFloatingIP, false) {
+	} else if !ptr.Deref(openStackCluster.Spec.DisableAPIServerFloatingIP, false) {
 		var floatingIPAddress *string
 		switch {
 		case openStackCluster.Spec.ControlPlaneEndpoint != nil && openStackCluster.Spec.ControlPlaneEndpoint.IsValid():

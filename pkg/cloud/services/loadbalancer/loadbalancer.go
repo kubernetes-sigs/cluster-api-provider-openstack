@@ -30,7 +30,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/pools"
 	"k8s.io/apimachinery/pkg/util/wait"
 	utilsnet "k8s.io/utils/net"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
@@ -98,7 +98,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 		}
 	}
 
-	if !pointer.BoolDeref(openStackCluster.Spec.DisableAPIServerFloatingIP, false) {
+	if !ptr.Deref(openStackCluster.Spec.DisableAPIServerFloatingIP, false) {
 		floatingIPAddress, err := getAPIServerFloatingIP(openStackCluster)
 		if err != nil {
 			return false, err
@@ -155,7 +155,7 @@ func getAPIServerVIPAddress(openStackCluster *infrav1.OpenStackCluster) (*string
 		return openStackCluster.Spec.APIServerFixedIP, nil
 
 	// If we are using the VIP as the control plane endpoint, use any value explicitly set on the control plane endpoint
-	case pointer.BoolDeref(openStackCluster.Spec.DisableAPIServerFloatingIP, false) && openStackCluster.Spec.ControlPlaneEndpoint != nil && openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
+	case ptr.Deref(openStackCluster.Spec.DisableAPIServerFloatingIP, false) && openStackCluster.Spec.ControlPlaneEndpoint != nil && openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
 		fixedIPAddress, err := lookupHost(openStackCluster.Spec.ControlPlaneEndpoint.Host)
 		if err != nil {
 			return nil, fmt.Errorf("lookup host: %w", err)

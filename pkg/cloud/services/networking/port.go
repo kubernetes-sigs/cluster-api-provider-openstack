@@ -30,7 +30,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
@@ -125,11 +125,11 @@ func (s *Service) GetPortForExternalNetwork(instanceID string, externalNetworkID
 
 func (s *Service) CreatePort(eventObject runtime.Object, portSpec *infrav1.ResolvedPortSpec) (*ports.Port, error) {
 	var addressPairs []ports.AddressPair
-	if !pointer.BoolDeref(portSpec.DisablePortSecurity, false) {
+	if !ptr.Deref(portSpec.DisablePortSecurity, false) {
 		for _, ap := range portSpec.AllowedAddressPairs {
 			addressPairs = append(addressPairs, ports.AddressPair{
 				IPAddress:  ap.IPAddress,
-				MACAddress: pointer.StringDeref(ap.MACAddress, ""),
+				MACAddress: ptr.Deref(ap.MACAddress, ""),
 			})
 		}
 	}
@@ -139,8 +139,8 @@ func (s *Service) CreatePort(eventObject runtime.Object, portSpec *infrav1.Resol
 		fixedIPs = make([]ports.IP, len(portSpec.FixedIPs))
 		for i, fixedIP := range portSpec.FixedIPs {
 			fixedIPs[i] = ports.IP{
-				SubnetID:  pointer.StringDeref(fixedIP.SubnetID, ""),
-				IPAddress: pointer.StringDeref(fixedIP.IPAddress, ""),
+				SubnetID:  ptr.Deref(fixedIP.SubnetID, ""),
+				IPAddress: ptr.Deref(fixedIP.IPAddress, ""),
 			}
 		}
 	}
@@ -160,7 +160,7 @@ func (s *Service) CreatePort(eventObject runtime.Object, portSpec *infrav1.Resol
 		NetworkID:             portSpec.NetworkID,
 		Description:           portSpec.Description,
 		AdminStateUp:          portSpec.AdminStateUp,
-		MACAddress:            pointer.StringDeref(portSpec.MACAddress, ""),
+		MACAddress:            ptr.Deref(portSpec.MACAddress, ""),
 		AllowedAddressPairs:   addressPairs,
 		ValueSpecs:            valueSpecs,
 		PropagateUplinkStatus: portSpec.PropagateUplinkStatus,
@@ -184,8 +184,8 @@ func (s *Service) CreatePort(eventObject runtime.Object, portSpec *infrav1.Resol
 
 	portsBindingOpts := portsbinding.CreateOptsExt{
 		CreateOptsBuilder: builder,
-		HostID:            pointer.StringDeref(portSpec.HostID, ""),
-		VNICType:          pointer.StringDeref(portSpec.VNICType, ""),
+		HostID:            ptr.Deref(portSpec.HostID, ""),
+		VNICType:          ptr.Deref(portSpec.VNICType, ""),
 		Profile:           getPortProfile(portSpec.Profile),
 	}
 	builder = portsBindingOpts
@@ -203,7 +203,7 @@ func (s *Service) CreatePort(eventObject runtime.Object, portSpec *infrav1.Resol
 		}
 	}
 	record.Eventf(eventObject, "SuccessfulCreatePort", "Created port %s with id %s", port.Name, port.ID)
-	if pointer.BoolDeref(portSpec.Trunk, false) {
+	if ptr.Deref(portSpec.Trunk, false) {
 		trunk, err := s.getOrCreateTrunkForPort(eventObject, port)
 		if err != nil {
 			record.Warnf(eventObject, "FailedCreateTrunk", "Failed to create trunk for port %s: %v", port.Name, err)
@@ -227,10 +227,10 @@ func getPortProfile(p *infrav1.BindingProfile) map[string]interface{} {
 
 	// if p.OVSHWOffload is true, we need to set the profile
 	// to enable hardware offload for the port
-	if pointer.BoolDeref(p.OVSHWOffload, false) {
+	if ptr.Deref(p.OVSHWOffload, false) {
 		portProfile["capabilities"] = []string{"switchdev"}
 	}
-	if pointer.BoolDeref(p.TrustedVF, false) {
+	if ptr.Deref(p.TrustedVF, false) {
 		portProfile["trusted"] = true
 	}
 
@@ -384,7 +384,7 @@ func (s *Service) ConstructPorts(spec *infrav1.OpenStackMachineSpec, clusterReso
 	// trunk support is required if any port has trunk enabled
 	portUsesTrunk := func() bool {
 		for _, port := range resolvedPorts {
-			if pointer.BoolDeref(port.Trunk, false) {
+			if ptr.Deref(port.Trunk, false) {
 				return true
 			}
 		}

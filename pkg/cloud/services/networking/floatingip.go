@@ -24,7 +24,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -38,7 +38,7 @@ func (s *Service) GetOrCreateFloatingIP(eventObject runtime.Object, openStackClu
 	var err error
 	var fpCreateOpts floatingips.CreateOpts
 
-	if pointer.StringDeref(ip, "") != "" {
+	if ptr.Deref(ip, "") != "" {
 		fp, err = s.GetFloatingIP(*ip)
 		if err != nil {
 			return nil, err
