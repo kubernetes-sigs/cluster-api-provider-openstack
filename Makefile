@@ -133,14 +133,15 @@ ifdef KUBEBUILDER_ASSETS_DIR
 	setup_envtest_extra_args += --bin-dir $(KUBEBUILDER_ASSETS_DIR)
 endif
 
+.PHONY: kubebuilder_assets
+kubebuilder_assets: $(SETUP_ENVTEST)
+	@echo Fetching assets for $(KUBEBUILDER_ENVTEST_KUBERNETES_VERSION)
+	$(eval KUBEBUILDER_ASSETS ?= $(shell $(SETUP_ENVTEST) use --use-env -p path $(setup_envtest_extra_args) $(KUBEBUILDER_ENVTEST_KUBERNETES_VERSION)))
+
 .PHONY: test
 TEST_PATHS ?= ./...
-test: $(SETUP_ENVTEST) ## Run tests
-	set -xeuf -o pipefail; \
-	if [ -z "$(KUBEBUILDER_ASSETS)" ]; then \
-		KUBEBUILDER_ASSETS=`$(SETUP_ENVTEST) use --use-env -p path $(setup_envtest_extra_args) $(KUBEBUILDER_ENVTEST_KUBERNETES_VERSION)`; \
-	fi; \
-	KUBEBUILDER_ASSETS="$$KUBEBUILDER_ASSETS" go test -v $(TEST_PATHS) $(TEST_ARGS)
+test: kubebuilder_assets
+	KUBEBUILDER_ASSETS="$(KUBEBUILDER_ASSETS)" go test -v $(TEST_PATHS) $(TEST_ARGS)
 
 E2E_TEMPLATES_DIR=test/e2e/data/infrastructure-openstack
 E2E_KUSTOMIZE_DIR=test/e2e/data/kustomize
@@ -160,7 +161,8 @@ e2e-templates: $(addprefix $(E2E_NO_ARTIFACT_TEMPLATES_DIR)/, \
 		 cluster-template.yaml \
 		 cluster-template-flatcar.yaml \
                  cluster-template-k8s-upgrade.yaml \
-		 cluster-template-flatcar-sysext.yaml)
+		 cluster-template-flatcar-sysext.yaml \
+		 cluster-template-no-bastion.yaml)
 # Currently no templates that require CI artifacts
 # $(addprefix $(E2E_TEMPLATES_DIR)/, add-templates-here.yaml) \
 
@@ -248,7 +250,7 @@ modules: ## Runs go mod to ensure proper vendoring.
 	cd $(TOOLS_DIR); go mod tidy
 
 .PHONY: generate
-generate: generate-controller-gen generate-conversion-gen generate-go generate-manifests generate-api-docs ## Generate all generated code
+generate: templates generate-controller-gen generate-conversion-gen generate-go generate-manifests generate-api-docs ## Generate all generated code
 
 .PHONY: generate-go
 generate-go: $(MOCKGEN)
@@ -268,6 +270,7 @@ generate-conversion-gen: $(CONVERSION_GEN)
 		--input-dirs=$(capo_module)/api/v1alpha6 \
 		--input-dirs=$(capo_module)/api/v1alpha7 \
 		--extra-dirs=$(capo_module)/pkg/utils/optional \
+		--extra-dirs=$(capo_module)/pkg/utils/conversioncommon \
 		--output-file-base=zz_generated.conversion \
 		--trim-path-prefix=$(capo_module)/ \
 		--go-header-file=./hack/boilerplate/boilerplate.generatego.txt
@@ -289,7 +292,7 @@ generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
 		rbac:roleName=manager-role
 
 .PHONY: generate-api-docs
-generate-api-docs: generate-api-docs-v1beta1 generate-api-docs-v1alpha7 generate-api-docs-v1alpha6
+generate-api-docs: generate-api-docs-v1beta1 generate-api-docs-v1alpha7 generate-api-docs-v1alpha6 generate-api-docs-v1alpha1
 generate-api-docs-%: $(GEN_CRD_API_REFERENCE_DOCS) FORCE
 	$(GEN_CRD_API_REFERENCE_DOCS) \
 		-api-dir=./api/$* \

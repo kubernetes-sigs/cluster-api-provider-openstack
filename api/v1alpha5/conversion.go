@@ -17,14 +17,16 @@ limitations under the License.
 package v1alpha5
 
 import (
+	"errors"
 	"strings"
 
 	conversion "k8s.io/apimachinery/pkg/conversion"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
 	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/conversioncommon"
 )
 
 var _ ctrlconversion.Convertible = &OpenStackCluster{}
@@ -205,8 +207,8 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(in *i
 		return err
 	}
 
-	if in.ExternalNetwork != nil && in.ExternalNetwork.ID != "" {
-		out.ExternalNetworkID = in.ExternalNetwork.ID
+	if in.ExternalNetwork != nil && in.ExternalNetwork.ID != nil {
+		out.ExternalNetworkID = *in.ExternalNetwork.ID
 	}
 
 	if len(in.ManagedSubnets) > 0 {
@@ -216,7 +218,7 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha5_OpenStackClusterSpec(in *i
 
 	if in.Subnets != nil {
 		if len(in.Subnets) >= 1 {
-			if err := Convert_v1beta1_SubnetFilter_To_v1alpha5_SubnetFilter(&in.Subnets[0], &out.Subnet, s); err != nil {
+			if err := Convert_v1beta1_SubnetParam_To_v1alpha5_SubnetFilter(&in.Subnets[0], &out.Subnet, s); err != nil {
 				return err
 			}
 		}
@@ -246,18 +248,18 @@ func Convert_v1alpha5_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 	}
 
 	if in.ExternalNetworkID != "" {
-		out.ExternalNetwork = &infrav1.NetworkFilter{
-			ID: in.ExternalNetworkID,
+		out.ExternalNetwork = &infrav1.NetworkParam{
+			ID: &in.ExternalNetworkID,
 		}
 	}
 
 	emptySubnet := SubnetFilter{}
 	if in.Subnet != emptySubnet {
-		subnet := infrav1.SubnetFilter{}
-		if err := Convert_v1alpha5_SubnetFilter_To_v1beta1_SubnetFilter(&in.Subnet, &subnet, s); err != nil {
+		subnet := infrav1.SubnetParam{}
+		if err := Convert_v1alpha5_SubnetFilter_To_v1beta1_SubnetParam(&in.Subnet, &subnet, s); err != nil {
 			return err
 		}
-		out.Subnets = []infrav1.SubnetFilter{subnet}
+		out.Subnets = []infrav1.SubnetParam{subnet}
 	}
 
 	if len(in.NodeCIDR) > 0 {
@@ -300,7 +302,7 @@ func Convert_v1alpha5_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 	}
 
 	if in.APIServerPort != 0 {
-		out.APIServerPort = pointer.Int(in.APIServerPort)
+		out.APIServerPort = ptr.To(in.APIServerPort)
 	}
 
 	return nil
@@ -324,23 +326,18 @@ func Convert_v1beta1_PortOpts_To_v1alpha5_PortOpts(in *infrav1.PortOpts, out *Po
 	if len(in.SecurityGroups) > 0 {
 		out.SecurityGroupFilters = make([]SecurityGroupParam, len(in.SecurityGroups))
 		for i := range in.SecurityGroups {
-			securityGroupParam := &out.SecurityGroupFilters[i]
-			if in.SecurityGroups[i].ID != "" {
-				securityGroupParam.UUID = in.SecurityGroups[i].ID
-			} else {
-				if err := Convert_v1beta1_SecurityGroupFilter_To_v1alpha5_SecurityGroupFilter(&in.SecurityGroups[i], &securityGroupParam.Filter, s); err != nil {
-					return err
-				}
+			if err := Convert_v1beta1_SecurityGroupParam_To_v1alpha5_SecurityGroupParam(&in.SecurityGroups[i], &out.SecurityGroupFilters[i], s); err != nil {
+				return err
 			}
 		}
 	}
 
 	if in.Profile != nil {
 		out.Profile = make(map[string]string)
-		if pointer.BoolDeref(in.Profile.OVSHWOffload, false) {
+		if ptr.Deref(in.Profile.OVSHWOffload, false) {
 			(out.Profile)["capabilities"] = "[\"switchdev\"]"
 		}
-		if pointer.BoolDeref(in.Profile.TrustedVF, false) {
+		if ptr.Deref(in.Profile.TrustedVF, false) {
 			(out.Profile)["trusted"] = trueString
 		}
 	}
@@ -355,18 +352,16 @@ func Convert_v1alpha5_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in *O
 	}
 
 	if in.ServerGroupID != "" {
-		out.ServerGroup = &infrav1.ServerGroupFilter{ID: in.ServerGroupID}
-	} else {
-		out.ServerGroup = &infrav1.ServerGroupFilter{}
+		out.ServerGroup = &infrav1.ServerGroupParam{ID: &in.ServerGroupID}
 	}
 
-	imageFilter := infrav1.ImageFilter{}
+	imageParam := infrav1.ImageParam{}
 	if in.ImageUUID != "" {
-		imageFilter.ID = &in.ImageUUID
+		imageParam.ID = &in.ImageUUID
 	} else if in.Image != "" { // Only add name when ID is not set, in v1beta1 it's not possible to set both.
-		imageFilter.Name = &in.Image
+		imageParam.Filter = &infrav1.ImageFilter{Name: &in.Image}
 	}
-	out.Image = imageFilter
+	out.Image = imageParam
 
 	if in.IdentityRef != nil {
 		out.IdentityRef = &infrav1.OpenStackIdentityReference{Name: in.IdentityRef.Name}
@@ -394,55 +389,57 @@ func Convert_v1alpha5_PortOpts_To_v1beta1_PortOpts(in *PortOpts, out *infrav1.Po
 	}
 
 	if len(in.SecurityGroups) > 0 || len(in.SecurityGroupFilters) > 0 {
-		out.SecurityGroups = make([]infrav1.SecurityGroupFilter, 0, len(in.SecurityGroups)+len(in.SecurityGroupFilters))
+		out.SecurityGroups = make([]infrav1.SecurityGroupParam, 0, len(in.SecurityGroups)+len(in.SecurityGroupFilters))
 		for i := range in.SecurityGroupFilters {
 			sgParam := &in.SecurityGroupFilters[i]
 			switch {
 			case sgParam.UUID != "":
-				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{ID: sgParam.UUID})
+				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupParam{ID: &sgParam.UUID})
 			case sgParam.Name != "":
-				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{Name: sgParam.Name})
+				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupParam{Filter: &infrav1.SecurityGroupFilter{Name: sgParam.Name}})
 			case sgParam.Filter != (SecurityGroupFilter{}):
-				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{})
+				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupParam{})
 				outSG := &out.SecurityGroups[len(out.SecurityGroups)-1]
-				if err := Convert_v1alpha5_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(&sgParam.Filter, outSG, s); err != nil {
+				outSG.Filter = &infrav1.SecurityGroupFilter{}
+				if err := Convert_v1alpha5_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(&sgParam.Filter, outSG.Filter, s); err != nil {
 					return err
 				}
 			}
 		}
-		for _, id := range in.SecurityGroups {
-			out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{ID: id})
+		for i := range in.SecurityGroups {
+			out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupParam{ID: &in.SecurityGroups[i]})
 		}
 	}
 
 	if len(in.SecurityGroups) > 0 || len(in.SecurityGroupFilters) > 0 {
-		out.SecurityGroups = make([]infrav1.SecurityGroupFilter, 0, len(in.SecurityGroups)+len(in.SecurityGroupFilters))
+		out.SecurityGroups = make([]infrav1.SecurityGroupParam, 0, len(in.SecurityGroups)+len(in.SecurityGroupFilters))
 		for i := range in.SecurityGroupFilters {
 			sgParam := &in.SecurityGroupFilters[i]
 			switch {
 			case sgParam.UUID != "":
-				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{ID: sgParam.UUID})
+				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupParam{ID: &sgParam.UUID})
 			case sgParam.Name != "":
-				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{Name: sgParam.Name})
+				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupParam{Filter: &infrav1.SecurityGroupFilter{Name: sgParam.Name}})
 			case sgParam.Filter != (SecurityGroupFilter{}):
-				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{})
+				out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupParam{})
 				outSG := &out.SecurityGroups[len(out.SecurityGroups)-1]
-				if err := Convert_v1alpha5_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(&sgParam.Filter, outSG, s); err != nil {
+				outSG.Filter = &infrav1.SecurityGroupFilter{}
+				if err := Convert_v1alpha5_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(&sgParam.Filter, outSG.Filter, s); err != nil {
 					return err
 				}
 			}
 		}
-		for _, id := range in.SecurityGroups {
-			out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupFilter{ID: id})
+		for i := range in.SecurityGroups {
+			out.SecurityGroups = append(out.SecurityGroups, infrav1.SecurityGroupParam{ID: &in.SecurityGroups[i]})
 		}
 	}
 
 	// Profile is now a struct in v1beta1.
 	if strings.Contains(in.Profile["capabilities"], "switchdev") {
-		out.Profile.OVSHWOffload = pointer.Bool(true)
+		out.Profile.OVSHWOffload = ptr.To(true)
 	}
 	if in.Profile["trusted"] == trueString {
-		out.Profile.TrustedVF = pointer.Bool(true)
+		out.Profile.TrustedVF = ptr.To(true)
 	}
 	return nil
 }
@@ -455,6 +452,10 @@ func Convert_v1alpha5_Instance_To_v1beta1_BastionStatus(in *Instance, out *infra
 	out.State = infrav1.InstanceState(in.State)
 	out.IP = in.IP
 	out.FloatingIP = in.FloatingIP
+
+	if out.Resolved == nil {
+		out.Resolved = &infrav1.ResolvedMachineSpec{}
+	}
 	out.Resolved.ServerGroupID = in.ServerGroupID
 	return nil
 }
@@ -467,7 +468,9 @@ func Convert_v1beta1_BastionStatus_To_v1alpha5_Instance(in *infrav1.BastionStatu
 	out.State = InstanceState(in.State)
 	out.IP = in.IP
 	out.FloatingIP = in.FloatingIP
-	out.ServerGroupID = in.Resolved.ServerGroupID
+	if in.Resolved != nil {
+		out.ServerGroupID = in.Resolved.ServerGroupID
+	}
 	return nil
 }
 
@@ -514,54 +517,91 @@ func Convert_v1beta1_NetworkStatus_To_v1alpha5_Network(in *infrav1.NetworkStatus
 	return nil
 }
 
-func Convert_v1alpha5_SecurityGroupParam_To_v1beta1_SecurityGroupFilter(in *SecurityGroupParam, out *infrav1.SecurityGroupFilter, s conversion.Scope) error {
-	// SecurityGroupParam is replaced by its contained SecurityGroupFilter in v1beta1
-	err := Convert_v1alpha5_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(&in.Filter, out, s)
-	if err != nil {
-		return err
+func Convert_v1alpha5_SecurityGroupParam_To_v1beta1_SecurityGroupParam(in *SecurityGroupParam, out *infrav1.SecurityGroupParam, s conversion.Scope) error {
+	if in.UUID != "" {
+		out.ID = &in.UUID
+		return nil
 	}
 
-	if in.UUID != "" {
-		out.ID = in.UUID
-	}
+	outFilter := &infrav1.SecurityGroupFilter{}
 	if in.Name != "" {
-		out.Name = in.Name
+		outFilter.Name = in.Name
+	} else {
+		// SecurityGroupParam is replaced by its contained SecurityGroupFilter in v1beta1
+		err := Convert_v1alpha5_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(&in.Filter, outFilter, s)
+		if err != nil {
+			return err
+		}
+	}
+
+	if !outFilter.IsZero() {
+		out.Filter = outFilter
 	}
 	return nil
 }
 
-func Convert_v1beta1_SecurityGroupFilter_To_v1alpha5_SecurityGroupParam(in *infrav1.SecurityGroupFilter, out *SecurityGroupParam, s conversion.Scope) error {
-	// SecurityGroupParam is replaced by its contained SecurityGroupFilter in v1beta1
-	err := Convert_v1beta1_SecurityGroupFilter_To_v1alpha5_SecurityGroupFilter(in, &out.Filter, s)
-	if err != nil {
-		return err
+func Convert_v1beta1_SecurityGroupParam_To_v1alpha5_SecurityGroupParam(in *infrav1.SecurityGroupParam, out *SecurityGroupParam, s conversion.Scope) error {
+	if in.ID != nil {
+		out.UUID = *in.ID
+		return nil
 	}
 
+	if in.Filter != nil {
+		err := Convert_v1beta1_SecurityGroupFilter_To_v1alpha5_SecurityGroupFilter(in.Filter, &out.Filter, s)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func Convert_v1alpha5_SubnetParam_To_v1beta1_SubnetParam(in *SubnetParam, out *infrav1.SubnetParam, s conversion.Scope) error {
+	if in.UUID != "" {
+		out.ID = &in.UUID
+		return nil
+	}
+	outFilter := &infrav1.SubnetFilter{}
+	if err := Convert_v1alpha5_SubnetFilter_To_v1beta1_SubnetFilter(&in.Filter, outFilter, s); err != nil {
+		return err
+	}
+	if !outFilter.IsZero() {
+		out.Filter = outFilter
+	}
+	return nil
+}
+
+func Convert_v1beta1_SubnetParam_To_v1alpha5_SubnetParam(in *infrav1.SubnetParam, out *SubnetParam, s conversion.Scope) error {
+	if in.ID != nil {
+		out.UUID = *in.ID
+		return nil
+	}
+
+	if in.Filter != nil {
+		if err := Convert_v1beta1_SubnetFilter_To_v1alpha5_SubnetFilter(in.Filter, &out.Filter, s); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func Convert_v1alpha5_SubnetFilter_To_v1beta1_SubnetParam(in *SubnetFilter, out *infrav1.SubnetParam, s conversion.Scope) error {
 	if in.ID != "" {
-		out.UUID = in.ID
+		out.ID = &in.ID
+		return nil
 	}
-	if in.Name != "" {
-		out.Name = in.Name
-	}
-	return nil
+	out.Filter = &infrav1.SubnetFilter{}
+	return Convert_v1alpha5_SubnetFilter_To_v1beta1_SubnetFilter(in, out.Filter, s)
 }
 
-func Convert_v1alpha5_SubnetParam_To_v1beta1_SubnetFilter(in *SubnetParam, out *infrav1.SubnetFilter, s conversion.Scope) error {
-	if err := Convert_v1alpha5_SubnetFilter_To_v1beta1_SubnetFilter(&in.Filter, out, s); err != nil {
-		return err
+func Convert_v1beta1_SubnetParam_To_v1alpha5_SubnetFilter(in *infrav1.SubnetParam, out *SubnetFilter, s conversion.Scope) error {
+	if in.ID != nil {
+		out.ID = *in.ID
+		return nil
 	}
-	if in.UUID != "" {
-		out.ID = in.UUID
+	if in.Filter != nil {
+		return Convert_v1beta1_SubnetFilter_To_v1alpha5_SubnetFilter(in.Filter, out, s)
 	}
-	return nil
-}
-
-func Convert_v1beta1_SubnetFilter_To_v1alpha5_SubnetParam(in *infrav1.SubnetFilter, out *SubnetParam, s conversion.Scope) error {
-	if err := Convert_v1beta1_SubnetFilter_To_v1alpha5_SubnetFilter(in, &out.Filter, s); err != nil {
-		return err
-	}
-	out.UUID = in.ID
-
 	return nil
 }
 
@@ -569,21 +609,21 @@ func Convert_Map_string_To_Interface_To_v1beta1_BindingProfile(in map[string]str
 	for k, v := range in {
 		if k == "capabilities" {
 			if strings.Contains(v, "switchdev") {
-				out.OVSHWOffload = pointer.Bool(true)
+				out.OVSHWOffload = ptr.To(true)
 			}
 		}
 		if k == "trusted" && v == trueString {
-			out.TrustedVF = pointer.Bool(true)
+			out.TrustedVF = ptr.To(true)
 		}
 	}
 	return nil
 }
 
 func Convert_v1beta1_BindingProfile_To_Map_string_To_Interface(in *infrav1.BindingProfile, out map[string]string, _ conversion.Scope) error {
-	if pointer.BoolDeref(in.OVSHWOffload, false) {
+	if ptr.Deref(in.OVSHWOffload, false) {
 		(out)["capabilities"] = "[\"switchdev\"]"
 	}
-	if pointer.BoolDeref(in.TrustedVF, false) {
+	if ptr.Deref(in.TrustedVF, false) {
 		(out)["trusted"] = trueString
 	}
 	return nil
@@ -641,16 +681,14 @@ func Convert_v1beta1_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(in *i
 		return err
 	}
 
-	if in.ServerGroup != nil {
-		out.ServerGroupID = in.ServerGroup.ID
+	if in.ServerGroup != nil && in.ServerGroup.ID != nil {
+		out.ServerGroupID = *in.ServerGroup.ID
 	}
 
-	if in.Image.Name != nil && *in.Image.Name != "" {
-		out.Image = *in.Image.Name
-	}
-
-	if in.Image.ID != nil && *in.Image.ID != "" {
+	if in.Image.ID != nil {
 		out.ImageUUID = *in.Image.ID
+	} else if in.Image.Filter != nil && in.Image.Filter.Name != nil {
+		out.Image = *in.Image.Filter.Name
 	}
 
 	if in.IdentityRef != nil {
@@ -746,18 +784,61 @@ func Convert_v1beta1_SecurityGroupFilter_To_v1alpha5_SecurityGroupFilter(in *inf
 	return nil
 }
 
-func Convert_v1alpha5_NetworkFilter_To_v1beta1_NetworkFilter(in *NetworkFilter, out *infrav1.NetworkFilter, s conversion.Scope) error {
-	if err := autoConvert_v1alpha5_NetworkFilter_To_v1beta1_NetworkFilter(in, out, s); err != nil {
+func Convert_v1alpha5_NetworkFilter_To_v1beta1_NetworkParam(in *NetworkFilter, out *infrav1.NetworkParam, s conversion.Scope) error {
+	if in.ID != "" {
+		out.ID = &in.ID
+		return nil
+	}
+	outFilter := &infrav1.NetworkFilter{}
+	if err := autoConvert_v1alpha5_NetworkFilter_To_v1beta1_NetworkFilter(in, outFilter, s); err != nil {
 		return err
 	}
-	infrav1.ConvertAllTagsTo(in.Tags, in.TagsAny, in.NotTags, in.NotTagsAny, &out.FilterByNeutronTags)
+	infrav1.ConvertAllTagsTo(in.Tags, in.TagsAny, in.NotTags, in.NotTagsAny, &outFilter.FilterByNeutronTags)
+	if !outFilter.IsZero() {
+		out.Filter = outFilter
+	}
 	return nil
 }
 
-func Convert_v1beta1_NetworkFilter_To_v1alpha5_NetworkFilter(in *infrav1.NetworkFilter, out *NetworkFilter, s conversion.Scope) error {
-	if err := autoConvert_v1beta1_NetworkFilter_To_v1alpha5_NetworkFilter(in, out, s); err != nil {
-		return err
+func Convert_v1beta1_NetworkParam_To_v1alpha5_NetworkFilter(in *infrav1.NetworkParam, out *NetworkFilter, s conversion.Scope) error {
+	if in.ID != nil {
+		out.ID = *in.ID
+		return nil
 	}
-	infrav1.ConvertAllTagsFrom(&in.FilterByNeutronTags, &out.Tags, &out.TagsAny, &out.NotTags, &out.NotTagsAny)
+	if in.Filter != nil {
+		if err := autoConvert_v1beta1_NetworkFilter_To_v1alpha5_NetworkFilter(in.Filter, out, s); err != nil {
+			return err
+		}
+		infrav1.ConvertAllTagsFrom(&in.Filter.FilterByNeutronTags, &out.Tags, &out.TagsAny, &out.NotTags, &out.NotTagsAny)
+	}
 	return nil
+}
+
+func Convert_v1alpha5_RootVolume_To_v1beta1_RootVolume(in *RootVolume, out *infrav1.RootVolume, s conversion.Scope) error {
+	out.SizeGiB = in.Size
+	out.Type = in.VolumeType
+	return conversioncommon.Convert_string_To_Pointer_v1beta1_VolumeAvailabilityZone(&in.AvailabilityZone, &out.AvailabilityZone, s)
+}
+
+func Convert_v1beta1_RootVolume_To_v1alpha5_RootVolume(in *infrav1.RootVolume, out *RootVolume, s conversion.Scope) error {
+	out.Size = in.SizeGiB
+	out.VolumeType = in.Type
+	return conversioncommon.Convert_Pointer_v1beta1_VolumeAvailabilityZone_To_string(&in.AvailabilityZone, &out.AvailabilityZone, s)
+}
+
+// conversion-gen registers the following functions so we have to define them, but nothing should ever call them.
+func Convert_v1alpha5_NetworkFilter_To_v1beta1_NetworkFilter(_ *NetworkFilter, _ *infrav1.NetworkFilter, _ conversion.Scope) error {
+	return errors.New("Convert_v1alpha6_NetworkFilter_To_v1beta1_NetworkFilter should not be called")
+}
+
+func Convert_v1beta1_NetworkFilter_To_v1alpha5_NetworkFilter(_ *infrav1.NetworkFilter, _ *NetworkFilter, _ conversion.Scope) error {
+	return errors.New("Convert_v1beta1_NetworkFilter_To_v1alpha6_NetworkFilter should not be called")
+}
+
+func Convert_v1alpha5_NetworkParam_To_v1beta1_NetworkParam(_ *NetworkParam, _ *infrav1.NetworkParam, _ conversion.Scope) error {
+	return errors.New("Convert_v1alpha6_NetworkParam_To_v1beta1_NetworkParam should not be called")
+}
+
+func Convert_v1beta1_NetworkParam_To_v1alpha5_NetworkParam(_ *infrav1.NetworkParam, _ *NetworkParam, _ conversion.Scope) error {
+	return errors.New("Convert_v1beta1_NetworkParam_To_v1alpha6_NetworkParam should not be called")
 }

@@ -45,7 +45,7 @@ import (
 	apimachinerytypes "k8s.io/apimachinery/pkg/types"
 	utilrand "k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	bootstrapv1 "sigs.k8s.io/cluster-api/bootstrap/kubeadm/api/v1beta1"
 	"sigs.k8s.io/cluster-api/controllers/noderefutil"
@@ -85,8 +85,8 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			shared.Logf("Creating a cluster")
 			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
-			configCluster.ControlPlaneMachineCount = pointer.Int64(1)
-			configCluster.WorkerMachineCount = pointer.Int64(1)
+			configCluster.ControlPlaneMachineCount = ptr.To(int64(1))
+			configCluster.WorkerMachineCount = ptr.To(int64(1))
 			configCluster.Flavor = shared.FlavorDefault
 			createCluster(ctx, configCluster, clusterResources)
 			md := clusterResources.MachineDeployments
@@ -176,7 +176,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
 			Expect(err).NotTo(HaveOccurred())
 			openStackClusterDisabledBastion := openStackCluster.DeepCopy()
-			openStackClusterDisabledBastion.Spec.Bastion.Enabled = false
+			openStackClusterDisabledBastion.Spec.Bastion.Enabled = ptr.To(false)
 			Expect(e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackClusterDisabledBastion)).To(Succeed())
 			Eventually(
 				func() (bool, error) {
@@ -245,6 +245,42 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 		})
 	})
 
+	Describe("Workload cluster (no bastion)", func() {
+		It("should be creatable and deletable", func() {
+			shared.Logf("Creating a cluster")
+			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
+			configCluster := defaultConfigCluster(clusterName, namespace.Name)
+			configCluster.ControlPlaneMachineCount = ptr.To(int64(1))
+			configCluster.WorkerMachineCount = ptr.To(int64(1))
+			configCluster.Flavor = shared.FlavorNoBastion
+			createCluster(ctx, configCluster, clusterResources)
+			md := clusterResources.MachineDeployments
+
+			workerMachines := framework.GetMachinesByMachineDeployments(ctx, framework.GetMachinesByMachineDeploymentsInput{
+				Lister:            e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
+				ClusterName:       clusterName,
+				Namespace:         namespace.Name,
+				MachineDeployment: *md[0],
+			})
+			controlPlaneMachines := framework.GetControlPlaneMachinesByCluster(ctx, framework.GetControlPlaneMachinesByClusterInput{
+				Lister:      e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
+				ClusterName: clusterName,
+				Namespace:   namespace.Name,
+			})
+			Expect(workerMachines).To(HaveLen(1))
+			Expect(controlPlaneMachines).To(HaveLen(1))
+
+			shared.Logf("Waiting for worker nodes to be in Running phase")
+			statusChecks := []framework.MachineStatusCheck{framework.MachinePhaseCheck(string(clusterv1.MachinePhaseRunning))}
+			machineStatusInput := framework.WaitForMachineStatusCheckInput{
+				Getter:       e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
+				Machine:      &workerMachines[0],
+				StatusChecks: statusChecks,
+			}
+			framework.WaitForMachineStatusCheck(ctx, machineStatusInput, e2eCtx.E2EConfig.GetIntervals(specName, "wait-machine-status")...)
+		})
+	})
+
 	Describe("Workload cluster (flatcar)", func() {
 		It("should be creatable and deletable", func() {
 			// Flatcar default user is "core"
@@ -253,8 +289,8 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			shared.Logf("Creating a cluster")
 			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
-			configCluster.ControlPlaneMachineCount = pointer.Int64(1)
-			configCluster.WorkerMachineCount = pointer.Int64(1)
+			configCluster.ControlPlaneMachineCount = ptr.To(int64(1))
+			configCluster.WorkerMachineCount = ptr.To(int64(1))
 			configCluster.Flavor = shared.FlavorFlatcar
 			createCluster(ctx, configCluster, clusterResources)
 			md := clusterResources.MachineDeployments
@@ -298,8 +334,8 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			shared.Logf("Creating a cluster")
 			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
-			configCluster.ControlPlaneMachineCount = pointer.Int64(1)
-			configCluster.WorkerMachineCount = pointer.Int64(1)
+			configCluster.ControlPlaneMachineCount = ptr.To(int64(1))
+			configCluster.WorkerMachineCount = ptr.To(int64(1))
 			configCluster.Flavor = shared.FlavorFlatcarSysext
 			createCluster(ctx, configCluster, clusterResources)
 			md := clusterResources.MachineDeployments
@@ -340,8 +376,8 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			shared.Logf("Creating a cluster")
 			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
-			configCluster.ControlPlaneMachineCount = pointer.Int64(1)
-			configCluster.WorkerMachineCount = pointer.Int64(1)
+			configCluster.ControlPlaneMachineCount = ptr.To(int64(1))
+			configCluster.WorkerMachineCount = ptr.To(int64(1))
 			configCluster.Flavor = shared.FlavorWithoutLB
 			createCluster(ctx, configCluster, clusterResources)
 			md := clusterResources.MachineDeployments
@@ -372,14 +408,14 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 
 			customPortOptions := &[]infrav1.PortOpts{
 				{
-					Description: pointer.String("primary"),
+					Description: ptr.To("primary"),
 				},
 				{
-					Description: pointer.String("trunked"),
-					Trunk:       pointer.Bool(true),
+					Description: ptr.To("trunked"),
+					Trunk:       ptr.To(true),
 				},
 				{
-					SecurityGroups: []infrav1.SecurityGroupFilter{{Name: testSecurityGroupName}},
+					SecurityGroups: []infrav1.SecurityGroupParam{{Filter: &infrav1.SecurityGroupFilter{Name: testSecurityGroupName}}},
 				},
 			}
 
@@ -474,8 +510,8 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			shared.Logf("Creating a cluster")
 			clusterName = fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster = defaultConfigCluster(clusterName, namespace.Name)
-			configCluster.ControlPlaneMachineCount = pointer.Int64(1)
-			configCluster.WorkerMachineCount = pointer.Int64(1)
+			configCluster.ControlPlaneMachineCount = ptr.To(int64(1))
+			configCluster.WorkerMachineCount = ptr.To(int64(1))
 			configCluster.Flavor = shared.FlavorMultiNetwork
 			createCluster(ctx, configCluster, clusterResources)
 			md = clusterResources.MachineDeployments
@@ -559,8 +595,8 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			shared.Logf("Creating a cluster")
 			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
-			configCluster.ControlPlaneMachineCount = pointer.Int64(1)
-			configCluster.WorkerMachineCount = pointer.Int64(0)
+			configCluster.ControlPlaneMachineCount = ptr.To(int64(1))
+			configCluster.WorkerMachineCount = ptr.To(int64(0))
 			configCluster.Flavor = shared.FlavorWithoutLB
 			createCluster(ctx, configCluster, clusterResources)
 
@@ -612,8 +648,8 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			shared.Logf("Creating a cluster")
 			clusterName = fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
-			configCluster.ControlPlaneMachineCount = pointer.Int64(3)
-			configCluster.WorkerMachineCount = pointer.Int64(2)
+			configCluster.ControlPlaneMachineCount = ptr.To(int64(3))
+			configCluster.WorkerMachineCount = ptr.To(int64(2))
 			configCluster.Flavor = shared.FlavorMultiAZ
 			createCluster(ctx, configCluster, clusterResources)
 			md = clusterResources.MachineDeployments
@@ -859,8 +895,10 @@ func makeOpenStackMachineTemplate(namespace, clusterName, name string) *infrav1.
 			Template: infrav1.OpenStackMachineTemplateResource{
 				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: e2eCtx.E2EConfig.GetVariable(shared.OpenStackNodeMachineFlavor),
-					Image: infrav1.ImageFilter{
-						Name: pointer.String(e2eCtx.E2EConfig.GetVariable(shared.OpenStackImageName)),
+					Image: infrav1.ImageParam{
+						Filter: &infrav1.ImageFilter{
+							Name: ptr.To(e2eCtx.E2EConfig.GetVariable(shared.OpenStackImageName)),
+						},
 					},
 					SSHKeyName: shared.DefaultSSHKeyPairName,
 					IdentityRef: &infrav1.OpenStackIdentityReference{
@@ -883,8 +921,10 @@ func makeOpenStackMachineTemplateWithPortOptions(namespace, clusterName, name st
 			Template: infrav1.OpenStackMachineTemplateResource{
 				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: e2eCtx.E2EConfig.GetVariable(shared.OpenStackNodeMachineFlavor),
-					Image: infrav1.ImageFilter{
-						Name: pointer.String(e2eCtx.E2EConfig.GetVariable(shared.OpenStackImageName)),
+					Image: infrav1.ImageParam{
+						Filter: &infrav1.ImageFilter{
+							Name: ptr.To(e2eCtx.E2EConfig.GetVariable(shared.OpenStackImageName)),
+						},
 					},
 					SSHKeyName: shared.DefaultSSHKeyPairName,
 					IdentityRef: &infrav1.OpenStackIdentityReference{
@@ -972,7 +1012,7 @@ func makeMachineDeployment(namespace, mdName, clusterName string, failureDomain 
 						Name:       mdName,
 						Namespace:  namespace,
 					},
-					Version: pointer.String(e2eCtx.E2EConfig.GetVariable(shared.KubernetesVersion)),
+					Version: ptr.To(e2eCtx.E2EConfig.GetVariable(shared.KubernetesVersion)),
 				},
 			},
 		},

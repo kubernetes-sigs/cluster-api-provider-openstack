@@ -17,7 +17,7 @@ limitations under the License.
 package v1alpha7
 
 import (
-	"strings"
+	"slices"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -27,7 +27,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	runtimeserializer "k8s.io/apimachinery/pkg/runtime/serializer"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
 	"sigs.k8s.io/controller-runtime/pkg/conversion"
 
@@ -57,32 +57,8 @@ func TestFuzzyConversion(t *testing.T) {
 		delete(obj.GetAnnotations(), utilconversion.DataAnnotation)
 	}
 
-	filterInvalidTags := func(tags []infrav1.NeutronTag) []infrav1.NeutronTag {
-		var ret []infrav1.NeutronTag
-		for i := range tags {
-			s := string(tags[i])
-			if len(s) > 0 && !strings.Contains(s, ",") {
-				ret = append(ret, tags[i])
-			}
-		}
-		return ret
-	}
-
 	fuzzerFuncs := func(_ runtimeserializer.CodecFactory) []interface{} {
-		return []interface{}{
-			func(spec *infrav1.OpenStackClusterSpec, c fuzz.Continue) {
-				c.FuzzNoCustom(spec)
-
-				// The fuzzer only seems to generate Subnets of
-				// length 1, but we need to also test length 2.
-				// Ensure it is occasionally generated.
-				if len(spec.Subnets) == 1 && c.RandBool() {
-					subnet := infrav1.SubnetFilter{}
-					c.FuzzNoCustom(&subnet)
-					spec.Subnets = append(spec.Subnets, subnet)
-				}
-			},
-
+		v1alpha7FuzzerFuncs := []interface{}{
 			func(spec *OpenStackMachineSpec, c fuzz.Continue) {
 				c.FuzzNoCustom(spec)
 
@@ -113,88 +89,9 @@ func TestFuzzyConversion(t *testing.T) {
 					}
 				}
 			},
-
-			func(spec *infrav1.SubnetSpec, c fuzz.Continue) {
-				c.FuzzNoCustom(spec)
-
-				// CIDR is required and API validates that it's present, so
-				// we force it to always be set.
-				for spec.CIDR == "" {
-					spec.CIDR = c.RandString()
-				}
-			},
-
-			func(pool *infrav1.AllocationPool, c fuzz.Continue) {
-				c.FuzzNoCustom(pool)
-
-				// Start and End are required properties, let's make sure both are set
-				for pool.Start == "" {
-					pool.Start = c.RandString()
-				}
-
-				for pool.End == "" {
-					pool.End = c.RandString()
-				}
-			},
-
-			// v1beta1 filter tags cannot contain commas and can't be empty.
-
-			func(filter *infrav1.SubnetFilter, c fuzz.Continue) {
-				c.FuzzNoCustom(filter)
-
-				// Sometimes add an additional tag to ensure we get test coverage of multiple tags
-				if c.RandBool() {
-					filter.Tags = append(filter.Tags, infrav1.NeutronTag(c.RandString()))
-				}
-
-				filter.Tags = filterInvalidTags(filter.Tags)
-				filter.TagsAny = filterInvalidTags(filter.TagsAny)
-				filter.NotTags = filterInvalidTags(filter.NotTags)
-				filter.NotTagsAny = filterInvalidTags(filter.NotTagsAny)
-			},
-
-			func(filter *infrav1.NetworkFilter, c fuzz.Continue) {
-				c.FuzzNoCustom(filter)
-
-				// Sometimes add an additional tag to ensure we get test coverage of multiple tags
-				if c.RandBool() {
-					filter.Tags = append(filter.Tags, infrav1.NeutronTag(c.RandString()))
-				}
-
-				filter.Tags = filterInvalidTags(filter.Tags)
-				filter.TagsAny = filterInvalidTags(filter.TagsAny)
-				filter.NotTags = filterInvalidTags(filter.NotTags)
-				filter.NotTagsAny = filterInvalidTags(filter.NotTagsAny)
-			},
-
-			func(filter *infrav1.RouterFilter, c fuzz.Continue) {
-				c.FuzzNoCustom(filter)
-
-				// Sometimes add an additional tag to ensure we get test coverage of multiple tags
-				if c.RandBool() {
-					filter.Tags = append(filter.Tags, infrav1.NeutronTag(c.RandString()))
-				}
-
-				filter.Tags = filterInvalidTags(filter.Tags)
-				filter.TagsAny = filterInvalidTags(filter.TagsAny)
-				filter.NotTags = filterInvalidTags(filter.NotTags)
-				filter.NotTagsAny = filterInvalidTags(filter.NotTagsAny)
-			},
-
-			func(filter *infrav1.SecurityGroupFilter, c fuzz.Continue) {
-				c.FuzzNoCustom(filter)
-
-				// Sometimes add an additional tag to ensure we get test coverage of multiple tags
-				if c.RandBool() {
-					filter.Tags = append(filter.Tags, infrav1.NeutronTag(c.RandString()))
-				}
-
-				filter.Tags = filterInvalidTags(filter.Tags)
-				filter.TagsAny = filterInvalidTags(filter.TagsAny)
-				filter.NotTags = filterInvalidTags(filter.NotTags)
-				filter.NotTagsAny = filterInvalidTags(filter.NotTagsAny)
-			},
 		}
+
+		return slices.Concat(v1alpha7FuzzerFuncs, testhelpers.InfraV1FuzzerFuncs())
 	}
 
 	t.Run("for OpenStackCluster", runParallel(utilconversion.FuzzTestFunc(utilconversion.FuzzTestFuncInput{
@@ -269,22 +166,24 @@ func TestFuzzyConversion(t *testing.T) {
 func TestMachineConversionControllerSpecFields(t *testing.T) {
 	// This tests that we still do field restoration when the controller modifies ProviderID and InstanceID in the spec
 
-	g := gomega.NewWithT(t)
-	scheme := runtime.NewScheme()
-	g.Expect(AddToScheme(scheme)).To(gomega.Succeed())
-	g.Expect(infrav1.AddToScheme(scheme)).To(gomega.Succeed())
-
+	// Define an initial state which cannot be converted losslessly. We add
+	// an IdentityRef with a Kind, which has been removed in v1beta1.
 	testMachine := func() *OpenStackMachine {
 		return &OpenStackMachine{
-			Spec: OpenStackMachineSpec{},
+			Spec: OpenStackMachineSpec{
+				IdentityRef: &OpenStackIdentityReference{
+					Kind: "InvalidKind",
+					Name: "test-name",
+				},
+			},
 		}
 	}
 
 	tests := []struct {
-		name              string
-		modifyUp          func(*infrav1.OpenStackMachine)
-		testAfter         func(*OpenStackMachine)
-		expectNetworkDiff bool
+		name                  string
+		modifyUp              func(*infrav1.OpenStackMachine)
+		testAfter             func(gomega.Gomega, *OpenStackMachine)
+		expectIdentityRefDiff bool
 	}{
 		{
 			name: "No change",
@@ -294,47 +193,52 @@ func TestMachineConversionControllerSpecFields(t *testing.T) {
 			modifyUp: func(up *infrav1.OpenStackMachine) {
 				up.Spec.Flavor = "new-flavor"
 			},
-			testAfter: func(after *OpenStackMachine) {
+			testAfter: func(g gomega.Gomega, after *OpenStackMachine) {
 				g.Expect(after.Spec.Flavor).To(gomega.Equal("new-flavor"))
 			},
-			expectNetworkDiff: true,
+			expectIdentityRefDiff: true,
 		},
 		{
 			name: "Set ProviderID",
 			modifyUp: func(up *infrav1.OpenStackMachine) {
-				up.Spec.ProviderID = pointer.String("new-provider-id")
+				up.Spec.ProviderID = ptr.To("new-provider-id")
 			},
-			testAfter: func(after *OpenStackMachine) {
-				g.Expect(after.Spec.ProviderID).To(gomega.Equal(pointer.String("new-provider-id")))
+			testAfter: func(g gomega.Gomega, after *OpenStackMachine) {
+				g.Expect(after.Spec.ProviderID).To(gomega.Equal(ptr.To("new-provider-id")))
 			},
-			expectNetworkDiff: false,
+			expectIdentityRefDiff: false,
 		},
 		{
 			name: "Set InstanceID",
 			modifyUp: func(up *infrav1.OpenStackMachine) {
-				up.Spec.InstanceID = pointer.String("new-instance-id")
+				up.Status.InstanceID = ptr.To("new-instance-id")
 			},
-			testAfter: func(after *OpenStackMachine) {
-				g.Expect(after.Spec.InstanceID).To(gomega.Equal(pointer.String("new-instance-id")))
+			testAfter: func(g gomega.Gomega, after *OpenStackMachine) {
+				g.Expect(after.Spec.InstanceID).To(gomega.Equal(ptr.To("new-instance-id")))
 			},
-			expectNetworkDiff: false,
+			expectIdentityRefDiff: false,
 		},
 		{
 			name: "Set ProviderID and non-ignored change",
 			modifyUp: func(up *infrav1.OpenStackMachine) {
-				up.Spec.ProviderID = pointer.String("new-provider-id")
+				up.Spec.ProviderID = ptr.To("new-provider-id")
 				up.Spec.Flavor = "new-flavor"
 			},
-			testAfter: func(after *OpenStackMachine) {
-				g.Expect(after.Spec.ProviderID).To(gomega.Equal(pointer.String("new-provider-id")))
+			testAfter: func(g gomega.Gomega, after *OpenStackMachine) {
+				g.Expect(after.Spec.ProviderID).To(gomega.Equal(ptr.To("new-provider-id")))
 				g.Expect(after.Spec.Flavor).To(gomega.Equal("new-flavor"))
 			},
-			expectNetworkDiff: true,
+			expectIdentityRefDiff: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			g := gomega.NewWithT(t)
+			scheme := runtime.NewScheme()
+			g.Expect(AddToScheme(scheme)).To(gomega.Succeed())
+			g.Expect(infrav1.AddToScheme(scheme)).To(gomega.Succeed())
+
 			before := testMachine()
 
 			up := infrav1.OpenStackMachine{}
@@ -348,7 +252,14 @@ func TestMachineConversionControllerSpecFields(t *testing.T) {
 			g.Expect(after.ConvertFrom(&up)).To(gomega.Succeed())
 
 			if tt.testAfter != nil {
-				tt.testAfter(&after)
+				tt.testAfter(g, &after)
+			}
+
+			g.Expect(after.Spec.IdentityRef).ToNot(gomega.BeNil())
+			if tt.expectIdentityRefDiff {
+				g.Expect(after.Spec.IdentityRef.Kind).ToNot(gomega.Equal("InvalidKind"))
+			} else {
+				g.Expect(after.Spec.IdentityRef.Kind).To(gomega.Equal("InvalidKind"))
 			}
 		})
 	}
@@ -459,4 +370,41 @@ func TestConvert_v1alpha7_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(t
 			g.Expect(&out.Template.Spec).To(gomega.Equal(tt.expectedOut), cmp.Diff(&out.Template.Spec, tt.expectedOut))
 		})
 	}
+}
+
+func Test_FuzzRestorers(t *testing.T) {
+	/* Cluster */
+	testhelpers.FuzzRestorer(t, "restorev1alpha7ClusterSpec", restorev1alpha7ClusterSpec)
+	testhelpers.FuzzRestorer(t, "restorev1beta1ClusterSpec", restorev1beta1ClusterSpec)
+	testhelpers.FuzzRestorer(t, "restorev1alpha7ClusterStatus", restorev1alpha7ClusterStatus)
+	testhelpers.FuzzRestorer(t, "restorev1beta1ClusterStatus", restorev1beta1ClusterStatus)
+	testhelpers.FuzzRestorer(t, "restorev1alpha7Bastion", restorev1alpha7Bastion)
+	testhelpers.FuzzRestorer(t, "restorev1beta1Bastion", restorev1beta1Bastion)
+	testhelpers.FuzzRestorer(t, "restorev1beta1BastionStatus", restorev1beta1BastionStatus)
+
+	/* ClusterTemplate */
+	testhelpers.FuzzRestorer(t, "restorev1alpha7ClusterTemplateSpec", restorev1alpha7ClusterTemplateSpec)
+	testhelpers.FuzzRestorer(t, "restorev1alpha7ClusterTemplateSpec", restorev1alpha7ClusterTemplateSpec)
+
+	/* Machine */
+	testhelpers.FuzzRestorer(t, "restorev1alpha7MachineSpec", restorev1alpha7MachineSpec)
+	testhelpers.FuzzRestorer(t, "restorev1beta1MachineSpec", restorev1beta1MachineSpec)
+
+	/* MachineTemplate */
+	testhelpers.FuzzRestorer(t, "restorev1alpha7MachineTemplateSpec", restorev1alpha7MachineTemplateSpec)
+
+	/* Types */
+	testhelpers.FuzzRestorer(t, "restorev1alpha7SecurityGroupFilter", restorev1alpha7SecurityGroupFilter)
+	testhelpers.FuzzRestorer(t, "restorev1alpha7SecurityGroup", restorev1alpha7SecurityGroup)
+	testhelpers.FuzzRestorer(t, "restorev1beta1SecurityGroupParam", restorev1beta1SecurityGroupParam)
+	testhelpers.FuzzRestorer(t, "restorev1alpha7NetworkFilter", restorev1alpha7NetworkFilter)
+	testhelpers.FuzzRestorer(t, "restorev1beta1NetworkParam", restorev1beta1NetworkParam)
+	testhelpers.FuzzRestorer(t, "restorev1alpha7SubnetFilter", restorev1alpha7SubnetFilter)
+	testhelpers.FuzzRestorer(t, "restorev1beta1SubnetParam", restorev1beta1SubnetParam)
+	testhelpers.FuzzRestorer(t, "restorev1alpha7RouterFilter", restorev1alpha7RouterFilter)
+	testhelpers.FuzzRestorer(t, "restorev1beta1RouterParam", restorev1beta1RouterParam)
+	testhelpers.FuzzRestorer(t, "restorev1alpha7Port", restorev1alpha7Port)
+	testhelpers.FuzzRestorer(t, "restorev1beta1Port", restorev1beta1Port)
+	testhelpers.FuzzRestorer(t, "restorev1beta1APIServerLoadBalancer", restorev1beta1APIServerLoadBalancer)
+	testhelpers.FuzzRestorer(t, "restorev1beta1BlockDeviceVolume", restorev1beta1BlockDeviceVolume)
 }

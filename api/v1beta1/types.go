@@ -17,7 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
 )
@@ -28,27 +28,47 @@ type OpenStackMachineTemplateResource struct {
 	Spec OpenStackMachineSpec `json:"spec"`
 }
 
-// ImageFilter describes the data needed to identify which image to use. If ID is provided it is required that all other fields are unset.
-// +kubebuilder:validation:XValidation:rule="(has(self.id) && !has(self.name) && !has(self.tags)) || !has(self.id)",message="when ID is set you cannot set other options"
-type ImageFilter struct {
-	// The ID of the desired image. If ID is provided, the other filters cannot be provided. Must be in UUID format.
+// ImageParam describes a glance image. It can be specified by ID or filter.
+// +kubebuilder:validation:MaxProperties:=1
+// +kubebuilder:validation:MinProperties:=1
+type ImageParam struct {
+	// ID is the uuid of the image. ID will not be validated before use.
 	// +kubebuilder:validation:Format:=uuid
 	// +optional
 	ID optional.String `json:"id,omitempty"`
+
+	// Filter describes a query for an image. If specified, the combination
+	// of name and tags must return a single matching image or an error will
+	// be raised.
+	// +optional
+	Filter *ImageFilter `json:"filter,omitempty"`
+}
+
+// ImageFilter describes a query for an image.
+// +kubebuilder:validation:MinProperties:=1
+type ImageFilter struct {
 	// The name of the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
 	// +optional
 	Name optional.String `json:"name,omitempty"`
+
 	// The tags associated with the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
 	// +listType=set
 	// +optional
 	Tags []string `json:"tags,omitempty"`
 }
 
+func (f *ImageFilter) IsZero() bool {
+	if f == nil {
+		return true
+	}
+	return f.Name == nil && len(f.Tags) == 0
+}
+
 type ExternalRouterIPParam struct {
 	// The FixedIP in the corresponding subnet
 	FixedIP string `json:"fixedIP,omitempty"`
 	// The subnet in which the FixedIP is used for the Gateway of this router
-	Subnet SubnetFilter `json:"subnet"`
+	Subnet SubnetParam `json:"subnet"`
 }
 
 // NeutronTag represents a tag on a Neutron resource.
@@ -84,8 +104,27 @@ type FilterByNeutronTags struct {
 	NotTagsAny []NeutronTag `json:"notTagsAny,omitempty"`
 }
 
+func (f *FilterByNeutronTags) IsZero() bool {
+	return f == nil || (len(f.Tags) == 0 && len(f.TagsAny) == 0 && len(f.NotTags) == 0 && len(f.NotTagsAny) == 0)
+}
+
+// SecurityGroupParam specifies an OpenStack security group. It may be specified by ID or filter, but not both.
+// +kubebuilder:validation:MaxProperties:=1
+// +kubebuilder:validation:MinProperties:=1
+type SecurityGroupParam struct {
+	// ID is the ID of the security group to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.
+	// +kubebuilder:validation:Format:=uuid
+	// +optional
+	ID optional.String `json:"id,omitempty"`
+
+	// Filter specifies a query to select an OpenStack security group. If provided, cannot be empty.
+	// +optional
+	Filter *SecurityGroupFilter `json:"filter,omitempty"`
+}
+
+// SecurityGroupFilter specifies a query to select an OpenStack security group. At least one property must be set.
+// +kubebuilder:validation:MinProperties:=1
 type SecurityGroupFilter struct {
-	ID          string `json:"id,omitempty"`
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
 	ProjectID   string `json:"projectID,omitempty"`
@@ -93,29 +132,66 @@ type SecurityGroupFilter struct {
 	FilterByNeutronTags `json:",inline"`
 }
 
+func (f *SecurityGroupFilter) IsZero() bool {
+	if f == nil {
+		return true
+	}
+	return f.Name == "" &&
+		f.Description == "" &&
+		f.ProjectID == "" &&
+		f.FilterByNeutronTags.IsZero()
+}
+
+// NetworkParam specifies an OpenStack network. It may be specified by either ID or Filter, but not both.
+// +kubebuilder:validation:MaxProperties:=1
+// +kubebuilder:validation:MinProperties:=1
+type NetworkParam struct {
+	// ID is the ID of the network to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.
+	// +kubebuilder:validation:Format:=uuid
+	// +optional
+	ID optional.String `json:"id,omitempty"`
+
+	// Filter specifies a filter to select an OpenStack network. If provided, cannot be empty.
+	// +optional
+	Filter *NetworkFilter `json:"filter,omitempty"`
+}
+
+// NetworkFilter specifies a query to select an OpenStack network. At least one property must be set.
+// +kubebuilder:validation:MinProperties:=1
 type NetworkFilter struct {
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
 	ProjectID   string `json:"projectID,omitempty"`
-	ID          string `json:"id,omitempty"`
 
 	FilterByNeutronTags `json:",inline"`
 }
 
-func (networkFilter *NetworkFilter) IsEmpty() bool {
+func (networkFilter *NetworkFilter) IsZero() bool {
 	if networkFilter == nil {
 		return true
 	}
 	return networkFilter.Name == "" &&
 		networkFilter.Description == "" &&
 		networkFilter.ProjectID == "" &&
-		networkFilter.ID == "" &&
-		len(networkFilter.Tags) == 0 &&
-		len(networkFilter.TagsAny) == 0 &&
-		len(networkFilter.NotTags) == 0 &&
-		len(networkFilter.NotTagsAny) == 0
+		networkFilter.FilterByNeutronTags.IsZero()
 }
 
+// SubnetParam specifies an OpenStack subnet to use. It may be specified by either ID or filter, but not both.
+// +kubebuilder:validation:MaxProperties:=1
+// +kubebuilder:validation:MinProperties:=1
+type SubnetParam struct {
+	// ID is the uuid of the subnet. It will not be validated.
+	// +kubebuilder:validation:Format:=uuid
+	// +optional
+	ID optional.String `json:"id,omitempty"`
+
+	// Filter specifies a filter to select the subnet. It must match exactly one subnet.
+	// +optional
+	Filter *SubnetFilter `json:"filter,omitempty"`
+}
+
+// SubnetFilter specifies a filter to select a subnet. At least one parameter must be specified.
+// +kubebuilder:validation:MinProperties:=1
 type SubnetFilter struct {
 	Name            string `json:"name,omitempty"`
 	Description     string `json:"description,omitempty"`
@@ -125,18 +201,56 @@ type SubnetFilter struct {
 	CIDR            string `json:"cidr,omitempty"`
 	IPv6AddressMode string `json:"ipv6AddressMode,omitempty"`
 	IPv6RAMode      string `json:"ipv6RAMode,omitempty"`
-	ID              string `json:"id,omitempty"`
 
 	FilterByNeutronTags `json:",inline"`
 }
 
+func (subnetFilter *SubnetFilter) IsZero() bool {
+	if subnetFilter == nil {
+		return true
+	}
+	return subnetFilter.Name == "" &&
+		subnetFilter.Description == "" &&
+		subnetFilter.ProjectID == "" &&
+		subnetFilter.IPVersion == 0 &&
+		subnetFilter.GatewayIP == "" &&
+		subnetFilter.CIDR == "" &&
+		subnetFilter.IPv6AddressMode == "" &&
+		subnetFilter.IPv6RAMode == "" &&
+		subnetFilter.FilterByNeutronTags.IsZero()
+}
+
+// RouterParam specifies an OpenStack router to use. It may be specified by either ID or filter, but not both.
+// +kubebuilder:validation:MaxProperties:=1
+// +kubebuilder:validation:MinProperties:=1
+type RouterParam struct {
+	// ID is the ID of the router to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.
+	// +kubebuilder:validation:Format:=uuid
+	// +optional
+	ID optional.String `json:"id,omitempty"`
+
+	// Filter specifies a filter to select an OpenStack router. If provided, cannot be empty.
+	Filter *RouterFilter `json:"filter,omitempty"`
+}
+
+// RouterFilter specifies a query to select an OpenStack router. At least one property must be set.
+// +kubebuilder:validation:MinProperties:=1
 type RouterFilter struct {
-	ID          string `json:"id,omitempty"`
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
 	ProjectID   string `json:"projectID,omitempty"`
 
 	FilterByNeutronTags `json:",inline"`
+}
+
+func (f *RouterFilter) IsZero() bool {
+	if f == nil {
+		return true
+	}
+	return f.Name == "" &&
+		f.Description == "" &&
+		f.ProjectID == "" &&
+		f.FilterByNeutronTags.IsZero()
 }
 
 type SubnetSpec struct {
@@ -169,7 +283,7 @@ type PortOpts struct {
 	// Network is a query for an openstack network that the port will be created or discovered on.
 	// This will fail if the query returns more than one network.
 	// +optional
-	Network *NetworkFilter `json:"network,omitempty"`
+	Network *NetworkParam `json:"network,omitempty"`
 
 	// Description is a human-readable description for the port.
 	// +optional
@@ -187,7 +301,7 @@ type PortOpts struct {
 	// SecurityGroups is a list of the names, uuids, filters or any combination these of the security groups to assign to the instance.
 	// +optional
 	// +listType=atomic
-	SecurityGroups []SecurityGroupFilter `json:"securityGroups,omitempty"`
+	SecurityGroups []SecurityGroupParam `json:"securityGroups,omitempty"`
 
 	// Tags applied to the port (and corresponding trunk, if a trunk is configured.)
 	// These tags are applied in addition to the instance's tags, which will also be applied to the port.
@@ -320,7 +434,7 @@ type FixedIP struct {
 	// Subnet is an openstack subnet query that will return the id of a subnet to create
 	// the fixed IP of a port in. This query must not return more than one subnet.
 	// +optional
-	Subnet *SubnetFilter `json:"subnet,omitempty"`
+	Subnet *SubnetParam `json:"subnet,omitempty"`
 
 	// IPAddress is a specific IP address to assign to the port. If Subnet
 	// is also specified, IPAddress must be a valid IP address in the
@@ -376,9 +490,12 @@ type BastionStatus struct {
 }
 
 type RootVolume struct {
-	Size             int    `json:"diskSize,omitempty"`
-	VolumeType       string `json:"volumeType,omitempty"`
-	AvailabilityZone string `json:"availabilityZone,omitempty"`
+	// SizeGiB is the size of the block device in gibibytes (GiB).
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Minimum:=1
+	SizeGiB int `json:"sizeGiB"`
+
+	BlockDeviceVolume `json:",inline"`
 }
 
 // BlockDeviceStorage is the storage type of a block device to create and
@@ -406,13 +523,44 @@ type BlockDeviceVolume struct {
 	// +optional
 	Type string `json:"type,omitempty"`
 
-	// AvailabilityZone is the volume availability zone to create the volume in.
-	// If omitted, the availability zone of the server will be used.
-	// The availability zone must NOT contain spaces otherwise it will lead to volume that belongs
-	// to this availability zone register failure, see kubernetes/cloud-provider-openstack#1379 for
-	// further information.
+	// AvailabilityZone is the volume availability zone to create the volume
+	// in. If not specified, the volume will be created without an explicit
+	// availability zone.
 	// +optional
-	AvailabilityZone string `json:"availabilityZone,omitempty"`
+	AvailabilityZone *VolumeAvailabilityZone `json:"availabilityZone,omitempty"`
+}
+
+// VolumeAZSource specifies where to obtain the availability zone for a volume.
+// +kubebuilder:validation:Enum=Name;Machine
+type VolumeAZSource string
+
+const (
+	VolumeAZFromName    VolumeAZSource = "Name"
+	VolumeAZFromMachine VolumeAZSource = "Machine"
+)
+
+// VolumeAZName is the name of a volume availability zone. It may not contain spaces.
+// +kubebuilder:validation:Pattern:="^[^ ]+$"
+// +kubebuilder:validation:MinLength:=1
+type VolumeAZName string
+
+// VolumeAvailabilityZone specifies the availability zone for a volume.
+// +kubebuilder:validation:XValidation:rule="!has(self.from) || self.from == 'Name' ? has(self.name) : !has(self.name)",message="name is required when from is 'Name' or default"
+type VolumeAvailabilityZone struct {
+	// From specifies where we will obtain the availability zone for the
+	// volume. The options are "Name" and "Machine". If "Name" is specified
+	// then the Name field must also be specified. If "Machine" is specified
+	// the volume will use the value of FailureDomain, if any, from the
+	// associated Machine.
+	// +kubebuilder:default:=Name
+	// +optional
+	From VolumeAZSource `json:"from,omitempty"`
+
+	// Name is the name of a volume availability zone to use. It is required
+	// if From is "Name". The volume availability zone name may not contain
+	// spaces.
+	// +optional
+	Name *VolumeAZName `json:"name,omitempty"`
 }
 
 // AdditionalBlockDevice is a block device to attach to the server.
@@ -423,9 +571,13 @@ type AdditionalBlockDevice struct {
 	// Also, this name will be used for tagging the block device.
 	// Information about the block device tag can be obtained from the OpenStack
 	// metadata API or the config drive.
+	// Name cannot be 'root', which is reserved for the root volume.
+	// +kubebuilder:validation:Required
 	Name string `json:"name"`
 
 	// SizeGiB is the size of the block device in gibibytes (GiB).
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Minimum:=1
 	SizeGiB int `json:"sizeGiB"`
 
 	// Storage specifies the storage type of the block device and
@@ -433,9 +585,30 @@ type AdditionalBlockDevice struct {
 	Storage BlockDeviceStorage `json:"storage"`
 }
 
+// ServerGroupParam specifies an OpenStack server group. It may be specified by ID or filter, but not both.
+// +kubebuilder:validation:MaxProperties:=1
+// +kubebuilder:validation:MinProperties:=1
+type ServerGroupParam struct {
+	// ID is the ID of the server group to use.
+	// +kubebuilder:validation:Format:=uuid
+	ID optional.String `json:"id,omitempty"`
+
+	// Filter specifies a query to select an OpenStack server group. If provided, it cannot be empty.
+	Filter *ServerGroupFilter `json:"filter,omitempty"`
+}
+
+// ServerGroupFilter specifies a query to select an OpenStack server group. At least one property must be set.
+// +kubebuilder:validation:MinProperties:=1
 type ServerGroupFilter struct {
-	ID   string `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
+	// Name is the name of a server group to look for.
+	Name optional.String `json:"name,omitempty"`
+}
+
+func (f *ServerGroupFilter) IsZero() bool {
+	if f == nil {
+		return true
+	}
+	return f.Name == nil
 }
 
 // BlockDeviceType defines the type of block device to create.
@@ -497,6 +670,12 @@ type LoadBalancer struct {
 	AllowedCIDRs []string `json:"allowedCIDRs,omitempty"`
 	//+optional
 	Tags []string `json:"tags,omitempty"`
+	// LoadBalancerNetwork contains information about network and/or subnets which the
+	// loadbalancer is allocated on.
+	// If subnets are specified within the LoadBalancerNetwork currently only the first
+	// subnet in the list is taken into account.
+	// +optional
+	LoadBalancerNetwork *NetworkStatusWithSubnets `json:"loadBalancerNetwork,omitempty"`
 }
 
 // SecurityGroupStatus represents the basic information of the associated
@@ -605,12 +784,18 @@ var (
 )
 
 // Bastion represents basic information about the bastion node. If you enable bastion, the spec has to be specified.
-// +kubebuilder:validation:XValidation:rule="!self.enabled || has(self.spec)",message="you need to specify the spec if bastion is enabled"
+// +kubebuilder:validation:XValidation:rule="!self.enabled || has(self.spec)",message="spec is required if bastion is enabled"
 type Bastion struct {
-	// Enabled means that bastion is enabled. Defaults to false.
-	// +kubebuilder:validation:Required
-	// +kubebuilder:default:=false
-	Enabled bool `json:"enabled"`
+	// Enabled means that bastion is enabled. The bastion is enabled by
+	// default if this field is not specified. Set this field to false to disable the
+	// bastion.
+	//
+	// It is not currently possible to remove the bastion from the cluster
+	// spec without first disabling it by setting this field to false and
+	// waiting until the bastion has been deleted.
+	// +kubebuilder:default:=true
+	// +optional
+	Enabled optional.Bool `json:"enabled,omitempty"`
 
 	// Spec for the bastion itself
 	Spec *OpenStackMachineSpec `json:"spec,omitempty"`
@@ -625,6 +810,13 @@ type Bastion struct {
 	//+optional
 	//+kubebuilder:validation:Format:=ipv4
 	FloatingIP optional.String `json:"floatingIP,omitempty"`
+}
+
+func (b *Bastion) IsEnabled() bool {
+	if b == nil {
+		return false
+	}
+	return b.Enabled == nil || *b.Enabled
 }
 
 type APIServerLoadBalancer struct {
@@ -654,10 +846,26 @@ type APIServerLoadBalancer struct {
 	// specified.
 	// +optional
 	Provider optional.String `json:"provider,omitempty"`
+
+	// Network defines which network should the load balancer be allocated on.
+	//+optional
+	Network *NetworkParam `json:"network,omitempty"`
+
+	// Subnets define which subnets should the load balancer be allocated on.
+	// It is expected that subnets are located on the network specified in this resource.
+	// Only the first element is taken into account.
+	// +optional
+	// +listType=atomic
+	// kubebuilder:validation:MaxLength:=2
+	Subnets []SubnetParam `json:"subnets,omitempty"`
+
+	// AvailabilityZone is the failure domain that will be used to create the APIServerLoadBalancer Spec.
+	//+optional
+	AvailabilityZone optional.String `json:"availabilityZone,omitempty"`
 }
 
 func (s *APIServerLoadBalancer) IsZero() bool {
-	return s == nil || ((s.Enabled == nil || !*s.Enabled) && len(s.AdditionalPorts) == 0 && len(s.AllowedCIDRs) == 0 && pointer.StringDeref(s.Provider, "") == "")
+	return s == nil || ((s.Enabled == nil || !*s.Enabled) && len(s.AdditionalPorts) == 0 && len(s.AllowedCIDRs) == 0 && ptr.Deref(s.Provider, "") == "")
 }
 
 func (s *APIServerLoadBalancer) IsEnabled() bool {

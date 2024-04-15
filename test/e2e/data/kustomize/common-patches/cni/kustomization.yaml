@@ -7,8 +7,4 @@ resources:
 - cni.yaml
 
 patches:
-- target:
-    kind: OpenStackCluster
-    name: \${CLUSTER_NAME}
-  path: patch-cluster.yaml
 - path: patch-cni.yaml

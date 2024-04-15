@@ -39,6 +39,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
+	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/loadbalancers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/rules"
@@ -494,10 +495,16 @@ func CreateOpenStackSecurityGroup(e2eCtx *E2EContext, securityGroupName, descrip
 		Description: description,
 	}
 
-	_, err = groups.Create(networkClient, createOpts).Extract()
+	group, err := groups.Create(networkClient, createOpts).Extract()
 	if err != nil {
 		return err
 	}
+	// Ensure the group is deleted after the test
+	DeferCleanup(func() error {
+		By(fmt.Sprintf("Deleting test security group %s(%s)", group.Name, group.ID))
+		return groups.Delete(networkClient, group.ID).ExtractErr()
+	})
+
 	return nil
 }
 
@@ -864,4 +871,29 @@ func GetFlavorFromName(e2eCtx *E2EContext, name string) (*flavors.Flavor, error)
 	Expect(err).NotTo(HaveOccurred())
 
 	return flavors.Get(computeClient, flavorID).Extract()
+}
+
+func DumpOpenStackLoadBalancers(e2eCtx *E2EContext, filter loadbalancers.ListOpts) ([]loadbalancers.LoadBalancer, error) {
+	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
+	if err != nil {
+		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
+		return nil, err
+	}
+
+	loadBalancerClient, err := openstack.NewLoadBalancerV2(providerClient, gophercloud.EndpointOpts{
+		Region: clientOpts.RegionName,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error creating network client: %s", err)
+	}
+
+	allPages, err := loadbalancers.List(loadBalancerClient, filter).AllPages()
+	if err != nil {
+		return nil, fmt.Errorf("error getting load balancers: %s", err)
+	}
+	loadBalancersList, err := loadbalancers.ExtractLoadBalancers(allPages)
+	if err != nil {
+		return nil, fmt.Errorf("error getting load balancers: %s", err)
+	}
+	return loadBalancersList, nil
 }

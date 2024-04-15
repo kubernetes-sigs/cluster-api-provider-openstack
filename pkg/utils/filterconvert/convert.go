@@ -31,7 +31,6 @@ func SecurityGroupFilterToListOpts(securityGroupFilter *infrav1.SecurityGroupFil
 		return securitygroups.ListOpts{}
 	}
 	return securitygroups.ListOpts{
-		ID:          securityGroupFilter.ID,
 		Name:        securityGroupFilter.Name,
 		Description: securityGroupFilter.Description,
 		ProjectID:   securityGroupFilter.ProjectID,
@@ -55,7 +54,6 @@ func SubnetFilterToListOpts(subnetFilter *infrav1.SubnetFilter) subnets.ListOpts
 		CIDR:            subnetFilter.CIDR,
 		IPv6AddressMode: subnetFilter.IPv6AddressMode,
 		IPv6RAMode:      subnetFilter.IPv6RAMode,
-		ID:              subnetFilter.ID,
 		Tags:            infrav1.JoinTags(subnetFilter.Tags),
 		TagsAny:         infrav1.JoinTags(subnetFilter.TagsAny),
 		NotTags:         infrav1.JoinTags(subnetFilter.NotTags),
@@ -71,7 +69,6 @@ func NetworkFilterToListOpts(networkFilter *infrav1.NetworkFilter) networks.List
 		Name:        networkFilter.Name,
 		Description: networkFilter.Description,
 		ProjectID:   networkFilter.ProjectID,
-		ID:          networkFilter.ID,
 		Tags:        infrav1.JoinTags(networkFilter.Tags),
 		TagsAny:     infrav1.JoinTags(networkFilter.TagsAny),
 		NotTags:     infrav1.JoinTags(networkFilter.NotTags),
@@ -84,7 +81,6 @@ func RouterFilterToListOpts(routerFilter *infrav1.RouterFilter) routers.ListOpts
 		return routers.ListOpts{}
 	}
 	return routers.ListOpts{
-		ID:          routerFilter.ID,
 		Name:        routerFilter.Name,
 		Description: routerFilter.Description,
 		ProjectID:   routerFilter.ProjectID,

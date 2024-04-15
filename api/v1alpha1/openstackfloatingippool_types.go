@@ -63,10 +63,9 @@ type OpenStackFloatingIPPoolSpec struct {
 
 	// FloatingIPNetwork is the external network to use for floating ips, if there's only one external network it will be used by default
 	// +optional
-	FloatingIPNetwork infrav1.NetworkFilter `json:"floatingIPNetwork"`
+	FloatingIPNetwork *infrav1.NetworkParam `json:"floatingIPNetwork"`
 
 	// The stratergy to use for reclaiming floating ips when they are released from a machine
-	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum=Retain;Delete
 	ReclaimPolicy ReclaimPolicy `json:"reclaimPolicy"`
 }

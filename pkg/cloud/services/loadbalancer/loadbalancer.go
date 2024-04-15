@@ -30,9 +30,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/pools"
 	"k8s.io/apimachinery/pkg/util/wait"
 	utilsnet "k8s.io/utils/net"
-	"k8s.io/utils/pointer"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
-	"sigs.k8s.io/cluster-api/util"
+	"k8s.io/utils/ptr"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
@@ -102,7 +100,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 		}
 	}
 
-	if !pointer.BoolDeref(openStackCluster.Spec.DisableAPIServerFloatingIP, false) {
+	if !ptr.Deref(openStackCluster.Spec.DisableAPIServerFloatingIP, false) {
 		floatingIPAddress, err := getAPIServerFloatingIP(openStackCluster)
 		if err != nil {
 			return false, err
@@ -159,7 +157,7 @@ func getAPIServerVIPAddress(openStackCluster *infrav1.OpenStackCluster) (*string
 		return openStackCluster.Spec.APIServerFixedIP, nil
 
 	// If we are using the VIP as the control plane endpoint, use any value explicitly set on the control plane endpoint
-	case pointer.BoolDeref(openStackCluster.Spec.DisableAPIServerFloatingIP, false) && openStackCluster.Spec.ControlPlaneEndpoint != nil && openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
+	case ptr.Deref(openStackCluster.Spec.DisableAPIServerFloatingIP, false) && openStackCluster.Spec.ControlPlaneEndpoint != nil && openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
 		fixedIPAddress, err := lookupHost(openStackCluster.Spec.ControlPlaneEndpoint.Host)
 		if err != nil {
 			return nil, fmt.Errorf("lookup host: %w", err)
@@ -272,9 +270,34 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 		return nil, fmt.Errorf("network is not yet available in OpenStackCluster.Status")
 	}
 
-	// Create the VIP on the first cluster subnet
-	subnetID := openStackCluster.Status.Network.Subnets[0].ID
-	s.scope.Logger().Info("Creating load balancer in subnet", "subnetID", subnetID, "name", loadBalancerName)
+	if openStackCluster.Status.APIServerLoadBalancer == nil {
+		return nil, fmt.Errorf("apiserver loadbalancer network is not yet available in OpenStackCluster.Status")
+	}
+
+	lbNetwork := openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork
+	if lbNetwork == nil {
+		lbNetwork = &infrav1.NetworkStatusWithSubnets{}
+		openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork = lbNetwork
+	}
+
+	var vipNetworkID, vipSubnetID string
+	if lbNetwork.ID != "" {
+		vipNetworkID = lbNetwork.ID
+	}
+
+	if len(lbNetwork.Subnets) > 0 {
+		// Currently only the first subnet is taken into account.
+		// This can be fixed as soon as we switch over to gophercloud release that
+		// contains AdditionalVips field.
+		vipSubnetID = lbNetwork.Subnets[0].ID
+	}
+
+	if vipNetworkID == "" && vipSubnetID == "" {
+		// keep the default and create the VIP on the first cluster subnet
+		vipSubnetID = openStackCluster.Status.Network.Subnets[0].ID
+	}
+
+	s.scope.Logger().Info("Creating load balancer in subnet", "subnetID", vipSubnetID, "name", loadBalancerName)
 
 	providers, err := s.loadbalancerClient.ListLoadBalancerProviders()
 	if err != nil {
@@ -283,17 +306,21 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 
 	// Choose the selected provider if it is set in cluster spec, if not, omit the field and Octavia will use the default provider.
 	lbProvider := ""
-	if openStackCluster.Spec.APIServerLoadBalancer != nil && openStackCluster.Spec.APIServerLoadBalancer.Provider != nil {
-		for _, v := range providers {
-			if v.Name == *openStackCluster.Spec.APIServerLoadBalancer.Provider {
-				lbProvider = v.Name
-				break
+	var availabilityZone *string
+	if openStackCluster.Spec.APIServerLoadBalancer != nil {
+		if openStackCluster.Spec.APIServerLoadBalancer.Provider != nil {
+			for _, v := range providers {
+				if v.Name == *openStackCluster.Spec.APIServerLoadBalancer.Provider {
+					lbProvider = v.Name
+					break
+				}
+			}
+			if lbProvider == "" {
+				record.Warnf(openStackCluster, "OctaviaProviderNotFound", "Provider specified for Octavia not found.")
+				record.Eventf(openStackCluster, "OctaviaProviderNotFound", "Provider %s specified for Octavia not found, using the default provider.", openStackCluster.Spec.APIServerLoadBalancer.Provider)
 			}
 		}
-		if lbProvider == "" {
-			record.Warnf(openStackCluster, "OctaviaProviderNotFound", "Provider specified for Octavia not found.")
-			record.Eventf(openStackCluster, "OctaviaProviderNotFound", "Provider %s specified for Octavia not found, using the default provider.", openStackCluster.Spec.APIServerLoadBalancer.Provider)
-		}
+		availabilityZone = openStackCluster.Spec.APIServerLoadBalancer.AvailabilityZone
 	}
 
 	vipAddress, err := getAPIServerVIPAddress(openStackCluster)
@@ -302,11 +329,15 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 	}
 
 	lbCreateOpts := loadbalancers.CreateOpts{
-		Name:        loadBalancerName,
-		VipSubnetID: subnetID,
-		Description: names.GetDescription(clusterResourceName),
-		Provider:    lbProvider,
-		Tags:        openStackCluster.Spec.Tags,
+		Name:         loadBalancerName,
+		VipSubnetID:  vipSubnetID,
+		VipNetworkID: vipNetworkID,
+		Description:  names.GetDescription(clusterResourceName),
+		Provider:     lbProvider,
+		Tags:         openStackCluster.Spec.Tags,
+	}
+	if availabilityZone != nil {
+		lbCreateOpts.AvailabilityZone = *availabilityZone
 	}
 	if vipAddress != nil {
 		lbCreateOpts.VipAddress = *vipAddress
@@ -647,9 +678,9 @@ func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster,
 	return nil
 }
 
-func (s *Service) DeleteLoadBalancerMember(openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine, clusterResourceName string) error {
-	if openStackMachine == nil || !util.IsControlPlaneMachine(machine) {
-		return nil
+func (s *Service) DeleteLoadBalancerMember(openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, clusterResourceName string) error {
+	if openStackMachine == nil {
+		return errors.New("openStackMachine is nil")
 	}
 
 	loadBalancerName := getLoadBalancerName(clusterResourceName)

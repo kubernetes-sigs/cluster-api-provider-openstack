@@ -78,5 +78,12 @@ var v1beta1OpenStackMachineTemplateRestorer = conversion.RestorerFor[*infrav1.Op
 }
 
 func restorev1alpha7MachineTemplateSpec(previous *OpenStackMachineTemplateSpec, dst *OpenStackMachineTemplateSpec) {
-	restorev1alpha7MachineSpec(&previous.Template.Spec, &dst.Template.Spec)
+	if previous == nil || dst == nil {
+		return
+	}
+
+	prevMachineSpec := &previous.Template.Spec
+	dstMachineSpec := &dst.Template.Spec
+	restorev1alpha7MachineSpec(prevMachineSpec, dstMachineSpec)
+	dstMachineSpec.InstanceID = prevMachineSpec.InstanceID
 }

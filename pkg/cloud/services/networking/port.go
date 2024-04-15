@@ -24,18 +24,18 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/portsbinding"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/portsecurity"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/filterconvert"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
@@ -59,6 +59,19 @@ func (s *Service) GetPortFromInstanceIP(instanceID string, ip string) ([]ports.P
 	return s.client.ListPort(portOpts)
 }
 
+type PortListOpts struct {
+	DeviceOwner []string `q:"device_owner"`
+	NetworkID   string   `q:"network_id"`
+}
+
+func (p *PortListOpts) ToPortListQuery() (string, error) {
+	q, err := gophercloud.BuildQueryString(p)
+	if err != nil {
+		return "", err
+	}
+	return q.String(), nil
+}
+
 func (s *Service) GetPortForExternalNetwork(instanceID string, externalNetworkID string) (*ports.Port, error) {
 	instancePortsOpts := ports.ListOpts{
 		DeviceID: instanceID,
@@ -69,9 +82,9 @@ func (s *Service) GetPortForExternalNetwork(instanceID string, externalNetworkID
 	}
 
 	for _, instancePort := range instancePorts {
-		networkPortsOpts := ports.ListOpts{
+		networkPortsOpts := &PortListOpts{
 			NetworkID:   instancePort.NetworkID,
-			DeviceOwner: "network:router_interface",
+			DeviceOwner: []string{"network:router_interface", "network:router_interface_distributed", "network:ha_router_replicated_interface", "network:router_ha_interface"},
 		}
 
 		networkPorts, err := s.client.ListPort(networkPortsOpts)
@@ -112,11 +125,11 @@ func (s *Service) GetPortForExternalNetwork(instanceID string, externalNetworkID
 
 func (s *Service) CreatePort(eventObject runtime.Object, portSpec *infrav1.ResolvedPortSpec) (*ports.Port, error) {
 	var addressPairs []ports.AddressPair
-	if !pointer.BoolDeref(portSpec.DisablePortSecurity, false) {
+	if !ptr.Deref(portSpec.DisablePortSecurity, false) {
 		for _, ap := range portSpec.AllowedAddressPairs {
 			addressPairs = append(addressPairs, ports.AddressPair{
 				IPAddress:  ap.IPAddress,
-				MACAddress: pointer.StringDeref(ap.MACAddress, ""),
+				MACAddress: ptr.Deref(ap.MACAddress, ""),
 			})
 		}
 	}
@@ -126,8 +139,8 @@ func (s *Service) CreatePort(eventObject runtime.Object, portSpec *infrav1.Resol
 		fixedIPs = make([]ports.IP, len(portSpec.FixedIPs))
 		for i, fixedIP := range portSpec.FixedIPs {
 			fixedIPs[i] = ports.IP{
-				SubnetID:  pointer.StringDeref(fixedIP.SubnetID, ""),
-				IPAddress: pointer.StringDeref(fixedIP.IPAddress, ""),
+				SubnetID:  ptr.Deref(fixedIP.SubnetID, ""),
+				IPAddress: ptr.Deref(fixedIP.IPAddress, ""),
 			}
 		}
 	}
@@ -147,7 +160,7 @@ func (s *Service) CreatePort(eventObject runtime.Object, portSpec *infrav1.Resol
 		NetworkID:             portSpec.NetworkID,
 		Description:           portSpec.Description,
 		AdminStateUp:          portSpec.AdminStateUp,
-		MACAddress:            pointer.StringDeref(portSpec.MACAddress, ""),
+		MACAddress:            ptr.Deref(portSpec.MACAddress, ""),
 		AllowedAddressPairs:   addressPairs,
 		ValueSpecs:            valueSpecs,
 		PropagateUplinkStatus: portSpec.PropagateUplinkStatus,
@@ -171,8 +184,8 @@ func (s *Service) CreatePort(eventObject runtime.Object, portSpec *infrav1.Resol
 
 	portsBindingOpts := portsbinding.CreateOptsExt{
 		CreateOptsBuilder: builder,
-		HostID:            pointer.StringDeref(portSpec.HostID, ""),
-		VNICType:          pointer.StringDeref(portSpec.VNICType, ""),
+		HostID:            ptr.Deref(portSpec.HostID, ""),
+		VNICType:          ptr.Deref(portSpec.VNICType, ""),
 		Profile:           getPortProfile(portSpec.Profile),
 	}
 	builder = portsBindingOpts
@@ -190,7 +203,7 @@ func (s *Service) CreatePort(eventObject runtime.Object, portSpec *infrav1.Resol
 		}
 	}
 	record.Eventf(eventObject, "SuccessfulCreatePort", "Created port %s with id %s", port.Name, port.ID)
-	if pointer.BoolDeref(portSpec.Trunk, false) {
+	if ptr.Deref(portSpec.Trunk, false) {
 		trunk, err := s.getOrCreateTrunkForPort(eventObject, port)
 		if err != nil {
 			record.Warnf(eventObject, "FailedCreateTrunk", "Failed to create trunk for port %s: %v", port.Name, err)
@@ -214,10 +227,10 @@ func getPortProfile(p *infrav1.BindingProfile) map[string]interface{} {
 
 	// if p.OVSHWOffload is true, we need to set the profile
 	// to enable hardware offload for the port
-	if pointer.BoolDeref(p.OVSHWOffload, false) {
+	if ptr.Deref(p.OVSHWOffload, false) {
 		portProfile["capabilities"] = []string{"switchdev"}
 	}
-	if pointer.BoolDeref(p.TrustedVF, false) {
+	if ptr.Deref(p.TrustedVF, false) {
 		portProfile["trusted"] = true
 	}
 
@@ -371,7 +384,7 @@ func (s *Service) ConstructPorts(spec *infrav1.OpenStackMachineSpec, clusterReso
 	// trunk support is required if any port has trunk enabled
 	portUsesTrunk := func() bool {
 		for _, port := range resolvedPorts {
-			if pointer.BoolDeref(port.Trunk, false) {
+			if ptr.Deref(port.Trunk, false) {
 				return true
 			}
 		}
@@ -469,8 +482,12 @@ func (s *Service) normalizePortTarget(port *infrav1.PortOpts, defaultNetwork *in
 	}
 
 	switch {
-	case port.Network != nil && port.Network.ID != "":
-		networkID = port.Network.ID
+	case port.Network != nil:
+		var err error
+		networkID, err = s.GetNetworkIDByParam(port.Network)
+		if err != nil {
+			return "", nil, err
+		}
 
 	// No network, but fixed IPs are defined(we handled the no fixed
 	// IPs case above): try to infer network from a subnet
@@ -490,7 +507,7 @@ func (s *Service) normalizePortTarget(port *infrav1.PortOpts, defaultNetwork *in
 					continue
 				}
 
-				subnet, err := s.GetSubnetByFilter(fixedIP.Subnet)
+				subnet, err := s.GetSubnetByParam(fixedIP.Subnet)
 				if err != nil {
 					// Multiple matches might be ok later when we restrict matches to a single network
 					if errors.Is(err, ErrMultipleMatches) {
@@ -513,21 +530,9 @@ func (s *Service) normalizePortTarget(port *infrav1.PortOpts, defaultNetwork *in
 			return "", nil, err
 		}
 
-	// Network is defined by filter
 	default:
-		networkListOpts := filterconvert.NetworkFilterToListOpts(port.Network)
-		netIDs, err := s.GetNetworkIDsByFilter(networkListOpts)
-		if err != nil {
-			return "", nil, err
-		}
-
-		// TODO: These are spec errors: they should set the machine to failed
-		if len(netIDs) > 1 {
-			return "", nil, fmt.Errorf("network filter for port %d returns more than one result", portIdx)
-		} else if len(netIDs) == 0 {
-			return "", nil, fmt.Errorf("network filter for port %d returns no networks", portIdx)
-		}
-		networkID = netIDs[0]
+		// TODO: This is a spec errors: it should set the machine to failed
+		return "", nil, fmt.Errorf("unable to determine network for port %d", portIdx)
 	}
 
 	// Network ID is now known. Resolve all FixedIPs
@@ -535,7 +540,7 @@ func (s *Service) normalizePortTarget(port *infrav1.PortOpts, defaultNetwork *in
 		resolvedFixedIP := &resolvedFixedIPs[i]
 		resolvedFixedIP.IPAddress = fixedIP.IPAddress
 		if fixedIP.Subnet != nil && resolvedFixedIP.SubnetID == nil {
-			subnet, err := s.GetNetworkSubnetByFilter(networkID, fixedIP.Subnet)
+			subnet, err := s.GetNetworkSubnetByParam(networkID, fixedIP.Subnet)
 			if err != nil {
 				return "", nil, err
 			}

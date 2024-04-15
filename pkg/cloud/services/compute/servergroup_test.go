@@ -23,6 +23,7 @@ import (
 	"github.com/go-logr/logr/testr"
 	"github.com/golang/mock/gomock"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/servergroups"
+	"k8s.io/utils/ptr"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
@@ -34,31 +35,31 @@ func TestService_GetServerGroupID(t *testing.T) {
 	const serverGroupID2 = "8f536889-5198-42d7-8314-cb78f4f4755c"
 
 	tests := []struct {
-		testName          string
-		serverGroupFilter *infrav1.ServerGroupFilter
-		expect            func(m *mock.MockComputeClientMockRecorder)
-		want              string
-		wantErr           bool
+		testName         string
+		serverGroupParam *infrav1.ServerGroupParam
+		expect           func(m *mock.MockComputeClientMockRecorder)
+		want             string
+		wantErr          bool
 	}{
 		{
-			testName:          "Return server group ID from filter if only filter (with ID) given",
-			serverGroupFilter: &infrav1.ServerGroupFilter{ID: serverGroupID1},
+			testName:         "Return server group ID from filter if only filter (with ID) given",
+			serverGroupParam: &infrav1.ServerGroupParam{ID: ptr.To(serverGroupID1)},
 			expect: func(m *mock.MockComputeClientMockRecorder) {
 			},
 			want:    serverGroupID1,
 			wantErr: false,
 		},
 		{
-			testName:          "Return no server group if empty filter is given",
-			serverGroupFilter: &infrav1.ServerGroupFilter{},
+			testName:         "Return error if empty filter is given",
+			serverGroupParam: &infrav1.ServerGroupParam{},
 			expect: func(m *mock.MockComputeClientMockRecorder) {
 			},
 			want:    "",
-			wantErr: false,
+			wantErr: true,
 		},
 		{
-			testName:          "Return server group ID from filter if only filter (with name) given",
-			serverGroupFilter: &infrav1.ServerGroupFilter{Name: "test-server-group"},
+			testName:         "Return server group ID from filter if only filter (with name) given",
+			serverGroupParam: &infrav1.ServerGroupParam{Filter: &infrav1.ServerGroupFilter{Name: ptr.To("test-server-group")}},
 			expect: func(m *mock.MockComputeClientMockRecorder) {
 				m.ListServerGroups().Return(
 					[]servergroups.ServerGroup{{ID: serverGroupID1, Name: "test-server-group"}},
@@ -68,8 +69,8 @@ func TestService_GetServerGroupID(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			testName:          "Return no results",
-			serverGroupFilter: &infrav1.ServerGroupFilter{Name: "test-server-group"},
+			testName:         "Return no results",
+			serverGroupParam: &infrav1.ServerGroupParam{Filter: &infrav1.ServerGroupFilter{Name: ptr.To("test-server-group")}},
 			expect: func(m *mock.MockComputeClientMockRecorder) {
 				m.ListServerGroups().Return(
 					[]servergroups.ServerGroup{},
@@ -79,8 +80,8 @@ func TestService_GetServerGroupID(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			testName:          "Return multiple results",
-			serverGroupFilter: &infrav1.ServerGroupFilter{Name: "test-server-group"},
+			testName:         "Return multiple results",
+			serverGroupParam: &infrav1.ServerGroupParam{Filter: &infrav1.ServerGroupFilter{Name: ptr.To("test-server-group")}},
 			expect: func(m *mock.MockComputeClientMockRecorder) {
 				m.ListServerGroups().Return(
 					[]servergroups.ServerGroup{
@@ -93,8 +94,8 @@ func TestService_GetServerGroupID(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			testName:          "OpenStack returns error",
-			serverGroupFilter: &infrav1.ServerGroupFilter{Name: "test-server-group"},
+			testName:         "OpenStack returns error",
+			serverGroupParam: &infrav1.ServerGroupParam{Filter: &infrav1.ServerGroupFilter{Name: ptr.To("test-server-group")}},
 			expect: func(m *mock.MockComputeClientMockRecorder) {
 				m.ListServerGroups().Return(
 					nil,
@@ -116,7 +117,7 @@ func TestService_GetServerGroupID(t *testing.T) {
 			}
 			tt.expect(mockScopeFactory.ComputeClient.EXPECT())
 
-			got, err := s.GetServerGroupID(tt.serverGroupFilter)
+			got, err := s.GetServerGroupID(tt.serverGroupParam)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Service.getServerGroupID() error = %v, wantErr %v", err, tt.wantErr)
 				return

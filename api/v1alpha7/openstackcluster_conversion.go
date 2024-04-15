@@ -78,12 +78,14 @@ var v1alpha7OpenStackClusterRestorer = conversion.RestorerFor[*OpenStackCluster]
 			return &c.Spec
 		},
 		restorev1alpha7ClusterSpec,
-		// Filter out Bastion, which is restored separately
-		conversion.HashedFilterField[*OpenStackCluster, OpenStackClusterSpec](
+		// Filter out Bastion, which is restored separately, and
+		// ControlPlaneEndpoint, which is written by the cluster controller
+		conversion.HashedFilterField[*OpenStackCluster](
 			func(s *OpenStackClusterSpec) *OpenStackClusterSpec {
-				if s.Bastion != nil {
+				if s.Bastion != nil || s.ControlPlaneEndpoint != (clusterv1.APIEndpoint{}) {
 					f := *s
 					f.Bastion = nil
+					f.ControlPlaneEndpoint = clusterv1.APIEndpoint{}
 					return &f
 				}
 				return s
@@ -169,36 +171,45 @@ func restorev1alpha7ClusterSpec(previous *OpenStackClusterSpec, dst *OpenStackCl
 }
 
 func restorev1beta1ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infrav1.OpenStackClusterSpec) {
+	if previous == nil || dst == nil {
+		return
+	}
+
 	// Bastion is restored separately
 
-	if dst.Network.IsEmpty() {
+	if dst.Network == nil {
 		dst.Network = previous.Network
 	}
 
-	// Restore all fields except ID, which should have been copied over in conversion
+	// ExternalNetwork by filter will be been lost in down-conversion
 	if previous.ExternalNetwork != nil {
 		if dst.ExternalNetwork == nil {
-			dst.ExternalNetwork = &infrav1.NetworkFilter{}
+			dst.ExternalNetwork = &infrav1.NetworkParam{}
 		}
-
-		dst.ExternalNetwork.Name = previous.ExternalNetwork.Name
-		dst.ExternalNetwork.Description = previous.ExternalNetwork.Description
-		dst.ExternalNetwork.ProjectID = previous.ExternalNetwork.ProjectID
-		dst.ExternalNetwork.Tags = previous.ExternalNetwork.Tags
-		dst.ExternalNetwork.TagsAny = previous.ExternalNetwork.TagsAny
-		dst.ExternalNetwork.NotTags = previous.ExternalNetwork.NotTags
-		dst.ExternalNetwork.NotTagsAny = previous.ExternalNetwork.NotTagsAny
+		dst.ExternalNetwork.Filter = previous.ExternalNetwork.Filter
 	}
 
 	dst.DisableExternalNetwork = previous.DisableExternalNetwork
 
+	restorev1beta1RouterParam(previous.Router, dst.Router)
+	restorev1beta1NetworkParam(previous.Network, dst.Network)
+
+	if len(previous.Subnets) > 0 && len(dst.Subnets) > 0 {
+		restorev1beta1SubnetParam(&previous.Subnets[0], &dst.Subnets[0])
+	}
 	if len(previous.Subnets) > 1 {
 		dst.Subnets = append(dst.Subnets, previous.Subnets[1:]...)
 	}
 
+	if len(previous.ExternalRouterIPs) == len(dst.ExternalRouterIPs) {
+		for i := range dst.ExternalRouterIPs {
+			restorev1beta1SubnetParam(&previous.ExternalRouterIPs[i].Subnet, &dst.ExternalRouterIPs[i].Subnet)
+		}
+	}
+
 	dst.ManagedSubnets = previous.ManagedSubnets
 
-	if previous.ManagedSecurityGroups != nil {
+	if previous.ManagedSecurityGroups != nil && dst.ManagedSecurityGroups != nil {
 		dst.ManagedSecurityGroups.AllNodesSecurityGroupRules = previous.ManagedSecurityGroups.AllNodesSecurityGroupRules
 	}
 
@@ -207,6 +218,14 @@ func restorev1beta1ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infr
 			dst.APIServerLoadBalancer.Enabled = previous.APIServerLoadBalancer.Enabled
 		}
 		optional.RestoreString(&previous.APIServerLoadBalancer.Provider, &dst.APIServerLoadBalancer.Provider)
+
+		if previous.APIServerLoadBalancer.Network != nil {
+			dst.APIServerLoadBalancer.Network = previous.APIServerLoadBalancer.Network
+		}
+
+		if previous.APIServerLoadBalancer.Subnets != nil {
+			dst.APIServerLoadBalancer.Subnets = previous.APIServerLoadBalancer.Subnets
+		}
 	}
 	if dst.APIServerLoadBalancer.IsZero() {
 		dst.APIServerLoadBalancer = previous.APIServerLoadBalancer
@@ -222,6 +241,8 @@ func restorev1beta1ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infr
 	optional.RestoreBool(&previous.DisableAPIServerFloatingIP, &dst.DisableAPIServerFloatingIP)
 	optional.RestoreBool(&previous.ControlPlaneOmitAvailabilityZone, &dst.ControlPlaneOmitAvailabilityZone)
 	optional.RestoreBool(&previous.DisablePortSecurity, &dst.DisablePortSecurity)
+
+	restorev1beta1APIServerLoadBalancer(previous.APIServerLoadBalancer, dst.APIServerLoadBalancer)
 }
 
 func Convert_v1alpha7_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *OpenStackClusterSpec, out *infrav1.OpenStackClusterSpec, s apiconversion.Scope) error {
@@ -231,25 +252,25 @@ func Convert_v1alpha7_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 	}
 
 	if in.Network != (NetworkFilter{}) {
-		out.Network = &infrav1.NetworkFilter{}
-		if err := Convert_v1alpha7_NetworkFilter_To_v1beta1_NetworkFilter(&in.Network, out.Network, s); err != nil {
+		out.Network = &infrav1.NetworkParam{}
+		if err := Convert_v1alpha7_NetworkFilter_To_v1beta1_NetworkParam(&in.Network, out.Network, s); err != nil {
 			return err
 		}
 	}
 
 	if in.ExternalNetworkID != "" {
-		out.ExternalNetwork = &infrav1.NetworkFilter{
-			ID: in.ExternalNetworkID,
+		out.ExternalNetwork = &infrav1.NetworkParam{
+			ID: &in.ExternalNetworkID,
 		}
 	}
 
 	emptySubnet := SubnetFilter{}
 	if in.Subnet != emptySubnet {
-		subnet := infrav1.SubnetFilter{}
-		if err := Convert_v1alpha7_SubnetFilter_To_v1beta1_SubnetFilter(&in.Subnet, &subnet, s); err != nil {
+		subnet := infrav1.SubnetParam{}
+		if err := Convert_v1alpha7_SubnetFilter_To_v1beta1_SubnetParam(&in.Subnet, &subnet, s); err != nil {
 			return err
 		}
-		out.Subnets = []infrav1.SubnetFilter{subnet}
+		out.Subnets = []infrav1.SubnetParam{subnet}
 	}
 
 	// DNSNameservers without NodeCIDR doesn't make sense, so we drop that.
@@ -291,6 +312,18 @@ func Convert_v1alpha7_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 	return nil
 }
 
+func Convert_v1beta1_LoadBalancer_To_v1alpha7_LoadBalancer(in *infrav1.LoadBalancer, out *LoadBalancer, s apiconversion.Scope) error {
+	return autoConvert_v1beta1_LoadBalancer_To_v1alpha7_LoadBalancer(in, out, s)
+}
+
+func Convert_v1beta1_APIServerLoadBalancer_To_v1alpha7_APIServerLoadBalancer(in *infrav1.APIServerLoadBalancer, out *APIServerLoadBalancer, s apiconversion.Scope) error {
+	return autoConvert_v1beta1_APIServerLoadBalancer_To_v1alpha7_APIServerLoadBalancer(in, out, s)
+}
+
+func Convert_v1alpha7_APIServerLoadBalancer_To_v1beta1_APIServerLoadBalancer(in *APIServerLoadBalancer, out *infrav1.APIServerLoadBalancer, s apiconversion.Scope) error {
+	return autoConvert_v1alpha7_APIServerLoadBalancer_To_v1beta1_APIServerLoadBalancer(in, out, s)
+}
+
 func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in *infrav1.OpenStackClusterSpec, out *OpenStackClusterSpec, s apiconversion.Scope) error {
 	err := autoConvert_v1beta1_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in, out, s)
 	if err != nil {
@@ -298,17 +331,17 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha7_OpenStackClusterSpec(in *i
 	}
 
 	if in.Network != nil {
-		if err := Convert_v1beta1_NetworkFilter_To_v1alpha7_NetworkFilter(in.Network, &out.Network, s); err != nil {
+		if err := Convert_v1beta1_NetworkParam_To_v1alpha7_NetworkFilter(in.Network, &out.Network, s); err != nil {
 			return err
 		}
 	}
 
-	if in.ExternalNetwork != nil && in.ExternalNetwork.ID != "" {
-		out.ExternalNetworkID = in.ExternalNetwork.ID
+	if in.ExternalNetwork != nil && in.ExternalNetwork.ID != nil {
+		out.ExternalNetworkID = *in.ExternalNetwork.ID
 	}
 
 	if len(in.Subnets) >= 1 {
-		if err := Convert_v1beta1_SubnetFilter_To_v1alpha7_SubnetFilter(&in.Subnets[0], &out.Subnet, s); err != nil {
+		if err := Convert_v1beta1_SubnetParam_To_v1alpha7_SubnetFilter(&in.Subnets[0], &out.Subnet, s); err != nil {
 			return err
 		}
 	}
@@ -354,6 +387,10 @@ func restorev1beta1ClusterStatus(previous *infrav1.OpenStackClusterStatus, dst *
 
 	restorev1beta1BastionStatus(previous.Bastion, dst.Bastion)
 	restorev1beta1ConditionStatus(previous.Conditions, dst.Conditions)
+
+	if previous.APIServerLoadBalancer != nil {
+		dst.APIServerLoadBalancer = previous.APIServerLoadBalancer
+	}
 }
 
 func Convert_v1beta1_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(in *infrav1.OpenStackClusterStatus, out *OpenStackClusterStatus, s apiconversion.Scope) error {
@@ -363,20 +400,24 @@ func Convert_v1beta1_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(i
 /* Bastion */
 
 func restorev1alpha7Bastion(previous **Bastion, dst **Bastion) {
-	if *previous != nil && *dst != nil {
-		restorev1alpha7MachineSpec(&(*previous).Instance, &(*dst).Instance)
+	if previous == nil || dst == nil || *previous == nil || *dst == nil {
+		return
 	}
+	prevMachineSpec := &(*previous).Instance
+	dstMachineSpec := &(*dst).Instance
+	restorev1alpha7MachineSpec(prevMachineSpec, dstMachineSpec)
+	dstMachineSpec.InstanceID = prevMachineSpec.InstanceID
 }
 
 func restorev1beta1Bastion(previous **infrav1.Bastion, dst **infrav1.Bastion) {
-	if *previous != nil {
-		if *dst != nil && (*previous).Spec != nil && (*dst).Spec != nil {
-			restorev1beta1MachineSpec((*previous).Spec, (*dst).Spec)
-		}
-
-		optional.RestoreString(&(*previous).FloatingIP, &(*dst).FloatingIP)
-		optional.RestoreString(&(*previous).AvailabilityZone, &(*dst).AvailabilityZone)
+	if previous == nil || dst == nil || *previous == nil || *dst == nil {
+		return
 	}
+
+	restorev1beta1MachineSpec((*previous).Spec, (*dst).Spec)
+	optional.RestoreString(&(*previous).FloatingIP, &(*dst).FloatingIP)
+	optional.RestoreString(&(*previous).AvailabilityZone, &(*dst).AvailabilityZone)
+	optional.RestoreBool(&(*previous).Enabled, &(*dst).Enabled)
 }
 
 func Convert_v1alpha7_Bastion_To_v1beta1_Bastion(in *Bastion, out *infrav1.Bastion, s apiconversion.Scope) error {
@@ -394,7 +435,7 @@ func Convert_v1alpha7_Bastion_To_v1beta1_Bastion(in *Bastion, out *infrav1.Basti
 		}
 
 		if in.Instance.ServerGroupID != "" {
-			out.Spec.ServerGroup = &infrav1.ServerGroupFilter{ID: in.Instance.ServerGroupID}
+			out.Spec.ServerGroup = &infrav1.ServerGroupParam{ID: &in.Instance.ServerGroupID}
 		} else {
 			out.Spec.ServerGroup = nil
 		}
@@ -424,8 +465,8 @@ func Convert_v1beta1_Bastion_To_v1alpha7_Bastion(in *infrav1.Bastion, out *Basti
 			return err
 		}
 
-		if in.Spec.ServerGroup != nil && in.Spec.ServerGroup.ID != "" {
-			out.Instance.ServerGroupID = in.Spec.ServerGroup.ID
+		if in.Spec.ServerGroup != nil && in.Spec.ServerGroup.ID != nil {
+			out.Instance.ServerGroupID = *in.Spec.ServerGroup.ID
 		}
 	}
 

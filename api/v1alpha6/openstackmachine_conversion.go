@@ -102,6 +102,26 @@ var v1beta1OpenStackMachineRestorer = conversion.RestorerFor[*infrav1.OpenStackM
 	),
 }
 
+/* OpenStackMachine */
+
+func Convert_v1alpha6_OpenStackMachine_To_v1beta1_OpenStackMachine(in *OpenStackMachine, out *infrav1.OpenStackMachine, s apiconversion.Scope) error {
+	err := autoConvert_v1alpha6_OpenStackMachine_To_v1beta1_OpenStackMachine(in, out, s)
+	if err != nil {
+		return err
+	}
+	out.Status.InstanceID = in.Spec.InstanceID
+	return nil
+}
+
+func Convert_v1beta1_OpenStackMachine_To_v1alpha6_OpenStackMachine(in *infrav1.OpenStackMachine, out *OpenStackMachine, s apiconversion.Scope) error {
+	err := autoConvert_v1beta1_OpenStackMachine_To_v1alpha6_OpenStackMachine(in, out, s)
+	if err != nil {
+		return err
+	}
+	out.Spec.InstanceID = in.Status.InstanceID
+	return nil
+}
+
 /* OpenStackMachineSpec */
 
 func restorev1alpha6MachineSpec(previous *OpenStackMachineSpec, dst *OpenStackMachineSpec) {
@@ -170,6 +190,28 @@ func restorev1beta1MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *infr
 	dst.ServerGroup = previous.ServerGroup
 	dst.Image = previous.Image
 	dst.FloatingIPPoolRef = previous.FloatingIPPoolRef
+
+	if len(dst.SecurityGroups) == len(previous.SecurityGroups) {
+		for i := range dst.SecurityGroups {
+			restorev1beta1SecurityGroupParam(&previous.SecurityGroups[i], &dst.SecurityGroups[i])
+		}
+	}
+
+	if dst.RootVolume != nil && previous.RootVolume != nil {
+		restorev1beta1BlockDeviceVolume(
+			&previous.RootVolume.BlockDeviceVolume,
+			&dst.RootVolume.BlockDeviceVolume,
+		)
+	}
+
+	if len(dst.AdditionalBlockDevices) == len(previous.AdditionalBlockDevices) {
+		for i := range dst.AdditionalBlockDevices {
+			restorev1beta1BlockDeviceVolume(
+				previous.AdditionalBlockDevices[i].Storage.Volume,
+				dst.AdditionalBlockDevices[i].Storage.Volume,
+			)
+		}
+	}
 }
 
 func convertNetworksToPorts(networks []NetworkParam, s apiconversion.Scope) ([]infrav1.PortOpts, error) {
@@ -179,7 +221,7 @@ func convertNetworksToPorts(networks []NetworkParam, s apiconversion.Scope) ([]i
 		network := networks[i]
 
 		// This will remain null if the network is not specified in NetworkParam
-		var networkFilter *infrav1.NetworkFilter
+		var networkFilter *infrav1.NetworkParam
 
 		// In v1alpha6, if network.Filter resolved to multiple networks
 		// then we would add multiple ports. It is not possible to
@@ -189,12 +231,12 @@ func convertNetworksToPorts(networks []NetworkParam, s apiconversion.Scope) ([]i
 		// create the port.
 		switch {
 		case network.UUID != "":
-			networkFilter = &infrav1.NetworkFilter{
-				ID: network.UUID,
+			networkFilter = &infrav1.NetworkParam{
+				ID: &network.UUID,
 			}
 		case network.Filter != (NetworkFilter{}):
-			networkFilter = &infrav1.NetworkFilter{}
-			if err := Convert_v1alpha6_NetworkFilter_To_v1beta1_NetworkFilter(&network.Filter, networkFilter, s); err != nil {
+			networkFilter = &infrav1.NetworkParam{}
+			if err := Convert_v1alpha6_NetworkFilter_To_v1beta1_NetworkParam(&network.Filter, networkFilter, s); err != nil {
 				return nil, err
 			}
 		}
@@ -223,18 +265,18 @@ func convertNetworksToPorts(networks []NetworkParam, s apiconversion.Scope) ([]i
 					ports = append(ports, infrav1.PortOpts{
 						Network: networkFilter,
 						FixedIPs: []infrav1.FixedIP{
-							{Subnet: &infrav1.SubnetFilter{ID: subnet.UUID}},
+							{Subnet: &infrav1.SubnetParam{ID: &subnet.UUID}},
 						},
 					})
 				} else {
-					subnetFilter := &infrav1.SubnetFilter{}
-					if err := Convert_v1alpha6_SubnetFilter_To_v1beta1_SubnetFilter(&subnet.Filter, subnetFilter, s); err != nil {
+					subnetParam := &infrav1.SubnetParam{}
+					if err := Convert_v1alpha6_SubnetFilter_To_v1beta1_SubnetParam(&subnet.Filter, subnetParam, s); err != nil {
 						return nil, err
 					}
 					ports = append(ports, infrav1.PortOpts{
 						Network: networkFilter,
 						FixedIPs: []infrav1.FixedIP{
-							{Subnet: subnetFilter},
+							{Subnet: subnetParam},
 						},
 					})
 				}
@@ -261,18 +303,18 @@ func Convert_v1alpha6_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in *O
 	}
 
 	if in.ServerGroupID != "" {
-		out.ServerGroup = &infrav1.ServerGroupFilter{ID: in.ServerGroupID}
+		out.ServerGroup = &infrav1.ServerGroupParam{ID: &in.ServerGroupID}
 	} else {
 		out.ServerGroup = nil
 	}
 
-	imageFilter := infrav1.ImageFilter{}
+	imageParam := infrav1.ImageParam{}
 	if in.ImageUUID != "" {
-		imageFilter.ID = &in.ImageUUID
+		imageParam.ID = &in.ImageUUID
 	} else if in.Image != "" { // Only add name when ID is not set, in v1beta1 it's not possible to set both.
-		imageFilter.Name = &in.Image
+		imageParam.Filter = &infrav1.ImageFilter{Name: &in.Image}
 	}
-	out.Image = imageFilter
+	out.Image = imageParam
 
 	if len(in.ServerMetadata) > 0 {
 		serverMetadata := make([]infrav1.ServerMetadata, 0, len(in.ServerMetadata))
@@ -310,16 +352,14 @@ func Convert_v1beta1_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(in *i
 		return err
 	}
 
-	if in.ServerGroup != nil {
-		out.ServerGroupID = in.ServerGroup.ID
+	if in.ServerGroup != nil && in.ServerGroup.ID != nil {
+		out.ServerGroupID = *in.ServerGroup.ID
 	}
 
-	if in.Image.Name != nil && *in.Image.Name != "" {
-		out.Image = *in.Image.Name
-	}
-
-	if in.Image.ID != nil && *in.Image.ID != "" {
+	if in.Image.ID != nil {
 		out.ImageUUID = *in.Image.ID
+	} else if in.Image.Filter != nil && in.Image.Filter.Name != nil {
+		out.Image = *in.Image.Filter.Name
 	}
 
 	if len(in.ServerMetadata) > 0 {

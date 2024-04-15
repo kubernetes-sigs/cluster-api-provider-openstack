@@ -23,7 +23,7 @@ import (
 	. "github.com/onsi/gomega"
 	admissionv1 "k8s.io/api/admission/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
@@ -47,7 +47,11 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: infrav1.OpenStackMachineTemplateResource{
 						Spec: infrav1.OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  infrav1.ImageFilter{Name: pointer.String("bar")},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
+									Name: ptr.To("bar"),
+								},
+							},
 						},
 					},
 				},
@@ -57,7 +61,11 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: infrav1.OpenStackMachineTemplateResource{
 						Spec: infrav1.OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  infrav1.ImageFilter{Name: pointer.String("NewImage")},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
+									Name: ptr.To("NewImage"),
+								},
+							},
 						},
 					},
 				},
@@ -72,7 +80,11 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: infrav1.OpenStackMachineTemplateResource{
 						Spec: infrav1.OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  infrav1.ImageFilter{Name: pointer.String("bar")},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
+									Name: ptr.To("bar"),
+								},
+							},
 						},
 					},
 				},
@@ -85,7 +97,11 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: infrav1.OpenStackMachineTemplateResource{
 						Spec: infrav1.OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  infrav1.ImageFilter{Name: pointer.String("bar")},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
+									Name: ptr.To("bar"),
+								},
+							},
 						},
 					},
 				},
@@ -102,7 +118,11 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: infrav1.OpenStackMachineTemplateResource{
 						Spec: infrav1.OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  infrav1.ImageFilter{Name: pointer.String("bar")},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
+									Name: ptr.To("bar"),
+								},
+							},
 						},
 					},
 				},
@@ -112,12 +132,16 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: infrav1.OpenStackMachineTemplateResource{
 						Spec: infrav1.OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  infrav1.ImageFilter{Name: pointer.String("NewImage")},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
+									Name: ptr.To("NewImage"),
+								},
+							},
 						},
 					},
 				},
 			},
-			req:     &admission.Request{AdmissionRequest: admissionv1.AdmissionRequest{DryRun: pointer.Bool(true)}},
+			req:     &admission.Request{AdmissionRequest: admissionv1.AdmissionRequest{DryRun: ptr.To(true)}},
 			wantErr: true,
 		},
 		{
@@ -127,7 +151,11 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: infrav1.OpenStackMachineTemplateResource{
 						Spec: infrav1.OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  infrav1.ImageFilter{Name: pointer.String("bar")},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
+									Name: ptr.To("bar"),
+								},
+							},
 						},
 					},
 				},
@@ -142,12 +170,16 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Template: infrav1.OpenStackMachineTemplateResource{
 						Spec: infrav1.OpenStackMachineSpec{
 							Flavor: "foo",
-							Image:  infrav1.ImageFilter{Name: pointer.String("NewImage")},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
+									Name: ptr.To("NewImage"),
+								},
+							},
 						},
 					},
 				},
 			},
-			req: &admission.Request{AdmissionRequest: admissionv1.AdmissionRequest{DryRun: pointer.Bool(true)}},
+			req: &admission.Request{AdmissionRequest: admissionv1.AdmissionRequest{DryRun: ptr.To(true)}},
 		},
 	}
 

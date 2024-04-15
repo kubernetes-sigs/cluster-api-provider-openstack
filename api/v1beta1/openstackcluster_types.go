@@ -43,12 +43,12 @@ type OpenStackClusterSpec struct {
 	// Router specifies an existing router to be used if ManagedSubnets are
 	// specified. If specified, no new router will be created.
 	// +optional
-	Router *RouterFilter `json:"router,omitempty"`
+	Router *RouterParam `json:"router,omitempty"`
 
 	// Network specifies an existing network to use if no ManagedSubnets
 	// are specified.
 	// +optional
-	Network *NetworkFilter `json:"network,omitempty"`
+	Network *NetworkParam `json:"network,omitempty"`
 
 	// Subnets specifies existing subnets to use if not ManagedSubnets are
 	// specified. All subnets must be in the network specified by Network.
@@ -58,7 +58,7 @@ type OpenStackClusterSpec struct {
 	// +kubebuilder:validation:MaxItems=2
 	// +listType=atomic
 	// +optional
-	Subnets []SubnetFilter `json:"subnets,omitempty"`
+	Subnets []SubnetParam `json:"subnets,omitempty"`
 
 	// NetworkMTU sets the maximum transmission unit (MTU) value to address fragmentation for the private network ID.
 	// This value will be used only if the Cluster actuator creates the network.
@@ -86,7 +86,7 @@ type OpenStackClusterSpec struct {
 	// If ExternalNetwork is not defined and there are no external networks
 	// the controller will proceed as though DisableExternalNetwork was set.
 	// +optional
-	ExternalNetwork *NetworkFilter `json:"externalNetwork,omitempty"`
+	ExternalNetwork *NetworkParam `json:"externalNetwork,omitempty"`
 
 	// DisableExternalNetwork specifies whether or not to attempt to connect the cluster
 	// to an external network. This allows for the creation of clusters when connecting

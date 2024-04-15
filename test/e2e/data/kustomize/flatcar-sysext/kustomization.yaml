@@ -3,6 +3,7 @@ resources:
 - ../../../../../kustomize/v1beta1/flatcar-sysext
 
 components:
+- ../common-patches/cluster
 - ../common-patches/cni
 - ../common-patches/ccm
 - ../common-patches/externalNetworkByName

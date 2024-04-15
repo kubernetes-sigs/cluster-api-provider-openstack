@@ -23,7 +23,7 @@ import (
 	"context"
 
 	. "github.com/onsi/ginkgo/v2"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	capi_e2e "sigs.k8s.io/cluster-api/test/e2e"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
@@ -39,7 +39,7 @@ var _ = Describe("When testing unhealthy machines remediation", func() {
 				BootstrapClusterProxy: e2eCtx.Environment.BootstrapClusterProxy,
 				ArtifactFolder:        e2eCtx.Settings.ArtifactFolder,
 				SkipCleanup:           false,
-				Flavor:                pointer.String(shared.FlavorMDRemediation),
+				Flavor:                ptr.To(shared.FlavorMDRemediation),
 			}
 		})
 	})

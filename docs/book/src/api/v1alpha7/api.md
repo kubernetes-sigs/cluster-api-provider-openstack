@@ -328,7 +328,7 @@ Kubernetes cluster, which also disables SecurityGroups</p>
 <td>
 <code>controlPlaneEndpoint</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.5.1">
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.6.0">
 sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 </a>
 </em>
@@ -1948,7 +1948,7 @@ Kubernetes cluster, which also disables SecurityGroups</p>
 <td>
 <code>controlPlaneEndpoint</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.5.1">
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.6.0">
 sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 </a>
 </em>
@@ -2097,7 +2097,7 @@ LoadBalancer
 <td>
 <code>failureDomains</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.5.1">
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.6.0">
 sigs.k8s.io/cluster-api/api/v1beta1.FailureDomains
 </a>
 </em>
@@ -2504,7 +2504,7 @@ Kubernetes cluster, which also disables SecurityGroups</p>
 <td>
 <code>controlPlaneEndpoint</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.5.1">
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.6.0">
 sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 </a>
 </em>
@@ -2983,7 +2983,7 @@ controller&rsquo;s output.</p>
 <td>
 <code>conditions</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.5.1">
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.6.0">
 sigs.k8s.io/cluster-api/api/v1beta1.Conditions
 </a>
 </em>

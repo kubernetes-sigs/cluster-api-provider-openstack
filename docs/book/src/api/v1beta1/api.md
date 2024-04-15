@@ -87,8 +87,8 @@ subnet is supported. If you leave this empty, no network will be created.</p>
 <td>
 <code>router</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.RouterFilter">
-RouterFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.RouterParam">
+RouterParam
 </a>
 </em>
 </td>
@@ -102,8 +102,8 @@ specified. If specified, no new router will be created.</p>
 <td>
 <code>network</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkFilter">
-NetworkFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkParam">
+NetworkParam
 </a>
 </em>
 </td>
@@ -117,8 +117,8 @@ are specified.</p>
 <td>
 <code>subnets</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetFilter">
-[]SubnetFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetParam">
+[]SubnetParam
 </a>
 </em>
 </td>
@@ -165,8 +165,8 @@ This is necessary if the router needs a fixed ip in a specific subnet.</p>
 <td>
 <code>externalNetwork</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkFilter">
-NetworkFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkParam">
+NetworkParam
 </a>
 </em>
 </td>
@@ -331,7 +331,7 @@ Kubernetes cluster, which also disables SecurityGroups</p>
 <td>
 <code>controlPlaneEndpoint</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.5.1">
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.6.0">
 sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 </a>
 </em>
@@ -563,17 +563,6 @@ string
 </tr>
 <tr>
 <td>
-<code>instanceID</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>InstanceID is the OpenStack instance ID for this machine.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>flavor</code><br/>
 <em>
 string
@@ -587,8 +576,8 @@ string
 <td>
 <code>image</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ImageFilter">
-ImageFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ImageParam">
+ImageParam
 </a>
 </em>
 </td>
@@ -626,8 +615,8 @@ If not specified a default port will be added for the default cluster network.</
 <td>
 <code>securityGroups</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupFilter">
-[]SecurityGroupFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupParam">
+[]SecurityGroupParam
 </a>
 </em>
 </td>
@@ -715,8 +704,8 @@ RootVolume
 <td>
 <code>serverGroup</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerGroupFilter">
-ServerGroupFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerGroupParam">
+ServerGroupParam
 </a>
 </em>
 </td>
@@ -913,6 +902,49 @@ API load balancer. The Octavia default will be used if it is not
 specified.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>network</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkParam">
+NetworkParam
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Network defines which network should the load balancer be allocated on.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>subnets</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetParam">
+[]SubnetParam
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Subnets define which subnets should the load balancer be allocated on.
+It is expected that subnets are located on the network specified in this resource.
+Only the first element is taken into account.
+kubebuilder:validation:MaxLength:=2</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>availabilityZone</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AvailabilityZone is the failure domain that will be used to create the APIServerLoadBalancer Spec.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.AdditionalBlockDevice">AdditionalBlockDevice
@@ -945,7 +977,8 @@ If the block device is a volume, the Cinder volume will be named
 as a combination of the machine name and this name.
 Also, this name will be used for tagging the block device.
 Information about the block device tag can be obtained from the OpenStack
-metadata API or the config drive.</p>
+metadata API or the config drive.
+Name cannot be &lsquo;root&rsquo;, which is reserved for the root volume.</p>
 </td>
 </tr>
 <tr>
@@ -1084,7 +1117,13 @@ bool
 </em>
 </td>
 <td>
-<p>Enabled means that bastion is enabled. Defaults to false.</p>
+<em>(Optional)</em>
+<p>Enabled means that bastion is enabled. The bastion is enabled by
+default if this field is not specified. Set this field to false to disable the
+bastion.</p>
+<p>It is not currently possible to remove the bastion from the cluster
+spec without first disabling it by setting this field to false and
+waiting until the bastion has been deleted.</p>
 </td>
 </tr>
 <tr>
@@ -1359,7 +1398,8 @@ BlockDeviceVolume
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.BlockDeviceStorage">BlockDeviceStorage</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.BlockDeviceStorage">BlockDeviceStorage</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.RootVolume">RootVolume</a>)
 </p>
 <p>
 <p>BlockDeviceVolume contains additional storage options for a volume block device.</p>
@@ -1390,16 +1430,16 @@ will be used.</p>
 <td>
 <code>availabilityZone</code><br/>
 <em>
-string
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.VolumeAvailabilityZone">
+VolumeAvailabilityZone
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>AvailabilityZone is the volume availability zone to create the volume in.
-If omitted, the availability zone of the server will be used.
-The availability zone must NOT contain spaces otherwise it will lead to volume that belongs
-to this availability zone register failure, see kubernetes/cloud-provider-openstack#1379 for
-further information.</p>
+<p>AvailabilityZone is the volume availability zone to create the volume
+in. If not specified, the volume will be created without an explicit
+availability zone.</p>
 </td>
 </tr>
 </tbody>
@@ -1435,8 +1475,8 @@ string
 <td>
 <code>subnet</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetFilter">
-SubnetFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetParam">
+SubnetParam
 </a>
 </em>
 </td>
@@ -1548,8 +1588,8 @@ which contain any of the given tags will be excluded from the result.</p>
 <td>
 <code>subnet</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetFilter">
-SubnetFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetParam">
+SubnetParam
 </a>
 </em>
 </td>
@@ -1580,10 +1620,10 @@ address in any subnet of the port&rsquo;s network.</p>
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ImageParam">ImageParam</a>)
 </p>
 <p>
-<p>ImageFilter describes the data needed to identify which image to use. If ID is provided it is required that all other fields are unset.</p>
+<p>ImageFilter describes a query for an image.</p>
 </p>
 <table>
 <thead>
@@ -1593,18 +1633,6 @@ address in any subnet of the port&rsquo;s network.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>
-<code>id</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The ID of the desired image. If ID is provided, the other filters cannot be provided. Must be in UUID format.</p>
-</td>
-</tr>
 <tr>
 <td>
 <code>name</code><br/>
@@ -1627,6 +1655,53 @@ string
 <td>
 <em>(Optional)</em>
 <p>The tags associated with the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.ImageParam">ImageParam
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>)
+</p>
+<p>
+<p>ImageParam describes a glance image. It can be specified by ID or filter.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>id</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ID is the uuid of the image. ID will not be validated before use.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>filter</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ImageFilter">
+ImageFilter
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Filter describes a query for an image. If specified, the combination
+of name and tags must return a single matching image or an error will
+be raised.</p>
 </td>
 </tr>
 </tbody>
@@ -1720,6 +1795,23 @@ string
 <em>(Optional)</em>
 </td>
 </tr>
+<tr>
+<td>
+<code>loadBalancerNetwork</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkStatusWithSubnets">
+NetworkStatusWithSubnets
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>LoadBalancerNetwork contains information about network and/or subnets which the
+loadbalancer is allocated on.
+If subnets are specified within the LoadBalancerNetwork currently only the first
+subnet in the list is taken into account.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.MachineResources">MachineResources
@@ -1811,10 +1903,10 @@ bool
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackClusterSpec">OpenStackClusterSpec</a>, 
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">PortOpts</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkParam">NetworkParam</a>)
 </p>
 <p>
+<p>NetworkFilter specifies a query to select an OpenStack network. At least one property must be set.</p>
 </p>
 <table>
 <thead>
@@ -1856,16 +1948,6 @@ string
 </tr>
 <tr>
 <td>
-<code>id</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
 <code>FilterByNeutronTags</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.FilterByNeutronTags">
@@ -1877,6 +1959,53 @@ FilterByNeutronTags
 <p>
 (Members of <code>FilterByNeutronTags</code> are embedded into this type.)
 </p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.NetworkParam">NetworkParam
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.APIServerLoadBalancer">APIServerLoadBalancer</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackClusterSpec">OpenStackClusterSpec</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">PortOpts</a>)
+</p>
+<p>
+<p>NetworkParam specifies an OpenStack network. It may be specified by either ID or Filter, but not both.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>id</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ID is the ID of the network to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>filter</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkFilter">
+NetworkFilter
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Filter specifies a filter to select an OpenStack network. If provided, cannot be empty.</p>
 </td>
 </tr>
 </tbody>
@@ -1936,6 +2065,7 @@ string
 </h3>
 <p>
 (<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.LoadBalancer">LoadBalancer</a>, 
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackClusterStatus">OpenStackClusterStatus</a>)
 </p>
 <p>
@@ -2027,8 +2157,8 @@ subnet is supported. If you leave this empty, no network will be created.</p>
 <td>
 <code>router</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.RouterFilter">
-RouterFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.RouterParam">
+RouterParam
 </a>
 </em>
 </td>
@@ -2042,8 +2172,8 @@ specified. If specified, no new router will be created.</p>
 <td>
 <code>network</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkFilter">
-NetworkFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkParam">
+NetworkParam
 </a>
 </em>
 </td>
@@ -2057,8 +2187,8 @@ are specified.</p>
 <td>
 <code>subnets</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetFilter">
-[]SubnetFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetParam">
+[]SubnetParam
 </a>
 </em>
 </td>
@@ -2105,8 +2235,8 @@ This is necessary if the router needs a fixed ip in a specific subnet.</p>
 <td>
 <code>externalNetwork</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkFilter">
-NetworkFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkParam">
+NetworkParam
 </a>
 </em>
 </td>
@@ -2271,7 +2401,7 @@ Kubernetes cluster, which also disables SecurityGroups</p>
 <td>
 <code>controlPlaneEndpoint</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.5.1">
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.6.0">
 sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 </a>
 </em>
@@ -2436,7 +2566,7 @@ LoadBalancer
 <td>
 <code>failureDomains</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.5.1">
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.6.0">
 sigs.k8s.io/cluster-api/api/v1beta1.FailureDomains
 </a>
 </em>
@@ -2621,8 +2751,8 @@ subnet is supported. If you leave this empty, no network will be created.</p>
 <td>
 <code>router</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.RouterFilter">
-RouterFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.RouterParam">
+RouterParam
 </a>
 </em>
 </td>
@@ -2636,8 +2766,8 @@ specified. If specified, no new router will be created.</p>
 <td>
 <code>network</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkFilter">
-NetworkFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkParam">
+NetworkParam
 </a>
 </em>
 </td>
@@ -2651,8 +2781,8 @@ are specified.</p>
 <td>
 <code>subnets</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetFilter">
-[]SubnetFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetParam">
+[]SubnetParam
 </a>
 </em>
 </td>
@@ -2699,8 +2829,8 @@ This is necessary if the router needs a fixed ip in a specific subnet.</p>
 <td>
 <code>externalNetwork</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkFilter">
-NetworkFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkParam">
+NetworkParam
 </a>
 </em>
 </td>
@@ -2865,7 +2995,7 @@ Kubernetes cluster, which also disables SecurityGroups</p>
 <td>
 <code>controlPlaneEndpoint</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.5.1">
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.6.0">
 sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint
 </a>
 </em>
@@ -3053,17 +3183,6 @@ string
 </tr>
 <tr>
 <td>
-<code>instanceID</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>InstanceID is the OpenStack instance ID for this machine.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>flavor</code><br/>
 <em>
 string
@@ -3077,8 +3196,8 @@ string
 <td>
 <code>image</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ImageFilter">
-ImageFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ImageParam">
+ImageParam
 </a>
 </em>
 </td>
@@ -3116,8 +3235,8 @@ If not specified a default port will be added for the default cluster network.</
 <td>
 <code>securityGroups</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupFilter">
-[]SecurityGroupFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupParam">
+[]SecurityGroupParam
 </a>
 </em>
 </td>
@@ -3205,8 +3324,8 @@ RootVolume
 <td>
 <code>serverGroup</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerGroupFilter">
-ServerGroupFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerGroupParam">
+ServerGroupParam
 </a>
 </em>
 </td>
@@ -3274,6 +3393,18 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Ready is true when the provider resource is ready.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>instanceID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>InstanceID is the OpenStack instance ID for this machine.</p>
 </td>
 </tr>
 <tr>
@@ -3371,7 +3502,7 @@ controller&rsquo;s output.</p>
 <td>
 <code>conditions</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.5.1">
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.6.0">
 sigs.k8s.io/cluster-api/api/v1beta1.Conditions
 </a>
 </em>
@@ -3425,17 +3556,6 @@ string
 </tr>
 <tr>
 <td>
-<code>instanceID</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>InstanceID is the OpenStack instance ID for this machine.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>flavor</code><br/>
 <em>
 string
@@ -3449,8 +3569,8 @@ string
 <td>
 <code>image</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ImageFilter">
-ImageFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ImageParam">
+ImageParam
 </a>
 </em>
 </td>
@@ -3488,8 +3608,8 @@ If not specified a default port will be added for the default cluster network.</
 <td>
 <code>securityGroups</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupFilter">
-[]SecurityGroupFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupParam">
+[]SecurityGroupParam
 </a>
 </em>
 </td>
@@ -3577,8 +3697,8 @@ RootVolume
 <td>
 <code>serverGroup</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerGroupFilter">
-ServerGroupFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerGroupParam">
+ServerGroupParam
 </a>
 </em>
 </td>
@@ -3673,8 +3793,8 @@ OpenStackMachineTemplateResource
 <td>
 <code>network</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkFilter">
-NetworkFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkParam">
+NetworkParam
 </a>
 </em>
 </td>
@@ -3726,8 +3846,8 @@ string
 <td>
 <code>securityGroups</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupFilter">
-[]SecurityGroupFilter
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupParam">
+[]SecurityGroupParam
 </a>
 </em>
 </td>
@@ -4204,32 +4324,28 @@ depends on the specific OpenStack implementation.</p>
 <tbody>
 <tr>
 <td>
-<code>diskSize</code><br/>
+<code>sizeGiB</code><br/>
 <em>
 int
 </em>
 </td>
 <td>
+<p>SizeGiB is the size of the block device in gibibytes (GiB).</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>volumeType</code><br/>
+<code>BlockDeviceVolume</code><br/>
 <em>
-string
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.BlockDeviceVolume">
+BlockDeviceVolume
+</a>
 </em>
 </td>
 <td>
-</td>
-</tr>
-<tr>
-<td>
-<code>availabilityZone</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
+<p>
+(Members of <code>BlockDeviceVolume</code> are embedded into this type.)
+</p>
 </td>
 </tr>
 </tbody>
@@ -4299,9 +4415,10 @@ string
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackClusterSpec">OpenStackClusterSpec</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.RouterParam">RouterParam</a>)
 </p>
 <p>
+<p>RouterFilter specifies a query to select an OpenStack router. At least one property must be set.</p>
 </p>
 <table>
 <thead>
@@ -4311,16 +4428,6 @@ string
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>
-<code>id</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
 <tr>
 <td>
 <code>name</code><br/>
@@ -4368,14 +4475,14 @@ FilterByNeutronTags
 </tr>
 </tbody>
 </table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupFilter">SecurityGroupFilter
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.RouterParam">RouterParam
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>, 
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">PortOpts</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackClusterSpec">OpenStackClusterSpec</a>)
 </p>
 <p>
+<p>RouterParam specifies an OpenStack router to use. It may be specified by either ID or filter, but not both.</p>
 </p>
 <table>
 <thead>
@@ -4393,8 +4500,42 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>ID is the ID of the router to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>filter</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.RouterFilter">
+RouterFilter
+</a>
+</em>
+</td>
+<td>
+<p>Filter specifies a filter to select an OpenStack router. If provided, cannot be empty.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupFilter">SecurityGroupFilter
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupParam">SecurityGroupParam</a>)
+</p>
+<p>
+<p>SecurityGroupFilter specifies a query to select an OpenStack security group. At least one property must be set.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
 <tr>
 <td>
 <code>name</code><br/>
@@ -4438,6 +4579,52 @@ FilterByNeutronTags
 <p>
 (Members of <code>FilterByNeutronTags</code> are embedded into this type.)
 </p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupParam">SecurityGroupParam
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">PortOpts</a>)
+</p>
+<p>
+<p>SecurityGroupParam specifies an OpenStack security group. It may be specified by ID or filter, but not both.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>id</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ID is the ID of the security group to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>filter</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupFilter">
+SecurityGroupFilter
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Filter specifies a query to select an OpenStack security group. If provided, cannot be empty.</p>
 </td>
 </tr>
 </tbody>
@@ -4642,9 +4829,40 @@ string
 </h3>
 <p>
 (<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerGroupParam">ServerGroupParam</a>)
+</p>
+<p>
+<p>ServerGroupFilter specifies a query to select an OpenStack server group. At least one property must be set.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name is the name of a server group to look for.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.ServerGroupParam">ServerGroupParam
+</h3>
+<p>
+(<em>Appears on:</em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>)
 </p>
 <p>
+<p>ServerGroupParam specifies an OpenStack server group. It may be specified by ID or filter, but not both.</p>
 </p>
 <table>
 <thead>
@@ -4662,16 +4880,20 @@ string
 </em>
 </td>
 <td>
+<p>ID is the ID of the server group to use.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>name</code><br/>
+<code>filter</code><br/>
 <em>
-string
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerGroupFilter">
+ServerGroupFilter
+</a>
 </em>
 </td>
 <td>
+<p>Filter specifies a query to select an OpenStack server group. If provided, it cannot be empty.</p>
 </td>
 </tr>
 </tbody>
@@ -4780,11 +5002,10 @@ string
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ExternalRouterIPParam">ExternalRouterIPParam</a>, 
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.FixedIP">FixedIP</a>, 
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackClusterSpec">OpenStackClusterSpec</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetParam">SubnetParam</a>)
 </p>
 <p>
+<p>SubnetFilter specifies a filter to select a subnet. At least one parameter must be specified.</p>
 </p>
 <table>
 <thead>
@@ -4876,16 +5097,6 @@ string
 </tr>
 <tr>
 <td>
-<code>id</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
 <code>FilterByNeutronTags</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.FilterByNeutronTags">
@@ -4897,6 +5108,54 @@ FilterByNeutronTags
 <p>
 (Members of <code>FilterByNeutronTags</code> are embedded into this type.)
 </p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.SubnetParam">SubnetParam
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.APIServerLoadBalancer">APIServerLoadBalancer</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ExternalRouterIPParam">ExternalRouterIPParam</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.FixedIP">FixedIP</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackClusterSpec">OpenStackClusterSpec</a>)
+</p>
+<p>
+<p>SubnetParam specifies an OpenStack subnet to use. It may be specified by either ID or filter, but not both.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>id</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ID is the uuid of the subnet. It will not be validated.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>filter</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetFilter">
+SubnetFilter
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Filter specifies a filter to select the subnet. It must match exactly one subnet.</p>
 </td>
 </tr>
 </tbody>
@@ -5007,6 +5266,90 @@ string
 </td>
 <td>
 <p>Value is the value in the key-value pair.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.VolumeAZName">VolumeAZName
+(<code>string</code> alias)</p></h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.VolumeAvailabilityZone">VolumeAvailabilityZone</a>)
+</p>
+<p>
+<p>VolumeAZName is the name of a volume availability zone. It may not contain spaces.</p>
+</p>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.VolumeAZSource">VolumeAZSource
+(<code>string</code> alias)</p></h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.VolumeAvailabilityZone">VolumeAvailabilityZone</a>)
+</p>
+<p>
+<p>VolumeAZSource specifies where to obtain the availability zone for a volume.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Machine&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Name&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.VolumeAvailabilityZone">VolumeAvailabilityZone
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.BlockDeviceVolume">BlockDeviceVolume</a>)
+</p>
+<p>
+<p>VolumeAvailabilityZone specifies the availability zone for a volume.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>from</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.VolumeAZSource">
+VolumeAZSource
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>From specifies where we will obtain the availability zone for the
+volume. The options are &ldquo;Name&rdquo; and &ldquo;Machine&rdquo;. If &ldquo;Name&rdquo; is specified
+then the Name field must also be specified. If &ldquo;Machine&rdquo; is specified
+the volume will use the value of FailureDomain, if any, from the
+associated Machine.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.VolumeAZName">
+VolumeAZName
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Name is the name of a volume availability zone to use. It is required
+if From is &ldquo;Name&rdquo;. The volume availability zone name may not contain
+spaces.</p>
 </td>
 </tr>
 </tbody>
