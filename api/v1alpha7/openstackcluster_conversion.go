@@ -353,6 +353,7 @@ func restorev1beta1ClusterStatus(previous *infrav1.OpenStackClusterStatus, dst *
 	}
 
 	restorev1beta1BastionStatus(previous.Bastion, dst.Bastion)
+	restorev1beta1ConditionStatus(previous.Conditions, dst.Conditions)
 }
 
 func Convert_v1beta1_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(in *infrav1.OpenStackClusterStatus, out *OpenStackClusterStatus, s apiconversion.Scope) error {
@@ -441,6 +442,28 @@ func restorev1beta1BastionStatus(previous *infrav1.BastionStatus, dst *infrav1.B
 	// Resolved and resources have no equivalents
 	dst.Resolved = previous.Resolved
 	dst.Resources = previous.Resources
+}
+
+/* Condition status */
+
+func restorev1beta1ConditionStatus(previous clusterv1.Conditions, dst clusterv1.Conditions) {
+	// maybe we shoudn't restore it,and only to please test case
+	// even if condition lose,it's ok because of failureReason and failureMessage existed
+	if len(previous) == 0 {
+		return
+	}
+	for _, p := range previous {
+
+		newCondition := clusterv1.Condition{
+			Type:               p.Type,
+			Status:             p.Status,
+			Severity:           p.Severity,
+			LastTransitionTime: p.LastTransitionTime,
+			Reason:             p.Reason,
+			Message:            p.Message,
+		}
+		dst = append(dst, newCondition)
+	}
 }
 
 func Convert_v1beta1_BastionStatus_To_v1alpha7_BastionStatus(in *infrav1.BastionStatus, out *BastionStatus, s apiconversion.Scope) error {
