@@ -556,7 +556,6 @@ func restorev1beta1ConditionStatus(previous clusterv1.Conditions, dst clusterv1.
 		return
 	}
 	for _, p := range previous {
-
 		newCondition := clusterv1.Condition{
 			Type:               p.Type,
 			Status:             p.Status,
