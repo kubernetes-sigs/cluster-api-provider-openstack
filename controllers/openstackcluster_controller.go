@@ -112,7 +112,8 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	// Always patch the openStackCluster when exiting this function so we can persist any OpenStackCluster changes.
 	defer func() {
 		if err := patchCluster(ctx, patchHelper, openStackCluster); err != nil {
-			reterr = kerrors.NewAggregate([]error{reterr, err})
+			result = ctrl.Result{}
+			reterr = kerrors.NewAggregate([]error{reterr, fmt.Errorf("error patching OpenStackCluster %s/%s: %w", openStackCluster.Namespace, openStackCluster.Name, err)})
 		}
 	}()
 
@@ -168,8 +169,6 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope 
 		return reconcile.Result{}, err
 	}
 
-	clusterName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
-
 	var skipLBDeleting bool
 
 	if openStackCluster.Spec.APIServerLoadBalancer.IsEnabled() {
@@ -184,7 +183,7 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope 
 		}
 
 		if !skipLBDeleting {
-			if err = loadBalancerService.DeleteLoadBalancer(openStackCluster, clusterName); err != nil {
+			if err = loadBalancerService.DeleteLoadBalancer(openStackCluster, clusterResourceName); err != nil {
 				handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete load balancer: %w", err))
 				return reconcile.Result{}, fmt.Errorf("failed to delete load balancer: %w", err)
 			}
