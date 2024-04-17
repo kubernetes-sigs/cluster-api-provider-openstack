@@ -96,8 +96,6 @@ linters-settings:
       - pkg: sigs.k8s.io/controller-runtime
         alias: ctrl
       # CAPO
-      - pkg: sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha5
-        alias: infrav1alpha5
       - pkg: sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6
         alias: infrav1alpha6
       - pkg: sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7

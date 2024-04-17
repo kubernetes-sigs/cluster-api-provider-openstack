@@ -266,7 +266,6 @@ generate-controller-gen: $(CONTROLLER_GEN)
 capo_module := sigs.k8s.io/cluster-api-provider-openstack
 generate-conversion-gen: $(CONVERSION_GEN)
 	$(CONVERSION_GEN) \
-		--input-dirs=$(capo_module)/api/v1alpha5 \
 		--input-dirs=$(capo_module)/api/v1alpha6 \
 		--input-dirs=$(capo_module)/api/v1alpha7 \
 		--extra-dirs=$(capo_module)/pkg/utils/optional \
