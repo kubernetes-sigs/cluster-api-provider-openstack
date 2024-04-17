@@ -1968,10 +1968,17 @@ spec:
       jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
+    deprecated: true
+    deprecationWarning: The v1alpha7 version of OpenStackCluster has been deprecated
+      and will be removed in a future release.
     name: v1alpha7
     schema:
       openAPIV3Schema:
-        description: OpenStackCluster is the Schema for the openstackclusters API.
+        description: |-
+          OpenStackCluster is the Schema for the openstackclusters API.
+
+
+          Deprecated: v1alpha7.OpenStackCluster has been replaced by v1beta1.OpenStackCluster.
         properties:
           apiVersion:
             description: |-

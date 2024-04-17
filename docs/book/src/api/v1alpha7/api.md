@@ -16,6 +16,7 @@ Resource Types:
 </h3>
 <p>
 <p>OpenStackCluster is the Schema for the openstackclusters API.</p>
+<p>Deprecated: v1alpha7.OpenStackCluster has been replaced by v1beta1.OpenStackCluster.</p>
 </p>
 <table>
 <thead>
@@ -413,6 +414,7 @@ OpenStackClusterStatus
 </h3>
 <p>
 <p>OpenStackClusterTemplate is the Schema for the openstackclustertemplates API.</p>
+<p>Deprecated: v1alpha7.OpenStackClusterTemplate has been replaced by v1beta1.OpenStackClusterTemplate.</p>
 </p>
 <table>
 <thead>
@@ -485,6 +487,7 @@ OpenStackClusterTemplateResource
 </h3>
 <p>
 <p>OpenStackMachine is the Schema for the openstackmachines API.</p>
+<p>Deprecated: v1alpha7.OpenStackMachine has been replaced by v1beta1.OpenStackMachine.</p>
 </p>
 <table>
 <thead>
@@ -774,6 +777,7 @@ OpenStackMachineStatus
 </h3>
 <p>
 <p>OpenStackMachineTemplate is the Schema for the openstackmachinetemplates API.</p>
+<p>Deprecated: v1alpha7.OpenStackMachineTemplate has been replaced by v1beta1.OpenStackMachineTemplate.</p>
 </p>
 <table>
 <thead>
