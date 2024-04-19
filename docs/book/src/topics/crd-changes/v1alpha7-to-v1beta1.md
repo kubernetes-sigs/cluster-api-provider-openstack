@@ -41,8 +41,6 @@
 
 # v1alpha7 compared to v1beta1
 
-> ⚠️ v1beta1 has not been released yet.
-
 ## Migration
 
 All users are encouraged to migrate their usage of the CAPO CRDs from older versions to `v1beta1`. This includes yaml files and source code. As CAPO implements automatic conversions between the CRD versions, this migration can happen after installing the new CAPO release.
