@@ -2687,6 +2687,20 @@ OpenStackClusters can be added as events to the OpenStackCluster object
 and/or logged in the controller&rsquo;s output.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>conditions</code><br/>
+<em>
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.6.0">
+sigs.k8s.io/cluster-api/api/v1beta1.Conditions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Conditions defines the current state of the OpenStackCluster.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.OpenStackClusterTemplateResource">OpenStackClusterTemplateResource

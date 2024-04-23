@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
@@ -35,6 +36,7 @@ import (
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/annotations"
 	"sigs.k8s.io/cluster-api/util/collections"
+	"sigs.k8s.io/cluster-api/util/conditions"
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/cluster-api/util/predicates"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -109,7 +111,7 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	// Always patch the openStackCluster when exiting this function so we can persist any OpenStackCluster changes.
 	defer func() {
-		if err := patchHelper.Patch(ctx, openStackCluster); err != nil {
+		if err := patchCluster(ctx, patchHelper, openStackCluster); err != nil {
 			result = ctrl.Result{}
 			reterr = kerrors.NewAggregate([]error{reterr, fmt.Errorf("error patching OpenStackCluster %s/%s: %w", openStackCluster.Namespace, openStackCluster.Name, err)})
 		}
@@ -167,15 +169,24 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope 
 		return reconcile.Result{}, err
 	}
 
+	var skipLBDeleting bool
+
 	if openStackCluster.Spec.APIServerLoadBalancer.IsEnabled() {
 		loadBalancerService, err := loadbalancer.NewService(scope)
 		if err != nil {
-			return reconcile.Result{}, err
+			if strings.EqualFold(err.Error(), loadbalancer.ErrLoadBalancerNoPoint) {
+				skipLBDeleting = true
+			}
+			if !skipLBDeleting {
+				return reconcile.Result{}, err
+			}
 		}
 
-		if err = loadBalancerService.DeleteLoadBalancer(openStackCluster, clusterResourceName); err != nil {
-			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete load balancer: %w", err))
-			return reconcile.Result{}, fmt.Errorf("failed to delete load balancer: %w", err)
+		if !skipLBDeleting {
+			if err = loadBalancerService.DeleteLoadBalancer(openStackCluster, clusterResourceName); err != nil {
+				handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete load balancer: %w", err))
+				return reconcile.Result{}, fmt.Errorf("failed to delete load balancer: %w", err)
+			}
 		}
 	}
 
@@ -345,6 +356,11 @@ func deleteBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStac
 }
 
 func reconcileNormal(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) { //nolint:unparam
+	if openStackCluster.Status.FailureReason != nil || openStackCluster.Status.FailureMessage != nil {
+		scope.Logger().Info("Not reconciling cluster in failed state. See openStackCluster.status.failureReason, openStackCluster.status.failureMessage, or previously logged error for details")
+		return ctrl.Result{}, nil
+	}
+
 	scope.Logger().Info("Reconciling Cluster")
 
 	// If the OpenStackCluster doesn't have our finalizer, add it.
@@ -809,6 +825,10 @@ func reconcileControlPlaneEndpoint(scope *scope.WithLogger, networkingService *n
 	case openStackCluster.Spec.APIServerLoadBalancer.IsEnabled():
 		loadBalancerService, err := loadbalancer.NewService(scope)
 		if err != nil {
+			if strings.EqualFold(err.Error(), loadbalancer.ErrLoadBalancerNoPoint) {
+				handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to init load balancer client: %w", err))
+				conditions.MarkFalse(openStackCluster, infrav1.ClusterReadyReason, infrav1.LoadBalancerReconcileErrorReason, clusterv1.ConditionSeverityError, err.Error())
+			}
 			return err
 		}
 
@@ -913,6 +933,7 @@ func (r *OpenStackClusterReconciler) SetupWithManager(ctx context.Context, mgr c
 
 func handleUpdateOSCError(openstackCluster *infrav1.OpenStackCluster, message error) {
 	err := capierrors.UpdateClusterError
+	openstackCluster.Status.Ready = false
 	openstackCluster.Status.FailureReason = &err
 	openstackCluster.Status.FailureMessage = ptr.To(message.Error())
 }
@@ -971,4 +992,13 @@ func setClusterNetwork(openStackCluster *infrav1.OpenStackCluster, network *netw
 	openStackCluster.Status.Network.ID = network.ID
 	openStackCluster.Status.Network.Name = network.Name
 	openStackCluster.Status.Network.Tags = network.Tags
+}
+
+// patchCluster patches the OpenStackCluster resource.
+func patchCluster(ctx context.Context, patchHelper *patch.Helper, openStackCluster *infrav1.OpenStackCluster, options ...patch.Option) error {
+	err := patchHelper.Patch(ctx, openStackCluster, options...)
+	if err != nil {
+		return err
+	}
+	return nil
 }

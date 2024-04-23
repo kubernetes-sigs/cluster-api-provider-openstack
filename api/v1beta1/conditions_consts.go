@@ -64,3 +64,13 @@ const (
 	// UnableToFindFloatingIPNetworkReason is used when the floating ip network is not found.
 	UnableToFindFloatingIPNetworkReason = "UnableToFindFloatingIPNetwork"
 )
+
+const (
+	ClusterReadyCondition clusterv1.ConditionType = "ClusterReady"
+	// ClusterNotReadyReason used when create the cluster failed.
+	ClusterNotReadyReason = "ClusterNotReady"
+	// ClusterReadyReason reports on current status of the OpenStack cluster. Ready indicates the cluster is in a OK state.
+	ClusterReadyReason = "ClusterReady"
+	// LoadBalancerReconcileErrorReason used when the openstack create loadbalancer error.
+	LoadBalancerReconcileErrorReason = "LoadBalancerReconcileError"
+)

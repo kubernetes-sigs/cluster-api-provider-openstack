@@ -390,6 +390,10 @@ func restorev1beta1ClusterStatus(previous *infrav1.OpenStackClusterStatus, dst *
 	if previous.APIServerLoadBalancer != nil {
 		dst.APIServerLoadBalancer = previous.APIServerLoadBalancer
 	}
+
+	if previous.Conditions != nil {
+		dst.Conditions = previous.Conditions
+	}
 }
 
 func Convert_v1beta1_OpenStackClusterStatus_To_v1alpha7_OpenStackClusterStatus(in *infrav1.OpenStackClusterStatus, out *OpenStackClusterStatus, s apiconversion.Scope) error {
