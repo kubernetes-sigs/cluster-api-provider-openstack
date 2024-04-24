@@ -744,6 +744,20 @@ to an IPAddressClaim. Once the IPAddressClaim is fulfilled, the FloatingIP
 will be assigned to the OpenStackMachine.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>namePrefix</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>NamePrefix is an optional string that will be used as a prefix for the name of OpenStack
+resources created based on this OpenStackMachine. A random suffix will be added to the prefix.
+If omitted, the name of the OpenStackMachine will be used as name.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -3352,6 +3366,20 @@ to an IPAddressClaim. Once the IPAddressClaim is fulfilled, the FloatingIP
 will be assigned to the OpenStackMachine.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>namePrefix</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>NamePrefix is an optional string that will be used as a prefix for the name of OpenStack
+resources created based on this OpenStackMachine. A random suffix will be added to the prefix.
+If omitted, the name of the OpenStackMachine will be used as name.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineStatus">OpenStackMachineStatus
@@ -3723,6 +3751,20 @@ Kubernetes core/v1.TypedLocalObjectReference
 <p>floatingIPPoolRef is a reference to a IPPool that will be assigned
 to an IPAddressClaim. Once the IPAddressClaim is fulfilled, the FloatingIP
 will be assigned to the OpenStackMachine.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>namePrefix</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>NamePrefix is an optional string that will be used as a prefix for the name of OpenStack
+resources created based on this OpenStackMachine. A random suffix will be added to the prefix.
+If omitted, the name of the OpenStackMachine will be used as name.</p>
 </td>
 </tr>
 </table>

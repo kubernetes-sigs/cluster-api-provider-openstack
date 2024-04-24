@@ -29,6 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
+	k8snames "k8s.io/apiserver/pkg/storage/names"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
@@ -815,8 +816,13 @@ func machineToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, machine *
 		serverMetadata[key] = value
 	}
 
+	instanceName := openStackMachine.Name
+	if openStackMachine.Spec.NamePrefix != "" {
+		instanceName = k8snames.SimpleNameGenerator.GenerateName(openStackMachine.Spec.NamePrefix)
+	}
+
 	instanceSpec := compute.InstanceSpec{
-		Name:                   openStackMachine.Name,
+		Name:                   instanceName,
 		ImageID:                resolved.ImageID,
 		Flavor:                 openStackMachine.Spec.Flavor,
 		SSHKeyName:             openStackMachine.Spec.SSHKeyName,

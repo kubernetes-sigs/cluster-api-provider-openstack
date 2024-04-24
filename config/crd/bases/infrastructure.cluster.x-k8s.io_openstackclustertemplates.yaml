@@ -1995,6 +1995,13 @@ spec:
                                     format: uuid
                                     type: string
                                 type: object
+                              namePrefix:
+                                description: |-
+                                  NamePrefix is an optional string that will be used as a prefix for the name of OpenStack
+                                  resources created based on this OpenStackMachine. A random suffix will be added to the prefix.
+                                  If omitted, the name of the OpenStackMachine will be used as name.
+                                maxLength: 255
+                                type: string
                               ports:
                                 description: |-
                                   Ports to be attached to the server instance. They are created if a port with the given name does not already exist.

@@ -169,6 +169,21 @@ func Test_machineToInstanceSpec(t *testing.T) {
 				return i
 			},
 		},
+		{
+			name:             "NamePrefix",
+			openStackCluster: getDefaultOpenStackCluster,
+			machine:          getDefaultMachine,
+			openStackMachine: func() *infrav1.OpenStackMachine {
+				m := getDefaultOpenStackMachine()
+				m.Spec.NamePrefix = "custom-prefix-"
+				return m
+			},
+			wantInstanceSpec: func() *compute.InstanceSpec {
+				i := getDefaultInstanceSpec()
+				i.Name = "custom-prefix-abcd"
+				return i
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -176,6 +191,12 @@ func Test_machineToInstanceSpec(t *testing.T) {
 			got, _ := machineToInstanceSpec(tt.openStackCluster(), tt.machine(), tt.openStackMachine(), "user-data")
 			wanted := tt.wantInstanceSpec()
 
+			if tt.openStackMachine().Spec.NamePrefix != "" {
+				// We cannot predict the generated name so we just check the prefix
+				g.Expect(got.Name).To(HavePrefix(tt.openStackMachine().Spec.NamePrefix))
+				// Then set it to what was generated so we can check Equal for the rest of the fields
+				wanted.Name = got.Name
+			}
 			g.Expect(got).To(Equal(wanted), cmp.Diff(got, wanted))
 		})
 	}
