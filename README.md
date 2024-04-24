@@ -56,11 +56,11 @@ This provider's versions are able to install and manage the following versions o
 
 This provider's versions are able to install Kubernetes to the following versions of OpenStack:
 
-|                                    | Queens | Rocky | Stein | Train | Ussuri | Victoria | Wallaby | Xena | Yoga |
-|------------------------------------| ------ | ----- | ----- | ----- | ------ | -------- | ------- | ---- | ---- |
-| OpenStack Provider v1alpha5 (v0.6) | +      | +     | +     | +     | +      | ✓        | ✓       | ✓    | ★    |
-| OpenStack Provider v1alpha6 (v0.7) | +      | +     | +     | +     | +      | ✓        | ✓       | ✓    | ★    |
-| OpenStack Provider v1alpha7        |        | +     | +     | +     | +      | ✓        | ✓       | ✓    | ★    |
+|                                    | Queens | Rocky | Stein | Train | Ussuri | Victoria | Wallaby | Xena | Yoga | Bobcat |
+|------------------------------------| ------ | ----- | ----- | ----- | ------ | -------- | ------- | ---- | ---- | ------ |
+| OpenStack Provider v1alpha5 (v0.6) | +      | +     | +     | +     | +      | ✓        | ✓       | ✓    | ✓    | ★      |
+| OpenStack Provider v1alpha6 (v0.7) | +      | +     | +     | +     | +      | ✓        | ✓       | ✓    | ✓    | ★      |
+| OpenStack Provider v1alpha7 (v0.9) |        | +     | +     | +     | +      | ✓        | ✓       | ✓    | ✓    | ★      |
 
 Test status:
 

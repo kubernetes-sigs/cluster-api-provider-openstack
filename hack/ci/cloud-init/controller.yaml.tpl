@@ -12,9 +12,6 @@
     VERBOSE=True
     LOG_COLOR=True
 
-    # Neutron
-    enable_plugin neutron https://github.com/openstack/neutron stable/${OPENSTACK_RELEASE}
-
     # Octavia
     enable_plugin octavia https://github.com/openstack/octavia stable/${OPENSTACK_RELEASE}
     enable_plugin octavia-dashboard https://github.com/openstack/octavia-dashboard stable/${OPENSTACK_RELEASE}
@@ -35,9 +32,17 @@
     ENABLED_SERVICES+=,g-api
 
     # Neutron
-    ENABLED_SERVICES+=,neutron-api,neutron-agent,neutron-dhcp,neutron-l3,neutron-trunk
+    enable_plugin neutron https://github.com/openstack/neutron stable/${OPENSTACK_RELEASE}
+    ENABLED_SERVICES+=,q-svc,neutron-trunk,ovn-controller,ovs-vswitchd,ovn-northd,ovsdb-server,q-ovn-metadata-agent
+    
+    DISABLED_SERVICES=q-agt,q-dhcp,q-l3,q-meta,q-metering
+    PUBLIC_BRIDGE_MTU=${MTU}
+    ENABLE_CHASSIS_AS_GW="True"
+    OVN_DBS_LOG_LEVEL="dbg"
+    Q_ML2_PLUGIN_MECHANISM_DRIVERS="ovn,logger"
+    OVN_L3_CREATE_PUBLIC_NETWORK="True"
+    Q_AGENT="ovn"
 
-    ENABLED_SERVICES+=,neutron-metadata-agent,neutron-qos
     # Octavia
     ENABLED_SERVICES+=,octavia,o-api,o-cw,o-hm,o-hk,o-da
 
@@ -50,6 +55,7 @@
 
     # Additional services
     ENABLED_SERVICES+=${OPENSTACK_ADDITIONAL_SERVICES}
+    DISABLED_SERVICES+=${OPENSTACK_DISABLED_SERVICES}
 
     # Don't download default images, just our test images
     DOWNLOAD_DEFAULT_IMAGES=False
@@ -86,13 +92,18 @@
     [DEFAULT]
     storage_availability_zone = ${PRIMARY_AZ}
 
-    [[post-config|/$NEUTRON_CORE_PLUGIN_CONF]]
-    [ml2]
-    path_mtu = ${MTU}
-
     [[post-config|$NEUTRON_CONF]]
     [DEFAULT]
+    global_physnet_mtu = ${MTU}
     service_plugins = trunk,router
+
+    # The following are required for OVN to set default DNS when a subnet is
+    # created without specifying DNS servers.
+    # Not specifying these will result in the default DNS servers being set to
+    # 127.0.0.53 which might be problematic in some environments.
+    [[post-config|/$Q_PLUGIN_CONF_FILE]]
+    [ovn]
+    dns_servers = ${OPENSTACK_DNS_NAMESERVERS}
 - path: /tmp/register-worker.sh
   permissions: "0755"
   content: |

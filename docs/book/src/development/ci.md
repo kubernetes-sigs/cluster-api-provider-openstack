@@ -28,7 +28,7 @@ The entry point for the creation of the test DevStack is `hack/ci/create_devstac
 
 ### DevStack OS
 
-In GCE, DevStack is installed on a community-maintained Ubuntu 20.04 LTS cloud image. The cloud-init config is also intended to work on CentOS 8, and this is known to work as of 2021-01-12. However, note that this is not regularly tested. See the comment in `hack/ci/gce-project.sh` for how to deploy on CentOS.
+In GCE, DevStack is installed on a community-maintained Ubuntu 22.04 LTS cloud image. The cloud-init config is also intended to work on CentOS 8, and this is known to work as of 2021-01-12. However, note that this is not regularly tested. See the comment in `hack/ci/gce-project.sh` for how to deploy on CentOS.
 
 It is convenient to the project to have a viable second OS option as it gives us an option to work around issues which only affect one or the other. This is most likely when enabling new DevStack features, but may also include infrastructure issues. Consequently, when making changes to cloud-init, try not to use features specific to Ubuntu or CentOS. DevStack already supports both operating systems, so we just need to be careful in our peripheral configuration, for example by using cloud-init's `packages` module rather than manually invoking `apt-get` or `yum`. Fortunately package names tend to be consistent across the two distributions.
 
@@ -40,13 +40,13 @@ We configure a 2 node DevStack. `controller` is running:
 * Nova: all services, including compute
 * Glance: all services
 * Octavia: all services
-* Neutron: all services with ML2/OVS, including L3 agent
+* Neutron: all services with ML2/OVN
 * Cinder: all services, including volume with default LVM/iSCSI backend
 
 `worker` is running:
 
 * Nova: compute only
-* Neutron: agent only (not L3 agent)
+* Neutron: OVN agents only
 * Cinder: volume only with default LVM/iSCSI backend
 
 `controller` is using the `n2-standard-16` machine type with 16 vCPUs and 64 GB RAM. `worker` is using the `n2-standard-8` machine type with 8 vCPUs and 32 GB RAM. Each job has a quota limit of 24 vCPUs.
@@ -65,6 +65,8 @@ Both instances share a common network which uses the CIDR defined in `PRIVATE_NE
 In addition, DevStack will create a floating IP network using CIDR defined in `FLOATING_RANGE` in `hack/ci/create_devstack.sh`. As the neutron L3 agent is only running on the controller, all of this traffic is handled on the controller, even if the source is an instance running on the worker. The controller creates `iptables` rules to NAT this traffic.
 
 The effect of this is that instances created on either `controller` or `worker` can get a floating ip from the `public` network. Traffic using this floating IP will be routed via `controller` and externally via NAT.
+
+We are configuring OVN to provide default DNS servers if a subnet is created without specifying DNS servers. This can be overridden in `OPENSTACK_DNS_NAMESERVERS`.
 
 ### Availability zones
 

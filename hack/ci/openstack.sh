@@ -30,7 +30,7 @@ function cloud_init {
     OPENSTACK_SUBNET_NAME=${OPENSTACK_SUBNET_NAME:-${CLUSTER_NAME}-subnet}
     OPENSTACK_SECGROUP_NAME=${OPENSTACK_SECGROUP_NAME:-${CLUSTER_NAME}-secgroup}
     OPENSTACK_ROUTER_NAME=${OPENSTACK_ROUTER_NAME:-${CLUSTER_NAME}-router}
-    OPENSTACK_IMAGE_NAME=${OPENSTACK_IMAGE_NAME:-ubuntu-2004-lts}
+    OPENSTACK_IMAGE_NAME=${OPENSTACK_IMAGE_NAME:-ubuntu-2204-lts}
 
     OPENSTACK_FLAVOR=${OPENSTACK_FLAVOR:-m1.xlarge}
     OPENSTACK_FLAVOR_controller=${OPENSTACK_FLAVOR_controller:-$OPENSTACK_FLAVOR}
@@ -88,9 +88,9 @@ function init_infrastructure() {
     # We don't tag the image with the cluster name as we expect it to be shared
     if ! imageid=$(openstack image show "$OPENSTACK_IMAGE_NAME" -f value -c id 2>/dev/null)
     then
-        curl -o /tmp/ubuntu-2004.qcow2 https://cloud-images.ubuntu.com/releases/focal/release/ubuntu-20.04-server-cloudimg-amd64.img
-        imageid=$(openstack image create --disk-format qcow2 --file /tmp/ubuntu-2004.qcow2 "$OPENSTACK_IMAGE_NAME" -f value -c id)
-        rm /tmp/ubuntu-2004.qcow2
+        curl -o /tmp/ubuntu-2204.qcow2 https://cloud-images.ubuntu.com/releases/jammy/release/ubuntu-22.04-server-cloudimg-amd64.img
+        imageid=$(openstack image create --disk-format qcow2 --file /tmp/ubuntu-2204.qcow2 "$OPENSTACK_IMAGE_NAME" -f value -c id)
+        rm /tmp/ubuntu-2204.qcow2
     fi
 }
 
