@@ -45,6 +45,7 @@ type Factory interface {
 	NewClientScopeFromMachine(ctx context.Context, ctrlClient client.Client, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster, defaultCACert []byte, logger logr.Logger) (Scope, error)
 	NewClientScopeFromCluster(ctx context.Context, ctrlClient client.Client, openStackCluster *infrav1.OpenStackCluster, defaultCACert []byte, logger logr.Logger) (Scope, error)
 	NewClientScopeFromFloatingIPPool(ctx context.Context, ctrlClient client.Client, openStackCluster *v1alpha1.OpenStackFloatingIPPool, defaultCACert []byte, logger logr.Logger) (Scope, error)
+	NewClientScopeFromServer(ctx context.Context, ctrlClient client.Client, openStackServer *infrav1.OpenStackServer, defaultCACert []byte, logger logr.Logger) (Scope, error)
 }
 
 // Scope contains arguments common to most operations.

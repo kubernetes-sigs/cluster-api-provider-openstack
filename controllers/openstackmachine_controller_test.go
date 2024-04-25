@@ -349,7 +349,7 @@ func Test_reconcileDelete(t *testing.T) {
 						ImageID: imageUUID,
 						Ports:   defaultResolvedPorts,
 					},
-					Resources: &infrav1.MachineResources{
+					Resources: &infrav1.ServerResources{
 						Ports: defaultPortsStatus,
 					},
 				},
@@ -375,7 +375,7 @@ func Test_reconcileDelete(t *testing.T) {
 						ImageID: imageUUID,
 						Ports:   defaultResolvedPorts,
 					},
-					Resources: &infrav1.MachineResources{
+					Resources: &infrav1.ServerResources{
 						Ports: defaultPortsStatus,
 					},
 				},
@@ -401,7 +401,7 @@ func Test_reconcileDelete(t *testing.T) {
 						ImageID: imageUUID,
 						Ports:   defaultResolvedPorts,
 					},
-					Resources: &infrav1.MachineResources{
+					Resources: &infrav1.ServerResources{
 						Ports: defaultPortsStatus,
 					},
 				},
@@ -465,7 +465,7 @@ func Test_reconcileDelete(t *testing.T) {
 						ImageID: imageUUID,
 						Ports:   defaultResolvedPorts,
 					},
-					Resources: &infrav1.MachineResources{
+					Resources: &infrav1.ServerResources{
 						Ports: defaultPortsStatus,
 					},
 				},

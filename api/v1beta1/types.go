@@ -486,7 +486,7 @@ type BastionStatus struct {
 
 	// Resources contains references to OpenStack resources created for the bastion.
 	// +optional
-	Resources *MachineResources `json:"resources,omitempty"`
+	Resources *ServerResources `json:"resources,omitempty"`
 }
 
 type RootVolume struct {
@@ -888,10 +888,26 @@ type ResolvedMachineSpec struct {
 	Ports []ResolvedPortSpec `json:"ports,omitempty"`
 }
 
-type MachineResources struct {
+// ServerResources contains references to OpenStack resources created for the server.
+type ServerResources struct {
 	// Ports is the status of the ports created for the machine.
 	// +optional
 	Ports []PortStatus `json:"ports,omitempty"`
+}
+
+// ResolvedServerSpec contains resolved references to resources required by the server.
+type ResolvedServerSpec struct {
+	// ServerGroupID is the ID of the server group the server should be added to and is calculated based on ServerGroupFilter.
+	// +optional
+	ServerGroupID string `json:"serverGroupID,omitempty"`
+
+	// ImageID is the ID of the image to use for the server and is calculated based on ImageFilter.
+	// +optional
+	ImageID string `json:"imageID,omitempty"`
+
+	// Ports is the fully resolved list of ports to create for the server.
+	// +optional
+	Ports []ResolvedPortSpec `json:"ports,omitempty"`
 }
 
 // ValueSpec represents a single value_spec key-value pair.

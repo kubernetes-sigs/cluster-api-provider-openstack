@@ -86,6 +86,7 @@ var (
 	profilerAddress             string
 	openStackClusterConcurrency int
 	openStackMachineConcurrency int
+	openStackServerConcurrency  int
 	syncPeriod                  time.Duration
 	restConfigQPS               float32
 	restConfigBurst             int
@@ -145,6 +146,9 @@ func InitFlags(fs *pflag.FlagSet) {
 
 	fs.IntVar(&openStackMachineConcurrency, "openstackmachine-concurrency", 10,
 		"Number of OpenStackMachines to process simultaneously")
+
+	fs.IntVar(&openStackServerConcurrency, "openstackserver-concurrency", 10,
+		"Number of OpenStackServers to process simultaneously")
 
 	fs.DurationVar(&syncPeriod, "sync-period", 10*time.Minute,
 		"The minimum interval at which watched resources are reconciled (e.g. 15m)")
@@ -347,6 +351,15 @@ func setupReconcilers(ctx context.Context, mgr ctrl.Manager, caCerts []byte, sco
 		CaCertificates: caCerts,
 	}).SetupWithManager(ctx, mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "FloatingIPPool")
+		os.Exit(1)
+	}
+	if err := (&controllers.OpenStackServerReconciler{
+		Client:         mgr.GetClient(),
+		Recorder:       mgr.GetEventRecorderFor("openstackserver-controller"),
+		ScopeFactory:   scopeFactory,
+		CaCertificates: caCerts,
+	}).SetupWithManager(ctx, mgr, concurrency(openStackServerConcurrency)); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "OpenStackServer")
 		os.Exit(1)
 	}
 }

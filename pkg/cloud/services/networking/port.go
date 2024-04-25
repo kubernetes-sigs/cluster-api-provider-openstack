@@ -324,7 +324,7 @@ func getPortName(baseName string, portSpec *infrav1.PortOpts, netIndex int) stri
 	return fmt.Sprintf("%s-%d", baseName, netIndex)
 }
 
-func (s *Service) CreatePorts(eventObject runtime.Object, desiredPorts []infrav1.ResolvedPortSpec, resources *infrav1.MachineResources) error {
+func (s *Service) CreatePorts(eventObject runtime.Object, desiredPorts []infrav1.ResolvedPortSpec, resources *infrav1.ServerResources) error {
 	for i := range desiredPorts {
 		// Skip creation of ports which already exist
 		if i < len(resources.Ports) {
@@ -565,7 +565,7 @@ func (s *Service) IsTrunkExtSupported() (trunknSupported bool, err error) {
 
 // AdoptPorts looks for ports in desiredPorts which were previously created, and adds them to resources.Ports.
 // A port matches if it has the same name and network ID as the desired port.
-func (s *Service) AdoptPorts(scope *scope.WithLogger, desiredPorts []infrav1.ResolvedPortSpec, resources *infrav1.MachineResources) error {
+func (s *Service) AdoptPorts(scope *scope.WithLogger, desiredPorts []infrav1.ResolvedPortSpec, resources *infrav1.ServerResources) error {
 	// We can skip adoption if the ports are already in the status
 	if len(desiredPorts) == len(resources.Ports) {
 		return nil

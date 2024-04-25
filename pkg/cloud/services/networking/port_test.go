@@ -888,9 +888,9 @@ func Test_AdoptPorts(t *testing.T) {
 	tests := []struct {
 		testName     string
 		desiredPorts []infrav1.ResolvedPortSpec
-		resources    infrav1.MachineResources
+		resources    infrav1.ServerResources
 		expect       func(*mock.MockNetworkClientMockRecorder)
-		want         infrav1.MachineResources
+		want         infrav1.ServerResources
 		wantErr      bool
 	}{
 		{
@@ -901,14 +901,14 @@ func Test_AdoptPorts(t *testing.T) {
 			desiredPorts: []infrav1.ResolvedPortSpec{
 				{NetworkID: networkID1},
 			},
-			resources: infrav1.MachineResources{
+			resources: infrav1.ServerResources{
 				Ports: []infrav1.PortStatus{
 					{
 						ID: portID1,
 					},
 				},
 			},
-			want: infrav1.MachineResources{
+			want: infrav1.ServerResources{
 				Ports: []infrav1.PortStatus{
 					{
 						ID: portID1,
@@ -925,7 +925,7 @@ func Test_AdoptPorts(t *testing.T) {
 				m.ListPort(ports.ListOpts{Name: "test-machine-0", NetworkID: networkID1}).
 					Return([]ports.Port{{ID: portID1}}, nil)
 			},
-			want: infrav1.MachineResources{
+			want: infrav1.ServerResources{
 				Ports: []infrav1.PortStatus{
 					{
 						ID: portID1,
@@ -942,7 +942,7 @@ func Test_AdoptPorts(t *testing.T) {
 				m.ListPort(ports.ListOpts{Name: "test-machine-0", NetworkID: networkID1}).
 					Return(nil, nil)
 			},
-			want: infrav1.MachineResources{},
+			want: infrav1.ServerResources{},
 		},
 		{
 			testName: "2 desired ports, first in status, second exists: adopt second",
@@ -950,7 +950,7 @@ func Test_AdoptPorts(t *testing.T) {
 				{Name: "test-machine-0", NetworkID: networkID1},
 				{Name: "test-machine-1", NetworkID: networkID2},
 			},
-			resources: infrav1.MachineResources{
+			resources: infrav1.ServerResources{
 				Ports: []infrav1.PortStatus{
 					{
 						ID: portID1,
@@ -961,7 +961,7 @@ func Test_AdoptPorts(t *testing.T) {
 				m.ListPort(ports.ListOpts{Name: "test-machine-1", NetworkID: networkID2}).
 					Return([]ports.Port{{ID: portID2}}, nil)
 			},
-			want: infrav1.MachineResources{
+			want: infrav1.ServerResources{
 				Ports: []infrav1.PortStatus{
 					{ID: portID1},
 					{ID: portID2},
@@ -975,7 +975,7 @@ func Test_AdoptPorts(t *testing.T) {
 				{Name: "test-machine-1", NetworkID: networkID2},
 				{Name: "test-machine-2", NetworkID: networkID3},
 			},
-			resources: infrav1.MachineResources{
+			resources: infrav1.ServerResources{
 				Ports: []infrav1.PortStatus{
 					{
 						ID: portID1,
@@ -986,7 +986,7 @@ func Test_AdoptPorts(t *testing.T) {
 				m.ListPort(ports.ListOpts{Name: "test-machine-1", NetworkID: networkID2}).
 					Return(nil, nil)
 			},
-			want: infrav1.MachineResources{
+			want: infrav1.ServerResources{
 				Ports: []infrav1.PortStatus{
 					{ID: portID1},
 				},
@@ -999,7 +999,7 @@ func Test_AdoptPorts(t *testing.T) {
 				{Name: "test-machine-bar", NetworkID: networkID2},
 				{Name: "test-machine-baz", NetworkID: networkID3},
 			},
-			resources: infrav1.MachineResources{
+			resources: infrav1.ServerResources{
 				Ports: []infrav1.PortStatus{
 					{
 						ID: portID1,
@@ -1010,7 +1010,7 @@ func Test_AdoptPorts(t *testing.T) {
 				m.ListPort(ports.ListOpts{Name: "test-machine-bar", NetworkID: networkID2}).
 					Return(nil, nil)
 			},
-			want: infrav1.MachineResources{
+			want: infrav1.ServerResources{
 				Ports: []infrav1.PortStatus{
 					{ID: portID1},
 				},

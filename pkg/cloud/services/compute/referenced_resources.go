@@ -25,6 +25,13 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
+// ResolveServerSpec is responsible for populating a ResolvedServerSpec from
+// an OpenStackServerSpec with only a few dependencies. The result contains no
+// external dependencies, and does not require any complex logic on creation.
+// Note that we only set the fields in ResolvedServerSpec that are not set yet.
+// This is ok because OpenStackServer is immutable, so we can't change the spec
+// after the server is created.
+
 // ResolveMachineSpec is responsible for populating a ResolvedMachineSpec from
 // an OpenStackMachineSpec and any external dependencies. The result contains no
 // external dependencies, and does not require any complex logic on creation.

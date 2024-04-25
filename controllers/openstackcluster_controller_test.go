@@ -249,7 +249,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 						},
 					},
 				},
-				Resources: &infrav1.MachineResources{
+				Resources: &infrav1.ServerResources{
 					Ports: []infrav1.PortStatus{
 						{
 							ID: "portID1",
@@ -298,7 +298,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 					},
 				},
 			},
-			Resources: &infrav1.MachineResources{
+			Resources: &infrav1.ServerResources{
 				Ports: []infrav1.PortStatus{
 					{
 						ID: "portID1",
@@ -339,7 +339,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 						},
 					},
 				},
-				Resources: &infrav1.MachineResources{
+				Resources: &infrav1.ServerResources{
 					Ports: []infrav1.PortStatus{
 						{
 							ID: "portID1",
@@ -381,7 +381,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 					},
 				},
 			},
-			Resources: &infrav1.MachineResources{
+			Resources: &infrav1.ServerResources{
 				Ports: []infrav1.PortStatus{
 					{
 						ID: "portID1",
@@ -421,7 +421,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 						},
 					},
 				},
-				Resources: &infrav1.MachineResources{
+				Resources: &infrav1.ServerResources{
 					Ports: []infrav1.PortStatus{
 						{
 							ID: "portID1",
@@ -457,7 +457,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 					},
 				},
 			},
-			Resources: &infrav1.MachineResources{
+			Resources: &infrav1.ServerResources{
 				Ports: []infrav1.PortStatus{
 					{
 						ID: "portID1",
@@ -531,7 +531,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		}
 		testCluster.Status = infrav1.OpenStackClusterStatus{
 			Bastion: &infrav1.BastionStatus{
-				Resources: &infrav1.MachineResources{
+				Resources: &infrav1.ServerResources{
 					Ports: []infrav1.PortStatus{
 						{
 							ID: "port-id",
@@ -605,7 +605,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		}
 		testCluster.Status = infrav1.OpenStackClusterStatus{
 			Bastion: &infrav1.BastionStatus{
-				Resources: &infrav1.MachineResources{
+				Resources: &infrav1.ServerResources{
 					Ports: []infrav1.PortStatus{
 						{
 							ID: "port-id",

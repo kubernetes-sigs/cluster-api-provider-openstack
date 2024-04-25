@@ -136,7 +136,7 @@ type OpenStackMachineStatus struct {
 
 	// Resources contains references to OpenStack resources created for the machine.
 	// +optional
-	Resources *MachineResources `json:"resources,omitempty"`
+	Resources *ServerResources `json:"resources,omitempty"`
 
 	FailureReason *errors.MachineStatusError `json:"failureReason,omitempty"`
 

@@ -11,6 +11,8 @@ Resource Types:
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachine">OpenStackMachine</a>
 </li><li>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineTemplate">OpenStackMachineTemplate</a>
+</li><li>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServer">OpenStackServer</a>
 </li></ul>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.OpenStackCluster">OpenStackCluster
 </h3>
@@ -833,6 +835,285 @@ OpenStackMachineTemplateResource
 </tr>
 </tbody>
 </table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServer">OpenStackServer
+</h3>
+<p>
+<p>OpenStackServer is the Schema for the openstackservers API.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code><br/>
+string</td>
+<td>
+<code>
+infrastructure.cluster.x-k8s.io/v1beta1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code><br/>
+string
+</td>
+<td><code>OpenStackServer</code></td>
+</tr>
+<tr>
+<td>
+<code>metadata</code><br/>
+<em>
+Kubernetes meta/v1.ObjectMeta
+</em>
+</td>
+<td>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServerSpec">
+OpenStackServerSpec
+</a>
+</em>
+</td>
+<td>
+<br/>
+<br/>
+<table>
+<tr>
+<td>
+<code>additionalBlockDevices</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.AdditionalBlockDevice">
+[]AdditionalBlockDevice
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AdditionalBlockDevices is a list of specifications for additional block devices to attach to the server instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>availabilityZone</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AvailabilityZone is the availability zone in which to create the server instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>configDrive</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ConfigDrive is a flag to enable config drive for the server instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>flavor</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The flavor reference for the flavor for the server instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>floatingIPPoolRef</code><br/>
+<em>
+Kubernetes core/v1.TypedLocalObjectReference
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>FloatingIPPoolRef is a reference to a FloatingIPPool to allocate a floating IP from.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>identityRef</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackIdentityReference">
+OpenStackIdentityReference
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The identity reference for the server instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>image</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ImageParam">
+ImageParam
+</a>
+</em>
+</td>
+<td>
+<p>The image to use for the server instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ports</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">
+[]PortOpts
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Ports to be attached to the server instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>rootVolume</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.RootVolume">
+RootVolume
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>RootVolume is the specification for the root volume of the server instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sshKeyName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>SSHKeyName is the name of the SSH key to inject in the instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>securityGroups</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupParam">
+[]SecurityGroupParam
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SecurityGroups is a list of security groups names to assign to the instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serverGroup</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerGroupParam">
+ServerGroupParam
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ServerGroup is the server group to which the server instance belongs.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serverMetadata</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerMetadata">
+[]ServerMetadata
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ServerMetadata is a map of key value pairs to add to the server instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tags</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>Tags which will be added to the machine and all dependent resources
+which support them. These are in addition to Tags defined on the
+cluster.
+Requires Nova api 2.52 minimum!</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>trunk</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Trunk is a flag to indicate if the server instance is created on a trunk port or not.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>userDataRef</code><br/>
+<em>
+Kubernetes core/v1.TypedLocalObjectReference
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>UserDataRef is a reference to a UserData to be injected into the server instance.</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServerStatus">
+OpenStackServerStatus
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.APIServerLoadBalancer">APIServerLoadBalancer
 </h3>
 <p>
@@ -951,7 +1232,8 @@ string
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServerSpec">OpenStackServerSpec</a>)
 </p>
 <p>
 <p>AdditionalBlockDevice is a block device to attach to the server.</p>
@@ -1663,7 +1945,8 @@ string
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServerSpec">OpenStackServerSpec</a>)
 </p>
 <p>
 <p>ImageParam describes a glance image. It can be specified by ID or filter.</p>
@@ -1711,7 +1994,8 @@ be raised.</p>
 <p>
 (<em>Appears on:</em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.BastionStatus">BastionStatus</a>, 
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineStatus">OpenStackMachineStatus</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineStatus">OpenStackMachineStatus</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServerStatus">OpenStackServerStatus</a>)
 </p>
 <p>
 <p>InstanceState describes the state of an OpenStack instance.</p>
@@ -3099,7 +3383,8 @@ OpenStackClusterTemplateResource
 <p>
 (<em>Appears on:</em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackClusterSpec">OpenStackClusterSpec</a>, 
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServerSpec">OpenStackServerSpec</a>)
 </p>
 <p>
 <p>OpenStackIdentityReference is a reference to an infrastructure
@@ -3761,11 +4046,423 @@ OpenStackMachineTemplateResource
 </tr>
 </tbody>
 </table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServerResources">OpenStackServerResources
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServerStatus">OpenStackServerStatus</a>)
+</p>
+<p>
+<p>OpenStackServerResources contains references to OpenStack resources created for the server.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>ports</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortStatus">
+[]PortStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Ports is the status of the ports created for the server.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServerSpec">OpenStackServerSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServer">OpenStackServer</a>)
+</p>
+<p>
+<p>OpenStackServerSpec defines the desired state of OpenStackServer.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>additionalBlockDevices</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.AdditionalBlockDevice">
+[]AdditionalBlockDevice
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AdditionalBlockDevices is a list of specifications for additional block devices to attach to the server instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>availabilityZone</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AvailabilityZone is the availability zone in which to create the server instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>configDrive</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ConfigDrive is a flag to enable config drive for the server instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>flavor</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The flavor reference for the flavor for the server instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>floatingIPPoolRef</code><br/>
+<em>
+Kubernetes core/v1.TypedLocalObjectReference
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>FloatingIPPoolRef is a reference to a FloatingIPPool to allocate a floating IP from.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>identityRef</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackIdentityReference">
+OpenStackIdentityReference
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The identity reference for the server instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>image</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ImageParam">
+ImageParam
+</a>
+</em>
+</td>
+<td>
+<p>The image to use for the server instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ports</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">
+[]PortOpts
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Ports to be attached to the server instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>rootVolume</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.RootVolume">
+RootVolume
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>RootVolume is the specification for the root volume of the server instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sshKeyName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>SSHKeyName is the name of the SSH key to inject in the instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>securityGroups</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupParam">
+[]SecurityGroupParam
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SecurityGroups is a list of security groups names to assign to the instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serverGroup</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerGroupParam">
+ServerGroupParam
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ServerGroup is the server group to which the server instance belongs.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serverMetadata</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerMetadata">
+[]ServerMetadata
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ServerMetadata is a map of key value pairs to add to the server instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tags</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>Tags which will be added to the machine and all dependent resources
+which support them. These are in addition to Tags defined on the
+cluster.
+Requires Nova api 2.52 minimum!</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>trunk</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Trunk is a flag to indicate if the server instance is created on a trunk port or not.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>userDataRef</code><br/>
+<em>
+Kubernetes core/v1.TypedLocalObjectReference
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>UserDataRef is a reference to a UserData to be injected into the server instance.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServerStatus">OpenStackServerStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServer">OpenStackServer</a>)
+</p>
+<p>
+<p>OpenStackServerStatus defines the observed state of OpenStackServer.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>ready</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Ready is true when the OpenStack server is ready.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>instanceID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>InstanceID is the ID of the server instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>instanceState</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.InstanceState">
+InstanceState
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>InstanceState is the state of the server instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>addresses</code><br/>
+<em>
+[]Kubernetes core/v1.NodeAddress
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Addresses is the list of addresses of the server instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>resolved</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedOpenStackServerSpec">
+ResolvedOpenStackServerSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Resolved contains parts of the machine spec with all external
+references fully resolved.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>resources</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServerResources">
+OpenStackServerResources
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Resources contains references to OpenStack resources created for the machine.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>failureReason</code><br/>
+<em>
+<a href="https://pkg.go.dev/sigs.k8s.io/cluster-api@v1.5.1/errors#OpenStackServerStatusError">
+sigs.k8s.io/cluster-api/errors.OpenStackServerStatusError
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>FailureReason will be set in the event that there is a terminal problem
+reconciling the OpenStackServer and will be the name the state that the
+server is in.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>failureMessage</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>FailureMessage will be set in the event that there is a terminal problem
+reconciling the Server and will contain a more verbose string suitable
+for logging and human consumption.</p>
+<p>This field should not be set for transitive errors that a controller
+faces that are expected to be fixed automatically over
+time (like service outages), but instead indicate that something is
+fundamentally wrong with the OpenStackServer&rsquo;s spec or the configuration of
+the controller, and that manual intervention is required. Examples
+of terminal errors would be invalid combinations of settings in the
+spec, values that are unsupported by the controller, or the
+responsible controller itself being critically misconfigured.</p>
+<p>Any transient errors that occur during the reconciliation of OpenStackServers
+can be added as events to the OpenStackServer object and/or logged in the
+controller&rsquo;s output.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>conditions</code><br/>
+<em>
+<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.6.0">
+sigs.k8s.io/cluster-api/api/v1beta1.Conditions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Conditions defines current service state of the OpenStackServer.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">PortOpts
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServerSpec">OpenStackServerSpec</a>)
 </p>
 <p>
 </p>
@@ -3892,7 +4589,8 @@ ResolvedPortSpecFields
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.MachineResources">MachineResources</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.MachineResources">MachineResources</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServerResources">OpenStackServerResources</a>)
 </p>
 <p>
 </p>
@@ -4021,11 +4719,69 @@ string
 </tr>
 </tbody>
 </table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.ResolvedOpenStackServerSpec">ResolvedOpenStackServerSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServerStatus">OpenStackServerStatus</a>)
+</p>
+<p>
+<p>ResolvedOpenStackServerSpec contains resolved references to resources required by the server.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>serverGroupID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ServerGroupID is the ID of the server group the server should be added to and is calculated based on ServerGroupFilter.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>imageID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ImageID is the ID of the image to use for the server and is calculated based on ImageFilter.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ports</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedPortSpec">
+[]ResolvedPortSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Ports is the fully resolved list of ports to create for the server.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.ResolvedPortSpec">ResolvedPortSpec
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedMachineSpec">ResolvedMachineSpec</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedMachineSpec">ResolvedMachineSpec</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedOpenStackServerSpec">ResolvedOpenStackServerSpec</a>)
 </p>
 <p>
 <p>ResolvedPortSpec is a PortOpts with all contained references fully resolved.</p>
@@ -4298,7 +5054,8 @@ depends on the specific OpenStack implementation.</p>
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServerSpec">OpenStackServerSpec</a>)
 </p>
 <p>
 </p>
@@ -4576,6 +5333,7 @@ FilterByNeutronTags
 <p>
 (<em>Appears on:</em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServerSpec">OpenStackServerSpec</a>, 
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">PortOpts</a>)
 </p>
 <p>
@@ -4847,7 +5605,8 @@ string
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServerSpec">OpenStackServerSpec</a>)
 </p>
 <p>
 <p>ServerGroupParam specifies an OpenStack server group. It may be specified by ID or filter, but not both.</p>
@@ -4890,7 +5649,8 @@ ServerGroupFilter
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServerSpec">OpenStackServerSpec</a>)
 </p>
 <p>
 </p>

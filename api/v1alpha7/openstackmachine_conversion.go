@@ -90,7 +90,7 @@ var v1beta1OpenStackMachineRestorer = conversion.RestorerFor[*infrav1.OpenStackM
 		restorev1beta1MachineSpec,
 	),
 	"depresources": conversion.UnconditionalFieldRestorer(
-		func(c *infrav1.OpenStackMachine) **infrav1.MachineResources {
+		func(c *infrav1.OpenStackMachine) **infrav1.ServerResources {
 			return &c.Status.Resources
 		},
 	),

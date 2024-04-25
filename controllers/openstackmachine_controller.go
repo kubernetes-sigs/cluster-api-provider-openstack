@@ -178,7 +178,7 @@ func resolveMachineResources(scope *scope.WithLogger, clusterResourceName string
 func adoptMachineResources(scope *scope.WithLogger, openStackMachine *infrav1.OpenStackMachine) error {
 	resources := openStackMachine.Status.Resources
 	if resources == nil {
-		resources = &infrav1.MachineResources{}
+		resources = &infrav1.ServerResources{}
 		openStackMachine.Status.Resources = resources
 	}
 

@@ -244,7 +244,7 @@ func resolveBastionResources(scope *scope.WithLogger, clusterResourceName string
 		}
 		resources := openStackCluster.Status.Bastion.Resources
 		if resources == nil {
-			resources = &infrav1.MachineResources{}
+			resources = &infrav1.ServerResources{}
 			openStackCluster.Status.Bastion.Resources = resources
 		}
 
