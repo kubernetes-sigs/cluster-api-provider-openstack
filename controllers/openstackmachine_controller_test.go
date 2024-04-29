@@ -316,19 +316,6 @@ func Test_reconcileDelete(t *testing.T) {
 		r.volume.DeleteVolume(rootVolumeUUID, volumes.DeleteOpts{}).Return(nil)
 	}
 
-	adoptExistingPorts := func(r *recorders) {
-		r.network.ListPort(ports.ListOpts{
-			NetworkID: networkUUID,
-			Name:      openStackMachineName + "-0",
-		}).Return([]ports.Port{{ID: portUUID}}, nil)
-	}
-
-	resolveImage := func(r *recorders) {
-		r.image.ListImages(images.ListOpts{
-			Name: imageName,
-		}).Return([]images.Image{{ID: imageUUID}}, nil)
-	}
-
 	tests := []struct {
 		name                string
 		osMachine           infrav1.OpenStackMachine
@@ -409,30 +396,6 @@ func Test_reconcileDelete(t *testing.T) {
 			expect: func(r *recorders) {
 				deleteMissingServerByName(r)
 				deleteRootVolume(r)
-				deleteDefaultPorts(r)
-			},
-			wantRemoveFinalizer: true,
-		},
-		{
-			// N.B. The 'no resolved but resource exist' case can
-			// only happen across an upgrade. At some point in the
-			// future we should stop handling it.
-			name: "No volumes, no resolved or resources, instance exists",
-			osMachine: infrav1.OpenStackMachine{
-				Spec: infrav1.OpenStackMachineSpec{
-					Image: defaultImage,
-				},
-				Status: infrav1.OpenStackMachineStatus{
-					// Unlike resolved and resources,
-					// instanceID will have been converted
-					// from the previous API version.
-					InstanceID: ptr.To(instanceUUID),
-				},
-			},
-			expect: func(r *recorders) {
-				resolveImage(r)
-				adoptExistingPorts(r)
-				deleteServerByID(r)
 				deleteDefaultPorts(r)
 			},
 			wantRemoveFinalizer: true,

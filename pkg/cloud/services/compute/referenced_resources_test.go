@@ -42,14 +42,20 @@ func Test_ResolveMachineSpec(t *testing.T) {
 		subnetID       = "32dc0e7f-34b6-4544-a69b-248955618736"
 	)
 
-	defaultPorts := []infrav1.ResolvedPortSpec{
+	defaultPortsOpts := []infrav1.PortOpts{
+		{
+			Description: ptr.To("Created by cluster-api-provider-openstack cluster test-cluster"),
+			Network: &infrav1.NetworkParam{
+				ID: ptr.To(networkID1),
+			},
+		},
+	}
+
+	defaultResolvedPorts := []infrav1.ResolvedPortSpec{
 		{
 			Name:        "test-instance-0",
 			Description: "Created by cluster-api-provider-openstack cluster test-cluster",
 			NetworkID:   networkID1,
-			FixedIPs: []infrav1.ResolvedFixedIP{
-				{SubnetID: ptr.To(subnetID)},
-			},
 		},
 	}
 
@@ -69,21 +75,23 @@ func Test_ResolveMachineSpec(t *testing.T) {
 			spec: infrav1.OpenStackMachineSpec{
 				ServerGroup: &infrav1.ServerGroupParam{ID: ptr.To(serverGroupID1)},
 				Image:       infrav1.ImageParam{ID: ptr.To(imageID1)},
+				Ports:       defaultPortsOpts,
 			},
 			want: &infrav1.ResolvedMachineSpec{
 				ImageID:       imageID1,
 				ServerGroupID: serverGroupID1,
-				Ports:         defaultPorts,
+				Ports:         defaultResolvedPorts,
 			},
 		},
 		{
 			testName: "Only image ID passed: want image id and default ports",
 			spec: infrav1.OpenStackMachineSpec{
 				Image: infrav1.ImageParam{ID: ptr.To(imageID1)},
+				Ports: defaultPortsOpts,
 			},
 			want: &infrav1.ResolvedMachineSpec{
 				ImageID: imageID1,
-				Ports:   defaultPorts,
+				Ports:   defaultResolvedPorts,
 			},
 		},
 		{
@@ -91,10 +99,11 @@ func Test_ResolveMachineSpec(t *testing.T) {
 			spec: infrav1.OpenStackMachineSpec{
 				Image:       infrav1.ImageParam{ID: ptr.To(imageID1)},
 				ServerGroup: nil,
+				Ports:       defaultPortsOpts,
 			},
 			want: &infrav1.ResolvedMachineSpec{
 				ImageID: imageID1,
-				Ports:   defaultPorts,
+				Ports:   defaultResolvedPorts,
 			},
 		},
 		{
@@ -191,7 +200,7 @@ func Test_ResolveMachineSpec(t *testing.T) {
 			baseName := "test-instance"
 
 			scope := scope.NewWithLogger(mockScopeFactory, log)
-			_, err := ResolveMachineSpec(scope, &tt.spec, resources, clusterResourceName, baseName, openStackCluster, tt.managedSecurityGroup)
+			_, err := ResolveMachineSpec(scope, &tt.spec, tt.spec.Ports, resources, clusterResourceName, baseName, openStackCluster, tt.managedSecurityGroup)
 			if tt.wantErr {
 				g.Expect(err).Error()
 				return

@@ -31,7 +31,7 @@ import (
 // Note that we only set the fields in ResolvedMachineSpec that are not set yet. This is ok because:
 // - OpenStackMachine is immutable, so we can't change the spec after the machine is created.
 // - the bastion is mutable, but we delete the bastion when the spec changes, so the bastion status will be empty.
-func ResolveMachineSpec(scope *scope.WithLogger, spec *infrav1.OpenStackMachineSpec, resolved *infrav1.ResolvedMachineSpec, clusterResourceName, baseName string, openStackCluster *infrav1.OpenStackCluster, managedSecurityGroup *string) (changed bool, err error) {
+func ResolveMachineSpec(scope *scope.WithLogger, spec *infrav1.OpenStackMachineSpec, portsSpec []infrav1.PortOpts, resolved *infrav1.ResolvedMachineSpec, clusterResourceName, baseName string, openStackCluster *infrav1.OpenStackCluster, managedSecurityGroup *string) (changed bool, err error) {
 	changed = false
 
 	computeService, err := NewService(scope)
@@ -73,8 +73,7 @@ func ResolveMachineSpec(scope *scope.WithLogger, spec *infrav1.OpenStackMachineS
 
 	// Network resources are required in order to get ports options.
 	if len(resolved.Ports) == 0 {
-		defaultNetwork := openStackCluster.Status.Network
-		portsOpts, err := networkingService.ConstructPorts(spec, clusterResourceName, baseName, defaultNetwork, managedSecurityGroup, InstanceTags(spec, openStackCluster))
+		portsOpts, err := networkingService.ConstructPorts(portsSpec, spec.SecurityGroups, spec.Trunk, clusterResourceName, baseName, managedSecurityGroup, InstanceTags(spec, openStackCluster))
 		if err != nil {
 			return changed, err
 		}

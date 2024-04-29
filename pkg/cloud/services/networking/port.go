@@ -347,11 +347,9 @@ func (s *Service) CreatePorts(eventObject runtime.Object, desiredPorts []infrav1
 }
 
 // ConstructPorts builds an array of ports from the machine spec.
-// If no ports are in the spec, returns a single port for a network connection to the default cluster network.
-func (s *Service) ConstructPorts(spec *infrav1.OpenStackMachineSpec, clusterResourceName, baseName string, defaultNetwork *infrav1.NetworkStatusWithSubnets, managedSecurityGroup *string, baseTags []string) ([]infrav1.ResolvedPortSpec, error) {
-	ports := spec.Ports
-
-	defaultSecurityGroupIDs, err := s.GetSecurityGroups(spec.SecurityGroups)
+// If no ports are in the spec, returns an error.
+func (s *Service) ConstructPorts(portsOpts []infrav1.PortOpts, securityGroups []infrav1.SecurityGroupParam, instanceTrunk bool, clusterResourceName, baseName string, managedSecurityGroup *string, baseTags []string) ([]infrav1.ResolvedPortSpec, error) {
+	defaultSecurityGroupIDs, err := s.GetSecurityGroups(securityGroups)
 	if err != nil {
 		return nil, fmt.Errorf("error getting security groups: %v", err)
 	}
@@ -360,25 +358,14 @@ func (s *Service) ConstructPorts(spec *infrav1.OpenStackMachineSpec, clusterReso
 	}
 
 	// Ensure user-specified ports have all required fields
-	resolvedPorts, err := s.normalizePorts(ports, clusterResourceName, baseName, spec.Trunk, defaultSecurityGroupIDs, defaultNetwork, baseTags)
+	resolvedPorts, err := s.normalizePorts(portsOpts, clusterResourceName, baseName, instanceTrunk, defaultSecurityGroupIDs, baseTags)
 	if err != nil {
 		return nil, err
 	}
 
-	// no networks or ports found in the spec, so create a port on the cluster network
+	// no networks or ports found in the spec, return an error
 	if len(resolvedPorts) == 0 {
-		resolvedPorts = make([]infrav1.ResolvedPortSpec, 1)
-		resolvedPort := &resolvedPorts[0]
-		resolvedPort.Name = getPortName(baseName, nil, 0)
-		resolvedPort.Description = names.GetDescription(clusterResourceName)
-		if len(baseTags) > 0 {
-			resolvedPort.Tags = baseTags
-		}
-		if spec.Trunk {
-			resolvedPort.Trunk = &spec.Trunk
-		}
-		resolvedPort.SecurityGroups = defaultSecurityGroupIDs
-		resolvedPort.NetworkID, resolvedPort.FixedIPs, _ = defaultNetworkTarget(defaultNetwork)
+		return nil, fmt.Errorf("no networks or ports found in the machine spec")
 	}
 
 	// trunk support is required if any port has trunk enabled
@@ -407,7 +394,7 @@ func (s *Service) ConstructPorts(spec *infrav1.OpenStackMachineSpec, clusterReso
 // normalizePorts ensures that a user-specified PortOpts has all required fields set. Specifically it:
 // - sets the Trunk field to the instance spec default if not specified
 // - sets the Network ID field if not specified.
-func (s *Service) normalizePorts(ports []infrav1.PortOpts, clusterResourceName, baseName string, trunkEnabled bool, defaultSecurityGroupIDs []string, defaultNetwork *infrav1.NetworkStatusWithSubnets, baseTags []string) ([]infrav1.ResolvedPortSpec, error) {
+func (s *Service) normalizePorts(ports []infrav1.PortOpts, clusterResourceName, baseName string, trunkEnabled bool, defaultSecurityGroupIDs []string, baseTags []string) ([]infrav1.ResolvedPortSpec, error) {
 	normalizedPorts := make([]infrav1.ResolvedPortSpec, len(ports))
 	for i := range ports {
 		port := &ports[i]
@@ -440,7 +427,7 @@ func (s *Service) normalizePorts(ports []infrav1.PortOpts, clusterResourceName, 
 
 		// Resolve network ID and fixed IPs
 		var err error
-		normalizedPort.NetworkID, normalizedPort.FixedIPs, err = s.normalizePortTarget(port, defaultNetwork, i)
+		normalizedPort.NetworkID, normalizedPort.FixedIPs, err = s.normalizePortTarget(port, i)
 		if err != nil {
 			return nil, err
 		}
@@ -458,21 +445,11 @@ func (s *Service) normalizePorts(ports []infrav1.PortOpts, clusterResourceName, 
 	return normalizedPorts, nil
 }
 
-func defaultNetworkTarget(network *infrav1.NetworkStatusWithSubnets) (string, []infrav1.ResolvedFixedIP, error) {
-	networkID := network.ID
-	fixedIPs := make([]infrav1.ResolvedFixedIP, len(network.Subnets))
-	for i := range network.Subnets {
-		subnet := &network.Subnets[i]
-		fixedIPs[i].SubnetID = &subnet.ID
-	}
-	return networkID, fixedIPs, nil
-}
-
 // normalizePortTarget ensures that the port has a network ID.
-func (s *Service) normalizePortTarget(port *infrav1.PortOpts, defaultNetwork *infrav1.NetworkStatusWithSubnets, portIdx int) (string, []infrav1.ResolvedFixedIP, error) {
-	// No network or subnets defined: use cluster defaults
+func (s *Service) normalizePortTarget(port *infrav1.PortOpts, portIdx int) (string, []infrav1.ResolvedFixedIP, error) {
+	// No network or subnets defined, return an error
 	if port.Network == nil && len(port.FixedIPs) == 0 {
-		return defaultNetworkTarget(defaultNetwork)
+		return "", nil, fmt.Errorf("port %d has no network or fixed IPs", portIdx)
 	}
 
 	var networkID string

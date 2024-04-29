@@ -772,3 +772,138 @@ func Test_getAPIServerPort(t *testing.T) {
 		})
 	}
 }
+
+func Test_DefaultPortsOpts(t *testing.T) {
+	tests := []struct {
+		name             string
+		openStackCluster *infrav1.OpenStackCluster
+		wantPorts        []infrav1.PortOpts
+	}{
+		{
+			name: "with no ports defined and network ID in cluster status",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					Bastion: &infrav1.Bastion{
+						Spec: &infrav1.OpenStackMachineSpec{},
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID: "network1",
+						},
+					},
+				},
+			},
+			wantPorts: []infrav1.PortOpts{
+				{
+					Network: &infrav1.NetworkParam{
+						ID: ptr.To("network1"),
+					},
+				},
+			},
+		},
+		{
+			name: "with no ports defined and instance trunk enabled",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					Bastion: &infrav1.Bastion{
+						Spec: &infrav1.OpenStackMachineSpec{
+							Trunk: true,
+						},
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID: "network1",
+						},
+					},
+				},
+			},
+			wantPorts: []infrav1.PortOpts{
+				{
+					Network: &infrav1.NetworkParam{
+						ID: ptr.To("network1"),
+					},
+					Trunk: ptr.To(true),
+				},
+			},
+		},
+		{
+			name: "with no ports defined and fixedIPs",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					Bastion: &infrav1.Bastion{
+						Spec: &infrav1.OpenStackMachineSpec{},
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID: "network1",
+						},
+						Subnets: []infrav1.Subnet{
+							{
+								ID: "subnet1",
+							},
+						},
+					},
+				},
+			},
+			wantPorts: []infrav1.PortOpts{
+				{
+					Network: &infrav1.NetworkParam{
+						ID: ptr.To("network1"),
+					},
+					FixedIPs: []infrav1.FixedIP{
+						{
+							Subnet: &infrav1.SubnetParam{
+								ID: ptr.To("subnet1"),
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "with incomplete port defined and network ID in cluster status",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					Bastion: &infrav1.Bastion{
+						Spec: &infrav1.OpenStackMachineSpec{
+							Ports: []infrav1.PortOpts{
+								{
+									Description: ptr.To("incomplete port"),
+								},
+							},
+						},
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID: "network1",
+						},
+					},
+				},
+			},
+			wantPorts: []infrav1.PortOpts{
+				{
+					Network: &infrav1.NetworkParam{
+						ID: ptr.To("network1"),
+					},
+					Description: ptr.To("incomplete port"),
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ports := DefaultPortsSpecs(tt.openStackCluster, tt.openStackCluster.Spec.Bastion.Spec.Ports, tt.openStackCluster.Spec.Bastion.Spec.Trunk)
+			if len(ports) != len(tt.wantPorts) && !reflect.DeepEqual(ports, tt.wantPorts) {
+				t.Errorf("DefaultPortsOpts() = %v, want %v", ports, tt.wantPorts)
+			}
+		})
+	}
+}

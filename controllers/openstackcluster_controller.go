@@ -217,6 +217,32 @@ func contains(arr []string, target string) bool {
 	return false
 }
 
+// DefaultPortsSpecs returns a list of default port options for the given OpenStackCluster.
+func DefaultPortsSpecs(openStackCluster *infrav1.OpenStackCluster, ports []infrav1.PortOpts, instanceTrunk bool) []infrav1.PortOpts {
+	if len(ports) == 0 {
+		ports = append(ports, infrav1.PortOpts{})
+	} else {
+		return ports
+	}
+	for i := range ports {
+		port := &ports[i]
+		if port.Network == nil && len(port.FixedIPs) == 0 {
+			port.Network = &infrav1.NetworkParam{
+				ID: &openStackCluster.Status.Network.ID,
+			}
+			for j := range openStackCluster.Status.Network.Subnets {
+				subnet := &openStackCluster.Status.Network.Subnets[j]
+				port.FixedIPs = append(port.FixedIPs, infrav1.FixedIP{
+					Subnet: &infrav1.SubnetParam{
+						ID: &subnet.ID,
+					},
+				})
+			}
+		}
+	}
+	return ports
+}
+
 func resolveBastionResources(scope *scope.WithLogger, clusterResourceName string, openStackCluster *infrav1.OpenStackCluster) (bool, error) {
 	// Resolve and store resources for the bastion
 	if openStackCluster.Spec.Bastion.IsEnabled() {
@@ -232,7 +258,7 @@ func resolveBastionResources(scope *scope.WithLogger, clusterResourceName string
 			openStackCluster.Status.Bastion.Resolved = resolved
 		}
 		changed, err := compute.ResolveMachineSpec(scope,
-			openStackCluster.Spec.Bastion.Spec, resolved,
+			openStackCluster.Spec.Bastion.Spec, DefaultPortsSpecs(openStackCluster, openStackCluster.Spec.Bastion.Spec.Ports, openStackCluster.Spec.Bastion.Spec.Trunk), resolved,
 			clusterResourceName, bastionName(clusterResourceName),
 			openStackCluster, getBastionSecurityGroupID(openStackCluster))
 		if err != nil {

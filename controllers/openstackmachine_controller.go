@@ -170,7 +170,7 @@ func resolveMachineResources(scope *scope.WithLogger, clusterResourceName string
 	}
 	// Resolve and store resources
 	return compute.ResolveMachineSpec(scope,
-		&openStackMachine.Spec, resolved,
+		&openStackMachine.Spec, DefaultPortsSpecs(openStackCluster, openStackMachine.Spec.Ports, openStackMachine.Spec.Trunk), resolved,
 		clusterResourceName, openStackMachine.Name,
 		openStackCluster, getManagedSecurityGroup(openStackCluster, machine))
 }

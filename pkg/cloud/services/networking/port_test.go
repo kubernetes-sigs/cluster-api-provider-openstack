@@ -349,9 +349,6 @@ func Test_CreatePort(t *testing.T) {
 
 func TestService_ConstructPorts(t *testing.T) {
 	const (
-		defaultNetworkID = "3c66f3ca-2d26-4d9d-ae3b-568f54129773"
-		defaultSubnetID  = "d8dbba89-8c39-4192-a571-e702fca35bac"
-
 		networkID        = "afa54944-1443-4132-9ef5-ce37eb4d6ab6"
 		subnetID1        = "d786e715-c299-4a97-911d-640c10fc0392"
 		subnetID2        = "41ad8201-5b2f-4e0e-b29d-3d82fad6ef10"
@@ -376,22 +373,13 @@ func TestService_ConstructPorts(t *testing.T) {
 		wantErr              bool
 	}{
 		{
-			name: "No ports creates port on default network",
-			spec: infrav1.OpenStackMachineSpec{},
-			want: []infrav1.ResolvedPortSpec{
-				{
-					Name:        "test-instance-0",
-					Description: defaultDescription,
-					Tags:        []string{"test-tag"},
-					NetworkID:   defaultNetworkID,
-					FixedIPs: []infrav1.ResolvedFixedIP{
-						{SubnetID: ptr.To(defaultSubnetID)},
-					},
-				},
-			},
+			name:    "Error when no network is specified",
+			spec:    infrav1.OpenStackMachineSpec{},
+			want:    nil,
+			wantErr: true,
 		},
 		{
-			name: "Nil network, no fixed IPs: cluster defaults",
+			name: "Error when no network and no fixed IPs",
 			spec: infrav1.OpenStackMachineSpec{
 				Ports: []infrav1.PortOpts{
 					{
@@ -401,74 +389,8 @@ func TestService_ConstructPorts(t *testing.T) {
 					},
 				},
 			},
-			want: []infrav1.ResolvedPortSpec{
-				{
-					Name:        "test-instance-custom",
-					Description: defaultDescription,
-					NetworkID:   defaultNetworkID,
-					FixedIPs: []infrav1.ResolvedFixedIP{
-						{
-							SubnetID: ptr.To(defaultSubnetID),
-						},
-					},
-					Tags: []string{"test-tag"},
-				},
-			},
-		},
-		{
-			name: "Port inherits trunk from instance",
-			spec: infrav1.OpenStackMachineSpec{
-				Ports: []infrav1.PortOpts{
-					{
-						NameSuffix: ptr.To("custom"),
-						Network:    nil,
-						FixedIPs:   nil,
-					},
-				},
-				Trunk: true,
-			},
-			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
-				expectListExtensions(m)
-			},
-			want: []infrav1.ResolvedPortSpec{
-				{
-					Name:        "test-instance-custom",
-					Description: defaultDescription,
-					NetworkID:   defaultNetworkID,
-					FixedIPs: []infrav1.ResolvedFixedIP{
-						{SubnetID: ptr.To(defaultSubnetID)},
-					},
-					Tags:  []string{"test-tag"},
-					Trunk: ptr.To(true),
-				},
-			},
-			wantErr: false,
-		},
-		{
-			name: "Port overrides trunk from instance",
-			spec: infrav1.OpenStackMachineSpec{
-				Ports: []infrav1.PortOpts{
-					{
-						Trunk: ptr.To(true),
-					},
-				},
-				Trunk: false,
-			},
-			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
-				expectListExtensions(m)
-			},
-			want: []infrav1.ResolvedPortSpec{
-				{
-					Name:        "test-instance-0",
-					Description: defaultDescription,
-					NetworkID:   defaultNetworkID,
-					FixedIPs: []infrav1.ResolvedFixedIP{
-						{SubnetID: ptr.To(defaultSubnetID)},
-					},
-					Tags:  []string{"test-tag"},
-					Trunk: ptr.To(true),
-				},
-			},
+			want:    nil,
+			wantErr: true,
 		},
 		{
 			name: "Network defined by ID: no lookup",
@@ -489,6 +411,61 @@ func TestService_ConstructPorts(t *testing.T) {
 					Name:        "test-instance-0",
 					Description: defaultDescription,
 					Tags:        []string{"test-tag"},
+				},
+			},
+		},
+		{
+			name: "Port inherits trunk from instance",
+			spec: infrav1.OpenStackMachineSpec{
+				Ports: []infrav1.PortOpts{
+					{
+						Network: &infrav1.NetworkParam{
+							ID: ptr.To(networkID),
+						},
+					},
+				},
+				Trunk: true,
+			},
+			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
+				expectListExtensions(m)
+			},
+			want: []infrav1.ResolvedPortSpec{
+				{
+					NetworkID: networkID,
+
+					// Defaults
+					Name:        "test-instance-0",
+					Description: defaultDescription,
+					Tags:        []string{"test-tag"},
+					Trunk:       ptr.To(true),
+				},
+			},
+		},
+		{
+			name: "Port overrides trunk from instance",
+			spec: infrav1.OpenStackMachineSpec{
+				Ports: []infrav1.PortOpts{
+					{
+						Network: &infrav1.NetworkParam{
+							ID: ptr.To(networkID),
+						},
+						Trunk: ptr.To(true),
+					},
+				},
+				Trunk: false,
+			},
+			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
+				expectListExtensions(m)
+			},
+			want: []infrav1.ResolvedPortSpec{
+				{
+					NetworkID: networkID,
+
+					// Defaults
+					Name:        "test-instance-0",
+					Description: defaultDescription,
+					Tags:        []string{"test-tag"},
+					Trunk:       ptr.To(true),
 				},
 			},
 		},
@@ -683,8 +660,15 @@ func TestService_ConstructPorts(t *testing.T) {
 			},
 		},
 		{
-			name: "machine spec security groups added to defaults",
+			name: "machine spec security groups",
 			spec: infrav1.OpenStackMachineSpec{
+				Ports: []infrav1.PortOpts{
+					{
+						Network: &infrav1.NetworkParam{
+							ID: ptr.To(networkID),
+						},
+					},
+				},
 				SecurityGroups: []infrav1.SecurityGroupParam{
 					{Filter: &infrav1.SecurityGroupFilter{Name: "test-security-group"}},
 				},
@@ -696,11 +680,8 @@ func TestService_ConstructPorts(t *testing.T) {
 			},
 			want: []infrav1.ResolvedPortSpec{
 				{
-					Name:      "test-instance-0",
-					NetworkID: defaultNetworkID,
-					FixedIPs: []infrav1.ResolvedFixedIP{
-						{SubnetID: ptr.To(defaultSubnetID)},
-					},
+					Name:           "test-instance-0",
+					NetworkID:      networkID,
 					Description:    defaultDescription,
 					Tags:           []string{"test-tag"},
 					SecurityGroups: []string{securityGroupID1},
@@ -714,7 +695,12 @@ func TestService_ConstructPorts(t *testing.T) {
 					{Filter: &infrav1.SecurityGroupFilter{Name: "machine-security-group"}},
 				},
 				Ports: []infrav1.PortOpts{
-					{SecurityGroups: []infrav1.SecurityGroupParam{{Filter: &infrav1.SecurityGroupFilter{Name: "port-security-group"}}}},
+					{
+						Network: &infrav1.NetworkParam{
+							ID: ptr.To(networkID),
+						},
+						SecurityGroups: []infrav1.SecurityGroupParam{{Filter: &infrav1.SecurityGroupFilter{Name: "port-security-group"}}},
+					},
 				},
 			},
 			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
@@ -727,11 +713,8 @@ func TestService_ConstructPorts(t *testing.T) {
 			},
 			want: []infrav1.ResolvedPortSpec{
 				{
-					Name:      "test-instance-0",
-					NetworkID: defaultNetworkID,
-					FixedIPs: []infrav1.ResolvedFixedIP{
-						{SubnetID: ptr.To(defaultSubnetID)},
-					},
+					Name:           "test-instance-0",
+					NetworkID:      networkID,
 					Description:    defaultDescription,
 					Tags:           []string{"test-tag"},
 					SecurityGroups: []string{securityGroupID2},
@@ -739,16 +722,21 @@ func TestService_ConstructPorts(t *testing.T) {
 			},
 		},
 		{
-			name:                 "managed security group added to port",
-			spec:                 infrav1.OpenStackMachineSpec{},
+			name: "managed security group added to port",
+			spec: infrav1.OpenStackMachineSpec{
+				Ports: []infrav1.PortOpts{
+					{
+						Network: &infrav1.NetworkParam{
+							ID: ptr.To(networkID),
+						},
+					},
+				},
+			},
 			managedSecurityGroup: ptr.To(securityGroupID1),
 			want: []infrav1.ResolvedPortSpec{
 				{
-					Name:      "test-instance-0",
-					NetworkID: defaultNetworkID,
-					FixedIPs: []infrav1.ResolvedFixedIP{
-						{SubnetID: ptr.To(defaultSubnetID)},
-					},
+					Name:           "test-instance-0",
+					NetworkID:      networkID,
 					Description:    defaultDescription,
 					Tags:           []string{"test-tag"},
 					SecurityGroups: []string{securityGroupID1},
@@ -758,6 +746,13 @@ func TestService_ConstructPorts(t *testing.T) {
 		{
 			name: "managed security group and machine security groups added to port",
 			spec: infrav1.OpenStackMachineSpec{
+				Ports: []infrav1.PortOpts{
+					{
+						Network: &infrav1.NetworkParam{
+							ID: ptr.To(networkID),
+						},
+					},
+				},
 				SecurityGroups: []infrav1.SecurityGroupParam{{Filter: &infrav1.SecurityGroupFilter{Name: "machine-security-group"}}},
 			},
 			managedSecurityGroup: ptr.To(securityGroupID1),
@@ -768,11 +763,8 @@ func TestService_ConstructPorts(t *testing.T) {
 			},
 			want: []infrav1.ResolvedPortSpec{
 				{
-					Name:      "test-instance-0",
-					NetworkID: defaultNetworkID,
-					FixedIPs: []infrav1.ResolvedFixedIP{
-						{SubnetID: ptr.To(defaultSubnetID)},
-					},
+					Name:           "test-instance-0",
+					NetworkID:      networkID,
 					Description:    defaultDescription,
 					Tags:           []string{"test-tag"},
 					SecurityGroups: []string{securityGroupID2, securityGroupID1},
@@ -799,19 +791,10 @@ func TestService_ConstructPorts(t *testing.T) {
 				scope:  scope.NewWithLogger(mockScopeFactory, log),
 			}
 
-			defaultNetwork := &infrav1.NetworkStatusWithSubnets{
-				NetworkStatus: infrav1.NetworkStatus{
-					ID: defaultNetworkID,
-				},
-				Subnets: []infrav1.Subnet{
-					{ID: defaultSubnetID},
-				},
-			}
-
 			clusterResourceName := "test-cluster"
 			baseName := "test-instance"
 			baseTags := []string{"test-tag"}
-			got, err := s.ConstructPorts(&tt.spec, clusterResourceName, baseName, defaultNetwork, tt.managedSecurityGroup, baseTags)
+			got, err := s.ConstructPorts(tt.spec.Ports, tt.spec.SecurityGroups, tt.spec.Trunk, clusterResourceName, baseName, tt.managedSecurityGroup, baseTags)
 			if tt.wantErr {
 				g.Expect(err).To(HaveOccurred())
 				return
