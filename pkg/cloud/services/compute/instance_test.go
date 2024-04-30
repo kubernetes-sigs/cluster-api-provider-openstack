@@ -29,7 +29,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
-	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega" //nolint:revive
 	"k8s.io/utils/ptr"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -54,7 +54,7 @@ func TestService_getImageID(t *testing.T) {
 			testName: "Return image ID when ID given",
 			image:    infrav1.ImageParam{ID: &imageID},
 			want:     imageID,
-			expect:   func(m *mock.MockImageClientMockRecorder) {},
+			expect:   func(*mock.MockImageClientMockRecorder) {},
 			wantErr:  false,
 		},
 		{

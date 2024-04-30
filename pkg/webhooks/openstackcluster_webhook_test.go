@@ -20,15 +20,13 @@ import (
 	"context"
 	"testing"
 
-	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega" //nolint:revive
 	"k8s.io/utils/ptr"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
 func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
-	g := NewWithT(t)
-
 	tests := []struct {
 		name        string
 		oldTemplate *infrav1.OpenStackCluster
@@ -515,7 +513,9 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			g := NewWithT(t)
 			ctx := context.TODO()
+
 			webhook := &openStackClusterWebhook{}
 			warn, err := webhook.ValidateUpdate(ctx, tt.oldTemplate, tt.newTemplate)
 			if tt.wantErr {
@@ -530,8 +530,6 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 }
 
 func TestOpenStackCluster_ValidateCreate(t *testing.T) {
-	g := NewWithT(t)
-
 	tests := []struct {
 		name     string
 		template *infrav1.OpenStackCluster
@@ -600,7 +598,9 @@ func TestOpenStackCluster_ValidateCreate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			g := NewWithT(t)
 			ctx := context.TODO()
+
 			webhook := &openStackClusterWebhook{}
 			warn, err := webhook.ValidateCreate(ctx, tt.template)
 			if tt.wantErr {

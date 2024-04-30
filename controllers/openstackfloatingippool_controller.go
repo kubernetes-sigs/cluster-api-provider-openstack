@@ -369,7 +369,7 @@ func (r *OpenStackFloatingIPPoolReconciler) getIP(ctx context.Context, scope *sc
 	defer func() {
 		tag := pool.GetFloatingIPTag()
 
-		err := wait.ExponentialBackoffWithContext(ctx, backoff, func(ctx context.Context) (bool, error) {
+		err := wait.ExponentialBackoffWithContext(ctx, backoff, func(context.Context) (bool, error) {
 			if err := networkingService.TagFloatingIP(fp.FloatingIP, tag); err != nil {
 				scope.Logger().Error(err, "Failed to tag floating IP, retrying", "ip", fp.FloatingIP, "tag", tag)
 				return false, err

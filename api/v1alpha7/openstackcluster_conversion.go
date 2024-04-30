@@ -274,7 +274,7 @@ func Convert_v1alpha7_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 	}
 
 	// DNSNameservers without NodeCIDR doesn't make sense, so we drop that.
-	if len(in.NodeCIDR) > 0 {
+	if in.NodeCIDR != "" {
 		out.ManagedSubnets = []infrav1.SubnetSpec{
 			{
 				CIDR:           in.NodeCIDR,

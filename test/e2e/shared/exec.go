@@ -84,7 +84,7 @@ func executeCommand(ctx context.Context, p commandParameter) error {
 		Auth: []ssh.AuthMethod{
 			ssh.PublicKeys(p.signer),
 		},
-		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil },
+		HostKeyCallback: func(string, net.Addr, ssh.PublicKey) error { return nil },
 		Timeout:         60 * time.Second,
 	}
 	cfg.SetDefaults()
@@ -117,7 +117,7 @@ func executeCommand(ctx context.Context, p commandParameter) error {
 		Auth: []ssh.AuthMethod{
 			ssh.PublicKeys(p.signer),
 		},
-		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil },
+		HostKeyCallback: func(string, net.Addr, ssh.PublicKey) error { return nil },
 		Timeout:         60 * time.Second,
 	}
 	cfg.SetDefaults()

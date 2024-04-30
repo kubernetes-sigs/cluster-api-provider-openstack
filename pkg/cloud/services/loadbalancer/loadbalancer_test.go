@@ -30,7 +30,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/monitors"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/pools"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/providers"
-	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega" //nolint:revive
 	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 
@@ -86,7 +86,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 	}{
 		{
 			name: "reconcile loadbalancer in non active state should wait for active state",
-			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
+			expectNetwork: func(*mock.MockNetworkClientMockRecorder) {
 				// add network api call results here
 			},
 			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
