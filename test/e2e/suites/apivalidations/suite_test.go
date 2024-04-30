@@ -40,7 +40,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
-	infrav1alpha6 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
 	infrav1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/webhooks"
@@ -70,7 +69,6 @@ var _ = BeforeSuite(func() {
 	testScheme = scheme.Scheme
 	for _, f := range []func(*runtime.Scheme) error{
 		infrav1alpha1.AddToScheme,
-		infrav1alpha6.AddToScheme,
 		infrav1alpha7.AddToScheme,
 		infrav1.AddToScheme,
 	} {
