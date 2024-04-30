@@ -56,7 +56,10 @@ linters-settings:
     # TODO(sbuerin) fix remaining findings and set to 20 afterwards
     max-complexity: 30
   gci:
-    local-prefixes: sigs.k8s.io/cluster-api-provider-openstack
+    sections:
+    - standard
+    - default
+    - prefix(sigs.k8s.io/cluster-api-provider-openstack)
   gocritic:
     enabled-tags:
       - diagnostic
@@ -129,10 +132,6 @@ linters-settings:
   nolintlint:
     # https://github.com/golangci/golangci-lint/issues/3228
     allow-unused: true
-  staticcheck:
-    go: "1.20"
-  stylecheck:
-    go: "1.20"
   nestif:
     # minimal complexity of if statements to report, 5 by default
     # TODO(sbuerin) fix remaining findings and set to 5 after:
@@ -174,12 +173,13 @@ issues:
     - stylecheck
     text: "ST1003: should not use underscores in Go names;"
     path: pkg/utils/conversioncommon/.*.go
+  exclude-files:
+  - "zz_generated.*\\.go$"
 
 run:
+  go: "1.20"
   timeout: 10m
   build-tags:
   - e2e
 
-  skip-files:
-    - "zz_generated.*\\.go$"
   allow-parallel-runners: true
