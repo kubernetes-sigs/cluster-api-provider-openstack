@@ -626,10 +626,17 @@ spec:
       jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
+    deprecated: true
+    deprecationWarning: The v1alpha7 version of OpenStackMachine has been deprecated
+      and will be removed in a future release.
     name: v1alpha7
     schema:
       openAPIV3Schema:
-        description: OpenStackMachine is the Schema for the openstackmachines API.
+        description: |-
+          OpenStackMachine is the Schema for the openstackmachines API.
+
+
+          Deprecated: v1alpha7.OpenStackMachine has been replaced by v1beta1.OpenStackMachine.
         properties:
           apiVersion:
             description: |-

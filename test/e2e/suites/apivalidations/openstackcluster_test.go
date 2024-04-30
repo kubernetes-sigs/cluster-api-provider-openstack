@@ -181,11 +181,11 @@ var _ = Describe("OpenStackCluster API validations", func() {
 	})
 
 	Context("v1alpha7", func() {
-		var cluster *infrav1alpha7.OpenStackCluster
+		var cluster *infrav1alpha7.OpenStackCluster //nolint: staticcheck
 
 		BeforeEach(func() {
 			// Initialise a basic cluster object in the correct namespace
-			cluster = &infrav1alpha7.OpenStackCluster{}
+			cluster = &infrav1alpha7.OpenStackCluster{} //nolint: staticcheck
 			cluster.Namespace = namespace.Name
 			cluster.GenerateName = clusterNamePrefix
 		})
@@ -210,7 +210,7 @@ var _ = Describe("OpenStackCluster API validations", func() {
 			Expect(k8sClient.Update(ctx, infrav1Cluster)).To(Succeed(), "Setting control plane endpoint should succeed")
 
 			// Fetch the v1alpha7 version of the cluster and ensure that both the new control plane endpoint and the identityRef.Kind are present
-			cluster = &infrav1alpha7.OpenStackCluster{}
+			cluster = &infrav1alpha7.OpenStackCluster{} //nolint:staticcheck
 			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: infrav1Cluster.Name, Namespace: infrav1Cluster.Namespace}, cluster)).To(Succeed(), "OpenStackCluster fetch should succeed")
 			Expect(cluster.Spec.ControlPlaneEndpoint).To(Equal(*infrav1Cluster.Spec.ControlPlaneEndpoint), "Control plane endpoint should be restored")
 			Expect(cluster.Spec.IdentityRef.Kind).To(Equal("FakeKind"), "IdentityRef.Kind should be restored")
