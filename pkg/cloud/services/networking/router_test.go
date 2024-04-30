@@ -24,7 +24,7 @@ import (
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
-	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega" //nolint:revive
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
@@ -78,7 +78,7 @@ func TestService_DeleteRouter(t *testing.T) {
 					},
 				},
 			},
-			expect: func(g Gomega, m *mock.MockNetworkClientMockRecorder) {
+			expect: func(_ Gomega, m *mock.MockNetworkClientMockRecorder) {
 				// Get by ID in status returns 404
 				// No further action
 				m.GetRouter(routerID).Return(&routers.Router{ID: routerID}, gophercloud.ErrDefault404{})
@@ -165,7 +165,7 @@ func TestService_DeleteRouter(t *testing.T) {
 					},
 				},
 			},
-			expect: func(g Gomega, m *mock.MockNetworkClientMockRecorder) {
+			expect: func(_ Gomega, m *mock.MockNetworkClientMockRecorder) {
 				// Get by ID in status returns 404
 				// Error
 				m.GetRouter(routerID).Return(nil, gophercloud.ErrDefault404{})

@@ -26,7 +26,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/rules"
-	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega" //nolint:revive
 	"k8s.io/utils/ptr"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -358,7 +358,7 @@ func TestReconcileGroupRules(t *testing.T) {
 				Name:  sgName,
 				Rules: []rules.SecGroupRule{},
 			},
-			mockExpect:   func(m *mock.MockNetworkClientMockRecorder) {},
+			mockExpect:   func(*mock.MockNetworkClientMockRecorder) {},
 			wantSGStatus: infrav1.SecurityGroupStatus{},
 		},
 		{
@@ -395,7 +395,7 @@ func TestReconcileGroupRules(t *testing.T) {
 					},
 				},
 			},
-			mockExpect: func(m *mock.MockNetworkClientMockRecorder) {},
+			mockExpect: func(*mock.MockNetworkClientMockRecorder) {},
 		},
 		{
 			name: "Different desiredSGSpec and observedSG produces changes",

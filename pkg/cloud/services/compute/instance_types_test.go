@@ -20,7 +20,7 @@ import (
 	"testing"
 
 	"github.com/go-logr/logr/testr"
-	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega" //nolint:revive
 	corev1 "k8s.io/api/core/v1"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"

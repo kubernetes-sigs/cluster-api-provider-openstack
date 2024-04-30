@@ -21,7 +21,7 @@ import (
 	"crypto/tls"
 	"testing"
 
-	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega" //nolint:revive
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 )

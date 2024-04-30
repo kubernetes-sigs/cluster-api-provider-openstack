@@ -30,7 +30,7 @@ func filterInvalidTags(tags []infrav1.NeutronTag) []infrav1.NeutronTag {
 	var ret []infrav1.NeutronTag
 	for i := range tags {
 		s := string(tags[i])
-		if len(s) > 0 && !strings.Contains(s, ",") {
+		if s != "" && !strings.Contains(s, ",") {
 			ret = append(ret, tags[i])
 		}
 	}
@@ -159,7 +159,7 @@ func InfraV1FuzzerFuncs() []interface{} {
 			stringWithoutSpaces := func() string {
 				for {
 					s := c.RandString()
-					if !strings.Contains(s, " ") && len(s) > 0 {
+					if !strings.Contains(s, " ") && s != "" {
 						return s
 					}
 				}

@@ -44,18 +44,16 @@ func TestService_GetServerGroupID(t *testing.T) {
 		{
 			testName:         "Return server group ID from filter if only filter (with ID) given",
 			serverGroupParam: &infrav1.ServerGroupParam{ID: ptr.To(serverGroupID1)},
-			expect: func(m *mock.MockComputeClientMockRecorder) {
-			},
-			want:    serverGroupID1,
-			wantErr: false,
+			expect:           func(*mock.MockComputeClientMockRecorder) {},
+			want:             serverGroupID1,
+			wantErr:          false,
 		},
 		{
 			testName:         "Return error if empty filter is given",
 			serverGroupParam: &infrav1.ServerGroupParam{},
-			expect: func(m *mock.MockComputeClientMockRecorder) {
-			},
-			want:    "",
-			wantErr: true,
+			expect:           func(*mock.MockComputeClientMockRecorder) {},
+			want:             "",
+			wantErr:          true,
 		},
 		{
 			testName:         "Return server group ID from filter if only filter (with name) given",
