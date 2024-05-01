@@ -131,7 +131,7 @@ $(MDBOOK_TABULATE): go.mod go.sum | $(BIN_DIR)
 
 MOCKGEN := $(BIN_DIR)/mockgen
 $(MOCKGEN): go.mod go.sum | $(BIN_DIR) # Build mockgen from tools folder.
-	go build -tags=tools -o $@ github.com/golang/mock/mockgen
+	go build -tags=tools -o $@ go.uber.org/mock/mockgen
 
 RELEASE_NOTES := $(BIN_DIR)/release-notes
 $(RELEASE_NOTES): go.mod go.sum | $(BIN_DIR)
@@ -143,7 +143,7 @@ $(PLANTUML): plantuml.Dockerfile ../../versions.mk | $(BIN_DIR)
 	touch $@
 
 GEN_CRD_API_REFERENCE_DOCS := $(BIN_DIR)/gen-crd-api-reference-docs
-$(GEN_CRD_API_REFERENCE_DOCS): 
+$(GEN_CRD_API_REFERENCE_DOCS):
 	go build -tags tools -o $@ github.com/ahmetb/gen-crd-api-reference-docs
 
 .PHONY: clean
