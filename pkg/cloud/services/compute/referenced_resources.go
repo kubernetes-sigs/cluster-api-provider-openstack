@@ -74,7 +74,7 @@ func ResolveMachineSpec(scope *scope.WithLogger, spec *infrav1.OpenStackMachineS
 	// Network resources are required in order to get ports options.
 	if len(resolved.Ports) == 0 {
 		defaultNetwork := openStackCluster.Status.Network
-		portsOpts, err := networkingService.ConstructPorts(spec, clusterResourceName, baseName, defaultNetwork, managedSecurityGroup, InstanceTags(spec, openStackCluster))
+		portsOpts, err := networkingService.ConstructPorts(spec.Ports, spec.SecurityGroups, spec.Trunk, clusterResourceName, baseName, defaultNetwork, managedSecurityGroup, InstanceTags(spec, openStackCluster))
 		if err != nil {
 			return changed, err
 		}

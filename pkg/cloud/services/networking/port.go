@@ -346,12 +346,11 @@ func (s *Service) CreatePorts(eventObject runtime.Object, desiredPorts []infrav1
 	return nil
 }
 
-// ConstructPorts builds an array of ports from the machine spec.
-// If no ports are in the spec, returns a single port for a network connection to the default cluster network.
-func (s *Service) ConstructPorts(spec *infrav1.OpenStackMachineSpec, clusterResourceName, baseName string, defaultNetwork *infrav1.NetworkStatusWithSubnets, managedSecurityGroup *string, baseTags []string) ([]infrav1.ResolvedPortSpec, error) {
-	ports := spec.Ports
-
-	defaultSecurityGroupIDs, err := s.GetSecurityGroups(spec.SecurityGroups)
+// ConstructPorts builds an array of ports from given parameters.
+// If no ports are provided, returns a single port for a network connection to the default cluster network. We'll want to remove this default port in the future
+// to call this function without dependency on the default network.
+func (s *Service) ConstructPorts(instancePorts []infrav1.PortOpts, instanceSecurityGroups []infrav1.SecurityGroupParam, instanceTrunk bool, clusterResourceName, baseName string, defaultNetwork *infrav1.NetworkStatusWithSubnets, managedSecurityGroup *string, baseTags []string) ([]infrav1.ResolvedPortSpec, error) {
+	defaultSecurityGroupIDs, err := s.GetSecurityGroups(instanceSecurityGroups)
 	if err != nil {
 		return nil, fmt.Errorf("error getting security groups: %v", err)
 	}
@@ -360,12 +359,12 @@ func (s *Service) ConstructPorts(spec *infrav1.OpenStackMachineSpec, clusterReso
 	}
 
 	// If no ports are specified, create a single port which will get default options.
-	if len(ports) == 0 {
-		ports = make([]infrav1.PortOpts, 1)
+	if len(instancePorts) == 0 {
+		instancePorts = make([]infrav1.PortOpts, 1)
 	}
 
 	// Ensure user-specified ports have all required fields
-	resolvedPorts, err := s.normalizePorts(ports, clusterResourceName, baseName, spec.Trunk, defaultSecurityGroupIDs, defaultNetwork, baseTags)
+	resolvedPorts, err := s.normalizePorts(instancePorts, clusterResourceName, baseName, instanceTrunk, defaultSecurityGroupIDs, defaultNetwork, baseTags)
 	if err != nil {
 		return nil, err
 	}

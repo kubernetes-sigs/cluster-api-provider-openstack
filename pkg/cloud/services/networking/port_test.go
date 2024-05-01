@@ -811,7 +811,7 @@ func TestService_ConstructPorts(t *testing.T) {
 			clusterResourceName := "test-cluster"
 			baseName := "test-instance"
 			baseTags := []string{"test-tag"}
-			got, err := s.ConstructPorts(&tt.spec, clusterResourceName, baseName, defaultNetwork, tt.managedSecurityGroup, baseTags)
+			got, err := s.ConstructPorts(tt.spec.Ports, tt.spec.SecurityGroups, tt.spec.Trunk, clusterResourceName, baseName, defaultNetwork, tt.managedSecurityGroup, baseTags)
 			if tt.wantErr {
 				g.Expect(err).To(HaveOccurred())
 				return
