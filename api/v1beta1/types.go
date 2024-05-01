@@ -279,11 +279,39 @@ type AllocationPool struct {
 	End string `json:"end"`
 }
 
-type PortOpts struct {
+type PortTarget struct {
 	// Network is a query for an openstack network that the port will be created or discovered on.
 	// This will fail if the query returns more than one network.
 	// +optional
 	Network *NetworkParam `json:"network,omitempty"`
+
+	// FixedIPs is a list of pairs of subnet and/or IP address to assign to the port. If specified, these must be subnets of the port's network.
+	// +optional
+	// +listType=atomic
+	FixedIPs []FixedIP `json:"fixedIPs,omitempty"`
+}
+
+// CEL for AT LEAST one of these must be set
+// +kubebuilder:validation:MinProperties:=1
+type ServerPortOpts struct {
+	// Network is a query for an openstack network that the port will be created or discovered on.
+	// This will fail if the query returns more than one network.
+	// +optional
+	Network *NetworkParam `json:"network,omitempty"`
+
+	// FixedIPs is a list of pairs of subnet and/or IP address to assign to the port. If specified, these must be subnets of the port's network.
+	// +optional
+	// +listType=atomic
+	FixedIPs []FixedIP `json:"fixedIPs,omitempty"`	
+}
+
+type PortOpts struct {
+	PortTarget	`json:",inline"`
+
+	ResolvedPortSpecFields `json:",inline"`
+}
+
+type PortOptsUnresolvedCommon {
 
 	// Description is a human-readable description for the port.
 	// +optional
@@ -292,11 +320,6 @@ type PortOpts struct {
 	// NameSuffix will be appended to the name of the port if specified. If unspecified, instead the 0-based index of the port in the list is used.
 	// +optional
 	NameSuffix optional.String `json:"nameSuffix,omitempty"`
-
-	// FixedIPs is a list of pairs of subnet and/or IP address to assign to the port. If specified, these must be subnets of the port's network.
-	// +optional
-	// +listType=atomic
-	FixedIPs []FixedIP `json:"fixedIPs,omitempty"`
 
 	// SecurityGroups is a list of the names, uuids, filters or any combination these of the security groups to assign to the instance.
 	// +optional
@@ -313,9 +336,7 @@ type PortOpts struct {
 	// provided the value is inherited from the machine, or false for a
 	// bastion host.
 	// +optional
-	Trunk *bool `json:"trunk,omitempty"`
-
-	ResolvedPortSpecFields `json:",inline"`
+	Trunk *bool `json:"trunk,omitempty"`	
 }
 
 // ResolvePortSpecFields is a convenience struct containing all fields of a
