@@ -359,26 +359,15 @@ func (s *Service) ConstructPorts(spec *infrav1.OpenStackMachineSpec, clusterReso
 		defaultSecurityGroupIDs = append(defaultSecurityGroupIDs, *managedSecurityGroup)
 	}
 
+	// If no ports are specified, create a single port which will get default options.
+	if len(ports) == 0 {
+		ports = make([]infrav1.PortOpts, 1)
+	}
+
 	// Ensure user-specified ports have all required fields
 	resolvedPorts, err := s.normalizePorts(ports, clusterResourceName, baseName, spec.Trunk, defaultSecurityGroupIDs, defaultNetwork, baseTags)
 	if err != nil {
 		return nil, err
-	}
-
-	// no networks or ports found in the spec, so create a port on the cluster network
-	if len(resolvedPorts) == 0 {
-		resolvedPorts = make([]infrav1.ResolvedPortSpec, 1)
-		resolvedPort := &resolvedPorts[0]
-		resolvedPort.Name = getPortName(baseName, nil, 0)
-		resolvedPort.Description = names.GetDescription(clusterResourceName)
-		if len(baseTags) > 0 {
-			resolvedPort.Tags = baseTags
-		}
-		if spec.Trunk {
-			resolvedPort.Trunk = &spec.Trunk
-		}
-		resolvedPort.SecurityGroups = defaultSecurityGroupIDs
-		resolvedPort.NetworkID, resolvedPort.FixedIPs, _ = defaultNetworkTarget(defaultNetwork)
 	}
 
 	// trunk support is required if any port has trunk enabled
