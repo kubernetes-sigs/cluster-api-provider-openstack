@@ -215,6 +215,24 @@ var _ = Describe("OpenStackCluster API validations", func() {
 			Expect(cluster.Spec.ControlPlaneEndpoint).To(Equal(*infrav1Cluster.Spec.ControlPlaneEndpoint), "Control plane endpoint should be restored")
 			Expect(cluster.Spec.IdentityRef.Kind).To(Equal("FakeKind"), "IdentityRef.Kind should be restored")
 		})
+
+		It("should not enable an explicitly disabled bastion when converting to v1beta1", func() {
+			cluster.Spec.Bastion = &infrav1alpha7.Bastion{Enabled: false}
+			Expect(create(cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
+
+			// Fetch the infrav1 version of the cluster
+			infrav1Cluster := &infrav1.OpenStackCluster{}
+			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: cluster.Name, Namespace: cluster.Namespace}, infrav1Cluster)).To(Succeed(), "OpenStackCluster fetch should succeed")
+
+			infrav1Bastion := infrav1Cluster.Spec.Bastion
+
+			// NOTE(mdbooth): It may be reasonable to remove the
+			// bastion if it is disabled with no other properties.
+			// It would be reasonable to update the assertions
+			// accordingly if we did that.
+			Expect(infrav1Bastion).ToNot(BeNil(), "Bastion should not have been removed")
+			Expect(infrav1Bastion.Enabled).To(Equal(ptr.To(false)), "Bastion should remain disabled")
+		})
 	})
 
 	Context("v1alpha6", func() {
@@ -251,6 +269,24 @@ var _ = Describe("OpenStackCluster API validations", func() {
 			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: infrav1Cluster.Name, Namespace: infrav1Cluster.Namespace}, cluster)).To(Succeed(), "OpenStackCluster fetch should succeed")
 			Expect(cluster.Spec.ControlPlaneEndpoint).To(Equal(*infrav1Cluster.Spec.ControlPlaneEndpoint), "Control plane endpoint should be restored")
 			Expect(cluster.Spec.IdentityRef.Kind).To(Equal("FakeKind"), "IdentityRef.Kind should be restored")
+		})
+
+		It("should not enable an explicitly disabled bastion when converting to v1beta1", func() {
+			cluster.Spec.Bastion = &infrav1alpha6.Bastion{Enabled: false}
+			Expect(create(cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
+
+			// Fetch the infrav1 version of the cluster
+			infrav1Cluster := &infrav1.OpenStackCluster{}
+			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: cluster.Name, Namespace: cluster.Namespace}, infrav1Cluster)).To(Succeed(), "OpenStackCluster fetch should succeed")
+
+			infrav1Bastion := infrav1Cluster.Spec.Bastion
+
+			// NOTE(mdbooth): It may be reasonable to remove the
+			// bastion if it is disabled with no other properties.
+			// It would be reasonable to update the assertions
+			// accordingly if we did that.
+			Expect(infrav1Bastion).ToNot(BeNil(), "Bastion should not have been removed")
+			Expect(infrav1Bastion.Enabled).To(Equal(ptr.To(false)), "Bastion should remain disabled")
 		})
 	})
 })
