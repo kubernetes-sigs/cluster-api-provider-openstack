@@ -35,7 +35,7 @@ previous cluster managers such as [kops][kops] and
 
 ------
 
-## Compatibility with Cluster API and Kubernetes Versions
+## Compatibility with Cluster API
 
 This provider's versions are compatible with the following versions of Cluster API:
 
@@ -44,31 +44,6 @@ This provider's versions are compatible with the following versions of Cluster A
 | OpenStack Provider v1alpha6 (v0.7) | ✓              |
 | OpenStack Provider v1alpha7 (v0.9) | ✓              |
 | OpenStack Provider v1beta1         | ✓              |
-
-
-This provider's versions are able to install and manage the following versions of Kubernetes:
-
-|                                    | v1.25 | v1.26 | v1.27 | v1.28 |
-|------------------------------------| ----- | ----- | ----- | ----- |
-| OpenStack Provider v1alpha6 (v0.7) | ✓     | ✓     | ✓     | +     |
-| OpenStack Provider v1alpha7 (v0.9) | +     | ✓     | ✓     | ★     |
-| OpenStack Provider v1beta1         | +     | ✓     | ✓     | ★     |
-
-This provider's versions are able to install Kubernetes to the following versions of OpenStack:
-
-|                                    | Queens | Rocky | Stein | Train | Ussuri | Victoria | Wallaby | Xena | Yoga | Bobcat |
-|------------------------------------| ------ | ----- | ----- | ----- | ------ | -------- | ------- | ---- | ---- | ------ |
-| OpenStack Provider v1alpha6 (v0.7) | +      | +     | +     | +     | +      | ✓        | ✓       | ✓    | ✓    | ★      |
-| OpenStack Provider v1alpha7 (v0.9) |        | +     | +     | +     | +      | ✓        | ✓       | ✓    | ✓    | ★      |
-| OpenStack Provider v1beta1         |        | +     | +     | +     | +      | ✓        | ✓       | ✓    | ✓    | ★      |
-
-Test status:
-
-- `★` currently testing
-- `✓` previously tested
-- `+` should work, but we weren't able to test it
-
-Older versions may also work but we have not verified.
 
 Each version of Cluster API for OpenStack will attempt to support two Kubernetes versions.
 
