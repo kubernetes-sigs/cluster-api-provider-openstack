@@ -3121,6 +3121,10 @@ spec:
                       API server loadbalancer, omit the APIServerLoadBalancer field in the
                       cluster spec instead.
                     type: boolean
+                  flavor:
+                    description: Flavor is the flavor name that will be used to create
+                      the APIServerLoadBalancer Spec.
+                    type: string
                   network:
                     description: Network defines which network should the load balancer
                       be allocated on.

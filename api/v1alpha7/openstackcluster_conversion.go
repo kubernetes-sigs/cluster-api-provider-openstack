@@ -218,6 +218,7 @@ func restorev1beta1ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infr
 			dst.APIServerLoadBalancer.Enabled = previous.APIServerLoadBalancer.Enabled
 		}
 		optional.RestoreString(&previous.APIServerLoadBalancer.Provider, &dst.APIServerLoadBalancer.Provider)
+		optional.RestoreString(&previous.APIServerLoadBalancer.Flavor, &dst.APIServerLoadBalancer.Flavor)
 
 		if previous.APIServerLoadBalancer.Network != nil {
 			dst.APIServerLoadBalancer.Network = previous.APIServerLoadBalancer.Network

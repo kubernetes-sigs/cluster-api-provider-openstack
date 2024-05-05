@@ -29,6 +29,7 @@ import (
 	reflect "reflect"
 
 	apiversions "github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/apiversions"
+	flavors "github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/flavors"
 	listeners "github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/listeners"
 	loadbalancers "github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/loadbalancers"
 	monitors "github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/monitors"
@@ -263,6 +264,21 @@ func (m *MockLbClient) ListListeners(arg0 listeners.ListOptsBuilder) ([]listener
 func (mr *MockLbClientMockRecorder) ListListeners(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListListeners", reflect.TypeOf((*MockLbClient)(nil).ListListeners), arg0)
+}
+
+// ListLoadBalancerFlavors mocks base method.
+func (m *MockLbClient) ListLoadBalancerFlavors() ([]flavors.Flavor, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListLoadBalancerFlavors")
+	ret0, _ := ret[0].([]flavors.Flavor)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListLoadBalancerFlavors indicates an expected call of ListLoadBalancerFlavors.
+func (mr *MockLbClientMockRecorder) ListLoadBalancerFlavors() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListLoadBalancerFlavors", reflect.TypeOf((*MockLbClient)(nil).ListLoadBalancerFlavors))
 }
 
 // ListLoadBalancerProviders mocks base method.

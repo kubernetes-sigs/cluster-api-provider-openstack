@@ -22,6 +22,7 @@ import (
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/apiversions"
+	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/flavors"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/listeners"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/loadbalancers"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/monitors"
@@ -55,6 +56,7 @@ type LbClient interface {
 	DeleteMonitor(id string) error
 	ListLoadBalancerProviders() ([]providers.Provider, error)
 	ListOctaviaVersions() ([]apiversions.APIVersion, error)
+	ListLoadBalancerFlavors() ([]flavors.Flavor, error)
 }
 
 type lbClient struct {
@@ -264,4 +266,16 @@ func (l lbClient) ListOctaviaVersions() ([]apiversions.APIVersion, error) {
 		return nil, err
 	}
 	return apiversions.ExtractAPIVersions(allPages)
+}
+
+func (l lbClient) ListLoadBalancerFlavors() ([]flavors.Flavor, error) {
+	allPages, err := flavors.List(l.serviceClient, flavors.ListOpts{}).AllPages()
+	if err != nil {
+		return nil, fmt.Errorf("listing flavors: %v", err)
+	}
+	flavorList, err := flavors.ExtractFlavors(allPages)
+	if err != nil {
+		return nil, fmt.Errorf("extracting loadbalancer flavors pages: %v", err)
+	}
+	return flavorList, nil
 }
