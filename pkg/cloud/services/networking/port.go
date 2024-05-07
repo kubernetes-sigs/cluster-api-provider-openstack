@@ -192,7 +192,7 @@ func (s *Service) CreatePort(eventObject runtime.Object, portSpec *infrav1.Resol
 
 	port, err := s.client.CreatePort(builder)
 	if err != nil {
-		record.Warnf(eventObject, "FailedCreatePort", "Failed to create port %s: %v", port.Name, err)
+		record.Warnf(eventObject, "FailedCreatePort", "Failed to create port %s: %v", portSpec.Name, err)
 		return nil, err
 	}
 
