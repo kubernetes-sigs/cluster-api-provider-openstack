@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"slices"
 
+	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
@@ -77,6 +78,75 @@ func ResolveMachineSpec(scope *scope.WithLogger, spec *infrav1.OpenStackMachineS
 		portsOpts, err := networkingService.ConstructPorts(spec.Ports, spec.SecurityGroups, spec.Trunk, clusterResourceName, baseName, defaultNetwork, managedSecurityGroup, InstanceTags(spec, openStackCluster))
 		if err != nil {
 			return changed, err
+		}
+		resolved.Ports = portsOpts
+		changed = true
+	}
+
+	return changed, nil
+}
+
+// ResolveServerSpec is responsible for populating a ResolvedServerSpec from
+// an OpenStackMachineSpec and any external dependencies. The result contains no
+// external dependencies, and does not require any complex logic on creation.
+// Note that we only set the fields in ResolvedServerSpec that are not set yet. This is ok because
+// OpenStackServer is immutable, so we can't change the spec after the machine is created.
+func ResolveServerSpec(scope *scope.WithLogger, spec *infrav1alpha1.OpenStackServerSpec, resolved *infrav1alpha1.ResolvedServerSpec, baseName string) (changed bool, err error) {
+	changed = false
+
+	computeService, err := NewService(scope)
+	if err != nil {
+		return changed, err
+	}
+
+	networkingService, err := networking.NewService(scope)
+	if err != nil {
+		return changed, err
+	}
+
+	// ServerGroup is optional, so we only need to resolve it if it's set in the spec
+	if spec.ServerGroup != nil && resolved.ServerGroupID == "" {
+		serverGroupID, err := computeService.GetServerGroupID(spec.ServerGroup)
+		if err != nil {
+			return changed, err
+		}
+		resolved.ServerGroupID = serverGroupID
+		changed = true
+	}
+
+	// Image is required, so we need to resolve it if it's not set
+	if resolved.ImageID == "" {
+		imageID, err := computeService.GetImageID(spec.Image)
+		if err != nil {
+			return changed, err
+		}
+		resolved.ImageID = imageID
+		changed = true
+	}
+
+	var specTrunk bool
+	if spec.Trunk == nil {
+		specTrunk = false
+	} else {
+		specTrunk = *spec.Trunk
+	}
+
+	// Network resources are required in order to get ports options.
+	// Notes:
+	// - clusterResourceName is not used in this context, so we pass an empty string. In the future,
+	// we may want to remove that (it's only used for the port description) or allow a user to pass
+	// a custom description.
+	// - managedSecurityGroup is not used in this context, so we pass nil. The security groups are
+	//   passed in the spec.SecurityGroups and spec.Ports.
+	// - We run a safety check to ensure that the resolved.Ports has the same length as the spec.Ports.
+	//   This is to ensure that we don't accidentally add ports to the resolved.Ports that are not in the spec.
+	if len(resolved.Ports) == 0 {
+		portsOpts, err := networkingService.ConstructPorts(spec.Ports, spec.SecurityGroups, specTrunk, "", baseName, nil, nil, spec.Tags)
+		if err != nil {
+			return changed, err
+		}
+		if portsOpts != nil && len(portsOpts) != len(spec.Ports) {
+			return changed, fmt.Errorf("resolved.Ports has a different length than spec.Ports")
 		}
 		resolved.Ports = portsOpts
 		changed = true

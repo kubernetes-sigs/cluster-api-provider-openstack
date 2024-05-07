@@ -35,6 +35,7 @@ import (
 	"go.uber.org/mock/gomock"
 	"k8s.io/utils/ptr"
 
+	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
@@ -876,7 +877,7 @@ func Test_getPortName(t *testing.T) {
 	}
 }
 
-func Test_AdoptPorts(t *testing.T) {
+func Test_AdoptPortsMachine(t *testing.T) {
 	const (
 		networkID1 = "5e8e0d3b-7f3d-4f3e-8b3f-3e3e3e3e3e3e"
 		networkID2 = "0a4ff38e-1e03-4b4e-994c-c8ae38a2915e"
@@ -1034,7 +1035,77 @@ func Test_AdoptPorts(t *testing.T) {
 				client: mockClient,
 			}
 
-			err := s.AdoptPorts(scope.NewWithLogger(mockScopeFactory, log),
+			err := s.AdoptPortsMachine(scope.NewWithLogger(mockScopeFactory, log),
+				tt.desiredPorts, &tt.resources)
+			if tt.wantErr {
+				g.Expect(err).Error()
+				return
+			}
+
+			g.Expect(tt.resources).To(Equal(tt.want), cmp.Diff(&tt.resources, tt.want))
+		})
+	}
+}
+
+func Test_AdoptPortsServer(t *testing.T) {
+	const (
+		networkID1 = "5e8e0d3b-7f3d-4f3e-8b3f-3e3e3e3e3e3e"
+		networkID2 = "0a4ff38e-1e03-4b4e-994c-c8ae38a2915e"
+		networkID3 = "bd22ea65-53de-4585-bb6f-b0a84d0085d1"
+		portID1    = "78e0d3b-7f3d-4f3e-8b3f-3e3e3e3e3e3e"
+		portID2    = "a838209b-389a-47a0-9161-3d6919891074"
+	)
+
+	tests := []struct {
+		testName     string
+		desiredPorts []infrav1.ResolvedPortSpec
+		resources    infrav1alpha1.ServerResources
+		expect       func(*mock.MockNetworkClientMockRecorder)
+		want         infrav1alpha1.ServerResources
+		wantErr      bool
+	}{
+		{
+			testName: "No desired ports",
+		},
+		{
+			testName: "desired port already in status: no-op",
+			desiredPorts: []infrav1.ResolvedPortSpec{
+				{NetworkID: networkID1},
+			},
+			resources: infrav1alpha1.ServerResources{
+				Ports: []infrav1.PortStatus{
+					{
+						ID: portID1,
+					},
+				},
+			},
+			want: infrav1alpha1.ServerResources{
+				Ports: []infrav1.PortStatus{
+					{
+						ID: portID1,
+					},
+				},
+			},
+		},
+	}
+	for i := range tests {
+		tt := &tests[i]
+		t.Run(tt.testName, func(t *testing.T) {
+			g := NewWithT(t)
+			log := testr.New(t)
+
+			mockCtrl := gomock.NewController(t)
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
+			mockClient := mock.NewMockNetworkClient(mockCtrl)
+			if tt.expect != nil {
+				tt.expect(mockClient.EXPECT())
+			}
+
+			s := Service{
+				client: mockClient,
+			}
+
+			err := s.AdoptPortsServer(scope.NewWithLogger(mockScopeFactory, log),
 				tt.desiredPorts, &tt.resources)
 			if tt.wantErr {
 				g.Expect(err).Error()
