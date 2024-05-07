@@ -306,7 +306,7 @@ generate-api-docs-%: $(GEN_CRD_API_REFERENCE_DOCS) FORCE
 
 .PHONY: docker-build
 docker-build: ## Build the docker image for controller-manager
-	docker build -f Dockerfile --build-arg goproxy=$(GOPROXY) --build-arg ARCH=$(ARCH) --build-arg LDFLAGS="$(LDFLAGS)" . -t $(CONTROLLER_IMG_TAG)
+	docker build -f Dockerfile --build-arg goproxy=$(GOPROXY) --build-arg ARCH=$(ARCH) --build-arg ldflags="$(LDFLAGS)" . -t $(CONTROLLER_IMG_TAG)
 
 .PHONY: docker-push
 docker-push: ## Push the docker image
