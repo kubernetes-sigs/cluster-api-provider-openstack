@@ -720,11 +720,8 @@ If `managedSecurityGroups` is set to a non-nil value (e.g. `{}`), security group
 
 ### Making changes to the bastion host
 
-Changes can be made to the bastion instance, like for example changing the flavor.
-First, you have to disable the bastion host by setting `enabled: false` in the `OpenStackCluster.Spec.Bastion` field.
-The bastion will be deleted, you can check the status of the bastion host by running `kubectl get openstackcluster` and looking at the `Bastion` field in status.
-Once it's gone, you can re-enable the bastion host by setting `enabled: true` and then making changes to the bastion instance spec by modifying the `OpenStackCluster.Spec.Bastion.Instance` field.
-The bastion host will be re-created with the new instance spec.
+Changes can be made to the bastion spec, like for example changing the flavor, by modifying the `OpenStackCluster.Spec.Bastion.Spec` field.
+The bastion host will be re-created with the new spec.
 
 ### Disabling the bastion
 

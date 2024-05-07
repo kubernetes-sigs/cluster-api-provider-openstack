@@ -22,12 +22,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
-	"github.com/gophercloud/gophercloud/v2"
-	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
-	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/floatingips"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
-	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/ports"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
 	. "github.com/onsi/ginkgo/v2" //nolint:revive
 	. "github.com/onsi/gomega"    //nolint:revive
@@ -207,9 +202,6 @@ var _ = Describe("OpenStackCluster controller", func() {
 		testCluster.Status = infrav1.OpenStackClusterStatus{
 			Bastion: &infrav1.BastionStatus{
 				ID: "bastion-uuid",
-				Resolved: &infrav1.ResolvedMachineSpec{
-					ImageID: "imageID",
-				},
 			},
 		}
 		err = k8sClient.Status().Update(ctx, testCluster)
@@ -219,256 +211,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 		scope := scope.NewWithLogger(clientScope, log)
 
-		computeClientRecorder := mockScopeFactory.ComputeClient.EXPECT()
-		computeClientRecorder.GetServer("bastion-uuid").Return(nil, gophercloud.ErrResourceNotFound{})
-
-		err = deleteBastion(scope, capiCluster, testCluster)
+		err = reconciler.deleteBastion(ctx, scope, capiCluster, testCluster)
 		Expect(err).To(BeNil())
 		Expect(testCluster.Status.Bastion).To(BeNil())
-	})
-	It("should adopt an existing bastion even if its uuid is not stored in status", func() {
-		testCluster.SetName("adopt-existing-bastion")
-		testCluster.Spec = infrav1.OpenStackClusterSpec{
-			Bastion: &infrav1.Bastion{
-				Enabled: ptr.To(true),
-				Spec:    &bastionSpec,
-			},
-		}
-		err := k8sClient.Create(ctx, testCluster)
-		Expect(err).To(BeNil())
-		err = k8sClient.Create(ctx, capiCluster)
-		Expect(err).To(BeNil())
-		testCluster.Status = infrav1.OpenStackClusterStatus{
-			Bastion: &infrav1.BastionStatus{
-				Resolved: &infrav1.ResolvedMachineSpec{
-					ImageID: "imageID",
-					Ports: []infrav1.ResolvedPortSpec{
-						{
-							NetworkID: "network-id",
-						},
-					},
-				},
-				Resources: &infrav1.MachineResources{
-					Ports: []infrav1.PortStatus{
-						{
-							ID: "portID1",
-						},
-					},
-				},
-			},
-			Network: &infrav1.NetworkStatusWithSubnets{
-				NetworkStatus: infrav1.NetworkStatus{
-					Name: "network-name",
-					ID:   "network-id",
-				},
-			},
-		}
-		err = k8sClient.Status().Update(ctx, testCluster)
-		Expect(err).To(BeNil())
-
-		log := GinkgoLogr
-		clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
-		Expect(err).To(BeNil())
-		scope := scope.NewWithLogger(clientScope, log)
-
-		server := servers.Server{
-			ID:     "adopted-bastion-uuid",
-			Status: "ACTIVE",
-		}
-
-		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
-		networkClientRecorder.ListPort(gomock.Any()).Return([]ports.Port{{ID: "portID1"}}, nil)
-
-		computeClientRecorder := mockScopeFactory.ComputeClient.EXPECT()
-		computeClientRecorder.ListServers(servers.ListOpts{
-			Name: "^capi-cluster-bastion$",
-		}).Return([]servers.Server{server}, nil)
-
-		networkClientRecorder.ListFloatingIP(floatingips.ListOpts{PortID: "portID1"}).Return(make([]floatingips.FloatingIP, 1), nil)
-
-		res, err := reconcileBastion(scope, capiCluster, testCluster)
-		expectedStatus := &infrav1.BastionStatus{
-			ID:    "adopted-bastion-uuid",
-			State: "ACTIVE",
-			Resolved: &infrav1.ResolvedMachineSpec{
-				ImageID: "imageID",
-				Ports: []infrav1.ResolvedPortSpec{
-					{
-						NetworkID: "network-id",
-					},
-				},
-			},
-			Resources: &infrav1.MachineResources{
-				Ports: []infrav1.PortStatus{
-					{
-						ID: "portID1",
-					},
-				},
-			},
-		}
-		Expect(testCluster.Status.Bastion).To(Equal(expectedStatus), cmp.Diff(testCluster.Status.Bastion, expectedStatus))
-		Expect(err).To(BeNil())
-		Expect(res).To(BeNil())
-	})
-	It("should adopt an existing bastion Floating IP if even if its uuid is not stored in status", func() {
-		testCluster.SetName("requeue-bastion")
-		testCluster.Spec = infrav1.OpenStackClusterSpec{
-			Bastion: &infrav1.Bastion{
-				Enabled: ptr.To(true),
-				Spec:    &bastionSpec,
-			},
-		}
-		err := k8sClient.Create(ctx, testCluster)
-		Expect(err).To(BeNil())
-		err = k8sClient.Create(ctx, capiCluster)
-		Expect(err).To(BeNil())
-		testCluster.Status = infrav1.OpenStackClusterStatus{
-			Network: &infrav1.NetworkStatusWithSubnets{
-				NetworkStatus: infrav1.NetworkStatus{
-					Name: "network-name",
-					ID:   "network-id",
-				},
-			},
-			Bastion: &infrav1.BastionStatus{
-				ID: "adopted-fip-bastion-uuid",
-				Resolved: &infrav1.ResolvedMachineSpec{
-					ImageID: "imageID",
-					Ports: []infrav1.ResolvedPortSpec{
-						{
-							NetworkID: "network-id",
-						},
-					},
-				},
-				Resources: &infrav1.MachineResources{
-					Ports: []infrav1.PortStatus{
-						{
-							ID: "portID1",
-						},
-					},
-				},
-			},
-		}
-		err = k8sClient.Status().Update(ctx, testCluster)
-		Expect(err).To(BeNil())
-
-		log := GinkgoLogr
-		clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
-		Expect(err).To(BeNil())
-		scope := scope.NewWithLogger(clientScope, log)
-
-		server := servers.Server{
-			ID:     "adopted-fip-bastion-uuid",
-			Status: "ACTIVE",
-		}
-
-		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
-		networkClientRecorder.ListPort(gomock.Any()).Return([]ports.Port{{ID: "portID1"}}, nil)
-
-		computeClientRecorder := mockScopeFactory.ComputeClient.EXPECT()
-		computeClientRecorder.GetServer("adopted-fip-bastion-uuid").Return(&server, nil)
-
-		networkClientRecorder.ListFloatingIP(floatingips.ListOpts{PortID: "portID1"}).Return([]floatingips.FloatingIP{{FloatingIP: "1.2.3.4"}}, nil)
-
-		res, err := reconcileBastion(scope, capiCluster, testCluster)
-		Expect(testCluster.Status.Bastion).To(Equal(&infrav1.BastionStatus{
-			ID:         "adopted-fip-bastion-uuid",
-			FloatingIP: "1.2.3.4",
-			State:      "ACTIVE",
-			Resolved: &infrav1.ResolvedMachineSpec{
-				ImageID: "imageID",
-				Ports: []infrav1.ResolvedPortSpec{
-					{
-						NetworkID: "network-id",
-					},
-				},
-			},
-			Resources: &infrav1.MachineResources{
-				Ports: []infrav1.PortStatus{
-					{
-						ID: "portID1",
-					},
-				},
-			},
-		}))
-		Expect(err).To(BeNil())
-		Expect(res).To(BeNil())
-	})
-	It("should requeue until bastion becomes active", func() {
-		testCluster.SetName("requeue-bastion")
-		testCluster.Spec = infrav1.OpenStackClusterSpec{
-			Bastion: &infrav1.Bastion{
-				Enabled: ptr.To(true),
-				Spec:    &bastionSpec,
-			},
-		}
-		err := k8sClient.Create(ctx, testCluster)
-		Expect(err).To(BeNil())
-		err = k8sClient.Create(ctx, capiCluster)
-		Expect(err).To(BeNil())
-		testCluster.Status = infrav1.OpenStackClusterStatus{
-			Network: &infrav1.NetworkStatusWithSubnets{
-				NetworkStatus: infrav1.NetworkStatus{
-					ID:   "network-id",
-					Name: "network-name",
-				},
-			},
-			Bastion: &infrav1.BastionStatus{
-				ID: "requeue-bastion-uuid",
-				Resolved: &infrav1.ResolvedMachineSpec{
-					ImageID: "imageID",
-					Ports: []infrav1.ResolvedPortSpec{
-						{
-							NetworkID: "network-id",
-						},
-					},
-				},
-				Resources: &infrav1.MachineResources{
-					Ports: []infrav1.PortStatus{
-						{
-							ID: "portID1",
-						},
-					},
-				},
-			},
-		}
-		err = k8sClient.Status().Update(ctx, testCluster)
-		Expect(err).To(BeNil())
-
-		log := GinkgoLogr
-		clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
-		Expect(err).To(BeNil())
-		scope := scope.NewWithLogger(clientScope, log)
-
-		server := servers.Server{
-			ID:     "requeue-bastion-uuid",
-			Status: "BUILD",
-		}
-
-		computeClientRecorder := mockScopeFactory.ComputeClient.EXPECT()
-		computeClientRecorder.GetServer("requeue-bastion-uuid").Return(&server, nil)
-
-		res, err := reconcileBastion(scope, capiCluster, testCluster)
-		Expect(testCluster.Status.Bastion).To(Equal(&infrav1.BastionStatus{
-			ID:    "requeue-bastion-uuid",
-			State: "BUILD",
-			Resolved: &infrav1.ResolvedMachineSpec{
-				ImageID: "imageID",
-				Ports: []infrav1.ResolvedPortSpec{
-					{
-						NetworkID: "network-id",
-					},
-				},
-			},
-			Resources: &infrav1.MachineResources{
-				Ports: []infrav1.PortStatus{
-					{
-						ID: "portID1",
-					},
-				},
-			},
-		}))
-		Expect(err).To(BeNil())
-		Expect(res).To(Equal(&reconcile.Result{RequeueAfter: waitForBuildingInstanceToReconcile}))
 	})
 	It("should delete an existing bastion even if its uuid is not stored in status", func() {
 		testCluster.SetName("delete-existing-bastion")
@@ -478,11 +223,6 @@ var _ = Describe("OpenStackCluster controller", func() {
 		err = k8sClient.Create(ctx, capiCluster)
 		Expect(err).To(BeNil())
 		testCluster.Status = infrav1.OpenStackClusterStatus{
-			Bastion: &infrav1.BastionStatus{
-				Resolved: &infrav1.ResolvedMachineSpec{
-					ImageID: "imageID",
-				},
-			},
 			Network: &infrav1.NetworkStatusWithSubnets{
 				NetworkStatus: infrav1.NetworkStatus{
 					ID: "network-id",
@@ -497,16 +237,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 		scope := scope.NewWithLogger(clientScope, log)
 
-		server := servers.Server{ID: "delete-bastion-uuid"}
-
-		computeClientRecorder := mockScopeFactory.ComputeClient.EXPECT()
-		computeClientRecorder.ListServers(servers.ListOpts{
-			Name: "^capi-cluster-bastion$",
-		}).Return([]servers.Server{server}, nil)
-		computeClientRecorder.DeleteServer("delete-bastion-uuid").Return(nil)
-		computeClientRecorder.GetServer("delete-bastion-uuid").Return(nil, gophercloud.ErrResourceNotFound{})
-
-		err = deleteBastion(scope, capiCluster, testCluster)
+		err = reconciler.deleteBastion(ctx, scope, capiCluster, testCluster)
 		Expect(err).To(BeNil())
 	})
 

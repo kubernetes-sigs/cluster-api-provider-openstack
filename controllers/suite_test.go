@@ -18,29 +18,23 @@ package controllers
 
 import (
 	"context"
-	"errors"
 	"path/filepath"
 	"testing"
 
-	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
 	. "github.com/onsi/ginkgo/v2" //nolint:revive
 	. "github.com/onsi/gomega"    //nolint:revive
-	"go.uber.org/mock/gomock"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
-	"k8s.io/utils/ptr"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 
+	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 	"sigs.k8s.io/cluster-api-provider-openstack/test/helpers/external"
 )
 
@@ -79,6 +73,9 @@ var _ = BeforeSuite(func() {
 	Expect(cfg).ToNot(BeNil())
 
 	err = infrav1.AddToScheme(scheme.Scheme)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = infrav1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	framework.TryAddDefaultSchemes(scheme.Scheme)
@@ -122,63 +119,5 @@ var _ = Describe("EnvTest sanity check", func() {
 		Expect(err).To(BeNil())
 		// Note: Since the controller-manager is not part of envtest the namespace
 		// will actually stay in "Terminating" state and never be completely gone.
-	})
-})
-
-var _ = Describe("When calling getOrCreate", func() {
-	logger := GinkgoLogr
-
-	var (
-		reconsiler       OpenStackMachineReconciler
-		mockCtrl         *gomock.Controller
-		mockScopeFactory *scope.MockScopeFactory
-		computeService   *compute.Service
-		err              error
-	)
-
-	BeforeEach(func() {
-		ctx = context.Background()
-		reconsiler = OpenStackMachineReconciler{}
-		mockCtrl = gomock.NewController(GinkgoT())
-		mockScopeFactory = scope.NewMockScopeFactory(mockCtrl, "1234")
-		computeService, err = compute.NewService(scope.NewWithLogger(mockScopeFactory, logger))
-		Expect(err).NotTo(HaveOccurred())
-	})
-
-	It("should return an error if unable to get instance", func() {
-		openStackCluster := &infrav1.OpenStackCluster{}
-		machine := &clusterv1.Machine{}
-		openStackMachine := &infrav1.OpenStackMachine{
-			Status: infrav1.OpenStackMachineStatus{
-				InstanceID: ptr.To("machine-uuid"),
-			},
-		}
-
-		mockScopeFactory.ComputeClient.EXPECT().GetServer(gomock.Any()).Return(nil, errors.New("Test error when getting server"))
-		instanceStatus, err := reconsiler.getOrCreateInstance(logger, openStackCluster, machine, openStackMachine, computeService, "", []string{})
-		Expect(err).To(HaveOccurred())
-		Expect(instanceStatus).To(BeNil())
-		conditions := openStackMachine.GetConditions()
-		Expect(len(conditions) > 0).To(BeTrue())
-		for i := range conditions {
-			if conditions[i].Type == infrav1.InstanceReadyCondition {
-				Expect(conditions[i].Reason).To(Equal(infrav1.OpenStackErrorReason))
-				break
-			}
-		}
-	})
-
-	It("should retrieve instance by name if no ID is stored", func() {
-		openStackCluster := &infrav1.OpenStackCluster{}
-		machine := &clusterv1.Machine{}
-		openStackMachine := &infrav1.OpenStackMachine{}
-		servers := make([]servers.Server, 1)
-		servers[0].ID = "machine-uuid"
-
-		mockScopeFactory.ComputeClient.EXPECT().ListServers(gomock.Any()).Return(servers, nil)
-		instanceStatus, err := reconsiler.getOrCreateInstance(logger, openStackCluster, machine, openStackMachine, computeService, "", []string{})
-		Expect(err).ToNot(HaveOccurred())
-		Expect(instanceStatus).ToNot(BeNil())
-		Expect(instanceStatus.ID()).To(Equal("machine-uuid"))
 	})
 })

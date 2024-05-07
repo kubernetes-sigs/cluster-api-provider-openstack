@@ -350,6 +350,17 @@ func setupReconcilers(ctx context.Context, mgr ctrl.Manager, caCerts []byte, sco
 		setupLog.Error(err, "unable to create controller", "controller", "FloatingIPPool")
 		os.Exit(1)
 	}
+	if err := (&controllers.OpenStackServerReconciler{
+		Client:           mgr.GetClient(),
+		Recorder:         mgr.GetEventRecorderFor("openstackserver-controller"),
+		WatchFilterValue: watchFilterValue,
+		ScopeFactory:     scopeFactory,
+		CaCertificates:   caCerts,
+		Scheme:           mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "OpenStackServer")
+		os.Exit(1)
+	}
 }
 
 func setupWebhooks(mgr ctrl.Manager) {
