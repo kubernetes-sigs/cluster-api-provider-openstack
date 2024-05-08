@@ -46,8 +46,17 @@ var _ = Describe("OpenStackMachine API validations", func() {
 		namespace = createNamespace()
 	})
 
-	It("should allow the smallest permissible machine spec", func() {
-		Expect(k8sClient.Create(ctx, defaultMachine())).To(Succeed(), "OpenStackMachine creation should succeed")
+	It("should allow to create a machine with correct spec", func() {
+		machine := defaultMachine()
+
+		By("Creating the smallest permissible machine spec")
+		Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
+
+		machine = defaultMachine()
+		machine.Spec.IdentityRef = &infrav1.OpenStackIdentityReference{Name: "foobar", CloudName: "staging"}
+
+		By("Creating a machine with spec.identityRef")
+		Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation with spec.identityRef should succeed")
 	})
 
 	It("should only allow the providerID to be set once", func() {
@@ -63,6 +72,29 @@ var _ = Describe("OpenStackMachine API validations", func() {
 		By("Modifying the providerID")
 		machine.Spec.ProviderID = ptr.To("bar")
 		Expect(k8sClient.Update(ctx, machine)).NotTo(Succeed(), "Updating providerID should fail")
+	})
+
+	It("should allow the identityRef to be set several times", func() {
+		machine := defaultMachine()
+
+		By("Creating a bare machine")
+		Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
+
+		By("Setting the identityRef")
+		machine.Spec.IdentityRef = ptr.To(infrav1.OpenStackIdentityReference{Name: "foo", CloudName: "staging"})
+		Expect(k8sClient.Update(ctx, machine)).To(Succeed(), "Setting the identityRef should succeed")
+
+		By("Updating the identityRef.Name")
+		machine.Spec.IdentityRef = ptr.To(infrav1.OpenStackIdentityReference{Name: "bar", CloudName: "staging"})
+		Expect(k8sClient.Update(ctx, machine)).To(Succeed(), "Updating the identityRef.Name should succeed")
+
+		By("Updating the identityRef.CloudName")
+		machine.Spec.IdentityRef = ptr.To(infrav1.OpenStackIdentityReference{Name: "bar", CloudName: "production"})
+		Expect(k8sClient.Update(ctx, machine)).To(Succeed(), "Updating the identityRef.CloudName should succeed")
+
+		By("Clearing the identityRef")
+		machine.Spec.IdentityRef = nil
+		Expect(k8sClient.Update(ctx, machine)).To(Succeed(), "Clearing the identityRef should succeed")
 	})
 
 	It("should not allow server metadata to exceed 255 characters", func() {
@@ -112,6 +144,28 @@ var _ = Describe("OpenStackMachine API validations", func() {
 				},
 			}
 			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with a zero size additional block device should fail")
+		})
+
+		It("should allow to create machine with spec.RootVolume and non-root device name in spec.AdditionalBlockDevices", func() {
+			machine := defaultMachine()
+			machine.Spec.RootVolume = &infrav1.RootVolume{SizeGiB: 50, BlockDeviceVolume: infrav1.BlockDeviceVolume{}}
+			machine.Spec.AdditionalBlockDevices = []infrav1.AdditionalBlockDevice{
+				{Name: "user", SizeGiB: 30, Storage: infrav1.BlockDeviceStorage{}},
+			}
+
+			By("Creating a machine with spec.RootVolume and non-root device name in spec.AdditionalBlockDevices")
+			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation with non-root device name in spec.AdditionalBlockDevices should succeed")
+		})
+
+		It("should not allow to create machine with spec.RootVolume and root device name in spec.AdditionalBlockDevices", func() {
+			machine := defaultMachine()
+			machine.Spec.RootVolume = &infrav1.RootVolume{SizeGiB: 50, BlockDeviceVolume: infrav1.BlockDeviceVolume{}}
+			machine.Spec.AdditionalBlockDevices = []infrav1.AdditionalBlockDevice{
+				{Name: "root", SizeGiB: 30, Storage: infrav1.BlockDeviceStorage{}},
+			}
+
+			By("Creating a machine with spec.RootVolume and root device name in spec.AdditionalBlockDevices")
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation with root device name in spec.AdditionalBlockDevices should not succeed")
 		})
 
 		/* FIXME: These tests are failing
