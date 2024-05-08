@@ -25,7 +25,7 @@ import (
 	"go.uber.org/mock/gomock"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
+	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
@@ -79,7 +79,7 @@ func (f *MockScopeFactory) NewClientScopeFromCluster(_ context.Context, _ client
 	return f, nil
 }
 
-func (f *MockScopeFactory) NewClientScopeFromFloatingIPPool(_ context.Context, _ client.Client, _ *v1alpha1.OpenStackFloatingIPPool, _ []byte, _ logr.Logger) (Scope, error) {
+func (f *MockScopeFactory) NewClientScopeFromFloatingIPPool(_ context.Context, _ client.Client, _ *infrav1alpha1.OpenStackFloatingIPPool, _ []byte, _ logr.Logger) (Scope, error) {
 	if f.clientScopeCreateError != nil {
 		return nil, f.clientScopeCreateError
 	}
