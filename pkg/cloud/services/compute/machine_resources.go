@@ -28,5 +28,5 @@ func AdoptMachineResources(scope *scope.WithLogger, resolved *infrav1.ResolvedMa
 		return err
 	}
 
-	return networkingService.AdoptPorts(scope, resolved.Ports, resources)
+	return networkingService.AdoptPorts(scope, resolved.Ports, resources.Ports)
 }

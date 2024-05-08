@@ -553,9 +553,9 @@ func (s *Service) IsTrunkExtSupported() (trunknSupported bool, err error) {
 
 // AdoptPorts looks for ports in desiredPorts which were previously created, and adds them to resources.Ports.
 // A port matches if it has the same name and network ID as the desired port.
-func (s *Service) AdoptPorts(scope *scope.WithLogger, desiredPorts []infrav1.ResolvedPortSpec, resources *infrav1.MachineResources) error {
+func (s *Service) AdoptPorts(scope *scope.WithLogger, desiredPorts []infrav1.ResolvedPortSpec, resourcesPorts []infrav1.PortStatus) error {
 	// We can skip adoption if the ports are already in the status
-	if len(desiredPorts) == len(resources.Ports) {
+	if len(desiredPorts) == len(resourcesPorts) {
 		return nil
 	}
 
@@ -566,7 +566,7 @@ func (s *Service) AdoptPorts(scope *scope.WithLogger, desiredPorts []infrav1.Res
 	// We can therefore stop searching for ports once we find one that doesn't exist.
 	for i := range desiredPorts {
 		// check if the port is in status first and if it is, skip it
-		if i < len(resources.Ports) {
+		if i < len(resourcesPorts) {
 			scope.Logger().V(5).Info("Port already in status, skipping it", "port index", i)
 			continue
 		}
@@ -592,7 +592,7 @@ func (s *Service) AdoptPorts(scope *scope.WithLogger, desiredPorts []infrav1.Res
 		// The desired port was found, so we add it to the status
 		portID := ports[0].ID
 		scope.Logger().Info("Adopted previously created port which was not in status", "port index", i, "portID", portID)
-		resources.Ports = append(resources.Ports, infrav1.PortStatus{ID: portID})
+		resourcesPorts = append(resourcesPorts, infrav1.PortStatus{ID: portID})
 	}
 
 	return nil

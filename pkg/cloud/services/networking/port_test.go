@@ -1035,7 +1035,7 @@ func Test_AdoptPorts(t *testing.T) {
 			}
 
 			err := s.AdoptPorts(scope.NewWithLogger(mockScopeFactory, log),
-				tt.desiredPorts, &tt.resources)
+				tt.desiredPorts, tt.resources.Ports)
 			if tt.wantErr {
 				g.Expect(err).Error()
 				return
