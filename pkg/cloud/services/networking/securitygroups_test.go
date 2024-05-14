@@ -49,19 +49,14 @@ func TestValidateRemoteManagedGroups(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "Valid rule with missing remoteManagedGroups",
+			name: "Valid rule with no remoteManagedGroups",
 			rule: infrav1.SecurityGroupRuleSpec{
-				PortRangeMin: ptr.To(22),
-				PortRangeMax: ptr.To(22),
-				Protocol:     ptr.To("tcp"),
+				PortRangeMin:   ptr.To(22),
+				PortRangeMax:   ptr.To(22),
+				Protocol:       ptr.To("tcp"),
+				RemoteIPPrefix: ptr.To("0.0.0.0/0"),
 			},
-			remoteManagedGroups: map[string]string{
-				"self":         "self",
-				"controlplane": "1",
-				"worker":       "2",
-				"bastion":      "3",
-			},
-			wantErr: true,
+			wantErr: false,
 		},
 		{
 			name: "Valid rule with remoteManagedGroups",
@@ -170,6 +165,70 @@ func TestGetAllNodesRules(t *testing.T) {
 					RemoteGroupID: "1",
 				},
 			},
+		},
+		{
+			name: "Valid remoteIPPrefix in a rule",
+			remoteManagedGroups: map[string]string{
+				"controlplane": "1",
+				"worker":       "2",
+			},
+			allNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
+				{
+					Protocol:       ptr.To("tcp"),
+					PortRangeMin:   ptr.To(22),
+					PortRangeMax:   ptr.To(22),
+					RemoteIPPrefix: ptr.To("0.0.0.0/0"),
+				},
+			},
+			wantRules: []resolvedSecurityGroupRuleSpec{
+				{
+					Protocol:       "tcp",
+					PortRangeMin:   22,
+					PortRangeMax:   22,
+					RemoteIPPrefix: "0.0.0.0/0",
+				},
+			},
+		},
+		{
+			name: "Valid allNodesSecurityGroupRules with no remote parameter",
+			remoteManagedGroups: map[string]string{
+				"controlplane": "1",
+				"worker":       "2",
+			},
+			allNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
+				{
+					Protocol:     ptr.To("tcp"),
+					PortRangeMin: ptr.To(22),
+					PortRangeMax: ptr.To(22),
+				},
+			},
+			wantRules: []resolvedSecurityGroupRuleSpec{
+				{
+					Protocol:     "tcp",
+					PortRangeMin: 22,
+					PortRangeMax: 22,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Invalid allNodesSecurityGroupRules with bastion while remoteManagedGroups does not have bastion",
+			remoteManagedGroups: map[string]string{
+				"controlplane": "1",
+				"worker":       "2",
+			},
+			allNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
+				{
+					Protocol:     ptr.To("tcp"),
+					PortRangeMin: ptr.To(22),
+					PortRangeMax: ptr.To(22),
+					RemoteManagedGroups: []infrav1.ManagedSecurityGroupName{
+						"bastion",
+					},
+				},
+			},
+			wantRules: nil,
+			wantErr:   true,
 		},
 		{
 			name: "Invalid allNodesSecurityGroupRules with wrong remoteManagedGroups",
