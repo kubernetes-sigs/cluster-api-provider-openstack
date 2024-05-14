@@ -25,7 +25,6 @@ require (
 	k8s.io/client-go v0.29.3
 	k8s.io/component-base v0.29.3
 	k8s.io/klog/v2 v2.110.1
-	k8s.io/kubernetes v1.28.3
 	k8s.io/utils v0.0.0-20231127182322-b307cd553661
 	sigs.k8s.io/cluster-api v1.7.0
 	sigs.k8s.io/cluster-api/test v1.7.0
@@ -52,6 +51,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
+	github.com/coredns/caddy v1.1.1 // indirect
 	github.com/distribution/reference v0.5.0 // indirect
 	github.com/docker/docker v25.0.5+incompatible // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
