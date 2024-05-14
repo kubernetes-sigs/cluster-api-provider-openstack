@@ -565,6 +565,7 @@ permitted from anywhere, as with the default rules).
 We can add security group rules that authorize traffic from all nodes via `allNodesSecurityGroupRules`.
 It takes a list of security groups rules that should be applied to selected nodes.
 The following rule fields are mutually exclusive: `remoteManagedGroups`, `remoteGroupID` and `remoteIPPrefix`.
+If none of these fields are set, the rule will have a remote IP prefix of `0.0.0.0/0` per Neutron default.
 
 Valid values for `remoteManagedGroups` are `controlplane`, `worker` and `bastion`.
 

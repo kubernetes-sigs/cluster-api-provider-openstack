@@ -396,6 +396,9 @@ The field `managedSecurityGroups` is now a pointer to a `ManagedSecurityGroups` 
 Also, we can now add security group rules that authorize traffic from all nodes via `allNodesSecurityGroupRules`.
 It takes a list of security groups rules that should be applied to selected nodes.
 The following rule fields are mutually exclusive: `remoteManagedGroups`, `remoteGroupID` and `remoteIPPrefix`.
+If none of these fields are set, the rule will have a remote IP prefix of `0.0.0.0/0` per Neutron default.
+
+```yaml
 Valid values for `remoteManagedGroups` are `controlplane`, `worker` and `bastion`.
 
 Also, `OpenStackCluster.Spec.AllowAllInClusterTraffic` moved under `ManagedSecurityGroups`.
