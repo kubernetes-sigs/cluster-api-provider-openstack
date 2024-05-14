@@ -45,6 +45,13 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
+	// Shortcut wait timeout
+	backoffDurationPrev := backoff.Duration
+	backoff.Duration = 0
+	defer func() {
+		backoff.Duration = backoffDurationPrev
+	}()
+
 	// Stub the call to net.LookupHost
 	lookupHost = func(host string) (addrs *string, err error) {
 		if net.ParseIP(host) != nil {
@@ -138,6 +145,27 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 				m.ListMonitors(monitors.ListOpts{Name: monitorList[0].Name}).Return(monitorList, nil)
 			},
 			wantError: nil,
+		},
+		{
+			name: "reconcile loadbalancer in non active state should timeout",
+			expectNetwork: func(*mock.MockNetworkClientMockRecorder) {
+				// add network api call results here
+			},
+			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
+				pendingLB := loadbalancers.LoadBalancer{
+					ID:                 "aaaaaaaa-bbbb-cccc-dddd-333333333333",
+					Name:               "k8s-clusterapi-cluster-AAAAA-kubeapi",
+					ProvisioningStatus: "PENDING_CREATE",
+				}
+
+				// return existing loadbalancer in non-active state
+				lbList := []loadbalancers.LoadBalancer{pendingLB}
+				m.ListLoadBalancers(loadbalancers.ListOpts{Name: pendingLB.Name}).Return(lbList, nil)
+
+				// wait for loadbalancer until it times out
+				m.GetLoadBalancer("aaaaaaaa-bbbb-cccc-dddd-333333333333").Return(&pendingLB, nil).Return(&pendingLB, nil).AnyTimes()
+			},
+			wantError: fmt.Errorf("load balancer \"k8s-clusterapi-cluster-AAAAA-kubeapi\" with id aaaaaaaa-bbbb-cccc-dddd-333333333333 is not active after timeout: timed out waiting for the condition"),
 		},
 	}
 	for _, tt := range lbtests {
