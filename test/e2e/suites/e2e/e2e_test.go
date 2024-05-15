@@ -28,6 +28,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
@@ -424,9 +426,10 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 
 			// Note that as the bootstrap config does not have cloud.conf, the node will not be added to the cluster.
 			// We still expect the port for the machine to be created.
+			machineDeployment := makeMachineDeployment(namespace.Name, md3Name, clusterName, "", 1)
 			framework.CreateMachineDeployment(ctx, framework.CreateMachineDeploymentInput{
 				Creator:                 e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
-				MachineDeployment:       makeMachineDeployment(namespace.Name, md3Name, clusterName, "", 1),
+				MachineDeployment:       machineDeployment,
 				BootstrapConfigTemplate: makeJoinBootstrapConfigTemplate(namespace.Name, md3Name),
 				InfraMachineTemplate:    makeOpenStackMachineTemplateWithPortOptions(namespace.Name, clusterName, md3Name, customPortOptions, machineTags),
 			})
@@ -440,9 +443,9 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 				return len(plist)
 			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(Equal(1))
 
-			port := plist[0]
-			Expect(port.Description).To(Equal("primary"))
-			Expect(port.Tags).To(ContainElement(testTag))
+			primaryPort := plist[0]
+			Expect(primaryPort.Description).To(Equal("primary"))
+			Expect(primaryPort.Tags).To(ContainElement(testTag))
 
 			// assert trunked port is created.
 			Eventually(func() int {
@@ -450,23 +453,124 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 				Expect(err).To(BeNil())
 				return len(plist)
 			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(Equal(1))
-			port = plist[0]
-			Expect(port.Description).To(Equal("trunked"))
-			Expect(port.Tags).To(ContainElement(testTag))
+			trunkedPort := plist[0]
+			Expect(trunkedPort.Description).To(Equal("trunked"))
+			Expect(trunkedPort.Tags).To(ContainElement(testTag))
 
 			// assert trunk data.
 			var trunk *trunks.Trunk
 			Eventually(func() int {
-				trunk, err = shared.DumpOpenStackTrunks(e2eCtx, port.ID)
+				trunk, err = shared.DumpOpenStackTrunks(e2eCtx, trunkedPort.ID)
 				Expect(err).To(BeNil())
 				Expect(trunk).NotTo(BeNil())
 				return 1
 			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(Equal(1))
-			Expect(trunk.PortID).To(Equal(port.ID))
+			Expect(trunk.PortID).To(Equal(trunkedPort.ID))
+
 			// assert port level security group is created by name using SecurityGroupFilters
+
 			securityGroupsList, err := shared.DumpOpenStackSecurityGroups(e2eCtx, groups.ListOpts{Name: testSecurityGroupName})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(securityGroupsList).To(HaveLen(1))
+
+			// Testing subports
+			shared.Logf("Create a new port and add it as a subport of the trunk")
+
+			providerClient, clientOpts, _, err := shared.GetTenantProviderClient(e2eCtx)
+			Expect(err).To(BeNil(), "Cannot create providerClient")
+
+			networkClient, err := openstack.NewNetworkV2(providerClient, gophercloud.EndpointOpts{
+				Region: clientOpts.RegionName,
+			})
+			Expect(err).To(BeNil(), "Cannot create network client")
+
+			networksList, err := shared.DumpOpenStackNetworks(
+				e2eCtx,
+				networks.ListOpts{
+					TenantID: securityGroupsList[0].TenantID,
+				},
+			)
+			Expect(err).To(BeNil(), "Cannot get network List")
+
+			createOpts := ports.CreateOpts{
+				Name:      "subPort",
+				NetworkID: networksList[0].ID,
+			}
+
+			subPort, err := ports.Create(networkClient, createOpts).Extract()
+			Expect(err).To(BeNil(), "Cannot create subPort")
+
+			addSubportsOpts := trunks.AddSubportsOpts{
+				Subports: []trunks.Subport{
+					{
+						SegmentationID:   1,
+						SegmentationType: "vlan",
+						PortID:           subPort.ID,
+					},
+				},
+			}
+			shared.Logf("Add subport to trunk")
+			_, err = trunks.AddSubports(networkClient, trunk.ID, addSubportsOpts).Extract()
+			Expect(err).To(BeNil(), "Cannot add subports")
+
+			subports, err := trunks.GetSubports(networkClient, trunk.ID).Extract()
+			Expect(err).To(BeNil())
+			Expect(subports).To(HaveLen(1))
+
+			shared.Logf("Get machine object from MachineDeployments")
+			c := e2eCtx.Environment.BootstrapClusterProxy.GetClient()
+
+			machines := framework.GetMachinesByMachineDeployments(ctx, framework.GetMachinesByMachineDeploymentsInput{
+				Lister:            c,
+				ClusterName:       clusterName,
+				Namespace:         namespace.Name,
+				MachineDeployment: *machineDeployment,
+			})
+
+			Expect(machines).To(HaveLen(1))
+
+			machine := machines[0]
+
+			shared.Logf("Fetching serverID")
+			allServers, err := shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{Name: machine.Spec.InfrastructureRef.Name})
+			Expect(err).To(BeNil())
+
+			Expect(allServers).To(HaveLen(1))
+			serverID := allServers[0].ID
+			Expect(err).To(BeNil())
+
+			shared.Logf("Deleting the machine deployment, which should trigger trunk deletion")
+
+			err = c.Delete(ctx, machineDeployment)
+			Expect(err).To(BeNil())
+
+			shared.Logf("Waiting for the server to be cleaned")
+
+			computeClient, err := openstack.NewComputeV2(providerClient, gophercloud.EndpointOpts{
+				Region: clientOpts.RegionName,
+			})
+			Expect(err).To(BeNil(), "Cannot create compute client")
+
+			Eventually(
+				func() bool {
+					_, err := servers.Get(computeClient, serverID).Extract()
+					_, ok := err.(gophercloud.ErrDefault404)
+					return ok
+				}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-delete-cluster")...,
+			).Should(BeTrue())
+
+			// Wait here for some time, to make sure the reconciler fully cleans everything
+			time.Sleep(10 * time.Second)
+
+			// Verify that the trunk is deleted
+			_, err = trunks.Get(networkClient, trunk.ID).Extract()
+			_, ok := err.(gophercloud.ErrDefault404)
+			Expect(ok).To(BeTrue())
+
+			// Verify that subPort is deleted
+			_, err = ports.Get(networkClient, subPort.ID).Extract()
+			_, ok = err.(gophercloud.ErrDefault404)
+			Expect(ok).To(BeTrue())
 		})
 	})
 
