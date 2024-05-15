@@ -953,6 +953,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 
 				// We should cleanup the first port and its trunk
 				r.network.DeleteTrunk(trunkUUID).Return(nil)
+				r.network.ListTrunkSubports(trunkUUID).Return([]trunks.Subport{}, nil)
 				r.network.DeletePort(portUUID).Return(nil)
 			},
 			wantErr: true,

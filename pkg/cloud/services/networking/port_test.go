@@ -625,6 +625,7 @@ func Test_GarbageCollectErrorInstancesPort(t *testing.T) {
 					},
 				}, nil)
 				m.DeleteTrunk(trunkID1)
+				m.ListTrunkSubports(trunkID1).Return([]trunks.Subport{}, nil)
 				m.DeletePort(portID1)
 			},
 			portOpts: []infrav1.PortOpts{
