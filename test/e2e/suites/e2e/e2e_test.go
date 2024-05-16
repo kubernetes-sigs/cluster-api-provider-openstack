@@ -198,9 +198,16 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 					return false, errors.New("Bastion was not removed in OpenStackCluster.Status")
 				}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-bastion")...,
 			).Should(BeTrue())
-			securityGroupsList, err = shared.DumpOpenStackSecurityGroups(e2eCtx, groups.ListOpts{Tags: clusterName})
-			Expect(err).NotTo(HaveOccurred())
-			Expect(securityGroupsList).To(HaveLen(2))
+			Eventually(
+				func() (bool, error) {
+					securityGroupsList, err = shared.DumpOpenStackSecurityGroups(e2eCtx, groups.ListOpts{Tags: clusterName})
+					Expect(err).NotTo(HaveOccurred())
+					if len(securityGroupsList) == 2 {
+						return true, nil
+					}
+					return false, errors.New("Security group for bastion was not removed in OpenStack")
+				}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-bastion")...,
+			).Should(BeTrue())
 
 			shared.Logf("Delete the bastion")
 			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
