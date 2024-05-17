@@ -295,7 +295,7 @@ func (s *Service) DeletePorts(openStackCluster *infrav1.OpenStackCluster) error 
 	return nil
 }
 
-func (s *Service) GarbageCollectErrorInstancesPort(eventObject runtime.Object, instanceName string, portOpts []infrav1.PortOpts) error {
+func (s *Service) GarbageCollectErrorInstancesPort(eventObject runtime.Object, instanceName string, portOpts []infrav1.PortOpts, trunkSupported bool) error {
 	for i := range portOpts {
 		portOpt := &portOpts[i]
 
@@ -315,8 +315,15 @@ func (s *Service) GarbageCollectErrorInstancesPort(eventObject runtime.Object, i
 			return fmt.Errorf("garbage collection of port %s failed, found %d ports with the same name", portName, len(portList))
 		}
 
-		if err := s.DeletePort(eventObject, portList[0].ID); err != nil {
-			return err
+		for _, port := range portList {
+			if trunkSupported {
+				if err := s.DeleteTrunk(eventObject, port.ID); err != nil {
+					return err
+				}
+			}
+			if err := s.DeletePort(eventObject, port.ID); err != nil {
+				return err
+			}
 		}
 	}
 

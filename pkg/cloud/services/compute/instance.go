@@ -680,7 +680,7 @@ func (s *Service) DeleteInstance(openStackCluster *infrav1.OpenStackCluster, eve
 			return err
 		}
 
-		if err := networkingService.GarbageCollectErrorInstancesPort(eventObject, instanceSpec.Name, portOpts); err != nil {
+		if err := networkingService.GarbageCollectErrorInstancesPort(eventObject, instanceSpec.Name, portOpts, trunkSupported); err != nil {
 			return err
 		}
 	}

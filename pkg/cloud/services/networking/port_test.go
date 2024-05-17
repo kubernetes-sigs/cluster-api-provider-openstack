@@ -537,12 +537,12 @@ func Test_GetOrCreatePort(t *testing.T) {
 }
 
 func Test_GarbageCollectErrorInstancesPort(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	instanceName := "foo"
-	portID1 := "dc6e0ae3-dad6-4240-a9cb-e541916f20d3"
-	portID2 := "a38ab1cb-c2cc-4c1b-9d1d-696ec73356d2"
+	const (
+		instanceName = "foo"
+		portID1      = "dc6e0ae3-dad6-4240-a9cb-e541916f20d3"
+		portID2      = "a38ab1cb-c2cc-4c1b-9d1d-696ec73356d2"
+		trunkID1     = "6ecfc5c2-7ee7-41b3-bba7-874b9b1423b7"
+	)
 	portName1 := GetPortName(instanceName, nil, 0)
 	portName2 := GetPortName(instanceName, nil, 1)
 
@@ -553,6 +553,8 @@ func Test_GarbageCollectErrorInstancesPort(t *testing.T) {
 		expect func(m *mock.MockNetworkClientMockRecorder)
 		// portOpts defines the instance ports as defined in the OSM spec.
 		portOpts []infrav1.PortOpts
+		// trunkSupported indicates whether we should check for trunk ports
+		trunkSupported bool
 		// wantErr defines whether the test is supposed to fail.
 		wantErr bool
 	}{
@@ -589,12 +591,57 @@ func Test_GarbageCollectErrorInstancesPort(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "succeed if there are no ports to be cleaned up",
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				o1 := ports.ListOpts{
+					Name: portName1,
+				}
+				m.ListPort(o1).Return([]ports.Port{}, nil)
+			},
+			portOpts: []infrav1.PortOpts{
+				{},
+			},
+			wantErr: false,
+		},
+		{
+			name: "cleanup trunk port",
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				o1 := ports.ListOpts{
+					Name: portName1,
+				}
+				p1 := []ports.Port{
+					{
+						ID:   portID1,
+						Name: portName1,
+					},
+				}
+				m.ListPort(o1).Return(p1, nil)
+				m.ListTrunk(trunks.ListOpts{
+					PortID: portID1,
+				}).Return([]trunks.Trunk{
+					{
+						ID: trunkID1,
+					},
+				}, nil)
+				m.DeleteTrunk(trunkID1)
+				m.DeletePort(portID1)
+			},
+			portOpts: []infrav1.PortOpts{
+				{},
+			},
+			trunkSupported: true,
+			wantErr:        false,
+		},
 	}
 
 	eventObject := &infrav1.OpenStackMachine{}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+
 			g := NewWithT(t)
 			mockClient := mock.NewMockNetworkClient(mockCtrl)
 			tt.expect(mockClient.EXPECT())
@@ -605,6 +652,7 @@ func Test_GarbageCollectErrorInstancesPort(t *testing.T) {
 				eventObject,
 				instanceName,
 				tt.portOpts,
+				tt.trunkSupported,
 			)
 			if tt.wantErr {
 				g.Expect(err).To(HaveOccurred())
