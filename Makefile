@@ -48,6 +48,7 @@ ENVSUBST := $(TOOLS_BIN_DIR)/envsubst
 GINKGO := $(TOOLS_BIN_DIR)/ginkgo
 GOJQ := $(TOOLS_BIN_DIR)/gojq
 GOLANGCI_LINT := $(TOOLS_BIN_DIR)/golangci-lint
+GOTESTSUM := $(TOOLS_BIN_DIR)/gotestsum
 KUSTOMIZE := $(TOOLS_BIN_DIR)/kustomize
 MOCKGEN := $(TOOLS_BIN_DIR)/mockgen
 RELEASE_NOTES := $(TOOLS_BIN_DIR)/release-notes
@@ -140,8 +141,9 @@ kubebuilder_assets: $(SETUP_ENVTEST)
 
 .PHONY: test
 TEST_PATHS ?= ./...
-test: kubebuilder_assets
-	KUBEBUILDER_ASSETS="$(KUBEBUILDER_ASSETS)" go test -v $(TEST_PATHS) $(TEST_ARGS)
+test: $(ARTIFACTS) $(GOTESTSUM) kubebuilder_assets
+	KUBEBUILDER_ASSETS="$(KUBEBUILDER_ASSETS)" $(GOTESTSUM) --junitfile $(ARTIFACTS)/junit.test.xml --junitfile-hide-empty-pkg --jsonfile $(ARTIFACTS)/test-output.log -- \
+			   -v $(TEST_PATHS) $(TEST_ARGS)
 
 E2E_TEMPLATES_DIR=test/e2e/data/infrastructure-openstack
 E2E_KUSTOMIZE_DIR=test/e2e/data/kustomize
