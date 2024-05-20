@@ -15,15 +15,17 @@
 ROOT_DIR_RELATIVE := ../..
 include $(ROOT_DIR_RELATIVE)/common.mk
 
-GOLANGCI_LINT_VERSION := v1.57.2
+GOLANGCI_LINT_VERSION ?= v1.57.2
 
-UNAME := $(shell uname -s)
+# GOTESTSUM version without the leading 'v'
+GOTESTSUM_VERSION ?= 1.11.0
 
 # Directories.
 BIN_DIR := bin
 SHARE_DIR := share
 
 OS := $(shell go env GOOS)
+ARCH ?= $(shell go env GOARCH)
 RUST_TARGET := unknown-$(OS)-gnu
 
 ifeq ($(OS), darwin)
@@ -76,6 +78,11 @@ $(ENVSUBST): go.mod go.sum | $(BIN_DIR) # Build envsubst from tools folder.
 SETUP_ENVTEST := $(BIN_DIR)/setup-envtest
 $(SETUP_ENVTEST): go.mod go.sum | $(BIN_DIR)
 	go build -tags=tools -o $@ sigs.k8s.io/controller-runtime/tools/setup-envtest
+
+GOTESTSUM := $(BIN_DIR)/gotestsum
+$(GOTESTSUM): | $(BIN_DIR)
+	curl -L https://github.com/gotestyourself/gotestsum/releases/download/v$(GOTESTSUM_VERSION)/gotestsum_$(GOTESTSUM_VERSION)_linux_$(ARCH).tar.gz | \
+		tar -C $(BIN_DIR) -zxvf - gotestsum
 
 GH_SHARE := $(SHARE_DIR)/gh
 
