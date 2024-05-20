@@ -473,6 +473,7 @@ func autoConvert_v1beta1_APIServerLoadBalancer_To_v1alpha6_APIServerLoadBalancer
 	// WARNING: in.Network requires manual conversion: does not exist in peer-type
 	// WARNING: in.Subnets requires manual conversion: does not exist in peer-type
 	// WARNING: in.AvailabilityZone requires manual conversion: does not exist in peer-type
+	// WARNING: in.Flavor requires manual conversion: does not exist in peer-type
 	return nil
 }
 

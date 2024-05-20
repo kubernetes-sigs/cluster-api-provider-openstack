@@ -303,8 +303,9 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 		return nil, err
 	}
 
-	// Choose the selected provider if it is set in cluster spec, if not, omit the field and Octavia will use the default provider.
+	// Choose the selected provider and flavor if set in cluster spec, if not, omit these fields and Octavia will use the default values.
 	lbProvider := ""
+	lbFlavorID := ""
 	var availabilityZone *string
 	if openStackCluster.Spec.APIServerLoadBalancer != nil {
 		if openStackCluster.Spec.APIServerLoadBalancer.Provider != nil {
@@ -319,6 +320,26 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 				record.Eventf(openStackCluster, "OctaviaProviderNotFound", "Provider %s specified for Octavia not found, using the default provider.", openStackCluster.Spec.APIServerLoadBalancer.Provider)
 			}
 		}
+		if openStackCluster.Spec.APIServerLoadBalancer.Flavor != nil {
+			// Gophercloud does not support filtering loadbalancer flavors by name and status (enabled) so we have to get all available flavors
+			// and filter them localy. There is a feature request in Gophercloud to implement this functionality:
+			// https://github.com/gophercloud/gophercloud/issues/3049
+			flavors, err := s.loadbalancerClient.ListLoadBalancerFlavors()
+			if err != nil {
+				return nil, err
+			}
+
+			for _, v := range flavors {
+				if v.Enabled && v.Name == *openStackCluster.Spec.APIServerLoadBalancer.Flavor {
+					lbFlavorID = v.ID
+					break
+				}
+			}
+			if lbFlavorID == "" {
+				record.Warnf(openStackCluster, "OctaviaFlavorNotFound", "Flavor %s specified for Octavia not found, using the default flavor.", *openStackCluster.Spec.APIServerLoadBalancer.Flavor)
+			}
+		}
+
 		availabilityZone = openStackCluster.Spec.APIServerLoadBalancer.AvailabilityZone
 	}
 
@@ -333,6 +354,7 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 		VipNetworkID: vipNetworkID,
 		Description:  names.GetDescription(clusterResourceName),
 		Provider:     lbProvider,
+		FlavorID:     lbFlavorID,
 		Tags:         openStackCluster.Spec.Tags,
 	}
 	if availabilityZone != nil {

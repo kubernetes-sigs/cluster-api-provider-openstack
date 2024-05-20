@@ -945,6 +945,18 @@ string
 <p>AvailabilityZone is the failure domain that will be used to create the APIServerLoadBalancer Spec.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>flavor</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Flavor is the flavor name that will be used to create the APIServerLoadBalancer Spec.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.AdditionalBlockDevice">AdditionalBlockDevice
