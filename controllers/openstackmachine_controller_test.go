@@ -265,6 +265,7 @@ func Test_reconcileDelete(t *testing.T) {
 		trunkExtension.Alias = "trunk"
 		r.network.ListExtensions().Return([]extensions.Extension{trunkExtension}, nil)
 		r.network.ListTrunk(trunks.ListOpts{PortID: portUUID}).Return([]trunks.Trunk{{ID: trunkUUID}}, nil)
+		r.network.ListTrunkSubports(trunkUUID).Return([]trunks.Subport{}, nil)
 		r.network.DeleteTrunk(trunkUUID).Return(nil)
 		r.network.DeletePort(portUUID).Return(nil)
 	}
