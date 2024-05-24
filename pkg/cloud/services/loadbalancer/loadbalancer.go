@@ -82,6 +82,9 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 
 	lb, err := s.getOrCreateAPILoadBalancer(openStackCluster, clusterResourceName)
 	if err != nil {
+		if errors.Is(err, capoerrors.ErrFilterMatch) {
+			return true, err
+		}
 		return false, err
 	}
 
@@ -107,6 +110,9 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 
 		fp, err := s.networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterResourceName, floatingIPAddress)
 		if err != nil {
+			if errors.Is(err, capoerrors.ErrFilterMatch) {
+				return true, err
+			}
 			return false, err
 		}
 
