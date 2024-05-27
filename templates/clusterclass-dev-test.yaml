@@ -117,6 +117,9 @@ spec:
     spec:
       apiServerLoadBalancer:
         enabled: true
+      externalNetwork:
+        filter:
+          name: ${OPENSTACK_EXTERNAL_NETWORK_NAME:=public}
       identityRef:
         name: dev-test-cloud-config
         cloudName: ${OPENSTACK_CLOUD:=capo-e2e}
