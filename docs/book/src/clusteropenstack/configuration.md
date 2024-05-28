@@ -664,9 +664,10 @@ spec:
     spec:
       ...
         rootVolume:
-          diskSize: <image size>
-          volumeType: <a cinder volume type (*optional)>
-          availabilityZone: <the cinder availability zone for the root volume (*optional)>
+          sizeGiB: <image size>
+          type: <a cinder volume type (*optional)>
+          availabilityZone:
+            name: <The cinder availability zone name>
       ...
 ```
 
