@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
 	. "github.com/onsi/ginkgo/v2" //nolint:revive
 	. "github.com/onsi/gomega"    //nolint:revive
 	"go.uber.org/mock/gomock"
@@ -38,7 +39,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 	"sigs.k8s.io/cluster-api-provider-openstack/test/helpers/external"
@@ -172,7 +172,7 @@ var _ = Describe("When calling getOrCreate", func() {
 		openStackCluster := &infrav1.OpenStackCluster{}
 		machine := &clusterv1.Machine{}
 		openStackMachine := &infrav1.OpenStackMachine{}
-		servers := make([]clients.ServerExt, 1)
+		servers := make([]servers.Server, 1)
 		servers[0].ID = "machine-uuid"
 
 		mockScopeFactory.ComputeClient.EXPECT().ListServers(gomock.Any()).Return(servers, nil)

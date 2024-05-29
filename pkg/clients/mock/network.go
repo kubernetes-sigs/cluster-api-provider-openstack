@@ -28,16 +28,16 @@ package mock
 import (
 	reflect "reflect"
 
-	extensions "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions"
-	attributestags "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
-	floatingips "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
-	routers "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
-	groups "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
-	rules "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/rules"
-	trunks "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/trunks"
-	networks "github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
-	ports "github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
-	subnets "github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
+	extensions "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions"
+	attributestags "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/attributestags"
+	floatingips "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/floatingips"
+	routers "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/routers"
+	groups "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/groups"
+	rules "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/rules"
+	trunks "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/trunks"
+	networks "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
+	ports "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/ports"
+	subnets "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
 	gomock "go.uber.org/mock/gomock"
 )
 

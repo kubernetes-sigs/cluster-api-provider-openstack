@@ -22,10 +22,10 @@ import (
 	"sort"
 
 	"github.com/go-logr/logr"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
 	corev1 "k8s.io/api/core/v1"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 )
 
 // InstanceSpec defines the fields which can be set on a new OpenStack instance.
@@ -53,11 +53,11 @@ type InstanceIdentifier struct {
 
 // InstanceStatus represents instance data which has been returned by OpenStack.
 type InstanceStatus struct {
-	server *clients.ServerExt
+	server *servers.Server
 	logger logr.Logger
 }
 
-func NewInstanceStatusFromServer(server *clients.ServerExt, logger logr.Logger) *InstanceStatus {
+func NewInstanceStatusFromServer(server *servers.Server, logger logr.Logger) *InstanceStatus {
 	return &InstanceStatus{server, logger}
 }
 

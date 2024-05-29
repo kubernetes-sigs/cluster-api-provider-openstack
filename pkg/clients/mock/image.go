@@ -28,7 +28,7 @@ package mock
 import (
 	reflect "reflect"
 
-	images "github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
+	images "github.com/gophercloud/gophercloud/v2/openstack/image/v2/images"
 	gomock "go.uber.org/mock/gomock"
 )
 

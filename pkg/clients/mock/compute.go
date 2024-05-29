@@ -28,13 +28,12 @@ package mock
 import (
 	reflect "reflect"
 
-	attachinterfaces "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
-	availabilityzones "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/availabilityzones"
-	servergroups "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/servergroups"
-	flavors "github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
-	servers "github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
+	attachinterfaces "github.com/gophercloud/gophercloud/v2/openstack/compute/v2/attachinterfaces"
+	availabilityzones "github.com/gophercloud/gophercloud/v2/openstack/compute/v2/availabilityzones"
+	flavors "github.com/gophercloud/gophercloud/v2/openstack/compute/v2/flavors"
+	servergroups "github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servergroups"
+	servers "github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
 	gomock "go.uber.org/mock/gomock"
-	clients "sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 )
 
 // MockComputeClient is a mock of ComputeClient interface.
@@ -61,18 +60,18 @@ func (m *MockComputeClient) EXPECT() *MockComputeClientMockRecorder {
 }
 
 // CreateServer mocks base method.
-func (m *MockComputeClient) CreateServer(arg0 servers.CreateOptsBuilder) (*clients.ServerExt, error) {
+func (m *MockComputeClient) CreateServer(arg0 servers.CreateOptsBuilder, arg1 servers.SchedulerHintOptsBuilder) (*servers.Server, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateServer", arg0)
-	ret0, _ := ret[0].(*clients.ServerExt)
+	ret := m.ctrl.Call(m, "CreateServer", arg0, arg1)
+	ret0, _ := ret[0].(*servers.Server)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateServer indicates an expected call of CreateServer.
-func (mr *MockComputeClientMockRecorder) CreateServer(arg0 any) *gomock.Call {
+func (mr *MockComputeClientMockRecorder) CreateServer(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateServer", reflect.TypeOf((*MockComputeClient)(nil).CreateServer), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateServer", reflect.TypeOf((*MockComputeClient)(nil).CreateServer), arg0, arg1)
 }
 
 // DeleteAttachedInterface mocks base method.
@@ -119,10 +118,10 @@ func (mr *MockComputeClientMockRecorder) GetFlavorFromName(arg0 any) *gomock.Cal
 }
 
 // GetServer mocks base method.
-func (m *MockComputeClient) GetServer(arg0 string) (*clients.ServerExt, error) {
+func (m *MockComputeClient) GetServer(arg0 string) (*servers.Server, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetServer", arg0)
-	ret0, _ := ret[0].(*clients.ServerExt)
+	ret0, _ := ret[0].(*servers.Server)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -179,10 +178,10 @@ func (mr *MockComputeClientMockRecorder) ListServerGroups() *gomock.Call {
 }
 
 // ListServers mocks base method.
-func (m *MockComputeClient) ListServers(arg0 servers.ListOptsBuilder) ([]clients.ServerExt, error) {
+func (m *MockComputeClient) ListServers(arg0 servers.ListOptsBuilder) ([]servers.Server, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListServers", arg0)
-	ret0, _ := ret[0].([]clients.ServerExt)
+	ret0, _ := ret[0].([]servers.Server)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

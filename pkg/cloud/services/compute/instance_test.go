@@ -17,23 +17,22 @@ limitations under the License.
 package compute
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"testing"
 	"time"
 
 	"github.com/go-logr/logr/testr"
-	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/availabilityzones"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
-	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
+	"github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v3/volumes"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/flavors"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
+	"github.com/gophercloud/gophercloud/v2/openstack/image/v2/images"
 	. "github.com/onsi/gomega" //nolint:revive
 	"go.uber.org/mock/gomock"
 	"k8s.io/utils/ptr"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
@@ -239,15 +238,12 @@ func TestService_ReconcileInstance(t *testing.T) {
 		}
 	}
 
-	returnedServer := func(status string) *clients.ServerExt {
-		return &clients.ServerExt{
-			Server: servers.Server{
-				ID:      instanceUUID,
-				Name:    openStackMachineName,
-				Status:  status,
-				KeyName: sshKeyName,
-			},
-			ServerAvailabilityZoneExt: availabilityzones.ServerAvailabilityZoneExt{},
+	returnedServer := func(status string) *servers.Server {
+		return &servers.Server{
+			ID:      instanceUUID,
+			Name:    openStackMachineName,
+			Status:  status,
+			KeyName: sshKeyName,
 		}
 	}
 
@@ -268,7 +264,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 		// map[string]interface{} of the create options, and then use
 		// gomega to assert the contents of the map, which is more flexible.
 
-		computeRecorder.CreateServer(gomock.Any()).DoAndReturn(func(createOpts servers.CreateOptsBuilder) (*clients.ServerExt, error) {
+		computeRecorder.CreateServer(context.TODO(), gomock.Any()).DoAndReturn(func(createOpts servers.CreateOptsBuilder, _ servers.SchedulerHintOptsBuilder) (*servers.Server, error) {
 			optsMap, err := createOpts.ToServerCreateMap()
 			Expect(err).NotTo(HaveOccurred())
 
@@ -345,7 +341,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 					Description: fmt.Sprintf("Root volume for %s", openStackMachineName),
 					Name:        fmt.Sprintf("%s-root", openStackMachineName),
 					ImageID:     imageUUID,
-					Multiattach: false,
 				}).Return(&volumes.Volume{ID: rootVolumeUUID}, nil)
 				expectVolumePollSuccess(r.volume, rootVolumeUUID)
 
@@ -393,7 +388,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 					Description:      fmt.Sprintf("Root volume for %s", openStackMachineName),
 					Name:             fmt.Sprintf("%s-root", openStackMachineName),
 					ImageID:          imageUUID,
-					Multiattach:      false,
 				}).Return(&volumes.Volume{ID: rootVolumeUUID}, nil)
 				expectVolumePollSuccess(r.volume, rootVolumeUUID)
 
@@ -440,7 +434,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 					Description:      fmt.Sprintf("Root volume for %s", openStackMachineName),
 					Name:             fmt.Sprintf("%s-root", openStackMachineName),
 					ImageID:          imageUUID,
-					Multiattach:      false,
 				}).Return(&volumes.Volume{ID: rootVolumeUUID}, nil)
 				expectVolumePollSuccess(r.volume, rootVolumeUUID)
 
@@ -481,7 +474,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 					Description: fmt.Sprintf("Root volume for %s", openStackMachineName),
 					Name:        fmt.Sprintf("%s-root", openStackMachineName),
 					ImageID:     imageUUID,
-					Multiattach: false,
 				}).Return(&volumes.Volume{ID: rootVolumeUUID}, nil)
 				expectVolumePoll(r.volume, rootVolumeUUID, []string{"creating", "error"})
 			},
@@ -525,7 +517,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 					Description: fmt.Sprintf("Root volume for %s", openStackMachineName),
 					Name:        fmt.Sprintf("%s-root", openStackMachineName),
 					ImageID:     imageUUID,
-					Multiattach: false,
 				}).Return(&volumes.Volume{ID: rootVolumeUUID}, nil)
 				expectVolumePollSuccess(r.volume, rootVolumeUUID)
 
@@ -535,7 +526,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 					Size:        50,
 					Description: fmt.Sprintf("Additional block device for %s", openStackMachineName),
 					Name:        fmt.Sprintf("%s-etcd", openStackMachineName),
-					Multiattach: false,
 					VolumeType:  "test-volume-type",
 				}).Return(&volumes.Volume{ID: additionalBlockDeviceVolumeUUID}, nil)
 				expectVolumePollSuccess(r.volume, additionalBlockDeviceVolumeUUID)
@@ -608,7 +598,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 					Size:        50,
 					Description: fmt.Sprintf("Additional block device for %s", openStackMachineName),
 					Name:        fmt.Sprintf("%s-etcd", openStackMachineName),
-					Multiattach: false,
 					VolumeType:  "test-volume-type",
 				}).Return(&volumes.Volume{ID: additionalBlockDeviceVolumeUUID}, nil)
 				expectVolumePollSuccess(r.volume, additionalBlockDeviceVolumeUUID)
@@ -678,7 +667,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 					AvailabilityZone: "test-alternate-az",
 					Description:      fmt.Sprintf("Additional block device for %s", openStackMachineName),
 					Name:             fmt.Sprintf("%s-etcd", openStackMachineName),
-					Multiattach:      false,
 					VolumeType:       "test-volume-type",
 				}).Return(&volumes.Volume{ID: additionalBlockDeviceVolumeUUID}, nil)
 				expectVolumePollSuccess(r.volume, additionalBlockDeviceVolumeUUID)
