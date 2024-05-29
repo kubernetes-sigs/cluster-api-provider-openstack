@@ -150,9 +150,9 @@ providers:
 variables:
   # used to ensure we deploy to the correct management cluster
   KUBE_CONTEXT: "kind-capo-e2e"
-  KUBERNETES_VERSION: "v1.28.5"
-  KUBERNETES_VERSION_UPGRADE_FROM: "v1.27.2"
-  KUBERNETES_VERSION_UPGRADE_TO: "v1.28.5"
+  KUBERNETES_VERSION: "v1.29.5"
+  KUBERNETES_VERSION_UPGRADE_FROM: "v1.28.5"
+  KUBERNETES_VERSION_UPGRADE_TO: "v1.29.5"
   # NOTE: To see default images run kubeadm config images list (optionally with --kubernetes-version=vX.Y.Z)
   ETCD_VERSION_UPGRADE_TO: "3.5.12-0"
   COREDNS_VERSION_UPGRADE_TO: "v1.11.1"
@@ -172,8 +172,8 @@ variables:
   OPENSTACK_DNS_NAMESERVERS: "8.8.8.8"
   OPENSTACK_FAILURE_DOMAIN: "testaz1"
   OPENSTACK_FAILURE_DOMAIN_ALT: "testaz2"
-  OPENSTACK_IMAGE_NAME: "ubuntu-2204-kube-v1.28.5"
-  OPENSTACK_IMAGE_NAME_UPGRADE_FROM: "ubuntu-2204-kube-v1.27.2"
+  OPENSTACK_IMAGE_NAME: "ubuntu-2204-kube-v1.29.5"
+  OPENSTACK_IMAGE_NAME_UPGRADE_FROM: "ubuntu-2204-kube-v1.28.5"
   OPENSTACK_NODE_MACHINE_FLAVOR: "m1.small"
   OPENSTACK_SSH_KEY_NAME: "cluster-api-provider-openstack-sigs-k8s-io"
   # The default external network created by devstack
@@ -181,13 +181,13 @@ variables:
   OPENSTACK_VOLUME_TYPE_ALT: "test-volume-type"
   CONFORMANCE_WORKER_MACHINE_COUNT: "5"
   CONFORMANCE_CONTROL_PLANE_MACHINE_COUNT: "1"
-  INIT_WITH_KUBERNETES_VERSION: "v1.28.5"
+  INIT_WITH_KUBERNETES_VERSION: "v1.29.5"
   E2E_IMAGE_URL: "http://10.0.3.15/capo-e2e-image.tar"
   # The default user for SSH connections from bastion to machines
   SSH_USER_MACHINE: "ubuntu"
   EXP_KUBEADM_BOOTSTRAP_FORMAT_IGNITION: "true"
   # The Flatcar image produced by the image-builder
-  OPENSTACK_FLATCAR_IMAGE_NAME: "flatcar-stable-3815.2.0-kube-v1.28.5"
+  OPENSTACK_FLATCAR_IMAGE_NAME: "flatcar-stable-3815.2.2-kube-v1.29.5"
   # A plain Flatcar from the Flatcar releases server
   FLATCAR_IMAGE_NAME: "flatcar_production_openstack_image"
 
