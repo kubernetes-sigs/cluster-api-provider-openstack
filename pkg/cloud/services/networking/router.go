@@ -142,7 +142,7 @@ func (s *Service) getExistingRouter(openStackCluster *infrav1.OpenStackCluster, 
 
 	router, err := s.getRouterByFilter(listOpts)
 	// It's ok if our managed router doesn't exist yet, just return nil
-	if errors.Is(err, ErrNoMatches) {
+	if errors.Is(err, capoerrors.ErrNoMatches) {
 		return nil, nil
 	}
 	return router, err
@@ -296,11 +296,11 @@ func (s *Service) getRouterByFilter(opts routers.ListOpts) (*routers.Router, err
 
 	switch len(routerList) {
 	case 0:
-		return nil, ErrNoMatches
+		return nil, capoerrors.ErrNoMatches
 	case 1:
 		return &routerList[0], nil
 	}
-	return nil, ErrMultipleMatches
+	return nil, capoerrors.ErrMultipleMatches
 }
 
 func (s *Service) getSubnetByName(subnetName string) (subnets.Subnet, error) {

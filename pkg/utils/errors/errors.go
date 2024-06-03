@@ -18,10 +18,38 @@ package errors
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/gophercloud/gophercloud"
 )
+
+var (
+	ErrFilterMatch     = fmt.Errorf("filter match error")
+	ErrMultipleMatches = multipleMatchesError{}
+	ErrNoMatches       = noMatchesError{}
+)
+
+type (
+	multipleMatchesError struct{}
+	noMatchesError       struct{}
+)
+
+func (e multipleMatchesError) Error() string {
+	return "filter matched more than one resource"
+}
+
+func (e multipleMatchesError) Is(err error) bool {
+	return err == ErrFilterMatch
+}
+
+func (e noMatchesError) Error() string {
+	return "filter matched no resources"
+}
+
+func (e noMatchesError) Is(err error) bool {
+	return err == ErrFilterMatch
+}
 
 func IsRetryable(err error) bool {
 	var errUnexpectedResponseCode gophercloud.ErrUnexpectedResponseCode
