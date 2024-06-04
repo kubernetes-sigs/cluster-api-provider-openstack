@@ -51,6 +51,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 	utils "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/controllers"
+	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
@@ -939,7 +940,7 @@ func getClusterSubnets(networkingService *networking.Service, openStackCluster *
 		clusterSubnets, err = networkingService.GetSubnetsByFilter(listOpts)
 		if err != nil {
 			err = fmt.Errorf("failed to find subnets: %w", err)
-			if errors.Is(err, networking.ErrFilterMatch) {
+			if errors.Is(err, capoerrors.ErrFilterMatch) {
 				handleUpdateOSCError(openStackCluster, err)
 			}
 			return nil, err
@@ -952,7 +953,7 @@ func getClusterSubnets(networkingService *networking.Service, openStackCluster *
 			filteredSubnet, err := networkingService.GetNetworkSubnetByParam(networkID, &openStackClusterSubnets[subnet])
 			if err != nil {
 				err = fmt.Errorf("failed to find subnet %d in network %s: %w", subnet, networkID, err)
-				if errors.Is(err, networking.ErrFilterMatch) {
+				if errors.Is(err, capoerrors.ErrFilterMatch) {
 					handleUpdateOSCError(openStackCluster, err)
 				}
 				return nil, err

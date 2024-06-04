@@ -521,6 +521,7 @@ func (s *Service) GetInstanceStatusByName(eventObject runtime.Object, name strin
 
 	if len(serverList) > 1 {
 		record.Warnf(eventObject, "DuplicateServerNames", "Found %d servers with name '%s'. This is likely to cause errors.", len(serverList), name)
+		return nil, capoerrors.ErrMultipleMatches
 	}
 
 	// Return the first returned server, if any

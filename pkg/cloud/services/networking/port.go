@@ -498,7 +498,7 @@ func (s *Service) normalizePortTarget(port *infrav1.PortOpts, defaultNetwork *in
 				subnet, err := s.GetSubnetByParam(fixedIP.Subnet)
 				if err != nil {
 					// Multiple matches might be ok later when we restrict matches to a single network
-					if errors.Is(err, ErrMultipleMatches) {
+					if errors.Is(err, capoerrors.ErrMultipleMatches) {
 						s.scope.Logger().V(4).Info("Couldn't infer network from subnet", "subnetIndex", i, "err", err)
 						continue
 					}
