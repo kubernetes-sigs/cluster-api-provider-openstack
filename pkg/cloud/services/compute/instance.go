@@ -119,6 +119,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, instanceSpec *I
 		KeyName:           instanceSpec.SSHKeyName,
 	})
 	if err != nil {
+		record.Warnf(eventObject, "FailedCreateServer", "Failed to create server %s: %v", instanceSpec.Name, err)
 		return nil, fmt.Errorf("error creating Openstack instance: %v", err)
 	}
 
