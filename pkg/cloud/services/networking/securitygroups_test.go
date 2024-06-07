@@ -568,6 +568,7 @@ func TestService_ReconcileSecurityGroups(t *testing.T) {
 					Return([]groups.SecGroup{{ID: "0", Name: controlPlaneSGName}}, nil)
 				m.ListSecGroup(groups.ListOpts{Name: workerSGName}).
 					Return([]groups.SecGroup{{ID: "1", Name: workerSGName}}, nil)
+				m.ListSecGroup(groups.ListOpts{Name: bastionSGName}).Return(nil, nil)
 
 				// We expect a total of 12 rules to be created.
 				// Nothing actually looks at the generated

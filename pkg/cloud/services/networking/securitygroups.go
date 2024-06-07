@@ -56,9 +56,24 @@ func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackClu
 		workerSuffix:       secWorkerGroupName,
 	}
 
+	secBastionGroupName := getSecBastionGroupName(clusterResourceName)
 	if bastionEnabled {
-		secBastionGroupName := getSecBastionGroupName(clusterResourceName)
 		suffixToNameMap[bastionSuffix] = secBastionGroupName
+	} else {
+		// We reconcile the security groups before the bastion, because the bastion
+		// needs its security group to be created first when managed security groups are enabled.
+		// When the bastion is disabled, we will try to delete the security group if it exists.
+		// In the first attempt, the security group will still be in-use by the bastion instance
+		// but then the bastion instance will be deleted in the next reconcile loop.
+		// We do that here because we don't want to manage the bastion security group from
+		// elsewhere, that could cause infinite loops between ReconCileSecurityGroups and ReconcileBastion.
+		// Therefore we try to delete the bastion security group as a best effort here
+		// and also when the cluster is deleted so we're sure it will be deleted at some point.
+		// https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/2113
+		if err := s.deleteSecurityGroup(openStackCluster, secBastionGroupName); err != nil {
+			s.scope.Logger().Info("Non-fatal error when deleting the bastion security group", "name", secBastionGroupName, "error", err)
+			return nil
+		}
 	}
 
 	// create security groups first, because desired rules use group ids.
@@ -351,10 +366,10 @@ func (s *Service) DeleteSecurityGroups(openStackCluster *infrav1.OpenStackCluste
 	secGroupNames := []string{
 		getSecControlPlaneGroupName(clusterResourceName),
 		getSecWorkerGroupName(clusterResourceName),
-	}
-
-	if openStackCluster.Spec.Bastion.IsEnabled() {
-		secGroupNames = append(secGroupNames, getSecBastionGroupName(clusterResourceName))
+		// Even if the bastion might be disabled, we still try to delete the security group in case
+		// we had a bastion before and for some reason we didn't delete its security group.
+		// https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/2113
+		getSecBastionGroupName(clusterResourceName),
 	}
 
 	for _, secGroupName := range secGroupNames {
