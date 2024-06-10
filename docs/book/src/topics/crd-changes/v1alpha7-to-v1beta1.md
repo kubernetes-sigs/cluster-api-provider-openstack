@@ -370,7 +370,8 @@ In v1beta1, `OpenStackCluster.Spec.ManagedSubnets` array field is introduced. Th
 
 ```yaml
   nodeCidr: "10.0.0.0/24"
-  dnsNameservers: "10.0.0.123"
+  dnsNameservers:
+  - "10.0.0.123"
 ```
 
 In v1beta1, this will be automatically converted to:
@@ -378,7 +379,8 @@ In v1beta1, this will be automatically converted to:
 ```yaml
   managedSubnets:
   - cidr: "10.0.0.0/24"
-    dnsNameservers: "10.0.0.123"
+    dnsNameservers:
+    - "10.0.0.123"
 ```
 
 Please note that currently `managedSubnets` can only hold one element.
