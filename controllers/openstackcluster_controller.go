@@ -57,6 +57,7 @@ import (
 
 const (
 	BastionInstanceHashAnnotation = "infrastructure.cluster.x-k8s.io/bastion-hash"
+	waitForOctaviaPortsCleanup    = 15 * time.Second
 )
 
 // OpenStackClusterReconciler reconciles a OpenStackCluster object.
@@ -174,9 +175,13 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope 
 			return reconcile.Result{}, err
 		}
 
-		if err = loadBalancerService.DeleteLoadBalancer(openStackCluster, clusterResourceName); err != nil {
+		result, err := loadBalancerService.DeleteLoadBalancer(openStackCluster, clusterResourceName)
+		if err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete load balancer: %w", err), false)
 			return reconcile.Result{}, fmt.Errorf("failed to delete load balancer: %w", err)
+		}
+		if result != nil {
+			return *result, nil
 		}
 	}
 
