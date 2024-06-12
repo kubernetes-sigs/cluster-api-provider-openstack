@@ -1317,7 +1317,9 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>OVSHWOffload enables or disables the OVS hardware offload feature.</p>
+<p>OVSHWOffload enables or disables the OVS hardware offload feature.
+This flag is not required on OpenStack clouds since Yoga as Nova will set it automatically when the port is attached.
+See: <a href="https://bugs.launchpad.net/nova/+bug/2020813">https://bugs.launchpad.net/nova/+bug/2020813</a></p>
 </td>
 </tr>
 <tr>

@@ -2261,8 +2261,10 @@ spec:
                                         rule:create_port:binding:profile
                                       properties:
                                         ovsHWOffload:
-                                          description: OVSHWOffload enables or disables
-                                            the OVS hardware offload feature.
+                                          description: |-
+                                            OVSHWOffload enables or disables the OVS hardware offload feature.
+                                            This flag is not required on OpenStack clouds since Yoga as Nova will set it automatically when the port is attached.
+                                            See: https://bugs.launchpad.net/nova/+bug/2020813
                                           type: boolean
                                         trustedVF:
                                           description: TrustedVF enables or disables

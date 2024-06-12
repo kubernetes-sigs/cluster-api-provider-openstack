@@ -422,6 +422,8 @@ type PortStatus struct {
 
 type BindingProfile struct {
 	// OVSHWOffload enables or disables the OVS hardware offload feature.
+	// This flag is not required on OpenStack clouds since Yoga as Nova will set it automatically when the port is attached.
+	// See: https://bugs.launchpad.net/nova/+bug/2020813
 	// +optional
 	OVSHWOffload *bool `json:"ovsHWOffload,omitempty"`
 
