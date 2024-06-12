@@ -96,7 +96,11 @@ involved:
 - via the [SIG-Cluster-Lifecycle Mailing List](https://groups.google.com/forum/#!forum/kubernetes-sig-cluster-lifecycle).
 - during our Office Hours
   - bi-weekly on Wednesdays @ 14:00 UTC on Zoom (link in meeting notes)
-  - Previous meetings: [ [notes][office-hours-notes] | [recordings][office-hours-recordings] ]
+  - Previous meetings:
+    - [notes this year][office-hours-notes]
+    - [notes in 2023][office-hours-notes-2023]
+    - [notes in 2022][office-hours-notes-2022]
+    - [recordings][office-hours-recordings]
 
 In the interest of getting more new people involved we try to tag issues with
 [`good first issue`][good_first_issue].
@@ -152,7 +156,9 @@ We also use the issue tracker to track features. If you have an idea for a featu
 [kops]: https://github.com/kubernetes/kops
 [kubicorn]: http://kubicorn.io/
 [slack]: https://kubernetes.slack.com/messages/cluster-api-openstack
-[office-hours-notes]: https://docs.google.com/document/d/1hzi6nr04mhQYBKrwL2NDTNPvgI4RgO9a-gqmk31kXMA/edit
+[office-hours-notes]: https://cluster-api-openstack.sigs.k8s.io/agenda
+[office-hours-notes-2023]: https://cluster-api-openstack.sigs.k8s.io/agenda/2023.html
+[office-hours-notes-2022]: https://cluster-api-openstack.sigs.k8s.io/agenda/2022.html
 [office-hours-recordings]: https://www.youtube.com/playlist?list=PL69nYSiGNLP29D0nYgAGWt1ZFqS9Z7lw4
 [good_first_issue]: https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc+label%3A%22good+first+issue%22
 [prow]: https://go.k8s.io/bot-commands
