@@ -28,6 +28,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/loadbalancers"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/monitors"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/pools"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"k8s.io/apimachinery/pkg/util/wait"
 	utilsnet "k8s.io/utils/net"
 	"k8s.io/utils/ptr"
@@ -51,6 +52,7 @@ const (
 const (
 	loadBalancerProvisioningStatusActive        = "ACTIVE"
 	loadBalancerProvisioningStatusPendingDelete = "PENDING_DELETE"
+	loadBalancerPortPrefix                      = "octavia-lb-"
 )
 
 // We wrap the LookupHost function in a variable to allow overriding it in unit tests.
@@ -663,6 +665,43 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 	return nil
 }
 
+func (s *Service) checkIfLbPortsExist(openStackCluster *infrav1.OpenStackCluster) (bool, error) {
+	// If the LB status doesn't exist, we can't get the LB ID so it's safer to just
+	// assume the port can't be found anymore.
+	// We could get the LB name and gets its ID but if the LB was deleted, we would
+	// get an error and we would have to handle it.
+	if openStackCluster.Status.APIServerLoadBalancer == nil {
+		return false, nil
+	}
+
+	// If the network is not ready, do nothing
+	if openStackCluster.Status.Network == nil || openStackCluster.Status.Network.ID == "" {
+		return false, nil
+	}
+	networkID := openStackCluster.Status.Network.ID
+	lbID := openStackCluster.Status.APIServerLoadBalancer.ID
+
+	// When creating a LoadBalancer, Octavia will create two ports but only
+	// one of them has a device ID which is the LoadBalancer ID.
+	// We can't easily identify the other one beside its name starting with "octavia-lb-".
+	// So for now we don't handle this port as another cluster could live in this network
+	// which would lead to a conflict.
+	portOpts := ports.ListOpts{
+		NetworkID: networkID,
+		DeviceID:  "lb-" + lbID,
+	}
+
+	portList, err := s.networkingService.GetPortWithPrefix(portOpts, loadBalancerPortPrefix)
+	if err != nil {
+		return false, err
+	}
+	if len(portList) > 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
 func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) (result *ctrl.Result, reterr error) {
 	loadBalancerName := getLoadBalancerName(clusterResourceName)
 	lb, err := s.checkIfLbExists(loadBalancerName)
@@ -670,7 +709,16 @@ func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster,
 		return nil, err
 	}
 
+	lbPortsExist, err := s.checkIfLbPortsExist(openStackCluster)
+	if err != nil {
+		return nil, err
+	}
+
 	if lb == nil {
+		if lbPortsExist {
+			s.scope.Logger().Info("Load balancer ports still exist, waiting for them to be deleted", "name", loadBalancerName)
+			return &ctrl.Result{RequeueAfter: waitForOctaviaLBCleanup}, nil
+		}
 		return nil, nil
 	}
 
@@ -715,7 +763,10 @@ func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster,
 	}
 
 	record.Eventf(openStackCluster, "SuccessfulDeleteLoadBalancer", "Deleted load balancer %s with id %s", lb.Name, lb.ID)
-	return nil, nil
+
+	// If we have reached this point, that means that the load balancer wasn't initially deleted but the request to delete it didn't return an error.
+	// So we want to requeue until the load balancer and its associated ports are actually deleted.
+	return &ctrl.Result{RequeueAfter: waitForOctaviaLBCleanup}, nil
 }
 
 func (s *Service) DeleteLoadBalancerMember(openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, clusterResourceName string) error {
