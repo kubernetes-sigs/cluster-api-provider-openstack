@@ -9,6 +9,12 @@ title = "Kubernetes Cluster API Provider OpenStack"
 curly-quotes = true
 git-repository-url = "https://sigs.k8s.io/cluster-api-provider-openstack"
 
+[output.html.redirect]
+"/agenda.html" = "/agenda/2024.html"
+"/agenda/2024.html" = "https://docs.google.com/document/d/1hzi6nr04mhQYBKrwL2NDTNPvgI4RgO9a-gqmk31kXMA"
+"/agenda/2023.html" = "https://docs.google.com/document/d/1ySIt17XYOJvpt6eJfIcenzWAKX4OSgQLdocRXNSd-ag"
+"/agenda/2022.html" = "https://docs.google.com/document/d/1l0DilYJYuBkPZPVrIeGIVFzWBHZjuiNRaJiQnpCU1U"
+
 [preprocessor.tabulate]
 command = "mdbook-tabulate"
 
