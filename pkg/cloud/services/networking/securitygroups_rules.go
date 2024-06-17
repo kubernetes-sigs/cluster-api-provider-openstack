@@ -142,7 +142,7 @@ func getSGControlPlaneHTTPS() []resolvedSecurityGroupRuleSpec {
 }
 
 // Allow all traffic, including from outside the cluster, to access node port services.
-func getSGWorkerNodePort() []resolvedSecurityGroupRuleSpec {
+func getSGWorkerNodePort(cidr string) []resolvedSecurityGroupRuleSpec {
 	return []resolvedSecurityGroupRuleSpec{
 		{
 			Description:  "Node Port Services",
@@ -151,6 +151,7 @@ func getSGWorkerNodePort() []resolvedSecurityGroupRuleSpec {
 			PortRangeMin: 30000,
 			PortRangeMax: 32767,
 			Protocol:     "tcp",
+			RemoteIPPrefix: cidr,
 		},
 		{
 			Description:  "Node Port Services",
@@ -159,6 +160,7 @@ func getSGWorkerNodePort() []resolvedSecurityGroupRuleSpec {
 			PortRangeMin: 30000,
 			PortRangeMax: 32767,
 			Protocol:     "udp",
+			RemoteIPPrefix: cidr,
 		},
 	}
 }
