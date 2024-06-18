@@ -75,6 +75,20 @@ func (mr *MockComputeClientMockRecorder) CreateServer(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateServer", reflect.TypeOf((*MockComputeClient)(nil).CreateServer), arg0)
 }
 
+// CreateServerGroup mocks base method.
+func (m *MockComputeClient) CreateServerGroup(arg0, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateServerGroup", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateServerGroup indicates an expected call of CreateServerGroup.
+func (mr *MockComputeClientMockRecorder) CreateServerGroup(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateServerGroup", reflect.TypeOf((*MockComputeClient)(nil).CreateServerGroup), arg0, arg1)
+}
+
 // DeleteAttachedInterface mocks base method.
 func (m *MockComputeClient) DeleteAttachedInterface(arg0, arg1 string) error {
 	m.ctrl.T.Helper()
@@ -101,6 +115,20 @@ func (m *MockComputeClient) DeleteServer(arg0 string) error {
 func (mr *MockComputeClientMockRecorder) DeleteServer(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteServer", reflect.TypeOf((*MockComputeClient)(nil).DeleteServer), arg0)
+}
+
+// DeleteServerGroup mocks base method.
+func (m *MockComputeClient) DeleteServerGroup(arg0 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteServerGroup", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteServerGroup indicates an expected call of DeleteServerGroup.
+func (mr *MockComputeClientMockRecorder) DeleteServerGroup(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteServerGroup", reflect.TypeOf((*MockComputeClient)(nil).DeleteServerGroup), arg0)
 }
 
 // GetFlavorFromName mocks base method.

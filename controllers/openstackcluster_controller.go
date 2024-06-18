@@ -124,14 +124,14 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	// Handle deleted clusters
 	if !openStackCluster.DeletionTimestamp.IsZero() {
-		return r.reconcileDelete(ctx, scope, cluster, openStackCluster)
+		return r.reconcileDelete(ctx, r.Client, scope, cluster, openStackCluster)
 	}
 
 	// Handle non-deleted clusters
-	return reconcileNormal(scope, cluster, openStackCluster)
+	return reconcileNormal(ctx, r.Client, scope, cluster, openStackCluster)
 }
 
-func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope *scope.WithLogger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
+func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, ctrlClient client.Client, scope *scope.WithLogger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
 	scope.Logger().Info("Reconciling Cluster delete")
 
 	// Wait for machines to be deleted before removing the finalizer as they
@@ -154,7 +154,7 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope 
 	// We attempt to delete it even if no status was written, just in case
 	if openStackCluster.Status.Network != nil {
 		// Attempt to resolve bastion resources before delete. We don't need to worry about starting if the resources have changed on update.
-		if _, err := resolveBastionResources(scope, clusterResourceName, openStackCluster); err != nil {
+		if _, err := resolveBastionResources(ctx, ctrlClient, scope, clusterResourceName, openStackCluster); err != nil {
 			return reconcile.Result{}, err
 		}
 
@@ -218,43 +218,64 @@ func contains(arr []string, target string) bool {
 	return false
 }
 
-func resolveBastionResources(scope *scope.WithLogger, clusterResourceName string, openStackCluster *infrav1.OpenStackCluster) (bool, error) {
+func resolveBastionResources(ctx context.Context, ctrlClient client.Client, scope *scope.WithLogger, clusterResourceName string, openStackCluster *infrav1.OpenStackCluster) (bool, error) {
 	// Resolve and store resources for the bastion
-	if openStackCluster.Spec.Bastion.IsEnabled() {
-		if openStackCluster.Status.Bastion == nil {
-			openStackCluster.Status.Bastion = &infrav1.BastionStatus{}
-		}
-		if openStackCluster.Spec.Bastion.Spec == nil {
-			return false, fmt.Errorf("bastion spec is nil when bastion is enabled, this shouldn't happen")
-		}
-		resolved := openStackCluster.Status.Bastion.Resolved
-		if resolved == nil {
-			resolved = &infrav1.ResolvedMachineSpec{}
-			openStackCluster.Status.Bastion.Resolved = resolved
-		}
-		changed, err := compute.ResolveMachineSpec(scope,
-			openStackCluster.Spec.Bastion.Spec, resolved,
-			clusterResourceName, bastionName(clusterResourceName),
-			openStackCluster, getBastionSecurityGroupID(openStackCluster))
+	if !openStackCluster.Spec.Bastion.IsEnabled() {
+		return false, nil
+	}
+	if openStackCluster.Status.Bastion == nil {
+		openStackCluster.Status.Bastion = &infrav1.BastionStatus{}
+	}
+	bastionSpec := openStackCluster.Spec.Bastion.Spec
+	if bastionSpec == nil {
+		return false, fmt.Errorf("bastion spec is nil when bastion is enabled, this shouldn't happen")
+	}
+	resolved := openStackCluster.Status.Bastion.Resolved
+	if resolved == nil {
+		resolved = &infrav1.ResolvedMachineSpec{}
+		openStackCluster.Status.Bastion.Resolved = resolved
+	}
+	// Resolve resources from OpenStack
+	changed, err := compute.ResolveMachineSpec(scope,
+		bastionSpec, resolved,
+		clusterResourceName, bastionName(clusterResourceName),
+		openStackCluster, getBastionSecurityGroupID(openStackCluster))
+	if err != nil {
+		return false, err
+	}
+
+	// Resolve the OpenStackServerGroup Reference using K8sClient (lower priority than spec.ServerGroup)
+	if resolved.ServerGroupID == "" && bastionSpec.ServerGroupRef != nil && bastionSpec.ServerGroupRef.Name != "" {
+		servergroup := &infrav1.OpenStackServerGroup{}
+
+		// Get OpenStackServerGroup resource from K8s
+		err := ctrlClient.Get(ctx, client.ObjectKey{
+			Namespace: openStackCluster.Namespace,
+			Name:      bastionSpec.ServerGroupRef.Name,
+		}, servergroup)
 		if err != nil {
-			return false, err
-		}
-		if changed {
-			// If the resolved machine spec changed we need to restart the reconcile to avoid inconsistencies between reconciles.
-			return true, nil
-		}
-		resources := openStackCluster.Status.Bastion.Resources
-		if resources == nil {
-			resources = &infrav1.MachineResources{}
-			openStackCluster.Status.Bastion.Resources = resources
+			return changed, err
 		}
 
-		err = compute.AdoptMachineResources(scope, resolved, resources)
-		if err != nil {
-			return false, err
+		// Store the resolved UUID, once it's ready and set.
+		if servergroup.Status.Ready && servergroup.Status.ID != "" {
+			resolved.ServerGroupID = servergroup.Status.ID
+			changed = true
 		}
 	}
-	return false, nil
+
+	if changed {
+		// If the resolved machine spec changed we need to restart the reconcile to avoid inconsistencies between reconciles.
+		return true, nil
+	}
+	resources := openStackCluster.Status.Bastion.Resources
+	if resources == nil {
+		resources = &infrav1.MachineResources{}
+		openStackCluster.Status.Bastion.Resources = resources
+	}
+
+	err = compute.AdoptMachineResources(scope, resolved, resources)
+	return false, err
 }
 
 func deleteBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
@@ -345,7 +366,7 @@ func deleteBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStac
 	return nil
 }
 
-func reconcileNormal(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) { //nolint:unparam
+func reconcileNormal(ctx context.Context, ctrlClient client.Client, scope *scope.WithLogger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) { //nolint:unparam
 	scope.Logger().Info("Reconciling Cluster")
 
 	// If the OpenStackCluster doesn't have our finalizer, add it.
@@ -364,7 +385,7 @@ func reconcileNormal(scope *scope.WithLogger, cluster *clusterv1.Cluster, openSt
 		return reconcile.Result{}, err
 	}
 
-	result, err := reconcileBastion(scope, cluster, openStackCluster)
+	result, err := reconcileBastion(ctx, ctrlClient, scope, cluster, openStackCluster)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -399,11 +420,11 @@ func reconcileNormal(scope *scope.WithLogger, cluster *clusterv1.Cluster, openSt
 	return reconcile.Result{}, nil
 }
 
-func reconcileBastion(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (*ctrl.Result, error) {
+func reconcileBastion(ctx context.Context, ctrlClient client.Client, scope *scope.WithLogger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (*ctrl.Result, error) {
 	scope.Logger().V(4).Info("Reconciling Bastion")
 
 	clusterResourceName := names.ClusterResourceName(cluster)
-	changed, err := resolveBastionResources(scope, clusterResourceName, openStackCluster)
+	changed, err := resolveBastionResources(ctx, ctrlClient, scope, clusterResourceName, openStackCluster)
 	if err != nil {
 		return nil, err
 	}

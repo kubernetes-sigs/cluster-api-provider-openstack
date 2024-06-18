@@ -556,7 +556,7 @@ func Test_reconcileDelete(t *testing.T) {
 			osMachine.Name = openStackMachineName
 			osMachine.Finalizers = []string{infrav1.MachineFinalizer}
 
-			_, err := reconciler.reconcileDelete(scopeWithLogger, openStackMachineName, &openStackCluster, &machine, &tt.osMachine)
+			_, err := reconciler.reconcileDelete(ctx, scopeWithLogger, openStackMachineName, &openStackCluster, &machine, &tt.osMachine)
 
 			if tt.wantErr {
 				g.Expect(err).To(HaveOccurred())

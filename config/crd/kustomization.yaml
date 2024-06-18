@@ -10,6 +10,7 @@ resources:
 - bases/infrastructure.cluster.x-k8s.io_openstackmachinetemplates.yaml
 - bases/infrastructure.cluster.x-k8s.io_openstackclustertemplates.yaml
 - bases/infrastructure.cluster.x-k8s.io_openstackfloatingippools.yaml
+- bases/infrastructure.cluster.x-k8s.io_openstackservergroups.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patches:
@@ -20,6 +21,7 @@ patches:
 - path: patches/webhook_in_openstackmachinetemplates.yaml
 - path: patches/webhook_in_openstackclustertemplates.yaml
 #- patches/webhook_in_openstackfloatingippools.yaml
+#- patches/webhook_in_openstackservergroups.yaml
 # +kubebuilder:scaffold:crdkustomizewebhookpatch
 
 # the following config is for teaching kustomize how to do kustomization for CRDs.

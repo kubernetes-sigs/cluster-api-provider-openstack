@@ -63,6 +63,8 @@ type ComputeClient interface {
 	DeleteAttachedInterface(serverID, portID string) error
 
 	ListServerGroups() ([]servergroups.ServerGroup, error)
+	CreateServerGroup(name string, policy string) error
+	DeleteServerGroup(id string) error
 }
 
 type computeClient struct{ client *gophercloud.ServiceClient }
@@ -162,6 +164,27 @@ func (c computeClient) ListServerGroups() ([]servergroups.ServerGroup, error) {
 	return servergroups.ExtractServerGroups(allPages)
 }
 
+func (c computeClient) CreateServerGroup(name string, policy string) error {
+	var servergroup servergroups.ServerGroup
+	mc := metrics.NewMetricPrometheusContext("server_group", "create")
+	// Use microversion <2.64 policies format.
+	opts := servergroups.CreateOpts{
+		Name:     name,
+		Policies: []string{policy},
+	}
+	err := servergroups.Create(c.client, opts).ExtractInto(&servergroup)
+	if mc.ObserveRequest(err) != nil {
+		return err
+	}
+	return err
+}
+
+func (c computeClient) DeleteServerGroup(id string) error {
+	mc := metrics.NewMetricPrometheusContext("server_group", "delete")
+	err := servergroups.Delete(c.client, id).ExtractErr()
+	return mc.ObserveRequestIgnoreNotFoundorConflict(err)
+}
+
 type computeErrorClient struct{ error }
 
 // NewComputeErrorClient returns a ComputeClient in which every method returns the given error.
@@ -203,4 +226,12 @@ func (e computeErrorClient) DeleteAttachedInterface(_, _ string) error {
 
 func (e computeErrorClient) ListServerGroups() ([]servergroups.ServerGroup, error) {
 	return nil, e.error
+}
+
+func (e computeErrorClient) CreateServerGroup(_ string, _ string) error {
+	return e.error
+}
+
+func (e computeErrorClient) DeleteServerGroup(_ string) error {
+	return e.error
 }

@@ -286,7 +286,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 
 		networkClientRecorder.ListFloatingIP(floatingips.ListOpts{PortID: "portID1"}).Return(make([]floatingips.FloatingIP, 1), nil)
 
-		res, err := reconcileBastion(scope, capiCluster, testCluster)
+		res, err := reconcileBastion(ctx, k8sClient, scope, capiCluster, testCluster)
 		expectedStatus := &infrav1.BastionStatus{
 			ID:    "adopted-bastion-uuid",
 			State: "ACTIVE",
@@ -368,7 +368,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 
 		networkClientRecorder.ListFloatingIP(floatingips.ListOpts{PortID: "portID1"}).Return([]floatingips.FloatingIP{{FloatingIP: "1.2.3.4"}}, nil)
 
-		res, err := reconcileBastion(scope, capiCluster, testCluster)
+		res, err := reconcileBastion(ctx, k8sClient, scope, capiCluster, testCluster)
 		Expect(testCluster.Status.Bastion).To(Equal(&infrav1.BastionStatus{
 			ID:         "adopted-fip-bastion-uuid",
 			FloatingIP: "1.2.3.4",
@@ -445,7 +445,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		computeClientRecorder := mockScopeFactory.ComputeClient.EXPECT()
 		computeClientRecorder.GetServer("requeue-bastion-uuid").Return(&server, nil)
 
-		res, err := reconcileBastion(scope, capiCluster, testCluster)
+		res, err := reconcileBastion(ctx, k8sClient, scope, capiCluster, testCluster)
 		Expect(testCluster.Status.Bastion).To(Equal(&infrav1.BastionStatus{
 			ID:    "requeue-bastion-uuid",
 			State: "BUILD",

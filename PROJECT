@@ -44,4 +44,7 @@ resources:
 - group: infrastructure
   kind: OpenStackFloatingIPPool
   version: v1alpha1
+- group: infrastructure
+  kind: OpenstackServerGroup
+  version: v1beta1
 version: "2"

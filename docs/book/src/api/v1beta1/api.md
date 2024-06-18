@@ -716,6 +716,20 @@ ServerGroupParam
 </tr>
 <tr>
 <td>
+<code>serverGroupRef</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerGroupRef">
+ServerGroupRef
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The server group ref to assign the machine to.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>identityRef</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackIdentityReference">
@@ -3113,7 +3127,8 @@ OpenStackClusterTemplateResource
 <p>
 (<em>Appears on:</em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackClusterSpec">OpenStackClusterSpec</a>, 
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServerGroupSpec">OpenStackServerGroupSpec</a>)
 </p>
 <p>
 <p>OpenStackIdentityReference is a reference to an infrastructure
@@ -3334,6 +3349,20 @@ ServerGroupParam
 <td>
 <em>(Optional)</em>
 <p>The server group to assign the machine to.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serverGroupRef</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerGroupRef">
+ServerGroupRef
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The server group ref to assign the machine to.</p>
 </td>
 </tr>
 <tr>
@@ -3711,6 +3740,20 @@ ServerGroupParam
 </tr>
 <tr>
 <td>
+<code>serverGroupRef</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ServerGroupRef">
+ServerGroupRef
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The server group ref to assign the machine to.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>identityRef</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackIdentityReference">
@@ -3771,6 +3814,172 @@ OpenStackMachineTemplateResource
 </em>
 </td>
 <td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServerGroup">OpenStackServerGroup
+</h3>
+<p>
+<p>OpenStackServerGroup is the Schema for the openstackservergroups API.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>metadata</code><br/>
+<em>
+Kubernetes meta/v1.ObjectMeta
+</em>
+</td>
+<td>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServerGroupSpec">
+OpenStackServerGroupSpec
+</a>
+</em>
+</td>
+<td>
+<br/>
+<br/>
+<table>
+<tr>
+<td>
+<code>policy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Policy is a string with some valid values; affinity, anti-affinity, soft-affinity, soft-anti-affinity.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>identityRef</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackIdentityReference">
+OpenStackIdentityReference
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>IdentityRef is a reference to a identity to be used when reconciling this resource</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServerGroupStatus">
+OpenStackServerGroupStatus
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServerGroupSpec">OpenStackServerGroupSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServerGroup">OpenStackServerGroup</a>)
+</p>
+<p>
+<p>OpenStackServerGroupSpec defines the desired state of OpenStackServerGroup.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>policy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Policy is a string with some valid values; affinity, anti-affinity, soft-affinity, soft-anti-affinity.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>identityRef</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackIdentityReference">
+OpenStackIdentityReference
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>IdentityRef is a reference to a identity to be used when reconciling this resource</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServerGroupStatus">OpenStackServerGroupStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackServerGroup">OpenStackServerGroup</a>)
+</p>
+<p>
+<p>OpenStackServerGroupStatus defines the observed state of OpenStackServerGroup.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>ready</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Ready is true when the resource is created.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>uuid</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>UUID of provisioned ServerGroup</p>
 </td>
 </tr>
 </tbody>
@@ -4004,7 +4213,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>ServerGroupID is the ID of the server group the machine should be added to and is calculated based on ServerGroupFilter.</p>
+<p>ServerGroupID is the ID of the server group the machine should be added to and is calculated based on ServerGroupFilter and ServerGroupRef.</p>
 </td>
 </tr>
 <tr>
@@ -4896,6 +5105,36 @@ ServerGroupFilter
 </td>
 <td>
 <p>Filter specifies a query to select an OpenStack server group. If provided, it cannot be empty.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.ServerGroupRef">ServerGroupRef
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>)
+</p>
+<p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name of the OpenStackServerGroup resource to be used.
+Must be in the same namespace as the resource(s) being provisioned.</p>
 </td>
 </tr>
 </tbody>

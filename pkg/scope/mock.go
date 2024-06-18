@@ -86,6 +86,13 @@ func (f *MockScopeFactory) NewClientScopeFromFloatingIPPool(_ context.Context, _
 	return f, nil
 }
 
+func (f *MockScopeFactory) NewClientScopeFromServerGroup(_ context.Context, _ client.Client, _ *infrav1.OpenStackServerGroup, _ []byte, _ logr.Logger) (Scope, error) {
+	if f.clientScopeCreateError != nil {
+		return nil, f.clientScopeCreateError
+	}
+	return f, nil
+}
+
 func (f *MockScopeFactory) NewComputeClient() (clients.ComputeClient, error) {
 	return f.ComputeClient, nil
 }

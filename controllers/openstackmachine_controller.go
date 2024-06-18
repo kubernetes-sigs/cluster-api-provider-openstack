@@ -155,24 +155,49 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	// Handle deleted machines
 	if !openStackMachine.DeletionTimestamp.IsZero() {
-		return r.reconcileDelete(scope, clusterResourceName, infraCluster, machine, openStackMachine)
+		return r.reconcileDelete(ctx, scope, clusterResourceName, infraCluster, machine, openStackMachine)
 	}
 
 	// Handle non-deleted clusters
 	return r.reconcileNormal(ctx, scope, clusterResourceName, infraCluster, machine, openStackMachine)
 }
 
-func resolveMachineResources(scope *scope.WithLogger, clusterResourceName string, openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, machine *clusterv1.Machine) (bool, error) {
+func resolveMachineResources(ctx context.Context, ctrlClient client.Client, scope *scope.WithLogger, clusterResourceName string, openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, machine *clusterv1.Machine) (bool, error) {
 	resolved := openStackMachine.Status.Resolved
 	if resolved == nil {
 		resolved = &infrav1.ResolvedMachineSpec{}
 		openStackMachine.Status.Resolved = resolved
 	}
-	// Resolve and store resources
-	return compute.ResolveMachineSpec(scope,
+
+	// Resolve resources from OpenStack
+	changed, err := compute.ResolveMachineSpec(scope,
 		&openStackMachine.Spec, resolved,
 		clusterResourceName, openStackMachine.Name,
 		openStackCluster, getManagedSecurityGroup(openStackCluster, machine))
+	if err != nil {
+		return changed, err
+	}
+
+	// Resolve the OpenStackServerGroup Reference using K8sClient (lower priority than spec.ServerGroup)
+	if resolved.ServerGroupID == "" && openStackMachine.Spec.ServerGroupRef != nil && openStackMachine.Spec.ServerGroupRef.Name != "" {
+		servergroup := &infrav1.OpenStackServerGroup{}
+
+		// Get OpenStackServerGroup resource from K8s
+		err := ctrlClient.Get(ctx, client.ObjectKey{
+			Namespace: openStackCluster.Namespace,
+			Name:      openStackMachine.Spec.ServerGroupRef.Name,
+		}, servergroup)
+		if err != nil {
+			return changed, err
+		}
+
+		// Store the resolved UUID, once it's ready and set.
+		if servergroup.Status.Ready && servergroup.Status.ID != "" {
+			resolved.ServerGroupID = servergroup.Status.ID
+			changed = true
+		}
+	}
+	return changed, err
 }
 
 func adoptMachineResources(scope *scope.WithLogger, openStackMachine *infrav1.OpenStackMachine) error {
@@ -238,7 +263,7 @@ func (r *OpenStackMachineReconciler) SetupWithManager(ctx context.Context, mgr c
 		Complete(r)
 }
 
-func (r *OpenStackMachineReconciler) reconcileDelete(scope *scope.WithLogger, clusterResourceName string, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (ctrl.Result, error) { //nolint:unparam
+func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, scope *scope.WithLogger, clusterResourceName string, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (ctrl.Result, error) { //nolint:unparam
 	scope.Logger().Info("Reconciling Machine delete")
 
 	computeService, err := compute.NewService(scope)
@@ -276,7 +301,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(scope *scope.WithLogger, cl
 	// This code can and should be deleted in a future release when we are
 	// sure that all machines have been reconciled at least by a v0.10 or
 	// later controller.
-	if _, err := resolveMachineResources(scope, clusterResourceName, openStackCluster, openStackMachine, machine); err != nil {
+	if _, err := resolveMachineResources(ctx, r.Client, scope, clusterResourceName, openStackCluster, openStackMachine, machine); err != nil {
 		// Return the error, but allow the resource to be removed anyway.
 		controllerutil.RemoveFinalizer(openStackMachine, infrav1.MachineFinalizer)
 		return ctrl.Result{}, err
@@ -552,7 +577,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		return ctrl.Result{}, nil
 	}
 
-	changed, err := resolveMachineResources(scope, clusterResourceName, openStackCluster, openStackMachine, machine)
+	changed, err := resolveMachineResources(ctx, r.Client, scope, clusterResourceName, openStackCluster, openStackMachine, machine)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -667,7 +692,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		scope.Logger().Info("Waiting for instance to become ACTIVE", "id", instanceStatus.ID(), "status", instanceStatus.State())
 		return ctrl.Result{RequeueAfter: waitForBuildingInstanceToReconcile}, nil
 	default:
-		// The other state is normal (for example, migrating, shutoff) but we don't want to proceed until it's ACTIVE
+		// The other state is normal (for example; migrating, shutoff) but we don't want to proceed until it's ACTIVE
 		// due to potential conflict or unexpected actions
 		scope.Logger().Info("Waiting for instance to become ACTIVE", "id", instanceStatus.ID(), "status", instanceStatus.State())
 		conditions.MarkUnknown(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceNotReadyReason, "Instance state is not handled: %s", instanceStatus.State())
