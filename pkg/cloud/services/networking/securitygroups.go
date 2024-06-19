@@ -19,6 +19,7 @@ package networking
 import (
 	"errors"
 	"fmt"
+	"net"
 	"slices"
 
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
@@ -203,10 +204,22 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 	controlPlaneRules = append(controlPlaneRules, getSGControlPlaneHTTPS()...)
 
 	// Fetch subnet to use for worker node port rules
-	// TODO: add case where subnets are used. However need a way of resolving the subnet to get it's CIDR
-	if openStackCluster.Spec.ManagedSubnets != nil && len(openStackCluster.Spec.ManagedSubnets) > 0 {
-		SubnetCIDR = openStackCluster.Spec.ManagedSubnets[0].CIDR
-	} else {
+	if openStackCluster.Status.Network != nil && len(openStackCluster.Status.Network.Subnets) > 0 {
+		for _, subnet := range openStackCluster.Status.Network.Subnets {
+			// Check uf subnet.CIDR is ipv4 subnet
+			_, ipnet, err := net.ParseCIDR(subnet.CIDR)
+			if err != nil {
+				return nil, fmt.Errorf("invalid subnet found during security groups reconcile: %v", err)
+			}
+			if ipnet.IP.To4() != nil {
+				SubnetCIDR = subnet.CIDR
+				break
+			}
+		}
+	}
+	if SubnetCIDR == "" {
+		// Should we return an error or simply default to 0.0.0.0/0?
+		//return nil, fmt.Errorf("unable to find a valid IPv4 subnet for worker node port rules")
 		SubnetCIDR = "0.0.0.0/0"
 	}
 	workerRules = append(workerRules, getSGWorkerNodePort(SubnetCIDR)...)
