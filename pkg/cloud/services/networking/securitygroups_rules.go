@@ -145,21 +145,21 @@ func getSGControlPlaneHTTPS() []resolvedSecurityGroupRuleSpec {
 func getSGWorkerNodePort(cidr string) []resolvedSecurityGroupRuleSpec {
 	return []resolvedSecurityGroupRuleSpec{
 		{
-			Description:  "Node Port Services",
-			Direction:    "ingress",
-			EtherType:    "IPv4",
-			PortRangeMin: 30000,
-			PortRangeMax: 32767,
-			Protocol:     "tcp",
+			Description:    "Node Port Services",
+			Direction:      "ingress",
+			EtherType:      "IPv4",
+			PortRangeMin:   30000,
+			PortRangeMax:   32767,
+			Protocol:       "tcp",
 			RemoteIPPrefix: cidr,
 		},
 		{
-			Description:  "Node Port Services",
-			Direction:    "ingress",
-			EtherType:    "IPv4",
-			PortRangeMin: 30000,
-			PortRangeMax: 32767,
-			Protocol:     "udp",
+			Description:    "Node Port Services",
+			Direction:      "ingress",
+			EtherType:      "IPv4",
+			PortRangeMin:   30000,
+			PortRangeMax:   32767,
+			Protocol:       "udp",
 			RemoteIPPrefix: cidr,
 		},
 	}
