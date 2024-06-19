@@ -169,6 +169,7 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 	var secControlPlaneGroupID string
 	var secWorkerGroupID string
 	var secBastionGroupID string
+	var SubnetCIDR string
 
 	// remoteManagedGroups is a map of suffix to security group ID.
 	// It will be used to fill in the RemoteGroupID field of the security group rules
@@ -200,7 +201,15 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 	workerRules := append([]resolvedSecurityGroupRuleSpec{}, defaultRules...)
 
 	controlPlaneRules = append(controlPlaneRules, getSGControlPlaneHTTPS()...)
-	workerRules = append(workerRules, getSGWorkerNodePort(openStackCluster.Spec.ManagedSubnets[0].CIDR)...)
+
+	// Fetch subnet to use for worker node port rules
+	// TODO: add case where subnets are used. However need a way of resolving the subnet to get it's CIDR
+	if openStackCluster.Spec.ManagedSubnets != nil && len(openStackCluster.Spec.ManagedSubnets) > 0 {
+		SubnetCIDR = openStackCluster.Spec.ManagedSubnets[0].CIDR
+	} else {
+		SubnetCIDR = "0.0.0.0/0"
+	}
+	workerRules = append(workerRules, getSGWorkerNodePort(SubnetCIDR)...)
 
 	// If we set additional ports to LB, we need create secgroup rules those ports, this apply to controlPlaneRules only
 	if openStackCluster.Spec.APIServerLoadBalancer.IsEnabled() {
