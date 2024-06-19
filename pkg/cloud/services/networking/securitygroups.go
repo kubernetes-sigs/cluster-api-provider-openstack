@@ -219,7 +219,7 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 	}
 	if SubnetCIDR == "" {
 		// Should we return an error or simply default to 0.0.0.0/0?
-		//return nil, fmt.Errorf("unable to find a valid IPv4 subnet for worker node port rules")
+		// return nil, fmt.Errorf("unable to find a valid IPv4 subnet for worker node port rules")
 		SubnetCIDR = "0.0.0.0/0"
 	}
 	workerRules = append(workerRules, getSGWorkerNodePort(SubnetCIDR)...)
