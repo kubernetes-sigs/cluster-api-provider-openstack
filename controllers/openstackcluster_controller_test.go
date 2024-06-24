@@ -216,7 +216,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		err = k8sClient.Status().Update(ctx, testCluster)
 		Expect(err).To(BeNil())
 		log := GinkgoLogr
-		clientScope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, log)
+		clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
 		Expect(err).To(BeNil())
 		scope := scope.NewWithLogger(clientScope, log)
 
@@ -268,7 +268,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 
 		log := GinkgoLogr
-		clientScope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, log)
+		clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
 		Expect(err).To(BeNil())
 		scope := scope.NewWithLogger(clientScope, log)
 
@@ -352,7 +352,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 
 		log := GinkgoLogr
-		clientScope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, log)
+		clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
 		Expect(err).To(BeNil())
 		scope := scope.NewWithLogger(clientScope, log)
 
@@ -434,7 +434,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 
 		log := GinkgoLogr
-		clientScope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, log)
+		clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
 		Expect(err).To(BeNil())
 		scope := scope.NewWithLogger(clientScope, log)
 
@@ -491,7 +491,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 
 		log := GinkgoLogr
-		clientScope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, log)
+		clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
 		Expect(err).To(BeNil())
 		scope := scope.NewWithLogger(clientScope, log)
 
@@ -546,7 +546,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 
 		log := GinkgoLogr
-		clientScope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, log)
+		clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
 		Expect(err).To(BeNil())
 		scope := scope.NewWithLogger(clientScope, log)
 
@@ -620,7 +620,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 
 		log := GinkgoLogr
-		clientScope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, log)
+		clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
 		Expect(err).To(BeNil())
 		scope := scope.NewWithLogger(clientScope, log)
 
@@ -676,7 +676,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 
 		log := GinkgoLogr
-		clientScope, err := mockScopeFactory.NewClientScopeFromCluster(ctx, k8sClient, testCluster, nil, log)
+		clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
 		Expect(err).To(BeNil())
 		scope := scope.NewWithLogger(clientScope, log)
 

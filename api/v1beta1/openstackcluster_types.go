@@ -325,6 +325,13 @@ type ManagedSecurityGroups struct {
 	AllowAllInClusterTraffic bool `json:"allowAllInClusterTraffic"`
 }
 
+var _ IdentityRefProvider = &OpenStackCluster{}
+
+// GetIdentifyRef returns the cluster's namespace and IdentityRef.
+func (c *OpenStackCluster) GetIdentityRef() (*string, *OpenStackIdentityReference) {
+	return &c.Namespace, &c.Spec.IdentityRef
+}
+
 func init() {
 	objectTypes = append(objectTypes, &OpenStackCluster{}, &OpenStackClusterList{})
 }

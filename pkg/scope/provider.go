@@ -37,7 +37,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 
-	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/hash"
@@ -53,60 +52,23 @@ type providerScopeFactory struct {
 	clientCache *cache.LRUExpireCache
 }
 
-func (f *providerScopeFactory) NewClientScopeFromMachine(ctx context.Context, ctrlClient client.Client, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster, defaultCACert []byte, logger logr.Logger) (Scope, error) {
-	var cloud clientconfig.Cloud
-	var caCert []byte
-
+func (f *providerScopeFactory) NewClientScopeFromObject(ctx context.Context, ctrlClient client.Client, defaultCACert []byte, logger logr.Logger, objects ...infrav1.IdentityRefProvider) (Scope, error) {
+	var namespace *string
 	var identityRef *infrav1.OpenStackIdentityReference
-	var namespace string
-	if openStackMachine.Spec.IdentityRef != nil {
-		identityRef = openStackMachine.Spec.IdentityRef
-		namespace = openStackMachine.Namespace
-	} else {
-		identityRef = &openStackCluster.Spec.IdentityRef
-		namespace = openStackCluster.Namespace
+
+	for _, o := range objects {
+		namespace, identityRef = o.GetIdentityRef()
 	}
 
-	var err error
-	cloud, caCert, err = getCloudFromSecret(ctx, ctrlClient, namespace, identityRef.Name, identityRef.CloudName)
-	if err != nil {
-		return nil, err
+	if namespace == nil || identityRef == nil {
+		return nil, fmt.Errorf("unable to get identityRef from provided objects")
 	}
 
-	if caCert == nil {
-		caCert = defaultCACert
-	}
-
-	if f.clientCache == nil {
-		return NewProviderScope(cloud, caCert, logger)
-	}
-
-	return NewCachedProviderScope(f.clientCache, cloud, caCert, logger)
-}
-
-func (f *providerScopeFactory) NewClientScopeFromCluster(ctx context.Context, ctrlClient client.Client, openStackCluster *infrav1.OpenStackCluster, defaultCACert []byte, logger logr.Logger) (Scope, error) {
 	var cloud clientconfig.Cloud
 	var caCert []byte
 
 	var err error
-	cloud, caCert, err = getCloudFromSecret(ctx, ctrlClient, openStackCluster.Namespace, openStackCluster.Spec.IdentityRef.Name, openStackCluster.Spec.IdentityRef.CloudName)
-	if err != nil {
-		return nil, err
-	}
-
-	if caCert == nil {
-		caCert = defaultCACert
-	}
-
-	if f.clientCache == nil {
-		return NewProviderScope(cloud, caCert, logger)
-	}
-
-	return NewCachedProviderScope(f.clientCache, cloud, caCert, logger)
-}
-
-func (f *providerScopeFactory) NewClientScopeFromFloatingIPPool(ctx context.Context, ctrlClient client.Client, openstackFloatingIPPool *infrav1alpha1.OpenStackFloatingIPPool, defaultCACert []byte, logger logr.Logger) (Scope, error) {
-	cloud, caCert, err := getCloudFromSecret(ctx, ctrlClient, openstackFloatingIPPool.Namespace, openstackFloatingIPPool.Spec.IdentityRef.Name, openstackFloatingIPPool.Spec.IdentityRef.CloudName)
+	cloud, caCert, err = getCloudFromSecret(ctx, ctrlClient, *namespace, identityRef.Name, identityRef.CloudName)
 	if err != nil {
 		return nil, err
 	}

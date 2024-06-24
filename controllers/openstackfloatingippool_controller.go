@@ -81,7 +81,7 @@ func (r *OpenStackFloatingIPPoolReconciler) Reconcile(ctx context.Context, req c
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	clientScope, err := r.ScopeFactory.NewClientScopeFromFloatingIPPool(ctx, r.Client, pool, r.CaCertificates, log)
+	clientScope, err := r.ScopeFactory.NewClientScopeFromObject(ctx, r.Client, r.CaCertificates, log, pool)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

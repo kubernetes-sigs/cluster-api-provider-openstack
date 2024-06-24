@@ -24,7 +24,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 )
@@ -40,11 +39,10 @@ func NewFactory(maxCacheSize int) Factory {
 	}
 }
 
-// Factory instantiates a new Scope using credentials from either a cluster or a machine.
+// Factory instantiates a new Scope using credentials from an IdentityRefProvider.
 type Factory interface {
-	NewClientScopeFromMachine(ctx context.Context, ctrlClient client.Client, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster, defaultCACert []byte, logger logr.Logger) (Scope, error)
-	NewClientScopeFromCluster(ctx context.Context, ctrlClient client.Client, openStackCluster *infrav1.OpenStackCluster, defaultCACert []byte, logger logr.Logger) (Scope, error)
-	NewClientScopeFromFloatingIPPool(ctx context.Context, ctrlClient client.Client, openStackCluster *infrav1alpha1.OpenStackFloatingIPPool, defaultCACert []byte, logger logr.Logger) (Scope, error)
+	// NewClientScopeFromObject creates a new scope from the first object which returns an OpenStackIdentityRef
+	NewClientScopeFromObject(ctx context.Context, ctrlClient client.Client, defaultCACert []byte, logger logr.Logger, objects ...infrav1.IdentityRefProvider) (Scope, error)
 }
 
 // Scope contains arguments common to most operations.

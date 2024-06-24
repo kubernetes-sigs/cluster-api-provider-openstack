@@ -209,6 +209,16 @@ func (r *OpenStackMachine) SetFailure(failureReason errors.MachineStatusError, f
 	r.Status.FailureMessage = ptr.To(failureMessage.Error())
 }
 
+var _ IdentityRefProvider = &OpenStackMachine{}
+
+// GetIdentifyRef returns the object's namespace and IdentityRef if it has an IdentityRef, or nulls if it does not.
+func (r *OpenStackMachine) GetIdentityRef() (*string, *OpenStackIdentityReference) {
+	if r.Spec.IdentityRef != nil {
+		return &r.Namespace, r.Spec.IdentityRef
+	}
+	return nil, nil
+}
+
 func init() {
 	objectTypes = append(objectTypes, &OpenStackMachine{}, &OpenStackMachineList{})
 }

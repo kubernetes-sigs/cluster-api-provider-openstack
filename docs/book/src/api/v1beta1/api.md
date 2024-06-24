@@ -1630,6 +1630,11 @@ address in any subnet of the port&rsquo;s network.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.IdentityRefProvider">IdentityRefProvider
+</h3>
+<p>
+<p>IdentityRefProvider is an interface for obtaining OpenStack credentials from an API object</p>
+</p>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.ImageFilter">ImageFilter
 </h3>
 <p>
