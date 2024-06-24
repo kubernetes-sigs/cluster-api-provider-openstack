@@ -31,7 +31,6 @@ type OpenStackClusterTemplateSpec struct {
 }
 
 // +genclient
-// +genclient:Namespaced
 // +kubebuilder:object:root=true
 // +kubebuilder:deprecatedversion:warning="The v1alpha7 version of OpenStackClusterTemplate has been deprecated and will be removed in a future release."
 // +kubebuilder:resource:path=openstackclustertemplates,scope=Namespaced,categories=cluster-api,shortName=osct
