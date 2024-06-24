@@ -1045,3 +1045,74 @@ func Test_AdoptPorts(t *testing.T) {
 		})
 	}
 }
+
+func Test_GetPortWithPrefix(t *testing.T) {
+	const (
+		networkID = "5e8e0d3b-7f3d-4f3e-8b3f-3e3e3e3e3e3e"
+		portID1   = "78e0d3b-7f3d-4f3e-8b3f-3e3e3e3e3e3e"
+		portID2   = "a838209b-389a-47a0-9161-3d6919891074"
+		portName1 = "test-0"
+		portName2 = "foobar-0"
+	)
+
+	tests := []struct {
+		testName string
+		portOpts ports.ListOpts
+		prefix   string
+		expect   func(*mock.MockNetworkClientMockRecorder)
+		want     []ports.Port
+	}{
+		{
+			testName: "portopts without prefix",
+			portOpts: ports.ListOpts{NetworkID: networkID},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				m.ListPort(ports.ListOpts{NetworkID: networkID}).
+					Return([]ports.Port{
+						{ID: portID1, Name: portName1},
+						{ID: portID2, Name: portName2},
+					}, nil)
+			},
+			want: []ports.Port{
+				{ID: portID1, Name: portName1},
+				{ID: portID2, Name: portName2},
+			},
+		},
+		{
+			testName: "portopts with prefix",
+			portOpts: ports.ListOpts{NetworkID: networkID},
+			prefix:   "foobar",
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				m.ListPort(ports.ListOpts{NetworkID: networkID}).
+					Return([]ports.Port{
+						{ID: portID1, Name: portName1},
+						{ID: portID2, Name: portName2},
+					}, nil)
+			},
+			want: []ports.Port{
+				{ID: portID2, Name: portName2},
+			},
+		},
+	}
+	for i := range tests {
+		tt := &tests[i]
+		t.Run(tt.testName, func(t *testing.T) {
+			g := NewWithT(t)
+
+			mockCtrl := gomock.NewController(t)
+			mockClient := mock.NewMockNetworkClient(mockCtrl)
+			if tt.expect != nil {
+				tt.expect(mockClient.EXPECT())
+			}
+
+			s := Service{
+				client: mockClient,
+			}
+
+			portList, err := s.GetPortWithPrefix(tt.portOpts, tt.prefix)
+			if err != nil {
+				t.Errorf("GetPortWithPrefix() error = %v", err)
+			}
+			g.Expect(portList).To(Equal(tt.want), cmp.Diff(portList, tt.want))
+		})
+	}
+}
