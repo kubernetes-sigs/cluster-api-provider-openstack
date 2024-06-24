@@ -29,3 +29,10 @@ type OpenStackIdentityReference struct {
 	// +kubebuilder:validation:Required
 	CloudName string `json:"cloudName"`
 }
+
+// IdentityRefProvider is an interface for obtaining OpenStack credentials from an API object
+// +kubebuilder:object:generate:=false
+type IdentityRefProvider interface {
+	// GetIdentifyRef returns the object's namespace and IdentityRef if it has an IdentityRef, or nulls if it does not
+	GetIdentityRef() (*string, *OpenStackIdentityReference)
+}

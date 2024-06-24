@@ -145,7 +145,7 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}()
 
-	clientScope, err := r.ScopeFactory.NewClientScopeFromMachine(ctx, r.Client, openStackMachine, infraCluster, r.CaCertificates, log)
+	clientScope, err := r.ScopeFactory.NewClientScopeFromObject(ctx, r.Client, r.CaCertificates, log, openStackMachine, infraCluster)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
