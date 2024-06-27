@@ -204,6 +204,7 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 	controlPlaneRules = append(controlPlaneRules, getSGControlPlaneHTTPS()...)
 
 	// Fetch subnet to use for worker node port rules
+	// In the future IPv6 support need to be added here
 	if openStackCluster.Status.Network != nil && len(openStackCluster.Status.Network.Subnets) > 0 {
 		for _, subnet := range openStackCluster.Status.Network.Subnets {
 			// Check uf subnet.CIDR is ipv4 subnet
@@ -217,12 +218,13 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 			}
 		}
 	}
-	if SubnetCIDR == "" {
-		// Should we return an error or simply default to 0.0.0.0/0?
-		// return nil, fmt.Errorf("unable to find a valid IPv4 subnet for worker node port rules")
-		SubnetCIDR = "0.0.0.0/0"
+	if SubnetCIDR != "" {
+		// If SubnetCIDR is found we allow tcp and udp traffic from said SubnetCIDR, this in order to allow octavia Loadbalancers created by CCM to function properly
+		workerRules = append(workerRules, getSGWorkerNodePortCidr(SubnetCIDR)...)
 	}
-	workerRules = append(workerRules, getSGWorkerNodePort(SubnetCIDR)...)
+	
+	// Add rules allowing nodepors from all cluster nodes, this will take effect even if no SubnetCIDR is found to ensure all nodes can commincate over nodeports at all time
+	workerRules = append(workerRules, getSGWorkerNodePort(secWorkerGroupID, secControlPlaneGroupID)...)
 
 	// If we set additional ports to LB, we need create secgroup rules those ports, this apply to controlPlaneRules only
 	if openStackCluster.Spec.APIServerLoadBalancer.IsEnabled() {
