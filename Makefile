@@ -268,7 +268,7 @@ modules: ## Runs go mod to ensure proper vendoring.
 	cd $(TOOLS_DIR); go mod tidy
 
 .PHONY: generate
-generate: templates generate-controller-gen generate-conversion-gen generate-go generate-manifests generate-api-docs ## Generate all generated code
+generate: templates generate-controller-gen generate-codegen generate-conversion-gen generate-go generate-manifests generate-api-docs ## Generate all generated code
 
 .PHONY: generate-go
 generate-go: $(MOCKGEN)
@@ -279,6 +279,9 @@ generate-controller-gen: $(CONTROLLER_GEN)
 	$(CONTROLLER_GEN) \
 		paths=./api/... \
 		object:headerFile=./hack/boilerplate/boilerplate.generatego.txt
+
+generate-codegen: generate-controller-gen
+	./hack/update-codegen.sh
 
 .PHONY: generate-conversion-gen
 capo_module := sigs.k8s.io/cluster-api-provider-openstack
