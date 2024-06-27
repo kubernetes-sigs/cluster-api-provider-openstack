@@ -878,7 +878,7 @@ func getAPIServerPort(openStackCluster *infrav1.OpenStackCluster) int {
 }
 
 func (r *OpenStackClusterReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager, options controller.Options) error {
-	clusterToInfraFn := util.ClusterToInfrastructureMapFunc(ctx, infrav1.GroupVersion.WithKind("OpenStackCluster"), mgr.GetClient(), &infrav1.OpenStackCluster{})
+	clusterToInfraFn := util.ClusterToInfrastructureMapFunc(ctx, infrav1.SchemeGroupVersion.WithKind("OpenStackCluster"), mgr.GetClient(), &infrav1.OpenStackCluster{})
 	log := ctrl.LoggerFrom(ctx)
 
 	return ctrl.NewControllerManagedBy(mgr).
