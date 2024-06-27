@@ -25,7 +25,6 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/rules"
-
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/filterconvert"
@@ -222,7 +221,7 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 		// If SubnetCIDR is found we allow tcp and udp traffic from said SubnetCIDR, this in order to allow octavia Loadbalancers created by CCM to function properly
 		workerRules = append(workerRules, getSGWorkerNodePortCidr(SubnetCIDR)...)
 	}
-	
+
 	// Add rules allowing nodepors from all cluster nodes, this will take effect even if no SubnetCIDR is found to ensure all nodes can commincate over nodeports at all time
 	workerRules = append(workerRules, getSGWorkerNodePort(secWorkerGroupID, secControlPlaneGroupID)...)
 
