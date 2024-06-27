@@ -323,7 +323,7 @@ func TestGenerateDesiredSecGroups(t *testing.T) {
 					ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{},
 				},
 			},
-			expectedNumberSecurityGroupRules: 12,
+			expectedNumberSecurityGroupRules: 14,
 			wantErr:                          false,
 		},
 		{
@@ -342,7 +342,7 @@ func TestGenerateDesiredSecGroups(t *testing.T) {
 					},
 				},
 			},
-			expectedNumberSecurityGroupRules: 16,
+			expectedNumberSecurityGroupRules: 18,
 			wantErr:                          false,
 		},
 		{
