@@ -168,7 +168,7 @@ func (r *OpenStackFloatingIPPoolReconciler) Reconcile(ctx context.Context, req c
 							Name: claim.Name,
 						},
 						PoolRef: corev1.TypedLocalObjectReference{
-							APIGroup: ptr.To(infrav1alpha1.GroupVersion.Group),
+							APIGroup: ptr.To(infrav1alpha1.SchemeGroupVersion.Group),
 							Kind:     pool.Kind,
 							Name:     pool.Name,
 						},

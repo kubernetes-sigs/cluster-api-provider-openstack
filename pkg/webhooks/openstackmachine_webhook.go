@@ -74,13 +74,13 @@ func (*openStackMachineWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 
 	newOpenStackMachine, err := runtime.DefaultUnstructuredConverter.ToUnstructured(newObj)
 	if err != nil {
-		return nil, apierrors.NewInvalid(infrav1.GroupVersion.WithKind("OpenStackMachine").GroupKind(), newObj.Name, field.ErrorList{
+		return nil, apierrors.NewInvalid(infrav1.SchemeGroupVersion.WithKind("OpenStackMachine").GroupKind(), newObj.Name, field.ErrorList{
 			field.InternalError(nil, fmt.Errorf("failed to convert new OpenStackMachine to unstructured object: %w", err)),
 		})
 	}
 	oldOpenStackMachine, err := runtime.DefaultUnstructuredConverter.ToUnstructured(oldObjRaw)
 	if err != nil {
-		return nil, apierrors.NewInvalid(infrav1.GroupVersion.WithKind("OpenStackMachine").GroupKind(), newObj.Name, field.ErrorList{
+		return nil, apierrors.NewInvalid(infrav1.SchemeGroupVersion.WithKind("OpenStackMachine").GroupKind(), newObj.Name, field.ErrorList{
 			field.InternalError(nil, fmt.Errorf("failed to convert old OpenStackMachine to unstructured object: %w", err)),
 		})
 	}
