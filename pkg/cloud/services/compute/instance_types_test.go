@@ -20,10 +20,9 @@ import (
 	"testing"
 
 	"github.com/go-logr/logr/testr"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
 	. "github.com/onsi/gomega" //nolint:revive
 	corev1 "k8s.io/api/core/v1"
-
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 )
 
 // Some arbitrary MAC addresses.
@@ -43,8 +42,8 @@ type networkAddress struct {
 	MacAddr string `json:"OS-EXT-IPS:mac_addr"`
 }
 
-func serverWithAddresses(addresses map[string][]networkAddress) *clients.ServerExt {
-	var server clients.ServerExt
+func serverWithAddresses(addresses map[string][]networkAddress) *servers.Server {
+	var server servers.Server
 
 	server.Addresses = make(map[string]interface{})
 	for network, addressList := range addresses {

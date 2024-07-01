@@ -23,12 +23,12 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
+	"github.com/gophercloud/gophercloud/v2"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/floatingips"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/ports"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
 	. "github.com/onsi/ginkgo/v2" //nolint:revive
 	. "github.com/onsi/gomega"    //nolint:revive
 	"go.uber.org/mock/gomock"
@@ -43,7 +43,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
@@ -272,9 +271,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 		scope := scope.NewWithLogger(clientScope, log)
 
-		server := clients.ServerExt{}
-		server.ID = "adopted-bastion-uuid"
-		server.Status = "ACTIVE"
+		server := servers.Server{
+			ID:     "adopted-bastion-uuid",
+			Status: "ACTIVE",
+		}
 
 		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
 		networkClientRecorder.ListPort(gomock.Any()).Return([]ports.Port{{ID: "portID1"}}, nil)
@@ -282,7 +282,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		computeClientRecorder := mockScopeFactory.ComputeClient.EXPECT()
 		computeClientRecorder.ListServers(servers.ListOpts{
 			Name: "^capi-cluster-bastion$",
-		}).Return([]clients.ServerExt{server}, nil)
+		}).Return([]servers.Server{server}, nil)
 
 		networkClientRecorder.ListFloatingIP(floatingips.ListOpts{PortID: "portID1"}).Return(make([]floatingips.FloatingIP, 1), nil)
 
@@ -356,9 +356,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 		scope := scope.NewWithLogger(clientScope, log)
 
-		server := clients.ServerExt{}
-		server.ID = "adopted-fip-bastion-uuid"
-		server.Status = "ACTIVE"
+		server := servers.Server{
+			ID:     "adopted-fip-bastion-uuid",
+			Status: "ACTIVE",
+		}
 
 		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
 		networkClientRecorder.ListPort(gomock.Any()).Return([]ports.Port{{ID: "portID1"}}, nil)
@@ -438,9 +439,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 		scope := scope.NewWithLogger(clientScope, log)
 
-		server := clients.ServerExt{}
-		server.ID = "requeue-bastion-uuid"
-		server.Status = "BUILD"
+		server := servers.Server{
+			ID:     "requeue-bastion-uuid",
+			Status: "BUILD",
+		}
 
 		computeClientRecorder := mockScopeFactory.ComputeClient.EXPECT()
 		computeClientRecorder.GetServer("requeue-bastion-uuid").Return(&server, nil)
@@ -495,13 +497,12 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 		scope := scope.NewWithLogger(clientScope, log)
 
-		server := clients.ServerExt{}
-		server.ID = "delete-bastion-uuid"
+		server := servers.Server{ID: "delete-bastion-uuid"}
 
 		computeClientRecorder := mockScopeFactory.ComputeClient.EXPECT()
 		computeClientRecorder.ListServers(servers.ListOpts{
 			Name: "^capi-cluster-bastion$",
-		}).Return([]clients.ServerExt{server}, nil)
+		}).Return([]servers.Server{server}, nil)
 		computeClientRecorder.DeleteServer("delete-bastion-uuid").Return(nil)
 		computeClientRecorder.GetServer("delete-bastion-uuid").Return(nil, gophercloud.ErrResourceNotFound{})
 

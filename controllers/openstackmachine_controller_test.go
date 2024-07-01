@@ -23,13 +23,13 @@ import (
 
 	"github.com/go-logr/logr/testr"
 	"github.com/google/go-cmp/cmp"
-	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
-	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/trunks"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
+	"github.com/gophercloud/gophercloud/v2"
+	"github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v3/volumes"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
+	"github.com/gophercloud/gophercloud/v2/openstack/image/v2/images"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/trunks"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/ports"
 	. "github.com/onsi/gomega" //nolint:revive
 	"go.uber.org/mock/gomock"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -37,7 +37,6 @@ import (
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
@@ -271,26 +270,24 @@ func Test_reconcileDelete(t *testing.T) {
 	}
 
 	deleteServerByID := func(r *recorders) {
-		r.compute.GetServer(instanceUUID).Return(&clients.ServerExt{
-			Server: servers.Server{
+		r.compute.GetServer(instanceUUID).Return(&servers.Server{
+			ID:   instanceUUID,
+			Name: openStackMachineName,
+		}, nil)
+		r.compute.DeleteServer(instanceUUID).Return(nil)
+		r.compute.GetServer(instanceUUID).Return(nil, gophercloud.ErrUnexpectedResponseCode{Actual: 404})
+	}
+	deleteServerByName := func(r *recorders) {
+		r.compute.ListServers(servers.ListOpts{
+			Name: "^" + openStackMachineName + "$",
+		}).Return([]servers.Server{
+			{
 				ID:   instanceUUID,
 				Name: openStackMachineName,
 			},
 		}, nil)
 		r.compute.DeleteServer(instanceUUID).Return(nil)
-		r.compute.GetServer(instanceUUID).Return(nil, gophercloud.ErrDefault404{})
-	}
-	deleteServerByName := func(r *recorders) {
-		r.compute.ListServers(servers.ListOpts{
-			Name: "^" + openStackMachineName + "$",
-		}).Return([]clients.ServerExt{
-			{Server: servers.Server{
-				ID:   instanceUUID,
-				Name: openStackMachineName,
-			}},
-		}, nil)
-		r.compute.DeleteServer(instanceUUID).Return(nil)
-		r.compute.GetServer(instanceUUID).Return(nil, gophercloud.ErrDefault404{})
+		r.compute.GetServer(instanceUUID).Return(nil, gophercloud.ErrUnexpectedResponseCode{Actual: 404})
 	}
 
 	deleteMissingServerByName := func(r *recorders) {
@@ -298,7 +295,7 @@ func Test_reconcileDelete(t *testing.T) {
 		// Don't find it.
 		r.compute.ListServers(servers.ListOpts{
 			Name: "^" + openStackMachineName + "$",
-		}).Return([]clients.ServerExt{}, nil)
+		}).Return([]servers.Server{}, nil)
 	}
 
 	deleteRootVolume := func(r *recorders) {

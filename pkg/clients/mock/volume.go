@@ -28,7 +28,7 @@ package mock
 import (
 	reflect "reflect"
 
-	volumes "github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
+	volumes "github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v3/volumes"
 	gomock "go.uber.org/mock/gomock"
 )
 

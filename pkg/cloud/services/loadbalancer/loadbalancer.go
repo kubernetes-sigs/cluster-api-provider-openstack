@@ -24,10 +24,10 @@ import (
 	"slices"
 	"time"
 
-	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/listeners"
-	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/loadbalancers"
-	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/monitors"
-	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/pools"
+	"github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/listeners"
+	"github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/loadbalancers"
+	"github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/monitors"
+	"github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/pools"
 	"k8s.io/apimachinery/pkg/util/wait"
 	utilsnet "k8s.io/utils/net"
 	"k8s.io/utils/ptr"
@@ -329,7 +329,7 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 		if openStackCluster.Spec.APIServerLoadBalancer.Flavor != nil {
 			// Gophercloud does not support filtering loadbalancer flavors by name and status (enabled) so we have to get all available flavors
 			// and filter them localy. There is a feature request in Gophercloud to implement this functionality:
-			// https://github.com/gophercloud/gophercloud/issues/3049
+			// https://github.com/gophercloud/gophercloud/v2/issues/3049
 			flavors, err := s.loadbalancerClient.ListLoadBalancerFlavors()
 			if err != nil {
 				return nil, err

@@ -22,8 +22,8 @@ import (
 
 	"github.com/go-logr/logr/testr"
 	"github.com/google/go-cmp/cmp"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/servergroups"
-	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servergroups"
+	"github.com/gophercloud/gophercloud/v2/openstack/image/v2/images"
 	. "github.com/onsi/gomega" //nolint:revive
 	"go.uber.org/mock/gomock"
 	"k8s.io/utils/ptr"

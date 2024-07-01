@@ -24,18 +24,15 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/bootfromvolume"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/schedulerhints"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
+	"github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v3/volumes"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/flavors"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/keypairs"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/ports"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/filterconvert"
@@ -62,7 +59,6 @@ func (s *Service) getAndValidateFlavor(flavorName string) (*flavors.Flavor, erro
 }
 
 func (s *Service) createInstanceImpl(eventObject runtime.Object, instanceSpec *InstanceSpec, retryInterval time.Duration, portIDs []string) (*InstanceStatus, error) {
-	var server *clients.ServerExt
 	portList := []servers.Network{}
 
 	flavor, err := s.getAndValidateFlavor(instanceSpec.Flavor)
@@ -89,6 +85,11 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, instanceSpec *I
 		serverImageRef = instanceSpec.ImageID
 	}
 
+	blockDevices, err := s.getBlockDevices(eventObject, instanceSpec, instanceSpec.ImageID, instanceCreateTimeout, retryInterval)
+	if err != nil {
+		return nil, err
+	}
+
 	var serverCreateOpts servers.CreateOptsBuilder = servers.CreateOpts{
 		Name:             instanceSpec.Name,
 		ImageRef:         serverImageRef,
@@ -99,25 +100,18 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, instanceSpec *I
 		Tags:             instanceSpec.Tags,
 		Metadata:         instanceSpec.Metadata,
 		ConfigDrive:      &instanceSpec.ConfigDrive,
+		BlockDevice:      blockDevices,
 	}
 
-	blockDevices, err := s.getBlockDevices(eventObject, instanceSpec, instanceSpec.ImageID, instanceCreateTimeout, retryInterval)
-	if err != nil {
-		return nil, err
-	}
-	if len(blockDevices) > 0 {
-		serverCreateOpts = bootfromvolume.CreateOptsExt{
+	server, err := s.getComputeClient().CreateServer(
+		keypairs.CreateOptsExt{
 			CreateOptsBuilder: serverCreateOpts,
-			BlockDevice:       blockDevices,
-		}
-	}
-
-	serverCreateOpts = applyServerGroupID(serverCreateOpts, instanceSpec.ServerGroupID)
-
-	server, err = s.getComputeClient().CreateServer(keypairs.CreateOptsExt{
-		CreateOptsBuilder: serverCreateOpts,
-		KeyName:           instanceSpec.SSHKeyName,
-	})
+			KeyName:           instanceSpec.SSHKeyName,
+		},
+		servers.SchedulerHintOpts{
+			Group: instanceSpec.ServerGroupID,
+		},
+	)
 	if err != nil {
 		record.Warnf(eventObject, "FailedCreateServer", "Failed to create server %s: %v", instanceSpec.Name, err)
 		return nil, fmt.Errorf("error creating Openstack instance: %v", err)
@@ -213,7 +207,6 @@ func (s *Service) getOrCreateVolumeBuilder(eventObject runtime.Object, instanceS
 		Description:      description,
 		Size:             blockDeviceSpec.SizeGiB,
 		ImageID:          imageID,
-		Multiattach:      false,
 		AvailabilityZone: availabilityZone,
 		VolumeType:       volType,
 	}
@@ -247,8 +240,8 @@ func resolveVolumeOpts(instanceSpec *InstanceSpec, volumeOpts *infrav1.BlockDevi
 
 // getBlockDevices returns a list of block devices that were created and attached to the instance. It returns an error
 // if the root volume or any of the additional block devices could not be created.
-func (s *Service) getBlockDevices(eventObject runtime.Object, instanceSpec *InstanceSpec, imageID string, timeout time.Duration, retryInterval time.Duration) ([]bootfromvolume.BlockDevice, error) {
-	blockDevices := []bootfromvolume.BlockDevice{}
+func (s *Service) getBlockDevices(eventObject runtime.Object, instanceSpec *InstanceSpec, imageID string, timeout time.Duration, retryInterval time.Duration) ([]servers.BlockDevice, error) {
+	blockDevices := make([]servers.BlockDevice, 0, 1+len(instanceSpec.AdditionalBlockDevices))
 
 	if hasRootVolume(instanceSpec) {
 		rootVolumeToBlockDevice := infrav1.AdditionalBlockDevice{
@@ -263,17 +256,17 @@ func (s *Service) getBlockDevices(eventObject runtime.Object, instanceSpec *Inst
 		if err != nil {
 			return nil, err
 		}
-		blockDevices = append(blockDevices, bootfromvolume.BlockDevice{
-			SourceType:          bootfromvolume.SourceVolume,
-			DestinationType:     bootfromvolume.DestinationVolume,
+		blockDevices = append(blockDevices, servers.BlockDevice{
+			SourceType:          servers.SourceVolume,
+			DestinationType:     servers.DestinationVolume,
 			UUID:                rootVolume.ID,
 			BootIndex:           0,
 			DeleteOnTermination: true,
 		})
 	} else {
-		blockDevices = append(blockDevices, bootfromvolume.BlockDevice{
-			SourceType:          bootfromvolume.SourceImage,
-			DestinationType:     bootfromvolume.DestinationLocal,
+		blockDevices = append(blockDevices, servers.BlockDevice{
+			SourceType:          servers.SourceImage,
+			DestinationType:     servers.DestinationLocal,
 			UUID:                imageID,
 			BootIndex:           0,
 			DeleteOnTermination: true,
@@ -285,8 +278,8 @@ func (s *Service) getBlockDevices(eventObject runtime.Object, instanceSpec *Inst
 
 		var bdUUID string
 		var localDiskSizeGiB int
-		var sourceType bootfromvolume.SourceType
-		var destinationType bootfromvolume.DestinationType
+		var sourceType servers.SourceType
+		var destinationType servers.DestinationType
 
 		// There is also a validation in the openstackmachine webhook.
 		if blockDeviceSpec.Name == "root" {
@@ -299,17 +292,17 @@ func (s *Service) getBlockDevices(eventObject runtime.Object, instanceSpec *Inst
 				return nil, err
 			}
 			bdUUID = blockDevice.ID
-			sourceType = bootfromvolume.SourceVolume
-			destinationType = bootfromvolume.DestinationVolume
+			sourceType = servers.SourceVolume
+			destinationType = servers.DestinationVolume
 		} else if blockDeviceSpec.Storage.Type == infrav1.LocalBlockDevice {
-			sourceType = bootfromvolume.SourceBlank
-			destinationType = bootfromvolume.DestinationLocal
+			sourceType = servers.SourceBlank
+			destinationType = servers.DestinationLocal
 			localDiskSizeGiB = blockDeviceSpec.SizeGiB
 		} else {
 			return nil, fmt.Errorf("invalid block device type %s", blockDeviceSpec.Storage.Type)
 		}
 
-		blockDevices = append(blockDevices, bootfromvolume.BlockDevice{
+		blockDevices = append(blockDevices, servers.BlockDevice{
 			SourceType:          sourceType,
 			DestinationType:     destinationType,
 			UUID:                bdUUID,
@@ -323,7 +316,7 @@ func (s *Service) getBlockDevices(eventObject runtime.Object, instanceSpec *Inst
 	// Wait for any volumes in the block devices to become available
 	if len(blockDevices) > 0 {
 		for _, bd := range blockDevices {
-			if bd.SourceType == bootfromvolume.SourceVolume {
+			if bd.SourceType == servers.SourceVolume {
 				if err := s.waitForVolume(bd.UUID, timeout, retryInterval); err != nil {
 					return nil, fmt.Errorf("volume %s did not become available: %w", bd.UUID, err)
 				}
@@ -332,20 +325,6 @@ func (s *Service) getBlockDevices(eventObject runtime.Object, instanceSpec *Inst
 	}
 
 	return blockDevices, nil
-}
-
-// applyServerGroupID adds a scheduler hint to the CreateOptsBuilder, if the
-// spec contains a server group ID.
-func applyServerGroupID(opts servers.CreateOptsBuilder, serverGroupID string) servers.CreateOptsBuilder {
-	if serverGroupID != "" {
-		return schedulerhints.CreateOptsExt{
-			CreateOptsBuilder: opts,
-			SchedulerHints: schedulerhints.SchedulerHints{
-				Group: serverGroupID,
-			},
-		}
-	}
-	return opts
 }
 
 // Helper function for getting image ID from name, ID, or tags.
