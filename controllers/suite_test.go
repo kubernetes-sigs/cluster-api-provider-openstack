@@ -38,6 +38,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 
+	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
@@ -79,6 +80,9 @@ var _ = BeforeSuite(func() {
 	Expect(cfg).ToNot(BeNil())
 
 	err = infrav1.AddToScheme(scheme.Scheme)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = infrav1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	framework.TryAddDefaultSchemes(scheme.Scheme)
