@@ -190,6 +190,8 @@ func restorev1beta1MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *infr
 	dst.ServerGroup = previous.ServerGroup
 	dst.Image = previous.Image
 	dst.FloatingIPPoolRef = previous.FloatingIPPoolRef
+	// NamePrefix is new in v1beta1
+	dst.NamePrefix = previous.NamePrefix
 
 	if len(dst.SecurityGroups) == len(previous.SecurityGroups) {
 		for i := range dst.SecurityGroups {

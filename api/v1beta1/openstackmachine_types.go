@@ -98,6 +98,13 @@ type OpenStackMachineSpec struct {
 	// will be assigned to the OpenStackMachine.
 	// +optional
 	FloatingIPPoolRef *corev1.TypedLocalObjectReference `json:"floatingIPPoolRef,omitempty"`
+
+	// NamePrefix is an optional string that will be used as a prefix for the name of OpenStack
+	// resources created based on this OpenStackMachine. A random suffix will be added to the prefix.
+	// If omitted, the name of the OpenStackMachine will be used as name.
+	// +kubebuilder:validation:MaxLength:=255
+	// +optional
+	NamePrefix string `json:"namePrefix,omitempty"`
 }
 
 type ServerMetadata struct {
