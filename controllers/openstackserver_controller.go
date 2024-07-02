@@ -25,6 +25,7 @@ import (
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
@@ -86,7 +87,10 @@ func (r *OpenStackServerReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 
 	scope.Logger().Info("Reconciling OpenStackServer")
 
-	cluster, _ := util.GetClusterFromMetadata(ctx, r.Client, openStackServer.ObjectMeta)
+	cluster, err := getClusterFromMetadata(ctx, r.Client, openStackServer.ObjectMeta)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
 	if cluster != nil {
 		if annotations.IsPaused(cluster, openStackServer) {
 			scope.Logger().Info("OpenStackServer %s/%s linked to a Cluster that is paused. Won't reconcile", openStackServer.Namespace, openStackServer.Name)
@@ -449,4 +453,17 @@ func getServerStatus(openStackServer *infrav1alpha1.OpenStackServer, computeServ
 		return computeService.GetInstanceStatus(*openStackServer.Status.InstanceID)
 	}
 	return computeService.GetInstanceStatusByName(openStackServer, openStackServer.Name)
+}
+
+// getClusterFromMetadata returns the Cluster object (if present) using the object metadata.
+// This function was copied from the cluster-api project but manages errors differently.
+func getClusterFromMetadata(ctx context.Context, c client.Client, obj metav1.ObjectMeta) (*clusterv1.Cluster, error) {
+	// If the object is unlabeled, return early with no error.
+	// It's fine for this object to not be part of a cluster.
+	if obj.Labels[clusterv1.ClusterNameLabel] == "" {
+		return nil, nil
+	}
+	// At this point, the object has a cluster name label so we should be able to find the cluster
+	// and return an error if we can't.
+	return util.GetClusterByName(ctx, c, obj.Namespace, obj.Labels[clusterv1.ClusterNameLabel])
 }
