@@ -346,12 +346,20 @@ func (s *Service) GetImageID(image infrav1.ImageParam) (string, error) {
 
 	switch len(allImages) {
 	case 0:
-		return "", fmt.Errorf("no images were found with the given image filter: %v", image)
+		var name string
+		if image.Filter.Name != nil {
+			name = *image.Filter.Name
+		}
+		return "", fmt.Errorf("no images were found with the given image filter: name=%v, tags=%v", name, image.Filter.Tags)
 	case 1:
 		return allImages[0].ID, nil
 	default:
 		// this should never happen
-		return "", fmt.Errorf("too many images were found with the given image filter: %v", image)
+		var name string
+		if image.Filter.Name != nil {
+			name = *image.Filter.Name
+		}
+		return "", fmt.Errorf("too many images were found with the given image filter: name=%v, tags=%v", name, image.Filter.Tags)
 	}
 }
 
