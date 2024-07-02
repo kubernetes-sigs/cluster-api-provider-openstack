@@ -27,6 +27,7 @@ import (
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
+	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
@@ -89,4 +90,8 @@ func Test_FuzzMachineWebhook(t *testing.T) {
 
 func Test_FuzzMachineTemplateWebhook(t *testing.T) {
 	fuzzCustomValidator[infrav1.OpenStackMachineTemplate](t, "OpenStackMachineTemplate", &openStackMachineTemplateWebhook{})
+}
+
+func Test_FuzzServerWebhook(t *testing.T) {
+	fuzzCustomValidator[infrav1alpha1.OpenStackServer](t, "OpenStackServer", &openStackServerWebhook{})
 }

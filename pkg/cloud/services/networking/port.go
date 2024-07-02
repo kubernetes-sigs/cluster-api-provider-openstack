@@ -32,6 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/utils/ptr"
 
+	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
@@ -324,7 +325,7 @@ func getPortName(baseName string, portSpec *infrav1.PortOpts, netIndex int) stri
 	return fmt.Sprintf("%s-%d", baseName, netIndex)
 }
 
-func (s *Service) CreatePorts(eventObject runtime.Object, desiredPorts []infrav1.ResolvedPortSpec, resources *infrav1.MachineResources) error {
+func (s *Service) CreatePorts(eventObject runtime.Object, desiredPorts []infrav1.ResolvedPortSpec, resources *infrav1alpha1.ServerResources) error {
 	for i := range desiredPorts {
 		// Skip creation of ports which already exist
 		if i < len(resources.Ports) {
@@ -551,9 +552,57 @@ func (s *Service) IsTrunkExtSupported() (trunknSupported bool, err error) {
 	return true, nil
 }
 
-// AdoptPorts looks for ports in desiredPorts which were previously created, and adds them to resources.Ports.
+// AdoptPortsMachine looks for ports in desiredPorts which were previously created, and adds them to resources.Ports.
 // A port matches if it has the same name and network ID as the desired port.
-func (s *Service) AdoptPorts(scope *scope.WithLogger, desiredPorts []infrav1.ResolvedPortSpec, resources *infrav1.MachineResources) error {
+func (s *Service) AdoptPortsMachine(scope *scope.WithLogger, desiredPorts []infrav1.ResolvedPortSpec, resources *infrav1.MachineResources) error {
+	// We can skip adoption if the ports are already in the status
+	if len(desiredPorts) == len(resources.Ports) {
+		return nil
+	}
+
+	scope.Logger().V(5).Info("Adopting ports")
+
+	// We create ports in order and adopt them in order in PortsStatus.
+	// This means that if port N doesn't exist we know that ports >N don't exist.
+	// We can therefore stop searching for ports once we find one that doesn't exist.
+	for i := range desiredPorts {
+		// check if the port is in status first and if it is, skip it
+		if i < len(resources.Ports) {
+			scope.Logger().V(5).Info("Port already in status, skipping it", "port index", i)
+			continue
+		}
+
+		portSpec := &desiredPorts[i]
+		ports, err := s.client.ListPort(ports.ListOpts{
+			Name:      portSpec.Name,
+			NetworkID: portSpec.NetworkID,
+		})
+		if err != nil {
+			return fmt.Errorf("searching for existing port %s in network %s: %v", portSpec.Name, portSpec.NetworkID, err)
+		}
+		// if the port is not found, we stop the adoption of ports since the rest of the ports will not be found either
+		// and will be created after the adoption
+		if len(ports) == 0 {
+			scope.Logger().V(5).Info("Port not found, stopping the adoption of ports", "port index", i)
+			return nil
+		}
+		if len(ports) > 1 {
+			return fmt.Errorf("found multiple ports with name %s", portSpec.Name)
+		}
+
+		// The desired port was found, so we add it to the status
+		portID := ports[0].ID
+		scope.Logger().Info("Adopted previously created port which was not in status", "port index", i, "portID", portID)
+		resources.Ports = append(resources.Ports, infrav1.PortStatus{ID: portID})
+	}
+
+	return nil
+}
+
+// AdoptPortsServer looks for ports in desiredPorts which were previously created, and adds them to resources.Ports.
+// A port matches if it has the same name and network ID as the desired port.
+// TODO(emilien): remove this function: https://github.com/kubernetes-sigs/cluster-api-provider-openstack/pull/2071
+func (s *Service) AdoptPortsServer(scope *scope.WithLogger, desiredPorts []infrav1.ResolvedPortSpec, resources *infrav1alpha1.ServerResources) error {
 	// We can skip adoption if the ports are already in the status
 	if len(desiredPorts) == len(resources.Ports) {
 		return nil

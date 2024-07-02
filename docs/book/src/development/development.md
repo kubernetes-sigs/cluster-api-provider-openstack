@@ -503,3 +503,17 @@ This sections goal is to gather various insights into the API design that can se
 Starting from v1beta1 both `OpenStackMachineStatus` and `BastionsStatus` feature a field named `referencedResources` which aims to include fields that list individual IDs of the resources associated with the machine or bastion. These IDs are calculated on machine or bastion creation and are not intended to be changed during the object lifecycle.
 
 Having all the IDs of related resources saved in the statuses allows CAPO to make easy decisions about deleting the related resources when deleting the VM corresponding to the machine or bastion.
+
+### `OpenStackServer`
+
+`OpenStackServer` is a new resource introduced as v1alpha1. It is a representation of a server in OpenStack. It is used to manage the lifecycle of the server and to store the server's status.
+Both the bastion and the machine are represented by an `OpenStackServer` object.
+Even if it's technically possible for an user to create an `OpenStackServer` object directly, it is not supported for now as there is no use case for it.
+
+To get the list of `OpenStackServer` objects, the user can use the following command:
+
+```shell
+kubectl get openstackservers
+```
+
+This object is immutable and is created by the controller when a machine or a bastion is created. The `OpenStackServer` object is deleted when the machine or the bastion is deleted.
