@@ -294,7 +294,6 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, scope 
 	if client.IgnoreNotFound(err) != nil {
 		return ctrl.Result{}, err
 	}
-	machineServerFound := !apierrors.IsNotFound(err)
 
 	var instanceStatus *compute.InstanceStatus
 	if machineServer != nil && machineServer.Status.InstanceID != nil {
@@ -319,8 +318,9 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, scope 
 		}
 	}
 
-	if machineServerFound {
-		if err := r.reconcileDeleteMachineServer(ctx, scope, openStackMachine); err != nil {
+	if machineServer != nil {
+		scope.Logger().Info("Deleting server", "name", machineServer.Name)
+		if err := r.Client.Delete(ctx, machineServer); err != nil {
 			conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceDeleteFailedReason, clusterv1.ConditionSeverityError, "Deleting instance failed: %v", err)
 			return ctrl.Result{}, err
 		}
@@ -391,22 +391,6 @@ func GetPortIDs(ports []infrav1.PortStatus) []string {
 		portIDs[i] = port.ID
 	}
 	return portIDs
-}
-
-// reconcileDeleteMachineServer reconciles the deletion of the OpenStackServer.
-// It returns nil if the OpenStackServer is deleted or not found or an error if there is any.
-func (r *OpenStackMachineReconciler) reconcileDeleteMachineServer(ctx context.Context, scope *scope.WithLogger, openStackMachine *infrav1.OpenStackMachine) error {
-	scope.Logger().Info("Reconciling Machine delete server")
-	server := &infrav1alpha1.OpenStackServer{}
-	err := r.Client.Get(ctx, client.ObjectKey{Namespace: openStackMachine.Namespace, Name: openStackMachine.Name}, server)
-	if client.IgnoreNotFound(err) != nil {
-		return err
-	}
-	if apierrors.IsNotFound(err) {
-		return nil
-	}
-
-	return r.Client.Delete(ctx, server)
 }
 
 func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope *scope.WithLogger, clusterResourceName string, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (_ ctrl.Result, reterr error) {
