@@ -536,7 +536,7 @@ func Test_OpenStackServerReconcileCreate(t *testing.T) {
 			osServer.Name = openStackServerName
 			osServer.Finalizers = []string{infrav1alpha1.OpenStackServerFinalizer}
 
-			_, err := reconciler.reconcileCreate(ctx, scopeWithLogger, &tt.osServer)
+			_, err := reconciler.reconcileCreateOrUpdateOrSync(ctx, scopeWithLogger, &tt.osServer)
 			g.Expect(err).ToNot(HaveOccurred())
 		})
 	}

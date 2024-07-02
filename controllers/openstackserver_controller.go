@@ -114,7 +114,7 @@ func (r *OpenStackServerReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return reconcile.Result{}, r.reconcileDelete(scope, openStackServer)
 	}
 
-	return r.reconcileCreate(ctx, scope, openStackServer)
+	return r.reconcileCreateOrUpdateOrSync(ctx, scope, openStackServer)
 }
 
 func patchServer(ctx context.Context, patchHelper *patch.Helper, openStackServer *infrav1alpha1.OpenStackServer, options ...patch.Option) error {
@@ -204,7 +204,7 @@ func (r *OpenStackServerReconciler) reconcileDelete(scope *scope.WithLogger, ope
 	return nil
 }
 
-func (r *OpenStackServerReconciler) reconcileCreate(ctx context.Context, scope *scope.WithLogger, openStackServer *infrav1alpha1.OpenStackServer) (_ ctrl.Result, reterr error) {
+func (r *OpenStackServerReconciler) reconcileCreateOrUpdateOrSync(ctx context.Context, scope *scope.WithLogger, openStackServer *infrav1alpha1.OpenStackServer) (_ ctrl.Result, reterr error) {
 	// If the OpenStackServer is in an error state, return early.
 	if openStackServer.Status.InstanceState != nil && *openStackServer.Status.InstanceState == infrav1.InstanceStateError {
 		scope.Logger().Info("Not reconciling server in error state. See openStackServer.status or previously logged error for details")
