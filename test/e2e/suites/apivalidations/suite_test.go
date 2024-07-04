@@ -165,3 +165,21 @@ func createNamespace() *corev1.Namespace {
 	By(fmt.Sprintf("Using namespace %s", namespace.Name))
 	return &namespace
 }
+
+func createObj(obj client.Object) error {
+	err := k8sClient.Create(ctx, obj)
+	if err == nil {
+		DeferCleanup(func() error {
+			return k8sClient.Delete(ctx, obj)
+		})
+	}
+	return err
+}
+
+func setObjectGVK(obj runtime.Object) {
+	gvk, unversioned, err := testScheme.ObjectKinds(obj)
+	Expect(unversioned).To(BeFalse(), "Object is considered unversioned")
+	Expect(err).ToNot(HaveOccurred(), "Error fetching gvk for Object")
+	Expect(gvk).To(HaveLen(1), "Object should have only one gvk")
+	obj.GetObjectKind().SetGroupVersionKind(gvk[0])
+}
