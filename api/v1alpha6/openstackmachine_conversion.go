@@ -373,7 +373,6 @@ func Convert_v1beta1_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(in *i
 	}
 
 	if in.IdentityRef != nil {
-		out.IdentityRef = &OpenStackIdentityReference{Name: in.IdentityRef.Name}
 		out.CloudName = in.IdentityRef.CloudName
 	}
 
