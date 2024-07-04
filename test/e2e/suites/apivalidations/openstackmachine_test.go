@@ -21,9 +21,14 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/format"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	infrav1alpha6 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
+	infrav1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
@@ -276,6 +281,56 @@ var _ = Describe("OpenStackMachine API validations", func() {
 
 			machine = defaultMachineWithAdditionBlockDeviceAZ(&az)
 			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with an additional block device with an empty name availability zone should fail")
+		})
+	})
+
+	Context("v1alpha7", func() {
+		It("should downgrade cleanly from infrav1", func() {
+			infrav1Machine := &infrav1.OpenStackMachine{}
+			infrav1Machine.Namespace = namespace.Name
+			infrav1Machine.GenerateName = clusterNamePrefix
+			infrav1Machine.Spec.IdentityRef = &infrav1.OpenStackIdentityReference{
+				CloudName: "test-cloud",
+				Name:      "test-credentials",
+			}
+			infrav1Machine.Spec.Image.ID = ptr.To("de9872ee-0c2c-44ed-9414-90163c8b0e0d")
+			Expect(createObj(infrav1Machine)).To(Succeed(), "infrav1 OpenStackMachine creation should succeed")
+
+			// Just fetching the object as v1alpha6 doesn't trigger
+			// validation failure, so we first fetch it and then
+			// patch the object with identical contents. The patch
+			// triggers a validation failure.
+			machine := &infrav1alpha7.OpenStackMachine{}
+			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: infrav1Machine.Name, Namespace: infrav1Machine.Namespace}, machine)).To(Succeed(), "OpenStackMachine fetch should succeed")
+
+			setObjectGVK(machine)
+			machine.ManagedFields = nil
+			Expect(k8sClient.Patch(ctx, machine, client.Apply, client.FieldOwner("test"), client.ForceOwnership)).To(Succeed(), format.Object(machine, 4))
+		})
+	})
+
+	Context("v1alpha6", func() {
+		It("should downgrade cleanly from infrav1", func() {
+			infrav1Machine := &infrav1.OpenStackMachine{}
+			infrav1Machine.Namespace = namespace.Name
+			infrav1Machine.GenerateName = clusterNamePrefix
+			infrav1Machine.Spec.IdentityRef = &infrav1.OpenStackIdentityReference{
+				CloudName: "test-cloud",
+				Name:      "test-credentials",
+			}
+			infrav1Machine.Spec.Image.ID = ptr.To("de9872ee-0c2c-44ed-9414-90163c8b0e0d")
+			Expect(createObj(infrav1Machine)).To(Succeed(), "infrav1 OpenStackMachine creation should succeed")
+
+			// Just fetching the object as v1alpha6 doesn't trigger
+			// validation failure, so we first fetch it and then
+			// patch the object with identical contents. The patch
+			// triggers a validation failure.
+			machine := &infrav1alpha6.OpenStackMachine{} //nolint:staticcheck
+			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: infrav1Machine.Name, Namespace: infrav1Machine.Namespace}, machine)).To(Succeed(), "OpenStackMachine fetch should succeed")
+
+			setObjectGVK(machine)
+			machine.ManagedFields = nil
+			Expect(k8sClient.Patch(ctx, machine, client.Apply, client.FieldOwner("test"), client.ForceOwnership)).To(Succeed(), format.Object(machine, 4))
 		})
 	})
 })
