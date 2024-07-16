@@ -477,17 +477,17 @@ func DumpOpenStackPorts(e2eCtx *E2EContext, filter ports.ListOpts) ([]ports.Port
 }
 
 // CreateOpenStackSecurityGroup creates a security group to be consumed by a worker node.
-func CreateOpenStackSecurityGroup(e2eCtx *E2EContext, securityGroupName, description string) error {
+func CreateOpenStackSecurityGroup(ctx context.Context, e2eCtx *E2EContext, securityGroupName, description string) (func(context.Context), error) {
 	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
 	if err != nil {
-		return fmt.Errorf("error creating provider client: %s", err)
+		return nil, fmt.Errorf("error creating provider client: %s", err)
 	}
 
 	networkClient, err := openstack.NewNetworkV2(providerClient, gophercloud.EndpointOpts{
 		Region: clientOpts.RegionName,
 	})
 	if err != nil {
-		return fmt.Errorf("error creating network client: %s", err)
+		return nil, fmt.Errorf("error creating network client: %s", err)
 	}
 
 	createOpts := groups.CreateOpts{
@@ -495,17 +495,17 @@ func CreateOpenStackSecurityGroup(e2eCtx *E2EContext, securityGroupName, descrip
 		Description: description,
 	}
 
-	group, err := groups.Create(context.TODO(), networkClient, createOpts).Extract()
+	group, err := groups.Create(ctx, networkClient, createOpts).Extract()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	// Ensure the group is deleted after the test
-	DeferCleanup(func() error {
-		By(fmt.Sprintf("Deleting test security group %s(%s)", group.Name, group.ID))
-		return groups.Delete(context.TODO(), networkClient, group.ID).ExtractErr()
-	})
 
-	return nil
+	cleanup := func(ctx context.Context) {
+		By(fmt.Sprintf("Deleting test security group %s(%s)", group.Name, group.ID))
+		Expect(groups.Delete(ctx, networkClient, group.ID).ExtractErr()).To(Succeed(), "Delete test security group")
+	}
+
+	return cleanup, nil
 }
 
 // DumpOpenStackTrunks trunks for a given port.
@@ -817,7 +817,7 @@ func CreateOpenStackNetwork(e2eCtx *E2EContext, name, cidr string) (*networks.Ne
 	return net, nil
 }
 
-func DeleteOpenStackNetwork(e2eCtx *E2EContext, id string) error {
+func DeleteOpenStackNetwork(ctx context.Context, e2eCtx *E2EContext, id string) error {
 	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
 	if err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
@@ -831,7 +831,7 @@ func DeleteOpenStackNetwork(e2eCtx *E2EContext, id string) error {
 		return fmt.Errorf("error creating network client: %s", err)
 	}
 
-	return networks.Delete(context.TODO(), networkClient, id).ExtractErr()
+	return networks.Delete(ctx, networkClient, id).ExtractErr()
 }
 
 func GetOpenStackVolume(e2eCtx *E2EContext, name string) (*volumes.Volume, error) {

@@ -66,7 +66,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 		ctx              context.Context
 
 		// Cleanup functions which cannot run until after the cluster has been deleted
-		postClusterCleanup []func()
+		postClusterCleanup []func(context.Context)
 	)
 
 	BeforeEach(func() {
@@ -406,11 +406,10 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			md3Name := clusterName + "-md-3"
 			testSecurityGroupName := "testSecGroup"
 			// create required test security group
-			Eventually(func() int {
-				err := shared.CreateOpenStackSecurityGroup(e2eCtx, testSecurityGroupName, "Test security group")
-				Expect(err).To(BeNil())
-				return 1
-			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(Equal(1))
+			var securityGroupCleanup func(ctx context.Context)
+			securityGroupCleanup, err = shared.CreateOpenStackSecurityGroup(ctx, e2eCtx, testSecurityGroupName, "Test security group")
+			Expect(err).To(BeNil())
+			postClusterCleanup = append(postClusterCleanup, securityGroupCleanup)
 
 			customPortOptions := &[]infrav1.PortOpts{
 				{
@@ -496,17 +495,17 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 
 			extraNet1, err = shared.CreateOpenStackNetwork(e2eCtx, fmt.Sprintf("%s-extraNet1", namespace.Name), "10.14.0.0/24")
 			Expect(err).NotTo(HaveOccurred())
-			postClusterCleanup = append(postClusterCleanup, func() {
+			postClusterCleanup = append(postClusterCleanup, func(ctx context.Context) {
 				shared.Logf("Deleting additional network %s", extraNet1.Name)
-				err := shared.DeleteOpenStackNetwork(e2eCtx, extraNet1.ID)
+				err := shared.DeleteOpenStackNetwork(ctx, e2eCtx, extraNet1.ID)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			extraNet2, err = shared.CreateOpenStackNetwork(e2eCtx, fmt.Sprintf("%s-extraNet2", namespace.Name), "10.14.1.0/24")
 			Expect(err).NotTo(HaveOccurred())
-			postClusterCleanup = append(postClusterCleanup, func() {
+			postClusterCleanup = append(postClusterCleanup, func(ctx context.Context) {
 				shared.Logf("Deleting additional network %s", extraNet2.Name)
-				err := shared.DeleteOpenStackNetwork(e2eCtx, extraNet2.ID)
+				err := shared.DeleteOpenStackNetwork(ctx, e2eCtx, extraNet2.ID)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -806,7 +805,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 		})
 	})
 
-	AfterEach(func() {
+	AfterEach(func(ctx context.Context) {
 		shared.Logf("Attempting to collect logs for cluster %q in namespace %q", clusterResources.Cluster.Name, namespace.Name)
 		e2eCtx.Environment.BootstrapClusterProxy.CollectWorkloadClusterLogs(ctx, namespace.Name, clusterResources.Cluster.Name, filepath.Join(e2eCtx.Settings.ArtifactFolder, "clusters", e2eCtx.Environment.BootstrapClusterProxy.GetName(), namespace.Name))
 		// Dumps all the resources in the spec namespace, then cleanups the cluster object and the spec namespace itself.
@@ -814,7 +813,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 
 		// Cleanup resources which can't be cleaned up until the cluster has been deleted
 		for _, cleanup := range postClusterCleanup {
-			cleanup()
+			cleanup(ctx)
 		}
 	})
 })
