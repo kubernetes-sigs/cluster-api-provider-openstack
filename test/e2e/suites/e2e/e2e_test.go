@@ -1014,7 +1014,7 @@ func makeMachineDeployment(namespace, mdName, clusterName string, failureDomain 
 					},
 					InfrastructureRef: corev1.ObjectReference{
 						Kind:       "OpenStackMachineTemplate",
-						APIVersion: infrav1.GroupVersion.String(),
+						APIVersion: infrav1.SchemeGroupVersion.String(),
 						Name:       mdName,
 						Namespace:  namespace,
 					},

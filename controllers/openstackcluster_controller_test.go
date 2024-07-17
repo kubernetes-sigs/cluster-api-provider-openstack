@@ -75,7 +75,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 
 		testCluster = &infrav1.OpenStackCluster{
 			TypeMeta: metav1.TypeMeta{
-				APIVersion: infrav1.GroupVersion.Group + "/" + infrav1.GroupVersion.Version,
+				APIVersion: infrav1.SchemeGroupVersion.Group + "/" + infrav1.SchemeGroupVersion.Version,
 				Kind:       "OpenStackCluster",
 			},
 			ObjectMeta: metav1.ObjectMeta{
