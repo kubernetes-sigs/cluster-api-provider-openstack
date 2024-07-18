@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/gophercloud/gophercloud/v2"
 	"github.com/gophercloud/gophercloud/v2/openstack"
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/attachinterfaces"
@@ -85,9 +86,20 @@ func (c computeClient) ListAvailabilityZones() ([]availabilityzones.Availability
 	return availabilityzones.ExtractAvailabilityZones(allPages)
 }
 
+// getFlavorIDFromName is a bit of a legacy misnomer, but allows flavors to be specified
+// by ID rather than do a full list and name lookup.
+func (c computeClient) getFlavorIDFromName(flavor string) (string, error) {
+	// If it looks like a UUID (specifically V4 aka random), then assume it's an ID already.
+	if _, err := uuid.Parse(flavor); err == nil {
+		return flavor, nil
+	}
+
+	return uflavors.IDFromName(context.TODO(), c.client, flavor)
+}
+
 func (c computeClient) GetFlavorFromName(flavor string) (*flavors.Flavor, error) {
 	mc := metrics.NewMetricPrometheusContext("flavor", "get")
-	flavorID, err := uflavors.IDFromName(context.TODO(), c.client, flavor)
+	flavorID, err := c.getFlavorIDFromName(flavor)
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
