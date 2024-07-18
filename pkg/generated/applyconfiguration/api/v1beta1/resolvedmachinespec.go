@@ -23,6 +23,7 @@ package v1beta1
 type ResolvedMachineSpecApplyConfiguration struct {
 	ServerGroupID *string                              `json:"serverGroupID,omitempty"`
 	ImageID       *string                              `json:"imageID,omitempty"`
+	FlavorID      *string                              `json:"flavorID,omitempty"`
 	Ports         []ResolvedPortSpecApplyConfiguration `json:"ports,omitempty"`
 }
 
@@ -45,6 +46,14 @@ func (b *ResolvedMachineSpecApplyConfiguration) WithServerGroupID(value string) 
 // If called multiple times, the ImageID field is set to the value of the last call.
 func (b *ResolvedMachineSpecApplyConfiguration) WithImageID(value string) *ResolvedMachineSpecApplyConfiguration {
 	b.ImageID = &value
+	return b
+}
+
+// WithFlavorID sets the FlavorID field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the FlavorID field is set to the value of the last call.
+func (b *ResolvedMachineSpecApplyConfiguration) WithFlavorID(value string) *ResolvedMachineSpecApplyConfiguration {
+	b.FlavorID = &value
 	return b
 }
 

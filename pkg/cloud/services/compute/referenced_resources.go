@@ -105,6 +105,20 @@ func ResolveServerSpec(ctx context.Context, scope *scope.WithLogger, k8sClient c
 		return true, true, nil
 	}
 
+	flavorID := func() (bool, bool, error) {
+		if resolved.FlavorID != "" {
+			return true, false, nil
+		}
+
+		flavorID, err := computeService.GetFlavorID(spec.FlavorID, spec.Flavor)
+		if err != nil {
+			return false, false, err
+		}
+
+		resolved.FlavorID = flavorID
+		return true, true, nil
+	}
+
 	ports := func() (bool, bool, error) {
 		if len(resolved.Ports) > 0 {
 			return true, false, nil
@@ -135,7 +149,7 @@ func ResolveServerSpec(ctx context.Context, scope *scope.WithLogger, k8sClient c
 	var errs []error
 	changed := false
 	done := true
-	for _, setter := range []setterFn{serverGroup, imageID, ports} {
+	for _, setter := range []setterFn{serverGroup, imageID, flavorID, ports} {
 		thisDone, thisChanged, err := setter()
 		changed = changed || thisChanged
 		done = done && thisDone

@@ -972,6 +972,16 @@ func (in *OpenStackMachineSpec) DeepCopyInto(out *OpenStackMachineSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.Flavor != nil {
+		in, out := &in.Flavor, &out.Flavor
+		*out = new(string)
+		**out = **in
+	}
+	if in.FlavorID != nil {
+		in, out := &in.FlavorID, &out.FlavorID
+		*out = new(string)
+		**out = **in
+	}
 	in.Image.DeepCopyInto(&out.Image)
 	if in.Ports != nil {
 		in, out := &in.Ports, &out.Ports

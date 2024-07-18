@@ -25,6 +25,7 @@ type OpenStackMachineSpecApplyConfiguration struct {
 	InstanceID             *string                                       `json:"instanceID,omitempty"`
 	CloudName              *string                                       `json:"cloudName,omitempty"`
 	Flavor                 *string                                       `json:"flavor,omitempty"`
+	FlavorID               *string                                       `json:"flavorID,omitempty"`
 	Image                  *string                                       `json:"image,omitempty"`
 	ImageUUID              *string                                       `json:"imageUUID,omitempty"`
 	SSHKeyName             *string                                       `json:"sshKeyName,omitempty"`
@@ -76,6 +77,14 @@ func (b *OpenStackMachineSpecApplyConfiguration) WithCloudName(value string) *Op
 // If called multiple times, the Flavor field is set to the value of the last call.
 func (b *OpenStackMachineSpecApplyConfiguration) WithFlavor(value string) *OpenStackMachineSpecApplyConfiguration {
 	b.Flavor = &value
+	return b
+}
+
+// WithFlavorID sets the FlavorID field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the FlavorID field is set to the value of the last call.
+func (b *OpenStackMachineSpecApplyConfiguration) WithFlavorID(value string) *OpenStackMachineSpecApplyConfiguration {
+	b.FlavorID = &value
 	return b
 }
 

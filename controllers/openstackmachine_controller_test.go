@@ -35,6 +35,7 @@ const (
 	workerSecurityGroupUUID       = "9c6c0d28-03c9-436c-815d-58440ac2c1c8"
 	serverGroupUUID               = "7b940d62-68ef-4e42-a76a-1a62e290509c"
 	imageUUID                     = "ce96e584-7ebc-46d6-9e55-987d72e3806c"
+	flavorUUID                    = "43b1c962-53ba-4690-b210-14e5a7651dbe"
 
 	openStackMachineName = "test-openstack-machine"
 	namespace            = "test-namespace"
@@ -86,12 +87,12 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 		{
 			name: "Test a minimum OpenStackMachineSpec to OpenStackServerSpec conversion",
 			spec: &infrav1.OpenStackMachineSpec{
-				Flavor:     flavorName,
+				Flavor:     ptr.To(flavorName),
 				Image:      image,
 				SSHKeyName: sshKeyName,
 			},
 			want: &infrav1alpha1.OpenStackServerSpec{
-				Flavor:      flavorName,
+				Flavor:      ptr.To(flavorName),
 				IdentityRef: identityRef,
 				Image:       image,
 				SSHKeyName:  sshKeyName,

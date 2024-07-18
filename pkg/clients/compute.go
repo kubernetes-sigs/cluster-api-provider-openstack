@@ -28,7 +28,6 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servergroups"
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
 	"github.com/gophercloud/utils/v2/openstack/clientconfig"
-	uflavors "github.com/gophercloud/utils/v2/openstack/compute/v2/flavors"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
 )
@@ -48,7 +47,7 @@ const NovaMinimumMicroversion = "2.60"
 type ComputeClient interface {
 	ListAvailabilityZones() ([]availabilityzones.AvailabilityZone, error)
 
-	GetFlavorFromName(flavor string) (*flavors.Flavor, error)
+	ListFlavors() ([]flavors.Flavor, error)
 	CreateServer(createOpts servers.CreateOptsBuilder, schedulerHints servers.SchedulerHintOptsBuilder) (*servers.Server, error)
 	DeleteServer(serverID string) error
 	GetServer(serverID string) (*servers.Server, error)
@@ -85,14 +84,13 @@ func (c computeClient) ListAvailabilityZones() ([]availabilityzones.Availability
 	return availabilityzones.ExtractAvailabilityZones(allPages)
 }
 
-func (c computeClient) GetFlavorFromName(flavor string) (*flavors.Flavor, error) {
-	mc := metrics.NewMetricPrometheusContext("flavor", "get")
-	flavorID, err := uflavors.IDFromName(context.TODO(), c.client, flavor)
+func (c computeClient) ListFlavors() ([]flavors.Flavor, error) {
+	mc := metrics.NewMetricPrometheusContext("flavor", "list")
+	allPages, err := flavors.ListDetail(c.client, &flavors.ListOpts{}).AllPages(context.TODO())
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
-	f, err := flavors.Get(context.TODO(), c.client, flavorID).Extract()
-	return f, mc.ObserveRequest(err)
+	return flavors.ExtractFlavors(allPages)
 }
 
 func (c computeClient) CreateServer(createOpts servers.CreateOptsBuilder, schedulerHints servers.SchedulerHintOptsBuilder) (*servers.Server, error) {
@@ -167,7 +165,7 @@ func (e computeErrorClient) ListAvailabilityZones() ([]availabilityzones.Availab
 	return nil, e.error
 }
 
-func (e computeErrorClient) GetFlavorFromName(_ string) (*flavors.Flavor, error) {
+func (e computeErrorClient) ListFlavors() ([]flavors.Flavor, error) {
 	return nil, e.error
 }
 

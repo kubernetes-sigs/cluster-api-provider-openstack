@@ -586,6 +586,18 @@ string
 </tr>
 <tr>
 <td>
+<code>flavorID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>FlavorID allows flavors to be specified by ID.  This field takes precedence
+over Flavor.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>image</code><br/>
 <em>
 string
@@ -2720,6 +2732,18 @@ string
 </tr>
 <tr>
 <td>
+<code>flavorID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>FlavorID allows flavors to be specified by ID.  This field takes precedence
+over Flavor.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>image</code><br/>
 <em>
 string
@@ -3071,6 +3095,18 @@ string
 </td>
 <td>
 <p>The flavor reference for the flavor for your server instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>flavorID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>FlavorID allows flavors to be specified by ID.  This field takes precedence
+over Flavor.</p>
 </td>
 </tr>
 <tr>

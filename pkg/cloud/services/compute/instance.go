@@ -25,7 +25,6 @@ import (
 	"time"
 
 	"github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v3/volumes"
-	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/flavors"
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/keypairs"
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/ports"
@@ -53,22 +52,8 @@ func (s *Service) CreateInstance(eventObject runtime.Object, instanceSpec *Insta
 	return s.createInstanceImpl(eventObject, instanceSpec, retryIntervalInstanceStatus, portIDs)
 }
 
-func (s *Service) getAndValidateFlavor(flavorName string) (*flavors.Flavor, error) {
-	f, err := s.getComputeClient().GetFlavorFromName(flavorName)
-	if err != nil {
-		return nil, fmt.Errorf("error getting flavor from flavor name %s: %v", flavorName, err)
-	}
-
-	return f, nil
-}
-
 func (s *Service) createInstanceImpl(eventObject runtime.Object, instanceSpec *InstanceSpec, retryInterval time.Duration, portIDs []string) (*InstanceStatus, error) {
 	portList := []servers.Network{}
-
-	flavor, err := s.getAndValidateFlavor(instanceSpec.Flavor)
-	if err != nil {
-		return nil, err
-	}
 
 	if len(portIDs) == 0 {
 		return nil, fmt.Errorf("portIDs cannot be empty")
@@ -97,7 +82,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, instanceSpec *I
 	var serverCreateOpts servers.CreateOptsBuilder = servers.CreateOpts{
 		Name:             instanceSpec.Name,
 		ImageRef:         serverImageRef,
-		FlavorRef:        flavor.ID,
+		FlavorRef:        instanceSpec.FlavorID,
 		AvailabilityZone: instanceSpec.FailureDomain,
 		Networks:         portList,
 		UserData:         []byte(instanceSpec.UserData),
@@ -418,6 +403,31 @@ func (s *Service) getImageIDByReference(ctx context.Context, k8sClient client.Cl
 	}
 
 	return nil, orcImage, nil
+}
+
+// Helper to resolve a flavor ID.
+// TODO: needs a breaking CRD change so it works like images.
+func (s *Service) GetFlavorID(flavorID, flavorName *string) (string, error) {
+	if flavorID != nil {
+		return *flavorID, nil
+	}
+
+	if flavorName == nil {
+		return "", fmt.Errorf("no flavors were found: no name set")
+	}
+
+	allFlavors, err := s.getComputeClient().ListFlavors()
+	if err != nil {
+		return "", err
+	}
+
+	for _, flavor := range allFlavors {
+		if flavor.Name == *flavorName {
+			return flavor.ID, nil
+		}
+	}
+
+	return "", fmt.Errorf("no flavors were found: name=%v", *flavorName)
 }
 
 // GetManagementPort returns the port which is used for management and external

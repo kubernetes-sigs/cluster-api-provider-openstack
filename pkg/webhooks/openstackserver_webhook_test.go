@@ -44,12 +44,12 @@ func TestOpenStackServer_ValidateUpdate(t *testing.T) {
 			name: "OpenStackServer with immutable spec",
 			old: &infrav1alpha1.OpenStackServer{
 				Spec: infrav1alpha1.OpenStackServerSpec{
-					Flavor: "foo",
+					Flavor: ptr.To("foo"),
 				},
 			},
 			new: &infrav1alpha1.OpenStackServer{
 				Spec: infrav1alpha1.OpenStackServerSpec{
-					Flavor: "new",
+					Flavor: ptr.To("new"),
 				},
 			},
 			req:     &admission.Request{},
@@ -59,7 +59,7 @@ func TestOpenStackServer_ValidateUpdate(t *testing.T) {
 			name: "OpenStackServer with mutable metadata",
 			old: &infrav1alpha1.OpenStackServer{
 				Spec: infrav1alpha1.OpenStackServerSpec{
-					Flavor: "foo",
+					Flavor: ptr.To("foo"),
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "foo",
@@ -67,7 +67,7 @@ func TestOpenStackServer_ValidateUpdate(t *testing.T) {
 			},
 			new: &infrav1alpha1.OpenStackServer{
 				Spec: infrav1alpha1.OpenStackServerSpec{
-					Flavor: "foo",
+					Flavor: ptr.To("foo"),
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "bar",
@@ -79,12 +79,12 @@ func TestOpenStackServer_ValidateUpdate(t *testing.T) {
 			name: "don't allow modification, dry run, no skip immutability annotation set",
 			old: &infrav1alpha1.OpenStackServer{
 				Spec: infrav1alpha1.OpenStackServerSpec{
-					Flavor: "foo",
+					Flavor: ptr.To("foo"),
 				},
 			},
 			new: &infrav1alpha1.OpenStackServer{
 				Spec: infrav1alpha1.OpenStackServerSpec{
-					Flavor: "new",
+					Flavor: ptr.To("new"),
 				},
 			},
 			req:     &admission.Request{AdmissionRequest: admissionv1.AdmissionRequest{DryRun: ptr.To(true)}},
@@ -94,7 +94,7 @@ func TestOpenStackServer_ValidateUpdate(t *testing.T) {
 			name: "allow modification, dry run, skip immutability annotation set",
 			old: &infrav1alpha1.OpenStackServer{
 				Spec: infrav1alpha1.OpenStackServerSpec{
-					Flavor: "foo",
+					Flavor: ptr.To("foo"),
 				},
 			},
 			new: &infrav1alpha1.OpenStackServer{
@@ -104,7 +104,7 @@ func TestOpenStackServer_ValidateUpdate(t *testing.T) {
 					},
 				},
 				Spec: infrav1alpha1.OpenStackServerSpec{
-					Flavor: "new",
+					Flavor: ptr.To("new"),
 				},
 			},
 			req: &admission.Request{AdmissionRequest: admissionv1.AdmissionRequest{DryRun: ptr.To(true)}},

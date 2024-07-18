@@ -191,10 +191,10 @@ func TestMachineConversionControllerSpecFields(t *testing.T) {
 		{
 			name: "Non-ignored change",
 			modifyUp: func(up *infrav1.OpenStackMachine) {
-				up.Spec.Flavor = "new-flavor"
+				up.Spec.Flavor = ptr.To("new-flavor")
 			},
 			testAfter: func(g gomega.Gomega, after *OpenStackMachine) {
-				g.Expect(after.Spec.Flavor).To(gomega.Equal("new-flavor"))
+				g.Expect(after.Spec.Flavor).To(gomega.Equal(ptr.To("new-flavor")))
 			},
 			expectIdentityRefDiff: true,
 		},
@@ -222,11 +222,11 @@ func TestMachineConversionControllerSpecFields(t *testing.T) {
 			name: "Set ProviderID and non-ignored change",
 			modifyUp: func(up *infrav1.OpenStackMachine) {
 				up.Spec.ProviderID = ptr.To("new-provider-id")
-				up.Spec.Flavor = "new-flavor"
+				up.Spec.Flavor = ptr.To("new-flavor")
 			},
 			testAfter: func(g gomega.Gomega, after *OpenStackMachine) {
 				g.Expect(after.Spec.ProviderID).To(gomega.Equal(ptr.To("new-provider-id")))
-				g.Expect(after.Spec.Flavor).To(gomega.Equal("new-flavor"))
+				g.Expect(after.Spec.Flavor).To(gomega.Equal(ptr.To("new-flavor")))
 			},
 			expectIdentityRefDiff: true,
 		},

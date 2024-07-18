@@ -238,6 +238,16 @@ func (in *OpenStackServerSpec) DeepCopyInto(out *OpenStackServerSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.Flavor != nil {
+		in, out := &in.Flavor, &out.Flavor
+		*out = new(string)
+		**out = **in
+	}
+	if in.FlavorID != nil {
+		in, out := &in.FlavorID, &out.FlavorID
+		*out = new(string)
+		**out = **in
+	}
 	if in.FloatingIPPoolRef != nil {
 		in, out := &in.FloatingIPPoolRef, &out.FloatingIPPoolRef
 		*out = new(v1.TypedLocalObjectReference)

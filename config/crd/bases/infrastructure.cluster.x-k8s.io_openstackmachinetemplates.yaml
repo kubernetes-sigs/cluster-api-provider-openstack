@@ -69,6 +69,13 @@ spec:
                       flavor:
                         description: The flavor reference for the flavor for your
                           server instance.
+                        minLength: 1
+                        type: string
+                      flavorID:
+                        description: |-
+                          FlavorID allows flavors to be specified by ID.  This field takes precedence
+                          over Flavor.
+                        minLength: 1
                         type: string
                       floatingIP:
                         description: |-
@@ -485,8 +492,6 @@ spec:
                         description: Whether the server instance is created on a trunk
                           port or not.
                         type: boolean
-                    required:
-                    - flavor
                     type: object
                 required:
                 - spec
@@ -609,6 +614,13 @@ spec:
                       flavor:
                         description: The flavor reference for the flavor for your
                           server instance.
+                        minLength: 1
+                        type: string
+                      flavorID:
+                        description: |-
+                          FlavorID allows flavors to be specified by ID.  This field takes precedence
+                          over Flavor.
+                        minLength: 1
                         type: string
                       floatingIP:
                         description: |-
@@ -902,8 +914,6 @@ spec:
                         description: Whether the server instance is created on a trunk
                           port or not.
                         type: boolean
-                    required:
-                    - flavor
                     type: object
                 required:
                 - spec
@@ -1042,6 +1052,13 @@ spec:
                       flavor:
                         description: The flavor reference for the flavor for your
                           server instance.
+                        minLength: 1
+                        type: string
+                      flavorID:
+                        description: |-
+                          FlavorID allows flavors to be specified by ID.  This field takes precedence
+                          over Flavor.
+                        minLength: 1
                         type: string
                       floatingIPPoolRef:
                         description: |-
@@ -1806,9 +1823,11 @@ spec:
                           port or not.
                         type: boolean
                     required:
-                    - flavor
                     - image
                     type: object
+                    x-kubernetes-validations:
+                    - message: at least one of flavor or flavorID must be set
+                      rule: (has(self.flavor) || has(self.flavorID))
                 required:
                 - spec
                 type: object

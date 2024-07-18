@@ -32,6 +32,7 @@ const (
 )
 
 // OpenStackServerSpec defines the desired state of OpenStackServer.
+// +kubebuilder:validation:XValidation:message="at least one of flavor or flavorID must be set",rule=(has(self.flavor) || has(self.flavorID))
 type OpenStackServerSpec struct {
 	// AdditionalBlockDevices is a list of specifications for additional block devices to attach to the server instance.
 	// +listType=map
@@ -48,8 +49,15 @@ type OpenStackServerSpec struct {
 	ConfigDrive optional.Bool `json:"configDrive,omitempty"`
 
 	// The flavor reference for the flavor for the server instance.
-	// +required
-	Flavor string `json:"flavor"`
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	Flavor *string `json:"flavor,omitempty"`
+
+	// FlavorID allows flavors to be specified by ID.  This field takes precedence
+	// over Flavor.
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	FlavorID *string `json:"flavorID,omitempty"`
 
 	// FloatingIPPoolRef is a reference to a FloatingIPPool to allocate a floating IP from.
 	// +optional

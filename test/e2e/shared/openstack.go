@@ -880,7 +880,11 @@ func GetOpenStackVolume(e2eCtx *E2EContext, name string) (*volumes.Volume, error
 	return volume, nil
 }
 
-func GetFlavorFromName(e2eCtx *E2EContext, name string) (*flavors.Flavor, error) {
+func GetFlavorFromName(e2eCtx *E2EContext, name *string) (*flavors.Flavor, error) {
+	if name == nil {
+		return nil, fmt.Errorf("flavor name not set")
+	}
+
 	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
 	if err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
@@ -890,7 +894,7 @@ func GetFlavorFromName(e2eCtx *E2EContext, name string) (*flavors.Flavor, error)
 	computeClient, err := openstack.NewComputeV2(providerClient, gophercloud.EndpointOpts{Region: clientOpts.RegionName})
 	Expect(err).NotTo(HaveOccurred())
 
-	flavorID, err := uflavors.IDFromName(context.TODO(), computeClient, name)
+	flavorID, err := uflavors.IDFromName(context.TODO(), computeClient, *name)
 	Expect(err).NotTo(HaveOccurred())
 
 	return flavors.Get(context.TODO(), computeClient, flavorID).Extract()

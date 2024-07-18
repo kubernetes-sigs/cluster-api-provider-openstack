@@ -107,7 +107,21 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>The flavor reference for the flavor for the server instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>flavorID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>FlavorID allows flavors to be specified by ID.  This field takes precedence
+over Flavor.</p>
 </td>
 </tr>
 <tr>
@@ -646,7 +660,21 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>The flavor reference for the flavor for the server instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>flavorID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>FlavorID allows flavors to be specified by ID.  This field takes precedence
+over Flavor.</p>
 </td>
 </tr>
 <tr>
@@ -998,6 +1026,18 @@ string
 <td>
 <em>(Optional)</em>
 <p>ImageID is the ID of the image to use for the server and is calculated based on ImageFilter.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>flavorID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>FlavorID is the ID of the flavor to use.</p>
 </td>
 </tr>
 <tr>

@@ -92,12 +92,19 @@ type SchedulerHintAdditionalProperty struct {
 }
 
 // OpenStackMachineSpec defines the desired state of OpenStackMachine.
+// +kubebuilder:validation:XValidation:message="at least one of flavor or flavorID must be set",rule=(has(self.flavor) || has(self.flavorID))
 type OpenStackMachineSpec struct {
 	// ProviderID is the unique identifier as specified by the cloud provider.
 	ProviderID *string `json:"providerID,omitempty"`
 
 	// The flavor reference for the flavor for your server instance.
-	Flavor string `json:"flavor"`
+	// +kubebuilder:validation:MinLength=1
+	Flavor *string `json:"flavor,omitempty"`
+
+	// FlavorID allows flavors to be specified by ID.  This field takes precedence
+	// over Flavor.
+	// +kubebuilder:validation:MinLength=1
+	FlavorID *string `json:"flavorID,omitempty"`
 
 	// The image to use for your server instance.
 	// If the rootVolume is specified, this will be used when creating the root volume.

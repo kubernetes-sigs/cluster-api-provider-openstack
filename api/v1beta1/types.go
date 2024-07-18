@@ -900,6 +900,10 @@ type ResolvedMachineSpec struct {
 	// +optional
 	ImageID string `json:"imageID,omitempty"`
 
+	// FlavorID is the ID of the flavor to use.
+	// +optional
+	FlavorID string `json:"flavorID,omitempty"`
+
 	// Ports is the fully resolved list of ports to create for the machine.
 	// +optional
 	Ports []ResolvedPortSpec `json:"ports,omitempty"`
