@@ -35,6 +35,7 @@ import (
 	"go.uber.org/mock/gomock"
 	"k8s.io/utils/ptr"
 
+	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
@@ -876,7 +877,7 @@ func Test_getPortName(t *testing.T) {
 	}
 }
 
-func Test_AdoptPorts(t *testing.T) {
+func Test_AdoptPortsServer(t *testing.T) {
 	const (
 		networkID1 = "5e8e0d3b-7f3d-4f3e-8b3f-3e3e3e3e3e3e"
 		networkID2 = "0a4ff38e-1e03-4b4e-994c-c8ae38a2915e"
@@ -888,9 +889,9 @@ func Test_AdoptPorts(t *testing.T) {
 	tests := []struct {
 		testName     string
 		desiredPorts []infrav1.ResolvedPortSpec
-		resources    infrav1.MachineResources
+		resources    infrav1alpha1.ServerResources
 		expect       func(*mock.MockNetworkClientMockRecorder)
-		want         infrav1.MachineResources
+		want         infrav1alpha1.ServerResources
 		wantErr      bool
 	}{
 		{
@@ -901,118 +902,18 @@ func Test_AdoptPorts(t *testing.T) {
 			desiredPorts: []infrav1.ResolvedPortSpec{
 				{NetworkID: networkID1},
 			},
-			resources: infrav1.MachineResources{
+			resources: infrav1alpha1.ServerResources{
 				Ports: []infrav1.PortStatus{
 					{
 						ID: portID1,
 					},
 				},
 			},
-			want: infrav1.MachineResources{
+			want: infrav1alpha1.ServerResources{
 				Ports: []infrav1.PortStatus{
 					{
 						ID: portID1,
 					},
-				},
-			},
-		},
-		{
-			testName: "desired port not in status, exists: adopt",
-			desiredPorts: []infrav1.ResolvedPortSpec{
-				{Name: "test-machine-0", NetworkID: networkID1},
-			},
-			expect: func(m *mock.MockNetworkClientMockRecorder) {
-				m.ListPort(ports.ListOpts{Name: "test-machine-0", NetworkID: networkID1}).
-					Return([]ports.Port{{ID: portID1}}, nil)
-			},
-			want: infrav1.MachineResources{
-				Ports: []infrav1.PortStatus{
-					{
-						ID: portID1,
-					},
-				},
-			},
-		},
-		{
-			testName: "desired port not in status, does not exist: ignore",
-			desiredPorts: []infrav1.ResolvedPortSpec{
-				{Name: "test-machine-0", NetworkID: networkID1},
-			},
-			expect: func(m *mock.MockNetworkClientMockRecorder) {
-				m.ListPort(ports.ListOpts{Name: "test-machine-0", NetworkID: networkID1}).
-					Return(nil, nil)
-			},
-			want: infrav1.MachineResources{},
-		},
-		{
-			testName: "2 desired ports, first in status, second exists: adopt second",
-			desiredPorts: []infrav1.ResolvedPortSpec{
-				{Name: "test-machine-0", NetworkID: networkID1},
-				{Name: "test-machine-1", NetworkID: networkID2},
-			},
-			resources: infrav1.MachineResources{
-				Ports: []infrav1.PortStatus{
-					{
-						ID: portID1,
-					},
-				},
-			},
-			expect: func(m *mock.MockNetworkClientMockRecorder) {
-				m.ListPort(ports.ListOpts{Name: "test-machine-1", NetworkID: networkID2}).
-					Return([]ports.Port{{ID: portID2}}, nil)
-			},
-			want: infrav1.MachineResources{
-				Ports: []infrav1.PortStatus{
-					{ID: portID1},
-					{ID: portID2},
-				},
-			},
-		},
-		{
-			testName: "3 desired ports, first in status, second does not exist: ignore, do no look for third",
-			desiredPorts: []infrav1.ResolvedPortSpec{
-				{Name: "test-machine-0", NetworkID: networkID1},
-				{Name: "test-machine-1", NetworkID: networkID2},
-				{Name: "test-machine-2", NetworkID: networkID3},
-			},
-			resources: infrav1.MachineResources{
-				Ports: []infrav1.PortStatus{
-					{
-						ID: portID1,
-					},
-				},
-			},
-			expect: func(m *mock.MockNetworkClientMockRecorder) {
-				m.ListPort(ports.ListOpts{Name: "test-machine-1", NetworkID: networkID2}).
-					Return(nil, nil)
-			},
-			want: infrav1.MachineResources{
-				Ports: []infrav1.PortStatus{
-					{ID: portID1},
-				},
-			},
-		},
-		{
-			testName: "3 desired ports with arbitrary names, first in status, second does not exist: ignore, do no look for third",
-			desiredPorts: []infrav1.ResolvedPortSpec{
-				{Name: "test-machine-foo", NetworkID: networkID1},
-				{Name: "test-machine-bar", NetworkID: networkID2},
-				{Name: "test-machine-baz", NetworkID: networkID3},
-			},
-			resources: infrav1.MachineResources{
-				Ports: []infrav1.PortStatus{
-					{
-						ID: portID1,
-					},
-				},
-			},
-			expect: func(m *mock.MockNetworkClientMockRecorder) {
-				m.ListPort(ports.ListOpts{Name: "test-machine-bar", NetworkID: networkID2}).
-					Return(nil, nil)
-			},
-			want: infrav1.MachineResources{
-				Ports: []infrav1.PortStatus{
-					{ID: portID1},
 				},
 			},
 		},
@@ -1034,7 +935,7 @@ func Test_AdoptPorts(t *testing.T) {
 				client: mockClient,
 			}
 
-			err := s.AdoptPorts(scope.NewWithLogger(mockScopeFactory, log),
+			err := s.AdoptPortsServer(scope.NewWithLogger(mockScopeFactory, log),
 				tt.desiredPorts, &tt.resources)
 			if tt.wantErr {
 				g.Expect(err).Error()

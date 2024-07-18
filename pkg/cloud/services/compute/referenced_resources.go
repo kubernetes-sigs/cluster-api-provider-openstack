@@ -20,19 +20,35 @@ import (
 	"fmt"
 	"slices"
 
+	"k8s.io/utils/ptr"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+
+	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
-// ResolveMachineSpec is responsible for populating a ResolvedMachineSpec from
+// ResolveServerSpec is responsible for populating a ResolvedServerSpec from
 // an OpenStackMachineSpec and any external dependencies. The result contains no
 // external dependencies, and does not require any complex logic on creation.
-// Note that we only set the fields in ResolvedMachineSpec that are not set yet. This is ok because:
-// - OpenStackMachine is immutable, so we can't change the spec after the machine is created.
-// - the bastion is mutable, but we delete the bastion when the spec changes, so the bastion status will be empty.
-func ResolveMachineSpec(scope *scope.WithLogger, spec *infrav1.OpenStackMachineSpec, resolved *infrav1.ResolvedMachineSpec, clusterResourceName, baseName string, openStackCluster *infrav1.OpenStackCluster, managedSecurityGroup *string) (changed bool, err error) {
+// Note that we only set the fields in ResolvedServerSpec that are not set yet. This is ok because
+// OpenStackServer is immutable, so we can't change the spec after the machine is created.
+func ResolveServerSpec(scope *scope.WithLogger, openStackServer *infrav1alpha1.OpenStackServer) (changed bool, err error) {
 	changed = false
+
+	spec := &openStackServer.Spec
+	resolved := openStackServer.Status.Resolved
+	if resolved == nil {
+		resolved = &infrav1alpha1.ResolvedServerSpec{}
+		openStackServer.Status.Resolved = resolved
+	}
+
+	// If the server is bound to a cluster, we use the cluster name to generate the port description.
+	var clusterName string
+	if openStackServer.ObjectMeta.Labels[clusterv1.ClusterNameLabel] != "" {
+		clusterName = openStackServer.ObjectMeta.Labels[clusterv1.ClusterNameLabel]
+	}
 
 	computeService, err := NewService(scope)
 	if err != nil {
@@ -64,19 +80,24 @@ func ResolveMachineSpec(scope *scope.WithLogger, spec *infrav1.OpenStackMachineS
 		changed = true
 	}
 
-	// ConstructPorts requires the cluster network to have been set. We only
-	// call this from places where we know it should have been set, but the
-	// cluster status is externally-provided data so we check it anyway.
-	if openStackCluster.Status.Network == nil {
-		return changed, fmt.Errorf("called ResolveMachineSpec with nil OpenStackCluster.Status.Network")
-	}
+	specTrunk := ptr.Deref(spec.Trunk, false)
 
 	// Network resources are required in order to get ports options.
+	// Notes:
+	// - clusterResourceName is not used in this context, so we pass an empty string. In the future,
+	// we may want to remove that (it's only used for the port description) or allow a user to pass
+	// a custom description.
+	// - managedSecurityGroup is not used in this context, so we pass nil. The security groups are
+	//   passed in the spec.SecurityGroups and spec.Ports.
+	// - We run a safety check to ensure that the resolved.Ports has the same length as the spec.Ports.
+	//   This is to ensure that we don't accidentally add ports to the resolved.Ports that are not in the spec.
 	if len(resolved.Ports) == 0 {
-		defaultNetwork := openStackCluster.Status.Network
-		portsOpts, err := networkingService.ConstructPorts(spec.Ports, spec.SecurityGroups, spec.Trunk, clusterResourceName, baseName, defaultNetwork, managedSecurityGroup, InstanceTags(spec, openStackCluster))
+		portsOpts, err := networkingService.ConstructPorts(spec.Ports, spec.SecurityGroups, specTrunk, clusterName, openStackServer.Name, nil, nil, spec.Tags)
 		if err != nil {
 			return changed, err
+		}
+		if portsOpts != nil && len(portsOpts) != len(spec.Ports) {
+			return changed, fmt.Errorf("resolved.Ports has a different length than spec.Ports")
 		}
 		resolved.Ports = portsOpts
 		changed = true

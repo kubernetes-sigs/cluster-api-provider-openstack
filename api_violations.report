@@ -97,6 +97,11 @@ API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1,OpenStackFloatingIPPoolStatus,AvailableIPs
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1,OpenStackFloatingIPPoolStatus,ClaimedIPs
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1,OpenStackFloatingIPPoolStatus,FailedIPs
+API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1,OpenStackServerSpec,Ports
+API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1,OpenStackServerSpec,SecurityGroups
+API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1,OpenStackServerStatus,Addresses
+API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1,ResolvedServerSpec,Ports
+API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1,ServerResources,Ports
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6,APIServerLoadBalancer,AdditionalPorts
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6,APIServerLoadBalancer,AllowedCIDRs
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6,Instance,Networks

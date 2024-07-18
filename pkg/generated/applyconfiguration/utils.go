@@ -20,9 +20,11 @@ package applyconfiguration
 
 import (
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
+	v1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	v1alpha6 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
 	v1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	apiv1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1alpha1"
 	apiv1alpha6 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1alpha6"
 	apiv1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1alpha7"
 	apiv1beta1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1beta1"
@@ -32,7 +34,19 @@ import (
 // apply configuration type exists for the given GroupVersionKind.
 func ForKind(kind schema.GroupVersionKind) interface{} {
 	switch kind {
-	// Group=infrastructure.cluster.x-k8s.io, Version=v1alpha6
+	// Group=infrastructure.cluster.x-k8s.io, Version=v1alpha1
+	case v1alpha1.SchemeGroupVersion.WithKind("OpenStackServer"):
+		return &apiv1alpha1.OpenStackServerApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("OpenStackServerSpec"):
+		return &apiv1alpha1.OpenStackServerSpecApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("OpenStackServerStatus"):
+		return &apiv1alpha1.OpenStackServerStatusApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ResolvedServerSpec"):
+		return &apiv1alpha1.ResolvedServerSpecApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ServerResources"):
+		return &apiv1alpha1.ServerResourcesApplyConfiguration{}
+
+		// Group=infrastructure.cluster.x-k8s.io, Version=v1alpha6
 	case v1alpha6.SchemeGroupVersion.WithKind("AddressPair"):
 		return &apiv1alpha6.AddressPairApplyConfiguration{}
 	case v1alpha6.SchemeGroupVersion.WithKind("APIServerLoadBalancer"):
