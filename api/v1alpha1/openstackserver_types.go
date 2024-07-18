@@ -48,8 +48,13 @@ type OpenStackServerSpec struct {
 	ConfigDrive optional.Bool `json:"configDrive,omitempty"`
 
 	// The flavor reference for the flavor for the server instance.
-	// +required
-	Flavor string `json:"flavor"`
+	// +optional
+	Flavor string `json:"flavor,omitempty"`
+
+	// FlavorID allows flavors to be specified by ID.  This field takes precedence
+	// over Flavor.
+	// +optional
+	FlavorID string `json:"flavorID,omitempty"`
 
 	// FloatingIPPoolRef is a reference to a FloatingIPPool to allocate a floating IP from.
 	// +optional

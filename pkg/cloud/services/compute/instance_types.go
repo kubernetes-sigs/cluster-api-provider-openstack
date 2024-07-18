@@ -32,7 +32,7 @@ import (
 type InstanceSpec struct {
 	Name                          string
 	ImageID                       string
-	Flavor                        string
+	FlavorID                      string
 	SSHKeyName                    string
 	UserData                      string
 	Metadata                      map[string]string
