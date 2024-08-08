@@ -1257,6 +1257,7 @@ func autoConvert_v1beta1_OpenStackMachineSpec_To_v1alpha6_OpenStackMachineSpec(i
 	}
 	// WARNING: in.AdditionalBlockDevices requires manual conversion: does not exist in peer-type
 	// WARNING: in.ServerGroup requires manual conversion: does not exist in peer-type
+	// WARNING: in.ServerGroupRef requires manual conversion: does not exist in peer-type
 	if in.IdentityRef != nil {
 		in, out := &in.IdentityRef, &out.IdentityRef
 		*out = new(OpenStackIdentityReference)

@@ -38,6 +38,7 @@ type OpenStackServerSpecApplyConfiguration struct {
 	SSHKeyName             *string                                               `json:"sshKeyName,omitempty"`
 	SecurityGroups         []v1beta1.SecurityGroupParamApplyConfiguration        `json:"securityGroups,omitempty"`
 	ServerGroup            *v1beta1.ServerGroupParamApplyConfiguration           `json:"serverGroup,omitempty"`
+	ServerGroupRef         *v1beta1.ServerGroupRefApplyConfiguration             `json:"serverGroupRef,omitempty"`
 	ServerMetadata         []v1beta1.ServerMetadataApplyConfiguration            `json:"serverMetadata,omitempty"`
 	Tags                   []string                                              `json:"tags,omitempty"`
 	Trunk                  *bool                                                 `json:"trunk,omitempty"`
@@ -158,6 +159,14 @@ func (b *OpenStackServerSpecApplyConfiguration) WithSecurityGroups(values ...*v1
 // If called multiple times, the ServerGroup field is set to the value of the last call.
 func (b *OpenStackServerSpecApplyConfiguration) WithServerGroup(value *v1beta1.ServerGroupParamApplyConfiguration) *OpenStackServerSpecApplyConfiguration {
 	b.ServerGroup = value
+	return b
+}
+
+// WithServerGroupRef sets the ServerGroupRef field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ServerGroupRef field is set to the value of the last call.
+func (b *OpenStackServerSpecApplyConfiguration) WithServerGroupRef(value *v1beta1.ServerGroupRefApplyConfiguration) *OpenStackServerSpecApplyConfiguration {
+	b.ServerGroupRef = value
 	return b
 }
 

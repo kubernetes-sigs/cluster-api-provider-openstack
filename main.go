@@ -361,6 +361,16 @@ func setupReconcilers(ctx context.Context, mgr ctrl.Manager, caCerts []byte, sco
 		setupLog.Error(err, "unable to create controller", "controller", "OpenStackServer")
 		os.Exit(1)
 	}
+	if err := (&controllers.OpenStackServerGroupReconciler{
+		Client:           mgr.GetClient(),
+		Recorder:         mgr.GetEventRecorderFor("openstackservergroup-controller"),
+		WatchFilterValue: watchFilterValue,
+		ScopeFactory:     scopeFactory,
+		CaCertificates:   caCerts,
+	}).SetupWithManager(ctx, mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "OpenStackServerGroup")
+		os.Exit(1)
+	}
 }
 
 func setupWebhooks(mgr ctrl.Manager) {

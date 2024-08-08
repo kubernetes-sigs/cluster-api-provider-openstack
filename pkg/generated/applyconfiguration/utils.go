@@ -293,6 +293,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apiv1beta1.ServerGroupFilterApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("ServerGroupParam"):
 		return &apiv1beta1.ServerGroupParamApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("ServerGroupRef"):
+		return &apiv1beta1.ServerGroupRefApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("ServerMetadata"):
 		return &apiv1beta1.ServerMetadataApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("Subnet"):
