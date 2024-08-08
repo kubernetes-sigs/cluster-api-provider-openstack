@@ -273,6 +273,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apiv1beta1.ResolvedPortSpecApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("ResolvedPortSpecFields"):
 		return &apiv1beta1.ResolvedPortSpecFieldsApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("ResourceReference"):
+		return &apiv1beta1.ResourceReferenceApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("RootVolume"):
 		return &apiv1beta1.RootVolumeApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("Router"):

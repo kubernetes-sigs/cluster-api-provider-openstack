@@ -204,3 +204,5 @@ intervals:
   default/wait-machine-upgrade: ["30m", "10s"]
   default/wait-nodes-ready: ["15m", "10s"]
   default/wait-machine-remediation: ["10m", "10s"]
+  default/wait-image-create: ["15m", "10s"]
+  default/wait-image-delete: ["2m", "10s"]

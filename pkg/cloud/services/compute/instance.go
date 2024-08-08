@@ -29,8 +29,12 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/keypairs"
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/ports"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	orcv1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
@@ -328,39 +332,78 @@ func (s *Service) getBlockDevices(eventObject runtime.Object, instanceSpec *Inst
 }
 
 // Helper function for getting image ID from name, ID, or tags.
-func (s *Service) GetImageID(image infrav1.ImageParam) (string, error) {
-	if image.ID != nil {
-		return *image.ID, nil
-	}
-
-	if image.Filter == nil {
+func (s *Service) GetImageID(ctx context.Context, k8sClient client.Client, namespace string, image infrav1.ImageParam) (*string, client.Object, error) {
+	switch {
+	case image.ID != nil:
+		return image.ID, nil, nil
+	case image.Filter != nil:
+		return s.getImageIDByFilter(image.Filter)
+	case image.ImageRef != nil:
+		return s.getImageIDByReference(ctx, k8sClient, namespace, image.ImageRef)
+	default:
 		// Should have been caught by validation
-		return "", errors.New("image id and filter are both nil")
+		return nil, nil, errors.New("image id, filter, and reference are all nil")
 	}
+}
 
-	listOpts := filterconvert.ImageFilterToListOpts(image.Filter)
+func (s *Service) getImageIDByFilter(filter *infrav1.ImageFilter) (*string, client.Object, error) {
+	listOpts := filterconvert.ImageFilterToListOpts(filter)
 	allImages, err := s.getImageClient().ListImages(listOpts)
 	if err != nil {
-		return "", err
+		return nil, nil, err
 	}
 
 	switch len(allImages) {
 	case 0:
 		var name string
-		if image.Filter.Name != nil {
-			name = *image.Filter.Name
+		if filter.Name != nil {
+			name = *filter.Name
 		}
-		return "", fmt.Errorf("no images were found with the given image filter: name=%v, tags=%v", name, image.Filter.Tags)
+		return nil, nil, fmt.Errorf("no images were found with the given image filter: name=%v, tags=%v", name, filter.Tags)
 	case 1:
-		return allImages[0].ID, nil
+		return &allImages[0].ID, nil, nil
 	default:
 		// this should never happen
 		var name string
-		if image.Filter.Name != nil {
-			name = *image.Filter.Name
+		if filter.Name != nil {
+			name = *filter.Name
 		}
-		return "", fmt.Errorf("too many images were found with the given image filter: name=%v, tags=%v", name, image.Filter.Tags)
+		return nil, nil, fmt.Errorf("too many images were found with the given image filter: name=%v, tags=%v", name, filter.Tags)
 	}
+}
+
+func (s *Service) getImageIDByReference(ctx context.Context, k8sClient client.Client, namespace string, ref *infrav1.ResourceReference) (*string, client.Object, error) {
+	orcImage := &orcv1alpha1.Image{}
+	err := k8sClient.Get(ctx, client.ObjectKey{
+		Namespace: namespace,
+		Name:      ref.Name,
+	}, orcImage)
+	if err != nil {
+		// If the object doesn't exist yet, we still need to return a hydrated reference to the object we're waiting on
+		if apierrors.IsNotFound(err) {
+			orcImage.SetName(ref.Name)
+			orcImage.SetNamespace(namespace)
+
+			return nil, orcImage, nil
+		}
+
+		return nil, nil, err
+	}
+
+	if orcv1alpha1.IsAvailable(orcImage) {
+		return orcImage.Status.ImageID, orcImage, nil
+	}
+
+	if !orcv1alpha1.IsReconciliationComplete(orcImage) {
+		return nil, orcImage, nil
+	}
+
+	err = orcv1alpha1.GetTerminalError(orcImage)
+	if err != nil {
+		return nil, orcImage, capoerrors.Terminal(infrav1.DependencyFailedReason, orcImage.Kind+" "+orcImage.GetNamespace()+"/"+orcImage.GetName()+" failed: "+err.Error())
+	}
+
+	return nil, orcImage, nil
 }
 
 // GetManagementPort returns the port which is used for management and external

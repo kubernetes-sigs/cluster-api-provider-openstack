@@ -7,3 +7,15 @@ components:
 - ../common-patches/cni
 - ../common-patches/ccm
 - ../common-patches/externalNetworkByName
+- ../common-patches/images
+
+patches:
+- target:
+    group: openstack.k-orc.cloud
+    version: v1alpha1
+    kind: Image
+    name: node-image
+  patch: |-
+    - op: replace
+      path: /spec/imageName
+      value: ${FLATCAR_IMAGE_NAME}

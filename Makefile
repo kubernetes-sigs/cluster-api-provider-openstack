@@ -150,6 +150,7 @@ TEST_PATHS ?= ./...
 test: $(ARTIFACTS) $(GOTESTSUM) kubebuilder_assets
 	KUBEBUILDER_ASSETS="$(KUBEBUILDER_ASSETS)" $(GOTESTSUM) --junitfile $(ARTIFACTS)/junit.test.xml --junitfile-hide-empty-pkg --jsonfile $(ARTIFACTS)/test-output.log -- \
 			   -v $(TEST_PATHS) $(TEST_ARGS)
+	$(MAKE) -C $(REPO_ROOT)/orc test
 
 E2E_TEMPLATES_DIR=test/e2e/data/infrastructure-openstack
 E2E_KUSTOMIZE_DIR=test/e2e/data/kustomize
@@ -250,10 +251,12 @@ $(GO_APIDIFF): # Build go-apidiff.
 .PHONY: lint
 lint: $(GOLANGCI_LINT) ## Lint codebase
 	$(GOLANGCI_LINT) run -v --fast=false
+	$(MAKE) -C $(REPO_ROOT)/orc lint
 
 .PHONY: lint-update
 lint-update: $(GOLANGCI_LINT) ## Lint codebase
 	$(GOLANGCI_LINT) run -v --fast=false --fix
+	$(MAKE) -C $(REPO_ROOT)/orc lint-fix
 
 lint-fast: $(GOLANGCI_LINT) ## Run only faster linters to detect possible issues
 	$(GOLANGCI_LINT) run -v --fast=true
@@ -264,11 +267,13 @@ lint-fast: $(GOLANGCI_LINT) ## Run only faster linters to detect possible issues
 
 .PHONY: modules
 modules: ## Runs go mod to ensure proper vendoring.
+	$(MAKE) -C $(REPO_ROOT)/orc modules
 	go mod tidy
 	cd $(TOOLS_DIR); go mod tidy
+	cd $(REPO_ROOT)/hack/codegen; go mod tidy
 
 .PHONY: generate
-generate: templates generate-controller-gen generate-codegen generate-conversion-gen generate-go generate-manifests generate-api-docs ## Generate all generated code
+generate: templates generate-orc generate-controller-gen generate-codegen generate-conversion-gen generate-go generate-manifests generate-api-docs ## Generate all generated code
 
 .PHONY: generate-go
 generate-go: $(MOCKGEN)
@@ -280,8 +285,13 @@ generate-controller-gen: $(CONTROLLER_GEN)
 		paths=./api/... \
 		object:headerFile=./hack/boilerplate/boilerplate.generatego.txt
 
+.PHONY: generate-codegen
 generate-codegen: generate-controller-gen
 	./hack/update-codegen.sh
+
+.PHONY: generate-orc
+generate-orc:
+	$(MAKE) -C $(REPO_ROOT)/orc generate
 
 .PHONY: generate-conversion-gen
 capo_module := sigs.k8s.io/cluster-api-provider-openstack
@@ -308,6 +318,7 @@ generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
 	$(CONTROLLER_GEN) \
 		paths=./ \
 		paths=./controllers/... \
+		paths=./internal/controllers/... \
 		output:rbac:dir=$(RBAC_ROOT) \
 		rbac:roleName=manager-role
 

@@ -435,6 +435,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedMachineSpec":               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedMachineSpec(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedPortSpec":                  schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedPortSpec(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedPortSpecFields":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedPortSpecFields(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResourceReference":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResourceReference(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RootVolume":                        schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_RootVolume(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.Router":                            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_Router(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RouterFilter":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_RouterFilter(ref),
@@ -21510,7 +21511,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ImageParam(ref 
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ImageParam describes a glance image. It can be specified by ID or filter.",
+				Description: "ImageParam describes a glance image. It can be specified by ID, filter, or a reference to an ORC Image.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"id": {
@@ -21526,11 +21527,17 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ImageParam(ref 
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageFilter"),
 						},
 					},
+					"imageRef": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ImageRef is a reference to an ORC Image in the same namespace as the referring object.",
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResourceReference"),
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageFilter"},
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageFilter", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResourceReference"},
 	}
 }
 
@@ -23561,6 +23568,27 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedPortSpe
 		},
 		Dependencies: []string{
 			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AddressPair", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ValueSpec"},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResourceReference(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name is the name of the referenced resource",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"name"},
+			},
+		},
 	}
 }
 

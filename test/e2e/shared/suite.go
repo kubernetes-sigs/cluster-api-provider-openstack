@@ -51,7 +51,7 @@ type synchronizedBeforeTestSuiteConfig struct {
 }
 
 // Node1BeforeSuite is the common setup down on the first ginkgo node before the test suite runs.
-func Node1BeforeSuite(e2eCtx *E2EContext) []byte {
+func Node1BeforeSuite(ctx context.Context, e2eCtx *E2EContext) []byte {
 	Logf("Running Node1BeforeSuite")
 	defer Logf("Finished Node1BeforeSuite")
 
@@ -157,6 +157,9 @@ func Node1BeforeSuite(e2eCtx *E2EContext) []byte {
 	Logf("Initializing the bootstrap cluster")
 	initBootstrapCluster(e2eCtx)
 
+	// Create credentials used by all glance images
+	CreateGlanceCredentials(ctx, e2eCtx)
+
 	conf := synchronizedBeforeTestSuiteConfig{
 		ArtifactFolder:          e2eCtx.Settings.ArtifactFolder,
 		ConfigPath:              e2eCtx.Settings.ConfigPath,
@@ -219,7 +222,7 @@ func AllNodesAfterSuite(e2eCtx *E2EContext) {
 }
 
 // Node1AfterSuite is cleanup that runs on the first ginkgo node after the test suite finishes.
-func Node1AfterSuite(e2eCtx *E2EContext) {
+func Node1AfterSuite(_ context.Context, e2eCtx *E2EContext) {
 	Logf("Running Node1AfterSuite")
 	defer Logf("Finished Node1AfterSuite")
 

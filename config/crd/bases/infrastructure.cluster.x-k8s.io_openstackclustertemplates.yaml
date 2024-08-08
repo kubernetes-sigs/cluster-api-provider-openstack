@@ -2004,6 +2004,18 @@ spec:
                                       not be validated before use.
                                     format: uuid
                                     type: string
+                                  imageRef:
+                                    description: |-
+                                      ImageRef is a reference to an ORC Image in the same namespace as the
+                                      referring object.
+                                    properties:
+                                      name:
+                                        description: Name is the name of the referenced
+                                          resource
+                                        type: string
+                                    required:
+                                    - name
+                                    type: object
                                 type: object
                               ports:
                                 description: |-

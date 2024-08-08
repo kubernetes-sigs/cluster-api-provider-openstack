@@ -28,7 +28,13 @@ type OpenStackMachineTemplateResource struct {
 	Spec OpenStackMachineSpec `json:"spec"`
 }
 
-// ImageParam describes a glance image. It can be specified by ID or filter.
+type ResourceReference struct {
+	// Name is the name of the referenced resource
+	Name string `json:"name"`
+}
+
+// ImageParam describes a glance image. It can be specified by ID, filter, or a
+// reference to an ORC Image.
 // +kubebuilder:validation:MaxProperties:=1
 // +kubebuilder:validation:MinProperties:=1
 type ImageParam struct {
@@ -42,6 +48,11 @@ type ImageParam struct {
 	// be raised.
 	// +optional
 	Filter *ImageFilter `json:"filter,omitempty"`
+
+	// ImageRef is a reference to an ORC Image in the same namespace as the
+	// referring object.
+	// +optional
+	ImageRef *ResourceReference `json:"imageRef,omitempty"`
 }
 
 // ImageFilter describes a query for an image.

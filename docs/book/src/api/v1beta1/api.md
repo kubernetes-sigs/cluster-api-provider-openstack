@@ -1685,7 +1685,8 @@ string
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>)
 </p>
 <p>
-<p>ImageParam describes a glance image. It can be specified by ID or filter.</p>
+<p>ImageParam describes a glance image. It can be specified by ID, filter, or a
+reference to an ORC Image.</p>
 </p>
 <table>
 <thead>
@@ -1721,6 +1722,21 @@ ImageFilter
 <p>Filter describes a query for an image. If specified, the combination
 of name and tags must return a single matching image or an error will
 be raised.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>imageRef</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResourceReference">
+ResourceReference
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ImageRef is a reference to an ORC Image in the same namespace as the
+referring object.</p>
 </td>
 </tr>
 </tbody>
@@ -4309,6 +4325,35 @@ bool
 <p>Value specs are extra parameters to include in the API request with OpenStack.
 This is an extension point for the API, so what they do and if they are supported,
 depends on the specific OpenStack implementation.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.ResourceReference">ResourceReference
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ImageParam">ImageParam</a>)
+</p>
+<p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name is the name of the referenced resource</p>
 </td>
 </tr>
 </tbody>

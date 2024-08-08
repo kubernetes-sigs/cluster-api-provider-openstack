@@ -31,10 +31,20 @@ import (
 const OldCAPIVersion = "v1.6.0"
 
 var _ = Describe("When testing clusterctl upgrades (v0.9=>current) [clusterctl-upgrade]", func() {
-	ctx := context.TODO()
-	shared.SetEnvVar("DOWNLOAD_E2E_IMAGE", "true", false)
+	BeforeEach(func(ctx context.Context) {
+		shared.ApplyCoreImagesPlus(ctx, e2eCtx, upgradeImage)
 
-	capi_e2e.ClusterctlUpgradeSpec(ctx, func() capi_e2e.ClusterctlUpgradeSpecInput {
+		// The upgrade job can't use image references in its machine templates,
+		// so we must wait for the images to be available before running the
+		// test.
+		coreImages := shared.CoreImages(e2eCtx)
+		allImages := append(coreImages, upgradeImage)
+		shared.WaitForGlanceImagesAvailable(ctx, e2eCtx, allImages)
+
+		setDownloadE2EImageEnvVar()
+	})
+
+	capi_e2e.ClusterctlUpgradeSpec(context.TODO(), func() capi_e2e.ClusterctlUpgradeSpecInput {
 		return capi_e2e.ClusterctlUpgradeSpecInput{
 			E2EConfig:                       e2eCtx.E2EConfig,
 			ClusterctlConfigPath:            e2eCtx.Environment.ClusterctlConfigPath,

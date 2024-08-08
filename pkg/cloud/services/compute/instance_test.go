@@ -17,7 +17,9 @@ limitations under the License.
 package compute
 
 import (
+	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -31,29 +33,49 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/image/v2/images"
 	. "github.com/onsi/gomega" //nolint:revive
 	"go.uber.org/mock/gomock"
+	apiequality "k8s.io/apimachinery/pkg/api/equality"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/ptr"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+
+	orcv1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
+	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 )
 
 func TestService_getImageID(t *testing.T) {
-	imageID := "ce96e584-7ebc-46d6-9e55-987d72e3806c"
-	imageName := "test-image"
+	const (
+		imageID   = "ce96e584-7ebc-46d6-9e55-987d72e3806c"
+		imageName = "test-image"
+		namespace = "test-namespace"
+
+		fakeClientResourceVersion = "999"
+	)
 	imageTags := []string{"test-tag"}
 
+	scheme := runtime.NewScheme()
+	if err := orcv1alpha1.AddToScheme(scheme); err != nil {
+		panic(err)
+	}
+
 	tests := []struct {
-		testName string
-		image    infrav1.ImageParam
-		expect   func(m *mock.MockImageClientMockRecorder)
-		want     string
-		wantErr  bool
+		testName          string
+		image             infrav1.ImageParam
+		fakeObjects       []runtime.Object
+		expect            func(m *mock.MockImageClientMockRecorder)
+		want              *string
+		wantDep           runtime.Object
+		wantErr           bool
+		wantTerminalError bool
 	}{
 		{
 			testName: "Return image ID when ID given",
-			image:    infrav1.ImageParam{ID: &imageID},
-			want:     imageID,
+			image:    infrav1.ImageParam{ID: ptr.To(imageID)},
+			want:     ptr.To(imageID),
 			expect:   func(*mock.MockImageClientMockRecorder) {},
 			wantErr:  false,
 		},
@@ -61,10 +83,10 @@ func TestService_getImageID(t *testing.T) {
 			testName: "Return image ID when name given",
 			image: infrav1.ImageParam{
 				Filter: &infrav1.ImageFilter{
-					Name: &imageName,
+					Name: ptr.To(imageName),
 				},
 			},
-			want: imageID,
+			want: ptr.To(imageID),
 			expect: func(m *mock.MockImageClientMockRecorder) {
 				m.ListImages(images.ListOpts{Name: imageName}).Return(
 					[]images.Image{{ID: imageID, Name: imageName}},
@@ -79,7 +101,7 @@ func TestService_getImageID(t *testing.T) {
 					Tags: imageTags,
 				},
 			},
-			want: imageID,
+			want: ptr.To(imageID),
 			expect: func(m *mock.MockImageClientMockRecorder) {
 				m.ListImages(images.ListOpts{Tags: imageTags}).Return(
 					[]images.Image{{ID: imageID, Name: imageName, Tags: imageTags}},
@@ -91,7 +113,7 @@ func TestService_getImageID(t *testing.T) {
 			testName: "Return no results",
 			image: infrav1.ImageParam{
 				Filter: &infrav1.ImageFilter{
-					Name: &imageName,
+					Name: ptr.To(imageName),
 				},
 			},
 			expect: func(m *mock.MockImageClientMockRecorder) {
@@ -99,14 +121,14 @@ func TestService_getImageID(t *testing.T) {
 					[]images.Image{},
 					nil)
 			},
-			want:    "",
+			want:    nil,
 			wantErr: true,
 		},
 		{
 			testName: "Return multiple results",
 			image: infrav1.ImageParam{
 				Filter: &infrav1.ImageFilter{
-					Name: &imageName,
+					Name: ptr.To(imageName),
 				},
 			},
 			expect: func(m *mock.MockImageClientMockRecorder) {
@@ -116,14 +138,14 @@ func TestService_getImageID(t *testing.T) {
 						{ID: "123", Name: "test-image"},
 					}, nil)
 			},
-			want:    "",
+			want:    nil,
 			wantErr: true,
 		},
 		{
 			testName: "OpenStack returns error",
 			image: infrav1.ImageParam{
 				Filter: &infrav1.ImageFilter{
-					Name: &imageName,
+					Name: ptr.To(imageName),
 				},
 			},
 			expect: func(m *mock.MockImageClientMockRecorder) {
@@ -131,8 +153,172 @@ func TestService_getImageID(t *testing.T) {
 					nil,
 					fmt.Errorf("test error"))
 			},
-			want:    "",
+			want:    nil,
 			wantErr: true,
+		},
+		{
+			testName: "Image by reference does not exist",
+			image: infrav1.ImageParam{
+				ImageRef: &infrav1.ResourceReference{
+					Name: imageName,
+				},
+			},
+			want: nil,
+			wantDep: &orcv1alpha1.Image{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      imageName,
+					Namespace: namespace,
+				},
+			},
+		},
+		{
+			testName: "Image by reference exists, is available",
+			image: infrav1.ImageParam{
+				ImageRef: &infrav1.ResourceReference{
+					Name: imageName,
+				},
+			},
+			fakeObjects: []runtime.Object{
+				&orcv1alpha1.Image{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      imageName,
+						Namespace: namespace,
+					},
+					Status: orcv1alpha1.ImageStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:   orcv1alpha1.OpenStackConditionAvailable,
+								Status: metav1.ConditionTrue,
+							},
+						},
+						ImageID: ptr.To(imageID),
+					},
+				},
+			},
+			want: ptr.To(imageID),
+			wantDep: &orcv1alpha1.Image{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:            imageName,
+					Namespace:       namespace,
+					ResourceVersion: fakeClientResourceVersion,
+				},
+				Status: orcv1alpha1.ImageStatus{
+					Conditions: []metav1.Condition{
+						{
+							Type:   orcv1alpha1.OpenStackConditionAvailable,
+							Status: metav1.ConditionTrue,
+						},
+					},
+					ImageID: ptr.To(imageID),
+				},
+			},
+		},
+		{
+			testName: "Image by reference exists, still reconciling",
+			image: infrav1.ImageParam{
+				ImageRef: &infrav1.ResourceReference{
+					Name: imageName,
+				},
+			},
+			fakeObjects: []runtime.Object{
+				&orcv1alpha1.Image{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      imageName,
+						Namespace: namespace,
+					},
+					Status: orcv1alpha1.ImageStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:   orcv1alpha1.OpenStackConditionAvailable,
+								Status: metav1.ConditionFalse,
+							},
+							{
+								Type:   orcv1alpha1.OpenStackConditionProgressing,
+								Status: metav1.ConditionTrue,
+								Reason: orcv1alpha1.OpenStackConditionReasonProgressing,
+							},
+						},
+						ImageID: ptr.To(imageID),
+					},
+				},
+			},
+			want: nil,
+			wantDep: &orcv1alpha1.Image{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:            imageName,
+					Namespace:       namespace,
+					ResourceVersion: fakeClientResourceVersion,
+				},
+				Status: orcv1alpha1.ImageStatus{
+					Conditions: []metav1.Condition{
+						{
+							Type:   orcv1alpha1.OpenStackConditionAvailable,
+							Status: metav1.ConditionFalse,
+						},
+						{
+							Type:   orcv1alpha1.OpenStackConditionProgressing,
+							Status: metav1.ConditionTrue,
+							Reason: orcv1alpha1.OpenStackConditionReasonProgressing,
+						},
+					},
+					ImageID: ptr.To(imageID),
+				},
+			},
+		},
+		{
+			testName: "Image by reference exists, terminal failure",
+			image: infrav1.ImageParam{
+				ImageRef: &infrav1.ResourceReference{
+					Name: imageName,
+				},
+			},
+			fakeObjects: []runtime.Object{
+				&orcv1alpha1.Image{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      imageName,
+						Namespace: namespace,
+					},
+					Status: orcv1alpha1.ImageStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:   orcv1alpha1.OpenStackConditionAvailable,
+								Status: metav1.ConditionFalse,
+							},
+							{
+								Type:    orcv1alpha1.OpenStackConditionProgressing,
+								Status:  metav1.ConditionFalse,
+								Reason:  orcv1alpha1.OpenStackConditionReasonUnrecoverableError,
+								Message: "test error",
+							},
+						},
+						ImageID: ptr.To(imageID),
+					},
+				},
+			},
+			want:              nil,
+			wantTerminalError: true,
+			wantDep: &orcv1alpha1.Image{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:            imageName,
+					Namespace:       namespace,
+					ResourceVersion: fakeClientResourceVersion,
+				},
+				Status: orcv1alpha1.ImageStatus{
+					Conditions: []metav1.Condition{
+						{
+							Type:   orcv1alpha1.OpenStackConditionAvailable,
+							Status: metav1.ConditionFalse,
+						},
+						{
+							Type:    orcv1alpha1.OpenStackConditionProgressing,
+							Status:  metav1.ConditionFalse,
+							Reason:  orcv1alpha1.OpenStackConditionReasonUnrecoverableError,
+							Message: "test error",
+						},
+					},
+					ImageID: ptr.To(imageID),
+				},
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -145,15 +331,35 @@ func TestService_getImageID(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Failed to create service: %v", err)
 			}
-			tt.expect(mockScopeFactory.ImageClient.EXPECT())
+			if tt.expect != nil {
+				tt.expect(mockScopeFactory.ImageClient.EXPECT())
+			}
 
-			got, err := s.GetImageID(tt.image)
+			fakeClient := fake.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(tt.fakeObjects...).Build()
+
+			got, dependency, err := s.GetImageID(context.TODO(), fakeClient, namespace, tt.image)
+
+			if tt.wantTerminalError {
+				tt.wantErr = true
+			}
+
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Service.getImageID() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if got != tt.want {
-				t.Errorf("Service.getImageID() = %v, want %v", got, tt.want)
+
+			var terminalError *capoerrors.TerminalError
+			if errors.As(err, &terminalError) != tt.wantTerminalError {
+				t.Errorf("Terminal error: wanted = %v, got = %v", tt.wantTerminalError, !tt.wantTerminalError)
+			}
+
+			if !apiequality.Semantic.DeepEqual(tt.wantDep, dependency) {
+				t.Errorf("Dependency does not match: %s", cmp.Diff(tt.wantDep, dependency))
+			}
+
+			// NOTE(mdbooth): there must be a simpler way to write this!
+			if (tt.want == nil && got != nil) || (tt.want != nil && (got == nil || *tt.want != *got)) {
+				t.Errorf("Service.getImageID() = '%v', want '%v'", ptr.Deref(got, ""), ptr.Deref(tt.want, ""))
 			}
 		})
 	}

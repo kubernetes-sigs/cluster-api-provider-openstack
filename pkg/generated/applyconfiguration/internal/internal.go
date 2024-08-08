@@ -2315,6 +2315,9 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: id
       type:
         scalar: string
+    - name: imageRef
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.ResourceReference
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.LoadBalancer
   map:
     fields:
@@ -2973,6 +2976,13 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: vnicType
       type:
         scalar: string
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.ResourceReference
+  map:
+    fields:
+    - name: name
+      type:
+        scalar: string
+      default: ""
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.RootVolume
   map:
     fields:
