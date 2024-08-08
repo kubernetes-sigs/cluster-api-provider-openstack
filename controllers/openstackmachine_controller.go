@@ -423,6 +423,7 @@ func (r *OpenStackMachineReconciler) reconcileMachineState(scope *scope.WithLogg
 
 		// Set properties required by CAPI machine controller
 		openStackMachine.Spec.ProviderID = ptr.To(fmt.Sprintf("openstack:///%s", *openStackServer.Status.InstanceID))
+		openStackMachine.Status.InstanceID = openStackServer.Status.InstanceID
 		openStackMachine.Status.Ready = true
 	case infrav1.InstanceStateError:
 		// If the machine has a NodeRef then it must have been working at some point,
