@@ -20,26 +20,28 @@ limitations under the License.
 package e2e
 
 import (
+	"context"
 	"errors"
 	"os"
 	"testing"
 
 	"github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v3/volumes"
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
+	"github.com/gophercloud/gophercloud/v2/openstack/image/v2/images"
 	"github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/loadbalancers"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
 )
 
 var (
-	e2eCtx *shared.E2EContext
-	err    error
+	e2eCtx       *shared.E2EContext
+	err          error
+	upgradeImage shared.DownloadImage
 )
 
 func init() {
@@ -55,12 +57,15 @@ func init() {
 
 func TestE2E(t *testing.T) {
 	RegisterFailHandler(Fail)
-	ctrl.SetLogger(klog.Background())
-	RunSpecs(t, "capo-e2e")
+	ctrl.SetLogger(GinkgoLogr)
+
+	suiteConfig, reporterConfig := GinkgoConfiguration()
+
+	RunSpecs(t, "capo-e2e", suiteConfig, reporterConfig)
 }
 
-var _ = SynchronizedBeforeSuite(func() []byte {
-	data := shared.Node1BeforeSuite(e2eCtx)
+var _ = SynchronizedBeforeSuite(func(ctx context.Context) []byte {
+	data := shared.Node1BeforeSuite(ctx, e2eCtx)
 
 	initialServers, err := shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{})
 	Expect(err).NotTo(HaveOccurred())
@@ -74,18 +79,29 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	Expect(err).NotTo(HaveOccurred())
 
 	DeferCleanup(func() error {
+		// Note that this runs after SynchronizedAfterSuite, so the
+		// management cluster has already been torn down: we can't make
+		// any k8s calls here.
 		return errors.Join(
 			CheckResourceCleanup(shared.DumpOpenStackServers, servers.ListOpts{}, initialServers),
 			CheckResourceCleanup(shared.DumpOpenStackNetworks, networks.ListOpts{}, initialNetworks),
 			CheckResourceCleanup(shared.DumpOpenStackSecurityGroups, groups.ListOpts{}, initialSecurityGroups),
 			CheckResourceCleanup(shared.DumpOpenStackLoadBalancers, loadbalancers.ListOpts{}, initialLoadBalancers),
 			CheckResourceCleanup(shared.DumpOpenStackVolumes, volumes.ListOpts{}, initialVolumes),
+
+			// All images we create are tagged with E2EImageTag. We assert that there are none of these remaining.
+			CheckResourceCleanup(shared.DumpOpenStackImages, images.ListOpts{Tags: []string{shared.E2EImageTag}}, []images.Image{}),
 		)
 	})
 
 	return data
 }, func(data []byte) {
 	shared.AllNodesBeforeSuite(e2eCtx, data)
+
+	upgradeImage = shared.DownloadImage{
+		Name:         "capo-upgrade-from",
+		ArtifactPath: "ubuntu/2024-05-28/" + e2eCtx.E2EConfig.GetVariable("OPENSTACK_IMAGE_NAME_UPGRADE_FROM") + ".img",
+	}
 })
 
 // CheckResourceCleanup checks if all resources created during the test are cleaned up by comparing the resources
@@ -112,6 +128,16 @@ func CheckResourceCleanup[T any, L any](f func(*shared.E2EContext, L) ([]T, erro
 
 var _ = SynchronizedAfterSuite(func() {
 	shared.AllNodesAfterSuite(e2eCtx)
-}, func() {
-	shared.Node1AfterSuite(e2eCtx)
+}, func(ctx context.Context) {
+	shared.DeleteAllORCImages(ctx, e2eCtx)
+	shared.Node1AfterSuite(ctx, e2eCtx)
 })
+
+func setDownloadE2EImageEnvVar() {
+	const downloadE2EImage = "DOWNLOAD_E2E_IMAGE"
+
+	shared.SetEnvVar(downloadE2EImage, "true", false)
+	if value, set := os.LookupEnv(downloadE2EImage); set {
+		DeferCleanup(shared.SetEnvVar, downloadE2EImage, value, false)
+	}
+}

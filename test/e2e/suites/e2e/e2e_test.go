@@ -61,29 +61,72 @@ import (
 
 const specName = "e2e"
 
+// Additional images required for flatcar tests.
+func flatcarImages(e2eCtx *shared.E2EContext) []shared.DownloadImage {
+	return []shared.DownloadImage{
+		{
+			Name:         "capo-flatcar",
+			ArtifactPath: "flatcar/" + e2eCtx.E2EConfig.GetVariable("OPENSTACK_FLATCAR_IMAGE_NAME") + ".img",
+		},
+		{
+			Name: "flatcar-openstack",
+			URL:  "https://stable.release.flatcar-linux.net/amd64-usr/current/flatcar_production_openstack_image.img",
+		},
+	}
+}
+
 var _ = Describe("e2e tests [PR-Blocking]", func() {
 	var (
 		namespace        *corev1.Namespace
 		clusterResources *clusterctl.ApplyClusterTemplateAndWaitResult
-		ctx              context.Context
 
 		// Cleanup functions which cannot run until after the cluster has been deleted
 		postClusterCleanup []func(context.Context)
+
+		// Images required for the current test in addition to the core images
+		additionalImages []shared.DownloadImage
 	)
 
-	BeforeEach(func() {
+	createCluster := func(ctx context.Context, configCluster clusterctl.ConfigClusterInput, result *clusterctl.ApplyClusterTemplateAndWaitResult) {
+		clusterctl.ApplyClusterTemplateAndWait(ctx, clusterctl.ApplyClusterTemplateAndWaitInput{
+			ClusterProxy:                 e2eCtx.Environment.BootstrapClusterProxy,
+			ConfigCluster:                configCluster,
+			WaitForClusterIntervals:      e2eCtx.E2EConfig.GetIntervals(specName, "wait-cluster"),
+			WaitForControlPlaneIntervals: e2eCtx.E2EConfig.GetIntervals(specName, "wait-control-plane"),
+			WaitForMachineDeployments:    e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes"),
+		}, result)
+
+		DeferCleanup(func(ctx context.Context) {
+			shared.Logf("Attempting to collect logs for cluster %q in namespace %q", clusterResources.Cluster.Name, namespace.Name)
+			e2eCtx.Environment.BootstrapClusterProxy.CollectWorkloadClusterLogs(ctx, namespace.Name, clusterResources.Cluster.Name, filepath.Join(e2eCtx.Settings.ArtifactFolder, "clusters", e2eCtx.Environment.BootstrapClusterProxy.GetName(), namespace.Name))
+			// Dumps all the resources in the spec namespace, then cleanups the cluster object and the spec namespace itself.
+			shared.DumpSpecResourcesAndCleanup(ctx, specName, namespace, e2eCtx)
+
+			// Cleanup resources which can't be cleaned up until the cluster has been deleted
+			for _, cleanup := range postClusterCleanup {
+				cleanup(ctx)
+			}
+		})
+	}
+
+	BeforeEach(func(ctx context.Context) {
 		Expect(e2eCtx.Environment.BootstrapClusterProxy).ToNot(BeNil(), "Invalid argument. BootstrapClusterProxy can't be nil")
-		ctx = context.TODO()
 		// Setup a Namespace where to host objects for this spec and create a watcher for the namespace events.
 		namespace = shared.SetupSpecNamespace(ctx, specName, e2eCtx)
 		clusterResources = new(clusterctl.ApplyClusterTemplateAndWaitResult)
 		Expect(e2eCtx.E2EConfig).ToNot(BeNil(), "Invalid argument. e2eConfig can't be nil when calling %s spec", specName)
 		Expect(e2eCtx.E2EConfig.Variables).To(HaveKey(shared.KubernetesVersion))
 		postClusterCleanup = nil
+
+		additionalImages = nil
+	})
+
+	JustBeforeEach(func(ctx context.Context) {
+		shared.ApplyCoreImagesPlus(ctx, e2eCtx, additionalImages...)
 	})
 
 	Describe("Workload cluster (default)", func() {
-		It("should be creatable and deletable", func() {
+		It("should be creatable and deletable", func(ctx context.Context) {
 			shared.Logf("Creating a cluster")
 			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
@@ -307,7 +350,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 	})
 
 	Describe("Workload cluster (no bastion)", func() {
-		It("should be creatable and deletable", func() {
+		It("should be creatable and deletable", func(ctx context.Context) {
 			shared.Logf("Creating a cluster")
 			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
@@ -343,7 +386,11 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 	})
 
 	Describe("Workload cluster (flatcar)", func() {
-		It("should be creatable and deletable", func() {
+		BeforeEach(func() {
+			additionalImages = append(additionalImages, flatcarImages(e2eCtx)...)
+		})
+
+		It("should be creatable and deletable", func(ctx context.Context) {
 			// Flatcar default user is "core"
 			shared.SetEnvVar(shared.SSHUserMachine, "core", false)
 
@@ -388,7 +435,11 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 	})
 
 	Describe("Workload cluster (flatcar-sysext)", func() {
-		It("should be creatable and deletable", func() {
+		BeforeEach(func() {
+			additionalImages = append(additionalImages, flatcarImages(e2eCtx)...)
+		})
+
+		It("should be creatable and deletable", func(ctx context.Context) {
 			// Flatcar default user is "core"
 			shared.SetEnvVar(shared.SSHUserMachine, "core", false)
 
@@ -433,7 +484,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 	})
 
 	Describe("Workload cluster (without lb)", func() {
-		It("should create port(s) with custom options", func() {
+		It("should create port(s) with custom options", func(ctx context.Context) {
 			shared.Logf("Creating a cluster")
 			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
@@ -637,7 +688,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			extraNet1, extraNet2 *networks.Network
 		)
 
-		BeforeEach(func() {
+		BeforeEach(func(ctx context.Context) {
 			var err error
 
 			// Create 2 additional networks to be attached to all cluster nodes
@@ -675,7 +726,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			md = clusterResources.MachineDeployments
 		})
 
-		It("should attach all machines to multiple networks", func() {
+		It("should attach all machines to multiple networks", func(ctx context.Context) {
 			workerMachines := framework.GetMachinesByMachineDeployments(ctx, framework.GetMachinesByMachineDeploymentsInput{
 				Lister:            e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
 				ClusterName:       clusterName,
@@ -749,7 +800,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 	})
 
 	Describe("MachineDeployment misconfigurations", func() {
-		It("should fail to create MachineDeployment with invalid subnet or invalid availability zone", func() {
+		It("should fail to create MachineDeployment with invalid subnet or invalid availability zone", func(ctx context.Context) {
 			shared.Logf("Creating a cluster")
 			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster := defaultConfigCluster(clusterName, namespace.Name)
@@ -785,7 +836,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			cluster                         *infrav1.OpenStackCluster
 		)
 
-		BeforeEach(func() {
+		BeforeEach(func(ctx context.Context) {
 			failureDomain = e2eCtx.E2EConfig.GetVariable(shared.OpenStackFailureDomain)
 			failureDomainAlt = e2eCtx.E2EConfig.GetVariable(shared.OpenStackFailureDomainAlt)
 			volumeTypeAlt = e2eCtx.E2EConfig.GetVariable(shared.OpenStackVolumeTypeAlt)
@@ -817,7 +868,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("should be creatable and deletable", func() {
+		It("should be creatable and deletable", func(ctx context.Context) {
 			workerMachines := framework.GetMachinesByMachineDeployments(ctx, framework.GetMachinesByMachineDeploymentsInput{
 				Lister:            e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
 				ClusterName:       clusterName,
@@ -957,29 +1008,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			}
 		})
 	})
-
-	AfterEach(func(ctx context.Context) {
-		shared.Logf("Attempting to collect logs for cluster %q in namespace %q", clusterResources.Cluster.Name, namespace.Name)
-		e2eCtx.Environment.BootstrapClusterProxy.CollectWorkloadClusterLogs(ctx, namespace.Name, clusterResources.Cluster.Name, filepath.Join(e2eCtx.Settings.ArtifactFolder, "clusters", e2eCtx.Environment.BootstrapClusterProxy.GetName(), namespace.Name))
-		// Dumps all the resources in the spec namespace, then cleanups the cluster object and the spec namespace itself.
-		shared.DumpSpecResourcesAndCleanup(ctx, specName, namespace, e2eCtx)
-
-		// Cleanup resources which can't be cleaned up until the cluster has been deleted
-		for _, cleanup := range postClusterCleanup {
-			cleanup(ctx)
-		}
-	})
 })
-
-func createCluster(ctx context.Context, configCluster clusterctl.ConfigClusterInput, result *clusterctl.ApplyClusterTemplateAndWaitResult) {
-	clusterctl.ApplyClusterTemplateAndWait(ctx, clusterctl.ApplyClusterTemplateAndWaitInput{
-		ClusterProxy:                 e2eCtx.Environment.BootstrapClusterProxy,
-		ConfigCluster:                configCluster,
-		WaitForClusterIntervals:      e2eCtx.E2EConfig.GetIntervals(specName, "wait-cluster"),
-		WaitForControlPlaneIntervals: e2eCtx.E2EConfig.GetIntervals(specName, "wait-control-plane"),
-		WaitForMachineDeployments:    e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes"),
-	}, result)
-}
 
 func defaultConfigCluster(clusterName, namespace string) clusterctl.ConfigClusterInput {
 	return clusterctl.ConfigClusterInput{

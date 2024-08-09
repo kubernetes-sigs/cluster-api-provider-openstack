@@ -21,8 +21,9 @@ package v1beta1
 // ImageParamApplyConfiguration represents an declarative configuration of the ImageParam type for use
 // with apply.
 type ImageParamApplyConfiguration struct {
-	ID     *string                        `json:"id,omitempty"`
-	Filter *ImageFilterApplyConfiguration `json:"filter,omitempty"`
+	ID       *string                              `json:"id,omitempty"`
+	Filter   *ImageFilterApplyConfiguration       `json:"filter,omitempty"`
+	ImageRef *ResourceReferenceApplyConfiguration `json:"imageRef,omitempty"`
 }
 
 // ImageParamApplyConfiguration constructs an declarative configuration of the ImageParam type for use with
@@ -44,5 +45,13 @@ func (b *ImageParamApplyConfiguration) WithID(value string) *ImageParamApplyConf
 // If called multiple times, the Filter field is set to the value of the last call.
 func (b *ImageParamApplyConfiguration) WithFilter(value *ImageFilterApplyConfiguration) *ImageParamApplyConfiguration {
 	b.Filter = value
+	return b
+}
+
+// WithImageRef sets the ImageRef field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ImageRef field is set to the value of the last call.
+func (b *ImageParamApplyConfiguration) WithImageRef(value *ResourceReferenceApplyConfiguration) *ImageParamApplyConfiguration {
+	b.ImageRef = value
 	return b
 }

@@ -59,6 +59,7 @@ linters-settings:
     sections:
     - standard
     - default
+    - prefix(github.com/k-orc/openstack-resource-controller)
     - prefix(sigs.k8s.io/cluster-api-provider-openstack)
   gocritic:
     enabled-tags:
@@ -130,6 +131,9 @@ linters-settings:
         alias: controlplanev1alpha4
       - pkg: sigs.k8s.io/cluster-api/controlplane/kubeadm/api/v1beta1
         alias: controlplanev1
+      # ORC
+      - pkg: github.com/k-orc/openstack-resource-controller/api/v1alpha1
+        alias: orcv1alpha1
 
   nolintlint:
     # https://github.com/golangci/golangci-lint/issues/3228

@@ -38,16 +38,24 @@ import (
 	"sigs.k8s.io/cluster-api/util/conditions"
 	"sigs.k8s.io/cluster-api/util/patch"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	orcv1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
+	"github.com/k-orc/openstack-resource-controller/pkg/predicates"
 
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
+	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/objects"
 )
 
 const (
@@ -106,6 +114,12 @@ func (r *OpenStackServerReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	}
 
 	defer func() {
+		// Propagate terminal errors
+		terminalError := &capoerrors.TerminalError{}
+		if errors.As(reterr, &terminalError) {
+			conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, terminalError.Reason, clusterv1.ConditionSeverityError, terminalError.Message)
+		}
+
 		if err := patchServer(ctx, patchHelper, openStackServer); err != nil {
 			result = ctrl.Result{}
 			reterr = kerrors.NewAggregate([]error{reterr, err})
@@ -145,9 +159,41 @@ func patchServer(ctx context.Context, patchHelper *patch.Helper, openStackServer
 	return patchHelper.Patch(ctx, openStackServer, options...)
 }
 
-func (r *OpenStackServerReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *OpenStackServerReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager, _ controller.Options) error {
+	log := ctrl.LoggerFrom(ctx)
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&infrav1alpha1.OpenStackServer{}).
+		Watches(&orcv1alpha1.Image{},
+			handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, obj client.Object) []reconcile.Request {
+				log = log.WithValues("watch", "Image")
+
+				k8sClient := mgr.GetClient()
+				label, err := objToDependencyLabel(obj, k8sClient.Scheme())
+				if err != nil {
+					log.Error(err, "objToDependencyLabel")
+				}
+
+				labels := map[string]string{label: ""}
+				serverList := &infrav1alpha1.OpenStackServerList{}
+				err = k8sClient.List(ctx, serverList, client.MatchingLabels(labels), client.InNamespace(obj.GetNamespace()))
+				if err != nil {
+					log.Error(err, "listing OpenStackServers")
+					return nil
+				}
+
+				requests := make([]reconcile.Request, len(serverList.Items))
+				for i := range serverList.Items {
+					server := &serverList.Items[i]
+					request := &requests[i]
+
+					request.Name = server.Name
+					request.Namespace = server.Namespace
+				}
+				return requests
+			}),
+			builder.WithPredicates(predicates.NewBecameAvailable(mgr.GetLogger(), &orcv1alpha1.Image{})),
+		).
 		Complete(r)
 }
 
@@ -210,6 +256,27 @@ func (r *OpenStackServerReconciler) reconcileDelete(scope *scope.WithLogger, ope
 	return nil
 }
 
+func objToDependencyLabel(obj client.Object, scheme *runtime.Scheme) (string, error) {
+	gvk, err := objects.GetGVK(obj, scheme)
+	if err != nil {
+		return "", err
+	}
+
+	if gvk.Group != orcv1alpha1.SchemeGroupVersion.Group {
+		return "", fmt.Errorf("dependency object has unexpected group %s", gvk.Group)
+	}
+
+	var prefixType string
+	switch gvk.Kind {
+	case "Image":
+		prefixType = "image"
+	default:
+		return "", fmt.Errorf("dependency object has unexpected kind %s", gvk.Kind)
+	}
+
+	return "orc-dependency-" + prefixType + "/" + obj.GetName(), nil
+}
+
 func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, scope *scope.WithLogger, openStackServer *infrav1alpha1.OpenStackServer) (_ ctrl.Result, reterr error) {
 	// If the OpenStackServer is in an error state, return early.
 	if openStackServer.Status.InstanceState != nil && *openStackServer.Status.InstanceState == infrav1.InstanceStateError {
@@ -219,8 +286,38 @@ func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, scope *
 
 	scope.Logger().Info("Reconciling Server create")
 
-	changed, err := resolveServerResources(scope, openStackServer)
-	if err != nil {
+	labels := openStackServer.GetLabels()
+	if labels == nil {
+		labels = make(map[string]string)
+		openStackServer.SetLabels(labels)
+	}
+
+	changed, dependencies, resolveDone, err := compute.ResolveServerSpec(ctx, scope, r.Client, openStackServer)
+
+	errs := make([]error, 0, len(dependencies)+1)
+	errs = append(errs, err)
+
+	// Add a dependency label for every object we depend on
+	// Set changed if we update any labels
+	// Collate all errors and return in a single transaction
+	for i := range dependencies {
+		errs = append(errs, func() error {
+			dependency := dependencies[i]
+			label, err := objToDependencyLabel(dependency, r.Client.Scheme())
+			if err != nil {
+				return err
+			}
+
+			if _, ok := labels[label]; !ok {
+				labels[label] = ""
+				changed = true
+			}
+			return nil
+		}())
+	}
+	err = errors.Join(errs...)
+
+	if err != nil || !resolveDone {
 		return ctrl.Result{}, err
 	}
 
@@ -315,19 +412,6 @@ func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, scope *
 
 	scope.Logger().Info("Reconciled Server create successfully")
 	return ctrl.Result{}, nil
-}
-
-// resolveServerResources resolves and stores the OpenStack resources for the server.
-func resolveServerResources(scope *scope.WithLogger, openStackServer *infrav1alpha1.OpenStackServer) (bool, error) {
-	if openStackServer.Status.Resources == nil {
-		openStackServer.Status.Resources = &infrav1alpha1.ServerResources{}
-	}
-	resolved := openStackServer.Status.Resolved
-	if resolved == nil {
-		resolved = &infrav1alpha1.ResolvedServerSpec{}
-		openStackServer.Status.Resolved = resolved
-	}
-	return compute.ResolveServerSpec(scope, openStackServer)
 }
 
 // adoptServerResources adopts the OpenStack resources for the server.

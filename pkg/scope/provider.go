@@ -44,8 +44,8 @@ import (
 )
 
 const (
-	cloudsSecretKey = "clouds.yaml"
-	caSecretKey     = "cacert"
+	CloudsSecretKey = "clouds.yaml"
+	CASecretKey     = "cacert"
 )
 
 type providerScopeFactory struct {
@@ -267,10 +267,10 @@ func getCloudFromSecret(ctx context.Context, ctrlClient client.Client, secretNam
 		return emptyCloud, nil, err
 	}
 
-	content, ok := secret.Data[cloudsSecretKey]
+	content, ok := secret.Data[CloudsSecretKey]
 	if !ok {
 		return emptyCloud, nil, fmt.Errorf("OpenStack credentials secret %v did not contain key %v",
-			secretName, cloudsSecretKey)
+			secretName, CloudsSecretKey)
 	}
 	var clouds clientconfig.Clouds
 	if err = yaml.Unmarshal(content, &clouds); err != nil {
@@ -278,7 +278,7 @@ func getCloudFromSecret(ctx context.Context, ctrlClient client.Client, secretNam
 	}
 
 	// get caCert
-	caCert, ok := secret.Data[caSecretKey]
+	caCert, ok := secret.Data[CASecretKey]
 	if !ok {
 		return clouds.Clouds[cloudName], nil, nil
 	}

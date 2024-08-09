@@ -17,6 +17,7 @@ limitations under the License.
 package compute
 
 import (
+	"context"
 	"reflect"
 	"slices"
 	"testing"
@@ -30,6 +31,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -162,8 +164,10 @@ func Test_ResolveServerSpec(t *testing.T) {
 				},
 			}
 
+			fakeClient := fake.NewFakeClient()
+
 			scope := scope.NewWithLogger(mockScopeFactory, log)
-			_, err := ResolveServerSpec(scope, openStackServer)
+			_, _, _, err := ResolveServerSpec(context.TODO(), scope, fakeClient, openStackServer)
 			if tt.wantErr {
 				g.Expect(err).Error()
 				return

@@ -57,21 +57,13 @@
     ENABLED_SERVICES+=${OPENSTACK_ADDITIONAL_SERVICES}
     DISABLED_SERVICES+=${OPENSTACK_DISABLED_SERVICES}
 
-    # Don't download default images, just our test images
+    # Don't download default images.
+    # Test images are downloaded by the e2e tests directly.
     DOWNLOAD_DEFAULT_IMAGES=False
+    # We upload the Amphora image so it doesn't have to be built
+    IMAGE_URLS="https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/amphora/2022-12-05/amphora-x64-haproxy.qcow2"
     # Increase the total image size limit
     GLANCE_LIMIT_IMAGE_SIZE_TOTAL=20000
-    # We upload the Amphora image so it doesn't have to be build
-    # Upload the images so we don't have to upload them from Prow
-    # NOTE: If you get issues when changing/adding images, check if the limits
-    # are sufficient and change the variable above if needed.
-    # https://docs.openstack.org/glance/latest/admin/quotas.html
-    IMAGE_URLS="https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/amphora/2022-12-05/amphora-x64-haproxy.qcow2,"
-    IMAGE_URLS+="https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/cirros/2022-12-05/cirros-0.6.1-x86_64-disk.img,"
-    IMAGE_URLS+="https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/ubuntu/2024-05-28/ubuntu-2204-kube-v1.29.5.img,"
-    IMAGE_URLS+="https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/ubuntu/2024-05-28/ubuntu-2204-kube-v1.30.1.img,"
-    IMAGE_URLS+="https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/flatcar/flatcar-stable-3975.2.0-kube-v1.30.1.img,"
-    IMAGE_URLS+="https://stable.release.flatcar-linux.net/amd64-usr/current/flatcar_production_openstack_image.img"
 
     [[post-config|$NOVA_CONF]]
     [DEFAULT]

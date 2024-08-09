@@ -1,0 +1,23 @@
+# permissions for end users to view images.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: orc
+    app.kubernetes.io/managed-by: kustomize
+  name: image-viewer-role
+rules:
+- apiGroups:
+  - openstack.k-orc.cloud
+  resources:
+  - images
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - openstack.k-orc.cloud
+  resources:
+  - images/status
+  verbs:
+  - get
