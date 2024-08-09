@@ -19,6 +19,7 @@ package networking
 import (
 	"errors"
 	"fmt"
+	"net"
 	"slices"
 
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/attributestags"
@@ -169,6 +170,7 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 	var secControlPlaneGroupID string
 	var secWorkerGroupID string
 	var secBastionGroupID string
+	var SubnetCIDR string
 
 	// remoteManagedGroups is a map of suffix to security group ID.
 	// It will be used to fill in the RemoteGroupID field of the security group rules
@@ -200,7 +202,29 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 	workerRules := append([]resolvedSecurityGroupRuleSpec{}, defaultRules...)
 
 	controlPlaneRules = append(controlPlaneRules, getSGControlPlaneHTTPS()...)
-	workerRules = append(workerRules, getSGWorkerNodePort()...)
+
+	// Fetch subnet to use for worker node port rules
+	// In the future IPv6 support need to be added here
+	if openStackCluster.Status.Network != nil && len(openStackCluster.Status.Network.Subnets) > 0 {
+		for _, subnet := range openStackCluster.Status.Network.Subnets {
+			// Check uf subnet.CIDR is ipv4 subnet
+			_, ipnet, err := net.ParseCIDR(subnet.CIDR)
+			if err != nil {
+				return nil, fmt.Errorf("invalid subnet found during security groups reconcile: %v", err)
+			}
+			if ipnet.IP.To4() != nil {
+				SubnetCIDR = subnet.CIDR
+				break
+			}
+		}
+	}
+	if SubnetCIDR != "" {
+		// If SubnetCIDR is found we allow tcp and udp traffic from said SubnetCIDR, this in order to allow octavia Loadbalancers created by CCM to function properly
+		workerRules = append(workerRules, getSGWorkerNodePortCidr(SubnetCIDR)...)
+	}
+
+	// Add rules allowing nodepors from all cluster nodes, this will take effect even if no SubnetCIDR is found to ensure all nodes can commincate over nodeports at all time
+	workerRules = append(workerRules, getSGWorkerNodePort(secWorkerGroupID, secControlPlaneGroupID)...)
 
 	// If we set additional ports to LB, we need create secgroup rules those ports, this apply to controlPlaneRules only
 	if openStackCluster.Spec.APIServerLoadBalancer.IsEnabled() {
