@@ -1,0 +1,31 @@
+index 9514c03ae..372b8dfc2 100644
+--- a/images/capi/Dockerfile
++++ b/images/capi/Dockerfile
+@@ -38,18 +38,15 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+ ARG ARCH
+ ARG PASSED_IB_VERSION
+
+-USER imagebuilder
+-WORKDIR /home/imagebuilder/
+-
+-COPY --chown=imagebuilder:imagebuilder ansible ansible/
+-COPY --chown=imagebuilder:imagebuilder ansible.cfg ansible.cfg
+-COPY --chown=imagebuilder:imagebuilder cloudinit cloudinit/
+-COPY --chown=imagebuilder:imagebuilder hack hack/
+-COPY --chown=imagebuilder:imagebuilder packer packer/
+-COPY --chown=imagebuilder:imagebuilder Makefile Makefile
+-COPY --chown=imagebuilder:imagebuilder azure_targets.sh azure_targets.sh
+-
+-ENV PATH="/home/imagebuilder/.local/bin:${PATH}"
++COPY ansible ansible/
++COPY ansible.cfg ansible.cfg
++COPY cloudinit cloudinit/
++COPY hack hack/
++COPY packer packer/
++COPY Makefile Makefile
++COPY azure_targets.sh azure_targets.sh
++
++ENV PATH="/root/.local/bin:${PATH}"
+ ENV PACKER_ARGS ''
+ ENV PACKER_VAR_FILES ''
+ ENV IB_VERSION "${PASSED_IB_VERSION}"
