@@ -429,6 +429,10 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplateList":      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineTemplateList(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplateResource":  schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineTemplateResource(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplateSpec":      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineTemplateSpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackServerGroup":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackServerGroup(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackServerGroupList":          schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackServerGroupList(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackServerGroupSpec":          schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackServerGroupSpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackServerGroupStatus":        schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackServerGroupStatus(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.PortOpts":                          schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_PortOpts(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.PortStatus":                        schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_PortStatus(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedFixedIP":                   schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedFixedIP(ref),
@@ -445,6 +449,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupStatus":               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SecurityGroupStatus(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupFilter":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ServerGroupFilter(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupParam":                  schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ServerGroupParam(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupRef":                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ServerGroupRef(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerMetadata":                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ServerMetadata(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.Subnet":                            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_Subnet(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetFilter":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SubnetFilter(ref),
@@ -15986,6 +15991,12 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackServe
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupParam"),
 						},
 					},
+					"serverGroupRef": {
+						SchemaProps: spec.SchemaProps{
+							Description: "The server group ref to assign the server instance to.",
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupRef"),
+						},
+					},
 					"serverMetadata": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
@@ -16046,7 +16057,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackServe
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.LocalObjectReference", "k8s.io/api/core/v1.TypedLocalObjectReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AdditionalBlockDevice", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackIdentityReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.PortOpts", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RootVolume", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerMetadata"},
+			"k8s.io/api/core/v1.LocalObjectReference", "k8s.io/api/core/v1.TypedLocalObjectReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AdditionalBlockDevice", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackIdentityReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.PortOpts", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RootVolume", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupRef", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerMetadata"},
 	}
 }
 
@@ -22756,6 +22767,12 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachin
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupParam"),
 						},
 					},
+					"serverGroupRef": {
+						SchemaProps: spec.SchemaProps{
+							Description: "The server group ref to assign the machine to.",
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupRef"),
+						},
+					},
 					"identityRef": {
 						SchemaProps: spec.SchemaProps{
 							Description: "IdentityRef is a reference to a secret holding OpenStack credentials to be used when reconciling this machine. If not specified, the credentials specified in the cluster will be used.",
@@ -22773,7 +22790,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachin
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.TypedLocalObjectReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AdditionalBlockDevice", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackIdentityReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.PortOpts", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RootVolume", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerMetadata"},
+			"k8s.io/api/core/v1.TypedLocalObjectReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AdditionalBlockDevice", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackIdentityReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.PortOpts", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RootVolume", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupRef", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerMetadata"},
 	}
 }
 
@@ -22998,6 +23015,162 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachin
 		},
 		Dependencies: []string{
 			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplateResource"},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackServerGroup(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "OpenStackServerGroup is the Schema for the openstackservergroups API.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackServerGroupSpec"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackServerGroupStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackServerGroupSpec", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackServerGroupStatus"},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackServerGroupList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "OpenStackServerGroupList contains a list of OpenStackServerGroup.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+						},
+					},
+					"items": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackServerGroup"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"items"},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackServerGroup"},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackServerGroupSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "OpenStackServerGroupSpec defines the desired state of OpenStackServerGroup.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"policy": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Policy is a string with some valid values; affinity, anti-affinity, soft-affinity, soft-anti-affinity.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"identityRef": {
+						SchemaProps: spec.SchemaProps{
+							Description: "IdentityRef is a reference to a identity to be used when reconciling this resource",
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackIdentityReference"),
+						},
+					},
+				},
+				Required: []string{"policy"},
+			},
+		},
+		Dependencies: []string{
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackIdentityReference"},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackServerGroupStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "OpenStackServerGroupStatus defines the observed state of OpenStackServerGroup.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"ready": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Ready is true when the resource is created.",
+							Default:     false,
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"uuid": {
+						SchemaProps: spec.SchemaProps{
+							Description: "UUID of provisioned ServerGroup",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"uuid"},
+			},
+		},
 	}
 }
 
@@ -23241,7 +23414,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedMachine
 				Properties: map[string]spec.Schema{
 					"serverGroupID": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ServerGroupID is the ID of the server group the machine should be added to and is calculated based on ServerGroupFilter.",
+							Description: "ServerGroupID is the ID of the server group the machine should be added to and is calculated based on ServerGroupFilter and ServerGroupRef.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -24103,6 +24276,27 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ServerGroupPara
 		},
 		Dependencies: []string{
 			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupFilter"},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ServerGroupRef(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name of the OpenStackServerGroup resource to be used. Must be in the same namespace as the resource(s) being provisioned.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"name"},
+			},
+		},
 	}
 }
 

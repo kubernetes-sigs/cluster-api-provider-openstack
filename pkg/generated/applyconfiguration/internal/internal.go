@@ -270,6 +270,9 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: serverGroup
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.ServerGroupParam
+    - name: serverGroupRef
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.ServerGroupRef
     - name: serverMetadata
       type:
         list:
@@ -2715,6 +2718,9 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: serverGroup
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.ServerGroupParam
+    - name: serverGroupRef
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.ServerGroupRef
     - name: serverMetadata
       type:
         list:
@@ -3163,6 +3169,13 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: id
       type:
         scalar: string
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.ServerGroupRef
+  map:
+    fields:
+    - name: name
+      type:
+        scalar: string
+      default: ""
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.ServerMetadata
   map:
     fields:

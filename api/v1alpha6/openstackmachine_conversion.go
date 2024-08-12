@@ -191,6 +191,9 @@ func restorev1beta1MachineSpec(previous *infrav1.OpenStackMachineSpec, dst *infr
 	dst.Image = previous.Image
 	dst.FloatingIPPoolRef = previous.FloatingIPPoolRef
 
+	// ServerGroupRef was added in v1beta1, so there is no equivalent in v1alpha7. Restore previous value.
+	dst.ServerGroupRef = previous.ServerGroupRef
+
 	if len(dst.SecurityGroups) == len(previous.SecurityGroups) {
 		for i := range dst.SecurityGroups {
 			restorev1beta1SecurityGroupParam(&previous.SecurityGroups[i], &dst.SecurityGroups[i])
