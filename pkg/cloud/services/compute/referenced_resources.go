@@ -17,11 +17,14 @@ limitations under the License.
 package compute
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"slices"
 
 	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -34,11 +37,16 @@ import (
 // external dependencies, and does not require any complex logic on creation.
 // Note that we only set the fields in ResolvedServerSpec that are not set yet. This is ok because
 // OpenStackServer is immutable, so we can't change the spec after the machine is created.
-func ResolveServerSpec(scope *scope.WithLogger, openStackServer *infrav1alpha1.OpenStackServer) (changed bool, err error) {
-	changed = false
+func ResolveServerSpec(ctx context.Context, scope *scope.WithLogger, k8sClient client.Client, openStackServer *infrav1alpha1.OpenStackServer) (bool, []client.Object, bool, error) {
+	resolved := openStackServer.Status.Resolved
+	if resolved == nil {
+		resolved = &infrav1alpha1.ResolvedServerSpec{}
+		openStackServer.Status.Resolved = resolved
+	}
+
+	var dependencies []client.Object
 
 	spec := &openStackServer.Spec
-	resolved := openStackServer.Status.Resolved
 	if resolved == nil {
 		resolved = &infrav1alpha1.ResolvedServerSpec{}
 		openStackServer.Status.Resolved = resolved
@@ -52,58 +60,91 @@ func ResolveServerSpec(scope *scope.WithLogger, openStackServer *infrav1alpha1.O
 
 	computeService, err := NewService(scope)
 	if err != nil {
-		return changed, err
+		return false, dependencies, false, err
 	}
 
 	networkingService, err := networking.NewService(scope)
 	if err != nil {
-		return changed, err
+		return false, dependencies, false, err
 	}
 
-	// ServerGroup is optional, so we only need to resolve it if it's set in the spec
-	if spec.ServerGroup != nil && resolved.ServerGroupID == "" {
+	// A setter returns: done, changed, error
+	type setterFn func() (bool, bool, error)
+
+	serverGroup := func() (bool, bool, error) {
+		if spec.ServerGroup == nil || resolved.ServerGroupID != "" {
+			return true, false, nil
+		}
 		serverGroupID, err := computeService.GetServerGroupID(spec.ServerGroup)
 		if err != nil {
-			return changed, err
+			return false, false, err
 		}
 		resolved.ServerGroupID = serverGroupID
-		changed = true
+		return true, true, nil
 	}
 
-	// Image is required, so we need to resolve it if it's not set
-	if resolved.ImageID == "" {
-		imageID, err := computeService.GetImageID(spec.Image)
-		if err != nil {
-			return changed, err
+	imageID := func() (bool, bool, error) {
+		if resolved.ImageID != "" {
+			return true, false, nil
 		}
-		resolved.ImageID = imageID
-		changed = true
+
+		imageID, dependency, err := computeService.GetImageID(ctx, k8sClient, openStackServer.Namespace, spec.Image)
+		if dependency != nil {
+			dependencies = append(dependencies, dependency)
+		}
+		if err != nil {
+			return false, false, err
+		}
+
+		// If we didn't get an imageID it means we're waiting on a dependency.
+		// Set the dependency and wait to be called again.
+		if imageID == nil {
+			return false, false, nil
+		}
+		resolved.ImageID = *imageID
+		return true, true, nil
 	}
 
-	specTrunk := ptr.Deref(spec.Trunk, false)
+	ports := func() (bool, bool, error) {
+		if len(resolved.Ports) > 0 {
+			return true, false, nil
+		}
 
-	// Network resources are required in order to get ports options.
-	// Notes:
-	// - clusterResourceName is not used in this context, so we pass an empty string. In the future,
-	// we may want to remove that (it's only used for the port description) or allow a user to pass
-	// a custom description.
-	// - managedSecurityGroup is not used in this context, so we pass nil. The security groups are
-	//   passed in the spec.SecurityGroups and spec.Ports.
-	// - We run a safety check to ensure that the resolved.Ports has the same length as the spec.Ports.
-	//   This is to ensure that we don't accidentally add ports to the resolved.Ports that are not in the spec.
-	if len(resolved.Ports) == 0 {
+		// Network resources are required in order to get ports options.
+		// Notes:
+		// - clusterResourceName is not used in this context, so we pass an empty string. In the future,
+		// we may want to remove that (it's only used for the port description) or allow a user to pass
+		// a custom description.
+		// - managedSecurityGroup is not used in this context, so we pass nil. The security groups are
+		//   passed in the spec.SecurityGroups and spec.Ports.
+		// - We run a safety check to ensure that the resolved.Ports has the same length as the spec.Ports.
+		//   This is to ensure that we don't accidentally add ports to the resolved.Ports that are not in the spec.
+		specTrunk := ptr.Deref(spec.Trunk, false)
 		portsOpts, err := networkingService.ConstructPorts(spec.Ports, spec.SecurityGroups, specTrunk, clusterName, openStackServer.Name, nil, nil, spec.Tags)
 		if err != nil {
-			return changed, err
+			return false, false, err
 		}
 		if portsOpts != nil && len(portsOpts) != len(spec.Ports) {
-			return changed, fmt.Errorf("resolved.Ports has a different length than spec.Ports")
+			return false, false, fmt.Errorf("resolved.Ports has a different length than spec.Ports")
 		}
 		resolved.Ports = portsOpts
-		changed = true
+		return true, true, nil
 	}
 
-	return changed, nil
+	// Execute all setters and collate their return values
+	var errs []error
+	changed := false
+	done := true
+	for _, setter := range []setterFn{serverGroup, imageID, ports} {
+		thisDone, thisChanged, err := setter()
+		changed = changed || thisChanged
+		done = done && thisDone
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	return changed, dependencies, done, errors.Join(errs...)
 }
 
 // InstanceTags returns the tags that should be applied to an instance.

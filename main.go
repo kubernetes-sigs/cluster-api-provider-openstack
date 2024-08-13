@@ -45,6 +45,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
+	orcv1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
+
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1alpha6 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
 	infrav1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
@@ -107,6 +109,7 @@ func init() {
 	_ = infrav1alpha6.AddToScheme(scheme)
 	_ = infrav1alpha7.AddToScheme(scheme)
 	_ = infrav1alpha1.AddToScheme(scheme)
+	_ = orcv1alpha1.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 
 	metrics.RegisterAPIPrometheusMetrics()
@@ -281,7 +284,8 @@ func main() {
 				TLSOpts: tlsOptionOverrides,
 			},
 		),
-		HealthProbeBindAddress: healthAddr,
+		HealthProbeBindAddress:        healthAddr,
+		LeaderElectionReleaseOnCancel: true,
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
@@ -357,8 +361,18 @@ func setupReconcilers(ctx context.Context, mgr ctrl.Manager, caCerts []byte, sco
 		ScopeFactory:     scopeFactory,
 		CaCertificates:   caCerts,
 		Scheme:           mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
+	}).SetupWithManager(ctx, mgr, concurrency(openStackMachineConcurrency)); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "OpenStackServer")
+		os.Exit(1)
+	}
+	if err := controllers.ImageController(
+		mgr.GetClient(),
+		mgr.GetEventRecorderFor("orc-image-controller"),
+		watchFilterValue,
+		scopeFactory,
+		caCerts,
+	).SetupWithManager(ctx, mgr, concurrency(openStackMachineConcurrency)); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ORCImage")
 		os.Exit(1)
 	}
 }

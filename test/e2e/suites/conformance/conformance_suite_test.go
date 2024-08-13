@@ -20,6 +20,7 @@ limitations under the License.
 package conformance
 
 import (
+	"context"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -40,14 +41,14 @@ func TestConformance(t *testing.T) {
 	RunSpecs(t, "capo-conformance")
 }
 
-var _ = SynchronizedBeforeSuite(func() []byte {
-	return shared.Node1BeforeSuite(e2eCtx)
+var _ = SynchronizedBeforeSuite(func(ctx context.Context) []byte {
+	return shared.Node1BeforeSuite(ctx, e2eCtx)
 }, func(data []byte) {
 	shared.AllNodesBeforeSuite(e2eCtx, data)
 })
 
 var _ = SynchronizedAfterSuite(func() {
 	shared.AllNodesAfterSuite(e2eCtx)
-}, func() {
-	shared.Node1AfterSuite(e2eCtx)
+}, func(ctx context.Context) {
+	shared.Node1AfterSuite(ctx, e2eCtx)
 })

@@ -31,8 +31,11 @@ import (
 
 var _ = Describe("When testing unhealthy machines remediation", func() {
 	Describe("When testing MachineDeployment remediation", func() {
-		ctx := context.TODO()
-		capi_e2e.MachineDeploymentRemediationSpec(ctx, func() capi_e2e.MachineDeploymentRemediationSpecInput {
+		BeforeEach(func(ctx context.Context) {
+			shared.ApplyCoreImagesPlus(ctx, e2eCtx)
+		})
+
+		capi_e2e.MachineDeploymentRemediationSpec(context.TODO(), func() capi_e2e.MachineDeploymentRemediationSpecInput {
 			return capi_e2e.MachineDeploymentRemediationSpecInput{
 				E2EConfig:             e2eCtx.E2EConfig,
 				ClusterctlConfigPath:  e2eCtx.Environment.ClusterctlConfigPath,

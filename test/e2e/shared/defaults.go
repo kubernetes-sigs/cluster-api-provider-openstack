@@ -20,12 +20,16 @@ limitations under the License.
 package shared
 
 import (
+	"errors"
 	"flag"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/cluster-api/test/framework"
 
+	orcv1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
+
+	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
@@ -38,6 +42,7 @@ const (
 	OpenStackBastionFlavorAlt  = "OPENSTACK_BASTION_MACHINE_FLAVOR_ALT"
 	OpenStackCloudYAMLFile     = "OPENSTACK_CLOUD_YAML_FILE"
 	OpenStackCloud             = "OPENSTACK_CLOUD"
+	OpenStackCloudCACertB64    = "OPENSTACK_CLOUD_CACERT_B64"
 	OpenStackCloudAdmin        = "OPENSTACK_CLOUD_ADMIN"
 	OpenStackFailureDomain     = "OPENSTACK_FAILURE_DOMAIN" //nolint:gosec // Linter thinks this could be credentials...
 	OpenStackFailureDomainAlt  = "OPENSTACK_FAILURE_DOMAIN_ALT"
@@ -62,8 +67,16 @@ const (
 func DefaultScheme() *runtime.Scheme {
 	sc := runtime.NewScheme()
 	framework.TryAddDefaultSchemes(sc)
-	_ = infrav1.AddToScheme(sc)
-	_ = clientgoscheme.AddToScheme(sc)
+
+	err := errors.Join(
+		orcv1alpha1.AddToScheme(sc),
+		infrav1alpha1.AddToScheme(sc),
+		infrav1.AddToScheme(sc),
+		clientgoscheme.AddToScheme(sc),
+	)
+	if err != nil {
+		panic("error adding types to scheme: " + err.Error())
+	}
 	return sc
 }
 

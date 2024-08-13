@@ -159,6 +159,7 @@ prune_dirs = [
     '_output',
     '.git',
     'vendor',
+    'orc',
 ]
 
 # Paths to be ignored for boilerplate detection

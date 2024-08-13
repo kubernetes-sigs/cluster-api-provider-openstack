@@ -426,6 +426,30 @@ func checkCalicoSecurityGroupRules(rules []rules.SecGroupRule) int {
 	return count
 }
 
+func DumpOpenStackImages(e2eCtx *E2EContext, filter images.ListOpts) ([]images.Image, error) {
+	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
+	if err != nil {
+		return nil, err
+	}
+
+	imageClient, err := openstack.NewImageV2(providerClient, gophercloud.EndpointOpts{
+		Region: clientOpts.RegionName,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error creating image client: %s", err)
+	}
+
+	allPages, err := images.List(imageClient, filter).AllPages(context.TODO())
+	if err != nil {
+		return nil, fmt.Errorf("error listing images: %s", err)
+	}
+	imageList, err := images.ExtractImages(allPages)
+	if err != nil {
+		return nil, fmt.Errorf("error extracting images: %s", err)
+	}
+	return imageList, nil
+}
+
 // DumpOpenStackVolumes returns all OpenStack volumes to a file in the artifact folder.
 func DumpOpenStackVolumes(e2eCtx *E2EContext, filter volumes.ListOpts) ([]volumes.Volume, error) {
 	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
