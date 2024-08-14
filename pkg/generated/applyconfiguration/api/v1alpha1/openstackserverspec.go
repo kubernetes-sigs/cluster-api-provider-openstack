@@ -42,6 +42,8 @@ type OpenStackServerSpecApplyConfiguration struct {
 	Tags                   []string                                              `json:"tags,omitempty"`
 	Trunk                  *bool                                                 `json:"trunk,omitempty"`
 	UserDataRef            *v1.LocalObjectReference                              `json:"userDataRef,omitempty"`
+	Resolved               *ResolvedServerSpecApplyConfiguration                 `json:"resolved,omitempty"`
+	Resources              *ServerResourcesApplyConfiguration                    `json:"resources,omitempty"`
 }
 
 // OpenStackServerSpecApplyConfiguration constructs an declarative configuration of the OpenStackServerSpec type for use with
@@ -197,5 +199,21 @@ func (b *OpenStackServerSpecApplyConfiguration) WithTrunk(value bool) *OpenStack
 // If called multiple times, the UserDataRef field is set to the value of the last call.
 func (b *OpenStackServerSpecApplyConfiguration) WithUserDataRef(value v1.LocalObjectReference) *OpenStackServerSpecApplyConfiguration {
 	b.UserDataRef = &value
+	return b
+}
+
+// WithResolved sets the Resolved field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Resolved field is set to the value of the last call.
+func (b *OpenStackServerSpecApplyConfiguration) WithResolved(value *ResolvedServerSpecApplyConfiguration) *OpenStackServerSpecApplyConfiguration {
+	b.Resolved = value
+	return b
+}
+
+// WithResources sets the Resources field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Resources field is set to the value of the last call.
+func (b *OpenStackServerSpecApplyConfiguration) WithResources(value *ServerResourcesApplyConfiguration) *OpenStackServerSpecApplyConfiguration {
+	b.Resources = value
 	return b
 }

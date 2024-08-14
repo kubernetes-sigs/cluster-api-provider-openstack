@@ -151,6 +151,7 @@ func Test_ResolveServerSpec(t *testing.T) {
 			if resources == nil {
 				resources = &infrav1alpha1.ResolvedServerSpec{}
 			}
+			tt.spec.Resolved = resources
 			openStackServer := &infrav1alpha1.OpenStackServer{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "test-instance",
@@ -159,9 +160,6 @@ func Test_ResolveServerSpec(t *testing.T) {
 					},
 				},
 				Spec: tt.spec,
-				Status: infrav1alpha1.OpenStackServerStatus{
-					Resolved: resources,
-				},
 			}
 
 			fakeClient := fake.NewFakeClient()

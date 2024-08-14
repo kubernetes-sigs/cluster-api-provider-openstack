@@ -27,13 +27,11 @@ import (
 // OpenStackServerStatusApplyConfiguration represents an declarative configuration of the OpenStackServerStatus type for use
 // with apply.
 type OpenStackServerStatusApplyConfiguration struct {
-	Ready         *bool                                 `json:"ready,omitempty"`
-	InstanceID    *string                               `json:"instanceID,omitempty"`
-	InstanceState *v1beta1.InstanceState                `json:"instanceState,omitempty"`
-	Addresses     []v1.NodeAddress                      `json:"addresses,omitempty"`
-	Resolved      *ResolvedServerSpecApplyConfiguration `json:"resolved,omitempty"`
-	Resources     *ServerResourcesApplyConfiguration    `json:"resources,omitempty"`
-	Conditions    *apiv1beta1.Conditions                `json:"conditions,omitempty"`
+	Ready         *bool                  `json:"ready,omitempty"`
+	InstanceID    *string                `json:"instanceID,omitempty"`
+	InstanceState *v1beta1.InstanceState `json:"instanceState,omitempty"`
+	Addresses     []v1.NodeAddress       `json:"addresses,omitempty"`
+	Conditions    *apiv1beta1.Conditions `json:"conditions,omitempty"`
 }
 
 // OpenStackServerStatusApplyConfiguration constructs an declarative configuration of the OpenStackServerStatus type for use with
@@ -73,22 +71,6 @@ func (b *OpenStackServerStatusApplyConfiguration) WithAddresses(values ...v1.Nod
 	for i := range values {
 		b.Addresses = append(b.Addresses, values[i])
 	}
-	return b
-}
-
-// WithResolved sets the Resolved field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Resolved field is set to the value of the last call.
-func (b *OpenStackServerStatusApplyConfiguration) WithResolved(value *ResolvedServerSpecApplyConfiguration) *OpenStackServerStatusApplyConfiguration {
-	b.Resolved = value
-	return b
-}
-
-// WithResources sets the Resources field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Resources field is set to the value of the last call.
-func (b *OpenStackServerStatusApplyConfiguration) WithResources(value *ServerResourcesApplyConfiguration) *OpenStackServerStatusApplyConfiguration {
-	b.Resources = value
 	return b
 }
 

@@ -104,6 +104,17 @@ type OpenStackServerSpec struct {
 	// be injected into the server instance.
 	// +optional
 	UserDataRef *corev1.LocalObjectReference `json:"userDataRef,omitempty"`
+
+	// Resolved contains parts of the machine spec with all external
+	// references fully resolved. This is not to be set by the user but rather
+	// by the controller.
+	// +optional
+	Resolved *ResolvedServerSpec `json:"resolved,omitempty"`
+
+	// Resources contains references to OpenStack resources created for the machine.
+	// This is not to be set by the user but rather by the controller.
+	// +optional
+	Resources *ServerResources `json:"resources,omitempty"`
 }
 
 // OpenStackServerStatus defines the observed state of OpenStackServer.
@@ -123,15 +134,6 @@ type OpenStackServerStatus struct {
 	// Addresses is the list of addresses of the server instance.
 	// +optional
 	Addresses []corev1.NodeAddress `json:"addresses,omitempty"`
-
-	// Resolved contains parts of the machine spec with all external
-	// references fully resolved.
-	// +optional
-	Resolved *ResolvedServerSpec `json:"resolved,omitempty"`
-
-	// Resources contains references to OpenStack resources created for the machine.
-	// +optional
-	Resources *ServerResources `json:"resources,omitempty"`
 
 	// Conditions defines current service state of the OpenStackServer.
 	// +optional

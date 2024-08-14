@@ -16042,12 +16042,24 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackServe
 							Ref:         ref("k8s.io/api/core/v1.LocalObjectReference"),
 						},
 					},
+					"resolved": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Resolved contains parts of the machine spec with all external references fully resolved. This is not to be set by the user but rather by the controller.",
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.ResolvedServerSpec"),
+						},
+					},
+					"resources": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Resources contains references to OpenStack resources created for the machine. This is not to be set by the user but rather by the controller.",
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.ServerResources"),
+						},
+					},
 				},
 				Required: []string{"flavor", "identityRef", "image", "ports", "sshKeyName"},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.LocalObjectReference", "k8s.io/api/core/v1.TypedLocalObjectReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AdditionalBlockDevice", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackIdentityReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.PortOpts", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RootVolume", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerMetadata"},
+			"k8s.io/api/core/v1.LocalObjectReference", "k8s.io/api/core/v1.TypedLocalObjectReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.ResolvedServerSpec", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.ServerResources", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AdditionalBlockDevice", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackIdentityReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.PortOpts", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RootVolume", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerMetadata"},
 	}
 }
 
@@ -16094,18 +16106,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackServe
 							},
 						},
 					},
-					"resolved": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Resolved contains parts of the machine spec with all external references fully resolved.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.ResolvedServerSpec"),
-						},
-					},
-					"resources": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Resources contains references to OpenStack resources created for the machine.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.ServerResources"),
-						},
-					},
 					"conditions": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Conditions defines current service state of the OpenStackServer.",
@@ -16125,7 +16125,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackServe
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.NodeAddress", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.ResolvedServerSpec", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.ServerResources", "sigs.k8s.io/cluster-api/api/v1beta1.Condition"},
+			"k8s.io/api/core/v1.NodeAddress", "sigs.k8s.io/cluster-api/api/v1beta1.Condition"},
 	}
 }
 

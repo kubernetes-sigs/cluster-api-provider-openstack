@@ -220,6 +220,10 @@ func TestOpenStackServer_serverToInstanceSpec(t *testing.T) {
 					AvailabilityZone: ptr.To("failure-domain"),
 					ConfigDrive:      ptr.To(true),
 					Flavor:           "large",
+					Resolved: &infrav1alpha1.ResolvedServerSpec{
+						ImageID:       "123",
+						ServerGroupID: "456",
+					},
 					RootVolume: &infrav1.RootVolume{
 						SizeGiB: 10,
 						BlockDeviceVolume: infrav1.BlockDeviceVolume{
@@ -230,12 +234,6 @@ func TestOpenStackServer_serverToInstanceSpec(t *testing.T) {
 					SSHKeyName:     "key",
 					Tags:           []string{"tag1", "tag2"},
 					Trunk:          ptr.To(true),
-				},
-				Status: infrav1alpha1.OpenStackServerStatus{
-					Resolved: &infrav1alpha1.ResolvedServerSpec{
-						ImageID:       "123",
-						ServerGroupID: "456",
-					},
 				},
 			},
 			want: &compute.InstanceSpec{
@@ -299,9 +297,6 @@ func Test_OpenStackServerReconcileDelete(t *testing.T) {
 					Flavor: defaultFlavor,
 					Image:  defaultImage,
 					Ports:  defaultPortOpts,
-				},
-				Status: infrav1alpha1.OpenStackServerStatus{
-					InstanceID: ptr.To(instanceUUID),
 					Resolved: &infrav1alpha1.ResolvedServerSpec{
 						ImageID: imageUUID,
 						Ports:   defaultResolvedPorts,
@@ -309,6 +304,9 @@ func Test_OpenStackServerReconcileDelete(t *testing.T) {
 					Resources: &infrav1alpha1.ServerResources{
 						Ports: defaultPortsStatus,
 					},
+				},
+				Status: infrav1alpha1.OpenStackServerStatus{
+					InstanceID: ptr.To(instanceUUID),
 				},
 			},
 			expect: func(r *recorders) {
@@ -326,9 +324,6 @@ func Test_OpenStackServerReconcileDelete(t *testing.T) {
 						SizeGiB: 50,
 					},
 					Ports: defaultPortOpts,
-				},
-				Status: infrav1alpha1.OpenStackServerStatus{
-					InstanceID: ptr.To(instanceUUID),
 					Resolved: &infrav1alpha1.ResolvedServerSpec{
 						ImageID: imageUUID,
 						Ports:   defaultResolvedPorts,
@@ -336,6 +331,9 @@ func Test_OpenStackServerReconcileDelete(t *testing.T) {
 					Resources: &infrav1alpha1.ServerResources{
 						Ports: defaultPortsStatus,
 					},
+				},
+				Status: infrav1alpha1.OpenStackServerStatus{
+					InstanceID: ptr.To(instanceUUID),
 				},
 			},
 			expect: func(r *recorders) {
@@ -354,8 +352,6 @@ func Test_OpenStackServerReconcileDelete(t *testing.T) {
 						SizeGiB: 50,
 					},
 					Ports: defaultPortOpts,
-				},
-				Status: infrav1alpha1.OpenStackServerStatus{
 					Resolved: &infrav1alpha1.ResolvedServerSpec{
 						ImageID: imageUUID,
 						Ports:   defaultResolvedPorts,
@@ -378,8 +374,6 @@ func Test_OpenStackServerReconcileDelete(t *testing.T) {
 				Spec: infrav1alpha1.OpenStackServerSpec{
 					Image: defaultImage,
 					Ports: defaultPortOpts,
-				},
-				Status: infrav1alpha1.OpenStackServerStatus{
 					Resolved: &infrav1alpha1.ResolvedServerSpec{
 						ImageID: imageUUID,
 						Ports:   defaultResolvedPorts,
@@ -401,8 +395,6 @@ func Test_OpenStackServerReconcileDelete(t *testing.T) {
 				Spec: infrav1alpha1.OpenStackServerSpec{
 					Image: defaultImage,
 					Ports: defaultPortOpts,
-				},
-				Status: infrav1alpha1.OpenStackServerStatus{
 					Resolved: &infrav1alpha1.ResolvedServerSpec{
 						ImageID: imageUUID,
 						Ports:   defaultResolvedPorts,
@@ -474,8 +466,6 @@ func Test_OpenStackServerReconcileCreate(t *testing.T) {
 					Flavor: defaultFlavor,
 					Image:  defaultImage,
 					Ports:  defaultPortOpts,
-				},
-				Status: infrav1alpha1.OpenStackServerStatus{
 					Resolved: &infrav1alpha1.ResolvedServerSpec{
 						ImageID: imageUUID,
 						Ports:   defaultResolvedPorts,
@@ -497,8 +487,6 @@ func Test_OpenStackServerReconcileCreate(t *testing.T) {
 					Flavor: defaultFlavor,
 					Image:  defaultImage,
 					Ports:  defaultPortOpts,
-				},
-				Status: infrav1alpha1.OpenStackServerStatus{
 					Resolved: &infrav1alpha1.ResolvedServerSpec{
 						ImageID: imageUUID,
 						Ports:   defaultResolvedPorts,

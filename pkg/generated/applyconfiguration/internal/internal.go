@@ -258,6 +258,12 @@ var schemaYAML = typed.YAMLObject(`types:
           elementType:
             namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.PortOpts
           elementRelationship: atomic
+    - name: resolved
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1alpha1.ResolvedServerSpec
+    - name: resources
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1alpha1.ServerResources
     - name: rootVolume
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.RootVolume
@@ -319,12 +325,6 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         scalar: boolean
       default: false
-    - name: resolved
-      type:
-        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1alpha1.ResolvedServerSpec
-    - name: resources
-      type:
-        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1alpha1.ServerResources
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1alpha1.ResolvedServerSpec
   map:
     fields:

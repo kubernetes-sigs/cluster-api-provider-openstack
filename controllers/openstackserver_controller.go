@@ -238,8 +238,8 @@ func (r *OpenStackServerReconciler) reconcileDelete(scope *scope.WithLogger, ope
 		return err
 	}
 
-	if openStackServer.Status.Resources != nil {
-		portsStatus := openStackServer.Status.Resources.Ports
+	if openStackServer.Spec.Resources != nil {
+		portsStatus := openStackServer.Spec.Resources.Ports
 		for _, port := range portsStatus {
 			if err := networkingService.DeleteInstanceTrunkAndPort(openStackServer, port, trunkSupported); err != nil {
 				return fmt.Errorf("failed to delete port %q: %w", port.ID, err)
@@ -359,7 +359,7 @@ func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, scope *
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	portIDs := GetPortIDs(openStackServer.Status.Resources.Ports)
+	portIDs := GetPortIDs(openStackServer.Spec.Resources.Ports)
 
 	instanceStatus, err := r.getOrCreateServer(ctx, scope.Logger(), openStackServer, computeService, portIDs)
 	if err != nil || instanceStatus == nil {
@@ -416,24 +416,24 @@ func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, scope *
 
 // adoptServerResources adopts the OpenStack resources for the server.
 func adoptServerResources(scope *scope.WithLogger, openStackServer *infrav1alpha1.OpenStackServer) error {
-	resources := openStackServer.Status.Resources
+	resources := openStackServer.Spec.Resources
 	if resources == nil {
 		resources = &infrav1alpha1.ServerResources{}
-		openStackServer.Status.Resources = resources
+		openStackServer.Spec.Resources = resources
 	}
 
 	// Adopt any existing resources
-	return compute.AdoptServerResources(scope, openStackServer.Status.Resolved, resources)
+	return compute.AdoptServerResources(scope, openStackServer.Spec.Resolved, resources)
 }
 
 func getOrCreateServerPorts(openStackServer *infrav1alpha1.OpenStackServer, networkingService *networking.Service) error {
-	resolved := openStackServer.Status.Resolved
+	resolved := openStackServer.Spec.Resolved
 	if resolved == nil {
-		return errors.New("server status resolved is nil")
+		return errors.New("server spec resolved is nil")
 	}
-	resources := openStackServer.Status.Resources
+	resources := openStackServer.Spec.Resources
 	if resources == nil {
-		return errors.New("server status resources is nil")
+		return errors.New("server spec resources is nil")
 	}
 	desiredPorts := resolved.Ports
 
@@ -511,9 +511,9 @@ func (r *OpenStackServerReconciler) getUserDataSecretValue(ctx context.Context, 
 }
 
 func (r *OpenStackServerReconciler) serverToInstanceSpec(ctx context.Context, openStackServer *infrav1alpha1.OpenStackServer) (*compute.InstanceSpec, error) {
-	resolved := openStackServer.Status.Resolved
+	resolved := openStackServer.Spec.Resolved
 	if resolved == nil {
-		return nil, errors.New("server resolved is nil")
+		return nil, errors.New("server spec resolved is nil")
 	}
 
 	serverMetadata := make(map[string]string, len(openStackServer.Spec.ServerMetadata))

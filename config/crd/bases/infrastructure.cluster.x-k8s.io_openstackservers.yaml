@@ -642,6 +642,210 @@ spec:
                       type: string
                   type: object
                 type: array
+              resolved:
+                description: |-
+                  Resolved contains parts of the machine spec with all external
+                  references fully resolved. This is not to be set by the user but rather
+                  by the controller.
+                properties:
+                  imageID:
+                    description: ImageID is the ID of the image to use for the server
+                      and is calculated based on ImageFilter.
+                    type: string
+                  ports:
+                    description: Ports is the fully resolved list of ports to create
+                      for the server.
+                    items:
+                      description: ResolvedPortSpec is a PortOpts with all contained
+                        references fully resolved.
+                      properties:
+                        adminStateUp:
+                          description: AdminStateUp specifies whether the port should
+                            be created in the up (true) or down (false) state. The
+                            default is up.
+                          type: boolean
+                        allowedAddressPairs:
+                          description: |-
+                            AllowedAddressPairs is a list of address pairs which Neutron will
+                            allow the port to send traffic from in addition to the port's
+                            addresses. If not specified, the MAC Address will be the MAC Address
+                            of the port. Depending on the configuration of Neutron, it may be
+                            supported to specify a CIDR instead of a specific IP address.
+                          items:
+                            properties:
+                              ipAddress:
+                                description: |-
+                                  IPAddress is the IP address of the allowed address pair. Depending on
+                                  the configuration of Neutron, it may be supported to specify a CIDR
+                                  instead of a specific IP address.
+                                type: string
+                              macAddress:
+                                description: |-
+                                  MACAddress is the MAC address of the allowed address pair. If not
+                                  specified, the MAC address will be the MAC address of the port.
+                                type: string
+                            required:
+                            - ipAddress
+                            type: object
+                          type: array
+                        description:
+                          description: Description is a human-readable description
+                            for the port.
+                          type: string
+                        disablePortSecurity:
+                          description: |-
+                            DisablePortSecurity enables or disables the port security when set.
+                            When not set, it takes the value of the corresponding field at the network level.
+                          type: boolean
+                        fixedIPs:
+                          description: FixedIPs is a list of pairs of subnet and/or
+                            IP address to assign to the port. If specified, these
+                            must be subnets of the port's network.
+                          items:
+                            description: ResolvedFixedIP is a FixedIP with the Subnet
+                              resolved to an ID.
+                            properties:
+                              ipAddress:
+                                description: |-
+                                  IPAddress is a specific IP address to assign to the port. If SubnetID
+                                  is also specified, IPAddress must be a valid IP address in the
+                                  subnet. If Subnet is not specified, IPAddress must be a valid IP
+                                  address in any subnet of the port's network.
+                                type: string
+                              subnet:
+                                description: SubnetID is the id of a subnet to create
+                                  the fixed IP of a port in.
+                                type: string
+                            type: object
+                          type: array
+                          x-kubernetes-list-type: atomic
+                        hostID:
+                          description: HostID specifies the ID of the host where the
+                            port resides.
+                          type: string
+                        macAddress:
+                          description: MACAddress specifies the MAC address of the
+                            port. If not specified, the MAC address will be generated.
+                          type: string
+                        name:
+                          description: Name is the name of the port.
+                          type: string
+                        networkID:
+                          description: NetworkID is the ID of the network the port
+                            will be created in.
+                          type: string
+                        profile:
+                          description: |-
+                            Profile is a set of key-value pairs that are used for binding
+                            details. We intentionally don't expose this as a map[string]string
+                            because we only want to enable the users to set the values of the
+                            keys that are known to work in OpenStack Networking API.  See
+                            https://docs.openstack.org/api-ref/network/v2/index.html?expanded=create-port-detail#create-port
+                            To set profiles, your tenant needs permissions rule:create_port, and
+                            rule:create_port:binding:profile
+                          properties:
+                            ovsHWOffload:
+                              description: |-
+                                OVSHWOffload enables or disables the OVS hardware offload feature.
+                                This flag is not required on OpenStack clouds since Yoga as Nova will set it automatically when the port is attached.
+                                See: https://bugs.launchpad.net/nova/+bug/2020813
+                              type: boolean
+                            trustedVF:
+                              description: TrustedVF enables or disables the “trusted
+                                mode” for the VF.
+                              type: boolean
+                          type: object
+                        propagateUplinkStatus:
+                          description: PropageteUplinkStatus enables or disables the
+                            propagate uplink status on the port.
+                          type: boolean
+                        securityGroups:
+                          description: SecurityGroups is a list of security group
+                            IDs to assign to the port.
+                          items:
+                            type: string
+                          type: array
+                          x-kubernetes-list-type: atomic
+                        tags:
+                          description: Tags applied to the port (and corresponding
+                            trunk, if a trunk is configured.)
+                          items:
+                            type: string
+                          type: array
+                          x-kubernetes-list-type: set
+                        trunk:
+                          description: Trunk specifies whether trunking is enabled
+                            at the port level.
+                          type: boolean
+                        valueSpecs:
+                          description: |-
+                            Value specs are extra parameters to include in the API request with OpenStack.
+                            This is an extension point for the API, so what they do and if they are supported,
+                            depends on the specific OpenStack implementation.
+                          items:
+                            description: ValueSpec represents a single value_spec
+                              key-value pair.
+                            properties:
+                              key:
+                                description: Key is the key in the key-value pair.
+                                type: string
+                              name:
+                                description: |-
+                                  Name is the name of the key-value pair.
+                                  This is just for identifying the pair and will not be sent to the OpenStack API.
+                                type: string
+                              value:
+                                description: Value is the value in the key-value pair.
+                                type: string
+                            required:
+                            - key
+                            - name
+                            - value
+                            type: object
+                          type: array
+                          x-kubernetes-list-map-keys:
+                          - name
+                          x-kubernetes-list-type: map
+                        vnicType:
+                          description: |-
+                            VNICType specifies the type of vNIC which this port should be
+                            attached to. This is used to determine which mechanism driver(s) to
+                            be used to bind the port. The valid values are normal, macvtap,
+                            direct, baremetal, direct-physical, virtio-forwarder, smart-nic and
+                            remote-managed, although these values will not be validated in this
+                            API to ensure compatibility with future neutron changes or custom
+                            implementations. What type of vNIC is actually available depends on
+                            deployments. If not specified, the Neutron default value is used.
+                          type: string
+                      required:
+                      - description
+                      - name
+                      - networkID
+                      type: object
+                    type: array
+                  serverGroupID:
+                    description: ServerGroupID is the ID of the server group the server
+                      should be added to and is calculated based on ServerGroupFilter.
+                    type: string
+                type: object
+              resources:
+                description: |-
+                  Resources contains references to OpenStack resources created for the machine.
+                  This is not to be set by the user but rather by the controller.
+                properties:
+                  ports:
+                    description: Ports is the status of the ports created for the
+                      server.
+                    items:
+                      properties:
+                        id:
+                          description: ID is the unique identifier of the port.
+                          type: string
+                      required:
+                      - id
+                      type: object
+                    type: array
+                type: object
               rootVolume:
                 description: RootVolume is the specification for the root volume of
                   the server instance.
@@ -927,208 +1131,6 @@ spec:
                 default: false
                 description: Ready is true when the OpenStack server is ready.
                 type: boolean
-              resolved:
-                description: |-
-                  Resolved contains parts of the machine spec with all external
-                  references fully resolved.
-                properties:
-                  imageID:
-                    description: ImageID is the ID of the image to use for the server
-                      and is calculated based on ImageFilter.
-                    type: string
-                  ports:
-                    description: Ports is the fully resolved list of ports to create
-                      for the server.
-                    items:
-                      description: ResolvedPortSpec is a PortOpts with all contained
-                        references fully resolved.
-                      properties:
-                        adminStateUp:
-                          description: AdminStateUp specifies whether the port should
-                            be created in the up (true) or down (false) state. The
-                            default is up.
-                          type: boolean
-                        allowedAddressPairs:
-                          description: |-
-                            AllowedAddressPairs is a list of address pairs which Neutron will
-                            allow the port to send traffic from in addition to the port's
-                            addresses. If not specified, the MAC Address will be the MAC Address
-                            of the port. Depending on the configuration of Neutron, it may be
-                            supported to specify a CIDR instead of a specific IP address.
-                          items:
-                            properties:
-                              ipAddress:
-                                description: |-
-                                  IPAddress is the IP address of the allowed address pair. Depending on
-                                  the configuration of Neutron, it may be supported to specify a CIDR
-                                  instead of a specific IP address.
-                                type: string
-                              macAddress:
-                                description: |-
-                                  MACAddress is the MAC address of the allowed address pair. If not
-                                  specified, the MAC address will be the MAC address of the port.
-                                type: string
-                            required:
-                            - ipAddress
-                            type: object
-                          type: array
-                        description:
-                          description: Description is a human-readable description
-                            for the port.
-                          type: string
-                        disablePortSecurity:
-                          description: |-
-                            DisablePortSecurity enables or disables the port security when set.
-                            When not set, it takes the value of the corresponding field at the network level.
-                          type: boolean
-                        fixedIPs:
-                          description: FixedIPs is a list of pairs of subnet and/or
-                            IP address to assign to the port. If specified, these
-                            must be subnets of the port's network.
-                          items:
-                            description: ResolvedFixedIP is a FixedIP with the Subnet
-                              resolved to an ID.
-                            properties:
-                              ipAddress:
-                                description: |-
-                                  IPAddress is a specific IP address to assign to the port. If SubnetID
-                                  is also specified, IPAddress must be a valid IP address in the
-                                  subnet. If Subnet is not specified, IPAddress must be a valid IP
-                                  address in any subnet of the port's network.
-                                type: string
-                              subnet:
-                                description: SubnetID is the id of a subnet to create
-                                  the fixed IP of a port in.
-                                type: string
-                            type: object
-                          type: array
-                          x-kubernetes-list-type: atomic
-                        hostID:
-                          description: HostID specifies the ID of the host where the
-                            port resides.
-                          type: string
-                        macAddress:
-                          description: MACAddress specifies the MAC address of the
-                            port. If not specified, the MAC address will be generated.
-                          type: string
-                        name:
-                          description: Name is the name of the port.
-                          type: string
-                        networkID:
-                          description: NetworkID is the ID of the network the port
-                            will be created in.
-                          type: string
-                        profile:
-                          description: |-
-                            Profile is a set of key-value pairs that are used for binding
-                            details. We intentionally don't expose this as a map[string]string
-                            because we only want to enable the users to set the values of the
-                            keys that are known to work in OpenStack Networking API.  See
-                            https://docs.openstack.org/api-ref/network/v2/index.html?expanded=create-port-detail#create-port
-                            To set profiles, your tenant needs permissions rule:create_port, and
-                            rule:create_port:binding:profile
-                          properties:
-                            ovsHWOffload:
-                              description: |-
-                                OVSHWOffload enables or disables the OVS hardware offload feature.
-                                This flag is not required on OpenStack clouds since Yoga as Nova will set it automatically when the port is attached.
-                                See: https://bugs.launchpad.net/nova/+bug/2020813
-                              type: boolean
-                            trustedVF:
-                              description: TrustedVF enables or disables the “trusted
-                                mode” for the VF.
-                              type: boolean
-                          type: object
-                        propagateUplinkStatus:
-                          description: PropageteUplinkStatus enables or disables the
-                            propagate uplink status on the port.
-                          type: boolean
-                        securityGroups:
-                          description: SecurityGroups is a list of security group
-                            IDs to assign to the port.
-                          items:
-                            type: string
-                          type: array
-                          x-kubernetes-list-type: atomic
-                        tags:
-                          description: Tags applied to the port (and corresponding
-                            trunk, if a trunk is configured.)
-                          items:
-                            type: string
-                          type: array
-                          x-kubernetes-list-type: set
-                        trunk:
-                          description: Trunk specifies whether trunking is enabled
-                            at the port level.
-                          type: boolean
-                        valueSpecs:
-                          description: |-
-                            Value specs are extra parameters to include in the API request with OpenStack.
-                            This is an extension point for the API, so what they do and if they are supported,
-                            depends on the specific OpenStack implementation.
-                          items:
-                            description: ValueSpec represents a single value_spec
-                              key-value pair.
-                            properties:
-                              key:
-                                description: Key is the key in the key-value pair.
-                                type: string
-                              name:
-                                description: |-
-                                  Name is the name of the key-value pair.
-                                  This is just for identifying the pair and will not be sent to the OpenStack API.
-                                type: string
-                              value:
-                                description: Value is the value in the key-value pair.
-                                type: string
-                            required:
-                            - key
-                            - name
-                            - value
-                            type: object
-                          type: array
-                          x-kubernetes-list-map-keys:
-                          - name
-                          x-kubernetes-list-type: map
-                        vnicType:
-                          description: |-
-                            VNICType specifies the type of vNIC which this port should be
-                            attached to. This is used to determine which mechanism driver(s) to
-                            be used to bind the port. The valid values are normal, macvtap,
-                            direct, baremetal, direct-physical, virtio-forwarder, smart-nic and
-                            remote-managed, although these values will not be validated in this
-                            API to ensure compatibility with future neutron changes or custom
-                            implementations. What type of vNIC is actually available depends on
-                            deployments. If not specified, the Neutron default value is used.
-                          type: string
-                      required:
-                      - description
-                      - name
-                      - networkID
-                      type: object
-                    type: array
-                  serverGroupID:
-                    description: ServerGroupID is the ID of the server group the server
-                      should be added to and is calculated based on ServerGroupFilter.
-                    type: string
-                type: object
-              resources:
-                description: Resources contains references to OpenStack resources
-                  created for the machine.
-                properties:
-                  ports:
-                    description: Ports is the status of the ports created for the
-                      server.
-                    items:
-                      properties:
-                        id:
-                          description: ID is the unique identifier of the port.
-                          type: string
-                      required:
-                      - id
-                      type: object
-                    type: array
-                type: object
             required:
             - ready
             type: object

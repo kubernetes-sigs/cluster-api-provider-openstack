@@ -38,10 +38,10 @@ import (
 // Note that we only set the fields in ResolvedServerSpec that are not set yet. This is ok because
 // OpenStackServer is immutable, so we can't change the spec after the machine is created.
 func ResolveServerSpec(ctx context.Context, scope *scope.WithLogger, k8sClient client.Client, openStackServer *infrav1alpha1.OpenStackServer) (bool, []client.Object, bool, error) {
-	resolved := openStackServer.Status.Resolved
+	resolved := openStackServer.Spec.Resolved
 	if resolved == nil {
 		resolved = &infrav1alpha1.ResolvedServerSpec{}
-		openStackServer.Status.Resolved = resolved
+		openStackServer.Spec.Resolved = resolved
 	}
 
 	var dependencies []client.Object
@@ -49,7 +49,7 @@ func ResolveServerSpec(ctx context.Context, scope *scope.WithLogger, k8sClient c
 	spec := &openStackServer.Spec
 	if resolved == nil {
 		resolved = &infrav1alpha1.ResolvedServerSpec{}
-		openStackServer.Status.Resolved = resolved
+		openStackServer.Spec.Resolved = resolved
 	}
 
 	// If the server is bound to a cluster, we use the cluster name to generate the port description.

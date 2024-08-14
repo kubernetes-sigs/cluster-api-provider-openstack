@@ -113,6 +113,16 @@ func (*openStackServerWebhook) ValidateUpdate(ctx context.Context, oldObjRaw, ne
 	delete(oldOpenStackServerSpec, "identityRef")
 	delete(newOpenStackServerSpec, "identityRef")
 
+	// Allow change to the Resolved field only if it was not previously set
+	if oldObj.Spec.Resolved == nil {
+		newObj.Spec.Resolved = nil
+	}
+
+	// Allow change to the Resources field only if it was not previously set
+	if oldObj.Spec.Resources == nil {
+		newObj.Spec.Resources = nil
+	}
+
 	if !topology.ShouldSkipImmutabilityChecks(req, newObj) &&
 		!reflect.DeepEqual(newObj.Spec, oldObj.Spec) {
 		allErrs = append(allErrs,

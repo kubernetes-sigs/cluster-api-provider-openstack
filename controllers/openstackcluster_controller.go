@@ -473,7 +473,7 @@ func (r *OpenStackClusterReconciler) reconcileBastionServer(ctx context.Context,
 	}
 
 	// If the bastion is found but the spec has changed, we need to delete it and reconcile.
-	bastionServerSpec := bastionToOpenStackServerSpec(openStackCluster)
+	bastionServerSpec := bastionToOpenStackServerSpec(openStackCluster, server)
 	if !bastionNotFound && server != nil && !apiequality.Semantic.DeepEqual(bastionServerSpec, &server.Spec) {
 		scope.Logger().Info("Bastion spec has changed, re-creating the OpenStackServer object")
 		if err := r.deleteBastion(ctx, scope, cluster, openStackCluster); err != nil {
@@ -519,7 +519,7 @@ func (r *OpenStackClusterReconciler) getBastionServer(ctx context.Context, openS
 // createBastionServer creates the OpenStackServer object for the bastion server.
 // It returns the OpenStackServer object and an error if any.
 func (r *OpenStackClusterReconciler) createBastionServer(ctx context.Context, openStackCluster *infrav1.OpenStackCluster, cluster *clusterv1.Cluster) (*infrav1alpha1.OpenStackServer, error) {
-	bastionServerSpec := bastionToOpenStackServerSpec(openStackCluster)
+	bastionServerSpec := bastionToOpenStackServerSpec(openStackCluster, nil)
 	bastionServer := &infrav1alpha1.OpenStackServer{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels: map[string]string{
@@ -547,7 +547,7 @@ func (r *OpenStackClusterReconciler) createBastionServer(ctx context.Context, op
 
 // bastionToOpenStackServerSpec converts the OpenStackMachineSpec for the bastion to an OpenStackServerSpec.
 // It returns the OpenStackServerSpec and an error if any.
-func bastionToOpenStackServerSpec(openStackCluster *infrav1.OpenStackCluster) *infrav1alpha1.OpenStackServerSpec {
+func bastionToOpenStackServerSpec(openStackCluster *infrav1.OpenStackCluster, server *infrav1alpha1.OpenStackServer) *infrav1alpha1.OpenStackServerSpec {
 	bastion := openStackCluster.Spec.Bastion
 	if bastion == nil {
 		bastion = &infrav1.Bastion{}
@@ -563,6 +563,15 @@ func bastionToOpenStackServerSpec(openStackCluster *infrav1.OpenStackCluster) *i
 		az = *bastion.AvailabilityZone
 	}
 	openStackServerSpec := openStackMachineSpecToOpenStackServerSpec(bastion.Spec, openStackCluster.Spec.IdentityRef, compute.InstanceTags(bastion.Spec, openStackCluster), az, nil, getBastionSecurityGroupID(openStackCluster), openStackCluster.Status.Network.ID)
+
+	if server != nil {
+		if server.Spec.Resolved != nil {
+			openStackServerSpec.Resolved = server.Spec.Resolved
+		}
+		if server.Spec.Resources != nil {
+			openStackServerSpec.Resources = server.Spec.Resources
+		}
+	}
 
 	return openStackServerSpec
 }

@@ -267,6 +267,37 @@ Kubernetes core/v1.LocalObjectReference
 be injected into the server instance.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>resolved</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.ResolvedServerSpec">
+ResolvedServerSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Resolved contains parts of the machine spec with all external
+references fully resolved. This is not to be set by the user but rather
+by the controller.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>resources</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.ServerResources">
+ServerResources
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Resources contains references to OpenStack resources created for the machine.
+This is not to be set by the user but rather by the controller.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -790,6 +821,37 @@ Kubernetes core/v1.LocalObjectReference
 be injected into the server instance.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>resolved</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.ResolvedServerSpec">
+ResolvedServerSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Resolved contains parts of the machine spec with all external
+references fully resolved. This is not to be set by the user but rather
+by the controller.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>resources</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.ServerResources">
+ServerResources
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Resources contains references to OpenStack resources created for the machine.
+This is not to be set by the user but rather by the controller.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1alpha1.OpenStackServerStatus">OpenStackServerStatus
@@ -860,35 +922,6 @@ sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.InstanceState
 </tr>
 <tr>
 <td>
-<code>resolved</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.ResolvedServerSpec">
-ResolvedServerSpec
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Resolved contains parts of the machine spec with all external
-references fully resolved.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>resources</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.ServerResources">
-ServerResources
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Resources contains references to OpenStack resources created for the machine.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>conditions</code><br/>
 <em>
 <a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.6.0">
@@ -931,7 +964,7 @@ sigs.k8s.io/cluster-api/api/v1beta1.Conditions
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.OpenStackServerStatus">OpenStackServerStatus</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.OpenStackServerSpec">OpenStackServerSpec</a>)
 </p>
 <p>
 <p>ResolvedServerSpec contains resolved references to resources required by the server.</p>
@@ -988,7 +1021,7 @@ string
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.OpenStackServerStatus">OpenStackServerStatus</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.OpenStackServerSpec">OpenStackServerSpec</a>)
 </p>
 <p>
 <p>ServerResources contains references to OpenStack resources created for the server.</p>
