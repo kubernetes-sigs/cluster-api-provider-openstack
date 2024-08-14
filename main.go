@@ -78,7 +78,7 @@ var (
 	tlsSupportedVersions = []string{TLSVersion12, TLSVersion13}
 
 	// flags.
-	diagnosticsOptions          = flags.DiagnosticsOptions{}
+	managerOptions              = flags.ManagerOptions{}
 	enableLeaderElection        bool
 	leaderElectionLeaseDuration time.Duration
 	leaderElectionRenewDeadline time.Duration
@@ -120,7 +120,7 @@ func InitFlags(fs *pflag.FlagSet) {
 	logs.AddFlags(fs, logs.SkipLoggingConfigurationFlags())
 	logsv1.AddFlags(logOptions, fs)
 
-	flags.AddDiagnosticsOptions(fs, &diagnosticsOptions)
+	flags.AddManagerOptions(fs, &managerOptions)
 
 	fs.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
@@ -248,7 +248,11 @@ func main() {
 		}
 	}
 
-	diagnosticsOpts := flags.GetDiagnosticsOptions(diagnosticsOptions)
+	_, metricsOpts, err := flags.GetManagerOptions(managerOptions)
+	if err != nil {
+		setupLog.Error(err, "unable to get manager options")
+		os.Exit(1)
+	}
 
 	var watchNamespaces map[string]cache.Config
 	if watchNamespace != "" {
@@ -259,7 +263,7 @@ func main() {
 
 	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
 		Scheme:           scheme,
-		Metrics:          diagnosticsOpts,
+		Metrics:          *metricsOpts,
 		LeaderElection:   enableLeaderElection,
 		LeaderElectionID: "controller-leader-election-capo",
 		LeaseDuration:    &leaderElectionLeaseDuration,

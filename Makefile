@@ -294,16 +294,13 @@ generate-orc:
 	$(MAKE) -C $(REPO_ROOT)/orc generate
 
 .PHONY: generate-conversion-gen
-capo_module := sigs.k8s.io/cluster-api-provider-openstack
 generate-conversion-gen: $(CONVERSION_GEN)
 	$(CONVERSION_GEN) \
-		--input-dirs=$(capo_module)/api/v1alpha6 \
-		--input-dirs=$(capo_module)/api/v1alpha7 \
-		--extra-dirs=$(capo_module)/pkg/utils/optional \
-		--extra-dirs=$(capo_module)/pkg/utils/conversioncommon \
-		--output-file-base=zz_generated.conversion \
-		--trim-path-prefix=$(capo_module)/ \
-		--go-header-file=./hack/boilerplate/boilerplate.generatego.txt
+		--extra-peer-dirs=./pkg/utils/optional \
+		--extra-peer-dirs=./pkg/utils/conversioncommon \
+		--output-file=zz_generated.conversion.go \
+		--go-header-file=./hack/boilerplate/boilerplate.generatego.txt \
+		./api/v1alpha6 ./api/v1alpha7
 
 .PHONY: generate-manifests
 generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
