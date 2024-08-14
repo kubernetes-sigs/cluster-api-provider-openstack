@@ -158,6 +158,7 @@ def file_extension(filename):
 prune_dirs = [
     '_output',
     '.git',
+    '.tiltbuild',
     'vendor',
     'orc',
 ]
