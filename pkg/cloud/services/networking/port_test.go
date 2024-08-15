@@ -193,6 +193,21 @@ func Test_CreatePort(t *testing.T) {
 			want: &ports.Port{ID: portID},
 		},
 		{
+			name: "disable port security with security groups produces an error",
+			port: infrav1.ResolvedPortSpec{
+				Name:      "test-port",
+				NetworkID: netID,
+				ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
+					DisablePortSecurity: ptr.To(true),
+				},
+				SecurityGroups: []string{portSecurityGroupID},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder, _ Gomega) {
+				m.CreatePort(gomock.Any()).Times(0)
+			},
+			wantErr: true,
+		},
+		{
 			name: "disable port security also ignores allowed address pairs",
 			port: infrav1.ResolvedPortSpec{
 				Name:      "test-port",
@@ -777,6 +792,40 @@ func TestService_ConstructPorts(t *testing.T) {
 					Description:    defaultDescription,
 					Tags:           []string{"test-tag"},
 					SecurityGroups: []string{securityGroupID2, securityGroupID1},
+				},
+			},
+		},
+		{
+			name: "port security disabled override machine spec security groups",
+			spec: infrav1.OpenStackMachineSpec{
+				SecurityGroups: []infrav1.SecurityGroupParam{
+					{Filter: &infrav1.SecurityGroupFilter{Name: "machine-security-group"}},
+				},
+				Ports: []infrav1.PortOpts{
+					{
+						ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
+							DisablePortSecurity: ptr.To(true),
+						},
+					},
+				},
+			},
+			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
+				m.ListSecGroup(groups.ListOpts{Name: "machine-security-group"}).Return([]groups.SecGroup{
+					{ID: securityGroupID1},
+				}, nil)
+			},
+			want: []infrav1.ResolvedPortSpec{
+				{
+					Name:      "test-instance-0",
+					NetworkID: defaultNetworkID,
+					FixedIPs: []infrav1.ResolvedFixedIP{
+						{SubnetID: ptr.To(defaultSubnetID)},
+					},
+					Description: defaultDescription,
+					Tags:        []string{"test-tag"},
+					ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
+						DisablePortSecurity: ptr.To(true),
+					},
 				},
 			},
 		},

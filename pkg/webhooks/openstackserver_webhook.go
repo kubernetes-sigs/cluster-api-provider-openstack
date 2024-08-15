@@ -24,6 +24,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/cluster-api/util/topology"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -61,6 +62,12 @@ func (*openStackServerWebhook) ValidateCreate(_ context.Context, objRaw runtime.
 			if device.Name == "root" {
 				allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "additionalBlockDevices"), "cannot contain a device named \"root\" when rootVolume is set"))
 			}
+		}
+	}
+
+	for _, port := range newObj.Spec.Ports {
+		if ptr.Deref(port.DisablePortSecurity, false) && len(port.SecurityGroups) > 0 {
+			allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "ports"), "cannot have security groups when DisablePortSecurity is set to true"))
 		}
 	}
 

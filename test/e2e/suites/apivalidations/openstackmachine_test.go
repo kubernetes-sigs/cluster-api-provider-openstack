@@ -172,6 +172,23 @@ var _ = Describe("OpenStackMachine API validations", func() {
 			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation with root device name in spec.AdditionalBlockDevices should not succeed")
 		})
 
+		It("should not allow to create machine with both SecurityGroups and DisablePortSecurity", func() {
+			machine := defaultMachine()
+			machine.Spec.Ports = []infrav1.PortOpts{
+				{
+					SecurityGroups: []infrav1.SecurityGroupParam{{
+						Filter: &infrav1.SecurityGroupFilter{Name: "test-security-group"},
+					}},
+					ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
+						DisablePortSecurity: ptr.To(true),
+					},
+				},
+			}
+
+			By("Creating a machine with both SecurityGroups and DisablePortSecurity")
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation with both SecurityGroups and DisablePortSecurity should not succeed")
+		})
+
 		/* FIXME: These tests are failing
 		It("should not allow additional volume with empty name", func() {
 			machine.Spec.AdditionalBlockDevices = []infrav1.AdditionalBlockDevice{
