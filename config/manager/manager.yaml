@@ -23,7 +23,7 @@ spec:
             - "--leader-elect"
             - "--v=2"
             - "--diagnostics-address=127.0.0.1:8080"
-            - "--insecure-diagnostics"
+            - "--insecure-diagnostics=true"
           image: controller:latest
           imagePullPolicy: Always
           name: manager
