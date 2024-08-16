@@ -248,7 +248,18 @@ func (r *OpenStackClusterReconciler) deleteBastion(ctx context.Context, scope *s
 		return err
 	}
 
+	var statusFloatingIP *string
+	var specFloatingIP *string
 	if openStackCluster.Status.Bastion != nil && openStackCluster.Status.Bastion.FloatingIP != "" {
+		// Floating IP set in status
+		statusFloatingIP = &openStackCluster.Status.Bastion.FloatingIP
+	}
+	if openStackCluster.Spec.Bastion.FloatingIP != nil {
+		// Floating IP from the spec
+		specFloatingIP = openStackCluster.Spec.Bastion.FloatingIP
+	}
+
+	if statusFloatingIP != nil && (specFloatingIP == nil || *statusFloatingIP != *specFloatingIP) {
 		if err = networkingService.DeleteFloatingIP(openStackCluster, openStackCluster.Status.Bastion.FloatingIP); err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete floating IP: %w", err), false)
 			return fmt.Errorf("failed to delete floating IP: %w", err)
@@ -274,6 +285,10 @@ func (r *OpenStackClusterReconciler) deleteBastion(ctx context.Context, scope *s
 
 		for _, address := range addresses {
 			if address.Type == corev1.NodeExternalIP {
+				// If a floating IP is set for the bastion spec, skip deleting it
+				if specFloatingIP != nil && address.Address == *specFloatingIP {
+					continue
+				}
 				// Floating IP may not have properly saved in bastion status (thus not deleted above), delete any remaining floating IP
 				if err = networkingService.DeleteFloatingIP(openStackCluster, address.Address); err != nil {
 					handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete floating IP: %w", err), false)
