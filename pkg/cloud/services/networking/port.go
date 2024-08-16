@@ -170,6 +170,9 @@ func (s *Service) CreatePort(eventObject runtime.Object, portSpec *infrav1.Resol
 		createOpts.FixedIPs = fixedIPs
 	}
 	if portSpec.SecurityGroups != nil {
+		if ptr.Deref(portSpec.DisablePortSecurity, false) {
+			return nil, errors.New("security groups cannot be set when port security is disabled")
+		}
 		createOpts.SecurityGroups = &portSpec.SecurityGroups
 	}
 	builder = createOpts
@@ -434,13 +437,15 @@ func (s *Service) normalizePorts(ports []infrav1.PortOpts, clusterResourceName, 
 			return nil, err
 		}
 
-		// Resolve security groups
-		if len(port.SecurityGroups) == 0 {
-			normalizedPort.SecurityGroups = defaultSecurityGroupIDs
-		} else {
-			normalizedPort.SecurityGroups, err = s.GetSecurityGroups(port.SecurityGroups)
-			if err != nil {
-				return nil, fmt.Errorf("error getting security groups: %v", err)
+		// Resolve security groups when port security is not disabled
+		if !ptr.Deref(port.DisablePortSecurity, false) {
+			if len(port.SecurityGroups) == 0 {
+				normalizedPort.SecurityGroups = defaultSecurityGroupIDs
+			} else {
+				normalizedPort.SecurityGroups, err = s.GetSecurityGroups(port.SecurityGroups)
+				if err != nil {
+					return nil, fmt.Errorf("error getting security groups: %v", err)
+				}
 			}
 		}
 	}
