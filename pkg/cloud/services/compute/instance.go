@@ -107,13 +107,27 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, instanceSpec *I
 		BlockDevice:      blockDevices,
 	}
 
+	schedulerAdditionalProperties := make(map[string]interface{})
+
+	for _, prop := range instanceSpec.SchedulerAdditionalProperties {
+		switch prop.Value.Type {
+		case infrav1.SchedulerHintTypeBool:
+			schedulerAdditionalProperties[prop.Name] = *prop.Value.Bool
+		case infrav1.SchedulerHintTypeString:
+			schedulerAdditionalProperties[prop.Name] = *prop.Value.String
+		case infrav1.SchedulerHintTypeNumber:
+			schedulerAdditionalProperties[prop.Name] = *prop.Value.Number
+		}
+	}
+
 	server, err := s.getComputeClient().CreateServer(
 		keypairs.CreateOptsExt{
 			CreateOptsBuilder: serverCreateOpts,
 			KeyName:           instanceSpec.SSHKeyName,
 		},
 		servers.SchedulerHintOpts{
-			Group: instanceSpec.ServerGroupID,
+			Group:                instanceSpec.ServerGroupID,
+			AdditionalProperties: schedulerAdditionalProperties,
 		},
 	)
 	if err != nil {

@@ -354,6 +354,158 @@ var _ = Describe("OpenStackMachine API validations", func() {
 		})
 	})
 
+	Context("schedulerHints", func() {
+		It("should allow empty schedulerHints", func() {
+			machine := defaultMachine()
+			machine.Spec.SchedulerHintAdditionalProperties = []infrav1.SchedulerHintAdditionalProperty{}
+			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "Creating a machine with an empty SchedulerHintAdditionalProperties should succeed.")
+		})
+
+		It("should not allow item with empty name", func() {
+			machine := defaultMachine()
+			machine.Spec.SchedulerHintAdditionalProperties = []infrav1.SchedulerHintAdditionalProperty{
+				{
+					Name: "",
+					Value: infrav1.SchedulerHintAdditionalValue{
+						Type: infrav1.SchedulerHintTypeBool,
+						Bool: ptr.To(false),
+					},
+				},
+			}
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with SchedulerHintAdditionalProperties including an item with empty name should fail.")
+		})
+
+		It("should not allow item with empty value", func() {
+			machine := defaultMachine()
+			machine.Spec.SchedulerHintAdditionalProperties = []infrav1.SchedulerHintAdditionalProperty{
+				{
+					Name: "test-hints",
+				},
+			}
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with SchedulerHintAdditionalProperties including an item with empty value should fail.")
+		})
+
+		It("should allow correct SchedulerHintAdditionalProperties", func() {
+			machineB := defaultMachine()
+			machineB.Spec.SchedulerHintAdditionalProperties = []infrav1.SchedulerHintAdditionalProperty{
+				{
+					Name: "test-hints",
+					Value: infrav1.SchedulerHintAdditionalValue{
+						Type: infrav1.SchedulerHintTypeBool,
+						Bool: ptr.To(true),
+					},
+				},
+			}
+			By("Creating SchedulerHint with bool type")
+			Expect(k8sClient.Create(ctx, machineB)).To(Succeed(), "Creating a machine with bool type scheduler hint property should succeed.")
+			machineN := defaultMachine()
+			machineN.Spec.SchedulerHintAdditionalProperties = []infrav1.SchedulerHintAdditionalProperty{
+				{
+					Name: "test-hints",
+					Value: infrav1.SchedulerHintAdditionalValue{
+						Type:   infrav1.SchedulerHintTypeNumber,
+						Number: ptr.To(1),
+					},
+				},
+			}
+			By("Creating SchedulerHint with number type")
+			Expect(k8sClient.Create(ctx, machineN)).To(Succeed(), "Creating a machine with number type scheduler hint property should succeed.")
+			machineS := defaultMachine()
+			machineS.Spec.SchedulerHintAdditionalProperties = []infrav1.SchedulerHintAdditionalProperty{
+				{
+					Name: "test-hints",
+					Value: infrav1.SchedulerHintAdditionalValue{
+						Type:   infrav1.SchedulerHintTypeString,
+						String: ptr.To("test-hint"),
+					},
+				},
+			}
+			By("Creating SchedulerHint with string type")
+			Expect(k8sClient.Create(ctx, machineS)).To(Succeed(), "Creating a machine with string type scheduler hint property should succeed.")
+		})
+
+		It("should not allow incorrect SchedulerHintAdditionalProperties with bool type", func() {
+			machineBN := defaultMachine()
+			machineBN.Spec.SchedulerHintAdditionalProperties = []infrav1.SchedulerHintAdditionalProperty{
+				{
+					Name: "test-hints",
+					Value: infrav1.SchedulerHintAdditionalValue{
+						Type:   infrav1.SchedulerHintTypeBool,
+						Number: ptr.To(1),
+					},
+				},
+			}
+			By("Creating SchedulerHint with bool type and number value")
+			Expect(k8sClient.Create(ctx, machineBN)).NotTo(Succeed(), "Creating a machine with bool type but number value scheduler hint property should fail.")
+			machineBS := defaultMachine()
+			machineBS.Spec.SchedulerHintAdditionalProperties = []infrav1.SchedulerHintAdditionalProperty{
+				{
+					Name: "test-hints",
+					Value: infrav1.SchedulerHintAdditionalValue{
+						Type:   infrav1.SchedulerHintTypeBool,
+						String: ptr.To("test-hint"),
+					},
+				},
+			}
+			By("Creating SchedulerHint with bool type and string value")
+			Expect(k8sClient.Create(ctx, machineBS)).NotTo(Succeed(), "Creating a machine with bool type but string value scheduler hint property should fail.")
+		})
+
+		It("should not allow incorrect SchedulerHintAdditionalProperties with number type", func() {
+			machineNB := defaultMachine()
+			machineNB.Spec.SchedulerHintAdditionalProperties = []infrav1.SchedulerHintAdditionalProperty{
+				{
+					Name: "test-hints",
+					Value: infrav1.SchedulerHintAdditionalValue{
+						Type: infrav1.SchedulerHintTypeNumber,
+						Bool: ptr.To(true),
+					},
+				},
+			}
+			By("Creating SchedulerHint with number type and bool value")
+			Expect(k8sClient.Create(ctx, machineNB)).NotTo(Succeed(), "Creating a machine with number type but bool value scheduler hint property should fail.")
+			machineNS := defaultMachine()
+			machineNS.Spec.SchedulerHintAdditionalProperties = []infrav1.SchedulerHintAdditionalProperty{
+				{
+					Name: "test-hints",
+					Value: infrav1.SchedulerHintAdditionalValue{
+						Type:   infrav1.SchedulerHintTypeNumber,
+						String: ptr.To("test-hint"),
+					},
+				},
+			}
+			By("Creating SchedulerHint with number type and string value")
+			Expect(k8sClient.Create(ctx, machineNS)).NotTo(Succeed(), "Creating a machine with number type but string value scheduler hint property should fail.")
+		})
+
+		It("should not allow incorrect SchedulerHintAdditionalProperties with string type", func() {
+			machineSB := defaultMachine()
+			machineSB.Spec.SchedulerHintAdditionalProperties = []infrav1.SchedulerHintAdditionalProperty{
+				{
+					Name: "test-hints",
+					Value: infrav1.SchedulerHintAdditionalValue{
+						Type: infrav1.SchedulerHintTypeString,
+						Bool: ptr.To(true),
+					},
+				},
+			}
+			By("Creating SchedulerHint with string type and bool value")
+			Expect(k8sClient.Create(ctx, machineSB)).NotTo(Succeed(), "Creating a machine with string type but bool value scheduler hint property should fail.")
+			machineSN := defaultMachine()
+			machineSN.Spec.SchedulerHintAdditionalProperties = []infrav1.SchedulerHintAdditionalProperty{
+				{
+					Name: "test-hints",
+					Value: infrav1.SchedulerHintAdditionalValue{
+						Type:   infrav1.SchedulerHintTypeString,
+						Number: ptr.To(1),
+					},
+				},
+			}
+			By("Creating SchedulerHint with string type and number value")
+			Expect(k8sClient.Create(ctx, machineSN)).NotTo(Succeed(), "Creating a machine with string type but number value scheduler hint property should fail.")
+		})
+	})
+
 	Context("v1alpha7", func() {
 		It("should downgrade cleanly from infrav1", func() {
 			infrav1Machine := &infrav1.OpenStackMachine{}

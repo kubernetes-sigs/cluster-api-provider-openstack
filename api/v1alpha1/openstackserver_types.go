@@ -104,6 +104,14 @@ type OpenStackServerSpec struct {
 	// be injected into the server instance.
 	// +optional
 	UserDataRef *corev1.LocalObjectReference `json:"userDataRef,omitempty"`
+
+	// SchedulerHintAdditionalProperties are arbitrary key/value pairs that provide additional hints
+	// to the OpenStack scheduler. These hints can influence how instances are placed on the infrastructure,
+	// such as specifying certain host aggregates or availability zones.
+	// +optional
+	// +listType=map
+	// +listMapKey=name
+	SchedulerHintAdditionalProperties []infrav1.SchedulerHintAdditionalProperty `json:"schedulerHintAdditionalProperties,omitempty"`
 }
 
 // OpenStackServerStatus defines the observed state of OpenStackServer.

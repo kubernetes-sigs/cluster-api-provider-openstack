@@ -913,6 +913,90 @@ func TestService_ReconcileInstance(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "With custom scheduler hint bool",
+			getInstanceSpec: func() *InstanceSpec {
+				s := getDefaultInstanceSpec()
+				s.SchedulerAdditionalProperties = []infrav1.SchedulerHintAdditionalProperty{
+					{
+						Name: "custom_hint",
+						Value: infrav1.SchedulerHintAdditionalValue{
+							Type: infrav1.SchedulerHintTypeBool,
+							Bool: ptr.To(true),
+						},
+					},
+				}
+				return s
+			},
+			expect: func(g Gomega, r *recorders) {
+				expectDefaultFlavor(r.compute)
+				createOpts := getDefaultServerCreateOpts()
+				schedulerHintOpts := servers.SchedulerHintOpts{
+					Group: serverGroupUUID,
+					AdditionalProperties: map[string]any{
+						"custom_hint": true,
+					},
+				}
+				expectCreateServer(g, r.compute, withSSHKey(createOpts), schedulerHintOpts, false)
+			},
+			wantErr: false,
+		},
+		{
+			name: "With custom scheduler hint number",
+			getInstanceSpec: func() *InstanceSpec {
+				s := getDefaultInstanceSpec()
+				s.SchedulerAdditionalProperties = []infrav1.SchedulerHintAdditionalProperty{
+					{
+						Name: "custom_hint",
+						Value: infrav1.SchedulerHintAdditionalValue{
+							Type:   infrav1.SchedulerHintTypeNumber,
+							Number: ptr.To(1),
+						},
+					},
+				}
+				return s
+			},
+			expect: func(g Gomega, r *recorders) {
+				expectDefaultFlavor(r.compute)
+				createOpts := getDefaultServerCreateOpts()
+				schedulerHintOpts := servers.SchedulerHintOpts{
+					Group: serverGroupUUID,
+					AdditionalProperties: map[string]any{
+						"custom_hint": 1,
+					},
+				}
+				expectCreateServer(g, r.compute, withSSHKey(createOpts), schedulerHintOpts, false)
+			},
+			wantErr: false,
+		},
+		{
+			name: "With custom scheduler hint string",
+			getInstanceSpec: func() *InstanceSpec {
+				s := getDefaultInstanceSpec()
+				s.SchedulerAdditionalProperties = []infrav1.SchedulerHintAdditionalProperty{
+					{
+						Name: "custom_hint",
+						Value: infrav1.SchedulerHintAdditionalValue{
+							Type:   infrav1.SchedulerHintTypeString,
+							String: ptr.To("custom hint"),
+						},
+					},
+				}
+				return s
+			},
+			expect: func(g Gomega, r *recorders) {
+				expectDefaultFlavor(r.compute)
+				createOpts := getDefaultServerCreateOpts()
+				schedulerHintOpts := servers.SchedulerHintOpts{
+					Group: serverGroupUUID,
+					AdditionalProperties: map[string]any{
+						"custom_hint": "custom hint",
+					},
+				}
+				expectCreateServer(g, r.compute, withSSHKey(createOpts), schedulerHintOpts, false)
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

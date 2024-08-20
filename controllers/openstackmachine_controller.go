@@ -472,14 +472,16 @@ func (r *OpenStackMachineReconciler) getMachineServer(ctx context.Context, openS
 // It returns the OpenStackServerSpec object and an error if there is any.
 func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.OpenStackMachineSpec, identityRef infrav1.OpenStackIdentityReference, tags []string, failureDomain string, userDataRef *corev1.LocalObjectReference, defaultSecGroup *string, defaultNetworkID string) *infrav1alpha1.OpenStackServerSpec {
 	openStackServerSpec := &infrav1alpha1.OpenStackServerSpec{
-		AdditionalBlockDevices: openStackMachineSpec.AdditionalBlockDevices,
-		ConfigDrive:            openStackMachineSpec.ConfigDrive,
-		Flavor:                 openStackMachineSpec.Flavor,
-		IdentityRef:            identityRef,
-		Image:                  openStackMachineSpec.Image,
-		RootVolume:             openStackMachineSpec.RootVolume,
-		ServerMetadata:         openStackMachineSpec.ServerMetadata,
-		SSHKeyName:             openStackMachineSpec.SSHKeyName,
+		AdditionalBlockDevices:            openStackMachineSpec.AdditionalBlockDevices,
+		ConfigDrive:                       openStackMachineSpec.ConfigDrive,
+		Flavor:                            openStackMachineSpec.Flavor,
+		IdentityRef:                       identityRef,
+		Image:                             openStackMachineSpec.Image,
+		RootVolume:                        openStackMachineSpec.RootVolume,
+		ServerMetadata:                    openStackMachineSpec.ServerMetadata,
+		SSHKeyName:                        openStackMachineSpec.SSHKeyName,
+		ServerGroup:                       openStackMachineSpec.ServerGroup,
+		SchedulerHintAdditionalProperties: openStackMachineSpec.SchedulerHintAdditionalProperties,
 	}
 
 	if len(tags) > 0 {

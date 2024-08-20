@@ -267,6 +267,22 @@ Kubernetes core/v1.LocalObjectReference
 be injected into the server instance.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>schedulerHintAdditionalProperties</code><br/>
+<em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta1/api#infrastructure.cluster.x-k8s.io/v1beta1.SchedulerHintAdditionalProperty">
+[]sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SchedulerHintAdditionalProperty
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SchedulerHintAdditionalProperties are arbitrary key/value pairs that provide additional hints
+to the OpenStack scheduler. These hints can influence how instances are placed on the infrastructure,
+such as specifying certain host aggregates or availability zones.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -788,6 +804,22 @@ Kubernetes core/v1.LocalObjectReference
 <em>(Optional)</em>
 <p>UserDataRef is a reference to a secret containing the user data to
 be injected into the server instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>schedulerHintAdditionalProperties</code><br/>
+<em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta1/api#infrastructure.cluster.x-k8s.io/v1beta1.SchedulerHintAdditionalProperty">
+[]sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SchedulerHintAdditionalProperty
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SchedulerHintAdditionalProperties are arbitrary key/value pairs that provide additional hints
+to the OpenStack scheduler. These hints can influence how instances are placed on the infrastructure,
+such as specifying certain host aggregates or availability zones.</p>
 </td>
 </tr>
 </tbody>

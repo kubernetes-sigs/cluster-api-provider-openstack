@@ -25,21 +25,22 @@ import (
 // OpenStackMachineSpecApplyConfiguration represents an declarative configuration of the OpenStackMachineSpec type for use
 // with apply.
 type OpenStackMachineSpecApplyConfiguration struct {
-	ProviderID             *string                                       `json:"providerID,omitempty"`
-	Flavor                 *string                                       `json:"flavor,omitempty"`
-	Image                  *ImageParamApplyConfiguration                 `json:"image,omitempty"`
-	SSHKeyName             *string                                       `json:"sshKeyName,omitempty"`
-	Ports                  []PortOptsApplyConfiguration                  `json:"ports,omitempty"`
-	SecurityGroups         []SecurityGroupParamApplyConfiguration        `json:"securityGroups,omitempty"`
-	Trunk                  *bool                                         `json:"trunk,omitempty"`
-	Tags                   []string                                      `json:"tags,omitempty"`
-	ServerMetadata         []ServerMetadataApplyConfiguration            `json:"serverMetadata,omitempty"`
-	ConfigDrive            *bool                                         `json:"configDrive,omitempty"`
-	RootVolume             *RootVolumeApplyConfiguration                 `json:"rootVolume,omitempty"`
-	AdditionalBlockDevices []AdditionalBlockDeviceApplyConfiguration     `json:"additionalBlockDevices,omitempty"`
-	ServerGroup            *ServerGroupParamApplyConfiguration           `json:"serverGroup,omitempty"`
-	IdentityRef            *OpenStackIdentityReferenceApplyConfiguration `json:"identityRef,omitempty"`
-	FloatingIPPoolRef      *v1.TypedLocalObjectReference                 `json:"floatingIPPoolRef,omitempty"`
+	ProviderID                        *string                                             `json:"providerID,omitempty"`
+	Flavor                            *string                                             `json:"flavor,omitempty"`
+	Image                             *ImageParamApplyConfiguration                       `json:"image,omitempty"`
+	SSHKeyName                        *string                                             `json:"sshKeyName,omitempty"`
+	Ports                             []PortOptsApplyConfiguration                        `json:"ports,omitempty"`
+	SecurityGroups                    []SecurityGroupParamApplyConfiguration              `json:"securityGroups,omitempty"`
+	Trunk                             *bool                                               `json:"trunk,omitempty"`
+	Tags                              []string                                            `json:"tags,omitempty"`
+	ServerMetadata                    []ServerMetadataApplyConfiguration                  `json:"serverMetadata,omitempty"`
+	ConfigDrive                       *bool                                               `json:"configDrive,omitempty"`
+	RootVolume                        *RootVolumeApplyConfiguration                       `json:"rootVolume,omitempty"`
+	AdditionalBlockDevices            []AdditionalBlockDeviceApplyConfiguration           `json:"additionalBlockDevices,omitempty"`
+	ServerGroup                       *ServerGroupParamApplyConfiguration                 `json:"serverGroup,omitempty"`
+	IdentityRef                       *OpenStackIdentityReferenceApplyConfiguration       `json:"identityRef,omitempty"`
+	FloatingIPPoolRef                 *v1.TypedLocalObjectReference                       `json:"floatingIPPoolRef,omitempty"`
+	SchedulerHintAdditionalProperties []SchedulerHintAdditionalPropertyApplyConfiguration `json:"schedulerHintAdditionalProperties,omitempty"`
 }
 
 // OpenStackMachineSpecApplyConfiguration constructs an declarative configuration of the OpenStackMachineSpec type for use with
@@ -187,5 +188,18 @@ func (b *OpenStackMachineSpecApplyConfiguration) WithIdentityRef(value *OpenStac
 // If called multiple times, the FloatingIPPoolRef field is set to the value of the last call.
 func (b *OpenStackMachineSpecApplyConfiguration) WithFloatingIPPoolRef(value v1.TypedLocalObjectReference) *OpenStackMachineSpecApplyConfiguration {
 	b.FloatingIPPoolRef = &value
+	return b
+}
+
+// WithSchedulerHintAdditionalProperties adds the given value to the SchedulerHintAdditionalProperties field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the SchedulerHintAdditionalProperties field.
+func (b *OpenStackMachineSpecApplyConfiguration) WithSchedulerHintAdditionalProperties(values ...*SchedulerHintAdditionalPropertyApplyConfiguration) *OpenStackMachineSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithSchedulerHintAdditionalProperties")
+		}
+		b.SchedulerHintAdditionalProperties = append(b.SchedulerHintAdditionalProperties, *values[i])
+	}
 	return b
 }

@@ -26,22 +26,23 @@ import (
 // OpenStackServerSpecApplyConfiguration represents an declarative configuration of the OpenStackServerSpec type for use
 // with apply.
 type OpenStackServerSpecApplyConfiguration struct {
-	AdditionalBlockDevices []v1beta1.AdditionalBlockDeviceApplyConfiguration     `json:"additionalBlockDevices,omitempty"`
-	AvailabilityZone       *string                                               `json:"availabilityZone,omitempty"`
-	ConfigDrive            *bool                                                 `json:"configDrive,omitempty"`
-	Flavor                 *string                                               `json:"flavor,omitempty"`
-	FloatingIPPoolRef      *v1.TypedLocalObjectReference                         `json:"floatingIPPoolRef,omitempty"`
-	IdentityRef            *v1beta1.OpenStackIdentityReferenceApplyConfiguration `json:"identityRef,omitempty"`
-	Image                  *v1beta1.ImageParamApplyConfiguration                 `json:"image,omitempty"`
-	Ports                  []v1beta1.PortOptsApplyConfiguration                  `json:"ports,omitempty"`
-	RootVolume             *v1beta1.RootVolumeApplyConfiguration                 `json:"rootVolume,omitempty"`
-	SSHKeyName             *string                                               `json:"sshKeyName,omitempty"`
-	SecurityGroups         []v1beta1.SecurityGroupParamApplyConfiguration        `json:"securityGroups,omitempty"`
-	ServerGroup            *v1beta1.ServerGroupParamApplyConfiguration           `json:"serverGroup,omitempty"`
-	ServerMetadata         []v1beta1.ServerMetadataApplyConfiguration            `json:"serverMetadata,omitempty"`
-	Tags                   []string                                              `json:"tags,omitempty"`
-	Trunk                  *bool                                                 `json:"trunk,omitempty"`
-	UserDataRef            *v1.LocalObjectReference                              `json:"userDataRef,omitempty"`
+	AdditionalBlockDevices            []v1beta1.AdditionalBlockDeviceApplyConfiguration           `json:"additionalBlockDevices,omitempty"`
+	AvailabilityZone                  *string                                                     `json:"availabilityZone,omitempty"`
+	ConfigDrive                       *bool                                                       `json:"configDrive,omitempty"`
+	Flavor                            *string                                                     `json:"flavor,omitempty"`
+	FloatingIPPoolRef                 *v1.TypedLocalObjectReference                               `json:"floatingIPPoolRef,omitempty"`
+	IdentityRef                       *v1beta1.OpenStackIdentityReferenceApplyConfiguration       `json:"identityRef,omitempty"`
+	Image                             *v1beta1.ImageParamApplyConfiguration                       `json:"image,omitempty"`
+	Ports                             []v1beta1.PortOptsApplyConfiguration                        `json:"ports,omitempty"`
+	RootVolume                        *v1beta1.RootVolumeApplyConfiguration                       `json:"rootVolume,omitempty"`
+	SSHKeyName                        *string                                                     `json:"sshKeyName,omitempty"`
+	SecurityGroups                    []v1beta1.SecurityGroupParamApplyConfiguration              `json:"securityGroups,omitempty"`
+	ServerGroup                       *v1beta1.ServerGroupParamApplyConfiguration                 `json:"serverGroup,omitempty"`
+	ServerMetadata                    []v1beta1.ServerMetadataApplyConfiguration                  `json:"serverMetadata,omitempty"`
+	Tags                              []string                                                    `json:"tags,omitempty"`
+	Trunk                             *bool                                                       `json:"trunk,omitempty"`
+	UserDataRef                       *v1.LocalObjectReference                                    `json:"userDataRef,omitempty"`
+	SchedulerHintAdditionalProperties []v1beta1.SchedulerHintAdditionalPropertyApplyConfiguration `json:"schedulerHintAdditionalProperties,omitempty"`
 }
 
 // OpenStackServerSpecApplyConfiguration constructs an declarative configuration of the OpenStackServerSpec type for use with
@@ -197,5 +198,18 @@ func (b *OpenStackServerSpecApplyConfiguration) WithTrunk(value bool) *OpenStack
 // If called multiple times, the UserDataRef field is set to the value of the last call.
 func (b *OpenStackServerSpecApplyConfiguration) WithUserDataRef(value v1.LocalObjectReference) *OpenStackServerSpecApplyConfiguration {
 	b.UserDataRef = &value
+	return b
+}
+
+// WithSchedulerHintAdditionalProperties adds the given value to the SchedulerHintAdditionalProperties field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the SchedulerHintAdditionalProperties field.
+func (b *OpenStackServerSpecApplyConfiguration) WithSchedulerHintAdditionalProperties(values ...*v1beta1.SchedulerHintAdditionalPropertyApplyConfiguration) *OpenStackServerSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithSchedulerHintAdditionalProperties")
+		}
+		b.SchedulerHintAdditionalProperties = append(b.SchedulerHintAdditionalProperties, *values[i])
+	}
 	return b
 }

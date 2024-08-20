@@ -262,6 +262,14 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: rootVolume
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.RootVolume
+    - name: schedulerHintAdditionalProperties
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.SchedulerHintAdditionalProperty
+          elementRelationship: associative
+          keys:
+          - name
     - name: securityGroups
       type:
         list:
@@ -2710,6 +2718,14 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: rootVolume
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.RootVolume
+    - name: schedulerHintAdditionalProperties
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.SchedulerHintAdditionalProperty
+          elementRelationship: associative
+          keys:
+          - name
     - name: securityGroups
       type:
         list:
@@ -3065,6 +3081,33 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: id
       type:
         scalar: string
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.SchedulerHintAdditionalProperty
+  map:
+    fields:
+    - name: name
+      type:
+        scalar: string
+      default: ""
+    - name: value
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.SchedulerHintAdditionalValue
+      default: {}
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.SchedulerHintAdditionalValue
+  map:
+    fields:
+    - name: bool
+      type:
+        scalar: boolean
+    - name: number
+      type:
+        scalar: numeric
+    - name: string
+      type:
+        scalar: string
+    - name: type
+      type:
+        scalar: string
+      default: ""
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.SecurityGroupFilter
   map:
     fields:
