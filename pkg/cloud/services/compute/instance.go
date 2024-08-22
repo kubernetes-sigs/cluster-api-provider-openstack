@@ -323,7 +323,18 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, openStackCluste
 		}
 	}
 
-	serverCreateOpts = applyServerGroupID(serverCreateOpts, instanceSpec.ServerGroupID)
+	schedulerHintsAdditionalProperties := make(map[string]interface{})
+	for k, v := range instanceSpec.SchedulerHintsAdditionalProperties {
+		schedulerHintsAdditionalProperties[k] = v
+	}
+
+	serverCreateOpts = schedulerhints.CreateOptsExt{
+		CreateOptsBuilder: serverCreateOpts,
+		SchedulerHints: schedulerhints.SchedulerHints{
+			Group:                instanceSpec.ServerGroupID,
+			AdditionalProperties: schedulerHintsAdditionalProperties,
+		},
+	}
 
 	server, err = s.getComputeClient().CreateServer(keypairs.CreateOptsExt{
 		CreateOptsBuilder: serverCreateOpts,
@@ -546,20 +557,6 @@ func (s *Service) getBlockDevices(eventObject runtime.Object, instanceSpec *Inst
 	}
 
 	return blockDevices, nil
-}
-
-// applyServerGroupID adds a scheduler hint to the CreateOptsBuilder, if the
-// spec contains a server group ID.
-func applyServerGroupID(opts servers.CreateOptsBuilder, serverGroupID string) servers.CreateOptsBuilder {
-	if serverGroupID != "" {
-		return schedulerhints.CreateOptsExt{
-			CreateOptsBuilder: opts,
-			SchedulerHints: schedulerhints.SchedulerHints{
-				Group: serverGroupID,
-			},
-		}
-	}
-	return opts
 }
 
 // Helper function for getting image id from name.

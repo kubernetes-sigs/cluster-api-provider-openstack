@@ -1279,6 +1279,12 @@ spec:
                           volumeType:
                             type: string
                         type: object
+                      schedulerHintAdditionalProperties:
+                        additionalProperties:
+                          type: string
+                        description: SchedulerHintAdditionalProperties are arbitrary
+                          key/values that are not validated by nova.
+                        type: object
                       securityGroups:
                         description: The names of the security groups to assign to
                           the instance
