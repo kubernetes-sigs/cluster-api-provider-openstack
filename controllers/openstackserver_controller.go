@@ -127,6 +127,14 @@ func (r *OpenStackServerReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	}()
 
 	if !openStackServer.ObjectMeta.DeletionTimestamp.IsZero() {
+		// When moving a cluster, we need to populate the server status with the resources
+		// that were in another object's status.
+		// This is because the status is not persisted across CAPI resources moves.
+		if openStackServer.Status.Resolved == nil || openStackServer.Status.Resources == nil {
+			if _, err := r.reconcileNormal(ctx, scope, openStackServer); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
 		return reconcile.Result{}, r.reconcileDelete(scope, openStackServer)
 	}
 
