@@ -1138,6 +1138,7 @@ func autoConvert_v1alpha7_OpenStackMachineSpec_To_v1alpha5_OpenStackMachineSpec(
 	// WARNING: in.AdditionalBlockDevices requires manual conversion: does not exist in peer-type
 	out.ServerGroupID = in.ServerGroupID
 	out.IdentityRef = (*OpenStackIdentityReference)(unsafe.Pointer(in.IdentityRef))
+	// WARNING: in.SchedulerHintAdditionalProperties requires manual conversion: does not exist in peer-type
 	return nil
 }
 

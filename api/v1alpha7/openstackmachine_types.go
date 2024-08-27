@@ -97,6 +97,10 @@ type OpenStackMachineSpec struct {
 	// If not specified, the identity ref of the cluster will be used instead.
 	// +optional
 	IdentityRef *OpenStackIdentityReference `json:"identityRef,omitempty"`
+
+	// SchedulerHintAdditionalProperties are arbitrary key/values that are not validated by nova.
+	// +optional
+	SchedulerHintAdditionalProperties map[string]string `json:"schedulerHintAdditionalProperties,omitempty"`
 }
 
 // OpenStackMachineStatus defines the observed state of OpenStackMachine.
