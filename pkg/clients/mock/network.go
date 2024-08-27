@@ -546,6 +546,21 @@ func (mr *MockNetworkClientMockRecorder) ListTrunk(arg0 interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListTrunk", reflect.TypeOf((*MockNetworkClient)(nil).ListTrunk), arg0)
 }
 
+// ListTrunkSubports mocks base method.
+func (m *MockNetworkClient) ListTrunkSubports(arg0 string) ([]trunks.Subport, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListTrunkSubports", arg0)
+	ret0, _ := ret[0].([]trunks.Subport)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListTrunkSubports indicates an expected call of ListTrunkSubports.
+func (mr *MockNetworkClientMockRecorder) ListTrunkSubports(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListTrunkSubports", reflect.TypeOf((*MockNetworkClient)(nil).ListTrunkSubports), arg0)
+}
+
 // RemoveRouterInterface mocks base method.
 func (m *MockNetworkClient) RemoveRouterInterface(arg0 string, arg1 routers.RemoveInterfaceOptsBuilder) (*routers.InterfaceInfo, error) {
 	m.ctrl.T.Helper()
@@ -559,6 +574,20 @@ func (m *MockNetworkClient) RemoveRouterInterface(arg0 string, arg1 routers.Remo
 func (mr *MockNetworkClientMockRecorder) RemoveRouterInterface(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveRouterInterface", reflect.TypeOf((*MockNetworkClient)(nil).RemoveRouterInterface), arg0, arg1)
+}
+
+// RemoveSubports mocks base method.
+func (m *MockNetworkClient) RemoveSubports(arg0 string, arg1 trunks.RemoveSubportsOpts) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveSubports", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveSubports indicates an expected call of RemoveSubports.
+func (mr *MockNetworkClientMockRecorder) RemoveSubports(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveSubports", reflect.TypeOf((*MockNetworkClient)(nil).RemoveSubports), arg0, arg1)
 }
 
 // ReplaceAllAttributesTags mocks base method.

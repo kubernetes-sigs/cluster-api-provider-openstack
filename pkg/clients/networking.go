@@ -53,6 +53,9 @@ type NetworkClient interface {
 	CreateTrunk(opts trunks.CreateOptsBuilder) (*trunks.Trunk, error)
 	DeleteTrunk(id string) error
 
+	ListTrunkSubports(trunkID string) ([]trunks.Subport, error)
+	RemoveSubports(id string, opts trunks.RemoveSubportsOpts) error
+
 	ListRouter(opts routers.ListOpts) ([]routers.Router, error)
 	CreateRouter(opts routers.CreateOptsBuilder) (*routers.Router, error)
 	DeleteRouter(id string) error
@@ -236,6 +239,24 @@ func (c networkClient) CreateTrunk(opts trunks.CreateOptsBuilder) (*trunks.Trunk
 func (c networkClient) DeleteTrunk(id string) error {
 	mc := metrics.NewMetricPrometheusContext("trunk", "delete")
 	return mc.ObserveRequestIgnoreNotFound(trunks.Delete(c.serviceClient, id).ExtractErr())
+}
+
+func (c networkClient) ListTrunkSubports(trunkID string) ([]trunks.Subport, error) {
+	mc := metrics.NewMetricPrometheusContext("trunk", "listsubports")
+	subports, err := trunks.GetSubports(c.serviceClient, trunkID).Extract()
+	if mc.ObserveRequest(err) != nil {
+		return nil, err
+	}
+	return subports, nil
+}
+
+func (c networkClient) RemoveSubports(id string, opts trunks.RemoveSubportsOpts) error {
+	mc := metrics.NewMetricPrometheusContext("trunk", "deletesubports")
+	_, err := trunks.RemoveSubports(c.serviceClient, id, opts).Extract()
+	if mc.ObserveRequest(err) != nil {
+		return err
+	}
+	return nil
 }
 
 func (c networkClient) ListTrunk(opts trunks.ListOptsBuilder) ([]trunks.Trunk, error) {
