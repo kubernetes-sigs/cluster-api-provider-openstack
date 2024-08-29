@@ -598,7 +598,8 @@ spec:
   template:
     spec:
       securityGroups:
-      - name: allow-ssh
+      - filter:
+          name: allow-ssh
 ```
 
 ## Tagging
