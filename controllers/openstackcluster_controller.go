@@ -309,16 +309,6 @@ func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, scope 
 		return reconcile.Result{}, err
 	}
 
-	// TODO(emilien) we should do that separately but the reconcileBastion
-	// should happen after the cluster Ready is true
-	result, err := r.reconcileBastion(ctx, scope, cluster, openStackCluster)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	if result != nil {
-		return *result, nil
-	}
-
 	availabilityZones, err := computeService.GetAvailabilityZones()
 	if err != nil {
 		return ctrl.Result{}, err
@@ -343,6 +333,16 @@ func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, scope 
 	openStackCluster.Status.FailureMessage = nil
 	openStackCluster.Status.FailureReason = nil
 	scope.Logger().Info("Reconciled Cluster created successfully")
+
+	result, err := r.reconcileBastion(ctx, scope, cluster, openStackCluster)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if result != nil {
+		return *result, nil
+	}
+	scope.Logger().Info("Reconciled Bastion created successfully")
+
 	return reconcile.Result{}, nil
 }
 
