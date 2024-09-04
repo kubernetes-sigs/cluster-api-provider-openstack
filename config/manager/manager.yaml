@@ -22,7 +22,8 @@ spec:
           args:
             - "--leader-elect"
             - "--v=2"
-            - "--metrics-bind-addr=127.0.0.1:8080"
+            - "--diagnostics-address=127.0.0.1:8080"
+            - "--insecure-diagnostics=true"
           image: controller:latest
           imagePullPolicy: Always
           name: manager
