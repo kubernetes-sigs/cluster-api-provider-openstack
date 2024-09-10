@@ -570,13 +570,13 @@ func TestService_ReconcileSecurityGroups(t *testing.T) {
 					Return([]groups.SecGroup{{ID: "1", Name: workerSGName}}, nil)
 				m.ListSecGroup(groups.ListOpts{Name: bastionSGName}).Return(nil, nil)
 
-				// We expect a total of 12 rules to be created.
+				// We expect a total of 14 rules to be created.
 				// Nothing actually looks at the generated
 				// rules, but we give them unique IDs anyway
 				m.CreateSecGroupRule(gomock.Any()).DoAndReturn(func(opts rules.CreateOpts) (*rules.SecGroupRule, error) {
 					log.Info("Created rule", "securityGroup", opts.SecGroupID, "description", opts.Description)
 					return &rules.SecGroupRule{ID: uuid.NewString()}, nil
-				}).Times(12)
+				}).Times(14)
 			},
 			expectedClusterStatus: infrav1.OpenStackClusterStatus{
 				ControlPlaneSecurityGroup: &infrav1.SecurityGroupStatus{
@@ -605,13 +605,13 @@ func TestService_ReconcileSecurityGroups(t *testing.T) {
 				m.ListSecGroup(groups.ListOpts{Name: bastionSGName}).
 					Return([]groups.SecGroup{{ID: "2", Name: bastionSGName}}, nil)
 
-				// We expect a total of 12 rules to be created.
+				// We expect a total of 19 rules to be created.
 				// Nothing actually looks at the generated
 				// rules, but we give them unique IDs anyway
 				m.CreateSecGroupRule(gomock.Any()).DoAndReturn(func(opts rules.CreateOpts) (*rules.SecGroupRule, error) {
 					log.Info("Created rule", "securityGroup", opts.SecGroupID, "description", opts.Description)
 					return &rules.SecGroupRule{ID: uuid.NewString()}, nil
-				}).Times(17)
+				}).Times(19)
 			},
 			expectedClusterStatus: infrav1.OpenStackClusterStatus{
 				ControlPlaneSecurityGroup: &infrav1.SecurityGroupStatus{
