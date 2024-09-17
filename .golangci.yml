@@ -5,13 +5,12 @@ linters:
   - asciicheck
   - bidichk
   - bodyclose
+  - copyloopvar
   - cyclop
-#  - depguard
   - dogsled
   - dupword
   - durationcheck
   - errcheck
-  - exportloopref
   - forbidigo
   - gci
   - goconst

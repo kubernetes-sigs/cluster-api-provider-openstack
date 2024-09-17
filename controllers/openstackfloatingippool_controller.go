@@ -125,7 +125,6 @@ func (r *OpenStackFloatingIPPoolReconciler) Reconcile(ctx context.Context, req c
 	}
 
 	for _, claim := range claims.Items {
-		claim := claim
 		log := log.WithValues("claim", claim.Name)
 		if !claim.ObjectMeta.DeletionTimestamp.IsZero() {
 			continue

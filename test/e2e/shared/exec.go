@@ -146,7 +146,7 @@ func executeCommand(ctx context.Context, p commandParameter) error {
 		return fmt.Errorf("unable to send command %q: %s", "sudo "+p.cmd.cmd, err)
 	}
 	result := strings.TrimSuffix(stdoutBuf.String(), "\n") + "\n" + strings.TrimSuffix(stderrBuf.String(), "\n")
-	if err := os.WriteFile(logFile, []byte(result), os.ModePerm); err != nil {
+	if err := os.WriteFile(logFile, []byte(result), 0o600); err != nil {
 		return fmt.Errorf("error writing log file: %s", err)
 	}
 	Debugf(p.debug, "finished executing cmd %q on machine %s", p.cmd.cmd, p.machineIP)

@@ -117,7 +117,7 @@ func (r *OpenStackServerReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		// Propagate terminal errors
 		terminalError := &capoerrors.TerminalError{}
 		if errors.As(reterr, &terminalError) {
-			conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, terminalError.Reason, clusterv1.ConditionSeverityError, terminalError.Message)
+			conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, terminalError.Reason, clusterv1.ConditionSeverityError, "%s", terminalError.Message)
 		}
 
 		if err := patchServer(ctx, patchHelper, openStackServer); err != nil {
@@ -465,7 +465,7 @@ func (r *OpenStackServerReconciler) getOrCreateServer(ctx context.Context, logge
 		instanceStatus, err = computeService.GetInstanceStatus(*openStackServer.Status.InstanceID)
 		if err != nil {
 			logger.Info("Unable to get OpenStack instance", "name", openStackServer.Name)
-			conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, infrav1.OpenStackErrorReason, clusterv1.ConditionSeverityError, err.Error())
+			conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, infrav1.OpenStackErrorReason, clusterv1.ConditionSeverityError, "%s", err.Error())
 			return nil, err
 		}
 	}
@@ -494,7 +494,7 @@ func (r *OpenStackServerReconciler) getOrCreateServer(ctx context.Context, logge
 		instanceSpec.Name = openStackServer.Name
 		instanceStatus, err = computeService.CreateInstance(openStackServer, instanceSpec, portIDs)
 		if err != nil {
-			conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, infrav1.InstanceCreateFailedReason, clusterv1.ConditionSeverityError, err.Error())
+			conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, infrav1.InstanceCreateFailedReason, clusterv1.ConditionSeverityError, "%s", err.Error())
 			openStackServer.Status.InstanceState = &infrav1.InstanceStateError
 			return nil, fmt.Errorf("create OpenStack instance: %w", err)
 		}
