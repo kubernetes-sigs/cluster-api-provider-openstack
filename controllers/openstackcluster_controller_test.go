@@ -467,7 +467,7 @@ func Test_getAPIServerPort(t *testing.T) {
 	tests := []struct {
 		name             string
 		openStackCluster *infrav1.OpenStackCluster
-		want             int
+		want             int32
 	}{
 		{
 			name:             "default",
@@ -498,7 +498,7 @@ func Test_getAPIServerPort(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getAPIServerPort(tt.openStackCluster); got != tt.want {
+			if got, _ := getAPIServerPort(tt.openStackCluster); got != tt.want {
 				t.Errorf("getAPIServerPort() = %v, want %v", got, tt.want)
 			}
 		})

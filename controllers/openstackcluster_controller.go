@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
@@ -759,7 +760,10 @@ func reconcileProvisionedNetworkComponents(networkingService *networking.Service
 // cluster spec.
 func reconcileControlPlaneEndpoint(scope *scope.WithLogger, networkingService *networking.Service, openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
 	// Calculate the port that we will use for the API server
-	apiServerPort := getAPIServerPort(openStackCluster)
+	apiServerPort, err := getAPIServerPort(openStackCluster)
+	if err != nil {
+		return err
+	}
 
 	// host must be set by a matching control plane endpoint provider below
 	var host string
@@ -774,7 +778,7 @@ func reconcileControlPlaneEndpoint(scope *scope.WithLogger, networkingService *n
 			return err
 		}
 
-		terminalFailure, err := loadBalancerService.ReconcileLoadBalancer(openStackCluster, clusterResourceName, apiServerPort)
+		terminalFailure, err := loadBalancerService.ReconcileLoadBalancer(openStackCluster, clusterResourceName, int(apiServerPort))
 		if err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile load balancer: %w", err), terminalFailure)
 			return fmt.Errorf("failed to reconcile load balancer: %w", err)
@@ -819,21 +823,27 @@ func reconcileControlPlaneEndpoint(scope *scope.WithLogger, networkingService *n
 
 	openStackCluster.Spec.ControlPlaneEndpoint = &clusterv1.APIEndpoint{
 		Host: host,
-		Port: int32(apiServerPort),
+		Port: apiServerPort,
 	}
 
 	return nil
 }
 
 // getAPIServerPort returns the port to use for the API server based on the cluster spec.
-func getAPIServerPort(openStackCluster *infrav1.OpenStackCluster) int {
+func getAPIServerPort(openStackCluster *infrav1.OpenStackCluster) (int32, error) {
 	switch {
 	case openStackCluster.Spec.ControlPlaneEndpoint != nil && openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
-		return int(openStackCluster.Spec.ControlPlaneEndpoint.Port)
+		return openStackCluster.Spec.ControlPlaneEndpoint.Port, nil
 	case openStackCluster.Spec.APIServerPort != nil:
-		return *openStackCluster.Spec.APIServerPort
+		// XXX: This highlights that we have missing validation on
+		// APIServerPort. We should ideally add validation and change its type
+		// to int32.
+		if *openStackCluster.Spec.APIServerPort > math.MaxInt32 {
+			return 0, fmt.Errorf("value of apiServerPort is larger than %d", math.MaxInt32)
+		}
+		return int32(*openStackCluster.Spec.APIServerPort), nil //nolint:gosec
 	}
-	return 6443
+	return 6443, nil
 }
 
 func (r *OpenStackClusterReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager, options controller.Options) error {
