@@ -37,7 +37,7 @@ type OpenStackClusterSpecApplyConfiguration struct {
 	DisableAPIServerFloatingIP       *bool                                         `json:"disableAPIServerFloatingIP,omitempty"`
 	APIServerFloatingIP              *string                                       `json:"apiServerFloatingIP,omitempty"`
 	APIServerFixedIP                 *string                                       `json:"apiServerFixedIP,omitempty"`
-	APIServerPort                    *int                                          `json:"apiServerPort,omitempty"`
+	APIServerPort                    *uint16                                       `json:"apiServerPort,omitempty"`
 	ManagedSecurityGroups            *ManagedSecurityGroupsApplyConfiguration      `json:"managedSecurityGroups,omitempty"`
 	DisablePortSecurity              *bool                                         `json:"disablePortSecurity,omitempty"`
 	Tags                             []string                                      `json:"tags,omitempty"`
@@ -168,7 +168,7 @@ func (b *OpenStackClusterSpecApplyConfiguration) WithAPIServerFixedIP(value stri
 // WithAPIServerPort sets the APIServerPort field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the APIServerPort field is set to the value of the last call.
-func (b *OpenStackClusterSpecApplyConfiguration) WithAPIServerPort(value int) *OpenStackClusterSpecApplyConfiguration {
+func (b *OpenStackClusterSpecApplyConfiguration) WithAPIServerPort(value uint16) *OpenStackClusterSpecApplyConfiguration {
 	b.APIServerPort = &value
 	return b
 }

@@ -490,7 +490,7 @@ func Test_getAPIServerPort(t *testing.T) {
 			name: "with API server port",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerPort: ptr.To(6445),
+					APIServerPort: ptr.To(uint16(6445)),
 				},
 			},
 			want: 6445,
@@ -498,7 +498,7 @@ func Test_getAPIServerPort(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got, _ := getAPIServerPort(tt.openStackCluster); got != tt.want {
+			if got := getAPIServerPort(tt.openStackCluster); got != tt.want {
 				t.Errorf("getAPIServerPort() = %v, want %v", got, tt.want)
 			}
 		})

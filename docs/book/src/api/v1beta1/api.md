@@ -273,13 +273,13 @@ holds the fixed IP to be used as a VIP.</p>
 <td>
 <code>apiServerPort</code><br/>
 <em>
-int
+uint16
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>APIServerPort is the port on which the listener on the APIServer
-will be created</p>
+will be created. If specified, it must be an integer between 0 and 65535.</p>
 </td>
 </tr>
 <tr>
@@ -2378,13 +2378,13 @@ holds the fixed IP to be used as a VIP.</p>
 <td>
 <code>apiServerPort</code><br/>
 <em>
-int
+uint16
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>APIServerPort is the port on which the listener on the APIServer
-will be created</p>
+will be created. If specified, it must be an integer between 0 and 65535.</p>
 </td>
 </tr>
 <tr>
@@ -2960,13 +2960,13 @@ holds the fixed IP to be used as a VIP.</p>
 <td>
 <code>apiServerPort</code><br/>
 <em>
-int
+uint16
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>APIServerPort is the port on which the listener on the APIServer
-will be created</p>
+will be created. If specified, it must be an integer between 0 and 65535.</p>
 </td>
 </tr>
 <tr>
