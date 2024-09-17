@@ -147,9 +147,15 @@ kubebuilder_assets: $(SETUP_ENVTEST)
 
 .PHONY: test
 TEST_PATHS ?= ./...
-test: $(ARTIFACTS) $(GOTESTSUM) kubebuilder_assets
+test: test-capo test-orc
+
+.PHONY: test-capo
+test-capo: $(ARTIFACTS) $(GOTESTSUM) kubebuilder_assets
 	KUBEBUILDER_ASSETS="$(KUBEBUILDER_ASSETS)" $(GOTESTSUM) --junitfile $(ARTIFACTS)/junit.test.xml --junitfile-hide-empty-pkg --jsonfile $(ARTIFACTS)/test-output.log -- \
 			   -v $(TEST_PATHS) $(TEST_ARGS)
+
+.PHONY: test-orc
+test-orc:
 	$(MAKE) -C $(REPO_ROOT)/orc test
 
 E2E_TEMPLATES_DIR=test/e2e/data/infrastructure-openstack
