@@ -30,19 +30,20 @@ import (
 
 // InstanceSpec defines the fields which can be set on a new OpenStack instance.
 type InstanceSpec struct {
-	Name                   string
-	ImageID                string
-	Flavor                 string
-	SSHKeyName             string
-	UserData               string
-	Metadata               map[string]string
-	ConfigDrive            bool
-	FailureDomain          string
-	RootVolume             *infrav1.RootVolume
-	AdditionalBlockDevices []infrav1.AdditionalBlockDevice
-	ServerGroupID          string
-	Trunk                  bool
-	Tags                   []string
+	Name                          string
+	ImageID                       string
+	Flavor                        string
+	SSHKeyName                    string
+	UserData                      string
+	Metadata                      map[string]string
+	ConfigDrive                   bool
+	FailureDomain                 string
+	RootVolume                    *infrav1.RootVolume
+	AdditionalBlockDevices        []infrav1.AdditionalBlockDevice
+	ServerGroupID                 string
+	Trunk                         bool
+	Tags                          []string
+	SchedulerAdditionalProperties []infrav1.SchedulerHintAdditionalProperty
 }
 
 // InstanceIdentifier describes an instance which has not necessarily been fetched.

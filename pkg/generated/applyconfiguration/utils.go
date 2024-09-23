@@ -283,6 +283,10 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apiv1beta1.RouterFilterApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("RouterParam"):
 		return &apiv1beta1.RouterParamApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("SchedulerHintAdditionalProperty"):
+		return &apiv1beta1.SchedulerHintAdditionalPropertyApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("SchedulerHintAdditionalValue"):
+		return &apiv1beta1.SchedulerHintAdditionalValueApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("SecurityGroupFilter"):
 		return &apiv1beta1.SecurityGroupFilterApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("SecurityGroupParam"):

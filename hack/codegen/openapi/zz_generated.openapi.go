@@ -444,6 +444,8 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.Router":                            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_Router(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RouterFilter":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_RouterFilter(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RouterParam":                       schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_RouterParam(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SchedulerHintAdditionalProperty":   schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SchedulerHintAdditionalProperty(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SchedulerHintAdditionalValue":      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SchedulerHintAdditionalValue(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupFilter":               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SecurityGroupFilter(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupParam":                schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SecurityGroupParam(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupRuleSpec":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SecurityGroupRuleSpec(ref),
@@ -16711,12 +16713,34 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackServe
 							Ref:         ref("k8s.io/api/core/v1.LocalObjectReference"),
 						},
 					},
+					"schedulerHintAdditionalProperties": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"name",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "SchedulerHintAdditionalProperties are arbitrary key/value pairs that provide additional hints to the OpenStack scheduler. These hints can influence how instances are placed on the infrastructure, such as specifying certain host aggregates or availability zones.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SchedulerHintAdditionalProperty"),
+									},
+								},
+							},
+						},
+					},
 				},
 				Required: []string{"flavor", "identityRef", "image", "ports", "sshKeyName"},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.LocalObjectReference", "k8s.io/api/core/v1.TypedLocalObjectReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AdditionalBlockDevice", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackIdentityReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.PortOpts", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RootVolume", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerMetadata"},
+			"k8s.io/api/core/v1.LocalObjectReference", "k8s.io/api/core/v1.TypedLocalObjectReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AdditionalBlockDevice", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackIdentityReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.PortOpts", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RootVolume", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SchedulerHintAdditionalProperty", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerMetadata"},
 	}
 }
 
@@ -23444,12 +23468,34 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachin
 							Ref:         ref("k8s.io/api/core/v1.TypedLocalObjectReference"),
 						},
 					},
+					"schedulerHintAdditionalProperties": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"name",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "SchedulerHintAdditionalProperties are arbitrary key/value pairs that provide additional hints to the OpenStack scheduler. These hints can influence how instances are placed on the infrastructure, such as specifying certain host aggregates or availability zones.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SchedulerHintAdditionalProperty"),
+									},
+								},
+							},
+						},
+					},
 				},
 				Required: []string{"flavor", "image"},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.TypedLocalObjectReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AdditionalBlockDevice", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackIdentityReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.PortOpts", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RootVolume", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerMetadata"},
+			"k8s.io/api/core/v1.TypedLocalObjectReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AdditionalBlockDevice", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackIdentityReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.PortOpts", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RootVolume", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SchedulerHintAdditionalProperty", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerMetadata"},
 	}
 }
 
@@ -24489,6 +24535,80 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_RouterParam(ref
 		},
 		Dependencies: []string{
 			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RouterFilter"},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SchedulerHintAdditionalProperty(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "SchedulerHintAdditionalProperty represents a single additional property for a scheduler hint. It includes a Name to identify the property and a Value that can be of various types.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name is the name of the scheduler hint property. It is a unique identifier for the property.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"value": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Value is the value of the scheduler hint property, which can be of various types (e.g., bool, string, int). The type is indicated by the Value.Type field.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SchedulerHintAdditionalValue"),
+						},
+					},
+				},
+				Required: []string{"name", "value"},
+			},
+		},
+		Dependencies: []string{
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SchedulerHintAdditionalValue"},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SchedulerHintAdditionalValue(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "SchedulerHintAdditionalValue represents the value of a scheduler hint property. The value can be of various types: Bool, String, or Number. The Type field indicates the type of the value being used.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"type": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Type represents the type of the value. Valid values are Bool, String, and Number.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"bool": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Bool is the boolean value of the scheduler hint, used when Type is \"Bool\". This field is required if type is 'Bool', and must not be set otherwise.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"number": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Number is the integer value of the scheduler hint, used when Type is \"Number\". This field is required if type is 'Number', and must not be set otherwise.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"string": {
+						SchemaProps: spec.SchemaProps{
+							Description: "String is the string value of the scheduler hint, used when Type is \"String\". This field is required if type is 'String', and must not be set otherwise.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"type"},
+			},
+		},
 	}
 }
 

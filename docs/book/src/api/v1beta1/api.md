@@ -744,6 +744,22 @@ to an IPAddressClaim. Once the IPAddressClaim is fulfilled, the FloatingIP
 will be assigned to the OpenStackMachine.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>schedulerHintAdditionalProperties</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SchedulerHintAdditionalProperty">
+[]SchedulerHintAdditionalProperty
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SchedulerHintAdditionalProperties are arbitrary key/value pairs that provide additional hints
+to the OpenStack scheduler. These hints can influence how instances are placed on the infrastructure,
+such as specifying certain host aggregates or availability zones.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -3387,6 +3403,22 @@ to an IPAddressClaim. Once the IPAddressClaim is fulfilled, the FloatingIP
 will be assigned to the OpenStackMachine.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>schedulerHintAdditionalProperties</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SchedulerHintAdditionalProperty">
+[]SchedulerHintAdditionalProperty
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SchedulerHintAdditionalProperties are arbitrary key/value pairs that provide additional hints
+to the OpenStack scheduler. These hints can influence how instances are placed on the infrastructure,
+such as specifying certain host aggregates or availability zones.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineStatus">OpenStackMachineStatus
@@ -3758,6 +3790,22 @@ Kubernetes core/v1.TypedLocalObjectReference
 <p>floatingIPPoolRef is a reference to a IPPool that will be assigned
 to an IPAddressClaim. Once the IPAddressClaim is fulfilled, the FloatingIP
 will be assigned to the OpenStackMachine.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>schedulerHintAdditionalProperties</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SchedulerHintAdditionalProperty">
+[]SchedulerHintAdditionalProperty
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SchedulerHintAdditionalProperties are arbitrary key/value pairs that provide additional hints
+to the OpenStack scheduler. These hints can influence how instances are placed on the infrastructure,
+such as specifying certain host aggregates or availability zones.</p>
 </td>
 </tr>
 </table>
@@ -4570,6 +4618,147 @@ RouterFilter
 </td>
 </tr>
 </tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.SchedulerHintAdditionalProperty">SchedulerHintAdditionalProperty
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>)
+</p>
+<p>
+<p>SchedulerHintAdditionalProperty represents a single additional property for a scheduler hint.
+It includes a Name to identify the property and a Value that can be of various types.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name is the name of the scheduler hint property.
+It is a unique identifier for the property.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>value</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SchedulerHintAdditionalValue">
+SchedulerHintAdditionalValue
+</a>
+</em>
+</td>
+<td>
+<p>Value is the value of the scheduler hint property, which can be of various types
+(e.g., bool, string, int). The type is indicated by the Value.Type field.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.SchedulerHintAdditionalValue">SchedulerHintAdditionalValue
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SchedulerHintAdditionalProperty">SchedulerHintAdditionalProperty</a>)
+</p>
+<p>
+<p>SchedulerHintAdditionalValue represents the value of a scheduler hint property.
+The value can be of various types: Bool, String, or Number.
+The Type field indicates the type of the value being used.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>type</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SchedulerHintValueType">
+SchedulerHintValueType
+</a>
+</em>
+</td>
+<td>
+<p>Type represents the type of the value.
+Valid values are Bool, String, and Number.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bool</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Bool is the boolean value of the scheduler hint, used when Type is &ldquo;Bool&rdquo;.
+This field is required if type is &lsquo;Bool&rsquo;, and must not be set otherwise.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>number</code><br/>
+<em>
+int
+</em>
+</td>
+<td>
+<p>Number is the integer value of the scheduler hint, used when Type is &ldquo;Number&rdquo;.
+This field is required if type is &lsquo;Number&rsquo;, and must not be set otherwise.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>string</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>String is the string value of the scheduler hint, used when Type is &ldquo;String&rdquo;.
+This field is required if type is &lsquo;String&rsquo;, and must not be set otherwise.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.SchedulerHintValueType">SchedulerHintValueType
+(<code>string</code> alias)</p></h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SchedulerHintAdditionalValue">SchedulerHintAdditionalValue</a>)
+</p>
+<p>
+<p>SchedulerHintValueType is the type that represents allowed values for the Type field.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Bool&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Number&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;String&#34;</p></td>
+<td></td>
+</tr></tbody>
 </table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupFilter">SecurityGroupFilter
 </h3>

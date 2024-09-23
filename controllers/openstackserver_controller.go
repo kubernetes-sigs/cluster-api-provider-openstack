@@ -532,17 +532,18 @@ func (r *OpenStackServerReconciler) serverToInstanceSpec(ctx context.Context, op
 	}
 
 	instanceSpec := &compute.InstanceSpec{
-		AdditionalBlockDevices: openStackServer.Spec.AdditionalBlockDevices,
-		ConfigDrive:            openStackServer.Spec.ConfigDrive != nil && *openStackServer.Spec.ConfigDrive,
-		Flavor:                 openStackServer.Spec.Flavor,
-		ImageID:                resolved.ImageID,
-		Metadata:               serverMetadata,
-		Name:                   openStackServer.Name,
-		RootVolume:             openStackServer.Spec.RootVolume,
-		SSHKeyName:             openStackServer.Spec.SSHKeyName,
-		ServerGroupID:          resolved.ServerGroupID,
-		Tags:                   openStackServer.Spec.Tags,
-		Trunk:                  openStackServer.Spec.Trunk != nil && *openStackServer.Spec.Trunk,
+		AdditionalBlockDevices:        openStackServer.Spec.AdditionalBlockDevices,
+		ConfigDrive:                   openStackServer.Spec.ConfigDrive != nil && *openStackServer.Spec.ConfigDrive,
+		Flavor:                        openStackServer.Spec.Flavor,
+		ImageID:                       resolved.ImageID,
+		Metadata:                      serverMetadata,
+		Name:                          openStackServer.Name,
+		RootVolume:                    openStackServer.Spec.RootVolume,
+		SSHKeyName:                    openStackServer.Spec.SSHKeyName,
+		ServerGroupID:                 resolved.ServerGroupID,
+		Tags:                          openStackServer.Spec.Tags,
+		Trunk:                         openStackServer.Spec.Trunk != nil && *openStackServer.Spec.Trunk,
+		SchedulerAdditionalProperties: openStackServer.Spec.SchedulerHintAdditionalProperties,
 	}
 
 	if openStackServer.Spec.UserDataRef != nil {
