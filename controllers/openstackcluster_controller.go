@@ -564,6 +564,12 @@ func bastionToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, cluster *
 	}
 
 	machineSpec := bastion.Spec
+
+	// Create metadata map from ServerMetadata
+	metadata := make(map[string]string)
+	for _, item := range bastion.Spec.ServerMetadata {
+		metadata[item.Key] = item.Value
+	}
 	instanceSpec := &compute.InstanceSpec{
 		Name:          bastionName(cluster.Name),
 		Flavor:        machineSpec.Flavor,
@@ -572,6 +578,7 @@ func bastionToInstanceSpec(openStackCluster *infrav1.OpenStackCluster, cluster *
 		RootVolume:    machineSpec.RootVolume,
 		ServerGroupID: resolved.ServerGroupID,
 		Tags:          compute.InstanceTags(machineSpec, openStackCluster),
+		Metadata:      metadata,
 	}
 	if bastion.AvailabilityZone != nil {
 		instanceSpec.FailureDomain = *bastion.AvailabilityZone
