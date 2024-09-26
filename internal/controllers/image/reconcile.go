@@ -143,6 +143,15 @@ func (r *orcImageReconciler) reconcileNormal(ctx context.Context, orcImage *orcv
 
 	// Newly created image, waiting for upload, or... previous upload was interrupted and has now reset
 	case images.ImageStatusQueued:
+		// Don't attempt image creation if we're only adopting
+		if orcImage.GetControllerOptions().GetOnCreate() == orcv1alpha1.ControllerOptionsOnCreateAdopt {
+			addStatus(withProgressMessage("Waiting for glance image content to be uploaded externally"))
+
+			return ctrl.Result{
+				RequeueAfter: waitForGlanceImageStatusUpdate,
+			}, err
+		}
+
 		if ptr.Deref(orcImage.Status.DownloadAttempts, 0) >= maxDownloadAttempts {
 			return ctrl.Result{}, capoerrors.Terminal(orcv1alpha1.OpenStackConditionReasonInvalidConfiguration, fmt.Sprintf("Unable to download content after %d attempts", maxDownloadAttempts))
 		}
