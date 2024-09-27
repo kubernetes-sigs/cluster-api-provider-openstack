@@ -241,7 +241,7 @@ func (r *orcImageReconciler) reconcileDelete(ctx context.Context, orcImage *orcv
 	log.V(4).Info("Image is deleted")
 
 	// Clear owned fields on the base resource, including the finalizer
-	applyConfig := orcapplyconfigv1alpha1.Image(orcImage.Name, orcImage.Namespace)
+	applyConfig := orcapplyconfigv1alpha1.Image(orcImage.Name, orcImage.Namespace).WithUID(orcImage.UID)
 	return ctrl.Result{}, r.client.Patch(ctx, orcImage, ssa.ApplyConfigPatch(applyConfig), client.ForceOwnership, client.FieldOwner(orcv1alpha1.ImageControllerFieldOwner))
 }
 

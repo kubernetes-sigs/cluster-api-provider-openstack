@@ -45,7 +45,7 @@ const (
 // updateObject writes to the Image root resource, i.e. everything except status.
 func (r *orcImageReconciler) updateObject(ctx context.Context, orcImage *orcv1alpha1.Image) error {
 	applyConfig := orcapplyconfigv1alpha1.Image(orcImage.Name, orcImage.Namespace).
-		WithFinalizers(orcv1alpha1.ImageControllerFinalizer)
+		WithFinalizers(orcv1alpha1.ImageControllerFinalizer).WithUID(orcImage.UID)
 
 	return r.client.Patch(ctx, orcImage, ssa.ApplyConfigPatch(applyConfig), client.ForceOwnership, client.FieldOwner(orcv1alpha1.ImageControllerFieldOwner))
 }
