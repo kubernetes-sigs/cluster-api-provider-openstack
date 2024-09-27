@@ -677,7 +677,7 @@ func (in *OpenStackClusterSpec) DeepCopyInto(out *OpenStackClusterSpec) {
 	}
 	if in.APIServerPort != nil {
 		in, out := &in.APIServerPort, &out.APIServerPort
-		*out = new(int)
+		*out = new(uint16)
 		**out = **in
 	}
 	if in.ManagedSecurityGroups != nil {

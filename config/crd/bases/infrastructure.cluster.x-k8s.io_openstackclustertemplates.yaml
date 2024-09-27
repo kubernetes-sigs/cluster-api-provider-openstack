@@ -1792,7 +1792,9 @@ spec:
                       apiServerPort:
                         description: |-
                           APIServerPort is the port on which the listener on the APIServer
-                          will be created
+                          will be created. If specified, it must be an integer between 0 and 65535.
+                        maximum: 65535
+                        minimum: 0
                         type: integer
                       bastion:
                         description: |-

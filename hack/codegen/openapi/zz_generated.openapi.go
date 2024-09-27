@@ -22848,7 +22848,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackCluste
 					},
 					"apiServerPort": {
 						SchemaProps: spec.SchemaProps{
-							Description: "APIServerPort is the port on which the listener on the APIServer will be created",
+							Description: "APIServerPort is the port on which the listener on the APIServer will be created. If specified, it must be an integer between 0 and 65535.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},

@@ -17,9 +17,11 @@ limitations under the License.
 package v1alpha6
 
 import (
+	"math"
 	"reflect"
 
 	apiconversion "k8s.io/apimachinery/pkg/conversion"
+	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
 
@@ -178,6 +180,11 @@ func restorev1alpha6ClusterSpec(previous *OpenStackClusterSpec, dst *OpenStackCl
 	restorev1alpha6SubnetFilter(&previous.Subnet, &dst.Subnet)
 
 	restorev1alpha6NetworkFilter(&previous.Network, &dst.Network)
+
+	// APIServerPort is now uint16
+	if previous.APIServerPort > math.MaxUint16 {
+		dst.APIServerPort = previous.APIServerPort
+	}
 }
 
 func restorev1beta1ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infrav1.OpenStackClusterSpec) {
@@ -241,7 +248,7 @@ func restorev1beta1ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infr
 
 	optional.RestoreString(&previous.APIServerFloatingIP, &dst.APIServerFloatingIP)
 	optional.RestoreString(&previous.APIServerFixedIP, &dst.APIServerFixedIP)
-	optional.RestoreInt(&previous.APIServerPort, &dst.APIServerPort)
+	optional.RestoreUInt16(&previous.APIServerPort, &dst.APIServerPort)
 	optional.RestoreBool(&previous.DisableAPIServerFloatingIP, &dst.DisableAPIServerFloatingIP)
 	optional.RestoreBool(&previous.ControlPlaneOmitAvailabilityZone, &dst.ControlPlaneOmitAvailabilityZone)
 	optional.RestoreBool(&previous.DisablePortSecurity, &dst.DisablePortSecurity)
@@ -313,6 +320,10 @@ func Convert_v1alpha6_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *O
 		out.APIServerLoadBalancer = apiServerLoadBalancer
 	}
 
+	if in.APIServerPort > 0 && in.APIServerPort < math.MaxUint16 {
+		out.APIServerPort = ptr.To(uint16(in.APIServerPort)) //nolint:gosec
+	}
+
 	return nil
 }
 
@@ -375,6 +386,8 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(in *i
 			return err
 		}
 	}
+
+	out.APIServerPort = int(ptr.Deref(in.APIServerPort, 0))
 
 	return nil
 }

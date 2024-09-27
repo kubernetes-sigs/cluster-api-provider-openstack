@@ -17,10 +17,15 @@ limitations under the License.
 package apivalidations
 
 import (
+	"math"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/format"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
@@ -167,6 +172,44 @@ var _ = Describe("OpenStackCluster API validations", func() {
 				FloatingIP: ptr.To("foobar"),
 			}
 			Expect(createObj(cluster)).NotTo(Succeed(), "OpenStackCluster creation should not succeed")
+		})
+
+		// We must use unstructured to set values which can't be marshalled by the Go type
+		unstructuredClusterWithAPIPort := func(apiServerPort any) *unstructured.Unstructured {
+			obj, err := runtime.DefaultUnstructuredConverter.ToUnstructured(cluster)
+			Expect(err).NotTo(HaveOccurred(), "converting cluster to unstructured")
+
+			u := &unstructured.Unstructured{}
+			u.Object = obj
+			u.SetGroupVersionKind(schema.GroupVersionKind{
+				Group:   infrav1.SchemeGroupVersion.Group,
+				Version: infrav1.SchemeGroupVersion.Version,
+				Kind:    "OpenStackCluster",
+			})
+			spec := obj["spec"].(map[string]any)
+			spec["apiServerPort"] = apiServerPort
+
+			return u
+		}
+
+		It("should not allow apiServerPort greater than MaxUInt16", func() {
+			u := unstructuredClusterWithAPIPort(math.MaxUint16 + 1)
+			Expect(createObj(u)).NotTo(Succeed(), "OpenStackCluster creation should not succeed")
+		})
+
+		It("should not allow apiServerPort less than zero", func() {
+			u := unstructuredClusterWithAPIPort(-1)
+			Expect(createObj(u)).NotTo(Succeed(), "OpenStackCluster creation should not succeed")
+		})
+
+		It("should allow apiServerPort zero", func() {
+			u := unstructuredClusterWithAPIPort(0)
+			Expect(createObj(u)).To(Succeed(), "OpenStackCluster creation should succeed")
+		})
+
+		It("should allow apiServerPort 65535", func() {
+			u := unstructuredClusterWithAPIPort(math.MaxUint16)
+			Expect(createObj(u)).To(Succeed(), "OpenStackCluster creation should succeed")
 		})
 	})
 

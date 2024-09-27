@@ -756,9 +756,7 @@ func autoConvert_v1alpha6_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(i
 	if err := optional.Convert_string_To_optional_String(&in.APIServerFixedIP, &out.APIServerFixedIP, s); err != nil {
 		return err
 	}
-	if err := optional.Convert_int_To_optional_Int(&in.APIServerPort, &out.APIServerPort, s); err != nil {
-		return err
-	}
+	// WARNING: in.APIServerPort requires manual conversion: inconvertible types (int vs sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional.UInt16)
 	// WARNING: in.ManagedSecurityGroups requires manual conversion: inconvertible types (bool vs *sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ManagedSecurityGroups)
 	// WARNING: in.AllowAllInClusterTraffic requires manual conversion: does not exist in peer-type
 	if err := optional.Convert_bool_To_optional_Bool(&in.DisablePortSecurity, &out.DisablePortSecurity, s); err != nil {
@@ -812,9 +810,7 @@ func autoConvert_v1beta1_OpenStackClusterSpec_To_v1alpha6_OpenStackClusterSpec(i
 	if err := optional.Convert_optional_String_To_string(&in.APIServerFixedIP, &out.APIServerFixedIP, s); err != nil {
 		return err
 	}
-	if err := optional.Convert_optional_Int_To_int(&in.APIServerPort, &out.APIServerPort, s); err != nil {
-		return err
-	}
+	// WARNING: in.APIServerPort requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional.UInt16 vs int)
 	// WARNING: in.ManagedSecurityGroups requires manual conversion: inconvertible types (*sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ManagedSecurityGroups vs bool)
 	if err := optional.Convert_optional_Bool_To_bool(&in.DisablePortSecurity, &out.DisablePortSecurity, s); err != nil {
 		return err
