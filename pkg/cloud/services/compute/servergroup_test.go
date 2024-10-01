@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/go-logr/logr/testr"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/servergroups"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servergroups"
 	"go.uber.org/mock/gomock"
 	"k8s.io/utils/ptr"
 

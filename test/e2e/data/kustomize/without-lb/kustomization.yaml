@@ -8,3 +8,4 @@ components:
 - ../common-patches/cni
 - ../common-patches/ccm
 - ../common-patches/externalNetworkByName
+- ../common-patches/images

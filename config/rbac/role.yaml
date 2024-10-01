@@ -114,6 +114,26 @@ rules:
   - patch
   - update
 - apiGroups:
+  - infrastructure.cluster.x-k8s.io
+  resources:
+  - openstackservers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - infrastructure.cluster.x-k8s.io
+  resources:
+  - openstackservers/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
   - ipam.cluster.x-k8s.io
   resources:
   - ipaddressclaims
@@ -138,3 +158,23 @@ rules:
   - list
   - update
   - watch
+- apiGroups:
+  - openstack.k-orc.cloud
+  resources:
+  - images
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - openstack.k-orc.cloud
+  resources:
+  - images/status
+  verbs:
+  - get
+  - patch
+  - update

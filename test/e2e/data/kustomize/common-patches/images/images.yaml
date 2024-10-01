@@ -1,0 +1,26 @@
+---
+apiVersion: openstack.k-orc.cloud/v1alpha1
+kind: Image
+metadata:
+  name: node-image
+spec:
+  imageName: ${OPENSTACK_IMAGE_NAME}
+  cloudCredentialsRef:
+    name: ${CLUSTER_NAME}-cloud-config
+    cloudName: ${OPENSTACK_CLOUD}
+  controllerOptions:
+    onCreate: Adopt
+    onDelete: Retain
+---
+apiVersion: openstack.k-orc.cloud/v1alpha1
+kind: Image
+metadata:
+  name: bastion-image
+spec:
+  imageName: ${OPENSTACK_BASTION_IMAGE_NAME}
+  cloudCredentialsRef:
+    name: ${CLUSTER_NAME}-cloud-config
+    cloudName: ${OPENSTACK_CLOUD}
+  controllerOptions:
+    onCreate: Adopt
+    onDelete: Retain

@@ -358,7 +358,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			newTemplate: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
 					DisableAPIServerFloatingIP: ptr.To(true),
-					APIServerPort:              ptr.To(8443),
+					APIServerPort:              ptr.To(uint16(8443)),
 				},
 			},
 			wantErr: false,
@@ -381,7 +381,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						CloudName: "foobar",
 					},
 					DisableAPIServerFloatingIP: ptr.To(false),
-					APIServerPort:              ptr.To(8443),
+					APIServerPort:              ptr.To(uint16(8443)),
 				},
 			},
 			wantErr: true,

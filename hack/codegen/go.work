@@ -1,0 +1,8 @@
+go 1.22.2
+
+use (
+	.
+	../..
+)
+
+replace k8s.io/code-generator => k8s.io/code-generator v0.30.0-alpha.3.0.20240618021310-030791bd8d60

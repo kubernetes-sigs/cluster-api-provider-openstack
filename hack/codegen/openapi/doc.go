@@ -14,19 +14,4 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package compute
-
-import (
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
-)
-
-func AdoptMachineResources(scope *scope.WithLogger, resolved *infrav1.ResolvedMachineSpec, resources *infrav1.MachineResources) error {
-	networkingService, err := networking.NewService(scope)
-	if err != nil {
-		return err
-	}
-
-	return networkingService.AdoptPorts(scope, resolved.Ports, resources)
-}
+package openapi

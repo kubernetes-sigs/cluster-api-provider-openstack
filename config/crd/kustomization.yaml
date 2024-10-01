@@ -10,6 +10,7 @@ resources:
 - bases/infrastructure.cluster.x-k8s.io_openstackmachinetemplates.yaml
 - bases/infrastructure.cluster.x-k8s.io_openstackclustertemplates.yaml
 - bases/infrastructure.cluster.x-k8s.io_openstackfloatingippools.yaml
+- bases/infrastructure.cluster.x-k8s.io_openstackservers.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patches:

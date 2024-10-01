@@ -29,9 +29,13 @@ import (
 )
 
 var _ = Describe("When testing Cluster API provider Openstack working on [self-hosted] clusters", func() {
-	ctx := context.TODO()
-	shared.SetEnvVar("DOWNLOAD_E2E_IMAGE", "true", false)
-	capie2e.SelfHostedSpec(ctx, func() capie2e.SelfHostedSpecInput {
+	BeforeEach(func(ctx context.Context) {
+		shared.ApplyCoreImagesPlus(ctx, e2eCtx, upgradeImage)
+
+		setDownloadE2EImageEnvVar()
+	})
+
+	capie2e.SelfHostedSpec(context.TODO(), func() capie2e.SelfHostedSpecInput {
 		return capie2e.SelfHostedSpecInput{
 			E2EConfig:             e2eCtx.E2EConfig,
 			ClusterctlConfigPath:  e2eCtx.Environment.ClusterctlConfigPath,

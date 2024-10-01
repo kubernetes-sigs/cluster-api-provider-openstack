@@ -43,14 +43,16 @@ var _ = Describe("conformance tests", func() {
 		specName  = "conformance"
 	)
 
-	BeforeEach(func() {
+	BeforeEach(func(ctx context.Context) {
 		Expect(e2eCtx.Environment.BootstrapClusterProxy).ToNot(BeNil(), "Invalid argument. BootstrapClusterProxy can't be nil")
 		Expect(e2eCtx.E2EConfig).ToNot(BeNil(), "Invalid argument. e2eConfig can't be nil when calling %s spec", specName)
 		Expect(e2eCtx.E2EConfig.Variables).To(HaveKey(shared.KubernetesVersion))
-		ctx = context.TODO()
 		// Setup a Namespace where to host objects for this spec and create a watcher for the namespace events.
 		namespace = shared.SetupSpecNamespace(ctx, specName, e2eCtx)
+
+		shared.ApplyCoreImagesPlus(ctx, e2eCtx)
 	})
+
 	Measure(specName, func(b Benchmarker) {
 		name := fmt.Sprintf("cluster-%s", namespace.Name)
 		kubernetesVersion := e2eCtx.E2EConfig.GetVariable(shared.KubernetesVersion)

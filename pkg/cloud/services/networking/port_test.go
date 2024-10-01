@@ -21,20 +21,21 @@ import (
 
 	"github.com/go-logr/logr/testr"
 	"github.com/google/go-cmp/cmp"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/portsbinding"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/portsecurity"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/trunks"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/attributestags"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/portsbinding"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/portsecurity"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/groups"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/trunks"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/ports"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
 	. "github.com/onsi/gomega" //nolint:revive
 	"github.com/onsi/gomega/types"
 	"go.uber.org/mock/gomock"
 	"k8s.io/utils/ptr"
 
+	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
@@ -190,6 +191,21 @@ func Test_CreatePort(t *testing.T) {
 				})
 			},
 			want: &ports.Port{ID: portID},
+		},
+		{
+			name: "disable port security with security groups produces an error",
+			port: infrav1.ResolvedPortSpec{
+				Name:      "test-port",
+				NetworkID: netID,
+				ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
+					DisablePortSecurity: ptr.To(true),
+				},
+				SecurityGroups: []string{portSecurityGroupID},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder, _ Gomega) {
+				m.CreatePort(gomock.Any()).Times(0)
+			},
+			wantErr: true,
 		},
 		{
 			name: "disable port security also ignores allowed address pairs",
@@ -779,6 +795,40 @@ func TestService_ConstructPorts(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "port security disabled override machine spec security groups",
+			spec: infrav1.OpenStackMachineSpec{
+				SecurityGroups: []infrav1.SecurityGroupParam{
+					{Filter: &infrav1.SecurityGroupFilter{Name: "machine-security-group"}},
+				},
+				Ports: []infrav1.PortOpts{
+					{
+						ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
+							DisablePortSecurity: ptr.To(true),
+						},
+					},
+				},
+			},
+			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
+				m.ListSecGroup(groups.ListOpts{Name: "machine-security-group"}).Return([]groups.SecGroup{
+					{ID: securityGroupID1},
+				}, nil)
+			},
+			want: []infrav1.ResolvedPortSpec{
+				{
+					Name:      "test-instance-0",
+					NetworkID: defaultNetworkID,
+					FixedIPs: []infrav1.ResolvedFixedIP{
+						{SubnetID: ptr.To(defaultSubnetID)},
+					},
+					Description: defaultDescription,
+					Tags:        []string{"test-tag"},
+					ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
+						DisablePortSecurity: ptr.To(true),
+					},
+				},
+			},
+		},
 	}
 	for i := range tests {
 		tt := &tests[i]
@@ -876,7 +926,7 @@ func Test_getPortName(t *testing.T) {
 	}
 }
 
-func Test_AdoptPorts(t *testing.T) {
+func Test_AdoptPortsServer(t *testing.T) {
 	const (
 		networkID1 = "5e8e0d3b-7f3d-4f3e-8b3f-3e3e3e3e3e3e"
 		networkID2 = "0a4ff38e-1e03-4b4e-994c-c8ae38a2915e"
@@ -888,9 +938,9 @@ func Test_AdoptPorts(t *testing.T) {
 	tests := []struct {
 		testName     string
 		desiredPorts []infrav1.ResolvedPortSpec
-		resources    infrav1.MachineResources
+		resources    infrav1alpha1.ServerResources
 		expect       func(*mock.MockNetworkClientMockRecorder)
-		want         infrav1.MachineResources
+		want         infrav1alpha1.ServerResources
 		wantErr      bool
 	}{
 		{
@@ -901,118 +951,18 @@ func Test_AdoptPorts(t *testing.T) {
 			desiredPorts: []infrav1.ResolvedPortSpec{
 				{NetworkID: networkID1},
 			},
-			resources: infrav1.MachineResources{
+			resources: infrav1alpha1.ServerResources{
 				Ports: []infrav1.PortStatus{
 					{
 						ID: portID1,
 					},
 				},
 			},
-			want: infrav1.MachineResources{
+			want: infrav1alpha1.ServerResources{
 				Ports: []infrav1.PortStatus{
 					{
 						ID: portID1,
 					},
-				},
-			},
-		},
-		{
-			testName: "desired port not in status, exists: adopt",
-			desiredPorts: []infrav1.ResolvedPortSpec{
-				{Name: "test-machine-0", NetworkID: networkID1},
-			},
-			expect: func(m *mock.MockNetworkClientMockRecorder) {
-				m.ListPort(ports.ListOpts{Name: "test-machine-0", NetworkID: networkID1}).
-					Return([]ports.Port{{ID: portID1}}, nil)
-			},
-			want: infrav1.MachineResources{
-				Ports: []infrav1.PortStatus{
-					{
-						ID: portID1,
-					},
-				},
-			},
-		},
-		{
-			testName: "desired port not in status, does not exist: ignore",
-			desiredPorts: []infrav1.ResolvedPortSpec{
-				{Name: "test-machine-0", NetworkID: networkID1},
-			},
-			expect: func(m *mock.MockNetworkClientMockRecorder) {
-				m.ListPort(ports.ListOpts{Name: "test-machine-0", NetworkID: networkID1}).
-					Return(nil, nil)
-			},
-			want: infrav1.MachineResources{},
-		},
-		{
-			testName: "2 desired ports, first in status, second exists: adopt second",
-			desiredPorts: []infrav1.ResolvedPortSpec{
-				{Name: "test-machine-0", NetworkID: networkID1},
-				{Name: "test-machine-1", NetworkID: networkID2},
-			},
-			resources: infrav1.MachineResources{
-				Ports: []infrav1.PortStatus{
-					{
-						ID: portID1,
-					},
-				},
-			},
-			expect: func(m *mock.MockNetworkClientMockRecorder) {
-				m.ListPort(ports.ListOpts{Name: "test-machine-1", NetworkID: networkID2}).
-					Return([]ports.Port{{ID: portID2}}, nil)
-			},
-			want: infrav1.MachineResources{
-				Ports: []infrav1.PortStatus{
-					{ID: portID1},
-					{ID: portID2},
-				},
-			},
-		},
-		{
-			testName: "3 desired ports, first in status, second does not exist: ignore, do no look for third",
-			desiredPorts: []infrav1.ResolvedPortSpec{
-				{Name: "test-machine-0", NetworkID: networkID1},
-				{Name: "test-machine-1", NetworkID: networkID2},
-				{Name: "test-machine-2", NetworkID: networkID3},
-			},
-			resources: infrav1.MachineResources{
-				Ports: []infrav1.PortStatus{
-					{
-						ID: portID1,
-					},
-				},
-			},
-			expect: func(m *mock.MockNetworkClientMockRecorder) {
-				m.ListPort(ports.ListOpts{Name: "test-machine-1", NetworkID: networkID2}).
-					Return(nil, nil)
-			},
-			want: infrav1.MachineResources{
-				Ports: []infrav1.PortStatus{
-					{ID: portID1},
-				},
-			},
-		},
-		{
-			testName: "3 desired ports with arbitrary names, first in status, second does not exist: ignore, do no look for third",
-			desiredPorts: []infrav1.ResolvedPortSpec{
-				{Name: "test-machine-foo", NetworkID: networkID1},
-				{Name: "test-machine-bar", NetworkID: networkID2},
-				{Name: "test-machine-baz", NetworkID: networkID3},
-			},
-			resources: infrav1.MachineResources{
-				Ports: []infrav1.PortStatus{
-					{
-						ID: portID1,
-					},
-				},
-			},
-			expect: func(m *mock.MockNetworkClientMockRecorder) {
-				m.ListPort(ports.ListOpts{Name: "test-machine-bar", NetworkID: networkID2}).
-					Return(nil, nil)
-			},
-			want: infrav1.MachineResources{
-				Ports: []infrav1.PortStatus{
-					{ID: portID1},
 				},
 			},
 		},
@@ -1034,7 +984,7 @@ func Test_AdoptPorts(t *testing.T) {
 				client: mockClient,
 			}
 
-			err := s.AdoptPorts(scope.NewWithLogger(mockScopeFactory, log),
+			err := s.AdoptPortsServer(scope.NewWithLogger(mockScopeFactory, log),
 				tt.desiredPorts, &tt.resources)
 			if tt.wantErr {
 				g.Expect(err).Error()
