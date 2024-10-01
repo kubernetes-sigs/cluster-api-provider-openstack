@@ -170,8 +170,7 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 	var secControlPlaneGroupID string
 	var secWorkerGroupID string
 	var secBastionGroupID string
-	var subnetCIDR string
-
+	
 	// remoteManagedGroups is a map of suffix to security group ID.
 	// It will be used to fill in the RemoteGroupID field of the security group rules
 	// that reference a managed security group.
@@ -208,22 +207,13 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 	if openStackCluster.Status.Network != nil {
 		for _, subnet := range openStackCluster.Status.Network.Subnets {
 			// Check if subnet.CIDR is ipv4 subnet
-			_, ipnet, err := net.ParseCIDR(subnet.CIDR)
-			if err != nil {
-				return nil, fmt.Errorf("invalid subnet found during security groups reconcile: %v", err)
-			}
-			if ipnet.IP.To4() != nil {
-				SubnetCIDR = subnet.CIDR
-				break
+			if netutils.IsIPv4CIDRString(subnet.CIDR) {
+				workerRules = append(workerRules, getSGWorkerNodePortCidr(subnet.CIDR)...)
 			}
 		}
 	}
-	if SubnetCIDR != "" {
-		// If SubnetCIDR is found we allow tcp and udp traffic from said SubnetCIDR, this in order to allow octavia Loadbalancers created by CCM to function properly
-		workerRules = append(workerRules, getSGWorkerNodePortCidr(SubnetCIDR)...)
-	}
 
-	// Add rules allowing nodepors from all cluster nodes, this will take effect even if no SubnetCIDR is found to ensure all nodes can commincate over nodeports at all time
+	// Add rules allowing nodepors from all cluster nodes, this will take effect even if no subnetCIDR is found to ensure all nodes can commincate over nodeports at all time
 	workerRules = append(workerRules, getSGWorkerNodePort(secWorkerGroupID, secControlPlaneGroupID)...)
 
 	// If we set additional ports to LB, we need create secgroup rules those ports, this apply to controlPlaneRules only
