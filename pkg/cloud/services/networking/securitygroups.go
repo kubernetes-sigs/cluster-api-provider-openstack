@@ -19,12 +19,12 @@ package networking
 import (
 	"errors"
 	"fmt"
-	"net"
 	"slices"
 
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/rules"
+	"k8s.io/utils/net"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
@@ -206,9 +206,8 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 	// In the future IPv6 support need to be added here
 	if openStackCluster.Status.Network != nil {
 		for _, subnet := range openStackCluster.Status.Network.Subnets {
-			// Check if subnet.CIDR is ipv4 subnet
-			if netutils.IsIPv4CIDRString(subnet.CIDR) {
-				workerRules = append(workerRules, getSGWorkerNodePortCidr(subnet.CIDR)...)
+			if net.IsIPv4CIDRString(subnet.CIDR) {
+				workerRules = append(workerRules, getSGWorkerNodePortCIDR(subnet.CIDR)...)
 			}
 		}
 	}
