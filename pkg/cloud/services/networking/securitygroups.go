@@ -205,7 +205,7 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 
 	// Fetch subnet to use for worker node port rules
 	// In the future IPv6 support need to be added here
-	if openStackCluster.Status.Network != nil && len(openStackCluster.Status.Network.Subnets) > 0 {
+	if openStackCluster.Status.Network != nil {
 		for _, subnet := range openStackCluster.Status.Network.Subnets {
 			// Check uf subnet.CIDR is ipv4 subnet
 			_, ipnet, err := net.ParseCIDR(subnet.CIDR)
