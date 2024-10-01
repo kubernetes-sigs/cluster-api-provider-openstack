@@ -184,7 +184,7 @@ func getSGWorkerNodePort(secWorkerGroupID string, secControlPlaneGroupID string)
 }
 
 // Allow all traffic from a specific CIDR to access node port services.
-func getSGWorkerNodePortCidr(cidr string) []resolvedSecurityGroupRuleSpec {
+func getSGWorkerNodePortCIDR(cidr string) []resolvedSecurityGroupRuleSpec {
 	return []resolvedSecurityGroupRuleSpec{
 		{
 			Description:    "Node Port Services",
