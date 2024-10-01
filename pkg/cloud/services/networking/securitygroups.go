@@ -170,7 +170,7 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 	var secControlPlaneGroupID string
 	var secWorkerGroupID string
 	var secBastionGroupID string
-	var SubnetCIDR string
+	var subnetCIDR string
 
 	// remoteManagedGroups is a map of suffix to security group ID.
 	// It will be used to fill in the RemoteGroupID field of the security group rules
