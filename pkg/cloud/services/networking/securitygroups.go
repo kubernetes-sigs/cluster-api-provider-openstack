@@ -207,7 +207,7 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 	// In the future IPv6 support need to be added here
 	if openStackCluster.Status.Network != nil {
 		for _, subnet := range openStackCluster.Status.Network.Subnets {
-			// Check uf subnet.CIDR is ipv4 subnet
+			// Check if subnet.CIDR is ipv4 subnet
 			_, ipnet, err := net.ParseCIDR(subnet.CIDR)
 			if err != nil {
 				return nil, fmt.Errorf("invalid subnet found during security groups reconcile: %v", err)
