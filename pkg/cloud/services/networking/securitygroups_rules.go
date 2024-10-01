@@ -183,7 +183,7 @@ func getSGWorkerNodePort(secWorkerGroupID string, secControlPlaneGroupID string)
 	}
 }
 
-// Allow all traffic, including from outside the cluster, to access node port services.
+// Allow all traffic from a specific CIDR to access node port services.
 func getSGWorkerNodePortCidr(cidr string) []resolvedSecurityGroupRuleSpec {
 	return []resolvedSecurityGroupRuleSpec{
 		{
