@@ -195,10 +195,6 @@ func (r *OpenStackMachineReconciler) SetupWithManager(ctx context.Context, mgr c
 			&clusterv1.Machine{},
 			handler.EnqueueRequestsFromMapFunc(util.MachineToInfrastructureMapFunc(infrav1.SchemeGroupVersion.WithKind("OpenStackMachine"))),
 		).
-		Watches(
-			&infrav1.OpenStackCluster{},
-			handler.EnqueueRequestsFromMapFunc(r.OpenStackClusterToOpenStackMachines(ctx)),
-		).
 		WithEventFilter(predicates.ResourceNotPausedAndHasFilterLabel(ctrl.LoggerFrom(ctx), r.WatchFilterValue)).
 		Watches(
 			&clusterv1.Cluster{},
