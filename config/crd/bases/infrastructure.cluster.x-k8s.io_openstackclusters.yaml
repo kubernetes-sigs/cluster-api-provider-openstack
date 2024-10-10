@@ -160,6 +160,11 @@ spec:
                         description: The flavor reference for the flavor for your
                           server instance.
                         type: string
+                      flavorID:
+                        description: |-
+                          FlavorID allows flavors to be specified by ID.  This field takes precedence
+                          over Flavor.
+                        type: string
                       floatingIP:
                         description: |-
                           The floatingIP which will be associated to the machine, only used for master.
@@ -575,8 +580,6 @@ spec:
                         description: Whether the server instance is created on a trunk
                           port or not.
                         type: boolean
-                    required:
-                    - flavor
                     type: object
                 type: object
               cloudName:
@@ -2134,6 +2137,11 @@ spec:
                         description: The flavor reference for the flavor for your
                           server instance.
                         type: string
+                      flavorID:
+                        description: |-
+                          FlavorID allows flavors to be specified by ID.  This field takes precedence
+                          over Flavor.
+                        type: string
                       floatingIP:
                         description: |-
                           The floatingIP which will be associated to the machine, only used for master.
@@ -2426,8 +2434,6 @@ spec:
                         description: Whether the server instance is created on a trunk
                           port or not.
                         type: boolean
-                    required:
-                    - flavor
                     type: object
                 type: object
               cloudName:
@@ -3426,6 +3432,11 @@ spec:
                         description: The flavor reference for the flavor for your
                           server instance.
                         type: string
+                      flavorID:
+                        description: |-
+                          FlavorID allows flavors to be specified by ID.  This field takes precedence
+                          over Flavor.
+                        type: string
                       floatingIPPoolRef:
                         description: |-
                           floatingIPPoolRef is a reference to a IPPool that will be assigned
@@ -4189,7 +4200,6 @@ spec:
                           port or not.
                         type: boolean
                     required:
-                    - flavor
                     - image
                     type: object
                 type: object
@@ -4962,6 +4972,9 @@ spec:
                       Resolved contains parts of the bastion's machine spec with all
                       external references fully resolved.
                     properties:
+                      flavorID:
+                        description: FlavorID is the ID of the flavor to use.
+                        type: string
                       imageID:
                         description: ImageID is the ID of the image to use for the
                           machine and is calculated based on ImageFilter.

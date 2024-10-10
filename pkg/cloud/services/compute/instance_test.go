@@ -27,7 +27,6 @@ import (
 	"github.com/go-logr/logr/testr"
 	"github.com/google/go-cmp/cmp"
 	"github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v3/volumes"
-	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/flavors"
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/keypairs"
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/v2/openstack/image/v2/images"
@@ -393,7 +392,7 @@ func getDefaultInstanceSpec() *InstanceSpec {
 	return &InstanceSpec{
 		Name:       openStackMachineName,
 		ImageID:    imageUUID,
-		Flavor:     flavorName,
+		FlavorID:   flavorUUID,
 		SSHKeyName: sshKeyName,
 		UserData:   "user-data",
 		Metadata: map[string]string{
@@ -453,15 +452,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 		}
 	}
 
-	// Expected calls when using default flavor
-	expectDefaultFlavor := func(computeRecorder *mock.MockComputeClientMockRecorder) {
-		f := flavors.Flavor{
-			ID:    flavorUUID,
-			VCPUs: 2,
-		}
-		computeRecorder.GetFlavorFromName(flavorName).Return(&f, nil)
-	}
-
 	// Expected calls and custom match function for creating a server
 	expectCreateServer := func(g Gomega, computeRecorder *mock.MockComputeClientMockRecorder, expectedCreateOpts servers.CreateOptsBuilder, expectedSchedulerHintOpts servers.SchedulerHintOptsBuilder, wantError bool) {
 		computeRecorder.CreateServer(gomock.Any(), gomock.Any()).DoAndReturn(func(createOpts servers.CreateOptsBuilder, schedulerHintOpts servers.SchedulerHintOptsBuilder) (*servers.Server, error) {
@@ -519,8 +509,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 			name:            "Defaults",
 			getInstanceSpec: getDefaultInstanceSpec,
 			expect: func(g Gomega, r *recorders) {
-				expectDefaultFlavor(r.compute)
-
 				expectCreateServer(g, r.compute, withSSHKey(getDefaultServerCreateOpts()), getDefaultSchedulerHintOpts(), false)
 			},
 			wantErr: false,
@@ -535,8 +523,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 				return s
 			},
 			expect: func(g Gomega, r *recorders) {
-				expectDefaultFlavor(r.compute)
-
 				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
 				r.volume.CreateVolume(volumes.CreateOpts{
@@ -579,8 +565,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 				return s
 			},
 			expect: func(g Gomega, r *recorders) {
-				expectDefaultFlavor(r.compute)
-
 				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
 				r.volume.CreateVolume(volumes.CreateOpts{
@@ -624,8 +608,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 				return s
 			},
 			expect: func(g Gomega, r *recorders) {
-				expectDefaultFlavor(r.compute)
-
 				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
 				r.volume.CreateVolume(volumes.CreateOpts{
@@ -665,8 +647,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 				return s
 			},
 			expect: func(_ Gomega, r *recorders) {
-				expectDefaultFlavor(r.compute)
-
 				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
 				r.volume.CreateVolume(volumes.CreateOpts{
@@ -708,8 +688,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 				return s
 			},
 			expect: func(g Gomega, r *recorders) {
-				expectDefaultFlavor(r.compute)
-
 				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
 				r.volume.CreateVolume(volumes.CreateOpts{
@@ -789,8 +767,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 				return s
 			},
 			expect: func(g Gomega, r *recorders) {
-				expectDefaultFlavor(r.compute)
-
 				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-etcd", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
 				r.volume.CreateVolume(volumes.CreateOpts{
@@ -856,8 +832,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 				return s
 			},
 			expect: func(g Gomega, r *recorders) {
-				expectDefaultFlavor(r.compute)
-
 				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-etcd", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
 				r.volume.CreateVolume(volumes.CreateOpts{
@@ -908,8 +882,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				}
 				return s
 			},
-			expect: func(_ Gomega, r *recorders) {
-				expectDefaultFlavor(r.compute)
+			expect: func(_ Gomega, _ *recorders) {
 			},
 			wantErr: true,
 		},
@@ -929,7 +902,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 				return s
 			},
 			expect: func(g Gomega, r *recorders) {
-				expectDefaultFlavor(r.compute)
 				createOpts := getDefaultServerCreateOpts()
 				schedulerHintOpts := servers.SchedulerHintOpts{
 					Group: serverGroupUUID,
@@ -957,7 +929,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 				return s
 			},
 			expect: func(g Gomega, r *recorders) {
-				expectDefaultFlavor(r.compute)
 				createOpts := getDefaultServerCreateOpts()
 				schedulerHintOpts := servers.SchedulerHintOpts{
 					Group: serverGroupUUID,
@@ -985,7 +956,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 				return s
 			},
 			expect: func(g Gomega, r *recorders) {
-				expectDefaultFlavor(r.compute)
 				createOpts := getDefaultServerCreateOpts()
 				schedulerHintOpts := servers.SchedulerHintOpts{
 					Group: serverGroupUUID,

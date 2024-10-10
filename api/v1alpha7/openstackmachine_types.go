@@ -43,7 +43,11 @@ type OpenStackMachineSpec struct {
 	CloudName string `json:"cloudName"`
 
 	// The flavor reference for the flavor for your server instance.
-	Flavor string `json:"flavor"`
+	Flavor string `json:"flavor,omitempty"`
+
+	// FlavorID allows flavors to be specified by ID.  This field takes precedence
+	// over Flavor.
+	FlavorID string `json:"flavorID,omitempty"`
 
 	// The name of the image to use for your server instance.
 	// If the RootVolume is specified, this will be ignored and use rootVolume directly.

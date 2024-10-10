@@ -139,6 +139,11 @@ spec:
                                 description: The flavor reference for the flavor for
                                   your server instance.
                                 type: string
+                              flavorID:
+                                description: |-
+                                  FlavorID allows flavors to be specified by ID.  This field takes precedence
+                                  over Flavor.
+                                type: string
                               floatingIP:
                                 description: |-
                                   The floatingIP which will be associated to the machine, only used for master.
@@ -561,8 +566,6 @@ spec:
                                 description: Whether the server instance is created
                                   on a trunk port or not.
                                 type: boolean
-                            required:
-                            - flavor
                             type: object
                         type: object
                       cloudName:
@@ -969,6 +972,11 @@ spec:
                                 description: The flavor reference for the flavor for
                                   your server instance.
                                 type: string
+                              flavorID:
+                                description: |-
+                                  FlavorID allows flavors to be specified by ID.  This field takes precedence
+                                  over Flavor.
+                                type: string
                               floatingIP:
                                 description: |-
                                   The floatingIP which will be associated to the machine, only used for master.
@@ -1267,8 +1275,6 @@ spec:
                                 description: Whether the server instance is created
                                   on a trunk port or not.
                                 type: boolean
-                            required:
-                            - flavor
                             type: object
                         type: object
                       cloudName:
@@ -1918,6 +1924,11 @@ spec:
                               flavor:
                                 description: The flavor reference for the flavor for
                                   your server instance.
+                                type: string
+                              flavorID:
+                                description: |-
+                                  FlavorID allows flavors to be specified by ID.  This field takes precedence
+                                  over Flavor.
                                 type: string
                               floatingIPPoolRef:
                                 description: |-
@@ -2698,7 +2709,6 @@ spec:
                                   on a trunk port or not.
                                 type: boolean
                             required:
-                            - flavor
                             - image
                             type: object
                         type: object

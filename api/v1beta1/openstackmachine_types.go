@@ -97,7 +97,11 @@ type OpenStackMachineSpec struct {
 	ProviderID *string `json:"providerID,omitempty"`
 
 	// The flavor reference for the flavor for your server instance.
-	Flavor string `json:"flavor"`
+	Flavor string `json:"flavor,omitempty"`
+
+	// FlavorID allows flavors to be specified by ID.  This field takes precedence
+	// over Flavor.
+	FlavorID string `json:"flavorID,omitempty"`
 
 	// The image to use for your server instance.
 	// If the rootVolume is specified, this will be used when creating the root volume.

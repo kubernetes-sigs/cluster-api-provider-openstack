@@ -534,7 +534,7 @@ func (r *OpenStackServerReconciler) serverToInstanceSpec(ctx context.Context, op
 	instanceSpec := &compute.InstanceSpec{
 		AdditionalBlockDevices:        openStackServer.Spec.AdditionalBlockDevices,
 		ConfigDrive:                   openStackServer.Spec.ConfigDrive != nil && *openStackServer.Spec.ConfigDrive,
-		Flavor:                        openStackServer.Spec.Flavor,
+		FlavorID:                      resolved.FlavorID,
 		ImageID:                       resolved.ImageID,
 		Metadata:                      serverMetadata,
 		Name:                          openStackServer.Name,
