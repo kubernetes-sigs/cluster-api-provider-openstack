@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.16.4
   name: openstackmachinetemplates.infrastructure.cluster.x-k8s.io
 spec:
   group: infrastructure.cluster.x-k8s.io
@@ -26,7 +26,6 @@ spec:
       openAPIV3Schema:
         description: |-
           OpenStackMachineTemplate is the Schema for the openstackmachinetemplates API.
-
 
           Deprecated: This type will be removed in one of the next releases.
         properties:
@@ -505,7 +504,6 @@ spec:
       openAPIV3Schema:
         description: |-
           OpenStackMachineTemplate is the Schema for the openstackmachinetemplates API.
-
 
           Deprecated: v1alpha7.OpenStackMachineTemplate has been replaced by v1beta1.OpenStackMachineTemplate.
         properties:
