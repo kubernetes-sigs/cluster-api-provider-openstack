@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.15.0
+    controller-gen.kubebuilder.io/version: v0.16.4
   name: images.openstack.k-orc.cloud
 spec:
   group: openstack.k-orc.cloud
@@ -256,13 +256,10 @@ spec:
                           separate these pinned instances from unpinned instances as the latter
                           will not respect the resourcing requirements of the former.
 
-
                           Permitted values are shared (the default), and dedicated.
-
 
                           shared: The guest vCPUs will be allowed to freely float across host
                           pCPUs, albeit potentially constrained by NUMA policy.
-
 
                           dedicated: The guest vCPUs will be strictly pinned to a set of host
                           pCPUs. In the absence of an explicit vCPU topology request, the
@@ -292,13 +289,10 @@ spec:
                           hardware threads, while the cores that a given core share components
                           with are known as thread siblings.
 
-
                           Permitted values are prefer (the default), isolate, and require.
-
 
                           prefer: The host may or may not have an SMT architecture. Where an
                           SMT architecture is present, thread siblings are preferred.
-
 
                           isolate: The host must not have an SMT architecture or must emulate a
                           non-SMT architecture. If the host does not have an SMT architecture,
@@ -308,7 +302,6 @@ spec:
                           vCPUs from other guests are placed on the same core. All but one
                           thread sibling on each utilized core is therefore guaranteed to be
                           unusable.
-
 
                           require: The host must have an SMT architecture. Each vCPU is
                           allocated on thread siblings. If the host does not have an SMT
@@ -344,7 +337,6 @@ spec:
                           controller device that provides improved scalability and performance,
                           and supports advanced SCSI hardware.
 
-
                           The only permitted value is virtio-scsi.
                         enum:
                         - virtio-scsi
@@ -352,7 +344,6 @@ spec:
                       vifModel:
                         description: |-
                           VIFModel specifies the model of virtual network interface device to use.
-
 
                           Permitted values are e1000, e1000e, ne2k_pci, pcnet, rtl8139, virtio,
                           and vmxnet3.
@@ -428,31 +419,20 @@ spec:
                   Conditions represents the observed status of the object.
                   Known .status.conditions.type are: "Available", "Progressing", "Failed"
 
-
                   Available represents the availability of the glance image. If it is
                   true then the image is ready for use in glance, and its hash has been
                   verified.
-
 
                   Progressing indicates that reconciliation is in progress. It may not
                   be in progress either because reconciliation was completed
                   successfully, or because an error was encountered that cannot be
                   retried.
 
-
                   Failed indicates that reconciliation was not successful, and further
                   reconciliation is not possible.
                 items:
-                  description: "Condition contains details for one aspect of the current
-                    state of this API Resource.\n---\nThis struct is intended for
-                    direct use as an array at the field path .status.conditions.  For
-                    example,\n\n\n\ttype FooStatus struct{\n\t    // Represents the
-                    observations of a foo's current state.\n\t    // Known .status.conditions.type
-                    are: \"Available\", \"Progressing\", and \"Degraded\"\n\t    //
-                    +patchMergeKey=type\n\t    // +patchStrategy=merge\n\t    // +listType=map\n\t
-                    \   // +listMapKey=type\n\t    Conditions []metav1.Condition `json:\"conditions,omitempty\"
-                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`\n\n\n\t
-                    \   // other fields\n\t}"
+                  description: Condition contains details for one aspect of the current
+                    state of this API Resource.
                   properties:
                     lastTransitionTime:
                       description: |-
@@ -493,12 +473,7 @@ spec:
                       - Unknown
                       type: string
                     type:
-                      description: |-
-                        type of condition in CamelCase or in foo.example.com/CamelCase.
-                        ---
-                        Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
-                        useful (see .node.status.conditions), the ability to deconflict is important.
-                        The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
+                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
                       maxLength: 316
                       pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
                       type: string
