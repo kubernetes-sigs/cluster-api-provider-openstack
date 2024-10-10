@@ -48,6 +48,10 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 		Name:      "foo",
 		CloudName: "my-cloud",
 	}
+	additionalIdentityRef := infrav1.OpenStackIdentityReference{
+		Name:      "foo",
+		CloudName: "another-cloud",
+	}
 	openStackCluster := &infrav1.OpenStackCluster{
 		Spec: infrav1.OpenStackClusterSpec{
 			ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{},
@@ -93,6 +97,24 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 			want: &infrav1alpha1.OpenStackServerSpec{
 				Flavor:      flavorName,
 				IdentityRef: identityRef,
+				Image:       image,
+				SSHKeyName:  sshKeyName,
+				Ports:       portOpts,
+				Tags:        tags,
+				UserDataRef: userData,
+			},
+		},
+		{
+			name: "Test a OpenStackMachineSpec to OpenStackServerSpec conversion with identityRef",
+			spec: &infrav1.OpenStackMachineSpec{
+				Flavor:      flavorName,
+				Image:       image,
+				SSHKeyName:  sshKeyName,
+				IdentityRef: &additionalIdentityRef,
+			},
+			want: &infrav1alpha1.OpenStackServerSpec{
+				Flavor:      flavorName,
+				IdentityRef: additionalIdentityRef,
 				Image:       image,
 				SSHKeyName:  sshKeyName,
 				Ports:       portOpts,
