@@ -865,6 +865,11 @@ func (r *OpenStackClusterReconciler) SetupWithManager(ctx context.Context, mgr c
 			}),
 			builder.WithPredicates(predicates.ClusterUnpaused(ctrl.LoggerFrom(ctx))),
 		).
+		Watches(
+			&infrav1alpha1.OpenStackServer{},
+			handler.EnqueueRequestForOwner(mgr.GetScheme(), mgr.GetRESTMapper(), &infrav1.OpenStackCluster{}),
+			builder.WithPredicates(OpenStackServerReconcileComplete(log)),
+		).
 		WithEventFilter(predicates.ResourceNotPausedAndHasFilterLabel(ctrl.LoggerFrom(ctx), r.WatchFilterValue)).
 		WithEventFilter(predicates.ResourceIsNotExternallyManaged(ctrl.LoggerFrom(ctx))).
 		Complete(r)

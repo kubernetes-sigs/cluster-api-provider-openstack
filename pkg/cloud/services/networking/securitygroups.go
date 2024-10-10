@@ -443,24 +443,28 @@ func (s *Service) reconcileGroupRules(desired *securityGroupSpec, observed *grou
 		}
 	}
 
-	s.scope.Logger().V(4).Info("Deleting rules not needed anymore for group", "name", observed.Name, "amount", len(rulesToDelete))
-	for _, rule := range rulesToDelete {
-		s.scope.Logger().V(6).Info("Deleting rule", "ID", rule, "name", observed.Name)
-		err := s.client.DeleteSecGroupRule(rule)
-		if err != nil {
-			return err
+	if len(rulesToDelete) > 0 {
+		s.scope.Logger().V(4).Info("Deleting rules not needed anymore for group", "name", observed.Name, "amount", len(rulesToDelete))
+		for _, rule := range rulesToDelete {
+			s.scope.Logger().V(6).Info("Deleting rule", "ID", rule, "name", observed.Name)
+			err := s.client.DeleteSecGroupRule(rule)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
-	s.scope.Logger().V(4).Info("Creating new rules needed for group", "name", observed.Name, "amount", len(rulesToCreate))
-	for _, rule := range rulesToCreate {
-		r := rule
-		if r.RemoteGroupID == remoteGroupIDSelf {
-			r.RemoteGroupID = observed.ID
-		}
-		err := s.createRule(observed.ID, r)
-		if err != nil {
-			return err
+	if len(rulesToCreate) > 0 {
+		s.scope.Logger().V(4).Info("Creating new rules needed for group", "name", observed.Name, "amount", len(rulesToCreate))
+		for _, rule := range rulesToCreate {
+			r := rule
+			if r.RemoteGroupID == remoteGroupIDSelf {
+				r.RemoteGroupID = observed.ID
+			}
+			err := s.createRule(observed.ID, r)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

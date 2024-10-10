@@ -30,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/klog/v2"
 	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	ipamv1 "sigs.k8s.io/cluster-api/exp/ipam/api/v1beta1"
@@ -42,7 +43,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	orcv1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
@@ -285,9 +288,16 @@ func objToDependencyLabel(obj client.Object, scheme *runtime.Scheme) (string, er
 	return "orc-dependency-" + prefixType + "/" + obj.GetName(), nil
 }
 
+func IsServerTerminalError(server *infrav1alpha1.OpenStackServer) bool {
+	if server.Status.InstanceState != nil && *server.Status.InstanceState == infrav1.InstanceStateError {
+		return true
+	}
+	return false
+}
+
 func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, scope *scope.WithLogger, openStackServer *infrav1alpha1.OpenStackServer) (_ ctrl.Result, reterr error) {
 	// If the OpenStackServer is in an error state, return early.
-	if openStackServer.Status.InstanceState != nil && *openStackServer.Status.InstanceState == infrav1.InstanceStateError {
+	if IsServerTerminalError(openStackServer) {
 		scope.Logger().Info("Not reconciling server in error state. See openStackServer.status or previously logged error for details")
 		return ctrl.Result{}, nil
 	}
@@ -707,4 +717,57 @@ func (r *OpenStackServerReconciler) reconcileDeleteFloatingAddressFromPool(scope
 
 	controllerutil.RemoveFinalizer(claim, infrav1.IPClaimMachineFinalizer)
 	return r.Client.Update(context.Background(), claim)
+}
+
+// OpenStackServerReconcileComplete returns a predicate that determines if a OpenStackServer has finished reconciling.
+func OpenStackServerReconcileComplete(log logr.Logger) predicate.Funcs {
+	log = log.WithValues("predicate", "OpenStackServerReconcileComplete")
+
+	return predicate.Funcs{
+		CreateFunc: func(e event.CreateEvent) bool {
+			log = log.WithValues("eventType", "create")
+
+			server, ok := e.Object.(*infrav1alpha1.OpenStackServer)
+			if !ok {
+				log.V(4).Info("Expected OpenStackServer", "type", fmt.Sprintf("%T", e.Object))
+				return false
+			}
+			log = log.WithValues("OpenStackServer", klog.KObj(server))
+
+			if server.Status.Ready || IsServerTerminalError(server) {
+				log.V(6).Info("OpenStackServer finished reconciling, allowing further processing")
+				return true
+			}
+			log.V(6).Info("OpenStackServer is still reconciling, blocking further processing")
+			return false
+		},
+		UpdateFunc: func(e event.UpdateEvent) bool {
+			log := log.WithValues("eventType", "update")
+
+			oldServer, ok := e.ObjectOld.(*infrav1alpha1.OpenStackServer)
+			if !ok {
+				log.V(4).Info("Expected OpenStackServer", "type", fmt.Sprintf("%T", e.ObjectOld))
+				return false
+			}
+			log = log.WithValues("OpenStackServer", klog.KObj(oldServer))
+
+			newServer, ok := e.ObjectNew.(*infrav1alpha1.OpenStackServer)
+			if !ok {
+				log.V(4).Info("Expected OpenStackServer (new)", "type", fmt.Sprintf("%T", e.ObjectNew))
+				return false
+			}
+
+			oldFinished := oldServer.Status.Ready || IsServerTerminalError(oldServer)
+			newFinished := newServer.Status.Ready || IsServerTerminalError(newServer)
+			if !oldFinished && newFinished {
+				log.V(6).Info("OpenStackServer finished reconciling, allowing further processing")
+				return true
+			}
+
+			log.V(4).Info("OpenStackServer is still reconciling, blocking further processing")
+			return false
+		},
+		DeleteFunc:  func(event.DeleteEvent) bool { return false },
+		GenericFunc: func(event.GenericEvent) bool { return false },
+	}
 }
