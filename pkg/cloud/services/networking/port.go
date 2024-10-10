@@ -60,6 +60,21 @@ func (s *Service) GetPortFromInstanceIP(instanceID string, ip string) ([]ports.P
 	return s.client.ListPort(portOpts)
 }
 
+// GetPortWithPRefix returns the list of ports with the given name prefix for a given network ID.
+func (s *Service) GetPortWithPrefix(portOpts ports.ListOpts, prefix string) ([]ports.Port, error) {
+	portList, err := s.client.ListPort(portOpts)
+	if err != nil {
+		return nil, fmt.Errorf("lookup ports for network %s: %w", portOpts.NetworkID, err)
+	}
+	prefixedPorts := make([]ports.Port, 0)
+	for _, port := range portList {
+		if strings.HasPrefix(port.Name, prefix) {
+			prefixedPorts = append(prefixedPorts, port)
+		}
+	}
+	return prefixedPorts, nil
+}
+
 type PortListOpts struct {
 	DeviceOwner []string `q:"device_owner"`
 	NetworkID   string   `q:"network_id"`
@@ -297,10 +312,11 @@ func (s *Service) DeleteClusterPorts(openStackCluster *infrav1.OpenStackCluster)
 	}
 	networkID := openStackCluster.Status.Network.ID
 
-	portList, err := s.client.ListPort(ports.ListOpts{
+	portOpts := ports.ListOpts{
 		NetworkID:   networkID,
 		DeviceOwner: "",
-	})
+	}
+	portList, err := s.GetPortWithPrefix(portOpts, openStackCluster.Name)
 	s.scope.Logger().Info("Deleting cluster ports", "networkID", networkID, "portList", portList)
 	if err != nil {
 		if capoerrors.IsNotFound(err) {
@@ -310,10 +326,8 @@ func (s *Service) DeleteClusterPorts(openStackCluster *infrav1.OpenStackCluster)
 	}
 
 	for _, port := range portList {
-		if strings.HasPrefix(port.Name, openStackCluster.Name) {
-			if err := s.DeletePort(openStackCluster, port.ID); err != nil {
-				return fmt.Errorf("error deleting port %s: %v", port.ID, err)
-			}
+		if err := s.DeletePort(openStackCluster, port.ID); err != nil {
+			return fmt.Errorf("error deleting port %s: %v", port.ID, err)
 		}
 	}
 
