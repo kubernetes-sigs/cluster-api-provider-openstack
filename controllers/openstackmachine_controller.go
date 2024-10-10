@@ -475,13 +475,20 @@ func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.Ope
 		AdditionalBlockDevices:            openStackMachineSpec.AdditionalBlockDevices,
 		ConfigDrive:                       openStackMachineSpec.ConfigDrive,
 		Flavor:                            openStackMachineSpec.Flavor,
-		IdentityRef:                       identityRef,
 		Image:                             openStackMachineSpec.Image,
 		RootVolume:                        openStackMachineSpec.RootVolume,
 		ServerMetadata:                    openStackMachineSpec.ServerMetadata,
 		SSHKeyName:                        openStackMachineSpec.SSHKeyName,
 		ServerGroup:                       openStackMachineSpec.ServerGroup,
 		SchedulerHintAdditionalProperties: openStackMachineSpec.SchedulerHintAdditionalProperties,
+	}
+
+	// Some of our users using pre-existing resources may want to use different credentials for different machines.
+	// See https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/2190
+	if openStackMachineSpec.IdentityRef != nil {
+		openStackServerSpec.IdentityRef = *openStackMachineSpec.IdentityRef
+	} else {
+		openStackServerSpec.IdentityRef = identityRef
 	}
 
 	if len(tags) > 0 {
