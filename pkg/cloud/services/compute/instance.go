@@ -405,7 +405,7 @@ func (s *Service) getImageIDByReference(ctx context.Context, k8sClient client.Cl
 	}
 
 	if orcv1alpha1.IsAvailable(orcImage) {
-		return orcImage.Status.ImageID, orcImage, nil
+		return orcImage.Status.ID, orcImage, nil
 	}
 
 	if !orcv1alpha1.IsReconciliationComplete(orcImage) {

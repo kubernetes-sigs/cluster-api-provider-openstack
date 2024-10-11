@@ -36,6 +36,23 @@ import (
 )
 
 const (
+	Finalizer = "openstack.k-orc.cloud/image"
+
+	FieldOwner = "openstack.k-orc.cloud/imagecontroller"
+	// Field owner of the object finalizer.
+	SSAFinalizerTxn = "finalizer"
+	// Field owner of transient status.
+	SSAStatusTxn = "status"
+	// Field owner of persistent id field.
+	SSAIDTxn = "id"
+)
+
+// ssaFieldOwner returns the field owner for a specific named SSA transaction.
+func ssaFieldOwner(txn string) client.FieldOwner {
+	return client.FieldOwner(FieldOwner + "/" + txn)
+}
+
+const (
 	// The time to wait before reconciling again when we are expecting glance to finish some task and update status.
 	waitForGlanceImageStatusUpdate = 15 * time.Second
 

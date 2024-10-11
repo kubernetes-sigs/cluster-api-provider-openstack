@@ -16,75 +16,50 @@ limitations under the License.
 
 package v1alpha1
 
-import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-)
-
-// +kubebuilder:validation:Enum:=AdoptOrCreate;Adopt
-type ControllerOptionsOnCreate string
-
-// +kubebuilder:validation:Enum:=Delete;Retain
-type ControllerOptionsOnDelete string
+// +kubebuilder:validation:Enum:=managed;unmanaged
+type ManagementPolicy string
 
 const (
-	// ControllerOptionsOnCreateAdoptOrCreate specifies that the controller will
-	// attempt to adopt a resource with the expected name if one exists, or
-	// create a new resource if it does not.
-	ControllerOptionsOnCreateAdoptOrCreate ControllerOptionsOnCreate = "AdoptOrCreate"
+	// ManagementPolicyManaged specifies that the controller will reconcile the
+	// state of the referenced OpenStack resource with the state of the ORC
+	// object.
+	ManagementPolicyManaged ManagementPolicy = "managed"
 
-	// ControllerOptionsOnCreateAdopt specifies that the controller will wait
-	// for the resource to exist, and will not create it.
-	ControllerOptionsOnCreateAdopt ControllerOptionsOnCreate = "Adopt"
-
-	// ControllerOptionsOnDeleteDelete specifies that the controller will delete
-	// the resource when the kubernetes object owning it is deleted.
-	ControllerOptionsOnDeleteDelete ControllerOptionsOnDelete = "Delete"
-
-	// ControllerOptionsOnDeleteRetain specifies that the controller will not
-	// delete the resource when the kubernetes object owning it is deleted.
-	ControllerOptionsOnDeleteRetain ControllerOptionsOnDelete = "Retain"
+	// ManagementPolicyUnmanaged specifies that the controller will expect the
+	// resource to either exist already or to be created externally. The
+	// controller will not make any changes to the referenced OpenStack
+	// resource.
+	ManagementPolicyUnmanaged ManagementPolicy = "unmanaged"
 )
 
-type ControllerOptions struct {
-	// OnCreate defines the controller's behaviour when creating a resource.
-	// If not specified, the default is AdoptOrCreate.
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="onCreate is immutable"
+// +kubebuilder:validation:Enum:=delete;detach
+type OnDelete string
+
+const (
+	// OnDeleteDelete specifies that the OpenStack resource will be deleted
+	// when the managed ORC object is deleted.
+	OnDeleteDelete OnDelete = "delete"
+
+	// OnDeleteDetach specifies that the OpenStack resource will not be
+	// deleted when the managed ORC object is deleted.
+	OnDeleteDetach OnDelete = "detach"
+)
+
+type ManagedOptions struct {
+	// OnDelete specifies the behaviour of the controller when the ORC
+	// object is deleted. Options are `delete` - delete the OpenStack resource;
+	// `detach` - do not delete the OpenStack resource. If not specified, the
+	// default is `delete`.
+	// +kubebuilder:default:=delete
 	// +optional
-	OnCreate *ControllerOptionsOnCreate `json:"onCreate,omitempty"`
-
-	// OnDelete defines the controller's behaviour when deleting a resource. If
-	// not specified, the default is Delete.
-	// +optional
-	OnDelete *ControllerOptionsOnDelete `json:"onDelete,omitempty"`
+	OnDelete OnDelete `json:"onDelete,omitempty"`
 }
 
-// ObjectWithControllerOptions is a metav1.Object which also has ControllerOptions
-// +kubebuilder:object:generate:=false
-type ObjectWithControllerOptions interface {
-	metav1.Object
-	GetControllerOptions() *ControllerOptions
-}
-
-// GetOnCreate returns the value of OnCreate from ControllerOptions, or
-// the default, AdoptOrCreate, if it is not set.
-func (o *ControllerOptions) GetOnCreate() ControllerOptionsOnCreate {
-	const defaultOnCreate = ControllerOptionsOnCreateAdoptOrCreate
-
-	if o == nil || o.OnCreate == nil {
-		return defaultOnCreate
+// GetOnDelete returns the delete behaviour from ManagedOptions. If called on a
+// nil receiver it safely returns the default.
+func (o *ManagedOptions) GetOnDelete() OnDelete {
+	if o == nil {
+		return OnDeleteDelete
 	}
-
-	return *o.OnCreate
-}
-
-// GetOnDelete returns the value of OnDelete from ControllerOptions, or
-// the default, Delete, if it is not set.
-func (o *ControllerOptions) GetOnDelete() ControllerOptionsOnDelete {
-	const defaultOnDelete = ControllerOptionsOnDeleteDelete
-
-	if o == nil || o.OnDelete == nil {
-		return defaultOnDelete
-	}
-
-	return *o.OnDelete
+	return o.OnDelete
 }

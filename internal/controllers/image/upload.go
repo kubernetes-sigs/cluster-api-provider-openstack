@@ -78,18 +78,17 @@ func (r *orcImageReconciler) uploadImageContent(ctx context.Context, orcImage *o
 	log := ctrl.LoggerFrom(ctx)
 	log.V(3).Info("Uploading image content")
 
-	contentSource := orcImage.Spec.Content
-	if contentSource == nil {
-		// Should have been caught by validation
-		return capoerrors.Terminal(orcv1alpha1.OpenStackConditionReasonInvalidConfiguration, "content source not provided")
+	content, err := requireResourceContent(orcImage)
+	if err != nil {
+		return err
 	}
 
-	if contentSource.SourceType != orcv1alpha1.ImageSourceTypeURL {
+	if content.SourceType != orcv1alpha1.ImageSourceTypeURL {
 		// Should have been caught by validation
-		return capoerrors.Terminal(orcv1alpha1.OpenStackConditionReasonInvalidConfiguration, "invalid image source type: "+string(contentSource.SourceType))
+		return capoerrors.Terminal(orcv1alpha1.OpenStackConditionReasonInvalidConfiguration, "invalid image source type: "+string(content.SourceType))
 	}
 
-	urlSource := contentSource.SourceURL
+	urlSource := content.SourceURL
 
 	if urlSource == nil {
 		// Should have been caught by validation
