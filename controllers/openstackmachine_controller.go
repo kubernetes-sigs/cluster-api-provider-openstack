@@ -568,7 +568,14 @@ func (r *OpenStackMachineReconciler) getOrCreateMachineServer(ctx context.Contex
 		return nil, err
 	}
 	if apierrors.IsNotFound(err) {
-		machineServerSpec := openStackMachineSpecToOpenStackServerSpec(&openStackMachine.Spec, openStackCluster.Spec.IdentityRef, compute.InstanceTags(&openStackMachine.Spec, openStackCluster), failureDomain, userDataRef, getManagedSecurityGroup(openStackCluster, machine), openStackCluster.Status.Network.ID)
+		// Use credentials from the machine object by default, falling back to cluster credentials.
+		identityRef := func() infrav1.OpenStackIdentityReference {
+			if openStackMachine.Spec.IdentityRef != nil {
+				return *openStackMachine.Spec.IdentityRef
+			}
+			return openStackCluster.Spec.IdentityRef
+		}()
+		machineServerSpec := openStackMachineSpecToOpenStackServerSpec(&openStackMachine.Spec, identityRef, compute.InstanceTags(&openStackMachine.Spec, openStackCluster), failureDomain, userDataRef, getManagedSecurityGroup(openStackCluster, machine), openStackCluster.Status.Network.ID)
 		machineServer = &infrav1alpha1.OpenStackServer{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels: map[string]string{

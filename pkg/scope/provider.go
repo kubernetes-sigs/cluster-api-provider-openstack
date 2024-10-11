@@ -58,6 +58,9 @@ func (f *providerScopeFactory) NewClientScopeFromObject(ctx context.Context, ctr
 
 	for _, o := range objects {
 		namespace, identityRef = o.GetIdentityRef()
+		if namespace != nil || identityRef != nil {
+			break
+		}
 	}
 
 	if namespace == nil || identityRef == nil {
