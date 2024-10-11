@@ -58,7 +58,6 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/objects"
 )
 
 const (
@@ -171,7 +170,23 @@ func patchServer(ctx context.Context, patchHelper *patch.Helper, openStackServer
 }
 
 func (r *OpenStackServerReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager, _ controller.Options) error {
+	const imageRefPath = "spec.image.imageRef.name"
+
 	log := ctrl.LoggerFrom(ctx)
+
+	// Index servers by referenced image
+	if err := mgr.GetFieldIndexer().IndexField(ctx, &infrav1alpha1.OpenStackServer{}, imageRefPath, func(obj client.Object) []string {
+		server, ok := obj.(*infrav1alpha1.OpenStackServer)
+		if !ok {
+			return nil
+		}
+		if server.Spec.Image.ImageRef == nil {
+			return nil
+		}
+		return []string{server.Spec.Image.ImageRef.Name}
+	}); err != nil {
+		return fmt.Errorf("adding servers by image index: %w", err)
+	}
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&infrav1alpha1.OpenStackServer{}).
@@ -180,15 +195,8 @@ func (r *OpenStackServerReconciler) SetupWithManager(ctx context.Context, mgr ct
 				log = log.WithValues("watch", "Image")
 
 				k8sClient := mgr.GetClient()
-				label, err := objToDependencyLabel(obj, k8sClient.Scheme())
-				if err != nil {
-					log.Error(err, "objToDependencyLabel")
-				}
-
-				labels := map[string]string{label: ""}
 				serverList := &infrav1alpha1.OpenStackServerList{}
-				err = k8sClient.List(ctx, serverList, client.MatchingLabels(labels), client.InNamespace(obj.GetNamespace()))
-				if err != nil {
+				if err := k8sClient.List(ctx, serverList, client.InNamespace(obj.GetNamespace()), client.MatchingFields{imageRefPath: obj.GetName()}); err != nil {
 					log.Error(err, "listing OpenStackServers")
 					return nil
 				}
@@ -267,27 +275,6 @@ func (r *OpenStackServerReconciler) reconcileDelete(scope *scope.WithLogger, ope
 	return nil
 }
 
-func objToDependencyLabel(obj client.Object, scheme *runtime.Scheme) (string, error) {
-	gvk, err := objects.GetGVK(obj, scheme)
-	if err != nil {
-		return "", err
-	}
-
-	if gvk.Group != orcv1alpha1.SchemeGroupVersion.Group {
-		return "", fmt.Errorf("dependency object has unexpected group %s", gvk.Group)
-	}
-
-	var prefixType string
-	switch gvk.Kind {
-	case "Image":
-		prefixType = "image"
-	default:
-		return "", fmt.Errorf("dependency object has unexpected kind %s", gvk.Kind)
-	}
-
-	return "orc-dependency-" + prefixType + "/" + obj.GetName(), nil
-}
-
 func IsServerTerminalError(server *infrav1alpha1.OpenStackServer) bool {
 	if server.Status.InstanceState != nil && *server.Status.InstanceState == infrav1.InstanceStateError {
 		return true
@@ -310,31 +297,7 @@ func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, scope *
 		openStackServer.SetLabels(labels)
 	}
 
-	changed, dependencies, resolveDone, err := compute.ResolveServerSpec(ctx, scope, r.Client, openStackServer)
-
-	errs := make([]error, 0, len(dependencies)+1)
-	errs = append(errs, err)
-
-	// Add a dependency label for every object we depend on
-	// Set changed if we update any labels
-	// Collate all errors and return in a single transaction
-	for i := range dependencies {
-		errs = append(errs, func() error {
-			dependency := dependencies[i]
-			label, err := objToDependencyLabel(dependency, r.Client.Scheme())
-			if err != nil {
-				return err
-			}
-
-			if _, ok := labels[label]; !ok {
-				labels[label] = ""
-				changed = true
-			}
-			return nil
-		}())
-	}
-	err = errors.Join(errs...)
-
+	changed, resolveDone, err := compute.ResolveServerSpec(ctx, scope, r.Client, openStackServer)
 	if err != nil || !resolveDone {
 		return ctrl.Result{}, err
 	}

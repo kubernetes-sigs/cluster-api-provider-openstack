@@ -346,25 +346,25 @@ func (s *Service) getBlockDevices(eventObject runtime.Object, instanceSpec *Inst
 }
 
 // Helper function for getting image ID from name, ID, or tags.
-func (s *Service) GetImageID(ctx context.Context, k8sClient client.Client, namespace string, image infrav1.ImageParam) (*string, client.Object, error) {
+func (s *Service) GetImageID(ctx context.Context, k8sClient client.Client, namespace string, image infrav1.ImageParam) (*string, error) {
 	switch {
 	case image.ID != nil:
-		return image.ID, nil, nil
+		return image.ID, nil
 	case image.Filter != nil:
 		return s.getImageIDByFilter(image.Filter)
 	case image.ImageRef != nil:
 		return s.getImageIDByReference(ctx, k8sClient, namespace, image.ImageRef)
 	default:
 		// Should have been caught by validation
-		return nil, nil, errors.New("image id, filter, and reference are all nil")
+		return nil, errors.New("image id, filter, and reference are all nil")
 	}
 }
 
-func (s *Service) getImageIDByFilter(filter *infrav1.ImageFilter) (*string, client.Object, error) {
+func (s *Service) getImageIDByFilter(filter *infrav1.ImageFilter) (*string, error) {
 	listOpts := filterconvert.ImageFilterToListOpts(filter)
 	allImages, err := s.getImageClient().ListImages(listOpts)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	switch len(allImages) {
@@ -373,51 +373,48 @@ func (s *Service) getImageIDByFilter(filter *infrav1.ImageFilter) (*string, clie
 		if filter.Name != nil {
 			name = *filter.Name
 		}
-		return nil, nil, fmt.Errorf("no images were found with the given image filter: name=%v, tags=%v", name, filter.Tags)
+		return nil, fmt.Errorf("no images were found with the given image filter: name=%v, tags=%v", name, filter.Tags)
 	case 1:
-		return &allImages[0].ID, nil, nil
+		return &allImages[0].ID, nil
 	default:
 		// this should never happen
 		var name string
 		if filter.Name != nil {
 			name = *filter.Name
 		}
-		return nil, nil, fmt.Errorf("too many images were found with the given image filter: name=%v, tags=%v", name, filter.Tags)
+		return nil, fmt.Errorf("too many images were found with the given image filter: name=%v, tags=%v", name, filter.Tags)
 	}
 }
 
-func (s *Service) getImageIDByReference(ctx context.Context, k8sClient client.Client, namespace string, ref *infrav1.ResourceReference) (*string, client.Object, error) {
+func (s *Service) getImageIDByReference(ctx context.Context, k8sClient client.Client, namespace string, ref *infrav1.ResourceReference) (*string, error) {
 	orcImage := &orcv1alpha1.Image{}
 	err := k8sClient.Get(ctx, client.ObjectKey{
 		Namespace: namespace,
 		Name:      ref.Name,
 	}, orcImage)
 	if err != nil {
-		// If the object doesn't exist yet, we still need to return a hydrated reference to the object we're waiting on
+		// Not an error if it doesn't exist yet
 		if apierrors.IsNotFound(err) {
-			orcImage.SetName(ref.Name)
-			orcImage.SetNamespace(namespace)
-
-			return nil, orcImage, nil
+			return nil, nil
 		}
 
-		return nil, nil, err
+		return nil, err
 	}
 
 	if orcv1alpha1.IsAvailable(orcImage) {
-		return orcImage.Status.ID, orcImage, nil
+		return orcImage.Status.ID, nil
 	}
 
 	if !orcv1alpha1.IsReconciliationComplete(orcImage) {
-		return nil, orcImage, nil
+		return nil, nil
 	}
 
 	err = orcv1alpha1.GetTerminalError(orcImage)
 	if err != nil {
-		return nil, orcImage, capoerrors.Terminal(infrav1.DependencyFailedReason, orcImage.Kind+" "+orcImage.GetNamespace()+"/"+orcImage.GetName()+" failed: "+err.Error())
+		return nil, capoerrors.Terminal(infrav1.DependencyFailedReason, orcImage.Kind+" "+orcImage.GetNamespace()+"/"+orcImage.GetName()+" failed: "+err.Error())
 	}
 
-	return nil, orcImage, nil
+	return nil, nil
 }
 
 // GetManagementPort returns the port which is used for management and external
