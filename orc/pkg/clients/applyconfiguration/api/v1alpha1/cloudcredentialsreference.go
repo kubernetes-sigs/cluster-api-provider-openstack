@@ -21,8 +21,8 @@ package v1alpha1
 // CloudCredentialsReferenceApplyConfiguration represents an declarative configuration of the CloudCredentialsReference type for use
 // with apply.
 type CloudCredentialsReferenceApplyConfiguration struct {
-	Name      *string `json:"name,omitempty"`
-	CloudName *string `json:"cloudName,omitempty"`
+	SecretName *string `json:"secretName,omitempty"`
+	CloudName  *string `json:"cloudName,omitempty"`
 }
 
 // CloudCredentialsReferenceApplyConfiguration constructs an declarative configuration of the CloudCredentialsReference type for use with
@@ -31,11 +31,11 @@ func CloudCredentialsReference() *CloudCredentialsReferenceApplyConfiguration {
 	return &CloudCredentialsReferenceApplyConfiguration{}
 }
 
-// WithName sets the Name field in the declarative configuration to the given value
+// WithSecretName sets the SecretName field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Name field is set to the value of the last call.
-func (b *CloudCredentialsReferenceApplyConfiguration) WithName(value string) *CloudCredentialsReferenceApplyConfiguration {
-	b.Name = &value
+// If called multiple times, the SecretName field is set to the value of the last call.
+func (b *CloudCredentialsReferenceApplyConfiguration) WithSecretName(value string) *CloudCredentialsReferenceApplyConfiguration {
+	b.SecretName = &value
 	return b
 }
 

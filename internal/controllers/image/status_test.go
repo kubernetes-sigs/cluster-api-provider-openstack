@@ -174,8 +174,8 @@ func Test_orcImageReconciler_updateStatus(t *testing.T) {
 			},
 			wantStatus: func() *orcapplyconfigv1alpha1.ImageStatusApplyConfiguration {
 				return orcapplyconfigv1alpha1.ImageStatus().
-					WithImageID(imageID).
-					WithStatus(string(images.ImageStatusQueued))
+					WithResource(orcapplyconfigv1alpha1.ImageResourceStatus().
+						WithStatus(string(images.ImageStatusQueued)))
 			},
 			wantAvailable: func(now metav1.Time) *applyconfigv1.ConditionApplyConfiguration {
 				return applyconfigv1.Condition().
@@ -200,13 +200,13 @@ func Test_orcImageReconciler_updateStatus(t *testing.T) {
 			},
 			wantStatus: func() *orcapplyconfigv1alpha1.ImageStatusApplyConfiguration {
 				return orcapplyconfigv1alpha1.ImageStatus().
-					WithImageID(imageID).
-					WithStatus(string(images.ImageStatusActive)).
-					WithSizeB(testSize).
-					WithVirtualSizeB(testVirtualSize).
-					WithHash(orcapplyconfigv1alpha1.ImageHash().
-						WithAlgorithm("sha512").
-						WithValue(testSHA512value))
+					WithResource(orcapplyconfigv1alpha1.ImageResourceStatus().
+						WithStatus(string(images.ImageStatusActive)).
+						WithSizeB(testSize).
+						WithVirtualSizeB(testVirtualSize).
+						WithHash(orcapplyconfigv1alpha1.ImageHash().
+							WithAlgorithm("sha512").
+							WithValue(testSHA512value)))
 			},
 			wantAvailable: func(now metav1.Time) *applyconfigv1.ConditionApplyConfiguration {
 				return applyconfigv1.Condition().
@@ -231,13 +231,13 @@ func Test_orcImageReconciler_updateStatus(t *testing.T) {
 			},
 			wantStatus: func() *orcapplyconfigv1alpha1.ImageStatusApplyConfiguration {
 				return orcapplyconfigv1alpha1.ImageStatus().
-					WithImageID(imageID).
-					WithStatus(string(images.ImageStatusActive)).
-					WithSizeB(testSize).
-					WithVirtualSizeB(testVirtualSize).
-					WithHash(orcapplyconfigv1alpha1.ImageHash().
-						WithAlgorithm("sha512").
-						WithValue(testSHA512value))
+					WithResource(orcapplyconfigv1alpha1.ImageResourceStatus().
+						WithStatus(string(images.ImageStatusActive)).
+						WithSizeB(testSize).
+						WithVirtualSizeB(testVirtualSize).
+						WithHash(orcapplyconfigv1alpha1.ImageHash().
+							WithAlgorithm("sha512").
+							WithValue(testSHA512value)))
 			},
 			wantAvailable: func(now metav1.Time) *applyconfigv1.ConditionApplyConfiguration {
 				return applyconfigv1.Condition().
@@ -284,13 +284,13 @@ func Test_orcImageReconciler_updateStatus(t *testing.T) {
 			},
 			wantStatus: func() *orcapplyconfigv1alpha1.ImageStatusApplyConfiguration {
 				return orcapplyconfigv1alpha1.ImageStatus().
-					WithImageID(imageID).
-					WithStatus(string(images.ImageStatusActive)).
-					WithSizeB(testSize).
-					WithVirtualSizeB(testVirtualSize).
-					WithHash(orcapplyconfigv1alpha1.ImageHash().
-						WithAlgorithm("sha512").
-						WithValue(testSHA512value))
+					WithResource(orcapplyconfigv1alpha1.ImageResourceStatus().
+						WithStatus(string(images.ImageStatusActive)).
+						WithSizeB(testSize).
+						WithVirtualSizeB(testVirtualSize).
+						WithHash(orcapplyconfigv1alpha1.ImageHash().
+							WithAlgorithm("sha512").
+							WithValue(testSHA512value)))
 			},
 			wantAvailable: func(now metav1.Time) *applyconfigv1.ConditionApplyConfiguration {
 				// LastTransitionTime should be copied from previous condition

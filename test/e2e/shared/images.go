@@ -254,20 +254,21 @@ func generateORCImage(e2eCtx *E2EContext, name, glanceName, url string, download
 
 	applyConfig := orcapplyconfigv1alpha1.Image(name, imageNamespace).
 		WithSpec(orcapplyconfigv1alpha1.ImageSpec().
-			WithImageName(glanceName).
-			WithTags(E2EImageTag).
+			WithResource(orcapplyconfigv1alpha1.ImageResourceSpec().
+				WithName(glanceName).
+				WithTags(E2EImageTag).
+				WithContent(orcapplyconfigv1alpha1.ImageContent().
+					WithContainerFormat(orcv1alpha1.ImageContainerFormatBare).
+					WithDiskFormat(orcv1alpha1.ImageDiskFormatQCOW2).
+					WithSourceType(orcv1alpha1.ImageSourceTypeURL).
+					WithSourceURL(orcapplyconfigv1alpha1.ImageContentSourceURL().
+						WithURL(url)))).
 			WithCloudCredentialsRef(orcapplyconfigv1alpha1.CloudCredentialsReference().
-				WithName(credentialsSecretName).
-				WithCloudName(e2eCtx.E2EConfig.GetVariable("OPENSTACK_CLOUD"))).
-			WithContent(orcapplyconfigv1alpha1.ImageContent().
-				WithContainerFormat(orcv1alpha1.ImageContainerFormatBare).
-				WithDiskFormat(orcv1alpha1.ImageDiskFormatQCOW2).
-				WithSourceType(orcv1alpha1.ImageSourceTypeURL).
-				WithSourceURL(orcapplyconfigv1alpha1.ImageContentSourceURL().
-					WithURL(url))))
+				WithSecretName(credentialsSecretName).
+				WithCloudName(e2eCtx.E2EConfig.GetVariable("OPENSTACK_CLOUD"))))
 
 	if downloadHash != nil {
-		applyConfig.Spec.Content.SourceURL.
+		applyConfig.Spec.Resource.Content.SourceURL.
 			WithDownloadHash(orcapplyconfigv1alpha1.ImageHash().
 				WithAlgorithm(downloadHash.Algorithm).
 				WithValue(downloadHash.Value))

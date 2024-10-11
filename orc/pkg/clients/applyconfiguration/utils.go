@@ -31,24 +31,32 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 	// Group=openstack.k-orc.cloud, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithKind("CloudCredentialsReference"):
 		return &apiv1alpha1.CloudCredentialsReferenceApplyConfiguration{}
-	case v1alpha1.SchemeGroupVersion.WithKind("ControllerOptions"):
-		return &apiv1alpha1.ControllerOptionsApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("Image"):
 		return &apiv1alpha1.ImageApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ImageContent"):
 		return &apiv1alpha1.ImageContentApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ImageContentSourceURL"):
 		return &apiv1alpha1.ImageContentSourceURLApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ImageFilter"):
+		return &apiv1alpha1.ImageFilterApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ImageHash"):
 		return &apiv1alpha1.ImageHashApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ImageImport"):
+		return &apiv1alpha1.ImageImportApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ImageProperties"):
 		return &apiv1alpha1.ImagePropertiesApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ImagePropertiesHardware"):
 		return &apiv1alpha1.ImagePropertiesHardwareApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ImageResourceSpec"):
+		return &apiv1alpha1.ImageResourceSpecApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ImageResourceStatus"):
+		return &apiv1alpha1.ImageResourceStatusApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ImageSpec"):
 		return &apiv1alpha1.ImageSpecApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ImageStatus"):
 		return &apiv1alpha1.ImageStatusApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ManagedOptions"):
+		return &apiv1alpha1.ManagedOptionsApplyConfiguration{}
 
 	}
 	return nil

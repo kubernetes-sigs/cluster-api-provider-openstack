@@ -33,7 +33,7 @@ func (o orcIdentityRefProvider) GetIdentityRef() (*string, *infrav1.OpenStackIde
 	}
 
 	return namespace, &infrav1.OpenStackIdentityReference{
-		Name:      openStackCredentialsRef.Name,
+		Name:      openStackCredentialsRef.SecretName,
 		CloudName: openStackCredentialsRef.CloudName,
 	}
 }

@@ -30,16 +30,20 @@ import (
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
 		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.CloudCredentialsReference": schema_k_orc_openstack_resource_controller_api_v1alpha1_CloudCredentialsReference(ref),
-		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ControllerOptions":         schema_k_orc_openstack_resource_controller_api_v1alpha1_ControllerOptions(ref),
 		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.Image":                     schema_k_orc_openstack_resource_controller_api_v1alpha1_Image(ref),
 		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageContent":              schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageContent(ref),
 		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageContentSourceURL":     schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageContentSourceURL(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageFilter":               schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageFilter(ref),
 		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageHash":                 schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageHash(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageImport":               schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageImport(ref),
 		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageList":                 schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageList(ref),
 		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageProperties":           schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageProperties(ref),
 		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImagePropertiesHardware":   schema_k_orc_openstack_resource_controller_api_v1alpha1_ImagePropertiesHardware(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageResourceSpec":         schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageResourceSpec(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageResourceStatus":       schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageResourceStatus(ref),
 		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageSpec":                 schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageSpec(ref),
 		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageStatus":               schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageStatus(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ManagedOptions":            schema_k_orc_openstack_resource_controller_api_v1alpha1_ManagedOptions(ref),
 		"k8s.io/api/core/v1.AWSElasticBlockStoreVolumeSource":                                   schema_k8sio_api_core_v1_AWSElasticBlockStoreVolumeSource(ref),
 		"k8s.io/api/core/v1.Affinity":                                    schema_k8sio_api_core_v1_Affinity(ref),
 		"k8s.io/api/core/v1.AppArmorProfile":                             schema_k8sio_api_core_v1_AppArmorProfile(ref),
@@ -326,9 +330,9 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_CloudCredentialsRef
 				Description: "CloudCredentialsReference is a reference to a secret containing OpenStack credentials.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"name": {
+					"secretName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Name is the name of a secret in the same namespace as the resource being provisioned. The secret must contain a key named `clouds.yaml` which contains an OpenStack clouds.yaml file. The secret may optionally contain a key named `cacert` containing a PEM-encoded CA certificate.",
+							Description: "SecretName is the name of a secret in the same namespace as the resource being provisioned. The secret must contain a key named `clouds.yaml` which contains an OpenStack clouds.yaml file. The secret may optionally contain a key named `cacert` containing a PEM-encoded CA certificate.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -343,33 +347,7 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_CloudCredentialsRef
 						},
 					},
 				},
-				Required: []string{"name", "cloudName"},
-			},
-		},
-	}
-}
-
-func schema_k_orc_openstack_resource_controller_api_v1alpha1_ControllerOptions(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"onCreate": {
-						SchemaProps: spec.SchemaProps{
-							Description: "OnCreate defines the controller's behaviour when creating a resource. If not specified, the default is AdoptOrCreate.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"onDelete": {
-						SchemaProps: spec.SchemaProps{
-							Description: "OnDelete defines the controller's behaviour when deleting a resource. If not specified, the default is Delete.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-				},
+				Required: []string{"secretName", "cloudName"},
 			},
 		},
 	}
@@ -432,7 +410,6 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageContent(ref co
 					"containerFormat": {
 						SchemaProps: spec.SchemaProps{
 							Description: "ContainerFormat is the format of the image container. qcow2 and raw images do not usually have a container. This is specified as \"bare\", which is also the default. Permitted values are ami, ari, aki, bare, ovf, ova, and docker.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -460,7 +437,21 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageContent(ref co
 						},
 					},
 				},
-				Required: []string{"containerFormat", "diskFormat", "sourceType"},
+				Required: []string{"diskFormat", "sourceType"},
+			},
+			VendorExtensible: spec.VendorExtensible{
+				Extensions: spec.Extensions{
+					"x-kubernetes-unions": []interface{}{
+						map[string]interface{}{
+							"discriminator": "sourceType",
+							"fields-to-discriminateBy": map[string]interface{}{
+								"containerFormat": "ContainerFormat",
+								"diskFormat":      "DiskFormat",
+								"sourceURL":       "SourceURL",
+							},
+						},
+					},
+				},
 			},
 		},
 		Dependencies: []string{
@@ -484,14 +475,14 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageContentSourceU
 					},
 					"decompress": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Decompress specifies that the source data must be decompressed with the given compression algorithm before being stored. Specifying Decompress will disable the use of Glance's web-download, as web-download cannot currently deterministically decompress downloaded content.",
+							Description: "Decompress specifies that the source data must be decompressed with the given compression algorithm before being stored. Specifying Decompress will disable the use of glance's web-download, as web-download cannot currently deterministically decompress downloaded content.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"downloadHash": {
 						SchemaProps: spec.SchemaProps{
-							Description: "DownloadHash is a hash which will be used to verify downloaded data, i.e. before any decompression. If not specified, no hash verification will be performed. Specifying a DownloadHash will disable the use of Glance's web-download, as web-download cannot currently deterministically verify the hash of downloaded content.",
+							Description: "DownloadHash is a hash which will be used to verify downloaded data, i.e. before any decompression. If not specified, no hash verification will be performed. Specifying a DownloadHash will disable the use of glance's web-download, as web-download cannot currently deterministically verify the hash of downloaded content.",
 							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageHash"),
 						},
 					},
@@ -501,6 +492,26 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageContentSourceU
 		},
 		Dependencies: []string{
 			"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageHash"},
+	}
+}
+
+func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageFilter(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ImageFilter defines a glance query",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name specifies the name of a glance image",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -530,6 +541,34 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageHash(ref commo
 				Required: []string{"algorithm", "value"},
 			},
 		},
+	}
+}
+
+func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageImport(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ImageImport specifies an existing image which will be imported instead of creating a new image",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"id": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ID contains the unique identifier of an existing glance image. Note that when specifying an image import by ID, the image MUST already exist. The Image will enter an error state if the image does not exist.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"filter": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Filter contains an image query which is expected to return a single result. The controller will continue to retry if filter returns no results. If filter returns multiple results the controller will set an error state and will not continue to retry.",
+							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageFilter"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageFilter"},
 	}
 }
 
@@ -691,16 +730,16 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImagePropertiesHard
 	}
 }
 
-func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageResourceSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ImageSpec defines the desired state of an Image.",
+				Description: "ImageResourceSpec contains the desired state of a glance image",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"imageName": {
+					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ImageName will be the name of the created Glance image. If not specified, the name of the Image object will be used.",
+							Description: "Name will be the name of the created glance image. If not specified, the name of the Image object will be used.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -747,14 +786,90 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageSpec(ref commo
 					},
 					"content": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Content specifies how to obtain the image content. Must be set if ControllerOptions.OnCreate is AdoptOrCreate. Must not be set if ControllerOptions.OnCreate is Adopt.",
+							Description: "Content specifies how to obtain the image content.",
 							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageContent"),
 						},
 					},
-					"controllerOptions": {
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageContent", "github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageProperties"},
+	}
+}
+
+func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageResourceStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ImageResourceStatus represents the observed state of a glance image",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"status": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ControllerOptions are options which control the behaviour of the resource controller.",
-							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.ControllerOptions"),
+							Description: "Status is the image status as reported by glance",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"hash": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Hash is the hash of the image data published by glance. Note that this is a hash of the data stored internally by glance, which will have been decompressed and potentially format converted depending on server-side configuration which is not visible to clients. It is expected that this hash will usually differ from the download hash.",
+							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageHash"),
+						},
+					},
+					"sizeB": {
+						SchemaProps: spec.SchemaProps{
+							Description: "SizeB is the size of the image data, in bytes",
+							Type:        []string{"integer"},
+							Format:      "int64",
+						},
+					},
+					"virtualSizeB": {
+						SchemaProps: spec.SchemaProps{
+							Description: "VirtualSizeB is the size of the disk the image data represents, in bytes",
+							Type:        []string{"integer"},
+							Format:      "int64",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageHash"},
+	}
+}
+
+func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ImageSpec defines the desired state of an Image.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"import": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Import refers to an existing image which will be imported instead of creating a new image.",
+							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageImport"),
+						},
+					},
+					"resource": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Resource specifies the desired state of the glance image.\n\nResource may not be specified if the management policy is `unmanaged`.\n\nResource must be specified when the management policy is `managed`.",
+							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageResourceSpec"),
+						},
+					},
+					"managementPolicy": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ManagementPolicy defines how ORC will treat the object. Valid values are `managed`: ORC will create, update, and delete the resource; `unmanaged`: ORC will import an existing image, and will not apply updates to it or delete it.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"managedOptions": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ManagedOptions specifies options which may be applied to managed objects.",
+							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.ManagedOptions"),
 						},
 					},
 					"cloudCredentialsRef": {
@@ -769,7 +884,7 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageSpec(ref commo
 			},
 		},
 		Dependencies: []string{
-			"github.com/k-orc/openstack-resource-controller/api/v1alpha1.CloudCredentialsReference", "github.com/k-orc/openstack-resource-controller/api/v1alpha1.ControllerOptions", "github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageContent", "github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageProperties"},
+			"github.com/k-orc/openstack-resource-controller/api/v1alpha1.CloudCredentialsReference", "github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageImport", "github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageResourceSpec", "github.com/k-orc/openstack-resource-controller/api/v1alpha1.ManagedOptions"},
 	}
 }
 
@@ -792,7 +907,7 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageStatus(ref com
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Conditions represents the observed status of the object. Known .status.conditions.type are: \"Available\", \"Progressing\", \"Failed\"\n\nAvailable represents the availability of the glance image. If it is true then the image is ready for use in glance, and its hash has been verified.\n\nProgressing indicates that reconciliation is in progress. It may not be in progress either because reconciliation was completed successfully, or because an error was encountered that cannot be retried.\n\nFailed indicates that reconciliation was not successful, and further reconciliation is not possible.",
+							Description: "Conditions represents the observed status of the object. Known .status.conditions.type are: \"Available\", \"Progressing\"\n\nAvailable represents the availability of the glance image. If it is true then the image is ready for use in glance, and its hash has been verified.\n\nProgressing indicates the state of the glance image does not currently reflect the desired state, but that reconciliation is progressing. Progressing will be False either because the desired state has been achieved, or some terminal error prevents it from being achieved and the controller is no longer attempting to reconcile.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -804,6 +919,19 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageStatus(ref com
 							},
 						},
 					},
+					"id": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ID is the unique identifier of the glance image",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"resource": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Resource contains the observed state of the glance image",
+							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageResourceStatus"),
+						},
+					},
 					"downloadAttempts": {
 						SchemaProps: spec.SchemaProps{
 							Description: "DownloadAttempts is the number of times the controller has attempted to download the image contents",
@@ -811,45 +939,30 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageStatus(ref com
 							Format:      "int32",
 						},
 					},
-					"imageID": {
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageResourceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.Condition"},
+	}
+}
+
+func schema_k_orc_openstack_resource_controller_api_v1alpha1_ManagedOptions(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"onDelete": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ImageID is the UUID of the glance image",
+							Description: "OnDelete specifies the behaviour of the controller when the ORC object is deleted. Options are `delete` - delete the OpenStack resource; `detach` - do not delete the OpenStack resource. If not specified, the default is `delete`.",
 							Type:        []string{"string"},
 							Format:      "",
-						},
-					},
-					"status": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Status is the image status as reported by glance",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"hash": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Hash is the hash of the image data published by glance",
-							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageHash"),
-						},
-					},
-					"sizeB": {
-						SchemaProps: spec.SchemaProps{
-							Description: "SizeB is the size of the image data, in bytes",
-							Type:        []string{"integer"},
-							Format:      "int64",
-						},
-					},
-					"virtualSizeB": {
-						SchemaProps: spec.SchemaProps{
-							Description: "VirtualSizeB is the size of the disk the image data represents, in bytes",
-							Type:        []string{"integer"},
-							Format:      "int64",
 						},
 					},
 				},
 			},
 		},
-		Dependencies: []string{
-			"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageHash", "k8s.io/apimachinery/pkg/apis/meta/v1.Condition"},
 	}
 }
 
