@@ -260,16 +260,15 @@ func generateORCImage(e2eCtx *E2EContext, name, glanceName, url string, download
 				WithContent(orcapplyconfigv1alpha1.ImageContent().
 					WithContainerFormat(orcv1alpha1.ImageContainerFormatBare).
 					WithDiskFormat(orcv1alpha1.ImageDiskFormatQCOW2).
-					WithSourceType(orcv1alpha1.ImageSourceTypeURL).
-					WithSourceURL(orcapplyconfigv1alpha1.ImageContentSourceURL().
+					WithDownload(orcapplyconfigv1alpha1.ImageContentSourceDownload().
 						WithURL(url)))).
 			WithCloudCredentialsRef(orcapplyconfigv1alpha1.CloudCredentialsReference().
 				WithSecretName(credentialsSecretName).
 				WithCloudName(e2eCtx.E2EConfig.GetVariable("OPENSTACK_CLOUD"))))
 
 	if downloadHash != nil {
-		applyConfig.Spec.Resource.Content.SourceURL.
-			WithDownloadHash(orcapplyconfigv1alpha1.ImageHash().
+		applyConfig.Spec.Resource.Content.Download.
+			WithHash(orcapplyconfigv1alpha1.ImageHash().
 				WithAlgorithm(downloadHash.Algorithm).
 				WithValue(downloadHash.Value))
 	}

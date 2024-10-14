@@ -192,11 +192,10 @@ var _ = Describe("Upload tests", Ordered, func() {
 				Content: &orcv1alpha1.ImageContent{
 					ContainerFormat: orcv1alpha1.ImageContainerFormatBare,
 					DiskFormat:      orcv1alpha1.ImageDiskFormatRaw,
-					SourceType:      orcv1alpha1.ImageSourceTypeURL,
-					SourceURL: &orcv1alpha1.ImageContentSourceURL{
-						URL:          "http://" + fileServeAddr + "/" + imageName,
-						Decompress:   opts.compression,
-						DownloadHash: opts.downloadHash,
+					Download: &orcv1alpha1.ImageContentSourceDownload{
+						URL:        "http://" + fileServeAddr + "/" + imageName,
+						Decompress: opts.compression,
+						Hash:       opts.downloadHash,
 					},
 				},
 			},

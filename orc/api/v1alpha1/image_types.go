@@ -214,16 +214,6 @@ const (
 	ImageCompressionBZ2 ImageCompression = "bz2"
 )
 
-// +kubebuilder:validation:Enum:=URL
-type ImageContentSourceType string
-
-const (
-	ImageSourceTypeURL ImageContentSourceType = "URL"
-)
-
-// ImageContent specifies the source of image data
-// +kubebuilder:validation:XValidation:rule="has(self.sourceType) && self.sourceType == 'URL' ?  has(self.sourceURL) : !has(self.sourceURL)",message="sourceURL is required when sourceType is URL, and forbidden otherwise"
-// +union
 type ImageContent struct {
 	// ContainerFormat is the format of the image container.
 	// qcow2 and raw images do not usually have a container. This is specified as "bare", which is also the default.
@@ -239,19 +229,14 @@ type ImageContent struct {
 	// +kubebuilder:validation:Required
 	DiskFormat ImageDiskFormat `json:"diskFormat"`
 
-	// SourceType is the type of the image content source
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="sourceType is immutable"
-	// +kubebuilder:validation:Required
-	// +unionDiscriminator
-	SourceType ImageContentSourceType `json:"sourceType"`
-
-	// SourceURL describes how to obtain image data by downloading it from a SourceURL. Must be set if Type is 'url'
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="sourceURL is immutable"
+	// Download describes how to obtain image data by downloading it from a URL.
+	// Must be set when creating a managed image.
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="download is immutable"
 	// +unionMember
-	SourceURL *ImageContentSourceURL `json:"sourceURL,omitempty"`
+	Download *ImageContentSourceDownload `json:"download,omitempty"`
 }
 
-type ImageContentSourceURL struct {
+type ImageContentSourceDownload struct {
 	// URL containing image data
 	// +kubebuilder:validation:Format=uri
 	// +kubebuilder:validation:Required
@@ -264,14 +249,14 @@ type ImageContentSourceURL struct {
 	// +optional
 	Decompress *ImageCompression `json:"decompress,omitempty"`
 
-	// DownloadHash is a hash which will be used to verify downloaded data, i.e.
+	// Hash is a hash which will be used to verify downloaded data, i.e.
 	// before any decompression. If not specified, no hash verification will be
-	// performed. Specifying a DownloadHash will disable the use of glance's
+	// performed. Specifying a Hash will disable the use of glance's
 	// web-download, as web-download cannot currently deterministically verify
 	// the hash of downloaded content.
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="downloadHash is immutable"
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="hash is immutable"
 	// +optional
-	DownloadHash *ImageHash `json:"downloadHash,omitempty"`
+	Hash *ImageHash `json:"hash,omitempty"`
 }
 
 type ImageHash struct {

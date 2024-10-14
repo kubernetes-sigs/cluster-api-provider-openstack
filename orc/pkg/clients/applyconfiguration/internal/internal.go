@@ -81,29 +81,16 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         scalar: string
       default: ""
-    - name: sourceType
+    - name: download
       type:
-        scalar: string
-      default: ""
-    - name: sourceURL
-      type:
-        namedType: com.github.k-orc.openstack-resource-controller.api.v1alpha1.ImageContentSourceURL
-    unions:
-    - discriminator: sourceType
-      fields:
-      - fieldName: containerFormat
-        discriminatorValue: ContainerFormat
-      - fieldName: diskFormat
-        discriminatorValue: DiskFormat
-      - fieldName: sourceURL
-        discriminatorValue: SourceURL
-- name: com.github.k-orc.openstack-resource-controller.api.v1alpha1.ImageContentSourceURL
+        namedType: com.github.k-orc.openstack-resource-controller.api.v1alpha1.ImageContentSourceDownload
+- name: com.github.k-orc.openstack-resource-controller.api.v1alpha1.ImageContentSourceDownload
   map:
     fields:
     - name: decompress
       type:
         scalar: string
-    - name: downloadHash
+    - name: hash
       type:
         namedType: com.github.k-orc.openstack-resource-controller.api.v1alpha1.ImageHash
     - name: url

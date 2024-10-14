@@ -29,22 +29,22 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.CloudCredentialsReference": schema_k_orc_openstack_resource_controller_api_v1alpha1_CloudCredentialsReference(ref),
-		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.Image":                     schema_k_orc_openstack_resource_controller_api_v1alpha1_Image(ref),
-		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageContent":              schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageContent(ref),
-		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageContentSourceURL":     schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageContentSourceURL(ref),
-		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageFilter":               schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageFilter(ref),
-		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageHash":                 schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageHash(ref),
-		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageImport":               schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageImport(ref),
-		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageList":                 schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageList(ref),
-		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageProperties":           schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageProperties(ref),
-		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImagePropertiesHardware":   schema_k_orc_openstack_resource_controller_api_v1alpha1_ImagePropertiesHardware(ref),
-		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageResourceSpec":         schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageResourceSpec(ref),
-		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageResourceStatus":       schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageResourceStatus(ref),
-		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageSpec":                 schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageSpec(ref),
-		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageStatus":               schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageStatus(ref),
-		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ManagedOptions":            schema_k_orc_openstack_resource_controller_api_v1alpha1_ManagedOptions(ref),
-		"k8s.io/api/core/v1.AWSElasticBlockStoreVolumeSource":                                   schema_k8sio_api_core_v1_AWSElasticBlockStoreVolumeSource(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.CloudCredentialsReference":  schema_k_orc_openstack_resource_controller_api_v1alpha1_CloudCredentialsReference(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.Image":                      schema_k_orc_openstack_resource_controller_api_v1alpha1_Image(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageContent":               schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageContent(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageContentSourceDownload": schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageContentSourceDownload(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageFilter":                schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageFilter(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageHash":                  schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageHash(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageImport":                schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageImport(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageList":                  schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageList(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageProperties":            schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageProperties(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImagePropertiesHardware":    schema_k_orc_openstack_resource_controller_api_v1alpha1_ImagePropertiesHardware(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageResourceSpec":          schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageResourceSpec(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageResourceStatus":        schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageResourceStatus(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageSpec":                  schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageSpec(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageStatus":                schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageStatus(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ManagedOptions":             schema_k_orc_openstack_resource_controller_api_v1alpha1_ManagedOptions(ref),
+		"k8s.io/api/core/v1.AWSElasticBlockStoreVolumeSource":                                    schema_k8sio_api_core_v1_AWSElasticBlockStoreVolumeSource(ref),
 		"k8s.io/api/core/v1.Affinity":                                    schema_k8sio_api_core_v1_Affinity(ref),
 		"k8s.io/api/core/v1.AppArmorProfile":                             schema_k8sio_api_core_v1_AppArmorProfile(ref),
 		"k8s.io/api/core/v1.AttachedVolume":                              schema_k8sio_api_core_v1_AttachedVolume(ref),
@@ -404,8 +404,7 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageContent(ref co
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ImageContent specifies the source of image data",
-				Type:        []string{"object"},
+				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
 					"containerFormat": {
 						SchemaProps: spec.SchemaProps{
@@ -422,44 +421,22 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageContent(ref co
 							Format:      "",
 						},
 					},
-					"sourceType": {
+					"download": {
 						SchemaProps: spec.SchemaProps{
-							Description: "SourceType is the type of the image content source",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"sourceURL": {
-						SchemaProps: spec.SchemaProps{
-							Description: "SourceURL describes how to obtain image data by downloading it from a SourceURL. Must be set if Type is 'url'",
-							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageContentSourceURL"),
+							Description: "Download describes how to obtain image data by downloading it from a URL. Must be set when creating a managed image.",
+							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageContentSourceDownload"),
 						},
 					},
 				},
-				Required: []string{"diskFormat", "sourceType"},
-			},
-			VendorExtensible: spec.VendorExtensible{
-				Extensions: spec.Extensions{
-					"x-kubernetes-unions": []interface{}{
-						map[string]interface{}{
-							"discriminator": "sourceType",
-							"fields-to-discriminateBy": map[string]interface{}{
-								"containerFormat": "ContainerFormat",
-								"diskFormat":      "DiskFormat",
-								"sourceURL":       "SourceURL",
-							},
-						},
-					},
-				},
+				Required: []string{"diskFormat"},
 			},
 		},
 		Dependencies: []string{
-			"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageContentSourceURL"},
+			"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageContentSourceDownload"},
 	}
 }
 
-func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageContentSourceURL(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageContentSourceDownload(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -480,9 +457,9 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageContentSourceU
 							Format:      "",
 						},
 					},
-					"downloadHash": {
+					"hash": {
 						SchemaProps: spec.SchemaProps{
-							Description: "DownloadHash is a hash which will be used to verify downloaded data, i.e. before any decompression. If not specified, no hash verification will be performed. Specifying a DownloadHash will disable the use of glance's web-download, as web-download cannot currently deterministically verify the hash of downloaded content.",
+							Description: "Hash is a hash which will be used to verify downloaded data, i.e. before any decompression. If not specified, no hash verification will be performed. Specifying a Hash will disable the use of glance's web-download, as web-download cannot currently deterministically verify the hash of downloaded content.",
 							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageHash"),
 						},
 					},

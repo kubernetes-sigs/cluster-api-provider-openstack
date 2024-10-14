@@ -35,8 +35,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apiv1alpha1.ImageApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ImageContent"):
 		return &apiv1alpha1.ImageContentApplyConfiguration{}
-	case v1alpha1.SchemeGroupVersion.WithKind("ImageContentSourceURL"):
-		return &apiv1alpha1.ImageContentSourceURLApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ImageContentSourceDownload"):
+		return &apiv1alpha1.ImageContentSourceDownloadApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ImageFilter"):
 		return &apiv1alpha1.ImageFilterApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ImageHash"):
