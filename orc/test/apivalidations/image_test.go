@@ -53,8 +53,7 @@ var _ = Describe("ORC Image API validations", func() {
 			WithContent(applyconfigv1alpha1.ImageContent().
 				WithContainerFormat(orcv1alpha1.ImageContainerFormatBare).
 				WithDiskFormat(orcv1alpha1.ImageDiskFormatQCOW2).
-				WithSourceType(orcv1alpha1.ImageSourceTypeURL).
-				WithSourceURL(applyconfigv1alpha1.ImageContentSourceURL().
+				WithDownload(applyconfigv1alpha1.ImageContentSourceDownload().
 					WithURL("https://example.com/example.img")))
 
 	}
@@ -91,8 +90,7 @@ var _ = Describe("ORC Image API validations", func() {
 		image.Spec.Resource = &orcv1alpha1.ImageResourceSpec{
 			Content: &orcv1alpha1.ImageContent{
 				DiskFormat: orcv1alpha1.ImageDiskFormatQCOW2,
-				SourceType: orcv1alpha1.ImageSourceTypeURL,
-				SourceURL: &orcv1alpha1.ImageContentSourceURL{
+				Download: &orcv1alpha1.ImageContentSourceDownload{
 					URL: "https://example.com/example.img",
 				},
 			},
@@ -290,14 +288,12 @@ var _ = Describe("ORC Image API validations", func() {
 		Entry("content", func(spec *applyconfigv1alpha1.ImageSpecApplyConfiguration) {
 			spec.Resource.WithContent(applyconfigv1alpha1.ImageContent().
 				WithDiskFormat("qcow2").
-				WithSourceType(orcv1alpha1.ImageSourceTypeURL).
-				WithSourceURL(applyconfigv1alpha1.ImageContentSourceURL().
+				WithDownload(applyconfigv1alpha1.ImageContentSourceDownload().
 					WithURL("https://example.com/image1.img")))
 		}, func(spec *applyconfigv1alpha1.ImageSpecApplyConfiguration) {
 			spec.Resource.WithContent(applyconfigv1alpha1.ImageContent().
 				WithDiskFormat("qcow2").
-				WithSourceType(orcv1alpha1.ImageSourceTypeURL).
-				WithSourceURL(applyconfigv1alpha1.ImageContentSourceURL().
+				WithDownload(applyconfigv1alpha1.ImageContentSourceDownload().
 					WithURL("https://example.com/image2.img")))
 		}),
 	)

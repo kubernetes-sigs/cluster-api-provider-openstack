@@ -63,8 +63,8 @@ func (r *orcImageReconciler) canWebDownload(ctx context.Context, orcImage *orcv1
 		return false, err
 	}
 
-	urlSource := content.SourceURL
-	if urlSource == nil {
+	download := content.Download
+	if download == nil {
 		debugLog("not type URL")
 		return false, nil
 	}
@@ -73,7 +73,7 @@ func (r *orcImageReconciler) canWebDownload(ctx context.Context, orcImage *orcv1
 	// Glance can be configured to do automatic decompression of imported
 	// images, but there's no way to determine if it is enabled so it can't
 	// be safely used.
-	if urlSource.Decompress != nil {
+	if download.Decompress != nil {
 		debugLog("web-download does not support decompression")
 		return false, nil
 	}
@@ -89,7 +89,7 @@ func (r *orcImageReconciler) canWebDownload(ctx context.Context, orcImage *orcv1
 	//   determine, if the hash we have doesn't match the algorithm configured
 	//   server-side in glance, which is also not exposed via the API, we
 	//   can't verify it anyway.
-	if urlSource.DownloadHash != nil {
+	if download.Hash != nil {
 		debugLog("web-download does not support hash verification")
 		return false, nil
 	}
@@ -125,6 +125,6 @@ func (r *orcImageReconciler) webDownload(ctx context.Context, orcImage *orcv1alp
 
 	return imageClient.CreateImport(ctx, glanceImage.ID, &imageimport.CreateOpts{
 		Name: imageimport.WebDownloadMethod,
-		URI:  content.SourceURL.URL,
+		URI:  content.Download.URL,
 	})
 }

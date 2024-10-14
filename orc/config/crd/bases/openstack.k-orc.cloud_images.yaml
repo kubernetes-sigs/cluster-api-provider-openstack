@@ -186,18 +186,10 @@ spec:
                         x-kubernetes-validations:
                         - message: diskFormat is immutable
                           rule: self == oldSelf
-                      sourceType:
-                        description: SourceType is the type of the image content source
-                        enum:
-                        - URL
-                        type: string
-                        x-kubernetes-validations:
-                        - message: sourceType is immutable
-                          rule: self == oldSelf
-                      sourceURL:
-                        description: SourceURL describes how to obtain image data
-                          by downloading it from a SourceURL. Must be set if Type
-                          is 'url'
+                      download:
+                        description: |-
+                          Download describes how to obtain image data by downloading it from a URL.
+                          Must be set when creating a managed image.
                         properties:
                           decompress:
                             description: |-
@@ -210,11 +202,11 @@ spec:
                             - gz
                             - bz2
                             type: string
-                          downloadHash:
+                          hash:
                             description: |-
-                              DownloadHash is a hash which will be used to verify downloaded data, i.e.
+                              Hash is a hash which will be used to verify downloaded data, i.e.
                               before any decompression. If not specified, no hash verification will be
-                              performed. Specifying a DownloadHash will disable the use of glance's
+                              performed. Specifying a Hash will disable the use of glance's
                               web-download, as web-download cannot currently deterministically verify
                               the hash of downloaded content.
                             properties:
@@ -240,7 +232,7 @@ spec:
                             - value
                             type: object
                             x-kubernetes-validations:
-                            - message: downloadHash is immutable
+                            - message: hash is immutable
                               rule: self == oldSelf
                           url:
                             description: URL containing image data
@@ -250,19 +242,14 @@ spec:
                         - url
                         type: object
                         x-kubernetes-validations:
-                        - message: sourceURL is immutable
+                        - message: download is immutable
                           rule: self == oldSelf
                     required:
                     - diskFormat
-                    - sourceType
                     type: object
                     x-kubernetes-validations:
                     - message: content is immutable
                       rule: self == oldSelf
-                    - message: sourceURL is required when sourceType is URL, and forbidden
-                        otherwise
-                      rule: 'has(self.sourceType) && self.sourceType == ''URL'' ?  has(self.sourceURL)
-                        : !has(self.sourceURL)'
                   name:
                     description: |-
                       Name will be the name of the created glance image. If not specified, the
