@@ -32,9 +32,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	orcv1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
-
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
+	"github.com/k-orc/openstack-resource-controller/internal/osclients/mock"
+	"github.com/k-orc/openstack-resource-controller/internal/scope"
 )
 
 type serveFileHandler string
@@ -142,7 +141,7 @@ var _ = Describe("Upload tests", Ordered, func() {
 		}
 
 		DeferCleanup(func() {
-			server.Close()
+			_ = server.Close()
 			done()
 		})
 
@@ -188,15 +187,20 @@ var _ = Describe("Upload tests", Ordered, func() {
 		orcImage.SetName("test-image")
 		orcImage.SetNamespace(namespace.GetName())
 		orcImage.Spec = orcv1alpha1.ImageSpec{
-			Content: &orcv1alpha1.ImageContent{
-				ContainerFormat: orcv1alpha1.ImageContainerFormatBare,
-				DiskFormat:      orcv1alpha1.ImageDiskFormatRaw,
-				SourceType:      orcv1alpha1.ImageSourceTypeURL,
-				SourceURL: &orcv1alpha1.ImageContentSourceURL{
-					URL:          "http://" + fileServeAddr + "/" + imageName,
-					Decompress:   opts.compression,
-					DownloadHash: opts.downloadHash,
+			Resource: &orcv1alpha1.ImageResourceSpec{
+				Content: &orcv1alpha1.ImageContent{
+					ContainerFormat: orcv1alpha1.ImageContainerFormatBare,
+					DiskFormat:      orcv1alpha1.ImageDiskFormatRaw,
+					Download: &orcv1alpha1.ImageContentSourceDownload{
+						URL:        "http://" + fileServeAddr + "/" + imageName,
+						Decompress: opts.compression,
+						Hash:       opts.downloadHash,
+					},
 				},
+			},
+			CloudCredentialsRef: orcv1alpha1.CloudCredentialsReference{
+				SecretName: "my-secret",
+				CloudName:  "my-cloud",
 			},
 		}
 

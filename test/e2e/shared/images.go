@@ -35,8 +35,8 @@ import (
 
 	orcv1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
 	orcapplyconfigv1alpha1 "github.com/k-orc/openstack-resource-controller/pkg/clients/applyconfiguration/api/v1alpha1"
-	"github.com/k-orc/openstack-resource-controller/pkg/utils/ssa"
 
+	"sigs.k8s.io/cluster-api-provider-openstack/internal/util/ssa"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
@@ -254,21 +254,21 @@ func generateORCImage(e2eCtx *E2EContext, name, glanceName, url string, download
 
 	applyConfig := orcapplyconfigv1alpha1.Image(name, imageNamespace).
 		WithSpec(orcapplyconfigv1alpha1.ImageSpec().
-			WithImageName(glanceName).
-			WithTags(E2EImageTag).
+			WithResource(orcapplyconfigv1alpha1.ImageResourceSpec().
+				WithName(glanceName).
+				WithTags(E2EImageTag).
+				WithContent(orcapplyconfigv1alpha1.ImageContent().
+					WithContainerFormat(orcv1alpha1.ImageContainerFormatBare).
+					WithDiskFormat(orcv1alpha1.ImageDiskFormatQCOW2).
+					WithDownload(orcapplyconfigv1alpha1.ImageContentSourceDownload().
+						WithURL(url)))).
 			WithCloudCredentialsRef(orcapplyconfigv1alpha1.CloudCredentialsReference().
-				WithName(credentialsSecretName).
-				WithCloudName(e2eCtx.E2EConfig.GetVariable("OPENSTACK_CLOUD"))).
-			WithContent(orcapplyconfigv1alpha1.ImageContent().
-				WithContainerFormat(orcv1alpha1.ImageContainerFormatBare).
-				WithDiskFormat(orcv1alpha1.ImageDiskFormatQCOW2).
-				WithSourceType(orcv1alpha1.ImageSourceTypeURL).
-				WithSourceURL(orcapplyconfigv1alpha1.ImageContentSourceURL().
-					WithURL(url))))
+				WithSecretName(credentialsSecretName).
+				WithCloudName(e2eCtx.E2EConfig.GetVariable("OPENSTACK_CLOUD"))))
 
 	if downloadHash != nil {
-		applyConfig.Spec.Content.SourceURL.
-			WithDownloadHash(orcapplyconfigv1alpha1.ImageHash().
+		applyConfig.Spec.Resource.Content.Download.
+			WithHash(orcapplyconfigv1alpha1.ImageHash().
 				WithAlgorithm(downloadHash.Algorithm).
 				WithValue(downloadHash.Value))
 	}

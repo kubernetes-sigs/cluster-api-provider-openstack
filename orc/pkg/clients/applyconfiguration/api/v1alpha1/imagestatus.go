@@ -25,13 +25,10 @@ import (
 // ImageStatusApplyConfiguration represents an declarative configuration of the ImageStatus type for use
 // with apply.
 type ImageStatusApplyConfiguration struct {
-	Conditions       []v1.ConditionApplyConfiguration `json:"conditions,omitempty"`
-	DownloadAttempts *int                             `json:"downloadAttempts,omitempty"`
-	ImageID          *string                          `json:"imageID,omitempty"`
-	Status           *string                          `json:"status,omitempty"`
-	Hash             *ImageHashApplyConfiguration     `json:"hash,omitempty"`
-	SizeB            *int64                           `json:"sizeB,omitempty"`
-	VirtualSizeB     *int64                           `json:"virtualSizeB,omitempty"`
+	Conditions       []v1.ConditionApplyConfiguration       `json:"conditions,omitempty"`
+	ID               *string                                `json:"id,omitempty"`
+	Resource         *ImageResourceStatusApplyConfiguration `json:"resource,omitempty"`
+	DownloadAttempts *int                                   `json:"downloadAttempts,omitempty"`
 }
 
 // ImageStatusApplyConfiguration constructs an declarative configuration of the ImageStatus type for use with
@@ -53,50 +50,26 @@ func (b *ImageStatusApplyConfiguration) WithConditions(values ...*v1.ConditionAp
 	return b
 }
 
+// WithID sets the ID field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ID field is set to the value of the last call.
+func (b *ImageStatusApplyConfiguration) WithID(value string) *ImageStatusApplyConfiguration {
+	b.ID = &value
+	return b
+}
+
+// WithResource sets the Resource field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Resource field is set to the value of the last call.
+func (b *ImageStatusApplyConfiguration) WithResource(value *ImageResourceStatusApplyConfiguration) *ImageStatusApplyConfiguration {
+	b.Resource = value
+	return b
+}
+
 // WithDownloadAttempts sets the DownloadAttempts field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the DownloadAttempts field is set to the value of the last call.
 func (b *ImageStatusApplyConfiguration) WithDownloadAttempts(value int) *ImageStatusApplyConfiguration {
 	b.DownloadAttempts = &value
-	return b
-}
-
-// WithImageID sets the ImageID field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the ImageID field is set to the value of the last call.
-func (b *ImageStatusApplyConfiguration) WithImageID(value string) *ImageStatusApplyConfiguration {
-	b.ImageID = &value
-	return b
-}
-
-// WithStatus sets the Status field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Status field is set to the value of the last call.
-func (b *ImageStatusApplyConfiguration) WithStatus(value string) *ImageStatusApplyConfiguration {
-	b.Status = &value
-	return b
-}
-
-// WithHash sets the Hash field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Hash field is set to the value of the last call.
-func (b *ImageStatusApplyConfiguration) WithHash(value *ImageHashApplyConfiguration) *ImageStatusApplyConfiguration {
-	b.Hash = value
-	return b
-}
-
-// WithSizeB sets the SizeB field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the SizeB field is set to the value of the last call.
-func (b *ImageStatusApplyConfiguration) WithSizeB(value int64) *ImageStatusApplyConfiguration {
-	b.SizeB = &value
-	return b
-}
-
-// WithVirtualSizeB sets the VirtualSizeB field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the VirtualSizeB field is set to the value of the last call.
-func (b *ImageStatusApplyConfiguration) WithVirtualSizeB(value int64) *ImageStatusApplyConfiguration {
-	b.VirtualSizeB = &value
 	return b
 }

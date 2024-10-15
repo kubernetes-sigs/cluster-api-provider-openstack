@@ -24,17 +24,13 @@ import (
 	. "github.com/onsi/ginkgo/v2" //nolint:revive
 	. "github.com/onsi/gomega"    //nolint:revive
 	corev1 "k8s.io/api/core/v1"
-	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
-	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 
 	orcv1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
-
-	"sigs.k8s.io/cluster-api-provider-openstack/test/helpers/external"
 )
 
 var (
@@ -59,11 +55,6 @@ var _ = BeforeSuite(func() {
 		CRDDirectoryPaths: []string{
 			filepath.Join("..", "..", "..", "orc", "config", "crd", "bases"),
 		},
-		// Add fake CAPI CRDs that we reference
-		CRDs: []*apiextensionsv1.CustomResourceDefinition{
-			external.TestClusterCRD.DeepCopy(),
-			external.TestMachineCRD.DeepCopy(),
-		},
 	}
 
 	var err error
@@ -73,8 +64,6 @@ var _ = BeforeSuite(func() {
 
 	err = orcv1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
-
-	framework.TryAddDefaultSchemes(scheme.Scheme)
 
 	// +kubebuilder:scaffold:scheme
 

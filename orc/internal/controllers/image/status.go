@@ -31,10 +31,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	orcv1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
+	orcerrors "github.com/k-orc/openstack-resource-controller/internal/util/errors"
+	"github.com/k-orc/openstack-resource-controller/internal/util/ssa"
 	orcapplyconfigv1alpha1 "github.com/k-orc/openstack-resource-controller/pkg/clients/applyconfiguration/api/v1alpha1"
-	"github.com/k-orc/openstack-resource-controller/pkg/utils/ssa"
-
-	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 )
 
 const (
@@ -42,12 +41,38 @@ const (
 	glanceOSHashValue = "os_hash_value"
 )
 
-// updateObject writes to the Image root resource, i.e. everything except status.
-func (r *orcImageReconciler) updateObject(ctx context.Context, orcImage *orcv1alpha1.Image) error {
-	applyConfig := orcapplyconfigv1alpha1.Image(orcImage.Name, orcImage.Namespace).
-		WithFinalizers(orcv1alpha1.ImageControllerFinalizer).WithUID(orcImage.UID)
+// setFinalizer sets a finalizer on the object in its own SSA transaction.
+func (r *orcImageReconciler) setFinalizer(ctx context.Context, obj client.Object) error {
+	gvk := obj.GetObjectKind().GroupVersionKind()
 
-	return r.client.Patch(ctx, orcImage, ssa.ApplyConfigPatch(applyConfig), client.ForceOwnership, client.FieldOwner(orcv1alpha1.ImageControllerFieldOwner))
+	applyConfig := struct {
+		applyconfigv1.TypeMetaApplyConfiguration   `json:",inline"`
+		applyconfigv1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
+	}{}
+
+	// Type meta
+	applyConfig.
+		WithAPIVersion(gvk.GroupVersion().String()).
+		WithKind(gvk.Kind)
+
+	// Object meta
+	applyConfig.
+		WithName(obj.GetName()).
+		WithNamespace(obj.GetNamespace()).
+		WithUID(obj.GetUID()). // For safety: ensure we don't accidentally create a new object if we race with delete
+		WithFinalizers(Finalizer)
+
+	return r.client.Patch(ctx, obj, ssa.ApplyConfigPatch(applyConfig), client.ForceOwnership, ssaFieldOwner(SSAFinalizerTxn))
+}
+
+// setStatusID sets a finalizer on the object in its own SSA transaction.
+func (r *orcImageReconciler) setStatusID(ctx context.Context, orcImage *orcv1alpha1.Image, id string) error {
+	applyConfig := orcapplyconfigv1alpha1.Image(orcImage.Name, orcImage.Namespace).
+		WithUID(orcImage.GetUID()).
+		WithStatus(orcapplyconfigv1alpha1.ImageStatus().
+			WithID(id))
+
+	return r.client.Status().Patch(ctx, orcImage, ssa.ApplyConfigPatch(applyConfig), client.ForceOwnership, ssaFieldOwner(SSAIDTxn))
 }
 
 type updateStatusOpts struct {
@@ -103,12 +128,6 @@ func createStatusUpdate(ctx context.Context, orcImage *orcv1alpha1.Image, now me
 	applyConfigStatus := orcapplyconfigv1alpha1.ImageStatus()
 	applyConfig := orcapplyconfigv1alpha1.Image(orcImage.Name, orcImage.Namespace).WithStatus(applyConfigStatus)
 
-	// We want to preserve a previously set image ID even if we were unable
-	// to fetch the image from glance.
-	if orcImage.Status.ImageID != nil {
-		applyConfigStatus.WithImageID(*orcImage.Status.ImageID)
-	}
-
 	downloadAttempts := ptr.Deref(orcImage.Status.DownloadAttempts, 0)
 	if statusOpts.incrementDownloadAttempts {
 		downloadAttempts++
@@ -119,14 +138,15 @@ func createStatusUpdate(ctx context.Context, orcImage *orcv1alpha1.Image, now me
 
 	var glanceHash *orcv1alpha1.ImageHash
 	if glanceImage != nil {
-		applyConfigStatus.WithImageID(glanceImage.ID)
-		applyConfigStatus.WithStatus(string(glanceImage.Status))
+		resourceStatus := orcapplyconfigv1alpha1.ImageResourceStatus()
+		applyConfigStatus.WithResource(resourceStatus)
+		resourceStatus.WithStatus(string(glanceImage.Status))
 
 		if glanceImage.SizeBytes > 0 {
-			applyConfigStatus.WithSizeB(glanceImage.SizeBytes)
+			resourceStatus.WithSizeB(glanceImage.SizeBytes)
 		}
 		if glanceImage.VirtualSize > 0 {
-			applyConfigStatus.WithVirtualSizeB(glanceImage.VirtualSize)
+			resourceStatus.WithVirtualSizeB(glanceImage.VirtualSize)
 		}
 
 		osHashAlgo, _ := glanceImage.Properties[glanceOSHashAlgo].(string)
@@ -136,7 +156,7 @@ func createStatusUpdate(ctx context.Context, orcImage *orcv1alpha1.Image, now me
 				Algorithm: orcv1alpha1.ImageHashAlgorithm(osHashAlgo),
 				Value:     osHashValue,
 			}
-			applyConfigStatus.WithHash(
+			resourceStatus.WithHash(
 				orcapplyconfigv1alpha1.ImageHash().
 					WithAlgorithm(glanceHash.Algorithm).
 					WithValue(glanceHash.Value))
@@ -183,7 +203,7 @@ func createStatusUpdate(ctx context.Context, orcImage *orcv1alpha1.Image, now me
 	} else {
 		progressingCondition.WithStatus(metav1.ConditionFalse)
 
-		var terminalError *capoerrors.TerminalError
+		var terminalError *orcerrors.TerminalError
 		if errors.As(err, &terminalError) {
 			progressingCondition.
 				WithReason(terminalError.Reason).
@@ -249,5 +269,5 @@ func (r *orcImageReconciler) updateStatus(ctx context.Context, orcImage *orcv1al
 
 	statusUpdate := createStatusUpdate(ctx, orcImage, now, opts...)
 
-	return r.client.Status().Patch(ctx, orcImage, ssa.ApplyConfigPatch(statusUpdate), client.ForceOwnership, client.FieldOwner(orcv1alpha1.ImageControllerFieldOwner))
+	return r.client.Status().Patch(ctx, orcImage, ssa.ApplyConfigPatch(statusUpdate), client.ForceOwnership, ssaFieldOwner(SSAStatusTxn))
 }

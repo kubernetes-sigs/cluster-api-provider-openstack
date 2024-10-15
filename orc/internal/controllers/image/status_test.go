@@ -30,9 +30,8 @@ import (
 	applyconfigv1 "k8s.io/client-go/applyconfigurations/meta/v1"
 
 	orcv1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
+	orcerrors "github.com/k-orc/openstack-resource-controller/internal/util/errors"
 	orcapplyconfigv1alpha1 "github.com/k-orc/openstack-resource-controller/pkg/clients/applyconfiguration/api/v1alpha1"
-
-	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 )
 
 func Test_orcImageReconciler_updateStatus(t *testing.T) {
@@ -148,7 +147,7 @@ func Test_orcImageReconciler_updateStatus(t *testing.T) {
 		{
 			name: "No image, no status, fatal error",
 			args: args{
-				err: capoerrors.Terminal(orcv1alpha1.OpenStackConditionReasonInvalidConfiguration, "invalid configuration", fmt.Errorf("test-error")),
+				err: orcerrors.Terminal(orcv1alpha1.OpenStackConditionReasonInvalidConfiguration, "invalid configuration", fmt.Errorf("test-error")),
 			},
 			wantStatus: orcapplyconfigv1alpha1.ImageStatus,
 			wantAvailable: func(now metav1.Time) *applyconfigv1.ConditionApplyConfiguration {
@@ -174,8 +173,8 @@ func Test_orcImageReconciler_updateStatus(t *testing.T) {
 			},
 			wantStatus: func() *orcapplyconfigv1alpha1.ImageStatusApplyConfiguration {
 				return orcapplyconfigv1alpha1.ImageStatus().
-					WithImageID(imageID).
-					WithStatus(string(images.ImageStatusQueued))
+					WithResource(orcapplyconfigv1alpha1.ImageResourceStatus().
+						WithStatus(string(images.ImageStatusQueued)))
 			},
 			wantAvailable: func(now metav1.Time) *applyconfigv1.ConditionApplyConfiguration {
 				return applyconfigv1.Condition().
@@ -200,13 +199,13 @@ func Test_orcImageReconciler_updateStatus(t *testing.T) {
 			},
 			wantStatus: func() *orcapplyconfigv1alpha1.ImageStatusApplyConfiguration {
 				return orcapplyconfigv1alpha1.ImageStatus().
-					WithImageID(imageID).
-					WithStatus(string(images.ImageStatusActive)).
-					WithSizeB(testSize).
-					WithVirtualSizeB(testVirtualSize).
-					WithHash(orcapplyconfigv1alpha1.ImageHash().
-						WithAlgorithm("sha512").
-						WithValue(testSHA512value))
+					WithResource(orcapplyconfigv1alpha1.ImageResourceStatus().
+						WithStatus(string(images.ImageStatusActive)).
+						WithSizeB(testSize).
+						WithVirtualSizeB(testVirtualSize).
+						WithHash(orcapplyconfigv1alpha1.ImageHash().
+							WithAlgorithm("sha512").
+							WithValue(testSHA512value)))
 			},
 			wantAvailable: func(now metav1.Time) *applyconfigv1.ConditionApplyConfiguration {
 				return applyconfigv1.Condition().
@@ -231,13 +230,13 @@ func Test_orcImageReconciler_updateStatus(t *testing.T) {
 			},
 			wantStatus: func() *orcapplyconfigv1alpha1.ImageStatusApplyConfiguration {
 				return orcapplyconfigv1alpha1.ImageStatus().
-					WithImageID(imageID).
-					WithStatus(string(images.ImageStatusActive)).
-					WithSizeB(testSize).
-					WithVirtualSizeB(testVirtualSize).
-					WithHash(orcapplyconfigv1alpha1.ImageHash().
-						WithAlgorithm("sha512").
-						WithValue(testSHA512value))
+					WithResource(orcapplyconfigv1alpha1.ImageResourceStatus().
+						WithStatus(string(images.ImageStatusActive)).
+						WithSizeB(testSize).
+						WithVirtualSizeB(testVirtualSize).
+						WithHash(orcapplyconfigv1alpha1.ImageHash().
+							WithAlgorithm("sha512").
+							WithValue(testSHA512value)))
 			},
 			wantAvailable: func(now metav1.Time) *applyconfigv1.ConditionApplyConfiguration {
 				return applyconfigv1.Condition().
@@ -284,13 +283,13 @@ func Test_orcImageReconciler_updateStatus(t *testing.T) {
 			},
 			wantStatus: func() *orcapplyconfigv1alpha1.ImageStatusApplyConfiguration {
 				return orcapplyconfigv1alpha1.ImageStatus().
-					WithImageID(imageID).
-					WithStatus(string(images.ImageStatusActive)).
-					WithSizeB(testSize).
-					WithVirtualSizeB(testVirtualSize).
-					WithHash(orcapplyconfigv1alpha1.ImageHash().
-						WithAlgorithm("sha512").
-						WithValue(testSHA512value))
+					WithResource(orcapplyconfigv1alpha1.ImageResourceStatus().
+						WithStatus(string(images.ImageStatusActive)).
+						WithSizeB(testSize).
+						WithVirtualSizeB(testVirtualSize).
+						WithHash(orcapplyconfigv1alpha1.ImageHash().
+							WithAlgorithm("sha512").
+							WithValue(testSHA512value)))
 			},
 			wantAvailable: func(now metav1.Time) *applyconfigv1.ConditionApplyConfiguration {
 				// LastTransitionTime should be copied from previous condition

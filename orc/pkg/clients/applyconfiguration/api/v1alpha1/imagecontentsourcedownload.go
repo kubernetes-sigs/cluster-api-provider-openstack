@@ -22,24 +22,24 @@ import (
 	v1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
 )
 
-// ImageContentSourceURLApplyConfiguration represents an declarative configuration of the ImageContentSourceURL type for use
+// ImageContentSourceDownloadApplyConfiguration represents an declarative configuration of the ImageContentSourceDownload type for use
 // with apply.
-type ImageContentSourceURLApplyConfiguration struct {
-	URL          *string                      `json:"url,omitempty"`
-	Decompress   *v1alpha1.ImageCompression   `json:"decompress,omitempty"`
-	DownloadHash *ImageHashApplyConfiguration `json:"downloadHash,omitempty"`
+type ImageContentSourceDownloadApplyConfiguration struct {
+	URL        *string                      `json:"url,omitempty"`
+	Decompress *v1alpha1.ImageCompression   `json:"decompress,omitempty"`
+	Hash       *ImageHashApplyConfiguration `json:"hash,omitempty"`
 }
 
-// ImageContentSourceURLApplyConfiguration constructs an declarative configuration of the ImageContentSourceURL type for use with
+// ImageContentSourceDownloadApplyConfiguration constructs an declarative configuration of the ImageContentSourceDownload type for use with
 // apply.
-func ImageContentSourceURL() *ImageContentSourceURLApplyConfiguration {
-	return &ImageContentSourceURLApplyConfiguration{}
+func ImageContentSourceDownload() *ImageContentSourceDownloadApplyConfiguration {
+	return &ImageContentSourceDownloadApplyConfiguration{}
 }
 
 // WithURL sets the URL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the URL field is set to the value of the last call.
-func (b *ImageContentSourceURLApplyConfiguration) WithURL(value string) *ImageContentSourceURLApplyConfiguration {
+func (b *ImageContentSourceDownloadApplyConfiguration) WithURL(value string) *ImageContentSourceDownloadApplyConfiguration {
 	b.URL = &value
 	return b
 }
@@ -47,15 +47,15 @@ func (b *ImageContentSourceURLApplyConfiguration) WithURL(value string) *ImageCo
 // WithDecompress sets the Decompress field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Decompress field is set to the value of the last call.
-func (b *ImageContentSourceURLApplyConfiguration) WithDecompress(value v1alpha1.ImageCompression) *ImageContentSourceURLApplyConfiguration {
+func (b *ImageContentSourceDownloadApplyConfiguration) WithDecompress(value v1alpha1.ImageCompression) *ImageContentSourceDownloadApplyConfiguration {
 	b.Decompress = &value
 	return b
 }
 
-// WithDownloadHash sets the DownloadHash field in the declarative configuration to the given value
+// WithHash sets the Hash field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the DownloadHash field is set to the value of the last call.
-func (b *ImageContentSourceURLApplyConfiguration) WithDownloadHash(value *ImageHashApplyConfiguration) *ImageContentSourceURLApplyConfiguration {
-	b.DownloadHash = value
+// If called multiple times, the Hash field is set to the value of the last call.
+func (b *ImageContentSourceDownloadApplyConfiguration) WithHash(value *ImageHashApplyConfiguration) *ImageContentSourceDownloadApplyConfiguration {
+	b.Hash = value
 	return b
 }

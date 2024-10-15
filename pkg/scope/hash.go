@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package hash
+package scope
 
 import (
 	"fmt"
@@ -22,13 +22,12 @@ import (
 	"hash/fnv"
 
 	"github.com/davecgh/go-spew/spew"
-	"k8s.io/apimachinery/pkg/util/dump"
 )
 
-// SpewHashObject writes specified object to hash using the spew library
+// spewHashObject writes specified object to hash using the spew library
 // which follows pointers and prints actual values of the nested objects
 // ensuring the hash does not change when a pointer changes.
-func SpewHashObject(hasher hash.Hash, objectToWrite interface{}) error {
+func spewHashObject(hasher hash.Hash, objectToWrite interface{}) error {
 	hasher.Reset()
 	printer := spew.ConfigState{
 		Indent:         " ",
@@ -43,20 +42,11 @@ func SpewHashObject(hasher hash.Hash, objectToWrite interface{}) error {
 	return nil
 }
 
-// ComputeSpewHash computes the hash of a InstanceSpec using the spew library.
-func ComputeSpewHash(objectToWrite interface{}) (uint32, error) {
+// computeSpewHash computes the hash of an object using the spew library.
+func computeSpewHash(objectToWrite interface{}) (uint32, error) {
 	instanceSpecHasher := fnv.New32a()
-	if err := SpewHashObject(instanceSpecHasher, objectToWrite); err != nil {
+	if err := spewHashObject(instanceSpecHasher, objectToWrite); err != nil {
 		return 0, err
 	}
 	return instanceSpecHasher.Sum32(), nil
-}
-
-// DeepHashObject writes specified object to hash using the spew library
-// which follows pointers and prints actual values of the nested objects
-// ensuring the hash does not change when a pointer changes.
-// This function is taken from https://github.com/kubernetes/kubernetes/blob/v1.29.2/pkg/util/hash/hash.go#L26-L32
-func DeepHashObject(hasher hash.Hash, objectToWrite interface{}) {
-	hasher.Reset()
-	fmt.Fprintf(hasher, "%v", dump.ForHash(objectToWrite))
 }

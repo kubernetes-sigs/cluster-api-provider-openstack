@@ -167,7 +167,7 @@ func Test_ResolveServerSpec(t *testing.T) {
 			fakeClient := fake.NewFakeClient()
 
 			scope := scope.NewWithLogger(mockScopeFactory, log)
-			_, _, _, err := ResolveServerSpec(context.TODO(), scope, fakeClient, openStackServer)
+			_, _, err := ResolveServerSpec(context.TODO(), scope, fakeClient, openStackServer)
 			if tt.wantErr {
 				g.Expect(err).Error()
 				return
