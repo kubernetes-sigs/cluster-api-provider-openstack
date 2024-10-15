@@ -37,9 +37,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
-	"sigs.k8s.io/cluster-api-provider-openstack/version"
+	orcv1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
+	clients "github.com/k-orc/openstack-resource-controller/internal/osclients"
+	"github.com/k-orc/openstack-resource-controller/internal/version"
 )
 
 const (
@@ -51,26 +51,27 @@ type providerScopeFactory struct {
 	clientCache *cache.LRUExpireCache
 }
 
-func (f *providerScopeFactory) NewClientScopeFromObject(ctx context.Context, ctrlClient client.Client, defaultCACert []byte, logger logr.Logger, objects ...infrav1.IdentityRefProvider) (Scope, error) {
-	var namespace *string
-	var identityRef *infrav1.OpenStackIdentityReference
+func (f *providerScopeFactory) NewClientScopeFromObject(ctx context.Context, ctrlClient client.Client, defaultCACert []byte, logger logr.Logger, objects ...orcv1alpha1.CloudCredentialsRefProvider) (Scope, error) {
+	namespace, credentialsRef := func() (*string, *orcv1alpha1.CloudCredentialsReference) {
+		for _, o := range objects {
+			namespace, credentialsRef := o.GetCloudCredentialsRef()
 
-	for _, o := range objects {
-		namespace, identityRef = o.GetIdentityRef()
-		if namespace != nil || identityRef != nil {
-			break
+			if namespace != nil && credentialsRef != nil {
+				return namespace, credentialsRef
+			}
 		}
-	}
+		return nil, nil
+	}()
 
-	if namespace == nil || identityRef == nil {
-		return nil, fmt.Errorf("unable to get identityRef from provided objects")
+	if namespace == nil || credentialsRef == nil {
+		return nil, fmt.Errorf("unable to get credentials from provided objects")
 	}
 
 	var cloud clientconfig.Cloud
 	var caCert []byte
 
 	var err error
-	cloud, caCert, err = getCloudFromSecret(ctx, ctrlClient, *namespace, identityRef.Name, identityRef.CloudName)
+	cloud, caCert, err = getCloudFromSecret(ctx, ctrlClient, *namespace, credentialsRef.SecretName, credentialsRef.CloudName)
 	if err != nil {
 		return nil, err
 	}
@@ -201,7 +202,7 @@ func NewProviderClient(cloud clientconfig.Cloud, caCert []byte, logger logr.Logg
 	}
 
 	ua := gophercloud.UserAgent{}
-	ua.Prepend(fmt.Sprintf("cluster-api-provider-openstack/%s", version.Get().String()))
+	ua.Prepend(fmt.Sprintf("k-orc/%s", version.Get().String()))
 	provider.UserAgent = ua
 
 	config := &tls.Config{

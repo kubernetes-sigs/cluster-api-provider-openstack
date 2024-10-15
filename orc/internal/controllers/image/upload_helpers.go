@@ -31,8 +31,7 @@ import (
 	"github.com/ulikunitz/xz"
 
 	orcv1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
-
-	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
+	orcerrors "github.com/k-orc/openstack-resource-controller/internal/util/errors"
 )
 
 type progressReporter func(progress int64)
@@ -135,6 +134,6 @@ func newReaderWithDecompression(reader io.Reader, compression orcv1alpha1.ImageC
 		return bzip2.NewReader(reader), nil
 	default:
 		msg := fmt.Sprintf("unsupported compression algorithm: %s", compression)
-		return nil, capoerrors.Terminal(orcv1alpha1.OpenStackConditionReasonInvalidConfiguration, msg)
+		return nil, orcerrors.Terminal(orcv1alpha1.OpenStackConditionReasonInvalidConfiguration, msg)
 	}
 }
