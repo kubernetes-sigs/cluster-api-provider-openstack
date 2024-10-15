@@ -188,6 +188,8 @@ func patchMachine(ctx context.Context, patchHelper *patch.Helper, openStackMachi
 }
 
 func (r *OpenStackMachineReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager, options controller.Options) error {
+	log := ctrl.LoggerFrom(ctx)
+
 	return ctrl.NewControllerManagedBy(mgr).
 		WithOptions(options).
 		For(&infrav1.OpenStackMachine{}).
@@ -195,28 +197,26 @@ func (r *OpenStackMachineReconciler) SetupWithManager(ctx context.Context, mgr c
 			&clusterv1.Machine{},
 			handler.EnqueueRequestsFromMapFunc(util.MachineToInfrastructureMapFunc(infrav1.SchemeGroupVersion.WithKind("OpenStackMachine"))),
 		).
-		Watches(
-			&infrav1.OpenStackCluster{},
-			handler.EnqueueRequestsFromMapFunc(r.OpenStackClusterToOpenStackMachines(ctx)),
-		).
 		WithEventFilter(predicates.ResourceNotPausedAndHasFilterLabel(ctrl.LoggerFrom(ctx), r.WatchFilterValue)).
 		Watches(
 			&clusterv1.Cluster{},
 			handler.EnqueueRequestsFromMapFunc(r.requeueOpenStackMachinesForUnpausedCluster(ctx)),
-			builder.WithPredicates(predicates.ClusterUnpausedAndInfrastructureReady(ctrl.LoggerFrom(ctx))),
+			builder.WithPredicates(predicates.ClusterUnpausedAndInfrastructureReady(log)),
 		).
+		// NOTE: we don't watch OpenStackCluster here, even though the
+		// OpenStackMachine controller directly requires values from
+		// OpenStackCluster. The reason is that we are already observing Cluster
+		// with the ClusterUnpausedAndInfrastructureReady predicate. The only
+		// fields in OpenStackCluster we are interested in are dependent on
+		// InfrastructureReady, so we don't need to watch both.
 		Watches(
 			&ipamv1.IPAddressClaim{},
 			handler.EnqueueRequestForOwner(mgr.GetScheme(), mgr.GetRESTMapper(), &infrav1.OpenStackMachine{}),
 		).
-		// TODO(emilien) to optimize because it's not efficient to watch all OpenStackServer events.
-		// We are only interested in certain state transitions of the OpenStackServer:
-		// - when the server is deleted
-		// - when the server becomes ready
-		// For that we probably want to write Predicate functions for the OpenStackServer.
 		Watches(
 			&infrav1alpha1.OpenStackServer{},
 			handler.EnqueueRequestForOwner(mgr.GetScheme(), mgr.GetRESTMapper(), &infrav1.OpenStackMachine{}),
+			builder.WithPredicates(OpenStackServerReconcileComplete(log)),
 		).
 		Complete(r)
 }
