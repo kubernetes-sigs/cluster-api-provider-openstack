@@ -31,8 +31,8 @@ import (
 
 	orcv1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
 
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
-	ctrlutil "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/controllers"
+	ctrlexport "github.com/k-orc/openstack-resource-controller/internal/controllers/export"
+	"github.com/k-orc/openstack-resource-controller/internal/scope"
 )
 
 const (
@@ -72,7 +72,7 @@ type orcImageReconciler struct {
 	caCertificates   []byte // PEM encoded ca certificates.
 }
 
-func New(client client.Client, recorder record.EventRecorder, watchFilterValue string, scopeFactory scope.Factory, caCertificates []byte) ctrlutil.SetupWithManager {
+func New(client client.Client, recorder record.EventRecorder, watchFilterValue string, scopeFactory scope.Factory, caCertificates []byte) ctrlexport.SetupWithManager {
 	return &orcImageReconciler{
 		client:           client,
 		recorder:         recorder,

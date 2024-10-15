@@ -40,7 +40,6 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/filterconvert"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/hash"
 )
 
 const (
@@ -581,12 +580,4 @@ func getTimeout(name string, timeout int) time.Duration {
 		}
 	}
 	return time.Duration(timeout)
-}
-
-func HashInstanceSpec(computeInstance *InstanceSpec) (string, error) {
-	instanceHash, err := hash.ComputeSpewHash(computeInstance)
-	if err != nil {
-		return "", err
-	}
-	return strconv.Itoa(int(instanceHash)), nil
 }
