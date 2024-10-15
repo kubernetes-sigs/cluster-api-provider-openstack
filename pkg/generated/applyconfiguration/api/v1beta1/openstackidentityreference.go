@@ -23,6 +23,7 @@ package v1beta1
 type OpenStackIdentityReferenceApplyConfiguration struct {
 	Name      *string `json:"name,omitempty"`
 	CloudName *string `json:"cloudName,omitempty"`
+	Region    *string `json:"region,omitempty"`
 }
 
 // OpenStackIdentityReferenceApplyConfiguration constructs an declarative configuration of the OpenStackIdentityReference type for use with
@@ -44,5 +45,13 @@ func (b *OpenStackIdentityReferenceApplyConfiguration) WithName(value string) *O
 // If called multiple times, the CloudName field is set to the value of the last call.
 func (b *OpenStackIdentityReferenceApplyConfiguration) WithCloudName(value string) *OpenStackIdentityReferenceApplyConfiguration {
 	b.CloudName = &value
+	return b
+}
+
+// WithRegion sets the Region field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Region field is set to the value of the last call.
+func (b *OpenStackIdentityReferenceApplyConfiguration) WithRegion(value string) *OpenStackIdentityReferenceApplyConfiguration {
+	b.Region = &value
 	return b
 }

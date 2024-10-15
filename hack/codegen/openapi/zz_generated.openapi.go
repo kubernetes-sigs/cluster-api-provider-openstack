@@ -23222,6 +23222,13 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackIdenti
 							Format:      "",
 						},
 					},
+					"region": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Region specifies an OpenStack region to use. If specified, it overrides any value in clouds.yaml. If specified for an OpenStackMachine, its value will be included in providerID.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 				},
 				Required: []string{"name", "cloudName"},
 			},

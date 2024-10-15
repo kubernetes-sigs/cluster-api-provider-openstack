@@ -422,7 +422,11 @@ func (r *OpenStackMachineReconciler) reconcileMachineState(scope *scope.WithLogg
 		conditions.MarkTrue(openStackMachine, infrav1.InstanceReadyCondition)
 
 		// Set properties required by CAPI machine controller
-		openStackMachine.Spec.ProviderID = ptr.To(fmt.Sprintf("openstack:///%s", *openStackServer.Status.InstanceID))
+		var region string
+		if openStackMachine.Spec.IdentityRef != nil {
+			region = openStackMachine.Spec.IdentityRef.Region
+		}
+		openStackMachine.Spec.ProviderID = ptr.To(fmt.Sprintf("openstack://%s/%s", region, *openStackServer.Status.InstanceID))
 		openStackMachine.Status.InstanceID = openStackServer.Status.InstanceID
 		openStackMachine.Status.Ready = true
 	case infrav1.InstanceStateError:

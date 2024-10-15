@@ -133,6 +133,34 @@ var _ = Describe("OpenStackMachine API validations", func() {
 		Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "Creating a machine with max metadata key and value should succeed")
 	})
 
+	It("should allow server identityRef Region field or unset on creation", func() {
+		machine := defaultMachine()
+
+		By("Creating a machine with identityRef Region field set on creation")
+		machine.Spec.IdentityRef = &infrav1.OpenStackIdentityReference{
+			Name:      "secretName",
+			CloudName: "cloudName",
+			Region:    "regionName",
+		}
+		Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "Creating a machine with a spec.identityRef.Region field should be allowed")
+
+		By("Updating the identityRef Region field")
+		machine.Spec.IdentityRef.Region = "anotherRegionName"
+		Expect(k8sClient.Update(ctx, machine)).NotTo(Succeed(), "Updating spec.identityRef.Region field should fail")
+
+		machine = defaultMachine()
+		By("Creating a machine with identityRef Region field not set on creation")
+		machine.Spec.IdentityRef = &infrav1.OpenStackIdentityReference{
+			Name:      "secretName",
+			CloudName: "cloudName",
+		}
+		Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "Creating a machine without a spec.identityRef.Region field should be allowed")
+
+		By("Setting the identityRef Region field")
+		machine.Spec.IdentityRef.Region = "regionName"
+		Expect(k8sClient.Update(ctx, machine)).NotTo(Succeed(), "Setting spec.identityRef.Region field should fail")
+	})
+
 	Context("flavors", func() {
 		It("should require either a flavor or flavorID", func() {
 			machine := defaultMachine()

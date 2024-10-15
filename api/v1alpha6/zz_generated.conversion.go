@@ -1085,6 +1085,7 @@ func autoConvert_v1alpha6_OpenStackIdentityReference_To_v1beta1_OpenStackIdentit
 func autoConvert_v1beta1_OpenStackIdentityReference_To_v1alpha6_OpenStackIdentityReference(in *v1beta1.OpenStackIdentityReference, out *OpenStackIdentityReference, s conversion.Scope) error {
 	out.Name = in.Name
 	// WARNING: in.CloudName requires manual conversion: does not exist in peer-type
+	// WARNING: in.Region requires manual conversion: does not exist in peer-type
 	return nil
 }
 

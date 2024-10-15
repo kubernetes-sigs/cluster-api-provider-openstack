@@ -3200,6 +3200,20 @@ string
 <p>CloudName specifies the name of the entry in the clouds.yaml file to use.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>region</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Region specifies an OpenStack region to use. If specified, it overrides
+any value in clouds.yaml. If specified for an OpenStackMachine, its
+value will be included in providerID.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec
