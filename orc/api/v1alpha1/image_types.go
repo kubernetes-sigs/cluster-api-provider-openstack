@@ -20,7 +20,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// GlanceTag is the name of the go field tag in properties structs used to specify the glance property name.
+// GlanceTag is the name of the go field tag in properties structs used to specify the Glance property name.
 const GlanceTag = "glance"
 
 // +kubebuilder:validation:MinLength:=1
@@ -244,14 +244,14 @@ type ImageContentSourceDownload struct {
 
 	// Decompress specifies that the source data must be decompressed with the
 	// given compression algorithm before being stored. Specifying Decompress
-	// will disable the use of glance's web-download, as web-download cannot
+	// will disable the use of Glance's web-download, as web-download cannot
 	// currently deterministically decompress downloaded content.
 	// +optional
 	Decompress *ImageCompression `json:"decompress,omitempty"`
 
 	// Hash is a hash which will be used to verify downloaded data, i.e.
 	// before any decompression. If not specified, no hash verification will be
-	// performed. Specifying a Hash will disable the use of glance's
+	// performed. Specifying a Hash will disable the use of Glance's
 	// web-download, as web-download cannot currently deterministically verify
 	// the hash of downloaded content.
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="hash is immutable"
@@ -272,9 +272,9 @@ type ImageHash struct {
 	Value string `json:"value"`
 }
 
-// ImageResourceSpec contains the desired state of a glance image
+// ImageResourceSpec contains the desired state of a Glance image
 type ImageResourceSpec struct {
-	// Name will be the name of the created glance image. If not specified, the
+	// Name will be the name of the created Glance image. If not specified, the
 	// name of the Image object will be used.
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="imageName is immutable"
 	// +optional
@@ -308,10 +308,10 @@ type ImageResourceSpec struct {
 	Content *ImageContent `json:"content,omitempty"`
 }
 
-// ImageFilter defines a glance query
+// ImageFilter defines a Glance query
 // +kubebuilder:validation:MinProperties:=1
 type ImageFilter struct {
-	// Name specifies the name of a glance image
+	// Name specifies the name of a Glance image
 	// +optional
 	// +kubebuilder:validation:MinLength:=1
 	// +kubebuilder:validation:MaxLength:=1000
@@ -323,7 +323,7 @@ type ImageFilter struct {
 // +kubebuilder:validation:MinProperties:=1
 // +kubebuilder:validation:MaxProperties:=1
 type ImageImport struct {
-	// ID contains the unique identifier of an existing glance image. Note that
+	// ID contains the unique identifier of an existing Glance image. Note that
 	// when specifying an image import by ID, the image MUST already exist. The
 	// Image will enter an error state if the image does not exist.
 	// +optional
@@ -351,7 +351,7 @@ type ImageSpec struct {
 	// +optional
 	Import *ImageImport `json:"import,omitempty"`
 
-	// Resource specifies the desired state of the glance image.
+	// Resource specifies the desired state of the Glance image.
 	//
 	// Resource may not be specified if the management policy is `unmanaged`.
 	//
@@ -377,14 +377,14 @@ type ImageSpec struct {
 	CloudCredentialsRef CloudCredentialsReference `json:"cloudCredentialsRef"`
 }
 
-// ImageResourceStatus represents the observed state of a glance image
+// ImageResourceStatus represents the observed state of a Glance image
 type ImageResourceStatus struct {
-	// Status is the image status as reported by glance
+	// Status is the image status as reported by Glance
 	// +optional
 	Status *string `json:"status,omitempty"`
 
-	// Hash is the hash of the image data published by glance. Note that this is
-	// a hash of the data stored internally by glance, which will have been
+	// Hash is the hash of the image data published by Glance. Note that this is
+	// a hash of the data stored internally by Glance, which will have been
 	// decompressed and potentially format converted depending on server-side
 	// configuration which is not visible to clients. It is expected that this
 	// hash will usually differ from the download hash.
@@ -405,11 +405,11 @@ type ImageStatus struct {
 	// Conditions represents the observed status of the object.
 	// Known .status.conditions.type are: "Available", "Progressing"
 	//
-	// Available represents the availability of the glance image. If it is
-	// true then the image is ready for use in glance, and its hash has been
+	// Available represents the availability of the Glance image. If it is
+	// true then the image is ready for use in Glance, and its hash has been
 	// verified.
 	//
-	// Progressing indicates the state of the glance image does not currently
+	// Progressing indicates the state of the Glance image does not currently
 	// reflect the desired state, but that reconciliation is progressing.
 	// Progressing will be False either because the desired state has been
 	// achieved, or some terminal error prevents it from being achieved and the
@@ -421,11 +421,11 @@ type ImageStatus struct {
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 
-	// ID is the unique identifier of the glance image
+	// ID is the unique identifier of the Glance image
 	// +optional
 	ID *string `json:"id,omitempty"`
 
-	// Resource contains the observed state of the glance image
+	// Resource contains the observed state of the Glance image
 	// +optional
 	Resource *ImageResourceStatus `json:"resource,omitempty"`
 

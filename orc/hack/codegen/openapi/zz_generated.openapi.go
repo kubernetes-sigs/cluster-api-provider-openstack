@@ -452,14 +452,14 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageContentSourceD
 					},
 					"decompress": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Decompress specifies that the source data must be decompressed with the given compression algorithm before being stored. Specifying Decompress will disable the use of glance's web-download, as web-download cannot currently deterministically decompress downloaded content.",
+							Description: "Decompress specifies that the source data must be decompressed with the given compression algorithm before being stored. Specifying Decompress will disable the use of Glance's web-download, as web-download cannot currently deterministically decompress downloaded content.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"hash": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Hash is a hash which will be used to verify downloaded data, i.e. before any decompression. If not specified, no hash verification will be performed. Specifying a Hash will disable the use of glance's web-download, as web-download cannot currently deterministically verify the hash of downloaded content.",
+							Description: "Hash is a hash which will be used to verify downloaded data, i.e. before any decompression. If not specified, no hash verification will be performed. Specifying a Hash will disable the use of Glance's web-download, as web-download cannot currently deterministically verify the hash of downloaded content.",
 							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageHash"),
 						},
 					},
@@ -476,12 +476,12 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageFilter(ref com
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ImageFilter defines a glance query",
+				Description: "ImageFilter defines a Glance query",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Name specifies the name of a glance image",
+							Description: "Name specifies the name of a Glance image",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -530,7 +530,7 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageImport(ref com
 				Properties: map[string]spec.Schema{
 					"id": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ID contains the unique identifier of an existing glance image. Note that when specifying an image import by ID, the image MUST already exist. The Image will enter an error state if the image does not exist.",
+							Description: "ID contains the unique identifier of an existing Glance image. Note that when specifying an image import by ID, the image MUST already exist. The Image will enter an error state if the image does not exist.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -711,12 +711,12 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageResourceSpec(r
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ImageResourceSpec contains the desired state of a glance image",
+				Description: "ImageResourceSpec contains the desired state of a Glance image",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Name will be the name of the created glance image. If not specified, the name of the Image object will be used.",
+							Description: "Name will be the name of the created Glance image. If not specified, the name of the Image object will be used.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -779,19 +779,19 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageResourceStatus
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ImageResourceStatus represents the observed state of a glance image",
+				Description: "ImageResourceStatus represents the observed state of a Glance image",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Status is the image status as reported by glance",
+							Description: "Status is the image status as reported by Glance",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"hash": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Hash is the hash of the image data published by glance. Note that this is a hash of the data stored internally by glance, which will have been decompressed and potentially format converted depending on server-side configuration which is not visible to clients. It is expected that this hash will usually differ from the download hash.",
+							Description: "Hash is the hash of the image data published by Glance. Note that this is a hash of the data stored internally by Glance, which will have been decompressed and potentially format converted depending on server-side configuration which is not visible to clients. It is expected that this hash will usually differ from the download hash.",
 							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageHash"),
 						},
 					},
@@ -832,7 +832,7 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageSpec(ref commo
 					},
 					"resource": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Resource specifies the desired state of the glance image.\n\nResource may not be specified if the management policy is `unmanaged`.\n\nResource must be specified when the management policy is `managed`.",
+							Description: "Resource specifies the desired state of the Glance image.\n\nResource may not be specified if the management policy is `unmanaged`.\n\nResource must be specified when the management policy is `managed`.",
 							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageResourceSpec"),
 						},
 					},
@@ -884,7 +884,7 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageStatus(ref com
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Conditions represents the observed status of the object. Known .status.conditions.type are: \"Available\", \"Progressing\"\n\nAvailable represents the availability of the glance image. If it is true then the image is ready for use in glance, and its hash has been verified.\n\nProgressing indicates the state of the glance image does not currently reflect the desired state, but that reconciliation is progressing. Progressing will be False either because the desired state has been achieved, or some terminal error prevents it from being achieved and the controller is no longer attempting to reconcile.",
+							Description: "Conditions represents the observed status of the object. Known .status.conditions.type are: \"Available\", \"Progressing\"\n\nAvailable represents the availability of the Glance image. If it is true then the image is ready for use in Glance, and its hash has been verified.\n\nProgressing indicates the state of the Glance image does not currently reflect the desired state, but that reconciliation is progressing. Progressing will be False either because the desired state has been achieved, or some terminal error prevents it from being achieved and the controller is no longer attempting to reconcile.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -898,14 +898,14 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageStatus(ref com
 					},
 					"id": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ID is the unique identifier of the glance image",
+							Description: "ID is the unique identifier of the Glance image",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"resource": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Resource contains the observed state of the glance image",
+							Description: "Resource contains the observed state of the Glance image",
 							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageResourceStatus"),
 						},
 					},

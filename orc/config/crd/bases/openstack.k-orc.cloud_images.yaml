@@ -94,14 +94,14 @@ spec:
                     minProperties: 1
                     properties:
                       name:
-                        description: Name specifies the name of a glance image
+                        description: Name specifies the name of a Glance image
                         maxLength: 1000
                         minLength: 1
                         type: string
                     type: object
                   id:
                     description: |-
-                      ID contains the unique identifier of an existing glance image. Note that
+                      ID contains the unique identifier of an existing Glance image. Note that
                       when specifying an image import by ID, the image MUST already exist. The
                       Image will enter an error state if the image does not exist.
                     format: uuid
@@ -139,7 +139,7 @@ spec:
                   rule: self == oldSelf
               resource:
                 description: |-
-                  Resource specifies the desired state of the glance image.
+                  Resource specifies the desired state of the Glance image.
 
                   Resource may not be specified if the management policy is `unmanaged`.
 
@@ -195,7 +195,7 @@ spec:
                             description: |-
                               Decompress specifies that the source data must be decompressed with the
                               given compression algorithm before being stored. Specifying Decompress
-                              will disable the use of glance's web-download, as web-download cannot
+                              will disable the use of Glance's web-download, as web-download cannot
                               currently deterministically decompress downloaded content.
                             enum:
                             - xz
@@ -206,7 +206,7 @@ spec:
                             description: |-
                               Hash is a hash which will be used to verify downloaded data, i.e.
                               before any decompression. If not specified, no hash verification will be
-                              performed. Specifying a Hash will disable the use of glance's
+                              performed. Specifying a Hash will disable the use of Glance's
                               web-download, as web-download cannot currently deterministically verify
                               the hash of downloaded content.
                             properties:
@@ -252,7 +252,7 @@ spec:
                       rule: self == oldSelf
                   name:
                     description: |-
-                      Name will be the name of the created glance image. If not specified, the
+                      Name will be the name of the created Glance image. If not specified, the
                       name of the Image object will be used.
                     type: string
                     x-kubernetes-validations:
@@ -465,11 +465,11 @@ spec:
                   Conditions represents the observed status of the object.
                   Known .status.conditions.type are: "Available", "Progressing"
 
-                  Available represents the availability of the glance image. If it is
-                  true then the image is ready for use in glance, and its hash has been
+                  Available represents the availability of the Glance image. If it is
+                  true then the image is ready for use in Glance, and its hash has been
                   verified.
 
-                  Progressing indicates the state of the glance image does not currently
+                  Progressing indicates the state of the Glance image does not currently
                   reflect the desired state, but that reconciliation is progressing.
                   Progressing will be False either because the desired state has been
                   achieved, or some terminal error prevents it from being achieved and the
@@ -537,15 +537,15 @@ spec:
                   has attempted to download the image contents
                 type: integer
               id:
-                description: ID is the unique identifier of the glance image
+                description: ID is the unique identifier of the Glance image
                 type: string
               resource:
-                description: Resource contains the observed state of the glance image
+                description: Resource contains the observed state of the Glance image
                 properties:
                   hash:
                     description: |-
-                      Hash is the hash of the image data published by glance. Note that this is
-                      a hash of the data stored internally by glance, which will have been
+                      Hash is the hash of the image data published by Glance. Note that this is
+                      a hash of the data stored internally by Glance, which will have been
                       decompressed and potentially format converted depending on server-side
                       configuration which is not visible to clients. It is expected that this
                       hash will usually differ from the download hash.
@@ -575,7 +575,7 @@ spec:
                     format: int64
                     type: integer
                   status:
-                    description: Status is the image status as reported by glance
+                    description: Status is the image status as reported by Glance
                     type: string
                   virtualSizeB:
                     description: VirtualSizeB is the size of the disk the image data
