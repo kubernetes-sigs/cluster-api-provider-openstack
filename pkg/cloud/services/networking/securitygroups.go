@@ -24,6 +24,7 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/rules"
+	"k8s.io/utils/net"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
@@ -200,7 +201,19 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 	workerRules := append([]resolvedSecurityGroupRuleSpec{}, defaultRules...)
 
 	controlPlaneRules = append(controlPlaneRules, getSGControlPlaneHTTPS()...)
-	workerRules = append(workerRules, getSGWorkerNodePort()...)
+
+	// Fetch subnet to use for worker node port rules
+	// In the future IPv6 support need to be added here
+	if openStackCluster.Status.Network != nil {
+		for _, subnet := range openStackCluster.Status.Network.Subnets {
+			if net.IsIPv4CIDRString(subnet.CIDR) {
+				workerRules = append(workerRules, getSGWorkerNodePortCIDR(subnet.CIDR)...)
+			}
+		}
+	}
+
+	// Add rules allowing nodepors from all cluster nodes, this will take effect even if no subnetCIDR is found to ensure all nodes can commincate over nodeports at all time
+	workerRules = append(workerRules, getSGWorkerNodePort(secWorkerGroupID, secControlPlaneGroupID)...)
 
 	// If we set additional ports to LB, we need create secgroup rules those ports, this apply to controlPlaneRules only
 	if openStackCluster.Spec.APIServerLoadBalancer.IsEnabled() {
