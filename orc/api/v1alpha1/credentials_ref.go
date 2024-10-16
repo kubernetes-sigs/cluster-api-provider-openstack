@@ -18,14 +18,18 @@ package v1alpha1
 
 // CloudCredentialsReference is a reference to a secret containing OpenStack credentials.
 type CloudCredentialsReference struct {
-	// Name is the name of a secret in the same namespace as the resource being provisioned.
+	// SecretName is the name of a secret in the same namespace as the resource being provisioned.
 	// The secret must contain a key named `clouds.yaml` which contains an OpenStack clouds.yaml file.
 	// The secret may optionally contain a key named `cacert` containing a PEM-encoded CA certificate.
 	// +kubebuilder:validation:Required
-	Name string `json:"name"`
+	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MaxLength:=253
+	SecretName string `json:"secretName"`
 
 	// CloudName specifies the name of the entry in the clouds.yaml file to use.
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MaxLength:=256
 	CloudName string `json:"cloudName"`
 }
 

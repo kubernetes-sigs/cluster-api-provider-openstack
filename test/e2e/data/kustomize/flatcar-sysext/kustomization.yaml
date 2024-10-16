@@ -17,5 +17,5 @@ patches:
     name: node-image
   patch: |-
     - op: replace
-      path: /spec/imageName
+      path: /spec/import/filter/name
       value: ${FLATCAR_IMAGE_NAME}

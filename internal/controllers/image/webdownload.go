@@ -31,6 +31,26 @@ import (
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 )
 
+func requireResource(orcImage *orcv1alpha1.Image) (*orcv1alpha1.ImageResourceSpec, error) {
+	resource := orcImage.Spec.Resource
+	if resource == nil {
+		return nil, capoerrors.Terminal(orcv1alpha1.OpenStackConditionReasonInvalidConfiguration, "resource not provided")
+	}
+
+	return resource, nil
+}
+
+func requireResourceContent(orcImage *orcv1alpha1.Image) (*orcv1alpha1.ImageContent, error) {
+	resource, err := requireResource(orcImage)
+	if err != nil {
+		return nil, err
+	}
+	if resource.Content == nil {
+		return nil, capoerrors.Terminal(orcv1alpha1.OpenStackConditionReasonInvalidConfiguration, "resource content not provided")
+	}
+	return resource.Content, nil
+}
+
 func (r *orcImageReconciler) canWebDownload(ctx context.Context, orcImage *orcv1alpha1.Image, imageClient clients.ImageClient) (bool, error) {
 	log := ctrl.LoggerFrom(ctx)
 
@@ -38,14 +58,13 @@ func (r *orcImageReconciler) canWebDownload(ctx context.Context, orcImage *orcv1
 		log.V(4).Info("Image cannot use web-download", slices.Concat([]any{"reason", reason}, extra)...)
 	}
 
-	contentSource := orcImage.Spec.Content
-	if contentSource == nil {
-		// Should have been caught by validation
-		return false, capoerrors.Terminal(orcv1alpha1.OpenStackConditionReasonInvalidConfiguration, "content source not provided")
+	content, err := requireResourceContent(orcImage)
+	if err != nil {
+		return false, err
 	}
 
-	urlSource := contentSource.SourceURL
-	if urlSource == nil {
+	download := content.Download
+	if download == nil {
 		debugLog("not type URL")
 		return false, nil
 	}
@@ -54,7 +73,7 @@ func (r *orcImageReconciler) canWebDownload(ctx context.Context, orcImage *orcv1
 	// Glance can be configured to do automatic decompression of imported
 	// images, but there's no way to determine if it is enabled so it can't
 	// be safely used.
-	if urlSource.Decompress != nil {
+	if download.Decompress != nil {
 		debugLog("web-download does not support decompression")
 		return false, nil
 	}
@@ -70,7 +89,7 @@ func (r *orcImageReconciler) canWebDownload(ctx context.Context, orcImage *orcv1
 	//   determine, if the hash we have doesn't match the algorithm configured
 	//   server-side in glance, which is also not exposed via the API, we
 	//   can't verify it anyway.
-	if urlSource.DownloadHash != nil {
+	if download.Hash != nil {
 		debugLog("web-download does not support hash verification")
 		return false, nil
 	}
@@ -93,13 +112,19 @@ func (r *orcImageReconciler) webDownload(ctx context.Context, orcImage *orcv1alp
 	log := ctrl.LoggerFrom(ctx)
 	log.V(3).Info("Importing with web-download")
 
-	if orcImage.Spec.Content.SourceURL == nil {
+	resource := orcImage.Spec.Resource
+	if resource == nil {
 		// Should have been caught by validation
-		return capoerrors.Terminal(orcv1alpha1.OpenStackConditionReasonInvalidConfiguration, "URL not provided")
+		return capoerrors.Terminal(orcv1alpha1.OpenStackConditionReasonInvalidConfiguration, "resource not provided")
+	}
+
+	content, err := requireResourceContent(orcImage)
+	if err != nil {
+		return err
 	}
 
 	return imageClient.CreateImport(ctx, glanceImage.ID, &imageimport.CreateOpts{
 		Name: imageimport.WebDownloadMethod,
-		URI:  orcImage.Spec.Content.SourceURL.URL,
+		URI:  content.Download.URL,
 	})
 }

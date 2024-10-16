@@ -19,19 +19,16 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
+	apiv1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
 )
 
 // ImageSpecApplyConfiguration represents an declarative configuration of the ImageSpec type for use
 // with apply.
 type ImageSpecApplyConfiguration struct {
-	ImageName           *string                                      `json:"imageName,omitempty"`
-	Protected           *bool                                        `json:"protected,omitempty"`
-	Tags                []v1alpha1.ImageTag                          `json:"tags,omitempty"`
-	Visibility          *v1alpha1.ImageVisibility                    `json:"visibility,omitempty"`
-	Properties          *ImagePropertiesApplyConfiguration           `json:"properties,omitempty"`
-	Content             *ImageContentApplyConfiguration              `json:"content,omitempty"`
-	ControllerOptions   *ControllerOptionsApplyConfiguration         `json:"controllerOptions,omitempty"`
+	Import              *ImageImportApplyConfiguration               `json:"import,omitempty"`
+	Resource            *ImageResourceSpecApplyConfiguration         `json:"resource,omitempty"`
+	ManagementPolicy    *apiv1alpha1.ManagementPolicy                `json:"managementPolicy,omitempty"`
+	ManagedOptions      *ManagedOptionsApplyConfiguration            `json:"managedOptions,omitempty"`
 	CloudCredentialsRef *CloudCredentialsReferenceApplyConfiguration `json:"cloudCredentialsRef,omitempty"`
 }
 
@@ -41,61 +38,35 @@ func ImageSpec() *ImageSpecApplyConfiguration {
 	return &ImageSpecApplyConfiguration{}
 }
 
-// WithImageName sets the ImageName field in the declarative configuration to the given value
+// WithImport sets the Import field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the ImageName field is set to the value of the last call.
-func (b *ImageSpecApplyConfiguration) WithImageName(value string) *ImageSpecApplyConfiguration {
-	b.ImageName = &value
+// If called multiple times, the Import field is set to the value of the last call.
+func (b *ImageSpecApplyConfiguration) WithImport(value *ImageImportApplyConfiguration) *ImageSpecApplyConfiguration {
+	b.Import = value
 	return b
 }
 
-// WithProtected sets the Protected field in the declarative configuration to the given value
+// WithResource sets the Resource field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Protected field is set to the value of the last call.
-func (b *ImageSpecApplyConfiguration) WithProtected(value bool) *ImageSpecApplyConfiguration {
-	b.Protected = &value
+// If called multiple times, the Resource field is set to the value of the last call.
+func (b *ImageSpecApplyConfiguration) WithResource(value *ImageResourceSpecApplyConfiguration) *ImageSpecApplyConfiguration {
+	b.Resource = value
 	return b
 }
 
-// WithTags adds the given value to the Tags field in the declarative configuration
-// and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the Tags field.
-func (b *ImageSpecApplyConfiguration) WithTags(values ...v1alpha1.ImageTag) *ImageSpecApplyConfiguration {
-	for i := range values {
-		b.Tags = append(b.Tags, values[i])
-	}
+// WithManagementPolicy sets the ManagementPolicy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ManagementPolicy field is set to the value of the last call.
+func (b *ImageSpecApplyConfiguration) WithManagementPolicy(value apiv1alpha1.ManagementPolicy) *ImageSpecApplyConfiguration {
+	b.ManagementPolicy = &value
 	return b
 }
 
-// WithVisibility sets the Visibility field in the declarative configuration to the given value
+// WithManagedOptions sets the ManagedOptions field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Visibility field is set to the value of the last call.
-func (b *ImageSpecApplyConfiguration) WithVisibility(value v1alpha1.ImageVisibility) *ImageSpecApplyConfiguration {
-	b.Visibility = &value
-	return b
-}
-
-// WithProperties sets the Properties field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Properties field is set to the value of the last call.
-func (b *ImageSpecApplyConfiguration) WithProperties(value *ImagePropertiesApplyConfiguration) *ImageSpecApplyConfiguration {
-	b.Properties = value
-	return b
-}
-
-// WithContent sets the Content field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Content field is set to the value of the last call.
-func (b *ImageSpecApplyConfiguration) WithContent(value *ImageContentApplyConfiguration) *ImageSpecApplyConfiguration {
-	b.Content = value
-	return b
-}
-
-// WithControllerOptions sets the ControllerOptions field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the ControllerOptions field is set to the value of the last call.
-func (b *ImageSpecApplyConfiguration) WithControllerOptions(value *ControllerOptionsApplyConfiguration) *ImageSpecApplyConfiguration {
-	b.ControllerOptions = value
+// If called multiple times, the ManagedOptions field is set to the value of the last call.
+func (b *ImageSpecApplyConfiguration) WithManagedOptions(value *ManagedOptionsApplyConfiguration) *ImageSpecApplyConfiguration {
+	b.ManagedOptions = value
 	return b
 }
 

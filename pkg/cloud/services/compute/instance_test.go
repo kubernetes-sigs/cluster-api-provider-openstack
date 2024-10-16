@@ -32,7 +32,6 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/image/v2/images"
 	. "github.com/onsi/gomega" //nolint:revive
 	"go.uber.org/mock/gomock"
-	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/ptr"
@@ -51,8 +50,6 @@ func TestService_getImageID(t *testing.T) {
 		imageID   = "ce96e584-7ebc-46d6-9e55-987d72e3806c"
 		imageName = "test-image"
 		namespace = "test-namespace"
-
-		fakeClientResourceVersion = "999"
 	)
 	imageTags := []string{"test-tag"}
 
@@ -67,7 +64,6 @@ func TestService_getImageID(t *testing.T) {
 		fakeObjects       []runtime.Object
 		expect            func(m *mock.MockImageClientMockRecorder)
 		want              *string
-		wantDep           runtime.Object
 		wantErr           bool
 		wantTerminalError bool
 	}{
@@ -163,12 +159,6 @@ func TestService_getImageID(t *testing.T) {
 				},
 			},
 			want: nil,
-			wantDep: &orcv1alpha1.Image{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      imageName,
-					Namespace: namespace,
-				},
-			},
 		},
 		{
 			testName: "Image by reference exists, is available",
@@ -190,27 +180,11 @@ func TestService_getImageID(t *testing.T) {
 								Status: metav1.ConditionTrue,
 							},
 						},
-						ImageID: ptr.To(imageID),
+						ID: ptr.To(imageID),
 					},
 				},
 			},
 			want: ptr.To(imageID),
-			wantDep: &orcv1alpha1.Image{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:            imageName,
-					Namespace:       namespace,
-					ResourceVersion: fakeClientResourceVersion,
-				},
-				Status: orcv1alpha1.ImageStatus{
-					Conditions: []metav1.Condition{
-						{
-							Type:   orcv1alpha1.OpenStackConditionAvailable,
-							Status: metav1.ConditionTrue,
-						},
-					},
-					ImageID: ptr.To(imageID),
-				},
-			},
 		},
 		{
 			testName: "Image by reference exists, still reconciling",
@@ -237,32 +211,11 @@ func TestService_getImageID(t *testing.T) {
 								Reason: orcv1alpha1.OpenStackConditionReasonProgressing,
 							},
 						},
-						ImageID: ptr.To(imageID),
+						ID: ptr.To(imageID),
 					},
 				},
 			},
 			want: nil,
-			wantDep: &orcv1alpha1.Image{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:            imageName,
-					Namespace:       namespace,
-					ResourceVersion: fakeClientResourceVersion,
-				},
-				Status: orcv1alpha1.ImageStatus{
-					Conditions: []metav1.Condition{
-						{
-							Type:   orcv1alpha1.OpenStackConditionAvailable,
-							Status: metav1.ConditionFalse,
-						},
-						{
-							Type:   orcv1alpha1.OpenStackConditionProgressing,
-							Status: metav1.ConditionTrue,
-							Reason: orcv1alpha1.OpenStackConditionReasonProgressing,
-						},
-					},
-					ImageID: ptr.To(imageID),
-				},
-			},
 		},
 		{
 			testName: "Image by reference exists, terminal failure",
@@ -290,34 +243,12 @@ func TestService_getImageID(t *testing.T) {
 								Message: "test error",
 							},
 						},
-						ImageID: ptr.To(imageID),
+						ID: ptr.To(imageID),
 					},
 				},
 			},
 			want:              nil,
 			wantTerminalError: true,
-			wantDep: &orcv1alpha1.Image{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:            imageName,
-					Namespace:       namespace,
-					ResourceVersion: fakeClientResourceVersion,
-				},
-				Status: orcv1alpha1.ImageStatus{
-					Conditions: []metav1.Condition{
-						{
-							Type:   orcv1alpha1.OpenStackConditionAvailable,
-							Status: metav1.ConditionFalse,
-						},
-						{
-							Type:    orcv1alpha1.OpenStackConditionProgressing,
-							Status:  metav1.ConditionFalse,
-							Reason:  orcv1alpha1.OpenStackConditionReasonUnrecoverableError,
-							Message: "test error",
-						},
-					},
-					ImageID: ptr.To(imageID),
-				},
-			},
 		},
 	}
 	for _, tt := range tests {
@@ -336,7 +267,7 @@ func TestService_getImageID(t *testing.T) {
 
 			fakeClient := fake.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(tt.fakeObjects...).Build()
 
-			got, dependency, err := s.GetImageID(context.TODO(), fakeClient, namespace, tt.image)
+			got, err := s.GetImageID(context.TODO(), fakeClient, namespace, tt.image)
 
 			if tt.wantTerminalError {
 				tt.wantErr = true
@@ -350,10 +281,6 @@ func TestService_getImageID(t *testing.T) {
 			var terminalError *capoerrors.TerminalError
 			if errors.As(err, &terminalError) != tt.wantTerminalError {
 				t.Errorf("Terminal error: wanted = %v, got = %v", tt.wantTerminalError, !tt.wantTerminalError)
-			}
-
-			if !apiequality.Semantic.DeepEqual(tt.wantDep, dependency) {
-				t.Errorf("Dependency does not match: %s", cmp.Diff(tt.wantDep, dependency))
 			}
 
 			// NOTE(mdbooth): there must be a simpler way to write this!

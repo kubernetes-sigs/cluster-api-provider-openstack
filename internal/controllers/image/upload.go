@@ -78,33 +78,26 @@ func (r *orcImageReconciler) uploadImageContent(ctx context.Context, orcImage *o
 	log := ctrl.LoggerFrom(ctx)
 	log.V(3).Info("Uploading image content")
 
-	contentSource := orcImage.Spec.Content
-	if contentSource == nil {
-		// Should have been caught by validation
-		return capoerrors.Terminal(orcv1alpha1.OpenStackConditionReasonInvalidConfiguration, "content source not provided")
+	content, err := requireResourceContent(orcImage)
+	if err != nil {
+		return err
 	}
 
-	if contentSource.SourceType != orcv1alpha1.ImageSourceTypeURL {
-		// Should have been caught by validation
-		return capoerrors.Terminal(orcv1alpha1.OpenStackConditionReasonInvalidConfiguration, "invalid image source type: "+string(contentSource.SourceType))
-	}
-
-	urlSource := contentSource.SourceURL
-
-	if urlSource == nil {
+	download := content.Download
+	if download == nil {
 		// Should have been caught by validation
 		return capoerrors.Terminal(orcv1alpha1.OpenStackConditionReasonInvalidConfiguration, "image source type URL has no url entry")
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, urlSource.URL, http.NoBody)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, download.URL, http.NoBody)
 	if err != nil {
-		return fmt.Errorf("error creating request for %s: %w", urlSource.URL, err)
+		return fmt.Errorf("error creating request for %s: %w", download.URL, err)
 	}
 
 	client := http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("error requesting %s: %w", urlSource.URL, err)
+		return fmt.Errorf("error requesting %s: %w", download.URL, err)
 	}
 	defer func() {
 		err = errors.Join(err, resp.Body.Close())
@@ -115,9 +108,9 @@ func (r *orcImageReconciler) uploadImageContent(ctx context.Context, orcImage *o
 	reader := newReaderWithProgress(resp.Body, r.downloadProgressReporter(ctx, orcImage, glanceImage, resp.ContentLength))
 
 	// If the content defines a hash, calculate the hash while downloading and verify it before returning a successful read to glance
-	if urlSource.DownloadHash != nil {
-		log.V(4).Info("will verify download hash", "algorithm", urlSource.DownloadHash.Algorithm, "value", urlSource.DownloadHash.Value)
-		reader, err = newReaderWithHash(reader, urlSource.DownloadHash.Algorithm, r.hashVerifier(ctx, orcImage, urlSource.DownloadHash.Value))
+	if download.Hash != nil {
+		log.V(4).Info("will verify download hash", "algorithm", download.Hash.Algorithm, "value", download.Hash.Value)
+		reader, err = newReaderWithHash(reader, download.Hash.Algorithm, r.hashVerifier(ctx, orcImage, download.Hash.Value))
 		if err != nil {
 			return err
 		}
@@ -128,11 +121,11 @@ func (r *orcImageReconciler) uploadImageContent(ctx context.Context, orcImage *o
 	reader = bufio.NewReaderSize(reader, transferBufferSizeBytes)
 
 	// If the content requires decompression, decompress before sending to glance
-	if urlSource.Decompress != nil {
-		log.V(4).Info("will decompress downladed content", "algorithm", *urlSource.Decompress)
-		reader, err = newReaderWithDecompression(reader, *urlSource.Decompress)
+	if download.Decompress != nil {
+		log.V(4).Info("will decompress downladed content", "algorithm", *download.Decompress)
+		reader, err = newReaderWithDecompression(reader, *download.Decompress)
 		if err != nil {
-			return fmt.Errorf("opening %s: %w", urlSource.URL, err)
+			return fmt.Errorf("opening %s: %w", download.URL, err)
 		}
 	}
 

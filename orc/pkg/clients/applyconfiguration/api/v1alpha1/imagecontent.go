@@ -25,10 +25,9 @@ import (
 // ImageContentApplyConfiguration represents an declarative configuration of the ImageContent type for use
 // with apply.
 type ImageContentApplyConfiguration struct {
-	ContainerFormat *v1alpha1.ImageContainerFormat           `json:"containerFormat,omitempty"`
-	DiskFormat      *v1alpha1.ImageDiskFormat                `json:"diskFormat,omitempty"`
-	SourceType      *v1alpha1.ImageContentSourceType         `json:"sourceType,omitempty"`
-	SourceURL       *ImageContentSourceURLApplyConfiguration `json:"sourceURL,omitempty"`
+	ContainerFormat *v1alpha1.ImageContainerFormat                `json:"containerFormat,omitempty"`
+	DiskFormat      *v1alpha1.ImageDiskFormat                     `json:"diskFormat,omitempty"`
+	Download        *ImageContentSourceDownloadApplyConfiguration `json:"download,omitempty"`
 }
 
 // ImageContentApplyConfiguration constructs an declarative configuration of the ImageContent type for use with
@@ -53,18 +52,10 @@ func (b *ImageContentApplyConfiguration) WithDiskFormat(value v1alpha1.ImageDisk
 	return b
 }
 
-// WithSourceType sets the SourceType field in the declarative configuration to the given value
+// WithDownload sets the Download field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the SourceType field is set to the value of the last call.
-func (b *ImageContentApplyConfiguration) WithSourceType(value v1alpha1.ImageContentSourceType) *ImageContentApplyConfiguration {
-	b.SourceType = &value
-	return b
-}
-
-// WithSourceURL sets the SourceURL field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the SourceURL field is set to the value of the last call.
-func (b *ImageContentApplyConfiguration) WithSourceURL(value *ImageContentSourceURLApplyConfiguration) *ImageContentApplyConfiguration {
-	b.SourceURL = value
+// If called multiple times, the Download field is set to the value of the last call.
+func (b *ImageContentApplyConfiguration) WithDownload(value *ImageContentSourceDownloadApplyConfiguration) *ImageContentApplyConfiguration {
+	b.Download = value
 	return b
 }

@@ -18,14 +18,18 @@ package apivalidations
 
 import (
 	"context"
-	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/format"
 	corev1 "k8s.io/api/core/v1"
 
 	orcv1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
 	applyconfigv1alpha1 "github.com/k-orc/openstack-resource-controller/pkg/clients/applyconfiguration/api/v1alpha1"
+)
+
+const (
+	imageID = "265c9e4f-0f5a-46e4-9f3f-fb8de25ae12f"
 )
 
 var _ = Describe("ORC Image API validations", func() {
@@ -37,18 +41,37 @@ var _ = Describe("ORC Image API validations", func() {
 		obj.Namespace = namespace.Name
 		return obj
 	}
-	minimalPatch := func(orcImage *orcv1alpha1.Image) *applyconfigv1alpha1.ImageApplyConfiguration {
-		return applyconfigv1alpha1.Image(orcImage.Name, orcImage.Namespace).
+
+	testCredentials := func() *applyconfigv1alpha1.CloudCredentialsReferenceApplyConfiguration {
+		return applyconfigv1alpha1.CloudCredentialsReference().
+			WithSecretName("openstack-credentials").
+			WithCloudName("openstack")
+	}
+
+	testResource := func() *applyconfigv1alpha1.ImageResourceSpecApplyConfiguration {
+		return applyconfigv1alpha1.ImageResourceSpec().
+			WithContent(applyconfigv1alpha1.ImageContent().
+				WithContainerFormat(orcv1alpha1.ImageContainerFormatBare).
+				WithDiskFormat(orcv1alpha1.ImageDiskFormatQCOW2).
+				WithDownload(applyconfigv1alpha1.ImageContentSourceDownload().
+					WithURL("https://example.com/example.img")))
+
+	}
+
+	basePatch := func(image *orcv1alpha1.Image) *applyconfigv1alpha1.ImageApplyConfiguration {
+		return applyconfigv1alpha1.Image(image.Name, image.Namespace).
 			WithSpec(applyconfigv1alpha1.ImageSpec().
-				WithContent(applyconfigv1alpha1.ImageContent().
-					WithContainerFormat(orcv1alpha1.ImageContainerFormatBare).
-					WithDiskFormat(orcv1alpha1.ImageDiskFormatQCOW2).
-					WithSourceType(orcv1alpha1.ImageSourceTypeURL).
-					WithSourceURL(applyconfigv1alpha1.ImageContentSourceURL().
-						WithURL("https://example.com/example.img"))).
-				WithCloudCredentialsRef(applyconfigv1alpha1.CloudCredentialsReference().
-					WithName("openstack-credentials").
-					WithCloudName("openstack")))
+				WithCloudCredentialsRef(testCredentials()))
+	}
+
+	minimalManagedPatch := func(orcImage *orcv1alpha1.Image) *applyconfigv1alpha1.ImageApplyConfiguration {
+		patch := basePatch(orcImage)
+		patch.Spec.WithResource(testResource())
+		return patch
+	}
+
+	testImport := func() *applyconfigv1alpha1.ImageImportApplyConfiguration {
+		return applyconfigv1alpha1.ImageImport().WithID(imageID)
 	}
 
 	BeforeEach(func() {
@@ -57,72 +80,130 @@ var _ = Describe("ORC Image API validations", func() {
 
 	It("should allow to create a minimal image", func(ctx context.Context) {
 		image := imageStub("image")
-		minimalPatch := minimalPatch(image)
+		minimalPatch := minimalManagedPatch(image)
 
 		Expect(applyObj(ctx, image, minimalPatch)).To(Succeed())
 	})
 
-	DescribeTable("should not allow invalid names",
-		func(ctx context.Context, name string) {
-			image := imageStub(name)
-			minimalPatch := minimalPatch(image)
-
-			Expect(applyObj(ctx, image, minimalPatch)).NotTo(Succeed())
-		},
-		Entry("longer than 63 characters", strings.Repeat("a", 64)),
-		Entry("contains /", "a/a"),
-	)
-
-	It("should require contentSource when controllerOptions are defined and empty", func(ctx context.Context) {
+	It("should default to managementPolicy managed", func(ctx context.Context) {
 		image := imageStub("image")
-		patch := minimalPatch(image)
-		patch.Spec.
-			WithControllerOptions(applyconfigv1alpha1.ControllerOptions())
-		Expect(applyObj(ctx, image, patch)).To(Succeed(), "with contentSource")
+		image.Spec.Resource = &orcv1alpha1.ImageResourceSpec{
+			Content: &orcv1alpha1.ImageContent{
+				DiskFormat: orcv1alpha1.ImageDiskFormatQCOW2,
+				Download: &orcv1alpha1.ImageContentSourceDownload{
+					URL: "https://example.com/example.img",
+				},
+			},
+		}
+		image.Spec.CloudCredentialsRef = orcv1alpha1.CloudCredentialsReference{
+			SecretName: "my-secret",
+			CloudName:  "my-cloud",
+		}
 
-		patch.Spec.
-			WithContent(nil)
-		Expect(applyObj(ctx, image, patch)).NotTo(Succeed(), "without contentSource")
+		Expect(k8sClient.Create(ctx, image)).To(Succeed())
+		Expect(image.Spec.ManagementPolicy).To(Equal(orcv1alpha1.ManagementPolicyManaged))
 	})
 
-	It("should require contentSource when controllerOptions.onCreate is AdoptOrCreate", func(ctx context.Context) {
-		image := imageStub("image-with")
-		patch := minimalPatch(image)
-		patch.Spec.
-			WithControllerOptions(applyconfigv1alpha1.ControllerOptions().
-				WithOnCreate(orcv1alpha1.ControllerOptionsOnCreateAdoptOrCreate))
-		Expect(applyObj(ctx, image, patch)).To(Succeed(), "with contentSource")
+	It("should require import for unmanaged", func(ctx context.Context) {
+		image := imageStub("image")
+		patch := basePatch(image)
+		patch.Spec.WithManagementPolicy(orcv1alpha1.ManagementPolicyUnmanaged)
+		Expect(applyObj(ctx, image, patch)).NotTo(Succeed())
 
-		image = imageStub("image-without")
-		patch.Spec.
-			WithControllerOptions(applyconfigv1alpha1.ControllerOptions().
-				WithOnCreate(orcv1alpha1.ControllerOptionsOnCreateAdoptOrCreate)).
-			WithContent(nil)
-		Expect(applyObj(ctx, image, patch)).NotTo(Succeed(), "without contentSource")
+		patch.Spec.WithImport(testImport())
+		Expect(applyObj(ctx, image, patch)).To(Succeed())
 	})
 
-	It("should require contentSource is not set when controllerOptions.onCreate is Adopt", func(ctx context.Context) {
-		image := imageStub("image-without")
-		patch := minimalPatch(image)
+	It("should not permit unmanaged with resource", func(ctx context.Context) {
+		image := imageStub("image")
+		patch := basePatch(image)
 		patch.Spec.
-			WithControllerOptions(applyconfigv1alpha1.ControllerOptions().
-				WithOnCreate(orcv1alpha1.ControllerOptionsOnCreateAdopt)).
-			WithContent(nil)
-		Expect(applyObj(ctx, image, patch)).To(Succeed(), "without contentSource")
+			WithManagementPolicy(orcv1alpha1.ManagementPolicyUnmanaged).
+			WithImport(testImport()).
+			WithResource(testResource())
+	})
 
-		image = imageStub("image-with")
-		patch = minimalPatch(image)
+	It("should not permit empty import", func(ctx context.Context) {
+		image := imageStub("image")
+		patch := basePatch(image)
 		patch.Spec.
-			WithControllerOptions(applyconfigv1alpha1.ControllerOptions().
-				WithOnCreate(orcv1alpha1.ControllerOptionsOnCreateAdopt))
-		Expect(applyObj(ctx, image, patch)).NotTo(Succeed(), "with contentSource")
+			WithManagementPolicy(orcv1alpha1.ManagementPolicyUnmanaged).
+			WithImport(applyconfigv1alpha1.ImageImport())
+		Expect(applyObj(ctx, image, patch)).NotTo(Succeed())
+	})
+
+	It("should not permit empty import filter", func(ctx context.Context) {
+		image := imageStub("image")
+		patch := basePatch(image)
+		patch.Spec.
+			WithManagementPolicy(orcv1alpha1.ManagementPolicyUnmanaged).
+			WithImport(applyconfigv1alpha1.ImageImport().
+				WithFilter(applyconfigv1alpha1.ImageFilter()))
+		Expect(applyObj(ctx, image, patch)).NotTo(Succeed())
+	})
+
+	It("should permit import filter with name", func(ctx context.Context) {
+		image := imageStub("image")
+		patch := basePatch(image)
+		patch.Spec.
+			WithManagementPolicy(orcv1alpha1.ManagementPolicyUnmanaged).
+			WithImport(applyconfigv1alpha1.ImageImport().
+				WithFilter(applyconfigv1alpha1.ImageFilter().WithName("foo")))
+		Expect(applyObj(ctx, image, patch)).To(Succeed())
+	})
+
+	It("should require resource for managed", func(ctx context.Context) {
+		image := imageStub("image")
+		patch := basePatch(image)
+		patch.Spec.WithManagementPolicy(orcv1alpha1.ManagementPolicyManaged)
+		Expect(applyObj(ctx, image, patch)).NotTo(Succeed())
+
+		patch.Spec.WithResource(testResource())
+		Expect(applyObj(ctx, image, patch)).To(Succeed())
+	})
+
+	It("should not permit managed with import", func(ctx context.Context) {
+		image := imageStub("image")
+		patch := basePatch(image)
+		patch.Spec.
+			WithImport(testImport()).
+			WithManagementPolicy(orcv1alpha1.ManagementPolicyManaged).
+			WithResource(testResource())
+		Expect(applyObj(ctx, image, patch)).NotTo(Succeed())
+	})
+
+	It("should require content when not importing", func(ctx context.Context) {
+		image := imageStub("image")
+		patch := minimalManagedPatch(image)
+		patch.Spec.WithResource(applyconfigv1alpha1.ImageResourceSpec())
+		Expect(applyObj(ctx, image, patch)).NotTo(Succeed())
+	})
+
+	It("should not permit managedOptions for unmanaged", func(ctx context.Context) {
+		image := imageStub("image")
+		patch := basePatch(image)
+		patch.Spec.
+			WithImport(testImport()).
+			WithManagementPolicy(orcv1alpha1.ManagementPolicyUnmanaged).
+			WithManagedOptions(applyconfigv1alpha1.ManagedOptions().
+				WithOnDelete(orcv1alpha1.OnDeleteDetach))
+		Expect(applyObj(ctx, image, patch)).NotTo(Succeed())
+	})
+
+	It("should permit managedOptions for managed", func(ctx context.Context) {
+		image := imageStub("image")
+		patch := minimalManagedPatch(image)
+		patch.Spec.
+			WithManagedOptions(applyconfigv1alpha1.ManagedOptions().
+				WithOnDelete(orcv1alpha1.OnDeleteDetach))
+		Expect(applyObj(ctx, image, patch)).To(Succeed())
 	})
 
 	DescribeTable("should permit containerFormat",
 		func(ctx context.Context, containerFormat orcv1alpha1.ImageContainerFormat) {
 			image := imageStub("image")
-			patch := minimalPatch(image)
-			patch.Spec.Content.WithContainerFormat(containerFormat)
+			patch := minimalManagedPatch(image)
+			patch.Spec.Resource.Content.WithContainerFormat(containerFormat)
 			Expect(applyObj(ctx, image, patch)).To(Succeed(), "create image")
 		},
 		Entry(string(orcv1alpha1.ImageContainerFormatAKI), orcv1alpha1.ImageContainerFormatAKI),
@@ -136,16 +217,16 @@ var _ = Describe("ORC Image API validations", func() {
 
 	It("should not permit invalid containerFormat", func(ctx context.Context) {
 		image := imageStub("image")
-		patch := minimalPatch(image)
-		patch.Spec.Content.WithContainerFormat("foo")
+		patch := minimalManagedPatch(image)
+		patch.Spec.Resource.Content.WithContainerFormat("foo")
 		Expect(applyObj(ctx, image, patch)).NotTo(Succeed(), "create image")
 	})
 
 	DescribeTable("should permit diskFormat",
 		func(ctx context.Context, diskFormat orcv1alpha1.ImageDiskFormat) {
 			image := imageStub("image")
-			patch := minimalPatch(image)
-			patch.Spec.Content.WithDiskFormat(diskFormat)
+			patch := minimalManagedPatch(image)
+			patch.Spec.Resource.Content.WithDiskFormat(diskFormat)
 			Expect(applyObj(ctx, image, patch)).To(Succeed(), "create image")
 		},
 		Entry(string(orcv1alpha1.ImageDiskFormatAMI), orcv1alpha1.ImageDiskFormatAMI),
@@ -163,58 +244,56 @@ var _ = Describe("ORC Image API validations", func() {
 
 	It("should not permit invalid diskFormat", func(ctx context.Context) {
 		image := imageStub("image")
-		patch := minimalPatch(image)
-		patch.Spec.Content.WithDiskFormat("foo")
+		patch := minimalManagedPatch(image)
+		patch.Spec.Resource.Content.WithDiskFormat("foo")
 		Expect(applyObj(ctx, image, patch)).NotTo(Succeed(), "create image")
 	})
 
 	DescribeTable("should not permit modifying immutable fields",
 		func(ctx context.Context, patchA, patchB func(*applyconfigv1alpha1.ImageSpecApplyConfiguration)) {
 			image := imageStub("image")
-			patch := minimalPatch(image)
+			patch := minimalManagedPatch(image)
 			patchA(patch.Spec)
-			Expect(applyObj(ctx, image, patch)).To(Succeed(), "create image")
+			Expect(applyObj(ctx, image, patch)).To(Succeed(), format.Object(patch, 2))
 
-			patch = minimalPatch(image)
+			patch = minimalManagedPatch(image)
 			patchB(patch.Spec)
 			Expect(applyObj(ctx, image, patch)).NotTo(Succeed(), "modify image")
 		},
 		Entry("imageName", func(spec *applyconfigv1alpha1.ImageSpecApplyConfiguration) {
-			spec.WithImageName("foo")
+			spec.Resource.WithName("foo")
 		}, func(spec *applyconfigv1alpha1.ImageSpecApplyConfiguration) {
-			spec.WithImageName("bar")
+			spec.Resource.WithName("bar")
 		}),
 		Entry("protected", func(spec *applyconfigv1alpha1.ImageSpecApplyConfiguration) {
-			spec.WithProtected(true)
+			spec.Resource.WithProtected(true)
 		}, func(spec *applyconfigv1alpha1.ImageSpecApplyConfiguration) {
-			spec.WithProtected(false)
+			spec.Resource.WithProtected(false)
 		}),
 		Entry("tags", func(spec *applyconfigv1alpha1.ImageSpecApplyConfiguration) {
-			spec.WithTags("foo")
+			spec.Resource.WithTags("foo")
 		}, func(spec *applyconfigv1alpha1.ImageSpecApplyConfiguration) {
-			spec.WithTags("bar")
+			spec.Resource.WithTags("bar")
 		}),
 		Entry("visibility", func(spec *applyconfigv1alpha1.ImageSpecApplyConfiguration) {
-			spec.WithVisibility("public")
+			spec.Resource.WithVisibility("public")
 		}, func(spec *applyconfigv1alpha1.ImageSpecApplyConfiguration) {
-			spec.WithVisibility("private")
+			spec.Resource.WithVisibility("private")
 		}),
 		Entry("properties", func(spec *applyconfigv1alpha1.ImageSpecApplyConfiguration) {
-			spec.WithProperties(applyconfigv1alpha1.ImageProperties().WithMinDiskGB(1))
+			spec.Resource.WithProperties(applyconfigv1alpha1.ImageProperties().WithMinDiskGB(1))
 		}, func(spec *applyconfigv1alpha1.ImageSpecApplyConfiguration) {
-			spec.WithProperties(applyconfigv1alpha1.ImageProperties().WithMinDiskGB(2))
+			spec.Resource.WithProperties(applyconfigv1alpha1.ImageProperties().WithMinDiskGB(2))
 		}),
 		Entry("content", func(spec *applyconfigv1alpha1.ImageSpecApplyConfiguration) {
-			spec.WithContent(applyconfigv1alpha1.ImageContent().
+			spec.Resource.WithContent(applyconfigv1alpha1.ImageContent().
 				WithDiskFormat("qcow2").
-				WithSourceType(orcv1alpha1.ImageSourceTypeURL).
-				WithSourceURL(applyconfigv1alpha1.ImageContentSourceURL().
+				WithDownload(applyconfigv1alpha1.ImageContentSourceDownload().
 					WithURL("https://example.com/image1.img")))
 		}, func(spec *applyconfigv1alpha1.ImageSpecApplyConfiguration) {
-			spec.WithContent(applyconfigv1alpha1.ImageContent().
+			spec.Resource.WithContent(applyconfigv1alpha1.ImageContent().
 				WithDiskFormat("qcow2").
-				WithSourceType(orcv1alpha1.ImageSourceTypeURL).
-				WithSourceURL(applyconfigv1alpha1.ImageContentSourceURL().
+				WithDownload(applyconfigv1alpha1.ImageContentSourceDownload().
 					WithURL("https://example.com/image2.img")))
 		}),
 	)

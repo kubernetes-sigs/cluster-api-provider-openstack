@@ -37,14 +37,12 @@ import (
 // external dependencies, and does not require any complex logic on creation.
 // Note that we only set the fields in ResolvedServerSpec that are not set yet. This is ok because
 // OpenStackServer is immutable, so we can't change the spec after the machine is created.
-func ResolveServerSpec(ctx context.Context, scope *scope.WithLogger, k8sClient client.Client, openStackServer *infrav1alpha1.OpenStackServer) (bool, []client.Object, bool, error) {
+func ResolveServerSpec(ctx context.Context, scope *scope.WithLogger, k8sClient client.Client, openStackServer *infrav1alpha1.OpenStackServer) (bool, bool, error) {
 	resolved := openStackServer.Status.Resolved
 	if resolved == nil {
 		resolved = &infrav1alpha1.ResolvedServerSpec{}
 		openStackServer.Status.Resolved = resolved
 	}
-
-	var dependencies []client.Object
 
 	spec := &openStackServer.Spec
 	if resolved == nil {
@@ -60,12 +58,12 @@ func ResolveServerSpec(ctx context.Context, scope *scope.WithLogger, k8sClient c
 
 	computeService, err := NewService(scope)
 	if err != nil {
-		return false, dependencies, false, err
+		return false, false, err
 	}
 
 	networkingService, err := networking.NewService(scope)
 	if err != nil {
-		return false, dependencies, false, err
+		return false, false, err
 	}
 
 	// A setter returns: done, changed, error
@@ -88,16 +86,13 @@ func ResolveServerSpec(ctx context.Context, scope *scope.WithLogger, k8sClient c
 			return true, false, nil
 		}
 
-		imageID, dependency, err := computeService.GetImageID(ctx, k8sClient, openStackServer.Namespace, spec.Image)
-		if dependency != nil {
-			dependencies = append(dependencies, dependency)
-		}
+		imageID, err := computeService.GetImageID(ctx, k8sClient, openStackServer.Namespace, spec.Image)
 		if err != nil {
 			return false, false, err
 		}
 
 		// If we didn't get an imageID it means we're waiting on a dependency.
-		// Set the dependency and wait to be called again.
+		// Wait to be called again.
 		if imageID == nil {
 			return false, false, nil
 		}
@@ -158,7 +153,7 @@ func ResolveServerSpec(ctx context.Context, scope *scope.WithLogger, k8sClient c
 		}
 	}
 
-	return changed, dependencies, done, errors.Join(errs...)
+	return changed, done, errors.Join(errs...)
 }
 
 // InstanceTags returns the tags that should be applied to an instance.

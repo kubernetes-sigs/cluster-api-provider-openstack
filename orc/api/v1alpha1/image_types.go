@@ -20,12 +20,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const (
-	ImageControllerFinalizer  = "openstack.k-orc.cloud/image"
-	ImageControllerFieldOwner = "openstack.k-orc.cloud/imagecontroller"
-)
-
-// GlanceTag is the name of the go field tag in properties structs used to specify the glance property name.
+// GlanceTag is the name of the go field tag in properties structs used to specify the Glance property name.
 const GlanceTag = "glance"
 
 // +kubebuilder:validation:MinLength:=1
@@ -219,24 +214,14 @@ const (
 	ImageCompressionBZ2 ImageCompression = "bz2"
 )
 
-// +kubebuilder:validation:Enum:=URL
-type ImageContentSourceType string
-
-const (
-	ImageSourceTypeURL ImageContentSourceType = "URL"
-)
-
-// ImageContent specifies the source of image data
-// +kubebuilder:validation:XValidation:rule="has(self.sourceType) && self.sourceType == 'URL' ?  has(self.sourceURL) : !has(self.sourceURL)",message="sourceURL is required when sourceType is URL, and forbidden otherwise"
-// +union.
 type ImageContent struct {
 	// ContainerFormat is the format of the image container.
 	// qcow2 and raw images do not usually have a container. This is specified as "bare", which is also the default.
 	// Permitted values are ami, ari, aki, bare, ovf, ova, and docker.
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="containerFormat is immutable"
-	// +kubebuilder:validation:Required
 	// +kubebuilder:default:=bare
-	ContainerFormat ImageContainerFormat `json:"containerFormat"`
+	// +optional
+	ContainerFormat ImageContainerFormat `json:"containerFormat,omitempty"`
 
 	// DiskFormat is the format of the disk image.
 	// Normal values are "qcow2", or "raw". Glance may be configured to support others.
@@ -244,19 +229,14 @@ type ImageContent struct {
 	// +kubebuilder:validation:Required
 	DiskFormat ImageDiskFormat `json:"diskFormat"`
 
-	// SourceType is the type of the image content source
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="sourceType is immutable"
-	// +kubebuilder:validation:Required
-	// +unionDiscriminator
-	SourceType ImageContentSourceType `json:"sourceType"`
-
-	// SourceURL describes how to obtain image data by downloading it from a SourceURL. Must be set if Type is 'url'
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="sourceURL is immutable"
+	// Download describes how to obtain image data by downloading it from a URL.
+	// Must be set when creating a managed image.
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="download is immutable"
 	// +unionMember
-	SourceURL *ImageContentSourceURL `json:"sourceURL,omitempty"`
+	Download *ImageContentSourceDownload `json:"download,omitempty"`
 }
 
-type ImageContentSourceURL struct {
+type ImageContentSourceDownload struct {
 	// URL containing image data
 	// +kubebuilder:validation:Format=uri
 	// +kubebuilder:validation:Required
@@ -269,14 +249,14 @@ type ImageContentSourceURL struct {
 	// +optional
 	Decompress *ImageCompression `json:"decompress,omitempty"`
 
-	// DownloadHash is a hash which will be used to verify downloaded data, i.e.
+	// Hash is a hash which will be used to verify downloaded data, i.e.
 	// before any decompression. If not specified, no hash verification will be
-	// performed. Specifying a DownloadHash will disable the use of Glance's
+	// performed. Specifying a Hash will disable the use of Glance's
 	// web-download, as web-download cannot currently deterministically verify
 	// the hash of downloaded content.
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="downloadHash is immutable"
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="hash is immutable"
 	// +optional
-	DownloadHash *ImageHash `json:"downloadHash,omitempty"`
+	Hash *ImageHash `json:"hash,omitempty"`
 }
 
 type ImageHash struct {
@@ -292,14 +272,13 @@ type ImageHash struct {
 	Value string `json:"value"`
 }
 
-// ImageSpec defines the desired state of an Image.
-// +kubebuilder:validation:XValidation:rule="(!has(self.controllerOptions) || !has(self.controllerOptions.onCreate) || self.controllerOptions.onCreate == 'AdoptOrCreate') ? has(self.content) : !has(self.content)",message="content must be set if controllerOptions.onCreate is AdoptOrCreate, not otherwise"
-type ImageSpec struct {
-	// ImageName will be the name of the created Glance image.
-	// If not specified, the name of the Image object will be used.
+// ImageResourceSpec contains the desired state of a Glance image
+type ImageResourceSpec struct {
+	// Name will be the name of the created Glance image. If not specified, the
+	// name of the Image object will be used.
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="imageName is immutable"
 	// +optional
-	ImageName *string `json:"imageName,omitempty"`
+	Name *string `json:"name,omitempty"`
 
 	// Protected specifies that the image is protected from deletion.
 	// If not specified, the default is false.
@@ -323,63 +302,92 @@ type ImageSpec struct {
 	// +optional
 	Properties *ImageProperties `json:"properties,omitempty"`
 
-	// Content specifies how to obtain the image content. Must be set if
-	// ControllerOptions.OnCreate is AdoptOrCreate. Must not be set if
-	// ControllerOptions.OnCreate is Adopt.
+	// Content specifies how to obtain the image content.
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="content is immutable"
 	// +optional
 	Content *ImageContent `json:"content,omitempty"`
+}
 
-	// ControllerOptions are options which control the behaviour of the resource controller.
+// ImageFilter defines a Glance query
+// +kubebuilder:validation:MinProperties:=1
+type ImageFilter struct {
+	// Name specifies the name of a Glance image
 	// +optional
-	ControllerOptions *ControllerOptions `json:"controllerOptions,omitempty"`
+	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MaxLength:=1000
+	Name *string `json:"name,omitempty"`
+}
+
+// ImageImport specifies an existing image which will be imported instead of
+// creating a new image
+// +kubebuilder:validation:MinProperties:=1
+// +kubebuilder:validation:MaxProperties:=1
+type ImageImport struct {
+	// ID contains the unique identifier of an existing Glance image. Note that
+	// when specifying an image import by ID, the image MUST already exist. The
+	// Image will enter an error state if the image does not exist.
+	// +optional
+	// +kubebuilder:validation:Format:=uuid
+	ID *string `json:"id,omitempty"`
+
+	// Filter contains an image query which is expected to return a single
+	// result. The controller will continue to retry if filter returns no
+	// results. If filter returns multiple results the controller will set an
+	// error state and will not continue to retry.
+	// +optional
+	Filter *ImageFilter `json:"filter,omitempty"`
+}
+
+// ImageSpec defines the desired state of an Image.
+// +kubebuilder:validation:XValidation:rule="self.managementPolicy == 'managed' ? has(self.resource) : true",message="resource must be specified when policy is managed"
+// +kubebuilder:validation:XValidation:rule="self.managementPolicy == 'managed' ? !has(self.__import__) : true",message="import may not be specified when policy is managed"
+// +kubebuilder:validation:XValidation:rule="self.managementPolicy == 'unmanaged' ? !has(self.resource) : true",message="resource may not be specified when policy is unmanaged"
+// +kubebuilder:validation:XValidation:rule="self.managementPolicy == 'unmanaged' ? has(self.__import__) : true",message="import must be specified when policy is unmanaged"
+// +kubebuilder:validation:XValidation:rule="has(self.managedOptions) ? self.managementPolicy == 'managed' : true",message="managedOptions may only be provided when policy is managed"
+// +kubebuilder:validation:XValidation:rule="!has(self.__import__) ? has(self.resource.content) : true",message="resource content must be specified when not importing"
+type ImageSpec struct {
+	// Import refers to an existing image which will be imported instead of
+	// creating a new image.
+	// +optional
+	Import *ImageImport `json:"import,omitempty"`
+
+	// Resource specifies the desired state of the Glance image.
+	//
+	// Resource may not be specified if the management policy is `unmanaged`.
+	//
+	// Resource must be specified when the management policy is `managed`.
+	// +optional
+	Resource *ImageResourceSpec `json:"resource,omitempty"`
+
+	// ManagementPolicy defines how ORC will treat the object. Valid values are
+	// `managed`: ORC will create, update, and delete the resource; `unmanaged`:
+	// ORC will import an existing image, and will not apply updates to it or
+	// delete it.
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="managementPolicy is immutable"
+	// +kubebuilder:default:=managed
+	// +optional
+	ManagementPolicy ManagementPolicy `json:"managementPolicy,omitempty"`
+
+	// ManagedOptions specifies options which may be applied to managed objects.
+	// +optional
+	ManagedOptions *ManagedOptions `json:"managedOptions,omitempty"`
 
 	// CloudCredentialsRef points to a secret containing OpenStack credentials
 	// +kubebuilder:validation:Required
 	CloudCredentialsRef CloudCredentialsReference `json:"cloudCredentialsRef"`
 }
 
-var _ ObjectWithControllerOptions = &Image{}
-
-func (i *Image) GetControllerOptions() *ControllerOptions {
-	return i.Spec.ControllerOptions
-}
-
-// ImageStatus defines the observed state of an Image.
-type ImageStatus struct {
-	// Conditions represents the observed status of the object.
-	// Known .status.conditions.type are: "Available", "Progressing", "Failed"
-	//
-	// Available represents the availability of the glance image. If it is
-	// true then the image is ready for use in glance, and its hash has been
-	// verified.
-	//
-	// Progressing indicates that reconciliation is in progress. It may not
-	// be in progress either because reconciliation was completed
-	// successfully, or because an error was encountered that cannot be
-	// retried.
-	//
-	// Failed indicates that reconciliation was not successful, and further
-	// reconciliation is not possible.
-	//
-	// +patchMergeKey=type
-	// +patchStrategy=merge
-	// +listType=map
-	// +listMapKey=type
-	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
-
-	// DownloadAttempts is the number of times the controller has attempted to download the image contents
-	// +optional
-	DownloadAttempts *int `json:"downloadAttempts,omitempty"`
-
-	// ImageID is the UUID of the glance image
-	// +optional
-	ImageID *string `json:"imageID,omitempty"`
-
-	// Status is the image status as reported by glance
+// ImageResourceStatus represents the observed state of a Glance image
+type ImageResourceStatus struct {
+	// Status is the image status as reported by Glance
 	// +optional
 	Status *string `json:"status,omitempty"`
 
-	// Hash is the hash of the image data published by glance
+	// Hash is the hash of the image data published by Glance. Note that this is
+	// a hash of the data stored internally by Glance, which will have been
+	// decompressed and potentially format converted depending on server-side
+	// configuration which is not visible to clients. It is expected that this
+	// hash will usually differ from the download hash.
 	// +optional
 	Hash *ImageHash `json:"hash,omitempty"`
 
@@ -392,6 +400,40 @@ type ImageStatus struct {
 	VirtualSizeB *int64 `json:"virtualSizeB,omitempty"`
 }
 
+// ImageStatus defines the observed state of an Image.
+type ImageStatus struct {
+	// Conditions represents the observed status of the object.
+	// Known .status.conditions.type are: "Available", "Progressing"
+	//
+	// Available represents the availability of the Glance image. If it is
+	// true then the image is ready for use in Glance, and its hash has been
+	// verified.
+	//
+	// Progressing indicates the state of the Glance image does not currently
+	// reflect the desired state, but that reconciliation is progressing.
+	// Progressing will be False either because the desired state has been
+	// achieved, or some terminal error prevents it from being achieved and the
+	// controller is no longer attempting to reconcile.
+	//
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=type
+	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+
+	// ID is the unique identifier of the Glance image
+	// +optional
+	ID *string `json:"id,omitempty"`
+
+	// Resource contains the observed state of the Glance image
+	// +optional
+	Resource *ImageResourceStatus `json:"resource,omitempty"`
+
+	// DownloadAttempts is the number of times the controller has attempted to download the image contents
+	// +optional
+	DownloadAttempts *int `json:"downloadAttempts,omitempty"`
+}
+
 var _ ObjectWithConditions = &Image{}
 
 func (i *Image) GetConditions() []metav1.Condition {
@@ -401,13 +443,12 @@ func (i *Image) GetConditions() []metav1.Condition {
 // +genclient
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="ImageID",type="string",JSONPath=".status.imageID",description="Glance image ID"
+// +kubebuilder:printcolumn:name="ID",type="string",JSONPath=".status.id",description="Glance image ID"
 // +kubebuilder:printcolumn:name="Available",type="string",JSONPath=".status.conditions[?(@.type=='Available')].status",description="Availability status of image"
 // +kubebuilder:printcolumn:name="Message",type="string",JSONPath=".status.conditions[?(@.type=='Available')].message",description="Message describing current availability status"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp",description="Time duration since creation"
 
 // Image is the Schema for the ORC images API.
-// +kubebuilder:validation:XValidation:rule="size(self.metadata.name) <= 63",message="name may not be longer than 63 characters"
 type Image struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
