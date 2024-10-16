@@ -156,6 +156,13 @@ spec:
                 type: boolean
               flavor:
                 description: The flavor reference for the flavor for the server instance.
+                minLength: 1
+                type: string
+              flavorID:
+                description: |-
+                  FlavorID allows flavors to be specified by ID.  This field takes precedence
+                  over Flavor.
+                minLength: 1
                 type: string
               floatingIPPoolRef:
                 description: FloatingIPPoolRef is a reference to a FloatingIPPool
@@ -920,12 +927,14 @@ spec:
                 type: object
                 x-kubernetes-map-type: atomic
             required:
-            - flavor
             - identityRef
             - image
             - ports
             - sshKeyName
             type: object
+            x-kubernetes-validations:
+            - message: at least one of flavor or flavorID must be set
+              rule: (has(self.flavor) || has(self.flavorID))
           status:
             description: OpenStackServerStatus defines the observed state of OpenStackServer.
             properties:
@@ -1006,6 +1015,9 @@ spec:
                   Resolved contains parts of the machine spec with all external
                   references fully resolved.
                 properties:
+                  flavorID:
+                    description: FlavorID is the ID of the flavor to use.
+                    type: string
                   imageID:
                     description: ImageID is the ID of the image to use for the server
                       and is calculated based on ImageFilter.

@@ -241,7 +241,9 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: flavor
       type:
         scalar: string
-      default: ""
+    - name: flavorID
+      type:
+        scalar: string
     - name: floatingIPPoolRef
       type:
         namedType: io.k8s.api.core.v1.TypedLocalObjectReference
@@ -337,6 +339,9 @@ var schemaYAML = typed.YAMLObject(`types:
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1alpha1.ResolvedServerSpec
   map:
     fields:
+    - name: flavorID
+      type:
+        scalar: string
     - name: imageID
       type:
         scalar: string
@@ -820,7 +825,9 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: flavor
       type:
         scalar: string
-      default: ""
+    - name: flavorID
+      type:
+        scalar: string
     - name: floatingIP
       type:
         scalar: string
@@ -1728,7 +1735,9 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: flavor
       type:
         scalar: string
-      default: ""
+    - name: flavorID
+      type:
+        scalar: string
     - name: floatingIP
       type:
         scalar: string
@@ -2695,7 +2704,9 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: flavor
       type:
         scalar: string
-      default: ""
+    - name: flavorID
+      type:
+        scalar: string
     - name: floatingIPPoolRef
       type:
         namedType: io.k8s.api.core.v1.TypedLocalObjectReference
@@ -2910,6 +2921,9 @@ var schemaYAML = typed.YAMLObject(`types:
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.ResolvedMachineSpec
   map:
     fields:
+    - name: flavorID
+      type:
+        scalar: string
     - name: imageID
       type:
         scalar: string

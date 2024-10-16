@@ -616,6 +616,16 @@ func (in *OpenStackMachineSpec) DeepCopyInto(out *OpenStackMachineSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.Flavor != nil {
+		in, out := &in.Flavor, &out.Flavor
+		*out = new(string)
+		**out = **in
+	}
+	if in.FlavorID != nil {
+		in, out := &in.FlavorID, &out.FlavorID
+		*out = new(string)
+		**out = **in
+	}
 	if in.Networks != nil {
 		in, out := &in.Networks, &out.Networks
 		*out = make([]NetworkParam, len(*in))

@@ -16585,7 +16585,13 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackServe
 					"flavor": {
 						SchemaProps: spec.SchemaProps{
 							Description: "The flavor reference for the flavor for the server instance.",
-							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"flavorID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "FlavorID allows flavors to be specified by ID.  This field takes precedence over Flavor.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -16736,7 +16742,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackServe
 						},
 					},
 				},
-				Required: []string{"flavor", "identityRef", "image", "ports", "sshKeyName"},
+				Required: []string{"identityRef", "image", "ports", "sshKeyName"},
 			},
 		},
 		Dependencies: []string{
@@ -16839,6 +16845,13 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_ResolvedServer
 					"imageID": {
 						SchemaProps: spec.SchemaProps{
 							Description: "ImageID is the ID of the image to use for the server and is calculated based on ImageFilter.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"flavorID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "FlavorID is the ID of the flavor to use.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -18158,7 +18171,13 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackMachi
 					"flavor": {
 						SchemaProps: spec.SchemaProps{
 							Description: "The flavor reference for the flavor for your server instance.",
-							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"flavorID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "FlavorID allows flavors to be specified by ID.  This field takes precedence over Flavor.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -18310,7 +18329,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackMachi
 						},
 					},
 				},
-				Required: []string{"flavor"},
 			},
 		},
 		Dependencies: []string{
@@ -20562,7 +20580,13 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachi
 					"flavor": {
 						SchemaProps: spec.SchemaProps{
 							Description: "The flavor reference for the flavor for your server instance.",
-							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"flavorID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "FlavorID allows flavors to be specified by ID.  This field takes precedence over Flavor.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -20715,7 +20739,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachi
 						},
 					},
 				},
-				Required: []string{"flavor"},
 			},
 		},
 		Dependencies: []string{
@@ -23319,7 +23342,13 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachin
 					"flavor": {
 						SchemaProps: spec.SchemaProps{
 							Description: "The flavor reference for the flavor for your server instance.",
-							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"flavorID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "FlavorID allows flavors to be specified by ID.  This field takes precedence over Flavor.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -23491,7 +23520,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachin
 						},
 					},
 				},
-				Required: []string{"flavor", "image"},
+				Required: []string{"image"},
 			},
 		},
 		Dependencies: []string{
@@ -23971,6 +24000,13 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedMachine
 					"imageID": {
 						SchemaProps: spec.SchemaProps{
 							Description: "ImageID is the ID of the image to use for the machine and is calculated based on ImageFilter.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"flavorID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "FlavorID is the ID of the flavor to use.",
 							Type:        []string{"string"},
 							Format:      "",
 						},

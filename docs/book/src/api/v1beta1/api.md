@@ -574,6 +574,18 @@ string
 </tr>
 <tr>
 <td>
+<code>flavorID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>FlavorID allows flavors to be specified by ID.  This field takes precedence
+over Flavor.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>image</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.ImageParam">
@@ -3233,6 +3245,18 @@ string
 </tr>
 <tr>
 <td>
+<code>flavorID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>FlavorID allows flavors to be specified by ID.  This field takes precedence
+over Flavor.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>image</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.ImageParam">
@@ -3618,6 +3642,18 @@ string
 </td>
 <td>
 <p>The flavor reference for the flavor for your server instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>flavorID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>FlavorID allows flavors to be specified by ID.  This field takes precedence
+over Flavor.</p>
 </td>
 </tr>
 <tr>
@@ -4086,6 +4122,18 @@ string
 <td>
 <em>(Optional)</em>
 <p>ImageID is the ID of the image to use for the machine and is calculated based on ImageFilter.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>flavorID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>FlavorID is the ID of the flavor to use.</p>
 </td>
 </tr>
 <tr>

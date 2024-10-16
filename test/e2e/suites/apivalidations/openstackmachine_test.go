@@ -38,7 +38,8 @@ var _ = Describe("OpenStackMachine API validations", func() {
 		// Initialise a basic machine object in the correct namespace
 		machine := &infrav1.OpenStackMachine{
 			Spec: infrav1.OpenStackMachineSpec{
-				Image: infrav1.ImageParam{Filter: &infrav1.ImageFilter{Name: ptr.To("test-image")}},
+				Image:  infrav1.ImageParam{Filter: &infrav1.ImageFilter{Name: ptr.To("test-image")}},
+				Flavor: ptr.To("flavor-name"),
 			},
 		}
 		machine.Namespace = namespace.Name
@@ -130,6 +131,20 @@ var _ = Describe("OpenStackMachine API validations", func() {
 			},
 		}
 		Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "Creating a machine with max metadata key and value should succeed")
+	})
+
+	Context("flavors", func() {
+		It("should require either a flavor or flavorID", func() {
+			machine := defaultMachine()
+
+			By("Creating a machine with no flavor or flavor id")
+			machine.Spec.Flavor = nil
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with no flavor name or id should fail")
+
+			By("Creating a machine with a flavor id")
+			machine.Spec.FlavorID = ptr.To("6aa02f56-c595-4d2f-9f8e-3c6296a4bed9")
+			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "Creating a machine with a flavor id should succeed")
+		})
 	})
 
 	Context("volumes", func() {
@@ -516,6 +531,7 @@ var _ = Describe("OpenStackMachine API validations", func() {
 				Name:      "test-credentials",
 			}
 			infrav1Machine.Spec.Image.ID = ptr.To("de9872ee-0c2c-44ed-9414-90163c8b0e0d")
+			infrav1Machine.Spec.Flavor = ptr.To("flavor-name")
 			Expect(createObj(infrav1Machine)).To(Succeed(), "infrav1 OpenStackMachine creation should succeed")
 
 			// Just fetching the object as v1alpha7 doesn't trigger

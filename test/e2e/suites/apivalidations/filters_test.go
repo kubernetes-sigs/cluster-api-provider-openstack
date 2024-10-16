@@ -38,7 +38,8 @@ var _ = Describe("Filter API validations", func() {
 		// Initialise a basic machine object in the correct namespace
 		machine = &infrav1.OpenStackMachine{
 			Spec: infrav1.OpenStackMachineSpec{
-				Image: infrav1.ImageParam{Filter: &infrav1.ImageFilter{Name: ptr.To("test-image")}},
+				Flavor: ptr.To("flavor-name"),
+				Image:  infrav1.ImageParam{Filter: &infrav1.ImageFilter{Name: ptr.To("test-image")}},
 			},
 		}
 		machine.Namespace = namespace.Name

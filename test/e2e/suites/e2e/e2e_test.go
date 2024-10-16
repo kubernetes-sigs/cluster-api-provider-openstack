@@ -275,7 +275,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			).Should(BeTrue())
 
 			shared.Logf("Create the bastion with a new flavor")
-			bastionNewFlavorName := e2eCtx.E2EConfig.GetVariable(shared.OpenStackBastionFlavorAlt)
+			bastionNewFlavorName := ptr.To(e2eCtx.E2EConfig.GetVariable(shared.OpenStackBastionFlavorAlt))
 			bastionNewFlavor, err := shared.GetFlavorFromName(e2eCtx, bastionNewFlavorName)
 			Expect(err).NotTo(HaveOccurred())
 			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
@@ -1081,7 +1081,7 @@ func makeOpenStackMachineTemplate(namespace, clusterName, name string) *infrav1.
 		Spec: infrav1.OpenStackMachineTemplateSpec{
 			Template: infrav1.OpenStackMachineTemplateResource{
 				Spec: infrav1.OpenStackMachineSpec{
-					Flavor: e2eCtx.E2EConfig.GetVariable(shared.OpenStackNodeMachineFlavor),
+					Flavor: ptr.To(e2eCtx.E2EConfig.GetVariable(shared.OpenStackNodeMachineFlavor)),
 					Image: infrav1.ImageParam{
 						Filter: &infrav1.ImageFilter{
 							Name: ptr.To(e2eCtx.E2EConfig.GetVariable(shared.OpenStackImageName)),
@@ -1107,7 +1107,7 @@ func makeOpenStackMachineTemplateWithPortOptions(namespace, clusterName, name st
 		Spec: infrav1.OpenStackMachineTemplateSpec{
 			Template: infrav1.OpenStackMachineTemplateResource{
 				Spec: infrav1.OpenStackMachineSpec{
-					Flavor: e2eCtx.E2EConfig.GetVariable(shared.OpenStackNodeMachineFlavor),
+					Flavor: ptr.To(e2eCtx.E2EConfig.GetVariable(shared.OpenStackNodeMachineFlavor)),
 					Image: infrav1.ImageParam{
 						Filter: &infrav1.ImageFilter{
 							Name: ptr.To(e2eCtx.E2EConfig.GetVariable(shared.OpenStackImageName)),

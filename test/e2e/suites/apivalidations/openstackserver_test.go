@@ -35,7 +35,7 @@ var _ = Describe("OpenStackServer API validations", func() {
 		// Initialise a basic server object in the correct namespace
 		server := &infrav1alpha1.OpenStackServer{
 			Spec: infrav1alpha1.OpenStackServerSpec{
-				Flavor: "test-flavor",
+				Flavor: ptr.To("test-flavor"),
 				IdentityRef: infrav1.OpenStackIdentityReference{
 					Name:      "test-identity",
 					CloudName: "test-cloud",
@@ -108,6 +108,20 @@ var _ = Describe("OpenStackServer API validations", func() {
 			},
 		}
 		Expect(k8sClient.Create(ctx, server)).To(Succeed(), "Creating a server with max metadata key and value should succeed")
+	})
+
+	Context("flavors", func() {
+		It("should require either a flavor or flavorID", func() {
+			server := defaultServer()
+
+			By("Creating a server with no flavor or flavor id")
+			server.Spec.Flavor = nil
+			Expect(k8sClient.Create(ctx, server)).NotTo(Succeed(), "Creating a server with no flavor name or id should fail")
+
+			By("Creating a server with a flavor id")
+			server.Spec.FlavorID = ptr.To("6aa02f56-c595-4d2f-9f8e-3c6296a4bed9")
+			Expect(k8sClient.Create(ctx, server)).To(Succeed(), "Creating a server with a flavor id should succeed")
+		})
 	})
 
 	Context("volumes", func() {

@@ -24,6 +24,7 @@ import (
 
 	"github.com/go-logr/logr/testr"
 	"github.com/google/go-cmp/cmp"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/flavors"
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servergroups"
 	"github.com/gophercloud/gophercloud/v2/openstack/image/v2/images"
 	. "github.com/onsi/gomega" //nolint:revive
@@ -46,6 +47,7 @@ func Test_ResolveServerSpec(t *testing.T) {
 		networkID1     = "23ab8b71-89d4-425f-ac81-4eb83b35125a"
 		networkID2     = "cc8f75ce-6ce4-4b8a-836e-e5dac91cc9c8"
 		subnetID       = "32dc0e7f-34b6-4544-a69b-248955618736"
+		flavorID       = "661c21bc-be52-44e3-9d2e-8d1e11623b59"
 	)
 
 	defaultPortSpec := []infrav1.ResolvedPortSpec{
@@ -80,10 +82,12 @@ func Test_ResolveServerSpec(t *testing.T) {
 			spec: infrav1alpha1.OpenStackServerSpec{
 				ServerGroup: &infrav1.ServerGroupParam{ID: ptr.To(serverGroupID1)},
 				Image:       infrav1.ImageParam{ID: ptr.To(imageID1)},
+				FlavorID:    ptr.To(flavorID),
 				Ports:       defaultPortOpts,
 			},
 			want: &infrav1alpha1.ResolvedServerSpec{
 				ImageID:       imageID1,
+				FlavorID:      flavorID,
 				ServerGroupID: serverGroupID1,
 				Ports:         defaultPortSpec,
 			},
@@ -93,6 +97,7 @@ func Test_ResolveServerSpec(t *testing.T) {
 			spec: infrav1alpha1.OpenStackServerSpec{
 				ServerGroup: &infrav1.ServerGroupParam{Filter: &infrav1.ServerGroupFilter{Name: ptr.To("test-server-group")}},
 				Image:       infrav1.ImageParam{ID: ptr.To(imageID1)},
+				FlavorID:    ptr.To(flavorID),
 				Ports:       defaultPortOpts,
 			},
 			want: &infrav1alpha1.ResolvedServerSpec{},
@@ -111,7 +116,8 @@ func Test_ResolveServerSpec(t *testing.T) {
 						Name: ptr.To("test-image"),
 					},
 				},
-				Ports: defaultPortOpts,
+				FlavorID: ptr.To(flavorID),
+				Ports:    defaultPortOpts,
 			},
 			expectImageMock: func(m *mock.MockImageClientMockRecorder) {
 				m.ListImages(images.ListOpts{Name: "test-image"}).Return([]images.Image{}, nil)
@@ -122,10 +128,23 @@ func Test_ResolveServerSpec(t *testing.T) {
 		{
 			testName: "Resolved ports length mismatch",
 			spec: infrav1alpha1.OpenStackServerSpec{
-				Image: infrav1.ImageParam{ID: ptr.To(imageID1)},
-				Ports: slices.Concat(defaultPortOpts, defaultPortOpts),
+				Image:    infrav1.ImageParam{ID: ptr.To(imageID1)},
+				FlavorID: ptr.To(flavorID),
+				Ports:    slices.Concat(defaultPortOpts, defaultPortOpts),
 			},
 			want:    &infrav1alpha1.ResolvedServerSpec{},
+			wantErr: true,
+		},
+		{
+			testName: "Flavor by Name not found",
+			spec: infrav1alpha1.OpenStackServerSpec{
+				Image:  infrav1.ImageParam{ID: ptr.To(imageID1)},
+				Flavor: ptr.To("foo"),
+				Ports:  defaultPortOpts,
+			},
+			expectComputeMock: func(m *mock.MockComputeClientMockRecorder) {
+				m.ListFlavors().Return([]flavors.Flavor{}, nil)
+			},
 			wantErr: true,
 		},
 	}

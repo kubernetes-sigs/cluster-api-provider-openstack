@@ -30,6 +30,7 @@ type OpenStackServerSpecApplyConfiguration struct {
 	AvailabilityZone                  *string                                                     `json:"availabilityZone,omitempty"`
 	ConfigDrive                       *bool                                                       `json:"configDrive,omitempty"`
 	Flavor                            *string                                                     `json:"flavor,omitempty"`
+	FlavorID                          *string                                                     `json:"flavorID,omitempty"`
 	FloatingIPPoolRef                 *v1.TypedLocalObjectReference                               `json:"floatingIPPoolRef,omitempty"`
 	IdentityRef                       *v1beta1.OpenStackIdentityReferenceApplyConfiguration       `json:"identityRef,omitempty"`
 	Image                             *v1beta1.ImageParamApplyConfiguration                       `json:"image,omitempty"`
@@ -85,6 +86,14 @@ func (b *OpenStackServerSpecApplyConfiguration) WithConfigDrive(value bool) *Ope
 // If called multiple times, the Flavor field is set to the value of the last call.
 func (b *OpenStackServerSpecApplyConfiguration) WithFlavor(value string) *OpenStackServerSpecApplyConfiguration {
 	b.Flavor = &value
+	return b
+}
+
+// WithFlavorID sets the FlavorID field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the FlavorID field is set to the value of the last call.
+func (b *OpenStackServerSpecApplyConfiguration) WithFlavorID(value string) *OpenStackServerSpecApplyConfiguration {
+	b.FlavorID = &value
 	return b
 }
 

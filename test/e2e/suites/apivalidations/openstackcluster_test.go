@@ -104,6 +104,7 @@ var _ = Describe("OpenStackCluster API validations", func() {
 			cluster.Spec.Bastion = &infrav1.Bastion{
 				Enabled: ptr.To(true),
 				Spec: &infrav1.OpenStackMachineSpec{
+					Flavor: ptr.To("flavor-name"),
 					Image: infrav1.ImageParam{
 						Filter: &infrav1.ImageFilter{
 							Name: ptr.To("fake-image"),
@@ -129,6 +130,7 @@ var _ = Describe("OpenStackCluster API validations", func() {
 		It("should default bastion.enabled=true", func() {
 			cluster.Spec.Bastion = &infrav1.Bastion{
 				Spec: &infrav1.OpenStackMachineSpec{
+					Flavor: ptr.To("flavor-name"),
 					Image: infrav1.ImageParam{
 						Filter: &infrav1.ImageFilter{
 							Name: ptr.To("fake-image"),
@@ -149,6 +151,7 @@ var _ = Describe("OpenStackCluster API validations", func() {
 			cluster.Spec.Bastion = &infrav1.Bastion{
 				Enabled: ptr.To(true),
 				Spec: &infrav1.OpenStackMachineSpec{
+					Flavor: ptr.To("flavor-name"),
 					Image: infrav1.ImageParam{
 						Filter: &infrav1.ImageFilter{
 							Name: ptr.To("fake-image"),
@@ -163,6 +166,7 @@ var _ = Describe("OpenStackCluster API validations", func() {
 		It("should not allow non-IPv4 as bastion floating IP", func() {
 			cluster.Spec.Bastion = &infrav1.Bastion{
 				Spec: &infrav1.OpenStackMachineSpec{
+					Flavor: ptr.To("flavor-name"),
 					Image: infrav1.ImageParam{
 						Filter: &infrav1.ImageFilter{
 							Name: ptr.To("fake-image"),

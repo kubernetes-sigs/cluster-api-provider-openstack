@@ -101,21 +101,6 @@ func (mr *MockComputeClientMockRecorder) DeleteServer(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteServer", reflect.TypeOf((*MockComputeClient)(nil).DeleteServer), arg0)
 }
 
-// GetFlavorFromName mocks base method.
-func (m *MockComputeClient) GetFlavorFromName(arg0 string) (*flavors.Flavor, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFlavorFromName", arg0)
-	ret0, _ := ret[0].(*flavors.Flavor)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetFlavorFromName indicates an expected call of GetFlavorFromName.
-func (mr *MockComputeClientMockRecorder) GetFlavorFromName(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFlavorFromName", reflect.TypeOf((*MockComputeClient)(nil).GetFlavorFromName), arg0)
-}
-
 // GetServer mocks base method.
 func (m *MockComputeClient) GetServer(arg0 string) (*servers.Server, error) {
 	m.ctrl.T.Helper()
@@ -159,6 +144,21 @@ func (m *MockComputeClient) ListAvailabilityZones() ([]availabilityzones.Availab
 func (mr *MockComputeClientMockRecorder) ListAvailabilityZones() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAvailabilityZones", reflect.TypeOf((*MockComputeClient)(nil).ListAvailabilityZones))
+}
+
+// ListFlavors mocks base method.
+func (m *MockComputeClient) ListFlavors() ([]flavors.Flavor, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListFlavors")
+	ret0, _ := ret[0].([]flavors.Flavor)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListFlavors indicates an expected call of ListFlavors.
+func (mr *MockComputeClientMockRecorder) ListFlavors() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListFlavors", reflect.TypeOf((*MockComputeClient)(nil).ListFlavors))
 }
 
 // ListServerGroups mocks base method.

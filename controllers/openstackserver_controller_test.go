@@ -24,7 +24,6 @@ import (
 	"github.com/go-logr/logr/testr"
 	"github.com/gophercloud/gophercloud/v2"
 	"github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v3/volumes"
-	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/flavors"
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/portsbinding"
@@ -84,13 +83,6 @@ var defaultPortsStatus = []infrav1.PortStatus{
 	{
 		ID: portUUID,
 	},
-}
-
-var getDefaultFlavor = func(r *recorders) {
-	f := flavors.Flavor{
-		Name: defaultFlavor,
-	}
-	r.compute.GetFlavorFromName(defaultFlavor).Return(&f, nil)
 }
 
 var createDefaultPort = func(r *recorders) {
@@ -219,7 +211,6 @@ func TestOpenStackServer_serverToInstanceSpec(t *testing.T) {
 					},
 					AvailabilityZone: ptr.To("failure-domain"),
 					ConfigDrive:      ptr.To(true),
-					Flavor:           "large",
 					RootVolume: &infrav1.RootVolume{
 						SizeGiB: 10,
 						BlockDeviceVolume: infrav1.BlockDeviceVolume{
@@ -233,6 +224,7 @@ func TestOpenStackServer_serverToInstanceSpec(t *testing.T) {
 				},
 				Status: infrav1alpha1.OpenStackServerStatus{
 					Resolved: &infrav1alpha1.ResolvedServerSpec{
+						FlavorID:      "xyz",
 						ImageID:       "123",
 						ServerGroupID: "456",
 					},
@@ -250,7 +242,7 @@ func TestOpenStackServer_serverToInstanceSpec(t *testing.T) {
 				},
 				ConfigDrive:   true,
 				FailureDomain: "failure-domain",
-				Flavor:        "large",
+				FlavorID:      "xyz",
 				ImageID:       "123",
 				Metadata: map[string]string{
 					"key": "value",
@@ -296,7 +288,7 @@ func Test_OpenStackServerReconcileDelete(t *testing.T) {
 			name: "No volumes, resolved and resources populated",
 			osServer: infrav1alpha1.OpenStackServer{
 				Spec: infrav1alpha1.OpenStackServerSpec{
-					Flavor: defaultFlavor,
+					Flavor: ptr.To(defaultFlavor),
 					Image:  defaultImage,
 					Ports:  defaultPortOpts,
 				},
@@ -471,21 +463,21 @@ func Test_OpenStackServerReconcileCreate(t *testing.T) {
 			name: "Minimal server spec creating port and server",
 			osServer: infrav1alpha1.OpenStackServer{
 				Spec: infrav1alpha1.OpenStackServerSpec{
-					Flavor: defaultFlavor,
+					Flavor: ptr.To(defaultFlavor),
 					Image:  defaultImage,
 					Ports:  defaultPortOpts,
 				},
 				Status: infrav1alpha1.OpenStackServerStatus{
 					Resolved: &infrav1alpha1.ResolvedServerSpec{
-						ImageID: imageUUID,
-						Ports:   defaultResolvedPorts,
+						ImageID:  imageUUID,
+						FlavorID: flavorUUID,
+						Ports:    defaultResolvedPorts,
 					},
 				},
 			},
 			expect: func(r *recorders) {
 				listDefaultPortsNotFound(r)
 				createDefaultPort(r)
-				getDefaultFlavor(r)
 				listDefaultServerNotFound(r)
 				createDefaultServer(r)
 			},
@@ -494,14 +486,15 @@ func Test_OpenStackServerReconcileCreate(t *testing.T) {
 			name: "Minimum server spec adopting port and server",
 			osServer: infrav1alpha1.OpenStackServer{
 				Spec: infrav1alpha1.OpenStackServerSpec{
-					Flavor: defaultFlavor,
+					Flavor: ptr.To(defaultFlavor),
 					Image:  defaultImage,
 					Ports:  defaultPortOpts,
 				},
 				Status: infrav1alpha1.OpenStackServerStatus{
 					Resolved: &infrav1alpha1.ResolvedServerSpec{
-						ImageID: imageUUID,
-						Ports:   defaultResolvedPorts,
+						ImageID:  imageUUID,
+						FlavorID: flavorUUID,
+						Ports:    defaultResolvedPorts,
 					},
 				},
 			},
