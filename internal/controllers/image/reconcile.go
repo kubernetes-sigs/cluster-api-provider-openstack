@@ -43,6 +43,10 @@ import (
 //+kubebuilder:rbac:groups=openstack.k-orc.cloud,resources=images,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=openstack.k-orc.cloud,resources=images/status,verbs=get;update;patch
 
+const (
+	hey = "Hello. I am here just to trigger an end-to-end test"
+)
+
 func (r *orcImageReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	orcImage := &orcv1alpha1.Image{}
 	err := r.client.Get(ctx, req.NamespacedName, orcImage)
