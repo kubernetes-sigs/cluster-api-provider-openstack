@@ -2666,6 +2666,9 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         scalar: string
       default: ""
+    - name: region
+      type:
+        scalar: string
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.OpenStackMachine
   map:
     fields:

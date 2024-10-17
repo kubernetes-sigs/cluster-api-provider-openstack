@@ -89,6 +89,13 @@ func TestFuzzyConversion(t *testing.T) {
 					}
 				}
 			},
+
+			func(identityRef *infrav1.OpenStackIdentityReference, c fuzz.Continue) {
+				c.FuzzNoCustom(identityRef)
+
+				// None of the following identityRef fields have ever been set in v1alpha7
+				identityRef.Region = ""
+			},
 		}
 
 		return slices.Concat(v1alpha7FuzzerFuncs, testhelpers.InfraV1FuzzerFuncs())

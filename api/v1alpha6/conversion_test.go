@@ -91,6 +91,13 @@ func TestFuzzyConversion(t *testing.T) {
 				}
 			},
 
+			func(identityRef *infrav1.OpenStackIdentityReference, c fuzz.Continue) {
+				c.FuzzNoCustom(identityRef)
+
+				// None of the following identityRef fields have ever been set in v1alpha6
+				identityRef.Region = ""
+			},
+
 			func(spec *OpenStackMachineSpec, c fuzz.Continue) {
 				c.FuzzNoCustom(spec)
 
