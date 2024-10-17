@@ -163,9 +163,6 @@ spec:
                         - ova
                         - docker
                         type: string
-                        x-kubernetes-validations:
-                        - message: containerFormat is immutable
-                          rule: self == oldSelf
                       diskFormat:
                         description: |-
                           DiskFormat is the format of the disk image.
@@ -183,9 +180,6 @@ spec:
                         - ploop
                         - iso
                         type: string
-                        x-kubernetes-validations:
-                        - message: diskFormat is immutable
-                          rule: self == oldSelf
                       download:
                         description: |-
                           Download describes how to obtain image data by downloading it from a URL.
@@ -241,11 +235,9 @@ spec:
                         required:
                         - url
                         type: object
-                        x-kubernetes-validations:
-                        - message: download is immutable
-                          rule: self == oldSelf
                     required:
                     - diskFormat
+                    - download
                     type: object
                     x-kubernetes-validations:
                     - message: content is immutable
@@ -254,10 +246,9 @@ spec:
                     description: |-
                       Name will be the name of the created Glance image. If not specified, the
                       name of the Image object will be used.
+                    maxLength: 1000
+                    minLength: 1
                     type: string
-                    x-kubernetes-validations:
-                    - message: imageName is immutable
-                      rule: self == oldSelf
                   properties:
                     description: Properties is metadata available to consumers of
                       the image
@@ -402,17 +393,11 @@ spec:
                         minimum: 1
                         type: integer
                     type: object
-                    x-kubernetes-validations:
-                    - message: properties is immutable
-                      rule: self == oldSelf
                   protected:
                     description: |-
                       Protected specifies that the image is protected from deletion.
                       If not specified, the default is false.
                     type: boolean
-                    x-kubernetes-validations:
-                    - message: protected is immutable
-                      rule: self == oldSelf
                   tags:
                     description: Tags is a list of tags which will be applied to the
                       image. A tag has a maximum length of 255 characters.
@@ -422,9 +407,6 @@ spec:
                       type: string
                     type: array
                     x-kubernetes-list-type: set
-                    x-kubernetes-validations:
-                    - message: tags is immutable
-                      rule: self == oldSelf
                   visibility:
                     description: Visibility of the image
                     enum:
@@ -437,6 +419,20 @@ spec:
                     - message: visibility is immutable
                       rule: self == oldSelf
                 type: object
+                x-kubernetes-validations:
+                - message: name is immutable
+                  rule: 'has(self.name) ? self.name == oldSelf.name : !has(oldSelf.name)'
+                - message: name is immutable
+                  rule: 'has(self.protected) ? self.protected == oldSelf.protected
+                    : !has(oldSelf.protected)'
+                - message: tags is immutable
+                  rule: 'has(self.tags) ? self.tags == oldSelf.tags : !has(oldSelf.tags)'
+                - message: visibility is immutable
+                  rule: 'has(self.visibility) ? self.visibility == oldSelf.visibility
+                    : !has(oldSelf.visibility)'
+                - message: properties is immutable
+                  rule: 'has(self.properties) ? self.properties == oldSelf.properties
+                    : !has(oldSelf.properties)'
             required:
             - cloudCredentialsRef
             type: object

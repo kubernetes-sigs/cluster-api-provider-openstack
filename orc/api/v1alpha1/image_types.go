@@ -218,21 +218,18 @@ type ImageContent struct {
 	// ContainerFormat is the format of the image container.
 	// qcow2 and raw images do not usually have a container. This is specified as "bare", which is also the default.
 	// Permitted values are ami, ari, aki, bare, ovf, ova, and docker.
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="containerFormat is immutable"
 	// +kubebuilder:default:=bare
 	// +optional
 	ContainerFormat ImageContainerFormat `json:"containerFormat,omitempty"`
 
 	// DiskFormat is the format of the disk image.
 	// Normal values are "qcow2", or "raw". Glance may be configured to support others.
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="diskFormat is immutable"
 	// +kubebuilder:validation:Required
 	DiskFormat ImageDiskFormat `json:"diskFormat"`
 
 	// Download describes how to obtain image data by downloading it from a URL.
 	// Must be set when creating a managed image.
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="download is immutable"
-	// +unionMember
+	// +kubebuilder:validation:Required
 	Download *ImageContentSourceDownload `json:"download,omitempty"`
 }
 
@@ -273,21 +270,25 @@ type ImageHash struct {
 }
 
 // ImageResourceSpec contains the desired state of a Glance image
+// +kubebuilder:validation:XValidation:rule="has(self.name) ? self.name == oldSelf.name : !has(oldSelf.name)",message="name is immutable"
+// +kubebuilder:validation:XValidation:rule="has(self.protected) ? self.protected == oldSelf.protected : !has(oldSelf.protected)",message="name is immutable"
+// +kubebuilder:validation:XValidation:rule="has(self.tags) ? self.tags == oldSelf.tags : !has(oldSelf.tags)",message="tags is immutable"
+// +kubebuilder:validation:XValidation:rule="has(self.visibility) ? self.visibility == oldSelf.visibility : !has(oldSelf.visibility)",message="visibility is immutable"
+// +kubebuilder:validation:XValidation:rule="has(self.properties) ? self.properties == oldSelf.properties : !has(oldSelf.properties)",message="properties is immutable"
 type ImageResourceSpec struct {
 	// Name will be the name of the created Glance image. If not specified, the
 	// name of the Image object will be used.
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="imageName is immutable"
+	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MaxLength:=1000
 	// +optional
-	Name *string `json:"name,omitempty"`
+	Name string `json:"name,omitempty"`
 
 	// Protected specifies that the image is protected from deletion.
 	// If not specified, the default is false.
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="protected is immutable"
 	// +optional
 	Protected *bool `json:"protected,omitempty"`
 
 	// Tags is a list of tags which will be applied to the image. A tag has a maximum length of 255 characters.
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="tags is immutable"
 	// +listType=set
 	// +optional
 	Tags []ImageTag `json:"tags,omitempty"`
@@ -298,7 +299,6 @@ type ImageResourceSpec struct {
 	Visibility *ImageVisibility `json:"visibility,omitempty"`
 
 	// Properties is metadata available to consumers of the image
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="properties is immutable"
 	// +optional
 	Properties *ImageProperties `json:"properties,omitempty"`
 

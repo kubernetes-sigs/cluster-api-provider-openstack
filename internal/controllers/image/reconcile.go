@@ -321,7 +321,10 @@ func getGlanceImage(ctx context.Context, orcImage *orcv1alpha1.Image, imageClien
 
 // getImageName returns the name of the glance image we should use.
 func getImageName(orcImage *orcv1alpha1.Image) string {
-	return ptr.Deref(orcImage.Spec.Resource.Name, orcImage.Name)
+	if orcImage.Spec.Resource.Name != "" {
+		return orcImage.Spec.Resource.Name
+	}
+	return orcImage.Name
 }
 
 func listOptsFromImportFilter(filter *orcv1alpha1.ImageFilter) images.ListOptsBuilder {
