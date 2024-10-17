@@ -103,59 +103,59 @@ func (r *orcImageReconciler) reconcileNormal(ctx context.Context, orcImage *orcv
 		return ctrl.Result{}, err
 	}
 
-	glanceImage, err := func() (*images.Image, error) {
-		if orcImage.Status.ID != nil {
-			log.V(4).Info("Fetching existing glance image", "ID", *orcImage.Status.ID)
-
-			image, err := imageClient.GetImage(*orcImage.Status.ID)
+	var glanceImage *images.Image
+	switch {
+	case orcImage.Status.ID != nil:
+		log.V(4).Info("Fetching existing glance image", "ID", *orcImage.Status.ID)
+		glanceImage, err = imageClient.GetImage(*orcImage.Status.ID)
+		if err != nil {
 			if capoerrors.IsNotFound(err) {
 				// An image we previously referenced has been deleted unexpectedly. We can't recover from this.
-				err = capoerrors.Terminal(orcv1alpha1.OpenStackConditionReasonUnrecoverableError, "image has been deleted from glance")
+				return ctrl.Result{}, capoerrors.Terminal(orcv1alpha1.OpenStackConditionReasonUnrecoverableError, "image has been deleted from Glance")
 			}
-			return image, err
+			return ctrl.Result{}, err
 		}
 
-		if orcImage.Spec.Import != nil {
-			log.V(4).Info("Importing existing glance image")
-
-			if orcImage.Spec.Import.ID != nil {
-				image, err := imageClient.GetImage(*orcImage.Spec.Import.ID)
-				if capoerrors.IsNotFound(err) {
-					// We assume that an image imported by ID must already exist. It's a terminal error if it doesn't.
-					err = capoerrors.Terminal(orcv1alpha1.OpenStackConditionReasonUnrecoverableError, "referenced image does not exist in glance")
-				}
-				return image, err
+	case orcImage.Spec.Import != nil && orcImage.Spec.Import.ID != nil:
+		log.V(4).Info("Importing existing Glance image by ID")
+		glanceImage, err = imageClient.GetImage(*orcImage.Spec.Import.ID)
+		if err != nil {
+			if capoerrors.IsNotFound(err) {
+				// We assume that an image imported by ID must already exist. It's a terminal error if it doesn't.
+				return ctrl.Result{}, capoerrors.Terminal(orcv1alpha1.OpenStackConditionReasonUnrecoverableError, "referenced image does not exist in Glance")
 			}
-
-			listOpts := listOptsFromImportFilter(orcImage.Spec.Import.Filter)
-			return getGlanceImageFromList(ctx, listOpts, imageClient)
-
-			// TODO: When we support 'import and manage' we need to implement
-			// setting spec.resource from the discovered glance image here.
+			return ctrl.Result{}, err
 		}
 
-		log.V(4).Info("Checking for previously created image")
-
-		listOpts := listOptsFromCreation(orcImage)
-		return getGlanceImageFromList(ctx, listOpts, imageClient)
-	}()
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
-	if glanceImage == nil {
-		if orcImage.Spec.Import != nil {
-			log.V(3).Info("Image does not yet exist")
-			addStatus(withProgressMessage("Waiting for glance image to be created externally"))
-
-			return ctrl.Result{RequeueAfter: waitForGlanceImageStatusUpdate}, err
-		}
-
-		glanceImage, err = createImage(ctx, orcImage, imageClient)
+	case orcImage.Spec.Import != nil && orcImage.Spec.Import.Filter != nil:
+		log.V(4).Info("Importing existing Glance image by filter")
+		listOpts := listOptsFromImportFilter(orcImage.Spec.Import.Filter)
+		glanceImage, err = getGlanceImageFromList(ctx, listOpts, imageClient)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
+		if glanceImage == nil {
+			log.V(3).Info("Glance image does not yet exist")
+			addStatus(withProgressMessage("Waiting for Glance image to be created externally"))
+			return ctrl.Result{RequeueAfter: waitForGlanceImageStatusUpdate}, err
+		}
+
+	default:
+		log.V(4).Info("Checking for previously created image")
+		listOpts := listOptsFromCreation(orcImage)
+		glanceImage, err = getGlanceImageFromList(ctx, listOpts, imageClient)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
+		if glanceImage == nil {
+			glanceImage, err = createImage(ctx, orcImage, imageClient)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
+		}
 	}
+
 	addStatus(withGlanceImage(glanceImage))
 
 	if orcImage.Status.ID == nil {
@@ -164,11 +164,14 @@ func (r *orcImageReconciler) reconcileNormal(ctx context.Context, orcImage *orcv
 		}
 	}
 
+	log.V(4).Info("Got glance image", "status", glanceImage.Status)
 	log = log.WithValues("ID", glanceImage.ID)
 	ctx = ctrl.LoggerInto(ctx, log)
 
-	log.V(4).Info("Got glance image", "status", glanceImage.Status)
+	return r.handleImageUpload(ctx, imageClient, orcImage, glanceImage, addStatus)
+}
 
+func (r *orcImageReconciler) handleImageUpload(ctx context.Context, imageClient clients.ImageClient, orcImage *orcv1alpha1.Image, glanceImage *images.Image, addStatus func(updateStatusOpt)) (_ ctrl.Result, err error) {
 	switch glanceImage.Status {
 	// Cases where we're not going to take any action until the next resync
 	case images.ImageStatusActive, images.ImageStatusDeactivated:
@@ -399,7 +402,7 @@ func glancePropertiesFromStruct(propStruct interface{}, properties map[string]st
 	return nil
 }
 
-// createImage creates a glance image for an ORC Image.
+// createImage creates a Glance image for an ORC Image.
 func createImage(ctx context.Context, orcImage *orcv1alpha1.Image, imageClient clients.ImageClient) (*images.Image, error) {
 	if orcImage.Spec.ManagementPolicy == orcv1alpha1.ManagementPolicyUnmanaged {
 		// Should have been caught by API validation
