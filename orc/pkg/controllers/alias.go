@@ -16,10 +16,14 @@ limitations under the License.
 
 package controllers
 
-// This file provides a minimal exported interface to non-exported controllers
+// This file provides a minimal exported interface to non-exported controllers.
 
 import (
-	imagecontroller "sigs.k8s.io/cluster-api-provider-openstack/internal/controllers/image"
+	"github.com/k-orc/openstack-resource-controller/internal/scope"
+
+	imagecontroller "github.com/k-orc/openstack-resource-controller/internal/controllers/image"
 )
 
 var ImageController = imagecontroller.New
+
+var NewScopeFactory = scope.NewFactory

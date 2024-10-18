@@ -44,6 +44,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	orcv1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
+	orccontrollers "github.com/k-orc/openstack-resource-controller/pkg/controllers"
 
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1alpha6 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
@@ -274,10 +275,8 @@ func main() {
 	// Initialize event recorder.
 	record.InitFromRecorder(mgr.GetEventRecorderFor("openstack-controller"))
 
-	scopeFactory := scope.NewFactory(scopeCacheMaxSize)
-
 	setupChecks(mgr)
-	setupReconcilers(ctx, mgr, caCerts, scopeFactory)
+	setupReconcilers(ctx, mgr, caCerts)
 	setupWebhooks(mgr)
 	// +kubebuilder:scaffold:builder
 	setupLog.Info("starting manager", "version", version.Get().String())
@@ -299,7 +298,9 @@ func setupChecks(mgr ctrl.Manager) {
 	}
 }
 
-func setupReconcilers(ctx context.Context, mgr ctrl.Manager, caCerts []byte, scopeFactory scope.Factory) {
+func setupReconcilers(ctx context.Context, mgr ctrl.Manager, caCerts []byte) {
+	scopeFactory := scope.NewFactory(scopeCacheMaxSize)
+
 	if err := (&controllers.OpenStackClusterReconciler{
 		Client:           mgr.GetClient(),
 		Recorder:         mgr.GetEventRecorderFor("openstackcluster-controller"),
@@ -341,11 +342,14 @@ func setupReconcilers(ctx context.Context, mgr ctrl.Manager, caCerts []byte, sco
 		setupLog.Error(err, "unable to create controller", "controller", "OpenStackServer")
 		os.Exit(1)
 	}
-	if err := controllers.ImageController(
+
+	orcFactory := orccontrollers.NewScopeFactory(scopeCacheMaxSize)
+
+	if err := orccontrollers.ImageController(
 		mgr.GetClient(),
 		mgr.GetEventRecorderFor("orc-image-controller"),
 		watchFilterValue,
-		scopeFactory,
+		orcFactory,
 		caCerts,
 	).SetupWithManager(ctx, mgr, concurrency(openStackMachineConcurrency)); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ORCImage")

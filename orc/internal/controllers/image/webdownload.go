@@ -26,15 +26,14 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	orcv1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
-
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
-	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
+	osclients "github.com/k-orc/openstack-resource-controller/internal/osclients"
+	orcerrors "github.com/k-orc/openstack-resource-controller/internal/util/errors"
 )
 
 func requireResource(orcImage *orcv1alpha1.Image) (*orcv1alpha1.ImageResourceSpec, error) {
 	resource := orcImage.Spec.Resource
 	if resource == nil {
-		return nil, capoerrors.Terminal(orcv1alpha1.OpenStackConditionReasonInvalidConfiguration, "resource not provided")
+		return nil, orcerrors.Terminal(orcv1alpha1.OpenStackConditionReasonInvalidConfiguration, "resource not provided")
 	}
 
 	return resource, nil
@@ -46,12 +45,12 @@ func requireResourceContent(orcImage *orcv1alpha1.Image) (*orcv1alpha1.ImageCont
 		return nil, err
 	}
 	if resource.Content == nil {
-		return nil, capoerrors.Terminal(orcv1alpha1.OpenStackConditionReasonInvalidConfiguration, "resource content not provided")
+		return nil, orcerrors.Terminal(orcv1alpha1.OpenStackConditionReasonInvalidConfiguration, "resource content not provided")
 	}
 	return resource.Content, nil
 }
 
-func (r *orcImageReconciler) canWebDownload(ctx context.Context, orcImage *orcv1alpha1.Image, imageClient clients.ImageClient) (bool, error) {
+func (r *orcImageReconciler) canWebDownload(ctx context.Context, orcImage *orcv1alpha1.Image, imageClient osclients.ImageClient) (bool, error) {
 	log := ctrl.LoggerFrom(ctx)
 
 	debugLog := func(reason string, extra ...any) {
@@ -108,14 +107,14 @@ func (r *orcImageReconciler) canWebDownload(ctx context.Context, orcImage *orcv1
 	return true, nil
 }
 
-func (r *orcImageReconciler) webDownload(ctx context.Context, orcImage *orcv1alpha1.Image, imageClient clients.ImageClient, glanceImage *images.Image) error {
+func (r *orcImageReconciler) webDownload(ctx context.Context, orcImage *orcv1alpha1.Image, imageClient osclients.ImageClient, glanceImage *images.Image) error {
 	log := ctrl.LoggerFrom(ctx)
 	log.V(3).Info("Importing with web-download")
 
 	resource := orcImage.Spec.Resource
 	if resource == nil {
 		// Should have been caught by validation
-		return capoerrors.Terminal(orcv1alpha1.OpenStackConditionReasonInvalidConfiguration, "resource not provided")
+		return orcerrors.Terminal(orcv1alpha1.OpenStackConditionReasonInvalidConfiguration, "resource not provided")
 	}
 
 	content, err := requireResourceContent(orcImage)

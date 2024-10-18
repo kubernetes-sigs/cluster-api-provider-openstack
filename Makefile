@@ -318,10 +318,11 @@ generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
 		paths=./pkg/webhooks/... \
 		output:webhook:dir=$(WEBHOOK_ROOT) \
 		webhook
+	 # We also need to extract rbac from ORC while we're running its controllers
 	$(CONTROLLER_GEN) \
 		paths=./ \
 		paths=./controllers/... \
-		paths=./internal/controllers/... \
+		paths=./orc/internal/controllers/... \
 		output:rbac:dir=$(RBAC_ROOT) \
 		rbac:roleName=manager-role
 
