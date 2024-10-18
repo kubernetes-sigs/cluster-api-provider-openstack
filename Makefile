@@ -276,7 +276,7 @@ modules: ## Runs go mod to ensure proper vendoring.
 	$(MAKE) -C $(REPO_ROOT)/orc modules
 	go mod tidy
 	cd $(TOOLS_DIR); go mod tidy
-	cd $(REPO_ROOT)/hack/codegen; go mod tidy
+	cd $(REPO_ROOT)/hack/codegen; go work sync; go mod tidy
 
 .PHONY: generate
 generate: templates generate-orc generate-controller-gen generate-codegen generate-conversion-gen generate-go generate-manifests generate-api-docs ## Generate all generated code
@@ -540,7 +540,7 @@ clean-release: ## Remove the release folder
 	rm -rf $(RELEASE_DIR)
 
 .PHONY: verify
-verify: verify-boilerplate verify-modules verify-gen
+verify: verify-boilerplate verify-modules verify-gen verify-orc
 
 .PHONY: verify-boilerplate
 verify-boilerplate:
@@ -548,16 +548,21 @@ verify-boilerplate:
 
 .PHONY: verify-modules
 verify-modules: modules
-	@if !(git diff --quiet HEAD -- go.sum go.mod hack/tools/go.mod hack/tools/go.sum); then \
+	@if !(git diff --quiet HEAD -- go.* hack/tools/go.* hack/codegen/go.*); then \
 		git diff; \
 		echo "go module files are out of date"; exit 1; \
 	fi
 
+.PHONY: verify-gen
 verify-gen: generate
 	@if !(git diff --quiet HEAD); then \
 		git diff; \
 		echo "generated files are out of date, run make generate"; exit 1; \
 	fi
+
+.PHONY: verify-orc
+verify-orc:
+	$(MAKE) -C $(REPO_ROOT)/orc verify-generated
 
 .PHONY: compile-e2e
 compile-e2e: ## Test e2e compilation
