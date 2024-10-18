@@ -29,9 +29,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	orcv1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
-
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
-	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
+	osclients "github.com/k-orc/openstack-resource-controller/internal/osclients"
+	orcerrors "github.com/k-orc/openstack-resource-controller/internal/util/errors"
 )
 
 func (r *orcImageReconciler) hashVerifier(ctx context.Context, orcImage *orcv1alpha1.Image, expectedValue string) hashCompletionHandler {
@@ -74,7 +73,7 @@ func (r *orcImageReconciler) downloadProgressReporter(ctx context.Context, orcIm
 	}
 }
 
-func (r *orcImageReconciler) uploadImageContent(ctx context.Context, orcImage *orcv1alpha1.Image, imageClient clients.ImageClient, glanceImage *images.Image) (err error) {
+func (r *orcImageReconciler) uploadImageContent(ctx context.Context, orcImage *orcv1alpha1.Image, imageClient osclients.ImageClient, glanceImage *images.Image) (err error) {
 	log := ctrl.LoggerFrom(ctx)
 	log.V(3).Info("Uploading image content")
 
@@ -86,7 +85,7 @@ func (r *orcImageReconciler) uploadImageContent(ctx context.Context, orcImage *o
 	download := content.Download
 	if download == nil {
 		// Should have been caught by validation
-		return capoerrors.Terminal(orcv1alpha1.OpenStackConditionReasonInvalidConfiguration, "image source type URL has no url entry")
+		return orcerrors.Terminal(orcv1alpha1.OpenStackConditionReasonInvalidConfiguration, "image source type URL has no url entry")
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, download.URL, http.NoBody)
@@ -138,8 +137,8 @@ func (r *orcImageReconciler) uploadImageContent(ctx context.Context, orcImage *o
 
 	err = imageClient.UploadData(ctx, glanceImage.ID, reader)
 	if err != nil {
-		if capoerrors.IsInvalidError(err) {
-			err = capoerrors.Terminal(orcv1alpha1.OpenStackConditionReasonInvalidConfiguration, err.Error(), err)
+		if orcerrors.IsInvalidError(err) {
+			err = orcerrors.Terminal(orcv1alpha1.OpenStackConditionReasonInvalidConfiguration, err.Error(), err)
 		}
 		return fmt.Errorf("error writing data to glance: %w", err)
 	}
