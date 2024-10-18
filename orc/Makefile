@@ -50,10 +50,10 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 .PHONY: modules
 modules:
 	go mod tidy
-	cd hack/codegen; go mod tidy
+	cd hack/codegen; go work sync; go mod tidy
 
 .PHONY: generate
-generate: manifests generate-controller-gen generate-codegen
+generate: modules manifests generate-controller-gen generate-codegen
 
 .PHONY: generate-controller-gen
 generate-controller-gen: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
@@ -62,6 +62,13 @@ generate-controller-gen: controller-gen ## Generate code containing DeepCopy, De
 .PHONY: generate-codegen
 generate-codegen: generate-controller-gen ## codegen requires DeepCopy etc
 	./hack/update-codegen.sh
+
+.PHONY: verify-generated
+verify-generated: generate
+	@if !(git diff --quiet HEAD); then \
+		git diff; \
+		echo "generated files are out of date, run make generate"; exit 1; \
+	fi
 
 .PHONY: fmt
 fmt: ## Run go fmt against code.
