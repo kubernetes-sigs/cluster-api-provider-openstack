@@ -53,7 +53,7 @@ modules:
 	cd hack/codegen; go work sync; go mod tidy
 
 .PHONY: generate
-generate: modules manifests generate-controller-gen generate-codegen
+generate: modules manifests generate-controller-gen generate-codegen generate-go
 
 .PHONY: generate-controller-gen
 generate-controller-gen: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
@@ -62,6 +62,10 @@ generate-controller-gen: controller-gen ## Generate code containing DeepCopy, De
 .PHONY: generate-codegen
 generate-codegen: generate-controller-gen ## codegen requires DeepCopy etc
 	./hack/update-codegen.sh
+
+.PHONY: generate-go
+generate-go: mockgen
+	go generate ./...
 
 .PHONY: verify-generated
 verify-generated: generate
@@ -173,18 +177,22 @@ LOCALBIN ?= $(shell pwd)/bin
 $(LOCALBIN):
 	mkdir -p $(LOCALBIN)
 
+export PATH := $(LOCALBIN):$(PATH)
+
 ## Tool Binaries
 KUBECTL ?= kubectl
 KUSTOMIZE ?= $(LOCALBIN)/kustomize
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
 GOLANGCI_LINT = $(LOCALBIN)/golangci-lint
+MOCKGEN = $(LOCALBIN)/mockgen
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.4.2
 CONTROLLER_TOOLS_VERSION ?= v0.16.4
 ENVTEST_VERSION ?= release-0.18
 GOLANGCI_LINT_VERSION ?= v1.61.0
+MOCKGEN_VERSION ?= v0.4.0
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
@@ -205,6 +213,11 @@ $(ENVTEST): $(LOCALBIN)
 golangci-lint: $(GOLANGCI_LINT) ## Download golangci-lint locally if necessary.
 $(GOLANGCI_LINT): $(LOCALBIN)
 	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/cmd/golangci-lint,$(GOLANGCI_LINT_VERSION))
+
+.PHONY: mockgen
+mockgen: $(MOCKGEN) ## Download mockgen locally if necessary.
+$(MOCKGEN): $(LOCALBIN)
+	$(call go-install-tool,$(MOCKGEN),go.uber.org/mock/mockgen,$(MOCKGEN_VERSION))
 
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary

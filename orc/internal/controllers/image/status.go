@@ -31,10 +31,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	orcv1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
+	orcerrors "github.com/k-orc/openstack-resource-controller/internal/util/errors"
+	"github.com/k-orc/openstack-resource-controller/internal/util/ssa"
 	orcapplyconfigv1alpha1 "github.com/k-orc/openstack-resource-controller/pkg/clients/applyconfiguration/api/v1alpha1"
-	"github.com/k-orc/openstack-resource-controller/pkg/utils/ssa"
-
-	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 )
 
 const (
@@ -204,7 +203,7 @@ func createStatusUpdate(ctx context.Context, orcImage *orcv1alpha1.Image, now me
 	} else {
 		progressingCondition.WithStatus(metav1.ConditionFalse)
 
-		var terminalError *capoerrors.TerminalError
+		var terminalError *orcerrors.TerminalError
 		if errors.As(err, &terminalError) {
 			progressingCondition.
 				WithReason(terminalError.Reason).

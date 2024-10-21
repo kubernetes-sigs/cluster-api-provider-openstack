@@ -35,8 +35,8 @@ import (
 
 	orcv1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
 	orcapplyconfigv1alpha1 "github.com/k-orc/openstack-resource-controller/pkg/clients/applyconfiguration/api/v1alpha1"
-	"github.com/k-orc/openstack-resource-controller/pkg/utils/ssa"
 
+	"sigs.k8s.io/cluster-api-provider-openstack/internal/util/ssa"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 

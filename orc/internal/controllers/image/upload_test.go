@@ -32,9 +32,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	orcv1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
-
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
+	"github.com/k-orc/openstack-resource-controller/internal/osclients/mock"
+	"github.com/k-orc/openstack-resource-controller/internal/scope"
 )
 
 type serveFileHandler string
@@ -142,7 +141,7 @@ var _ = Describe("Upload tests", Ordered, func() {
 		}
 
 		DeferCleanup(func() {
-			server.Close()
+			_ = server.Close()
 			done()
 		})
 
