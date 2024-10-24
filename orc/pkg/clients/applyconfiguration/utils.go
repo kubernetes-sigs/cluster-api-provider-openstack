@@ -58,6 +58,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apiv1alpha1.ImageSpecApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ImageStatus"):
 		return &apiv1alpha1.ImageStatusApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ImageStatusExtra"):
+		return &apiv1alpha1.ImageStatusExtraApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ManagedOptions"):
 		return &apiv1alpha1.ManagedOptionsApplyConfiguration{}
 

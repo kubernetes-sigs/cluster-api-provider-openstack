@@ -25,10 +25,10 @@ import (
 // ImageStatusApplyConfiguration represents a declarative configuration of the ImageStatus type for use
 // with apply.
 type ImageStatusApplyConfiguration struct {
-	Conditions       []v1.ConditionApplyConfiguration       `json:"conditions,omitempty"`
-	ID               *string                                `json:"id,omitempty"`
-	Resource         *ImageResourceStatusApplyConfiguration `json:"resource,omitempty"`
-	DownloadAttempts *int                                   `json:"downloadAttempts,omitempty"`
+	Conditions                         []v1.ConditionApplyConfiguration       `json:"conditions,omitempty"`
+	ID                                 *string                                `json:"id,omitempty"`
+	Resource                           *ImageResourceStatusApplyConfiguration `json:"resource,omitempty"`
+	ImageStatusExtraApplyConfiguration `json:",inline"`
 }
 
 // ImageStatusApplyConfiguration constructs a declarative configuration of the ImageStatus type for use with
