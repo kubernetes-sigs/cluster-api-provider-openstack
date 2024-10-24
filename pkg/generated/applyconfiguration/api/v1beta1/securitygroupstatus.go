@@ -18,14 +18,14 @@ limitations under the License.
 
 package v1beta1
 
-// SecurityGroupStatusApplyConfiguration represents an declarative configuration of the SecurityGroupStatus type for use
+// SecurityGroupStatusApplyConfiguration represents a declarative configuration of the SecurityGroupStatus type for use
 // with apply.
 type SecurityGroupStatusApplyConfiguration struct {
 	Name *string `json:"name,omitempty"`
 	ID   *string `json:"id,omitempty"`
 }
 
-// SecurityGroupStatusApplyConfiguration constructs an declarative configuration of the SecurityGroupStatus type for use with
+// SecurityGroupStatusApplyConfiguration constructs a declarative configuration of the SecurityGroupStatus type for use with
 // apply.
 func SecurityGroupStatus() *SecurityGroupStatusApplyConfiguration {
 	return &SecurityGroupStatusApplyConfiguration{}

@@ -18,7 +18,7 @@ limitations under the License.
 
 package v1alpha1
 
-// ImagePropertiesApplyConfiguration represents an declarative configuration of the ImageProperties type for use
+// ImagePropertiesApplyConfiguration represents a declarative configuration of the ImageProperties type for use
 // with apply.
 type ImagePropertiesApplyConfiguration struct {
 	MinDiskGB   *int                                       `json:"minDiskGB,omitempty"`
@@ -26,7 +26,7 @@ type ImagePropertiesApplyConfiguration struct {
 	Hardware    *ImagePropertiesHardwareApplyConfiguration `json:"hardware,omitempty"`
 }
 
-// ImagePropertiesApplyConfiguration constructs an declarative configuration of the ImageProperties type for use with
+// ImagePropertiesApplyConfiguration constructs a declarative configuration of the ImageProperties type for use with
 // apply.
 func ImageProperties() *ImagePropertiesApplyConfiguration {
 	return &ImagePropertiesApplyConfiguration{}

@@ -18,14 +18,14 @@ limitations under the License.
 
 package v1beta1
 
-// SchedulerHintAdditionalPropertyApplyConfiguration represents an declarative configuration of the SchedulerHintAdditionalProperty type for use
+// SchedulerHintAdditionalPropertyApplyConfiguration represents a declarative configuration of the SchedulerHintAdditionalProperty type for use
 // with apply.
 type SchedulerHintAdditionalPropertyApplyConfiguration struct {
 	Name  *string                                         `json:"name,omitempty"`
 	Value *SchedulerHintAdditionalValueApplyConfiguration `json:"value,omitempty"`
 }
 
-// SchedulerHintAdditionalPropertyApplyConfiguration constructs an declarative configuration of the SchedulerHintAdditionalProperty type for use with
+// SchedulerHintAdditionalPropertyApplyConfiguration constructs a declarative configuration of the SchedulerHintAdditionalProperty type for use with
 // apply.
 func SchedulerHintAdditionalProperty() *SchedulerHintAdditionalPropertyApplyConfiguration {
 	return &SchedulerHintAdditionalPropertyApplyConfiguration{}

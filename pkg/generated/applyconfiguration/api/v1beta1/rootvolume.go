@@ -18,14 +18,14 @@ limitations under the License.
 
 package v1beta1
 
-// RootVolumeApplyConfiguration represents an declarative configuration of the RootVolume type for use
+// RootVolumeApplyConfiguration represents a declarative configuration of the RootVolume type for use
 // with apply.
 type RootVolumeApplyConfiguration struct {
 	SizeGiB                             *int `json:"sizeGiB,omitempty"`
 	BlockDeviceVolumeApplyConfiguration `json:",inline"`
 }
 
-// RootVolumeApplyConfiguration constructs an declarative configuration of the RootVolume type for use with
+// RootVolumeApplyConfiguration constructs a declarative configuration of the RootVolume type for use with
 // apply.
 func RootVolume() *RootVolumeApplyConfiguration {
 	return &RootVolumeApplyConfiguration{}

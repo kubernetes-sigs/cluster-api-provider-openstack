@@ -18,14 +18,14 @@ limitations under the License.
 
 package v1beta1
 
-// ServerMetadataApplyConfiguration represents an declarative configuration of the ServerMetadata type for use
+// ServerMetadataApplyConfiguration represents a declarative configuration of the ServerMetadata type for use
 // with apply.
 type ServerMetadataApplyConfiguration struct {
 	Key   *string `json:"key,omitempty"`
 	Value *string `json:"value,omitempty"`
 }
 
-// ServerMetadataApplyConfiguration constructs an declarative configuration of the ServerMetadata type for use with
+// ServerMetadataApplyConfiguration constructs a declarative configuration of the ServerMetadata type for use with
 // apply.
 func ServerMetadata() *ServerMetadataApplyConfiguration {
 	return &ServerMetadataApplyConfiguration{}

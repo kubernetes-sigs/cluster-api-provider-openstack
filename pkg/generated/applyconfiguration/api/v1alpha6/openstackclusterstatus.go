@@ -23,7 +23,7 @@ import (
 	errors "sigs.k8s.io/cluster-api/errors"
 )
 
-// OpenStackClusterStatusApplyConfiguration represents an declarative configuration of the OpenStackClusterStatus type for use
+// OpenStackClusterStatusApplyConfiguration represents a declarative configuration of the OpenStackClusterStatus type for use
 // with apply.
 type OpenStackClusterStatusApplyConfiguration struct {
 	Ready                     *bool                            `json:"ready,omitempty"`
@@ -38,7 +38,7 @@ type OpenStackClusterStatusApplyConfiguration struct {
 	FailureMessage            *string                          `json:"failureMessage,omitempty"`
 }
 
-// OpenStackClusterStatusApplyConfiguration constructs an declarative configuration of the OpenStackClusterStatus type for use with
+// OpenStackClusterStatusApplyConfiguration constructs a declarative configuration of the OpenStackClusterStatus type for use with
 // apply.
 func OpenStackClusterStatus() *OpenStackClusterStatusApplyConfiguration {
 	return &OpenStackClusterStatusApplyConfiguration{}

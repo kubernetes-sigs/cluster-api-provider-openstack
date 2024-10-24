@@ -22,7 +22,7 @@ import (
 	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
-// SecurityGroupRuleSpecApplyConfiguration represents an declarative configuration of the SecurityGroupRuleSpec type for use
+// SecurityGroupRuleSpecApplyConfiguration represents a declarative configuration of the SecurityGroupRuleSpec type for use
 // with apply.
 type SecurityGroupRuleSpecApplyConfiguration struct {
 	Name                *string                            `json:"name,omitempty"`
@@ -37,7 +37,7 @@ type SecurityGroupRuleSpecApplyConfiguration struct {
 	RemoteManagedGroups []v1beta1.ManagedSecurityGroupName `json:"remoteManagedGroups,omitempty"`
 }
 
-// SecurityGroupRuleSpecApplyConfiguration constructs an declarative configuration of the SecurityGroupRuleSpec type for use with
+// SecurityGroupRuleSpecApplyConfiguration constructs a declarative configuration of the SecurityGroupRuleSpec type for use with
 // apply.
 func SecurityGroupRuleSpec() *SecurityGroupRuleSpecApplyConfiguration {
 	return &SecurityGroupRuleSpecApplyConfiguration{}

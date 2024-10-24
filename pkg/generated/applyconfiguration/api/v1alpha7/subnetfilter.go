@@ -18,7 +18,7 @@ limitations under the License.
 
 package v1alpha7
 
-// SubnetFilterApplyConfiguration represents an declarative configuration of the SubnetFilter type for use
+// SubnetFilterApplyConfiguration represents a declarative configuration of the SubnetFilter type for use
 // with apply.
 type SubnetFilterApplyConfiguration struct {
 	Name            *string `json:"name,omitempty"`
@@ -36,7 +36,7 @@ type SubnetFilterApplyConfiguration struct {
 	NotTagsAny      *string `json:"notTagsAny,omitempty"`
 }
 
-// SubnetFilterApplyConfiguration constructs an declarative configuration of the SubnetFilter type for use with
+// SubnetFilterApplyConfiguration constructs a declarative configuration of the SubnetFilter type for use with
 // apply.
 func SubnetFilter() *SubnetFilterApplyConfiguration {
 	return &SubnetFilterApplyConfiguration{}

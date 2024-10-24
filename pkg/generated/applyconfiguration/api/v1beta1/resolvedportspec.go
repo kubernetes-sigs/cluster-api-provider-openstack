@@ -18,7 +18,7 @@ limitations under the License.
 
 package v1beta1
 
-// ResolvedPortSpecApplyConfiguration represents an declarative configuration of the ResolvedPortSpec type for use
+// ResolvedPortSpecApplyConfiguration represents a declarative configuration of the ResolvedPortSpec type for use
 // with apply.
 type ResolvedPortSpecApplyConfiguration struct {
 	Name                                     *string                             `json:"name,omitempty"`
@@ -31,7 +31,7 @@ type ResolvedPortSpecApplyConfiguration struct {
 	ResolvedPortSpecFieldsApplyConfiguration `json:",inline"`
 }
 
-// ResolvedPortSpecApplyConfiguration constructs an declarative configuration of the ResolvedPortSpec type for use with
+// ResolvedPortSpecApplyConfiguration constructs a declarative configuration of the ResolvedPortSpec type for use with
 // apply.
 func ResolvedPortSpec() *ResolvedPortSpecApplyConfiguration {
 	return &ResolvedPortSpecApplyConfiguration{}

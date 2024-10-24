@@ -22,7 +22,7 @@ import (
 	v1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
 )
 
-// ImageContentApplyConfiguration represents an declarative configuration of the ImageContent type for use
+// ImageContentApplyConfiguration represents a declarative configuration of the ImageContent type for use
 // with apply.
 type ImageContentApplyConfiguration struct {
 	ContainerFormat *v1alpha1.ImageContainerFormat                `json:"containerFormat,omitempty"`
@@ -30,7 +30,7 @@ type ImageContentApplyConfiguration struct {
 	Download        *ImageContentSourceDownloadApplyConfiguration `json:"download,omitempty"`
 }
 
-// ImageContentApplyConfiguration constructs an declarative configuration of the ImageContent type for use with
+// ImageContentApplyConfiguration constructs a declarative configuration of the ImageContent type for use with
 // apply.
 func ImageContent() *ImageContentApplyConfiguration {
 	return &ImageContentApplyConfiguration{}

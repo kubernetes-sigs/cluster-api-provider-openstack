@@ -22,7 +22,7 @@ import (
 	apiv1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
 )
 
-// ImageSpecApplyConfiguration represents an declarative configuration of the ImageSpec type for use
+// ImageSpecApplyConfiguration represents a declarative configuration of the ImageSpec type for use
 // with apply.
 type ImageSpecApplyConfiguration struct {
 	Import              *ImageImportApplyConfiguration               `json:"import,omitempty"`
@@ -32,7 +32,7 @@ type ImageSpecApplyConfiguration struct {
 	CloudCredentialsRef *CloudCredentialsReferenceApplyConfiguration `json:"cloudCredentialsRef,omitempty"`
 }
 
-// ImageSpecApplyConfiguration constructs an declarative configuration of the ImageSpec type for use with
+// ImageSpecApplyConfiguration constructs a declarative configuration of the ImageSpec type for use with
 // apply.
 func ImageSpec() *ImageSpecApplyConfiguration {
 	return &ImageSpecApplyConfiguration{}

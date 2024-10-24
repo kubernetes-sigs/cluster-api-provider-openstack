@@ -18,7 +18,7 @@ limitations under the License.
 
 package v1alpha6
 
-// NetworkApplyConfiguration represents an declarative configuration of the Network type for use
+// NetworkApplyConfiguration represents a declarative configuration of the Network type for use
 // with apply.
 type NetworkApplyConfiguration struct {
 	Name                  *string                         `json:"name,omitempty"`
@@ -30,7 +30,7 @@ type NetworkApplyConfiguration struct {
 	APIServerLoadBalancer *LoadBalancerApplyConfiguration `json:"apiServerLoadBalancer,omitempty"`
 }
 
-// NetworkApplyConfiguration constructs an declarative configuration of the Network type for use with
+// NetworkApplyConfiguration constructs a declarative configuration of the Network type for use with
 // apply.
 func Network() *NetworkApplyConfiguration {
 	return &NetworkApplyConfiguration{}

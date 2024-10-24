@@ -18,7 +18,7 @@ limitations under the License.
 
 package v1beta1
 
-// ResolvedMachineSpecApplyConfiguration represents an declarative configuration of the ResolvedMachineSpec type for use
+// ResolvedMachineSpecApplyConfiguration represents a declarative configuration of the ResolvedMachineSpec type for use
 // with apply.
 type ResolvedMachineSpecApplyConfiguration struct {
 	ServerGroupID *string                              `json:"serverGroupID,omitempty"`
@@ -27,7 +27,7 @@ type ResolvedMachineSpecApplyConfiguration struct {
 	Ports         []ResolvedPortSpecApplyConfiguration `json:"ports,omitempty"`
 }
 
-// ResolvedMachineSpecApplyConfiguration constructs an declarative configuration of the ResolvedMachineSpec type for use with
+// ResolvedMachineSpecApplyConfiguration constructs a declarative configuration of the ResolvedMachineSpec type for use with
 // apply.
 func ResolvedMachineSpec() *ResolvedMachineSpecApplyConfiguration {
 	return &ResolvedMachineSpecApplyConfiguration{}

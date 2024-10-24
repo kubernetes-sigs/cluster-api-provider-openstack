@@ -18,7 +18,7 @@ limitations under the License.
 
 package v1beta1
 
-// ImageParamApplyConfiguration represents an declarative configuration of the ImageParam type for use
+// ImageParamApplyConfiguration represents a declarative configuration of the ImageParam type for use
 // with apply.
 type ImageParamApplyConfiguration struct {
 	ID       *string                              `json:"id,omitempty"`
@@ -26,7 +26,7 @@ type ImageParamApplyConfiguration struct {
 	ImageRef *ResourceReferenceApplyConfiguration `json:"imageRef,omitempty"`
 }
 
-// ImageParamApplyConfiguration constructs an declarative configuration of the ImageParam type for use with
+// ImageParamApplyConfiguration constructs a declarative configuration of the ImageParam type for use with
 // apply.
 func ImageParam() *ImageParamApplyConfiguration {
 	return &ImageParamApplyConfiguration{}

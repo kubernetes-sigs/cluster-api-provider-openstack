@@ -22,7 +22,7 @@ import (
 	v1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
 )
 
-// ImagePropertiesHardwareApplyConfiguration represents an declarative configuration of the ImagePropertiesHardware type for use
+// ImagePropertiesHardwareApplyConfiguration represents a declarative configuration of the ImagePropertiesHardware type for use
 // with apply.
 type ImagePropertiesHardwareApplyConfiguration struct {
 	CPUSockets      *int                 `json:"cpuSockets,omitempty"`
@@ -36,7 +36,7 @@ type ImagePropertiesHardwareApplyConfiguration struct {
 	VIFModel        *string              `json:"vifModel,omitempty"`
 }
 
-// ImagePropertiesHardwareApplyConfiguration constructs an declarative configuration of the ImagePropertiesHardware type for use with
+// ImagePropertiesHardwareApplyConfiguration constructs a declarative configuration of the ImagePropertiesHardware type for use with
 // apply.
 func ImagePropertiesHardware() *ImagePropertiesHardwareApplyConfiguration {
 	return &ImagePropertiesHardwareApplyConfiguration{}

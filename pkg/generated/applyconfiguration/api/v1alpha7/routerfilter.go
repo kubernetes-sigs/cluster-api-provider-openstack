@@ -18,7 +18,7 @@ limitations under the License.
 
 package v1alpha7
 
-// RouterFilterApplyConfiguration represents an declarative configuration of the RouterFilter type for use
+// RouterFilterApplyConfiguration represents a declarative configuration of the RouterFilter type for use
 // with apply.
 type RouterFilterApplyConfiguration struct {
 	ID          *string `json:"id,omitempty"`
@@ -31,7 +31,7 @@ type RouterFilterApplyConfiguration struct {
 	NotTagsAny  *string `json:"notTagsAny,omitempty"`
 }
 
-// RouterFilterApplyConfiguration constructs an declarative configuration of the RouterFilter type for use with
+// RouterFilterApplyConfiguration constructs a declarative configuration of the RouterFilter type for use with
 // apply.
 func RouterFilter() *RouterFilterApplyConfiguration {
 	return &RouterFilterApplyConfiguration{}

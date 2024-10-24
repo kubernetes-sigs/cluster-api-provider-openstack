@@ -18,7 +18,7 @@ limitations under the License.
 
 package v1alpha7
 
-// NetworkStatusApplyConfiguration represents an declarative configuration of the NetworkStatus type for use
+// NetworkStatusApplyConfiguration represents a declarative configuration of the NetworkStatus type for use
 // with apply.
 type NetworkStatusApplyConfiguration struct {
 	Name *string  `json:"name,omitempty"`
@@ -26,7 +26,7 @@ type NetworkStatusApplyConfiguration struct {
 	Tags []string `json:"tags,omitempty"`
 }
 
-// NetworkStatusApplyConfiguration constructs an declarative configuration of the NetworkStatus type for use with
+// NetworkStatusApplyConfiguration constructs a declarative configuration of the NetworkStatus type for use with
 // apply.
 func NetworkStatus() *NetworkStatusApplyConfiguration {
 	return &NetworkStatusApplyConfiguration{}

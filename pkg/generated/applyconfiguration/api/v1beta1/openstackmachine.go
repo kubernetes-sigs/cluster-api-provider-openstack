@@ -27,7 +27,7 @@ import (
 	internal "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/internal"
 )
 
-// OpenStackMachineApplyConfiguration represents an declarative configuration of the OpenStackMachine type for use
+// OpenStackMachineApplyConfiguration represents a declarative configuration of the OpenStackMachine type for use
 // with apply.
 type OpenStackMachineApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
@@ -36,7 +36,7 @@ type OpenStackMachineApplyConfiguration struct {
 	Status                           *OpenStackMachineStatusApplyConfiguration `json:"status,omitempty"`
 }
 
-// OpenStackMachine constructs an declarative configuration of the OpenStackMachine type for use with
+// OpenStackMachine constructs a declarative configuration of the OpenStackMachine type for use with
 // apply.
 func OpenStackMachine(name, namespace string) *OpenStackMachineApplyConfiguration {
 	b := &OpenStackMachineApplyConfiguration{}
@@ -255,4 +255,10 @@ func (b *OpenStackMachineApplyConfiguration) WithSpec(value *OpenStackMachineSpe
 func (b *OpenStackMachineApplyConfiguration) WithStatus(value *OpenStackMachineStatusApplyConfiguration) *OpenStackMachineApplyConfiguration {
 	b.Status = value
 	return b
+}
+
+// GetName retrieves the value of the Name field in the declarative configuration.
+func (b *OpenStackMachineApplyConfiguration) GetName() *string {
+	b.ensureObjectMetaApplyConfigurationExists()
+	return b.Name
 }

@@ -22,7 +22,7 @@ import (
 	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
-// FilterByNeutronTagsApplyConfiguration represents an declarative configuration of the FilterByNeutronTags type for use
+// FilterByNeutronTagsApplyConfiguration represents a declarative configuration of the FilterByNeutronTags type for use
 // with apply.
 type FilterByNeutronTagsApplyConfiguration struct {
 	Tags       []v1beta1.NeutronTag `json:"tags,omitempty"`
@@ -31,7 +31,7 @@ type FilterByNeutronTagsApplyConfiguration struct {
 	NotTagsAny []v1beta1.NeutronTag `json:"notTagsAny,omitempty"`
 }
 
-// FilterByNeutronTagsApplyConfiguration constructs an declarative configuration of the FilterByNeutronTags type for use with
+// FilterByNeutronTagsApplyConfiguration constructs a declarative configuration of the FilterByNeutronTags type for use with
 // apply.
 func FilterByNeutronTags() *FilterByNeutronTagsApplyConfiguration {
 	return &FilterByNeutronTagsApplyConfiguration{}

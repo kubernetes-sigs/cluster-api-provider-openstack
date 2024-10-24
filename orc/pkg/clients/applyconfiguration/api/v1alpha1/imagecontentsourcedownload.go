@@ -22,7 +22,7 @@ import (
 	v1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
 )
 
-// ImageContentSourceDownloadApplyConfiguration represents an declarative configuration of the ImageContentSourceDownload type for use
+// ImageContentSourceDownloadApplyConfiguration represents a declarative configuration of the ImageContentSourceDownload type for use
 // with apply.
 type ImageContentSourceDownloadApplyConfiguration struct {
 	URL        *string                      `json:"url,omitempty"`
@@ -30,7 +30,7 @@ type ImageContentSourceDownloadApplyConfiguration struct {
 	Hash       *ImageHashApplyConfiguration `json:"hash,omitempty"`
 }
 
-// ImageContentSourceDownloadApplyConfiguration constructs an declarative configuration of the ImageContentSourceDownload type for use with
+// ImageContentSourceDownloadApplyConfiguration constructs a declarative configuration of the ImageContentSourceDownload type for use with
 // apply.
 func ImageContentSourceDownload() *ImageContentSourceDownloadApplyConfiguration {
 	return &ImageContentSourceDownloadApplyConfiguration{}

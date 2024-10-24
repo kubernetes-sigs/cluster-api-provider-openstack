@@ -18,7 +18,7 @@ limitations under the License.
 
 package v1beta1
 
-// AdditionalBlockDeviceApplyConfiguration represents an declarative configuration of the AdditionalBlockDevice type for use
+// AdditionalBlockDeviceApplyConfiguration represents a declarative configuration of the AdditionalBlockDevice type for use
 // with apply.
 type AdditionalBlockDeviceApplyConfiguration struct {
 	Name    *string                               `json:"name,omitempty"`
@@ -26,7 +26,7 @@ type AdditionalBlockDeviceApplyConfiguration struct {
 	Storage *BlockDeviceStorageApplyConfiguration `json:"storage,omitempty"`
 }
 
-// AdditionalBlockDeviceApplyConfiguration constructs an declarative configuration of the AdditionalBlockDevice type for use with
+// AdditionalBlockDeviceApplyConfiguration constructs a declarative configuration of the AdditionalBlockDevice type for use with
 // apply.
 func AdditionalBlockDevice() *AdditionalBlockDeviceApplyConfiguration {
 	return &AdditionalBlockDeviceApplyConfiguration{}

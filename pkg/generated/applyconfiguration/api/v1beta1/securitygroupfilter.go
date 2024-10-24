@@ -22,7 +22,7 @@ import (
 	apiv1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
-// SecurityGroupFilterApplyConfiguration represents an declarative configuration of the SecurityGroupFilter type for use
+// SecurityGroupFilterApplyConfiguration represents a declarative configuration of the SecurityGroupFilter type for use
 // with apply.
 type SecurityGroupFilterApplyConfiguration struct {
 	Name                                  *string `json:"name,omitempty"`
@@ -31,7 +31,7 @@ type SecurityGroupFilterApplyConfiguration struct {
 	FilterByNeutronTagsApplyConfiguration `json:",inline"`
 }
 
-// SecurityGroupFilterApplyConfiguration constructs an declarative configuration of the SecurityGroupFilter type for use with
+// SecurityGroupFilterApplyConfiguration constructs a declarative configuration of the SecurityGroupFilter type for use with
 // apply.
 func SecurityGroupFilter() *SecurityGroupFilterApplyConfiguration {
 	return &SecurityGroupFilterApplyConfiguration{}

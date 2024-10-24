@@ -24,7 +24,7 @@ import (
 	apiv1beta1 "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
-// OpenStackServerStatusApplyConfiguration represents an declarative configuration of the OpenStackServerStatus type for use
+// OpenStackServerStatusApplyConfiguration represents a declarative configuration of the OpenStackServerStatus type for use
 // with apply.
 type OpenStackServerStatusApplyConfiguration struct {
 	Ready         *bool                                 `json:"ready,omitempty"`
@@ -36,7 +36,7 @@ type OpenStackServerStatusApplyConfiguration struct {
 	Conditions    *apiv1beta1.Conditions                `json:"conditions,omitempty"`
 }
 
-// OpenStackServerStatusApplyConfiguration constructs an declarative configuration of the OpenStackServerStatus type for use with
+// OpenStackServerStatusApplyConfiguration constructs a declarative configuration of the OpenStackServerStatus type for use with
 // apply.
 func OpenStackServerStatus() *OpenStackServerStatusApplyConfiguration {
 	return &OpenStackServerStatusApplyConfiguration{}

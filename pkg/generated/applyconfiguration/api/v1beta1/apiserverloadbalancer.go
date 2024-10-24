@@ -18,7 +18,7 @@ limitations under the License.
 
 package v1beta1
 
-// APIServerLoadBalancerApplyConfiguration represents an declarative configuration of the APIServerLoadBalancer type for use
+// APIServerLoadBalancerApplyConfiguration represents a declarative configuration of the APIServerLoadBalancer type for use
 // with apply.
 type APIServerLoadBalancerApplyConfiguration struct {
 	Enabled          *bool                           `json:"enabled,omitempty"`
@@ -31,7 +31,7 @@ type APIServerLoadBalancerApplyConfiguration struct {
 	Flavor           *string                         `json:"flavor,omitempty"`
 }
 
-// APIServerLoadBalancerApplyConfiguration constructs an declarative configuration of the APIServerLoadBalancer type for use with
+// APIServerLoadBalancerApplyConfiguration constructs a declarative configuration of the APIServerLoadBalancer type for use with
 // apply.
 func APIServerLoadBalancer() *APIServerLoadBalancerApplyConfiguration {
 	return &APIServerLoadBalancerApplyConfiguration{}

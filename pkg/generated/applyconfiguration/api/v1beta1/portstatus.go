@@ -18,13 +18,13 @@ limitations under the License.
 
 package v1beta1
 
-// PortStatusApplyConfiguration represents an declarative configuration of the PortStatus type for use
+// PortStatusApplyConfiguration represents a declarative configuration of the PortStatus type for use
 // with apply.
 type PortStatusApplyConfiguration struct {
 	ID *string `json:"id,omitempty"`
 }
 
-// PortStatusApplyConfiguration constructs an declarative configuration of the PortStatus type for use with
+// PortStatusApplyConfiguration constructs a declarative configuration of the PortStatus type for use with
 // apply.
 func PortStatus() *PortStatusApplyConfiguration {
 	return &PortStatusApplyConfiguration{}

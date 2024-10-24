@@ -18,13 +18,13 @@ limitations under the License.
 
 package v1beta1
 
-// MachineResourcesApplyConfiguration represents an declarative configuration of the MachineResources type for use
+// MachineResourcesApplyConfiguration represents a declarative configuration of the MachineResources type for use
 // with apply.
 type MachineResourcesApplyConfiguration struct {
 	Ports []PortStatusApplyConfiguration `json:"ports,omitempty"`
 }
 
-// MachineResourcesApplyConfiguration constructs an declarative configuration of the MachineResources type for use with
+// MachineResourcesApplyConfiguration constructs a declarative configuration of the MachineResources type for use with
 // apply.
 func MachineResources() *MachineResourcesApplyConfiguration {
 	return &MachineResourcesApplyConfiguration{}

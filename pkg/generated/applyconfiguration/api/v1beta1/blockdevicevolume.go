@@ -18,14 +18,14 @@ limitations under the License.
 
 package v1beta1
 
-// BlockDeviceVolumeApplyConfiguration represents an declarative configuration of the BlockDeviceVolume type for use
+// BlockDeviceVolumeApplyConfiguration represents a declarative configuration of the BlockDeviceVolume type for use
 // with apply.
 type BlockDeviceVolumeApplyConfiguration struct {
 	Type             *string                                   `json:"type,omitempty"`
 	AvailabilityZone *VolumeAvailabilityZoneApplyConfiguration `json:"availabilityZone,omitempty"`
 }
 
-// BlockDeviceVolumeApplyConfiguration constructs an declarative configuration of the BlockDeviceVolume type for use with
+// BlockDeviceVolumeApplyConfiguration constructs a declarative configuration of the BlockDeviceVolume type for use with
 // apply.
 func BlockDeviceVolume() *BlockDeviceVolumeApplyConfiguration {
 	return &BlockDeviceVolumeApplyConfiguration{}

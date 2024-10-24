@@ -18,14 +18,14 @@ limitations under the License.
 
 package v1alpha7
 
-// BindingProfileApplyConfiguration represents an declarative configuration of the BindingProfile type for use
+// BindingProfileApplyConfiguration represents a declarative configuration of the BindingProfile type for use
 // with apply.
 type BindingProfileApplyConfiguration struct {
 	OVSHWOffload *bool `json:"ovsHWOffload,omitempty"`
 	TrustedVF    *bool `json:"trustedVF,omitempty"`
 }
 
-// BindingProfileApplyConfiguration constructs an declarative configuration of the BindingProfile type for use with
+// BindingProfileApplyConfiguration constructs a declarative configuration of the BindingProfile type for use with
 // apply.
 func BindingProfile() *BindingProfileApplyConfiguration {
 	return &BindingProfileApplyConfiguration{}

@@ -18,7 +18,7 @@ limitations under the License.
 
 package v1beta1
 
-// ResolvedPortSpecFieldsApplyConfiguration represents an declarative configuration of the ResolvedPortSpecFields type for use
+// ResolvedPortSpecFieldsApplyConfiguration represents a declarative configuration of the ResolvedPortSpecFields type for use
 // with apply.
 type ResolvedPortSpecFieldsApplyConfiguration struct {
 	AdminStateUp          *bool                             `json:"adminStateUp,omitempty"`
@@ -32,7 +32,7 @@ type ResolvedPortSpecFieldsApplyConfiguration struct {
 	ValueSpecs            []ValueSpecApplyConfiguration     `json:"valueSpecs,omitempty"`
 }
 
-// ResolvedPortSpecFieldsApplyConfiguration constructs an declarative configuration of the ResolvedPortSpecFields type for use with
+// ResolvedPortSpecFieldsApplyConfiguration constructs a declarative configuration of the ResolvedPortSpecFields type for use with
 // apply.
 func ResolvedPortSpecFields() *ResolvedPortSpecFieldsApplyConfiguration {
 	return &ResolvedPortSpecFieldsApplyConfiguration{}

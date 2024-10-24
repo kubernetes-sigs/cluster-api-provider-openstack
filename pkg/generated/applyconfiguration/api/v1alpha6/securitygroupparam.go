@@ -18,7 +18,7 @@ limitations under the License.
 
 package v1alpha6
 
-// SecurityGroupParamApplyConfiguration represents an declarative configuration of the SecurityGroupParam type for use
+// SecurityGroupParamApplyConfiguration represents a declarative configuration of the SecurityGroupParam type for use
 // with apply.
 type SecurityGroupParamApplyConfiguration struct {
 	UUID   *string                                `json:"uuid,omitempty"`
@@ -26,7 +26,7 @@ type SecurityGroupParamApplyConfiguration struct {
 	Filter *SecurityGroupFilterApplyConfiguration `json:"filter,omitempty"`
 }
 
-// SecurityGroupParamApplyConfiguration constructs an declarative configuration of the SecurityGroupParam type for use with
+// SecurityGroupParamApplyConfiguration constructs a declarative configuration of the SecurityGroupParam type for use with
 // apply.
 func SecurityGroupParam() *SecurityGroupParamApplyConfiguration {
 	return &SecurityGroupParamApplyConfiguration{}

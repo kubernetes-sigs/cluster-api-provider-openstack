@@ -22,14 +22,14 @@ import (
 	v1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
 )
 
-// ImageHashApplyConfiguration represents an declarative configuration of the ImageHash type for use
+// ImageHashApplyConfiguration represents a declarative configuration of the ImageHash type for use
 // with apply.
 type ImageHashApplyConfiguration struct {
 	Algorithm *v1alpha1.ImageHashAlgorithm `json:"algorithm,omitempty"`
 	Value     *string                      `json:"value,omitempty"`
 }
 
-// ImageHashApplyConfiguration constructs an declarative configuration of the ImageHash type for use with
+// ImageHashApplyConfiguration constructs a declarative configuration of the ImageHash type for use with
 // apply.
 func ImageHash() *ImageHashApplyConfiguration {
 	return &ImageHashApplyConfiguration{}

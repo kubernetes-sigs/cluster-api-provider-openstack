@@ -25,7 +25,7 @@ import (
 	errors "sigs.k8s.io/cluster-api/errors"
 )
 
-// OpenStackMachineStatusApplyConfiguration represents an declarative configuration of the OpenStackMachineStatus type for use
+// OpenStackMachineStatusApplyConfiguration represents a declarative configuration of the OpenStackMachineStatus type for use
 // with apply.
 type OpenStackMachineStatusApplyConfiguration struct {
 	Ready          *bool                      `json:"ready,omitempty"`
@@ -36,7 +36,7 @@ type OpenStackMachineStatusApplyConfiguration struct {
 	Conditions     *v1beta1.Conditions        `json:"conditions,omitempty"`
 }
 
-// OpenStackMachineStatusApplyConfiguration constructs an declarative configuration of the OpenStackMachineStatus type for use with
+// OpenStackMachineStatusApplyConfiguration constructs a declarative configuration of the OpenStackMachineStatus type for use with
 // apply.
 func OpenStackMachineStatus() *OpenStackMachineStatusApplyConfiguration {
 	return &OpenStackMachineStatusApplyConfiguration{}

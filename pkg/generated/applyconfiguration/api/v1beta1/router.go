@@ -18,7 +18,7 @@ limitations under the License.
 
 package v1beta1
 
-// RouterApplyConfiguration represents an declarative configuration of the Router type for use
+// RouterApplyConfiguration represents a declarative configuration of the Router type for use
 // with apply.
 type RouterApplyConfiguration struct {
 	Name *string  `json:"name,omitempty"`
@@ -27,7 +27,7 @@ type RouterApplyConfiguration struct {
 	IPs  []string `json:"ips,omitempty"`
 }
 
-// RouterApplyConfiguration constructs an declarative configuration of the Router type for use with
+// RouterApplyConfiguration constructs a declarative configuration of the Router type for use with
 // apply.
 func Router() *RouterApplyConfiguration {
 	return &RouterApplyConfiguration{}

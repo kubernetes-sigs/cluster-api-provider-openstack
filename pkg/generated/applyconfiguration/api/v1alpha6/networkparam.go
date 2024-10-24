@@ -18,7 +18,7 @@ limitations under the License.
 
 package v1alpha6
 
-// NetworkParamApplyConfiguration represents an declarative configuration of the NetworkParam type for use
+// NetworkParamApplyConfiguration represents a declarative configuration of the NetworkParam type for use
 // with apply.
 type NetworkParamApplyConfiguration struct {
 	UUID    *string                          `json:"uuid,omitempty"`
@@ -27,7 +27,7 @@ type NetworkParamApplyConfiguration struct {
 	Subnets []SubnetParamApplyConfiguration  `json:"subnets,omitempty"`
 }
 
-// NetworkParamApplyConfiguration constructs an declarative configuration of the NetworkParam type for use with
+// NetworkParamApplyConfiguration constructs a declarative configuration of the NetworkParam type for use with
 // apply.
 func NetworkParam() *NetworkParamApplyConfiguration {
 	return &NetworkParamApplyConfiguration{}

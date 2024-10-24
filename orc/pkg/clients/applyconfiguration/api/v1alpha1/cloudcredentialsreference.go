@@ -18,14 +18,14 @@ limitations under the License.
 
 package v1alpha1
 
-// CloudCredentialsReferenceApplyConfiguration represents an declarative configuration of the CloudCredentialsReference type for use
+// CloudCredentialsReferenceApplyConfiguration represents a declarative configuration of the CloudCredentialsReference type for use
 // with apply.
 type CloudCredentialsReferenceApplyConfiguration struct {
 	SecretName *string `json:"secretName,omitempty"`
 	CloudName  *string `json:"cloudName,omitempty"`
 }
 
-// CloudCredentialsReferenceApplyConfiguration constructs an declarative configuration of the CloudCredentialsReference type for use with
+// CloudCredentialsReferenceApplyConfiguration constructs a declarative configuration of the CloudCredentialsReference type for use with
 // apply.
 func CloudCredentialsReference() *CloudCredentialsReferenceApplyConfiguration {
 	return &CloudCredentialsReferenceApplyConfiguration{}

@@ -18,7 +18,7 @@ limitations under the License.
 
 package v1beta1
 
-// LoadBalancerApplyConfiguration represents an declarative configuration of the LoadBalancer type for use
+// LoadBalancerApplyConfiguration represents a declarative configuration of the LoadBalancer type for use
 // with apply.
 type LoadBalancerApplyConfiguration struct {
 	Name                *string                                     `json:"name,omitempty"`
@@ -30,7 +30,7 @@ type LoadBalancerApplyConfiguration struct {
 	LoadBalancerNetwork *NetworkStatusWithSubnetsApplyConfiguration `json:"loadBalancerNetwork,omitempty"`
 }
 
-// LoadBalancerApplyConfiguration constructs an declarative configuration of the LoadBalancer type for use with
+// LoadBalancerApplyConfiguration constructs a declarative configuration of the LoadBalancer type for use with
 // apply.
 func LoadBalancer() *LoadBalancerApplyConfiguration {
 	return &LoadBalancerApplyConfiguration{}

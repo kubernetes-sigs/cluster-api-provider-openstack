@@ -27,7 +27,7 @@ import (
 	internal "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/internal"
 )
 
-// OpenStackClusterApplyConfiguration represents an declarative configuration of the OpenStackCluster type for use
+// OpenStackClusterApplyConfiguration represents a declarative configuration of the OpenStackCluster type for use
 // with apply.
 type OpenStackClusterApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
@@ -36,7 +36,7 @@ type OpenStackClusterApplyConfiguration struct {
 	Status                           *OpenStackClusterStatusApplyConfiguration `json:"status,omitempty"`
 }
 
-// OpenStackCluster constructs an declarative configuration of the OpenStackCluster type for use with
+// OpenStackCluster constructs a declarative configuration of the OpenStackCluster type for use with
 // apply.
 func OpenStackCluster(name, namespace string) *OpenStackClusterApplyConfiguration {
 	b := &OpenStackClusterApplyConfiguration{}
@@ -255,4 +255,10 @@ func (b *OpenStackClusterApplyConfiguration) WithSpec(value *OpenStackClusterSpe
 func (b *OpenStackClusterApplyConfiguration) WithStatus(value *OpenStackClusterStatusApplyConfiguration) *OpenStackClusterApplyConfiguration {
 	b.Status = value
 	return b
+}
+
+// GetName retrieves the value of the Name field in the declarative configuration.
+func (b *OpenStackClusterApplyConfiguration) GetName() *string {
+	b.ensureObjectMetaApplyConfigurationExists()
+	return b.Name
 }

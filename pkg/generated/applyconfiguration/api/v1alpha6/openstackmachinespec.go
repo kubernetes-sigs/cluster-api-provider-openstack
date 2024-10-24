@@ -18,7 +18,7 @@ limitations under the License.
 
 package v1alpha6
 
-// OpenStackMachineSpecApplyConfiguration represents an declarative configuration of the OpenStackMachineSpec type for use
+// OpenStackMachineSpecApplyConfiguration represents a declarative configuration of the OpenStackMachineSpec type for use
 // with apply.
 type OpenStackMachineSpecApplyConfiguration struct {
 	ProviderID     *string                                       `json:"providerID,omitempty"`
@@ -43,7 +43,7 @@ type OpenStackMachineSpecApplyConfiguration struct {
 	IdentityRef    *OpenStackIdentityReferenceApplyConfiguration `json:"identityRef,omitempty"`
 }
 
-// OpenStackMachineSpecApplyConfiguration constructs an declarative configuration of the OpenStackMachineSpec type for use with
+// OpenStackMachineSpecApplyConfiguration constructs a declarative configuration of the OpenStackMachineSpec type for use with
 // apply.
 func OpenStackMachineSpec() *OpenStackMachineSpecApplyConfiguration {
 	return &OpenStackMachineSpecApplyConfiguration{}
