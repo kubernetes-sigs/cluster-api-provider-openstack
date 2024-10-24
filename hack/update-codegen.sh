@@ -19,16 +19,15 @@ set -x
 
 SCRIPT_ROOT=$(realpath $(dirname "${BASH_SOURCE[0]}"))
 PROJECT_ROOT=$(realpath "${SCRIPT_ROOT}/..")
-WORKSPACE_ROOT=$(realpath "${PROJECT_ROOT}/hack/codegen")
 
 GENERATED_PKG="pkg/generated"
 
 # Ensure tools built by kube_codegen go in our own GOBIN rather than something
 # shared under GOPATH. This guards against these tools being rebuilt by some
 # other concurrent invocation, potentially with a different version.
-export GOBIN="${WORKSPACE_ROOT}/bin"
+export GOBIN="${PROJECT_ROOT}/bin"
 
-cd "$WORKSPACE_ROOT"
+cd "$PROJECT_ROOT"
 
 # For this to work, the current working directory must be under a Go module which
 # lists k8s.io/code-generator
@@ -40,8 +39,8 @@ source "${CODEGEN_PKG}/kube_codegen.sh"
 
 declare -a gen_openapi_args=(
     --report-filename "${PROJECT_ROOT}/api_violations.report"
-    --output-dir "${PROJECT_ROOT}/hack/codegen/openapi"
-    --output-pkg sigs.k8s.io/cluster-api-provider-openstack/hack/codegen/openapi
+    --output-dir "${PROJECT_ROOT}/cmd/models-schema"
+    --output-pkg main
     --boilerplate "${SCRIPT_ROOT}/boilerplate.go.txt"
 
     # We need to include all referenced types in our generated openapi schema
@@ -60,11 +59,8 @@ fi
 
 kube::codegen::gen_openapi "${gen_openapi_args[@]}" "${PROJECT_ROOT}/api"
 
-tempdir=$(mktemp -d)
-trap 'rm -r "${tempdir}"' EXIT
-
-openapi="${tempdir}/openapi.json"
-go run "${PROJECT_ROOT}/hack/codegen/cmd/models-schema/main.go" > "$openapi"
+openapi="${PROJECT_ROOT}/openapi.json"
+go run "${PROJECT_ROOT}/cmd/models-schema" | jq > "$openapi"
 
 kube::codegen::gen_client \
     --with-applyconfig \

@@ -22,10 +22,9 @@ import (
 	"os"
 	"strings"
 
+	_ "k8s.io/code-generator" // Import magnet so go mod tidy doesn't remove the dep, required by update-codegen.sh
 	"k8s.io/kube-openapi/pkg/common"
 	"k8s.io/kube-openapi/pkg/validation/spec"
-
-	"github.com/k-orc/openstack-resource-controller/hack/codegen/openapi"
 )
 
 // Outputs openAPI schema JSON containing the schema definitions in zz_generated.openapi.go.
@@ -33,7 +32,7 @@ import (
 func main() {
 	err := output()
 	if err != nil {
-		os.Stderr.WriteString(fmt.Sprintf("Failed: %v", err))
+		_, _ = os.Stderr.WriteString(fmt.Sprintf("Failed: %v", err))
 		os.Exit(1)
 	}
 }
@@ -42,7 +41,7 @@ func output() error {
 	refFunc := func(name string) spec.Ref {
 		return spec.MustCreateRef(fmt.Sprintf("#/definitions/%s", friendlyName(name)))
 	}
-	defs := openapi.GetOpenAPIDefinitions(refFunc)
+	defs := GetOpenAPIDefinitions(refFunc)
 	schemaDefs := make(map[string]spec.Schema, len(defs))
 	for k, v := range defs {
 		// Replace top-level schema with v2 if a v2 schema is embedded
@@ -74,7 +73,7 @@ func output() error {
 	if err != nil {
 		return fmt.Errorf("error serializing api definitions: %w", err)
 	}
-	os.Stdout.Write(data)
+	_, _ = os.Stdout.Write(data)
 	return nil
 }
 
