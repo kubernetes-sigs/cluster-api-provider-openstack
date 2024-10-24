@@ -18,7 +18,7 @@ limitations under the License.
 
 package v1alpha1
 
-// ImageResourceStatusApplyConfiguration represents an declarative configuration of the ImageResourceStatus type for use
+// ImageResourceStatusApplyConfiguration represents a declarative configuration of the ImageResourceStatus type for use
 // with apply.
 type ImageResourceStatusApplyConfiguration struct {
 	Status       *string                      `json:"status,omitempty"`
@@ -27,7 +27,7 @@ type ImageResourceStatusApplyConfiguration struct {
 	VirtualSizeB *int64                       `json:"virtualSizeB,omitempty"`
 }
 
-// ImageResourceStatusApplyConfiguration constructs an declarative configuration of the ImageResourceStatus type for use with
+// ImageResourceStatusApplyConfiguration constructs a declarative configuration of the ImageResourceStatus type for use with
 // apply.
 func ImageResourceStatus() *ImageResourceStatusApplyConfiguration {
 	return &ImageResourceStatusApplyConfiguration{}

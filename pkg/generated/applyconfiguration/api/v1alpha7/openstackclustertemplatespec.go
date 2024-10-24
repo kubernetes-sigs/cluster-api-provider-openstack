@@ -18,13 +18,13 @@ limitations under the License.
 
 package v1alpha7
 
-// OpenStackClusterTemplateSpecApplyConfiguration represents an declarative configuration of the OpenStackClusterTemplateSpec type for use
+// OpenStackClusterTemplateSpecApplyConfiguration represents a declarative configuration of the OpenStackClusterTemplateSpec type for use
 // with apply.
 type OpenStackClusterTemplateSpecApplyConfiguration struct {
 	Template *OpenStackClusterTemplateResourceApplyConfiguration `json:"template,omitempty"`
 }
 
-// OpenStackClusterTemplateSpecApplyConfiguration constructs an declarative configuration of the OpenStackClusterTemplateSpec type for use with
+// OpenStackClusterTemplateSpecApplyConfiguration constructs a declarative configuration of the OpenStackClusterTemplateSpec type for use with
 // apply.
 func OpenStackClusterTemplateSpec() *OpenStackClusterTemplateSpecApplyConfiguration {
 	return &OpenStackClusterTemplateSpecApplyConfiguration{}

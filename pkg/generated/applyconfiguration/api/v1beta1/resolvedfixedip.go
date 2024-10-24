@@ -18,14 +18,14 @@ limitations under the License.
 
 package v1beta1
 
-// ResolvedFixedIPApplyConfiguration represents an declarative configuration of the ResolvedFixedIP type for use
+// ResolvedFixedIPApplyConfiguration represents a declarative configuration of the ResolvedFixedIP type for use
 // with apply.
 type ResolvedFixedIPApplyConfiguration struct {
 	SubnetID  *string `json:"subnet,omitempty"`
 	IPAddress *string `json:"ipAddress,omitempty"`
 }
 
-// ResolvedFixedIPApplyConfiguration constructs an declarative configuration of the ResolvedFixedIP type for use with
+// ResolvedFixedIPApplyConfiguration constructs a declarative configuration of the ResolvedFixedIP type for use with
 // apply.
 func ResolvedFixedIP() *ResolvedFixedIPApplyConfiguration {
 	return &ResolvedFixedIPApplyConfiguration{}

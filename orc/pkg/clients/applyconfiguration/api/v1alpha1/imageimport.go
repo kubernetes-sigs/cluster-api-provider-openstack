@@ -18,14 +18,14 @@ limitations under the License.
 
 package v1alpha1
 
-// ImageImportApplyConfiguration represents an declarative configuration of the ImageImport type for use
+// ImageImportApplyConfiguration represents a declarative configuration of the ImageImport type for use
 // with apply.
 type ImageImportApplyConfiguration struct {
 	ID     *string                        `json:"id,omitempty"`
 	Filter *ImageFilterApplyConfiguration `json:"filter,omitempty"`
 }
 
-// ImageImportApplyConfiguration constructs an declarative configuration of the ImageImport type for use with
+// ImageImportApplyConfiguration constructs a declarative configuration of the ImageImport type for use with
 // apply.
 func ImageImport() *ImageImportApplyConfiguration {
 	return &ImageImportApplyConfiguration{}

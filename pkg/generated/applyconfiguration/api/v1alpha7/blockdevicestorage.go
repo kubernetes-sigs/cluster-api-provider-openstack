@@ -22,14 +22,14 @@ import (
 	v1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 )
 
-// BlockDeviceStorageApplyConfiguration represents an declarative configuration of the BlockDeviceStorage type for use
+// BlockDeviceStorageApplyConfiguration represents a declarative configuration of the BlockDeviceStorage type for use
 // with apply.
 type BlockDeviceStorageApplyConfiguration struct {
 	Type   *v1alpha7.BlockDeviceType            `json:"type,omitempty"`
 	Volume *BlockDeviceVolumeApplyConfiguration `json:"volume,omitempty"`
 }
 
-// BlockDeviceStorageApplyConfiguration constructs an declarative configuration of the BlockDeviceStorage type for use with
+// BlockDeviceStorageApplyConfiguration constructs a declarative configuration of the BlockDeviceStorage type for use with
 // apply.
 func BlockDeviceStorage() *BlockDeviceStorageApplyConfiguration {
 	return &BlockDeviceStorageApplyConfiguration{}

@@ -22,7 +22,7 @@ import (
 	v1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
 )
 
-// ImageResourceSpecApplyConfiguration represents an declarative configuration of the ImageResourceSpec type for use
+// ImageResourceSpecApplyConfiguration represents a declarative configuration of the ImageResourceSpec type for use
 // with apply.
 type ImageResourceSpecApplyConfiguration struct {
 	Name       *string                            `json:"name,omitempty"`
@@ -33,7 +33,7 @@ type ImageResourceSpecApplyConfiguration struct {
 	Content    *ImageContentApplyConfiguration    `json:"content,omitempty"`
 }
 
-// ImageResourceSpecApplyConfiguration constructs an declarative configuration of the ImageResourceSpec type for use with
+// ImageResourceSpecApplyConfiguration constructs a declarative configuration of the ImageResourceSpec type for use with
 // apply.
 func ImageResourceSpec() *ImageResourceSpecApplyConfiguration {
 	return &ImageResourceSpecApplyConfiguration{}

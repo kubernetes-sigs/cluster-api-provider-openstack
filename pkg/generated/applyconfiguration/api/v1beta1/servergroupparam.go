@@ -18,14 +18,14 @@ limitations under the License.
 
 package v1beta1
 
-// ServerGroupParamApplyConfiguration represents an declarative configuration of the ServerGroupParam type for use
+// ServerGroupParamApplyConfiguration represents a declarative configuration of the ServerGroupParam type for use
 // with apply.
 type ServerGroupParamApplyConfiguration struct {
 	ID     *string                              `json:"id,omitempty"`
 	Filter *ServerGroupFilterApplyConfiguration `json:"filter,omitempty"`
 }
 
-// ServerGroupParamApplyConfiguration constructs an declarative configuration of the ServerGroupParam type for use with
+// ServerGroupParamApplyConfiguration constructs a declarative configuration of the ServerGroupParam type for use with
 // apply.
 func ServerGroupParam() *ServerGroupParamApplyConfiguration {
 	return &ServerGroupParamApplyConfiguration{}

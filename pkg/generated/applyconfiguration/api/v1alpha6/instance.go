@@ -22,7 +22,7 @@ import (
 	apiv1alpha6 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
 )
 
-// InstanceApplyConfiguration represents an declarative configuration of the Instance type for use
+// InstanceApplyConfiguration represents a declarative configuration of the Instance type for use
 // with apply.
 type InstanceApplyConfiguration struct {
 	ID             *string                       `json:"id,omitempty"`
@@ -47,7 +47,7 @@ type InstanceApplyConfiguration struct {
 	FloatingIP     *string                       `json:"floatingIP,omitempty"`
 }
 
-// InstanceApplyConfiguration constructs an declarative configuration of the Instance type for use with
+// InstanceApplyConfiguration constructs a declarative configuration of the Instance type for use with
 // apply.
 func Instance() *InstanceApplyConfiguration {
 	return &InstanceApplyConfiguration{}

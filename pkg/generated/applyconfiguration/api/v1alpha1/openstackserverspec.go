@@ -23,7 +23,7 @@ import (
 	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1beta1"
 )
 
-// OpenStackServerSpecApplyConfiguration represents an declarative configuration of the OpenStackServerSpec type for use
+// OpenStackServerSpecApplyConfiguration represents a declarative configuration of the OpenStackServerSpec type for use
 // with apply.
 type OpenStackServerSpecApplyConfiguration struct {
 	AdditionalBlockDevices            []v1beta1.AdditionalBlockDeviceApplyConfiguration           `json:"additionalBlockDevices,omitempty"`
@@ -46,7 +46,7 @@ type OpenStackServerSpecApplyConfiguration struct {
 	SchedulerHintAdditionalProperties []v1beta1.SchedulerHintAdditionalPropertyApplyConfiguration `json:"schedulerHintAdditionalProperties,omitempty"`
 }
 
-// OpenStackServerSpecApplyConfiguration constructs an declarative configuration of the OpenStackServerSpec type for use with
+// OpenStackServerSpecApplyConfiguration constructs a declarative configuration of the OpenStackServerSpec type for use with
 // apply.
 func OpenStackServerSpec() *OpenStackServerSpecApplyConfiguration {
 	return &OpenStackServerSpecApplyConfiguration{}

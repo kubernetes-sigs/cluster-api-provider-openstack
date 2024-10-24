@@ -22,7 +22,7 @@ import (
 	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
-// SchedulerHintAdditionalValueApplyConfiguration represents an declarative configuration of the SchedulerHintAdditionalValue type for use
+// SchedulerHintAdditionalValueApplyConfiguration represents a declarative configuration of the SchedulerHintAdditionalValue type for use
 // with apply.
 type SchedulerHintAdditionalValueApplyConfiguration struct {
 	Type   *v1beta1.SchedulerHintValueType `json:"type,omitempty"`
@@ -31,7 +31,7 @@ type SchedulerHintAdditionalValueApplyConfiguration struct {
 	String *string                         `json:"string,omitempty"`
 }
 
-// SchedulerHintAdditionalValueApplyConfiguration constructs an declarative configuration of the SchedulerHintAdditionalValue type for use with
+// SchedulerHintAdditionalValueApplyConfiguration constructs a declarative configuration of the SchedulerHintAdditionalValue type for use with
 // apply.
 func SchedulerHintAdditionalValue() *SchedulerHintAdditionalValueApplyConfiguration {
 	return &SchedulerHintAdditionalValueApplyConfiguration{}

@@ -18,13 +18,13 @@ limitations under the License.
 
 package v1beta1
 
-// ResourceReferenceApplyConfiguration represents an declarative configuration of the ResourceReference type for use
+// ResourceReferenceApplyConfiguration represents a declarative configuration of the ResourceReference type for use
 // with apply.
 type ResourceReferenceApplyConfiguration struct {
 	Name *string `json:"name,omitempty"`
 }
 
-// ResourceReferenceApplyConfiguration constructs an declarative configuration of the ResourceReference type for use with
+// ResourceReferenceApplyConfiguration constructs a declarative configuration of the ResourceReference type for use with
 // apply.
 func ResourceReference() *ResourceReferenceApplyConfiguration {
 	return &ResourceReferenceApplyConfiguration{}

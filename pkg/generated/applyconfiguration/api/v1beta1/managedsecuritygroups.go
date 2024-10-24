@@ -18,14 +18,14 @@ limitations under the License.
 
 package v1beta1
 
-// ManagedSecurityGroupsApplyConfiguration represents an declarative configuration of the ManagedSecurityGroups type for use
+// ManagedSecurityGroupsApplyConfiguration represents a declarative configuration of the ManagedSecurityGroups type for use
 // with apply.
 type ManagedSecurityGroupsApplyConfiguration struct {
 	AllNodesSecurityGroupRules []SecurityGroupRuleSpecApplyConfiguration `json:"allNodesSecurityGroupRules,omitempty"`
 	AllowAllInClusterTraffic   *bool                                     `json:"allowAllInClusterTraffic,omitempty"`
 }
 
-// ManagedSecurityGroupsApplyConfiguration constructs an declarative configuration of the ManagedSecurityGroups type for use with
+// ManagedSecurityGroupsApplyConfiguration constructs a declarative configuration of the ManagedSecurityGroups type for use with
 // apply.
 func ManagedSecurityGroups() *ManagedSecurityGroupsApplyConfiguration {
 	return &ManagedSecurityGroupsApplyConfiguration{}

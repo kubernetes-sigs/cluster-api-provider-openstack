@@ -18,14 +18,14 @@ limitations under the License.
 
 package v1alpha7
 
-// AddressPairApplyConfiguration represents an declarative configuration of the AddressPair type for use
+// AddressPairApplyConfiguration represents a declarative configuration of the AddressPair type for use
 // with apply.
 type AddressPairApplyConfiguration struct {
 	IPAddress  *string `json:"ipAddress,omitempty"`
 	MACAddress *string `json:"macAddress,omitempty"`
 }
 
-// AddressPairApplyConfiguration constructs an declarative configuration of the AddressPair type for use with
+// AddressPairApplyConfiguration constructs a declarative configuration of the AddressPair type for use with
 // apply.
 func AddressPair() *AddressPairApplyConfiguration {
 	return &AddressPairApplyConfiguration{}

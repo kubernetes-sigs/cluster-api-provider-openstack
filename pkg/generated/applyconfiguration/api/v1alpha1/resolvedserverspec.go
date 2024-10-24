@@ -22,7 +22,7 @@ import (
 	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1beta1"
 )
 
-// ResolvedServerSpecApplyConfiguration represents an declarative configuration of the ResolvedServerSpec type for use
+// ResolvedServerSpecApplyConfiguration represents a declarative configuration of the ResolvedServerSpec type for use
 // with apply.
 type ResolvedServerSpecApplyConfiguration struct {
 	ServerGroupID *string                                      `json:"serverGroupID,omitempty"`
@@ -31,7 +31,7 @@ type ResolvedServerSpecApplyConfiguration struct {
 	Ports         []v1beta1.ResolvedPortSpecApplyConfiguration `json:"ports,omitempty"`
 }
 
-// ResolvedServerSpecApplyConfiguration constructs an declarative configuration of the ResolvedServerSpec type for use with
+// ResolvedServerSpecApplyConfiguration constructs a declarative configuration of the ResolvedServerSpec type for use with
 // apply.
 func ResolvedServerSpec() *ResolvedServerSpecApplyConfiguration {
 	return &ResolvedServerSpecApplyConfiguration{}

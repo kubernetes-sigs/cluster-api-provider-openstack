@@ -18,13 +18,13 @@ limitations under the License.
 
 package v1beta1
 
-// OpenStackMachineTemplateResourceApplyConfiguration represents an declarative configuration of the OpenStackMachineTemplateResource type for use
+// OpenStackMachineTemplateResourceApplyConfiguration represents a declarative configuration of the OpenStackMachineTemplateResource type for use
 // with apply.
 type OpenStackMachineTemplateResourceApplyConfiguration struct {
 	Spec *OpenStackMachineSpecApplyConfiguration `json:"spec,omitempty"`
 }
 
-// OpenStackMachineTemplateResourceApplyConfiguration constructs an declarative configuration of the OpenStackMachineTemplateResource type for use with
+// OpenStackMachineTemplateResourceApplyConfiguration constructs a declarative configuration of the OpenStackMachineTemplateResource type for use with
 // apply.
 func OpenStackMachineTemplateResource() *OpenStackMachineTemplateResourceApplyConfiguration {
 	return &OpenStackMachineTemplateResourceApplyConfiguration{}

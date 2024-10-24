@@ -27,7 +27,7 @@ import (
 	internal "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/internal"
 )
 
-// OpenStackServerApplyConfiguration represents an declarative configuration of the OpenStackServer type for use
+// OpenStackServerApplyConfiguration represents a declarative configuration of the OpenStackServer type for use
 // with apply.
 type OpenStackServerApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
@@ -36,7 +36,7 @@ type OpenStackServerApplyConfiguration struct {
 	Status                           *OpenStackServerStatusApplyConfiguration `json:"status,omitempty"`
 }
 
-// OpenStackServer constructs an declarative configuration of the OpenStackServer type for use with
+// OpenStackServer constructs a declarative configuration of the OpenStackServer type for use with
 // apply.
 func OpenStackServer(name, namespace string) *OpenStackServerApplyConfiguration {
 	b := &OpenStackServerApplyConfiguration{}
@@ -255,4 +255,10 @@ func (b *OpenStackServerApplyConfiguration) WithSpec(value *OpenStackServerSpecA
 func (b *OpenStackServerApplyConfiguration) WithStatus(value *OpenStackServerStatusApplyConfiguration) *OpenStackServerApplyConfiguration {
 	b.Status = value
 	return b
+}
+
+// GetName retrieves the value of the Name field in the declarative configuration.
+func (b *OpenStackServerApplyConfiguration) GetName() *string {
+	b.ensureObjectMetaApplyConfigurationExists()
+	return b.Name
 }

@@ -18,14 +18,14 @@ limitations under the License.
 
 package v1beta1
 
-// SecurityGroupParamApplyConfiguration represents an declarative configuration of the SecurityGroupParam type for use
+// SecurityGroupParamApplyConfiguration represents a declarative configuration of the SecurityGroupParam type for use
 // with apply.
 type SecurityGroupParamApplyConfiguration struct {
 	ID     *string                                `json:"id,omitempty"`
 	Filter *SecurityGroupFilterApplyConfiguration `json:"filter,omitempty"`
 }
 
-// SecurityGroupParamApplyConfiguration constructs an declarative configuration of the SecurityGroupParam type for use with
+// SecurityGroupParamApplyConfiguration constructs a declarative configuration of the SecurityGroupParam type for use with
 // apply.
 func SecurityGroupParam() *SecurityGroupParamApplyConfiguration {
 	return &SecurityGroupParamApplyConfiguration{}

@@ -22,14 +22,14 @@ import (
 	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
-// VolumeAvailabilityZoneApplyConfiguration represents an declarative configuration of the VolumeAvailabilityZone type for use
+// VolumeAvailabilityZoneApplyConfiguration represents a declarative configuration of the VolumeAvailabilityZone type for use
 // with apply.
 type VolumeAvailabilityZoneApplyConfiguration struct {
 	From *v1beta1.VolumeAZSource `json:"from,omitempty"`
 	Name *v1beta1.VolumeAZName   `json:"name,omitempty"`
 }
 
-// VolumeAvailabilityZoneApplyConfiguration constructs an declarative configuration of the VolumeAvailabilityZone type for use with
+// VolumeAvailabilityZoneApplyConfiguration constructs a declarative configuration of the VolumeAvailabilityZone type for use with
 // apply.
 func VolumeAvailabilityZone() *VolumeAvailabilityZoneApplyConfiguration {
 	return &VolumeAvailabilityZoneApplyConfiguration{}

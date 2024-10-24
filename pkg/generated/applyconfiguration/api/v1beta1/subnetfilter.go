@@ -22,7 +22,7 @@ import (
 	apiv1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
-// SubnetFilterApplyConfiguration represents an declarative configuration of the SubnetFilter type for use
+// SubnetFilterApplyConfiguration represents a declarative configuration of the SubnetFilter type for use
 // with apply.
 type SubnetFilterApplyConfiguration struct {
 	Name                                  *string `json:"name,omitempty"`
@@ -36,7 +36,7 @@ type SubnetFilterApplyConfiguration struct {
 	FilterByNeutronTagsApplyConfiguration `json:",inline"`
 }
 
-// SubnetFilterApplyConfiguration constructs an declarative configuration of the SubnetFilter type for use with
+// SubnetFilterApplyConfiguration constructs a declarative configuration of the SubnetFilter type for use with
 // apply.
 func SubnetFilter() *SubnetFilterApplyConfiguration {
 	return &SubnetFilterApplyConfiguration{}

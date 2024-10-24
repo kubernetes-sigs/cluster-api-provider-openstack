@@ -22,7 +22,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// OpenStackMachineSpecApplyConfiguration represents an declarative configuration of the OpenStackMachineSpec type for use
+// OpenStackMachineSpecApplyConfiguration represents a declarative configuration of the OpenStackMachineSpec type for use
 // with apply.
 type OpenStackMachineSpecApplyConfiguration struct {
 	ProviderID                        *string                                             `json:"providerID,omitempty"`
@@ -44,7 +44,7 @@ type OpenStackMachineSpecApplyConfiguration struct {
 	SchedulerHintAdditionalProperties []SchedulerHintAdditionalPropertyApplyConfiguration `json:"schedulerHintAdditionalProperties,omitempty"`
 }
 
-// OpenStackMachineSpecApplyConfiguration constructs an declarative configuration of the OpenStackMachineSpec type for use with
+// OpenStackMachineSpecApplyConfiguration constructs a declarative configuration of the OpenStackMachineSpec type for use with
 // apply.
 func OpenStackMachineSpec() *OpenStackMachineSpecApplyConfiguration {
 	return &OpenStackMachineSpecApplyConfiguration{}

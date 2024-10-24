@@ -22,7 +22,7 @@ import (
 	apiv1beta1 "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
-// OpenStackClusterSpecApplyConfiguration represents an declarative configuration of the OpenStackClusterSpec type for use
+// OpenStackClusterSpecApplyConfiguration represents a declarative configuration of the OpenStackClusterSpec type for use
 // with apply.
 type OpenStackClusterSpecApplyConfiguration struct {
 	ManagedSubnets                   []SubnetSpecApplyConfiguration                `json:"managedSubnets,omitempty"`
@@ -48,7 +48,7 @@ type OpenStackClusterSpecApplyConfiguration struct {
 	IdentityRef                      *OpenStackIdentityReferenceApplyConfiguration `json:"identityRef,omitempty"`
 }
 
-// OpenStackClusterSpecApplyConfiguration constructs an declarative configuration of the OpenStackClusterSpec type for use with
+// OpenStackClusterSpecApplyConfiguration constructs a declarative configuration of the OpenStackClusterSpec type for use with
 // apply.
 func OpenStackClusterSpec() *OpenStackClusterSpecApplyConfiguration {
 	return &OpenStackClusterSpecApplyConfiguration{}

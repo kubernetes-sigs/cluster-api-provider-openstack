@@ -18,7 +18,7 @@ limitations under the License.
 
 package v1alpha7
 
-// RootVolumeApplyConfiguration represents an declarative configuration of the RootVolume type for use
+// RootVolumeApplyConfiguration represents a declarative configuration of the RootVolume type for use
 // with apply.
 type RootVolumeApplyConfiguration struct {
 	Size             *int    `json:"diskSize,omitempty"`
@@ -26,7 +26,7 @@ type RootVolumeApplyConfiguration struct {
 	AvailabilityZone *string `json:"availabilityZone,omitempty"`
 }
 
-// RootVolumeApplyConfiguration constructs an declarative configuration of the RootVolume type for use with
+// RootVolumeApplyConfiguration constructs a declarative configuration of the RootVolume type for use with
 // apply.
 func RootVolume() *RootVolumeApplyConfiguration {
 	return &RootVolumeApplyConfiguration{}

@@ -19,7 +19,9 @@ limitations under the License.
 package applyconfiguration
 
 import (
+	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
+	testing "k8s.io/client-go/testing"
 	v1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	v1alpha6 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
 	v1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
@@ -28,6 +30,7 @@ import (
 	apiv1alpha6 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1alpha6"
 	apiv1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1alpha7"
 	apiv1beta1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1beta1"
+	internal "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/internal"
 )
 
 // ForKind returns an apply configuration type for the given GroupVersionKind, or nil if no
@@ -316,4 +319,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 
 	}
 	return nil
+}
+
+func NewTypeConverter(scheme *runtime.Scheme) *testing.TypeConverter {
+	return &testing.TypeConverter{Scheme: scheme, TypeResolver: internal.Parser()}
 }

@@ -22,13 +22,13 @@ import (
 	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1beta1"
 )
 
-// ServerResourcesApplyConfiguration represents an declarative configuration of the ServerResources type for use
+// ServerResourcesApplyConfiguration represents a declarative configuration of the ServerResources type for use
 // with apply.
 type ServerResourcesApplyConfiguration struct {
 	Ports []v1beta1.PortStatusApplyConfiguration `json:"ports,omitempty"`
 }
 
-// ServerResourcesApplyConfiguration constructs an declarative configuration of the ServerResources type for use with
+// ServerResourcesApplyConfiguration constructs a declarative configuration of the ServerResources type for use with
 // apply.
 func ServerResources() *ServerResourcesApplyConfiguration {
 	return &ServerResourcesApplyConfiguration{}

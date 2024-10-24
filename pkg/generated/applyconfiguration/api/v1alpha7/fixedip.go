@@ -18,14 +18,14 @@ limitations under the License.
 
 package v1alpha7
 
-// FixedIPApplyConfiguration represents an declarative configuration of the FixedIP type for use
+// FixedIPApplyConfiguration represents a declarative configuration of the FixedIP type for use
 // with apply.
 type FixedIPApplyConfiguration struct {
 	Subnet    *SubnetFilterApplyConfiguration `json:"subnet,omitempty"`
 	IPAddress *string                         `json:"ipAddress,omitempty"`
 }
 
-// FixedIPApplyConfiguration constructs an declarative configuration of the FixedIP type for use with
+// FixedIPApplyConfiguration constructs a declarative configuration of the FixedIP type for use with
 // apply.
 func FixedIP() *FixedIPApplyConfiguration {
 	return &FixedIPApplyConfiguration{}

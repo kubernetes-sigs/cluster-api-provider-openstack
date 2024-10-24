@@ -18,7 +18,7 @@ limitations under the License.
 
 package v1alpha7
 
-// SecurityGroupFilterApplyConfiguration represents an declarative configuration of the SecurityGroupFilter type for use
+// SecurityGroupFilterApplyConfiguration represents a declarative configuration of the SecurityGroupFilter type for use
 // with apply.
 type SecurityGroupFilterApplyConfiguration struct {
 	ID          *string `json:"id,omitempty"`
@@ -31,7 +31,7 @@ type SecurityGroupFilterApplyConfiguration struct {
 	NotTagsAny  *string `json:"notTagsAny,omitempty"`
 }
 
-// SecurityGroupFilterApplyConfiguration constructs an declarative configuration of the SecurityGroupFilter type for use with
+// SecurityGroupFilterApplyConfiguration constructs a declarative configuration of the SecurityGroupFilter type for use with
 // apply.
 func SecurityGroupFilter() *SecurityGroupFilterApplyConfiguration {
 	return &SecurityGroupFilterApplyConfiguration{}

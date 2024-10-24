@@ -22,7 +22,7 @@ import (
 	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
-// BastionStatusApplyConfiguration represents an declarative configuration of the BastionStatus type for use
+// BastionStatusApplyConfiguration represents a declarative configuration of the BastionStatus type for use
 // with apply.
 type BastionStatusApplyConfiguration struct {
 	ID         *string                                `json:"id,omitempty"`
@@ -35,7 +35,7 @@ type BastionStatusApplyConfiguration struct {
 	Resources  *MachineResourcesApplyConfiguration    `json:"resources,omitempty"`
 }
 
-// BastionStatusApplyConfiguration constructs an declarative configuration of the BastionStatus type for use with
+// BastionStatusApplyConfiguration constructs a declarative configuration of the BastionStatus type for use with
 // apply.
 func BastionStatus() *BastionStatusApplyConfiguration {
 	return &BastionStatusApplyConfiguration{}

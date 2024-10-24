@@ -18,7 +18,7 @@ limitations under the License.
 
 package v1alpha7
 
-// ValueSpecApplyConfiguration represents an declarative configuration of the ValueSpec type for use
+// ValueSpecApplyConfiguration represents a declarative configuration of the ValueSpec type for use
 // with apply.
 type ValueSpecApplyConfiguration struct {
 	Name  *string `json:"name,omitempty"`
@@ -26,7 +26,7 @@ type ValueSpecApplyConfiguration struct {
 	Value *string `json:"value,omitempty"`
 }
 
-// ValueSpecApplyConfiguration constructs an declarative configuration of the ValueSpec type for use with
+// ValueSpecApplyConfiguration constructs a declarative configuration of the ValueSpec type for use with
 // apply.
 func ValueSpec() *ValueSpecApplyConfiguration {
 	return &ValueSpecApplyConfiguration{}

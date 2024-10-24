@@ -18,14 +18,14 @@ limitations under the License.
 
 package v1alpha7
 
-// NetworkStatusWithSubnetsApplyConfiguration represents an declarative configuration of the NetworkStatusWithSubnets type for use
+// NetworkStatusWithSubnetsApplyConfiguration represents a declarative configuration of the NetworkStatusWithSubnets type for use
 // with apply.
 type NetworkStatusWithSubnetsApplyConfiguration struct {
 	NetworkStatusApplyConfiguration `json:",inline"`
 	Subnets                         []SubnetApplyConfiguration `json:"subnets,omitempty"`
 }
 
-// NetworkStatusWithSubnetsApplyConfiguration constructs an declarative configuration of the NetworkStatusWithSubnets type for use with
+// NetworkStatusWithSubnetsApplyConfiguration constructs a declarative configuration of the NetworkStatusWithSubnets type for use with
 // apply.
 func NetworkStatusWithSubnets() *NetworkStatusWithSubnetsApplyConfiguration {
 	return &NetworkStatusWithSubnetsApplyConfiguration{}

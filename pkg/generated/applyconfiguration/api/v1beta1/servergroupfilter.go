@@ -18,13 +18,13 @@ limitations under the License.
 
 package v1beta1
 
-// ServerGroupFilterApplyConfiguration represents an declarative configuration of the ServerGroupFilter type for use
+// ServerGroupFilterApplyConfiguration represents a declarative configuration of the ServerGroupFilter type for use
 // with apply.
 type ServerGroupFilterApplyConfiguration struct {
 	Name *string `json:"name,omitempty"`
 }
 
-// ServerGroupFilterApplyConfiguration constructs an declarative configuration of the ServerGroupFilter type for use with
+// ServerGroupFilterApplyConfiguration constructs a declarative configuration of the ServerGroupFilter type for use with
 // apply.
 func ServerGroupFilter() *ServerGroupFilterApplyConfiguration {
 	return &ServerGroupFilterApplyConfiguration{}

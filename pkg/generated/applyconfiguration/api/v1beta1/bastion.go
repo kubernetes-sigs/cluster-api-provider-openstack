@@ -18,7 +18,7 @@ limitations under the License.
 
 package v1beta1
 
-// BastionApplyConfiguration represents an declarative configuration of the Bastion type for use
+// BastionApplyConfiguration represents a declarative configuration of the Bastion type for use
 // with apply.
 type BastionApplyConfiguration struct {
 	Enabled          *bool                                   `json:"enabled,omitempty"`
@@ -27,7 +27,7 @@ type BastionApplyConfiguration struct {
 	FloatingIP       *string                                 `json:"floatingIP,omitempty"`
 }
 
-// BastionApplyConfiguration constructs an declarative configuration of the Bastion type for use with
+// BastionApplyConfiguration constructs a declarative configuration of the Bastion type for use with
 // apply.
 func Bastion() *BastionApplyConfiguration {
 	return &BastionApplyConfiguration{}

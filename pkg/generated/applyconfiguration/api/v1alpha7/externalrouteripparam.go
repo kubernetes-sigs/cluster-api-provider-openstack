@@ -18,14 +18,14 @@ limitations under the License.
 
 package v1alpha7
 
-// ExternalRouterIPParamApplyConfiguration represents an declarative configuration of the ExternalRouterIPParam type for use
+// ExternalRouterIPParamApplyConfiguration represents a declarative configuration of the ExternalRouterIPParam type for use
 // with apply.
 type ExternalRouterIPParamApplyConfiguration struct {
 	FixedIP *string                         `json:"fixedIP,omitempty"`
 	Subnet  *SubnetFilterApplyConfiguration `json:"subnet,omitempty"`
 }
 
-// ExternalRouterIPParamApplyConfiguration constructs an declarative configuration of the ExternalRouterIPParam type for use with
+// ExternalRouterIPParamApplyConfiguration constructs a declarative configuration of the ExternalRouterIPParam type for use with
 // apply.
 func ExternalRouterIPParam() *ExternalRouterIPParamApplyConfiguration {
 	return &ExternalRouterIPParamApplyConfiguration{}

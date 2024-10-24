@@ -18,7 +18,7 @@ limitations under the License.
 
 package v1alpha7
 
-// SecurityGroupRuleApplyConfiguration represents an declarative configuration of the SecurityGroupRule type for use
+// SecurityGroupRuleApplyConfiguration represents a declarative configuration of the SecurityGroupRule type for use
 // with apply.
 type SecurityGroupRuleApplyConfiguration struct {
 	Description     *string `json:"description,omitempty"`
@@ -33,7 +33,7 @@ type SecurityGroupRuleApplyConfiguration struct {
 	RemoteIPPrefix  *string `json:"remoteIPPrefix,omitempty"`
 }
 
-// SecurityGroupRuleApplyConfiguration constructs an declarative configuration of the SecurityGroupRule type for use with
+// SecurityGroupRuleApplyConfiguration constructs a declarative configuration of the SecurityGroupRule type for use with
 // apply.
 func SecurityGroupRule() *SecurityGroupRuleApplyConfiguration {
 	return &SecurityGroupRuleApplyConfiguration{}

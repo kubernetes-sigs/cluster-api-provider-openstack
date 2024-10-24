@@ -22,13 +22,13 @@ import (
 	v1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
 )
 
-// ManagedOptionsApplyConfiguration represents an declarative configuration of the ManagedOptions type for use
+// ManagedOptionsApplyConfiguration represents a declarative configuration of the ManagedOptions type for use
 // with apply.
 type ManagedOptionsApplyConfiguration struct {
 	OnDelete *v1alpha1.OnDelete `json:"onDelete,omitempty"`
 }
 
-// ManagedOptionsApplyConfiguration constructs an declarative configuration of the ManagedOptions type for use with
+// ManagedOptionsApplyConfiguration constructs a declarative configuration of the ManagedOptions type for use with
 // apply.
 func ManagedOptions() *ManagedOptionsApplyConfiguration {
 	return &ManagedOptionsApplyConfiguration{}

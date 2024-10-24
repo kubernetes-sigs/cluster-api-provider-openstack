@@ -18,7 +18,7 @@ limitations under the License.
 
 package v1alpha7
 
-// PortOptsApplyConfiguration represents an declarative configuration of the PortOpts type for use
+// PortOptsApplyConfiguration represents a declarative configuration of the PortOpts type for use
 // with apply.
 type PortOptsApplyConfiguration struct {
 	Network               *NetworkFilterApplyConfiguration        `json:"network,omitempty"`
@@ -39,7 +39,7 @@ type PortOptsApplyConfiguration struct {
 	ValueSpecs            []ValueSpecApplyConfiguration           `json:"valueSpecs,omitempty"`
 }
 
-// PortOptsApplyConfiguration constructs an declarative configuration of the PortOpts type for use with
+// PortOptsApplyConfiguration constructs a declarative configuration of the PortOpts type for use with
 // apply.
 func PortOpts() *PortOptsApplyConfiguration {
 	return &PortOptsApplyConfiguration{}

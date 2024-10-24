@@ -18,13 +18,13 @@ limitations under the License.
 
 package v1alpha1
 
-// ImageFilterApplyConfiguration represents an declarative configuration of the ImageFilter type for use
+// ImageFilterApplyConfiguration represents a declarative configuration of the ImageFilter type for use
 // with apply.
 type ImageFilterApplyConfiguration struct {
 	Name *string `json:"name,omitempty"`
 }
 
-// ImageFilterApplyConfiguration constructs an declarative configuration of the ImageFilter type for use with
+// ImageFilterApplyConfiguration constructs a declarative configuration of the ImageFilter type for use with
 // apply.
 func ImageFilter() *ImageFilterApplyConfiguration {
 	return &ImageFilterApplyConfiguration{}

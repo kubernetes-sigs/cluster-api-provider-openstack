@@ -18,14 +18,14 @@ limitations under the License.
 
 package v1alpha7
 
-// OpenStackIdentityReferenceApplyConfiguration represents an declarative configuration of the OpenStackIdentityReference type for use
+// OpenStackIdentityReferenceApplyConfiguration represents a declarative configuration of the OpenStackIdentityReference type for use
 // with apply.
 type OpenStackIdentityReferenceApplyConfiguration struct {
 	Kind *string `json:"kind,omitempty"`
 	Name *string `json:"name,omitempty"`
 }
 
-// OpenStackIdentityReferenceApplyConfiguration constructs an declarative configuration of the OpenStackIdentityReference type for use with
+// OpenStackIdentityReferenceApplyConfiguration constructs a declarative configuration of the OpenStackIdentityReference type for use with
 // apply.
 func OpenStackIdentityReference() *OpenStackIdentityReferenceApplyConfiguration {
 	return &OpenStackIdentityReferenceApplyConfiguration{}
