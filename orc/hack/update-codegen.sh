@@ -64,13 +64,9 @@ trap 'rm -r "${tempdir}"' EXIT
 openapi="${tempdir}/openapi.json"
 go run "${PROJECT_ROOT}/hack/codegen/cmd/models-schema/main.go" > "$openapi"
 
-# This hack is required until we're using k8s.io/code-generator containing
-# https://github.com/kubernetes/kubernetes/pull/125162, which should be v0.31
-ln -s "${PROJECT_ROOT}/api" "${PROJECT_ROOT}/core"
-trap 'rm "${PROJECT_ROOT}/core"' EXIT
-
 kube::codegen::gen_client \
     --with-applyconfig \
+    --with-watch \
     --applyconfig-openapi-schema "$openapi" \
     --output-dir "${PROJECT_ROOT}/${GENERATED_PKG}" \
     --output-pkg github.com/k-orc/openstack-resource-controller/${GENERATED_PKG} \
@@ -78,21 +74,3 @@ kube::codegen::gen_client \
     --boilerplate "${SCRIPT_ROOT}/boilerplate.go.txt" \
     --one-input-api "api" \
     "${PROJECT_ROOT}"
-
-# Add --with-watch to the above command line to generate informers and listers.
-# It's not worth doing that now until we can remove the hack below which
-# deletes the clientset.
-#    --with-watch \
-
-# The hack below is required until CAPO is using the same version of the k/k
-# libraries as the code-generator we're using in this utility module.
-#
-# code-generator generates code targetting the version of kubernetes it is
-# built from. We are fortunate that the generated applyconfiguration builds
-# against older libraries. However, the generated clientset does not. As we
-# aren't yet using the clientset we just delete it for now.
-#
-# We could avoid generating it in the first place, but then we wouldn't be able
-# to use kube_codegen.sh. We leave it like this as we expect to update to a
-# sufficiently new k/k in the relatively near future.
-rm -r "${PROJECT_ROOT}/${GENERATED_PKG}/clientset"
