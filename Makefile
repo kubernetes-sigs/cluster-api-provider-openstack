@@ -173,9 +173,11 @@ e2e-templates: $(addprefix $(E2E_NO_ARTIFACT_TEMPLATES_DIR)/, \
 		 cluster-template-without-lb.yaml \
 		 cluster-template.yaml \
 		 cluster-template-flatcar.yaml \
-                 cluster-template-k8s-upgrade.yaml \
+		 cluster-template-k8s-upgrade.yaml \
 		 cluster-template-flatcar-sysext.yaml \
-		 cluster-template-no-bastion.yaml)
+		 cluster-template-no-bastion.yaml \
+		 cluster-template-providerID-with-region-override.yaml \
+		 cluster-template-providerID-with-region-default.yaml)
 # Currently no templates that require CI artifacts
 # $(addprefix $(E2E_TEMPLATES_DIR)/, add-templates-here.yaml) \
 

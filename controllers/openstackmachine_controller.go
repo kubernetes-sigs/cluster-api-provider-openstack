@@ -392,6 +392,9 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		Address: instanceStatus.Name(),
 	})
 	openStackMachine.Status.Addresses = addresses
+	if openStackMachine.Spec.IdentityRef == nil {
+		openStackMachine.Spec.IdentityRef = &openStackCluster.Spec.IdentityRef
+	}
 
 	result := r.reconcileMachineState(scope, openStackMachine, machine, machineServer)
 	if result != nil {

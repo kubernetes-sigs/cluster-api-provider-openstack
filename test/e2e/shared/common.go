@@ -174,9 +174,13 @@ func getOpenStackClusterFromMachine(ctx context.Context, client client.Client, m
 	return openStackCluster, err
 }
 
-// getIDFromProviderID returns the server ID part of a provider ID string.
-func getIDFromProviderID(providerID string) string {
-	return strings.TrimPrefix(providerID, "openstack:///")
+// GetIDFromProviderID returns the server ID part of a provider ID string.
+func GetIDFromProviderID(providerID string) string {
+	providerIDSplit := strings.SplitN(providerID, "://", 2)
+	Expect(providerIDSplit[0]).To(Equal("openstack"))
+	providerIDPathSplit := strings.SplitN(providerIDSplit[1], "/", 2)
+	// providerIDPathSplit[0] contain region name, could be empty
+	return providerIDPathSplit[1]
 }
 
 type OpenStackLogCollector struct {
