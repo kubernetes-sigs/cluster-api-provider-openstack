@@ -1,0 +1,7 @@
+---
+- op: replace
+  path: /spec/kubeadmConfigSpec/initConfiguration/nodeRegistration/kubeletExtraArgs/provider-id
+  value: "openstack://${CAPO_REGION}/{{ instance_id }}"
+- op: replace
+  path: /spec/kubeadmConfigSpec/joinConfiguration/nodeRegistration/kubeletExtraArgs/provider-id
+  value: "openstack://${CAPO_REGION}/{{ instance_id }}"
