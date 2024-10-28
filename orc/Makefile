@@ -53,7 +53,11 @@ modules:
 	cd hack/codegen; go work sync; go mod tidy
 
 .PHONY: generate
-generate: modules manifests generate-controller-gen generate-codegen generate-go
+generate: generate-resources generate-controller-gen generate-codegen generate-go modules manifests
+
+.PHONY: generate-resources
+generate-resources:
+	go run ./cmd/resource-generator
 
 .PHONY: generate-controller-gen
 generate-controller-gen: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.

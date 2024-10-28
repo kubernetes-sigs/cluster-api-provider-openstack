@@ -44,6 +44,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageResourceStatus":        schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageResourceStatus(ref),
 		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageSpec":                  schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageSpec(ref),
 		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageStatus":                schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageStatus(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageStatusExtra":           schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageStatusExtra(ref),
 		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ManagedOptions":             schema_k_orc_openstack_resource_controller_api_v1alpha1_ManagedOptions(ref),
 		"k8s.io/api/core/v1.AWSElasticBlockStoreVolumeSource":                                    schema_k8sio_api_core_v1_AWSElasticBlockStoreVolumeSource(ref),
 		"k8s.io/api/core/v1.Affinity":                                    schema_k8sio_api_core_v1_Affinity(ref),
@@ -364,7 +365,7 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_Image(ref common.Re
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "Image is the Schema for the ORC images API.",
+				Description: "Image is the Schema for an ORC resource.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
@@ -532,19 +533,19 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageImport(ref com
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ImageImport specifies an existing image which will be imported instead of creating a new image",
+				Description: "ImageImport specifies an existing resource which will be imported instead of creating a new one",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"id": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ID contains the unique identifier of an existing Glance image. Note that when specifying an image import by ID, the image MUST already exist. The Image will enter an error state if the image does not exist.",
+							Description: "ID contains the unique identifier of an existing OpenStack resource. Note that when specifying an import by ID, the resource MUST already exist. The ORC object will enter an error state if the resource does not exist.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"filter": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Filter contains an image query which is expected to return a single result. The controller will continue to retry if filter returns no results. If filter returns multiple results the controller will set an error state and will not continue to retry.",
+							Description: "Filter contains a resource query which is expected to return a single result. The controller will continue to retry if filter returns no results. If filter returns multiple results the controller will set an error state and will not continue to retry.",
 							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageFilter"),
 						},
 					},
@@ -828,24 +829,24 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageSpec(ref commo
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ImageSpec defines the desired state of an Image.",
+				Description: "ImageSpec defines the desired state of an ORC object.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"import": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Import refers to an existing image which will be imported instead of creating a new image.",
+							Description: "Import refers to an existing OpenStack resource which will be imported instead of creating a new one.",
 							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageImport"),
 						},
 					},
 					"resource": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Resource specifies the desired state of the Glance image.\n\nResource may not be specified if the management policy is `unmanaged`.\n\nResource must be specified when the management policy is `managed`.",
+							Description: "Resource specifies the desired state of the resource.\n\nResource may not be specified if the management policy is `unmanaged`.\n\nResource must be specified if the management policy is `managed`.",
 							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageResourceSpec"),
 						},
 					},
 					"managementPolicy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ManagementPolicy defines how ORC will treat the object. Valid values are `managed`: ORC will create, update, and delete the resource; `unmanaged`: ORC will import an existing image, and will not apply updates to it or delete it.",
+							Description: "ManagementPolicy defines how ORC will treat the object. Valid values are `managed`: ORC will create, update, and delete the resource; `unmanaged`: ORC will import an existing resource, and will not apply updates to it or delete it.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -876,7 +877,7 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageStatus(ref com
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ImageStatus defines the observed state of an Image.",
+				Description: "ImageStatus defines the observed state of an ORC resource.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"conditions": {
@@ -891,7 +892,7 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageStatus(ref com
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Conditions represents the observed status of the object. Known .status.conditions.type are: \"Available\", \"Progressing\"\n\nAvailable represents the availability of the Glance image. If it is true then the image is ready for use in Glance, and its hash has been verified.\n\nProgressing indicates the state of the Glance image does not currently reflect the desired state, but that reconciliation is progressing. Progressing will be False either because the desired state has been achieved, or some terminal error prevents it from being achieved and the controller is no longer attempting to reconcile.",
+							Description: "Conditions represents the observed status of the object. Known .status.conditions.type are: \"Available\", \"Progressing\"\n\nAvailable represents the availability of the OpenStack resource. If it is true then the resource is ready for use.\n\nProgressing indicates whether the controller is still attempting to reconcile the current state of the OpenStack resource to the desired state. Progressing will be False either because the desired state has been achieved, or because some terminal error prevents it from ever being achieved and the controller is no longer attempting to reconcile. If Progressing is True, an observer waiting on the resource should continue to wait.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -905,14 +906,14 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageStatus(ref com
 					},
 					"id": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ID is the unique identifier of the Glance image",
+							Description: "ID is the unique identifier of the OpenStack resource.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"resource": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Resource contains the observed state of the Glance image",
+							Description: "Resource contains the observed state of the OpenStack resource.",
 							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageResourceStatus"),
 						},
 					},
@@ -928,6 +929,25 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageStatus(ref com
 		},
 		Dependencies: []string{
 			"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageResourceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.Condition"},
+	}
+}
+
+func schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageStatusExtra(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"downloadAttempts": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DownloadAttempts is the number of times the controller has attempted to download the image contents",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+				},
+			},
+		},
 	}
 }
 
