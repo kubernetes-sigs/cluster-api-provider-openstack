@@ -50,7 +50,6 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 .PHONY: modules
 modules:
 	go mod tidy
-	cd hack/codegen; go work sync; go mod tidy
 
 .PHONY: generate
 generate: generate-resources generate-controller-gen generate-codegen generate-go modules manifests

@@ -19,16 +19,15 @@ set -x
 
 SCRIPT_ROOT=$(realpath $(dirname "${BASH_SOURCE[0]}"))
 PROJECT_ROOT=$(realpath "${SCRIPT_ROOT}/..")
-WORKSPACE_ROOT=$(realpath "${PROJECT_ROOT}/hack/codegen")
 
 GENERATED_PKG="pkg/generated"
 
 # Ensure tools built by kube_codegen go in our own GOBIN rather than something
 # shared under GOPATH. This guards against these tools being rebuilt by some
 # other concurrent invocation, potentially with a different version.
-export GOBIN="${WORKSPACE_ROOT}/bin"
+export GOBIN="${PROJECT_ROOT}/bin"
 
-cd "$WORKSPACE_ROOT"
+cd "$PROJECT_ROOT"
 
 # For this to work, the current working directory must be under a Go module which
 # lists k8s.io/code-generator
@@ -40,8 +39,8 @@ source "${CODEGEN_PKG}/kube_codegen.sh"
 
 declare -a gen_openapi_args=(
     --report-filename "${PROJECT_ROOT}/api_violations.report"
-    --output-dir "${PROJECT_ROOT}/hack/codegen/openapi"
-    --output-pkg sigs.k8s.io/cluster-api-provider-openstack/hack/codegen/openapi
+    --output-dir "${PROJECT_ROOT}/cmd/models-schema"
+    --output-pkg main
     --boilerplate "${SCRIPT_ROOT}/boilerplate.go.txt"
 
     # We need to include all referenced types in our generated openapi schema
@@ -60,19 +59,12 @@ fi
 
 kube::codegen::gen_openapi "${gen_openapi_args[@]}" "${PROJECT_ROOT}/api"
 
-tempdir=$(mktemp -d)
-trap 'rm -r "${tempdir}"' EXIT
-
-openapi="${tempdir}/openapi.json"
-go run "${PROJECT_ROOT}/hack/codegen/cmd/models-schema/main.go" > "$openapi"
-
-# This hack is required until we're using k8s.io/code-generator containing
-# https://github.com/kubernetes/kubernetes/pull/125162, which should be v0.31
-ln -s "${PROJECT_ROOT}/api" "${PROJECT_ROOT}/core"
-trap 'rm "${PROJECT_ROOT}/core"' EXIT
+openapi="${PROJECT_ROOT}/openapi.json"
+go run "${PROJECT_ROOT}/cmd/models-schema" | jq > "$openapi"
 
 kube::codegen::gen_client \
     --with-applyconfig \
+    --with-watch \
     --applyconfig-openapi-schema "$openapi" \
     --output-dir "${PROJECT_ROOT}/${GENERATED_PKG}" \
     --output-pkg sigs.k8s.io/cluster-api-provider-openstack/${GENERATED_PKG} \
@@ -80,21 +72,3 @@ kube::codegen::gen_client \
     --boilerplate "${SCRIPT_ROOT}/boilerplate.go.txt" \
     --one-input-api "api" \
     "${PROJECT_ROOT}"
-
-# Add --with-watch to the above command line to generate informers and listers.
-# It's not worth doing that now until we can remove the hack below which
-# deletes the clientset.
-#    --with-watch \
-
-# The hack below is required until CAPO is using the same version of the k/k
-# libraries as the code-generator we're using in this utility module.
-#
-# code-generator generates code targetting the version of kubernetes it is
-# built from. We are fortunate that the generated applyconfiguration builds
-# against older libraries. However, the generated clientset does not. As we
-# aren't yet using the clientset we just delete it for now.
-#
-# We could avoid generating it in the first place, but then we wouldn't be able
-# to use kube_codegen.sh. We leave it like this as we expect to update to a
-# sufficiently new k/k in the relatively near future.
-rm -r "${PROJECT_ROOT}/${GENERATED_PKG}/clientset"

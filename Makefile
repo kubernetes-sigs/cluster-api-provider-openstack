@@ -276,7 +276,6 @@ modules: ## Runs go mod to ensure proper vendoring.
 	$(MAKE) -C $(REPO_ROOT)/orc modules
 	go mod tidy
 	cd $(TOOLS_DIR); go mod tidy
-	cd $(REPO_ROOT)/hack/codegen; go work sync; go mod tidy
 
 .PHONY: generate
 generate: templates generate-orc generate-controller-gen generate-codegen generate-conversion-gen generate-go generate-manifests generate-api-docs ## Generate all generated code
@@ -549,7 +548,7 @@ verify-boilerplate:
 
 .PHONY: verify-modules
 verify-modules: modules
-	@if !(git diff --quiet HEAD -- go.* hack/tools/go.* hack/codegen/go.*); then \
+	@if !(git diff --quiet HEAD -- go.* hack/tools/go.*); then \
 		git diff; \
 		echo "go module files are out of date"; exit 1; \
 	fi
