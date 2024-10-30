@@ -29,6 +29,7 @@ import (
 type OpenstackV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	ImagesGetter
+	SubnetsGetter
 }
 
 // OpenstackV1alpha1Client is used to interact with features provided by the openstack.k-orc.cloud group.
@@ -38,6 +39,10 @@ type OpenstackV1alpha1Client struct {
 
 func (c *OpenstackV1alpha1Client) Images(namespace string) ImageInterface {
 	return newImages(c, namespace)
+}
+
+func (c *OpenstackV1alpha1Client) Subnets(namespace string) SubnetInterface {
+	return newSubnets(c, namespace)
 }
 
 // NewForConfig creates a new OpenstackV1alpha1Client for the given config.

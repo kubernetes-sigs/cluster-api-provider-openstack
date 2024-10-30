@@ -30,7 +30,11 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.AllocationPool":             schema_k_orc_openstack_resource_controller_api_v1alpha1_AllocationPool(ref),
 		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.CloudCredentialsReference":  schema_k_orc_openstack_resource_controller_api_v1alpha1_CloudCredentialsReference(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.FilterByNeutronTags":        schema_k_orc_openstack_resource_controller_api_v1alpha1_FilterByNeutronTags(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.HostRoute":                  schema_k_orc_openstack_resource_controller_api_v1alpha1_HostRoute(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.IPv6Options":                schema_k_orc_openstack_resource_controller_api_v1alpha1_IPv6Options(ref),
 		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.Image":                      schema_k_orc_openstack_resource_controller_api_v1alpha1_Image(ref),
 		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageContent":               schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageContent(ref),
 		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageContentSourceDownload": schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageContentSourceDownload(ref),
@@ -46,6 +50,15 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageStatus":                schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageStatus(ref),
 		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ImageStatusExtra":           schema_k_orc_openstack_resource_controller_api_v1alpha1_ImageStatusExtra(ref),
 		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.ManagedOptions":             schema_k_orc_openstack_resource_controller_api_v1alpha1_ManagedOptions(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.Subnet":                     schema_k_orc_openstack_resource_controller_api_v1alpha1_Subnet(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.SubnetFilter":               schema_k_orc_openstack_resource_controller_api_v1alpha1_SubnetFilter(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.SubnetGateway":              schema_k_orc_openstack_resource_controller_api_v1alpha1_SubnetGateway(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.SubnetImport":               schema_k_orc_openstack_resource_controller_api_v1alpha1_SubnetImport(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.SubnetList":                 schema_k_orc_openstack_resource_controller_api_v1alpha1_SubnetList(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.SubnetResourceSpec":         schema_k_orc_openstack_resource_controller_api_v1alpha1_SubnetResourceSpec(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.SubnetResourceStatus":       schema_k_orc_openstack_resource_controller_api_v1alpha1_SubnetResourceStatus(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.SubnetSpec":                 schema_k_orc_openstack_resource_controller_api_v1alpha1_SubnetSpec(ref),
+		"github.com/k-orc/openstack-resource-controller/api/v1alpha1.SubnetStatus":               schema_k_orc_openstack_resource_controller_api_v1alpha1_SubnetStatus(ref),
 		"k8s.io/api/core/v1.AWSElasticBlockStoreVolumeSource":                                    schema_k8sio_api_core_v1_AWSElasticBlockStoreVolumeSource(ref),
 		"k8s.io/api/core/v1.Affinity":                                    schema_k8sio_api_core_v1_Affinity(ref),
 		"k8s.io/api/core/v1.AppArmorProfile":                             schema_k8sio_api_core_v1_AppArmorProfile(ref),
@@ -331,6 +344,33 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 	}
 }
 
+func schema_k_orc_openstack_resource_controller_api_v1alpha1_AllocationPool(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"start": {
+						SchemaProps: spec.SchemaProps{
+							Default: "",
+							Type:    []string{"string"},
+							Format:  "",
+						},
+					},
+					"end": {
+						SchemaProps: spec.SchemaProps{
+							Default: "",
+							Type:    []string{"string"},
+							Format:  "",
+						},
+					},
+				},
+				Required: []string{"start", "end"},
+			},
+		},
+	}
+}
+
 func schema_k_orc_openstack_resource_controller_api_v1alpha1_CloudCredentialsReference(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -356,6 +396,151 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_CloudCredentialsRef
 					},
 				},
 				Required: []string{"secretName", "cloudName"},
+			},
+		},
+	}
+}
+
+func schema_k_orc_openstack_resource_controller_api_v1alpha1_FilterByNeutronTags(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"tags": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Tags is a list of tags to filter by. If specified, the resource must have all of the tags specified to be included in the result.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"tagsAny": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "TagsAny is a list of tags to filter by. If specified, the resource must have at least one of the tags specified to be included in the result.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"notTags": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "NotTags is a list of tags to filter by. If specified, resources which contain all of the given tags will be excluded from the result.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"notTagsAny": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "NotTagsAny is a list of tags to filter by. If specified, resources which contain any of the given tags will be excluded from the result.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func schema_k_orc_openstack_resource_controller_api_v1alpha1_HostRoute(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"destination": {
+						SchemaProps: spec.SchemaProps{
+							Default: "",
+							Type:    []string{"string"},
+							Format:  "",
+						},
+					},
+					"nextHop": {
+						SchemaProps: spec.SchemaProps{
+							Default: "",
+							Type:    []string{"string"},
+							Format:  "",
+						},
+					},
+				},
+				Required: []string{"destination", "nextHop"},
+			},
+		},
+	}
+}
+
+func schema_k_orc_openstack_resource_controller_api_v1alpha1_IPv6Options(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"addressMode": {
+						SchemaProps: spec.SchemaProps{
+							Description: "AddressMode specifies mechanisms for assigning IPv6 IP addresses.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"raMode": {
+						SchemaProps: spec.SchemaProps{
+							Description: "RAMode specifies the IPv6 router advertisement mode. It specifies whether the networking service should transmit ICMPv6 packets.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
 			},
 		},
 	}
@@ -967,6 +1152,748 @@ func schema_k_orc_openstack_resource_controller_api_v1alpha1_ManagedOptions(ref 
 				},
 			},
 		},
+	}
+}
+
+func schema_k_orc_openstack_resource_controller_api_v1alpha1_Subnet(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "Subnet is the Schema for an ORC resource.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.SubnetSpec"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.SubnetStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/k-orc/openstack-resource-controller/api/v1alpha1.SubnetSpec", "github.com/k-orc/openstack-resource-controller/api/v1alpha1.SubnetStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_k_orc_openstack_resource_controller_api_v1alpha1_SubnetFilter(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "SubnetFilter specifies a filter to select a subnet. At least one parameter must be specified.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"projectID": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"ipVersion": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "byte",
+						},
+					},
+					"gatewayIP": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"cidr": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"ipv6": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.IPv6Options"),
+						},
+					},
+					"tags": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Tags is a list of tags to filter by. If specified, the resource must have all of the tags specified to be included in the result.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"tagsAny": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "TagsAny is a list of tags to filter by. If specified, the resource must have at least one of the tags specified to be included in the result.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"notTags": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "NotTags is a list of tags to filter by. If specified, resources which contain all of the given tags will be excluded from the result.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"notTagsAny": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "NotTagsAny is a list of tags to filter by. If specified, resources which contain any of the given tags will be excluded from the result.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/k-orc/openstack-resource-controller/api/v1alpha1.IPv6Options"},
+	}
+}
+
+func schema_k_orc_openstack_resource_controller_api_v1alpha1_SubnetGateway(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"type": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Type specifies how the default gateway will be created. `Automatic` specifies that neutron will automatically add a default gateway. This is also the default if no Gateway is specified. `None` specifies that the subnet will not have a default gateway. `IP` specifies that the subnet will use a specific address as the default gateway, which must be specified in `IP`.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"ip": {
+						SchemaProps: spec.SchemaProps{
+							Description: "IP is the IP address of the default gateway, which must be specified if Type is `IP`. It must be a valid IP address, either IPv4 or IPv6, matching the IPVersion in SubnetResourceSpec.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"type"},
+			},
+		},
+	}
+}
+
+func schema_k_orc_openstack_resource_controller_api_v1alpha1_SubnetImport(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "SubnetImport specifies an existing resource which will be imported instead of creating a new one",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"id": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ID contains the unique identifier of an existing OpenStack resource. Note that when specifying an import by ID, the resource MUST already exist. The ORC object will enter an error state if the resource does not exist.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"filter": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Filter contains a resource query which is expected to return a single result. The controller will continue to retry if filter returns no results. If filter returns multiple results the controller will set an error state and will not continue to retry.",
+							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.SubnetFilter"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/k-orc/openstack-resource-controller/api/v1alpha1.SubnetFilter"},
+	}
+}
+
+func schema_k_orc_openstack_resource_controller_api_v1alpha1_SubnetList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "SubnetList contains a list of Subnet.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+						},
+					},
+					"items": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.Subnet"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"items"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/k-orc/openstack-resource-controller/api/v1alpha1.Subnet", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+	}
+}
+
+func schema_k_orc_openstack_resource_controller_api_v1alpha1_SubnetResourceSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"networkRef": {
+						SchemaProps: spec.SchemaProps{
+							Description: "NetworkRef is a reference to the ORC Network which this subnet is associated with.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name is a human-readable name of the subnet. If not set, the object's name will be used.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Description of the subnet.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"tags": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Tags is a list of tags which will be applied to the subnet.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"ipVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "IPVersion is the IP version for the subnet.",
+							Default:     0,
+							Type:        []string{"integer"},
+							Format:      "byte",
+						},
+					},
+					"cidr": {
+						SchemaProps: spec.SchemaProps{
+							Description: "CIDR is the address CIDR of the subnet. It must match the IP version specified in IPVersion.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"projectID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ProjectID is the unique ID of the project which owns the Subnet. Only administrative users can specify a project UUID other than their own.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"allocationPools": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "AllocationPools are IP Address pools that will be available for DHCP. IP addresses must be in CIDR.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.AllocationPool"),
+									},
+								},
+							},
+						},
+					},
+					"gateway": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Gateway specifies the default gateway of the subnet. If not specified, neutron will add one automatically. To disable this behaviour, specify a gateway with a type of None.",
+							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.SubnetGateway"),
+						},
+					},
+					"enableDHCP": {
+						SchemaProps: spec.SchemaProps{
+							Description: "EnableDHCP will either enable to disable the DHCP service.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"dnsNameservers": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "DNSNameservers are the nameservers to be set via DHCP.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"dnsPublishFixedIP": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DNSPublishFixedIP will either enable or disable the publication of fixed IPs to the DNS",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"hostRoutes": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "HostRoutes are any static host routes to be set via DHCP.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.HostRoute"),
+									},
+								},
+							},
+						},
+					},
+					"ipv6": {
+						SchemaProps: spec.SchemaProps{
+							Description: "IPv6 contains IPv6-specific options. It may only be set if IPVersion is 6.",
+							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.IPv6Options"),
+						},
+					},
+				},
+				Required: []string{"networkRef", "ipVersion", "cidr"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/k-orc/openstack-resource-controller/api/v1alpha1.AllocationPool", "github.com/k-orc/openstack-resource-controller/api/v1alpha1.HostRoute", "github.com/k-orc/openstack-resource-controller/api/v1alpha1.IPv6Options", "github.com/k-orc/openstack-resource-controller/api/v1alpha1.SubnetGateway"},
+	}
+}
+
+func schema_k_orc_openstack_resource_controller_api_v1alpha1_SubnetResourceStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"networkID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "UUID of the parent network.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name is the human-readable name of the subnet. Might not be unique.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Description for the subnet.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"ipVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "IPVersion specifies IP version, either `4' or `6'.",
+							Default:     0,
+							Type:        []string{"integer"},
+							Format:      "byte",
+						},
+					},
+					"cidr": {
+						SchemaProps: spec.SchemaProps{
+							Description: "CIDR representing IP range for this subnet, based on IP version.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"gatewayIP": {
+						SchemaProps: spec.SchemaProps{
+							Description: "GatewayIP is the default gateway used by devices in this subnet, if any.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"dnsNameservers": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "DNSNameservers is a list of name servers used by hosts in this subnet.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"dnsPublishFixedIP": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DNSPublishFixedIP specifies whether the fixed IP addresses are published to the DNS.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"allocationPools": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "AllocationPools is a list of sub-ranges within CIDR available for dynamic allocation to ports.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.AllocationPool"),
+									},
+								},
+							},
+						},
+					},
+					"hostRoutes": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "HostRoutes is a list of routes that should be used by devices with IPs from this subnet (not including local subnet route).",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.HostRoute"),
+									},
+								},
+							},
+						},
+					},
+					"enableDHCP": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Specifies whether DHCP is enabled for this subnet or not.",
+							Default:     false,
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"projectID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ProjectID is the project owner of the subnet.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"ipv6AddressMode": {
+						SchemaProps: spec.SchemaProps{
+							Description: "The IPv6 address modes specifies mechanisms for assigning IPv6 IP addresses.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"ipv6RAMode": {
+						SchemaProps: spec.SchemaProps{
+							Description: "The IPv6 router advertisement specifies whether the networking service should transmit ICMPv6 packets.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"subnetPoolID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "SubnetPoolID is the id of the subnet pool associated with the subnet.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"tags": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Tags optionally set via extensions/attributestags",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"revisionNumber": {
+						SchemaProps: spec.SchemaProps{
+							Description: "RevisionNumber optionally set via extensions/standard-attr-revisions",
+							Type:        []string{"integer"},
+							Format:      "int64",
+						},
+					},
+				},
+				Required: []string{"networkID", "name", "ipVersion", "cidr", "dnsNameservers", "enableDHCP", "projectID"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/k-orc/openstack-resource-controller/api/v1alpha1.AllocationPool", "github.com/k-orc/openstack-resource-controller/api/v1alpha1.HostRoute"},
+	}
+}
+
+func schema_k_orc_openstack_resource_controller_api_v1alpha1_SubnetSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "SubnetSpec defines the desired state of an ORC object.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"import": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Import refers to an existing OpenStack resource which will be imported instead of creating a new one.",
+							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.SubnetImport"),
+						},
+					},
+					"resource": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Resource specifies the desired state of the resource.\n\nResource may not be specified if the management policy is `unmanaged`.\n\nResource must be specified if the management policy is `managed`.",
+							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.SubnetResourceSpec"),
+						},
+					},
+					"managementPolicy": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ManagementPolicy defines how ORC will treat the object. Valid values are `managed`: ORC will create, update, and delete the resource; `unmanaged`: ORC will import an existing resource, and will not apply updates to it or delete it.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"managedOptions": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ManagedOptions specifies options which may be applied to managed objects.",
+							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.ManagedOptions"),
+						},
+					},
+					"cloudCredentialsRef": {
+						SchemaProps: spec.SchemaProps{
+							Description: "CloudCredentialsRef points to a secret containing OpenStack credentials",
+							Default:     map[string]interface{}{},
+							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.CloudCredentialsReference"),
+						},
+					},
+				},
+				Required: []string{"cloudCredentialsRef"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/k-orc/openstack-resource-controller/api/v1alpha1.CloudCredentialsReference", "github.com/k-orc/openstack-resource-controller/api/v1alpha1.ManagedOptions", "github.com/k-orc/openstack-resource-controller/api/v1alpha1.SubnetImport", "github.com/k-orc/openstack-resource-controller/api/v1alpha1.SubnetResourceSpec"},
+	}
+}
+
+func schema_k_orc_openstack_resource_controller_api_v1alpha1_SubnetStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "SubnetStatus defines the observed state of an ORC resource.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"conditions": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"type",
+								},
+								"x-kubernetes-list-type":       "map",
+								"x-kubernetes-patch-merge-key": "type",
+								"x-kubernetes-patch-strategy":  "merge",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Conditions represents the observed status of the object. Known .status.conditions.type are: \"Available\", \"Progressing\"\n\nAvailable represents the availability of the OpenStack resource. If it is true then the resource is ready for use.\n\nProgressing indicates whether the controller is still attempting to reconcile the current state of the OpenStack resource to the desired state. Progressing will be False either because the desired state has been achieved, or because some terminal error prevents it from ever being achieved and the controller is no longer attempting to reconcile. If Progressing is True, an observer waiting on the resource should continue to wait.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.Condition"),
+									},
+								},
+							},
+						},
+					},
+					"id": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ID is the unique identifier of the OpenStack resource.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"resource": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Resource contains the observed state of the OpenStack resource.",
+							Ref:         ref("github.com/k-orc/openstack-resource-controller/api/v1alpha1.SubnetResourceStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/k-orc/openstack-resource-controller/api/v1alpha1.SubnetResourceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.Condition"},
 	}
 }
 

@@ -1,3 +1,7 @@
+API rule violation: names_match,github.com/k-orc/openstack-resource-controller/api/v1alpha1,SubnetFilter,IPv6
+API rule violation: names_match,github.com/k-orc/openstack-resource-controller/api/v1alpha1,SubnetResourceSpec,IPv6
+API rule violation: names_match,github.com/k-orc/openstack-resource-controller/api/v1alpha1,SubnetResourceStatus,IPv6AddressMode
+API rule violation: names_match,github.com/k-orc/openstack-resource-controller/api/v1alpha1,SubnetResourceStatus,IPv6RAMode
 API rule violation: names_match,k8s.io/api/core/v1,AzureDiskVolumeSource,DataDiskURI
 API rule violation: names_match,k8s.io/api/core/v1,ContainerStatus,LastTerminationState
 API rule violation: names_match,k8s.io/api/core/v1,DaemonEndpoint,Port

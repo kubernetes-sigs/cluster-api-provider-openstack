@@ -26,6 +26,8 @@ import (
 type Interface interface {
 	// Images returns a ImageInformer.
 	Images() ImageInformer
+	// Subnets returns a SubnetInformer.
+	Subnets() SubnetInformer
 }
 
 type version struct {
@@ -42,4 +44,9 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // Images returns a ImageInformer.
 func (v *version) Images() ImageInformer {
 	return &imageInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// Subnets returns a SubnetInformer.
+func (v *version) Subnets() SubnetInformer {
+	return &subnetInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
