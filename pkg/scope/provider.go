@@ -48,19 +48,12 @@ const (
 )
 
 type providerScopeFactory struct {
+	*defaultScopeFactory
 	clientCache *cache.LRUExpireCache
 }
 
 func (f *providerScopeFactory) NewClientScopeFromObject(ctx context.Context, ctrlClient client.Client, defaultCACert []byte, logger logr.Logger, objects ...infrav1.IdentityRefProvider) (Scope, error) {
-	var namespace *string
-	var identityRef *infrav1.OpenStackIdentityReference
-
-	for _, o := range objects {
-		namespace, identityRef = o.GetIdentityRef()
-		if namespace != nil || identityRef != nil {
-			break
-		}
-	}
+	namespace, identityRef := f.GetIdentityRefFromObjects(objects...)
 
 	if namespace == nil || identityRef == nil {
 		return nil, fmt.Errorf("unable to get identityRef from provided objects")

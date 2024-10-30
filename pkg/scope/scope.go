@@ -43,6 +43,21 @@ func NewFactory(maxCacheSize int) Factory {
 type Factory interface {
 	// NewClientScopeFromObject creates a new scope from the first object which returns an OpenStackIdentityRef
 	NewClientScopeFromObject(ctx context.Context, ctrlClient client.Client, defaultCACert []byte, logger logr.Logger, objects ...infrav1.IdentityRefProvider) (Scope, error)
+	GetIdentityRefFromObjects(objects ...infrav1.IdentityRefProvider) (*string, *infrav1.OpenStackIdentityReference)
+}
+
+type defaultScopeFactory struct{}
+
+func (f *defaultScopeFactory) GetIdentityRefFromObjects(objects ...infrav1.IdentityRefProvider) (*string, *infrav1.OpenStackIdentityReference) {
+	var namespace *string
+	var identityRef *infrav1.OpenStackIdentityReference
+	for _, o := range objects {
+		namespace, identityRef = o.GetIdentityRef()
+		if identityRef != nil {
+			break
+		}
+	}
+	return namespace, identityRef
 }
 
 // Scope contains arguments common to most operations.

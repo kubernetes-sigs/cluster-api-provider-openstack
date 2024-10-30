@@ -198,7 +198,7 @@ func (o OpenStackLogCollector) CollectMachineLog(ctx context.Context, management
 	if m.Spec.ProviderID == nil {
 		return fmt.Errorf("unable to get logs for machine since it has no provider ID")
 	}
-	providerID := getIDFromProviderID(*m.Spec.ProviderID)
+	providerID := GetIDFromProviderID(*m.Spec.ProviderID)
 
 	consolLog, err := GetOpenStackServerConsoleLog(o.E2EContext, providerID)
 	if err != nil {

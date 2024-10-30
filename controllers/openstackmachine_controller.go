@@ -392,9 +392,12 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		Address: instanceStatus.Name(),
 	})
 	openStackMachine.Status.Addresses = addresses
-	if openStackMachine.Spec.IdentityRef == nil {
-		openStackMachine.Spec.IdentityRef = &openStackCluster.Spec.IdentityRef
-	}
+
+	_, identityRef := r.ScopeFactory.GetIdentityRefFromObjects(openStackMachine, openStackCluster)
+	openStackMachine.Spec.IdentityRef = identityRef
+
+	_, identityRef := r.ScopeFactory.GetIdentityRefFromObjects(openStackMachine, openStackCluster)
+	openStackMachine.Spec.IdentityRef = identityRef
 
 	result := r.reconcileMachineState(scope, openStackMachine, machine, machineServer)
 	if result != nil {
@@ -580,13 +583,11 @@ func (r *OpenStackMachineReconciler) getOrCreateMachineServer(ctx context.Contex
 	}
 	if apierrors.IsNotFound(err) {
 		// Use credentials from the machine object by default, falling back to cluster credentials.
-		identityRef := func() infrav1.OpenStackIdentityReference {
-			if openStackMachine.Spec.IdentityRef != nil {
-				return *openStackMachine.Spec.IdentityRef
-			}
-			return openStackCluster.Spec.IdentityRef
-		}()
-		machineServerSpec := openStackMachineSpecToOpenStackServerSpec(&openStackMachine.Spec, identityRef, compute.InstanceTags(&openStackMachine.Spec, openStackCluster), failureDomain, userDataRef, getManagedSecurityGroup(openStackCluster, machine), openStackCluster.Status.Network.ID)
+		_, identityRef := r.ScopeFactory.GetIdentityRefFromObjects(openStackMachine, openStackCluster)
+		if identityRef == nil {
+			return nil, fmt.Errorf("unable to get identityRef from provided objects")
+		}
+		machineServerSpec := openStackMachineSpecToOpenStackServerSpec(&openStackMachine.Spec, *identityRef, compute.InstanceTags(&openStackMachine.Spec, openStackCluster), failureDomain, userDataRef, getManagedSecurityGroup(openStackCluster, machine), openStackCluster.Status.Network.ID)
 		machineServer = &infrav1alpha1.OpenStackServer{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels: map[string]string{
