@@ -1,7 +1,8 @@
 module sigs.k8s.io/cluster-api-provider-openstack/hack/tools
 
-go 1.22.0
-toolchain go1.22.8
+go 1.22.7
+
+toolchain go1.23.2
 
 require (
 	github.com/a8m/envsubst v1.4.2
