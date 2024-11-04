@@ -6,7 +6,7 @@ require (
 	github.com/a8m/envsubst v1.2.0
 	github.com/ahmetb/gen-crd-api-reference-docs v0.3.1-0.20220420215017-3f29e6853552
 	github.com/itchyny/gojq v0.12.2
-	github.com/onsi/ginkgo/v2 v2.20.1
+	github.com/onsi/ginkgo/v2 v2.21.0
 	go.uber.org/mock v0.4.0
 	k8s.io/code-generator v0.31.2
 	sigs.k8s.io/cluster-api-provider-openstack v0.0.0
@@ -49,7 +49,7 @@ require (
 	github.com/google/gnostic-models v0.6.8 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/google/pprof v0.0.0-20240827171923-fa2c70bbbfe5 // indirect
+	github.com/google/pprof v0.0.0-20241029153458-d1b30febd7db // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gophercloud/gophercloud/v2 v2.2.0 // indirect
