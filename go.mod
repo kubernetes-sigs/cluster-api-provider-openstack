@@ -17,7 +17,7 @@ require (
 	github.com/prometheus/client_golang v1.20.5
 	github.com/spf13/pflag v1.0.5
 	github.com/ulikunitz/xz v0.5.12
-	go.uber.org/mock v0.4.0
+	go.uber.org/mock v0.5.0
 	golang.org/x/crypto v0.28.0
 	golang.org/x/text v0.19.0
 	gopkg.in/ini.v1 v1.67.0
