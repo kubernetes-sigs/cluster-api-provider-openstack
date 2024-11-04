@@ -7,7 +7,7 @@ require (
 	github.com/ahmetb/gen-crd-api-reference-docs v0.3.1-0.20220420215017-3f29e6853552
 	github.com/itchyny/gojq v0.12.2
 	github.com/onsi/ginkgo/v2 v2.21.0
-	go.uber.org/mock v0.4.0
+	go.uber.org/mock v0.5.0
 	k8s.io/code-generator v0.31.2
 	sigs.k8s.io/cluster-api-provider-openstack v0.0.0
 	sigs.k8s.io/cluster-api/hack/tools v0.0.0-20221129083400-679ae3e9e6b6

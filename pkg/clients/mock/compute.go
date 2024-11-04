@@ -39,6 +39,7 @@ import (
 type MockComputeClient struct {
 	ctrl     *gomock.Controller
 	recorder *MockComputeClientMockRecorder
+	isgomock struct{}
 }
 
 // MockComputeClientMockRecorder is the mock recorder for MockComputeClient.
@@ -59,76 +60,76 @@ func (m *MockComputeClient) EXPECT() *MockComputeClientMockRecorder {
 }
 
 // CreateServer mocks base method.
-func (m *MockComputeClient) CreateServer(arg0 servers.CreateOptsBuilder, arg1 servers.SchedulerHintOptsBuilder) (*servers.Server, error) {
+func (m *MockComputeClient) CreateServer(createOpts servers.CreateOptsBuilder, schedulerHints servers.SchedulerHintOptsBuilder) (*servers.Server, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateServer", arg0, arg1)
+	ret := m.ctrl.Call(m, "CreateServer", createOpts, schedulerHints)
 	ret0, _ := ret[0].(*servers.Server)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateServer indicates an expected call of CreateServer.
-func (mr *MockComputeClientMockRecorder) CreateServer(arg0, arg1 any) *gomock.Call {
+func (mr *MockComputeClientMockRecorder) CreateServer(createOpts, schedulerHints any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateServer", reflect.TypeOf((*MockComputeClient)(nil).CreateServer), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateServer", reflect.TypeOf((*MockComputeClient)(nil).CreateServer), createOpts, schedulerHints)
 }
 
 // DeleteAttachedInterface mocks base method.
-func (m *MockComputeClient) DeleteAttachedInterface(arg0, arg1 string) error {
+func (m *MockComputeClient) DeleteAttachedInterface(serverID, portID string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteAttachedInterface", arg0, arg1)
+	ret := m.ctrl.Call(m, "DeleteAttachedInterface", serverID, portID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteAttachedInterface indicates an expected call of DeleteAttachedInterface.
-func (mr *MockComputeClientMockRecorder) DeleteAttachedInterface(arg0, arg1 any) *gomock.Call {
+func (mr *MockComputeClientMockRecorder) DeleteAttachedInterface(serverID, portID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAttachedInterface", reflect.TypeOf((*MockComputeClient)(nil).DeleteAttachedInterface), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAttachedInterface", reflect.TypeOf((*MockComputeClient)(nil).DeleteAttachedInterface), serverID, portID)
 }
 
 // DeleteServer mocks base method.
-func (m *MockComputeClient) DeleteServer(arg0 string) error {
+func (m *MockComputeClient) DeleteServer(serverID string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteServer", arg0)
+	ret := m.ctrl.Call(m, "DeleteServer", serverID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteServer indicates an expected call of DeleteServer.
-func (mr *MockComputeClientMockRecorder) DeleteServer(arg0 any) *gomock.Call {
+func (mr *MockComputeClientMockRecorder) DeleteServer(serverID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteServer", reflect.TypeOf((*MockComputeClient)(nil).DeleteServer), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteServer", reflect.TypeOf((*MockComputeClient)(nil).DeleteServer), serverID)
 }
 
 // GetServer mocks base method.
-func (m *MockComputeClient) GetServer(arg0 string) (*servers.Server, error) {
+func (m *MockComputeClient) GetServer(serverID string) (*servers.Server, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetServer", arg0)
+	ret := m.ctrl.Call(m, "GetServer", serverID)
 	ret0, _ := ret[0].(*servers.Server)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetServer indicates an expected call of GetServer.
-func (mr *MockComputeClientMockRecorder) GetServer(arg0 any) *gomock.Call {
+func (mr *MockComputeClientMockRecorder) GetServer(serverID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetServer", reflect.TypeOf((*MockComputeClient)(nil).GetServer), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetServer", reflect.TypeOf((*MockComputeClient)(nil).GetServer), serverID)
 }
 
 // ListAttachedInterfaces mocks base method.
-func (m *MockComputeClient) ListAttachedInterfaces(arg0 string) ([]attachinterfaces.Interface, error) {
+func (m *MockComputeClient) ListAttachedInterfaces(serverID string) ([]attachinterfaces.Interface, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListAttachedInterfaces", arg0)
+	ret := m.ctrl.Call(m, "ListAttachedInterfaces", serverID)
 	ret0, _ := ret[0].([]attachinterfaces.Interface)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListAttachedInterfaces indicates an expected call of ListAttachedInterfaces.
-func (mr *MockComputeClientMockRecorder) ListAttachedInterfaces(arg0 any) *gomock.Call {
+func (mr *MockComputeClientMockRecorder) ListAttachedInterfaces(serverID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAttachedInterfaces", reflect.TypeOf((*MockComputeClient)(nil).ListAttachedInterfaces), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAttachedInterfaces", reflect.TypeOf((*MockComputeClient)(nil).ListAttachedInterfaces), serverID)
 }
 
 // ListAvailabilityZones mocks base method.
@@ -177,16 +178,16 @@ func (mr *MockComputeClientMockRecorder) ListServerGroups() *gomock.Call {
 }
 
 // ListServers mocks base method.
-func (m *MockComputeClient) ListServers(arg0 servers.ListOptsBuilder) ([]servers.Server, error) {
+func (m *MockComputeClient) ListServers(listOpts servers.ListOptsBuilder) ([]servers.Server, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListServers", arg0)
+	ret := m.ctrl.Call(m, "ListServers", listOpts)
 	ret0, _ := ret[0].([]servers.Server)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListServers indicates an expected call of ListServers.
-func (mr *MockComputeClientMockRecorder) ListServers(arg0 any) *gomock.Call {
+func (mr *MockComputeClientMockRecorder) ListServers(listOpts any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListServers", reflect.TypeOf((*MockComputeClient)(nil).ListServers), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListServers", reflect.TypeOf((*MockComputeClient)(nil).ListServers), listOpts)
 }
