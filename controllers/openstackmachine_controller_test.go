@@ -76,6 +76,21 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 			},
 		},
 	}
+	portOptsWithAdditionalSecurityGroup := []infrav1.PortOpts{
+		{
+			Network: &infrav1.NetworkParam{
+				ID: ptr.To(openStackCluster.Status.Network.ID),
+			},
+			SecurityGroups: []infrav1.SecurityGroupParam{
+				{
+					ID: ptr.To(openStackCluster.Status.WorkerSecurityGroup.ID),
+				},
+				{
+					ID: ptr.To(extraSecurityGroupUUID),
+				},
+			},
+		},
+	}
 	image := infrav1.ImageParam{Filter: &infrav1.ImageFilter{Name: ptr.To("my-image")}}
 	tags := []string{"tag1", "tag2"}
 	userData := &corev1.LocalObjectReference{Name: "server-data-secret"}
@@ -97,6 +112,28 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 				Image:       image,
 				SSHKeyName:  sshKeyName,
 				Ports:       portOpts,
+				Tags:        tags,
+				UserDataRef: userData,
+			},
+		},
+		{
+			name: "Test a OpenStackMachineSpec to OpenStackServerSpec conversion with an additional security group",
+			spec: &infrav1.OpenStackMachineSpec{
+				Flavor:     ptr.To(flavorName),
+				Image:      image,
+				SSHKeyName: sshKeyName,
+				SecurityGroups: []infrav1.SecurityGroupParam{
+					{
+						ID: ptr.To(extraSecurityGroupUUID),
+					},
+				},
+			},
+			want: &infrav1alpha1.OpenStackServerSpec{
+				Flavor:      ptr.To(flavorName),
+				IdentityRef: identityRef,
+				Image:       image,
+				SSHKeyName:  sshKeyName,
+				Ports:       portOptsWithAdditionalSecurityGroup,
 				Tags:        tags,
 				UserDataRef: userData,
 			},
