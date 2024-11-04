@@ -14,7 +14,7 @@ require (
 	github.com/k-orc/openstack-resource-controller v0.0.0-00010101000000-000000000000
 	github.com/onsi/ginkgo/v2 v2.20.0
 	github.com/onsi/gomega v1.34.1
-	github.com/prometheus/client_golang v1.20.0
+	github.com/prometheus/client_golang v1.20.5
 	github.com/spf13/pflag v1.0.5
 	github.com/ulikunitz/xz v0.5.12
 	go.uber.org/mock v0.4.0
