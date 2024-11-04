@@ -2,7 +2,7 @@
 
 version: 2
 updates:
-
+## main branch config starts here
 # github-actions
 - directory: "/"
   package-ecosystem: "github-actions"
@@ -10,46 +10,99 @@ updates:
   schedule:
     interval: "weekly"
     day: "monday"
+  target-branch: main
   groups:
     all-github-actions:
       patterns: [ "*" ]
   commit-message:
-    prefix: ":seedling: chore(deps): bump"
+    prefix: ":seedling:"
     include: scope
   labels:
-    - "area/dependency"
-    - "ok-to-test"
-
+  - "area/dependency"
+  - "ok-to-test"
 # Go directories
 - directories:
-    - "/"
-    - "/hack/tools"
-    - "/orc"
+  - "/"
+  - "/hack/tools"
+  - "/orc"
   package-ecosystem: "gomod"
   open-pull-requests-limit: 5
   schedule:
     interval: "weekly"
     day: "monday"
-  ## group all dependencies with a k8s.io prefix into a single PR.
+  target-branch: main
   groups:
-    all-go-mod-patch-and-minor:
-      patterns: [ "*" ]
-      update-types: [ "patch", "minor" ]
+    kubernetes:
+      patterns: ["k8s.io/*"]
+    capi:
+      patterns: ["sigs.k8s.io/cluster-api", "sigs.k8s.io/cluster-api/test"]
   commit-message:
-    prefix: ":seedling: chore(deps): bump"
+    prefix: ":seedling:"
     include: scope
   ignore:
-    # Ignore controller-runtime as its upgraded manually.
-    - dependency-name: "sigs.k8s.io/controller-runtime"
-      update-types: [ "version-update:semver-major", "version-update:semver-minor" ]
-    # Ignore k8s and its transitives modules as they are upgraded manually together with controller-runtime.
-    - dependency-name: "k8s.io/*"
-      update-types: [ "version-update:semver-major", "version-update:semver-minor" ]
-    - dependency-name: "github.com/prometheus/*"
-      update-types: [ "version-update:semver-major", "version-update:semver-minor" ]
-    - dependency-name: "sigs.k8s.io/cluster-api-provider-openstack"
-    # We will need k8s v0.31.3 to bump structured-merge-diff to v4.4.2 (check git history for details).
-    - dependency-name: "sigs.k8s.io/structured-merge-diff"
+  # Ignore controller-runtime major and minor bumps as its upgraded manually.
+  - dependency-name: "sigs.k8s.io/controller-runtime"
+    update-types: ["version-update:semver-major", "version-update:semver-minor"]
+  # Ignore k8s major and minor bumps and its transitives modules
+  - dependency-name: "k8s.io/*"
+    update-types: ["version-update:semver-major", "version-update:semver-minor"]
+  - dependency-name: "sigs.k8s.io/controller-tools"
+    update-types: ["version-update:semver-major", "version-update:semver-minor"]
+  # We will need k8s v0.31.3 to bump structured-merge-diff to v4.4.2 (check git history for details).
+  - dependency-name: "sigs.k8s.io/structured-merge-diff/*"
   labels:
     - "area/dependency"
     - "ok-to-test"
+## main branch config ends here
+## release-0.11 branch config starts here
+# github-actions
+- directory: "/"
+  package-ecosystem: "github-actions"
+  open-pull-requests-limit: 5
+  schedule:
+    interval: "weekly"
+    day: "monday"
+  target-branch: release-0.11
+  groups:
+    all-github-actions:
+      patterns: [ "*" ]
+  commit-message:
+    prefix: ":seedling:"
+    include: scope
+  labels:
+  - "area/dependency"
+  - "ok-to-test"
+# Go directories
+- directories:
+  - "/"
+  - "/hack/tools"
+  - "/orc"
+  package-ecosystem: "gomod"
+  open-pull-requests-limit: 5
+  schedule:
+    interval: "weekly"
+    day: "monday"
+  target-branch: release-0.11
+  groups:
+    kubernetes:
+      patterns: ["k8s.io/*"]
+    capi:
+      patterns: ["sigs.k8s.io/cluster-api", "sigs.k8s.io/cluster-api/test"]
+  commit-message:
+    prefix: ":seedling:"
+    include: scope
+  ignore:
+  # Ignore controller-runtime major and minor bumps as its upgraded manually.
+  - dependency-name: "sigs.k8s.io/controller-runtime"
+    update-types: ["version-update:semver-major", "version-update:semver-minor"]
+  # Ignore k8s major and minor bumps and its transitives modules
+  - dependency-name: "k8s.io/*"
+    update-types: ["version-update:semver-major", "version-update:semver-minor"]
+  - dependency-name: "sigs.k8s.io/controller-tools"
+    update-types: ["version-update:semver-major", "version-update:semver-minor"]
+  # We will need k8s v0.31.3 to bump structured-merge-diff to v4.4.2 (check git history for details).
+  - dependency-name: "sigs.k8s.io/structured-merge-diff/*"
+  labels:
+    - "area/dependency"
+    - "ok-to-test"
+## release-0.11 branch config ends here
