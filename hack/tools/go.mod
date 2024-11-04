@@ -5,7 +5,7 @@ go 1.22.0
 require (
 	github.com/a8m/envsubst v1.2.0
 	github.com/ahmetb/gen-crd-api-reference-docs v0.3.1-0.20220420215017-3f29e6853552
-	github.com/itchyny/gojq v0.12.2
+	github.com/itchyny/gojq v0.12.16
 	github.com/onsi/ginkgo/v2 v2.21.0
 	go.uber.org/mock v0.4.0
 	k8s.io/code-generator v0.31.2
@@ -58,8 +58,7 @@ require (
 	github.com/hashicorp/go-version v1.7.0 // indirect
 	github.com/imdario/mergo v0.3.15 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/itchyny/go-flags v1.5.0 // indirect
-	github.com/itchyny/timefmt-go v0.1.2 // indirect
+	github.com/itchyny/timefmt-go v0.1.6 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/k-orc/openstack-resource-controller v0.0.0-00010101000000-000000000000 // indirect
@@ -68,7 +67,7 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/mattn/go-runewidth v0.0.14 // indirect
+	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
@@ -80,7 +79,7 @@ require (
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.55.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
-	github.com/rivo/uniseg v0.4.2 // indirect
+	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cobra v1.8.1 // indirect
