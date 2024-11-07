@@ -6,7 +6,7 @@ require (
 	k8s.io/apimachinery v0.30.6
 	k8s.io/code-generator v0.30.6
 	k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340
-	sigs.k8s.io/cluster-api v1.8.4
+	sigs.k8s.io/cluster-api v1.8.5
 )
 
 require (
