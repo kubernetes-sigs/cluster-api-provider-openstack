@@ -12,7 +12,7 @@ require (
 	sigs.k8s.io/cluster-api-provider-openstack v0.0.0
 	sigs.k8s.io/cluster-api/hack/tools v0.0.0-20221129083400-679ae3e9e6b6
 	sigs.k8s.io/controller-runtime/tools/setup-envtest v0.0.0-20230926180527-c93e2abcb28e
-	sigs.k8s.io/controller-tools v0.16.4
+	sigs.k8s.io/controller-tools v0.16.5
 	sigs.k8s.io/kustomize/kustomize/v5 v5.2.1
 )
 
@@ -28,7 +28,7 @@ require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/emicklei/go-restful/v3 v3.12.1 // indirect
 	github.com/evanphx/json-patch/v5 v5.9.0 // indirect
-	github.com/fatih/color v1.17.0 // indirect
+	github.com/fatih/color v1.18.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
