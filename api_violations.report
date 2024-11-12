@@ -66,7 +66,10 @@ API rule violation: list_type_missing,sigs.k8s.io/cluster-api/api/v1beta1,Cluste
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api/api/v1beta1,ClusterClassSpec,Variables
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api/api/v1beta1,ClusterClassStatus,Variables
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api/api/v1beta1,ClusterClassStatusVariable,Definitions
+API rule violation: list_type_missing,sigs.k8s.io/cluster-api/api/v1beta1,JSONSchemaProps,AllOf
+API rule violation: list_type_missing,sigs.k8s.io/cluster-api/api/v1beta1,JSONSchemaProps,AnyOf
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api/api/v1beta1,JSONSchemaProps,Enum
+API rule violation: list_type_missing,sigs.k8s.io/cluster-api/api/v1beta1,JSONSchemaProps,OneOf
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api/api/v1beta1,JSONSchemaProps,Required
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api/api/v1beta1,MachineHealthCheckClass,UnhealthyConditions
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api/api/v1beta1,MachineHealthCheckSpec,UnhealthyConditions
@@ -148,6 +151,13 @@ API rule violation: names_match,sigs.k8s.io/cluster-api-provider-openstack/api/v
 API rule violation: names_match,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1,Router,IPs
 API rule violation: names_match,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1,SubnetFilter,IPv6AddressMode
 API rule violation: names_match,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1,SubnetFilter,IPv6RAMode
+API rule violation: names_match,sigs.k8s.io/cluster-api/api/v1beta1,ClusterClassStatus,V1Beta2
+API rule violation: names_match,sigs.k8s.io/cluster-api/api/v1beta1,ClusterStatus,V1Beta2
+API rule violation: names_match,sigs.k8s.io/cluster-api/api/v1beta1,JSONSchemaProps,XIntOrString
 API rule violation: names_match,sigs.k8s.io/cluster-api/api/v1beta1,JSONSchemaProps,XMetadata
 API rule violation: names_match,sigs.k8s.io/cluster-api/api/v1beta1,JSONSchemaProps,XPreserveUnknownFields
 API rule violation: names_match,sigs.k8s.io/cluster-api/api/v1beta1,JSONSchemaProps,XValidations
+API rule violation: names_match,sigs.k8s.io/cluster-api/api/v1beta1,MachineDeploymentStatus,V1Beta2
+API rule violation: names_match,sigs.k8s.io/cluster-api/api/v1beta1,MachineHealthCheckStatus,V1Beta2
+API rule violation: names_match,sigs.k8s.io/cluster-api/api/v1beta1,MachineSetStatus,V1Beta2
+API rule violation: names_match,sigs.k8s.io/cluster-api/api/v1beta1,MachineStatus,V1Beta2
