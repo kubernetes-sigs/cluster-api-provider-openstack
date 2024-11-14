@@ -66,6 +66,7 @@ const (
 	waitForClusterInfrastructureReadyDuration = 15 * time.Second
 	waitForInstanceBecomeActiveToReconcile    = 60 * time.Second
 	waitForBuildingInstanceToReconcile        = 10 * time.Second
+	deleteServerRequeueDelay                  = 10 * time.Second
 )
 
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackmachines,verbs=get;list;watch;create;update;patch;delete
@@ -265,7 +266,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, scope 
 		// If the server was found, we need to wait for it to be deleted before
 		// removing the OpenStackMachine finalizer.
 		scope.Logger().Info("Waiting for server to be deleted before removing finalizer")
-		return ctrl.Result{}, nil
+		return ctrl.Result{RequeueAfter: deleteServerRequeueDelay}, nil
 	}
 
 	controllerutil.RemoveFinalizer(openStackMachine, infrav1.MachineFinalizer)
