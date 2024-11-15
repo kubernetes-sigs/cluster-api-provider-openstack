@@ -756,7 +756,7 @@ func getOrCreateMachinePorts(openStackMachine *infrav1.OpenStackMachine, network
 		return nil
 	}
 
-	if err := networkingService.CreatePorts(openStackMachine, desiredPorts, resources); err != nil {
+	if err := networkingService.EnsurePorts(openStackMachine, desiredPorts, resources); err != nil {
 		return fmt.Errorf("creating ports: %w", err)
 	}
 

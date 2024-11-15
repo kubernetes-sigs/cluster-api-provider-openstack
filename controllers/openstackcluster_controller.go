@@ -620,7 +620,7 @@ func getOrCreateBastionPorts(openStackCluster *infrav1.OpenStackCluster, network
 		return nil
 	}
 
-	err := networkingService.CreatePorts(openStackCluster, desiredPorts, resources)
+	err := networkingService.EnsurePorts(openStackCluster, desiredPorts, resources)
 	if err != nil {
 		return fmt.Errorf("failed to create ports for bastion %s: %w", bastionName(openStackCluster.Name), err)
 	}
