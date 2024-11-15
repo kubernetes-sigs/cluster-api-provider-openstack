@@ -418,11 +418,7 @@ func getOrCreateServerPorts(openStackServer *infrav1alpha1.OpenStackServer, netw
 	}
 	desiredPorts := resolved.Ports
 
-	if len(desiredPorts) == len(resources.Ports) {
-		return nil
-	}
-
-	if err := networkingService.CreatePorts(openStackServer, desiredPorts, resources); err != nil {
+	if err := networkingService.EnsurePorts(openStackServer, desiredPorts, resources); err != nil {
 		return fmt.Errorf("creating ports: %w", err)
 	}
 

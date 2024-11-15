@@ -479,6 +479,7 @@ func Test_OpenStackServerReconcileCreate(t *testing.T) {
 				listDefaultPortsNotFound(r)
 				createDefaultPort(r)
 				listDefaultServerNotFound(r)
+				listDefaultPortsNotFound(r)
 				createDefaultServer(r)
 			},
 		},
@@ -499,6 +500,7 @@ func Test_OpenStackServerReconcileCreate(t *testing.T) {
 				},
 			},
 			expect: func(r *recorders) {
+				listDefaultPorts(r)
 				listDefaultPorts(r)
 				listDefaultServerFound(r)
 			},
