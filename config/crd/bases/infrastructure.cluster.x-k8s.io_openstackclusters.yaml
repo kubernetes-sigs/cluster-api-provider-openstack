@@ -4912,6 +4912,16 @@ spec:
             required:
             - identityRef
             type: object
+            x-kubernetes-validations:
+            - message: bastion floating IP cannot be set when disableExternalNetwork
+                is true
+              rule: 'has(self.disableExternalNetwork) && self.disableExternalNetwork
+                ? !has(self.bastion) || !has(self.bastion.floatingIP) : true'
+            - message: disableAPIServerFloatingIP cannot be false when disableExternalNetwork
+                is true
+              rule: 'has(self.disableExternalNetwork) && self.disableExternalNetwork
+                ? has(self.disableAPIServerFloatingIP) && self.disableAPIServerFloatingIP
+                : true'
           status:
             description: OpenStackClusterStatus defines the observed state of OpenStackCluster.
             properties:
