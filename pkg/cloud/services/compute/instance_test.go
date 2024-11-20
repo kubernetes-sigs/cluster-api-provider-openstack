@@ -366,7 +366,6 @@ func TestService_ReconcileInstance(t *testing.T) {
 				Description: portOpts["description"].(string),
 			}, nil
 		})
-		networkRecorder.ReplaceAllAttributesTags("ports", portUUID, attributestags.ReplaceAllOpts{Tags: []string{"test-tag"}}).Return(nil, nil)
 	}
 
 	// Expected calls if we delete the network port
@@ -460,6 +459,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				expectDefaultImageAndFlavor(r.compute, r.image)
 
 				expectCreateServer(r.compute, getDefaultServerMap(), false)
+				r.network.ReplaceAllAttributesTags("ports", portUUID, attributestags.ReplaceAllOpts{Tags: []string{"test-tag"}}).Return(nil, nil)
 				expectServerPollSuccess(r.compute)
 			},
 			wantErr: false,
@@ -472,6 +472,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				expectDefaultImageAndFlavor(r.compute, r.image)
 
 				expectCreateServer(r.compute, getDefaultServerMap(), true)
+				r.network.ReplaceAllAttributesTags("ports", portUUID, attributestags.ReplaceAllOpts{Tags: []string{"test-tag"}}).Return(nil, nil)
 
 				// Make sure we delete ports
 				expectCleanupDefaultPort(r.network)
@@ -491,6 +492,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 			expect: func(r *recorders) {
 				expectDefaultImageAndFlavor(r.compute, r.image)
 				expectUseExistingDefaultPort(r.network)
+				r.network.ReplaceAllAttributesTags("ports", portUUID, attributestags.ReplaceAllOpts{Tags: []string{"test-tag"}}).Return(nil, nil)
 
 				// Looking up the second port fails
 				r.network.ListPort(ports.ListOpts{
@@ -511,6 +513,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				expectDefaultImageAndFlavor(r.compute, r.image)
 
 				expectCreateServer(r.compute, getDefaultServerMap(), false)
+				r.network.ReplaceAllAttributesTags("ports", portUUID, attributestags.ReplaceAllOpts{Tags: []string{"test-tag"}}).Return(nil, nil)
 				expectServerPoll(r.compute, []string{"BUILDING", "ACTIVE"})
 			},
 			wantErr: false,
@@ -523,6 +526,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				expectDefaultImageAndFlavor(r.compute, r.image)
 
 				expectCreateServer(r.compute, getDefaultServerMap(), false)
+				r.network.ReplaceAllAttributesTags("ports", portUUID, attributestags.ReplaceAllOpts{Tags: []string{"test-tag"}}).Return(nil, nil)
 				expectServerPoll(r.compute, []string{"BUILDING", "ERROR"})
 
 				// Don't delete ports because the server is created: DeleteInstance will do it
@@ -567,6 +571,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 					},
 				}
 				expectCreateServer(r.compute, createMap, false)
+				r.network.ReplaceAllAttributesTags("ports", portUUID, attributestags.ReplaceAllOpts{Tags: []string{"test-tag"}}).Return(nil, nil)
 				expectServerPollSuccess(r.compute)
 
 				// Don't delete ports because the server is created: DeleteInstance will do it
@@ -614,6 +619,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 					},
 				}
 				expectCreateServer(r.compute, createMap, false)
+				r.network.ReplaceAllAttributesTags("ports", portUUID, attributestags.ReplaceAllOpts{Tags: []string{"test-tag"}}).Return(nil, nil)
 				expectServerPollSuccess(r.compute)
 
 				// Don't delete ports because the server is created: DeleteInstance will do it
@@ -631,6 +637,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 			},
 			expect: func(r *recorders) {
 				expectUseExistingDefaultPort(r.network)
+				r.network.ReplaceAllAttributesTags("ports", portUUID, attributestags.ReplaceAllOpts{Tags: []string{"test-tag"}}).Return(nil, nil)
 				expectDefaultImageAndFlavor(r.compute, r.image)
 
 				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
@@ -679,6 +686,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 			},
 			expect: func(r *recorders) {
 				expectUseExistingDefaultPort(r.network)
+				r.network.ReplaceAllAttributesTags("ports", portUUID, attributestags.ReplaceAllOpts{Tags: []string{"test-tag"}}).Return(nil, nil)
 				expectDefaultImageAndFlavor(r.compute, r.image)
 
 				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
@@ -767,6 +775,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 			},
 			expect: func(r *recorders) {
 				expectUseExistingDefaultPort(r.network)
+				r.network.ReplaceAllAttributesTags("ports", portUUID, attributestags.ReplaceAllOpts{Tags: []string{"test-tag"}}).Return(nil, nil)
 				expectDefaultImageAndFlavor(r.compute, r.image)
 
 				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-etcd", openStackMachineName)}).
@@ -836,6 +845,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 			},
 			expect: func(r *recorders) {
 				expectUseExistingDefaultPort(r.network)
+				r.network.ReplaceAllAttributesTags("ports", portUUID, attributestags.ReplaceAllOpts{Tags: []string{"test-tag"}}).Return(nil, nil)
 				expectDefaultImageAndFlavor(r.compute, r.image)
 
 				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-etcd", openStackMachineName)}).
@@ -893,6 +903,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 			},
 			expect: func(r *recorders) {
 				expectUseExistingDefaultPort(r.network)
+				r.network.ReplaceAllAttributesTags("ports", portUUID, attributestags.ReplaceAllOpts{Tags: []string{"test-tag"}}).Return(nil, nil)
 				expectDefaultImageAndFlavor(r.compute, r.image)
 
 				// Make sure we delete ports
@@ -918,6 +929,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				r.network.ListExtensions().Return(extensions, nil)
 
 				expectCreatePort(r.network, portName, networkUUID)
+				r.network.ReplaceAllAttributesTags("ports", portUUID, attributestags.ReplaceAllOpts{Tags: []string{"test-tag"}}).Return(nil, nil)
 
 				// Check for existing trunk
 				r.network.ListTrunk(newGomegaMockMatcher(

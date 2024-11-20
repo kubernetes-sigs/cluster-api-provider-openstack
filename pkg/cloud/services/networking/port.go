@@ -54,6 +54,32 @@ func (s *Service) GetPortFromInstanceIP(instanceID string, ip string) ([]ports.P
 	return s.client.ListPort(portOpts)
 }
 
+// ensurePortTagsAndTrunk tags the specified port and checks if a trunk is needed.
+// If required, it creates and tags the trunk.
+func (s *Service) ensurePortTagsAndTrunk(eventObject runtime.Object, clusterName string, port *ports.Port, portOpts *infrav1.PortOpts, instanceTags []string) error {
+	var tags []string
+	tags = append(tags, instanceTags...)
+	tags = append(tags, portOpts.Tags...)
+	if len(tags) > 0 {
+		if err := s.replaceAllAttributesTags(eventObject, portResource, port.ID, tags); err != nil {
+			record.Warnf(eventObject, "FailedReplaceTags", "Failed to replace port tags %s: %v", port.Name, err)
+			return err
+		}
+	}
+	if portOpts.Trunk != nil && *portOpts.Trunk {
+		trunk, err := s.getOrCreateTrunk(eventObject, clusterName, port.Name, port.ID)
+		if err != nil {
+			record.Warnf(eventObject, "FailedCreateTrunk", "Failed to create trunk for port %s: %v", port.Name, err)
+			return err
+		}
+		if err = s.replaceAllAttributesTags(eventObject, trunkResource, trunk.ID, tags); err != nil {
+			record.Warnf(eventObject, "FailedReplaceTags", "Failed to replace trunk tags %s: %v", port.Name, err)
+			return err
+		}
+	}
+	return nil
+}
+
 func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string, portName string, portOpts *infrav1.PortOpts, instanceSecurityGroups []string, instanceTags []string) (*ports.Port, error) {
 	networkID := portOpts.Network.ID
 
@@ -66,7 +92,11 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 	}
 
 	if len(existingPorts) == 1 {
-		return &existingPorts[0], nil
+		port := &existingPorts[0]
+		if err := s.ensurePortTagsAndTrunk(eventObject, clusterName, port, portOpts, instanceTags); err != nil {
+			return nil, err
+		}
+		return port, nil
 	}
 
 	if len(existingPorts) > 1 {
@@ -166,27 +196,10 @@ func (s *Service) GetOrCreatePort(eventObject runtime.Object, clusterName string
 		return nil, err
 	}
 
-	var tags []string
-	tags = append(tags, instanceTags...)
-	tags = append(tags, portOpts.Tags...)
-	if len(tags) > 0 {
-		if err = s.replaceAllAttributesTags(eventObject, portResource, port.ID, tags); err != nil {
-			record.Warnf(eventObject, "FailedReplaceTags", "Failed to replace port tags %s: %v", portName, err)
-			return nil, err
-		}
+	if err := s.ensurePortTagsAndTrunk(eventObject, clusterName, port, portOpts, instanceTags); err != nil {
+		return nil, err
 	}
 	record.Eventf(eventObject, "SuccessfulCreatePort", "Created port %s with id %s", port.Name, port.ID)
-	if portOpts.Trunk != nil && *portOpts.Trunk {
-		trunk, err := s.getOrCreateTrunk(eventObject, clusterName, port.Name, port.ID)
-		if err != nil {
-			record.Warnf(eventObject, "FailedCreateTrunk", "Failed to create trunk for port %s: %v", portName, err)
-			return nil, err
-		}
-		if err = s.replaceAllAttributesTags(eventObject, trunkResource, trunk.ID, tags); err != nil {
-			record.Warnf(eventObject, "FailedReplaceTags", "Failed to replace trunk tags %s: %v", portName, err)
-			return nil, err
-		}
-	}
 
 	return port, nil
 }
