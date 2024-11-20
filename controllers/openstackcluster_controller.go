@@ -33,7 +33,6 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
-	capierrors "sigs.k8s.io/cluster-api/errors"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/annotations"
 	"sigs.k8s.io/cluster-api/util/collections"
@@ -886,7 +885,7 @@ func (r *OpenStackClusterReconciler) SetupWithManager(ctx context.Context, mgr c
 
 func handleUpdateOSCError(openstackCluster *infrav1.OpenStackCluster, message error, isFatal bool) {
 	if isFatal {
-		err := capierrors.UpdateClusterError
+		err := capoerrors.DeprecatedCAPOUpdateClusterError
 		openstackCluster.Status.FailureReason = &err
 		openstackCluster.Status.FailureMessage = ptr.To(message.Error())
 	}

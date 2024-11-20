@@ -19,7 +19,8 @@ package v1alpha7
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
-	capierrors "sigs.k8s.io/cluster-api/errors"
+
+	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 )
 
 const (
@@ -207,7 +208,7 @@ type OpenStackClusterStatus struct {
 	// OpenStackClusters can be added as events to the OpenStackCluster object
 	// and/or logged in the controller's output.
 	// +optional
-	FailureReason *capierrors.ClusterStatusError `json:"failureReason,omitempty"`
+	FailureReason *capoerrors.DeprecatedCAPIClusterStatusError `json:"failureReason,omitempty"`
 
 	// FailureMessage will be set in the event that there is a terminal problem
 	// reconciling the OpenStackCluster and will contain a more verbose string suitable
