@@ -19,6 +19,8 @@ include $(ROOT_DIR_RELATIVE)/common.mk
 # If you update this file, please follow
 # https://www.thapaliya.com/en/writings/well-documented-makefiles/
 
+export GOTOOLCHAIN=go1.22.8
+
 # Active module mode, as we use go modules to manage dependencies
 export GO111MODULE=on
 unexport GOPATH
