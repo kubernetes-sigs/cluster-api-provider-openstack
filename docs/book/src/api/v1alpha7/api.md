@@ -2179,9 +2179,7 @@ BastionStatus
 <td>
 <code>failureReason</code><br/>
 <em>
-<a href="https://pkg.go.dev/sigs.k8s.io/cluster-api@v1.5.1/errors#ClusterStatusError">
-sigs.k8s.io/cluster-api/errors.ClusterStatusError
-</a>
+sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors.DeprecatedCAPIClusterStatusError
 </em>
 </td>
 <td>
@@ -2974,9 +2972,7 @@ InstanceState
 <td>
 <code>failureReason</code><br/>
 <em>
-<a href="https://pkg.go.dev/sigs.k8s.io/cluster-api@v1.5.1/errors#MachineStatusError">
-sigs.k8s.io/cluster-api/errors.MachineStatusError
-</a>
+sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors.DeprecatedCAPIMachineStatusError
 </em>
 </td>
 <td>

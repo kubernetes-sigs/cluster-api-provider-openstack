@@ -30,7 +30,6 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
-	capierrors "sigs.k8s.io/cluster-api/errors"
 	ipamv1 "sigs.k8s.io/cluster-api/exp/ipam/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/annotations"
@@ -51,6 +50,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/loadbalancer"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
+	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 )
 
 // OpenStackMachineReconciler reconciles a OpenStackMachine object.
@@ -298,7 +298,7 @@ func removeAPIServerEndpoint(scope *scope.WithLogger, openStackCluster *infrav1.
 		instanceNS, err := instanceStatus.NetworkStatus()
 		if err != nil {
 			openStackMachine.SetFailure(
-				capierrors.UpdateMachineError,
+				capoerrors.DeprecatedCAPIUpdateMachineError,
 				fmt.Errorf("get network status for OpenStack instance %s with ID %s: %v", instanceStatus.Name(), instanceStatus.ID(), err),
 			)
 			return nil
@@ -437,7 +437,7 @@ func (r *OpenStackMachineReconciler) reconcileMachineState(scope *scope.WithLogg
 		scope.Logger().Info("Machine instance state is ERROR", "id", openStackServer.Status.InstanceID)
 		if machine.Status.NodeRef == nil {
 			err := fmt.Errorf("instance state %v is unexpected", openStackServer.Status.InstanceState)
-			openStackMachine.SetFailure(capierrors.UpdateMachineError, err)
+			openStackMachine.SetFailure(capoerrors.DeprecatedCAPIUpdateMachineError, err)
 		}
 		conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceStateErrorReason, clusterv1.ConditionSeverityError, "")
 		return &ctrl.Result{}

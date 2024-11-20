@@ -587,8 +587,8 @@ spec:
                   controller's output.
                 type: string
               failureReason:
-                description: MachineStatusError defines errors states for Machine
-                  objects.
+                description: DeprecatedCAPIMachineStatusError defines errors states
+                  for Machine objects.
                 type: string
               instanceState:
                 description: InstanceState is the state of the OpenStack instance
@@ -1111,8 +1111,8 @@ spec:
                   controller's output.
                 type: string
               failureReason:
-                description: MachineStatusError defines errors states for Machine
-                  objects.
+                description: DeprecatedCAPIMachineStatusError defines errors states
+                  for Machine objects.
                 type: string
               instanceState:
                 description: InstanceState is the state of the OpenStack instance
@@ -2133,8 +2133,8 @@ spec:
                   controller's output.
                 type: string
               failureReason:
-                description: MachineStatusError defines errors states for Machine
-                  objects.
+                description: DeprecatedCAPIMachineStatusError defines errors states
+                  for Machine objects.
                 type: string
               instanceID:
                 description: InstanceID is the OpenStack instance ID for this machine.
