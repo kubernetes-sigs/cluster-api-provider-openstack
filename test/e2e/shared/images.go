@@ -79,7 +79,7 @@ func CoreImages(e2eCtx *E2EContext) []DownloadImage {
 		},
 		{
 			Name:         "capo-default",
-			ArtifactPath: "ubuntu/2024-05-28/" + e2eCtx.E2EConfig.GetVariable("OPENSTACK_IMAGE_NAME") + ".img",
+			ArtifactPath: "ubuntu/2024-11-21/" + e2eCtx.E2EConfig.GetVariable("OPENSTACK_IMAGE_NAME") + ".img",
 		},
 	}
 }
