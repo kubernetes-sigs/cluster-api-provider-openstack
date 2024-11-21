@@ -150,9 +150,9 @@ providers:
 variables:
   # used to ensure we deploy to the correct management cluster
   KUBE_CONTEXT: "kind-capo-e2e"
-  KUBERNETES_VERSION: "v1.30.1"
-  KUBERNETES_VERSION_UPGRADE_FROM: "v1.29.5"
-  KUBERNETES_VERSION_UPGRADE_TO: "v1.30.1"
+  KUBERNETES_VERSION: "v1.31.2"
+  KUBERNETES_VERSION_UPGRADE_FROM: "v1.30.1"
+  KUBERNETES_VERSION_UPGRADE_TO: "v1.31.2"
   # NOTE: To see default images run kubeadm config images list (optionally with --kubernetes-version=vX.Y.Z)
   ETCD_VERSION_UPGRADE_TO: "3.5.12-0"
   COREDNS_VERSION_UPGRADE_TO: "v1.11.1"
@@ -172,8 +172,8 @@ variables:
   OPENSTACK_DNS_NAMESERVERS: "8.8.8.8"
   OPENSTACK_FAILURE_DOMAIN: "testaz1"
   OPENSTACK_FAILURE_DOMAIN_ALT: "testaz2"
-  OPENSTACK_IMAGE_NAME: "ubuntu-2204-kube-v1.30.1"
-  OPENSTACK_IMAGE_NAME_UPGRADE_FROM: "ubuntu-2204-kube-v1.29.5"
+  OPENSTACK_IMAGE_NAME: "ubuntu-2404-kube-v1.31.2"
+  OPENSTACK_IMAGE_NAME_UPGRADE_FROM: "ubuntu-2204-kube-v1.30.1"
   OPENSTACK_NODE_MACHINE_FLAVOR: "m1.small"
   OPENSTACK_SSH_KEY_NAME: "cluster-api-provider-openstack-sigs-k8s-io"
   # The default external network created by devstack
