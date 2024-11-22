@@ -34,7 +34,38 @@
 
 # Development Guide
 
-This document explains how to develop Cluster API Provider OpenStack.
+This document explains how to develop Cluster API Provider OpenStack (CAPO).
+Note that CAPO depends on ORC. No matter how you choose to work, you will need to deploy ORC in order to make CAPO functional:
+
+```bash
+kubectl apply -f https://github.com/k-orc/openstack-resource-controller/releases/download/v1.0.0/install.yaml
+```
+
+TL;DR: Here is a short version for how to develop with Tilt:
+
+1. Create a devstack
+2. Run tilt, configured through the Cluster API repository
+3. Install ORC
+4. Create a secret with the clouds.yaml to match the devstack
+5. Add images to the devstack
+
+```bash
+# Create Devstack
+export RESOURCE_TYPE=...
+./hack/ci/create_devstack.sh
+# Start tilt (separate terminal in cluster-api repo)
+# NOTE: Configure tilt-settings.yaml first! See below.
+make tilt-up
+# Back in CAPO repo
+# Install ORC
+kubectl apply -f https://github.com/k-orc/openstack-resource-controller/releases/download/v1.0.0/install.yaml
+# Create secret with clouds.yaml (the file is created by create_devstack.sh)
+kubectl create secret generic dev-test-cloud-config --from-file=clouds.yaml
+# Add images to use in the tests
+clusterctl generate yaml --from templates/images-template.yaml | kubectl apply -f -
+```
+
+At this point, you should be able to apply the `dev-test` ClusterClass and start creating/deleting `development` clusters through the Tilt UI.
 
 ## Using your own capi-openstack controller image for testing cluster creation or deletion
 
@@ -60,6 +91,15 @@ make docker-build docker-push
 ### Using your own capi-openstack controller image
 
 After generating `infrastructure-components.yaml`, replace the `us.gcr.io/k8s-artifacts-prod/capi-openstack/capi-openstack-controller:v0.3.4` with your image.
+
+## Automatically Adding Images to OpenStack
+
+Before you can create a Cluster, you will need a suitable image in OpenStack.
+There is a convenient template available in `templates/images-template.yaml` for this purpose.
+
+```bash
+clusterctl generate yaml --from templates/images-template.yaml | kubectl apply -f -
+```
 
 ## Testing Cluster Creation using the 'dev-test' ClusterClass with Tilt
 
@@ -93,6 +133,8 @@ kustomize_substitutions:
   OPENSTACK_NODE_MACHINE_FLAVOR: "<openstack_node_machine_flavor>"
   # [Optional] OpenStack Cloud Environment (Default: capo-e2e)
   OPENSTACK_CLOUD: "<openstack_cloud>"
+  # See templates/cluster-template-development.yaml and
+  # templates/clusterclass-dev-test.yaml for more variables.
 
 # [Optional] Automatically apply a kustomization, e.g. for adding the clouds.yaml secret
 additional_kustomizations:
@@ -107,8 +149,7 @@ After a while, you should be able to find resources called `CAPO.clusterclasses`
 These shoud correspond to what exists in the `templates` folder and you should see widgets for applying and deleting them.
 
 **Note:** When you apply a cluster template, there will be a `KUBERNETES_VERSION` variable.
-This variable is used to pick the image used!
-Ensure that an image named `ubuntu-2204-kube-{{ KUBERNETES_VERSION }}` is available in your environment, corresponding to that Kubernetes version.
+Make sure that the image or sysext overlay you use exists for and works with that version!
 
 **Note:** All clusters created from the dev-test ClusterClass will require a secret named `dev-test-cloud-config` with the `clouds.yaml` to be used by CAPO for interacting with OpenStack.
 You can create it manually or see below how to make Tilt automate it.
@@ -196,7 +237,7 @@ kubectl create secret generic dev-test-cloud-config --from-file=clouds.yaml
 You can use `clusterctl` to render the ClusterClass:
 
 ```bash
-clusterctl generate yaml  --from templates/clusterclass-dev-test.yaml
+clusterctl generate yaml  --from templates/clusterclass-dev-test.yaml | kubectl apply -f -
 ```
 
 Create a cluster using the development template, that makes use of the ClusterClass:
@@ -324,8 +365,9 @@ The entry point for the creation of the DevStack environment is the [create_devs
 - AWS: [aws-project.sh][hack-ci-aws-project]
 - GCE: [gce-project.sh][hack-ci-gce-project]
 - OpenStack: [openstack.sh][hack-ci-openstack]
+- Libvirt: [libvirt.sh][hack-ci-libvirt]
 
-You can switch between these cloud providers, by setting the `RESOURCE_TYPE` environment variable to `aws-project`, `gce-project` or `openstack` respectively.
+You can switch between these cloud providers, by setting the `RESOURCE_TYPE` environment variable to `aws-project`, `gce-project`, `openstack` or `libvirt` respectively.
 
 ##### OpenStack
 
@@ -493,6 +535,7 @@ $ sudo ln -s /run/user/$(id -u)/podman/podman.sock /var/run/docker.sock
 [hack-ci-create-devstack]: https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/hack/ci/create_devstack.sh
 [hack-ci-gce-project]: https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/hack/ci/gce-project.sh
 [hack-ci-openstack]: https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/hack/ci/openstack.sh
+[hack-ci-libvirt]: https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/hack/ci/libvirt.sh
 
 ## API concepts
 

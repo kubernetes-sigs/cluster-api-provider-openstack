@@ -20,20 +20,61 @@ spec:
       name: dev-test-openstackcluster
   workers:
     machineDeployments:
-      - class: default-worker
-        template:
-          bootstrap:
-            ref:
-              apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
-              kind: KubeadmConfigTemplate
-              name: dev-test-default-worker-bootstraptemplate
-          infrastructure:
-            ref:
-              apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
-              kind: OpenStackMachineTemplate
-              name: dev-test-default-worker-machine
+    - class: default-worker
+      template:
+        bootstrap:
+          ref:
+            apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+            kind: KubeadmConfigTemplate
+            name: dev-test-default-worker-bootstraptemplate
+        infrastructure:
+          ref:
+            apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+            kind: OpenStackMachineTemplate
+            name: dev-test-default-worker-machine
+  variables:
+  - name: identityRef
+    required: false
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          name:
+            type: string
+            description: "The name of the OpenStackCloudConfigSecret."
+            default: dev-test-cloud-config
+          cloudName:
+            type: string
+            description: "The name of the cloud in the OpenStackCloudConfigSecret."
+            default: capo-e2e
+  - name: imageName
+    required: false
+    schema:
+      openAPIV3Schema:
+        type: string
+        description: |
+          The base name of the OpenStack image that is used for creating the servers.
+          This will be combined with the k8s version to create the full name. E.g. imageName-v1.31.2.
+        default: "ubuntu-2404-kube"
+  - name: addImageVersion
+    required: false
+    schema:
+      openAPIV3Schema:
+        type: boolean
+        description: |
+          Add a suffix with the Kubernetes version to the imageName. E.g. imageName-v1.32.2.
+        default: true
+  - name: injectIgnitionSysext
+    required: false
+    schema:
+      openAPIV3Schema:
+        type: boolean
+        description: |
+          Use a sysext overlay to add the Kubernetes components to the image.
+          This is for use with flatcar and similar images.
+        default: false
   patches:
-  - name: controlPlaneImage
+  - name: image
     description: "Sets the OpenStack image that is used for creating the servers."
     definitions:
     - selector:
@@ -46,10 +87,7 @@ spec:
         path: /spec/template/spec/image/filter/name
         valueFrom:
           template: |
-            ubuntu-2204-kube-{{ .builtin.controlPlane.version }}
-  - name: workerImage
-    description: "Sets the OpenStack image that is used for creating the servers."
-    definitions:
+            {{ .imageName }}{{ if .addImageVersion }}-{{ .builtin.controlPlane.version }}{{ end }}
     - selector:
         apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
         kind: OpenStackMachineTemplate
@@ -62,7 +100,189 @@ spec:
         path: /spec/template/spec/image/filter/name
         valueFrom:
           template: |
-            ubuntu-2204-kube-{{ .builtin.machineDeployment.version }}
+            {{ .imageName }}{{ if .addImageVersion }}-{{ .builtin.machineDeployment.version }}{{ end }}
+  - name: identityRef
+    description: "Sets the OpenStack identity reference."
+    definitions:
+    - selector:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+        kind: OpenStackClusterTemplate
+        matchResources:
+          infrastructureCluster: true
+      jsonPatches:
+      - op: add
+        path: /spec/template/spec/identityRef
+        valueFrom:
+          variable: identityRef
+  - name: ignitionSysext
+    description: "Add the necessary ignition configuration for kube components through sysext."
+    enabledIf: "{{ .injectIgnitionSysext }}"
+    definitions:
+    - selector:
+        apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+        kind: KubeadmControlPlaneTemplate
+        matchResources:
+          controlPlane: true
+      jsonPatches:
+      - op: add
+        path: /spec/template/spec/kubeadmConfigSpec
+        valueFrom:
+          template: |
+            preKubeadmCommands:
+            - export COREOS_OPENSTACK_HOSTNAME=$${COREOS_OPENSTACK_HOSTNAME%.*}
+            - export COREOS_OPENSTACK_INSTANCE_UUID=$${COREOS_OPENSTACK_INSTANCE_UUID}
+            - envsubst < /etc/kubeadm.yml > /etc/kubeadm.yml.tmp
+            - mv /etc/kubeadm.yml.tmp /etc/kubeadm.yml
+            initConfiguration:
+              nodeRegistration:
+                name: $${COREOS_OPENSTACK_HOSTNAME}
+                kubeletExtraArgs:
+                  provider-id: openstack:///$${COREOS_OPENSTACK_INSTANCE_UUID}
+            joinConfiguration:
+              nodeRegistration:
+                name: $${COREOS_OPENSTACK_HOSTNAME}
+                kubeletExtraArgs:
+                  provider-id: openstack:///$${COREOS_OPENSTACK_INSTANCE_UUID}
+            format: ignition
+            ignition:
+              containerLinuxConfig:
+                additionalConfig: |
+                  {{- $version := semver .builtin.controlPlane.version }}
+                  {{- $minor := printf "v%d.%d" $version.Major $version.Minor }}
+                  storage:
+                    links:
+                      - path: /etc/extensions/kubernetes.raw
+                        hard: false
+                        target: /opt/extensions/kubernetes/kubernetes-{{ .builtin.controlPlane.version }}-x86-64.raw
+                    files:
+                      - path: /etc/sysupdate.kubernetes.d/kubernetes-{{ $minor }}.conf
+                        mode: 0644
+                        contents:
+                          remote:
+                            url: https://github.com/flatcar/sysext-bakery/releases/download/latest/kubernetes-{{ $minor }}.conf
+                      - path: /etc/sysupdate.d/noop.conf
+                        mode: 0644
+                        contents:
+                          remote:
+                            url: https://github.com/flatcar/sysext-bakery/releases/download/latest/noop.conf
+                      - path: /opt/extensions/kubernetes/kubernetes-{{ .builtin.controlPlane.version }}-x86-64.raw
+                        contents:
+                          remote:
+                            url: https://github.com/flatcar/sysext-bakery/releases/download/latest/kubernetes-{{ .builtin.controlPlane.version }}-x86-64.raw
+                  systemd:
+                    units:
+                      - name: systemd-sysupdate.service
+                        dropins:
+                          - name: kubernetes.conf
+                            contents: |
+                              [Service]
+                              ExecStartPre=/usr/bin/sh -c "readlink --canonicalize /etc/extensions/kubernetes.raw > /tmp/kubernetes"
+                              ExecStartPre=/usr/lib/systemd/systemd-sysupdate -C kubernetes update
+                              ExecStartPost=/usr/bin/sh -c "readlink --canonicalize /etc/extensions/kubernetes.raw > /tmp/kubernetes-new"
+                              ExecStartPost=/usr/bin/sh -c "if ! cmp --silent /tmp/kubernetes /tmp/kubernetes-new; then touch /run/reboot-required; fi"
+                      - name: update-engine.service
+                        # Set this to 'false' if you want to enable Flatcar auto-update
+                        mask: ${FLATCAR_DISABLE_AUTO_UPDATE:=true}
+                      - name: locksmithd.service
+                        # NOTE: To coordinate the node reboot in this context, we recommend to use Kured.
+                        mask: true
+                      - name: systemd-sysupdate.timer
+                        # Set this to 'true' if you want to enable the Kubernetes auto-update.
+                        # NOTE: Only patches version will be pulled.
+                        enabled: false
+                      - name: coreos-metadata-sshkeys@.service
+                        enabled: true
+                      - name: kubeadm.service
+                        enabled: true
+                        dropins:
+                          - name: 10-flatcar.conf
+                            contents: |
+                              [Unit]
+                              Requires=containerd.service coreos-metadata.service
+                              After=containerd.service coreos-metadata.service
+                              [Service]
+                              EnvironmentFile=/run/metadata/flatcar
+    - selector:
+        apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+        kind: KubeadmConfigTemplate
+        matchResources:
+          machineDeploymentClass:
+            names:
+            - default-worker
+      jsonPatches:
+      - op: add
+        path: /spec/template/spec
+        valueFrom:
+          template: |
+            preKubeadmCommands:
+            - export COREOS_OPENSTACK_HOSTNAME=$${COREOS_OPENSTACK_HOSTNAME%.*}
+            - export COREOS_OPENSTACK_INSTANCE_UUID=$${COREOS_OPENSTACK_INSTANCE_UUID}
+            - envsubst < /etc/kubeadm.yml > /etc/kubeadm.yml.tmp
+            - mv /etc/kubeadm.yml.tmp /etc/kubeadm.yml
+            joinConfiguration:
+              nodeRegistration:
+                name: $${COREOS_OPENSTACK_HOSTNAME}
+                kubeletExtraArgs:
+                  provider-id: openstack:///$${COREOS_OPENSTACK_INSTANCE_UUID}
+            format: ignition
+            ignition:
+              containerLinuxConfig:
+                additionalConfig: |
+                  {{- $version := semver .builtin.machineDeployment.version }}
+                  {{- $minor := printf "v%d.%d" $version.Major $version.Minor }}
+                  storage:
+                    links:
+                      - path: /etc/extensions/kubernetes.raw
+                        hard: false
+                        target: /opt/extensions/kubernetes/kubernetes-{{ .builtin.machineDeployment.version }}-x86-64.raw
+                    files:
+                      - path: /etc/sysupdate.kubernetes.d/kubernetes-{{ $minor }}.conf
+                        mode: 0644
+                        contents:
+                          remote:
+                            url: https://github.com/flatcar/sysext-bakery/releases/download/latest/kubernetes-{{ $minor }}.conf
+                      - path: /etc/sysupdate.d/noop.conf
+                        mode: 0644
+                        contents:
+                          remote:
+                            url: https://github.com/flatcar/sysext-bakery/releases/download/latest/noop.conf
+                      - path: /opt/extensions/kubernetes/kubernetes-{{ .builtin.machineDeployment.version }}-x86-64.raw
+                        contents:
+                          remote:
+                            url: https://github.com/flatcar/sysext-bakery/releases/download/latest/kubernetes-{{ .builtin.machineDeployment.version }}-x86-64.raw
+                  systemd:
+                    units:
+                      - name: systemd-sysupdate.service
+                        dropins:
+                          - name: kubernetes.conf
+                            contents: |
+                              [Service]
+                              ExecStartPre=/usr/bin/sh -c "readlink --canonicalize /etc/extensions/kubernetes.raw > /tmp/kubernetes"
+                              ExecStartPre=/usr/lib/systemd/systemd-sysupdate -C kubernetes update
+                              ExecStartPost=/usr/bin/sh -c "readlink --canonicalize /etc/extensions/kubernetes.raw > /tmp/kubernetes-new"
+                              ExecStartPost=/usr/bin/sh -c "if ! cmp --silent /tmp/kubernetes /tmp/kubernetes-new; then touch /run/reboot-required; fi"
+                      - name: update-engine.service
+                        # Set this to 'false' if you want to enable Flatcar auto-update
+                        mask: ${FLATCAR_DISABLE_AUTO_UPDATE:=true}
+                      - name: locksmithd.service
+                        # NOTE: To coordinate the node reboot in this context, we recommend to use Kured.
+                        mask: true
+                      - name: systemd-sysupdate.timer
+                        # Set this to 'true' if you want to enable the Kubernetes auto-update.
+                        # NOTE: Only patches version will be pulled.
+                        enabled: false
+                      - name: coreos-metadata-sshkeys@.service
+                        enabled: true
+                      - name: kubeadm.service
+                        enabled: true
+                        dropins:
+                          - name: 10-flatcar.conf
+                            contents: |
+                              [Unit]
+                              Requires=containerd.service coreos-metadata.service
+                              After=containerd.service coreos-metadata.service
+                              [Service]
+                              EnvironmentFile=/run/metadata/flatcar
 ---
 apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
 kind: KubeadmConfigTemplate
@@ -76,8 +296,8 @@ spec:
         nodeRegistration:
           kubeletExtraArgs:
             cloud-provider: external
-            provider-id: openstack:///'{{ instance_id }}'
-          name: '{{ local_hostname }}'
+            provider-id: "openstack:///{{ v1.instance_id }}"
+          name: "{{ v1.local_hostname }}"
 ---
 apiVersion: controlplane.cluster.x-k8s.io/v1beta1
 kind: KubeadmControlPlaneTemplate
@@ -94,19 +314,18 @@ spec:
           controllerManager:
             extraArgs:
               cloud-provider: external
-        files: []
         initConfiguration:
           nodeRegistration:
             kubeletExtraArgs:
               cloud-provider: external
-              provider-id: openstack:///'{{ instance_id }}'
-            name: '{{ local_hostname }}'
+              provider-id: "openstack:///{{ v1.instance_id }}"
+            name: "{{ v1.local_hostname }}"
         joinConfiguration:
           nodeRegistration:
             kubeletExtraArgs:
               cloud-provider: external
-              provider-id: openstack:///'{{ instance_id }}'
-            name: '{{ local_hostname }}'
+              provider-id: "openstack:///{{ v1.instance_id }}"
+            name: "{{ v1.local_hostname }}"
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: OpenStackClusterTemplate
