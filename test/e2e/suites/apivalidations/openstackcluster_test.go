@@ -178,6 +178,29 @@ var _ = Describe("OpenStackCluster API validations", func() {
 			Expect(createObj(cluster)).NotTo(Succeed(), "OpenStackCluster creation should not succeed")
 		})
 
+		It("should not allow a bastion floating IP with DisableExternalNetwork set to true", func() {
+			cluster.Spec.Bastion = &infrav1.Bastion{
+				Enabled: ptr.To(true),
+				Spec: &infrav1.OpenStackMachineSpec{
+					Flavor: ptr.To("flavor-name"),
+					Image: infrav1.ImageParam{
+						Filter: &infrav1.ImageFilter{
+							Name: ptr.To("fake-image"),
+						},
+					},
+				},
+				FloatingIP: ptr.To("10.0.0.0"),
+			}
+			cluster.Spec.DisableExternalNetwork = ptr.To(true)
+			Expect(createObj(cluster)).ToNot(Succeed(), "OpenStackCluster creation should not succeed")
+		})
+
+		It("should not allow DisableAPIServerFloatingIP to be false with DisableExternalNetwork set to true", func() {
+			cluster.Spec.DisableAPIServerFloatingIP = ptr.To(false)
+			cluster.Spec.DisableExternalNetwork = ptr.To(true)
+			Expect(createObj(cluster)).ToNot(Succeed(), "OpenStackCluster creation should not succeed")
+		})
+
 		// We must use unstructured to set values which can't be marshalled by the Go type
 		unstructuredClusterWithAPIPort := func(apiServerPort any) *unstructured.Unstructured {
 			obj, err := runtime.DefaultUnstructuredConverter.ToUnstructured(cluster)
