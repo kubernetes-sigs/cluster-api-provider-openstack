@@ -61,6 +61,15 @@ make docker-build docker-push
 
 After generating `infrastructure-components.yaml`, replace the `us.gcr.io/k8s-artifacts-prod/capi-openstack/capi-openstack-controller:v0.3.4` with your image.
 
+## Automatically Adding Images to OpenStack
+
+Before you can create a Cluster, you will need a suitable image in OpenStack.
+There is a convenient template available in `templates/images-template.yaml` for this purpose.
+
+```bash
+clusterctl generate yaml  --from templates/images-template.yaml | kubectl apply -f -
+```
+
 ## Testing Cluster Creation using the 'dev-test' ClusterClass with Tilt
 
 This guide demonstrates how to create a Kubernetes cluster using a ClusterClass, specifically designed for a development environment. It includes configuring secrets, applying the ClusterClass, and creating a cluster with Tilt.
@@ -196,7 +205,7 @@ kubectl create secret generic dev-test-cloud-config --from-file=clouds.yaml
 You can use `clusterctl` to render the ClusterClass:
 
 ```bash
-clusterctl generate yaml  --from templates/clusterclass-dev-test.yaml
+clusterctl generate yaml  --from templates/clusterclass-dev-test.yaml | kubectl apply -f -
 ```
 
 Create a cluster using the development template, that makes use of the ClusterClass:

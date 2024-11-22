@@ -11,3 +11,10 @@ spec:
       - class: default-worker
         name: md-0
         replicas: 1
+    variables:
+    - name: identityRef
+      value:
+        name: ${CLOUD_CONFIG_SECRET:=dev-test-cloud-config}
+        cloudName: ${OPENSTACK_CLOUD:=capo-e2e}
+    - name: imageBaseName
+      value: ${IMAGE_BASE_NAME:=ubuntu-2404-kube}
