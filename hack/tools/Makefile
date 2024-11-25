@@ -15,8 +15,6 @@
 ROOT_DIR_RELATIVE := ../..
 include $(ROOT_DIR_RELATIVE)/common.mk
 
-GOLANGCI_LINT_VERSION ?= v1.61.0
-
 # GOTESTSUM version without the leading 'v'
 GOTESTSUM_VERSION ?= 1.11.0
 
@@ -62,11 +60,6 @@ $(SHARE_DIR):
 $(GTAR):
 	@$(GTAR) --version > /dev/null || (echo Install GNU Tar with brew install gnu-tar && exit -1)
 
-
-CONTROLLER_GEN := $(BIN_DIR)/controller-gen
-$(CONTROLLER_GEN): go.mod go.sum | $(BIN_DIR) # Build controller-gen from tools folder.
-	go build -tags=tools -o $@ sigs.k8s.io/controller-tools/cmd/controller-gen
-
 CONVERSION_GEN := $(BIN_DIR)/conversion-gen
 $(CONVERSION_GEN): go.mod go.sum | $(BIN_DIR)
 	go build -tags=tools -o $@ k8s.io/code-generator/cmd/conversion-gen
@@ -74,10 +67,6 @@ $(CONVERSION_GEN): go.mod go.sum | $(BIN_DIR)
 ENVSUBST := $(BIN_DIR)/envsubst
 $(ENVSUBST): go.mod go.sum | $(BIN_DIR) # Build envsubst from tools folder.
 	go build -tags=tools -o $@ github.com/a8m/envsubst/cmd/envsubst
-
-SETUP_ENVTEST := $(BIN_DIR)/setup-envtest
-$(SETUP_ENVTEST): go.mod go.sum | $(BIN_DIR)
-	go build -tags=tools -o $@ sigs.k8s.io/controller-runtime/tools/setup-envtest
 
 GOTESTSUM := $(BIN_DIR)/gotestsum
 $(GOTESTSUM): | $(BIN_DIR)
@@ -105,14 +94,6 @@ $(GINKGO): go.mod go.sum | $(BIN_DIR)
 GOJQ := $(BIN_DIR)/gojq
 $(GOJQ): go.mod go.sum | $(BIN_DIR)
 	go build -tags=tools -o $@ github.com/itchyny/gojq/cmd/gojq
-
-GOLANGCI_LINT := $(BIN_DIR)/golangci-lint
-$(GOLANGCI_LINT): Makefile ensure-golangci-lint.sh | $(BIN_DIR)
-	./ensure-golangci-lint.sh -b $(BIN_DIR) $(GOLANGCI_LINT_VERSION)
-
-KUSTOMIZE := $(BIN_DIR)/kustomize
-$(KUSTOMIZE): go.mod go.sum | $(BIN_DIR) # Build kustomize from tools folder.
-	CGO_ENABLED=0 go build -tags=tools -o $@ sigs.k8s.io/kustomize/kustomize/v5
 
 MDBOOK_SHARE := $(SHARE_DIR)/mdbook$(MDBOOK_ARCHIVE_EXT)
 $(MDBOOK_SHARE): ../../versions.mk $(SHARE_DIR)

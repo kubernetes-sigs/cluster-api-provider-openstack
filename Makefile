@@ -47,17 +47,13 @@ GO_APIDIFF_BIN := go-apidiff
 GO_APIDIFF_PKG := github.com/joelanford/go-apidiff
 
 # Binaries.
-CONTROLLER_GEN := $(TOOLS_BIN_DIR)/controller-gen
 CONVERSION_GEN := $(TOOLS_BIN_DIR)/conversion-gen
 ENVSUBST := $(TOOLS_BIN_DIR)/envsubst
 GINKGO := $(TOOLS_BIN_DIR)/ginkgo
 GOJQ := $(TOOLS_BIN_DIR)/gojq
-GOLANGCI_LINT := $(TOOLS_BIN_DIR)/golangci-lint
 GOTESTSUM := $(TOOLS_BIN_DIR)/gotestsum
-KUSTOMIZE := $(TOOLS_BIN_DIR)/kustomize
 MOCKGEN := $(TOOLS_BIN_DIR)/mockgen
 RELEASE_NOTES := $(TOOLS_BIN_DIR)/release-notes
-SETUP_ENVTEST := $(TOOLS_BIN_DIR)/setup-envtest
 GEN_CRD_API_REFERENCE_DOCS := $(TOOLS_BIN_DIR)/gen-crd-api-reference-docs
 GO_APIDIFF := $(TOOLS_BIN_DIR)/$(GO_APIDIFF_BIN)-$(GO_APIDIFF_VER)
 
@@ -141,9 +137,9 @@ ifdef KUBEBUILDER_ASSETS_DIR
 endif
 
 .PHONY: kubebuilder_assets
-kubebuilder_assets: $(SETUP_ENVTEST)
+kubebuilder_assets: envtest
 	@echo Fetching assets for $(KUBEBUILDER_ENVTEST_KUBERNETES_VERSION)
-	$(eval KUBEBUILDER_ASSETS ?= $(shell $(SETUP_ENVTEST) use --use-env -p path $(setup_envtest_extra_args) $(KUBEBUILDER_ENVTEST_KUBERNETES_VERSION)))
+	$(eval KUBEBUILDER_ASSETS ?= $(shell $(ENVTEST) use --use-env -p path $(setup_envtest_extra_args) $(KUBEBUILDER_ENVTEST_KUBERNETES_VERSION)))
 
 .PHONY: test
 TEST_PATHS ?= ./...
@@ -180,10 +176,10 @@ e2e-templates: $(addprefix $(E2E_NO_ARTIFACT_TEMPLATES_DIR)/, \
 # Currently no templates that require CI artifacts
 # $(addprefix $(E2E_TEMPLATES_DIR)/, add-templates-here.yaml) \
 
-$(E2E_NO_ARTIFACT_TEMPLATES_DIR)/cluster-template.yaml: $(E2E_KUSTOMIZE_DIR)/with-tags $(KUSTOMIZE) FORCE
+$(E2E_NO_ARTIFACT_TEMPLATES_DIR)/cluster-template.yaml: $(E2E_KUSTOMIZE_DIR)/with-tags kustomize FORCE
 	$(KUSTOMIZE) build "$<" > "$@"
 
-$(E2E_NO_ARTIFACT_TEMPLATES_DIR)/cluster-template-%.yaml: $(E2E_KUSTOMIZE_DIR)/% $(KUSTOMIZE) FORCE
+$(E2E_NO_ARTIFACT_TEMPLATES_DIR)/cluster-template-%.yaml: $(E2E_KUSTOMIZE_DIR)/% kustomize FORCE
 	$(KUSTOMIZE) build "$<" > "$@"
 
 e2e-prerequisites: e2e-templates e2e-image test-e2e-image-prerequisites ## Build all artifacts required by e2e tests
@@ -255,16 +251,17 @@ $(GO_APIDIFF): # Build go-apidiff.
 ## --------------------------------------
 
 .PHONY: lint
-lint: $(GOLANGCI_LINT) ## Lint codebase
+lint: golangci-lint ## Lint codebase
 	$(GOLANGCI_LINT) run -v --fast=false
 	$(MAKE) -C $(REPO_ROOT)/orc lint
 
 .PHONY: lint-update
-lint-update: $(GOLANGCI_LINT) ## Lint codebase
+lint-update: golangci-lint ## Lint codebase
 	$(GOLANGCI_LINT) run -v --fast=false --fix
 	$(MAKE) -C $(REPO_ROOT)/orc lint-fix
 
-lint-fast: $(GOLANGCI_LINT) ## Run only faster linters to detect possible issues
+.PHONY: lint-fast
+lint-fast: golangci-lint ## Run only faster linters to detect possible issues
 	$(GOLANGCI_LINT) run -v --fast=true
 
 ## --------------------------------------
@@ -285,7 +282,7 @@ generate-go: $(MOCKGEN)
 	go generate ./...
 
 .PHONY: generate-controller-gen
-generate-controller-gen: $(CONTROLLER_GEN)
+generate-controller-gen: controller-gen
 	$(CONTROLLER_GEN) \
 		paths=./api/... \
 		object:headerFile=./hack/boilerplate/boilerplate.generatego.txt
@@ -308,7 +305,7 @@ generate-conversion-gen: $(CONVERSION_GEN)
 		./api/v1alpha6 ./api/v1alpha7
 
 .PHONY: generate-manifests
-generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
+generate-manifests: controller-gen ## Generate manifests e.g. CRD, RBAC etc.
 	$(CONTROLLER_GEN) \
 		paths=./api/... \
 		crd:crdVersions=v1 \
@@ -465,10 +462,10 @@ templates: templates/cluster-template.yaml \
 	templates/cluster-template-flatcar.yaml \
 	templates/cluster-template-flatcar-sysext.yaml
 
-templates/cluster-template.yaml: kustomize/v1beta1/default $(KUSTOMIZE) FORCE
+templates/cluster-template.yaml: kustomize/v1beta1/default kustomize FORCE
 	$(KUSTOMIZE) build "$<" > "$@"
 
-templates/cluster-template-%.yaml: kustomize/v1beta1/% $(KUSTOMIZE) FORCE
+templates/cluster-template-%.yaml: kustomize/v1beta1/% kustomize FORCE
 	$(KUSTOMIZE) build "$<" > "$@"
 
 .PHONY: release-templates
@@ -491,14 +488,14 @@ $(RELEASE_DIR)/$(MANIFEST_FILE).yaml:
 		NAMESPACE=$(NAMESPACE)
 
 .PHONY: compiled-manifest
-compiled-manifest: $(RELEASE_DIR) $(KUSTOMIZE)
+compiled-manifest: $(RELEASE_DIR) kustomize
 	$(MAKE) image-patch-source-manifest
 	$(MAKE) image-patch-pull-policy
 	$(MAKE) image-patch-kustomization
 	$(KUSTOMIZE) build $(IMAGE_PATCH_DIR)/$(PROVIDER) > $(RELEASE_DIR)/$(PROVIDER).yaml
 
 .PHONY: image-patch-source-manifest
-image-patch-source-manifest: $(IMAGE_PATCH_DIR) $(KUSTOMIZE)
+image-patch-source-manifest: $(IMAGE_PATCH_DIR) kustomize
 	mkdir -p $(IMAGE_PATCH_DIR)/$(PROVIDER)
 	$(KUSTOMIZE) build $(PROVIDER_CONFIG_DIR)/default > $(IMAGE_PATCH_DIR)/$(PROVIDER)/source-manifest.yaml
 
@@ -570,3 +567,59 @@ compile-e2e: ## Test e2e compilation
 
 .PHONY: FORCE
 FORCE:
+
+##@ Dependencies
+
+## Location to install dependencies to
+LOCALBIN ?= $(shell pwd)/bin
+$(LOCALBIN):
+	mkdir -p $(LOCALBIN)
+
+## Tool Binaries
+KUBECTL ?= kubectl
+KUSTOMIZE ?= $(LOCALBIN)/kustomize
+CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
+ENVTEST ?= $(LOCALBIN)/setup-envtest
+GOLANGCI_LINT = $(LOCALBIN)/golangci-lint
+
+## Tool Versions
+KUSTOMIZE_VERSION ?= v5.4.2
+CONTROLLER_TOOLS_VERSION ?= v0.14.0
+ENVTEST_VERSION ?= release-0.18
+GOLANGCI_LINT_VERSION ?= v1.57.2
+
+.PHONY: kustomize
+kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
+$(KUSTOMIZE): $(LOCALBIN)
+	$(call go-install-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v5,$(KUSTOMIZE_VERSION))
+
+.PHONY: controller-gen
+controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessary.
+$(CONTROLLER_GEN): $(LOCALBIN)
+	$(call go-install-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen,$(CONTROLLER_TOOLS_VERSION))
+
+.PHONY: envtest
+envtest: $(ENVTEST) ## Download setup-envtest locally if necessary.
+$(ENVTEST): $(LOCALBIN)
+	$(call go-install-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest,$(ENVTEST_VERSION))
+
+.PHONY: golangci-lint
+golangci-lint: $(GOLANGCI_LINT) ## Download golangci-lint locally if necessary.
+$(GOLANGCI_LINT): $(LOCALBIN)
+	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/cmd/golangci-lint,$(GOLANGCI_LINT_VERSION))
+
+# go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
+# $1 - target path with name of binary
+# $2 - package url which can be installed
+# $3 - specific version of package
+define go-install-tool
+@[ -f "$(1)-$(3)" ] || { \
+set -e; \
+package=$(2)@$(3) ;\
+echo "Downloading $${package}" ;\
+rm -f $(1) || true ;\
+GOBIN=$(LOCALBIN) go install $${package} ;\
+mv $(1) $(1)-$(3) ;\
+} ;\
+ln -sf $(1)-$(3) $(1)
+endef
