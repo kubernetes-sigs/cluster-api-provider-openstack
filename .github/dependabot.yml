@@ -6,7 +6,6 @@ updates:
 # github-actions
 - directory: "/"
   package-ecosystem: "github-actions"
-  open-pull-requests-limit: 5
   schedule:
     interval: "weekly"
     day: "monday"
@@ -26,16 +25,14 @@ updates:
   - "/hack/tools"
   - "/orc"
   package-ecosystem: "gomod"
-  open-pull-requests-limit: 5
   schedule:
     interval: "weekly"
     day: "monday"
   target-branch: main
   groups:
-    kubernetes:
-      patterns: ["k8s.io/*"]
-    capi:
-      patterns: ["sigs.k8s.io/cluster-api", "sigs.k8s.io/cluster-api/test"]
+    all-go-mod-patch-and-minor:
+      patterns: [ "*" ]
+      update-types: [ "patch", "minor" ]
   commit-message:
     prefix: ":seedling:"
     include: scope
@@ -58,7 +55,6 @@ updates:
 # github-actions
 - directory: "/"
   package-ecosystem: "github-actions"
-  open-pull-requests-limit: 5
   schedule:
     interval: "weekly"
     day: "monday"
@@ -78,20 +74,21 @@ updates:
   - "/hack/tools"
   - "/orc"
   package-ecosystem: "gomod"
-  open-pull-requests-limit: 5
   schedule:
     interval: "weekly"
     day: "monday"
   target-branch: release-0.11
   groups:
-    kubernetes:
-      patterns: ["k8s.io/*"]
-    capi:
-      patterns: ["sigs.k8s.io/cluster-api", "sigs.k8s.io/cluster-api/test"]
+    all-go-mod-patch-and-minor:
+      patterns: [ "*" ]
+      update-types: [ "patch", "minor" ]
   commit-message:
     prefix: ":seedling:"
     include: scope
   ignore:
+  # Ignore CAPI major and minor bumps
+  - dependency-name: "sigs.k8s.io/cluster-api*"
+    update-types: ["version-update:semver-major", "version-update:semver-minor"]
   # Ignore controller-runtime major and minor bumps as its upgraded manually.
   - dependency-name: "sigs.k8s.io/controller-runtime"
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
