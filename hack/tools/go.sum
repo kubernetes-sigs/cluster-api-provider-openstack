@@ -467,8 +467,8 @@ sigs.k8s.io/cluster-api/hack/tools v0.0.0-20221129083400-679ae3e9e6b6 h1:YF+g/Mr
 sigs.k8s.io/cluster-api/hack/tools v0.0.0-20221129083400-679ae3e9e6b6/go.mod h1:7luenhlsUTb9obnAferuDFEvhtITw7JjHpXkiDmCmKY=
 sigs.k8s.io/cluster-api/test v1.8.5 h1:p2fjSv/exSFgYw+pO6iap1RVJPc0LJ+/A/PAMPl9vhU=
 sigs.k8s.io/cluster-api/test v1.8.5/go.mod h1:odnzMkDndCRPCWdwl0CRofyZyY857wN34bUih1MLKIc=
-sigs.k8s.io/controller-runtime v0.19.1 h1:Son+Q40+Be3QWb+niBXAg2vFiYWolDjjRfO8hn/cxOk=
-sigs.k8s.io/controller-runtime v0.19.1/go.mod h1:iRmWllt8IlaLjvTTDLhRBXIEtkCK6hwVBJJsYS9Ajf4=
+sigs.k8s.io/controller-runtime v0.19.2 h1:3sPrF58XQEPzbE8T81TN6selQIMGbtYwuaJ6eDssDF8=
+sigs.k8s.io/controller-runtime v0.19.2/go.mod h1:iRmWllt8IlaLjvTTDLhRBXIEtkCK6hwVBJJsYS9Ajf4=
 sigs.k8s.io/controller-runtime/tools/setup-envtest v0.0.0-20230926180527-c93e2abcb28e h1:xYNzzoK+cwgBnaRqrYFLQCSwMAYcR6a06gf3FJ369Kw=
 sigs.k8s.io/controller-runtime/tools/setup-envtest v0.0.0-20230926180527-c93e2abcb28e/go.mod h1:B6HLcvOy2S1qq2eWOFm9xepiKPMIc8Z9OXSPsnUDaR4=
 sigs.k8s.io/controller-tools v0.16.5 h1:5k9FNRqziBPwqr17AMEPPV/En39ZBplLAdOwwQHruP4=
