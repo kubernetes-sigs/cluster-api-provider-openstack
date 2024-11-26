@@ -25,6 +25,9 @@ export GOTOOLCHAIN=go1.22.8
 export GO111MODULE=on
 unexport GOPATH
 
+# Go
+GO_VERSION ?= 1.22.7
+
 # Directories.
 ARTIFACTS ?= $(REPO_ROOT)/_artifacts
 TOOLS_DIR := hack/tools
@@ -346,8 +349,25 @@ staging-manifests:
 ##@ Release
 ## --------------------------------------
 
+ifneq (,$(findstring -,$(RELEASE_TAG)))                                                                                                 
+    PRE_RELEASE=true                                                                                                                    
+endif                                                                                                                                   
+PREVIOUS_TAG ?= $(shell git tag -l | grep -E "^v[0-9]+\.[0-9]+\.[0-9]+$$" | sort -V | grep -B1 $(RELEASE_TAG) | head -n 1 2>/dev/null)
+## set by Prow, ref name of the base branch, e.g., main
+RELEASE_DIR := out
+RELEASE_NOTES_DIR := _releasenotes
+
+.PHONY: $(RELEASE_DIR)
 $(RELEASE_DIR):
-	mkdir -p $@
+	mkdir -p $(RELEASE_DIR)/
+ 
+.PHONY: $(RELEASE_NOTES_DIR)
+$(RELEASE_NOTES_DIR):
+	mkdir -p $(RELEASE_NOTES_DIR)/
+ 
+.PHONY: $(BUILD_DIR)
+$(BUILD_DIR):
+	@mkdir -p $(BUILD_DIR)
 
 .PHONY: list-staging-releases
 list-staging-releases: ## List staging images for image promotion
@@ -422,9 +442,14 @@ upload-gh-artifacts: $(GH) ## Upload artifacts to Github release
 release-alias-tag: # Adds the tag to the last build tag.
 	gcloud container images add-tag -q $(CONTROLLER_IMG):$(TAG) $(CONTROLLER_IMG):$(RELEASE_ALIAS_TAG)
 
-.PHONY: release-notes
-release-notes: $(RELEASE_NOTES) ## Generate release notes
-	$(RELEASE_NOTES) $(RELEASE_NOTES_ARGS)
+.PHONY: generate-release-notes ## Generate release notes
+generate-release-notes: $(RELEASE_NOTES_DIR) $(RELEASE_NOTES)
+	# Reset the file
+	echo -n > $(RELEASE_NOTES_DIR)/$(RELEASE_TAG).md
+	if [ -n "${PRE_RELEASE}" ]; then \
+	echo -e ":rotating_light: This is a RELEASE CANDIDATE. Use it only for testing purposes. If you find any bugs, file an [issue](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/new/choose).\n" >> $(RELEASE_NOTES_DIR)/$(RELEASE_TAG).md; \
+	fi
+	"$(RELEASE_NOTES)" --from=$(PREVIOUS_TAG) >> $(RELEASE_NOTES_DIR)/$(RELEASE_TAG).md
 
 .PHONY: templates
 templates: ## Generate cluster templates
@@ -533,3 +558,12 @@ compile-e2e: ## Test e2e compilation
 
 .PHONY: FORCE
 FORCE:
+
+## --------------------------------------    
+## Helpers
+## --------------------------------------
+
+##@ helpers:
+
+go-version: ## Print the go version we use to compile our binaries and images
+	@echo $(GO_VERSION)
