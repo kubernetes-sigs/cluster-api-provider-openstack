@@ -152,9 +152,11 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope 
 	// A bastion may have been created if cluster initialisation previously reached populating the network status
 	// We attempt to delete it even if no status was written, just in case
 	if openStackCluster.Status.Network != nil {
-		// Attempt to resolve bastion resources before delete. We don't need to worry about starting if the resources have changed on update.
+		// Attempt to resolve bastion resources before delete.
+		// Even if we fail, we need to continue with the deletion or risk getting stuck.
+		// For example, if the image doesn't exist, we do not have a bastion.
 		if _, err := resolveBastionResources(scope, clusterResourceName, openStackCluster); err != nil {
-			return reconcile.Result{}, err
+			scope.Logger().Info("Failed to resolve bastion, continuing.", "error", err)
 		}
 
 		if err := deleteBastion(scope, cluster, openStackCluster); err != nil {
