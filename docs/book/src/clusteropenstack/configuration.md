@@ -64,6 +64,13 @@ clusterctl generate cluster capi-quickstart \
 ## OpenStack version
 
 We currently require at least OpenStack Pike.
+There is some flexibility in the microversion requirements for Nova.
+The minimum requirement is 2.38.
+However, certain features require a higher version.
+Specifically, tagging raises the requirement to 2.53, and multiattach volumes to 2.60.
+
+Note that CAPO will not be able to determine what the default volume type is or whether it is multiattach capable.
+You need to be explicit in this case and specify what volume type should be used.
 
 ## Operating system image
 
@@ -193,7 +200,7 @@ Depending on the CNI that will be deployed on the cluster, you may need to add s
    namespace: <cluster-namespace>
  spec:
     ...
-    managedSecurityGroups: 
+    managedSecurityGroups:
       allNodesSecurityGroupRules:
       - remoteManagedGroups:
         - controlplane
@@ -246,7 +253,7 @@ You can use a pre-existing router instead of creating a new one. When deleting a
    namespace: <cluster-namespace>
  spec:
    ...
-   router: 
+   router:
       id: <Router id>
  ```
 
