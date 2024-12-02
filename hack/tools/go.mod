@@ -7,7 +7,7 @@ toolchain go1.23.2
 require (
 	github.com/a8m/envsubst v1.4.2
 	github.com/ahmetb/gen-crd-api-reference-docs v0.3.1-0.20220420215017-3f29e6853552
-	github.com/itchyny/gojq v0.12.16
+	github.com/itchyny/gojq v0.12.17
 	github.com/onsi/ginkgo/v2 v2.22.0
 	go.uber.org/mock v0.5.0
 	k8s.io/code-generator v0.31.3
@@ -136,7 +136,7 @@ require (
 	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8 // indirect
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.30.3 // indirect
 	sigs.k8s.io/cluster-api v1.8.5 // indirect
-	sigs.k8s.io/controller-runtime v0.18.5 // indirect
+	sigs.k8s.io/controller-runtime v0.18.6 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/kubebuilder/docs/book/utils v0.0.0-20211028165026-57688c578b5d // indirect
 	sigs.k8s.io/kustomize/api v0.18.0 // indirect
