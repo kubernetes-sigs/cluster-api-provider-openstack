@@ -27,6 +27,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gmeasure"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/cluster-api/test/framework/clusterctl"
@@ -39,7 +40,6 @@ import (
 var _ = Describe("conformance tests", func() {
 	var (
 		namespace *corev1.Namespace
-		ctx       context.Context
 		specName  = "conformance"
 	)
 
@@ -53,7 +53,7 @@ var _ = Describe("conformance tests", func() {
 		shared.ApplyCoreImagesPlus(ctx, e2eCtx)
 	})
 
-	Measure(specName, func(b Benchmarker) {
+	It(specName, func(ctx context.Context) {
 		name := fmt.Sprintf("cluster-%s", namespace.Name)
 		kubernetesVersion := e2eCtx.E2EConfig.GetVariable(shared.KubernetesVersion)
 
@@ -70,7 +70,10 @@ var _ = Describe("conformance tests", func() {
 		controlPlaneMachineCount, err := strconv.ParseInt(e2eCtx.E2EConfig.GetVariable("CONFORMANCE_CONTROL_PLANE_MACHINE_COUNT"), 10, 64)
 		Expect(err).NotTo(HaveOccurred())
 
-		b.Time("cluster creation", func() {
+		experiment := gmeasure.NewExperiment(specName)
+		AddReportEntry(experiment.Name, experiment)
+
+		experiment.MeasureDuration("cluster creation", func() {
 			result := &clusterctl.ApplyClusterTemplateAndWaitResult{}
 			clusterctl.ApplyClusterTemplateAndWait(ctx, clusterctl.ApplyClusterTemplateAndWaitInput{
 				ClusterProxy: e2eCtx.Environment.BootstrapClusterProxy,
@@ -93,7 +96,7 @@ var _ = Describe("conformance tests", func() {
 		})
 
 		workloadProxy := e2eCtx.Environment.BootstrapClusterProxy.GetWorkloadCluster(ctx, namespace.Name, name)
-		b.Time("conformance suite", func() {
+		experiment.MeasureDuration("conformance suite", func() {
 			err := kubetest.Run(ctx,
 				kubetest.RunInput{
 					ClusterProxy:   workloadProxy,
@@ -104,10 +107,5 @@ var _ = Describe("conformance tests", func() {
 			)
 			Expect(err).To(BeNil(), "error on kubetest execution")
 		})
-	}, 1)
-
-	AfterEach(func() {
-		// Dumps all the resources in the spec namespace, then cleanups the cluster object and the spec namespace itself.
-		shared.DumpSpecResourcesAndCleanup(ctx, specName, namespace, e2eCtx)
 	})
 })

@@ -7,7 +7,6 @@
 
 # To run tests, run the following from the root of this repository.
 # `OPENSTACK_CLOUD=capo-e2e OPENSTACK_CLOUD_YAML_FILE=/tmp/clouds.yaml make test-conformance`
-# The -stream flag will make Ginkgo print results to the screen in real-time.
 
 managementClusterName: capo-e2e
 
