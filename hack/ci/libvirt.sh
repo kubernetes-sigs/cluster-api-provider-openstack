@@ -25,7 +25,7 @@ set -x -o errexit -o nounset -o pipefail
 
 function cloud_init {
     LIBVIRT_NETWORK_NAME=${LIBVIRT_NETWORK_NAME:-${CLUSTER_NAME}-network}
-    LIBVIRT_IMAGE_NAME=${LIBVIRT_IMAGE_NAME:-ubuntu-2204-lts}
+    LIBVIRT_IMAGE_NAME=${LIBVIRT_IMAGE_NAME:-ubuntu-2404-lts}
 
     LIBVIRT_MEMORY=${LIBVIRT_MEMORY:-8192}
     LIBVIRT_MEMORY_controller=${LIBVIRT_MEMORY_controller:-$LIBVIRT_MEMORY}
@@ -65,7 +65,7 @@ EOF
     fi
 
     if [ ! -f "/tmp/${LIBVIRT_IMAGE_NAME}.qcow2" ]; then
-        curl -o "/tmp/${LIBVIRT_IMAGE_NAME}.qcow2" https://cloud-images.ubuntu.com/releases/jammy/release/ubuntu-22.04-server-cloudimg-amd64.img
+        curl -o "/tmp/${LIBVIRT_IMAGE_NAME}.qcow2" https://cloud-images.ubuntu.com/releases/noble/release/ubuntu-24.04-server-cloudimg-amd64.img
     fi
 }
 
