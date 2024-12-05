@@ -47,6 +47,12 @@
     [DEFAULT]
     cpu_allocation_ratio = 2.0
 
+    [workarounds]
+    # FIXME(stephenfin): This is temporary while we get to the bottom of
+    # https://bugs.launchpad.net/nova/+bug/2091114 It should not be kept after
+    # we bump to 2025.1
+    disable_deep_image_inspection = True
+
     [[post-config|$CINDER_CONF]]
     [DEFAULT]
     storage_availability_zone = ${SECONDARY_AZ}
