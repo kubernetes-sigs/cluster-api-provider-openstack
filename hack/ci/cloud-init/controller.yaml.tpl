@@ -81,6 +81,12 @@
     # query_placement_for_availability_zone is the default from Xena
     query_placement_for_availability_zone = True
 
+    [workarounds]
+    # FIXME(stephenfin): This is temporary while we get to the bottom of
+    # https://bugs.launchpad.net/nova/+bug/2091114 It should not be kept after
+    # we bump to 2025.1
+    disable_deep_image_inspection = True
+
     [[post-config|$CINDER_CONF]]
     [DEFAULT]
     storage_availability_zone = ${PRIMARY_AZ}
