@@ -95,7 +95,7 @@ function create_vm {
         --zone "$GCP_ZONE" \
         --enable-nested-virtualization \
         --image-project ubuntu-os-cloud \
-        --image-family ubuntu-2204-lts \
+        --image-family ubuntu-2404-lts-amd64 \
         --boot-disk-size 200G \
         --boot-disk-type pd-ssd \
         --can-ip-forward \

@@ -31,7 +31,7 @@ source "${scriptdir}/${RESOURCE_TYPE}.sh"
 
 CLUSTER_NAME=${CLUSTER_NAME:-"capo-e2e"}
 
-OPENSTACK_RELEASE=${OPENSTACK_RELEASE:-"2023.2"}
+OPENSTACK_RELEASE=${OPENSTACK_RELEASE:-"2024.2"}
 OPENSTACK_ENABLE_HORIZON=${OPENSTACK_ENABLE_HORIZON:-"false"}
 
 # Devstack will create a provider network using this range
@@ -46,6 +46,9 @@ OPENSTACK_DNS_NAMESERVERS=${OPENSTACK_DNS_NAMESERVERS:-"8.8.8.8"}
 PRIVATE_NETWORK_CIDR=${PRIVATE_NETWORK_CIDR:-"10.0.3.0/24"}
 CONTROLLER_IP=${CONTROLLER_IP:-"10.0.3.15"}
 WORKER_IP=${WORKER_IP:-"10.0.3.16"}
+
+SKIP_INIT_INFRA=${SKIP_INIT_INFRA:-}
+SKIP_SECONDARY_AZ=${SKIP_SECONDARY_AZ:-}
 
 PRIMARY_AZ=testaz1
 SECONDARY_AZ=testaz2
@@ -273,7 +276,11 @@ function main() {
     # is available, and wait if it is not.
     #
     # For efficiency, tests which require multi-AZ SHOULD run as late as possible.
-    create_worker
+    if [[ -n "${SKIP_SECONDARY_AZ:-}" ]]; then
+        echo "Skipping worker creation..."
+    else
+        create_worker
+    fi
 
     public_ip=$(get_public_ip)
     cat << EOF > "${REPO_ROOT_ABSOLUTE}/clouds.yaml"
