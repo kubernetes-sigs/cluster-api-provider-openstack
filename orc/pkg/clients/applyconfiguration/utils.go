@@ -32,8 +32,14 @@ import (
 func ForKind(kind schema.GroupVersionKind) interface{} {
 	switch kind {
 	// Group=openstack.k-orc.cloud, Version=v1alpha1
+	case v1alpha1.SchemeGroupVersion.WithKind("AllocationPool"):
+		return &apiv1alpha1.AllocationPoolApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("CloudCredentialsReference"):
 		return &apiv1alpha1.CloudCredentialsReferenceApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("FilterByNeutronTags"):
+		return &apiv1alpha1.FilterByNeutronTagsApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("HostRoute"):
+		return &apiv1alpha1.HostRouteApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("Image"):
 		return &apiv1alpha1.ImageApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ImageContent"):
@@ -60,8 +66,26 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apiv1alpha1.ImageStatusApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ImageStatusExtra"):
 		return &apiv1alpha1.ImageStatusExtraApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("IPv6Options"):
+		return &apiv1alpha1.IPv6OptionsApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ManagedOptions"):
 		return &apiv1alpha1.ManagedOptionsApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("Subnet"):
+		return &apiv1alpha1.SubnetApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("SubnetFilter"):
+		return &apiv1alpha1.SubnetFilterApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("SubnetGateway"):
+		return &apiv1alpha1.SubnetGatewayApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("SubnetImport"):
+		return &apiv1alpha1.SubnetImportApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("SubnetResourceSpec"):
+		return &apiv1alpha1.SubnetResourceSpecApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("SubnetResourceStatus"):
+		return &apiv1alpha1.SubnetResourceStatusApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("SubnetSpec"):
+		return &apiv1alpha1.SubnetSpecApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("SubnetStatus"):
+		return &apiv1alpha1.SubnetStatusApplyConfiguration{}
 
 	}
 	return nil
