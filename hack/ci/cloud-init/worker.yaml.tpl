@@ -11,6 +11,11 @@
     VERBOSE=True
     LOG_COLOR=True
 
+    # Host tuning
+    ENABLE_SYSCTL_MEM_TUNING="True"
+    ENABLE_SYSCTL_NET_TUNING="True"
+    ENABLE_ZSWAP="True"
+
     DATABASE_PASSWORD=secretdatabase
     RABBIT_PASSWORD=secretrabbit
     ADMIN_PASSWORD=secretadmin

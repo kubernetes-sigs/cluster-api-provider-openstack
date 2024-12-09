@@ -12,6 +12,11 @@
     VERBOSE=True
     LOG_COLOR=True
 
+    # Host tuning
+    ENABLE_SYSCTL_MEM_TUNING="True"
+    ENABLE_SYSCTL_NET_TUNING="True"
+    ENABLE_ZSWAP="True"
+
     # Octavia
     enable_plugin octavia https://github.com/openstack/octavia stable/${OPENSTACK_RELEASE}
     enable_plugin octavia-dashboard https://github.com/openstack/octavia-dashboard stable/${OPENSTACK_RELEASE}
