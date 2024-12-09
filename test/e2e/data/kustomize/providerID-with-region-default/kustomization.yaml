@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../default
+
+patches:
+- path: patch-machine-template-identity-ref.yaml
+  target:
+    kind: OpenStackCluster
+- path: patch-kubeadm-config-template-provider-id.yaml
+  target:
+    kind: KubeadmConfigTemplate
+- path: patch-kubeadm-control-plane-provider-id.yaml
+  target:
+    kind: KubeadmControlPlane

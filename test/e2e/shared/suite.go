@@ -201,6 +201,10 @@ func AllNodesBeforeSuite(e2eCtx *E2EContext, data []byte) {
 	SetEnvVar("OPENSTACK_CLOUD_YAML_B64", getEncodedOpenStackCloudYAML(openStackCloudYAMLFile), true)
 	SetEnvVar("OPENSTACK_CLOUD_PROVIDER_CONF_B64", getEncodedOpenStackCloudProviderConf(openStackCloudYAMLFile, openStackCloud), true)
 	SetEnvVar("OPENSTACK_SSH_KEY_NAME", DefaultSSHKeyPairName, false)
+	clouds := getParsedOpenStackCloudYAML(openStackCloudYAMLFile)
+	cloud, ok := clouds.Clouds[openStackCloud]
+	Expect(ok).To(BeTrue())
+	SetEnvVar("CAPO_REGION", cloud.RegionName, false)
 }
 
 // AllNodesAfterSuite is cleanup that runs on all ginkgo parallel nodes after the test suite finishes.

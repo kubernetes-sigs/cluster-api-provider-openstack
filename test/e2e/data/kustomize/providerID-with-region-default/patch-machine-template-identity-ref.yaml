@@ -1,0 +1,4 @@
+---
+- op: add
+  path: /spec/identityRef/region
+  value: ${CAPO_REGION}
