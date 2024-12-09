@@ -124,7 +124,49 @@ func (s *Service) GetPortForExternalNetwork(instanceID string, externalNetworkID
 	return nil, nil
 }
 
-func (s *Service) CreatePort(eventObject runtime.Object, portSpec *infrav1.ResolvedPortSpec) (*ports.Port, error) {
+// ensurePortTagsAndTrunk ensures that the provided port has the tags and trunk defined in portSpec.
+func (s *Service) ensurePortTagsAndTrunk(port *ports.Port, eventObject runtime.Object, portSpec *infrav1.ResolvedPortSpec) error {
+	if len(portSpec.Tags) > 0 {
+		if err := s.replaceAllAttributesTags(eventObject, portResource, port.ID, portSpec.Tags); err != nil {
+			record.Warnf(eventObject, "FailedReplaceTags", "Failed to replace port tags %s: %v", portSpec.Name, err)
+			return err
+		}
+	}
+	if ptr.Deref(portSpec.Trunk, false) {
+		trunk, err := s.getOrCreateTrunkForPort(eventObject, port)
+		if err != nil {
+			record.Warnf(eventObject, "FailedCreateTrunk", "Failed to create trunk for port %s: %v", port.Name, err)
+			return err
+		}
+		if err = s.replaceAllAttributesTags(eventObject, trunkResource, trunk.ID, portSpec.Tags); err != nil {
+			record.Warnf(eventObject, "FailedReplaceTags", "Failed to replace trunk tags %s: %v", port.Name, err)
+			return err
+		}
+	}
+	return nil
+}
+
+// EnsurePort ensure that a port defined with portSpec Name and NetworkID exists,
+// and that the port has suitable tags and trunk.
+func (s *Service) EnsurePort(eventObject runtime.Object, portSpec *infrav1.ResolvedPortSpec) (*ports.Port, error) {
+	existingPorts, err := s.client.ListPort(ports.ListOpts{
+		Name:      portSpec.Name,
+		NetworkID: portSpec.NetworkID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("searching for existing port for server: %v", err)
+	}
+	if len(existingPorts) > 1 {
+		return nil, fmt.Errorf("multiple ports found with name \"%s\"", portSpec.Name)
+	}
+
+	if len(existingPorts) == 1 {
+		port := &existingPorts[0]
+		if err = s.ensurePortTagsAndTrunk(port, eventObject, portSpec); err != nil {
+			return nil, err
+		}
+		return port, nil
+	}
 	var addressPairs []ports.AddressPair
 	if !ptr.Deref(portSpec.DisablePortSecurity, false) {
 		for _, ap := range portSpec.AllowedAddressPairs {
@@ -200,24 +242,10 @@ func (s *Service) CreatePort(eventObject runtime.Object, portSpec *infrav1.Resol
 		return nil, err
 	}
 
-	if len(portSpec.Tags) > 0 {
-		if err = s.replaceAllAttributesTags(eventObject, portResource, port.ID, portSpec.Tags); err != nil {
-			record.Warnf(eventObject, "FailedReplaceTags", "Failed to replace port tags %s: %v", portSpec.Name, err)
-			return nil, err
-		}
+	if err = s.ensurePortTagsAndTrunk(port, eventObject, portSpec); err != nil {
+		return nil, err
 	}
 	record.Eventf(eventObject, "SuccessfulCreatePort", "Created port %s with id %s", port.Name, port.ID)
-	if ptr.Deref(portSpec.Trunk, false) {
-		trunk, err := s.getOrCreateTrunkForPort(eventObject, port)
-		if err != nil {
-			record.Warnf(eventObject, "FailedCreateTrunk", "Failed to create trunk for port %s: %v", port.Name, err)
-			return nil, err
-		}
-		if err = s.replaceAllAttributesTags(eventObject, trunkResource, trunk.ID, portSpec.Tags); err != nil {
-			record.Warnf(eventObject, "FailedReplaceTags", "Failed to replace trunk tags %s: %v", port.Name, err)
-			return nil, err
-		}
-	}
 
 	return port, nil
 }
@@ -328,16 +356,12 @@ func getPortName(baseName string, portSpec *infrav1.PortOpts, netIndex int) stri
 	return fmt.Sprintf("%s-%d", baseName, netIndex)
 }
 
-func (s *Service) CreatePorts(eventObject runtime.Object, desiredPorts []infrav1.ResolvedPortSpec, resources *infrav1alpha1.ServerResources) error {
-	for i := range desiredPorts {
-		// Skip creation of ports which already exist
-		if i < len(resources.Ports) {
-			continue
-		}
-
-		portSpec := &desiredPorts[i]
-		// Events are recorded in CreatePort
-		port, err := s.CreatePort(eventObject, portSpec)
+// EnsurePorts ensures that every one of desiredPorts is created and has
+// expected trunk and tags.
+func (s *Service) EnsurePorts(eventObject runtime.Object, desiredPorts []infrav1.ResolvedPortSpec, resources *infrav1alpha1.ServerResources) error {
+	for _, portSpec := range desiredPorts {
+		// Events are recorded in EnsurePort
+		port, err := s.EnsurePort(eventObject, &portSpec)
 		if err != nil {
 			return err
 		}
