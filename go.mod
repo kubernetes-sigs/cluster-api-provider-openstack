@@ -8,7 +8,7 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/google/gofuzz v1.2.0
 	github.com/google/uuid v1.6.0
-	github.com/gophercloud/gophercloud/v2 v2.2.0
+	github.com/gophercloud/gophercloud/v2 v2.3.0
 	github.com/gophercloud/utils/v2 v2.0.0-20240812072210-8ce1fc0f2894
 	github.com/hashicorp/go-version v1.7.0
 	github.com/k-orc/openstack-resource-controller v0.0.0-00010101000000-000000000000
@@ -18,8 +18,8 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/ulikunitz/xz v0.5.12
 	go.uber.org/mock v0.5.0
-	golang.org/x/crypto v0.29.0
-	golang.org/x/text v0.20.0
+	golang.org/x/crypto v0.30.0
+	golang.org/x/text v0.21.0
 	gopkg.in/ini.v1 v1.67.0
 	k8s.io/api v0.30.7
 	k8s.io/apiextensions-apiserver v0.30.7
@@ -132,9 +132,9 @@ require (
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/oauth2 v0.21.0 // indirect
-	golang.org/x/sync v0.9.0 // indirect
-	golang.org/x/sys v0.27.0 // indirect
-	golang.org/x/term v0.26.0 // indirect
+	golang.org/x/sync v0.10.0 // indirect
+	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/term v0.27.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.26.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
