@@ -11,6 +11,11 @@
     VERBOSE=True
     LOG_COLOR=True
 
+    # Host tuning
+    ENABLE_SYSCTL_MEM_TUNING="True"
+    ENABLE_SYSCTL_NET_TUNING="True"
+    ENABLE_ZSWAP="True"
+
     DATABASE_PASSWORD=secretdatabase
     RABBIT_PASSWORD=secretrabbit
     ADMIN_PASSWORD=secretadmin
@@ -47,6 +52,12 @@
     [DEFAULT]
     cpu_allocation_ratio = 2.0
 
+    [workarounds]
+    # FIXME(stephenfin): This is temporary while we get to the bottom of
+    # https://bugs.launchpad.net/nova/+bug/2091114 It should not be kept after
+    # we bump to 2025.1
+    disable_deep_image_inspection = True
+
     [[post-config|$CINDER_CONF]]
     [DEFAULT]
     storage_availability_zone = ${SECONDARY_AZ}
@@ -67,6 +78,7 @@
 
     # from https://raw.githubusercontent.com/openstack/octavia/master/devstack/contrib/new-octavia-devstack.sh
     git clone -b stable/${OPENSTACK_RELEASE} https://github.com/openstack/devstack.git /tmp/devstack
+    pushd /tmp/devstack; git fetch https://review.opendev.org/openstack/devstack refs/changes/62/937462/1 && git cherry-pick FETCH_HEAD; popd
     cp /tmp/local.conf /tmp/devstack/
 
     # Create the stack user
