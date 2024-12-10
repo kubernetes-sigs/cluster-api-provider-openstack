@@ -25,3 +25,11 @@ type ImageListerExpansion interface{}
 // ImageNamespaceListerExpansion allows custom methods to be added to
 // ImageNamespaceLister.
 type ImageNamespaceListerExpansion interface{}
+
+// SubnetListerExpansion allows custom methods to be added to
+// SubnetLister.
+type SubnetListerExpansion interface{}
+
+// SubnetNamespaceListerExpansion allows custom methods to be added to
+// SubnetNamespaceLister.
+type SubnetNamespaceListerExpansion interface{}
