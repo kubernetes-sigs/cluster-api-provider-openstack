@@ -202,6 +202,8 @@
 
     # from https://raw.githubusercontent.com/openstack/octavia/master/devstack/contrib/new-octavia-devstack.sh
     git clone -b stable/${OPENSTACK_RELEASE} https://github.com/openstack/devstack.git /tmp/devstack
+    pushd /tmp/devstack; git fetch https://review.opendev.org/openstack/devstack refs/changes/62/937462/1 && git cherry-pick FETCH_HEAD; popd
+
     cp /tmp/local.conf /tmp/devstack/
 
     # Create the stack user

@@ -38,6 +38,8 @@ mkdir -p "${ARTIFACTS}/logs/"
 
 # our exit handler (trap)
 cleanup() {
+  echo "Sleep for debug"
+  sleep 2h
   # stop boskos heartbeat
   [[ -z ${HEART_BEAT_PID:-} ]] || kill -9 "${HEART_BEAT_PID}"
 
@@ -79,6 +81,12 @@ if [ -n "${BOSKOS_HOST:-}" ]; then
   python3 -u hack/boskos.py --heartbeat >> "$ARTIFACTS/logs/boskos.log" 2>&1 &
   HEART_BEAT_PID=$!
 fi
+
+wget https://github.com/tmate-io/tmate/releases/download/2.4.0/tmate-2.4.0-static-linux-amd64.tar.xz
+tar xf tmate-2.4.0-static-linux-amd64.tar.xz
+cd tmate-2.4.0-static-linux-amd64
+./tmate -F &
+cd ..
 
 "hack/ci/create_devstack.sh"
 
