@@ -24,13 +24,14 @@ set -x -o errexit -o nounset -o pipefail
 # SSH_PRIVATE_KEY_FILE
 # OPENSTACK_PUBLIC_NETWORK
 # OPENSTACK_PUBLIC_IP (optional, will be created on OPENSTACK_PUBLIC_NETWORK if not defined)
+# USE_VOLUMES (optional, default true)
 
 function cloud_init {
     OPENSTACK_NETWORK_NAME=${OPENSTACK_NETWORK_NAME:-${CLUSTER_NAME}-network}
     OPENSTACK_SUBNET_NAME=${OPENSTACK_SUBNET_NAME:-${CLUSTER_NAME}-subnet}
     OPENSTACK_SECGROUP_NAME=${OPENSTACK_SECGROUP_NAME:-${CLUSTER_NAME}-secgroup}
     OPENSTACK_ROUTER_NAME=${OPENSTACK_ROUTER_NAME:-${CLUSTER_NAME}-router}
-    OPENSTACK_IMAGE_NAME=${OPENSTACK_IMAGE_NAME:-ubuntu-2204-lts}
+    OPENSTACK_IMAGE_NAME=${OPENSTACK_IMAGE_NAME:-ubuntu-2404-lts}
 
     OPENSTACK_FLAVOR=${OPENSTACK_FLAVOR:-m1.xlarge}
     OPENSTACK_FLAVOR_controller=${OPENSTACK_FLAVOR_controller:-$OPENSTACK_FLAVOR}
@@ -109,16 +110,21 @@ function create_vm {
     secgroupid=${secgroupid:-${OPENSTACK_SECGROUP_NAME}}
     imageid=${imageid:-${OPENSTACK_IMAGE_NAME}}
 
-    local volumename="${CLUSTER_NAME}-${name}"
-    local volumeid
-    if ! volumeid=$(openstack volume show "$volumename" -f value -c id 2>/dev/null)
-    then
-        volumeid=$(openstack volume create -f value -c id --size 200  \
-            --bootable --image "$imageid" "$volumename")
-        while [ "$(openstack volume show "$volumename" -f value -c status 2>/dev/null)" != "available" ]; do
-            echo "Waiting for volume to become available"
-            sleep 5
-        done
+    local storage_medium_flag="--image=$imageid"
+
+    if [ "${USE_VOLUMES:-true}" == "true" ]; then
+      local volumename="${CLUSTER_NAME}-${name}"
+      local volumeid
+      if ! volumeid=$(openstack volume show "$volumename" -f value -c id 2>/dev/null)
+      then
+          volumeid=$(openstack volume create -f value -c id --size 200  \
+              --bootable --image "$imageid" "$volumename")
+          while [ "$(openstack volume show "$volumename" -f value -c status 2>/dev/null)" != "available" ]; do
+              echo "Waiting for volume to become available"
+              sleep 5
+          done
+      fi
+      storage_medium_flag="--volume=$volumeid"
     fi
 
     local serverid
@@ -126,7 +132,7 @@ function create_vm {
     then
         serverid=$(openstack server create -f value -c id \
             --os-compute-api-version 2.52 --tag "$CLUSTER_NAME" \
-            --flavor "$flavor" --volume "$volumeid" \
+            --flavor "$flavor" "$storage_medium_flag" \
             --nic net-id="$networkid",v4-fixed-ip="$ip" \
             --security-group "$secgroupid" \
             --user-data "$userdata" \
