@@ -96,7 +96,7 @@ function create_vm {
         --enable-nested-virtualization \
         --image-project ubuntu-os-cloud \
         --image-family ubuntu-2404-lts-amd64 \
-        --boot-disk-size 200G \
+        --boot-disk-size 500G \
         --boot-disk-type pd-ssd \
         --can-ip-forward \
         --tags http-server,https-server,novnc,openstack-apis \
