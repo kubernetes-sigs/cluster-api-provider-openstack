@@ -12,6 +12,11 @@
     VERBOSE=True
     LOG_COLOR=True
 
+    # Host tuning
+    ENABLE_SYSCTL_MEM_TUNING="True"
+    ENABLE_SYSCTL_NET_TUNING="True"
+    ENABLE_ZSWAP="True"
+
     # Octavia
     enable_plugin octavia https://github.com/openstack/octavia stable/${OPENSTACK_RELEASE}
     enable_plugin octavia-dashboard https://github.com/openstack/octavia-dashboard stable/${OPENSTACK_RELEASE}
@@ -42,6 +47,14 @@
     Q_ML2_PLUGIN_MECHANISM_DRIVERS="ovn,logger"
     OVN_L3_CREATE_PUBLIC_NETWORK="True"
     Q_AGENT="ovn"
+
+    # WORKAROUND:
+    # 	https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/2320
+    # 	OVN built from source using LTS versions. Should be removed once OVS is more stable without the pin.
+    # 	https://opendev.org/openstack/neutron/src/commit/83de306105f9329e24c97c4af6c3886de20e7d70/zuul.d/tempest-multinode.yaml#L603-L604
+    OVN_BUILD_FROM_SOURCE=True
+    OVN_BRANCH=branch-24.03
+    OVS_BRANCH=branch-3.3
 
     # Octavia
     ENABLED_SERVICES+=,octavia,o-api,o-cw,o-hm,o-hk,o-da
@@ -87,6 +100,12 @@
     [scheduler]
     # query_placement_for_availability_zone is the default from Xena
     query_placement_for_availability_zone = True
+
+    [workarounds]
+    # FIXME(stephenfin): This is temporary while we get to the bottom of
+    # https://bugs.launchpad.net/nova/+bug/2091114 It should not be kept after
+    # we bump to 2025.1
+    disable_deep_image_inspection = True
 
     [[post-config|$CINDER_CONF]]
     [DEFAULT]
