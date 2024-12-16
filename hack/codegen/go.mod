@@ -3,8 +3,8 @@ module sigs.k8s.io/cluster-api-provider-openstack/hack/codegen
 go 1.22.2
 
 require (
-	k8s.io/apimachinery v0.30.7
-	k8s.io/code-generator v0.30.7
+	k8s.io/apimachinery v0.30.8
+	k8s.io/code-generator v0.30.8
 	k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340
 	sigs.k8s.io/cluster-api v1.8.6
 )
@@ -25,7 +25,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/onsi/ginkgo/v2 v2.22.0 // indirect
-	github.com/onsi/gomega v1.36.0 // indirect
+	github.com/onsi/gomega v1.36.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
@@ -41,8 +41,8 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/api v0.30.7 // indirect
-	k8s.io/apiextensions-apiserver v0.30.7 // indirect
+	k8s.io/api v0.30.8 // indirect
+	k8s.io/apiextensions-apiserver v0.30.8 // indirect
 	k8s.io/gengo/v2 v2.0.0-20240228010128-51d4e06bde70 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/utils v0.0.0-20231127182322-b307cd553661 // indirect
