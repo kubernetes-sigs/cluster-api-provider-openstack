@@ -306,7 +306,7 @@ func Test_EnsurePort(t *testing.T) {
 			want: &ports.Port{ID: portID},
 		},
 		{
-			name: "tags and trunk",
+			name: "create port with tags and trunk",
 			port: infrav1.ResolvedPortSpec{
 				Name:      "test-port",
 				NetworkID: netID,
@@ -358,6 +358,87 @@ func Test_EnsurePort(t *testing.T) {
 			},
 			want: &ports.Port{ID: portID, Name: "test-port"},
 		},
+		{
+			name: "port with tags and trunk already exists",
+			port: infrav1.ResolvedPortSpec{
+				Name:      "test-port",
+				NetworkID: netID,
+				Tags:      []string{"tag1", "tag2"},
+				Trunk:     ptr.To(true),
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder, _ types.Gomega) {
+				m.ListPort(ports.ListOpts{
+					Name:      "test-port",
+					NetworkID: netID,
+				}).Return([]ports.Port{{
+					ID:        portID,
+					Name:      "test-port",
+					NetworkID: netID,
+					Tags:      []string{"tag1", "tag2"},
+				}}, nil)
+
+				// Look for existing trunk
+				m.ListTrunk(trunks.ListOpts{
+					PortID: portID,
+					Name:   "test-port",
+				}).Return([]trunks.Trunk{{
+					ID:   trunkID,
+					Tags: []string{"tag1", "tag2"},
+				}}, nil)
+			},
+			want: &ports.Port{
+				ID:        portID,
+				Name:      "test-port",
+				NetworkID: netID,
+				Tags:      []string{"tag1", "tag2"},
+			},
+		},
+		{
+			name: "partial port missing tags and trunk",
+			port: infrav1.ResolvedPortSpec{
+				Name:      "test-port",
+				NetworkID: netID,
+				Tags:      []string{"tag1", "tag2"},
+				Trunk:     ptr.To(true),
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder, _ types.Gomega) {
+				m.ListPort(ports.ListOpts{
+					Name:      "test-port",
+					NetworkID: netID,
+				}).Return([]ports.Port{{
+					ID:        portID,
+					Name:      "test-port",
+					NetworkID: netID,
+				}}, nil)
+
+				// Tag the port
+				m.ReplaceAllAttributesTags("ports", portID, attributestags.ReplaceAllOpts{
+					Tags: []string{"tag1", "tag2"},
+				})
+
+				// Look for existing trunk
+				m.ListTrunk(trunks.ListOpts{
+					PortID: portID,
+					Name:   "test-port",
+				}).Return([]trunks.Trunk{}, nil)
+
+				// Create the trunk
+				m.CreateTrunk(trunks.CreateOpts{
+					PortID: portID,
+					Name:   "test-port",
+				}).Return(&trunks.Trunk{ID: trunkID}, nil)
+
+				// Tag the trunk
+				m.ReplaceAllAttributesTags("trunks", trunkID, attributestags.ReplaceAllOpts{
+					Tags: []string{"tag1", "tag2"},
+				})
+			},
+			want: &ports.Port{
+				ID:        portID,
+				Name:      "test-port",
+				NetworkID: netID,
+			},
+		},
 	}
 
 	eventObject := &infrav1.OpenStackMachine{}
@@ -376,6 +457,7 @@ func Test_EnsurePort(t *testing.T) {
 			got, err := s.EnsurePort(
 				eventObject,
 				&tt.port,
+				infrav1.PortStatus{},
 			)
 			if tt.wantErr {
 				g.Expect(err).To(HaveOccurred())

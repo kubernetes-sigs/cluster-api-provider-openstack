@@ -1,4 +1,3 @@
----
 # E2E test scenario using local dev images and manifests built from the source tree for following providers:
 # - openstack
 
@@ -201,7 +200,7 @@ intervals:
   default/wait-cluster: ["20m", "10s"]
   default/wait-control-plane: ["30m", "10s"]
   default/wait-worker-nodes: ["30m", "10s"]
-  default/wait-delete-cluster: ["10m", "10s"]
+  default/wait-delete-cluster: ["5m", "10s"]
   default/wait-alt-az: ["20m", "30s"]
   default/wait-machine-upgrade: ["30m", "10s"]
   default/wait-nodes-ready: ["15m", "10s"]
