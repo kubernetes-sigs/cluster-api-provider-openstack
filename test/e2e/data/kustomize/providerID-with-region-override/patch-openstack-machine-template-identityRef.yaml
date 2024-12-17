@@ -1,0 +1,7 @@
+---
+- op: add
+  path: /spec/template/spec/identityRef
+  value: 
+    cloudName: ${OPENSTACK_CLOUD}
+    name: ${CLUSTER_NAME}-cloud-config
+    region: ${CAPO_REGION}
