@@ -126,9 +126,12 @@ func (s *Service) GetPortForExternalNetwork(instanceID string, externalNetworkID
 
 // ensurePortTagsAndTrunk ensures that the provided port has the tags and trunk defined in portSpec.
 func (s *Service) ensurePortTagsAndTrunk(port *ports.Port, eventObject runtime.Object, portSpec *infrav1.ResolvedPortSpec) error {
-	if len(portSpec.Tags) > 0 {
-		if err := s.replaceAllAttributesTags(eventObject, portResource, port.ID, portSpec.Tags); err != nil {
-			record.Warnf(eventObject, "FailedReplaceTags", "Failed to replace port tags %s: %v", portSpec.Name, err)
+	wantedTags := uniqueSortedTags(portSpec.Tags)
+	actualTags := uniqueSortedTags(port.Tags)
+	// Only replace tags if there is a difference
+	if !slices.Equal(wantedTags, actualTags) && len(wantedTags) > 0 {
+		if err := s.replaceAllAttributesTags(eventObject, portResource, port.ID, wantedTags); err != nil {
+			record.Warnf(eventObject, "FailedReplaceTags", "Failed to replace port tags %s: %v", port.Name, err)
 			return err
 		}
 	}
@@ -138,21 +141,30 @@ func (s *Service) ensurePortTagsAndTrunk(port *ports.Port, eventObject runtime.O
 			record.Warnf(eventObject, "FailedCreateTrunk", "Failed to create trunk for port %s: %v", port.Name, err)
 			return err
 		}
-		if err = s.replaceAllAttributesTags(eventObject, trunkResource, trunk.ID, portSpec.Tags); err != nil {
-			record.Warnf(eventObject, "FailedReplaceTags", "Failed to replace trunk tags %s: %v", port.Name, err)
-			return err
+
+		if !slices.Equal(wantedTags, trunk.Tags) {
+			if err = s.replaceAllAttributesTags(eventObject, trunkResource, trunk.ID, wantedTags); err != nil {
+				record.Warnf(eventObject, "FailedReplaceTags", "Failed to replace trunk tags %s: %v", port.Name, err)
+				return err
+			}
 		}
 	}
 	return nil
 }
 
 // EnsurePort ensure that a port defined with portSpec Name and NetworkID exists,
-// and that the port has suitable tags and trunk.
-func (s *Service) EnsurePort(eventObject runtime.Object, portSpec *infrav1.ResolvedPortSpec) (*ports.Port, error) {
-	existingPorts, err := s.client.ListPort(ports.ListOpts{
+// and that the port has suitable tags and trunk. If the PortStatus is already known,
+// use the ID when filtering for existing ports.
+func (s *Service) EnsurePort(eventObject runtime.Object, portSpec *infrav1.ResolvedPortSpec, portStatus infrav1.PortStatus) (*ports.Port, error) {
+	opts := ports.ListOpts{
 		Name:      portSpec.Name,
 		NetworkID: portSpec.NetworkID,
-	})
+	}
+	if portStatus.ID != "" {
+		opts.ID = portStatus.ID
+	}
+
+	existingPorts, err := s.client.ListPort(opts)
 	if err != nil {
 		return nil, fmt.Errorf("searching for existing port for server: %v", err)
 	}
@@ -359,16 +371,27 @@ func getPortName(baseName string, portSpec *infrav1.PortOpts, netIndex int) stri
 // EnsurePorts ensures that every one of desiredPorts is created and has
 // expected trunk and tags.
 func (s *Service) EnsurePorts(eventObject runtime.Object, desiredPorts []infrav1.ResolvedPortSpec, resources *infrav1alpha1.ServerResources) error {
-	for _, portSpec := range desiredPorts {
+	for i := range desiredPorts {
+		// If we already created the port, make use of the status
+		portStatus := infrav1.PortStatus{}
+		if i < len(resources.Ports) {
+			portStatus = resources.Ports[i]
+		}
 		// Events are recorded in EnsurePort
-		port, err := s.EnsurePort(eventObject, &portSpec)
+		port, err := s.EnsurePort(eventObject, &desiredPorts[i], portStatus)
 		if err != nil {
 			return err
 		}
 
-		resources.Ports = append(resources.Ports, infrav1.PortStatus{
-			ID: port.ID,
-		})
+		// If we already have the status, replace it,
+		// otherwise append it.
+		if i < len(resources.Ports) {
+			resources.Ports[i] = portStatus
+		} else {
+			resources.Ports = append(resources.Ports, infrav1.PortStatus{
+				ID: port.ID,
+			})
+		}
 	}
 
 	return nil
@@ -627,4 +650,20 @@ func (s *Service) AdoptPortsServer(scope *scope.WithLogger, desiredPorts []infra
 	}
 
 	return nil
+}
+
+// uniqueSortedTags returns a new, sorted slice where any duplicates have been removed.
+func uniqueSortedTags(tags []string) []string {
+	// remove duplicate values from tags
+	tagsMap := make(map[string]string)
+	for _, t := range tags {
+		tagsMap[t] = t
+	}
+
+	uniqueTags := []string{}
+	for k := range tagsMap {
+		uniqueTags = append(uniqueTags, k)
+	}
+	slices.Sort(uniqueTags)
+	return uniqueTags
 }
