@@ -32,6 +32,10 @@ func (c *FakeOpenstackV1alpha1) Images(namespace string) v1alpha1.ImageInterface
 	return &FakeImages{c, namespace}
 }
 
+func (c *FakeOpenstackV1alpha1) Subnets(namespace string) v1alpha1.SubnetInterface {
+	return &FakeSubnets{c, namespace}
+}
+
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeOpenstackV1alpha1) RESTClient() rest.Interface {
