@@ -627,11 +627,15 @@ func resolveLoadBalancerNetwork(openStackCluster *infrav1.OpenStackCluster, netw
 			for _, s := range lbSpec.Subnets {
 				matchFound := false
 				for _, subnetID := range lbNet.Subnets {
-					if s.ID != nil && subnetID == *s.ID {
+					subnet, err := networkingService.GetSubnetByParam(&s)
+					if s.ID != nil && subnetID == *s.ID && err == nil {
 						matchFound = true
 						lbNetStatus.Subnets = append(
 							lbNetStatus.Subnets, infrav1.Subnet{
-								ID: *s.ID,
+								ID:   subnet.ID,
+								Name: subnet.Name,
+								CIDR: subnet.CIDR,
+								Tags: subnet.Tags,
 							})
 					}
 				}
@@ -640,6 +644,8 @@ func resolveLoadBalancerNetwork(openStackCluster *infrav1.OpenStackCluster, netw
 					return fmt.Errorf("no subnet match was found in the specified network (specified subnet: %v, available subnets: %v)", s, lbNet.Subnets)
 				}
 			}
+
+			openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork = lbNetStatus
 		}
 	}
 
