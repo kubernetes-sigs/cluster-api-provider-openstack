@@ -251,14 +251,14 @@ func (r *OpenStackClusterReconciler) deleteBastion(ctx context.Context, scope *s
 	var statusFloatingIP *string
 	var specFloatingIP *string
 	if openStackCluster.Status.Bastion != nil && openStackCluster.Status.Bastion.FloatingIP != "" {
-		// Floating IP set in status
 		statusFloatingIP = &openStackCluster.Status.Bastion.FloatingIP
 	}
 	if openStackCluster.Spec.Bastion.FloatingIP != nil {
-		// Floating IP from the spec
 		specFloatingIP = openStackCluster.Spec.Bastion.FloatingIP
 	}
 
+	// We only remove the bastion's floating IP if it exists and if it's not the same value defined both in the spec and in status.
+	// This decision was made so if a user specifies a pre-created floating IP that is intended to only be used for the bastion, the floating IP won't get removed once the bastion is destroyed.
 	if statusFloatingIP != nil && (specFloatingIP == nil || *statusFloatingIP != *specFloatingIP) {
 		if err = networkingService.DeleteFloatingIP(openStackCluster, openStackCluster.Status.Bastion.FloatingIP); err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete floating IP: %w", err), false)
@@ -285,7 +285,8 @@ func (r *OpenStackClusterReconciler) deleteBastion(ctx context.Context, scope *s
 
 		for _, address := range addresses {
 			if address.Type == corev1.NodeExternalIP {
-				// If a floating IP is set for the bastion spec, skip deleting it
+				// If a floating IP retrieved is the same as what is set in the bastion spec, skip deleting it.
+				// This decision was made so if a user specifies a pre-created floating IP that is intended to only be used for the bastion, the floating IP won't get removed once the bastion is destroyed.
 				if specFloatingIP != nil && address.Address == *specFloatingIP {
 					continue
 				}
