@@ -1,0 +1,4 @@
+---
+- op: replace
+  path: /spec/template/spec/joinConfiguration/nodeRegistration/kubeletExtraArgs/provider-id
+  value: "openstack://${CAPO_REGION}/{{ instance_id }}"
