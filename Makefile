@@ -209,9 +209,9 @@ e2e-image: docker-build
 
 # Pull all the images references in test/e2e/data/e2e_conf.yaml
 test-e2e-image-prerequisites:
-	docker pull registry.k8s.io/cluster-api/cluster-api-controller:v1.8.6
-	docker pull registry.k8s.io/cluster-api/kubeadm-bootstrap-controller:v1.8.6
-	docker pull registry.k8s.io/cluster-api/kubeadm-control-plane-controller:v1.8.6
+	docker pull registry.k8s.io/cluster-api/cluster-api-controller:v1.8.8
+	docker pull registry.k8s.io/cluster-api/kubeadm-bootstrap-controller:v1.8.8
+	docker pull registry.k8s.io/cluster-api/kubeadm-control-plane-controller:v1.8.8
 
 CONFORMANCE_E2E_ARGS ?= -kubetest.config-file=$(KUBETEST_CONF_PATH)
 CONFORMANCE_E2E_ARGS += $(E2E_ARGS)

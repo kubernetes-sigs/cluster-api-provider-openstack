@@ -28,8 +28,8 @@ require (
 	k8s.io/component-base v0.30.8
 	k8s.io/klog/v2 v2.130.1
 	k8s.io/utils v0.0.0-20231127182322-b307cd553661
-	sigs.k8s.io/cluster-api v1.8.6
-	sigs.k8s.io/cluster-api/test v1.8.6
+	sigs.k8s.io/cluster-api v1.8.8
+	sigs.k8s.io/cluster-api/test v1.8.8
 	sigs.k8s.io/controller-runtime v0.18.6
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1
 	sigs.k8s.io/yaml v1.4.0
@@ -89,7 +89,7 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
-	github.com/magiconair/properties v1.8.7 // indirect
+	github.com/magiconair/properties v1.8.8 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
@@ -130,7 +130,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
-	golang.org/x/net v0.30.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/oauth2 v0.21.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
