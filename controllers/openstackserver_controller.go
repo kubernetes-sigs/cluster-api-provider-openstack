@@ -77,6 +77,7 @@ type OpenStackServerReconciler struct {
 
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackservers,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackservers/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=openstack.k-orc.cloud,resources=images,verbs=get;list;watch
 
 func (r *OpenStackServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ctrl.Result, reterr error) {
 	log := ctrl.LoggerFrom(ctx)

@@ -177,7 +177,7 @@ func TestService_getImageID(t *testing.T) {
 					Status: orcv1alpha1.ImageStatus{
 						Conditions: []metav1.Condition{
 							{
-								Type:   orcv1alpha1.OpenStackConditionAvailable,
+								Type:   orcv1alpha1.ConditionAvailable,
 								Status: metav1.ConditionTrue,
 							},
 						},
@@ -203,13 +203,13 @@ func TestService_getImageID(t *testing.T) {
 					Status: orcv1alpha1.ImageStatus{
 						Conditions: []metav1.Condition{
 							{
-								Type:   orcv1alpha1.OpenStackConditionAvailable,
+								Type:   orcv1alpha1.ConditionAvailable,
 								Status: metav1.ConditionFalse,
 							},
 							{
-								Type:   orcv1alpha1.OpenStackConditionProgressing,
+								Type:   orcv1alpha1.ConditionProgressing,
 								Status: metav1.ConditionTrue,
-								Reason: orcv1alpha1.OpenStackConditionReasonProgressing,
+								Reason: orcv1alpha1.ConditionReasonProgressing,
 							},
 						},
 						ID: ptr.To(imageID),
@@ -234,13 +234,13 @@ func TestService_getImageID(t *testing.T) {
 					Status: orcv1alpha1.ImageStatus{
 						Conditions: []metav1.Condition{
 							{
-								Type:   orcv1alpha1.OpenStackConditionAvailable,
+								Type:   orcv1alpha1.ConditionAvailable,
 								Status: metav1.ConditionFalse,
 							},
 							{
-								Type:    orcv1alpha1.OpenStackConditionProgressing,
+								Type:    orcv1alpha1.ConditionProgressing,
 								Status:  metav1.ConditionFalse,
-								Reason:  orcv1alpha1.OpenStackConditionReasonUnrecoverableError,
+								Reason:  orcv1alpha1.ConditionReasonUnrecoverableError,
 								Message: "test error",
 							},
 						},

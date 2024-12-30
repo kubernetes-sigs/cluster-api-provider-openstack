@@ -17,6 +17,8 @@ images:
 # Use local dev images built source tree;
 - name: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e
   loadBehavior: mustLoad
+- name: quay.io/orc/openstack-resource-controller:v1.0.0
+  loadBehavior: tryLoad
 
 providers:
 - name: cluster-api
@@ -133,6 +135,17 @@ providers:
       new: "--v=4"
     - old: "--leader-elect"
       new: "--leader-elect=false\n        - --sync-period=1m"
+- name: openstack-resource-controller
+  type: RuntimeExtensionProvider # ORC isn't a provider but we fake it so it can be handled by the clusterctl machinery.
+  versions:
+  - name: v1.0.99
+    value: ../../../../cluster-api-provider-openstack/test/infrastructure/openstack-resource-controller/config/default
+    contract: v1beta1
+    files:
+    - sourcePath: "../data/shared/openstack-resource-controller/metadata.yaml"
+    replacements:
+    - old: "imagePullPolicy: Always"
+      new: "imagePullPolicy: IfNotPresent"
 
 
 # default variables for the e2e test; those values could be overridden via env variables, thus

@@ -102,18 +102,6 @@ rules:
   resources:
   - images
   verbs:
-  - create
-  - delete
   - get
   - list
-  - patch
-  - update
   - watch
-- apiGroups:
-  - openstack.k-orc.cloud
-  resources:
-  - images/status
-  verbs:
-  - get
-  - patch
-  - update
