@@ -1,6 +1,8 @@
 module sigs.k8s.io/cluster-api-provider-openstack
 
-go 1.22.0
+go 1.23.0
+
+toolchain go1.23.4
 
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
@@ -9,9 +11,9 @@ require (
 	github.com/google/gofuzz v1.2.0
 	github.com/google/uuid v1.6.0
 	github.com/gophercloud/gophercloud/v2 v2.4.0
-	github.com/gophercloud/utils/v2 v2.0.0-20241008104625-7cbb8fd76bb7
+	github.com/gophercloud/utils/v2 v2.0.0-20241209100706-e3a3b7c07d26
 	github.com/hashicorp/go-version v1.7.0
-	github.com/k-orc/openstack-resource-controller v0.0.0-00010101000000-000000000000
+	github.com/k-orc/openstack-resource-controller v1.0.0
 	github.com/onsi/ginkgo/v2 v2.22.2
 	github.com/onsi/gomega v1.36.2
 	github.com/prometheus/client_golang v1.20.5
@@ -120,7 +122,6 @@ require (
 	github.com/spf13/viper v1.19.0 // indirect
 	github.com/stoewer/go-strcase v1.3.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
-	github.com/ulikunitz/xz v0.5.12 // indirect
 	github.com/valyala/fastjson v1.6.4 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.53.0 // indirect
@@ -158,5 +159,3 @@ require (
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/kind v0.25.0 // indirect
 )
-
-replace github.com/k-orc/openstack-resource-controller => ./orc

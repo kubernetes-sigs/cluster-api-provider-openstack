@@ -8,6 +8,7 @@
     - [cloud-init based images](#cloud-init-based-images)
     - [Ignition based images](#ignition-based-images)
   - [SSH key pair](#ssh-key-pair)
+  - [ORC](#orc)
   - [OpenStack credential](#openstack-credential)
     - [Generate credentials](#generate-credentials)
   - [CA certificates](#ca-certificates)
@@ -128,6 +129,27 @@ The key pair name must be exposed as an environment variable `OPENSTACK_SSH_KEY_
 In order to access cluster nodes via SSH, you must either
 [access nodes through the bastion host](#accessing-nodes-through-the-bastion-host-via-ssh)
 or [configure custom security groups](#security-groups) with rules allowing ingress for port 22.
+
+## ORC
+
+ORC ([OpenStack Resource Controller](https://github.com/k-orc/openstack-resource-controller)) provides a set of Kubernetes controllers and is required by CAPO to 
+manage some OpenStack resources. ORC is a separate project and is not part of CAPO, therefore it needs to be installed separately.
+
+To install ORC, run the following command:
+
+```bash
+ORC_VERSION=v1.0.0
+kubectl apply -f "https://github.com/k-orc/openstack-resource-controller/releases/download/${ORC_VERSION}/install.yaml"
+```
+
+We also publish a Kustomize module which can be used to install ORC:
+
+```bash
+kubectl apply --server-side -k "https://github.com/k-orc/openstack-resource-controller/dist?ref=${ORC_VERSION}"
+```
+
+In most cases, the default configuration should be sufficient.
+Check the [ORC documentation](https://k-orc.cloud) for more information.
 
 ## OpenStack credential
 

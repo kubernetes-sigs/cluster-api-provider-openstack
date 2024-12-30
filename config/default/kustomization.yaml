@@ -13,9 +13,6 @@ resources:
 - ../webhook
 - ../certmanager
 
-# ORC
-- ../../orc/config/crd
-
 patches:
 # Provide customizable hook for make targets.
 - path: manager_image_patch.yaml

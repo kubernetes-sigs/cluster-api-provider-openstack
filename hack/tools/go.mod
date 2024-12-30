@@ -1,6 +1,6 @@
 module sigs.k8s.io/cluster-api-provider-openstack/hack/tools
 
-go 1.22.7
+go 1.23.0
 
 toolchain go1.23.2
 
@@ -55,7 +55,7 @@ require (
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gophercloud/gophercloud/v2 v2.4.0 // indirect
-	github.com/gophercloud/utils/v2 v2.0.0-20241008104625-7cbb8fd76bb7 // indirect
+	github.com/gophercloud/utils/v2 v2.0.0-20241209100706-e3a3b7c07d26 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.20.0 // indirect
 	github.com/hashicorp/go-version v1.7.0 // indirect
 	github.com/imdario/mergo v0.3.15 // indirect
@@ -63,7 +63,7 @@ require (
 	github.com/itchyny/timefmt-go v0.1.6 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/k-orc/openstack-resource-controller v0.0.0-00010101000000-000000000000 // indirect
+	github.com/k-orc/openstack-resource-controller v1.0.0 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
@@ -88,7 +88,6 @@ require (
 	github.com/spf13/cobra v1.8.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stoewer/go-strcase v1.3.0 // indirect
-	github.com/ulikunitz/xz v0.5.12 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xlab/treeprint v1.2.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.53.0 // indirect
@@ -146,7 +145,4 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-replace (
-	github.com/k-orc/openstack-resource-controller => ../../orc
-	sigs.k8s.io/cluster-api-provider-openstack => ../..
-)
+replace sigs.k8s.io/cluster-api-provider-openstack => ../..
