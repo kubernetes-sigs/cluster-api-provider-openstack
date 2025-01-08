@@ -95,7 +95,7 @@ func TestValidateRemoteManagedGroups(t *testing.T) {
 	}
 }
 
-func TestGetAllNodesRules(t *testing.T) {
+func TestGetRulesFromSpecs(t *testing.T) {
 	tests := []struct {
 		name                       string
 		remoteManagedGroups        map[string]string
@@ -273,13 +273,13 @@ func TestGetAllNodesRules(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRules, err := getAllNodesRules(tt.remoteManagedGroups, tt.allNodesSecurityGroupRules)
+			gotRules, err := getRulesFromSpecs(tt.remoteManagedGroups, tt.allNodesSecurityGroupRules)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("getAllNodesRules() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("getRulesFromSpecs() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(gotRules, tt.wantRules) {
-				t.Errorf("getAllNodesRules() gotRules = %v, want %v", gotRules, tt.wantRules)
+				t.Errorf("getRulesFromSpecs() gotRules = %v, want %v", gotRules, tt.wantRules)
 			}
 		})
 	}

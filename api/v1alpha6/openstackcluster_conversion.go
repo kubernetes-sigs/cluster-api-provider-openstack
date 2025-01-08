@@ -222,6 +222,8 @@ func restorev1beta1ClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infr
 
 	if previous.ManagedSecurityGroups != nil && dst.ManagedSecurityGroups != nil {
 		dst.ManagedSecurityGroups.AllNodesSecurityGroupRules = previous.ManagedSecurityGroups.AllNodesSecurityGroupRules
+		dst.ManagedSecurityGroups.ControlPlaneNodesSecurityGroupRules = previous.ManagedSecurityGroups.ControlPlaneNodesSecurityGroupRules
+		dst.ManagedSecurityGroups.WorkerNodesSecurityGroupRules = previous.ManagedSecurityGroups.WorkerNodesSecurityGroupRules
 	}
 
 	if dst.APIServerLoadBalancer != nil && previous.APIServerLoadBalancer != nil {
