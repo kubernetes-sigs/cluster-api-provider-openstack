@@ -317,7 +317,7 @@ func TestGenerateDesiredSecGroups(t *testing.T) {
 			wantErr:                          false,
 		},
 		{
-			name: "Valid openStackCluster with securityGroups",
+			name: "Valid openStackCluster with default securityGroups",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
 					ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{},
@@ -327,10 +327,11 @@ func TestGenerateDesiredSecGroups(t *testing.T) {
 			wantErr:                          false,
 		},
 		{
-			name: "Valid openStackCluster with securityGroups and allNodesSecurityGroupRules",
+			name: "Valid openStackCluster with default + additional security groups",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
 					ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{
+						// This should add 4 rules (two for the control plane group and two for the worker group)
 						AllNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
 							{
 								Protocol:            ptr.To("tcp"),
@@ -339,14 +340,34 @@ func TestGenerateDesiredSecGroups(t *testing.T) {
 								RemoteManagedGroups: []infrav1.ManagedSecurityGroupName{"controlplane", "worker"},
 							},
 						},
+						// This should add one rule
+						ControlPlaneNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
+							{
+								Protocol:            ptr.To("tcp"),
+								PortRangeMin:        ptr.To(9000),
+								PortRangeMax:        ptr.To(9000),
+								RemoteManagedGroups: []infrav1.ManagedSecurityGroupName{"controlplane"},
+							},
+						},
+						// This should also add one rule
+						WorkerNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
+							{
+								Protocol:       ptr.To("tcp"),
+								Direction:      "ingress",
+								EtherType:      ptr.To("IPv4"),
+								PortRangeMin:   ptr.To(30000),
+								PortRangeMax:   ptr.To(32767),
+								RemoteIPPrefix: ptr.To("0.0.0.0/0"),
+							},
+						},
 					},
 				},
 			},
-			expectedNumberSecurityGroupRules: 18,
+			expectedNumberSecurityGroupRules: 20,
 			wantErr:                          false,
 		},
 		{
-			name: "Valid openStackCluster with securityGroups with invalid allNodesSecurityGroupRules",
+			name: "Valid openStackCluster with invalid allNodesSecurityGroupRules",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
 					ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{
