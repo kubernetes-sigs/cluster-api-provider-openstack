@@ -575,7 +575,7 @@ between cluster nodes on all ports and protocols (API server and node port traff
 permitted from anywhere, as with the default rules).
 
 We can add additional security group rules that authorize traffic between nodes and/or from the outside
-world using `allNodesSecurityGroupRules`, `ControlPlaneNodesSecurityGroupRules` and `WorkerNodesSecurityGroupRules`.
+world using `allNodesSecurityGroupRules`, `controlPlaneNodesSecurityGroupRules` and `workerNodesSecurityGroupRules`.
 These properties take a list of security group rules that should be applied to all nodes, control plane nodes only
 or worker nodes only respectively.
 
