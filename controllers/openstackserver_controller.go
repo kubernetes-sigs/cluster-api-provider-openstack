@@ -602,6 +602,7 @@ func (r *OpenStackServerReconciler) getOrCreateIPAddressClaimForFloatingAddress(
 				},
 			},
 			Finalizers: []string{infrav1.IPClaimMachineFinalizer},
+			Labels:     map[string]string{},
 		},
 		Spec: ipamv1.IPAddressClaimSpec{
 			PoolRef: *poolRef,
