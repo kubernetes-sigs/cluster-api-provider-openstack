@@ -28,6 +28,9 @@
   - [Multiple Networks](#multiple-networks)
   - [Subnet Filters](#subnet-filters)
   - [Ports](#ports)
+    - [Port network and IP addresses](#port-network-and-ip-addresses)
+      - [Examples](#examples)
+    - [Port Security](#port-security)
   - [Security groups](#security-groups)
   - [Tagging](#tagging)
   - [Metadata](#metadata)
@@ -571,14 +574,17 @@ set to `true`, the rules for the managed security groups permit all traffic
 between cluster nodes on all ports and protocols (API server and node port traffic is still
 permitted from anywhere, as with the default rules).
 
-We can add security group rules that authorize traffic from all nodes via `allNodesSecurityGroupRules`.
-It takes a list of security groups rules that should be applied to selected nodes.
-The following rule fields are mutually exclusive: `remoteManagedGroups`, `remoteGroupID` and `remoteIPPrefix`.
+We can add additional security group rules that authorize traffic between nodes and/or from the outside
+world using `allNodesSecurityGroupRules`, `ControlPlaneNodesSecurityGroupRules` and `WorkerNodesSecurityGroupRules`.
+These properties take a list of security group rules that should be applied to all nodes, control plane nodes only
+or worker nodes only respectively.
+
+In a rule definition, the fields `remoteManagedGroups`, `remoteGroupID` and `remoteIPPrefix` are mutually exclusive.
 If none of these fields are set, the rule will have a remote IP prefix of `0.0.0.0/0` per Neutron default.
 
 Valid values for `remoteManagedGroups` are `controlplane`, `worker` and `bastion`.
 
-To apply a security group rule that will allow BGP between the control plane and workers, you can follow this example:
+For example, to apply a security group rule to all nodes to permit BGP traffic between the nodes, use the following:
 
 ```yaml
 managedSecurityGroups:
@@ -593,7 +599,29 @@ managedSecurityGroups:
     portRangeMax: 179
     protocol: tcp
     description: "Allow BGP between control plane and workers"
-  ```
+```
+
+Or to enable traffic from anywhere to node port services on worker nodes only,
+which is **required for the OVN load-balancer provider**, the following can be used:
+
+```yaml
+managedSecurityGroups:
+  workerNodesSecurityGroupRules:
+  - remoteIPPrefix: 0.0.0.0/0
+    direction: ingress
+    etherType: IPv4
+    name: Node Port (TCP, anywhere)
+    portRangeMin: 30000
+    portRangeMax: 32767
+    protocol: tcp
+  - remoteIPPrefix: 0.0.0.0/0
+    direction: ingress
+    etherType: IPv4
+    name: Node Port (UDP, anywhere)
+    portRangeMin: 30000
+    portRangeMax: 32767
+    protocol: udp
+```
 
 If this is not flexible enough, pre-existing security groups can be added to the
 spec of an `OpenStackMachineTemplate`, e.g.:
