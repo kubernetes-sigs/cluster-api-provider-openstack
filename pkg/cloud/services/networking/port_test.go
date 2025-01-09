@@ -41,7 +41,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
-func Test_CreatePort(t *testing.T) {
+func Test_EnsurePort(t *testing.T) {
 	// Arbitrary values used in the tests
 	const (
 		netID               = "7fd24ceb-788a-441f-ad0a-d8e2f5d31a1d"
@@ -60,8 +60,8 @@ func Test_CreatePort(t *testing.T) {
 		name   string
 		port   infrav1.ResolvedPortSpec
 		expect func(m *mock.MockNetworkClientMockRecorder, g Gomega)
-		// Note the 'wanted' port isn't so important, since it will be whatever we tell ListPort or CreatePort to return.
-		// Mostly in this test suite, we're checking that CreatePort is called with the expected port opts.
+		// Note the 'wanted' port isn't so important, since it will be whatever we tell ListPort or EnsurePort to return.
+		// Mostly in this test suite, we're checking that EnsurePort is called with the expected port opts.
 		want    *ports.Port
 		wantErr bool
 	}{
@@ -157,6 +157,10 @@ func Test_CreatePort(t *testing.T) {
 					},
 				}
 
+				m.ListPort(ports.ListOpts{
+					Name:      "foo-port-1",
+					NetworkID: netID,
+				}).Return(nil, nil)
 				// The following allows us to use gomega to
 				// compare the argument instead of gomock.
 				// Gomock's output in the case of a mismatch is
@@ -184,6 +188,10 @@ func Test_CreatePort(t *testing.T) {
 				expectedCreateOpts = portsbinding.CreateOptsExt{
 					CreateOptsBuilder: expectedCreateOpts,
 				}
+				m.ListPort(ports.ListOpts{
+					Name:      "test-port",
+					NetworkID: netID,
+				}).Return(nil, nil)
 				m.CreatePort(gomock.Any()).DoAndReturn(func(builder ports.CreateOptsBuilder) (*ports.Port, error) {
 					gotCreateOpts := builder.(portsbinding.CreateOptsExt)
 					g.Expect(gotCreateOpts).To(Equal(expectedCreateOpts), cmp.Diff(gotCreateOpts, expectedCreateOpts))
@@ -203,6 +211,10 @@ func Test_CreatePort(t *testing.T) {
 				SecurityGroups: []string{portSecurityGroupID},
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder, _ Gomega) {
+				m.ListPort(ports.ListOpts{
+					Name:      "test-port",
+					NetworkID: netID,
+				}).Return(nil, nil)
 				m.CreatePort(gomock.Any()).Times(0)
 			},
 			wantErr: true,
@@ -235,6 +247,10 @@ func Test_CreatePort(t *testing.T) {
 				expectedCreateOpts = portsbinding.CreateOptsExt{
 					CreateOptsBuilder: expectedCreateOpts,
 				}
+				m.ListPort(ports.ListOpts{
+					Name:      "test-port",
+					NetworkID: netID,
+				}).Return(nil, nil)
 				m.CreatePort(gomock.Any()).DoAndReturn(func(builder ports.CreateOptsBuilder) (*ports.Port, error) {
 					gotCreateOpts := builder.(portsbinding.CreateOptsExt)
 					g.Expect(gotCreateOpts).To(Equal(expectedCreateOpts), cmp.Diff(gotCreateOpts, expectedCreateOpts))
@@ -277,6 +293,10 @@ func Test_CreatePort(t *testing.T) {
 				expectedCreateOpts = portsbinding.CreateOptsExt{
 					CreateOptsBuilder: expectedCreateOpts,
 				}
+				m.ListPort(ports.ListOpts{
+					Name:      "test-port",
+					NetworkID: netID,
+				}).Return(nil, nil)
 				m.CreatePort(gomock.Any()).DoAndReturn(func(builder ports.CreateOptsBuilder) (*ports.Port, error) {
 					gotCreateOpts := builder.(portsbinding.CreateOptsExt)
 					g.Expect(gotCreateOpts).To(Equal(expectedCreateOpts), cmp.Diff(gotCreateOpts, expectedCreateOpts))
@@ -286,7 +306,7 @@ func Test_CreatePort(t *testing.T) {
 			want: &ports.Port{ID: portID},
 		},
 		{
-			name: "tags and trunk",
+			name: "create port with tags and trunk",
 			port: infrav1.ResolvedPortSpec{
 				Name:      "test-port",
 				NetworkID: netID,
@@ -303,6 +323,10 @@ func Test_CreatePort(t *testing.T) {
 					CreateOptsBuilder: expectedCreateOpts,
 				}
 
+				m.ListPort(ports.ListOpts{
+					Name:      "test-port",
+					NetworkID: netID,
+				}).Return(nil, nil)
 				// Create the port
 				m.CreatePort(gomock.Any()).DoAndReturn(func(builder ports.CreateOptsBuilder) (*ports.Port, error) {
 					gotCreateOpts := builder.(portsbinding.CreateOptsExt)
@@ -334,6 +358,87 @@ func Test_CreatePort(t *testing.T) {
 			},
 			want: &ports.Port{ID: portID, Name: "test-port"},
 		},
+		{
+			name: "port with tags and trunk already exists",
+			port: infrav1.ResolvedPortSpec{
+				Name:      "test-port",
+				NetworkID: netID,
+				Tags:      []string{"tag1", "tag2"},
+				Trunk:     ptr.To(true),
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder, _ types.Gomega) {
+				m.ListPort(ports.ListOpts{
+					Name:      "test-port",
+					NetworkID: netID,
+				}).Return([]ports.Port{{
+					ID:        portID,
+					Name:      "test-port",
+					NetworkID: netID,
+					Tags:      []string{"tag1", "tag2"},
+				}}, nil)
+
+				// Look for existing trunk
+				m.ListTrunk(trunks.ListOpts{
+					PortID: portID,
+					Name:   "test-port",
+				}).Return([]trunks.Trunk{{
+					ID:   trunkID,
+					Tags: []string{"tag1", "tag2"},
+				}}, nil)
+			},
+			want: &ports.Port{
+				ID:        portID,
+				Name:      "test-port",
+				NetworkID: netID,
+				Tags:      []string{"tag1", "tag2"},
+			},
+		},
+		{
+			name: "partial port missing tags and trunk",
+			port: infrav1.ResolvedPortSpec{
+				Name:      "test-port",
+				NetworkID: netID,
+				Tags:      []string{"tag1", "tag2"},
+				Trunk:     ptr.To(true),
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder, _ types.Gomega) {
+				m.ListPort(ports.ListOpts{
+					Name:      "test-port",
+					NetworkID: netID,
+				}).Return([]ports.Port{{
+					ID:        portID,
+					Name:      "test-port",
+					NetworkID: netID,
+				}}, nil)
+
+				// Tag the port
+				m.ReplaceAllAttributesTags("ports", portID, attributestags.ReplaceAllOpts{
+					Tags: []string{"tag1", "tag2"},
+				})
+
+				// Look for existing trunk
+				m.ListTrunk(trunks.ListOpts{
+					PortID: portID,
+					Name:   "test-port",
+				}).Return([]trunks.Trunk{}, nil)
+
+				// Create the trunk
+				m.CreateTrunk(trunks.CreateOpts{
+					PortID: portID,
+					Name:   "test-port",
+				}).Return(&trunks.Trunk{ID: trunkID}, nil)
+
+				// Tag the trunk
+				m.ReplaceAllAttributesTags("trunks", trunkID, attributestags.ReplaceAllOpts{
+					Tags: []string{"tag1", "tag2"},
+				})
+			},
+			want: &ports.Port{
+				ID:        portID,
+				Name:      "test-port",
+				NetworkID: netID,
+			},
+		},
 	}
 
 	eventObject := &infrav1.OpenStackMachine{}
@@ -349,9 +454,10 @@ func Test_CreatePort(t *testing.T) {
 			s := Service{
 				client: mockClient,
 			}
-			got, err := s.CreatePort(
+			got, err := s.EnsurePort(
 				eventObject,
 				&tt.port,
+				infrav1.PortStatus{},
 			)
 			if tt.wantErr {
 				g.Expect(err).To(HaveOccurred())
