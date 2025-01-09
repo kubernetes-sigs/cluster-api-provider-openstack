@@ -19,8 +19,8 @@ limitations under the License.
 package v1beta1
 
 import (
+	errors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 	apiv1beta1 "sigs.k8s.io/cluster-api/api/v1beta1"
-	errors "sigs.k8s.io/cluster-api/errors"
 )
 
 // OpenStackClusterStatusApplyConfiguration represents a declarative configuration of the OpenStackClusterStatus type for use
@@ -36,7 +36,7 @@ type OpenStackClusterStatusApplyConfiguration struct {
 	WorkerSecurityGroup       *SecurityGroupStatusApplyConfiguration      `json:"workerSecurityGroup,omitempty"`
 	BastionSecurityGroup      *SecurityGroupStatusApplyConfiguration      `json:"bastionSecurityGroup,omitempty"`
 	Bastion                   *BastionStatusApplyConfiguration            `json:"bastion,omitempty"`
-	FailureReason             *errors.ClusterStatusError                  `json:"failureReason,omitempty"`
+	FailureReason             *errors.DeprecatedCAPIClusterStatusError    `json:"failureReason,omitempty"`
 	FailureMessage            *string                                     `json:"failureMessage,omitempty"`
 }
 
@@ -129,7 +129,7 @@ func (b *OpenStackClusterStatusApplyConfiguration) WithBastion(value *BastionSta
 // WithFailureReason sets the FailureReason field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the FailureReason field is set to the value of the last call.
-func (b *OpenStackClusterStatusApplyConfiguration) WithFailureReason(value errors.ClusterStatusError) *OpenStackClusterStatusApplyConfiguration {
+func (b *OpenStackClusterStatusApplyConfiguration) WithFailureReason(value errors.DeprecatedCAPIClusterStatusError) *OpenStackClusterStatusApplyConfiguration {
 	b.FailureReason = &value
 	return b
 }
