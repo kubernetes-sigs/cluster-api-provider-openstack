@@ -22712,6 +22712,54 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ManagedSecurity
 							},
 						},
 					},
+					"controlPlaneNodesSecurityGroupRules": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"name",
+								},
+								"x-kubernetes-list-type":       "map",
+								"x-kubernetes-patch-merge-key": "name",
+								"x-kubernetes-patch-strategy":  "merge",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "controlPlaneNodesSecurityGroupRules defines the rules that should be applied to control plane nodes.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupRuleSpec"),
+									},
+								},
+							},
+						},
+					},
+					"workerNodesSecurityGroupRules": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"name",
+								},
+								"x-kubernetes-list-type":       "map",
+								"x-kubernetes-patch-merge-key": "name",
+								"x-kubernetes-patch-strategy":  "merge",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "workerNodesSecurityGroupRules defines the rules that should be applied to worker nodes.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupRuleSpec"),
+									},
+								},
+							},
+						},
+					},
 					"allowAllInClusterTraffic": {
 						SchemaProps: spec.SchemaProps{
 							Description: "AllowAllInClusterTraffic allows all ingress and egress traffic between cluster nodes when set to true.",

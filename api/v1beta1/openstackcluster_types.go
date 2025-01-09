@@ -320,6 +320,22 @@ type ManagedSecurityGroups struct {
 	// +optional
 	AllNodesSecurityGroupRules []SecurityGroupRuleSpec `json:"allNodesSecurityGroupRules,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
 
+	// controlPlaneNodesSecurityGroupRules defines the rules that should be applied to control plane nodes.
+	// +patchMergeKey=name
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=name
+	// +optional
+	ControlPlaneNodesSecurityGroupRules []SecurityGroupRuleSpec `json:"controlPlaneNodesSecurityGroupRules,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
+
+	// workerNodesSecurityGroupRules defines the rules that should be applied to worker nodes.
+	// +patchMergeKey=name
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=name
+	// +optional
+	WorkerNodesSecurityGroupRules []SecurityGroupRuleSpec `json:"workerNodesSecurityGroupRules,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
+
 	// AllowAllInClusterTraffic allows all ingress and egress traffic between cluster nodes when set to true.
 	// +kubebuilder:default=false
 	// +kubebuilder:validation:Required

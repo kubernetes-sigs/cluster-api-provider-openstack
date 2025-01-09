@@ -2394,6 +2394,22 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         scalar: boolean
       default: false
+    - name: controlPlaneNodesSecurityGroupRules
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.SecurityGroupRuleSpec
+          elementRelationship: associative
+          keys:
+          - name
+    - name: workerNodesSecurityGroupRules
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.SecurityGroupRuleSpec
+          elementRelationship: associative
+          keys:
+          - name
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.NetworkFilter
   map:
     fields:

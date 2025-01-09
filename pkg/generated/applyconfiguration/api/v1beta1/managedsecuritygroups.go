@@ -21,8 +21,10 @@ package v1beta1
 // ManagedSecurityGroupsApplyConfiguration represents a declarative configuration of the ManagedSecurityGroups type for use
 // with apply.
 type ManagedSecurityGroupsApplyConfiguration struct {
-	AllNodesSecurityGroupRules []SecurityGroupRuleSpecApplyConfiguration `json:"allNodesSecurityGroupRules,omitempty"`
-	AllowAllInClusterTraffic   *bool                                     `json:"allowAllInClusterTraffic,omitempty"`
+	AllNodesSecurityGroupRules          []SecurityGroupRuleSpecApplyConfiguration `json:"allNodesSecurityGroupRules,omitempty"`
+	ControlPlaneNodesSecurityGroupRules []SecurityGroupRuleSpecApplyConfiguration `json:"controlPlaneNodesSecurityGroupRules,omitempty"`
+	WorkerNodesSecurityGroupRules       []SecurityGroupRuleSpecApplyConfiguration `json:"workerNodesSecurityGroupRules,omitempty"`
+	AllowAllInClusterTraffic            *bool                                     `json:"allowAllInClusterTraffic,omitempty"`
 }
 
 // ManagedSecurityGroupsApplyConfiguration constructs a declarative configuration of the ManagedSecurityGroups type for use with
@@ -40,6 +42,32 @@ func (b *ManagedSecurityGroupsApplyConfiguration) WithAllNodesSecurityGroupRules
 			panic("nil value passed to WithAllNodesSecurityGroupRules")
 		}
 		b.AllNodesSecurityGroupRules = append(b.AllNodesSecurityGroupRules, *values[i])
+	}
+	return b
+}
+
+// WithControlPlaneNodesSecurityGroupRules adds the given value to the ControlPlaneNodesSecurityGroupRules field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the ControlPlaneNodesSecurityGroupRules field.
+func (b *ManagedSecurityGroupsApplyConfiguration) WithControlPlaneNodesSecurityGroupRules(values ...*SecurityGroupRuleSpecApplyConfiguration) *ManagedSecurityGroupsApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithControlPlaneNodesSecurityGroupRules")
+		}
+		b.ControlPlaneNodesSecurityGroupRules = append(b.ControlPlaneNodesSecurityGroupRules, *values[i])
+	}
+	return b
+}
+
+// WithWorkerNodesSecurityGroupRules adds the given value to the WorkerNodesSecurityGroupRules field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the WorkerNodesSecurityGroupRules field.
+func (b *ManagedSecurityGroupsApplyConfiguration) WithWorkerNodesSecurityGroupRules(values ...*SecurityGroupRuleSpecApplyConfiguration) *ManagedSecurityGroupsApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithWorkerNodesSecurityGroupRules")
+		}
+		b.WorkerNodesSecurityGroupRules = append(b.WorkerNodesSecurityGroupRules, *values[i])
 	}
 	return b
 }

@@ -1951,6 +1951,34 @@ subnet in the list is taken into account.</p>
 </tr>
 <tr>
 <td>
+<code>controlPlaneNodesSecurityGroupRules</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupRuleSpec">
+[]SecurityGroupRuleSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>controlPlaneNodesSecurityGroupRules defines the rules that should be applied to control plane nodes.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>workerNodesSecurityGroupRules</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupRuleSpec">
+[]SecurityGroupRuleSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>workerNodesSecurityGroupRules defines the rules that should be applied to worker nodes.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>allowAllInClusterTraffic</code><br/>
 <em>
 bool
