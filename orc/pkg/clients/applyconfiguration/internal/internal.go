@@ -39,6 +39,17 @@ func Parser() *typed.Parser {
 var parserOnce sync.Once
 var parser *typed.Parser
 var schemaYAML = typed.YAMLObject(`types:
+- name: com.github.k-orc.openstack-resource-controller.api.v1alpha1.AllocationPool
+  map:
+    fields:
+    - name: end
+      type:
+        scalar: string
+      default: ""
+    - name: start
+      type:
+        scalar: string
+      default: ""
 - name: com.github.k-orc.openstack-resource-controller.api.v1alpha1.CloudCredentialsReference
   map:
     fields:
@@ -50,6 +61,26 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         scalar: string
       default: ""
+- name: com.github.k-orc.openstack-resource-controller.api.v1alpha1.HostRoute
+  map:
+    fields:
+    - name: destination
+      type:
+        scalar: string
+      default: ""
+    - name: nextHop
+      type:
+        scalar: string
+      default: ""
+- name: com.github.k-orc.openstack-resource-controller.api.v1alpha1.IPv6Options
+  map:
+    fields:
+    - name: addressMode
+      type:
+        scalar: string
+    - name: raMode
+      type:
+        scalar: string
 - name: com.github.k-orc.openstack-resource-controller.api.v1alpha1.Image
   map:
     fields:
@@ -249,6 +280,262 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: onDelete
       type:
         scalar: string
+- name: com.github.k-orc.openstack-resource-controller.api.v1alpha1.Subnet
+  map:
+    fields:
+    - name: apiVersion
+      type:
+        scalar: string
+    - name: kind
+      type:
+        scalar: string
+    - name: metadata
+      type:
+        namedType: io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta
+      default: {}
+    - name: spec
+      type:
+        namedType: com.github.k-orc.openstack-resource-controller.api.v1alpha1.SubnetSpec
+      default: {}
+    - name: status
+      type:
+        namedType: com.github.k-orc.openstack-resource-controller.api.v1alpha1.SubnetStatus
+      default: {}
+- name: com.github.k-orc.openstack-resource-controller.api.v1alpha1.SubnetFilter
+  map:
+    fields:
+    - name: cidr
+      type:
+        scalar: string
+    - name: description
+      type:
+        scalar: string
+    - name: gatewayIP
+      type:
+        scalar: string
+    - name: ipVersion
+      type:
+        scalar: numeric
+    - name: ipv6
+      type:
+        namedType: com.github.k-orc.openstack-resource-controller.api.v1alpha1.IPv6Options
+    - name: name
+      type:
+        scalar: string
+    - name: notTags
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+    - name: notTagsAny
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+    - name: projectID
+      type:
+        scalar: string
+    - name: tags
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+    - name: tagsAny
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+- name: com.github.k-orc.openstack-resource-controller.api.v1alpha1.SubnetGateway
+  map:
+    fields:
+    - name: ip
+      type:
+        scalar: string
+    - name: type
+      type:
+        scalar: string
+      default: ""
+- name: com.github.k-orc.openstack-resource-controller.api.v1alpha1.SubnetImport
+  map:
+    fields:
+    - name: filter
+      type:
+        namedType: com.github.k-orc.openstack-resource-controller.api.v1alpha1.SubnetFilter
+    - name: id
+      type:
+        scalar: string
+- name: com.github.k-orc.openstack-resource-controller.api.v1alpha1.SubnetResourceSpec
+  map:
+    fields:
+    - name: allocationPools
+      type:
+        list:
+          elementType:
+            namedType: com.github.k-orc.openstack-resource-controller.api.v1alpha1.AllocationPool
+          elementRelationship: associative
+    - name: cidr
+      type:
+        scalar: string
+      default: ""
+    - name: description
+      type:
+        scalar: string
+    - name: dnsNameservers
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+    - name: dnsPublishFixedIP
+      type:
+        scalar: boolean
+    - name: enableDHCP
+      type:
+        scalar: boolean
+    - name: gateway
+      type:
+        namedType: com.github.k-orc.openstack-resource-controller.api.v1alpha1.SubnetGateway
+    - name: hostRoutes
+      type:
+        list:
+          elementType:
+            namedType: com.github.k-orc.openstack-resource-controller.api.v1alpha1.HostRoute
+          elementRelationship: associative
+    - name: ipVersion
+      type:
+        scalar: numeric
+      default: 0
+    - name: ipv6
+      type:
+        namedType: com.github.k-orc.openstack-resource-controller.api.v1alpha1.IPv6Options
+    - name: name
+      type:
+        scalar: string
+    - name: networkRef
+      type:
+        scalar: string
+      default: ""
+    - name: projectID
+      type:
+        scalar: string
+    - name: tags
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+- name: com.github.k-orc.openstack-resource-controller.api.v1alpha1.SubnetResourceStatus
+  map:
+    fields:
+    - name: allocationPools
+      type:
+        list:
+          elementType:
+            namedType: com.github.k-orc.openstack-resource-controller.api.v1alpha1.AllocationPool
+          elementRelationship: atomic
+    - name: cidr
+      type:
+        scalar: string
+      default: ""
+    - name: description
+      type:
+        scalar: string
+    - name: dnsNameservers
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: atomic
+    - name: dnsPublishFixedIP
+      type:
+        scalar: boolean
+    - name: enableDHCP
+      type:
+        scalar: boolean
+      default: false
+    - name: gatewayIP
+      type:
+        scalar: string
+    - name: hostRoutes
+      type:
+        list:
+          elementType:
+            namedType: com.github.k-orc.openstack-resource-controller.api.v1alpha1.HostRoute
+          elementRelationship: atomic
+    - name: ipVersion
+      type:
+        scalar: numeric
+      default: 0
+    - name: ipv6AddressMode
+      type:
+        scalar: string
+    - name: ipv6RAMode
+      type:
+        scalar: string
+    - name: name
+      type:
+        scalar: string
+      default: ""
+    - name: networkID
+      type:
+        scalar: string
+      default: ""
+    - name: projectID
+      type:
+        scalar: string
+      default: ""
+    - name: revisionNumber
+      type:
+        scalar: numeric
+    - name: subnetPoolID
+      type:
+        scalar: string
+    - name: tags
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: atomic
+- name: com.github.k-orc.openstack-resource-controller.api.v1alpha1.SubnetSpec
+  map:
+    fields:
+    - name: cloudCredentialsRef
+      type:
+        namedType: com.github.k-orc.openstack-resource-controller.api.v1alpha1.CloudCredentialsReference
+      default: {}
+    - name: import
+      type:
+        namedType: com.github.k-orc.openstack-resource-controller.api.v1alpha1.SubnetImport
+    - name: managedOptions
+      type:
+        namedType: com.github.k-orc.openstack-resource-controller.api.v1alpha1.ManagedOptions
+    - name: managementPolicy
+      type:
+        scalar: string
+    - name: resource
+      type:
+        namedType: com.github.k-orc.openstack-resource-controller.api.v1alpha1.SubnetResourceSpec
+- name: com.github.k-orc.openstack-resource-controller.api.v1alpha1.SubnetStatus
+  map:
+    fields:
+    - name: conditions
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.apimachinery.pkg.apis.meta.v1.Condition
+          elementRelationship: associative
+          keys:
+          - type
+    - name: id
+      type:
+        scalar: string
+    - name: resource
+      type:
+        namedType: com.github.k-orc.openstack-resource-controller.api.v1alpha1.SubnetResourceStatus
 - name: io.k8s.apimachinery.pkg.apis.meta.v1.Condition
   map:
     fields:
