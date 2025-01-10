@@ -25,6 +25,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	ctrl "sigs.k8s.io/controller-runtime"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
 )
@@ -38,6 +39,7 @@ func init() {
 
 func TestConformance(t *testing.T) {
 	RegisterFailHandler(Fail)
+	ctrl.SetLogger(GinkgoLogr)
 	RunSpecs(t, "capo-conformance")
 }
 
