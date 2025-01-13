@@ -302,7 +302,7 @@ var _ = Describe("OpenStackCluster API validations", func() {
 			infrav1Cluster.Spec.IdentityRef.Name = "test-credentials"
 			Expect(createObj(infrav1Cluster)).To(Succeed(), "infrav1 OpenStackCluster creation should succeed")
 
-			// Just fetching the object as v1alpha6 doesn't trigger
+			// Just fetching the object as v1alpha7 doesn't trigger
 			// validation failure, so we first fetch it and then
 			// patch the object with identical contents. The patch
 			// triggers a validation failure.

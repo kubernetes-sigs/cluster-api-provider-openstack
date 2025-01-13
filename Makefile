@@ -296,7 +296,7 @@ generate-conversion-gen: $(CONVERSION_GEN)
 		--extra-peer-dirs=./pkg/utils/conversioncommon \
 		--output-file=zz_generated.conversion.go \
 		--go-header-file=./hack/boilerplate/boilerplate.generatego.txt \
-		./api/v1alpha6 ./api/v1alpha7
+		./api/v1alpha7
 
 .PHONY: generate-manifests
 generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
@@ -316,7 +316,7 @@ generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
 		rbac:roleName=manager-role
 
 .PHONY: generate-api-docs
-generate-api-docs: generate-api-docs-v1beta1 generate-api-docs-v1alpha7 generate-api-docs-v1alpha6 generate-api-docs-v1alpha1
+generate-api-docs: generate-api-docs-v1beta1 generate-api-docs-v1alpha7 generate-api-docs-v1alpha1
 generate-api-docs-%: $(GEN_CRD_API_REFERENCE_DOCS) FORCE
 	$(GEN_CRD_API_REFERENCE_DOCS) \
 		-api-dir=./api/$* \

@@ -25,7 +25,6 @@ import (
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	infrastructurev1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
-	infrastructurev1alpha6 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6"
 	infrastructurev1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	infrastructurev1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
@@ -35,7 +34,6 @@ var codecs = serializer.NewCodecFactory(scheme)
 
 var localSchemeBuilder = runtime.SchemeBuilder{
 	infrastructurev1alpha1.AddToScheme,
-	infrastructurev1alpha6.AddToScheme,
 	infrastructurev1alpha7.AddToScheme,
 	infrastructurev1beta1.AddToScheme,
 }
