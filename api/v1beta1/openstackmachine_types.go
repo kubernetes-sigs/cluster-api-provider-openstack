@@ -21,8 +21,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
-	"sigs.k8s.io/cluster-api/errors"
 
+	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
 )
 
@@ -211,7 +211,7 @@ type OpenStackMachineStatus struct {
 	// +optional
 	Resources *MachineResources `json:"resources,omitempty"`
 
-	FailureReason *errors.MachineStatusError `json:"failureReason,omitempty"`
+	FailureReason *capoerrors.DeprecatedCAPIMachineStatusError `json:"failureReason,omitempty"`
 
 	// FailureMessage will be set in the event that there is a terminal problem
 	// reconciling the Machine and will contain a more verbose string suitable
@@ -276,7 +276,7 @@ func (r *OpenStackMachine) SetConditions(conditions clusterv1.Conditions) {
 }
 
 // SetFailure sets the OpenStackMachine status failure reason and failure message.
-func (r *OpenStackMachine) SetFailure(failureReason errors.MachineStatusError, failureMessage error) {
+func (r *OpenStackMachine) SetFailure(failureReason capoerrors.DeprecatedCAPIMachineStatusError, failureMessage error) {
 	r.Status.FailureReason = &failureReason
 	r.Status.FailureMessage = ptr.To(failureMessage.Error())
 }

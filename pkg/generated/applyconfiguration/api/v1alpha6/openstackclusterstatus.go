@@ -19,23 +19,23 @@ limitations under the License.
 package v1alpha6
 
 import (
+	errors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 	v1beta1 "sigs.k8s.io/cluster-api/api/v1beta1"
-	errors "sigs.k8s.io/cluster-api/errors"
 )
 
 // OpenStackClusterStatusApplyConfiguration represents a declarative configuration of the OpenStackClusterStatus type for use
 // with apply.
 type OpenStackClusterStatusApplyConfiguration struct {
-	Ready                     *bool                            `json:"ready,omitempty"`
-	Network                   *NetworkApplyConfiguration       `json:"network,omitempty"`
-	ExternalNetwork           *NetworkApplyConfiguration       `json:"externalNetwork,omitempty"`
-	FailureDomains            *v1beta1.FailureDomains          `json:"failureDomains,omitempty"`
-	ControlPlaneSecurityGroup *SecurityGroupApplyConfiguration `json:"controlPlaneSecurityGroup,omitempty"`
-	WorkerSecurityGroup       *SecurityGroupApplyConfiguration `json:"workerSecurityGroup,omitempty"`
-	BastionSecurityGroup      *SecurityGroupApplyConfiguration `json:"bastionSecurityGroup,omitempty"`
-	Bastion                   *InstanceApplyConfiguration      `json:"bastion,omitempty"`
-	FailureReason             *errors.ClusterStatusError       `json:"failureReason,omitempty"`
-	FailureMessage            *string                          `json:"failureMessage,omitempty"`
+	Ready                     *bool                                    `json:"ready,omitempty"`
+	Network                   *NetworkApplyConfiguration               `json:"network,omitempty"`
+	ExternalNetwork           *NetworkApplyConfiguration               `json:"externalNetwork,omitempty"`
+	FailureDomains            *v1beta1.FailureDomains                  `json:"failureDomains,omitempty"`
+	ControlPlaneSecurityGroup *SecurityGroupApplyConfiguration         `json:"controlPlaneSecurityGroup,omitempty"`
+	WorkerSecurityGroup       *SecurityGroupApplyConfiguration         `json:"workerSecurityGroup,omitempty"`
+	BastionSecurityGroup      *SecurityGroupApplyConfiguration         `json:"bastionSecurityGroup,omitempty"`
+	Bastion                   *InstanceApplyConfiguration              `json:"bastion,omitempty"`
+	FailureReason             *errors.DeprecatedCAPIClusterStatusError `json:"failureReason,omitempty"`
+	FailureMessage            *string                                  `json:"failureMessage,omitempty"`
 }
 
 // OpenStackClusterStatusApplyConfiguration constructs a declarative configuration of the OpenStackClusterStatus type for use with
@@ -111,7 +111,7 @@ func (b *OpenStackClusterStatusApplyConfiguration) WithBastion(value *InstanceAp
 // WithFailureReason sets the FailureReason field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the FailureReason field is set to the value of the last call.
-func (b *OpenStackClusterStatusApplyConfiguration) WithFailureReason(value errors.ClusterStatusError) *OpenStackClusterStatusApplyConfiguration {
+func (b *OpenStackClusterStatusApplyConfiguration) WithFailureReason(value errors.DeprecatedCAPIClusterStatusError) *OpenStackClusterStatusApplyConfiguration {
 	b.FailureReason = &value
 	return b
 }
