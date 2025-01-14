@@ -182,7 +182,7 @@ func WaitForGlanceImagesAvailable(ctx context.Context, e2eCtx *E2EContext, image
 
 			Expect(image).ToNot(BeNil(), "Did not find "+imageName+" in image list")
 
-			availableCondition := meta.FindStatusCondition(image.Status.Conditions, orcv1alpha1.OpenStackConditionAvailable)
+			availableCondition := meta.FindStatusCondition(image.Status.Conditions, orcv1alpha1.ConditionAvailable)
 			if availableCondition == nil || availableCondition.Status != metav1.ConditionTrue {
 				var msg string
 				if availableCondition == nil {
@@ -255,7 +255,7 @@ func generateORCImage(e2eCtx *E2EContext, name, glanceName, url string, download
 	applyConfig := orcapplyconfigv1alpha1.Image(name, imageNamespace).
 		WithSpec(orcapplyconfigv1alpha1.ImageSpec().
 			WithResource(orcapplyconfigv1alpha1.ImageResourceSpec().
-				WithName(glanceName).
+				WithName(orcv1alpha1.OpenStackName(glanceName)).
 				WithTags(E2EImageTag).
 				WithContent(orcapplyconfigv1alpha1.ImageContent().
 					WithContainerFormat(orcv1alpha1.ImageContainerFormatBare).
