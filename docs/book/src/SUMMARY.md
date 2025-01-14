@@ -14,7 +14,6 @@
         - [v1alpha7 to v1beta1](./topics/crd-changes/v1alpha7-to-v1beta1.md)
 - [API reference](./api/index.md)
     - [v1alpha1](./api/v1alpha1/api.md)
-    - [v1alpha6](./api/v1alpha6/api.md)
     - [v1alpha7](./api/v1alpha7/api.md)
     - [v1beta1](./api/v1beta1/api.md)
 - [Development](./development/development.md)

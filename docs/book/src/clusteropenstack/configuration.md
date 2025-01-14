@@ -492,15 +492,11 @@ Together, `network` and `fixedIPs` define the network a port will be created on,
 
 `network` is a filter which uniquely describes the Neutron network the port will be created be on. Machine creation will fail if the result is empty or not unique. If a network `id` is specified in the filter then no separate OpenStack query is required. This has the advantages of being both faster and unambiguous in all circumstances, so it is the preferred way to specify a network where possible.
 
-The available fields are described in [the CRD](https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api-provider-openstack/infrastructure.cluster.x-k8s.io/OpenStackMachine/v1alpha6@v0.7.1#spec-ports-network).
-
 If `network` is not specified at all, it may be possible to infer the network from any uniquely defined subnets in `fixedIPs`. As this may result in additional OpenStack queries and the potential for ambiguity is greater, this is not recommended.
 
 `fixedIPs` describes a list of addresses from the target `network` which will be allocated to the port. A `fixedIP` is either a specific `ipAddress`, a `subnet` from which an ip address will be allocated, or both. If only `ipAddress` is specified, it must be valid in at least one of the subnets defined in the current network. If both are defined, `ipAddress` must be valid in the specified subnet.
 
 `subnet` is a filter which uniquely describe the Neutron subnet an address will be allocated from. Its operation is analogous to `network`, described above.
-
-`fixedIPs`, including all fields available in the `subnet` filter, are described in [the CRD](https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api-provider-openstack/infrastructure.cluster.x-k8s.io/OpenStackMachine/v1alpha6@v0.7.1#spec-ports-fixedIPs).
 
 If no `fixedIPs` are specified, the port will get an address from every subnet in the network.
 
