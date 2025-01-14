@@ -68,6 +68,7 @@ type ComputeClient interface {
 	DeleteAttachedInterface(serverID, portID string) error
 
 	ListServerGroups() ([]servergroups.ServerGroup, error)
+	GetConsoleOutput(serverID string) (string, error)
 	WithMicroversion(required string) (ComputeClient, error)
 }
 
@@ -186,6 +187,11 @@ func (c computeClient) ListServerGroups() ([]servergroups.ServerGroup, error) {
 	return servergroups.ExtractServerGroups(allPages)
 }
 
+func (c computeClient) GetConsoleOutput(serverID string) (string, error) {
+	opts := servers.ShowConsoleOutputOpts{}
+	return servers.ShowConsoleOutput(context.TODO(), c.client, serverID, opts).Extract()
+}
+
 // WithMicroversion checks that the required Nova microversion is supported and sets it for
 // the ComputeClient.
 func (c computeClient) WithMicroversion(required string) (ComputeClient, error) {
@@ -242,6 +248,10 @@ func (e computeErrorClient) DeleteAttachedInterface(_, _ string) error {
 
 func (e computeErrorClient) ListServerGroups() ([]servergroups.ServerGroup, error) {
 	return nil, e.error
+}
+
+func (e computeErrorClient) GetConsoleOutput(_ string) (string, error) {
+	return "", e.error
 }
 
 func (e computeErrorClient) WithMicroversion(_ string) (ComputeClient, error) {
