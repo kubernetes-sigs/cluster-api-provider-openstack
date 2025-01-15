@@ -191,6 +191,21 @@ func (o OpenStackLogCollector) CollectMachineLog(ctx context.Context, management
 		return fmt.Errorf("couldn't create directory %q for logs: %s", outputPath, err)
 	}
 
+	if m.Spec.ProviderID == nil {
+		return fmt.Errorf("unable to get logs for machine since it has no provider ID")
+	}
+	providerID := getIDFromProviderID(*m.Spec.ProviderID)
+
+	consolLog, err := GetOpenStackServerConsoleLog(o.E2EContext, providerID)
+	if err != nil {
+		return fmt.Errorf("error getting console log for machine: %s", err)
+	}
+	logFile := path.Join(outputPath, "console.log")
+	if err := os.WriteFile(logFile, []byte(consolLog), 0o600); err != nil {
+		return fmt.Errorf("error writing log file: %s", err)
+	}
+	Logf("Console log for machine %q saved", m.Name)
+
 	openStackCluster, err := getOpenStackClusterFromMachine(ctx, managementClusterClient, m)
 	if err != nil {
 		return fmt.Errorf("error getting OpenStackCluster for Machine: %s", err)
@@ -201,7 +216,7 @@ func (o OpenStackLogCollector) CollectMachineLog(ctx context.Context, management
 	}
 	ip := m.Status.Addresses[0].Address
 
-	srv, err := GetOpenStackServerWithIP(o.E2EContext, getIDFromProviderID(*m.Spec.ProviderID), openStackCluster)
+	srv, err := GetOpenStackServerWithIP(o.E2EContext, providerID, openStackCluster)
 	if err != nil {
 		return fmt.Errorf("error getting OpenStack server: %w", err)
 	}

@@ -929,3 +929,17 @@ func DumpOpenStackLoadBalancers(e2eCtx *E2EContext, filter loadbalancers.ListOpt
 	}
 	return loadBalancersList, nil
 }
+
+func GetOpenStackServerConsoleLog(e2eCtx *E2EContext, id string) (string, error) {
+	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
+	if err != nil {
+		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
+		return "", nil
+	}
+
+	computeClient, err := clients.NewComputeClient(providerClient, clientOpts)
+	if err != nil {
+		return "", fmt.Errorf("unable to create compute client: %w", err)
+	}
+	return computeClient.GetConsoleOutput(id)
+}
