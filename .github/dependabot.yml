@@ -23,7 +23,6 @@ updates:
 - directories:
   - "/"
   - "/hack/tools"
-  - "/orc"
   package-ecosystem: "gomod"
   schedule:
     interval: "weekly"
@@ -99,6 +98,10 @@ updates:
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
   # We will need k8s v0.31.3 to bump structured-merge-diff to v4.4.2 (check git history for details).
   - dependency-name: "sigs.k8s.io/structured-merge-diff/*"
+  # Newest code-generator requires k8s api minor version (to v0.31.x) which we don't want at this point
+  # https://github.com/kubernetes/code-generator/commit/3dab3dd1438bd944bd9ae050ec5e6fe6750ad994
+  - dependency-name: "k8s.io/code-generator"
+    update-types: ["version-update:semver-major", "version-update:semver-minor"]
   labels:
     - "area/dependency"
     - "ok-to-test"
