@@ -95,12 +95,16 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 	tags := []string{"tag1", "tag2"}
 	userData := &corev1.LocalObjectReference{Name: "server-data-secret"}
 	tests := []struct {
-		name string
-		spec *infrav1.OpenStackMachineSpec
-		want *infrav1alpha1.OpenStackServerSpec
+		name         string
+		passWorkerSG bool
+		passNetID    bool
+		spec         *infrav1.OpenStackMachineSpec
+		want         *infrav1alpha1.OpenStackServerSpec
 	}{
 		{
-			name: "Test a minimum OpenStackMachineSpec to OpenStackServerSpec conversion",
+			name:         "Test a minimum OpenStackMachineSpec to OpenStackServerSpec conversion",
+			passWorkerSG: true,
+			passNetID:    true,
 			spec: &infrav1.OpenStackMachineSpec{
 				Flavor:     ptr.To(flavorName),
 				Image:      image,
@@ -117,7 +121,9 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 			},
 		},
 		{
-			name: "Test a OpenStackMachineSpec to OpenStackServerSpec conversion with an additional security group",
+			name:         "Test a OpenStackMachineSpec to OpenStackServerSpec conversion with an additional security group",
+			passWorkerSG: true,
+			passNetID:    true,
 			spec: &infrav1.OpenStackMachineSpec{
 				Flavor:     ptr.To(flavorName),
 				Image:      image,
@@ -138,13 +144,76 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 				UserDataRef: userData,
 			},
 		},
+		{
+			name:         "HPC scenario with user-provided ports ignoring cluster network",
+			passWorkerSG: false,
+			passNetID:    false,
+			spec: &infrav1.OpenStackMachineSpec{
+				Flavor:     ptr.To(flavorName),
+				Image:      image,
+				SSHKeyName: sshKeyName,
+				Ports: []infrav1.PortOpts{
+					{
+						Network: &infrav1.NetworkParam{
+							ID: ptr.To(networkUUID),
+						},
+					},
+				},
+				SecurityGroups: []infrav1.SecurityGroupParam{
+					{
+						ID: ptr.To(extraSecurityGroupUUID),
+					},
+				},
+			},
+			want: &infrav1alpha1.OpenStackServerSpec{
+				Flavor:      ptr.To(flavorName),
+				IdentityRef: identityRef,
+				Image:       image,
+				SSHKeyName:  sshKeyName,
+				Ports: []infrav1.PortOpts{
+					{
+						Network: &infrav1.NetworkParam{
+							ID: ptr.To(networkUUID),
+						},
+						SecurityGroups: []infrav1.SecurityGroupParam{
+							{
+								ID: ptr.To(extraSecurityGroupUUID),
+							},
+						},
+					},
+				},
+				Tags:        tags,
+				UserDataRef: userData,
+			},
+		},
 	}
 	for i := range tests {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
-			spec := openStackMachineSpecToOpenStackServerSpec(tt.spec, identityRef, tags, "", userData, &openStackCluster.Status.WorkerSecurityGroup.ID, openStackCluster.Status.Network.ID)
-			if !reflect.DeepEqual(spec, tt.want) {
-				t.Errorf("openStackMachineSpecToOpenStackServerSpec() got = %+v, want %+v", spec, tt.want)
+			// Conditionally pass the cluster’s worker SG
+			var workerSGPtr *string
+			if tt.passWorkerSG {
+				workerSGPtr = &openStackCluster.Status.WorkerSecurityGroup.ID
+			}
+
+			// Conditionally pass the cluster’s network ID
+			var netID string
+			if tt.passNetID && openStackCluster.Status.Network != nil {
+				netID = openStackCluster.Status.Network.ID
+			}
+
+			got := openStackMachineSpecToOpenStackServerSpec(
+				tt.spec,
+				identityRef,
+				tags,
+				"",
+				userData,
+				workerSGPtr,
+				netID,
+			)
+
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("openStackMachineSpecToOpenStackServerSpec() got = %+v, want %+v", got, tt.want)
 			}
 		})
 	}
