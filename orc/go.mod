@@ -6,9 +6,9 @@ require (
 	github.com/go-logr/logr v1.4.2
 	github.com/onsi/ginkgo/v2 v2.22.2
 	github.com/onsi/gomega v1.36.2
-	k8s.io/api v0.30.8
-	k8s.io/apimachinery v0.30.8
-	k8s.io/client-go v0.30.8
+	k8s.io/api v0.30.9
+	k8s.io/apimachinery v0.30.9
+	k8s.io/client-go v0.30.9
 	sigs.k8s.io/controller-runtime v0.18.7
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1
 )
@@ -85,9 +85,9 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apiextensions-apiserver v0.30.8 // indirect
-	k8s.io/apiserver v0.30.8 // indirect
-	k8s.io/component-base v0.30.8 // indirect
+	k8s.io/apiextensions-apiserver v0.30.9 // indirect
+	k8s.io/apiserver v0.30.9 // indirect
+	k8s.io/component-base v0.30.9 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340 // indirect
 	k8s.io/utils v0.0.0-20231127182322-b307cd553661 // indirect

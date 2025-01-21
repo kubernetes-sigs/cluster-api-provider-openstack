@@ -3,8 +3,8 @@ module github.com/k-orc/openstack-resource-controller/hack/codegen
 go 1.22.2
 
 require (
-	k8s.io/apimachinery v0.30.8
-	k8s.io/code-generator v0.30.8
+	k8s.io/apimachinery v0.30.9
+	k8s.io/code-generator v0.30.9
 	k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340
 )
 
