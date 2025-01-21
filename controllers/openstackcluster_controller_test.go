@@ -22,6 +22,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/routers"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
 	. "github.com/onsi/ginkgo/v2" //nolint:revive
@@ -38,6 +39,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
@@ -430,6 +432,140 @@ var _ = Describe("OpenStackCluster controller", func() {
 		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
 		Expect(err).To(BeNil())
 		Expect(testCluster.Status.Network.ID).To(Equal(clusterNetworkID))
+	})
+
+	It("reconcile pre-existing network components by id", func() {
+		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
+		const clusterSubnetID = "cad5a91a-36de-4388-823b-b0cc82cadfdc"
+		const clusterRouterID = "e2407c18-c4e7-4d3d-befa-8eec5d8756f2"
+
+		testCluster.SetName("pre-existing-network-components-by-id")
+		testCluster.Spec = infrav1.OpenStackClusterSpec{
+			Network: &infrav1.NetworkParam{
+				ID: ptr.To(clusterNetworkID),
+			},
+			Subnets: []infrav1.SubnetParam{
+				{
+					ID: ptr.To(clusterSubnetID),
+				},
+			},
+			ManagedSubnets: []infrav1.SubnetSpec{},
+			Router: &infrav1.RouterParam{
+				ID: ptr.To(clusterRouterID),
+			},
+		}
+		err := k8sClient.Create(ctx, testCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, capiCluster)
+		Expect(err).To(BeNil())
+
+		log := GinkgoLogr
+		clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
+		Expect(err).To(BeNil())
+		scope := scope.NewWithLogger(clientScope, log)
+
+		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
+
+		networkClientRecorder.GetSubnet(clusterSubnetID).Return(&subnets.Subnet{
+			ID:        clusterSubnetID,
+			CIDR:      "192.168.0.0/24",
+			NetworkID: clusterNetworkID,
+		}, nil)
+
+		networkClientRecorder.GetNetwork(clusterNetworkID).Return(&networks.Network{
+			ID: clusterNetworkID,
+		}, nil)
+
+		networkClientRecorder.GetRouter(clusterRouterID).Return(&routers.Router{
+			ID: clusterRouterID,
+		}, nil)
+
+		networkingService, err := networking.NewService(scope)
+		Expect(err).To(BeNil())
+
+		err = reconcilePreExistingNetworkComponents(scope, networkingService, testCluster)
+		Expect(err).To(BeNil())
+		Expect(testCluster.Status.Network.ID).To(Equal(clusterNetworkID))
+		Expect(testCluster.Status.Network.Subnets[0].ID).To(Equal(clusterSubnetID))
+		Expect(testCluster.Status.Router.ID).To(Equal(clusterRouterID))
+	})
+
+	It("reconcile pre-existing network components by name", func() {
+		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
+		const clusterNetworkName = "capo"
+		const clusterSubnetID = "cad5a91a-36de-4388-823b-b0cc82cadfdc"
+		const clusterSubnetName = "capo"
+		const clusterRouterID = "e2407c18-c4e7-4d3d-befa-8eec5d8756f2"
+		const clusterRouterName = "capo"
+
+		testCluster.SetName("pre-existing-network-components-by-id")
+		testCluster.Spec = infrav1.OpenStackClusterSpec{
+			Network: &infrav1.NetworkParam{
+				Filter: &infrav1.NetworkFilter{
+					Name: clusterNetworkName,
+				},
+			},
+			Subnets: []infrav1.SubnetParam{
+				{
+					Filter: &infrav1.SubnetFilter{
+						Name: clusterSubnetName,
+					},
+				},
+			},
+			ManagedSubnets: []infrav1.SubnetSpec{},
+			Router: &infrav1.RouterParam{
+				Filter: &infrav1.RouterFilter{
+					Name: clusterRouterName,
+				},
+			},
+		}
+		err := k8sClient.Create(ctx, testCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, capiCluster)
+		Expect(err).To(BeNil())
+
+		log := GinkgoLogr
+		clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
+		Expect(err).To(BeNil())
+		scope := scope.NewWithLogger(clientScope, log)
+
+		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
+
+		networkClientRecorder.ListNetwork(networks.ListOpts{
+			Name: clusterNetworkName,
+		}).Return([]networks.Network{
+			{
+				ID: clusterNetworkID,
+			},
+		}, nil)
+
+		networkClientRecorder.ListSubnet(subnets.ListOpts{
+			Name:      clusterSubnetName,
+			NetworkID: clusterNetworkID,
+		}).Return([]subnets.Subnet{
+			{
+				ID:        clusterSubnetID,
+				CIDR:      "192.168.0.0/24",
+				NetworkID: clusterNetworkID,
+			},
+		}, nil)
+
+		networkClientRecorder.ListRouter(routers.ListOpts{
+			Name: clusterRouterName,
+		}).Return([]routers.Router{
+			{
+				ID: clusterRouterID,
+			},
+		}, nil)
+
+		networkingService, err := networking.NewService(scope)
+		Expect(err).To(BeNil())
+
+		err = reconcilePreExistingNetworkComponents(scope, networkingService, testCluster)
+		Expect(err).To(BeNil())
+		Expect(testCluster.Status.Network.ID).To(Equal(clusterNetworkID))
+		Expect(testCluster.Status.Network.Subnets[0].ID).To(Equal(clusterSubnetID))
+		Expect(testCluster.Status.Router.ID).To(Equal(clusterRouterID))
 	})
 })
 
