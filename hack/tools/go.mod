@@ -149,4 +149,7 @@ require (
 replace (
 	github.com/k-orc/openstack-resource-controller => ../../orc
 	sigs.k8s.io/cluster-api-provider-openstack => ../..
+	// Remove it once we have a new version of code-generator that is compatible with latest gengo.
+	// See https://github.com/kubernetes/gengo/issues/286
+	k8s.io/gengo/v2 => k8s.io/gengo/v2 v2.0.0-20240228010128-51d4e06bde70
 )
