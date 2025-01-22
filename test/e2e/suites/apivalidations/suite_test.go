@@ -40,7 +40,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
-	infrav1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/webhooks"
 )
@@ -69,7 +68,6 @@ var _ = BeforeSuite(func() {
 	testScheme = scheme.Scheme
 	for _, f := range []func(*runtime.Scheme) error{
 		infrav1alpha1.AddToScheme,
-		infrav1alpha7.AddToScheme,
 		infrav1.AddToScheme,
 	} {
 		Expect(f(testScheme)).To(Succeed())
@@ -170,12 +168,4 @@ func createObj(obj client.Object) error {
 		})
 	}
 	return err
-}
-
-func setObjectGVK(obj runtime.Object) {
-	gvk, unversioned, err := testScheme.ObjectKinds(obj)
-	Expect(unversioned).To(BeFalse(), "Object is considered unversioned")
-	Expect(err).ToNot(HaveOccurred(), "Error fetching gvk for Object")
-	Expect(gvk).To(HaveLen(1), "Object should have only one gvk")
-	obj.GetObjectKind().SetGroupVersionKind(gvk[0])
 }
