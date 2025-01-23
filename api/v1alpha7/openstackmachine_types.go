@@ -145,6 +145,7 @@ type OpenStackMachineStatus struct {
 
 // +genclient
 // +kubebuilder:object:root=true
+// +kubebuilder:unservedversion
 // +kubebuilder:deprecatedversion:warning="The v1alpha7 version of OpenStackMachine has been deprecated and will be removed in a future release."
 // +kubebuilder:resource:path=openstackmachines,scope=Namespaced,categories=cluster-api,shortName=osm
 // +kubebuilder:subresource:status
