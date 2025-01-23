@@ -15,10 +15,10 @@
 ROOT_DIR_RELATIVE := ../..
 include $(ROOT_DIR_RELATIVE)/common.mk
 
-GOLANGCI_LINT_VERSION ?= v1.61.0
+GOLANGCI_LINT_VERSION ?= v1.63.4
 
 # GOTESTSUM version without the leading 'v'
-GOTESTSUM_VERSION ?= 1.11.0
+GOTESTSUM_VERSION ?= 1.12.0
 
 # Directories.
 BIN_DIR := bin
