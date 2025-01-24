@@ -19,10 +19,10 @@ limitations under the License.
 package v1beta1
 
 import (
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
-	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
+	apiv1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
 // OpenStackMachineLister helps list OpenStackMachines.
@@ -30,7 +30,7 @@ import (
 type OpenStackMachineLister interface {
 	// List lists all OpenStackMachines in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1beta1.OpenStackMachine, err error)
+	List(selector labels.Selector) (ret []*apiv1beta1.OpenStackMachine, err error)
 	// OpenStackMachines returns an object that can list and get OpenStackMachines.
 	OpenStackMachines(namespace string) OpenStackMachineNamespaceLister
 	OpenStackMachineListerExpansion
@@ -38,17 +38,17 @@ type OpenStackMachineLister interface {
 
 // openStackMachineLister implements the OpenStackMachineLister interface.
 type openStackMachineLister struct {
-	listers.ResourceIndexer[*v1beta1.OpenStackMachine]
+	listers.ResourceIndexer[*apiv1beta1.OpenStackMachine]
 }
 
 // NewOpenStackMachineLister returns a new OpenStackMachineLister.
 func NewOpenStackMachineLister(indexer cache.Indexer) OpenStackMachineLister {
-	return &openStackMachineLister{listers.New[*v1beta1.OpenStackMachine](indexer, v1beta1.Resource("openstackmachine"))}
+	return &openStackMachineLister{listers.New[*apiv1beta1.OpenStackMachine](indexer, apiv1beta1.Resource("openstackmachine"))}
 }
 
 // OpenStackMachines returns an object that can list and get OpenStackMachines.
 func (s *openStackMachineLister) OpenStackMachines(namespace string) OpenStackMachineNamespaceLister {
-	return openStackMachineNamespaceLister{listers.NewNamespaced[*v1beta1.OpenStackMachine](s.ResourceIndexer, namespace)}
+	return openStackMachineNamespaceLister{listers.NewNamespaced[*apiv1beta1.OpenStackMachine](s.ResourceIndexer, namespace)}
 }
 
 // OpenStackMachineNamespaceLister helps list and get OpenStackMachines.
@@ -56,15 +56,15 @@ func (s *openStackMachineLister) OpenStackMachines(namespace string) OpenStackMa
 type OpenStackMachineNamespaceLister interface {
 	// List lists all OpenStackMachines in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1beta1.OpenStackMachine, err error)
+	List(selector labels.Selector) (ret []*apiv1beta1.OpenStackMachine, err error)
 	// Get retrieves the OpenStackMachine from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1beta1.OpenStackMachine, error)
+	Get(name string) (*apiv1beta1.OpenStackMachine, error)
 	OpenStackMachineNamespaceListerExpansion
 }
 
 // openStackMachineNamespaceLister implements the OpenStackMachineNamespaceLister
 // interface.
 type openStackMachineNamespaceLister struct {
-	listers.ResourceIndexer[*v1beta1.OpenStackMachine]
+	listers.ResourceIndexer[*apiv1beta1.OpenStackMachine]
 }

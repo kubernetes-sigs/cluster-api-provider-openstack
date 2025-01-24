@@ -19,10 +19,10 @@ limitations under the License.
 package v1alpha7
 
 import (
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
-	v1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
+	apiv1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 )
 
 // OpenStackClusterTemplateLister helps list OpenStackClusterTemplates.
@@ -30,7 +30,7 @@ import (
 type OpenStackClusterTemplateLister interface {
 	// List lists all OpenStackClusterTemplates in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha7.OpenStackClusterTemplate, err error)
+	List(selector labels.Selector) (ret []*apiv1alpha7.OpenStackClusterTemplate, err error)
 	// OpenStackClusterTemplates returns an object that can list and get OpenStackClusterTemplates.
 	OpenStackClusterTemplates(namespace string) OpenStackClusterTemplateNamespaceLister
 	OpenStackClusterTemplateListerExpansion
@@ -38,17 +38,17 @@ type OpenStackClusterTemplateLister interface {
 
 // openStackClusterTemplateLister implements the OpenStackClusterTemplateLister interface.
 type openStackClusterTemplateLister struct {
-	listers.ResourceIndexer[*v1alpha7.OpenStackClusterTemplate]
+	listers.ResourceIndexer[*apiv1alpha7.OpenStackClusterTemplate]
 }
 
 // NewOpenStackClusterTemplateLister returns a new OpenStackClusterTemplateLister.
 func NewOpenStackClusterTemplateLister(indexer cache.Indexer) OpenStackClusterTemplateLister {
-	return &openStackClusterTemplateLister{listers.New[*v1alpha7.OpenStackClusterTemplate](indexer, v1alpha7.Resource("openstackclustertemplate"))}
+	return &openStackClusterTemplateLister{listers.New[*apiv1alpha7.OpenStackClusterTemplate](indexer, apiv1alpha7.Resource("openstackclustertemplate"))}
 }
 
 // OpenStackClusterTemplates returns an object that can list and get OpenStackClusterTemplates.
 func (s *openStackClusterTemplateLister) OpenStackClusterTemplates(namespace string) OpenStackClusterTemplateNamespaceLister {
-	return openStackClusterTemplateNamespaceLister{listers.NewNamespaced[*v1alpha7.OpenStackClusterTemplate](s.ResourceIndexer, namespace)}
+	return openStackClusterTemplateNamespaceLister{listers.NewNamespaced[*apiv1alpha7.OpenStackClusterTemplate](s.ResourceIndexer, namespace)}
 }
 
 // OpenStackClusterTemplateNamespaceLister helps list and get OpenStackClusterTemplates.
@@ -56,15 +56,15 @@ func (s *openStackClusterTemplateLister) OpenStackClusterTemplates(namespace str
 type OpenStackClusterTemplateNamespaceLister interface {
 	// List lists all OpenStackClusterTemplates in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha7.OpenStackClusterTemplate, err error)
+	List(selector labels.Selector) (ret []*apiv1alpha7.OpenStackClusterTemplate, err error)
 	// Get retrieves the OpenStackClusterTemplate from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1alpha7.OpenStackClusterTemplate, error)
+	Get(name string) (*apiv1alpha7.OpenStackClusterTemplate, error)
 	OpenStackClusterTemplateNamespaceListerExpansion
 }
 
 // openStackClusterTemplateNamespaceLister implements the OpenStackClusterTemplateNamespaceLister
 // interface.
 type openStackClusterTemplateNamespaceLister struct {
-	listers.ResourceIndexer[*v1alpha7.OpenStackClusterTemplate]
+	listers.ResourceIndexer[*apiv1alpha7.OpenStackClusterTemplate]
 }

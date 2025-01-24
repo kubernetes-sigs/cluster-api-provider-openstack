@@ -19,13 +19,13 @@ limitations under the License.
 package v1alpha7
 
 import (
-	v1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
+	apiv1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 )
 
 // BlockDeviceStorageApplyConfiguration represents a declarative configuration of the BlockDeviceStorage type for use
 // with apply.
 type BlockDeviceStorageApplyConfiguration struct {
-	Type   *v1alpha7.BlockDeviceType            `json:"type,omitempty"`
+	Type   *apiv1alpha7.BlockDeviceType         `json:"type,omitempty"`
 	Volume *BlockDeviceVolumeApplyConfiguration `json:"volume,omitempty"`
 }
 
@@ -38,7 +38,7 @@ func BlockDeviceStorage() *BlockDeviceStorageApplyConfiguration {
 // WithType sets the Type field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Type field is set to the value of the last call.
-func (b *BlockDeviceStorageApplyConfiguration) WithType(value v1alpha7.BlockDeviceType) *BlockDeviceStorageApplyConfiguration {
+func (b *BlockDeviceStorageApplyConfiguration) WithType(value apiv1alpha7.BlockDeviceType) *BlockDeviceStorageApplyConfiguration {
 	b.Type = &value
 	return b
 }

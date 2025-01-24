@@ -19,14 +19,14 @@ limitations under the License.
 package v1beta1
 
 import (
-	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	apiv1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
 // VolumeAvailabilityZoneApplyConfiguration represents a declarative configuration of the VolumeAvailabilityZone type for use
 // with apply.
 type VolumeAvailabilityZoneApplyConfiguration struct {
-	From *v1beta1.VolumeAZSource `json:"from,omitempty"`
-	Name *v1beta1.VolumeAZName   `json:"name,omitempty"`
+	From *apiv1beta1.VolumeAZSource `json:"from,omitempty"`
+	Name *apiv1beta1.VolumeAZName   `json:"name,omitempty"`
 }
 
 // VolumeAvailabilityZoneApplyConfiguration constructs a declarative configuration of the VolumeAvailabilityZone type for use with
@@ -38,7 +38,7 @@ func VolumeAvailabilityZone() *VolumeAvailabilityZoneApplyConfiguration {
 // WithFrom sets the From field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the From field is set to the value of the last call.
-func (b *VolumeAvailabilityZoneApplyConfiguration) WithFrom(value v1beta1.VolumeAZSource) *VolumeAvailabilityZoneApplyConfiguration {
+func (b *VolumeAvailabilityZoneApplyConfiguration) WithFrom(value apiv1beta1.VolumeAZSource) *VolumeAvailabilityZoneApplyConfiguration {
 	b.From = &value
 	return b
 }
@@ -46,7 +46,7 @@ func (b *VolumeAvailabilityZoneApplyConfiguration) WithFrom(value v1beta1.Volume
 // WithName sets the Name field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Name field is set to the value of the last call.
-func (b *VolumeAvailabilityZoneApplyConfiguration) WithName(value v1beta1.VolumeAZName) *VolumeAvailabilityZoneApplyConfiguration {
+func (b *VolumeAvailabilityZoneApplyConfiguration) WithName(value apiv1beta1.VolumeAZName) *VolumeAvailabilityZoneApplyConfiguration {
 	b.Name = &value
 	return b
 }

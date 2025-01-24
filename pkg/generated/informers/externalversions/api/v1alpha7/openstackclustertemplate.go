@@ -19,24 +19,24 @@ limitations under the License.
 package v1alpha7
 
 import (
-	"context"
+	context "context"
 	time "time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
-	apiv1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
+	clusterapiprovideropenstackapiv1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	clientset "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset"
 	internalinterfaces "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/informers/externalversions/internalinterfaces"
-	v1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/listers/api/v1alpha7"
+	apiv1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/listers/api/v1alpha7"
 )
 
 // OpenStackClusterTemplateInformer provides access to a shared informer and lister for
 // OpenStackClusterTemplates.
 type OpenStackClusterTemplateInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha7.OpenStackClusterTemplateLister
+	Lister() apiv1alpha7.OpenStackClusterTemplateLister
 }
 
 type openStackClusterTemplateInformer struct {
@@ -71,7 +71,7 @@ func NewFilteredOpenStackClusterTemplateInformer(client clientset.Interface, nam
 				return client.InfrastructureV1alpha7().OpenStackClusterTemplates(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&apiv1alpha7.OpenStackClusterTemplate{},
+		&clusterapiprovideropenstackapiv1alpha7.OpenStackClusterTemplate{},
 		resyncPeriod,
 		indexers,
 	)
@@ -82,9 +82,9 @@ func (f *openStackClusterTemplateInformer) defaultInformer(client clientset.Inte
 }
 
 func (f *openStackClusterTemplateInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&apiv1alpha7.OpenStackClusterTemplate{}, f.defaultInformer)
+	return f.factory.InformerFor(&clusterapiprovideropenstackapiv1alpha7.OpenStackClusterTemplate{}, f.defaultInformer)
 }
 
-func (f *openStackClusterTemplateInformer) Lister() v1alpha7.OpenStackClusterTemplateLister {
-	return v1alpha7.NewOpenStackClusterTemplateLister(f.Informer().GetIndexer())
+func (f *openStackClusterTemplateInformer) Lister() apiv1alpha7.OpenStackClusterTemplateLister {
+	return apiv1alpha7.NewOpenStackClusterTemplateLister(f.Informer().GetIndexer())
 }

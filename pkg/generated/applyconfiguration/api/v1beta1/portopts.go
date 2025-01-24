@@ -109,7 +109,7 @@ func (b *PortOptsApplyConfiguration) WithTrunk(value bool) *PortOptsApplyConfigu
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the AdminStateUp field is set to the value of the last call.
 func (b *PortOptsApplyConfiguration) WithAdminStateUp(value bool) *PortOptsApplyConfiguration {
-	b.AdminStateUp = &value
+	b.ResolvedPortSpecFieldsApplyConfiguration.AdminStateUp = &value
 	return b
 }
 
@@ -117,7 +117,7 @@ func (b *PortOptsApplyConfiguration) WithAdminStateUp(value bool) *PortOptsApply
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the MACAddress field is set to the value of the last call.
 func (b *PortOptsApplyConfiguration) WithMACAddress(value string) *PortOptsApplyConfiguration {
-	b.MACAddress = &value
+	b.ResolvedPortSpecFieldsApplyConfiguration.MACAddress = &value
 	return b
 }
 
@@ -129,7 +129,7 @@ func (b *PortOptsApplyConfiguration) WithAllowedAddressPairs(values ...*AddressP
 		if values[i] == nil {
 			panic("nil value passed to WithAllowedAddressPairs")
 		}
-		b.AllowedAddressPairs = append(b.AllowedAddressPairs, *values[i])
+		b.ResolvedPortSpecFieldsApplyConfiguration.AllowedAddressPairs = append(b.ResolvedPortSpecFieldsApplyConfiguration.AllowedAddressPairs, *values[i])
 	}
 	return b
 }
@@ -138,7 +138,7 @@ func (b *PortOptsApplyConfiguration) WithAllowedAddressPairs(values ...*AddressP
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the HostID field is set to the value of the last call.
 func (b *PortOptsApplyConfiguration) WithHostID(value string) *PortOptsApplyConfiguration {
-	b.HostID = &value
+	b.ResolvedPortSpecFieldsApplyConfiguration.HostID = &value
 	return b
 }
 
@@ -146,7 +146,7 @@ func (b *PortOptsApplyConfiguration) WithHostID(value string) *PortOptsApplyConf
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the VNICType field is set to the value of the last call.
 func (b *PortOptsApplyConfiguration) WithVNICType(value string) *PortOptsApplyConfiguration {
-	b.VNICType = &value
+	b.ResolvedPortSpecFieldsApplyConfiguration.VNICType = &value
 	return b
 }
 
@@ -154,7 +154,7 @@ func (b *PortOptsApplyConfiguration) WithVNICType(value string) *PortOptsApplyCo
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Profile field is set to the value of the last call.
 func (b *PortOptsApplyConfiguration) WithProfile(value *BindingProfileApplyConfiguration) *PortOptsApplyConfiguration {
-	b.Profile = value
+	b.ResolvedPortSpecFieldsApplyConfiguration.Profile = value
 	return b
 }
 
@@ -162,7 +162,7 @@ func (b *PortOptsApplyConfiguration) WithProfile(value *BindingProfileApplyConfi
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the DisablePortSecurity field is set to the value of the last call.
 func (b *PortOptsApplyConfiguration) WithDisablePortSecurity(value bool) *PortOptsApplyConfiguration {
-	b.DisablePortSecurity = &value
+	b.ResolvedPortSpecFieldsApplyConfiguration.DisablePortSecurity = &value
 	return b
 }
 
@@ -170,7 +170,7 @@ func (b *PortOptsApplyConfiguration) WithDisablePortSecurity(value bool) *PortOp
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the PropagateUplinkStatus field is set to the value of the last call.
 func (b *PortOptsApplyConfiguration) WithPropagateUplinkStatus(value bool) *PortOptsApplyConfiguration {
-	b.PropagateUplinkStatus = &value
+	b.ResolvedPortSpecFieldsApplyConfiguration.PropagateUplinkStatus = &value
 	return b
 }
 
@@ -182,7 +182,7 @@ func (b *PortOptsApplyConfiguration) WithValueSpecs(values ...*ValueSpecApplyCon
 		if values[i] == nil {
 			panic("nil value passed to WithValueSpecs")
 		}
-		b.ValueSpecs = append(b.ValueSpecs, *values[i])
+		b.ResolvedPortSpecFieldsApplyConfiguration.ValueSpecs = append(b.ResolvedPortSpecFieldsApplyConfiguration.ValueSpecs, *values[i])
 	}
 	return b
 }

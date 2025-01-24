@@ -19,24 +19,24 @@ limitations under the License.
 package v1beta1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
-	apiv1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	clusterapiprovideropenstackapiv1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	clientset "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset"
 	internalinterfaces "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/informers/externalversions/internalinterfaces"
-	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/listers/api/v1beta1"
+	apiv1beta1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/listers/api/v1beta1"
 )
 
 // OpenStackMachineInformer provides access to a shared informer and lister for
 // OpenStackMachines.
 type OpenStackMachineInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1beta1.OpenStackMachineLister
+	Lister() apiv1beta1.OpenStackMachineLister
 }
 
 type openStackMachineInformer struct {
@@ -71,7 +71,7 @@ func NewFilteredOpenStackMachineInformer(client clientset.Interface, namespace s
 				return client.InfrastructureV1beta1().OpenStackMachines(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&apiv1beta1.OpenStackMachine{},
+		&clusterapiprovideropenstackapiv1beta1.OpenStackMachine{},
 		resyncPeriod,
 		indexers,
 	)
@@ -82,9 +82,9 @@ func (f *openStackMachineInformer) defaultInformer(client clientset.Interface, r
 }
 
 func (f *openStackMachineInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&apiv1beta1.OpenStackMachine{}, f.defaultInformer)
+	return f.factory.InformerFor(&clusterapiprovideropenstackapiv1beta1.OpenStackMachine{}, f.defaultInformer)
 }
 
-func (f *openStackMachineInformer) Lister() v1beta1.OpenStackMachineLister {
-	return v1beta1.NewOpenStackMachineLister(f.Informer().GetIndexer())
+func (f *openStackMachineInformer) Lister() apiv1beta1.OpenStackMachineLister {
+	return apiv1beta1.NewOpenStackMachineLister(f.Informer().GetIndexer())
 }

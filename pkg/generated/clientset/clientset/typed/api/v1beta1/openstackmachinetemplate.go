@@ -19,14 +19,14 @@ limitations under the License.
 package v1beta1
 
 import (
-	"context"
+	context "context"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	gentype "k8s.io/client-go/gentype"
-	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
-	apiv1beta1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1beta1"
+	apiv1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	applyconfigurationapiv1beta1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1beta1"
 	scheme "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset/scheme"
 )
 
@@ -38,32 +38,33 @@ type OpenStackMachineTemplatesGetter interface {
 
 // OpenStackMachineTemplateInterface has methods to work with OpenStackMachineTemplate resources.
 type OpenStackMachineTemplateInterface interface {
-	Create(ctx context.Context, openStackMachineTemplate *v1beta1.OpenStackMachineTemplate, opts v1.CreateOptions) (*v1beta1.OpenStackMachineTemplate, error)
-	Update(ctx context.Context, openStackMachineTemplate *v1beta1.OpenStackMachineTemplate, opts v1.UpdateOptions) (*v1beta1.OpenStackMachineTemplate, error)
+	Create(ctx context.Context, openStackMachineTemplate *apiv1beta1.OpenStackMachineTemplate, opts v1.CreateOptions) (*apiv1beta1.OpenStackMachineTemplate, error)
+	Update(ctx context.Context, openStackMachineTemplate *apiv1beta1.OpenStackMachineTemplate, opts v1.UpdateOptions) (*apiv1beta1.OpenStackMachineTemplate, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1beta1.OpenStackMachineTemplate, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1beta1.OpenStackMachineTemplateList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*apiv1beta1.OpenStackMachineTemplate, error)
+	List(ctx context.Context, opts v1.ListOptions) (*apiv1beta1.OpenStackMachineTemplateList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.OpenStackMachineTemplate, err error)
-	Apply(ctx context.Context, openStackMachineTemplate *apiv1beta1.OpenStackMachineTemplateApplyConfiguration, opts v1.ApplyOptions) (result *v1beta1.OpenStackMachineTemplate, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *apiv1beta1.OpenStackMachineTemplate, err error)
+	Apply(ctx context.Context, openStackMachineTemplate *applyconfigurationapiv1beta1.OpenStackMachineTemplateApplyConfiguration, opts v1.ApplyOptions) (result *apiv1beta1.OpenStackMachineTemplate, err error)
 	OpenStackMachineTemplateExpansion
 }
 
 // openStackMachineTemplates implements OpenStackMachineTemplateInterface
 type openStackMachineTemplates struct {
-	*gentype.ClientWithListAndApply[*v1beta1.OpenStackMachineTemplate, *v1beta1.OpenStackMachineTemplateList, *apiv1beta1.OpenStackMachineTemplateApplyConfiguration]
+	*gentype.ClientWithListAndApply[*apiv1beta1.OpenStackMachineTemplate, *apiv1beta1.OpenStackMachineTemplateList, *applyconfigurationapiv1beta1.OpenStackMachineTemplateApplyConfiguration]
 }
 
 // newOpenStackMachineTemplates returns a OpenStackMachineTemplates
 func newOpenStackMachineTemplates(c *InfrastructureV1beta1Client, namespace string) *openStackMachineTemplates {
 	return &openStackMachineTemplates{
-		gentype.NewClientWithListAndApply[*v1beta1.OpenStackMachineTemplate, *v1beta1.OpenStackMachineTemplateList, *apiv1beta1.OpenStackMachineTemplateApplyConfiguration](
+		gentype.NewClientWithListAndApply[*apiv1beta1.OpenStackMachineTemplate, *apiv1beta1.OpenStackMachineTemplateList, *applyconfigurationapiv1beta1.OpenStackMachineTemplateApplyConfiguration](
 			"openstackmachinetemplates",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1beta1.OpenStackMachineTemplate { return &v1beta1.OpenStackMachineTemplate{} },
-			func() *v1beta1.OpenStackMachineTemplateList { return &v1beta1.OpenStackMachineTemplateList{} }),
+			func() *apiv1beta1.OpenStackMachineTemplate { return &apiv1beta1.OpenStackMachineTemplate{} },
+			func() *apiv1beta1.OpenStackMachineTemplateList { return &apiv1beta1.OpenStackMachineTemplateList{} },
+		),
 	}
 }

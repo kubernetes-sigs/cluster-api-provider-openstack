@@ -19,10 +19,10 @@ limitations under the License.
 package v1beta1
 
 import (
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
-	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
+	apiv1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
 // OpenStackClusterLister helps list OpenStackClusters.
@@ -30,7 +30,7 @@ import (
 type OpenStackClusterLister interface {
 	// List lists all OpenStackClusters in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1beta1.OpenStackCluster, err error)
+	List(selector labels.Selector) (ret []*apiv1beta1.OpenStackCluster, err error)
 	// OpenStackClusters returns an object that can list and get OpenStackClusters.
 	OpenStackClusters(namespace string) OpenStackClusterNamespaceLister
 	OpenStackClusterListerExpansion
@@ -38,17 +38,17 @@ type OpenStackClusterLister interface {
 
 // openStackClusterLister implements the OpenStackClusterLister interface.
 type openStackClusterLister struct {
-	listers.ResourceIndexer[*v1beta1.OpenStackCluster]
+	listers.ResourceIndexer[*apiv1beta1.OpenStackCluster]
 }
 
 // NewOpenStackClusterLister returns a new OpenStackClusterLister.
 func NewOpenStackClusterLister(indexer cache.Indexer) OpenStackClusterLister {
-	return &openStackClusterLister{listers.New[*v1beta1.OpenStackCluster](indexer, v1beta1.Resource("openstackcluster"))}
+	return &openStackClusterLister{listers.New[*apiv1beta1.OpenStackCluster](indexer, apiv1beta1.Resource("openstackcluster"))}
 }
 
 // OpenStackClusters returns an object that can list and get OpenStackClusters.
 func (s *openStackClusterLister) OpenStackClusters(namespace string) OpenStackClusterNamespaceLister {
-	return openStackClusterNamespaceLister{listers.NewNamespaced[*v1beta1.OpenStackCluster](s.ResourceIndexer, namespace)}
+	return openStackClusterNamespaceLister{listers.NewNamespaced[*apiv1beta1.OpenStackCluster](s.ResourceIndexer, namespace)}
 }
 
 // OpenStackClusterNamespaceLister helps list and get OpenStackClusters.
@@ -56,15 +56,15 @@ func (s *openStackClusterLister) OpenStackClusters(namespace string) OpenStackCl
 type OpenStackClusterNamespaceLister interface {
 	// List lists all OpenStackClusters in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1beta1.OpenStackCluster, err error)
+	List(selector labels.Selector) (ret []*apiv1beta1.OpenStackCluster, err error)
 	// Get retrieves the OpenStackCluster from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1beta1.OpenStackCluster, error)
+	Get(name string) (*apiv1beta1.OpenStackCluster, error)
 	OpenStackClusterNamespaceListerExpansion
 }
 
 // openStackClusterNamespaceLister implements the OpenStackClusterNamespaceLister
 // interface.
 type openStackClusterNamespaceLister struct {
-	listers.ResourceIndexer[*v1beta1.OpenStackCluster]
+	listers.ResourceIndexer[*apiv1beta1.OpenStackCluster]
 }

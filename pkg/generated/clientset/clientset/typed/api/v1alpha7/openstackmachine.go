@@ -19,14 +19,14 @@ limitations under the License.
 package v1alpha7
 
 import (
-	"context"
+	context "context"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	gentype "k8s.io/client-go/gentype"
-	v1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
-	apiv1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1alpha7"
+	apiv1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
+	applyconfigurationapiv1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1alpha7"
 	scheme "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset/scheme"
 )
 
@@ -38,36 +38,37 @@ type OpenStackMachinesGetter interface {
 
 // OpenStackMachineInterface has methods to work with OpenStackMachine resources.
 type OpenStackMachineInterface interface {
-	Create(ctx context.Context, openStackMachine *v1alpha7.OpenStackMachine, opts v1.CreateOptions) (*v1alpha7.OpenStackMachine, error)
-	Update(ctx context.Context, openStackMachine *v1alpha7.OpenStackMachine, opts v1.UpdateOptions) (*v1alpha7.OpenStackMachine, error)
+	Create(ctx context.Context, openStackMachine *apiv1alpha7.OpenStackMachine, opts v1.CreateOptions) (*apiv1alpha7.OpenStackMachine, error)
+	Update(ctx context.Context, openStackMachine *apiv1alpha7.OpenStackMachine, opts v1.UpdateOptions) (*apiv1alpha7.OpenStackMachine, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, openStackMachine *v1alpha7.OpenStackMachine, opts v1.UpdateOptions) (*v1alpha7.OpenStackMachine, error)
+	UpdateStatus(ctx context.Context, openStackMachine *apiv1alpha7.OpenStackMachine, opts v1.UpdateOptions) (*apiv1alpha7.OpenStackMachine, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha7.OpenStackMachine, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha7.OpenStackMachineList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*apiv1alpha7.OpenStackMachine, error)
+	List(ctx context.Context, opts v1.ListOptions) (*apiv1alpha7.OpenStackMachineList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha7.OpenStackMachine, err error)
-	Apply(ctx context.Context, openStackMachine *apiv1alpha7.OpenStackMachineApplyConfiguration, opts v1.ApplyOptions) (result *v1alpha7.OpenStackMachine, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *apiv1alpha7.OpenStackMachine, err error)
+	Apply(ctx context.Context, openStackMachine *applyconfigurationapiv1alpha7.OpenStackMachineApplyConfiguration, opts v1.ApplyOptions) (result *apiv1alpha7.OpenStackMachine, err error)
 	// Add a +genclient:noStatus comment above the type to avoid generating ApplyStatus().
-	ApplyStatus(ctx context.Context, openStackMachine *apiv1alpha7.OpenStackMachineApplyConfiguration, opts v1.ApplyOptions) (result *v1alpha7.OpenStackMachine, err error)
+	ApplyStatus(ctx context.Context, openStackMachine *applyconfigurationapiv1alpha7.OpenStackMachineApplyConfiguration, opts v1.ApplyOptions) (result *apiv1alpha7.OpenStackMachine, err error)
 	OpenStackMachineExpansion
 }
 
 // openStackMachines implements OpenStackMachineInterface
 type openStackMachines struct {
-	*gentype.ClientWithListAndApply[*v1alpha7.OpenStackMachine, *v1alpha7.OpenStackMachineList, *apiv1alpha7.OpenStackMachineApplyConfiguration]
+	*gentype.ClientWithListAndApply[*apiv1alpha7.OpenStackMachine, *apiv1alpha7.OpenStackMachineList, *applyconfigurationapiv1alpha7.OpenStackMachineApplyConfiguration]
 }
 
 // newOpenStackMachines returns a OpenStackMachines
 func newOpenStackMachines(c *InfrastructureV1alpha7Client, namespace string) *openStackMachines {
 	return &openStackMachines{
-		gentype.NewClientWithListAndApply[*v1alpha7.OpenStackMachine, *v1alpha7.OpenStackMachineList, *apiv1alpha7.OpenStackMachineApplyConfiguration](
+		gentype.NewClientWithListAndApply[*apiv1alpha7.OpenStackMachine, *apiv1alpha7.OpenStackMachineList, *applyconfigurationapiv1alpha7.OpenStackMachineApplyConfiguration](
 			"openstackmachines",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1alpha7.OpenStackMachine { return &v1alpha7.OpenStackMachine{} },
-			func() *v1alpha7.OpenStackMachineList { return &v1alpha7.OpenStackMachineList{} }),
+			func() *apiv1alpha7.OpenStackMachine { return &apiv1alpha7.OpenStackMachine{} },
+			func() *apiv1alpha7.OpenStackMachineList { return &apiv1alpha7.OpenStackMachineList{} },
+		),
 	}
 }

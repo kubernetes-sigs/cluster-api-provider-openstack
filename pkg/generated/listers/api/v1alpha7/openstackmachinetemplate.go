@@ -19,10 +19,10 @@ limitations under the License.
 package v1alpha7
 
 import (
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
-	v1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
+	apiv1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 )
 
 // OpenStackMachineTemplateLister helps list OpenStackMachineTemplates.
@@ -30,7 +30,7 @@ import (
 type OpenStackMachineTemplateLister interface {
 	// List lists all OpenStackMachineTemplates in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha7.OpenStackMachineTemplate, err error)
+	List(selector labels.Selector) (ret []*apiv1alpha7.OpenStackMachineTemplate, err error)
 	// OpenStackMachineTemplates returns an object that can list and get OpenStackMachineTemplates.
 	OpenStackMachineTemplates(namespace string) OpenStackMachineTemplateNamespaceLister
 	OpenStackMachineTemplateListerExpansion
@@ -38,17 +38,17 @@ type OpenStackMachineTemplateLister interface {
 
 // openStackMachineTemplateLister implements the OpenStackMachineTemplateLister interface.
 type openStackMachineTemplateLister struct {
-	listers.ResourceIndexer[*v1alpha7.OpenStackMachineTemplate]
+	listers.ResourceIndexer[*apiv1alpha7.OpenStackMachineTemplate]
 }
 
 // NewOpenStackMachineTemplateLister returns a new OpenStackMachineTemplateLister.
 func NewOpenStackMachineTemplateLister(indexer cache.Indexer) OpenStackMachineTemplateLister {
-	return &openStackMachineTemplateLister{listers.New[*v1alpha7.OpenStackMachineTemplate](indexer, v1alpha7.Resource("openstackmachinetemplate"))}
+	return &openStackMachineTemplateLister{listers.New[*apiv1alpha7.OpenStackMachineTemplate](indexer, apiv1alpha7.Resource("openstackmachinetemplate"))}
 }
 
 // OpenStackMachineTemplates returns an object that can list and get OpenStackMachineTemplates.
 func (s *openStackMachineTemplateLister) OpenStackMachineTemplates(namespace string) OpenStackMachineTemplateNamespaceLister {
-	return openStackMachineTemplateNamespaceLister{listers.NewNamespaced[*v1alpha7.OpenStackMachineTemplate](s.ResourceIndexer, namespace)}
+	return openStackMachineTemplateNamespaceLister{listers.NewNamespaced[*apiv1alpha7.OpenStackMachineTemplate](s.ResourceIndexer, namespace)}
 }
 
 // OpenStackMachineTemplateNamespaceLister helps list and get OpenStackMachineTemplates.
@@ -56,15 +56,15 @@ func (s *openStackMachineTemplateLister) OpenStackMachineTemplates(namespace str
 type OpenStackMachineTemplateNamespaceLister interface {
 	// List lists all OpenStackMachineTemplates in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha7.OpenStackMachineTemplate, err error)
+	List(selector labels.Selector) (ret []*apiv1alpha7.OpenStackMachineTemplate, err error)
 	// Get retrieves the OpenStackMachineTemplate from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1alpha7.OpenStackMachineTemplate, error)
+	Get(name string) (*apiv1alpha7.OpenStackMachineTemplate, error)
 	OpenStackMachineTemplateNamespaceListerExpansion
 }
 
 // openStackMachineTemplateNamespaceLister implements the OpenStackMachineTemplateNamespaceLister
 // interface.
 type openStackMachineTemplateNamespaceLister struct {
-	listers.ResourceIndexer[*v1alpha7.OpenStackMachineTemplate]
+	listers.ResourceIndexer[*apiv1alpha7.OpenStackMachineTemplate]
 }
