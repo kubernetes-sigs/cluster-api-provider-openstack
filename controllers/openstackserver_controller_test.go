@@ -114,6 +114,18 @@ var listDefaultPorts = func(r *recorders) {
 	}, nil)
 }
 
+var listDefaultPortsWithID = func(r *recorders) {
+	r.network.ListPort(ports.ListOpts{
+		Name:      openStackServerName + "-0",
+		ID:        portUUID,
+		NetworkID: networkUUID,
+	}).Return([]ports.Port{
+		{
+			ID: portUUID,
+		},
+	}, nil)
+}
+
 var listDefaultPortsNotFound = func(r *recorders) {
 	r.network.ListPort(ports.ListOpts{
 		Name:      openStackServerName + "-0",
@@ -479,6 +491,7 @@ func Test_OpenStackServerReconcileCreate(t *testing.T) {
 				listDefaultPortsNotFound(r)
 				createDefaultPort(r)
 				listDefaultServerNotFound(r)
+				listDefaultPortsNotFound(r)
 				createDefaultServer(r)
 			},
 		},
@@ -500,6 +513,7 @@ func Test_OpenStackServerReconcileCreate(t *testing.T) {
 			},
 			expect: func(r *recorders) {
 				listDefaultPorts(r)
+				listDefaultPortsWithID(r)
 				listDefaultServerFound(r)
 			},
 		},
