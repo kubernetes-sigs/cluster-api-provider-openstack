@@ -277,6 +277,8 @@ var _ = Describe("OpenStackCluster controller", func() {
 		server.Status = "ACTIVE"
 
 		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
+		// One list for adopting and one for ensuring the ports and tags are correct
+		networkClientRecorder.ListPort(gomock.Any()).Return([]ports.Port{{ID: "portID1"}}, nil)
 		networkClientRecorder.ListPort(gomock.Any()).Return([]ports.Port{{ID: "portID1"}}, nil)
 
 		computeClientRecorder := mockScopeFactory.ComputeClient.EXPECT()
@@ -362,6 +364,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 
 		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
 		networkClientRecorder.ListPort(gomock.Any()).Return([]ports.Port{{ID: "portID1"}}, nil)
+		networkClientRecorder.ListPort(gomock.Any()).Return([]ports.Port{{ID: "portID1"}}, nil)
 
 		computeClientRecorder := mockScopeFactory.ComputeClient.EXPECT()
 		computeClientRecorder.GetServer("adopted-fip-bastion-uuid").Return(&server, nil)
@@ -444,6 +447,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 
 		computeClientRecorder := mockScopeFactory.ComputeClient.EXPECT()
 		computeClientRecorder.GetServer("requeue-bastion-uuid").Return(&server, nil)
+
+		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
+		networkClientRecorder.ListPort(gomock.Any()).Return([]ports.Port{{ID: "portID1"}}, nil)
 
 		res, err := reconcileBastion(scope, capiCluster, testCluster)
 		Expect(testCluster.Status.Bastion).To(Equal(&infrav1.BastionStatus{
