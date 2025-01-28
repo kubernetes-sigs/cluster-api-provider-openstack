@@ -235,6 +235,11 @@ type OpenStackMachineStatus struct {
 	FailureMessage *string `json:"failureMessage,omitempty"`
 
 	Conditions clusterv1.Conditions `json:"conditions,omitempty"`
+
+	// OpenStackServerRef is a reference to the OpenStackServer object that
+	// is associated with this OpenStackMachine.
+	// +optional
+	OpenStackServerRef *corev1.TypedLocalObjectReference `json:"openStackServerRef,omitempty"`
 }
 
 // +genclient

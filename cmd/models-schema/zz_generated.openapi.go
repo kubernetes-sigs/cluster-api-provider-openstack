@@ -19234,11 +19234,17 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachin
 							},
 						},
 					},
+					"openStackServerRef": {
+						SchemaProps: spec.SchemaProps{
+							Description: "OpenStackServerRef is a reference to the OpenStackServer object that is associated with this OpenStackMachine.",
+							Ref:         ref("k8s.io/api/core/v1.TypedLocalObjectReference"),
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.NodeAddress", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.MachineResources", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedMachineSpec", "sigs.k8s.io/cluster-api/api/v1beta1.Condition"},
+			"k8s.io/api/core/v1.NodeAddress", "k8s.io/api/core/v1.TypedLocalObjectReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.MachineResources", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedMachineSpec", "sigs.k8s.io/cluster-api/api/v1beta1.Condition"},
 	}
 }
 
