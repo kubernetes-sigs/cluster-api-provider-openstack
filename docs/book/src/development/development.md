@@ -38,7 +38,7 @@ This document explains how to develop Cluster API Provider OpenStack (CAPO).
 Note that CAPO depends on ORC. No matter how you choose to work, you will need to deploy ORC in order to make CAPO functional:
 
 ```bash
-kubectl apply -f https://github.com/k-orc/openstack-resource-controller/releases/download/v1.0.0/install.yaml
+kubectl apply -f https://github.com/k-orc/openstack-resource-controller/releases/latest/download/install.yaml
 ```
 
 TL;DR: Here is a short version for how to develop with Tilt:
@@ -58,11 +58,12 @@ export RESOURCE_TYPE=...
 make tilt-up
 # Back in CAPO repo
 # Install ORC
-kubectl apply -f https://github.com/k-orc/openstack-resource-controller/releases/download/v1.0.0/install.yaml
+kubectl apply -f https://github.com/k-orc/openstack-resource-controller/releases/latest/download/install.yaml
 # Create secret with clouds.yaml (the file is created by create_devstack.sh)
 kubectl create secret generic dev-test-cloud-config --from-file=clouds.yaml
 # Add images to use in the tests
-clusterctl generate yaml --from templates/images-template.yaml | kubectl apply -f -
+clusterctl generate yaml --from templates/image-template-node.yaml | kubectl apply -f -
+clusterctl generate yaml --from templates/image-template-bastion.yaml | kubectl apply -f -
 ```
 
 At this point, you should be able to apply the `dev-test` ClusterClass and start creating/deleting `development` clusters through the Tilt UI.
@@ -95,10 +96,11 @@ After generating `infrastructure-components.yaml`, replace the `us.gcr.io/k8s-ar
 ## Automatically Adding Images to OpenStack
 
 Before you can create a Cluster, you will need a suitable image in OpenStack.
-There is a convenient template available in `templates/images-template.yaml` for this purpose.
+There are convenient templates available in `templates/image-template-*.yaml` for this purpose.
+For example:
 
 ```bash
-clusterctl generate yaml --from templates/images-template.yaml | kubectl apply -f -
+clusterctl generate yaml --from templates/image-template-node.yaml | kubectl apply -f -
 ```
 
 ## Testing Cluster Creation using the 'dev-test' ClusterClass with Tilt
