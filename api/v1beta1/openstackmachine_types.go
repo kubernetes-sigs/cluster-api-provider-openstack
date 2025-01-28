@@ -199,6 +199,8 @@ type OpenStackMachineStatus struct {
 	Addresses []corev1.NodeAddress `json:"addresses,omitempty"`
 
 	// InstanceState is the state of the OpenStack instance for this machine.
+	// This field is not set anymore by the OpenStackMachine controller.
+	// Instead, it's set by the OpenStackServer controller.
 	// +optional
 	InstanceState *InstanceState `json:"instanceState,omitempty"`
 
@@ -241,7 +243,6 @@ type OpenStackMachineStatus struct {
 // +kubebuilder:resource:path=openstackmachines,scope=Namespaced,categories=cluster-api,shortName=osm
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Cluster",type="string",JSONPath=".metadata.labels.cluster\\.x-k8s\\.io/cluster-name",description="Cluster to which this OpenStackMachine belongs"
-// +kubebuilder:printcolumn:name="InstanceState",type="string",JSONPath=".status.instanceState",description="OpenStack instance state"
 // +kubebuilder:printcolumn:name="Ready",type="string",JSONPath=".status.ready",description="Machine ready status"
 // +kubebuilder:printcolumn:name="ProviderID",type="string",JSONPath=".spec.providerID",description="OpenStack instance ID"
 // +kubebuilder:printcolumn:name="Machine",type="string",JSONPath=".metadata.ownerReferences[?(@.kind==\"Machine\")].name",description="Machine object which owns with this OpenStackMachine"
