@@ -1,0 +1,16 @@
+---
+apiVersion: openstack.k-orc.cloud/v1alpha1
+kind: Image
+metadata:
+  name: node-image
+spec:
+  managementPolicy: managed
+  resource:
+    name: flatcar_production
+    content:
+      diskFormat: qcow2
+      download:
+        url: ${NODE_IMAGE_URL:="https://stable.release.flatcar-linux.net/amd64-usr/current/flatcar_production_openstack_image.img"}
+  cloudCredentialsRef:
+    secretName: ${CLOUD_CONFIG_SECRET:=dev-test-cloud-config}
+    cloudName: ${OPENSTACK_CLOUD:=capo-e2e}
