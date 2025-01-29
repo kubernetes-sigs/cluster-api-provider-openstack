@@ -29,7 +29,7 @@ type FakeInfrastructureV1alpha1 struct {
 }
 
 func (c *FakeInfrastructureV1alpha1) OpenStackServers(namespace string) v1alpha1.OpenStackServerInterface {
-	return &FakeOpenStackServers{c, namespace}
+	return newFakeOpenStackServers(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate

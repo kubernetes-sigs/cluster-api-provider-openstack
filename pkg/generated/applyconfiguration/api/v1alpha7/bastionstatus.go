@@ -19,18 +19,18 @@ limitations under the License.
 package v1alpha7
 
 import (
-	v1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
+	apiv1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 )
 
 // BastionStatusApplyConfiguration represents a declarative configuration of the BastionStatus type for use
 // with apply.
 type BastionStatusApplyConfiguration struct {
-	ID         *string                 `json:"id,omitempty"`
-	Name       *string                 `json:"name,omitempty"`
-	SSHKeyName *string                 `json:"sshKeyName,omitempty"`
-	State      *v1alpha7.InstanceState `json:"state,omitempty"`
-	IP         *string                 `json:"ip,omitempty"`
-	FloatingIP *string                 `json:"floatingIP,omitempty"`
+	ID         *string                    `json:"id,omitempty"`
+	Name       *string                    `json:"name,omitempty"`
+	SSHKeyName *string                    `json:"sshKeyName,omitempty"`
+	State      *apiv1alpha7.InstanceState `json:"state,omitempty"`
+	IP         *string                    `json:"ip,omitempty"`
+	FloatingIP *string                    `json:"floatingIP,omitempty"`
 }
 
 // BastionStatusApplyConfiguration constructs a declarative configuration of the BastionStatus type for use with
@@ -66,7 +66,7 @@ func (b *BastionStatusApplyConfiguration) WithSSHKeyName(value string) *BastionS
 // WithState sets the State field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the State field is set to the value of the last call.
-func (b *BastionStatusApplyConfiguration) WithState(value v1alpha7.InstanceState) *BastionStatusApplyConfiguration {
+func (b *BastionStatusApplyConfiguration) WithState(value apiv1alpha7.InstanceState) *BastionStatusApplyConfiguration {
 	b.State = &value
 	return b
 }

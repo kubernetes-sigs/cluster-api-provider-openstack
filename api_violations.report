@@ -122,3 +122,4 @@ API rule violation: names_match,sigs.k8s.io/cluster-api/api/v1beta1,MachineDeplo
 API rule violation: names_match,sigs.k8s.io/cluster-api/api/v1beta1,MachineHealthCheckStatus,V1Beta2
 API rule violation: names_match,sigs.k8s.io/cluster-api/api/v1beta1,MachineSetStatus,V1Beta2
 API rule violation: names_match,sigs.k8s.io/cluster-api/api/v1beta1,MachineStatus,V1Beta2
+API rule violation: names_match,sigs.k8s.io/cluster-api/api/v1beta1,MachineTemplateSpec,ObjectMeta

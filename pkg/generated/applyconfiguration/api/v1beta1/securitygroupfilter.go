@@ -66,7 +66,7 @@ func (b *SecurityGroupFilterApplyConfiguration) WithProjectID(value string) *Sec
 // If called multiple times, values provided by each call will be appended to the Tags field.
 func (b *SecurityGroupFilterApplyConfiguration) WithTags(values ...apiv1beta1.NeutronTag) *SecurityGroupFilterApplyConfiguration {
 	for i := range values {
-		b.Tags = append(b.Tags, values[i])
+		b.FilterByNeutronTagsApplyConfiguration.Tags = append(b.FilterByNeutronTagsApplyConfiguration.Tags, values[i])
 	}
 	return b
 }
@@ -76,7 +76,7 @@ func (b *SecurityGroupFilterApplyConfiguration) WithTags(values ...apiv1beta1.Ne
 // If called multiple times, values provided by each call will be appended to the TagsAny field.
 func (b *SecurityGroupFilterApplyConfiguration) WithTagsAny(values ...apiv1beta1.NeutronTag) *SecurityGroupFilterApplyConfiguration {
 	for i := range values {
-		b.TagsAny = append(b.TagsAny, values[i])
+		b.FilterByNeutronTagsApplyConfiguration.TagsAny = append(b.FilterByNeutronTagsApplyConfiguration.TagsAny, values[i])
 	}
 	return b
 }
@@ -86,7 +86,7 @@ func (b *SecurityGroupFilterApplyConfiguration) WithTagsAny(values ...apiv1beta1
 // If called multiple times, values provided by each call will be appended to the NotTags field.
 func (b *SecurityGroupFilterApplyConfiguration) WithNotTags(values ...apiv1beta1.NeutronTag) *SecurityGroupFilterApplyConfiguration {
 	for i := range values {
-		b.NotTags = append(b.NotTags, values[i])
+		b.FilterByNeutronTagsApplyConfiguration.NotTags = append(b.FilterByNeutronTagsApplyConfiguration.NotTags, values[i])
 	}
 	return b
 }
@@ -96,7 +96,7 @@ func (b *SecurityGroupFilterApplyConfiguration) WithNotTags(values ...apiv1beta1
 // If called multiple times, values provided by each call will be appended to the NotTagsAny field.
 func (b *SecurityGroupFilterApplyConfiguration) WithNotTagsAny(values ...apiv1beta1.NeutronTag) *SecurityGroupFilterApplyConfiguration {
 	for i := range values {
-		b.NotTagsAny = append(b.NotTagsAny, values[i])
+		b.FilterByNeutronTagsApplyConfiguration.NotTagsAny = append(b.FilterByNeutronTagsApplyConfiguration.NotTagsAny, values[i])
 	}
 	return b
 }

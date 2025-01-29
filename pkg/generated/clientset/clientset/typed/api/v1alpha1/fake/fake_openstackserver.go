@@ -19,179 +19,35 @@ limitations under the License.
 package fake
 
 import (
-	"context"
-	json "encoding/json"
-	"fmt"
-
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	gentype "k8s.io/client-go/gentype"
 	v1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	apiv1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1alpha1"
+	typedapiv1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset/typed/api/v1alpha1"
 )
 
-// FakeOpenStackServers implements OpenStackServerInterface
-type FakeOpenStackServers struct {
+// fakeOpenStackServers implements OpenStackServerInterface
+type fakeOpenStackServers struct {
+	*gentype.FakeClientWithListAndApply[*v1alpha1.OpenStackServer, *v1alpha1.OpenStackServerList, *apiv1alpha1.OpenStackServerApplyConfiguration]
 	Fake *FakeInfrastructureV1alpha1
-	ns   string
 }
 
-var openstackserversResource = v1alpha1.SchemeGroupVersion.WithResource("openstackservers")
-
-var openstackserversKind = v1alpha1.SchemeGroupVersion.WithKind("OpenStackServer")
-
-// Get takes name of the openStackServer, and returns the corresponding openStackServer object, and an error if there is any.
-func (c *FakeOpenStackServers) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.OpenStackServer, err error) {
-	emptyResult := &v1alpha1.OpenStackServer{}
-	obj, err := c.Fake.
-		Invokes(testing.NewGetActionWithOptions(openstackserversResource, c.ns, name, options), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
+func newFakeOpenStackServers(fake *FakeInfrastructureV1alpha1, namespace string) typedapiv1alpha1.OpenStackServerInterface {
+	return &fakeOpenStackServers{
+		gentype.NewFakeClientWithListAndApply[*v1alpha1.OpenStackServer, *v1alpha1.OpenStackServerList, *apiv1alpha1.OpenStackServerApplyConfiguration](
+			fake.Fake,
+			namespace,
+			v1alpha1.SchemeGroupVersion.WithResource("openstackservers"),
+			v1alpha1.SchemeGroupVersion.WithKind("OpenStackServer"),
+			func() *v1alpha1.OpenStackServer { return &v1alpha1.OpenStackServer{} },
+			func() *v1alpha1.OpenStackServerList { return &v1alpha1.OpenStackServerList{} },
+			func(dst, src *v1alpha1.OpenStackServerList) { dst.ListMeta = src.ListMeta },
+			func(list *v1alpha1.OpenStackServerList) []*v1alpha1.OpenStackServer {
+				return gentype.ToPointerSlice(list.Items)
+			},
+			func(list *v1alpha1.OpenStackServerList, items []*v1alpha1.OpenStackServer) {
+				list.Items = gentype.FromPointerSlice(items)
+			},
+		),
+		fake,
 	}
-	return obj.(*v1alpha1.OpenStackServer), err
-}
-
-// List takes label and field selectors, and returns the list of OpenStackServers that match those selectors.
-func (c *FakeOpenStackServers) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.OpenStackServerList, err error) {
-	emptyResult := &v1alpha1.OpenStackServerList{}
-	obj, err := c.Fake.
-		Invokes(testing.NewListActionWithOptions(openstackserversResource, openstackserversKind, c.ns, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1alpha1.OpenStackServerList{ListMeta: obj.(*v1alpha1.OpenStackServerList).ListMeta}
-	for _, item := range obj.(*v1alpha1.OpenStackServerList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested openStackServers.
-func (c *FakeOpenStackServers) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchActionWithOptions(openstackserversResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a openStackServer and creates it.  Returns the server's representation of the openStackServer, and an error, if there is any.
-func (c *FakeOpenStackServers) Create(ctx context.Context, openStackServer *v1alpha1.OpenStackServer, opts v1.CreateOptions) (result *v1alpha1.OpenStackServer, err error) {
-	emptyResult := &v1alpha1.OpenStackServer{}
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateActionWithOptions(openstackserversResource, c.ns, openStackServer, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.OpenStackServer), err
-}
-
-// Update takes the representation of a openStackServer and updates it. Returns the server's representation of the openStackServer, and an error, if there is any.
-func (c *FakeOpenStackServers) Update(ctx context.Context, openStackServer *v1alpha1.OpenStackServer, opts v1.UpdateOptions) (result *v1alpha1.OpenStackServer, err error) {
-	emptyResult := &v1alpha1.OpenStackServer{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateActionWithOptions(openstackserversResource, c.ns, openStackServer, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.OpenStackServer), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeOpenStackServers) UpdateStatus(ctx context.Context, openStackServer *v1alpha1.OpenStackServer, opts v1.UpdateOptions) (result *v1alpha1.OpenStackServer, err error) {
-	emptyResult := &v1alpha1.OpenStackServer{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceActionWithOptions(openstackserversResource, "status", c.ns, openStackServer, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.OpenStackServer), err
-}
-
-// Delete takes name of the openStackServer and deletes it. Returns an error if one occurs.
-func (c *FakeOpenStackServers) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(openstackserversResource, c.ns, name, opts), &v1alpha1.OpenStackServer{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeOpenStackServers) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionActionWithOptions(openstackserversResource, c.ns, opts, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1alpha1.OpenStackServerList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched openStackServer.
-func (c *FakeOpenStackServers) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.OpenStackServer, err error) {
-	emptyResult := &v1alpha1.OpenStackServer{}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceActionWithOptions(openstackserversResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.OpenStackServer), err
-}
-
-// Apply takes the given apply declarative configuration, applies it and returns the applied openStackServer.
-func (c *FakeOpenStackServers) Apply(ctx context.Context, openStackServer *apiv1alpha1.OpenStackServerApplyConfiguration, opts v1.ApplyOptions) (result *v1alpha1.OpenStackServer, err error) {
-	if openStackServer == nil {
-		return nil, fmt.Errorf("openStackServer provided to Apply must not be nil")
-	}
-	data, err := json.Marshal(openStackServer)
-	if err != nil {
-		return nil, err
-	}
-	name := openStackServer.Name
-	if name == nil {
-		return nil, fmt.Errorf("openStackServer.Name must be provided to Apply")
-	}
-	emptyResult := &v1alpha1.OpenStackServer{}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceActionWithOptions(openstackserversResource, c.ns, *name, types.ApplyPatchType, data, opts.ToPatchOptions()), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.OpenStackServer), err
-}
-
-// ApplyStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating ApplyStatus().
-func (c *FakeOpenStackServers) ApplyStatus(ctx context.Context, openStackServer *apiv1alpha1.OpenStackServerApplyConfiguration, opts v1.ApplyOptions) (result *v1alpha1.OpenStackServer, err error) {
-	if openStackServer == nil {
-		return nil, fmt.Errorf("openStackServer provided to Apply must not be nil")
-	}
-	data, err := json.Marshal(openStackServer)
-	if err != nil {
-		return nil, err
-	}
-	name := openStackServer.Name
-	if name == nil {
-		return nil, fmt.Errorf("openStackServer.Name must be provided to Apply")
-	}
-	emptyResult := &v1alpha1.OpenStackServer{}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceActionWithOptions(openstackserversResource, c.ns, *name, types.ApplyPatchType, data, opts.ToPatchOptions(), "status"), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.OpenStackServer), err
 }

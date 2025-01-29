@@ -19,11 +19,11 @@ limitations under the License.
 package v1alpha7
 
 import (
-	"net/http"
+	http "net/http"
 
 	rest "k8s.io/client-go/rest"
-	v1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset/scheme"
+	apiv1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
+	scheme "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset/scheme"
 )
 
 type InfrastructureV1alpha7Interface interface {
@@ -100,10 +100,10 @@ func New(c rest.Interface) *InfrastructureV1alpha7Client {
 }
 
 func setConfigDefaults(config *rest.Config) error {
-	gv := v1alpha7.SchemeGroupVersion
+	gv := apiv1alpha7.SchemeGroupVersion
 	config.GroupVersion = &gv
 	config.APIPath = "/apis"
-	config.NegotiatedSerializer = scheme.Codecs.WithoutConversion()
+	config.NegotiatedSerializer = rest.CodecFactoryForGeneratedClient(scheme.Scheme, scheme.Codecs).WithoutConversion()
 
 	if config.UserAgent == "" {
 		config.UserAgent = rest.DefaultKubernetesUserAgent()

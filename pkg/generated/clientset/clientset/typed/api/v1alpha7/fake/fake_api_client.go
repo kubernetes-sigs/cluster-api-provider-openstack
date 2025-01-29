@@ -29,19 +29,19 @@ type FakeInfrastructureV1alpha7 struct {
 }
 
 func (c *FakeInfrastructureV1alpha7) OpenStackClusters(namespace string) v1alpha7.OpenStackClusterInterface {
-	return &FakeOpenStackClusters{c, namespace}
+	return newFakeOpenStackClusters(c, namespace)
 }
 
 func (c *FakeInfrastructureV1alpha7) OpenStackClusterTemplates(namespace string) v1alpha7.OpenStackClusterTemplateInterface {
-	return &FakeOpenStackClusterTemplates{c, namespace}
+	return newFakeOpenStackClusterTemplates(c, namespace)
 }
 
 func (c *FakeInfrastructureV1alpha7) OpenStackMachines(namespace string) v1alpha7.OpenStackMachineInterface {
-	return &FakeOpenStackMachines{c, namespace}
+	return newFakeOpenStackMachines(c, namespace)
 }
 
 func (c *FakeInfrastructureV1alpha7) OpenStackMachineTemplates(namespace string) v1alpha7.OpenStackMachineTemplateInterface {
-	return &FakeOpenStackMachineTemplates{c, namespace}
+	return newFakeOpenStackMachineTemplates(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate

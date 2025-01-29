@@ -19,179 +19,35 @@ limitations under the License.
 package fake
 
 import (
-	"context"
-	json "encoding/json"
-	"fmt"
-
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	gentype "k8s.io/client-go/gentype"
 	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	apiv1beta1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1beta1"
+	typedapiv1beta1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset/typed/api/v1beta1"
 )
 
-// FakeOpenStackClusters implements OpenStackClusterInterface
-type FakeOpenStackClusters struct {
+// fakeOpenStackClusters implements OpenStackClusterInterface
+type fakeOpenStackClusters struct {
+	*gentype.FakeClientWithListAndApply[*v1beta1.OpenStackCluster, *v1beta1.OpenStackClusterList, *apiv1beta1.OpenStackClusterApplyConfiguration]
 	Fake *FakeInfrastructureV1beta1
-	ns   string
 }
 
-var openstackclustersResource = v1beta1.SchemeGroupVersion.WithResource("openstackclusters")
-
-var openstackclustersKind = v1beta1.SchemeGroupVersion.WithKind("OpenStackCluster")
-
-// Get takes name of the openStackCluster, and returns the corresponding openStackCluster object, and an error if there is any.
-func (c *FakeOpenStackClusters) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1beta1.OpenStackCluster, err error) {
-	emptyResult := &v1beta1.OpenStackCluster{}
-	obj, err := c.Fake.
-		Invokes(testing.NewGetActionWithOptions(openstackclustersResource, c.ns, name, options), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
+func newFakeOpenStackClusters(fake *FakeInfrastructureV1beta1, namespace string) typedapiv1beta1.OpenStackClusterInterface {
+	return &fakeOpenStackClusters{
+		gentype.NewFakeClientWithListAndApply[*v1beta1.OpenStackCluster, *v1beta1.OpenStackClusterList, *apiv1beta1.OpenStackClusterApplyConfiguration](
+			fake.Fake,
+			namespace,
+			v1beta1.SchemeGroupVersion.WithResource("openstackclusters"),
+			v1beta1.SchemeGroupVersion.WithKind("OpenStackCluster"),
+			func() *v1beta1.OpenStackCluster { return &v1beta1.OpenStackCluster{} },
+			func() *v1beta1.OpenStackClusterList { return &v1beta1.OpenStackClusterList{} },
+			func(dst, src *v1beta1.OpenStackClusterList) { dst.ListMeta = src.ListMeta },
+			func(list *v1beta1.OpenStackClusterList) []*v1beta1.OpenStackCluster {
+				return gentype.ToPointerSlice(list.Items)
+			},
+			func(list *v1beta1.OpenStackClusterList, items []*v1beta1.OpenStackCluster) {
+				list.Items = gentype.FromPointerSlice(items)
+			},
+		),
+		fake,
 	}
-	return obj.(*v1beta1.OpenStackCluster), err
-}
-
-// List takes label and field selectors, and returns the list of OpenStackClusters that match those selectors.
-func (c *FakeOpenStackClusters) List(ctx context.Context, opts v1.ListOptions) (result *v1beta1.OpenStackClusterList, err error) {
-	emptyResult := &v1beta1.OpenStackClusterList{}
-	obj, err := c.Fake.
-		Invokes(testing.NewListActionWithOptions(openstackclustersResource, openstackclustersKind, c.ns, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1beta1.OpenStackClusterList{ListMeta: obj.(*v1beta1.OpenStackClusterList).ListMeta}
-	for _, item := range obj.(*v1beta1.OpenStackClusterList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested openStackClusters.
-func (c *FakeOpenStackClusters) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchActionWithOptions(openstackclustersResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a openStackCluster and creates it.  Returns the server's representation of the openStackCluster, and an error, if there is any.
-func (c *FakeOpenStackClusters) Create(ctx context.Context, openStackCluster *v1beta1.OpenStackCluster, opts v1.CreateOptions) (result *v1beta1.OpenStackCluster, err error) {
-	emptyResult := &v1beta1.OpenStackCluster{}
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateActionWithOptions(openstackclustersResource, c.ns, openStackCluster, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1beta1.OpenStackCluster), err
-}
-
-// Update takes the representation of a openStackCluster and updates it. Returns the server's representation of the openStackCluster, and an error, if there is any.
-func (c *FakeOpenStackClusters) Update(ctx context.Context, openStackCluster *v1beta1.OpenStackCluster, opts v1.UpdateOptions) (result *v1beta1.OpenStackCluster, err error) {
-	emptyResult := &v1beta1.OpenStackCluster{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateActionWithOptions(openstackclustersResource, c.ns, openStackCluster, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1beta1.OpenStackCluster), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeOpenStackClusters) UpdateStatus(ctx context.Context, openStackCluster *v1beta1.OpenStackCluster, opts v1.UpdateOptions) (result *v1beta1.OpenStackCluster, err error) {
-	emptyResult := &v1beta1.OpenStackCluster{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceActionWithOptions(openstackclustersResource, "status", c.ns, openStackCluster, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1beta1.OpenStackCluster), err
-}
-
-// Delete takes name of the openStackCluster and deletes it. Returns an error if one occurs.
-func (c *FakeOpenStackClusters) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(openstackclustersResource, c.ns, name, opts), &v1beta1.OpenStackCluster{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeOpenStackClusters) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionActionWithOptions(openstackclustersResource, c.ns, opts, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1beta1.OpenStackClusterList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched openStackCluster.
-func (c *FakeOpenStackClusters) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.OpenStackCluster, err error) {
-	emptyResult := &v1beta1.OpenStackCluster{}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceActionWithOptions(openstackclustersResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1beta1.OpenStackCluster), err
-}
-
-// Apply takes the given apply declarative configuration, applies it and returns the applied openStackCluster.
-func (c *FakeOpenStackClusters) Apply(ctx context.Context, openStackCluster *apiv1beta1.OpenStackClusterApplyConfiguration, opts v1.ApplyOptions) (result *v1beta1.OpenStackCluster, err error) {
-	if openStackCluster == nil {
-		return nil, fmt.Errorf("openStackCluster provided to Apply must not be nil")
-	}
-	data, err := json.Marshal(openStackCluster)
-	if err != nil {
-		return nil, err
-	}
-	name := openStackCluster.Name
-	if name == nil {
-		return nil, fmt.Errorf("openStackCluster.Name must be provided to Apply")
-	}
-	emptyResult := &v1beta1.OpenStackCluster{}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceActionWithOptions(openstackclustersResource, c.ns, *name, types.ApplyPatchType, data, opts.ToPatchOptions()), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1beta1.OpenStackCluster), err
-}
-
-// ApplyStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating ApplyStatus().
-func (c *FakeOpenStackClusters) ApplyStatus(ctx context.Context, openStackCluster *apiv1beta1.OpenStackClusterApplyConfiguration, opts v1.ApplyOptions) (result *v1beta1.OpenStackCluster, err error) {
-	if openStackCluster == nil {
-		return nil, fmt.Errorf("openStackCluster provided to Apply must not be nil")
-	}
-	data, err := json.Marshal(openStackCluster)
-	if err != nil {
-		return nil, err
-	}
-	name := openStackCluster.Name
-	if name == nil {
-		return nil, fmt.Errorf("openStackCluster.Name must be provided to Apply")
-	}
-	emptyResult := &v1beta1.OpenStackCluster{}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceActionWithOptions(openstackclustersResource, c.ns, *name, types.ApplyPatchType, data, opts.ToPatchOptions(), "status"), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1beta1.OpenStackCluster), err
 }

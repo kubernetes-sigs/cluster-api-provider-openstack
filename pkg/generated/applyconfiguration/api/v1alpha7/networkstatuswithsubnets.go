@@ -35,7 +35,7 @@ func NetworkStatusWithSubnets() *NetworkStatusWithSubnetsApplyConfiguration {
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Name field is set to the value of the last call.
 func (b *NetworkStatusWithSubnetsApplyConfiguration) WithName(value string) *NetworkStatusWithSubnetsApplyConfiguration {
-	b.Name = &value
+	b.NetworkStatusApplyConfiguration.Name = &value
 	return b
 }
 
@@ -43,7 +43,7 @@ func (b *NetworkStatusWithSubnetsApplyConfiguration) WithName(value string) *Net
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ID field is set to the value of the last call.
 func (b *NetworkStatusWithSubnetsApplyConfiguration) WithID(value string) *NetworkStatusWithSubnetsApplyConfiguration {
-	b.ID = &value
+	b.NetworkStatusApplyConfiguration.ID = &value
 	return b
 }
 
@@ -52,7 +52,7 @@ func (b *NetworkStatusWithSubnetsApplyConfiguration) WithID(value string) *Netwo
 // If called multiple times, values provided by each call will be appended to the Tags field.
 func (b *NetworkStatusWithSubnetsApplyConfiguration) WithTags(values ...string) *NetworkStatusWithSubnetsApplyConfiguration {
 	for i := range values {
-		b.Tags = append(b.Tags, values[i])
+		b.NetworkStatusApplyConfiguration.Tags = append(b.NetworkStatusApplyConfiguration.Tags, values[i])
 	}
 	return b
 }

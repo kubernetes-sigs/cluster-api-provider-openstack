@@ -19,24 +19,24 @@ limitations under the License.
 package v1alpha7
 
 import (
-	"context"
+	context "context"
 	time "time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
-	apiv1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
+	clusterapiprovideropenstackapiv1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	clientset "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset"
 	internalinterfaces "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/informers/externalversions/internalinterfaces"
-	v1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/listers/api/v1alpha7"
+	apiv1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/listers/api/v1alpha7"
 )
 
 // OpenStackClusterInformer provides access to a shared informer and lister for
 // OpenStackClusters.
 type OpenStackClusterInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha7.OpenStackClusterLister
+	Lister() apiv1alpha7.OpenStackClusterLister
 }
 
 type openStackClusterInformer struct {
@@ -71,7 +71,7 @@ func NewFilteredOpenStackClusterInformer(client clientset.Interface, namespace s
 				return client.InfrastructureV1alpha7().OpenStackClusters(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&apiv1alpha7.OpenStackCluster{},
+		&clusterapiprovideropenstackapiv1alpha7.OpenStackCluster{},
 		resyncPeriod,
 		indexers,
 	)
@@ -82,9 +82,9 @@ func (f *openStackClusterInformer) defaultInformer(client clientset.Interface, r
 }
 
 func (f *openStackClusterInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&apiv1alpha7.OpenStackCluster{}, f.defaultInformer)
+	return f.factory.InformerFor(&clusterapiprovideropenstackapiv1alpha7.OpenStackCluster{}, f.defaultInformer)
 }
 
-func (f *openStackClusterInformer) Lister() v1alpha7.OpenStackClusterLister {
-	return v1alpha7.NewOpenStackClusterLister(f.Informer().GetIndexer())
+func (f *openStackClusterInformer) Lister() apiv1alpha7.OpenStackClusterLister {
+	return apiv1alpha7.NewOpenStackClusterLister(f.Informer().GetIndexer())
 }
