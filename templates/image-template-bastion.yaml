@@ -1,0 +1,16 @@
+---
+apiVersion: openstack.k-orc.cloud/v1alpha1
+kind: Image
+metadata:
+  name: bastion-image
+spec:
+  managementPolicy: managed
+  resource:
+    name: ubuntu-24.04
+    content:
+      diskFormat: qcow2
+      download:
+        url: ${BASTION_IMAGE_URL:="https://cloud-images.ubuntu.com/releases/noble/release/ubuntu-24.04-server-cloudimg-amd64.img"}
+  cloudCredentialsRef:
+    secretName: ${CLOUD_CONFIG_SECRET:=dev-test-cloud-config}
+    cloudName: ${OPENSTACK_CLOUD:=capo-e2e}
