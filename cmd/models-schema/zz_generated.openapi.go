@@ -21537,7 +21537,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachin
 					},
 					"instanceState": {
 						SchemaProps: spec.SchemaProps{
-							Description: "InstanceState is the state of the OpenStack instance for this machine.",
+							Description: "InstanceState is the state of the OpenStack instance for this machine. This field is not set anymore by the OpenStackMachine controller. Instead, it's set by the OpenStackServer controller.",
 							Type:        []string{"string"},
 							Format:      "",
 						},

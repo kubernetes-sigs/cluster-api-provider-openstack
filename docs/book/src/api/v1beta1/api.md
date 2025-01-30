@@ -3548,7 +3548,9 @@ InstanceState
 </td>
 <td>
 <em>(Optional)</em>
-<p>InstanceState is the state of the OpenStack instance for this machine.</p>
+<p>InstanceState is the state of the OpenStack instance for this machine.
+This field is not set anymore by the OpenStackMachine controller.
+Instead, it&rsquo;s set by the OpenStackServer controller.</p>
 </td>
 </tr>
 <tr>
