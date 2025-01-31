@@ -350,7 +350,10 @@ func (s *Service) DeleteClusterPorts(openStackCluster *infrav1.OpenStackCluster)
 	}
 
 	for _, port := range portList {
-		if strings.HasPrefix(port.Name, openStackCluster.Name) {
+		// The bastion port in 0.10 was prefixed with the namespace and then the current port name
+		// so in order to cleanup the old bastion port we need to check for the old format.
+		bastionLegacyPortPrefix := fmt.Sprintf("%s-%s", openStackCluster.Namespace, openStackCluster.Name)
+		if strings.HasPrefix(port.Name, openStackCluster.Name) || strings.HasPrefix(port.Name, bastionLegacyPortPrefix) {
 			if err := s.DeletePort(openStackCluster, port.ID); err != nil {
 				return fmt.Errorf("error deleting port %s: %v", port.ID, err)
 			}
